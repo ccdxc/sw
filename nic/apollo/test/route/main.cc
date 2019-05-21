@@ -12,8 +12,9 @@
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/batch.hpp"
 #include "nic/apollo/test/utils/workflow.hpp"
-#include "nic/apollo/test/utils/tep.hpp"
 #include "nic/apollo/test/utils/route.hpp"
+#include "nic/apollo/test/utils/tep.hpp"
+#include "nic/apollo/test/utils/vpc.hpp"
 
 using std::cerr;
 using std::cout;
@@ -22,15 +23,17 @@ using std::endl;
 namespace api_test {
 
 // Globals
-char *g_cfg_file = NULL;
+static char *g_cfg_file = NULL;
 
-constexpr int k_max_v4_route_table = PDS_MAX_ROUTE_TABLE;
-constexpr int k_max_v6_route_table = PDS_MAX_ROUTE_TABLE;
-constexpr int k_max_route_per_tbl = PDS_MAX_ROUTE_PER_TABLE;
+static constexpr int k_max_v4_route_table = PDS_MAX_ROUTE_TABLE;
+static constexpr int k_max_v6_route_table = PDS_MAX_ROUTE_TABLE;
+static constexpr int k_max_route_per_tbl = PDS_MAX_ROUTE_PER_TABLE;
+static constexpr pds_vpc_id_t k_vpc_id = 2;
 
-const char *k_first_nh_ip_str = "30.30.30.1";
-const char *k_first_v4_pfx_str = "100.100.100.1/21";
-const char *k_first_v6_pfx_str = "100:100:100:1::1/64";
+static const char * const k_base_nh_ip = "30.30.30.1";
+static const char * const k_base_v4_pfx = "100.100.100.1/21";
+static const char * const k_base_v6_pfx = "100:100:100:1:1::1/65";
+static const vpc_util k_vpc_obj(k_vpc_id, "10.0.0.0/8");
 
 //----------------------------------------------------------------------------
 // Route table test class
@@ -44,17 +47,17 @@ protected:
     virtual void TearDown() {}
     static void SetUpTestCase() {
         test_case_params_t params;
-        params.cfg_file = api_test::g_cfg_file;
-        params.enable_fte = false;
-        pds_test_base::SetUpTestCase(params);
-
         pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
         tep_stepper_seed_t tep_seed = {};
 
-        TEP_SEED_INIT(PDS_MAX_TEP, k_first_nh_ip_str, PDS_TEP_TYPE_WORKLOAD,
+        params.cfg_file = api_test::g_cfg_file;
+        params.enable_fte = false;
+        pds_test_base::SetUpTestCase(params);
+        TEP_SEED_INIT(PDS_MAX_TEP, k_base_nh_ip, PDS_TEP_TYPE_WORKLOAD,
                       encap, TRUE, &tep_seed);
-
         batch_start();
+        // create vpc which can be used for vpc peering routes
+        VPC_CREATE(k_vpc_obj);
         // create max TEPs which can be used as NHs for routes
         TEP_MANY_CREATE(&tep_seed);
         batch_commit();
@@ -63,13 +66,12 @@ protected:
         pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
         tep_stepper_seed_t tep_seed = {};
 
-        TEP_SEED_INIT(PDS_MAX_TEP, k_first_nh_ip_str, PDS_TEP_TYPE_WORKLOAD,
+        TEP_SEED_INIT(PDS_MAX_TEP, k_base_nh_ip, PDS_TEP_TYPE_WORKLOAD,
                       encap, TRUE, &tep_seed);
-
         batch_start();
         TEP_MANY_DELETE(&tep_seed);
+        VPC_DELETE(k_vpc_obj);
         batch_commit();
-
         pds_test_base::TearDownTestCase();
     }
 };
@@ -85,21 +87,17 @@ protected:
 TEST_F(route_test, v4v6_route_table_workflow_1) {
     route_table_stepper_seed_t seed = {};
 
-    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
-                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, 0, &seed);
-    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
-                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, 0, &seed);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4, 0);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6, 0);
     // trigger - test max route tables with zero routes
     workflow_1<route_table_util, route_table_stepper_seed_t>(&seed);
 
-    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
-                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, k_max_route_per_tbl, &seed);
-    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
-                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, k_max_route_per_tbl, &seed);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6);
     // trigger - test max route tables with max routes
     workflow_1<route_table_util, route_table_stepper_seed_t>(&seed);
 }
@@ -108,21 +106,17 @@ TEST_F(route_test, v4v6_route_table_workflow_1) {
 TEST_F(route_test, v4v6_route_table_workflow_2) {
     route_table_stepper_seed_t seed = {};
 
-    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
-                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, 0, &seed);
-    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
-                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, 0, &seed);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4, 0);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6, 0);
     // trigger - test max route tables with zero routes
     workflow_2<route_table_util, route_table_stepper_seed_t>(&seed);
 
-    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
-                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, k_max_route_per_tbl, &seed);
-    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
-                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, k_max_route_per_tbl, &seed);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6);
     // trigger - test max route tables with max routes
     workflow_2<route_table_util, route_table_stepper_seed_t>(&seed);
 }
@@ -131,69 +125,54 @@ TEST_F(route_test, v4v6_route_table_workflow_2) {
 TEST_F(route_test, v4v6_route_table_workflow_3) {
     route_table_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {};
 
-    route_table_util::route_table_stepper_seed_init(50, 101,
-                                  k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, 0, &seed1);
-    route_table_util::route_table_stepper_seed_init(50, 151,
-                                  k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, 0, &seed1);
-    route_table_util::route_table_stepper_seed_init(50, 201,
-                                  "125.100.100.1/21", k_first_nh_ip_str,
-                                  IP_AF_IPV4, 0, &seed2);
-    route_table_util::route_table_stepper_seed_init(50, 251,
-                                  "125:100:100:1::0/64", k_first_nh_ip_str,
-                                  IP_AF_IPV6, 0, &seed2);
-    route_table_util::route_table_stepper_seed_init(50, 301,
-                                  "150.100.100.1/21", k_first_nh_ip_str,
-                                  IP_AF_IPV4, 0, &seed3);
-    route_table_util::route_table_stepper_seed_init(50, 351,
-                                  "150:100:100:1::0/64", k_first_nh_ip_str,
-                                  IP_AF_IPV6, 0, &seed3);
+    ROUTE_TABLE_SEED_INIT(&seed1, 50, 101, k_base_v4_pfx, k_base_nh_ip,
+                          IP_AF_IPV4, 0);
+    ROUTE_TABLE_SEED_INIT(&seed1, 50, 151, k_base_v6_pfx, k_base_nh_ip,
+                          IP_AF_IPV6, 0);
+    ROUTE_TABLE_SEED_INIT(&seed2, 50, 201, "125.100.100.1/21", k_base_nh_ip,
+                          IP_AF_IPV4, 0);
+    ROUTE_TABLE_SEED_INIT(&seed2, 50, 251, "125:100:100:1:1::0/65",
+                          k_base_nh_ip, IP_AF_IPV6, 0);
+    ROUTE_TABLE_SEED_INIT(&seed3, 50, 301, "150.100.100.1/21", k_base_nh_ip,
+                          IP_AF_IPV4, 0);
+    ROUTE_TABLE_SEED_INIT(&seed3, 50, 351, "150:100:100:1:1::0/65",
+                          k_base_nh_ip, IP_AF_IPV6, 0);
     // trigger - test route tables with zero routes
-    workflow_3<route_table_util, route_table_stepper_seed_t>(&seed1, &seed2, &seed3);
+    workflow_3<route_table_util, route_table_stepper_seed_t>(&seed1, &seed2,
+                                                             &seed3);
 
-
-    route_table_util::route_table_stepper_seed_init(50, 101,
-                                  k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, k_max_route_per_tbl, &seed1);
-    route_table_util::route_table_stepper_seed_init(50, 151,
-                                  k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, k_max_route_per_tbl, &seed1);
-    route_table_util::route_table_stepper_seed_init(50, 201,
-                                  "125.100.100.1/21", k_first_nh_ip_str,
-                                  IP_AF_IPV4, k_max_route_per_tbl, &seed2);
-    route_table_util::route_table_stepper_seed_init(50, 251,
-                                  "125:100:100:1::0/64", k_first_nh_ip_str,
-                                  IP_AF_IPV6, k_max_route_per_tbl, &seed2);
-    route_table_util::route_table_stepper_seed_init(50, 301,
-                                  "150.100.100.1/21", k_first_nh_ip_str,
-                                  IP_AF_IPV4, k_max_route_per_tbl, &seed3);
-    route_table_util::route_table_stepper_seed_init(50, 351,
-                                  "150:100:100:1::0/64", k_first_nh_ip_str,
-                                  IP_AF_IPV6, k_max_route_per_tbl, &seed3);
+    ROUTE_TABLE_SEED_INIT(&seed1, 50, 101, k_base_v4_pfx, k_base_nh_ip,
+                          IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed1, 50, 151, k_base_v6_pfx, k_base_nh_ip,
+                          IP_AF_IPV6);
+    ROUTE_TABLE_SEED_INIT(&seed2, 50, 201, "125.100.100.1/21", k_base_nh_ip,
+                          IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed2, 50, 251, "125:100:100:1:1::0/65",
+                          k_base_nh_ip, IP_AF_IPV6);
+    ROUTE_TABLE_SEED_INIT(&seed3, 50, 301, "150.100.100.1/21", k_base_nh_ip,
+                          IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed3, 50, 351, "150:100:100:1:1::0/65",
+                          k_base_nh_ip, IP_AF_IPV6);
     // trigger - test route tables with max routes
-    workflow_3<route_table_util, route_table_stepper_seed_t>(&seed1, &seed2, &seed3);
+    workflow_3<route_table_util, route_table_stepper_seed_t>(&seed1, &seed2,
+                                                             &seed3);
 }
 
 /// \brief Route table WF_4
 TEST_F(route_test, v4v6_route_table_workflow_4) {
     route_table_stepper_seed_t seed = {};
 
-    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
-                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, 0, &seed);
-    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
-                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, 0, &seed);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4, 0);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6, 0);
     // trigger - test max route tables with zero routes
     workflow_4<route_table_util, route_table_stepper_seed_t>(&seed);
 
-    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
-                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, k_max_route_per_tbl, &seed);
-    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
-                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, k_max_route_per_tbl, &seed);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6);
     // trigger - test max route tables with max routes
     workflow_4<route_table_util, route_table_stepper_seed_t>(&seed);
 }
@@ -202,69 +181,183 @@ TEST_F(route_test, v4v6_route_table_workflow_4) {
 TEST_F(route_test, v4v6_route_table_workflow_5) {
     route_table_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {};
 
-    route_table_util::route_table_stepper_seed_init(50, 101,
-                                  k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, 0, &seed1);
-    route_table_util::route_table_stepper_seed_init(50, 151,
-                                  k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, 0, &seed1);
-    route_table_util::route_table_stepper_seed_init(50, 201,
-                                  "125.100.100.1/21", k_first_nh_ip_str,
-                                  IP_AF_IPV4, 0, &seed2);
-    route_table_util::route_table_stepper_seed_init(50, 251,
-                                  "125:100:100:1::0/64", k_first_nh_ip_str,
-                                  IP_AF_IPV6, 0, &seed2);
-    route_table_util::route_table_stepper_seed_init(50, 301,
-                                  "150.100.100.1/21", k_first_nh_ip_str,
-                                  IP_AF_IPV4, 0, &seed3);
-    route_table_util::route_table_stepper_seed_init(50, 351,
-                                  "150:100:100:1::0/64", k_first_nh_ip_str,
-                                  IP_AF_IPV6, 0, &seed3);
+    ROUTE_TABLE_SEED_INIT(&seed1, 50, 101, k_base_v4_pfx, k_base_nh_ip,
+                          IP_AF_IPV4, 0);
+    ROUTE_TABLE_SEED_INIT(&seed1, 50, 151, k_base_v6_pfx, k_base_nh_ip,
+                          IP_AF_IPV6, 0);
+    ROUTE_TABLE_SEED_INIT(&seed2, 50, 201, "125.100.100.1/21", k_base_nh_ip,
+                          IP_AF_IPV4, 0);
+    ROUTE_TABLE_SEED_INIT(&seed2, 50, 251, "125:100:100:1:1::0/65",
+                          k_base_nh_ip, IP_AF_IPV6, 0);
+    ROUTE_TABLE_SEED_INIT(&seed3, 50, 301, "150.100.100.1/21", k_base_nh_ip,
+                          IP_AF_IPV4, 0);
+    ROUTE_TABLE_SEED_INIT(&seed3, 50, 351, "150:100:100:1:1::0/65",
+                          k_base_nh_ip, IP_AF_IPV6, 0);
     // trigger - test route tables with zero routes
-    workflow_5<route_table_util, route_table_stepper_seed_t>(&seed1, &seed2, &seed3);
+    workflow_5<route_table_util, route_table_stepper_seed_t>(&seed1, &seed2,
+                                                             &seed3);
 
-
-    route_table_util::route_table_stepper_seed_init(50, 101,
-                                  k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, k_max_route_per_tbl, &seed1);
-    route_table_util::route_table_stepper_seed_init(50, 151,
-                                  k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, k_max_route_per_tbl, &seed1);
-    route_table_util::route_table_stepper_seed_init(50, 201,
-                                  "125.100.100.1/21", k_first_nh_ip_str,
-                                  IP_AF_IPV4, k_max_route_per_tbl, &seed2);
-    route_table_util::route_table_stepper_seed_init(50, 251,
-                                  "125:100:100:1::0/64", k_first_nh_ip_str,
-                                  IP_AF_IPV6, k_max_route_per_tbl, &seed2);
-    route_table_util::route_table_stepper_seed_init(50, 301,
-                                  "150.100.100.1/21", k_first_nh_ip_str,
-                                  IP_AF_IPV4, k_max_route_per_tbl, &seed3);
-    route_table_util::route_table_stepper_seed_init(50, 351,
-                                  "150:100:100:1::0/64", k_first_nh_ip_str,
-                                  IP_AF_IPV6, k_max_route_per_tbl, &seed3);
+    ROUTE_TABLE_SEED_INIT(&seed1, 50, 101, k_base_v4_pfx, k_base_nh_ip,
+                          IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed1, 50, 151, k_base_v6_pfx, k_base_nh_ip,
+                          IP_AF_IPV6);
+    ROUTE_TABLE_SEED_INIT(&seed2, 50, 201, "125.100.100.1/21", k_base_nh_ip,
+                          IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed2, 50, 251, "125:100:100:1:1::0/65",
+                          k_base_nh_ip, IP_AF_IPV6);
+    ROUTE_TABLE_SEED_INIT(&seed3, 50, 301, "150.100.100.1/21", k_base_nh_ip,
+                          IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed3, 50, 351, "150:100:100:1:1::0/65",
+                          k_base_nh_ip, IP_AF_IPV6);
     // trigger - test route tables with max routes
-    workflow_5<route_table_util, route_table_stepper_seed_t>(&seed1, &seed2, &seed3);
+    workflow_5<route_table_util, route_table_stepper_seed_t>(&seed1, &seed2,
+                                                             &seed3);
+}
+
+/// \brief Route table WF_6
+TEST_F(route_test, v4v6_route_table_workflow_6) {
+    route_table_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
+
+    ROUTE_TABLE_SEED_INIT(&seed1, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed1, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6);
+    // seed1A =  seed1 with vpc peering routes
+    ROUTE_TABLE_SEED_INIT(&seed1A, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4, k_max_route_per_tbl,
+                          PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    ROUTE_TABLE_SEED_INIT(&seed1A, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6, k_max_route_per_tbl,
+                          PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    // seed1B =  seed1A with TEP routes but less scale
+    ROUTE_TABLE_SEED_INIT(&seed1B, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4, 100);
+    ROUTE_TABLE_SEED_INIT(&seed1B, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6, 100);
+    workflow_6<route_table_util, route_table_stepper_seed_t>(&seed1, &seed1A,
+                                                             &seed1B);
+}
+
+/// \brief Route table WF_7
+TEST_F(route_test, v4v6_route_table_workflow_7) {
+    route_table_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
+
+    ROUTE_TABLE_SEED_INIT(&seed1, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed1, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6);
+    // seed1A =  seed1 with vpc peering routes
+    ROUTE_TABLE_SEED_INIT(&seed1A, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4, k_max_route_per_tbl,
+                          PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    ROUTE_TABLE_SEED_INIT(&seed1A, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6, k_max_route_per_tbl,
+                          PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    // seed1B =  seed1 but less scale
+    ROUTE_TABLE_SEED_INIT(&seed1B, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4, 100);
+    ROUTE_TABLE_SEED_INIT(&seed1B, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6, 100);
+    workflow_7<route_table_util, route_table_stepper_seed_t>(&seed1, &seed1A,
+                                                             &seed1B);
+}
+
+/// \brief Route table WF_8
+TEST_F(route_test, DISABLED_v4v6_route_table_workflow_8) {
+    route_table_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
+
+    ROUTE_TABLE_SEED_INIT(&seed1, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed1, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6);
+    // seed1A =  seed1 with vpc peering routes
+    ROUTE_TABLE_SEED_INIT(&seed1A, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4, k_max_route_per_tbl,
+                          PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    ROUTE_TABLE_SEED_INIT(&seed1A, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6, k_max_route_per_tbl,
+                          PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    // seed1B =  seed1 but less scale
+    ROUTE_TABLE_SEED_INIT(&seed1B, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4, 100);
+    ROUTE_TABLE_SEED_INIT(&seed1B, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6, 100);
+    workflow_8<route_table_util, route_table_stepper_seed_t>(&seed1, &seed1A,
+                                                             &seed1B);
+}
+
+/// \brief Route table WF_9
+TEST_F(route_test, v4v6_route_table_workflow_9) {
+    route_table_stepper_seed_t seed1 = {}, seed1A = {};
+
+    ROUTE_TABLE_SEED_INIT(&seed1, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed1, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6);
+    // seed1A =  seed1 with vpc peering routes
+    ROUTE_TABLE_SEED_INIT(&seed1A, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4, k_max_route_per_tbl,
+                          PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    ROUTE_TABLE_SEED_INIT(&seed1A, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6, k_max_route_per_tbl,
+                          PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    workflow_9<route_table_util, route_table_stepper_seed_t>(&seed1, &seed1A);
+}
+
+/// \brief Route table WF_10
+TEST_F(route_test, DISABLED_v4v6_route_table_workflow_10) {
+    route_table_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {}, seed4 = {};
+    route_table_stepper_seed_t seed2A = {}, seed3A = {};
+
+    ROUTE_TABLE_SEED_INIT(&seed1, 50, 101, k_base_v4_pfx, k_base_nh_ip,
+                          IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed1, 50, 151, k_base_v6_pfx, k_base_nh_ip,
+                          IP_AF_IPV6);
+    ROUTE_TABLE_SEED_INIT(&seed2, 50, 201, "125.100.100.1/21", k_base_nh_ip,
+                          IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed2, 50, 251, "125:100:100:1:1::0/65",
+                          k_base_nh_ip, IP_AF_IPV6);
+    // seed2A =  seed2 with vpc peering routes
+    ROUTE_TABLE_SEED_INIT(&seed2A, 50, 201, "125.100.100.1/21", k_base_nh_ip,
+                          IP_AF_IPV4, k_max_route_per_tbl,
+                          PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    ROUTE_TABLE_SEED_INIT(&seed2A, 50, 251, "125:100:100:1:1::0/65",
+                          k_base_nh_ip, IP_AF_IPV6, k_max_route_per_tbl,
+                          PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    ROUTE_TABLE_SEED_INIT(&seed3, 50, 301, "150.100.100.1/21", k_base_nh_ip,
+                          IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed3, 50, 351, "150:100:100:1:1::0/65",
+                          k_base_nh_ip, IP_AF_IPV6);
+    // seed3A =  seed3 with vpc peering routes
+    ROUTE_TABLE_SEED_INIT(&seed3A, 50, 301, "150.100.100.1/21", k_base_nh_ip,
+                          IP_AF_IPV4, k_max_route_per_tbl,
+                          PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    ROUTE_TABLE_SEED_INIT(&seed3A, 50, 351, "150:100:100:1:1::0/65",
+                          k_base_nh_ip, IP_AF_IPV6, k_max_route_per_tbl,
+                          PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    ROUTE_TABLE_SEED_INIT(&seed4, 50, 401, "175.100.100.1/21", k_base_nh_ip,
+                          IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed4, 50, 451, "175:100:100:1:1::0/65",
+                          k_base_nh_ip, IP_AF_IPV6);
+    workflow_10<route_table_util, route_table_stepper_seed_t>(
+                &seed1, &seed2, &seed2A, &seed3, &seed3A, &seed4);
 }
 
 /// \brief Route table WF_N_1
 TEST_F(route_test, v4v6_route_table_workflow_neg_1) {
     route_table_stepper_seed_t seed = {};
 
-    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
-                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, 0, &seed);
-    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
-                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, 0, &seed);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4, 0);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6, 0);
     // trigger - test max route tables with zero routes
     workflow_neg_1<route_table_util, route_table_stepper_seed_t>(&seed);
 
-    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
-                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, k_max_route_per_tbl, &seed);
-    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
-                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, k_max_route_per_tbl, &seed);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6);
     // trigger - test max route tables with max routes
     workflow_neg_1<route_table_util, route_table_stepper_seed_t>(&seed);
 }
@@ -273,28 +366,24 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_1) {
 TEST_F(route_test, v4v6_route_table_workflow_neg_2) {
     route_table_stepper_seed_t seed1 = {}, seed2 = {};
 
-    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table+2,
-                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, 0, &seed1);
+    ROUTE_TABLE_SEED_INIT(&seed1, k_max_v4_route_table+2, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4, 0);
     // trigger - test MAX+1 v4 route tables with zero routes
     // using max + 2 as max+1 is reserved to handle update
     workflow_neg_2<route_table_util, route_table_stepper_seed_t>(&seed1);
 
-    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table+2,
-                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, 0, &seed2);
+    ROUTE_TABLE_SEED_INIT(&seed2, k_max_v6_route_table+2, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6, 0);
     // trigger - test MAX+1 v6 route tables with zero routes
     workflow_neg_2<route_table_util, route_table_stepper_seed_t>(&seed2);
 
-    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table+2,
-                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, k_max_route_per_tbl, &seed1);
+    ROUTE_TABLE_SEED_INIT(&seed1, k_max_v4_route_table+2, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4);
     // trigger - test MAX+1 v4 route tables with max routes
     workflow_neg_2<route_table_util, route_table_stepper_seed_t>(&seed1);
 
-    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table+2,
-                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, k_max_route_per_tbl, &seed2);
+    ROUTE_TABLE_SEED_INIT(&seed2, k_max_v6_route_table+2, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6);
     // trigger - test MAX+1 v6 route tables with max routes
     workflow_neg_2<route_table_util, route_table_stepper_seed_t>(&seed2);
 #if 0
@@ -324,21 +413,17 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_2) {
 TEST_F(route_test, v4v6_route_table_workflow_neg_3) {
     route_table_stepper_seed_t seed = {};
 
-    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
-                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, 0, &seed);
-    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
-                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, 0, &seed);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4, 0);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6, 0);
     // trigger - test max route tables with zero routes
     workflow_neg_3<route_table_util, route_table_stepper_seed_t>(&seed);
 
-    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
-                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, k_max_route_per_tbl, &seed);
-    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
-                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, k_max_route_per_tbl, &seed);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6);
     // trigger - test max route tables with max routes
     workflow_neg_3<route_table_util, route_table_stepper_seed_t>(&seed);
 }
@@ -347,36 +432,107 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_3) {
 TEST_F(route_test, v4v6_route_table_workflow_neg_4) {
     route_table_stepper_seed_t seed1 = {}, seed2 = {};
 
-    route_table_util::route_table_stepper_seed_init(40, 100,
-                                  k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, 0, &seed1);
-    route_table_util::route_table_stepper_seed_init(40, 150,
-                                  k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, 0, &seed1);
-    route_table_util::route_table_stepper_seed_init(40, 300,
-                                  k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, 0, &seed2);
-    route_table_util::route_table_stepper_seed_init(40, 350,
-                                  k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, 0, &seed2);
+    ROUTE_TABLE_SEED_INIT(&seed1, 40, 100, k_base_v4_pfx, k_base_nh_ip,
+                          IP_AF_IPV4, 0);
+    ROUTE_TABLE_SEED_INIT(&seed1, 40, 150, k_base_v6_pfx, k_base_nh_ip,
+                          IP_AF_IPV6, 0);
+    ROUTE_TABLE_SEED_INIT(&seed2, 40, 300, k_base_v4_pfx, k_base_nh_ip,
+                          IP_AF_IPV4, 0);
+    ROUTE_TABLE_SEED_INIT(&seed2, 40, 350, k_base_v6_pfx, k_base_nh_ip,
+                          IP_AF_IPV6, 0);
     // trigger - test route tables with zero routes
     workflow_neg_4<route_table_util, route_table_stepper_seed_t>(&seed1,
                                                                  &seed2);
 
-    route_table_util::route_table_stepper_seed_init(40, 100,
-                                  k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, k_max_route_per_tbl, &seed1);
-    route_table_util::route_table_stepper_seed_init(40, 150,
-                                  k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, k_max_route_per_tbl, &seed1);
-    route_table_util::route_table_stepper_seed_init(40, 300,
-                                  k_first_v4_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV4, k_max_route_per_tbl, &seed2);
-    route_table_util::route_table_stepper_seed_init(40, 350,
-                                  k_first_v6_pfx_str, k_first_nh_ip_str,
-                                  IP_AF_IPV6, k_max_route_per_tbl, &seed2);
+    ROUTE_TABLE_SEED_INIT(&seed1, 40, 100, k_base_v4_pfx, k_base_nh_ip,
+                          IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed1, 40, 150, k_base_v6_pfx, k_base_nh_ip,
+                          IP_AF_IPV6);
+    ROUTE_TABLE_SEED_INIT(&seed2, 40, 300, k_base_v4_pfx, k_base_nh_ip,
+                          IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed2, 40, 350, k_base_v6_pfx, k_base_nh_ip,
+                          IP_AF_IPV6);
     // trigger - test route tables with max routes
     workflow_neg_4<route_table_util, route_table_stepper_seed_t>(&seed1,
+                                                                 &seed2);
+}
+
+/// \brief Route table WF_N_5
+TEST_F(route_test, DISABLED_v4v6_route_table_workflow_neg_5) {
+    route_table_stepper_seed_t seed1 = {}, seed1A = {};
+
+    ROUTE_TABLE_SEED_INIT(&seed1, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed1, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6);
+    // seed1A = seed1 updated to vpc peering routes
+    ROUTE_TABLE_SEED_INIT(&seed1A, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4, k_max_route_per_tbl,
+                          PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    ROUTE_TABLE_SEED_INIT(&seed1A, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6, k_max_route_per_tbl,
+                          PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    // trigger - test max route tables with addition of max routes
+    workflow_neg_5<route_table_util, route_table_stepper_seed_t>(&seed1,
+                                                                 &seed1A);
+}
+
+
+/// \brief Route table WF_N_6
+TEST_F(route_test, v4v6_route_table_workflow_neg_6) {
+    route_table_stepper_seed_t seed1 = {}, seed1A = {};
+
+    ROUTE_TABLE_SEED_INIT(&seed1, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed1, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6);
+    // seed1A = seed1 updated to vpc peering routes
+    ROUTE_TABLE_SEED_INIT(&seed1A, k_max_v4_route_table, 22222, k_base_v4_pfx,
+                          k_base_nh_ip, IP_AF_IPV4, k_max_route_per_tbl,
+                          PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    ROUTE_TABLE_SEED_INIT(&seed1A, k_max_v6_route_table, 11111, k_base_v6_pfx,
+                          k_base_nh_ip, IP_AF_IPV6, k_max_route_per_tbl,
+                          PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    workflow_neg_6<route_table_util, route_table_stepper_seed_t>(&seed1,
+                                                                 &seed1A);
+}
+
+/// \brief Route table WF_N_7
+TEST_F(route_test, v4v6_route_table_workflow_neg_7) {
+    route_table_stepper_seed_t seed1 = {}, seed1A = {}, seed2 = {};
+
+    ROUTE_TABLE_SEED_INIT(&seed1, 50, 101, k_base_v4_pfx, k_base_nh_ip,
+                          IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed1, 50, 151, k_base_v6_pfx, k_base_nh_ip,
+                          IP_AF_IPV6);
+    ROUTE_TABLE_SEED_INIT(&seed1A, 50, 101, k_base_v4_pfx, k_base_nh_ip,
+                          IP_AF_IPV4, k_max_route_per_tbl,
+                          PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    ROUTE_TABLE_SEED_INIT(&seed1A, 50, 151, k_base_v6_pfx, k_base_nh_ip,
+                          IP_AF_IPV6, k_max_route_per_tbl,
+                          PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    ROUTE_TABLE_SEED_INIT(&seed2, 50, 201, "125.100.100.1/21", k_base_nh_ip,
+                          IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed2, 50, 251, "125:100:100:1:1::0/65",
+                          k_base_nh_ip, IP_AF_IPV6);
+    workflow_neg_7<route_table_util, route_table_stepper_seed_t>(&seed1,
+                                                                 &seed1A,
+                                                                 &seed2);
+}
+
+/// \brief Route table WF_N_8
+TEST_F(route_test, v4v6_route_table_workflow_neg_8) {
+    route_table_stepper_seed_t seed1 = {}, seed2 = {};
+
+    ROUTE_TABLE_SEED_INIT(&seed1, 50, 101, k_base_v4_pfx, k_base_nh_ip,
+                          IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed1, 50, 151, k_base_v6_pfx, k_base_nh_ip,
+                          IP_AF_IPV6);
+    ROUTE_TABLE_SEED_INIT(&seed2, 50, 201, "125.100.100.1/21", k_base_nh_ip,
+                          IP_AF_IPV4);
+    ROUTE_TABLE_SEED_INIT(&seed2, 50, 251, "125:100:100:1:1::0/65",
+                          k_base_nh_ip, IP_AF_IPV6);
+    workflow_neg_8<route_table_util, route_table_stepper_seed_t>(&seed1,
                                                                  &seed2);
 }
 

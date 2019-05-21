@@ -30,19 +30,6 @@ namespace api_test {
 #define ROUTE_TABLE_DELETE(obj)                                               \
     ASSERT_TRUE(obj.del() == sdk::SDK_RET_OK)
 
-#define ROUTE_TABLE_MANY_CREATE(seed)                                         \
-    ASSERT_TRUE(route_table_util::many_create(seed) == sdk::SDK_RET_OK)
-
-#define ROUTE_TABLE_MANY_READ(seed, exp_result)                               \
-    ASSERT_TRUE(route_table_util::many_read(seed,                             \
-                                      exp_result) == sdk::SDK_RET_OK)
-
-#define ROUTE_TABLE_MANY_UPDATE(seed)                                         \
-    ASSERT_TRUE(route_table_util::many_update(seed) == sdk::SDK_RET_OK)
-
-#define ROUTE_TABLE_MANY_DELETE(seed)                                         \
-    ASSERT_TRUE(route_table_util::many_delete(seed) == sdk::SDK_RET_OK)
-
 // Route object seed used as base seed in many_* operations
 typedef struct route_table_seed_s {
     uint32_t num_route_tables;
@@ -51,6 +38,8 @@ typedef struct route_table_seed_s {
     ip_addr_t base_nh_ip;
     uint8_t af;
     uint32_t num_routes;
+    pds_nh_type_t nh_type;
+    pds_vpc_id_t peer_vpc_id;
 } route_table_seed_t;
 
 typedef struct route_table_stepper_seed_s {
@@ -62,10 +51,10 @@ typedef struct route_table_stepper_seed_s {
 class route_util {
 public:
     // Test parameters
-    ip_prefix_t ip_pfx;      ///< route prefix
-    ip_addr_t nh_ip;         ///< next hop IP
-    pds_nh_type_t nh_type;   ///< nexthop type
-    pds_vpc_id_t vpc_id;     ///< vpc id
+    ip_prefix_t ip_pfx;          ///< route prefix
+    ip_addr_t nh_ip;             ///< next hop IP
+    pds_nh_type_t nh_type;       ///< nexthop type
+    pds_vpc_id_t peer_vpc_id;    ///< peer vpc id
 
     /// \brief Constructor
     route_util();
@@ -92,7 +81,9 @@ public:
     /// \brief Parameterized constructor
     route_table_util(pds_route_table_id_t id, ip_prefix_t base_route_pfx,
                      ip_addr_t base_nh_ip, uint8_t af = IP_AF_IPV4,
-                     uint32_t num_routes=1);
+                     uint32_t num_routes=1,
+                     pds_nh_type_t nh_type=PDS_NH_TYPE_TEP,
+                     pds_vpc_id_t peer_vpc_id=PDS_VPC_ID_INVALID);
 
     /// \brief Destructor
     ~route_table_util();
@@ -146,20 +137,25 @@ public:
 
     /// \brief Initialize the seed for route table
     ///
+    /// \param[out] seed route table seed
     /// \param[in] num_route_tables number of route tables
     /// \param[in] base_route_table_id route table id base
     /// \param[in] base_route_pfx_str route table starting prefix
     /// \param[in] base_nh_ip_str base next hop ip for route
     /// \param[in] af route table address family
     /// \param[in] num_routes number of routes per route table
-    /// \param[out] seed route table seed
-    static void route_table_stepper_seed_init(uint32_t num_route_tables,
-                                              uint32_t base_route_table_id,
-                                              std::string base_route_pfx_str,
-                                              std::string base_nh_ip_str,
-                                              uint8_t af, uint32_t num_routes,
-                                              route_table_stepper_seed_t *seed
-                                              );
+    /// \param[in] nh_type type of next hop which routes are pointing to
+    /// \param[in] peer_vpc_id peer VPC's id for VPC peering routes
+    static void route_table_stepper_seed_init(
+        route_table_stepper_seed_t *seed,
+        uint32_t num_route_tables,
+        uint32_t base_route_table_id,
+        std::string base_route_pfx_str,
+        std::string base_nh_ip_str,
+        uint8_t af=IP_AF_IPV4,
+        uint32_t num_routes=PDS_MAX_ROUTE_PER_TABLE,
+        pds_nh_type_t nh_type=PDS_NH_TYPE_TEP,
+        pds_vpc_id_t peer_vpc_id=PDS_VPC_ID_INVALID);
 
     /// \brief Indicates whether route table is stateful
     ///

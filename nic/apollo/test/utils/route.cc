@@ -16,21 +16,22 @@ namespace api_test {
 
 route_util::route_util() {
     this->nh_type = PDS_NH_TYPE_BLACKHOLE;
-    this->vpc_id = PDS_VPC_ID_INVALID;
+    this->peer_vpc_id = PDS_VPC_ID_INVALID;
 }
 
 route_util::~route_util() {}
 
 route_table_util::route_table_util() {
-    this->id = 0;
-    this->af = 0;
+    this->id = PDS_ROUTE_TABLE_ID_INVALID;
+    this->af = IP_AF_IPV4;
     this->num_routes = 0;
 }
 
 route_table_util::route_table_util(pds_route_table_id_t id,
                                    ip_prefix_t base_route_pfx,
                                    ip_addr_t base_nh_ip, uint8_t af,
-                                   uint32_t num_routes) {
+                                   uint32_t num_routes, pds_nh_type_t nh_type,
+                                   pds_vpc_id_t peer_vpc_id) {
     uint32_t nh_offset = 0, nh_offset_max = PDS_MAX_TEP - 1;
     ip_addr_t route_addr;
 
@@ -41,16 +42,24 @@ route_table_util::route_table_util(pds_route_table_id_t id,
     this->num_routes = num_routes;
     for (uint32_t i = 0; i < this->num_routes; ++i) {
         this->routes[i].ip_pfx = base_route_pfx;
-        this->routes[i].nh_type = PDS_NH_TYPE_TEP;
-        this->routes[i].vpc_id = PDS_VPC_ID_INVALID;
+        this->routes[i].nh_type = nh_type;
+        switch (nh_type) {
+        case PDS_NH_TYPE_TEP:
+            this->routes[i].nh_ip.addr.v4_addr =
+                base_nh_ip.addr.v4_addr + nh_offset;
+            nh_offset += 1;
+            if (nh_offset > nh_offset_max) {
+                nh_offset %= nh_offset_max;
+            }
+            break;
+        case PDS_NH_TYPE_PEER_VPC:
+            this->routes[i].peer_vpc_id = peer_vpc_id;
+            break;
+        default:
+            break;
+        }
         ip_prefix_ip_next(&base_route_pfx, &route_addr);
         base_route_pfx.addr = route_addr;
-
-        this->routes[i].nh_ip.addr.v4_addr = base_nh_ip.addr.v4_addr + nh_offset;
-        nh_offset += 1;
-        if (nh_offset > nh_offset_max) {
-            nh_offset %= nh_offset_max;
-        }
     }
 }
 
@@ -71,7 +80,16 @@ route_table_util::create(void) const {
         for (i = 0; i < this->num_routes; ++i) {
             spec.routes[i].prefix = this->routes[i].ip_pfx;
             spec.routes[i].nh_type = this->routes[i].nh_type;
-            spec.routes[i].nh_ip = this->routes[i].nh_ip;
+            switch (this->routes[i].nh_type) {
+            case PDS_NH_TYPE_TEP:
+                spec.routes[i].nh_ip = this->routes[i].nh_ip;
+                break;
+            case PDS_NH_TYPE_PEER_VPC:
+                spec.routes[i].vpc.id = this->routes[i].peer_vpc_id;
+                break;
+            default:
+                break;
+            }
         }
     }
     return (pds_route_table_create(&spec));
@@ -196,12 +214,15 @@ route_table_util::many_delete(route_table_stepper_seed_t *seed) {
 }
 
 void
-route_table_util::route_table_stepper_seed_init(uint32_t num_route_tables,
+route_table_util::route_table_stepper_seed_init(
+                                            route_table_stepper_seed_t *seed,
+                                            uint32_t num_route_tables,
                                             uint32_t base_route_table_id,
                                             std::string base_route_pfx_str,
                                             std::string base_nh_ip_str,
                                             uint8_t af, uint32_t num_routes,
-                                            route_table_stepper_seed_t *seed) {
+                                            pds_nh_type_t nh_type,
+                                            pds_vpc_id_t peer_vpc_id) {
     route_table_seed_t *rt_seed;
     if (af == IP_AF_IPV4) {
         rt_seed = &seed->v4_rt_seed;
@@ -214,6 +235,8 @@ route_table_util::route_table_stepper_seed_init(uint32_t num_route_tables,
     extract_ip_addr(base_nh_ip_str.c_str(), &rt_seed->base_nh_ip);
     rt_seed->af = af;
     rt_seed->num_routes = num_routes;
+    rt_seed->nh_type = nh_type;
+    rt_seed->peer_vpc_id = peer_vpc_id;
 }
 
 }    // namespace api_test

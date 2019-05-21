@@ -16,6 +16,18 @@
 
 namespace api_test {
 
+#define VPC_CREATE(obj)                                              \
+    ASSERT_TRUE(obj.create() == sdk::SDK_RET_OK)
+
+#define VPC_READ(obj, info)                                          \
+    ASSERT_TRUE(obj.read(info) == sdk::SDK_RET_OK)
+
+#define VPC_UPDATE(obj)                                              \
+    ASSERT_TRUE(obj.update() == sdk::SDK_RET_OK)
+
+#define VPC_DELETE(obj)                                              \
+    ASSERT_TRUE(obj.del() == sdk::SDK_RET_OK)
+
 #define VPC_MANY_CREATE(seed)                                        \
     ASSERT_TRUE(vpc_util::many_create(seed) == sdk::SDK_RET_OK)
 
