@@ -462,9 +462,6 @@ public:
     sdk_ret_t create_flow(uint32_t vpc, ipv6_addr_t v6_addr_sip,
                           ipv6_addr_t v6_addr_dip, uint8_t proto,
                           uint16_t sport, uint16_t dport) {
-        char *dst_ip_str = NULL;
-        char *src_ip_str = NULL;
-
         memset(&v6entry, 0, sizeof(ftl_entry_t));
         v6entry.ktype = 2;
         v6entry.local_vnic_tag = vpc - 1;

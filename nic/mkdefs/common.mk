@@ -193,14 +193,14 @@ export NIC_HAL_GTEST_WO_MAIN_LDLIBS :=
 # ==========================================================================
 #                        Apollo Specific Defs
 # ==========================================================================
-export NIC_APOLLO_NICMGR_LIBS := nicmgr_apollo rdmamgr_apollo mnet evutils \
+export NIC_apollo_NICMGR_LIBS := nicmgr_apollo rdmamgr_apollo mnet evutils \
                                  pciemgr_if pciemgr pciemgrutils \
                                  pciehdevices pcietlp cfgspace intrutils misc
 
 # ==========================================================================
 #                        ARTEMIS specific defs
 # ==========================================================================
-export NIC_ARTEMIS_NICMGR_LIBS := nicmgr_artemis rdmamgr_artemis mnet evutils \
+export NIC_artemis_NICMGR_LIBS := nicmgr_artemis rdmamgr_artemis mnet evutils \
                                   pciemgr_if pciemgr pciemgrutils \
                                   pciehdevices pcietlp cfgspace intrutils misc
 
