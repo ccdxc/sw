@@ -58,7 +58,7 @@ func (it *veniceIntegSuite) TestMetrics(c *C) {
 	// set some values
 	tmtr.SetRxBroadcastBytes(200)
 	tmtr.SetRxBroadcastPackets(300)
-	tmtr.SetRxCsumComplete(400.0)
+	tmtr.SetRxDropMulticastPackets(400.0)
 	tmtr.SetRxDescFetchError(500.0)
 
 	// query
@@ -190,7 +190,7 @@ func (it *veniceIntegSuite) TestMetricsAuthz(c *C) {
 	// set some values
 	tmtr.SetRxBroadcastBytes(200)
 	tmtr.SetRxBroadcastPackets(300)
-	tmtr.SetRxCsumComplete(400.0)
+	tmtr.SetRxDropMulticastPackets(400.0)
 	tmtr.SetRxDescFetchError(500.0)
 
 	apiGwAddr := "localhost:" + it.config.APIGatewayPort

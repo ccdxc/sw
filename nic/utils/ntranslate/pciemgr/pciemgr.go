@@ -1,6 +1,8 @@
 package pciemgr
 
 import (
+	"fmt"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/ntranslate"
 )
@@ -8,20 +10,40 @@ import (
 func init() {
 	tstr := ntranslate.MustGetTranslator()
 
-	tstr.Register("PcieMgrKey", &pciemgrTranslatorFns{})
+	tstr.Register("PcieMgrMetricsKey", &pcieMgrFns{})
+	tstr.Register("PciePortMetricsKey", &pciePortFns{})
 }
 
-type pciemgrTranslatorFns struct{}
+type pcieMgrFns struct{}
 
 // KeyToMeta converts network key to meta
-func (n *pciemgrTranslatorFns) KeyToMeta(key interface{}) *api.ObjectMeta {
-	if str, ok := key.(string); ok {
-		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: str}
+func (n *pcieMgrFns) KeyToMeta(key interface{}) *api.ObjectMeta {
+	if pciemgrkey, ok := key.(uint32); ok {
+		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: fmt.Sprintf("%d", pciemgrkey)}
 	}
 	return nil
 }
 
 // MetaToKey converts meta to network key
-func (n *pciemgrTranslatorFns) MetaToKey(meta *api.ObjectMeta) interface{} {
-	return meta.Name
+func (n *pcieMgrFns) MetaToKey(meta *api.ObjectMeta) interface{} {
+	var key uint32
+	fmt.Sscanf(meta.Name, "%s", &key)
+	return &key
+}
+
+type pciePortFns struct{}
+
+// KeyToMeta converts network key to meta
+func (n *pciePortFns) KeyToMeta(key interface{}) *api.ObjectMeta {
+	if pcieportkey, ok := key.(uint32); ok {
+		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: fmt.Sprintf("%d", pcieportkey)}
+	}
+	return nil
+}
+
+// MetaToKey converts meta to network key
+func (n *pciePortFns) MetaToKey(meta *api.ObjectMeta) interface{} {
+	var key uint32
+	fmt.Sscanf(meta.Name, "%s", &key)
+	return &key
 }

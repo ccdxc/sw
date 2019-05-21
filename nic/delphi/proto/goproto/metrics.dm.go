@@ -109,53 +109,165 @@ type LifMetrics struct {
 
 	XRsvd__12 metrics.Counter
 
-	RxRss metrics.Counter
+	TxRdmaUcastBytes metrics.Counter
 
-	RxCsumComplete metrics.Counter
+	TxRdmaUcastPackets metrics.Counter
 
-	RxIpBad metrics.Counter
+	TxRdmaMcastBytes metrics.Counter
 
-	RxTcpBad metrics.Counter
+	TxRdmaMcastPackets metrics.Counter
 
-	RxUdpBad metrics.Counter
-
-	RxVlanStrip metrics.Counter
+	TxRdmaCnpPackets metrics.Counter
 
 	XRsvd__13 metrics.Counter
 
 	XRsvd__14 metrics.Counter
 
-	TxCsumHw metrics.Counter
-
-	TxCsumHwInner metrics.Counter
-
-	TxVlanInsert metrics.Counter
-
-	TxSg metrics.Counter
-
-	TxTsoSg metrics.Counter
-
-	TxTsoSop metrics.Counter
-
-	TxTsoEop metrics.Counter
-
 	XRsvd__15 metrics.Counter
 
-	TxDescOpcInvalid metrics.Counter
+	RxRdmaUcastBytes metrics.Counter
 
-	TxDescOpcCsumNone metrics.Counter
+	RxRdmaUcastPackets metrics.Counter
 
-	TxDescOpcCsumPartial metrics.Counter
+	RxRdmaMcastBytes metrics.Counter
 
-	TxDescOpcCsumHw metrics.Counter
+	RxRdmaMcastPackets metrics.Counter
 
-	TxDescOpcCsumTso metrics.Counter
+	RxRdmaCnpPackets metrics.Counter
 
-	XRsvd__16 metrics.Counter
+	RxRdmaEcnPackets metrics.Counter
 
-	XRsvd__17 metrics.Counter
+	Rsvd16 metrics.Counter
 
-	XRsvd__18 metrics.Counter
+	Rsvd17 metrics.Counter
+
+	Rsvd18 metrics.Counter
+
+	Rsvd19 metrics.Counter
+
+	Rsvd20 metrics.Counter
+
+	Rsvd21 metrics.Counter
+
+	Rsvd22 metrics.Counter
+
+	Rsvd23 metrics.Counter
+
+	Rsvd24 metrics.Counter
+
+	Rsvd25 metrics.Counter
+
+	Rsvd26 metrics.Counter
+
+	Rsvd27 metrics.Counter
+
+	Rsvd28 metrics.Counter
+
+	Rsvd29 metrics.Counter
+
+	Rsvd30 metrics.Counter
+
+	Rsvd31 metrics.Counter
+
+	Rsvd32 metrics.Counter
+
+	Rsvd33 metrics.Counter
+
+	Rsvd34 metrics.Counter
+
+	Rsvd35 metrics.Counter
+
+	Rsvd36 metrics.Counter
+
+	Rsvd37 metrics.Counter
+
+	Rsvd38 metrics.Counter
+
+	Rsvd39 metrics.Counter
+
+	Rsvd40 metrics.Counter
+
+	Rsvd41 metrics.Counter
+
+	Rsvd42 metrics.Counter
+
+	Rsvd43 metrics.Counter
+
+	Rsvd44 metrics.Counter
+
+	Rsvd45 metrics.Counter
+
+	Rsvd46 metrics.Counter
+
+	Rsvd47 metrics.Counter
+
+	Rsvd48 metrics.Counter
+
+	Rsvd49 metrics.Counter
+
+	RdmaReqRxPktSeqErr metrics.Counter
+
+	RdmaReqRxRnrRetryErr metrics.Counter
+
+	RdmaReqRxRemoteAccessErr metrics.Counter
+
+	RdmaReqRxRemoteInvReqErr metrics.Counter
+
+	RdmaReqRxRemoteOperErr metrics.Counter
+
+	RdmaReqRxImpliedNakSeqErr metrics.Counter
+
+	RdmaReqRxCqeErr metrics.Counter
+
+	RdmaReqRxCqeFlushErr metrics.Counter
+
+	RdmaReqRxDupResponses metrics.Counter
+
+	RdmaReqRxInvalidPackets metrics.Counter
+
+	RdmaReqTxLocalAccessErr metrics.Counter
+
+	RdmaReqTxLocalOperErr metrics.Counter
+
+	RdmaReqTxMemoryMgmtErr metrics.Counter
+
+	Rsvd52 metrics.Counter
+
+	Rsvd53 metrics.Counter
+
+	Rsvd54 metrics.Counter
+
+	RdmaRespRxDupRequests metrics.Counter
+
+	RdmaRespRxOutOfBuffer metrics.Counter
+
+	RdmaRespRxOutOfSeqPkts metrics.Counter
+
+	RdmaRespRxCqeErr metrics.Counter
+
+	RdmaRespRxCqeFlushErr metrics.Counter
+
+	RdmaRespRxLocalLenErr metrics.Counter
+
+	RdmaRespRxInvRequestErr metrics.Counter
+
+	RdmaRespRxLocalQpOperErr metrics.Counter
+
+	RdmaRespRxOutOfAtomicResource metrics.Counter
+
+	RdmaRespTxPktSeqErr metrics.Counter
+
+	RdmaRespTxRemoteInvReqErr metrics.Counter
+
+	RdmaRespTxRemoteAccessErr metrics.Counter
+
+	RdmaRespTxRemoteOperErr metrics.Counter
+
+	RdmaRespTxRnrRetryErr metrics.Counter
+
+	Rsvd57 metrics.Counter
+
+	Rsvd58 metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -265,53 +377,165 @@ func (mtr *LifMetrics) Size() int {
 
 	sz += mtr.XRsvd__12.Size()
 
-	sz += mtr.RxRss.Size()
+	sz += mtr.TxRdmaUcastBytes.Size()
 
-	sz += mtr.RxCsumComplete.Size()
+	sz += mtr.TxRdmaUcastPackets.Size()
 
-	sz += mtr.RxIpBad.Size()
+	sz += mtr.TxRdmaMcastBytes.Size()
 
-	sz += mtr.RxTcpBad.Size()
+	sz += mtr.TxRdmaMcastPackets.Size()
 
-	sz += mtr.RxUdpBad.Size()
-
-	sz += mtr.RxVlanStrip.Size()
+	sz += mtr.TxRdmaCnpPackets.Size()
 
 	sz += mtr.XRsvd__13.Size()
 
 	sz += mtr.XRsvd__14.Size()
 
-	sz += mtr.TxCsumHw.Size()
-
-	sz += mtr.TxCsumHwInner.Size()
-
-	sz += mtr.TxVlanInsert.Size()
-
-	sz += mtr.TxSg.Size()
-
-	sz += mtr.TxTsoSg.Size()
-
-	sz += mtr.TxTsoSop.Size()
-
-	sz += mtr.TxTsoEop.Size()
-
 	sz += mtr.XRsvd__15.Size()
 
-	sz += mtr.TxDescOpcInvalid.Size()
+	sz += mtr.RxRdmaUcastBytes.Size()
 
-	sz += mtr.TxDescOpcCsumNone.Size()
+	sz += mtr.RxRdmaUcastPackets.Size()
 
-	sz += mtr.TxDescOpcCsumPartial.Size()
+	sz += mtr.RxRdmaMcastBytes.Size()
 
-	sz += mtr.TxDescOpcCsumHw.Size()
+	sz += mtr.RxRdmaMcastPackets.Size()
 
-	sz += mtr.TxDescOpcCsumTso.Size()
+	sz += mtr.RxRdmaCnpPackets.Size()
 
-	sz += mtr.XRsvd__16.Size()
+	sz += mtr.RxRdmaEcnPackets.Size()
 
-	sz += mtr.XRsvd__17.Size()
+	sz += mtr.Rsvd16.Size()
 
-	sz += mtr.XRsvd__18.Size()
+	sz += mtr.Rsvd17.Size()
+
+	sz += mtr.Rsvd18.Size()
+
+	sz += mtr.Rsvd19.Size()
+
+	sz += mtr.Rsvd20.Size()
+
+	sz += mtr.Rsvd21.Size()
+
+	sz += mtr.Rsvd22.Size()
+
+	sz += mtr.Rsvd23.Size()
+
+	sz += mtr.Rsvd24.Size()
+
+	sz += mtr.Rsvd25.Size()
+
+	sz += mtr.Rsvd26.Size()
+
+	sz += mtr.Rsvd27.Size()
+
+	sz += mtr.Rsvd28.Size()
+
+	sz += mtr.Rsvd29.Size()
+
+	sz += mtr.Rsvd30.Size()
+
+	sz += mtr.Rsvd31.Size()
+
+	sz += mtr.Rsvd32.Size()
+
+	sz += mtr.Rsvd33.Size()
+
+	sz += mtr.Rsvd34.Size()
+
+	sz += mtr.Rsvd35.Size()
+
+	sz += mtr.Rsvd36.Size()
+
+	sz += mtr.Rsvd37.Size()
+
+	sz += mtr.Rsvd38.Size()
+
+	sz += mtr.Rsvd39.Size()
+
+	sz += mtr.Rsvd40.Size()
+
+	sz += mtr.Rsvd41.Size()
+
+	sz += mtr.Rsvd42.Size()
+
+	sz += mtr.Rsvd43.Size()
+
+	sz += mtr.Rsvd44.Size()
+
+	sz += mtr.Rsvd45.Size()
+
+	sz += mtr.Rsvd46.Size()
+
+	sz += mtr.Rsvd47.Size()
+
+	sz += mtr.Rsvd48.Size()
+
+	sz += mtr.Rsvd49.Size()
+
+	sz += mtr.RdmaReqRxPktSeqErr.Size()
+
+	sz += mtr.RdmaReqRxRnrRetryErr.Size()
+
+	sz += mtr.RdmaReqRxRemoteAccessErr.Size()
+
+	sz += mtr.RdmaReqRxRemoteInvReqErr.Size()
+
+	sz += mtr.RdmaReqRxRemoteOperErr.Size()
+
+	sz += mtr.RdmaReqRxImpliedNakSeqErr.Size()
+
+	sz += mtr.RdmaReqRxCqeErr.Size()
+
+	sz += mtr.RdmaReqRxCqeFlushErr.Size()
+
+	sz += mtr.RdmaReqRxDupResponses.Size()
+
+	sz += mtr.RdmaReqRxInvalidPackets.Size()
+
+	sz += mtr.RdmaReqTxLocalAccessErr.Size()
+
+	sz += mtr.RdmaReqTxLocalOperErr.Size()
+
+	sz += mtr.RdmaReqTxMemoryMgmtErr.Size()
+
+	sz += mtr.Rsvd52.Size()
+
+	sz += mtr.Rsvd53.Size()
+
+	sz += mtr.Rsvd54.Size()
+
+	sz += mtr.RdmaRespRxDupRequests.Size()
+
+	sz += mtr.RdmaRespRxOutOfBuffer.Size()
+
+	sz += mtr.RdmaRespRxOutOfSeqPkts.Size()
+
+	sz += mtr.RdmaRespRxCqeErr.Size()
+
+	sz += mtr.RdmaRespRxCqeFlushErr.Size()
+
+	sz += mtr.RdmaRespRxLocalLenErr.Size()
+
+	sz += mtr.RdmaRespRxInvRequestErr.Size()
+
+	sz += mtr.RdmaRespRxLocalQpOperErr.Size()
+
+	sz += mtr.RdmaRespRxOutOfAtomicResource.Size()
+
+	sz += mtr.RdmaRespTxPktSeqErr.Size()
+
+	sz += mtr.RdmaRespTxRemoteInvReqErr.Size()
+
+	sz += mtr.RdmaRespTxRemoteAccessErr.Size()
+
+	sz += mtr.RdmaRespTxRemoteOperErr.Size()
+
+	sz += mtr.RdmaRespTxRnrRetryErr.Size()
+
+	sz += mtr.Rsvd57.Size()
+
+	sz += mtr.Rsvd58.Size()
 
 	return sz
 }
@@ -466,23 +690,20 @@ func (mtr *LifMetrics) Unmarshal() error {
 	mtr.XRsvd__12 = mtr.metrics.GetCounter(offset)
 	offset += mtr.XRsvd__12.Size()
 
-	mtr.RxRss = mtr.metrics.GetCounter(offset)
-	offset += mtr.RxRss.Size()
+	mtr.TxRdmaUcastBytes = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxRdmaUcastBytes.Size()
 
-	mtr.RxCsumComplete = mtr.metrics.GetCounter(offset)
-	offset += mtr.RxCsumComplete.Size()
+	mtr.TxRdmaUcastPackets = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxRdmaUcastPackets.Size()
 
-	mtr.RxIpBad = mtr.metrics.GetCounter(offset)
-	offset += mtr.RxIpBad.Size()
+	mtr.TxRdmaMcastBytes = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxRdmaMcastBytes.Size()
 
-	mtr.RxTcpBad = mtr.metrics.GetCounter(offset)
-	offset += mtr.RxTcpBad.Size()
+	mtr.TxRdmaMcastPackets = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxRdmaMcastPackets.Size()
 
-	mtr.RxUdpBad = mtr.metrics.GetCounter(offset)
-	offset += mtr.RxUdpBad.Size()
-
-	mtr.RxVlanStrip = mtr.metrics.GetCounter(offset)
-	offset += mtr.RxVlanStrip.Size()
+	mtr.TxRdmaCnpPackets = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxRdmaCnpPackets.Size()
 
 	mtr.XRsvd__13 = mtr.metrics.GetCounter(offset)
 	offset += mtr.XRsvd__13.Size()
@@ -490,53 +711,224 @@ func (mtr *LifMetrics) Unmarshal() error {
 	mtr.XRsvd__14 = mtr.metrics.GetCounter(offset)
 	offset += mtr.XRsvd__14.Size()
 
-	mtr.TxCsumHw = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxCsumHw.Size()
-
-	mtr.TxCsumHwInner = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxCsumHwInner.Size()
-
-	mtr.TxVlanInsert = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxVlanInsert.Size()
-
-	mtr.TxSg = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxSg.Size()
-
-	mtr.TxTsoSg = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxTsoSg.Size()
-
-	mtr.TxTsoSop = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxTsoSop.Size()
-
-	mtr.TxTsoEop = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxTsoEop.Size()
-
 	mtr.XRsvd__15 = mtr.metrics.GetCounter(offset)
 	offset += mtr.XRsvd__15.Size()
 
-	mtr.TxDescOpcInvalid = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxDescOpcInvalid.Size()
+	mtr.RxRdmaUcastBytes = mtr.metrics.GetCounter(offset)
+	offset += mtr.RxRdmaUcastBytes.Size()
 
-	mtr.TxDescOpcCsumNone = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxDescOpcCsumNone.Size()
+	mtr.RxRdmaUcastPackets = mtr.metrics.GetCounter(offset)
+	offset += mtr.RxRdmaUcastPackets.Size()
 
-	mtr.TxDescOpcCsumPartial = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxDescOpcCsumPartial.Size()
+	mtr.RxRdmaMcastBytes = mtr.metrics.GetCounter(offset)
+	offset += mtr.RxRdmaMcastBytes.Size()
 
-	mtr.TxDescOpcCsumHw = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxDescOpcCsumHw.Size()
+	mtr.RxRdmaMcastPackets = mtr.metrics.GetCounter(offset)
+	offset += mtr.RxRdmaMcastPackets.Size()
 
-	mtr.TxDescOpcCsumTso = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxDescOpcCsumTso.Size()
+	mtr.RxRdmaCnpPackets = mtr.metrics.GetCounter(offset)
+	offset += mtr.RxRdmaCnpPackets.Size()
 
-	mtr.XRsvd__16 = mtr.metrics.GetCounter(offset)
-	offset += mtr.XRsvd__16.Size()
+	mtr.RxRdmaEcnPackets = mtr.metrics.GetCounter(offset)
+	offset += mtr.RxRdmaEcnPackets.Size()
 
-	mtr.XRsvd__17 = mtr.metrics.GetCounter(offset)
-	offset += mtr.XRsvd__17.Size()
+	mtr.Rsvd16 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd16.Size()
 
-	mtr.XRsvd__18 = mtr.metrics.GetCounter(offset)
-	offset += mtr.XRsvd__18.Size()
+	mtr.Rsvd17 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd17.Size()
+
+	mtr.Rsvd18 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd18.Size()
+
+	mtr.Rsvd19 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd19.Size()
+
+	mtr.Rsvd20 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd20.Size()
+
+	mtr.Rsvd21 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd21.Size()
+
+	mtr.Rsvd22 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd22.Size()
+
+	mtr.Rsvd23 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd23.Size()
+
+	mtr.Rsvd24 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd24.Size()
+
+	mtr.Rsvd25 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd25.Size()
+
+	mtr.Rsvd26 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd26.Size()
+
+	mtr.Rsvd27 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd27.Size()
+
+	mtr.Rsvd28 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd28.Size()
+
+	mtr.Rsvd29 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd29.Size()
+
+	mtr.Rsvd30 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd30.Size()
+
+	mtr.Rsvd31 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd31.Size()
+
+	mtr.Rsvd32 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd32.Size()
+
+	mtr.Rsvd33 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd33.Size()
+
+	mtr.Rsvd34 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd34.Size()
+
+	mtr.Rsvd35 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd35.Size()
+
+	mtr.Rsvd36 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd36.Size()
+
+	mtr.Rsvd37 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd37.Size()
+
+	mtr.Rsvd38 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd38.Size()
+
+	mtr.Rsvd39 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd39.Size()
+
+	mtr.Rsvd40 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd40.Size()
+
+	mtr.Rsvd41 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd41.Size()
+
+	mtr.Rsvd42 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd42.Size()
+
+	mtr.Rsvd43 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd43.Size()
+
+	mtr.Rsvd44 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd44.Size()
+
+	mtr.Rsvd45 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd45.Size()
+
+	mtr.Rsvd46 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd46.Size()
+
+	mtr.Rsvd47 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd47.Size()
+
+	mtr.Rsvd48 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd48.Size()
+
+	mtr.Rsvd49 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd49.Size()
+
+	mtr.RdmaReqRxPktSeqErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaReqRxPktSeqErr.Size()
+
+	mtr.RdmaReqRxRnrRetryErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaReqRxRnrRetryErr.Size()
+
+	mtr.RdmaReqRxRemoteAccessErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaReqRxRemoteAccessErr.Size()
+
+	mtr.RdmaReqRxRemoteInvReqErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaReqRxRemoteInvReqErr.Size()
+
+	mtr.RdmaReqRxRemoteOperErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaReqRxRemoteOperErr.Size()
+
+	mtr.RdmaReqRxImpliedNakSeqErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaReqRxImpliedNakSeqErr.Size()
+
+	mtr.RdmaReqRxCqeErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaReqRxCqeErr.Size()
+
+	mtr.RdmaReqRxCqeFlushErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaReqRxCqeFlushErr.Size()
+
+	mtr.RdmaReqRxDupResponses = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaReqRxDupResponses.Size()
+
+	mtr.RdmaReqRxInvalidPackets = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaReqRxInvalidPackets.Size()
+
+	mtr.RdmaReqTxLocalAccessErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaReqTxLocalAccessErr.Size()
+
+	mtr.RdmaReqTxLocalOperErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaReqTxLocalOperErr.Size()
+
+	mtr.RdmaReqTxMemoryMgmtErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaReqTxMemoryMgmtErr.Size()
+
+	mtr.Rsvd52 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd52.Size()
+
+	mtr.Rsvd53 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd53.Size()
+
+	mtr.Rsvd54 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd54.Size()
+
+	mtr.RdmaRespRxDupRequests = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaRespRxDupRequests.Size()
+
+	mtr.RdmaRespRxOutOfBuffer = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaRespRxOutOfBuffer.Size()
+
+	mtr.RdmaRespRxOutOfSeqPkts = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaRespRxOutOfSeqPkts.Size()
+
+	mtr.RdmaRespRxCqeErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaRespRxCqeErr.Size()
+
+	mtr.RdmaRespRxCqeFlushErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaRespRxCqeFlushErr.Size()
+
+	mtr.RdmaRespRxLocalLenErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaRespRxLocalLenErr.Size()
+
+	mtr.RdmaRespRxInvRequestErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaRespRxInvRequestErr.Size()
+
+	mtr.RdmaRespRxLocalQpOperErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaRespRxLocalQpOperErr.Size()
+
+	mtr.RdmaRespRxOutOfAtomicResource = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaRespRxOutOfAtomicResource.Size()
+
+	mtr.RdmaRespTxPktSeqErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaRespTxPktSeqErr.Size()
+
+	mtr.RdmaRespTxRemoteInvReqErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaRespTxRemoteInvReqErr.Size()
+
+	mtr.RdmaRespTxRemoteAccessErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaRespTxRemoteAccessErr.Size()
+
+	mtr.RdmaRespTxRemoteOperErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaRespTxRemoteOperErr.Size()
+
+	mtr.RdmaRespTxRnrRetryErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RdmaRespTxRnrRetryErr.Size()
+
+	mtr.Rsvd57 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd57.Size()
+
+	mtr.Rsvd58 = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rsvd58.Size()
 
 	return nil
 }
@@ -785,35 +1177,30 @@ func (mtr *LifMetrics) getOffset(fldName string) int {
 	}
 	offset += mtr.XRsvd__12.Size()
 
-	if fldName == "RxRss" {
+	if fldName == "TxRdmaUcastBytes" {
 		return offset
 	}
-	offset += mtr.RxRss.Size()
+	offset += mtr.TxRdmaUcastBytes.Size()
 
-	if fldName == "RxCsumComplete" {
+	if fldName == "TxRdmaUcastPackets" {
 		return offset
 	}
-	offset += mtr.RxCsumComplete.Size()
+	offset += mtr.TxRdmaUcastPackets.Size()
 
-	if fldName == "RxIpBad" {
+	if fldName == "TxRdmaMcastBytes" {
 		return offset
 	}
-	offset += mtr.RxIpBad.Size()
+	offset += mtr.TxRdmaMcastBytes.Size()
 
-	if fldName == "RxTcpBad" {
+	if fldName == "TxRdmaMcastPackets" {
 		return offset
 	}
-	offset += mtr.RxTcpBad.Size()
+	offset += mtr.TxRdmaMcastPackets.Size()
 
-	if fldName == "RxUdpBad" {
+	if fldName == "TxRdmaCnpPackets" {
 		return offset
 	}
-	offset += mtr.RxUdpBad.Size()
-
-	if fldName == "RxVlanStrip" {
-		return offset
-	}
-	offset += mtr.RxVlanStrip.Size()
+	offset += mtr.TxRdmaCnpPackets.Size()
 
 	if fldName == "XRsvd__13" {
 		return offset
@@ -825,85 +1212,370 @@ func (mtr *LifMetrics) getOffset(fldName string) int {
 	}
 	offset += mtr.XRsvd__14.Size()
 
-	if fldName == "TxCsumHw" {
-		return offset
-	}
-	offset += mtr.TxCsumHw.Size()
-
-	if fldName == "TxCsumHwInner" {
-		return offset
-	}
-	offset += mtr.TxCsumHwInner.Size()
-
-	if fldName == "TxVlanInsert" {
-		return offset
-	}
-	offset += mtr.TxVlanInsert.Size()
-
-	if fldName == "TxSg" {
-		return offset
-	}
-	offset += mtr.TxSg.Size()
-
-	if fldName == "TxTsoSg" {
-		return offset
-	}
-	offset += mtr.TxTsoSg.Size()
-
-	if fldName == "TxTsoSop" {
-		return offset
-	}
-	offset += mtr.TxTsoSop.Size()
-
-	if fldName == "TxTsoEop" {
-		return offset
-	}
-	offset += mtr.TxTsoEop.Size()
-
 	if fldName == "XRsvd__15" {
 		return offset
 	}
 	offset += mtr.XRsvd__15.Size()
 
-	if fldName == "TxDescOpcInvalid" {
+	if fldName == "RxRdmaUcastBytes" {
 		return offset
 	}
-	offset += mtr.TxDescOpcInvalid.Size()
+	offset += mtr.RxRdmaUcastBytes.Size()
 
-	if fldName == "TxDescOpcCsumNone" {
+	if fldName == "RxRdmaUcastPackets" {
 		return offset
 	}
-	offset += mtr.TxDescOpcCsumNone.Size()
+	offset += mtr.RxRdmaUcastPackets.Size()
 
-	if fldName == "TxDescOpcCsumPartial" {
+	if fldName == "RxRdmaMcastBytes" {
 		return offset
 	}
-	offset += mtr.TxDescOpcCsumPartial.Size()
+	offset += mtr.RxRdmaMcastBytes.Size()
 
-	if fldName == "TxDescOpcCsumHw" {
+	if fldName == "RxRdmaMcastPackets" {
 		return offset
 	}
-	offset += mtr.TxDescOpcCsumHw.Size()
+	offset += mtr.RxRdmaMcastPackets.Size()
 
-	if fldName == "TxDescOpcCsumTso" {
+	if fldName == "RxRdmaCnpPackets" {
 		return offset
 	}
-	offset += mtr.TxDescOpcCsumTso.Size()
+	offset += mtr.RxRdmaCnpPackets.Size()
 
-	if fldName == "XRsvd__16" {
+	if fldName == "RxRdmaEcnPackets" {
 		return offset
 	}
-	offset += mtr.XRsvd__16.Size()
+	offset += mtr.RxRdmaEcnPackets.Size()
 
-	if fldName == "XRsvd__17" {
+	if fldName == "Rsvd16" {
 		return offset
 	}
-	offset += mtr.XRsvd__17.Size()
+	offset += mtr.Rsvd16.Size()
 
-	if fldName == "XRsvd__18" {
+	if fldName == "Rsvd17" {
 		return offset
 	}
-	offset += mtr.XRsvd__18.Size()
+	offset += mtr.Rsvd17.Size()
+
+	if fldName == "Rsvd18" {
+		return offset
+	}
+	offset += mtr.Rsvd18.Size()
+
+	if fldName == "Rsvd19" {
+		return offset
+	}
+	offset += mtr.Rsvd19.Size()
+
+	if fldName == "Rsvd20" {
+		return offset
+	}
+	offset += mtr.Rsvd20.Size()
+
+	if fldName == "Rsvd21" {
+		return offset
+	}
+	offset += mtr.Rsvd21.Size()
+
+	if fldName == "Rsvd22" {
+		return offset
+	}
+	offset += mtr.Rsvd22.Size()
+
+	if fldName == "Rsvd23" {
+		return offset
+	}
+	offset += mtr.Rsvd23.Size()
+
+	if fldName == "Rsvd24" {
+		return offset
+	}
+	offset += mtr.Rsvd24.Size()
+
+	if fldName == "Rsvd25" {
+		return offset
+	}
+	offset += mtr.Rsvd25.Size()
+
+	if fldName == "Rsvd26" {
+		return offset
+	}
+	offset += mtr.Rsvd26.Size()
+
+	if fldName == "Rsvd27" {
+		return offset
+	}
+	offset += mtr.Rsvd27.Size()
+
+	if fldName == "Rsvd28" {
+		return offset
+	}
+	offset += mtr.Rsvd28.Size()
+
+	if fldName == "Rsvd29" {
+		return offset
+	}
+	offset += mtr.Rsvd29.Size()
+
+	if fldName == "Rsvd30" {
+		return offset
+	}
+	offset += mtr.Rsvd30.Size()
+
+	if fldName == "Rsvd31" {
+		return offset
+	}
+	offset += mtr.Rsvd31.Size()
+
+	if fldName == "Rsvd32" {
+		return offset
+	}
+	offset += mtr.Rsvd32.Size()
+
+	if fldName == "Rsvd33" {
+		return offset
+	}
+	offset += mtr.Rsvd33.Size()
+
+	if fldName == "Rsvd34" {
+		return offset
+	}
+	offset += mtr.Rsvd34.Size()
+
+	if fldName == "Rsvd35" {
+		return offset
+	}
+	offset += mtr.Rsvd35.Size()
+
+	if fldName == "Rsvd36" {
+		return offset
+	}
+	offset += mtr.Rsvd36.Size()
+
+	if fldName == "Rsvd37" {
+		return offset
+	}
+	offset += mtr.Rsvd37.Size()
+
+	if fldName == "Rsvd38" {
+		return offset
+	}
+	offset += mtr.Rsvd38.Size()
+
+	if fldName == "Rsvd39" {
+		return offset
+	}
+	offset += mtr.Rsvd39.Size()
+
+	if fldName == "Rsvd40" {
+		return offset
+	}
+	offset += mtr.Rsvd40.Size()
+
+	if fldName == "Rsvd41" {
+		return offset
+	}
+	offset += mtr.Rsvd41.Size()
+
+	if fldName == "Rsvd42" {
+		return offset
+	}
+	offset += mtr.Rsvd42.Size()
+
+	if fldName == "Rsvd43" {
+		return offset
+	}
+	offset += mtr.Rsvd43.Size()
+
+	if fldName == "Rsvd44" {
+		return offset
+	}
+	offset += mtr.Rsvd44.Size()
+
+	if fldName == "Rsvd45" {
+		return offset
+	}
+	offset += mtr.Rsvd45.Size()
+
+	if fldName == "Rsvd46" {
+		return offset
+	}
+	offset += mtr.Rsvd46.Size()
+
+	if fldName == "Rsvd47" {
+		return offset
+	}
+	offset += mtr.Rsvd47.Size()
+
+	if fldName == "Rsvd48" {
+		return offset
+	}
+	offset += mtr.Rsvd48.Size()
+
+	if fldName == "Rsvd49" {
+		return offset
+	}
+	offset += mtr.Rsvd49.Size()
+
+	if fldName == "RdmaReqRxPktSeqErr" {
+		return offset
+	}
+	offset += mtr.RdmaReqRxPktSeqErr.Size()
+
+	if fldName == "RdmaReqRxRnrRetryErr" {
+		return offset
+	}
+	offset += mtr.RdmaReqRxRnrRetryErr.Size()
+
+	if fldName == "RdmaReqRxRemoteAccessErr" {
+		return offset
+	}
+	offset += mtr.RdmaReqRxRemoteAccessErr.Size()
+
+	if fldName == "RdmaReqRxRemoteInvReqErr" {
+		return offset
+	}
+	offset += mtr.RdmaReqRxRemoteInvReqErr.Size()
+
+	if fldName == "RdmaReqRxRemoteOperErr" {
+		return offset
+	}
+	offset += mtr.RdmaReqRxRemoteOperErr.Size()
+
+	if fldName == "RdmaReqRxImpliedNakSeqErr" {
+		return offset
+	}
+	offset += mtr.RdmaReqRxImpliedNakSeqErr.Size()
+
+	if fldName == "RdmaReqRxCqeErr" {
+		return offset
+	}
+	offset += mtr.RdmaReqRxCqeErr.Size()
+
+	if fldName == "RdmaReqRxCqeFlushErr" {
+		return offset
+	}
+	offset += mtr.RdmaReqRxCqeFlushErr.Size()
+
+	if fldName == "RdmaReqRxDupResponses" {
+		return offset
+	}
+	offset += mtr.RdmaReqRxDupResponses.Size()
+
+	if fldName == "RdmaReqRxInvalidPackets" {
+		return offset
+	}
+	offset += mtr.RdmaReqRxInvalidPackets.Size()
+
+	if fldName == "RdmaReqTxLocalAccessErr" {
+		return offset
+	}
+	offset += mtr.RdmaReqTxLocalAccessErr.Size()
+
+	if fldName == "RdmaReqTxLocalOperErr" {
+		return offset
+	}
+	offset += mtr.RdmaReqTxLocalOperErr.Size()
+
+	if fldName == "RdmaReqTxMemoryMgmtErr" {
+		return offset
+	}
+	offset += mtr.RdmaReqTxMemoryMgmtErr.Size()
+
+	if fldName == "Rsvd52" {
+		return offset
+	}
+	offset += mtr.Rsvd52.Size()
+
+	if fldName == "Rsvd53" {
+		return offset
+	}
+	offset += mtr.Rsvd53.Size()
+
+	if fldName == "Rsvd54" {
+		return offset
+	}
+	offset += mtr.Rsvd54.Size()
+
+	if fldName == "RdmaRespRxDupRequests" {
+		return offset
+	}
+	offset += mtr.RdmaRespRxDupRequests.Size()
+
+	if fldName == "RdmaRespRxOutOfBuffer" {
+		return offset
+	}
+	offset += mtr.RdmaRespRxOutOfBuffer.Size()
+
+	if fldName == "RdmaRespRxOutOfSeqPkts" {
+		return offset
+	}
+	offset += mtr.RdmaRespRxOutOfSeqPkts.Size()
+
+	if fldName == "RdmaRespRxCqeErr" {
+		return offset
+	}
+	offset += mtr.RdmaRespRxCqeErr.Size()
+
+	if fldName == "RdmaRespRxCqeFlushErr" {
+		return offset
+	}
+	offset += mtr.RdmaRespRxCqeFlushErr.Size()
+
+	if fldName == "RdmaRespRxLocalLenErr" {
+		return offset
+	}
+	offset += mtr.RdmaRespRxLocalLenErr.Size()
+
+	if fldName == "RdmaRespRxInvRequestErr" {
+		return offset
+	}
+	offset += mtr.RdmaRespRxInvRequestErr.Size()
+
+	if fldName == "RdmaRespRxLocalQpOperErr" {
+		return offset
+	}
+	offset += mtr.RdmaRespRxLocalQpOperErr.Size()
+
+	if fldName == "RdmaRespRxOutOfAtomicResource" {
+		return offset
+	}
+	offset += mtr.RdmaRespRxOutOfAtomicResource.Size()
+
+	if fldName == "RdmaRespTxPktSeqErr" {
+		return offset
+	}
+	offset += mtr.RdmaRespTxPktSeqErr.Size()
+
+	if fldName == "RdmaRespTxRemoteInvReqErr" {
+		return offset
+	}
+	offset += mtr.RdmaRespTxRemoteInvReqErr.Size()
+
+	if fldName == "RdmaRespTxRemoteAccessErr" {
+		return offset
+	}
+	offset += mtr.RdmaRespTxRemoteAccessErr.Size()
+
+	if fldName == "RdmaRespTxRemoteOperErr" {
+		return offset
+	}
+	offset += mtr.RdmaRespTxRemoteOperErr.Size()
+
+	if fldName == "RdmaRespTxRnrRetryErr" {
+		return offset
+	}
+	offset += mtr.RdmaRespTxRnrRetryErr.Size()
+
+	if fldName == "Rsvd57" {
+		return offset
+	}
+	offset += mtr.Rsvd57.Size()
+
+	if fldName == "Rsvd58" {
+		return offset
+	}
+	offset += mtr.Rsvd58.Size()
 
 	return offset
 }
@@ -1196,39 +1868,33 @@ func (mtr *LifMetrics) SetXRsvd__12(val metrics.Counter) error {
 	return nil
 }
 
-// SetRxRss sets cunter in shared memory
-func (mtr *LifMetrics) SetRxRss(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RxRss"))
+// SetTxRdmaUcastBytes sets cunter in shared memory
+func (mtr *LifMetrics) SetTxRdmaUcastBytes(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxRdmaUcastBytes"))
 	return nil
 }
 
-// SetRxCsumComplete sets cunter in shared memory
-func (mtr *LifMetrics) SetRxCsumComplete(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RxCsumComplete"))
+// SetTxRdmaUcastPackets sets cunter in shared memory
+func (mtr *LifMetrics) SetTxRdmaUcastPackets(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxRdmaUcastPackets"))
 	return nil
 }
 
-// SetRxIpBad sets cunter in shared memory
-func (mtr *LifMetrics) SetRxIpBad(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RxIpBad"))
+// SetTxRdmaMcastBytes sets cunter in shared memory
+func (mtr *LifMetrics) SetTxRdmaMcastBytes(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxRdmaMcastBytes"))
 	return nil
 }
 
-// SetRxTcpBad sets cunter in shared memory
-func (mtr *LifMetrics) SetRxTcpBad(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RxTcpBad"))
+// SetTxRdmaMcastPackets sets cunter in shared memory
+func (mtr *LifMetrics) SetTxRdmaMcastPackets(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxRdmaMcastPackets"))
 	return nil
 }
 
-// SetRxUdpBad sets cunter in shared memory
-func (mtr *LifMetrics) SetRxUdpBad(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RxUdpBad"))
-	return nil
-}
-
-// SetRxVlanStrip sets cunter in shared memory
-func (mtr *LifMetrics) SetRxVlanStrip(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RxVlanStrip"))
+// SetTxRdmaCnpPackets sets cunter in shared memory
+func (mtr *LifMetrics) SetTxRdmaCnpPackets(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxRdmaCnpPackets"))
 	return nil
 }
 
@@ -1244,99 +1910,441 @@ func (mtr *LifMetrics) SetXRsvd__14(val metrics.Counter) error {
 	return nil
 }
 
-// SetTxCsumHw sets cunter in shared memory
-func (mtr *LifMetrics) SetTxCsumHw(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxCsumHw"))
-	return nil
-}
-
-// SetTxCsumHwInner sets cunter in shared memory
-func (mtr *LifMetrics) SetTxCsumHwInner(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxCsumHwInner"))
-	return nil
-}
-
-// SetTxVlanInsert sets cunter in shared memory
-func (mtr *LifMetrics) SetTxVlanInsert(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxVlanInsert"))
-	return nil
-}
-
-// SetTxSg sets cunter in shared memory
-func (mtr *LifMetrics) SetTxSg(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxSg"))
-	return nil
-}
-
-// SetTxTsoSg sets cunter in shared memory
-func (mtr *LifMetrics) SetTxTsoSg(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxTsoSg"))
-	return nil
-}
-
-// SetTxTsoSop sets cunter in shared memory
-func (mtr *LifMetrics) SetTxTsoSop(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxTsoSop"))
-	return nil
-}
-
-// SetTxTsoEop sets cunter in shared memory
-func (mtr *LifMetrics) SetTxTsoEop(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxTsoEop"))
-	return nil
-}
-
 // SetXRsvd__15 sets cunter in shared memory
 func (mtr *LifMetrics) SetXRsvd__15(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("XRsvd__15"))
 	return nil
 }
 
-// SetTxDescOpcInvalid sets cunter in shared memory
-func (mtr *LifMetrics) SetTxDescOpcInvalid(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxDescOpcInvalid"))
+// SetRxRdmaUcastBytes sets cunter in shared memory
+func (mtr *LifMetrics) SetRxRdmaUcastBytes(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RxRdmaUcastBytes"))
 	return nil
 }
 
-// SetTxDescOpcCsumNone sets cunter in shared memory
-func (mtr *LifMetrics) SetTxDescOpcCsumNone(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxDescOpcCsumNone"))
+// SetRxRdmaUcastPackets sets cunter in shared memory
+func (mtr *LifMetrics) SetRxRdmaUcastPackets(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RxRdmaUcastPackets"))
 	return nil
 }
 
-// SetTxDescOpcCsumPartial sets cunter in shared memory
-func (mtr *LifMetrics) SetTxDescOpcCsumPartial(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxDescOpcCsumPartial"))
+// SetRxRdmaMcastBytes sets cunter in shared memory
+func (mtr *LifMetrics) SetRxRdmaMcastBytes(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RxRdmaMcastBytes"))
 	return nil
 }
 
-// SetTxDescOpcCsumHw sets cunter in shared memory
-func (mtr *LifMetrics) SetTxDescOpcCsumHw(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxDescOpcCsumHw"))
+// SetRxRdmaMcastPackets sets cunter in shared memory
+func (mtr *LifMetrics) SetRxRdmaMcastPackets(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RxRdmaMcastPackets"))
 	return nil
 }
 
-// SetTxDescOpcCsumTso sets cunter in shared memory
-func (mtr *LifMetrics) SetTxDescOpcCsumTso(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxDescOpcCsumTso"))
+// SetRxRdmaCnpPackets sets cunter in shared memory
+func (mtr *LifMetrics) SetRxRdmaCnpPackets(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RxRdmaCnpPackets"))
 	return nil
 }
 
-// SetXRsvd__16 sets cunter in shared memory
-func (mtr *LifMetrics) SetXRsvd__16(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("XRsvd__16"))
+// SetRxRdmaEcnPackets sets cunter in shared memory
+func (mtr *LifMetrics) SetRxRdmaEcnPackets(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RxRdmaEcnPackets"))
 	return nil
 }
 
-// SetXRsvd__17 sets cunter in shared memory
-func (mtr *LifMetrics) SetXRsvd__17(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("XRsvd__17"))
+// SetRsvd16 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd16(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd16"))
 	return nil
 }
 
-// SetXRsvd__18 sets cunter in shared memory
-func (mtr *LifMetrics) SetXRsvd__18(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("XRsvd__18"))
+// SetRsvd17 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd17(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd17"))
+	return nil
+}
+
+// SetRsvd18 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd18(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd18"))
+	return nil
+}
+
+// SetRsvd19 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd19(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd19"))
+	return nil
+}
+
+// SetRsvd20 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd20(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd20"))
+	return nil
+}
+
+// SetRsvd21 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd21(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd21"))
+	return nil
+}
+
+// SetRsvd22 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd22(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd22"))
+	return nil
+}
+
+// SetRsvd23 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd23(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd23"))
+	return nil
+}
+
+// SetRsvd24 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd24(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd24"))
+	return nil
+}
+
+// SetRsvd25 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd25(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd25"))
+	return nil
+}
+
+// SetRsvd26 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd26(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd26"))
+	return nil
+}
+
+// SetRsvd27 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd27(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd27"))
+	return nil
+}
+
+// SetRsvd28 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd28(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd28"))
+	return nil
+}
+
+// SetRsvd29 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd29(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd29"))
+	return nil
+}
+
+// SetRsvd30 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd30(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd30"))
+	return nil
+}
+
+// SetRsvd31 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd31(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd31"))
+	return nil
+}
+
+// SetRsvd32 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd32(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd32"))
+	return nil
+}
+
+// SetRsvd33 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd33(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd33"))
+	return nil
+}
+
+// SetRsvd34 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd34(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd34"))
+	return nil
+}
+
+// SetRsvd35 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd35(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd35"))
+	return nil
+}
+
+// SetRsvd36 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd36(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd36"))
+	return nil
+}
+
+// SetRsvd37 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd37(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd37"))
+	return nil
+}
+
+// SetRsvd38 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd38(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd38"))
+	return nil
+}
+
+// SetRsvd39 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd39(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd39"))
+	return nil
+}
+
+// SetRsvd40 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd40(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd40"))
+	return nil
+}
+
+// SetRsvd41 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd41(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd41"))
+	return nil
+}
+
+// SetRsvd42 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd42(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd42"))
+	return nil
+}
+
+// SetRsvd43 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd43(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd43"))
+	return nil
+}
+
+// SetRsvd44 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd44(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd44"))
+	return nil
+}
+
+// SetRsvd45 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd45(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd45"))
+	return nil
+}
+
+// SetRsvd46 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd46(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd46"))
+	return nil
+}
+
+// SetRsvd47 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd47(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd47"))
+	return nil
+}
+
+// SetRsvd48 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd48(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd48"))
+	return nil
+}
+
+// SetRsvd49 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd49(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd49"))
+	return nil
+}
+
+// SetRdmaReqRxPktSeqErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaReqRxPktSeqErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaReqRxPktSeqErr"))
+	return nil
+}
+
+// SetRdmaReqRxRnrRetryErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaReqRxRnrRetryErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaReqRxRnrRetryErr"))
+	return nil
+}
+
+// SetRdmaReqRxRemoteAccessErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaReqRxRemoteAccessErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaReqRxRemoteAccessErr"))
+	return nil
+}
+
+// SetRdmaReqRxRemoteInvReqErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaReqRxRemoteInvReqErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaReqRxRemoteInvReqErr"))
+	return nil
+}
+
+// SetRdmaReqRxRemoteOperErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaReqRxRemoteOperErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaReqRxRemoteOperErr"))
+	return nil
+}
+
+// SetRdmaReqRxImpliedNakSeqErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaReqRxImpliedNakSeqErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaReqRxImpliedNakSeqErr"))
+	return nil
+}
+
+// SetRdmaReqRxCqeErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaReqRxCqeErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaReqRxCqeErr"))
+	return nil
+}
+
+// SetRdmaReqRxCqeFlushErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaReqRxCqeFlushErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaReqRxCqeFlushErr"))
+	return nil
+}
+
+// SetRdmaReqRxDupResponses sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaReqRxDupResponses(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaReqRxDupResponses"))
+	return nil
+}
+
+// SetRdmaReqRxInvalidPackets sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaReqRxInvalidPackets(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaReqRxInvalidPackets"))
+	return nil
+}
+
+// SetRdmaReqTxLocalAccessErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaReqTxLocalAccessErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaReqTxLocalAccessErr"))
+	return nil
+}
+
+// SetRdmaReqTxLocalOperErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaReqTxLocalOperErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaReqTxLocalOperErr"))
+	return nil
+}
+
+// SetRdmaReqTxMemoryMgmtErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaReqTxMemoryMgmtErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaReqTxMemoryMgmtErr"))
+	return nil
+}
+
+// SetRsvd52 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd52(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd52"))
+	return nil
+}
+
+// SetRsvd53 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd53(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd53"))
+	return nil
+}
+
+// SetRsvd54 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd54(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd54"))
+	return nil
+}
+
+// SetRdmaRespRxDupRequests sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaRespRxDupRequests(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaRespRxDupRequests"))
+	return nil
+}
+
+// SetRdmaRespRxOutOfBuffer sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaRespRxOutOfBuffer(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaRespRxOutOfBuffer"))
+	return nil
+}
+
+// SetRdmaRespRxOutOfSeqPkts sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaRespRxOutOfSeqPkts(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaRespRxOutOfSeqPkts"))
+	return nil
+}
+
+// SetRdmaRespRxCqeErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaRespRxCqeErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaRespRxCqeErr"))
+	return nil
+}
+
+// SetRdmaRespRxCqeFlushErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaRespRxCqeFlushErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaRespRxCqeFlushErr"))
+	return nil
+}
+
+// SetRdmaRespRxLocalLenErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaRespRxLocalLenErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaRespRxLocalLenErr"))
+	return nil
+}
+
+// SetRdmaRespRxInvRequestErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaRespRxInvRequestErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaRespRxInvRequestErr"))
+	return nil
+}
+
+// SetRdmaRespRxLocalQpOperErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaRespRxLocalQpOperErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaRespRxLocalQpOperErr"))
+	return nil
+}
+
+// SetRdmaRespRxOutOfAtomicResource sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaRespRxOutOfAtomicResource(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaRespRxOutOfAtomicResource"))
+	return nil
+}
+
+// SetRdmaRespTxPktSeqErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaRespTxPktSeqErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaRespTxPktSeqErr"))
+	return nil
+}
+
+// SetRdmaRespTxRemoteInvReqErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaRespTxRemoteInvReqErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaRespTxRemoteInvReqErr"))
+	return nil
+}
+
+// SetRdmaRespTxRemoteAccessErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaRespTxRemoteAccessErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaRespTxRemoteAccessErr"))
+	return nil
+}
+
+// SetRdmaRespTxRemoteOperErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaRespTxRemoteOperErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaRespTxRemoteOperErr"))
+	return nil
+}
+
+// SetRdmaRespTxRnrRetryErr sets cunter in shared memory
+func (mtr *LifMetrics) SetRdmaRespTxRnrRetryErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RdmaRespTxRnrRetryErr"))
+	return nil
+}
+
+// SetRsvd57 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd57(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd57"))
+	return nil
+}
+
+// SetRsvd58 sets cunter in shared memory
+func (mtr *LifMetrics) SetRsvd58(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd58"))
 	return nil
 }
 
