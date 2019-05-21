@@ -472,8 +472,6 @@ public:
         sdk::lib::memrev(v6entry.dst, v6_addr_dip.addr8, sizeof(ipv6_addr_t));
         v6entry.session_index = session_index++;
         FTLV6_SET_NHGROUP_INDEX(&v6entry, nexthop_group_index++);
-        v6entry.nexthop_group_index_sbit0_ebit6 = 1;
-        v6entry.nexthop_group_index_sbit7_ebit9 = 1;
 
         // reset nexthop_group_index if it reaches max
         if (nexthop_group_index == MAX_NEXTHOP_GROUP_INDEX) {
@@ -500,8 +498,6 @@ public:
         v4entry.dst = v4_addr_dip;
         v4entry.session_index = session_index++;
         FTLV4_SET_NHGROUP_INDEX(&v4entry, nexthop_group_index++);
-        v4entry.nexthop_group_index_sbit0_ebit6 = 1;
-        v4entry.nexthop_group_index_sbit7_ebit9 = 1;
 
         // reset nexthop_group_index if it reaches max
         if (nexthop_group_index == MAX_NEXTHOP_GROUP_INDEX) {
