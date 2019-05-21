@@ -160,7 +160,7 @@ describe('PenuitabsComponent', () => {
   it('should display tab headers and content corretly', () => {
     // Check can't change tab while in edit mode, but can change after
     component.startingIndex = 2;
-    const spy0 = spyOn(component.selectedIndexChange, 'emit');
+    let spy0 = spyOn(component.selectedIndexChange, 'emit');
     fixture.detectChanges();
 
     // waiting for the templates to render
@@ -173,6 +173,7 @@ describe('PenuitabsComponent', () => {
       expect(spy0).toHaveBeenCalledTimes(1);
       expect(spy0).toHaveBeenCalledWith(2);
       spy0.calls.reset();
+      spy0 = spyOn(component.selectedIndexChange, 'emit');
       const tabs = fixture.debugElement.queryAll(By.css('.mat-tab-label'));
       expect(tabs.length).toBe(3);
       let activeTab = fixture.debugElement.queryAll(By.css('.mat-tab-label-active'));

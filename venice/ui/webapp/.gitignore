@@ -5,6 +5,11 @@
 /tmp
 /out-tsc
 
+# yarn and yalc
+/.yalc
+yalc.lock
+yarn-error.log
+
 # dependencies
 /node_modules
 

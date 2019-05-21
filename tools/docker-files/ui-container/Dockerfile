@@ -1,26 +1,5 @@
 FROM node:10.15.3-stretch
-MAINTAINER "Ravi Gadde" <ravi@pensando.io>
-
-
-# Install npm packages
-RUN mkdir -p /usr/local/lib/web-app-framework/dist
-COPY web-app-framework/package.json /usr/local/lib/web-app-framework
-COPY web-app-framework/npm-shrinkwrap.json /usr/local/lib/web-app-framework
-COPY web-app-framework/dist/web-app-framework-0.0.0.tgz /usr/local/lib/web-app-framework/dist/web-app-framework-0.0.0.tgz
-RUN cd /usr/local/lib/web-app-framework && npm install && npm run replaceShrinkwrap
-RUN cd /usr/local/lib/web-app-framework && tar zcf node_modules.tgz node_modules
-
-RUN mkdir -p /usr/local/lib/webapp
-COPY webapp/package.json /usr/local/lib/webapp
-COPY webapp/npm-shrinkwrap.json /usr/local/lib/webapp
-RUN cd /usr/local/lib/webapp
-RUN cd /usr/local/lib/webapp && npm install  && npm run replaceShrinkwrap && tar zcf node_modules.tgz node_modules
-
-RUN mkdir -p /usr/local/lib/venice-sdk
-COPY venice-sdk/package.json /usr/local/lib/venice-sdk
-COPY venice-sdk/npm-shrinkwrap.json /usr/local/lib/venice-sdk
-COPY venice-sdk/pensando-swagger-ts-generator-1.1.29.tgz /usr/local/lib/venice-sdk
-RUN cd /usr/local/lib/venice-sdk && npm install && npm run replaceShrinkwrap && tar zcf node_modules.tgz node_modules
+MAINTAINER "Rohan Sikdar" <rsikdar@pensando.io>
 
 # Install ng
 USER node
@@ -35,27 +14,80 @@ RUN ng -v
 USER root
 RUN chmod -R 777 /root
 
-FROM node:10.15.3-stretch
 ENV PATH=/home/node/.npm-global/bin:$PATH
 
-RUN mkdir -p /usr/local/lib/web-app-framework /usr/local/lib/webapp /usr/local/lib/venice-sdk /home/node/.npm-global /root/.npm && chmod -R 777 /root
+RUN mkdir -p /usr/local/lib/web-app-framework /usr/local/lib/webapp /usr/local/lib/venice-sdk /usr/local/lib/swagger-gen /home/node/.npm-global /root/.npm && chmod -R 777 /root
 RUN echo 'deb http://dl.google.com/linux/chrome/deb/ stable main' >> /etc/apt/sources.list
 RUN wget https://dl-ssl.google.com/linux/linux_signing_key.pub
 RUN apt-key add linux_signing_key.pub
 RUN apt-get update
+RUN apt-get install -y vim
 RUN apt-get install curl sudo google-chrome-stable  -y
 RUN ln /usr/bin/google-chrome-stable /usr/bin/chrome
 RUN chmod 755 /usr/bin/chrome
 
-COPY --from=0 /usr/local/lib/web-app-framework/node_modules.tgz /usr/local/lib/web-app-framework/node_modules.tgz
-COPY --from=0 /usr/local/lib/webapp/node_modules.tgz /usr/local/lib/webapp/node_modules.tgz
-COPY --from=0 /usr/local/lib/venice-sdk/node_modules.tgz /usr/local/lib/venice-sdk/node_modules.tgz
-COPY --from=0 /home/node/.npm-global /home/node/.npm-global
+RUN npm i -g yarn@1.16.0
+
+# setting offline mirror location
+RUN yarn config set yarn-offline-mirror /root/node-packages-offline-cache
+
+# Copying package.json files
+COPY venice-sdk/package.json /usr/local/lib/venice-sdk
+COPY web-app-framework/package.json /usr/local/lib/web-app-framework
+COPY webapp/package.json /usr/local/lib/webapp
+
+# Copying yarn.lock files
+COPY venice-sdk/yarn.lock /usr/local/lib/venice-sdk
+COPY web-app-framework/yarn.lock /usr/local/lib/web-app-framework
+COPY webapp/yarn.lock /usr/local/lib/webapp
+
+# Copy and extract ts generator so that its node modules will be stored in the offline mirror
+COPY venice-sdk/pensando-swagger-ts-generator-1.1.29.tgz /usr/local/lib/swagger-gen
+RUN cd /usr/local/lib/swagger-gen && yarn add file:pensando-swagger-ts-generator-1.1.29.tgz
+RUN rm -rf /usr/local/lib/swagger-gen 
+
+# yarn install packages to populate node_modules and offline mirror 
+# create tar and then remove node modules
+RUN cd /usr/local/lib/venice-sdk && yarn install --frozen-lockfile
+RUN cd /usr/local/lib/venice-sdk && tar zcf node_modules.tgz node_modules
+RUN rm -rf /usr/local/lib/venice-sdk/node_modules
+
+RUN cd /usr/local/lib/web-app-framework && yarn install --frozen-lockfile
+RUN cd /usr/local/lib/web-app-framework && tar zcf node_modules.tgz node_modules
+RUN rm -rf /usr/local/lib/web-app-framework/node_modules
+
+RUN cd /usr/local/lib/webapp && yarn --network-timeout 100000 install --frozen-lockfile
+
+# Adding in yalc, which helps manage web-app-framework dependency
+# When we add packages to yalc, it gets copied 
+# into .yalc folder and becomes globally accessible to other yarn repos.
+# Need to have non root write access to this folder in order to allow web-app-framework updates.
+RUN yarn config set prefix /root/.yarn
+# adding yarn's globally installed package location to path
+ENV PATH=/usr/local/go/bin:/opt/bin:/import/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.yarn/bin
+RUN yarn global add yalc
+
+# Adding web-app-framework to yalc so that webapp's node modules have all dependencies installed
+RUN mkdir -p /usr/local/lib/web-app-framework/dist
+COPY web-app-framework/dist/web-app-framework-0.0.0.tgz /usr/local/lib/web-app-framework/dist/web-app-framework-0.0.0.tgz
+RUN cd /usr/local/lib/web-app-framework/dist/ && tar zxf web-app-framework-0.0.0.tgz && cd package && yalc publish --private
+RUN cd /usr/local/lib/webapp && yalc add web-app-framework
+RUN cd /usr/local/lib/webapp && yarn install --offline
+
+RUN cd /usr/local/lib/webapp && tar zcf node_modules.tgz node_modules
+RUN rm -rf /usr/local/lib/webapp/node_modules
+
+# clean yarn cache to reduce container size
+RUN yarn cache clean
+
+# Removing yalc link so that during container runtime, web-app-framework updates
+# don't try to update the copy living in /usr/local/lib
+RUN cd /usr/local/lib/webapp && yalc remove web-app-framework
+
+RUN cp /usr/local/share/.yarnrc /root/
+
 WORKDIR /import/src/github.com/pensando/sw
-ENV PATH=/usr/local/go/bin:/opt/bin:/import/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/node/.npm-global/bin
 ENV HOME=/root
-ENV NPM_CONFIG_PREFIX=/root/.npm
 USER root
-RUN cd /usr/local/lib && npm install phantomjs-prebuilt@2.1.16
 RUN chmod -R 777 /root
 CMD make ui

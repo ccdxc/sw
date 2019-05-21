@@ -60,7 +60,7 @@ GOCMD = /usr/local/go/bin/go
 PENS_AGENTS ?= 50
 REGISTRY_URL ?= registry.test.pensando.io:5000
 BUILD_CONTAINER ?= pens-bld:v0.13
-UI_BUILD_CONTAINER ?= pens-ui-bld:v0.24
+UI_BUILD_CONTAINER ?= pens-ui-bld:v0.26
 DIND_CONTAINER ?= pens-dind:v0.3
 E2E_CONTAINER ?= pens-e2e:v0.4
 TARGETS ?= ws-tools pull-assets gen build
@@ -225,16 +225,23 @@ debug-container:
 
 ui-container-helper:
 	mkdir -p tools/docker-files/ui-container/web-app-framework/dist tools/docker-files/ui-container/venice-sdk
-	cp venice/ui/venice-sdk/pensando-swagger-ts-generator-1.1.29.tgz tools/docker-files/ui-container/venice-sdk/pensando-swagger-ts-generator-1.1.29.tgz
-	cp venice/ui/venice-sdk/npm-shrinkwrap.json tools/docker-files/ui-container/venice-sdk/npm-shrinkwrap.json
-	cp venice/ui/web-app-framework/npm-shrinkwrap.json tools/docker-files/ui-container/web-app-framework/npm-shrinkwrap.json
-	cp venice/ui/webapp/npm-shrinkwrap.json tools/docker-files/ui-container/webapp/npm-shrinkwrap.json
+	# copy local packages
 	cp venice/ui/web-app-framework/dist/web-app-framework-0.0.0.tgz tools/docker-files/ui-container/web-app-framework/dist/web-app-framework-0.0.0.tgz
+	cp venice/ui/venice-sdk/pensando-swagger-ts-generator-1.1.29.tgz tools/docker-files/ui-container/venice-sdk/pensando-swagger-ts-generator-1.1.29.tgz
+	# copy package.json and yarn.locks files, removing local packages
+	$(eval FILENAME := package.json)
+	cp venice/ui/web-app-framework/$(FILENAME) tools/docker-files/ui-container/web-app-framework/$(FILENAME)
+	sed '/@pensando/ d' venice/ui/venice-sdk/$(FILENAME) > tools/docker-files/ui-container/venice-sdk/$(FILENAME)
+	sed '/web-app-framework/ d' venice/ui/webapp/$(FILENAME) > tools/docker-files/ui-container/webapp/$(FILENAME)
+	$(eval FILENAME := yarn.lock)
+	cp venice/ui/web-app-framework/$(FILENAME) tools/docker-files/ui-container/web-app-framework/$(FILENAME)
+	sed '/@pensando/,/^$$/ d' venice/ui/venice-sdk/$(FILENAME) > tools/docker-files/ui-container/venice-sdk/$(FILENAME)
+	sed '/web-app-framework/,/^$$/ d' venice/ui/webapp/$(FILENAME) > tools/docker-files/ui-container/webapp/$(FILENAME)
 	@cd tools/docker-files/ui-container; docker build --squash -t ${REGISTRY_URL}/${UI_BUILD_CONTAINER} .
 
 # runs the ui-container in interactive mode
 ui-container:
-	docker run -it --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} bash; \
+	docker run -it --network none --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} bash; \
 
 # running as 'make container-compile UI_FRAMEWORK=1' will also force the UI-framework compilation
 container-compile:
@@ -250,14 +257,15 @@ container-compile:
 
 populate-web-app-framework-node-modules:
 	echo "+++ populating node_modules from cache for ui-framework";\
-	echo docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/web-app-framework/node_modules.tgz bin/web-app-framework-node-modules.tgz ' ; \
-	docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/web-app-framework/node_modules.tgz bin/web-app-framework-node-modules.tgz ' ; \
+	echo docker run --network none --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/web-app-framework/node_modules.tgz bin/web-app-framework-node-modules.tgz ' ; \
+	docker run --network none --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/web-app-framework/node_modules.tgz bin/web-app-framework-node-modules.tgz ' ; \
 	cd venice/ui/web-app-framework && tar zxf ../../../bin/web-app-framework-node-modules.tgz ;\
+	cd ../../.. ;\
 
 populate-webapp-node-modules:
 	echo "+++ populating node_modules from cache for ui";\
-	echo docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/venice-sdk/node_modules.tgz bin/venice-sdk-node-modules.tgz; cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
-	docker run --user $(shell id -u):$(shell id -g) -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/venice-sdk/node_modules.tgz bin/venice-sdk-node-modules.tgz; cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
+	echo docker run --network none --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/venice-sdk/node_modules.tgz bin/venice-sdk-node-modules.tgz; cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
+	docker run --network none --user $(shell id -u):$(shell id -g) -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/venice-sdk/node_modules.tgz bin/venice-sdk-node-modules.tgz; cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
 	cd venice/ui/webapp && tar zxf ../../../bin/webapp-node-modules.tgz ;\
 	cd ../venice-sdk && tar zxf ../../../bin/venice-sdk-node-modules.tgz ;\
 	cd ../../.. ;\
@@ -265,9 +273,10 @@ populate-webapp-node-modules:
 fixtures:
 	@if [ -z ${BYPASS_UI} ]; then \
 		if [ ! -z ${UI_FRAMEWORK} ]; then \
-			$(MAKE) populate-web-app-framework-node-modules ;\
+			if [ ! -f bin/web-app-node-modules.tgz ]; then \
+				$(MAKE) populate-web-app-framework-node-modules ;\
+			fi ; \
 			docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make ui-framework; \
-			cd ../../.. ;\
 		fi; \
 		if [ ! -f bin/webapp-node-modules.tgz ]; then \
 			$(MAKE) populate-webapp-node-modules ;\
@@ -391,7 +400,7 @@ e2e-test:
 	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/${E2E_CONFIG} -ginkgo.v -timeout 25m ${E2E_SEED}'
 
 e2e-ui:
-	docker run --privileged  -it -l pens --network pen-dind-net --user $(shell id -u):$(shell id -g) -v ${PWD}:/import/src/github.com/pensando/sw -e "E2E_BASE_URL=https://192.168.30.10:443" -w /import/src/github.com/pensando/sw/venice/ui/webapp ${REGISTRY_URL}/${UI_BUILD_CONTAINER} /bin/bash -c "npm run webdriver-update-ci ; ng e2e --configuration=e2e-ci  --webdriverUpdate=false --suite=all| tee  /import/src/github.com/pensando/sw/e2e-ui.log" 
+	docker run --privileged  -it -l pens --network pen-dind-net --user $(shell id -u):$(shell id -g) -v ${PWD}:/import/src/github.com/pensando/sw -e "E2E_BASE_URL=https://192.168.30.10:443" -w /import/src/github.com/pensando/sw/venice/ui/webapp ${REGISTRY_URL}/${UI_BUILD_CONTAINER} /bin/bash -c "yarn run webdriver-update-ci ; ng e2e --configuration=e2e-ci  --webdriverUpdate=false --suite=all| tee  /import/src/github.com/pensando/sw/e2e-ui.log" 
 
 	
 
@@ -456,18 +465,18 @@ palazzo:
 	go install -v github.com/pensando/sw/test/integ/palazzo/
 
 ui-framework:
-	npm version;
-	cd venice/ui/web-app-framework && npm run replaceShrinkwrap && npm run pack
+	yarn -v;
+	cd venice/ui/web-app-framework && yarn run pack && cd dist && yalc publish --private
+	cd venice/ui/webapp && yalc add web-app-framework
 
 ui-venice-sdk:
-	cd venice/ui/venice-sdk && npm install --prefer-offline true --prefer-cache pensando-swagger-ts-generator-1.1.29.tgz && npm run replaceShrinkwrap
+	cd venice/ui/venice-sdk && yarn add file:pensando-swagger-ts-generator-1.1.29.tgz --offline
 	cd venice/ui/venice-sdk && node swaggerGen.js
 
 ui:
-	npm version;
-	cd venice/ui/webapp && npm install --prefer-offline true --prefer-cache ../web-app-framework/dist/web-app-framework-0.0.0.tgz && npm run replaceShrinkwrap;
+	yarn -v;
 	$(MAKE) ui-venice-sdk
-	cd venice/ui/webapp && npm run build-prod && ./gzipDist.sh
+	cd venice/ui/webapp && yarn run build-prod && ./gzipDist.sh
 
 ui-autogen:
 	printf "\n+++++++++++++++++ Generating ui-autogen +++++++++++++++++\n";
@@ -475,24 +484,23 @@ ui-autogen:
 	docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make ui-venice-sdk; \
 
 ui-test-web-app-framework:
-	echo docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} bash -c "cd venice/ui/web-app-framework && npm run test-prod"; \
-	docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} bash -c "cd venice/ui/web-app-framework && ng version && npm run test-prod"; \
+	echo docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} bash -c "cd venice/ui/web-app-framework && yarn run test-prod"; \
+	docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} bash -c "cd venice/ui/web-app-framework && yarn run test-prod"; \
 
 ui-test-webapp:
-	echo docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} bash -c "cd venice/ui/webapp && npm run test-prod"; \
-	docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} bash -c "cd venice/ui/webapp && npm run test-prod"; \
+	echo docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} bash -c "cd venice/ui/webapp && yarn run test-prod"; \
+	docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} bash -c "cd venice/ui/webapp && yarn run test-prod"; \
 
 # runs all UI unit tests
 ui-unit-test-cover:
-	$(MAKE) populate-web-app-framework-node-modules
+	@BYPASS_DOCS=1 UI_FRAMEWORK=1	$(MAKE) fixtures
 	$(MAKE) ui-test-web-app-framework
-	@BYPASS_DOCS=1 UI_FRAMEWORK=""	$(MAKE) fixtures
 	$(MAKE) ui-test-webapp
 
 # ui-checks ensure that the UI code meets standards
 ui-checks:
-	echo docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} bash -c "cd venice/ui/webapp && npm run lint-ci"; \
-	docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} bash -c "cd venice/ui/webapp && npm run lint-ci"; \
+	echo docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} bash -c "cd venice/ui/webapp && yarn run lint-ci"; \
+	docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} bash -c "cd venice/ui/webapp && yarn run lint-ci"; \
 
 venice-image:
 	printf "\n+++++++++++++++++ start container-compile $$(date) +++++++++++++++++\n"
