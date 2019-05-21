@@ -28,6 +28,7 @@ enum class platform_type_t {
 enum class asic_type_t {
     SDK_ASIC_TYPE_NONE,
     SDK_ASIC_TYPE_CAPRI,
+    SDK_ASIC_TYPE_ELBA,
 };
 
 }    // namespace platform

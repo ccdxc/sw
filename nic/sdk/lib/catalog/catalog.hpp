@@ -204,6 +204,11 @@ public:
     // lookups based on ifindex
     uint32_t ifindex_to_tm_port(uint32_t ifindex);
 
+    // lookups based on asic
+    sdk::platform::asic_type_t asic_type(uint32_t asic) {
+        return catalog_db_.asics[asic].type;
+    }
+
     // lookups based on asic, asic_port
     uint32_t num_asic_ports(uint32_t asic) {
         return catalog_db_.asics[asic].max_ports;
