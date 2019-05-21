@@ -54,11 +54,11 @@ var _ = Describe("Search test", func() {
 	It("spyglass restart", func() {
 		createDummyObj()
 		testCases := []*queryTestCase{
-			&queryTestCase{
+			{
 				query: &search.SearchRequest{
 					Query: &search.SearchQuery{
 						Texts: []*search.TextRequirement{
-							&search.TextRequirement{
+							{
 								Text: []string{fmt.Sprintf(`"%s"`, dummyObjName)},
 							},
 						},
@@ -80,11 +80,11 @@ var _ = Describe("Search test", func() {
 		testQueries(testCases)
 		deleteDummyObj()
 		testCases = []*queryTestCase{
-			&queryTestCase{
+			{
 				query: &search.SearchRequest{
 					Query: &search.SearchQuery{
 						Texts: []*search.TextRequirement{
-							&search.TextRequirement{
+							{
 								Text: []string{fmt.Sprintf(`"%s"`, dummyObjName)},
 							},
 						},
@@ -100,11 +100,11 @@ var _ = Describe("Search test", func() {
 		}
 		testQueries(testCases)
 		testCases = []*queryTestCase{
-			&queryTestCase{
+			{
 				query: &search.SearchRequest{
 					Query: &search.SearchQuery{
 						Texts: []*search.TextRequirement{
-							&search.TextRequirement{
+							{
 								Text: []string{fmt.Sprintf(`"%s"`, dummyObjName)},
 							},
 						},
@@ -154,12 +154,12 @@ func testQueries(testCases []*queryTestCase) {
 
 			err := ts.tu.Search(ts.loggedInCtx, tc.query, resp)
 			if err != tc.expErr {
-				By(fmt.Sprintf("Test Case %d: Expected err %v, actual err was %d", i, tc.expErr, err))
+				By(fmt.Sprintf("tc {%d}: expected err %v, actual err was %v", i, tc.expErr, err))
 				return false
 			}
 
 			if err := tc.resultCheck(resp, *tc); err != nil {
-				By(fmt.Sprintf("Test Case %d %s", i, err))
+				By(fmt.Sprintf("tc {%d}, query_results: %v, err: %s", i, resp, err))
 				return false
 			}
 
@@ -167,5 +167,5 @@ func testQueries(testCases []*queryTestCase) {
 
 		return true
 
-	}, 90, 10).Should(BeTrue(), "Query tests failed")
+	}, 120, 10).Should(BeTrue(), "Query tests failed")
 }

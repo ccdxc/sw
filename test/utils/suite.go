@@ -646,8 +646,9 @@ func (tu *TestUtils) KillContainer(serviceName string) (string, error) {
 		}
 	}
 	if len(containerID) == 0 {
-		return "", fmt.Errorf("Couldn't find container for service %s", serviceName)
+		return "", fmt.Errorf("couldn't find container for service %s", serviceName)
 	}
+	ginkgo.By(fmt.Sprintf("killing service {%s} running on node {%s}", serviceName, nodeIP))
 	tu.KillContainerOnNodeByID(nodeIP, containerID)
 	return tu.IPToNameMap[nodeIP], nil
 }
@@ -656,7 +657,7 @@ func (tu *TestUtils) KillContainer(serviceName string) (string, error) {
 func (tu *TestUtils) KillContainerOnNodeByName(ip string, serviceName string) error {
 	containerID := tu.GetContainerOnNode(ip, serviceName)
 	if len(containerID) == 0 {
-		return fmt.Errorf("Couldn't find container for service %s", serviceName)
+		return fmt.Errorf("couldn't find container for service %s", serviceName)
 	}
 	tu.KillContainerOnNodeByID(ip, containerID)
 	return nil
