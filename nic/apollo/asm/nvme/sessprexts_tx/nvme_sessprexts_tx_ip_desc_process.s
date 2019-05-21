@@ -17,15 +17,15 @@ nvme_sessprexts_tx_ip_desc_process:
 
     //XXX TBD: if needed prp pointers endianness need to be changed
     phvwr       p.ip_desc_A0, d.prp1
+    phvwr       p.ip_desc_O0, k.{to_s4_info_prp1_offset}.wx    
    
     bbeq        k.to_s4_info_prp2_valid, 0, skip_prp2
-    phvwrpair   p.ip_desc_O0, k.to_s4_info_prp1_offset, \
-                p.ip_desc_L0, k.to_s4_info_prp1_bytes   //BD Slot
+    phvwr       p.ip_desc_L0, k.{to_s4_info_prp1_bytes}.wx   //BD Slot
 
     //XXX TBD: if needed prp pointers endianness need to be changed
     phvwr       p.ip_desc_A1, d.prp2
-    phvwrpair   p.ip_desc_O1, r0, \
-                p.ip_desc_L1, k.to_s4_info_prp2_bytes
+    phvwr       p.ip_desc_O1, r0.wx    
+    phvwr       p.ip_desc_L1, k.{to_s4_info_prp2_bytes}.wx
 
 skip_prp2: 
 

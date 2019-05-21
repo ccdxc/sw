@@ -43,7 +43,7 @@ nvme_sessprexts_tx_xtscb_process:
     //DMA instr for ip desc
     DMA_CMD_BASE_GET(DMA_CMD_BASE, ip_desc_dma)
     DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, ip_desc_A0, ip_desc_rsvd, r3)
-    phvwr       p.xts_desc_input_list_address, r3
+    phvwr       p.xts_desc_input_list_address, r3.dx
     
     //move addr to point to op desc
     add         r3, r3, AOL_SIZE
@@ -51,7 +51,7 @@ nvme_sessprexts_tx_xtscb_process:
     //DMA instr for op desc
     DMA_CMD_BASE_GET(DMA_CMD_BASE, op_desc_dma)
     DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, op_desc_A0, op_desc_rsvd, r3)
-    phvwr       p.xts_desc_output_list_address, r3
+    phvwr       p.xts_desc_output_list_address, r3.dx
 
     //calculate iv addr
     addui       r3, r0, hiword(nvme_tx_xts_iv_array_base)
@@ -61,7 +61,7 @@ nvme_sessprexts_tx_xtscb_process:
     //DMA instr for iv
     DMA_CMD_BASE_GET(DMA_CMD_BASE, iv_dma)
     DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, iv_iv_0, iv_iv_1, r3)
-    phvwr       p.xts_desc_iv_address, r3
+    phvwr       p.xts_desc_iv_address, r3.dx
 
     //DMA instr for xts db
     DMA_CMD_BASE_GET(DMA_CMD_BASE, xts_db_dma)
@@ -74,9 +74,10 @@ nvme_sessprexts_tx_xtscb_process:
     //assumption is that opaque tag address is already setup
     //to point to the address of "CI" field in this xtscb. (check)
 
-    phvwr       p.xts_db_index, r1
+    //write doorbell in little-endian
+    phvwr       p.xts_db_index, r1.wx
 
-    phvwrpair.e p.xts_desc_opaque_tag_value, r1, \
+    phvwrpair.e p.xts_desc_opaque_tag_value, r1.wx, \
                 p.xts_desc_opaque_tag_write_en, 1
     CAPRI_SET_TABLE_1_VALID(0)                      //Exit Slot
 

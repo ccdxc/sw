@@ -46,8 +46,8 @@ skip_page_ptr_update:
     phvwr       p.t0_s2s_cmd_ctxt_to_writeback_info_prp1_offset, d.prp1_offset
     
     //store the keys in the xts descr
-    phvwr       p.xts_desc_key_desc_index, d.key_index
-    phvwr       p.xts_desc_second_key_desc_index, d.sec_key_index
+    phvwr       p.xts_desc_key_desc_index, d.{key_index}.wx
+    phvwr       p.xts_desc_second_key_desc_index, d.{sec_key_index}.wx
 
     add         r1, r0, k.phv_global_common_cb_addr
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_EN,

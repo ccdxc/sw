@@ -147,7 +147,8 @@ sess_found:
     sle         c1, r4, r2
     bcf         [c1], two_dmas
     // only prp1 is valid in base cmd
-    phvwr       p.prp1_ptr, k.t0_s2s_sqe_to_nscb_info_prp1 //BD Slot
+    // store prp pointers in cmd_ctxt in little endian format
+    phvwr       p.prp1_ptr, k.{t0_s2s_sqe_to_nscb_info_prp1}.dx //BD Slot
 
 three_dmas:
     sub         r2, r2, 1, LOG_NUM_PRP_BYTES
@@ -184,8 +185,9 @@ one_dma:
     // if only one prp dma command needed, always copy prp1/prp2, 
     // anyway num_prps field in cmd_ctxt going to guide whether prp2 is valid
     // or not
-    phvwrpair.e p.prp1_ptr, k.t0_s2s_sqe_to_nscb_info_prp1, \
-                p.prp2_ptr, k.t0_s2s_sqe_to_nscb_info_prp2
+    // store prp pointers in cmd_ctxt in little endian format
+    phvwr       p.prp1_ptr, k.{t0_s2s_sqe_to_nscb_info_prp1}.dx
+    phvwr.e     p.prp2_ptr, k.{t0_s2s_sqe_to_nscb_info_prp2}.dx
     // prp1_dma_valid = 1, prp2_dma_valid = 0, prp3_dma_valid = 0
     phvwrpair   p.{to_s5_info_prp1_dma_valid...to_s5_info_prp3_dma_valid}, 4, \
                 p.to_s5_info_prp1_dma_bytes, r4     //Exit Slot

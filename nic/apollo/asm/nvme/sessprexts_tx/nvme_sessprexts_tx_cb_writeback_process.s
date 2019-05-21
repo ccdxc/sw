@@ -18,7 +18,7 @@ struct s3_t0_nvme_sessprexts_tx_cb_writeback_process_d d;
 #define DB_ADDR                     r5
 #define DB_DATA                     r6
 
-#define F_FIRST_LBA                 c1
+#define F_FIRST_PAGE                c1
 #define F_LAST_LBA                  c2
 #define F_END_OF_PAGE               c3
 #define F_FIRST_LBA_IN_PAGE         c4
@@ -62,8 +62,8 @@ last_lba:
                         SESSPREXTSTX_C_INDEX, DB_DATA) 
 
     b           post_tbl_updates
-    phvwrpair   p.xts_desc_doorbell_address, DB_ADDR, \
-                p.xts_desc_doorbell_data, DB_DATA   //BD Slot
+    phvwrpair   p.xts_desc_doorbell_address, DB_ADDR.dx, \
+                p.xts_desc_doorbell_data, DB_DATA.dx   //BD Slot
 
 non_last_lba:
     //store the new lba offset
@@ -79,12 +79,19 @@ non_last_lba:
     cmov        r5, F_END_OF_PAGE, r0, K_PAGE_PTR
     tblwr.f     d.page_ptr, r5  //Flush
 
+    //xts engine was mandating a valid doorbell address even for intermediate
+    //lbas. Hence setting up a doorbell to do nothing. This wastes doorbell 
+    //machine bandwidth, but we have to live with this as this seems to be a 
+    //limitation imposed by barco.
+    CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_NO_UPDATE, DB_NO_SCHED_WR, \
+                        K_GLOBAL_LIF, NVME_QTYPE_SESSXTSTX, DB_ADDR)
+    CAPRI_SETUP_DB_DATA(K_GLOBAL_QID, SESSPOSTXTS_TX_RING_ID, \
+                        r0, DB_DATA) 
+    phvwrpair   p.xts_desc_doorbell_address, DB_ADDR.dx, \
+                p.xts_desc_doorbell_data, DB_DATA.dx   //BD Slot
     //fall thru
 
 post_tbl_updates:
-    // if curr_lba_offset == 0 then it is first lba
-    seq     F_FIRST_LBA, CURR_LBA_OFFSET, r0
-
     // see which prp start byte of curr lba falls into
     sll         r5, CURR_LBA_OFFSET, K_LOG_LBA_SIZE
     add         r5, K_PRP1_OFFSET, r5
@@ -106,6 +113,7 @@ post_tbl_updates:
     mincr       r7, K_LOG_HOST_PAGE_SIZE, r0
     //convert offsets to number of bytes (by adding 1)
     add         r7, r7, 1
+    add         r2, r0, LBA_SIZE
     sub.!c4     r2, LBA_SIZE, r7
 
     phvwrpair.!c4   p.to_s4_info_prp2_bytes, r7, \
@@ -130,19 +138,21 @@ post_tbl_updates:
 
     //compute the offset at which current lba needs to be copied to 
     //in the data page
-    add         r2, CURR_LBA_OFFSET, r0
+    sll         r6, 1, LOG_MAX_NUM_LBAS_IN_PAGE
+    add         r5, CURR_LBA_OFFSET, r0
+    sle         F_FIRST_PAGE, r5, r6
     mincr       r5, LOG_MAX_NUM_LBAS_IN_PAGE, 0
     seq         F_FIRST_LBA_IN_PAGE, r5, r0
     sll         r5, r5, K_LOG_LBA_SIZE
     add         r5, K_PAGE_PTR, r5
     add         r5, r5, PKT_DESC_OVERHEAD
-    add.F_FIRST_LBA r5, r5, NVME_O_TCP_CMD_CAPSULE_HEADER_SIZE
+    add.F_FIRST_PAGE r5, r5, NVME_O_TCP_CMD_CAPSULE_HEADER_SIZE
 
     //populate output desc
     //due to PHV being initialized to 0, O0 value is anyway 0 and doesn't 
     //need to be set explicitly
-    phvwr       p.op_desc_A0, r5
-    phvwr       p.op_desc_L0, LBA_SIZE
+    phvwr       p.op_desc_A0, r5.dx
+    phvwr       p.op_desc_L0, LBA_SIZE.wx
 
     bcf         [!F_FIRST_LBA_IN_PAGE], skip_page_ptr_len_update
 
@@ -150,14 +160,13 @@ post_tbl_updates:
     //curr_lba_offset is multiple of LOG_MAX_NUM_LBAS_IN_PAGE by the time we
     //enter here
     sub         r5, K_NLB, CURR_LBA_OFFSET
-    sll         r6, 1, LOG_MAX_NUM_LBAS_IN_PAGE
     sle         c5, r5, r6
     cmov        r5, c5, r5, r6
     //r5 should have number of LBAs that will eventually go to this page
 
     //convert to bytes and any header/trailer etc.
     sll                 r5, r5, K_LOG_LBA_SIZE
-    add.F_FIRST_LBA     r5, r5, NVME_O_TCP_CMD_CAPSULE_HEADER_SIZE
+    add.F_FIRST_PAGE    r5, r5, NVME_O_TCP_CMD_CAPSULE_HEADER_SIZE
     add.c5              r5, r5, NVME_O_TCP_DDGST_SIZE
 
     add                 r6, r5, PKT_DESC_OVERHEAD
@@ -184,4 +193,4 @@ skip_page_ptr_len_update:
     phvwr       p.iv_iv_1, r0
 
     addi.e      r3, r0, HW_CMD_XTS_ENCRYPT
-    phvwr       p.xts_desc_command, r3  //Exit Slot
+    phvwr       p.xts_desc_command, r3.wx  //Exit Slot

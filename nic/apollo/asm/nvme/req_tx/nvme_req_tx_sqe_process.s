@@ -16,8 +16,20 @@ struct s1_t0_nvme_req_tx_sqe_process_d d;
 nvme_req_tx_sqe_process:
 
     //copy important sqe params to cmd ctxt
-    phvwr       p.{cmd_ctxt_opc...cmd_ctxt_nsid}, d.{opc...nsid}
-    phvwr       p.{cmd_ctxt_slba...cmd_ctxt_nlb}, d.{slba...nlb}
+
+    //phvwr       p.{cmd_ctxt_opc...cmd_ctxt_nsid}, d.{opc...nsid}
+    //phvwr       p.{cmd_ctxt_slba...cmd_ctxt_nlb}, d.{slba...nlb}
+
+    //store params in big-endian format in cmd-ctxt
+    //for some reason, phvwrpair is not working in combination with 
+    //endian conversion
+    phvwr       p.{cmd_ctxt_opc...cmd_ctxt_psdt}, d.{opc...psdt}
+    phvwr       p.cmd_ctxt_cid, d.{cid}.hx
+    phvwr       p.cmd_ctxt_nsid, d.{nsid}.wx
+    phvwr       p.cmd_ctxt_slba, d.{slba}.dx
+    phvwr       p.cmd_ctxt_nlb, d.{nlb}.hx
+
+    
     phvwrpair   p.{cmd_ctxt_lif...cmd_ctxt_sq_id}, K_GLOBAL_LIF_QID, \
                 p.{cmd_ctxt_num_prps...cmd_ctxt_state}, r0
 
