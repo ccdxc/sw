@@ -4527,9 +4527,9 @@ capri_tm_get_port_mon_out (int chip_id,
 
     pbc_csr.cfg_port_mon_out.read();
     cfg_port_0 = pbc_csr.cfg_port_mon_out.port_0().convert_to<int>();
-    cfg_port_1 = pbc_csr.cfg_port_mon_out.port_0().convert_to<int>();
-    cfg_port_2 = pbc_csr.cfg_port_mon_out.port_0().convert_to<int>();
-    cfg_port_3 = pbc_csr.cfg_port_mon_out.port_0().convert_to<int>();
+    cfg_port_1 = pbc_csr.cfg_port_mon_out.port_1().convert_to<int>();
+    cfg_port_2 = pbc_csr.cfg_port_mon_out.port_2().convert_to<int>();
+    cfg_port_3 = pbc_csr.cfg_port_mon_out.port_3().convert_to<int>();
 
     if (tm_port == cfg_port_0) {
         port = 0;
@@ -4541,10 +4541,14 @@ capri_tm_get_port_mon_out (int chip_id,
         port = 3;
     } else {
         // port monitor not configured for tm_port
+        // SDK_TRACE_DEBUG("tm_port %d, oq %d not supported",
+        //                 tm_port, tm_oq);
         return 0;
     }
 
     cur_address = (port * CAPRI_TM_MAX_QUEUES) + tm_oq;
+    // SDK_TRACE_DEBUG("tm_port %d, oq %d cur_address %d",
+    //                 tm_port, tm_oq, cur_address);
     cap_pb_read_port_mon_out(chip_id, inst_id, cur_address, count);
     return count.convert_to<uint64_t>();
 }
@@ -4585,6 +4589,8 @@ capri_tm_get_port_mon_in (int chip_id,
             // NCSI and UPLINKS
             // only 6 ETH ports can be monitored
             if (tm_port > eth_port_start + 5) {
+                // SDK_TRACE_DEBUG("tm_port %d, iq %d not supported",
+                //                 tm_port, tm_iq);
                 return 0;
             }
             cur_address = capri_tm_get_num_iqs_for_port(TM_PORT_INGRESS) +
@@ -4595,7 +4601,8 @@ capri_tm_get_port_mon_in (int chip_id,
                           tm_iq;
             break;
     }
-
+    // SDK_TRACE_DEBUG("tm_port %d, iq %d cur_address %d",
+    //                 tm_port, tm_iq, cur_address);
     cap_pb_read_port_mon_in(chip_id, inst_id, cur_address, count);
     return count.convert_to<uint64_t>();
 }
