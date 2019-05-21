@@ -13,7 +13,6 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/obj_api.hpp"
 #include "nic/apollo/api/mapping.hpp"
-#include "nic/apollo/api/impl/apollo/mapping_impl.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 
@@ -149,8 +148,8 @@ pds_local_mapping_read (pds_mapping_key_t *key,
 {
     pds_mapping_info_t info;
     mapping_entry *entry = NULL;
-    api::impl::mapping_impl *impl;
     sdk_ret_t rv = SDK_RET_OK;
+    bool is_local = true;
 
     if (key == NULL || local_info == NULL)
         return SDK_RET_INVALID_ARG;
@@ -159,9 +158,8 @@ pds_local_mapping_read (pds_mapping_key_t *key,
         return SDK_RET_ENTRY_NOT_FOUND;
 
     info.spec.key = *key;
-    impl = dynamic_cast<api::impl::mapping_impl*>(entry->impl());
-    impl->set_is_local(true);
-    rv = impl->read_hw(key, &info);
+    rv = entry->impl()->read_hw((obj_key_t *)key, (obj_info_t *)&info,
+                               (void *)&is_local);
     pds_mapping_spec_to_local_spec(&local_info->spec, &info.spec);
     return rv;
 }
@@ -172,8 +170,8 @@ pds_remote_mapping_read (pds_mapping_key_t *key,
 {
     pds_mapping_info_t info;
     mapping_entry *entry = NULL;
-    api::impl::mapping_impl *impl;
     sdk_ret_t rv = SDK_RET_OK;
+    bool is_local = false;
 
     if (key == NULL || remote_info == NULL) {
         return SDK_RET_INVALID_ARG;
@@ -184,9 +182,8 @@ pds_remote_mapping_read (pds_mapping_key_t *key,
     }
 
     info.spec.key = *key;
-    impl = dynamic_cast<api::impl::mapping_impl*>(entry->impl());
-    impl->set_is_local(false);
-    rv = impl->read_hw(key, &info);
+    rv = entry->impl()->read_hw((obj_key_t *)key, (obj_info_t *)&info,
+                                (void *)&is_local);
     pds_mapping_spec_to_remote_spec(&remote_info->spec, &info.spec);
     return rv;
 }

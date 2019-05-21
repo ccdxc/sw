@@ -230,9 +230,12 @@ tep_impl::fill_spec_(nexthop_actiondata_t *nh_data,
 }
 
 sdk_ret_t
-tep_impl::read_hw(pds_tep_info_t *info) {
+tep_impl::read_hw(obj_key_t *key, obj_info_t *info, void *arg) {
     nexthop_actiondata_t nh_data;
     tep_actiondata_t tep_data;
+    pds_tep_info_t *tep_info = (pds_tep_info_t *)info;
+    (void)key;
+    (void)arg;
 
     if (tep_impl_db()->nh_tbl()->retrieve(nh_id_,
                                           &nh_data) != SDK_RET_OK) {
@@ -243,8 +246,8 @@ tep_impl::read_hw(pds_tep_info_t *info) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    fill_spec_(&nh_data, &tep_data, &info->spec);
-    fill_status_(&tep_data, &info->status);
+    fill_spec_(&nh_data, &tep_data, &tep_info->spec);
+    fill_status_(&tep_data, &tep_info->status);
 
     return sdk::SDK_RET_OK;
 }

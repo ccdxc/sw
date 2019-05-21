@@ -76,10 +76,13 @@ public:
 
     /**
      * @brief read spec, statistics and status from hw tables
+     * @param[in]  key pointer to tep key. Not used.
      * @param[out] info pointer to tep info
+     * @param[in]  arg Argument. Not used.
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t read_hw(pds_tep_info_t *info);
+    virtual sdk_ret_t read_hw(obj_key_t *key, obj_info_t *info,
+                              void *arg = NULL) override;
 
     /**
      * @brief    program all h/w tables relevant to this object except stage 0

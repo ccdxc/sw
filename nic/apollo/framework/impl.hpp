@@ -36,4 +36,8 @@ typedef enum impl_obj_id_e {
 
 using api::impl::impl_obj_id_t;
 
+// These are for read_hw apis
+typedef void obj_info_t;
+typedef void obj_key_t;
+
 #endif    // __FRAMEWORK_IMPL_HPP__

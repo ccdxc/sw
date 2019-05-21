@@ -207,39 +207,41 @@ mirror_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
 }
 
 sdk_ret_t
-mirror_impl::read_hw(pds_mirror_session_key_t *key,
-                     pds_mirror_session_info_t *info) {
+mirror_impl::read_hw(obj_key_t *key, obj_info_t *info, void *arg) {
     p4pd_error_t p4pd_ret;
     mirror_actiondata_t mirror_data;
     uint16_t hw_id;
+    pds_mirror_session_key_t *mkey = (pds_mirror_session_key_t *)key;
+    pds_mirror_session_info_t *minfo = (pds_mirror_session_info_t *)info;
+    (void)arg;
 
-    hw_id = key->id-1;
+    hw_id = mkey->id-1;
     if ((mirror_impl_db()->session_bmap_ & (1 << hw_id)) == 0) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_MIRROR, hw_id, NULL, NULL,
                                       &mirror_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to read mirror session %u at idx %u", key->id);
+        PDS_TRACE_ERR("Failed to read mirror session %u at idx %u", mkey->id);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
-    info->spec.key.id = key->id;
+    minfo->spec.key.id = mkey->id;
     switch (mirror_data.action_id) {
     case MIRROR_RSPAN_ID:
-        info->spec.type = PDS_MIRROR_SESSION_TYPE_RSPAN;
-        info->spec.snap_len = mirror_data.rspan_action.truncate_len;
-        info->spec.rspan_spec.interface =
+        minfo->spec.type = PDS_MIRROR_SESSION_TYPE_RSPAN;
+        minfo->spec.snap_len = mirror_data.rspan_action.truncate_len;
+        minfo->spec.rspan_spec.interface =
             g_pds_state.catalogue()->tm_port_to_ifindex(mirror_data.rspan_action.tm_oport);
-        info->spec.rspan_spec.encap.type = PDS_ENCAP_TYPE_DOT1Q;
-        info->spec.rspan_spec.encap.val.vlan_tag =
+        minfo->spec.rspan_spec.encap.type = PDS_ENCAP_TYPE_DOT1Q;
+        minfo->spec.rspan_spec.encap.val.vlan_tag =
             mirror_data.rspan_action.ctag;
         break;
 
     case MIRROR_ERSPAN_ID:
-        info->spec.type = PDS_MIRROR_SESSION_TYPE_ERSPAN;
-        info->spec.snap_len = mirror_data.erspan_action.truncate_len;
-        info->spec.erspan_spec.src_ip.addr.v4_addr = mirror_data.erspan_action.sip;
-        info->spec.erspan_spec.dst_ip.addr.v4_addr = mirror_data.erspan_action.dip;
+        minfo->spec.type = PDS_MIRROR_SESSION_TYPE_ERSPAN;
+        minfo->spec.snap_len = mirror_data.erspan_action.truncate_len;
+        minfo->spec.erspan_spec.src_ip.addr.v4_addr = mirror_data.erspan_action.sip;
+        minfo->spec.erspan_spec.dst_ip.addr.v4_addr = mirror_data.erspan_action.dip;
         break;
 
     default:

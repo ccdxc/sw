@@ -150,11 +150,6 @@ mapping_impl::destroy(mapping_impl *impl) {
     mapping_impl::soft_delete(impl);
 }
 
-void
-mapping_impl::set_is_local(bool val) {
-    is_local_ = val;
-}
-
 mapping_impl *
 mapping_impl::build(pds_mapping_key_t *key) {
     sdk_ret_t                             ret;
@@ -1012,17 +1007,21 @@ mapping_impl::read_remote_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
 }
 
 sdk_ret_t
-mapping_impl::read_hw(pds_mapping_key_t *key,
-                      pds_mapping_info_t *info) {
+mapping_impl::read_hw(obj_key_t *key, obj_info_t *info, void *arg) {
     sdk_ret_t ret;
     vpc_entry *vpc;
     nat_actiondata_t nat_data = { 0 };
+    pds_mapping_key_t *mkey = (pds_mapping_key_t *)key;
+    pds_mapping_info_t *minfo = (pds_mapping_info_t *)info;
 
-    vpc = vpc_db()->find(&key->vpc);
+    SDK_ASSERT(arg != NULL);
+    is_local_ = *(bool *)arg;
+
+    vpc = vpc_db()->find(&mkey->vpc);
     if (is_local_) {
-        ret = read_local_mapping_(vpc, &info->spec);
+        ret = read_local_mapping_(vpc, &minfo->spec);
     } else {
-        ret = read_remote_mapping_(vpc, &info->spec);
+        ret = read_remote_mapping_(vpc, &minfo->spec);
     }
     if (ret != SDK_RET_OK) {
         return ret;
@@ -1032,8 +1031,8 @@ mapping_impl::read_hw(pds_mapping_key_t *key,
         ret = mapping_impl_db()->nat_tbl()->retrieve(handle_.local_.overlay_ip_to_public_ip_nat_hdl_,
                                                      &nat_data);
         if (ret == SDK_RET_OK) {
-            info->spec.public_ip_valid = true;
-            memcpy(info->spec.public_ip.addr.v6_addr.addr8,
+            minfo->spec.public_ip_valid = true;
+            memcpy(minfo->spec.public_ip.addr.v6_addr.addr8,
                    nat_data.nat_action.nat_ip, IP6_ADDR8_LEN);
         }
     }

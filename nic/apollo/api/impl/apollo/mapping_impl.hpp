@@ -136,12 +136,13 @@ public:
 
     /**
      * @brief read spec, statistics and status from hw tables
-     * @param[in]  key  pointer to mapping key
+     * @param[in]  key pointer to mapping key
      * @param[out] info pointer to mapping info
+     * @param[in]  arg Pointer to boolean having local true/false
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t read_hw(pds_mapping_key_t *key,
-                      pds_mapping_info_t *info);
+    virtual sdk_ret_t read_hw(obj_key_t *key, obj_info_t *info,
+                              void *arg = NULL) override;
 
     /**
      * @brief return true if mapping is local, false otherwise
@@ -154,12 +155,6 @@ public:
      * @return   TEP hw index or PDS_TEP_IMPL_INVALID_INDEX
      */
     static uint16_t tep_idx(pds_mapping_key_t *key);
-
-    /**
-     * @brief    set is_local_ value of this mapping_impl object
-     * @param[in] val    set is_local_ for this mapping_impl object
-     */
-    void set_is_local(bool val);
 
 private:
     /**< @brief    constructor */

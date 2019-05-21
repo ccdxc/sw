@@ -98,10 +98,13 @@ public:
                                   obj_ctxt_t *obj_ctxt) override;
     /**
      * @brief read spec, statistics and status from hw tables
+     * @param[in]  key Not used
      * @param[out] info pointer to device info
+     * @param[in]  arg Not used
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t read_hw(pds_device_info_t *info);
+    virtual sdk_ret_t read_hw(obj_key_t *key, obj_info_t *info,
+                              void *arg = NULL) override;
 
 private:
     /**

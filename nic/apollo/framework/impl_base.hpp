@@ -181,6 +181,15 @@ public:
         return sdk::SDK_RET_INVALID_OP;
     }
 
+    /// \brief read config from hardware
+    /// \param[in] key Pointer to the key object
+    /// \param[in] info Pointer to the info object
+    /// \param[in] arg Impl specific argument
+    virtual sdk_ret_t read_hw(obj_key_t *key, obj_info_t *info,
+                              void *arg = NULL) {
+        return sdk::SDK_RET_INVALID_OP;
+    }
+
     /// \brief Return ASIC impl class instance
     static asic_impl_base *asic_impl(void) { return asic_impl_; }
 

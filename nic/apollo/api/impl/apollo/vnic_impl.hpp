@@ -143,9 +143,11 @@ public:
      * @brief read spec, statistics and status from hw tables
      * @param[in]  key  pointer to vnic key
      * @param[out] info pointer to vnic info
+     * @param[in]  arg  Not used
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t read_hw(pds_vnic_key_t *key, pds_vnic_info_t *info);
+    virtual sdk_ret_t read_hw(obj_key_t *key, obj_info_t *info,
+                              void *arg = NULL) override;
 
     uint16_t hw_id(void) { return hw_id_; }
 

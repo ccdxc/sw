@@ -11,8 +11,8 @@
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
-#include "nic/apollo/api/impl/apollo/mirror_impl.hpp"
 #include "nic/apollo/api/obj_api.hpp"
+#include "nic/apollo/api/mirror.hpp"
 
 static sdk_ret_t
 pds_mirror_session_api_handle (api::api_op_t op,
@@ -76,7 +76,6 @@ pds_mirror_session_get (pds_mirror_session_key_t *key,
                         pds_mirror_session_info_t *info)
 {
     mirror_session *entry = NULL;
-    api::impl::mirror_impl *impl;
 
     if (key == NULL || info == NULL) {
         return sdk::SDK_RET_INVALID_ARG;
@@ -87,7 +86,5 @@ pds_mirror_session_get (pds_mirror_session_key_t *key,
     }
     info->spec.key = *key;
 
-    // call the mirror hw implementaion directly
-    impl = dynamic_cast<api::impl::mirror_impl*>(entry->impl());
-    return impl->read_hw(key, info);
+    return entry->impl()->read_hw((obj_key_t *)key, (obj_info_t *)info);
 }

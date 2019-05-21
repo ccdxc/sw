@@ -12,7 +12,6 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/obj_api.hpp"
 #include "nic/apollo/api/vnic.hpp"
-#include "nic/apollo/api/impl/apollo/vnic_impl.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
 static inline sdk_ret_t
@@ -60,7 +59,6 @@ sdk::sdk_ret_t
 pds_vnic_read (pds_vnic_key_t *key, pds_vnic_info_t *info)
 {
     vnic_entry *entry = NULL;
-    api::impl::vnic_impl *impl;
 
     if (key == NULL || info == NULL) {
         return sdk::SDK_RET_INVALID_ARG;
@@ -71,9 +69,7 @@ pds_vnic_read (pds_vnic_key_t *key, pds_vnic_info_t *info)
     }
     info->spec.key = *key;
 
-    // call the vnic hw implementaion directly
-    impl = dynamic_cast<api::impl::vnic_impl*>(entry->impl());
-    return impl->read_hw(key, info);
+    return entry->impl()->read_hw((obj_key_t *)key, (obj_info_t *)info);
 }
 
 sdk_ret_t

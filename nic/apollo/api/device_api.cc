@@ -12,7 +12,6 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/device.hpp"
-#include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
 #include "nic/apollo/api/obj_api.hpp"
 
 static sdk_ret_t
@@ -61,7 +60,6 @@ sdk_ret_t
 pds_device_read (pds_device_info_t *info)
 {
     device_entry *entry;
-    api::impl::device_impl *impl;
 
     if (info == NULL) {
         return sdk::SDK_RET_INVALID_ARG;
@@ -75,6 +73,5 @@ pds_device_read (pds_device_info_t *info)
     // fill from software state
     pds_device_spec_fill(entry, &info->spec);
 
-    impl = dynamic_cast<api::impl::device_impl*>(entry->impl());
-    return impl->read_hw(info);
+    return entry->impl()->read_hw(NULL, (obj_info_t *)info);
 }

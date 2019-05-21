@@ -11,7 +11,6 @@
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/tep.hpp"
-#include "nic/apollo/api/impl/apollo/tep_impl.hpp"
 
 static inline sdk_ret_t
 pds_tep_api_handle (api_op_t api_op, pds_tep_key_t *key, pds_tep_spec_t *spec)
@@ -44,7 +43,6 @@ sdk_ret_t
 pds_tep_read (pds_tep_key_t *key, pds_tep_info_t *info)
 {
     tep_entry *entry;
-    api::impl::tep_impl *impl;
 
     if ((key == NULL) || (info == NULL)) {
         return sdk::SDK_RET_INVALID_ARG;
@@ -55,8 +53,7 @@ pds_tep_read (pds_tep_key_t *key, pds_tep_info_t *info)
     }
 
     info->spec.key = *key;
-    impl = dynamic_cast<api::impl::tep_impl*>(entry->impl());
-    return impl->read_hw(info);
+    return entry->impl()->read_hw(NULL, (obj_info_t *)info);
 }
 
 sdk_ret_t
