@@ -104,7 +104,7 @@ typedef struct nvme_cqcb_s {
 
 typedef struct nvme_nscb_s {
     uint8_t valid_session_bitmap[32];
-    uint8_t  pad[13];
+    uint8_t  pad[5];
 
     uint64_t sess_prodcb_start: 16;
 
@@ -119,6 +119,8 @@ typedef struct nvme_nscb_s {
     uint64_t rsvd0:1;
     uint64_t ns_active:1;
     uint64_t ns_valid:1;
+    uint32_t sec_key_index;
+    uint32_t key_index;
     uint64_t ns_size;
 } PACKED nvme_nscb_t;
 
@@ -170,9 +172,8 @@ static_assert(sizeof(nvme_txsessprodcb_t) == 64);
 typedef struct nvme_sessxtstxcb_s {
 
     uint8_t pad[28];
-
-    uint64_t sec_key_index: 32;
-    uint64_t key_index: 32;
+    
+    uint64_t page_ptr;
 
     uint64_t rsvd4: 7;
     uint64_t wb_r1_busy: 1;
@@ -182,16 +183,14 @@ typedef struct nvme_sessxtstxcb_s {
 
     uint64_t nxt_lba_offset: 16;
 
-    uint64_t rsvd2: 6;
-    uint64_t r0_in_progress: 1;
+    uint64_t rsvd2: 7;
     uint64_t wb_r0_busy: 1;
 
     uint64_t rsvd1: 7;
     uint64_t r0_busy: 1;   
 
-    uint64_t rsvd0: 3;
+    uint64_t rsvd0: 8;
     uint64_t ring_empty_sched_eval_done: 1;
-    uint64_t log_lba_size: 5;
     uint64_t log_num_entries: 5;
     uint64_t base_addr: 34;
     

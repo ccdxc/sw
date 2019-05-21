@@ -22,6 +22,9 @@ nvme_req_tx_cmdid_fetch_process:
     addi    CMD_CTXT_P, CMD_CTXT_P, loword(nvme_cmd_context_base)
     add     CMD_CTXT_P, CMD_CTXT_P, CMDID, LOG_CMD_CTXT_SIZE
 
+    DMA_CMD_BASE_GET(DMA_CMD_BASE, cmd_ctxt_dma)
+    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, cmd_ctxt_opc, cmd_ctxt_pad, CMD_CTXT_P)
+
     bbeq    k.to_s5_info_prp1_dma_valid, 0, exit
     add     CMD_CTXT_P, CMD_CTXT_P, NVME_CMD_CTXT_PRP_LIST_OFFSET   //BD Slot
 

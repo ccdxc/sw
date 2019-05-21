@@ -176,6 +176,8 @@ ring_empty_sched_eval_done, busy, rsvd0, cq_id, lif_ns_start, pad
 header_type nscb_t {
     fields {
         ns_size                         : 64; //in LBAs
+        key_index                       : 32;
+        sec_key_index                   : 32;
         ns_valid                        : 1;
         ns_active                       : 1;
         rsvd0                           : 1;
@@ -193,20 +195,22 @@ header_type nscb_t {
 
         sess_prodcb_start               : 16;
 
-        pad                             : 104;
+        pad                             : 40;
 
         valid_session_bitmap            : 256;
     }
 }
 
 #define NSCB_PARAMS                                                      \
-ns_size, ns_valid, ns_active, rsvd0, log_lba_size, backend_ns_id,        \
-num_sessions, rr_session_id_to_be_served,\
+ns_size, key_index, sec_key_index, ns_valid, ns_active, rsvd0, log_lba_size, \
+backend_ns_id, num_sessions, rr_session_id_to_be_served,\
 num_outstanding_req, sess_prodcb_start, pad, \
 valid_session_bitmap
 
 #define GENERATE_NSCB_D                                                  \
     modify_field(nscb_d.ns_size, ns_size);                               \
+    modify_field(nscb_d.key_index, key_index);                           \
+    modify_field(nscb_d.sec_key_index, sec_key_index);                   \
     modify_field(nscb_d.ns_valid, ns_valid);                             \
     modify_field(nscb_d.ns_active, ns_active);                           \
     modify_field(nscb_d.rsvd0, rsvd0);                                   \
@@ -310,9 +314,8 @@ header_type sessxtstxcb_t {
         //6B
         base_addr                       : 34;
         log_num_entries                 : 5;
-        log_lba_size                    : 5;
         ring_empty_sched_eval_done      : 1;
-        rsvd0                           : 3;
+        rsvd0                           : 8;
         
         //R0 stage0 flags
         //1B
@@ -322,8 +325,7 @@ header_type sessxtstxcb_t {
         //R0 writeback stage flags
         //1B
         wb_r0_busy                      : 1;
-        r0_in_progress                  : 1;
-        rsvd2                           : 6;
+        rsvd2                           : 7;
 
         //2B
         nxt_lba_offset                  : 16;
@@ -339,8 +341,7 @@ header_type sessxtstxcb_t {
         rsvd4                           : 7;
 
         //8B
-        key_index                       : 32;
-        sec_key_index                   : 32;
+        page_ptr                        : 64;
 
         //28B
         pad                             : 224;
@@ -349,11 +350,11 @@ header_type sessxtstxcb_t {
 
 #define SESSXTSTXCB_PARAMS                                                      \
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, \
-base_addr, log_num_entries, log_lba_size, ring_empty_sched_eval_done, \
+base_addr, log_num_entries, ring_empty_sched_eval_done, \
 rsvd0, r0_busy, rsvd1, \
-wb_r0_busy, r0_in_progress, rsvd2, nxt_lba_offset, \
+wb_r0_busy, rsvd2, nxt_lba_offset, \
 r1_busy, rsvd3, wb_r1_busy, rsvd4,  \
-key_index, sec_key_index, pad
+page_ptr, pad
 
 #define GENERATE_SESSXTSTXCB_D  \
     modify_field(sessxtstxcb_d.rsvd, rsvd);                              \
@@ -370,22 +371,26 @@ key_index, sec_key_index, pad
     modify_field(sessxtstxcb_d.ci_1, ci_1);                              \
     modify_field(sessxtstxcb_d.base_addr, base_addr);  \
     modify_field(sessxtstxcb_d.log_num_entries, log_num_entries);  \
-    modify_field(sessxtstxcb_d.log_lba_size, log_lba_size);  \
     modify_field(sessxtstxcb_d.ring_empty_sched_eval_done, ring_empty_sched_eval_done);  \
     modify_field(sessxtstxcb_d.rsvd0, rsvd0);  \
     modify_field(sessxtstxcb_d.r0_busy, r0_busy);  \
     modify_field(sessxtstxcb_d.rsvd1, rsvd1);  \
     modify_field(sessxtstxcb_d.wb_r0_busy, wb_r0_busy);  \
-    modify_field(sessxtstxcb_d.r0_in_progress, r0_in_progress);  \
     modify_field(sessxtstxcb_d.rsvd2, rsvd2);  \
     modify_field(sessxtstxcb_d.nxt_lba_offset, nxt_lba_offset);  \
     modify_field(sessxtstxcb_d.r1_busy, r1_busy);  \
     modify_field(sessxtstxcb_d.rsvd3, rsvd3);  \
     modify_field(sessxtstxcb_d.wb_r1_busy, wb_r1_busy);  \
     modify_field(sessxtstxcb_d.rsvd4, rsvd4);  \
-    modify_field(sessxtstxcb_d.key_index, key_index);  \
-    modify_field(sessxtstxcb_d.sec_key_index, sec_key_index);  \
+    modify_field(sessxtstxcb_d.page_ptr, page_ptr);  \
     modify_field(sessxtstxcb_d.pad, pad);  \
+
+#define SESSXTSTXCB_PARAMS_NON_STG0 \
+    pc, SESSXTSTXCB_PARAMS
+
+#define GENERATE_SESSXTSTXCB_D_NON_STG0                                \
+    modify_field(sessxtstxcb_d.pc, pc);                                \
+    GENERATE_SESSXTSTXCB_D
 
 // session dgst tx cb
 // 64B
@@ -559,7 +564,7 @@ pad
     modify_field(sq_statscb_d.num_write_lbas, num_write_lbas);                 \
     modify_field(sq_statscb_d.pad, pad);                                       \
 
-//32B
+//64B
 header_type cmd_context_t {
   fields {
     // NVME command Dword 0
@@ -584,7 +589,7 @@ header_type cmd_context_t {
     // cross check whether the received response is sane.
     // sq_id is used to retrieve the head_pointer and also associated cq_id of this sq 
     // so that completions can be posted.
-    rsvd2           :  5;
+    log_lba_size    :  5;
     lif             : 11;
     sq_id           : 24;
     session_id      : 16;    
@@ -594,13 +599,21 @@ header_type cmd_context_t {
     num_aols        :  8;
     state           :  8;
 
-    pad             :  8;
+    log_host_page_size  :   5;
+    rsvd2               :   3;
+
+    prp1_offset         :   16;
+    rsvd3               :   16;
+    key_index           :   32;
+    sec_key_index       :   32;
+    pad                 :  160;
   }
 }
 
 #define CMD_CTXT_PARAMS \
 opc, fuse, rsvd0, psdt, cid, nsid, slba, nlb, rsvd1, \
-rsvd2, lif, sq_id, session_id, num_prps, num_pages, num_aols, state, pad
+log_lba_size, lif, sq_id, session_id, num_prps, num_pages, num_aols, state, \
+log_host_page_size, rsvd2, prp1_offset, rsvd3, key_index, sec_key_index, pad
 
 #define GENERATE_CMD_CTXT_D \
     modify_field(cmd_ctxt_d.opc, opc); \
@@ -612,7 +625,7 @@ rsvd2, lif, sq_id, session_id, num_prps, num_pages, num_aols, state, pad
     modify_field(cmd_ctxt_d.slba, slba); \
     modify_field(cmd_ctxt_d.nlb, nlb); \
     modify_field(cmd_ctxt_d.rsvd1, rsvd1); \
-    modify_field(cmd_ctxt_d.rsvd2, rsvd2); \
+    modify_field(cmd_ctxt_d.log_lba_size, log_lba_size); \
     modify_field(cmd_ctxt_d.lif, lif); \
     modify_field(cmd_ctxt_d.sq_id, sq_id); \
     modify_field(cmd_ctxt_d.session_id, session_id); \
@@ -620,6 +633,12 @@ rsvd2, lif, sq_id, session_id, num_prps, num_pages, num_aols, state, pad
     modify_field(cmd_ctxt_d.num_pages, num_pages); \
     modify_field(cmd_ctxt_d.num_aols, num_aols); \
     modify_field(cmd_ctxt_d.state, state); \
+    modify_field(cmd_ctxt_d.log_host_page_size, log_host_page_size); \
+    modify_field(cmd_ctxt_d.rsvd2, rsvd2); \
+    modify_field(cmd_ctxt_d.prp1_offset, prp1_offset); \
+    modify_field(cmd_ctxt_d.rsvd3, rsvd3); \
+    modify_field(cmd_ctxt_d.key_index, key_index); \
+    modify_field(cmd_ctxt_d.sec_key_index, sec_key_index); \
     modify_field(cmd_ctxt_d.pad, pad); \
 
 // wqe that gets posted into session XTS/DGST queues
@@ -651,7 +670,7 @@ cid
 // since opaque tag data is 32 bits, to simplify the implementation, allocating 32 bit
 // value for ci/pi.
 
-//16B
+//64B
 header_type xtscb_t {
   fields {
     pi                  : 32;
@@ -660,7 +679,7 @@ header_type xtscb_t {
     log_sz              :  5;
     rsvd                :  1;
     choke_counter       :  8;
-    pad                 : 16;
+    pad                 :400;
   }
 }
 
@@ -688,7 +707,7 @@ header_type dgstcb_t {
     log_sz              :  5;
     rsvd                :  1;
     choke_counter       :  8;
-    pad                 : 16;
+    pad                 :400;
   }
 }
 
@@ -725,6 +744,7 @@ header_type xts_desc_t {
         doorbell_address                    : 64;
         doorbell_data                       : 64;
         second_key_desc_index               : 32;
+        //rsvd2                               :320;
     }
 }
 
@@ -788,6 +808,15 @@ header_type dgst_aol_desc_t {
     }
 }
 
+//16B
+header_type pkt_desc_one_aol_t {
+    fields {
+        A0 : 64;
+        O0 : 32;
+        L0 : 32;
+    }
+}
+
 
 header_type ptr64_t {
     fields {
@@ -807,9 +836,58 @@ header_type index16_t {
   }
 }
 
+header_type index32_t {
+  fields {
+    index   : 32;
+  }
+}
+
 header_type data64_t {
     fields {
         data: 64;
     }
 }
 
+header_type nmdpr_t {
+    fields {
+        idx :   32;
+        full:   1;
+    }
+}
+
+#define NMDPR_PARAMS \
+idx, full
+
+#define GENERATE_NMDPR_D    \
+    modify_field(nmdpr_d.idx, idx); \
+    modify_field(nmdpr_d.full, full); \
+
+header_type nmdpr_page_t {
+    fields {
+        page_ptr    : 64;
+        pad         : 448;
+    }
+}
+
+#define NMDPR_PAGE_PARAMS \
+page_ptr, pad
+
+#define GENERATE_NMDPR_PAGE_D   \
+    modify_field(nmdpr_page_d.page_ptr, page_ptr); \
+    modify_field(nmdpr_page_d.pad, pad); \
+
+header_type prp_pair_t {
+    fields {
+        prp1    : 64;
+        prp2    : 64;
+        pad     :384;
+    }
+}
+
+#define PRP_PAIR_PARAMS \
+prp1, prp2, pad
+
+#define GENERATE_PRP_PAIR_D     \
+    modify_field(prp_pair_d.prp1, prp1); \
+    modify_field(prp_pair_d.prp2, prp2); \
+    modify_field(prp_pair_d.pad, pad); \

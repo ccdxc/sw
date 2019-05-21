@@ -43,9 +43,11 @@
 #define tx_table_s0_t0_action nvme_sessprexts_tx_cb_process
 
 #define tx_table_s1_t0_action nvme_sessprexts_tx_sess_wqe_process
-#define tx_table_s1_t1_action nvme_sessprexts_tx_xtscb_process
+#define tx_table_s1_t2_action nvme_sessprexts_tx_nmdpr_process
 
 #define tx_table_s2_t0_action nvme_sessprexts_tx_cmd_ctxt_process
+#define tx_table_s2_t1_action nvme_sessprexts_tx_xtscb_process
+#define tx_table_s2_t2_action nvme_sessprexts_tx_page_fetch_process
 
 #define tx_table_s3_t0_action nvme_sessprexts_tx_cb_writeback_process
 
@@ -84,19 +86,25 @@ header_type nvme_sessprexts_tx_to_stage_sess_wqe_info_t {
 
 header_type nvme_sessprexts_tx_to_stage_cmd_ctxt_info_t {
     fields {
-        pad                              :  128;
+        incr_num_pages                   :    1;
+        pad                              :  127;
     }
 }
 
 header_type nvme_sessprexts_tx_to_stage_writeback_info_t {
     fields {
-        pad                              :  128;
+        page_ptr                         :   64;
+        cmd_ctxt_ptr                     :   64;
     }
 }
 
 header_type nvme_sessprexts_tx_to_stage_ip_op_desc_info_t {
     fields {
-        pad                              :  128;
+        prp1_offset                      :   32;
+        prp1_bytes                       :   32;
+        prp2_bytes                       :   32;
+        prp2_valid                       :    1;
+        pad                              :   31;
     }
 }
 
@@ -106,7 +114,7 @@ header_type nvme_sessprexts_tx_cb_to_sess_wqe_t {
     }
 }
 
-header_type nvme_sessprexts_tx_cb_to_xtscb_t {
+header_type nvme_sessprexts_tx_cb_to_nmdpr_t {
     fields {
         pad                 : 160;
     }
@@ -118,9 +126,26 @@ header_type nvme_sessprexts_tx_sess_wqe_to_cmd_ctxt_t {
     }
 }
 
-header_type nvme_sessprexts_tx_cmd_ctxt_to_writeback_t {
+header_type nvme_sessprexts_tx_sess_wqe_to_xtscb_t {
     fields {
         pad                 : 160;
+    }
+}
+
+header_type nvme_sessprexts_tx_nmdpr_to_page_fetch_t {
+    fields {
+        pad                 : 160;
+    }
+}
+
+header_type nvme_sessprexts_tx_cmd_ctxt_to_writeback_t {
+    fields {
+        slba                :  64;
+        nlb                 :  16;
+        log_lba_size        :   5;
+        log_host_page_size  :   5;
+        prp1_offset         :  16;
+        pad                 :  54;
     }
 }
 
@@ -145,10 +170,19 @@ metadata sessxtstxcb_t sessxtstxcb_d;
 metadata sess_wqe_t sess_wqe_d;
 
 @pragma scratch_metadata
+metadata nmdpr_t nmdpr_d;
+
+@pragma scratch_metadata
 metadata xtscb_t xtscb_d;
 
 @pragma scratch_metadata
+metadata nmdpr_page_t nmdpr_page_d;
+
+@pragma scratch_metadata
 metadata cmd_context_t cmd_ctxt_d;
+
+@pragma scratch_metadata
+metadata prp_pair_t prp_pair_d;
 
 /**** global header unions ****/
 
@@ -207,11 +241,11 @@ metadata nvme_sessprexts_tx_writeback_to_ip_desc_t t0_s2s_writeback_to_ip_desc_i
 metadata nvme_sessprexts_tx_writeback_to_ip_desc_t t0_s2s_writeback_to_ip_desc_info_scr;
 
 //Table-1
-@pragma pa_header_union ingress common_t1_s2s t1_s2s_cb_to_xtscb_info t1_s2s_writeback_to_op_desc_info 
+@pragma pa_header_union ingress common_t1_s2s t1_s2s_sess_wqe_to_xtscb_info t1_s2s_writeback_to_op_desc_info
 
-metadata nvme_sessprexts_tx_cb_to_xtscb_t t1_s2s_cb_to_xtscb_info;
+metadata nvme_sessprexts_tx_sess_wqe_to_xtscb_t t1_s2s_sess_wqe_to_xtscb_info;
 @pragma scratch_metadata
-metadata nvme_sessprexts_tx_cb_to_xtscb_t t1_s2s_cb_to_xtscb_info_scr;
+metadata nvme_sessprexts_tx_sess_wqe_to_xtscb_t t1_s2s_sess_wqe_to_xtscb_info_scr;
 
 metadata nvme_sessprexts_tx_writeback_to_op_desc_t t1_s2s_writeback_to_op_desc_info;
 @pragma scratch_metadata
@@ -219,38 +253,48 @@ metadata nvme_sessprexts_tx_writeback_to_op_desc_t t1_s2s_writeback_to_op_desc_i
 
 
 //Table-2
+@pragma pa_header_union ingress common_t2_s2s t2_s2s_cb_to_nmdpr_info t2_s2s_nmdpr_to_page_fetch_info
+
+metadata nvme_sessprexts_tx_cb_to_nmdpr_t t2_s2s_cb_to_nmdpr_info;
+@pragma scratch_metadata
+metadata nvme_sessprexts_tx_cb_to_nmdpr_t t2_s2s_cb_to_nmdpr_info_scr;
+
+metadata nvme_sessprexts_tx_nmdpr_to_page_fetch_t t2_s2s_nmdpr_to_page_fetch_info;
+@pragma scratch_metadata
+metadata nvme_sessprexts_tx_nmdpr_to_page_fetch_t t2_s2s_nmdpr_to_page_fetch_info_scr;
+
 
 /**** PHV Layout ****/
 @pragma dont_trim
-metadata xts_desc_t xts_desc;
+metadata pkt_desc_one_aol_t pkt_desc_one_aol;
+@pragma dont_trim
+metadata ptr64_t page_ptr;
+@pragma dont_trim
+metadata index32_t xts_db;
 @pragma dont_trim
 metadata xts_aol_desc_t ip_desc;
 @pragma dont_trim
 metadata xts_aol_desc_t op_desc;
 @pragma dont_trim
+metadata xts_desc_t xts_desc;
+@pragma dont_trim
 metadata xts_iv_t iv;
-@pragma dont_trim
-metadata doorbell_data_t xts_db;
-@pragma dont_trim
-metadata ptr64_t dgst_ptr0;
-@pragma dont_trim
-metadata ptr64_t dgst_ptr1;
 
 @pragma pa_align 128
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t ip_desc_dma;         //dma cmd 0
+metadata dma_cmd_phv2mem_t pkt_desc_dma;        //dma cmd 0
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t op_desc_dma;         //dma cmd 1
+metadata dma_cmd_phv2mem_t page_ptr_dma;        //dma cmd 1
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t iv_dma;              //dma cmd 2
+metadata dma_cmd_phv2mem_t ip_desc_dma;         //dma cmd 2
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t xts_desc_dma;        //dma cmd 3
+metadata dma_cmd_phv2mem_t op_desc_dma;         //dma cmd 3
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t xts_db_dma;          //dma cmd 4
+metadata dma_cmd_phv2mem_t iv_dma;              //dma cmd 4
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dgst_ptr0_dma;       //dma cmd 5
+metadata dma_cmd_phv2mem_t xts_desc_dma;        //dma cmd 5
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dgst_ptr1_dma;       //dma cmd 6
+metadata dma_cmd_phv2mem_t xts_db_dma;          //dma cmd 6
 
 /*
  * Stage 0 table 0 action
@@ -282,7 +326,7 @@ action nvme_sessprexts_tx_sess_wqe_process (SESS_WQE_PARAMS) {
     GENERATE_SESS_WQE_D
 }
 
-action nvme_sessprexts_tx_xtscb_process (XTSCB_PARAMS) {
+action nvme_sessprexts_tx_nmdpr_process (NMDPR_PARAMS) {
 
     // from ki global
     GENERATE_GLOBAL_K
@@ -291,10 +335,10 @@ action nvme_sessprexts_tx_xtscb_process (XTSCB_PARAMS) {
     modify_field(to_s1_info_scr.pad, to_s1_info.pad);
     
     // stage to stage
-    modify_field(t1_s2s_cb_to_xtscb_info_scr.pad, t1_s2s_cb_to_xtscb_info.pad);
+    modify_field(t2_s2s_cb_to_nmdpr_info_scr.pad, t2_s2s_cb_to_nmdpr_info.pad);
 
     // D-vector
-    GENERATE_XTSCB_D
+    GENERATE_NMDPR_D
 }
 
 action nvme_sessprexts_tx_cmd_ctxt_process (CMD_CTXT_PARAMS) {
@@ -302,6 +346,7 @@ action nvme_sessprexts_tx_cmd_ctxt_process (CMD_CTXT_PARAMS) {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s2_info_scr.incr_num_pages, to_s2_info.incr_num_pages);
     modify_field(to_s2_info_scr.pad, to_s2_info.pad);
     
     // stage to stage
@@ -311,27 +356,75 @@ action nvme_sessprexts_tx_cmd_ctxt_process (CMD_CTXT_PARAMS) {
     GENERATE_CMD_CTXT_D
 }
 
-action nvme_sessprexts_tx_cb_writeback_process () {
+action nvme_sessprexts_tx_xtscb_process (XTSCB_PARAMS) {
+
     // from ki global
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s3_info_scr.pad, to_s3_info.pad);
+    modify_field(to_s2_info_scr.incr_num_pages, to_s2_info.incr_num_pages);
+    modify_field(to_s2_info_scr.pad, to_s2_info.pad);
     
     // stage to stage
+    modify_field(t1_s2s_sess_wqe_to_xtscb_info_scr.pad, t1_s2s_sess_wqe_to_xtscb_info.pad);
+
+    // D-vector
+    GENERATE_XTSCB_D
+}
+
+action nvme_sessprexts_tx_page_fetch_process (NMDPR_PAGE_PARAMS) {
+
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s2_info_scr.incr_num_pages, to_s2_info.incr_num_pages);
+    modify_field(to_s2_info_scr.pad, to_s2_info.pad);
+    
+    // stage to stage
+    modify_field(t2_s2s_nmdpr_to_page_fetch_info_scr.pad, t2_s2s_nmdpr_to_page_fetch_info.pad);
+
+    // D-vector
+    GENERATE_NMDPR_PAGE_D
+}
+
+action nvme_sessprexts_tx_cb_writeback_process (SESSXTSTXCB_PARAMS_NON_STG0) {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s3_info_scr.page_ptr, to_s3_info.page_ptr);
+    modify_field(to_s3_info_scr.cmd_ctxt_ptr, to_s3_info.cmd_ctxt_ptr);
+    
+    // stage to stage
+    modify_field(t0_s2s_cmd_ctxt_to_writeback_info_scr.slba, t0_s2s_cmd_ctxt_to_writeback_info.slba);
+    modify_field(t0_s2s_cmd_ctxt_to_writeback_info_scr.nlb, t0_s2s_cmd_ctxt_to_writeback_info.nlb);
+    modify_field(t0_s2s_cmd_ctxt_to_writeback_info_scr.log_lba_size, t0_s2s_cmd_ctxt_to_writeback_info.log_lba_size);
+    modify_field(t0_s2s_cmd_ctxt_to_writeback_info_scr.log_host_page_size, t0_s2s_cmd_ctxt_to_writeback_info.log_host_page_size);
+    modify_field(t0_s2s_cmd_ctxt_to_writeback_info_scr.prp1_offset, t0_s2s_cmd_ctxt_to_writeback_info.prp1_offset);
     modify_field(t0_s2s_cmd_ctxt_to_writeback_info_scr.pad, t0_s2s_cmd_ctxt_to_writeback_info.pad);
+
+    // D-vector
+    GENERATE_SESSXTSTXCB_D_NON_STG0
 }
 
 
-action nvme_sessprexts_tx_ip_desc_process () {
+action nvme_sessprexts_tx_ip_desc_process (PRP_PAIR_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s4_info_scr.prp1_offset, to_s4_info.prp1_offset);
+    modify_field(to_s4_info_scr.prp1_bytes, to_s4_info.prp1_bytes);
+    modify_field(to_s4_info_scr.prp2_bytes, to_s4_info.prp2_bytes);
+    modify_field(to_s4_info_scr.prp2_valid, to_s4_info.prp2_valid);
     modify_field(to_s4_info_scr.pad, to_s4_info.pad);
     
     // stage to stage
     modify_field(t0_s2s_writeback_to_ip_desc_info_scr.pad, t0_s2s_writeback_to_ip_desc_info.pad);
+
+    // D-vector
+    GENERATE_PRP_PAIR_D
 }
 
 action nvme_sessprexts_tx_op_desc_process () {
@@ -339,6 +432,10 @@ action nvme_sessprexts_tx_op_desc_process () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s4_info_scr.prp1_offset, to_s4_info.prp1_offset);
+    modify_field(to_s4_info_scr.prp1_bytes, to_s4_info.prp1_bytes);
+    modify_field(to_s4_info_scr.prp2_bytes, to_s4_info.prp2_bytes);
+    modify_field(to_s4_info_scr.prp2_valid, to_s4_info.prp2_valid);
     modify_field(to_s4_info_scr.pad, to_s4_info.pad);
     
     // stage to stage

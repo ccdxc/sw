@@ -223,8 +223,8 @@
 #define NVME_RX_HWXTSCB                 "nvme_rx_hwxtscb_addr"
 #define NVME_TX_HWDGSTCB                "nvme_tx_hwdgstcb_addr"
 #define NVME_RX_HWDGSTCB                "nvme_rx_hwdgstcb_addr"
-#define NVME_TX_NMDPR_RING_BASE         TNMDPR_BIG_TABLE_BASE
-#define NVME_RX_NMDPR_RING_BASE         RNMDPR_BIG_TABLE_BASE
+#define NVME_TX_NMDPR_RING_BASE         "nvme_tx_nmdpr_ring_base"
+#define NVME_RX_NMDPR_RING_BASE         "nvme_rx_nmdpr_ring_base"
 
 
 #endif    // __CAPRI_HBM_HPP__

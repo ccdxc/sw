@@ -356,7 +356,7 @@ metadata ptr64_t prp2;
 
 @pragma pa_align 128
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t wqe_dma;             //dma cmd 0
+metadata dma_cmd_phv2mem_t cmd_ctxt_dma;        //dma cmd 0
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t prp1_dma;            //dma cmd 1
 @pragma dont_trim

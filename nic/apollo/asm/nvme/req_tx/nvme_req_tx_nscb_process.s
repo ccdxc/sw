@@ -99,11 +99,16 @@ sess_found:
                               nvme_req_tx_resourcecb_process,
                               r6)
                             
+    phvwrpair   p.cmd_ctxt_log_lba_size, d.log_lba_size, \
+                p.cmd_ctxt_log_host_page_size, k.to_s2_info_log_host_page_size
+  
     //logic to download prps
 
     //calculate prp1_offset
     add         r1, r0, k.t0_s2s_sqe_to_nscb_info_prp1
     mincr       r1, k.to_s2_info_log_host_page_size, r0
+    phvwrpair   p.cmd_ctxt_prp1_offset, r1, \
+                p.{cmd_ctxt_key_index...cmd_ctxt_sec_key_index}, d.{key_index...sec_key_index}
 
     // add it to nlb * lba_size
     sll         r2, k.to_s2_info_nlb, d.log_lba_size
@@ -121,7 +126,8 @@ sess_found:
     // if the number of prps are <=2, we only need one dma
     sle         c1, r3, 2
     bcf         [c1], one_dma 
-    phvwr       p.cmd_ctxt_num_prps, r3 //BD Slot
+    phvwrpair   p.cmd_ctxt_session_id, r5, \
+                p.cmd_ctxt_num_prps, r3 //BD Slot
 
     // since number of prps are more than 2, we have at least one prp list, 
     

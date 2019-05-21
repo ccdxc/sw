@@ -842,6 +842,8 @@ nvme_ns_create (NvmeNsSpec& spec, NvmeNsResponse *rsp)
     memset(&nscb, 0, sizeof(nvme_nscb_t));
     nscb.backend_ns_id = spec.backend_nsid();
     nscb.ns_size = spec.size(); //size in LBAs
+    nscb.key_index = spec.key_index();
+    nscb.sec_key_index = spec.sec_key_index();
     nscb.log_lba_size = log2(spec.lba_size());
     nscb.sess_prodcb_start = (g_nvme_lif_info[lif].sess_start + g_nvme_lif_info[lif].cur_sess);
 
@@ -1134,10 +1136,7 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     HAL_TRACE_DEBUG("sess_num: {}, tx sessxts pc: {:#x}", ns_info_p->cur_sess, offset);
 
     sessxtstxcb.base_addr = tx_sess_xtsq_base;
-    sessxtstxcb.log_num_entries = txsessprodcb.log_num_xts_q_entries;
-    sessxtstxcb.log_lba_size = ns_info_p->log_lba_size;
-    sessxtstxcb.key_index = ns_info_p->key_index;
-    sessxtstxcb.sec_key_index = ns_info_p->sec_key_index;
+    sessxtstxcb.log_num_entries = log2(NVME_TX_SESS_XTSQ_DEPTH);
 
     // Convert data before writting to HBM
     memrev((uint8_t*)&sessxtstxcb, sizeof(nvme_sessxtstxcb_t));
@@ -1161,7 +1160,7 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     HAL_TRACE_DEBUG("sess_num: {}, tx sessdgst pc: {:#x}", ns_info_p->cur_sess, offset);
 
     sessdgsttxcb.base_addr = tx_sess_dgstq_base;
-    sessdgsttxcb.log_num_entries = txsessprodcb.log_num_dgst_q_entries;
+    sessdgsttxcb.log_num_entries = log2(NVME_TX_SESS_DGSTQ_DEPTH);
 
     // Convert data before writting to HBM
     memrev((uint8_t*)&sessdgsttxcb, sizeof(nvme_sessdgsttxcb_t));
@@ -1185,10 +1184,7 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     HAL_TRACE_DEBUG("sess_num: {}, rx sessxts pc: {:#x}", ns_info_p->cur_sess, offset);
 
     sessxtsrxcb.base_addr = rx_sess_xtsq_base;
-    sessxtsrxcb.log_num_entries = rxsessprodcb.log_num_xts_q_entries;
-    sessxtsrxcb.log_lba_size = ns_info_p->log_lba_size;
-    sessxtsrxcb.key_index = ns_info_p->key_index;
-    sessxtsrxcb.sec_key_index = ns_info_p->sec_key_index;
+    sessxtsrxcb.log_num_entries = log2(NVME_RX_SESS_XTSQ_DEPTH);
 
     // Convert data before writting to HBM
     memrev((uint8_t*)&sessxtsrxcb, sizeof(nvme_sessxtsrxcb_t));
@@ -1212,7 +1208,7 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     HAL_TRACE_DEBUG("sess_num: {}, rx sessdgst pc: {:#x}", ns_info_p->cur_sess, offset);
 
     sessdgstrxcb.base_addr = rx_sess_dgstq_base;
-    sessdgstrxcb.log_num_entries = rxsessprodcb.log_num_dgst_q_entries;
+    sessdgstrxcb.log_num_entries = log2(NVME_RX_SESS_DGSTQ_DEPTH);
 
     sessdgstrxcb.rx_q_base_addr = serq_base;
     sessdgstrxcb.rx_q_log_num_entries = log2(serq_size);

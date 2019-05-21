@@ -19,7 +19,7 @@ nvme_req_tx_sqe_process:
     phvwr       p.{cmd_ctxt_opc...cmd_ctxt_nsid}, d.{opc...nsid}
     phvwr       p.{cmd_ctxt_slba...cmd_ctxt_nlb}, d.{slba...nlb}
     phvwrpair   p.{cmd_ctxt_lif...cmd_ctxt_sq_id}, K_GLOBAL_LIF_QID, \
-                p.{cmd_ctxt_session_id...cmd_ctxt_pad}, r0
+                p.{cmd_ctxt_num_prps...cmd_ctxt_state}, r0
 
     phvwr       p.to_s2_info_opc, d.opc
     phvwr       p.to_s2_info_slba, d.{slba}.dx

@@ -45,7 +45,7 @@ nvme_req_tx_sessprodcb_process:
     
     DMA_CMD_BASE_GET(DMA_CMD_BASE, session_db_dma)
     DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, session_db_data, session_db_data, DB_ADDR)
-    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
+    DMA_SET_WR_FENCE_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
 
     add         r1, r0, k.phv_global_common_cb_addr
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_EN,
