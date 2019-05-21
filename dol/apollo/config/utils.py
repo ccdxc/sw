@@ -13,6 +13,7 @@ IP_VERSION_6 = 6
 IP_VERSION_4 = 4
 
 ETHER_HDR_LEN = 14
+DOT1Q_HDR_LEN = 4
 
 IPV4_DEFAULT_ROUTE = ipaddress.ip_network("0.0.0.0/0")
 IPV6_DEFAULT_ROUTE = ipaddress.ip_network("0::/0")

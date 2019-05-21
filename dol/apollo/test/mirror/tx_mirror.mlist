@@ -10,20 +10,6 @@ feature:
 modules:
 
     - module:
-        name    : IPV4_VPC_PEERING
-        spec    : local2remote_vpc_peering.testspec
-        enable  : False
-        iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=VPC_PEER,Label=NETWORKING
-
-    - module:
-        name    : IPV6_VPC_PEERING
-        spec    : local2remote_vpc_peering.testspec
-        enable  : False
-        iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=VPC_PEER,Label=NETWORKING
-
-    - module:
         name    : IPV4_L2_LOCAL2REMOTE
         spec    : local2remote_tx.testspec
         iterate :

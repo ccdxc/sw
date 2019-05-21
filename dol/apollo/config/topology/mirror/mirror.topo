@@ -35,18 +35,21 @@ mirror:
       interface  : 285278209 #destination or collector interface eth 1/1
       vlanid     : 10 # rspan vlanid
 
+    # RSPAN session without truncate (snaplen < packet size)
     - spantype   : 'RSPAN'
-      snaplen    : 128
+      snaplen    : 1
       interface  : 285278209
       vlanid     : 20
 
+    # RSPAN session without truncate (snaplen > packet size)
     - spantype   : 'RSPAN'
-      snaplen    : 128
+      snaplen    : 4294967295
       interface  : 285278209
       vlanid     : 30
 
+    # RSPAN session without truncate (snaplen == packet size)
     - spantype   : 'RSPAN'
-      snaplen    : 128
+      snaplen    : 130
       interface  : 285278209
       vlanid     : 40
 
@@ -62,7 +65,7 @@ mirror:
 
     # ERSPAN session to substrate vpc with truncate
     - spantype   : 'ERSPAN'
-      snaplen    : 80
+      snaplen    : 1
       dscp       : 0
       vpcid      : 1
       # TODO: Check why srcip is configurable. Until then hardcoding device ip
@@ -71,7 +74,7 @@ mirror:
 
     # ERSPAN session to substrate vpc without truncate
     - spantype   : 'ERSPAN'
-      snaplen    : 200
+      snaplen    : 4294967295
       dscp       : 0
       vpcid      : 1
       srcip      : '172.16.0.1'

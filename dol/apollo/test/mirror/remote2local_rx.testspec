@@ -72,62 +72,124 @@ packets:
                 prio    : 0
 
     - packet:
-        id          : RSPAN_MIRROR_PKT_RX_1 # Expected RSPAN rx mirrored packet for session 1
+        id          : RSPAN_MIRROR_PKT_RX_BASE_1 # Expected RSPAN rx mirrored packet for session 1
         clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_RX_BASE
         headers     :
             outerqtag:
                 vlan    : callback://mirror/packets/GetSPANVlanID/direction=RX,id=1
 
     - packet:
-        id          : RSPAN_MIRROR_PKT_RX_2 # Expected RSPAN rx mirrored packet for session 2
+        id          : RSPAN_MIRROR_PKT_RX_1 # Expected Truncated RSPAN rx mirrored packet for session 1
+        payloadsize : callback://mirror/packets/GetRSPANPayloadSize/pktid=RSPAN_MIRROR_PKT_RX_BASE_1,direction=RX,id=1
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://mirror/packets/GetRSPANPayload/pktid=RSPAN_MIRROR_PKT_RX_BASE_1,direction=RX,id=1
+
+    - packet:
+        id          : RSPAN_MIRROR_PKT_RX_BASE_2 # Expected RSPAN rx mirrored packet for session 2
         clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_RX_BASE
         headers     :
             outerqtag:
                 vlan    : callback://mirror/packets/GetSPANVlanID/direction=RX,id=2
 
+    - packet:
+        id          : RSPAN_MIRROR_PKT_RX_2 # Expected Truncated RSPAN rx mirrored packet for session 2
+        payloadsize : callback://mirror/packets/GetRSPANPayloadSize/pktid=RSPAN_MIRROR_PKT_RX_BASE_2,direction=RX,id=2
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://mirror/packets/GetRSPANPayload/pktid=RSPAN_MIRROR_PKT_RX_BASE_2,direction=RX,id=2
 
     - packet:
-        id          : RSPAN_MIRROR_PKT_RX_3 # Expected RSPAN rx mirrored packet for session 3
+        id          : RSPAN_MIRROR_PKT_RX_BASE_3 # Expected RSPAN rx mirrored packet for session 3
         clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_RX_BASE
         headers     :
             outerqtag:
                 vlan    : callback://mirror/packets/GetSPANVlanID/direction=RX,id=3
 
     - packet:
-        id          : RSPAN_MIRROR_PKT_RX_4 # Expected RSPAN rx mirrored packet for session 4
+        id          : RSPAN_MIRROR_PKT_RX_3 # Expected Truncated RSPAN rx mirrored packet for session 3
+        payloadsize : callback://mirror/packets/GetRSPANPayloadSize/pktid=RSPAN_MIRROR_PKT_RX_BASE_3,direction=RX,id=3
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://mirror/packets/GetRSPANPayload/pktid=RSPAN_MIRROR_PKT_RX_BASE_3,direction=RX,id=3
+
+    - packet:
+        id          : RSPAN_MIRROR_PKT_RX_BASE_4 # Expected RSPAN rx mirrored packet for session 4
         clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_RX_BASE
         headers     :
             outerqtag:
                 vlan    : callback://mirror/packets/GetSPANVlanID/direction=RX,id=4
 
     - packet:
-        id          : RSPAN_MIRROR_PKT_RX_5 # Expected RSPAN rx mirrored packet for session 5
+        id          : RSPAN_MIRROR_PKT_RX_4 # Expected Truncated RSPAN rx mirrored packet for session 4
+        payloadsize : callback://mirror/packets/GetRSPANPayloadSize/pktid=RSPAN_MIRROR_PKT_RX_BASE_4,direction=RX,id=4
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://mirror/packets/GetRSPANPayload/pktid=RSPAN_MIRROR_PKT_RX_BASE_4,direction=RX,id=4
+
+    - packet:
+        id          : RSPAN_MIRROR_PKT_RX_BASE_5 # Expected RSPAN rx mirrored packet for session 5
         clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_RX_BASE
         headers     :
             outerqtag:
                 vlan    : callback://mirror/packets/GetSPANVlanID/direction=RX,id=5
 
     - packet:
-        id          : RSPAN_MIRROR_PKT_RX_6 # Expected RSPAN rx mirrored packet for session 6
+        id          : RSPAN_MIRROR_PKT_RX_5 # Expected Truncated RSPAN rx mirrored packet for session 5
+        payloadsize : callback://mirror/packets/GetRSPANPayloadSize/pktid=RSPAN_MIRROR_PKT_RX_BASE_5,direction=RX,id=5
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://mirror/packets/GetRSPANPayload/pktid=RSPAN_MIRROR_PKT_RX_BASE_5,direction=RX,id=5
+
+    - packet:
+        id          : RSPAN_MIRROR_PKT_RX_BASE_6 # Expected RSPAN rx mirrored packet for session 6
         clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_RX_BASE
         headers     :
             outerqtag:
                 vlan    : callback://mirror/packets/GetSPANVlanID/direction=RX,id=6
 
+    - packet:
+        id          : RSPAN_MIRROR_PKT_RX_6 # Expected Truncated RSPAN rx mirrored packet for session 6
+        payloadsize : callback://mirror/packets/GetRSPANPayloadSize/pktid=RSPAN_MIRROR_PKT_RX_BASE_6,direction=RX,id=6
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://mirror/packets/GetRSPANPayload/pktid=RSPAN_MIRROR_PKT_RX_BASE_6,direction=RX,id=6
 
     - packet:
-        id          : RSPAN_MIRROR_PKT_RX_7 # Expected RSPAN rx mirrored packet for session 7
+        id          : RSPAN_MIRROR_PKT_RX_BASE_7 # Expected RSPAN rx mirrored packet for session 7
         clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_RX_BASE
         headers     :
             outerqtag:
                 vlan    : callback://mirror/packets/GetSPANVlanID/direction=RX,id=7
 
     - packet:
-        id          : RSPAN_MIRROR_PKT_RX_8 # Expected RSPAN rx mirrored packet for session 8
+        id          : RSPAN_MIRROR_PKT_RX_7 # Expected Truncated RSPAN rx mirrored packet for session 7
+        payloadsize : callback://mirror/packets/GetRSPANPayloadSize/pktid=RSPAN_MIRROR_PKT_RX_BASE_7,direction=RX,id=7
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://mirror/packets/GetRSPANPayload/pktid=RSPAN_MIRROR_PKT_RX_BASE_7,direction=RX,id=7
+
+    - packet:
+        id          : RSPAN_MIRROR_PKT_RX_BASE_8 # Expected RSPAN rx mirrored packet for session 8
         clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_RX_BASE
         headers     :
             outerqtag:
                 vlan    : callback://mirror/packets/GetSPANVlanID/direction=RX,id=8
+
+    - packet:
+        id          : RSPAN_MIRROR_PKT_RX_8 # Expected Truncated RSPAN rx mirrored packet for session 8
+        payloadsize : callback://mirror/packets/GetRSPANPayloadSize/pktid=RSPAN_MIRROR_PKT_RX_BASE_8,direction=RX,id=8
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://mirror/packets/GetRSPANPayload/pktid=RSPAN_MIRROR_PKT_RX_BASE_8,direction=RX,id=8
 
     - packet:
         id          : ERSPAN_MIRROR_PKT_RX_BASE # Expected ERSPAN rx mirrored packet base

@@ -74,7 +74,7 @@ def GetExpectedPacket(testcase, args):
     return testcase.packets.Get(mirrorObj.SpanType + '_MIRROR_PKT_' + args.direction + '_' + str(args.id))
 
 def GetERSPANCos(testcase, inpkt, args):
-    pkt = testcase.packets.db[args.pktid].spktobj.spkt
+    pkt = testcase.packets.db[args.pktid].GetScapyPacket()
     return pkt[Dot1Q].prio
 
 def __is_erspan_truncate(basepktsize, truncatelen):
@@ -116,3 +116,36 @@ def GetERSPANPayload(testcase, inpkt, args):
     else:
         args.end = basepkt.size
     return pktslicer.GetPacketSlice(testcase, basepkt, args)
+
+def __is_rspan_truncate(basepktsize, truncatelen):
+    if truncatelen == 0 or (truncatelen >= (basepktsize - utils.ETHER_HDR_LEN - utils.DOT1Q_HDR_LEN)):
+        # No truncate
+        return 0
+    else:
+        # truncate
+        return 1
+
+def GetRSPANPayloadSize(testcase, inpkt, args):
+    mirrorObj = __get_mirror_object(testcase, args)
+    if not mirrorObj or mirrorObj.SpanType != 'RSPAN':
+        return 0
+    snaplen = mirrorObj.SnapLen
+    pkt = testcase.packets.Get(args.pktid)
+    if __is_rspan_truncate(pkt.size, snaplen):
+        plen = snaplen + utils.ETHER_HDR_LEN + utils.DOT1Q_HDR_LEN
+    else:
+        plen = pkt.size
+    return plen
+
+def GetRSPANPayload(testcase, inpkt, args):
+    mirrorObj = __get_mirror_object(testcase, args)
+    if not mirrorObj or mirrorObj.SpanType != 'RSPAN':
+        return []
+    snaplen = mirrorObj.SnapLen
+    pkt = testcase.packets.Get(args.pktid)
+    args.pktid = args.pktid
+    if __is_rspan_truncate(pkt.size, snaplen):
+        args.end = snaplen + utils.ETHER_HDR_LEN + utils.DOT1Q_HDR_LEN
+    else:
+        args.end = pkt.size
+    return pktslicer.GetPacketSlice(testcase, pkt, args)
