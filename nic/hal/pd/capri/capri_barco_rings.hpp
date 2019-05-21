@@ -200,6 +200,16 @@ capri_barco_resp_dispatch (capri_barco_ring_t *barco_ring)
 #endif
 
 hal_ret_t get_opaque_tag_addr(types::BarcoRings ring_type, uint64_t* addr);
+
+#define CAPRI_BARCO_OPAQUE_TAG_ENTRY_SIZE 64 //Bytes
+#define CAPRI_BARCO_MAX_OPAQUE_TAG_ENTRIES 32
+
+static inline int get_opaque_tag_offset(types::BarcoRings ring_type)
+{
+    assert(ring_type < CAPRI_BARCO_MAX_OPAQUE_TAG_ENTRIES);
+    return (ring_type * CAPRI_BARCO_OPAQUE_TAG_ENTRY_SIZE);
+}
+
 hal_ret_t capri_barco_get_meta_config_info(types::BarcoRings ring_type, uint64_t* shadow_pndx_addr,
                                            uint32_t *shadow_pndx_size, uint32_t *desc_size,
                                            uint32_t *opaque_tag_size);

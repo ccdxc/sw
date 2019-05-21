@@ -112,6 +112,7 @@
 #define CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS "tcp_proxy_per_flow_stats"
 #define CAPRI_HBM_REG_NWSEC_RULE_STATS            "nwsec_rule_stats"
 #define CAPRI_HBM_REG_NVME                        "nvme"
+#define CAPRI_HBM_REG_OPAQUE_TAG                  "opaque_tag"
 #define CAPRI_HBM_NVME_TX_NMDPR_RING_BASE         CAPRI_HBM_REG_NMDPR_BIG_TX
 #define CAPRI_HBM_NVME_RX_NMDPR_RING_BASE         CAPRI_HBM_REG_NMDPR_BIG_RX
 

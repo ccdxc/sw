@@ -24,7 +24,6 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     uint32_t    i = 0;
     uint64_t    offset;
     uint32_t capri_coreclk_freq; //Mhz
-    uint64_t opaque_tag_addr;
 
     capri_coreclk_freq = (uint32_t)(sdk::platform::capri::capri_get_coreclk_freq(platform_type) / 1000000);
 
@@ -384,23 +383,19 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     i++;
 
     symbols[i].name = NVME_TX_HWXTSCB;
-    get_opaque_tag_addr(types::BARCO_RING_XTS0, &opaque_tag_addr);
-    symbols[i].val = opaque_tag_addr;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(types::BARCO_RING_XTS0);
     i++;
 
     symbols[i].name = NVME_RX_HWXTSCB;
-    get_opaque_tag_addr(types::BARCO_RING_XTS1, &opaque_tag_addr);
-    symbols[i].val = opaque_tag_addr;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(types::BARCO_RING_XTS1);
     i++;
 
     symbols[i].name = NVME_TX_HWDGSTCB;
-    get_opaque_tag_addr(types::BARCO_RING_CP, &opaque_tag_addr);
-    symbols[i].val = opaque_tag_addr;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(types::BARCO_RING_CP);
     i++;
 
     symbols[i].name = NVME_RX_HWDGSTCB;
-    get_opaque_tag_addr(types::BARCO_RING_DC, &opaque_tag_addr);
-    symbols[i].val = opaque_tag_addr;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(types::BARCO_RING_DC);
     i++;
 
     symbols[i].name = NVME_TX_NMDPR_RING_BASE;

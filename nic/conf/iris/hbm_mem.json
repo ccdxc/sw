@@ -526,6 +526,12 @@
             "name": "nwsec_rule_stats",
             "size": "8192K",
             "reset": true
+        }, 
+        {
+            "_comment" : "32 entries of 64 Bytes each",
+            "name": "opaque_tag",
+            "size": "2K",
+            "reset": true
         } 
     ]
 }

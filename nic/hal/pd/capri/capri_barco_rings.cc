@@ -1783,14 +1783,9 @@ hal_ret_t capri_barco_rings_init(platform_type_t platform)
 
         if (barco_rings[idx].ring_size != 0) {
             barco_rings[idx].opaqe_tag_value = 0x1;
-            /* FIXME: 512 byte is an overkill, on the real target use storage in the ring structure */
-            /* On XTS0, XTS1, CP, DC rings, NVME uses first 64Bytes of this 512B */
-            ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B, NULL, &opa_tag_addr);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Failed to allocate opaque tag storage for ring {}",
-                  barco_rings[idx].ring_name);
-                return ret;
-            }
+            
+            opa_tag_addr = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset((types::BarcoRings)idx);
+
             HAL_TRACE_DEBUG("Ring: {}: Allocated opaque tag @ {:x}",
                 barco_rings[idx].ring_name, opa_tag_addr);
             if(sdk::asic::asic_mem_write(opa_tag_addr, (uint8_t *)&opa_tag_def_val, sizeof(opa_tag_def_val))) {
