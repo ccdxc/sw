@@ -15,7 +15,7 @@
 #include "nic/sdk/third-party/asic/capri/verif/apis/cap_freq_api.h"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/pds_state.hpp"
-#include "nic/apollo/api/impl/capri_impl.hpp"
+#include "nic/apollo/api/impl/capri/capri_impl.hpp"
 #include "nic/apollo/core/trace.hpp"
 
 namespace api {

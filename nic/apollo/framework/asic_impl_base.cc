@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/framework/asic_impl_base.hpp"
-#include "nic/apollo/api/impl/capri_impl.hpp"
+#include "nic/apollo/api/impl/capri/capri_impl.hpp"
 
 namespace api {
 namespace impl {
