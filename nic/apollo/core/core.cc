@@ -115,13 +115,6 @@ parse_global_config (string pipeline, string cfg_file, pds_state *state)
     return SDK_RET_OK;
 }
 
-#if 0
-static void
-session_age_cb (void *timer, uint32_t timer_id, void *ctxt)
-{
-}
-#endif
-
 sdk_ret_t
 schedule_timers (pds_state *state, sdk::lib::twheel_cb_t sysmon_cb)
 {
@@ -131,20 +124,6 @@ schedule_timers (pds_state *state, sdk::lib::twheel_cb_t sysmon_cb)
     while (!sdk::lib::periodic_thread_is_running()) {
         pthread_yield();
     }
-
-#if 0
-    // start periodic timer for aging sessions
-    aging_timer = sdk::lib::timer_schedule(
-                      TIMER_ID_SESSION_AGE,
-                      SESSION_AGE_SCAN_INTVL * TIME_MSECS_PER_SEC,
-                      nullptr, session_age_cb, true);
-    if (aging_timer == NULL) {
-        PDS_TRACE_ERR("Failed to start session aging timer\n");
-        return SDK_RET_ERR;
-    }
-    PDS_TRACE_DEBUG("Started periodic session aging timer with %us intvl",
-                    SESSION_AGE_SCAN_INTVL);
-#endif
 
     if (state->platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
         // start periodic timer for scanning system interrupts, temparature,

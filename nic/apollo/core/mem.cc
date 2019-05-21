@@ -72,6 +72,14 @@ slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
         mirror_session::destroy((mirror_session *)elem);
         break;
 
+    case PDS_SLAB_ID_METER:
+        meter_entry::destroy((meter_entry *)elem);
+        break;
+
+    case PDS_SLAB_ID_TAG:
+        tag_entry::destroy((tag_entry *)elem);
+        break;
+
     default:
         PDS_TRACE_ERR("Unknown slab id {}", slab_id);
         SDK_ASSERT(false);
