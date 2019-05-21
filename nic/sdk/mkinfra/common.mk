@@ -32,8 +32,10 @@ ifeq ($(PERF),1)
     COMMON_GXX_FLAGS        += -DPERF
 endif
 
+# pipeline specific stuff inside SDK is big no-no, new pipeline is broken now
+# @lseshan please follow up and fix this
 COMMON_GXX_FLAGS		+= -DPIPELINE=${PIPELINE}
-ifneq ($(PIPELINE), apollo)
+ifeq ($(PIPELINE), iris)
 	COMMON_GXX_FLAGS        += -DENABLE_SDK_MTRACK
 endif
 

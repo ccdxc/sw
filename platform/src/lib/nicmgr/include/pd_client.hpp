@@ -19,17 +19,19 @@
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "platform/utils/mpartition.hpp"
 
-#ifndef APOLLO
+// TODO: what was done here was clearly a hack, please clean up !!!
+#ifdef APOLLO
+#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
+#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd_table.h"
+#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
+#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd_table.h"
+#elif defined (ARTEMIS)
+#else
 #include "gen/platform/mem_regions.hpp"
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h"
 #include "gen/p4gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
 #include "gen/p4gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h"
-#else
-#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
-#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd_table.h"
-#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
-#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd_table.h"
 #endif
 
 // Maximum number of queue per LIF

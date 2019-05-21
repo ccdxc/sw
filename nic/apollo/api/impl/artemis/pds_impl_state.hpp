@@ -11,18 +11,17 @@
 #define __PDS_IMPL_STATE_HPP__
 
 #include "nic/sdk/lib/slab/slab.hpp"
-#include "nic/apollo/api/impl/artemis_impl_state.hpp"
-#if 0
+#include "nic/apollo/api/impl/artemis/artemis_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/device_impl.hpp"
-#include "nic/apollo/api/impl/artemis/tep_impl_state.hpp"
-#include "nic/apollo/api/impl/artemis/vnic_impl_state.hpp"
-#include "nic/apollo/api/impl/artemis/mapping_impl_state.hpp"
+//#include "nic/apollo/api/impl/artemis/tep_impl_state.hpp"
+//#include "nic/apollo/api/impl/artemis/vnic_impl_state.hpp"
+//#include "nic/apollo/api/impl/artemis/mapping_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/route_impl_state.hpp"
-#include "nic/apollo/api/impl/artemis/security_policy_impl_state.hpp"
+//#include "nic/apollo/api/impl/artemis/security_policy_impl_state.hpp"
 #include "nic/apollo/api/impl/lif_impl_state.hpp"
-#include "nic/apollo/api/impl/artemis/mirror_impl_state.hpp"
-#include "nic/apollo/api/impl/meter_impl_state.hpp"
-#include "nic/apollo/api/impl/tag_impl_state.hpp"
+//#include "nic/apollo/api/impl/artemis/mirror_impl_state.hpp"
+#include "nic/apollo/api/impl/artemis/meter_impl_state.hpp"
+#include "nic/apollo/api/impl/artemis/tag_impl_state.hpp"
 
 namespace api {
 namespace impl {
@@ -44,20 +43,20 @@ public:
     static void destroy(pds_impl_state *impl_state);
     pds_impl_state();
     ~pds_impl_state();
-    apollo_impl_state *apollo_impl_db(void) { return apollo_impl_db_; }
+    artemis_impl_state *artemis_impl_db(void) { return artemis_impl_db_; }
     lif_impl_state *lif_impl_db(void) { return lif_impl_db_; }
     tep_impl_state *tep_impl_db(void) { return tep_impl_db_; }
-    vnic_impl_state *vnic_impl_db(void) { return vnic_impl_db_; }
-    mapping_impl_state *mapping_impl_db(void) { return mapping_impl_db_; }
+    //vnic_impl_state *vnic_impl_db(void) { return vnic_impl_db_; }
+    //mapping_impl_state *mapping_impl_db(void) { return mapping_impl_db_; }
     route_table_impl_state *route_table_impl_db(void) {
         return route_table_impl_db_;
     }
-    security_policy_impl_state *security_policy_impl_db(void) {
-        return security_policy_impl_db_;
-    }
-    mirror_impl_state *mirror_impl_db(void) {
-        return mirror_impl_db_;
-    }
+    //security_policy_impl_state *security_policy_impl_db(void) {
+        //return security_policy_impl_db_;
+    //}
+    //mirror_impl_state *mirror_impl_db(void) {
+        //return mirror_impl_db_;
+    //}
     meter_impl_state *meter_impl_db(void) {
         return meter_impl_db_;
     }
@@ -66,23 +65,23 @@ public:
     }
 
 private:
-    apollo_impl_state             *apollo_impl_db_;
+    artemis_impl_state             *artemis_impl_db_;
     lif_impl_state                *lif_impl_db_;
-    tep_impl_state                *tep_impl_db_;
+    //tep_impl_state                *tep_impl_db_;
     vnic_impl_state               *vnic_impl_db_;
-    mapping_impl_state            *mapping_impl_db_;
+    //mapping_impl_state            *mapping_impl_db_;
     route_table_impl_state        *route_table_impl_db_;
-    security_policy_impl_state    *security_policy_impl_db_;
-    mirror_impl_state             *mirror_impl_db_;
+    //security_policy_impl_state    *security_policy_impl_db_;
+    //mirror_impl_state             *mirror_impl_db_;
     meter_impl_state              *meter_impl_db_;
     tag_impl_state                *tag_impl_db_;
 };
 extern pds_impl_state g_pds_impl_state;
 
-static inline apollo_impl_state *
-apollo_impl_db (void)
+static inline artemis_impl_state *
+artemis_impl_db (void)
 {
-    return  g_pds_impl_state.apollo_impl_db();
+    return  g_pds_impl_state.artemis_impl_db();
 }
 
 static inline lif_impl_state *
@@ -103,11 +102,13 @@ vnic_impl_db (void)
     return g_pds_impl_state.vnic_impl_db();
 }
 
+#if 0
 static inline mapping_impl_state *
 mapping_impl_db (void)
 {
     return g_pds_impl_state.mapping_impl_db();
 }
+#endif
 
 static inline route_table_impl_state *
 route_table_impl_db (void)
@@ -115,6 +116,7 @@ route_table_impl_db (void)
     return g_pds_impl_state.route_table_impl_db();
 }
 
+#if 0
 static inline security_policy_impl_state *
 security_policy_impl_db (void)
 {
@@ -126,8 +128,8 @@ mirror_impl_db (void)
 {
     return g_pds_impl_state.mirror_impl_db();
 }
+#endif
 
-#if 0
 static inline meter_impl_state *
 meter_impl_db (void)
 {
@@ -139,7 +141,6 @@ tag_impl_db (void)
 {
     return g_pds_impl_state.tag_impl_db();
 }
-#endif
 #endif
 
 /** * @} */    // end of PDS_IMPL_STATE

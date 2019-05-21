@@ -21,7 +21,7 @@ pds_impl_state g_pds_impl_state;
 
 sdk_ret_t
 pds_impl_state::init(pds_state *state) {
-    apollo_impl_db_ = new apollo_impl_state(state);
+    artemis_impl_db_ = new apollo_impl_state(state);
     lif_impl_db_ = new lif_impl_state(state);
     tep_impl_db_ = new tep_impl_state(state);
     vnic_impl_db_ = new vnic_impl_state(state);
