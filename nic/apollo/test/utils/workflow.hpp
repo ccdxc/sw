@@ -18,11 +18,15 @@ namespace api_test {
     ASSERT_TRUE(class_T::many_create(seed) == sdk::SDK_RET_OK)
 
 #define MANY_READ(seed)                                             \
-    ASSERT_TRUE(class_T::many_read(seed) == sdk::SDK_RET_OK)
+    if (class_T::is_stateful()) {                                   \
+        ASSERT_TRUE(class_T::many_read(seed) == sdk::SDK_RET_OK);   \
+    }
 
 #define MANY_READ_FAIL(seed, exp_result)                            \
-    ASSERT_TRUE(class_T::many_read(                                 \
-        seed, exp_result) == sdk::SDK_RET_OK)
+    if (class_T::is_stateful()) {                                   \
+        ASSERT_TRUE(class_T::many_read(seed,                        \
+            exp_result) == sdk::SDK_RET_OK);                        \
+    }
 
 #define MANY_UPDATE(seed)                                           \
     ASSERT_TRUE(class_T::many_update(seed) == sdk::SDK_RET_OK)

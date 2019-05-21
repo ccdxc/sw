@@ -138,6 +138,11 @@ public:
                                        std::string subnet_start_addr,
                                        int num_subnets);
 
+    /// \brief Indicates whether subnet is stateful
+    ///
+    /// \returns TRUE for subnet which is stateful
+    static bool is_stateful(void) { return TRUE; }
+
 private:
     void __init();
 

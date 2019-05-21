@@ -131,6 +131,11 @@ public:
                                        pds_encap_type_t fabric_encap_type,
                                        bool src_dst_check,
                                        vnic_stepper_seed_t *seed);
+
+    /// \brief Indicates whether VNIC is stateful
+    ///
+    /// \returns TRUE for VNIC which is stateful
+    static bool is_stateful(void) { return TRUE; }
 };
 
 } // namespace api_test

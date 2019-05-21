@@ -140,6 +140,11 @@ public:
     static void tep_stepper_seed_init(uint32_t num_tep, std::string ip_str,
                                       pds_tep_type_t type, pds_encap_t encap,
                                       bool nat, tep_stepper_seed_t *seed);
+
+    /// \brief Indicates whether TEP is stateful
+    ///
+    /// \returns TRUE for TEP which is stateful
+    static bool is_stateful(void) { return TRUE; }
 };
 
 }    // namespace api_test

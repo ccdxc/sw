@@ -10,6 +10,8 @@
 #include <getopt.h>
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
+#include "nic/apollo/test/utils/batch.hpp"
+#include "nic/apollo/test/utils/workflow.hpp"
 #include "nic/apollo/test/utils/tep.hpp"
 #include "nic/apollo/test/utils/route.hpp"
 
@@ -21,7 +23,6 @@ namespace api_test {
 
 // Globals
 char *g_cfg_file = NULL;
-static pds_epoch_t g_batch_epoch = PDS_EPOCH_INVALID;
 
 constexpr int k_max_v4_route_table = PDS_MAX_ROUTE_TABLE;
 constexpr int k_max_v6_route_table = PDS_MAX_ROUTE_TABLE;
@@ -47,29 +48,27 @@ protected:
         params.enable_fte = false;
         pds_test_base::SetUpTestCase(params);
 
-        pds_batch_params_t batch_params = {0};
         pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
         tep_stepper_seed_t tep_seed = {};
 
         TEP_SEED_INIT(PDS_MAX_TEP, k_first_nh_ip_str, PDS_TEP_TYPE_WORKLOAD,
                       encap, TRUE, &tep_seed);
 
-        BATCH_START();
+        batch_start();
         // create max TEPs which can be used as NHs for routes
         TEP_MANY_CREATE(&tep_seed);
-        BATCH_COMMIT();
+        batch_commit();
     }
     static void TearDownTestCase() {
-        pds_batch_params_t batch_params = {0};
         pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
         tep_stepper_seed_t tep_seed = {};
 
         TEP_SEED_INIT(PDS_MAX_TEP, k_first_nh_ip_str, PDS_TEP_TYPE_WORKLOAD,
                       encap, TRUE, &tep_seed);
 
-        BATCH_START();
+        batch_start();
         TEP_MANY_DELETE(&tep_seed);
-        BATCH_COMMIT();
+        batch_commit();
 
         pds_test_base::TearDownTestCase();
     }
@@ -82,462 +81,222 @@ protected:
 /// \defgroup Route table
 /// @{
 
-/// \brief Create and delete max v4/v6 route tables in the same batch
-/// The operation should be de-duped by framework and effectively
-/// a NO-OP from hardware perspective
-/// [ Create SetMax, Delete SetMax ] - Read
+/// \brief Route table WF_1
 TEST_F(route_test, v4v6_route_table_workflow_1) {
-    pds_batch_params_t batch_params = {0};
-    pds_route_table_id_t first_v4_route_table_id = 22222;
-    pds_route_table_id_t first_v6_route_table_id = 11111;
+    route_table_stepper_seed_t seed = {};
 
+    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
+                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, 0, &seed);
+    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
+                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, 0, &seed);
     // trigger - test max route tables with zero routes
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table,
-        first_v4_route_table_id, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table,
-        first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v4_route_table,
-        first_v4_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v6_route_table,
-        first_v6_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    workflow_1<route_table_util, route_table_stepper_seed_t>(&seed);
 
+    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
+                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, k_max_route_per_tbl, &seed);
+    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
+                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, k_max_route_per_tbl, &seed);
     // trigger - test max route tables with max routes
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table,
-        first_v4_route_table_id, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table,
-        first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v4_route_table,
-        first_v4_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v6_route_table,
-        first_v6_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    workflow_1<route_table_util, route_table_stepper_seed_t>(&seed);
 }
 
-/// \brief Create, delete and create max v4/v6 route tables in the same batch
-/// Create and delete should be de-deduped by framework and subsequent create
-/// should result in successful creation
-/// [ Create SetMax - Delete SetMax - Create SetMax ] - Read
+/// \brief Route table WF_2
 TEST_F(route_test, v4v6_route_table_workflow_2) {
-    pds_batch_params_t batch_params = {0};
-    pds_route_table_id_t first_v4_route_table_id = 22222;
-    pds_route_table_id_t first_v6_route_table_id = 11111;
+    route_table_stepper_seed_t seed = {};
 
+    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
+                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, 0, &seed);
+    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
+                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, 0, &seed);
     // trigger - test max route tables with zero routes
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table,
-        first_v4_route_table_id, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table,
-        first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v4_route_table,
-        first_v4_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v6_route_table,
-        first_v6_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table,
-        first_v4_route_table_id, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table,
-        first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    workflow_2<route_table_util, route_table_stepper_seed_t>(&seed);
 
-    // cleanup
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v4_route_table,
-        first_v4_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v6_route_table,
-        first_v6_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
+    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
+                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, k_max_route_per_tbl, &seed);
+    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
+                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, k_max_route_per_tbl, &seed);
     // trigger - test max route tables with max routes
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table,
-        first_v4_route_table_id, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table,
-        first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v4_route_table,
-        first_v4_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v6_route_table,
-        first_v6_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table,
-        first_v4_route_table_id, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table,
-        first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v4_route_table,
-        first_v4_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v6_route_table,
-        first_v6_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    workflow_2<route_table_util, route_table_stepper_seed_t>(&seed);
 }
 
-/// \brief Create Set1, Set2, Delete Set1, Create Set3 in same batch
-/// The set1 route table should be de-duped and set2 and set3 should be
-/// programmed in the hardware
-/// [ Create Set1, Set2 - Delete Set1 - Create Set3 ] - Read
+/// \brief Route table WF_3
 TEST_F(route_test, v4v6_route_table_workflow_3) {
-    pds_batch_params_t batch_params = {0};
-    uint32_t num_route_tables = 50;
+    route_table_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {};
 
-    // trigger - test max route tables with zero routes
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        101, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        151, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        201, "125.100.100.1/21", k_first_nh_ip_str,
-        IP_AF_IPV4, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        251, "125:100:100:1::0/64", k_first_nh_ip_str,
-        IP_AF_IPV6, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 101) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 151) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        301, "150.100.100.1/21", k_first_nh_ip_str,
-        IP_AF_IPV4, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        351, "150:100:100:1::0/64", k_first_nh_ip_str,
-        IP_AF_IPV6, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    route_table_util::route_table_stepper_seed_init(50, 101,
+                                  k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, 0, &seed1);
+    route_table_util::route_table_stepper_seed_init(50, 151,
+                                  k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, 0, &seed1);
+    route_table_util::route_table_stepper_seed_init(50, 201,
+                                  "125.100.100.1/21", k_first_nh_ip_str,
+                                  IP_AF_IPV4, 0, &seed2);
+    route_table_util::route_table_stepper_seed_init(50, 251,
+                                  "125:100:100:1::0/64", k_first_nh_ip_str,
+                                  IP_AF_IPV6, 0, &seed2);
+    route_table_util::route_table_stepper_seed_init(50, 301,
+                                  "150.100.100.1/21", k_first_nh_ip_str,
+                                  IP_AF_IPV4, 0, &seed3);
+    route_table_util::route_table_stepper_seed_init(50, 351,
+                                  "150:100:100:1::0/64", k_first_nh_ip_str,
+                                  IP_AF_IPV6, 0, &seed3);
+    // trigger - test route tables with zero routes
+    workflow_3<route_table_util, route_table_stepper_seed_t>(&seed1, &seed2, &seed3);
 
-    // cleanup
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 201) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 251) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 301) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 351) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    // trigger - test max route tables with max routes
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        101, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        151, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        201, "125.100.100.1/21", k_first_nh_ip_str,
-        IP_AF_IPV4, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        251, "125:100:100:1::0/64", k_first_nh_ip_str,
-        IP_AF_IPV6, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 101) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 151) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        301, "150.100.100.1/21", k_first_nh_ip_str,
-        IP_AF_IPV4, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        351, "150:100:100:1::0/64", k_first_nh_ip_str,
-        IP_AF_IPV6, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 201) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 251) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 301) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 351) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    route_table_util::route_table_stepper_seed_init(50, 101,
+                                  k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, k_max_route_per_tbl, &seed1);
+    route_table_util::route_table_stepper_seed_init(50, 151,
+                                  k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, k_max_route_per_tbl, &seed1);
+    route_table_util::route_table_stepper_seed_init(50, 201,
+                                  "125.100.100.1/21", k_first_nh_ip_str,
+                                  IP_AF_IPV4, k_max_route_per_tbl, &seed2);
+    route_table_util::route_table_stepper_seed_init(50, 251,
+                                  "125:100:100:1::0/64", k_first_nh_ip_str,
+                                  IP_AF_IPV6, k_max_route_per_tbl, &seed2);
+    route_table_util::route_table_stepper_seed_init(50, 301,
+                                  "150.100.100.1/21", k_first_nh_ip_str,
+                                  IP_AF_IPV4, k_max_route_per_tbl, &seed3);
+    route_table_util::route_table_stepper_seed_init(50, 351,
+                                  "150:100:100:1::0/64", k_first_nh_ip_str,
+                                  IP_AF_IPV6, k_max_route_per_tbl, &seed3);
+    // trigger - test route tables with max routes
+    workflow_3<route_table_util, route_table_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
-/// \brief Create and delete max v4/v6 route tables in two batches
-/// The hardware should create and delete route table correctly.
-///  Validate using reads when it is supported
-/// [ Create SetMax ] - Read - [ Delete SetMax ] - Read
+/// \brief Route table WF_4
 TEST_F(route_test, v4v6_route_table_workflow_4) {
-    pds_batch_params_t batch_params = {0};
-    pds_route_table_id_t first_v4_route_table_id = 22222;
-    pds_route_table_id_t first_v6_route_table_id = 11111;
+    route_table_stepper_seed_t seed = {};
 
+    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
+                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, 0, &seed);
+    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
+                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, 0, &seed);
     // trigger - test max route tables with zero routes
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table,
-        first_v4_route_table_id, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table,
-        first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    workflow_4<route_table_util, route_table_stepper_seed_t>(&seed);
 
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v4_route_table,
-        first_v4_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v6_route_table,
-        first_v6_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
+    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
+                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, k_max_route_per_tbl, &seed);
+    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
+                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, k_max_route_per_tbl, &seed);
     // trigger - test max route tables with max routes
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table,
-        first_v4_route_table_id, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table,
-        first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v4_route_table,
-        first_v4_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v6_route_table,
-        first_v6_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    workflow_4<route_table_util, route_table_stepper_seed_t>(&seed);
 }
 
-/// \brief Create and delete mix and match of v4/v6 route tables in two batches
-/// [ Create Set1, Set2 ] - Read - [Delete Set1 - Create Set3 ] - Read
+/// \brief Route table WF_5
 TEST_F(route_test, v4v6_route_table_workflow_5) {
-    pds_batch_params_t batch_params = {0};
-    uint32_t num_route_tables = 50;
+    route_table_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {};
 
-    // trigger - test max route tables with zero routes
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        101, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        151, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        201, "125.100.100.1/21", k_first_nh_ip_str,
-        IP_AF_IPV4, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        251, "125:100:100:1::0/64", k_first_nh_ip_str,
-        IP_AF_IPV6, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    route_table_util::route_table_stepper_seed_init(50, 101,
+                                  k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, 0, &seed1);
+    route_table_util::route_table_stepper_seed_init(50, 151,
+                                  k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, 0, &seed1);
+    route_table_util::route_table_stepper_seed_init(50, 201,
+                                  "125.100.100.1/21", k_first_nh_ip_str,
+                                  IP_AF_IPV4, 0, &seed2);
+    route_table_util::route_table_stepper_seed_init(50, 251,
+                                  "125:100:100:1::0/64", k_first_nh_ip_str,
+                                  IP_AF_IPV6, 0, &seed2);
+    route_table_util::route_table_stepper_seed_init(50, 301,
+                                  "150.100.100.1/21", k_first_nh_ip_str,
+                                  IP_AF_IPV4, 0, &seed3);
+    route_table_util::route_table_stepper_seed_init(50, 351,
+                                  "150:100:100:1::0/64", k_first_nh_ip_str,
+                                  IP_AF_IPV6, 0, &seed3);
+    // trigger - test route tables with zero routes
+    workflow_5<route_table_util, route_table_stepper_seed_t>(&seed1, &seed2, &seed3);
 
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 101) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 151) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        301, "150.100.100.1/21", k_first_nh_ip_str,
-        IP_AF_IPV4, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        351, "150:100:100:1::0/64", k_first_nh_ip_str,
-        IP_AF_IPV6, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    // cleanup
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 201) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 251) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 301) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 351) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    // trigger - test max route tables with max routes
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        101, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        151, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        201, "125.100.100.1/21", k_first_nh_ip_str,
-        IP_AF_IPV4, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        251, "125:100:100:1::0/64", k_first_nh_ip_str,
-        IP_AF_IPV6, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 101) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 151) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        301, "150.100.100.1/21", k_first_nh_ip_str,
-        IP_AF_IPV4, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        351, "150:100:100:1::0/64", k_first_nh_ip_str,
-        IP_AF_IPV6, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 201) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 251) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 301) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(
-        num_route_tables, 351) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    route_table_util::route_table_stepper_seed_init(50, 101,
+                                  k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, k_max_route_per_tbl, &seed1);
+    route_table_util::route_table_stepper_seed_init(50, 151,
+                                  k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, k_max_route_per_tbl, &seed1);
+    route_table_util::route_table_stepper_seed_init(50, 201,
+                                  "125.100.100.1/21", k_first_nh_ip_str,
+                                  IP_AF_IPV4, k_max_route_per_tbl, &seed2);
+    route_table_util::route_table_stepper_seed_init(50, 251,
+                                  "125:100:100:1::0/64", k_first_nh_ip_str,
+                                  IP_AF_IPV6, k_max_route_per_tbl, &seed2);
+    route_table_util::route_table_stepper_seed_init(50, 301,
+                                  "150.100.100.1/21", k_first_nh_ip_str,
+                                  IP_AF_IPV4, k_max_route_per_tbl, &seed3);
+    route_table_util::route_table_stepper_seed_init(50, 351,
+                                  "150:100:100:1::0/64", k_first_nh_ip_str,
+                                  IP_AF_IPV6, k_max_route_per_tbl, &seed3);
+    // trigger - test route tables with max routes
+    workflow_5<route_table_util, route_table_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
-/// \brief Create maximum number of v4v6 route tables in two batches
-/// [ Create SetMax ] - [ Create SetMax ] - Read
+/// \brief Route table WF_N_1
 TEST_F(route_test, v4v6_route_table_workflow_neg_1) {
-    pds_batch_params_t batch_params = {0};
-    pds_route_table_id_t first_v4_route_table_id = 22222;
-    pds_route_table_id_t first_v6_route_table_id = 11111;
+    route_table_stepper_seed_t seed = {};
 
+    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
+                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, 0, &seed);
+    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
+                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, 0, &seed);
     // trigger - test max route tables with zero routes
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table,
-        first_v4_route_table_id, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table,
-        first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    workflow_neg_1<route_table_util, route_table_stepper_seed_t>(&seed);
 
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table,
-        first_v4_route_table_id, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table,
-        first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_INVALID_OP);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v4_route_table,
-        first_v4_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v6_route_table,
-        first_v6_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
+    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
+                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, k_max_route_per_tbl, &seed);
+    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
+                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, k_max_route_per_tbl, &seed);
     // trigger - test max route tables with max routes
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table,
-        first_v4_route_table_id, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table,
-        first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table,
-        first_v4_route_table_id, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table,
-        first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_INVALID_OP);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v4_route_table,
-        first_v4_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v6_route_table,
-        first_v6_route_table_id) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    workflow_neg_1<route_table_util, route_table_stepper_seed_t>(&seed);
 }
 
-/// \brief Create more than max number of v4/v6 route tables supported
-/// [ Create SetMax+1] - Read
+/// \brief Route table WF_N_2
 TEST_F(route_test, v4v6_route_table_workflow_neg_2) {
-    pds_batch_params_t batch_params = {0};
-    pds_route_table_id_t first_v4_route_table_id = 22222;
-    pds_route_table_id_t first_v6_route_table_id = 11111;
+    route_table_stepper_seed_t seed1 = {}, seed2 = {};
 
+    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table+2,
+                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, 0, &seed1);
     // trigger - test MAX+1 v4 route tables with zero routes
     // using max + 2 as max+1 is reserved to handle update
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table + 2,
-        first_v4_route_table_id, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+    workflow_neg_2<route_table_util, route_table_stepper_seed_t>(&seed1);
 
+    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table+2,
+                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, 0, &seed2);
     // trigger - test MAX+1 v6 route tables with zero routes
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table + 2,
-        first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+    workflow_neg_2<route_table_util, route_table_stepper_seed_t>(&seed2);
 
+    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table+2,
+                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, k_max_route_per_tbl, &seed1);
     // trigger - test MAX+1 v4 route tables with max routes
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table + 2,
-        first_v4_route_table_id, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+    workflow_neg_2<route_table_util, route_table_stepper_seed_t>(&seed1);
 
+    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table+2,
+                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, k_max_route_per_tbl, &seed2);
     // trigger - test MAX+1 v6 route tables with max routes
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table + 2,
-        first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
-
+    workflow_neg_2<route_table_util, route_table_stepper_seed_t>(&seed2);
 #if 0
     // TODO: move this input validation testcase to agent test
     // as hal should not catch this and will only assert
@@ -561,104 +320,64 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_2) {
 #endif
 }
 
-/// \brief Read and delete non existing v4/v6 route tables and routes
-/// Read NonEx, [ Delete NonExMax ]
+/// \brief Route table WF_N_3
 TEST_F(route_test, v4v6_route_table_workflow_neg_3) {
-    pds_batch_params_t batch_params = {0};
-    pds_route_table_id_t first_v4_route_table_id = 22222;
-    pds_route_table_id_t first_v6_route_table_id = 11111;
+    route_table_stepper_seed_t seed = {};
 
-    // trigger - read is not supported yet; validate later
+    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
+                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, 0, &seed);
+    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
+                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, 0, &seed);
+    // trigger - test max route tables with zero routes
+    workflow_neg_3<route_table_util, route_table_stepper_seed_t>(&seed);
 
-    // trigger
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v4_route_table,
-        111) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(k_max_v6_route_table,
-        222) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+    route_table_util::route_table_stepper_seed_init(k_max_v4_route_table,
+                                  22222, k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, k_max_route_per_tbl, &seed);
+    route_table_util::route_table_stepper_seed_init(k_max_v6_route_table,
+                                  11111, k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, k_max_route_per_tbl, &seed);
+    // trigger - test max route tables with max routes
+    workflow_neg_3<route_table_util, route_table_stepper_seed_t>(&seed);
 }
 
-/// \brief Create and delete different v4v6 route tables in different batches
-/// The hardware should create v4v6 route tables correctly and
-/// delete batch (containing valid & invalid entries) is expected to fail
-/// because of lookup failure.
-/// [ Create Set1 ] - [Delete Set1, Set2 ] - Read
+/// \brief Route table WF_N_4
 TEST_F(route_test, v4v6_route_table_workflow_neg_4) {
-    pds_batch_params_t batch_params = {0};
-    uint32_t num_route_tables = 40;
+    route_table_stepper_seed_t seed1 = {}, seed2 = {};
 
-    // trigger- test max route tables with zero routes
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        100, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        150, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    route_table_util::route_table_stepper_seed_init(40, 100,
+                                  k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, 0, &seed1);
+    route_table_util::route_table_stepper_seed_init(40, 150,
+                                  k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, 0, &seed1);
+    route_table_util::route_table_stepper_seed_init(40, 300,
+                                  k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, 0, &seed2);
+    route_table_util::route_table_stepper_seed_init(40, 350,
+                                  k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, 0, &seed2);
+    // trigger - test route tables with zero routes
+    workflow_neg_4<route_table_util, route_table_stepper_seed_t>(&seed1,
+                                                                 &seed2);
 
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(num_route_tables,
-        200) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(num_route_tables,
-        250) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        300, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        350, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(num_route_tables,
-        100) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(num_route_tables,
-        150) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    // trigger- test max route tables with max routes
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        100, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        150, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(num_route_tables,
-        200) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(num_route_tables,
-        250) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        300, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(num_route_tables,
-        350, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(num_route_tables,
-        100) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_delete(num_route_tables,
-        150) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    route_table_util::route_table_stepper_seed_init(40, 100,
+                                  k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, k_max_route_per_tbl, &seed1);
+    route_table_util::route_table_stepper_seed_init(40, 150,
+                                  k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, k_max_route_per_tbl, &seed1);
+    route_table_util::route_table_stepper_seed_init(40, 300,
+                                  k_first_v4_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV4, k_max_route_per_tbl, &seed2);
+    route_table_util::route_table_stepper_seed_init(40, 350,
+                                  k_first_v6_pfx_str, k_first_nh_ip_str,
+                                  IP_AF_IPV6, k_max_route_per_tbl, &seed2);
+    // trigger - test route tables with max routes
+    workflow_neg_4<route_table_util, route_table_stepper_seed_t>(&seed1,
+                                                                 &seed2);
 }
 
 /// @}

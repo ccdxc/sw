@@ -106,6 +106,12 @@ public:
                                   pds_vpc_type_t type,
                                   std::string start_pfx,
                                   uint32_t num_vpcs);
+
+    /// \brief Indicates whether VPC is stateful
+    ///
+    /// \returns TRUE for VPC which is stateful
+    static bool is_stateful(void) { return TRUE; }
+
 };
 
 }    // namespace api_test

@@ -116,8 +116,7 @@ protected:
                       encap, FALSE, &tep_seed);
         TEP_MANY_CREATE(&tep_seed);
         for (uint16_t idx = 0; idx < num_teps; idx++) {
-            route_table_util rt_obj(rt_id_v4 + idx, nr_cidr, rt_ip, IP_AF_IPV4,
-                                    1);
+            route_table_util rt_obj(rt_id_v4 + idx, nr_pfx, rt_addr);
             ip_prefix_ip_next(&rt_pfx, &rt_addr);
             rt_pfx.addr = rt_addr;
             rt_ip = ipv4addr2str(rt_addr.addr.v4_addr);
@@ -126,7 +125,7 @@ protected:
             nr_pfx.addr = nr_addr;
             nr_cidr = ippfx2str(&nr_pfx);
 
-            ASSERT_TRUE(rt_obj.create() == sdk::SDK_RET_OK);
+            ROUTE_TABLE_CREATE(rt_obj);
         }
 
         subnet_key.id = api_test::g_subnet_id;
