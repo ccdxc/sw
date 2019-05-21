@@ -914,6 +914,8 @@ port_create (port_args_t *args)
     port_p->set_auto_neg_enable(args->auto_neg_enable);
     port_p->set_mtu(args->mtu);
     port_p->set_pause(args->pause);
+    port_p->set_tx_pause_enable(args->tx_pause_enable);
+    port_p->set_rx_pause_enable(args->rx_pause_enable);
     port_p->set_cable_type(args->cable_type);
     port_p->set_loopback_mode(args->loopback_mode);
 
@@ -1122,6 +1124,20 @@ port_update (void *pd_p, port_args_t *args)
         configured = true;
     }
 
+    if (args->tx_pause_enable != port_p->tx_pause_enable()) {
+        SDK_TRACE_DEBUG("Tx Pause updated. new: %d, old: %d",
+                        args->tx_pause_enable, port_p->tx_pause_enable());
+        port_p->set_tx_pause_enable(args->tx_pause_enable);
+        configured = true;
+    }
+
+    if (args->rx_pause_enable != port_p->rx_pause_enable()) {
+        SDK_TRACE_DEBUG("Rx Pause updated. new: %d, old: %d",
+                        args->rx_pause_enable, port_p->rx_pause_enable());
+        port_p->set_rx_pause_enable(args->rx_pause_enable);
+        configured = true;
+    }
+
     // TODO need check?
     if (args->mac_stats_reset == true) {
         SDK_TRACE_DEBUG("Resetting MAC stats");
@@ -1207,6 +1223,8 @@ port_get (void *pd_p, port_args_t *args)
     args->user_admin_state = port_p->user_admin_state();
     args->num_lanes_cfg    = port_p->num_lanes_cfg();
     args->pause       = port_p->pause();
+    args->tx_pause_enable = port_p->tx_pause_enable();
+    args->rx_pause_enable = port_p->rx_pause_enable();
     args->link_sm     = port_p->port_link_sm();
     args->loopback_mode = port_p->loopback_mode();
     args->num_link_down = port_p->num_link_down();

@@ -50,6 +50,8 @@ typedef struct port_args_s {
     port_oper_status_t    oper_status;                // oper status of the port
     port_fec_type_t       fec_type;                   // FEC type
     port_pause_type_t     pause;                      // mac pause
+    bool                  tx_pause_enable;            // mac tx pause enable
+    bool                  rx_pause_enable;            // mac rx pause enable
     cable_type_t          cable_type;                 // CU/Fiber cable type
     bool                  auto_neg_cfg;               // user AutoNeg config
     bool                  auto_neg_enable;            // Enable AutoNeg

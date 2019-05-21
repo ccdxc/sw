@@ -178,8 +178,10 @@ message PortSpec {
   uint32            debounce_time    = 11;  // Debounce time in ms
   uint32            mtu              = 12;  // port mtu
   PortPauseType     pause            = 13;  // MAC pause
-  PortLoopBackMode  loopback_mode    = 14;  // Port loopback mdoe - MAC/PHY
-  bool              mac_stats_reset  = 15;  // Reset port mac stats. Only during update
+  bool              tx_pause_enable  = 14;  // MAC TX pause enable
+  bool              rx_pause_enable  = 15;  // MAC RX pause enable
+  PortLoopBackMode  loopback_mode    = 16;  // Port loopback mdoe - MAC/PHY
+  bool              mac_stats_reset  = 17;  // Reset port mac stats. Only during update
 }
 
 message PortLinkStatus {

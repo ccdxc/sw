@@ -109,6 +109,16 @@ public:
         this->pause_ = pause;
     }
 
+    bool tx_pause_enable(void) const { return this->tx_pause_enable_; }
+    void set_tx_pause_enable(bool tx_pause_enable) {
+        this->tx_pause_enable_ = tx_pause_enable;
+    }
+
+    bool rx_pause_enable(void) const { return this->rx_pause_enable_; }
+    void set_rx_pause_enable(bool rx_pause_enable) {
+        this->rx_pause_enable_ = rx_pause_enable;
+    }
+
     uint32_t debounce_time(void) const { return this->debounce_time_; }
     void set_debounce_time(uint32_t debounce_time) {
         this->debounce_time_ = debounce_time;
@@ -322,6 +332,8 @@ private:
     port_link_sm_t        link_an_sm_;                // port link AN state machine
     port_fec_type_t       fec_type_;                  // FEC type
     port_pause_type_t     pause_;                     // Enable MAC pause
+    bool                  tx_pause_enable_;           // Enable MAC Tx Pause
+    bool                  rx_pause_enable_;           // Enable MAC Rx Pause
     bool                  auto_neg_enable_;           // Enable AutoNeg
     bool                  auto_neg_cfg_;              // user configured AutoNeg
     void                  *link_bring_up_timer_;      // port link bring up timer

@@ -118,6 +118,8 @@ populate_port_create_args (PortSpec& spec, port_args_t *args)
     args->auto_neg_enable = spec.auto_neg_enable();
     args->debounce_time   = spec.debounce_time();
     args->mtu             = spec.mtu();
+    args->tx_pause_enable = spec.tx_pause_enable();
+    args->rx_pause_enable = spec.rx_pause_enable();
 
     args->pause           =
         linkmgr::port_pause_type_spec_to_sdk_port_pause_type(spec.pause());
@@ -264,6 +266,8 @@ populate_port_update_args (PortSpec& spec, port_args_t *args)
     args->debounce_time   = spec.debounce_time();
     args->mac_stats_reset = spec.mac_stats_reset();
     args->num_lanes       = spec.num_lanes();
+    args->tx_pause_enable = spec.tx_pause_enable();
+    args->rx_pause_enable = spec.rx_pause_enable();
 
     args->port_type   =
         linkmgr::port_type_spec_to_sdk_port_type (spec.port_type());
@@ -414,6 +418,8 @@ populate_port_get_response_spec (port_args_t *port_args,
         spec->set_pause(
                 linkmgr::sdk_port_pause_type_to_port_pause_type_spec
                                           (port_args->pause));
+        spec->set_tx_pause_enable(port_args->tx_pause_enable);
+        spec->set_rx_pause_enable(port_args->rx_pause_enable);
         spec->set_loopback_mode(
                 linkmgr::sdk_port_lp_mode_to_port_lp_mode_spec(
                                          port_args->loopback_mode));
