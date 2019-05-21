@@ -1,0 +1,99 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for service mapping object
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package pds;
+
+import "gogo.proto";
+import "meta/meta.proto";
+import "types.proto";
+
+// service mapping grpc service
+service Svc {
+  rpc SvcMappingCreate (SvcMappingRequest) returns (SvcMappingResponse) {}
+  rpc SvcMappingUpdate (SvcMappingRequest) returns (SvcMappingResponse) {}
+  rpc SvcMappingGet (SvcMappingGetRequest) returns (SvcMappingGetResponse) {}
+  rpc SvcMappingDelete (SvcMappingDeleteRequest) returns (SvcMappingDeleteResponse) {}
+}
+
+// SvcKey uniquely identifies a service
+message SvcKey {
+  // virtual private cloud where service is exposed
+  uint32 VPCId           = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // service IP (aka. VIP)
+  types.IPAddress IPAddr = 2;
+  // L4 port where service is hosted
+  uint32 SvcPort         = 3;
+}
+
+// service mapping specification
+message SvcMappingSpec {
+  // key to identify the service
+  SvcKey          Key        = 1;
+  // virtual private cloud where the backend is running
+  uint32 VPCId               = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // overlay/private IP of the backend serving the (VIP, port), i.e., DIP
+  types.IPAddress PrivateIP  = 3;
+  // L4 port on the DIP, in case port rewrite needs to be performed
+  uint32          Port       = 4;
+  // provider/substrate IP corresponding to the overlay IP of the backend
+  types.IPAddress ProviderIP = 5;
+}
+
+// operational status of service mapping, if any
+message SvcMappingStatus {
+}
+
+// stats of service mapping, if any
+message SvcMappingStats {
+}
+
+// service mapping object
+message SvcMapping {
+  meta.TypeMeta    TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta     ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  SvcMappingSpec   Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  SvcMappingStatus Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  SvcMappingStats  Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// service mapping create and update request
+message SvcMappingRequest {
+  // batched request
+  repeated SvcMappingSpec Request = 1;
+}
+
+// service mapping create and update response
+message SvcMappingResponse {
+  types.ApiStatus           ApiStatus = 1;
+  // batched response
+  repeated SvcMappingStatus Response  = 2;
+}
+
+// service mapping get request
+message SvcMappingGetRequest {
+  // batched request
+  repeated uint32 SvcMappingId = 1;
+}
+
+// service mapping get response
+message SvcMappingGetResponse {
+  types.ApiStatus     ApiStatus = 1;
+  // batched response
+  repeated SvcMapping Response  = 2;
+}
+
+// service mapping delete request
+message SvcMappingDeleteRequest {
+  // batched request
+  repeated uint32 SvcMappingId = 1;
+}
+
+// service mapping delete response
+message SvcMappingDeleteResponse {
+  // batched response
+  repeated types.ApiStatus ApiStatus = 1;
+}

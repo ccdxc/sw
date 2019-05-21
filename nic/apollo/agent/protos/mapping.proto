@@ -43,6 +43,8 @@ message MappingSpec {
   uint32          VnicId      = 6;
   // public IP, if overlay IP has corresponding public IP
   types.IPAddress PublicIP    = 7;
+  // provider/substrate IP corresponding to the overlay IP, if any
+  types.IPAddress ProviderIp  = 8;
 }
 
 // operational status of a mapping

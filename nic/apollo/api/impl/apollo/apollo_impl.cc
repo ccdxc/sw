@@ -3,7 +3,7 @@
  *
  * @file    apollo_impl.cc
  *
- * @brief   CAPRI pipeline implementation
+ * @brief   apollo pipeline implementation
  */
 
 #include "nic/sdk/include/sdk/mem.hpp"
@@ -11,8 +11,8 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
-#include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
+// TODO: clean this up
 #include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/apollo/apollo_impl.hpp"
