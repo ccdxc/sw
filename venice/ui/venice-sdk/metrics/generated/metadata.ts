@@ -22,42 +22,36 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "displayName": "Metrics for hardware rings",
   "fields": [
     {
-      "name": "Key",
-      "displayName": "Key indices",
-      "units": "ID",
-      "baseType": ".accel_metrics.AccelHwRingKey"
-    },
-    {
       "name": "PIndex",
-      "displayName": "PIndex",
+      "displayName": "P Index",
       "description": "ring producer index",
       "units": "ID",
       "baseType": "Counter"
     },
     {
       "name": "CIndex",
-      "displayName": "CIndex",
+      "displayName": "C Index",
       "description": "ring consumer index",
       "units": "ID",
       "baseType": "Counter"
     },
     {
       "name": "InputBytes",
-      "displayName": "InputBytes",
+      "displayName": "Input Bytes",
       "description": "total input bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)",
       "units": "Bytes",
       "baseType": "Counter"
     },
     {
       "name": "OutputBytes",
-      "displayName": "OutputBytes",
+      "displayName": "Output Bytes",
       "description": "total output bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)",
       "units": "Bytes",
       "baseType": "Counter"
     },
     {
       "name": "SoftResets",
-      "displayName": "SoftResets",
+      "displayName": "Soft Resets",
       "description": "number of soft resets executed",
       "units": "Count",
       "baseType": "Counter"
@@ -71,42 +65,42 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "fields": [
     {
       "name": "HwLifId",
-      "displayName": "HwLifId",
+      "displayName": "Hw Lif Id",
       "description": "hardware logical interface ID",
       "units": "ID",
       "baseType": "uint64"
     },
     {
       "name": "NumSeqQueues",
-      "displayName": "NumSeqQueues",
+      "displayName": "Num Seq Queues",
       "description": "number of sequencer queues available",
       "units": "Count",
       "baseType": "uint32"
     },
     {
       "name": "CryptoKeyIdxBase",
-      "displayName": "CryptoKeyIdxBase",
+      "displayName": "Crypto Key Idx Base",
       "description": "crypto key base index",
       "units": "Count",
       "baseType": "uint32"
     },
     {
       "name": "NumCryptoKeysMax",
-      "displayName": "NumCryptoKeysMax",
+      "displayName": "Num Crypto Keys Max",
       "description": "maximum number of crypto keys allowed",
       "units": "Count",
       "baseType": "uint32"
     },
     {
       "name": "IntrBase",
-      "displayName": "IntrBase",
+      "displayName": "Intr Base",
       "description": "CPU interrupt base",
       "units": "Count",
       "baseType": "uint32"
     },
     {
       "name": "IntrCount",
-      "displayName": "IntrCount",
+      "displayName": "Intr Count",
       "description": "CPU interrupt vectors available",
       "units": "Count",
       "baseType": "uint32"
@@ -126,21 +120,21 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     },
     {
       "name": "QStateAddr",
-      "displayName": "QStateAdd",
+      "displayName": "Q State Add",
       "description": "queue state memory address",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "QGroup",
-      "displayName": "QGroup",
+      "displayName": "Q Group",
       "description": "queue group\\n           : 0 - compress/decompress\\n           : 1 - compress/decompress status\\n           : 2 - crypto\\n           : 3 - crypto status\\n",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "CoreId",
-      "displayName": "CoreId",
+      "displayName": "Core Id",
       "description": "CPU core ID (not available currently",
       "units": "Count",
       "baseType": "Counter"
@@ -160,133 +154,133 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     },
     {
       "name": "InterruptsRaised",
-      "displayName": "InterruptsRaised",
+      "displayName": "Interrupts Raised",
       "description": "CPU interrupts raised",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "NextDBsRung",
-      "displayName": "NextDBsRung",
+      "displayName": "Next DBs Rung",
       "description": "chaining doorbells rung",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "SeqDescsProcessed",
-      "displayName": "SeqDescsProcessed",
+      "displayName": "Seq Descs Processed",
       "description": "sequencer descriptors processed",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "SeqDescsAborted",
-      "displayName": "SeqDescsAborted",
+      "displayName": "Seq Descs Aborted",
       "description": "sequencer descriptors aborted (due to reset)",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "StatusPdmaXfers",
-      "displayName": "StatusPdmaXfers",
+      "displayName": "Status Pdma Xfers",
       "description": "status descriptors copied",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "HwDescXfers",
-      "displayName": "HwDescXfers",
+      "displayName": "Hw Desc Xfers",
       "description": "descriptors transferred to hardware",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "HwBatchErrors",
-      "displayName": "HwBatchErrors",
+      "displayName": "Hw Batch Errors",
       "description": "hardware batch (length) errors",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "HwOpErrors",
-      "displayName": "HwOpErrors",
+      "displayName": "Hw Op Errors",
       "description": "hardware operation errors",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "AolUpdateReqs",
-      "displayName": "AolUpdateReqs",
+      "displayName": "Aol Update Reqs",
       "description": "AOL list updates requested",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "SglUpdateReqs",
-      "displayName": "AolUpdateReqs",
+      "displayName": "Sgl Update Reqs",
       "description": "scatter/gather list updates requested",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "SglPdmaXfers",
-      "displayName": "SglUpdateReqs",
+      "displayName": "Sgl Pdma Xfers",
       "description": "payload DMA transfers executed",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "SglPdmaErrors",
-      "displayName": "SglPdmaXfers",
+      "displayName": "Sgl Pdma Errors",
       "description": "payload DMA errors encountered",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "SglPadOnlyXfers",
-      "displayName": "SglPdmaErrors",
+      "displayName": "Sgl Pad Only Xfers",
       "description": "pad-data-only DMA transfers executed",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "SglPadOnlyErrors",
-      "displayName": "SglPadOnlyXfers",
+      "displayName": "Sgl Pad Only Errors",
       "description": "pad-data-only DMA errors encountered",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "AltDescsTaken",
-      "displayName": "AltDescsTaken",
+      "displayName": "Alt Descs Taken",
       "description": "alternate (bypass-onfail) descriptors executed",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "AltBufsTaken",
-      "displayName": "AltBufsTaken",
+      "displayName": "Alt Bufs Taken",
       "description": "alternate buffers taken",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "LenUpdateReqs",
-      "displayName": "LenUpdateReqs",
+      "displayName": "Len Update Reqs",
       "description": "length updates requested",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "CpHeaderUpdates",
-      "displayName": "CpHeaderUpdates",
+      "displayName": "Cp Header Updates",
       "description": "compression header updates requested",
       "units": "Count",
       "baseType": "Counter"
     },
     {
       "name": "SeqHwBytes",
-      "displayName": "SeqHwBytes",
+      "displayName": "Seq Hw Bytes",
       "description": "bytes processed",
       "units": "Count",
       "baseType": "Counter"
