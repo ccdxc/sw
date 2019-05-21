@@ -11,8 +11,8 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/tep.hpp"
-#include "nic/apollo/api/impl/tep_impl.hpp"
-#include "nic/apollo/api/impl/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/tep_impl.hpp"
+#include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
 
 namespace api {
 namespace impl {

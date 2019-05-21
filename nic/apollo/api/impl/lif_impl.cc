@@ -10,7 +10,7 @@
 
 #include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/api/impl/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
 #include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
 #include "gen/p4gen/apollo/include/p4pd.h"

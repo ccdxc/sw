@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
-#include "nic/apollo/api/impl/apollo_impl.hpp"
+#include "nic/apollo/api/impl/apollo/apollo_impl.hpp"
 
 namespace api {
 namespace impl {

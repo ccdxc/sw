@@ -11,7 +11,7 @@
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/tep.hpp"
-#include "nic/apollo/api/impl/tep_impl.hpp"
+#include "nic/apollo/api/impl/apollo/tep_impl.hpp"
 
 static inline sdk_ret_t
 pds_tep_api_handle (api_op_t api_op, pds_tep_key_t *key, pds_tep_spec_t *spec)

@@ -7,7 +7,7 @@
  */
 
 #include "nic/apollo/api/include/pds_route.hpp"
-#include "nic/apollo/api/impl/route_impl_state.hpp"
+#include "nic/apollo/api/impl/artemis/route_impl_state.hpp"
 
 namespace api {
 namespace impl {

@@ -11,15 +11,15 @@
 #define __PDS_IMPL_STATE_HPP__
 
 #include "nic/sdk/lib/slab/slab.hpp"
-#include "nic/apollo/api/impl/apollo_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/apollo_impl_state.hpp"
 #include "nic/apollo/api/impl/apollo/device_impl.hpp"
-#include "nic/apollo/api/impl/tep_impl_state.hpp"
-#include "nic/apollo/api/impl/vnic_impl_state.hpp"
-#include "nic/apollo/api/impl/mapping_impl_state.hpp"
-#include "nic/apollo/api/impl/route_impl_state.hpp"
-#include "nic/apollo/api/impl/security_policy_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/tep_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/vnic_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/mapping_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/route_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/security_policy_impl_state.hpp"
 #include "nic/apollo/api/impl/lif_impl_state.hpp"
-#include "nic/apollo/api/impl/mirror_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/mirror_impl_state.hpp"
 
 namespace api {
 namespace impl {

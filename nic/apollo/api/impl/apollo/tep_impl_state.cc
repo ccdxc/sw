@@ -10,7 +10,7 @@
 
 
 #include "nic/apollo/api/include/pds_tep.hpp"
-#include "nic/apollo/api/impl/tep_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/tep_impl_state.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 

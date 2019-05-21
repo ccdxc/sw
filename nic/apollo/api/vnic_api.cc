@@ -12,7 +12,7 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/obj_api.hpp"
 #include "nic/apollo/api/vnic.hpp"
-#include "nic/apollo/api/impl/vnic_impl.hpp"
+#include "nic/apollo/api/impl/apollo/vnic_impl.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
 static inline sdk_ret_t

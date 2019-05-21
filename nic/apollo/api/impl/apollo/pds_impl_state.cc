@@ -8,7 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/api/impl/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
 
 namespace api {
 namespace impl {

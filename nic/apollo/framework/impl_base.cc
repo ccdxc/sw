@@ -13,12 +13,12 @@
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/impl/apollo/device_impl.hpp"    // TODO: think how to accomodate a new impl
-#include "nic/apollo/api/impl/tep_impl.hpp"
-#include "nic/apollo/api/impl/vnic_impl.hpp"
-#include "nic/apollo/api/impl/mapping_impl.hpp"
-#include "nic/apollo/api/impl/route_impl.hpp"
-#include "nic/apollo/api/impl/mirror_impl.hpp"
-#include "nic/apollo/api/impl/security_policy_impl.hpp"
+#include "nic/apollo/api/impl/apollo/tep_impl.hpp"
+#include "nic/apollo/api/impl/apollo/vnic_impl.hpp"
+#include "nic/apollo/api/impl/apollo/mapping_impl.hpp"
+#include "nic/apollo/api/impl/apollo/route_impl.hpp"
+#include "nic/apollo/api/impl/apollo/mirror_impl.hpp"
+#include "nic/apollo/api/impl/apollo/security_policy_impl.hpp"
 //#include "nic/apollo/api/impl/meter_impl.hpp"
 //#include "nic/apollo/api/impl/tag_impl.hpp"
 

@@ -13,7 +13,7 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/obj_api.hpp"
 #include "nic/apollo/api/mapping.hpp"
-#include "nic/apollo/api/impl/mapping_impl.hpp"
+#include "nic/apollo/api/impl/apollo/mapping_impl.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 

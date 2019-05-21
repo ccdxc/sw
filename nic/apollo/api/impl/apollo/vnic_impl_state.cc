@@ -7,7 +7,7 @@
  */
 
 #include "nic/apollo/api/include/pds_vnic.hpp"
-#include "nic/apollo/api/impl/vnic_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/vnic_impl_state.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 

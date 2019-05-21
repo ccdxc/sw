@@ -12,7 +12,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/api/impl/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/port.hpp"

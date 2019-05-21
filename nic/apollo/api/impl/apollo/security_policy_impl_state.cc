@@ -7,7 +7,7 @@
  */
 
 #include "nic/apollo/api/include/pds_policy.hpp"
-#include "nic/apollo/api/impl/security_policy_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/security_policy_impl_state.hpp"
 
 namespace api {
 namespace impl {

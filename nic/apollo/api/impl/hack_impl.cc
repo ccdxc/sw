@@ -15,7 +15,7 @@
 #include "nic/sdk/p4/loader/loader.hpp"
 #include "nic/sdk/platform/capri/capri_qstate.hpp"
 #include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/api/impl/apollo_impl.hpp"
+#include "nic/apollo/api/impl/apollo/apollo_impl.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/p4/include/defines.h"
 

@@ -11,7 +11,7 @@
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
-#include "nic/apollo/api/impl/mirror_impl.hpp"
+#include "nic/apollo/api/impl/apollo/mirror_impl.hpp"
 #include "nic/apollo/api/obj_api.hpp"
 
 static sdk_ret_t

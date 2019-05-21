@@ -9,11 +9,10 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/api/impl/pds_impl_state.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
-#include "nic/apollo/api/impl/pds_impl_state.hpp"
-#include "nic/apollo/api/impl/mirror_impl.hpp"
-#include "nic/apollo/api/impl/mirror_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/mirror_impl.hpp"
+#include "nic/apollo/api/impl/apollo/mirror_impl_state.hpp"
 
 namespace api {
 namespace impl {

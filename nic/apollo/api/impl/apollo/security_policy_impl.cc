@@ -10,8 +10,8 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/policy.hpp"
-#include "nic/apollo/api/impl/security_policy_impl.hpp"
-#include "nic/apollo/api/impl/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/security_policy_impl.hpp"
+#include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
 #include "nic/apollo/rfc/rfc.hpp"
 
 namespace api {

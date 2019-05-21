@@ -19,7 +19,7 @@
 #include "nic/sdk/linkmgr/port_mac.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
-#include "nic/apollo/api/impl/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
 
 namespace api {
 namespace impl {
