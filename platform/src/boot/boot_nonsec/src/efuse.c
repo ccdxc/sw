@@ -13,6 +13,9 @@ is_secure_boot_enabled(void)
 {
     uint64_t addr = MS_(STA_PK_EFUSE_VAL) + 4 * (EFUSE_SECURE_BOOT_BIT / 32);
     int shift = EFUSE_SECURE_BOOT_BIT % 32;
-    uint32_t v = readreg(addr);
+    uint32_t v;
+
+    (void)readreg(MS_(STA_PK_EFUSE_VAL));   // latch efuse row
+    v = readreg(addr);
     return (((v >> shift) & EFUSE_SECURE_BOOT_MASK) != 0);
 }
