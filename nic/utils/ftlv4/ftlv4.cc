@@ -182,21 +182,22 @@ ftlv4::genhash_(sdk_table_api_params_t *params) {
         return SDK_RET_OK;
     }
 
-    ftlv4_entry_t hashkey;
-    FTLV4_ENTRY_HASH_KEY_BUILD_BUILD(&hashkey, ((ftlv4_entry_t*)params->entry));
+    //ftlv4_entry_t hashkey;
+    // For IPv4, we should form 32byte Key + 32bytes of zeros.
+    uint8_t hashkey[64] = {0};
+    FTLV4_ENTRY_HASH_KEY_BUILD_BUILD((ftlv4_entry_t*)hashkey, 
+                                     ((ftlv4_entry_t*)params->entry));
     ftlv4_swap_bytes((uint8_t *)&hashkey);
 #ifdef SIM
-    params->hash_32b = crc32gen_->compute_crc((uint8_t *)&hashkey,
-                                              sizeof(ftlv4_entry_t),
+    params->hash_32b = crc32gen_->compute_crc((uint8_t *)&hashkey, 64,
                                               props_->hash_poly);
 #else
     params->hash_32b = crc32_aarch64((uint64_t *)&hashkey);
 #endif
 
     params->hash_valid = true;
-    FTLV4_TRACE_VERBOSE("[%s] => H:%#x",
-                      ftlu_rawstr(&hashkey, sizeof(ftlv4_entry_t)),
-                      params->hash_32b);
+    FTLV4_TRACE_VERBOSE("[%s] => H:%#x", ftlu_rawstr(&hashkey, 64),
+                        params->hash_32b);
     return SDK_RET_OK;
 }
 

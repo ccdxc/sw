@@ -8,13 +8,15 @@
 
 typedef struct __attribute__((__packed__)) ftlv4_entry_s {
     // data after key
-    uint32_t __pad_to_512b : 25;
+    uint32_t __pad_to_512b : 15;
     uint32_t more_hints: 22;
     uint32_t more_hashes : 1;
     uint32_t hint2 : 22;
     uint32_t hash2 : 9;
     uint32_t hint1 : 22;
-    uint32_t hash1_sbit6_ebit8 : 3;
+    uint32_t hash1 : 9;
+    uint32_t flow_role : 1;
+    uint32_t nexthop_group_index_sbit7_ebit9 : 3 ;
 
     uint32_t sport : 16;
     uint32_t dport : 16;
@@ -24,24 +26,31 @@ typedef struct __attribute__((__packed__)) ftlv4_entry_s {
     uint32_t proto : 8;
 
     // data before key
-    uint32_t hash1_sbit0_ebit5 : 6;
-    uint32_t flow_role : 1;
+    uint32_t nexthop_group_index_sbit0_ebit6 : 7;
     uint32_t session_index : 24;
     uint32_t entry_valid : 1;
 } ftlv4_entry_t;
+
+#define FTLV4_SET_NHGROUP_INDEX(_entry, _index) \
+{\
+    (_entry)->nexthop_group_index_sbit0_ebit6 = _index & 0x7f; \
+    (_entry)->nexthop_group_index_sbit7_ebit9 = (_index >> 7) & 0x7; \
+}
 
 #define FTLV4_ENTRY_STR(_e, _b, _l) \
 { \
     FTLV4_SNPRINTF((_b), (_l), "more_hints:%d more_hashes:%d "\
          "hint2:%d hash2:%#x hint1:%d hash1:%#x sport:%d dport:%d "\
          "src:%08x dst:%08x local_vnic_tag:%d proto:%d "\
-         "flow_role:%d session_index:%d entry_valid:%d",\
+         "flow_role:%d nexthop_group_index:%d "\
+         "session_index:%d entry_valid:%d",\
          (_e)->more_hints, (_e)->more_hashes, \
          (_e)->hint2, (_e)->hash2, \
-         (_e)->hint1, (((_e)->hash1_sbit6_ebit8 << 6) | (_e)->hash1_sbit0_ebit5), \
+         (_e)->hint1, (_e)->hash1, \
          (_e)->sport, (_e)->dport, (_e)->src, (_e)->dst, \
-         (_e)->local_vnic_tag, (_e)->proto, (_e)->flow_role, (_e)->session_index, \
-         (_e)->entry_valid); \
+         (_e)->local_vnic_tag, (_e)->proto, (_e)->flow_role, \
+         ((_e)->nexthop_group_index_sbit0_ebit6 | ((_e)->nexthop_group_index_sbit7_ebit9 << 7)), \
+         (_e)->session_index, (_e)->entry_valid); \
 }
 
 # define FTLV4_ENTRY_CLEAR_HINTS(_e) \
@@ -52,8 +61,7 @@ typedef struct __attribute__((__packed__)) ftlv4_entry_s {
     (_e)->hash2 = 0; \
     (_e)->hint2 = 0; \
     (_e)->hint1 = 0; \
-    (_e)->hash1_sbit6_ebit8 = 0; \
-    (_e)->hash1_sbit0_ebit5 = 0; \
+    (_e)->hash1= 0; \
 }
 
 #define FTLV4_ENTRY_CLEAR_KEY(_e) \
@@ -71,6 +79,8 @@ typedef struct __attribute__((__packed__)) ftlv4_entry_s {
 {\
     (_e)->flow_role = 0;\
     (_e)->session_index = 0;\
+    (_e)->nexthop_group_index_sbit0_ebit6 = 0;\
+    (_e)->nexthop_group_index_sbit7_ebit9 = 0;\
 }
 
 #define FTLV4_ENTRY_CLEAR_KEY_DATA(_e) \
@@ -100,6 +110,8 @@ typedef struct __attribute__((__packed__)) ftlv4_entry_s {
 {\
     (_d)->flow_role = (_s)->flow_role;\
     (_d)->session_index = (_s)->session_index;\
+    (_d)->nexthop_group_index_sbit0_ebit6 = (_s)->nexthop_group_index_sbit0_ebit6;\
+    (_d)->nexthop_group_index_sbit7_ebit9 = (_s)->nexthop_group_index_sbit7_ebit9;\
 }
 
 #define FTLV4_ENTRY_COPY_KEY_DATA(_d, _s) \
@@ -126,11 +138,8 @@ ftlv4_entry_key_compare(ftlv4_entry_t *src, ftlv4_entry_t *dst) {
     return true;
 }
 
-#define __FTLV4_SET_HINT_HASH_1(_e, _h, _s) {\
-    (_e)->hint1 = _h;\
-    (_e)->hash1_sbit6_ebit8 = (((_s) & 0x1C0)>> 6);\
-    (_e)->hash1_sbit0_ebit5 = ((_s) & 0x3F);\
-}
+#define __FTLV4_SET_HINT_HASH_1(_e, _h, _s) \
+    { (_e)->hint1 = _h; (_e)->hash1 = _s; }
 #define __FTLV4_SET_HINT_HASH_2(_e, _h, _s) \
     { (_e)->hint2 = (_h); (_e)->hash2 = (_s); }
 #define __FTLV4_SET_HINT_HASH_MORE(_e, _h, _s) \
@@ -144,11 +153,8 @@ ftlv4_entry_key_compare(ftlv4_entry_t *src, ftlv4_entry_t *dst) {
     default: __FTLV4_SET_HINT_HASH_MORE(_e, _h, 1); break; \
     } \
 }
-#define __FTLV4_GET_HINT_HASH_1(_e, _h, _s) {\
-    (_h) = (_e)->hint1;\
-    (_s) = ((_e)->hash1_sbit6_ebit8 << 6) |\
-           ((_e)->hash1_sbit0_ebit5);\
-}
+#define __FTLV4_GET_HINT_HASH_1(_e, _h, _s) \
+    { (_h) = (_e)->hint1; (_s) = (_e)->hash1; }
 #define __FTLV4_GET_HINT_HASH_2(_e, _h, _s) \
     { (_h) = (_e)->hint2; (_s) = (_e)->hash2; }
 #define __FTLV4_GET_HINT_HASH_MORE(_e, _h, _s) \

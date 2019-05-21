@@ -37,6 +37,12 @@ typedef struct __attribute__((__packed__)) ftl_entry_s {
     uint32_t entry_valid : 1;
 } ftl_entry_t;
 
+#define FTLV6_SET_NHGROUP_INDEX(_entry, _index) \
+{\
+    (_entry)->nexthop_group_index_sbit0_ebit6 = _index & 0x7f; \
+    (_entry)->nexthop_group_index_sbit7_ebit9 = (_index >> 7) & 0x7; \
+}
+
 #define FTLENTRY_STR(_e, _b, _l) \
 { \
     FTL_SNPRINTF((_b), (_l), "more_hints:%d more_hashes:%d "\
@@ -160,9 +166,9 @@ ftl_entry_key_compare(ftl_entry_t *src, ftl_entry_t *dst) {
 #define __SET_HINT_HASH_2(_e, _h, _s) \
     { (_e)->hint2 = (_h); (_e)->hash2 = (_s); }
 #define __SET_HINT_HASH_3(_e, _h, _s) \
-    { (_e)->hint3 = (_h); (_e)->hash2 = (_s); }
+    { (_e)->hint3 = (_h); (_e)->hash3 = (_s); }
 #define __SET_HINT_HASH_4(_e, _h, _s) \
-    { (_e)->hint4 = (_h); (_e)->hash2 = (_s); }
+    { (_e)->hint4 = (_h); (_e)->hash4 = (_s); }
 #define __SET_HINT_HASH_MORE(_e, _h, _s) \
     { (_e)->more_hints = (_h); (_e)->more_hashes = (_s); }
 #define FTL_ENTRY_SET_HINT_HASH(_i, _e, _h, _s) \
@@ -181,9 +187,9 @@ ftl_entry_key_compare(ftl_entry_t *src, ftl_entry_t *dst) {
 #define __GET_HINT_HASH_2(_e, _h, _s) \
     { (_h) = (_e)->hint2; (_s) = (_e)->hash2; }
 #define __GET_HINT_HASH_3(_e, _h, _s) \
-    { (_h) = (_e)->hint3; (_s) = (_e)->hash2; }
+    { (_h) = (_e)->hint3; (_s) = (_e)->hash3; }
 #define __GET_HINT_HASH_4(_e, _h, _s) \
-    { (_h) = (_e)->hint4; (_s) = (_e)->hash2; }
+    { (_h) = (_e)->hint4; (_s) = (_e)->hash4; }
 #define __GET_HINT_HASH_MORE(_e, _h, _s) \
     { (_h) = (_e)->more_hints; (_s) = (_e)->more_hashes; }
 #define FTL_ENTRY_GET_HINT_HASH(_i, _e, _h, _s) \

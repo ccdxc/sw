@@ -34,6 +34,7 @@ using sdk::table::sdk_table_factory_params_t;
 
 namespace pt = boost::property_tree;
 #define FLOW_TEST_CHECK_RETURN(_exp, _ret) if (!(_exp)) return (_ret)
+#define MAX_NEXTHOP_GROUP_INDEX 1024
 
 static char *
 flow_key2str(void *key) {
@@ -63,6 +64,55 @@ flow_appdata2str(void *appdata) {
     sprintf(str, "I:%d R:%d",
             d->session_index, d->flow_role);
     return str;
+}
+
+static void
+dump_flow_entry(ftl_entry_t *entry, ipv6_addr_t v6_addr_sip,
+                ipv6_addr_t v6_addr_dip) {
+    return;
+    static FILE *d_fp = fopen("/tmp/flow_log.log", "a+");
+    char *src_ip_str = ipv6addr2str(v6_addr_sip);
+    char *dst_ip_str = ipv6addr2str(v6_addr_dip);
+    if (d_fp) {
+        fprintf(d_fp, "proto %d, session_index %d, sip %s, dip %s, sport %d, dport %d, "
+                "nexthop_group_index %d %d, flow_role %d, ktype %d, local_vnic_tag %d\n",
+                entry->proto,
+                entry->session_index,
+                src_ip_str,
+                dst_ip_str,
+                entry->sport,
+                entry->dport,
+                entry->nexthop_group_index_sbit0_ebit6,
+                entry->nexthop_group_index_sbit7_ebit9,
+                entry->flow_role,
+                entry->ktype,
+                entry->local_vnic_tag);
+        fflush(d_fp);
+    }
+}
+
+static void
+dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip,
+                ipv4_addr_t v4_addr_dip) {
+    return;
+    static FILE *d_fp = fopen("/tmp/flow_log.log", "a+");
+    char *src_ip_str = ipv4addr2str(v4_addr_sip);
+    char *dst_ip_str = ipv4addr2str(v4_addr_dip);
+    if (d_fp) {
+        fprintf(d_fp, "proto %d, session_index %d, sip %s, dip %s, sport %d, dport %d, "
+                "nexthop_group_index %d %d, flow_role %d, local_vnic_tag %d\n",
+                entry->proto,
+                entry->session_index,
+                src_ip_str,
+                dst_ip_str,
+                entry->sport,
+                entry->dport,
+                entry->nexthop_group_index_sbit0_ebit6,
+                entry->nexthop_group_index_sbit7_ebit9,
+                entry->flow_role,
+                entry->local_vnic_tag);
+        fflush(d_fp);
+    }
 }
 
 #define MAX_VPCS        512
@@ -108,8 +158,9 @@ class flow_test {
 private:
     ftl *v6table;
     ftlv4 *v4table;
-    vpc_epdb_t epdb[MAX_VPCS];
+    vpc_epdb_t epdb[MAX_VPCS+1];
     uint32_t session_index;
+    uint32_t nexthop_group_index;
     uint32_t hash;
     uint16_t sport_base;
     uint16_t sport;
@@ -289,6 +340,7 @@ public:
         factory_params.max_recircs = 8;
         factory_params.key2str = flow_key2str;
         factory_params.appdata2str = flow_appdata2str;
+        factory_params.entry_trace_en = false;
         v6table = ftl::factory(&factory_params);
         assert(v6table);
 
@@ -298,12 +350,14 @@ public:
         factory_params.max_recircs = 8;
         factory_params.key2str = NULL;
         factory_params.appdata2str = NULL;
+        factory_params.entry_trace_en = false;
         v4table = ftlv4::factory(&factory_params);
         assert(v4table);
 
         memset(epdb, 0, sizeof(epdb));
         memset(&cfg_params, 0, sizeof(cfg_params_t));
-        session_index = 0;
+        session_index = 1;
+        nexthop_group_index = 1;
         hash = 0;
         with_hash = w;
 
@@ -405,41 +459,65 @@ public:
         return;
     }
 
-    sdk_ret_t create_flow(uint32_t vpc, uint8_t *sip, uint8_t *dip,
-                          uint8_t proto, uint16_t sport, uint16_t dport) {
+    sdk_ret_t create_flow(uint32_t vpc, ipv6_addr_t v6_addr_sip,
+                          ipv6_addr_t v6_addr_dip, uint8_t proto,
+                          uint16_t sport, uint16_t dport) {
+        char *dst_ip_str = NULL;
+        char *src_ip_str = NULL;
+
         memset(&v6entry, 0, sizeof(ftl_entry_t));
         v6entry.ktype = 2;
         v6entry.local_vnic_tag = vpc - 1;
         v6entry.sport = sport;
         v6entry.dport = dport;
         v6entry.proto = proto;
-        sdk::lib::memrev(v6entry.src, sip, sizeof(ipv6_addr_t));
-        sdk::lib::memrev(v6entry.dst, dip, sizeof(ipv6_addr_t));
+        sdk::lib::memrev(v6entry.src, v6_addr_sip.addr8, sizeof(ipv6_addr_t));
+        sdk::lib::memrev(v6entry.dst, v6_addr_dip.addr8, sizeof(ipv6_addr_t));
         v6entry.session_index = session_index++;
+        FTLV6_SET_NHGROUP_INDEX(&v6entry, nexthop_group_index++);
+        v6entry.nexthop_group_index_sbit0_ebit6 = 1;
+        v6entry.nexthop_group_index_sbit7_ebit9 = 1;
+
+        // reset nexthop_group_index if it reaches max
+        if (nexthop_group_index == MAX_NEXTHOP_GROUP_INDEX) {
+            nexthop_group_index = 1;
+        }
         auto ret = insert_(&v6entry);
         if (ret != SDK_RET_OK) {
             return ret;
         }
+        // print entry info
+        dump_flow_entry(&v6entry, v6_addr_sip, v6_addr_dip);
         return SDK_RET_OK;
     }
 
-    sdk_ret_t create_flow(uint32_t vpc, uint32_t sip, uint32_t dip,
-                          uint8_t proto, uint16_t sport, uint16_t dport) {
+    sdk_ret_t create_flow(uint32_t vpc, ipv4_addr_t v4_addr_sip,
+                          ipv4_addr_t v4_addr_dip, uint8_t proto,
+                          uint16_t sport, uint16_t dport) {
         memset(&v4entry, 0, sizeof(ftlv4_entry_t));
         v4entry.local_vnic_tag = vpc - 1;
         v4entry.sport = sport;
         v4entry.dport = dport;
         v4entry.proto = proto;
-        v4entry.src = sip;
-        v4entry.dst = dip;
+        v4entry.src = v4_addr_sip;
+        v4entry.dst = v4_addr_dip;
         v4entry.session_index = session_index++;
+        FTLV4_SET_NHGROUP_INDEX(&v4entry, nexthop_group_index++);
+        v4entry.nexthop_group_index_sbit0_ebit6 = 1;
+        v4entry.nexthop_group_index_sbit7_ebit9 = 1;
+
+        // reset nexthop_group_index if it reaches max
+        if (nexthop_group_index == MAX_NEXTHOP_GROUP_INDEX) {
+            nexthop_group_index = 1;
+        }
         auto ret = insert_(&v4entry);
         if (ret != SDK_RET_OK) {
             return ret;
         }
+        // print entry info
+        dump_flow_entry(&v4entry, v4_addr_sip, v4_addr_dip);
         return SDK_RET_OK;
     }
-
 
     sdk_ret_t create_flows_one_proto_(uint32_t count, uint8_t proto, bool ipv6) {
         uint16_t local_port = 0, remote_port = 0;
@@ -468,8 +546,9 @@ public:
                         }
 
                         if (ipv6) {
-                            auto ret = create_flow(vpc, ep_pairs[i].lip6.addr8,
-                                                   ep_pairs[i].rip6.addr8, proto,
+
+                            auto ret = create_flow(vpc, ep_pairs[i].lip6,
+                                                   ep_pairs[i].rip6, proto,
                                                    fwd_sport, fwd_dport);
                             if (ret != SDK_RET_OK) {
                                 return ret;
@@ -481,7 +560,6 @@ public:
                                 return ret;
                             }
                         }
-
                         nflows++;
                         if (nflows >= count) {
                             return SDK_RET_OK;

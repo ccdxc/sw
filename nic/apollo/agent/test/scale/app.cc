@@ -297,10 +297,8 @@ create_mirror_session_grpc (pds_mirror_session_spec_t *ms)
     return SDK_RET_OK;
 }
 
-int g_epoch = 0;
-
 sdk_ret_t
-batch_start_grpc (void)
+batch_start_grpc (int epoch)
 {
     BatchSpec           spec;
     ClientContext       start_context;
@@ -308,8 +306,7 @@ batch_start_grpc (void)
     pds_batch_params_t  params;
     BatchStatus         status;
 
-    g_epoch++;
-    params.epoch = g_epoch;
+    params.epoch = epoch;
     populate_batch_spec(&spec, &params);
 
     /* Batch start */

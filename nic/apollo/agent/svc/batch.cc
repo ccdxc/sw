@@ -7,7 +7,7 @@
 #include "nic/apollo/test/flow_test/flow_test.hpp"
 extern flow_test *g_flow_test_obj;
 
-//#define PDS_FLOW_TEST
+// #define PDS_FLOW_TEST
 
 Status
 BatchSvcImpl::BatchStart(ServerContext *context,
@@ -27,12 +27,14 @@ BatchSvcImpl::BatchStart(ServerContext *context,
         if (ret != sdk::SDK_RET_OK) {
             return Status::CANCELLED;
         }
-
+#if 0
+        // DUAL STACK is handled in flow test itself
         //ret = g_flow_test_obj->create_flows(1024*1024, 17, 100, 100, true);
         ret = g_flow_test_obj->create_flows();
         if (ret != sdk::SDK_RET_OK) {
             return Status::CANCELLED;
         }
+#endif
         return Status::OK;
     }
 #endif

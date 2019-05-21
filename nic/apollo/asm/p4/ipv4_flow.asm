@@ -16,7 +16,6 @@ ipv4_flow_hash:
     bcf         [c1], label_flow_hit
     // Check hash1 and hint1
     seq         c1, r1[FLOW_HASH_MSB], d.ipv4_flow_hash_d.hash1
-    seq         c1, r1[FLOW_HASH_MSB], r7
     sne         c2, d.ipv4_flow_hash_d.hint1, r0
     bcf         [c1&c2], label_flow_hash_hit
     add         r2, r0, d.ipv4_flow_hash_d.hint1

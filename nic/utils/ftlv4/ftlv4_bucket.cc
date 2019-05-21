@@ -235,7 +235,6 @@ ftlv4_bucket::find_first_free_hint_(ftlv4_apictx *ctx) {
         if (!FTLV4_HINT_IS_VALID(hintX)) {
             ctx->hint_slot = i;
             ctx->hint = hintX;
-            ctx->hash_msbits = hashX;
             break;
         }
     }

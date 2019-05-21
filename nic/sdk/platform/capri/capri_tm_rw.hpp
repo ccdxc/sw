@@ -412,6 +412,8 @@ uint64_t capri_tm_get_port_mon_in(int chip_id, int inst_id,
                                   tm_q_t tm_iq);
 // set the span queue threshold
 sdk_ret_t capri_tm_set_span_threshold(uint32_t span_threshold);
+// set the reserved min for uplink ports
+sdk_ret_t capri_tm_set_reserved_min(uint32_t reserved_min);
 
 }    // namespace capri
 }    // namespace platform

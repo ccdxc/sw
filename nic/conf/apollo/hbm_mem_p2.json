@@ -287,7 +287,7 @@
         },
         {
             "name": "qos-hbm-fifo",
-            "size": "256M"
+            "size": "0K"
         },
         {
             "name": "tx-scheduler",

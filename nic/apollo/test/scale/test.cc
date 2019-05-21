@@ -5,6 +5,7 @@
 #include <iostream>
 #include <math.h>
 #include "nic/apollo/test/scale/test.hpp"
+#include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
@@ -32,6 +33,8 @@ pds_device_spec_t g_device = {0};
 #ifndef TEST_GRPC_APP
 flow_test *g_flow_test_obj;
 #endif
+
+static int g_epoch = 1;
 
 typedef struct test_params_s {
     // device config
@@ -197,7 +200,7 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
             printf("%s: Batch commit failed!\n", __FUNCTION__);
             return SDK_RET_ERR;
         }
-        rv = batch_start_grpc();
+        rv = batch_start_grpc(g_epoch++);
         if (rv != SDK_RET_OK) {
             printf("%s: Batch start failed!\n", __FUNCTION__);
             return SDK_RET_ERR;
@@ -270,7 +273,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
             printf("%s: Batch commit failed!\n", __FUNCTION__);
             return SDK_RET_ERR;
         }
-        rv = batch_start_grpc();
+        rv = batch_start_grpc(g_epoch++);
         if (rv != SDK_RET_OK) {
             printf("%s: Batch start failed!\n", __FUNCTION__);
             return SDK_RET_ERR;
@@ -732,7 +735,6 @@ create_meter (uint32_t num_meter, uint32_t meter_scale, pds_meter_type_t type,
     if (num_meter == 0) {
         return SDK_RET_OK;
     }
-
     memset(&pds_meter, 0, sizeof(pds_meter_spec_t));
     pds_meter.rules =
             (pds_meter_rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,
@@ -1164,7 +1166,7 @@ create_objects (void)
 
 #ifdef TEST_GRPC_APP
     /* BATCH START */
-    ret = batch_start_grpc();
+    ret = batch_start_grpc(g_epoch++);
     if (ret != SDK_RET_OK) {
         printf("%s: Batch start failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
@@ -1278,6 +1280,14 @@ create_objects (void)
     if (ret != SDK_RET_OK) {
         return ret;
     }
+
+#ifdef TEST_GRPC_APP
+    ret = batch_start_grpc(PDS_EPOCH_INVALID);
+    if (ret != SDK_RET_OK) {
+        printf("%s: Batch start failed!\n", __FUNCTION__);
+        return SDK_RET_ERR;
+    }
+#endif
 
 #ifndef TEST_GRPC_APP
     g_flow_test_obj->set_cfg_params(g_test_params.dual_stack,

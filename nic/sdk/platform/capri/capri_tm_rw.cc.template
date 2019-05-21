@@ -232,6 +232,12 @@ capri_tm_get_max_cell_chunks_for_island (uint32_t island)
     return cells_to_chunks(cells);
 }
 
+static inline bool
+capri_tm_hbm_overflow_enabled (void)
+{
+    return tm_cfg_profile()->hbm_fifo_size == 0 ? false : true;
+}
+
 static inline tm_port_type_e
 capri_tm_get_port_type (tm_port_t port)
 {
@@ -3627,19 +3633,21 @@ capri_tm_init_hbm (capri_tm_buf_cfg_t *buf_cfg)
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
 
-    ret = capri_tm_alloc_hbm_buffers(buf_cfg);
-    if (ret != sdk::SDK_RET_OK) {
-        SDK_TRACE_ERR("Error allocating hbm buffers ret %d",
-                      ret);
-        return ret;
-    }
+    if (capri_tm_hbm_overflow_enabled() == true) {
+        ret = capri_tm_alloc_hbm_buffers(buf_cfg);
+        if (ret != sdk::SDK_RET_OK) {
+            SDK_TRACE_ERR("Error allocating hbm buffers ret %d",
+                          ret);
+            return ret;
+        }
 
-    // Program the HBM buffers
-    ret = capri_tm_program_hbm_buffers(buf_cfg);
-    if (ret != sdk::SDK_RET_OK) {
-        SDK_TRACE_ERR("Error programming hbm buffers ret %d",
-                      ret);
-        return ret;
+        // Program the HBM buffers
+        ret = capri_tm_program_hbm_buffers(buf_cfg);
+        if (ret != sdk::SDK_RET_OK) {
+            SDK_TRACE_ERR("Error programming hbm buffers ret %d",
+                          ret);
+            return ret;
+        }
     }
 
     ret = capri_tm_init_hbm_q_map();
@@ -3731,9 +3739,7 @@ capri_tm_init_ports (void)
         SDK_TRACE_ERR("Error initing hbm %d", ret);
         return ret;
     }
-
     tm_ctx()->buf_cfg = buf_cfg;
-
     return ret;
 }
 
@@ -3987,11 +3993,6 @@ capri_tm_init_qos_profile (capri_tm_cfg_profile_t *tm_cfg_profile,
                        CAPRI_TM_MAX_HBM_ETH_CONTEXTS/tm_cfg_profile->num_active_uplink_ports);
         tm_cfg_profile->num_qs[TM_PORT_TYPE_UPLINK] =
             CAPRI_TM_MAX_HBM_ETH_CONTEXTS/tm_cfg_profile->num_active_uplink_ports;
-    }
-
-    if (!tm_cfg_profile->hbm_fifo_size) {
-        SDK_TRACE_ERR("HBM allocation for QOS overflow fifo not available");
-        return sdk::SDK_RET_INVALID_ARG;
     }
     return sdk::SDK_RET_OK;
 }
@@ -4616,6 +4617,22 @@ capri_tm_set_span_threshold (uint32_t span_threshold)
     pbc_csr.cfg_tail_drop.read();
     pbc_csr.cfg_tail_drop.span_threshold(span_threshold);
     pbc_csr.cfg_tail_drop.write();
+    return SDK_RET_OK;
+}
+
+// set the reserved min for uplink ports
+sdk_ret_t
+capri_tm_set_reserved_min (uint32_t reserved_min)
+{
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+
+     pbc_csr.port_0.cfg_account_pg_0.read();
+    pbc_csr.port_0.cfg_account_pg_0.reserved_min(reserved_min);
+    pbc_csr.port_0.cfg_account_pg_0.write();
+    pbc_csr.port_1.cfg_account_pg_0.read();
+    pbc_csr.port_1.cfg_account_pg_0.reserved_min(reserved_min);
+    pbc_csr.port_1.cfg_account_pg_0.write();
     return SDK_RET_OK;
 }
 
