@@ -11,6 +11,8 @@
 #include <getopt.h>
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
+#include "nic/apollo/test/utils/batch.hpp"
+#include "nic/apollo/test/utils/workflow.hpp"
 #include "nic/apollo/test/utils/device.hpp"
 
 using std::cerr;
@@ -56,132 +58,82 @@ protected:
 /// \defgroup DEVICE_TEST
 /// @{
 
-/// \brief Create and delete a device in the same batch
-/// The operation should be de-duped by framework and effectively
-/// a NO-OP from hardware perspective
-/// [ Create, Delete ] - Read
+/// \brief Device WF_1
 TEST_F(device_test, device_workflow_1) {
-    pds_batch_params_t batch_params = {0};
-    pds_device_info_t info;
-    device_util device_obj(k_device_ip_str, k_mac_addr_str, k_gateway_ip_str);
-
-    // trigger
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_obj.del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    device_stepper_seed_t seed;
+    DEVICE_SEED_INIT(&seed, k_device_ip_str, k_mac_addr_str, k_gateway_ip_str);
+    workflow_1<device_util, device_stepper_seed_t>(&seed);
 }
 
-/// \brief Create, delete and create a device in the same batch
-/// The operation should be program and unprogram device in hardware
-/// and return successful afetr create
-/// [ Create - Delete - Create ] - Read
-TEST_F(device_test, DISABLED_device_workflow_2) {
-    pds_batch_params_t batch_params = {0};
-    pds_device_info_t info;
-    device_util device_obj(k_device_ip_str, k_mac_addr_str, k_gateway_ip_str);
-
-    // trigger
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_obj.del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_obj.del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+/// \brief Device WF_2
+TEST_F(device_test, device_workflow_2) {
+    device_stepper_seed_t seed;
+    DEVICE_SEED_INIT(&seed, k_device_ip_str, k_mac_addr_str, k_gateway_ip_str);
+    workflow_2<device_util, device_stepper_seed_t>(&seed);
 }
 
-/// \brief Create and delete device in different batches
-/// The hardware should create device correctly
-/// and return entry not found after delete
-/// [ Create ] - Read - [ Delete ] - Read
+/// \brief Device WF_4
 TEST_F(device_test, device_workflow_4) {
-    pds_batch_params_t batch_params = {0};
-    pds_device_info_t info;
-    device_util device_obj(k_device_ip_str, k_mac_addr_str, k_gateway_ip_str);
-
-    // trigger
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_OK);
-
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_obj.del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    device_stepper_seed_t seed;
+    DEVICE_SEED_INIT(&seed, k_device_ip_str, k_mac_addr_str, k_gateway_ip_str);
+    workflow_4<device_util, device_stepper_seed_t>(&seed);
 }
 
-/// \brief Create and recreate device in two batches
-/// The hardware should program device correctly in case of
-/// first create and return error in second create operation
-/// [ Create ] - [ Create ] - Read
+/// \brief Device WF_6
+TEST_F(device_test, device_workflow_6) {
+    device_stepper_seed_t seed1, seed1A, seed1B;
+    DEVICE_SEED_INIT(&seed1, k_device_ip_str, k_mac_addr_str, k_gateway_ip_str);
+    DEVICE_SEED_INIT(&seed1A, k_device_ip_str, "00:02:01:00:0A:0B", "111.0.0.111");
+    DEVICE_SEED_INIT(&seed1B, k_device_ip_str, "00:02:01:0A:0B:0C", "99.99.99.99");
+    workflow_6<device_util, device_stepper_seed_t>(&seed1, &seed1A, &seed1B);
+}
+
+/// \brief Device WF_7
+TEST_F(device_test, device_workflow_7) {
+    device_stepper_seed_t seed1, seed1A, seed1B;
+    DEVICE_SEED_INIT(&seed1, k_device_ip_str, k_mac_addr_str, k_gateway_ip_str);
+    DEVICE_SEED_INIT(&seed1A, k_device_ip_str, "00:02:01:00:0A:0B", "111.0.0.111");
+    DEVICE_SEED_INIT(&seed1B, k_device_ip_str, "00:02:01:0A:0B:0C", "99.99.99.99");
+    workflow_7<device_util, device_stepper_seed_t>(&seed1, &seed1A, &seed1B);
+}
+
+/// \brief Device WF_8
+TEST_F(device_test, DISABLED_device_workflow_8) {
+    device_stepper_seed_t seed1, seed1A, seed1B;
+    DEVICE_SEED_INIT(&seed1, k_device_ip_str, k_mac_addr_str, k_gateway_ip_str);
+    DEVICE_SEED_INIT(&seed1A, k_device_ip_str, "00:02:01:00:0A:0B", "111.0.0.111");
+    DEVICE_SEED_INIT(&seed1B, k_device_ip_str, "00:02:01:0A:0B:0C", "99.99.99.99");
+    workflow_8<device_util, device_stepper_seed_t>(&seed1, &seed1A, &seed1B);
+}
+
+/// \brief Device WF_9
+TEST_F(device_test, DISABLED_device_workflow_9) {
+    device_stepper_seed_t seed1, seed1A;
+    DEVICE_SEED_INIT(&seed1, k_device_ip_str, k_mac_addr_str, k_gateway_ip_str);
+    DEVICE_SEED_INIT(&seed1A, k_device_ip_str, "00:02:01:00:0A:0B", "111.0.0.111");
+    workflow_9<device_util, device_stepper_seed_t>(&seed1, &seed1A);
+}
+
+/// \brief Device WF_N_1
 TEST_F(device_test, device_workflow_neg_1) {
-    pds_batch_params_t batch_params = {0};
-    device_util device_obj(k_device_ip_str, k_mac_addr_str, k_gateway_ip_str);
-    pds_device_info_t info;
-
-    // trigger
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_OK);
-
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_abort() == sdk:: SDK_RET_OK);
-
-    // cleanup
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_obj.del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    device_stepper_seed_t seed;
+    DEVICE_SEED_INIT(&seed, k_device_ip_str, k_mac_addr_str, k_gateway_ip_str);
+    workflow_neg_1<device_util, device_stepper_seed_t>(&seed);
 }
 
-/// \brief Read a device without creating it
-/// The hardware should return entry not found
-TEST_F(device_test, device_workflow_neg_3a) {
-    device_util device_obj;
-    pds_device_info_t info;
-
-    // trigger
-    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+/// \brief Device WF_N_3
+TEST_F(device_test, device_workflow_neg_3) {
+    device_stepper_seed_t seed;
+    DEVICE_SEED_INIT(&seed, k_device_ip_str, k_mac_addr_str, k_gateway_ip_str);
+    workflow_neg_3<device_util, device_stepper_seed_t>(&seed);
 }
 
-/// \brief Delete a device without creating it
-/// The hardware should return entry not found
-TEST_F(device_test, device_workflow_neg_3b) {
-    pds_batch_params_t batch_params = {0};
-    device_util device_obj;
-
-    // trigger
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_obj.del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+/// \brief Device WF_N_5
+TEST_F(device_test, DISABLED_device_workflow_neg_5) {
+    device_stepper_seed_t seed1, seed1A;
+    DEVICE_SEED_INIT(&seed1, k_device_ip_str, k_mac_addr_str, k_gateway_ip_str);
+    DEVICE_SEED_INIT(&seed1A, k_device_ip_str, "00:02:01:00:0A:0B", "111.0.0.111");
+    workflow_neg_5<device_util, device_stepper_seed_t>(&seed1, &seed1A);
 }
 
 /// @}

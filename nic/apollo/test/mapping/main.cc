@@ -93,6 +93,7 @@ protected:
         std::string nr_cidr = "100.0.0.1/16";
         ip_prefix_t ip_pfx, rt_pfx, nr_pfx;
         ip_addr_t ipaddr, rt_addr, nr_addr;
+        device_stepper_seed_t device_seed;
         vpc_stepper_seed_t vpc_seed;
         subnet_stepper_seed_t subnet_seed;
         tep_stepper_seed_t tep_seed = {};
@@ -103,11 +104,11 @@ protected:
         extract_ip_pfx((char *)api_test::g_rt_cidr_v4.c_str(), &rt_pfx);
         extract_ip_pfx((char *)nr_cidr.c_str(), &nr_pfx);
 
-        device_util device_obj(g_device_ip, g_device_macaddr, g_gateway_ip);
         tep_util tep_obj(api_test::g_device_ip, PDS_TEP_TYPE_WORKLOAD, encap);
 
         BATCH_START();
-        ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
+        DEVICE_SEED_INIT(&device_seed, g_device_ip, g_device_macaddr, g_gateway_ip);
+        DEVICE_CREATE(&device_seed);
         VPC_SEED_INIT(&vpc_seed, vpc_key, PDS_VPC_TYPE_TENANT,
                       api_test::g_vpc_cidr_v4, PDS_MAX_VPC);
         VPC_MANY_CREATE(&vpc_seed);
@@ -156,7 +157,7 @@ protected:
             subnet_key.id += 1;
             vpc_key.id += 1;
         }
-        ASSERT_TRUE(device_obj.read(&dev_info) == sdk::SDK_RET_OK);
+        DEVICE_READ(&device_seed, sdk::SDK_RET_OK);
         TEP_READ(tep_obj, &tep_info);
         TEP_MANY_READ(&tep_seed);
         VNIC_MANY_READ(&vnic_seed, sdk::SDK_RET_OK);
@@ -175,11 +176,14 @@ protected:
         std::string nr_cidr = "100.0.0.1/16";
         ip_prefix_t ip_pfx, rt_pfx, nr_pfx;
         ip_addr_t ipaddr, rt_addr, nr_addr;
+        device_stepper_seed_t device_seed;
         pds_vpc_key_t vpc_key = {0};
         pds_subnet_key_t subnet_key = {0};
         vnic_stepper_seed_t seed;
         pds_batch_params_t batch_params = {0};
         pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
+
+        DEVICE_SEED_INIT(&device_seed, g_device_ip, g_device_macaddr, g_gateway_ip);
 
         vpc_key.id = api_test::g_vpc_id;
         subnet_key.id = api_test::g_subnet_id;
@@ -187,7 +191,6 @@ protected:
         extract_ip_pfx((char *)api_test::g_rt_cidr_v4.c_str(), &rt_pfx);
         extract_ip_pfx((char *)nr_cidr.c_str(), &nr_pfx);
 
-        device_util device_obj(g_device_ip, g_device_macaddr, g_gateway_ip);
         tep_util tep_obj(api_test::g_device_ip, PDS_TEP_TYPE_WORKLOAD, encap);
 
         batch_params.epoch = ++api_test::g_batch_epoch;
@@ -225,7 +228,7 @@ protected:
         }
         ASSERT_TRUE(vpc_util::many_delete(vpc_key, PDS_MAX_VPC) ==
                     sdk::SDK_RET_OK);
-        ASSERT_TRUE(device_obj.del() == sdk::SDK_RET_OK);
+        DEVICE_DELETE(&device_seed);
         ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 #endif
         pds_test_base::TearDownTestCase();

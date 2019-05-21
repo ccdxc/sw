@@ -369,7 +369,7 @@ inline void workflow_neg_5(seed_T *seed1, seed_T *seed1A) {
     MANY_READ_FAIL(seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
-// WF_N_7: [ Create SetMax ] - Read - [ Update SetMax + 1 ] - Read
+// WF_N_6: [ Create SetMax ] - Read - [ Update SetMax + 1 ] - Read
 template <typename class_T, typename seed_T>
 inline void workflow_neg_6(seed_T *seed1, seed_T *seed1A) {
     // trigger
@@ -394,7 +394,7 @@ inline void workflow_neg_6(seed_T *seed1, seed_T *seed1A) {
     MANY_READ_FAIL(seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
-// WF_N_8: [ Create Set1 ] - Read - [ Update Set1 - Update Set2 ] - Read
+// WF_N_7: [ Create Set1 ] - Read - [ Update Set1 - Update Set2 ] - Read
 template <typename class_T, typename seed_T>
 inline void workflow_neg_7(seed_T *seed1, seed_T *seed1A, seed_T *seed2) {
     // trigger
@@ -420,7 +420,7 @@ inline void workflow_neg_7(seed_T *seed1, seed_T *seed1A, seed_T *seed2) {
     MANY_READ_FAIL(seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
-// WF_N_9: [ Create Set1 ] - Read - [ Delete Set1 - Update Set2 ] - Read
+// WF_N_8: [ Create Set1 ] - Read - [ Delete Set1 - Update Set2 ] - Read
 template <typename class_T, typename seed_T>
 inline void workflow_neg_8(seed_T *seed1, seed_T *seed2) {
     // trigger
