@@ -42,7 +42,7 @@ nvme_sessprexts_tx_cb_process:
 
 skip_page_alloc:
     //calculate session_wqe address = base_addr + (ci << sizeof(wqe))
-    sll         r1, SESSPREXTSTX_C_INDEX, LOG_SESSXTS_Q_ENTRY_SIZE
+    sll         r1, SESSPREXTSTX_C_INDEX, LOG_SESS_Q_ENTRY_SIZE
     add         r1, d.base_addr, r1
 
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS,

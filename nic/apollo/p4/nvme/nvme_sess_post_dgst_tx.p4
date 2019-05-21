@@ -51,10 +51,11 @@
 #define tx_table_s3_t0_action nvme_sesspostdgst_tx_sessprodcb_process
 
 //releases busy lock
-#define tx_table s4_t0_action nvme_sesspostdgst_tx_cb_writeback_process
+#define tx_table_s4_t0_action nvme_sesspostdgst_tx_cb_writeback_process
 
 //prepares tcp tso descriptors
-#define tx_table_s5_t0_action nvme_sesspostdgst_tx_cb_tso_process
+#define tx_table_s5_t0_action nvme_sesspostdgst_tx_cb_tso_process_t0
+#define tx_table_s5_t1_action nvme_sesspostdgst_tx_cb_tso_process_t1
 
 #include "common_txdma.p4"
 #include "nvme_common.p4"
@@ -94,13 +95,16 @@ header_type nvme_sesspostdgst_tx_to_stage_cmd_ctxt_info_t {
 
 header_type nvme_sesspostdgst_tx_to_stage_sessprodcb_info_t {
     fields {
-        pad                              :  128;
+        num_pages                        :  8;
+        pad                              :  120;
     }
 }
 
 header_type nvme_sesspostdgst_tx_to_stage_writeback_info_t {
     fields {
-        pad                              :  128;
+        num_pages                        :  8;
+        cid                              :  16;
+        pad                              :  104;
     }
 }
 
@@ -136,7 +140,10 @@ header_type nvme_sesspostdgst_tx_sessprodcb_to_writeback_t {
 
 header_type nvme_sesspostdgst_tx_writeback_to_tso_t {
     fields {
-        pad                 : 160;
+        num_pages           : 8;
+        is_t0               : 1;
+        tcp_wqe_offset      : 16;
+        pad                 : 135;
     }
 }
 
@@ -216,12 +223,17 @@ metadata nvme_sesspostdgst_tx_writeback_to_tso_t t0_s2s_writeback_to_tso_info;
 @pragma scratch_metadata
 metadata nvme_sesspostdgst_tx_writeback_to_tso_t t0_s2s_writeback_to_tso_info_scr;
 
-@pragma dont_trim
 metadata nvme_sesspostdgst_tx_sessprodcb_to_writeback_t t0_s2s_sessprodcb_to_writeback_info;
 @pragma scratch_metadata
 metadata nvme_sesspostdgst_tx_sessprodcb_to_writeback_t t0_s2s_sessprodcb_to_writeback_info_scr;
 
 //Table-1
+@pragma pa_header_union ingress common_t1_s2s t1_s2s_writeback_to_tso_info
+
+metadata nvme_sesspostdgst_tx_writeback_to_tso_t t1_s2s_writeback_to_tso_info;
+@pragma scratch_metadata
+metadata nvme_sesspostdgst_tx_writeback_to_tso_t t1_s2s_writeback_to_tso_info_scr;
+
 
 //Table-2
 
@@ -330,6 +342,7 @@ action nvme_sesspostdgst_tx_sessprodcb_process (SESSPRODCB_PARAMS) {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s3_info_scr.num_pages, to_s3_info.num_pages);
     modify_field(to_s3_info_scr.pad, to_s3_info.pad);
     
     // stage to stage
@@ -339,18 +352,22 @@ action nvme_sesspostdgst_tx_sessprodcb_process (SESSPRODCB_PARAMS) {
     GENERATE_SESSPRODCB_D
 }
 
-action nvme_sesspostdgst_tx_cb_writeback_process () {
+action nvme_sesspostdgst_tx_cb_writeback_process (SESSDGSTTXCB_PARAMS_NON_STG0) {
     // from ki global
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s4_info_scr.num_pages, to_s4_info.num_pages);
+    modify_field(to_s4_info_scr.cid, to_s4_info.cid);
     modify_field(to_s4_info_scr.pad, to_s4_info.pad);
     
     // stage to stage
     modify_field(t0_s2s_sessprodcb_to_writeback_info_scr.pad, t0_s2s_sessprodcb_to_writeback_info.pad);
+
+    GENERATE_SESSDGSTTXCB_D_NON_STG0
 }
 
-action nvme_sesspostdgst_tx_cb_tso_process () {
+action nvme_sesspostdgst_tx_cb_tso_process_t0 () {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -358,5 +375,22 @@ action nvme_sesspostdgst_tx_cb_tso_process () {
     modify_field(to_s5_info_scr.pad, to_s5_info.pad);
     
     // stage to stage
+    modify_field(t0_s2s_writeback_to_tso_info_scr.num_pages, t0_s2s_writeback_to_tso_info.num_pages);
+    modify_field(t0_s2s_writeback_to_tso_info_scr.is_t0, t0_s2s_writeback_to_tso_info.is_t0);
+    modify_field(t0_s2s_writeback_to_tso_info_scr.tcp_wqe_offset, t0_s2s_writeback_to_tso_info.tcp_wqe_offset);
     modify_field(t0_s2s_writeback_to_tso_info_scr.pad, t0_s2s_writeback_to_tso_info.pad);
+}
+
+action nvme_sesspostdgst_tx_cb_tso_process_t1 () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s5_info_scr.pad, to_s5_info.pad);
+
+    // stage to stage
+    modify_field(t1_s2s_writeback_to_tso_info_scr.num_pages, t1_s2s_writeback_to_tso_info.num_pages);
+    modify_field(t1_s2s_writeback_to_tso_info_scr.is_t0, t1_s2s_writeback_to_tso_info.is_t0);
+    modify_field(t1_s2s_writeback_to_tso_info_scr.tcp_wqe_offset, t1_s2s_writeback_to_tso_info.tcp_wqe_offset);
+    modify_field(t1_s2s_writeback_to_tso_info_scr.pad, t1_s2s_writeback_to_tso_info.pad);
 }

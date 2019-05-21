@@ -408,7 +408,8 @@ header_type sessdgsttxcb_t {
         //6B
         base_addr                       : 34;
         log_num_entries                 : 5;
-        rsvd0                           : 9;
+        ring_empty_sched_eval_done      : 1;
+        rsvd0                           : 8;
         
         //R0 stage0 flags
         //1B
@@ -437,7 +438,7 @@ header_type sessdgsttxcb_t {
 
 #define SESSDGSTTXCB_PARAMS                                                      \
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, \
-base_addr, log_num_entries, rsvd0, r0_busy, rsvd1, \
+base_addr, log_num_entries, ring_empty_sched_eval_done, rsvd0, r0_busy, rsvd1, \
 wb_r0_busy, rsvd2, r1_busy, rsvd3, wb_r1_busy, rsvd4, pad
 
 #define GENERATE_SESSDGSTTXCB_D  \
@@ -451,8 +452,11 @@ wb_r0_busy, rsvd2, r1_busy, rsvd3, wb_r1_busy, rsvd4, pad
     modify_field(sessdgsttxcb_d.pid, pid);                                \
     modify_field(sessdgsttxcb_d.pi_0, pi_0);                              \
     modify_field(sessdgsttxcb_d.ci_0, ci_0);                              \
+    modify_field(sessdgsttxcb_d.pi_1, pi_1);                              \
+    modify_field(sessdgsttxcb_d.ci_1, ci_1);                              \
     modify_field(sessdgsttxcb_d.base_addr, base_addr);  \
     modify_field(sessdgsttxcb_d.log_num_entries, log_num_entries);  \
+    modify_field(sessdgsttxcb_d.ring_empty_sched_eval_done, ring_empty_sched_eval_done);  \
     modify_field(sessdgsttxcb_d.rsvd0, rsvd0);  \
     modify_field(sessdgsttxcb_d.r0_busy, r0_busy);  \
     modify_field(sessdgsttxcb_d.rsvd1, rsvd1);  \
@@ -463,6 +467,13 @@ wb_r0_busy, rsvd2, r1_busy, rsvd3, wb_r1_busy, rsvd4, pad
     modify_field(sessdgsttxcb_d.wb_r1_busy, wb_r1_busy);  \
     modify_field(sessdgsttxcb_d.rsvd4, rsvd4);  \
     modify_field(sessdgsttxcb_d.pad, pad);  \
+
+#define SESSDGSTTXCB_PARAMS_NON_STG0 \
+    pc, SESSDGSTTXCB_PARAMS
+
+#define GENERATE_SESSDGSTTXCB_D_NON_STG0                       \
+    modify_field(sessdgsttxcb_d.pc, pc);                       \
+    GENERATE_SESSDGSTTXCB_D
 
 // resource cb
 header_type resourcecb_t {

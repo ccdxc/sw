@@ -28,7 +28,7 @@ nvme_req_tx_sessprodcb_process:
     //XXX: check for read/write opcode
     
     
-    sll         r3, XTS_Q_PI, LOG_SESSXTS_Q_ENTRY_SIZE
+    sll         r3, XTS_Q_PI, LOG_SESS_Q_ENTRY_SIZE
     tblmincri   XTS_Q_PI, d.log_num_xts_q_entries, 1
     add         r3, d.xts_q_base_addr, r3
 

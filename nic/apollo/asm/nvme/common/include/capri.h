@@ -930,6 +930,14 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
     phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, phv_end), sizeof(DMA_CMD_PHV2MEM_T.phv_end), _tmp_r; \
     phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, addr), sizeof(DMA_CMD_PHV2MEM_T.addr), _addr; \
 
+#define DMA_HBM_PHV2MEM_START_SLEN_ELEN_SETUP(_base_r, _tmp_r, _start, _slen, _elen, _addr)         \
+    phvwrpi      _base_r, offsetof(DMA_CMD_PHV2MEM_T, cmdtype), sizeof(DMA_CMD_PHV2MEM_T.cmdtype), (DMA_CMD_TYPE_PHV2MEM << PHV2MEM_CMDTYPE_OFFSET); \
+    add          _tmp_r, PHV_FIELD_START_OFFSET(_start), _slen; \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, phv_start), sizeof(DMA_CMD_PHV2MEM_T.phv_start), _tmp_r; \
+    add          _tmp_r, PHV_FIELD_START_OFFSET(_start)-1, _elen; \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, phv_end), sizeof(DMA_CMD_PHV2MEM_T.phv_end), _tmp_r; \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, addr), sizeof(DMA_CMD_PHV2MEM_T.addr), _addr; \
+
 #define DMA_PHV2PKT_SETUP(_base_r, _start, _end)         \
     phvwrpi       _base_r, offsetof(DMA_CMD_PHV2PKT_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_PHV2PKT_T, phv_end, cmdtype), ((PHV_FIELD_END_OFFSET(_end) - 1) << PHV2PKT_PHV_END_OFFSET) | (PHV_FIELD_START_OFFSET(_start) << PHV2PKT_PHV_START_OFFSET) | (DMA_CMD_TYPE_PHV2PKT << PHV2PKT_CMDTYPE_OFFSET); \
 

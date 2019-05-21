@@ -20,6 +20,10 @@
 #define SESSPOSTXTSTX_P_INDEX   d.{pi_1}.hx
 #define SESSPOSTXTSTX_C_INDEX   d.{ci_1}.hx
 #define NMDPR_IDX               d.{idx}.wx
+#define DGST_R0_P_INDEX         d.{pi_0}.hx
+#define DGST_R0_C_INDEX         d.{ci_0}.hx
+#define DGST_R1_P_INDEX         d.{pi_1}.hx
+#define DGST_R1_C_INDEX         d.{ci_1}.hx
 
 //cb, ring entry sizes
 #define LOG_SQE_SIZE            6   //2^6 = 64
@@ -31,7 +35,7 @@
 #define LOG_CMDID_RING_ENTRY_SIZE   LOG_CMDID_SIZE
 #define LOG_CMD_CTXT_SIZE           11  //2^11=2K
 
-#define LOG_SESSXTS_Q_ENTRY_SIZE    LOG_CMDID_SIZE
+#define LOG_SESS_Q_ENTRY_SIZE   LOG_CMDID_SIZE
 #define LOG_XTS_DESC_SIZE       7   //2^7 = 128
 #define LOG_AOL_SIZE            6   //2^6 = 64
 #define AOL_SIZE                (1 << (LOG_AOL_SIZE))
@@ -43,6 +47,7 @@
 #define NMDPR_RING_SIZE_MASK    (NMDPR_RING_SIZE-1)
 #define LOG_NMDPR_RING_ENTRY_SIZE   3
 #define NMDPR_RING_ENTRY_SIZE   (1 << LOG_NMDPR_RING_ENTRY_SIZE)
+#define LOG_HBM_AL_RING_ENTRY_SIZE  3 // 2^3 = 8
 
 //rings, their ids and priorities
 //sq
@@ -89,6 +94,7 @@
 //dma cmd ptrs
 #define NVME_REQ_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(cmd_ctxt_dma_dma_cmd_type)/16)
 #define NVME_SESSPREXTSTX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(pkt_desc_dma_dma_cmd_type)/16)
+#define NVME_SESS_POST_DGST_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(tcp_wqe_dma0_dma_cmd_pad)/16)
 
 //command context offsets
 #define NVME_CMD_CTXT_HDR_SIZE          64
@@ -100,6 +106,18 @@
 
 #define NVME_CMD_CTXT_MAX_PAGE_PTRS     16
 #define NVME_CMD_CTXT_PAGE_LIST_SIZE    (NVME_CMD_CTXT_MAX_PAGE_PTRS << LOG_NUM_PAGE_PTR_BYTES)
+
+struct nvme_cmd_ctxt_page_entry_t {
+    len:16;
+    page_addr:48;
+};
+#define NVME_CMD_CTXT_PAGE_ENTRY_SIZE sizeof(struct nvme_cmd_ctxt_page_entry_t)
+
+struct hbm_al_ring_entry_t {
+    pad : 16;
+    len : 14;
+    descr_addr : 34;
+};
 
 //XTS related defines
 #define HW_XTS_TX_DB_ADDR        CAPRI_BARCO_MD_HENS_REG_XTS0_PRODUCER_IDX
@@ -132,6 +150,5 @@
 #define NVME_O_TCP_CMD_CAPSULE_HEADER_SIZE  \
     (NVME_O_TCP_CH_SIZE + NVME_O_TCP_PSH_CMD_CAPSULE_SIZE + NVME_O_TCP_HDGST_SIZE)
 #define NVME_O_TCP_DDGST_SIZE               4
-
 
 #endif //__NVME_COMMON_H
