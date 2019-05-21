@@ -24,7 +24,7 @@ function cleanupNode() {
         do
             ${SUDO} umount $i
         done
-        ${SUDO} rm -fr /etc/pensando/* /etc/kubernetes/* /usr/pensando/bin/* /var/lib/pensando/* /var/log/pensando/*  /var/lib/cni/ /var/lib/kubelet/* /etc/cni/
+        ${SUDO} rm -fr /etc/pensando/* /etc/kubernetes/* /usr/pensando/bin/* /var/lib/pensando/* /var/log/pensando/*  /var/lib/cni/ /var/lib/kubelet/* /etc/cni/ /data/minio/*
         ${SUDO} ip addr flush label *pens
         if [ "$(docker ps -qa)" != "" ]
         then
