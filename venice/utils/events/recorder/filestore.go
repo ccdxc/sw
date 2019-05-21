@@ -49,9 +49,6 @@ func newFile(dir, filename string) (*fileImpl, error) {
 		return nil, errors.Wrap(err, "failed to open/create recorder events file")
 	}
 
-	// seek to the end
-	handler.Seek(0, os.SEEK_END)
-
 	// make backup directory which stores all the rotated files that're yet to be sent to the proxy
 	backupDir := filepath.Join(dir, fmt.Sprintf("%s.bak", filename))
 	if err = os.MkdirAll(backupDir, 0755); err != nil {
