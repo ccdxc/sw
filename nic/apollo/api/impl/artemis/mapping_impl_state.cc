@@ -10,8 +10,8 @@
 
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
-#include "nic/apollo/api/impl/pds_impl_state.hpp"
-#include "nic/apollo/api/impl/mapping_impl.hpp"
+#include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/artemis/mapping_impl.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/p4/include/defines.h"
 #include "gen/p4gen/artemis/include/p4pd.h"

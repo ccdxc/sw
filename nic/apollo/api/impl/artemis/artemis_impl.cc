@@ -17,13 +17,13 @@
 // TODO: clean this up
 #include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/api/impl/artemis_impl.hpp"
+#include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
-#include "nic/apollo/p4/artemis_p4/include/defines.h"
+#include "nic/apollo/p4/include/defines.h"
 #include "gen/p4gen/artemis/include/p4pd.h"
-#include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
-#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
+// #include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
+// #include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
 
 extern int p4pd_txdma_get_max_action_id(uint32_t tableid);
 extern sdk_ret_t init_service_lif(const char *cfg_path);
@@ -645,22 +645,20 @@ artemis_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
 
 sdk_ret_t
 artemis_impl::table_transaction_begin(void) {
-    tep_impl_db()->table_transaction_begin();
     vnic_impl_db()->table_transaction_begin();
     mapping_impl_db()->table_transaction_begin();
     route_table_impl_db()->table_transaction_begin();
-    security_policy_impl_db()->table_transaction_begin();
+    // security_policy_impl_db()->table_transaction_begin();
     meter_impl_db()->table_transaction_begin();
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 artemis_impl::table_transaction_end(void) {
-    tep_impl_db()->table_transaction_end();
     vnic_impl_db()->table_transaction_end();
     mapping_impl_db()->table_transaction_end();
     route_table_impl_db()->table_transaction_end();
-    security_policy_impl_db()->table_transaction_end();
+    // security_policy_impl_db()->table_transaction_end();
     meter_impl_db()->table_transaction_end();
     return SDK_RET_OK;
 }

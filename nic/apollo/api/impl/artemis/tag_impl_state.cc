@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/api/include/pds_route.hpp"
-#include "nic/apollo/api/impl/tag_impl_state.hpp"
+#include "nic/apollo/api/impl/artemis/tag_impl_state.hpp"
 
 namespace api {
 namespace impl {

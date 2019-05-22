@@ -12,10 +12,8 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/route.hpp"
-#include "nic/apollo/api/impl/route_impl.hpp"
-#include "nic/apollo/api/impl/pds_impl_state.hpp"
-#include "nic/apollo/api/tep.hpp"
-#include "nic/apollo/api/impl/tep_impl.hpp"
+#include "nic/apollo/api/impl/artemis/route_impl.hpp"
+#include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/lpm/lpm.hpp"
 
 namespace api {
@@ -104,8 +102,6 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     pds_route_table_spec_t    *spec;
     pds_vpc_key_t             vpc_key;
     route_table_t             *rtable;
-    pds_tep_key_t             tep_key;
-    tep_entry                 *tep;
     vpc_entry                 *vpc;
 
     spec = &obj_ctxt->api_params->route_table_spec;
@@ -138,23 +134,6 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                             "nh id %u, ", spec->key.id,
                             ippfx2str(&rtable->routes[i].prefix),
                             rtable->routes[i].nhid);
-            break;
-        case PDS_NH_TYPE_TEP:
-            // non vpc peering case
-            tep_key.ip_addr = spec->routes[i].nh_ip.addr.v4_addr;
-            tep = tep_db()->find(&tep_key);
-            if (tep == NULL) {
-                PDS_TRACE_ERR("TEP %s not found while processing route %s in "
-                              "route table %u", ipv4addr2str(tep_key.ip_addr),
-                              ippfx2str(&spec->routes[i].prefix), spec->key.id);
-                ret = SDK_RET_INVALID_ARG;
-                goto cleanup;
-            }
-            rtable->routes[i].nhid = ((tep_impl *)(tep->impl()))->nh_id();
-            PDS_TRACE_DEBUG("Processing route table %u, route %s -> nh %u, "
-                            "TEP %s", spec->key.id,
-                            ippfx2str(&rtable->routes[i].prefix),
-                            rtable->routes[i].nhid, tep->key2str().c_str());
             break;
         case PDS_NH_TYPE_PEER_VPC:
             vpc = vpc_db()->find(&spec->routes[i].vpc);

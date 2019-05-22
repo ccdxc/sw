@@ -33,6 +33,7 @@ extern sdk_ret_t init_service_lif(const char *cfg_path);
 #define MEM_REGION_LIF_STATS_BASE     "lif_stats_base"
 #define RXDMA_SYMBOLS_MAX             1
 #define TXDMA_SYMBOLS_MAX             1
+#define MEM_REGION_SESSION_STATS_NAME "session_stats"
 
 namespace api {
 namespace impl {
@@ -426,7 +427,8 @@ apollo_impl::table_init_(void) {
 
     // program session stats table base address as table constant
     // of session table
-    addr = api::g_pds_state.mempartition()->start_addr("session_stats");
+    addr = api::g_pds_state.mempartition()->start_addr(
+                                        MEM_REGION_SESSION_STATS_NAME);
     SDK_ASSERT(addr != INVALID_MEM_ADDRESS);
     // reset bit 31 (saves one asm instruction)
     addr &= ~((uint64_t)1 << 31);
@@ -642,6 +644,47 @@ apollo_impl::table_transaction_end(void) {
 sdk_ret_t
 apollo_impl::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
     mapping_impl_db()->table_stats(cb, ctxt);
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief      API to get session stats
+ * @param[in]  session_index session index
+ * @param[in]  flow_role     iflow or rflow
+ * @param[out] packet_count  number of packets for this session and flow
+ * @param[out] bytes_count   number of bytes for this session and flow
+ * @return     SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+apollo_impl::session_stats(uint32_t session_index, uint8_t flow_role,
+                           uint64_t *packet_count, uint64_t *bytes_count) {
+    sdk_ret_t ret;
+    uint64_t offset = 0;
+    uint64_t start_addr = 0;
+    session_stats_entry_t session_stats_entry;
+
+    memset(&session_stats_entry, 0, sizeof(session_stats_entry_t));
+    offset = session_index * sizeof(session_stats_entry_t);
+    start_addr = api::g_pds_state.mempartition()->start_addr(
+                                             MEM_REGION_SESSION_STATS_NAME);
+    ret = sdk::asic::asic_mem_read(start_addr + offset,
+                                   (uint8_t *)&session_stats_entry,
+                                   sizeof(session_stats_entry_t));
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    switch (flow_role) {
+    case TCP_FLOW_INITIATOR:
+        *packet_count = session_stats_entry.iflow_packet_count;
+        *bytes_count = session_stats_entry.iflow_bytes_count;
+        break;
+
+    default:
+    case TCP_FLOW_RESPONDER:
+        *packet_count = session_stats_entry.rflow_packet_count;
+        *bytes_count = session_stats_entry.rflow_bytes_count;
+        break;
+    }
     return SDK_RET_OK;
 }
 

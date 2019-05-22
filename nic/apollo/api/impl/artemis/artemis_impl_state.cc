@@ -8,7 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/api/impl/artemis_impl_state.hpp"
+#include "nic/apollo/api/impl/artemis/artemis_impl_state.hpp"
 #include "gen/p4gen/artemis/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 

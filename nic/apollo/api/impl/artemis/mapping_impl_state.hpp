@@ -18,6 +18,8 @@
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 
+using sdk::table::slhash;
+
 namespace api {
 namespace impl {
 
@@ -65,8 +67,8 @@ public:
     sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
 
 private:
-    mem_hash *local_ip_mapping_tbl(void) { return local_ip_mapping_tbl_; }
-    mem_hash *mappings_tbl(void) { return mappings_tbl_; }
+    slhash *local_ip_mapping_tbl(void) { return local_ip_mapping_tbl_; }
+    mem_hash *mapping_tbl(void) { return mapping_tbl_; }
     slab *mapping_impl_slab(void) { return mapping_impl_slab_; }
     directmap *nat_tbl(void) { return nat_tbl_; }
     // mapping_impl class is friend of mapping_impl_state
@@ -74,7 +76,7 @@ private:
 
 private:
     directmap *nat_tbl_;
-    mem_hash *mappings_tbl_;
+    mem_hash *mapping_tbl_;
     slab *mapping_impl_slab_;
     slhash *local_ip_mapping_tbl_;
 };

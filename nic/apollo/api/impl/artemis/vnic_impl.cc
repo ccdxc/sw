@@ -15,7 +15,7 @@
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/impl/artemis/route_impl.hpp"
-#include "nic/apollo/api/impl/artemis/security_policy_impl.hpp"
+// #include "nic/apollo/api/impl/artemis/security_policy_impl.hpp"
 #include "nic/apollo/api/impl/artemis/vnic_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -122,7 +122,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     p4pd_error_t p4pd_ret;
     pds_vnic_spec_t *spec;
     pds_vpc_key_t vpc_key;
-    pds_meter_entry *meter;
+    // pds_meter_entry *meter;
     pds_subnet_key_t subnet_key;
     pds_policy_key_t policy_key;
     policy *ing_v4_policy, *ing_v6_policy;
@@ -192,10 +192,8 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     if (p4pd_ret != P4PD_SUCCESS) {
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
-#endif
 
     // program INGRESS_VNIC_INFO table
-#if 0
     vpc_key = subnet->vpc();
     vpc = vpc_db()->find(&vpc_key);
     if (unlikely(vpc == NULL)) {
@@ -222,6 +220,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     egr_v6_policy = policy_db()->policy_find(&policy_key);
 
     ing_vnic_info.action_id = INGRESS_VNIC_INFO_INGRESS_VNIC_INFO_ID;
+#if 0
     if (v4_route_table) {
         addr =
             ((impl::route_table_impl *)(v4_route_table->impl()))->lpm_root_addr();
@@ -240,17 +239,18 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     // TODO: we need to revisit once pipeline is fixed to take both ing & egr
     //       policy roots and potentially this table moves to RXDMA and/or TXDMA
     if (egr_v4_policy) {
-        addr = ((impl::security_policy_impl *)(egr_v4_policy->impl()))->security_policy_root_addr();
+        // addr = ((impl::security_policy_impl *)(egr_v4_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv4 egr policy root addr 0x%llx", addr);
         MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v4_sacl,
                                 addr, 5);
     }
     if (egr_v6_policy) {
-        addr = ((impl::security_policy_impl *)(egr_v6_policy->impl()))->security_policy_root_addr();
+        // addr = ((impl::security_policy_impl *)(egr_v6_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv6 egr policy root addr 0x%llx", addr);
         MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v6_sacl,
                                 addr, 5);
     }
+
     meter = meter_db()->find(&spec->v4_meter);
     if (meter) {
         addr = ((impl::meter_impl *)(meter->impl()))->lpm_root_addr();
@@ -265,6 +265,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v6_meter,
                                 addr, 5);
     }
+#endif
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INGRESS_VNIC_INFO,
                                        hw_id_, NULL, NULL,
                                        &ing_vnic_info);
@@ -279,8 +280,8 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
     // TODO: reprogram INGRESS_VNIC_INFO table and EGRESS_VNIC_INFO table
+    sdk_ret_t ret = SDK_RET_OK;
 #if 0
-    sdk_ret_t ret;
     pds_subnet_key_t subnet_key;
     vnic_entry *vnic = (vnic_entry *)api_obj;
     subnet_entry *subnet;
@@ -417,6 +418,7 @@ vnic_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
 sdk_ret_t
 vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
                          api_op_t api_op) {
+    sdk_ret_t ret = SDK_RET_OK;
     sdk_table_api_params_t api_params = { 0 };
     vnic_mapping_swkey vnic_mapping_key = { 0 };
     vnic_mapping_swkey_mask_t vnic_mapping_mask = { 0 };
@@ -430,8 +432,8 @@ vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
     api_params.handle = vnic_mapping_handle_;
     ret = vnic_impl_db()->vnic_mapping_tbl()->get(&api_params);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to read VNIC_MAPPING table for "
-                      "vnic %u, err %u", vnic->key().id, ret);
+        //PDS_TRACE_ERR("Failed to read VNIC_MAPPING table for "
+        //              "vnic %u, err %u", vnic->key().id, ret);
         return ret;
     }
 
@@ -440,9 +442,9 @@ vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
     vnic_mapping_data.epoch = epoch
     ret = vnic_impl_db()->vnic_mapping_tbl()->update(&api_params);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Programming of VNIC_MAPPING table failed, "
-                      "epoch %u, vnic %s , err %u", epoch,
-                      vnic->key2str().c_str(), ret);
+        //PDS_TRACE_ERR("Programming of VNIC_MAPPING table failed, "
+        //              "epoch %u, vnic %s , err %u", epoch,
+        //              vnic->key2str().c_str(), ret);
         return ret;
     }
 

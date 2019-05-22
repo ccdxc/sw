@@ -8,8 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
-
-#include "nic/apollo/api/impl/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 
 namespace api {
 namespace impl {
@@ -19,14 +18,13 @@ pds_impl_state g_pds_impl_state;
 
 sdk_ret_t
 pds_impl_state::init(pds_state *state) {
-    artemis_impl_db_ = new apollo_impl_state(state);
+    artemis_impl_db_ = new artemis_impl_state(state);
     lif_impl_db_ = new lif_impl_state(state);
-    tep_impl_db_ = new tep_impl_state(state);
     vnic_impl_db_ = new vnic_impl_state(state);
     mapping_impl_db_ = new mapping_impl_state(state);
     route_table_impl_db_ = new route_table_impl_state(state);
-    security_policy_impl_db_ = new security_policy_impl_state(state);
-    mirror_impl_db_ = new mirror_impl_state(state);
+    // security_policy_impl_db_ = new security_policy_impl_state(state);
+    // mirror_impl_db_ = new mirror_impl_state(state);
     meter_impl_db_ = new meter_impl_state(state);
     tag_impl_db_ = new tag_impl_state(state);
 
@@ -35,27 +33,25 @@ pds_impl_state::init(pds_state *state) {
 
 void
 pds_impl_state::destroy(pds_impl_state *impl_state) {
-    delete impl_state->apollo_impl_db_;
+    delete impl_state->artemis_impl_db_;
     delete impl_state->lif_impl_db_;
-    delete impl_state->tep_impl_db_;
     delete impl_state->vnic_impl_db_;
     delete impl_state->mapping_impl_db_;
     delete impl_state->route_table_impl_db_;
-    delete impl_state->security_policy_impl_db_;
-    delete impl_state->mirror_impl_db_;
+    // delete impl_state->security_policy_impl_db_;
+    // delete impl_state->mirror_impl_db_;
     delete impl_state->meter_impl_db_;
     delete impl_state->tag_impl_db_;
 }
 
 pds_impl_state::pds_impl_state() {
-    apollo_impl_db_ = NULL;
+    artemis_impl_db_ = NULL;
     lif_impl_db_ = NULL;
-    tep_impl_db_ = NULL;
     vnic_impl_db_ = NULL;
     mapping_impl_db_ = NULL;
     route_table_impl_db_ = NULL;
-    security_policy_impl_db_ = NULL;
-    mirror_impl_db_ = NULL;
+    // security_policy_impl_db_ = NULL;
+    // mirror_impl_db_ = NULL;
     meter_impl_db_ = NULL;
     tag_impl_db_ = NULL;
 }

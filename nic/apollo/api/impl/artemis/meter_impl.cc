@@ -12,8 +12,8 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/meter.hpp"
-#include "nic/apollo/api/impl/meter_impl.hpp"
-#include "nic/apollo/api/impl/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/artemis/meter_impl.hpp"
+#include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/lpm/lpm.hpp"
 
 namespace api {
