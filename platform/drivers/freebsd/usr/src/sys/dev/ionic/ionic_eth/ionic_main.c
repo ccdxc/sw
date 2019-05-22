@@ -35,7 +35,125 @@ MODULE_DESCRIPTION(DRV_DESCRIPTION);
 MODULE_AUTHOR("Anish Gupta <anish@pensando.io>");
 MODULE_VERSION(ionic, 1);
 
-static const char *ionic_error_to_str(enum status_code code)
+const char
+*ionic_port_oper_status_str(enum port_oper_status status)
+{
+
+	switch (status) {
+	case PORT_OPER_STATUS_NONE:
+		return "PORT_OPER_STATUS_NONE";
+	case PORT_OPER_STATUS_UP:
+		return "PORT_OPER_STATUS_UP";
+	case PORT_OPER_STATUS_DOWN:
+		return "PORT_OPER_STATUS_DOWN";
+	default:
+		return "PORT_OPER_STATUS_UNKNOWN";
+	}
+}
+
+const char
+*ionic_port_admin_state_str(enum PortAdminState state)
+{
+
+	switch (state) {
+	case PORT_ADMIN_STATE_NONE:
+		return "PORT_ADMIN_STATE_NONE";
+	case PORT_ADMIN_STATE_DOWN:
+		return "PORT_ADMIN_STATE_DOWN";
+	case PORT_ADMIN_STATE_UP:
+		return "PORT_ADMIN_STATE_UP";
+	default:
+		return "PORT_ADMIN_STATE_UNKNOWN";
+	}
+}
+
+const char
+*ionic_port_fec_type_str(enum port_fec_type type)
+{
+
+	switch (type) {
+	case PORT_FEC_TYPE_NONE:
+		return "PORT_FEC_TYPE_NONE";
+	case PORT_FEC_TYPE_FC:
+		return "PORT_FEC_TYPE_FC";
+	case PORT_FEC_TYPE_RS:
+		return "PORT_FEC_TYPE_RS";
+	default:
+		return "PORT_FEC_TYPE_UNKNOWN";
+	}
+}
+
+
+const char
+*ionic_port_pause_type_str(enum port_pause_type type)
+{
+
+	switch (type) {
+	case PORT_PAUSE_TYPE_NONE:
+		return "PORT_PAUSE_TYPE_NONE";
+	case PORT_PAUSE_TYPE_LINK:
+		return "PORT_PAUSE_TYPE_LINK";
+	case PORT_PAUSE_TYPE_PFC:
+		return "PORT_PAUSE_TYPE_PFC";
+	default:
+		return "PORT_PAUSE_TYPE_UNKNOWN";
+	}
+}
+
+const char
+*ionic_port_loopback_mode_str(enum port_loopback_mode mode)
+{
+
+	switch (mode) {
+	case PORT_LOOPBACK_MODE_NONE:
+		return "PORT_LOOPBACK_MODE_NONE";
+	case PORT_LOOPBACK_MODE_MAC:
+		return "PORT_LOOPBACK_MODE_MAC";
+	case PORT_LOOPBACK_MODE_PHY:
+		return "PORT_LOOPBACK_MODE_PHY";
+	default:
+		return "PORT_LOOPBACK_MODE_UNKNOWN";
+	}
+}
+
+const char
+*ionic_xcvr_state_str(enum xcvr_state state)
+{
+
+	switch (state) {
+	case XCVR_STATE_REMOVED:
+		return "XCVR_STATE_REMOVED";
+	case XCVR_STATE_INSERTED:
+		return "XCVR_STATE_INSERTED";
+	case XCVR_STATE_PENDING:
+		return "XCVR_STATE_PENDING";
+	case XCVR_STATE_SPROM_READ:
+		return "XCVR_STATE_SPROM_READ";
+	case XCVR_STATE_SPROM_READ_ERR:
+		return "XCVR_STATE_SPROM_READ_ERR";
+	default:
+		return "XCVR_STATE_UNKNOWN";
+	}
+}
+
+const char
+*ionic_phy_type_str(enum phy_type type)
+{
+
+	switch (type) {
+	case PHY_TYPE_NONE:
+		return "PHY_TYPE_NONE";
+	case PHY_TYPE_COPPER:
+		return "PHY_TYPE_COPPER";
+	case PHY_TYPE_FIBER:
+		return "PHY_TYPE_FIBER";
+	default:
+		return "PHY_TYPE_UNKNOWN";
+	}
+}
+
+static const char
+*ionic_error_to_str(enum status_code code)
 {
 	switch (code) {
 	case IONIC_RC_SUCCESS:
@@ -337,7 +455,8 @@ int ionic_port_identify(struct ionic *ionic)
 	return err;
 }
 
-int ionic_port_init(struct ionic *ionic)
+int
+ionic_port_init(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	struct identity *ident = &ionic->ident;
@@ -364,9 +483,6 @@ int ionic_port_init(struct ionic *ionic)
 	nwords = min(ARRAY_SIZE(ident->port.config.words),
 					ARRAY_SIZE(idev->dev_cmd_regs->data));
 	config = &ident->port.config;
-	/* Bring the physical port up. */
-	if (!ionic->is_mgmt_nic)
-		config->state = PORT_ADMIN_STATE_UP;
 	for (i = 0; i < nwords; i++)
 		iowrite32(config->words[i], &idev->dev_cmd_regs->data[i]);
 
@@ -376,7 +492,8 @@ int ionic_port_init(struct ionic *ionic)
 	return err;
 }
 
-int ionic_port_reset(struct ionic *ionic)
+int
+ionic_port_reset(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	int err;
@@ -384,6 +501,7 @@ int ionic_port_reset(struct ionic *ionic)
 	if (!idev->port_info)
 		return 0;
 
+	ionic_set_port_state(ionic, PORT_ADMIN_STATE_DOWN);
 	ionic_dev_cmd_port_reset(idev);
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	if (err) {
@@ -399,6 +517,23 @@ int ionic_port_reset(struct ionic *ionic)
 	return 0;
 }
 
+void
+ionic_set_port_state(struct ionic *ionic, uint8_t state)
+{
+	struct ionic_dev *idev = &ionic->idev;
+	int err;
+
+	if (!idev->port_info)
+		return;
+	if (ionic->is_mgmt_nic)
+		return;
+
+	ionic_dev_cmd_port_state(idev, state);
+	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
+	if (err)
+		dev_err(ionic->dev, "Failed to set port state %s, err: %d\n",
+			ionic_port_admin_state_str(state), err);
+}
 /*
  * Validate user parameters.
  */

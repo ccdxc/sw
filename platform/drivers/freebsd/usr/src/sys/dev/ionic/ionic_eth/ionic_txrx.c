@@ -314,7 +314,7 @@ ionic_rx_rss(struct mbuf *m, struct rxq_comp *comp, int qnum,
 	 * RSS hash type was not configured for these packet type,
 	 * use OPAQUE_HASH.
 	 */
-	if (M_HASHTYPE_SET(m, M_HASHTYPE_NONE)) {
+	if (M_HASHTYPE_GET(m) == M_HASHTYPE_NONE) {
 		M_HASHTYPE_SET(m, M_HASHTYPE_OPAQUE_HASH);
 		stats->rss_unknown++;
 	}
@@ -1683,28 +1683,28 @@ ionic_media_status_sysctl(SYSCTL_HANDLER_ARGS)
 	sbuf_printf(sb, " lif_status eid=%ld link_status=%s"
 		" link_speed=%dMpbps flap=%d\n",
 			lif_status->eid,
-			port_oper_status_str(lif_status->link_status),
+			ionic_port_oper_status_str(lif_status->link_status),
 			lif_status->link_speed,
 			lif_status->link_flap_count);
 
 	sbuf_printf(sb, "  port_status id=%d status=%s speed=%dMbps\n",
 			port_status->id,
-			port_oper_status_str(port_status->status),
+			ionic_port_oper_status_str(port_status->status),
 			port_status->speed);
 
 	sbuf_printf(sb, "  port_config state=%s speed=%dMbps mtu=%d AN %s"
 		" fec_type=%s pause_type=%s loopback_mode=%s\n",
-			port_admin_state_str(port_config->state),
+			ionic_port_admin_state_str(port_config->state),
 			port_config->speed,
 			port_config->mtu,
 			port_config->an_enable ? "enabled" : "disabled",
-			port_fec_type_str(port_config->fec_type),
-			port_pause_type_str(port_config->pause_type),
-			port_loopback_mode_str(port_config->loopback_mode));
+			ionic_port_fec_type_str(port_config->fec_type),
+			ionic_port_pause_type_str(port_config->pause_type),
+			ionic_port_loopback_mode_str(port_config->loopback_mode));
 
 	sbuf_printf(sb, "  xcvr_status state=%s phy=%s pid=0x%x\n",
-			xcvr_state_str(xcvr->state),
-			phy_type_str(xcvr->phy),
+			ionic_xcvr_state_str(xcvr->state),
+			ionic_phy_type_str(xcvr->phy),
 			xcvr->pid);
 
 	switch (xcvr->pid) {

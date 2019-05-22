@@ -165,5 +165,6 @@ int ionic_reset(struct ionic *ionic);
 int ionic_port_identify(struct ionic *ionic);
 int ionic_port_init(struct ionic *ionic);
 int ionic_port_reset(struct ionic *ionic);
+void ionic_set_port_state(struct ionic *ionic, uint8_t state);
 
 #endif /* _IONIC_H_ */
