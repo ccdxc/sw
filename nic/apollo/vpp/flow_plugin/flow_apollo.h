@@ -11,17 +11,6 @@
 #include "flow.h"
 #include "flow_prog_hw.h"
 
-typedef struct pds_flow_params_s {
-    ftentry_t entry;
-    u32 hash;
-} pds_flow_params_t;
-
-typedef struct pds_flow_hw_ctx_s {
-    u8 dummy;
-} pds_flow_hw_ctx_t;
-
-pds_flow_hw_ctx_t *session_index_pool = NULL;
-
 #if 0
 always_inline void
 clib_memrev2 (u8 *dst1, u8* dst2, u8 *src, int size)
@@ -133,22 +122,26 @@ pds_flow_program_hw (pds_flow_params_t *key,
     int i;
     ftl *table = pds_flow_prog_get_table();
     pds_flow_hw_ctx_t *ctx;
+    pds_flow_main_t *fm = &pds_flow_main;
 
-    pds_flow_prog_lock();
     for (i = 0; i < size; i++) {
-        pool_get(session_index_pool, ctx);
-        key[i].entry.session_index = ctx - session_index_pool + 1;
+        pds_flow_prog_lock();
+        pool_get(fm->session_index_pool, ctx);
+        pds_flow_prog_unlock();
+        key[i].entry.session_index = ctx - fm->session_index_pool + 1;
         if (PREDICT_TRUE(0 == ftl_insert(table, &key[i].entry, key[i].hash))) {
             counter[FLOW_PROG_COUNTER_FLOW_SUCCESS]++;
             next[i/2] = FLOW_PROG_NEXT_FWD_FLOW;
         } else {
             counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
             next[i/2] = FLOW_PROG_NEXT_DROP;
-            pool_put_index(session_index_pool, (key[i].entry.session_index - 1));
+            pds_flow_prog_lock();
+            pool_put_index(fm->session_index_pool, (key[i].entry.session_index - 1));
+            pds_flow_prog_unlock();
             if (i % 2) {
                 /* Remove last entry as local flow succeeded
                  * but remote entry failed */
-                pool_put_index(session_index_pool,
+                pool_put_index(fm->session_index_pool,
                                (key[i-1].entry.session_index - 1));
                 /*TODO - Delete is resulting in crash, so comment for now */
 #if 0
@@ -164,7 +157,6 @@ pds_flow_program_hw (pds_flow_params_t *key,
             }
         }
     }
-    pds_flow_prog_unlock();
 }
 
 #endif    // __VPP_FLOW_PLUGIN_FLOW_APOLLO_H__

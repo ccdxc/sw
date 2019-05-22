@@ -29,13 +29,12 @@ using sdk::table::ftlint::ftl_apictx;
 
 class ftl {
 private:
-    sdk::table::properties_t *props_;
-    void *main_table_;
-    crcFast *crc32gen_;
+    static sdk::table::properties_t *props_;
+    static void *main_table_;
+    static crcFast *crc32gen_;
     ftl_api_stats api_stats_;
     ftl_table_stats table_stats_;
-    sdk_spinlock_t slock_;
-    ftl_apictx apictx_;
+    ftl_apictx apictx_[FTL_MAX_API_CONTEXTS + 1];
 
 private:
     sdk_ret_t init_(sdk_table_factory_params_t *params);
@@ -48,14 +47,9 @@ public:
     static void destroy(ftl *ftl);
 
     ftl() {
-        props_ = NULL;
-        main_table_ = NULL;
-        crc32gen_ = NULL;
-        SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     }
 
     ~ftl() {
-        SDK_SPINLOCK_DESTROY(&slock_);
     }
 
     sdk_ret_t txn_start();

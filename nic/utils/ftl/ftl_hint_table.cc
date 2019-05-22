@@ -14,6 +14,8 @@ using sdk::table::ftlint::ftl_apictx;
 using sdk::table::ftlint::ftl_bucket;
 using sdk::table::ftlint::ftl_bucket;
 
+thread_local uint8_t ftl_hint_table::nctx_ = 0;
+
 //---------------------------------------------------------------------------
 // Factory method to instantiate the ftl_main_table class
 //---------------------------------------------------------------------------
@@ -79,13 +81,16 @@ ftl_hint_table::destroy_(ftl_hint_table *table)
 //---------------------------------------------------------------------------
 sdk_ret_t
 ftl_hint_table::alloc_(ftl_apictx *ctx) {
+    spin_lock_();
 #ifdef PERF
     static uint32_t hint_index = 1;
     ctx->hint = hint_index++;
+    spin_unlock_();
     return SDK_RET_OK;
 #endif
     uint32_t hint = 0;
     auto ret = indexer_.alloc(hint);
+    spin_unlock_();
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -103,7 +108,9 @@ ftl_hint_table::alloc_(ftl_apictx *ctx) {
 //---------------------------------------------------------------------------
 sdk_ret_t
 ftl_hint_table::dealloc_(ftl_apictx *ctx) {
+    spin_lock_();
     indexer_.free(ctx->hint);
+    spin_unlock_();
     FTL_TRACE_VERBOSE("HintTable: Freed index:%d", ctx->hint);
 
     // Clear the hint and set write pending

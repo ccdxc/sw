@@ -33,9 +33,19 @@ protected:
     uint32_t table_size_;
     uint32_t num_table_index_bits_;
     ftl_bucket *buckets_;
+//    sdk_spinlock_t slock_;
+    volatile uint8_t slock_;
 
 protected:
     sdk_ret_t init_(uint32_t id, uint32_t size);
+    void spin_lock_(void) {
+//        SDK_SPINLOCK_LOCK(&slock_);
+        while(__sync_lock_test_and_set(&slock_, 1));
+    }
+    void spin_unlock_(void) {
+//        SDK_SPINLOCK_UNLOCK(&slock_);
+        __sync_lock_release(&slock_);
+    }
 
 public:
     ftl_base_table() {
@@ -43,9 +53,12 @@ public:
         table_size_ = 0;
         num_table_index_bits_ = 0;
         buckets_ = NULL;
+        //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+        slock_ = 0;
     }
 
     ~ftl_base_table() {
+        //SDK_SPINLOCK_DESTROY(&slock_);
     }
 
     sdk_ret_t iterate_(ftl_apictx *ctx);
@@ -59,8 +72,7 @@ public:
 
 private:
     indexer indexer_;
-    ftl_apictx ctxs_[FTL_MAX_API_CONTEXTS];
-    uint8_t nctx_;
+    static thread_local uint8_t nctx_;
 
     ftl_apictx *ctxnew_(ftl_apictx *src) {
         if (FTL_API_CONTEXT_IS_MAIN(src)) {
@@ -68,7 +80,7 @@ private:
         } else {
             SDK_ASSERT(nctx_ < FTL_MAX_API_CONTEXTS);
         }
-        auto c = &ctxs_[nctx_];
+        auto c = src + 1;
         FTL_API_CONTEXT_INIT(c, src);
         nctx_++;
         return c;
@@ -90,7 +102,6 @@ private:
 public:
     static ftl_hint_table* factory(sdk::table::properties_t *props);
     ftl_hint_table() {
-        nctx_ = 0;
     }
 
     ~ftl_hint_table() {
@@ -119,6 +130,8 @@ private:
     sdk_ret_t find_(ftl_apictx *ctx,
                     ftl_apictx **retctx);
     sdk_ret_t iterate_(ftl_apictx *ctx);
+    void entry_lock_(ftl_apictx *ctx);
+    void entry_unlock_(ftl_apictx *ctx);
 
 public:
     static ftl_main_table* factory(sdk::table::properties_t *props);

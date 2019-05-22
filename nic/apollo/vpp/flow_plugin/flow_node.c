@@ -7,17 +7,9 @@
 #include "flow_prog_hw.h"
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include <vnet/ethernet/packet.h>
 #include "flow_apollo.h"
 
 #define P4TBL_ID_FLOW_HASH      1
-
-typedef struct pds_flow_main_s {
-    ftl *table;
-    volatile u32 *flow_prog_lock;
-    pds_flow_params_t **ip4_flow_params;
-    pds_flow_params_t **ip6_flow_params;
-} pds_flow_main_t;
 
 pds_flow_main_t pds_flow_main;
 
@@ -56,7 +48,7 @@ pds_flow_prog_get_table (void)
 {
     pds_flow_main_t *fm = &pds_flow_main;
 
-    return fm->table;
+    return fm->table[vlib_get_thread_index()];
 }
 
 static u8 *
@@ -126,6 +118,8 @@ pds_fwd_flow_trace_add (vlib_main_t * vm,
     }
 }
 
+u32 pds_fwd_flow_next = FWD_FLOW_NEXT_INTF_OUT;
+
 static uword
 pds_fwd_flow (vlib_main_t * vm,
               vlib_node_runtime_t * node,
@@ -139,7 +133,7 @@ pds_fwd_flow (vlib_main_t * vm,
     from = vlib_frame_vector_args (from_frame);
     n_left_from = from_frame->n_vectors;
 
-    next = FWD_FLOW_NEXT_INTF_OUT; //node->cached_next_index;
+    next = pds_fwd_flow_next; //FWD_FLOW_NEXT_INTF_OUT; //node->cached_next_index;
 
     while (n_left_from > 0) {
 
@@ -1053,13 +1047,12 @@ pds_flow_init (vlib_main_t * vm)
                             CLIB_CACHE_LINE_BYTES);
     vec_validate_aligned (fm->ip6_flow_params, no_of_threads - 1,
                                 CLIB_CACHE_LINE_BYTES);
+    vec_validate_aligned (fm->table, no_of_threads - 1,
+                                CLIB_CACHE_LINE_BYTES);
 
     if (0 != initialize_pds()) {
         ASSERT(0);
     }
-
-    fm->table = ftl_create(P4TBL_ID_FLOW, 5, 8,
-            (void *) pds_flow_key2str, (void *)pds_flow_appdata2str);
 
     fm->flow_prog_lock = clib_mem_alloc_aligned (CLIB_CACHE_LINE_BYTES,
                               CLIB_CACHE_LINE_BYTES);
@@ -1068,6 +1061,8 @@ pds_flow_init (vlib_main_t * vm)
     for (i = 0; i < no_of_threads; i++) {
         vec_validate (fm->ip4_flow_params[i], (MAX_FLOWS_PER_FRAME - 1));
         vec_validate (fm->ip6_flow_params[i], (MAX_FLOWS_PER_FRAME - 1));
+        fm->table[i] = ftl_create(P4TBL_ID_FLOW, 5, 8,
+            (void *) pds_flow_key2str, (void *)pds_flow_appdata2str);
     }
 
     return 0;

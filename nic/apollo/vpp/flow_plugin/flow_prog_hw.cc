@@ -153,4 +153,36 @@ ftl_delete(ftl *obj)
     ftl::destroy(obj);
 }
 
+void
+ftl_dump_stats(ftl *obj, char *buf, int max_len)
+{
+    sdk_table_api_stats_t api_stats;
+    sdk_table_stats_t table_stats;
+
+    obj->stats_get(&api_stats, &table_stats);
+    snprintf(buf, max_len,
+                "Insert %u, Insert_duplicate %u, Insert_fail %u\n"
+                "Remove %u, Remove_not_found %u, Remove_fail %u\n"
+                "Update %u, Update_fail %u\n"
+                "Get %u, Get_fail %u\n"
+                "Reserve %u, reserver_fail %u\n"
+                "Release %u, Release_fail %u\n"
+                "Entries %u, Collisions %u\n",
+                api_stats.insert,
+                api_stats.insert_duplicate,
+                api_stats.insert_fail,
+                api_stats.remove,
+                api_stats.remove_not_found,
+                api_stats.remove_fail,
+                api_stats.update,
+                api_stats.update_fail,
+                api_stats.get,
+                api_stats.get_fail,
+                api_stats.reserve,
+                api_stats.reserve_fail,
+                api_stats.release,
+                api_stats.release_fail,
+                table_stats.entries,
+                table_stats.collisions);
+}
 }

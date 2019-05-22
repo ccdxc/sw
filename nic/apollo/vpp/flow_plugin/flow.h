@@ -111,6 +111,25 @@ typedef struct p4cpu_hdr_lookup_trace_t {
     u32 flags;
 } p4cpu_hdr_lookup_trace_t;
 
+typedef struct pds_flow_params_s {
+    ftentry_t entry;
+    u32 hash;
+} pds_flow_params_t;
+
+typedef struct pds_flow_hw_ctx_s {
+    u8 dummy;
+} pds_flow_hw_ctx_t;
+
+typedef struct pds_flow_main_s {
+    ftl **table;
+    volatile u32 *flow_prog_lock;
+    pds_flow_params_t **ip4_flow_params;
+    pds_flow_params_t **ip6_flow_params;
+    pds_flow_hw_ctx_t *session_index_pool;
+} pds_flow_main_t;
+
+extern pds_flow_main_t pds_flow_main;
+
 void pds_flow_prog_lock(void);
 
 void pds_flow_prog_unlock(void);

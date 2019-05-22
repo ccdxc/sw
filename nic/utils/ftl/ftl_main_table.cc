@@ -89,6 +89,34 @@ ftl_main_table::initctx_(ftl_apictx *ctx) {
 }
 
 //---------------------------------------------------------------------------
+// ftl_main_table entry_lock_: Lock main table entry
+//---------------------------------------------------------------------------
+void
+ftl_main_table::entry_lock_(ftl_apictx *ctx) {
+#if 0
+retry:
+    spin_lock_();
+    if (buckets_[ctx->table_index].is_locked_()) {
+        spin_unlock_();    
+        goto retry;
+    }
+    buckets_[ctx->table_index].lock_();
+    spin_unlock_();
+#endif
+    buckets_[ctx->table_index].lock_();
+}
+
+//---------------------------------------------------------------------------
+// ftl_main_table entry_unlock_: Unlock main table entry
+//---------------------------------------------------------------------------
+void
+ftl_main_table::entry_unlock_(ftl_apictx *ctx) {
+    //spin_lock_();
+    buckets_[ctx->table_index].unlock_();
+    //spin_unlock_();    
+}
+
+//---------------------------------------------------------------------------
 // ftl_main_table insert_: Insert entry to main table
 //---------------------------------------------------------------------------
 sdk_ret_t
@@ -107,6 +135,7 @@ ftl_main_table::insert_(ftl_apictx *ctx) {
     //           Write the Main Table bucket to HW
     // 3) Else if SUCCESS, insert is complete.
 
+    entry_lock_(ctx);
     auto ret = buckets_[ctx->table_index].insert_(ctx);
     if (unlikely(ret == SDK_RET_COLLISION)) {
         // COLLISION case
@@ -126,6 +155,7 @@ ftl_main_table::insert_(ftl_apictx *ctx) {
         FTL_TRACE_ERR("MainTable: insert failed: ret:%d", ret);
     }
 
+    entry_unlock_(ctx);
     return ret;
 }
 

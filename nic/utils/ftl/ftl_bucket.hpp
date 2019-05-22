@@ -27,7 +27,10 @@ public:
 
 private:
     uint8_t valid_  : 1;
-    uint8_t spare_  : 7;
+//    uint8_t locked_ : 1;
+    uint8_t spare_  : 6;
+
+    volatile uint8_t locked_;
 
 private:
     sdk_ret_t insert_(ftl_apictx *ctx);
@@ -51,8 +54,20 @@ private:
                           ftl_apictx *tctx);
     sdk_ret_t iterate_(ftl_apictx *ctx);
 
+    bool is_locked_() {
+        return (locked_ ? true : false);
+    }
+    void lock_(void) {
+        while(__sync_lock_test_and_set(&locked_, 1));
+//        locked_ = 1;
+    }
+    void unlock_(void) {
+        __sync_lock_release(&locked_);
+//        locked_ = 0;
+    }
 public:
     ftl_bucket() {
+        locked_ = 0;
     }
 
     ~ftl_bucket() {

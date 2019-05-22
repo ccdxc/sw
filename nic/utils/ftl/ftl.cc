@@ -3,7 +3,6 @@
 //-----------------------------------------------------------------------------
 #include <string.h>
 
-#include "include/sdk/lock.hpp"
 #include "include/sdk/base.hpp"
 #include "include/sdk/table.hpp"
 #include "lib/p4/p4_api.hpp"
@@ -23,6 +22,10 @@ using sdk::table::ftlint::ftl_main_table;
 using sdk::table::ftlint::ftl_hint_table;
 using sdk::table::ftlint::ftl_bucket;
 
+sdk::table::properties_t * ftl::props_ = NULL;
+void * ftl::main_table_                = NULL;
+sdk::utils::crcFast * ftl::crc32gen_   = NULL;
+
 #define FTL_API_BEGIN(_name) {\
         FTL_TRACE_VERBOSE("%s ftl begin: %s %s",\
                               "--", _name, "--");\
@@ -35,12 +38,10 @@ using sdk::table::ftlint::ftl_bucket;
 
 #define FTL_API_BEGIN_() {\
         FTL_API_BEGIN(props_->name.c_str());\
-        SDK_SPINLOCK_LOCK(&slock_);\
 }
 
 #define FTL_API_END_(_status) {\
         FTL_API_END(props_->name.c_str(), (_status));\
-        SDK_SPINLOCK_UNLOCK(&slock_);\
 }
 
 #ifndef SIM
@@ -94,13 +95,14 @@ ftl::init_(sdk_table_factory_params_t *params) {
     p4pd_error_t p4pdret;
     p4pd_table_properties_t tinfo, ctinfo;
 
+    if (props_) {
+        goto skip_props;
+    }
     props_ = (sdk::table::properties_t *)SDK_CALLOC(SDK_MEM_ALLOC_FTL_PROPERTIES,
                                                  sizeof(sdk::table::properties_t));
     if (props_ == NULL) {
         return SDK_RET_OOM;
     }
-
-    SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
 
     props_->ptable_id = params->table_id;
     props_->num_hints = params->num_hints;
@@ -123,10 +125,6 @@ ftl::init_(sdk_table_factory_params_t *params) {
     props_->ptable_base_mem_pa = tinfo.base_mem_pa;
     props_->ptable_base_mem_va = tinfo.base_mem_va;
 
-    // Initialize CRC Fast
-    crc32gen_ = crcFast::factory();
-    SDK_ASSERT(crc32gen_);
-
     props_->stable_id = tinfo.oflow_table_id;
     SDK_ASSERT(props_->stable_id);
 
@@ -142,6 +140,11 @@ ftl::init_(sdk_table_factory_params_t *params) {
     props_->stable_size = ctinfo.tabledepth;
     SDK_ASSERT(props_->stable_size);
 
+skip_props:
+    if (main_table_) {
+        goto skip_tables;
+    }
+
     main_table_ = ftl_main_table::factory(props_);
     SDK_ASSERT_RETURN(main_table_, SDK_RET_OOM);
 
@@ -156,6 +159,11 @@ ftl::init_(sdk_table_factory_params_t *params) {
                    props_->ptable_base_mem_pa, props_->ptable_base_mem_va);
     FTL_TRACE_INFO("- stable base_mem_pa:%#lx base_mem_va:%#lx",
                    props_->stable_base_mem_pa, props_->stable_base_mem_va);
+
+skip_tables:
+    // Initialize CRC Fast
+    crc32gen_ = crcFast::factory();
+    SDK_ASSERT(crc32gen_);
 
     return SDK_RET_OK;
 }
@@ -215,7 +223,7 @@ ftl::ctxinit_(sdk_table_api_op_t op,
         }
     }
 
-    FTL_API_CONTEXT_INIT_MAIN(apictx_, op, params,
+    FTL_API_CONTEXT_INIT_MAIN((apictx_[0]), op, params,
                               props_, &table_stats_);
     return SDK_RET_OK;
 }
@@ -236,7 +244,7 @@ __label__ done;
     ret = ctxinit_(sdk::table::SDK_TABLE_API_INSERT, params);
     FTL_RET_CHECK_AND_GOTO(ret, done, "ctxinit r:%d", ret);
 
-    ret = static_cast<ftl_main_table*>(main_table_)->insert_(&apictx_);
+    ret = static_cast<ftl_main_table*>(main_table_)->insert_(apictx_);
     FTL_RET_CHECK_AND_GOTO(ret, done, "main table insert r:%d", ret);
 
 done:
@@ -262,7 +270,7 @@ ftl::update(sdk_table_api_params_t *params) {
         goto update_return;
     }
 
-    ret = static_cast<ftl_main_table*>(main_table_)->update_(&apictx_);
+    ret = static_cast<ftl_main_table*>(main_table_)->update_(apictx_);
     if (ret != SDK_RET_OK) {
         FTL_TRACE_ERR("update_ failed. ret:%d", ret);
         goto update_return;
@@ -290,7 +298,7 @@ ftl::remove(sdk_table_api_params_t *params) {
         goto remove_return;
     }
 
-    ret = static_cast<ftl_main_table*>(main_table_)->remove_(&apictx_);
+    ret = static_cast<ftl_main_table*>(main_table_)->remove_(apictx_);
     if (ret != SDK_RET_OK) {
         FTL_TRACE_ERR("remove_ failed. ret:%d", ret);
         goto remove_return;
@@ -318,7 +326,7 @@ ftl::get(sdk_table_api_params_t *params) {
         goto get_return;
     }
 
-    ret = static_cast<ftl_main_table*>(main_table_)->get_(&apictx_);
+    ret = static_cast<ftl_main_table*>(main_table_)->get_(apictx_);
     if (ret != SDK_RET_OK) {
         FTL_TRACE_ERR("remove_ failed. ret:%d", ret);
         goto get_return;
@@ -373,7 +381,7 @@ __label__ done;
     ret = ctxinit_(sdk::table::SDK_TABLE_API_ITERATE, params);
     FTL_RET_CHECK_AND_GOTO(ret, done, "ctxinit r:%d", ret);
 
-    ret = static_cast<ftl_main_table*>(main_table_)->iterate_(&apictx_);
+    ret = static_cast<ftl_main_table*>(main_table_)->iterate_(apictx_);
     FTL_RET_CHECK_AND_GOTO(ret, done, "iterate r:%d", ret);
 
 done:

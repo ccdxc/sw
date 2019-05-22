@@ -10,6 +10,8 @@
 extern "C" {
 #endif
 
+#include <nic/utils/ftl/ftl_structs.hpp>
+
 typedef struct ftl ftl;
 typedef struct ftl_entry_s ftentry_t;
 
@@ -28,6 +30,8 @@ int ftl_insert(ftl *obj, ftentry_t *entry, uint32_t hash);
 int ftl_remove(ftl *obj, ftentry_t *entry, uint32_t hash);
 
 void ftl_delete(ftl *obj);
+
+void ftl_dump_stats(ftl *obj, char *buf, int max_len);
 
 #ifdef __cplusplus
 }
