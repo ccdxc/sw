@@ -35,27 +35,6 @@ def __installBinary(node, img):
 
     return api.types.status.SUCCESS
 
-def __copyNaplesFwImage(node, img, path):
-
-    copy_cmd = "sshpass -p pen123 scp -o ConnectTimeout=20 -o StrictHostKeyChecking=no {} root@{}:{}".format(img, api.GetNicIntMgmtIP(node), path)
-    req = api.Trigger_CreateExecuteCommandsRequest()
-    api.Trigger_AddHostCommand(req, node, copy_cmd)
-    resp = api.Trigger(req)
-    for cmd in resp.commands:
-        if cmd.exit_code != 0:
-            api.Logger.error("Copy to failed %s" % cmd.command)
-            return api.types.status.FAILURE
-
-    req = api.Trigger_CreateExecuteCommandsRequest()
-    api.Trigger_AddNaplesCommand(req, node, "chmod 777 {}/{}".format(path, img))
-    resp = api.Trigger(req)
-    for cmd_resp in resp.commands:
-        api.PrintCommandResults(cmd_resp)
-        if cmd_resp.exit_code != 0:
-            api.Logger.error("Creating core failed %s", cmd_resp.command)
-            return api.types.status.FAILURE
-
-    return api.types.status.SUCCESS
 
 def Main(step):
     #time.sleep(10)
@@ -70,7 +49,7 @@ def Main(step):
             ret = __installNaplesFwLatestImage(naplesHost, image)
             if ret != api.types.status.SUCCESS:
                 return ret
-            ret = __copyNaplesFwImage(naplesHost, image, "/update/")
+            ret = common.copyNaplesFwImage(naplesHost, image, "/update/")
             if ret != api.types.status.SUCCESS:
                 return ret
 
@@ -78,7 +57,7 @@ def Main(step):
         ret = __installBinary(naplesHost, "build/aarch64/iris/out/" + common.UPGRADE_TEST_APP + "_bin/" + common.UPGRADE_TEST_APP + ".bin")
         if ret != api.types.status.SUCCESS:
             return ret
-        ret = __copyNaplesFwImage(naplesHost, common.UPGRADE_TEST_APP + ".bin", "/nic/bin/")
+        ret = common.copyNaplesFwImage(naplesHost, common.UPGRADE_TEST_APP + ".bin", "/update/")
         if ret != api.types.status.SUCCESS:
             return ret
 

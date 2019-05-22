@@ -61,7 +61,6 @@ testbundles:
         #- storage/storage.testbundle
         - penctl/penctl_classic.testbundle
         - penctl/mode_change.testbundle
-        - naples_upgrade/naples_upgrade_classic.testbundle
         - post_diag/post_diag.testbundle
 
     regression:

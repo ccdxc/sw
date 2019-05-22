@@ -87,13 +87,13 @@ func (n *NMD) updateOps(ops []*protos.SmartNICOpSpec) error {
 			n.opStatus = newOpStatus
 		}
 	}
-	log.Debugf("state after updateOps is completed:%s inProgress:%s pending:%s opStatus:%s", spew.Sdump(n.completedOps), spew.Sdump(n.inProgressOps), spew.Sdump(n.pendingOps), spew.Sdump(n.opStatus))
+	log.Infof("state after updateOps is completed:%s inProgress:%s pending:%s opStatus:%s", spew.Sdump(n.completedOps), spew.Sdump(n.inProgressOps), spew.Sdump(n.pendingOps), spew.Sdump(n.opStatus))
 	return nil
 }
 
 // MUST be called with lock held
 func (n *NMD) issueNextPendingOp() {
-	log.Debugf("On entry of issueNextPendingOp state is completed:%s inProgress:%s pending:%s", spew.Sdump(n.completedOps), spew.Sdump(n.inProgressOps), spew.Sdump(n.pendingOps))
+	log.Infof("On entry of issueNextPendingOp state is completed:%s inProgress:%s pending:%s", spew.Sdump(n.completedOps), spew.Sdump(n.inProgressOps), spew.Sdump(n.pendingOps))
 	if n.inProgressOps != nil {
 		return // an op is already in progress...
 	}
@@ -105,7 +105,7 @@ func (n *NMD) issueNextPendingOp() {
 	n.inProgressOps = &op
 
 	var err error
-	log.Debugf("Issuing %#v", *n.inProgressOps)
+	log.Infof("Issuing %#v", *n.inProgressOps)
 	switch n.inProgressOps.Op {
 	case protos.SmartNICOp_SmartNICDisruptiveUpgrade:
 		//TODO set the right downloaded image name

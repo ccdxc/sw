@@ -23,6 +23,7 @@ setup:
              spec : scale_cfg_1vrf_1nw_2ep_2rep.cfgyml
         - step : testcases.drivers.install_iperf
         - step : testcases.penctl.install
+        - step : testcases.naples_upgrade.install
 
 common:
     verifs:
@@ -52,6 +53,7 @@ testbundles:
         - mnic/mnic_hostpin_naples_only.testbundle
         - ipsec/ipsec.testbundle
         - penctl/penctl_hostpin.testbundle
+        - naples_upgrade/naples_upgrade_hostpin.testbundle
 
     regression:
         - firewall/policy_scale.testbundle

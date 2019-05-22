@@ -33,6 +33,8 @@ bool test::PostLinkUpPause;
 
 bool test::UnRegisterWithUpgrade;
 
+string test::retStr;
+
 int main(int argc, char **argv) {
 
     remove("/run/testupgapp.success");
@@ -44,6 +46,7 @@ int main(int argc, char **argv) {
     fclose(fp);
 
     if (argc > 1) {
+        test::retStr = argv[1];
         if (strcmp(argv[1], "compatcheckfail") == 0) {
             test::CompatCheckFail = true;
         } else if (strcmp(argv[1], "postrestartfail") == 0) {

@@ -440,7 +440,7 @@ func (n *NMD) NaplesRolloutGetHandler(r *http.Request) (interface{}, error) {
 	return st, nil
 }
 
-// NaplesRolloutDeleteHandler is the REST handler for Naples Rollout Config GET operation
+// NaplesRolloutDeleteHandler is the REST handler for Naples Rollout Config DELETE operation
 func (n *NMD) NaplesRolloutDeleteHandler(r *http.Request) (interface{}, error) {
 	resp := NaplesConfigResp{}
 	ioutil.ReadAll(r.Body)
@@ -554,7 +554,7 @@ func (n *NMD) StartRestServer() error {
 	t2.HandleFunc(NaplesInfoURL, httputils.MakeHTTPHandler(n.NaplesInfoGetHandler))
 	t2.HandleFunc(CmdEXECUrl, n.NaplesCmdExecHandler)
 	t2.HandleFunc(NaplesVersionURL, httputils.MakeHTTPHandler(NaplesVersionGetHandler))
-	t1.HandleFunc(RolloutURL, httputils.MakeHTTPHandler(n.NaplesRolloutGetHandler))
+	t2.HandleFunc(RolloutURL, httputils.MakeHTTPHandler(n.NaplesRolloutGetHandler))
 
 	t2.HandleFunc("/api/{*}", unknownAction)
 	t2.HandleFunc("/debug/pprof/", pprof.Index)

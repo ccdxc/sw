@@ -63,6 +63,7 @@ bool UpgPostStateHandler::PostDataplaneDowntimePhase4Handler(UpgCtx &ctx) {
 
 bool UpgPostStateHandler::PostSuccessHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostSuccess returning");
+    return true;
     if (exists("/nic/tools/fwupdate")) {
 	int ret = 0;
         string cmd = "rm -rf /update/" + ctx.firmwarePkgName;

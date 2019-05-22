@@ -1,13 +1,11 @@
 meta:
     name    : naples_upgrade
-    os      : [ linux, freebsd ]
+    os      : [ linux, freebsd , esx]
     nics    : [ pensando, mellanox, intel ]
     targetcount : 1
 
 testcases:
     -   name: DISRUPTIVE_UPGRADE
-        disable : True
-        ignore      : True
         testcase    : testcases.naples_upgrade.disruptive_upgrade
         iterators :
             type : simple
@@ -16,12 +14,11 @@ testcases:
             sleep : 320
 
     -   name: DISRUPTIVE_UPGRADE_FAIL_PRE_SWITCHROOT
-        disable : True
-        ignore      : True
         testcase    : testcases.naples_upgrade.disruptive_upgrade
         iterators :
             type : simple
-            option : ["compatcheckfail", "linkdownfail", "hostdownfail", "posthostdownfail", "savestatefail"]
+            option : ["compatcheckfail"]
+            #option : ["compatcheckfail", "linkdownfail", "hostdownfail", "posthostdownfail", "savestatefail"]
         args      :
             sleep : 120
 
@@ -33,7 +30,7 @@ testcases:
             type : simple
             option : ["postrestartfail", "hostupfail", "linkupfail", "postlinkupfail"]
         args      :
-            sleep : 120
+            sleep : 320
 
     -   name: DISRUPTIVE_UPGRADE_PAUSE_PRE_SWITCHROOT
         disable : True
@@ -43,7 +40,7 @@ testcases:
             type : simple
             option : ["compatcheckpause", "linkdownpause", "hostdownpause", "posthostdownpause", "savestatepause"]
         args      :
-            sleep : 320
+            sleep : 400
 
     -   name: DISRUPTIVE_UPGRADE_PAUSE_POST_SWITCHROOT
         disable : True
@@ -56,8 +53,6 @@ testcases:
             sleep : 320
 
     -   name: DISRUPTIVE_UPGRADE_COMPAT_CHECK_FAIL
-        disable : True
-        ignore      : True
         testcase    : testcases.naples_upgrade.disruptive_upgrade_compat_check
         args      :
             sleep : 30

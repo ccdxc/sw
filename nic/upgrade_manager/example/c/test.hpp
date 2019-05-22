@@ -38,6 +38,8 @@ extern bool PostLinkUpPause;
 
 extern bool UnRegisterWithUpgrade;
 
+extern string retStr;
+
 // TestUpgSvc is the service object for test upgrade service 
 class TestUpgSvc : public delphi::Service, public enable_shared_from_this<TestUpgSvc> {
 private:
@@ -70,7 +72,7 @@ public:
     HdlrResp CompatCheckHandler(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         if (CompatCheckFail) {
-            resp = {.resp=FAIL, .errStr=""};
+            resp = {.resp=FAIL, .errStr=retStr};
         }
         if (CompatCheckPause) {
             resp = {.resp=INPROGRESS, .errStr=""};
@@ -81,7 +83,7 @@ public:
     HdlrResp PostRestartHandler(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         if (PostRestartFail) {
-            resp = {.resp=FAIL, .errStr=""};
+            resp = {.resp=FAIL, .errStr=retStr};
         }
         if (PostRestartPause) {
             resp = {.resp=INPROGRESS, .errStr=""};
@@ -92,10 +94,10 @@ public:
     HdlrResp ProcessQuiesceHandler(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         if (ProcessQuiesceFail) {
-            resp = {.resp=FAIL, .errStr=""};
+            resp = {.resp=FAIL, .errStr=retStr};
         }
         if (ProcessQuiescePause) {
-            resp = {.resp=INPROGRESS, .errStr=""};
+            resp = {.resp=FAIL, .errStr=retStr};
         }
         return resp;
     }
@@ -103,7 +105,7 @@ public:
     HdlrResp LinkDownHandler(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         if (LinkDownFail) {
-            resp = {.resp=FAIL, .errStr=""};
+            resp = {.resp=FAIL, .errStr=retStr};
         }
         if (LinkDownPause) {
             resp = {.resp=INPROGRESS, .errStr=""};
@@ -114,7 +116,7 @@ public:
     HdlrResp HostDownHandler(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         if (HostDownFail) {
-            resp = {.resp=FAIL, .errStr=""};
+            resp = {.resp=FAIL, .errStr=retStr};
         }
         if (HostDownPause) {
             resp = {.resp=INPROGRESS, .errStr=""};
@@ -125,7 +127,7 @@ public:
     HdlrResp PostHostDownHandler(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         if (PostHostDownFail) {
-            resp = {.resp=FAIL, .errStr=""};
+            resp = {.resp=FAIL, .errStr=retStr};
         }
         if (PostHostDownPause) {
             resp = {.resp=INPROGRESS, .errStr=""};
@@ -136,7 +138,7 @@ public:
     HdlrResp SaveStateHandler(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         if (SaveStateFail) {
-            resp = {.resp=FAIL, .errStr=""};
+            resp = {.resp=FAIL, .errStr=retStr};
         }
         if (SaveStatePause) {
             resp = {.resp=INPROGRESS, .errStr=""};
@@ -147,7 +149,7 @@ public:
     HdlrResp HostUpHandler(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         if (HostUpFail) {
-            resp = {.resp=FAIL, .errStr=""};
+            resp = {.resp=FAIL, .errStr=retStr};
         }
         if (HostUpPause) {
             resp = {.resp=INPROGRESS, .errStr=""};
@@ -158,7 +160,7 @@ public:
     HdlrResp LinkUpHandler(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         if (LinkUpFail) {
-            resp = {.resp=FAIL, .errStr=""};
+            resp = {.resp=FAIL, .errStr=retStr};
         }
         if (LinkUpPause) {
             resp = {.resp=INPROGRESS, .errStr=""};
@@ -169,7 +171,7 @@ public:
     HdlrResp PostLinkUpHandler(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         if (PostLinkUpFail) {
-            resp = {.resp=FAIL, .errStr=""};
+            resp = {.resp=FAIL, .errStr=retStr};
         }
         if (PostLinkUpPause) {
             resp = {.resp=INPROGRESS, .errStr=""};
