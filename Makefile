@@ -271,6 +271,7 @@ populate-webapp-node-modules:
 	cd ../../.. ;\
 
 fixtures:
+	mkdir -p bin
 	@if [ -z ${BYPASS_UI} ]; then \
 		if [ ! -z ${UI_FRAMEWORK} ]; then \
 			if [ ! -f bin/web-app-node-modules.tgz ]; then \
@@ -282,6 +283,8 @@ fixtures:
 		fi ; \
 		if [ ! -z ${UI_FRAMEWORK} ]; then \
 			docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make ui-framework; \
+		else \
+			cd venice/ui/web-app-framework && tar xvf web-app-framework.tgz && cd ../../..; \
 		fi; \
 	    echo "+++ building ui sources" ; \
 		echo docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ; \
@@ -468,8 +471,7 @@ palazzo:
 
 ui-framework:
 	yarn -v;
-	cd venice/ui/web-app-framework && yarn run pack && cd dist && yalc publish --private
-	cd venice/ui/webapp && yalc add web-app-framework
+	cd venice/ui/web-app-framework && yarn run pack
 
 ui-venice-sdk:
 	cd venice/ui/venice-sdk && yarn add file:pensando-swagger-ts-generator-1.1.29.tgz --offline
@@ -477,6 +479,8 @@ ui-venice-sdk:
 
 ui:
 	yarn -v;
+	cd venice/ui/web-app-framework && cd dist && yalc publish --private
+	cd venice/ui/webapp && yalc add web-app-framework
 	$(MAKE) ui-venice-sdk
 	cd venice/ui/webapp && yarn run build-prod && ./gzipDist.sh
 
