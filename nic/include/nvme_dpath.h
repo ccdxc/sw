@@ -171,7 +171,9 @@ static_assert(sizeof(nvme_txsessprodcb_t) == 64);
 
 typedef struct nvme_sessxtstxcb_s {
 
-    uint8_t pad[28];
+    uint8_t pad[26];
+
+    uint16_t session_id;
     
     uint64_t page_ptr;
 
@@ -216,7 +218,9 @@ static_assert(sizeof(nvme_sessxtstxcb_t) == 64);
 
 typedef struct nvme_sessdgsttxcb_s {
 
-    uint8_t pad[30];
+    uint8_t pad[28];
+
+    uint16_t session_id;
 
     uint64_t rsvd4: 7;
     uint64_t wb_r1_busy: 1;
@@ -231,7 +235,8 @@ typedef struct nvme_sessdgsttxcb_s {
     uint64_t r0_busy: 1;   
 
     //Ring 1
-    uint64_t rsvd0: 9;
+    uint64_t rsvd0: 8;
+    uint64_t ring_empty_sched_eval_done: 1;
     uint64_t log_num_entries: 5;
     uint64_t base_addr: 34;
     

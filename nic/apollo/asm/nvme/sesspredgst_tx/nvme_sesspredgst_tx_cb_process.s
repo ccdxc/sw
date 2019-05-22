@@ -11,6 +11,8 @@ struct s0_t0_nvme_sesspredgst_tx_cb_process_d d;
 
 .align
 nvme_sesspredgst_tx_cb_process:
-    nop.e
-    nop             //Exit Slot
+    tblwr           d.ring_empty_sched_eval_done, 0
+    tblwr.f         d.ci_0, d.pi_0
+    phvwr.e         p.p4_intr_global_drop, 1
+    CAPRI_SET_TABLE_0_VALID(0)  //Exit Slot
     

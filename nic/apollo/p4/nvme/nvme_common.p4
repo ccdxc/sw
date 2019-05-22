@@ -343,8 +343,11 @@ header_type sessxtstxcb_t {
         //8B
         page_ptr                        : 64;
 
-        //28B
-        pad                             : 224;
+        //2B
+        session_id                      : 16;
+
+        //26B
+        pad                             : 208;
     }
 }
 
@@ -354,7 +357,7 @@ base_addr, log_num_entries, ring_empty_sched_eval_done, \
 rsvd0, r0_busy, rsvd1, \
 wb_r0_busy, rsvd2, nxt_lba_offset, \
 r1_busy, rsvd3, wb_r1_busy, rsvd4,  \
-page_ptr, pad
+page_ptr, session_id, pad
 
 #define GENERATE_SESSXTSTXCB_D  \
     modify_field(sessxtstxcb_d.rsvd, rsvd);                              \
@@ -383,6 +386,7 @@ page_ptr, pad
     modify_field(sessxtstxcb_d.wb_r1_busy, wb_r1_busy);  \
     modify_field(sessxtstxcb_d.rsvd4, rsvd4);  \
     modify_field(sessxtstxcb_d.page_ptr, page_ptr);  \
+    modify_field(sessxtstxcb_d.session_id, session_id);  \
     modify_field(sessxtstxcb_d.pad, pad);  \
 
 #define SESSXTSTXCB_PARAMS_NON_STG0 \
@@ -405,6 +409,11 @@ header_type sessdgsttxcb_t {
         // 4 Bytes Ring 1
         CAPRI_QSTATE_HEADER_RING(1)
 
+        //8B
+        rx_q_base_addr                  : 34;
+        rx_q_log_num_entries            : 5;
+        rsvd5                           : 25;
+        
         //6B
         base_addr                       : 34;
         log_num_entries                 : 5;
@@ -431,15 +440,19 @@ header_type sessdgsttxcb_t {
         wb_r1_busy                      : 1;
         rsvd4                           : 7;
 
-        //38B
-        pad                             : 304;
+        //2B
+        session_id                      : 16;
+
+        //28B
+        pad                             : 224;
     }
 }
 
 #define SESSDGSTTXCB_PARAMS                                                      \
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, \
+rx_q_base_addr, rx_q_log_num_entries, rsvd5, \
 base_addr, log_num_entries, ring_empty_sched_eval_done, rsvd0, r0_busy, rsvd1, \
-wb_r0_busy, rsvd2, r1_busy, rsvd3, wb_r1_busy, rsvd4, pad
+wb_r0_busy, rsvd2, r1_busy, rsvd3, wb_r1_busy, rsvd4, session_id, pad
 
 #define GENERATE_SESSDGSTTXCB_D  \
     modify_field(sessdgsttxcb_d.rsvd, rsvd);                              \
@@ -454,6 +467,9 @@ wb_r0_busy, rsvd2, r1_busy, rsvd3, wb_r1_busy, rsvd4, pad
     modify_field(sessdgsttxcb_d.ci_0, ci_0);                              \
     modify_field(sessdgsttxcb_d.pi_1, pi_1);                              \
     modify_field(sessdgsttxcb_d.ci_1, ci_1);                              \
+    modify_field(sessdgsttxcb_d.rx_q_base_addr, rx_q_base_addr);  \
+    modify_field(sessdgsttxcb_d.rx_q_log_num_entries, rx_q_log_num_entries);  \
+    modify_field(sessdgsttxcb_d.rsvd5, rsvd5);  \
     modify_field(sessdgsttxcb_d.base_addr, base_addr);  \
     modify_field(sessdgsttxcb_d.log_num_entries, log_num_entries);  \
     modify_field(sessdgsttxcb_d.ring_empty_sched_eval_done, ring_empty_sched_eval_done);  \
@@ -466,6 +482,7 @@ wb_r0_busy, rsvd2, r1_busy, rsvd3, wb_r1_busy, rsvd4, pad
     modify_field(sessdgsttxcb_d.rsvd3, rsvd3);  \
     modify_field(sessdgsttxcb_d.wb_r1_busy, wb_r1_busy);  \
     modify_field(sessdgsttxcb_d.rsvd4, rsvd4);  \
+    modify_field(sessdgsttxcb_d.session_id, session_id);  \
     modify_field(sessdgsttxcb_d.pad, pad);  \
 
 #define SESSDGSTTXCB_PARAMS_NON_STG0 \

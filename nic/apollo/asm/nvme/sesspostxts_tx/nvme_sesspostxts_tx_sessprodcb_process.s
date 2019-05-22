@@ -6,40 +6,41 @@
 
 struct phv_ p;
 struct s5_t0_k_ k;
-struct s5_t0_nvme_req_tx_sessprodcb_process_d d;
+struct s5_t0_nvme_sesspostxts_tx_sessprodcb_process_d d;
 
 #define DB_ADDR r4
 #define DB_DATA r5
 #define DMA_CMD_BASE r6
 
 %%
-    .param  nvme_req_tx_sqcb_writeback_process
+    .param  nvme_sesspostxts_tx_cb_writeback_process
 
 .align
-nvme_req_tx_sessprodcb_process:
+nvme_sesspostxts_tx_sessprodcb_process:
 
     mfspr       r1, spr_mpuid
     seq         c1, r1[4:2], STAGE_5
     bcf         [!c1], bubble_to_next_stage
     nop         //BD Slot
 
-    //XXX: check if resourcecb allocation was successful
     //XXX: check for full q (choke counter)
-    //XXX: check for read/write opcode
-    
-    
-    sll         r3, XTS_Q_PI, LOG_SESS_Q_ENTRY_SIZE
-    tblmincri.f XTS_Q_PI, d.log_num_xts_q_entries, 1    //Flush
-    add         r3, d.xts_q_base_addr, r3
 
-    //sess_wqe is populated in cmdid_fetch_process, but DMA cmd is enqueued here
+    sll         r3, DGST_Q_PI, LOG_SESS_Q_ENTRY_SIZE
+    tblmincri   DGST_Q_PI, d.log_num_dgst_q_entries, 1
+
+    // because we successfully consumed cid from sesspostxts q, we need
+    // to increment the CI of xts q in sessprodcb
+    tblmincri.f XTS_Q_CI, d.log_num_xts_q_entries, 1 
+
+    //sess_wqe is populated in sess_wqe_process, but DMA cmd is enqueued here
+    add         r3, d.dgst_q_base_addr, r3
     DMA_CMD_BASE_GET(DMA_CMD_BASE, session_wqe_dma)
     DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, sess_wqe_cid, sess_wqe_cid, r3)
 
-    //ring the doorbell of xts_q
+    //ring the doorbell of dgst_q
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, \
-                        K_GLOBAL_LIF, NVME_QTYPE_SESSXTSTX, DB_ADDR)
-    CAPRI_SETUP_DB_DATA(d.xts_qid, SESSPREXTS_TX_RING_ID, XTS_Q_PI, DB_DATA) 
+                        K_GLOBAL_LIF, NVME_QTYPE_SESSDGSTTX, DB_ADDR)
+    CAPRI_SETUP_DB_DATA(d.dgst_qid, SESSPREDGST_TX_RING_ID, DGST_Q_PI, DB_DATA) 
 
     phvwr       p.session_db_data, DB_DATA.dx
     
@@ -50,7 +51,7 @@ nvme_req_tx_sessprodcb_process:
     add         r1, r0, k.phv_global_common_cb_addr
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_EN,
                                 CAPRI_TABLE_SIZE_512_BITS,
-                                nvme_req_tx_sqcb_writeback_process,
+                                nvme_sesspostxts_tx_cb_writeback_process,
                                 r1) //Exit Slot
   
 bubble_to_next_stage:

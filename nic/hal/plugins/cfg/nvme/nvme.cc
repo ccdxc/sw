@@ -1117,7 +1117,7 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     //Setup session xts tx
     nvme_sessxtstxcb_t sessxtstxcb;
     uint64_t sessxtstxcb_addr;
-    sessxtstxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_TX_SESS_XTSQ, g_sess_id);
+    sessxtstxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_TX_SESS_XTSQ, lif_sess_id);
     memset(&sessxtstxcb, 0, sizeof(nvme_sessxtstxcb_t));
 
     sessxtstxcb.ring_header.total_rings = MAX_SESSXTSTX_RINGS;
@@ -1133,6 +1133,8 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     sessxtstxcb.base_addr = tx_sess_xtsq_base;
     sessxtstxcb.log_num_entries = log2(NVME_TX_SESS_XTSQ_DEPTH);
 
+    sessxtstxcb.session_id = g_sess_id;
+
     // Convert data before writting to HBM
     memrev((uint8_t*)&sessxtstxcb, sizeof(nvme_sessxtstxcb_t));
     nvme_hbm_write(sessxtstxcb_addr, (void *)&sessxtstxcb, sizeof(nvme_sessxtstxcb_t));
@@ -1141,7 +1143,7 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     //Setup session dgst tx
     nvme_sessdgsttxcb_t sessdgsttxcb;
     uint64_t sessdgsttxcb_addr;
-    sessdgsttxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_TX_SESS_DGSTQ, g_sess_id);
+    sessdgsttxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_TX_SESS_DGSTQ, lif_sess_id);
     memset(&sessdgsttxcb, 0, sizeof(nvme_sessdgsttxcb_t));
 
     sessdgsttxcb.ring_header.total_rings = MAX_SESSDGSTTX_RINGS;
@@ -1157,6 +1159,8 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     sessdgsttxcb.base_addr = tx_sess_dgstq_base;
     sessdgsttxcb.log_num_entries = log2(NVME_TX_SESS_DGSTQ_DEPTH);
 
+    sessdgsttxcb.session_id = g_sess_id;
+
     // Convert data before writting to HBM
     memrev((uint8_t*)&sessdgsttxcb, sizeof(nvme_sessdgsttxcb_t));
     nvme_hbm_write(sessdgsttxcb_addr, (void *)&sessdgsttxcb, sizeof(nvme_sessdgsttxcb_t));
@@ -1165,7 +1169,7 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     //Setup session xts rx
     nvme_sessxtsrxcb_t sessxtsrxcb;
     uint64_t sessxtsrxcb_addr;
-    sessxtsrxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_RX_SESS_XTSQ, g_sess_id);
+    sessxtsrxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_RX_SESS_XTSQ, lif_sess_id);
     memset(&sessxtsrxcb, 0, sizeof(nvme_sessxtsrxcb_t));
 
     sessxtsrxcb.ring_header.total_rings = MAX_SESSXTSRX_RINGS;
@@ -1181,6 +1185,8 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     sessxtsrxcb.base_addr = rx_sess_xtsq_base;
     sessxtsrxcb.log_num_entries = log2(NVME_RX_SESS_XTSQ_DEPTH);
 
+    sessxtsrxcb.session_id = g_sess_id;
+
     // Convert data before writting to HBM
     memrev((uint8_t*)&sessxtsrxcb, sizeof(nvme_sessxtsrxcb_t));
     nvme_hbm_write(sessxtsrxcb_addr, (void *)&sessxtsrxcb, sizeof(nvme_sessxtsrxcb_t));
@@ -1189,7 +1195,7 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     //Setup session dgst rx
     nvme_sessdgstrxcb_t sessdgstrxcb;
     uint64_t sessdgstrxcb_addr;
-    sessdgstrxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_RX_SESS_DGSTQ, g_sess_id);
+    sessdgstrxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_RX_SESS_DGSTQ, lif_sess_id);
     memset(&sessdgstrxcb, 0, sizeof(nvme_sessdgstrxcb_t));
 
     sessdgstrxcb.ring_header.total_rings = MAX_SESSDGSTRX_RINGS;
@@ -1207,6 +1213,8 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
 
     sessdgstrxcb.rx_q_base_addr = serq_base;
     sessdgstrxcb.rx_q_log_num_entries = log2(serq_size);
+
+    sessdgstrxcb.session_id = g_sess_id;
 
     // Convert data before writting to HBM
     memrev((uint8_t*)&sessdgstrxcb, sizeof(nvme_sessdgstrxcb_t));

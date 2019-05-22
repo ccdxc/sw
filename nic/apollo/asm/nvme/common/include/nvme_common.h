@@ -15,6 +15,9 @@
 #define CMDID_RING_CI           d.{cmdid_ring_ci}.hx
 #define CMDID                   d.{cmdid}.hx
 #define XTS_Q_PI                d.{xts_q_pi}.hx
+#define XTS_Q_CI                d.{xts_q_ci}.hx
+#define DGST_Q_PI               d.{dgst_q_pi}.hx
+#define DGST_Q_CI               d.{dgst_q_ci}.hx
 #define SESSPREXTSTX_P_INDEX    d.{pi_0}.hx
 #define SESSPREXTSTX_C_INDEX    d.{ci_0}.hx
 #define SESSPOSTXTSTX_P_INDEX   d.{pi_1}.hx
@@ -94,6 +97,7 @@
 //dma cmd ptrs
 #define NVME_REQ_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(cmd_ctxt_dma_dma_cmd_type)/16)
 #define NVME_SESSPREXTSTX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(pkt_desc_dma_dma_cmd_type)/16)
+#define NVME_SESSPOSTXTSTX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(session_wqe_dma_dma_cmd_type)/16)
 #define NVME_SESS_POST_DGST_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(tcp_wqe_dma0_dma_cmd_pad)/16)
 
 //command context offsets

@@ -76,7 +76,8 @@ header_type phv_global_common_t {
 
 header_type nvme_sesspostxts_tx_to_stage_sess_wqe_info_t {
     fields {
-        pad                              :  128;
+        session_id                       :   16;
+        pad                              :  112;
     }
 }
 
@@ -175,17 +176,13 @@ metadata nvme_sesspostxts_tx_sessprodcb_to_writeback_t t0_s2s_sessprodcb_to_writ
 @pragma dont_trim
 metadata sess_wqe_t sess_wqe;
 @pragma dont_trim
-metadata doorbell_data_t session_db;
-@pragma dont_trim
-metadata index16_t sessxts_q_cindex;
+metadata data64_t session_db;
 
 @pragma pa_align 128
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t session_wqe_dma;         //dma cmd 0
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t session_db_dma;          //dma cmd 1
-@pragma dont_trim
-metadata dma_cmd_phv2mem_t sessxts_q_cindex_dma;    //dma cmd 2
 
 /*
  * Stage 0 table 0 action
@@ -208,6 +205,7 @@ action nvme_sesspostxts_tx_sess_wqe_process (SESS_WQE_PARAMS) {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s1_info_scr.session_id, to_s1_info.session_id);
     modify_field(to_s1_info_scr.pad, to_s1_info.pad);
     
     // stage to stage
@@ -232,7 +230,7 @@ action nvme_sesspostxts_tx_sessprodcb_process (SESSPRODCB_PARAMS) {
     GENERATE_SESSPRODCB_D
 }
 
-action nvme_sesspostxts_tx_cb_writeback_process () {
+action nvme_sesspostxts_tx_cb_writeback_process (SESSXTSTXCB_PARAMS_NON_STG0) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -241,4 +239,7 @@ action nvme_sesspostxts_tx_cb_writeback_process () {
     
     // stage to stage
     modify_field(t0_s2s_sessprodcb_to_writeback_info_scr.pad, t0_s2s_sessprodcb_to_writeback_info.pad);
+
+    // D-vector
+    GENERATE_SESSXTSTXCB_D_NON_STG0
 }
