@@ -104,7 +104,7 @@ func getint(in interface{}) (int64, bool) {
 // EmptyOr returns no error if the value is empty. If it isn't, it is passed
 // to the supplied validator
 func EmptyOr(fn interface{}, in string, args []string) error {
-	if len(in) == 0 {
+	if in == "" {
 		return nil
 	}
 	if len(args) == 0 {
@@ -220,7 +220,7 @@ func MacAddr(in string) error {
 		return nil
 	}
 
-	return fmt.Errorf("Value must be a valid MAC address")
+	return fmt.Errorf("Value must be a valid MAC address of the format aaaa.bbbb.cccc")
 }
 
 // URI validates the input is a valid URI

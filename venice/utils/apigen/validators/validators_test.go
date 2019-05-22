@@ -235,18 +235,20 @@ func TestHostAddr(t *testing.T) {
 }
 
 func TestMacAddr(t *testing.T) {
+	expMacErr := "Value must be a valid MAC address of the format aaaa.bbbb.cccc"
+
 	cases := []struct {
 		s      string
 		errMsg string
 	}{
-		{s: "aa:bb:cc:dd:00:00", errMsg: "Value must be a valid MAC address"},
+		{s: "aa:bb:cc:dd:00:00", errMsg: expMacErr},
 		{s: "aaBB.ccDD.0000", errMsg: ""},
-		{s: "aa-BB-cc-DD-00-00", errMsg: "Value must be a valid MAC address"},
+		{s: "aa-BB-cc-DD-00-00", errMsg: expMacErr},
 		{s: "aaBB.ccDD.0000", errMsg: ""},
-		{s: "aa.BB.cc.DD.00.00", errMsg: "Value must be a valid MAC address"},
-		{s: "aaBB.ccDD.00.00", errMsg: "Value must be a valid MAC address"},
-		{s: "aa:BB:cc:DD:00:00", errMsg: "Value must be a valid MAC address"},
-		{s: "aaXY.ccDD.0000", errMsg: "Value must be a valid MAC address"},
+		{s: "aa.BB.cc.DD.00.00", errMsg: expMacErr},
+		{s: "aaBB.ccDD.00.00", errMsg: expMacErr},
+		{s: "aa:BB:cc:DD:00:00", errMsg: expMacErr},
+		{s: "aaXY.ccDD.0000", errMsg: expMacErr},
 	}
 	for i, c := range cases {
 		err := MacAddr(c.s)
@@ -549,26 +551,26 @@ func TestRegExp(t *testing.T) {
 
 func TestValidKind(t *testing.T) {
 	types := map[string]*api.Struct{
-		"test.Type1": &api.Struct{
+		"test.Type1": {
 			Kind:     "TestKind1",
 			APIGroup: "TestGroup1",
 			Fields: map[string]api.Field{
-				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "test.Type2"},
-				"Fld2": api.Field{Name: "Fld2", JSONTag: "fld2", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+				"Fld1": {Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "test.Type2"},
+				"Fld2": {Name: "Fld2", JSONTag: "fld2", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
 			},
 		},
-		"test.Type2": &api.Struct{
+		"test.Type2": {
 			Kind:     "TestKind2",
 			APIGroup: "TestGroup1",
 			Fields: map[string]api.Field{
-				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+				"Fld1": {Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
 			},
 		},
-		"test.Type3": &api.Struct{
+		"test.Type3": {
 			Kind:     "TestKind3",
 			APIGroup: "TestGroup2",
 			Fields: map[string]api.Field{
-				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+				"Fld1": {Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
 			},
 		},
 	}
