@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// vpc state handling
+/// VPC state handling
 ///
 //----------------------------------------------------------------------------
 
@@ -19,7 +19,7 @@
 
 namespace api {
 
-/// \defgroup PDS_VPC_STATE - vpc state functionality
+/// \defgroup PDS_VPC_STATE - VPC state functionality
 /// \ingroup PDS_VPC
 /// @{
 
@@ -32,27 +32,27 @@ public:
     /// \brief destructor
     ~vpc_state();
 
-    /// \brief allocate memory required for a VPC instance
+    /// \brief  allocate memory required for a VPC instance
     /// \return pointer to the allocated VPC, NULL if no memory
     vpc_entry *alloc(void);
 
-    /// \brief insert given VPC instance into the VPC db
+    /// \brief     insert given VPC instance into the VPC db
     /// \param[in] vpc VPC entry to be added to the db
-    /// \return SDK_RET_OK on success, failure status code on error
+    /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t insert(vpc_entry *vpc);
 
-    /// \brief remove the given instance of VPC object from db
+    /// \brief     remove the given instance of VPC object from db
     /// \param[in] vpc VPC entry to be deleted from the db
-    /// \return pointer to the removed VPC instance or NULL, if not found
+    /// \return    pointer to the removed VPC instance or NULL, if not found
     vpc_entry *remove(vpc_entry *vpc);
 
-    /// \brief free VPC instance back to slab
+    /// \brief     free VPC instance back to slab
     /// \param[in] vpc pointer to the allocated VPC
     void free(vpc_entry *vpc);
 
-    /// \brief lookup a vpc in database given the key
+    /// \brief     lookup a vpc in database given the key
     /// \param[in] vpc key for the VPC object
-    /// \return pointer to the VPC instance found or NULL
+    /// \return    pointer to the VPC instance found or NULL
     vpc_entry *find(pds_vpc_key_t *key) const;
 
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
@@ -64,9 +64,9 @@ private:
     friend class vpc_entry;    ///< vpc_entry class is friend of vpc_state
 
 private:
-    ht *vpc_ht_;           ///< vpc hash table
+    ht      *vpc_ht_;      ///< vpc hash table
     indexer *vpc_idxr_;    ///< indexer to allocate hw vpc id
-    slab *vpc_slab_;       ///< slab for allocating vpc entry
+    slab    *vpc_slab_;    ///< slab for allocating vpc entry
 };
 
 /// \@}

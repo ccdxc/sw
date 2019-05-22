@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    tep_state.cc
- *
- * @brief   Tunnel EndPoint (TEP) database handling
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// TEP database handling
+///
+//----------------------------------------------------------------------------
 
 #include <stdio.h>
 #include "nic/apollo/core/mem.hpp"

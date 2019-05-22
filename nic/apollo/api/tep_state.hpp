@@ -1,13 +1,15 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    tep_state.hpp
- *
- * @brief   Tunnel EndPoint (TEP) database maintenance
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// TEP state handling
+///
+//----------------------------------------------------------------------------
 
-#if !defined (__TEP_STATE_HPP__)
-#define __TEP_STATE_HPP__
+#ifndef __API__TEP_STATE_HPP__
+#define __API__TEP_STATE_HPP__
 
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/sdk/lib/ht/ht.hpp"
@@ -18,71 +20,58 @@
 
 namespace api {
 
-/**
- * @defgroup PDS_TEP_STATE - tep state functionality
- * @ingroup PDS_TEP
- * @{
- */
+/// \defgroup PDS_TEP_STATE - TEP state functionality
+/// \ingroup PDS_TEP
+/// @{
 
-/**
- * @brief    state maintained for teps
- */
+/// \brief state maintained for TEPs
 class tep_state : public state_base {
 public:
-    /**
-     * @brief    constructor
-     */
+    /// \brief constructor
     tep_state();
 
-    /**
-     * @brief    destructor
-     */
+    /// \brief destructor
     ~tep_state();
 
-    /**
-     * @brief    allocate memory required for a tep
-     * @return pointer to the allocated tep, NULL if no memory
-     */
+    /// \brief  allocate memory required for a TEP
+    /// \return pointer to the allocated tep, NULL if no memory
     tep_entry *alloc(void);
 
-    /// \brief    insert given TEP instance into the TEP db
-    /// \param[in] tep    TEP entry to be added to the db
-    /// \return   SDK_RET_OK on success, failure status code on error
+    /// \brief     insert given TEP instance into the TEP db
+    /// \param[in] tep TEP entry to be added to the db
+    /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t insert(tep_entry *tep);
 
     /// \brief     remove given instance of TEP object from db
-    /// \param[in] tep    TEP entry to be deleted from the db
+    /// \param[in] tep TEP entry to be deleted from the db
     /// \return    pointer to the removed TEP instance or NULL, if not found
     tep_entry *remove(tep_entry *tep);
 
-    /**
-     * @brief      free tep instance back to slab
-     * @param[in]  tep   pointer to the allocated tep
-     */
+    /// \brief     free TEP instance back to slab
+    /// \param[in] tep pointer to the allocated TEP
     void free(tep_entry *tep);
 
-    /**
-     * @brief     lookup a tep in database given the key
-     * @param[in] tep_key tep key
-     */
+    /// \brief     lookup a TEP in database given the key
+    /// \param[in] tep_key TEP key
     tep_entry *find(pds_tep_key_t *tep_key) const;
 
-    friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
+    friend void slab_delay_delete_cb(void *timer, uint32_t slab_id,
+                                     void *elem);
 
 private:
     ht *tep_ht(void) { return tep_ht_; }
     slab *tep_slab(void) { return tep_slab_; }
-    friend class tep_entry;   /**< tep_entry class is friend of tep_state */
+    friend class tep_entry;    ///< tep_entry class is friend of tep_state
 
 private:
-    ht      *tep_ht_;      /**< Hash table root */
-    slab    *tep_slab_;    /**< slab for allocating tep entry */
+    ht      *tep_ht_;      ///< Hash table root
+    slab    *tep_slab_;    ///< slab for allocating tep entry
 };
 
-/** * @} */    // end of PDS_TEP_STATE
+/// \@}
 
-}  /** end namespace api */
+}  // namespace api
 
 using api::tep_state;
 
-#endif    /** __TEP_STATE_HPP__ */
+#endif    // __API__TEP_STATE_HPP__

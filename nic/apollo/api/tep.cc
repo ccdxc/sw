@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    tep.cc
- *
- * @brief   Tunnel EndPoint (TEP) entry handling
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// TEP entry handling
+///
+//----------------------------------------------------------------------------
 
 #include <stdio.h>
 #include "nic/apollo/core/mem.hpp"

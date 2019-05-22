@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------
 
 #ifndef __TEP_IMPL_STATE_HPP__
-#define __TEP_IMPL_STATEHPP__
+#define __TEP_IMPL_STATE_HPP__
 
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
 #include "nic/apollo/framework/api_base.hpp"
@@ -17,13 +17,13 @@
 #include "nic/apollo/api/pds_state.hpp"
 
 // default drop/blackhole nexthop (dataplane drops pkts when this nh is hit)
-#define PDS_SYSTEM_DROP_NEXTHOP_HW_ID        0
-#define PDS_NH_TYPE_PEER_VPC_MASK            0x8000
+#define PDS_SYSTEM_DROP_NEXTHOP_HW_ID 0
+#define PDS_NH_TYPE_PEER_VPC_MASK     0x8000
 
 namespace api {
 namespace impl {
 
-/// \defgroup PDS_TEP_IMPL_STATE - tep state functionality
+/// \defgroup PDS_TEP_IMPL_STATE - TEP state functionality
 /// \ingroup PDS_TEP
 /// \@{
 
@@ -31,41 +31,37 @@ namespace impl {
 class tep_impl;
 class mapping_impl;
 
-/// \brief    state maintained for teps
+/// \brief state maintained for TEPs
 class tep_impl_state : public state_base {
 public:
-    // constructor
+    /// \brief constructor
     tep_impl_state(pds_state *state);
 
-    // destructor
+    /// \brief destructor
     ~tep_impl_state();
 
-    /**
-     * @brief    API to initiate transaction over all the table manamgement
-     *           library instances
-     * @return    SDK_RET_OK on success, failure status code on error
-     */
+    /// \brief  API to initiate transaction over all the table manamgement
+    ///         library instances
+    /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_transaction_begin(void);
 
-    /**
-     * @brief    API to end transaction over all the table manamgement
-     *           library instances
-     * @return    SDK_RET_OK on success, failure status code on error
-     */
+    /// \brief API to end transaction over all the table manamgement
+    ///        library instances
+    /// return SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_transaction_end(void);
 
 private:
     directmap *tep_tbl(void) { return tep_tbl_; }
     directmap *nh_tbl(void) { return nh_tbl_; }
-    friend class tep_impl;       // tep_impl class is friend of tep_impl_state
-    friend class mapping_impl;   // mapping_impl class is friend of tep_impl_state
+    friend class tep_impl;         ///< tep_impl, friend of tep_impl_state
+    friend class mapping_impl;     ///< mapping_impl, friend of tep_impl_state
 
 private:
-    directmap    *tep_tbl_;     // directmap table for TEP
-    directmap    *nh_tbl_;      // directmap table for NH
+    directmap *tep_tbl_;    ///< directmap table for TEP
+    directmap *nh_tbl_;     ///< directmap table for NH
 };
 
-///   \@}    // end of PDS_TEP_IMPL_STATE
+///   \@}
 
 }    // namespace impl
 }    // namespace api

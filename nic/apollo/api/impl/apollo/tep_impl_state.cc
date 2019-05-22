@@ -9,20 +9,20 @@
 //----------------------------------------------------------------------------
 
 
+#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/impl/apollo/tep_impl_state.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
-#include "nic/sdk/lib/p4/p4_api.hpp"
 
 namespace api {
 namespace impl {
 
-/// \defgroup PDS_TEP_IMPL_STATE - tep database functionality
+/// \defgroup PDS_TEP_IMPL_STATE - TEP database functionality
 /// \ingroup PDS_TEP
 /// \@{
 
 tep_impl_state::tep_impl_state(pds_state *state) {
-    p4pd_table_properties_t    tinfo;
+    p4pd_table_properties_t tinfo;
 
     // instantiate P4 tables for bookkeeping
     p4pd_table_properties_get(P4TBL_ID_TEP, &tinfo);
@@ -65,7 +65,7 @@ tep_impl_state::table_transaction_end(void) {
     return SDK_RET_OK;
 }
 
-/// \@}    // end of PDS_TEP_IMPL_STATE
+/// \@}
 
 }    // namespace impl
 }    // namespace api

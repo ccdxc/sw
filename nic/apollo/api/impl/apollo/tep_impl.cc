@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    tep_impl.cc
- *
- * @brief   datapath implementation of tep
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// TEP datapath implementation
+///
+//----------------------------------------------------------------------------
 
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/apollo/core/mem.hpp"
@@ -17,7 +19,7 @@
 namespace api {
 namespace impl {
 
-/// \defgroup PDS_TEP_IMPL - tep entry datapath implementation
+/// \defgroup PDS_TEP_IMPL - tep datapath implementation
 /// \ingroup PDS_TEP
 /// @{
 
@@ -252,7 +254,7 @@ tep_impl::read_hw(obj_key_t *key, obj_info_t *info, void *arg) {
     return sdk::SDK_RET_OK;
 }
 
-/// \@}    // end of PDS_TEP_IMPL
+/// \@}
 
 }    // namespace impl
 }    // namespace api
