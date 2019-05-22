@@ -50,7 +50,7 @@ sdk_ret_t
 vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
-    sdk_table_api_params_t tparams = { 0 };
+    sdk_table_api_params_t api_params = { 0 };
     pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
     vnic_mapping_swkey vnic_mapping_key = { 0 };
     vnic_mapping_swkey_mask_t vnic_mapping_mask = { 0 };
@@ -63,6 +63,9 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     }
     hw_id_ = idx;
 
+    // NOTE: we don't need to reserve indices in INGRESS_VNIC_INFO and
+    //       EGRESS_VNIC_INFO, as we use hw_id_ as index into those tables
+
     // reserve an entry in VNIC_MAPPING table
     if ((spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) &&
         spec->vnic_encap.vlan) {
@@ -72,16 +75,16 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     sdk::lib::memrev(vnic_mapping_key.ethernet_1_srcAddr, spec->mac_addr,
                      ETH_ADDR_LEN);
     memset(vnic_mapping_mask.ethernet_1_srcAddr_mask, 0xFF, ETH_ADDR_LEN);
-    tparams.key = &vnic_mapping_key;
-    tparams.mask = &vnic_mapping_mask;
-    tparams.handle = sdk::table::handle_t::null();
-    ret = vnic_impl_db()->vnic_mapping_tbl()->reserve(&tparams);
+    api_params.key = &vnic_mapping_key;
+    api_params.mask = &vnic_mapping_mask;
+    api_params.handle = sdk::table::handle_t::null();
+    ret = vnic_impl_db()->vnic_mapping_tbl()->reserve(&api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in VNIC_MAPPING "
                       "table for vnic %u, err %u", spec->key.id, ret);
         return ret;
     }
-    vnic_mapping_handle_ = tparams.handle;
+    vnic_mapping_handle_ = api_params.handle;
     return SDK_RET_OK;
 }
 
@@ -120,10 +123,11 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     pds_vnic_spec_t *spec;
     pds_vpc_key_t vpc_key;
     pds_subnet_key_t subnet_key;
-    //pds_policy_key_t policy_key;
-    //policy *v4_policy, *v6_policy;
-    //pds_route_table_key_t route_table_key;
-    //route_table *v4_route_table, *v6_route_table;
+    pds_policy_key_t policy_key;
+    policy *ing_v4_policy, *ing_v6_policy;
+    policy *egr_v4_policy, *egr_v6_policy;
+    pds_route_table_key_t route_table_key;
+    route_table *v4_route_table, *v6_route_table;
     //vnic_rx_stats_actiondata_t vnic_rx_stats_data = { 0 };
     //vnic_tx_stats_actiondata_t vnic_tx_stats_data = { 0 };
     ingress_vnic_info_actiondata_t ing_vnic_info = { 0 };
@@ -207,10 +211,14 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     } else {
         v6_route_table = NULL;
     }
-    policy_key = subnet->v4_policy();
-    v4_policy = policy_db()->policy_find(&policy_key);
-    policy_key = subnet->v6_policy();
-    v6_policy = policy_db()->policy_find(&policy_key);
+    policy_key = subnet->ing_v4_policy();
+    ing_v4_policy = policy_db()->policy_find(&policy_key);
+    policy_key = subnet->ing_v6_policy();
+    ing_v6_policy = policy_db()->policy_find(&policy_key);
+    policy_key = subnet->egr_v4_policy();
+    egr_v4_policy = policy_db()->policy_find(&policy_key);
+    policy_key = subnet->egr_v6_policy();
+    egr_v6_policy = policy_db()->policy_find(&policy_key);
 
     ing_vnic_info.action_id = INGRESS_VNIC_INFO_INGRESS_VNIC_INFO_ID;
     if (v4_route_table) {
@@ -227,14 +235,17 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v6_lpm,
                                 addr, 5);
     }
-    if (v4_policy) {
-        addr = ((impl::security_policy_impl *)(v4_policy->impl()))->security_policy_root_addr();
+
+    // TODO: we need to revisit once pipeline is fixed to take both ing & egr
+    //       policy roots and potentially this table moves to RXDMA and/or TXDMA
+    if (egr_v4_policy) {
+        addr = ((impl::security_policy_impl *)(egr_v4_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv4 policy root addr 0x%llx", addr);
         MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v4_sacl,
                                 addr, 5);
     }
-    if (v6_policy) {
-        addr = ((impl::security_policy_impl *)(v6_policy->impl()))->security_policy_root_addr();
+    if (egr_v6_policy) {
+        addr = ((impl::security_policy_impl *)(egr_v6_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv6 policy root addr 0x%llx", addr);
         MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v6_sacl,
                                 addr, 5);
@@ -410,7 +421,8 @@ vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
         return ret;
     }
 
-    // update the epoch (nothing else in this table can be altered)
+    // update all the fields that depend on other objects
+    // currently epoch is the only field that can change like this
     vnic_mapping_data.epoch = epoch
     ret = vnic_impl_db()->vnic_mapping_tbl()->update(&api_params);
     if (ret != SDK_RET_OK) {
