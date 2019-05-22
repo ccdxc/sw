@@ -5,7 +5,8 @@
  *
  * @brief   service mapping implementation in the p4/hw
  */
-#if !defined (__SVC_MAPPING_IMPL_HPP__)
+
+#ifndef __SVC_MAPPING_IMPL_HPP__
 #define __SVC_MAPPING_IMPL_HPP__
 
 #include "nic/sdk/include/sdk/table.hpp"
