@@ -48,7 +48,7 @@ public:
     artemis_impl_state *artemis_impl_db(void) { return artemis_impl_db_; }
     lif_impl_state *lif_impl_db(void) { return lif_impl_db_; }
     tep_impl_state *tep_impl_db(void) { return tep_impl_db_; }
-    //vnic_impl_state *vnic_impl_db(void) { return vnic_impl_db_; }
+    vnic_impl_state *vnic_impl_db(void) { return vnic_impl_db_; }
     //mapping_impl_state *mapping_impl_db(void) { return mapping_impl_db_; }
     route_table_impl_state *route_table_impl_db(void) {
         return route_table_impl_db_;
