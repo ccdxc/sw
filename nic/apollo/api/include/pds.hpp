@@ -160,4 +160,10 @@ typedef struct pds_rsc_pool_key_s {
     pds_rsc_pool_id_t id;    ///< Resource pool ID
 } __PACK__ pds_rsc_pool_key_t;
 
+typedef struct pds_svc_mapping_key_s {
+    pds_vpc_key_t vpc;    ///< VPC this service is in
+    ip_addr_t vip;        ///< Virtual IP (VIP) of the service
+    uint16_t svc_port;    ///< L4 service port
+} __PACK__ pds_svc_mapping_key_t;
+
 #endif    // __INCLUDE_API_PDS_HPP__

@@ -29,6 +29,7 @@ typedef enum impl_obj_id_e {
     IMPL_OBJ_ID_METER,
     IMPL_OBJ_ID_TAG,
     IMPL_OBJ_ID_MAX,
+    IMPL_OBJ_ID_SVC_MAPPING,
 } impl_obj_id_t;
 
 }    // namespace impl

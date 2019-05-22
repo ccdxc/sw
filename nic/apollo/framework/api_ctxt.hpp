@@ -25,6 +25,7 @@
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/include/pds_meter.hpp"
 #include "nic/apollo/api/include/pds_tag.hpp"
+#include "nic/apollo/api/include/pds_service.hpp"
 
 namespace api {
 
@@ -51,6 +52,8 @@ typedef union api_params_u {
     pds_meter_spec_t             meter_spec;
     pds_tag_key_t                tag_key;
     pds_tag_spec_t               tag_spec;
+    pds_svc_mapping_key_t        svc_mapping_key;
+    pds_svc_mapping_spec_t       svc_mapping_spec;
 } api_params_t;
 
 /// \brief Per API context maintained by framework while processing

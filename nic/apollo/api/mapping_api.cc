@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// This module implements Mapping API
+/// This module implements mapping API
 ///
 //----------------------------------------------------------------------------
 
@@ -23,17 +23,19 @@ pds_mapping_api_handle (api::api_op_t op, pds_mapping_key_t *key,
     sdk_ret_t rv;
     api_ctxt_t api_ctxt;
 
-    if ((rv = pds_obj_api_validate(op, key, spec)) != SDK_RET_OK)
+    if ((rv = pds_obj_api_validate(op, key, spec)) != SDK_RET_OK) {
         return rv;
+    }
 
     api_ctxt.api_params = api::api_params_alloc(api::OBJ_ID_MAPPING, op);
     if (likely(api_ctxt.api_params != NULL)) {
         api_ctxt.api_op = op;
         api_ctxt.obj_id = api::OBJ_ID_MAPPING;
-        if (op == api::API_OP_DELETE)
+        if (op == api::API_OP_DELETE) {
             api_ctxt.api_params->mapping_key = *key;
-        else
+        } else {
             api_ctxt.api_params->mapping_spec = *spec;
+        }
         rv = api::g_api_engine.process_api(&api_ctxt);
         return rv;
     }
@@ -43,12 +45,11 @@ pds_mapping_api_handle (api::api_op_t op, pds_mapping_key_t *key,
 static inline mapping_entry *
 pds_mapping_entry_find (pds_mapping_key_t *key)
 {
-    pds_mapping_spec_t spec = {0};
-    spec.key = *key;
-
-    // Mapping does not have any entry database
-    // As the call are single thread, we can use static entry
+    // mapping does not have any entry database, as the calls are single thread,
+    // we can use static entry
     static mapping_entry *mapping;
+    pds_mapping_spec_t spec = { 0 };
+    spec.key = *key;
 
     if (mapping == NULL) {
         mapping  = mapping_entry::factory(&spec);

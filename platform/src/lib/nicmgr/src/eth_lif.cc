@@ -2551,7 +2551,7 @@ EthLif::StatsUpdate(void *obj)
 void
 EthLif::StatsUpdateComplete(void *obj)
 {
-    EthLif *eth = (EthLif *)obj;
+    //EthLif *eth = (EthLif *)obj;
 
     // evutil_timer_again(eth->loop, &eth->stats_timer);
 }
