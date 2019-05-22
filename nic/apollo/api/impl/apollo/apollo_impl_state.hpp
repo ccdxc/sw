@@ -30,35 +30,35 @@ class apollo_impl;
 #define MAX_KEY_NATIVE_TBL_ENTRIES   3
 #define MAX_KEY_TUNNELED_TBL_ENTRIES 3
 
-/// \brief    pipeline global state
+/// \brief pipeline global state
 class apollo_impl_state : public state_base {
 public:
-    // constructor
+    /// \brief constructor
     apollo_impl_state(pds_state *state);
 
-    // destructor
+    /// \brief destructor
     ~apollo_impl_state();
 
-    // accessors
+    /// \brief accessors
     tcam *key_native_tbl(void) { return key_native_tbl_; };
     tcam *key_tunneled_tbl(void) { return key_tunneled_tbl_; };
     tcam *ingress_drop_stats_tbl(void) { return ingress_drop_stats_tbl_; }
     tcam *egress_drop_stats_tbl(void) { return egress_drop_stats_tbl_; }
     tcam *nacl_tbl(void) { return nacl_tbl_; }
 
-    friend class apollo_impl;   // apollo_impl is friend of apollo_impl_state
+    friend class apollo_impl;         ///< friend of apollo_impl_state
 
 private:
-    tcam *key_native_tbl_;          // key table for native packets
-    tcam *key_tunneled_tbl_;        // key table for tunneled packets
-    tcam *ingress_drop_stats_tbl_;  // ingress drop stats table
-    tcam *egress_drop_stats_tbl_;   // egress drop stats table
-    tcam *nacl_tbl_;                // NACL tcam table
+    tcam *key_native_tbl_;            ///< key table for native packets
+    tcam *key_tunneled_tbl_;          ///< key table for tunneled packets
+    tcam *ingress_drop_stats_tbl_;    ///< ingress drop stats table
+    tcam *egress_drop_stats_tbl_;     ///< egress drop stats table
+    tcam *nacl_tbl_;                  ///< NACL tcam table
     uint32_t key_native_tbl_idx_[MAX_KEY_NATIVE_TBL_ENTRIES];
     uint32_t key_tunneled_tbl_idx_[MAX_KEY_TUNNELED_TBL_ENTRIES];
 };
 
-/// \@}    // end of PDS_APOLLO_IMPL_STATE
+/// \@}
 
 }    // namespace impl
 }    // namespace api

@@ -8,19 +8,18 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/impl/apollo/apollo_impl_state.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
-#include "nic/sdk/lib/p4/p4_api.hpp"
 
 namespace api {
 namespace impl {
 
-/// \defgroup PDS_APOLLO_IMPL_STATE - tep database functionality
+/// \defgroup PDS_APOLLO_IMPL_STATE - apollo database functionality
 /// \ingroup PDS_APOLLO
 /// \@{
 
-// constructor
 // TODO: table_health_monitor_cb is passed as NULL everywhere here
 apollo_impl_state::apollo_impl_state(pds_state *state) {
     p4pd_table_properties_t    tinfo;
@@ -66,7 +65,6 @@ apollo_impl_state::apollo_impl_state(pds_state *state) {
      SDK_ASSERT(nacl_tbl_ != NULL);
 }
 
-// destructor
 apollo_impl_state::~apollo_impl_state() {
     tcam::destroy(key_native_tbl_);
     tcam::destroy(key_tunneled_tbl_);
@@ -75,7 +73,7 @@ apollo_impl_state::~apollo_impl_state() {
     tcam::destroy(nacl_tbl_);
 }
 
-/// \@}    // end of PDS_APOLLO_IMPL_STATE
+/// \@}
 
 }    // namespace impl
 }    // namespace api

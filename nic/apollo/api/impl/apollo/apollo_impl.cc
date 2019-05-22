@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    apollo_impl.cc
- *
- * @brief   apollo pipeline implementation
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// apollo pipeline implementation
+///
+//----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/mem.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
@@ -35,15 +37,11 @@ extern sdk_ret_t init_service_lif(const char *cfg_path);
 namespace api {
 namespace impl {
 
-/**
- * @defgroup PDS_PIPELINE_IMPL - pipeline wrapper implementation
- * @ingroup PDS_PIPELINE
- * @{
- */
+/// \defgroup PDS_PIPELINE_IMPL - pipeline wrapper implementation
+/// \ingroup PDS_PIPELINE
+/// @{
 
-/**
- * @brief    helper class to sort p4/p4+ programs to maximize performance
- */
+/// \brief helper class to sort p4/p4+ programs to maximize performance
 class sort_mpu_programs_compare {
 public:
     bool operator() (std::string p1, std::string p2) {
@@ -75,10 +73,6 @@ private:
     std::map <std::string, p4pd_table_properties_t> tbl_map_;
 };
 
-/**
- * @brief    apollo specific mpu program sort function
- * @param[in] program information
- */
 void
 apollo_impl::sort_mpu_programs_(std::vector<std::string>& programs) {
     sort_mpu_programs_compare sort_compare;
@@ -93,10 +87,6 @@ apollo_impl::sort_mpu_programs_(std::vector<std::string>& programs) {
     sort(programs.begin(), programs.end(), sort_compare);
 }
 
-/*
- * @brief    apollo specific rxdma symbols init function
- * @param[in] program information
- */
 uint32_t
 apollo_impl::rxdma_symbols_init_(void **p4plus_symbols,
                                  platform_type_t platform_type)
@@ -118,10 +108,6 @@ apollo_impl::rxdma_symbols_init_(void **p4plus_symbols,
     return i;
 }
 
-/*
- * @brief    apollo specific txdma symbols init function
- * @param[in] program information
- */
 uint32_t
 apollo_impl::txdma_symbols_init_(void **p4plus_symbols,
                                  platform_type_t platform_type)
@@ -143,22 +129,12 @@ apollo_impl::txdma_symbols_init_(void **p4plus_symbols,
     return i;
 }
 
-/**
- * @brief    initialize an instance of apollo impl class
- * @param[in] pipeline_cfg    pipeline information
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 apollo_impl::init_(pipeline_cfg_t *pipeline_cfg) {
     pipeline_cfg_ = *pipeline_cfg;
     return SDK_RET_OK;
 }
 
-/**
- * @brief    factory method to pipeline impl instance
- * @param[in] pipeline_cfg    pipeline information
- * @return    new instance of apollo pipeline impl or NULL, in case of error
- */
 apollo_impl *
 apollo_impl::factory(pipeline_cfg_t *pipeline_cfg) {
     apollo_impl    *impl;
@@ -199,11 +175,6 @@ apollo_impl::destroy(apollo_impl *impl) {
     p4pd_cleanup();
 }
 
-/**
- * @brief    initialize program configuration
- * @param[in] init_params    initialization time parameters passed by app
- * @param[in] asic_cfg       asic configuration to be populated
- */
 void
 apollo_impl::program_config_init(pds_init_params_t *init_params,
                                  asic_cfg_t *asic_cfg) {
@@ -214,11 +185,6 @@ apollo_impl::program_config_init(pds_init_params_t *init_params,
     asic_cfg->pgm_cfg[2].path = std::string("txdma_bin");
 }
 
-/**
- * @brief    initialize asm configuration
- * @param[in] init_params    initialization time parameters passed by app
- * @param[in] asic_cfg       asic configuration to be populated
- */
 void
 apollo_impl::asm_config_init(pds_init_params_t *init_params,
                              asic_cfg_t *asic_cfg) {
@@ -238,10 +204,6 @@ apollo_impl::asm_config_init(pds_init_params_t *init_params,
     asic_cfg->asm_cfg[2].symbols_func = txdma_symbols_init_;
 }
 
-/**
- * @brief    init routine to initialize key native table
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 apollo_impl::key_native_init_(void) {
     sdk_ret_t                  ret;
@@ -310,10 +272,6 @@ apollo_impl::key_native_init_(void) {
     return ret;
 }
 
-/**
- * @brief    init routine to initialize key tunnel table
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 apollo_impl::key_tunneled_init_(void) {
     sdk_ret_t                    ret;
@@ -375,10 +333,6 @@ apollo_impl::key_tunneled_init_(void) {
     return ret;
 }
 
-/**
- * @brief    init routine to initialize ingress to rxdma table
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 apollo_impl::ingress_to_rxdma_init_(void) {
     p4pd_error_t p4pd_ret;
@@ -403,10 +357,6 @@ apollo_impl::ingress_to_rxdma_init_(void) {
     return SDK_RET_OK;
 }
 
-/**
- * @brief    initialize egress drop stats table
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 apollo_impl::egress_drop_stats_init_(void) {
     sdk_ret_t                      ret;
@@ -428,10 +378,6 @@ apollo_impl::egress_drop_stats_init_(void) {
     return ret;
 }
 
-/**
- * @brief    initialize ingress drop stats table
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 apollo_impl::ingress_drop_stats_init_(void) {
     sdk_ret_t                      ret;
@@ -453,10 +399,6 @@ apollo_impl::ingress_drop_stats_init_(void) {
     return ret;
 }
 
-/**
- * @brief    initialize all the stats tables, where needed
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 apollo_impl::stats_init_(void) {
     ingress_drop_stats_init_();
@@ -464,10 +406,6 @@ apollo_impl::stats_init_(void) {
     return SDK_RET_OK;
 }
 
-/**
- * @brief    program all datapath tables that require one time initialization
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 apollo_impl::table_init_(void) {
     sdk_ret_t     ret;
@@ -497,10 +435,6 @@ apollo_impl::table_init_(void) {
     return SDK_RET_OK;
 }
 
-/**
- * @brief    init routine to initialize p4plus tables
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 apollo_impl::p4plus_table_init_(void) {
     p4pd_table_properties_t tbl_ctx_apphdr;
@@ -534,11 +468,6 @@ apollo_impl::p4plus_table_init_(void) {
     return SDK_RET_OK;
 }
 
-
-/**
- * @brief    init routine to initialize the pipeline
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 apollo_impl::pipeline_init(void) {
     p4pd_error_t    p4pd_ret;
@@ -605,18 +534,10 @@ apollo_impl::pipeline_init(void) {
     return SDK_RET_OK;
 }
 
-/**
- * @brief    dump egress drop statistics
- * @param[in] fp       file handle
- */
 void
 apollo_impl::dump_egress_drop_stats_(FILE *fp) {
 }
 
-/**
- * @brief    dump ingress drop statistics
- * @param[in] fp       file handle
- */
 void
 apollo_impl::dump_ingress_drop_stats_(FILE *fp) {
     sdk_ret_t                      ret;
@@ -642,10 +563,6 @@ apollo_impl::dump_ingress_drop_stats_(FILE *fp) {
     fprintf(fp, "\n");
 }
 
-/**
- * @brief    dump all the debug information to given file
- * @param[in] fp    file handle
- */
 void
 apollo_impl::debug_dump(FILE *fp) {
     fprintf(fp, "Ingress drop statistics\n");
@@ -654,14 +571,6 @@ apollo_impl::debug_dump(FILE *fp) {
     dump_egress_drop_stats_(fp);
 }
 
-/**
- * @brief    generic API to write to rxdma tables
- * @param[in]    addr         memory address to write the data to
- * @param[in]    tableid      table id
- * @param[in]    action_id    action id to write
- * @param[in]    action_data  action data to write
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 apollo_impl::write_to_rxdma_table(mem_addr_t addr, uint32_t tableid,
                                   uint8_t action_id, void *actiondata) {
@@ -686,14 +595,6 @@ apollo_impl::write_to_rxdma_table(mem_addr_t addr, uint32_t tableid,
                           ASIC_WRITE_MODE_WRITE_THRU);
 }
 
-/**
- * @brief    generic API to write to txdma tables
- * @param[in]    addr         memory address to write the data to
- * @param[in]    tableid      table id
- * @param[in]    action_id    action id to write
- * @param[in]    action_data  action data to write
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 apollo_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
                                   uint8_t action_id, void *actiondata) {
@@ -718,11 +619,6 @@ apollo_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
                           ASIC_WRITE_MODE_WRITE_THRU);
 }
 
-/**
- * @brief    API to initiate transaction over all the table manamgement
- *           library instances
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 apollo_impl::table_transaction_begin(void) {
     tep_impl_db()->table_transaction_begin();
@@ -733,11 +629,6 @@ apollo_impl::table_transaction_begin(void) {
     return SDK_RET_OK;
 }
 
-/**
- * @brief    API to end transaction over all the table manamgement
- *           library instances
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 apollo_impl::table_transaction_end(void) {
     tep_impl_db()->table_transaction_end();
@@ -748,19 +639,13 @@ apollo_impl::table_transaction_end(void) {
     return SDK_RET_OK;
 }
 
-/**
- * @brief     API to get table stats
- * @param[in]  cb    callback to be called on stats
- *             ctxt    opaque ctxt passed to the callback
- * @return     SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 apollo_impl::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
     mapping_impl_db()->table_stats(cb, ctxt);
     return SDK_RET_OK;
 }
 
-/** @} */    // end of PDS_PIPELINE_IMPL
+/// \@}
 
 }    // namespace impl
 }    // namespace api
