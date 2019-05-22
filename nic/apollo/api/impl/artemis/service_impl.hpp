@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    service_impl.hpp
- *
- * @brief   service mapping implementation in the p4/hw
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// service mapping implementation in the p4/hw
+///
+//----------------------------------------------------------------------------
 
 #ifndef __SVC_MAPPING_IMPL_HPP__
 #define __SVC_MAPPING_IMPL_HPP__

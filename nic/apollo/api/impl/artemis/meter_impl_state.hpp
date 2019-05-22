@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    meter_impl_state.hpp
- *
- * @brief   meter implementation state
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// meter implementation state
+///
+//----------------------------------------------------------------------------
 
 #ifndef __METER_IMPL_STATE_HPP__
 #define __METER_IMPL_STATEHPP__

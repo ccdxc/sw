@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    meter_impl_state.cc
- *
- * @brief   This file contains meter datapath database handling
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// meter datapath database handling
+///
+//----------------------------------------------------------------------------
 
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"

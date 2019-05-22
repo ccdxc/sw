@@ -1,10 +1,13 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    vnic_impl_state.cc
- *
- * @brief   This file contains vnic datapath database handling
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// vnic datapath database handling
+///
+//----------------------------------------------------------------------------
+
 
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/impl/artemis/vnic_impl_state.hpp"

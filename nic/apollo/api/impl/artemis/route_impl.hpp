@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    route_impl.hpp
- *
- * @brief   route table implementation in the p4/hw
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// route table implementation in the p4/hw
+///
+//----------------------------------------------------------------------------
 
 #if !defined (__ROUTE_IMPL_HPP__)
 #define __ROUTE_IMPL_HPP__

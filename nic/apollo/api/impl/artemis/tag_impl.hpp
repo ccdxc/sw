@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    tag_impl.hpp
- *
- * @brief   tag implementation in the p4/hw
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// tag implementation in the p4/hw
+///
+//----------------------------------------------------------------------------
 
 #ifndef __TAG_IMPL_HPP__
 #define __TAG_IMPL_HPP__

@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    vnic_impl_state.hpp
- *
- * @brief   vnic implementation state
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// vnic implementation state
+///
+//----------------------------------------------------------------------------
 
 #ifndef __VNIC_IMPL_STATE_HPP__
 #define __VNIC_IMPL_STATEHPP__

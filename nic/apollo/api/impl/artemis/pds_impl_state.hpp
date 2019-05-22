@@ -1,11 +1,12 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    pds_impl_state.hpp
- *
- * @brief   This file captures all the state maintained in
- *          impl layer
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// captures all the state maintained in impl layer
+///
+//----------------------------------------------------------------------------
 
 #ifndef __PDS_IMPL_STATE_HPP__
 #define __PDS_IMPL_STATE_HPP__

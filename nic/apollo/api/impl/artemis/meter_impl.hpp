@@ -1,10 +1,13 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    meter_impl.hpp
- *
- * @brief   meter implementation in the p4/hw
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// meter implementation in the p4/hw
+///
+//----------------------------------------------------------------------------
+
 #if !defined (__METER_IMPL_HPP__)
 #define __METER_IMPL_HPP__
 

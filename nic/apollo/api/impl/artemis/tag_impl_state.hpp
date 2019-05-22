@@ -1,10 +1,13 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    tag_impl_state.hpp
- *
- * @brief   tag implementation state
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// tag implementation state
+///
+//----------------------------------------------------------------------------
+
 
 #ifndef __TAG_IMPL_STATE_HPP__
 #define __TAG_IMPL_STATEHPP__

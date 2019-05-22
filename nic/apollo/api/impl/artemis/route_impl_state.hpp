@@ -1,10 +1,13 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    route_impl_state.hpp
- *
- * @brief   route table implementation state
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// route table implementation state
+///
+//----------------------------------------------------------------------------
+
 #if !defined (__ROUTE_IMPL_STATE_HPP__)
 #define __ROUTE_IMPL_STATEHPP__
 

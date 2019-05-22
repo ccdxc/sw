@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    route_impl_state.cc
- *
- * @brief   This file contains route table datapath database handling
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// route table datapath databae handling
+///
+//----------------------------------------------------------------------------
 
 #include "nic/apollo/api/include/pds_route.hpp"
 #include "nic/apollo/api/impl/artemis/route_impl_state.hpp"

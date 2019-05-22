@@ -1,10 +1,13 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    artemis_impl.hpp
- *
- * @brief   artemis pipeline implementation
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// artemis pipeline implementation
+///
+//----------------------------------------------------------------------------
+
 #if !defined (__ARTEMIS_IMPL_HPP__)
 #define __ARTEMIS_IMPL_HPP__
 

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019 Pensando Systems, Inc.
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
 ///

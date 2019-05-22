@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    tag_impl_state.cc
- *
- * @brief   This file contains tag datapath database handling
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// tag datapath database handling
+///
+//----------------------------------------------------------------------------
 
 #include "nic/apollo/api/include/pds_route.hpp"
 #include "nic/apollo/api/impl/tag_impl_state.hpp"

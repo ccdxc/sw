@@ -1,10 +1,13 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    device_impl.hpp
- *
- * @brief   device implementation in the p4/hw
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// device implementation in the p4/hw
+///
+//----------------------------------------------------------------------------
+
 #if !defined (__DEVICE_IMPL_HPP__)
 #define __DEVICE_IMPL_HPP__
 

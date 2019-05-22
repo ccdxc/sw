@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    artemis_impl.cc
- *
- * @brief   artemis pipeline implementation
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// artemis pipeline implementation
+///
+//----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/mem.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
