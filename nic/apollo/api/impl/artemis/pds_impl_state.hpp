@@ -35,10 +35,8 @@ enum {
     PDS_SLAB_ID_SVC_MAPPING_IMPL,
 };
 
-/**
- * @defgroup PDS_IMPL_STATE - Internal state
- * @{
- */
+/// \defgroup PDS_IMPL_STATE - Internal state
+/// @{
 
 class pds_impl_state {
 public:
@@ -155,9 +153,9 @@ sv_mapping_impl_db (void)
     return g_pds_impl_state.svc_mapping_impl_db();
 }
 
-/** * @} */    // end of PDS_IMPL_STATE
+/// @}
 
 }    // namespace  impl
 }    // namespace api
 
-#endif    /** __PDS_IMPL_STATE_HPP__ */
+#endif    // __PDS_IMPL_STATE_HPP__

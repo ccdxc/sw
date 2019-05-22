@@ -14,11 +14,8 @@
 namespace api {
 namespace impl {
 
-///< (singleton) instance of all PDS state in one place
+// (singleton) instance of all PDS state in one place
 pds_impl_state g_pds_impl_state;
-
-/// \defgroup PDS_IMPL_STATE - internal state
-/// \@{
 
 sdk_ret_t
 pds_impl_state::init(pds_state *state) {
@@ -65,8 +62,6 @@ pds_impl_state::pds_impl_state() {
 
 pds_impl_state::~pds_impl_state() {
 }
-
-/// \@}    // end of PDS_IMPL_STATE
 
 }    // namespace impl
 }    // namespace api
