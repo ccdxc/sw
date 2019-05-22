@@ -30,9 +30,9 @@ extern sdk_ret_t init_service_lif(const char *cfg_path);
 
 #define MEM_REGION_RXDMA_PROGRAM_NAME "rxdma_program"
 #define MEM_REGION_TXDMA_PROGRAM_NAME "txdma_program"
-#define MEM_REGION_LIF_STATS_BASE   "lif_stats_base"
-#define RXDMA_SYMBOLS_MAX           1
-#define TXDMA_SYMBOLS_MAX           1
+#define MEM_REGION_LIF_STATS_BASE     "lif_stats_base"
+#define RXDMA_SYMBOLS_MAX             1
+#define TXDMA_SYMBOLS_MAX             1
 
 namespace api {
 namespace impl {

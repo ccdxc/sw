@@ -87,7 +87,7 @@ mirror_impl_state::table_transaction_end(void) {
     return SDK_RET_OK;
 }
 
-/// \@}    // end of PDS_MIRROR_IMPL_STATE
+/// \@}
 
 }    // namespace impl
 }    // namespace api

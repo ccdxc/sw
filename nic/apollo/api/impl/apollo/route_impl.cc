@@ -219,7 +219,7 @@ route_table_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     return SDK_RET_OK;
 }
 
-/// \@}    // end of PDS_ROUTE_TABLE_IMPL
+/// \@}
 
 }    // namespace impl
 }    // namespace api

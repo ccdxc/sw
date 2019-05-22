@@ -251,7 +251,7 @@ mirror_impl::read_hw(obj_key_t *key, obj_info_t *info, void *arg) {
     return SDK_RET_OK;
 }
 
-/// \@}    // end of PDS_MIRROR_IMPL
+/// \@}
 
 }    // namespace impl
 }    // namespace api

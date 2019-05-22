@@ -25,55 +25,54 @@ namespace impl {
 // forward declaration
 class mirror_impl;
 
-/// \brief    state maintained for mirror sessions
+/// \brief state maintained for mirror sessions
 class mirror_impl_state : public state_base {
 public:
-    ///< constructor
+    /// \brief constructor
     mirror_impl_state(pds_state *state);
 
-    ///< destructor
+    /// \brief destructor
     ~mirror_impl_state();
 
-    /// \brief      allocate memory required for a mirror session impl instance
-    /// \return     pointer to the allocated instance, NULL if no memory
+    /// \brief  allocate memory required for a mirror session impl instance
+    /// \return pointer to the allocated instance, NULL if no memory
     mirror_impl *alloc(void);
 
-    /// \brief      free mirror session impl instance back to slab
-    /// \param[in]  impl    pointer to the allocated impl instance
+    /// \brief     free mirror session impl instance back to slab
+    /// \param[in] impl pointer to the allocated impl instance
     void free(mirror_impl *impl);
 
     /// \brief      allocate a free entry in the mirror table and return its
     ///             index
-    /// \param[in]   key      pointer to mirror session key
-    /// \param[out]  hw_id    pointer where allocated h/w id needs to be stored
-    /// \return SDK_RET_OK on success, failure status code on error
+    /// \param[in]  key   pointer to mirror session key
+    /// \param[out] hw_id pointer where allocated h/w id needs to be stored
+    /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t alloc_hw_id(pds_mirror_session_key_t *key, uint16_t *hw_id);
 
     /// \brief      free h/w mirror table entry given its index
-    /// \param[in]  hw_id    h/w entry index
-    /// \return SDK_RET_OK on success, failure status code on error
+    /// \param[in]  hw_id h/w entry index
+    /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t free_hw_id(uint16_t hw_id);
 
-    /// \brief     API to initiate transaction over all the table manamgement
-    ///            library instances
-    /// \return    SDK_RET_OK on success, failure status code on error
+    /// \brief  API to initiate transaction over all the table manamgement
+    ///         library instances
+    /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_transaction_begin(void);
 
-    /// \brief     API to end transaction over all the table manamgement
-    ///            library instances
-    /// \return    SDK_RET_OK on success, failure status code on error
+    /// \brief  API to end transaction over all the table manamgement
+    ///         library instances
+    /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_transaction_end(void);
 
 private:
-    // mirror_impl class is friend of mirror_impl_state
-    friend class mirror_impl;
+    friend class mirror_impl;    ///< friend of mirror_impl_state
 
 private:
     uint8_t session_bmap_;
-    slab *mirror_impl_slab_;
+    slab    *mirror_impl_slab_;
 };
 
-///   \@}    // end of PDS_MIRROR_IMPL_STATE
+///   \@}
 
 }    // namespace impl
 }    // namespace api

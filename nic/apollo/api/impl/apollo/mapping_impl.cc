@@ -1075,7 +1075,7 @@ mapping_impl::tep_idx(pds_mapping_key_t *key) {
     return nh_data.action_u.nexthop_nexthop_info.tep_index;
 }
 
-/// \@}    // end of PDS_MAPPING_IMPL
+/// \@}
 
 }    // namespace impl
 }    // namespace api

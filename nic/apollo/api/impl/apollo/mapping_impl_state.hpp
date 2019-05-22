@@ -30,37 +30,37 @@ namespace impl {
 // forward declaration
 class mapping_impl;
 
-///< state maintained for mappings
+/// \brief state maintained for mappings
 class mapping_impl_state : public state_base {
 public:
-    ///< \brief    constructor
+    /// \brief constructor
     mapping_impl_state(pds_state *state);
 
-    ///< \brief    destructor
+    /// \brief destructor
     ~mapping_impl_state();
 
-    /// \brief      allocate memory required for a mapping impl instance
-    /// \return     pointer to the allocated instance, NULL if no memory
+    /// \brief  allocate memory required for a mapping impl instance
+    /// \return pointer to the allocated instance, NULL if no memory
     mapping_impl *alloc(void);
 
-    /// \brief      free mapping impl instance back to slab
-    /// \param[in]  impl    pointer to the allocated impl instance
+    /// \brief     free mapping impl instance back to slab
+    /// \param[in] impl pointer to the allocated impl instance
     void free(mapping_impl *impl);
 
-    /// \brief    API to initiate transaction over all the table manamgement
-    ///           library instances
-    /// \return    SDK_RET_OK on success, failure status code on error
+    /// \brief  API to initiate transaction over all the table manamgement
+    ///         library instances
+    /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_transaction_begin(void);
 
-    /// \brief    API to end transaction over all the table manamgement
-    ///           library instances
-    /// \return    SDK_RET_OK on success, failure status code on error
+    /// \brief  API to end transaction over all the table manamgement
+    ///         library instances
+    /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_transaction_end(void);
 
     /// \brief     API to get table stats
-    /// \param[in]  cb    callback to be called on stats
-    ///             ctxt    opaque ctxt passed to the callback
-    /// \return     SDK_RET_OK on success, failure status code on error
+    /// \param[in] cb   callback to be called on stats
+    /// \param[in] ctxt opaque ctxt passed to the callback
+    /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
 
 private:
@@ -73,15 +73,14 @@ private:
     }
     directmap *nat_tbl(void) { return nat_tbl_; }
     slab *mapping_impl_slab(void) { return mapping_impl_slab_; }
-    // mapping_impl class is friend of mapping_impl_state
-    friend class mapping_impl;
+    friend class mapping_impl;    ///< friend of mapping_impl_state
 
 private:
-    mem_hash *local_ip_mapping_tbl_;
-    mem_hash *remote_vnic_mapping_rx_tbl_;
-    mem_hash *remote_vnic_mapping_tx_tbl_;
+    mem_hash  *local_ip_mapping_tbl_;
+    mem_hash  *remote_vnic_mapping_rx_tbl_;
+    mem_hash  *remote_vnic_mapping_tx_tbl_;
     directmap *nat_tbl_;
-    slab *mapping_impl_slab_;
+    slab      *mapping_impl_slab_;
 };
 
 /// \@}
