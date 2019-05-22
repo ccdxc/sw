@@ -5,9 +5,12 @@ import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.testcases.naples_upgrade.upgradedefs as upgradedefs
 import iota.test.iris.testcases.naples_upgrade.common as common
+import iota.test.iris.testcases.naples_upgrade.ping as ping
 
 def Setup(tc):
     tc.Nodes = api.GetNaplesHostnames()
+    if ping.TestPing(tc, 'local_only', 'ipv4', 64) != api.types.status.SUCCESS or ping.TestPing(tc, 'remote_only', 'ipv4', 64) != api.types.status.SUCCESS:
+        api.Logger.info("ping test failed on setup")
     if not tc.iterators.option:
         return api.types.status.SUCCESS
     for n in tc.Nodes:
@@ -45,6 +48,9 @@ def Verify(tc):
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0:
             return api.types.status.FAILURE
+        if ping.TestPing(tc, 'local_only', 'ipv4', 64) != api.types.status.SUCCESS or ping.TestPing(tc, 'remote_only', 'ipv4', 64) != api.types.status.SUCCESS:
+            api.Logger.info("ping test failed")
+            #return api.types.status.FAILURE
         return api.types.status.SUCCESS
         resp = json.loads(cmd.stdout)
         for item in resp['Status']['status']:
@@ -58,8 +64,9 @@ def Verify(tc):
                 if tc.iterators.option not in item['Message']:
                     print("message is bad")
                     return api.types.status.FAILURE
-
-    return api.types.status.SUCCESS
+        if ping.TestPing('local_only', 'ipv4', 64) != api.types.status.SUCCESS or ping.TestPing('remote_only', 'ipv4', 64) != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+        return api.types.status.SUCCESS
 
 def Teardown(tc):
     for n in tc.Nodes:
