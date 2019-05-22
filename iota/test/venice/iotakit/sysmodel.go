@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"math/rand"
@@ -237,7 +238,7 @@ func (sm *SysModel) SetupDefaultConfig(scale, scaleData bool) error {
 			for _, gwrk := range getResp.Workloads {
 				if gwrk.WorkloadName == wrk.iotaWorkload.WorkloadName {
 					wrk.iotaWorkload.MgmtIp = gwrk.MgmtIp
-                                        wrk.iotaWorkload.Interface = gwrk.GetInterface()
+					wrk.iotaWorkload.Interface = gwrk.GetInterface()
 					found = true
 				}
 			}
@@ -590,5 +591,35 @@ func (sm *SysModel) createDefaultAlgs() error {
 		return fmt.Errorf("Error creating DNS app. Err: %v", err)
 	}
 
+	return nil
+}
+
+// AddNaplesNode node on the fly
+func (sm *SysModel) AddNaplesNode(name string) error {
+	//First add to testbed.
+	node, err := sm.tb.AddNode(iota.PersonalityType_PERSONALITY_NAPLES, name)
+	if err != nil {
+		return err
+	}
+
+	return sm.createNaples(node)
+}
+
+// DeleteNaplesNode node on the fly
+func (sm *SysModel) DeleteNaplesNode(name string) error {
+	//First add to testbed.
+
+	naples, ok := sm.naples[name]
+
+	if !ok {
+		return errors.New("naples not found to delete")
+	}
+
+	err := sm.tb.DeleteNode(naples.testNode)
+	if err != nil {
+		return err
+	}
+
+	delete(sm.naples, name)
 	return nil
 }

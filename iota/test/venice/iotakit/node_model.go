@@ -203,6 +203,7 @@ func (sm *SysModel) createNaples(node *TestNode) error {
 		sm:       sm,
 	}
 
+	log.Infof("Adding naples %v to model", node.NodeName)
 	sm.naples[node.NodeName] = &naples
 
 	return nil

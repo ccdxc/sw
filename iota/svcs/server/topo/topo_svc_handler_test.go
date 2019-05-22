@@ -68,7 +68,7 @@ func TestMain(m *testing.M) {
 	// Ensure the service is up
 	time.Sleep(time.Second * 2)
 
-	c, err := common.CreateNewGRPCClient("topo-test-client", topoServerURL)
+	c, err := common.CreateNewGRPCClient("topo-test-client", topoServerURL, 0)
 	if err != nil {
 		fmt.Println("Could not create a GRPC Client to the IOTA Server")
 		os.Exit(1)

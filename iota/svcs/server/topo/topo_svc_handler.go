@@ -286,6 +286,70 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	return ts.TestBedInfo, nil
 }
 
+func (ts *TopologyService) initTestNodes(ctx context.Context, cfg *ssh.ClientConfig, nodes []*iota.TestBedNode) error {
+	pool, ctx := errgroup.WithContext(ctx)
+
+	for _, node := range nodes {
+		n := testbed.TestNode{
+			Node: &iota.Node{
+				IpAddress: node.IpAddress,
+				EsxConfig: &iota.VmwareESXConfig{
+					IpAddress: node.IpAddress,
+					Username:  node.EsxUsername,
+					Password:  node.EsxPassword,
+				},
+			},
+			Os:     node.GetOs(),
+			SSHCfg: ts.SSHConfig,
+		}
+
+		ts.Nodes = append(ts.Nodes, &n)
+		commonCopyArtifacts := []string{
+			ts.TestBedInfo.VeniceImage,
+			ts.TestBedInfo.NaplesImage,
+		}
+
+		pool.Go(func() error {
+			n := n
+			return n.InitNode(ts.SSHConfig, common.DstIotaAgentDir, commonCopyArtifacts)
+		})
+	}
+	if err := pool.Wait(); err != nil {
+		return err
+	}
+
+	for _, node := range nodes {
+		if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+			node.EsxCtrlNodeIpAddress = node.IpAddress
+		}
+	}
+	return nil
+}
+
+func (ts *TopologyService) cleanUpTestNodes(ctx context.Context, cfg *ssh.ClientConfig, nodes []*iota.TestBedNode) error {
+	pool, ctx := errgroup.WithContext(ctx)
+
+	for _, node := range nodes {
+		n := testbed.TestNode{
+			Node: &iota.Node{
+				IpAddress: node.IpAddress,
+				EsxConfig: &iota.VmwareESXConfig{
+					IpAddress: node.IpAddress,
+					Username:  node.EsxUsername,
+					Password:  node.EsxPassword,
+				},
+			},
+			Os: node.GetOs(),
+		}
+
+		pool.Go(func() error {
+			n := n
+			return n.CleanUpNode(cfg)
+		})
+	}
+	return pool.Wait()
+}
+
 // CleanUpTestBed cleans up a testbed
 func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | CleanUpTestBed. Received Request Msg: %v", req)
@@ -299,40 +363,80 @@ func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBed
 	//ts.TestBedInfo.Username = req.Username
 	//ts.TestBedInfo.Password = req.Password
 
-	ts.SSHConfig = testbed.InitSSHConfig(req.Username, req.Password)
-	// Run clean up
-	cleanupTestBed := func(ctx context.Context) error {
-		pool, ctx := errgroup.WithContext(ctx)
+	err := ts.cleanUpTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.GetNodes())
 
-		for _, node := range req.Nodes {
-			n := testbed.TestNode{
-				Node: &iota.Node{
-					IpAddress: node.IpAddress,
-					EsxConfig: &iota.VmwareESXConfig{
-						IpAddress: node.IpAddress,
-						Username:  node.EsxUsername,
-						Password:  node.EsxPassword,
-					},
-				},
-				Os: node.GetOs(),
-			}
-
-			pool.Go(func() error {
-				n := n
-				return n.CleanUpNode(ts.SSHConfig)
-			})
-		}
-		return pool.Wait()
-	}
-	err := cleanupTestBed(context.Background())
 	if err != nil {
-		log.Errorf("TOPO SVC | CleanupTestBed | Cleanup Test Bed Call Failed. %v", err)
+		log.Errorf("TOPO SVC | InitNodes | cleanup Node Call Failed. %v", err)
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
-		req.ApiResponse.ErrorMsg = fmt.Sprintf("Topo SVC CleanupTestBed | Clean up Test Bed Call Failed. %s", err.Error())
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("Topo SVC InitNodes | InitNodes Call Failed. %s", err.Error())
 		return req, nil
 	}
 
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
+}
+
+// InitNodes initializes list of nodes
+func (ts *TopologyService) InitNodes(ctx context.Context, req *iota.TestNodesMsg) (*iota.TestNodesMsg, error) {
+
+	err := ts.cleanUpTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.GetNodes())
+
+	if err != nil {
+		log.Errorf("TOPO SVC | InitNodes | cleanup Node Call Failed. %v", err)
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("Topo SVC InitNodes | InitNodes Call Failed. %s", err.Error())
+		return req, nil
+	}
+
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+
+	err = ts.initTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.GetNodes())
+	if err != nil {
+		log.Errorf("TOPO SVC | InitNodes | initnode Call Failed. %v", err)
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("Topo SVC InitNodes | InitNodes Call Failed. %s", err.Error())
+		return req, nil
+	}
+
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
+}
+
+// CleanNodes cleans up list of nodes and removes association
+func (ts *TopologyService) CleanNodes(ctx context.Context, req *iota.TestNodesMsg) (*iota.TestNodesMsg, error) {
+
+	err := ts.cleanUpTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.GetNodes())
+
+	if err != nil {
+		log.Errorf("TOPO SVC | InitNodes | cleanup Node Call Failed. %v", err)
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("Topo SVC InitNodes | InitNodes Call Failed. %s", err.Error())
+		return req, nil
+	}
+
+	nodes := []*testbed.TestNode{}
+
+	for _, node := range ts.Nodes {
+		nodeRemove := false
+		for _, n := range req.Nodes {
+			if node.Node.GetName() == n.GetNodeName() {
+				nodeRemove = true
+				_, ok := ts.ProvisionedNodes[n.GetNodeName()]
+				if ok {
+					delete(ts.ProvisionedNodes, n.GetNodeName())
+				}
+				break
+			}
+		}
+		if !nodeRemove {
+			nodes = append(nodes, node)
+		}
+	}
+
+	ts.Nodes = nodes
+
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+
 	return req, nil
 }
 

@@ -14,7 +14,7 @@ very expressive query language to iterate over the model and perform operations
 on them.
 
 ## Contents
- 
+
 1. [SysMode](#SysModel)
 2. [Actions](#Actions)
 3. [Collections](#Collections)
@@ -107,6 +107,19 @@ WorkloadPairs creates full mesh of workload pairs
     func (sm *SysModel) Workloads() *WorkloadCollection
 
 Workloads returns all workloads in the model
+
+
+#### func (*SysModel) AddNaplesNode
+
+    func (sm *SysModel) AddNaplesNode(name string) *error
+
+AddNaples will add naples node and changes to network managed mode.
+
+#### func (*SysModel) DeleteNaplesNode
+
+    func (sm *SysModel) DeleteNaplesNode(name string) *error
+
+DeleteNaplesNode will delete naples node and changes to self managed mode.
 
 ## Actions
 
@@ -681,5 +694,3 @@ VeniceRestClient returns the REST client for venice
     func (tb *TestBed) WaitForVeniceClusterUp() error
 
 WaitForVeniceClusterUp wait for venice cluster to come up
-
-

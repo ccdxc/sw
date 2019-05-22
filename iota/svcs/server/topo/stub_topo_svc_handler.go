@@ -41,6 +41,16 @@ func (ts *StubTopologyService) CleanUpTestBed(ctx context.Context, req *iota.Tes
 	return req, nil
 }
 
+// InitNodes initializes test nodes
+func (ts *StubTopologyService) InitNodes(ctx context.Context, req *iota.TestNodesMsg) (*iota.TestNodesMsg, error) {
+	return nil, nil
+}
+
+// CleanNodes cleans up list of nodes and removes association
+func (ts *StubTopologyService) CleanNodes(ctx context.Context, req *iota.TestNodesMsg) (*iota.TestNodesMsg, error) {
+	return nil, nil
+}
+
 // AddNodes adds nodes to the topology
 func (ts *StubTopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | AddNodes. Received Request Msg: %v", req)

@@ -25,6 +25,12 @@ service TopologyApi {
     // CleanUpTestBed will ensure that any state left behind from the previous run is appropriately cleaned up.
     rpc CleanUpTestBed(TestBedMsg) returns (TestBedMsg) {};
 
+    // InitNodes initialize the list of nodes specified which might be added on the fly
+    rpc InitNodes (TestNodesMsg) returns (TestNodesMsg) {};
+
+    // CleanNodes removes the nodes from the topology on the fly
+    rpc CleanNodes (TestNodesMsg) returns (TestNodesMsg) {};
+
     // AddNodes brings up the nodes with their corresponding personalities
     rpc AddNodes (NodeMsg) returns (NodeMsg) {};
 
@@ -493,6 +499,21 @@ message TestBedMsg {
     // DataSwitch
     repeated DataSwitch data_switches   = 10;
 }
+
+message TestNodesMsg {
+    // API Response
+    IotaAPIResponse api_response        = 1;
+
+    // List of node IP addresses
+    repeated TestBedNode nodes          = 2;
+
+    // Node username
+    string username                     = 3;
+
+    // Node password
+    string password                     = 4;
+}
+
 
 enum TestBedNodeType {
     TESTBED_NODE_TYPE_NONE  = 0;

@@ -93,6 +93,16 @@ func (ms *mockIotaServer) CleanUpTestBed(ctx context.Context, req *iota.TestBedM
 	return req, nil
 }
 
+// InitNodes initializes test nodes
+func (ms *mockIotaServer) InitNodes(ctx context.Context, req *iota.TestNodesMsg) (*iota.TestNodesMsg, error) {
+	return nil, nil
+}
+
+// CleanNodes cleans up list of nodes and removes association
+func (ms *mockIotaServer) CleanNodes(ctx context.Context, req *iota.TestNodesMsg) (*iota.TestNodesMsg, error) {
+	return nil, nil
+}
+
 func (ms *mockIotaServer) AddNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
 	log.Debugf("AddNodes(): Received Request Msg: %v", req)
 

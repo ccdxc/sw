@@ -5,11 +5,14 @@ package iotakit
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -286,100 +289,91 @@ func (tb *TestBed) getAvailableInstance(instType iota.TestBedNodeType) *Instance
 	return nil
 }
 
-// initNodeState merges topology and testbed params to create node state
-func (tb *TestBed) initNodeState() error {
-	// add all instances to unallocated list
-	for i := 0; i < len(tb.Params.Instances); i++ {
-		pinst := &tb.Params.Instances[i]
-		pinst.idx = i
-		tb.unallocatedInstances = append(tb.unallocatedInstances, pinst)
+func (tb *TestBed) addAvailableInstance(instance *InstanceParams) error {
+	for _, inst := range tb.unallocatedInstances {
+		if inst.ID == instance.ID {
+			return nil
+		}
 	}
 
-	// setup all nodes
-	for i := 0; i < len(tb.Nodes); i++ {
-		tnode := &tb.Topo.Nodes[i]
-		pinst := tb.getAvailableInstance(tnode.Type)
+	tb.unallocatedInstances = append(tb.unallocatedInstances, instance)
+	return nil
+}
 
-		// setup node state
-		node := TestNode{
-			NodeName:    tnode.NodeName,
-			Type:        tnode.Type,
-			Personality: tnode.Personality,
-			NodeMgmtIP:  pinst.NodeMgmtIP,
-			instParams:  pinst,
-			topoNode:    tnode,
-		}
+func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality iota.PersonalityType, node *TestNode) error {
 
-		// check if testbed node can take this personality
-		switch tnode.Type {
-		case iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM:
-			switch tnode.Personality {
-			case iota.PersonalityType_PERSONALITY_NAPLES_SIM:
-				if pinst.Type != "vm" {
-					log.Errorf("Incompatible testbed node %v for personality %v/%v", pinst.Type, tnode.Type, tnode.Personality)
-					return fmt.Errorf("Incompatible testbed node")
-				}
-
-				tb.hasNaplesSim = true
-				node.NaplesConfig = iota.NaplesConfig{
-					ControlIntf:     "eth1",
-					ControlIp:       fmt.Sprintf("172.16.100.%d", i+1),
-					DataIntfs:       []string{"eth2", "eth3"},
-					NaplesIpAddress: "169.254.0.1",
-					NaplesUsername:  "root",
-					NaplesPassword:  "pen123",
-					NicType:         "pensando-sim",
-				}
-			case iota.PersonalityType_PERSONALITY_VENICE:
-				if pinst.Type != "vm" {
-					log.Errorf("Incompatible testbed node %v for personality %v/%v", pinst.Type, tnode.Type, tnode.Personality)
-					return fmt.Errorf("Incompatible testbed node")
-				}
-
-				node.VeniceConfig = iota.VeniceConfig{
-					ControlIntf: "eth1",
-					ControlIp:   fmt.Sprintf("172.16.100.%d", i+1),
-					VenicePeers: []*iota.VenicePeer{},
-				}
-			default:
-				return fmt.Errorf("unsupported node personality %v", tnode.Personality)
+	// check if testbed node can take this personality
+	switch nodeType {
+	case iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM:
+		switch personality {
+		case iota.PersonalityType_PERSONALITY_NAPLES_SIM:
+			if node.instParams.Type != "vm" {
+				log.Errorf("Incompatible testbed node %v for personality %v/%v", nodeType, personality, personality)
+				return fmt.Errorf("Incompatible testbed node")
 			}
-		case iota.TestBedNodeType_TESTBED_NODE_TYPE_HW:
-			switch tnode.Personality {
-			case iota.PersonalityType_PERSONALITY_NAPLES:
-				if pinst.Type != "bm" {
-					log.Errorf("Incompatible testbed node %v for personality %v/%v", pinst.Type, tnode.Type, tnode.Personality)
-					return fmt.Errorf("Incompatible testbed node")
-				}
-				tb.hasNaplesHW = true
-				// we need Esx credentials if this is running esx
-				if tnode.HostOS == "esx" {
-					_, uok := tb.Params.Provision.Vars["EsxUsername"]
-					_, pok := tb.Params.Provision.Vars["EsxPassword"]
-					if !uok || !pok {
-						log.Errorf("Esx login credentials are not provided in testbed params. %+v", tb.Params.Provision)
-						return fmt.Errorf("Esx login credentials are not provided")
-					}
-				}
 
-				node.NaplesConfig = iota.NaplesConfig{
-					ControlIntf:     "eth1",
-					ControlIp:       fmt.Sprintf("172.16.100.%d", i+1),
-					DataIntfs:       []string{"eth2", "eth3"},
-					NaplesIpAddress: "169.254.0.1",
-					NaplesUsername:  "root",
-					NaplesPassword:  "pen123",
-					NicType:         "naples",
-				}
-			default:
-				return fmt.Errorf("unsupported node personality %v for Type: %v", tnode.Personality, pinst.Type)
+			tb.hasNaplesSim = true
+			node.NaplesConfig = iota.NaplesConfig{
+				ControlIntf:     "eth1",
+				ControlIp:       fmt.Sprintf("172.16.100.%d", len(tb.Nodes)+1), //FIXME
+				DataIntfs:       []string{"eth2", "eth3"},
+				NaplesIpAddress: "169.254.0.1",
+				NaplesUsername:  "root",
+				NaplesPassword:  "pen123",
+				NicType:         "pensando-sim",
+			}
+		case iota.PersonalityType_PERSONALITY_VENICE:
+			if node.instParams.Type != "vm" {
+				log.Errorf("Incompatible testbed node %v for personality %v/%v", node.instParams.Type, nodeType, personality)
+				return fmt.Errorf("Incompatible testbed node")
+			}
+
+			node.VeniceConfig = iota.VeniceConfig{
+				ControlIntf: "eth1",
+				ControlIp:   fmt.Sprintf("172.16.100.%d", len(tb.Nodes)+1), //FIXME
+				VenicePeers: []*iota.VenicePeer{},
 			}
 		default:
-			return fmt.Errorf("invalid testbed node type %v", tnode.Type)
+			return fmt.Errorf("unsupported node personality %v", personality)
 		}
+	case iota.TestBedNodeType_TESTBED_NODE_TYPE_HW:
+		switch personality {
+		case iota.PersonalityType_PERSONALITY_NAPLES:
+			if node.instParams.Type != "bm" {
+				log.Errorf("Incompatible testbed node %v for personality %v/%v", node.instParams.Type, nodeType, personality)
+				return fmt.Errorf("Incompatible testbed node")
+			}
+			tb.hasNaplesHW = true
+			// we need Esx credentials if this is running esx
+			if node.topoNode.HostOS == "esx" {
+				_, uok := tb.Params.Provision.Vars["EsxUsername"]
+				_, pok := tb.Params.Provision.Vars["EsxPassword"]
+				if !uok || !pok {
+					log.Errorf("Esx login credentials are not provided in testbed params. %+v", tb.Params.Provision)
+					return fmt.Errorf("Esx login credentials are not provided")
+				}
+			}
 
-		tb.Nodes[i] = &node
+			node.NaplesConfig = iota.NaplesConfig{
+				ControlIntf:     "eth1",
+				ControlIp:       fmt.Sprintf("172.16.100.%d", len(tb.Nodes)+1), //FIXME
+				DataIntfs:       []string{"eth2", "eth3"},
+				NaplesIpAddress: "169.254.0.1",
+				NaplesUsername:  "root",
+				NaplesPassword:  "pen123",
+				NicType:         "naples",
+			}
+		default:
+			return fmt.Errorf("unsupported node personality %v for Type: %v", personality, node.instParams.Type)
+		}
+	default:
+		return fmt.Errorf("invalid testbed node type %v", nodeType)
 	}
+
+	return nil
+}
+
+func (tb *TestBed) setupVeniceIPs(node *TestNode) error {
 
 	// setup venice ips
 	for _, node := range tb.Nodes {
@@ -425,7 +419,256 @@ func (tb *TestBed) initNodeState() error {
 				}
 			}
 		}
+	}
+	return nil
+}
 
+func (tb *TestBed) setupNode(node *TestNode) error {
+
+	client := iota.NewTopologyApiClient(tb.iotaClient.Client)
+	tbn := iota.TestBedNode{
+		Type:                node.Type,
+		IpAddress:           node.NodeMgmtIP,
+		NicConsoleIpAddress: node.instParams.NicConsoleIP,
+		NicConsolePort:      node.instParams.NicConsolePort,
+		NicIpAddress:        node.instParams.NicMgmtIP,
+		CimcIpAddress:       node.instParams.NodeCimcIP,
+		NicUuid:             node.instParams.Resource.NICUuid,
+		NodeName:            node.NodeName,
+	}
+	// set esx user name when required
+	if node.topoNode.HostOS == "esx" {
+		tbn.EsxUsername = tb.Params.Provision.Vars["EsxUsername"]
+		tbn.EsxPassword = tb.Params.Provision.Vars["EsxPassword"]
+		tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_ESX
+	} else if node.topoNode.HostOS == "freebsd" {
+		tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_FREEBSD
+	} else {
+		tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_LINUX
+	}
+
+	initNodeMsg := &iota.TestNodesMsg{
+		Username:    tb.Params.Provision.Username,
+		Password:    tb.Params.Provision.Password,
+		ApiResponse: &iota.IotaAPIResponse{},
+		Nodes:       []*iota.TestBedNode{&tbn},
+	}
+
+	resp, err := client.InitNodes(context.Background(), initNodeMsg)
+	if err != nil {
+		log.Errorf("Error initing nodes:  Err %v", err)
+		return fmt.Errorf("Error while adding nodes in testbed")
+	} else if resp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		log.Errorf("Error initing nodes: ApiResp: %+v. ", resp.ApiResponse)
+		return fmt.Errorf("Error while initing nodes in testbed")
+	}
+
+	return nil
+}
+
+//DeleteNode add node dynamically
+func (tb *TestBed) DeleteNode(node *TestNode) error {
+
+	client := iota.NewTopologyApiClient(tb.iotaClient.Client)
+	cnt := 0
+	for i := 0; i < len(tb.Nodes); i++ {
+		n := tb.Nodes[i]
+		if node.NodeName != n.NodeName {
+			tb.Nodes[cnt] = n
+			cnt++
+		}
+	}
+
+	if cnt == len(tb.Nodes) {
+		log.Errorf("Node not presnt to delete:  Err %v", node.NodeName)
+		return fmt.Errorf("Node not presnt to delete:  Err %v", node.NodeName)
+	}
+
+	tb.Nodes = tb.Nodes[:cnt]
+
+	// move naples to managed mode
+	err := tb.cleanUpNaplesConfig([]*TestNode{node})
+	if err != nil {
+		log.Errorf("clean up naples failed. Err: %v", err)
+		return err
+	}
+
+	tb.addAvailableInstance(node.instParams)
+
+	tbn := iota.TestBedNode{
+		Type:                node.Type,
+		IpAddress:           node.NodeMgmtIP,
+		NicConsoleIpAddress: node.instParams.NicConsoleIP,
+		NicConsolePort:      node.instParams.NicConsolePort,
+		NicIpAddress:        node.instParams.NicMgmtIP,
+		CimcIpAddress:       node.instParams.NodeCimcIP,
+		NicUuid:             node.instParams.Resource.NICUuid,
+		NodeName:            node.NodeName,
+	}
+	// set esx user name when required
+	if node.topoNode.HostOS == "esx" {
+		tbn.EsxUsername = tb.Params.Provision.Vars["EsxUsername"]
+		tbn.EsxPassword = tb.Params.Provision.Vars["EsxPassword"]
+		tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_ESX
+	} else if node.topoNode.HostOS == "freebsd" {
+		tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_FREEBSD
+	} else {
+		tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_LINUX
+	}
+	cleanNodeMsg := &iota.TestNodesMsg{
+		Username:    tb.Params.Provision.Username,
+		Password:    tb.Params.Provision.Password,
+		ApiResponse: &iota.IotaAPIResponse{},
+		Nodes:       []*iota.TestBedNode{&tbn},
+	}
+
+	resp, err := client.CleanNodes(context.Background(), cleanNodeMsg)
+	if err != nil {
+		log.Errorf("Error cleaning up nodes:  Err %v", err)
+		return fmt.Errorf("Error while removing nodes in testbed")
+	} else if resp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		log.Errorf("Error removing nodes: ApiResp: %+v. ", resp.ApiResponse)
+		return fmt.Errorf("Error while removing nodes in testbed")
+	}
+
+	return nil
+}
+
+//AddNode add node dynamically
+func (tb *TestBed) AddNode(personality iota.PersonalityType, name string) (*TestNode, error) {
+
+	for i := 0; i < len(tb.Nodes); i++ {
+		node := tb.Nodes[i]
+		if node.NodeName == name {
+			msg := fmt.Sprintf("Node name %v already present", name)
+			return nil, errors.New(msg)
+		}
+	}
+
+	client := iota.NewTopologyApiClient(tb.iotaClient.Client)
+
+	nodeType := iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM
+	if personality == iota.PersonalityType_PERSONALITY_NAPLES {
+		nodeType = iota.TestBedNodeType_TESTBED_NODE_TYPE_HW
+	}
+	pinst := tb.getAvailableInstance(nodeType)
+	// setup node state
+	node := &TestNode{
+		NodeName:    name,
+		Type:        nodeType,
+		Personality: personality,
+		NodeMgmtIP:  pinst.NodeMgmtIP,
+		instParams:  pinst,
+		topoNode: &TopoNode{NodeName: name,
+			Personality: personality,
+			HostOS:      tb.Params.Provision.Vars["BmOs"],
+			Type:        nodeType},
+	}
+
+	if err := tb.preapareNodeParams(nodeType, personality, node); err != nil {
+		return nil, err
+	}
+
+	if err := tb.setupNode(node); err != nil {
+		return nil, err
+	}
+
+	tb.Nodes = append(tb.Nodes, node)
+
+	if err := tb.setupVeniceIPs(node); err != nil {
+		return nil, err
+	}
+	// Build Topology Object after parsing warmd.json
+	nodes := &iota.NodeMsg{
+		NodeOp:      iota.Op_ADD,
+		ApiResponse: &iota.IotaAPIResponse{},
+		Nodes:       []*iota.Node{},
+		MakeCluster: true,
+	}
+
+	iotaNode := tb.getIotaNode(node)
+
+	nodes.Nodes = append(nodes.Nodes, iotaNode)
+	log.Infof("Adding nodes to the testbed...")
+	log.Debugf("Adding nodes: %+v", nodes)
+	addNodeResp, err := client.AddNodes(context.Background(), nodes)
+	if err != nil {
+		log.Errorf("Error adding nodes:  Err %v", err)
+		return nil, fmt.Errorf("Error while adding nodes to testbed")
+	} else if addNodeResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		log.Errorf("Error adding nodes: ApiResp: %+v. ", addNodeResp.ApiResponse)
+		return nil, fmt.Errorf("Error while adding nodes to testbed")
+	}
+
+	// save node uuid
+	node.NodeUUID = addNodeResp.Nodes[0].NodeUuid
+	node.iotaNode = addNodeResp.Nodes[0]
+
+	// move naples to managed mode
+	err = tb.setupNaplesMode([]*TestNode{node})
+	if err != nil {
+		log.Errorf("Setting up naples failed. Err: %v", err)
+		return nil, err
+	}
+
+	return node, nil
+}
+
+// initNodeState merges topology and testbed params to create node state
+func (tb *TestBed) initNodeState() error {
+	// add all instances to unallocated list
+	for i := 0; i < len(tb.Params.Instances); i++ {
+		pinst := &tb.Params.Instances[i]
+		pinst.idx = i
+		tb.unallocatedInstances = append(tb.unallocatedInstances, pinst)
+	}
+
+	naplesInst := os.Getenv("NAPLES_INSTANCES")
+	bringUpNaples := math.MaxInt32
+	if naplesInst != "" {
+		naplesInst, err := strconv.Atoi(naplesInst)
+		if err != nil || naplesInst < 0 {
+			log.Debugf("Invalid number if naples Instances")
+		}
+		bringUpNaples = naplesInst
+	}
+
+	log.Infof("Bringing up naples instances %v\n", bringUpNaples)
+	// setup all nodes
+	count := 0
+	for i := 0; i < len(tb.Nodes); i++ {
+		tnode := &tb.Topo.Nodes[i]
+		if tnode.Personality == iota.PersonalityType_PERSONALITY_NAPLES ||
+			tnode.Personality == iota.PersonalityType_PERSONALITY_NAPLES_SIM {
+			if bringUpNaples <= 0 {
+				continue
+			}
+			bringUpNaples = bringUpNaples - 1
+		}
+
+		pinst := tb.getAvailableInstance(tnode.Type)
+
+		// setup node state
+		node := TestNode{
+			NodeName:    tnode.NodeName,
+			Type:        tnode.Type,
+			Personality: tnode.Personality,
+			NodeMgmtIP:  pinst.NodeMgmtIP,
+			instParams:  pinst,
+			topoNode:    tnode,
+		}
+
+		if err := tb.preapareNodeParams(tnode.Type, tnode.Personality, &node); err != nil {
+			return err
+		}
+
+		tb.Nodes[count] = &node
+		count++
+	}
+
+	tb.Nodes = tb.Nodes[:count]
+	for _, node := range tb.Nodes {
+		tb.setupVeniceIPs(node)
 		log.Debugf("Testbed Node: %+v", node)
 	}
 
@@ -546,6 +789,63 @@ func (tb *TestBed) connectToIotaServer() error {
 	tb.iotaClient = iotc
 
 	return nil
+}
+
+func (tb *TestBed) getIotaNode(node *TestNode) *iota.Node {
+
+	tbn := iota.Node{
+		Name:      node.NodeName,
+		Type:      node.Personality,
+		IpAddress: node.NodeMgmtIP,
+	}
+
+	// set esx user name when required
+	if node.topoNode.HostOS == "esx" {
+		tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_ESX
+		tbn.EsxConfig = &iota.VmwareESXConfig{
+			Username:  tb.Params.Provision.Vars["EsxUsername"],
+			Password:  tb.Params.Provision.Vars["EsxPassword"],
+			IpAddress: node.NodeMgmtIP,
+		}
+	} else if node.topoNode.HostOS == "freebsd" {
+		tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_FREEBSD
+	} else {
+		tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_LINUX
+	}
+
+	switch node.Personality {
+	case iota.PersonalityType_PERSONALITY_NAPLES:
+		tbn.StartupScript = "/naples/nodeinit.sh"
+		fallthrough
+	case iota.PersonalityType_PERSONALITY_NAPLES_SIM:
+		tbn.Image = filepath.Base(tb.Topo.NaplesImage)
+		tbn.NodeInfo = &iota.Node_NaplesConfig{
+			NaplesConfig: &node.NaplesConfig,
+		}
+		tbn.Entities = []*iota.Entity{
+			{
+				Type: iota.EntityType_ENTITY_TYPE_HOST,
+				Name: node.NodeName + "_host",
+			},
+			{
+				Type: iota.EntityType_ENTITY_TYPE_NAPLES,
+				Name: node.NodeName + "_naples",
+			},
+		}
+	case iota.PersonalityType_PERSONALITY_VENICE:
+		tbn.Image = filepath.Base(tb.Topo.VeniceImage)
+		tbn.NodeInfo = &iota.Node_VeniceConfig{
+			VeniceConfig: &node.VeniceConfig,
+		}
+		tbn.Entities = []*iota.Entity{
+			{
+				Type: iota.EntityType_ENTITY_TYPE_HOST,
+				Name: node.NodeName + "_venice",
+			},
+		}
+	}
+
+	return &tbn
 }
 
 // setupTestBed sets up testbed
@@ -734,6 +1034,7 @@ func (tb *TestBed) setupTestBed() error {
 		tb.addNodeResp = addNodeResp
 
 	} else {
+		log.Infof("Skipping setup of the testbed...")
 		getNodeResp, err := client.GetNodes(context.Background(), nodes)
 		if err != nil {
 			log.Errorf("Error getting nodes: ApiResp: %+v. Err %v", getNodeResp.ApiResponse, err)
@@ -745,19 +1046,31 @@ func (tb *TestBed) setupTestBed() error {
 	}
 
 	// save node uuid
-	for _, nr := range tb.addNodeResp.Nodes {
-		for i := 0; i < len(tb.Nodes); i++ {
-			node := tb.Nodes[i]
+	addedNodes := []*TestNode{}
+	for i := 0; i < len(tb.Nodes); i++ {
+		nodeAdded := false
+		node := tb.Nodes[i]
+		for _, nr := range tb.addNodeResp.Nodes {
 			if node.NodeName == nr.Name {
+				log.Infof("Adding node %v as not used", node.topoNode.NodeName)
 				node.NodeUUID = nr.NodeUuid
 				node.iotaNode = nr
+				nodeAdded = true
+				addedNodes = append(addedNodes, node)
 			}
+		}
+		//Probably node not added, release the instance
+		if !nodeAdded {
+			log.Infof("Releasing node %v as not used", node.topoNode.NodeName)
+			tb.addAvailableInstance(node.instParams)
 		}
 	}
 
+	tb.Nodes = addedNodes
+
 	if !tb.skipSetup {
 		// move naples to managed mode
-		err := tb.setupNaplesMode()
+		err := tb.setupNaplesMode(tb.Nodes)
 		if err != nil {
 			log.Errorf("Setting up naples failed. Err: %v", err)
 			return err
@@ -768,11 +1081,11 @@ func (tb *TestBed) setupTestBed() error {
 }
 
 // setupNaplesMode changes naples to managed mode
-func (tb *TestBed) setupNaplesMode() error {
+func (tb *TestBed) setupNaplesMode(nodes []*TestNode) error {
 	log.Infof("Setting up Naples in network managed mode")
 
 	// copy penctl to host if required
-	for _, node := range tb.Nodes {
+	for _, node := range nodes {
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
 			err := tb.CopyToHost(node.NodeName, []string{penctlPkgName}, "")
 			if err != nil {
@@ -783,7 +1096,7 @@ func (tb *TestBed) setupNaplesMode() error {
 
 	// set date, untar penctl and trigger mode switch
 	trig := tb.NewTrigger()
-	for _, node := range tb.Nodes {
+	for _, node := range nodes {
 		veniceIPs := strings.Join(node.NaplesConfig.VeniceIps, ",")
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
 			// set date on naples
@@ -826,7 +1139,7 @@ func (tb *TestBed) setupNaplesMode() error {
 		ApiResponse: &iota.IotaAPIResponse{},
 		Nodes:       []*iota.Node{},
 	}
-	for _, node := range tb.Nodes {
+	for _, node := range nodes {
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
 			reloadMsg.Nodes = append(reloadMsg.Nodes, &iota.Node{Name: node.iotaNode.Name})
 			hostNames += node.iotaNode.Name + ", "
@@ -848,7 +1161,7 @@ func (tb *TestBed) setupNaplesMode() error {
 
 	// set date on naples
 	trig = tb.NewTrigger()
-	for _, node := range tb.Nodes {
+	for _, node := range nodes {
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
 			trig.AddCommand(fmt.Sprintf("rm /etc/localtime"), node.NodeName+"_naples", node.NodeName)
 			trig.AddCommand(fmt.Sprintf("ln -s /usr/share/zoneinfo/US/Pacific /etc/localtime"), node.NodeName+"_naples", node.NodeName)
@@ -869,6 +1182,68 @@ func (tb *TestBed) setupNaplesMode() error {
 
 		}
 	}
+
+	return nil
+}
+
+// cleanUpNaplesConfig cleans up naples config
+func (tb *TestBed) cleanUpNaplesConfig(nodes []*TestNode) error {
+	log.Infof("Setting up Naples in self managed mode")
+
+	// set date, untar penctl and trigger mode switch
+	cmds := 0
+	trig := tb.NewTrigger()
+	for _, node := range nodes {
+		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+			// cleaning up db is good for now.
+			trig.AddCommand(fmt.Sprintf("rm -rf /sysconfig/config0/*.db"), node.NodeName+"_naples", node.NodeName)
+			cmds++
+		}
+	}
+
+	//No naples, return
+	if cmds == 0 {
+		return nil
+	}
+	resp, err := trig.Run()
+	if err != nil {
+		return fmt.Errorf("Error running command on naples Err: %v", err)
+	}
+	log.Debugf("Got trigger resp: %+v", resp)
+
+	// check the response
+	for _, cmdResp := range resp {
+		if cmdResp.ExitCode != 0 {
+			log.Errorf("Cleaning naples mode failed. %+v", cmdResp)
+			return fmt.Errorf("Cleaning naples mode failed. exit code %v, Out: %v, StdErr: %v", cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+
+		}
+	}
+
+	var hostNames string
+	reloadMsg := &iota.NodeMsg{
+		ApiResponse: &iota.IotaAPIResponse{},
+		Nodes:       []*iota.Node{},
+	}
+	for _, node := range nodes {
+		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+			reloadMsg.Nodes = append(reloadMsg.Nodes, &iota.Node{Name: node.iotaNode.Name})
+			hostNames += node.iotaNode.Name + ", "
+
+		}
+	}
+	log.Infof("Reloading Naples: %v", hostNames)
+
+	// Trigger App
+	topoClient := iota.NewTopologyApiClient(tb.iotaClient.Client)
+	reloadResp, err := topoClient.ReloadNodes(context.Background(), reloadMsg)
+	if err != nil {
+		return fmt.Errorf("Failed to reload Naples %+v. | Err: %v", reloadMsg.Nodes, err)
+	} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.Nodes, reloadResp.ApiResponse, err)
+	}
+
+	log.Debugf("Got reload resp: %+v", reloadResp)
 
 	return nil
 }
