@@ -1,34 +1,5 @@
-/*
- * Copyright (c) 2017-2019 Pensando Systems, Inc.  All rights reserved.
- *
- * This software is available to you under a choice of one of two
- * licenses.  You may choose to be licensed under the terms of the GNU
- * General Public License (GPL) Version 2, available from the file
- * COPYING in the main directory of this source tree, or the
- * OpenIB.org BSD license below:
- *
- *     Redistribution and use in source and binary forms, with or
- *     without modification, are permitted provided that the following
- *     conditions are met:
- *
- *      - Redistributions of source code must retain the above
- *        copyright notice, this list of conditions and the following
- *        disclaimer.
- *
- *      - Redistributions in binary form must reproduce the above
- *        copyright notice, this list of conditions and the following
- *        disclaimer in the documentation and/or other materials
- *        provided with the distribution.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+/* SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB OR BSD-2-Clause */
+/* Copyright (c) 2017-2019 Pensando Systems, Inc.  All rights reserved. */
 
 #ifndef _IONIC_IF_H_
 #define _IONIC_IF_H_
@@ -37,20 +8,20 @@
 
 #define IONIC_DEV_INFO_SIGNATURE		0x44455649      /* 'DEVI' */
 #define IONIC_DEV_INFO_VERSION			1
-#define IONIC_IFNAMSIZ					16
+#define IONIC_IFNAMSIZ				16
 
 /**
  * Commands
  */
 enum cmd_opcode {
-	CMD_OPCODE_NOP					= 0,
+	CMD_OPCODE_NOP				= 0,
 
 	/* Device commands */
-	CMD_OPCODE_IDENTIFY				= 1,
-	CMD_OPCODE_INIT					= 2,
-	CMD_OPCODE_RESET				= 3,
-	CMD_OPCODE_GETATTR				= 4,
-	CMD_OPCODE_SETATTR				= 5,
+	CMD_OPCODE_IDENTIFY			= 1,
+	CMD_OPCODE_INIT				= 2,
+	CMD_OPCODE_RESET			= 3,
+	CMD_OPCODE_GETATTR			= 4,
+	CMD_OPCODE_SETATTR			= 5,
 
 	/* Port commands */
 	CMD_OPCODE_PORT_IDENTIFY		= 10,
@@ -61,7 +32,7 @@ enum cmd_opcode {
 
 	/* LIF commands */
 	CMD_OPCODE_LIF_IDENTIFY			= 20,
-	CMD_OPCODE_LIF_INIT				= 21,
+	CMD_OPCODE_LIF_INIT			= 21,
 	CMD_OPCODE_LIF_RESET			= 22,
 	CMD_OPCODE_LIF_GETATTR			= 23,
 	CMD_OPCODE_LIF_SETATTR			= 24,
@@ -71,14 +42,14 @@ enum cmd_opcode {
 	CMD_OPCODE_RX_FILTER_DEL		= 32,
 
 	/* Queue commands */
-	CMD_OPCODE_Q_INIT				= 40,
+	CMD_OPCODE_Q_INIT			= 40,
 	CMD_OPCODE_Q_CONTROL			= 41,
 
 	/* RDMA commands */
 	CMD_OPCODE_RDMA_RESET_LIF		= 50,
 	CMD_OPCODE_RDMA_CREATE_EQ		= 51,
 	CMD_OPCODE_RDMA_CREATE_CQ		= 52,
-	CMD_OPCODE_RDMA_CREATE_ADMINQ	= 53,
+	CMD_OPCODE_RDMA_CREATE_ADMINQ		= 53,
 
 	/* Firmware commands */
 	CMD_OPCODE_FW_DOWNLOAD			= 254,
@@ -122,8 +93,9 @@ enum notifyq_opcode {
 
 /**
  * struct cmd - General admin command format
- * @opcode:   Opcode for the command
- * @cmd_data: Opcode-specific command bytes
+ * @opcode:     Opcode for the command
+ * @lif_index:  LIF index
+ * @cmd_data:   Opcode-specific command bytes
  */
 struct admin_cmd {
 	u8     opcode;
@@ -267,6 +239,8 @@ union drv_identity {
 
 /**
  * union dev_identity - device identity information
+ * @version:          Version of device identify
+ * @type:             Identify type (0 for now)
  * @nports:           Number of ports provisioned
  * @nlifs:            Number of LIFs provisioned
  * @nintrs:           Number of interrupts provisioned
@@ -347,8 +321,8 @@ enum logical_qtype {
 /**
  * struct lif_logical_qtype - Descriptor of logical to hardware queue type.
  * @qtype:          Hardware Queue Type.
- * @qid_base:       Minimum Queue ID of the logical type.
  * @qid_count:      Number of Queue IDs of the logical type.
+ * @qid_base:       Minimum Queue ID of the logical type.
  */
 struct lif_logical_qtype {
 	u8     qtype;
@@ -358,9 +332,9 @@ struct lif_logical_qtype {
 };
 
 enum lif_state {
-	IONIC_LIF_DISABLE			= 0,
-	IONIC_LIF_ENABLE			= 1,
-	IONIC_LIF_HANG_RESET		= 2,
+	IONIC_LIF_DISABLE	= 0,
+	IONIC_LIF_ENABLE	= 1,
+	IONIC_LIF_HANG_RESET	= 2,
 };
 
 /**
@@ -396,17 +370,23 @@ union lif_config {
  *     @features:         Ethernet features supported on this lif type.
  *     @max_ucast_filters:  Number of perfect unicast addresses supported.
  *     @max_mcast_filters:  Number of perfect multicast addresses supported.
- *     @queue_count:      Number of queues per logical type
+ *     @min_frame_size:   Minimum size of frames to be sent
+ *     @max_frame_size:   Maximim size of frames to be sent
+ *     @config:           LIF config struct with features, mtu, mac, q counts
  *
  * RDMA:
  *     @version:         RDMA version of opcodes and queue descriptors.
  *     @qp_opcodes:      Number of rdma queue pair opcodes supported.
  *     @admin_opcodes:   Number of rdma admin opcodes supported.
+ *     @npts_per_lif:    Page table size per lif
+ *     @nmrs_per_lif:    Number of memory regions per lif
+ *     @nahs_per_lif:    Number of address handles per lif
  *     @max_stride:      Max work request stride.
  *     @cl_stride:       Cache line stride.
  *     @pte_stride:      Page table entry stride.
  *     @rrq_stride:      Remote RQ work request stride.
  *     @rsq_stride:      Remote SQ work request stride.
+ *     @dcqcn_profiles:  Number of DCQCN profiles
  *     @aq_qtype:        RDMA Admin Qtype.
  *     @sq_qtype:        RDMA Send Qtype.
  *     @rq_qtype:        RDMA Receive Qtype.
@@ -484,9 +464,9 @@ struct lif_init_comp {
 /**
  * struct q_init_cmd - Queue init command
  * @opcode:       opcode
- * @lif_index:    LIF index
  * @type:         Logical queue type
  * @ver:          Queue version (defines opcode/descriptor scope)
+ * @lif_index:    LIF index
  * @index:        (lif, qtype) relative admin queue index
  * @intr_index:   Interrupt control register index
  * @pid:          Process ID
@@ -505,11 +485,12 @@ struct lif_init_comp {
  *                ring_size value is 16 for a ring size of 64k
  *                descriptors.  Values of ring_size <2 and >16 are
  *                reserved.
+ *    EQ:         Enable the Event Queue
  * @cos:          Class of service for this queue.
+ * @ring_size:    Queue ring size, encoded as a log2(size)
  * @ring_base:    Queue ring base address
  * @cq_ring_base: Completion queue ring base address
  * @sg_ring_base: Scatter/Gather ring base address
- * @ring_size:    Admin queue ring size, encoded as a log2(size)
  * @eq_index:	  Event queue index
  */
 struct q_init_cmd {
@@ -555,10 +536,9 @@ struct q_init_comp {
 	u8     color;
 };
 
-
 /* the device's internal addressing uses up to 52 bits */
-#define IONIC_ADDR_LEN				52
-#define IONIC_ADDR_MASK				(BIT_ULL(IONIC_ADDR_LEN) - 1)
+#define IONIC_ADDR_LEN		52
+#define IONIC_ADDR_MASK		(BIT_ULL(IONIC_ADDR_LEN) - 1)
 
 enum txq_desc_opcode {
 	IONIC_TXQ_DESC_OPCODE_CSUM_NONE = 0,
@@ -632,8 +612,7 @@ enum txq_desc_opcode {
  *                      buffer containing the header template,
  *                      the driver will set IPv4 checksum to 0
  *                      and preload TCP checksum with the IP
- *                      pseudo header calculated with IP length =
- *                      0.
+ *                      pseudo header calculated with IP length = 0.
  *
  *                      Supported tunnel encapsulations are IPIP,
  *                      layer-3 GRE, and UDP. @hdr_len includes
@@ -723,7 +702,8 @@ struct txq_desc {
 };
 
 static inline u64 encode_txq_desc_cmd(u8 opcode, u8 flags,
-					 u8 nsge, u64 addr) {
+				      u8 nsge, u64 addr)
+{
 	u64 cmd;
 
 	cmd = (opcode & IONIC_TXQ_DESC_OPCODE_MASK) << IONIC_TXQ_DESC_OPCODE_SHIFT;
@@ -735,7 +715,8 @@ static inline u64 encode_txq_desc_cmd(u8 opcode, u8 flags,
 };
 
 static inline void decode_txq_desc_cmd(u64 cmd, u8 *opcode, u8 *flags,
-				       u8 *nsge, u64 *addr) {
+				       u8 *nsge, u64 *addr)
+{
 	*opcode = (cmd >> IONIC_TXQ_DESC_OPCODE_SHIFT) & IONIC_TXQ_DESC_OPCODE_MASK;
 	*flags = (cmd >> IONIC_TXQ_DESC_FLAGS_SHIFT) & IONIC_TXQ_DESC_FLAGS_MASK;
 	*nsge = (cmd >> IONIC_TXQ_DESC_NSGE_SHIFT) & IONIC_TXQ_DESC_NSGE_MASK;
@@ -823,7 +804,7 @@ struct rxq_sg_desc {
  *                If the packet's L2 payload is odd length, an extra
  *                zero-value byte is included in the @csum calculation but
  *                not included in @len.
- * @vlan_tci:     VLAN tag stripped from the packet.  Valid if @V is
+ * @vlan_tci:     VLAN tag stripped from the packet.  Valid if @VLAN is
  *                set.  Includes .1p and .1q tags.
  * @len:          Received packet length, in bytes.  Excludes FCS.
  * @csum_calc     L2 payload checksum is computed or not
@@ -895,7 +876,7 @@ enum eth_hw_features {
 	ETH_HW_TX_SG		= BIT(5),
 	ETH_HW_RX_SG		= BIT(6),
 	ETH_HW_TX_CSUM		= BIT(7),
-	ETH_HW_TSO			= BIT(8),
+	ETH_HW_TSO		= BIT(8),
 	ETH_HW_TSO_IPV6		= BIT(9),
 	ETH_HW_TSO_ECN		= BIT(10),
 	ETH_HW_TSO_GRE		= BIT(11),
@@ -909,9 +890,9 @@ enum eth_hw_features {
 /**
  * struct q_control_cmd - Queue control command
  * @opcode:     opcode
+ * @type:       Queue type
  * @lif_index:  LIF index
  * @index:      Queue index
- * @type:       Queue type
  * @oper:       Operation (enum q_control_oper)
  */
 struct q_control_cmd {
@@ -926,29 +907,29 @@ struct q_control_cmd {
 typedef struct admin_comp q_control_comp;
 
 enum q_control_oper {
-	IONIC_Q_DISABLE			= 0,
-	IONIC_Q_ENABLE			= 1,
-	IONIC_Q_HANG_RESET		= 2,
+	IONIC_Q_DISABLE		= 0,
+	IONIC_Q_ENABLE		= 1,
+	IONIC_Q_HANG_RESET	= 2,
 };
 
 /**
  * Physical connection type
  */
 enum phy_type {
-	PHY_TYPE_NONE = 0,
-	PHY_TYPE_COPPER = 1,
-	PHY_TYPE_FIBER = 2,
+	PHY_TYPE_NONE	= 0,
+	PHY_TYPE_COPPER	= 1,
+	PHY_TYPE_FIBER	= 2,
 };
 
 /**
  * Transceiver status
  */
 enum xcvr_state {
-	XCVR_STATE_REMOVED = 0,
-	XCVR_STATE_INSERTED = 1,
-	XCVR_STATE_PENDING = 2,
-	XCVR_STATE_SPROM_READ = 3,
-	XCVR_STATE_SPROM_READ_ERR = 4,
+	XCVR_STATE_REMOVED	   = 0,
+	XCVR_STATE_INSERTED	   = 1,
+	XCVR_STATE_PENDING	   = 2,
+	XCVR_STATE_SPROM_READ	   = 3,
+	XCVR_STATE_SPROM_READ_ERR  = 4,
 };
 
 /**
@@ -1184,7 +1165,7 @@ struct port_status {
  * struct port_identify_cmd - Port identify command
  * @opcode:     opcode
  * @index:      port index
- * @version:    Highest version of identify supported by driver
+ * @ver:        Highest version of identify supported by driver
  */
 struct port_identify_cmd {
 	u8 opcode;
@@ -1195,6 +1176,7 @@ struct port_identify_cmd {
 
 /**
  * struct port_identify_comp - Port identify command completion
+ * @status: The status of the command (enum status_code)
  * @ver:    Version of identify returned by device
  */
 struct port_identify_comp {
@@ -1219,6 +1201,7 @@ struct port_init_cmd {
 
 /**
  * struct port_init_comp - Port initialization command completion
+ * @status: The status of the command (enum status_code)
  */
 struct port_init_comp {
 	u8 status;
@@ -1238,6 +1221,7 @@ struct port_reset_cmd {
 
 /**
  * struct port_reset_comp - Port reset command completion
+ * @status: The status of the command (enum status_code)
  */
 struct port_reset_comp {
 	u8 status;
@@ -1250,9 +1234,9 @@ struct port_reset_comp {
 enum ionic_port_attr {
 	IONIC_PORT_ATTR_STATE		= 0,
 	IONIC_PORT_ATTR_SPEED		= 1,
-	IONIC_PORT_ATTR_MTU			= 2,
+	IONIC_PORT_ATTR_MTU		= 2,
 	IONIC_PORT_ATTR_AUTONEG		= 3,
-	IONIC_PORT_ATTR_FEC			= 4,
+	IONIC_PORT_ATTR_FEC		= 4,
 	IONIC_PORT_ATTR_PAUSE		= 5,
 	IONIC_PORT_ATTR_LOOPBACK	= 6,
 };
@@ -1260,6 +1244,7 @@ enum ionic_port_attr {
 /**
  * struct port_setattr_cmd - Set port attributes on the NIC
  * @opcode:     Opcode
+ * @index:      port index
  * @attr:       Attribute type (enum ionic_port_attr)
  */
 struct port_setattr_cmd {
@@ -1279,16 +1264,21 @@ struct port_setattr_cmd {
 	};
 };
 
+/**
+ * struct port_setattr_comp - Port set attr command completion
+ * @status:     The status of the command (enum status_code)
+ * @color:      Color bit
+ */
 struct port_setattr_comp {
 	u8     status;
-	u8     rsvd;
-	__le16 comp_index;
-	u8     rsvd2[11];
+	u8     rsvd[14];
 	u8     color;
 };
 
 /**
  * struct port_getattr_cmd - Get port attributes from the NIC
+ * @opcode:     Opcode
+ * @index:      port index
  * @attr:       Attribute type (enum ionic_port_attr)
  */
 struct port_getattr_cmd {
@@ -1298,10 +1288,14 @@ struct port_getattr_cmd {
 	u8     rsvd[61];
 };
 
+/**
+ * struct port_getattr_comp - Port get attr command completion
+ * @status:     The status of the command (enum status_code)
+ * @color:      Color bit
+ */
 struct port_getattr_comp {
 	u8     status;
-	u8     rsvd;
-	__le16 comp_index;
+	u8     rsvd[3];
 	union {
 		u8      state;
 		__le32  speed;
@@ -1318,7 +1312,8 @@ struct port_getattr_comp {
 /**
  * struct lif_status - Lif status register
  * @eid:             most recent NotifyQ event id
- * @link_status      port status (enum port_oper_status)
+ * @port_num:        port the lif is connected to
+ * @link_status:     port status (enum port_oper_status)
  * @link_speed:      speed of link in Mbps
  * @link_flap_count: number of times link status changes
  */
@@ -1335,7 +1330,7 @@ struct lif_status {
 /**
  * struct lif_reset_cmd - LIF reset command
  * @opcode:    opcode
- * @lif_index: LIF index
+ * @index:     LIF index
  */
 struct lif_reset_cmd {
 	u8     opcode;
@@ -1381,10 +1376,15 @@ struct dev_setattr_cmd {
 	};
 };
 
+/**
+ * struct dev_setattr_comp - Device set attr command completion
+ * @status:     The status of the command (enum status_code)
+ * @features:   Device features
+ * @color:      Color bit
+ */
 struct dev_setattr_comp {
 	u8     status;
-	u8     rsvd;
-	__le16 comp_index;
+	u8     rsvd[3];
 	union {
 		__le64  features;
 		u8      rsvd2[11];
@@ -1394,6 +1394,7 @@ struct dev_setattr_comp {
 
 /**
  * struct dev_getattr_cmd - Get Device attributes from the NIC
+ * @opcode:     opcode
  * @attr:       Attribute type (enum dev_attr)
  */
 struct dev_getattr_cmd {
@@ -1402,10 +1403,15 @@ struct dev_getattr_cmd {
 	u8     rsvd[62];
 };
 
+/**
+ * struct dev_setattr_comp - Device set attr command completion
+ * @status:     The status of the command (enum status_code)
+ * @features:   Device features
+ * @color:      Color bit
+ */
 struct dev_getattr_comp {
 	u8     status;
-	u8     rsvd;
-	__le16 comp_index;
+	u8     rsvd[3];
 	union {
 		__le64  features;
 		u8      rsvd2[11];
@@ -1442,12 +1448,13 @@ enum lif_attr {
 /**
  * struct lif_setattr_cmd - Set LIF attributes on the NIC
  * @opcode:     Opcode
- * @index:      LIF index
  * @type:       Attribute type (enum lif_attr)
+ * @index:      LIF index
+ * @state:      lif state (enum lif_state)
  * @name:       The netdev name string, 0 terminated
  * @mtu:        Mtu
  * @mac:        Station mac
- * @features:   Features
+ * @features:   Features (enum eth_hw_features)
  * @rss:        RSS properties
  *              @types:     The hash types to enable (see rss_hash_types).
  *              @key:       The hash secret key.
@@ -1473,6 +1480,14 @@ struct lif_setattr_cmd {
 	};
 };
 
+/**
+ * struct lif_setattr_comp - LIF set attr command completion
+ * @status:     The status of the command (enum status_code)
+ * @comp_index: The index in the descriptor ring for which this
+ *              is the completion.
+ * @features:   features (enum eth_hw_features)
+ * @color:      Color bit
+ */
 struct lif_setattr_comp {
 	u8     status;
 	u8     rsvd;
@@ -1486,8 +1501,9 @@ struct lif_setattr_comp {
 
 /**
  * struct lif_getattr_cmd - Get LIF attributes from the NIC
+ * @opcode:     Opcode
+ * @attr:       Attribute type (enum lif_attr)
  * @index:      LIF index
- * @type:       Attribute type (enum lif_attr)
  */
 struct lif_getattr_cmd {
 	u8     opcode;
@@ -1496,14 +1512,28 @@ struct lif_getattr_cmd {
 	u8     rsvd[60];
 };
 
+/**
+ * struct lif_getattr_comp - LIF get attr command completion
+ * @status:     The status of the command (enum status_code)
+ * @comp_index: The index in the descriptor ring for which this
+ *              is the completion.
+ * @state:      lif state (enum lif_state)
+ * @name:       The netdev name string, 0 terminated
+ * @mtu:        Mtu
+ * @mac:        Station mac
+ * @features:   Features (enum eth_hw_features)
+ * @color:      Color bit
+ */
 struct lif_getattr_comp {
 	u8     status;
 	u8     rsvd;
 	__le16 comp_index;
 	union {
-		// char    name[IONIC_IFNAMSIZ];
+		u8      state;
+		//char    name[IONIC_IFNAMSIZ];
 		__le32  mtu;
 		u8      mac[6];
+		__le64  features;
 		u8      rsvd2[11];
 	};
 	u8     color;
@@ -1547,9 +1577,9 @@ enum rx_filter_match_type {
 /**
  * struct rx_filter_add_cmd - Add LIF Rx filter command
  * @opcode:     opcode
+ * @qtype:      Queue type
  * @lif_index:  LIF index
  * @qid:        Queue ID
- * @qtype:      Queue type
  * @match:      Rx filter match type.  (See RX_FILTER_MATCH_xxx)
  * @vlan:       VLAN ID
  * @addr:       MAC address (network-byte order)
@@ -1626,8 +1656,8 @@ struct fw_download_cmd {
 typedef struct admin_comp fw_download_comp;
 
 enum fw_control_oper {
-	IONIC_FW_RESET = 0,		/* Reset firmare */
-	IONIC_FW_INSTALL = 1,	/* Install firmware */
+	IONIC_FW_RESET    = 0,	/* Reset firmare */
+	IONIC_FW_INSTALL  = 1,	/* Install firmware */
 	IONIC_FW_ACTIVATE = 2,	/* Activate firmware */
 };
 
@@ -1901,10 +1931,12 @@ struct port_stats {
  * @type:           type of port (enum port_type)
  * @num_lanes:      number of lanes for the port
  * @autoneg:        autoneg supported
+ * @min_frame_size: minimum frame size supported
  * @max_frame_size: maximum frame size supported
  * @fec_type:       supported fec types
  * @pause_type:     supported pause types
  * @loopback_mode:  supported loopback mode
+ * @speeds:         supported speeds
  * @config:         current port configuration
  */
 union port_identity {
