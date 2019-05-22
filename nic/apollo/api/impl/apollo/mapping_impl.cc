@@ -407,8 +407,6 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
                     handle_.local_.public_ip_remote_vnic_tx_hdl_);
 
     // reserve an entry for overlay IP to public IP xlation in NAT_TX table
-    // TODO: typecasting to uint32_t should be removed once DM APIs are
-    //       standardized
     ret = mapping_impl_db()->nat_tbl()->reserve(&handle_.local_.overlay_ip_to_public_ip_nat_hdl_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in NAT_TX table for mapping %s, "

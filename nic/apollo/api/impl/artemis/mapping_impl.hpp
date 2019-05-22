@@ -201,9 +201,8 @@ private:
 
     // handle or indices to NAT table
     uint32_t    overlay_ip_to_public_ip_nat_hdl_;
-    uint32_t    public_ip_to_overlay_ip_nat_hdl_;
     uint32_t    overlay_ip_to_provider_ip_nat_hdl_;
-    uint32_t    provider_ip_to_overlay_ip_nat_hdl_;
+    uint32_t    to_overlay_ip_nat_hdl_;
 
     // handles to entries in LOCAL_IP_MAPPING table
     handle_t    overlay_ip_hdl_;     // xlate idx to provider_ip & public_ip
