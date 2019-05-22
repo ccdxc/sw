@@ -653,7 +653,5 @@ artemis_impl::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
     return SDK_RET_OK;
 }
 
-/// @} */    // end of PDS_PIPELINE_IMPL
-
 }    // namespace impl
 }    // namespace api

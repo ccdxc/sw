@@ -20,10 +20,6 @@
 namespace api {
 namespace impl {
 
-/// \defgroup PDS_DEVICE_IMPL - device entry datapath implementation
-/// \ingroup PDS_DEVICE
-/// \@{
-
 // as there is no state in this impl, single instance is good enough
 device_impl    g_device_impl;
 
@@ -75,8 +71,6 @@ device_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                          api_op_t api_op, obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
-
-/// \@}    // end of PDS_DEVICE_IMPL
 
 }    // namespace impl
 }    // namespace api
