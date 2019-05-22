@@ -331,7 +331,7 @@ func (actx *ActionCtx) PerformRollout(rollout *rollout.Rollout) error {
 		return err
 	}
 	//create the rollout object
-	r1, err := restcls[0].RolloutV1().Rollout().DoRollout(ctx, rollout)
+	r1, err := restcls[0].RolloutV1().Rollout().CreateRollout(ctx, rollout)
 	if err != nil || r1.Name != rollout.Name {
 		return err
 	}
