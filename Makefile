@@ -473,14 +473,17 @@ ui-framework:
 	yarn -v;
 	cd venice/ui/web-app-framework && yarn run pack
 
+ui-link-framework:
+	cd venice/ui/web-app-framework && cd dist && yalc publish --private
+	cd venice/ui/webapp && yalc add web-app-framework
+
 ui-venice-sdk:
 	cd venice/ui/venice-sdk && yarn add file:pensando-swagger-ts-generator-1.1.29.tgz --offline
 	cd venice/ui/venice-sdk && node swaggerGen.js
 
 ui:
 	yarn -v;
-	cd venice/ui/web-app-framework && cd dist && yalc publish --private
-	cd venice/ui/webapp && yalc add web-app-framework
+	$(MAKE) ui-link-framework
 	$(MAKE) ui-venice-sdk
 	cd venice/ui/webapp && yarn run build-prod && ./gzipDist.sh
 
