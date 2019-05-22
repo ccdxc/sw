@@ -227,7 +227,7 @@ var _ = Describe("Rollout object tests", func() {
 
 			// Verify creation for rollout object
 			Eventually(func() bool {
-				r1, err := ts.restSvc.RolloutV1().Rollout().DoRollout(ts.loggedInCtx, &rollout)
+				r1, err := ts.restSvc.RolloutV1().Rollout().CreateRollout(ts.loggedInCtx, &rollout)
 				if err != nil || r1.Name != rolloutName {
 					By(fmt.Sprintf("ts:%s Rollout CREATE failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutName, err, r1))
 					return false
@@ -421,7 +421,7 @@ var _ = Describe("Rollout object tests", func() {
 
 			// Verify creation for rollout object
 			Eventually(func() bool {
-				r1, err := ts.restSvc.RolloutV1().Rollout().DoRollout(ts.loggedInCtx, &rollout)
+				r1, err := ts.restSvc.RolloutV1().Rollout().CreateRollout(ts.loggedInCtx, &rollout)
 				if err != nil || r1.Name != rolloutSuspendName {
 					By(fmt.Sprintf("ts:%s Rollout CREATE failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutSuspendName, err, r1))
 					return false
@@ -448,7 +448,7 @@ var _ = Describe("Rollout object tests", func() {
 				time.Sleep(20 * time.Second)
 				//Now Suspend rollout
 				rollout.Spec.Suspend = true
-				r1, err := ts.restSvc.RolloutV1().Rollout().DoRollout(ts.loggedInCtx, &rollout)
+				r1, err := ts.restSvc.RolloutV1().Rollout().StopRollout(ts.loggedInCtx, &rollout)
 				if err != nil || r1.Name != rolloutSuspendName {
 					By(fmt.Sprintf("ts:%s Rollout Update failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutSuspendName, err, r1))
 					return false

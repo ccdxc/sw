@@ -536,7 +536,9 @@
               "watch"
             ],
             "Actions": [
-              "DoRollout"
+              "CreateRollout",
+              "UpdateRollout",
+              "StopRollout"
             ]
           },
           "RolloutAction": {

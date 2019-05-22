@@ -60,7 +60,9 @@ type eRolloutV1Endpoints struct {
 	fnAutoListRolloutAction   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateRollout       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateRolloutAction func(ctx context.Context, t interface{}) (interface{}, error)
-	fnDoRollout               func(ctx context.Context, t interface{}) (interface{}, error)
+	fnCreateRollout           func(ctx context.Context, t interface{}) (interface{}, error)
+	fnStopRollout             func(ctx context.Context, t interface{}) (interface{}, error)
+	fnUpdateRollout           func(ctx context.Context, t interface{}) (interface{}, error)
 
 	fnAutoWatchRollout       func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchRolloutAction func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
@@ -204,8 +206,26 @@ func (s *srolloutSvc_rolloutBackend) regSvcsFunc(ctx context.Context, logger log
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
-		s.endpointsRolloutV1.fnDoRollout = srv.AddMethod("DoRollout",
-			apisrvpkg.NewMethod(srv, pkgMessages["rollout.Rollout"], pkgMessages["rollout.Rollout"], "rollout", "DoRollout")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+		s.endpointsRolloutV1.fnCreateRollout = srv.AddMethod("CreateRollout",
+			apisrvpkg.NewMethod(srv, pkgMessages["rollout.Rollout"], pkgMessages["rollout.Rollout"], "rollout", "CreateRollout")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(rollout.Rollout)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "rollout/v1/rollout/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsRolloutV1.fnStopRollout = srv.AddMethod("StopRollout",
+			apisrvpkg.NewMethod(srv, pkgMessages["rollout.Rollout"], pkgMessages["rollout.Rollout"], "rollout", "StopRollout")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(rollout.Rollout)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "rollout/v1/rollout/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsRolloutV1.fnUpdateRollout = srv.AddMethod("UpdateRollout",
+			apisrvpkg.NewMethod(srv, pkgMessages["rollout.Rollout"], pkgMessages["rollout.Rollout"], "rollout", "UpdateRollout")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(rollout.Rollout)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -550,8 +570,24 @@ func (e *eRolloutV1Endpoints) AutoUpdateRolloutAction(ctx context.Context, t rol
 	return rollout.RolloutAction{}, err
 
 }
-func (e *eRolloutV1Endpoints) DoRollout(ctx context.Context, t rollout.Rollout) (rollout.Rollout, error) {
-	r, err := e.fnDoRollout(ctx, t)
+func (e *eRolloutV1Endpoints) CreateRollout(ctx context.Context, t rollout.Rollout) (rollout.Rollout, error) {
+	r, err := e.fnCreateRollout(ctx, t)
+	if err == nil {
+		return r.(rollout.Rollout), err
+	}
+	return rollout.Rollout{}, err
+
+}
+func (e *eRolloutV1Endpoints) StopRollout(ctx context.Context, t rollout.Rollout) (rollout.Rollout, error) {
+	r, err := e.fnStopRollout(ctx, t)
+	if err == nil {
+		return r.(rollout.Rollout), err
+	}
+	return rollout.Rollout{}, err
+
+}
+func (e *eRolloutV1Endpoints) UpdateRollout(ctx context.Context, t rollout.Rollout) (rollout.Rollout, error) {
+	r, err := e.fnUpdateRollout(ctx, t)
 	if err == nil {
 		return r.(rollout.Rollout), err
 	}

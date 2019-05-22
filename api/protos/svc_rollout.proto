@@ -20,10 +20,26 @@ service RolloutV1 {
         Method: [ "get", "delete", "list", "watch"]
     };
 
-    // Action to start/stop/abort rollout.
+    // Action to start rollout.
     option (venice.apiAction) = {
      Collection: "Rollout"
-     Action: "DoRollout"
+     Action: "CreateRollout"
+     Request: "Rollout"
+     Response: "Rollout"
+    };
+
+    // Action to update rollout.
+    option (venice.apiAction) = {
+     Collection: "Rollout"
+     Action: "UpdateRollout"
+     Request: "Rollout"
+     Response: "Rollout"
+    };
+
+    // Action to stop/suspend rollout.
+    option (venice.apiAction) = {
+     Collection: "Rollout"
+     Action: "StopRollout"
      Request: "Rollout"
      Response: "Rollout"
     };

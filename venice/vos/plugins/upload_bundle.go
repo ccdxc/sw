@@ -101,6 +101,11 @@ func getUploadBundleCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc 
 			return fmt.Errorf("ExtractImage %s  returned %v", tarfileDir+"/"+bundleImage, err)
 		}
 
+		err = os.Remove(tarfileDir + "/" + bundleImage)
+		if err != nil {
+			log.Errorf("removal of /tmp/bundle.tar returned %v", err)
+		}
+
 		versionMap := processMetadataFile(installerTmpDir + imageMetaFileName)
 		if versionMap == nil {
 			return fmt.Errorf("Failed to process metafile %s missing version info", installerTmpDir+"/"+imageMetaFileName)

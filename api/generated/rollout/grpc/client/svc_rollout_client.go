@@ -169,19 +169,47 @@ func NewRolloutV1(conn *grpc.ClientConn, logger log.Logger) rollout.ServiceRollo
 		).Endpoint()
 		lAutoUpdateRolloutActionEndpoint = trace.ClientEndPoint("RolloutV1:AutoUpdateRolloutAction")(lAutoUpdateRolloutActionEndpoint)
 	}
-	var lDoRolloutEndpoint endpoint.Endpoint
+	var lCreateRolloutEndpoint endpoint.Endpoint
 	{
-		lDoRolloutEndpoint = grpctransport.NewClient(
+		lCreateRolloutEndpoint = grpctransport.NewClient(
 			conn,
 			"rollout.RolloutV1",
-			"DoRollout",
+			"CreateRollout",
 			rollout.EncodeGrpcReqRollout,
 			rollout.DecodeGrpcRespRollout,
 			&rollout.Rollout{},
 			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lDoRolloutEndpoint = trace.ClientEndPoint("RolloutV1:DoRollout")(lDoRolloutEndpoint)
+		lCreateRolloutEndpoint = trace.ClientEndPoint("RolloutV1:CreateRollout")(lCreateRolloutEndpoint)
+	}
+	var lStopRolloutEndpoint endpoint.Endpoint
+	{
+		lStopRolloutEndpoint = grpctransport.NewClient(
+			conn,
+			"rollout.RolloutV1",
+			"StopRollout",
+			rollout.EncodeGrpcReqRollout,
+			rollout.DecodeGrpcRespRollout,
+			&rollout.Rollout{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lStopRolloutEndpoint = trace.ClientEndPoint("RolloutV1:StopRollout")(lStopRolloutEndpoint)
+	}
+	var lUpdateRolloutEndpoint endpoint.Endpoint
+	{
+		lUpdateRolloutEndpoint = grpctransport.NewClient(
+			conn,
+			"rollout.RolloutV1",
+			"UpdateRollout",
+			rollout.EncodeGrpcReqRollout,
+			rollout.DecodeGrpcRespRollout,
+			&rollout.Rollout{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lUpdateRolloutEndpoint = trace.ClientEndPoint("RolloutV1:UpdateRollout")(lUpdateRolloutEndpoint)
 	}
 	return rollout.EndpointsRolloutV1Client{
 		Client: rollout.NewRolloutV1Client(conn),
@@ -196,7 +224,9 @@ func NewRolloutV1(conn *grpc.ClientConn, logger log.Logger) rollout.ServiceRollo
 		AutoListRolloutActionEndpoint:   lAutoListRolloutActionEndpoint,
 		AutoUpdateRolloutEndpoint:       lAutoUpdateRolloutEndpoint,
 		AutoUpdateRolloutActionEndpoint: lAutoUpdateRolloutActionEndpoint,
-		DoRolloutEndpoint:               lDoRolloutEndpoint,
+		CreateRolloutEndpoint:           lCreateRolloutEndpoint,
+		StopRolloutEndpoint:             lStopRolloutEndpoint,
+		UpdateRolloutEndpoint:           lUpdateRolloutEndpoint,
 	}
 }
 
@@ -313,13 +343,31 @@ func (a *grpcObjRolloutV1Rollout) Watch(ctx context.Context, options *api.ListWa
 	return lw, nil
 }
 
-func (a *grpcObjRolloutV1Rollout) DoRollout(ctx context.Context, in *rollout.Rollout) (*rollout.Rollout, error) {
-	a.logger.DebugLog("msg", "received call", "object", "{DoRollout Rollout Rollout}", "oper", "DoRollout")
+func (a *grpcObjRolloutV1Rollout) CreateRollout(ctx context.Context, in *rollout.Rollout) (*rollout.Rollout, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{CreateRollout Rollout Rollout}", "oper", "CreateRollout")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
-	return a.client.DoRollout(nctx, in)
+	return a.client.CreateRollout(nctx, in)
+}
+
+func (a *grpcObjRolloutV1Rollout) UpdateRollout(ctx context.Context, in *rollout.Rollout) (*rollout.Rollout, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{UpdateRollout Rollout Rollout}", "oper", "UpdateRollout")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.UpdateRollout(nctx, in)
+}
+
+func (a *grpcObjRolloutV1Rollout) StopRollout(ctx context.Context, in *rollout.Rollout) (*rollout.Rollout, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{StopRollout Rollout Rollout}", "oper", "StopRollout")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.StopRollout(nctx, in)
 }
 
 func (a *grpcObjRolloutV1Rollout) Allowed(oper apiintf.APIOperType) bool {
@@ -405,11 +453,23 @@ func (a *restObjRolloutV1Rollout) Allowed(oper apiintf.APIOperType) bool {
 	}
 }
 
-func (a *restObjRolloutV1Rollout) DoRollout(ctx context.Context, in *rollout.Rollout) (*rollout.Rollout, error) {
+func (a *restObjRolloutV1Rollout) CreateRollout(ctx context.Context, in *rollout.Rollout) (*rollout.Rollout, error) {
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
-	return a.endpoints.DoRolloutRollout(ctx, in)
+	return a.endpoints.CreateRolloutRollout(ctx, in)
+}
+func (a *restObjRolloutV1Rollout) UpdateRollout(ctx context.Context, in *rollout.Rollout) (*rollout.Rollout, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.UpdateRolloutRollout(ctx, in)
+}
+func (a *restObjRolloutV1Rollout) StopRollout(ctx context.Context, in *rollout.Rollout) (*rollout.Rollout, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.StopRolloutRollout(ctx, in)
 }
 
 type grpcObjRolloutV1RolloutAction struct {

@@ -25,7 +25,9 @@ type RolloutV1RolloutInterface interface {
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Rollout, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 	Allowed(oper apiintf.APIOperType) bool
-	DoRollout(ctx context.Context, in *Rollout) (*Rollout, error)
+	CreateRollout(ctx context.Context, in *Rollout) (*Rollout, error)
+	UpdateRollout(ctx context.Context, in *Rollout) (*Rollout, error)
+	StopRollout(ctx context.Context, in *Rollout) (*Rollout, error)
 }
 
 // RolloutV1RolloutActionInterface exposes the CRUD methods for RolloutAction

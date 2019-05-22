@@ -35,10 +35,44 @@ export class Rolloutv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IRolloutRolloutList | IApiStatus | Error, statusCode: number}>;
   }
   
-  public DoRollout(body: IRolloutRollout, stagingID: string = "", trimObject: boolean = true):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/rollout/v1/rollout/DoRollout';
+  public CreateRollout(body: IRolloutRollout, stagingID: string = "", trimObject: boolean = true):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/rollout/v1/rollout/CreateRollout';
     const opts = {
-      eventID: 'DoRollout',
+      eventID: 'CreateRollout',
+      objType: 'RolloutRollout',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new RolloutRollout(body))
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  public StopRollout(body: IRolloutRollout, stagingID: string = "", trimObject: boolean = true):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/rollout/v1/rollout/StopRollout';
+    const opts = {
+      eventID: 'StopRollout',
+      objType: 'RolloutRollout',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new RolloutRollout(body))
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  public UpdateRollout(body: IRolloutRollout, stagingID: string = "", trimObject: boolean = true):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/rollout/v1/rollout/UpdateRollout';
+    const opts = {
+      eventID: 'UpdateRollout',
       objType: 'RolloutRollout',
       isStaging: false,
     }

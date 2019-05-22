@@ -131,7 +131,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   stopRollout() {
     this.selectedRollout.spec.suspend = true;
     const rollout = this.selectedRollout.getModelValues();
-    const sub = this.rolloutService.DoRollout(rollout).subscribe(
+    const sub = this.rolloutService.StopRollout(rollout).subscribe(
       (response) => {
         this._controllerService.invokeSuccessToaster('Success', 'Rollout ' + this.selectedRollout.meta.name + ' was suspended!');
         // TODO:  What should UI do when rollout is suspeced.

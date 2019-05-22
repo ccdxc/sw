@@ -262,7 +262,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
        handler = this.rolloutService.AddRollout(rollout);
     }
     */
-    handler = this.rolloutService.DoRollout(rollout, null, false); // TODO: For now, add trimObject parameter as false because rollout.spec["scheduled-start-time"] got trimmed.
+    handler = this.rolloutService.CreateRollout(rollout, null, false); // TODO: For now, add trimObject parameter as false because rollout.spec["scheduled-start-time"] got trimmed.
     const sub = handler.subscribe(
       (response) => {
         if (this.isInline) {

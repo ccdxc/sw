@@ -84,8 +84,10 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 		t.Fatalf("unable to create kvstore %s", err)
 	}
 	txn := kvs.NewTxn()
+	key2 := req.MakeKey(string(apiclient.GroupRollout))
+	err = kvs.Create(context.TODO(), key2, &req)
 
-	ret, skip, err := hooks.doRolloutAction(context.TODO(), kvs, txn, "", apiintf.CreateOper, false, req)
+	ret, skip, err := hooks.doRolloutAction(context.TODO(), kvs, txn, key2, apiintf.CreateOper, false, req)
 
 	if ret == nil || err != nil {
 		t.Fatalf("failed exec commitAction [%v](%s)", ret, err)
@@ -125,6 +127,39 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 	}
 	if skip == false {
 		t.Fatalf("kvwrite enabled on commit")
+	}
+
+	ret, skip, err = hooks.stopRolloutAction(context.TODO(), kvs, txn, key2, apiintf.CreateOper, false, req)
+
+	if ret == nil || err != nil {
+		t.Fatalf("failed exec commitAction [%v](%s)", ret, err)
+	}
+
+	req4 := rollout.Rollout{
+		TypeMeta: api.TypeMeta{
+			Kind: "Rollout",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: rolloutName,
+		},
+		Spec: rollout.RolloutSpec{
+			Version:                   "2.8",
+			ScheduledStartTime:        nil,
+			Duration:                  "",
+			Strategy:                  "LINEAR",
+			MaxParallel:               0,
+			MaxNICFailuresBeforeAbort: 0,
+			OrderConstraints:          nil,
+			Suspend:                   false,
+			SmartNICsOnly:             false,
+			UpgradeType:               "Disruptive",
+		},
+	}
+
+	ret, skip, err = hooks.modifyRolloutAction(context.TODO(), kvs, txn, key2, apiintf.CreateOper, false, req4)
+
+	if ret == nil || err != nil {
+		t.Fatalf("failed exec commitAction [%v](%s)", ret, err)
 	}
 
 }
