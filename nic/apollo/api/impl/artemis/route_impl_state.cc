@@ -14,15 +14,6 @@
 namespace api {
 namespace impl {
 
-/**
- * @defgroup PDS_ROUTE_TABLE_IMPL_STATE - route table database functionality
- * @ingroup PDS_ROUTE
- * @{
- */
-
-/**
- * @brief    constructor
- */
 route_table_impl_state::route_table_impl_state(pds_state *state) {
     /**
      * we need max + 1 blocks, extra 1 block for processing updates for
@@ -43,19 +34,11 @@ route_table_impl_state::route_table_impl_state(pds_state *state) {
     v6_max_routes_ = state->mempartition()->max_elements("lpm_v6") - 1;
 }
 
-/**
- * @brief    destructor
- */
 route_table_impl_state::~route_table_impl_state() {
     indexer::destroy(v4_idxr_);
     indexer::destroy(v6_idxr_);
 }
 
-/**
- * @brief    API to initiate transaction over all the table manamgement
- *           library instances
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 route_table_impl_state::table_transaction_begin(void) {
     //v4_idxr_->txn_start();
@@ -63,19 +46,12 @@ route_table_impl_state::table_transaction_begin(void) {
     return SDK_RET_OK;
 }
 
-/**
- * @brief    API to end transaction over all the table manamgement
- *           library instances
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 route_table_impl_state::table_transaction_end(void) {
     //v4_idxr_->txn_end();
     //v6_idxr_->txn_end();
     return SDK_RET_OK;
 }
-
-/** @} */    // end of PDS_ROUTE_TABLE_IMPL_STATE
 
 }    // namespace impl
 }    // namespace api

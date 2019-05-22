@@ -22,38 +22,30 @@ using sdk::table::sdk_table_factory_params_t;
 namespace api {
 namespace impl {
 
-/**
- * @defgroup PDS_VNIC_IMPL_STATE - vnic state functionality
- * @ingroup PDS_VNIC
- * @{
- */
+/// \defgroup PDS_VNIC_IMPL_STATE vnic state functionality
+/// \ingroup PDS_VNIC
+/// @{
 
- /**< forward declaration */
+// forward declaration
 class vnic_impl;
 
-/**
- * @brief    state maintained for vnics
- */
+/// \brief  state maintained for vnics
 class vnic_impl_state : public state_base {
 public:
-    /**< @brief    constructor */
+    /// \brief  constructor
     vnic_impl_state(pds_state *state);
 
-    /**< @brief    destructor */
+    /// \brief  destructor
     ~vnic_impl_state();
 
-    /**
-     * @brief    API to initiate transaction over all the table manamgement
-     *           library instances
-     * @return    SDK_RET_OK on success, failure status code on error
-     */
+    /// \brief  API to initiate transaction over all the table manamgement
+    ///         library instances
+    /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_transaction_begin(void);
 
-    /**
-     * @brief    API to end transaction over all the table manamgement
-     *           library instances
-     * @return    SDK_RET_OK on success, failure status code on error
-     */
+    /// \brief  API to end transaction over all the table manamgement
+    ///         library instances
+    /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_transaction_end(void);
 
 private:
@@ -61,24 +53,20 @@ private:
     sltcam *vnic_mapping_tbl(void) { return vnic_mapping_tbl_; }
     directmap *ingress_vnic_info_tbl(void) { return ingress_vnic_info_tbl_; }
     directmap *egress_vnic_info_tbl(void) { return egress_vnic_info_tbl_; }
-    friend class vnic_impl;   /**< vnic_impl class is friend of vnic_impl_state */
+    friend class vnic_impl;   // vnic_impl class is friend of vnic_impl_state
 
 private:
-    /**< P4 datapath tables for vnic */
-    indexer      *vnic_idxr_;                    /**< indexer to allocate hw
-                                                      vnic id */
-     /**
-      * NOTE: there is no explicit table mgmt for rx and tx stats, we directly
-      *       index using hw_id_ of vnic and and bzero out when we create vnic
-      */
-    sltcam       *vnic_mapping_tbl_;         /**< tcam table for VNIC_MAPPING */
-    directmap    *ingress_vnic_info_tbl_;    /**< directmap table for INGRESS_VNIC_INFO */
-    directmap    *egress_vnic_info_tbl_;     /**< directmap table for EGRESS_VNIC_INFO */
+    indexer     *vnic_idxr_;                ///< indexer to allocate hw vnic id
+    // NOTE: there is no explicit table mgmt for rx and tx stats, we directly
+    //       index using hw_id_ of vnic and and bzero out when we create vnic
+    sltcam      *vnic_mapping_tbl_;         ///< tcam table for VNIC_MAPPING */
+    directmap   *ingress_vnic_info_tbl_;    ///< directmap table for INGRESS_VNIC_INFO */
+    directmap   *egress_vnic_info_tbl_;     ///< directmap table for EGRESS_VNIC_INFO */
 };
 
-/** * @} */    // end of PDS_VNIC_IMPL_STATE
+/// @}
 
 }    // namespace impl
 }    // namespace api
 
-#endif    /** __VNIC_IMPL_STATE_HPP__ */
+#endif    // __VNIC_IMPL_STATE_HPP__

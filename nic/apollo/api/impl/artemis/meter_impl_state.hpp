@@ -36,7 +36,7 @@ public:
     /// \brief    constructor
     meter_impl_state(pds_state *state);
 
-    /// \@brief    destructor
+    /// \brief    destructor
     ~meter_impl_state();
 
     /// \brief    API to initiate transaction over all the table manamgement
