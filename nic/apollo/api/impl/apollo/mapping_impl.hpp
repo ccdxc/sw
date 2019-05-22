@@ -153,70 +153,70 @@ private:
                                                   vpc_entry *vpc,
                                                   pds_mapping_spec_t *spec);
 
-   /// \brief     add necessary entries to local mapping tables
-   /// \param[in] vpc  VPC of this IP
-   /// \param[in] spec IP mapping details
-   /// \return    SDK_RET_OK on success, failure status code on error
+    /// \brief     add necessary entries to local mapping tables
+    /// \param[in] vpc  VPC of this IP
+    /// \param[in] spec IP mapping details
+    /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t add_local_ip_mapping_entries_(vpc_entry *vpc,
                                             pds_mapping_spec_t *spec);
 
-   /// \brief     reserve necessary entries in remote mapping tables
-   /// \param[in] api_obj API object being processed
-   /// \param[in] vpc     VPC of this IP
-   /// \param[in] spec    IP mapping details
-   /// \return    SDK_RET_OK on success, failure status code on error
+    /// \brief     reserve necessary entries in remote mapping tables
+    /// \param[in] api_obj API object being processed
+    /// \param[in] vpc     VPC of this IP
+    /// \param[in] spec    IP mapping details
+    /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t reserve_remote_ip_mapping_resources_(api_base *api_obj,
                                                    vpc_entry *vpc,
                                                    pds_mapping_spec_t *spec);
 
-   /// \brief     add necessary entries to remote mapping tables
-   /// \param[in] vpc    VPC of this IP
-   /// \param[in] subnet subnet of this IP
-   /// \param[in] spec   IP mapping details
-   /// \return    SDK_RET_OK on success, failure status code on error
+    /// \brief     add necessary entries to remote mapping tables
+    /// \param[in] vpc    VPC of this IP
+    /// \param[in] subnet subnet of this IP
+    /// \param[in] spec   IP mapping details
+    /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t add_remote_vnic_mapping_rx_entries_(vpc_entry *vpc,
                                                   subnet_entry *subnet,
                                                   pds_mapping_spec_t *spec);
 
-   /// \brief     add necessary entries to REMOTE_VNIC_MAPPING_TX table
-   /// \param[in] vpc    VPC of this IP
-   /// \param[in] subnet subnet of this IP
-   /// \param[in] spec   IP mapping details
-   /// \return    SDK_RET_OK on success, failure status code on error
+    /// \brief     add necessary entries to REMOTE_VNIC_MAPPING_TX table
+    /// \param[in] vpc    VPC of this IP
+    /// \param[in] subnet subnet of this IP
+    /// \param[in] spec   IP mapping details
+    /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t add_remote_vnic_mapping_tx_entries_(vpc_entry *vpc,
                                                   pds_mapping_spec_t *spec);
 
-   /// \brief      fill the table values to the spec
-   /// \param[in]  remote_vnic_map_tx_data  REMOTE_VNIC_MAPPING_TX table data
-   /// \param[in]  nh_data                  NH table data
-   /// \param[in]  tep_data                 TEP table data
-   /// \param[out] spec                     specification
+    /// \brief      fill the table values to the spec
+    /// \param[in]  remote_vnic_map_tx_data  REMOTE_VNIC_MAPPING_TX table data
+    /// \param[in]  nh_data                  NH table data
+    /// \param[in]  tep_data                 TEP table data
+    /// \param[out] spec                     specification
     void fill_mapping_spec_(
                 remote_vnic_mapping_tx_appdata_t *remote_vnic_map_tx_dta,
                 nexthop_actiondata_t             *nh_data,
                 tep_actiondata_t                 *tep_data,
                 pds_mapping_spec_t               *spec);
 
-   /// \brief         read the configured values from the local mapping tables
-   /// \param[in]     vpc  pointer to the vpc entry
-   /// \param[in/out] spec pointer to the spec
-   /// \return        SDK_RET_OK on success, failure status code on error
+    /// \brief         read the configured values from the local mapping tables
+    /// \param[in]     vpc  pointer to the vpc entry
+    /// \param[in/out] spec pointer to the spec
+    /// \return        SDK_RET_OK on success, failure status code on error
     sdk_ret_t read_local_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec);
 
-   /// \brief         read the configured values from the local mapping tables
-   /// \param[in]     vpc  pointer to the vpc entry
-   /// \param[in/out] spec pointer to the spec
-   /// \return        SDK_RET_OK on success, failure status code on error
+    /// \brief         read the configured values from the local mapping tables
+    /// \param[in]     vpc  pointer to the vpc entry
+    /// \param[in/out] spec pointer to the spec
+    /// \return        SDK_RET_OK on success, failure status code on error
     sdk_ret_t read_remote_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec);
 
-   /// \brief     release all the resources reserved for local IP mapping
-   /// \param[in] api_obj mapping object
-   /// \return    SDK_RET_OK on success, failure status code on error
+    /// \brief     release all the resources reserved for local IP mapping
+    /// \param[in] api_obj mapping object
+    /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t release_local_ip_mapping_resources_(api_base *api_obj);
 
-   /// \brief     release all the resources reserved for remote IP mapping
-   /// \param[in] api_obj mapping object
-   /// \return    SDK_RET_OK on success, failure status code on error
+    /// \brief     release all the resources reserved for remote IP mapping
+    /// \param[in] api_obj mapping object
+    /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t release_remote_ip_mapping_resources_(api_base *api_obj);
 
 private:
@@ -247,4 +247,4 @@ private:
 }    // namespace impl
 }    // namespace api
 
-#endif     __MAPPING_IMPL_HPP__
+#endif     // __MAPPING_IMPL_HPP__

@@ -83,7 +83,7 @@ namespace impl {
 
 #define nat_action                action_u.nat_nat
 mapping_impl *
-mapping_impl::factory(pds_mapping_spec_t *pds_mapping) {
+mapping_impl::factory(pds_mapping_spec_t *spec) {
     mapping_impl    *impl;
 
     impl = mapping_impl_db()->alloc();
@@ -91,7 +91,7 @@ mapping_impl::factory(pds_mapping_spec_t *pds_mapping) {
         return NULL;
     }
     new (impl) mapping_impl();
-    // TODO: set is_local_ here !!
+    is_local_ = spec->is_local;
     return impl;
 }
 

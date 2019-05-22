@@ -20,7 +20,8 @@ typedef struct pds_mapping_spec_s {
     pds_encap_t fabric_encap;         // fabric encap for this mapping
     pds_tep_key_t tep;                // TEP address for this mapping
                                       // 1. Device IP for local vnic
-                                      // 2. Remote TEP for remote vnic
+                                      // 2. Remote TEP for remote vnic if
+                                      //    provider IP is not valid
     mac_addr_t overlay_mac;           // MAC for this IP
 
     // information specific to local IP mappings
@@ -29,6 +30,8 @@ typedef struct pds_mapping_spec_s {
         pds_vnic_key_t vnic;          // VNIC for local IP
         bool public_ip_valid;         // TRUE if public IP is valid
         ip_addr_t public_ip;          // Public IP address
+        bool provider_ip_valid;       // TRUE if provider IP is valid
+        ip_addr_t provider_ip;        // Provider IP address
     };
 } __PACK__ pds_mapping_spec_t;
 
