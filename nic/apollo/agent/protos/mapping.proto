@@ -45,6 +45,10 @@ message MappingSpec {
   types.IPAddress PublicIP    = 7;
   // provider/substrate IP corresponding to the overlay IP, if any
   types.IPAddress ProviderIp  = 8;
+  // service tag for this IP mapping, if exists. service tag can be used
+  // in defining security policies
+  // NOTE: service tag 0 is invalid
+  uint32          ServceTag   = 9;
 }
 
 // operational status of a mapping

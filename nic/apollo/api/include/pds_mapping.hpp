@@ -29,6 +29,9 @@ typedef struct pds_local_mapping_spec_s {
     mac_addr_t vnic_mac;         ///< VNIC MAC
     bool public_ip_valid;        ///< TRUE if public IP is valid
     ip_addr_t public_ip;         ///< Public IP address
+    bool provider_ip_valid;      ///< TRUE if provider IP is valid
+    ip_addr_t provider_ip;       ///< Provider IP address
+    uint32_t  svc_tag;           ///< service tag, if any
 } __PACK__ pds_local_mapping_spec_t;
 
 /// \brief    remote mapping specification
