@@ -122,6 +122,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     p4pd_error_t p4pd_ret;
     pds_vnic_spec_t *spec;
     pds_vpc_key_t vpc_key;
+    pds_meter_entry *meter;
     pds_subnet_key_t subnet_key;
     pds_policy_key_t policy_key;
     policy *ing_v4_policy, *ing_v6_policy;
@@ -240,17 +241,30 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     //       policy roots and potentially this table moves to RXDMA and/or TXDMA
     if (egr_v4_policy) {
         addr = ((impl::security_policy_impl *)(egr_v4_policy->impl()))->security_policy_root_addr();
-        PDS_TRACE_DEBUG("IPv4 policy root addr 0x%llx", addr);
+        PDS_TRACE_DEBUG("IPv4 egr policy root addr 0x%llx", addr);
         MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v4_sacl,
                                 addr, 5);
     }
     if (egr_v6_policy) {
         addr = ((impl::security_policy_impl *)(egr_v6_policy->impl()))->security_policy_root_addr();
-        PDS_TRACE_DEBUG("IPv6 policy root addr 0x%llx", addr);
+        PDS_TRACE_DEBUG("IPv6 egr policy root addr 0x%llx", addr);
         MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v6_sacl,
                                 addr, 5);
     }
-    // TODO: program v4 and v6 meter roots
+    meter = meter_db()->find(&spec->v4_meter);
+    if (meter) {
+        addr = ((impl::meter_impl *)(meter->impl()))->lpm_root_addr();
+        PDS_TRACE_DEBUG("IPv4 meter root addr 0x%llx", addr);
+        MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v4_meter,
+                                addr, 5);
+    }
+    meter = meter_db()->find(&spec->v6_meter);
+    if (meter) {
+        addr = ((impl::meter_impl *)(meter->impl()))->lpm_root_addr();
+        PDS_TRACE_DEBUG("IPv6 meter root addr 0x%llx", addr);
+        MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v6_meter,
+                                addr, 5);
+    }
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INGRESS_VNIC_INFO,
                                        hw_id_, NULL, NULL,
                                        &ing_vnic_info);

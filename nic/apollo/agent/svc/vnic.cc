@@ -43,6 +43,8 @@ pds_vnic_proto_spec_to_api_spec (pds_vnic_spec_t *api_spec,
         }
         api_spec->rx_mirror_session_bmap |= (1 << (msid - 1));
     }
+    api_spec->v4_meter.id = proto_spec.v4meterid;
+    api_spec->v4_meter.id = proto_spec.v6meterid;
     return SDK_RET_OK;
 }
 
@@ -150,6 +152,8 @@ vnic_api_spec_to_proto_spec (const pds_vnic_spec_t *api_spec,
                              &api_spec->fabric_encap);
     proto_spec->set_resourcepoolid(api_spec->rsc_pool_id);
     proto_spec->set_sourceguardenable(api_spec->src_dst_check);
+    proto_spec->set_v4meterid(api_spec->v4_meter.id);
+    proto_spec->set_v6meterid(api_spec->v6_meter.id);
 }
 
 // Populate proto buf status from vnic API status
