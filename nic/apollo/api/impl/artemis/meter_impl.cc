@@ -19,10 +19,6 @@
 namespace api {
 namespace impl {
 
-/// \defgroup PDS_METER_IMPL - meter datapath implementation
-/// \ingroup PDS_METER
-/// \@{
-
 meter_impl *
 meter_impl::factory(pds_meter_spec_t *spec) {
     meter_impl    *impl;
@@ -40,9 +36,8 @@ meter_impl::destroy(meter_impl *impl) {
     SDK_FREE(SDK_MEM_ALLOC_PDS_METER_IMPL, impl);
 }
 
-// NOTE: reserve_resources() logic is same for both API_OP_CREATE and
-//       API_OP_UPDATE as update doesn't reuse any of the existing resources
-//       for this object
+// reserve_resources() logic is same for both API_OP_CREATE and API_OP_UPDATE
+// as update doesn't reuse any of the existing resources for this object
 sdk_ret_t
 meter_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t lpm_block_id;
@@ -172,8 +167,6 @@ meter_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     }
     return SDK_RET_OK;
 }
-
-/// \@}
 
 }    // namespace impl
 }    // namespace api

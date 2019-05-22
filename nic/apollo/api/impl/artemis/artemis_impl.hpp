@@ -37,15 +37,15 @@ public:
 
     /// \brief      initialize program configuration
     /// \param[in]  init_params initialization time parameters passed by app
-    /// \param[in]  asic_cfg asic configuration to be populated with program
-    ///                           information
+    /// \param[in]  asic_cfg    asic configuration to be populated with program
+    ///                         information
     virtual void program_config_init(pds_init_params_t *init_params,
                                      asic_cfg_t *asic_cfg) override;
 
     /// \brief      initialize asm configuration
     /// \param[in]  init_params initialization time parameters passed by app
-    /// \param[in]  asic_cfg asic configuration to be populated with asm
-    ///                           information
+    /// \param[in]  asic_cfg    asic configuration to be populated with asm
+    ///                         information
     virtual void asm_config_init(pds_init_params_t *init_params,
                                  asic_cfg_t *asic_cfg) override;
 
