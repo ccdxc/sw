@@ -43,8 +43,8 @@ pds_vnic_proto_spec_to_api_spec (pds_vnic_spec_t *api_spec,
         }
         api_spec->rx_mirror_session_bmap |= (1 << (msid - 1));
     }
-    api_spec->v4_meter.id = proto_spec.v4meterid;
-    api_spec->v4_meter.id = proto_spec.v6meterid;
+    api_spec->v4_meter.id = proto_spec.v4meterid();
+    api_spec->v4_meter.id = proto_spec.v6meterid();
     return SDK_RET_OK;
 }
 

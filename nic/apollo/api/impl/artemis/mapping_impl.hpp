@@ -216,8 +216,8 @@ private:
      * @param[in] spec            IP mapping details
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t add_remote_vnic_mapping_entries_(vpc_entry *vpc,
-                                               pds_mapping_spec_t *spec);
+    sdk_ret_t add_remote_ip_mapping_entries_(vpc_entry *vpc,
+                                             pds_mapping_spec_t *spec);
 
    /**
      * @brief     Read the configured values from the local mapping tables
