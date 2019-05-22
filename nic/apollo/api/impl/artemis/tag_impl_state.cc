@@ -14,10 +14,6 @@
 namespace api {
 namespace impl {
 
-/// \defgroup PDS_TAG_IMPL_STATE - tag database functionality
-/// \ingroup PDS_TAG
-/// \@{
-
 tag_impl_state::tag_impl_state(pds_state *state) {
     v4_lpm_region_addr_ = state->mempartition()->start_addr("tag_v4");
     SDK_ASSERT(v4_lpm_region_addr_ != INVALID_MEM_ADDRESS);
@@ -41,8 +37,6 @@ sdk_ret_t
 tag_impl_state::table_transaction_end(void) {
     return SDK_RET_OK;
 }
-
-/** @} */    // end of PDS_TAG_IMPL_STATE
 
 }    // namespace impl
 }    // namespace api
