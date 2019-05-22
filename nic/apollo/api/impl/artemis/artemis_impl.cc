@@ -202,7 +202,6 @@ artemis_impl::asm_config_init(pds_init_params_t *init_params,
     asic_cfg->asm_cfg[2].symbols_func = txdma_symbols_init_;
 }
 
-#if 0
 sdk_ret_t
 artemis_impl::key_native_init_(void) {
     sdk_ret_t                  ret;
@@ -221,14 +220,20 @@ artemis_impl::key_native_init_(void) {
     key.ethernet_2_valid = 0;
     key.ipv4_2_valid = 0;
     key.ipv6_2_valid = 0;
+    key.ethernet_3_valid = 0;
+    key.ipv4_3_valid = 0;
+    key.ipv6_3_valid = 0;
     data.action_id = KEY_NATIVE_NATIVE_IPV4_PACKET_ID;
     mask.ipv4_1_valid_mask = 0xFF;
     mask.ipv6_1_valid_mask = 0xFF;
     mask.ethernet_2_valid_mask = 0xFF;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    ret = artemis_impl_db()->key_native_tbl()->insert(
-        &key, &mask, &data, &artemis_impl_db()->key_native_tbl_idx_[idx++]);
+    mask.ethernet_3_valid_mask = 0xFF;
+    mask.ipv4_3_valid_mask = 0xFF;
+    mask.ipv6_3_valid_mask = 0xFF;
+    ret = artemis_impl_db()->key_native_tbl()->insert(&key, &mask, &data,
+                                                      &artemis_impl_db()->key_native_tbl_idx_[idx++]);
 
     // entry for native IPv6 packets
     memset(&key, 0, sizeof(key));
@@ -239,14 +244,20 @@ artemis_impl::key_native_init_(void) {
     key.ethernet_2_valid = 0;
     key.ipv4_2_valid = 0;
     key.ipv6_2_valid = 0;
+    key.ethernet_3_valid = 0;
+    key.ipv4_3_valid = 0;
+    key.ipv6_3_valid = 0;
     data.action_id = KEY_NATIVE_NATIVE_IPV6_PACKET_ID;
     mask.ipv4_1_valid_mask = 0xFF;
     mask.ipv6_1_valid_mask = 0xFF;
     mask.ethernet_2_valid_mask = 0xFF;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    ret = artemis_impl_db()->key_native_tbl()->insert(
-        &key, &mask, &data, &artemis_impl_db()->key_native_tbl_idx_[idx++]);
+    mask.ethernet_3_valid_mask = 0xFF;
+    mask.ipv4_3_valid_mask = 0xFF;
+    mask.ipv6_3_valid_mask = 0xFF;
+    ret = artemis_impl_db()->key_native_tbl()->insert(&key, &mask, &data,
+                                                      &artemis_impl_db()->key_native_tbl_idx_[idx++]);
 
     // entry for native non-IP packets
     memset(&key, 0, sizeof(key));
@@ -257,12 +268,18 @@ artemis_impl::key_native_init_(void) {
     key.ethernet_2_valid = 0;
     key.ipv4_2_valid = 0;
     key.ipv6_2_valid = 0;
+    key.ethernet_3_valid = 0;
+    key.ipv4_3_valid = 0;
+    key.ipv6_3_valid = 0;
     data.action_id = KEY_NATIVE_NATIVE_NONIP_PACKET_ID;
     mask.ipv4_1_valid_mask = 0xFF;
     mask.ipv6_1_valid_mask = 0xFF;
     mask.ethernet_2_valid_mask = 0xFF;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
+    mask.ethernet_3_valid_mask = 0xFF;
+    mask.ipv4_3_valid_mask = 0xFF;
+    mask.ipv6_3_valid_mask = 0xFF;
     ret = artemis_impl_db()->key_native_tbl()->insert(
         &key, &mask, &data, &artemis_impl_db()->key_native_tbl_idx_[idx++]);
 
@@ -271,6 +288,7 @@ artemis_impl::key_native_init_(void) {
     return ret;
 }
 
+#if 0
 sdk_ret_t
 artemis_impl::key_tunneled_init_(void) {
     sdk_ret_t                    ret;
@@ -413,11 +431,11 @@ artemis_impl::table_init_(void) {
     sdk_ret_t     ret;
     mem_addr_t    addr;
 
-#if 0
     ret = key_native_init_();
     if (ret != SDK_RET_OK) {
         return ret;
     }
+#if 0
     ret = key_tunneled_init_();
     if (ret != SDK_RET_OK) {
         return ret;
@@ -579,7 +597,7 @@ artemis_impl::debug_dump(FILE *fp) {
 
 sdk_ret_t
 artemis_impl::write_to_rxdma_table(mem_addr_t addr, uint32_t tableid,
-                                  uint8_t action_id, void *actiondata) {
+                                   uint8_t action_id, void *actiondata) {
     uint32_t     len;
     uint8_t      packed_bytes[CACHE_LINE_SIZE];
     uint8_t      *packed_entry = packed_bytes;
@@ -603,7 +621,7 @@ artemis_impl::write_to_rxdma_table(mem_addr_t addr, uint32_t tableid,
 
 sdk_ret_t
 artemis_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
-                                  uint8_t action_id, void *actiondata) {
+                                   uint8_t action_id, void *actiondata) {
     uint32_t     len;
     uint8_t      packed_bytes[CACHE_LINE_SIZE];
     uint8_t      *packed_entry = packed_bytes;
