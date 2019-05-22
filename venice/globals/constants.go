@@ -210,6 +210,9 @@ const (
 	// TechSupport
 	VeniceTechSupport = "pen-vtsa"
 	NaplesTechSupport = "pen-ntsa"
+
+	// DefaultClusterVersionName
+	DefaultVersionName = "clusterVersion"
 )
 
 var (

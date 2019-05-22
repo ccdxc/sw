@@ -332,6 +332,15 @@ func PreLoadImage() error {
 func PreLoadVeniceOSImage() error {
 
 	cmd := exec.Command(applInstallScriptName, "-p", installerTmpDir)
+	// open the out file for writing
+	outfile, err := os.OpenFile("/var/log/pensando/grubInstall.txt", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		log.Errorf("Failed to open log file %v", err)
+		return err
+	}
+	defer outfile.Close()
+	cmd.Stdout = outfile
+
 	if err := cmd.Run(); err != nil {
 		errStr := fmt.Sprintf("Installation failed at running the script %#v with err %s", applInstallScriptName, err)
 		return errors.New(errStr)
@@ -345,6 +354,15 @@ func LoadAndInstallVeniceOSImage() error {
 	var err error
 
 	cmd := exec.Command(applInstallScriptName, "-u", installerTmpDir)
+	// open the out file for writing
+	outfile, err := os.OpenFile("/var/log/pensando/grubInstall.txt", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		log.Errorf("Failed to open log file %v", err)
+		return err
+	}
+	defer outfile.Close()
+	cmd.Stdout = outfile
+
 	if err = cmd.Run(); err != nil {
 		errStr := fmt.Sprintf("Installation failed at running the script %#v with err %s", applInstallScriptName, err)
 		return errors.New(errStr)

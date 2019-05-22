@@ -74,6 +74,7 @@ func (o *clusterCreateOp) populateClusterDefaults() {
 
 func (o *clusterCreateOp) populateVersionDefaults() {
 	o.version.Kind = "Version"
+	o.version.Name = globals.DefaultVersionName
 	o.version.APIVersion = "v1"
 	o.version.UUID = uuid.NewV4().String()
 	o.version.SelfLink = o.version.MakeKey("cluster")

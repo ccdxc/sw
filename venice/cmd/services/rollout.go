@@ -5,6 +5,11 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/pensando/sw/venice/globals"
+
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
+
 	"github.com/pensando/sw/venice/utils/imagestore"
 
 	"github.com/pensando/sw/venice/cmd/env"
@@ -252,6 +257,31 @@ func (r *rolloutMgr) handleServiceRollout(ro *rolloutproto.ServiceRollout) {
 		}
 		log.Infof(" Writing service rollout status :%#v ", s)
 		r.serviceStatusWriter.WriteServiceStatus(context.TODO(), &s)
+	}
+
+	clusterVersion := &cluster.Version{
+		TypeMeta: api.TypeMeta{
+			Kind:       "Version",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.DefaultVersionName,
+		},
+		Spec: cluster.VersionSpec{},
+		Status: cluster.VersionStatus{
+			BuildVersion: env.GitVersion,
+			VCSCommit:    env.GitCommit,
+			BuildDate:    env.BuildDate,
+		},
+	}
+
+	log.Infof(" Cluster version Info %v", clusterVersion)
+	if env.CfgWatcherService != nil {
+		versionIf := env.CfgWatcherService.APIClient().Version()
+		_, err := versionIf.UpdateStatus(context.Background(), clusterVersion)
+		if err != nil {
+			log.Errorf("Failed to update ClusterVersion to objectStore %+v", err)
+		}
 	}
 }
 
