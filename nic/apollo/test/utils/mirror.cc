@@ -101,8 +101,18 @@ mirror_session_util::read(pds_mirror_session_info_t *info) {
 
 sdk::sdk_ret_t
 mirror_session_util::update(void) {
-    // TODO
-    return SDK_RET_OK;
+    pds_mirror_session_spec_t spec = {0};
+
+    spec.key.id = key.id;
+    spec.type =type;
+    spec.snap_len = snap_len;
+    if(spec.type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
+        spec.rspan_spec = rspan_spec;
+    } else if (spec.type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
+        spec.erspan_spec = erspan_spec;
+    }
+
+    return pds_mirror_session_update(&spec);
 }
 
 sdk::sdk_ret_t
@@ -112,7 +122,6 @@ mirror_session_util::del(void) {
 
 static inline sdk::sdk_ret_t
 mirror_session_util_object_stepper(mirror_session_stepper_seed_t *seed,
-                                   uint32_t num_mirror_sessions,
                                    utils_op_t op,
                                    sdk_ret_t expected_result = sdk::SDK_RET_OK)
 {
@@ -124,7 +133,7 @@ mirror_session_util_object_stepper(mirror_session_stepper_seed_t *seed,
     memcpy(&local_seed, seed, sizeof(mirror_session_stepper_seed_t));
 
     for (uint32_t idx = seed->key.id;
-         idx < seed->key.id + num_mirror_sessions;
+         idx < seed->key.id + seed->num_ms;
          idx++) {
 
         local_seed.key.id = idx;
@@ -133,11 +142,14 @@ mirror_session_util_object_stepper(mirror_session_stepper_seed_t *seed,
         case OP_MANY_CREATE:
             rv = ms_obj.create();
             break;
-        case OP_MANY_DELETE:
-            rv = ms_obj.del();
-            break;
         case OP_MANY_READ:
             rv = ms_obj.read(&info);
+            break;
+        case OP_MANY_UPDATE:
+            rv = ms_obj.update();
+            break;
+        case OP_MANY_DELETE:
+            rv = ms_obj.del();
             break;
         default:
             return sdk::SDK_RET_INVALID_OP;
@@ -145,17 +157,20 @@ mirror_session_util_object_stepper(mirror_session_stepper_seed_t *seed,
 
         if (rv != expected_result)
             return sdk::SDK_RET_ERR;
-
-        if (local_seed.type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
+        // alternatively create RSPAN and ERSPAN sessions
+        if (local_seed.type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
+            local_seed.type = PDS_MIRROR_SESSION_TYPE_RSPAN;
             if (local_seed.encap.type == PDS_ENCAP_TYPE_DOT1Q)
                 local_seed.encap.val.vlan_tag++;
             else if (local_seed.encap.type == PDS_ENCAP_TYPE_QINQ) {
                 local_seed.encap.val.qinq_tag.c_tag++;
                 local_seed.encap.val.qinq_tag.s_tag++;
             }
-        } else if (local_seed.type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
+        } else if (local_seed.type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
+            local_seed.type = PDS_MIRROR_SESSION_TYPE_ERSPAN;
             local_seed.span_id++;
             local_seed.dscp++;
+            local_seed.src_ip.addr.v4_addr += 1;
         }
     }
 
@@ -163,25 +178,25 @@ mirror_session_util_object_stepper(mirror_session_stepper_seed_t *seed,
 }
 
 sdk::sdk_ret_t
-mirror_session_util::many_create(mirror_session_stepper_seed_t *seed,
-                                 uint32_t num_mirror_sessions) {
-    return (mirror_session_util_object_stepper(seed, num_mirror_sessions,
-                                               OP_MANY_CREATE));
+mirror_session_util::many_create(mirror_session_stepper_seed_t *seed) {
+    return (mirror_session_util_object_stepper(seed, OP_MANY_CREATE));
 }
 
 sdk::sdk_ret_t
 mirror_session_util::many_read(mirror_session_stepper_seed_t *seed,
-                     uint32_t num_mirror_sessions,
                      sdk::sdk_ret_t exp_result) {
-    return (mirror_session_util_object_stepper(seed, num_mirror_sessions,
-                                               OP_MANY_READ, exp_result));
+    return (mirror_session_util_object_stepper(seed, OP_MANY_READ,
+                                               exp_result));
 }
 
 sdk::sdk_ret_t
-mirror_session_util::many_delete(mirror_session_stepper_seed_t *seed,
-                                 uint32_t num_mirror_sessions) {
-    return (mirror_session_util_object_stepper(seed, num_mirror_sessions,
-                                               OP_MANY_DELETE));
+mirror_session_util::many_update(mirror_session_stepper_seed_t *seed) {
+    return (mirror_session_util_object_stepper(seed, OP_MANY_UPDATE));
+}
+
+sdk::sdk_ret_t
+mirror_session_util::many_delete(mirror_session_stepper_seed_t *seed) {
+    return (mirror_session_util_object_stepper(seed, OP_MANY_DELETE));
 }
 
 }    // namespace api_test

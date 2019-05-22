@@ -27,6 +27,7 @@ typedef struct mirror_session_stepper_seed_s {
     uint32_t dscp;
     pds_ifindex_t interface;
     pds_encap_t encap;
+    uint8_t num_ms;
 } mirror_session_stepper_seed_t;
 
 /// Mirror session test utility class
@@ -71,23 +72,31 @@ public:
     ///
     /// \param num_mirror_sessions Number of mirror sessions to be created
     /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_create(mirror_session_stepper_seed_t *seed,
-                                 uint32_t num_mirror_sessions);
+    static sdk_ret_t many_create(mirror_session_stepper_seed_t *seed);
 
     /// \brief Read many mirror sessions
     ///
     /// \param num_mirror_sessions Number of mirror sessions to be read
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_read(mirror_session_stepper_seed_t *seed,
-                               uint32_t num_mirror_sessions,
                                sdk::sdk_ret_t exp_result = sdk::SDK_RET_OK);
+
+    /// \brief update many mirror sessions for the given type and id
+    ///
+    /// \param num_mirror_sessions Number of mirror sessions to be created
+    /// \returns #SDK_RET_OK on success, failure status code on error
+    static sdk_ret_t many_update(mirror_session_stepper_seed_t *seed);
 
     /// \brief Delete many mirror sessions
     ///
     /// \param num_mirror_sessions Number of mirror sessions to be deleted
     /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_delete(mirror_session_stepper_seed_t *seed,
-                                 uint32_t num_mirror_sessions);
+    static sdk_ret_t many_delete(mirror_session_stepper_seed_t *seed);
+
+    /// \brief Indicates whether route table is stateful
+    ///
+    /// \returns FALSE for mirror  which is stateless
+    static bool is_stateful(void) { return FALSE; }
 };
 
 }    // namespace api_test
