@@ -41,6 +41,7 @@ import (
 	"github.com/pensando/sw/venice/utils/balancer"
 	vErrors "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/events/recorder"
+	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -328,10 +329,10 @@ func (s *loginV1GwService) audit(user *auth.User, clientIPs []string, reqURI str
 	auditor := apiGateway.GetAuditor()
 	eventID := uuid.NewV4().String()
 	creationTime, _ := types.TimestampProto(time.Now())
+	addrStr := k8s.GetPodIP()
 	addr, err := apiGateway.GetAddr()
-	if err != nil {
-		s.logger.ErrorLog("method", "audit", "msg", "error getting API Gateway IP address", "error", err)
-		return err
+	if err == nil {
+		addrStr = addr.String()
 	}
 	event := &auditapi.Event{
 		TypeMeta: api.TypeMeta{Kind: auth.Permission_AuditEvent.String()},
@@ -357,7 +358,7 @@ func (s *loginV1GwService) audit(user *auth.User, clientIPs []string, reqURI str
 			Outcome:     auditapi.Outcome_Success.String(),
 			RequestURI:  reqURI,
 			GatewayNode: os.Getenv("HOSTNAME"),
-			GatewayIP:   addr.String(),
+			GatewayIP:   addrStr,
 			Data:        make(map[string]string),
 		},
 	}
