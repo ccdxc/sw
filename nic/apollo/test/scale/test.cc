@@ -508,11 +508,14 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
 // bits 22-32 have vpc number
 sdk_ret_t
 create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
-              uint32_t num_vnics, uint16_t vlan_start)
+              uint32_t num_vnics, uint16_t vlan_start,
+              uint32_t num_meter)
 {
     sdk_ret_t rv = SDK_RET_OK;
     pds_vnic_spec_t pds_vnic;
     uint16_t vnic_key = 1;
+    static pds_meter_id_t v4_meter_id = 1;
+    static pds_meter_id_t v6_meter_id = num_meter+1;
 
     SDK_ASSERT(num_vpcs * num_subnets * num_vnics <= PDS_MAX_VNIC);
     for (uint32_t i = 1; i <= (uint64_t)num_vpcs; i++) {
@@ -542,6 +545,14 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                     g_test_params.rspan_bmap | g_test_params.erspan_bmap;
                 pds_vnic.rx_mirror_session_bmap =
                     g_test_params.rspan_bmap | g_test_params.erspan_bmap;
+                pds_vnic.v4_meter.id = v4_meter_id++;
+                if (v4_meter_id > num_meter) {
+                    v4_meter_id = 1;
+                }
+                pds_vnic.v6_meter.id = v6_meter_id++;
+                if (v6_meter_id > (2 * num_meter)) {
+                    v6_meter_id = num_meter+1;
+                }
 #ifdef TEST_GRPC_APP
                 rv = create_vnic_grpc(&pds_vnic);
                 if (rv != SDK_RET_OK) {
@@ -728,7 +739,7 @@ create_meter (uint32_t num_meter, uint32_t meter_scale, pds_meter_type_t type,
 {
     sdk_ret_t ret;
     pds_meter_spec_t pds_meter;
-    static pds_meter_id_t id = 0;
+    static pds_meter_id_t id = 1;
     static uint32_t meter_pfx_count = 0;
     uint32_t num_prefixes = 16;
 
@@ -1195,6 +1206,7 @@ create_objects (void)
     }
 
     // create v4 meter
+    // meter ids: 1 to num_meter
     ret = create_meter(g_test_params.num_meter, g_test_params.meter_scale,
                        g_test_params.meter_type, g_test_params.pps_bps,
                        g_test_params.burst, IP_AF_IPV4);
@@ -1203,6 +1215,7 @@ create_objects (void)
     }
 
     // create v6 meter
+    // meter ids: num_meter+1 to 2*num_meter
     ret = create_meter(g_test_params.num_meter, g_test_params.meter_scale,
                        g_test_params.meter_type, g_test_params.pps_bps,
                        g_test_params.burst, IP_AF_IPV6);
@@ -1267,7 +1280,8 @@ create_objects (void)
     }
     // create vnics
     ret = create_vnics(g_test_params.num_vpcs, g_test_params.num_subnets,
-                       g_test_params.num_vnics, g_test_params.vlan_start);
+                       g_test_params.num_vnics, g_test_params.vlan_start,
+                       g_test_params.num_meter);
     if (ret != SDK_RET_OK) {
         return ret;
     }
