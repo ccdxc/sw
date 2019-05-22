@@ -2,16 +2,20 @@ syntax = "proto3";
 package rulestats;
 
 import "delphi.proto";
+import "metrics_annotations.proto";
 
-message ruleMetrics {
-    // External
+message RuleMetrics {
     option (delphi.datapath_metrics) = true;
+    option (venice.metricInfo) = {
+        DisplayName: "per-Rule Statistics",
+        Description: "Key index - Rule ID"
+    };
     fixed64        Key          = 1;     // Rule Key
 
-    delphi.Counter tcp_hits     = 2;     // Number of TCP packets that hit the rule
-    delphi.Counter udp_hits     = 3;     // Number of UDP packets that hit the rule
-    delphi.Counter icmp_hits    = 4;     // Number of ICMP packets that hit the rule
-    delphi.Counter esp_hits     = 5;     // Number of ESP packets that hit the rule
-    delphi.Counter other_hits   = 6;     // Number of other packets that hit the rule
-    delphi.Counter total_hits   = 7;     // Number of total hits that hit the rule
+    delphi.Counter tcp_hits     = 2  [(venice.metricsField) = {DisplayName: "TCP Hits" Description: "Number of TCP packets that hit the rule"}];
+    delphi.Counter udp_hits     = 3  [(venice.metricsField) = {DisplayName: "UDP Hits" Description: "Number of UDP packets that hit the rule"}];
+    delphi.Counter icmp_hits    = 4  [(venice.metricsField) = {DisplayName: "ICMP Hits" Description: "Number of ICMP packets that hit the rule"}];
+    delphi.Counter esp_hits     = 5  [(venice.metricsField) = {DisplayName: "ESP Hits" Description: "Number of ESP packets that hit the rule"}];
+    delphi.Counter other_hits   = 6  [(venice.metricsField) = {DisplayName: "Other Hits" Description: "Number of non-TCP/UDP/ICMP/ESP packets that hit the rule"}];
+    delphi.Counter total_hits   = 7  [(venice.metricsField) = {DisplayName: "Total Hits" Description: "Number of total packets that hit the rule"}];
 }

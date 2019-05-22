@@ -111,7 +111,7 @@ rule_stats_cb (rule_ctr_t *ctr, bool add)
         SDK_ASSERT_RETURN((rs == sdk::lib::indexer::SUCCESS), HAL_RET_OOM);
 
         start_addr += idx * (1 << NWSEC_RULE_STATS_SHIFT);
-        auto rule_metrics_ptr = delphi::objects::ruleMetrics::NewruleMetrics(ctr->rule_key, start_addr);
+        auto rule_metrics_ptr = delphi::objects::RuleMetrics::NewRuleMetrics(ctr->rule_key, start_addr);
         SDK_ASSERT(rule_metrics_ptr != NULL);
 
         sdk::lib::pal_ret_t ret = sdk::lib::pal_physical_addr_to_virtual_addr(start_addr, &vaddr);
@@ -121,7 +121,7 @@ rule_stats_cb (rule_ctr_t *ctr, bool add)
         ctr->stats_idx = idx;
         bzero(ctr->rule_stats, sizeof(rule_ctr_data_t));
     } else {
-        auto rule_metrics_ptr = delphi::objects::ruleMetrics::Find(ctr->rule_key);
+        auto rule_metrics_ptr = delphi::objects::RuleMetrics::Find(ctr->rule_key);
         if (rule_metrics_ptr != NULL) {
             rule_metrics_ptr->Delete(); 
         }

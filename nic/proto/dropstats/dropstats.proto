@@ -2,48 +2,60 @@ syntax = "proto3";
 package dropstats;
 
 import "delphi.proto";
+import "metrics_annotations.proto";
 
 message DropMetrics {
     // External
     option (delphi.datapath_metrics) = true;
+
+    option (venice.metricInfo) = {
+        DisplayName: "Global Drop Statistics",
+        Description: "Key index - Global ID"
+    };
+
     fixed64          Key                              = 1;        // Global id 0
-    delphi.Counter   drop_malformed_pkt               = 2;        // malformed pkt drop
-    delphi.Counter   drop_parser_icrc_error           = 3;       // RDMA ICRC Errors
-    delphi.Counter   drop_parse_len_error             = 4;       // Packet Length Errors
-    delphi.Counter   drop_hardware_error              = 5;
-    delphi.Counter   drop_input_mapping               = 6;        // input mapping table miss
-    delphi.Counter   drop_input_mapping_dejavu        = 7;        // deja-vu drop
-    delphi.Counter   drop_multi_dest_not_pinned_uplink  = 8;        // Multi destination frame recieved for a l2seg on not pinned uplink
-    delphi.Counter   drop_flow_hit                    = 9;        // flow hit drop
-    delphi.Counter   drop_flow_miss                   = 10;        // flow miss drop
-    delphi.Counter   drop_nacl                        = 11;        // nacl drop
-    delphi.Counter   drop_ipsg                        = 12;        // ipsg drop
-    delphi.Counter   drop_ip_normalization            = 13;        // ip norm. drop
-    delphi.Counter   drop_tcp_normalization           = 14;        // tcp norm. drop
-    delphi.Counter   drop_tcp_rst_with_invalid_ack_num = 15;       // rst with invalid ack num
-    delphi.Counter   drop_tcp_non_syn_first_pkt       = 16;       // non-syn first pkt
-    delphi.Counter   drop_icmp_normalization          = 17;       // icmp norm. drop
-    delphi.Counter   drop_input_properties_miss       = 18;       // input properties miss
-    delphi.Counter   drop_tcp_out_of_window           = 19;       // tcp OOW drop
-    delphi.Counter   drop_tcp_split_handshake         = 20;       // split handshake drop
-    delphi.Counter   drop_tcp_win_zero_drop           = 21;       // tcp win. zero
-    delphi.Counter   drop_tcp_data_after_fin          = 22;       // tcp data after fin
-    delphi.Counter   drop_tcp_non_rst_pkt_after_rst   = 23;       // tcp non rst
-    delphi.Counter   drop_tcp_invalid_responder_first_pkt = 24;       // tcp invalid resp.
-    delphi.Counter   drop_tcp_unexpected_pkt          = 25;       // tcp unexpected packet
-    delphi.Counter   drop_src_lif_mismatch            = 26;
-    delphi.Counter   drop_vf_ip_label_mismatch        = 27;
-    delphi.Counter   drop_vf_bad_rr_dst_ip            = 28;
+    delphi.Counter   drop_malformed_pkt               = 2  [(venice.metricsField) = {DisplayName: "Malformed Packet Drops" Description: " malformed pkt drop"}];
+    delphi.Counter   drop_parser_icrc_error           = 3  [(venice.metricsField) = {DisplayName: "RDMA ICRC Errors" Description: "number of packets dropped due to RDMA ICRC Errors"}];
+    delphi.Counter   drop_parse_len_error             = 4  [(venice.metricsField) = {DisplayName: "Packet Length Errors" Description: "number of packets dropped due to parse length errors"}];
+    delphi.Counter   drop_hardware_error              = 5  [(venice.metricsField) = {DisplayName: "Hardware Errors" Description: "number of packets dropped due to hardware errors seen"}];
+    delphi.Counter   drop_input_mapping               = 6  [(venice.metricsField) = {DisplayName: "Input Mapping Table Drops" Description: "number of packets dropped due to missing lookup in input mapping table"}];
+    delphi.Counter   drop_input_mapping_dejavu        = 7  [(venice.metricsField) = {DisplayName: "Input Mapping Deja-vu Drops" Description: "number of packets dropped due to dejavu in input mapping table"}];
+    delphi.Counter   drop_multi_dest_not_pinned_uplink  = 8  [(venice.metricsField) = {DisplayName: "Multi-dest-not-pinned-uplink Drops" Description: "number of multi-destination (multicast) packets dropped because they were not seen on right pinned uplink"}];
+    delphi.Counter   drop_flow_hit                    = 9  [(venice.metricsField) = {DisplayName: "Drop-flow-hit Drops" Description: "number of packets dropped due to hitting drop flows"}];
+    delphi.Counter   drop_flow_miss                   = 10  [(venice.metricsField) = {DisplayName: "Flow-miss Drops" Description: "number of packets dropped due to missing a flow-hit"}];
+    delphi.Counter   drop_nacl                        = 11  [(venice.metricsField) = {DisplayName: "Drop-NACL-hit Drops" Description: "number of packets dropped due to drop-nacl hit"}];
+    delphi.Counter   drop_ipsg                        = 12  [(venice.metricsField) = {DisplayName: "Drop-IPSG Drops" Description: "number of packets dropped due to drop-ipsg hit"}];
+    delphi.Counter   drop_ip_normalization            = 13  [(venice.metricsField) = {DisplayName: "IP-Normalization Drops" Description: "number of packets dropped due to IP packet normalization"}];
+    delphi.Counter   drop_tcp_normalization           = 14  [(venice.metricsField) = {DisplayName: "TCP-Normalization Drops" Description: "number of TCP packets dropped due to TCP normalization"}];
+    delphi.Counter   drop_tcp_rst_with_invalid_ack_num = 15 [(venice.metricsField) = {DisplayName: "TCP-RST-Invalid-ACK Drops" Description: "number of TCP RST packets dropped due to invalid ACK number"}];
+    delphi.Counter   drop_tcp_non_syn_first_pkt       = 16  [(venice.metricsField) = {DisplayName: "TCP-RST-Invalid-ACK Drops" Description: "number of TCP non-SYN first packets dropped"}];
+    delphi.Counter   drop_icmp_normalization          = 17  [(venice.metricsField) = {DisplayName: "ICMP-Normalization Drops" Description: "number of packets dropped due to ICMP packet normalization"}];
+    delphi.Counter   drop_input_properties_miss       = 18  [(venice.metricsField) = {DisplayName: "Input-properties-miss Drops" Description: "number of packets dropped due to input properties miss"}];
+    delphi.Counter   drop_tcp_out_of_window           = 19  [(venice.metricsField) = {DisplayName: "TCP-out-of-window Drops" Description: "number of TCP packets dropped due to out-of-window"}];
+    delphi.Counter   drop_tcp_split_handshake         = 20  [(venice.metricsField) = {DisplayName: "TCP-split-handshake Drops" Description: "number of TCP packets dropped due to split handshake"}];
+    delphi.Counter   drop_tcp_win_zero_drop           = 21  [(venice.metricsField) = {DisplayName: "TCP-zero-window Drops" Description: "number of TCP packets dropped due to window size being zero"}];
+    delphi.Counter   drop_tcp_data_after_fin          = 22  [(venice.metricsField) = {DisplayName: "TCP-data-after-FIN Drops" Description: "number of TCP packets dropped due to data received after FIN was seen"}];
+    delphi.Counter   drop_tcp_non_rst_pkt_after_rst   = 23  [(venice.metricsField) = {DisplayName: "TCP-non-RST-after-RST Drops" Description: "number of TCP packets dropped due to non-RST seen after RST"}];
+    delphi.Counter   drop_tcp_invalid_responder_first_pkt = 24  [(venice.metricsField) = {DisplayName: "TCP-responder-first-packet Drops" Description: "number of TCP packets dropped due to invalid first packet seen from responder"}];
+    delphi.Counter   drop_tcp_unexpected_pkt          = 25  [(venice.metricsField) = {DisplayName: "TCP-unexpected-packet Drops" Description: "number of TCP packets dropped due to unexpected packet seen"}];
+    delphi.Counter   drop_src_lif_mismatch            = 26  [(venice.metricsField) = {DisplayName: "Source-LIF-mismatch Drops" Description: "number of packets dropped due to packets received on unexpected source LIF"}];
+    delphi.Counter   drop_vf_ip_label_mismatch        = 27  [(venice.metricsField) = {DisplayName: "VF-IP-Label-mismatch Drops" Description: "number of packets dropped due to packets VF IP Label mismatch"}];
+    delphi.Counter   drop_vf_bad_rr_dst_ip            = 28  [(venice.metricsField) = {DisplayName: "VF-Bad-RR-Destination-IP Drops" Description: "number of packets dropped due to packets VF bad RR destination IP"}];
 }
 
 message EgressDropMetrics {
     // External
     option (delphi.datapath_metrics) = true;
+    option (venice.metricInfo) = {
+        DisplayName: "Global Egress Drop Statistics",
+        Description: "Key index - Global ID"
+    };
+
     fixed64          Key                              = 1;        // Global id 0
-    delphi.Counter   drop_output_mapping              = 2;        // output mapping table miss
-    delphi.Counter   drop_prune_src_port              = 3;        // prune source port drop
-    delphi.Counter   drop_mirror                      = 4;        // mirror drop
-    delphi.Counter   drop_policer                     = 5;        // policer drop
-    delphi.Counter   drop_copp                        = 6;        // copp drop
-    delphi.Counter   drop_checksum_err                = 7;        // checksum error drop
+    delphi.Counter   drop_output_mapping              = 2  [(venice.metricsField) = {DisplayName: "Output-mapping-miss Drops" Description: "number of packets dropped due to output mapping miss"}];
+    delphi.Counter   drop_prune_src_port              = 3  [(venice.metricsField) = {DisplayName: "Source-port-prune Drops" Description: "number of packets dropped due to source port pruning"}];
+    delphi.Counter   drop_mirror                      = 4  [(venice.metricsField) = {DisplayName: "Mirror-hit Drops" Description: "number of packets dropped due to mirror hit"}];
+    delphi.Counter   drop_policer                     = 5  [(venice.metricsField) = {DisplayName: "Policer Drops" Description: "number of packets dropped due to policer"}];
+    delphi.Counter   drop_copp                        = 6  [(venice.metricsField) = {DisplayName: "COPP Drops" Description: "number of packets dropped due to COPP"}];
+    delphi.Counter   drop_checksum_err                = 7  [(venice.metricsField) = {DisplayName: "Checksum-error Drops" Description: "number of packets dropped due to checksum errors"}];
 }
