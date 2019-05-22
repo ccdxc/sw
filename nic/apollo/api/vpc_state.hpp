@@ -23,7 +23,7 @@ namespace api {
 /// \ingroup PDS_VPC
 /// @{
 
-/// \brief    state maintained for vpcs
+/// \brief state maintained for VPCs
 class vpc_state : public state_base {
 public:
     /// \brief constructor
@@ -32,27 +32,27 @@ public:
     /// \brief destructor
     ~vpc_state();
 
-    /// \brief      allocate memory required for a vpc instance
-    /// \return     pointer to the allocated vpc, NULL if no memory
+    /// \brief allocate memory required for a VPC instance
+    /// \return pointer to the allocated VPC, NULL if no memory
     vpc_entry *alloc(void);
 
-    /// \brief    insert given vpc instance into the vpc db
-    /// \param[in] vpc    vpc entry to be added to the db
-    /// \return   SDK_RET_OK on success, failure status code on error
+    /// \brief insert given VPC instance into the VPC db
+    /// \param[in] vpc VPC entry to be added to the db
+    /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t insert(vpc_entry *vpc);
 
-    /// \brief     remove the given instance of vpc object from db
-    /// \param[in] vpc    vpc entry to be deleted from the db
-    /// \return    pointer to the removed vpc instance or NULL, if not found
+    /// \brief remove the given instance of VPC object from db
+    /// \param[in] vpc VPC entry to be deleted from the db
+    /// \return pointer to the removed VPC instance or NULL, if not found
     vpc_entry *remove(vpc_entry *vpc);
 
-    /// \brief      free vpc instance back to slab
-    /// \param[in]  vpc   pointer to the allocated vpc
+    /// \brief free VPC instance back to slab
+    /// \param[in] vpc pointer to the allocated VPC
     void free(vpc_entry *vpc);
 
-    /// \brief      lookup a vpc in database given the key
-    /// \param[in]  vpc  key for the VPC object
-    /// \return     pointer to the vpc instance found or NULL
+    /// \brief lookup a vpc in database given the key
+    /// \param[in] vpc key for the VPC object
+    /// \return pointer to the VPC instance found or NULL
     vpc_entry *find(pds_vpc_key_t *key) const;
 
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);

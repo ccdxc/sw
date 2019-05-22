@@ -34,12 +34,12 @@ typedef struct pds_vpc_spec_s {
     pds_vpc_type_t type;                     ///< Type
     ipv4_prefix_t v4_pfx;                    ///< IPv4 CIDR block
     ip_prefix_t v6_pfx;                      ///< IPv6 CIDR block
-    ///< traffic routed in this vpc will carry SMAC as vr_mac, if
+    ///< traffic routed in this VPC will carry SMAC as vr_mac, if
     ///< there are no subnets configured (or else the vr_mac configured
     ///< in the subnet will stamped as SMAC in the routed packet), additionally,
     ///< only packets coming with DMAC as this vr_mac are routed
     mac_addr_t vr_mac;                       ///< vnic's overlay mac mac address
-    pds_encap_t fabric_encap;                ///< fabric encap for this vpc, if any
+    pds_encap_t fabric_encap;                ///< fabric encap for this VPC, if any
     ///< subnets of this VPC configured without route table
     ///< will inherit corresponding VPC's route table(s), if any
     pds_route_table_key_t v4_route_table;    ///< IPv4 route table id
@@ -63,9 +63,8 @@ typedef struct pds_vpc_info_s {
     pds_vpc_stats_t stats;      ///< Statistics
 } pds_vpc_info_t;
 
-/// \brief Create VPC
-///
-/// \param[in] spec Specification
+/// \brief create VPC
+/// \param[in] spec specification
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark
@@ -76,28 +75,25 @@ typedef struct pds_vpc_info_s {
 ///    by the caller
 sdk_ret_t pds_vpc_create(pds_vpc_spec_t *spec);
 
-/// \brief Read VPC
-///
-/// \param[in] key Key
-/// \param[out] info Information
+/// \brief read VPC
+/// \param[in]  key  key
+/// \param[out] info information
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark
 ///  - VPC spec containing a valid vpc key should be passed
 sdk_ret_t pds_vpc_read(pds_vpc_key_t *key, pds_vpc_info_t *info);
 
-/// \brief Update VPC
-///
-/// \param[in] spec Specification
+/// \brief update VPC
+/// \param[in] spec specification
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark
 ///  - A valid VPC specification should be passed
 sdk_ret_t pds_vpc_update(pds_vpc_spec_t *spec);
 
-/// \brief Delete VPC
-///
-/// \param[in] key Key
+/// \brief delete VPC
+/// \param[in] key key
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark
