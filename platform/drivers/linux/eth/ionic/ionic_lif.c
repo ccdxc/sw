@@ -199,19 +199,11 @@ err_out:
 int ionic_open(struct net_device *netdev)
 {
 	struct lif *lif = netdev_priv(netdev);
-	struct ionic *ionic = lif->ionic;
 	struct list_head *cur, *tmp;
 	struct lif *slif;
 	int err;
 
 	netif_carrier_off(netdev);
-
-	if (!ionic->is_mgmt_nic) {
-		mutex_lock(&ionic->dev_cmd_lock);
-		ionic_dev_cmd_port_state(&ionic->idev, PORT_ADMIN_STATE_UP);
-		(void)ionic_dev_cmd_wait(ionic, devcmd_timeout);
-		mutex_unlock(&ionic->dev_cmd_lock);
-	}
 
 	err = ionic_lif_open(lif);
 	if (err)
@@ -309,21 +301,10 @@ static void ionic_slaves_stop(struct ionic *ionic)
 int ionic_stop(struct net_device *netdev)
 {
 	struct lif *lif = netdev_priv(netdev);
-	struct ionic *ionic = lif->ionic;
-	int err;
 
 	ionic_slaves_stop(lif->ionic);
 
-	err = ionic_lif_stop(lif);
-
-	if (!ionic->is_mgmt_nic) {
-		mutex_lock(&ionic->dev_cmd_lock);
-		ionic_dev_cmd_port_state(&ionic->idev, PORT_ADMIN_STATE_DOWN);
-		(void)ionic_dev_cmd_wait(ionic, devcmd_timeout);
-		mutex_unlock(&ionic->dev_cmd_lock);
-	}
-
-	return err;
+	return ionic_lif_stop(lif);
 }
 
 int ionic_reset_queues(struct lif *lif)

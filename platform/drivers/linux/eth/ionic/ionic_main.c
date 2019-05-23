@@ -420,6 +420,9 @@ int ionic_port_init(struct ionic *ionic)
 	ionic_dev_cmd_port_init(idev);
 	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
 
+	ionic_dev_cmd_port_state(&ionic->idev, PORT_ADMIN_STATE_UP);
+	(void)ionic_dev_cmd_wait(ionic, devcmd_timeout);
+
 	mutex_unlock(&ionic->dev_cmd_lock);
 	if (err) {
 		dev_err(ionic->dev, "Failed to init port\n");
