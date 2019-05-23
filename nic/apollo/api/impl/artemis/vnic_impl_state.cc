@@ -38,6 +38,7 @@ vnic_impl_state::vnic_impl_state(pds_state *state) {
     vnic_mapping_tbl_ = sltcam::factory(&table_params);
     SDK_ASSERT(vnic_mapping_tbl_ != NULL);
 
+#if 0
     // INGRESS_VNIC_INFO index table
     p4pd_table_properties_get(P4TBL_ID_INGRESS_VNIC_INFO, &tinfo);
     ingress_vnic_info_tbl_ =
@@ -46,21 +47,20 @@ vnic_impl_state::vnic_impl_state(pds_state *state) {
                            false, true, NULL);
     SDK_ASSERT(ingress_vnic_info_tbl_ != NULL);
 
-#if 0
-    // LOCAL_VNIC_INFO index table
-    p4pd_table_properties_get(P4TBL_ID_LOCAL_VNIC_INFO, &tinfo);
+    // EGRESS_VNIC_INFO index table
+    p4pd_table_properties_get(P4TBL_ID_EGRESS_VNIC_INFO, &tinfo);
     egress_vnic_info_tbl_ =
         directmap::factory(tinfo.tablename, P4TBL_ID_EGRESS_VNIC_INFO,
                            tinfo.tabledepth, tinfo.actiondata_struct_size,
                            false, true, NULL);
-    SDK_ASSERT(local_vnic_info_tbl_ != NULL);
+    SDK_ASSERT(egress_vnic_info_tbl_ != NULL);
 #endif
 }
 
 vnic_impl_state::~vnic_impl_state() {
     indexer::destroy(vnic_idxr_);
     sltcam::destroy(vnic_mapping_tbl_);
-    directmap::destroy(ingress_vnic_info_tbl_);
+    //directmap::destroy(ingress_vnic_info_tbl_);
     //directmap::destroy(egress_vnic_info_tbl_);
 }
 

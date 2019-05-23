@@ -35,6 +35,7 @@ namespace impl {
 #define PDS_IMPL_FILL_SVC_MAPPING_SWKEY(key, vpc_hw_id, vip_or_dip, svc_port,  \
                                         provider_ip)                           \
 {                                                                              \
+    memset((key), 0, sizeof(*(key)));                                          \
     (key)->key_metadata_mapping_port = svc_port;                               \
     if ((vip_or_dip)->af == IP_AF_IPV6) {                                      \
         sdk::lib::memrev((key)->key_metadata_mapping_ip,                       \
@@ -44,7 +45,6 @@ namespace impl {
                              (provider_ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);\
         }                                                                      \
     } else {                                                                   \
-        /* key is initialized to zero by the caller */                         \
         memcpy((key)->key_metadata_mapping_ip,                                 \
                &(vip_or_dip)->addr.v4_addr, IP4_ADDR8_LEN);                    \
         if (provider_ip) {                                                     \
@@ -55,15 +55,13 @@ namespace impl {
     (key)->vnic_metadata_vpc_id = vpc_hw_id;                                   \
 }
 
-#define local_ip_mapping_action    action_u.local_ip_mapping_local_ip_mapping_info
-#define PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(data, vnic_hw_id, vpc_hw_id,  \
-                                               svc_tag, xidx1, xidx2)        \
-{                                                                            \
-    (data)->local_ip_mapping_action.vnic_id = (vnic_hw_id);                  \
-    (data)->local_ip_mapping_action.vpc_id = (vpc_hw_id);                    \
-    (data)->local_ip_mapping_action.service_tag = (svc_tag);                 \
-    (data)->local_ip_mapping_action.pa_or_ca_xlate_idx= (uint16_t)xidx1;     \
-    (data)->local_ip_mapping_action.public_xlate_idx = (uint16_t)xidx2;      \
+#define svc_mapping_action action_u.service_mapping_service_mapping_info
+#define PDS_IMPL_FILL_SVC_MAPPING_DATA(data, xlate_idx, xlate_port)            \
+{                                                                              \
+    memset((data), 0, sizeof(*(data)));                                        \
+    (data)->action_id = SERVICE_MAPPING_SERVICE_MAPPING_INFO_ID;               \
+    (data)->svc_mapping_action.service_xlate_idx = xlate_idx;                  \
+    (data)->svc_mapping_action.service_xlate_port = xlate_idx;                 \
 }
 
 svc_mapping_impl *
@@ -151,7 +149,68 @@ svc_mapping_impl::release_resources(api_base *api_obj) {
 
 sdk_ret_t
 svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_INVALID_OP;
+    sdk_ret_t ret;
+    vpc_entry *vip_vpc, *dip_vpc;
+    pds_svc_mapping_spec_t *spec;
+    sdk_table_api_params_t api_params;
+    service_mapping_actiondata_t svc_mapping_data;
+    service_mapping_swkey_t svc_mapping_key;
+
+    spec = &obj_ctxt->api_params->svc_mapping_spec;
+    vip_vpc = vpc_db()->find(&spec->key.vpc);
+    dip_vpc = vpc_db()->find(&spec->vpc);
+    PDS_TRACE_DEBUG("Programming svc mapping (vpc %u, vip %s, port %u, "
+                    "provider IP %s) -> (vpc %u, dip %s, port %u)",
+                    spec->key.vpc.id, ipaddr2str(&spec->key.vip),
+                    spec->key.svc_port, ipaddr2str(&spec->backend_provider_ip),
+                    spec->vpc.id, &spec->backend_ip, spec->svc_port);
+
+    // add an entry in SERVICE_MAPPING with (VIP, port) as key
+    PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
+                                    vip_vpc->hw_id(), &spec->key.vip,
+                                    spec->key.svc_port,
+                                    &spec->backend_provider_ip);
+    PDS_IMPL_FILL_SVC_MAPPING_DATA(&svc_mapping_data,
+                                   0, // TODO: fix
+                                   spec->svc_port);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key,
+                                   &svc_mapping_data,
+                                   SERVICE_MAPPING_SERVICE_MAPPING_INFO_ID,
+                                   vip_to_dip_handle_);
+
+    ret = svc_mapping_impl_db()->svc_mapping_tbl()->insert(&api_params);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to add svc mapping (vpc %u, vip %s, port %u, "
+                      "provider IP %s) -> (vpc %u, dip %s, port %u), err %u",
+                      spec->key.vpc.id, ipaddr2str(&spec->key.vip),
+                      spec->key.svc_port,
+                      ipaddr2str(&spec->backend_provider_ip),
+                      spec->vpc.id, ipaddr2str(&spec->backend_ip),
+                      spec->svc_port, ret);
+        return ret;
+    }
+
+    // reserve an entry in SERVICE_MAPPING with (overlay_ip, port) as key
+    PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
+                                    dip_vpc->hw_id(), &spec->backend_ip,
+                                    spec->svc_port, (ip_addr_t *)NULL);
+    PDS_IMPL_FILL_SVC_MAPPING_DATA(&svc_mapping_data,
+                                   0, // TODO: fix
+                                   spec->key.svc_port);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key,
+                                   &svc_mapping_data,
+                                   SERVICE_MAPPING_SERVICE_MAPPING_INFO_ID,
+                                   dip_to_vip_handle_);
+    ret = svc_mapping_impl_db()->svc_mapping_tbl()->reserve(&api_params);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to add svc mapping (vpc %u, backend-ip %s, "
+                      "port %u) --> (vpc %u, vip %s, port %u), err %u",
+                      spec->vpc.id, ipaddr2str(&spec->backend_ip),
+                      spec->svc_port, spec->key.vpc.id,
+                      ipaddr2str(&spec->key.vip), spec->key.svc_port, ret);
+        return ret;
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -161,13 +220,13 @@ svc_mapping_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 svc_mapping_impl::update_hw(api_base *curr_obj, api_base *prev_obj,
-                        obj_ctxt_t *obj_ctxt) {
+                            obj_ctxt_t *obj_ctxt) {
     return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
 svc_mapping_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
-                          api_op_t api_op, obj_ctxt_t *obj_ctxt) {
+                              api_op_t api_op, obj_ctxt_t *obj_ctxt) {
     return SDK_RET_INVALID_OP;
 }
 

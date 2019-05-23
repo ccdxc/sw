@@ -133,9 +133,10 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     route_table *v4_route_table, *v6_route_table;
     //vnic_rx_stats_actiondata_t vnic_rx_stats_data = { 0 };
     //vnic_tx_stats_actiondata_t vnic_tx_stats_data = { 0 };
-    ingress_vnic_info_actiondata_t ing_vnic_info = { 0 };
+    //ingress_vnic_info_actiondata_t ing_vnic_info = { 0 };
     //egress_vnic_info_actiondata_t egr_vnic_info = { 0 };
 
+#if 0
     spec = &obj_ctxt->api_params->vnic_spec;
     subnet = subnet_db()->find(&spec->subnet);
     if (unlikely(subnet == NULL)) {
@@ -144,7 +145,6 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_INVALID_ARG;
     }
 
-#if 0
     // initialize tx stats tables for this vnic
     vnic_tx_stats_data.action_id = VNIC_TX_STATS_VNIC_TX_STATS_ID;
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VNIC_TX_STATS,
@@ -194,7 +194,6 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     if (p4pd_ret != P4PD_SUCCESS) {
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
-#endif
 
     // program INGRESS_VNIC_INFO table
     vpc_key = subnet->vpc();
@@ -272,6 +271,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     if (p4pd_ret != P4PD_SUCCESS) {
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
+#endif
     return SDK_RET_OK;
 }
 

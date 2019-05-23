@@ -34,6 +34,7 @@ namespace impl {
 // TODO: IP address type (i.e., v4 or v6 bit) is not part of the key
 #define PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(key, vpc_hw_id, ip)             \
 {                                                                            \
+    memset((key), 0, sizeof(*(key)));                                        \
     (key)->vnic_metadata_vpc_id = vpc_hw_id;                                 \
     if ((ip)->af == IP_AF_IPV6) {                                            \
         sdk::lib::memrev((key)->key_metadata_mapping_ip,                     \
@@ -49,6 +50,8 @@ namespace impl {
 #define PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(data, vnic_hw_id, vpc_hw_id,  \
                                                svc_tag, xidx1, xidx2)        \
 {                                                                            \
+    memset((data), 0, sizeof(*(data)));                                      \
+    (data)->action_id = LOCAL_IP_MAPPING_LOCAL_IP_MAPPING_INFO_ID;           \
     (data)->local_ip_mapping_action.vnic_id = (vnic_hw_id);                  \
     (data)->local_ip_mapping_action.vpc_id = (vpc_hw_id);                    \
     (data)->local_ip_mapping_action.service_tag = (svc_tag);                 \
@@ -129,7 +132,7 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
                                                   pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
     sdk_table_api_params_t api_params;
-    local_ip_mapping_swkey_t local_ip_mapping_key = { 0 };
+    local_ip_mapping_swkey_t local_ip_mapping_key;
 
     // reserve an entry in LOCAL_IP_MAPPING table with overlay IP as the key
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
@@ -392,8 +395,8 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
     //mapping_swkey_t mapping_key = { 0 };
     //mapping_appdata_t mapping_data = { 0 };
     sdk_table_api_params_t api_params = { 0 };
-    local_ip_mapping_swkey_t local_ip_mapping_key = { 0 };
-    local_ip_mapping_actiondata_t local_ip_mapping_data = { 0 };
+    local_ip_mapping_swkey_t local_ip_mapping_key;
+    local_ip_mapping_actiondata_t local_ip_mapping_data;
 
     // add entry to LOCAL_IP_MAPPING table for overlay IP
     vnic_impl_obj =
