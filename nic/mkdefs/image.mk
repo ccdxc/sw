@@ -12,6 +12,7 @@
 #
 
 export CONFIG_DIR=${NICDIR}/buildroot/
+export TOOLS_DIR=${NICDIR}/tools/
 export BR2_CONFIG=$(CONFIG_DIR)/.config
 export BINARIES_DIR=${NICDIR}/buildroot/output/images
 export TARGET_DIR=${NICDIR}/buildroot/output/target
@@ -94,3 +95,4 @@ firmware-upgrade: build-upg-image
 .PHONY: firmware
 firmware:
 	${NICDIR}/mkdefs/build_firmware.sh
+	${TOOLS_DIR}/relative_link.sh ${NICDIR}/build
