@@ -81,7 +81,9 @@ func writeDataBlocks(ctx context.Context, dst io.Writer, enBlocks [][]byte, data
 		if write < int64(len(block)) {
 			n, err := io.Copy(dst, bytes.NewReader(block[:write]))
 			if err != nil {
-				logger.LogIf(ctx, err)
+				if err != io.ErrClosedPipe {
+					logger.LogIf(ctx, err)
+				}
 				return 0, err
 			}
 			totalWritten += n
@@ -90,7 +92,10 @@ func writeDataBlocks(ctx context.Context, dst io.Writer, enBlocks [][]byte, data
 		// Copy the block.
 		n, err := io.Copy(dst, bytes.NewReader(block))
 		if err != nil {
-			logger.LogIf(ctx, err)
+			// The writer will be closed incase of range queries, which will emit ErrClosedPipe.
+			if err != io.ErrClosedPipe {
+				logger.LogIf(ctx, err)
+			}
 			return 0, err
 		}
 
@@ -103,4 +108,26 @@ func writeDataBlocks(ctx context.Context, dst io.Writer, enBlocks [][]byte, data
 
 	// Success.
 	return totalWritten, nil
+}
+
+// Returns shard-file size.
+func getErasureShardFileSize(blockSize int64, totalLength int64, dataBlocks int) int64 {
+	shardSize := ceilFrac(int64(blockSize), int64(dataBlocks))
+	numShards := totalLength / int64(blockSize)
+	lastBlockSize := totalLength % int64(blockSize)
+	lastShardSize := ceilFrac(lastBlockSize, int64(dataBlocks))
+	return shardSize*numShards + lastShardSize
+}
+
+// Returns the endOffset till which bitrotReader should read data using disk.ReadFile()
+// partOffset, partLength and partSize are values of the object's part file.
+func getErasureShardFileEndOffset(partOffset int64, partLength int64, partSize int64, erasureBlockSize int64, dataBlocks int) int64 {
+	shardSize := ceilFrac(erasureBlockSize, int64(dataBlocks))
+	shardFileSize := getErasureShardFileSize(erasureBlockSize, partSize, dataBlocks)
+	endShard := (partOffset + int64(partLength)) / erasureBlockSize
+	endOffset := endShard*shardSize + shardSize
+	if endOffset > shardFileSize {
+		endOffset = shardFileSize
+	}
+	return endOffset
 }

@@ -633,14 +633,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:0c0eac431b07bd0da31ef684aa15b5b5eeeda8a820f666e6523d2bfb8ce868c4"
-  name = "github.com/go-ini/ini"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "32e4c1e6bc4e7d0d8451aa6b75200d19e37a536a"
-  version = "v1.32.0"
-
-[[projects]]
   digest = "1:26e670da8f5f743e60717437979dd303ad451ed92400d2836943ab063c59307e"
   name = "github.com/go-kit/kit"
   packages = [
@@ -1017,6 +1009,88 @@
   version = "v1.3.1"
 
 [[projects]]
+  digest = "1:f0d9d74edbd40fdeada436d5ac9cb5197407899af3fef85ff0137077ffe8ae19"
+  name = "github.com/hashicorp/errwrap"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "8a6fb523712970c966eefc6b39ed2c5e74880354"
+  version = "v1.0.0"
+
+[[projects]]
+  digest = "1:fff05cb0c34d2decaeb27bb6ab6b73a6947c3009d725160070da55f9511fd410"
+  name = "github.com/hashicorp/go-cleanhttp"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "eda1e5db218aad1db63ca4642c8906b26bcf2744"
+  version = "v0.5.1"
+
+[[projects]]
+  digest = "1:2ed138049ab373f696db2081ca48f15c5abdf20893803612a284f2bdce2bf443"
+  name = "github.com/hashicorp/go-multierror"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "886a7fbe3eb1c874d46f623bfa70af45f425b3d1"
+  version = "v1.0.0"
+
+[[projects]]
+  digest = "1:b3496707ba69dd873a870238644aa8ac259ee67fc4fd05caf37b608e7053e1f7"
+  name = "github.com/hashicorp/go-retryablehttp"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "357460732517ec3b57c05c51443296bdd6df1874"
+  version = "v0.5.3"
+
+[[projects]]
+  digest = "1:cdb5ce76cd7af19e3d2d5ba9b6458a2ee804f0d376711215dd3df5f51100d423"
+  name = "github.com/hashicorp/go-rootcerts"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "63503fb4e1eca22f9ae0f90b49c5d5538a0e87eb"
+  version = "v1.0.0"
+
+[[projects]]
+  digest = "1:6c69626c7aacae1e573084cdb6ed55713094ba56263f687e5d1750053bd08598"
+  name = "github.com/hashicorp/go-sockaddr"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "c7188e74f6acae5a989bdc959aa779f8b9f42faf"
+  version = "v1.0.2"
+
+[[projects]]
+  digest = "1:39f543569bf189e228c84a294c50aca8ea56c82b3d9df5c9b788249907d7049a"
+  name = "github.com/hashicorp/hcl"
+  packages = [
+    ".",
+    "hcl/ast",
+    "hcl/parser",
+    "hcl/scanner",
+    "hcl/strconv",
+    "hcl/token",
+    "json/parser",
+    "json/scanner",
+    "json/token",
+  ]
+  pruneopts = "NUT"
+  revision = "8cb6e5b959231cc1119e43259c4a608f9c51a241"
+  version = "v1.0.0"
+
+[[projects]]
+  digest = "1:010eddbe5d1da9cbe074d721ff874862cf5d8be2069107e41915d50a0d2936ef"
+  name = "github.com/hashicorp/vault"
+  packages = [
+    "api",
+    "helper/compressutil",
+    "helper/consts",
+    "helper/hclutil",
+    "helper/jsonutil",
+    "helper/parseutil",
+    "helper/strutil",
+  ]
+  pruneopts = "NUT"
+  revision = "0082501623c0b704b87b1fbc84c2d725994bac54"
+  version = "v1.1.2"
+
+[[projects]]
   branch = "master"
   digest = "1:92892c0505ce5c695312933e38c4f2c8ae4320de7aa15d67f18cb671ca3a77f6"
   name = "github.com/haya14busa/gopkgs"
@@ -1224,12 +1298,36 @@
   revision = "ae77be60afb1dcacde03767a8c37337fad28ac14"
 
 [[projects]]
+  digest = "1:cbf515e2ef22155a1ccaa9e6d8c86f7c84cc7f95f13341d06649492bf8e5d9d5"
+  name = "github.com/klauspost/compress"
+  packages = ["flate"]
+  pruneopts = "NUT"
+  revision = "b4b6d9e7f099f14b3a4a08f0664986cd4c85ebd6"
+  version = "v1.5.0"
+
+[[projects]]
   digest = "1:5e55a8699c9ff7aba1e4c8952aeda209685d88d4cb63a8766c338e333b8e65d6"
   name = "github.com/klauspost/cpuid"
   packages = ["."]
   pruneopts = "NUT"
   revision = "ae7887de9fa5d2db4eaa8174a7eff2c1ac00f2da"
   version = "v1.1"
+
+[[projects]]
+  digest = "1:f3f3545a30b934b75ad9cf9c7e9543f84f1d1aee3e534f6d01ab1776fa519fb9"
+  name = "github.com/klauspost/pgzip"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "083b1c3f84dd6486588802e5ce295de3a7f41a8b"
+  version = "v1.2.1"
+
+[[projects]]
+  digest = "1:cbc22d0c2d8b78235003ed737d5476203774b5e56d4b16942692ef7303f90d2e"
+  name = "github.com/klauspost/readahead"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "0d07bc3753e3e36555da11526303c6024ac7adab"
+  version = "v1.3.0"
 
 [[projects]]
   branch = "master"
@@ -1389,13 +1487,19 @@
   revision = "7e49e2d5191b7b008e1e133450a6207139df82b4"
 
 [[projects]]
-  digest = "1:1e16d825b74217647d6d2b556aa9f1cb1da73c90237af26718748cff80aeb477"
+  digest = "1:809bb7a5454c12ae048f69b9f26011fc7462be7a3adae94d300a3a3470404ea8"
   name = "github.com/minio/minio"
   packages = [
     "browser",
     "cmd",
+    "cmd/crypto",
     "cmd/http",
     "cmd/logger",
+    "cmd/logger/message/audit",
+    "cmd/logger/message/log",
+    "cmd/logger/target/console",
+    "cmd/logger/target/http",
+    "cmd/rest",
     "cmd/rpc",
     "pkg/auth",
     "pkg/bpool",
@@ -1408,6 +1512,8 @@
     "pkg/event/target",
     "pkg/handlers",
     "pkg/hash",
+    "pkg/iam/policy",
+    "pkg/iam/validator",
     "pkg/ioutil",
     "pkg/lock",
     "pkg/madmin",
@@ -1417,6 +1523,10 @@
     "pkg/policy",
     "pkg/policy/condition",
     "pkg/quick",
+    "pkg/s3select",
+    "pkg/s3select/format",
+    "pkg/s3select/format/csv",
+    "pkg/s3select/format/json",
     "pkg/safe",
     "pkg/sync/errgroup",
     "pkg/sys",
@@ -1425,11 +1535,11 @@
     "pkg/words",
   ]
   pruneopts = "NUT"
-  revision = "5acc2a6db1fae9923139dfdfab6faa5de48deb73"
-  version = "RELEASE.2018-07-23T18-34-49Z"
+  revision = "40852801ea63d0e10f220c0d7d2a8d6a8efa5688"
+  version = "RELEASE.2018-12-06T01-27-43Z"
 
 [[projects]]
-  digest = "1:c81d6dbae2813905ce99a759e2918f0725cd400cd52642256e93ef3c1eaf7873"
+  digest = "1:e18a70fdb7c76ac99343fc24ca29cd61eed98bf521588e30eb853b5cfa250d38"
   name = "github.com/minio/minio-go"
   packages = [
     ".",
@@ -1441,8 +1551,8 @@
     "pkg/set",
   ]
   pruneopts = "NUT"
-  revision = "9e124ec59547551cb3f1324f73623bbb30650cf8"
-  version = "4.0.9"
+  revision = "10b3660b8f09a1c25db63da7bf2d4f7449acc366"
+  version = "v6.0.24"
 
 [[projects]]
   branch = "master"
@@ -1525,6 +1635,14 @@
   packages = ["."]
   pruneopts = "NUT"
   revision = "0ad87eef1443f64d3d8c50da647e2b1552851124"
+
+[[projects]]
+  digest = "1:6a4b804cee2d4cae52f26c9425dee0da31421e147be18c33ab281ad7961a8f81"
+  name = "github.com/nsqio/go-nsq"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "eee57a3ac4174c55924125bb15eeeda8cffb6e6f"
+  version = "v1.0.7"
 
 [[projects]]
   digest = "1:1207a31f08a3cb94a1b02f03a70c4d2a57ed850d8c30ba85e47f8fa3d0271c90"
@@ -1823,6 +1941,14 @@
   version = "v1.5.1"
 
 [[projects]]
+  digest = "1:09d61699d553a4e6ec998ad29816177b1f3d3ed0c18fe923d2c174ec065c99c8"
+  name = "github.com/ryanuber/go-glob"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "51a8f68e6c24dc43f1e371749c89a267de4ebc53"
+  version = "v1.0.0"
+
+[[projects]]
   digest = "1:6bc0652ea6e39e22ccd522458b8bdd8665bf23bdc5a20eec90056e4dc7e273ca"
   name = "github.com/satori/go.uuid"
   packages = ["."]
@@ -1936,6 +2062,14 @@
   revision = "1731857f09b1f38450e2c12409748407822dc6be"
 
 [[projects]]
+  digest = "1:6b710a4259018ad39c57b847ef492762bcb705dc8d035647ba79abbf8bfacc29"
+  name = "github.com/tidwall/sjson"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "25fb082a20e29e83fb7b7ef5f5919166aad1f084"
+  version = "v1.0.4"
+
+[[projects]]
   digest = "1:c97e8a5e5c435c3287f581cdb4441ba34577ec6ead8422bfedafa6269af7abf6"
   name = "github.com/tinylib/msgp"
   packages = ["msgp"]
@@ -1957,6 +2091,14 @@
   pruneopts = "NUT"
   revision = "cfb38830724cc34fedffe9a2a29fb54fa9169cd1"
   version = "v1.20.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:7bfdf39375b9f303d6b051a7773230a03045d0e26cf1ac1caafe01d28e48d746"
+  name = "github.com/valyala/tcplisten"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "ceec8f93295a060cdb565ec25e4ccf17941dbd55"
 
 [[projects]]
   branch = "master"
@@ -2028,6 +2170,20 @@
   revision = "06dfc6fa17cdde904617990a0c2d89e3e332dbb3"
 
 [[projects]]
+  branch = "master"
+  digest = "1:61ef8bf53ae82c329c1891636d9d9a8f505d5da583e6283724c18802cbfc75be"
+  name = "github.com/xwb1989/sqlparser"
+  packages = [
+    ".",
+    "dependency/bytes2",
+    "dependency/hack",
+    "dependency/querypb",
+    "dependency/sqltypes",
+  ]
+  pruneopts = "NUT"
+  revision = "120387863bf27d04bc07db8015110a6e96d0146c"
+
+[[projects]]
   digest = "1:8eff4c694254322268936dc162805ff95ac846435e909f011ba43805bb9b4e0f"
   name = "go.uber.org/atomic"
   packages = ["."]
@@ -2060,9 +2216,10 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:166afa758b55864c187a2937a16ae3f4bd806e2943c998dc2f11085df9e692a6"
+  digest = "1:dbeb3ca87803009abcb4871c1ac192df5fb47e6f0f8c74b0073260b3c3539ea4"
   name = "golang.org/x/crypto"
   packages = [
+    "argon2",
     "bcrypt",
     "blake2b",
     "blowfish",
@@ -2080,8 +2237,8 @@
   revision = "0c41d7ab0a0ee717d4590a44bcb987dfd9e183eb"
 
 [[projects]]
-  branch = "release-branch.go1.9"
-  digest = "1:822013bd5fe3619ec72d5440419f1d8eb60ad2603aa464d7b8a8e5486c1cb5f9"
+  branch = "release-branch.go1.11"
+  digest = "1:a8a5df3efe944dd2d1f8ee7a649aba1c20803963249fd8406b7dfefd2503e290"
   name = "golang.org/x/net"
   packages = [
     "bpf",
@@ -2090,21 +2247,23 @@
     "html",
     "html/atom",
     "html/charset",
+    "http/httpguts",
     "http2",
     "http2/hpack",
     "idna",
     "internal/iana",
     "internal/socket",
+    "internal/socks",
     "internal/timeseries",
     "ipv4",
     "ipv6",
-    "lex/httplex",
     "proxy",
+    "publicsuffix",
     "trace",
     "websocket",
   ]
   pruneopts = "NUT"
-  revision = "44b7c21cbf19450f38b337eb6b6fe4f6496fb5b3"
+  revision = "48a9fcba44db44cd7ae4a92f00e48d51075d8528"
 
 [[projects]]
   branch = "master"
@@ -2262,6 +2421,14 @@
   pruneopts = "NUT"
   revision = "3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4"
   version = "v0.9.0"
+
+[[projects]]
+  digest = "1:d74ba1aea6244ead12e4f16d5f61a15ced9a2f2d1cae2021fbb76088b27e7afa"
+  name = "gopkg.in/ini.v1"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "c85607071cf08ca1adaf48319cd1aa322e81d8c1"
+  version = "v1.42.0"
 
 [[projects]]
   digest = "1:7e1c00b9959544fa1ccca7cf0407a5b29ac6d5201059c4fac6f599cb99bfd24d"

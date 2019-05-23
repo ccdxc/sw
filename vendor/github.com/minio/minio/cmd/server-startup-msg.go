@@ -116,10 +116,12 @@ func printServerCommonMsg(apiEndpoints []string) {
 
 	// Colorize the message and print.
 	logger.StartupMessage(colorBlue("Endpoint: ") + colorBold(fmt.Sprintf(getFormatStr(len(apiEndpointStr), 1), apiEndpointStr)))
-	logger.StartupMessage(colorBlue("AccessKey: ") + colorBold(fmt.Sprintf("%s ", cred.AccessKey)))
-	logger.StartupMessage(colorBlue("SecretKey: ") + colorBold(fmt.Sprintf("%s ", cred.SecretKey)))
-	if region != "" {
-		logger.StartupMessage(colorBlue("Region: ") + colorBold(fmt.Sprintf(getFormatStr(len(region), 3), region)))
+	if isTerminal() {
+		logger.StartupMessage(colorBlue("AccessKey: ") + colorBold(fmt.Sprintf("%s ", cred.AccessKey)))
+		logger.StartupMessage(colorBlue("SecretKey: ") + colorBold(fmt.Sprintf("%s ", cred.SecretKey)))
+		if region != "" {
+			logger.StartupMessage(colorBlue("Region: ") + colorBold(fmt.Sprintf(getFormatStr(len(region), 3), region)))
+		}
 	}
 	printEventNotifiers()
 
@@ -151,13 +153,15 @@ func printCLIAccessMsg(endPoint string, alias string) {
 	cred := globalServerConfig.GetCredential()
 
 	// Configure 'mc', following block prints platform specific information for minio client.
-	logger.StartupMessage(colorBlue("\nCommand-line Access: ") + mcQuickStartGuide)
-	if runtime.GOOS == globalWindowsOSName {
-		mcMessage := fmt.Sprintf("$ mc.exe config host add %s %s %s %s", alias, endPoint, cred.AccessKey, cred.SecretKey)
-		logger.StartupMessage(fmt.Sprintf(getFormatStr(len(mcMessage), 3), mcMessage))
-	} else {
-		mcMessage := fmt.Sprintf("$ mc config host add %s %s %s %s", alias, endPoint, cred.AccessKey, cred.SecretKey)
-		logger.StartupMessage(fmt.Sprintf(getFormatStr(len(mcMessage), 3), mcMessage))
+	if isTerminal() {
+		logger.StartupMessage(colorBlue("\nCommand-line Access: ") + mcQuickStartGuide)
+		if runtime.GOOS == globalWindowsOSName {
+			mcMessage := fmt.Sprintf("$ mc.exe config host add %s %s %s %s", alias, endPoint, cred.AccessKey, cred.SecretKey)
+			logger.StartupMessage(fmt.Sprintf(getFormatStr(len(mcMessage), 3), mcMessage))
+		} else {
+			mcMessage := fmt.Sprintf("$ mc config host add %s %s %s %s", alias, endPoint, cred.AccessKey, cred.SecretKey)
+			logger.StartupMessage(fmt.Sprintf(getFormatStr(len(mcMessage), 3), mcMessage))
+		}
 	}
 }
 
@@ -174,7 +178,7 @@ func printObjectAPIMsg() {
 // Get formatted disk/storage info message.
 func getStorageInfoMsg(storageInfo StorageInfo) string {
 	var msg string
-	if storageInfo.Backend.Type == Erasure {
+	if storageInfo.Backend.Type == BackendErasure {
 		diskInfo := fmt.Sprintf(" %d Online, %d Offline. ", storageInfo.Backend.OnlineDisks, storageInfo.Backend.OfflineDisks)
 		msg += colorBlue("Status:") + fmt.Sprintf(getFormatStr(len(diskInfo), 8), diskInfo)
 	}

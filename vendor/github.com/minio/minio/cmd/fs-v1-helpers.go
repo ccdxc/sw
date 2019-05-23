@@ -64,7 +64,7 @@ func fsRemoveAll(ctx context.Context, dirPath string) (err error) {
 		return err
 	}
 
-	if err = os.RemoveAll(dirPath); err != nil {
+	if err = removeAll(dirPath); err != nil {
 		if os.IsPermission(err) {
 			logger.LogIf(ctx, errVolumeAccessDenied)
 			return errVolumeAccessDenied
@@ -121,23 +121,25 @@ func fsMkdir(ctx context.Context, dirPath string) (err error) {
 	}
 
 	if err = os.Mkdir((dirPath), 0777); err != nil {
-		if os.IsExist(err) {
+		switch {
+		case os.IsExist(err):
 			return errVolumeExists
-		} else if os.IsPermission(err) {
+		case os.IsPermission(err):
 			logger.LogIf(ctx, errDiskAccessDenied)
 			return errDiskAccessDenied
-		} else if isSysErrNotDir(err) {
+		case isSysErrNotDir(err):
 			// File path cannot be verified since
 			// one of the parents is a file.
 			logger.LogIf(ctx, errDiskAccessDenied)
 			return errDiskAccessDenied
-		} else if isSysErrPathNotFound(err) {
+		case isSysErrPathNotFound(err):
 			// Add specific case for windows.
 			logger.LogIf(ctx, errDiskAccessDenied)
 			return errDiskAccessDenied
+		default:
+			logger.LogIf(ctx, err)
+			return err
 		}
-		logger.LogIf(ctx, err)
-		return err
 	}
 
 	return nil
@@ -343,7 +345,9 @@ func fsCreateFile(ctx context.Context, filePath string, reader io.Reader, buf []
 	if buf != nil {
 		bytesWritten, err = io.CopyBuffer(writer, reader, buf)
 		if err != nil {
-			logger.LogIf(ctx, err)
+			if err != io.ErrUnexpectedEOF {
+				logger.LogIf(ctx, err)
+			}
 			return 0, err
 		}
 	} else {

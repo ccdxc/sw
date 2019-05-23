@@ -314,17 +314,15 @@ func (e InvalidUploadID) Error() string {
 }
 
 // InvalidPart One or more of the specified parts could not be found
-type InvalidPart struct{}
-
-func (e InvalidPart) Error() string {
-	return "One or more of the specified parts could not be found. The part may not have been uploaded, or the specified entity tag may not match the part's entity tag."
+type InvalidPart struct {
+	PartNumber int
+	ExpETag    string
+	GotETag    string
 }
 
-// PartsSizeUnequal - All parts except the last part should be of the same size
-type PartsSizeUnequal struct{}
-
-func (e PartsSizeUnequal) Error() string {
-	return "All parts except the last part should be of the same size"
+func (e InvalidPart) Error() string {
+	return fmt.Sprintf("Specified part could not be found. PartNumber %d, Expected %s, got %s",
+		e.PartNumber, e.ExpETag, e.GotETag)
 }
 
 // PartTooSmall - error if part size is less than 5MB.
@@ -380,20 +378,8 @@ func (e BackendDown) Error() string {
 	return "Backend down"
 }
 
-// isErrIncompleteBody - Check if error type is IncompleteBody.
-func isErrIncompleteBody(err error) bool {
-	switch err.(type) {
-	case IncompleteBody:
-		return true
-	}
-	return false
-}
-
 // isErrObjectNotFound - Check if error type is ObjectNotFound.
 func isErrObjectNotFound(err error) bool {
-	switch err.(type) {
-	case ObjectNotFound:
-		return true
-	}
-	return false
+	_, ok := err.(ObjectNotFound)
+	return ok
 }

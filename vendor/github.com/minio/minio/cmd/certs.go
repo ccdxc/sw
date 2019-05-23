@@ -71,8 +71,12 @@ func getRootCAs(certsCAsDir string) (*x509.CertPool, error) {
 	// Get all CA file names.
 	var caFiles []string
 	fis, err := readDir(certsCAsDir)
-	if err != nil {
+	if err != nil && err != errFileNotFound {
 		return nil, err
+	}
+	// Return success if CA's directory is missing.
+	if err == errFileNotFound {
+		return nil, nil
 	}
 	for _, fi := range fis {
 		// Skip all directories.
@@ -150,24 +154,20 @@ func loadX509KeyPair(certFile, keyFile string) (tls.Certificate, error) {
 	return cert, nil
 }
 
-func getSSLConfig() (x509Certs []*x509.Certificate, rootCAs *x509.CertPool, c *certs.Certs, secureConn bool, err error) {
+func getTLSConfig() (x509Certs []*x509.Certificate, c *certs.Certs, secureConn bool, err error) {
 	if !(isFile(getPublicCertFile()) && isFile(getPrivateKeyFile())) {
-		return nil, nil, nil, false, nil
+		return nil, nil, false, nil
 	}
 
 	if x509Certs, err = parsePublicCertFile(getPublicCertFile()); err != nil {
-		return nil, nil, nil, false, err
+		return nil, nil, false, err
 	}
 
 	c, err = certs.New(getPublicCertFile(), getPrivateKeyFile(), loadX509KeyPair)
 	if err != nil {
-		return nil, nil, nil, false, err
-	}
-
-	if rootCAs, err = getRootCAs(getCADir()); err != nil {
-		return nil, nil, nil, false, err
+		return nil, nil, false, err
 	}
 
 	secureConn = true
-	return x509Certs, rootCAs, c, secureConn, nil
+	return x509Certs, c, secureConn, nil
 }

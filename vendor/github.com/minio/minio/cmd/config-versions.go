@@ -19,8 +19,11 @@ package cmd
 import (
 	"sync"
 
+	"github.com/minio/minio/cmd/crypto"
 	"github.com/minio/minio/pkg/auth"
 	"github.com/minio/minio/pkg/event/target"
+	"github.com/minio/minio/pkg/iam/policy"
+	"github.com/minio/minio/pkg/iam/validator"
 	"github.com/minio/minio/pkg/quick"
 )
 
@@ -370,7 +373,7 @@ type serverConfigV12 struct {
 	Notify notifierV2 `json:"notify"`
 }
 
-type notifier struct {
+type notifierV3 struct {
 	AMQP          map[string]target.AMQPArgs          `json:"amqp"`
 	Elasticsearch map[string]target.ElasticsearchArgs `json:"elasticsearch"`
 	Kafka         map[string]target.KafkaArgs         `json:"kafka"`
@@ -395,7 +398,7 @@ type serverConfigV13 struct {
 	Logger *loggerV7 `json:"logger"`
 
 	// Notification queue configuration.
-	Notify *notifier `json:"notify"`
+	Notify *notifierV3 `json:"notify"`
 }
 
 // serverConfigV14 server configuration version '14' which is like
@@ -412,7 +415,7 @@ type serverConfigV14 struct {
 	Logger *loggerV7 `json:"logger"`
 
 	// Notification queue configuration.
-	Notify *notifier `json:"notify"`
+	Notify *notifierV3 `json:"notify"`
 }
 
 // serverConfigV15 server configuration version '15' which is like
@@ -429,7 +432,7 @@ type serverConfigV15 struct {
 	Logger *loggerV7 `json:"logger"`
 
 	// Notification queue configuration.
-	Notify *notifier `json:"notify"`
+	Notify *notifierV3 `json:"notify"`
 }
 
 // FileLogger is introduced to workaround the dependency about logrus
@@ -467,7 +470,7 @@ type serverConfigV16 struct {
 	Logger *loggers `json:"logger"`
 
 	// Notification queue configuration.
-	Notify *notifier `json:"notify"`
+	Notify *notifierV3 `json:"notify"`
 }
 
 // serverConfigV17 server configuration version '17' which is like
@@ -486,7 +489,7 @@ type serverConfigV17 struct {
 	Logger *loggers `json:"logger"`
 
 	// Notification queue configuration.
-	Notify *notifier `json:"notify"`
+	Notify *notifierV3 `json:"notify"`
 }
 
 // serverConfigV18 server configuration version '18' which is like
@@ -505,7 +508,7 @@ type serverConfigV18 struct {
 	Logger *loggers `json:"logger"`
 
 	// Notification queue configuration.
-	Notify *notifier `json:"notify"`
+	Notify *notifierV3 `json:"notify"`
 }
 
 // serverConfigV19 server configuration version '19' which is like
@@ -523,7 +526,7 @@ type serverConfigV19 struct {
 	Logger *loggers `json:"logger"`
 
 	// Notification queue configuration.
-	Notify *notifier `json:"notify"`
+	Notify *notifierV3 `json:"notify"`
 }
 
 // serverConfigV20 server configuration version '20' which is like
@@ -542,7 +545,7 @@ type serverConfigV20 struct {
 	Logger *loggers `json:"logger"`
 
 	// Notification queue configuration.
-	Notify *notifier `json:"notify"`
+	Notify *notifierV3 `json:"notify"`
 }
 
 // serverConfigV21 is just like version '20' without logger field
@@ -557,7 +560,7 @@ type serverConfigV21 struct {
 	Domain     string           `json:"domain"`
 
 	// Notification queue configuration.
-	Notify *notifier `json:"notify"`
+	Notify *notifierV3 `json:"notify"`
 }
 
 // serverConfigV22 is just like version '21' with added support
@@ -578,7 +581,7 @@ type serverConfigV22 struct {
 	StorageClass storageClassConfig `json:"storageclass"`
 
 	// Notification queue configuration.
-	Notify notifier `json:"notify"`
+	Notify notifierV3 `json:"notify"`
 }
 
 // serverConfigV23 is just like version '22' with addition of cache field.
@@ -601,7 +604,7 @@ type serverConfigV23 struct {
 	Cache CacheConfig `json:"cache"`
 
 	// Notification queue configuration.
-	Notify notifier `json:"notify"`
+	Notify notifierV3 `json:"notify"`
 }
 
 // serverConfigV24 is just like version '23', we had to revert
@@ -625,7 +628,7 @@ type serverConfigV24 struct {
 	Cache CacheConfig `json:"cache"`
 
 	// Notification queue configuration.
-	Notify notifier `json:"notify"`
+	Notify notifierV3 `json:"notify"`
 }
 
 // serverConfigV25 is just like version '24', stores additionally
@@ -652,7 +655,7 @@ type serverConfigV25 struct {
 	Cache CacheConfig `json:"cache"`
 
 	// Notification queue configuration.
-	Notify notifier `json:"notify"`
+	Notify notifierV3 `json:"notify"`
 }
 
 // serverConfigV26 is just like version '25', stores additionally
@@ -676,7 +679,7 @@ type serverConfigV26 struct {
 	Cache CacheConfig `json:"cache"`
 
 	// Notification queue configuration.
-	Notify notifier `json:"notify"`
+	Notify notifierV3 `json:"notify"`
 }
 
 type loggerConsole struct {
@@ -717,8 +720,219 @@ type serverConfigV27 struct {
 	Cache CacheConfig `json:"cache"`
 
 	// Notification queue configuration.
+	Notify notifierV3 `json:"notify"`
+
+	// Logger configuration
+	Logger loggerConfig `json:"logger"`
+}
+
+// serverConfigV28 is just like version '27', additionally
+// storing KMS config
+//
+// IMPORTANT NOTE: When updating this struct make sure that
+// serverConfig.ConfigDiff() is updated as necessary.
+type serverConfigV28 struct {
+	quick.Config `json:"-"` // ignore interfaces
+
+	Version string `json:"version"`
+
+	// S3 API configuration.
+	Credential auth.Credentials `json:"credential"`
+	Region     string           `json:"region"`
+	Worm       BoolFlag         `json:"worm"`
+
+	// Storage class configuration
+	StorageClass storageClassConfig `json:"storageclass"`
+
+	// Cache configuration
+	Cache CacheConfig `json:"cache"`
+
+	// KMS configuration
+	KMS crypto.KMSConfig `json:"kms"`
+
+	// Notification queue configuration.
+	Notify notifierV3 `json:"notify"`
+
+	// Logger configuration
+	Logger loggerConfig `json:"logger"`
+}
+
+// serverConfigV29 is just like version '28'.
+type serverConfigV29 serverConfigV28
+
+// compressionConfig represents the compression settings.
+type compressionConfig struct {
+	Enabled    bool     `json:"enabled"`
+	Extensions []string `json:"extensions"`
+	MimeTypes  []string `json:"mime-types"`
+}
+
+// serverConfigV30 is just like version '29', stores additionally
+// extensions and mimetypes fields for compression.
+type serverConfigV30 struct {
+	Version string `json:"version"`
+
+	// S3 API configuration.
+	Credential auth.Credentials `json:"credential"`
+	Region     string           `json:"region"`
+	Worm       BoolFlag         `json:"worm"`
+
+	// Storage class configuration
+	StorageClass storageClassConfig `json:"storageclass"`
+
+	// Cache configuration
+	Cache CacheConfig `json:"cache"`
+
+	// KMS configuration
+	KMS crypto.KMSConfig `json:"kms"`
+
+	// Notification queue configuration.
+	Notify notifierV3 `json:"notify"`
+
+	// Logger configuration
+	Logger loggerConfig `json:"logger"`
+
+	// Compression configuration
+	Compression compressionConfig `json:"compress"`
+}
+
+// serverConfigV31 is just like version '30', with OPA and OpenID configuration.
+type serverConfigV31 struct {
+	Version string `json:"version"`
+
+	// S3 API configuration.
+	Credential auth.Credentials `json:"credential"`
+	Region     string           `json:"region"`
+	Worm       BoolFlag         `json:"worm"`
+
+	// Storage class configuration
+	StorageClass storageClassConfig `json:"storageclass"`
+
+	// Cache configuration
+	Cache CacheConfig `json:"cache"`
+
+	// KMS configuration
+	KMS crypto.KMSConfig `json:"kms"`
+
+	// Notification queue configuration.
+	Notify notifierV3 `json:"notify"`
+
+	// Logger configuration
+	Logger loggerConfig `json:"logger"`
+
+	// Compression configuration
+	Compression compressionConfig `json:"compress"`
+
+	// OpenID configuration
+	OpenID struct {
+		// JWKS validator config.
+		JWKS validator.JWKSArgs `json:"jwks"`
+	} `json:"openid"`
+
+	// External policy enforcements.
+	Policy struct {
+		// OPA configuration.
+		OPA iampolicy.OpaArgs `json:"opa"`
+
+		// Add new external policy enforcements here.
+	} `json:"policy"`
+}
+
+type notifier struct {
+	AMQP          map[string]target.AMQPArgs          `json:"amqp"`
+	Elasticsearch map[string]target.ElasticsearchArgs `json:"elasticsearch"`
+	Kafka         map[string]target.KafkaArgs         `json:"kafka"`
+	MQTT          map[string]target.MQTTArgs          `json:"mqtt"`
+	MySQL         map[string]target.MySQLArgs         `json:"mysql"`
+	NATS          map[string]target.NATSArgs          `json:"nats"`
+	NSQ           map[string]target.NSQArgs           `json:"nsq"`
+	PostgreSQL    map[string]target.PostgreSQLArgs    `json:"postgresql"`
+	Redis         map[string]target.RedisArgs         `json:"redis"`
+	Webhook       map[string]target.WebhookArgs       `json:"webhook"`
+}
+
+// serverConfigV32 is just like version '31' with added nsq notifer.
+type serverConfigV32 struct {
+	Version string `json:"version"`
+
+	// S3 API configuration.
+	Credential auth.Credentials `json:"credential"`
+	Region     string           `json:"region"`
+	Worm       BoolFlag         `json:"worm"`
+
+	// Storage class configuration
+	StorageClass storageClassConfig `json:"storageclass"`
+
+	// Cache configuration
+	Cache CacheConfig `json:"cache"`
+
+	// KMS configuration
+	KMS crypto.KMSConfig `json:"kms"`
+
+	// Notification queue configuration.
 	Notify notifier `json:"notify"`
 
 	// Logger configuration
 	Logger loggerConfig `json:"logger"`
+
+	// Compression configuration
+	Compression compressionConfig `json:"compress"`
+
+	// OpenID configuration
+	OpenID struct {
+		// JWKS validator config.
+		JWKS validator.JWKSArgs `json:"jwks"`
+	} `json:"openid"`
+
+	// External policy enforcements.
+	Policy struct {
+		// OPA configuration.
+		OPA iampolicy.OpaArgs `json:"opa"`
+
+		// Add new external policy enforcements here.
+	} `json:"policy"`
+}
+
+// serverConfigV33 is just like version '32', removes clientID from NATS.
+type serverConfigV33 struct {
+	quick.Config `json:"-"` // ignore interfaces
+
+	Version string `json:"version"`
+
+	// S3 API configuration.
+	Credential auth.Credentials `json:"credential"`
+	Region     string           `json:"region"`
+	Worm       BoolFlag         `json:"worm"`
+
+	// Storage class configuration
+	StorageClass storageClassConfig `json:"storageclass"`
+
+	// Cache configuration
+	Cache CacheConfig `json:"cache"`
+
+	// KMS configuration
+	KMS crypto.KMSConfig `json:"kms"`
+
+	// Notification queue configuration.
+	Notify notifier `json:"notify"`
+
+	// Logger configuration
+	Logger loggerConfig `json:"logger"`
+
+	// Compression configuration
+	Compression compressionConfig `json:"compress"`
+
+	// OpenID configuration
+	OpenID struct {
+		// JWKS validator config.
+		JWKS validator.JWKSArgs `json:"jwks"`
+	} `json:"openid"`
+
+	// External policy enforcements.
+	Policy struct {
+		// OPA configuration.
+		OPA iampolicy.OpaArgs `json:"opa"`
+
+		// Add new external policy enforcements here.
+	} `json:"policy"`
 }

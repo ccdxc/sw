@@ -19,11 +19,25 @@ package cmd
 import (
 	"context"
 	"io"
-	"time"
+	"net/http"
 
-	"github.com/minio/minio/pkg/hash"
+	"github.com/minio/minio-go/pkg/encrypt"
 	"github.com/minio/minio/pkg/madmin"
 	"github.com/minio/minio/pkg/policy"
+)
+
+// ObjectOptions represents object options for ObjectLayer operations
+type ObjectOptions struct {
+	ServerSideEncryption encrypt.ServerSide
+}
+
+// LockType represents required locking for ObjectLayer operations
+type LockType int
+
+const (
+	noLock LockType = iota
+	readLock
+	writeLock
 )
 
 // ObjectLayer implements primitives for object API layer.
@@ -41,21 +55,29 @@ type ObjectLayer interface {
 	ListObjectsV2(ctx context.Context, bucket, prefix, continuationToken, delimiter string, maxKeys int, fetchOwner bool, startAfter string) (result ListObjectsV2Info, err error)
 
 	// Object operations.
-	GetObject(ctx context.Context, bucket, object string, startOffset int64, length int64, writer io.Writer, etag string) (err error)
-	GetObjectInfo(ctx context.Context, bucket, object string) (objInfo ObjectInfo, err error)
-	PutObject(ctx context.Context, bucket, object string, data *hash.Reader, metadata map[string]string) (objInfo ObjectInfo, err error)
-	CopyObject(ctx context.Context, srcBucket, srcObject, destBucket, destObject string, srcInfo ObjectInfo) (objInfo ObjectInfo, err error)
+
+	// GetObjectNInfo returns a GetObjectReader that satisfies the
+	// ReadCloser interface. The Close method unlocks the object
+	// after reading, so it must always be called after usage.
+	//
+	// IMPORTANTLY, when implementations return err != nil, this
+	// function MUST NOT return a non-nil ReadCloser.
+	GetObjectNInfo(ctx context.Context, bucket, object string, rs *HTTPRangeSpec, h http.Header, lockType LockType, opts ObjectOptions) (reader *GetObjectReader, err error)
+	GetObject(ctx context.Context, bucket, object string, startOffset int64, length int64, writer io.Writer, etag string, opts ObjectOptions) (err error)
+	GetObjectInfo(ctx context.Context, bucket, object string, opts ObjectOptions) (objInfo ObjectInfo, err error)
+	PutObject(ctx context.Context, bucket, object string, data *PutObjReader, metadata map[string]string, opts ObjectOptions) (objInfo ObjectInfo, err error)
+	CopyObject(ctx context.Context, srcBucket, srcObject, destBucket, destObject string, srcInfo ObjectInfo, srcOpts, dstOpts ObjectOptions) (objInfo ObjectInfo, err error)
 	DeleteObject(ctx context.Context, bucket, object string) error
 
 	// Multipart operations.
 	ListMultipartUploads(ctx context.Context, bucket, prefix, keyMarker, uploadIDMarker, delimiter string, maxUploads int) (result ListMultipartsInfo, err error)
-	NewMultipartUpload(ctx context.Context, bucket, object string, metadata map[string]string) (uploadID string, err error)
+	NewMultipartUpload(ctx context.Context, bucket, object string, metadata map[string]string, opts ObjectOptions) (uploadID string, err error)
 	CopyObjectPart(ctx context.Context, srcBucket, srcObject, destBucket, destObject string, uploadID string, partID int,
-		startOffset int64, length int64, srcInfo ObjectInfo) (info PartInfo, err error)
-	PutObjectPart(ctx context.Context, bucket, object, uploadID string, partID int, data *hash.Reader) (info PartInfo, err error)
+		startOffset int64, length int64, srcInfo ObjectInfo, srcOpts, dstOpts ObjectOptions) (info PartInfo, err error)
+	PutObjectPart(ctx context.Context, bucket, object, uploadID string, partID int, data *PutObjReader, opts ObjectOptions) (info PartInfo, err error)
 	ListObjectParts(ctx context.Context, bucket, object, uploadID string, partNumberMarker int, maxParts int) (result ListPartsInfo, err error)
 	AbortMultipartUpload(ctx context.Context, bucket, object, uploadID string) error
-	CompleteMultipartUpload(ctx context.Context, bucket, object, uploadID string, uploadedParts []CompletePart) (objInfo ObjectInfo, err error)
+	CompleteMultipartUpload(ctx context.Context, bucket, object, uploadID string, uploadedParts []CompletePart, opts ObjectOptions) (objInfo ObjectInfo, err error)
 
 	// Healing operations.
 	ReloadFormat(ctx context.Context, dryRun bool) error
@@ -65,10 +87,6 @@ type ObjectLayer interface {
 	ListBucketsHeal(ctx context.Context) (buckets []BucketInfo, err error)
 	ListObjectsHeal(ctx context.Context, bucket, prefix, marker, delimiter string, maxKeys int) (ListObjectsInfo, error)
 
-	// Locking operations
-	ListLocks(ctx context.Context, bucket, prefix string, duration time.Duration) ([]VolumeLockInfo, error)
-	ClearLocks(context.Context, []VolumeLockInfo) error
-
 	// Policy operations
 	SetBucketPolicy(context.Context, string, *policy.Policy) error
 	GetBucketPolicy(context.Context, string) (*policy.Policy, error)
@@ -76,5 +94,9 @@ type ObjectLayer interface {
 
 	// Supported operations check
 	IsNotificationSupported() bool
+	IsListenBucketSupported() bool
 	IsEncryptionSupported() bool
+
+	// Compression support check.
+	IsCompressionSupported() bool
 }

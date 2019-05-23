@@ -41,13 +41,13 @@ var serverFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  "address",
 		Value: ":" + globalMinioPort,
-		Usage: "Bind to a specific ADDRESS:PORT, ADDRESS can be an IP or hostname.",
+		Usage: "bind to a specific ADDRESS:PORT, ADDRESS can be an IP or hostname",
 	},
 }
 
 var serverCmd = cli.Command{
 	Name:   "server",
-	Usage:  "Start object storage server.",
+	Usage:  "start object storage server",
 	Flags:  append(serverFlags, globalFlags...),
 	Action: serverMain,
 	CustomHelpTemplate: `NAME:
@@ -72,9 +72,6 @@ ENVIRONMENT VARIABLES:
      MINIO_ACCESS_KEY: Custom username or access key of minimum 3 characters in length.
      MINIO_SECRET_KEY: Custom password or secret key of minimum 8 characters in length.
 
-  ENDPOINTS:
-     MINIO_ENDPOINTS: List of all endpoints delimited by ' '.
-
   BROWSER:
      MINIO_BROWSER: To disable web browser access, set this value to "off".
 
@@ -95,6 +92,12 @@ ENVIRONMENT VARIABLES:
      MINIO_PUBLIC_IPS: To enable bucket DNS requests, set this value to list of Minio host public IP(s) delimited by ",".
      MINIO_ETCD_ENDPOINTS: To enable bucket DNS requests, set this value to list of etcd endpoints delimited by ",".
 
+   KMS:
+     MINIO_SSE_VAULT_ENDPOINT: To enable Vault as KMS,set this value to Vault endpoint.
+     MINIO_SSE_VAULT_APPROLE_ID: To enable Vault as KMS,set this value to Vault AppRole ID.
+     MINIO_SSE_VAULT_APPROLE_SECRET: To enable Vault as KMS,set this value to Vault AppRole Secret ID.
+     MINIO_SSE_VAULT_KEY_NAME: To enable Vault as KMS,set this value to Vault encryption key-ring name.
+
 EXAMPLES:
   1. Start minio server on "/home/shared" directory.
      $ {{.HelpName}} /home/shared
@@ -106,20 +109,26 @@ EXAMPLES:
      $ export MINIO_DOMAIN=mydomain.com
      $ {{.HelpName}} --address mydomain.com:9000 /mnt/export
 
-  4. Start minio server on 64 disks server with endpoints through environment variable.
-     $ export MINIO_ENDPOINTS=/mnt/export{1...64}
-     $ {{.HelpName}}
+  4. Start erasure coded minio server on a node with 64 drives.
+     $ {{.HelpName}} /mnt/export{1...64}
 
-  5. Start distributed minio server on an 8 node setup with 8 drives each. Run following command on all the 8 nodes.
+  5. Start distributed minio server on an 32 node setup with 32 drives each. Run following command on all the 32 nodes.
      $ export MINIO_ACCESS_KEY=minio
      $ export MINIO_SECRET_KEY=miniostorage
-     $ {{.HelpName}} http://node{1...8}.example.com/mnt/export/{1...8}
+     $ {{.HelpName}} http://node{1...32}.example.com/mnt/export/{1...32}
 
   6. Start minio server with edge caching enabled.
      $ export MINIO_CACHE_DRIVES="/mnt/drive1;/mnt/drive2;/mnt/drive3;/mnt/drive4"
      $ export MINIO_CACHE_EXCLUDE="bucket1/*;*.png"
      $ export MINIO_CACHE_EXPIRY=40
      $ export MINIO_CACHE_MAXUSE=80
+     $ {{.HelpName}} /home/shared
+
+  7. Start minio server with KMS enabled.
+     $ export MINIO_SSE_VAULT_APPROLE_ID=9b56cc08-8258-45d5-24a3-679876769126
+     $ export MINIO_SSE_VAULT_APPROLE_SECRET=4e30c52f-13e4-a6f5-0763-d50e8cb4321f
+     $ export MINIO_SSE_VAULT_ENDPOINT=https://vault-endpoint-ip:8200
+     $ export MINIO_SSE_VAULT_KEY_NAME=my-minio-key
      $ {{.HelpName}} /home/shared
 `,
 }
@@ -212,22 +221,20 @@ func serverMain(ctx *cli.Context) {
 	// Handle all server command args.
 	serverHandleCmdArgs(ctx)
 
-	// Handle all server environment vars.
-	serverHandleEnvVars()
-
 	// Create certs path.
 	logger.FatalIf(createConfigDir(), "Unable to initialize configuration files")
 
-	// Initialize server config.
-	initConfig()
-
-	// Load logger subsystem
-	loadLoggers()
-
-	// Check and load SSL certificates.
+	// Check and load TLS certificates.
 	var err error
-	globalPublicCerts, globalRootCAs, globalTLSCerts, globalIsSSL, err = getSSLConfig()
+	globalPublicCerts, globalTLSCerts, globalIsSSL, err = getTLSConfig()
 	logger.FatalIf(err, "Unable to load the TLS configuration")
+
+	// Check and load Root CAs.
+	globalRootCAs, err = getRootCAs(getCADir())
+	logger.FatalIf(err, "Failed to read root CAs (%v)", err)
+
+	// Handle all server environment vars.
+	serverHandleEnvVars()
 
 	// Is distributed setup, error out if no certificates are found for HTTPS endpoints.
 	if globalIsDistXL {
@@ -248,6 +255,35 @@ func serverMain(ctx *cli.Context) {
 			mode = globalMinioModeXL
 		}
 		checkUpdate(mode)
+	}
+
+	// FIXME: This code should be removed in future releases and we should have mandatory
+	// check for ENVs credentials under distributed setup. Until all users migrate we
+	// are intentionally providing backward compatibility.
+	{
+		// Check for backward compatibility and newer style.
+		if !globalIsEnvCreds && globalIsDistXL {
+			// Try to load old config file if any, for backward compatibility.
+			var config = &serverConfig{}
+			if _, err = Load(getConfigFile(), config); err == nil {
+				globalActiveCred = config.Credential
+			}
+
+			if os.IsNotExist(err) {
+				if _, err = Load(getConfigFile()+".deprecated", config); err == nil {
+					globalActiveCred = config.Credential
+				}
+			}
+
+			if globalActiveCred.IsValid() {
+				// Credential is valid don't throw an error instead print a message regarding deprecation of 'config.json'
+				// based model and proceed to use it for now in distributed setup.
+				logger.Info(`Supplying credentials from your 'config.json' is **DEPRECATED**, Access key and Secret key in distributed server mode is expected to be specified with environment variables MINIO_ACCESS_KEY and MINIO_SECRET_KEY. This approach will become mandatory in future releases, please migrate to this approach soon.`)
+			} else {
+				// Credential is not available anywhere by both means, we cannot start distributed setup anymore, fail eagerly.
+				logger.Fatal(uiErrEnvCredentialsMissingDistributed(nil), "Unable to initialize the server in distributed mode")
+			}
+		}
 	}
 
 	// Set system resources to maximum.
@@ -300,10 +336,6 @@ func serverMain(ctx *cli.Context) {
 		logger.FatalIf(err, "Unable to initialize backend")
 	}
 
-	globalObjLayerMutex.Lock()
-	globalObjectAPI = newObject
-	globalObjLayerMutex.Unlock()
-
 	// Populate existing buckets to the etcd backend
 	if globalDNSConfig != nil {
 		initFederatorBackend(newObject)
@@ -312,11 +344,35 @@ func serverMain(ctx *cli.Context) {
 	// Re-enable logging
 	logger.Disable = false
 
+	// Create a new config system.
+	globalConfigSys = NewConfigSys()
+
+	// Initialize config system.
+	if err = globalConfigSys.Init(newObject); err != nil {
+		logger.Fatal(err, "Unable to initialize config system")
+	}
+
+	// Load logger subsystem
+	loadLoggers()
+
+	var cacheConfig = globalServerConfig.GetCacheConfig()
+	if len(cacheConfig.Drives) > 0 {
+		// initialize the new disk cache objects.
+		globalCacheObjectAPI, err = newServerCacheObjects(cacheConfig)
+		logger.FatalIf(err, "Unable to initialize disk caching")
+	}
+
+	// Create new IAM system.
+	globalIAMSys = NewIAMSys()
+	if err = globalIAMSys.Init(newObject); err != nil {
+		logger.Fatal(err, "Unable to initialize IAM system")
+	}
+
 	// Create new policy system.
 	globalPolicySys = NewPolicySys()
 
 	// Initialize policy system.
-	if err := globalPolicySys.Init(newObjectLayerFn()); err != nil {
+	if err = globalPolicySys.Init(newObject); err != nil {
 		logger.Fatal(err, "Unable to initialize policy system")
 	}
 
@@ -324,9 +380,13 @@ func serverMain(ctx *cli.Context) {
 	globalNotificationSys = NewNotificationSys(globalServerConfig, globalEndpoints)
 
 	// Initialize notification system.
-	if err := globalNotificationSys.Init(newObjectLayerFn()); err != nil {
-		logger.Fatal(err, "Unable to initialize notification system")
+	if err = globalNotificationSys.Init(newObject); err != nil {
+		logger.LogIf(context.Background(), err)
 	}
+
+	globalObjLayerMutex.Lock()
+	globalObjectAPI = newObject
+	globalObjLayerMutex.Unlock()
 
 	// Prints the formatted startup message once object layer is initialized.
 	apiEndpoints := getAPIEndpoints(globalMinioAddr)

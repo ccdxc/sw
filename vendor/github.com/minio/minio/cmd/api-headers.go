@@ -24,6 +24,8 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/minio/minio/cmd/crypto"
 )
 
 // Returns a hexadecimal representation of time at the
@@ -41,6 +43,9 @@ func setCommonHeaders(w http.ResponseWriter) {
 		w.Header().Set("X-Amz-Bucket-Region", region)
 	}
 	w.Header().Set("Accept-Ranges", "bytes")
+
+	// Remove sensitive information
+	crypto.RemoveSensitiveHeaders(w.Header())
 }
 
 // Encodes the response headers into XML format.
@@ -61,12 +66,9 @@ func encodeResponseJSON(response interface{}) []byte {
 }
 
 // Write object header
-func setObjectHeaders(w http.ResponseWriter, objInfo ObjectInfo, contentRange *httpRange) {
+func setObjectHeaders(w http.ResponseWriter, objInfo ObjectInfo, rs *HTTPRangeSpec) (err error) {
 	// set common headers
 	setCommonHeaders(w)
-
-	// Set content length.
-	w.Header().Set("Content-Length", strconv.FormatInt(objInfo.Size, 10))
 
 	// Set last modified time.
 	lastModified := objInfo.ModTime.UTC().Format(http.TimeFormat)
@@ -95,11 +97,34 @@ func setObjectHeaders(w http.ResponseWriter, objInfo ObjectInfo, contentRange *h
 		w.Header().Set(k, v)
 	}
 
-	// for providing ranged content
-	if contentRange != nil && contentRange.offsetBegin > -1 {
-		// Override content-length
-		w.Header().Set("Content-Length", strconv.FormatInt(contentRange.getLength(), 10))
-		w.Header().Set("Content-Range", contentRange.String())
-		w.WriteHeader(http.StatusPartialContent)
+	var totalObjectSize int64
+	switch {
+	case crypto.IsEncrypted(objInfo.UserDefined):
+		totalObjectSize, err = objInfo.DecryptedSize()
+		if err != nil {
+			return err
+		}
+	case objInfo.IsCompressed():
+		totalObjectSize = objInfo.GetActualSize()
+		if totalObjectSize < 0 {
+			return errInvalidDecompressedSize
+		}
+	default:
+		totalObjectSize = objInfo.Size
 	}
+
+	// for providing ranged content
+	start, rangeLen, err := rs.GetOffsetLength(totalObjectSize)
+	if err != nil {
+		return err
+	}
+
+	// Set content length.
+	w.Header().Set("Content-Length", strconv.FormatInt(rangeLen, 10))
+	if rs != nil {
+		contentRange := fmt.Sprintf("bytes %d-%d/%d", start, start+rangeLen-1, totalObjectSize)
+		w.Header().Set("Content-Range", contentRange)
+	}
+
+	return nil
 }

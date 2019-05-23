@@ -54,6 +54,7 @@ type objStoreBackend interface {
 type client struct {
 	accessID       string
 	secretKey      string
+	connRetries    int
 	tlsConfig      *tls.Config
 	bucketName     string
 	client         objStoreBackend
@@ -72,6 +73,13 @@ func WithTLSConfig(tlsConfig *tls.Config) Option {
 	}
 }
 
+// WithConnectRetries sets the number of connect retries for the client.
+func WithConnectRetries(count int) Option {
+	return func(c *client) {
+		c.connRetries = count
+	}
+}
+
 // NewClient creates a new client to the Venice object store
 // tenant name and service name is used to form the bucket as "tenantName.serviceName"
 func NewClient(tenantName, serviceName string, resolver resolver.Interface, opts ...Option) (Client, error) {
@@ -85,6 +93,7 @@ func NewClient(tenantName, serviceName string, resolver resolver.Interface, opts
 		secretKey:      "minio0523",
 		bucketName:     fmt.Sprintf("%s.%s", tenantName, serviceName),
 		resolverClient: resolver,
+		connRetries:    maxRetry,
 	}
 
 	for _, o := range opts {
@@ -116,7 +125,7 @@ func (c *client) connect() error {
 
 	// connect and check
 	for _, url := range addr {
-		for i := 0; i < maxRetry; i++ {
+		for i := 0; i < c.connRetries; i++ {
 			objsLog.Infof("connecting to {%s} %s", globals.VosMinio, url)
 			mc, err := minio.NewClient(url, c.accessID, c.secretKey, c.tlsConfig, c.bucketName)
 			if err != nil {

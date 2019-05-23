@@ -19,6 +19,7 @@ package cmd
 import (
 	"bytes"
 	"context"
+	"crypto/subtle"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
@@ -27,8 +28,11 @@ import (
 	"net/http"
 	"strings"
 
+	jwtgo "github.com/dgrijalva/jwt-go"
 	"github.com/minio/minio/cmd/logger"
+	"github.com/minio/minio/pkg/auth"
 	"github.com/minio/minio/pkg/hash"
+	"github.com/minio/minio/pkg/iam/policy"
 	"github.com/minio/minio/pkg/policy"
 )
 
@@ -86,6 +90,7 @@ const (
 	authTypeSigned
 	authTypeSignedV2
 	authTypeJWT
+	authTypeSTS
 )
 
 // Get request authentication type.
@@ -104,6 +109,8 @@ func getRequestAuthType(r *http.Request) authType {
 		return authTypeJWT
 	} else if isRequestPostPolicySignatureV4(r) {
 		return authTypePostPolicy
+	} else if _, ok := r.URL.Query()["Action"]; ok {
+		return authTypeSTS
 	} else if _, ok := r.Header["Authorization"]; !ok {
 		return authTypeAnonymous
 	}
@@ -112,43 +119,140 @@ func getRequestAuthType(r *http.Request) authType {
 
 // checkAdminRequestAuthType checks whether the request is a valid signature V2 or V4 request.
 // It does not accept presigned or JWT or anonymous requests.
-func checkAdminRequestAuthType(r *http.Request, region string) APIErrorCode {
+func checkAdminRequestAuthType(ctx context.Context, r *http.Request, region string) APIErrorCode {
 	s3Err := ErrAccessDenied
-	if _, ok := r.Header["X-Amz-Content-Sha256"]; ok && getRequestAuthType(r) == authTypeSigned && !skipContentSha256Cksum(r) { // we only support V4 (no presign) with auth. body
-		s3Err = isReqAuthenticated(r, region)
+	if _, ok := r.Header["X-Amz-Content-Sha256"]; ok &&
+		getRequestAuthType(r) == authTypeSigned && !skipContentSha256Cksum(r) {
+		// We only support admin credentials to access admin APIs.
+
+		var owner bool
+		_, owner, s3Err = getReqAccessKeyV4(r, region)
+		if s3Err != ErrNone {
+			return s3Err
+		}
+
+		if !owner {
+			return ErrAccessDenied
+		}
+
+		// we only support V4 (no presign) with auth body
+		s3Err = isReqAuthenticated(ctx, r, region)
 	}
 	if s3Err != ErrNone {
 		reqInfo := (&logger.ReqInfo{}).AppendTags("requestHeaders", dumpRequest(r))
-		ctx := logger.SetReqInfo(context.Background(), reqInfo)
+		ctx := logger.SetReqInfo(ctx, reqInfo)
 		logger.LogIf(ctx, errors.New(getAPIError(s3Err).Description))
 	}
 	return s3Err
 }
 
-func checkRequestAuthType(ctx context.Context, r *http.Request, action policy.Action, bucketName, objectName string) APIErrorCode {
-	isOwner := true
-	accountName := globalServerConfig.GetCredential().AccessKey
+// Fetch the security token set by the client.
+func getSessionToken(r *http.Request) (token string) {
+	token = r.Header.Get("X-Amz-Security-Token")
+	if token != "" {
+		return token
+	}
+	return r.URL.Query().Get("X-Amz-Security-Token")
+}
 
+// Fetch claims in the security token returned by the client, doesn't return
+// errors - upon errors the returned claims map will be empty.
+func mustGetClaimsFromToken(r *http.Request) map[string]interface{} {
+	claims, _ := getClaimsFromToken(r)
+	return claims
+}
+
+// Fetch claims in the security token returned by the client.
+func getClaimsFromToken(r *http.Request) (map[string]interface{}, error) {
+	claims := make(map[string]interface{})
+	token := getSessionToken(r)
+	if token == "" {
+		return claims, nil
+	}
+	stsTokenCallback := func(jwtToken *jwtgo.Token) (interface{}, error) {
+		// JWT token for x-amz-security-token is signed with admin
+		// secret key, temporary credentials become invalid if
+		// server admin credentials change. This is done to ensure
+		// that clients cannot decode the token using the temp
+		// secret keys and generate an entirely new claim by essentially
+		// hijacking the policies. We need to make sure that this is
+		// based an admin credential such that token cannot be decoded
+		// on the client side and is treated like an opaque value.
+		return []byte(globalServerConfig.GetCredential().SecretKey), nil
+	}
+	p := &jwtgo.Parser{
+		ValidMethods: []string{
+			jwtgo.SigningMethodHS256.Alg(),
+			jwtgo.SigningMethodHS512.Alg(),
+		},
+	}
+	jtoken, err := p.ParseWithClaims(token, jwtgo.MapClaims(claims), stsTokenCallback)
+	if err != nil {
+		return nil, err
+	}
+	if !jtoken.Valid {
+		return nil, errAuthentication
+	}
+	v, ok := claims["accessKey"]
+	if !ok {
+		return nil, errInvalidAccessKeyID
+	}
+	if _, ok = v.(string); !ok {
+		return nil, errInvalidAccessKeyID
+	}
+	return claims, nil
+}
+
+// Fetch claims in the security token returned by the client and validate the token.
+func checkClaimsFromToken(r *http.Request, cred auth.Credentials) (map[string]interface{}, APIErrorCode) {
+	token := getSessionToken(r)
+	if token != "" && cred.AccessKey == "" {
+		return nil, ErrNoAccessKey
+	}
+	if subtle.ConstantTimeCompare([]byte(token), []byte(cred.SessionToken)) != 1 {
+		return nil, ErrInvalidToken
+	}
+	claims, err := getClaimsFromToken(r)
+	if err != nil {
+		return nil, toAPIErrorCode(context.Background(), err)
+	}
+	return claims, ErrNone
+}
+
+// Check request auth type verifies the incoming http request
+// - validates the request signature
+// - validates the policy action if anonymous tests bucket policies if any,
+//   for authenticated requests validates IAM policies.
+// returns APIErrorCode if any to be replied to the client.
+func checkRequestAuthType(ctx context.Context, r *http.Request, action policy.Action, bucketName, objectName string) (s3Err APIErrorCode) {
+	var cred auth.Credentials
+	var owner bool
 	switch getRequestAuthType(r) {
-	case authTypeUnknown:
+	case authTypeUnknown, authTypeStreamingSigned:
 		return ErrAccessDenied
 	case authTypePresignedV2, authTypeSignedV2:
-		if errorCode := isReqAuthenticatedV2(r); errorCode != ErrNone {
-			return errorCode
+		if s3Err = isReqAuthenticatedV2(r); s3Err != ErrNone {
+			return s3Err
 		}
+		cred, owner, s3Err = getReqAccessKeyV2(r)
 	case authTypeSigned, authTypePresigned:
 		region := globalServerConfig.GetRegion()
 		switch action {
 		case policy.GetBucketLocationAction, policy.ListAllMyBucketsAction:
 			region = ""
 		}
-
-		if errorCode := isReqAuthenticated(r, region); errorCode != ErrNone {
-			return errorCode
+		if s3Err = isReqAuthenticated(ctx, r, region); s3Err != ErrNone {
+			return s3Err
 		}
-	default:
-		isOwner = false
-		accountName = ""
+		cred, owner, s3Err = getReqAccessKeyV4(r, region)
+	}
+	if s3Err != ErrNone {
+		return s3Err
+	}
+
+	claims, s3Err := checkClaimsFromToken(r, cred)
+	if s3Err != ErrNone {
+		return s3Err
 	}
 
 	// LocationConstraint is valid only for CreateBucketAction.
@@ -174,17 +278,31 @@ func checkRequestAuthType(ctx context.Context, r *http.Request, action policy.Ac
 		r.Body = ioutil.NopCloser(bytes.NewReader(payload))
 	}
 
-	if globalPolicySys.IsAllowed(policy.Args{
-		AccountName:     accountName,
-		Action:          action,
+	if cred.AccessKey == "" {
+		if globalPolicySys.IsAllowed(policy.Args{
+			AccountName:     cred.AccessKey,
+			Action:          action,
+			BucketName:      bucketName,
+			ConditionValues: getConditionValues(r, locationConstraint),
+			IsOwner:         false,
+			ObjectName:      objectName,
+		}) {
+			return ErrNone
+		}
+		return ErrAccessDenied
+	}
+
+	if globalIAMSys.IsAllowed(iampolicy.Args{
+		AccountName:     cred.AccessKey,
+		Action:          iampolicy.Action(action),
 		BucketName:      bucketName,
-		ConditionValues: getConditionValues(r, locationConstraint),
-		IsOwner:         isOwner,
+		ConditionValues: getConditionValues(r, ""),
 		ObjectName:      objectName,
+		IsOwner:         owner,
+		Claims:          claims,
 	}) {
 		return ErrNone
 	}
-
 	return ErrAccessDenied
 }
 
@@ -209,7 +327,7 @@ func reqSignatureV4Verify(r *http.Request, region string) (s3Error APIErrorCode)
 }
 
 // Verify if request has valid AWS Signature Version '4'.
-func isReqAuthenticated(r *http.Request, region string) (s3Error APIErrorCode) {
+func isReqAuthenticated(ctx context.Context, r *http.Request, region string) (s3Error APIErrorCode) {
 	if errCode := reqSignatureV4Verify(r, region); errCode != ErrNone {
 		return errCode
 	}
@@ -244,9 +362,9 @@ func isReqAuthenticated(r *http.Request, region string) (s3Error APIErrorCode) {
 
 	// Verify 'Content-Md5' and/or 'X-Amz-Content-Sha256' if present.
 	// The verification happens implicit during reading.
-	reader, err := hash.NewReader(r.Body, -1, hex.EncodeToString(contentMD5), hex.EncodeToString(contentSHA256))
+	reader, err := hash.NewReader(r.Body, -1, hex.EncodeToString(contentMD5), hex.EncodeToString(contentSHA256), -1)
 	if err != nil {
-		return toAPIErrorCode(err)
+		return toAPIErrorCode(ctx, err)
 	}
 	r.Body = ioutil.NopCloser(reader)
 	return ErrNone
@@ -288,12 +406,67 @@ func (a authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if aType == authTypeJWT {
 		// Validate Authorization header if its valid for JWT request.
-		if !isHTTPRequestValid(r) {
+		if _, _, authErr := webRequestAuthenticate(r); authErr != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 		a.handler.ServeHTTP(w, r)
 		return
+	} else if aType == authTypeSTS {
+		a.handler.ServeHTTP(w, r)
+		return
 	}
-	writeErrorResponse(w, ErrSignatureVersionNotSupported, r.URL)
+	writeErrorResponse(w, ErrSignatureVersionNotSupported, r.URL, guessIsBrowserReq(r))
+}
+
+// isPutAllowed - check if PUT operation is allowed on the resource, this
+// call verifies bucket policies and IAM policies, supports multi user
+// checks etc.
+func isPutAllowed(atype authType, bucketName, objectName string, r *http.Request) (s3Err APIErrorCode) {
+	var cred auth.Credentials
+	var owner bool
+	switch atype {
+	case authTypeUnknown:
+		return ErrAccessDenied
+	case authTypeSignedV2, authTypePresignedV2:
+		cred, owner, s3Err = getReqAccessKeyV2(r)
+	case authTypeStreamingSigned, authTypePresigned, authTypeSigned:
+		region := globalServerConfig.GetRegion()
+		cred, owner, s3Err = getReqAccessKeyV4(r, region)
+	}
+	if s3Err != ErrNone {
+		return s3Err
+	}
+
+	claims, s3Err := checkClaimsFromToken(r, cred)
+	if s3Err != ErrNone {
+		return s3Err
+	}
+
+	if cred.AccessKey == "" {
+		if globalPolicySys.IsAllowed(policy.Args{
+			AccountName:     cred.AccessKey,
+			Action:          policy.PutObjectAction,
+			BucketName:      bucketName,
+			ConditionValues: getConditionValues(r, ""),
+			IsOwner:         false,
+			ObjectName:      objectName,
+		}) {
+			return ErrNone
+		}
+		return ErrAccessDenied
+	}
+
+	if globalIAMSys.IsAllowed(iampolicy.Args{
+		AccountName:     cred.AccessKey,
+		Action:          policy.PutObjectAction,
+		BucketName:      bucketName,
+		ConditionValues: getConditionValues(r, ""),
+		ObjectName:      objectName,
+		IsOwner:         owner,
+		Claims:          claims,
+	}) {
+		return ErrNone
+	}
+	return ErrAccessDenied
 }

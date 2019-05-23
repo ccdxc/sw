@@ -24,7 +24,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/minio/minio/cmd/logger"
 	xrpc "github.com/minio/minio/cmd/rpc"
-	"github.com/minio/minio/pkg/auth"
 	"github.com/minio/minio/pkg/event"
 	xnet "github.com/minio/minio/pkg/net"
 	"github.com/minio/minio/pkg/policy"
@@ -46,6 +45,11 @@ type DeleteBucketArgs struct {
 
 // DeleteBucket - handles delete bucket RPC call which removes all values of given bucket in global NotificationSys object.
 func (receiver *peerRPCReceiver) DeleteBucket(args *DeleteBucketArgs, reply *VoidReply) error {
+	objAPI := newObjectLayerFn()
+	if objAPI == nil {
+		return errServerNotInitialized
+	}
+
 	globalNotificationSys.RemoveNotification(args.BucketName)
 	globalPolicySys.Remove(args.BucketName)
 	return nil
@@ -60,6 +64,11 @@ type SetBucketPolicyArgs struct {
 
 // SetBucketPolicy - handles set bucket policy RPC call which adds bucket policy to globalPolicySys.
 func (receiver *peerRPCReceiver) SetBucketPolicy(args *SetBucketPolicyArgs, reply *VoidReply) error {
+	objAPI := newObjectLayerFn()
+	if objAPI == nil {
+		return errServerNotInitialized
+	}
+
 	globalPolicySys.Set(args.BucketName, args.Policy)
 	return nil
 }
@@ -72,6 +81,11 @@ type RemoveBucketPolicyArgs struct {
 
 // RemoveBucketPolicy - handles delete bucket policy RPC call which removes bucket policy to globalPolicySys.
 func (receiver *peerRPCReceiver) RemoveBucketPolicy(args *RemoveBucketPolicyArgs, reply *VoidReply) error {
+	objAPI := newObjectLayerFn()
+	if objAPI == nil {
+		return errServerNotInitialized
+	}
+
 	globalPolicySys.Remove(args.BucketName)
 	return nil
 }
@@ -85,6 +99,11 @@ type PutBucketNotificationArgs struct {
 
 // PutBucketNotification - handles put bucket notification RPC call which adds rules to given bucket to global NotificationSys object.
 func (receiver *peerRPCReceiver) PutBucketNotification(args *PutBucketNotificationArgs, reply *VoidReply) error {
+	objAPI := newObjectLayerFn()
+	if objAPI == nil {
+		return errServerNotInitialized
+	}
+
 	globalNotificationSys.AddRulesMap(args.BucketName, args.RulesMap)
 	return nil
 }
@@ -101,6 +120,11 @@ type ListenBucketNotificationArgs struct {
 
 // ListenBucketNotification - handles listen bucket notification RPC call. It creates PeerRPCClient target which pushes requested events to target in remote peer.
 func (receiver *peerRPCReceiver) ListenBucketNotification(args *ListenBucketNotificationArgs, reply *VoidReply) error {
+	objAPI := newObjectLayerFn()
+	if objAPI == nil {
+		return errServerNotInitialized
+	}
+
 	rpcClient := globalNotificationSys.GetPeerRPCClient(args.Addr)
 	if rpcClient == nil {
 		return fmt.Errorf("unable to find PeerRPCClient for provided address %v. This happens only if remote and this minio run with different set of endpoints", args.Addr)
@@ -127,6 +151,11 @@ type RemoteTargetExistArgs struct {
 
 // RemoteTargetExist - handles target ID exist RPC call which checks whether given target ID is a HTTP client target or not.
 func (receiver *peerRPCReceiver) RemoteTargetExist(args *RemoteTargetExistArgs, reply *bool) error {
+	objAPI := newObjectLayerFn()
+	if objAPI == nil {
+		return errServerNotInitialized
+	}
+
 	*reply = globalNotificationSys.RemoteTargetExist(args.BucketName, args.TargetID)
 	return nil
 }
@@ -141,6 +170,11 @@ type SendEventArgs struct {
 
 // SendEvent - handles send event RPC call which sends given event to target by given target ID.
 func (receiver *peerRPCReceiver) SendEvent(args *SendEventArgs, reply *bool) error {
+	objAPI := newObjectLayerFn()
+	if objAPI == nil {
+		return errServerNotInitialized
+	}
+
 	// Set default to true to keep the target.
 	*reply = true
 	errs := globalNotificationSys.send(args.BucketName, args.Event, args.TargetID)
@@ -158,35 +192,26 @@ func (receiver *peerRPCReceiver) SendEvent(args *SendEventArgs, reply *bool) err
 	return nil
 }
 
-// SetCredentialsArgs - set credentials RPC arguments.
-type SetCredentialsArgs struct {
-	AuthArgs
-	Credentials auth.Credentials
-}
-
-// SetCredentials - handles set credentials RPC call.
-func (receiver *peerRPCReceiver) SetCredentials(args *SetCredentialsArgs, reply *VoidReply) error {
-	if !args.Credentials.IsValid() {
-		return fmt.Errorf("invalid credentials passed")
+// LoadCredentials - handles load credentials RPC call.
+func (receiver *peerRPCReceiver) LoadCredentials(args *AuthArgs, reply *VoidReply) error {
+	objAPI := newObjectLayerFn()
+	if objAPI == nil {
+		return errServerNotInitialized
 	}
 
-	// Acquire lock before updating global configuration.
-	globalServerConfigMu.Lock()
-	defer globalServerConfigMu.Unlock()
+	// Construct path to config.json for the given bucket.
+	configFile := path.Join(bucketConfigPrefix, minioConfigFile)
+	transactionConfigFile := configFile + ".transaction"
 
-	// Update credentials in memory
-	prevCred := globalServerConfig.SetCredential(args.Credentials)
-
-	// Save credentials to config file
-	if err := globalServerConfig.Save(getConfigFile()); err != nil {
-		// As saving configurstion failed, restore previous credential in memory.
-		globalServerConfig.SetCredential(prevCred)
-
-		logger.LogIf(context.Background(), err)
+	// As object layer's GetObject() and PutObject() take respective lock on minioMetaBucket
+	// and configFile, take a transaction lock to avoid race.
+	objLock := globalNSMutex.NewNSLock(minioMetaBucket, transactionConfigFile)
+	if err := objLock.GetRLock(globalOperationTimeout); err != nil {
 		return err
 	}
+	objLock.RUnlock()
 
-	return nil
+	return globalConfigSys.Load(newObjectLayerFn())
 }
 
 // NewPeerRPCServer - returns new peer RPC server.
@@ -201,7 +226,7 @@ func NewPeerRPCServer() (*xrpc.Server, error) {
 // registerPeerRPCRouter - creates and registers Peer RPC server and its router.
 func registerPeerRPCRouter(router *mux.Router) {
 	rpcServer, err := NewPeerRPCServer()
-	logger.FatalIf(err, "Unable to initialize peer RPC Server", context.Background())
+	logger.FatalIf(err, "Unable to initialize peer RPC Server")
 	subrouter := router.PathPrefix(minioReservedBucketPath).Subrouter()
-	subrouter.Path(peerServiceSubPath).Handler(rpcServer)
+	subrouter.Path(peerServiceSubPath).HandlerFunc(httpTraceHdrs(rpcServer.ServeHTTP))
 }

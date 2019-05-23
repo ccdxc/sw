@@ -29,21 +29,21 @@ var printEndpointError = func() func(Endpoint, error) {
 	printOnce := make(map[Endpoint]map[string]bool)
 
 	return func(endpoint Endpoint, err error) {
-		reqInfo := (&logger.ReqInfo{}).AppendTags("endpoint", endpoint.Host)
+		reqInfo := (&logger.ReqInfo{}).AppendTags("endpoint", endpoint.String())
 		ctx := logger.SetReqInfo(context.Background(), reqInfo)
 		m, ok := printOnce[endpoint]
 		if !ok {
 			m = make(map[string]bool)
 			m[err.Error()] = true
 			printOnce[endpoint] = m
-			logger.LogIf(ctx, err)
+			logger.LogAlwaysIf(ctx, err)
 			return
 		}
 		if m[err.Error()] {
 			return
 		}
 		m[err.Error()] = true
-		logger.LogIf(ctx, err)
+		logger.LogAlwaysIf(ctx, err)
 	}
 }()
 
@@ -80,10 +80,10 @@ func formatXLCleanupTmpLocalEndpoints(endpoints EndpointList) error {
 			}
 			return err
 		}
-		if err := os.RemoveAll(pathJoin(endpoint.Path, minioMetaTmpBucket)); err != nil {
+		if err := removeAll(pathJoin(endpoint.Path, minioMetaTmpBucket)); err != nil {
 			return err
 		}
-		if err := os.MkdirAll(pathJoin(endpoint.Path, minioMetaTmpBucket), 0777); err != nil {
+		if err := mkdirAll(pathJoin(endpoint.Path, minioMetaTmpBucket), 0777); err != nil {
 			return err
 		}
 	}
@@ -120,7 +120,8 @@ var errXLV3ThisEmpty = fmt.Errorf("XL format version 3 has This field empty")
 // connect to list of endpoints and load all XL disk formats, validate the formats are correct
 // and are in quorum, if no formats are found attempt to initialize all of them for the first
 // time. additionally make sure to close all the disks used in this attempt.
-func connectLoadInitFormats(firstDisk bool, endpoints EndpointList, setCount, drivesPerSet int) (*formatXLV3, error) {
+func connectLoadInitFormats(retryCount int, firstDisk bool, endpoints EndpointList, setCount, drivesPerSet int) (*formatXLV3, error) {
+	// Initialize all storage disks
 	storageDisks, err := initStorageDisks(endpoints)
 	if err != nil {
 		return nil, err
@@ -129,6 +130,23 @@ func connectLoadInitFormats(firstDisk bool, endpoints EndpointList, setCount, dr
 
 	// Attempt to load all `format.json` from all disks.
 	formatConfigs, sErrs := loadFormatXLAll(storageDisks)
+	// Check if we have
+	for i, sErr := range sErrs {
+		if _, ok := formatCriticalErrors[sErr]; ok {
+			return nil, fmt.Errorf("Disk %s: %s", endpoints[i], sErr)
+		}
+	}
+
+	// Connect to all storage disks, a connection failure will be
+	// only logged after some retries.
+	for _, disk := range storageDisks {
+		if disk != nil {
+			connectErr := disk.LastError()
+			if connectErr != nil && retryCount >= 5 {
+				logger.Info("Unable to connect to %s: %v\n", disk.String(), connectErr.Error())
+			}
+		}
+	}
 
 	// Pre-emptively check if one of the formatted disks
 	// is invalid. This function returns success for the
@@ -137,12 +155,6 @@ func connectLoadInitFormats(firstDisk bool, endpoints EndpointList, setCount, dr
 	// trying to pool FS backend into an XL set.
 	if err = checkFormatXLValues(formatConfigs); err != nil {
 		return nil, err
-	}
-
-	for i, sErr := range sErrs {
-		if _, ok := formatCriticalErrors[sErr]; ok {
-			return nil, fmt.Errorf("Disk %s: %s", endpoints[i], sErr)
-		}
 	}
 
 	// All disks report unformatted we should initialized everyone.
@@ -198,7 +210,7 @@ func connectLoadInitFormats(firstDisk bool, endpoints EndpointList, setCount, dr
 		}
 	}
 
-	logger.SetDeploymentID(format.ID)
+	globalDeploymentID = format.ID
 
 	if err = formatXLFixLocalDeploymentID(context.Background(), storageDisks, format); err != nil {
 		return nil, err
@@ -238,8 +250,8 @@ func waitForFormatXL(ctx context.Context, firstDisk bool, endpoints EndpointList
 	retryTimerCh := newRetryTimerSimple(doneCh)
 	for {
 		select {
-		case _ = <-retryTimerCh:
-			format, err := connectLoadInitFormats(firstDisk, endpoints, setCount, disksPerSet)
+		case retryCount := <-retryTimerCh:
+			format, err := connectLoadInitFormats(retryCount, firstDisk, endpoints, setCount, disksPerSet)
 			if err != nil {
 				switch err {
 				case errNotFirstDisk:

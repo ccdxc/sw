@@ -31,18 +31,14 @@ import (
 
 	"github.com/djherbis/atime"
 
+	"github.com/minio/minio/cmd/crypto"
 	"github.com/minio/minio/cmd/logger"
-	"github.com/minio/minio/pkg/wildcard"
-
 	"github.com/minio/minio/pkg/hash"
+	"github.com/minio/minio/pkg/wildcard"
 )
 
-// list of all errors that can be ignored in tree walk operation in disk cache
-var cacheTreeWalkIgnoredErrs = append(baseIgnoredErrs, errDiskAccessDenied, errVolumeNotFound, errFileNotFound)
-
 const (
-	// disk cache needs to have cacheSizeMultiplier * object size space free for a cache entry to be created.
-	cacheSizeMultiplier  = 100
+	// disk cache needs to have  object size space free for a cache entry to be created.
 	cacheTrashDir        = "trash"
 	cacheCleanupInterval = 10 // in minutes
 )
@@ -61,18 +57,19 @@ type cacheObjects struct {
 	// file path patterns to exclude from cache
 	exclude []string
 	// Object functions pointing to the corresponding functions of backend implementation.
-	GetObjectFn               func(ctx context.Context, bucket, object string, startOffset int64, length int64, writer io.Writer, etag string) (err error)
-	GetObjectInfoFn           func(ctx context.Context, bucket, object string) (objInfo ObjectInfo, err error)
-	PutObjectFn               func(ctx context.Context, bucket, object string, data *hash.Reader, metadata map[string]string) (objInfo ObjectInfo, err error)
+	GetObjectNInfoFn          func(ctx context.Context, bucket, object string, rs *HTTPRangeSpec, h http.Header, lockType LockType, opts ObjectOptions) (gr *GetObjectReader, err error)
+	GetObjectFn               func(ctx context.Context, bucket, object string, startOffset int64, length int64, writer io.Writer, etag string, opts ObjectOptions) (err error)
+	GetObjectInfoFn           func(ctx context.Context, bucket, object string, opts ObjectOptions) (objInfo ObjectInfo, err error)
+	PutObjectFn               func(ctx context.Context, bucket, object string, data *PutObjReader, metadata map[string]string, opts ObjectOptions) (objInfo ObjectInfo, err error)
 	DeleteObjectFn            func(ctx context.Context, bucket, object string) error
 	ListObjectsFn             func(ctx context.Context, bucket, prefix, marker, delimiter string, maxKeys int) (result ListObjectsInfo, err error)
 	ListObjectsV2Fn           func(ctx context.Context, bucket, prefix, continuationToken, delimiter string, maxKeys int, fetchOwner bool, startAfter string) (result ListObjectsV2Info, err error)
 	ListBucketsFn             func(ctx context.Context) (buckets []BucketInfo, err error)
 	GetBucketInfoFn           func(ctx context.Context, bucket string) (bucketInfo BucketInfo, err error)
-	NewMultipartUploadFn      func(ctx context.Context, bucket, object string, metadata map[string]string) (uploadID string, err error)
-	PutObjectPartFn           func(ctx context.Context, bucket, object, uploadID string, partID int, data *hash.Reader) (info PartInfo, err error)
+	NewMultipartUploadFn      func(ctx context.Context, bucket, object string, metadata map[string]string, opts ObjectOptions) (uploadID string, err error)
+	PutObjectPartFn           func(ctx context.Context, bucket, object, uploadID string, partID int, data *PutObjReader, opts ObjectOptions) (info PartInfo, err error)
 	AbortMultipartUploadFn    func(ctx context.Context, bucket, object, uploadID string) error
-	CompleteMultipartUploadFn func(ctx context.Context, bucket, object, uploadID string, uploadedParts []CompletePart) (objInfo ObjectInfo, err error)
+	CompleteMultipartUploadFn func(ctx context.Context, bucket, object, uploadID string, uploadedParts []CompletePart, opts ObjectOptions) (objInfo ObjectInfo, err error)
 	DeleteBucketFn            func(ctx context.Context, bucket string) error
 }
 
@@ -92,19 +89,25 @@ type CacheObjectLayer interface {
 	ListBuckets(ctx context.Context) (buckets []BucketInfo, err error)
 	DeleteBucket(ctx context.Context, bucket string) error
 	// Object operations.
-	GetObject(ctx context.Context, bucket, object string, startOffset int64, length int64, writer io.Writer, etag string) (err error)
-	GetObjectInfo(ctx context.Context, bucket, object string) (objInfo ObjectInfo, err error)
-	PutObject(ctx context.Context, bucket, object string, data *hash.Reader, metadata map[string]string) (objInfo ObjectInfo, err error)
+	GetObjectNInfo(ctx context.Context, bucket, object string, rs *HTTPRangeSpec, h http.Header, lockType LockType, opts ObjectOptions) (gr *GetObjectReader, err error)
+	GetObject(ctx context.Context, bucket, object string, startOffset int64, length int64, writer io.Writer, etag string, opts ObjectOptions) (err error)
+	GetObjectInfo(ctx context.Context, bucket, object string, opts ObjectOptions) (objInfo ObjectInfo, err error)
+	PutObject(ctx context.Context, bucket, object string, data *PutObjReader, metadata map[string]string, opts ObjectOptions) (objInfo ObjectInfo, err error)
 	DeleteObject(ctx context.Context, bucket, object string) error
 
 	// Multipart operations.
-	NewMultipartUpload(ctx context.Context, bucket, object string, metadata map[string]string) (uploadID string, err error)
-	PutObjectPart(ctx context.Context, bucket, object, uploadID string, partID int, data *hash.Reader) (info PartInfo, err error)
+	NewMultipartUpload(ctx context.Context, bucket, object string, metadata map[string]string, opts ObjectOptions) (uploadID string, err error)
+	PutObjectPart(ctx context.Context, bucket, object, uploadID string, partID int, data *PutObjReader, opts ObjectOptions) (info PartInfo, err error)
 	AbortMultipartUpload(ctx context.Context, bucket, object, uploadID string) error
-	CompleteMultipartUpload(ctx context.Context, bucket, object, uploadID string, uploadedParts []CompletePart) (objInfo ObjectInfo, err error)
+	CompleteMultipartUpload(ctx context.Context, bucket, object, uploadID string, uploadedParts []CompletePart, opts ObjectOptions) (objInfo ObjectInfo, err error)
 
 	// Storage operations.
 	StorageInfo(ctx context.Context) CacheStorageInfo
+}
+
+// IsCacheable returns if the object should be saved in the cache.
+func (o ObjectInfo) IsCacheable() bool {
+	return !crypto.IsEncrypted(o.UserDefined)
 }
 
 // backendDownError returns true if err is due to backend failure or faulty disk if in server mode
@@ -179,22 +182,99 @@ func (c cacheObjects) getMetadata(objInfo ObjectInfo) map[string]string {
 	return metadata
 }
 
+func (c cacheObjects) GetObjectNInfo(ctx context.Context, bucket, object string, rs *HTTPRangeSpec, h http.Header, lockType LockType, opts ObjectOptions) (gr *GetObjectReader, err error) {
+	if c.isCacheExclude(bucket, object) {
+		return c.GetObjectNInfoFn(ctx, bucket, object, rs, h, writeLock, opts)
+	}
+
+	// fetch cacheFSObjects if object is currently cached or nearest available cache drive
+	dcache, err := c.cache.getCachedFSLoc(ctx, bucket, object)
+	if err != nil {
+		return c.GetObjectNInfoFn(ctx, bucket, object, rs, h, writeLock, opts)
+	}
+
+	cacheReader, cacheErr := dcache.GetObjectNInfo(ctx, bucket, object, rs, h, lockType, opts)
+
+	objInfo, err := c.GetObjectInfoFn(ctx, bucket, object, opts)
+	if backendDownError(err) && cacheErr == nil {
+		return cacheReader, nil
+	} else if err != nil {
+		if _, ok := err.(ObjectNotFound); ok {
+			// Delete cached entry if backend object was deleted.
+			dcache.Delete(ctx, bucket, object)
+		}
+		return nil, err
+	}
+
+	if !objInfo.IsCacheable() || filterFromCache(objInfo.UserDefined) {
+		return c.GetObjectNInfoFn(ctx, bucket, object, rs, h, writeLock, opts)
+	}
+
+	if cacheErr == nil {
+		if cacheReader.ObjInfo.ETag == objInfo.ETag && !isStaleCache(objInfo) {
+			// Object is not stale, so serve from cache
+			return cacheReader, nil
+		}
+		cacheReader.Close()
+		// Object is stale, so delete from cache
+		dcache.Delete(ctx, bucket, object)
+	}
+
+	// Since we got here, we are serving the request from backend,
+	// and also adding the object to the cache.
+
+	if rs != nil {
+		// We don't cache partial objects.
+		return c.GetObjectNInfoFn(ctx, bucket, object, rs, h, writeLock, opts)
+	}
+	if !dcache.diskAvailable(objInfo.Size) {
+		return c.GetObjectNInfoFn(ctx, bucket, object, rs, h, writeLock, opts)
+	}
+
+	bkReader, bkErr := c.GetObjectNInfoFn(ctx, bucket, object, rs, h, writeLock, opts)
+	if bkErr != nil {
+		return nil, bkErr
+	}
+
+	// Initialize pipe.
+	pipeReader, pipeWriter := io.Pipe()
+	teeReader := io.TeeReader(bkReader, pipeWriter)
+	hashReader, herr := hash.NewReader(pipeReader, bkReader.ObjInfo.Size, "", "", bkReader.ObjInfo.Size)
+	if herr != nil {
+		bkReader.Close()
+		return nil, herr
+	}
+
+	go func() {
+		opts := ObjectOptions{}
+		putErr := dcache.Put(ctx, bucket, object, NewPutObjReader(hashReader, nil, nil), c.getMetadata(bkReader.ObjInfo), opts)
+		// close the write end of the pipe, so the error gets
+		// propagated to getObjReader
+		pipeWriter.CloseWithError(putErr)
+	}()
+
+	cleanupBackend := func() { bkReader.Close() }
+	cleanupPipe := func() { pipeReader.Close() }
+	gr = NewGetObjectReaderFromReader(teeReader, bkReader.ObjInfo, cleanupBackend, cleanupPipe)
+	return gr, nil
+}
+
 // Uses cached-object to serve the request. If object is not cached it serves the request from the backend and also
 // stores it in the cache for serving subsequent requests.
-func (c cacheObjects) GetObject(ctx context.Context, bucket, object string, startOffset int64, length int64, writer io.Writer, etag string) (err error) {
+func (c cacheObjects) GetObject(ctx context.Context, bucket, object string, startOffset int64, length int64, writer io.Writer, etag string, opts ObjectOptions) (err error) {
 	GetObjectFn := c.GetObjectFn
 	GetObjectInfoFn := c.GetObjectInfoFn
 
 	if c.isCacheExclude(bucket, object) {
-		return GetObjectFn(ctx, bucket, object, startOffset, length, writer, etag)
+		return GetObjectFn(ctx, bucket, object, startOffset, length, writer, etag, opts)
 	}
 	// fetch cacheFSObjects if object is currently cached or nearest available cache drive
 	dcache, err := c.cache.getCachedFSLoc(ctx, bucket, object)
 	if err != nil {
-		return GetObjectFn(ctx, bucket, object, startOffset, length, writer, etag)
+		return GetObjectFn(ctx, bucket, object, startOffset, length, writer, etag, opts)
 	}
 	// stat object on backend
-	objInfo, err := GetObjectInfoFn(ctx, bucket, object)
+	objInfo, err := GetObjectInfoFn(ctx, bucket, object, opts)
 	backendDown := backendDownError(err)
 	if err != nil && !backendDown {
 		if _, ok := err.(ObjectNotFound); ok {
@@ -204,43 +284,43 @@ func (c cacheObjects) GetObject(ctx context.Context, bucket, object string, star
 		return err
 	}
 
-	if !backendDown && filterFromCache(objInfo.UserDefined) {
-		return GetObjectFn(ctx, bucket, object, startOffset, length, writer, etag)
+	if !backendDown && !objInfo.IsCacheable() {
+		return GetObjectFn(ctx, bucket, object, startOffset, length, writer, etag, opts)
 	}
 
-	cachedObjInfo, err := dcache.GetObjectInfo(ctx, bucket, object)
+	if !backendDown && filterFromCache(objInfo.UserDefined) {
+		return GetObjectFn(ctx, bucket, object, startOffset, length, writer, etag, opts)
+	}
+
+	cachedObjInfo, err := dcache.GetObjectInfo(ctx, bucket, object, opts)
 	if err == nil {
 		if backendDown {
 			// If the backend is down, serve the request from cache.
-			return dcache.Get(ctx, bucket, object, startOffset, length, writer, etag)
+			return dcache.Get(ctx, bucket, object, startOffset, length, writer, etag, opts)
 		}
 		if cachedObjInfo.ETag == objInfo.ETag && !isStaleCache(objInfo) {
-			return dcache.Get(ctx, bucket, object, startOffset, length, writer, etag)
+			return dcache.Get(ctx, bucket, object, startOffset, length, writer, etag, opts)
 		}
 		dcache.Delete(ctx, bucket, object)
 	}
-	if startOffset != 0 || length != objInfo.Size {
+	if startOffset != 0 || (length > 0 && length != objInfo.Size) {
 		// We don't cache partial objects.
-		return GetObjectFn(ctx, bucket, object, startOffset, length, writer, etag)
+		return GetObjectFn(ctx, bucket, object, startOffset, length, writer, etag, opts)
 	}
-	if !dcache.diskAvailable(objInfo.Size * cacheSizeMultiplier) {
-		// cache only objects < 1/100th of disk capacity
-		return GetObjectFn(ctx, bucket, object, startOffset, length, writer, etag)
+	if !dcache.diskAvailable(objInfo.Size) {
+		return GetObjectFn(ctx, bucket, object, startOffset, length, writer, etag, opts)
 	}
 	// Initialize pipe.
 	pipeReader, pipeWriter := io.Pipe()
-	hashReader, err := hash.NewReader(pipeReader, objInfo.Size, "", "")
+	hashReader, err := hash.NewReader(pipeReader, objInfo.Size, "", "", objInfo.Size)
 	if err != nil {
 		return err
 	}
 	go func() {
-		if err = GetObjectFn(ctx, bucket, object, 0, objInfo.Size, io.MultiWriter(writer, pipeWriter), etag); err != nil {
-			pipeWriter.CloseWithError(err)
-			return
-		}
-		pipeWriter.Close() // Close writer explicitly signaling we wrote all data.
+		gerr := GetObjectFn(ctx, bucket, object, 0, objInfo.Size, io.MultiWriter(writer, pipeWriter), etag, opts)
+		pipeWriter.CloseWithError(gerr) // Close writer explicitly signaling we wrote all data.
 	}()
-	err = dcache.Put(ctx, bucket, object, hashReader, c.getMetadata(objInfo))
+	err = dcache.Put(ctx, bucket, object, NewPutObjReader(hashReader, nil, nil), c.getMetadata(objInfo), opts)
 	if err != nil {
 		return err
 	}
@@ -249,17 +329,17 @@ func (c cacheObjects) GetObject(ctx context.Context, bucket, object string, star
 }
 
 // Returns ObjectInfo from cache if available.
-func (c cacheObjects) GetObjectInfo(ctx context.Context, bucket, object string) (ObjectInfo, error) {
+func (c cacheObjects) GetObjectInfo(ctx context.Context, bucket, object string, opts ObjectOptions) (ObjectInfo, error) {
 	getObjectInfoFn := c.GetObjectInfoFn
 	if c.isCacheExclude(bucket, object) {
-		return getObjectInfoFn(ctx, bucket, object)
+		return getObjectInfoFn(ctx, bucket, object, opts)
 	}
 	// fetch cacheFSObjects if object is currently cached or nearest available cache drive
 	dcache, err := c.cache.getCachedFSLoc(ctx, bucket, object)
 	if err != nil {
-		return getObjectInfoFn(ctx, bucket, object)
+		return getObjectInfoFn(ctx, bucket, object, opts)
 	}
-	objInfo, err := getObjectInfoFn(ctx, bucket, object)
+	objInfo, err := getObjectInfoFn(ctx, bucket, object, opts)
 	if err != nil {
 		if _, ok := err.(ObjectNotFound); ok {
 			// Delete the cached entry if backend object was deleted.
@@ -270,14 +350,14 @@ func (c cacheObjects) GetObjectInfo(ctx context.Context, bucket, object string) 
 			return ObjectInfo{}, err
 		}
 		// when backend is down, serve from cache.
-		cachedObjInfo, cerr := dcache.GetObjectInfo(ctx, bucket, object)
+		cachedObjInfo, cerr := dcache.GetObjectInfo(ctx, bucket, object, opts)
 		if cerr == nil {
 			return cachedObjInfo, nil
 		}
 		return ObjectInfo{}, BackendDown{}
 	}
 	// when backend is up, do a sanity check on cached object
-	cachedObjInfo, err := dcache.GetObjectInfo(ctx, bucket, object)
+	cachedObjInfo, err := dcache.GetObjectInfo(ctx, bucket, object, opts)
 	if err != nil {
 		return objInfo, nil
 	}
@@ -291,40 +371,32 @@ func (c cacheObjects) GetObjectInfo(ctx context.Context, bucket, object string) 
 // Returns function "listDir" of the type listDirFunc.
 // isLeaf - is used by listDir function to check if an entry is a leaf or non-leaf entry.
 // disks - list of fsObjects
-func listDirCacheFactory(isLeaf isLeafFunc, treeWalkIgnoredErrs []error, disks []*cacheFSObjects) listDirFunc {
-	listCacheDirs := func(bucket, prefixDir, prefixEntry string) (dirs []string, err error) {
+func listDirCacheFactory(isLeaf isLeafFunc, disks []*cacheFSObjects) listDirFunc {
+	listCacheDirs := func(bucket, prefixDir, prefixEntry string) (dirs []string) {
 		var entries []string
 		for _, disk := range disks {
 			// ignore disk-caches that might be missing/offline
 			if disk == nil {
 				continue
 			}
-			fs := disk.FSObjects
-			entries, err = readDir(pathJoin(fs.fsPath, bucket, prefixDir))
 
-			// For any reason disk was deleted or goes offline, continue
-			// and list from other disks if possible.
+			fs := disk.FSObjects
+			var err error
+			entries, err = readDir(pathJoin(fs.fsPath, bucket, prefixDir))
 			if err != nil {
-				if IsErrIgnored(err, treeWalkIgnoredErrs...) {
-					continue
-				}
-				return nil, err
+				continue
 			}
 
 			// Filter entries that have the prefix prefixEntry.
 			entries = filterMatchingPrefix(entries, prefixEntry)
 			dirs = append(dirs, entries...)
 		}
-		return dirs, nil
+		return dirs
 	}
 
 	// listDir - lists all the entries at a given prefix and given entry in the prefix.
-	listDir := func(bucket, prefixDir, prefixEntry string) (mergedEntries []string, delayIsLeaf bool, err error) {
-		var cacheEntries []string
-		cacheEntries, err = listCacheDirs(bucket, prefixDir, prefixEntry)
-		if err != nil {
-			return nil, false, err
-		}
+	listDir := func(bucket, prefixDir, prefixEntry string) (mergedEntries []string, delayIsLeaf bool) {
+		cacheEntries := listCacheDirs(bucket, prefixDir, prefixEntry)
 		for _, entry := range cacheEntries {
 			// Find elements in entries which are not in mergedEntries
 			idx := sort.SearchStrings(mergedEntries, entry)
@@ -335,7 +407,7 @@ func listDirCacheFactory(isLeaf isLeafFunc, treeWalkIgnoredErrs []error, disks [
 			mergedEntries = append(mergedEntries, entry)
 			sort.Strings(mergedEntries)
 		}
-		return mergedEntries, false, nil
+		return mergedEntries, false
 	}
 	return listDir
 }
@@ -371,7 +443,7 @@ func (c cacheObjects) listCacheObjects(ctx context.Context, bucket, prefix, mark
 			return fs.isObjectDir(bucket, object)
 		}
 
-		listDir := listDirCacheFactory(isLeaf, cacheTreeWalkIgnoredErrs, c.cache.cfs)
+		listDir := listDirCacheFactory(isLeaf, c.cache.cfs)
 		walkResultCh = startTreeWalk(ctx, bucket, prefix, marker, recursive, listDir, isLeaf, isLeafDir, endWalkCh)
 	}
 
@@ -572,42 +644,43 @@ func (c cacheObjects) isCacheExclude(bucket, object string) bool {
 }
 
 // PutObject - caches the uploaded object for single Put operations
-func (c cacheObjects) PutObject(ctx context.Context, bucket, object string, r *hash.Reader, metadata map[string]string) (objInfo ObjectInfo, err error) {
+func (c cacheObjects) PutObject(ctx context.Context, bucket, object string, r *PutObjReader, metadata map[string]string, opts ObjectOptions) (objInfo ObjectInfo, err error) {
 	putObjectFn := c.PutObjectFn
+	data := r.Reader
 	dcache, err := c.cache.getCacheFS(ctx, bucket, object)
 	if err != nil {
 		// disk cache could not be located,execute backend call.
-		return putObjectFn(ctx, bucket, object, r, metadata)
+		return putObjectFn(ctx, bucket, object, r, metadata, opts)
 	}
 	size := r.Size()
 
 	// fetch from backend if there is no space on cache drive
-	if !dcache.diskAvailable(size * cacheSizeMultiplier) {
-		return putObjectFn(ctx, bucket, object, r, metadata)
+	if !dcache.diskAvailable(size) {
+		return putObjectFn(ctx, bucket, object, r, metadata, opts)
 	}
 	// fetch from backend if cache exclude pattern or cache-control
 	// directive set to exclude
 	if c.isCacheExclude(bucket, object) || filterFromCache(metadata) {
 		dcache.Delete(ctx, bucket, object)
-		return putObjectFn(ctx, bucket, object, r, metadata)
+		return putObjectFn(ctx, bucket, object, r, metadata, opts)
 	}
 	objInfo = ObjectInfo{}
 	// Initialize pipe to stream data to backend
 	pipeReader, pipeWriter := io.Pipe()
-	hashReader, err := hash.NewReader(pipeReader, size, r.MD5HexString(), r.SHA256HexString())
+	hashReader, err := hash.NewReader(pipeReader, size, data.MD5HexString(), data.SHA256HexString(), data.ActualSize())
 	if err != nil {
 		return ObjectInfo{}, err
 	}
 	// Initialize pipe to stream data to cache
 	rPipe, wPipe := io.Pipe()
-	cHashReader, err := hash.NewReader(rPipe, size, r.MD5HexString(), r.SHA256HexString())
+	cHashReader, err := hash.NewReader(rPipe, size, data.MD5HexString(), data.SHA256HexString(), data.ActualSize())
 	if err != nil {
 		return ObjectInfo{}, err
 	}
 	oinfoCh := make(chan ObjectInfo)
 	errCh := make(chan error)
 	go func() {
-		oinfo, perr := putObjectFn(ctx, bucket, object, hashReader, metadata)
+		oinfo, perr := putObjectFn(ctx, bucket, object, NewPutObjReader(hashReader, nil, nil), metadata, opts)
 		if perr != nil {
 			pipeWriter.CloseWithError(perr)
 			wPipe.CloseWithError(perr)
@@ -620,14 +693,14 @@ func (c cacheObjects) PutObject(ctx context.Context, bucket, object string, r *h
 	}()
 
 	go func() {
-		if err = dcache.Put(ctx, bucket, object, cHashReader, metadata); err != nil {
+		if err = dcache.Put(ctx, bucket, object, NewPutObjReader(cHashReader, nil, nil), metadata, opts); err != nil {
 			wPipe.CloseWithError(err)
 			return
 		}
 	}()
 
 	mwriter := io.MultiWriter(pipeWriter, wPipe)
-	_, err = io.Copy(mwriter, r)
+	_, err = io.Copy(mwriter, data)
 	if err != nil {
 		err = <-errCh
 		return objInfo, err
@@ -639,68 +712,69 @@ func (c cacheObjects) PutObject(ctx context.Context, bucket, object string, r *h
 }
 
 // NewMultipartUpload - Starts a new multipart upload operation to backend and cache.
-func (c cacheObjects) NewMultipartUpload(ctx context.Context, bucket, object string, metadata map[string]string) (uploadID string, err error) {
+func (c cacheObjects) NewMultipartUpload(ctx context.Context, bucket, object string, metadata map[string]string, opts ObjectOptions) (uploadID string, err error) {
 	newMultipartUploadFn := c.NewMultipartUploadFn
 
 	if c.isCacheExclude(bucket, object) || filterFromCache(metadata) {
-		return newMultipartUploadFn(ctx, bucket, object, metadata)
+		return newMultipartUploadFn(ctx, bucket, object, metadata, opts)
 	}
 
 	dcache, err := c.cache.getCacheFS(ctx, bucket, object)
 	if err != nil {
 		// disk cache could not be located,execute backend call.
-		return newMultipartUploadFn(ctx, bucket, object, metadata)
+		return newMultipartUploadFn(ctx, bucket, object, metadata, opts)
 	}
 
-	uploadID, err = newMultipartUploadFn(ctx, bucket, object, metadata)
+	uploadID, err = newMultipartUploadFn(ctx, bucket, object, metadata, opts)
 	if err != nil {
 		return
 	}
 	// create new multipart upload in cache with same uploadID
-	dcache.NewMultipartUpload(ctx, bucket, object, metadata, uploadID)
+	dcache.NewMultipartUpload(ctx, bucket, object, metadata, uploadID, opts)
 	return uploadID, err
 }
 
 // PutObjectPart - uploads part to backend and cache simultaneously.
-func (c cacheObjects) PutObjectPart(ctx context.Context, bucket, object, uploadID string, partID int, data *hash.Reader) (info PartInfo, err error) {
+func (c cacheObjects) PutObjectPart(ctx context.Context, bucket, object, uploadID string, partID int, r *PutObjReader, opts ObjectOptions) (info PartInfo, err error) {
+	data := r.Reader
 	putObjectPartFn := c.PutObjectPartFn
 	dcache, err := c.cache.getCacheFS(ctx, bucket, object)
 	if err != nil {
 		// disk cache could not be located,execute backend call.
-		return putObjectPartFn(ctx, bucket, object, uploadID, partID, data)
+		return putObjectPartFn(ctx, bucket, object, uploadID, partID, r, opts)
 	}
 
 	if c.isCacheExclude(bucket, object) {
-		return putObjectPartFn(ctx, bucket, object, uploadID, partID, data)
+		return putObjectPartFn(ctx, bucket, object, uploadID, partID, r, opts)
 	}
 
-	// make sure cache has at least cacheSizeMultiplier * size available
+	// make sure cache has at least size space available
 	size := data.Size()
-	if !dcache.diskAvailable(size * cacheSizeMultiplier) {
+	if !dcache.diskAvailable(size) {
 		select {
 		case dcache.purgeChan <- struct{}{}:
 		default:
 		}
-		return putObjectPartFn(ctx, bucket, object, uploadID, partID, data)
+		return putObjectPartFn(ctx, bucket, object, uploadID, partID, r, opts)
 	}
 
 	info = PartInfo{}
 	// Initialize pipe to stream data to backend
 	pipeReader, pipeWriter := io.Pipe()
-	hashReader, err := hash.NewReader(pipeReader, size, data.MD5HexString(), data.SHA256HexString())
+	hashReader, err := hash.NewReader(pipeReader, size, data.MD5HexString(), data.SHA256HexString(), data.ActualSize())
 	if err != nil {
 		return
 	}
 	// Initialize pipe to stream data to cache
 	rPipe, wPipe := io.Pipe()
-	cHashReader, err := hash.NewReader(rPipe, size, data.MD5HexString(), data.SHA256HexString())
+	cHashReader, err := hash.NewReader(rPipe, size, data.MD5HexString(), data.SHA256HexString(), data.ActualSize())
 	if err != nil {
 		return
 	}
 	pinfoCh := make(chan PartInfo)
 	errorCh := make(chan error)
 	go func() {
-		info, err = putObjectPartFn(ctx, bucket, object, uploadID, partID, hashReader)
+		info, err = putObjectPartFn(ctx, bucket, object, uploadID, partID, NewPutObjReader(hashReader, nil, nil), opts)
 		if err != nil {
 			close(pinfoCh)
 			pipeWriter.CloseWithError(err)
@@ -712,7 +786,7 @@ func (c cacheObjects) PutObjectPart(ctx context.Context, bucket, object, uploadI
 		pinfoCh <- info
 	}()
 	go func() {
-		if _, perr := dcache.PutObjectPart(ctx, bucket, object, uploadID, partID, cHashReader); perr != nil {
+		if _, perr := dcache.PutObjectPart(ctx, bucket, object, uploadID, partID, NewPutObjReader(cHashReader, nil, nil), opts); perr != nil {
 			wPipe.CloseWithError(perr)
 			return
 		}
@@ -754,25 +828,25 @@ func (c cacheObjects) AbortMultipartUpload(ctx context.Context, bucket, object, 
 }
 
 // CompleteMultipartUpload - completes multipart upload operation on backend and cache.
-func (c cacheObjects) CompleteMultipartUpload(ctx context.Context, bucket, object, uploadID string, uploadedParts []CompletePart) (objInfo ObjectInfo, err error) {
+func (c cacheObjects) CompleteMultipartUpload(ctx context.Context, bucket, object, uploadID string, uploadedParts []CompletePart, opts ObjectOptions) (objInfo ObjectInfo, err error) {
 	completeMultipartUploadFn := c.CompleteMultipartUploadFn
 
 	if c.isCacheExclude(bucket, object) {
-		return completeMultipartUploadFn(ctx, bucket, object, uploadID, uploadedParts)
+		return completeMultipartUploadFn(ctx, bucket, object, uploadID, uploadedParts, opts)
 	}
 
 	dcache, err := c.cache.getCacheFS(ctx, bucket, object)
 	if err != nil {
 		// disk cache could not be located,execute backend call.
-		return completeMultipartUploadFn(ctx, bucket, object, uploadID, uploadedParts)
+		return completeMultipartUploadFn(ctx, bucket, object, uploadID, uploadedParts, opts)
 	}
 	// perform backend operation
-	objInfo, err = completeMultipartUploadFn(ctx, bucket, object, uploadID, uploadedParts)
+	objInfo, err = completeMultipartUploadFn(ctx, bucket, object, uploadID, uploadedParts, opts)
 	if err != nil {
 		return
 	}
 	// create new multipart upload in cache with same uploadID
-	dcache.CompleteMultipartUpload(ctx, bucket, object, uploadID, uploadedParts)
+	dcache.CompleteMultipartUpload(ctx, bucket, object, uploadID, uploadedParts, opts)
 	return
 }
 
@@ -888,14 +962,17 @@ func newServerCacheObjects(config CacheConfig) (CacheObjectLayer, error) {
 		cache:    dcache,
 		exclude:  config.Exclude,
 		listPool: newTreeWalkPool(globalLookupTimeout),
-		GetObjectFn: func(ctx context.Context, bucket, object string, startOffset int64, length int64, writer io.Writer, etag string) error {
-			return newObjectLayerFn().GetObject(ctx, bucket, object, startOffset, length, writer, etag)
+		GetObjectFn: func(ctx context.Context, bucket, object string, startOffset int64, length int64, writer io.Writer, etag string, opts ObjectOptions) error {
+			return newObjectLayerFn().GetObject(ctx, bucket, object, startOffset, length, writer, etag, opts)
 		},
-		GetObjectInfoFn: func(ctx context.Context, bucket, object string) (ObjectInfo, error) {
-			return newObjectLayerFn().GetObjectInfo(ctx, bucket, object)
+		GetObjectInfoFn: func(ctx context.Context, bucket, object string, opts ObjectOptions) (ObjectInfo, error) {
+			return newObjectLayerFn().GetObjectInfo(ctx, bucket, object, opts)
 		},
-		PutObjectFn: func(ctx context.Context, bucket, object string, data *hash.Reader, metadata map[string]string) (objInfo ObjectInfo, err error) {
-			return newObjectLayerFn().PutObject(ctx, bucket, object, data, metadata)
+		GetObjectNInfoFn: func(ctx context.Context, bucket, object string, rs *HTTPRangeSpec, h http.Header, lockType LockType, opts ObjectOptions) (gr *GetObjectReader, err error) {
+			return newObjectLayerFn().GetObjectNInfo(ctx, bucket, object, rs, h, lockType, opts)
+		},
+		PutObjectFn: func(ctx context.Context, bucket, object string, data *PutObjReader, metadata map[string]string, opts ObjectOptions) (objInfo ObjectInfo, err error) {
+			return newObjectLayerFn().PutObject(ctx, bucket, object, data, metadata, opts)
 		},
 		DeleteObjectFn: func(ctx context.Context, bucket, object string) error {
 			return newObjectLayerFn().DeleteObject(ctx, bucket, object)
@@ -912,17 +989,17 @@ func newServerCacheObjects(config CacheConfig) (CacheObjectLayer, error) {
 		GetBucketInfoFn: func(ctx context.Context, bucket string) (bucketInfo BucketInfo, err error) {
 			return newObjectLayerFn().GetBucketInfo(ctx, bucket)
 		},
-		NewMultipartUploadFn: func(ctx context.Context, bucket, object string, metadata map[string]string) (uploadID string, err error) {
-			return newObjectLayerFn().NewMultipartUpload(ctx, bucket, object, metadata)
+		NewMultipartUploadFn: func(ctx context.Context, bucket, object string, metadata map[string]string, opts ObjectOptions) (uploadID string, err error) {
+			return newObjectLayerFn().NewMultipartUpload(ctx, bucket, object, metadata, opts)
 		},
-		PutObjectPartFn: func(ctx context.Context, bucket, object, uploadID string, partID int, data *hash.Reader) (info PartInfo, err error) {
-			return newObjectLayerFn().PutObjectPart(ctx, bucket, object, uploadID, partID, data)
+		PutObjectPartFn: func(ctx context.Context, bucket, object, uploadID string, partID int, data *PutObjReader, opts ObjectOptions) (info PartInfo, err error) {
+			return newObjectLayerFn().PutObjectPart(ctx, bucket, object, uploadID, partID, data, opts)
 		},
 		AbortMultipartUploadFn: func(ctx context.Context, bucket, object, uploadID string) error {
 			return newObjectLayerFn().AbortMultipartUpload(ctx, bucket, object, uploadID)
 		},
-		CompleteMultipartUploadFn: func(ctx context.Context, bucket, object, uploadID string, uploadedParts []CompletePart) (objInfo ObjectInfo, err error) {
-			return newObjectLayerFn().CompleteMultipartUpload(ctx, bucket, object, uploadID, uploadedParts)
+		CompleteMultipartUploadFn: func(ctx context.Context, bucket, object, uploadID string, uploadedParts []CompletePart, opts ObjectOptions) (objInfo ObjectInfo, err error) {
+			return newObjectLayerFn().CompleteMultipartUpload(ctx, bucket, object, uploadID, uploadedParts, opts)
 		},
 		DeleteBucketFn: func(ctx context.Context, bucket string) error {
 			return newObjectLayerFn().DeleteBucket(ctx, bucket)

@@ -19,7 +19,6 @@ package madmin
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -29,24 +28,24 @@ type SetCredsReq struct {
 	SecretKey string `json:"secretKey"`
 }
 
-// SetCredentials - Call Set Credentials API to set new access and
+// SetAdminCredentials - Call Set Credentials API to set new access and
 // secret keys in the specified Minio server
-func (adm *AdminClient) SetCredentials(access, secret string) error {
+func (adm *AdminClient) SetAdminCredentials(access, secret string) error {
 	// Setup request's body
 	body, err := json.Marshal(SetCredsReq{access, secret})
 	if err != nil {
 		return err
 	}
 
-	// No TLS?
-	if !adm.secure {
-		return fmt.Errorf("credentials cannot be updated over an insecure connection")
+	ebody, err := EncryptData(adm.secretAccessKey, body)
+	if err != nil {
+		return err
 	}
 
 	// Setup new request
 	reqData := requestData{
 		relPath: "/v1/config/credential",
-		content: body,
+		content: ebody,
 	}
 
 	// Execute GET on bucket to list objects.
@@ -62,5 +61,6 @@ func (adm *AdminClient) SetCredentials(access, secret string) error {
 	if resp.StatusCode != http.StatusOK {
 		return httpRespToErrorResponse(resp)
 	}
+
 	return nil
 }

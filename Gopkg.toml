@@ -104,7 +104,7 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
 
 [[constraint]]
   name = "github.com/minio/minio-go"
-  version = "4.0.0"
+  version = "6.0.6"
 
 [[constraint]]
   name = "github.com/onsi/ginkgo"
@@ -160,7 +160,7 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
 
 [[constraint]]
   name = "golang.org/x/net"
-  branch = "release-branch.go1.9"
+  branch = "release-branch.go1.11"
 
 [[constraint]]
   branch = "master"
@@ -314,7 +314,7 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
 
 [[constraint]]
   name = "github.com/minio/minio"
-  version = "RELEASE.2018-07-23T18-34-49Z"
+  version = "RELEASE.2018-12-06T01-27-43Z"
 
 [[constraint]]
   name = "github.com/docker/docker"

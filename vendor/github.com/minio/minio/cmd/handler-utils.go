@@ -17,8 +17,10 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"io"
+	"io/ioutil"
 	"mime/multipart"
 	"net"
 	"net/http"
@@ -26,6 +28,7 @@ import (
 	"strings"
 
 	"github.com/minio/minio/cmd/logger"
+	"github.com/minio/minio/pkg/auth"
 	"github.com/minio/minio/pkg/handlers"
 	httptracer "github.com/minio/minio/pkg/handlers"
 )
@@ -174,15 +177,38 @@ func getRedirectPostRawQuery(objInfo ObjectInfo) string {
 	return redirectValues.Encode()
 }
 
+// Returns access credentials in the request Authorization header.
+func getReqAccessCred(r *http.Request, region string) (cred auth.Credentials) {
+	cred, _, _ = getReqAccessKeyV4(r, region)
+	if cred.AccessKey == "" {
+		cred, _, _ = getReqAccessKeyV2(r)
+	}
+	return cred
+}
+
 // Extract request params to be sent with event notifiation.
 func extractReqParams(r *http.Request) map[string]string {
 	if r == nil {
 		return nil
 	}
 
+	region := globalServerConfig.GetRegion()
+	cred := getReqAccessCred(r, region)
 	// Success.
 	return map[string]string{
+		"region":          region,
+		"accessKey":       cred.AccessKey,
 		"sourceIPAddress": handlers.GetSourceIP(r),
+		// Add more fields here.
+	}
+}
+
+// Extract response elements to be sent with event notifiation.
+func extractRespElements(w http.ResponseWriter) map[string]string {
+
+	return map[string]string{
+		"requestId":      w.Header().Get(responseRequestIDKey),
+		"content-length": w.Header().Get("Content-Length"),
 		// Add more fields here.
 	}
 }
@@ -235,6 +261,19 @@ func extractPostPolicyFormValues(ctx context.Context, form *multipart.Form) (fil
 		return nil, "", 0, nil, err
 	}
 
+	// this means that filename="" was not specified for file key and Go has
+	// an ugly way of handling this situation. Refer here
+	// https://golang.org/src/mime/multipart/formdata.go#L61
+	if len(form.File) == 0 {
+		var b = &bytes.Buffer{}
+		for _, v := range formValues["File"] {
+			b.WriteString(v)
+		}
+		fileSize = int64(b.Len())
+		filePart = ioutil.NopCloser(b)
+		return filePart, fileName, fileSize, formValues, nil
+	}
+
 	// Iterator until we find a valid File field and break
 	for k, v := range form.File {
 		canonicalFormName := http.CanonicalHeaderKey(k)
@@ -269,7 +308,6 @@ func extractPostPolicyFormValues(ctx context.Context, form *multipart.Form) (fil
 			break
 		}
 	}
-
 	return filePart, fileName, fileSize, formValues, nil
 }
 
@@ -315,6 +353,6 @@ func getResource(path string, host string, domain string) (string, error) {
 
 // If none of the http routes match respond with MethodNotAllowed
 func notFoundHandler(w http.ResponseWriter, r *http.Request) {
-	writeErrorResponse(w, ErrMethodNotAllowed, r.URL)
+	writeErrorResponse(w, ErrMethodNotAllowed, r.URL, guessIsBrowserReq(r))
 	return
 }

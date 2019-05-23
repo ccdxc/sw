@@ -30,7 +30,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/inconshreveable/go-update"
 	"github.com/minio/cli"
 	"github.com/minio/minio/cmd/logger"
@@ -41,12 +40,12 @@ import (
 // Check for new software updates.
 var updateCmd = cli.Command{
 	Name:   "update",
-	Usage:  "Check for a new software update.",
+	Usage:  "update minio to latest release",
 	Action: mainUpdate,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
 			Name:  "quiet",
-			Usage: "Disable any update prompt message.",
+			Usage: "disable any update prompt message",
 		},
 	},
 	CustomHelpTemplate: `Name:
@@ -254,12 +253,6 @@ func getUserAgent(mode string) string {
 	if mode != "" {
 		uaAppend("; ", mode)
 	}
-	if len(globalCacheDrives) > 0 {
-		uaAppend("; ", "feature-cache")
-	}
-	if globalWORMEnabled {
-		uaAppend("; ", "feature-worm")
-	}
 	if IsDCOS() {
 		uaAppend("; ", "dcos")
 	}
@@ -325,7 +318,7 @@ func downloadReleaseURL(releaseChecksumURL string, timeout time.Duration, mode s
 	if resp == nil {
 		return content, fmt.Errorf("No response from server to download URL %s", releaseChecksumURL)
 	}
-	defer resp.Body.Close()
+	defer CloseResponse(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		return content, fmt.Errorf("Error downloading URL %s. Response: %v", releaseChecksumURL, resp.Status)
@@ -456,47 +449,45 @@ func getUpdateInfo(timeout time.Duration, mode string) (updateMsg string, sha256
 	return prepareUpdateMessage(downloadURL, older), sha256Hex, currentReleaseTime, latestReleaseTime, nil
 }
 
-func doUpdate(sha256Hex string, latestReleaseTime time.Time, ok bool) (successMsg string, err error) {
+func doUpdate(sha256Hex string, latestReleaseTime time.Time, ok bool) (updateStatusMsg string, err error) {
 	if !ok {
-		successMsg = greenColorSprintf("Minio update to version RELEASE.%s canceled.",
+		updateStatusMsg = colorGreenBold("Minio update to version RELEASE.%s canceled.",
 			latestReleaseTime.Format(minioReleaseTagTimeLayout))
-		return successMsg, nil
+		return updateStatusMsg, nil
 	}
 	var sha256Sum []byte
 	sha256Sum, err = hex.DecodeString(sha256Hex)
 	if err != nil {
-		return successMsg, err
+		return updateStatusMsg, err
 	}
 
 	resp, err := http.Get(getDownloadURL(releaseTimeToReleaseTag(latestReleaseTime)))
 	if err != nil {
-		return successMsg, err
+		return updateStatusMsg, err
 	}
-	defer resp.Body.Close()
+	defer CloseResponse(resp.Body)
 
 	// FIXME: add support for gpg verification as well.
-	if err = update.RollbackError(update.Apply(resp.Body,
+	if err = update.Apply(resp.Body,
 		update.Options{
 			Hash:     crypto.SHA256,
 			Checksum: sha256Sum,
 		},
-	)); err != nil {
-		return successMsg, err
+	); err != nil {
+		return updateStatusMsg, err
 	}
 
-	return greenColorSprintf("Minio updated to version RELEASE.%s successfully.",
+	return colorGreenBold("Minio updated to version RELEASE.%s successfully.",
 		latestReleaseTime.Format(minioReleaseTagTimeLayout)), nil
 }
 
 func shouldUpdate(quiet bool, sha256Hex string, latestReleaseTime time.Time) (ok bool) {
 	ok = true
 	if !quiet {
-		ok = prompt.Confirm(greenColorSprintf("Update to RELEASE.%s [%s]", latestReleaseTime.Format(minioReleaseTagTimeLayout), "yes"))
+		ok = prompt.Confirm(colorGreenBold("Update to RELEASE.%s [%s]", latestReleaseTime.Format(minioReleaseTagTimeLayout), "yes"))
 	}
 	return ok
 }
-
-var greenColorSprintf = color.New(color.FgGreen, color.Bold).SprintfFunc()
 
 func mainUpdate(ctx *cli.Context) {
 	if len(ctx.Args()) != 0 {
@@ -519,7 +510,7 @@ func mainUpdate(ctx *cli.Context) {
 
 	// Nothing to update running the latest release.
 	if updateMsg == "" {
-		logger.Info(greenColorSprintf("You are already running the most recent version of ‘minio’."))
+		logger.Info(colorGreenBold("You are already running the most recent version of ‘minio’."))
 		os.Exit(0)
 	}
 
@@ -527,13 +518,14 @@ func mainUpdate(ctx *cli.Context) {
 	// if the in-place update is disabled then we shouldn't ask the
 	// user to update the binaries.
 	if strings.Contains(updateMsg, minioReleaseURL) && !globalInplaceUpdateDisabled {
-		var successMsg string
-		successMsg, err = doUpdate(sha256Hex, latestReleaseTime, shouldUpdate(quiet, sha256Hex, latestReleaseTime))
+		var updateStatusMsg string
+		updateStatusMsg, err = doUpdate(sha256Hex, latestReleaseTime, shouldUpdate(quiet, sha256Hex, latestReleaseTime))
 		if err != nil {
+			logger.Info(colorRedBold("Unable to update ‘minio’."))
 			logger.Info(err.Error())
 			os.Exit(-1)
 		}
-		logger.Info(successMsg)
+		logger.Info(updateStatusMsg)
 		os.Exit(1)
 	}
 }

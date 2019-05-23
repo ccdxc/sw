@@ -29,6 +29,18 @@ var (
 		"Browser can only accept `on` and `off` values. To disable web browser access, set this value to `off`",
 	)
 
+	uiErrInvalidDomainValue = newUIErrFn(
+		"Invalid domain value",
+		"Please check the passed value",
+		"Domain can only accept DNS compatible values.",
+	)
+
+	uiErrInvalidErasureSetSize = newUIErrFn(
+		"Invalid erasure set size",
+		"Please check the passed value",
+		"Erasure set can only accept any of [4, 6, 8, 10, 12, 14, 16] values.",
+	)
+
 	uiErrInvalidWormValue = newUIErrFn(
 		"Invalid WORM value",
 		"Please check the passed value",
@@ -66,10 +78,16 @@ var (
 Secret key should be in between 8 and 40 characters.`,
 	)
 
-	uiErrEnvCredentialsMissing = newUIErrFn(
+	uiErrEnvCredentialsMissingGateway = newUIErrFn(
 		"Credentials missing",
-		"Please provide correct credentials",
-		`Access key and Secret key should be specified in Gateway mode from environment variables MINIO_ACCESS_KEY and MINIO_SECRET_KEY respectively.`,
+		"Please set your credentials in the environment",
+		`In Gateway mode, access and secret keys should be specified via environment variables MINIO_ACCESS_KEY and MINIO_SECRET_KEY respectively.`,
+	)
+
+	uiErrEnvCredentialsMissingDistributed = newUIErrFn(
+		"Credentials missing",
+		"Please set your credentials in the environment",
+		`In distributed server mode, access and secret keys should be specified via environment variables MINIO_ACCESS_KEY and MINIO_SECRET_KEY respectively.`,
 	)
 
 	uiErrInvalidErasureEndpoints = newUIErrFn(
@@ -178,5 +196,11 @@ Example 1:
 		"Unexpected error",
 		"Please contact Minio at https://slack.minio.io",
 		"",
+	)
+
+	uiErrInvalidCompressionIncludesValue = newUIErrFn(
+		"Invalid compression include value",
+		"Please check the passed value",
+		"Compress extensions/mime-types are delimited by `,`. For eg, MINIO_COMPRESS_ATTR=\"A,B,C\"",
 	)
 )

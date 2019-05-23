@@ -28,9 +28,6 @@ const (
 	// Default minio configuration directory where below configuration files/directories are stored.
 	defaultMinioConfigDir = ".minio"
 
-	// Minio configuration file.
-	minioConfigFile = "config.json"
-
 	// Directory contains below files/directories for HTTPS configuration.
 	certsDir = "certs"
 
@@ -77,7 +74,15 @@ func (config *ConfigDir) GetCADir() string {
 
 // Create - creates configuration directory tree.
 func (config *ConfigDir) Create() error {
-	return os.MkdirAll(config.GetCADir(), 0700)
+	err := os.MkdirAll(config.GetCADir(), 0700)
+	// It is possible in kubernetes like deployments this directory
+	// is already mounted and is not writable, ignore any write errors.
+	if err != nil {
+		if os.IsPermission(err) {
+			err = nil
+		}
+	}
+	return err
 }
 
 // GetMinioConfigFile - returns absolute path of config.json file.

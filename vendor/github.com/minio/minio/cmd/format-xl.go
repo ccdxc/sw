@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"reflect"
 	"sync"
 
@@ -267,10 +266,11 @@ func formatXLMigrateV2ToV3(export string) error {
 		return err
 	}
 
-	if err = os.RemoveAll(pathJoin(export, minioMetaMultipartBucket)); err != nil {
+	if err = removeAll(pathJoin(export, minioMetaMultipartBucket)); err != nil {
 		return err
 	}
-	if err = os.MkdirAll(pathJoin(export, minioMetaMultipartBucket), 0755); err != nil {
+
+	if err = mkdirAll(pathJoin(export, minioMetaMultipartBucket), 0755); err != nil {
 		return err
 	}
 
@@ -379,6 +379,23 @@ func saveFormatXL(disk StorageAPI, format interface{}) error {
 	return disk.RenameFile(minioMetaBucket, formatConfigFileTmp, minioMetaBucket, formatConfigFile)
 }
 
+var ignoredHiddenDirectories = []string{
+	minioMetaBucket,
+	".snapshot",
+	"lost+found",
+	"$RECYCLE.BIN",
+	"System Volume Information",
+}
+
+func isIgnoreHiddenDirectories(dir string) bool {
+	for _, ignDir := range ignoredHiddenDirectories {
+		if dir == ignDir {
+			return true
+		}
+	}
+	return false
+}
+
 // loadFormatXL - loads format.json from disk.
 func loadFormatXL(disk StorageAPI) (format *formatXLV3, err error) {
 	buf, err := disk.ReadAll(minioMetaBucket, formatConfigFile)
@@ -391,9 +408,7 @@ func loadFormatXL(disk StorageAPI) (format *formatXLV3, err error) {
 			if err != nil {
 				return nil, err
 			}
-			if len(vols) > 1 || (len(vols) == 1 &&
-				vols[0].Name != minioMetaBucket &&
-				vols[0].Name != "lost+found") {
+			if len(vols) > 1 || (len(vols) == 1 && !isIgnoreHiddenDirectories(vols[0].Name)) {
 				// 'format.json' not found, but we
 				// found user data.
 				return nil, errCorruptedFormat

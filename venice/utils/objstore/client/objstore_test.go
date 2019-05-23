@@ -52,7 +52,8 @@ func TestNewClient(t *testing.T) {
 	defer c.Finish()
 
 	r := mockresolver.New()
-	_, err = NewClient("ten1", "svc1", r)
+	retryOpt := WithConnectRetries(1)
+	_, err = NewClient("ten1", "svc1", r, retryOpt)
 	tu.Assert(t, err != nil, "failed test client error ")
 
 	err = r.AddServiceInstance(&types.ServiceInstance{
@@ -67,7 +68,7 @@ func TestNewClient(t *testing.T) {
 	})
 	tu.AssertOk(t, err, "failed to add objstore sercvice")
 
-	_, err = NewClient("ten1", "svc1", r)
+	_, err = NewClient("ten1", "svc1", r, retryOpt)
 	tu.AssertOk(t, err, "failed newclient ")
 
 	err = r.AddServiceInstance(&types.ServiceInstance{
@@ -82,7 +83,7 @@ func TestNewClient(t *testing.T) {
 	})
 	tu.AssertOk(t, err, "failed to add 127.0.0.1:1001 service")
 
-	_, err = NewClient("ten1", "svc1", r)
+	_, err = NewClient("ten1", "svc1", r, retryOpt)
 	tu.Assert(t, err != nil, "failed test invalid client address")
 
 	// test two service instance
@@ -109,7 +110,7 @@ func TestNewClient(t *testing.T) {
 		URL:     l.Addr().(*net.TCPAddr).String(),
 	})
 	tu.AssertOk(t, err, "failed to add server2 service")
-	_, err = NewClient("ten1", "svc1", r)
+	_, err = NewClient("ten1", "svc1", r, retryOpt)
 	tu.AssertOk(t, err, "failed test multiple objstore address")
 }
 
@@ -158,18 +159,6 @@ func TestPutObject(t *testing.T) {
 			Kind: "ServiceInstance",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: "server1",
-		},
-		Service: globals.VosMinio,
-		URL:     "127.0.0.1:1001",
-	})
-	tu.AssertOk(t, err, "failed to add server1 ")
-
-	err = r.AddServiceInstance(&types.ServiceInstance{
-		TypeMeta: api.TypeMeta{
-			Kind: "ServiceInstance",
-		},
-		ObjectMeta: api.ObjectMeta{
 			Name: "server2",
 		},
 		Service: globals.VosMinio,
@@ -177,19 +166,8 @@ func TestPutObject(t *testing.T) {
 	})
 	tu.AssertOk(t, err, "failed to add server2 service")
 
-	err = r.AddServiceInstance(&types.ServiceInstance{
-		TypeMeta: api.TypeMeta{
-			Kind: "ServiceInstance",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: "server3",
-		},
-		Service: globals.VosMinio,
-		URL:     "127.0.0.1:1003",
-	})
-	tu.AssertOk(t, err, "failed to add server2 ")
-
-	oc, err := NewClient("ten1", "svc1", r)
+	retryOpt := WithConnectRetries(1)
+	oc, err := NewClient("ten1", "svc1", r, retryOpt)
 	tu.AssertOk(t, err, "failed create new client")
 	tu.Assert(t, oc != nil, "new client nil")
 
@@ -252,18 +230,6 @@ func TestGetObject(t *testing.T) {
 			Kind: "ServiceInstance",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: "server1",
-		},
-		Service: globals.VosMinio,
-		URL:     "127.0.0.1:1001",
-	})
-	tu.AssertOk(t, err, "failed to add server1 ")
-
-	err = r.AddServiceInstance(&types.ServiceInstance{
-		TypeMeta: api.TypeMeta{
-			Kind: "ServiceInstance",
-		},
-		ObjectMeta: api.ObjectMeta{
 			Name: "server2",
 		},
 		Service: globals.VosMinio,
@@ -271,19 +237,8 @@ func TestGetObject(t *testing.T) {
 	})
 	tu.AssertOk(t, err, "failed to add server2 service")
 
-	err = r.AddServiceInstance(&types.ServiceInstance{
-		TypeMeta: api.TypeMeta{
-			Kind: "ServiceInstance",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: "server3",
-		},
-		Service: globals.VosMinio,
-		URL:     "127.0.0.1:1003",
-	})
-	tu.AssertOk(t, err, "failed to add server2 ")
-
-	oc, err := NewClient("ten1", "svc1", r)
+	retryOpt := WithConnectRetries(1)
+	oc, err := NewClient("ten1", "svc1", r, retryOpt)
 	tu.AssertOk(t, err, "failed create new client")
 	tu.Assert(t, oc != nil, "new client nil")
 
@@ -345,18 +300,6 @@ func TestStatObject(t *testing.T) {
 			Kind: "ServiceInstance",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: "server1",
-		},
-		Service: globals.VosMinio,
-		URL:     "127.0.0.1:1001",
-	})
-	tu.AssertOk(t, err, "failed to add server1 ")
-
-	err = r.AddServiceInstance(&types.ServiceInstance{
-		TypeMeta: api.TypeMeta{
-			Kind: "ServiceInstance",
-		},
-		ObjectMeta: api.ObjectMeta{
 			Name: "server2",
 		},
 		Service: globals.VosMinio,
@@ -364,19 +307,8 @@ func TestStatObject(t *testing.T) {
 	})
 	tu.AssertOk(t, err, "failed to add server2 service")
 
-	err = r.AddServiceInstance(&types.ServiceInstance{
-		TypeMeta: api.TypeMeta{
-			Kind: "ServiceInstance",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: "server3",
-		},
-		Service: globals.VosMinio,
-		URL:     "127.0.0.1:1003",
-	})
-	tu.AssertOk(t, err, "failed to add server2 ")
-
-	oc, err := NewClient("ten1", "svc1", r)
+	retryOpt := WithConnectRetries(1)
+	oc, err := NewClient("ten1", "svc1", r, retryOpt)
 	tu.AssertOk(t, err, "failed create new client")
 	tu.Assert(t, oc != nil, "new client nil")
 
@@ -447,18 +379,6 @@ func TestListObjects(t *testing.T) {
 			Kind: "ServiceInstance",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: "server1",
-		},
-		Service: globals.VosMinio,
-		URL:     "127.0.0.1:1001",
-	})
-	tu.AssertOk(t, err, "failed to add server1 ")
-
-	err = r.AddServiceInstance(&types.ServiceInstance{
-		TypeMeta: api.TypeMeta{
-			Kind: "ServiceInstance",
-		},
-		ObjectMeta: api.ObjectMeta{
 			Name: "server2",
 		},
 		Service: globals.VosMinio,
@@ -466,19 +386,8 @@ func TestListObjects(t *testing.T) {
 	})
 	tu.AssertOk(t, err, "failed to add server2 service")
 
-	err = r.AddServiceInstance(&types.ServiceInstance{
-		TypeMeta: api.TypeMeta{
-			Kind: "ServiceInstance",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: "server3",
-		},
-		Service: globals.VosMinio,
-		URL:     "127.0.0.1:1003",
-	})
-	tu.AssertOk(t, err, "failed to add server2 ")
-
-	oc, err := NewClient("ten1", "svc1", r)
+	retryOpt := WithConnectRetries(1)
+	oc, err := NewClient("ten1", "svc1", r, retryOpt)
 	tu.AssertOk(t, err, "failed create new client")
 	tu.Assert(t, oc != nil, "new client nil")
 
@@ -555,18 +464,6 @@ func TestRemoveObjects(t *testing.T) {
 			Kind: "ServiceInstance",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: "server1",
-		},
-		Service: globals.VosMinio,
-		URL:     "127.0.0.1:1001",
-	})
-	tu.AssertOk(t, err, "failed to add server1 ")
-
-	err = r.AddServiceInstance(&types.ServiceInstance{
-		TypeMeta: api.TypeMeta{
-			Kind: "ServiceInstance",
-		},
-		ObjectMeta: api.ObjectMeta{
 			Name: "server2",
 		},
 		Service: globals.VosMinio,
@@ -574,19 +471,8 @@ func TestRemoveObjects(t *testing.T) {
 	})
 	tu.AssertOk(t, err, "failed to add server2 service")
 
-	err = r.AddServiceInstance(&types.ServiceInstance{
-		TypeMeta: api.TypeMeta{
-			Kind: "ServiceInstance",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: "server3",
-		},
-		Service: globals.VosMinio,
-		URL:     "127.0.0.1:1003",
-	})
-	tu.AssertOk(t, err, "failed to add server2 ")
-
-	oc, err := NewClient("ten1", "svc1", r)
+	retryOpt := WithConnectRetries(1)
+	oc, err := NewClient("ten1", "svc1", r, retryOpt)
 	tu.AssertOk(t, err, "failed create new client")
 	tu.Assert(t, oc != nil, "new client nil")
 

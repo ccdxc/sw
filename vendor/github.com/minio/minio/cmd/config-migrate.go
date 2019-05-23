@@ -17,15 +17,21 @@
 package cmd
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 
+	"github.com/minio/minio/cmd/crypto"
 	"github.com/minio/minio/cmd/logger"
 	"github.com/minio/minio/pkg/auth"
 	"github.com/minio/minio/pkg/dns"
 	"github.com/minio/minio/pkg/event"
 	"github.com/minio/minio/pkg/event/target"
+	"github.com/minio/minio/pkg/iam/policy"
+	"github.com/minio/minio/pkg/iam/validator"
 	xnet "github.com/minio/minio/pkg/net"
 	"github.com/minio/minio/pkg/quick"
 )
@@ -33,7 +39,22 @@ import (
 // DO NOT EDIT following message template, please open a github issue to discuss instead.
 var configMigrateMSGTemplate = "Configuration file %s migrated from version '%s' to '%s' successfully."
 
-// Migrates all config versions from "1" to "18".
+// Save config file to corresponding backend
+func Save(configFile string, data interface{}) error {
+	return quick.SaveConfig(data, configFile, globalEtcdClient)
+}
+
+// Load config from backend
+func Load(configFile string, data interface{}) (quick.Config, error) {
+	return quick.LoadConfig(configFile, globalEtcdClient, data)
+}
+
+// GetVersion gets config version from backend
+func GetVersion(configFile string) (string, error) {
+	return quick.GetVersion(configFile, globalEtcdClient)
+}
+
+// Migrates all config versions from "1" to "28".
 func migrateConfig() error {
 	// Purge all configs with version '1',
 	// this is a special case since version '1' used
@@ -45,6 +66,9 @@ func migrateConfig() error {
 	// Load only config version information.
 	version, err := GetVersion(getConfigFile())
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
 		return err
 	}
 
@@ -190,6 +214,11 @@ func migrateConfig() error {
 		fallthrough
 	case "26":
 		if err = migrateV26ToV27(); err != nil {
+			return err
+		}
+		fallthrough
+	case "27":
+		if err = migrateV27ToV28(); err != nil {
 			return err
 		}
 		fallthrough
@@ -890,7 +919,7 @@ func migrateV12ToV13() error {
 	// Copy over fields from V12 into V13 config struct
 	srvConfig := &serverConfigV13{
 		Logger: &loggerV7{},
-		Notify: &notifier{},
+		Notify: &notifierV3{},
 	}
 	srvConfig.Version = "13"
 	srvConfig.Credential = cv12.Credential
@@ -970,7 +999,7 @@ func migrateV13ToV14() error {
 	// Copy over fields from V13 into V14 config struct
 	srvConfig := &serverConfigV14{
 		Logger: &loggerV7{},
-		Notify: &notifier{},
+		Notify: &notifierV3{},
 	}
 	srvConfig.Version = "14"
 	srvConfig.Credential = cv13.Credential
@@ -1055,7 +1084,7 @@ func migrateV14ToV15() error {
 	// Copy over fields from V14 into V15 config struct
 	srvConfig := &serverConfigV15{
 		Logger: &loggerV7{},
-		Notify: &notifier{},
+		Notify: &notifierV3{},
 	}
 	srvConfig.Version = "15"
 	srvConfig.Credential = cv14.Credential
@@ -1145,7 +1174,7 @@ func migrateV15ToV16() error {
 	// Copy over fields from V15 into V16 config struct
 	srvConfig := &serverConfigV16{
 		Logger: &loggers{},
-		Notify: &notifier{},
+		Notify: &notifierV3{},
 	}
 	srvConfig.Version = "16"
 	srvConfig.Credential = cv15.Credential
@@ -1235,7 +1264,7 @@ func migrateV16ToV17() error {
 	// Copy over fields from V16 into V17 config struct
 	srvConfig := &serverConfigV17{
 		Logger: &loggers{},
-		Notify: &notifier{},
+		Notify: &notifierV3{},
 	}
 	srvConfig.Version = "17"
 	srvConfig.Credential = cv16.Credential
@@ -1356,7 +1385,7 @@ func migrateV17ToV18() error {
 	// Copy over fields from V17 into V18 config struct
 	srvConfig := &serverConfigV17{
 		Logger: &loggers{},
-		Notify: &notifier{},
+		Notify: &notifierV3{},
 	}
 	srvConfig.Version = "18"
 	srvConfig.Credential = cv17.Credential
@@ -1458,7 +1487,7 @@ func migrateV18ToV19() error {
 	// Copy over fields from V18 into V19 config struct
 	srvConfig := &serverConfigV18{
 		Logger: &loggers{},
-		Notify: &notifier{},
+		Notify: &notifierV3{},
 	}
 	srvConfig.Version = "19"
 	srvConfig.Credential = cv18.Credential
@@ -1564,7 +1593,7 @@ func migrateV19ToV20() error {
 	// Copy over fields from V19 into V20 config struct
 	srvConfig := &serverConfigV20{
 		Logger: &loggers{},
-		Notify: &notifier{},
+		Notify: &notifierV3{},
 	}
 	srvConfig.Version = "20"
 	srvConfig.Credential = cv19.Credential
@@ -1668,7 +1697,7 @@ func migrateV20ToV21() error {
 
 	// Copy over fields from V20 into V21 config struct
 	srvConfig := &serverConfigV21{
-		Notify: &notifier{},
+		Notify: &notifierV3{},
 	}
 	srvConfig.Version = "21"
 	srvConfig.Credential = cv20.Credential
@@ -1772,7 +1801,7 @@ func migrateV21ToV22() error {
 
 	// Copy over fields from V21 into V22 config struct
 	srvConfig := &serverConfigV22{
-		Notify: notifier{},
+		Notify: notifierV3{},
 	}
 	srvConfig.Version = "22"
 	srvConfig.Credential = cv21.Credential
@@ -1876,7 +1905,7 @@ func migrateV22ToV23() error {
 
 	// Copy over fields from V22 into V23 config struct
 	srvConfig := &serverConfigV23{
-		Notify: notifier{},
+		Notify: notifierV3{},
 	}
 	srvConfig.Version = "23"
 	srvConfig.Credential = cv22.Credential
@@ -1989,7 +2018,7 @@ func migrateV23ToV24() error {
 
 	// Copy over fields from V23 into V24 config struct
 	srvConfig := &serverConfigV24{
-		Notify: notifier{},
+		Notify: notifierV3{},
 	}
 	srvConfig.Version = "24"
 	srvConfig.Credential = cv23.Credential
@@ -2102,7 +2131,7 @@ func migrateV24ToV25() error {
 
 	// Copy over fields from V24 into V25 config struct
 	srvConfig := &serverConfigV25{
-		Notify: notifier{},
+		Notify: notifierV3{},
 	}
 	srvConfig.Version = "25"
 	srvConfig.Credential = cv24.Credential
@@ -2220,7 +2249,7 @@ func migrateV25ToV26() error {
 
 	// Copy over fields from V25 into V26 config struct
 	srvConfig := &serverConfigV26{
-		Notify: notifier{},
+		Notify: notifierV3{},
 	}
 	srvConfig.Version = "26"
 	srvConfig.Credential = cv25.Credential
@@ -2353,5 +2382,336 @@ func migrateV26ToV27() error {
 	}
 
 	logger.Info(configMigrateMSGTemplate, configFile, "26", "27")
+	return nil
+}
+
+func migrateV27ToV28() error {
+	configFile := getConfigFile()
+
+	// config V28 is backward compatible with V27, load the old
+	// config file in serverConfigV28 struct and initialize KMSConfig
+
+	srvConfig := &serverConfigV28{}
+	_, err := quick.LoadConfig(configFile, globalEtcdClient, srvConfig)
+	if os.IsNotExist(err) {
+		return nil
+	} else if err != nil {
+		return fmt.Errorf("Unable to load config file. %v", err)
+	}
+
+	if srvConfig.Version != "27" {
+		return nil
+	}
+
+	srvConfig.Version = "28"
+	srvConfig.KMS = crypto.KMSConfig{}
+	if err = quick.SaveConfig(srvConfig, configFile, globalEtcdClient); err != nil {
+		return fmt.Errorf("Failed to migrate config from ‘27’ to ‘28’. %v", err)
+	}
+
+	logger.Info(configMigrateMSGTemplate, configFile, "27", "28")
+	return nil
+}
+
+// Migrates ${HOME}/.minio/config.json to '<export_path>/.minio.sys/config/config.json'
+func migrateConfigToMinioSys(objAPI ObjectLayer) (err error) {
+	defer func() {
+		// Rename config.json to config.json.deprecated only upon
+		// success of this function.
+		if err == nil {
+			os.Rename(getConfigFile(), getConfigFile()+".deprecated")
+		}
+	}()
+
+	configFile := path.Join(minioConfigPrefix, minioConfigFile)
+	// Construct path to config.json for the given bucket.
+	transactionConfigFile := configFile + ".transaction"
+
+	// As object layer's GetObject() and PutObject() take respective lock on minioMetaBucket
+	// and configFile, take a transaction lock to avoid data race between readConfig()
+	// and saveConfig().
+	objLock := globalNSMutex.NewNSLock(minioMetaBucket, transactionConfigFile)
+	if err = objLock.GetLock(globalOperationTimeout); err != nil {
+		return err
+	}
+	defer objLock.Unlock()
+
+	// Verify if backend already has the file.
+	if err = checkConfig(context.Background(), objAPI, configFile); err != errConfigNotFound {
+		return err
+	} // if errConfigNotFound proceed to migrate..
+
+	var config = &serverConfig{}
+	if _, err = Load(getConfigFile(), config); err != nil {
+		if !os.IsNotExist(err) {
+			return err
+		}
+		// Read from deprecate file as well if necessary.
+		if _, err = Load(getConfigFile()+".deprecated", config); err != nil {
+			return err
+		}
+	}
+
+	return saveServerConfig(context.Background(), objAPI, config)
+}
+
+// Migrates '.minio.sys/config.json' to v33.
+func migrateMinioSysConfig(objAPI ObjectLayer) error {
+	configFile := path.Join(minioConfigPrefix, minioConfigFile)
+
+	// Construct path to config.json for the given bucket.
+	transactionConfigFile := configFile + ".transaction"
+
+	// As object layer's GetObject() and PutObject() take respective lock on minioMetaBucket
+	// and configFile, take a transaction lock to avoid data race between readConfig()
+	// and saveConfig().
+	objLock := globalNSMutex.NewNSLock(minioMetaBucket, transactionConfigFile)
+	if err := objLock.GetLock(globalOperationTimeout); err != nil {
+		return err
+	}
+	defer objLock.Unlock()
+
+	if err := migrateV27ToV28MinioSys(objAPI); err != nil {
+		return err
+	}
+	if err := migrateV28ToV29MinioSys(objAPI); err != nil {
+		return err
+	}
+	if err := migrateV29ToV30MinioSys(objAPI); err != nil {
+		return err
+	}
+	if err := migrateV30ToV31MinioSys(objAPI); err != nil {
+		return err
+	}
+	if err := migrateV31ToV32MinioSys(objAPI); err != nil {
+		return err
+	}
+	return migrateV32ToV33MinioSys(objAPI)
+}
+
+func checkConfigVersion(objAPI ObjectLayer, configFile string, version string) (bool, []byte, error) {
+	data, err := readConfig(context.Background(), objAPI, configFile)
+	if err != nil {
+		return false, nil, err
+	}
+
+	var versionConfig struct {
+		Version string `json:"version"`
+	}
+
+	vcfg := &versionConfig
+	if err = json.Unmarshal(data, vcfg); err != nil {
+		return false, nil, err
+	}
+	return vcfg.Version == version, data, nil
+}
+
+func migrateV27ToV28MinioSys(objAPI ObjectLayer) error {
+	configFile := path.Join(minioConfigPrefix, minioConfigFile)
+	ok, data, err := checkConfigVersion(objAPI, configFile, "27")
+	if err == errConfigNotFound {
+		return nil
+	} else if err != nil {
+		return fmt.Errorf("Unable to load config file. %v", err)
+	}
+	if !ok {
+		return nil
+	}
+
+	cfg := &serverConfigV28{}
+	if err = json.Unmarshal(data, cfg); err != nil {
+		return err
+	}
+
+	cfg.Version = "28"
+	cfg.KMS = crypto.KMSConfig{}
+
+	data, err = json.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+
+	if err = saveConfig(context.Background(), objAPI, configFile, data); err != nil {
+		return fmt.Errorf("Failed to migrate config from ‘27’ to ‘28’. %v", err)
+	}
+
+	logger.Info(configMigrateMSGTemplate, configFile, "27", "28")
+	return nil
+}
+
+func migrateV28ToV29MinioSys(objAPI ObjectLayer) error {
+	configFile := path.Join(minioConfigPrefix, minioConfigFile)
+
+	ok, data, err := checkConfigVersion(objAPI, configFile, "28")
+	if err == errConfigNotFound {
+		return nil
+	} else if err != nil {
+		return fmt.Errorf("Unable to load config file. %v", err)
+	}
+	if !ok {
+		return nil
+	}
+
+	cfg := &serverConfigV29{}
+	if err = json.Unmarshal(data, cfg); err != nil {
+		return err
+	}
+
+	cfg.Version = "29"
+	data, err = json.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+
+	if err = saveConfig(context.Background(), objAPI, configFile, data); err != nil {
+		return fmt.Errorf("Failed to migrate config from ‘28’ to ‘29’. %v", err)
+	}
+
+	logger.Info(configMigrateMSGTemplate, configFile, "28", "29")
+	return nil
+}
+
+func migrateV29ToV30MinioSys(objAPI ObjectLayer) error {
+	configFile := path.Join(minioConfigPrefix, minioConfigFile)
+
+	ok, data, err := checkConfigVersion(objAPI, configFile, "29")
+	if err == errConfigNotFound {
+		return nil
+	} else if err != nil {
+		return fmt.Errorf("Unable to load config file. %v", err)
+	}
+	if !ok {
+		return nil
+	}
+
+	cfg := &serverConfigV30{}
+	if err = json.Unmarshal(data, cfg); err != nil {
+		return err
+	}
+
+	cfg.Version = "30"
+	// Init compression config.For future migration, Compression config needs to be copied over from previous version.
+	cfg.Compression.Enabled = false
+	cfg.Compression.Extensions = globalCompressExtensions
+	cfg.Compression.MimeTypes = globalCompressMimeTypes
+
+	data, err = json.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+
+	if err = saveConfig(context.Background(), objAPI, configFile, data); err != nil {
+		return fmt.Errorf("Failed to migrate config from ‘29’ to ‘30’. %v", err)
+	}
+
+	logger.Info(configMigrateMSGTemplate, configFile, "29", "30")
+	return nil
+}
+
+func migrateV30ToV31MinioSys(objAPI ObjectLayer) error {
+	configFile := path.Join(minioConfigPrefix, minioConfigFile)
+
+	ok, data, err := checkConfigVersion(objAPI, configFile, "30")
+	if err == errConfigNotFound {
+		return nil
+	} else if err != nil {
+		return fmt.Errorf("Unable to load config file. %v", err)
+	}
+	if !ok {
+		return nil
+	}
+
+	cfg := &serverConfigV31{}
+	if err = json.Unmarshal(data, cfg); err != nil {
+		return err
+	}
+
+	cfg.Version = "31"
+	cfg.OpenID.JWKS = validator.JWKSArgs{
+		URL: &xnet.URL{},
+	}
+	cfg.Policy.OPA = iampolicy.OpaArgs{
+		URL:       &xnet.URL{},
+		AuthToken: "",
+	}
+
+	data, err = json.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+
+	if err = saveConfig(context.Background(), objAPI, configFile, data); err != nil {
+		return fmt.Errorf("Failed to migrate config from ‘30’ to ‘31’. %v", err)
+	}
+
+	logger.Info(configMigrateMSGTemplate, configFile, "30", "31")
+	return nil
+}
+
+func migrateV31ToV32MinioSys(objAPI ObjectLayer) error {
+	configFile := path.Join(minioConfigPrefix, minioConfigFile)
+
+	ok, data, err := checkConfigVersion(objAPI, configFile, "31")
+	if err == errConfigNotFound {
+		return nil
+	} else if err != nil {
+		return fmt.Errorf("Unable to load config file. %v", err)
+	}
+	if !ok {
+		return nil
+	}
+
+	cfg := &serverConfigV32{}
+	if err = json.Unmarshal(data, cfg); err != nil {
+		return err
+	}
+
+	cfg.Version = "32"
+	cfg.Notify.NSQ = make(map[string]target.NSQArgs)
+	cfg.Notify.NSQ["1"] = target.NSQArgs{}
+
+	data, err = json.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+
+	if err = saveConfig(context.Background(), objAPI, configFile, data); err != nil {
+		return fmt.Errorf("Failed to migrate config from ‘31’ to ‘32’. %v", err)
+	}
+
+	logger.Info(configMigrateMSGTemplate, configFile, "31", "32")
+	return nil
+}
+
+func migrateV32ToV33MinioSys(objAPI ObjectLayer) error {
+	configFile := path.Join(minioConfigPrefix, minioConfigFile)
+
+	ok, data, err := checkConfigVersion(objAPI, configFile, "32")
+	if err == errConfigNotFound {
+		return nil
+	} else if err != nil {
+		return fmt.Errorf("Unable to load config file. %v", err)
+	}
+	if !ok {
+		return nil
+	}
+
+	cfg := &serverConfigV33{}
+	if err = json.Unmarshal(data, cfg); err != nil {
+		return err
+	}
+
+	cfg.Version = "33"
+
+	data, err = json.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+
+	if err = saveConfig(context.Background(), objAPI, configFile, data); err != nil {
+		return fmt.Errorf("Failed to migrate config from  32  to  33 . %v", err)
+	}
+
+	logger.Info(configMigrateMSGTemplate, configFile, "32", "33")
 	return nil
 }
