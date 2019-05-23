@@ -154,7 +154,7 @@ mirror_session_get (pds_mirror_session_key_t *key,
     sdk_ret_t ret = SDK_RET_OK;
 
     if (!agent_state::state()->pds_mock_mode()) {
-        ret = pds_mirror_session_get(key, info);
+        ret = pds_mirror_session_read(key, info);
     } else {
         memset(&info->stats, 0, sizeof(info->stats));
         memset(&info->status, 0, sizeof(info->status));
@@ -171,7 +171,7 @@ mirror_session_get_all_cb (pds_mirror_session_spec_t *spec, void *ctxt)
 
     memcpy(&info.spec, spec, sizeof(pds_mirror_session_spec_t));
     if (!agent_state::state()->pds_mock_mode()) {
-        ret = pds_mirror_session_get(&spec->key, &info);
+        ret = pds_mirror_session_read(&spec->key, &info);
     } else {
         memset(&info.stats, 0, sizeof(info.stats));
         memset(&info.status, 0, sizeof(info.status));

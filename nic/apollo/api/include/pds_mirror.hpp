@@ -74,6 +74,13 @@ typedef struct pds_mirror_session_info_s {
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_mirror_session_create(pds_mirror_session_spec_t *spec);
 
+/// \brief read mirror session
+/// \param[in] key    pointer to spec
+/// \param[out] info  mirror session information
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_mirror_session_read(pds_mirror_session_key_t *key,
+                                 pds_mirror_session_info_t *info);
+
 /// \brief    update mirror session
 /// \param[in] spec    mirror session configuration
 /// \return #SDK_RET_OK on success, failure status code on error
@@ -83,13 +90,6 @@ sdk_ret_t pds_mirror_session_update(pds_mirror_session_spec_t *spec);
 /// \param[in] key    mirror session key
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_mirror_session_delete(pds_mirror_session_key_t *key);
-
-/// \brief get mirror session
-/// \param[in] key    pointer to spec
-/// \param[out] info  mirror session information
-/// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_mirror_session_get(pds_mirror_session_key_t *key,
-                                 pds_mirror_session_info_t *info);
 
 /// @}
 

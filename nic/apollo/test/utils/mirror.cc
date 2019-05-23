@@ -56,7 +56,7 @@ mirror_session_util::read(pds_mirror_session_info_t *info) {
     memset(info, 0, sizeof(pds_mirror_session_info_t));
 
     key.id = this->key.id;
-    if ((rv = pds_mirror_session_get(&key, info)) != sdk::SDK_RET_OK)
+    if ((rv = pds_mirror_session_read(&key, info)) != sdk::SDK_RET_OK)
         return rv;
 
     if (capri_mock_mode())

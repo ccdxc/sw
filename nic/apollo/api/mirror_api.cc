@@ -40,24 +40,6 @@ pds_mirror_session_api_handle (api::api_op_t op,
     return SDK_RET_OOM;
 }
 
-sdk_ret_t
-pds_mirror_session_create (_In_ pds_mirror_session_spec_t *spec)
-{
-    return (pds_mirror_session_api_handle(api::API_OP_CREATE, NULL, spec));
-}
-
-sdk_ret_t
-pds_mirror_session_update (_In_ pds_mirror_session_spec_t *spec)
-{
-    return (pds_mirror_session_api_handle(api::API_OP_UPDATE, NULL, spec));
-}
-
-sdk_ret_t
-pds_mirror_session_delete (_In_ pds_mirror_session_key_t *key)
-{
-    return (pds_mirror_session_api_handle(api::API_OP_DELETE, key, NULL));
-}
-
 static inline mirror_session *
 pds_mirror_session_find (pds_mirror_session_key_t *key)
 {
@@ -72,7 +54,13 @@ pds_mirror_session_find (pds_mirror_session_key_t *key)
 }
 
 sdk_ret_t
-pds_mirror_session_get (pds_mirror_session_key_t *key,
+pds_mirror_session_create (_In_ pds_mirror_session_spec_t *spec)
+{
+    return (pds_mirror_session_api_handle(api::API_OP_CREATE, NULL, spec));
+}
+
+sdk_ret_t
+pds_mirror_session_read (pds_mirror_session_key_t *key,
                         pds_mirror_session_info_t *info)
 {
     mirror_session *entry = NULL;
@@ -87,4 +75,16 @@ pds_mirror_session_get (pds_mirror_session_key_t *key,
     info->spec.key = *key;
 
     return entry->impl()->read_hw((obj_key_t *)key, (obj_info_t *)info);
+}
+
+sdk_ret_t
+pds_mirror_session_update (_In_ pds_mirror_session_spec_t *spec)
+{
+    return (pds_mirror_session_api_handle(api::API_OP_UPDATE, NULL, spec));
+}
+
+sdk_ret_t
+pds_mirror_session_delete (_In_ pds_mirror_session_key_t *key)
+{
+    return (pds_mirror_session_api_handle(api::API_OP_DELETE, key, NULL));
 }
