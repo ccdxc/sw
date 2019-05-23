@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// datapath implementation of vnic
+/// datapath implementation of VNIC
 ///
 //----------------------------------------------------------------------------
 
@@ -25,9 +25,9 @@
 namespace api {
 namespace impl {
 
-/// \defgroup PDS_VNIC_IMPL - vnic entry datapath implementation
+/// \defgroup PDS_VNIC_IMPL - VNIC entry datapath implementation
 /// \ingroup PDS_VNIC
-/// \@{
+/// @{
 
 vnic_impl *
 vnic_impl::factory(pds_vnic_spec_t *spec) {
@@ -116,7 +116,7 @@ vnic_impl::nuke_resources(api_base *api_obj) {
 
     if (hw_id_ != 0xFFFF) {
         // TODO: uncomment the below once sdk_hash moves to standard API model
-        //if (vnic_by_slot_hash_idx_ != SDK_TABLE_HANDLE_INVALID) {
+        // if (vnic_by_slot_hash_idx_ != SDK_TABLE_HANDLE_INVALID) {
         if (vnic_by_slot_hash_idx_ != 0xFFFF) {
             vnic_impl_db()->local_vnic_by_slot_rx_tbl()->remove(vnic_by_slot_hash_idx_);
         }
@@ -695,8 +695,7 @@ vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
 void
 vnic_impl::fill_vnic_stats_(vnic_tx_stats_actiondata_t *tx_stats,
                             vnic_rx_stats_actiondata_t *rx_stats,
-                            pds_vnic_stats_t *stats)
-{
+                            pds_vnic_stats_t *stats) {
     stats->tx_pkts  = *(uint64_t *)tx_stats->vnic_tx_stats_action.out_packets;
     stats->tx_bytes = *(uint64_t *)tx_stats->vnic_tx_stats_action.out_bytes;
     stats->rx_pkts  = *(uint64_t *)rx_stats->vnic_rx_stats_action.in_packets;
@@ -817,7 +816,7 @@ vnic_impl::read_hw(obj_key_t *key, obj_info_t *info, void *arg) {
     return SDK_RET_OK;
 }
 
-/// \@}    // end of PDS_VNIC_IMPL
+/// \@}
 
 }    // namespace impl
 }    // namespace api

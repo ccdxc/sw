@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    vnic_impl_state.cc
- *
- * @brief   This file contains vnic datapath database handling
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// VNIC datapath database handling
+///
+//----------------------------------------------------------------------------
 
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/impl/apollo/vnic_impl_state.hpp"
@@ -14,15 +16,10 @@
 namespace api {
 namespace impl {
 
-/**
- * @defgroup PDS_VNIC_IMPL_STATE - vnic database functionality
- * @ingroup PDS_VNIC
- * @{
- */
+/// \defgroup PDS_VNIC_IMPL_STATE - VNIC database functionality
+/// \ingroup PDS_VNIC
+/// @{
 
-/**
- * @brief    constructor
- */
 vnic_impl_state::vnic_impl_state(pds_state *state) {
     p4pd_table_properties_t       tinfo, oflow_tinfo;
     sdk_table_factory_params_t    table_params;
@@ -62,9 +59,6 @@ vnic_impl_state::vnic_impl_state(pds_state *state) {
     SDK_ASSERT(egress_local_vnic_info_tbl_ != NULL);
 }
 
-/**
- * @brief    destructor
- */
 vnic_impl_state::~vnic_impl_state() {
     indexer::destroy(vnic_idxr_);
     sltcam::destroy(local_vnic_by_vlan_tx_tbl_);
@@ -72,11 +66,6 @@ vnic_impl_state::~vnic_impl_state() {
     directmap::destroy(egress_local_vnic_info_tbl_);
 }
 
-/**
- * @brief    API to initiate transaction over all the table manamgement
- *           library instances
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 vnic_impl_state::table_transaction_begin(void) {
     //vnic_idxr_->txn_start();
@@ -86,11 +75,6 @@ vnic_impl_state::table_transaction_begin(void) {
     return SDK_RET_OK;
 }
 
-/**
- * @brief    API to end transaction over all the table manamgement
- *           library instances
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 vnic_impl_state::table_transaction_end(void) {
     //vnic_idxr_->txn_end();
@@ -100,7 +84,7 @@ vnic_impl_state::table_transaction_end(void) {
     return SDK_RET_OK;
 }
 
-/** @} */    // end of PDS_VNIC_IMPL_STATE
+/// \@}
 
 }    // namespace impl
 }    // namespace api

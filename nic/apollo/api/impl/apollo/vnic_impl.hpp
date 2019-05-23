@@ -34,12 +34,12 @@ namespace impl {
 /// \brief VNIC implementation
 class vnic_impl : public impl_base {
 public:
-    /// \brief     factory method to allocate & initialize vnic impl instance
+    /// \brief     factory method to allocate & initialize VNIC impl instance
     /// \param[in] spec VNIC specification
-    /// \return    new instance of vnic or NULL, in case of error
+    /// \return    new instance of VNIC or NULL, in case of error
     static vnic_impl *factory(pds_vnic_spec_t *spec);
 
-    /// \brief     release all the s/w state associated with the given vnic,
+    /// \brief     release all the s/w state associated with the given VNIC,
     ///            if any, and free the memory
     /// \param[in] impl VNIC impl instance to be freed
     /// \NOTE      h/w entries should have been cleaned up (by calling
@@ -125,8 +125,8 @@ public:
                                     api_op_t api_op) override;
 
     /// \brief      read spec, statistics and status from hw tables
-    /// \param[in]  key  pointer to vnic key
-    /// \param[out] info pointer to vnic info
+    /// \param[in]  key  pointer to VNIC key
+    /// \param[out] info pointer to VNIC info
     /// \param[in]  arg  not used
     /// \return     SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t read_hw(obj_key_t *key, obj_info_t *info,
@@ -146,12 +146,12 @@ private:
 
     /// \brief     program LOCAL_VNIC_BY_VLAN_TX table and activate the epoch in
     ///            the Tx direction
-    /// \param[in] api_op         api operation
-    /// \param[in] api_obj        vnic entry object
+    /// \param[in] api_op         API operation
+    /// \param[in] api_obj        VNIC entry object
     /// \param[in] epoch          epoch being activated
-    /// \param[in] vpc            vpc entry
+    /// \param[in] vpc            VPC entry
     /// \param[in] subnet         subnet entry
-    /// \param[in] spec           vnic configuration
+    /// \param[in] spec           VNIC configuration
     /// \param[in] v4_route_table IPv4 routing table entry
     /// \param[in] v6_route_table IPv6 routing table entry
     /// \param[in] v4_policy      egress IPv4 security policy
@@ -169,9 +169,9 @@ private:
     /// \brief     program LOCAL_VNIC_BY_SLOT_RX table and activate the epoch in
     ///            the Rx direction
     /// \param[in] epoch     epoch being activated
-    /// \param[in] vpc       vpc entry
-    /// \param[in] spec      vnic configuration
-    /// \param[in] vnic      vnic obj being programmed
+    /// \param[in] vpc       VPC entry
+    /// \param[in] spec      VNIC configuration
+    /// \param[in] vnic      VNIC obj being programmed
     /// \param[in] v4_policy ingress IPv4 security policy
     /// \param[in] v6_policy ingress IPv6 security policy
     /// \return    SDK_RET_OK on success, failure status code on error
@@ -182,30 +182,30 @@ private:
                                                      policy *v4_policy,
                                                      policy *v6_policy);
 
-    /// \brief     program vnic related tables during vnic create by enabling
+    /// \brief     program VNIC related tables during VNIC create by enabling
     ///            stage0 tables corresponding to the new epoch
     /// \param[in] epoch epoch being activated
-    /// \param[in] vnic  vnic obj being programmed
-    /// \param[in] spec  vnic configuration
+    /// \param[in] vnic  VNIC obj being programmed
+    /// \param[in] spec  VNIC configuration
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
                                     pds_vnic_spec_t *spec);
 
-    /// \brief     program vnic related tables during vnic delete by disabling
+    /// \brief     program VNIC related tables during VNIC delete by disabling
     ///            stage0 tables corresponding to the new epoch
     /// \param[in] epoch epoch being activated
-    /// \param[in] vnic  vnic obj being programmed
+    /// \param[in] vnic  VNIC obj being programmed
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_vnic_delete_(pds_epoch_t epoch, vnic_entry *vnic);
 
-    /// \brief fill the vnic stats
+    /// \brief fill the VNIC stats
     /// \param[in] tx_stats transmit statistics table data
     /// \param[in] rx_stats receive statistics table data
     void fill_vnic_stats_(vnic_tx_stats_actiondata_t *tx_stats,
                          vnic_rx_stats_actiondata_t *rx_stats,
                          pds_vnic_stats_t *stats);
 
-    /// \breif fill the vnic specification
+    /// \breif fill the VNIC specification
     /// \param[in]  egress_vnic_data   EGRESS_LOCAL_VNIC_INFO_RX table data
     /// \param[in]  vnic_by_vlan_data  LOCAL_VNIC_BY_VLAN_TX table data
     /// \param[in]  vnic_by_slot_key   LOCAL_VNIC_BY_SLOT_RX table key
