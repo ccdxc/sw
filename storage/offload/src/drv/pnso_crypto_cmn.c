@@ -259,10 +259,10 @@ crypto_aol_vec_sparse_get(const struct per_core_resource *pcr,
 		cur_count++;
 	}
 
-	if (iter) {
-		OSAL_LOG_ERROR("buffer_list total length exceeds AOL vector, current_len %u",
-			       total_len);
+	if (buffer_list_iter_more_data(iter)) {
 		err = EINVAL;
+		OSAL_LOG_ERROR("buffer_list total length exceeds AOL vector, total_len %u err: %d",
+			       total_len, err);
 		goto out;
 	}
 

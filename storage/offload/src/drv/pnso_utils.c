@@ -241,9 +241,9 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 		CPDC_SGL_SWLINK_SET(sgl_prev, sgl_vec);
 	}
 
-	if (iter) {
+	if (buffer_list_iter_more_data(iter)) {
 		err = EINVAL;
-		OSAL_LOG_ERROR("buffer_list total length exceeds SGL vector, current_len %u err: %d",
+		OSAL_LOG_ERROR("buffer_list total length exceeds SGL vector, total_len %u err: %d",
 			       total_len, err);
 		goto out;
 	}
@@ -292,8 +292,8 @@ pc_res_sgl_pdma_packed_get(const struct per_core_resource *pcr,
 			total_len += sgl_pdma->tuple[i].len;
 		}
 
-		if (iter) {
-			OSAL_LOG_DEBUG("buffer_list exceeds all SGL PDMA tuples, current_len %u",
+		if (buffer_list_iter_more_data(iter)) {
+			OSAL_LOG_ERROR("buffer_list exceeds all SGL PDMA tuples, total_len %u",
 				       total_len);
 			goto out;
 		}
@@ -463,6 +463,19 @@ buffer_list_iter_addr_len_get(struct buffer_list_iter *iter,
 	}
 
 	return iter;
+}
+
+bool
+buffer_list_iter_more_data(struct buffer_list_iter *iter)
+{
+	if (iter && iter->total_len_max) {
+		OSAL_LOG_DEBUG("buffer list iterator type: %u total_len_max: %u cur_count: %u cur_len: %u",
+				iter->blist_type, iter->total_len_max,
+				iter->cur_count, iter->cur_len);
+		return true;
+	}
+
+	return false;
 }
 
 pnso_error_t

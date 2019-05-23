@@ -92,6 +92,8 @@ buffer_list_iter_addr_len_get(struct buffer_list_iter *iter,
 			      uint32_t max_len,
 			      struct buffer_addr_len *ret_addr_len);
 
+bool buffer_list_iter_more_data(struct buffer_list_iter *iter);
+
 uint64_t
 svc_poll_expiry_start(const struct service_info *svc_info,
 		      uint64_t cur_ts);
