@@ -1,5 +1,5 @@
 //
-// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
 ///
@@ -12,15 +12,14 @@
 #include "nic/apollo/framework/impl.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
-#include "nic/apollo/api/impl/artemis/device_impl.hpp"    // TODO: think how to accomodate a new impl
-#include "nic/apollo/api/impl/artemis/tep_impl.hpp"
+#include "nic/apollo/api/impl/artemis/device_impl.hpp"
 #include "nic/apollo/api/impl/artemis/vnic_impl.hpp"
 #include "nic/apollo/api/impl/artemis/mapping_impl.hpp"
 #include "nic/apollo/api/impl/artemis/route_impl.hpp"
 #include "nic/apollo/api/impl/artemis/mirror_impl.hpp"
 #include "nic/apollo/api/impl/artemis/security_policy_impl.hpp"
-//#include "nic/apollo/api/impl/meter_impl.hpp"
-//#include "nic/apollo/api/impl/tag_impl.hpp"
+#include "nic/apollo/api/impl/artemis/meter_impl.hpp"
+#include "nic/apollo/api/impl/artemis/tag_impl.hpp"
 
 namespace api {
 namespace impl {
@@ -90,7 +89,6 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
     case IMPL_OBJ_ID_MIRROR_SESSION:
         return mirror_impl::factory((pds_mirror_session_spec_t *)args);
 
-#if 0
     case IMPL_OBJ_ID_METER:
         return meter_impl::factory((pds_meter_spec_t *)args);
 
@@ -99,7 +97,6 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
 
     case IMPL_OBJ_ID_SVC_MAPPING:
         return svc_mapping_impl::factory((pds_svc_mapping_spec_t *)args);
-#endif
 
     default:
         break;
@@ -116,10 +113,8 @@ impl_base::build(impl_obj_id_t obj_id, void *args) {
     case IMPL_OBJ_ID_MIRROR_SESSION:
         return mirror_impl::build((pds_mirror_session_key_t *)args);
 
-#if 0
     case IMPL_OBJ_ID_SVC_MAPPING:
         return svc_mapping_impl::build((pds_svc_mapping_key_t *)args);
-#endif
 
     default:
         break;
@@ -138,10 +133,8 @@ impl_base::soft_delete(impl_obj_id_t obj_id, impl_base *impl) {
         mirror_impl::soft_delete((mirror_impl *)impl);
         break;
 
-#if 0
     case IMPL_OBJ_ID_SVC_MAPPING:
         svc_mappping_impl::soft_delete((svc_mapping_impl *)impl);
-#endif
 
     default:
         PDS_TRACE_ERR("Non-statless obj %u can't be soft deleted\n", obj_id);
@@ -173,7 +166,6 @@ impl_base::destroy(impl_obj_id_t obj_id, impl_base *impl) {
     case IMPL_OBJ_ID_MIRROR_SESSION:
         return mirror_impl::destroy((mirror_impl *)impl);
 
-#if 0
     case IMPL_OBJ_ID_METER:
         return meter_impl::destroy((meter_impl *)impl);
 
@@ -182,7 +174,6 @@ impl_base::destroy(impl_obj_id_t obj_id, impl_base *impl) {
 
     case IMPL_OBJ_ID_SVC_MAPPING:
         return svc_mapping_impl::destroy((svc_mapping_impl *)impl);
-#endif
 
     default:
         break;

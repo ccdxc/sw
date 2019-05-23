@@ -2,6 +2,5 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   := libpciemgrd.so
-# MODULE_PIPELINE := apollo iris artemis
 MODULE_INCS     := ${BLD_PROTOGEN_DIR}
 include ${MKDEFS}/post.mk

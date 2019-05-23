@@ -192,6 +192,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     if (p4pd_ret != P4PD_SUCCESS) {
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
+#endif
 
     // program INGRESS_VNIC_INFO table
     vpc_key = subnet->vpc();
@@ -199,7 +200,6 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     if (unlikely(vpc == NULL)) {
         return sdk::SDK_RET_INVALID_ARG;
     }
-#endif
 
     route_table_key = subnet->v4_route_table();
     v4_route_table = route_table_db()->find(&route_table_key);
@@ -220,7 +220,6 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     egr_v6_policy = policy_db()->policy_find(&policy_key);
 
     ing_vnic_info.action_id = INGRESS_VNIC_INFO_INGRESS_VNIC_INFO_ID;
-#if 0
     if (v4_route_table) {
         addr =
             ((impl::route_table_impl *)(v4_route_table->impl()))->lpm_root_addr();
@@ -265,7 +264,6 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v6_meter,
                                 addr, 5);
     }
-#endif
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INGRESS_VNIC_INFO,
                                        hw_id_, NULL, NULL,
                                        &ing_vnic_info);
@@ -281,7 +279,6 @@ sdk_ret_t
 vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
     // TODO: reprogram INGRESS_VNIC_INFO table and EGRESS_VNIC_INFO table
     sdk_ret_t ret = SDK_RET_OK;
-#if 0
     pds_subnet_key_t subnet_key;
     vnic_entry *vnic = (vnic_entry *)api_obj;
     subnet_entry *subnet;
@@ -304,8 +301,6 @@ vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
                      subnet->vr_mac(), ETH_ADDR_LEN);
     ret = vnic_impl_db()->egress_local_vnic_info_tbl()->update(hw_id_,
                                                                &egress_vnic_data);
-#endif
-
     return ret;
 }
 
@@ -442,9 +437,9 @@ vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
     vnic_mapping_data.epoch = epoch
     ret = vnic_impl_db()->vnic_mapping_tbl()->update(&api_params);
     if (ret != SDK_RET_OK) {
-        //PDS_TRACE_ERR("Programming of VNIC_MAPPING table failed, "
-        //              "epoch %u, vnic %s , err %u", epoch,
-        //              vnic->key2str().c_str(), ret);
+        PDS_TRACE_ERR("Programming of VNIC_MAPPING table failed, "
+                      "epoch %u, vnic %s , err %u", epoch,
+                      vnic->key2str().c_str(), ret);
         return ret;
     }
 

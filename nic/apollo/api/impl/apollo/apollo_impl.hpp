@@ -167,14 +167,12 @@ private:
     /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t p4plus_table_init_(void);
 
-    /**
-     * @brief      API to get session stats
-     * @param[in]  session_index session index
-     * @param[in]  flow_role     iflow or rflow
-     * @param[out] packet_count  number of packets for this session and flow
-     * @param[out] bytes_count   number of bytes for this session and flow
-     * @return     SDK_RET_OK on success, failure status code on error
-     */
+    /// \brief      API to get session stats
+    /// \param[in]  session_index session index
+    /// \param[in]  flow_role     iflow or rflow
+    /// \param[out] packet_count  number of packets for this session and flow
+    /// \ param[out] bytes_count   number of bytes for this session and flow
+    /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t session_stats(uint32_t session_index, uint8_t flow_role,
                             uint64_t *packet_count, uint64_t *bytes_count);
 
