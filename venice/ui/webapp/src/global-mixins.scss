@@ -248,4 +248,18 @@
   .ui-chips :focus {
     outline-width: 1px !important;
   }
+
+  .ui-datepicker {
+    @include primary-font(16px);
+  }
+
+  .ui-datepicker .ui-datepicker-current-day>a,
+  .ui-datepicker .ui-datepicker-current-day.ui-datepicker-today>a {
+    color: #ffffff;
+    background-color: #86a8d7 !important;
+  }
+
+  .ui-datepicker .ui-datepicker-today>a {
+    background-color: #d6d6d6 !important;
+  }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { Animations } from '@app/animations';
 import { Observable } from 'rxjs';
 
@@ -10,15 +10,20 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { Utility } from '@app/common/Utility';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { AUTH_KEY } from '@app/core';
-import { RolloutUtil} from '@app/components/settings-group/systemupgrade/rollouts/RolloutUtil';
+import { RolloutUtil } from '@app/components/settings-group/systemupgrade/rollouts/RolloutUtil';
 import { RolloutImageLabel, RolloutImageOption } from '@app/components/settings-group/systemupgrade/rollouts/';
+import { environment } from '@env/environment';
 
 /**
  * This component let user upload Venice rollout images and manage existing images.
  * Note:
  *   imageupload.component.html use <p-fileUpload> widget which not using Angular http-clinet. We have to use p-fileUpload.onBeforeSend() hook to add security-token.
+ *   We change UI according to file upload progress. User can cancel upload. If user move away from current page. We will cancel file upload.
+ *
+ *   As well, this component lists rollout images and let user delete images.
  *
  */
+
 @Component({
   selector: 'app-imageupload',
   templateUrl: './imageupload.component.html',
@@ -27,7 +32,7 @@ import { RolloutImageLabel, RolloutImageOption } from '@app/components/settings-
   encapsulation: ViewEncapsulation.None
 })
 
-export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject, ObjstoreObject> implements OnInit {
+export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject, ObjstoreObject> implements OnInit , OnDestroy {
 
   dataObjects: ReadonlyArray<ObjstoreObject> = [];
   isTabComponent: boolean = false;
@@ -37,6 +42,11 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
 
   uploadedFiles: any[] = [];
   fileUploadProgress: number = 0;
+
+  _uploadCancelled: boolean = false;
+  showUploadButton: boolean = true;
+
+  _xhr: XMLHttpRequest = null;
 
   bodyIcon: Icon = {
     margin: {
@@ -68,41 +78,55 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     return this.constructor.name;
   }
   setDefaultToolbar(): void {
-    this.controllerService.setToolbarData({
+    const breadcrumb = [{ label: 'System Upgrade', url: Utility.getBaseUIUrl() + 'settings/upgrade' }, { label: 'Images', url: '' }];
+    const buttons = [];
+    if (! this.isToUseWebSocket()) {
       // TODO: delete the refresh button when  watchRolloutImages() is working.  For now, make a refresh button for VS-307
-      buttons: [
-          {
-            cssClass: 'global-button-primary imageupload-toolbar-button imageupload-toolbar-button-refresh',
-            text: 'Refresh',
-            callback: () => { this.refreshImages(); },
-          }
-      ],
-      breadcrumb: [{ label: 'System Upgrade', url: Utility.getBaseUIUrl() + 'settings/upgrade' }, { label: 'Images', url: '' }]
+      buttons.push(
+        {
+          cssClass: 'global-button-primary imageupload-toolbar-button imageupload-toolbar-button-refresh',
+          text: 'RERESH',
+          callback: () => { this.refreshImages(); },
+        }
+      );
+    }
+    this.controllerService.setToolbarData({
+      buttons: buttons,
+      breadcrumb: breadcrumb
     });
   }
 
   postNgInit() {
-    // this.watchRolloutImages(); // This will fail and trigger "sign out" toaster. Asking Sanjay to look into ws.
-    this.getRolloutImages();
+   if (this.isToUseWebSocket()) {
+     this.watchRolloutImages(); // This will fail and trigger "sign out" toaster when using local proxy. // TODO: fix me!
+   } else {
+      this.getRolloutImages();
+   }
+  }
+
+  isToUseWebSocket() {
+    return (environment.production) ;
   }
 
   /** Override parent API as watchRolloutImages() is not working. */
   postDeleteRecord() {
-    this.refreshImages();
+      this.refreshImages();
   }
 
-  /** TODO: delete me once watchRolloutImages() is working */
   refreshImages() {
-    this.getRolloutImages();
+    if (! this.isToUseWebSocket()) {
+      this.getRolloutImages();
+    }
   }
 
-  /** TODO: This function is not working yet. */
+  /** TODO: This function is not working in local dev using proxy.conf.js . */
   watchRolloutImages() {
     this.rolloutimagesEventUtility = new HttpEventUtility<ObjstoreObject>(ObjstoreObject);
     this.dataObjects = this.rolloutimagesEventUtility.array;
     const sub = this.objstoreService.WatchObject(Utility.ROLLOUT_IMGAGE_NAMESPACE).subscribe(
       response => {
         this.rolloutimagesEventUtility.processEvents(response);
+        this.processRolloutImages(response);
       },
     );
     this.subscriptions.push(sub);
@@ -118,11 +142,22 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   getRolloutImages() {
     const sub = this.objstoreService.ListObject(Utility.ROLLOUT_IMGAGE_NAMESPACE).subscribe(
       (response) => {
-        let metaImage: ObjstoreObject = null;
+          this.processRolloutImages(response);
+      },
+      (error) => {
+        this.controllerService.invokeRESTErrorToaster('Failed to fetch rollout images.', error);
+      }
+    );
+    this.subscriptions.push(sub);
+  }
+
+  processRolloutImages(response) {
+    let metaImage: ObjstoreObject = null;
         let bundleTarImage: ObjstoreObject = null;
         const rolloutImages: IObjstoreObjectList = response.body as IObjstoreObjectList;
         if (rolloutImages.items) {
           const entries = [];
+          const allentries = [];
           rolloutImages.items.forEach((image: ObjstoreObject) => {
             if (image.meta.name.endsWith(RolloutUtil.ROLLOUT_METADATA_JSON)) {
               metaImage = image;
@@ -130,11 +165,12 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
               bundleTarImage = image;
               entries.push(bundleTarImage);
             }
+            allentries.push(image);
           });
           if (bundleTarImage) {  // process only when bundle.tar is available.
             const metaImageLabel: RolloutImageLabel = metaImage.meta.labels as RolloutImageLabel;
             let bundletarImageLabel: RolloutImageLabel = bundleTarImage.meta.labels as RolloutImageLabel;
-            if (metaImageLabel ) {
+            if (metaImageLabel) {
               bundletarImageLabel = Utility.getLodash().cloneDeep(metaImageLabel);
             } else {
               const badLabels: RolloutImageLabel = {
@@ -145,21 +181,20 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
             }
             bundleTarImage.meta.labels = bundletarImageLabel;
           }
-          this.dataObjects = entries;
+          // in case user uploads a dummy tar file (not bundle.tar), we will show it. So that user can delete it. // 2019-05-17 // TODO: clean it up once back-end is ok.
+          this.dataObjects = (entries.length > 0) ? entries : allentries;
         }
-      },
-      (error) => {
-        this.controllerService.invokeRESTErrorToaster('Failed to fetch rollout images.', error);
-      }
-    );
-    this.subscriptions.push(sub);
   }
 
   onBeforeSend($event) {
     const xhr = $event.xhr;
+    this._xhr = xhr;
     const headerName = AUTH_KEY;
     const token = Utility.getInstance().getXSRFtoken();
     xhr.setRequestHeader(headerName, token);
+    this._uploadCancelled = false;
+    this.showUploadButton = false;
+    this.controllerService.invokeInfoToaster('Upload', 'Please do not move away from this page until upload is completed');
   }
   /**
    * This API serves html template
@@ -169,17 +204,65 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     const filenames = this.getFilesNames(files);
     this.controllerService.invokeInfoToaster('Upload succeeded', 'Uploaded files: ' + filenames.join(',') + '. System will validate uploaded files.');
     this.refreshImages();
-    this.fileUploadProgress = 0;
+    this.resetProgressStatus();
+  }
+
+  /**
+  * This API serves html template
+  *
+  * If user cancels upload operation, it will trigger onError() call.  We don't want to popup error toaster.
+  * We will pop up error toaster if server response error. (such as server disk space issue, file handling errors, etc)
+  */
+  onError(event) {
+    if (this._uploadCancelled) {
+      return;
+    }
+    const files = event.files;
+    const filenames = this.getFilesNames(files);
+    this.controllerService.invokeErrorToaster('Upload failed', 'Involved files: ' + filenames.join(',') + '\n' + JSON.stringify(event.error));
+    this.resetProgressStatus();
   }
 
   /**
   * This API serves html template
   */
-  onError(event) {
-    const files = event.files;
-    const filenames = this.getFilesNames(files);
-    this.controllerService.invokeErrorToaster('Upload failed', 'Involved files: ' + filenames.join(',') + '\n' + JSON.stringify(event.error));
+  onCancelUpload() {
+    if (this.isFileUploadInProgress()) {
+       this.cancelUpload();  // cancel upload only when upload started.
+    }
+  }
+
+  /**
+  * This API serves html template
+  */
+  onFileRemove($event) {
+    if ($event && $event.file) {
+      if (this.isFileUploadInProgress()) {
+        this.cancelUpload();
+      }
+    }
+  }
+
+  cancelUpload() {
+    this._uploadCancelled = true;
+    if (this._xhr) {
+      this._xhr.abort();
+    }
+    this.resetProgressStatus();
+    this.controllerService.invokeInfoToaster('Upload', 'Upload operation was cancelled');
+  }
+
+  onFileSelect($event) {
     this.fileUploadProgress = 0;
+  }
+
+  private resetProgressStatus() {
+    if (this.uploadedFiles) {
+      this.uploadedFiles.length = 0;
+    }
+    this.fileUploadProgress = 0;
+    this.showUploadButton = true;
+    this._xhr = null;
   }
 
   getFilesNames(files: any[]): string[] {
@@ -218,6 +301,19 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   }
 
   onUploadProgress($event) {
-    this.fileUploadProgress = $event.progress;
+    if (!this._uploadCancelled) {
+      this.fileUploadProgress = $event.progress;
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.isFileUploadInProgress()) {
+      this.cancelUpload();
+    }
+    super.ngOnDestroy();
+  }
+
+  private isFileUploadInProgress(): boolean {
+    return (this._xhr !== null) || (this.fileUploadProgress > 0) ;
   }
 }

@@ -13,6 +13,7 @@
         <div fxFlex fxLayout="column" [formGroup]="newRollout.$formGroup">
           <div fxFlex="nogrow" fxLayout="row" class="newrollout-row" formGroupName="meta">
             <!-- meta row-->
+            <div fxFlex="nogrow" class="newrollout-text">Name *:</div>
             <input fxFlex="300px" formControlName="name" appErrorTooltip
                    class="newrollout-input-common"
                    matspellcheck="false" type="text" pInputText

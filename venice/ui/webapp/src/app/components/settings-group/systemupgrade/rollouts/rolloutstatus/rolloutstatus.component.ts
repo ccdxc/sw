@@ -7,13 +7,16 @@ import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { BaseComponent } from '@components/base/base.component';
 import { ControllerService } from '@app/services/controller.service';
 import { RolloutService } from '@app/services/generated/rollout.service';
+import { ClusterService } from '@app/services/generated/cluster.service';
+import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+
 import { Utility } from '@common/Utility';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { IApiStatus, IRolloutRollout, RolloutRollout, RolloutRolloutSpec, RolloutRolloutStatus_state } from '@sdk/v1/models/generated/rollout';
 import { TableCol } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
-import { RolloutUtil} from '../RolloutUtil';
+import { RolloutUtil } from '../RolloutUtil';
 import { EnumRolloutOptions } from '../';
 
 /**
@@ -28,6 +31,8 @@ import { EnumRolloutOptions } from '../';
   encapsulation: ViewEncapsulation.None,
 })
 export class RolloutstatusComponent extends BaseComponent implements OnInit, OnDestroy {
+  public static STOP_BUTTON_TEXT  = 'STOP ROLLOUT';
+
   subscriptions = [];
   selectedRolloutId: string;
   selectedRollout: RolloutRollout;
@@ -55,17 +60,22 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   };
 
   statusCols: TableCol[] = [
-    { field: 'name', header: 'Name', class: 'rolloutstatus-column rolloutstatus-column-name', sortable: true, width: 10 },
+    { field: 'name', header: 'Name', class: 'rolloutstatus-column rolloutstatus-column-name', sortable: true, width: 15 },
     { field: 'phase', header: 'Phase', class: 'rolloutstatus-column rolloutstatus-column-phase', sortable: true, width: 10 },
     { field: 'start-time', header: 'Start Time', class: 'rolloutstatus-column rolloutstatus-column-sdate', sortable: true, width: 10 },
     { field: 'end-time', header: 'End Time', class: 'rolloutstatus-column rolloutstatus-column-edate', sortable: true, width: 10 },
-    { field: 'reason', header: 'Reason', class: 'rolloutstatus-column rolloutstatus-column-reason', sortable: true, width: 20 },
-    { field: 'message', header: 'Message', class: 'rolloutstatus-column rolloutstatus-column-message', sortable: false, width: 40 }
+    { field: 'reason', header: 'Previous Phase', class: 'rolloutstatus-column rolloutstatus-column-reason', sortable: true, width: 20 }, // VS-299
+    { field: 'message', header: 'Message', class: 'rolloutstatus-column rolloutstatus-column-message', sortable: false, width: 35 }
   ];
+
+  naples: ReadonlyArray<ClusterSmartNIC> = [];
+  // Used for processing the stream events
+  naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
+
 
   constructor(protected _controllerService: ControllerService,
     private _route: ActivatedRoute, protected UIConfigService: UIConfigsService,
-    protected rolloutService: RolloutService) {
+    protected rolloutService: RolloutService, private clusterService: ClusterService) {
     super(_controllerService, UIConfigService);
   }
   /**
@@ -81,13 +91,15 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
 
       this.getRolloutDetail();
       this.setDefaultToolbar(this.selectedRolloutId);
+
+     this.getNaples();
     });
   }
 
 
 
   setDefaultToolbar(id: string) {
-    const toolbarData: ToolbarData =  {
+    const toolbarData: ToolbarData = {
       breadcrumb: [
         { label: 'System Upgrade', url: Utility.getBaseUIUrl() + 'settings/upgrade/rollouts' },
         { label: id, url: Utility.getBaseUIUrl() + 'settings/upgrade/rollouts/' + id }],
@@ -99,17 +111,29 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   addToolbarButton() {
     const toolbarData: ToolbarData = this._controllerService.getToolbarData();
     if (this.selectedRollout && this.selectedRollout.status.state === RolloutRolloutStatus_state.PROGRESSING) {
-      toolbarData.buttons.push(
-        {
-          cssClass: 'global-button-primary rolloutstatus-toolbar-button',
-          text: 'STOP ROLLOUT',
-          callback: () => {
-            this.onStopRollout();
+      if (!this.hasStopButtonAlready(toolbarData)) {  // VS-328.  We just want to add stop-button once.
+        toolbarData.buttons.push(
+          {
+            cssClass: 'global-button-primary rolloutstatus-toolbar-button',
+            text: RolloutstatusComponent.STOP_BUTTON_TEXT,
+            callback: () => {
+              this.onStopRollout();
+            }
           }
-        }
-      );
+        );
+      }
       this._controllerService.setToolbarData(toolbarData);
     }
+  }
+
+  /**
+   * This function check whethere to add [STOP ROLLOUT] button in toolbar
+   */
+  private hasStopButtonAlready(toolbarData: ToolbarData ): boolean {
+      const hasStop = toolbarData.buttons.some( (button) => {
+        return (button.text === RolloutstatusComponent.STOP_BUTTON_TEXT);
+      });
+      return hasStop;
   }
 
   /**
@@ -125,6 +149,17 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
 
   getClassName(): string {
     return this.constructor.name;
+  }
+
+  getNaples() {
+    this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
+    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
+    const subscription = this.clusterService.WatchSmartNIC().subscribe(
+      response => {
+        this.naplesEventUtility.processEvents(response);
+      },
+    );
+    this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }
 
 
@@ -188,7 +223,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
           // Set sgpolicyrules
           this.selectedRollout = this.rollouts[0];
           this.addToolbarButton();
-          this.selectedRolloutNicNodeTypes  = RolloutUtil.getRolloutNaplesVeniceType(this.selectedRollout);
+          this.selectedRolloutNicNodeTypes = RolloutUtil.getRolloutNaplesVeniceType(this.selectedRollout);
         } else {
           // Must have received a delete event.
           this.showDeletionScreen = true;
@@ -206,7 +241,12 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
     // TODO: add code
   }
 
-  displayColumn(data, col): any {
+  /**
+   * This API serves html template
+   * @param data
+   * @param col
+   */
+  displayColumn(data: any, col: TableCol): string {
     const fields = col.field.split('.');
     const value = Utility.getObjectValueByPropertyPath(data, fields);
     const column = col.field;
@@ -214,6 +254,34 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
       default:
         return Array.isArray(value) ? JSON.stringify(value, null, 2) : value;
     }
+  }
+
+  /**
+   * This API serves html template
+   * @param data
+   * @param col
+   * @param tablename
+   *
+   * VS-312  requests to have rollout status page's NAPLE table should display NIC hostname (human readable text)
+   * We check "tablename" to build name column display.
+   */
+  displayNameColumn(data: any, col: TableCol, tablename: string): string {
+      if (tablename === 'NAPLES') {
+        const fields = col.field.split('.');
+        const value = Utility.getObjectValueByPropertyPath(data, fields);
+        const column = col.field;
+        const hostname  = this.getNICHostName(value);
+        return hostname;
+      } else {
+        return this.displayColumn(data, col);
+      }
+  }
+
+  getNICHostName(nicNameInMAC: string): string {
+    const matchedNaple  = this.naples.find(naple => {
+      return naple.meta.name === nicNameInMAC;
+    });
+    return matchedNaple ? matchedNaple.spec.hostname : nicNameInMAC;
   }
 
   isVeniceOnly(): boolean {
@@ -229,7 +297,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   }
 
   getRolloutVeniceNaplesType(): string {
-      return EnumRolloutOptions[this.selectedRolloutNicNodeTypes];
+    return EnumRolloutOptions[this.selectedRolloutNicNodeTypes];
   }
 
 }

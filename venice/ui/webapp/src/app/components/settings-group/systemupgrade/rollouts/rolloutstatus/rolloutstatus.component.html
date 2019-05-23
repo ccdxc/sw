@@ -73,10 +73,10 @@
     </div>
   </mat-expansion-panel>
   <mat-expansion-panel fxFlex="none" class="global-mat-expansion-panel" [expanded]="true"
-                       [hideToggle]="true">
+                       [hideToggle]="false">
     <mat-expansion-panel-header class="rolloutstatus-expansionpanel-header">
       <mat-panel-title class="rolloutstatus-summary-panel-header">
-        Status
+        Status ({{selectedRollout?.status.state}})
       </mat-panel-title>
     </mat-expansion-panel-header>
     <div class="rolloutstatus-summary-panel-content">
@@ -188,6 +188,9 @@
           <tr class="rolloutstatus-tablerow">
             <td *ngFor="let col of statusCols" [ngSwitch]="col.field" [class]="col.class"
                 [style.width]="col.width + '%'">
+              <div *ngSwitchCase="'name'" class="rolloutstatus-name-row">
+                {{displayNameColumn(rowData, col, tablename)}}
+              </div>
               <div *ngSwitchCase="'start-time'" class="rolloutstatus-date-row">
                 {{rowData['start-time'] | PrettyDate }}
               </div>

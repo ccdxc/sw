@@ -92,6 +92,9 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   initRolloutData() {
     if (!this.isInline) {  // create mode
       this.newRollout = new RolloutRollout();
+      const today = new Date().getTime() + 3600 * 1000; // VS-331 set default time. Now + 1 hour.
+      this.newRollout.spec['scheduled-start-time'] = new Date(today);
+      this.newRollout.setFormGroupValuesToBeModelValues();
       this.newRollout.$formGroup.get(['spec', 'suspend']).disable();
     } else {   // edit mode
       const myrollout: IRolloutRollout = Utility.getLodash().cloneDeep(this.selectedRolloutData);
@@ -225,26 +228,35 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     this._saveRollout();
   }
 
+  /**
+   * Build rollout JSON.
+   * according to RolloutUtil.getRolloutNaplesVeniceType() rules
+   */
   buildRollout(): IRolloutRollout {
     const rollout: IRolloutRollout = this.newRollout.getFormGroupValues();
     rollout.meta.name = (rollout.meta.name) ? rollout.meta.name : this.newRollout.meta.name;
     if (this.selectedRolloutNicNodeTypes === RolloutUtil.ROLLOUTTYPE_VENICE_ONLY) {
       rollout.spec['max-nic-failures-before-abort'] = null;
       rollout.spec['order-constraints'] = [];
-      rollout.spec['smartnic-must-match-constraint'] = true; // This is what Vinod (back-end) wants.
+      rollout.spec['smartnic-must-match-constraint'] = true;
       rollout.spec['smartnics-only'] = false;
     } else if (this.selectedRolloutNicNodeTypes === RolloutUtil.ROLLOUTTYPE_NAPLES_ONLY) {
       rollout.spec['smartnics-only'] = true;
-      if (rollout.spec['smartnic-must-match-constraint']) {
-        rollout.spec['order-constraints'] = Utility.convertRepeaterValuesToSearchExpression(this.ocLabelRepeater);
-      } else {
-        rollout.spec['order-constraints'] = [];
-      }
+      this.setSpecOrderConstrains(rollout);
       rollout.spec['max-parallel'] = null;
-    } else {
-      rollout.spec['smartnics-only'] = false;
+    } else if ( this.selectedRolloutNicNodeTypes === RolloutUtil.ROLLOUTTYPE_BOTH_NAPLES_VENICE) {
+       rollout.spec['smartnics-only'] = false;
+       this.setSpecOrderConstrains(rollout);
     }
      return rollout;
+  }
+
+  private setSpecOrderConstrains(rollout: IRolloutRollout) {
+    if (rollout.spec['smartnic-must-match-constraint']) {
+      rollout.spec['order-constraints'] = Utility.convertRepeaterValuesToSearchExpression(this.ocLabelRepeater); // Some Naples will be updated.
+    } else {
+      rollout.spec['order-constraints'] = []; // All Naples will be updated.
+    }
   }
 
   _saveRollout() {
