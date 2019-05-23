@@ -50,7 +50,7 @@ parser.add_argument('--dry-run', dest='dry_run',
 
 # pipeline
 parser.add_argument('--pipeline', dest='pipeline', default='iris',
-                     action='store', choices=['apollo', 'gft', 'iris'],
+                     action='store', choices=['apollo', 'gft', 'iris', 'artemis'],
                      help='Pipeline')
 
 args = parser.parse_args()
@@ -74,6 +74,8 @@ if args.target == 'sim':
     output_dir  = pwd + '/fake_root_target/x86_64'
     if args.pipeline == 'apollo':
         files.append('nic/tools/package/pack_apollo.txt')
+    elif args.pipeline == 'artemis':
+        files.append('nic/tools/package/pack_artemis.txt')
     elif args.pipeline == 'gft':
         files.append('nic/tools/package/pack_gft.txt')
     else:
@@ -124,6 +126,8 @@ else:
 
     if args.pipeline == 'apollo':
         files.append('nic/tools/package/pack_apollo.txt')
+    elif args.pipeline == 'artemis':
+        files.append('nic/tools/package/pack_artemis.txt')
     elif args.pipeline == 'gft':
         files.append('nic/tools/package/pack_gft.txt')
     else:

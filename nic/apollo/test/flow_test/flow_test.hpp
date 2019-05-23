@@ -23,7 +23,11 @@
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 
+#if defined(APOLLO)
 #include "gen/p4gen/apollo/include/p4pd.h"
+#else
+#include "gen/p4gen/artemis/include/p4pd.h"
+#endif
 
 using sdk::table::ftl;
 using sdk::table::ftlv4;
@@ -50,10 +54,13 @@ flow_key2str(void *key) {
         inet_ntop(AF_INET, k->key_metadata_src, srcstr, INET_ADDRSTRLEN);
         inet_ntop(AF_INET, k->key_metadata_dst, dststr, INET_ADDRSTRLEN);
     }
+#if defined(APOLLO)
     sprintf(str, "T:%d SA:%s DA:%s DP:%d SP:%d P:%d VN:%d",
             k->key_metadata_ktype, srcstr, dststr,
             k->key_metadata_dport, k->key_metadata_sport,
             k->key_metadata_proto, k->vnic_metadata_local_vnic_tag);
+#else
+#endif
     return str;
 }
 

@@ -19,7 +19,7 @@
 #include "nic/include/edmaq.h"
 #include "nic/p4/common/defines.h"
 
-#ifndef APOLLO
+#if !defined(APOLLO) && !defined(ARTEMIS)
 #include "gen/proto/nicmgr/nicmgr.pb.h"
 #include "gen/proto/nicmgr/metrics.delphi.hpp"
 #include "gen/proto/common/nicmgr_status_msgs.pb.h"

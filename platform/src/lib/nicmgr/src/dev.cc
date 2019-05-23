@@ -13,7 +13,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#ifndef APOLLO
+#if !defined(APOLLO) && !defined(ARTEMIS)
 #include "gen/proto/device.pb.h"
 #include "accel_dev.hpp"
 #endif
@@ -77,7 +77,7 @@ DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) ==
                sdk::lib::PAL_RET_OK);
 #elif __aarch64__
-#ifndef APOLLO
+#if !defined(APOLLO) && !defined(ARTEMIS)
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HAPS) ==
                sdk::lib::PAL_RET_OK);
 #endif
@@ -108,7 +108,7 @@ DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
 string
 DeviceManager::ParseDeviceConf(string filename)
 {
-#ifndef APOLLO
+#if !defined(APOLLO) && !defined(ARTEMIS)
     boost::property_tree::ptree spec;
 
     cout << "Parsing Device conf, input: " << filename << endl;

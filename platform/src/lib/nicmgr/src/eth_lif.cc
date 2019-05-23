@@ -19,7 +19,7 @@
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/p4/common/defines.h"
 
-#ifndef APOLLO
+#if !defined(APOLLO) && !defined(ARTEMIS)
 #include "gen/proto/nicmgr/metrics.delphi.hpp"
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
 #endif
@@ -213,7 +213,7 @@ EthLif::EthLif(devapi *dev_api,
     NIC_LOG_INFO("{}: lif_stats_addr: {:#x}",
         hal_lif_info_.name, lif_stats_addr);
 
-#ifndef APOLLO
+#if !defined(APOLLO) && !defined(ARTEMIS)
     auto lif_stats =
         delphi::objects::LifMetrics::NewLifMetrics(hal_lif_info_.lif_id, lif_stats_addr);
     if (lif_stats == NULL) {
@@ -1370,7 +1370,7 @@ EthLif::NotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
      * worst case we see the third attempt going through. Along with the original
      * notify block update we retry 3 times.
      */
-#ifdef APOLLO
+#if !defined(APOLLO) && !defined(ARTEMIS)
     uint8_t count = 3;
     while(count--) {
         port_status_t retry_status = {0};

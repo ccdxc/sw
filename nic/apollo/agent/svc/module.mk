@@ -8,7 +8,7 @@ MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_SDK_SOLIBS} ${NIC_HAL_PD_SOLIBS_${ARCH}} \
                   sdkp4 sdkp4utils sdkcapri_asicrw_if sdkcapri \
-                  sdkplatformutils sdkxcvrdriver sdkasicpd lpmitree \
+                  sdkplatformutils sdkxcvrdriver sdkasicpd \
                   bm_allocator sdklinkmgr sdklinkmgrcsr
 MODULE_LDLIBS   = ${NIC_CAPSIM_LDLIBS} \
                   ${SDK_THIRDPARTY_CAPRI_LDLIBS} \

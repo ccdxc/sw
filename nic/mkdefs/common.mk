@@ -202,7 +202,7 @@ export NIC_apollo_NICMGR_LIBS := nicmgr_apollo rdmamgr_apollo mnet evutils \
 # ==========================================================================
 #                        ARTEMIS specific defs
 # ==========================================================================
-export NIC_artemis_NICMGR_LIBS := nicmgr_artemis rdmamgr_artemis mnet evutils \
+export NIC_artemis_NICMGR_LIBS := nicmgr_artemis mnet evutils \
                                   pciemgr_if pciemgr pciemgrutils \
                                   pciehdevices pcietlp cfgspace intrutils misc
 

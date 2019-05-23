@@ -3,5 +3,5 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET = libftlv4.so
 MODULE_SOLIBS = utils indexer
 MODULE_FLAGS  = -O3
-MODULE_PIPELINE = apollo iris
+MODULE_PIPELINE = apollo iris artemis
 include ${MKDEFS}/post.mk
