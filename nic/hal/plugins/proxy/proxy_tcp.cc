@@ -250,6 +250,7 @@ proxy_tcp_cb_init_def_params(TcpCbSpec& spec)
     spec.set_delay_ack(true);
     spec.set_ooo_queue(true);
     spec.set_sack_perm(true);
+    /* timestamps disabled for DOL */
     spec.set_timestamps(false);
     spec.set_abc_l_var(2);
     // pred_flags
@@ -393,8 +394,6 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
         spec->set_rcv_wup(hal::pd::lkl_get_tcpcb_rcv_nxt(tcpcb));
         spec->set_snd_nxt(hal::pd::lkl_get_tcpcb_snd_nxt(tcpcb));
         spec->set_snd_una(hal::pd::lkl_get_tcpcb_snd_una(tcpcb));
-        spec->set_rcv_tsval(hal::pd::lkl_get_tcpcb_rcv_tsval(tcpcb));
-        spec->set_ts_recent(hal::pd::lkl_get_tcpcb_ts_recent(tcpcb));
         spec->set_snd_wscale(hal::pd::lkl_get_tcpcb_snd_wscale(tcpcb));
         spec->set_snd_ssthresh(hal::pd::lkl_get_tcpcb_snd_ssthresh(tcpcb));
         spec->set_smss(hal::pd::lkl_get_tcpcb_smss(tcpcb));
@@ -439,6 +438,13 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     spec->set_ooo_queue(get_rsp.mutable_spec()->ooo_queue());
     spec->set_sack_perm(get_rsp.mutable_spec()->sack_perm());
     spec->set_timestamps(get_rsp.mutable_spec()->timestamps());
+    spec->set_ts_recent(get_rsp.mutable_spec()->ts_recent());
+    spec->set_rcv_tsval(get_rsp.mutable_spec()->ts_recent());
+    spec->set_rtt_seq_tsoffset(get_rsp.mutable_spec()->rtt_seq_tsoffset());
+    spec->set_rtt_time(get_rsp.mutable_spec()->rtt_time());
+    spec->set_ts_learned(get_rsp.mutable_spec()->ts_learned());
+    spec->set_ts_time(get_rsp.mutable_spec()->rtt_time());
+    spec->set_ts_offset(get_rsp.mutable_spec()->rtt_seq_tsoffset());
 
     memcpy(data,
            get_rsp.mutable_spec()->header_template().c_str(),

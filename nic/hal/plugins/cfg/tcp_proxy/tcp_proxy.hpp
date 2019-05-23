@@ -177,6 +177,11 @@ typedef struct tcp_proxy_cb_s {
     uint32_t              snd_una;
     uint32_t              rcv_tsval;
     uint32_t              ts_recent;
+    uint32_t              ts_learned;
+    uint32_t              ts_offset;
+    uint32_t              ts_time;
+    uint32_t              rtt_time;
+    uint32_t              rtt_seq_tsoffset;
     uint64_t              rx_ts;
     uint64_t              serq_base;
     uint32_t              debug_dol;

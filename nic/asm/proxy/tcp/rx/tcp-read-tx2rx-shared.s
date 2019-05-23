@@ -87,7 +87,9 @@ table_read_RX:
     add             r1, r0, d.debug_dol
     smeqh           c1, r1, TCP_DDOL_TSOPT_SUPPORT, TCP_DDOL_TSOPT_SUPPORT
     phvwr.c1        p.common_phv_tsopt_enabled, 1
-    phvwr.c1        p.common_phv_tsopt_available, 1    /* Until P4 is updated to support this in TCP app hdr */
+    seq.c1          c2, k.tcp_app_header_prev_echo_ts, r0
+    setcf           c1, [c1 & !c2]
+    phvwr.c1        p.common_phv_tsopt_available, 1
 
     phvwr           p.to_s1_serq_cidx, d.serq_cidx
     phvwr           p.to_s6_payload_len, k.tcp_app_header_payload_len

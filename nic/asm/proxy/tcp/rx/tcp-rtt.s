@@ -27,26 +27,33 @@ tcp_rx_rtt_start:
             Disabled: process the current ts, the ts of the segment being ACKed
         For now, support only TSopt based RTT estimation
     */
-    sne         c1, k.common_phv_write_arq, r0
-    bcf         [c1], flow_rtt_process_done
     
-    seq         c1, k.common_phv_tsopt_enabled, 1
-    seq         c2, k.common_phv_tsopt_available, 1
     seq         c3, k.common_phv_ooq_tx2rx_pkt, 1 //to indicate 2nd pass of the o-o-o packet
 
     bcf         [c3], flow_rtt_process_done
-    
+    seq         c1, k.to_s3_rcv_tsecr, 0 
+    setcf       c5, [!c1]
+    seq.c5      c4, d.ts_learned, r0
+    add.c4      r1, k.to_s3_rcv_tsecr, r0      
+    phvwr.c4    p.rx2tx_extra_ts_offset, r1
+    tblwr.c4    d.rtt_seq_tsoffset, r1
+    phvwr.c4    p.rx2tx_extra_ts_time, r2  // with TS, need current ts_offset update time.
+    srl.c4      r2, r4, 13
+    tblwr.c4    d.rtt_time, r2
+    tblwr.c4    d.ts_learned, 1
+    bcf         [c4], first_rtt_measure    
+    add.c4      r1, 100, r0   //1ms initial
+   
     setcf       c2, [!c1 | !c2]
     
-    // add.c2      r5, k.to_s3_rtt_time, r0
     seq.c2      c3, k.to_s3_rtt_time, r0
     seq.c2      c4, d.rtt_time, r0 
     bcf.c2      [c3 & c4], flow_rtt_process_done
     nop
-    tblwr.!c3   d.rtt_time, k.to_s3_rtt_time
+    tblwr.c2    d.rtt_time, k.to_s3_rtt_time
     seq.c2      c3, k.to_s3_rtt_seq, r0
-    tblwr.!c3   d.rtt_seq, k.to_s3_rtt_seq
-    sle.c2      c3, k.to_s3_rtt_seq, k.to_s3_snd_nxt 
+    tblwr.!c3   d.rtt_seq_tsoffset, k.to_s3_rtt_seq
+    sle.c2      c3, k.to_s3_rtt_seq, k.s1_s2s_snd_nxt 
     bcf.c2      [!c3], flow_rtt_process_done
     nop
     /* r4 is loaded at the beginning of the stage with current timestamp value */
@@ -80,6 +87,11 @@ tcp_rx_rtt_start:
 #endif
     srl         r2, r4, 13
     andi        r2, r2, 0x1FFFFFFF
+    sub.c5      r1, r2, d.rtt_time  //ticks since learned
+    sub.c5      r5, k.to_s3_rcv_tsecr, d.rtt_seq_tsoffset //ticks since learned when sent 
+    bcf         [c5], do_srtt
+    sub.c5      r1, r1, r5
+    
     //srl         r2, r4, d.ts_shift  //ts_shift setting
     //sub.c2      r1, r2, k.to_s3_rcv_tsecr
     sub.c3      r1, r2, d.rtt_time 
@@ -90,6 +102,7 @@ tcp_rx_rtt_start:
      * if (seq_rtt_us < 0)
      *   return false;
      */
+do_srtt:
     /* Wrap around */
     slt.s       c1, r1, r0   //todo test wrap
     bcf         [c1], flow_rtt_process_done

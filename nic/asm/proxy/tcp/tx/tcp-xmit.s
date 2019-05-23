@@ -106,7 +106,6 @@ flow_read_xmit_cursor_start:
     tblwr.c2        d.rtt_time, r3
     phvwr.!c2       p.tx2rx_rtt_time, d.rtt_time
     tblwr.c2        d.rtt_seq_req, r0           
-    phvwr           p.tx2rx_snd_nxt, d.snd_nxt
 
 rearm_rto:
 #ifndef HW

@@ -226,10 +226,20 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
 
     pd::pd_tcpcb_update_args_init(&pd_tcpcb_args);
     tcpcb->rcv_nxt = spec.rcv_nxt();
+    HAL_TRACE_DEBUG("tcpcb_update rcv_nxt: {}", spec.rcv_nxt());
     tcpcb->snd_nxt = spec.snd_nxt();
     tcpcb->snd_una = spec.snd_una();
-    tcpcb->rcv_tsval = spec.rcv_tsval();
+    tcpcb->rcv_tsval = spec.ts_recent();
     tcpcb->ts_recent = spec.ts_recent();
+    tcpcb->rtt_seq_tsoffset = spec.rtt_seq_tsoffset();
+    tcpcb->rtt_time = spec.rtt_time();
+    tcpcb->ts_time = spec.ts_time();
+    tcpcb->ts_offset = spec.ts_offset();
+    HAL_TRACE_DEBUG("spec.ts_recent: {}", spec.ts_recent());
+    HAL_TRACE_DEBUG("spec.rtt_time: {}", spec.rtt_time());
+    HAL_TRACE_DEBUG("spec.rtt_seq_tsoffset: {}", spec.rtt_seq_tsoffset());
+    HAL_TRACE_DEBUG("spec.ts_offset: {}", spec.ts_offset());
+    HAL_TRACE_DEBUG("spec.ts_time: {}", spec.ts_time());
     if (hal::tls::proxy_tls_bypass_mode) {
         tcpcb->bypass_tls = true;
         tcpcb->debug_dol = spec.debug_dol() | TCP_DDOL_BYPASS_BARCO;
@@ -242,6 +252,8 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
             tcpcb->bypass_tls = true;
         }
     }
+    
+    //tcpcb->debug_dol = spec.debug_dol() | TCP_DDOL_TSOPT_SUPPORT;
     tcpcb->debug_dol = spec.debug_dol();
     tcpcb->debug_dol_tx = spec.debug_dol_tx();
     tcpcb->snd_wnd = spec.snd_wnd();
@@ -463,6 +475,11 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_snd_una(rtcpcb.snd_una);
     rsp->mutable_spec()->set_rcv_tsval(rtcpcb.rcv_tsval);
     rsp->mutable_spec()->set_ts_recent(rtcpcb.ts_recent);
+    rsp->mutable_spec()->set_ts_learned(rtcpcb.ts_learned);
+    rsp->mutable_spec()->set_ts_offset(rtcpcb.ts_offset);
+    rsp->mutable_spec()->set_ts_time(rtcpcb.ts_time);
+    rsp->mutable_spec()->set_rtt_time(rtcpcb.rtt_time);
+    rsp->mutable_spec()->set_rtt_seq_tsoffset(rtcpcb.rtt_seq_tsoffset);
     rsp->mutable_spec()->set_serq_base(rtcpcb.serq_base);
     rsp->mutable_spec()->set_debug_dol(rtcpcb.debug_dol);
     rsp->mutable_spec()->set_sesq_pi(rtcpcb.sesq_pi);

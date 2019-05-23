@@ -310,8 +310,9 @@ header_type to_stage_4_phv_t {
 
 header_type to_stage_5_phv_t {
     fields {
+        ts_offset               : 32;
+        ts_time                 : 32;
         rcv_wnd                 : 16;
-
         sack_opt_len            : 8;
         pending_tso_data        : 1;
         pending_pad             : 7;
@@ -630,7 +631,7 @@ action read_rx2tx(RX2TX_PARAMS) {
  */
 action read_rx2tx_extra(
        snd_cwnd, rcv_nxt, dup_rcv_nxt, snd_wnd, rcv_wnd, rto, snd_una, rcv_tsval,
-       cc_flags, rtt_seq_req_, t_flags, limited_transmit, state,
+       ts_offset, ts_time, cc_flags, rtt_seq_req_, t_flags, limited_transmit, state,
        pending_dup_ack_send, pending_challenge_ack_send, launch_sack_rx) {
 
     // from ki global
@@ -651,6 +652,8 @@ action read_rx2tx_extra(
     modify_field(rx2tx_extra_d.rto, rto);
     modify_field(rx2tx_extra_d.snd_una, snd_una);
     modify_field(rx2tx_extra_d.rcv_tsval, rcv_tsval);
+    modify_field(rx2tx_extra_d.ts_offset, ts_offset);
+    modify_field(rx2tx_extra_d.ts_time, ts_time);
     modify_field(rx2tx_extra_d.cc_flags, cc_flags);
     modify_field(rx2tx_extra_d.rtt_seq_req_, rtt_seq_req_);
     modify_field(rx2tx_extra_d.t_flags, t_flags);
@@ -863,6 +866,8 @@ action tso(TSO_PARAMS) {
     GENERATE_GLOBAL_K
 
     // from to_stage 5
+    modify_field(to_s5_scratch.ts_offset, to_s5.ts_offset);
+    modify_field(to_s5_scratch.ts_time, to_s5.ts_time);
     modify_field(to_s5_scratch.rcv_wnd, to_s5.rcv_wnd);
     modify_field(to_s5_scratch.sack_opt_len, to_s5.sack_opt_len);
     modify_field(to_s5_scratch.pending_tso_data, to_s5.pending_tso_data);

@@ -212,31 +212,33 @@ header_type tcp_rtt_d_t {
         curr_ts                 : 32;
         rttvar_us               : 32;
         rto                     : 32;
-        rtt_seq                 : 32;
+        rtt_seq_tsoffset        : 32;
         rtt_time                : 32;
         ts_ganularity_us        : 16;
         rtt_updated             : 32;
         ts_shift                : 8;
         backoff                 : 4;
+        ts_learned              : 1;
     }
 }
 
 #define RTT_D_PARAMS                                            \
     srtt_us, curr_ts, rttvar_us,\
-    rto, rtt_seq, rtt_time, ts_ganularity_us,       \
-    rtt_updated, ts_shift, backoff
+    rto, rtt_seq_tsoffset, rtt_time, ts_ganularity_us,       \
+    rtt_updated, ts_shift, backoff, ts_learned
 
 #define GENERATE_RTT_D                                          \
     modify_field(tcp_rtt_d.srtt_us, srtt_us);                   \
     modify_field(tcp_rtt_d.curr_ts, curr_ts);                   \
     modify_field(tcp_rtt_d.rttvar_us, rttvar_us);               \
     modify_field(tcp_rtt_d.rto, rto);                           \
-    modify_field(tcp_rtt_d.rtt_seq, rtt_seq);                   \
+    modify_field(tcp_rtt_d.rtt_seq_tsoffset, rtt_seq_tsoffset); \
     modify_field(tcp_rtt_d.rtt_time, rtt_time);                 \
     modify_field(tcp_rtt_d.ts_ganularity_us, ts_ganularity_us); \
     modify_field(tcp_rtt_d.rtt_updated, rtt_updated);           \
     modify_field(tcp_rtt_d.ts_shift, ts_shift);                 \
     modify_field(tcp_rtt_d.backoff, backoff);                   \
+    modify_field(tcp_rtt_d.ts_learned, ts_learned);             \
 
 
 // d for stage 3 table 1
@@ -449,7 +451,6 @@ header_type to_stage_2_phv_t {
 header_type to_stage_3_phv_t {
     // tcp-rtt, read-rnmdr, read-rnmpr
     fields {
-        snd_nxt                 : 32;
         rcv_tsecr               : 32;
         rtt_time                : 32;
         rtt_seq                 : 32;
@@ -1002,7 +1003,6 @@ action tcp_rtt(RTT_D_PARAMS) {
 
     // from to_stage 3
     if (backoff == 0) {
-        modify_field(to_s3_scratch.snd_nxt, to_s3.snd_nxt);
         //modify_field(to_s3_scratch.rcv_tsval, to_s3.rcv_tsval);
         modify_field(to_s3_scratch.rcv_tsecr, to_s3.rcv_tsecr);
         modify_field(to_s3_scratch.rtt_time, to_s3.rtt_time);

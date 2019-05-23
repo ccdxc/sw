@@ -48,7 +48,8 @@ tcp_tx_read_rx2tx_shared_extra_stage1_start:
     phvwr           p.tcp_ts_opt_kind, TCPOPT_TIMESTAMP
     phvwr           p.tcp_ts_opt_len, TCPOLEN_TIMESTAMP
     phvwr           p.tcp_ts_opt_ts_ecr, d.rcv_tsval
-    phvwr           p.tcp_ts_opt_ts_val, r4
+    phvwrpair       p.to_s5_ts_offset, d.ts_offset, \
+                        p.to_s5_ts_time, d.ts_time 
 
     seq             c1, d.launch_sack_rx, 1
     phvwr.c1        p.common_phv_launch_sack_rx, 1

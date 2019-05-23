@@ -206,6 +206,11 @@ tcp_proxy_cb_update (TcpProxyCbSpec& spec, TcpProxyCbResponse *rsp)
     tcp_proxy_cb->snd_una = spec.snd_una();
     tcp_proxy_cb->rcv_tsval = spec.rcv_tsval();
     tcp_proxy_cb->ts_recent = spec.ts_recent();
+    tcp_proxy_cb->rtt_seq_tsoffset = spec.rtt_seq_tsoffset();
+    tcp_proxy_cb->rtt_time = spec.rtt_time();
+    tcp_proxy_cb->ts_time = spec.rtt_time();
+    tcp_proxy_cb->ts_offset = spec.rtt_seq_tsoffset();
+    tcp_proxy_cb->ts_learned = spec.ts_learned();
 #if 0
     if (hal::tls::proxy_tls_bypass_mode) {
         tcp_proxy_cb->debug_dol = spec.debug_dol() | TCP_DDOL_BYPASS_BARCO;
@@ -296,6 +301,11 @@ tcp_proxy_cb_get (TcpProxyCbGetRequest& req, TcpProxyCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_snd_una(rtcp_proxy_cb.snd_una);
     rsp->mutable_spec()->set_rcv_tsval(rtcp_proxy_cb.rcv_tsval);
     rsp->mutable_spec()->set_ts_recent(rtcp_proxy_cb.ts_recent);
+    rsp->mutable_spec()->set_rtt_seq_tsoffset(rtcp_proxy_cb.rtt_seq_tsoffset);
+    rsp->mutable_spec()->set_rtt_time(rtcp_proxy_cb.rtt_time);
+    rsp->mutable_spec()->set_ts_learned(rtcp_proxy_cb.ts_learned);
+    rsp->mutable_spec()->set_ts_offset(rtcp_proxy_cb.ts_offset);
+    rsp->mutable_spec()->set_ts_time(rtcp_proxy_cb.ts_time);
     rsp->mutable_spec()->set_serq_base(rtcp_proxy_cb.serq_base);
     rsp->mutable_spec()->set_debug_dol(rtcp_proxy_cb.debug_dol);
     rsp->mutable_spec()->set_sesq_pi(rtcp_proxy_cb.sesq_pi);

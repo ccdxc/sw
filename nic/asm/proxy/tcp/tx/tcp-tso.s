@@ -33,6 +33,9 @@ tcp_tso_process_start:
     nop
 
 tcp_write_xmit:
+    seq             c2, k.to_s5_ts_offset, r0
+    tblwr.!c2       d.ts_offset, k.to_s5_ts_offset
+    tblwr.!c2       d.ts_time, k.to_s5_ts_time
     seq             c1, k.common_phv_pending_ack_send, 1
     bcf             [c1], dma_cmd_intrinsic
 
@@ -102,19 +105,35 @@ dma_cmd_tcp_header:
     // TODO : handle tsopt
     // r1 = tcp hdr len = 20 + sack_opt_len + 2 bytes pad
     // r2 = r1 / 4
-    seq             c1, k.to_s5_sack_opt_len, 0
-    add.c1          r1, 20, 0
-    add.!c1         r1, 22, k.to_s5_sack_opt_len
+    add             r1, r0, 20
     smeqb           c2, d.tcp_opt_flags, TCP_OPT_FLAG_TIMESTAMPS, \
                         TCP_OPT_FLAG_TIMESTAMPS
     add.c2          r1, r1, TCPOLEN_TIMESTAMP
+    add.c2          r1, r1, 2
+    srl.c2          r2, r4, 13
+    sub.c2          r2, r2, d.ts_time
+    add.c2          r2, d.ts_offset, r2
+    phvwr.c2        p.tcp_ts_opt_ts_val, r2
+    
+    seq             c1, k.to_s5_sack_opt_len, 0
+    setcf           c3, [!c1 & !c2]
+    add.c3          r1, r1, 2
+    add.!c1         r1, r1, k.to_s5_sack_opt_len
+   
+/* this may be un-necessary TODO.. */ 
+    mod             r3, r1, 4
+    nop
+    nop
+    seq             c3, r3, r0
+    sub.!c3         r3, 4, r3
+    add.!c3         r1, r1, r3 
+/*********************************/    
     srl             r2, r1, 2
     phvwrpair       p.tcp_header_data_ofs, r2, \
                         p.tcp_header_window, k.to_s5_rcv_wnd
-	phvwr           p.{tcp_nop_opt1_kind...tcp_nop_opt2_kind}, \
+    phvwr           p.{tcp_nop_opt1_kind...tcp_nop_opt2_kind}, \
                         (TCPOPT_NOP << 8 | TCPOPT_NOP)
 
-    // Disable timestamps for now
     CAPRI_DMA_CMD_PHV2PKT_SETUP_WITH_LEN(r7, tcp_header_dma_dma_cmd, tcp_header_source_port, r1)
     //CAPRI_DMA_CMD_PHV2PKT_SETUP(tcp_header_dma_dma_cmd, tcp_header_source_port, tcp_ts_opts_ts_ecr)
 

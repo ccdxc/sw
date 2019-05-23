@@ -74,7 +74,9 @@ tcp_rx_process_start:
     seq             c6, d.u.tcp_rx_d.ooq_not_empty, 1
     seq.!c6         c6, k.common_phv_ooq_tx2rx_pkt, 1
     seq             c7, k.to_s1_rcv_wnd_adv, 0
-
+/* set ts_recent always...this as/is needs fix -- TBD*/
+    phvwr        p.rx2tx_extra_rcv_tsval, k.s1_s2s_rcv_tsval 
+    tblwr.c1        d.u.tcp_rx_d.ts_recent, k.s1_s2s_rcv_tsval
     bcf             [c1 | c2 | c3 | c4 | c5 | c6 | c7], tcp_rx_slow_path
 
 tcp_rx_fast_path:
@@ -86,7 +88,8 @@ tcp_store_ts_recent:
      *
      */
     seq             c1, k.to_s1_rcv_wup, d.u.tcp_rx_d.rcv_nxt
-    tblwr.c1        d.u.tcp_rx_d.ts_recent, k.s1_s2s_rcv_tsval
+    
+    //tblwr.c1        d.u.tcp_rx_d.ts_recent, k.s1_s2s_rcv_tsval
 
     /*
      * Do we have payload? If not we are done.

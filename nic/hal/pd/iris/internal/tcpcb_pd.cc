@@ -137,7 +137,6 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     if(!del) {
         data.u.tcp_rx_d.rcv_nxt = htonl(tcpcb_pd->tcpcb->rcv_nxt);
         data.u.tcp_rx_d.snd_una = htonl(tcpcb_pd->tcpcb->snd_una);
-        data.u.tcp_rx_d.ts_recent = htonl(tcpcb_pd->tcpcb->ts_recent);
         data.u.tcp_rx_d.snd_wnd = htons((uint16_t)tcpcb_pd->tcpcb->snd_wnd);
         data.u.tcp_rx_d.serq_pidx = htons((uint16_t)tcpcb_pd->tcpcb->serq_pi);
         data.u.tcp_rx_d.state = (uint8_t)tcpcb_pd->tcpcb->state;
@@ -212,6 +211,9 @@ p4pd_add_or_del_tcp_rx_tcp_rtt_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_rtt_d.curr_ts = htonl(0xf0);
         data.u.tcp_rtt_d.rttvar_us = 0;
         data.u.tcp_rtt_d.rtt_updated = 0;
+        data.u.tcp_rtt_d.rtt_seq_tsoffset = htonl(tcpcb_pd->tcpcb->rtt_seq_tsoffset); 
+        data.u.tcp_rtt_d.rtt_time = htonl(tcpcb_pd->tcpcb->rtt_time);
+        data.u.tcp_rtt_d.ts_learned = tcpcb_pd->tcpcb->ts_learned;
     }
 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
@@ -221,6 +223,7 @@ p4pd_add_or_del_tcp_rx_tcp_rtt_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     }
     
     HAL_TRACE_DEBUG("Set RTO to {}", ntohl(data.u.tcp_rtt_d.rto));
+    HAL_TRACE_DEBUG("Set rtt_seq_tsoffset to {}", ntohl(data.u.tcp_rtt_d.rtt_seq_tsoffset));
     return ret;
 }
 
@@ -579,7 +582,7 @@ p4pd_get_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd)
     HAL_TRACE_DEBUG("Received rcv_nxt: {:#x}", tcpcb_pd->tcpcb->rcv_nxt);
     HAL_TRACE_DEBUG("Received snd_una: {:#x}", tcpcb_pd->tcpcb->snd_una);
     HAL_TRACE_DEBUG("Received snd_wnd: {:#x}", tcpcb_pd->tcpcb->snd_wnd);
-    HAL_TRACE_DEBUG("Received ts_recent: {:#x}", tcpcb_pd->tcpcb->ts_recent);
+    HAL_TRACE_DEBUG("HWID: {} Received ts_recent: {}", hwid, tcpcb_pd->tcpcb->ts_recent);
     HAL_TRACE_DEBUG("Received debug_dol: {:#x}", tcpcb_pd->tcpcb->debug_dol);
     HAL_TRACE_DEBUG("Received state: {:#x}", tcpcb_pd->tcpcb->state);
     HAL_TRACE_DEBUG("Received pred_flags: {:#x}", tcpcb_pd->tcpcb->pred_flags);
@@ -605,11 +608,21 @@ p4pd_get_tcp_rx_tcp_rtt_entry(pd_tcpcb_t* tcpcb_pd)
     }
     tcpcb_pd->tcpcb->rto = ntohl(data.u.tcp_rtt_d.rto);
     tcpcb_pd->tcpcb->srtt_us = ntohl(data.u.tcp_rtt_d.srtt_us);
+    tcpcb_pd->tcpcb->rtt_seq_tsoffset = ntohl(data.u.tcp_rtt_d.rtt_seq_tsoffset);
+    tcpcb_pd->tcpcb->ts_offset = ntohl(data.u.tcp_rtt_d.rtt_seq_tsoffset);
+    tcpcb_pd->tcpcb->ts_time = ntohl(data.u.tcp_rtt_d.rtt_time);
+    tcpcb_pd->tcpcb->rtt_time = ntohl(data.u.tcp_rtt_d.rtt_time);
+    tcpcb_pd->tcpcb->ts_learned = data.u.tcp_rtt_d.ts_learned;
+    
     //tcpcb_pd->tcpcb->curr_ts = ntohl(data.u.tcp_rtt_d.curr_ts);
     //tcpcb_pd->tcpcb->rttvar_us = ntohl(data.u.tcp_rtt_d.rttvar_us);
     //tcpcb_pd->tcpcb->rtt_updated = ntohl(data.u.tcp_rtt_d.rtt_updated);
 
     HAL_TRACE_DEBUG("Received rto: {:#x}", tcpcb_pd->tcpcb->rto);
+    HAL_TRACE_DEBUG("Received srtt_us: {}", tcpcb_pd->tcpcb->srtt_us);
+    HAL_TRACE_DEBUG("Received rtt_seq_tsoffset: {}", tcpcb_pd->tcpcb->rtt_seq_tsoffset);
+    HAL_TRACE_DEBUG("Received rtt_time: {}", tcpcb_pd->tcpcb->rtt_time);
+    HAL_TRACE_DEBUG("Received ts_learned: {}", tcpcb_pd->tcpcb->ts_learned);
 
     return HAL_RET_OK;
 }
@@ -1113,6 +1126,8 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_extra_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     hal_ret_t                           ret = HAL_RET_OK;
 
     // hardware index for this entry
+
+    // hardware index for this entry
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_READ_RX2TX_EXTRA);
 
@@ -1126,11 +1141,18 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_extra_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         // TODO : fix this hardcoding
         data.u.read_rx2tx_extra_d.rto = htonl(100);
         data.u.read_rx2tx_extra_d.state = (uint8_t)tcpcb_pd->tcpcb->state;
+        data.u.read_rx2tx_extra_d.rcv_tsval = htonl(tcpcb_pd->tcpcb->ts_recent);
+        
 
     }
-    HAL_TRACE_DEBUG("TCPCB rx2tx snd_wnd: {}", tcpcb_pd->tcpcb->snd_wnd);
-    HAL_TRACE_DEBUG("TCPCB rx2tx rcv_wnd: {}", tcpcb_pd->tcpcb->rcv_wnd);
-    HAL_TRACE_DEBUG("TCPCB rx2tx rcv_wscale: {}", tcpcb_pd->tcpcb->rcv_wscale);
+    HAL_TRACE_DEBUG("rx2tx extra add/del");
+    HAL_TRACE_DEBUG("    snd_cwnd: {}", data.u.read_rx2tx_extra_d.snd_cwnd);
+    HAL_TRACE_DEBUG("    rcv_nxt: {}", data.u.read_rx2tx_extra_d.rcv_nxt);
+    HAL_TRACE_DEBUG("    snd_wnd: {}", data.u.read_rx2tx_extra_d.snd_wnd);
+    HAL_TRACE_DEBUG("    rcv_wnd: {}", tcpcb_pd->tcpcb->rcv_wnd);
+    HAL_TRACE_DEBUG("    rcv_wscale: {}", tcpcb_pd->tcpcb->rcv_wscale);
+    HAL_TRACE_DEBUG("    rcv_tsval: {}", data.u.read_rx2tx_extra_d.rcv_tsval);
+
 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET,
             P4PLUS_CACHE_INVALIDATE_BOTH)) {
@@ -1259,18 +1281,22 @@ p4pd_add_or_del_tcp_tx_tso_entry(pd_tcpcb_t* tcpcb_pd, bool del)
             HAL_TRACE_DEBUG("Skipping header template len update");
         }
         data.smss = htons(tcpcb_pd->tcpcb->smss);
-        HAL_TRACE_DEBUG("TCPCB source lif: {:#x}", data.source_lif);
-        HAL_TRACE_DEBUG("TCPCB source port: {:#x} dest port {:#x}",
+        data.ts_offset = htonl(tcpcb_pd->tcpcb->ts_offset);
+        data.ts_time   = htonl(tcpcb_pd->tcpcb->ts_time);
+        HAL_TRACE_DEBUG(" tcp_tx_tso add/del:")
+        HAL_TRACE_DEBUG("    TCPCB source lif: {:#x}", data.source_lif);
+        HAL_TRACE_DEBUG("    TCPCB source port: {:#x} dest port {:#x}",
             data.source_port, data.dest_port);
         HAL_TRACE_DEBUG("TCPCB header len: {}", data.header_len);
 
         if (tcpcb_pd->tcpcb->sack_perm) {
             data.tcp_opt_flags |= TCP_OPT_FLAG_SACK_PERM;
         }
-        if (tcpcb_pd->tcpcb->timestamps) {
+        if ( tcpcb_pd->tcpcb->timestamps && tcpcb_pd->tcpcb->ts_recent) {
             data.tcp_opt_flags |= TCP_OPT_FLAG_TIMESTAMPS;
         }
         HAL_TRACE_DEBUG("tcp_opt_flags: {:#x}", data.tcp_opt_flags);
+        HAL_TRACE_DEBUG("    TCPCB tsoffset: {}", data.ts_offset);
     }
 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
@@ -1424,6 +1450,8 @@ p4pd_get_tcp_tx_read_rx2tx_extra_entry(pd_tcpcb_t* tcpcb_pd)
         HAL_TRACE_ERR("Failed to get tx: read_rx2tx entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
+
+    tcpcb_pd->tcpcb->rcv_tsval = ntohs(data.u.read_rx2tx_extra_d.rcv_tsval);
 
     return HAL_RET_OK;
 

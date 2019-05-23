@@ -43,7 +43,8 @@ tcp_rx_read_shared_stage0_start_ext:
     phvwrpair       p.to_s1_rcv_wup, d.rcv_wup, \
                         p.to_s1_rcv_wnd_adv, d.rcv_wnd_adv
     //phvwr           p.cpu_hdr3_tcp_window, k.{tcp_app_header_window}.hx
-
+    phvwrpair       p.s1_s2s_rcv_tsval[31:8], k.tcp_app_header_ts_s0_e23, \
+                        p.s1_s2s_rcv_tsval[7:0], k.tcp_app_header_ts_s24_e31
     phvwrpair       p.s1_s2s_ack_seq, k.tcp_app_header_ackNo, \
                         p.s1_s2s_snd_nxt, d.snd_nxt
     phvwr           p.to_s2_window, k.tcp_app_header_window

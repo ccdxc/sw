@@ -432,6 +432,11 @@ message TcpCbSpec {
   bool                  sack_perm                  = 59;
   bool                  timestamps                 = 60;
   uint32                tx_window_update_pi        = 61;
+  uint32                rtt_seq_tsoffset           = 62;
+  uint32                rtt_time                   = 63;
+  uint32                ts_learned                 = 64;
+  uint32                ts_offset                  = 65;
+  uint32                ts_time                    = 66;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request
