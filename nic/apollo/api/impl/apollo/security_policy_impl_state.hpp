@@ -1,11 +1,14 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    security_policy_impl_state.hpp
- *
- * @brief   security policy implementation state
- */
-#if !defined (__SECURITY_POLICY_STATE_IMPL_HPP__)
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// security policy implementation state
+///
+//----------------------------------------------------------------------------
+
+#ifndef __SECURITY_POLICY_STATE_IMPL_HPP__
 #define __SECURITY_POLICY_IMPL_STATE_HPP__
 
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
@@ -17,42 +20,34 @@
 namespace api {
 namespace impl {
 
-/**
- * @defgroup PDS_SECURITY_POLICY_IMPL_STATE - security policy impl state
- *                                            functionality
- * @ingroup PDS_SECURITY_POLICY
- * @{
- */
+/// \defgroup PDS_SECURITY_POLICY_IMPL_STATE - security policy impl state
+///           functionality
+/// \ingroup PDS_SECURITY_POLICY
+/// @{
 
- /**< forward declaration */
+// forward declaration
 class security_policy_impl;
 
-/**
- * @brief    state maintained for security policies
- */
+/// \brief state maintained for security policies
 class security_policy_impl_state : public state_base {
 public:
-    /**< @brief    constructor */
+    /// \brief constructor
     security_policy_impl_state(pds_state *state);
 
-    /**< @brief    destructor */
+    /// \brief destructor
     ~security_policy_impl_state();
 
-    /**
-     * @brief    API to initiate transaction over all the table manamgement
-     *           library instances
-     * @return    SDK_RET_OK on success, failure status code on error
-     */
+    /// \brief  API to initiate transaction over all the table manamgement
+    ///         library instances
+    /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_transaction_begin(void);
 
-    /**
-     * @brief    API to end transaction over all the table manamgement
-     *           library instances
-     * @return    SDK_RET_OK on success, failure status code on error
-     */
+    /// \brief  API to end transaction over all the table manamgement
+    ///         library instances
+    /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_transaction_end(void);
 
-    /**< @brief    return policy region's base/start address in memory */
+    /// \brief  return policy region's base/start address in memory
     mem_addr_t security_policy_region_addr(uint8_t af, rule_dir_t dir) const {
         if (af == IP_AF_IPV4) {
             if (dir == RULE_DIR_INGRESS) {
@@ -69,7 +64,7 @@ public:
         }
     }
 
-    /**< @brief    return security policy table's size */
+    /// \brief return security policy table's size
     uint32_t security_policy_table_size(uint8_t af, rule_dir_t dir) const {
         if (af == IP_AF_IPV4) {
             if (dir == RULE_DIR_INGRESS) {
@@ -105,24 +100,24 @@ private:
     friend class security_policy_impl;
 
 private:
-    /**< datapath tables for security policy */
-    indexer       *ing_v4_idxr_;        /**< indexer to allocate mem block for ingress policy tables */
-    mem_addr_t    ing_v4_region_addr_;  /**< base address for the ingress policy region */
-    uint32_t      ing_v4_table_size_;   /**< size of each ingress policy table */
-    indexer       *egr_v4_idxr_;        /**< indexer to allocate mem block for egress policy tables */
-    mem_addr_t    egr_v4_region_addr_;  /**< base address for the egress policy region */
-    uint32_t      egr_v4_table_size_;   /**< size of each egress policy table */
-    indexer       *ing_v6_idxr_;        /**< indexer to allocate mem block for ingress policy tables */
-    mem_addr_t    ing_v6_region_addr_;  /**< base address for the ingress policy region */
-    uint32_t      ing_v6_table_size_;   /**< size of each ingress policy table */
-    indexer       *egr_v6_idxr_;        /**< indexer to allocate mem block for egress policy tables */
-    mem_addr_t    egr_v6_region_addr_;  /**< base address for the egress policy region */
-    uint32_t      egr_v6_table_size_;   /**< size of each egress policy table */
+    // datapath tables for security policy
+    indexer    *ing_v4_idxr_;          ///< indexer to allocate mem block for ingress policy tables
+    mem_addr_t ing_v4_region_addr_;    ///< base address for the ingress policy region
+    uint32_t   ing_v4_table_size_;     ///< size of each ingress policy table
+    indexer    *egr_v4_idxr_;          ///< indexer to allocate mem block for egress policy tables
+    mem_addr_t egr_v4_region_addr_;    ///< base address for the egress policy region
+    uint32_t   egr_v4_table_size_;     ///< size of each egress policy table
+    indexer    *ing_v6_idxr_;          ///< indexer to allocate mem block for ingress policy tables
+    mem_addr_t ing_v6_region_addr_;    ///< base address for the ingress policy region
+    uint32_t   ing_v6_table_size_;     ///< size of each ingress policy table
+    indexer    *egr_v6_idxr_;          ///< indexer to allocate mem block for egress policy tables
+    mem_addr_t egr_v6_region_addr_;    ///< base address for the egress policy region
+    uint32_t   egr_v6_table_size_;     ///< size of each egress policy table
 };
 
-/** * @} */    // end of PDS_SECURITY_POLICY_IMPL_STATE
+/// \@}
 
 }    // namespace impl
 }    // namespace api
 
-#endif    /** __SECURITY_POLICY_IMPL_STATE_HPP__ */
+#endif    // __SECURITY_POLICY_IMPL_STATE_HPP__

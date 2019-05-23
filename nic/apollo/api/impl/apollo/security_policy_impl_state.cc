@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    security_policy_impl_state.cc
- *
- * @brief   This file contains security policy datapath database handling
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// security policy datapath database handling
+///
+//----------------------------------------------------------------------------
 
 #include "nic/apollo/api/include/pds_policy.hpp"
 #include "nic/apollo/api/impl/apollo/security_policy_impl_state.hpp"
@@ -12,22 +14,15 @@
 namespace api {
 namespace impl {
 
-/**
- * @defgroup PDS_SECURITY_POLICY_IMPL_STATE - security policy database
- *                                            functionality
- * @ingroup PDS_SECURITY_POLICY
- * @{
- */
+/// \defgroup PDS_SECURITY_POLICY_IMPL_STATE - security policy database
+///                                          functionality
+/// \ingroup PDS_SECURITY_POLICY
+/// @{
 
-/**
- * @brief    constructor
- */
 security_policy_impl_state::security_policy_impl_state(pds_state *state) {
-    /**
-     * we need max + 1 blocks, extra 1 block for processing updates for
-     * routing table (with the assumption that more than one routing table
-     * is not updated in any given batch
-     */
+    // we need max + 1 blocks, extra 1 block for processing updates for
+    // routing table (with the assumption that more than one routing table
+    // is not updated in any given batch
     egr_v4_idxr_ =
         indexer::factory(PDS_MAX_SECURITY_POLICY + 1);
     SDK_ASSERT(egr_v4_idxr_ != NULL);
@@ -62,9 +57,6 @@ security_policy_impl_state::security_policy_impl_state(pds_state *state) {
         state->mempartition()->block_size("sacl_ingress_v6");
 }
 
-/**
- * @brief    destructor
- */
 security_policy_impl_state::~security_policy_impl_state() {
     indexer::destroy(egr_v4_idxr_);
     indexer::destroy(ing_v4_idxr_);
@@ -72,11 +64,6 @@ security_policy_impl_state::~security_policy_impl_state() {
     indexer::destroy(ing_v6_idxr_);
 }
 
-/**
- * @brief    API to initiate transaction over all the table manamgement
- *           library instances
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 security_policy_impl_state::table_transaction_begin(void) {
     //egr_v4_idxr_->txn_start();
@@ -86,11 +73,6 @@ security_policy_impl_state::table_transaction_begin(void) {
     return SDK_RET_OK;
 }
 
-/**
- * @brief    API to end transaction over all the table manamgement
- *           library instances
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 security_policy_impl_state::table_transaction_end(void) {
     //egr_v4_idxr_->txn_end();
@@ -100,7 +82,7 @@ security_policy_impl_state::table_transaction_end(void) {
     return SDK_RET_OK;
 }
 
-/** @} */    // end of PDS_SECURITY_POLICY_IMPL_STATE
+/// \@}
 
 }    // namespace impl
 }    // namespace api

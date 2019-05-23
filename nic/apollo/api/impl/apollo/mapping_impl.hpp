@@ -247,4 +247,4 @@ private:
 }    // namespace impl
 }    // namespace api
 
-#endif     // __MAPPING_IMPL_HPP__
+#endif    // __MAPPING_IMPL_HPP__

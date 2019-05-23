@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    security_policy_impl.cc
- *
- * @brief   datapath implementation of security policy
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// datapath implementation of security policy
+///
+//----------------------------------------------------------------------------
 
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/mem.hpp"
@@ -17,11 +19,9 @@
 namespace api {
 namespace impl {
 
-/**
- * @defgroup PDS_SECURITY_POLICY_IMPL - security policy datapath implementation
- * @ingroup PDS_SECURITY_POLICY
- * @{
- */
+/// \defgroup PDS_SECURITY_POLICY_IMPL - security policy datapath implementation
+/// \ingroup PDS_SECURITY_POLICY
+/// @{
 
 security_policy_impl *
 security_policy_impl::factory(pds_policy_spec_t *spec) {
@@ -48,7 +48,7 @@ security_policy_impl::reserve_resources(api_base *orig_obj,
     pds_policy_spec_t    *spec;
 
     spec = &obj_ctxt->api_params->policy_spec;
-    /**< allocate available block for this security policy */
+    // allocate available block for this security policy
     if (security_policy_impl_db()->security_policy_idxr(spec->af,
                                                         spec->direction)->alloc(&policy_block_id) !=
             sdk::lib::indexer::SUCCESS) {
@@ -131,20 +131,18 @@ security_policy_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
 {
     switch (api_op) {
     case api::API_OP_CREATE:
-        /**< for security policy create, there is no stage 0 programming */
+        // for security policy create, there is no stage 0 programming
         break;
 
     case api::API_OP_UPDATE:
-        /**
-         * need to walk all vnics AND subnets to see which of them are using
-         * this policy table and then walk all the vnics that are part of the
-         * vpcs and subnets and write new epoch data
-         */
+        // need to walk all vnics AND subnets to see which of them are using
+        // this policy table and then walk all the vnics that are part of the
+        // vpcs and subnets and write new epoch data
         return SDK_RET_ERR;
         break;
 
     case api::API_OP_DELETE:
-        /**< same as update but every entry written will have invalid bit set */
+        // same as update but every entry written will have invalid bit set
         //return SDK_RET_ERR;
         break;
 
@@ -154,7 +152,7 @@ security_policy_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     return SDK_RET_OK;
 }
 
-/** @} */    // end of PDS_SECURITY_POLICY_IMPL
+/// \@}
 
 }    // namespace impl
 }    // namespace api
