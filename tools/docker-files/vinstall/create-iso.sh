@@ -25,7 +25,7 @@ cd /
 yum install -y livecd-tools rsync dosfstools
 
 #our custom modules
-sed -i -e 's/=ata/=ata", "megaraid", "megaraid_sas/' /usr/lib/python2.7/site-packages/imgcreate/live.py
+sed -i -e 's/=ata/=ata", "mptspi", "vmw_pvscsi", "megaraid", "megaraid_sas/' /usr/lib/python2.7/site-packages/imgcreate/live.py
 
 livecd-creator -d --verbose --config=/pen/venice-os.cfg --cache=/venice-bin/cache --fslabel=pen-install
 

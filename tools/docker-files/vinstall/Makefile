@@ -6,9 +6,6 @@ BUILD_DATE ?= $(shell date   +%Y-%m-%dT%H:%M:%S%z)
 export GIT_COMMIT GIT_VERSION BUILD_DATE TOPDIR
 
 base-iso:
-	echo commit: ${GIT_COMMIT} > PEN-VERSION
-	echo version: ${GIT_VERSION} >> PEN-VERSION
-	echo build-date: ${BUILD_DATE} >> PEN-VERSION
 	docker run --rm --privileged  -v ${CURDIR}:/pen \
 		-v ${TOPDIR}/bin:/venice-bin \
 		-v ${TOPDIR}/nic:/nic \
