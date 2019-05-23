@@ -51,6 +51,9 @@ api_base::factory(api_ctxt_t *api_ctxt) {
     case OBJ_ID_TAG:
         return tag_entry::factory(&api_ctxt->api_params->tag_spec);
 
+    case OBJ_ID_SVC_MAPPING:
+        return svc_mapping::factory(&api_ctxt->api_params->svc_mapping_spec);
+
     default:
         break;
     }
@@ -74,7 +77,15 @@ api_base::build(api_ctxt_t *api_ctxt) {
         if (api_ctxt->api_op == API_OP_DELETE) {
             return mirror_session::build(&api_ctxt->api_params->mirror_session_key);
         }
-        return  mirror_session::build(&api_ctxt->api_params->mirror_session_spec.key);
+        return mirror_session::build(&api_ctxt->api_params->mirror_session_spec.key);
+
+    case OBJ_ID_SVC_MAPPING:
+        // service mapping is a stateless object, so we need to construct the
+        // object from the datapath tables
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return svc_mapping::build(&api_ctxt->api_params->svc_mapping_key);
+        }
+        return svc_mapping::build(&api_ctxt->api_params->svc_mapping_spec.key);
 
     default:
         break;
@@ -91,6 +102,10 @@ api_base::soft_delete(obj_id_t obj_id, api_base *api_obj) {
 
     case OBJ_ID_MIRROR_SESSION:
         mirror_session::soft_delete((mirror_session *)api_obj);
+        break;
+
+    case OBJ_ID_SVC_MAPPING:
+        svc_mapping::soft_delete((svc_mapping *)api_obj);
         break;
 
     default:
@@ -143,6 +158,7 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
 
     case OBJ_ID_MAPPING:
     case OBJ_ID_MIRROR_SESSION:
+    case OBJ_ID_SVC_MAPPING:
         return NULL;
 
     default:
@@ -162,6 +178,7 @@ api_base::stateless(obj_id_t obj_id) {
     switch (obj_id) {
     case OBJ_ID_MAPPING:
     case OBJ_ID_MIRROR_SESSION:
+    case OBJ_ID_SVC_MAPPING:
         return true;
 
     default:
