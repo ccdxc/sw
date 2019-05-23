@@ -19,6 +19,8 @@
 #include "nacl.p4"
 #include "inter_pipe.p4"
 #include "nat.p4"
+#include "nexthop.p4"
+#include "stats.p4"
 
 action nop() {
 }
@@ -43,6 +45,7 @@ control ingress {
     ingress_mappings();
     flow_lookup();
     nacl();
+    ingress_stats();
     inter_pipe_ingress();
 }
 
@@ -53,4 +56,6 @@ control egress {
     session_lookup();
     egress_vnic_info();
     nat();
+    nexthop();
+    egress_stats();
 }

@@ -6,13 +6,8 @@ header_type artemis_p4_to_rxdma_header_t {
         table2_valid    : 1;
         table3_valid    : 1;
 
-        pad0            : 5;
+        pad0            : 7;
         direction       : 1;
-        sacl_base_addr  : 34;
-        pad1            : 6;
-        lpm_base_addr   : 34;
-        pad2            : 6;
-        meter_base_addr : 34;
         vnic_id         : 8;
         service_tag     : 32;
 

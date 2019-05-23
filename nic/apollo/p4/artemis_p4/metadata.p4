@@ -60,6 +60,7 @@ header_type tunnel_metadata_t {
 
 header_type rewrite_metadata_t {
     fields {
+        encap_src_ip        : 128;
         ip                  : 128;
         l4port              : 16;
         pa_mac              : 48;
@@ -87,6 +88,9 @@ header_type scratch_metadata_t {
         epoch               : 8;
         cpu_flags           : 16;
         timestamp           : 48;
+        ip_totallen         : 16;
+        drop_stats_pad      : 88;
+        drop_stats_pkts     : 40;
 
         tcp_state           : 4;
         tcp_seq_num         : 32;

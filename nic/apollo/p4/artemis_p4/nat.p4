@@ -36,6 +36,9 @@ action nat_rewrite(nat_ip) {
                 modify_field(tcp.dstPort, rewrite_metadata.l4port);
             }
         }
+        if (TX_REWRITE(rewrite_metadata.flags, ENCAP, VXLAN)) {
+            modify_field(rewrite_metadata.encap_src_ip, nat_ip);
+        }
     } else {
         if (RX_REWRITE(rewrite_metadata.flags, SRC_IP, FROM_SESSION)) {
             if (ipv4_1.valid == TRUE) {

@@ -14,4 +14,7 @@
 
 #define SESSION_TABLE_SIZE                                  8388608     // 8M
 #define NAT_TABLE_SIZE                                      65536       // 64K
-#define LOCAL_46_MAPPING_TABLE_SIZE                         64
+#define LOCAL_46_MAPPING_TABLE_SIZE                         256
+#define NEXTHOP_TABLE_SIZE                                  1048576     // 1M
+#define VNIC_STATS_TABLE_SIZE                               64
+#define DROP_STATS_TABLE_SIZE                               64

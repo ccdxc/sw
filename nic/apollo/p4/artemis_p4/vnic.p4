@@ -22,40 +22,10 @@ table vnic_mapping {
     size : VNIC_MAPPING_TABLE_SIZE;
 }
 
-/******************************************************************************/
-/* Ingress VNIC info                                                          */
-/******************************************************************************/
-action ingress_vnic_info(v4_sacl, v6_sacl, v4_lpm, v6_lpm, v4_meter, v6_meter) {
-    if (key_metadata.ktype == KEY_TYPE_IPV4) {
-        modify_field(p4_to_rxdma.sacl_base_addr, v4_sacl);
-        modify_field(p4_to_rxdma.lpm_base_addr, v4_lpm);
-        modify_field(p4_to_rxdma.meter_base_addr, v4_meter);
-    } else {
-        if (key_metadata.ktype == KEY_TYPE_IPV6) {
-            modify_field(p4_to_rxdma.sacl_base_addr, v6_sacl);
-            modify_field(p4_to_rxdma.lpm_base_addr, v6_lpm);
-            modify_field(p4_to_rxdma.meter_base_addr, v6_meter);
-        }
-    }
-}
-
-@pragma stage 3
-@pragma index_table
-table ingress_vnic_info {
-    reads {
-        vnic_metadata.vnic_id   : exact;
-    }
-    actions {
-        ingress_vnic_info;
-    }
-    size : VNIC_INFO_TABLE_SIZE;
-}
-
 control ingress_vnic_info {
     if (vxlan_1.valid == FALSE) {
         apply(vnic_mapping);
     }
-    apply(ingress_vnic_info);
 }
 
 /******************************************************************************/
