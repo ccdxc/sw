@@ -73,8 +73,8 @@ def Trigger(tc):
                         "/nic/bin/halctl debug test send-fin")
         tc.cmd_cookies.append("Send fin")
         api.Trigger_AddNaplesCommand(req, node[0],
-                        "/nic/bin/halctl show session | grep FIN_RCVD")
-        tc.cmd_cookies.append("show session FIN RCVD")
+                        "/nic/bin/halctl show session --yaml")
+        tc.cmd_cookies.append("show session after delete")
 
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
@@ -121,9 +121,12 @@ def Verify(tc):
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
-            result = api.types.status.FAILURE
-        if tc.cmd_cookies[cookie_idx].find("FIN RCVD") != -1 and \
-           cmd.stdout == '':
+            if tc.cmd_cookies[cookie_idx].find("after delete") != -1:
+                result = api.types.status.SUCCESS
+            else:
+                result = api.types.status.FAILURE
+        if tc.cmd_cookies[cookie_idx].find("after delete") != -1 and \
+          cmd.stdout != '':
             result = api.types.status.FAILURE
         cookie_idx += 1
     return result

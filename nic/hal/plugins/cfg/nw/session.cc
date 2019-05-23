@@ -3026,6 +3026,7 @@ session_handle_upgrade (void)
 {
     auto walk_func = [](void *entry, void *ctxt) {
         hal::session_t             *session = (session_t *)entry;
+        dllist_ctxt_t              *list_head = (dllist_ctxt_t  *)ctxt;
         ep_t                       *sep = NULL, *dep = NULL;
         bool                        src_is_local = false, dst_is_local = false;
         pd::pd_session_get_args_t   args;
@@ -3068,13 +3069,31 @@ session_handle_upgrade (void)
                 HAL_TRACE_DEBUG("Successfully enqueued TCP FIN for {}",
                                         session->hal_handle);
             }
+
         }
+
+        // Add the sessions to the list to send a delete
+
+        hal_handle_id_list_entry_t *list_entry = (hal_handle_id_list_entry_t *)g_hal_state->
+                hal_handle_id_list_entry_slab()->alloc();
+
+        if (list_entry == NULL) {
+            HAL_TRACE_ERR("Out of memory - skipping delete session {}", session->hal_handle);
+            return false;
+        }
+
+        list_entry->handle_id = session->hal_handle;
+        dllist_add(list_head, &list_entry->dllist_ctxt);
 
         return false;
     };
 
+    dllist_ctxt_t session_list;
+    dllist_reset(&session_list);
+
     HAL_TRACE_DEBUG("calling walk func");
-    g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, NULL);
+    g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, &session_list);
+    session_delete_list(&session_list);
 
     return HAL_RET_OK;
 }
