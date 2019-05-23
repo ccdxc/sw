@@ -15,7 +15,7 @@ copy_files() {
     # Add a space in end of each line.
     nicd='nic/sdk nic/buildroot nic/mkdefs nic/tools/ncc nic/utils/pack_bytes '
     nicf='nic/Makefile nic/include/capri_barco.h nic/tools/print-cores.sh nic/tools/savelogs.sh '
-    nicf+='nic/tools/merge_model_debug.py nic/include/globals.hpp '
+    nicf+='nic/tools/merge_model_debug.py nic/tools/relative_link.sh nic/include/globals.hpp '
     nicf+='nic/include/notify.hpp nic/include/edmaq.h nic/include/eth_common.h '
     nicf+='nic/include/adminq.h nic/include/nvme_dev_if.h '
 
