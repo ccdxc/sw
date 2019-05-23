@@ -5,7 +5,9 @@
                      [virtualRowHeight]="48"
                      [expandedRowData]="expandedRowData" [captionTemplate]="captionTemplate"
                      [bodyTemplate]="bodyTemplate"
+                     [expandTemplate]="expandTemplate"
                      [actionTemplate]="actionTemplate" [createTemplate]="createTemplate"
+                     (rowClick)="onTechSupportTableRowClick($event)"
                      (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
   </app-tableviewedit>
 
@@ -33,25 +35,9 @@
       <div *ngIf="isTechsupportCompleted(rowData, col)" fxLayout="column">
         <div fxLayout="row"> Success </div>
         <!--  download all ts output files in one bundle  -->
-        <div fxLayout="row">
-          <a class="techsupportrequests-download-file-link"
-             href="{{rowData['techsupportdownload']['bundleAll']}}"
-             [matTooltip]="'Download all files'">Download all files</a>
-        </div>
-        <!-- TODO: once there are 100s download links, listing links is not good UX. Change UI later.-->
-        <div fxLayout="row">
-          <div *ngFor="let v of rowData['techsupportdownload']['nicNodes']">
-            <a class="techsupportrequests-download-file-link" href="{{v.url}}"
-               [matTooltip]="'Download NIC file ' + v.name ">{{v.name}}</a>
-          </div>
-        </div>
-        <div fxLayout="row">
-          <div *ngFor="let v of rowData['techsupportdownload']['controlnodes']">
-            <a class="techsupportrequests-download-file-link" href="{{v.url}}"
-               [matTooltip]="'Download Controller file ' + v.name ">{{v.name}}</a>
-          </div>
-        </div>
-
+        <a class="techsupportrequests-download-file-link" (click)="$event.stopPropagation()"
+           href="{{rowData['techsupportdownload']['bundleAll']}}"
+           [matTooltip]="'Download all files'">Download all files</a>
       </div>
     </ng-container>
     <ng-container *ngSwitchDefault>
@@ -67,5 +53,20 @@
     <mat-icon *roleGuard="'monitoringtechsupportrequest_delete'" matTooltip="Delete tech-support"
               class="global-table-action-icon"
               (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+  </div>
+</ng-template>
+
+<ng-template #expandTemplate let-rowData let-col="col">
+  <div fxLayout="row">
+    <div *ngFor="let v of rowData['techsupportdownload']['nicNodes']">
+      <a class="techsupportrequests-download-file-link" href="{{v.url}}"
+         [matTooltip]="'Download NIC files ' + v.name ">{{v.name}}</a>
+    </div>
+  </div>
+  <div fxLayout="row">
+    <div *ngFor="let v of rowData['techsupportdownload']['controlnodes']">
+      <a class="techsupportrequests-download-file-link" href="{{v.url}}"
+         [matTooltip]="'Download Controller file ' + v.name ">{{v.name}}</a>
+    </div>
   </div>
 </ng-template>

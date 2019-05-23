@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, ViewEncapsulation, OnInit } from '@angula
 import { Animations } from '@app/animations';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Utility } from '@app/common/Utility';
-import { TableCol, TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { RowClickEvent, TableCol, TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
@@ -232,6 +232,14 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
       labelselectors.push(ret);
     });
     return labelselectors.join(',');
+  }
+
+  onTechSupportTableRowClick(event: RowClickEvent) {
+    if (this.expandedRowData === event.rowData) {
+      this.closeRowExpand();
+    } else {
+      this.expandRowRequest(event.event, event.rowData);
+    }
   }
 
   deleteRecord(object: MonitoringTechSupportRequest): Observable<{ body: IMonitoringTechSupportRequest | IApiStatus | Error, statusCode: number }> {
