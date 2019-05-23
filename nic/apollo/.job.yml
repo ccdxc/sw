@@ -105,6 +105,34 @@ targets:
     #sub-area:
     #feature:
 
+  artemis/aarch64_pdsctl_build:
+    commands: ["make", "PIPELINE=artemis", "ARCH=aarch64", "PLATFORM=hw", "pdsctl.gobin"]
+    owners: ["email:saratk@pensando.io","email:srikanth@pensando.io"]
+    area:
+    sub-area:
+    feature:
+
+  artemis/aarch64_protos_build:
+    commands: ["make", "PIPELINE=artemis", "ARCH=aarch64", "PLATFORM=hw", "pds.proto"]
+    owners: ["email:saratk@pensando.io","email:srikanth@pensando.io"]
+    area:
+    sub-area:
+    feature:
+
+  artemis/pdsctl_build:
+    commands: ["make", "PIPELINE=artemis", "pdsctl.gobin"]
+    owners: ["email:saratk@pensando.io","email:srikanth@pensando.io"]
+    area:
+    sub-area:
+    feature:
+
+  artemis/protos_build:
+    commands: ["make", "PIPELINE=artemis", "pds.proto"]
+    owners: ["email:saratk@pensando.io","email:srikanth@pensando.io"]
+    area:
+    sub-area:
+    feature:
+
 cache:
   name: "sw"
   mount_dir: "/root/.cache"
