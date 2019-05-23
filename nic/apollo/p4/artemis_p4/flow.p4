@@ -1,16 +1,23 @@
 /*****************************************************************************/
 /* Policy (IPv6 and non-IP)                                                  */
 /*****************************************************************************/
-@pragma capi appdatafields session_index flow_role
+@pragma capi appdatafields epoch session_index flow_role
 @pragma capi hwfields_access_api
-action flow_hash(entry_valid, session_index, flow_role, hash1, hint1, hash2,
-                 hint2, hash3, hint3, hash4, hint4, more_hashes, more_hints) {
+action flow_hash(epoch, session_index, entry_valid, flow_role, hash1, hint1,
+                 hash2, hint2, hash3, hint3, hash4, hint4, more_hashes,
+                 more_hints) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(service_header.flow_done, TRUE);
         modify_field(control_metadata.session_index, session_index);
         modify_field(control_metadata.flow_role, flow_role);
         modify_field(p4i_i2e.entropy_hash, scratch_metadata.flow_hash);
+        modify_field(scratch_metadata.epoch, epoch);
+        if (scratch_metadata.epoch < control_metadata.epoch) {
+            // entry is old
+            modify_field(service_header.flow_done, TRUE);
+            modify_field(control_metadata.session_index, 0);
+        }
 
         // if hardware register indicates miss, compare hashes with r1
         // (scratch_metadata.flow_hash) and setup lookup in overflow table
@@ -97,9 +104,9 @@ table flow_ohash {
 /*****************************************************************************/
 /* Policy (IPv4)                                                             */
 /*****************************************************************************/
-@pragma capi appdatafields session_index flow_role
+@pragma capi appdatafields epoch session_index flow_role
 @pragma capi hwfields_access_api
-action ipv4_flow_hash(entry_valid, session_index, flow_role, hash1, hint1,
+action ipv4_flow_hash(epoch, session_index, entry_valid, flow_role, hash1, hint1,
                       hash2, hint2, more_hashes, more_hints) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
@@ -107,6 +114,12 @@ action ipv4_flow_hash(entry_valid, session_index, flow_role, hash1, hint1,
         modify_field(control_metadata.session_index, session_index);
         modify_field(control_metadata.flow_role, flow_role);
         modify_field(p4i_i2e.entropy_hash, scratch_metadata.flow_hash);
+        modify_field(scratch_metadata.epoch, epoch);
+        if (scratch_metadata.epoch < control_metadata.epoch) {
+            // entry is old
+            modify_field(service_header.flow_done, TRUE);
+            modify_field(control_metadata.session_index, 0);
+        }
 
         // if hardware register indicates miss, compare hashes with r1
         // (scratch_metadata.flow_hash) and setup lookup in overflow table

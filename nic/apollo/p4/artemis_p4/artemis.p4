@@ -15,11 +15,21 @@
 #include "tunnel.p4"
 #include "mappings.p4"
 #include "flow.p4"
+#include "session.p4"
+#include "nacl.p4"
+#include "inter_pipe.p4"
+#include "nat.p4"
 
 action nop() {
 }
 
-action drop_packet() {
+action ingress_drop(drop_bit) {
+    modify_field(control_metadata.p4i_drop_reason, 1 << drop_bit);
+    modify_field(capri_intrinsic.drop, TRUE);
+}
+
+action egress_drop(drop_bit) {
+    modify_field(control_metadata.p4e_drop_reason, 1 << drop_bit);
     modify_field(capri_intrinsic.drop, TRUE);
 }
 
@@ -32,10 +42,15 @@ control ingress {
     tunnel_rx();
     ingress_mappings();
     flow_lookup();
+    nacl();
+    inter_pipe_ingress();
 }
 
 /*****************************************************************************/
 /* Egress pipeline                                                           */
 /*****************************************************************************/
 control egress {
+    session_lookup();
+    egress_vnic_info();
+    nat();
 }

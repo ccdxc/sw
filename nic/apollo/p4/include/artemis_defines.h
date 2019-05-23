@@ -17,7 +17,7 @@
 /*****************************************************************************/
 /* Lifs                                                                      */
 /*****************************************************************************/
-#define APOLLO_SERVICE_LIF              1020
+#define ARTEMIS_SERVICE_LIF             1020
 
 /*****************************************************************************/
 /* Packet direction                                                          */
@@ -28,9 +28,11 @@
 /*****************************************************************************/
 /* drop reasons - these are bit positions to be used in ASM                  */
 /*****************************************************************************/
+#define P4I_DROP_NACL                   1
 #define P4I_DROP_REASON_MIN             0
 #define P4I_DROP_REASON_MAX             0
 
+#define P4E_DROP_FLOW_HIT               1
 #define P4E_DROP_REASON_MIN             0
 #define P4E_DROP_REASON_MAX             0
 
@@ -48,11 +50,90 @@
 #define ROUTE_RESULT_BIT_POS            15
 
 /*****************************************************************************/
-/* number of hints in various HBM hash tables                                */
+/* Next pipe id                                                              */
 /*****************************************************************************/
-#define P4_LOCAL_IP_MAPPING_NUM_HINTS_PER_ENTRY          10
-#define P4_REMOTE_VNIC_MAPPING_RX_NUM_HINTS_PER_ENTRY    10
-#define P4_REMOTE_VNIC_MAPPING_TX_NUM_HINTS_PER_ENTRY    8
+#define PIPE_EGRESS                     0
+#define PIPE_CPS                        1
+#define PIPE_CLASSIC_NIC                2
+#define PIPE_ARM                        3
+
+/*****************************************************************************/
+/* Rewrite flags                                                             */
+/*****************************************************************************/
+#define TX_REWRITE_DMAC_SHIFT                   0
+#define TX_REWRITE_DMAC_MASK                    1
+#define TX_REWRITE_DMAC_NONE                    0
+#define TX_REWRITE_DMAC_FROM_NEXTHOP            1
+
+#define TX_REWRITE_SRC_IP_SHIFT                 1
+#define TX_REWRITE_SRC_IP_MASK                  3
+#define TX_REWRITE_SRC_IP_NONE                  0
+#define TX_REWRITE_SRC_IP_FROM_PUBLIC           1
+#define TX_REWRITE_SRC_IP_FROM_SERVICE          2
+#define TX_REWRITE_SRC_IP_FROM_46               3
+
+#define TX_REWRITE_DPORT_SHIFT                  3
+#define TX_REWRITE_DPORT_MASK                   1
+#define TX_REWRITE_DPORT_NONE                   0
+#define TX_REWRITE_DPORT_FROM_SESSION           1
+
+#define TX_REWRITE_DST_IP_SHIFT                 4
+#define TX_REWRITE_DST_IP_MASK                  1
+#define TX_REWRITE_DST_IP_NONE                  0
+#define TX_REWRITE_DST_IP_FROM_SESSION          1
+
+#define TX_REWRITE_ENCAP_SHIFT                  5
+#define TX_REWRITE_ENCAP_MASK                   1
+#define TX_REWRITE_ENCAP_NONE                   0
+#define TX_REWRITE_ENCAP_VXLAN                  1
+
+#define RX_REWRITE_SMAC_SHIFT                   0
+#define RX_REWRITE_SMAC_MASK                    1
+#define RX_REWRITE_SMAC_NONE                    0
+#define RX_REWRITE_SMAC_FROM_VRMAC              1
+
+#define RX_REWRITE_SRC_IP_SHIFT                 1
+#define RX_REWRITE_SRC_IP_MASK                  3
+#define RX_REWRITE_SRC_IP_NONE                  0
+#define RX_REWRITE_SRC_IP_FROM_SESSION          1
+#define RX_REWRITE_SRC_IP_FROM_64               2
+
+#define RX_REWRITE_SPORT_SHIFT                  3
+#define RX_REWRITE_SPORT_MASK                   1
+#define RX_REWRITE_SPORT_NONE                   0
+#define RX_REWRITE_SPORT_FROM_SESSION           1
+
+#define RX_REWRITE_DST_IP_SHIFT                 4
+#define RX_REWRITE_DST_IP_MASK                  3
+#define RX_REWRITE_DST_IP_NONE                  0
+#define RX_REWRITE_DST_IP_FROM_CA               1
+#define RX_REWRITE_DST_IP_FROM_SERVICE          2
+#define RX_REWRITE_DST_IP_FROM_64               3
+
+#define TX_REWRITE(a, attr, val) \
+    ((((a) >> TX_REWRITE_ ## attr ## _SHIFT) & TX_REWRITE_ ## attr ## _MASK) == TX_REWRITE_ ## attr ## _ ## val)
+
+#define RX_REWRITE(a, attr, val) \
+    ((((a) >> RX_REWRITE_ ## attr ## _SHIFT) & RX_REWRITE_ ## attr ## _MASK) == RX_REWRITE_ ## attr ## _ ## val)
+
+/*****************************************************************************/
+/* cpu flags and bit positions                                               */
+/*****************************************************************************/
+#define ARTEMIS_CPU_FLAGS_VLAN_VALID_BIT_POS    1
+#define ARTEMIS_CPU_FLAGS_IPV4_1_VALID_BIT_POS  2
+#define ARTEMIS_CPU_FLAGS_IPV6_1_VALID_BIT_POS  3
+#define ARTEMIS_CPU_FLAGS_ETH_2_VALID_BIT_POS   4
+#define ARTEMIS_CPU_FLAGS_IPV4_2_VALID_BIT_POS  5
+#define ARTEMIS_CPU_FLAGS_IPV6_2_VALID_BIT_POS  6
+#define ARTEMIS_CPU_FLAGS_DIRECTION_BIT_POS     7
+
+#define ARTEMIS_CPU_FLAGS_VLAN_VALID    (1 << ARTEMIS_CPU_FLAGS_VLAN_VALID_BIT_POS)
+#define ARTEMIS_CPU_FLAGS_IPV4_1_VALID  (1 << ARTEMIS_CPU_FLAGS_IPV4_1_VALID_BIT_POS)
+#define ARTEMIS_CPU_FLAGS_IPV6_1_VALID  (1 << ARTEMIS_CPU_FLAGS_IPV6_1_VALID_BIT_POS)
+#define ARTEMIS_CPU_FLAGS_ETH_2_VALID   (1 << ARTEMIS_CPU_FLAGS_ETH_2_VALID_BIT_POS)
+#define ARTEMIS_CPU_FLAGS_IPV4_2_VALID  (1 << ARTEMIS_CPU_FLAGS_IPV4_2_VALID_BIT_POS)
+#define ARTEMIS_CPU_FLAGS_IPV6_2_VALID  (1 << ARTEMIS_CPU_FLAGS_IPV6_2_VALID_BIT_POS)
+#define ARTEMIS_CPU_FLAGS_DIRECTION     (1 << ARTEMIS_CPU_FLAGS_DIRECTION_BIT_POS)
 
 /*****************************************************************************/
 /* Header sizes                                                              */

@@ -52,10 +52,10 @@ action native_nonip_packet() {
 
 action set_tep1_dst() {
     if (ipv4_1.valid == TRUE) {
-        modify_field(key_metadata.mapping_ip2, ipv4_1.dstAddr);
+        modify_field(key_metadata.mapping_ip, ipv4_1.dstAddr);
     } else {
         if (ipv6_1.valid == TRUE) {
-            modify_field(key_metadata.mapping_ip2, ipv6_1.dstAddr);
+            modify_field(key_metadata.mapping_ip, ipv6_1.dstAddr);
         }
     }
 }
@@ -71,7 +71,7 @@ action tunneled_ipv4_packet() {
         modify_field(key_metadata.dport, udp_2.dstPort);
     }
     modify_field(key_metadata.proto, ipv4_2.protocol);
-    modify_field(key_metadata.mapping_ip, ipv4_2.dstAddr);
+    modify_field(key_metadata.mapping_ip2, ipv4_2.dstAddr);
     modify_field(key_metadata.mapping_port, key_metadata.dport);
 }
 
@@ -84,7 +84,7 @@ action tunneled_ipv6_packet() {
         modify_field(key_metadata.dport, udp_2.dstPort);
     }
     modify_field(key_metadata.proto, ipv6_2.nextHdr);
-    modify_field(key_metadata.mapping_ip, ipv6_2.dstAddr);
+    modify_field(key_metadata.mapping_ip2, ipv6_2.dstAddr);
     modify_field(key_metadata.mapping_port, key_metadata.dport);
 }
 
@@ -98,11 +98,11 @@ action tunneled_nonip_packet() {
 action set_tep2_dst() {
     if (ipv4_2.valid == TRUE) {
         modify_field(tunnel_metadata.tep2_dst, ipv4_2.dstAddr);
-        modify_field(key_metadata.mapping_ip2, ipv4_2.dstAddr);
+        modify_field(key_metadata.mapping_ip, ipv4_2.dstAddr);
     } else {
         if (ipv6_2.valid == TRUE) {
             modify_field(tunnel_metadata.tep2_dst, ipv6_2.dstAddr);
-            modify_field(key_metadata.mapping_ip2, ipv6_2.dstAddr);
+            modify_field(key_metadata.mapping_ip, ipv6_2.dstAddr);
         }
     }
 }
@@ -114,7 +114,7 @@ action tunneled_2_ipv4_packet() {
     modify_field(key_metadata.ipv4_src, ipv4_3.srcAddr);
     modify_field(key_metadata.ipv4_dst, ipv4_3.dstAddr);
     modify_field(key_metadata.proto, ipv4_3.protocol);
-    modify_field(key_metadata.mapping_ip, ipv4_3.dstAddr);
+    modify_field(key_metadata.mapping_ip2, ipv4_3.dstAddr);
     modify_field(key_metadata.mapping_port, key_metadata.dport);
 }
 
@@ -123,7 +123,7 @@ action tunneled_2_ipv6_packet() {
     modify_field(key_metadata.src, ipv6_3.srcAddr);
     modify_field(key_metadata.dst, ipv6_3.dstAddr);
     modify_field(key_metadata.proto, ipv6_3.nextHdr);
-    modify_field(key_metadata.mapping_ip, ipv6_3.dstAddr);
+    modify_field(key_metadata.mapping_ip2, ipv6_3.dstAddr);
     modify_field(key_metadata.mapping_port, key_metadata.dport);
 }
 

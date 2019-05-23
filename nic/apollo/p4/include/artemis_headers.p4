@@ -25,15 +25,3 @@ header_type artemis_p4_to_rxdma_header_t {
         padn            : 4;
     }
 }
-
-header_type artemis_p4_to_txdma_header_t {
-    fields {
-        p4plus_app_id   : 4;
-        pad0            : 2;
-        lpm_addr        : 34;
-        pad2            : 2;
-        payload_len     : 14;
-        lpm_dst         : 128;
-        vpc_id          : 8;
-    }
-}

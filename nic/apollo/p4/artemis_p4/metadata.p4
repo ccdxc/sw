@@ -26,6 +26,7 @@ header_type vnic_metadata_t {
     fields {
         vnic_id         : 8;
         vpc_id          : 8;
+        src_vpc_id      : 16;
 
         vr_mac          : 48;
         overlay_mac     : 48;
@@ -44,12 +45,9 @@ header_type control_metadata_t {
         session_index       : 24;
         skip_flow_lkp       : 1;
         flow_ohash_lkp      : 1;
-
-        p4plus_app_id       : 8;
-        vlan_strip          : 1;
-        local_switching     : 1;
+        pipe_id             : 4;
         mirror_session      : 8;
-        fastpath            : 1;
+        vlan_strip          : 1;
     }
 }
 
@@ -62,44 +60,34 @@ header_type tunnel_metadata_t {
 
 header_type rewrite_metadata_t {
     fields {
-        encap_type          : 1;
-        dst_slot_id_valid   : 1;
-        tep_index           : 10;
-        dst_slot_id         : 24;
-        mytep_ip            : 32;
-        src_slot_id         : 20;
-        nexthop_index       : 12;
+        ip                  : 128;
+        l4port              : 16;
+        pa_mac              : 48;
+        nexthop_idx         : 20;
+        flags               : 8;
+        policer_idx         : 12;
+        meter_idx           : 16;
     }
 }
 
 header_type nat_metadata_t {
     fields {
-        snat_required       : 1;
+        xlate_idx           : 16;
     }
 }
 
 header_type scratch_metadata_t {
     fields {
         flag                : 1;
-        local_ip_hash       : 14;
-        local_ip_hint       : 15;
-        vnic_mapping_hash   : 11;
-        vnic_mapping_hint   : 18;
-        ipv4_src            : 32;
+        hint_valid          : 1;
         flow_hash           : 9;
         flow_hint           : 22;
         in_packets          : 64;
         in_bytes            : 64;
-        class_id            : 8;
-        addr                : 32;
-        local_vnic_tag      : 10;
-        vpc_id              : 10;
-        drop                : 1;
-        mytep_ip            : 32;
-        mytep_macsa         : 48;
-        overlay_mac         : 48;
-        drop_stats_pad      : 88;
-        drop_stats_pkts     : 40;
+        epoch               : 8;
+        cpu_flags           : 16;
+        timestamp           : 48;
+
         tcp_state           : 4;
         tcp_seq_num         : 32;
         tcp_ack_num         : 32;
@@ -108,34 +96,6 @@ header_type scratch_metadata_t {
         last_seen_timestamp : 48;
         tcp_flags           : 8;
         session_stats_addr  : 34;
-        hint_valid          : 1;
-        cpu_flags           : 16;
-        nexthop_index       : 12;
-        num_nexthops        : 4;
-
-        subnet_id           : 16;
-        snat                : 1;
-        dnat                : 1;
-        encap_type          : 1;
-        ip_totallen         : 16;
-
-        //common types
-        mac                 : 48;
-        ipv4                : 32;
-
-        // policer
-        policer_valid       : 1;
-        policer_pkt_rate    : 1;
-        policer_rlimit_en   : 1;
-        policer_rlimit_prof : 2;
-        policer_color_aware : 1;
-        policer_rsvd        : 1;
-        policer_axi_wr_pend : 1;
-        policer_burst       : 40;
-        policer_rate        : 40;
-        policer_tbkt        : 40;
-        policer_packets     : 4;
-        policer_bytes       : 18;
     }
 }
 

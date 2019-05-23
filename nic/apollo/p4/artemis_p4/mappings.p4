@@ -1,8 +1,8 @@
 /******************************************************************************/
 /* Local IP mappings                                                          */
 /******************************************************************************/
-action local_ip_mapping_info(vnic_id, vpc_id, service_tag, xlate_idx1,
-                             xlate_idx2) {
+action local_ip_mapping_info(vnic_id, vpc_id, service_tag, pa_or_ca_xlate_idx,
+                             public_xlate_idx, ca6_xlate_idx) {
     // if table lookup is a miss, return
 
     if (vnic_id != 0) {
@@ -10,8 +10,9 @@ action local_ip_mapping_info(vnic_id, vpc_id, service_tag, xlate_idx1,
         modify_field(vnic_metadata.vpc_id, vpc_id);
     }
     modify_field(p4_to_rxdma.service_tag, service_tag);
-    modify_field(p4i_i2e.xlate_idx1, xlate_idx1);
-    modify_field(p4i_i2e.xlate_idx2, xlate_idx2);
+    modify_field(p4i_i2e.pa_or_ca_xlate_idx, pa_or_ca_xlate_idx);
+    modify_field(p4i_i2e.public_xlate_idx, public_xlate_idx);
+    modify_field(p4i_i2e.ca6_xlate_idx, ca6_xlate_idx);
 }
 
 @pragma stage 2
@@ -42,11 +43,11 @@ table local_ip_mapping_otcam {
 /******************************************************************************/
 /* Service mappings                                                           */
 /******************************************************************************/
-action service_mapping_info(xlate_idx3, xlate_port) {
+action service_mapping_info(service_xlate_idx, service_xlate_port) {
     // if table lookup is a miss, return
 
-    modify_field(p4i_i2e.xlate_idx3, xlate_idx3);
-    modify_field(p4i_i2e.xlate_port, xlate_port);
+    modify_field(p4i_i2e.service_xlate_idx, service_xlate_idx);
+    modify_field(p4i_i2e.service_xlate_port, service_xlate_port);
 }
 
 @pragma stage 2

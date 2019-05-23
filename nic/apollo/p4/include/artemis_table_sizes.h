@@ -9,4 +9,9 @@
 #define SERVICE_MAPPING_OTCAM_TABLE_SIZE                    1024        // 1K
 #define FLOW_TABLE_SIZE                                     8388608     // 8M
 #define FLOW_OHASH_TABLE_SIZE                               4194304     // 4M
+#define INTER_PIPE_TABLE_SIZE                               16
+#define NACL_TABLE_SIZE                                     512
+
 #define SESSION_TABLE_SIZE                                  8388608     // 8M
+#define NAT_TABLE_SIZE                                      65536       // 64K
+#define LOCAL_46_MAPPING_TABLE_SIZE                         64

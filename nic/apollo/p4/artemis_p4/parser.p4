@@ -11,6 +11,7 @@ header cap_phv_intr_txdma_t capri_txdma_intrinsic;
  *****************************************************************************/
 @pragma synthetic_header
 @pragma pa_field_union ingress p4i_i2e.vnic_id                      vnic_metadata.vnic_id
+@pragma pa_field_union ingress p4i_i2e.session_index                control_metadata.session_index
 header artemis_i2e_metadata_t p4i_i2e;
 header artemis_i2e_metadata_t p4e_i2e;
 
@@ -21,8 +22,6 @@ header mirror_blob_t mirror_blob;
 
 // Inter-pipeline headers
 header predicate_header_t predicate_header;
-@pragma pa_header_union ingress predicate_header
-header predicate_header_t predicate_header2;
 
 @pragma synthetic_header
 @pragma pa_field_union ingress p4_to_rxdma.flow_src                 key_metadata.src
@@ -46,7 +45,6 @@ header p4plus_to_p4_s1_t p4plus_to_p4;
 header p4plus_to_p4_s2_t p4plus_to_p4_vlan;
 
 @pragma synthetic_header
-#if 0
 @pragma pa_field_union ingress p4_to_arm.vnic_id                    vnic_metadata.vnic_id
 @pragma pa_field_union ingress p4_to_arm.l2_1_offset                offset_metadata.l2_1
 @pragma pa_field_union ingress p4_to_arm.l2_2_offset                offset_metadata.l2_2
@@ -54,15 +52,9 @@ header p4plus_to_p4_s2_t p4plus_to_p4_vlan;
 @pragma pa_field_union ingress p4_to_arm.l3_2_offset                offset_metadata.l3_2
 @pragma pa_field_union ingress p4_to_arm.l4_1_offset                offset_metadata.l4_1
 @pragma pa_field_union ingress p4_to_arm.l4_2_offset                offset_metadata.l4_2
-#endif
 header p4_to_arm_header_t p4_to_arm;
 
-@pragma synthetic_header
-@pragma pa_field_union ingress p4_to_txdma.lpm_dst                  key_metadata.dst
-@pragma pa_field_union ingress p4_to_txdm.vpc_id                    vnic_metadata.vpc_id
-header artemis_p4_to_txdma_header_t p4_to_txdma;
-
-header txdma_to_p4e_header_t txdma_to_p4e_header;
+header txdma_to_p4e_header_t txdma_to_p4e;
 
 // layer 0
 header ethernet_t ethernet_0;
@@ -451,7 +443,7 @@ parser parse_egress {
 @pragma allow_set_meta control_metadata.direction
 parser parse_egress_predicate_header_rx {
     set_metadata(control_metadata.direction, RX_FROM_SWITCH);
-    extract(txdma_to_p4e_header);
+    extract(txdma_to_p4e);
     return parse_i2e_metadata;
 }
 
@@ -459,7 +451,7 @@ parser parse_egress_predicate_header_rx {
 @pragma allow_set_meta control_metadata.direction
 parser parse_egress_predicate_header_tx {
     set_metadata(control_metadata.direction, TX_FROM_HOST);
-    extract(txdma_to_p4e_header);
+    extract(txdma_to_p4e);
     return parse_i2e_metadata;
 }
 
@@ -518,20 +510,17 @@ parser deparse_ingress {
     extract(capri_intrinsic);
     extract(capri_p4_intrinsic);
     extract(capri_rxdma_intrinsic);
-    extract(capri_txdma_intrinsic);
 
     extract(p4_to_rxdma);
     extract(predicate_header);
     // splitter offset here for pipeline extension
-    extract(predicate_header2);
 
     extract(p4_to_p4plus_classic_nic);
     extract(p4_to_p4plus_classic_nic_ip);
     // splitter offset here for classic nic app
     extract(p4_to_arm);
 
-    extract(txdma_to_p4e_header);
-    extract(p4_to_txdma);
+    extract(txdma_to_p4e);
     extract(p4i_i2e);
 
     return parse_ingress_packet;
@@ -543,11 +532,11 @@ parser deparse_egress {
     // intrinsic headers
     extract(capri_intrinsic);
     extract(capri_p4_intrinsic);
-    extract(capri_txdma_intrinsic);
+
     // Below are headers used in case of egress-to-egress recirc
     extract(egress_service_header);
     extract(predicate_header);
-    extract(txdma_to_p4e_header);
+    extract(txdma_to_p4e);
     extract(p4e_i2e);
 
     // layer 0

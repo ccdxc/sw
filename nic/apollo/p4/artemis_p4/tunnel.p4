@@ -1,11 +1,11 @@
 /******************************************************************************/
 /* Tunnel lookup 1                                                            */
 /******************************************************************************/
-action tep1_rx_info(decap_next, vpc_id) {
+action tep1_rx_info(decap_next, src_vpc_id) {
     // if table lookup is a miss, drop
 
     modify_field(tunnel_metadata.decap_next, decap_next);
-    modify_field(vnic_metadata.vpc_id, vpc_id);
+    modify_field(vnic_metadata.src_vpc_id, src_vpc_id);
 }
 
 @pragma stage 0
@@ -22,10 +22,10 @@ table tep1_rx {
 /******************************************************************************/
 /* Tunnel lookup 2                                                            */
 /******************************************************************************/
-action tep2_rx_info(vpc_id) {
+action tep2_rx_info(src_vpc_id) {
     // if table lookup is a miss, drop
 
-    modify_field(vnic_metadata.vpc_id, vpc_id);
+    modify_field(vnic_metadata.src_vpc_id, src_vpc_id);
 }
 
 @pragma stage 1

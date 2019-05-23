@@ -57,3 +57,32 @@ control ingress_vnic_info {
     }
     apply(ingress_vnic_info);
 }
+
+/******************************************************************************/
+/* Egress VNIC info                                                           */
+/******************************************************************************/
+action egress_vnic_info(vr_mac, ca_mac, pa_mac) {
+    modify_field(rewrite_metadata.pa_mac, pa_mac);
+    if (control_metadata.direction == RX_FROM_SWITCH) {
+        if (RX_REWRITE(rewrite_metadata.flags, SMAC, FROM_VRMAC)) {
+            modify_field(ethernet_1.srcAddr, vr_mac);
+        }
+        modify_field(ethernet_1.dstAddr, ca_mac);
+    }
+}
+
+@pragma stage 1
+@pragma index_table
+table egress_vnic_info {
+    reads {
+        p4e_i2e.vnic_id : exact;
+    }
+    actions {
+        egress_vnic_info;
+    }
+    size : VNIC_INFO_TABLE_SIZE;
+}
+
+control egress_vnic_info {
+    apply(egress_vnic_info);
+}
