@@ -134,9 +134,8 @@ private:
     /// \brief constructor
     mapping_impl() {
         overlay_ip_to_public_ip_nat_hdl_ = 0;
-        public_ip_to_overlay_ip_nat_hdl_ = 0;
         overlay_ip_to_provider_ip_nat_hdl_ = 0;
-        provider_ip_to_overlay_ip_nat_hdl_ = 0;
+        to_overlay_ip_nat_hdl_ = 0;
         overlay_ip_hdl_ = handle_t::null();
         public_ip_hdl_ = handle_t::null();
         provider_ip_hdl_ = handle_t::null();
@@ -195,6 +194,16 @@ private:
     /// \param[in/out] spec pointer to the spec
     /// \return        SDK_RET_OK on success, failure status code on error
     sdk_ret_t read_remote_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec);
+
+    /// \brief     release all the resources reserved for local IP mapping
+    /// \param[in] api_obj mapping object
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t release_local_ip_mapping_resources_(api_base *api_obj);
+
+    /// \brief     release all the resources reserved for remote IP mapping
+    /// \param[in] api_obj mapping object
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t release_remote_ip_mapping_resources_(api_base *api_obj);
 
 private:
     bool    is_local_;

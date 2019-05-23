@@ -32,6 +32,7 @@ typedef struct pds_mapping_spec_s {
         ip_addr_t public_ip;          // Public IP address
         bool provider_ip_valid;       // TRUE if provider IP is valid
         ip_addr_t provider_ip;        // Provider IP address
+        uint32_t svc_tag;             // Service tag
     };
 } __PACK__ pds_mapping_spec_t;
 

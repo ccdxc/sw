@@ -16,6 +16,16 @@
 #include "nic/sdk/p4/loader/loader.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
 
+#define PDS_SYSTEM_DROP_NEXTHOP_HW_ID        0
+#define PDS_IMPL_PUBLIC_VPC_HW_ID            0
+#define PDS_IMPL_PROVIDER_VPC_HW_ID          PDS_IMPL_PUBLIC_VPC_HW_ID
+#define PDS_NAT_TBL_RSVD_ENTRY_IDX           0
+#define PDS_NH_TYPE_PEER_VPC_MASK            0x8000
+#define MEM_ADDR_TO_P4_MEM_ADDR(p4_mem_addr, mem_addr, p4_addr_size)      \
+    for (uint32_t i = 0; i < (p4_addr_size); i++) {                       \
+        p4_mem_addr[i] = ((mem_addr) >> (i * 8)) & 0xFF;                  \
+    }
+
 namespace api {
 namespace impl {
 
@@ -28,7 +38,8 @@ class artemis_impl : public pipeline_impl_base {
 public:
     /// \brief      factory method to pipeline impl instance
     /// \param[in]  pipeline_cfg pipeline configuration information
-    /// \return     new instance of artemis pipeline impl or NULL, in case of error
+    /// \return     new instance of artemis pipeline impl or NULL, in case
+    ///             of error
     static artemis_impl *factory(pipeline_cfg_t *pipeline_cfg);
 
     /// \brief      desroy method to pipeline impl instance

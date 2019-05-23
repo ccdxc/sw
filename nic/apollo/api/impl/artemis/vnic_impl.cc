@@ -16,6 +16,7 @@
 #include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/impl/artemis/route_impl.hpp"
 // #include "nic/apollo/api/impl/artemis/security_policy_impl.hpp"
+#include "nic/apollo/api/impl/artemis/meter_impl.hpp"
 #include "nic/apollo/api/impl/artemis/vnic_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -68,8 +69,8 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
     // reserve an entry in VNIC_MAPPING table
     if ((spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) &&
-        spec->vnic_encap.vlan) {
-        vnic_mapping_key.ctag_1_vid = spec->vnic_encap.vla.vlan_tag;
+        spec->vnic_encap.val.vlan_tag) {
+        vnic_mapping_key.ctag_1_vid = spec->vnic_encap.val.vlan_tag;
         vnic_mapping_mask.ctag_1_vid_mask = ~0;
     }
     sdk::lib::memrev(vnic_mapping_key.ethernet_1_srcAddr, spec->mac_addr,
@@ -105,7 +106,7 @@ vnic_impl::nuke_resources(api_base *api_obj) {
     sdk_table_api_params_t api_params = { 0 };
 
     if (hw_id_ != 0xFFFF) {
-        api_params.handle = local_vnic_by_vlan_tx_handle_;
+        api_params.handle = vnic_mapping_handle_;
         vnic_impl_db()->vnic_mapping_tbl()->remove(&api_params);
         vnic_impl_db()->vnic_idxr()->free(hw_id_);
     }
@@ -118,11 +119,12 @@ sdk_ret_t
 vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     vpc_entry *vpc;
+    mem_addr_t addr;
     subnet_entry *subnet;
     p4pd_error_t p4pd_ret;
     pds_vnic_spec_t *spec;
     pds_vpc_key_t vpc_key;
-    // pds_meter_entry *meter;
+    meter_entry *meter;
     pds_subnet_key_t subnet_key;
     pds_policy_key_t policy_key;
     policy *ing_v4_policy, *ing_v6_policy;
@@ -277,6 +279,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 //       old epoch contents and override them !!!
 sdk_ret_t
 vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
+#if 0
     // TODO: reprogram INGRESS_VNIC_INFO table and EGRESS_VNIC_INFO table
     sdk_ret_t ret = SDK_RET_OK;
     pds_subnet_key_t subnet_key;
@@ -302,6 +305,8 @@ vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
     ret = vnic_impl_db()->egress_local_vnic_info_tbl()->update(hw_id_,
                                                                &egress_vnic_data);
     return ret;
+#endif
+    return SDK_RET_ERR;
 }
 
 sdk_ret_t
@@ -353,8 +358,8 @@ vnic_impl::activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
     }
 
     if ((spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) &&
-        spec->vnic_encap.vlan) {
-        vnic_mapping_key.ctag_1_vid = spec->vnic_encap.vla.vlan_tag;
+        spec->vnic_encap.val.vlan_tag) {
+        vnic_mapping_key.ctag_1_vid = spec->vnic_encap.val.vlan_tag;
         vnic_mapping_mask.ctag_1_vid_mask = ~0;
     }
     sdk::lib::memrev(vnic_mapping_key.ethernet_1_srcAddr, spec->mac_addr,
@@ -413,7 +418,8 @@ vnic_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
 sdk_ret_t
 vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
                          api_op_t api_op) {
-    sdk_ret_t ret = SDK_RET_OK;
+    sdk_ret_t ret;
+    vnic_entry *vnic = (vnic_entry *)api_obj;
     sdk_table_api_params_t api_params = { 0 };
     vnic_mapping_swkey vnic_mapping_key = { 0 };
     vnic_mapping_swkey_mask_t vnic_mapping_mask = { 0 };
@@ -434,7 +440,7 @@ vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
 
     // update all the fields that depend on other objects
     // currently epoch is the only field that can change like this
-    vnic_mapping_data.epoch = epoch
+    vnic_mapping_data.mapping_info_action.epoch = epoch;
     ret = vnic_impl_db()->vnic_mapping_tbl()->update(&api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Programming of VNIC_MAPPING table failed, "
@@ -444,18 +450,6 @@ vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
     }
 
     return SDK_RET_OK;
-}
-
-void
-vnic_impl::fill_vnic_stats_(vnic_tx_stats_actiondata_t *tx_stats,
-                            vnic_rx_stats_actiondata_t *rx_stats,
-                            pds_vnic_stats_t *stats)
-{
-    return;
-}
-
-void
-vnic_impl::fill_vnic_spec_(
 }
 
 sdk_ret_t

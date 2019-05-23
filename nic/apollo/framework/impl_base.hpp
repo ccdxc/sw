@@ -21,6 +21,8 @@
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
 #include "nic/sdk/asic/asic.hpp"
 
+#define PDS_IMPL_PUBLIC_VPC_HW_ID     0
+
 namespace api {
 namespace impl {
 

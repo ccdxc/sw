@@ -47,6 +47,7 @@ lif_impl::lif_impl(pds_lif_spec_t *spec) {
 #define lif_egress_rl_params       action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params
 sdk_ret_t
 lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
+#if 0
     sdk_ret_t ret;
     tx_table_s5_t4_lif_rate_limiter_table_actiondata_t rlimit_data = { 0 };
     uint64_t refresh_interval_us = SDK_DEFAULT_POLICER_REFRESH_INTERVAL;
@@ -80,6 +81,7 @@ lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
                       lif_id, ret);
         return ret;
     }
+#endif
     return SDK_RET_OK;
 }
 

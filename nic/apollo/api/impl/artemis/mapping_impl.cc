@@ -45,14 +45,15 @@ namespace impl {
     }                                                                        \
 }
 
+#define local_ip_mapping_action    action_u.local_ip_mapping_local_ip_mapping_info
 #define PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(data, vnic_hw_id, vpc_hw_id,  \
                                                svc_tag, xidx1, xidx2)        \
 {                                                                            \
-    (data)->vnic_id = (vnic_hw_id);                                          \
-    (data)->vpc_id = (vpc_hw_id);                                            \
-    (data)->service_tag = (svc_tag);                                         \
-    (data)->xlate_idx1 = (uint16_t)xidix1;                                   \
-    (data)->xlate_idx2 = (uint16_t)xidix2;                                   \
+    (data)->local_ip_mapping_action.vnic_id = (vnic_hw_id);                  \
+    (data)->local_ip_mapping_action.vpc_id = (vpc_hw_id);                    \
+    (data)->local_ip_mapping_action.service_tag = (svc_tag);                 \
+    (data)->local_ip_mapping_action.pa_or_ca_xlate_idx= (uint16_t)xidx1;     \
+    (data)->local_ip_mapping_action.public_xlate_idx = (uint16_t)xidx2;      \
 }
 
 #define PDS_IMPL_FILL_NAT_DATA(data, ip)                                     \
@@ -87,7 +88,7 @@ mapping_impl::factory(pds_mapping_spec_t *spec) {
         return NULL;
     }
     new (impl) mapping_impl();
-    is_local_ = spec->is_local;
+    impl->is_local_ = spec->is_local;
     return impl;
 }
 
@@ -109,14 +110,14 @@ mapping_impl::set_is_local(bool val) {
 
 mapping_impl *
 mapping_impl::build(pds_mapping_key_t *key) {
-    sdk_ret_t                             ret;
-    vpc_entry                             *vpc;
-    mapping_impl                          *impl;
-    uint16_t                              vnic_hw_id;
-    bool                                  local_mapping = false;
-    sdk_table_api_params_t                api_params;
-    local_ip_mapping_swkey_t              local_ip_mapping_key;
-    local_ip_mapping_appdata_t            local_ip_mapping_data;
+    sdk_ret_t ret;
+    vpc_entry *vpc;
+    mapping_impl *impl;
+    uint16_t vnic_hw_id;
+    bool local_mapping = false;
+    sdk_table_api_params_t api_params;
+    local_ip_mapping_swkey_t local_ip_mapping_key;
+    local_ip_mapping_actiondata_t local_ip_mapping_data;
 
     vpc = vpc_db()->find(&key->vpc);
     if (unlikely(vpc == NULL)) {
@@ -144,14 +145,14 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
                                          vpc->hw_id(), &spec->key.ip_addr);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_ip_mapping_key,
                                    NULL, 0, sdk::table::handle_t::null());
-    ret = mapping_impl_db()->local_ip_mapping_tbl()->reserve(&tparams);
+    ret = mapping_impl_db()->local_ip_mapping_tbl()->reserve(&api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in LOCAL_IP_MAPPING table "
                       "for mapping %s, err %u", api_obj->key2str().c_str(),
                       ret);
         return ret;
     }
-    handle_.local_.overlay_ip_hdl_ = api_params.handle;
+    overlay_ip_hdl_ = api_params.handle;
 
     // if public IP and provider IP are not there, no more mappings or xlation
     // entries are needed
@@ -166,7 +167,7 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
                                              &spec->public_ip);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_ip_mapping_key,
                                        NULL, 0, sdk::table::handle_t::null());
-        ret = mapping_impl_db()->local_ip_mapping_tbl()->reserve(&tparams);
+        ret = mapping_impl_db()->local_ip_mapping_tbl()->reserve(&api_params);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to reserve entry in LOCAL_IP_MAPPING table "
                           "for public IP of mapping %s, err %u",
@@ -192,7 +193,7 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
                                              &spec->provider_ip);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_ip_mapping_key,
                                        NULL, 0, sdk::table::handle_t::null());
-        ret = mapping_impl_db()->local_ip_mapping_tbl()->reserve(&tparams);
+        ret = mapping_impl_db()->local_ip_mapping_tbl()->reserve(&api_params);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to reserve entry in LOCAL_IP_MAPPING table "
                           "for provider IP of mapping %s, err %u",
@@ -293,7 +294,7 @@ mapping_impl::nuke_resources(api_base *api_obj) {
     }
     if (mapping_hdl_.valid()) {
         api_params.handle = mapping_hdl_;
-        mapping_impl_db()->mappings_tbl()->remove(&api_params);
+        mapping_impl_db()->mapping_tbl()->remove(&api_params);
     }
     return SDK_RET_OK;
 }
@@ -316,7 +317,7 @@ mapping_impl::release_local_ip_mapping_resources_(api_base *api_obj) {
     }
     if (mapping_hdl_.valid()) {
         api_params.handle = mapping_hdl_;
-        mapping_impl_db()->mappings_tbl()->release(&api_params);
+        mapping_impl_db()->mapping_tbl()->release(&api_params);
     }
 
     // TODO: change the api calls here once DM APIs are standardized
@@ -344,7 +345,7 @@ mapping_impl::release_remote_ip_mapping_resources_(api_base *api_obj) {
 
     if (mapping_hdl_.valid()) {
         api_params.handle = mapping_hdl_;
-        mapping_impl_db()->mappings_tbl()->release(&api_params);
+        mapping_impl_db()->mapping_tbl()->release(&api_params);
     }
     return SDK_RET_OK;
 }
@@ -401,7 +402,7 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
     //mapping_appdata_t mapping_data = { 0 };
     sdk_table_api_params_t api_params = { 0 };
     local_ip_mapping_swkey_t local_ip_mapping_key = { 0 };
-    local_ip_mapping_appdata_t local_ip_mapping_data = { 0 };
+    local_ip_mapping_actiondata_t local_ip_mapping_data = { 0 };
 
     // add entry to LOCAL_IP_MAPPING table for overlay IP
     vnic_impl_obj =
@@ -411,8 +412,8 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(&local_ip_mapping_data,
                                            vnic_impl_obj->hw_id(), vpc->hw_id(),
                                            spec->svc_tag,
-                                           overlay_ip_to_public_ip_nat_hdl_,
-                                           overlay_ip_to_provider_ip_nat_hdl_);
+                                           overlay_ip_to_provider_ip_nat_hdl_,
+                                           overlay_ip_to_public_ip_nat_hdl_);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_ip_mapping_key,
                                    &local_ip_mapping_data,
                                    LOCAL_IP_MAPPING_LOCAL_IP_MAPPING_INFO_ID,
@@ -431,7 +432,7 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
                                                vnic_impl_obj->hw_id(), vpc->hw_id(),
                                                spec->svc_tag,
                                                to_overlay_ip_nat_hdl_,
-                                               NAT_TBL_RSVD_ENTRY_IDX);
+                                               PDS_NAT_TBL_RSVD_ENTRY_IDX);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params,
                                        &local_ip_mapping_key,
                                        &local_ip_mapping_data,
@@ -452,7 +453,7 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
                                                vnic_impl_obj->hw_id(), vpc->hw_id(),
                                                spec->svc_tag,
                                                to_overlay_ip_nat_hdl_,
-                                               NAT_TBL_RSVD_ENTRY_IDX);
+                                               PDS_NAT_TBL_RSVD_ENTRY_IDX);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params,
                                        &local_ip_mapping_key,
                                        &local_ip_mapping_data,
@@ -535,10 +536,6 @@ sdk_ret_t
 mapping_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                           api_op_t api_op, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
-}
-
-void
-mapping_impl::fill_mapping_spec_(
 }
 
 sdk_ret_t

@@ -137,7 +137,7 @@ tag_impl_db (void)
 }
 
 static inline svc_mapping_impl_state *
-sv_mapping_impl_db (void)
+svc_mapping_impl_db (void)
 {
     return g_pds_impl_state.svc_mapping_impl_db();
 }

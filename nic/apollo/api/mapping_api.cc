@@ -71,9 +71,12 @@ pds_local_spec_to_mapping_spec (pds_mapping_spec_t *spec,
     spec->subnet.id = local_spec->subnet.id;
     spec->fabric_encap = local_spec->fabric_encap;
     memcpy(&spec->overlay_mac, &local_spec->vnic_mac, sizeof(mac_addr_t));
+    spec->vnic.id = local_spec->vnic.id;
     spec->public_ip_valid = local_spec->public_ip_valid;
     spec->public_ip = local_spec->public_ip;
-    spec->vnic.id = local_spec->vnic.id;
+    spec->provider_ip_valid = local_spec->public_ip_valid;
+    spec->provider_ip = local_spec->provider_ip;
+    spec->svc_tag = local_spec->svc_tag;
     spec->is_local = true;
 }
 
@@ -103,6 +106,9 @@ pds_mapping_spec_to_local_spec (pds_local_mapping_spec_t *local_spec,
     local_spec->vnic.id = spec->vnic.id;
     spec->public_ip_valid = local_spec->public_ip_valid;
     local_spec->public_ip = spec->public_ip;
+    spec->provider_ip_valid = local_spec->provider_ip_valid;
+    local_spec->provider_ip = spec->provider_ip;
+    local_spec->svc_tag = spec->svc_tag;
 }
 
 static inline void

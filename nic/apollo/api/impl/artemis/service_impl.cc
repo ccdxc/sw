@@ -94,7 +94,6 @@ svc_mapping_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     return SDK_RET_INVALID_OP;
 }
 
-void
 sdk_ret_t
 svc_mapping_impl::read_hw(obj_key_t *key, obj_info_t *info, void *arg) {
     return SDK_RET_INVALID_OP;

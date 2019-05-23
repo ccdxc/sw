@@ -20,6 +20,7 @@
 #include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/route.hpp"
 #include "nic/apollo/api/policy.hpp"
+#include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 #include "gen/p4gen/artemis/include/p4pd.h"
 
 using sdk::table::handle_t;
@@ -136,7 +137,7 @@ private:
     /// \brief  constructor
     vnic_impl() {
         hw_id_ = 0xFFFF;
-        vnic_by_slot_hash_idx_ = 0xFFFF;
+        vnic_mapping_handle_ = handle_t::null();
     }
 
     /// \brief  destructor

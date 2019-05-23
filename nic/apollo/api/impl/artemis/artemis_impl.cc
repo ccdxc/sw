@@ -444,8 +444,8 @@ artemis_impl::table_init_(void) {
     if (ret != SDK_RET_OK) {
         return ret;
     }
-
 #endif
+
     // program session stats table base address as table constant
     // of session table
     addr = api::g_pds_state.mempartition()->start_addr("session_stats");
@@ -613,8 +613,8 @@ artemis_impl::write_to_rxdma_table(mem_addr_t addr, uint32_t tableid,
         packed_entry = line->packed_entry;
     }
 
-    p4pd_apollo_rxdma_raw_table_hwentry_query(tableid, action_id, &len);
-    p4pd_apollo_rxdma_entry_pack(tableid, action_id, actiondata, packed_entry);
+    //p4pd_apollo_rxdma_raw_table_hwentry_query(tableid, action_id, &len);
+    //p4pd_apollo_rxdma_entry_pack(tableid, action_id, actiondata, packed_entry);
     return asic_mem_write(addr, packed_bytes, 1 + (len >> 3),
                           ASIC_WRITE_MODE_WRITE_THRU);
 }
@@ -637,8 +637,8 @@ artemis_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
         packed_entry = line->packed_entry;
     }
 
-    p4pd_apollo_txdma_raw_table_hwentry_query(tableid, action_id, &len);
-    p4pd_apollo_txdma_entry_pack(tableid, action_id, actiondata, packed_entry);
+    //p4pd_apollo_txdma_raw_table_hwentry_query(tableid, action_id, &len);
+    //p4pd_apollo_txdma_entry_pack(tableid, action_id, actiondata, packed_entry);
     return asic_mem_write(addr, packed_bytes, 1 + (len >> 3),
                           ASIC_WRITE_MODE_WRITE_THRU);
 }
