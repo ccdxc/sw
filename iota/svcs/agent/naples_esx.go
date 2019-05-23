@@ -553,6 +553,9 @@ func (node *esxHwNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 		node.logger.Printf("Sending trigger to : %s ", tw.wloadName)
 		tw.triggerMsg, err = client.Trigger(context.Background(), tw.triggerMsg)
 		node.logger.Printf("Completed trigger from  : %s ", tw.wloadName)
+		if err != nil {
+			node.logger.Printf("Error running trigger : %v", err.Error())
+		}
 		return tw, err
 	}
 	if in.GetTriggerMode() == iota.TriggerMode_TRIGGER_NODE_PARALLEL {
@@ -604,6 +607,7 @@ func (node *esxHwNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 		})
 
 	} else {
+		var err error
 		for index, cmd := range in.Commands {
 			wload, _ := node.entityMap.Load(cmd.EntityName)
 			triggerMsg := &iota.TriggerMsg{Commands: []*iota.Command{cmd},
@@ -613,9 +617,15 @@ func (node *esxHwNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 			iotaWload := wload.(iotaWorkload)
 			wloadAgent := iotaWload.workload.GetWorkloadAgent()
 			if wloadAgent != nil {
-				runTrigger(wloadAgent.(iota.IotaAgentApiClient), twrap)
+				twrap, err = runTrigger(wloadAgent.(iota.IotaAgentApiClient), twrap)
 			} else {
 				twrap.triggerMsg, _ = node.dataNode.Trigger(twrap.triggerMsg)
+			}
+			node.logger.Println("Completed running trigger.")
+			if err != nil {
+				in.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR,
+					ErrorMsg: err.Error()}
+				return in, nil
 			}
 			in.Commands[index] = twrap.triggerMsg.GetCommands()[0]
 		}

@@ -839,6 +839,9 @@ def Main():
         #First do a reset as naples may be in screwed up state.
         try:
             naples.Connect()
+            #Read Naples Gold FW version if system in good state.
+            #If not able to read then we will reset
+            naples.ReadGoldFwVersion()
             if not host.IsSSHUP():
                 raise Exception("Host not up.")
             #need to unload driver as host might crash in ESX case.
