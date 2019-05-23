@@ -1145,12 +1145,11 @@ capri_table_entry_read (uint32_t tableid,
         }
         uint8_t to_copy_bytes = (to_copy + 7) >> 3;
         to_copy_bytes += (to_copy_bytes & 0x1) ? 1 : 0;
-        memcpy(_hwentry,
-               (uint8_t*)&(shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT])
-                + (entry_start_word << 1),
-                to_copy_bytes);
+        for (int i = 0; i < (to_copy_bytes >> 1); ++i) {
+            *_hwentry = shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word + i];
+            ++_hwentry;
+        }
         copy_bits -= to_copy;
-        _hwentry += to_copy_bytes;
         entry_start_word = 0;
         block++;
     }
