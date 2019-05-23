@@ -433,7 +433,7 @@ Loop:
 	a.authGetter = authnmgr.GetAuthGetter(globals.APIGw, grpcaddr, a.rslver, a.logger)
 	a.permGetter = rbac.GetPermissionGetter(globals.APIGw, grpcaddr, a.rslver)
 	// create authentication manager
-	a.authnMgr, err = authnmgr.WithAuthGetter(a.authGetter)
+	a.authnMgr, err = authnmgr.WithAuthGetter(a.authGetter, a.logger)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create authentication manager (%v)", err))
 	}

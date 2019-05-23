@@ -24,9 +24,10 @@ type AuthenticationManager struct {
 }
 
 // WithAuthGetter returns an instance of authentication manager
-func WithAuthGetter(authGetter AuthGetter) (*AuthenticationManager, error) {
+func WithAuthGetter(authGetter AuthGetter, logger log.Logger) (*AuthenticationManager, error) {
 	return &AuthenticationManager{
 		AuthGetter: authGetter,
+		logger:     logger,
 	}, nil
 }
 
