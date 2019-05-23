@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 #include "nic/apollo/api/impl/artemis/artemis_impl_state.hpp"
 #include "gen/p4gen/artemis/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
@@ -21,7 +22,6 @@ namespace impl {
 
 // constructor
 artemis_impl_state::artemis_impl_state(pds_state *state) {
-#if 0
     p4pd_table_properties_t    tinfo;
 
     // instantiate P4 tables for bookkeeping
@@ -33,6 +33,7 @@ artemis_impl_state::artemis_impl_state(pds_state *state) {
                       false, true, NULL);
     SDK_ASSERT(key_native_tbl_ != NULL);
 
+#if 0
     p4pd_table_properties_get(P4TBL_ID_KEY_TUNNELED, &tinfo);
     key_tunneled_tbl_ =
         tcam::factory(tinfo.tablename, P4TBL_ID_KEY_TUNNELED,
@@ -40,7 +41,9 @@ artemis_impl_state::artemis_impl_state(pds_state *state) {
                       tinfo.actiondata_struct_size,
                       false, true, NULL);
     SDK_ASSERT(key_tunneled_tbl_ != NULL);
+#endif
 
+    // instantiate ingress drop stats table
     p4pd_table_properties_get(P4TBL_ID_P4I_DROP_STATS, &tinfo);
     ingress_drop_stats_tbl_ =
         tcam::factory(tinfo.tablename, P4TBL_ID_P4I_DROP_STATS,
@@ -49,6 +52,7 @@ artemis_impl_state::artemis_impl_state(pds_state *state) {
                       false, false, NULL);
     SDK_ASSERT(ingress_drop_stats_tbl_ != NULL);
 
+    // instantiate egress drop stats table
     p4pd_table_properties_get(P4TBL_ID_P4E_DROP_STATS, &tinfo);
     egress_drop_stats_tbl_ =
         tcam::factory(tinfo.tablename, P4TBL_ID_P4E_DROP_STATS,
@@ -57,22 +61,45 @@ artemis_impl_state::artemis_impl_state(pds_state *state) {
                       false, false, NULL);
     SDK_ASSERT(egress_drop_stats_tbl_ != NULL);
 
+    // instantiate NACL table
     p4pd_table_properties_get(P4TBL_ID_NACL, &tinfo);
     nacl_tbl_ =
         tcam::factory(tinfo.tablename, P4TBL_ID_NACL, tinfo.tabledepth,
                       tinfo.key_struct_size, tinfo.actiondata_struct_size,
                       false, true, NULL);
      SDK_ASSERT(nacl_tbl_ != NULL);
-#endif
+
+    // instantiate NAT table
+    p4pd_table_properties_get(P4TBL_ID_NAT, &tinfo);
+    nat_tbl_ = directmap::factory(tinfo.tablename, P4TBL_ID_NAT,
+                                  tinfo.tabledepth,
+                                  tinfo.actiondata_struct_size,
+                                  false, false, NULL);
+    SDK_ASSERT(nat_tbl_ != NULL);
+    // reserve 0th entry for no xlation
+    nat_tbl_->reserve_index(PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX);
 }
 
 // destructor
 artemis_impl_state::~artemis_impl_state() {
-    //tcam::destroy(key_native_tbl_);
+    tcam::destroy(key_native_tbl_);
     //tcam::destroy(key_tunneled_tbl_);
-    //tcam::destroy(ingress_drop_stats_tbl_);
-    //tcam::destroy(egress_drop_stats_tbl_);
-    //tcam::destroy(nacl_tbl_);
+    tcam::destroy(ingress_drop_stats_tbl_);
+    tcam::destroy(egress_drop_stats_tbl_);
+    tcam::destroy(nacl_tbl_);
+    directmap::destroy(nat_tbl_);
+}
+
+sdk_ret_t
+artemis_impl_state::table_transaction_begin(void) {
+    //nat_tbl_->txn_start();
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+artemis_impl_state::table_transaction_end(void) {
+    //nat_tbl_->txn_end();
+    return SDK_RET_OK;
 }
 
 /// \@}    // end of PDS_ARTEMIS_IMPL_STATE

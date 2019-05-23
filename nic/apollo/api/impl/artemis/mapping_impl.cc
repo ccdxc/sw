@@ -171,7 +171,7 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
         public_ip_hdl_ = api_params.handle;
         // reserve an entry in the NAT table for the overlay IP to public
         // IP xlation rewrite
-        ret = mapping_impl_db()->nat_tbl()->reserve(&overlay_ip_to_public_ip_nat_hdl_);
+        ret = artemis_impl_db()->nat_tbl()->reserve(&overlay_ip_to_public_ip_nat_hdl_);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to reserve overlay IP to public IP xlation "
                           "entry in NAT table for mapping %s, err %u",
@@ -197,7 +197,7 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
         provider_ip_hdl_ = api_params.handle;
         // reserve an entry in the NAT table for the overlay IP to provider
         // IP xlation rewrite
-        ret = mapping_impl_db()->nat_tbl()->reserve(&overlay_ip_to_provider_ip_nat_hdl_);
+        ret = artemis_impl_db()->nat_tbl()->reserve(&overlay_ip_to_provider_ip_nat_hdl_);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to reserve overlay IP to provider IP xlation "
                           "entry in NAT table for mapping %s, " "err %u",
@@ -208,7 +208,7 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
 
     // reserve one entry in the NAT table for xlating from both public IP and
     // provider IP to overlay IP
-    ret = mapping_impl_db()->nat_tbl()->reserve(&to_overlay_ip_nat_hdl_);
+    ret = artemis_impl_db()->nat_tbl()->reserve(&to_overlay_ip_nat_hdl_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve public/provider IP to overlay IP "
                       "xlation entry in NAT table for mapping %s, " "err %u",
@@ -272,18 +272,18 @@ mapping_impl::nuke_resources(api_base *api_obj) {
         // TODO: change the api calls here once DM APIs are standardized
         if (overlay_ip_to_public_ip_nat_hdl_) {
             //api_params.handle = overlay_ip_to_public_ip_nat_hdl_;
-            //mapping_impl_db()->nat_tbl()->release(&api_params);
-            mapping_impl_db()->nat_tbl()->remove(overlay_ip_to_public_ip_nat_hdl_);
+            //artemis_impl_db()->nat_tbl()->remove(&api_params);
+            artemis_impl_db()->nat_tbl()->remove(overlay_ip_to_public_ip_nat_hdl_);
         }
         if (overlay_ip_to_provider_ip_nat_hdl_) {
             //api_params.handle = overlay_ip_to_provider_ip_nat_hdl_;
-            //mapping_impl_db()->nat_tbl()->release(&api_params);
-            mapping_impl_db()->nat_tbl()->remove(overlay_ip_to_provider_ip_nat_hdl_);
+            //artemis_impl_db()->nat_tbl()->remove(&api_params);
+            artemis_impl_db()->nat_tbl()->remove(overlay_ip_to_provider_ip_nat_hdl_);
         }
         if (to_overlay_ip_nat_hdl_) {
             //api_params.handle = to_overlay_ip_nat_hdl_;
-            //mapping_impl_db()->nat_tbl()->release(&api_params);
-            mapping_impl_db()->nat_tbl()->remove(to_overlay_ip_nat_hdl_);
+            //artemis_impl_db()->nat_tbl()->remove(&api_params);
+            artemis_impl_db()->nat_tbl()->remove(to_overlay_ip_nat_hdl_);
         }
     }
     if (mapping_hdl_.valid()) {
@@ -317,18 +317,18 @@ mapping_impl::release_local_ip_mapping_resources_(api_base *api_obj) {
     // TODO: change the api calls here once DM APIs are standardized
     if (overlay_ip_to_public_ip_nat_hdl_) {
         //api_params.handle = overlay_ip_to_public_ip_nat_hdl_;
-        //mapping_impl_db()->nat_tbl()->release(&api_params);
-        mapping_impl_db()->nat_tbl()->release(overlay_ip_to_public_ip_nat_hdl_);
+        //artemis_impl_db()->nat_tbl()->release(&api_params);
+        artemis_impl_db()->nat_tbl()->release(overlay_ip_to_public_ip_nat_hdl_);
     }
     if (overlay_ip_to_provider_ip_nat_hdl_) {
         //api_params.handle = overlay_ip_to_provider_ip_nat_hdl_;
-        //mapping_impl_db()->nat_tbl()->release(&api_params);
-        mapping_impl_db()->nat_tbl()->release(overlay_ip_to_provider_ip_nat_hdl_);
+        //artemis_impl_db()->nat_tbl()->release(&api_params);
+        artemis_impl_db()->nat_tbl()->release(overlay_ip_to_provider_ip_nat_hdl_);
     }
     if (to_overlay_ip_nat_hdl_) {
         //api_params.handle = to_overlay_ip_nat_hdl_;
-        //mapping_impl_db()->nat_tbl()->release(&api_params);
-        mapping_impl_db()->nat_tbl()->release(to_overlay_ip_nat_hdl_);
+        //artemis_impl_db()->nat_tbl()->release(&api_params);
+        artemis_impl_db()->nat_tbl()->release(to_overlay_ip_nat_hdl_);
     }
     return SDK_RET_OK;
 }
@@ -363,7 +363,7 @@ mapping_impl::add_nat_entries_(pds_mapping_spec_t *spec) {
         // add private to public IP xlation NAT entry
         PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->public_ip);
         ret =
-            mapping_impl_db()->nat_tbl()->insert_atid(&nat_data,
+            artemis_impl_db()->nat_tbl()->insert_atid(&nat_data,
                                                       handle_.local_.overlay_ip_to_public_ip_nat_hdl_);
         if (ret != SDK_RET_OK) {
             return ret;
@@ -372,7 +372,7 @@ mapping_impl::add_nat_entries_(pds_mapping_spec_t *spec) {
         // add public to private IP xlation NAT entry
         PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->key.ip_addr);
         ret =
-            mapping_impl_db()->nat_tbl()->insert_atid(&nat_data,
+            artemis_impl_db()->nat_tbl()->insert_atid(&nat_data,
                                                       handle_.local_.public_ip_to_overlay_ip_nat_hdl_);
         if (ret != SDK_RET_OK) {
             goto error;

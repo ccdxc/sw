@@ -70,12 +70,10 @@ private:
     slhash *local_ip_mapping_tbl(void) { return local_ip_mapping_tbl_; }
     mem_hash *mapping_tbl(void) { return mapping_tbl_; }
     slab *mapping_impl_slab(void) { return mapping_impl_slab_; }
-    directmap *nat_tbl(void) { return nat_tbl_; }
     // mapping_impl class is friend of mapping_impl_state
     friend class mapping_impl;
 
 private:
-    directmap *nat_tbl_;
     mem_hash *mapping_tbl_;
     slhash *local_ip_mapping_tbl_;
     slab *mapping_impl_slab_;

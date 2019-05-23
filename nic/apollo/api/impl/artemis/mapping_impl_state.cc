@@ -50,14 +50,6 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
     remote_vnic_mapping_tx_tbl_ = mem_hash::factory(&mhparams);
     SDK_ASSERT(remote_vnic_mapping_tx_tbl_ != NULL);
 
-    p4pd_table_properties_get(P4TBL_ID_NAT, &tinfo);
-    nat_tbl_ = directmap::factory(tinfo.tablename, P4TBL_ID_NAT,
-                                  tinfo.tabledepth,
-                                  tinfo.actiondata_struct_size,
-                                  false, false, NULL);
-    SDK_ASSERT(nat_tbl_ != NULL);
-    // reserve 0th entry for no xlation
-    nat_tbl_->reserve_index(NAT_TX_TBL_RSVD_ENTRY_IDX);
 #endif
 
     // create a slab for mapping impl entries
@@ -69,7 +61,6 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
 mapping_impl_state::~mapping_impl_state() {
     slhash::destroy(local_ip_mapping_tbl_);
     mem_hash::destroy(mapping_tbl_);
-    //directmap::destroy(nat_tbl_);
     slab::destroy(mapping_impl_slab_);
 }
 
@@ -87,7 +78,6 @@ sdk_ret_t
 mapping_impl_state::table_transaction_begin(void) {
     local_ip_mapping_tbl_->txn_start();
     mapping_tbl_->txn_start();
-    //nat_tbl_->txn_start();
     return SDK_RET_OK;
 }
 
@@ -95,7 +85,6 @@ sdk_ret_t
 mapping_impl_state::table_transaction_end(void) {
     local_ip_mapping_tbl_->txn_end();
     mapping_tbl_->txn_end();
-    //nat_tbl_->txn_end();
     return SDK_RET_OK;
 }
 
