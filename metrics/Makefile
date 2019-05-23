@@ -2,7 +2,9 @@
 # Each path where protos for metrics exist is listed below as a tuple of prefix and the path seperated by a :
 METRICS_PATHS =\
 	venicepapi:api/protos \
-	nicmgr:nic/proto/nicmgr
+	nicmgr:nic/proto/nicmgr \
+	dropstats:nic/proto/dropstats \
+	ftestats:nic/proto/ftestats
 
 # all generated files are in the generated/<prefix> path
 

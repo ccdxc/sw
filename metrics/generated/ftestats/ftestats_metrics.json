@@ -1,0 +1,182 @@
+{
+  "FileName": "ftestats.proto",
+  "Package": "ftestats",
+  "Prefix": "ftestats",
+  "Messages": [
+    {
+      "Name": "FteCPSMetrics",
+      "Description": "Key index - FTE ID",
+      "DisplayName": "per-FTE CPS Statistics",
+      "Fields": [
+        {
+          "Name": "connections_per_second",
+          "DisplayName": "CPS",
+          "Description": "Connections per second",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "max_connections_per_second",
+          "DisplayName": "Max-CPS",
+          "Description": "Max Connections per second",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ]
+    },
+    {
+      "Name": "FteLifQMetrics",
+      "Description": "Key index - FTE ID",
+      "DisplayName": "per-FTE Queue Statistics",
+      "Fields": [
+        {
+          "Name": "flow_miss_packets",
+          "DisplayName": "Flow-miss Packets",
+          "Description": "Number of flow miss packets processed by this FTE",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "flow_retransmit_packets",
+          "DisplayName": "Flow-retransmit Packets",
+          "Description": "Number of flow retransmits seen",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "l4_redirect_packets",
+          "DisplayName": "L4-redirect Packets",
+          "Description": "Number of packets that hit the L4 redirect queue",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "alg_control_flow_packets",
+          "DisplayName": "ALG-control-flow Packets",
+          "Description": "Number of packets that hit the ALG control flow queue",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "tcp_close_packets",
+          "DisplayName": "TCP-Close Packets",
+          "Description": "Number of packets that hit the TCP close queue",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "tls_proxy_packets",
+          "DisplayName": "TLS-proxy Packets",
+          "Description": "Number of packets that hit the TLS Proxy queue",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "fte_span_packets",
+          "DisplayName": "FTE-Span Packets",
+          "Description": "Number of packets that hit the FTE SPAN queue",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "software_queue_packets",
+          "DisplayName": "Software-config-Q Requests",
+          "Description": "Number of packets that hit the FTE config path",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "queued_tx_packets",
+          "DisplayName": "Queued-Tx Packets",
+          "Description": "Number of packets enqueue in the FTE TX queue",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ]
+    },
+    {
+      "Name": "SessionSummaryMetrics",
+      "Description": "Key index - Global",
+      "DisplayName": "Global Session Summary Statistics",
+      "Fields": [
+        {
+          "Name": "total_active_sessions",
+          "DisplayName": "Total Active Sessions",
+          "Description": "Total Number of active sessions",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "num_l2_sessions",
+          "DisplayName": "L2 Sessions",
+          "Description": "Total Number of L2 Sessions",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "num_tcp_sessions",
+          "DisplayName": "TCP Sessions",
+          "Description": "Total Number of TCP sessions",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "num_udp_sessions",
+          "DisplayName": "UDP Sessions",
+          "Description": "Total Number of UDP sessions",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "num_icmp_sessions",
+          "DisplayName": "ICMP Sessions",
+          "Description": "Total Number of ICMP sessions",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "num_drop_sessions",
+          "DisplayName": "Drop Sessions",
+          "Description": "Total Number of Drop sessions",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "num_aged_sessions",
+          "DisplayName": "Aged Sessions",
+          "Description": "Total Number of Aged sessions",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "num_tcp_resets",
+          "DisplayName": "TCP RST Sent",
+          "Description": "Total Number of TCP Resets sent as a result of SFW Reject",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "num_icmp_errors",
+          "DisplayName": "ICMP Error Sent",
+          "Description": "Total Number of ICMP Errors sent as a result of SFW Reject",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "num_tcp_cxnsetup_timeouts",
+          "DisplayName": "Connection-timeout Sessions",
+          "Description": "Total Number of sessions that timed out at connection setup",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "num_session_create_errors",
+          "DisplayName": "Session Create Errors",
+          "Description": "Total Number of sessions that errored out during creation",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ]
+    }
+  ]
+}

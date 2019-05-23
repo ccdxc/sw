@@ -16,6 +16,426 @@ export interface MetricMeasurement {
 }
 
 export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
+  DropMetrics: {
+  "name": "DropMetrics",
+  "description": "Key index - Global ID",
+  "displayName": "Global Drop Statistics",
+  "fields": [
+    {
+      "name": "drop_malformed_pkt",
+      "displayName": "Malformed Packet Drops",
+      "description": " malformed pkt drop",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_parser_icrc_error",
+      "displayName": "RDMA ICRC Errors",
+      "description": "number of packets dropped due to RDMA ICRC Errors",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_parse_len_error",
+      "displayName": "Packet Length Errors",
+      "description": "number of packets dropped due to parse length errors",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_hardware_error",
+      "displayName": "Hardware Errors",
+      "description": "number of packets dropped due to hardware errors seen",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_input_mapping",
+      "displayName": "Input Mapping Table Drops",
+      "description": "number of packets dropped due to missing lookup in input mapping table",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_input_mapping_dejavu",
+      "displayName": "Input Mapping Deja-vu Drops",
+      "description": "number of packets dropped due to dejavu in input mapping table",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_multi_dest_not_pinned_uplink",
+      "displayName": "Multi-dest-not-pinned-uplink Drops",
+      "description": "number of multi-destination (multicast) packets dropped because they were not seen on right pinned uplink",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_flow_hit",
+      "displayName": "Drop-flow-hit Drops",
+      "description": "number of packets dropped due to hitting drop flows",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_flow_miss",
+      "displayName": "Flow-miss Drops",
+      "description": "number of packets dropped due to missing a flow-hit",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_nacl",
+      "displayName": "Drop-NACL-hit Drops",
+      "description": "number of packets dropped due to drop-nacl hit",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_ipsg",
+      "displayName": "Drop-IPSG Drops",
+      "description": "number of packets dropped due to drop-ipsg hit",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_ip_normalization",
+      "displayName": "IP-Normalization Drops",
+      "description": "number of packets dropped due to IP packet normalization",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_tcp_normalization",
+      "displayName": "TCP-Normalization Drops",
+      "description": "number of TCP packets dropped due to TCP normalization",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_tcp_rst_with_invalid_ack_num",
+      "displayName": "TCP-RST-Invalid-ACK Drops",
+      "description": "number of TCP RST packets dropped due to invalid ACK number",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_tcp_non_syn_first_pkt",
+      "displayName": "TCP-RST-Invalid-ACK Drops",
+      "description": "number of TCP non-SYN first packets dropped",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_icmp_normalization",
+      "displayName": "ICMP-Normalization Drops",
+      "description": "number of packets dropped due to ICMP packet normalization",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_input_properties_miss",
+      "displayName": "Input-properties-miss Drops",
+      "description": "number of packets dropped due to input properties miss",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_tcp_out_of_window",
+      "displayName": "TCP-out-of-window Drops",
+      "description": "number of TCP packets dropped due to out-of-window",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_tcp_split_handshake",
+      "displayName": "TCP-split-handshake Drops",
+      "description": "number of TCP packets dropped due to split handshake",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_tcp_win_zero_drop",
+      "displayName": "TCP-zero-window Drops",
+      "description": "number of TCP packets dropped due to window size being zero",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_tcp_data_after_fin",
+      "displayName": "TCP-data-after-FIN Drops",
+      "description": "number of TCP packets dropped due to data received after FIN was seen",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_tcp_non_rst_pkt_after_rst",
+      "displayName": "TCP-non-RST-after-RST Drops",
+      "description": "number of TCP packets dropped due to non-RST seen after RST",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_tcp_invalid_responder_first_pkt",
+      "displayName": "TCP-responder-first-packet Drops",
+      "description": "number of TCP packets dropped due to invalid first packet seen from responder",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_tcp_unexpected_pkt",
+      "displayName": "TCP-unexpected-packet Drops",
+      "description": "number of TCP packets dropped due to unexpected packet seen",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_src_lif_mismatch",
+      "displayName": "Source-LIF-mismatch Drops",
+      "description": "number of packets dropped due to packets received on unexpected source LIF",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_vf_ip_label_mismatch",
+      "displayName": "VF-IP-Label-mismatch Drops",
+      "description": "number of packets dropped due to packets VF IP Label mismatch",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_vf_bad_rr_dst_ip",
+      "displayName": "VF-Bad-RR-Destination-IP Drops",
+      "description": "number of packets dropped due to packets VF bad RR destination IP",
+      "units": "Count",
+      "baseType": "Counter"
+    }
+  ]
+},
+  EgressDropMetrics: {
+  "name": "EgressDropMetrics",
+  "description": "Key index - Global ID",
+  "displayName": "Global Egress Drop Statistics",
+  "fields": [
+    {
+      "name": "drop_output_mapping",
+      "displayName": "Output-mapping-miss Drops",
+      "description": "number of packets dropped due to output mapping miss",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_prune_src_port",
+      "displayName": "Source-port-prune Drops",
+      "description": "number of packets dropped due to source port pruning",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_mirror",
+      "displayName": "Mirror-hit Drops",
+      "description": "number of packets dropped due to mirror hit",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_policer",
+      "displayName": "Policer Drops",
+      "description": "number of packets dropped due to policer",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_copp",
+      "displayName": "COPP Drops",
+      "description": "number of packets dropped due to COPP",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "drop_checksum_err",
+      "displayName": "Checksum-error Drops",
+      "description": "number of packets dropped due to checksum errors",
+      "units": "Count",
+      "baseType": "Counter"
+    }
+  ]
+},
+  FteCPSMetrics: {
+  "name": "FteCPSMetrics",
+  "description": "Key index - FTE ID",
+  "displayName": "per-FTE CPS Statistics",
+  "fields": [
+    {
+      "name": "connections_per_second",
+      "displayName": "CPS",
+      "description": "Connections per second",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "max_connections_per_second",
+      "displayName": "Max-CPS",
+      "description": "Max Connections per second",
+      "units": "Count",
+      "baseType": "Counter"
+    }
+  ]
+},
+  FteLifQMetrics: {
+  "name": "FteLifQMetrics",
+  "description": "Key index - FTE ID",
+  "displayName": "per-FTE Queue Statistics",
+  "fields": [
+    {
+      "name": "flow_miss_packets",
+      "displayName": "Flow-miss Packets",
+      "description": "Number of flow miss packets processed by this FTE",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "flow_retransmit_packets",
+      "displayName": "Flow-retransmit Packets",
+      "description": "Number of flow retransmits seen",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "l4_redirect_packets",
+      "displayName": "L4-redirect Packets",
+      "description": "Number of packets that hit the L4 redirect queue",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "alg_control_flow_packets",
+      "displayName": "ALG-control-flow Packets",
+      "description": "Number of packets that hit the ALG control flow queue",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "tcp_close_packets",
+      "displayName": "TCP-Close Packets",
+      "description": "Number of packets that hit the TCP close queue",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "tls_proxy_packets",
+      "displayName": "TLS-proxy Packets",
+      "description": "Number of packets that hit the TLS Proxy queue",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "fte_span_packets",
+      "displayName": "FTE-Span Packets",
+      "description": "Number of packets that hit the FTE SPAN queue",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "software_queue_packets",
+      "displayName": "Software-config-Q Requests",
+      "description": "Number of packets that hit the FTE config path",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "queued_tx_packets",
+      "displayName": "Queued-Tx Packets",
+      "description": "Number of packets enqueue in the FTE TX queue",
+      "units": "Count",
+      "baseType": "Counter"
+    }
+  ]
+},
+  SessionSummaryMetrics: {
+  "name": "SessionSummaryMetrics",
+  "description": "Key index - Global",
+  "displayName": "Global Session Summary Statistics",
+  "fields": [
+    {
+      "name": "total_active_sessions",
+      "displayName": "Total Active Sessions",
+      "description": "Total Number of active sessions",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "num_l2_sessions",
+      "displayName": "L2 Sessions",
+      "description": "Total Number of L2 Sessions",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "num_tcp_sessions",
+      "displayName": "TCP Sessions",
+      "description": "Total Number of TCP sessions",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "num_udp_sessions",
+      "displayName": "UDP Sessions",
+      "description": "Total Number of UDP sessions",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "num_icmp_sessions",
+      "displayName": "ICMP Sessions",
+      "description": "Total Number of ICMP sessions",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "num_drop_sessions",
+      "displayName": "Drop Sessions",
+      "description": "Total Number of Drop sessions",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "num_aged_sessions",
+      "displayName": "Aged Sessions",
+      "description": "Total Number of Aged sessions",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "num_tcp_resets",
+      "displayName": "TCP RST Sent",
+      "description": "Total Number of TCP Resets sent as a result of SFW Reject",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "num_icmp_errors",
+      "displayName": "ICMP Error Sent",
+      "description": "Total Number of ICMP Errors sent as a result of SFW Reject",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "num_tcp_cxnsetup_timeouts",
+      "displayName": "Connection-timeout Sessions",
+      "description": "Total Number of sessions that timed out at connection setup",
+      "units": "Count",
+      "baseType": "Counter"
+    },
+    {
+      "name": "num_session_create_errors",
+      "displayName": "Session Create Errors",
+      "description": "Total Number of sessions that errored out during creation",
+      "units": "Count",
+      "baseType": "Counter"
+    }
+  ]
+},
   AccelHwRingMetrics: {
   "name": "AccelHwRingMetrics",
   "description": "Key indices - RId: ring ID, SubRId: sub-ring ID",
