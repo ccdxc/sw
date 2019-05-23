@@ -20,7 +20,7 @@ using namespace sdk::platform::utils;
 
 const static char *kLif2QstateHBMLabel = "nicmgrqstate_map";
 
-#ifdef APOLLO
+#if defined(APOLLO)
 #define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN P4_APOLLO_RXDMA_TBL_ID_INDEX_MIN
 #define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX P4_APOLLO_RXDMA_TBL_ID_INDEX_MAX
 #define P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN P4_APOLLO_TXDMA_TBL_ID_INDEX_MIN
@@ -30,6 +30,16 @@ const static char *kLif2QstateHBMLabel = "nicmgrqstate_map";
 #define P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN P4_APOLLO_TXDMA_TBL_ID_TBLMIN
 #define P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX P4_APOLLO_TXDMA_TBL_ID_TBLMAX
 #define P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_PARAMS P4_APOLLO_RXDMA_TBL_ID_ETH_RX_RSS_PARAMS
+#elif defined(ARTEMIS)
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN P4_ARTEMIS_RXDMA_TBL_ID_INDEX_MIN
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX P4_ARTEMIS_RXDMA_TBL_ID_INDEX_MAX
+#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN P4_ARTEMIS_TXDMA_TBL_ID_INDEX_MIN
+#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX P4_ARTEMIS_TXDMA_TBL_ID_INDEX_MAX
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN P4_ARTEMIS_RXDMA_TBL_ID_TBLMIN
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX P4_ARTEMIS_RXDMA_TBL_ID_TBLMAX
+#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN P4_ARTEMIS_TXDMA_TBL_ID_TBLMIN
+#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX P4_ARTEMIS_TXDMA_TBL_ID_TBLMAX
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_PARAMS P4_ARTEMIS_RXDMA_TBL_ID_ETH_RX_RSS_PARAMS
 #endif
 
 const static char *kNicmgrHBMLabel = MEM_REGION_NICMGR_NAME;
@@ -70,10 +80,18 @@ PdClient::p4plus_rxdma_init_tables()
     uint32_t                   tid;
     p4pd_table_properties_t    tinfo;
     p4pd_error_t               rc;
-#ifdef APOLLO
+#if defined(APOLLO)
     p4pd_cfg_t                 p4pd_cfg = {
             .table_map_cfg_file  = "apollo/capri_rxdma_table_map.json",
             .p4pd_pgm_name       = "apollo",
+            .p4pd_rxdma_pgm_name = "p4plus",
+            .p4pd_txdma_pgm_name = "p4plus",
+            .cfg_path            = hal_cfg_path_.c_str(),
+    };
+#elif defined(ARTEMIS)
+    p4pd_cfg_t                 p4pd_cfg = {
+            .table_map_cfg_file  = "artemis/capri_rxdma_table_map.json",
+            .p4pd_pgm_name       = "artemis",
             .p4pd_rxdma_pgm_name = "p4plus",
             .p4pd_txdma_pgm_name = "p4plus",
             .cfg_path            = hal_cfg_path_.c_str(),
@@ -137,10 +155,18 @@ PdClient::p4plus_txdma_init_tables()
     uint32_t                   tid;
     p4pd_table_properties_t    tinfo;
     p4pd_error_t               rc;
-#ifdef APOLLO
+#if defined(APOLLO)
     p4pd_cfg_t                 p4pd_cfg = {
         .table_map_cfg_file  = "apollo/capri_txdma_table_map.json",
         .p4pd_pgm_name       = "apollo",
+        .p4pd_rxdma_pgm_name = "p4plus",
+        .p4pd_txdma_pgm_name = "p4plus",
+        .cfg_path            = hal_cfg_path_.c_str(),
+    };
+#elif defined(ARTEMIS)
+    p4pd_cfg_t                 p4pd_cfg = {
+        .table_map_cfg_file  = "artemis/capri_txdma_table_map.json",
+        .p4pd_pgm_name       = "artemis",
         .p4pd_rxdma_pgm_name = "p4plus",
         .p4pd_txdma_pgm_name = "p4plus",
         .cfg_path            = hal_cfg_path_.c_str(),
@@ -345,8 +371,10 @@ PdClient::create_dirs() {
 
 void PdClient::init(fwd_mode_t fwd_mode)
 {
-#ifdef APOLLO
+#if defined(APOLLO)
     std::string mpart_json = hal_cfg_path_ + "/apollo/hbm_mem.json";
+#elif defined(ARTEMIS)
+    std::string mpart_json = hal_cfg_path_ + "/artemis/hbm_mem.json";
 #else
     std::string mpart_json = fwd_mode == sdk::platform::FWD_MODE_CLASSIC ?
             hal_cfg_path_ + "/iris/hbm_classic_mem.json" :
@@ -367,7 +395,7 @@ void PdClient::init(fwd_mode_t fwd_mode)
     lm_ = lif_mgr::factory(kNumMaxLIFs, mp_, kLif2QstateHBMLabel);
     assert(lm_);
 
-#ifndef APOLLO
+#if !defined(APOLLO) || !defined(ARTEMIS)
     NIC_LOG_DEBUG("Initializing table rw ...");
     ret = capri_p4plus_table_rw_init();
     assert(ret == 0);
