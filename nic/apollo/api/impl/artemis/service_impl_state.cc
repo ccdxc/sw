@@ -15,7 +15,7 @@
 #include "nic/apollo/api/impl/artemis/service_impl.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/p4/include/defines.h"
-//#include "gen/p4gen/artemis/include/p4pd.h"
+#include "gen/p4gen/artemis/include/p4pd.h"
 
 using sdk::table::sdk_table_factory_params_t;
 
@@ -27,15 +27,30 @@ namespace impl {
 /// \@{
 
 svc_mapping_impl_state::svc_mapping_impl_state(pds_state *state) {
+    sdk_table_factory_params_t    mhparams;
+
     // create a slab for mapping impl entries
     svc_mapping_impl_slab_ = slab::factory("svc-mapping-impl",
                                            PDS_SLAB_ID_SVC_MAPPING_IMPL,
                                            sizeof(svc_mapping_impl), 128,
                                            true, true);
     SDK_ASSERT(svc_mapping_impl_slab_!= NULL);
+
+    // instantiate P4 tables for bookkeeping
+    bzero(&mhparams, sizeof(mhparams));
+    mhparams.max_recircs = 8;
+    mhparams.entry_trace_en = true;
+
+    // local IP Mapping table
+    mhparams.table_id = P4TBL_ID_SERVICE_MAPPING;
+    mhparams.key2str = NULL;
+    mhparams.appdata2str = NULL;
+    svc_mapping_tbl_ = slhash::factory(&mhparams);
+    SDK_ASSERT(svc_mapping_tbl_ != NULL);
 }
 
 svc_mapping_impl_state::~svc_mapping_impl_state() {
+    slhash::destroy(svc_mapping_tbl_);
     slab::destroy(svc_mapping_impl_slab_);
 }
 
@@ -51,17 +66,27 @@ svc_mapping_impl_state::free(svc_mapping_impl *impl) {
 
 sdk_ret_t
 svc_mapping_impl_state::table_transaction_begin(void) {
+    svc_mapping_tbl_->txn_start();
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 svc_mapping_impl_state::table_transaction_end(void) {
+    svc_mapping_tbl_->txn_end();
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 svc_mapping_impl_state::table_stats(debug::table_stats_get_cb_t cb,
                                     void *ctxt) {
+    pds_table_stats_t stats;
+    p4pd_table_properties_t tinfo;
+
+    memset(&stats, 0, sizeof(pds_table_stats_t));
+    p4pd_table_properties_get(P4TBL_ID_SERVICE_MAPPING, &tinfo);
+    stats.table_name = tinfo.tablename;
+    svc_mapping_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
+    cb(&stats, ctxt);
     return SDK_RET_OK;
 }
 

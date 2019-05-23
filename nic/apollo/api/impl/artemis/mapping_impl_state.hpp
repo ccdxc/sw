@@ -77,8 +77,8 @@ private:
 private:
     directmap *nat_tbl_;
     mem_hash *mapping_tbl_;
-    slab *mapping_impl_slab_;
     slhash *local_ip_mapping_tbl_;
+    slab *mapping_impl_slab_;
 };
 
 /// \@}

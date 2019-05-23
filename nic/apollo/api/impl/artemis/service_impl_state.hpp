@@ -11,7 +11,7 @@
 #ifndef __SVC_MAPPING_IMPL_STATE_HPP__
 #define __SVC_MAPPING_IMPL_STATEHPP__
 
-#include "nic/sdk/lib/table/memhash/mem_hash.hpp"
+#include "nic/sdk/lib/table/slhash/slhash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -61,11 +61,13 @@ public:
     sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
 
 private:
+    slhash *svc_mapping_tbl(void) { return svc_mapping_tbl_; }
     slab *svc_mapping_impl_slab(void) { return svc_mapping_impl_slab_; }
     // svc_mapping_impl class is friend of svc_mapping_impl_state
     friend class svc_mapping_impl;
 
 private:
+    slhash *svc_mapping_tbl_;
     slab *svc_mapping_impl_slab_;
 };
 
