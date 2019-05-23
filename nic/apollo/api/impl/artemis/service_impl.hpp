@@ -126,12 +126,16 @@ public:
 private:
     /// \brief  constructor
     svc_mapping_impl() {
+        vip_to_dip_handle_ = handle_t::null();
+        dip_to_vip_handle_ = handle_t::null();
     }
 
     /// \brief  destructor
     ~svc_mapping_impl() {}
 
 private:
+    handle_t    vip_to_dip_handle_;
+    handle_t    dip_to_vip_handle_;
 };
 
 /// @}

@@ -21,10 +21,20 @@
 #define PDS_IMPL_PROVIDER_VPC_HW_ID          PDS_IMPL_PUBLIC_VPC_HW_ID
 #define PDS_NAT_TBL_RSVD_ENTRY_IDX           0
 #define PDS_NH_TYPE_PEER_VPC_MASK            0x8000
+
 #define MEM_ADDR_TO_P4_MEM_ADDR(p4_mem_addr, mem_addr, p4_addr_size)      \
     for (uint32_t i = 0; i < (p4_addr_size); i++) {                       \
         p4_mem_addr[i] = ((mem_addr) >> (i * 8)) & 0xFF;                  \
     }
+
+#define PDS_IMPL_FILL_TABLE_API_PARAMS(api_params, key_, data, action, hdl)  \
+{                                                                            \
+    memset((api_params), 0, sizeof(*(api_params)));                          \
+    (api_params)->key = (key_);                                              \
+    (api_params)->appdata = (data);                                          \
+    (api_params)->action_id = (action);                                      \
+    (api_params)->handle = (hdl);                                            \
+}
 
 namespace api {
 namespace impl {
