@@ -100,7 +100,6 @@ export enum MonitoringMatchedRequirement_operator {
 }
 
 export enum MonitoringMirrorCollector_type {
-    'VENICE' = "VENICE",
     'ERSPAN' = "ERSPAN",
 }
 
@@ -245,7 +244,7 @@ export enum MonitoringMatchedRequirement_operator_uihint {
 }
 
 export enum MonitoringMirrorCollector_type_uihint {
-    'VENICE' = "Venice",
+    'ERSPAN' = "ERSPAN",
 }
 
 export enum MonitoringMirrorSessionSpec_packet_filters_uihint {

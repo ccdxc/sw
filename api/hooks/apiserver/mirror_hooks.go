@@ -69,13 +69,8 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 	}
 	numVeniceCollectors := 0
 	for _, c := range ms.Spec.Collectors {
-		if c.Type == monitoring.PacketCollectorType_VENICE.String() {
-			if numVeniceCollectors > 0 {
-				return i, false, fmt.Errorf("Only one Venice collector is supported per mirror session")
-			}
-			numVeniceCollectors++
-		} else if c.Type == monitoring.PacketCollectorType_ERSPAN.String() {
-			if c.ExportCfg.Destination == "" {
+		if c.Type == monitoring.PacketCollectorType_ERSPAN.String() {
+			if c.ExportCfg == nil || c.ExportCfg.Destination == "" {
 				return i, false, fmt.Errorf("Provide valid destination for ERSPAN collector")
 			}
 			// Checking for Destition and other parameters inside ExportCfg XXX

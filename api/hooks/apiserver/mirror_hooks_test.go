@@ -433,7 +433,11 @@ var testGoodMirrorSession = []monitoring.MirrorSession{
 			},
 			Collectors: []monitoring.MirrorCollector{
 				{
-					Type: "VENICE",
+					Type: "ERSPAN",
+					ExportCfg: &monitoring.ExportConfig{
+						Destination: "127.0.0.1",
+						Transport:   "UDP/5789",
+					},
 				},
 			},
 

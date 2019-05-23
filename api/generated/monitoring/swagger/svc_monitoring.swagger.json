@@ -14232,12 +14232,11 @@
         "type": {
           "type": "string",
           "enum": [
-            "VENICE",
             "ERSPAN"
           ],
-          "default": "VENICE",
+          "default": "ERSPAN",
           "x-ui-hints": {
-            "VENICE": "Venice"
+            "ERSPAN": "ERSPAN"
           }
         },
         "export-config": {

@@ -41,9 +41,6 @@ var testMirrorSessions = []monitoring.MirrorSession{
 			},
 			Collectors: []monitoring.MirrorCollector{
 				{
-					Type: "VENICE",
-				},
-				{
 					Type: "ERSPAN",
 					ExportCfg: &monitoring.ExportConfig{
 						Destination: "111.1.1.1",

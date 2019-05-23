@@ -43,9 +43,7 @@ var MirrorSessionSpec_MirrorPacketFilter_normal = map[string]string{
 // PacketCollectorType_normal is a map of normalized values for the enum
 var PacketCollectorType_normal = map[string]string{
 	"ERSPAN": "ERSPAN",
-	"VENICE": "VENICE",
 	"erspan": "ERSPAN",
-	"venice": "VENICE",
 }
 
 // MirrorSessionState_normal is a map of normalized values for the enum
@@ -172,7 +170,7 @@ func (m *MirrorCollector) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Type = "VENICE"
+		m.Type = "ERSPAN"
 	}
 	return ret
 }

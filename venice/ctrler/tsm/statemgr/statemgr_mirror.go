@@ -74,15 +74,6 @@ func (mss *MirrorSessionState) handleExpTimer() {
 	return
 }
 
-func (mss *MirrorSessionState) hasVeniceCollector() bool {
-	for _, c := range mss.Spec.Collectors {
-		if c.Type == monitoring.PacketCollectorType_VENICE.String() {
-			return true
-		}
-	}
-	return false
-}
-
 func (mss *MirrorSessionState) setMirrorSessionRunning() {
 	if !mss.Statemgr.MirrorSessionCountAllocate() {
 		mss.State = monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION
@@ -95,9 +86,6 @@ func (mss *MirrorSessionState) setMirrorSessionRunning() {
 		// create PCAP file URL for sessions with venice collector
 		_t, _ := mss.Status.StartedAt.Time()
 		log.Infof("Mirror session StartedAt %v", _t)
-		if mss.hasVeniceCollector() {
-			mss.Status.PcapFileURL = mss.mirrorSessionGetPcapLink()
-		}
 	}
 }
 
