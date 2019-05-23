@@ -21,6 +21,7 @@
 #define PDS_IMPL_PROVIDER_VPC_HW_ID          PDS_IMPL_PUBLIC_VPC_HW_ID
 #define PDS_NAT_TBL_RSVD_ENTRY_IDX           0
 #define PDS_NH_TYPE_PEER_VPC_MASK            0x8000
+// NAT table entry reserved for no translation
 #define PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX      0
 
 #define MEM_ADDR_TO_P4_MEM_ADDR(p4_mem_addr, mem_addr, p4_addr_size)      \

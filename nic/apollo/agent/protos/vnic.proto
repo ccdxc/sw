@@ -32,24 +32,26 @@ message VnicSpec {
   types.Encap VnicEncap             = 4 [(gogoproto.moretags) = "meta:mandatory"];
   // overlay MAC of this VNIC
   uint64      MACAddress            = 5 [(gogoproto.moretags) = "meta:mandatory"];
+  // provider MAC of this VNIC
+  uint64      ProviderMACAddress    = 6 [(gogoproto.moretags) = "meta:mandatory"];
   // resource pool to be used to enforce resource limits
-  uint32      ResourcePoolId        = 6;
+  uint32      ResourcePoolId        = 7;
   // enable or disable reverse path checks while sending traffic to this vnic
   // or while receiving traffic from this vnic
-  bool        SourceGuardEnable     = 7;
+  bool        SourceGuardEnable     = 8;
   // fabric encap information to be used for traffic originated from this vnic
-  types.Encap FabricEncap           = 8;
+  types.Encap FabricEncap           = 9;
   // Tx/egress mirror session id list, if any
-  repeated uint32 TxMirrorSessionId = 9;
+  repeated uint32 TxMirrorSessionId = 10;
   // Rx/ingress mirror session id list, if any
-  repeated uint32 RxMirrorSessionId = 10;
+  repeated uint32 RxMirrorSessionId = 11;
   // switch vnic is router/bridge/appliance sitting behind the VLAN of this VNIC
   // and can have many MACs in the same VLAN, so SMAC check will be disabled
-  bool        SwitchVnic            = 11;
+  bool        SwitchVnic            = 12;
   // metering policy to apply for IPv4 traffic coming in and going out of vnic
-  uint32      V4MeterId             = 12;
+  uint32      V4MeterId             = 13;
   // metering policy to apply for IPv6 traffic coming in and going out of vnic
-  uint32      V6MeterId             = 13;
+  uint32      V6MeterId             = 14;
 }
 
 // operational status of Vnic, if any

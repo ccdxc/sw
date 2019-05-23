@@ -28,7 +28,8 @@ typedef struct pds_vnic_spec_s {
     pds_subnet_key_t subnet;           ///< subnet of this vnic
     pds_encap_t vnic_encap;            ///< vnic encap for this vnic
     pds_encap_t fabric_encap;          ///< fabric encap for this vnic
-    mac_addr_t mac_addr;               ///< vnic's overlay mac mac address
+    mac_addr_t mac_addr;               ///< vnic's overlay mac address
+    mac_addr_t provider_mac_addr;      ///< vnic's provider mac address
     pds_rsc_pool_id_t rsc_pool_id;     ///< resource pool
     bool src_dst_check;                ///< tRUE if src/dst check is enabled
     uint8_t tx_mirror_session_bmap;    ///< Tx mirror sessions, if any

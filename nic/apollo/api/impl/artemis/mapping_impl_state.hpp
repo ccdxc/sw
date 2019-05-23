@@ -23,9 +23,6 @@ using sdk::table::slhash;
 namespace api {
 namespace impl {
 
-// entry reserved for no translation
-#define NAT_TX_TBL_RSVD_ENTRY_IDX        0
-
 /// \defgroup PDS_MAPPING_IMPL_STATE - mapping state functionality
 /// \ingroup PDS_MAPPING
 /// \@{

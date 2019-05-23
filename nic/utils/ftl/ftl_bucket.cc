@@ -67,11 +67,11 @@ ftl_bucket::write_(ftl_apictx *ctx) {
         FTL_ENTRY_SET_HINT_HASH(ctx->hint_slot, &ctx->entry,
                                 ctx->hint, ctx->hash_msbits);
     }
-    
+
     if (ctx->props->entry_trace_en) {
         FTL_API_CONTEXT_PRINT_SW_FIELDS(ctx);
-    } 
-    
+    }
+
     auto ret = ftl_platform_write(ctx);
     if (ret != SDK_RET_OK) {
         FTL_TRACE_ERR("failed: r:%d", p4pdret);
@@ -95,7 +95,7 @@ ftl_bucket::create_(ftl_apictx *ctx) {
     FTL_TRACE_VERBOSE("%s: Meta: [%s]", ctx->idstr(), ctx->metastr());
     FTL_ENTRY_COPY_KEY_DATA(&ctx->entry, (ftl_entry_t*)ctx->params->entry);
     ctx->table_stats->insert(!FTL_API_CONTEXT_IS_MAIN(ctx));
-    
+
     // Set the Handle
     if (FTL_API_CONTEXT_IS_MAIN(ctx)) {
         ctx->params->handle.pindex(ctx->table_index);
@@ -148,7 +148,7 @@ ftl_bucket::compare_(ftl_apictx *ctx) {
         return SDK_RET_COLLISION;
     }
 
-    FTL_ENTRY_GET_HINT_HASH(ftl_apictx::hint_slot::HINT_SLOT_MORE, 
+    FTL_ENTRY_GET_HINT_HASH(ftl_apictx::hint_slot::HINT_SLOT_MORE,
                           &ctx->entry, ctx->hint, ctx->more_hashs);
 
     return SDK_RET_COLLISION;
@@ -288,7 +288,7 @@ ftl_bucket::find_last_hint_(ftl_apictx *ctx) {
         FTL_TRACE_VERBOSE("- No Valid Hint Found");
         return SDK_RET_ENTRY_NOT_FOUND;
     }
-    
+
     FTL_TRACE_VERBOSE("Result = [ LastHint: Slot:%d Hint:%d ]", ctx->hint_slot, ctx->hint);
 
     return SDK_RET_OK;

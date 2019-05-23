@@ -1288,7 +1288,7 @@ Eth::StatsUpdate(void *obj)
 void
 Eth::StatsUpdateComplete(void *obj)
 {
-    Eth *eth = (Eth *)obj;
+    //Eth *eth = (Eth *)obj;
 
     // evutil_timer_again(eth->loop, &eth->stats_timer);
 }

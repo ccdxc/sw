@@ -113,8 +113,8 @@ vnic_impl::nuke_resources(api_base *api_obj) {
     return SDK_RET_OK;
 }
 
-// TODO: undo stuff if something goes wrong here !!
 #define ingress_vnic_info_action    action_u.ingress_vnic_info_ingress_vnic_info
+#define egress_vnic_info_action     action_u.egress_vnic_info_egress_vnic_info
 sdk_ret_t
 vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
@@ -131,12 +131,11 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     policy *egr_v4_policy, *egr_v6_policy;
     pds_route_table_key_t route_table_key;
     route_table *v4_route_table, *v6_route_table;
-    //vnic_rx_stats_actiondata_t vnic_rx_stats_data = { 0 };
-    //vnic_tx_stats_actiondata_t vnic_tx_stats_data = { 0 };
+    vnic_rx_stats_actiondata_t vnic_rx_stats_data = { 0 };
+    vnic_tx_stats_actiondata_t vnic_tx_stats_data = { 0 };
     //ingress_vnic_info_actiondata_t ing_vnic_info = { 0 };
-    //egress_vnic_info_actiondata_t egr_vnic_info = { 0 };
+    egress_vnic_info_actiondata_t egr_vnic_info = { 0 };
 
-#if 0
     spec = &obj_ctxt->api_params->vnic_spec;
     subnet = subnet_db()->find(&spec->subnet);
     if (unlikely(subnet == NULL)) {
@@ -154,37 +153,27 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
-    // initialize egress_local_vnic_info_table entry
-    egress_vnic_data.action_id =
-        EGRESS_LOCAL_VNIC_INFO_EGRESS_LOCAL_VNIC_INFO_ID;
-    sdk::lib::memrev(egress_vnic_data.egress_local_vnic_info_action.vr_mac,
+    // initialize egress_vnic_info_table entry
+    egr_vnic_info.action_id = EGRESS_VNIC_INFO_EGRESS_VNIC_INFO_ID;
+    sdk::lib::memrev(egr_vnic_info.egress_vnic_info_action.vr_mac,
                      subnet->vr_mac(), ETH_ADDR_LEN);
-    sdk::lib::memrev(egress_vnic_data.egress_local_vnic_info_action.overlay_mac,
+    sdk::lib::memrev(egr_vnic_info.egress_vnic_info_action.ca_mac,
                      spec->mac_addr, ETH_ADDR_LEN);
-    // assert to support only dot1q encap for now
-    SDK_ASSERT(spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q);
-    egress_vnic_data.egress_local_vnic_info_action.overlay_vlan_id =
-        spec->vnic_encap.val.vlan_tag;
+    sdk::lib::memrev(egr_vnic_info.egress_vnic_info_action.pa_mac,
+                     spec->provider_mac_addr, ETH_ADDR_LEN);
 
-    egress_vnic_data.egress_local_vnic_info_action.subnet_id =
-        subnet->hw_id();
-    if (spec->fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
-        egress_vnic_data.egress_local_vnic_info_action.src_slot_id =
-            spec->fabric_encap.val.mpls_tag;
-    } else if (spec->fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
-        egress_vnic_data.egress_local_vnic_info_action.src_slot_id =
-            spec->fabric_encap.val.vnid;
-    }
+#if 0
     if (spec->rx_mirror_session_bmap) {
-        egress_vnic_data.egress_local_vnic_info_action.mirror_en = TRUE;
-        egress_vnic_data.egress_local_vnic_info_action.mirror_session =
+        egress_vnic_data.egress_vnic_info_action.mirror_en = TRUE;
+        egress_vnic_data.egress_vnic_info_action.mirror_session =
             spec->rx_mirror_session_bmap;
     }
-    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->insert_atid(&egress_vnic_data,
-                                                                    hw_id_);
+    ret = vnic_impl_db()->egress_vnic_info_tbl()->insert_atid(&egress_vnic_data,
+                                                              hw_id_);
     if (ret != SDK_RET_OK) {
         return ret;
     }
+#endif
 
     // initialize rx stats tables for this vnic
     vnic_rx_stats_data.action_id = VNIC_RX_STATS_VNIC_RX_STATS_ID;
@@ -195,6 +184,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
+#if 0
     // program INGRESS_VNIC_INFO table
     vpc_key = subnet->vpc();
     vpc = vpc_db()->find(&vpc_key);
@@ -279,34 +269,30 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 //       old epoch contents and override them !!!
 sdk_ret_t
 vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
-#if 0
-    // TODO: reprogram INGRESS_VNIC_INFO table and EGRESS_VNIC_INFO table
-    sdk_ret_t ret = SDK_RET_OK;
+    sdk_ret_t ret;
+    subnet_entry *subnet;
     pds_subnet_key_t subnet_key;
     vnic_entry *vnic = (vnic_entry *)api_obj;
-    subnet_entry *subnet;
-    egress_local_vnic_info_actiondata_t egress_vnic_data = { 0 };
+    egress_vnic_info_actiondata_t egress_vnic_data;
 
     subnet_key = vnic->subnet();
     subnet = (subnet_entry *)api_base::find_obj(OBJ_ID_SUBNET, &subnet_key);
 
-    // read EGRESS_LOCAL_VNIC_INFO table entry of this vnic
-    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->retrieve(
+    // read EGRESS_VNIC_INFO table entry of this vnic
+    ret = vnic_impl_db()->egress_vnic_info_tbl()->retrieve(
               hw_id_, &egress_vnic_data);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to read EGRESS_LOCAL_VNIC_INFO table for "
+        PDS_TRACE_ERR("Failed to read EGRESS_VNIC_INFO table for "
                       "vnic %u, err %u", vnic->key().id, ret);
         return ret;
     }
 
     // update fields dependent on other objects and reprogram
-    sdk::lib::memrev(egress_vnic_data.egress_local_vnic_info_action.vr_mac,
+    sdk::lib::memrev(egress_vnic_data.egress_vnic_info_action.vr_mac,
                      subnet->vr_mac(), ETH_ADDR_LEN);
-    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->update(hw_id_,
-                                                               &egress_vnic_data);
+    ret = vnic_impl_db()->egress_vnic_info_tbl()->update(hw_id_,
+                                                         &egress_vnic_data);
     return ret;
-#endif
-    return SDK_RET_ERR;
 }
 
 sdk_ret_t
