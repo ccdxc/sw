@@ -41,8 +41,8 @@ public:
     // accessors
     tcam *key_native_tbl(void) { return key_native_tbl_; };
     //tcam *key_tunneled_tbl(void) { return key_tunneled_tbl_; };
-    //tcam *ingress_drop_stats_tbl(void) { return ingress_drop_stats_tbl_; }
-    //tcam *egress_drop_stats_tbl(void) { return egress_drop_stats_tbl_; }
+    tcam *ingress_drop_stats_tbl(void) { return ingress_drop_stats_tbl_; }
+    tcam *egress_drop_stats_tbl(void) { return egress_drop_stats_tbl_; }
     //tcam *nacl_tbl(void) { return nacl_tbl_; }
 
     friend class artemis_impl;   // artemisa_impl is friend of artemis_impl_state
@@ -50,11 +50,11 @@ public:
 private:
     tcam *key_native_tbl_;          // key table for native packets
     //tcam *key_tunneled_tbl_;        // key table for tunneled packets
-    //tcam *ingress_drop_stats_tbl_;  // ingress drop stats table
-    //tcam *egress_drop_stats_tbl_;   // egress drop stats table
+    tcam *ingress_drop_stats_tbl_;  // ingress drop stats table
+    tcam *egress_drop_stats_tbl_;   // egress drop stats table
     //tcam *nacl_tbl_;                // NACL tcam table
     uint32_t key_native_tbl_idx_[MAX_KEY_NATIVE_TBL_ENTRIES];
-    //uint32_t key_tunneled_tbl_idx_[MAX_KEY_TUNNELED_TBL_ENTRIES];
+    uint32_t key_tunneled_tbl_idx_[MAX_KEY_TUNNELED_TBL_ENTRIES];
 };
 
 /// \@}    // end of PDS_ARTEMIS_IMPL_STATE

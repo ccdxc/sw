@@ -1,5 +1,5 @@
 //
-// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
 ///
@@ -85,7 +85,7 @@ artemis_impl::sort_mpu_programs_(std::vector<std::string>& programs) {
 
 uint32_t
 artemis_impl::rxdma_symbols_init_(void **p4plus_symbols,
-                                 platform_type_t platform_type)
+                                  platform_type_t platform_type)
 {
     uint32_t    i = 0;
 
@@ -106,7 +106,7 @@ artemis_impl::rxdma_symbols_init_(void **p4plus_symbols,
 
 uint32_t
 artemis_impl::txdma_symbols_init_(void **p4plus_symbols,
-                                 platform_type_t platform_type)
+                                  platform_type_t platform_type)
 {
     uint32_t    i = 0;
 
@@ -150,25 +150,25 @@ void
 artemis_impl::destroy(artemis_impl *impl) {
     int i;
 
-#if 0
-    // Remove key native table entries
+    // remove key native table entries
     for (i = 0; i < MAX_KEY_NATIVE_TBL_ENTRIES; i++) {
         artemis_impl_db()->key_native_tbl()->remove(
             artemis_impl_db()->key_native_tbl_idx_[i]);
     }
-    // Remove key tunneled table entries
+#if 0
+    // remove key tunneled table entries
     for (i = 0; i < MAX_KEY_TUNNELED_TBL_ENTRIES; i++) {
         artemis_impl_db()->key_tunneled_tbl()->remove(
             artemis_impl_db()->key_tunneled_tbl_idx_[i]);
     }
-    // Remove drop stats table entries
+    // remove drop stats table entries
     for (i = P4E_DROP_REASON_MIN; i <= P4E_DROP_REASON_MAX; i++) {
         artemis_impl_db()->egress_drop_stats_tbl()->remove(i);
     }
+#endif
     for (i = P4I_DROP_REASON_MIN; i <= P4I_DROP_REASON_MAX; i++) {
         artemis_impl_db()->ingress_drop_stats_tbl()->remove(i);
     }
-#endif
     api::impl::pds_impl_state::destroy(&api::impl::g_pds_impl_state);
     p4pd_cleanup();
 }
@@ -373,6 +373,7 @@ artemis_impl::ingress_to_rxdma_init_(void) {
 
     return SDK_RET_OK;
 }
+#endif
 
 sdk_ret_t
 artemis_impl::egress_drop_stats_init_(void) {
@@ -415,14 +416,11 @@ artemis_impl::ingress_drop_stats_init_(void) {
     }
     return ret;
 }
-#endif
 
 sdk_ret_t
 artemis_impl::stats_init_(void) {
-#if 0
     ingress_drop_stats_init_();
     egress_drop_stats_init_();
-#endif
     return SDK_RET_OK;
 }
 
@@ -453,7 +451,6 @@ artemis_impl::table_init_(void) {
     // reset bit 31 (saves one asm instruction)
     addr &= ~((uint64_t)1 << 31);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_SESSION, addr);
-
     return SDK_RET_OK;
 }
 
@@ -562,7 +559,6 @@ artemis_impl::dump_egress_drop_stats_(FILE *fp) {
 
 void
 artemis_impl::dump_ingress_drop_stats_(FILE *fp) {
-#if 0
     sdk_ret_t                      ret;
     uint64_t                       pkts;
     tcam                           *table;
@@ -584,7 +580,6 @@ artemis_impl::dump_ingress_drop_stats_(FILE *fp) {
         }
     }
     fprintf(fp, "\n");
-#endif
 }
 
 void

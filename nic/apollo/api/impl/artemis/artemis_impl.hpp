@@ -108,7 +108,8 @@ public:
     /// \param[in]  cb   callback to be called on stats
     /// \param[in]  ctxt opaque ctxt passed to the callback
     /// \return     #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt) override;
+    virtual sdk_ret_t table_stats(debug::table_stats_get_cb_t cb,
+                                  void *ctxt) override;
 
     /// \brief      dump all the debug information to given file
     /// \param[in]  fp file handle
