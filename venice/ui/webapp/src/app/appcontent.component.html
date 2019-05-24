@@ -75,8 +75,26 @@
           <ul class="list-unstyled components">
             <ng-container *ngTemplateOutlet="SideNavMenu; context:{items:sideNavMenu}">
             </ng-container>
+            <li>
+              <div class="app-shell-version-text">
+                <div style="margin:10px;">
+                  <b>Build Version:</b>
+                  <br>{{version?.status["build-version"]}}
+                </div>
+                <div style="margin:10px;">
+                  <b>VCS Commit ID:</b>
+                  <br>{{ version?.status["vcs-commit"] }}
+                </div>
+                <div style="margin:10px;">
+                  <b>Build Date:</b>
+                  <br>{{ version?.status["build-date"] }}
+                </div>
+              </div>
+            </li>
           </ul>
+
         </mat-sidenav>
+
         <mat-sidenav-content>
           <app-toolbar #breadcrumbToolbar></app-toolbar>
           <div class="app-shell-router-outter-div">
@@ -188,19 +206,6 @@
         <mat-icon>cloud_upload</mat-icon>
         System Upgrade
       </button>
-    </div>
-
-    <div fxFlex></div>
-    <div fxFlex="nogrow" class="app-shell-build-info">
-      <div>
-        Build Version: {{version?.status["build-version"]}}
-      </div>
-      <div>
-        VCS Commit ID: {{ version?.status["vcs-commit"] }}
-      </div>
-      <div>
-        Build Date: {{ version?.status["build-date"] }}
-      </div>
     </div>
   </div>
 </ng-template>
