@@ -277,6 +277,7 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 				memdb.WithTenantFilter(alertPolicy.GetTenant()),
 				memdb.WithAlertStateFilter([]monitoring.AlertState{monitoring.AlertState_OPEN, monitoring.AlertState_ACKNOWLEDGED}),
 				memdb.WithAlertPolicyIDFilter(alertPolicy.GetName()),
+				memdb.WithEventMessageFilter(evt.GetMessage()),
 				memdb.WithObjectRefFilter(evt.GetObjectRef()))
 			if len(outstandingAlerts) >= 1 { // there should be exactly one outstanding alert; not more than that
 				a.logger.Debug("1 or more outstanding alert found that matches the object ref. and policy")

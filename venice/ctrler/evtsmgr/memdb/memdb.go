@@ -110,6 +110,18 @@ func WithEventURIFilter(eventURI string) FilterFn {
 	}
 }
 
+// WithEventMessageFilter returns a fn() which returns true if the alert object matches the given event message
+// * applicable only for alert object *
+func WithEventMessageFilter(eventMessage string) FilterFn {
+	return func(obj runtime.Object) bool {
+		switch obj.(type) {
+		case *monitoring.Alert:
+			return obj.(*monitoring.Alert).Status.GetMessage() == eventMessage
+		}
+		return false
+	}
+}
+
 // GetAlertPolicies returns the list of alert policies that matches all the given filters
 func (m *MemDb) GetAlertPolicies(filters ...FilterFn) []*monitoring.AlertPolicy {
 	var alertPolicies []*monitoring.AlertPolicy

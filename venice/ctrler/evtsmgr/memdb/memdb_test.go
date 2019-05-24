@@ -202,6 +202,10 @@ func TestGetAlerts(t *testing.T) {
 			filters:      []FilterFn{WithResourceFilter("n/a")},
 			expNumAlerts: 0,
 		},
+		{
+			filters:      []FilterFn{WithEventMessageFilter("test-alert1"), WithTenantFilter("infra")},
+			expNumAlerts: 1,
+		},
 	}
 
 	for i := range tests {
