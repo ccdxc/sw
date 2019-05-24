@@ -216,6 +216,36 @@ function doPreUpgrade() {
     fi
 }
 
+function doDeleteOldDockerImages() {
+    allowedVerList=$(grep menuentry ${GRUBFILE}  | awk '{print $2}')
+    if [[ -z ${allowedVerList} ]]
+    then
+        echo "allowedImage list to boot should not be empty"
+        exit 19
+    fi
+
+    declare -A verMap
+    for i in ${allowedVerList}
+    do
+        verMap[$i]=1
+    done
+
+    for imageId in $(docker images -f 'label=org.label-schema.vendor=Pensando' --format '{{.ID}}' )
+    do
+        lab=$(docker inspect -f '{{index .Config.Labels "org.label-schema.version"}}' $imageId)
+
+        # label found. Now check if this is in one of the allowed lists by looking in the map
+        if [[ ! -z ${lab}  && -z ${verMap[$lab]:+_} ]]
+        then
+            docker rmi ${imageId}
+        else
+            :    #echo skip ${imageId} as ${lab} is needed
+        fi
+    done
+    # delete any untagged images
+    docker system prune -f
+}
+
 function doUpgrade() {
     DEST=/run/initramfs/live/OS-${VER}
     mkdir -p ${DEST}
@@ -226,6 +256,7 @@ function doUpgrade() {
         cp ${SRCPATH}/${i} ${DEST}
     done
     doAddImage ${VER} ${GRUBFILE}
+    doDeleteOldDockerImages
     sync
 }
 
