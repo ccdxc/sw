@@ -19,7 +19,7 @@
 #include "nic/apollo/api/service.hpp"
 #include "nic/apollo/api/vpc.hpp"
 #include "nic/apollo/api/subnet.hpp"
-//#include "gen/p4gen/artemis/include/p4pd.h"
+#include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 
 using sdk::table::handle_t;
 
@@ -126,6 +126,8 @@ public:
 private:
     /// \brief  constructor
     svc_mapping_impl() {
+        to_dip_nat_hdl_ = PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX;
+        to_vip_nat_hdl_ = PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX;
         vip_to_dip_handle_ = handle_t::null();
         dip_to_vip_handle_ = handle_t::null();
     }
@@ -134,6 +136,10 @@ private:
     ~svc_mapping_impl() {}
 
 private:
+    // handles or indices to NAT table
+    uint32_t    to_dip_nat_hdl_;
+    uint32_t    to_vip_nat_hdl_;
+    // handles to SERVICE_MAPPING table
     handle_t    vip_to_dip_handle_;
     handle_t    dip_to_vip_handle_;
 };

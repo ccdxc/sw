@@ -19,7 +19,7 @@
 #include "nic/apollo/api/mapping.hpp"
 #include "nic/apollo/api/vpc.hpp"
 #include "nic/apollo/api/subnet.hpp"
-#include "gen/p4gen/artemis/include/p4pd.h"
+#include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 
 using sdk::table::handle_t;
 
@@ -133,9 +133,9 @@ public:
 private:
     /// \brief constructor
     mapping_impl() {
-        overlay_ip_to_public_ip_nat_hdl_ = 0;
-        overlay_ip_to_provider_ip_nat_hdl_ = 0;
-        to_overlay_ip_nat_hdl_ = 0;
+        overlay_ip_to_public_ip_nat_hdl_ = PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX;
+        overlay_ip_to_provider_ip_nat_hdl_ = PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX;
+        to_overlay_ip_nat_hdl_ = PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX;
         overlay_ip_hdl_ = handle_t::null();
         public_ip_hdl_ = handle_t::null();
         provider_ip_hdl_ = handle_t::null();

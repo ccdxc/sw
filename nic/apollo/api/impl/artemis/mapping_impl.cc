@@ -59,9 +59,11 @@ namespace impl {
     (data)->local_ip_mapping_action.public_xlate_idx = (uint16_t)xidx2;      \
 }
 
+#define nat_action action_u.nat_nat_rewrite
 #define PDS_IMPL_FILL_NAT_DATA(data, ip)                                     \
 {                                                                            \
-    (data)->action_id = NAT_NAT_ID;                                          \
+    memset((data), 0, sizeof(*(data)));                                      \
+    (data)->action_id = NAT_NAT_REWRITE_ID;                                  \
     if ((ip)->af == IP_AF_IPV6) {                                            \
         sdk::lib::memrev((data)->nat_action.nat_ip,                          \
                          (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);           \
@@ -72,7 +74,6 @@ namespace impl {
     }                                                                        \
 }
 
-#define nat_action                action_u.nat_nat
 mapping_impl *
 mapping_impl::factory(pds_mapping_spec_t *spec) {
     mapping_impl    *impl;
@@ -354,9 +355,14 @@ mapping_impl::release_resources(api_base *api_obj) {
 
 sdk_ret_t
 mapping_impl::add_nat_entries_(pds_mapping_spec_t *spec) {
-#if 0
     sdk_ret_t           ret;
     nat_actiondata_t    nat_data = { 0 };
+
+    // if no public or provider IPs are configured, no need to install any
+    // NAT entries
+    if (!spec->public_ip_valid && !spec->provider_ip_valid) {
+        return SDK_RET_OK;
+    }
 
     // allocate NAT table entries
     if (spec->public_ip_valid) {
@@ -364,27 +370,36 @@ mapping_impl::add_nat_entries_(pds_mapping_spec_t *spec) {
         PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->public_ip);
         ret =
             artemis_impl_db()->nat_tbl()->insert_atid(&nat_data,
-                                                      handle_.local_.overlay_ip_to_public_ip_nat_hdl_);
+                                                      overlay_ip_to_public_ip_nat_hdl_);
         if (ret != SDK_RET_OK) {
             return ret;
         }
+    }
 
-        // add public to private IP xlation NAT entry
-        PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->key.ip_addr);
+    if (spec->provider_ip_valid) {
+        // add private to provider IP xlation NAT entry
+        PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->provider_ip);
         ret =
             artemis_impl_db()->nat_tbl()->insert_atid(&nat_data,
-                                                      handle_.local_.public_ip_to_overlay_ip_nat_hdl_);
+                                                      overlay_ip_to_provider_ip_nat_hdl_);
         if (ret != SDK_RET_OK) {
-            goto error;
+            return ret;
         }
+    }
+
+    // add provider & public to private IP xlation NAT entry
+    PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->key.ip_addr);
+    ret =
+        artemis_impl_db()->nat_tbl()->insert_atid(&nat_data,
+                                                  to_overlay_ip_nat_hdl_);
+    if (ret != SDK_RET_OK) {
+        goto error;
     }
     return SDK_RET_OK;
 
 error:
     // TODO: handle cleanup in case of failure
     return ret;
-#endif
-    return SDK_RET_OK;
 }
 
 sdk_ret_t

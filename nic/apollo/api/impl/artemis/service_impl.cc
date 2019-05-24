@@ -102,7 +102,7 @@ svc_mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     spec = &obj_ctxt->api_params->svc_mapping_spec;
     vpc = vpc_db()->find(&spec->key.vpc);
 
-    // reserve an entry in SERVICE_MAPPING with (VIP, port) as key
+    // reserve an entry in SERVICE_MAPPING with (VIP, provider IP, port) as key
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
                                     vpc->hw_id(), &spec->key.vip,
                                     spec->key.svc_port,
@@ -111,14 +111,23 @@ svc_mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
                                    NULL, 0, sdk::table::handle_t::null());
     ret = svc_mapping_impl_db()->svc_mapping_tbl()->reserve(&api_params);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to reserve (vip, pa-ip, port) entry in "
+        PDS_TRACE_ERR("Failed to reserve (VIP, provider-ip, port) entry in "
                       "SERVICE_MAPPING table for mapping %s, err %u",
                       orig_obj->key2str().c_str(), ret);
         return ret;
     }
     vip_to_dip_handle_ = api_params.handle;
 
-    // reserve an entry in SERVICE_MAPPING with (overlay_ip, port) as key
+    // reserve an entry in the NAT table for (VIP, provider-ip, VIP-port) -> DIP
+    // xlation rewrite
+    ret = artemis_impl_db()->nat_tbl()->reserve(&to_dip_nat_hdl_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve (VIP, provider-ip, VIP-port) -> "
+                      "DIP xlation entry in NAT table, err %u", ret);
+        goto error;
+    }
+
+    // reserve an entry in SERVICE_MAPPING with (DIP/overlay_ip, port) as key
     vpc = vpc_db()->find(&spec->vpc);
     memset(&svc_mapping_key, 0, sizeof(svc_mapping_key));
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
@@ -131,10 +140,23 @@ svc_mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
         PDS_TRACE_ERR("Failed to reserve (backend-ip, port) entry in "
                       "SERVICE_MAPPING table for mapping %s, err %u",
                       orig_obj->key2str().c_str(), ret);
-        return ret;
+        goto error;
     }
     dip_to_vip_handle_ = api_params.handle;
+
+    // reserve an entry in the NAT table for (DIP, DIP-port) -> VIP
+    // xlation rewrite
+    ret = artemis_impl_db()->nat_tbl()->reserve(&to_vip_nat_hdl_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve (DIP, DIP-port) -> VIP xlation entry "
+                      "in NAT table, err %u", ret);
+        goto error;
+    }
     return SDK_RET_OK;
+
+error:
+    // TODO: cleanup
+    return ret;
 }
 
 sdk_ret_t
@@ -165,13 +187,13 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                     spec->key.svc_port, ipaddr2str(&spec->backend_provider_ip),
                     spec->vpc.id, &spec->backend_ip, spec->svc_port);
 
-    // add an entry in SERVICE_MAPPING with (VIP, port) as key
+    // add an entry in SERVICE_MAPPING with (VIP, provider-ip, port) as key
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
                                     vip_vpc->hw_id(), &spec->key.vip,
                                     spec->key.svc_port,
                                     &spec->backend_provider_ip);
     PDS_IMPL_FILL_SVC_MAPPING_DATA(&svc_mapping_data,
-                                   0, // TODO: fix
+                                   to_dip_nat_hdl_,
                                    spec->svc_port);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key,
                                    &svc_mapping_data,
@@ -190,12 +212,12 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return ret;
     }
 
-    // reserve an entry in SERVICE_MAPPING with (overlay_ip, port) as key
+    // reserve an entry in SERVICE_MAPPING with (DIP/overlay_ip, port) as key
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
                                     dip_vpc->hw_id(), &spec->backend_ip,
                                     spec->svc_port, (ip_addr_t *)NULL);
     PDS_IMPL_FILL_SVC_MAPPING_DATA(&svc_mapping_data,
-                                   0, // TODO: fix
+                                   to_vip_nat_hdl_,
                                    spec->key.svc_port);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key,
                                    &svc_mapping_data,
