@@ -250,6 +250,14 @@ func (a *apiGw) checkCORS(h http.Handler) http.Handler {
 	})
 }
 
+// securityHeadersHandler sets security headers for prevention of clickjacking, cross-site scripting, MIM attacks
+func (a *apiGw) securityHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		setSecurityHeaders(w)
+		next.ServeHTTP(w, r)
+	})
+}
+
 // Following metadata handlers are borrowed from gRPC gateway implementation
 
 func handleForwardResponseServerMetadata(w http.ResponseWriter, md gwruntime.ServerMetadata) {
@@ -348,14 +356,14 @@ func (a *apiGw) Run(config apigw.Config) {
 	m := http.NewServeMux()
 
 	// Register UI to serve GZIP compressed files if available
-	m.Handle("/", gzipserver.GzipFileServer(http.Dir("./dist")))
+	m.Handle("/", a.securityHeadersMiddleware(gzipserver.GzipFileServer(http.Dir("./dist"))))
 
 	// Register Staging
 	stagingPrefix := "/" + globals.StagingURIPrefix + "/"
 	m.Handle(stagingPrefix, HandleStaging(m))
 
 	// Docs
-	m.Handle("/docs/", http.StripPrefix("/docs/", http.FileServer(http.Dir("./docs"))))
+	m.Handle("/docs/", a.securityHeadersMiddleware(http.StripPrefix("/docs/", http.FileServer(http.Dir("./docs")))))
 
 	// Create the GRPC connection for the server.
 	s := grpc.NewServer()
@@ -484,7 +492,7 @@ Loop:
 	wg.Add(1)
 	go func(c context.Context) {
 		wg.Done()
-		srv := &http.Server{Handler: a.extractHdrInfo(a.checkCORS(a.tracerMiddleware(m)))}
+		srv := &http.Server{Handler: a.extractHdrInfo(a.checkCORS(a.tracerMiddleware(a.securityHeadersMiddleware(m))))}
 		go func() {
 			select {
 			case <-c.Done():
@@ -896,6 +904,9 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	p.apiGw.logger.Infof("Handling HTTP proxy request")
 
+	// set security headers
+	setSecurityHeaders(w)
+
 	// make sure end user is not able to set user and permission info in request headers
 	authzhttp.RemoveUserPermsFromRequest(r)
 
@@ -1135,4 +1146,11 @@ func getRequestURI(ctx context.Context) string {
 		}
 	}
 	return uri
+}
+
+func setSecurityHeaders(w http.ResponseWriter) {
+	w.Header().Set("X-Frame-Options", "deny")
+	w.Header().Set("X-XSS-Protection", "1")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains") // browser will remember for a year to use https
 }

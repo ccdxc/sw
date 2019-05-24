@@ -383,7 +383,7 @@ func createCookie(token string, expiration time.Time) *http.Cookie {
 		Value:    token,
 		Expires:  expiration,
 		MaxAge:   int(expiration.Sub(time.Now()).Seconds()),
-		Secure:   false,
+		Secure:   true,
 		HttpOnly: true,
 		Path:     "/",
 	}

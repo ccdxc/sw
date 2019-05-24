@@ -51,7 +51,7 @@ func TestLogin(t *testing.T) {
 	Assert(t, len(cookies) == 1, "cookie not set in response")
 	Assert(t, cookies[0].Name == "sid", "cookie not present")
 	Assert(t, cookies[0].HttpOnly, "cookie is not http only")
-	//Assert(t, cookies[0].Secure, "cookie is not secure") TODO:// Enable it once APIGW is TLS enabled
+	Assert(t, cookies[0].Secure, "cookie is not secure")
 	maxAge := time.Duration(cookies[0].MaxAge) * time.Second
 	tokExp, _ := time.ParseDuration(ExpiryDuration)
 	Assert(t, maxAge.Round(time.Hour) == tokExp, fmt.Sprintf("cookie max age [%s] is not [%s]", maxAge.Round(time.Hour).String(), tokExp.String()))
