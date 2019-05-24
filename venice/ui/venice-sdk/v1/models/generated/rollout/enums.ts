@@ -87,7 +87,7 @@ export enum RolloutRolloutPhase_phase_uihint {
     'DEPENDENCIES_CHECK' = "DependenciesCheck",
     'FAIL' = "Fail",
     'PRE_CHECK' = "PreCheck",
-    'PROGRESSING' = "Processing",
+    'PROGRESSING' = "Progressing",
     'WAITING_FOR_TURN' = "WaitingForTurn",
 }
 

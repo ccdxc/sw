@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/pensando/sw/api/generated/rollout"
+	roproto "github.com/pensando/sw/api/generated/rollout"
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -46,6 +47,7 @@ func (sm *Statemgr) CreateServiceRolloutState(sro *protos.ServiceRollout, ros *R
 	sros.Mutex.Unlock()
 
 	sm.memDB.AddObject(&sros)
+	ros.setServicePhase(sro.Name, "", "", roproto.RolloutPhase_PROGRESSING)
 	return nil
 }
 

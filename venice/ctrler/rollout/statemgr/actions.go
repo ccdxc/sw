@@ -172,6 +172,10 @@ func (ros *RolloutState) startNextVeniceRollout() (int, error) {
 
 			log.Debugf("setting VeniceRollout for %v with version %v", v.Name, version)
 			err = sm.memDB.UpdateObject(v)
+			if err == nil {
+				log.Infof("Setting Rollout Status %#v", v.status[protos.VeniceOp_VenicePreCheck])
+				ros.setVenicePhase(v.Name, v.status[protos.VeniceOp_VenicePreCheck].OpStatus, v.status[protos.VeniceOp_VenicePreCheck].Message, roproto.RolloutPhase_PROGRESSING)
+			}
 			return 1, err
 		}
 	}

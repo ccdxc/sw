@@ -1402,7 +1402,7 @@
             "DEPENDENCIES_CHECK": "DependenciesCheck",
             "FAIL": "Fail",
             "PRE_CHECK": "PreCheck",
-            "PROGRESSING": "Processing",
+            "PROGRESSING": "Progressing",
             "WAITING_FOR_TURN": "WaitingForTurn"
           },
           "title": "Phase indicates a certain rollout phase/condition"

@@ -8,16 +8,16 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 
 	"github.com/gogo/protobuf/types"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/rollout"
 
 	"github.com/pkg/errors"
 
-	apiintf "github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
-	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -134,6 +134,11 @@ func performRolloutUpdate(ctx context.Context, kv kvstore.Interface, txn kvstore
 		return nil, false, errors.New("invalid kvstore and txn objects")
 	}
 
+	if buf.Spec.Version == "" {
+		h.l.ErrorLog("Version field is empty in rollout object")
+		return nil, false, errors.New("missing version field in rollout object")
+	}
+
 	rolloutObj := rollout.Rollout{}
 	rolloutObjKey := buf.MakeKey(string(apiclient.GroupRollout))
 
@@ -184,6 +189,11 @@ func (h *rolloutHooks) doRolloutAction(ctx context.Context, kv kvstore.Interface
 	if kv == nil || txn == nil {
 		h.l.ErrorLog("Invalid kvstore and txn objects for rolloutAction")
 		return nil, false, errors.New("invalid kvstore and txn objects")
+	}
+
+	if buf.Spec.Version == "" {
+		h.l.ErrorLog("Version field is empty in rollout object")
+		return nil, false, errors.New("missing version field in rollout object")
 	}
 
 	rolloutObj := rollout.Rollout{}

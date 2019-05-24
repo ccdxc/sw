@@ -60,7 +60,7 @@ const (
 	// ui-hint: WaitingForTurn
 	RolloutPhase_WAITING_FOR_TURN RolloutPhase_Phases = 2
 	// Component is undergoing rollout - Either node is rebooting or service is restarting
-	// ui-hint: Processing
+	// ui-hint: Progressing
 	RolloutPhase_PROGRESSING RolloutPhase_Phases = 3
 	// new revision is ready and available for service
 	// ui-hint: Complete

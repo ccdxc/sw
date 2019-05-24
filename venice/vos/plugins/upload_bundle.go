@@ -118,6 +118,11 @@ func getUploadBundleCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc 
 			}
 			log.Infof("uploaded %s in bucket[%s]", versionMap[key][metaName], "default."+bucket)
 		}
+
+		if err := os.RemoveAll(installerTmpDir); err != nil {
+			return fmt.Errorf("Error %s during removeAll of %s", err, installerTmpDir)
+		}
+
 		return nil
 	}
 }

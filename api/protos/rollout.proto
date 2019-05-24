@@ -98,7 +98,7 @@ message RolloutPhase {
         WAITING_FOR_TURN    = 2;
 
         // Component is undergoing rollout - Either node is rebooting or service is restarting
-        //ui-hint: Processing
+        //ui-hint: Progressing
         PROGRESSING         = 3;
 
         // new revision is ready and available for service
