@@ -331,6 +331,8 @@ capri_hbm_cache_regions_init (void)
     mpartition_region_t *reg;
     mpartition_region_t p4ig_reg;
     mpartition_region_t p4eg_reg;
+    mpartition_region_t p4plus_rxdma_reg;
+    mpartition_region_t p4plus_txdma_reg;
     uint32_t            p4ig_filter_idx = 0;
     uint32_t            p4eg_filter_idx = 0;
     uint32_t            p4plus_txdma_filter_idx = 0;
@@ -340,6 +342,8 @@ capri_hbm_cache_regions_init (void)
 
     memset(&p4ig_reg, 0, sizeof(p4ig_reg));
     memset(&p4eg_reg, 0, sizeof(p4eg_reg));
+    memset(&p4plus_rxdma_reg, 0, sizeof(p4plus_rxdma_reg));
+    memset(&p4plus_txdma_reg, 0, sizeof(p4plus_txdma_reg));
     for (int i = 0; i < g_capri_state_pd->mempartition()->num_regions(); i++) {
         reg = g_capri_state_pd->mempartition()->region(i);
         if (is_region_cache_pipe_none(reg)) {
@@ -389,21 +393,45 @@ capri_hbm_cache_regions_init (void)
         }
 
         if (is_region_cache_pipe_p4plus_txdma(reg)) {
-            SDK_TRACE_DEBUG("Programming %s to P4PLUS TXDMA cache(region 3), "
-                            "start=%lx size=%u index=%u", reg->mem_reg_name,
-                            g_capri_state_pd->mempartition()->addr(reg->start_offset),
-                            reg->size, p4plus_txdma_filter_idx);
-            capri_hbm_cache_program_region(reg, 3, p4plus_txdma_filter_idx, 1, 1);
-            p4plus_txdma_filter_idx++;
+            if ((p4plus_txdma_reg.start_offset == 0) ||
+                ((p4plus_txdma_reg.start_offset + p4plus_txdma_reg.size) != (reg->start_offset))) {
+                SDK_TRACE_DEBUG("Programming %s to P4PLUS TXDMA cache(region 3), "
+                                "start=%lx size=%u index=%u", reg->mem_reg_name,
+                                g_capri_state_pd->mempartition()->addr(reg->start_offset),
+                                reg->size, p4plus_txdma_filter_idx);
+                p4plus_txdma_reg.start_offset = reg->start_offset;
+                p4plus_txdma_reg.size = reg->size;
+                capri_hbm_cache_program_region(&p4plus_txdma_reg, 3, p4plus_txdma_filter_idx, 1, 1);
+                p4plus_txdma_filter_idx++;
+            } else {
+                p4plus_txdma_reg.size += reg->size;
+                SDK_TRACE_DEBUG("Programming %s to P4PLUS TXDMA cache(region 3) (merge), "
+                                "start=%lx size=%u index=%u", reg->mem_reg_name,
+                                g_capri_state_pd->mempartition()->addr(p4plus_txdma_reg.start_offset),
+                                p4plus_txdma_reg.size, p4plus_txdma_filter_idx - 1);
+                capri_hbm_cache_program_region(&p4plus_txdma_reg, 3, p4plus_txdma_filter_idx - 1, 1, 1);
+            }
         }
 
         if (is_region_cache_pipe_p4plus_rxdma(reg)) {
-            SDK_TRACE_DEBUG("Programming %s to P4PLUS RXDMA cache(region 0), "
-                            "start=%lx size=%u index=%u", reg->mem_reg_name,
-                            g_capri_state_pd->mempartition()->addr(reg->start_offset),
-                            reg->size, p4plus_rxdma_filter_idx);
-            capri_hbm_cache_program_region(reg, 0, p4plus_rxdma_filter_idx, 1, 1);
-            p4plus_rxdma_filter_idx++;
+            if ((p4plus_rxdma_reg.start_offset == 0) ||
+                ((p4plus_rxdma_reg.start_offset + p4plus_rxdma_reg.size) != (reg->start_offset))) {
+                SDK_TRACE_DEBUG("Programming %s to P4PLUS RXDMA cache(region 0), "
+                                "start=%lx size=%u index=%u", reg->mem_reg_name,
+                                g_capri_state_pd->mempartition()->addr(reg->start_offset),
+                                reg->size, p4plus_rxdma_filter_idx);
+                p4plus_rxdma_reg.start_offset = reg->start_offset;
+                p4plus_rxdma_reg.size = reg->size;
+                capri_hbm_cache_program_region(&p4plus_rxdma_reg, 0, p4plus_rxdma_filter_idx, 1, 1);
+                p4plus_rxdma_filter_idx++;
+            } else {
+                p4plus_rxdma_reg.size += reg->size;
+                SDK_TRACE_DEBUG("Programming %s to P4PLUS RXDMA cache(region 0) (merge), "
+                                "start=%lx size=%u index=%u", reg->mem_reg_name,
+                                g_capri_state_pd->mempartition()->addr(p4plus_rxdma_reg.start_offset),
+                                p4plus_rxdma_reg.size, p4plus_rxdma_filter_idx - 1);
+                capri_hbm_cache_program_region(&p4plus_rxdma_reg, 0, p4plus_rxdma_filter_idx - 1, 1, 1);
+            }
         }
 
         if (is_region_cache_pipe_p4plus_pciedb(reg)) {

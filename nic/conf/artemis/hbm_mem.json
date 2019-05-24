@@ -112,11 +112,6 @@
             "_comment": "1K descriptors of size 64B"
         },
         {
-            "name": "nat",
-            "size": "131072K",
-            "cache": "p4eg"
-        },
-        {
             "name": "lpm",
             "_comment_v4_region_size": "(64+1) * (64 + 16 * 64 + 16 * 16 * 64) = 2M",
             "_comment_v6_region_size": "(64+1) * (64 + 8 * 64 + 8 * 8 * 64 + 8 * 8 * 8 * 64) = 3M",
@@ -233,6 +228,11 @@
             "size": "128M",
             "cache": "p4ig",
             "_comment": "4M * 32B"
+        },
+        {
+            "name": "nat",
+            "size": "131072K",
+            "cache": "p4eg"
         },
         {
             "name": "session",
