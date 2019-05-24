@@ -16,6 +16,7 @@
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/meter.hpp"
 #include "nic/apollo/agent/svc/tag.hpp"
+#include "nic/apollo/agent/svc/vnic.hpp"
 #include "gen/proto/types.pb.h"
 
 //----------------------------------------------------------------------------
@@ -127,6 +128,44 @@ tag_api_spec_to_proto_spec (const pds_tag_spec_t *api_spec,
         for (uint32_t j = 0; j < api_spec->rules[i].num_prefixes; j ++) {
             ippfx_api_spec_to_proto_spec(
                     rule->add_prefix(), &api_spec->rules[i].prefixes[j]);
+        }
+    }
+}
+
+// Populate proto buf spec from vnic API spec
+static inline void
+vnic_api_spec_to_proto_spec (const pds_vnic_spec_t *api_spec,
+                             pds::VnicSpec *proto_spec)
+{
+    if (!api_spec || !proto_spec) {
+        return;
+    }
+    proto_spec->set_vnicid(api_spec->key.id);
+    proto_spec->set_vpcid(api_spec->vpc.id);
+    proto_spec->set_subnetid(api_spec->subnet.id);
+    pds_encap_to_proto_encap(proto_spec->mutable_vnicencap(),
+                             &api_spec->vnic_encap);
+    proto_spec->set_macaddress(MAC_TO_UINT64(api_spec->mac_addr));
+    proto_spec->set_providermacaddress(
+                        MAC_TO_UINT64(api_spec->provider_mac_addr));
+    pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(),
+                             &api_spec->fabric_encap);
+    proto_spec->set_resourcepoolid(api_spec->rsc_pool_id);
+    proto_spec->set_sourceguardenable(api_spec->src_dst_check);
+    proto_spec->set_v4meterid(api_spec->v4_meter.id);
+    proto_spec->set_v6meterid(api_spec->v6_meter.id);
+    if (api_spec->tx_mirror_session_bmap) {
+        for (uint8_t i = 0; i < 8; i++) {
+            if (api_spec->tx_mirror_session_bmap & (1 << i)) {
+                proto_spec->add_txmirrorsessionid(i + 1);
+            }
+        }
+    }
+    if (api_spec->rx_mirror_session_bmap) {
+        for (uint8_t i = 0; i < 8; i++) {
+            if (api_spec->rx_mirror_session_bmap & (1 << i)) {
+                proto_spec->add_rxmirrorsessionid(i + 1);
+            }
         }
     }
 }

@@ -32,6 +32,15 @@ pds_agent_local_mapping_api_spec_fill (pds_local_mapping_spec_t *local_spec,
                                           proto_spec.publicip());
         }
     }
+    if (proto_spec.has_providerip()) {
+        if (proto_spec.providerip().af() == types::IP_AF_INET ||
+            proto_spec.providerip().af() == types::IP_AF_INET6) {
+            local_spec->provider_ip_valid = true;
+            ipaddr_proto_spec_to_api_spec(&local_spec->provider_ip,
+                                          proto_spec.providerip());
+        }
+    }
+    local_spec->svc_tag = proto_spec.servicetag();
     MAC_UINT64_TO_ADDR(local_spec->vnic_mac, proto_spec.macaddr());
     local_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.encap());
 }

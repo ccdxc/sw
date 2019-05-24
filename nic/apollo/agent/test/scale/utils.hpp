@@ -215,6 +215,10 @@ populate_local_mapping_request (MappingRequest *req,
     if (local_spec->public_ip_valid) {
         ip_addr_to_spec(spec->mutable_publicip(), &local_spec->public_ip);
     }
+    if (local_spec->provider_ip_valid) {
+        ip_addr_to_spec(spec->mutable_providerip(), &local_spec->provider_ip);
+    }
+    spec->set_servicetag(local_spec->svc_tag);
     return;
 }
 
@@ -235,39 +239,6 @@ populate_remote_mapping_request (MappingRequest *req,
     spec->set_tunnelid(remote_spec->tep.ip_addr);
     spec->set_macaddr(MAC_TO_UINT64(remote_spec->vnic_mac));
     pds_encap_to_proto_encap(spec->mutable_encap(), &remote_spec->fabric_encap);
-    return;
-}
-
-static void
-populate_vnic_request (VnicRequest *req, pds_vnic_spec_t *vnic)
-{
-    if (!vnic || !req) {
-        return;
-    }
-
-    VnicSpec *spec = req->add_request();
-    spec->set_vpcid(vnic->vpc.id);
-    spec->set_subnetid(vnic->subnet.id);
-    spec->set_vnicid(vnic->key.id);
-    pds_encap_to_proto_encap(spec->mutable_vnicencap(), &vnic->vnic_encap);
-    spec->set_macaddress(MAC_TO_UINT64(vnic->mac_addr));
-    spec->set_resourcepoolid(vnic->rsc_pool_id);
-    spec->set_sourceguardenable(vnic->src_dst_check);
-    pds_encap_to_proto_encap(spec->mutable_fabricencap(), &vnic->fabric_encap);
-    if (vnic->tx_mirror_session_bmap) {
-        for (uint8_t i = 0; i < 8; i++) {
-            if (vnic->tx_mirror_session_bmap & (1 << i)) {
-                spec->add_txmirrorsessionid(i + 1);
-            }
-        }
-    }
-    if (vnic->rx_mirror_session_bmap) {
-        for (uint8_t i = 0; i < 8; i++) {
-            if (vnic->rx_mirror_session_bmap & (1 << i)) {
-                spec->add_rxmirrorsessionid(i + 1);
-            }
-        }
-    }
     return;
 }
 

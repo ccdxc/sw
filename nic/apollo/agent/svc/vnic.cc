@@ -7,6 +7,7 @@
 #include "nic/apollo/agent/core/vnic.hpp"
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/vnic.hpp"
+#include "nic/apollo/agent/svc/specs.hpp"
 
 // build VNIC api spec from proto buf spec
 static inline sdk_ret_t
@@ -21,6 +22,7 @@ pds_vnic_proto_spec_to_api_spec (pds_vnic_spec_t *api_spec,
     api_spec->vnic_encap = proto_encap_to_pds_encap(proto_spec.vnicencap());
     api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
     MAC_UINT64_TO_ADDR(api_spec->mac_addr, proto_spec.macaddress());
+    MAC_UINT64_TO_ADDR(api_spec->provider_mac_addr, proto_spec.providermacaddress());
     api_spec->rsc_pool_id = proto_spec.resourcepoolid();
     api_spec->src_dst_check = proto_spec.sourceguardenable();
     for (int i = 0; i < proto_spec.txmirrorsessionid_size(); i++) {
@@ -135,25 +137,6 @@ VnicSvcImpl::VnicDelete(ServerContext *context,
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
     }
     return Status::OK;
-}
-
-// Populate proto buf spec from vnic API spec
-static inline void
-vnic_api_spec_to_proto_spec (const pds_vnic_spec_t *api_spec,
-                             pds::VnicSpec *proto_spec)
-{
-    proto_spec->set_vnicid(api_spec->key.id);
-    proto_spec->set_vpcid(api_spec->vpc.id);
-    proto_spec->set_subnetid(api_spec->subnet.id);
-    pds_encap_to_proto_encap(proto_spec->mutable_vnicencap(),
-                             &api_spec->vnic_encap);
-    proto_spec->set_macaddress(MAC_TO_UINT64(api_spec->mac_addr));
-    pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(),
-                             &api_spec->fabric_encap);
-    proto_spec->set_resourcepoolid(api_spec->rsc_pool_id);
-    proto_spec->set_sourceguardenable(api_spec->src_dst_check);
-    proto_spec->set_v4meterid(api_spec->v4_meter.id);
-    proto_spec->set_v6meterid(api_spec->v6_meter.id);
 }
 
 // Populate proto buf status from vnic API status

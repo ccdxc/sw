@@ -140,7 +140,10 @@ create_vnic_grpc (pds_vnic_spec_t *vnic)
     VnicResponse    response;
     Status          ret_status;
 
-    populate_vnic_request(&g_vnic_req, vnic);
+    if (vnic != NULL) {
+        pds::VnicSpec *proto_spec = g_vnic_req.add_request();
+        vnic_api_spec_to_proto_spec(vnic, proto_spec);
+    }
     if ((g_vnic_req.request_size() >= APP_GRPC_BATCH_COUNT) || !vnic) {
         ret_status = g_vnic_stub_->VnicCreate(&context, g_vnic_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {

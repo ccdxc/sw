@@ -48,7 +48,7 @@ message MappingSpec {
   // service tag for this IP mapping, if exists. service tag can be used
   // in defining security policies
   // NOTE: service tag 0 is invalid
-  uint32          ServceTag   = 9;
+  uint32          ServiceTag  = 9;
 }
 
 // operational status of a mapping

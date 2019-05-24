@@ -78,6 +78,8 @@ typedef struct test_params_s {
     struct {
         ip_prefix_t nat_pfx;
         ip_prefix_t v6_nat_pfx;
+        ip_prefix_t provider_pfx;
+        ip_prefix_t v6_provider_pfx;
         uint32_t num_ip_per_vnic;
         uint32_t num_remote_mappings;
     };
@@ -302,7 +304,9 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                  uint32_t num_vnics, uint32_t num_ip_per_vnic,
                  ip_prefix_t *teppfx, ip_prefix_t *natpfx,
                  ip_prefix_t *v6_natpfx,
-                 uint32_t num_remote_mappings)
+                 uint32_t num_remote_mappings,
+                 ip_prefix_t *provider_pfx,
+                 ip_prefix_t *v6_provider_pfx)
 {
     sdk_ret_t rv;
     pds_local_mapping_spec_t pds_local_mapping;
@@ -312,6 +316,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
     uint16_t vnic_key = 1, ip_base;
     uint32_t ip_offset = 0, remote_slot = 1025;
     uint32_t tep_offset = 0, v6_tep_offset = 0;
+    static uint32_t svc_tag = 1;
 
     // ensure a max. of 32 IPs per VNIC
     SDK_ASSERT(num_vpcs * num_subnets * num_vnics * num_ip_per_vnic <=
@@ -347,8 +352,13 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     if (natpfx) {
                         pds_local_mapping.public_ip_valid = true;
                         pds_local_mapping.public_ip.addr.v4_addr =
-                            natpfx->addr.addr.v4_addr + ip_offset++;
+                            natpfx->addr.addr.v4_addr + ip_offset;
                     }
+                    pds_local_mapping.provider_ip_valid = true;
+                    pds_local_mapping.provider_ip.addr.v4_addr =
+                                    provider_pfx->addr.addr.v4_addr + ip_offset;
+                    pds_local_mapping.svc_tag = svc_tag++;
+                    ip_offset++;
 
 #ifdef TEST_GRPC_APP
                     rv = create_local_mapping_grpc(&pds_local_mapping);
@@ -380,6 +390,10 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                             CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_local_v6_mapping.public_ip.addr.v6_addr,
                                                             pds_local_mapping.public_ip.addr.v4_addr);
                         }
+                        pds_local_v6_mapping.provider_ip_valid = true;
+                        pds_local_v6_mapping.provider_ip.addr.v6_addr = v6_provider_pfx->addr.addr.v6_addr;
+                        CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_local_v6_mapping.provider_ip.addr.v6_addr,
+                                                        pds_local_mapping.provider_ip.addr.v4_addr);
 #ifdef TEST_GRPC_APP
                         rv = create_local_mapping_grpc(&pds_local_v6_mapping);
                         if (rv != SDK_RET_OK) {
@@ -536,8 +550,22 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                     pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
                     pds_vnic.fabric_encap.val.mpls_tag = vnic_key;
                 }
+                // MAC ADDR bits based as below
+                // vnic:   bits  0 - 10
+                // subnet: bits 11 - 21
+                // vpc:    bits 22 - 32
                 MAC_UINT64_TO_ADDR(pds_vnic.mac_addr,
                                    (((((uint64_t)i & 0x7FF) << 22) |
+                                     ((j & 0x7FF) << 11) | (k & 0x7FF))));
+
+                // Provider MAC ADDR bits based as below
+                // vnic:   bits  0 - 10
+                // subnet: bits 11 - 21
+                // vpc:    bits 22 - 32
+                // 1:      bit 33
+                MAC_UINT64_TO_ADDR(pds_vnic.provider_mac_addr,
+                                   (((1 << 33) |
+                                     (((uint64_t)i & 0x7FF) << 22) |
                                      ((j & 0x7FF) << 11) | (k & 0x7FF))));
                 pds_vnic.rsc_pool_id = 1;
                 pds_vnic.src_dst_check = false; //(k & 0x1);
@@ -1132,6 +1160,10 @@ create_objects (void)
                     std::stol(obj.second.get<std::string>("remotes"));
                 g_test_params.num_ip_per_vnic =
                     std::stol(obj.second.get<std::string>("locals"));
+                pfxstr = obj.second.get<std::string>("provider-prefix");
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.provider_pfx) == 0);
+                pfxstr = obj.second.get<std::string>("v6-provider-prefix");
+                assert(str2ipv6pfx((char *)pfxstr.c_str(), &g_test_params.v6_provider_pfx) == 0);
             } else if (kind == "flows") {
                 g_test_params.num_tcp = std::stol(obj.second.get<std::string>("num_tcp"));
                 g_test_params.num_udp = std::stol(obj.second.get<std::string>("num_udp"));
@@ -1290,7 +1322,9 @@ create_objects (void)
                           g_test_params.num_subnets, g_test_params.num_vnics,
                           g_test_params.num_ip_per_vnic, &g_test_params.tep_pfx,
                           &g_test_params.nat_pfx, &g_test_params.v6_nat_pfx,
-                          g_test_params.num_remote_mappings);
+                          g_test_params.num_remote_mappings,
+                          &g_test_params.provider_pfx,
+                          &g_test_params.v6_provider_pfx);
     if (ret != SDK_RET_OK) {
         return ret;
     }
