@@ -243,6 +243,13 @@ ui-container-helper:
 ui-container:
 	docker run -it --network none --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} bash; \
 
+# update web-app-framework.tgz asset to minio
+ui-update-asset: ui-framework
+	tar czvf asset.tgz venice/ui/web-app-framework/web-app-framework.tgz
+	cd asset-build/asset-upload/ && go install
+	python tools/scripts/ui_update_minio_version.py
+	rm asset.tgz venice/ui/web-app-framework/web-app-framework.tgz
+
 # running as 'make container-compile UI_FRAMEWORK=1' will also force the UI-framework compilation
 container-compile:
 	@mkdir -p ${PWD}/bin/cbin
@@ -472,6 +479,7 @@ palazzo:
 ui-framework:
 	yarn -v;
 	cd venice/ui/web-app-framework && yarn run pack
+	$(MAKE) ui-link-framework
 
 ui-link-framework:
 	cd venice/ui/web-app-framework && cd dist && yalc publish --private
