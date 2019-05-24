@@ -176,7 +176,7 @@ main (int argc, char **argv)
     }
 
     // make sure the cfg file exists
-    file = cfg_path + "apollo/" + std::string(cfg_file);
+    file = cfg_path + "/" + pipeline + "/" + std::string(cfg_file);
     if (access(file.c_str(), R_OK) < 0) {
         fprintf(stderr, "Config file %s doesn't exist or not accessible\n",
                 file.c_str());
