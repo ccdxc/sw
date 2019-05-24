@@ -39,6 +39,16 @@ VxlanIdAllocator = iter(irange(80001, 81024))
 InvalidVxlanIdAllocator = iter(irange(10001,12000))
 MirrorSessionIdAllocator = iter(irange(1, 8))
 
+#TODO: read from PDS header files & init
+MAX_DEVICE = 1
+MAX_TUNNEL = 1023
+MAX_VPC = 64
+MAX_VNIC = 64
+MAX_SUBNET = 64
+MAX_ROUTE_TABLE = 1024
+MAX_POLICY = 1023
+MAX_MIRROR = 8
+
 # Create subnets from base prefix
 # - base is a prefix in the form of '10.0.0.0/16'
 # - sublen is the subnet length, gt base prefix length.
@@ -111,4 +121,3 @@ VPC_V6_PREFIX_OVERLAP_DIST=128
 def GetVpcIPv6Prefix(vpcid):
     pfxstr = '%s:%04x::/48'%(VPC_V6_BASE, ((vpcid%VPC_V6_PREFIX_OVERLAP_DIST)+VPC_V6_PREFIX_BASE))
     return ipaddress.IPv6Network(pfxstr)
-

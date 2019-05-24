@@ -94,6 +94,13 @@ class TunnelObjectClient:
     def Objects(self):
         return self.__objs
 
+    def IsValidConfig(self):
+        count = len(self.__objs)
+        if  count > resmgr.MAX_TUNNEL:
+            return False, "Tunnel count %d exceeds allowed limit of %d" %\
+                          (count, resmgr.MAX_TUNNEL)
+        return True, ""
+
     def GenerateObjects(self, parent, tunnelspec):
         # Generate Local Tunnel object
         self.__lobjs.append(TunnelObject(parent, None, True))

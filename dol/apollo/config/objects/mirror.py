@@ -80,6 +80,13 @@ class MirrorSessionObjectClient:
     def Objects(self):
         return self.__objs.values()
 
+    def IsValidConfig(self):
+        count = len(self.__objs.values())
+        if  count > resmgr.MAX_MIRROR:
+            return False, "Mirror count %d exceeds allowed limit of %d" %\
+                          (count, resmgr.MAX_MIRROR)
+        return True, ""
+
     def GetMirrorObject(self, mirrorid):
         return self.__objs.get(mirrorid, None)
 

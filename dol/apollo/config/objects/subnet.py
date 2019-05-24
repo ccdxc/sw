@@ -144,6 +144,13 @@ class SubnetObjectClient:
     def Objects(self):
         return self.__objs
 
+    def IsValidConfig(self):
+        count = len(self.__objs)
+        if  count > resmgr.MAX_SUBNET:
+            return False, "Subnet count %d exceeds allowed limit of %d" %\
+                          (count, resmgr.MAX_SUBNET)
+        return True, ""
+
     def GenerateObjects(self, parent, vpc_spec_obj):
         poolid = 0
         for subnet_spec_obj in vpc_spec_obj.subnet:

@@ -71,6 +71,13 @@ class DeviceObjectClient:
     def Objects(self):
         return self.__objs
 
+    def IsValidConfig(self):
+        count = len(self.__objs)
+        if  count > resmgr.MAX_DEVICE:
+            return False, "Device count %d exceeds allowed limit of %d" %\
+                          (count, resmgr.MAX_DEVICE)
+        return True, ""
+
     def GenerateObjects(self, topospec):
         obj = DeviceObject(topospec.device)
         self.__objs.append(obj)

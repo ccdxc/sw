@@ -45,11 +45,6 @@ vpc:
               public  : true
           rmap:                       # Remote IP mappings per subnet
             - count : 2
-        - count     : 2
-          v4prefixlen : 28
-          v6prefixlen : 96
-          rmap:
-            - count : 2
       routetbl:
              - type: specific # route table with disjoint routes
                count : 1 # always 1 if routes specified by user

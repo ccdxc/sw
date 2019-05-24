@@ -103,6 +103,13 @@ class VpcObjectClient:
     def Objects(self):
         return self.__objs.values()
 
+    def IsValidConfig(self):
+        count = len(self.__objs.values())
+        if  count > resmgr.MAX_VPC:
+            return False, "VPC count %d exceeds allowed limit of %d" %\
+                          (count, resmgr.MAX_VPC)
+        return True, ""
+
     def GetVpcObject(self, vpcid):
         return self.__objs.get(vpcid, None)
 

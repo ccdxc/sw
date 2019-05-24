@@ -143,6 +143,13 @@ class PolicyObjectClient:
     def Objects(self):
         return self.__objs
 
+    def IsValidConfig(self):
+        count = len(self.__objs)
+        if  count > resmgr.MAX_POLICY:
+            return False, "Policy count %d exceeds allowed limit of %d" %\
+                          (count, resmgr.MAX_POLICY)
+        return True, ""
+
     def GetIngV4SecurityPolicyId(self, vpcid):
         if len(self.__v4ingressobjs[vpcid]) == 0:
             return 0

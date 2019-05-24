@@ -110,6 +110,19 @@ class RouteObjectClient:
     def Objects(self):
         return self.__objs.values()
 
+    def IsValidConfig(self):
+        count = sum(list(map(lambda x: len(x.values()), self.__v4objs.values())))
+        if  count > resmgr.MAX_ROUTE_TABLE:
+            return False, "V4 Route Table count %d exceeds allowed limit of %d" %\
+                          (count, resmgr.MAX_ROUTE_TABLE)
+        count = sum(list(map(lambda x: len(x.values()), self.__v6objs.values())))
+        if  count > resmgr.MAX_ROUTE_TABLE:
+            return False, "V6 Route Table count %d exceeds allowed limit of %d" %\
+                          (count, resmgr.MAX_ROUTE_TABLE)
+        #TODO: check route table count equals subnet count in that VPC
+        #TODO: check scale of routes per route table
+        return True, ""
+
     def GetRouteV4Table(self, vpcid, routetblid):
         return self.__v4objs[vpcid].get(routetblid, None)
 

@@ -97,6 +97,13 @@ class VnicObjectClient:
     def Objects(self):
         return self.__objs
 
+    def IsValidConfig(self):
+        count = len(self.__objs)
+        if  count > resmgr.MAX_VNIC:
+            return False, "VNIC count %d exceeds allowed limit of %d" %\
+                          (count, resmgr.MAX_VNIC)
+        return True, ""
+
     def GenerateObjects(self, parent, subnet_spec_obj):
         if getattr(subnet_spec_obj, 'vnic', None) == None:
             return
