@@ -104,8 +104,9 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
    }
   }
 
-  isToUseWebSocket() {
-    return (environment.production) ;
+  isToUseWebSocket(): boolean {
+     // TODO:  in MAC dev env. Use:  return (environment.production) ;
+     return true;
   }
 
   /** Override parent API as watchRolloutImages() is not working. */
