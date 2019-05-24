@@ -11,10 +11,10 @@
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/batch.hpp"
-#include "nic/apollo/test/utils/workflow.hpp"
 #include "nic/apollo/test/utils/route.hpp"
 #include "nic/apollo/test/utils/tep.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
+#include "nic/apollo/test/utils/workflow.hpp"
 
 using std::cerr;
 using std::cout;
@@ -48,15 +48,13 @@ protected:
     virtual void TearDown() {}
     static void SetUpTestCase() {
         test_case_params_t params;
-        pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
         tep_stepper_seed_t tep_seed = {};
 
         params.cfg_file = api_test::g_cfg_file;
         params.enable_fte = false;
         params.pipeline = g_pipeline;
         pds_test_base::SetUpTestCase(params);
-        TEP_SEED_INIT(PDS_MAX_TEP, k_base_nh_ip, PDS_TEP_TYPE_WORKLOAD,
-                      encap, TRUE, &tep_seed);
+        TEP_SEED_INIT(&tep_seed, k_base_nh_ip);
         batch_start();
         // create vpc which can be used for vpc peering routes
         VPC_CREATE(k_vpc_obj);
@@ -65,11 +63,9 @@ protected:
         batch_commit();
     }
     static void TearDownTestCase() {
-        pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
         tep_stepper_seed_t tep_seed = {};
 
-        TEP_SEED_INIT(PDS_MAX_TEP, k_base_nh_ip, PDS_TEP_TYPE_WORKLOAD,
-                      encap, TRUE, &tep_seed);
+        TEP_SEED_INIT(&tep_seed, k_base_nh_ip);
         batch_start();
         TEP_MANY_DELETE(&tep_seed);
         VPC_DELETE(k_vpc_obj);

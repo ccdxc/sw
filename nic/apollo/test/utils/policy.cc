@@ -22,8 +22,7 @@ policy_util::policy_util(pds_policy_id_t id,
                          rule_t *rules,
                          rule_dir_t direction,
                          uint8_t af,
-                         policy_type_t type)
-{
+                         policy_type_t type) {
     __init();
     this->id = id;
     this->num_rules = num_rules;
@@ -33,8 +32,7 @@ policy_util::policy_util(pds_policy_id_t id,
     this->af = af;
 }
 
-policy_util::policy_util(policy_seed_stepper_t *seed)
-{
+policy_util::policy_util(policy_seed_stepper_t *seed) {
     __init();
     this->id = seed->id;
     this->num_rules = seed->num_rules;
@@ -105,8 +103,7 @@ create_rules(std::string pfx, uint16_t num_rules,
 }
 
 sdk::sdk_ret_t
-policy_util::create()
-{
+policy_util::create(void) {
     pds_policy_spec_t spec = {};
 
     spec.key.id = this->id;
@@ -121,8 +118,7 @@ policy_util::create()
 }
 
 sdk::sdk_ret_t
-policy_util::read(pds_policy_info_t *info)
-{
+policy_util::read(pds_policy_info_t *info) const {
     sdk_ret_t rv = sdk::SDK_RET_OK;
     pds_policy_key_t key;
     int af;
@@ -152,8 +148,7 @@ policy_util::read(pds_policy_info_t *info)
 }
 
 sdk::sdk_ret_t
-policy_util::update()
-{
+policy_util::update(void) {
     pds_policy_spec_t spec = {};
 
     spec.key.id = this->id;
@@ -169,9 +164,9 @@ policy_util::update()
 
 
 sdk::sdk_ret_t
-policy_util::del()
-{
+policy_util::del(void) const {
     pds_policy_key_t policy_key = {};
+
     policy_key.id = this->id;
     return (pds_policy_delete(&policy_key));
 }

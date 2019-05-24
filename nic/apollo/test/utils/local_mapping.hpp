@@ -54,20 +54,20 @@ public:
 
     /// \brief Create local IP mapping
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t create(void);
+    sdk_ret_t create(void) const;
 
     /// \brief Read local IP mapping
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_local_mapping_info_t *info);
+    sdk_ret_t read(pds_local_mapping_info_t *info) const;
 
     /// \brief Update local IP mapping
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update(pds_local_mapping_spec_t *spec);
+    sdk_ret_t update(pds_local_mapping_spec_t *spec) const;
 
     /// \brief Delete local/remote ip mapping
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t del(void);
+    sdk_ret_t del(void) const;
 
     /// \brief Create many local IP mapping for the given <vpc, subnet>
     /// max num_mappings = num_ip_per_vnic * num_vnics

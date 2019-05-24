@@ -66,23 +66,23 @@ public:
     /// \brief Create device
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t create(void);
+    sdk_ret_t create(void) const;
 
     /// \brief Read device
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
     sdk_ret_t read(pds_device_info_t *info,
-                   sdk::sdk_ret_t expected_res = sdk::SDK_RET_OK);
+                   sdk::sdk_ret_t expected_res = sdk::SDK_RET_OK) const;
 
     /// \brief Update device
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update(void);
+    sdk_ret_t update(void) const;
 
     /// \brief Delete device
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t del(void);
+    sdk_ret_t del(void) const;
 
     // \brief Create many devices
     ///
@@ -110,10 +110,16 @@ public:
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_delete(device_stepper_seed_t *seed);
 
+    /// \brief Initialize the seed for device
+    ///
+    /// \param[out] seed device seed
+    /// \param[in] device_ip_str device ip address
+    /// \param[in] mac_addr_str device mac address
+    /// \param[in] gateway_ip_str gateway ip address
     static void stepper_seed_init(device_stepper_seed_t *seed,
-                                       std::string device_ip_str,
-                                       std::string mac_addr_str,
-                                       std::string gateway_ip_str);
+                                  std::string device_ip_str,
+                                  std::string mac_addr_str,
+                                  std::string gateway_ip_str);
 
     /// \brief Indicates whether device is stateful
     ///

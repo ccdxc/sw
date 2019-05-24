@@ -47,7 +47,7 @@ local_mapping_util::local_mapping_util(
 local_mapping_util::~local_mapping_util() {}
 
 sdk::sdk_ret_t
-local_mapping_util::create(void) {
+local_mapping_util::create(void) const {
     pds_local_mapping_spec_t local_spec = {0};
 
     local_spec.key.vpc.id = this->vpc_id;
@@ -79,7 +79,7 @@ local_mapping_util::create(void) {
 }
 
 sdk::sdk_ret_t
-local_mapping_util::read(pds_local_mapping_info_t *info) {
+local_mapping_util::read(pds_local_mapping_info_t *info) const {
     // uint64_t mac1, mac2;
     sdk_ret_t rv = sdk::SDK_RET_OK;
     pds_mapping_key_t key = {0};
@@ -136,7 +136,7 @@ local_mapping_util::read(pds_local_mapping_info_t *info) {
 }
 
 sdk::sdk_ret_t
-local_mapping_util::del(void) {
+local_mapping_util::del(void) const {
     pds_mapping_key_t key;
 
     key.vpc.id = vpc_id;

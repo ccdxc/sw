@@ -50,7 +50,7 @@ device_util::stepper_seed_init(device_stepper_seed_t *seed,
 }
 
 sdk_ret_t
-device_util::create() {
+device_util::create(void) const {
     pds_device_spec_t spec;
     ip_prefix_t device_ip_pfx, gateway_ip_pfx;
 
@@ -68,7 +68,7 @@ device_util::create() {
 
 sdk_ret_t
 device_util::read(pds_device_info_t *info,
-                  sdk::sdk_ret_t expected_res) {
+                  sdk::sdk_ret_t expected_res) const {
     sdk_ret_t rv;
 
     memset(info, 0, sizeof(pds_device_info_t));
@@ -100,7 +100,7 @@ device_util::read(pds_device_info_t *info,
 }
 
 sdk_ret_t
-device_util::update() {
+device_util::update(void) const {
     pds_device_spec_t spec;
     ip_prefix_t device_ip_pfx, gateway_ip_pfx;
 
@@ -117,7 +117,7 @@ device_util::update() {
 }
 
 sdk_ret_t
-device_util::del() {
+device_util::del(void) const {
     return (pds_device_delete());
 }
 

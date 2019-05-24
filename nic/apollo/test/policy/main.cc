@@ -14,6 +14,7 @@
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
+#include "nic/apollo/test/utils/batch.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
 #include "nic/apollo/test/utils/policy.hpp"
 
@@ -24,10 +25,10 @@ using std::endl;
 namespace api_test {
 
 // Globals
-char *g_cfg_file = NULL;
-std::string g_pipeline("");
-uint16_t g_num_policy = PDS_MAX_SECURITY_POLICY; // can overwrite using cmd line
-static pds_epoch_t g_batch_epoch = 1; // PDS_EPOCH_INVALID;
+static const char *g_cfg_file = NULL;
+static std::string g_pipeline("");
+static uint16_t g_num_policy = PDS_MAX_SECURITY_POLICY; // can overwrite using cmd line
+static const vpc_util k_vpc_obj(1, "10.0.0.0/8");
 
 //----------------------------------------------------------------------------
 // Policy test class
@@ -41,27 +42,21 @@ protected:
     virtual void TearDown() {}
     static void SetUpTestCase() {
         test_case_params_t params;
+
         params.cfg_file = api_test::g_cfg_file;
-        params.enable_fte = false;
-        params.pipeline = g_pipeline;
+        params.pipeline = api_test::g_pipeline;
+        params.enable_fte = FALSE;
         pds_test_base::SetUpTestCase(params);
         g_trace_level = sdk::lib::SDK_TRACE_LEVEL_INFO;
-        pds_batch_params_t batch_params = {0};
-        vpc_util vpc_obj(1, "10.0.0.0/8");
-
-        BATCH_START();
-        ASSERT_TRUE(vpc_obj.create() == sdk::SDK_RET_OK);
-        BATCH_COMMIT();
+        batch_start();
+        VPC_CREATE(k_vpc_obj);
+        batch_commit();
     }
     static void TearDownTestCase() {
-        pds_batch_params_t batch_params = {0};
-        vpc_util vpc_obj(1, "10.0.0.0/8");
-
         g_trace_level = sdk::lib::SDK_TRACE_LEVEL_DEBUG;
-        BATCH_START();
-        ASSERT_TRUE(vpc_obj.del() == sdk::SDK_RET_OK);
-        BATCH_COMMIT();
-
+        batch_start();
+        VPC_DELETE(k_vpc_obj);
+        batch_commit();
         pds_test_base::TearDownTestCase();
     }
 };
@@ -78,7 +73,6 @@ protected:
 /// from hardware perspective
 /// [ Create SetMax, Delete SetMax ] - Read
 TEST_F(policy, policy_workflow_1) {
-    pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed;
     uint32_t num_policy = g_num_policy;
     uint32_t policy_id = 1;
@@ -88,10 +82,10 @@ TEST_F(policy, policy_workflow_1) {
                      POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
                      num_policy);
     // trigger
-    BATCH_START();
+    batch_start();
     POLICY_MANY_CREATE(&seed);
     POLICY_MANY_DELETE(&seed);
-    BATCH_COMMIT();
+    batch_commit();
     POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
@@ -100,7 +94,6 @@ TEST_F(policy, policy_workflow_1) {
 /// should result in successful creation
 /// [ Create SetMax - Delete SetMax - Create SetMax ] - Read
 TEST_F(policy, policy_workflow_2) {
-    pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed;
     uint32_t num_policy = g_num_policy;
     uint32_t policy_id = 1;
@@ -111,17 +104,17 @@ TEST_F(policy, policy_workflow_2) {
                      num_policy);
 
     // trigger
-    BATCH_START();
+    batch_start();
     POLICY_MANY_CREATE(&seed);
     POLICY_MANY_DELETE(&seed);
     POLICY_MANY_CREATE(&seed);
-    BATCH_COMMIT();
+    batch_commit();
     POLICY_MANY_READ(&seed, sdk::SDK_RET_OK);
 
     // teardown
-    BATCH_START();
+    batch_start();
     POLICY_MANY_DELETE(&seed);
-    BATCH_COMMIT();
+    batch_commit();
 
     POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
@@ -131,7 +124,6 @@ TEST_F(policy, policy_workflow_2) {
 /// in the hardware
 /// [ Create Set1, Set2 - Delete Set1 - Create Set3 ] - Read
 TEST_F(policy, policy_workflow_3) {
-    pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed1, seed2, seed3;
     uint32_t num_policy = 341;
     uint32_t policy_id = 1;
@@ -152,12 +144,12 @@ TEST_F(policy, policy_workflow_3) {
                      num_policy + 1);
 
     // trigger
-    BATCH_START();
+    batch_start();
     POLICY_MANY_CREATE(&seed1);
     POLICY_MANY_CREATE(&seed2);
     POLICY_MANY_DELETE(&seed1);
     POLICY_MANY_CREATE(&seed3);
-    BATCH_COMMIT();
+    batch_commit();
 
     POLICY_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
 
@@ -165,10 +157,10 @@ TEST_F(policy, policy_workflow_3) {
     POLICY_MANY_READ(&seed3, sdk::SDK_RET_OK);
 
     // teardown
-    BATCH_START();
+    batch_start();
     POLICY_MANY_DELETE(&seed2);
     POLICY_MANY_DELETE(&seed3);
-    BATCH_COMMIT();
+    batch_commit();
 
     POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
     POLICY_MANY_READ(&seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -179,7 +171,6 @@ TEST_F(policy, policy_workflow_3) {
 /// at each batch end
 /// [ Create SetMax ] - Read - [ Delete SetMax ] - Read
 TEST_F(policy, policy_workflow_4) {
-    pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed;
     uint32_t num_policy = g_num_policy;
     uint32_t policy_id = 1;
@@ -190,15 +181,15 @@ TEST_F(policy, policy_workflow_4) {
                      num_policy);
 
     // trigger
-    BATCH_START();
+    batch_start();
     POLICY_MANY_CREATE(&seed);
-    BATCH_COMMIT();
+    batch_commit();
     POLICY_MANY_READ(&seed, sdk::SDK_RET_OK);
 
     // teardown
-    BATCH_START();
+    batch_start();
     POLICY_MANY_DELETE(&seed);
-    BATCH_COMMIT();
+    batch_commit();
 
     POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
@@ -206,7 +197,6 @@ TEST_F(policy, policy_workflow_4) {
 /// \brief Create and delete mix and match of policies in two batches
 /// [ Create Set1, Set2 ] - Read - [Delete Set1 - Create Set3 ] - Read
 TEST_F(policy, policy_workflow_5) {
-    pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed1, seed2, seed3;
     uint32_t num_policy = 341;
     uint32_t policy_id = 1;
@@ -227,25 +217,25 @@ TEST_F(policy, policy_workflow_5) {
                      num_policy + 1);
 
     // trigger
-    BATCH_START();
+    batch_start();
     POLICY_MANY_CREATE(&seed1);
     POLICY_MANY_CREATE(&seed2);
-    BATCH_COMMIT();
+    batch_commit();
     POLICY_MANY_READ(&seed1, sdk::SDK_RET_OK);
     POLICY_MANY_READ(&seed2, sdk::SDK_RET_OK);
 
-    BATCH_START();
+    batch_start();
     POLICY_MANY_DELETE(&seed1);
     POLICY_MANY_CREATE(&seed3);
-    BATCH_COMMIT();
+    batch_commit();
     POLICY_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
     POLICY_MANY_READ(&seed3, sdk::SDK_RET_OK);
 
     // teardown
-    BATCH_START();
+    batch_start();
     POLICY_MANY_DELETE(&seed2);
     POLICY_MANY_DELETE(&seed3);
-    BATCH_COMMIT();
+    batch_commit();
 
     POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
     POLICY_MANY_READ(&seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -255,7 +245,6 @@ TEST_F(policy, policy_workflow_5) {
 /// \brief Create, update and delete maximum number of policies
 /// [ Create SetMax, Update SetMax - Update SetMax - Delete SetMax ] - Read
 TEST_F(policy, policy_workflow_6) {
-    pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed, seed1, seed2;
     uint32_t num_policy = g_num_policy;
     uint32_t policy_id = 1;
@@ -272,12 +261,12 @@ TEST_F(policy, policy_workflow_6) {
                      num_policy);
 
     // trigger
-    BATCH_START();
+    batch_start();
     POLICY_MANY_CREATE(&seed);
     POLICY_MANY_UPDATE(&seed1);
     POLICY_MANY_UPDATE(&seed2);
     POLICY_MANY_DELETE(&seed2);
-    BATCH_COMMIT();
+    batch_commit();
     POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
 
     // teardown
@@ -287,7 +276,6 @@ TEST_F(policy, policy_workflow_6) {
 /// [ Create SetMax - Delete SetMax - Create SetMax - Update SetMax -
 ///   Update SetMax] - Read
 TEST_F(policy, policy_workflow_7) {
-    pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed, seed1, seed2;
     uint32_t num_policy = g_num_policy;
     uint32_t policy_id = 1;
@@ -304,19 +292,19 @@ TEST_F(policy, policy_workflow_7) {
                      num_policy);
 
     // trigger
-    BATCH_START();
+    batch_start();
     POLICY_MANY_CREATE(&seed);
     POLICY_MANY_DELETE(&seed);
     POLICY_MANY_CREATE(&seed);
     POLICY_MANY_UPDATE(&seed1);
     POLICY_MANY_UPDATE(&seed2);
-    BATCH_COMMIT();
+    batch_commit();
     POLICY_MANY_READ(&seed2, sdk::SDK_RET_OK);
 
     // teardown
-    BATCH_START();
+    batch_start();
     POLICY_MANY_DELETE(&seed2);
-    BATCH_COMMIT();
+    batch_commit();
 
     POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
@@ -325,7 +313,6 @@ TEST_F(policy, policy_workflow_7) {
 /// [ Create SetMax, Update SetMax ] - Read - [ Update SetMax ] - Read -
 ///   [ Delete SetMax ] - Read
 TEST_F(policy, DISABLED_policy_workflow_8) {
-    pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed, seed1, seed2;
     uint32_t num_policy = g_num_policy;
     uint32_t policy_id = 1;
@@ -342,21 +329,21 @@ TEST_F(policy, DISABLED_policy_workflow_8) {
                      num_policy);
 
     // trigger
-    BATCH_START();
+    batch_start();
     POLICY_MANY_CREATE(&seed);
     POLICY_MANY_UPDATE(&seed1);
-    BATCH_COMMIT();
+    batch_commit();
     POLICY_MANY_READ(&seed1, sdk::SDK_RET_OK);
 
-    BATCH_START();
+    batch_start();
     POLICY_MANY_UPDATE(&seed2);
-    BATCH_COMMIT();
+    batch_commit();
 
     POLICY_MANY_READ(&seed2, sdk::SDK_RET_OK);
 
-    BATCH_START();
+    batch_start();
     POLICY_MANY_DELETE(&seed2);
-    BATCH_COMMIT();
+    batch_commit();
 
     POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
 
@@ -366,7 +353,6 @@ TEST_F(policy, DISABLED_policy_workflow_8) {
 /// \brief Create, update and delete maximum policies in multiple batches
 /// [ Create SetMax ] - Read - [ Update SetMax Delete SetMax ] - Read
 TEST_F(policy, policy_workflow_9) {
-    pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed, seed1, seed2;
     uint32_t num_policy = g_num_policy;
     uint32_t policy_id = 1;
@@ -383,15 +369,15 @@ TEST_F(policy, policy_workflow_9) {
                      num_policy);
 
     // trigger
-    BATCH_START();
+    batch_start();
     POLICY_MANY_CREATE(&seed);
-    BATCH_COMMIT();
+    batch_commit();
     POLICY_MANY_READ(&seed, sdk::SDK_RET_OK);
 
-    BATCH_START();
+    batch_start();
     POLICY_MANY_UPDATE(&seed1);
     POLICY_MANY_DELETE(&seed1);
-    BATCH_COMMIT();
+    batch_commit();
 
     POLICY_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
 
@@ -402,7 +388,6 @@ TEST_F(policy, policy_workflow_9) {
 /// [ Create Set1, Set2 Set3 - Delete Set1 - Update Set2 ] - Read -
 /// [ Update Set3 - Delete Set2 - Create Set4] - Read
 TEST_F(policy, DISABLED_policy_workflow_10) {
-    pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed1, seed2, seed3, seed4, seed2_new, seed3_new;
     uint32_t num_policy = 341;
     uint32_t policy_id = 1;
@@ -433,31 +418,31 @@ TEST_F(policy, DISABLED_policy_workflow_10) {
                      POLICY_TYPE_FIREWALL, IP_AF_IPV4, "21.0.0.1/16",
                      num_policy);
     // trigger
-    BATCH_START();
+    batch_start();
     POLICY_MANY_CREATE(&seed1);
     POLICY_MANY_CREATE(&seed2);
     POLICY_MANY_CREATE(&seed3);
     POLICY_MANY_DELETE(&seed1);
     POLICY_MANY_UPDATE(&seed2_new);
-    BATCH_COMMIT();
+    batch_commit();
     POLICY_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
     POLICY_MANY_READ(&seed2_new, sdk::SDK_RET_OK);
     POLICY_MANY_READ(&seed3, sdk::SDK_RET_OK);
 
-    BATCH_START();
+    batch_start();
     POLICY_MANY_UPDATE(&seed3_new);
     POLICY_MANY_DELETE(&seed2_new);
     POLICY_MANY_CREATE(&seed4);
-    BATCH_COMMIT();
+    batch_commit();
     POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
     POLICY_MANY_READ(&seed3_new, sdk::SDK_RET_OK);
     POLICY_MANY_READ(&seed4, sdk::SDK_RET_OK);
 
     // teardown
-    BATCH_START();
+    batch_start();
     POLICY_MANY_DELETE(&seed3_new);
     POLICY_MANY_DELETE(&seed4);
-    BATCH_COMMIT();
+    batch_commit();
 
     POLICY_MANY_READ(&seed3_new, sdk::SDK_RET_ENTRY_NOT_FOUND);
     POLICY_MANY_READ(&seed4, sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -466,7 +451,6 @@ TEST_F(policy, DISABLED_policy_workflow_10) {
 /// \brief Create maximum number of policies in two batches
 /// [ Create SetMax ] - [ Create SetMax ] - Read
 TEST_F(policy, policy_workflow_neg_1) {
-    pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed;
     uint32_t num_policy = g_num_policy;
     uint32_t policy_id = 1;
@@ -477,13 +461,13 @@ TEST_F(policy, policy_workflow_neg_1) {
                      num_policy);
 
     // trigger
-    BATCH_START();
+    batch_start();
     POLICY_MANY_CREATE(&seed);
-    BATCH_COMMIT();
+    batch_commit();
 
     POLICY_MANY_READ(&seed, sdk::SDK_RET_OK);
 
-    BATCH_START();
+    batch_start();
     POLICY_MANY_CREATE(&seed);
     BATCH_COMMIT_FAIL();
     BATCH_ABORT();
@@ -491,9 +475,9 @@ TEST_F(policy, policy_workflow_neg_1) {
     POLICY_MANY_READ(&seed, sdk::SDK_RET_OK);
 
     // teardown
-    BATCH_START();
+    batch_start();
     POLICY_MANY_DELETE(&seed);
-    BATCH_COMMIT();
+    batch_commit();
 
     POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
@@ -504,7 +488,6 @@ TEST_F(policy, policy_workflow_neg_1) {
 // for g_max_policy assignmnet at the top. If I use PDS_MAX_SUBNET, things
 // are crashing, so left it at 1024 for now.
 TEST_F(policy, policy_workflow_neg_2) {
-    pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed;
     uint32_t num_policy = PDS_MAX_SECURITY_POLICY + 3;
     uint32_t policy_id = 1;
@@ -515,7 +498,7 @@ TEST_F(policy, policy_workflow_neg_2) {
                      num_policy);
 
     // trigger
-    BATCH_START();
+    batch_start();
     POLICY_MANY_CREATE(&seed);
     BATCH_COMMIT_FAIL();
     BATCH_ABORT();
@@ -526,7 +509,6 @@ TEST_F(policy, policy_workflow_neg_2) {
 /// \brief Read of a non-existing policy should return entry not found.
 /// Read NonEx and Delete NonEx
 TEST_F(policy, policy_workflow_neg_3) {
-    pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed;
     uint32_t policy_id = 1;
 
@@ -536,7 +518,7 @@ TEST_F(policy, policy_workflow_neg_3) {
 
     POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 
-    BATCH_START();
+    batch_start();
     POLICY_MANY_DELETE(&seed);
     BATCH_COMMIT_FAIL();
     BATCH_ABORT();
@@ -545,7 +527,6 @@ TEST_F(policy, policy_workflow_neg_3) {
 /// \brief Invalid batch shouldn't affect entries of previous batch
 /// [ Create Set1 ] - [Delete Set1, Set2 ] - Read
 TEST_F(policy, policy_workflow_neg_4) {
-    pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed1, seed2;
     uint32_t num_policy = 512;
     uint32_t policy_id = 1;
@@ -561,12 +542,12 @@ TEST_F(policy, policy_workflow_neg_4) {
                      num_policy);
 
     // trigger
-    BATCH_START();
+    batch_start();
     POLICY_MANY_CREATE(&seed1);
-    BATCH_COMMIT();
+    batch_commit();
     POLICY_MANY_READ(&seed1, sdk::SDK_RET_OK);
 
-    BATCH_START();
+    batch_start();
     POLICY_MANY_DELETE(&seed1);
     POLICY_MANY_DELETE(&seed2);
     BATCH_COMMIT_FAIL();
@@ -575,9 +556,9 @@ TEST_F(policy, policy_workflow_neg_4) {
     POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
 
     // teardown
-    BATCH_START();
+    batch_start();
     POLICY_MANY_DELETE(&seed1);
-    BATCH_COMMIT();
+    batch_commit();
 
     POLICY_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
@@ -586,7 +567,6 @@ TEST_F(policy, policy_workflow_neg_4) {
 /// batch.
 /// [ Create SetMax ] - Read - [ Delete SetMax - Update SetMax ] - Read
 TEST_F(policy, DISABLED_policy_workflow_neg_5) {
-    pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed, seed1;
     uint32_t num_policy = g_num_policy;
     uint32_t policy_id = 1;
@@ -600,13 +580,13 @@ TEST_F(policy, DISABLED_policy_workflow_neg_5) {
                      num_policy);
 
     // trigger
-    BATCH_START();
+    batch_start();
     POLICY_MANY_CREATE(&seed);
-    BATCH_COMMIT();
+    batch_commit();
 
     POLICY_MANY_READ(&seed, sdk::SDK_RET_OK);
 
-    BATCH_START();
+    batch_start();
     POLICY_MANY_DELETE(&seed);
     POLICY_MANY_UPDATE(&seed1);
     BATCH_COMMIT_FAIL();
@@ -615,9 +595,9 @@ TEST_F(policy, DISABLED_policy_workflow_neg_5) {
     POLICY_MANY_READ(&seed, sdk::SDK_RET_OK);
 
     // teardown
-    BATCH_START();
+    batch_start();
     POLICY_MANY_DELETE(&seed);
-    BATCH_COMMIT();
+    batch_commit();
 
     POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
@@ -625,7 +605,6 @@ TEST_F(policy, DISABLED_policy_workflow_neg_5) {
 /// \brief Update non existing policies
 /// [ Update SetMax ] - Read
 TEST_F(policy, policy_workflow_neg_6) {
-    pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed, seed1;
     uint32_t num_policy = g_num_policy;
     uint32_t policy_id = 1;
@@ -639,7 +618,7 @@ TEST_F(policy, policy_workflow_neg_6) {
                      num_policy);
 
     // trigger
-    BATCH_START();
+    batch_start();
     POLICY_MANY_UPDATE(&seed);
     BATCH_COMMIT_FAIL();
     BATCH_ABORT();
@@ -653,7 +632,6 @@ TEST_F(policy, policy_workflow_neg_6) {
 /// policy in the next batch.
 /// [ Create SetMax ] - Read - [ Update SetMax + 1 ] - Read
 TEST_F(policy, DISABLED_policy_workflow_neg_7) {
-    pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed, seed1;
     uint32_t num_policy = g_num_policy;
     uint32_t policy_id = 1;
@@ -667,13 +645,13 @@ TEST_F(policy, DISABLED_policy_workflow_neg_7) {
                      num_policy + 1);
 
     // trigger
-    BATCH_START();
+    batch_start();
     POLICY_MANY_CREATE(&seed);
-    BATCH_COMMIT();
+    batch_commit();
 
     POLICY_MANY_READ(&seed, sdk::SDK_RET_OK);
 
-    BATCH_START();
+    batch_start();
     POLICY_MANY_UPDATE(&seed1);
     BATCH_COMMIT_FAIL();
     BATCH_ABORT();
@@ -681,9 +659,9 @@ TEST_F(policy, DISABLED_policy_workflow_neg_7) {
     POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 
     // teardown
-    BATCH_START();
+    batch_start();
     POLICY_MANY_DELETE(&seed);
-    BATCH_COMMIT();
+    batch_commit();
 
     POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
@@ -692,7 +670,6 @@ TEST_F(policy, DISABLED_policy_workflow_neg_7) {
 /// set of policies in the next batch.
 /// [ Create Set1 ] - Read - [ Update Set1 - Update Set2 ] - Read
 TEST_F(policy, policy_workflow_neg_8) {
-    pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed1, seed1_new, seed2;
     uint32_t num_policy = 341;
     uint32_t policy_id = 1;
@@ -711,12 +688,12 @@ TEST_F(policy, policy_workflow_neg_8) {
                      num_policy);
 
     // trigger
-    BATCH_START();
+    batch_start();
     POLICY_MANY_CREATE(&seed1);
-    BATCH_COMMIT();
+    batch_commit();
     POLICY_MANY_READ(&seed1, sdk::SDK_RET_OK);
 
-    BATCH_START();
+    batch_start();
     POLICY_MANY_UPDATE(&seed1_new);
     POLICY_MANY_UPDATE(&seed2);
     BATCH_COMMIT_FAIL();
@@ -725,9 +702,9 @@ TEST_F(policy, policy_workflow_neg_8) {
     POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
 
     // teardown
-    BATCH_START();
+    batch_start();
     POLICY_MANY_DELETE(&seed1);
-    BATCH_COMMIT();
+    batch_commit();
 
     POLICY_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
@@ -736,7 +713,6 @@ TEST_F(policy, policy_workflow_neg_8) {
 /// non-existing set of policies in the next batch.
 /// [ Create Set1 ] - Read - [ Delete Set1 - Update Set2 ] - Read
 TEST_F(policy, policy_workflow_neg_9) {
-    pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed1, seed2, seed3, seed4, seed2_new, seed3_new;
     uint32_t num_policy = 341;
     uint32_t policy_id = 1;
@@ -751,12 +727,12 @@ TEST_F(policy, policy_workflow_neg_9) {
                      num_policy);
 
     // trigger
-    BATCH_START();
+    batch_start();
     POLICY_MANY_CREATE(&seed1);
-    BATCH_COMMIT();
+    batch_commit();
     POLICY_MANY_READ(&seed1, sdk::SDK_RET_OK);
 
-    BATCH_START();
+    batch_start();
     POLICY_MANY_DELETE(&seed1);
     POLICY_MANY_UPDATE(&seed2);
     BATCH_COMMIT_FAIL();
@@ -765,9 +741,9 @@ TEST_F(policy, policy_workflow_neg_9) {
     POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
 
     // teardown
-    BATCH_START();
+    batch_start();
     POLICY_MANY_DELETE(&seed1);
-    BATCH_COMMIT();
+    batch_commit();
 
     POLICY_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }

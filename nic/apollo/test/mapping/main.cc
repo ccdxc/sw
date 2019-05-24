@@ -89,7 +89,6 @@ protected:
         pds_tep_info_t tep_info = {0};
         vnic_stepper_seed_t vnic_seed = {};
         pds_batch_params_t batch_params = {0};
-        pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
         std::string subnet_cidr = api_test::g_subnet_cidr_v4;
         std::string rt_ip = api_test::g_rt_cidr_v4;
         std::string nr_cidr = "100.0.0.1/16";
@@ -106,7 +105,7 @@ protected:
         extract_ip_pfx((char *)api_test::g_rt_cidr_v4.c_str(), &rt_pfx);
         extract_ip_pfx((char *)nr_cidr.c_str(), &nr_pfx);
 
-        tep_util tep_obj(api_test::g_device_ip, PDS_TEP_TYPE_WORKLOAD, encap);
+        tep_util tep_obj(api_test::g_device_ip);
 
         BATCH_START();
         DEVICE_SEED_INIT(&device_seed, g_device_ip, g_device_macaddr, g_gateway_ip);
@@ -115,8 +114,7 @@ protected:
                       api_test::g_vpc_cidr_v4, PDS_MAX_VPC);
         VPC_MANY_CREATE(&vpc_seed);
         TEP_CREATE(tep_obj);
-        TEP_SEED_INIT(num_teps, api_test::g_tep_cidr_v4, PDS_TEP_TYPE_WORKLOAD,
-                      encap, FALSE, &tep_seed);
+        TEP_SEED_INIT(&tep_seed, api_test::g_tep_cidr_v4, num_teps);
         TEP_MANY_CREATE(&tep_seed);
         for (uint16_t idx = 0; idx < num_teps; idx++) {
             route_table_util rt_obj(rt_id_v4 + idx, nr_pfx, rt_addr);
@@ -143,9 +141,7 @@ protected:
             ip_pfx.addr = ipaddr;
             subnet_cidr = ippfx2str(&ip_pfx);
         }
-        VNIC_SEED_INIT(vnic_stepper, num_vnics, vnic_stepper_mac,
-                       PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_MPLSoUDP,
-                       TRUE, &vnic_seed);
+        VNIC_SEED_INIT(&vnic_seed, vnic_stepper, num_vnics, vnic_stepper_mac);
         VNIC_MANY_CREATE(&vnic_seed);
         BATCH_COMMIT();
 

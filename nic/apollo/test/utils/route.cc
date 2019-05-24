@@ -68,28 +68,25 @@ route_table_util::~route_table_util() {}
 sdk::sdk_ret_t
 route_table_util::create(void) const {
     pds_route_table_spec_t spec;
-    uint32_t i;
 
     memset(&spec, 0, sizeof(pds_route_table_spec_t));
     spec.key.id = this->id;
     spec.af = this->af;
     spec.num_routes = this->num_routes;
-    if (spec.num_routes) {
-        spec.routes = (pds_route_t *)malloc(
-            (this->num_routes * sizeof(pds_route_t)));
-        for (i = 0; i < this->num_routes; ++i) {
-            spec.routes[i].prefix = this->routes[i].ip_pfx;
-            spec.routes[i].nh_type = this->routes[i].nh_type;
-            switch (this->routes[i].nh_type) {
-            case PDS_NH_TYPE_TEP:
-                spec.routes[i].nh_ip = this->routes[i].nh_ip;
-                break;
-            case PDS_NH_TYPE_PEER_VPC:
-                spec.routes[i].vpc.id = this->routes[i].peer_vpc_id;
-                break;
-            default:
-                break;
-            }
+    spec.routes = (pds_route_t *)malloc(
+        (this->num_routes * sizeof(pds_route_t)));
+    for (uint32_t i = 0; i < this->num_routes; ++i) {
+        spec.routes[i].prefix = this->routes[i].ip_pfx;
+        spec.routes[i].nh_type = this->routes[i].nh_type;
+        switch (this->routes[i].nh_type) {
+        case PDS_NH_TYPE_TEP:
+            spec.routes[i].nh_ip = this->routes[i].nh_ip;
+            break;
+        case PDS_NH_TYPE_PEER_VPC:
+            spec.routes[i].vpc.id = this->routes[i].peer_vpc_id;
+            break;
+        default:
+            break;
         }
     }
     return (pds_route_table_create(&spec));
@@ -104,20 +101,17 @@ route_table_util::read(pds_route_table_info_t *info) const {
 sdk::sdk_ret_t
 route_table_util::update(void) const {
     pds_route_table_spec_t spec;
-    uint32_t i;
 
     memset(&spec, 0, sizeof(pds_route_table_spec_t));
     spec.key.id = this->id;
     spec.af = this->af;
     spec.num_routes = this->num_routes;
-    if (spec.num_routes) {
-        spec.routes = (pds_route_t *)malloc(
-            (this->num_routes * sizeof(pds_route_t)));
-        for (i = 0; i < this->num_routes; ++i) {
-            spec.routes[i].prefix = this->routes[i].ip_pfx;
-            spec.routes[i].nh_type = this->routes[i].nh_type;
-            spec.routes[i].nh_ip = this->routes[i].nh_ip;
-        }
+    spec.routes = (pds_route_t *)malloc(
+        (this->num_routes * sizeof(pds_route_t)));
+    for (uint32_t i = 0; i < this->num_routes; ++i) {
+        spec.routes[i].prefix = this->routes[i].ip_pfx;
+        spec.routes[i].nh_type = this->routes[i].nh_type;
+        spec.routes[i].nh_ip = this->routes[i].nh_ip;
     }
     return (pds_route_table_update(&spec));
 }

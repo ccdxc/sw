@@ -51,22 +51,22 @@ public:
     /// \brief Create mirror session
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t create(void);
+    sdk_ret_t create(void) const;
 
     /// \brief Read mirror session info
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_mirror_session_info_t *info);
+    sdk_ret_t read(pds_mirror_session_info_t *info) const;
 
     /// \brief Update mirror session configuration
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update(void);
+    sdk_ret_t update(void) const;
 
     /// \brief Delete mirror session
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t del(void);
+    sdk_ret_t del(void) const;
 
     /// \brief Create many mirror sessions for the given type
     ///
@@ -93,9 +93,9 @@ public:
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_delete(mirror_session_stepper_seed_t *seed);
 
-    /// \brief Indicates whether route table is stateful
+    /// \brief Indicates whether mirror is stateful
     ///
-    /// \returns FALSE for mirror  which is stateless
+    /// \returns FALSE for mirror which is stateless
     static bool is_stateful(void) { return FALSE; }
 };
 

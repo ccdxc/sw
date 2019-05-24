@@ -15,6 +15,8 @@
 
 namespace api_test {
 
+const uint64_t k_seed_mac = 0xa010101000000000;
+
 vnic_util::vnic_util(uint32_t vnic_id, pds_encap_t vnic_encap,
                      pds_encap_t fabric_encap, uint64_t mac_u64,
                      bool src_dst_check) {
@@ -253,12 +255,11 @@ vnic_stepper_seed_populate_encap (uint32_t seed_base,
 }
 
 void
-vnic_util::vnic_stepper_seed_init(uint32_t seed_base, uint32_t num_vnics,
-                                  uint64_t seed_mac,
-                                  pds_encap_type_t vnic_encap_type,
-                                  pds_encap_type_t fabric_encap_type,
-                                  bool src_dst_check,
-                                  vnic_stepper_seed_t *seed) {
+vnic_util::stepper_seed_init(vnic_stepper_seed_t *seed, uint32_t seed_base,
+                             uint32_t num_vnics, uint64_t seed_mac,
+                             pds_encap_type_t vnic_encap_type,
+                             pds_encap_type_t fabric_encap_type,
+                             bool src_dst_check) {
     seed->id = seed_base;
     seed->num_vnics = num_vnics;
     seed->mac_u64 = seed_mac;

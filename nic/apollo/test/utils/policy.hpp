@@ -12,8 +12,8 @@
 #define __TEST_UTILS_POLICY_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
+#include "nic/apollo/api/include/pds_vpc.hpp"
 
 namespace api_test {
 
@@ -72,26 +72,23 @@ public:
     /// \brief Create policy
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t create();
+    sdk_ret_t create(void);
 
     /// \brief Read policy
     ///
-    /// \param[in] compare_spec validation to be done or not
     /// \param[out] info policy information
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_policy_info_t *info);
+    sdk_ret_t read(pds_policy_info_t *info) const;
 
     /// \brief Update the policy
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update();
+    sdk_ret_t update(void);
 
     /// \brief Delete policy
     ///
-    /// \param[in] vpc_id VPC id
-    /// \param[in] policy_id policy id
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t del();
+    sdk_ret_t del(void) const;
 
     /// \brief Create many policies
     ///
@@ -119,6 +116,16 @@ public:
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_delete(policy_seed_stepper_t *seed);
 
+    /// \brief Initialize the seed for policy
+    ///
+    /// \param[out] seed policy seed
+    /// \param[in] id policy id
+    /// \param[in] stateless_rules number of stateless rules in policy
+    /// \param[in] dir direction
+    /// \param[in] type policy type
+    /// \param[in] af address family type
+    /// \param[in] pfx base prefix
+    /// \param[in] num_policy number of policies
     static void stepper_seed_init(policy_seed_stepper_t *seed, uint32_t id,
                                   uint32_t stateless_rules, rule_dir_t dir,
                                   policy_type_t type, uint8_t af,

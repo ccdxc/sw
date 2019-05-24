@@ -22,12 +22,13 @@ using std::endl;
 namespace api_test {
 
 // Globals
-char *g_cfg_file = NULL;
-std::string g_pipeline("");
-constexpr int k_max_tep = PDS_MAX_TEP;
-constexpr pds_encap_t k_mplsoudp_encap = {PDS_ENCAP_TYPE_MPLSoUDP, 11};
-constexpr pds_encap_t k_vxlan_encap = {PDS_ENCAP_TYPE_VXLAN, 22};
-constexpr bool k_nat = TRUE;
+static const char *g_cfg_file = NULL;
+static std::string g_pipeline("");
+static const char * const k_base_nh_ip = "50.50.1.1";
+static constexpr int k_max_tep = PDS_MAX_TEP;
+static constexpr pds_encap_t k_mplsoudp_encap = {PDS_ENCAP_TYPE_MPLSoUDP, 11};
+static constexpr pds_encap_t k_vxlan_encap = {PDS_ENCAP_TYPE_VXLAN, 22};
+static constexpr bool k_nat = FALSE;
 
 //----------------------------------------------------------------------------
 // TEP test class
@@ -41,9 +42,10 @@ protected:
     virtual void TearDown() {}
     static void SetUpTestCase() {
         test_case_params_t params;
+
         params.cfg_file = api_test::g_cfg_file;
         params.pipeline = api_test::g_pipeline;
-        params.enable_fte = false;
+        params.enable_fte = FALSE;
         pds_test_base::SetUpTestCase(params);
     }
     static void TearDownTestCase() {
@@ -62,8 +64,7 @@ protected:
 TEST_F(tep_test, tep_workflow1) {
     tep_stepper_seed_t seed = {};
 
-    TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed);
+    TEP_SEED_INIT(&seed, k_base_nh_ip);
     workflow_1<tep_util, tep_stepper_seed_t>(&seed);
 }
 
@@ -71,8 +72,7 @@ TEST_F(tep_test, tep_workflow1) {
 TEST_F(tep_test, tep_workflow2) {
     tep_stepper_seed_t seed = {};
 
-    TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed);
+    TEP_SEED_INIT(&seed, k_base_nh_ip);
     workflow_2<tep_util, tep_stepper_seed_t>(&seed);
 }
 
@@ -80,12 +80,9 @@ TEST_F(tep_test, tep_workflow2) {
 TEST_F(tep_test, tep_workflow3) {
     tep_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {};
 
-    TEP_SEED_INIT(10, "10.10.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed1);
-    TEP_SEED_INIT(20, "20.20.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed2);
-    TEP_SEED_INIT(30, "30.30.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed3);
+    TEP_SEED_INIT(&seed1, "10.10.1.1", 10);
+    TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
+    TEP_SEED_INIT(&seed3, "30.30.1.1", 30);
     workflow_3<tep_util, tep_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
@@ -93,8 +90,7 @@ TEST_F(tep_test, tep_workflow3) {
 TEST_F(tep_test, tep_workflow4) {
     tep_stepper_seed_t seed = {};
 
-    TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed);
+    TEP_SEED_INIT(&seed, k_base_nh_ip);
     workflow_4<tep_util, tep_stepper_seed_t>(&seed);
 }
 
@@ -102,12 +98,9 @@ TEST_F(tep_test, tep_workflow4) {
 TEST_F(tep_test, tep_workflow5) {
     tep_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {};
 
-    TEP_SEED_INIT(10, "10.10.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed1);
-    TEP_SEED_INIT(20, "20.20.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed2);
-    TEP_SEED_INIT(30, "30.30.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed3);
+    TEP_SEED_INIT(&seed1, "10.10.1.1", 10);
+    TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
+    TEP_SEED_INIT(&seed3, "30.30.1.1", 30);
     workflow_5<tep_util, tep_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
@@ -115,14 +108,12 @@ TEST_F(tep_test, tep_workflow5) {
 TEST_F(tep_test, tep_workflow6) {
     tep_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
 
-    TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed1);
+    TEP_SEED_INIT(&seed1, k_base_nh_ip);
     // seed1A =  seed1 + different encap
-    TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_vxlan_encap, k_nat, &seed1A);
+    TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_vxlan_encap);
     // seed1B =  seedA1 + different tunnel type, encap, nat
-    TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_IGW,
-                  k_mplsoudp_encap, FALSE, &seed1B);
+    TEP_SEED_INIT(&seed1B, k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
+                  k_nat, PDS_TEP_TYPE_IGW);
     workflow_6<tep_util, tep_stepper_seed_t>(&seed1, &seed1A, &seed1B);
 }
 
@@ -130,14 +121,12 @@ TEST_F(tep_test, tep_workflow6) {
 TEST_F(tep_test, tep_workflow7) {
     tep_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
 
-    TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed1);
+    TEP_SEED_INIT(&seed1, k_base_nh_ip);
     // seed1A =  seed1 + different encap
-    TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_vxlan_encap, k_nat, &seed1A);
+    TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_vxlan_encap);
     // seed1B =  seed1A + different tunnel type, encap, nat
-    TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_IGW,
-                  k_mplsoudp_encap, FALSE, &seed1B);
+    TEP_SEED_INIT(&seed1B, k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
+                  k_nat, PDS_TEP_TYPE_IGW);
     workflow_7<tep_util, tep_stepper_seed_t>(&seed1, &seed1A, &seed1B);
 }
 
@@ -145,14 +134,12 @@ TEST_F(tep_test, tep_workflow7) {
 TEST_F(tep_test, DISABLED_tep_workflow8) {
     tep_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
 
-    TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed1);
+    TEP_SEED_INIT(&seed1, k_base_nh_ip);
     // seed1A =  seed1 + different encap
-    TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_vxlan_encap, k_nat, &seed1A);
-    // seedA1B =  seed1A + different tunnel type, encap, nat
-    TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_IGW,
-                  k_mplsoudp_encap, FALSE, &seed1B);
+    TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_vxlan_encap);
+    // seed1B =  seed1A + different tunnel type, encap, nat
+    TEP_SEED_INIT(&seed1B, k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
+                  k_nat, PDS_TEP_TYPE_IGW);
     workflow_8<tep_util, tep_stepper_seed_t>(&seed1, &seed1A, &seed1B);
 }
 
@@ -160,11 +147,10 @@ TEST_F(tep_test, DISABLED_tep_workflow8) {
 TEST_F(tep_test, tep_workflow9) {
     tep_stepper_seed_t seed1 = {}, seed1A = {};
 
-    TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed1);
+    TEP_SEED_INIT(&seed1, k_base_nh_ip);
     // seed1A =  seed1 + different tunnel type, encap, nat
-    TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_IGW,
-                  k_vxlan_encap, FALSE, &seed1A);
+    TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_vxlan_encap,
+                  k_nat, PDS_TEP_TYPE_IGW);
     workflow_9<tep_util, tep_stepper_seed_t>(&seed1, &seed1A);
 }
 
@@ -173,18 +159,13 @@ TEST_F(tep_test, DISABLED_tep_workflow10) {
     tep_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {}, seed4 = {};
     tep_stepper_seed_t seed2A = {}, seed3A = {};
 
-    TEP_SEED_INIT(10, "10.10.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed1);
-    TEP_SEED_INIT(20, "20.20.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed2);
-    TEP_SEED_INIT(20, "20.20.1.1", PDS_TEP_TYPE_IGW,
-                  k_mplsoudp_encap, FALSE, &seed2A);
-    TEP_SEED_INIT(30, "30.30.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed3);
-    TEP_SEED_INIT(30, "30.30.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, FALSE, &seed3A);
-    TEP_SEED_INIT(40, "40.40.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed4);
+    TEP_SEED_INIT(&seed1, "10.10.1.1", 10);
+    TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
+    TEP_SEED_INIT(&seed2A, "20.20.1.1", 20, k_mplsoudp_encap,
+                  k_nat, PDS_TEP_TYPE_IGW);
+    TEP_SEED_INIT(&seed3, "30.30.1.1", 30);
+    TEP_SEED_INIT(&seed3A, "30.30.1.1", 30, k_mplsoudp_encap, k_nat);
+    TEP_SEED_INIT(&seed4, "40.40.1.1", 40);
     workflow_10<tep_util, tep_stepper_seed_t>(
                 &seed1, &seed2, &seed2A, &seed3, &seed3A, &seed4);
 }
@@ -193,8 +174,7 @@ TEST_F(tep_test, DISABLED_tep_workflow10) {
 TEST_F(tep_test, tep_workflow_neg_1) {
     tep_stepper_seed_t seed = {};
 
-    TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed);
+    TEP_SEED_INIT(&seed, k_base_nh_ip);
     workflow_neg_1<tep_util, tep_stepper_seed_t>(&seed);
 }
 
@@ -202,8 +182,7 @@ TEST_F(tep_test, tep_workflow_neg_1) {
 TEST_F(tep_test, tep_workflow_neg_2) {
     tep_stepper_seed_t seed = {};
 
-    TEP_SEED_INIT(k_max_tep + 2, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed);
+    TEP_SEED_INIT(&seed, k_base_nh_ip, k_max_tep+2);
     workflow_neg_2<tep_util, tep_stepper_seed_t>(&seed);
 }
 
@@ -211,8 +190,7 @@ TEST_F(tep_test, tep_workflow_neg_2) {
 TEST_F(tep_test, tep_workflow_neg_3) {
     tep_stepper_seed_t seed = {};
 
-    TEP_SEED_INIT(k_max_tep, "150.150.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed);
+    TEP_SEED_INIT(&seed, "150.150.1.1", k_max_tep);
     workflow_neg_3<tep_util, tep_stepper_seed_t>(&seed);
 }
 
@@ -220,10 +198,8 @@ TEST_F(tep_test, tep_workflow_neg_3) {
 TEST_F(tep_test, tep_workflow_neg_4) {
     tep_stepper_seed_t seed1 = {}, seed2 = {};
 
-    TEP_SEED_INIT(10, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed1);
-    TEP_SEED_INIT(10, "60.60.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed2);
+    TEP_SEED_INIT(&seed1, k_base_nh_ip, 10);
+    TEP_SEED_INIT(&seed2, "60.60.1.1", 10);
     workflow_neg_4<tep_util, tep_stepper_seed_t>(&seed1, &seed2);
 }
 
@@ -231,11 +207,10 @@ TEST_F(tep_test, tep_workflow_neg_4) {
 TEST_F(tep_test, DISABLED_tep_workflow_neg_5) {
     tep_stepper_seed_t seed1 = {}, seed1A = {};
 
-    TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed1);
+    TEP_SEED_INIT(&seed1, k_base_nh_ip);
     // seed1A = seed + different tunnel type, nat
-    TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_IGW,
-                  k_mplsoudp_encap, FALSE, &seed1A);
+    TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
+                  k_nat, PDS_TEP_TYPE_IGW);
     workflow_neg_5<tep_util, tep_stepper_seed_t>(&seed1, &seed1A);
 }
 
@@ -243,11 +218,10 @@ TEST_F(tep_test, DISABLED_tep_workflow_neg_5) {
 TEST_F(tep_test, tep_workflow_neg_6) {
     tep_stepper_seed_t seed1 = {}, seed1A = {};
 
-    TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed1);
+    TEP_SEED_INIT(&seed1, k_base_nh_ip);
     // seed1A = seed1 + different tunnel type, nat
-    TEP_SEED_INIT(k_max_tep + 1, "50.50.1.1", PDS_TEP_TYPE_IGW,
-                  k_mplsoudp_encap, FALSE, &seed1A);
+    TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep+1, k_mplsoudp_encap,
+                  k_nat, PDS_TEP_TYPE_IGW);
     workflow_neg_6<tep_util, tep_stepper_seed_t>(&seed1, &seed1A);
 }
 
@@ -255,12 +229,10 @@ TEST_F(tep_test, tep_workflow_neg_6) {
 TEST_F(tep_test, tep_workflow_neg_7) {
     tep_stepper_seed_t seed1 = {}, seed1A = {}, seed2 = {};
 
-    TEP_SEED_INIT(10, "10.10.1.1", PDS_TEP_TYPE_IGW,
-                  k_mplsoudp_encap, FALSE, &seed1);
-    TEP_SEED_INIT(10, "10.10.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed1A);
-    TEP_SEED_INIT(20, "20.20.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed2);
+    TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_mplsoudp_encap,
+                  k_nat, PDS_TEP_TYPE_IGW);
+    TEP_SEED_INIT(&seed1A, "10.10.1.1", 10);
+    TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
     workflow_neg_7<tep_util, tep_stepper_seed_t>(&seed1, &seed1A, &seed2);
 }
 
@@ -268,10 +240,9 @@ TEST_F(tep_test, tep_workflow_neg_7) {
 TEST_F(tep_test, tep_workflow_neg_8) {
     tep_stepper_seed_t seed1 = {}, seed2 = {};
 
-    TEP_SEED_INIT(10, "10.10.1.1", PDS_TEP_TYPE_IGW,
-                  k_mplsoudp_encap, FALSE, &seed1);
-    TEP_SEED_INIT(20, "20.20.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed2);
+    TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_mplsoudp_encap,
+                  k_nat, PDS_TEP_TYPE_IGW);
+    TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
     workflow_neg_8<tep_util, tep_stepper_seed_t>(&seed1, &seed2);
 }
 

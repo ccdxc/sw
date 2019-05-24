@@ -24,9 +24,9 @@ using std::endl;
 namespace api_test {
 
 // Globals
-char *g_cfg_file = NULL;
-std::string g_pipeline("");
-constexpr int k_max_vpc = PDS_MAX_VPC;
+static const char *g_cfg_file = NULL;
+static std::string g_pipeline("");
+static constexpr uint32_t k_max_vpc = PDS_MAX_VPC;
 
 //----------------------------------------------------------------------------
 // VPC test class
@@ -40,9 +40,10 @@ protected:
     virtual void TearDown() {}
     static void SetUpTestCase() {
         test_case_params_t params;
-        params.cfg_file = g_cfg_file;
-        params.enable_fte = false;
-        params.pipeline = g_pipeline;
+
+        params.cfg_file = api_test::g_cfg_file;
+        params.pipeline = api_test::g_pipeline;
+        params.enable_fte = FALSE;
         pds_test_base::SetUpTestCase(params);
     }
     static void TearDownTestCase() {

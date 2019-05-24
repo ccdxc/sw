@@ -9,11 +9,9 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/apollo/test/utils/vpc.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
-#include "iostream"
+#include "nic/apollo/test/utils/vpc.hpp"
 
-using namespace std;
 namespace api_test {
 
 vpc_util::vpc_util(vpc_stepper_seed_t *seed) {
@@ -97,21 +95,6 @@ vpc_util::del(void) const {
     return (pds_vpc_delete(&key));
 }
 
-void
-vpc_util::stepper_seed_init (vpc_stepper_seed_t *seed,
-                             pds_vpc_key_t key,
-                             pds_vpc_type_t type,
-                             std::string start_pfx,
-                             uint32_t num_vpcs) {
-    if (seed == NULL) {
-        cout << "vpc seed is NULL";
-    }
-    seed->key.id = key.id;
-    seed->type = type;
-    seed->num_vpcs = num_vpcs;
-    SDK_ASSERT(str2ipv4pfx((char *)start_pfx.c_str(), &seed->pfx) == 0);
-}
-
 static inline void
 vpc_stepper_seed_increment (vpc_stepper_seed_t *seed, int width)
 {
@@ -181,6 +164,18 @@ vpc_util::many_update(vpc_stepper_seed_t *seed) {
 sdk::sdk_ret_t
 vpc_util::many_delete(vpc_stepper_seed_t *seed) {
     return (vpc_util_object_stepper(seed, OP_MANY_DELETE, sdk::SDK_RET_OK));
+}
+
+void
+vpc_util::stepper_seed_init (vpc_stepper_seed_t *seed,
+                             pds_vpc_key_t key,
+                             pds_vpc_type_t type,
+                             std::string start_pfx,
+                             uint32_t num_vpcs) {
+    seed->key.id = key.id;
+    seed->type = type;
+    seed->num_vpcs = num_vpcs;
+    SDK_ASSERT(str2ipv4pfx((char *)start_pfx.c_str(), &seed->pfx) == 0);
 }
 
 }    // namespace api_test

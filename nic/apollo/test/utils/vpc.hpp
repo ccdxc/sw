@@ -113,10 +113,15 @@ public:
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_delete(vpc_stepper_seed_t *seed);
 
-    static void stepper_seed_init(vpc_stepper_seed_t *seed,
-                                  pds_vpc_key_t key,
-                                  pds_vpc_type_t type,
-                                  std::string start_pfx,
+    /// \brief Initialize the seed for vpc
+    ///
+    /// \param[out] seed vpc seed
+    /// \param[in] key vpc key
+    /// \param[in] type vpc type
+    /// \param[in] start_pfx base prefix to be used
+    /// \param[in] num_vpcs number of vpcs
+    static void stepper_seed_init(vpc_stepper_seed_t *seed, pds_vpc_key_t key,
+                                  pds_vpc_type_t type, std::string start_pfx,
                                   uint32_t num_vpcs);
 
     /// \brief Indicates whether VPC is stateful

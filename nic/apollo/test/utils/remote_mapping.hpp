@@ -50,20 +50,20 @@ public:
 
     /// \brief Create remote IP mapping
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t create(void);
+    sdk_ret_t create(void) const;
 
     /// \brief Read remote IP mapping
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_remote_mapping_info_t *info);
+    sdk_ret_t read(pds_remote_mapping_info_t *info) const;
 
     /// \brief Update remote IP mapping
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update(pds_remote_mapping_spec_t *spec);
+    sdk_ret_t update(pds_remote_mapping_spec_t *spec) const;
 
     /// \brief Delete remote ip mapping
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t del(void);
+    sdk_ret_t del(void) const;
 
     /// \brief Create many remote IP mapping for the given <vpc, subnet>
     /// max num_mappings = num_vnics * num_teps

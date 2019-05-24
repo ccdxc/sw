@@ -17,6 +17,12 @@
 
 namespace api_test {
 
+#define SUBNET_CREATE(obj)                                              \
+    ASSERT_TRUE(obj.create() == sdk::SDK_RET_OK)
+
+#define SUBNET_DELETE(obj)                                              \
+    ASSERT_TRUE(obj.del() == sdk::SDK_RET_OK)
+
 #define SUBNET_MANY_CREATE(seed)                                        \
     ASSERT_TRUE(subnet_util::many_create(seed) == sdk::SDK_RET_OK)
 
@@ -132,6 +138,13 @@ public:
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_delete(subnet_stepper_seed_t *seed);
 
+    /// \brief Initialize the seed for subnet
+    ///
+    /// \param[out] seed subnet seed
+    /// \param[in] key subnet key
+    /// \param[in] vpc_key vpc key of subnet
+    /// \param[in] subnet_start_addr base address of subnet
+    /// \param[in] num_subnets number of subnets
     static sdk_ret_t stepper_seed_init(subnet_stepper_seed_t *seed,
                                        pds_subnet_key_t key,
                                        pds_vpc_key_t vpc_key,

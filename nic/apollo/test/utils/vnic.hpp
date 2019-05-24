@@ -16,7 +16,9 @@
 
 namespace api_test {
 
-#define VNIC_SEED_INIT vnic_util::vnic_stepper_seed_init
+extern const uint64_t k_seed_mac;
+
+#define VNIC_SEED_INIT vnic_util::stepper_seed_init
 
 #define VNIC_MANY_CREATE(seed)                                        \
     ASSERT_TRUE(vnic_util::many_create(seed) == sdk::SDK_RET_OK)
@@ -118,19 +120,19 @@ public:
 
     /// \brief Initialize the seed for vnic
     ///
+    /// \param[out] seed vnic seed
     /// \param[in] seed_base vnic seed base
     /// \param[in] num_vnics number of vnics
     /// \param[in] seed_mac mac address
     /// \param[in] vnic_encap_type vnic encap type
     /// \param[in] fabric_encap_type fabric encap type
     /// \param[in] src_dst_check source & destination check
-    /// \param[out] seed vnic seed
-    static void vnic_stepper_seed_init(uint32_t seed_base, uint32_t num_vnics,
-                                       uint64_t seed_mac,
-                                       pds_encap_type_t vnic_encap_type,
-                                       pds_encap_type_t fabric_encap_type,
-                                       bool src_dst_check,
-                                       vnic_stepper_seed_t *seed);
+    static void stepper_seed_init(vnic_stepper_seed_t *seed,
+        uint32_t seed_base=1, uint32_t num_vnics=PDS_MAX_VNIC,
+        uint64_t seed_mac=k_seed_mac,
+        pds_encap_type_t vnic_encap_type=PDS_ENCAP_TYPE_DOT1Q,
+        pds_encap_type_t fabric_encap_type=PDS_ENCAP_TYPE_MPLSoUDP,
+        bool src_dst_check=TRUE);
 
     /// \brief Indicates whether VNIC is stateful
     ///

@@ -14,9 +14,9 @@
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/batch.hpp"
-#include "nic/apollo/test/utils/workflow.hpp"
 #include "nic/apollo/test/utils/subnet.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
+#include "nic/apollo/test/utils/workflow.hpp"
 
 using std::cerr;
 using std::cout;
@@ -25,10 +25,11 @@ using std::endl;
 namespace api_test {
 
 // Globals
-char *g_cfg_file = NULL;
-std::string g_pipeline("");
-constexpr uint32_t k_max_subnet = PDS_MAX_SUBNET;
-constexpr pds_vpc_key_t k_vpc_key = {.id = 1};
+static const char *g_cfg_file = NULL;
+static std::string g_pipeline("");
+static constexpr uint32_t k_max_subnet = PDS_MAX_SUBNET;
+static constexpr pds_vpc_key_t k_vpc_key = {.id = 1};
+static const vpc_util k_vpc_obj(k_vpc_key.id, "10.0.0.0/8");
 
 //----------------------------------------------------------------------------
 // Subnet test class
@@ -42,23 +43,19 @@ protected:
     virtual void TearDown() {}
     static void SetUpTestCase() {
         test_case_params_t params;
+
         params.cfg_file = api_test::g_cfg_file;
         params.pipeline = api_test::g_pipeline;
-        params.enable_fte = false;
+        params.enable_fte = FALSE;
         pds_test_base::SetUpTestCase(params);
-        vpc_util vpc_obj(k_vpc_key.id, "10.0.0.0/8");
-
         batch_start();
-        ASSERT_TRUE(vpc_obj.create() == sdk::SDK_RET_OK);
+        VPC_CREATE(k_vpc_obj);
         batch_commit();
     }
     static void TearDownTestCase() {
-        vpc_util vpc_obj(k_vpc_key.id, "10.0.0.0/8");
-
         batch_start();
-        ASSERT_TRUE(vpc_obj.del() == sdk::SDK_RET_OK);
+        VPC_DELETE(k_vpc_obj);
         batch_commit();
-
         pds_test_base::TearDownTestCase();
     }
 };

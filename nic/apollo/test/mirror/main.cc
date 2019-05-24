@@ -10,28 +10,31 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <gtest/gtest.h>
-#include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
+#include "nic/apollo/test/utils/batch.hpp"
 #include "nic/apollo/test/utils/device.hpp"
-#include "nic/apollo/test/utils/vpc.hpp"
-#include "nic/apollo/test/utils/utils.hpp"
+#include "nic/apollo/test/utils/mirror.hpp"
 #include "nic/apollo/test/utils/subnet.hpp"
 #include "nic/apollo/test/utils/tep.hpp"
-#include "nic/apollo/test/utils/batch.hpp"
+#include "nic/apollo/test/utils/utils.hpp"
+#include "nic/apollo/test/utils/vpc.hpp"
 #include "nic/apollo/test/utils/workflow.hpp"
-#include "nic/apollo/test/utils/mirror.hpp"
-
-const char *g_cfg_file = "hal.json";
-std::string g_pipeline("apollo");
-static pds_epoch_t g_batch_epoch = PDS_EPOCH_INVALID;
-constexpr int k_max_mirror_sessions = PDS_MAX_MIRROR_SESSION;
-constexpr int k_base_ms = 1;
-const std::string g_device_ip("91.0.0.1");
-const std::string g_gateway_ip("90.0.0.2");
-const std::string g_device_macaddr("00:00:01:02:0a:0b");
 
 namespace api_test {
+
+static const char *g_cfg_file = "hal.json";
+static std::string g_pipeline("apollo");
+static constexpr uint32_t k_max_mirror_sessions = PDS_MAX_MIRROR_SESSION;
+static constexpr uint32_t k_base_ms = 1;
+static const char * const k_tep_ip1 = "10.1.1.1";
+static const char * const k_tep_ip2 = "10.1.2.1";
+static const char * const k_tep_ip3 = "10.1.3.1";
+static const vpc_util k_vpc_obj(PDS_VPC_TYPE_SUBSTRATE, 1, "10.0.0.0/8");
+static const subnet_util k_subnet_obj(1, 1, "10.1.0.0/16");
+static const device_util k_device_obj("91.0.0.1", "00:00:01:02:0a:0b",
+                                      "90.0.0.2");
+static const tep_util k_tep1(k_tep_ip1), k_tep2(k_tep_ip2), k_tep3(k_tep_ip3);
 
 //----------------------------------------------------------------------------
 // Mirror session test class
@@ -45,52 +48,29 @@ protected:
     virtual void TearDown() {}
     static void SetUpTestCase() {
         test_case_params_t params;
-        params.cfg_file = g_cfg_file;
-        params.pipeline = g_pipeline;
-        params.enable_fte = false;
+
+        params.cfg_file = api_test::g_cfg_file;
+        params.pipeline = api_test::g_pipeline;
+        params.enable_fte = FALSE;
         pds_test_base::SetUpTestCase(params);
-
-        pds_batch_params_t batch_params = {0};
-        vpc_util vpc_obj(PDS_VPC_TYPE_SUBSTRATE, 1, "10.0.0.0/8");
-        subnet_util subnet_obj(1, 1, "10.1.0.0/16");
-        pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
-        tep_util tep_obj("10.1.1.1", PDS_TEP_TYPE_WORKLOAD, encap, true);
-        tep_util tep_obj_update("10.1.2.1", PDS_TEP_TYPE_WORKLOAD,
-                                encap, true);
-        tep_util tep_obj_update_2("10.1.3.1", PDS_TEP_TYPE_WORKLOAD,
-                                encap, true);
-        device_util device_obj(g_device_ip, g_device_macaddr, g_gateway_ip);
-
-        BATCH_START();
-        ASSERT_TRUE(vpc_obj.create() == sdk::SDK_RET_OK);
-        ASSERT_TRUE(subnet_obj.create() == sdk::SDK_RET_OK);
-        TEP_CREATE(tep_obj);
-        TEP_CREATE(tep_obj_update);
-        TEP_CREATE(tep_obj_update_2);
-        ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
-        BATCH_COMMIT();
+        batch_start();
+        VPC_CREATE(k_vpc_obj);
+        SUBNET_CREATE(k_subnet_obj);
+        TEP_CREATE(k_tep1);
+        TEP_CREATE(k_tep2);
+        TEP_CREATE(k_tep3);
+        ASSERT_TRUE(k_device_obj.create() == sdk::SDK_RET_OK);
+        batch_commit();
     }
     static void TearDownTestCase() {
-        pds_batch_params_t batch_params = {0};
-        vpc_util vpc_obj(PDS_VPC_TYPE_SUBSTRATE, 1, "10.0.0.0/8");
-        subnet_util subnet_obj(1, 1, "10.1.0.0/16");
-        pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
-        tep_util tep_obj("10.1.1.1", PDS_TEP_TYPE_WORKLOAD, encap, true);
-        tep_util tep_obj_update("10.1.2.1", PDS_TEP_TYPE_WORKLOAD,
-                                encap, true);
-        tep_util tep_obj_update_2("10.1.3.1", PDS_TEP_TYPE_WORKLOAD,
-                                encap, true);
-        device_util device_obj(g_device_ip, g_device_macaddr, g_gateway_ip);
-
-        BATCH_START();
-        ASSERT_TRUE(vpc_obj.del() == sdk::SDK_RET_OK);
-        ASSERT_TRUE(subnet_obj.del() == sdk::SDK_RET_OK);
-        TEP_DELETE(tep_obj);
-        TEP_DELETE(tep_obj_update);
-        TEP_DELETE(tep_obj_update_2);
-        ASSERT_TRUE(device_obj.del() == sdk::SDK_RET_OK);
-        BATCH_COMMIT();
-
+        batch_start();
+        TEP_DELETE(k_tep1);
+        TEP_DELETE(k_tep2);
+        TEP_DELETE(k_tep3);
+        SUBNET_DELETE(k_subnet_obj);
+        VPC_DELETE(k_vpc_obj);
+        ASSERT_TRUE(k_device_obj.del() == sdk::SDK_RET_OK);
+        batch_commit();
         pds_test_base::TearDownTestCase();
     }
 };
@@ -120,10 +100,10 @@ mirror_session_stepper_seed_init (int seed_base, uint8_t max_ms,
         std::string dst_ip;
         std::string src_ip;
         if (count == 1) {
-            dst_ip = "10.1.2.1";
+            dst_ip = k_tep_ip2;
             src_ip = "20.1.2.1";
         } else {
-            dst_ip = "10.1.3.1";
+            dst_ip = k_tep_ip3;
             src_ip = "20.1.3.1";
         }
         extract_ip_addr((char *)dst_ip.c_str(), &seed->dst_ip);
@@ -135,7 +115,7 @@ mirror_session_stepper_seed_init (int seed_base, uint8_t max_ms,
         seed->encap.type = PDS_ENCAP_TYPE_DOT1Q;
         seed->encap.val.vlan_tag = seed_base;
         seed->vpc_id = 1;
-        std::string dst_ip = "10.1.1.1";
+        std::string dst_ip = k_tep_ip1;
         std::string src_ip = "20.1.1.1";
         extract_ip_addr((char *)dst_ip.c_str(), &seed->dst_ip);
         extract_ip_addr((char *)src_ip.c_str(), &seed->src_ip);
@@ -457,8 +437,8 @@ main (int argc, char **argv)
     while ((oc = getopt_long(argc, argv, "hc:f:", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
-            g_cfg_file = optarg;
-            if (!g_cfg_file) {
+            api_test::g_cfg_file = optarg;
+            if (!api_test::g_cfg_file) {
                 fprintf(stderr, "HAL config file is not specified\n");
                 print_usage(argv);
                 exit(1);
@@ -466,9 +446,9 @@ main (int argc, char **argv)
             break;
 
         case 'f':
-            g_pipeline = std::string(optarg);
-            if (g_pipeline != "apollo" &&
-                g_pipeline != "artemis") {
+            api_test::g_pipeline = std::string(optarg);
+            if (api_test::g_pipeline != "apollo" &&
+                api_test::g_pipeline != "artemis") {
                 fprintf(stderr, "Pipeline specified is invalid\n");
                 print_usage(argv);
                 exit(1);

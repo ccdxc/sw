@@ -32,7 +32,7 @@ mirror_session_util::mirror_session_util(mirror_session_stepper_seed_t *seed) {
 }
 
 sdk::sdk_ret_t
-mirror_session_util::create(void) {
+mirror_session_util::create(void) const {
     pds_mirror_session_spec_t spec = {0};
 
     spec.key.id = key.id;
@@ -48,7 +48,7 @@ mirror_session_util::create(void) {
 }
 
 sdk::sdk_ret_t
-mirror_session_util::read(pds_mirror_session_info_t *info) {
+mirror_session_util::read(pds_mirror_session_info_t *info) const {
     sdk_ret_t rv;
     pds_mirror_session_key_t key;
 
@@ -100,11 +100,11 @@ mirror_session_util::read(pds_mirror_session_info_t *info) {
 }
 
 sdk::sdk_ret_t
-mirror_session_util::update(void) {
+mirror_session_util::update(void) const {
     pds_mirror_session_spec_t spec = {0};
 
     spec.key.id = key.id;
-    spec.type =type;
+    spec.type = type;
     spec.snap_len = snap_len;
     if(spec.type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
         spec.rspan_spec = rspan_spec;
@@ -116,8 +116,11 @@ mirror_session_util::update(void) {
 }
 
 sdk::sdk_ret_t
-mirror_session_util::del(void) {
-    return pds_mirror_session_delete(&this->key);
+mirror_session_util::del(void) const {
+    pds_mirror_session_key_t key = {0};
+
+    key.id = this->key.id;
+    return pds_mirror_session_delete(&key);
 }
 
 static inline sdk::sdk_ret_t

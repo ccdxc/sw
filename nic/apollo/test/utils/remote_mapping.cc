@@ -47,7 +47,7 @@ remote_mapping_util::remote_mapping_util(pds_vpc_id_t vpc_id,
 remote_mapping_util::~remote_mapping_util() {}
 
 sdk::sdk_ret_t
-remote_mapping_util::create(void) {
+remote_mapping_util::create(void) const {
     pds_remote_mapping_spec_t remote_spec = {0};
     struct in_addr ipaddr;
 
@@ -76,7 +76,7 @@ remote_mapping_util::create(void) {
 }
 
 sdk::sdk_ret_t
-remote_mapping_util::read(pds_remote_mapping_info_t *info) {
+remote_mapping_util::read(pds_remote_mapping_info_t *info) const {
     // uint64_t mac1, mac2;
     sdk_ret_t rv = sdk::SDK_RET_OK;
     pds_mapping_key_t key = {0};
@@ -125,7 +125,7 @@ remote_mapping_util::read(pds_remote_mapping_info_t *info) {
 }
 
 sdk::sdk_ret_t
-remote_mapping_util::del(void) {
+remote_mapping_util::del(void) const {
     pds_mapping_key_t key = {0};
 
     key.vpc.id = vpc_id;

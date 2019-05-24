@@ -16,7 +16,9 @@
 
 namespace api_test {
 
-#define TEP_SEED_INIT tep_util::tep_stepper_seed_init
+extern const pds_encap_t k_default_tep_encap;
+
+#define TEP_SEED_INIT tep_util::stepper_seed_init
 
 #define TEP_CREATE(obj)                                              \
     ASSERT_TRUE(obj.create() == sdk::SDK_RET_OK)
@@ -69,12 +71,12 @@ public:
     bool nat;                     ///< NAT state
 
     /// \brief parameterized constructor
-    tep_util(std::string ip_str, pds_tep_type_t type,
-             pds_encap_t encap, bool nat=FALSE);
+    tep_util(std::string ip_str, pds_tep_type_t type=PDS_TEP_TYPE_WORKLOAD,
+             pds_encap_t encap=k_default_tep_encap, bool nat=FALSE);
 
     /// \brief parameterized constructor
-    tep_util(ip_addr_t ip_addr, pds_tep_type_t type,
-             pds_encap_t encap, bool nat=FALSE);
+    tep_util(ip_addr_t ip_addr, pds_tep_type_t type=PDS_TEP_TYPE_WORKLOAD,
+             pds_encap_t encap=k_default_tep_encap, bool nat=FALSE);
 
     /// \brief destructor
     ~tep_util();
@@ -131,15 +133,17 @@ public:
 
     /// \brief Initialize the seed for TEP
     ///
-    /// \param[in] num_tep number of TEPs to be operated
+    /// \param[out] seed TEP seed
     /// \param[in] ip_str starting IP address
-    /// \param[in] type TEP type
+    /// \param[in] num_tep number of TEPs to be operated
     /// \param[in] encap TEP encap
     /// \param[in] nat NAT state
-    /// \param[out] seed TEP seed
-    static void tep_stepper_seed_init(uint32_t num_tep, std::string ip_str,
-                                      pds_tep_type_t type, pds_encap_t encap,
-                                      bool nat, tep_stepper_seed_t *seed);
+    /// \param[in] type TEP type
+    static void stepper_seed_init(tep_stepper_seed_t *seed, std::string ip_str,
+                                  uint32_t num_tep=PDS_MAX_TEP,
+                                  pds_encap_t encap=k_default_tep_encap,
+                                  bool nat=TRUE,
+                                  pds_tep_type_t type=PDS_TEP_TYPE_WORKLOAD);
 
     /// \brief Indicates whether TEP is stateful
     ///
