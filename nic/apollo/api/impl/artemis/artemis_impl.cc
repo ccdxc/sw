@@ -22,17 +22,16 @@
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/p4/include/defines.h"
 #include "gen/p4gen/artemis/include/p4pd.h"
-// #include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
-// #include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
+#include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
+#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
 
-extern int p4pd_txdma_get_max_action_id(uint32_t tableid);
 extern sdk_ret_t init_service_lif(const char *cfg_path);
 
-#define MEM_REGION_RXDMA_PROGRAM_NAME "rxdma_program"
-#define MEM_REGION_TXDMA_PROGRAM_NAME "txdma_program"
-#define MEM_REGION_LIF_STATS_BASE   "lif_stats_base"
-#define RXDMA_SYMBOLS_MAX           1
-#define TXDMA_SYMBOLS_MAX           1
+#define MEM_REGION_RXDMA_PROGRAM_NAME        "rxdma_program"
+#define MEM_REGION_TXDMA_PROGRAM_NAME        "txdma_program"
+#define MEM_REGION_LIF_STATS_BASE            "lif_stats_base"
+#define RXDMA_SYMBOLS_MAX                    1
+#define TXDMA_SYMBOLS_MAX                    1
 
 namespace api {
 namespace impl {
@@ -161,11 +160,11 @@ artemis_impl::destroy(artemis_impl *impl) {
         artemis_impl_db()->key_tunneled_tbl()->remove(
             artemis_impl_db()->key_tunneled_tbl_idx_[i]);
     }
+#endif
     // remove drop stats table entries
     for (i = P4E_DROP_REASON_MIN; i <= P4E_DROP_REASON_MAX; i++) {
         artemis_impl_db()->egress_drop_stats_tbl()->remove(i);
     }
-#endif
     for (i = P4I_DROP_REASON_MIN; i <= P4I_DROP_REASON_MAX; i++) {
         artemis_impl_db()->ingress_drop_stats_tbl()->remove(i);
     }
@@ -604,12 +603,14 @@ artemis_impl::write_to_rxdma_table(mem_addr_t addr, uint32_t tableid,
         };
 
         auto line = (struct line_s *) packed_bytes;
-        line->action_pc = sdk::asic::pd::asicpd_get_action_pc(tableid, action_id);
+        line->action_pc = sdk::asic::pd::asicpd_get_action_pc(tableid,
+                                                              action_id);
         packed_entry = line->packed_entry;
     }
 
     //p4pd_apollo_rxdma_raw_table_hwentry_query(tableid, action_id, &len);
-    //p4pd_apollo_rxdma_entry_pack(tableid, action_id, actiondata, packed_entry);
+    //p4pd_apollo_rxdma_entry_pack(tableid, action_id,
+    //                             actiondata, packed_entry);
     return asic_mem_write(addr, packed_bytes, 1 + (len >> 3),
                           ASIC_WRITE_MODE_WRITE_THRU);
 }
@@ -628,12 +629,14 @@ artemis_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
         };
 
         auto line = (struct line_s *) packed_bytes;
-        line->action_pc = sdk::asic::pd::asicpd_get_action_pc(tableid, action_id);
+        line->action_pc = sdk::asic::pd::asicpd_get_action_pc(tableid,
+                                                              action_id);
         packed_entry = line->packed_entry;
     }
 
     //p4pd_apollo_txdma_raw_table_hwentry_query(tableid, action_id, &len);
-    //p4pd_apollo_txdma_entry_pack(tableid, action_id, actiondata, packed_entry);
+    //p4pd_apollo_txdma_entry_pack(tableid, action_id
+    //                             actiondata, packed_entry);
     return asic_mem_write(addr, packed_bytes, 1 + (len >> 3),
                           ASIC_WRITE_MODE_WRITE_THRU);
 }
@@ -643,7 +646,7 @@ artemis_impl::table_transaction_begin(void) {
     vnic_impl_db()->table_transaction_begin();
     mapping_impl_db()->table_transaction_begin();
     route_table_impl_db()->table_transaction_begin();
-    // security_policy_impl_db()->table_transaction_begin();
+    security_policy_impl_db()->table_transaction_begin();
     meter_impl_db()->table_transaction_begin();
     return SDK_RET_OK;
 }
@@ -653,7 +656,7 @@ artemis_impl::table_transaction_end(void) {
     vnic_impl_db()->table_transaction_end();
     mapping_impl_db()->table_transaction_end();
     route_table_impl_db()->table_transaction_end();
-    // security_policy_impl_db()->table_transaction_end();
+    security_policy_impl_db()->table_transaction_end();
     meter_impl_db()->table_transaction_end();
     return SDK_RET_OK;
 }

@@ -17,7 +17,7 @@
 #include "nic/apollo/api/impl/artemis/vnic_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/mapping_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/route_impl_state.hpp"
-//#include "nic/apollo/api/impl/artemis/security_policy_impl_state.hpp"
+#include "nic/apollo/api/impl/artemis/security_policy_impl_state.hpp"
 #include "nic/apollo/api/impl/lif_impl_state.hpp"
 //#include "nic/apollo/api/impl/artemis/mirror_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/meter_impl_state.hpp"
@@ -50,9 +50,9 @@ public:
     route_table_impl_state *route_table_impl_db(void) {
         return route_table_impl_db_;
     }
-    //security_policy_impl_state *security_policy_impl_db(void) {
-        //return security_policy_impl_db_;
-    //}
+    security_policy_impl_state *security_policy_impl_db(void) {
+        return security_policy_impl_db_;
+    }
     //mirror_impl_state *mirror_impl_db(void) {
         //return mirror_impl_db_;
     //}
@@ -72,7 +72,7 @@ private:
     vnic_impl_state               *vnic_impl_db_;
     mapping_impl_state            *mapping_impl_db_;
     route_table_impl_state        *route_table_impl_db_;
-    //security_policy_impl_state    *security_policy_impl_db_;
+    security_policy_impl_state    *security_policy_impl_db_;
     //mirror_impl_state             *mirror_impl_db_;
     meter_impl_state              *meter_impl_db_;
     tag_impl_state                *tag_impl_db_;
@@ -110,13 +110,13 @@ route_table_impl_db (void)
     return g_pds_impl_state.route_table_impl_db();
 }
 
-#if 0
 static inline security_policy_impl_state *
 security_policy_impl_db (void)
 {
     return g_pds_impl_state.security_policy_impl_db();
 }
 
+#if 0
 static inline mirror_impl_state *
 mirror_impl_db (void)
 {
