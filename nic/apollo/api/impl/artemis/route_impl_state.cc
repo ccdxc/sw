@@ -14,14 +14,15 @@
 namespace api {
 namespace impl {
 
-// 1K routes, 3 stages, 16-way tree => 64 + 16 * 64 + 16 * 16 * 64 = 17472 bytes
+// 1K IPv4 routes, 3 stages, 16-way tree => 64 + 16 * 64 + 16 * 16 * 64 = 17472B
 #define PDS_ROUTE_LPM_IPV4_BLOCK_SIZE     17472
-// region size = (64 + 1) * PDS_ROUTE_LPM_IPV4_BLOCK_SIZE
+// region size = (64 + 1) * PDS_ROUTE_LPM_IPV4_BLOCK_SIZE => 2M (approx.)
 #define PDS_ROUTE_LPM_IPV4_REGION_SIZE   (1 << 21)
-// 1K routes, 4 stages, 8-way tree =>
-// 64 + 8 * 64 + 8 * 8 * 64 + 8 * 8 * 8 * 64 = 37440 bytes
+
+// 1K IPv6 routes, 4 stages, 8-way tree =>
+// 64 + 8 * 64 + 8 * 8 * 64 + 8 * 8 * 8 * 64 = 37440B
 #define PDS_ROUTE_LPM_IPV6_BLOCK_SIZE    37440
-// region size = (64 + 1) * PDS_ROUTE_LPM_IPV6_BLOCK_SIZE
+// region size = (64 + 1) * PDS_ROUTE_LPM_IPV6_BLOCK_SIZE => 3M (approx.)
 #define PDS_ROUTE_LPM_IPV6_REGION_SIZE    (3 * (1 << 20))
 
 route_table_impl_state::route_table_impl_state(pds_state *state) {

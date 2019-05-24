@@ -18,15 +18,24 @@ service SecurityPolicySvc {
   rpc SecurityPolicyDelete (SecurityPolicyDeleteRequest) returns (SecurityPolicyDeleteResponse) {}
 }
 
+// Securit rule action is one of the below
+enum SecurityRuleAction {
+  SECURITY_RULE_ACTION_NONE   = 0;
+  SECURITY_RULE_ACTION_ALLOW  = 1;
+  SECURITY_RULE_ACTION_DENY   = 2;
+}
+
 // SecurityRule is a single rule in the security policy
-// Security policy is a white list policy (hence action is not explicitly
-// configurable), hence if no rule is matched packets are dropped
 message SecurityRule {
   // stateful rule results in flow/session creation whereas stateless rule
   // will not result in flow creation
-  bool            Stateful = 1;
+  bool               Stateful = 1;
   // rule match criteria
-  types.RuleMatch Match    = 2;
+  types.RuleMatch    Match    = 2;
+  // priority of this rule (lower the numeric value, higher the priority is)
+  uint32             Priority = 3;
+  // action to take when this rule is matched
+  SecurityRuleAction Action   = 4;
 }
 
 // security policy configuration
