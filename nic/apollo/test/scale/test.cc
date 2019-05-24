@@ -564,7 +564,7 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                 // vpc:    bits 22 - 32
                 // 1:      bit 33
                 MAC_UINT64_TO_ADDR(pds_vnic.provider_mac_addr,
-                                   (((1 << 33) |
+                                   ((((uint64_t)1 << 33) |
                                      (((uint64_t)i & 0x7FF) << 22) |
                                      ((j & 0x7FF) << 11) | (k & 0x7FF))));
                 pds_vnic.rsc_pool_id = 1;
