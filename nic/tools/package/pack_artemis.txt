@@ -187,10 +187,10 @@ nic/build/$ARCH/$PIPELINE/lib/flow_plugin.so                         /nic/lib/vp
 nic/sdk/third-party/vpp-pkg/$ARCH/lib/*.so.*                         /nic/lib/
 nic/sdk/third-party/vpp-pkg/$ARCH/bin/vpp                            /nic/bin/
 nic/sdk/third-party/vpp-pkg/$ARCH/lib/dpdk_plugin.so                 /nic/lib/vpp_plugins/
-nic/$PIPELINE/tools/start-vpp.sh                                     /nic/tools/
-nic/$PIPELINE/vpp/conf/*                                             /nic/conf/vpp/
+nic/apollo/tools/start-vpp.sh                                        /nic/tools/
+nic/apollo/vpp/conf/*                                                /nic/conf/vpp/
 nic/build/$ARCH/$PIPELINE/lib/libnuma.so			      			 /nic/lib/libnuma.so.1
 
 # cronjobs
 nic/conf/$PIPELINE/crontabs/root                                     /nic/conf/$PIPELINE/crontabs/
-nic/$PIPELINE/tools/run_cron.sh                                      /nic/tools/
+nic/apollo/tools/run_cron.sh                                         /nic/tools/
