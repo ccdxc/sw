@@ -13,4 +13,5 @@ MODULE_SOLIBS   = ${NIC_${PIPELINE}_P4PD_SOLIBS} \
 MODULE_LDLIBS   = ${NIC_CAPSIM_LDLIBS} \
                   ${NIC_COMMON_LDLIBS} \
                   ${${PIPELINE}_GTEST_COMMON_LDLIBS}
+MODULE_SRCS     = ${MODULE_SRC_DIR}/apollo.cc
 include ${MKDEFS}/post.mk
