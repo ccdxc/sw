@@ -45,6 +45,18 @@ export class FieldselectorComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.formArray) {
+      if (this.formArray != null && this.formArray.length != null) {
+        this.formArray.controls.forEach((control) => {
+          const values = control.value;
+          if (values[this.operatorFormName] === 'equals') {
+            values[this.operatorFormName] = 'in';
+            control.patchValue(values);
+          } else if (control.value[this.operatorFormName] === 'notEquals')  {
+            values[this.operatorFormName] = 'notIn';
+            control.patchValue(values);
+          }
+        });
+      }
       if (!this.kind) {
         this.setDefaultData();
       } else {

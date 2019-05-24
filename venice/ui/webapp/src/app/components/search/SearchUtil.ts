@@ -28,7 +28,7 @@ export class SearchUtil {
   // The UI hides this distinction and shows equal, but allows user to select multiple if they wish to.
   public static stringOperators = [
     { label: 'equals', value: 'in' },
-    { label: 'not equals', value: 'notEquals' },
+    { label: 'not equals', value: 'notIn' },
   ];
 
   public static numberOperators = [
@@ -66,11 +66,11 @@ export class SearchUtil {
     { 'operator': '<=', 'label': 'lte', 'description': 'less than or equal', 'searchoperator': 'lte' },
     { 'operator': '=', 'label': 'equals', 'description': 'equal', 'searchoperator': 'in' },
     { 'operator': '==', 'label': 'equals', 'description': 'equal', 'searchoperator': 'in' },
-    { 'operator': '!=', 'label': 'not equals', 'description': 'notEquals', 'searchoperator': 'notEquals' },
+    { 'operator': '!=', 'label': 'not equals', 'description': 'not equal', 'searchoperator': 'notIn' },
     { 'operator': '>', 'label': 'gt', 'description': 'greater than', 'searchoperator': 'gt' },
     { 'operator': '<', 'label': 'lt', 'description': 'less than', 'searchoperator': 'lt' },
     { 'operator': '=~', 'label': 'in', 'description': 'contains', 'searchoperator': 'in' },
-    { 'operator': '!~', 'label': 'not in', 'description': 'not contains', 'searchoperator': 'notEquals' }
+    { 'operator': '!~', 'label': 'not in', 'description': 'not in', 'searchoperator': 'notIn' }
   ];
 
   public static SEARCH_GRAMMAR_TAGS = {
@@ -170,7 +170,7 @@ export class SearchUtil {
     const operators = SearchUtil.SEARCH_FIELD_OPERATORS;
     for (let i = 0; i < operators.length; i++) {
       const op = operators[i];
-      if (opStr === op.description || opStr === op.label) {
+      if (opStr === op.description || opStr === op.label || opStr === op.searchoperator) {
         return op.operator;
       }
     }

@@ -77,13 +77,13 @@
       </div>
       <div *ngIf="isInline" class="neweventalertpolicy-buttoncontainer" fxFlex="nogrow"
            fxLayout="row wrap" fxLayoutAlign="start start">
-        <div fxFlex="nogrow">
-          <span (click)="savePolicy()"
-                class="global-button-primary neweventalertpolicy-save">SAVE</span>
+        <div fxFlex="65px" fxLayout="row">
+          <div fxFlex="65px" (click)="savePolicy()"
+               class="global-button-primary neweventalertpolicy-save">SAVE</div>
         </div>
-        <div fxFlex="nogrow">
-          <span (click)="cancelPolicy()"
-                class="global-button-neutral neweventalertpolicy-cancel">CANCEL</span>
+        <div fxFlex="65px" fxLayout="row">
+          <div fxFlex="65px" (click)="cancelPolicy()"
+               class="global-button-neutral neweventalertpolicy-cancel">CANCEL</div>
         </div>
       </div>
     </div>
