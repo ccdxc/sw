@@ -44,6 +44,8 @@ typedef struct pds_meter_rule_s {
             uint64_t    byte_burst;
         };
     };
+    uint32_t            priority;        ///< priority of the rule (numerically
+                                         ///< lower values is higher priority)
     uint32_t            num_prefixes;    ///< number of prefixes in the list
     ip_prefix_t         *prefixes;       ///< prefixes using this meter
 } __PACK__ pds_meter_rule_t;

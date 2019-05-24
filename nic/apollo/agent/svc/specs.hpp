@@ -106,6 +106,7 @@ meter_api_spec_to_proto_spec (const pds_meter_spec_t *api_spec,
         default:
             break;
         }
+        proto_rule_spec->set_priority(api_rule_spec->priority);
         for (uint32_t pfx = 0;
                   pfx < api_rule_spec->num_prefixes; pfx++) {
             ip_pfx_to_spec(proto_rule_spec->add_prefix(),
@@ -170,4 +171,4 @@ vnic_api_spec_to_proto_spec (const pds_vnic_spec_t *api_spec,
     }
 }
 
-#endif // __AGENT_SVC_SPECS_HPP__
+#endif    // __AGENT_SVC_SPECS_HPP__
