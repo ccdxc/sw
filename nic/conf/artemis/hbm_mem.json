@@ -112,12 +112,18 @@
             "_comment": "1K descriptors of size 64B"
         },
         {
-            "name": "lpm",
-            "_comment_v4_region_size": "(64+1) * (64 + 16 * 64 + 16 * 16 * 64) = 2M",
-            "_comment_v6_region_size": "(64+1) * (64 + 8 * 64 + 8 * 8 * 64 + 8 * 8 * 8 * 64) = 3M",
-            "size": "5M",
-            "v4_block_size": "17472B",
-            "v6_block_size": "37440B",
+            "name": "lpm_v4",
+            "_comment": "(64+1) * (64 + 16 * 64 + 16 * 16 * 64)",
+            "size": "2M",
+            "block_size": "17472B",
+            "max_elements": "1K",
+            "cache": "p4plus-txdma"
+        },
+        {
+            "name": "lpm_v6",
+            "_comment": "(64+1) * (64 + 8 * 64 + 8 * 8 * 64 + 8 * 8 * 8 * 64)",
+            "size": "3M",
+            "block_size": "37440B",
             "max_elements": "1K",
             "cache": "p4plus-txdma"
         },

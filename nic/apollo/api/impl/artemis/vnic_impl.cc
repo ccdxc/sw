@@ -15,7 +15,7 @@
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/impl/artemis/route_impl.hpp"
-// #include "nic/apollo/api/impl/artemis/security_policy_impl.hpp"
+#include "nic/apollo/api/impl/artemis/security_policy_impl.hpp"
 #include "nic/apollo/api/impl/artemis/meter_impl.hpp"
 #include "nic/apollo/api/impl/artemis/vnic_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
@@ -191,6 +191,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     if (unlikely(vpc == NULL)) {
         return sdk::SDK_RET_INVALID_ARG;
     }
+#endif
 
     route_table_key = subnet->v4_route_table();
     v4_route_table = route_table_db()->find(&route_table_key);
@@ -210,51 +211,63 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     policy_key = subnet->egr_v6_policy();
     egr_v6_policy = policy_db()->policy_find(&policy_key);
 
-    ing_vnic_info.action_id = INGRESS_VNIC_INFO_INGRESS_VNIC_INFO_ID;
     if (v4_route_table) {
         addr =
             ((impl::route_table_impl *)(v4_route_table->impl()))->lpm_root_addr();
         PDS_TRACE_DEBUG("IPv4 lpm root addr 0x%llx", addr);
-        MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v4_lpm,
-                                addr, 5);
+        //MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v4_lpm,
+                                //addr, 5);
     }
     if (v6_route_table) {
         addr =
             ((impl::route_table_impl *)(v6_route_table->impl()))->lpm_root_addr();
         PDS_TRACE_DEBUG("IPv6 lpm root addr 0x%llx", addr);
-        MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v6_lpm,
-                                addr, 5);
+        //MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v6_lpm,
+                                //addr, 5);
     }
 
-    // TODO: we need to revisit once pipeline is fixed to take both ing & egr
-    //       policy roots and potentially this table moves to RXDMA and/or TXDMA
+    if (ing_v4_policy) {
+        addr = ((impl::security_policy_impl *)(ing_v4_policy->impl()))->security_policy_root_addr();
+        PDS_TRACE_DEBUG("IPv4 ing policy root addr 0x%llx", addr);
+        //MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v4_sacl,
+                                //addr, 5);
+    }
+    if (ing_v6_policy) {
+        addr = ((impl::security_policy_impl *)(ing_v6_policy->impl()))->security_policy_root_addr();
+        PDS_TRACE_DEBUG("IPv6 ing policy root addr 0x%llx", addr);
+        //MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v6_sacl,
+                                //addr, 5);
+    }
     if (egr_v4_policy) {
-        // addr = ((impl::security_policy_impl *)(egr_v4_policy->impl()))->security_policy_root_addr();
+        addr = ((impl::security_policy_impl *)(egr_v4_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv4 egr policy root addr 0x%llx", addr);
-        MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v4_sacl,
-                                addr, 5);
+        //MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v4_sacl,
+                                //addr, 5);
     }
     if (egr_v6_policy) {
-        // addr = ((impl::security_policy_impl *)(egr_v6_policy->impl()))->security_policy_root_addr();
+        addr = ((impl::security_policy_impl *)(egr_v6_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv6 egr policy root addr 0x%llx", addr);
-        MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v6_sacl,
-                                addr, 5);
+        //MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v6_sacl,
+                                //addr, 5);
     }
 
     meter = meter_db()->find(&spec->v4_meter);
     if (meter) {
         addr = ((impl::meter_impl *)(meter->impl()))->lpm_root_addr();
         PDS_TRACE_DEBUG("IPv4 meter root addr 0x%llx", addr);
-        MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v4_meter,
-                                addr, 5);
+        //MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v4_meter,
+                                //addr, 5);
     }
     meter = meter_db()->find(&spec->v6_meter);
     if (meter) {
         addr = ((impl::meter_impl *)(meter->impl()))->lpm_root_addr();
         PDS_TRACE_DEBUG("IPv6 meter root addr 0x%llx", addr);
-        MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v6_meter,
-                                addr, 5);
+        //MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v6_meter,
+                                //addr, 5);
     }
+
+#if 0
+    ing_vnic_info.action_id = INGRESS_VNIC_INFO_INGRESS_VNIC_INFO_ID;
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INGRESS_VNIC_INFO,
                                        hw_id_, NULL, NULL,
                                        &ing_vnic_info);
