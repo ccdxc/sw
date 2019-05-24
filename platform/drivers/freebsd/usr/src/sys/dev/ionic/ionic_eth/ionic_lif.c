@@ -235,8 +235,10 @@ ionic_open(struct lif *lif)
 	ionic_calc_rx_size(lif);
 
 	ionic_hw_open(lif);
+#if 0
 	/* Bring up the physical link. */
 	ionic_set_port_state(lif->ionic, PORT_ADMIN_STATE_UP);
+#endif
 	ifp->if_drv_flags |= IFF_DRV_RUNNING;
 	if_link_state_change(ifp, LINK_STATE_UP);
 }
@@ -261,8 +263,10 @@ ionic_stop(struct net_device *netdev)
 
 	IONIC_NETDEV_INFO(netdev, "stopping interface\n");
 
+#if 0
 	/* Bring down the physical link. */
 	ionic_set_port_state(lif->ionic, PORT_ADMIN_STATE_DOWN);
+#endif
 	lif->netdev->if_drv_flags &= ~IFF_DRV_RUNNING;
 	if_link_state_change(lif->netdev, LINK_STATE_DOWN);
 
@@ -296,7 +300,7 @@ ionic_stop(struct net_device *netdev)
 void
 ionic_open_or_stop(struct lif *lif)
 {
-	if (lif->netdev->if_flags & IFF_UP)
+	if (lif->netdev->if_flags & IFF_UP  && lif->link_up)
 		ionic_open(lif);
 	else
 		ionic_stop(lif->netdev);

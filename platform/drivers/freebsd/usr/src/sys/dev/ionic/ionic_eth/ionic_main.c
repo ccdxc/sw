@@ -483,6 +483,9 @@ ionic_port_init(struct ionic *ionic)
 	nwords = min(ARRAY_SIZE(ident->port.config.words),
 					ARRAY_SIZE(idev->dev_cmd_regs->data));
 	config = &ident->port.config;
+	
+	if (!ionic->is_mgmt_nic)
+		config->state = PORT_ADMIN_STATE_UP;
 	for (i = 0; i < nwords; i++)
 		iowrite32(config->words[i], &idev->dev_cmd_regs->data[i]);
 
@@ -501,7 +504,6 @@ ionic_port_reset(struct ionic *ionic)
 	if (!idev->port_info)
 		return 0;
 
-	ionic_set_port_state(ionic, PORT_ADMIN_STATE_DOWN);
 	ionic_dev_cmd_port_reset(idev);
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	if (err) {
@@ -517,6 +519,7 @@ ionic_port_reset(struct ionic *ionic)
 	return 0;
 }
 
+#if 0
 void
 ionic_set_port_state(struct ionic *ionic, uint8_t state)
 {
@@ -534,6 +537,7 @@ ionic_set_port_state(struct ionic *ionic, uint8_t state)
 		dev_err(ionic->dev, "Failed to set port state %s, err: %d\n",
 			ionic_port_admin_state_str(state), err);
 }
+#endif
 /*
  * Validate user parameters.
  */
