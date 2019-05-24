@@ -34,7 +34,7 @@ message TagSpec {
   // unique tag policy id
   uint32                  Id = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // IP address family
-  types.IPAF              AF = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  types.IPAF              Af = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // tag policy rules
   repeated TagRuleSpec rules = 3;
 }

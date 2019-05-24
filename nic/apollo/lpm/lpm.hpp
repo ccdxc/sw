@@ -31,6 +31,7 @@ typedef enum itree_type_e {
 typedef struct route_s {
     ip_prefix_t    prefix;    /**< IP prefix */
     uint32_t       nhid;      /**< nexthop index */
+    uint32_t       prio;      /**< priority of the route */
 } route_t;
 
 typedef struct route_table_s {

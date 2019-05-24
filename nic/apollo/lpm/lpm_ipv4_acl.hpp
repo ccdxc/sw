@@ -23,6 +23,6 @@ sdk_ret_t lpm_ipv4_acl_add_key_to_last_stage(uint8_t *bytes, uint32_t idx,
 sdk_ret_t lpm_ipv4_acl_write_stage_table(mem_addr_t addr, uint8_t *bytes);
 sdk_ret_t lpm_ipv4_acl_write_last_stage_table(mem_addr_t addr, uint8_t *bytes);
 uint32_t lpm_ipv4_acl_key_size (void);
-uint32_t lpm_ipv4_acl_stages (uint32_t num_intrvls);
+uint32_t lpm_ipv4_acl_stages(uint32_t num_intrvls);
 
 #endif    // __LPM_IPV4_ACL_HPP__

@@ -47,6 +47,8 @@ message MeterRuleSpec {
     // bytes per second (bps) policer
     BytePolicerSpec       BPSPolicer = 3;
   }
+  // priority of this rule (lower the numeric value is, higher the priority)
+  uint32                  Priority   = 4;
 }
 
 // meter policy specification
@@ -57,7 +59,7 @@ message MeterSpec {
   // unique meter policy id
   uint32                 Id    = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // IP address family
-  types.IPAF             AF    = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  types.IPAF             Af    = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // meter rules
   repeated MeterRuleSpec rules = 3;
 }

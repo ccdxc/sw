@@ -105,7 +105,7 @@ func printRoute(rt *pds.RouteTable) {
 	first := true
 
 	fmt.Printf("%-6d%-6s", spec.GetId(),
-		strings.Replace(spec.GetAF().String(), "IP_AF_", "", -1))
+		strings.Replace(spec.GetAf().String(), "IP_AF_", "", -1))
 
 	for _, route := range routes {
 		if first != true {
