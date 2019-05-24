@@ -127,7 +127,7 @@ sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
 // initialize PDS library
 //------------------------------------------------------------------------------
 static inline sdk_ret_t
-init_pds (std::string cfg_file, std::string profile)
+init_pds (std::string cfg_file, std::string profile, std::string pipeline)
 {
     sdk_ret_t ret;
     pds_init_params_t init_params;
@@ -135,7 +135,7 @@ init_pds (std::string cfg_file, std::string profile)
     memset(&init_params, 0, sizeof(init_params));
     init_params.init_mode = PDS_INIT_MODE_COLD_START;
     init_params.trace_cb  = sdk_logger;
-    init_params.pipeline  = "apollo";
+    init_params.pipeline  = pipeline;
     init_params.cfg_file  = cfg_file;
     init_params.scale_profile = PDS_SCALE_PROFILE_DEFAULT;
     init_params.batching_en = true;
@@ -217,7 +217,7 @@ device_profile_read (void)
 // initialize the agent
 //------------------------------------------------------------------------------
 sdk_ret_t
-agent_init (std::string cfg_file, std::string profile)
+agent_init (std::string cfg_file, std::string profile, std::string pipeline)
 {
     sdk_ret_t    ret;
 
@@ -230,7 +230,7 @@ agent_init (std::string cfg_file, std::string profile)
     }
 
     // initialize PDS library
-    ret = init_pds(cfg_file, profile);
+    ret = init_pds(cfg_file, profile, pipeline);
 
     // init agent state
     ret = core::agent_state::init();

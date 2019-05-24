@@ -24,6 +24,7 @@
 namespace api_test {
 
 static const char *g_cfg_file = "hal.json";
+std::string g_pipeline("apollo");
 constexpr uint32_t k_max_vnic = PDS_MAX_VNIC;
 constexpr uint64_t k_seed_mac = 0xa010101000000000;
 constexpr bool k_src_dst_check = TRUE;
@@ -44,6 +45,7 @@ protected:
         test_case_params_t params;
 
         params.cfg_file = api_test::g_cfg_file;
+        params.pipeline = g_pipeline;
         params.enable_fte = false;
         pds_test_base::SetUpTestCase(params);
         batch_start();
@@ -285,7 +287,7 @@ TEST_F(vnic_test, vnic_workflow_neg_8) {
 static inline void
 print_usage (char **argv)
 {
-    fprintf(stdout, "Usage : %s -c <hal.json> \n", argv[0]);
+    fprintf(stdout, "Usage : %s -c <hal.json> -f <apollo|artemis>\n", argv[0]);
 }
 
 int
@@ -293,16 +295,27 @@ main (int argc, char **argv)
 {
     int oc;
     struct option longopts[] = {{"config", required_argument, NULL, 'c'},
+                                {"feature", required_argument, NULL, 'f'},
                                 {"help", no_argument, NULL, 'h'},
                                 {0, 0, 0, 0}};
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, "hc:", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, "hc:f:", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
             api_test::g_cfg_file = optarg;
             if (!api_test::g_cfg_file) {
                 fprintf(stderr, "HAL config file is not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+
+        case 'f':
+            api_test::g_pipeline = std::string(optarg);
+            if (api_test::g_pipeline != "apollo" &&
+                api_test::g_pipeline != "artemis") {
+                fprintf(stderr, "Pipeline specified is invalid\n");
                 print_usage(argv);
                 exit(1);
             }

@@ -17,7 +17,7 @@ rm -f $LOG_DIR/pen-agent.log*
 ulimit -c unlimited
 
 export LD_LIBRARY_PATH=$LIBRARY_PATH
-$NIC_DIR/bin/agent -c hal_hw.json $* &
+$NIC_DIR/bin/agent -c hal_hw.json -f apollo $* &
 if [[ $? -ne 0 ]]; then
     echo "Failed to start agent!"
     exit 1

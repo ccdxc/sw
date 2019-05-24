@@ -79,7 +79,7 @@ pds_test_base::SetUpTestCase(test_case_params_t &params)
     memset(&init_params, 0, sizeof(init_params));
     init_params.init_mode = PDS_INIT_MODE_COLD_START;
     init_params.trace_cb  = trace_cb;
-    init_params.pipeline  = "apollo";
+    init_params.pipeline  = params.pipeline;
     init_params.cfg_file  = std::string(params.cfg_file);
     init_params.scale_profile = PDS_SCALE_PROFILE_DEFAULT;
     if (!params.profile.empty()) {

@@ -20,6 +20,7 @@ typedef struct test_case_params_t_ {
     const char  *cfg_file;
     bool        enable_fte;
     std::string profile;
+    std::string pipeline;
 } test_case_params_t;
 
 #define BATCH_START()                                                   \

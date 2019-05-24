@@ -27,22 +27,22 @@ export PATH=${PATH}:${BUILD_DIR}/bin
 
 # gtests
 echo "Running scale test"
-$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml" > apollo_scale_test.log.txt
+$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json -f apollo --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml" > apollo_scale_test.log.txt
 [[ $? -ne 0 ]] && echo "apollo_scale_test failed!" && exit 1
 echo "Running device test"
-$GDB apollo_device_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_device_test.xml" > apollo_device_test.log.txt
+$GDB apollo_device_test -c hal.json -f apollo --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_device_test.xml" > apollo_device_test.log.txt
 [[ $? -ne 0 ]] && echo "apollo_device_test failed!" && exit 1
 echo "Running vpc test"
-$GDB apollo_vpc_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_vpc_test.xml" > apollo_vpc_test.log.txt
+$GDB apollo_vpc_test -c hal.json -f apollo --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_vpc_test.xml" > apollo_vpc_test.log.txt
 [[ $? -ne 0 ]] && echo "apollo_vpc_test failed!" && exit 1
 echo "Running subnet test"
-$GDB apollo_subnet_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_subnet_test.xml" > apollo_subnet_test.log.txt
+$GDB apollo_subnet_test -c hal.json -f apollo --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_subnet_test.xml" > apollo_subnet_test.log.txt
 [[ $? -ne 0 ]] && echo "apollo_subnet_test failed!" && exit 1
 echo "Running route test"
-$GDB apollo_route_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_route_test.xml" > apollo_route_test.log.txt
+$GDB apollo_route_test -c hal.json -f apollo --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_route_test.xml" > apollo_route_test.log.txt
 [[ $? -ne 0 ]] && echo "apollo_route_test failed!" && exit 1
 echo "Running policy test"
-$GDB apollo_policy_test -c hal.json -n 1024 --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_policy_test.xml" > apollo_policy_test.log.txt
+$GDB apollo_policy_test -c hal.json -f apollo -n 1024 --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_policy_test.xml" > apollo_policy_test.log.txt
 [[ $? -ne 0 ]] && echo "apollo_policy_test failed!" && exit 1
 
 #echo "Running vnic test"

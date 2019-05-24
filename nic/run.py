@@ -531,6 +531,7 @@ def run_apollo_scale_test(args):
     cmd = ["build/x86_64/apollo/bin/apollo_scale_test",
            '-c', "hal.json",
            '-i', "apollo/test/scale/scale_cfg_sim.json",
+           '-f', "apollo",
            "--gtest_output=", "xml:build/x86_64/apollo/gtest_results/apollo_scale_test.xml"]
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
@@ -544,6 +545,7 @@ def run_apollo_vxlan_scale_test(args):
     cmd = ["build/x86_64/apollo/bin/apollo_scale_test",
            '-c', "hal.json",
            '-i', "apollo/test/scale/scale_cfg_sim.json",
+           '-f', "apollo",
            "--gtest_output=", "xml:build/x86_64/apollo/gtest_results/apollo_scale_test.xml"]
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)

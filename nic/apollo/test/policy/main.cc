@@ -25,6 +25,7 @@ namespace api_test {
 
 // Globals
 char *g_cfg_file = NULL;
+std::string g_pipeline("");
 uint16_t g_num_policy = PDS_MAX_SECURITY_POLICY; // can overwrite using cmd line
 static pds_epoch_t g_batch_epoch = 1; // PDS_EPOCH_INVALID;
 
@@ -42,6 +43,7 @@ protected:
         test_case_params_t params;
         params.cfg_file = api_test::g_cfg_file;
         params.enable_fte = false;
+        params.pipeline = g_pipeline;
         pds_test_base::SetUpTestCase(params);
         g_trace_level = sdk::lib::SDK_TRACE_LEVEL_INFO;
         pds_batch_params_t batch_params = {0};
@@ -781,7 +783,7 @@ TEST_F(policy, policy_workflow_neg_9) {
 static inline void
 policy_test_usage_print (char **argv)
 {
-    cout << "Usage : " << argv[0] << " -c <hal.json>" << endl;
+    cout << "Usage : " << argv[0] << " -c <hal.json> -f <apollo|artemis>" << endl;
 }
 
 static void
@@ -789,14 +791,18 @@ policy_test_options_parse (int argc, char **argv)
 {
     int oc;
     struct option longopts[] = {{"config", required_argument, NULL, 'c'},
+                                {"feature", required_argument, NULL, 'f'},
                                 {"help", no_argument, NULL, 'h'},
                                 {"num_policy", required_argument, NULL, 'n'},
                                 {0, 0, 0, 0}};
 
-    while ((oc = getopt_long(argc, argv, ":hc:n:", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":hc:n:f:", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
             api_test::g_cfg_file = optarg;
+            break;
+        case 'f':
+            api_test::g_pipeline = std::string(optarg);
             break;
         case 'n':
             api_test::g_num_policy = atoi(optarg);
@@ -811,6 +817,11 @@ policy_test_options_validate (void)
 {
     if (!api_test::g_cfg_file) {
         cerr << "HAL config file is not specified" << endl;
+        return SDK_RET_ERR;
+    }
+    if (api_test::g_pipeline != "apollo" &&
+        api_test::g_pipeline != "artemis") {
+        cerr << "Pipeline specified is invalid" << endl;
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;

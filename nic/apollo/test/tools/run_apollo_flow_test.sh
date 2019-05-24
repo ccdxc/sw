@@ -28,7 +28,7 @@ fi
 rm -rf core.*
 export PATH=${PATH}:${BUILD_DIR}/bin
 #$GDB apollo_flow_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml" $*
-$GDB apollo_flow_test -c hal.json $* > run.log; grep "flow_gtest" run.log
+$GDB apollo_flow_test -c hal.json -f apollo $* > run.log; grep "flow_gtest" run.log
 #perf record --call-graph fp apollo_flow_test -c hal.json $* > run.log; grep flow_gtest run.log
 #valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale_test/scale_cfg.json
 

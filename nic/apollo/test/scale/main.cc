@@ -18,6 +18,7 @@
 
 char *g_input_cfg_file = NULL;
 char *g_cfg_file = NULL;
+std::string g_pipeline("");
 bool g_daemon_mode = false;
 string g_profile;
 
@@ -217,6 +218,7 @@ protected:
         /**< call base class function */
         test_case_params_t params;
         params.cfg_file = g_cfg_file;
+        params.pipeline = g_pipeline;
         params.enable_fte = false;
         params.profile = g_profile;
         pds_test_base::SetUpTestCase(params);
@@ -419,17 +421,28 @@ main (int argc, char **argv)
         {"config",  required_argument, NULL, 'c'},
         {"daemon",  required_argument, NULL, 'd'},
         {"profile", required_argument, NULL, 'p'},
+        {"feature", required_argument, NULL, 'f'},
         {"help", no_argument, NULL, 'h'},
         {0, 0, 0, 0}
     };
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":hdc:i:p:W;", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":hdc:i:p:f:W;", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
             g_cfg_file = optarg;
             if (!g_cfg_file) {
                 fprintf(stderr, "HAL config file is not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+
+        case 'f':
+            g_pipeline = (std::string)optarg;
+            if (g_pipeline != "apollo" &&
+                g_pipeline != "artemis") {
+                fprintf(stderr, "Pipeline specified is invalid\n");
                 print_usage(argv);
                 exit(1);
             }

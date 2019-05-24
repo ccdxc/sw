@@ -96,18 +96,19 @@ int
 main (int argc, char **argv)
 {
     int          oc;
-    string       cfg_path, cfg_file, profile, file;
+    string       cfg_path, cfg_file, profile, pipeline, file;
     sdk_ret_t    ret;
 
     struct option longopts[] = {
        { "config",    required_argument, NULL, 'c' },
        { "profile",   required_argument, NULL, 'p' },
+       { "feature",   required_argument, NULL, 'f' },
        { "help",      no_argument,       NULL, 'h' },
        { 0,           0,                 0,     0 }
     };
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":hc:p:W;", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":hc:p:f:W;", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
             if (optarg) {
@@ -124,6 +125,21 @@ main (int argc, char **argv)
                 profile = std::string(optarg);
             } else {
                 fprintf(stderr, "profile is not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+
+        case 'f':
+            if (optarg) {
+                pipeline = std::string(optarg);
+                if ((pipeline.compare("apollo") != 0) &&
+                    (pipeline.compare("artemis") != 0)) {
+                    fprintf(stderr, "feature is not valid\n");
+                    exit(1);
+                }
+            } else {
+                fprintf(stderr, "feature is not specified\n");
                 print_usage(argv);
                 exit(1);
             }
@@ -168,7 +184,7 @@ main (int argc, char **argv)
     }
 
     // initialize the agent
-    if ((ret = core::agent_init(cfg_file, profile)) != SDK_RET_OK) {
+    if ((ret = core::agent_init(cfg_file, profile, pipeline)) != SDK_RET_OK) {
         fprintf(stderr, "Agent initialization failed, err %u", ret);
     }
 

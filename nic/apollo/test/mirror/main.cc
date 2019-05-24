@@ -23,6 +23,7 @@
 #include "nic/apollo/test/utils/mirror.hpp"
 
 const char *g_cfg_file = "hal.json";
+std::string g_pipeline("apollo");
 static pds_epoch_t g_batch_epoch = PDS_EPOCH_INVALID;
 constexpr int k_max_mirror_sessions = PDS_MAX_MIRROR_SESSION;
 constexpr int k_base_ms = 1;
@@ -45,6 +46,7 @@ protected:
     static void SetUpTestCase() {
         test_case_params_t params;
         params.cfg_file = g_cfg_file;
+        params.pipeline = g_pipeline;
         params.enable_fte = false;
         pds_test_base::SetUpTestCase(params);
 
@@ -439,7 +441,7 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_8) {
 static inline void
 print_usage (char **argv)
 {
-    fprintf(stdout, "Usage : %s -c <hal.json> \n", argv[0]);
+    fprintf(stdout, "Usage : %s -c <hal.json> -f <apollo|artemis>\n", argv[0]);
 }
 
 int
@@ -447,16 +449,27 @@ main (int argc, char **argv)
 {
     int oc;
     struct option longopts[] = {{"config", required_argument, NULL, 'c'},
+                                {"feature", required_argument, NULL, 'f'},
                                 {"help", no_argument, NULL, 'h'},
                                 {0, 0, 0, 0}};
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, "hc:", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, "hc:f:", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
             g_cfg_file = optarg;
             if (!g_cfg_file) {
                 fprintf(stderr, "HAL config file is not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+
+        case 'f':
+            g_pipeline = std::string(optarg);
+            if (g_pipeline != "apollo" &&
+                g_pipeline != "artemis") {
+                fprintf(stderr, "Pipeline specified is invalid\n");
                 print_usage(argv);
                 exit(1);
             }

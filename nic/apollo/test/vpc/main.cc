@@ -25,6 +25,7 @@ namespace api_test {
 
 // Globals
 char *g_cfg_file = NULL;
+std::string g_pipeline("");
 constexpr int k_max_vpc = PDS_MAX_VPC;
 
 //----------------------------------------------------------------------------
@@ -41,6 +42,7 @@ protected:
         test_case_params_t params;
         params.cfg_file = g_cfg_file;
         params.enable_fte = false;
+        params.pipeline = g_pipeline;
         pds_test_base::SetUpTestCase(params);
     }
     static void TearDownTestCase() {
@@ -253,7 +255,7 @@ TEST_F(vpc, vpc_workflow_neg_8) {
 static inline void
 vpc_test_usage_print (char **argv)
 {
-    cout << "Usage : " << argv[0] << " -c <hal.json>" << endl;
+    cout << "Usage : " << argv[0] << " -c <hal.json> -f <apollo|artemis>" << endl;
 }
 
 static void
@@ -261,13 +263,17 @@ vpc_test_options_parse (int argc, char **argv)
 {
     int oc;
     struct option longopts[] = {{"config", required_argument, NULL, 'c'},
+                                {"feature", required_argument, NULL, 'f'},
                                 {"help", no_argument, NULL, 'h'},
                                 {0, 0, 0, 0}};
 
-    while ((oc = getopt_long(argc, argv, ":hc:", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":hc:f:", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
             api_test::g_cfg_file = optarg;
+            break;
+        case 'f':
+            api_test::g_pipeline = std::string(optarg);
             break;
         default:    // ignore all other options
             break;
@@ -280,6 +286,11 @@ vpc_test_options_validate (void)
 {
     if (!api_test::g_cfg_file) {
         cerr << "HAL config file is not specified" << endl;
+        return SDK_RET_ERR;
+    }
+    if (api_test::g_pipeline != "apollo" &&
+        api_test::g_pipeline != "artemis") {
+        cerr << "Pipeline specified is invalid" << endl;
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;
