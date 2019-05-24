@@ -224,7 +224,7 @@ export class AbstractService {
    */
   protected handleOfflineAJAX(url: string, method: string, eventpayload: any): Observable<any> {
     const mockedData = MockDataUtil.getMockedData(url, method, eventpayload);
-    const fakeObservable = Observable.create(obs => {
+    const fakeObservable = new Observable(obs => {
       obs.next(mockedData);
       obs.complete();
     }).pipe(delay(1000));

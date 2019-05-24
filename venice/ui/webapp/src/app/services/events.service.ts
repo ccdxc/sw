@@ -76,6 +76,12 @@ export class EventsService extends EventGenService {
           if (items.length > 0) {
             const currArray = poll.handler.value;
             let res = items.concat(currArray);
+            res = res.filter( (e) => {
+              if (e == null || e.meta == null) {
+                return false;
+              }
+              return true;
+            });
             res = Utility.getLodash().uniqBy(res, (e: IEventsEvent) => {
               return e.meta.uuid;
             });

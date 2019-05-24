@@ -138,10 +138,13 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
     } else if (errPayload.message && errPayload.message.status === 401) {
       // handle status =401 authentication failure.
       return msgFailtoLogin + ' Incorrect credentials';
-    } else if (! Utility.isEmpty(errPayload.message)) {
+    } else if (! Utility.isEmpty(errPayload.message) && typeof errPayload.message === 'string') {
       return msgFailtoLogin + ' ' + errPayload.message;
+    } else if (! Utility.isEmpty(errPayload.message)) {
+      return msgFailtoLogin + ' ' + errPayload.message.error;
     }
-    // Here, most likely, there is server error.
-    return (errPayload) ? msgFailtoLogin + ' ' + JSON.stringify(errPayload) : msgFailtoLogin + 'Server error. ' + msgConsultAdmin;
+    // Stringifying the object may be ugly. We console the error, and display a generic Server error message
+    console.error('Login component received error: ' + errPayload);
+    return msgFailtoLogin + 'Server error. ' + msgConsultAdmin;
   }
 }

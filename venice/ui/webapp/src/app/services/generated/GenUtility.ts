@@ -1,7 +1,7 @@
 import { HttpClient, HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { Utility } from '@app/common/Utility';
 import * as oboe from 'oboe';
-import { publishReplay, refCount } from 'rxjs/operators';
+import { publishReplay, refCount, delay } from 'rxjs/operators';
 import { Observable ,  Subject, Subscriber, TeardownLogic } from 'rxjs';
 import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.interface';
 import { MockDataUtil } from '@app/common/MockDataUtil';
@@ -155,7 +155,8 @@ export class GenServiceUtility {
               // 2. Socket was open and then closed. We check that this closed
               //    wasn't caused by the UI unsubscribing from the socket by
               //    checking if there are listeners on the output observable
-              if (output == null || output.observers.length > 0) {
+              // If output is null, then closeObserver was fired before openObserver was ever called, so we can safely not display an error message
+              if (output != null && output.observers.length > 0) {
                 Utility.getInstance().getControllerService().webSocketErrorToaster(url, closeEvent);
                 output = null;
               }
@@ -171,7 +172,7 @@ export class GenServiceUtility {
     // Watch
     if (this.urlServiceMap[url] == null) {
       // Creating cold observer that emits events when oboe receives new data
-      const oboeObserver: Observable<any> = Observable.create(this.oboeObserverCreate(url, payload, eventPayload));
+      const oboeObserver: Observable<any> = new Observable(this.oboeObserverCreate(url, payload, eventPayload));
       // Creating a replay subject that subscribes and unsubscribes from the oboeObserver source
       // only if it has subscribers.
       // The connection will only be open if there is a listener, and closed as soon as there
@@ -260,10 +261,10 @@ export class GenServiceUtility {
    */
   protected handleOfflineAJAX(url: string, method: string, eventpayload: any): Observable<VeniceResponse> {
     const mockedData = MockDataUtil.getMockedData(url, method, eventpayload);
-    const fakeObservable = Observable.create(obs => {
+    const fakeObservable = new Observable<VeniceResponse>(obs => {
       obs.next({ body: mockedData, statusCode: 200 });
       obs.complete();
-    }).delay(1000);
+    }).pipe(delay(1000));
     return fakeObservable;
   }
 

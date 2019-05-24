@@ -44,6 +44,7 @@
   }
 
   .ui-toast-detail {
+    word-break: break-all;
     @include primary-font(14px);
   }
 

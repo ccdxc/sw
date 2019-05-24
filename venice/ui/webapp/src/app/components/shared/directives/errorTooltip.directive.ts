@@ -78,7 +78,7 @@ export class ErrorTooltipDirective extends MatTooltip implements OnInit {
       return msgs.join('\n');
     }
 
-    if (this.appErrorTooltip != null) {
+    if (this.appErrorTooltip != null && this.appErrorTooltip !== '') {
       this.tooltipClass = this.tooltipDefaultClass;
       return this.appErrorTooltip;
     }
