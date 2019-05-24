@@ -33,7 +33,7 @@ func NewFwEventGen(ctx context.Context, num int, vrf uint64) chan *halproto.FWEv
 		for i := 0; i < num; i++ {
 			ev := &halproto.FWEvent{
 				SourceVrf:  uint64(rand.Int31n(100)),
-				Flowaction: halproto.FlowLogEventType_FLOW_LOG_EVENT_TYPE_CREATE,
+				Flowaction: halproto.FlowLogEventType(i % 2),
 				Sipv4:      uint32(rand.Int31n(200) + rand.Int31n(200)<<8 + rand.Int31n(200)<<16 + rand.Int31n(200)<<24),
 				Dipv4:      uint32(rand.Int31n(200) + rand.Int31n(200)<<8 + rand.Int31n(200)<<16 + rand.Int31n(200)<<24),
 				Dport:      uint32(rand.Int31n(5000)),

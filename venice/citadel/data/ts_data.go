@@ -625,26 +625,12 @@ func (dn *DNode) queryAllShards(ctx context.Context, req *tproto.QueryReq) ([]<-
 	queryShards := map[uint64]bool{}
 	resultsCh := []<-chan *query.Result{}
 
-	// query local replicas
-	dn.tshards.Range(func(key, val interface{}) bool {
-		if replicaID, ok := key.(uint64); ok {
-			if tshard, ok := val.(*TshardState); ok && tshard.store != nil {
-				ch, err := tshard.store.ExecuteQuery(req.Query, req.Database)
-				if err != nil {
-					dn.logger.Warnf("failed to execute local query on shard %v replicaid %v", tshard.shardID, replicaID)
-				} else {
-					queryShards[tshard.shardID] = true
-					resultsCh = append(resultsCh, ch)
-				}
-			}
-		}
-		return true
-	})
+	// todo: query local replicas to optimize
+	// requires new marshal functions to handle int/float
+	// Use grpc for local and remote shards for now
 
 	// check if any shards are remote
 	cl := dn.watcher.GetCluster(meta.ClusterTypeTstore)
-
-	dn.logger.Infof("found %d local shards in %s, total shards %d", len(queryShards), dn.nodeUUID, len(cl.ShardMap.Shards))
 
 	// check if a shard replica is on this data node
 	for _, shard := range cl.ShardMap.Shards {
