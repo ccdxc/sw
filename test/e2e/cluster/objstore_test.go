@@ -216,19 +216,27 @@ func testObjCUDOps() func() {
 		apigwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 		restClient, err := apiclient.NewRestAPIClient(apigwAddr)
 		Expect(err).To(BeNil())
-		var wr int
+		var wr, rd int
+		var rhash []byte
+		// Use of Eventually is needed for all operations here because success of one objstore operation does not
+		//  gaurantee the next one will succeed, because the call may end up on a node that is rebooting.
 		Eventually(func() error {
-			var err error
 			wr, err = uploadFile(ctx, filename, metadata, buf)
 			return err
 		}, 90, 1).Should(BeNil(), fmt.Sprintf("failed to upload file (%s)", err))
 
-		rhash, rd, err := downloadFile(filename)
-		Expect(err).Should(BeNil(), "Failed to download file")
+		Eventually(func() error {
+			rhash, rd, err = downloadFile(filename)
+			return err
+		}, 90, 1).Should(BeNil(), fmt.Sprintf("failed to download file (%s)", err))
 		Expect(hash).Should(Equal(rhash), "uploaded and downloaded hashes do not match")
 		Expect(rd).Should(Equal(wr), "size written does not match size read")
-		resp, err := statFile(ctx, filename)
-		Expect(err).Should(BeNil(), "failed to stat file")
+		var resp, obj *objstore.Object
+		Eventually(func() error {
+			resp, err = statFile(ctx, filename)
+			return err
+		}, 90, 1).Should(BeNil(), fmt.Sprintf("failed to stat file(%s)", err))
+
 		for k, v := range metadata {
 			if v1, ok := resp.Labels[k]; !ok {
 				Fail(fmt.Sprintf("did not find [%v] in labels [%+v]", k, resp))
@@ -243,8 +251,11 @@ func testObjCUDOps() func() {
 			Tenant:    "default",
 			Namespace: "images",
 		}
-		obj, err := restClient.ObjstoreV1().Object().Get(ctx, &objMeta)
-		Expect(err).To(BeNil())
+		Eventually(func() error {
+			obj, err = restClient.ObjstoreV1().Object().Get(ctx, &objMeta)
+			return err
+		}, 90, 1).Should(BeNil(), fmt.Sprintf("failed to Get object (%s)", err))
+
 		for k, v := range metadata {
 			if v1, ok := obj.Labels[k]; !ok {
 				Fail(fmt.Sprintf("did not find [%v] in labels [%+v]", k, resp))
@@ -254,8 +265,11 @@ func testObjCUDOps() func() {
 				}
 			}
 		}
-		_, err = restClient.ObjstoreV1().Object().Delete(ctx, &objMeta)
-		Expect(err).To(BeNil())
+		Eventually(func() error {
+			_, err = restClient.ObjstoreV1().Object().Delete(ctx, &objMeta)
+			return err
+		}, 90, 1).Should(BeNil(), fmt.Sprintf("failed to Delete object (%s)", err))
+
 		_, err = restClient.ObjstoreV1().Object().Get(ctx, &objMeta)
 		Expect(err).ShouldNot(BeNil())
 	}

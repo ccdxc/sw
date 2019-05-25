@@ -7,11 +7,9 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/pensando/sw/api/graph"
-
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/graph"
 	"github.com/pensando/sw/api/interfaces"
-
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -91,12 +89,17 @@ type Server interface {
 	GetGraphDB() graph.Interface
 	// RuntimeFlags returns runtime flags in use by the Server
 	RuntimeFlags() Flags
+	// GetResolver returns the resolver initialized by API Server for use by hooks that need to do non-local work.
+	//  returns nil on error
+	GetResolvers() []string
 }
 
 // Config holds config for the API Server.
 type Config struct {
 	// Connection string for the KV store.
 	Kvstore store.Config
+	// Resolvers lists all the resolvers that can be used for service discovery
+	Resolvers []string
 	// GrpcServerPort is the port on which to start the API server service.
 	GrpcServerPort string
 	// grpcOptions is list of options to be passed into grpc

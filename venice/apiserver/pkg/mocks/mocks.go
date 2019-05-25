@@ -80,6 +80,12 @@ func (f *FakeServer) RuntimeFlags() apisrv.Flags {
 	return apisrv.Flags{}
 }
 
+// GetResolvers returns the list of resolvers known to API server for use by hooks that need to non-local work.
+//  returns nil on error
+func (f *FakeServer) GetResolvers() []string {
+	return nil
+}
+
 // NewFakeServer returns a new FakeServer
 func NewFakeServer() *FakeServer {
 	return &FakeServer{SvcMap: make(map[string]*FakeService)}

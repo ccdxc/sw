@@ -67,6 +67,8 @@ type apiSrv struct {
 	apiCache apiintf.CacheInterface
 	// objGraph maintains a graph of all relations between objects
 	apiGraph graph.Interface
+	// rslvrURIs used for service discovery (for use by hooks)
+	rslvrURIs []string
 	// newLocalOverlayFunc creates a new local overlay. indirection is mainly for testing.
 	newLocalOverlayFunc func(tenant, id, baseKey string, c apiintf.CacheInterface, apisrv apiserver.Server) (apiintf.OverlayInterface, error)
 }
@@ -291,6 +293,8 @@ func (a *apiSrv) Run(config apiserver.Config) {
 		a.runstate.addr = s.GetListenURL()
 	}
 
+	a.rslvrURIs = config.Resolvers
+
 	// Let all the services complete registration.
 	for name, svc := range a.svcmap {
 		err = svc.CompleteRegistration(ctx, a.Logger, s, config.Scheme)
@@ -386,6 +390,7 @@ func (a *apiSrv) reinit() {
 	singletonAPISrv.messages = make(map[string]apiserver.Message)
 	singletonAPISrv.doneCh = make(chan error)
 	singletonAPISrv.activeWatches = safelist.New()
+	singletonAPISrv.rslvrURIs = nil
 }
 
 // Stop sends a stop signal to the API server
@@ -407,6 +412,7 @@ func (a *apiSrv) Stop() {
 			break
 		}
 	}
+
 	a.reinit()
 }
 
@@ -443,4 +449,10 @@ func (a *apiSrv) getRunState() bool {
 // RuntimeFlags returns runtime flags in use by the Server
 func (a *apiSrv) RuntimeFlags() apiserver.Flags {
 	return a.flags
+}
+
+// GetResolver returns the resolver initialized by API Server for use by hooks that need to do non-local work.
+//  returns nil on error
+func (a *apiSrv) GetResolvers() []string {
+	return a.rslvrURIs
 }

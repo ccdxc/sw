@@ -1,10 +1,8 @@
-package main
+package cmd
 
 import (
 	"bytes"
-	"context"
 	"crypto/tls"
-	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -14,28 +12,25 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pensando/sw/api/generated/auth"
-	loginctx "github.com/pensando/sw/api/login/context"
-	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/authn/testutils"
+	"github.com/spf13/cobra"
 )
 
-const (
-	testUser     = "test"
-	testPassword = "Pensando0$"
-)
+var uploadCmd = &cobra.Command{
+	Use:   "upload",
+	Short: "upload to venice <path>",
+	Run:   upload,
+}
 
-func main() {
-	URI := flag.String("uri", "https://localhost:19000", "server URI")
-	fileName := flag.String("file", "", "file to upload")
-	flag.Parse()
+func init() {
+	rootCmd.AddCommand(uploadCmd)
+}
 
-	if *fileName == "" {
-		fmt.Printf("file name not provided")
-		os.Exit(-1)
+func upload(cmd *cobra.Command, args []string) {
+	if len(args) != 1 {
+		errorExit(nil, "file name to upload required")
 	}
 
-	sURI := strings.TrimSuffix(*URI, "/")
+	sURI := strings.TrimSuffix(uri, "/")
 	reqURI := "/objstore/v1/uploads/images/"
 	metadata := map[string]string{
 		"Version":     "v1.3.2",
@@ -43,29 +38,14 @@ func main() {
 		"Description": "image with fixes",
 		"ReleaseDate": "May2018",
 	}
-	path := *fileName
+	path := args[0]
 
 	file, err := os.Open(path)
 	if err != nil {
-		fmt.Printf("Failed to open file (%s)", err)
-		os.Exit(1)
+		errorExit(err, "Failed to open file (%s)", err)
 	}
 	defer file.Close()
 	fmt.Printf("Opened file [%v]\n", path)
-
-	userCred := &auth.PasswordCredential{
-		Username: testUser,
-		Password: testPassword,
-		Tenant:   globals.DefaultTenant,
-	}
-	ctx, err := testutils.NewLoggedInContext(context.Background(), sURI, userCred)
-	if err != nil {
-		log.Fatalf("could not login (%s)", err)
-	}
-	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
-	if !ok {
-		log.Fatalf("no authorizaton header in context")
-	}
 
 	reader, writer := io.Pipe()
 	mpWriter := multipart.NewWriter(writer)

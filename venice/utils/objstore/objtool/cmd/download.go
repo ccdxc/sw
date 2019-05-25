@@ -1,9 +1,8 @@
-package main
+package cmd
 
 import (
 	"context"
 	"crypto/tls"
-	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,6 +10,8 @@ import (
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/spf13/cobra"
 
 	"github.com/pensando/sw/api"
 	penobj "github.com/pensando/sw/api/generated/objstore"
@@ -24,7 +25,27 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 )
 
-var useReflect bool
+var (
+	useGrpc    bool
+	useDirect  bool
+	resolvers  string
+	provider   string
+	useReflect bool
+)
+
+var downloadCmd = &cobra.Command{
+	Use:   "download",
+	Short: "download file from venice <path> <output file>",
+	Run:   download,
+}
+
+func init() {
+	rootCmd.AddCommand(downloadCmd)
+	downloadCmd.PersistentFlags().BoolVar(&useGrpc, "grpc", false, "use grpc for operation")
+	downloadCmd.PersistentFlags().BoolVar(&useDirect, "direct", false, "use direct minio client for operation")
+	downloadCmd.PersistentFlags().StringVar(&resolvers, "resolvers", "node1:9009", "resolvers to use with gRPC")
+	downloadCmd.PersistentFlags().StringVar(&provider, "provider", "node1:9002", "TLS Provider to use with gRPC")
+}
 
 func viaGrpc(ctx context.Context, bucket, name string, of *os.File, clnt penobj.ServiceObjstoreV1Client) {
 	obj := penobj.Object{
@@ -37,17 +58,17 @@ func viaGrpc(ctx context.Context, bucket, name string, of *os.File, clnt penobj.
 
 	stream, err := clnt.DownloadFile(ctx, &obj)
 	if err != nil {
-		log.Fatalf("failed to start stream (%s)", err)
+		errorExit(err, "failed to start stream")
 	}
 	now := time.Now()
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
-			log.Infof("Downloaded file in [%v]", time.Since(now))
+			fmt.Printf("Downloaded file in [%v]\n", time.Since(now))
 			return
 		}
 		if err != nil {
-			log.Fatalf("receive return error(%s)", err)
+			errorExit(err, "receive return error")
 			return
 		}
 		var buf []byte
@@ -63,7 +84,7 @@ func viaGrpc(ctx context.Context, bucket, name string, of *os.File, clnt penobj.
 		}
 
 		if _, err = of.Write(buf); err != nil {
-			log.Fatalf("could not write to output (%s)", err)
+			errorExit(err, "could not write to output")
 			return
 		}
 	}
@@ -75,52 +96,59 @@ func viaDirect(dest, name string, tlsConfig *tls.Config, of *os.File) {
 	now := time.Now()
 	resp, err := http.Get(url)
 	if err != nil {
-		log.Fatalf("failed to do get on direct endpoint (%s)", err)
+		errorExit(err, "failed to do get on direct endpoint")
 	}
 	cnt, err := io.Copy(of, resp.Body)
 	if err != nil {
-		log.Fatalf("Failed to write to file (%s)", err)
+		errorExit(err, "Failed to write to file")
 	}
-	log.Infof("downloaded [%d] bytes  to [%v] in [%v]", cnt, of.Name(), time.Since(now))
-
+	fmt.Printf("downloaded [%d] bytes  to [%v] in [%v]\n", cnt, of.Name(), time.Since(now))
 }
 
-func main1() {
-	bucket := flag.String("bucket", "images", "bucket name")
-	name := flag.String("name", "", "object name")
-	out := flag.String("output", "", "output file name")
-	servers := flag.String("resolvers", "node1:9009", "comma seperated resolvers")
-	useGrpc := flag.Bool("grpc", false, "User gRPC")
-	useDirect := flag.Bool("direct", false, "user direct download")
-	flag.Parse()
-
-	if *name == "" || *out == "" {
-		log.Fatal("filename and output file needed")
+func download(cmd *cobra.Command, args []string) {
+	if len(args) != 2 {
+		errorExit(nil, "need 2 parameters  : <download filename> <destination>")
 	}
-	rslvrs := strings.Split(*servers, ",")
+	name := args[0]
+	out := args[1]
+	if name == "" || out == "" {
+		errorExit(nil, "filename and output file needed")
+	}
+
+	if useGrpc && useDirect {
+		errorExit(nil, "only one transport override allowed [grpc OR direct]")
+	}
+
+	rslvrs := strings.Split(resolvers, ",")
+	if len(rslvrs) == 0 {
+		errorExit(nil, "resolvers needed for")
+	}
+	if provider == "" {
+		errorExit(nil, "TLS Provider needed")
+	}
 	opts := []rpckit.Option{}
-	tlsp, err := tlsproviders.NewDefaultCMDBasedProvider("node1:9002", "vostest")
+	tlsp, err := tlsproviders.NewDefaultCMDBasedProvider(provider, "vostest")
 	if err != nil {
-		log.Fatalf("error getting tls provider (%s)", err)
+		errorExit(err, "error getting tls provider")
 	}
 	opts = append(opts, rpckit.WithTLSProvider(tlsp))
 	resolver := resolver.New(&resolver.Config{Name: "TestClient", Servers: rslvrs, Options: opts})
 	tlsc := tls.Config{
 		InsecureSkipVerify: true,
 	}
-	client, err := objstore.NewClient("default", *bucket, resolver, objstore.WithTLSConfig(&tlsc))
+	client, err := objstore.NewClient(testTenant, bucket, resolver, objstore.WithTLSConfig(&tlsc))
 	if err != nil {
-		log.Fatalf("could not create client (%s)", err)
+		errorExit(err, "could not create client")
 	}
 	ctx := context.Background()
-	of, err := os.Create(*out)
+	of, err := os.Create(out)
 	if err != nil {
-		log.Fatalf("could not create output file [%s](%s)", *out, err)
+		log.Fatalf("could not create output file [%s](%s)", out, err)
 	}
 	defer of.Close()
 
 	switch {
-	case *useGrpc:
+	case useGrpc:
 		{
 			grpcConn, err := rpckit.NewRPCClient("testclient", globals.Vos, rpckit.WithBalancer(balancer.New(resolver)), rpckit.WithTLSProvider(tlsp))
 			if err != nil {
@@ -129,26 +157,26 @@ func main1() {
 			l := log.WithContext("model", "Vos-Test")
 			grpcClient := penobjcl.NewObjstoreV1Backend(grpcConn.ClientConn, l)
 			now := time.Now()
-			viaGrpc(ctx, *bucket, *name, of, grpcClient)
-			fmt.Printf("elapsed time is [%v]", time.Since(now))
+			viaGrpc(ctx, bucket, name, of, grpcClient)
+			fmt.Printf("elapsed time is [%v]\n", time.Since(now))
 			return
 		}
-	case *useDirect:
+	case useDirect:
 		{
 			tlsc1, err := tlsp.GetClientTLSConfig(globals.Vos)
 			if err != nil {
 				log.Fatalf("Failed to get TLC config")
 			}
 			tlsc1.InsecureSkipVerify = true
-			dest := "https://node1:" + globals.VosHTTPPort
-			viaDirect(dest, *name, tlsc1, of)
+			dest := uri + globals.VosHTTPPort
+			viaDirect(dest, name, tlsc1, of)
 		}
 	default:
 		{
 
-			fr, err := client.GetObject(ctx, *name)
+			fr, err := client.GetObject(ctx, name)
 			if err != nil {
-				log.Fatalf("could not get object (%s)", err)
+				errorExit(err, "could not get object")
 			}
 
 			buf := make([]byte, 1024*1024)
@@ -157,18 +185,18 @@ func main1() {
 			for {
 				n, err := fr.Read(buf)
 				if err != nil && err != io.EOF {
-					log.Fatalf("error while reading object (%s)", err)
+					errorExit(err, "error while reading object")
 				}
 				if n == 0 {
 					break
 				}
 				totsize += n
 				if _, err = of.Write(buf[:n]); err != nil {
-					log.Fatalf("error writing to output file (%s)", err)
+					errorExit(nil, "error writing to output file")
 				}
 			}
-			log.Infof("Downloaded file in [%v]", time.Since(now))
-			log.Infof("Got image [%v] of size [%d]", *name, totsize)
+			fmt.Printf("Downloaded file in [%v]\n", time.Since(now))
+			fmt.Printf("Got image [%v] of size [%d]\n", name, totsize)
 		}
 	}
 }

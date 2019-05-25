@@ -198,6 +198,7 @@ var k8sModules = map[string]protos.Module{
 					},
 					Args: []string{
 						"-kvdest", "$KVSTORE_URL",
+						"-resolver-urls", "$RESOLVER_URLS",
 					},
 				},
 			},

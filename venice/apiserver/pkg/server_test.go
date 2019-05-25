@@ -225,6 +225,17 @@ func TestRunApiSrv(t *testing.T) {
 	if !flags.AllowMultiTenant {
 		t.Errorf("Expecting AllowMultiTenant to be set")
 	}
+
+	rslvr := a.GetResolvers()
+	if len(rslvr) != 0 {
+		t.Errorf("expecting to receive 0 entries")
+	}
+	a.rslvrURIs = []string{"node1", "node2"}
+	rslvr = a.GetResolvers()
+	if len(rslvr) != 2 {
+		t.Errorf("expecting to receive valid resolvers")
+	}
+
 	// Check we are able to create overlays
 	_, err = a.CreateOverlay("default", "notused", "/test/")
 	if err != nil {

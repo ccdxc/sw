@@ -28,6 +28,7 @@ func main() {
 	var (
 		grpcaddr        = flag.String("grpc-server-port", ":"+globals.APIServerPort, "GRPC Port to listen on")
 		kvstore         = flag.String("kvdest", globals.Localhost+":2379", "Comma separated list of etcd servers")
+		reslvrUrls      = flag.String("resolver-urls", "", "Comma separated list of resolvers")
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
 		version         = flag.String("version", "v1", "Version string for native version")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
@@ -100,6 +101,9 @@ func main() {
 		}
 		config.GetOverlay = cache.GetOverlay
 		config.IsDryRun = cache.IsDryRun
+		if *reslvrUrls != "" {
+			config.Resolvers = strings.Split(*reslvrUrls, ",")
+		}
 	}
 	trace.Init(globals.APIServer)
 	if *devmode {
