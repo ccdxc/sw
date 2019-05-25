@@ -438,7 +438,7 @@ sdk_ret_t
 mapping_impl::reserve_remote_ip_mapping_resources_(api_base *api_obj,
                                                    vpc_entry *vpc,
                                                    pds_mapping_spec_t *spec) {
-    sdk_ret_t                         ret = SDK_RET_OK;
+    sdk_ret_t                         ret;
     remote_vnic_mapping_tx_swkey_t    remote_vnic_mapping_tx_key = { 0 };
     remote_vnic_mapping_rx_swkey_t    remote_vnic_mapping_rx_key = { 0 };
     sdk_table_api_params_t            tparams;

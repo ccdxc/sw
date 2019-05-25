@@ -719,9 +719,9 @@ artemis_impl::write_to_rxdma_table(mem_addr_t addr, uint32_t tableid,
         packed_entry = line->packed_entry;
     }
 
-    //p4pd_apollo_rxdma_raw_table_hwentry_query(tableid, action_id, &len);
-    //p4pd_apollo_rxdma_entry_pack(tableid, action_id,
-    //                             actiondata, packed_entry);
+    p4pd_artemis_rxdma_raw_table_hwentry_query(tableid, action_id, &len);
+    p4pd_artemis_rxdma_entry_pack(tableid, action_id,
+                                  actiondata, packed_entry);
     return asic_mem_write(addr, packed_bytes, 1 + (len >> 3),
                           ASIC_WRITE_MODE_WRITE_THRU);
 }
@@ -745,9 +745,9 @@ artemis_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
         packed_entry = line->packed_entry;
     }
 
-    //p4pd_apollo_txdma_raw_table_hwentry_query(tableid, action_id, &len);
-    //p4pd_apollo_txdma_entry_pack(tableid, action_id
-    //                             actiondata, packed_entry);
+    p4pd_artemis_txdma_raw_table_hwentry_query(tableid, action_id, &len);
+    p4pd_artemis_txdma_entry_pack(tableid, action_id,
+                                  actiondata, packed_entry);
     return asic_mem_write(addr, packed_bytes, 1 + (len >> 3),
                           ASIC_WRITE_MODE_WRITE_THRU);
 }

@@ -136,6 +136,7 @@ private:
         overlay_ip_to_public_ip_nat_hdl_ = PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX;
         overlay_ip_to_provider_ip_nat_hdl_ = PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX;
         to_overlay_ip_nat_hdl_ = PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX;
+        nh_idx_ = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
         overlay_ip_hdl_ = handle_t::null();
         public_ip_hdl_ = handle_t::null();
         provider_ip_hdl_ = handle_t::null();
@@ -212,6 +213,9 @@ private:
     uint32_t    overlay_ip_to_public_ip_nat_hdl_;
     uint32_t    overlay_ip_to_provider_ip_nat_hdl_;
     uint32_t    to_overlay_ip_nat_hdl_;
+
+    // nexhop table index
+    uint32_t    nh_idx_;
 
     // handles to entries in LOCAL_IP_MAPPING table
     handle_t    overlay_ip_hdl_;     // xlate idx to provider_ip & public_ip

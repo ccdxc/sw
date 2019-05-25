@@ -13,8 +13,9 @@
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/mapping_impl.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
-#include "nic/apollo/p4/include/defines.h"
+#include "nic/apollo/p4/include/artemis_defines.h"
 #include "gen/p4gen/artemis/include/p4pd.h"
+#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
 
 using sdk::table::sdk_table_factory_params_t;
 
@@ -26,7 +27,6 @@ namespace impl {
 /// \@{
 
 mapping_impl_state::mapping_impl_state(pds_state *state) {
-    //p4pd_table_properties_t       tinfo;
     sdk_table_factory_params_t    mhparams;
 
     // instantiate P4 tables for bookkeeping
@@ -41,16 +41,13 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
     local_ip_mapping_tbl_ = slhash::factory(&mhparams);
     SDK_ASSERT(local_ip_mapping_tbl_ != NULL);
 
-#if 0
-    // remote VNIC Mapping RX table
-    mhparams.table_id = P4TBL_ID_VNIC_MAPPING;
-    mhparams.num_hints = P4_REMOTE_VNIC_MAPPING_TX_NUM_HINTS_PER_ENTRY;
+    // MAPPING table
+    mhparams.table_id = P4_ARTEMIS_TXDMA_TBL_ID_MAPPING;
+    mhparams.num_hints = P4_MAPPING_NUM_HINTS_PER_ENTRY;
     mhparams.key2str = NULL;
     mhparams.appdata2str = NULL;
-    remote_vnic_mapping_tx_tbl_ = mem_hash::factory(&mhparams);
-    SDK_ASSERT(remote_vnic_mapping_tx_tbl_ != NULL);
-
-#endif
+    mapping_tbl_ = mem_hash::factory(&mhparams);
+    SDK_ASSERT(mapping_tbl_ != NULL);
 
     // create a slab for mapping impl entries
     mapping_impl_slab_ = slab::factory("mapping-impl", PDS_SLAB_ID_MAPPING_IMPL,
@@ -99,13 +96,11 @@ mapping_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
     local_ip_mapping_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
     cb(&stats, ctxt);
 
-#if 0
     memset(&stats, 0, sizeof(pds_table_stats_t));
-    p4pd_table_properties_get(P4TBL_ID_MAPPING, &tinfo);
+    p4pd_global_table_properties_get(P4_ARTEMIS_TXDMA_TBL_ID_MAPPING, &tinfo);
     stats.table_name = tinfo.tablename;
     mapping_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
     cb(&stats, ctxt);
-#endif
 
     return SDK_RET_OK;
 }

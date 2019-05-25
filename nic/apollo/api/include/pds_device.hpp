@@ -13,8 +13,9 @@
 
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
-#include "nic/apollo/p4/include/defines.h"
 #include "nic/apollo/api/include/pds.hpp"
+
+#define PDS_DROP_REASON_MAX        64
 
 /// \defgroup PDS_DEVICE Device API
 /// @{
@@ -33,7 +34,7 @@ typedef struct pds_device_status_s {
 
 /// \brief Ingress drop statistics
 typedef struct pds_device_ing_drop_stats_s {
-    uint64_t drop_stats_pkts[P4I_DROP_REASON_MAX + 1];
+    uint64_t drop_stats_pkts[PDS_DROP_REASON_MAX];
 } __PACK__ pds_device_ing_drop_stats_t;
 
 /// \brief Device egress drop statistics

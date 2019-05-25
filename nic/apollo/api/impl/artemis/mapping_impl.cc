@@ -8,6 +8,10 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/sdk/lib/utils/utils.hpp"
+//#include "nic/sdk/include/sdk/table.hpp"
+#include "nic/sdk/lib/table/memhash/mem_hash.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/mapping.hpp"
@@ -17,10 +21,7 @@
 #include "nic/apollo/api/impl/artemis/mapping_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/p4/include/defines.h"
-#include "nic/sdk/lib/p4/p4_api.hpp"
-#include "nic/sdk/lib/table/memhash/mem_hash.hpp"
-#include "nic/sdk/include/sdk/table.hpp"
-#include "nic/sdk/lib/utils/utils.hpp"
+#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
 
 using sdk::table::sdk_table_api_params_t;
 
@@ -40,7 +41,6 @@ namespace impl {
         sdk::lib::memrev((key)->key_metadata_mapping_ip,                     \
                          (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);           \
     } else {                                                                 \
-        /* key is initialized to zero by the caller */                       \
         memcpy((key)->key_metadata_mapping_ip,                               \
                &(ip)->addr.v4_addr, IP4_ADDR8_LEN);                          \
     }                                                                        \
@@ -57,6 +57,25 @@ namespace impl {
     (data)->local_ip_mapping_action.service_tag = (svc_tag);                 \
     (data)->local_ip_mapping_action.pa_or_ca_xlate_idx= (uint16_t)xidx1;     \
     (data)->local_ip_mapping_action.public_xlate_idx = (uint16_t)xidx2;      \
+}
+
+#define PDS_IMPL_FILL_MAPPING_SWKEY(key, vpc_hw_id, ip)                      \
+{                                                                            \
+    memset((key), 0, sizeof(*(key)));                                        \
+    (key)->txdma_control_vpc_id = vpc_hw_id;                                 \
+    if ((ip)->af == IP_AF_IPV6) {                                            \
+        sdk::lib::memrev((key)->txdma_control_dst,                           \
+                         (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);           \
+    } else {                                                                 \
+        memcpy((key)->txdma_control_dst,                                     \
+               &(ip)->addr.v4_addr, IP4_ADDR8_LEN);                          \
+    }                                                                        \
+}
+
+#define PDS_IMPL_FILL_MAPPING_APPDATA(data, nh_id, encap)                    \
+{                                                                            \
+    memset((data), 0, sizeof(*(data)));                                      \
+    (data)->nexthop_group_index = (nh_id);                                   \
 }
 
 #define nat_action action_u.nat_nat_rewrite
@@ -132,6 +151,7 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
                                                   vpc_entry *vpc,
                                                   pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
+    mapping_swkey_t mapping_key;
     sdk_table_api_params_t api_params;
     local_ip_mapping_swkey_t local_ip_mapping_key;
 
@@ -143,11 +163,16 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
     ret = mapping_impl_db()->local_ip_mapping_tbl()->reserve(&api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in LOCAL_IP_MAPPING table "
-                      "for mapping %s, err %u", api_obj->key2str().c_str(),
-                      ret);
+                      "for local mapping %s, err %u",
+                      api_obj->key2str().c_str(), ret);
         return ret;
     }
     overlay_ip_hdl_ = api_params.handle;
+
+    ret = reserve_remote_ip_mapping_resources_(api_obj, vpc, spec);
+    if (unlikely(ret != SDK_RET_OK)) {
+        goto error;
+    }
 
     // if public IP and provider IP are not there, no more mappings or xlation
     // entries are needed
@@ -167,7 +192,7 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
             PDS_TRACE_ERR("Failed to reserve entry in LOCAL_IP_MAPPING table "
                           "for public IP of mapping %s, err %u",
                           api_obj->key2str().c_str(), ret);
-            return ret;
+            goto error;
         }
         public_ip_hdl_ = api_params.handle;
         // reserve an entry in the NAT table for the overlay IP to public
@@ -193,7 +218,7 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
             PDS_TRACE_ERR("Failed to reserve entry in LOCAL_IP_MAPPING table "
                           "for provider IP of mapping %s, err %u",
                           api_obj->key2str().c_str(), ret);
-            return ret;
+            goto error;
         }
         provider_ip_hdl_ = api_params.handle;
         // reserve an entry in the NAT table for the overlay IP to provider
@@ -227,7 +252,34 @@ sdk_ret_t
 mapping_impl::reserve_remote_ip_mapping_resources_(api_base *api_obj,
                                                    vpc_entry *vpc,
                                                    pds_mapping_spec_t *spec) {
-    return SDK_RET_ERR;
+    sdk_ret_t ret;
+    mapping_swkey_t mapping_key;
+    sdk_table_api_params_t api_params;
+
+    // reserve an entry in the MAPPING table
+    PDS_IMPL_FILL_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
+                                &spec->key.ip_addr);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &mapping_key,
+                                   NULL, 0, sdk::table::handle_t::null());
+    ret = mapping_impl_db()->mapping_tbl()->reserve(&api_params);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve entry in MAPPING table for "
+                      "mapping %s, err %u", api_obj->key2str().c_str(), ret);
+        goto error;
+    }
+    mapping_hdl_ = api_params.handle;
+
+    // reserve an entry in NH_TX table
+    ret = artemis_impl_db()->nh_tbl()->reserve(&nh_idx_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve entry in NH table, err %u", ret);
+        return ret;
+    }
+    return SDK_RET_OK;
+
+error:
+
+    return ret;
 }
 
 sdk_ret_t

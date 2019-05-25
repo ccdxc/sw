@@ -61,7 +61,6 @@ tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     ret = tep_impl_db()->nh_tbl()->reserve(&idx);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in NH table, err %u", ret);
-
         return ret;
     }
     nh_id_ = idx & 0xFFFF;

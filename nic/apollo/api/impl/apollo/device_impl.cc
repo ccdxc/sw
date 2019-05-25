@@ -10,12 +10,13 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/device.hpp"
 #include "nic/apollo/api/impl/apollo/device_impl.hpp"
+#include "nic/apollo/p4/include/defines.h"
 #include "gen/p4gen/apollo/include/p4pd.h"
-#include "nic/sdk/lib/utils/utils.hpp"
 
 namespace api {
 namespace impl {
