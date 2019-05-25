@@ -80,6 +80,7 @@ func (ctx *upgstatereqctx) invokeAppHdlr(reqType upgrade.UpgReqStateType, hdlrRe
 		hdlrResp.ErrStr = ""
 		ctx.appHdlrs.AbortHandler(&upgCtx)
 	}
+	upgCtx.prevExecState = reqType
 }
 
 func (ctx *upgstatereqctx) getUpgCtx(obj *upgrade.UpgStateReq) error {

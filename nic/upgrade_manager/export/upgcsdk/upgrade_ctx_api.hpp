@@ -9,6 +9,12 @@ namespace upgrade {
 
 using namespace std;
 
+typedef enum {
+    CompatCheck,
+    PreSwitchRoot,
+    PostSwitchRoot
+} UpgState;
+
 class UpgCtxApi {
 public:
     UpgCtxApi() {}
@@ -16,6 +22,7 @@ public:
     static delphi::error UpgCtxGetPostUpgTableVersion (UpgCtx &ctx, UpgMeta meta, string &version);
     static bool UpgCtxIsUpgTypeDisruptive(UpgCtx &ctx);
     static bool UpgCtxIsUpgTypeNonDisruptive(UpgCtx &ctx);
+    static UpgState UpgCtxGetUpgState(UpgCtx &ctx);
 private:
     static delphi::error UpgCtxGetUpgTableVersion (ImageInfo& imgInfo, UpgMeta meta, string &version);
 };

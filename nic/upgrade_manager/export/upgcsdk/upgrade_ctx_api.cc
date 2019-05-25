@@ -41,4 +41,26 @@ bool UpgCtxApi::UpgCtxIsUpgTypeNonDisruptive(UpgCtx &ctx) {
     return ctx.upgType == UpgTypeNonDisruptive;
 }
 
+UpgState UpgCtxApi::UpgCtxGetUpgState(UpgCtx &ctx) {
+    switch (ctx.prevExecState) {
+        case UpgStateCompatCheck:
+            return CompatCheck;
+
+        case UpgStateLinkDown:
+        case UpgStateHostDown:
+        case UpgStatePostHostDown:
+        case UpgStateSaveState:
+             return PreSwitchRoot;
+
+        case UpgStatePostRestart:
+        case UpgStateHostUp:
+        case UpgStateLinkUp:
+        case UpgStatePostLinkUp:
+             return PostSwitchRoot;
+
+        default:
+             return CompatCheck;
+    }
+}
+
 }

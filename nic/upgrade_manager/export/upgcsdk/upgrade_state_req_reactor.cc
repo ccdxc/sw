@@ -95,6 +95,7 @@ void UpgStateReqReact::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp) {
             //UPG_LOG_DEBUG("Upgrade: Default state {}", type);
             break;
     }
+    ctx.prevExecState = type;
 }
 
 bool UpgStateReqReact::GetUpgCtx(delphi::objects::UpgStateReqPtr req) {

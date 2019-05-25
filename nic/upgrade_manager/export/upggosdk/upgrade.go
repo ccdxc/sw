@@ -98,6 +98,7 @@ type UpgCtx struct {
 	PostUpgMeta     ImgMeta
 	upgType         upgrade.UpgType
 	firmwarePkgName string
+	prevExecState   upgrade.UpgReqStateType
 }
 
 //UpgAppHandlers all upgrade applications to implement this
