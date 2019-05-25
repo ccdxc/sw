@@ -641,7 +641,7 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vpc_entry *vpc,
                             handle_.remote_.remote_vnic_tx_hdl_);
     ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->insert(&api_params);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to add program entry in REMOTE_VNIC_MAPPING_TX "
+        PDS_TRACE_ERR("Failed to program entry in REMOTE_VNIC_MAPPING_TX "
                       "table for (vpc %u, IP %s), err %u\n", vpc->hw_id(),
                       ipaddr2str(&spec->key.ip_addr), ret);
         goto error;
@@ -676,7 +676,6 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vpc_entry *vpc,
     return SDK_RET_OK;
 
 error:
-
     return ret;
 }
 
@@ -761,9 +760,7 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
         }
     }
     // add entry to REMOTE_VNIC_MAPPING_TX table for overlay & public IPs
-    add_remote_vnic_mapping_tx_entries_(vpc, spec);
-
-    return SDK_RET_OK;
+    return add_remote_vnic_mapping_tx_entries_(vpc, spec);
 
 error:
 

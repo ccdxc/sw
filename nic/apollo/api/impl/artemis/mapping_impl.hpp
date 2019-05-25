@@ -172,17 +172,17 @@ private:
     /// \param[in] vpc     VPC of this IP
     /// \param[in] spec    IP mapping details
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t reserve_remote_ip_mapping_resources_(api_base *api_obj,
-                                                   vpc_entry *vpc,
-                                                   pds_mapping_spec_t *spec);
+    sdk_ret_t reserve_remote_mapping_resources_(api_base *api_obj,
+                                                vpc_entry *vpc,
+                                                pds_mapping_spec_t *spec);
 
     /// \brief     add necessary mapping table entries for remote IPs
     /// \param[in] vpc    VPC of this IP
     /// \param[in] subnet subnet of this IP
     /// \param[in] spec   IP mapping details
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t add_remote_ip_mapping_entries_(vpc_entry *vpc,
-                                             pds_mapping_spec_t *spec);
+    sdk_ret_t add_remote_mapping_entries_(vpc_entry *vpc,
+                                          pds_mapping_spec_t *spec);
 
     /// \brief         read the configured values from the local mapping tables
     /// \param[in]     vpc  pointer to the vpc entry
@@ -204,7 +204,7 @@ private:
     /// \brief     release all the resources reserved for remote IP mapping
     /// \param[in] api_obj mapping object
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t release_remote_ip_mapping_resources_(api_base *api_obj);
+    sdk_ret_t release_remote_mapping_resources_(api_base *api_obj);
 
 private:
     bool    is_local_;

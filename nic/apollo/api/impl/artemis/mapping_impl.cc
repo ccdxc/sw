@@ -72,7 +72,7 @@ namespace impl {
     }                                                                        \
 }
 
-#define PDS_IMPL_FILL_MAPPING_APPDATA(data, nh_id, encap)                    \
+#define PDS_IMPL_FILL_MAPPING_APPDATA(data, nh_id)                           \
 {                                                                            \
     memset((data), 0, sizeof(*(data)));                                      \
     (data)->nexthop_group_index = (nh_id);                                   \
@@ -169,7 +169,7 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
     }
     overlay_ip_hdl_ = api_params.handle;
 
-    ret = reserve_remote_ip_mapping_resources_(api_obj, vpc, spec);
+    ret = reserve_remote_mapping_resources_(api_obj, vpc, spec);
     if (unlikely(ret != SDK_RET_OK)) {
         goto error;
     }
@@ -249,9 +249,9 @@ error:
 }
 
 sdk_ret_t
-mapping_impl::reserve_remote_ip_mapping_resources_(api_base *api_obj,
-                                                   vpc_entry *vpc,
-                                                   pds_mapping_spec_t *spec) {
+mapping_impl::reserve_remote_mapping_resources_(api_base *api_obj,
+                                                vpc_entry *vpc,
+                                                pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
     mapping_swkey_t mapping_key;
     sdk_table_api_params_t api_params;
@@ -301,7 +301,7 @@ mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     if (is_local_) {
         return reserve_local_ip_mapping_resources_(orig_obj, vpc, spec);
     }
-    return reserve_remote_ip_mapping_resources_(orig_obj, vpc, spec);
+    return reserve_remote_mapping_resources_(orig_obj, vpc, spec);
 }
 
 sdk_ret_t
@@ -387,7 +387,7 @@ mapping_impl::release_local_ip_mapping_resources_(api_base *api_obj) {
 }
 
 sdk_ret_t
-mapping_impl::release_remote_ip_mapping_resources_(api_base *api_obj) {
+mapping_impl::release_remote_mapping_resources_(api_base *api_obj) {
     sdk_table_api_params_t    api_params = { 0 };
 
     if (mapping_hdl_.valid()) {
@@ -402,7 +402,37 @@ mapping_impl::release_resources(api_base *api_obj) {
     if (is_local_) {
         return release_local_ip_mapping_resources_(api_obj);
     }
-    return release_remote_ip_mapping_resources_(api_obj);
+    return release_remote_mapping_resources_(api_obj);
+}
+
+sdk_ret_t
+mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
+                                          pds_mapping_spec_t *spec) {
+    sdk_ret_t ret;
+    mapping_swkey_t mapping_key;
+    mapping_appdata_t mapping_data;
+    sdk_table_api_params_t api_params;
+
+    PDS_IMPL_FILL_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
+                                &spec->key.ip_addr);
+    PDS_IMPL_FILL_MAPPING_APPDATA(&mapping_data, nh_idx_);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &mapping_key,
+                                   &mapping_data, MAPPING_MAPPING_INFO_ID,
+                                   mapping_hdl_);
+    ret = mapping_impl_db()->mapping_tbl()->insert(&api_params);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program entry in MAPPING table for "
+                      "(vpc %u, IP %s), err %u\n", vpc->hw_id(),
+                      ipaddr2str(&spec->key.ip_addr), ret);
+        goto error;
+    }
+    return SDK_RET_OK;
+
+    // TODO:
+    // should we reserve & program entries for public IP of local IP mappings ?
+
+error:
+    return ret;
 }
 
 sdk_ret_t
@@ -525,20 +555,12 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
             goto error;
         }
     }
-
-    // TODO: add entry to MAPPING table
-    return SDK_RET_OK;
+    // add MAPPING table entries now
+    return add_remote_mapping_entries_(vpc, spec);
 
 error:
-
     // TODO: handle cleanup in case of failure
     return ret;
-}
-
-sdk_ret_t
-mapping_impl::add_remote_ip_mapping_entries_(vpc_entry *vpc,
-                                             pds_mapping_spec_t *spec) {
-    return SDK_RET_ERR;
 }
 
 sdk_ret_t
@@ -570,7 +592,7 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             goto error;
         }
     } else {
-        ret = add_remote_ip_mapping_entries_(vpc, spec);
+        ret = add_remote_mapping_entries_(vpc, spec);
         if (ret != SDK_RET_OK) {
             goto error;
         }
