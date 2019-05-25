@@ -525,6 +525,68 @@ func TestSgAttachEndpoint(t *testing.T) {
 	Assert(t, (len(sg.SecurityGroup.Status.Workloads) == 0), "Endpoint is still linked to sg", sg)
 }
 
+func TestSgErrorCases(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create sg with nil selector
+	_, err = createSg(stateMgr, "default", "testSg", nil)
+	AssertOk(t, err, "Error creating security group")
+	_, err = stateMgr.FindSecurityGroup("default", "testSg")
+	AssertOk(t, err, "Error finding sg")
+
+	// create a network
+	err = createNetwork(stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254")
+	AssertOk(t, err, "Error creating the network")
+
+	// endpoint object with nil workload attributes
+	epinfo := workload.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testEndpoint",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: workload.EndpointSpec{},
+		Status: workload.EndpointStatus{
+			WorkloadName:       "testContainerName",
+			Network:            "default",
+			HomingHostAddr:     "192.168.1.1",
+			HomingHostName:     "testHost",
+			WorkloadAttributes: nil,
+		},
+	}
+
+	// find the network
+	_, err = stateMgr.FindNetwork("default", "default")
+	AssertOk(t, err, "Could not find the network")
+
+	// create endpoint
+	err = stateMgr.ctrler.Endpoint().Create(&epinfo)
+	Assert(t, (err == nil), "Error creating the endpoint", epinfo)
+
+	// verify endpoint is created
+	eps, err := stateMgr.FindEndpoint("default", "testEndpoint")
+	Assert(t, (err == nil), "Error finding the endpoint", epinfo)
+
+	// create a new sg with nil selector
+	_, err = createSg(stateMgr, "default", "testSg2", nil)
+	AssertOk(t, err, "Error creating security group")
+	sg2, err := stateMgr.FindSecurityGroup("default", "testSg2")
+	AssertOk(t, err, "Error finding sg")
+
+	// delete the second sg
+	err = stateMgr.ctrler.SecurityGroup().Delete(&sg2.SecurityGroup.SecurityGroup)
+	AssertOk(t, err, "Error deleting security group")
+
+	// delete the endpoint
+	err = stateMgr.ctrler.Endpoint().Delete(&eps.Endpoint.Endpoint)
+	AssertOk(t, err, "Error deleting endpoint")
+}
+
 // test concurrent add/delete/change of endpoints
 func TestEndpointConcurrency(t *testing.T) {
 	var concurrency = 100

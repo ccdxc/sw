@@ -45,7 +45,7 @@ func (sg *SecurityGroupState) attachEndpoints() error {
 	// walk the endpoints and see which ones match
 	for _, ep := range eps {
 		if ep.Endpoint.Tenant == sg.SecurityGroup.Tenant {
-			if sg.SecurityGroup.Spec.WorkloadSelector.Matches(labels.Set(ep.Endpoint.Status.WorkloadAttributes)) {
+			if sg.SecurityGroup.Spec.WorkloadSelector != nil && sg.SecurityGroup.Spec.WorkloadSelector.Matches(labels.Set(ep.Endpoint.Status.WorkloadAttributes)) {
 				err = ep.AddSecurityGroup(sg)
 				if err != nil {
 					log.Errorf("Error attaching endpoint %s to sg %s. Err: %v", ep.Endpoint.Name, sg.SecurityGroup.Name, err)

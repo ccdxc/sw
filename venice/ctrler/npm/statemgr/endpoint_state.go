@@ -118,7 +118,7 @@ func (eps *EndpointState) attachSecurityGroups() error {
 
 	// walk all sgs and see if endpoint matches the selector
 	for _, sg := range sgs {
-		if sg.SecurityGroup.Spec.WorkloadSelector.Matches(labels.Set(eps.Endpoint.Status.WorkloadAttributes)) {
+		if sg.SecurityGroup.Spec.WorkloadSelector != nil && sg.SecurityGroup.Spec.WorkloadSelector.Matches(labels.Set(eps.Endpoint.Status.WorkloadAttributes)) {
 			err = sg.AddEndpoint(eps)
 			if err != nil {
 				log.Errorf("Error adding ep %s to sg %s. Err: %v", eps.Endpoint.Name, sg.SecurityGroup.Name, err)
