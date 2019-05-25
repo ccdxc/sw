@@ -147,8 +147,8 @@ vnic_api_spec_to_proto_spec (const pds_vnic_spec_t *api_spec,
     pds_encap_to_proto_encap(proto_spec->mutable_vnicencap(),
                              &api_spec->vnic_encap);
     proto_spec->set_macaddress(MAC_TO_UINT64(api_spec->mac_addr));
-    proto_spec->set_providermacaddress(
-                        MAC_TO_UINT64(api_spec->provider_mac_addr));
+    //proto_spec->set_providermacaddress(
+                        //MAC_TO_UINT64(api_spec->provider_mac_addr));
     pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(),
                              &api_spec->fabric_encap);
     proto_spec->set_resourcepoolid(api_spec->rsc_pool_id);

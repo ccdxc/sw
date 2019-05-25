@@ -30,21 +30,24 @@ enum TunnelType {
 message TunnelSpec {
   // unique tunnel identifier
   // NOTE: Tunnel id of 0 is reserve for local TEP/host
-  uint32          Id       = 1 [(gogoproto.moretags) = "meta:mandatory"];;
+  uint32          Id         = 1 [(gogoproto.moretags) = "meta:mandatory"];;
   // virtual private cloud this is tunnel belongs to
-  uint32          VPCId    = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32          VPCId      = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // local IP of the tunnel (used as outer SIP in tunneled packets)
-  types.IPAddress LocalIP  = 3;
+  types.IPAddress LocalIP    = 3;
   // remote IP of the tunnel (used as outer DIP in tunneled packets)
-  types.IPAddress RemoteIP = 4;
+  types.IPAddress RemoteIP   = 4;
+  // MAC address of the remote IP (i.e., remote side of the tunnel)
+  // NOTE: if dataplane is supposed to resolve this, set to 0
+  uint64          MACAddress = 5;
   // type of this tunnel
-  TunnelType      Type     = 5 [(gogoproto.moretags) = "meta:mandatory"];
+  TunnelType      Type       = 6 [(gogoproto.moretags) = "meta:mandatory"];
   // encap used while sending traffic to this tunnel
-  types.Encap     Encap    = 6;
+  types.Encap     Encap      = 7;
   // if Nat is set to true, do (static) source NAT for the traffic going to
   // this tunnel and (static) destination NAT in the reverse direction if
   // the local IP mapping has NAT/public IP configured
-  bool            Nat      = 7;
+  bool            Nat        = 8;
 }
 
 // operational status of the tunnel, if any

@@ -120,6 +120,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     vpc_entry *vpc;
     mem_addr_t addr;
+    device_entry *device;
     subnet_entry *subnet;
     p4pd_error_t p4pd_ret;
     pds_vnic_spec_t *spec;
@@ -136,6 +137,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     //ingress_vnic_info_actiondata_t ing_vnic_info = { 0 };
     egress_vnic_info_actiondata_t egr_vnic_info = { 0 };
 
+    device = device_db()->find();
     spec = &obj_ctxt->api_params->vnic_spec;
     subnet = subnet_db()->find(&spec->subnet);
     if (unlikely(subnet == NULL)) {
@@ -160,7 +162,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk::lib::memrev(egr_vnic_info.egress_vnic_info_action.ca_mac,
                      spec->mac_addr, ETH_ADDR_LEN);
     sdk::lib::memrev(egr_vnic_info.egress_vnic_info_action.pa_mac,
-                     spec->provider_mac_addr, ETH_ADDR_LEN);
+                     device->mac(), ETH_ADDR_LEN);
 
 #if 0
     if (spec->rx_mirror_session_bmap) {

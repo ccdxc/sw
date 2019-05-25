@@ -22,7 +22,8 @@ pds_vnic_proto_spec_to_api_spec (pds_vnic_spec_t *api_spec,
     api_spec->vnic_encap = proto_encap_to_pds_encap(proto_spec.vnicencap());
     api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
     MAC_UINT64_TO_ADDR(api_spec->mac_addr, proto_spec.macaddress());
-    MAC_UINT64_TO_ADDR(api_spec->provider_mac_addr, proto_spec.providermacaddress());
+    //MAC_UINT64_TO_ADDR(api_spec->provider_mac_addr,
+    //                   proto_spec.providermacaddress());
     api_spec->rsc_pool_id = proto_spec.resourcepoolid();
     api_spec->src_dst_check = proto_spec.sourceguardenable();
     for (int i = 0; i < proto_spec.txmirrorsessionid_size(); i++) {
