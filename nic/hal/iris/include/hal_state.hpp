@@ -246,10 +246,12 @@ public:
     ht *lif_id_ht(void) const { return lif_id_ht_; }
     ht *if_id_ht(void) const { return if_id_ht_; }
     ht *l4lb_ht(void) const { return l4lb_ht_; }
+    ht *session_hal_telemetry_ht(void) const { return session_hal_telemetry_ht_; }
     ht *session_hal_handle_ht(void) const { return session_hal_handle_ht_; }
     ht *session_hal_iflow_ht(void)  const { return session_hal_iflow_ht_; }
     ht *session_hal_rflow_ht(void)  const { return session_hal_rflow_ht_; }
     ht *qos_class_ht(void) const { return qos_class_ht_; }
+    bitmap *telemetry_collectors_bmp(void) const { return telemetry_collectors_bmp_; }
     bitmap *qos_cmap_pcp_bmp(void) const { return qos_cmap_pcp_bmp_; }
     bitmap *qos_cmap_dscp_bmp(void) const { return qos_cmap_dscp_bmp_; }
     ht *crypto_cert_store_id_ht(void) const { return crypto_cert_store_id_ht_; }
@@ -366,6 +368,7 @@ private:
     ht    *oif_list_id_ht_;
     ht    *lif_id_ht_;
     ht    *if_id_ht_;
+    ht    *session_hal_telemetry_ht_;
     ht    *session_hal_handle_ht_;
     ht    *session_hal_iflow_ht_;
     ht    *session_hal_rflow_ht_;
@@ -396,6 +399,7 @@ private:
     ht    *ipsec_policy_ht_;
     ht    *tcp_proxy_policy_ht_;
     ht    *filter_ht_;
+    bitmap                  *telemetry_collectors_bmp_;
     bitmap                  *qos_cmap_pcp_bmp_;
     bitmap                  *qos_cmap_dscp_bmp_;
 
@@ -546,6 +550,7 @@ public:
     slab *flow_slab(void) const { return cfg_db_->flow_slab(); }
     slab *session_slab(void) const { return cfg_db_->session_slab(); }
     //ht *session_id_ht(void) const { return oper_db_->session_id_ht(); }
+    ht *session_hal_telemetry_ht(void) const { return oper_db_->session_hal_telemetry_ht(); }
     ht *session_hal_handle_ht(void) const { return oper_db_->session_hal_handle_ht(); }
     ht *session_hal_iflow_ht(void) const { return oper_db_->session_hal_iflow_ht(); }
     ht *session_hal_rflow_ht(void) const { return oper_db_->session_hal_rflow_ht(); }
@@ -565,6 +570,7 @@ public:
     // get APIs for qos-class state
     slab *qos_class_slab(void) const { return cfg_db_->qos_class_slab(); }
     ht *qos_class_ht(void) const { return oper_db_->qos_class_ht(); }
+    bitmap *telemetry_collectors_bmp(void) const { return oper_db_->telemetry_collectors_bmp(); }
     bitmap *qos_cmap_pcp_bmp(void) const { return oper_db_->qos_cmap_pcp_bmp(); }
     bitmap *qos_cmap_dscp_bmp(void) const { return oper_db_->qos_cmap_dscp_bmp(); }
 

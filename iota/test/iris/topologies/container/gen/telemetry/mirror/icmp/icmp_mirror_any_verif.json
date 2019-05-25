@@ -1,61 +1,5 @@
 [
     {
-        "src_ip": "192.168.100.101", 
-        "dst_ip": "any", 
-        "protocol": "icmp", 
-        "port": "120", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "any", 
-        "dst_ip": "192.168.100.101", 
-        "protocol": "icmp", 
-        "port": "120", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "192.168.100.101", 
-        "dst_ip": "any", 
-        "protocol": "icmp", 
-        "port": "any", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "any", 
-        "dst_ip": "192.168.100.101", 
-        "protocol": "icmp", 
-        "port": "any", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "192.168.100.102", 
-        "dst_ip": "any", 
-        "protocol": "icmp", 
-        "port": "120", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "any", 
-        "dst_ip": "192.168.100.102", 
-        "protocol": "icmp", 
-        "port": "120", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "192.168.100.102", 
-        "dst_ip": "any", 
-        "protocol": "icmp", 
-        "port": "any", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "any", 
-        "dst_ip": "192.168.100.102", 
-        "protocol": "icmp", 
-        "port": "any", 
-        "result": "mirror"
-    }, 
-    {
         "src_ip": "192.168.100.103", 
         "dst_ip": "any", 
         "protocol": "icmp", 
@@ -67,48 +11,6 @@
         "dst_ip": "192.168.100.103", 
         "protocol": "icmp", 
         "port": "120", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "192.168.100.103", 
-        "dst_ip": "any", 
-        "protocol": "icmp", 
-        "port": "any", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "any", 
-        "dst_ip": "192.168.100.103", 
-        "protocol": "icmp", 
-        "port": "any", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "192.168.100.104", 
-        "dst_ip": "any", 
-        "protocol": "icmp", 
-        "port": "120", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "any", 
-        "dst_ip": "192.168.100.104", 
-        "protocol": "icmp", 
-        "port": "120", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "192.168.100.104", 
-        "dst_ip": "any", 
-        "protocol": "icmp", 
-        "port": "any", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "any", 
-        "dst_ip": "192.168.100.104", 
-        "protocol": "icmp", 
-        "port": "any", 
         "result": "mirror"
     }
 ]

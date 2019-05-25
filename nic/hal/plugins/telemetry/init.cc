@@ -23,6 +23,10 @@ telemetry_init (hal_cfg_t *hal_cfg)
 
     fte::feature_info_t info = {
         state_size: sizeof(telemetry_info_t),
+        state_init_fn: NULL,
+        sess_del_cb: telemetry_exec_delete,
+        sess_get_cb: NULL,
+        sess_upd_cb: telemetry_exec,
     };
     fte::register_feature(FTE_FEATURE_TELEMETRY, telemetry_exec, info);
 

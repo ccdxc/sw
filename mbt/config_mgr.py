@@ -175,7 +175,9 @@ class ConfigObject():
             return ApiStatus.API_STATUS_OK, None
 
         if crud_oper._pre_cb and should_call_callback:
-            crud_oper._pre_cb.call(self.data, req_message, None)
+            ret_val = crud_oper._pre_cb.call(self.data, req_message, None)
+            if ret_val == False:
+                return ApiStatus.API_STATUS_OK, None
 
         if op_type == ConfigObjectMeta.CREATE and not redo:
             self.key_or_handle = GrpcReqRspMsg.GetKeyObject(req_message)

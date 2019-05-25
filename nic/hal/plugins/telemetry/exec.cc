@@ -143,6 +143,58 @@ end:
     return ret;
 }
 
+static hal_ret_t
+telemetry_pick_dest_if (fte::ctx_t &ctx)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    fte::flow_update_t  flowupd;
+
+    if_t *dif = ctx.dif();
+    if (!dif) {
+        return HAL_RET_OK;
+    }
+    // Pick an active uplink
+    if ((dif->if_type == intf::IF_TYPE_UPLINK) &&
+            (dif->if_op_status == intf::IF_STATUS_DOWN)) {
+        HAL_TRACE_DEBUG("Pinned uplink id {} is down", dif->if_id);
+        // Pinned uplink is down, pick a new active uplink
+        if_t *ndif = telemetry_get_active_uplink();
+        if (ndif) {
+            HAL_TRACE_DEBUG("Picked new uplink id {}", ndif->if_id);
+            memset(&flowupd, 0, sizeof(fte::flow_update_t));
+            flowupd.type = fte::FLOWUPD_FWDING_INFO;
+            flowupd.fwding.dif = ndif;
+            ret = ctx.update_flow(flowupd);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error updating the dif");
+                return ret;
+            }
+        }
+    }
+
+    return ret;
+}
+
+fte::pipeline_action_t
+telemetry_exec_delete (fte::ctx_t &ctx)
+{
+    hal::session_t *session = ctx.session();
+    
+    HAL_TRACE_DEBUG("Delete for telemetry plugin, event {}",
+                                        ctx.pipeline_event());
+    if (session && session->is_ipfix_flow) {
+        hal::session_t *ls = (session_t *)
+            g_hal_state->session_hal_telemetry_ht()->lookup(&session->hal_handle);
+        if (ls) {
+            HAL_TRACE_DEBUG("Found IPFIX session. Deleting from HT");
+            g_hal_state->session_hal_telemetry_ht()->remove_entry(session,
+                                                &session->hal_telemetry_ht_ctxt);
+        }
+    }
+
+    return fte::PIPELINE_CONTINUE;
+}
+
 /*
  * telemetry_exec
  *   Entry point into the TELEMETRY feature
@@ -150,7 +202,35 @@ end:
 fte::pipeline_action_t
 telemetry_exec (fte::ctx_t &ctx)
 {
-    hal_ret_t ret;
+    hal_ret_t           ret = HAL_RET_OK;
+    
+    hal::session_t *session = ctx.session();
+    HAL_TRACE_DEBUG("telemetry plugin exec, event {}", ctx.pipeline_event());
+    // IPFIX flows
+    if ((session && session->is_ipfix_flow) ||
+            (ctx.cpu_rxhdr() && (ctx.cpu_rxhdr()->src_lif == HAL_LIF_CPU) &&
+            (ctx.cpu_rxhdr()->src_app_id == P4PLUS_APPTYPE_TELEMETRY))) {
+        /* Skip rflow for IPFIX pkts */
+        ctx.set_valid_rflow(false);
+        telemetry_pick_dest_if(ctx);
+        
+        // Insert IPFIX sessions to local db
+        if (ctx.pipeline_event() != fte::FTE_SESSION_UPDATE) {
+            if (session) {
+            hal::session_t *ls = (session_t *)
+                g_hal_state->session_hal_telemetry_ht()->lookup(&session->hal_handle);
+            if (!ls) {
+                session->hal_telemetry_ht_ctxt.reset();
+                HAL_TRACE_DEBUG("Inserting IPFIX session into HT");
+                g_hal_state->session_hal_telemetry_ht()->insert(session,
+                                                    &session->hal_telemetry_ht_ctxt);
+            }
+            session->is_ipfix_flow = true;
+            }
+        }
+        // No need to evaluate telemetry rules for IPFIX flows
+        return fte::PIPELINE_CONTINUE;
+    }
 
     /* Iflow and Rflow are independently evaluated */
     /* Update mirror rules */
@@ -158,12 +238,6 @@ telemetry_exec (fte::ctx_t &ctx)
     /* Update flowmon rules */
     ret = update_flow_from_telemetry_rules(ctx, false);
     
-    /* Skip rflow for IPFIX pkts */
-    if (ctx.cpu_rxhdr() && (ctx.cpu_rxhdr()->src_lif == HAL_LIF_CPU) &&
-        (ctx.cpu_rxhdr()->src_app_id == P4PLUS_APPTYPE_TELEMETRY)) {
-        ctx.set_valid_rflow(false);
-    }
-
     if (ret != HAL_RET_OK) {
         ctx.set_feature_status(ret);
         return fte::PIPELINE_END;

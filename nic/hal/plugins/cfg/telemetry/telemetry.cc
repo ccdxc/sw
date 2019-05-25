@@ -30,6 +30,8 @@ using hal::drop_monitor_rule_t;
 extern uint64_t g_mgmt_if_mac;
 namespace hal {
 
+int telemetry_collector_id_db[HAL_MAX_TELEMETRY_COLLECTORS] = {-1}; 
+
 // Global structs
 acl::acl_config_t   flowmon_rule_config_glbl = { };
 flow_monitor_rule_t *flow_mon_rules[MAX_FLOW_MONITOR_RULES];
@@ -39,32 +41,15 @@ hal::if_t *g_telemetry_mirror_dest_if;
 hal::if_t *g_telemetry_mirror_session_dest_if[MAX_MIRROR_SESSION_DEST];
 int g_telemetry_mirror_dest_if_rc = 0;
 
-static bool
-telemetry_active_port_get_cb (void *ht_entry, void *ctxt)
+static inline int
+telemetry_collector_get_id (int spec_id)
 {
-    hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
-    if_t                     *hal_if = NULL;
-    telemetry_active_port_get_cb_ctxt_t *tctxt = 
-                (telemetry_active_port_get_cb_ctxt_t *) ctxt;
-
-    hal_if = (if_t *) hal_handle_get_obj(entry->handle_id);
-    if ((hal_if->if_type == intf::IF_TYPE_UPLINK) &&
-        !hal_if->is_oob_management &&
-        (hal_if->if_op_status == intf::IF_STATUS_UP)) {
-            tctxt->hal_if = hal_if;
-            return true;
+    for (int i = 0; i < HAL_MAX_TELEMETRY_COLLECTORS; i++) {
+        if (telemetry_collector_id_db[i] == spec_id) {
+            return i;
+        }
     }
-    return false;
-}
-
-// Find uplink which is with oper status up
-if_t *
-telemetry_get_active_uplink (void)
-{
-    telemetry_active_port_get_cb_ctxt_t ctxt = {0};
-    
-    g_hal_state->if_id_ht()->walk(telemetry_active_port_get_cb, &ctxt);
-    return ctxt.hal_if;
+    return -1;
 }
 
 hal_ret_t
@@ -437,11 +422,28 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     hal_ret_t ret = HAL_RET_OK;
     mac_addr_t *mac = NULL;
     mac_addr_t smac;
+    uint32_t id;
 
-    HAL_TRACE_DEBUG("ExportID {}", spec.key_or_handle().collector_id());
     collector_spec_dump(spec);
+    // Get free collector id 
+    sdk_ret_t sret = g_hal_state->telemetry_collectors_bmp()->first_free(&id);
+    if (sret != SDK_RET_OK) {
+        HAL_TRACE_ERR("Unable to allocate collector bitmap! ret: {}", sret);
+        rsp->set_api_status(types::API_STATUS_OUT_OF_RESOURCE);
+        return HAL_RET_NO_RESOURCE;
+    }
+    if (id >= HAL_MAX_TELEMETRY_COLLECTORS) {
+        HAL_TRACE_ERR("Id is out of bounds. id {}", id);
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        return HAL_RET_INVALID_ARG;
+    }
+    HAL_TRACE_DEBUG("ExportID {} allocated id {}",
+                        spec.key_or_handle().collector_id(), id);
+    // Stash the collector id
+    telemetry_collector_id_db[id] = spec.key_or_handle().collector_id();
+    g_hal_state->telemetry_collectors_bmp()->set(id);
+    cfg.collector_id = id;
 
-    cfg.collector_id = spec.key_or_handle().collector_id();
     ip_addr_spec_to_ip_addr(&cfg.src_ip, spec.src_ip());
     ip_addr_spec_to_ip_addr(&cfg.dst_ip, spec.dest_ip());
     auto ep = find_ep_by_v4_key(spec.vrf_key_handle().vrf_id(), cfg.dst_ip.addr.v4_addr);
@@ -507,8 +509,8 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
         HAL_TRACE_ERR("PI-Collector: PD API failed {}", ret);
         return ret;
     }
-    HAL_TRACE_DEBUG("SUCCESS: ExportID {}, dest {}, source {},  port {}",
-            spec.key_or_handle().collector_id(), ipaddr2str(&cfg.dst_ip),
+    HAL_TRACE_DEBUG("SUCCESS: CollectorID {}, dest {}, source {},  port {}",
+            cfg.collector_id, ipaddr2str(&cfg.dst_ip),
             ipaddr2str(&cfg.src_ip), cfg.dport);
     rsp->set_api_status(types::API_STATUS_OK);
     rsp->mutable_status()->set_handle(spec.key_or_handle().collector_id());
@@ -532,14 +534,21 @@ collector_delete (CollectorDeleteRequest &req, CollectorDeleteResponse *rsp)
 
     HAL_TRACE_DEBUG("Collector ID {}",
             req.key_or_handle().collector_id());
+    int id = telemetry_collector_get_id(req.key_or_handle().collector_id());
+    if (id < 0) {
+        HAL_TRACE_ERR("Collector not found for id {}", req.key_or_handle().collector_id());
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+        return HAL_RET_INVALID_ARG;
+    }
     args.cfg = &cfg;
     pd_func_args.pd_collector_delete = &args;
 
-    args.cfg->collector_id = req.key_or_handle().collector_id();
+    args.cfg->collector_id = id;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_COLLECTOR_DELETE, &pd_func_args);
     if (ret == HAL_RET_OK) {
         rsp->set_api_status(types::API_STATUS_OK);
         rsp->mutable_key_or_handle()->set_collector_id(args.cfg->collector_id);
+        g_hal_state->telemetry_collectors_bmp()->clear(id);
     } else {
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
     }
@@ -553,10 +562,17 @@ collector_process_get (CollectorGetRequest &req, CollectorGetResponseMsg *rsp,
     hal_ret_t ret = HAL_RET_OK;
     pd::pd_func_args_t pd_func_args = {0};
 
-    HAL_TRACE_DEBUG("Collector ID {}", req.key_or_handle().collector_id());
-    memset(args->cfg, 0, sizeof(collector_config_t));
-    pd_func_args.pd_collector_get = args;
     auto response = rsp->add_response();
+    int id = telemetry_collector_get_id(args->cfg->collector_id);
+    if (id < 0) {
+        HAL_TRACE_ERR("Collector not found for id {}", args->cfg->collector_id)
+        response->set_api_status(types::API_STATUS_NOT_FOUND);
+        return HAL_RET_INVALID_ARG;
+    }
+    HAL_TRACE_DEBUG("Collector ID {}, {}", args->cfg->collector_id, id);
+    
+    args->cfg->collector_id = id;
+    pd_func_args.pd_collector_get = args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_COLLECTOR_GET, &pd_func_args);
     if (ret == HAL_RET_OK) {
         response->set_api_status(types::API_STATUS_OK);
@@ -584,11 +600,13 @@ collector_get (CollectorGetRequest &req, CollectorGetResponseMsg *rsp)
     args.cfg = &cfg;
     if (!req.has_key_or_handle()) {
         /* Iterate over all collectors */
-        for (int i = 0; i < MAX_COLLECTORS; i++) {
+        for (int i = 0; i < HAL_MAX_TELEMETRY_COLLECTORS; i++) {
+            memset(&args.cfg, 0, sizeof(collector_config_t));
             args.cfg->collector_id = i;
             ret = collector_process_get(req, rsp, &args);
         }
     } else {
+        memset(&args.cfg, 0, sizeof(collector_config_t));
         args.cfg->collector_id = req.key_or_handle().collector_id();
         ret = collector_process_get(req, rsp, &args);
     }
@@ -679,7 +697,13 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
             HAL_TRACE_DEBUG("Collect action: num_collectors {}", n);
             rule->action.num_collector = n;
             for (int i = 0; i < n; i++) {
-                rule->action.collectors[i] = spec.collector_key_handle(i).collector_id();
+                int id = telemetry_collector_get_id(spec.collector_key_handle(i).collector_id());
+                if (id < 0) {
+                    HAL_TRACE_ERR("Invalid collector! id {}",
+                            spec.collector_key_handle(i).collector_id());
+                    return HAL_RET_INVALID_ARG;
+                }
+                rule->action.collectors[i] = id;
                 HAL_TRACE_DEBUG("Collector[{}]: {}", i, rule->action.collectors[i]);
             }
         }

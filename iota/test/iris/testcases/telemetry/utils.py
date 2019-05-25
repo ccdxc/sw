@@ -30,13 +30,13 @@ def GetTcpDumpCmd(intf, protocol = None, port = 0):
 
     return cmd
 
-def GetHping3Cmd(protocol, destination_ip, destination_port):
+def GetHping3Cmd(protocol, src_wl, destination_ip, destination_port):
     if protocol == 'tcp':
-        cmd = "hping3 -S -p {} -c 1 {}".format(int(destination_port), destination_ip)
+        cmd = "hping3 -S -p {} -c 1 {} -I {}".format(int(destination_port), destination_ip, src_wl.interface)
     elif protocol == 'udp':
-        cmd = "hping3 --{} -p {} -c 1 {}".format(protocol.lower(), int(destination_port), destination_ip)
+        cmd = "hping3 --{} -p {} -c 1 {} -I {}".format(protocol.lower(), int(destination_port), destination_ip, src_wl.interface)
     else:
-        cmd = "hping3 --{} -c 1 {}".format(protocol.lower(), destination_ip)
+        cmd = "hping3 --{} -c 1 {} -I {}".format(protocol.lower(), destination_ip, src_wl.interface)
         
     return cmd
 
@@ -85,23 +85,31 @@ def GetDestPort(port):
         return '3000'
     return port 
 
-def RunCmd(workload, protocol, destination_ip, destination_port, collector_w, action, feature):
+def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collector_w, action, feature):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     result = api.types.status.SUCCESS
     
+    # Add the ping commands from collector to source and dest workload
+    # to avoid flooding on the vswitch
+    if (collector_w.node_name != src_wl.node_name):
+        api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
+                                   "ping -c1 %s -I %s" % (src_wl.ip_address, collector_w.interface))
+    if (collector_w.node_name != dest_wl.node_name):
+        api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
+                                   "ping -c1 %s -I %s" % (destination_ip, collector_w.interface))
     if feature == 'mirror':
         api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
                                "tcpdump -nni %s ip proto gre" % (collector_w.interface), background=True)
     elif feature == 'flowmon':
         api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
                                "tcpdump -nni %s udp and dst port 2055" % (collector_w.interface), background=True)
-    cmd = GetHping3Cmd(protocol, destination_ip, destination_port)
-    api.Trigger_AddCommand(req, workload.node_name, workload.workload_name, cmd)
-    api.Logger.info("Running from workload_ip {} COMMAND {}".format(workload.ip_address, cmd))
+    cmd = GetHping3Cmd(protocol, src_wl, destination_ip, destination_port)
+    api.Trigger_AddCommand(req, src_wl.node_name, src_wl.workload_name, cmd)
+    api.Logger.info("Running from src_wl_ip {} COMMAND {}".format(src_wl.ip_address, cmd))
 
     trig_resp = api.Trigger(req)
     if feature == 'flowmon':
-        time.sleep(1)
+        time.sleep(3)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
     for cmd in resp.commands:
@@ -159,7 +167,7 @@ def RunAll(collector_w, verif_json, tc, feature):
     api.Logger.info("VERIF = {}".format(verif))
     count = 0
     if feature == 'flowmon':
-        time.sleep(6)
+        time.sleep(4)
     for i in range(0, len(verif)):
         protocol = verif[i]['protocol'] 
         src_w = GetSourceWorkload(verif[i], tc)
@@ -174,7 +182,7 @@ def RunAll(collector_w, verif_json, tc, feature):
                 continue
         dest_port = GetDestPort(verif[i]['port'])
         action = verif[i]['result']
-        res = RunCmd(src_w, protocol, dest_w.ip_address, dest_port, collector_w, action, feature)
+        res = RunCmd(src_w, protocol, dest_w, dest_w.ip_address, dest_port, collector_w, action, feature)
         if (res == api.types.status.FAILURE):
             api.Logger.info("Testcase FAILED!!")
             break;

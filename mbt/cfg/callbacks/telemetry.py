@@ -6,6 +6,7 @@ import cfg.callbacks.l2segment as l2segment
 import random
 
 ip_protocol = [types_pb2.IPPROTO_ICMP, types_pb2.IPPROTO_TCP, types_pb2.IPPROTO_UDP, types_pb2.IPPROTO_ESP]
+collector_count = 0
 
 def CollectorPreCreateCb(data, req_spec, resp_spec):
     global current_infra_types
@@ -13,6 +14,10 @@ def CollectorPreCreateCb(data, req_spec, resp_spec):
     global infra_vrf_id
     global customer_vrf_id
     global l2seg_dot1q
+    global collector_count
+    
+    if collector_count > 7:
+        return False
 
     if req_spec.request[0].src_ip.ip_af == types_pb2.IP_AF_INET6:
         GrpcReqRspMsg.generate_ip_address(req_spec.request[0].src_ip, types_pb2.IP_AF_INET)
@@ -29,6 +34,8 @@ def CollectorPreCreateCb(data, req_spec, resp_spec):
     req_spec.request[0].format = telemetry_pb2.IPFIX
     if len(l2segment.l2seg_dot1q) != 0:
         req_spec.request[0].l2seg_key_handle = l2segment.l2seg_dot1q[0]
+    collector_count = collector_count + 1
+    return True
 
 def FlowMatchPreCreateCb(data, req_spec, resp_spec):
     if req_spec.request[0].match.src_address[0].address.WhichOneof("Address") == "range":

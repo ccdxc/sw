@@ -383,6 +383,7 @@ struct session_s {
     uint8_t             fte_id:4;                 // FTE that created this session
     uint8_t             conn_track_en:1;          // enable connection tracking
     uint8_t             skip_sfw_reval:1;         // do not reeval session
+    uint8_t             is_ipfix_flow:1;          // to track ipfix flows
     flow_t              *iflow;                   // initiator flow
     flow_t              *rflow;                   // responder flow, if any
     hal_handle_t        vrf_handle;               // src vrf handle
@@ -395,6 +396,7 @@ struct session_s {
 
     // meta data maintained for session
     hal_handle_t        hal_handle;               // hal handle for this session
+    ht_ctxt_t           hal_telemetry_ht_ctxt;    // hal telemetry based hash table ctxt
     ht_ctxt_t           hal_handle_ht_ctxt;       // hal handle based hash table ctxt
     ht_ctxt_t           hal_iflow_ht_ctxt;        // hal iflow based hash table ctxt
     ht_ctxt_t           hal_rflow_ht_ctxt;        // hal rflow based hash table ctxt
@@ -481,6 +483,7 @@ void session_set_tcp_state (session_t *session, hal::flow_role_t role,
                            FlowTCPState tcp_state);
 hal_ret_t session_get_all_stream(grpc::ServerWriter<session::SessionGetResponseMsg> *writer);
 hal_ret_t session_get_all (session::SessionGetResponseMsg *rsp);
+hal_ret_t session_update_list (dllist_ctxt_t *session_list, bool async);
 hal_ret_t session_delete_list (dllist_ctxt_t *session_list, bool async=false);
 hal_ret_t session_delete_all (session::SessionDeleteResponseMsg *rsp);
 hal_ret_t session_eval_matching_session (session_match_t *match);

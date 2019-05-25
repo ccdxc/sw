@@ -608,7 +608,7 @@ p4pd_fill_flow_hash_key (flow_key_t *flow_key, uint32_t lkp_vrf,
 hal_ret_t
 p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
                                 uint8_t lkp_inst, pd_flow_t *flow_pd,
-                                uint32_t hash_val, bool export_en,
+                                uint32_t hash_val, uint8_t export_en,
                                 uint32_t *flow_hash_p)
 {
     hal_ret_t ret = HAL_RET_OK;

@@ -1,70 +1,6 @@
 [
     {
         "protocol": "tcp", 
-        "src_ip": "192.168.100.101", 
-        "result": "flowmon", 
-        "dst_ip": "any", 
-        "collector": "flowmon", 
-        "port": "120"
-    }, 
-    {
-        "protocol": "tcp", 
-        "src_ip": "any", 
-        "result": "flowmon", 
-        "dst_ip": "192.168.100.101", 
-        "collector": "flowmon", 
-        "port": "120"
-    }, 
-    {
-        "protocol": "tcp", 
-        "src_ip": "192.168.100.101", 
-        "result": "flowmon", 
-        "dst_ip": "any", 
-        "collector": "flowmon", 
-        "port": "any"
-    }, 
-    {
-        "protocol": "tcp", 
-        "src_ip": "any", 
-        "result": "flowmon", 
-        "dst_ip": "192.168.100.101", 
-        "collector": "flowmon", 
-        "port": "any"
-    }, 
-    {
-        "protocol": "tcp", 
-        "src_ip": "192.168.100.102", 
-        "result": "flowmon", 
-        "dst_ip": "any", 
-        "collector": "flowmon", 
-        "port": "120"
-    }, 
-    {
-        "protocol": "tcp", 
-        "src_ip": "any", 
-        "result": "flowmon", 
-        "dst_ip": "192.168.100.102", 
-        "collector": "flowmon", 
-        "port": "120"
-    }, 
-    {
-        "protocol": "tcp", 
-        "src_ip": "192.168.100.102", 
-        "result": "flowmon", 
-        "dst_ip": "any", 
-        "collector": "flowmon", 
-        "port": "any"
-    }, 
-    {
-        "protocol": "tcp", 
-        "src_ip": "any", 
-        "result": "flowmon", 
-        "dst_ip": "192.168.100.102", 
-        "collector": "flowmon", 
-        "port": "any"
-    }, 
-    {
-        "protocol": "tcp", 
         "src_ip": "192.168.100.103", 
         "result": "flowmon", 
         "dst_ip": "any", 
@@ -78,53 +14,5 @@
         "dst_ip": "192.168.100.103", 
         "collector": "flowmon", 
         "port": "120"
-    }, 
-    {
-        "protocol": "tcp", 
-        "src_ip": "192.168.100.103", 
-        "result": "flowmon", 
-        "dst_ip": "any", 
-        "collector": "flowmon", 
-        "port": "any"
-    }, 
-    {
-        "protocol": "tcp", 
-        "src_ip": "any", 
-        "result": "flowmon", 
-        "dst_ip": "192.168.100.103", 
-        "collector": "flowmon", 
-        "port": "any"
-    }, 
-    {
-        "protocol": "tcp", 
-        "src_ip": "192.168.100.104", 
-        "result": "flowmon", 
-        "dst_ip": "any", 
-        "collector": "flowmon", 
-        "port": "120"
-    }, 
-    {
-        "protocol": "tcp", 
-        "src_ip": "any", 
-        "result": "flowmon", 
-        "dst_ip": "192.168.100.104", 
-        "collector": "flowmon", 
-        "port": "120"
-    }, 
-    {
-        "protocol": "tcp", 
-        "src_ip": "192.168.100.104", 
-        "result": "flowmon", 
-        "dst_ip": "any", 
-        "collector": "flowmon", 
-        "port": "any"
-    }, 
-    {
-        "protocol": "tcp", 
-        "src_ip": "any", 
-        "result": "flowmon", 
-        "dst_ip": "192.168.100.104", 
-        "collector": "flowmon", 
-        "port": "any"
     }
 ]

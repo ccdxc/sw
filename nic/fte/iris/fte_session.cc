@@ -206,7 +206,7 @@ session_update_async (hal::session_t *session)
             fn_ctx_t *fn_ctx = (fn_ctx_t *) data;
             fn_ctx->ret = session_update_in_fte(fn_ctx->session_handle);
             if (fn_ctx->ret != HAL_RET_OK) {
-                HAL_TRACE_DEBUG("session delete in fte failed for handle: {}", fn_ctx->session_handle);
+                HAL_TRACE_DEBUG("session update in fte failed for handle: {}", fn_ctx->session_handle);
             }
             HAL_FREE(hal::HAL_MEM_ALLOC_SESS_UPD_DATA, fn_ctx);
         }, fn_ctx);

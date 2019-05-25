@@ -71,7 +71,8 @@ using telemetry::DropMonitorRuleGetResponseMsg;
 
 namespace hal {
 
-#define MAX_FLOW_MONITOR_RULES      1024
+#define MAX_FLOW_MONITOR_RULES          1024
+#define HAL_MAX_TELEMETRY_COLLECTORS    16
 
 using hal::if_t;
 using hal::lif_t;
@@ -99,7 +100,6 @@ DEFINE_ENUM(export_formats_en, EXPORT_FORMATS)
 // Iris pipeline can support upto 8 mirror destinations
 #define MAX_MIRROR_SESSION_DEST     8
 #define MAX_DROP_REASON             128
-#define MAX_COLLECTORS              16
 #define MAX_COLLECTORS_PER_FLOW     4
 
 typedef struct telemetry_active_port_get_cb_ctxt_t_ {
@@ -331,6 +331,34 @@ dropmonrule_spec_dump (DropMonitorRuleSpec& spec)
     google::protobuf::util::MessageToJsonString(spec, &cfg);
     HAL_TRACE_DEBUG("DropMonitorRuleSpec configuration:");
     HAL_TRACE_DEBUG("{}", cfg.c_str());
+}
+
+static inline bool
+telemetry_active_port_get_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+    if_t                     *hal_if = NULL;
+    telemetry_active_port_get_cb_ctxt_t *tctxt = 
+                (telemetry_active_port_get_cb_ctxt_t *) ctxt;
+
+    hal_if = (if_t *) hal_handle_get_obj(entry->handle_id);
+    if ((hal_if->if_type == intf::IF_TYPE_UPLINK) &&
+        !hal_if->is_oob_management &&
+        (hal_if->if_op_status == intf::IF_STATUS_UP)) {
+            tctxt->hal_if = hal_if;
+            return true;
+    }
+    return false;
+}
+
+// Find uplink which is with oper status up
+static inline if_t *
+telemetry_get_active_uplink (void)
+{
+    telemetry_active_port_get_cb_ctxt_t ctxt = {0};
+    
+    g_hal_state->if_id_ht()->walk(telemetry_active_port_get_cb, &ctxt);
+    return ctxt.hal_if;
 }
 
 hal_ret_t mirror_session_create(MirrorSessionSpec &spec, MirrorSessionResponse *rsp);

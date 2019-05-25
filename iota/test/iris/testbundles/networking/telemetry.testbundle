@@ -2,7 +2,7 @@ meta:
     name    : telemetry
     nics    : [ pensando, mellanox, intel, broadcom ]
     os      : [ linux, esx ]
-    targetcount : 400
+    targetcount : 72
 
 testcases:
     -   name    : Ping_Mirror_Policy
@@ -14,7 +14,7 @@ testcases:
         iterators :
             type    : nested
             pktsize : [128]
-            proto   : [tcp, udp, icmp]
+            proto   : [tcp, udp, icmp, mixed]
 
     -   name    : Flowmon_Policy
         testcase: testcases.telemetry.flowmon_policy
@@ -25,7 +25,7 @@ testcases:
         iterators :
             type    : nested
             pktsize : [128]
-            proto   : [tcp, udp, icmp]
+            proto   : [tcp, udp, icmp, mixed]
 
 #    -   name    : Ping_Mirror_Remote_Workloads
 #        testcase: testcases.telemetry.ping_mirror

@@ -1,6 +1,6 @@
 ProtoObject: telemetry_pb2
 Service: Telemetry
-enabled : True
+enabled : False
 dolEnabled : True
 objects:
     - object :

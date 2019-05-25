@@ -29,6 +29,7 @@
 #include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 #include "nic/hal/plugins/cfg/aclqos/acl.hpp"
+#include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
 #include "nic/hal/plugins/cfg/l4lb/l4lb.hpp"
 #include "nic/hal/src/internal/wring.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
@@ -928,6 +929,15 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     SDK_ASSERT_RETURN((if_id_ht_ != NULL), false);
 
     // initialize flow/session related data structures
+    HAL_HT_CREATE("session-telemetry", session_hal_telemetry_ht_,
+                  HAL_MAX_SESSIONS >> 1,
+                  hal::session_get_handle_key_func,
+                  hal::session_compute_handle_hash_func,
+                  hal::session_compare_handle_key_func,
+                  true, mmgr);
+    SDK_ASSERT_RETURN((session_hal_telemetry_ht_ != NULL), false);
+
+    // initialize flow/session related data structures
     HAL_HT_CREATE("session-handle", session_hal_handle_ht_,
                   HAL_MAX_SESSIONS >> 1,
                   hal::session_get_handle_key_func,
@@ -1114,6 +1124,9 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::tcpcb_compare_key_func);
     SDK_ASSERT_RETURN((tcpcb_id_ht_ != NULL), false);
 
+    telemetry_collectors_bmp_ = bitmap::factory(HAL_MAX_TELEMETRY_COLLECTORS, true);
+    SDK_ASSERT_RETURN((telemetry_collectors_bmp_ != NULL), false);
+
     qos_cmap_pcp_bmp_ = bitmap::factory(HAL_MAX_DOT1Q_PCP_VALS, true);
     SDK_ASSERT_RETURN((qos_cmap_pcp_bmp_ != NULL), false);
 
@@ -1269,6 +1282,7 @@ hal_oper_db::hal_oper_db()
     oif_list_id_ht_ = NULL;
     lif_id_ht_ = NULL;
     if_id_ht_ = NULL;
+    session_hal_telemetry_ht_= NULL;
     session_hal_handle_ht_= NULL;
     session_hal_iflow_ht_ = NULL;
     session_hal_rflow_ht_ = NULL;
@@ -1278,6 +1292,7 @@ hal_oper_db::hal_oper_db()
     nwsec_group_ht_ = NULL;
     rule_cfg_ht_ = NULL;
     qos_class_ht_ = NULL;
+    telemetry_collectors_bmp_ = NULL;
     qos_cmap_pcp_bmp_ = NULL;
     qos_cmap_dscp_bmp_ = NULL;
     copp_ht_ = NULL;
@@ -1331,6 +1346,7 @@ hal_oper_db::~hal_oper_db()
     oif_list_id_ht_ ? ht::destroy(oif_list_id_ht_, mmgr_) : HAL_NOP;
     lif_id_ht_ ? ht::destroy(lif_id_ht_, mmgr_) : HAL_NOP;
     if_id_ht_ ? ht::destroy(if_id_ht_, mmgr_) : HAL_NOP;
+    session_hal_telemetry_ht_ ? ht::destroy(session_hal_telemetry_ht_) : HAL_NOP;
     session_hal_handle_ht_ ? ht::destroy(session_hal_handle_ht_) : HAL_NOP;
     session_hal_iflow_ht_ ? ht::destroy(session_hal_iflow_ht_) : HAL_NOP;
     session_hal_rflow_ht_ ? ht::destroy(session_hal_rflow_ht_) : HAL_NOP;
@@ -1339,6 +1355,7 @@ hal_oper_db::~hal_oper_db()
     tlscb_id_ht_ ? ht::destroy(tlscb_id_ht_) : HAL_NOP;
     tcpcb_id_ht_ ? ht::destroy(tcpcb_id_ht_) : HAL_NOP;
     qos_class_ht_ ? ht::destroy(qos_class_ht_, mmgr_) : HAL_NOP;
+    telemetry_collectors_bmp_ ? bitmap::destroy(telemetry_collectors_bmp_) : HAL_NOP;
     qos_cmap_pcp_bmp_ ? bitmap::destroy(qos_cmap_pcp_bmp_) : HAL_NOP;
     qos_cmap_dscp_bmp_ ? bitmap::destroy(qos_cmap_dscp_bmp_) : HAL_NOP;
     copp_ht_ ? ht::destroy(copp_ht_, mmgr_) : HAL_NOP;

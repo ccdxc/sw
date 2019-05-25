@@ -1,22 +1,6 @@
 [
     {
         "protocol": "udp", 
-        "src_ip": "192.168.100.102", 
-        "result": "flowmon", 
-        "dst_ip": "192.168.100.101", 
-        "collector": "flowmon", 
-        "port": "120"
-    }, 
-    {
-        "protocol": "udp", 
-        "src_ip": "192.168.100.101", 
-        "result": "flowmon", 
-        "dst_ip": "192.168.100.102", 
-        "collector": "flowmon", 
-        "port": "120"
-    }, 
-    {
-        "protocol": "udp", 
         "src_ip": "192.168.100.103", 
         "result": "flowmon", 
         "dst_ip": "192.168.100.101", 
@@ -28,70 +12,6 @@
         "src_ip": "192.168.100.101", 
         "result": "flowmon", 
         "dst_ip": "192.168.100.103", 
-        "collector": "flowmon", 
-        "port": "120"
-    }, 
-    {
-        "protocol": "udp", 
-        "src_ip": "192.168.100.104", 
-        "result": "flowmon", 
-        "dst_ip": "192.168.100.101", 
-        "collector": "flowmon", 
-        "port": "120"
-    }, 
-    {
-        "protocol": "udp", 
-        "src_ip": "192.168.100.101", 
-        "result": "flowmon", 
-        "dst_ip": "192.168.100.104", 
-        "collector": "flowmon", 
-        "port": "120"
-    }, 
-    {
-        "protocol": "udp", 
-        "src_ip": "192.168.100.103", 
-        "result": "flowmon", 
-        "dst_ip": "192.168.100.102", 
-        "collector": "flowmon", 
-        "port": "120"
-    }, 
-    {
-        "protocol": "udp", 
-        "src_ip": "192.168.100.102", 
-        "result": "flowmon", 
-        "dst_ip": "192.168.100.103", 
-        "collector": "flowmon", 
-        "port": "120"
-    }, 
-    {
-        "protocol": "udp", 
-        "src_ip": "192.168.100.104", 
-        "result": "flowmon", 
-        "dst_ip": "192.168.100.102", 
-        "collector": "flowmon", 
-        "port": "120"
-    }, 
-    {
-        "protocol": "udp", 
-        "src_ip": "192.168.100.102", 
-        "result": "flowmon", 
-        "dst_ip": "192.168.100.104", 
-        "collector": "flowmon", 
-        "port": "120"
-    }, 
-    {
-        "protocol": "udp", 
-        "src_ip": "192.168.100.104", 
-        "result": "flowmon", 
-        "dst_ip": "192.168.100.103", 
-        "collector": "flowmon", 
-        "port": "120"
-    }, 
-    {
-        "protocol": "udp", 
-        "src_ip": "192.168.100.103", 
-        "result": "flowmon", 
-        "dst_ip": "192.168.100.104", 
         "collector": "flowmon", 
         "port": "120"
     }

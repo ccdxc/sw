@@ -1,33 +1,5 @@
 [
     {
-        "src_ip": "192.168.100.101", 
-        "dst_ip": "192.168.100.0/24", 
-        "protocol": "udp", 
-        "port": "120", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "192.168.100.0/24", 
-        "dst_ip": "192.168.100.101", 
-        "protocol": "udp", 
-        "port": "120", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "192.168.100.102", 
-        "dst_ip": "192.168.100.0/24", 
-        "protocol": "udp", 
-        "port": "120", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "192.168.100.0/24", 
-        "dst_ip": "192.168.100.102", 
-        "protocol": "udp", 
-        "port": "120", 
-        "result": "mirror"
-    }, 
-    {
         "src_ip": "192.168.100.103", 
         "dst_ip": "192.168.100.0/24", 
         "protocol": "udp", 
@@ -37,20 +9,6 @@
     {
         "src_ip": "192.168.100.0/24", 
         "dst_ip": "192.168.100.103", 
-        "protocol": "udp", 
-        "port": "120", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "192.168.100.104", 
-        "dst_ip": "192.168.100.0/24", 
-        "protocol": "udp", 
-        "port": "120", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "192.168.100.0/24", 
-        "dst_ip": "192.168.100.104", 
         "protocol": "udp", 
         "port": "120", 
         "result": "mirror"

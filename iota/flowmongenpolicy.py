@@ -121,13 +121,13 @@ def Main():
     with open(GlobalOptions.endpoint_file, 'r') as fp:
         obj = json.load(fp)
     EP = []
+    EP_nodes = []
 
     for i in range(0, len(obj["objects"])):
         print("EP[%d] : %s" % (i, obj["objects"][i]["spec"]["ipv4-address"]))
         EP.append(StripIpMask(obj["objects"][i]["spec"]["ipv4-address"]))
+        EP_nodes.append(obj["objects"][i]["spec"]["node-uuid"])
 
-    #EP.append(GetIpRange(EP[0]))
-    json.dump(EP, open("EP.json", "w"))
     GlobalOptions.topology_dir = GlobalOptions.topology_dir + '/gen/telemetry/flowmon'
     for dir in GlobalOptions.directories:
         if not os.path.exists(GlobalOptions.topology_dir + "/{}".format(dir)):
@@ -140,17 +140,24 @@ def Main():
             match_rules = flowmonpolicy_template['objects'][0]['spec']['match-rules']
             del match_rules[:]
             verif =[]
+            loop = 1
             for i in range(0, len(EP)):
                 for j in range(i+1, len(EP)):
                     for k in GlobalOptions.ports:
+                        if EP_nodes[i] == EP_nodes[j]:
+                            continue
+                        if loop == 0:
+                            continue
                         rule = get_rule(EP[i], EP[j], protocol, k, action)
                         match_rules.append(rule)
                         verif.append(get_verif(EP[i], EP[j], protocol, k, action))
                         rule = get_rule(EP[j], EP[i], protocol, k, action)
                         match_rules.append(rule)
                         verif.append(get_verif(EP[j], EP[i], protocol, k, action))
-            json.dump(verif, open(GlobalOptions.topology_dir +"/{}/{}_{}_specific_verif.json".format(protocol, protocol, action), "w"), indent=4)
-            json.dump(mirrorpolicy, open(GlobalOptions.topology_dir + "/{}/{}_{}_specific_policy.json".format(protocol, protocol, action), "w"), indent=4)
+                        loop = 0
+            if len(verif) > 0:
+                json.dump(verif, open(GlobalOptions.topology_dir +"/{}/{}_{}_specific_verif.json".format(protocol, protocol, action), "w"), indent=4)
+                json.dump(mirrorpolicy, open(GlobalOptions.topology_dir + "/{}/{}_{}_specific_policy.json".format(protocol, protocol, action), "w"), indent=4)
 
     EP_SUBNET = []
     EP_SUBNET.append(GetIpCidr(EP[0]))
@@ -161,17 +168,24 @@ def Main():
             match_rules = flowmonpolicy_template['objects'][0]['spec']['match-rules']
             del match_rules[:]
             verif =[]
+            loop = 1
             for i in range(0, len(EP_SUBNET)):
                 for j in range(0, len(EP)):
                     for k in GlobalOptions.ports:
+                        if EP_nodes[i] == EP_nodes[j]:
+                            continue
+                        if loop == 0:
+                            continue
                         rule = get_rule(EP_SUBNET[i], EP[j], protocol, k, action)
                         match_rules.append(rule)
                         verif.append(get_verif(EP_SUBNET[i], EP[j], protocol, k, action))
                         rule = get_rule(EP[j], EP_SUBNET[i], protocol, k, action)
                         match_rules.append(rule)
                         verif.append(get_verif(EP[j], EP_SUBNET[i], protocol, k, action))
-            json.dump(mirrorpolicy, open(GlobalOptions.topology_dir +"/{}/{}_{}_subnet_policy.json".format(protocol, protocol, action), "w"), indent=4)
-            json.dump(verif, open(GlobalOptions.topology_dir + "/{}/{}_{}_subnet_verif.json".format(protocol, protocol, action), "w"), indent=4)
+                        loop = 0
+            if len(verif) > 0:
+                json.dump(mirrorpolicy, open(GlobalOptions.topology_dir +"/{}/{}_{}_subnet_policy.json".format(protocol, protocol, action), "w"), indent=4)
+                json.dump(verif, open(GlobalOptions.topology_dir + "/{}/{}_{}_subnet_verif.json".format(protocol, protocol, action), "w"), indent=4)
 
     EP_ANY = []
     EP_ANY.append("any")
@@ -183,17 +197,24 @@ def Main():
             match_rules = flowmonpolicy_template['objects'][0]['spec']['match-rules']
             del match_rules[:]
             verif =[]
+            loop = 1
             for i in range(0, len(EP_ANY)):
                 for j in range(i, len(EP)):
                     for k in GlobalOptions.ports:
+                        if EP_nodes[i] == EP_nodes[j]:
+                            continue
+                        if loop == 0:
+                            continue
                         rule = get_rule(EP_ANY[i], EP[j], protocol, k, action)
                         match_rules.append(rule)
                         verif.append(get_verif(EP_ANY[i], EP[j], protocol, k, action))
                         rule = get_rule(EP[j], EP_ANY[i], protocol, k, action)
                         match_rules.append(rule)
                         verif.append(get_verif(EP[j], EP_ANY[i], protocol, k, action))
-            json.dump(mirrorpolicy, open(GlobalOptions.topology_dir + "/{}/{}_{}_any_policy.json".format(protocol, protocol, action), "w"), indent=4)
-            json.dump(verif, open(GlobalOptions.topology_dir + "/{}/{}_{}_any_verif.json".format(protocol, protocol, action), "w"), indent=4)
+                        loop = 0
+            if len(verif) > 0:
+                json.dump(mirrorpolicy, open(GlobalOptions.topology_dir + "/{}/{}_{}_any_policy.json".format(protocol, protocol, action), "w"), indent=4)
+                json.dump(verif, open(GlobalOptions.topology_dir + "/{}/{}_{}_any_verif.json".format(protocol, protocol, action), "w"), indent=4)
 
     # Mixed Config
     del match_rules[:]
@@ -202,17 +223,24 @@ def Main():
         for action in GlobalOptions.actions:
             mirrorpolicy = flowmonpolicy_template
             match_rules = flowmonpolicy_template['objects'][0]['spec']['match-rules']
+            loop = 1
             for i in range(0, len(EP)):
                 for j in range(i+1, len(EP)):
                     for k in GlobalOptions.ports:
+                        if EP_nodes[i] == EP_nodes[j]:
+                            continue
+                        if loop == 0:
+                            continue
                         rule = get_rule(EP[i], EP[j], protocol, k, action)
                         match_rules.append(rule)
                         verif.append(get_verif(EP[i], EP[j], protocol, k, action))
                         rule = get_rule(EP[j], EP[i], protocol, k, action)
                         match_rules.append(rule)
                         verif.append(get_verif(EP[j], EP[i], protocol, k, action))
-    json.dump(verif, open(GlobalOptions.topology_dir +"/{}/flowmon_mixed_verif.json".format('mixed'), "w"), indent=4)
-    json.dump(mirrorpolicy, open(GlobalOptions.topology_dir + "/{}/flowmon_mixed_policy.json".format('mixed'), "w"), indent=4)
+                        loop = 0
+    if len(verif) > 0:
+        json.dump(verif, open(GlobalOptions.topology_dir +"/{}/flowmon_mixed_verif.json".format('mixed'), "w"), indent=4)
+        json.dump(mirrorpolicy, open(GlobalOptions.topology_dir + "/{}/flowmon_mixed_policy.json".format('mixed'), "w"), indent=4)
 
 if __name__ == '__main__':
     Main()

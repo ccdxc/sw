@@ -5098,7 +5098,70 @@ if_port_oper_state_process_event (uint32_t fp_port_num, port_event_t event)
 end:
     // Release write lock
     g_hal_state->cfg_db()->wunlock();
+    
+    if (ctxt.hal_if) {
+        // Repin ipfix flows
+        ret = hal_if_repin_ipfix_flows(ctxt.hal_if);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to repin ipfix sessions. ret: {}", ret);
+        }
+    }
     return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Re pin IPFIX flows
+//-----------------------------------------------------------------------------
+hal_ret_t
+hal_if_repin_ipfix_flows (if_t *uplink)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    
+    if (!uplink) {
+        // Nothing to be done
+        return ret;
+    }
+    if (uplink->if_type != intf::IF_TYPE_UPLINK) {
+        // Nothing to be done
+        return ret;
+    }
+    if (uplink->is_oob_management) {
+        // Nothing to be done
+        return ret;
+    }
+    
+    HAL_TRACE_DEBUG("Repin IPFIX flows");
+    // We need to post session update to FTE
+    auto walk_func = [](void *entry, void *ctxt) {
+        hal::session_t  *session = (session_t *)entry;
+        dllist_ctxt_t   *list_head = (dllist_ctxt_t *) ctxt;
+
+        hal_handle_id_list_entry_t *lentry = (hal_handle_id_list_entry_t *)g_hal_state->
+                hal_handle_id_list_entry_slab()->alloc();
+        if (lentry == NULL) {
+            HAL_TRACE_ERR("Out of memory - skipping update session {}", session->hal_handle);
+            return false;
+        }
+        HAL_TRACE_DEBUG("add the handle {}", session->hal_handle);
+        lentry->handle_id = session->hal_handle;
+        dllist_add(list_head, &lentry->dllist_ctxt);
+        return false;
+    };
+
+    // build list of session_ids
+    dllist_ctxt_t ipfix_session_list;
+    dllist_reset(&ipfix_session_list);
+
+    if (g_hal_state->session_hal_telemetry_ht()->num_entries() > 0) {
+        HAL_TRACE_DEBUG("Calling IPFIX sessions walk func");
+        g_hal_state->session_hal_telemetry_ht()->walk_safe(walk_func,
+                                                        &ipfix_session_list);
+    }
+
+    HAL_TRACE_DEBUG("Update the IPFIX sessions");
+    session_update_list(&ipfix_session_list, true);
+    
+    return HAL_RET_OK;
 }
 
 //-----------------------------------------------------------------------------

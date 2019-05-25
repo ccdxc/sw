@@ -1198,6 +1198,32 @@ session_get_all(SessionGetResponseMsg *rsp)
 }
 
 hal_ret_t
+session_update_list (dllist_ctxt_t *session_list, bool async)
+{
+    // update all sessions
+    hal_ret_t ret = HAL_RET_OK;
+    dllist_ctxt_t  *curr = NULL, *next = NULL;
+    
+    dllist_for_each_safe(curr, next, session_list) {
+        hal_handle_id_list_entry_t  *entry =
+            dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        hal::session_t *session = hal::find_session_by_handle(entry->handle_id);
+        if (session) {
+            if (async) {
+                ret = fte::session_update_async(session);
+            } else {
+                // TODO: No sync call in fte ?
+            }
+        }
+        // Remove from list
+        dllist_del(&entry->dllist_ctxt);
+        g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
+    }
+    
+    return ret;
+}
+
+hal_ret_t
 session_delete_list (dllist_ctxt_t *session_list, bool async)
 {
     // delete all sessions

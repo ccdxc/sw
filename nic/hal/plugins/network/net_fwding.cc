@@ -178,8 +178,9 @@ update_fwding_info(fte::ctx_t&ctx)
     }
 
     /* Get dest-if based on the l2seg information for IPFIX pkts */
-    if (ctx.cpu_rxhdr() && (ctx.cpu_rxhdr()->src_lif == HAL_LIF_CPU) &&
-        (ctx.cpu_rxhdr()->src_app_id == P4PLUS_APPTYPE_TELEMETRY)) {
+    if ((ctx.session() && ctx.session()->is_ipfix_flow) ||
+            (ctx.cpu_rxhdr() && (ctx.cpu_rxhdr()->src_lif == HAL_LIF_CPU) &&
+            (ctx.cpu_rxhdr()->src_app_id == P4PLUS_APPTYPE_TELEMETRY))) {
         if (dif == NULL) {
             if (ctx.sl2seg() == NULL) {
                 HAL_TRACE_INFO("net_fwding: sl2seg is NULL!");
