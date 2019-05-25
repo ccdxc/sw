@@ -234,15 +234,6 @@ ionic_stop(struct lif *lif)
                                        ionic);
         uplink_handle = lif->uplink_handle;
 
-        if (!uplink_handle->is_mgmt_nic) {
-                vmk_MutexLock(ionic->dev_cmd_lock);
-                ionic_dev_cmd_port_state(&ionic->en_dev.idev,
-                                         PORT_ADMIN_STATE_DOWN);
-                ionic_dev_cmd_wait_check(&ionic->en_dev.idev,
-                                         HZ * devcmd_timeout);
-                vmk_MutexUnlock(ionic->dev_cmd_lock);
-        }
-
         max_rx_normal_queues = uplink_handle->max_rx_normal_queues;
 
         for (i = 0; i < lif->nrxqcqs; i++) {
