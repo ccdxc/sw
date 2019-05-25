@@ -137,6 +137,10 @@ private:
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t key_tunneled_init_(void);
 
+    /// \brief  init routine to initialize key tunnel2 table
+    /// \return #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t key_tunneled2_init_(void);
+
     /// \brief  init routine to initialize ingress to rxdma table
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t ingress_to_rxdma_init_(void);

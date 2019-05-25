@@ -33,7 +33,6 @@ artemis_impl_state::artemis_impl_state(pds_state *state) {
                       false, true, NULL);
     SDK_ASSERT(key_native_tbl_ != NULL);
 
-#if 0
     p4pd_table_properties_get(P4TBL_ID_KEY_TUNNELED, &tinfo);
     key_tunneled_tbl_ =
         tcam::factory(tinfo.tablename, P4TBL_ID_KEY_TUNNELED,
@@ -41,7 +40,14 @@ artemis_impl_state::artemis_impl_state(pds_state *state) {
                       tinfo.actiondata_struct_size,
                       false, true, NULL);
     SDK_ASSERT(key_tunneled_tbl_ != NULL);
-#endif
+
+    p4pd_table_properties_get(P4TBL_ID_KEY_TUNNELED_2, &tinfo);
+    key_tunneled2_tbl_ =
+        tcam::factory(tinfo.tablename, P4TBL_ID_KEY_TUNNELED_2,
+                      tinfo.tabledepth, tinfo.key_struct_size,
+                      tinfo.actiondata_struct_size,
+                      false, true, NULL);
+    SDK_ASSERT(key_tunneled2_tbl_ != NULL);
 
     // instantiate ingress drop stats table
     p4pd_table_properties_get(P4TBL_ID_P4I_DROP_STATS, &tinfo);

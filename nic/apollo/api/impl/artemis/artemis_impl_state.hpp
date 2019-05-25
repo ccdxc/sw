@@ -27,8 +27,9 @@ namespace impl {
 // forward declaration
 class artemis_impl;
 
-#define MAX_KEY_NATIVE_TBL_ENTRIES          3
-#define MAX_KEY_TUNNELED_TBL_ENTRIES        3
+#define MAX_KEY_NATIVE_TBL_ENTRIES          4
+#define MAX_KEY_TUNNELED_TBL_ENTRIES        4
+#define MAX_KEY_TUNNELED2_TBL_ENTRIES       3
 
 /// \brief    pipeline global state
 class artemis_impl_state : public state_base {
@@ -41,7 +42,8 @@ public:
 
     // accessors
     tcam *key_native_tbl(void) { return key_native_tbl_; };
-    //tcam *key_tunneled_tbl(void) { return key_tunneled_tbl_; };
+    tcam *key_tunneled_tbl(void) { return key_tunneled_tbl_; };
+    tcam *key_tunneled2_tbl(void) { return key_tunneled2_tbl_; };
     tcam *ingress_drop_stats_tbl(void) { return ingress_drop_stats_tbl_; }
     tcam *egress_drop_stats_tbl(void) { return egress_drop_stats_tbl_; }
     tcam *nacl_tbl(void) { return nacl_tbl_; }
@@ -62,7 +64,8 @@ public:
 private:
     // any tables that are shared across objects are instantiated here
     tcam *key_native_tbl_;          // key table for native packets
-    //tcam *key_tunneled_tbl_;        // key table for tunneled packets
+    tcam *key_tunneled_tbl_;        // key table for tunneled packets
+    tcam *key_tunneled2_tbl_;       // key table for double tunneled packets
     tcam *ingress_drop_stats_tbl_;  // ingress drop stats table
     tcam *egress_drop_stats_tbl_;   // egress drop stats table
     tcam *nacl_tbl_;                // NACL tcam table
