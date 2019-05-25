@@ -7,6 +7,7 @@
 #include "../include/headers.p4"
 
 #include "./common_metadata.p4"
+#include "./mapping.p4"
 
 @pragma scratch_metadata
 metadata common_scratch_metadata_t common_scratch_metadata0;
@@ -1058,6 +1059,7 @@ control ingress {
     if (app_header.table3_valid == 1) {
         read_qstate();
         dma();
+        mapping();
     } else {
         if (app_header.table0_valid == 1) {
             apply(tx_table_s1_t0);

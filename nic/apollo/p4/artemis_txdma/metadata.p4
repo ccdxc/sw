@@ -10,7 +10,13 @@ header_type txdma_control_metadata_t {
         lpm_s2_offset       : 16;
         pad1                :  6;
         lpm_addr            : 34;
+        pad2                :  6;
         rxdma_cindex_addr   : 34;
+        pad3                :  5;
+        remote_vnic_mapping_tx_ohash_lkp : 1; //TEMP: Replace with P4 to P4+ header
+        vpc_id              : 10;   //TEMP: Replace with P4 to P4+ header
+        dst                 : 128;  //TEMP: Replace with P4 to P4+ header
+        remote_vnic_mapping_tx_ohash : 32; //TEMP: Replace with P4 to P4+ header
     }
 }
 
@@ -25,6 +31,18 @@ header_type scratch_metadata_t {
         payload_len     : 14;
         qid             : 24;
         lif             : 11;
+        // TMP: Fileds added temporarily
+        nexthop_group_index : 10;
+        remote_vnic_mapping_tx_done : 1;
+        dst_slot_id_valid   : 1;
+        pad0                : 4;
+        dst_slot_id         : 24;
+        flag                : 1;
+        hint_valid          : 1;
+        vnic_mapping_hash   : 11;
+        remote_vnic_mapping_tx_ohash_lkp    : 1;
+        vnic_mapping_hint   : 18;
+        remote_vnic_mapping_tx_ohash : 32;
     }
 }
 
