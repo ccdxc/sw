@@ -32,7 +32,8 @@ typedef enum rule_dir_e {
 /// \brief    rule L3 match criteria
 typedef struct rule_l3_match_s {
     uint8_t        ip_proto;    ///< IP protocol
-    ip_prefix_t    ip_pfx;      ///< IP prefix
+    ip_prefix_t    src_ip_pfx;  ///< Src IP prefix
+    ip_prefix_t    dst_ip_pfx;  ///< Dst IP prefix
 } __PACK__ rule_l3_match_t;
 
 /// \brief    rule L4 match criteria

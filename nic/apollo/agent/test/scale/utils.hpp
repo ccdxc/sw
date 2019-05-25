@@ -183,8 +183,11 @@ populate_policy_request (SecurityPolicyRequest *req, pds_policy_spec_t *policy)
             rule->mutable_match()->mutable_l3match()->set_protocol(policy->rules[i].match.l3_match.ip_proto);
         }
         ip_pfx_to_spec(
-            rule->mutable_match()->mutable_l3match()->mutable_prefix(),
-            &policy->rules[i].match.l3_match.ip_pfx);
+            rule->mutable_match()->mutable_l3match()->mutable_srcprefix(),
+            &policy->rules[i].match.l3_match.src_ip_pfx);
+        ip_pfx_to_spec(
+            rule->mutable_match()->mutable_l3match()->mutable_dstprefix(),
+            &policy->rules[i].match.l3_match.dst_ip_pfx);
         rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_srcportrange()->set_portlow(policy->rules[i].match.l4_match.sport_range.port_lo);
         rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_srcportrange()->set_porthigh(policy->rules[i].match.l4_match.sport_range.port_hi);
         rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_dstportrange()->set_portlow(policy->rules[i].match.l4_match.dport_range.port_lo);

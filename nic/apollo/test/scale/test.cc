@@ -936,23 +936,42 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                         SECURITY_RULE_ACTION_ALLOW;
                     rule->stateful = g_test_params.stateful;
                     rule->match.l3_match.ip_proto = 17;    // UDP
-                    rule->match.l3_match.ip_pfx.addr.af = policy.af;
                     rule->match.l4_match.sport_range.port_lo = 100;
                     rule->match.l4_match.sport_range.port_hi = 10000;
                     if (idx < (num_rules - 3)) {
                         if (policy.af == IP_AF_IPV4) {
-                            rule->match.l3_match.ip_pfx = g_test_params.vpc_pfx;
-                            rule->match.l3_match.ip_pfx.addr.addr.v4_addr =
-                                    rule->match.l3_match.ip_pfx.addr.addr.v4_addr |
-                                    ((j - 1) << 14) | ((k + 2) << 4);
-                            rule->match.l3_match.ip_pfx.len = 28;
+                            if (ingress) {
+                                rule->match.l3_match.src_ip_pfx.addr.af = policy.af;
+                                rule->match.l3_match.src_ip_pfx = g_test_params.vpc_pfx;
+                                rule->match.l3_match.src_ip_pfx.addr.addr.v4_addr =
+                                        rule->match.l3_match.src_ip_pfx.addr.addr.v4_addr |
+                                        ((j - 1) << 14) | ((k + 2) << 4);
+                                rule->match.l3_match.src_ip_pfx.len = 28;
+                            } else {
+                                rule->match.l3_match.dst_ip_pfx.addr.af = policy.af;
+                                rule->match.l3_match.dst_ip_pfx = g_test_params.vpc_pfx;
+                                rule->match.l3_match.dst_ip_pfx.addr.addr.v4_addr =
+                                        rule->match.l3_match.dst_ip_pfx.addr.addr.v4_addr |
+                                        ((j - 1) << 14) | ((k + 2) << 4);
+                                rule->match.l3_match.dst_ip_pfx.len = 28;
+                            }
                         }
                         else {
-                            rule->match.l3_match.ip_pfx = g_test_params.v6_vpc_pfx;
-                            rule->match.l3_match.ip_pfx.addr.addr.v6_addr.addr32[3] =
-                                    rule->match.l3_match.ip_pfx.addr.addr.v6_addr.addr32[3] |
-                                    htonl(((j - 1) << 14) | ((k + 2) << 4));
-                            rule->match.l3_match.ip_pfx.len = 124;
+                            if (ingress) {
+                                rule->match.l3_match.src_ip_pfx.addr.af = policy.af;
+                                rule->match.l3_match.src_ip_pfx = g_test_params.v6_vpc_pfx;
+                                rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[3] =
+                                        rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[3] |
+                                        htonl(((j - 1) << 14) | ((k + 2) << 4));
+                                rule->match.l3_match.src_ip_pfx.len = 124;
+                            } else {
+                                rule->match.l3_match.dst_ip_pfx.addr.af = policy.af;
+                                rule->match.l3_match.dst_ip_pfx = g_test_params.v6_vpc_pfx;
+                                rule->match.l3_match.dst_ip_pfx.addr.addr.v6_addr.addr32[3] =
+                                        rule->match.l3_match.dst_ip_pfx.addr.addr.v6_addr.addr32[3] |
+                                        htonl(((j - 1) << 14) | ((k + 2) << 4));
+                                rule->match.l3_match.dst_ip_pfx.len = 124;
+                            }
                         }
                         rule->match.l4_match.dport_range.port_lo = dport_base;
                         rule->match.l4_match.dport_range.port_hi =
@@ -973,14 +992,31 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                     } else {
                         // catch-all policy for LPM routes + UDP
                         if (policy.af == IP_AF_IPV4) {
-                            rule->match.l3_match.ip_pfx.addr.addr.v4_addr = (0xC << 28);
-                            rule->match.l3_match.ip_pfx.len = 8;
+                            if (ingress) {
+                                rule->match.l3_match.src_ip_pfx.addr.af = policy.af;
+                                rule->match.l3_match.src_ip_pfx.addr.addr.v4_addr = (0xC << 28);
+                                rule->match.l3_match.src_ip_pfx.len = 8;
+                            } else {
+                                rule->match.l3_match.dst_ip_pfx.addr.af = policy.af;
+                                rule->match.l3_match.dst_ip_pfx.addr.addr.v4_addr = (0xC << 28);
+                                rule->match.l3_match.dst_ip_pfx.len = 8;
+                            }
                         } else {
-                            rule->match.l3_match.ip_pfx.addr.addr.v6_addr.addr32[0] = htonl(0x20210000);
-                            rule->match.l3_match.ip_pfx.addr.addr.v6_addr.addr32[1] = htonl(0x00000000);
-                            rule->match.l3_match.ip_pfx.addr.addr.v6_addr.addr32[2] = htonl(0xF1D0D1D0);
-                            rule->match.l3_match.ip_pfx.addr.addr.v6_addr.addr32[3] = htonl(0x00000000);
-                            rule->match.l3_match.ip_pfx.len = 96;
+                            if (ingress) {
+                                rule->match.l3_match.src_ip_pfx.addr.af = policy.af;
+                                rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[0] = htonl(0x20210000);
+                                rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[1] = htonl(0x00000000);
+                                rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[2] = htonl(0xF1D0D1D0);
+                                rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[3] = htonl(0x00000000);
+                                rule->match.l3_match.src_ip_pfx.len = 96;
+                            } else {
+                                rule->match.l3_match.dst_ip_pfx.addr.af = policy.af;
+                                rule->match.l3_match.dst_ip_pfx.addr.addr.v6_addr.addr32[0] = htonl(0x20210000);
+                                rule->match.l3_match.dst_ip_pfx.addr.addr.v6_addr.addr32[1] = htonl(0x00000000);
+                                rule->match.l3_match.dst_ip_pfx.addr.addr.v6_addr.addr32[2] = htonl(0xF1D0D1D0);
+                                rule->match.l3_match.dst_ip_pfx.addr.addr.v6_addr.addr32[3] = htonl(0x00000000);
+                                rule->match.l3_match.dst_ip_pfx.len = 96;
+                            }
                         }
                         rule->match.l4_match.dport_range.port_lo = 1000;
                         rule->match.l4_match.dport_range.port_hi = 20000;

@@ -52,7 +52,9 @@ rfc_policy_rule_dump (policy_t *policy, uint32_t rule_num)
     rule_str += "match = (proto " +
                     std::to_string(rule->match.l3_match.ip_proto) + ", ";
     rule_str+=
-        "IP pfx " + string(ippfx2str(&rule->match.l3_match.ip_pfx)) + ", ";
+        "Src IP pfx " + string(ippfx2str(&rule->match.l3_match.src_ip_pfx)) + ", ";
+    rule_str+=
+        "Dst IP pfx " + string(ippfx2str(&rule->match.l3_match.dst_ip_pfx)) + ", ";
     if (rule->match.l3_match.ip_proto == IP_PROTO_ICMP) {
         rule_str += "ICMP type/code " +
                        std::to_string(rule->match.l4_match.icmp_type) +
@@ -105,8 +107,13 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
     for (rule_num = 0; rule_num < policy->num_rules; rule_num++) {
         rule = &policy->rules[rule_num];
         rfc_policy_rule_dump(policy, rule_num);
-        itable_add_address_inodes(rule_num, addr_inode,
-                                  &rule->match.l3_match.ip_pfx);
+        if (policy->direction == RULE_DIR_INGRESS) {
+            itable_add_address_inodes(rule_num, addr_inode,
+                                      &rule->match.l3_match.src_ip_pfx);
+        } else {
+            itable_add_address_inodes(rule_num, addr_inode,
+                                      &rule->match.l3_match.dst_ip_pfx);
+        }
         itable_add_port_inodes(rule_num, port_inode,
                                &rule->match.l4_match.sport_range);
         itable_add_proto_port_inodes(rule_num, proto_port_inode,

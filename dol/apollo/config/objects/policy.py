@@ -70,8 +70,12 @@ class PolicyObject(base.ConfigObjectBase):
             specrule.Match.L4Match.Ports.DstPortRange.PortHigh = rule.L4DportHigh
         if rule.L3Match:
             specrule.Match.L3Match.Protocol = rule.Proto
-            if rule.Prefix is not None:
-                utils.GetRpcIPPrefix(rule.Prefix, specrule.Match.L3Match.Prefix)
+            if self.Direction == types_pb2.RULE_DIR_INGRESS:
+                if rule.Prefix is not None:
+                    utils.GetRpcIPPrefix(rule.Prefix, specrule.Match.L3Match.SrcPrefix)
+            else:
+                if rule.Prefix is not None:
+                    utils.GetRpcIPPrefix(rule.Prefix, specrule.Match.L3Match.DstPrefix)
 
     def GetGrpcCreateMessage(self):
         grpcmsg = policy_pb2.SecurityPolicyRequest()

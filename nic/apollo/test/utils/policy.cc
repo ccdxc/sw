@@ -71,7 +71,7 @@ create_rules(std::string pfx, uint16_t num_rules,
             }
             (*rules)[i].match.l3_match.ip_proto = 1;
             str2ipv4pfx((char*)pfx.c_str(),
-                        &(*rules)[i].match.l3_match.ip_pfx);
+                        &(*rules)[i].match.l3_match.src_ip_pfx);
             ip_pfx.addr.addr.v4_addr += 1;
             pfx = ippfx2str(&ip_pfx);
         } else {
@@ -89,7 +89,7 @@ create_rules(std::string pfx, uint16_t num_rules,
             }
             (*rules)[i].match.l3_match.ip_proto = 1;
             str2ipv6pfx((char*)pfx.c_str(),
-                        &(*rules)[i].match.l3_match.ip_pfx);
+                        &(*rules)[i].match.l3_match.src_ip_pfx);
             for (uint8_t byte = IP6_ADDR8_LEN - 1; byte >= 0 ; byte--) {
                 // keep adding one until there is no rollover
                 if ((++(ip_pfx.addr.addr.v6_addr.addr8[byte]))) {

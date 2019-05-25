@@ -61,9 +61,16 @@ pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
                       match->l3_match.ip_proto);
         return SDK_RET_INVALID_ARG;
     }
-    if (proto_l3_match.has_prefix()) {
-        ippfx_proto_spec_to_api_spec(&match->l3_match.ip_pfx,
-                                     proto_l3_match.prefix());
+    if (proto_l3_match.has_srcprefix()) {
+        ippfx_proto_spec_to_api_spec(&match->l3_match.src_ip_pfx,
+                                     proto_l3_match.srcprefix());
+    } else {
+        // since the memory is zero-ed out, this is 0.0.0.0/0 or 0::0/0
+        // TODO: should we set the IP_AF_XXX ?
+    }
+    if (proto_l3_match.has_dstprefix()) {
+        ippfx_proto_spec_to_api_spec(&match->l3_match.dst_ip_pfx,
+                                     proto_l3_match.dstprefix());
     } else {
         // since the memory is zero-ed out, this is 0.0.0.0/0 or 0::0/0
         // TODO: should we set the IP_AF_XXX ?
