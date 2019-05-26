@@ -59,6 +59,17 @@ mac_str_to_addr (char *str, mac_addr_t mac_addr)
            &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]);
 }
 
+static inline bool
+is_mac_set (mac_addr_t mac_addr)
+{
+    for (uint32_t i = 0; i < ETH_ADDR_LEN; i++) {
+        if ((mac_addr)[i] != 0x0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 //------------------------------------------------------------------------------
 // thread safe helper to stringify MAC address
 //------------------------------------------------------------------------------

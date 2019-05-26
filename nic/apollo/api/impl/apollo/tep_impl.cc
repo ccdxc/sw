@@ -96,23 +96,25 @@ tep_impl::nuke_resources(api_base *api_obj) {
 sdk_ret_t
 tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t                  ret;
+    tep_entry                  *tep;
     pds_tep_spec_t             *tep_spec;
     tep_actiondata_t           tep_data = { 0 };
     nexthop_actiondata_t       nh_data = { 0 };
 
     // program TEP Tx table
     tep_spec = &obj_ctxt->api_params->tep_spec;
+    tep = (tep_entry *)api_obj;
     switch (tep_spec->encap.type) {
     case PDS_ENCAP_TYPE_MPLSoUDP:
         tep_data.action_id = TEP_MPLS_UDP_TEP_ID;
         tep_data.tep_mpls_udp_action.dipo = tep_spec->key.ip_addr;
-        memcpy(tep_data.tep_mpls_udp_action.dmac, mac_, ETH_ADDR_LEN);
+        memcpy(tep_data.tep_mpls_udp_action.dmac, tep->mac(), ETH_ADDR_LEN);
         break;
 
     case PDS_ENCAP_TYPE_VXLAN:
         tep_data.action_id = TEP_VXLAN_TEP_ID;
         tep_data.tep_vxlan_action.dipo = tep_spec->key.ip_addr;
-        memcpy(tep_data.tep_vxlan_action.dmac, mac_, ETH_ADDR_LEN);
+        memcpy(tep_data.tep_vxlan_action.dmac, tep->mac(), ETH_ADDR_LEN);
         break;
 
     default:

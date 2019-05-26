@@ -144,7 +144,8 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
             }
-            rtable->routes[i].nhid = PDS_NH_TYPE_PEER_VPC_MASK | vpc->hw_id();
+            rtable->routes[i].nhid =
+                PDS_IMPL_NH_TYPE_PEER_VPC_MASK | vpc->hw_id();
             PDS_TRACE_DEBUG("Processing route table %u, route %s -> vpc hw "
                             "id %u, ", spec->key.id,
                             ippfx2str(&rtable->routes[i].prefix),

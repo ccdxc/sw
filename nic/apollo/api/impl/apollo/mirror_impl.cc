@@ -129,18 +129,20 @@ mirror_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         if (vpc->type() == PDS_VPC_TYPE_SUBSTRATE) {
             tep_key.ip_addr = spec->erspan_spec.dst_ip.addr.v4_addr;
             if ((tep = tep_db()->find(&tep_key)) == NULL) {
-                PDS_TRACE_ERR("Unknown TEP IP %s", ipv4addr2str(tep_key.ip_addr));
+                PDS_TRACE_ERR("Unknown TEP IP %s",
+                              ipv4addr2str(tep_key.ip_addr));
                 return SDK_RET_INVALID_ARG;
             }
             // TODO: what if this TEP is local TEP itself ?
             mirror_data.erspan_action.tm_oport = TM_PORT_UPLINK_1;
             mirror_data.erspan_action.ctag = 0;
-            memcpy(mirror_data.erspan_action.dmac,
-                   ((tep_impl *)(tep->impl()))->mac(), ETH_ADDR_LEN);
+            memcpy(mirror_data.erspan_action.dmac, tep->mac(), ETH_ADDR_LEN);
             memcpy(mirror_data.erspan_action.smac,
                    device_db()->find()->mac(), ETH_ADDR_LEN);
-            mirror_data.erspan_action.sip = spec->erspan_spec.src_ip.addr.v4_addr;
-            mirror_data.erspan_action.dip = spec->erspan_spec.dst_ip.addr.v4_addr;
+            mirror_data.erspan_action.sip =
+                spec->erspan_spec.src_ip.addr.v4_addr;
+            mirror_data.erspan_action.dip =
+                spec->erspan_spec.dst_ip.addr.v4_addr;
             mirror_data.erspan_action.truncate_len = spec->snap_len;
         } else {
 #if 0

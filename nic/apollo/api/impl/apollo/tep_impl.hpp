@@ -20,8 +20,6 @@
 #include "nic/apollo/p4/include/defines.h"
 #include "gen/p4gen/apollo/include/p4pd.h"
 
-// TODO: fix this when fte plugin is available
-#define PDS_REMOTE_TEP_MAC            0x0E0D0A0B0200
 #define PDS_TEP_IMPL_INVALID_INDEX    0xFFFF
 
 namespace api {
@@ -96,10 +94,6 @@ public:
     virtual sdk_ret_t update_hw(api_base *curr_obj, api_base *prev_obj,
                                 obj_ctxt_t *obj_ctxt) override;
 
-    /// \brief  return the MAC address corresponding to this TEP
-    /// \return ethernet MAC address of this TEP (configured/learnt)
-    mac_addr_t& mac(void) { return mac_; }
-
     /// \brief  return h/w index for this TEP
     /// \return h/w table index for this TEP
     uint16_t hw_id(void) const { return hw_id_; }
@@ -113,7 +107,6 @@ private:
     tep_impl() {
         hw_id_ = 0xFFFF;
         nh_id_ = 0xFFFF;
-        MAC_UINT64_TO_ADDR(mac_, PDS_REMOTE_TEP_MAC);
     }
 
     /// \brief destructor
@@ -136,7 +129,6 @@ private:
     // P4 datapath specific state
     uint16_t   hw_id_;    ///< hardware id for this tep
     uint16_t   nh_id_;    ///< nexthop index for this tep
-    mac_addr_t mac_;      ///< (learnt) MAC address of this TEP
 } __PACK__;
 
 /// \@}

@@ -523,7 +523,7 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
                                                vnic_impl_obj->hw_id(), vpc->hw_id(),
                                                spec->svc_tag,
                                                to_overlay_ip_nat_hdl_,
-                                               PDS_NAT_TBL_RSVD_ENTRY_IDX);
+                                               PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params,
                                        &local_ip_mapping_key,
                                        &local_ip_mapping_data,
@@ -544,7 +544,7 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
                                                vnic_impl_obj->hw_id(), vpc->hw_id(),
                                                spec->svc_tag,
                                                to_overlay_ip_nat_hdl_,
-                                               PDS_NAT_TBL_RSVD_ENTRY_IDX);
+                                               PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params,
                                        &local_ip_mapping_key,
                                        &local_ip_mapping_data,

@@ -16,13 +16,15 @@
 #include "nic/sdk/p4/loader/loader.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
 
-#define PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID       0
-#define PDS_IMPL_PUBLIC_VPC_HW_ID                0
-#define PDS_IMPL_PROVIDER_VPC_HW_ID              PDS_IMPL_PUBLIC_VPC_HW_ID
-#define PDS_NAT_TBL_RSVD_ENTRY_IDX               0
-#define PDS_NH_TYPE_PEER_VPC_MASK                0x8000
+#define PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID           0
+#define PDS_IMPL_PUBLIC_VPC_HW_ID                    0
+#define PDS_IMPL_PROVIDER_VPC_HW_ID                  PDS_IMPL_PUBLIC_VPC_HW_ID
+#define PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX              0
+// next hop types
+#define PDS_IMPL_NH_TYPE_PEER_VPC_MASK               0x8000
+#define PDS_IMPL_NH_TYPE_SVC_TUNNEL_MASK             0x4000
 // NAT table entry reserved for no translation
-#define PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX          0
+#define PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX              0
 
 #define MEM_ADDR_TO_P4_MEM_ADDR(p4_mem_addr, mem_addr, p4_addr_size)      \
     for (uint32_t i = 0; i < (p4_addr_size); i++) {                       \

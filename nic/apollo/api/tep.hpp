@@ -17,6 +17,9 @@
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 
+// TODO: fix this when fte plugin is available
+#define PDS_REMOTE_TEP_MAC            0x0E0D0A0B0200
+
 namespace api {
 
 /// \defgroup PDS_TEP_ENTRY - TEP entry functionality
@@ -141,6 +144,10 @@ public:
     /// \return IPv4 address of the TEP
     ipv4_addr_t ip(void) const { return key_.ip_addr; }
 
+    /// \brief  return the MAC address corresponding to this TEP
+    /// \return ethernet MAC address of this TEP (configured/learnt)
+    mac_addr_t& mac(void) { return mac_; }
+
     /// \brief  return impl instance of this TEP object
     /// \return impl instance of the TEP object
     impl_base *impl(void) { return impl_; }
@@ -162,6 +169,7 @@ private:
     ///        ARP traffic in the substrate, but we don't need to store it in
     ///        s/w, we will directly refresh the TEP_TX table
     pds_tep_key_t key_;        ///< TEP key
+    mac_addr_t    mac_;        ///< (learnt/configured) MAC address of this TEP
     ht_ctxt_t     ht_ctxt_;    ///< hash table context
     impl_base     *impl_;      ///< impl object instance
     friend class  tep_state;   ///< tep_state is friend of tep_entry

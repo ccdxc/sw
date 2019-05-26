@@ -34,6 +34,7 @@ typedef struct pds_tep_spec_s {
     pds_tep_key_t  key;        ///< key
     ipv4_addr_t    ip_addr;    ///< outer source IP to be used
                                ///< (unused currently)
+    mac_addr_t     mac;        ///< MAC address of this TEP
     pds_tep_type_t type;       ///< type/role of the TEP
     ///< encap to be used, if specified
     ///< for PDS_TEP_TYPE_WORKLOAD type TEP, encap value itself comes from the

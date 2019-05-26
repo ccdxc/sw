@@ -27,6 +27,7 @@ namespace api {
 tep_entry::tep_entry() {
     //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     ht_ctxt_.reset();
+    MAC_UINT64_TO_ADDR(mac_, PDS_REMOTE_TEP_MAC);
 }
 
 tep_entry *
@@ -67,6 +68,9 @@ tep_entry::init_config(api_ctxt_t *api_ctxt) {
 
     PDS_TRACE_VERBOSE("Initializing TEP %s", ipv4addr2str(spec->key.ip_addr));
     memcpy(&this->key_, &spec->key, sizeof(pds_tep_key_t));
+    if (is_mac_set(spec->mac)) {
+        memcpy(mac_, spec->mac, sizeof(ETH_ADDR_LEN));
+    }
     return SDK_RET_OK;
 }
 
