@@ -22,6 +22,8 @@ var (
 	portNum        uint32
 	portPause      string
 	portFecType    string
+	txPause        string
+	rxPause        string
 	portAutoNeg    string
 	portMtu        uint32
 	portAdminState string
@@ -109,8 +111,10 @@ func init() {
 	debugCmd.AddCommand(portDebugCmd)
 	portDebugCmd.Flags().Uint32Var(&portNum, "port", 0, "Specify port number")
 	portDebugCmd.Flags().StringVar(&portPause, "pause", "none", "Specify pause - link, pfc, none")
+	portDebugCmd.Flags().StringVar(&txPause, "tx-pause", "enable", "Enable or disable TX pause using enable | disable")
+	portDebugCmd.Flags().StringVar(&rxPause, "rx-pause", "enable", "Enable or disable RX pause using enable | disable")
 	portDebugCmd.Flags().StringVar(&portFecType, "fec-type", "none", "Specify fec-type - rs, fc, none")
-	portDebugCmd.Flags().StringVar(&portAutoNeg, "auto-neg", "enable", "Enable or disable auto-neg using enable | disable (default \"enable\")")
+	portDebugCmd.Flags().StringVar(&portAutoNeg, "auto-neg", "enable", "Enable or disable auto-neg using enable | disable")
 	portDebugCmd.Flags().StringVar(&portAdminState, "admin-state", "up", "Set port admin state - up, down")
 	portDebugCmd.Flags().StringVar(&portSpeed, "speed", "", "Set port speed - none, 1g, 10g, 25g, 40g, 50g, 100g")
 	portDebugCmd.Flags().Uint32Var(&portMtu, "mtu", 0, "Specify port MTU")
@@ -398,12 +402,17 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func portShowHeaderPrint() {
-	hdrLine := strings.Repeat("-", 157)
+	hdrLine := strings.Repeat("-", 169)
 	fmt.Println("MAC-Info: MAC ID/MAC Channel/Num lanes          Debounce: Debounce time in ms")
 	fmt.Println("FEC-Type: FC - FireCode, RS - ReedSolomon")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-12s%-7s%-10s%-10s%-12s%-15s%-6s%-10s%-10s%-12s%-12s%-12s%-20s%-10s\n",
-		"PortType/ID", "Speed", "MAC-Info", "FEC-Type", "AutoNegCfg", "AutoNegEnable", "MTU", "Pause", "Debounce", "AdminStatus", "OperStatus", "NumLinkDown", "LinkSM", "Loopback")
+	fmt.Printf("%-12s%-7s%-10s%-10s"+"%-12s%-15s"+"%-6s"+"%-6s%-8s%-8s"+"%-10s%-12s%-12s"+"%-12s%-20s%-10s\n",
+		"PortType/ID", "Speed", "MAC-Info", "FEC-Type",
+		"AutoNegCfg", "AutoNegEnable",
+		"MTU",
+		"Pause", "TxPause", "RxPause",
+		"Debounce", "AdminStatus", "OperStatus",
+		"NumLinkDown", "LinkSM", "Loopback")
 	fmt.Println(hdrLine)
 }
 
@@ -496,11 +505,13 @@ func portShowOneResp(resp *halproto.PortGetResponse) {
 	adminStateStr := strings.Replace(resp.GetSpec().GetAdminState().String(), "PORT_ADMIN_STATE_", "", -1)
 	operStatusStr := strings.Replace(resp.GetStatus().GetLinkStatus().GetOperState().String(), "PORT_OPER_STATUS_", "", -1)
 
-	fmt.Printf("%-12s%-7s%-10s%-10s%-12t%-15t%-6d%-10s%-10d%-12s%-12s%-12d%-20s%-10s\n",
-		portStr, speedStr, macStr, fecStr, spec.GetAutoNegEnable(),
-		resp.GetStatus().GetLinkStatus().GetAutoNegEnable(),
-		spec.GetMtu(), pauseStr, spec.GetDebounceTime(),
-		adminStateStr, operStatusStr, resp.GetStats().GetNumLinkDown(), linkSmStr, loopbackStr)
+	fmt.Printf("%-12s%-7s%-10s%-10s"+"%-12t%-15t"+"%-6d"+"%-6s%-8t%-8t"+"%-10d%-12s%-12s"+"%-12d%-20s%-10s\n",
+		portStr, speedStr, macStr, fecStr,
+		spec.GetAutoNegEnable(), resp.GetStatus().GetLinkStatus().GetAutoNegEnable(),
+		spec.GetMtu(),
+		pauseStr, spec.GetTxPauseEnable(), spec.GetRxPauseEnable(),
+		spec.GetDebounceTime(), adminStateStr, operStatusStr,
+		resp.GetStats().GetNumLinkDown(), linkSmStr, loopbackStr)
 }
 
 func portStatsShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -656,7 +667,8 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 
 	success := true
 
-	if cmd.Flags().Changed("pause") == false && cmd.Flags().Changed("fec-type") == false &&
+	if cmd.Flags().Changed("pause") == false && cmd.Flags().Changed("tx-pause") == false &&
+		cmd.Flags().Changed("rx-pause") == false && cmd.Flags().Changed("fec-type") == false &&
 		cmd.Flags().Changed("auto-neg") == false && cmd.Flags().Changed("mtu") == false &&
 		cmd.Flags().Changed("admin-state") == false && cmd.Flags().Changed("speed") == false {
 		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
@@ -669,6 +681,8 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 	speed := inputToSpeed("none")
 	autoNeg := false
 	var mtu uint32
+	txPauseEnable := true
+	rxPauseEnable := true
 
 	if cmd.Flags().Changed("pause") == true {
 		if isPauseTypeValid(portPause) == false {
@@ -676,6 +690,28 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 			return
 		}
 		pauseType = inputToPauseType(portPause)
+	}
+
+	if cmd.Flags().Changed("tx-pause") == true {
+		if strings.Compare(txPause, "disable") == 0 {
+			txPauseEnable = false
+		} else if strings.Compare(txPause, "enable") == 0 {
+			txPauseEnable = true
+		} else {
+			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			return
+		}
+	}
+
+	if cmd.Flags().Changed("rx-pause") == true {
+		if strings.Compare(rxPause, "disable") == 0 {
+			rxPauseEnable = false
+		} else if strings.Compare(rxPause, "enable") == 0 {
+			rxPauseEnable = true
+		} else {
+			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			return
+		}
 	}
 
 	if cmd.Flags().Changed("fec-type") == true {
@@ -760,6 +796,12 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 		if cmd.Flags().Changed("pause") == false {
 			pauseType = resp.GetSpec().GetPause()
 		}
+		if cmd.Flags().Changed("tx-pause") == false {
+			txPauseEnable = resp.GetSpec().GetTxPauseEnable()
+		}
+		if cmd.Flags().Changed("rx-pause") == false {
+			rxPauseEnable = resp.GetSpec().GetRxPauseEnable()
+		}
 		if cmd.Flags().Changed("fec-type") == false {
 			fecType = resp.GetSpec().GetFecType()
 		}
@@ -794,6 +836,8 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 			Mtu:           mtu,
 			MacStatsReset: false,
 			Pause:         pauseType,
+			TxPauseEnable: txPauseEnable,
+			RxPauseEnable: rxPauseEnable,
 		}
 
 		portUpdateReqMsg := &halproto.PortRequestMsg{

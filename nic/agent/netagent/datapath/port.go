@@ -28,6 +28,8 @@ func (hd *Datapath) CreatePort(ports ...*netproto.Port) error {
 			AutoNegEnable: autoNegEnable,
 			FecType:       fecType,
 			Pause:         halproto.PortPauseType_PORT_PAUSE_TYPE_LINK,
+			TxPauseEnable: true,
+			RxPauseEnable: true,
 		}
 
 		req = append(req, &halPortSpec)

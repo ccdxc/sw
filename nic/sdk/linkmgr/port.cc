@@ -101,6 +101,8 @@ port::port_mac_cfg(void)
 
     mac_info.mtu       = this->mtu_;
     mac_info.pause     = this->pause_;
+    mac_info.tx_pause_enable = this->tx_pause_enable_;
+    mac_info.rx_pause_enable = this->rx_pause_enable_;
     mac_info.num_lanes = this->num_lanes_;
 
     mac_info.fec       = static_cast<uint32_t>(this->fec_type_);

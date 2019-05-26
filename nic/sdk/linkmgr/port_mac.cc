@@ -457,6 +457,8 @@ mac_cfg_hw (mac_info_t *mac_info)
     uint32_t     mx_api_speed  = 0;
     uint8_t      loopback      = mac_info->loopback;
     port_pause_type_t pause      = mac_info->pause;
+    bool         tx_pause_enable = mac_info->tx_pause_enable;
+    bool         rx_pause_enable = mac_info->rx_pause_enable;
     port_speed_t      port_speed = (port_speed_t) mac_info->speed;
 
     switch (port_speed) {
@@ -561,15 +563,18 @@ mac_cfg_hw (mac_info_t *mac_info)
 
         switch (pause) {
         case port_pause_type_t::PORT_PAUSE_TYPE_LINK:
-            cap_mx_set_pause(chip_id, inst_id, ch, 0x1, 1);
+            cap_mx_set_pause(chip_id, inst_id, ch, 0x1, 1,
+                             tx_pause_enable, rx_pause_enable);
             break;
 
         case port_pause_type_t::PORT_PAUSE_TYPE_PFC:
-            cap_mx_set_pause(chip_id, inst_id, ch, 0xff, 0);
+            cap_mx_set_pause(chip_id, inst_id, ch, 0xff, 0,
+                             tx_pause_enable, rx_pause_enable);
             break;
 
         default:
-            cap_mx_set_pause(chip_id, inst_id, ch, 0x0, 0);
+            cap_mx_set_pause(chip_id, inst_id, ch, 0x0, 0,
+                             tx_pause_enable, rx_pause_enable);
             break;
         }
 

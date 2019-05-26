@@ -224,32 +224,79 @@ int cap_mx_set_pause_src_addr (int chip_id, int inst_id, int ch, uint8_t *mac_ad
     return 0;
 }
 
+static inline uint64_t
+set_bit (uint64_t data, uint8_t index) {
+    return (data | ((uint64_t)1 << index));
+}
+
+static inline uint64_t
+reset_bit (uint64_t data, uint8_t index) {
+    return (data & ~((uint64_t)1 << index));
+}
+
 int
-cap_mx_set_pause(int chip_id, int inst_id, int ch, int pri_vec, int legacy)
+cap_mx_set_pause(int chip_id, int inst_id, int ch, int pri_vec, int legacy,
+                 bool tx_pause_enable, bool rx_pause_enable)
 {
     cap_mx_csr_t & mx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
 
     int txfcxoff_enable  = 0;
     int txpfcxoff_enable = 0;
+    uint32_t data = 0x0;
 
     int addr1 = (ch == 1) ? 0x501 : (ch == 2) ? 0x601 : (ch == 3) ? 0x701 : 0x401;
     int addr2 = (ch == 1) ? 0x502 : (ch == 2) ? 0x602 : (ch == 3) ? 0x702 : 0x402;
     int addr3 = (ch == 1) ? 0x506 : (ch == 2) ? 0x606 : (ch == 3) ? 0x706 : 0x406;
 
     if (pri_vec == 0) {
+        // No pause
         cap_mx_apb_write(chip_id, inst_id, addr1, 0x030);
         cap_mx_apb_write(chip_id, inst_id, addr2, 0x010);  // bit4 Promiscuous Mode (1: disable MAC address check)
         cap_mx_apb_write(chip_id, inst_id, addr3, 0x00);   // MAC Tx Priority Pause Vector
     } else {
         if (legacy) {
+            // Link level pause
             txfcxoff_enable = 1;
-            cap_mx_apb_write(chip_id, inst_id, addr1, 0x130);   // Bit8: Control Frame Generation Enable
-            cap_mx_apb_write(chip_id, inst_id, addr2, 0x130);   // bit5: Enable Rx Flow Control Decode, bit8 filter pause frame
-            cap_mx_apb_write(chip_id, inst_id, addr3, 0x00);    // MAC Tx Priority Pause Vector
+
+            data = 0x30;
+            // Bit8: Control Frame Generation Enable
+            if (tx_pause_enable == true) {
+                data = set_bit(data, 8);
+            } else {
+                data = reset_bit(data, 8);
+            }
+            cap_mx_apb_write(chip_id, inst_id, addr1, data);
+
+            data = 0x110;
+            // bit5: Enable Rx Flow Control Decode
+            if (rx_pause_enable == true) {
+                data = set_bit(data, 5);
+            } else {
+                data = reset_bit(data, 5);
+            }
+            cap_mx_apb_write(chip_id, inst_id, addr2, data);   // bit8 filter pause frame
+            cap_mx_apb_write(chip_id, inst_id, addr3, 0x00);   // MAC Tx Priority Pause Vector
         } else {
+            // PFC
             txpfcxoff_enable = 0xff;
-            cap_mx_apb_write(chip_id, inst_id, addr1, 0x230);   // bit9: Priority Flow Control Generation Enable
-            cap_mx_apb_write(chip_id, inst_id, addr2, 0x130);   // bit5: Enable Rx Flow Control Decode, bit8 filter pause frame
+
+            data = 0x30;
+            // bit9: Priority Flow Control Generation Enable
+            if (tx_pause_enable == true) {
+                data = set_bit(data, 9);
+            } else {
+                data = reset_bit(data, 9);
+            }
+            cap_mx_apb_write(chip_id, inst_id, addr1, data);
+
+            data = 0x110;
+            // bit5: Enable Rx Flow Control Decode
+            if (rx_pause_enable == true) {
+                data = set_bit(data, 5);
+            } else {
+                data = reset_bit(data, 5);
+            }
+            cap_mx_apb_write(chip_id, inst_id, addr2, data);   // bit8 filter pause frame
             cap_mx_apb_write(chip_id, inst_id, addr3, pri_vec); // MAC Tx Priority Pause Vector
         }
     }

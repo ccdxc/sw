@@ -24,6 +24,8 @@ typedef struct mac_info_s {
     bool     force_global_init;
     uint8_t  loopback;
     port_pause_type_t    pause;
+    bool     tx_pause_enable;
+    bool     rx_pause_enable;
 } mac_info_t;
 
 typedef struct mac_fn_s_ {
