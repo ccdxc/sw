@@ -10,12 +10,12 @@
 #include <stack>
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/lpm/lpm.hpp"
-#include "nic/apollo/lpm/lpm_sport.hpp"
-#include "nic/apollo/lpm/lpm_ipv4_acl.hpp"
-#include "nic/apollo/lpm/lpm_ipv6_acl.hpp"
-#include "nic/apollo/lpm/lpm_ipv4_route.hpp"
-#include "nic/apollo/lpm/lpm_ipv6_route.hpp"
-#include "nic/apollo/lpm/lpm_proto_dport.hpp"
+#include "lpm_sport.hpp"
+#include "lpm_ipv4_acl.hpp"
+#include "lpm_ipv6_acl.hpp"
+#include "lpm_ipv4_route.hpp"
+#include "lpm_ipv6_route.hpp"
+#include "lpm_proto_dport.hpp"
 
 using std::stack;
 

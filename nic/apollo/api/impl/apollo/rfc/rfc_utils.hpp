@@ -10,7 +10,7 @@
 #define __RFC_UTILS_HPP__
 
 #include "nic/apollo/rfc/rfc.hpp"
-#include "nic/apollo/rfc/rfc_tree.hpp"
+#include "nic/apollo/api/impl/apollo/rfc/rfc_tree.hpp"
 
 namespace rfc {
 

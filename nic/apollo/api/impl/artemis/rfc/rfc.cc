@@ -8,14 +8,14 @@
 
 #include <string>
 #include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/rfc/rte_bitmap_utils.hpp"
 #include "nic/apollo/lpm/lpm.hpp"
 #include "nic/apollo/rfc/rfc.hpp"
-#include "nic/apollo/rfc/rfc_tree.hpp"
-#include "nic/apollo/rfc/rfc_utils.hpp"
-#include "nic/apollo/p4/include/sacl_defines.h"
-#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
-#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
+#include "nic/apollo/api/impl/artemis/rfc/rfc_tree.hpp"
+#include "nic/apollo/api/impl/artemis/rfc/rfc_utils.hpp"
+#include "nic/apollo/api/impl/artemis/rfc/rte_bitmap_utils.hpp"
+#include "nic/apollo/p4/include/artemis_sacl_defines.h"
+#include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
+#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
 
 using std::string;
 
@@ -24,10 +24,10 @@ namespace rfc {
 typedef bool (rfc_p0_tree_inode_eq_cb_t)(inode_t *inode1, inode_t *inode2);
 
 /**
- * @brief    dump a given policy rule
- * @param[in]    policy    policy table
- * @param[in]    rule_num  rule number of the rule to dump
- */
+* @brief    dump a given policy rule
+* @param[in]    policy    policy table
+* @param[in]    rule_num  rule number of the rule to dump
+*/
 static inline void
 rfc_policy_rule_dump (policy_t *policy, uint32_t rule_num)
 {
@@ -50,25 +50,25 @@ rfc_policy_rule_dump (policy_t *policy, uint32_t rule_num)
         rule_str += "stateless : ";
     }
     rule_str += "match = (proto " +
-                    std::to_string(rule->match.l3_match.ip_proto) + ", ";
+                std::to_string(rule->match.l3_match.ip_proto) + ", ";
     rule_str+=
-        "Src IP pfx " + string(ippfx2str(&rule->match.l3_match.src_ip_pfx)) + ", ";
+            "Src IP pfx " + string(ippfx2str(&rule->match.l3_match.src_ip_pfx)) + ", ";
     rule_str+=
-        "Dst IP pfx " + string(ippfx2str(&rule->match.l3_match.dst_ip_pfx)) + ", ";
+            "Dst IP pfx " + string(ippfx2str(&rule->match.l3_match.dst_ip_pfx)) + ", ";
     if (rule->match.l3_match.ip_proto == IP_PROTO_ICMP) {
         rule_str += "ICMP type/code " +
-                       std::to_string(rule->match.l4_match.icmp_type) +
-                       std::to_string(rule->match.l4_match.icmp_code) + ", ";
+                    std::to_string(rule->match.l4_match.icmp_type) +
+                    std::to_string(rule->match.l4_match.icmp_code) + ", ";
     } else if ((rule->match.l3_match.ip_proto == IP_PROTO_UDP) ||
                (rule->match.l3_match.ip_proto == IP_PROTO_TCP)) {
         rule_str +=
-            "sport range " +
-            std::to_string(rule->match.l4_match.sport_range.port_lo) + "-" +
-            std::to_string(rule->match.l4_match.sport_range.port_hi) + ", ";
+                "sport range " +
+                std::to_string(rule->match.l4_match.sport_range.port_lo) + "-" +
+                std::to_string(rule->match.l4_match.sport_range.port_hi) + ", ";
         rule_str +=
-            "dport range " +
-            std::to_string(rule->match.l4_match.dport_range.port_lo) + "-" +
-            std::to_string(rule->match.l4_match.dport_range.port_hi) + ") ";
+                "dport range " +
+                std::to_string(rule->match.l4_match.dport_range.port_lo) + "-" +
+                std::to_string(rule->match.l4_match.dport_range.port_hi) + ") ";
     }
     if (policy->policy_type == POLICY_TYPE_FIREWALL) {
         rule_str += "action = ";
@@ -82,12 +82,12 @@ rfc_policy_rule_dump (policy_t *policy, uint32_t rule_num)
 }
 
 /**
- * @brief    walk the policy rules and build all phase 0 RFC interval tables
- * @param[in]    rfc_ctxt    pointer to RFC trees
- *               intervals and class ids
- * @param[in]    num_nodes number of nodes in the itables
- * @return    SDK_RET_OK on success, failure status code on error
- */
+* @brief    walk the policy rules and build all phase 0 RFC interval tables
+* @param[in]    rfc_ctxt    pointer to RFC trees
+*               intervals and class ids
+* @param[in]    num_nodes number of nodes in the itables
+* @return    SDK_RET_OK on success, failure status code on error
+*/
 static inline sdk_ret_t
 rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
 {
@@ -124,7 +124,7 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
         proto_port_inode += 2;
     }
     addr_itable->num_nodes = port_itable->num_nodes =
-        proto_port_itable->num_nodes = rule_num << 1;
+    proto_port_itable->num_nodes = rule_num << 1;
     return SDK_RET_OK;
 }
 
@@ -181,8 +181,8 @@ rfc_compute_p0_itree_classes (rfc_ctxt_t *rfc_ctxt, rfc_tree_t *rfc_tree,
             continue;
         }
         inode->rfc.class_id =
-            rfc_compute_class_id(rfc_ctxt, rfc_table,
-                                 rfc_ctxt->cbm, rfc_ctxt->cbm_size);
+                rfc_compute_class_id(rfc_ctxt, rfc_table,
+                                     rfc_ctxt->cbm, rfc_ctxt->cbm_size);
         itable->nodes[num_intervals++] = *inode;
     }
     rfc_tree->num_intervals = num_intervals;
@@ -266,10 +266,10 @@ rfc_compute_p0_classes (rfc_ctxt_t *rfc_ctxt)
 }
 
 /**
- * @brief    dump the contents of given equivalence table
- * @param[in] rfc_ctxt    RFC context carrying all of the previous phases
- *                        information processed until now
- */
+* @brief    dump the contents of given equivalence table
+* @param[in] rfc_ctxt    RFC context carrying all of the previous phases
+*                        information processed until now
+*/
 void
 rfc_eq_class_table_dump (rfc_table_t *rfc_table)
 {
@@ -293,7 +293,7 @@ rfc_p0_eq_class_tables_dump (rfc_ctxt_t *rfc_ctxt)
     PDS_TRACE_DEBUG("RFC P0 prefix interval tree dump :");
     rfc_itree_dump(&rfc_ctxt->pfx_tree,
                    (rfc_ctxt->policy->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4_ACL:
-                                                          ITREE_TYPE_IPV6_ACL);
+                   ITREE_TYPE_IPV6_ACL);
     PDS_TRACE_DEBUG("RFC P0 prefix tree equivalence class table dump :");
     rfc_eq_class_table_dump(&rfc_ctxt->pfx_tree.rfc_table);
 
@@ -309,15 +309,15 @@ rfc_p0_eq_class_tables_dump (rfc_ctxt_t *rfc_ctxt)
 }
 
 /**
- * @brief    build interval tree based RFC LPM trees and index tables for
- *           subsequent RFC phases, starting at the given memory address
- * @param[in] policy           pointer to the policy
- * @param[in] rfc_tree_root    pointer to the memory address at which tree
- *                             should be built
- * @param[in] mem_size         memory block size provided (for error
- *                             detection)
- * @return    SDK_RET_OK on success, failure status code on error
- */
+* @brief    build interval tree based RFC LPM trees and index tables for
+*           subsequent RFC phases, starting at the given memory address
+* @param[in] policy           pointer to the policy
+* @param[in] rfc_tree_root    pointer to the memory address at which tree
+*                             should be built
+* @param[in] mem_size         memory block size provided (for error
+*                             detection)
+* @return    SDK_RET_OK on success, failure status code on error
+*/
 sdk_ret_t
 rfc_policy_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
                    uint32_t mem_size)
@@ -358,7 +358,7 @@ rfc_policy_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
      */
     rfc_build_eqtables(&rfc_ctxt);
 
-cleanup:
+    cleanup:
 
     /**< free all the temporary state */
     rfc_ctxt_destroy(&rfc_ctxt);

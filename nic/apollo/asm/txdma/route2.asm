@@ -35,7 +35,8 @@ struct route2_d            d;
 
 // Define result register and handler function name
 #define res_reg            r7
-#define res_handler        route_ipv4_handler
+#define result_handler32b  route_ipv4_handler
+#define result_handler64b  route_ipv4_handler
 
 %%
 

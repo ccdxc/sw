@@ -1,4 +1,4 @@
-res_handler:
+route_ipv4_handler:
     seq             c1, res_reg[ROUTE_RESULT_BIT_POS:ROUTE_RESULT_BIT_POS], \
                         ROUTE_RESULT_TYPE_VPC
     bcf             [c1], route_result_vpc

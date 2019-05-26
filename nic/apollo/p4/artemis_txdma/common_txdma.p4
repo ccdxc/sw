@@ -1058,6 +1058,8 @@ control ingress {
     common_tx_p4plus_stage0();
     if (app_header.table3_valid == 1) {
         read_qstate();
+        route_lookup();
+        sacl();
         dma();
         mapping();
     } else {

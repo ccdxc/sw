@@ -5,6 +5,7 @@
 #include "../include/artemis_headers.p4"
 
 #include "metadata.p4"
+#include "sacl.p4"
 #include "packet_queue.p4"
 #include "common_rxdma.p4"
 
@@ -14,6 +15,7 @@ parser start {
 
 control ingress {
     if (app_header.table3_valid == 1) {
+        sacl();
         pkt_enqueue();
     } else {
         common_p4plus_stage0();

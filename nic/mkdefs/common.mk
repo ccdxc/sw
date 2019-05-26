@@ -105,8 +105,8 @@ export NIC_artemis_P4PD_SOLIBS := p4pd_artemis p4pd_artemis_rxdma p4pd_artemis_t
 export NIC_l2switch_P4PD_SOLIBS := p4pd_l2switch
 export NIC_elektra_P4PD_SOLIBS := p4pd_elektra
 export NIC_hello_P4PD_SOLIBS := p4pd_hello
-export NIC_apollo_PDSAPI_IMPL_SOLIBS := lpmitree rfc sensor trace memhash pdsapi_capri_impl
-export NIC_artemis_PDSAPI_IMPL_SOLIBS := sensor trace memhash pdsapi_capri_impl
+export NIC_apollo_PDSAPI_IMPL_SOLIBS := lpmitree_apollo rfc_apollo sensor trace memhash pdsapi_capri_impl
+export NIC_artemis_PDSAPI_IMPL_SOLIBS := lpmitree_artemis rfc_artemis sensor trace memhash pdsapi_capri_impl
 
 # ==========================================================================
 #                           Third-party Libs

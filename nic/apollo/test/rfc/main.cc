@@ -12,7 +12,7 @@
 #include <getopt.h>
 #include <gtest/gtest.h>
 #include "nic/apollo/test/utils/base.hpp"
-#include "nic/apollo/rfc/rte_bitmap_utils.hpp"
+#include "nic/apollo/api/impl/apollo/rfc/rte_bitmap_utils.hpp"
 
 using std::cerr;
 using std::cout;

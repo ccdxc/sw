@@ -38,13 +38,14 @@ struct sacl_ip_d            d;
 
 // Define result register and handler function name
 #define res_reg            r7
-#define res_handler        sacl_ip_handler
+#define result_handler32b  sacl_ip_handler
+#define result_handler128b sacl_ip_handler
 
 %%
 
 #include "../include/lpm.h"
 
-res_handler:
+sacl_ip_handler:
     or              r2, res_reg, k.sacl_metadata_sport_class_id, 10
     div             r6, r2, 51
     phvwr           p.sacl_metadata_ip_sport_class_id, r2

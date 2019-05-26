@@ -3,6 +3,11 @@
 
 header_type scratch_metadata_t {
     fields {
+        field10         : 10;
+        field16         : 16;
+        field32         : 32;
+        field64         : 64;
+        field128        : 128;
         qid             : 24;
         dma_size        : 16;
     }
@@ -17,6 +22,39 @@ header_type flow_key_t {
         flow_proto      : 8;
         flow_dport      : 16;
         flow_sport      : 16;
+    }
+}
+
+header_type lpm_metadata_t {
+    fields {
+        lpm1_key                : 128;
+        pad0                    : 6;
+        lpm1_base_addr          : 34;
+        pad1                    : 6;
+        lpm1_next_addr          : 34;
+
+        pad2                    : 6;
+        lpm2_base_addr          : 34;
+        pad3                    : 6;
+        lpm2_next_addr          : 34;
+
+        pad4                    : 6;
+        tag_base_addr           : 34;
+        pad5                    : 6;
+        meter_base_addr         : 34;
+
+
+        sip_classid             :10; // Bytes 0 and 1
+        dip_classid             :10; // Bytes 1 and 2
+        tag_classid             :10; // Bytes 2 and 3
+        pad6                    :2;  // Byte 3 ends
+        dport_classid           :8;  // Byte 4
+        sport_classid           :7;  // Byte 5
+        pad7                    :1;  // Byte 5 ends
+        meter_result            :10; // Byte 6 and 7
+        pad8                    :6;  // Byte 7 ends
+
+        lpm2_key                : 128;
     }
 }
 
@@ -104,6 +142,9 @@ metadata doorbell_addr_t        doorbell_addr;
 @pragma dont_trim
 @pragma pa_header_union ingress to_stage_1
 metadata doorbell_data_t        doorbell_data;
+
+@pragma dont_trim
+metadata lpm_metadata_t         lpm_metadata;
 
 // DMA commands
 @pragma dont_trim

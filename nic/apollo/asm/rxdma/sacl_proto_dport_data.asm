@@ -22,13 +22,13 @@ struct sacl_proto_dport_data_d    d;
 
 // Define result register and handler function name
 #define res_reg            r7
-#define res_handler        sacl_proto_dport_handler
+#define result_handler32b  sacl_proto_dport_handler
 
 %%
 
 #include "../include/lpm.h"
 
-res_handler:
+sacl_proto_dport_handler:
     add             r1, r0, k.p4_to_rxdma_header_sacl_base_addr
     add             r1, r1, SACL_P2_TABLE_OFFSET
     add             r1, r1, k.sacl_metadata_p1_class_id, 6

@@ -1,8 +1,8 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = librfc.so
-MODULE_PIPELINE = apollo
+MODULE_TARGET   = librfc_artemis.so
+MODULE_PIPELINE = artemis
 
 ifeq ($(ARCH),aarch64)
 MODULE_INCS     = ${TOPDIR}/nic/sdk/third-party/dpdk/v18.11/lib/librte_eal/common/include \

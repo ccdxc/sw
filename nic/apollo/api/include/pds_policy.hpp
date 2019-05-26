@@ -74,6 +74,7 @@ typedef union rule_action_data_s {
 /// \brief    generic rule
 typedef struct rule_s {
     bool                  stateful;       ///< true, if rule is stateful
+    uint32_t              priority;       /// Rule Priority
     rule_match_t          match;          ///< rule match
     rule_action_data_t    action_data;    ///< action and related information
 } __PACK__ rule_t;

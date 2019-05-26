@@ -6,7 +6,8 @@ header_type artemis_p4_to_rxdma_header_t {
         table2_valid    : 1;
         table3_valid    : 1;
 
-        pad0            : 7;
+        pad0            : 6;
+        sacl_bypass     : 1;
         direction       : 1;
         vnic_id         : 8;
         service_tag     : 32;

@@ -5,16 +5,30 @@ header_type txdma_control_metadata_t {
     fields {
         pad0                : 6;
         control_addr        : 34;
+        pad1                : 6;
+        rxdma_cindex_addr   : 34;
+        pad2                : 6;
+        rfc_table_addr      : 34;
+        pad3                : 6;
+        lpm1_base_addr      : 34;
+        pad4                : 6;
+        lpm1_next_addr      : 34;
+        lpm1_key            : 128;
+
         payload_addr        : 40;
         cindex              : 16;
-        lpm_s2_offset       : 16;
-        pad1                :  6;
-        lpm_addr            : 34;
-        pad2                :  6;
-        rxdma_cindex_addr   : 34;
-        pad3                :  5;
+
+        pad5                : 6;
+        rule_priority       : 10;
+        p1_class_id         : 10;
+        p2_class_id         : 10;
+        p3_class_id         : 20;
+        sacl_result         : 1;
         remote_vnic_mapping_tx_ohash_lkp : 1; //TEMP: Replace with P4 to P4+ header
+        pad6                :  4;
         vpc_id              : 10;   //TEMP: Replace with P4 to P4+ header
+        nexthop_group_index : 16;
+
         dst                 : 128;  //TEMP: Replace with P4 to P4+ header
         remote_vnic_mapping_tx_ohash : 32; //TEMP: Replace with P4 to P4+ header
     }
@@ -22,6 +36,9 @@ header_type txdma_control_metadata_t {
 
 header_type scratch_metadata_t {
     fields {
+        field1          :  1;
+        field2          :  2;
+        field10         : 10;
         field16         : 16;
         field32         : 32;
         field64         : 64;

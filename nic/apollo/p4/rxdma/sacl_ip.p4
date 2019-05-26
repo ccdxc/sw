@@ -19,8 +19,10 @@
 #define next_addr          sacl_metadata.ip_table_addr_next
 
 // Define result field and handler function name
-#define lpm_result         scratch_metadata.class_id10
-#define res_handler        sacl_ip_res_handler
+#define lpm_result32b      scratch_metadata.class_id10
+#define lpm_result128b     scratch_metadata.class_id10
+#define result_handler32b  sacl_ip_res_handler
+#define result_handler128b sacl_ip_res_handler
 
 /**    Per Stage Definitions    **/
 /* Stage 0 */
@@ -69,10 +71,11 @@
 action sacl_ip_res_handler() {
     modify_field(sacl_metadata.p1_table_addr,
         p4_to_rxdma_header.sacl_base_addr + SACL_P1_TABLE_OFFSET +
-        (((lpm_result |
+        (((scratch_metadata.class_id10 |
            (sacl_metadata.sport_class_id << 10)) / 51) << 6));
     modify_field(sacl_metadata.ip_sport_class_id,
-        (lpm_result | (sacl_metadata.sport_class_id << 10)));
+        (scratch_metadata.class_id10 |
+         (sacl_metadata.sport_class_id << 10)));
 }
 
 #undef stage_num
@@ -88,5 +91,7 @@ action sacl_ip_res_handler() {
 #undef base_addr
 #undef next_addr
 #undef curr_addr
-#undef lpm_result
-#undef res_handler
+#undef lpm_result32b
+#undef lpm_result128b
+#undef result_handler32b
+#undef result_handler128b
