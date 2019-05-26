@@ -1047,6 +1047,9 @@ func handlePortClearStatsCmd(cmd *cobra.Command, ofile *os.File) {
 			AutoNegEnable: resp.GetSpec().GetAutoNegEnable(),
 			DebounceTime:  resp.GetSpec().GetDebounceTime(),
 			Mtu:           resp.GetSpec().GetMtu(),
+			Pause:         resp.GetSpec().GetPause(),
+			TxPauseEnable: resp.GetSpec().GetTxPauseEnable(),
+			RxPauseEnable: resp.GetSpec().GetRxPauseEnable(),
 			MacStatsReset: true,
 		}
 

@@ -63,7 +63,8 @@ validate_mtu_spec (const QosClassSpec &spec)
 {
     uint32_t mtu = spec.mtu();
 
-    if ((mtu < HAL_MIN_MTU) || (mtu > HAL_JUMBO_MTU)) {
+    // if mtu=0, then pd sets to default value
+    if (mtu != 0 && ((mtu < HAL_MIN_MTU) || (mtu > HAL_JUMBO_MTU))) {
         HAL_TRACE_ERR("mtu {} not within {}-{} bytes",
                       mtu, HAL_MIN_MTU, HAL_JUMBO_MTU);
         return HAL_RET_QOS_CLASS_MTU_INVALID;

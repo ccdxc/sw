@@ -58,8 +58,6 @@ namespace hal {
 #define HAL_MIN_MTU            1500
 #define HAL_JUMBO_MTU          9216
 #define QOS_DEFAULT_CPU_BPS    10000
-#define QOS_DEFAULT_XON_THRESHOLD  0x4B8800
-#define QOS_DEFAULT_XOFF_THRESHOLD 0x4C8200
 
 #define QOS_GROUPS(ENTRY)                                       \
     ENTRY(QOS_GROUP_DEFAULT,             0, "default")          \

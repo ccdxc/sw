@@ -2055,13 +2055,13 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
                 // program it to drop when 1000*64 bytes worth of bytes still free
                 xoff_threshold =
                     (hbm_chunks_to_bytes(payload_size) -
-                     CAPRI_TM_DEFAULT_XOFF_THRESHOLD_BYTES) >> 9;
+                     CAPRI_TM_DEFAULT_RELATIVE_XOFF_THRESHOLD_BYTES) >> 9;
 
                 // xon_threshold is in units of 512 bytes
                 // program it to drop when 2000*64 bytes worth of bytes still free
                 xon_threshold =
                     (hbm_chunks_to_bytes(payload_size) -
-                     CAPRI_TM_DEFAULT_XON_THRESHOLD_BYTES) >> 9;
+                     CAPRI_TM_DEFAULT_RELATIVE_XON_THRESHOLD_BYTES) >> 9;
             } else {
                 xoff_threshold = 0;
                 xon_threshold = 0;

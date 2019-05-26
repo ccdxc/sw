@@ -84,10 +84,7 @@ hal_qos_config_init (hal_cfg_t *hal_cfg)
 
     for (int i = 0; i < max_default_qos_class; i++) {
         spec.mutable_key_or_handle()->set_qos_group(qos_group[i]);
-        spec.mutable_pause()->set_xon_threshold(QOS_DEFAULT_XON_THRESHOLD);
-        spec.mutable_pause()->set_xoff_threshold(QOS_DEFAULT_XOFF_THRESHOLD);
         spec.mutable_pause()->set_type(qos::QOS_PAUSE_TYPE_LINK_LEVEL);
-        spec.set_mtu(HAL_JUMBO_MTU);
 
         if (qos_group[i] == kh::QosGroup::INTERNAL_CPU_COPY) {
             spec.mutable_sched()->mutable_strict()->set_bps(QOS_DEFAULT_CPU_BPS);

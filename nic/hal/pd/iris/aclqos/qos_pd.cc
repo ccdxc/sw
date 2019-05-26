@@ -1262,6 +1262,21 @@ pd_qos_class_set_global_pause_type (pd_func_args_t *pd_func_args)
     return ret;
 }
 
+hal_ret_t
+pd_qos_class_defaults_set (qos_class_t *qos_class)
+{
+    if (qos_class->mtu == 0) {
+        qos_class->mtu = HAL_JUMBO_MTU;
+    }
+    if (qos_class->pause.xon_threshold == 0) {
+        qos_class->pause.xon_threshold = CAPRI_TM_DEFAULT_XON_THRESHOLD;
+    }
+    if (qos_class->pause.xoff_threshold == 0) {
+        qos_class->pause.xoff_threshold = CAPRI_TM_DEFAULT_XOFF_THRESHOLD;
+    }
+    return HAL_RET_OK;
+}
+
 // ----------------------------------------------------------------------------
 // Qos-class Create
 // ----------------------------------------------------------------------------
@@ -1281,6 +1296,8 @@ pd_qos_class_create (pd_func_args_t *pd_func_args)
         ret = HAL_RET_OOM;
         goto end;
     }
+
+    pd_qos_class_defaults_set(args->qos_class);
 
     // Link PI & PD
     qos_class_pd_link_pi_pd(pd_qos_class, args->qos_class);
