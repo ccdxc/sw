@@ -446,10 +446,6 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("rm -rf /sysconfig/config0/*.db", "#")
         self.SendlineExpect("mkdir -p /sysconfig/config0", "#")
         self.SendlineExpect("mount /dev/mmcblk0p6 /sysconfig/config0", "#")
-        if mode:
-            self.SendlineExpect("echo %s > /sysconfig/config0/app-start.conf && sync" % GlobalOptions.mode, "#")
-        if uuid:
-            self.SendlineExpect("echo %s > /sysconfig/config0/sysuuid" % GlobalOptions.uuid, "#")
 
         if goldfw:
             self.SendlineExpect("rm -f /sysconfig/config0/device.conf", "#")
@@ -850,7 +846,8 @@ def Main():
         except:
             #Do Reset only if we can't connect to naples.
             IpmiReset()
-            time.sleep(10)
+            #Give it longer for naples to mount devices
+            time.sleep(30)
             naples.Connect()
             naples.InitForUpgrade(goldfw = True)
             #Do a reset again as old fw might lock up host boot
