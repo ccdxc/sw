@@ -49,19 +49,19 @@ typedef struct pds_vpc_spec_s {
 /// \brief VPC status
 typedef struct pds_vpc_status_s {
     uint16_t hw_id;    ///< hardware id
-} pds_vpc_status_t;
+} __PACK__ pds_vpc_status_t;
 
 /// \brief VPC statistics
 typedef struct pds_vpc_stats_s {
     // TODO
-} pds_vpc_stats_t;
+} __PACK__ pds_vpc_stats_t;
 
 /// \brief VPC information
 typedef struct pds_vpc_info_s {
     pds_vpc_spec_t   spec;      ///< specification
     pds_vpc_status_t status;    ///< status
     pds_vpc_stats_t  stats;     ///< statistics
-} pds_vpc_info_t;
+} __PACK__ pds_vpc_info_t;
 
 /// \brief     create VPC
 /// \param[in] spec specification
@@ -91,6 +91,46 @@ sdk_ret_t pds_vpc_update(pds_vpc_spec_t *spec);
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid VPC key should be passed
 sdk_ret_t pds_vpc_delete(pds_vpc_key_t *key);
+
+/// \brief VPC peering specification
+typedef struct pds_vpc_peer_spec_s {
+    pds_vpc_peer_key_t    key;    ///< key
+} __PACK__ pds_vpc_peer_spec_t;
+
+/// \brief VPC peering status
+typedef struct pds_vpc_peer_status_s {
+    /// \h/w id for (vpc1, vpc2) entry
+    uint16_t hw_id1;
+    /// \h/w id for (vpc2, vpc1) entry
+    uint16_t hw_id2;
+} __PACK__ pds_vpc_peer_status_t;
+
+/// \brief VPC peerings statistics, if any
+typedef struct pds_vpc_peer_stats_s {
+} __PACK__ pds_vpc_peer_stats_t;
+
+/// \brief VPC peering information
+typedef struct pds_vpc_peer_info_s {
+    pds_vpc_peer_spec_t spec;        ///< specification
+    pds_vpc_peer_status_t status;    ///< operational status
+    pds_vpc_peer_stats_t stats;      ///< statistics
+} __PACK__ pds_vpc_peer_info_t;
+
+/// \brief     create VPC peering
+/// \param[in] spec specification
+/// \return    #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_vpc_peer_create(pds_vpc_peer_spec_t *spec);
+
+/// \brief      read VPC peering related information
+/// \param[in]  key  key
+/// \param[out] info information
+/// \return     #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_vpc_peer_read(pds_vpc_peer_key_t *key, pds_vpc_peer_info_t *info);
+
+/// \brief     delete VPC peering
+/// \param[in] key key
+/// \return    #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_vpc_peer_delete(pds_vpc_peer_key_t *key);
 
 /// \@}
 

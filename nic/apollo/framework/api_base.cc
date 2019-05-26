@@ -54,6 +54,9 @@ api_base::factory(api_ctxt_t *api_ctxt) {
     case OBJ_ID_SVC_MAPPING:
         return svc_mapping::factory(&api_ctxt->api_params->svc_mapping_spec);
 
+    case OBJ_ID_VPC_PEER:
+        return vpc_peer_entry::factory(&api_ctxt->api_params->vpc_peer_spec);
+
     default:
         break;
     }
@@ -87,6 +90,14 @@ api_base::build(api_ctxt_t *api_ctxt) {
         }
         return svc_mapping::build(&api_ctxt->api_params->svc_mapping_spec.key);
 
+    case OBJ_ID_VPC_PEER:
+        // VPC peering is a stateless object, so we need to construct the
+        // object from the datapath tables
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return vpc_peer_entry::build(&api_ctxt->api_params->vpc_peer_key);
+        }
+        return vpc_peer_entry::build(&api_ctxt->api_params->vpc_peer_spec.key);
+
     default:
         break;
     }
@@ -106,6 +117,10 @@ api_base::soft_delete(obj_id_t obj_id, api_base *api_obj) {
 
     case OBJ_ID_SVC_MAPPING:
         svc_mapping::soft_delete((svc_mapping *)api_obj);
+        break;
+
+    case OBJ_ID_VPC_PEER:
+        vpc_peer_entry::soft_delete((vpc_peer_entry *)api_obj);
         break;
 
     default:
@@ -159,6 +174,7 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
     case OBJ_ID_MAPPING:
     case OBJ_ID_MIRROR_SESSION:
     case OBJ_ID_SVC_MAPPING:
+    case OBJ_ID_VPC_PEER:
         return NULL;
 
     default:
@@ -179,6 +195,7 @@ api_base::stateless(obj_id_t obj_id) {
     case OBJ_ID_MAPPING:
     case OBJ_ID_MIRROR_SESSION:
     case OBJ_ID_SVC_MAPPING:
+    case OBJ_ID_VPC_PEER:
         return true;
 
     default:

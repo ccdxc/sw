@@ -48,14 +48,6 @@ public:
      */
     void free(mapping_entry *mapping);
 
-#if 0
-    /**
-     * @brief     lookup a mapping in database given the key
-     * @param[in] key    mapping key
-     */
-    mapping_entry *find(pds_mapping_key_t *key) const;
-#endif
-
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:

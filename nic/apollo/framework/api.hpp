@@ -43,6 +43,7 @@ typedef enum obj_id_e {
     OBJ_ID_METER,          ///< Meter
     OBJ_ID_TAG,            ///< (Service) tag
     OBJ_ID_SVC_MAPPING,    ///< service mapping
+    OBJ_ID_VPC_PEER,       ///< VPC peer
     OBJ_ID_MAX,
 } obj_id_t;
 

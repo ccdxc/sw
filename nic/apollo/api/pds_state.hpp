@@ -13,7 +13,6 @@
 #include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/platform/utils/mpartition.hpp"
 #include "nic/sdk/platform/utils/program.hpp"
-//#include "nic/sdk/platform/capri/capri_lif_manager.hpp"
 #include "nic/apollo/api/device_state.hpp"
 #include "nic/apollo/api/tep_state.hpp"
 #include "nic/apollo/api/vpc_state.hpp"
@@ -27,9 +26,9 @@
 #include "nic/apollo/api/meter_state.hpp"
 #include "nic/apollo/api/tag_state.hpp"
 #include "nic/apollo/api/service_state.hpp"
+#include "nic/apollo/api/vpc_peer_state.hpp"
 
 using std::string;
-//using sdk::platform::capri::LIFManager;
 
 namespace api {
 
@@ -51,8 +50,6 @@ public:
     mpartition *mempartition(void) const { return mpartition_; }
     void set_prog_info(program_info *pginfo) { pginfo_ = pginfo; }
     program_info *prog_info(void) const { return pginfo_; }
-    //void set_lif_mgr(LIFManager *lm) { lm_ = lm; }
-    //LIFManager *lm(void) const { return lm_; }
     void set_platform_type(platform_type_t type) { platform_type_ = type; }
     platform_type_t platform_type(void) const { return platform_type_; }
     void set_scale_profile(pds_scale_profile_t profile) {
@@ -90,6 +87,7 @@ public:
     meter_state *meter_db(void) { return &meter_db_; }
     tag_state *tag_db(void) { return &tag_db_; }
     svc_mapping_state *svc_mapping_db(void) { return &svc_mapping_db_; }
+    vpc_peer_state *vpc_peer_db(void) { return &vpc_peer_db_; }
 
 private:
     string                  cfg_path_;
@@ -98,7 +96,6 @@ private:
     platform_type_t         platform_type_;
     pds_scale_profile_t     scale_profile_;
     program_info            *pginfo_;
-    //LIFManager            *lm_;
     uint64_t                control_cores_mask_;
     uint16_t                num_control_cores_;
     uint64_t                data_cores_mask_;
@@ -116,6 +113,7 @@ private:
     meter_state             meter_db_;
     tag_state               tag_db_;
     svc_mapping_state       svc_mapping_db_;
+    vpc_peer_state          vpc_peer_db_;
 };
 extern pds_state g_pds_state;
 
@@ -201,6 +199,12 @@ static inline svc_mapping_state *
 svc_mapping_db (void)
 {
     return api::g_pds_state.svc_mapping_db();
+}
+
+static inline vpc_peer_state *
+vpc_peer_db (void)
+{
+    return api::g_pds_state.vpc_peer_db();
 }
 
 #endif    /** __PDS_STATE_HPP__ */
