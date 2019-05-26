@@ -1,6 +1,6 @@
 ProtoObject: telemetry_pb2
 Service: Telemetry
-enabled : False
+enabled : True
 dolEnabled : True
 objects:
     - object :
@@ -23,9 +23,9 @@ objects:
             pre_cb   : None
             post_cb  : None
         delete:
-            api      : None
-            request  : None
-            response : None
+            api      : CollectorDelete
+            request  : CollectorDeleteRequestMsg
+            response : CollectorDeleteResponseMsg
             pre_cb   : None
             post_cb  : None
         get:
