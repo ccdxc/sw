@@ -1155,7 +1155,6 @@ ionic_notifyq_alloc(struct lif *lif, unsigned int qnum,
 	notifyq->num_descs = num_descs;
 	notifyq->pid = pid;
 	notifyq->intr.index = INTR_INDEX_NOT_ASSIGNED;
-	lif->last_eid = 1;	/* Valid events are non zero. */
 
 	/* Allocate DMA for command and completion rings. They must be consecutive. */
 	cmd_ring_size = sizeof(*notifyq->cmd_ring) * num_descs;
@@ -2159,8 +2158,6 @@ ionic_lif_deinit(struct lif *lif)
 	ionic_lif_notifyq_deinit(lif);
 	ionic_lif_adminq_deinit(lif);
 
-	memset(lif->dev_addr, 0, ETHER_ADDR_LEN);
-
 	ionic_lif_reset(lif);
 }
 
@@ -2361,6 +2358,7 @@ static int ionic_lif_notifyq_init(struct lif *lif, struct notifyq *notifyq)
 	};
 
 	notifyq->comp_index = 0;
+	lif->last_eid = 1;	/* Valid events are non zero. */
 	bzero(notifyq->cmd_ring, notifyq->total_ring_size);
 
 	err = ionic_adminq_post_wait(lif, &ctx);
@@ -2933,18 +2931,25 @@ int
 ionic_set_mac(struct net_device *netdev)
 {
 	struct lif *lif = netdev_priv(netdev);
+	uint8_t *addr;
 	int err = 0;
 
 	KASSERT(lif, ("lif is NULL"));
 	KASSERT(IONIC_CORE_LOCK_OWNED(lif), ("%s is not locked", lif->name));
 
+	addr = IF_LLADDR(netdev);
+	if (is_zero_ether_addr(addr)) {
+		IONIC_NETDEV_ERROR(lif->netdev, "Invalid MAC %6D\n", addr, ":");
+		return (ENXIO);
+	}
+
 	/* if mac addr has not changed then nop */
-	if (bcmp(IF_LLADDR(netdev), lif->dev_addr, ETHER_ADDR_LEN) == 0) {
+	if (bcmp(addr, lif->dev_addr, ETHER_ADDR_LEN) == 0) {
 		return (0);
 	}
 
 	/* add filter for new mac addr */
-	err = ionic_addr_add(lif->netdev, (u8 *)IF_LLADDR(netdev));
+	err = ionic_addr_add(lif->netdev, addr);
 	if (err) {
 		IONIC_NETDEV_ERROR(lif->netdev, "Failed to add new MAC %6D, err: %d\n",
 			lif->dev_addr, ":", err);
@@ -2962,7 +2967,7 @@ ionic_set_mac(struct net_device *netdev)
 	IONIC_NETDEV_INFO(lif->netdev, "Changed MAC from %6D to %6D\n",
 		lif->dev_addr, ":", IF_LLADDR(netdev), ":");
 
-	bcopy(IF_LLADDR(netdev), lif->dev_addr, ETHER_ADDR_LEN);
+	bcopy(addr, lif->dev_addr, ETHER_ADDR_LEN);
 
 	return (err);
 }
@@ -3142,26 +3147,8 @@ ionic_lif_init(struct lif *lif)
 		goto err_out_rss_deinit;
 	}
 
-	err = ionic_station_add(lif);
-	if (err) {
-		IONIC_NETDEV_ERROR(lif->netdev, "ionic_station_add failed, error = %d\n", err);
-		goto err_out_rss_deinit;
-	}
-
 	ionic_read_notify_block(lif);
 
-	err = ionic_set_features(lif,
-				 ETH_HW_VLAN_TX_TAG
-				| ETH_HW_VLAN_RX_STRIP
-				| ETH_HW_VLAN_RX_FILTER
-				| ETH_HW_RX_HASH
-				| ETH_HW_TX_SG
-				| ETH_HW_TX_CSUM
-				| ETH_HW_RX_CSUM
-				| ETH_HW_TSO
-				| ETH_HW_TSO_IPV6);
-	if (err)
-		IONIC_NETDEV_ERROR(lif->netdev, "ionic_set_features failed, error = %d\n", err);
 
 	return err;
 
@@ -3220,12 +3207,19 @@ ionic_lif_reinit(struct lif *lif)
 	ionic_lif_deinit(lif);
 
 	/* LIF reset is already done by deinit. */
-	
+
 	error = ionic_lif_init(lif);
 	if (error) {
 		IONIC_NETDEV_ERROR(ifp, "init failed, error = %d\n", error);
 		return (error);
 	}
+
+	if (is_zero_ether_addr(lif->dev_addr)) {
+		IONIC_NETDEV_ERROR(ifp, "station address is missing\n");
+		return (EINVAL);
+	}
+	
+	ionic_addr_add(lif->netdev, lif->dev_addr);
 
 	ionic_set_hw_features(lif, lif->hw_features);
 	/* Program the Rx mode. */
@@ -3341,12 +3335,34 @@ static int
 ionic_lif_register(struct lif *lif)
 {
 	struct ifnet *ifp;
+	int err;
 	
 	ifp = lif->netdev;
 	
+	err = ionic_station_add(lif);
+	if (err) {
+		IONIC_NETDEV_ERROR(lif->netdev, "ionic_station_add failed, error = %d\n", err);
+		return (EIO);
+	}
+
+	err = ionic_set_features(lif,
+				 ETH_HW_VLAN_TX_TAG
+				| ETH_HW_VLAN_RX_STRIP
+				| ETH_HW_VLAN_RX_FILTER
+				| ETH_HW_RX_HASH
+				| ETH_HW_TX_SG
+				| ETH_HW_TX_CSUM
+				| ETH_HW_RX_CSUM
+				| ETH_HW_TSO
+				| ETH_HW_TSO_IPV6);
+	if (err) {
+		IONIC_NETDEV_ERROR(lif->netdev, "ionic_set_features failed, error = %d\n", err);
+		return (EIO);
+	}
+
 	/* Initializes ifnet */
 	ionic_lif_ifnet_init(lif);
-	
+
 	ether_ifattach(ifp, lif->dev_addr);
 
 	ionic_lif_set_netdev_info(lif);
