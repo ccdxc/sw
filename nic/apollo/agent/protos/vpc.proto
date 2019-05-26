@@ -16,6 +16,9 @@ service VPCSvc {
   rpc VPCUpdate (VPCRequest) returns (VPCResponse) {}
   rpc VPCGet (VPCGetRequest) returns (VPCGetResponse) {}
   rpc VPCDelete (VPCDeleteRequest) returns (VPCDeleteResponse) {}
+  rpc VPCPeerCreate (VPCPeerRequest) returns (VPCPeerResponse) {}
+  rpc VPCPeerGet (VPCPeerGetRequest) returns (VPCPeerGetResponse) {}
+  rpc VPCPeerDelete (VPCPeerDeleteRequest) returns (VPCPeerDeleteResponse) {}
 }
 
 // type of the virtual private cloud
@@ -98,4 +101,67 @@ message VPCDeleteRequest {
 // VPC delete response
 message VPCDeleteResponse {
   repeated types.ApiStatus ApiStatus = 1; // API status code
+}
+
+// VPCPeerSpec captures configuration for a VPC peering relation
+message VPCPeerSpec {
+  // unique id/key idenitifying this VPC peering relation
+  uint32    Id   = 1;
+  // unique key/identifier of VPC1
+  uint32    Vpc1 = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // unique key/identifier of VPC2
+  uint32    Vpc2 = 3 [(gogoproto.moretags) = "meta:mandatory"];
+}
+
+// operational status of a VPC peering, if any
+message VPCPeerStatus {
+}
+
+// stats for a VPC peering, if any
+message VPCPeerStats {
+}
+
+// Virtual Private Cloud Peer (aka. pairing) object
+message VPCPeer {
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  VPCPeerSpec   Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  VPCPeerStatus Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  VPCPeerStats  Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// VPC peer create and update request
+message VPCPeerRequest {
+  // batched request
+  repeated VPCPeerSpec Request = 1;
+}
+
+// VPC peer create and update response
+message VPCPeerResponse {
+  types.ApiStatus        ApiStatus = 1;
+  // batched response
+  repeated VPCPeerStatus Response  = 2;
+}
+
+// VPC peer get request
+message VPCPeerGetRequest {
+  repeated uint32 Id = 1;
+}
+
+// VPC peer get response
+message VPCPeerGetResponse {
+  // API status code
+  types.ApiStatus  ApiStatus = 1;
+  repeated VPCPeer Response  = 2;
+}
+
+// VPC peer delete request
+message VPCPeerDeleteRequest {
+  repeated uint32 Id = 1;
+}
+
+// VPC peer delete response
+message VPCPeerDeleteResponse {
+  // API status code
+  repeated types.ApiStatus ApiStatus = 1;
 }
