@@ -23,6 +23,7 @@
 #include "nic/apollo/api/impl/artemis/meter_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/tag_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/service_impl_state.hpp"
+#include "nic/apollo/api/impl/artemis/vpc_peer_impl_state.hpp"
 
 namespace api {
 namespace impl {
@@ -32,6 +33,7 @@ enum {
     PDS_SLAB_ID_MAPPING_IMPL,
     PDS_SLAB_ID_MIRROR_IMPL,
     PDS_SLAB_ID_SVC_MAPPING_IMPL,
+    PDS_SLAB_ID_VPC_PEER_IMPL,
 };
 
 /// \defgroup PDS_IMPL_STATE - Internal state
@@ -65,6 +67,9 @@ public:
     svc_mapping_impl_state *svc_mapping_impl_db(void) {
         return svc_mapping_impl_db_;
     }
+    vpc_peer_impl_state *vpc_peer_impl_db(void) {
+        return vpc_peer_impl_db_;
+    }
 
 private:
     artemis_impl_state             *artemis_impl_db_;
@@ -77,6 +82,7 @@ private:
     meter_impl_state              *meter_impl_db_;
     tag_impl_state                *tag_impl_db_;
     svc_mapping_impl_state        *svc_mapping_impl_db_;
+    vpc_peer_impl_state           *vpc_peer_impl_db_;
 };
 extern pds_impl_state g_pds_impl_state;
 
@@ -140,6 +146,12 @@ static inline svc_mapping_impl_state *
 svc_mapping_impl_db (void)
 {
     return g_pds_impl_state.svc_mapping_impl_db();
+}
+
+static inline vpc_peer_impl_state *
+vpc_peer_impl_db (void)
+{
+    return g_pds_impl_state.vpc_peer_impl_db();
 }
 
 /// @}
