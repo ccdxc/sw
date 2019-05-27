@@ -70,6 +70,8 @@ public:
     // policers etc
     sdk_ret_t insert(void *data, uint32_t *index, void *data_mask = NULL);
     sdk_ret_t insert_withid(void *data, uint32_t index, void *data_mask = NULL);
+    // insert an entry at given index that was previously reserved (if it wasn't
+    // reserved, this API will return error
     sdk_ret_t insert_atid(void *data, uint32_t index, void *data_mask = NULL);
     sdk_ret_t reserve_index(uint32_t index);
     sdk_ret_t reserve(uint32_t *index);

@@ -146,16 +146,17 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_INVALID_ARG;
     }
 
-    // initialize tx stats tables for this vnic
-    vnic_tx_stats_data.action_id = VNIC_TX_STATS_VNIC_TX_STATS_ID;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VNIC_TX_STATS,
+    // initialize rx stats tables for this vnic
+    vnic_rx_stats_data.action_id = VNIC_RX_STATS_VNIC_RX_STATS_ID;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VNIC_RX_STATS,
                                        hw_id_, NULL, NULL,
-                                       &vnic_tx_stats_data);
+                                       &vnic_rx_stats_data);
     if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program VNIC_RX_STATS table at %u", hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
-    // initialize egress_vnic_info_table entry
+    // program egress_vnic_info_table entry
     egr_vnic_info.action_id = EGRESS_VNIC_INFO_EGRESS_VNIC_INFO_ID;
     sdk::lib::memrev(egr_vnic_info.egress_vnic_info_action.vr_mac,
                      subnet->vr_mac(), ETH_ADDR_LEN);
@@ -163,26 +164,21 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                      spec->mac_addr, ETH_ADDR_LEN);
     sdk::lib::memrev(egr_vnic_info.egress_vnic_info_action.pa_mac,
                      device->mac(), ETH_ADDR_LEN);
-
-#if 0
-    if (spec->rx_mirror_session_bmap) {
-        egress_vnic_data.egress_vnic_info_action.mirror_en = TRUE;
-        egress_vnic_data.egress_vnic_info_action.mirror_session =
-            spec->rx_mirror_session_bmap;
-    }
-    ret = vnic_impl_db()->egress_vnic_info_tbl()->insert_atid(&egress_vnic_data,
-                                                              hw_id_);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-#endif
-
-    // initialize rx stats tables for this vnic
-    vnic_rx_stats_data.action_id = VNIC_RX_STATS_VNIC_RX_STATS_ID;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VNIC_RX_STATS,
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_EGRESS_VNIC_INFO,
                                        hw_id_, NULL, NULL,
-                                       &vnic_rx_stats_data);
+                                       &egr_vnic_info);
     if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program EGRESS_VNIC_INFO table at %u", hw_id_);
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    // initialize tx stats tables for this vnic
+    vnic_tx_stats_data.action_id = VNIC_TX_STATS_VNIC_TX_STATS_ID;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VNIC_TX_STATS,
+                                       hw_id_, NULL, NULL,
+                                       &vnic_tx_stats_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program VNIC_TX_STATS table at %u", hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
@@ -284,7 +280,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 //       old epoch contents and override them !!!
 sdk_ret_t
 vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
-    sdk_ret_t ret;
+    p4pd_error_t p4pd_ret;
     subnet_entry *subnet;
     pds_subnet_key_t subnet_key;
     vnic_entry *vnic = (vnic_entry *)api_obj;
@@ -294,20 +290,25 @@ vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
     subnet = (subnet_entry *)api_base::find_obj(OBJ_ID_SUBNET, &subnet_key);
 
     // read EGRESS_VNIC_INFO table entry of this vnic
-    ret = vnic_impl_db()->egress_vnic_info_tbl()->retrieve(
-              hw_id_, &egress_vnic_data);
-    if (ret != SDK_RET_OK) {
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_EGRESS_VNIC_INFO, hw_id_,
+                                      NULL, NULL, &egress_vnic_data);
+    if (p4pd_ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to read EGRESS_VNIC_INFO table for "
-                      "vnic %u, err %u", vnic->key().id, ret);
-        return ret;
+                      "vnic %u at index %u", vnic->key().id, hw_id_);
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
     // update fields dependent on other objects and reprogram
     sdk::lib::memrev(egress_vnic_data.egress_vnic_info_action.vr_mac,
                      subnet->vr_mac(), ETH_ADDR_LEN);
-    ret = vnic_impl_db()->egress_vnic_info_tbl()->update(hw_id_,
-                                                         &egress_vnic_data);
-    return ret;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_EGRESS_VNIC_INFO,
+                                       hw_id_, NULL, NULL,
+                                       &egress_vnic_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to update EGRESS_VNIC_INFO table at %u", hw_id_);
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

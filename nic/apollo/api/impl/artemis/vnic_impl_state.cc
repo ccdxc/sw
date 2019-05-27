@@ -8,7 +8,6 @@
 ///
 //----------------------------------------------------------------------------
 
-
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/impl/artemis/vnic_impl_state.hpp"
 #include "gen/p4gen/artemis/include/p4pd.h"
@@ -46,14 +45,6 @@ vnic_impl_state::vnic_impl_state(pds_state *state) {
                            tinfo.tabledepth, tinfo.actiondata_struct_size,
                            false, true, NULL);
     SDK_ASSERT(ingress_vnic_info_tbl_ != NULL);
-
-    // EGRESS_VNIC_INFO index table
-    p4pd_table_properties_get(P4TBL_ID_EGRESS_VNIC_INFO, &tinfo);
-    egress_vnic_info_tbl_ =
-        directmap::factory(tinfo.tablename, P4TBL_ID_EGRESS_VNIC_INFO,
-                           tinfo.tabledepth, tinfo.actiondata_struct_size,
-                           false, true, NULL);
-    SDK_ASSERT(egress_vnic_info_tbl_ != NULL);
 #endif
 }
 
@@ -61,7 +52,6 @@ vnic_impl_state::~vnic_impl_state() {
     indexer::destroy(vnic_idxr_);
     sltcam::destroy(vnic_mapping_tbl_);
     //directmap::destroy(ingress_vnic_info_tbl_);
-    //directmap::destroy(egress_vnic_info_tbl_);
 }
 
 sdk_ret_t
@@ -69,7 +59,6 @@ vnic_impl_state::table_transaction_begin(void) {
     //vnic_idxr_->txn_start();
     vnic_mapping_tbl_->txn_start();
     //ingress_vnic_info_tbl_->txn_start();
-    //egress_vnic_info_tbl_->txn_start();
     return SDK_RET_OK;
 }
 
@@ -78,7 +67,6 @@ vnic_impl_state::table_transaction_end(void) {
     //vnic_idxr_->txn_end();
     vnic_mapping_tbl_->txn_end();
     //ingress_vnic_info_tbl_->txn_end();
-    //egress_vnic_info_tbl_->txn_end();
     return SDK_RET_OK;
 }
 
