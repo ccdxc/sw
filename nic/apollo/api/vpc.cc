@@ -23,6 +23,7 @@ vpc_entry::vpc_entry() {
     type_ = PDS_VPC_TYPE_NONE;
     ht_ctxt_.reset();
     hw_id_ = 0xFFFF;
+    impl_ = NULL;
 }
 
 vpc_entry *
@@ -32,6 +33,7 @@ vpc_entry::factory(pds_vpc_spec_t *spec) {
     // create vpc entry with defaults, if any
     vpc = vpc_db()->alloc();
     if (vpc) {
+        vpc->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_VPC, spec);
         new (vpc) vpc_entry();
     }
     return vpc;
@@ -44,6 +46,9 @@ vpc_entry::~vpc_entry() {
 void
 vpc_entry::destroy(vpc_entry *vpc) {
     vpc->nuke_resources_();
+    if (vpc->impl_) {
+        impl_base::destroy(impl::IMPL_OBJ_ID_VPC, vpc->impl_);
+    }
     vpc->~vpc_entry();
     vpc_db()->free(vpc);
 }
@@ -67,7 +72,6 @@ vpc_entry::init_config(api_ctxt_t *api_ctxt) {
 sdk_ret_t
 vpc_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
-    vpc_entry *vpc_orig = (vpc_entry *)orig_obj;
 
     switch (obj_ctxt->api_op) {
     case API_OP_CREATE:
@@ -76,16 +80,13 @@ vpc_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
             return sdk::SDK_RET_NO_RESOURCE;
         }
         hw_id_ = idx & 0xFFFF;
+        if (impl_) {
+            impl_->reserve_resources(this, obj_ctxt);
+        }
         break;
 
     case API_OP_UPDATE:
-        // update doesn't require any new resources, we will update and
-        // activate the existing entry
-        if (unlikely(type_ != vpc_orig->type())) {
-            PDS_TRACE_ERR("Failed to update vpc %u type %u to %u, VPC type "
-                          "is immutable", key_.id, vpc_orig->type(), type_);
-            return SDK_RET_INVALID_ARG;
-        }
+        return SDK_RET_OK;
         break;
 
     case API_OP_DELETE:
@@ -96,18 +97,38 @@ vpc_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-vpc_entry::nuke_resources_(void) {
-    // other than an index allocation, no other h/w resources are used for vpc,
-    // so this is same as release_resources()
-    return this->release_resources();
+vpc_entry::program_config(obj_ctxt_t *obj_ctxt) {
+    if (impl_) {
+        return impl_->program_hw(this, obj_ctxt);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vpc_entry::reprogram_config(api_op_t api_op) {
+    if (impl_) {
+        return impl_->reprogram_hw(this, api_op);
+    }
+    return SDK_RET_ERR;
 }
 
 sdk_ret_t
 vpc_entry::release_resources(void) {
+    if (impl_) {
+        return impl_->release_resources(this);
+    }
     if (hw_id_ != 0xFFFF) {
         vpc_db()->vpc_idxr()->free(hw_id_);
     }
     return SDK_RET_OK;
+}
+
+sdk_ret_t
+vpc_entry::nuke_resources_(void) {
+    if (impl_) {
+        impl_->nuke_resources(this);
+    }
+    return this->release_resources();
 }
 
 sdk_ret_t
@@ -118,14 +139,15 @@ vpc_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 vpc_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
-    // there is no h/w programming for vpc config, so nothing to activate
-    PDS_TRACE_DEBUG("Activated vpc api op %u, vpc %u", api_op, key_.id);
+    if (impl_) {
+        PDS_TRACE_DEBUG("Activating vpc %u config", key_.id);
+        impl_->activate_hw(this, epoch, api_op, obj_ctxt);
+    }
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 vpc_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    // nothing to update on vpc, so no updates supported
     return sdk::SDK_RET_INVALID_OP;
 }
 

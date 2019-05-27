@@ -13,6 +13,7 @@
 
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
+#include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
 
 namespace api {
@@ -59,10 +60,14 @@ public:
     ///            stage 0 table(s), if any
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override {
-        // no programming is done for this object, hence this is a no-op
-        return SDK_RET_OK;
-    }
+    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief          reprogram all h/w tables relevant to this object and
+    ///                 dependent on other objects except stage 0 table(s),
+    ///                 if any
+    /// \param[in] api_op    API operation
+    /// \return         SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t reprogram_config(api_op_t api_op) override;
 
     /// \brief     cleanup all h/w tables relevant to this object except
     ///            stage 0 table(s), if any, by updating packed entries
@@ -70,7 +75,6 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override {
-        // no programming is done for this object, hence this is a no-op
         return SDK_RET_OK;
     }
 
@@ -175,6 +179,7 @@ private:
 
     // P4 datapath specific state
     uint16_t hw_id_;                          ///< hardware id
+    impl_base *impl_;                         ///< impl object instance
 
     friend class vpc_state;                   ///< a friend of vpc_entry
 } __PACK__;

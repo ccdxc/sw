@@ -13,14 +13,16 @@
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/impl/artemis/device_impl.hpp"
+#include "nic/apollo/api/impl/artemis/vpc_impl.hpp"
 #include "nic/apollo/api/impl/artemis/vnic_impl.hpp"
 #include "nic/apollo/api/impl/artemis/mapping_impl.hpp"
 #include "nic/apollo/api/impl/artemis/route_impl.hpp"
 //#include "nic/apollo/api/impl/artemis/mirror_impl.hpp"
-//#include "nic/apollo/api/impl/artemis/security_policy_impl.hpp"
+#include "nic/apollo/api/impl/artemis/security_policy_impl.hpp"
 #include "nic/apollo/api/impl/artemis/meter_impl.hpp"
 #include "nic/apollo/api/impl/artemis/tag_impl.hpp"
 #include "nic/apollo/api/impl/artemis/service_impl.hpp"
+#include "nic/apollo/api/impl/artemis/vpc_peer_impl.hpp"
 
 namespace api {
 namespace impl {
@@ -72,6 +74,9 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
     case IMPL_OBJ_ID_DEVICE:
         return device_impl::factory((pds_device_spec_t *)args);
 
+    case IMPL_OBJ_ID_VPC:
+        return vpc_impl::factory((pds_vpc_spec_t *)args);
+
     case IMPL_OBJ_ID_VNIC:
         return vnic_impl::factory((pds_vnic_spec_t *)args);
 
@@ -81,8 +86,8 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
     case IMPL_OBJ_ID_ROUTE_TABLE:
         return route_table_impl::factory((pds_route_table_spec_t *)args);
 
-    //case IMPL_OBJ_ID_SECURITY_POLICY:
-        //return security_policy_impl::factory((pds_policy_spec_t *)args);
+    case IMPL_OBJ_ID_SECURITY_POLICY:
+        return security_policy_impl::factory((pds_policy_spec_t *)args);
 
     //case IMPL_OBJ_ID_MIRROR_SESSION:
         //return mirror_impl::factory((pds_mirror_session_spec_t *)args);
@@ -114,6 +119,9 @@ impl_base::build(impl_obj_id_t obj_id, void *args) {
     case IMPL_OBJ_ID_SVC_MAPPING:
         return svc_mapping_impl::build((pds_svc_mapping_key_t *)args);
 
+    case IMPL_OBJ_ID_VPC_PEER:
+        return vpc_peer_impl::build((pds_vpc_peer_key_t *)args);
+
     default:
         break;
     }
@@ -134,6 +142,9 @@ impl_base::soft_delete(impl_obj_id_t obj_id, impl_base *impl) {
     case IMPL_OBJ_ID_SVC_MAPPING:
         svc_mapping_impl::soft_delete((svc_mapping_impl *)impl);
 
+    case IMPL_OBJ_ID_VPC_PEER:
+        vpc_peer_impl::soft_delete((vpc_peer_impl *)impl);
+
     default:
         PDS_TRACE_ERR("Non-statless obj %u can't be soft deleted\n", obj_id);
         break;
@@ -146,6 +157,9 @@ impl_base::destroy(impl_obj_id_t obj_id, impl_base *impl) {
     case IMPL_OBJ_ID_DEVICE:
         return device_impl::destroy((device_impl *)impl);
 
+    case IMPL_OBJ_ID_VPC:
+        return vpc_impl::destroy((vpc_impl *)impl);
+
     case IMPL_OBJ_ID_VNIC:
         return vnic_impl::destroy((vnic_impl *)impl);
 
@@ -155,8 +169,8 @@ impl_base::destroy(impl_obj_id_t obj_id, impl_base *impl) {
     case IMPL_OBJ_ID_ROUTE_TABLE:
         return route_table_impl::destroy((route_table_impl *)impl);
 
-    //case IMPL_OBJ_ID_SECURITY_POLICY:
-        //return security_policy_impl::destroy((security_policy_impl *)impl);
+    case IMPL_OBJ_ID_SECURITY_POLICY:
+        return security_policy_impl::destroy((security_policy_impl *)impl);
 
     //case IMPL_OBJ_ID_MIRROR_SESSION:
         //return mirror_impl::destroy((mirror_impl *)impl);

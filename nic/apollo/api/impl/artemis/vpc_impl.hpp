@@ -15,6 +15,7 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
+#include "nic/apollo/api/vpc.hpp"
 #include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 #include "gen/p4gen/artemis/include/p4pd.h"
 
@@ -64,7 +65,9 @@ public:
     /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_hw(api_base *api_obj,
-                                 obj_ctxt_t *obj_ctxt) override;
+                                 obj_ctxt_t *obj_ctxt) {
+        return SDK_RET_OK;
+    }
 
     /// \brief      re-program all hardware tables relevant to this object
     ///             except stage 0 table(s), if any and this reprogramming
@@ -82,8 +85,9 @@ public:
     ///             latest epoch#
     /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t cleanup_hw(api_base *api_obj,
-                                 obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+        return SDK_RET_OK;
+    }
 
     /// \brief      update all h/w tables relevant to this object except stage 0
     ///             table(s), if any, by updating packed entries with latest
@@ -134,6 +138,22 @@ private:
 
     /// \brief  destructor
     ~vpc_impl() {}
+
+    /// \brief      program vpc related tables during vpc create by enabling
+    ///             stage0 tables corresponding to the new epoch
+    /// \param[in]  epoch epoch being activated
+    /// \param[in]  vpc    vpc obj being programmed
+    /// \param[in]  spec    vpc configuration
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_vpc_create_(pds_epoch_t epoch, vpc_entry *vpc,
+                                   pds_vpc_spec_t *spec);
+
+    /// \brief      program vpc related tables during vpc delete by disabling
+    ///             stage0 tables corresponding to the new epoch
+    /// \param[in]  epoch epoch being activated
+    /// \param[in]  vpc    vpc obj being programmed
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_vpc_delete_(pds_epoch_t epoch, vpc_entry *vpc);
 
 private:
     handle_t    tep1_rx_handle_;    // TEP1_RX table handle
