@@ -909,6 +909,7 @@ bat_flush_batch(struct request_params *req_params)
 	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct batch_info *batch_info;
 	bool is_sync_mode;
+	uint32_t num_entries = 0;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -917,6 +918,8 @@ bat_flush_batch(struct request_params *req_params)
 		OSAL_LOG_DEBUG("invalid thread/request! err: %d", err);
 		goto out;
 	}
+	num_entries = batch_info->bi_num_entries;
+	PAS_INC_NUM_BATCH_REQUESTS(pcr, num_entries);
 
 	err = build_batch(batch_info, req_params);
 	if (err) {
@@ -939,6 +942,7 @@ bat_flush_batch(struct request_params *req_params)
 	return err;
 
 out:
+	PAS_INC_NUM_BATCH_REQUEST_FAILURES(pcr, num_entries);
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
 }

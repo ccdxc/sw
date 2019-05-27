@@ -117,6 +117,8 @@ struct pnso_api_stats {
 
 #define PAS_INC_NUM_REQUESTS(pcr)					\
 	PNSO_STAT_INC(pcr, num_requests)
+#define PAS_INC_NUM_BATCH_REQUESTS(pcr, total_requests)			\
+	PNSO_STAT_ADD(pcr, num_requests, total_requests)
 #define PAS_INC_NUM_SERVICES(pcr)					\
 	PNSO_STAT_INC(pcr, num_services)
 #define PAS_INC_NUM_CHAINS(pcr)						\
@@ -126,6 +128,8 @@ struct pnso_api_stats {
 
 #define PAS_INC_NUM_REQUEST_FAILURES(pcr)				\
 	PNSO_STAT_INC(pcr, num_request_failures)
+#define PAS_INC_NUM_BATCH_REQUEST_FAILURES(pcr, total_requests)		\
+	PNSO_STAT_ADD(pcr, num_request_failures, total_requests)
 #define PAS_INC_NUM_SERVICE_FAILURES(pcr)				\
 	PNSO_STAT_INC(pcr, num_service_failures)
 #define PAS_INC_NUM_CHAIN_FAILURES(pcr)					\
