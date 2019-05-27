@@ -1,5 +1,5 @@
 /******************************************************************************
- * Capri Intrinsic header definitions
+ * Capri Intrinsic header definitions                                         *
  *****************************************************************************/
 header cap_phv_intr_global_t capri_intrinsic;
 header cap_phv_intr_p4_t capri_p4_intrinsic;
@@ -7,7 +7,7 @@ header cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
 header cap_phv_intr_txdma_t capri_txdma_intrinsic;
 
 /******************************************************************************
- * Headers
+ * Headers                                                                    *
  *****************************************************************************/
 @pragma synthetic_header
 @pragma pa_field_union ingress p4i_i2e.vnic_id                      vnic_metadata.vnic_id
@@ -96,7 +96,7 @@ header tcp_t tcp;
 header icmp_t icmp;
 
 /******************************************************************************
- * Parser OHI
+ * Parser OHI                                                                 *
  *****************************************************************************/
 header_type parser_ohi_t {
     fields {
@@ -109,7 +109,7 @@ header_type parser_ohi_t {
 metadata parser_ohi_t ohi;
 
 /******************************************************************************
- * Parser metadata
+ * Parser metadata                                                            *
  *****************************************************************************/
 header_type parser_metadata_t {
     fields {
@@ -120,7 +120,7 @@ header_type parser_metadata_t {
 metadata parser_metadata_t parser_metadata;
 
 /******************************************************************************
- * Parser start
+ * Parser start                                                               *
  *****************************************************************************/
 parser start {
     extract(capri_intrinsic);
@@ -203,7 +203,7 @@ parser parse_packet_from_switch {
 }
 
 /******************************************************************************
- * Layer 1
+ * Layer 1                                                                    *
  *****************************************************************************/
 parser parse_ingress_packet {
     extract(ethernet_1);
@@ -277,7 +277,7 @@ parser parse_vxlan_1 {
 }
 
 /******************************************************************************
- * Layer 2
+ * Layer 2                                                                    *
  *****************************************************************************/
 parser parse_ethernet_2 {
     extract(ethernet_2);
@@ -338,7 +338,7 @@ parser parse_vxlan_2 {
 }
 
 /******************************************************************************
- * Layer 3
+ * Layer 3                                                                    *
  *****************************************************************************/
 parser parse_ethernet_3 {
     set_metadata(offset_metadata.l2_3, current + 0);
@@ -392,6 +392,32 @@ parser parse_udp_3 {
 }
 
 /******************************************************************************/
+/* Ingress deparser                                                           */
+/******************************************************************************/
+@pragma deparse_only
+@pragma xgress ingress
+parser deparse_ingress {
+    // intrinsic headers
+    extract(capri_intrinsic);
+    extract(capri_p4_intrinsic);
+    extract(capri_rxdma_intrinsic);
+
+    extract(p4_to_rxdma);
+    extract(predicate_header);
+    // splitter offset here for pipeline extension
+
+    extract(p4_to_p4plus_classic_nic);
+    extract(p4_to_p4plus_classic_nic_ip);
+    // splitter offset here for classic nic app
+    extract(p4_to_arm);
+
+    extract(txdma_to_p4e);
+    extract(p4i_i2e);
+
+    return parse_ingress_packet;
+}
+
+/******************************************************************************/
 /* Egress parser                                                              */
 /******************************************************************************/
 @pragma xgress egress
@@ -430,7 +456,6 @@ parser parse_egress_common {
 @pragma xgress egress
 @pragma allow_set_meta control_metadata.direction
 parser parse_egress {
-    extract(capri_txdma_intrinsic);
     extract(predicate_header);
     return select(predicate_header.direction) {
         RX_FROM_SWITCH : parse_egress_predicate_header_rx;
@@ -503,57 +528,6 @@ parser parse_i2e_metadata {
     return parse_egress_packet;
 }
 
-@pragma deparse_only
-@pragma xgress ingress
-parser deparse_ingress {
-    // intrinsic headers
-    extract(capri_intrinsic);
-    extract(capri_p4_intrinsic);
-    extract(capri_rxdma_intrinsic);
-
-    extract(p4_to_rxdma);
-    extract(predicate_header);
-    // splitter offset here for pipeline extension
-
-    extract(p4_to_p4plus_classic_nic);
-    extract(p4_to_p4plus_classic_nic_ip);
-    // splitter offset here for classic nic app
-    extract(p4_to_arm);
-
-    extract(txdma_to_p4e);
-    extract(p4i_i2e);
-
-    return parse_ingress_packet;
-}
-
-@pragma deparse_only
-@pragma xgress egress
-parser deparse_egress {
-    // intrinsic headers
-    extract(capri_intrinsic);
-    extract(capri_p4_intrinsic);
-
-    // Below are headers used in case of egress-to-egress recirc
-    extract(egress_service_header);
-    extract(predicate_header);
-    extract(txdma_to_p4e);
-    extract(p4e_i2e);
-
-    // layer 0
-    extract(ethernet_0);
-    extract(ctag_0);
-    extract(ipv4_0);
-    extract(ipv6_0);
-    extract(udp_0);
-    extract(vxlan_0);
-    extract(erspan);
-
-    return parse_egress_packet;
-}
-
-/******************************************************************************
- * Egress parser
- *****************************************************************************/
 @pragma xgress egress
 @pragma allow_set_meta offset_metadata.l2_1
 parser parse_egress_packet {
@@ -617,9 +591,37 @@ parser parse_egress_udp {
     return ingress;
 }
 
+/******************************************************************************
+ * Egress deparser                                                            *
+ *****************************************************************************/
+@pragma deparse_only
+@pragma xgress egress
+parser deparse_egress {
+    // intrinsic headers
+    extract(capri_intrinsic);
+    extract(capri_p4_intrinsic);
+
+    // Below are headers used in case of egress-to-egress recirc
+    extract(egress_service_header);
+    extract(predicate_header);
+    extract(txdma_to_p4e);
+    extract(p4e_i2e);
+
+    // layer 0
+    extract(ethernet_0);
+    extract(ctag_0);
+    extract(ipv4_0);
+    extract(ipv6_0);
+    extract(udp_0);
+    extract(vxlan_0);
+    extract(erspan);
+
+    return parse_egress_packet;
+}
+
 #if 0
 /******************************************************************************
- * Checksums : Layer 0 (compute only, no verification)
+ * Checksums : Layer 0 (compute only, no verification)                        *
  *****************************************************************************/
 field_list ipv4_0_checksum_list {
     ipv4_0.version;
@@ -650,7 +652,7 @@ calculated_field ipv4_0.hdrChecksum  {
 }
 
 /******************************************************************************
- * Checksums : Layer 1
+ * Checksums : Layer 1                                                        *
  *****************************************************************************/
 field_list ipv4_1_checksum_list {
     ipv4_1.version;
@@ -683,7 +685,7 @@ calculated_field ipv4_1.hdrChecksum  {
 }
 
 /******************************************************************************
- * Checksums : Layer 2 (verify only)
+ * Checksums : Layer 2 (verify only)                                          *
  *****************************************************************************/
 field_list ipv4_2_checksum_list {
     ipv4_2.version;
@@ -715,7 +717,7 @@ calculated_field ipv4_2.hdrChecksum  {
 }
 
 /******************************************************************************
- * Checksums : Layer 3 (verify only)
+ * Checksums : Layer 3 (verify only)                                          *
  *****************************************************************************/
 field_list ipv4_3_checksum_list {
     ipv4_3.version;

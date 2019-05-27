@@ -45,6 +45,11 @@ native_nonip_packet:
     phvwr.e         p.key_metadata_src, k.ethernet_1_srcAddr
     phvwr           p.key_metadata_dst, k.ethernet_1_dstAddr
 
+.align
+set_tep1_dst:
+    nop.e
+    nop
+
 /*****************************************************************************/
 /* error function                                                            */
 /*****************************************************************************/

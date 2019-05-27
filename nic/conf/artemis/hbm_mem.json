@@ -236,15 +236,22 @@
             "_comment": "4M * 32B"
         },
         {
-            "name": "nat",
-            "size": "131072K",
-            "cache": "p4eg"
-        },
-        {
             "name": "session",
             "size": "256M",
             "cache": "p4eg",
             "_comment": "8M * 32B"
+        },
+        {
+            "name": "nexthop",
+            "size": "32M",
+            "cache": "p4eg",
+            "_comment": "1M * 32B"
+        },
+        {
+            "name": "nat",
+            "size": "1M",
+            "cache": "p4eg",
+            "_comment": "64K * 16B"
         },
         {
             "name": "session_stats",
