@@ -140,16 +140,20 @@ public:
         return false;
     }
 
-    /// \brief  return TEP IPv4 address
-    /// \return IPv4 address of the TEP
+    /// \brief    return TEP's key
+    /// \return    key of the TEP
+    pds_tep_key_t key(void) const { return key_; }
+
+    /// \brief    return TEP IPv4 address
+    /// \return    IPv4 address of the TEP
     ipv4_addr_t ip(void) const { return key_.ip_addr; }
 
-    /// \brief  return the MAC address corresponding to this TEP
-    /// \return ethernet MAC address of this TEP (configured/learnt)
+    /// \brief    return the MAC address corresponding to this TEP
+    /// \return    ethernet MAC address of this TEP (configured/learnt)
     mac_addr_t& mac(void) { return mac_; }
 
-    /// \brief  return impl instance of this TEP object
-    /// \return impl instance of the TEP object
+    /// \brief    return impl instance of this TEP object
+    /// \return    impl instance of the TEP object
     impl_base *impl(void) { return impl_; }
 
 private:

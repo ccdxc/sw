@@ -90,6 +90,7 @@ artemis_impl_state::artemis_impl_state(pds_state *state) {
                                  tinfo.tabledepth,
                                  tinfo.actiondata_struct_size,
                                  false, true, NULL);
+    nh_tbl_->reserve_index(PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID);
     SDK_ASSERT(nh_tbl_ != NULL);
 }
 

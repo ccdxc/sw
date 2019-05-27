@@ -39,10 +39,6 @@ tep_entry::factory(pds_tep_spec_t *pds_tep) {
     if (tep) {
         new (tep) tep_entry();
         tep->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_TEP, pds_tep);
-        if (tep->impl_ == NULL) {
-            tep_entry::destroy(tep);
-            return NULL;
-        }
     }
     return tep;
 }
@@ -76,7 +72,10 @@ tep_entry::init_config(api_ctxt_t *api_ctxt) {
 
 sdk_ret_t
 tep_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return impl_->reserve_resources(this, obj_ctxt);
+    if (impl_) {
+        return impl_->reserve_resources(this, obj_ctxt);
+    }
+    return SDK_RET_OK;
 }
 
 // TODO: we should simply be generating ARP request in the substrate in this API
@@ -84,22 +83,31 @@ tep_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 //       plane & PMD APIs are ready, we will directly write to hw with fixed MAC
 sdk_ret_t
 tep_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    return impl_->program_hw(this, obj_ctxt);
+    if (impl_) {
+        return impl_->program_hw(this, obj_ctxt);
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 tep_entry::nuke_resources_(void) {
-    return impl_->nuke_resources(this);
+    if (impl_) {
+        return impl_->nuke_resources(this);
+    }
 }
 
 sdk_ret_t
 tep_entry::release_resources(void) {
-    return impl_->release_resources(this);
+    if (impl_) {
+        return impl_->release_resources(this);
+    }
 }
 
 sdk_ret_t
 tep_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
-    return impl_->cleanup_hw(this, obj_ctxt);
+    if (impl_) {
+        return impl_->cleanup_hw(this, obj_ctxt);
+    }
 }
 
 sdk_ret_t

@@ -148,6 +148,40 @@ mapping_impl::build(pds_mapping_key_t *key) {
 }
 
 sdk_ret_t
+mapping_impl::reserve_remote_mapping_resources_(api_base *api_obj,
+                                                vpc_entry *vpc,
+                                                pds_mapping_spec_t *spec) {
+    sdk_ret_t ret;
+    mapping_swkey_t mapping_key;
+    sdk_table_api_params_t api_params;
+
+    // reserve an entry in the MAPPING table
+    PDS_IMPL_FILL_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
+                                &spec->key.ip_addr);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &mapping_key,
+                                   NULL, 0, sdk::table::handle_t::null());
+    ret = mapping_impl_db()->mapping_tbl()->reserve(&api_params);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve entry in MAPPING table for "
+                      "mapping %s, err %u", api_obj->key2str().c_str(), ret);
+        goto error;
+    }
+    mapping_hdl_ = api_params.handle;
+
+    // reserve an entry in NEXTHOP table
+    ret = artemis_impl_db()->nh_tbl()->reserve(&nh_idx_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve entry in NH table, err %u", ret);
+        return ret;
+    }
+    return SDK_RET_OK;
+
+error:
+
+    return ret;
+}
+
+sdk_ret_t
 mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
                                                   vpc_entry *vpc,
                                                   pds_mapping_spec_t *spec) {
@@ -250,40 +284,6 @@ error:
 }
 
 sdk_ret_t
-mapping_impl::reserve_remote_mapping_resources_(api_base *api_obj,
-                                                vpc_entry *vpc,
-                                                pds_mapping_spec_t *spec) {
-    sdk_ret_t ret;
-    mapping_swkey_t mapping_key;
-    sdk_table_api_params_t api_params;
-
-    // reserve an entry in the MAPPING table
-    PDS_IMPL_FILL_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
-                                &spec->key.ip_addr);
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &mapping_key,
-                                   NULL, 0, sdk::table::handle_t::null());
-    ret = mapping_impl_db()->mapping_tbl()->reserve(&api_params);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to reserve entry in MAPPING table for "
-                      "mapping %s, err %u", api_obj->key2str().c_str(), ret);
-        goto error;
-    }
-    mapping_hdl_ = api_params.handle;
-
-    // reserve an entry in NH_TX table
-    ret = artemis_impl_db()->nh_tbl()->reserve(&nh_idx_);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to reserve entry in NH table, err %u", ret);
-        return ret;
-    }
-    return SDK_RET_OK;
-
-error:
-
-    return ret;
-}
-
-sdk_ret_t
 mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     vpc_entry *vpc;
     pds_mapping_spec_t *spec;
@@ -344,6 +344,9 @@ mapping_impl::nuke_resources(api_base *api_obj) {
         api_params.handle = mapping_hdl_;
         mapping_impl_db()->mapping_tbl()->remove(&api_params);
     }
+    if (nh_idx_ != PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID) {
+        artemis_impl_db()->nh_tbl()->remove(nh_idx_);
+    }
     return SDK_RET_OK;
 }
 
@@ -366,6 +369,9 @@ mapping_impl::release_local_ip_mapping_resources_(api_base *api_obj) {
     if (mapping_hdl_.valid()) {
         api_params.handle = mapping_hdl_;
         mapping_impl_db()->mapping_tbl()->release(&api_params);
+    }
+    if (nh_idx_ != PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID) {
+        artemis_impl_db()->nh_tbl()->release(nh_idx_);
     }
 
     // TODO: change the api calls here once DM APIs are standardized
@@ -395,6 +401,9 @@ mapping_impl::release_remote_mapping_resources_(api_base *api_obj) {
         api_params.handle = mapping_hdl_;
         mapping_impl_db()->mapping_tbl()->release(&api_params);
     }
+    if (nh_idx_ != PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID) {
+        artemis_impl_db()->nh_tbl()->release(nh_idx_);
+    }
     return SDK_RET_OK;
 }
 
@@ -410,9 +419,11 @@ sdk_ret_t
 mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
                                           pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
+    tep_entry *tep;
     mapping_swkey_t mapping_key;
     mapping_appdata_t mapping_data;
     sdk_table_api_params_t api_params;
+    nexthop_actiondata_t nh_data = { 0 };
 
     PDS_IMPL_FILL_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
                                 &spec->key.ip_addr);
@@ -427,10 +438,30 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
                       ipaddr2str(&spec->key.ip_addr), ret);
         goto error;
     }
+
+    tep = tep_db()->find(&spec->tep);
+    nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
+    //nh_data.action_u.nexthop_nexthop_info.port = ;
+    //nh_data.action_u.nexthop_nexthop_info.vni = ;
+    //nh_data.action_u.nexthop_nexthop_info.ip_type = ;
+    memcpy(nh_data.action_u.nexthop_nexthop_info.dipo,
+           &spec->tep.ip_addr, IP4_ADDR8_LEN);
+    sdk::lib::memrev(nh_data.action_u.nexthop_nexthop_info.dmaco,
+                     tep->mac(), ETH_ADDR_LEN);
+    sdk::lib::memrev(nh_data.action_u.nexthop_nexthop_info.dmaci,
+                     spec->overlay_mac, ETH_ADDR_LEN);
+    ret = artemis_impl_db()->nh_tbl()->insert_atid(&nh_data, nh_idx_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NEXTHOP table at %u, err %u",
+                      nh_idx_, ret);
+        goto error;
+    }
+
     return SDK_RET_OK;
 
     // TODO:
-    // should we reserve & program entries for public IP of local IP mappings ?
+    // should we reserve & program entries for public, provider IP of local
+    // IP mappings ?
 
 error:
     return ret;
