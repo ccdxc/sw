@@ -152,6 +152,14 @@ public:
     /// \return PDS_VPC_TYPE_SUBSTRATE or PDS_VPC_TYPE_TENANT
     pds_vpc_type_t type(void) const { return type_; }
 
+    /// \brief    return true if NAT46 prefix configured is valid
+    /// \return    true or false based on whether NAT46 prefix is valid or not
+    bool nat46_prefix_valid(void) const { return nat46_pfx_valid_; }
+
+    /// \brief  return the type of VPC
+    /// \return    IPv6 prefix to be used for NAT46
+    ip_prefix_t& nat46_prefix(void) { return nat46_pfx_; }
+
     /// \brief  return h/w index for this VPC
     /// \return h/w table index for this VPC
     uint16_t hw_id(void) { return hw_id_; }
@@ -175,6 +183,10 @@ private:
     pds_encap_t fabric_encap_;                ///< fabric encap information
     pds_route_table_key_t v4_route_table_;    ///< IPv4 route table id
     pds_route_table_key_t v6_route_table_;    ///< IPv6 route table id
+    bool nat46_pfx_valid_;                    ///< TRUE if NAT46 prefix is valid
+    ip_prefix_t nat46_pfx_;                   ///< IPv6 prefix to be used to
+                                              ///< (S)NAT outbound traffic
+                                              ///< towards a IPv6-only cluster
     ht_ctxt_t ht_ctxt_;                       ///< hash table context
 
     // P4 datapath specific state

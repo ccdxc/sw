@@ -44,6 +44,10 @@ typedef struct pds_vpc_spec_s {
     ///< will inherit corresponding VPC's route table(s), if any
     pds_route_table_key_t v4_route_table;    ///< IPv4 route table id
     pds_route_table_key_t v6_route_table;    ///< IPv6 route table id
+    ip_prefix_t           nat46_prefix;      ///< IPv6 prefix/IP to be used to
+                                             ///< (S)NAT outbound traffic from
+                                             ///< this VPC that is destined to
+                                             ///< a IPv6-only service/network
 } __PACK__ pds_vpc_spec_t;
 
 /// \brief VPC status

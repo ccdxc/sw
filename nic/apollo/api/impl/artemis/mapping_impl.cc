@@ -47,7 +47,8 @@ namespace impl {
 
 #define local_ip_mapping_action    action_u.local_ip_mapping_local_ip_mapping_info
 #define PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(data, vnic_hw_id, vpc_hw_id,  \
-                                               svc_tag, xidx1, xidx2)        \
+                                               svc_tag, xidx1, xidx2,        \
+                                               nat46_xidx)                   \
 {                                                                            \
     memset((data), 0, sizeof(*(data)));                                      \
     (data)->action_id = LOCAL_IP_MAPPING_LOCAL_IP_MAPPING_INFO_ID;           \
@@ -56,6 +57,7 @@ namespace impl {
     (data)->local_ip_mapping_action.service_tag = (svc_tag);                 \
     (data)->local_ip_mapping_action.pa_or_ca_xlate_idx= (uint16_t)xidx1;     \
     (data)->local_ip_mapping_action.public_xlate_idx = (uint16_t)xidx2;      \
+    (data)->local_ip_mapping_action.ca6_xlate_idx = (uint8_t)nat46_xidx;     \
 }
 
 #define PDS_IMPL_FILL_MAPPING_SWKEY(key, vpc_hw_id, ip)                      \
@@ -488,8 +490,6 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
                                             pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
     vnic_impl *vnic_impl_obj;
-    //mapping_swkey_t mapping_key = { 0 };
-    //mapping_appdata_t mapping_data = { 0 };
     sdk_table_api_params_t api_params = { 0 };
     local_ip_mapping_swkey_t local_ip_mapping_key;
     local_ip_mapping_actiondata_t local_ip_mapping_data;
@@ -503,7 +503,10 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
                                            vnic_impl_obj->hw_id(), vpc->hw_id(),
                                            spec->svc_tag,
                                            overlay_ip_to_provider_ip_nat_hdl_,
-                                           overlay_ip_to_public_ip_nat_hdl_);
+                                           overlay_ip_to_public_ip_nat_hdl_,
+                                           vpc->nat46_prefix_valid() ?
+                                           vnic_impl_obj->hw_id() + 1 :
+                                           PDS_IMPL_LOCAL_46_MAPPING_RSVD_ENTRY_IDX);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_ip_mapping_key,
                                    &local_ip_mapping_data,
                                    LOCAL_IP_MAPPING_LOCAL_IP_MAPPING_INFO_ID,
@@ -519,10 +522,11 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
                                              PDS_IMPL_PUBLIC_VPC_HW_ID,
                                              &spec->public_ip);
         PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(&local_ip_mapping_data,
-                                               vnic_impl_obj->hw_id(), vpc->hw_id(),
-                                               spec->svc_tag,
+                                               vnic_impl_obj->hw_id(),
+                                               vpc->hw_id(), spec->svc_tag,
                                                to_overlay_ip_nat_hdl_,
-                                               PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX);
+                                               PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX,
+                                               PDS_IMPL_LOCAL_46_MAPPING_RSVD_ENTRY_IDX);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params,
                                        &local_ip_mapping_key,
                                        &local_ip_mapping_data,
@@ -540,10 +544,11 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
                                              PDS_IMPL_PUBLIC_VPC_HW_ID,
                                              &spec->provider_ip);
         PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(&local_ip_mapping_data,
-                                               vnic_impl_obj->hw_id(), vpc->hw_id(),
-                                               spec->svc_tag,
+                                               vnic_impl_obj->hw_id(),
+                                               vpc->hw_id(), spec->svc_tag,
                                                to_overlay_ip_nat_hdl_,
-                                               PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX);
+                                               PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX,
+                                               PDS_IMPL_LOCAL_46_MAPPING_RSVD_ENTRY_IDX);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params,
                                        &local_ip_mapping_key,
                                        &local_ip_mapping_data,

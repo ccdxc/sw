@@ -115,6 +115,7 @@ vnic_impl::nuke_resources(api_base *api_obj) {
 
 #define ingress_vnic_info_action    action_u.ingress_vnic_info_ingress_vnic_info
 #define egress_vnic_info_action     action_u.egress_vnic_info_egress_vnic_info
+#define local_46_mapping_action     action_u.local_46_mapping_local_46_info
 sdk_ret_t
 vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
@@ -136,14 +137,40 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     vnic_tx_stats_actiondata_t vnic_tx_stats_data = { 0 };
     //ingress_vnic_info_actiondata_t ing_vnic_info = { 0 };
     egress_vnic_info_actiondata_t egr_vnic_info = { 0 };
+    local_46_mapping_actiondata_t local_46_mapping_data = { 0 };
 
     device = device_db()->find();
     spec = &obj_ctxt->api_params->vnic_spec;
+
+    // get the subnet of the vnic
     subnet = subnet_db()->find(&spec->subnet);
     if (unlikely(subnet == NULL)) {
         PDS_TRACE_ERR("Unable to find subnet : %u, vpc : %u",
                       spec->subnet.id, spec->vpc.id);
         return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    // get the vpc of this subnet
+    vpc_key = subnet->vpc();
+    vpc = vpc_db()->find(&vpc_key);
+    if (unlikely(vpc == NULL)) {
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    // program LOCAL_46_MAPPING table
+    if (vpc->nat46_prefix_valid()) {
+        local_46_mapping_data.action_id = LOCAL_46_MAPPING_LOCAL_46_INFO_ID;
+        sdk::lib::memrev(local_46_mapping_data.local_46_mapping_action.prefix,
+                         vpc->nat46_prefix().addr.addr.v6_addr.addr8,
+                         IP6_ADDR8_LEN);
+        p4pd_ret = p4pd_global_entry_write(P4TBL_ID_LOCAL_46_MAPPING,
+                                           hw_id_ + 1, NULL, NULL,
+                                           &local_46_mapping_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            PDS_TRACE_ERR("Failed to program LOCAL_46_MAPPING table at %u",
+                          hw_id_);
+            return sdk::SDK_RET_HW_PROGRAM_ERR;
+        }
     }
 
     // initialize rx stats tables for this vnic
@@ -183,12 +210,6 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     }
 
 #if 0
-    // program INGRESS_VNIC_INFO table
-    vpc_key = subnet->vpc();
-    vpc = vpc_db()->find(&vpc_key);
-    if (unlikely(vpc == NULL)) {
-        return sdk::SDK_RET_INVALID_ARG;
-    }
 #endif
 
     route_table_key = subnet->v4_route_table();

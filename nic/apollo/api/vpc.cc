@@ -66,6 +66,12 @@ vpc_entry::init_config(api_ctxt_t *api_ctxt) {
     fabric_encap_ = spec->fabric_encap;
     v4_route_table_.id = spec->v4_route_table.id;
     v6_route_table_.id = spec->v6_route_table.id;
+    if (ip_addr_is_zero(&spec->nat46_prefix.addr)) {
+        nat46_pfx_valid_ = false;
+    } else {
+        nat46_pfx_valid_ = true;
+        memcpy(&nat46_pfx_, &spec->nat46_prefix, sizeof(ip_prefix_t));
+    }
     return SDK_RET_OK;
 }
 

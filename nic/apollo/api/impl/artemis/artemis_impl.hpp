@@ -25,6 +25,7 @@
 #define PDS_IMPL_NH_TYPE_SVC_TUNNEL_MASK             0x4000
 // NAT table entry reserved for no translation
 #define PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX              0
+#define PDS_IMPL_LOCAL_46_MAPPING_RSVD_ENTRY_IDX     0
 
 #define MEM_ADDR_TO_P4_MEM_ADDR(p4_mem_addr, mem_addr, p4_addr_size)      \
     for (uint32_t i = 0; i < (p4_addr_size); i++) {                       \

@@ -64,9 +64,9 @@ private:
     friend class vpc_entry;    ///< vpc_entry class is friend of vpc_state
 
 private:
-    ht      *vpc_ht_;      ///< vpc hash table
-    indexer *vpc_idxr_;    ///< indexer to allocate hw vpc id
-    slab    *vpc_slab_;    ///< slab for allocating vpc entry
+    ht      *vpc_ht_;                ///< vpc hash table
+    indexer *vpc_idxr_;              ///< indexer to allocate hw vpc id
+    slab    *vpc_slab_;              ///< slab for allocating vpc entry
 };
 
 /// \@}

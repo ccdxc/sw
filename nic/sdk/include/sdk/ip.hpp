@@ -349,9 +349,7 @@ static inline std::ostream& operator<<(std::ostream& os, const ipv6_addr_t& ip)
 }
 
 #define IPADDR_EQ(ipaddr1, ipaddr2) ip_addr_is_equal(ipaddr1, ipaddr2)
-
 #define IPADDR_LT(ipaddr1, ipaddr2) ip_addr_is_lessthan(ipaddr1, ipaddr2)
-
 #define IPADDR_GT(ipaddr1, ipaddr2) ip_addr_is_greaterthan(ipaddr1, ipaddr2)
 
 static inline bool
