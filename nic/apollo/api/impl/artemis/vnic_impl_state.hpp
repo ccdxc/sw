@@ -59,9 +59,9 @@ private:
     indexer     *vnic_idxr_;                ///< indexer to allocate hw vnic id
     // NOTE: there is no explicit table mgmt for rx and tx stats, we directly
     //       index using hw_id_ of vnic and and bzero out when we create vnic
-    sltcam      *vnic_mapping_tbl_;         ///< tcam table for VNIC_MAPPING */
-    directmap   *ingress_vnic_info_tbl_;    ///< directmap table for INGRESS_VNIC_INFO */
-    directmap   *egress_vnic_info_tbl_;     ///< directmap table for EGRESS_VNIC_INFO */
+    sltcam      *vnic_mapping_tbl_;         ///< tcam table for VNIC_MAPPING
+    directmap   *ingress_vnic_info_tbl_;    ///< directmap table for INGRESS_VNIC_INFO
+    directmap   *egress_vnic_info_tbl_;     ///< directmap table for EGRESS_VNIC_INFO
 };
 
 /// @}

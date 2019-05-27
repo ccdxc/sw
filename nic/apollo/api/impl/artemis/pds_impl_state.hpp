@@ -14,6 +14,7 @@
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/api/impl/artemis/artemis_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/device_impl.hpp"
+#include "nic/apollo/api/impl/artemis/vpc_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/vnic_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/mapping_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/route_impl_state.hpp"
@@ -47,6 +48,7 @@ public:
     ~pds_impl_state();
     artemis_impl_state *artemis_impl_db(void) { return artemis_impl_db_; }
     lif_impl_state *lif_impl_db(void) { return lif_impl_db_; }
+    vpc_impl_state *vpc_impl_db(void) { return vpc_impl_db_; }
     vnic_impl_state *vnic_impl_db(void) { return vnic_impl_db_; }
     mapping_impl_state *mapping_impl_db(void) { return mapping_impl_db_; }
     route_table_impl_state *route_table_impl_db(void) {
@@ -74,6 +76,7 @@ public:
 private:
     artemis_impl_state             *artemis_impl_db_;
     lif_impl_state                *lif_impl_db_;
+    vpc_impl_state                *vpc_impl_db_;
     vnic_impl_state               *vnic_impl_db_;
     mapping_impl_state            *mapping_impl_db_;
     route_table_impl_state        *route_table_impl_db_;
@@ -96,6 +99,12 @@ static inline lif_impl_state *
 lif_impl_db (void)
 {
     return g_pds_impl_state.lif_impl_db();
+}
+
+static inline vpc_impl_state *
+vpc_impl_db (void)
+{
+    return g_pds_impl_state.vpc_impl_db();
 }
 
 static inline vnic_impl_state *
