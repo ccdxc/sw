@@ -78,7 +78,9 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_hw(api_base *api_obj,
-                                 obj_ctxt_t *obj_ctxt) override;
+                                 obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief     cleanup all h/w tables relevant to this object except stage 0
     ///            table(s), if any, by updating packed entries with latest epoch#
@@ -118,12 +120,16 @@ public:
 private:
     /// \brief constructor
     vpc_peer_impl() {
+        vpc_peer_handle1_ = handle_t::null();
+        vpc_peer_handle2_ = handle_t::null();
     }
 
     /// \brief destructor
     ~vpc_peer_impl() {}
 
 private:
+    handle_t vpc_peer_handle1_;    // handle for (vpc1, vpc2) key
+    handle_t vpc_peer_handle2_;    // handle for (vpc2, vpc1) key
 };
 
 /// \@}

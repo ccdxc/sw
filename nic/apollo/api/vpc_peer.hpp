@@ -130,6 +130,10 @@ public:
                    std::to_string(key_.vpc2.id);
     }
 
+    /// \brief    return the key of this object
+    /// \return    key containing pair of vpc keys
+    pds_vpc_peer_key_t key(void) { return key_; }
+
 private:
     /// \brief constructor
     vpc_peer_entry();

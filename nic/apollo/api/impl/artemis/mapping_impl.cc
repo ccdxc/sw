@@ -9,7 +9,6 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/lib/utils/utils.hpp"
-//#include "nic/sdk/include/sdk/table.hpp"
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/core/mem.hpp"
@@ -628,7 +627,6 @@ mapping_impl::read_local_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
 
 sdk_ret_t
 mapping_impl::read_remote_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
-    sdk_ret_t ret;
     return SDK_RET_INVALID_OP;
 }
 
