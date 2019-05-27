@@ -528,8 +528,8 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq)
 				   &lif->info->status.link_status);
 		debugfs_create_u32("link_speed", 0400, stats_dentry,
 				   &lif->info->status.link_speed);
-		debugfs_create_u16("link_flap_count", 0400, stats_dentry,
-				   &lif->info->status.link_flap_count);
+		debugfs_create_u16("link_down_count", 0400, stats_dentry,
+				   &lif->info->status.link_down_count);
 	}
 
 	return 0;

@@ -370,7 +370,7 @@ ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 
 	prefetch(m->data - NET_IP_ALIGN);
 	m->m_pkthdr.rcvif = rxq->lif->netdev;
-	/* 
+	/*
 	 * Write the length here, if its chained mbufs for SG list,
 	 * it will be overwritten.
 	 */
@@ -437,7 +437,7 @@ ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
 	rxbuf = &rxq->rxbuf[index];
 	desc = &rxq->cmd_ring[index];
 	sg = &rxq->sg_ring[index];
-	
+
 	bzero(desc, sizeof(*desc));
 	bzero(sg, sizeof(*sg));
 	KASSERT(rxbuf->m == NULL, ("rxuf %d is not empty", index));
@@ -490,7 +490,7 @@ ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
 	desc->len = seg[0].ds_len;
 	desc->opcode = nsegs ? RXQ_DESC_OPCODE_SG : RXQ_DESC_OPCODE_SIMPLE;
 
-	size = desc->len;	
+	size = desc->len;
 	for (i = 0; i < nsegs - 1; i++) {
 		pseg = &seg[i + 1];
 		if (!pseg->ds_len || pseg->ds_len > ionic_rx_sg_size)
@@ -586,7 +586,7 @@ ionic_queue_task_handler(void *arg, int pendindg)
 	IONIC_RX_TRACE(rxq, "comp index: %d head: %d tail :%d\n",
 		rxq->comp_index, rxq->head_index, rxq->tail_index);
 
-	/* 
+	/*
 	 * Process all Rx frames.
 	 */
 	work_done = ionic_rx_clean(rxq, rxq->num_descs);
@@ -669,7 +669,7 @@ ionic_setup_rx_intr(struct rxque* rxq)
 /**************************** Tx handling **********************/
 static bool
 ionic_tx_avail(struct txque *txq, int want)
-{	
+{
 	int avail;
 
 	avail = ionic_desc_avail(txq->num_descs, txq->head_index, txq->tail_index);
@@ -767,7 +767,7 @@ int ionic_setup_legacy_intr(struct lif *lif)
 }
 
 static int
-ionic_get_header_size(struct txque *txq, struct mbuf *mb, uint16_t *eth_type, 
+ionic_get_header_size(struct txque *txq, struct mbuf *mb, uint16_t *eth_type,
 	int *proto, int *hlen)
 {
 	struct ether_vlan_header *eh;
@@ -962,7 +962,7 @@ static void ionic_tx_tso_dump(struct txque *txq, struct mbuf *m,
 
 	IONIC_TX_TRACE(txq, "TSO: VA: %p nsegs: %d length: %d\n",
 		m, nsegs, m->m_pkthdr.len);
-	
+
 	for (i = 0; i < nsegs; i++) {
 		IONIC_TX_TRACE(txq, "seg[%d] pa: 0x%lx len:%ld\n",
 			i, seg[i].ds_addr, seg[i].ds_len);
@@ -975,7 +975,7 @@ static void ionic_tx_tso_dump(struct txque *txq, struct mbuf *m,
 		len += desc->len;
 		IONIC_TX_TRACE(txq, "TSO Dump desc[%d] pa: 0x%lx length: %d"
 			" S:%d E:%d mss:%d hdr_len:%d mbuf:%p\n",
-			i, desc->addr, desc->len, desc->S, desc->E, 
+			i, desc->addr, desc->len, desc->S, desc->E,
 			desc->C, desc->mss, desc->hdr_len, txbuf->m);
 
 		for (j = 0; j < desc->num_sg_elems; j++) {
@@ -1076,14 +1076,14 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 	bus_dmamap_sync(txq->buf_tag, first_txbuf->dma_map, BUS_DMASYNC_PREWRITE);
 	stats->tso_max_size = max(stats->tso_max_size, m->m_pkthdr.len);
 
-	remain_len = m->m_pkthdr.len;	
+	remain_len = m->m_pkthdr.len;
 	index = txq->head_index;
 	frag_offset = 0;
 	frag_remain_len = seg[0].ds_len;
 
 	has_vlan = (m->m_flags & M_VLANTAG) ? 1 : 0;
 
-	/* 
+	/*
 	 * Loop through all segments of mbuf and create mss size descriptors.
 	 * First descriptor points to header.
 	 */
@@ -1124,7 +1124,7 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 			frag_offset += desc_len;
 		}
 
-		/* 
+		/*
 		 * Now populate SG list, with the remaining fragments upto MSS size.
 		 */
 		for (j = 0; j < IONIC_MAX_TSO_SG_ENTRIES && (i < nsegs) && desc_len < desc_max_size; j++) {
@@ -1174,7 +1174,7 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 	txq->head_index = index;
 	if (txq->head_index % ionic_tx_stride)
 		ionic_tx_ring_doorbell(txq, txq->head_index);
-	
+
 	IONIC_TX_TRACE(txq, "Exit head: %d tail: %d\n",
 		txq->head_index, txq->tail_index);
 
@@ -1343,7 +1343,7 @@ ionic_get_counter(struct ifnet *ifp, ift_counter cnt)
 
 }
 
-static void 
+static void
 ionic_tx_qflush(struct ifnet *ifp)
 {
 	struct lif *lif = if_getsoftc(ifp);
@@ -1604,7 +1604,7 @@ ionic_flow_ctrl_sysctl(SYSCTL_HANDLER_ARGS)
 	struct lif *lif = oidp->oid_arg1;
 	struct ionic* ionic = lif->ionic;
 	struct ionic_dev* idev = &ionic->idev;
-	u8 pause_type;
+	u8 pause_type = idev->port_info->config.pause_type & 0xf0;
 	int err, fc;
 
 	/* Not allowed to change for mgmt interface. */
@@ -1617,13 +1617,13 @@ ionic_flow_ctrl_sysctl(SYSCTL_HANDLER_ARGS)
 
 	switch (fc) {
 	case 0:
-		pause_type = PORT_PAUSE_TYPE_NONE;
+		pause_type |= PORT_PAUSE_TYPE_NONE;
 		break;
 	case 1:
-		pause_type = PORT_PAUSE_TYPE_LINK;
+		pause_type |= PORT_PAUSE_TYPE_LINK;
 		break;
 	case 2:
-		pause_type = PORT_PAUSE_TYPE_PFC;
+		pause_type |= PORT_PAUSE_TYPE_PFC;
 		break;
 	default:
 		if_printf(lif->netdev, "Invalid flow control: %d value\n", fc);
@@ -1681,11 +1681,11 @@ ionic_media_status_sysctl(SYSCTL_HANDLER_ARGS)
 	sbuf_printf(sb, "\n");
 
 	sbuf_printf(sb, " lif_status eid=%ld link_status=%s"
-		" link_speed=%dMpbps flap=%d\n",
+		" link_speed=%dMbps link_down_count=%d\n",
 			lif_status->eid,
 			ionic_port_oper_status_str(lif_status->link_status),
 			lif_status->link_speed,
-			lif_status->link_flap_count);
+			lif_status->link_down_count);
 
 	sbuf_printf(sb, "  port_status id=%d status=%s speed=%dMbps\n",
 			port_status->id,
@@ -2217,10 +2217,9 @@ ionic_setup_mac_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
 
 static void
 ionic_notifyq_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
-		struct sysctl_oid_list *child)
+	struct sysctl_oid_list *child)
 {
 	struct notifyq* notifyq = lif->notifyq;
-	struct lif_status *nb = &lif->info->status;
 	struct sysctl_oid *queue_node;
 	struct sysctl_oid_list *queue_list;
 	char namebuf[QUEUE_NAME_LEN];
@@ -2239,8 +2238,167 @@ ionic_notifyq_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
 			&notifyq->comp_index, 0, "Completion index");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "last_eid", CTLFLAG_RD,
 			&lif->last_eid, "Last event Id");
-	SYSCTL_ADD_U16(ctx, queue_list, OID_AUTO, "nb_flap_count", CTLFLAG_RD,
-			&nb->link_flap_count, 0, "NB link flap count");
+}
+
+static void
+ionic_qos_config_sysctl(struct ionic_qos_tc *tc, int num, struct sysctl_ctx_list *ctx,
+	struct sysctl_oid_list *queue_list)
+{
+	if (num == 0) {
+		SYSCTL_ADD_BOOL(ctx, queue_list, OID_AUTO, "enable", CTLFLAG_RD,
+				&tc->enable, 0, "Enable policy");
+		SYSCTL_ADD_BOOL(ctx, queue_list, OID_AUTO, "drop", CTLFLAG_RD,
+				&tc->drop, 0, "Enable drop");
+	} else {
+		SYSCTL_ADD_BOOL(ctx, queue_list, OID_AUTO, "enable", CTLFLAG_RW,
+				&tc->enable, 0, "Enable policy");
+		SYSCTL_ADD_BOOL(ctx, queue_list, OID_AUTO, "drop", CTLFLAG_RW,
+				&tc->drop, 0, "Enable drop");
+	}
+
+	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "mtu", CTLFLAG_RW,
+			&tc->mtu, 1500, "MTU");
+	SYSCTL_ADD_U8(ctx, queue_list, OID_AUTO, "pcp", CTLFLAG_RW,
+			&tc->dot1q_pcp, 0, "802.1q TCI pcp value");
+	SYSCTL_ADD_U8(ctx, queue_list, OID_AUTO, "weight", CTLFLAG_RW,
+			&tc->dwrr_weight, 0, "DWRR weight");
+}
+
+static int
+ionic_qos_validate(struct lif *lif, int qnum)
+{	
+	struct ionic_qos_tc *swtc;
+
+	swtc = &lif->ionic->qos_tc[qnum];
+	if (swtc->dot1q_pcp >= IONIC_QOS_CLASS_MAX) {
+		IONIC_NETDEV_ERROR(lif->netdev, "tc%d pcp value: %d invalid\n",
+				qnum, swtc->dot1q_pcp);
+			return (EINVAL);
+	}
+
+	if (swtc->dwrr_weight > 100) {
+		IONIC_NETDEV_ERROR(lif->netdev, "tc%d weight value: %d invalid\n",
+			qnum, swtc->dwrr_weight);
+		return (EINVAL);
+	}
+
+	if (swtc->mtu < IONIC_MIN_MTU || swtc->mtu > IONIC_MAX_MTU) {
+		IONIC_NETDEV_ERROR(lif->netdev, "tc%d mtu value: %d invalid\n",
+			qnum, swtc->mtu);
+		return (EINVAL);
+	}
+
+	return (0);
+}
+
+/*
+ * Send the QoS config to the card.
+ */
+static int
+ionic_qos_apply_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	struct lif *lif = oidp->oid_arg1;
+	struct ionic *ionic = lif->ionic;
+	struct identity *ident = &ionic->ident;
+	union qos_config *qos;
+	struct ionic_qos_tc *swtc;
+	int i, err, val, total_wt;
+
+	/* Not allowed to change for mgmt interface. */
+	if (lif->ionic->is_mgmt_nic)
+		return (EINVAL);
+
+	err = sysctl_handle_int(oidp, &val, 0, req);
+	if ((err) || (req->newptr == NULL))
+		return (err);
+
+	total_wt = 0;
+	for (i = 1; i < IONIC_QOS_CLASS_MAX; i++) {
+		swtc = &ionic->qos_tc[i];
+		if (swtc->enable)
+			total_wt += swtc->dwrr_weight;
+	}
+
+	if (total_wt > 100) {
+		IONIC_NETDEV_ERROR(lif->netdev, "total weight %d > 100\n", total_wt);
+		return (EINVAL);
+	}
+
+	ionic_qos_class_identify(ionic);
+
+	for (i = 1; i < IONIC_QOS_CLASS_MAX; i++) {
+		qos = &ident->qos.config[i];
+		swtc = &ionic->qos_tc[i];
+
+		/* Validate user provided parameters. */
+		if (ionic_qos_validate(lif, i))
+			continue;
+
+		/* Delete the class if it already exists */
+		if (qos->flags & IONIC_QOS_CONFIG_F_ENABLE)
+			ionic_qos_class_reset(ionic, i);
+
+		/* No need to init the class if the user does not want to enable it */
+		if (!swtc->enable) {
+			IONIC_NETDEV_DEBUG(lif->netdev, "Class %d not enabled. Skipped!\n", i);
+			continue;
+		}
+
+		qos->flags |= IONIC_QOS_CONFIG_F_ENABLE;
+
+		if (swtc->drop)
+			qos->flags |= IONIC_QOS_CONFIG_F_DROP;
+		else
+			qos->flags &= ~IONIC_QOS_CONFIG_F_DROP;
+
+		qos->mtu = swtc->mtu;
+		qos->dot1q_pcp = swtc->dot1q_pcp;
+		qos->dwrr_weight = swtc->dwrr_weight;
+		qos->pause_type = PORT_PAUSE_TYPE_LINK;
+		qos->class_type = QOS_CLASS_TYPE_PCP;
+		qos->sched_type = QOS_SCHED_TYPE_DWRR;
+
+		IONIC_NETDEV_DEBUG(lif->netdev, "TC%d pcp: %d weight: %d drop: %s class: %d\n",
+			i, qos->dot1q_pcp, qos->dwrr_weight,
+			swtc->drop ? "true" : "false", qos->class_type);
+
+		err = ionic_qos_class_init(ionic, i, qos);
+		if (err) {
+			IONIC_NETDEV_ERROR(lif->netdev, "failed to create class %d\n", i);
+			ionic_qos_class_identify(ionic);
+			return (err);
+		}
+	}
+
+	return (0);
+}
+
+static void
+ionic_qos_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
+		struct sysctl_oid_list *child)
+{
+	struct sysctl_oid *queue_node, *queue_node1;
+	struct sysctl_oid_list *queue_list, *queue_list1;
+	char namebuf[QUEUE_NAME_LEN];
+	int i;
+
+	snprintf(namebuf, QUEUE_NAME_LEN, "qos");
+	queue_node = SYSCTL_ADD_NODE(ctx, child, OID_AUTO, namebuf,
+				CTLFLAG_RD, NULL, "QoS for controlling CoS/PFC etc, shared between ports");
+	queue_list = SYSCTL_CHILDREN(queue_node);
+
+	SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, "apply",
+			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
+			ionic_qos_apply_sysctl, "I",
+			"Apply the newly configured QoS params to hardware");
+
+	for (i = 0; i < IONIC_QOS_CLASS_MAX; i++) {
+		snprintf(namebuf, QUEUE_NAME_LEN, "tc%d", i);
+		queue_node1 = SYSCTL_ADD_NODE(ctx, queue_list, OID_AUTO, namebuf,
+					CTLFLAG_RD, NULL, "QoS traffic class");
+		queue_list1 = SYSCTL_CHILDREN(queue_node1);
+		ionic_qos_config_sysctl(&lif->ionic->qos_tc[i], i, ctx, queue_list1);
+	}
 }
 
 static void
@@ -2384,6 +2542,7 @@ ionic_setup_device_stats(struct lif *lif)
 	ionic_setup_mac_stats(lif, ctx, child);
 	ionic_adminq_sysctl(lif, ctx, child);
 	ionic_notifyq_sysctl(lif, ctx, child);
+	ionic_qos_sysctl(lif, ctx, child);
 
 	for (i = 0; i < lif->nrxqs; i++) {
 		snprintf(namebuf, QUEUE_NAME_LEN, "rxq%d", i);
@@ -2506,7 +2665,7 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 	int mask;
 	uint32_t hw_features;
 
-	switch (command) {  
+	switch (command) {
 	case SIOCSIFMEDIA:
 	case SIOCGIFMEDIA:
 	case SIOCGIFXMEDIA:
@@ -2610,13 +2769,13 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 
 		// enable offloads on hardware
 		error = ionic_set_hw_features(lif, hw_features);
-		if (error) {				
+		if (error) {
 			IONIC_NETDEV_ERROR(lif->netdev, "Failed to set capabilities, err: %d\n",
 				error);
 			IONIC_CORE_UNLOCK(lif);
 			break;
 		}
-		
+
 		IONIC_CORE_UNLOCK(lif);
 		VLAN_CAPABILITIES(ifp);
 

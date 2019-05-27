@@ -29,6 +29,8 @@
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
 
+#include "nic/sdk/platform/devapi/devapi_types.hpp"
+
 #include "logger.hpp"
 #include "eth_if.h"
 #include "eth_dev.hpp"
@@ -307,7 +309,6 @@ EthLif::EthLif(devapi *dev_api,
     NIC_LOG_INFO("{}: fw_buf_addr {:#x} fw_buf_size {}", hal_lif_info_.name,
         fw_buf_addr, fw_buf_size);
 
-    // TODO: enhance mpartition library to get region size
     fw_buf = (uint8_t *)MEM_MAP(fw_buf_addr, fw_buf_size, 0);
     if (fw_buf == NULL) {
         NIC_LOG_ERR("{}: Failed to map firmware buffer", hal_lif_info_.name);
@@ -465,14 +466,11 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_INFO("{}: host_lif_stats_addr {:#x}",
                     hal_lif_info_.name, host_lif_stats_addr);
 
-        // starts a non-repeating timer to update stats. the timer is reset when
-        // stats update is complete.
         evutil_timer_start(EV_A_ &stats_timer, &EthLif::StatsUpdate, this, 0.0, 0.2);
     }
 
     // Init the status block
-    lif_status->eid = 0;
-    lif_status->link_flap_count = 0;
+    memset(lif_status, 0, sizeof(*lif_status));
 
     // Init the stats region
     MEM_SET(lif_stats_addr, 0, LIF_STATS_SIZE, 0);
@@ -564,10 +562,6 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
     // to avoid name collisions during re-addition of the lifs
     // TODO: Lif delete has to be called here instead of just
     // doing an update
-#if 0
-    lif->UpdateName(std::to_string(lif->GetHwLifId()));
-    lif->Reset();
-#endif
     DEVAPI_CHECK
     dev_api->lif_upd_name(hal_lif_info_.lif_id,
                           std::to_string(hal_lif_info_.lif_id));
@@ -758,8 +752,9 @@ EthLif::_CmdFwDownload(void *req, void *req_data, void *resp, void *resp_data)
     FILE *file;
     int err;
     status_code_t status = IONIC_RC_SUCCESS;
-    uint32_t transfer_off = 0, transfer_sz = 0;
+    uint32_t transfer_off = 0, transfer_sz = 0, buf_off = 0, write_off = 0;
     bool posted = false;
+    struct edmaq_ctx ctx = {0};
 
     NIC_LOG_INFO("{}: {} addr {:#x} offset {:#x} length {}",
         hal_lif_info_.name,
@@ -783,34 +778,6 @@ EthLif::_CmdFwDownload(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_EINVAL);
     }
 
-    struct edmaq_ctx ctx = {
-        .cb = NULL,
-        .obj = edmaq
-    };
-
-    while (transfer_off < cmd->length) {
-        transfer_sz = min(cmd->length - transfer_off, EDMAQ_MAX_TRANSFER_SZ);
-        posted = edmaq->Post(
-            spec->host_dev ? EDMA_OPCODE_HOST_TO_LOCAL : EDMA_OPCODE_LOCAL_TO_LOCAL,
-            cmd->addr + transfer_off,
-            fw_buf_addr + transfer_off,
-            transfer_sz,
-            &ctx
-        );
-        if (posted) {
-            // NIC_LOG_INFO("{}: Queued transfer offset {:#x} size {} src {:#x} dst {:#x}",
-            //     hal_lif_info_.name, transfer_off, transfer_sz,
-            //     cmd->addr + transfer_off, fw_buf_addr + transfer_off);
-            transfer_off += transfer_sz;
-        } else {
-            NIC_LOG_INFO("{}: Waiting for transfers to complete ...",
-                hal_lif_info_.name);
-            usleep(1000);
-        }
-        // Check for completions
-        EdmaQ::Poll(edmaq);
-    };
-
     /* cleanup update partition before starting download */
     if (cmd->offset == 0) {
         system("rm -r /update/*");
@@ -823,20 +790,73 @@ EthLif::_CmdFwDownload(void *req, void *req_data, void *resp, void *resp_data)
         goto err_out;
     }
 
-    err = fseek(file, cmd->offset, SEEK_SET);
-    if (err) {
-        NIC_LOG_ERR("{}: Failed to seek offset {}, {}", hal_lif_info_.name,
-            cmd->offset, strerror(errno));
-        status = IONIC_RC_EIO;
-        goto err_out;
+    /* transfer from host buffer in chunks of max size allowed by edma */
+    write_off = cmd->offset;
+    while (transfer_off < cmd->length) {
+
+        transfer_sz = min(cmd->length - transfer_off, EDMAQ_MAX_TRANSFER_SZ);
+
+        /* if the local buffer does not have enough free space, then write it to file */
+        if (buf_off + transfer_sz > fw_buf_size) {
+            err = fseek(file, write_off, SEEK_SET);
+            if (err) {
+                NIC_LOG_ERR("{}: Failed to seek offset {}, {}", hal_lif_info_.name,
+                    write_off, strerror(errno));
+                status = IONIC_RC_EIO;
+                goto err_out;
+            }
+
+            err = fwrite((const void *)fw_buf, sizeof(fw_buf[0]), buf_off, file);
+            if (err != (int)buf_off) {
+                NIC_LOG_ERR("{}: Failed to write chunk, {}", hal_lif_info_.name,
+                    strerror(errno));
+                status = IONIC_RC_EIO;
+                goto err_out;
+            }
+
+            write_off += buf_off;
+            buf_off = 0;
+        }
+
+        /* try posting an edma request */
+        posted = edmaq->Post(
+            spec->host_dev ? EDMA_OPCODE_HOST_TO_LOCAL : EDMA_OPCODE_LOCAL_TO_LOCAL,
+            cmd->addr + transfer_off,
+            fw_buf_addr + buf_off,
+            transfer_sz,
+            &ctx
+        );
+
+        if (posted) {
+            // NIC_LOG_INFO("{}: Queued transfer offset {:#x} size {} src {:#x} dst {:#x}",
+            //     hal_lif_info_.name, transfer_off, transfer_sz,
+            //     cmd->addr + transfer_off, fw_buf_addr + transfer_off);
+            transfer_off += transfer_sz;
+            buf_off += transfer_sz;
+        } else {
+            NIC_LOG_INFO("{}: Waiting for transfers to complete ...",
+                hal_lif_info_.name);
+            usleep(1000);
+        }
     }
 
-    err = fwrite((const void *)fw_buf, sizeof(fw_buf[0]), cmd->length, file);
-    if (err != (int)cmd->length) {
-        NIC_LOG_ERR("{}: Failed to write chunk, {}", hal_lif_info_.name,
-            strerror(errno));
-        status = IONIC_RC_EIO;
-        goto err_out;
+    /* write the leftover data */
+    if (buf_off > 0) {
+        err = fseek(file, write_off, SEEK_SET);
+        if (err) {
+            NIC_LOG_ERR("{}: Failed to seek offset {}, {}", hal_lif_info_.name,
+                write_off, strerror(errno));
+            status = IONIC_RC_EIO;
+            goto err_out;
+        }
+
+        err = fwrite((const void *)fw_buf, sizeof(fw_buf[0]), buf_off, file);
+        if (err != (int)buf_off) {
+            NIC_LOG_ERR("{}: Failed to write chunk, {}", hal_lif_info_.name,
+                strerror(errno));
+            status = IONIC_RC_EIO;
+            goto err_out;
+        }
     }
 
 err_out:
@@ -2324,7 +2344,8 @@ EthLif::LinkEventHandler(port_status_t *evd)
     lif_status->link_status = evd->status;
     lif_status->link_speed =  evd->speed;
     ++lif_status->eid;
-    ++lif_status->link_flap_count;
+    if (state == LIF_STATE_DOWN && evd->status == PORT_OPER_STATUS_UP)
+        ++lif_status->link_down_count;
     WRITE_MEM(lif_status_addr, (uint8_t *)lif_status, sizeof(struct lif_status), 0);
 
     // Update host lif status
@@ -2371,11 +2392,11 @@ EthLif::LinkEventHandler(port_status_t *evd)
 
     // FIXME: Wait for completion
 
-    state = (evd->status == 1) ? LIF_STATE_UP : LIF_STATE_DOWN;
+    state = (evd->status == PORT_OPER_STATUS_UP) ? LIF_STATE_UP : LIF_STATE_DOWN;
     NIC_LOG_INFO("{}: {} + {} => {}",
         hal_lif_info_.name,
         lif_state_to_str(state),
-        (evd->status == 1) ? "LINK_UP" : "LINK_DN",
+        (evd->status == PORT_OPER_STATUS_UP) ? "LINK_UP" : "LINK_DN",
         lif_state_to_str(state));
 }
 
@@ -2396,10 +2417,12 @@ EthLif::XcvrEventHandler(port_status_t *evd)
         return;
     }
 
+    // Update local lif status
     lif_status->link_status = evd->status;
     lif_status->link_speed =  evd->speed;
     ++lif_status->eid;
-    ++lif_status->link_flap_count;
+    if (state == LIF_STATE_DOWN && evd->status == PORT_OPER_STATUS_UP)
+        ++lif_status->link_down_count;
     WRITE_MEM(lif_status_addr, (uint8_t *)lif_status, sizeof(struct lif_status), 0);
 
     // Update host lif status
@@ -2442,11 +2465,11 @@ EthLif::XcvrEventHandler(port_status_t *evd)
 
     // FIXME: Wait for completion
 
-    state = (evd->status == 1) ? LIF_STATE_UP : LIF_STATE_DOWN;
+    state = (evd->status == PORT_OPER_STATUS_UP) ? LIF_STATE_UP : LIF_STATE_DOWN;
     NIC_LOG_INFO("{}: {} + {} => {}",
         hal_lif_info_.name,
         lif_state_to_str(state),
-        (evd->status == 1) ? "LINK_UP" : "LINK_DN",
+        (evd->status == PORT_OPER_STATUS_UP) ? "LINK_UP" : "LINK_DN",
         lif_state_to_str(state));
 }
 
@@ -2457,24 +2480,6 @@ EthLif::SendFWDownEvent()
         NIC_LOG_WARN("{}: state: {} Cannot send RESET event when lif is in RESET state!",
             hal_lif_info_.name, lif_state_to_str(state));
         return;
-    }
-
-    // Update local lif status
-    lif_status->link_status = 0;
-    lif_status->link_speed = 0;
-    ++lif_status->eid;
-    ++lif_status->link_flap_count;
-    WRITE_MEM(lif_status_addr, (uint8_t *)lif_status, sizeof(struct lif_status), 0);
-
-    // Update host lif status
-    if (host_lif_status_addr != 0) {
-        edmaq->Post(
-            spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-            lif_status_addr,
-            host_lif_status_addr,
-            sizeof(struct lif_status),
-            NULL
-        );
     }
 
     if (notify_enabled == 0) {
@@ -2545,15 +2550,16 @@ EthLif::StatsUpdate(void *obj)
             sizeof(struct lif_stats),
             &ctx
         );
+        evutil_timer_stop(eth->loop, &eth->stats_timer);
     }
 }
 
 void
 EthLif::StatsUpdateComplete(void *obj)
 {
-    //EthLif *eth = (EthLif *)obj;
+    EthLif *eth = (EthLif *)obj;
 
-    // evutil_timer_again(eth->loop, &eth->stats_timer);
+    evutil_timer_again(eth->loop, &eth->stats_timer);
 }
 
 int

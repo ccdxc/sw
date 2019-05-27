@@ -189,9 +189,36 @@ ionic_read_notify_block(struct lif* lif)
 
 	lif->last_eid = nb->eid;
 	lif->link_speed = nb->link_speed;
-	lif->link_up = nb->link_status == PORT_OPER_STATUS_UP;
+	lif->link_up = (nb->link_status == PORT_OPER_STATUS_UP);
 }
 
+/*
+ * Read the current QoS config.
+ */
+static void
+ionic_read_qos_cfg(struct lif *lif)
+{
+	struct identity *ident;
+	union qos_config *qos;
+	struct ionic_qos_tc *swtc;
+	int i;
+
+	if (ionic_qos_class_identify(lif->ionic)) {
+		IONIC_NETDEV_ERROR(lif->netdev, "failed to read current QoS config.\n");
+		return;
+	}
+
+	ident = &lif->ionic->ident;
+	for (i = 0; i < IONIC_QOS_CLASS_MAX; i++) {
+		qos = &ident->qos.config[i];
+		swtc = &lif->ionic->qos_tc[i];
+		
+		swtc->enable = (qos->flags & IONIC_QOS_CONFIG_F_ENABLE) ? true : false;
+		swtc->drop = (qos->flags & IONIC_QOS_CONFIG_F_DROP) ? true : false;
+		swtc->dot1q_pcp = qos->dot1q_pcp;
+		swtc->dwrr_weight = qos->dwrr_weight;
+	}
+}
 /*
  * Enable all the queues and unmask interrupts.
  */
@@ -1178,7 +1205,7 @@ ionic_notifyq_alloc(struct lif *lif, unsigned int qnum,
 	notifyq->comp_ring = (union notifyq_comp *)(notifyq->cmd_dma.dma_vaddr + ALIGN(cmd_ring_size, PAGE_SIZE));
 
 	/*
-	 * Create notifyQ task to process notifyQ events - link flap, log
+	 * Create notifyQ task to process notifyQ events - link status, log
 	 */
 	TASK_INIT(&notifyq->task, 0, ionic_notifyq_task_handler, notifyq);
 	snprintf(namebuf, sizeof(namebuf), "task-%s", notifyq->name);
@@ -1712,6 +1739,15 @@ ionic_setup_intr_coal(struct lif* lif)
 	}
 }
 
+static inline void
+ionic_ifmedia_add(struct ifmedia *ifm, int m)
+{
+	ifmedia_add(ifm, m, 0, NULL);
+	ifmedia_add(ifm, m | IFM_ETH_TXPAUSE, 0, NULL);
+	ifmedia_add(ifm, m | IFM_ETH_RXPAUSE, 0, NULL);
+	ifmedia_add(ifm, m | IFM_ETH_TXPAUSE | IFM_ETH_RXPAUSE, 0, NULL);
+}
+
 static void
 ionic_lif_ifnet_init(struct lif *lif)
 {
@@ -1729,23 +1765,23 @@ ionic_lif_ifnet_init(struct lif *lif)
 	if (lif->ionic->is_mgmt_nic) {
 		ifmedia_add(&lif->media, IFM_ETHER | IFM_1000_KX, 0, NULL);
 	} else {
-		ifmedia_add(&lif->media, IFM_ETHER | IFM_100G_CR4, 0, NULL);
-		ifmedia_add(&lif->media, IFM_ETHER | IFM_100G_SR4, 0, NULL);
-		ifmedia_add(&lif->media, IFM_ETHER | IFM_100G_LR4, 0, NULL);
-		ifmedia_add(&lif->media, IFM_ETHER | IFM_40G_CR4, 0, NULL);
-		ifmedia_add(&lif->media, IFM_ETHER | IFM_40G_SR4, 0, NULL);
-		ifmedia_add(&lif->media, IFM_ETHER | IFM_40G_LR4, 0, NULL);
-		ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_CR, 0, NULL);
-		ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_SR, 0, NULL);
-		ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_LR, 0, NULL);
-		ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_AOC, 0, NULL);
-		ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_SR, 0, NULL);
-		ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_LR, 0, NULL);
-		ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_LRM, 0, NULL);
-		ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_ER, 0, NULL);
+		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_100G_CR4);
+		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_100G_SR4);
+		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_100G_LR4);
+		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_40G_CR4);
+		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_40G_SR4);
+		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_40G_LR4);
+		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_CR);
+		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_SR);
+		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_LR);
+		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_AOC);
+		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_SR);
+		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_LR);
+		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_LRM);
+		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_ER);
 	}
 
-	ifmedia_add(&lif->media, IFM_ETHER | IFM_AUTO, 0, NULL);
+	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_AUTO);
 	ifmedia_set(&lif->media, IFM_ETHER | IFM_AUTO);
 }
 
@@ -2711,8 +2747,11 @@ ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr)
 	ifmr->ifm_status |= IFM_ACTIVE;
 	ifmr->ifm_active |= IFM_FDX;
 
-	if (idev->port_info->config.pause_type)
-		ifmr->ifm_active |= IFM_ETH_TXPAUSE | IFM_ETH_RXPAUSE;
+	ifmr->ifm_active &= ~(IFM_ETH_TXPAUSE | IFM_ETH_RXPAUSE);
+	if (idev->port_info->config.pause_type & IONIC_PAUSE_F_RX)
+		ifmr->ifm_active |= IFM_ETH_RXPAUSE;
+	if (idev->port_info->config.pause_type & IONIC_PAUSE_F_TX)
+		ifmr->ifm_active |= IFM_ETH_TXPAUSE;
 
 	if (ionic->is_mgmt_nic) {
 		ifmr->ifm_active |= IFM_1000_KX;
@@ -2806,13 +2845,13 @@ ionic_media_change(struct ifnet *ifp)
 	struct ionic_dev* idev = &ionic->idev;
 	struct ifmedia *ifm = &lif->media;
 	u32 speed;
-	u8 an_enable;
+	u8 an_enable, pause_type;
 	int err;
 
 	if (IFM_TYPE(ifm->ifm_media) != IFM_ETHER)
 		return (EINVAL);
 
-	if (lif->ionic->is_mgmt_nic)
+	if (ionic->is_mgmt_nic)
 		return (ENODEV);
 
 	switch (IFM_SUBTYPE(ifm->ifm_media)) {
@@ -2855,6 +2894,13 @@ ionic_media_change(struct ifnet *ifp)
 		an_enable = 1;
 	}
 
+	pause_type = idev->port_info->config.pause_type;
+	pause_type &= ~(IONIC_PAUSE_F_TX | IONIC_PAUSE_F_RX);
+	if (ifm->ifm_media & IFM_ETH_RXPAUSE)
+		pause_type |= IONIC_PAUSE_F_RX;
+	if (ifm->ifm_media & IFM_ETH_TXPAUSE)
+		pause_type |= IONIC_PAUSE_F_TX;
+
 	ionic_dev_cmd_port_autoneg(idev, an_enable);
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	if (err) {
@@ -2866,6 +2912,13 @@ ionic_media_change(struct ifnet *ifp)
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	if (err) {
 		IONIC_NETDEV_ERROR(lif->netdev, "failed to set speed, error = %d\n", err);
+		return err;
+	}
+
+	ionic_dev_cmd_port_pause(idev, pause_type);
+	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
+	if (err) {
+		IONIC_NETDEV_ERROR(lif->netdev, "failed to set pause, error = %d\n", err);
 		return err;
 	}
 

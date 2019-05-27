@@ -130,6 +130,18 @@ MALLOC_DECLARE(M_IONIC);
 
 struct ionic_dev;
 
+/*
+ * @cos: valid value 0-7
+ * @weight: 0-99.
+ */
+struct ionic_qos_tc {
+	bool enable;
+	bool drop;
+	uint8_t dot1q_pcp;
+	uint8_t dwrr_weight;
+	uint32_t mtu;
+};
+
 struct ionic {
 	struct pci_dev *pdev;
 	struct platform_device *pfdev;
@@ -147,6 +159,9 @@ struct ionic {
 	unsigned int ntxqs_per_lif;
 	unsigned int nrxqs_per_lif;
 	unsigned int nintrs;
+
+	/* QoS software config. */
+	struct ionic_qos_tc qos_tc[IONIC_QOS_CLASS_MAX];
 
 	DECLARE_BITMAP(intrs, INTR_CTRL_REGS_MAX);
 };
@@ -166,5 +181,10 @@ int ionic_port_identify(struct ionic *ionic);
 int ionic_port_init(struct ionic *ionic);
 int ionic_port_reset(struct ionic *ionic);
 void ionic_set_port_state(struct ionic *ionic, uint8_t state);
+
+int ionic_qos_class_identify(struct ionic *ionic);
+int ionic_qos_class_init(struct ionic *ionic, uint8_t group,
+	union qos_config *config);
+int ionic_qos_class_reset(struct ionic *ionic, uint8_t group);
 
 #endif /* _IONIC_H_ */

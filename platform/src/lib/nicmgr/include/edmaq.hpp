@@ -6,6 +6,7 @@
 #define __EDMAQ_HPP__
 
 #include <cstdint>
+#include <ev.h>
 
 #include "nic/include/edmaq.h"
 #include "nic/sdk/platform/evutils/include/evutils.h"
@@ -14,8 +15,8 @@
 #include "pal_compat.hpp"
 #include "nicmgr_utils.hpp"
 
-#define EDMAQ_COMP_POLL_US          (1000)
-#define EDMAQ_COMP_POLL_MAX         (10)
+#define EDMAQ_COMP_POLL_S           (0.001) // 1 ms
+#define EDMAQ_COMP_TIMEOUT_S        (0.01)  // 10 ms
 #define EDMAQ_MAX_TRANSFER_SZ       (((1U << 14) - 1) & (~63U))
 
 typedef void (*edmaq_cb_t) (void *obj);
@@ -23,6 +24,7 @@ typedef void (*edmaq_cb_t) (void *obj);
 struct edmaq_ctx {
     edmaq_cb_t cb;
     void *obj;
+    ev_tstamp deadline;
 };
 
 class EdmaQ {

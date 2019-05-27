@@ -38,7 +38,6 @@ static inline void ionic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(union dev_info_regs) != 2048);
 	BUILD_BUG_ON(sizeof(union dev_cmd_regs) != 2048);
 
-	BUILD_BUG_ON(sizeof(struct port_stats) != 1024);
 	BUILD_BUG_ON(sizeof(struct lif_stats) != 1024);
 
 	BUILD_BUG_ON(sizeof(struct admin_cmd) != 64);

@@ -538,6 +538,50 @@ ionic_set_port_state(struct ionic *ionic, uint8_t state)
 			ionic_port_admin_state_str(state), err);
 }
 #endif
+
+int ionic_qos_class_identify(struct ionic *ionic)
+{
+	struct ionic_dev *idev = &ionic->idev;
+	struct identity *ident = &ionic->ident;
+	int i, err, nwords;
+
+	ionic_dev_cmd_qos_class_identify(idev);
+	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
+	if (!err) {
+		nwords = min(ARRAY_SIZE(ident->qos.words),
+						ARRAY_SIZE(idev->dev_cmd_regs->data));
+		for (i = 0; i < nwords; i++)
+			ident->qos.words[i] = ioread32(&idev->dev_cmd_regs->data[i]);
+	}
+
+	return err;
+}
+
+int ionic_qos_class_init(struct ionic *ionic, uint8_t group, union qos_config *config)
+{
+	struct ionic_dev *idev = &ionic->idev;
+	int i, err, nwords;
+
+	nwords = min(ARRAY_SIZE(config->words),
+					ARRAY_SIZE(idev->dev_cmd_regs->data));
+	for (i = 0; i < nwords; i++)
+		iowrite32(config->words[i], &idev->dev_cmd_regs->data[i]);
+
+	ionic_dev_cmd_qos_class_init(idev, group);
+	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
+	return err;
+}
+
+int ionic_qos_class_reset(struct ionic *ionic, uint8_t group)
+{
+	struct ionic_dev *idev = &ionic->idev;
+	int err;
+
+	ionic_dev_cmd_qos_class_reset(idev, group);
+	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
+	return err;
+}
+
 /*
  * Validate user parameters.
  */

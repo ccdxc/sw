@@ -49,10 +49,15 @@ public:
                                       bool all_multicast,
                                       bool promiscuous) override;
     virtual sdk_ret_t lif_upd_name(uint32_t lif_id, string name) override;
+
     // qos APIs
+    virtual sdk_ret_t qos_class_get(uint8_t group, qos_class_info_t *info) override;
+    virtual sdk_ret_t qos_class_create(qos_class_info_t *info) override;
+    virtual sdk_ret_t qos_class_delete(uint8_t group) override;
     virtual sdk_ret_t qos_get_txtc_cos(const string &group,
                                        uint32_t uplink_port,
                                        uint8_t *cos) override;
+
     // uplink APIs
     virtual sdk_ret_t uplink_create(uint32_t uplink_ifidx,
                                     pds_ifindex_t ifidx, bool is_oob) override;

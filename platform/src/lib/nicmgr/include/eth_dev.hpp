@@ -14,7 +14,7 @@
 
 #include "nic/sdk/lib/indexer/indexer.hpp"
 #include "nic/sdk/platform/evutils/include/evutils.h"
-#include "nic/sdk/platform/devapi/devapi_types.hpp"
+#include "nic/sdk/platform/devapi/devapi.hpp"
 
 #ifdef __aarch64__
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
@@ -168,6 +168,7 @@ private:
     // Port Stats
     uint64_t port_stats_addr;
     uint64_t host_port_stats_addr;
+    uint32_t port_stats_size;
     // Tasks
     EV_P;
     evutil_prepare devcmd_prepare = {0};
@@ -200,6 +201,10 @@ private:
     status_code_t _CmdPortGetAttr(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdPortSetAttr(void *req, void *req_data, void *resp, void *resp_data);
 
+    status_code_t _CmdQosIdentify(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdQosInit(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdQosReset(void *req, void *req_data, void *resp, void *resp_data);
+
     status_code_t _CmdLifIdentify(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdLifInit(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdLifReset(void *req, void *req_data, void *resp, void *resp_data);
@@ -212,7 +217,7 @@ private:
     static void StatsUpdateComplete(void *obj);
 
     const char *opcode_to_str(cmd_opcode_t opcode);
-
+    const char *qos_class_to_str(uint8_t qos_class);
 };
 
 #endif

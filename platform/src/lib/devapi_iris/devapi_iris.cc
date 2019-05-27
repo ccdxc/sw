@@ -280,6 +280,24 @@ end:
 }
 
 sdk_ret_t
+devapi_iris::qos_class_get(uint8_t group, qos_class_info_t *info)
+{
+    return devapi_qos::qos_class_get(group, info);
+}
+
+sdk_ret_t
+devapi_iris::qos_class_create(qos_class_info_t *info)
+{
+    return devapi_qos::qos_class_create(info);
+}
+
+sdk_ret_t
+devapi_iris::qos_class_delete(uint8_t group)
+{
+    return devapi_qos::qos_class_delete(group);
+}
+
+sdk_ret_t
 devapi_iris::qos_get_txtc_cos(const std::string &group, uint32_t uplink_port,
                               uint8_t *cos)
 {

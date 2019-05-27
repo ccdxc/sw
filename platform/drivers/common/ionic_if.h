@@ -51,6 +51,11 @@ enum cmd_opcode {
 	CMD_OPCODE_RDMA_CREATE_CQ		= 52,
 	CMD_OPCODE_RDMA_CREATE_ADMINQ		= 53,
 
+	/* QoS commands */
+	CMD_OPCODE_QOS_CLASS_IDENTIFY		= 240,
+	CMD_OPCODE_QOS_CLASS_INIT		= 241,
+	CMD_OPCODE_QOS_CLASS_RESET		= 242,
+
 	/* Firmware commands */
 	CMD_OPCODE_FW_DOWNLOAD			= 254,
 	CMD_OPCODE_FW_CONTROL			= 255,
@@ -197,7 +202,7 @@ struct dev_identify_cmd {
 };
 
 /**
- * struct identify_comp - Driver/device identify command completion
+ * struct dev_identify_comp - Driver/device identify command completion
  * @status: The status of the command (enum status_code)
  * @ver:    Version of identify returned by device
  */
@@ -1124,7 +1129,7 @@ struct xcvr_status {
  * @state:              port admin state (enum port_admin_state)
  * @an_enable:          autoneg enable
  * @fec_type:           fec type (enum port_fec_type)
- * @pause_type:         pause type  (enum port_pause_type)
+ * @pause_type:         pause type (enum port_pause_type)
  * @loopback_mode:      loopback mode (enum port_loopback_mode)
  */
 union port_config {
@@ -1140,6 +1145,10 @@ union port_config {
 		u8     state;
 		u8     an_enable;
 		u8     fec_type;
+#define IONIC_PAUSE_TYPE_MASK		0x0f
+#define IONIC_PAUSE_FLAGS_MASK		0xf0
+#define IONIC_PAUSE_F_TX		0x10
+#define IONIC_PAUSE_F_RX		0x20
 		u8     pause_type;
 		u8     loopback_mode;
 	};
@@ -1315,7 +1324,7 @@ struct port_getattr_comp {
  * @port_num:        port the lif is connected to
  * @link_status:     port status (enum port_oper_status)
  * @link_speed:      speed of link in Mbps
- * @link_flap_count: number of times link status changes
+ * @link_down_count: number of times link status changes
  */
 struct lif_status {
 	__le64 eid;
@@ -1323,7 +1332,7 @@ struct lif_status {
 	u8     rsvd;
 	__le16 link_status;
 	__le32 link_speed;		/* units of 1Mbps: eg 10000 = 10Gbps */
-	__le16 link_flap_count;
+	__le16 link_down_count;
 	u8      rsvd2[46];
 };
 
@@ -1639,11 +1648,170 @@ struct rx_filter_del_cmd {
 typedef struct admin_comp rx_filter_del_comp;
 
 /**
- * struct fw_download_cmd - Firmware download command
+ * struct qos_identify_cmd - QoS identify command
  * @opcode:    opcode
- * @addr:      dma address of the firmware buffer
- * @offset:    offset of the firmware buffer within the full image
- * @length:    number of valid bytes in the firmware buffer
+ * @ver:     Highest version of identify supported by driver
+ * 
+ */
+struct qos_identify_cmd {
+	u8 opcode;
+	u8 ver;
+	u8 rsvd[62];
+};
+
+/**
+ * struct qos_identify_comp - QoS identify command completion
+ * @status: The status of the command (enum status_code)
+ * @ver:    Version of identify returned by device
+ */
+struct qos_identify_comp {
+	u8 status;
+	u8 ver;
+	u8 rsvd[14];
+};
+
+#define IONIC_QOS_CLASS_MAX		7
+#define IONIC_QOS_CLASS_NAME_SZ		32
+#define IONIC_QOS_DSCP_MAX_VALUES	64
+
+/**
+ * enum qos_class
+ */
+enum qos_class {
+	QOS_CLASS_DEFAULT		= 0,
+	QOS_CLASS_USER_DEFINED_1	= 1,
+	QOS_CLASS_USER_DEFINED_2	= 2,
+	QOS_CLASS_USER_DEFINED_3	= 3,
+	QOS_CLASS_USER_DEFINED_4	= 4,
+	QOS_CLASS_USER_DEFINED_5	= 5,
+	QOS_CLASS_USER_DEFINED_6	= 6,
+};
+
+/**
+ * enum qos_class_type - Traffic classification criteria
+ */
+enum qos_class_type {
+	QOS_CLASS_TYPE_NONE	= 0,
+	QOS_CLASS_TYPE_PCP	= 1,	/* Dot1Q pcp */
+	QOS_CLASS_TYPE_DSCP	= 2,	/* IP dscp */
+};
+
+/**
+ * enum qos_sched_type - Qos class scheduling type
+ */
+enum qos_sched_type {
+	QOS_SCHED_TYPE_STRICT	= 0,	/* Strict priority */
+	QOS_SCHED_TYPE_DWRR	= 1,	/* Deficit weighted round-robin */
+};
+
+/**
+ * union qos_config - Qos configuration structure
+ * @flags:		Configuration flags
+ * 	IONIC_QOS_CONFIG_F_ENABLE		enable
+ * 	IONIC_QOS_CONFIG_F_DROP			drop/nodrop
+ * 	IONIC_QOS_CONFIG_F_RW_DOT1Q_PCP		enable dot1q pcp rewrite
+ * 	IONIC_QOS_CONFIG_F_RW_IP_DSCP		enable ip dscp rewrite
+ * @sched_type:		Qos class scheduling type (enum qos_sched_type)
+ * @class_type:		Qos class type (enum qos_class_type)
+ * @pause_type:		Qos pause type (enum qos_pause_type)
+ * @name:		Qos class name
+ * @mtu:		MTU of the class
+ * @pfc_dot1q_pcp:	Pcp value for pause frames (valid iff F_NODROP)
+ * @dwrr_weight:	Qos class scheduling weight
+ * @strict_rlmt:	Rate limit for strict priority scheduling
+ * @rw_dot1q_pcp:	Rewrite dot1q pcp to this value	(valid iff F_RW_DOT1Q_PCP)
+ * @rw_ip_dscp:		Rewrite ip dscp to this value	(valid iff F_RW_IP_DSCP)
+ * @dot1q_pcp:		Dot1q pcp value
+ * @ndscp:		Number of valid dscp values in the ip_dscp field
+ * @ip_dscp:		IP dscp values
+ */
+union qos_config {
+	struct {
+#define IONIC_QOS_CONFIG_F_ENABLE		BIT(0)
+#define IONIC_QOS_CONFIG_F_DROP			BIT(1)
+#define IONIC_QOS_CONFIG_F_RW_DOT1Q_PCP		BIT(2)
+#define IONIC_QOS_CONFIG_F_RW_IP_DSCP		BIT(3)
+		u8      flags;
+		u8      sched_type;
+		u8      class_type;
+		u8      pause_type;
+		char    name[IONIC_QOS_CLASS_NAME_SZ];
+		__le32  mtu;
+		/* flow control */
+		u8      pfc_cos;
+		/* scheduler */
+		union {
+			u8      dwrr_weight;
+			__le64  strict_rlmt;
+		};
+		/* marking */
+		union {
+			u8      rw_dot1q_pcp;
+			u8      rw_ip_dscp;
+		};
+		/* classification */
+		union {
+			u8      dot1q_pcp;
+			struct {
+				u8      ndscp;
+				u8      ip_dscp[IONIC_QOS_DSCP_MAX_VALUES];
+			};
+		};
+	};
+	__le32  words[64];
+};
+
+/**
+ * union qos_identity - QoS identity structure
+ * @version:	Version of the identify structure
+ * @type:	QoS system type
+ * @nclasses:	Number of usable QoS classes
+ * @config:	Current configuration of classes
+ */
+union qos_identity {
+	struct {
+		u8     version;
+		u8     type;
+		u8     rsvd[62];
+		union  qos_config config[IONIC_QOS_CLASS_MAX];
+	};
+	__le32 words[512];
+};
+
+/**
+ * struct qos_init_cmd - QoS config init command
+ * @opcode:	Opcode
+ * @group:	Qos class id
+ * @info_pa:	destination address for qos info
+ */
+struct qos_init_cmd {
+	u8     opcode;
+	u8     group;
+	u8     rsvd[6];
+	__le64 info_pa;
+	u8     rsvd1[48];
+};
+
+typedef struct admin_comp qos_init_comp;
+
+/**
+ * struct qos_reset_cmd - Qos config reset command
+ * @opcode:	Opcode
+ */
+struct qos_reset_cmd {
+	u8    opcode;
+	u8    group;
+	u8    rsvd[62];
+};
+
+typedef struct admin_comp qos_reset_comp;
+
+/**
+ * struct fw_download_cmd - Firmware download command
+ * @opcode:	opcode
+ * @addr:	dma address of the firmware buffer
+ * @offset:	offset of the firmware buffer within the full image
+ * @length:	number of valid bytes in the firmware buffer
  */
 struct fw_download_cmd {
 	u8     opcode;
@@ -1656,9 +1824,9 @@ struct fw_download_cmd {
 typedef struct admin_comp fw_download_comp;
 
 enum fw_control_oper {
-	IONIC_FW_RESET    = 0,	/* Reset firmare */
-	IONIC_FW_INSTALL  = 1,	/* Install firmware */
-	IONIC_FW_ACTIVATE = 2,	/* Activate firmware */
+	IONIC_FW_RESET		= 0,	/* Reset firmare */
+	IONIC_FW_INSTALL	= 1,	/* Install firmware */
+	IONIC_FW_ACTIVATE	= 2,	/* Activate firmware */
 };
 
 /**
@@ -1922,7 +2090,41 @@ struct port_stats {
 	__le64 rx_pripause_7_1us_count;
 	__le64 rx_pause_1us_count;
 	__le64 frames_tx_truncated;
-	u8 rsvd[312];
+};
+
+struct mgmt_port_stats {
+	__le64 frames_rx_ok;
+	__le64 frames_rx_all;
+	__le64 frames_rx_bad_fcs;
+	__le64 frames_rx_bad_all;
+	__le64 octets_rx_ok;
+	__le64 octets_rx_all;
+	__le64 frames_rx_unicast;
+	__le64 frames_rx_multicast;
+	__le64 frames_rx_broadcast;
+	__le64 frames_rx_pause;
+	__le64 frames_rx_bad_length0;
+	__le64 frames_rx_undersized1;
+	__le64 frames_rx_oversized2;
+	__le64 frames_rx_fragments3;
+	__le64 frames_rx_jabber4;
+	__le64 frames_rx_64b5;
+	__le64 frames_rx_65b_127b6;
+	__le64 frames_rx_128b_255b7;
+	__le64 frames_rx_256b_511b8;
+	__le64 frames_rx_512b_1023b9;
+	__le64 frames_rx_1024b_1518b0;
+	__le64 frames_rx_gt_1518b1;
+	__le64 frames_rx_fifo_full2;
+	__le64 frames_tx_ok3;
+	__le64 frames_tx_all4;
+	__le64 frames_tx_bad5;
+	__le64 octets_tx_ok6;
+	__le64 octets_tx_total7;
+	__le64 frames_tx_unicast8;
+	__le64 frames_tx_multicast9;
+	__le64 frames_tx_broadcast0;
+	__le64 frames_tx_pause1;
 };
 
 /**
@@ -2152,6 +2354,10 @@ union dev_cmd {
 	struct lif_init_cmd lif_init;
 	struct lif_reset_cmd lif_reset;
 
+	struct qos_identify_cmd qos_identify;
+	struct qos_init_cmd qos_init;
+	struct qos_reset_cmd qos_reset;
+
 	struct q_init_cmd q_init;
 };
 
@@ -2176,6 +2382,10 @@ union dev_cmd_comp {
 	struct lif_identify_comp lif_identify;
 	struct lif_init_comp lif_init;
 	lif_reset_comp lif_reset;
+
+	struct qos_identify_comp qos_identify;
+	qos_init_comp qos_init;
+	qos_reset_comp qos_reset;
 
 	struct q_init_comp q_init;
 };
@@ -2411,6 +2621,7 @@ struct identity {
 	union dev_identity dev;
 	union lif_identity lif;
 	union port_identity port;
+	union qos_identity qos;
 };
 
 #pragma pack(pop)

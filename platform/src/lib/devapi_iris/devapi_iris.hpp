@@ -32,11 +32,21 @@ public:
     sdk_ret_t lif_upd_rx_mode(uint32_t lif_id, bool broadcast,
                               bool all_multicast, bool promiscuous);
     sdk_ret_t lif_upd_name(uint32_t lif_id, std::string name);
+
+    // Qos APIs
+    sdk_ret_t qos_class_get(uint8_t group, qos_class_info_t *info);
+    sdk_ret_t qos_class_create(qos_class_info_t *info);
+    sdk_ret_t qos_class_delete(uint8_t group);
     sdk_ret_t qos_get_txtc_cos(const std::string &group, uint32_t uplink_port,
                                uint8_t *cos);
-    sdk_ret_t set_fwd_mode(fwd_mode_t fwd_mode);
+
+    // Uplink APIs
     sdk_ret_t uplink_create(uint32_t id, uint32_t port, bool is_oob);
     sdk_ret_t uplink_destroy(uint32_t port);
+
+    // Generic APIs
+    sdk_ret_t set_fwd_mode(fwd_mode_t fwd_mode);
+
     // Port APIs
     sdk_ret_t port_get_status(uint32_t port_num,
                               port_status_t *status);

@@ -36,7 +36,6 @@ static inline void ionic_struct_size_checks(void)
 	VMK_ASSERT_ON_COMPILE(sizeof(union dev_info_regs) == 2048);
 	VMK_ASSERT_ON_COMPILE(sizeof(union dev_cmd_regs) == 2048);
 
-	VMK_ASSERT_ON_COMPILE(sizeof(struct port_stats) == 1024);
 	VMK_ASSERT_ON_COMPILE(sizeof(struct lif_stats) == 1024);
 
 	VMK_ASSERT_ON_COMPILE(sizeof(struct admin_cmd) == 64);

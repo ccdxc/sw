@@ -262,7 +262,6 @@ nvme_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
     }
 }
 
-
 void
 eth_qpoll(uint16_t lif, uint8_t qtype)
 {
@@ -554,6 +553,76 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
 }
 
 void
+eth_qdump(uint16_t lif, uint8_t qtype, uint32_t qid, uint8_t ring)
+{
+    queue_info_t qinfo[8] = {0};
+
+    if (!get_lif_qstate(lif, qinfo)) {
+        printf("Failed to get qinfo for lif %u\n", lif);
+        return;
+    }
+
+    if (qinfo[qtype].size == 0) {
+        printf("Invalid type %u for lif %u\n", qtype, lif);
+        return;
+    }
+
+    if (qid >= qinfo[qtype].length) {
+        printf("Invalid qid %u for lif %u qtype %u\n", qid, lif, qtype);
+        return;
+    }
+
+    uint64_t addr = qinfo[qtype].base + qid * qinfo[qtype].size;
+
+    switch (qtype) {
+    case 7:
+        if (qid == 0) {
+            struct notify_qstate qstate = {0};
+            sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate, sizeof(qstate));
+            if (ring == 0) {
+                uint64_t desc_addr = qstate.ring_base;
+                struct notify_desc desc = {0};
+                for (uint16_t i = 0; i < (1 << qstate.ring_size); i++) {
+                    sdk::lib::pal_mem_read(desc_addr, (uint8_t *)&desc, sizeof(desc));
+                    printf("[%5d] eid = %10lu ecode = %5d", i, desc.eid, desc.ecode);
+                    for (uint16_t j = 0; i < sizeof(desc); j++) {
+                        printf(" %02x", desc.data[j]);
+                    }
+                    printf("\n");
+                    desc_addr += sizeof(desc);
+                }
+            }
+        }
+        if (qid == 1) {
+            struct edma_qstate qstate = {0};
+            sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate, sizeof(qstate));
+            if (ring == 0) {
+                uint64_t desc_addr = qstate.ring_base;
+                struct edma_cmd_desc desc = {0};
+                for (uint16_t i = 0; i < (1 << qstate.ring_size); i++) {
+                    sdk::lib::pal_mem_read(desc_addr, (uint8_t *)&desc, sizeof(desc));
+                    printf("[%5d] opcode = %3d len = %5d slif = %4d saddr 0x%013lx dlif = %4d daddr = 0x%013lx\n",
+                        i, desc.opcode, desc.len,
+                        desc.src_lif, desc.src_addr, desc.dst_lif, desc.dst_addr);
+                    desc_addr += sizeof(desc);
+                }
+            }
+            if (ring == 1) {
+                uint64_t desc_addr = qstate.cq_ring_base;
+                struct edma_comp_desc desc = {0};
+                for (uint16_t i = 0; i < (1 << qstate.ring_size); i++) {
+                    sdk::lib::pal_mem_read(desc_addr, (uint8_t *)&desc, sizeof(desc));
+                    printf("[%5d] status = %3d comp_index = %5d color = %d\n",
+                        i, desc.status, desc.comp_index, desc.color);
+                    desc_addr += sizeof(desc);
+                }
+            }
+        }
+        break;
+    }
+}
+
+void
 eth_debug(uint16_t lif, uint8_t qtype, uint32_t qid, uint8_t enable)
 {
     struct eth_rx_cfg_qstate qstate_ethrx = {0};
@@ -581,7 +650,6 @@ eth_debug(uint16_t lif, uint8_t qtype, uint32_t qid, uint8_t enable)
     }
 
     uint64_t addr = qinfo[qtype].base + qid * qinfo[qtype].size;
-    printf("\naddr: 0x%lx\n\n", addr);
 
     switch (qtype) {
         case 0:
@@ -851,7 +919,7 @@ lif_status(uint64_t addr)
     printf("  port_num: %u\n", status->port_num);
     printf("  link_status: %u\n", status->link_status);
     printf("  link_speed: %u\n", status->link_speed);
-    printf("  link_flap_count: %u\n", status->link_flap_count);
+    printf("  link_down_count: %u\n", status->link_down_count);
     printf("\n");
 
     free(buf);
@@ -885,6 +953,7 @@ usage()
     printf("Usage:\n");
     printf("   qinfo          <lif>\n");
     printf("   qstate         <lif> <qtype> <qid>\n");
+    printf("   qdump          <lif> <qtype> <qid> <ring>\n");
     printf("   debug          <lif> <qtype> <qid>\n");
     printf("   nvme_qstate    <lif> <qtype> <qid>\n");
     printf("   qpoll          <lif> <qtype>\n");
@@ -932,6 +1001,15 @@ main(int argc, char **argv)
         uint8_t qtype = std::strtoul(argv[3], NULL, 0);
         uint32_t qid = std::strtoul(argv[4], NULL, 0);
         eth_qstate(lif, qtype, qid);
+    } else if (strcmp(argv[1], "qdump") == 0) {
+        if (argc != 6) {
+            usage();
+        }
+        uint16_t lif = std::strtoul(argv[2], NULL, 0);
+        uint8_t qtype = std::strtoul(argv[3], NULL, 0);
+        uint32_t qid = std::strtoul(argv[4], NULL, 0);
+        uint8_t ring = std::strtoul(argv[5], NULL, 0);
+        eth_qdump(lif, qtype, qid, ring);
     } else if (strcmp(argv[1], "debug") == 0) {
         if (argc != 6) {
             usage();

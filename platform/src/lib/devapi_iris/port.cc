@@ -156,6 +156,10 @@ devapi_port::port_hal_get_config(port_config_t *cfg)
     cfg->an_enable = rsp.spec().auto_neg_enable();
     cfg->fec_type = rsp.spec().fec_type();
     cfg->pause_type = rsp.spec().pause();
+    if (rsp.spec().tx_pause_enable())
+        cfg->pause_type |= PORT_CFG_PAUSE_F_TX;
+    if (rsp.spec().rx_pause_enable())
+        cfg->pause_type |= PORT_CFG_PAUSE_F_RX;
     cfg->loopback_mode = rsp.spec().loopback_mode();
 
     NIC_FUNC_DEBUG("{}: state {} speed {} mtu {} "
@@ -217,6 +221,11 @@ devapi_port::port_hal_update_config(port_config_t *cfg)
         goto end;
     }
 
+    if (hal->get_fwd_mode() != sdk::platform::FWD_MODE_CLASSIC) {
+        NIC_FUNC_DEBUG("Not allowd in classic nic mode ... ignoring!");
+        return (SDK_RET_OK);
+    }
+
     req = req_msg.add_request();
     req->CopyFrom(rsp.spec());
     req->set_admin_state((port::PortAdminState)cfg->state);
@@ -224,7 +233,9 @@ devapi_port::port_hal_update_config(port_config_t *cfg)
     req->set_mtu(cfg->mtu);
     req->set_auto_neg_enable(cfg->an_enable);
     req->set_fec_type((port::PortFecType)cfg->fec_type);
-    req->set_pause((port::PortPauseType)cfg->pause_type);
+    req->set_pause((port::PortPauseType)(cfg->pause_type & PORT_CFG_PAUSE_TYPE_MASK));
+    req->set_tx_pause_enable(cfg->pause_type & PORT_CFG_PAUSE_F_TX);
+    req->set_rx_pause_enable(cfg->pause_type & PORT_CFG_PAUSE_F_RX);
     req->set_loopback_mode((port::PortLoopBackMode)cfg->loopback_mode);
     VERIFY_HAL();
     status = hal->port_update(req_msg, rsp_msg);

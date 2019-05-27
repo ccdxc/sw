@@ -733,11 +733,6 @@ static bool ionic_notifyq_cb(struct cq *cq,
 
         lif->last_eid = comp->event.eid;
 
-        /* TODO: pay attention to link_flap_count
-         *       and make sure that enough interrupt credits get
-         *       returned in case we missed some events
-         */
-
         ionic_hex_dump("notifyq event ", 
                        comp,
                        sizeof(union notifyq_comp),

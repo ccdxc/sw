@@ -142,6 +142,24 @@ devapi_impl::lif_upd_name(uint32_t lif_id, string name) {
 }
 
 sdk_ret_t
+devapi_impl::qos_class_get(uint8_t group, qos_class_info_t *info) {
+    PDS_TRACE_WARN("Not implemented: Revisit");
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+devapi_impl::qos_class_create(qos_class_info_t *info) {
+    PDS_TRACE_WARN("Not implemented: Revisit");
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+devapi_impl::qos_class_delete(uint8_t group) {
+    PDS_TRACE_WARN("Not implemented: Revisit");
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 devapi_impl::qos_get_txtc_cos(const string &group, uint32_t uplink_port,
                               uint8_t *cos) {
     PDS_TRACE_WARN("Not implemented: Revisit");

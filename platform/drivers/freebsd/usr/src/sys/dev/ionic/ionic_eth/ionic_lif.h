@@ -345,7 +345,7 @@ struct lif {
 	bool link_up;
 
 	u32 link_speed;		/* units of 1Mbps: e.g. 10000 = 10Gbps */
-	u16 link_flap_count;
+	u16 link_down_count;
 
 	u32 info_sz;
 	dma_addr_t info_pa;

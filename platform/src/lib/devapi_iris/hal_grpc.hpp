@@ -98,6 +98,10 @@ using multicast::MulticastEntryDeleteRequest;
 using multicast::MulticastEntryDeleteResponse;
 using qos::QosClassGetRequestMsg;
 using qos::QosClassGetResponseMsg;
+using qos::QosClassRequestMsg;
+using qos::QosClassResponseMsg;
+using qos::QosClassDeleteRequestMsg;
+using qos::QosClassDeleteResponseMsg;
 using accelRGroup::AccelRGroupAddRequestMsg;
 using accelRGroup::AccelRGroupAddResponseMsg;
 using accelRGroup::AccelRGroupDelRequestMsg;
@@ -223,6 +227,11 @@ public:
     DELETE_API(filter, Filter);
     GET_API(filter, Filter);
 
+    // QoS APIs
+    Status qos_class_create(QosClassRequestMsg& req_msg,
+                            QosClassResponseMsg& rsp_msg);
+    Status qos_class_delete(QosClassDeleteRequestMsg& req_msg,
+                            QosClassDeleteResponseMsg& rsp_msg);
     GET_API(qos_class, QosClass);
 
     // Port APIs

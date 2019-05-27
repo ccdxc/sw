@@ -370,12 +370,13 @@ static void ionic_get_pauseparam(struct net_device *netdev,
 {
 	struct lif *lif = netdev_priv(netdev);
 	struct ionic_dev *idev = &lif->ionic->idev;
+	uint8_t pause_type = idev->port_info->config.pause_type;
 
 	pause->autoneg = idev->port_info->config.an_enable;
 
-	if (idev->port_info->config.pause_type) {
-		pause->rx_pause = 1;
-		pause->tx_pause = 1;
+	if (pause_type) {
+		pause->rx_pause = pause_type & IONIC_PAUSE_F_RX ? 1 : 0;
+		pause->tx_pause = pause_type & IONIC_PAUSE_F_TX ? 1 : 0;
 	}
 }
 
@@ -398,12 +399,11 @@ static int ionic_set_pauseparam(struct net_device *netdev,
 	}
 
 	/* change both at the same time */
-	if (pause->rx_pause && pause->tx_pause)
-		requested_pause = PORT_PAUSE_TYPE_LINK;
-	else if (!pause->rx_pause && !pause->tx_pause)
-		requested_pause = PORT_PAUSE_TYPE_NONE;
-	else
-		return -EINVAL;
+	requested_pause = PORT_PAUSE_TYPE_LINK;
+	if (pause->rx_pause)
+		requested_pause |= IONIC_PAUSE_F_RX;
+	if (pause->tx_pause)
+		requested_pause |= IONIC_PAUSE_F_TX;
 
 	if (requested_pause == idev->port_info->config.pause_type)
 		return 0;
@@ -793,11 +793,11 @@ static int ionic_get_module_eeprom(struct net_device *netdev,
 	len = min_t(u32, sizeof(xcvr->sprom), ee->len);
 	memcpy(data, xcvr->sprom, len);
 
-	dev_dbg(&lif->netdev->dev, "notifyblock eid=0x%llx link_status=0x%x link_speed=0x%x flap=0x%x\n",
+	dev_dbg(&lif->netdev->dev, "notifyblock eid=0x%llx link_status=0x%x link_speed=0x%x link_down_cnt=0x%x\n",
 		lif->info->status.eid,
 		lif->info->status.link_status,
 		lif->info->status.link_speed,
-		lif->info->status.link_flap_count);
+		lif->info->status.link_down_count);
 	dev_dbg(&lif->netdev->dev, "  port_status id=0x%x status=0x%x speed=0x%x\n",
 		idev->port_info->status.id,
 		idev->port_info->status.status,

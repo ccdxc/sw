@@ -87,6 +87,10 @@ typedef struct port_config_s {
     uint8_t     state;      // 0: down, 1: up
     uint8_t     an_enable;
     uint8_t     fec_type;   // TODO: port_fec_type_t
+#define PORT_CFG_PAUSE_TYPE_MASK	0x0f
+#define PORT_CFG_PAUSE_FLAGS_MASK	0xf0
+#define PORT_CFG_PAUSE_F_TX		0x10
+#define PORT_CFG_PAUSE_F_RX		0x20
     uint8_t     pause_type; // TODO: port_pause_type_t
     uint8_t     loopback_mode; // TODO: port_loopback_mode_t
 } __PACK__ port_config_t;
@@ -106,7 +110,58 @@ typedef struct port_status_s {
     xcvr_status_t  xcvr;
 } __PACK__ port_status_t;
 
- typedef struct {
+typedef enum qos_class_e {
+    QOS_CLASS_DEFAULT         = 0,
+    QOS_CLASS_USER_DEFINED_1  = 1,
+    QOS_CLASS_USER_DEFINED_2  = 2,
+    QOS_CLASS_USER_DEFINED_3  = 3,
+    QOS_CLASS_USER_DEFINED_4  = 4,
+    QOS_CLASS_USER_DEFINED_5  = 5,
+    QOS_CLASS_USER_DEFINED_6  = 6,
+} qos_class_t;
+
+typedef enum qos_class_type_e {
+    QOS_CLASS_TYPE_NONE       = 0,
+    QOS_CLASS_TYPE_PCP        = 1,
+    QOS_CLASS_TYPE_DSCP       = 2,
+} qos_class_type_t;
+
+typedef enum pause_type_e {
+    PAUSE_TYPE_NONE       = 0,
+    PAUSE_TYPE_LINK_LEVEL = 1,
+    PAUSE_TYPE_PFC        = 2,
+} pause_type_t;
+
+typedef enum qos_sched_e {
+    QOS_SCHED_TYPE_STRICT = 0,
+    QOS_SCHED_TYPE_DWRR   = 1,
+} qos_sched_type_t;
+
+typedef struct qos_class_info_s {
+    uint8_t     group;          /* qos_class_t */
+    uint32_t    mtu;
+
+    uint8_t     pause_type;     /* pause_type_t */
+    uint8_t     pause_dot1q_pcp;
+    uint32_t    pause_xon_threshold;
+    uint32_t    pause_xoff_threshold;
+
+    uint8_t     sched_type;     /* qos_sched_type_t */
+    uint64_t    sched_strict_rlmt;
+    uint8_t     sched_dwrr_weight;
+
+    uint8_t     class_type;     /* qos_class_type_t */
+    uint8_t     class_dot1q_pcp;
+    uint8_t     class_ndscp;
+    uint8_t     class_ip_dscp[64];
+
+    uint8_t     rewrite_dot1q_pcp_en;
+    uint8_t     rewrite_dot1q_pcp;
+    uint8_t     rewrite_ip_dscp_en;
+    uint8_t     rewrite_ip_dscp;
+} qos_class_info_t;
+
+typedef struct {
      uint32_t    ring_handle;
      uint32_t    sub_ring;
      uint64_t    base_pa;
@@ -187,5 +242,9 @@ using sdk::platform::accel_rgroup_rmetrics_rsp_cb_t;
 using sdk::platform::accel_rgroup_rmisc_rsp_cb_t;
 using sdk::platform::crypto_key_type_t;
 using sdk::platform::lif_qpurpose_t;
+using sdk::platform::qos_class_info_t;
+using sdk::platform::qos_sched_type_t;
+using sdk::platform::qos_class_type_t;
+using sdk::platform::pause_type_t;
 
 #endif    // __DEVAPI_TYPES_HPP__

@@ -51,6 +51,12 @@ typedef struct notify_qstate {
 
 static_assert (sizeof(struct notify_qstate) == 64, "");
 
+struct notify_desc {
+    uint64_t eid;
+    uint16_t ecode;
+    uint8_t  data[54];
+};
+
 #pragma pack(pop)
 
 #endif

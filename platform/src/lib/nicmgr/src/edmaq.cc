@@ -162,10 +162,24 @@ EdmaQ::Post(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
         .dst_addr = to,
     };
 
-    // Is the ring full?
-    if (((head + 1) % ring_size) == tail) {
-        NIC_LOG_WARN("{}: EDMA queue full head {} tail {}", name, head, tail);
-        return false;
+    /* check for completions before posting more requests, this might make
+       some room in the ring */
+    EdmaQ::Poll(this);
+
+    auto ring_full = [](uint16_t h, uint16_t t, uint16_t sz) -> bool {
+        return (((h + 1) % sz) == t);
+    };
+
+    /* if the ring is full, do a blocking wait for completions */
+    if (ring_full(head, tail, ring_size)) {
+        while (!EdmaQ::Poll(this)) {
+            ev_sleep(EDMAQ_COMP_POLL_S);
+            ev_now_update(EV_A);
+        };
+        if (ring_full(head, tail, ring_size)) {
+            NIC_LOG_WARN("{}: EDMA queue full head {} tail {}", name, head, tail);
+            return false;
+        }
     }
 
     if (ctx != NULL)
@@ -190,36 +204,13 @@ EdmaQ::Post(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
     PAL_barrier();
     WRITE_DB64(req_db_addr, (qid << 24) | head);
 
-    if (ctx == NULL) {  // Blocking wait for completion
-        struct edma_comp_desc comp = {0};
-        uint8_t npolls = 0;
-        do {
-            comp = {0};
-            npolls = 0;
-            addr = comp_base + comp_tail * sizeof(struct edma_comp_desc);
-            do {
-                READ_MEM(addr, (uint8_t *)&comp, sizeof(struct edma_comp_desc), 0);
-                usleep(EDMAQ_COMP_POLL_US);
-            } while (comp.color != exp_color &&
-                    ++npolls < EDMAQ_COMP_POLL_MAX);
+    pending[head].deadline = ev_now(EV_A) + EDMAQ_COMP_TIMEOUT_S;
 
-            if (npolls == EDMAQ_COMP_POLL_MAX) {
-                NIC_LOG_ERR("{}: EDMA timeout opcode {} from {:#x} to {:#x} len {}",
-                    name, opcode, from, to);
-                return false;   // Fail return!
-            } else {
-                if (pending[comp.comp_index].cb) {
-                    // Complete pending requests
-                    pending[comp.comp_index].cb(pending[comp.comp_index].obj);
-                    memset(&pending[comp.comp_index], 0, sizeof(pending[comp.comp_index]));
-                }
-                comp_tail = (comp_tail + 1) % ring_size;
-                if (comp_tail == 0) {
-                    exp_color = exp_color ? 0 : 1;
-                }
-                tail = (comp.comp_index + 1) % ring_size;
-            }
-        } while (comp.comp_index != head);
+    if (ctx == NULL) {
+        while (!EdmaQ::Poll(this)) {
+            ev_sleep(EDMAQ_COMP_POLL_S);
+            ev_now_update(EV_A);
+        };
     } else {
         auto cb = [](void *obj) { EdmaQ::Poll(obj); };
         evutil_add_prepare(EV_A_ &prepare, cb, this);
@@ -234,23 +225,23 @@ EdmaQ::Poll(void *obj)
     EdmaQ *edmaq = (EdmaQ *)obj;
     struct edma_comp_desc comp = {0};
     uint64_t addr = edmaq->comp_base + edmaq->comp_tail * sizeof(struct edma_comp_desc);
+    ev_tstamp now = ev_now(edmaq->EV_A);
+    bool timeout = (edmaq->pending[edmaq->tail].deadline < now);
 
     READ_MEM(addr, (uint8_t *)&comp, sizeof(struct edma_comp_desc), 0);
-    if (comp.color == edmaq->exp_color) {
-        if (edmaq->pending[comp.comp_index].cb) {
-            // Complete pending requests
-            edmaq->pending[comp.comp_index].cb(edmaq->pending[comp.comp_index].obj);
-            memset(&edmaq->pending[comp.comp_index], 0, sizeof(edmaq->pending[comp.comp_index]));
+    if (comp.color == edmaq->exp_color || timeout) {
+        if (edmaq->pending[edmaq->tail].cb) {
+            edmaq->pending[edmaq->tail].cb(edmaq->pending[edmaq->tail].obj);
+            memset(&edmaq->pending[edmaq->tail], 0, sizeof(edmaq->pending[edmaq->tail]));
         }
         edmaq->comp_tail = (edmaq->comp_tail + 1) % edmaq->ring_size;
         if (edmaq->comp_tail == 0) {
             edmaq->exp_color = edmaq->exp_color ? 0 : 1;
         }
-        edmaq->tail = (comp.comp_index + 1) % edmaq->ring_size;
-        if (edmaq->head == edmaq->tail) {   // Is the ring empty?
+        edmaq->tail = (edmaq->tail + 1) % edmaq->ring_size;
+        if (edmaq->head == edmaq->tail) {
             evutil_remove_prepare(edmaq->EV_A_ &edmaq->prepare);
         }
-
         return true;
     }
 

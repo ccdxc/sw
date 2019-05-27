@@ -177,7 +177,7 @@ int mnet_uio_pdrv_genirq_probe(struct platform_device *pdev)
 		uiomem->offs = (r->start & (PAGE_SIZE - 1));
 		uiomem->size = PAGE_ALIGN(resource_size(r));
 #if 1
-		dev_info(&pdev->dev, "resource %d size %d", i, uiomem->size);
+		dev_info(&pdev->dev, "resource %d size %llu", i, uiomem->size);
 		uiomem->name = r->name;
 #endif
 		++uiomem;

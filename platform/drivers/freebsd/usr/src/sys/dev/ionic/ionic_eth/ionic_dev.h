@@ -59,7 +59,6 @@ static inline void ionic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(union dev_info_regs) != 2048);
 	BUILD_BUG_ON(sizeof(union dev_cmd_regs) != 2048);
 
-	BUILD_BUG_ON(sizeof(struct port_stats) != 1024);
 	BUILD_BUG_ON(sizeof(struct lif_stats) != 1024);
 
 	BUILD_BUG_ON(sizeof(struct admin_cmd) != 64);
@@ -203,6 +202,10 @@ void ionic_dev_cmd_lif_identify(struct ionic_dev *idev, u8 type, u8 ver);
 void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index,
 	dma_addr_t regs_base);
 void ionic_dev_cmd_lif_reset(struct ionic_dev *idev, u32 index);
+
+void ionic_dev_cmd_qos_class_identify(struct ionic_dev *idev);
+void ionic_dev_cmd_qos_class_init(struct ionic_dev *idev, uint8_t group);
+void ionic_dev_cmd_qos_class_reset(struct ionic_dev *idev, uint8_t group);
 
 char *ionic_dev_asic_name(u8 asic_type);
 int ionic_db_page_num(struct ionic *ionic, int lif_id, int pid);

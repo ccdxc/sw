@@ -334,6 +334,39 @@ void ionic_dev_cmd_lif_reset(struct ionic_dev *idev, u32 index)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
+/* QoS commands */
+void
+ionic_dev_cmd_qos_class_identify(struct ionic_dev *idev)
+{
+	union dev_cmd cmd = {
+		.qos_identify.opcode = CMD_OPCODE_QOS_CLASS_IDENTIFY,
+	};
+
+	ionic_dev_cmd_go(idev, &cmd);
+}
+
+void
+ionic_dev_cmd_qos_class_init(struct ionic_dev *idev, uint8_t group)
+{
+	union dev_cmd cmd = {
+		.qos_init.opcode = CMD_OPCODE_QOS_CLASS_INIT,
+		.qos_init.group = group,
+	};
+
+	ionic_dev_cmd_go(idev, &cmd);
+}
+
+void
+ionic_dev_cmd_qos_class_reset(struct ionic_dev *idev, uint8_t group)
+{
+	union dev_cmd cmd = {
+		.qos_reset.opcode = CMD_OPCODE_QOS_CLASS_RESET,
+		.qos_reset.group = group,
+	};
+
+	ionic_dev_cmd_go(idev, &cmd);
+}
+
 char *ionic_dev_asic_name(u8 asic_type)
 {
 	switch (asic_type) {

@@ -271,12 +271,36 @@ HAL_CREATE_API(filter, Filter, endpoint);
 HAL_DELETE_API(filter, Filter, endpoint);
 HAL_GET_API(filter, Filter, endpoint);
 
-// Qos Calls
-HAL_GET_API(qos_class, QosClass, qos);
-
 // Port Calls
 HAL_UPDATE_API(port, Port, port);
 HAL_GET_API(port, Port, port);
+
+// Qos Calls
+HAL_GET_API(qos_class, QosClass, qos);
+
+Status
+hal_grpc::qos_class_create(QosClassRequestMsg& req_msg,
+                           QosClassResponseMsg& rsp_msg)
+{
+    grpc::ClientContext context;
+    grpc::Status        status;
+
+    SET_TIMEOUT();
+    status = qos_stub_->QosClassCreate(&context, req_msg, &rsp_msg);
+    return status;
+}
+
+Status
+hal_grpc::qos_class_delete(QosClassDeleteRequestMsg& req_msg,
+                           QosClassDeleteResponseMsg& rsp_msg)
+{
+    grpc::ClientContext context;
+    grpc::Status        status;
+
+    SET_TIMEOUT();
+    status = qos_stub_->QosClassDelete(&context, req_msg, &rsp_msg);
+    return status;
+}
 
 // Accel Calls
 Status
