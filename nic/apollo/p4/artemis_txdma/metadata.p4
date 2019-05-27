@@ -31,6 +31,8 @@ header_type txdma_control_metadata_t {
 
         dst                 : 128;  //TEMP: Replace with P4 to P4+ header
         remote_vnic_mapping_tx_ohash : 32; //TEMP: Replace with P4 to P4+ header
+        svc_id              : 10;
+        pad7                :  6;
     }
 }
 
@@ -60,6 +62,7 @@ header_type scratch_metadata_t {
         remote_vnic_mapping_tx_ohash_lkp    : 1;
         vnic_mapping_hint   : 18;
         remote_vnic_mapping_tx_ohash : 32;
+        ipv6_tx_da          : 128;       
     }
 }
 

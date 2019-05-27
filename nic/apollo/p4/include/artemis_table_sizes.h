@@ -18,3 +18,12 @@
 #define NEXTHOP_TABLE_SIZE                                  1048576     // 1M
 #define VNIC_STATS_TABLE_SIZE                               64
 #define DROP_STATS_TABLE_SIZE                               64
+
+//RXDMA Tables
+#define RXDMA_VNIC_INFO_TABLE_SIZE                          256
+
+//TXDMA Tables
+#define MAPPING_TABLE_SIZE                                  2097152     // 2M
+#define MAPPING_OHASH_TABLE_SIZE                            262144      // 256K
+#define REMOTE_46_MAPPING_TABLE_SIZE                        1024
+

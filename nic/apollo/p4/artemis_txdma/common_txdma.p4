@@ -5,9 +5,11 @@
 #include "../include/defines.h"
 #include "../include/table_sizes.h"
 #include "../include/headers.p4"
+#include "../include/artemis_table_sizes.h"
 
 #include "./common_metadata.p4"
 #include "./mapping.p4"
+#include "./remote_46_mapping.p4"
 
 @pragma scratch_metadata
 metadata common_scratch_metadata_t common_scratch_metadata0;
@@ -1062,6 +1064,7 @@ control ingress {
         sacl();
         dma();
         mapping();
+        remote_46_mapping();
     } else {
         if (app_header.table0_valid == 1) {
             apply(tx_table_s1_t0);

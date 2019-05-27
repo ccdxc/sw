@@ -10,6 +10,19 @@ header_type scratch_metadata_t {
         field128        : 128;
         qid             : 24;
         dma_size        : 16;
+
+        lpm_base1       : 48;
+        lpm_base2       : 48;
+        lpm_base3       : 48;
+        lpm_base4       : 48;
+        lpm_base5       : 48;
+        lpm_base6       : 48;
+        lpm_base7       : 48;
+        lpm_base8       : 48;
+        acl_base        : 48;
+        meter_base      : 48;
+        flag            :  1;
+        pad0            :  3;
     }
 }
 

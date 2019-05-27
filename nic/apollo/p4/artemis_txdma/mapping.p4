@@ -109,7 +109,7 @@ table mapping {
     actions {
         mapping_info;
     }
-    size : REMOTE_VNIC_MAPPING_TX_TABLE_SIZE;
+    size : MAPPING_TABLE_SIZE;
 }
 
 @pragma stage 2
@@ -122,7 +122,7 @@ table mapping_ohash {
     actions {
        mapping_info;
     }
-    size : REMOTE_VNIC_MAPPING_TX_OHASH_TABLE_SIZE;
+    size : MAPPING_OHASH_TABLE_SIZE;
 }
 
 control mapping {

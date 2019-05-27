@@ -3,6 +3,7 @@
 #include "../include/headers.p4"
 #include "../include/artemis_defines.h"
 #include "../include/artemis_headers.p4"
+#include "../include/artemis_table_sizes.h"
 
 #include "metadata.p4"
 #include "sacl.p4"
@@ -19,6 +20,7 @@ control ingress {
         pkt_enqueue();
     } else {
         common_p4plus_stage0();
+        vnic_info();
         if (app_header.table0_valid == 1) {
             apply(rx_table_s1_t0);
             apply(rx_table_s2_t0);
