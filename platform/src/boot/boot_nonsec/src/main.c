@@ -12,6 +12,12 @@ void
 main(void)
 {
     /*
+     * Banner.
+     */
+    uart_init();
+    uart_write("\nBoot...\n");
+
+    /*
      * This image is not valid if the secure boot eFuse has been blown.
      */
     if (is_secure_boot_enabled()) {

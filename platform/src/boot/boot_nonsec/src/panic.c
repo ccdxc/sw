@@ -9,7 +9,6 @@
 void
 panic(const char *s)
 {
-    uart_init();
     uart_write("\npanic: ");
     uart_write(s);
     uart_write("\n");
