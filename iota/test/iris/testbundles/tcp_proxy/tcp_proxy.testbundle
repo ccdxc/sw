@@ -20,6 +20,7 @@ testcases:
 
     -   name    : iperf_client_thru_tcp_proxy
         testcase: testcases.tcp_proxy.iperf_client
+        ignore:   True
         iterators:
             type  : simple 
             port  : [ 73, 74, 75 ]
