@@ -63,9 +63,20 @@ enum deferred_work_type {
 	DW_TYPE_RESET,
 } __attribute__((packed));
 
+enum reset_ctl_state {
+	RESET_CTL_ST_IDLE,
+	RESET_CTL_ST_PRE_RESET,
+	RESET_CTL_ST_RESET,
+	RESET_CTL_ST_REINIT,
+
+	RESET_CTL_ST_MAX /* must be last */
+};
+
 struct deferred_work {
 	struct list_head list;
 	enum deferred_work_type type;
+	enum reset_ctl_state reset_state;
+	uint64_t timestamp;
 	u16 reset_code;
 	u8 dont_free;
 };
@@ -73,24 +84,19 @@ struct deferred_work {
 struct deferred {
 	spinlock_t lock;
 	struct list_head list;
-	struct work_struct work;
+	//struct work_struct work;
+	struct delayed_work dwork;
+	struct workqueue_struct *wq;
 };
 
-enum reset_ctl_state {
-	RESET_CTL_ST_IDLE,
-	RESET_CTL_ST_PRE_RESET,
-	RESET_CTL_ST_RESET,
-	RESET_CTL_ST_REINIT,
-};
+typedef int (*reset_ctl_cb)(struct lif *lif,
+			    void *cb_arg);
 
-typedef void (*reset_ctl_cb)(void *cb_arg,
-			     enum reset_ctl_state ctl_state,
-			     int err);
 struct reset_ctl {
         struct deferred_work work;
 	atomic_t state;
-	reset_ctl_cb cb;
-	void *cb_arg;
+	reset_ctl_cb cbs[RESET_CTL_ST_MAX];
+	void *cb_args[RESET_CTL_ST_MAX];
 	int8_t sense;
 };
 
@@ -155,12 +161,14 @@ int sonic_lifs_register(struct sonic *sonic);
 void sonic_lifs_unregister(struct sonic *sonic);
 int sonic_lifs_size(struct sonic *sonic);
 void sonic_lif_reset_ctl_register(struct lif *lif,
-				 reset_ctl_cb cb,
-				 void *cb_arg);
+				  enum reset_ctl_state state,
+				  reset_ctl_cb cb,
+				  void *cb_arg);
 void sonic_lif_reset_ctl_start(struct lif *lif);
-void sonic_lif_reset_ctl_reset(struct lif *lif);
-void sonic_lif_reset_ctl_reinit(struct lif *lif);
-void sonic_lif_reset_ctl_end(struct lif *lif);
+int sonic_lif_reset_ctl_pre_reset(struct lif *lif, void *cb_arg);
+int sonic_lif_reset_ctl_reset(struct lif *lif, void *cb_arg);
+int sonic_lif_reset_ctl_reinit(struct lif *lif, void *cb_arg);
+int sonic_lif_reset_ctl_end(struct lif *lif, void *cb_arg);
 bool sonic_lif_reset_ctl_pending(struct lif *lif);
 int sonic_lif_reinit(struct lif *lif);
 
@@ -181,6 +189,9 @@ uint32_t sonic_get_num_per_core_res(struct lif *lif);
 struct per_core_resource *sonic_get_per_core_res_by_res_id(struct lif *lif,
 		uint32_t res_id);
 struct per_core_resource *sonic_get_per_core_res(struct lif *lif);
+struct per_core_resource *sonic_reserve_per_core_res(struct lif *lif);
+void sonic_unreserve_per_core_res(struct per_core_resource *pcr);
+bool sonic_is_reserved_per_core_res(struct per_core_resource *pcr);
 
 static inline struct lif *
 sonic_get_lif(void)

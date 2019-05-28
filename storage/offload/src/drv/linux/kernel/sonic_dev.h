@@ -217,6 +217,7 @@ struct queue_tracking {
 
 struct per_core_resource {
 	bool initialized;
+	bool reserved;
 	int core_id;
 	int idx;
 	struct lif *lif;

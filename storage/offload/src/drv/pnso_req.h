@@ -29,6 +29,8 @@ union request_poll_context {
 struct request_params {
 	uint16_t rp_flags;	/* mode/type flags (rflags) */
 
+	struct per_core_resource *rp_pcr;	/* to access pool/etc. */
+
 	struct batch_info *rp_batch_info;
 	struct batch_page *rp_page;
 	uint16_t rp_batch_index;

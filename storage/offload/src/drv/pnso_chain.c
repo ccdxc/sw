@@ -197,7 +197,8 @@ chn_pprint_chain(const struct service_chain *chain)
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_req_cb",
 			(uint64_t) chain->sc_req_cb);
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_req_cb_ctx",
-			(uint64_t) chain->sc_req_cb_ctx);
+			(uint64_t) atomic64_read((atomic64_t *)
+					&chain->sc_req_cb_ctx));
 }
 
 struct service_chain *
@@ -350,11 +351,11 @@ chn_poller(void *poll_ctx)
 
 	/* save caller's cb and context ahead of destroy */
 	cb = chain->sc_req_cb;
-	cb_ctx =  chain->sc_req_cb_ctx;
+	cb_ctx = (void *) atomic64_xchg(&chain->sc_req_cb_ctx, 0);
 
 	chn_destroy_chain(chain);
 
-	if (cb) {
+	if (cb && cb_ctx) {
 		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 " res: 0x" PRIx64 " err: %d",
 				(uint64_t) cb_ctx, (uint64_t) res, err);
 
@@ -393,11 +394,11 @@ chn_poll_timeout(void *poll_ctx)
 
 	/* save caller's cb and context ahead of destroy */
 	cb = chain->sc_req_cb;
-	cb_ctx =  chain->sc_req_cb_ctx;
+	cb_ctx = (void *) atomic64_xchg(&chain->sc_req_cb_ctx, 0);
 
 	chn_destroy_chain(chain);
 
-	if (cb) {
+	if (cb && cb_ctx) {
 		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 " res: 0x" PRIx64 " err: %d",
 				(uint64_t) cb_ctx, (uint64_t) res, err);
 
@@ -407,6 +408,29 @@ chn_poll_timeout(void *poll_ctx)
 out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
+}
+
+void
+chn_poll_timeout_all(struct per_core_resource *pcr)
+{
+	struct mem_pool *mpool;
+	void *obj = NULL;
+
+	OSAL_LOG_DEBUG("enter ...");
+
+	mpool = pcr->mpools[MPOOL_TYPE_SERVICE_CHAIN];
+	if (!mpool) {
+		goto out;
+	}
+
+	obj = mpool_get_first_inuse_object(mpool);
+	while (obj) {
+		chn_poll_timeout(chain_to_poll_ctx((struct service_chain *) obj));
+		obj = mpool_get_next_inuse_object(mpool, obj);
+	}
+
+out:
+	OSAL_LOG_DEBUG("exit!");
 }
 
 void
@@ -782,7 +806,7 @@ chn_create_chain(struct request_params *req_params,
 		struct service_chain **ret_chain)
 {
 	pnso_error_t err = EINVAL;
-	struct per_core_resource *pcr = putil_get_per_core_resource();
+	struct per_core_resource *pcr = req_params->rp_pcr;
 	struct mem_pool *svc_chain_mpool;
 	struct mem_pool *svc_chain_entry_mpool;
 	struct pnso_service_request *req;
@@ -846,7 +870,7 @@ chn_create_chain(struct request_params *req_params,
 			((chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC) ||
 			(chain->sc_flags & CHAIN_CFLAG_MODE_POLL))) {
 		chain->sc_req_cb = req_params->rp_cb;
-		chain->sc_req_cb_ctx = req_params->rp_cb_ctx;
+		atomic64_set(&chain->sc_req_cb_ctx, (uint64_t) req_params->rp_cb_ctx);
 
 		poll_ctx = chain_to_poll_ctx(chain);
 		if (chain->sc_flags & CHAIN_CFLAG_MODE_POLL) {
@@ -967,8 +991,13 @@ out:
 void
 chn_notify_caller(struct service_chain *chain)
 {
-	if (chain->sc_req_cb)
-		chain->sc_req_cb(chain->sc_req_cb_ctx, chain->sc_res);
+	void *cb_ctx;
+
+	if (chain->sc_req_cb) {
+		cb_ctx = (void *) atomic64_xchg(&chain->sc_req_cb_ctx, 0);
+		if (cb_ctx)
+			chain->sc_req_cb(cb_ctx, chain->sc_res);
+	}
 }
 
 void
@@ -1005,7 +1034,7 @@ pnso_error_t
 chn_execute_chain(struct service_chain *chain)
 {
 	pnso_error_t err = EINVAL;
-	struct per_core_resource *pcr = putil_get_per_core_resource();
+	struct per_core_resource *pcr = chain->sc_pcr;
 	struct chain_entry *ce_first, *ce_last;
 	bool is_sync_mode = (chain->sc_flags & CHAIN_CFLAG_MODE_SYNC) != 0;
 

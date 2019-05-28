@@ -44,6 +44,26 @@ deinit_mpools(struct per_core_resource *pcr)
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CPDC_DESC]);
 }
 
+static void
+reset_mpools(struct per_core_resource *pcr)
+{
+	mpool_reset(pcr->mpools[
+			MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC_VECTOR]);
+	mpool_reset(pcr->mpools[MPOOL_TYPE_CPDC_SGL_VECTOR]);
+	mpool_reset(pcr->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR]);
+	mpool_reset(pcr->mpools[MPOOL_TYPE_CPDC_DESC_BO_PB_VECTOR]);
+	mpool_reset(pcr->mpools[MPOOL_TYPE_CPDC_DESC_BO_VECTOR]);
+	mpool_reset(pcr->mpools[MPOOL_TYPE_CPDC_DESC_PB_VECTOR]);
+	mpool_reset(pcr->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR]);
+	mpool_reset(pcr->mpools[MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC]);
+	mpool_reset(pcr->mpools[MPOOL_TYPE_BATCH_INFO]);
+	mpool_reset(pcr->mpools[MPOOL_TYPE_BATCH_PAGE]);
+	mpool_reset(pcr->mpools[MPOOL_TYPE_SERVICE_CHAIN_ENTRY]);
+	mpool_reset(pcr->mpools[MPOOL_TYPE_SERVICE_CHAIN]);
+	mpool_reset(pcr->mpools[MPOOL_TYPE_CPDC_SGL]);
+	mpool_reset(pcr->mpools[MPOOL_TYPE_CPDC_DESC]);
+}
+
 static pnso_error_t
 init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 {
@@ -56,7 +76,7 @@ init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 	mpool_type = MPOOL_TYPE_CPDC_DESC;
 	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct cpdc_desc), PNSO_MEM_ALIGN_DESC,
-			&pcr->mpools[mpool_type]);
+			false, &pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
 
@@ -64,7 +84,7 @@ init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 	err = mpool_create(mpool_type, num_objects * MAX_CPDC_SGLS_PER_REQ,
 			MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct cpdc_sgl), PNSO_MEM_ALIGN_DESC,
-			&pcr->mpools[mpool_type]);
+			false, &pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
 
@@ -72,7 +92,7 @@ init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 	mpool_type = MPOOL_TYPE_SERVICE_CHAIN;
 	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct service_chain), PNSO_MEM_ALIGN_DESC,
-			&pcr->mpools[mpool_type]);
+			true, &pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
 
@@ -80,28 +100,28 @@ init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 	err = mpool_create(mpool_type, num_objects * MAX_CPDC_DESC_VEC_PER_REQ,
 			MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct chain_entry), PNSO_MEM_ALIGN_DESC,
-			&pcr->mpools[mpool_type]);
+			false, &pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
 
 	mpool_type = MPOOL_TYPE_BATCH_PAGE;
 	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct batch_page), PNSO_MEM_ALIGN_DESC,
-			&pcr->mpools[mpool_type]);
+			false, &pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
 
 	mpool_type = MPOOL_TYPE_BATCH_INFO;
 	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct batch_info), PNSO_MEM_ALIGN_DESC,
-			&pcr->mpools[mpool_type]);
+			true, &pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
 
 	mpool_type = MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC;
 	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct cpdc_status_desc), PNSO_MEM_ALIGN_DESC,
-			&pcr->mpools[mpool_type]);
+			false, &pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
 
@@ -114,7 +134,7 @@ init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 	err = mpool_create(mpool_type, num_objects * MAX_CPDC_DESC_VEC_PER_REQ,
 			PNSO_NUM_OBJECTS_IN_OBJECT,
 			sizeof(struct cpdc_desc), PNSO_MEM_ALIGN_DESC,
-			&pcr->mpools[mpool_type]);
+			false, &pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
 
@@ -122,7 +142,7 @@ init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 	err = mpool_create(mpool_type, MAX_NUM_PAGES,
 			PNSO_MAX_NUM_PB_PER_REQUEST * MAX_PAGE_ENTRIES,
 			sizeof(struct cpdc_desc), PNSO_MEM_ALIGN_DESC,
-			&pcr->mpools[mpool_type]);
+			false, &pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
 
@@ -130,7 +150,7 @@ init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 	err = mpool_create(mpool_type, num_objects,
 			PNSO_NUM_BYPASS_OBJECTS,
 			sizeof(struct cpdc_desc), PNSO_MEM_ALIGN_DESC,
-			&pcr->mpools[mpool_type]);
+			false, &pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
 
@@ -138,14 +158,14 @@ init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 	err = mpool_create(mpool_type, num_objects,
 			PNSO_NUM_BYPASS_OBJECTS * PNSO_NUM_OBJECTS_IN_OBJECT,
 			sizeof(struct cpdc_desc), PNSO_MEM_ALIGN_DESC,
-			&pcr->mpools[mpool_type]);
+			false, &pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
 
 	mpool_type = MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR;
 	err = mpool_create(mpool_type, num_objects, PNSO_NUM_OBJECTS_IN_OBJECT,
 			sizeof(struct cpdc_status_desc), PNSO_MEM_ALIGN_DESC,
-			&pcr->mpools[mpool_type]);
+			false, &pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
 
@@ -153,14 +173,14 @@ init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 	err = mpool_create(mpool_type, num_objects * MAX_CPDC_SGL_VEC_PER_REQ,
 			PNSO_NUM_OBJECTS_IN_OBJECT,
 			sizeof(struct cpdc_sgl), PNSO_MEM_ALIGN_DESC,
-			&pcr->mpools[mpool_type]);
+			false, &pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
 
 	mpool_type = MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC_VECTOR;
 	err = mpool_create(mpool_type, num_objects, PNSO_NUM_OBJECTS_IN_OBJECT,
 			sizeof(struct cpdc_status_desc), PNSO_MEM_ALIGN_DESC,
-			&pcr->mpools[mpool_type]);
+			false, &pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
 
@@ -214,6 +234,16 @@ cpdc_deinit_accelerator(struct per_core_resource *pcr)
 	OSAL_LOG_DEBUG("enter ...");
 
 	deinit_mpools(pcr);
+
+	OSAL_LOG_DEBUG("exit!");
+}
+
+void
+cpdc_reset_accelerator(struct per_core_resource *pcr)
+{
+	OSAL_LOG_DEBUG("enter ...");
+
+	reset_mpools(pcr);
 
 	OSAL_LOG_DEBUG("exit!");
 }

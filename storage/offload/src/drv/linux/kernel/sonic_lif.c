@@ -49,10 +49,6 @@
 	     list < &lif->seq_q_batch_ht[LIF_SEQ_Q_BATCH_HT_SZ];		\
 	     list++)								\
 
-#define LIF_RESET_CTL_CB(lif, state, err)					\
-	if (lif->reset_ctl.cb)							\
-	     (*lif->reset_ctl.cb)(lif->reset_ctl.cb_arg, state, err)		\
-
 static int
 sonic_lif_seq_q_batch_init(struct seq_queue_batch *batch,
 			   void *cb_arg);
@@ -64,6 +60,12 @@ sonic_lif_seq_q_batch_control(struct seq_queue_batch *batch,
 			      void *cb_arg);
 static int
 sonic_lif_reset(struct lif *lif);
+
+static void
+sonic_lif_per_core_resource_pre_reset(struct per_core_resource *res);
+
+static void sonic_lif_reset_ctl_work(struct lif *lif,
+				     enum reset_ctl_state ctl_state);
 
 static struct deferred_work *
 sonic_lif_deferred_work_alloc_init(struct lif *lif, struct deferred_work *work)
@@ -92,7 +94,7 @@ sonic_lif_deferred_work_free(struct lif *lif, struct deferred_work *work)
 
 static void sonic_lif_deferred_work(struct work_struct *work)
 {
-	struct lif *lif = container_of(work, struct lif, deferred.work);
+	struct lif *lif = container_of(work, struct lif, deferred.dwork.work);
 	struct deferred *def = &lif->deferred;
 	struct deferred_work *w = NULL;
 
@@ -107,27 +109,27 @@ static void sonic_lif_deferred_work(struct work_struct *work)
 		switch (w->type) {
 		case DW_TYPE_RESET:
 			OSAL_LOG_DEBUG("Deferred RESET");
-			if (sonic_error_reset_recovery_en_get())
-				sonic_lif_reset_ctl_start(lif);
+			sonic_lif_reset_ctl_work(lif, w->reset_state);
 			break;
-                default:
+		default:
+			sonic_lif_deferred_work_free(lif, w);
 			break;
 		};
-		sonic_lif_deferred_work_free(lif, w);
-		schedule_work(&def->work);
 	}
 }
 
 static void
 sonic_lif_deferred_enqueue(struct deferred *def,
-			   struct deferred_work *work)
+			   struct deferred_work *work,
+			   int ms_delay)
 {
 	/* Just to be safe, don't enqueue if already queued */
 	spin_lock_bh(&def->lock);
 	if (list_empty(&work->list))
 		list_add_tail(&work->list, &def->list);
 	spin_unlock_bh(&def->lock);
-	schedule_work(&def->work);
+
+	queue_delayed_work(def->wq, &def->dwork, msecs_to_jiffies(ms_delay));
 }
 
 static void __attribute__((unused))
@@ -146,13 +148,18 @@ static void sonic_lif_deferred_cancel(struct lif *lif)
 	struct deferred_work *w;
 	struct deferred_work *w_next;
 
-	cancel_work_sync(&def->work);
-	spin_lock_bh(&def->lock);
-	list_for_each_entry_safe(w, w_next, &def->list, list) {
-		list_del_init(&w->list);
-		sonic_lif_deferred_work_free(lif, w);
+	if (def->wq) {
+		cancel_delayed_work_sync(&def->dwork);
+		spin_lock_bh(&def->lock);
+		list_for_each_entry_safe(w, w_next, &def->list, list) {
+			list_del_init(&w->list);
+			sonic_lif_deferred_work_free(lif, w);
+		}
+		spin_unlock_bh(&def->lock);
+
+		destroy_workqueue(def->wq);
+		def->wq = NULL;
 	}
-	spin_unlock_bh(&def->lock);
 }
 
 static bool sonic_notifyq_service(struct cq *cq, struct cq_info *cq_info, void *cb_arg)
@@ -175,10 +182,10 @@ static bool sonic_notifyq_service(struct cq *cq, struct cq_info *cq_info, void *
 			    cpl->event.eid);
 		OSAL_LOG_DEBUG("reset_code=%d",
 			    cpl->reset.reset_code);
-		lif->reset_ctl.work.type = DW_TYPE_RESET;
-		lif->reset_ctl.work.reset_code = cpl->reset.reset_code;
-		sonic_lif_deferred_enqueue(&lif->deferred,
-					   &lif->reset_ctl.work);
+		if (sonic_error_reset_recovery_en_get()) {
+			lif->reset_ctl.work.reset_code = cpl->reset.reset_code;
+			sonic_lif_reset_ctl_start(lif);
+		}
 		break;
 	case EVENT_OPCODE_HEARTBEAT:
 		OSAL_LOG_DEBUG("Notifyq EVENT_OPCODE_HEARTBEAT eid=" PRIu64,
@@ -889,13 +896,19 @@ static int sonic_lif_alloc(struct sonic *sonic, unsigned int index)
 	spin_lock_init(&lif->adminq_lock);
 	spin_lock_init(&lif->deferred.lock);
 	INIT_LIST_HEAD(&lif->deferred.list);
-	INIT_WORK(&lif->deferred.work, sonic_lif_deferred_work);
+	INIT_DELAYED_WORK(&lif->deferred.dwork, sonic_lif_deferred_work);
+	lif->deferred.wq = osal_create_workqueue_fast(lif->name, 1);
+	if (!lif->deferred.wq) {
+		err = ENOMEM;
+		OSAL_LOG_ERROR("Failed to allocate LIF deferred workqueue");
+		return err;
+	}
 
 	sonic_seq_q_batch_ht_init(lif);
 
 	err = sonic_qcqs_alloc(lif);
 	if (err)
-		return err;
+		goto err_out_free_wq;
 
 	err = sonic_lif_per_core_resources_alloc(lif);
 	if (err)
@@ -906,6 +919,9 @@ static int sonic_lif_alloc(struct sonic *sonic, unsigned int index)
 
 err_out_free_qcqs:
 	sonic_qcqs_free(lif);
+err_out_free_wq:
+	destroy_workqueue(lif->deferred.wq);
+	lif->deferred.wq = NULL;
 	return err;
 }
 
@@ -928,14 +944,7 @@ int sonic_lifs_alloc(struct sonic *sonic)
 static int sonic_lif_reset(struct lif *lif)
 {
 	struct sonic_dev *idev = &lif->sonic->idev;
-#if 0
-	struct per_core_resource *res;
-	uint32_t i;
 
-	LIF_FOR_EACH_PC_RES(lif, i, res) {
-		sonic_flush_ev_list(res);
-	}
-#endif
 	sonic_dev_cmd_lif_reset(idev, lif->index);
 	lif->flags &= ~LIF_F_INITED;
 	return sonic_dev_cmd_wait_check(idev, devcmd_timeout);
@@ -950,65 +959,164 @@ static int sonic_lif_hang_notify(struct lif *lif)
 }
 
 void sonic_lif_reset_ctl_register(struct lif *lif,
-				 reset_ctl_cb cb,
-				 void *cb_arg)
+				  enum reset_ctl_state state,
+				  reset_ctl_cb cb,
+				  void *cb_arg)
 {
-	lif->reset_ctl.cb = cb;
-	lif->reset_ctl.cb_arg = cb_arg;
+	if (state >= RESET_CTL_ST_MAX) {
+		OSAL_ASSERT(state < RESET_CTL_ST_MAX);
+		return;
+	}
+	lif->reset_ctl.cbs[state] = cb;
+	lif->reset_ctl.cb_args[state] = cb_arg;
+}
+
+struct ctl_state {
+	const char *name;
+	int prev;
+	int next;
+};
+
+/* Mapping of state to prev/next state for simple linear state machine */
+static const struct ctl_state reset_ctl_state_machine[RESET_CTL_ST_MAX] = {
+	[RESET_CTL_ST_IDLE] = { "IDLE", RESET_CTL_ST_REINIT, RESET_CTL_ST_PRE_RESET },
+	[RESET_CTL_ST_PRE_RESET] = { "PRE_RESET", RESET_CTL_ST_IDLE, RESET_CTL_ST_RESET },
+	[RESET_CTL_ST_RESET] = { "RESET", RESET_CTL_ST_PRE_RESET, RESET_CTL_ST_REINIT },
+	[RESET_CTL_ST_REINIT] = { "REINIT", RESET_CTL_ST_RESET, RESET_CTL_ST_IDLE }
+};
+
+/* Transition state atomically */
+static bool sonic_lif_reset_ctl_set_state(struct lif *lif,
+					  enum reset_ctl_state state)
+{
+	int old_state;
+
+	if (state >= RESET_CTL_ST_MAX)
+		return false;
+
+	old_state = atomic_cmpxchg(&lif->reset_ctl.state,
+				   reset_ctl_state_machine[state].prev,
+				   state);
+	return (old_state == reset_ctl_state_machine[state].prev);
+}
+
+static bool sonic_lif_reset_ctl_deferred_enqueue(struct lif *lif,
+						 enum reset_ctl_state state,
+						 uint32_t ms)
+{
+	if (sonic_lif_reset_ctl_set_state(lif, state)) {
+		lif->reset_ctl.work.type = DW_TYPE_RESET;
+		lif->reset_ctl.work.reset_state = state;
+		if (state == RESET_CTL_ST_PRE_RESET)
+			lif->reset_ctl.work.timestamp = osal_get_clock_nsec();
+		sonic_lif_deferred_enqueue(&lif->deferred,
+					   &lif->reset_ctl.work,
+					   ms);
+		return true;
+	}
+
+	return false;
+}
+
+#define SONIC_DEFAULT_SYSCTL_RESET_TIMER_MS 100
+
+/*
+ * Work handler for DW_TYPE_RESET
+ */
+static void sonic_lif_reset_ctl_work(struct lif *lif,
+				     enum reset_ctl_state ctl_state)
+{
+	int state;
+	int err = 0;
+
+	state = atomic_read(&lif->reset_ctl.state);
+	if (ctl_state >= RESET_CTL_ST_MAX || state != ctl_state) {
+		OSAL_LOG_WARN("LIF reset_state %d does not match expected %d",
+			      state, ctl_state);
+		return;
+		/* spurious event, ignore */
+	}
+
+	if (lif->reset_ctl.cbs[ctl_state]) {
+		OSAL_LOG_NOTICE("LIF reset_ctl starting state %s at " PRIu64 "ms",
+				reset_ctl_state_machine[ctl_state].name,
+				(osal_get_clock_nsec() - lif->reset_ctl.work.timestamp) /
+				(uint64_t) OSAL_NSEC_PER_MSEC);
+		err = lif->reset_ctl.cbs[ctl_state](lif, lif->reset_ctl.cb_args[ctl_state]);
+		OSAL_LOG_NOTICE("LIF reset_ctl ending state %s err %d at " PRIu64 "ms",
+				reset_ctl_state_machine[ctl_state].name, err,
+				(osal_get_clock_nsec() - lif->reset_ctl.work.timestamp) /
+				(uint64_t) OSAL_NSEC_PER_MSEC);
+	}
+
+	switch (err) {
+	case 0:
+		/* transition to next state */
+		state = reset_ctl_state_machine[ctl_state].next;
+		if (state == RESET_CTL_ST_IDLE) {
+			/* no pending work, just set state */
+			sonic_lif_reset_ctl_set_state(lif, state);
+		} else {
+			sonic_lif_reset_ctl_deferred_enqueue(lif,
+					state,
+					SONIC_DEFAULT_SYSCTL_RESET_TIMER_MS);
+		}
+		break;
+	case EBUSY:
+		/* waiting, reenqueue */
+		sonic_lif_deferred_enqueue(&lif->deferred, &lif->reset_ctl.work,
+					   SONIC_DEFAULT_SYSCTL_RESET_TIMER_MS);
+		break;
+	default:
+		OSAL_LOG_ERROR("Unknown error %d during LIF reset, state %d",
+			       err, ctl_state);
+		/* spurious error, ignore */
+		break;
+	}
 }
 
 void sonic_lif_reset_ctl_start(struct lif *lif)
 {
-	int old_state;
-	int err;
-
-	old_state = atomic_cmpxchg(&lif->reset_ctl.state,
-				   RESET_CTL_ST_IDLE, RESET_CTL_ST_PRE_RESET);
-	if (old_state == RESET_CTL_ST_IDLE) {
-		OSAL_LOG_DEBUG("%s: lif_id %u", __FUNCTION__, lif->lif_id);
-		err = sonic_lif_hang_notify(lif);
-		LIF_RESET_CTL_CB(lif, RESET_CTL_ST_PRE_RESET, err);
+	if (sonic_lif_reset_ctl_deferred_enqueue(lif, RESET_CTL_ST_PRE_RESET, 1)) {
+		OSAL_LOG_NOTICE("LIF reset_ctl started");
 	}
 }
 
-void sonic_lif_reset_ctl_reset(struct lif *lif)
+int sonic_lif_reset_ctl_pre_reset(struct lif *lif, void *cb_arg)
 {
-	int old_state;
 	int err;
+	struct per_core_resource *res;
+	uint32_t i;
 
-	old_state = atomic_cmpxchg(&lif->reset_ctl.state,
-				   RESET_CTL_ST_PRE_RESET, RESET_CTL_ST_RESET);
-	if (old_state == RESET_CTL_ST_PRE_RESET) {
-		OSAL_LOG_DEBUG("%s: lif_id %u", __FUNCTION__, lif->lif_id);
-		err = sonic_lif_reset(lif);
-		LIF_RESET_CTL_CB(lif, RESET_CTL_ST_RESET, err);
+	err = sonic_lif_hang_notify(lif);
+
+	LIF_FOR_EACH_PC_RES(lif, i, res) {
+		sonic_lif_per_core_resource_pre_reset(res);
 	}
+
+	return err;
 }
 
-void sonic_lif_reset_ctl_reinit(struct lif *lif)
+int sonic_lif_reset_ctl_reset(struct lif *lif, void *cb_arg)
 {
-	int old_state;
 	int err;
 
-	old_state = atomic_cmpxchg(&lif->reset_ctl.state,
-				   RESET_CTL_ST_RESET, RESET_CTL_ST_REINIT);
-	if (old_state == RESET_CTL_ST_RESET) {
-		OSAL_LOG_DEBUG("%s: lif_id %u", __FUNCTION__, lif->lif_id);
-		err = sonic_lif_reinit(lif);
-		LIF_RESET_CTL_CB(lif, RESET_CTL_ST_REINIT, err);
-	}
+	err = sonic_lif_reset(lif);
+
+	return err;
 }
 
-void sonic_lif_reset_ctl_end(struct lif *lif)
+int sonic_lif_reset_ctl_reinit(struct lif *lif, void *cb_arg)
 {
-	int old_state;
+	int err;
 
-	old_state = atomic_cmpxchg(&lif->reset_ctl.state,
-				   RESET_CTL_ST_REINIT, RESET_CTL_ST_IDLE);
-	if (old_state == RESET_CTL_ST_REINIT) {
-		OSAL_LOG_DEBUG("%s: lif_id %u", __FUNCTION__, lif->lif_id);
-		LIF_RESET_CTL_CB(lif, RESET_CTL_ST_IDLE, 0);
-	}
+	err = sonic_lif_reinit(lif);
+
+	OSAL_LOG_NOTICE("LIF reset_ctl completed with err %d in " PRIu64 "ms",
+			err,
+			(osal_get_clock_nsec() - lif->reset_ctl.work.timestamp) /
+			(uint64_t) OSAL_NSEC_PER_MSEC);
+	return err;
 }
 
 bool sonic_lif_reset_ctl_pending(struct lif *lif)
@@ -1077,34 +1185,6 @@ static void sonic_sysctl_deinit(struct lif *lif)
 	/* Nothing to do, for now */
 }
 
-/*
- * Simple reset_ctl test function, overridable by application such as pnso.
- */
-static void sonic_sysctl_reset_test(void *cb_arg,
-				    enum reset_ctl_state ctl_state,
-				    int err)
-{
-	struct lif *lif = cb_arg;
-
-	if (!err) {
-		OSAL_LOG_DEBUG("reset ctl_state %d succeeded", ctl_state);
-	}
-
-	switch (ctl_state) {
-	case RESET_CTL_ST_PRE_RESET:
-		sonic_lif_reset_ctl_reset(lif);
-		break;
-	case RESET_CTL_ST_RESET:
-		sonic_lif_reset_ctl_reinit(lif);
-		break;
-	case RESET_CTL_ST_REINIT:
-		sonic_lif_reset_ctl_end(lif);
-		break;
-	default:
-		break;
-	}
-}
-
 static int sonic_sysctl_init(struct lif *lif)
 {
 	struct device *dev = lif->sonic->dev;
@@ -1123,8 +1203,14 @@ static int sonic_sysctl_init(struct lif *lif)
 	PNSO_INIT_STATS;
 	PNSO_INIT_LIF_RESET(lif);
 
-	/* Register a transient reset_ctl test function */
-	sonic_lif_reset_ctl_register(lif, sonic_sysctl_reset_test, lif);
+	/* Register default reset_ctl work handlers */
+	//sonic_lif_reset_ctl_register(lif, sonic_lif_reset_ctl_work, lif);
+	sonic_lif_reset_ctl_register(lif, RESET_CTL_ST_PRE_RESET,
+				     sonic_lif_reset_ctl_pre_reset, lif);
+	sonic_lif_reset_ctl_register(lif, RESET_CTL_ST_RESET,
+				     sonic_lif_reset_ctl_reset, lif);
+	sonic_lif_reset_ctl_register(lif, RESET_CTL_ST_REINIT,
+				     sonic_lif_reset_ctl_reinit, lif);
 
 	return 0;
 }
@@ -1134,7 +1220,6 @@ static void sonic_lif_free(struct lif *lif)
 {
 	sonic_lif_reset(lif);
 
-	flush_scheduled_work();
 	sonic_lif_deferred_cancel(lif);
 	sonic_qcqs_free(lif);
 	sonic_per_core_resources_free(lif);
@@ -1199,6 +1284,14 @@ static void sonic_ev_intr_deinit(struct per_core_resource *res)
 		res->intr.index = INTR_INDEX_NOT_ASSIGNED;
 	}
 	sonic_destroy_ev_list(res);
+}
+
+static void sonic_lif_per_core_resource_pre_reset(struct per_core_resource *res)
+{
+	if (!res)
+		return;
+
+	sonic_flush_ev_list(res);
 }
 
 static void sonic_lif_per_core_resource_deinit(struct per_core_resource *res)
@@ -2180,6 +2273,36 @@ sonic_get_per_core_res(struct lif *lif)
 	}
 
 	return lif->res.pc_res[pc_res_idx];
+}
+
+struct per_core_resource *
+sonic_reserve_per_core_res(struct lif *lif)
+{
+	struct per_core_resource *pcr = sonic_get_per_core_res(lif);
+
+	if (pcr) {
+		((volatile struct per_core_resource *) pcr)->reserved = true;
+	}
+
+	return pcr;
+}
+
+void
+sonic_unreserve_per_core_res(struct per_core_resource *pcr)
+{
+	if (!pcr)
+		return;
+
+	((volatile struct per_core_resource *) pcr)->reserved = false;
+}
+
+bool
+sonic_is_reserved_per_core_res(struct per_core_resource *pcr)
+{
+	if (!pcr)
+		return false;
+
+	return ((volatile struct per_core_resource *) pcr)->reserved;
 }
 
 uint32_t

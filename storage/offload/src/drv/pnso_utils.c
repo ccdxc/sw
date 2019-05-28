@@ -844,7 +844,7 @@ putil_get_per_core_resource(void)
 		goto out;
 	}
 
-	pcr = sonic_get_per_core_res(lif);
+	pcr = sonic_reserve_per_core_res(lif);
 	if (!pcr) {
 		OSAL_ASSERT(0);
 		goto out;
@@ -853,4 +853,10 @@ putil_get_per_core_resource(void)
 	return pcr;
 out:
 	return NULL;
+}
+
+void
+putil_put_per_core_resource(struct per_core_resource *pcr)
+{
+	sonic_unreserve_per_core_res(pcr);
 }

@@ -71,6 +71,14 @@ enum pnso_chksum_type {
 	PNSO_CHKSUM_TYPE_MAX
 };
 
+/* States for hardware accelerators */
+enum pnso_accelerator_state {
+	PNSO_ACCEL_STATE_UNINITIALIZED = 0,
+	PNSO_ACCEL_STATE_IDLE = 1,
+	PNSO_ACCEL_STATE_RESET_IN_PROGRESS = 2,
+	PNSO_ACCEL_STATE_MAX
+};
+
 typedef int32_t pnso_error_t;
 
 /* Generic error codes */
@@ -665,6 +673,24 @@ pnso_error_t pnso_register_compression_header_format(
 pnso_error_t pnso_add_compression_algo_mapping(
 		enum pnso_compression_type pnso_algo,
 		uint32_t header_algo);
+
+/**
+ * pnso_get_accel_state - Returns the current state of the hardware
+ * accelerators.
+ *
+ * Hardware accelerators can undergo initialization and re-initialization of
+ * resources, and an internally triggered reset operation for error recovery
+ * purposes.  The process of reset operation is uninterruptible and will take
+ * some time to complete.
+ *
+ * Return Value:
+ *	PNSO_ACCEL_STATE_UNINITIALIZED - when failed to initialize resources.
+ *	PNSO_ACCEL_STATE_IDLE - when hardware accelerators are up-and-running.
+ *	PNSO_ACCEL_STATE_RESET_IN_PROGRESS - when an internal reset operation is
+ *	underway.
+ *
+ */
+enum pnso_accelerator_state pnso_get_accel_state(void);
 
 #ifdef __cplusplus
 }

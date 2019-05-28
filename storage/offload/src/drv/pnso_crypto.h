@@ -204,6 +204,19 @@ pnso_error_t crypto_init_accelerator(struct pc_res_init_params *pc_init,
  */
 void crypto_deinit_accelerator(struct per_core_resource *pcr);
 
+/**
+ * crypto_reset_accelerator() - conducts cleanup task specific to encryption
+ * and decryption accelerator.
+ * @pcr:	[in/out]	specifies the per core container-structure from
+ *				which the accelerators' internal data structures
+ *				need to be reset.
+ *
+ * Return Value:
+ *	None
+ *
+ */
+void crypto_reset_accelerator(struct per_core_resource *pcr);
+
 pnso_error_t crypto_key_index_update(const void *key1,
 				     const void *key2,
 				     uint32_t key_size,

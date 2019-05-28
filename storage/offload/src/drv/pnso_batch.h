@@ -10,6 +10,7 @@
 extern "C" {
 #endif
 
+#include <linux/atomic.h>
 #include "pnso_req.h"
 #include "pnso_mpool.h"
 #include "pnso_chain_params.h"
@@ -61,7 +62,7 @@ struct batch_info {
 	struct per_core_resource *bi_pcr;
 
 	completion_cb_t	bi_req_cb;	/* caller supplied call-back */
-	void *bi_req_cb_ctx;		/* caller supplied cb context */
+	atomic64_t bi_req_cb_ctx;	/* caller supplied cb context */
 
 	uint32_t bi_polled_idx;		/* last chain polled successfully */
 	uint32_t bi_num_entries;	/* total # of requests */
@@ -70,15 +71,17 @@ struct batch_info {
 	uint64_t bi_poll_ts;		/* first poll timestamp */
 };
 
-pnso_error_t bat_add_to_batch(struct pnso_service_request *svc_req,
+pnso_error_t bat_add_to_batch(struct per_core_resource *pcr,
+		struct pnso_service_request *svc_req,
 		struct pnso_service_result *svc_res);
 
 pnso_error_t bat_flush_batch(struct request_params *req_params);
 
-void bat_destroy_batch(void);
+void bat_destroy_batch(struct per_core_resource *pcr);
 
 pnso_error_t bat_poller(void *poll_ctx);
 pnso_error_t bat_poll_timeout(void *poll_ctx);
+void bat_poll_timeout_all(struct per_core_resource *pcr);
 
 #ifdef __cplusplus
 }

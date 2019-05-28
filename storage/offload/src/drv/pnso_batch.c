@@ -77,7 +77,8 @@ pprint_batch_info(struct batch_info *batch_info)
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "bi_req_cb",
 			(uint64_t) batch_info->bi_req_cb);
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "bi_req_cb_ctx",
-			(uint64_t) batch_info->bi_req_cb_ctx);
+			(uint64_t) atomic64_read((atomic64_t *)
+					&batch_info->bi_req_cb_ctx));
 }
 
 static void __attribute__((unused))
@@ -324,9 +325,9 @@ poll_all_chains(struct batch_info *batch_info)
 }
 
 static struct batch_info *
-init_batch_info(struct pnso_service_request *req)
+init_batch_info(struct per_core_resource *pcr,
+		struct pnso_service_request *req)
 {
-	struct per_core_resource *pcr = putil_get_per_core_resource();
 	enum mem_pool_type mpool_type;
 	struct batch_info *batch_info = NULL;
 	uint16_t gen_id;
@@ -410,16 +411,15 @@ deinit_batch(struct batch_info *batch_info)
 }
 
 void
-bat_destroy_batch(void)
+bat_destroy_batch(struct per_core_resource *pcr)
 {
-	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct batch_info *batch_info;
 
 	OSAL_LOG_DEBUG("enter ...");
 
 	batch_info = pcr->batch_info;
 	if (!batch_info) {
-		OSAL_LOG_ERROR("batch not found! pcr: 0x" PRIx64,
+		OSAL_LOG_DEBUG("batch not found! pcr: 0x" PRIx64,
 				(uint64_t) pcr);
 		goto out;
 	}
@@ -534,11 +534,11 @@ bat_poller(void *poll_ctx)
 
 	/* save caller's cb and context ahead of destroy */
 	cb = batch_info->bi_req_cb;
-	cb_ctx =  batch_info->bi_req_cb_ctx;
+	cb_ctx = (void *) atomic64_xchg(&batch_info->bi_req_cb_ctx, 0);
 
 	deinit_batch(batch_info);
 
-	if (cb) {
+	if (cb && cb_ctx) {
 		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 "err: %d",
 				(uint64_t) cb_ctx, err);
 
@@ -574,11 +574,11 @@ bat_poll_timeout(void *poll_ctx)
 
 	/* save caller's cb and context ahead of destroy */
 	cb = batch_info->bi_req_cb;
-	cb_ctx =  batch_info->bi_req_cb_ctx;
+	cb_ctx = (void *) atomic64_xchg(&batch_info->bi_req_cb_ctx, 0);
 
 	deinit_batch(batch_info);
 
-	if (cb) {
+	if (cb && cb_ctx) {
 		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 "err: %d",
 				(uint64_t) cb_ctx, err);
 
@@ -588,6 +588,29 @@ bat_poll_timeout(void *poll_ctx)
 out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
+}
+
+void
+bat_poll_timeout_all(struct per_core_resource *pcr)
+{
+	struct mem_pool *batch_info_mpool;
+	void *obj = NULL;
+
+	OSAL_LOG_DEBUG("enter ...");
+
+	batch_info_mpool = pcr->mpools[MPOOL_TYPE_BATCH_INFO];
+	if (!batch_info_mpool) {
+		goto out;
+	}
+
+	obj = mpool_get_first_inuse_object(batch_info_mpool);
+	while (obj) {
+		bat_poll_timeout(batch_to_poll_ctx((struct batch_info *) obj));
+		obj = mpool_get_next_inuse_object(batch_info_mpool, obj);
+	}
+
+out:
+	OSAL_LOG_DEBUG("exit!");
 }
 
 static inline void
@@ -633,7 +656,8 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 	if ((req_params->rp_flags & REQUEST_RFLAG_MODE_ASYNC) ||
 			(req_params->rp_flags & REQUEST_RFLAG_MODE_POLL)) {
 		batch_info->bi_req_cb = req_params->rp_cb;
-		batch_info->bi_req_cb_ctx = req_params->rp_cb_ctx;
+		atomic64_set(&batch_info->bi_req_cb_ctx,
+			     (uint64_t) req_params->rp_cb_ctx);
 
 		poll_ctx = batch_to_poll_ctx(batch_info);
 		if (req_params->rp_flags & REQUEST_RFLAG_MODE_POLL) {
@@ -690,16 +714,16 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 	return err;
 
 out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
+	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
 
 pnso_error_t
-bat_add_to_batch(struct pnso_service_request *svc_req,
+bat_add_to_batch(struct per_core_resource *pcr,
+		struct pnso_service_request *svc_req,
 		struct pnso_service_result *svc_res)
 {
 	pnso_error_t err = EINVAL;
-	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct batch_info *batch_info;
 	struct batch_page *batch_page;
 	struct batch_page_entry *page_entry;
@@ -710,7 +734,7 @@ bat_add_to_batch(struct pnso_service_request *svc_req,
 
 	batch_info = pcr->batch_info;
 	if (!batch_info) {
-		batch_info = init_batch_info(svc_req);
+		batch_info = init_batch_info(pcr, svc_req);
 		if (!batch_info) {
 			OSAL_LOG_DEBUG("failed to init batch! err: %d",
 					err);
@@ -725,12 +749,6 @@ bat_add_to_batch(struct pnso_service_request *svc_req,
 		goto out_batch;
 	}
 
-	if ((batch_info->bi_num_entries % MAX_PAGE_ENTRIES) == 0) {
-		err = add_page(batch_info);
-		if (err)
-			goto out_batch;
-	}
-
 	if (!new_batch) {
 		req_svc_type = svc_req->svc[0].svc_type;
 		if (batch_info->bi_svc_type != req_svc_type) {
@@ -740,6 +758,12 @@ bat_add_to_batch(struct pnso_service_request *svc_req,
 					req_svc_type, err);
 			goto out_batch;
 		}
+	}
+
+	if ((batch_info->bi_num_entries % MAX_PAGE_ENTRIES) == 0) {
+		err = add_page(batch_info);
+		if (err)
+			goto out_batch;
 	}
 
 	batch_page = GET_PAGE(batch_info, batch_info->bi_num_entries);
@@ -898,7 +922,7 @@ done:
 	return err;
 
 out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
+	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
 
@@ -906,7 +930,7 @@ pnso_error_t
 bat_flush_batch(struct request_params *req_params)
 {
 	pnso_error_t err = EINVAL;
-	struct per_core_resource *pcr = putil_get_per_core_resource();
+	struct per_core_resource *pcr = req_params->rp_pcr;
 	struct batch_info *batch_info;
 	bool is_sync_mode;
 	uint32_t num_entries = 0;

@@ -138,6 +138,7 @@ void pprint_chain_sgl_pdma(uint64_t sgl_pa);
 bool putil_is_bulk_desc_in_use(uint16_t flags);
 
 struct per_core_resource *putil_get_per_core_resource(void);
+void putil_put_per_core_resource(struct per_core_resource *pcr);
 
 static inline void
 svc_rate_limit_control_eval(struct service_info *svc_info,
@@ -160,10 +161,11 @@ pnso_lif_error_reset_recovery_en_get(void)
 }
 
 static inline void
-pnso_lif_reset_ctl_register(reset_ctl_cb cb,
+pnso_lif_reset_ctl_register(enum reset_ctl_state state,
+			    reset_ctl_cb cb,
 			    void *cb_arg)
 {
-	sonic_lif_reset_ctl_register(sonic_get_lif(), cb, cb_arg);
+	sonic_lif_reset_ctl_register(sonic_get_lif(), state, cb, cb_arg);
 }
 
 static inline void
@@ -172,22 +174,33 @@ pnso_lif_reset_ctl_start(void)
 	sonic_lif_reset_ctl_start(sonic_get_lif());
 }
 
-static inline void
-pnso_lif_reset_ctl_reset(void)
+static inline int
+pnso_lif_reset_ctl_pre_reset_cb(struct lif *lif, void *cb_arg)
 {
-	sonic_lif_reset_ctl_reset(sonic_get_lif());
+	int err;
+
+	pnso_pre_reset_wait();
+	err = sonic_lif_reset_ctl_pre_reset(lif, cb_arg);
+	pnso_pre_reset();
+
+	return err;
 }
 
-static inline void
-pnso_lif_reset_ctl_reinit(void)
+static inline int
+pnso_lif_reset_ctl_reset_cb(struct lif *lif, void *cb_arg)
 {
-	sonic_lif_reset_ctl_reinit(sonic_get_lif());
+	int err;
+
+	pnso_reset();
+	err = sonic_lif_reset_ctl_reset(lif, cb_arg);
+
+	return err;
 }
 
-static inline void
-pnso_lif_reset_ctl_end(void)
+static inline int
+pnso_lif_reset_ctl_reinit_cb(struct lif *lif, void *cb_arg)
 {
-	sonic_lif_reset_ctl_end(sonic_get_lif());
+	return sonic_lif_reset_ctl_reinit(lif, cb_arg);
 }
 
 static inline bool

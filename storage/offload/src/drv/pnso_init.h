@@ -66,6 +66,9 @@ union shared_status_desc {
 extern uint64_t pad_buffer;
 
 void pnso_deinit(void);
+void pnso_pre_reset_wait(void);
+void pnso_pre_reset(void);
+void pnso_reset(void);
 void pnso_set_log_level(int level);
 
 #endif /* __PNSO_INIT_H__ */

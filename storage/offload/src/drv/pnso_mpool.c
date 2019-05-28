@@ -180,16 +180,69 @@ mpool_destroy_rmem_objects(struct mem_pool *mpool)
 	}
 }
 
+static void
+mpool_init_stack(struct mem_pool *mpool)
+{
+	void **objects;
+	char *obj;
+	int i;
+
+	/* populate the stack to point the newly created objects */
+	objects = mpool->mp_stack.mps_objects;
+	obj = (char *) mpool->mp_objects;
+	for (i = 0; i < mpool->mp_config.mpc_num_objects; i++) {
+		objects[i] = obj;
+		OSAL_LOG_DEBUG("%30s[%d]: 0x"PRIx64" 0x"PRIx64" 0x"PRIx64" %u %u %u",
+			       "mpool->mp_dstack.mps_objects", i,
+			       (uint64_t) &objects[i], (uint64_t) objects[i],
+			       (uint64_t) mpool_get_object_phy_addr(
+						mpool->mp_config.mpc_type,
+						objects[i]),
+			       mpool->mp_config.mpc_vec_elem_size,
+			       mpool->mp_config.mpc_pad_size,
+			       mpool->mp_config.mpc_align_size);
+
+		obj += mpool->mp_config.mpc_vec_elem_size;
+	}
+	mpool->mp_stack.mps_top = mpool->mp_config.mpc_num_objects;
+	if (mpool->mp_stack.mps_inuse_objects_bmp)
+		bitmap_zero(mpool->mp_stack.mps_inuse_objects_bmp,
+			    mpool->mp_config.mpc_num_objects);
+}
+
+static void
+mpool_destroy_objects(struct mem_pool *mpool)
+{
+	OSAL_LOG_INFO("pool deallocated. mpc_type: %s mpc_num_objects: %d mps_top: %d mpool: 0x" PRIx64,
+		      mpool_get_type_str(mpool->mp_config.mpc_type),
+		      mpool->mp_config.mpc_num_objects,
+		      mpool->mp_stack.mps_top,
+		      (uint64_t) mpool);
+
+	if (mpool_type_is_rmem(mpool->mp_config.mpc_type))
+		mpool_destroy_rmem_objects(mpool);
+	else
+		mpool_destroy_mem_objects(mpool);
+
+	if (mpool->mp_stack.mps_objects) {
+		osal_free(mpool->mp_stack.mps_objects);
+		mpool->mp_stack.mps_objects = NULL;
+	}
+	if (mpool->mp_stack.mps_inuse_objects_bmp) {
+		osal_free(mpool->mp_stack.mps_inuse_objects_bmp);
+		mpool->mp_stack.mps_inuse_objects_bmp = NULL;
+	}
+}
+
 pnso_error_t
 mpool_create(enum mem_pool_type mpool_type, uint32_t num_objects,
 		uint32_t num_vec_elems, uint32_t object_size,
-		uint32_t align_size, struct mem_pool **out_mpool)
+		uint32_t align_size, bool enable_tracking,
+		struct mem_pool **out_mpool)
 {
 	pnso_error_t err = EINVAL;
 	struct mem_pool *mpool = NULL;
 	void **objects;
-	char *obj;
-	int i;
 
 	if (!mpool_type_is_valid(mpool_type)) {
 		OSAL_LOG_ERROR("invalid pool type specified. mpool_type: %d err: %d",
@@ -230,7 +283,6 @@ mpool_create(enum mem_pool_type mpool_type, uint32_t num_objects,
 		goto out;
 	}
 	memset(mpool, 0, sizeof(*mpool));
-	mpool->mp_magic = MPOOL_MAGIC_VALID;
 	mpool->mp_config.mpc_type = mpool_type;
 	mpool->mp_config.mpc_num_objects = num_objects;
 	mpool->mp_config.mpc_num_vec_elems = num_vec_elems;
@@ -265,21 +317,21 @@ mpool_create(enum mem_pool_type mpool_type, uint32_t num_objects,
 	mpool->mp_stack.mps_objects = objects;
 	spin_lock_init(&mpool->mp_stack.mps_lock);
 
-	/* populate the stack to point the newly created objects */
-	obj = (char *) mpool->mp_objects;
-	for (i = 0; i < mpool->mp_config.mpc_num_objects; i++) {
-		objects[i] = obj;
-		OSAL_LOG_DEBUG("%30s[%d]: 0x"PRIx64" 0x"PRIx64" 0x"PRIx64" %u %u %u",
-			       "mpool->mp_dstack.mps_objects", i,
-			       (uint64_t) &objects[i], (uint64_t) objects[i],
-			       (uint64_t) mpool_get_object_phy_addr(mpool_type,
-				       objects[i]),
-			       mpool->mp_config.mpc_vec_elem_size,
-			       mpool->mp_config.mpc_pad_size, align_size);
-
-		obj += mpool->mp_config.mpc_vec_elem_size;
+	/* Object tracking */
+	if (enable_tracking) {
+		mpool->mp_stack.mps_inuse_objects_bmp =
+			osal_alloc(BITS_TO_LONGS(num_objects) * sizeof(long));
+		if (!mpool->mp_stack.mps_inuse_objects_bmp) {
+			err = ENOMEM;
+			OSAL_LOG_ERROR("failed to allocate memory for inuse bitmap! mpool_type: %d num_objects: %d err: %d",
+				       mpool_type, num_objects, err);
+			goto out;
+		}
 	}
-	mpool->mp_stack.mps_top = mpool->mp_config.mpc_num_objects;
+
+	/* populate the stack to point the newly created objects */
+	mpool_init_stack(mpool);
+	mpool->mp_magic = MPOOL_MAGIC_VALID;
 
 	*out_mpool = mpool;
 	OSAL_LOG_INFO("pool allocated. mpool_type: %s num_objects: %d vec_elem_size: %d align_size: %d pad_size: %d mpool: 0x" PRIx64,
@@ -293,8 +345,10 @@ out:
 	OSAL_LOG_ERROR("failed to allocate pool!  mpool_type: %s num_objects: %d num_vec_elems %d object_size: %d align_size: %d",
 			mpool_get_type_str(mpool_type), num_objects,
 			num_vec_elems, object_size, align_size);
-	if (mpool)
-		mpool_destroy(&mpool);
+	if (mpool) {
+		mpool_destroy_objects(mpool);
+		osal_free(mpool);
+	}
 	return err;
 }
 
@@ -308,23 +362,136 @@ mpool_destroy(struct mem_pool **mpoolp)
 
 	mpool = *mpoolp;
 
-	OSAL_LOG_INFO("pool deallocated. mpc_type: %s mpc_num_objects: %d mps_top: %d mpool: 0x" PRIx64,
+	/* TODO-mpool: for graceful exit, ensure stack top is back to full */
+	mpool->mp_magic = MPOOL_MAGIC_INVALID;
+	mpool_destroy_objects(mpool);
+	osal_free(mpool);
+
+	*mpoolp = NULL;
+}
+
+void
+mpool_reset(struct mem_pool *mpool)
+{
+	if (!mpool || !is_pool_valid(mpool))
+		return;
+
+	OSAL_LOG_INFO("pool reset. mpc_type: %s mpc_num_objects: %d mps_top: %d mpool: 0x" PRIx64,
 		      mpool_get_type_str(mpool->mp_config.mpc_type),
 		      mpool->mp_config.mpc_num_objects,
 		      mpool->mp_stack.mps_top,
 		      (uint64_t) mpool);
 
-	/* TODO-mpool: for graceful exit, ensure stack top is back to full */
 	mpool->mp_magic = MPOOL_MAGIC_INVALID;
+	spin_lock(&mpool->mp_stack.mps_lock);
+	mpool_init_stack(mpool);
+	mpool->mp_magic = MPOOL_MAGIC_VALID;
+	spin_unlock(&mpool->mp_stack.mps_lock);
+}
 
-	if (mpool_type_is_rmem(mpool->mp_config.mpc_type))
-		mpool_destroy_rmem_objects(mpool);
-	else
-		mpool_destroy_mem_objects(mpool);
-	osal_free(mpool->mp_stack.mps_objects);
-	osal_free(mpool);
+bool
+mpool_is_object_inuse(struct mem_pool *mpool, void *object)
+{
+	struct mem_pool_stack *mem_stack;
+	bool in_use;
+	uint32_t index;
 
-	*mpoolp = NULL;
+	if (!mpool || !object)
+		return false;
+
+	if (!is_pool_valid(mpool))
+		return false;
+
+	if (!mpool->mp_stack.mps_inuse_objects_bmp)
+		return false;
+
+	MPOOL_VALIDATE_OBJECT(mpool, object);
+
+	index = mpool_get_obj_id(mpool, object);
+	if (index >= mpool->mp_config.mpc_num_objects)
+		return false;
+
+	mem_stack = &mpool->mp_stack;
+
+	spin_lock(&mem_stack->mps_lock);
+	in_use = test_bit(index, mpool->mp_stack.mps_inuse_objects_bmp);
+	spin_unlock(&mem_stack->mps_lock);
+
+	return in_use;
+}
+
+void *
+mpool_get_first_inuse_object(struct mem_pool *mpool)
+{
+	struct mem_pool_stack *mem_stack;
+	void *object = NULL;
+	uint32_t index;
+
+	if (!mpool)
+		return NULL;
+
+	if (!is_pool_valid(mpool))
+		return NULL;
+
+	if (!mpool->mp_stack.mps_inuse_objects_bmp)
+		return NULL;
+
+	mem_stack = &mpool->mp_stack;
+
+	spin_lock(&mem_stack->mps_lock);
+	index = find_first_bit(mem_stack->mps_inuse_objects_bmp,
+			mpool->mp_config.mpc_num_objects);
+	spin_unlock(&mem_stack->mps_lock);
+
+	if (index < mpool->mp_config.mpc_num_objects) {
+		object = mpool_get_obj_by_id(mpool, index);
+		OSAL_LOG_DEBUG("found first in-use object! object: 0x" PRIx64 " index: %d",
+				(uint64_t) object, index);
+	}
+
+	return object;
+}
+
+void *
+mpool_get_next_inuse_object(struct mem_pool *mpool, void *object)
+{
+	struct mem_pool_stack *mem_stack;
+	void *next_object = NULL;
+	uint32_t curr_index, next_index;
+
+	if (!mpool || !object)
+		return NULL;
+
+	if (!is_pool_valid(mpool))
+		return NULL;
+
+	if (!mpool->mp_stack.mps_inuse_objects_bmp)
+		return NULL;
+
+	MPOOL_VALIDATE_OBJECT(mpool, object);
+
+	mem_stack = &mpool->mp_stack;
+
+	curr_index = mpool_get_obj_id(mpool, object);
+	OSAL_LOG_DEBUG("prev object: 0x" PRIx64 " curr_index: %d num_objects: %d",
+			(uint64_t) object, curr_index,
+			mpool->mp_config.mpc_num_objects);
+
+	if (curr_index >= mpool->mp_config.mpc_num_objects)
+		return NULL;
+
+	spin_lock(&mem_stack->mps_lock);
+	next_index = find_next_bit(mem_stack->mps_inuse_objects_bmp,
+			mpool->mp_config.mpc_num_objects, curr_index+1);
+	spin_unlock(&mem_stack->mps_lock);
+
+	if (next_index < mpool->mp_config.mpc_num_objects) {
+		next_object = mpool_get_obj_by_id(mpool, next_index);
+		OSAL_LOG_DEBUG("found next in-use object! object: 0x" PRIx64 " index: %d",
+				(uint64_t) next_object, next_index);
+	}
+
+	return next_object;
 }
 
 void *
@@ -332,6 +499,8 @@ mpool_get_object(struct mem_pool *mpool)
 {
 	struct mem_pool_stack *mem_stack;
 	void *object = NULL;
+	uint32_t index;
+	pnso_error_t err = PNSO_OK;
 
 	if (!mpool)
 		return NULL;
@@ -345,9 +514,27 @@ mpool_get_object(struct mem_pool *mpool)
 	if (mem_stack->mps_top > 0) {
 		object = mem_stack->mps_objects[--(mem_stack->mps_top)];
 		// MPOOL_VALIDATE_OBJECT(mpool, object);
+
+		/* Object tracking */
+		if (mem_stack->mps_inuse_objects_bmp) {
+			index = mpool_get_obj_id(mpool, object);
+			if (index < mpool->mp_config.mpc_num_objects) {
+				if (__test_and_set_bit(index,
+					mem_stack->mps_inuse_objects_bmp) != 0)
+					err = EINVAL;
+			} else {
+				err = EFAULT;
+			}
+		}
 	}
 	spin_unlock(&mem_stack->mps_lock);
 
+	if (err) {
+		OSAL_LOG_ERROR("Possible double alloc in mpool type %s err %d",
+			       mpool_get_type_str(mpool->mp_config.mpc_type),
+			       err);
+		//OSAL_ASSERT(0);
+	}
 	return object;
 }
 
@@ -355,6 +542,8 @@ void
 mpool_put_object(struct mem_pool *mpool, void *object)
 {
 	struct mem_pool_stack *mem_stack;
+	uint32_t index;
+	pnso_error_t err = PNSO_OK;
 
 	if (!mpool || !object)
 		return;
@@ -377,7 +566,26 @@ mpool_put_object(struct mem_pool *mpool, void *object)
 
 	mem_stack->mps_objects[mem_stack->mps_top] = object;
 	mem_stack->mps_top++;
+
+	/* Object tracking */
+	if (mem_stack->mps_inuse_objects_bmp) {
+		index = mpool_get_obj_id(mpool, object);
+		if (index < mpool->mp_config.mpc_num_objects) {
+			if (__test_and_clear_bit(index, mem_stack->mps_inuse_objects_bmp) == 0)
+				err = EINVAL;
+		} else {
+			err = EFAULT;
+		}
+	}
+
 	spin_unlock(&mem_stack->mps_lock);
+
+	if (err) {
+		OSAL_LOG_ERROR("Possible double free in mpool type %s err %d",
+			       mpool_get_type_str(mpool->mp_config.mpc_type),
+			       err);
+		//OSAL_ASSERT(0);
+	}
 }
 
 uint32_t mpool_get_obj_id(struct mem_pool *mpool, void *object)

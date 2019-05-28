@@ -96,6 +96,7 @@ struct mem_pool_stack {
 	uint32_t mps_num_objects;	/* total number of objects */
 	uint32_t mps_top;		/* stack pointer */
 	spinlock_t mps_lock;		/* to serialize get/put in poll/async */
+	unsigned long *mps_inuse_objects_bmp; /* bitmap to track inuse objs */
 	void **mps_objects;		/* array of pointers to objects */
 };
 
@@ -127,6 +128,7 @@ struct mem_pool {
  *				comprising the object.
  * @object_size:	[in]	specifies the size of an object in bytes.
  * @align_size:		[in]	specifies the alignment size of an object.
+ * @enable_tracking:	[in]	whether to enable in-use object tracking.
  * @out_mpool:		[out]	specifies the pointer to the newly created pool.
  *
  * This routine internally decides the size of the pool based on the requested
@@ -143,6 +145,7 @@ struct mem_pool {
 pnso_error_t mpool_create(enum mem_pool_type mpool_type,
 		uint32_t num_objects, uint32_t num_vec_elems,
 		uint32_t object_size, uint32_t align_size,
+		bool enable_tracking,
 		struct mem_pool **out_mpool);
 
 /**
@@ -156,6 +159,69 @@ pnso_error_t mpool_create(enum mem_pool_type mpool_type,
  *
  */
 void mpool_destroy(struct mem_pool **mpool);
+
+/**
+ * mpool_reset() - resets the specified pool.
+ * @mpool:	[in]		specifies the pointer to the mpool to be
+ *				reset.
+ *
+ * Return Value:
+ *	None
+ *
+ */
+void mpool_reset(struct mem_pool *mpool);
+
+/**
+ * mpool_is_object_inuse() - returns true if object is currently used by its
+ * caller.
+ * @mpool:	[in]	specifies the pointer to the mpool.
+ * @object:	[in]	specifies the pointer to the object.
+ *
+ * Return Value:
+ *	- true if the specified object is used by its caller.
+ *	- false if the specified object is residing in the pool.
+ *
+ */
+bool mpool_is_object_inuse(struct mem_pool *mpool, void *object);
+
+/**
+ * mpool_get_first_inuse_object() - returns pointer to the first in-use object
+ * within the specified pool.
+ * @mpool:	[in]	specifies the pointer to the mpool to search
+ * 			for first in-use object.
+ *
+ * mem pool maintains an in-use objects array to keep track of the objects
+ * supplied to the caller and returned to the pool.  This routine scans from
+ * the start of the array sequentially to return the in-use object.  As the
+ * scan encounters a valid in-use object, this routine will return it as the
+ * first in-use object in the pool.
+ *
+ * Return Value:
+ *	- NULL if specified pool is NULL, or if none of the objects are in-use
+ *	- a pointer to the object
+ *
+ */
+void *mpool_get_first_inuse_object(struct mem_pool *mpool);
+
+/**
+ * mpool_get_next_inuse_object() - returns pointer to the first in-use object
+ * within the specified pool.
+ * @mpool:	[in]	specifies the pointer to the mpool to search
+ * 			for next in-use object.
+ * @object:	[in]	specifies the pointer to the previous object.
+ *
+ * Prior to invoking this routine, mpool_get_first_inuse_object() be inovked
+ * to obtian the first in-use object in the pool.  This routine converts the
+ * 'object' param to an index and scans the sequentially from the index to the 
+ * end of the array.  As the scan encounters a valid in-use object, this
+ * routine will return it as the next in-use object in the pool.
+ *
+ * Return Value:
+ *	- NULL if specified pool is NULL, or if none of the objects are in-use
+ *	- a pointer to the object
+ *
+ */
+void *mpool_get_next_inuse_object(struct mem_pool *mpool, void *object);
 
 /**
  * mpool_get_object() - obtains a pointer to an object within the pool.

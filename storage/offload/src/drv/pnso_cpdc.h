@@ -269,6 +269,19 @@ pnso_error_t cpdc_init_accelerator(struct pc_res_init_params *pc_init,
  */
 void cpdc_deinit_accelerator(struct per_core_resource *pcr);
 
+/**
+ * cpdc_reset_accelerator() - conducts cleanup task specific to CPDC
+ * accelerator.
+ * @pcr:	[in/out]	specifies the per core container-structure from
+ *				which the accelerators' internal data structures
+ *				need to be reset.
+ *
+ * Return Value:
+ *	None
+ *
+ */
+void cpdc_reset_accelerator(struct per_core_resource *pcr);
+
 #ifdef __cplusplus
 }
 #endif

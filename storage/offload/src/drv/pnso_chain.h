@@ -58,6 +58,7 @@
 extern "C" {
 #endif
 
+#include <linux/atomic.h>
 #include "pnso_req.h"
 #include "pnso_batch.h"
 #include "pnso_chain_params.h"
@@ -307,7 +308,7 @@ struct service_chain {
 	struct batch_info *sc_batch_info;	/* backpointer to  batch info */
 
 	completion_cb_t	sc_req_cb;	/* caller supplied call-back */
-	void *sc_req_cb_ctx;		/* caller supplied cb context */
+	atomic64_t sc_req_cb_ctx;		/* caller supplied cb context */
 };
 
 pnso_error_t chn_create_chain(struct request_params *req_params,
@@ -344,6 +345,7 @@ bool chn_is_poll_done(struct service_chain *chain);
 
 pnso_error_t chn_poller(void *poll_ctx);
 pnso_error_t chn_poll_timeout(void *poll_ctx);
+void chn_poll_timeout_all(struct per_core_resource *pcr);
 
 void chn_pprint_chain(const struct service_chain *chain);
 

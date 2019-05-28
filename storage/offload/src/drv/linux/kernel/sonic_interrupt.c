@@ -59,7 +59,7 @@ static int sonic_get_evid(struct sonic_event_list *evl, u32 *evid)
 
 found:
 	//set_bit(id, evl->inuse_evid_bmp);
-	was_set = test_and_set_bit(id, evl->inuse_evid_bmp);
+	was_set = __test_and_set_bit(id, evl->inuse_evid_bmp);
 	if (!was_set)
 		evl->inuse_count++;
 
@@ -82,7 +82,7 @@ static int sonic_put_evid(struct sonic_event_list *evl, u32 evid)
 
 	spin_lock_irqsave(&evl->inuse_lock, irqflags);
 	//clear_bit(evid, evl->inuse_evid_bmp);
-	was_set = test_and_clear_bit(evid, evl->inuse_evid_bmp);
+	was_set = __test_and_clear_bit(evid, evl->inuse_evid_bmp);
 	if (was_set)
 		evl->inuse_count--;
 	spin_unlock_irqrestore(&evl->inuse_lock, irqflags);
@@ -243,8 +243,7 @@ sonic_poll_ev_list(struct sonic_event_list *evl, int budget,
 		if (work->found_work)
 			work->reinit_ts = cur_ts;
 	} else {
-		if (evl->idle_count++ == SONIC_ISR_MAX_IDLE_COUNT)
-			OSAL_LOG_CRITICAL("sonic_async_ev_isr stuck in idle loop!");
+		evl->idle_count++;
 	}
 
 	//if (!found || found > 2 || (found + found_zero_data) >= budget || loop_count > budget) {
@@ -532,7 +531,6 @@ void sonic_intr_put_db_addr(struct per_core_resource *pc_res, uint64_t addr)
 /* Assumes lif reset in progress */
 void sonic_flush_ev_list(struct per_core_resource *pc_res)
 {
-	struct delayed_work dwork;
 	uint64_t start_ns;
 
 	if (!pc_res->evl)
@@ -544,12 +542,7 @@ void sonic_flush_ev_list(struct per_core_resource *pc_res)
 	}
 
 	if (sonic_get_evid_count(pc_res->evl) > 0) {
-		OSAL_LOG_WARN("Flushing async event list");
-
-		/* trigger a flush of timed out entries */
-		INIT_DELAYED_WORK(&dwork, sonic_ev_idle_handler);
-		queue_delayed_work(pc_res->evl->wq, &dwork,
-				   SONIC_EV_IDLE_WORK_JIFFIES);
+		OSAL_LOG_NOTICE("Flushing async event list");
 
 		/* wait for all events to be timed out */
 		start_ns = osal_get_clock_nsec();
@@ -658,7 +651,7 @@ int sonic_create_ev_list(struct per_core_resource *pc_res, uint32_t ev_count)
 		goto err_evl;
 	}
 
-	OSAL_LOG_NOTICE("Successfully created event list");
+	OSAL_LOG_INFO("Successfully created event list %s", evl->name);
 	evl->enable = true;
 	return 0;
 

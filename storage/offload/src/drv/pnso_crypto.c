@@ -28,6 +28,16 @@ deinit_mpools(struct per_core_resource *pcr)
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CRYPTO_DESC]);
 }
 
+static void
+reset_mpools(struct per_core_resource *pcr)
+{
+	mpool_reset(pcr->mpools[MPOOL_TYPE_CRYPTO_AOL_VECTOR]);
+	mpool_reset(pcr->mpools[MPOOL_TYPE_CRYPTO_DESC_VECTOR]);
+	mpool_reset(pcr->mpools[MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS]);
+	mpool_reset(pcr->mpools[MPOOL_TYPE_CRYPTO_AOL]);
+	mpool_reset(pcr->mpools[MPOOL_TYPE_CRYPTO_DESC]);
+}
+
 static pnso_error_t
 init_mpools(struct pc_res_init_params *pc_init,
 		struct per_core_resource *pcr)
@@ -41,7 +51,7 @@ init_mpools(struct pc_res_init_params *pc_init,
 	mpool_type = MPOOL_TYPE_CRYPTO_DESC;
 	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
 				sizeof(struct crypto_desc), PNSO_MEM_ALIGN_DESC,
-				&pcr->mpools[mpool_type]);
+				false, &pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
 
@@ -49,7 +59,7 @@ init_mpools(struct pc_res_init_params *pc_init,
 	err = mpool_create(mpool_type, num_objects * MAX_CRYPTO_SGLS_PER_REQ,
 			MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct crypto_aol), PNSO_MEM_ALIGN_DESC,
-			&pcr->mpools[mpool_type]);
+			false, &pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
 
@@ -57,7 +67,7 @@ init_mpools(struct pc_res_init_params *pc_init,
 	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct crypto_status_desc),
 			sizeof(struct crypto_status_desc),
-			&pcr->mpools[mpool_type]);
+			false, &pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
 
@@ -71,7 +81,7 @@ init_mpools(struct pc_res_init_params *pc_init,
 			MAX_CRYPTO_DESC_VEC_PER_REQ,
 			PNSO_NUM_OBJECTS_IN_OBJECT,
 			sizeof(struct crypto_desc), PNSO_MEM_ALIGN_DESC,
-			&pcr->mpools[mpool_type]);
+			false, &pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
 
@@ -79,7 +89,7 @@ init_mpools(struct pc_res_init_params *pc_init,
 	err = mpool_create(mpool_type, num_objects * MAX_CRYPTO_SGL_VEC_PER_REQ,
 			CRYPTO_NUM_DESCS_PER_AOL_VEC,
 			sizeof(struct crypto_aol), PNSO_MEM_ALIGN_DESC,
-			&pcr->mpools[mpool_type]);
+			false, &pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
 
@@ -125,6 +135,16 @@ crypto_deinit_accelerator(struct per_core_resource *pcr)
 	OSAL_LOG_DEBUG("enter ...");
 
 	deinit_mpools(pcr);
+
+	OSAL_LOG_DEBUG("exit!");
+}
+
+void
+crypto_reset_accelerator(struct per_core_resource *pcr)
+{
+	OSAL_LOG_DEBUG("enter ...");
+
+	reset_mpools(pcr);
 
 	OSAL_LOG_DEBUG("exit!");
 }

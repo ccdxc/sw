@@ -779,7 +779,9 @@ out:
 }
 
 static void
-init_request_params(uint16_t req_flags, struct pnso_service_request *svc_req,
+init_request_params(uint16_t req_flags,
+		struct per_core_resource *pcr,
+		struct pnso_service_request *svc_req,
 		struct pnso_service_result *svc_res,
 		completion_cb_t cb, void *cb_ctx,
 		pnso_poll_fn_t *pnso_poll_fn, void **pnso_poll_ctx,
@@ -788,6 +790,7 @@ init_request_params(uint16_t req_flags, struct pnso_service_request *svc_req,
 	memset(req_params, 0, sizeof(*req_params));
 
 	req_params->rp_flags = req_flags;
+	req_params->rp_pcr = pcr;
 
 	req_params->rp_svc_req = svc_req;
 	req_params->rp_svc_res = svc_res;
@@ -829,13 +832,13 @@ static pnso_error_t
 submit_chain(struct request_params *req_params)
 {
 	pnso_error_t err;
-	struct per_core_resource *pcr = putil_get_per_core_resource();
+	struct per_core_resource *pcr = req_params->rp_pcr;
 	struct service_chain *chain = NULL;
 	bool is_sync_mode;
 
 	err = chn_create_chain(req_params, &chain);
 	if (err) {
-		OSAL_LOG_ERROR("failed to create request/chain! err: %d",
+		OSAL_LOG_DEBUG("failed to create request/chain! err: %d",
 				err);
 		goto out;
 	}
@@ -844,7 +847,7 @@ submit_chain(struct request_params *req_params)
 	is_sync_mode = (chain->sc_flags & CHAIN_CFLAG_MODE_SYNC) != 0;
 	err = chn_execute_chain(chain);
 	if (err) {
-		OSAL_LOG_ERROR("failed to complete request/chain! err: %d",
+		OSAL_LOG_DEBUG("failed to complete request/chain! err: %d",
 				err);
 		PAS_INC_NUM_CHAIN_FAILURES(pcr);
 		goto out_chain;
@@ -872,22 +875,25 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 	pnso_error_t err;
 	struct request_params req_params;
 	uint32_t req_flags = 0;
-	struct per_core_resource *pcr = putil_get_per_core_resource();
+	struct per_core_resource *pcr;
 
 	PAS_DECL_PERF();
 
 	OSAL_LOG_DEBUG("enter...");
 	PAS_START_PERF();
+
+	if (pnso_lif_reset_ctl_pending()) {
+		err = PNSO_LIF_IO_ERROR;
+		OSAL_LOG_DEBUG("pnso pending error reset! err: %d", err);
+		pcr = NULL;
+		goto out;
+	}
+	pcr = putil_get_per_core_resource();
+
 	PAS_INC_NUM_REQUESTS(pcr);
 
 	REQ_PPRINT_REQUEST(svc_req);
 	REQ_PPRINT_RESULT(svc_res);
-
-	if (pnso_lif_reset_ctl_pending()) {
-		err = PNSO_LIF_IO_ERROR;
-		OSAL_LOG_ERROR("pnso pending error reset! err: %d", err);
-		goto out;
-	}
 
 	/* validate each service request */
 	err = validate_service_request(svc_req);
@@ -922,7 +928,7 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 	}
 
 	req_flags |= REQUEST_RFLAG_TYPE_CHAIN;
-	init_request_params(req_flags, svc_req, svc_res, cb, cb_ctx,
+	init_request_params(req_flags, pcr, svc_req, svc_res, cb, cb_ctx,
 			pnso_poll_fn, pnso_poll_ctx, &req_params);
 
 	err = submit_chain(&req_params);
@@ -931,12 +937,19 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 
 	REQ_PPRINT_RESULT(svc_res);
 	PAS_END_PERF(pcr);
+	putil_put_per_core_resource(pcr);
+
 	OSAL_LOG_DEBUG("exit!");
 	return err;
 out:
-	PAS_INC_NUM_REQUEST_FAILURES(pcr);
-	PAS_END_PERF(pcr);
+	if (pcr) {
+		PAS_INC_NUM_REQUEST_FAILURES(pcr);
+		PAS_END_PERF(pcr);
+		putil_put_per_core_resource(pcr);
+	}
+
 	OSAL_LOG_DEBUG("exit! err: %d", err);
+
 	return err;
 }
 OSAL_EXPORT_SYMBOL(pnso_submit_request);
@@ -946,14 +959,17 @@ pnso_add_to_batch(struct pnso_service_request *svc_req,
 		struct pnso_service_result *svc_res)
 {
 	pnso_error_t err;
+	struct per_core_resource *pcr;
 
 	OSAL_LOG_DEBUG("enter...");
 
 	if (pnso_lif_reset_ctl_pending()) {
 		err = PNSO_LIF_IO_ERROR;
-		OSAL_LOG_ERROR("pnso pending error reset! err: %d", err);
+		OSAL_LOG_DEBUG("pnso pending error reset! err: %d", err);
+		pcr = NULL;
 		goto out;
 	}
+	pcr = putil_get_per_core_resource();
 
 	REQ_PPRINT_REQUEST(svc_req);
 	REQ_PPRINT_RESULT(svc_res);
@@ -983,18 +999,23 @@ pnso_add_to_batch(struct pnso_service_request *svc_req,
 		goto out;
 	}
 
-	err = bat_add_to_batch(svc_req, svc_res);
+	err = bat_add_to_batch(pcr, svc_req, svc_res);
 	if (err)
 		goto out;
 
+	putil_put_per_core_resource(pcr);
 	OSAL_LOG_DEBUG("exit!");
 	return err;
 
 out:
 	/* cleanup batch, if it was created for previous requests */
-	bat_destroy_batch();
+	if (pcr) {
+		bat_destroy_batch(pcr);
+		putil_put_per_core_resource(pcr);
+	}
 
-	OSAL_LOG_ERROR("exit! err: %d", err);
+	OSAL_LOG_DEBUG("exit! err: %d", err);
+
 	return err;
 }
 OSAL_EXPORT_SYMBOL(pnso_add_to_batch);
@@ -1006,7 +1027,7 @@ pnso_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 	pnso_error_t err;
 	struct request_params req_params;
 	uint32_t req_flags = 0;
-	struct per_core_resource *pcr = putil_get_per_core_resource();
+	struct per_core_resource *pcr;
 
 	PAS_DECL_PERF();
 
@@ -1015,9 +1036,11 @@ pnso_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 
 	if (pnso_lif_reset_ctl_pending()) {
 		err = PNSO_LIF_IO_ERROR;
-		OSAL_LOG_ERROR("pnso pending error reset! err: %d", err);
+		OSAL_LOG_DEBUG("pnso pending error reset! err: %d", err);
+		pcr = NULL;
 		goto out;
 	}
+	pcr = putil_get_per_core_resource();
 
 	err = get_request_mode(cb, cb_ctx, pnso_poll_fn,
 			pnso_poll_ctx, &req_flags);
@@ -1027,32 +1050,36 @@ pnso_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 	}
 
 	req_flags |= REQUEST_RFLAG_TYPE_BATCH;
-	init_request_params(req_flags, NULL, NULL, cb, cb_ctx,
+	init_request_params(req_flags, pcr, NULL, NULL, cb, cb_ctx,
 			pnso_poll_fn, pnso_poll_ctx, &req_params);
 
 	err = bat_flush_batch(&req_params);
 	if (err) {
-		OSAL_LOG_ERROR("flush request failed! err: %d", err);
+		OSAL_LOG_DEBUG("flush request failed! err: %d", err);
 		goto out;
 	}
 	PAS_INC_NUM_BATCHES(pcr);
 
 	/* TODO-batch: temp hack to free-up batch in sync mode */
 	if (!cb)
-		bat_destroy_batch();
+		bat_destroy_batch(pcr);
 
 	err = PNSO_OK;
 	PAS_END_PERF(pcr);
+	putil_put_per_core_resource(pcr);
 	OSAL_LOG_DEBUG("exit!");
 	return err;
 
 out:
 	/* cleanup batch, if it was created for previous requests */
-	bat_destroy_batch();
+	if (pcr) {
+		bat_destroy_batch(pcr);
+		PAS_INC_NUM_BATCH_FAILURES(pcr);
+		PAS_END_PERF(pcr);
+		putil_put_per_core_resource(pcr);
+	}
 
-	PAS_INC_NUM_BATCH_FAILURES(pcr);
-	PAS_END_PERF(pcr);
-	OSAL_LOG_ERROR("exit! err: %d", err);
+	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
 OSAL_EXPORT_SYMBOL(pnso_flush_batch);
