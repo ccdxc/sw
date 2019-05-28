@@ -375,7 +375,7 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("/nic/tools/fwupdate -l", "#")
 
     @_exceptionWrapper(_errCodes.NAPLES_TELNET_FAILED, "Telnet Failed")
-    def Connect(self):
+    def Connect(self, bringup_oob=True):
         for _ in range(3):
             try:
                 self.hdl = self.Spawn("telnet %s %s" % ((GlobalOptions.console_ip, GlobalOptions.console_port)))
@@ -395,7 +395,7 @@ class NaplesManagement(EntityManagement):
             print(msg)
             raise Exception(msg)
 
-        self.Login()
+        self.Login(bringup_oob)
 
     def _getMemorySize(self):
         mem_check_cmd = '''cat /proc/iomem | grep "System RAM" | grep "200000000" | cut  -d'-' -f 1'''
@@ -414,9 +414,10 @@ class NaplesManagement(EntityManagement):
 
 
     @_exceptionWrapper(_errCodes.NAPLES_LOGIN_FAILED, "Login Failed")
-    def Login(self):
+    def Login(self, bringup_oob=True):
         self.__login()
-        self.__run_dhclient()
+        if bringup_oob:
+            self.__run_dhclient()
 
     @_exceptionWrapper(_errCodes.NAPLES_GOLDFW_UNKNOWN, "Gold FW unknown")
     def ReadGoldFwVersion(self):
@@ -446,12 +447,18 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("rm -rf /sysconfig/config0/*.db", "#")
         self.SendlineExpect("rm -rf /sysconfig/config0/*.conf", "#")
 
-        if goldfw:
-            self.SendlineExpect("rm -f /sysconfig/config0/device.conf", "#")
-
         self.SendlineExpect("rm -rf /data/log && sync", "#")
         self.SendlineExpect("rm -rf /data/core/* && sync", "#")
         return
+
+    def Close(self):
+        if self.hdl:
+            self.hdl.close()
+        return
+
+    @_exceptionWrapper(_errCodes.NAPLES_INIT_FOR_UPGRADE_FAILED, "Switch to gold fw failed")
+    def SwitchToGoldFW(self):
+        self.SendlineExpect("fwupdate -s goldfw", "#")
 
     def Close(self):
         if self.hdl:
@@ -844,11 +851,16 @@ def Main():
         except:
             #Do Reset only if we can't connect to naples.
             IpmiReset()
-            #Give it longer for naples to mount devices
-            time.sleep(30)
-            naples.Connect()
-            naples.InitForUpgrade(goldfw = True)
-            #Do a reset again as old fw might lock up host boot
+            time.sleep(10)
+            #Don't bring up oob as naples/host in bad state
+            #Switch to gold FW ASAP
+            naples.Connect(bringup_oob=False)
+            naples.SwitchToGoldFW()
+            try:
+                #Try to do a clean up db files and conf files
+                naples.InitForUpgrade()
+            except:
+                pass
             IpmiReset()
             host.WaitForSsh()
             host.UnloadDriver()
