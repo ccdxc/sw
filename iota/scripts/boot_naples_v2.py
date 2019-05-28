@@ -444,13 +444,11 @@ class NaplesManagement(EntityManagement):
 
         #clean up db that was setup by previous
         self.SendlineExpect("rm -rf /sysconfig/config0/*.db", "#")
-        self.SendlineExpect("mkdir -p /sysconfig/config0", "#")
-        self.SendlineExpect("mount /dev/mmcblk0p6 /sysconfig/config0", "#")
+        self.SendlineExpect("rm -rf /sysconfig/config0/*.conf", "#")
 
         if goldfw:
             self.SendlineExpect("rm -f /sysconfig/config0/device.conf", "#")
 
-        self.SendlineExpect("umount /sysconfig/config0", "#")
         self.SendlineExpect("rm -rf /data/log && sync", "#")
         self.SendlineExpect("rm -rf /data/core/* && sync", "#")
         return
