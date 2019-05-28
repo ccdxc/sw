@@ -65,7 +65,7 @@ cd -
 
 cd perftest
 
-if [ ! -a ./configure ] ; then ./autogen.sh ; fi
+./autogen.sh || exit
 
 CFLAGS="-std=gnu99 -I$DIR/rdma-core/build/include" \
 LDFLAGS="-L$DIR/rdma-core/build/lib -Wl,-R$DIR/rdma-core/build/lib" \
@@ -81,7 +81,7 @@ cd -
 
 cd qperf
 
-if [ ! -a ./configure ] ; then ./autogen.sh ; fi
+./autogen.sh || exit
 
 CFLAGS="-I$DIR/rdma-core/build/include" \
 LDFLAGS="-L$DIR/rdma-core/build/lib -Wl,-R$DIR/rdma-core/build/lib" \
