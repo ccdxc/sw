@@ -29,6 +29,7 @@ using std::string;
 namespace pt = boost::property_tree;
 
 extern char *g_input_cfg_file;
+extern std::string g_pipeline;
 pds_device_spec_t g_device = {0};
 #ifndef TEST_GRPC_APP
 flow_test *g_flow_test_obj;
@@ -127,6 +128,18 @@ test_params_t g_test_params = { 0 };
 
 #define PDS_SUBNET_ID(vpc_num, num_subnets_per_vpc, subnet_num)    \
             (((vpc_num) * (num_subnets_per_vpc)) + subnet_num)
+
+inline bool
+apollo (void)
+{
+    return g_pipeline == "apollo";
+}
+
+inline bool
+artemis (void)
+{
+    return g_pipeline == "artemis";
+}
 
 static void
 meter_str_to_type (std::string meter_type_str,
@@ -516,10 +529,6 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
     return SDK_RET_OK;
 }
 
-// MAC address is encoded like below:
-// bits 0-10 have vnic number in the subnet
-// bits 11-21 have subnet number in the vpc
-// bits 22-32 have vpc number
 sdk_ret_t
 create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
               uint32_t num_vnics, uint16_t vlan_start,
@@ -614,7 +623,8 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
 // leaving LSB 14 bits for VNIC IPs
 sdk_ret_t
 create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
-                uint32_t num_subnets, ipv4_prefix_t *vpc_pfx)
+                uint32_t num_subnets, ipv4_prefix_t *vpc_pfx,
+                ip_prefix_t *v6_vpc_pfx)
 {
     sdk_ret_t rv;
     pds_subnet_spec_t pds_subnet;
@@ -630,6 +640,11 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
             (pds_subnet.v4_pfx.v4_addr) | ((i - 1) << 14);
         pds_subnet.v4_pfx.len = 18;
         pds_subnet.v4_vr_ip = pds_subnet.v4_pfx.v4_addr;
+        pds_subnet.v6_pfx = *v6_vpc_pfx;
+        pds_subnet.v6_pfx.addr.addr.v6_addr.addr32[3] =
+            (pds_subnet.v6_pfx.addr.addr.v6_addr.addr32[3]) | ((i - 1) << 14);
+        pds_subnet.v6_pfx.len = 96;
+        pds_subnet.v6_vr_ip = pds_subnet.v6_pfx.addr;
         MAC_UINT64_TO_ADDR(pds_subnet.vr_mac,
                            (uint64_t)pds_subnet.v4_vr_ip);
         pds_subnet.v6_route_table.id =
@@ -656,7 +671,8 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
 }
 
 sdk_ret_t
-create_vpcs (uint32_t num_vpcs, ip_prefix_t *ip_pfx, uint32_t num_subnets)
+create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_pfx,
+             ip_prefix_t *ipv6_pfx, uint32_t num_subnets)
 {
     sdk_ret_t rv;
     pds_vpc_spec_t pds_vpc;
@@ -666,8 +682,9 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ip_pfx, uint32_t num_subnets)
         memset(&pds_vpc, 0, sizeof(pds_vpc));
         pds_vpc.type = PDS_VPC_TYPE_TENANT;
         pds_vpc.key.id = i;
-        pds_vpc.v4_pfx.v4_addr = ip_pfx->addr.addr.v4_addr & 0xFF000000;
+        pds_vpc.v4_pfx.v4_addr = ipv4_pfx->addr.addr.v4_addr & 0xFF000000;
         pds_vpc.v4_pfx.len = 8; // fix this to /8
+        pds_vpc.v6_pfx = *ipv6_pfx;
 #ifdef TEST_GRPC_APP
         rv = create_vpc_grpc(&pds_vpc);
         if (rv != SDK_RET_OK) {
@@ -679,7 +696,8 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ip_pfx, uint32_t num_subnets)
             return rv;
         }
 #endif
-        rv = create_subnets(i, num_vpcs, num_subnets, &pds_vpc.v4_pfx);
+        rv = create_subnets(i, num_vpcs, num_subnets, &pds_vpc.v4_pfx,
+                            &pds_vpc.v6_pfx);
         if (rv != SDK_RET_OK) {
             return rv;
         }
@@ -692,6 +710,41 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ip_pfx, uint32_t num_subnets)
         return rv;
     }
     rv = create_subnet_grpc(NULL);
+    if (rv != SDK_RET_OK) {
+        SDK_ASSERT(0);
+        return rv;
+    }
+#endif
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+create_vpc_peers (uint32_t num_vpcs)
+{
+    sdk_ret_t rv;
+    pds_vpc_peer_spec_t pds_vpc_peer;
+    uint32_t vpc_peer_id = 1;
+
+    SDK_ASSERT(num_vpcs <= PDS_MAX_VPC);
+    for (uint32_t i = 1; i <= num_vpcs; i+=2) {
+        memset(&pds_vpc_peer, 0, sizeof(pds_vpc_peer));
+        pds_vpc_peer.key.vpc1.id = i;
+        pds_vpc_peer.key.vpc2.id = i+1;
+#ifdef TEST_GRPC_APP
+        rv = create_vpc_peer_grpc(vpc_peer_id++, &pds_vpc_peer);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+#else
+        rv = pds_vpc_peer_create(&pds_vpc_peer);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+#endif
+    }
+#ifdef TEST_GRPC_APP
+    // Batching: push leftover vpc and subnet objects
+    rv = create_vpc_peer_grpc(0, NULL);
     if (rv != SDK_RET_OK) {
         SDK_ASSERT(0);
         return rv;
@@ -1261,91 +1314,97 @@ create_objects (void)
         return ret;
     }
 
-    // create v4 tags
-    ret = create_tags(g_test_params.num_tags/2, g_test_params.tags_v4_scale,
-                      IP_AF_IPV4);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
-    // create v6 tags
-    ret = create_tags(g_test_params.num_tags/2, g_test_params.tags_v6_scale,
-                      IP_AF_IPV6);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
-    // create v4 meter
-    // meter ids: 1 to num_meter
-    ret = create_meter(g_test_params.num_meter, g_test_params.meter_scale,
-                       g_test_params.meter_type, g_test_params.pps_bps,
-                       g_test_params.burst, IP_AF_IPV4);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
-    // create v6 meter
-    // meter ids: num_meter+1 to 2*num_meter
-    ret = create_meter(g_test_params.num_meter, g_test_params.meter_scale,
-                       g_test_params.meter_type, g_test_params.pps_bps,
-                       g_test_params.burst, IP_AF_IPV6);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
-    // create TEPs including MyTEP
-    ret = create_teps(g_test_params.num_teps + 1, &g_test_params.tep_pfx);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-    // create route tables
-    ret = create_route_tables(g_test_params.num_teps, g_test_params.num_vpcs,
-                              g_test_params.num_subnets,
-                              g_test_params.num_routes,
-                              &g_test_params.tep_pfx, &g_test_params.route_pfx,
-                              &g_test_params.v6_route_pfx);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-    // create security policies
-    ret = create_security_policy(g_test_params.num_vpcs,
-                                 g_test_params.num_subnets,
-                                 g_test_params.num_ipv4_rules, IP_AF_IPV4, false);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-    ret = create_security_policy(g_test_params.num_vpcs,
-                                 g_test_params.num_subnets,
-                                 g_test_params.num_ipv4_rules, IP_AF_IPV4, true);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
-    ret = create_security_policy(g_test_params.num_vpcs,
-                                 g_test_params.num_subnets,
-                                 g_test_params.num_ipv6_rules, IP_AF_IPV6, false);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-    ret = create_security_policy(g_test_params.num_vpcs,
-                                 g_test_params.num_subnets,
-                                 g_test_params.num_ipv6_rules, IP_AF_IPV6, true);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
-    // create vpcs and subnets
-    ret = create_vpcs(g_test_params.num_vpcs, &g_test_params.vpc_pfx,
-                      g_test_params.num_subnets);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
-    // create RSPAN mirror sessions
-    if (g_test_params.mirror_en && (g_test_params.num_rspan > 0)) {
-        ret = create_rspan_mirror_sessions(g_test_params.num_rspan);
+    if (artemis()) {
+        // create v4 tags
+        ret = create_tags(g_test_params.num_tags/2, g_test_params.tags_v4_scale,
+                          IP_AF_IPV4);
         if (ret != SDK_RET_OK) {
             return ret;
+        }
+        // create v6 tags
+        ret = create_tags(g_test_params.num_tags/2, g_test_params.tags_v6_scale,
+                          IP_AF_IPV6);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        // create v4 meter
+        // meter ids: 1 to num_meter
+        ret = create_meter(g_test_params.num_meter, g_test_params.meter_scale,
+                           g_test_params.meter_type, g_test_params.pps_bps,
+                           g_test_params.burst, IP_AF_IPV4);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        // create v6 meter
+        // meter ids: num_meter+1 to 2*num_meter
+        ret = create_meter(g_test_params.num_meter, g_test_params.meter_scale,
+                           g_test_params.meter_type, g_test_params.pps_bps,
+                           g_test_params.burst, IP_AF_IPV6);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    }
+    if (apollo()) {
+        // create TEPs including MyTEP
+        ret = create_teps(g_test_params.num_teps + 1, &g_test_params.tep_pfx);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        // create route tables
+        ret = create_route_tables(g_test_params.num_teps, g_test_params.num_vpcs,
+                                  g_test_params.num_subnets,
+                                  g_test_params.num_routes,
+                                  &g_test_params.tep_pfx, &g_test_params.route_pfx,
+                                  &g_test_params.v6_route_pfx);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        // create security policies
+        ret = create_security_policy(g_test_params.num_vpcs,
+                                     g_test_params.num_subnets,
+                                     g_test_params.num_ipv4_rules, IP_AF_IPV4, false);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        ret = create_security_policy(g_test_params.num_vpcs,
+                                     g_test_params.num_subnets,
+                                     g_test_params.num_ipv4_rules, IP_AF_IPV4, true);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        ret = create_security_policy(g_test_params.num_vpcs,
+                                     g_test_params.num_subnets,
+                                     g_test_params.num_ipv6_rules, IP_AF_IPV6, false);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        ret = create_security_policy(g_test_params.num_vpcs,
+                                     g_test_params.num_subnets,
+                                     g_test_params.num_ipv6_rules, IP_AF_IPV6, true);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    }
+    // create vpcs and subnets
+    ret = create_vpcs(g_test_params.num_vpcs, &g_test_params.vpc_pfx,
+                      &g_test_params.v6_vpc_pfx, g_test_params.num_subnets);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    if (artemis()) {
+        // create vpc peers
+        ret = create_vpc_peers(g_test_params.num_vpcs);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    }
+    if (apollo()) {
+        // create RSPAN mirror sessions
+        if (g_test_params.mirror_en && (g_test_params.num_rspan > 0)) {
+            ret = create_rspan_mirror_sessions(g_test_params.num_rspan);
+            if (ret != SDK_RET_OK) {
+                return ret;
+            }
         }
     }
     // create vnics
@@ -1398,7 +1457,6 @@ create_objects (void)
         return SDK_RET_ERR;
     }
 #endif
-
     return ret;
 }
 

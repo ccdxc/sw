@@ -7,8 +7,6 @@
 #include "nic/apollo/test/flow_test/flow_test.hpp"
 extern flow_test *g_flow_test_obj;
 
-// #define PDS_FLOW_TEST
-
 Status
 BatchSvcImpl::BatchStart(ServerContext *context,
                          const pds::BatchSpec *proto_spec,

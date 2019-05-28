@@ -24,6 +24,8 @@ sdk_ret_t create_remote_mapping_grpc(pds_remote_mapping_spec_t *remote_spec);
 sdk_ret_t create_vnic_grpc(pds_vnic_spec_t *vnic);
 sdk_ret_t create_subnet_grpc(pds_subnet_spec_t *subnet);
 sdk_ret_t create_vpc_grpc(pds_vpc_spec_t *vpc);
+sdk_ret_t create_vpc_peer_grpc(uint32_t vpc_peer_id,
+                               pds_vpc_peer_spec_t *vpc);
 sdk_ret_t create_tunnel_grpc(uint32_t tep_id, pds_tep_spec_t *tep);
 sdk_ret_t create_device_grpc(pds_device_spec_t *device);
 sdk_ret_t create_mirror_session_grpc(pds_mirror_session_spec_t *spec);

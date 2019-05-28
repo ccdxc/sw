@@ -439,9 +439,8 @@ main (int argc, char **argv)
             break;
 
         case 'f':
-            g_pipeline = (std::string)optarg;
-            if (g_pipeline != "apollo" &&
-                g_pipeline != "artemis") {
+            g_pipeline = std::string(optarg);
+            if (g_pipeline != "apollo" && g_pipeline != "artemis") {
                 fprintf(stderr, "Pipeline specified is invalid\n");
                 print_usage(argv);
                 exit(1);

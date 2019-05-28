@@ -17,6 +17,7 @@
 #include "nic/apollo/agent/svc/meter.hpp"
 #include "nic/apollo/agent/svc/tag.hpp"
 #include "nic/apollo/agent/svc/vnic.hpp"
+#include "nic/apollo/agent/svc/vpc.hpp"
 #include "gen/proto/types.pb.h"
 
 //----------------------------------------------------------------------------
@@ -169,6 +170,20 @@ vnic_api_spec_to_proto_spec (const pds_vnic_spec_t *api_spec,
             }
         }
     }
+}
+
+// Populate VPCPeer protobuf spec from VPCPeer API spec
+static inline void
+vpc_peer_api_spec_to_proto_spec (uint32_t vpc_peer_id,
+                                 const pds_vpc_peer_spec_t *api_spec,
+                                 pds::VPCPeerSpec *proto_spec)
+{
+    if (!api_spec || !proto_spec) {
+        return;
+    }
+    proto_spec->set_id(vpc_peer_id);
+    proto_spec->set_vpc1(api_spec->key.vpc1.id);
+    proto_spec->set_vpc2(api_spec->key.vpc2.id);
 }
 
 #endif    // __AGENT_SVC_SPECS_HPP__

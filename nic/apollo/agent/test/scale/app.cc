@@ -45,6 +45,7 @@ MappingRequest           g_mapping_req;
 VnicRequest              g_vnic_req;
 SubnetRequest            g_subnet_req;
 VPCRequest               g_vpc_req;
+VPCPeerRequest           g_vpc_peer_req;
 TunnelRequest            g_tunnel_req;
 MirrorSessionRequest     g_mirror_session_req;
 MeterRequest             g_meter_req;
@@ -191,6 +192,30 @@ create_vpc_grpc (pds_vpc_spec_t *vpc)
             return SDK_RET_ERR;
         }
         g_vpc_req.clear_request();
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+create_vpc_peer_grpc (uint32_t vpc_peer_id,
+                      pds_vpc_peer_spec_t *vpc_peer)
+{
+    ClientContext   context;
+    VPCPeerResponse response;
+    Status          ret_status;
+
+    if (vpc_peer != NULL) {
+        pds::VPCPeerSpec *spec = g_vpc_peer_req.add_request();
+        vpc_peer_api_spec_to_proto_spec(vpc_peer_id, vpc_peer, spec);
+    }
+    if ((g_vpc_peer_req.request_size() >= APP_GRPC_BATCH_COUNT) || !vpc_peer) {
+        ret_status = g_vpc_stub_->VPCPeerCreate(&context, g_vpc_peer_req, &response);
+        if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+            printf("%s failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        g_vpc_peer_req.clear_request();
     }
 
     return SDK_RET_OK;

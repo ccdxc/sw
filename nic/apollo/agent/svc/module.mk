@@ -4,6 +4,7 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libsvc.so
 MODULE_PIPELINE = apollo artemis
 MODULE_INCS     = ${MODULE_GEN_DIR}
+MODULE_FLAGS    = ${${PIPELINE}_PDS_FLOW_TEST_FLAGS}
 MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_SDK_SOLIBS} ${NIC_HAL_PD_SOLIBS_${ARCH}} \
