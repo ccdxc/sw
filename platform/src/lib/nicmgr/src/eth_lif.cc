@@ -1383,28 +1383,6 @@ EthLif::NotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     // Enable notifications
     notify_enabled = 1;
 
-    /*
-     * EDMA is not going through. We tried to write a well-known pattern during lif
-     * initialization in driver and thats being not updated without this hack.
-     * This hack tries to update the notify block multiple times and in the
-     * worst case we see the third attempt going through. Along with the original
-     * notify block update we retry 3 times.
-     */
-#if !defined(APOLLO) && !defined(ARTEMIS)
-    uint8_t count = 3;
-    while(count--) {
-        port_status_t retry_status = {0};
-        retry_status.status = lif_status->link_status;
-        retry_status.speed = lif_status->link_speed;
-        retry_status.id = spec->uplink_port_num;
-        NIC_LOG_INFO("{}: Retrying link event status: {}, speed: {}, port_num: {}",
-                     hal_lif_info_.name, retry_status.status, retry_status.speed,
-                     retry_status.id);
-        LinkEventHandler(&retry_status);
-        usleep(1000 * 1000);
-    }
-#endif
-
     return (IONIC_RC_SUCCESS);
 }
 
