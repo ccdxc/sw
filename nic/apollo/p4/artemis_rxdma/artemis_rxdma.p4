@@ -18,9 +18,9 @@ control ingress {
     if (app_header.table3_valid == 1) {
         sacl();
         pkt_enqueue();
+        vnic_info();
     } else {
         common_p4plus_stage0();
-        vnic_info();
         if (app_header.table0_valid == 1) {
             apply(rx_table_s1_t0);
             apply(rx_table_s2_t0);

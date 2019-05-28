@@ -21,5 +21,5 @@ table remote_46_mapping {
 }
 
 control remote_46_mapping {
-    //apply(remote_46_mapping);
+    apply(remote_46_mapping);
 }

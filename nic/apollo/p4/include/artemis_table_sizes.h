@@ -20,7 +20,7 @@
 #define DROP_STATS_TABLE_SIZE                               64
 
 //RXDMA Tables
-#define RXDMA_VNIC_INFO_TABLE_SIZE                          256
+#define RXDMA_VNIC_INFO_TABLE_SIZE                          512
 
 //TXDMA Tables
 #define MAPPING_TABLE_SIZE                                  2097152     // 2M

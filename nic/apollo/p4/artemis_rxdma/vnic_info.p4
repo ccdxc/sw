@@ -20,10 +20,11 @@ action vnic_info(entry_valid, lpm_base1, lpm_base2, lpm_base3,
 }
 
 /* miss action : drop packet */
-@pragma stage 0
-@pragma index_table
+@pragma stage 1
+@pragma hbm_table
 table vnic_info_tx {
     reads {
+        //p4_to_rxdma.direction : exact;
         p4_to_rxdma.vnic_id : exact;
     }
     actions {
@@ -33,10 +34,11 @@ table vnic_info_tx {
 }
 
 /* miss action : drop packet */
-@pragma stage 0
-@pragma index_table
+@pragma stage 1
+@pragma hbm_table
 table vnic_info_rx {
     reads {
+        p4_to_rxdma.direction : exact;
         p4_to_rxdma.vnic_id : exact;
     }
     actions {
@@ -47,9 +49,9 @@ table vnic_info_rx {
 
 control vnic_info {
     // TMP: Launch this look up only in first pass (recirc == 0)
-    if (p4_to_rxdma.direction == TX_FROM_HOST) {
-        //apply(vnic_info_tx);
-    } else {  // RX_FROM_SWITCH
+    //if (p4_to_rxdma.direction == TX_FROM_HOST) {
+        apply(vnic_info_tx);
+    //} else {  // RX_FROM_SWITCH
         //apply(vnic_info_rx);
-    }
+    //}
 }
