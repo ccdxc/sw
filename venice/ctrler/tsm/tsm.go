@@ -59,7 +59,7 @@ func NewTsCtrler(serverURL, restURL, apisrvURL string, resolver resolver.Interfa
 	}
 
 	// create trouble shooting state
-	stateMgr, err := statemgr.NewStatemgr(wr)
+	stateMgr, err := statemgr.NewStatemgr(wr, resolver)
 	if err != nil {
 		log.Errorf("Could not create trouble shooting manager. Err: %v", err)
 		return nil, err

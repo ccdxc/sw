@@ -3,14 +3,19 @@
 package statemgr
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/ctrler/tsm/writer"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
+	"github.com/pensando/sw/venice/utils/objstore/client"
+	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 type syncFlag struct {
@@ -20,9 +25,10 @@ type syncFlag struct {
 
 // Statemgr is the object state manager
 type Statemgr struct {
-	waitGrp sync.WaitGroup // wait group to wait on all go routines to exit
-	memDB   *memdb.Memdb   // database of all objects
-	writer  writer.Writer  // writer to ApiServer
+	waitGrp        sync.WaitGroup // wait group to wait on all go routines to exit
+	memDB          *memdb.Memdb   // database of all objects
+	writer         writer.Writer  // writer to ApiServer
+	objstoreClient objstore.Client
 
 	// Channels to receive events from api server and internal timers
 	MirrorSessionWatcher chan kvstore.WatchEvent // mirror session object watcher
@@ -185,11 +191,12 @@ func (sm *Statemgr) Stop() {
 }
 
 // NewStatemgr creates a new state manager object
-func NewStatemgr(wr writer.Writer) (*Statemgr, error) {
+func NewStatemgr(wr writer.Writer, resolver resolver.Interface) (*Statemgr, error) {
 	// create new statemgr instance
 	stateMgr := &Statemgr{
 		memDB:                memdb.NewMemdb(),
 		writer:               wr,
+		objstoreClient:       nil,
 		MirrorSessionWatcher: make(chan kvstore.WatchEvent, watcherQueueLen),
 		mirrorTimerWatcher:   make(chan MirrorTimerEvent, watcherQueueLen),
 		TechSupportWatcher:   make(chan kvstore.WatchEvent, watcherQueueLen),
@@ -197,6 +204,29 @@ func NewStatemgr(wr writer.Writer) (*Statemgr, error) {
 			flag: false,
 		},
 		numMirrorSessions: 0,
+	}
+
+	if resolver != nil {
+
+		bucket := "techsupport"
+		tlsp, err := rpckit.GetDefaultTLSProvider(globals.Vos)
+		if err != nil {
+			log.Errorf("Error getting tls provider (%s)", err)
+			return nil, fmt.Errorf("Error getting tls provider (%s)", err)
+		}
+
+		tlsc, err := tlsp.GetClientTLSConfig(globals.Vos)
+		if err != nil {
+			log.Errorf("Error getting tls client (%s)", err)
+			return nil, fmt.Errorf("Error getting tls client (%s)", err)
+		}
+		tlsc.ServerName = globals.Vos
+
+		stateMgr.objstoreClient, err = objstore.NewClient("default", bucket, resolver, objstore.WithTLSConfig(tlsc))
+		if err != nil {
+			stateMgr.objstoreClient = nil
+			log.Errorf("Failed to create objstore client. Err : %v", err)
+		}
 	}
 
 	stateMgr.waitGrp.Add(2)

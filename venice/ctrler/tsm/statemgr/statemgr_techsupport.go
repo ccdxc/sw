@@ -131,6 +131,16 @@ func (sm *Statemgr) deleteTechSupportObjectState(obj TechSupportObject) error {
 	if err != nil {
 		return fmt.Errorf("Error deleting TechSupport object %s: %v", obj.GetObjectMeta().Name, err)
 	}
+
+	if obj.GetObjectKind() == KindTechSupportRequest && sm.objstoreClient != nil {
+		tsr := obj.(*monitoring.TechSupportRequest)
+		log.Infof("Removing objects with prefix : %v", tsr.ObjectMeta.Name)
+		err = sm.objstoreClient.RemoveObjects(tsr.ObjectMeta.Name)
+		if err != nil {
+			log.Errorf("Failed to remove %v from VOS. Err : %v", tsr.Status.InstanceID, err)
+		}
+	}
+
 	return sm.memDB.DeleteObject(state)
 }
 

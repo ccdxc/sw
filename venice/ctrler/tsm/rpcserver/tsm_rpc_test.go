@@ -52,7 +52,7 @@ func (wr *APISrvWriter) Close() error {
 // createRPCServerClient creates rpc client and server
 func createRPCServerClient(t *testing.T) (*statemgr.Statemgr, *RPCServer, *rpckit.RPCClient) {
 	// create state manager
-	stateMgr, err := statemgr.NewStatemgr(&APISrvWriter{})
+	stateMgr, err := statemgr.NewStatemgr(&APISrvWriter{}, nil)
 	if err != nil {
 		t.Fatalf("Could not create state manager. Err: %v", err)
 	}
@@ -467,7 +467,7 @@ func TestTechSupportRPCs(t *testing.T) {
 
 // TestTechSupportNodeSelector tests the TechSupport node selection logic
 func TestTechSupportNodeSelector(t *testing.T) {
-	stateMgr, err := statemgr.NewStatemgr(&APISrvWriter{})
+	stateMgr, err := statemgr.NewStatemgr(&APISrvWriter{}, nil)
 	AssertOk(t, err, "Error instantiating StateMgr")
 	defer stateMgr.Stop()
 	s := NewTechSupportRPCServer(stateMgr)
