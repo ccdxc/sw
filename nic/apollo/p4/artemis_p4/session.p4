@@ -9,7 +9,7 @@ action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
                     rx_policer_idx, meter_idx, timestamp, drop) {
     modify_field(scratch_metadata.session_stats_addr,
                  scratch_metadata.session_stats_addr +
-                 (control_metadata.session_index * 8 * 4));
+                 (p4e_i2e.session_index * 8 * 4));
     modify_field(scratch_metadata.in_bytes, capri_p4_intrinsic.packet_len);
 
     modify_field(scratch_metadata.flag, drop);
@@ -19,7 +19,7 @@ action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
 
     if (tcp.valid == TRUE) {
         modify_field(scratch_metadata.tcp_flags, tcp.flags);
-        if (control_metadata.flow_role == TCP_FLOW_INITIATOR) {
+        if (p4e_i2e.flow_role == TCP_FLOW_INITIATOR) {
             modify_field(scratch_metadata.tcp_state, iflow_tcp_state);
             modify_field(scratch_metadata.tcp_seq_num, iflow_tcp_seq_num);
             modify_field(scratch_metadata.tcp_ack_num, iflow_tcp_ack_num);

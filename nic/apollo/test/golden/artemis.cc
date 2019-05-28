@@ -76,6 +76,17 @@ typedef struct cache_line_s {
     uint8_t packed_entry[CACHE_LINE_SIZE-sizeof(action_pc)];
 } cache_line_t;
 
+uint16_t g_vpc_id1 = 0;
+uint32_t g_session_index1 = 0x700DBA;
+
+uint64_t g_smac1 = 0x00C1C2C3C4C5ULL;
+uint64_t g_dmac1 = 0x000102030405ULL;
+uint32_t g_sip1 = 0x0B0B0101;
+uint32_t g_dip1 = 0x0A0A0101;
+uint8_t  g_proto1 = 0x6;
+uint16_t g_sport1 = 0x1234;
+uint16_t g_dport1 = 0x5678;
+
 uint8_t g_snd_pkt1[] = {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0xC1,
     0xC2, 0xC3, 0xC4, 0xC5, 0x81, 0x00, 0x00, 0x64,
@@ -326,6 +337,135 @@ txdma_symbols_init (void **p4plus_symbols,
     return i;
 }
 
+static void
+key_native_init (void)
+{
+    key_native_swkey_t key;
+    key_native_swkey_mask_t mask;
+    key_native_actiondata_t data;
+    uint32_t tbl_id = P4TBL_ID_KEY_NATIVE;
+    uint32_t index = 0;
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    data.action_id = KEY_NATIVE_NATIVE_IPV4_PACKET_ID;
+    key.ipv4_1_valid = 1;
+    key.ipv6_1_valid = 0;
+    key.ethernet_2_valid = 0;
+    key.ipv4_2_valid = 0;
+    key.ipv6_2_valid = 0;
+    key.ethernet_3_valid = 0;
+    key.ipv4_3_valid = 0;
+    key.ipv6_3_valid = 0;
+    mask.ipv4_1_valid_mask = 1;
+    mask.ipv6_1_valid_mask = 1;
+    mask.ethernet_2_valid_mask = 1;
+    mask.ipv4_2_valid_mask = 1;
+    mask.ipv6_2_valid_mask = 1;
+    mask.ethernet_3_valid_mask = 1;
+    mask.ipv4_3_valid_mask = 1;
+    mask.ipv6_3_valid_mask = 1;
+    entry_write(tbl_id, index, &key, &mask, &data, false, 0);
+}
+
+static void
+key_tunneled_init (void)
+{
+    key_tunneled_swkey_t key;
+    key_tunneled_swkey_mask_t mask;
+    key_tunneled_actiondata_t data;
+    uint32_t tbl_id = P4TBL_ID_KEY_TUNNELED;
+    uint32_t index = 0;
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0xFF, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    data.action_id = KEY_TUNNELED_TUNNELED_IPV4_PACKET_ID;
+    key.ipv4_1_valid = 0;
+    key.ipv6_1_valid = 0;
+    key.ethernet_2_valid = 1;
+    key.ipv4_2_valid = 1;
+    key.ipv6_2_valid = 0;
+    key.ethernet_3_valid = 0;
+    key.ipv4_3_valid = 0;
+    key.ipv6_3_valid = 0;
+    mask.ipv4_1_valid_mask = 0;
+    mask.ipv6_1_valid_mask = 0;
+    mask.ethernet_2_valid_mask = 1;
+    mask.ipv4_2_valid_mask = 1;
+    mask.ipv6_2_valid_mask = 1;
+    mask.ethernet_3_valid_mask = 1;
+    mask.ipv4_3_valid_mask = 1;
+    mask.ipv6_3_valid_mask = 1;
+    entry_write(tbl_id, index, &key, &mask, &data, false, 0);
+}
+
+static void
+key_tunneled2_init (void)
+{
+    key_tunneled2_swkey_t key;
+    key_tunneled2_swkey_mask_t mask;
+    key_tunneled2_actiondata_t data;
+    uint32_t tbl_id = P4TBL_ID_KEY_TUNNELED2;
+    uint32_t index = 0;
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0xFF, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    data.action_id = KEY_TUNNELED2_TUNNELED2_IPV4_PACKET_ID;
+    key.ipv4_1_valid = 0;
+    key.ipv6_1_valid = 0;
+    key.ethernet_2_valid = 0;
+    key.ipv4_2_valid = 0;
+    key.ipv6_2_valid = 0;
+    key.ethernet_3_valid = 1;
+    key.ipv4_3_valid = 1;
+    key.ipv6_3_valid = 0;
+    mask.ipv4_1_valid_mask = 0;
+    mask.ipv6_1_valid_mask = 0;
+    mask.ethernet_2_valid_mask = 0;
+    mask.ipv4_2_valid_mask = 0;
+    mask.ipv6_2_valid_mask = 0;
+    mask.ethernet_3_valid_mask = 1;
+    mask.ipv4_3_valid_mask = 1;
+    mask.ipv6_3_valid_mask = 1;
+    entry_write(tbl_id, index, &key, &mask, &data, false, 0);
+}
+
+static void
+ipv4_flow_init (void)
+{
+    ipv4_flow_swkey_t key;
+    ipv4_flow_actiondata_t data;
+    ipv4_flow_ipv4_flow_hash_t *flow_hash_info =
+        &data.action_u.ipv4_flow_ipv4_flow_hash;
+    uint32_t tbl_id = P4TBL_ID_IPV4_FLOW;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.vnic_metadata_vpc_id = g_vpc_id1;
+    key.key_metadata_ipv4_src = g_sip1;
+    key.key_metadata_ipv4_dst = g_dip1;
+    key.key_metadata_proto = g_proto1;
+    key.key_metadata_sport = g_sport1;
+    key.key_metadata_dport = g_dport1;
+    flow_hash_info->entry_valid = true;
+    flow_hash_info->session_index = g_session_index1;
+    flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
+    entry_write(tbl_id, 0, &key, NULL, &data, true, FLOW_TABLE_SIZE);
+
+    key.vnic_metadata_vpc_id = g_vpc_id1;
+    key.key_metadata_ipv4_src = g_dip1;
+    key.key_metadata_ipv4_dst = g_sip1;
+    key.key_metadata_proto = g_proto1;
+    key.key_metadata_sport = g_dport1;
+    key.key_metadata_dport = g_sport1;
+    flow_hash_info->entry_valid = true;
+    flow_hash_info->flow_role = TCP_FLOW_RESPONDER;
+    flow_hash_info->session_index = g_session_index1;
+    entry_write(tbl_id, 0, &key, NULL, &data, true, FLOW_TABLE_SIZE);
+}
 
 class artemis_test : public ::testing::Test {
 protected:
@@ -456,6 +596,10 @@ TEST_F(artemis_test, test1)
 #endif
 
     init_service_lif();
+    key_native_init();
+    key_tunneled_init();
+    key_tunneled2_init();
+    ipv4_flow_init();
 
 #ifdef SIM
     uint32_t port = 0;

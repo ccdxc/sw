@@ -374,9 +374,9 @@ sdk_ret_t
 artemis_impl::key_tunneled2_init_(void) {
     sdk_ret_t                      ret;
     uint32_t                       idx = 0;
-    key_tunneled_2_swkey_t         key;
-    key_tunneled_2_swkey_mask_t    mask;
-    key_tunneled_2_actiondata_t    data;
+    key_tunneled2_swkey_t          key;
+    key_tunneled2_swkey_mask_t     mask;
+    key_tunneled2_actiondata_t     data;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0xFF, sizeof(mask));
@@ -392,7 +392,7 @@ artemis_impl::key_tunneled2_init_(void) {
     key.ethernet_3_valid = 1;
     key.ipv4_3_valid = 1;
     key.ipv6_3_valid = 0;
-    data.action_id = KEY_TUNNELED_2_TUNNELED_2_IPV4_PACKET_ID;
+    data.action_id = KEY_TUNNELED2_TUNNELED2_IPV4_PACKET_ID;
     mask.ipv4_1_valid_mask = 0;
     mask.ipv6_1_valid_mask = 0;
     mask.ethernet_2_valid_mask = 0;
@@ -415,7 +415,7 @@ artemis_impl::key_tunneled2_init_(void) {
     key.ethernet_3_valid = 1;
     key.ipv4_3_valid = 0;
     key.ipv6_3_valid = 1;
-    data.action_id = KEY_TUNNELED_2_TUNNELED_2_IPV6_PACKET_ID;
+    data.action_id = KEY_TUNNELED2_TUNNELED2_IPV6_PACKET_ID;
     mask.ipv4_1_valid_mask = 0;
     mask.ipv6_1_valid_mask = 0;
     mask.ethernet_2_valid_mask = 0;
@@ -437,7 +437,7 @@ artemis_impl::key_tunneled2_init_(void) {
     key.ethernet_3_valid = 1;
     key.ipv4_3_valid = 0;
     key.ipv6_3_valid = 0;
-    data.action_id = KEY_TUNNELED_2_TUNNELED_2_NONIP_PACKET_ID;
+    data.action_id = KEY_TUNNELED2_TUNNELED2_NONIP_PACKET_ID;
     mask.ipv4_1_valid_mask = 0;
     mask.ipv6_1_valid_mask = 0;
     mask.ethernet_2_valid_mask = 0;

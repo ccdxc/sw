@@ -107,7 +107,7 @@ action set_tep2_dst() {
     }
 }
 
-action tunneled_2_ipv4_packet() {
+action tunneled2_ipv4_packet() {
     modify_field(key_metadata.ktype, KEY_TYPE_IPV4);
     modify_field(key_metadata.src, ipv4_3.srcAddr);
     modify_field(key_metadata.dst, ipv4_3.dstAddr);
@@ -118,7 +118,7 @@ action tunneled_2_ipv4_packet() {
     modify_field(key_metadata.mapping_port, key_metadata.dport);
 }
 
-action tunneled_2_ipv6_packet() {
+action tunneled2_ipv6_packet() {
     modify_field(key_metadata.ktype, KEY_TYPE_IPV6);
     modify_field(key_metadata.src, ipv6_3.srcAddr);
     modify_field(key_metadata.dst, ipv6_3.dstAddr);
@@ -127,7 +127,7 @@ action tunneled_2_ipv6_packet() {
     modify_field(key_metadata.mapping_port, key_metadata.dport);
 }
 
-action tunneled_2_nonip_packet() {
+action tunneled2_nonip_packet() {
     modify_field(key_metadata.ktype, KEY_TYPE_MAC);
     modify_field(key_metadata.src, ethernet_3.srcAddr);
     modify_field(key_metadata.dst, ethernet_3.dstAddr);
@@ -179,7 +179,7 @@ table key_tunneled {
 }
 
 @pragma stage 1
-table key_tunneled_2 {
+table key_tunneled2 {
     reads {
         ipv4_1.valid        : ternary;
         ipv6_1.valid        : ternary;
@@ -192,9 +192,9 @@ table key_tunneled_2 {
     }
     actions {
         nop;
-        tunneled_2_ipv4_packet;
-        tunneled_2_ipv6_packet;
-        tunneled_2_nonip_packet;
+        tunneled2_ipv4_packet;
+        tunneled2_ipv6_packet;
+        tunneled2_nonip_packet;
     }
     size : KEY_MAPPING_TABLE_SIZE;
 }
@@ -202,5 +202,5 @@ table key_tunneled_2 {
 control key_init {
     apply(key_native);
     apply(key_tunneled);
-    apply(key_tunneled_2);
+    apply(key_tunneled2);
 }

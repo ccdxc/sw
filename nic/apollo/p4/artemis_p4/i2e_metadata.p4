@@ -6,7 +6,9 @@ header_type artemis_i2e_metadata_t {
         ca6_xlate_idx       : 8;
         service_xlate_idx   : 16;
         service_xlate_port  : 16;
-        session_index       : 24;
+        flow_role           : 1;
+        session_index       : 23;
         vnic_id             : 8;
+        pad0                : 7;
     }
 }

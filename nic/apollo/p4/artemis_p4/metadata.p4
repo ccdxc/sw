@@ -12,8 +12,8 @@ header_type key_metadata_t {
         src             : 128;
         dst             : 128;
         proto           : 8;
-        dport           : 16;
         sport           : 16;
+        dport           : 16;
         ipv4_src        : 32;
         ipv4_dst        : 32;
         mapping_ip      : 128;
@@ -41,8 +41,6 @@ header_type control_metadata_t {
         direction           : 1;
         span_copy           : 1;
         epoch               : 8;
-        flow_role           : 1;
-        session_index       : 24;
         skip_flow_lkp       : 1;
         flow_ohash_lkp      : 1;
         pipe_id             : 4;
