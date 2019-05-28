@@ -567,6 +567,19 @@ header_type cmdid_ring_entry_t {
 #define GENERATE_CMDID_RING_ENTRY_D                                             \
     modify_field(cmdid_ring_entry_d.cmdid, cmdid);
 
+header_type aolid_ring_entry_t {
+    fields {
+        aolid                           : 16;
+    }
+}
+
+#define AOLID_RING_ENTRY_PARAMS \
+    aolid
+
+#define GENERATE_AOLID_RING_ENTRY_D                                             \
+    modify_field(aolid_ring_entry_d.aolid, aolid);
+
+
 
 // SQ stats cb
 header_type sq_statscb_t {
@@ -631,7 +644,7 @@ header_type cmd_context_t {
     rsvd2               :   3;
 
     prp1_offset         :   16;
-    rsvd3               :   16;
+    aolid               :   16;
     key_index           :   32;
     sec_key_index       :   32;
     pad                 :  160;
@@ -641,7 +654,7 @@ header_type cmd_context_t {
 #define CMD_CTXT_PARAMS \
 opc, fuse, rsvd0, psdt, cid, nsid, slba, nlb, rsvd1, \
 log_lba_size, lif, sq_id, session_id, num_prps, num_pages, num_aols, state, \
-log_host_page_size, rsvd2, prp1_offset, rsvd3, key_index, sec_key_index, pad
+log_host_page_size, rsvd2, prp1_offset, aolid, key_index, sec_key_index, pad
 
 #define GENERATE_CMD_CTXT_D \
     modify_field(cmd_ctxt_d.opc, opc); \
@@ -664,7 +677,7 @@ log_host_page_size, rsvd2, prp1_offset, rsvd3, key_index, sec_key_index, pad
     modify_field(cmd_ctxt_d.log_host_page_size, log_host_page_size); \
     modify_field(cmd_ctxt_d.rsvd2, rsvd2); \
     modify_field(cmd_ctxt_d.prp1_offset, prp1_offset); \
-    modify_field(cmd_ctxt_d.rsvd3, rsvd3); \
+    modify_field(cmd_ctxt_d.aolid, aolid); \
     modify_field(cmd_ctxt_d.key_index, key_index); \
     modify_field(cmd_ctxt_d.sec_key_index, sec_key_index); \
     modify_field(cmd_ctxt_d.pad, pad); \
@@ -845,6 +858,14 @@ header_type pkt_desc_one_aol_t {
     }
 }
 
+//16B
+header_type dgst_one_aol_t {
+    fields {
+        A0      : 64;
+        L0      : 32;
+        R0      : 32;
+    }
+}
 
 header_type ptr64_t {
     fields {

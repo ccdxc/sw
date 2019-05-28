@@ -33,6 +33,8 @@ nvme_proxy:
     max_cmd_context : 512
     max_sess        : 512
     max_ns          : 256
+    tx_max_aol      : 256
+    rx_max_aol      : 256
 
 timers:
     - entry:

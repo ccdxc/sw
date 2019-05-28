@@ -279,6 +279,8 @@ metadata xts_aol_desc_t op_desc;
 metadata xts_desc_t xts_desc;
 @pragma dont_trim
 metadata xts_iv_t iv;
+@pragma dont_trim
+metadata dgst_one_aol_t dgst_one_aol;
 
 @pragma pa_align 128
 @pragma dont_trim
@@ -294,7 +296,9 @@ metadata dma_cmd_phv2mem_t iv_dma;              //dma cmd 4
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t xts_desc_dma;        //dma cmd 5
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t xts_db_dma;          //dma cmd 6
+metadata dma_cmd_phv2mem_t dgst_one_aol_dma;    //dma cmd 6
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t xts_db_dma;          //dma cmd 7
 
 /*
  * Stage 0 table 0 action

@@ -14,6 +14,11 @@
 #define CMDID_RING_PI           d.{cmdid_ring_pi}.hx
 #define CMDID_RING_CI           d.{cmdid_ring_ci}.hx
 #define CMDID                   d.{cmdid}.hx
+#define AOL_RING_PROXY_CI       d.{aol_ring_proxy_ci}.hx
+#define AOL_RING_PROXY_CI_LE    d.{aol_ring_proxy_ci}
+#define AOL_RING_PI             d.{aol_ring_pi}.hx
+#define AOL_RING_CI             d.{aol_ring_ci}.hx
+#define AOLID                   d.{aolid}.hx
 #define XTS_Q_PI                d.{xts_q_pi}.hx
 #define XTS_Q_CI                d.{xts_q_ci}.hx
 #define DGST_Q_PI               d.{dgst_q_pi}.hx
@@ -38,12 +43,17 @@
 #define LOG_CMDID_RING_ENTRY_SIZE   LOG_CMDID_SIZE
 #define LOG_CMD_CTXT_SIZE           11  //2^11=2K
 
+#define LOG_AOLID_SIZE              1   //2^1 = 2
+#define LOG_AOL_RING_ENTRY_SIZE     LOG_AOLID_SIZE
+#define LOG_AOL_ENTRY_SIZE          9   //2^9=512(8x64B AOLs)
+
 #define LOG_SESS_Q_ENTRY_SIZE   LOG_CMDID_SIZE
 #define LOG_XTS_DESC_SIZE       7   //2^7 = 128
 #define LOG_AOL_SIZE            6   //2^6 = 64
 #define AOL_SIZE                (1 << (LOG_AOL_SIZE))
 #define LOG_AOL_PAIR_SIZE       7   //2^7 = 128
 #define LOG_IV_SIZE             4   //2^4 = 16
+#define LOG_ONE_AOL_SIZE        4   //2^4 = 16
 
 #define LOG_NMDPR_RING_SIZE     (CAPRI_TNMDPR_BIG_RING_SHIFT)
 #define NMDPR_RING_SIZE         (1 << LOG_NMDPR_RING_SIZE)

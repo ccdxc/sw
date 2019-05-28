@@ -203,6 +203,53 @@ nvme_cmd_context_ring_entry_write (uint16_t index,
 }
 
 hal_ret_t
+nvme_tx_aol_ring_entry_write (uint16_t index, 
+                              uint16_t aol_id)
+{
+    uint64_t            base_addr;
+
+    SDK_ASSERT(index < g_nvme_global_info.tx_max_aol);
+
+    base_addr = g_nvme_global_info.tx_aol_ring_base;
+
+    pd::pd_capri_hbm_write_mem_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
+    args.addr = (uint64_t)(base_addr + (index * sizeof(nvme_aol_ring_entry_t)));
+    args.buf = (uint8_t*)&aol_id;
+    args.size = sizeof(nvme_aol_ring_entry_t);
+    pd_func_args.pd_capri_hbm_write_mem = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
+
+    HAL_TRACE_DEBUG("Writing tx_aol_ring[{}] = {}",
+                    index, aol_id);
+    return (HAL_RET_OK);
+}
+
+hal_ret_t
+nvme_rx_aol_ring_entry_write (uint16_t index, 
+                              uint16_t aol_id)
+{
+    uint64_t            base_addr;
+
+    SDK_ASSERT(index < g_nvme_global_info.rx_max_aol);
+
+    base_addr = g_nvme_global_info.rx_aol_ring_base;
+
+    pd::pd_capri_hbm_write_mem_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
+    args.addr = (uint64_t)(base_addr + (index * sizeof(nvme_aol_ring_entry_t)));
+    args.buf = (uint8_t*)&aol_id;
+    args.size = sizeof(nvme_aol_ring_entry_t);
+    pd_func_args.pd_capri_hbm_write_mem = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
+
+    HAL_TRACE_DEBUG("Writing rx_aol_ring[{}] = {}",
+                    index, aol_id);
+    return (HAL_RET_OK);
+}
+
+
+hal_ret_t
 nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
 {
     int32_t            max_ns;
@@ -371,6 +418,16 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
     //Fill the ring with cmd context page addresses
     for (index = 0; index < max_cmd_context; index++) {
         nvme_cmd_context_ring_entry_write(index, index);
+    }
+
+    //Fill the ring with tx_aol page addresses
+    for (index = 0; index < tx_max_aol; index++) {
+        nvme_tx_aol_ring_entry_write(index, index);
+    }
+
+    //Fill the ring with rx_aol page addresses
+    for (index = 0; index < rx_max_aol; index++) {
+        nvme_rx_aol_ring_entry_write(index, index);
     }
 
     rsp->set_cmd_context_page_base(g_nvme_global_info.cmd_context_page_base);

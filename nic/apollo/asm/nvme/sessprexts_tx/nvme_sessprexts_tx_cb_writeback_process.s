@@ -166,6 +166,12 @@ post_tbl_updates:
 
     //convert to bytes and any header/trailer etc.
     sll                 r5, r5, K_LOG_LBA_SIZE
+
+    phvwr               p.dgst_one_aol_L0, r5.wx
+    add                 r6, K_PAGE_PTR, PKT_DESC_OVERHEAD
+    add.F_FIRST_PAGE    r6, r6, NVME_O_TCP_CMD_CAPSULE_HEADER_SIZE
+    phvwr               p.dgst_one_aol_A0, r6.dx
+
     add.F_FIRST_PAGE    r5, r5, NVME_O_TCP_CMD_CAPSULE_HEADER_SIZE
     add.c5              r5, r5, NVME_O_TCP_DDGST_SIZE
 

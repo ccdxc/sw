@@ -61,6 +61,10 @@ struct capri_intrinsic_ring_t {
     cindex: 16;
 };
 
+#define BITS_PER_NIB        4
+#define LOG_BITS_PER_NIB    2   //2^2 = BITS_PER_NIB
+#define NIB_MASK            ((1 << BITS_PER_NIB)-1)
+
 #define BITS_PER_BYTE 8
 #define LOG_BITS_PER_BYTE 3 // 2^3 = BITS_PER_BYTE)
 #define BYTE_OFFSETOF(_struct, _field) offsetof(struct _struct, _field)/BITS_PER_BYTE
