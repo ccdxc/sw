@@ -11,6 +11,39 @@
                  placeholder="Unique Policy Name...">
         </div>
         <div fxFlex="15px"></div>
+        <!-- Buffer -->
+        <div fxFlex="noshrink" fxLayout="row" [formGroup]="newPolicy.$formGroup.get(['spec'])">
+          <!-- Commented out because VRF is not exposed in the UI for now. -->
+          <!-- <div fxFlex="nogrow" fxLayout="column">
+            <div class="newflowexportpolicy-fieldtitle" fxFlex="30px" fxLayout="row"
+                 fxLayoutAlign="start center">
+              <span>VRF Name:</span>
+            </div>
+          </div>
+          <div fxFlex="nogrow" fxLayout="column">
+            <div fxFlex="30px" fxLayout="row" class="newflowexportpolicy-value">
+              <input fxFlex="nogrow" appErrorTooltip formControlName="vrf-name"
+                     class="newflowexportpolicy-input"
+                     spellcheck="false" type="text" pInputText
+                     placeholder="">
+            </div>
+          </div> -->
+          <div fxFlex="nogrow" fxLayout="column">
+            <div class="newflowexportpolicy-fieldtitle" fxFlex="30px" fxLayout="row"
+                 fxLayoutAlign="start center">
+              <span>Interval:</span>
+            </div>
+          </div>
+          <div fxFlex="nogrow" fxLayout="column">
+            <div fxFlex="30px" fxLayout="row" class="newflowexportpolicy-value">
+              <input fxFlex="nogrow" appErrorTooltip formControlName="interval"
+                     class="newflowexportpolicy-input"
+                     spellcheck="false" type="text" pInputText
+                     placeholder="0h0m10s">
+            </div>
+          </div>
+        </div>
+        <div fxFlex="15px"></div>
         <!-- Buffer, creating as a div so there are no hiccups in the animation-->
         <div fxFlex="noshrink" fxLayout="row">
           <div fxFlex="nogrow" class="newflowexportpolicy-text">EXPORT PACKET IF:</div>

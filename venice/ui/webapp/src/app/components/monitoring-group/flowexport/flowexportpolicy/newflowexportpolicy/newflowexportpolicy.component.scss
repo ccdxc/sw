@@ -16,6 +16,18 @@ $vertical-gutter: 5px;
   height: 30px !important;
 }
 
+.newflowexportpolicy-value {
+  margin: $vertical-gutter $horizontal-gutter;
+}
+
+.newflowexportpolicy-fieldtitle {
+  margin: $vertical-gutter $horizontal-gutter;
+}
+
+.newflowexportpolicy-input {
+  width: 155px;
+}
+
 .newflowexportpolicy-content {
   background: white;
   min-height: 180px;

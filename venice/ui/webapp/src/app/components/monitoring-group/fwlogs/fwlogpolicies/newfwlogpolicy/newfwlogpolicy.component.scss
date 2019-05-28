@@ -16,6 +16,10 @@ $vertical-gutter: 5px;
   height: 30px !important;
 }
 
+.newfwlogpolicy-input {
+  width: 155px;
+}
+
 .newfwlogpolicy-content {
   background: white;
   min-height: 180px;
@@ -28,6 +32,14 @@ $vertical-gutter: 5px;
   margin-left: $horizontal-gutter;
   height: 30px;
   @include primary-font();
+}
+
+.newfwlogpolicy-fieldtitle {
+  margin: $vertical-gutter $horizontal-gutter;
+}
+
+.newfwlogpolicy-value {
+  margin: $vertical-gutter $horizontal-gutter;
 }
 
 .newfwlogpolicy-font {

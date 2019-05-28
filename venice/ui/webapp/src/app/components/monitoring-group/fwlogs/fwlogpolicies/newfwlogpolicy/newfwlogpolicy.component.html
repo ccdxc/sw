@@ -8,8 +8,28 @@
           <input fxFlex="300px" formControlName="name" class="newfwlogpolicy-name" appErrorTooltip
                  spellcheck="false" type="text" pInputText placeholder="Unique Policy Name...">
         </div>
-        <div fxFlex="25px"></div>
+
+        <!-- Commented out because VRF is not exposed in the UI for now. -->
+        <!-- <div fxFlex="25px"></div> -->
         <!-- Buffer, creating as a div so there are no hiccups in the animation-->
+        <!-- <div fxFlex="noshrink" fxLayout="row" [formGroup]="newPolicy.$formGroup.get(['spec'])">
+          <div fxFlex="nogrow" fxLayout="column">
+            <div class="newfwlogpolicy-fieldtitle" fxFlex="30px" fxLayout="row"
+                 fxLayoutAlign="start center">
+              <span>VRF Name:</span>
+            </div>
+          </div>
+          <div fxFlex="nogrow" fxLayout="column">
+            <div fxFlex="30px" fxLayout="row" class="newfwlogpolicy-value">
+              <input fxFlex="nogrow" appErrorTooltip formControlName="vrf-name"
+                     class="newfwlogpolicy-input"
+                     spellcheck="false" type="text" pInputText
+                     placeholder="">
+            </div>
+          </div>
+        </div> -->
+        <div fxFlex="25px"></div>
+
         <div fxFlex="noshrink" fxLayout="row" formGroupName="spec">
           <div fxFlex="nogrow" class="newfwlogpolicy-text">EXPORT:</div>
           <p-multiSelect #logOptions class="newfwlogpolicy-filter" fxFlex="300px"
@@ -19,7 +39,7 @@
                          [options]="filterOptions"
                          (onChange)="onLogOptionChange($event)"></p-multiSelect>
         </div>
-
+        <!-- Buffer -->
         <div fxFlex="20px" fxLayout="row">
           <div fxFlex="30px"></div>
           <div fxFlex="auto" class="newfwlogpolicy-divider"></div>
