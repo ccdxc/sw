@@ -6,30 +6,29 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/venice/utils/log"
-	st "github.com/pensando/sw/venice/utils/techsupport/state"
 )
 
 // RestServer has port and router for techsupport REST service
 type RestServer struct {
 	listenURL  string
-	State      *st.State
 	listener   net.Listener
 	httpServer *http.Server
+	tsCh       chan<- tsproto.TechSupportRequest
 }
 
 // NewRestServer creates a new techsupport server
-func NewRestServer(port string, State *st.State) *RestServer {
+func NewRestServer(port string, tsCh chan<- tsproto.TechSupportRequest) *RestServer {
 	if port == "" {
 		log.Errorf("Cannot create Server. Port is empty.")
 		return nil
 	}
-
 	listenURL := ":" + port
 
 	return &RestServer{
 		listenURL: listenURL,
-		State:     State,
+		tsCh:      tsCh,
 	}
 }
 

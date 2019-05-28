@@ -33,7 +33,7 @@ func (rs *RestServer) CollectTechSupport(w http.ResponseWriter, r *http.Request)
 	if tsWork == nil {
 		log.Error("Couldn't get tech support request. Exiting Collect of Tech Support.")
 	} else {
-		rs.State.RQ.Put(tsWork)
+		rs.tsCh <- *tsWork
 		log.Infof("Got request %v", tsWork)
 	}
 

@@ -21,12 +21,12 @@ import (
 	action "github.com/pensando/sw/venice/utils/techsupport/actionengine"
 	export "github.com/pensando/sw/venice/utils/techsupport/exporter"
 	rest "github.com/pensando/sw/venice/utils/techsupport/restapi"
-	st "github.com/pensando/sw/venice/utils/techsupport/state"
 )
 
 const (
 	// kindTechSupportRequest is the kind of SmartNIC objects in string form
 	kindTechSupportRequest = string(monitoring.KindTechSupportRequest)
+	maxChanLength          = 2000
 )
 
 // TSMClient keeps the techsupport state
@@ -53,19 +53,14 @@ type TSMClient struct {
 	// cancel function
 	cancelFn       context.CancelFunc
 	resolverClient resolver.Interface
-	State          *st.State
 	restServer     *rest.RestServer
+	tsCh           chan tsproto.TechSupportRequest
+	cfg            *tsconfig.TechSupportConfig
 }
 
 // NewTSMClient creates a new techsupport agent
 func NewTSMClient(name string, mac string, kind string, configPath string, controllers []string) *TSMClient {
 	log.Infof("Name : %v MAC : %v Controllers : %v", name, mac, controllers)
-	state := st.NewState(configPath)
-	if state == nil {
-		log.Error("Could not create new tech support state.")
-		return nil
-	}
-
 	var resolverClient resolver.Interface
 	if len(controllers) != 0 {
 		resolverClient = resolver.New(&resolver.Config{Name: globals.Tsm, Servers: controllers})
@@ -73,23 +68,28 @@ func NewTSMClient(name string, mac string, kind string, configPath string, contr
 		resolverClient = nil
 	}
 
+	res, err := action.ReadConfig(configPath)
+	if err != nil {
+		log.Errorf("Failed to read config file :%v. Err: %v", configPath, err)
+		return nil
+	}
+
 	ctxt, cancel := context.WithCancel(context.Background())
 	agent := &TSMClient{
 		ctx:            ctxt,
 		cancelFn:       cancel,
-		State:          state,
 		name:           name,
 		mac:            mac,
 		kind:           kind,
 		resolverClient: resolverClient,
 		stopped:        false,
+		tsCh:           make(chan tsproto.TechSupportRequest, maxChanLength),
+		cfg:            res,
 	}
 
-	log.Infof("CFG : %v", state.Cfg)
-
-	if state.Cfg.RESTUri != "" {
+	if res.RESTUri != "" {
 		log.Info("REST URI is non null")
-		agent.restServer = rest.NewRestServer(state.Cfg.RESTUri, state)
+		agent.restServer = rest.NewRestServer(res.RESTUri, agent.tsCh)
 	}
 
 	return agent
@@ -98,7 +98,6 @@ func NewTSMClient(name string, mac string, kind string, configPath string, contr
 func (ag *TSMClient) isStopped() bool {
 	ag.Lock()
 	defer ag.Unlock()
-
 	return ag.stopped
 }
 
@@ -127,9 +126,9 @@ func (ag *TSMClient) handleTechSupportEvents(events *tsproto.TechSupportRequestE
 		case api.EventType_CreateEvent:
 			log.Infof("Create event received")
 			tsWork := event.Request
-			ag.State.RQ.Put(tsWork)
+			ag.tsCh <- *tsWork
 			log.Infof("Got request %v", tsWork)
-			ag.sendUpdate(tsWork, tsproto.TechSupportRequestStatus_Queued)
+			ag.sendUpdate(*tsWork, tsproto.TechSupportRequestStatus_Queued)
 		}
 	}
 }
@@ -197,7 +196,7 @@ func (ag *TSMClient) isWatching() bool {
 	return atomic.LoadInt32(&ag.watching) != 0
 }
 
-func (ag *TSMClient) sendUpdate(work *tsproto.TechSupportRequest, status tsproto.TechSupportRequestStatus_ActionStatus) {
+func (ag *TSMClient) sendUpdate(work tsproto.TechSupportRequest, status tsproto.TechSupportRequestStatus_ActionStatus) {
 	update := &tsproto.TechSupportRequest{
 		TypeMeta: api.TypeMeta{
 			Kind: kindTechSupportRequest,
@@ -241,10 +240,8 @@ func (ag *TSMClient) Stop() {
 	ag.Lock()
 	ag.stopped = true
 	ag.Unlock()
-
-	if ag.cancelFn != nil {
-		ag.cancelFn()
-	}
+	ag.cancelFn()
+	ag.waitGrp.Wait()
 
 	if ag.tsGrpcClient != nil {
 		ag.tsGrpcClient.Close()
@@ -261,25 +258,19 @@ func (ag *TSMClient) Stop() {
 // StartWorking the work be the worker
 func (ag *TSMClient) StartWorking() {
 	log.Info("Worker is starting work.")
-	// TODO : Update this code to use channels instead of loop.
 	for {
-		if ag.isStopped() {
+		select {
+		case <-ag.ctx.Done():
 			return
+		case work := <-ag.tsCh:
+			ag.DoWork(work)
 		}
-
-		if !ag.State.RQ.IsEmpty() {
-			ag.DoWork()
-		}
-
-		// TODO : Remove this once we move to channels
-		time.Sleep(5 * time.Second)
 	}
 }
 
 // DoWork executes commands for collecting techsupport
-func (ag *TSMClient) DoWork() error {
+func (ag *TSMClient) DoWork(work tsproto.TechSupportRequest) error {
 	log.Info("Worker doing work.")
-	work := ag.State.RQ.Get()
 	ag.sendUpdate(work, tsproto.TechSupportRequestStatus_InProgress)
 	err := ag.pre(work)
 	if err != nil {
@@ -306,15 +297,15 @@ func (ag *TSMClient) DoWork() error {
 	return nil
 }
 
-func (ag *TSMClient) handleTechSupportRetention(work *tsproto.TechSupportRequest) error {
-	if ag.State.Cfg.Retention == tsconfig.TechSupportConfig_Manual {
+func (ag *TSMClient) handleTechSupportRetention(work tsproto.TechSupportRequest) error {
+	if ag.cfg.Retention == tsconfig.TechSupportConfig_Manual {
 		return nil
 	}
 
 	targetID := ag.generateTargetID(work.Spec.InstanceID, work.ObjectMeta.Name)
 
-	if ag.State.Cfg.Retention == tsconfig.TechSupportConfig_DelOnExport {
-		cmd := fmt.Sprintf("rm -rf %s/%s", ag.State.Cfg.FileSystemRoot, targetID)
+	if ag.cfg.Retention == tsconfig.TechSupportConfig_DelOnExport {
+		cmd := fmt.Sprintf("rm -rf %s/%s", ag.cfg.FileSystemRoot, targetID)
 		_, err := action.RunShellCmd(cmd)
 		return err
 	}
@@ -323,12 +314,12 @@ func (ag *TSMClient) handleTechSupportRetention(work *tsproto.TechSupportRequest
 }
 
 // Move these into their own directory
-func (ag *TSMClient) pre(work *tsproto.TechSupportRequest) error {
+func (ag *TSMClient) pre(work tsproto.TechSupportRequest) error {
 	log.Info("PreWork")
 	return nil
 }
 
-func (ag *TSMClient) do(work *tsproto.TechSupportRequest) error {
+func (ag *TSMClient) do(work tsproto.TechSupportRequest) error {
 	log.Info("Actual Work")
 	var instanceID, instanceName string
 	if work.Spec.InstanceID == "" {
@@ -341,9 +332,9 @@ func (ag *TSMClient) do(work *tsproto.TechSupportRequest) error {
 	}
 	targetID := ag.generateTargetID(instanceID, instanceName)
 	vosTarget := fmt.Sprintf("%v.tar.gz", targetID)
-	action.CollectTechSupport(ag.State.Cfg, targetID)
-	export.GenerateTechsupportZip(vosTarget, ag.State.Cfg.FileSystemRoot+"/"+targetID)
-	tarballFile := ag.State.Cfg.FileSystemRoot + "/" + targetID + "/" + vosTarget
+	action.CollectTechSupport(ag.cfg, targetID)
+	export.GenerateTechsupportZip(vosTarget, ag.cfg.FileSystemRoot+"/"+targetID)
+	tarballFile := ag.cfg.FileSystemRoot + "/" + targetID + "/" + vosTarget
 
 	for _, destination := range work.Spec.Destinations {
 		log.Infof("Destination : %v", destination)
@@ -367,7 +358,7 @@ func (ag *TSMClient) do(work *tsproto.TechSupportRequest) error {
 	return nil
 }
 
-func (ag *TSMClient) post(work *tsproto.TechSupportRequest) error {
+func (ag *TSMClient) post(work tsproto.TechSupportRequest) error {
 	log.Info("Post Work")
 	return ag.handleTechSupportRetention(work)
 }
