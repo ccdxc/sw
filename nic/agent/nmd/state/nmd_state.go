@@ -93,6 +93,36 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 		Timestamp: *c,
 	}
 
+	// TODO : Add more information into SmartNICRollout
+	ro := nmd.NaplesRollout{
+		TypeMeta: api.TypeMeta{
+			Kind: "NaplesRollout",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: macAddr,
+		},
+		Status: nmd.RolloutStatus{
+			InProgressOp: &roprotos.SmartNICOpSpec{
+				Op: roprotos.SmartNICOp_SmartNICNoOp,
+			},
+		},
+	}
+
+	roObj, err := emdb.Read(&ro)
+
+	if roObj != nil && err == nil {
+		// Use the persisted config moving forward
+		ro = *roObj.(*nmd.NaplesRollout)
+		log.Infof("Rollout Object found in NMD DB. Using persisted values. %v", ro)
+	} else {
+		// persist the default rollout object
+		log.Info("Rollout Object not found in NMD DB. Persisting it in the DB.")
+		err = emdb.Write(&ro)
+		if err != nil {
+			log.Errorf("Error persisting the default naples config in EmDB, err: %+v", err)
+		}
+	}
+
 	// construct default config and a default profile
 	defaultProfile := &nmd.NaplesProfile{
 		ObjectMeta: api.ObjectMeta{
@@ -176,6 +206,7 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 		stopNICUpd:         make(chan bool, 1),
 		config:             config,
 		completedOps:       make(map[roprotos.SmartNICOpSpec]bool),
+		ro:                 ro,
 	}
 
 	err = nm.updateLocatTimeZone()

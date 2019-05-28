@@ -17,12 +17,12 @@ import "github.com/pensando/sw/api/common.proto";
 //============================ smartnic update ==========================================================
 
 enum SmartNICOp {
-    SmartNICPreCheckForUpgOnNextHostReboot  = 0;
-    SmartNICPreCheckForDisruptive           = 1;
-    SmartNICUpgOnNextHostReboot             = 2;
-    SmartNICDisruptiveUpgrade               = 3;
-    SmartNICImageDownload                   = 4;
-
+    SmartNICNoOp			    = 0;
+    SmartNICPreCheckForUpgOnNextHostReboot  = 1;
+    SmartNICPreCheckForDisruptive           = 2;
+    SmartNICUpgOnNextHostReboot             = 3;
+    SmartNICDisruptiveUpgrade               = 4;
+    SmartNICImageDownload                   = 5;
 }
 
 message SmartNICOpSpec {

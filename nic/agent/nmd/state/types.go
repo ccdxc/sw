@@ -75,12 +75,12 @@ type NMD struct {
 	certsProxy     *certsproxy.CertsProxy            // the CertsProxy instance
 	tlsProvider    *tlsproviders.KeyMgrBasedProvider // TLS provider holding cluster keys
 	// Rollout related stuff
-	completedOps  map[roprotos.SmartNICOpSpec]bool // the ops that were requested by spec and got completed
-	inProgressOps *roprotos.SmartNICOpSpec         // the ops thats currently in progress
-	pendingOps    []roprotos.SmartNICOpSpec        // the ops that will be executed after the current op is completed
-	opStatus      []roprotos.SmartNICOpStatus
-	objectMeta    api.ObjectMeta
-	profiles      []*nmd.NaplesProfile
+	completedOps map[roprotos.SmartNICOpSpec]bool // the ops that were requested by spec and got completed
+	ro           nmd.NaplesRollout
+	pendingOps   []roprotos.SmartNICOpSpec // the ops that will be executed after the current op is completed
+	opStatus     []roprotos.SmartNICOpStatus
+	objectMeta   api.ObjectMeta
+	profiles     []*nmd.NaplesProfile
 }
 
 // NaplesConfigResp is response to NaplesConfig request nmd.Naples

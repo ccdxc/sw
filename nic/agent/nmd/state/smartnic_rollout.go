@@ -31,6 +31,7 @@ func (n *NMD) DeleteSmartNICRollout(sro *protos.SmartNICRollout) error {
 	n.Lock()
 	defer n.Unlock()
 
+	n.updateRolloutStatus(protos.SmartNICOpSpec{Op: protos.SmartNICOp_SmartNICNoOp})
 	n.updateOps([]*protos.SmartNICOpSpec{})
 	return nil
 }
@@ -52,6 +53,13 @@ func (n *NMD) GetSmartNICRolloutStatus() protos.SmartNICRolloutStatusUpdate {
 }
 
 // === helper routines
+func (n *NMD) updateRolloutStatus(inProgressOp protos.SmartNICOpSpec) {
+	*n.ro.Status.InProgressOp = inProgressOp
+	err := n.store.Write(&n.ro)
+	if err != nil {
+		log.Errorf("Error persisting the default naples config in EmDB, err: %+v", err)
+	}
+}
 
 // new/update request came from venice
 /*
@@ -67,7 +75,7 @@ func (n *NMD) updateOps(ops []*protos.SmartNICOpSpec) error {
 	for _, o := range ops {
 		newOps[*o] = true
 
-		if n.completedOps[*o] || (n.inProgressOps != nil && *n.inProgressOps == *o) {
+		if n.completedOps[*o] || (*n.ro.Status.InProgressOp == *o) {
 			continue
 		} else {
 			newPendingOps = append(newPendingOps, *o)
@@ -87,14 +95,14 @@ func (n *NMD) updateOps(ops []*protos.SmartNICOpSpec) error {
 			n.opStatus = newOpStatus
 		}
 	}
-	log.Infof("state after updateOps is completed:%s inProgress:%s pending:%s opStatus:%s", spew.Sdump(n.completedOps), spew.Sdump(n.inProgressOps), spew.Sdump(n.pendingOps), spew.Sdump(n.opStatus))
+	log.Infof("state after updateOps is completed:%s inProgress:%s pending:%s opStatus:%s", spew.Sdump(n.completedOps), n.ro.Status.InProgressOp, spew.Sdump(n.pendingOps), spew.Sdump(n.opStatus))
 	return nil
 }
 
 // MUST be called with lock held
 func (n *NMD) issueNextPendingOp() {
-	log.Infof("On entry of issueNextPendingOp state is completed:%s inProgress:%s pending:%s", spew.Sdump(n.completedOps), spew.Sdump(n.inProgressOps), spew.Sdump(n.pendingOps))
-	if n.inProgressOps != nil {
+	log.Infof("On entry of issueNextPendingOp state is completed:%s inProgress:%s pending:%s", spew.Sdump(n.completedOps), n.ro.Status.InProgressOp, spew.Sdump(n.pendingOps))
+	if n.ro.Status.InProgressOp.Op != protos.SmartNICOp_SmartNICNoOp {
 		return // an op is already in progress...
 	}
 	if len(n.pendingOps) == 0 {
@@ -102,11 +110,12 @@ func (n *NMD) issueNextPendingOp() {
 	}
 	op := n.pendingOps[0]
 	n.pendingOps = append(n.pendingOps[:0], n.pendingOps[1:]...)
-	n.inProgressOps = &op
+
+	n.updateRolloutStatus(op)
 
 	var err error
-	log.Infof("Issuing %#v", *n.inProgressOps)
-	switch n.inProgressOps.Op {
+	log.Infof("Issuing %#v", n.ro.Status.InProgressOp)
+	switch n.ro.Status.InProgressOp.Op {
 	case protos.SmartNICOp_SmartNICDisruptiveUpgrade:
 		//TODO set the right downloaded image name
 		err = n.upgmgr.StartDisruptiveUpgrade("naples_fw.tar")
@@ -123,7 +132,7 @@ func (n *NMD) issueNextPendingOp() {
 			return
 		}
 	case protos.SmartNICOp_SmartNICPreCheckForDisruptive:
-		naplesVersion, err := imagestore.GetNaplesRolloutVersion(context.Background(), n.resolverClient, n.inProgressOps.Version)
+		naplesVersion, err := imagestore.GetNaplesRolloutVersion(context.Background(), n.resolverClient, n.ro.Status.InProgressOp.Version)
 		if err != nil {
 			log.Errorf("Failed to get naples version from objectstore %+v", err)
 		}
@@ -131,13 +140,13 @@ func (n *NMD) issueNextPendingOp() {
 		if err != nil {
 			log.Errorf("Failed to download naples image from objectstore %+v", err)
 		}
-		err = n.upgmgr.StartPreCheckDisruptive(n.inProgressOps.Version)
+		err = n.upgmgr.StartPreCheckDisruptive(n.ro.Status.InProgressOp.Version)
 		if err != nil {
 			log.Errorf("Precheck returned %s", err)
 			return
 		}
 	case protos.SmartNICOp_SmartNICImageDownload:
-		naplesVersion, err := imagestore.GetNaplesRolloutVersion(context.Background(), n.resolverClient, n.inProgressOps.Version)
+		naplesVersion, err := imagestore.GetNaplesRolloutVersion(context.Background(), n.resolverClient, n.ro.Status.InProgressOp.Version)
 		if err != nil {
 			log.Errorf("Failed to get naples version from objectstore %+v", err)
 			return
@@ -158,10 +167,10 @@ func (n *NMD) UpgSuccessful() {
 
 	message := ""
 
-	if n.inProgressOps != nil {
-		n.updateOpStatus(n.inProgressOps.Op, n.inProgressOps.Version, "success", message)
-		n.completedOps[*n.inProgressOps] = true
-		n.inProgressOps = nil
+	if n.ro.Status.InProgressOp.Op != protos.SmartNICOp_SmartNICNoOp {
+		n.updateOpStatus(n.ro.Status.InProgressOp.Op, n.ro.Status.InProgressOp.Version, "success", message)
+		n.completedOps[*n.ro.Status.InProgressOp] = true
+		n.updateRolloutStatus(protos.SmartNICOpSpec{Op: protos.SmartNICOp_SmartNICNoOp})
 	} else {
 		log.Infof("UpgSuccessful got called when there is no pending Op")
 	}
@@ -177,10 +186,10 @@ func (n *NMD) UpgFailed(errStrList *[]string) {
 	defer n.Unlock()
 	message := strings.Join(*errStrList, ", ")
 
-	if n.inProgressOps != nil {
-		n.updateOpStatus(n.inProgressOps.Op, n.inProgressOps.Version, "failure", message)
-		n.completedOps[*n.inProgressOps] = true
-		n.inProgressOps = nil
+	if n.ro.Status.InProgressOp.Op != protos.SmartNICOp_SmartNICNoOp {
+		n.updateOpStatus(n.ro.Status.InProgressOp.Op, n.ro.Status.InProgressOp.Version, "failure", message)
+		n.completedOps[*n.ro.Status.InProgressOp] = true
+		n.updateRolloutStatus(protos.SmartNICOpSpec{Op: protos.SmartNICOp_SmartNICNoOp})
 	} else {
 		log.Infof("UpgFailed got called when there is no pending Op")
 	}
@@ -195,10 +204,10 @@ func (n *NMD) UpgPossible() {
 	defer n.Unlock()
 
 	message := ""
-	if n.inProgressOps != nil {
-		n.updateOpStatus(n.inProgressOps.Op, n.inProgressOps.Version, "success", message)
-		n.completedOps[*n.inProgressOps] = true
-		n.inProgressOps = nil
+	if n.ro.Status.InProgressOp.Op != protos.SmartNICOp_SmartNICNoOp {
+		n.updateOpStatus(n.ro.Status.InProgressOp.Op, n.ro.Status.InProgressOp.Version, "success", message)
+		n.completedOps[*n.ro.Status.InProgressOp] = true
+		n.updateRolloutStatus(protos.SmartNICOpSpec{Op: protos.SmartNICOp_SmartNICNoOp})
 	} else {
 		log.Infof("UpgPossible got called when there is no pending Op")
 	}
@@ -215,10 +224,10 @@ func (n *NMD) UpgNotPossible(errStrList *[]string) {
 	log.Infof("UpgNotPossible got called")
 	message := strings.Join(*errStrList, ", ")
 
-	if n.inProgressOps != nil {
-		n.updateOpStatus(n.inProgressOps.Op, n.inProgressOps.Version, "failure", message)
-		n.completedOps[*n.inProgressOps] = true
-		n.inProgressOps = nil
+	if n.ro.Status.InProgressOp.Op != protos.SmartNICOp_SmartNICNoOp {
+		n.updateOpStatus(n.ro.Status.InProgressOp.Op, n.ro.Status.InProgressOp.Version, "failure", message)
+		n.completedOps[*n.ro.Status.InProgressOp] = true
+		n.updateRolloutStatus(protos.SmartNICOpSpec{Op: protos.SmartNICOp_SmartNICNoOp})
 	} else {
 		log.Infof("UpgNotPossible got called when there is no pending Op")
 	}

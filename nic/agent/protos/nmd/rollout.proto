@@ -1,0 +1,33 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package nmd;
+
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos/rollout.proto";
+
+// Naples rollout object
+message NaplesRollout {
+    option (venice.objectPrefix) = {Collection: "config"};
+
+    api.TypeMeta T      = 1 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O    = 2 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Rollout Status contains the current rollout state of the NIC
+    RolloutStatus Status = 3 [(gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// NaplesStatus contains current status of a Naples I/O subsystem
+message RolloutStatus {
+   protos.SmartNICOpSpec InProgressOp = 1 [(gogoproto.jsontag) = "inprogress,omitempty"];
+}

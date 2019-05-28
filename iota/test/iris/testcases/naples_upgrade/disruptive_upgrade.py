@@ -19,7 +19,7 @@ def Setup(tc):
 
 def Trigger(tc):
 
-    cmd = 'curl -d \'{"kind": "SmartNICRollout","meta": {"name": "test disruptive upgrade","tenant": "tenant-foo"},"spec": {"ops": [{"op": 3,"version": "0.1"}]}}\' -X POST -H "Content-Type:application/json" 169.254.0.1:8888/api/v1/naples/rollout/'
+    cmd = 'curl -d \'{"kind": "SmartNICRollout","meta": {"name": "test disruptive upgrade","tenant": "tenant-foo"},"spec": {"ops": [{"op": 4,"version": "0.1"}]}}\' -X POST -H "Content-Type:application/json" 169.254.0.1:8888/api/v1/naples/rollout/'
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:
@@ -54,7 +54,7 @@ def Verify(tc):
         return api.types.status.SUCCESS
         resp = json.loads(cmd.stdout)
         for item in resp['Status']['status']:
-            if not item['Op'] == 3:
+            if not item['Op'] == 4:
                 print("opcode is bad")
                 return api.types.status.FAILURE
             if "fail" in tc.iterators.option:
