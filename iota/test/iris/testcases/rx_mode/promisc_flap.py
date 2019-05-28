@@ -5,6 +5,7 @@ import iota.test.iris.utils.naples_host as naples_host_utils
 import iota.test.iris.utils.traffic as traffic
 import iota.test.iris.utils.hal_show as hal_show_utils
 import yaml
+import time
 
 def Setup(tc):
 
@@ -108,6 +109,7 @@ def Trigger(tc):
         if result != api.types.status.SUCCESS:
             api.Logger.info("Failed to enable promiscuous mode on %s" %(intf))
             break
+    time.sleep(30)
     # Verify that the LIF flags have changed appropriately
     if verify_hal_output(tc, True) != api.types.status.SUCCESS:
         api.Logger.info("Looks like PR flag is not set for some interfaces")
@@ -127,6 +129,7 @@ def Trigger(tc):
             result = api.types.status.FAILURE
             tc.skip = True
 
+    time.sleep(30)
     # Ensure that PR flags are gone now
     if verify_hal_output(tc, False) != api.types.status.SUCCESS:
         api.Logger.info("Looks like PR flag is not gone after the flap")
