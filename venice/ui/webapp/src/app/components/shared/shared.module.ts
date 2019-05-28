@@ -28,6 +28,7 @@ import { FlipComponent } from './flip/flip.component';
 import { ErrorTooltipDirective } from './directives/errorTooltip.directive';
 import { TablevieweditHTMLComponent } from './tableviewedit/tableviewedit.component';
 import { RoleGuardDirective } from './directives/roleGuard.directive';
+import { LabeleditorComponent } from './labeleditor/labeleditor.component';
 
 @NgModule({
   imports: [
@@ -62,6 +63,7 @@ import { RoleGuardDirective } from './directives/roleGuard.directive';
     ErrorTooltipDirective,
     TablevieweditHTMLComponent,
     RoleGuardDirective,
+    LabeleditorComponent,
   ],
   exports: [
     PagebodyComponent,
@@ -86,6 +88,7 @@ import { RoleGuardDirective } from './directives/roleGuard.directive';
     ErrorTooltipDirective,
     TablevieweditHTMLComponent,
     RoleGuardDirective,
+    LabeleditorComponent
   ],
 })
 export class SharedModule { }

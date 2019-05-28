@@ -174,7 +174,11 @@ export class BaseComponent extends CommonComponent implements OnInit {
   }
 
   displayLabels(item): string {
-    return JSON.stringify(item);
+    let res = '';
+    Object.keys(item).forEach(key => {
+      res = `${res}"${key}":"${item[key]}"\n`;
+    });
+    return res;
   }
 
   /**

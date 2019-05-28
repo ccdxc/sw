@@ -1,0 +1,30 @@
+.label-editor-button {
+  margin: 5px;
+}
+
+.label-editor-add {
+  color: #6ba0e5;
+  margin: 10px 0px 10px 5px;
+  display: inline-block;
+}
+
+.label-editor-delete {
+  margin-left: 5px;
+  margin-top: 6px;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.label-editor-input-key {
+  height: 30px !important;
+}
+
+.label-editor-input-value {
+  height: 30px !important;
+}
+
+.label-editor-scroll-panel {
+  border: 0px;
+  width: 100%;
+  height: 200px;
+}

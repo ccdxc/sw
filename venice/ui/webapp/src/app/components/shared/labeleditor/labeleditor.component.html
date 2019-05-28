@@ -1,0 +1,68 @@
+<div *ngIf="inLabelEditMode" class="ui-widget-overlay ui-dialog-mask" style="z-index:10"></div>
+<p-dialog #dialog [header]="hasProp( metadata, 'title') ? metadata['title'] : 'Label Editor'"
+          [(visible)]="inLabelEditMode" fxFlex fxLayout="row wrap" (onHide)="cancel()"
+          [draggable]="false" [focusOnShow]="false">
+  <p-scrollPanel styleClass="label-editor-scroll-panel">
+    <div *ngFor="let prop of models;  let last = last;" fxLayout="row" fxLayoutAlign="start center">
+      <div name="prop"
+           [class]=" prop.class ? prop.class : ( metadata.PropsClasses ? metadata.PropsClasses : '')"
+           fxLayout="row" fxLayoutAlign="start center">
+        <!--     label key-->
+        <div fxFlex="nogrow" style="padding: 5px">
+          <input pInputText [(ngModel)]="prop.key"
+                 [ngClass]="getKeyClassWithValidator(prop)"
+                 [readonly]=" hasProp( prop, 'keyEditable' )  ? !prop.keyEditable : ( metadata.keysEditable ?  !metadata.keysEditable : 'true')"
+                 (change)="onObjectEdit()"
+                 [placeholder]="prop.keyPlaceholder || 'key'"
+                 tabindex="0"
+                 (keyup)="validate(prop.key)">
+        </div>
+
+        <!--     label value-->
+        <div fxFlex="nogrow" style="padding: 5px"
+             [class]=" prop.valueParentClass ? prop.valueParentClass : ( metadata.valuesParentsClasses ? metadata.valuesParentsClasses : '')">
+          <input pInputText *ngIf="prop.element == 'input' || ! hasProp(prop, 'element')"
+                 [type]="prop.inputType ? prop.inputType : 'text' "
+                 [(ngModel)]="prop.value"
+                 [class]=" prop.valueClass ? prop.valueClass : ( metadata.valuesClasses ? metadata.valuesClasses : 'label-editor-input-value')"
+                 [min]="prop.min" [max]="prop.max" [step]="prop.step"
+                 [readonly]=" hasProp( prop, 'valueEditable' )  ? !prop.valueEditable : ( metadata.valuesEditable ?  !metadata.valuesEditable : 'true')"
+                 [disabled]=" hasProp( prop, 'valueEditable' )  ? !prop.valueEditable : ( metadata.valuesEditable ?  !metadata.valuesEditable : 'true')"
+                 (change)="onObjectEdit()"
+                 [placeholder]="prop.valuePlaceholder || 'value'"
+                 (keydown)="($event.which ==13) && last? addProperty() : ''">
+        </div>
+        <!--     label add button-->
+        <div class="label-editor-add" fxFlex="nogrow" (click)="addProperty()"
+             *ngIf="metadata?.extendable && last">
+          <span style="cursor:pointer;" tabindex="0" (keydown)="onAddKeydown($event)">+ AND</span>
+        </div>
+
+        <!--     label delete button-->
+        <div class="label-editor-delete" fxFlex="nogrow" (click)="delete(prop)"
+             *ngIf="! (hasProp(prop, 'deletable') ? ! prop.deletable : ( metadata.propsDeletable ?  ! metadata.propsDeletable : 'true'))
+             && models.length !== 1">
+          <mat-icon tabindex="0" (keydown)="onDeleteKeydown($event, prop)">delete</mat-icon>
+        </div>
+      </div>
+
+    </div>
+  </p-scrollPanel>
+
+  <div *ngIf="metadata?.extendable" fxLayout="row" fxLayoutAlign="end center">
+    <div fxFlexFill></div>
+    <button [disabled]="!formValidated" fxFlex="100px"
+            [ngClass]="formValidated ? '' : 'global-button-disabled'"
+            class="global-button-primary label-editor-button label-editor-save"
+            *ngIf="metadata.save"
+            (click)="save()">
+      {{metadata.saveTxt ? metadata.saveTxt : 'SAVE'}}
+    </button>
+    <button fxFlex="100px"
+            class="global-button-neutral label-editor-button label-editor-cancel"
+            *ngIf="metadata.cancel"
+            (click)="cancel()">
+      {{metadata.cancelTxt ? metadata.cancelTxt : 'CANCEL'}}
+    </button>
+  </div>
+</p-dialog>

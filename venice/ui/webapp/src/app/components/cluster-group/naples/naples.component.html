@@ -59,6 +59,9 @@
             <div *ngSwitchCase="'meta.creation-time'">
               {{rowData.meta['creation-time'] | PrettyDate }}
             </div>
+            <div *ngSwitchCase="'status.smartNicVersion'">
+              {{rowData.status["smartNicVersion"]}}
+            </div>
             <div *ngSwitchCase="'status.admission-phase'"
                  [matTooltip]="rowData.status['admission-phase'] === 'REJECTED' || rowData.status['admission-phase'] === 'PENDING' ?  rowData.status['adm-phase-reason'] : ''">
               {{displayColumn(rowData, col)}}

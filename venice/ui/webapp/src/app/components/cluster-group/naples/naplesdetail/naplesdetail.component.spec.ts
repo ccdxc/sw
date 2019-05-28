@@ -62,7 +62,7 @@ describe('NaplesdetailComponent', () => {
 
   function verifyMeta(naples: IClusterSmartNIC) {
     const fields = fixture.debugElement.queryAll(By.css('.naplesdetail-node-value'));
-    expect(fields.length).toBe(5);
+    expect(fields.length).toBe(7);
     if (naples.status['primary-mac'] != null) {
       expect(fields[0].nativeElement.textContent).toContain(naples.status['primary-mac']);
     } else {
@@ -313,7 +313,6 @@ describe('NaplesdetailComponent', () => {
     });
 
     fixture.detectChanges();
-
     expect(getOverlay()).toBeTruthy();
     expect(getDeletedPolicyIcon()).toBeTruthy();
     expect(getOverlayText().nativeElement.textContent).toContain('3333.3333.0002 has been deleted');

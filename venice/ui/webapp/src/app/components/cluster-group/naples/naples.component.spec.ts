@@ -51,6 +51,7 @@ describe('NaplesComponent', () => {
       },
       'primary-mac': '00ae.cd00.1142',
       'admission-phase': 'PENDING',
+      'smartNicVersion': '1.0E',
     }
   };
 
@@ -72,6 +73,7 @@ describe('NaplesComponent', () => {
       },
       'primary-mac': '00ae.cd00.1143',
       'admission-phase': 'ADMITTED',
+      'smartNicVersion': '1.0E',
     }
   };
 
@@ -93,6 +95,7 @@ describe('NaplesComponent', () => {
       },
       'primary-mac': '00ae.cd00.1143',
       'admission-phase': 'REJECTED',
+      'smartNicVersion': '1.0E',
     }
   };
 

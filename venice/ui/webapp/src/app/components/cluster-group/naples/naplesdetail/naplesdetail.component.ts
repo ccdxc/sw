@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import {Component, OnInit, OnDestroy} from '@angular/core';
 import { BaseComponent } from '@app/components/base/base.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ClusterSmartNIC, ClusterSmartNICStatus_admission_phase_uihint } from '@sdk/v1/models/generated/cluster';
@@ -17,6 +17,7 @@ import { ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_que
 import { AlertsEventsSelector } from '@app/components/shared/alertsevents/alertsevents.component';
 import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/basecard.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import {LabelEditorMetadataModel} from '@components/shared/labeleditor';
 
 @Component({
   selector: 'app-naplesdetail',
@@ -42,7 +43,6 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     },
     svgIcon: 'naples'
   };
-
   // Id of the object the user has navigated to
   selectedId: string;
   selectedObj: ClusterSmartNIC;
@@ -82,6 +82,10 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
 
   alertseventsSelector: AlertsEventsSelector;
 
+  inLabelEditMode: boolean = false;
+
+  labelEditorMetaData: LabelEditorMetadataModel;
+
   constructor(protected _controllerService: ControllerService,
     private _route: ActivatedRoute,
     protected clusterService: ClusterService,
@@ -119,7 +123,6 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     this.objList = [];
     this.showDeletionScreen = false;
     this.showMissingScreen = false;
-    this.selectedObj = null;
     this.timeSeriesData = null;
     this.avgData = null;
     this.avgDayData = null;
@@ -360,4 +363,51 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     });
   }
 
+  editLabels($event) {
+    this.labelEditorMetaData = {
+      title: this.selectedObj.meta.name,
+      keysEditable: true,
+      valuesEditable: true,
+      propsDeletable: true,
+      extendable: true,
+      save: true,
+      cancel: true,
+    };
+
+    if (!this.inLabelEditMode) {
+      this.inLabelEditMode = true;
+    }
+  }
+
+  handleEditCancel($event) {
+    this.inLabelEditMode = false;
+  }
+
+  handleEditSave(labels: object) {
+    const name = this.selectedObj.meta.name;
+    this.selectedObj.meta.labels = labels;
+    const sub = this.clusterService.UpdateSmartNIC(name, this.selectedObj).subscribe(response => {
+      this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, `Successfully updated ${this.selectedObj.meta.name}'s labels`);
+    }, this._controllerService.restErrorHandler(Utility.UPDATE_FAILED_SUMMARY));
+    this.subscriptions.push(sub);
+    this.inLabelEditMode = false;
+  }
+
+  /**
+   * TODO: have a local variable storing this to avoid repetitive computation
+   */
+  genKeys(): string[] {
+    return Object.keys(this.selectedObj.meta.labels);
+  }
+
+  ifLabelExists(): boolean {
+    if (this.selectedObj) {
+      if (Utility.getLodash().isEmpty(this.selectedObj.meta.labels)) {
+        return false;
+      } else {
+        return true;
+      }
+    }
+    return false;
+  }
 }
