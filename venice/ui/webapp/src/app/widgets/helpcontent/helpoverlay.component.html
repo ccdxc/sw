@@ -1,0 +1,28 @@
+<button mat-icon-button (click)="toggleHelp($event)">
+  <mat-icon>help_outline</mat-icon>
+</button>
+
+<ng-template cdkPortal #HelpShell="cdkPortal">
+  <div class="helpoverlay" fxFlex fxLayout="column" cdkDrag cdkDragRootElement=".cdk-overlay-pane">
+    <div fxFlex="40px" fxLayout="row" fxLayoutAlign="start center" class="helpoverlay-header">
+      <div fxFlex="nogrow">Help</div>
+      <div fxFlex></div>
+      <mat-icon fxFlex="nogrow" (click)="closeHelp()" class="helpoverlay-close">close</mat-icon>
+    </div>
+    <div fxFlex class="helpoverlay-content">
+      <ng-template [cdkPortalOutlet]="helpPortal"></ng-template>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template cdkPortal #DefaultHelp="cdkPortal">
+  <h1>
+    Pensando default help text
+  </h1>
+  <div>
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+    labore et dolore magna aliqua. Est pellentesque elit ullamcorper dignissim cras tincidunt
+    lobortis feugiat vivamus. Nulla facilisi morbi tempus iaculis urna id. Quisque egestas diam in
+    arcu cursus euismod. Sit amet nisl purus in mollis nunc sed.
+  </div>
+</ng-template>

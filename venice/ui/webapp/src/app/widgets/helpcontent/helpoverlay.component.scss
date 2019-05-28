@@ -1,0 +1,23 @@
+@import 'src/global-mixins';
+
+.helpoverlay {
+  @include primary-font(14px);
+  height: 100%;
+  width: 100%;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+}
+
+.helpoverlay-header {
+  background-color: #595959;
+  @include primary-font(24px, #ffffff);
+  padding: 0px 10px;
+}
+
+.helpoverlay-content {
+  background-color: white;
+  padding: 15px;
+}
+
+.helpoverlay-close {
+  cursor: pointer;
+}

@@ -19,6 +19,9 @@ export enum Eventtypes {
   FETCH_USER_OBJ,
   FETCH_USER_PERMISSIONS,
   NEW_USER_PERMISSIONS, // Triggered when ui permissions changes.
+  HELP_CONTENT_CHANGE,
+  HELP_OVERLAY_OPEN,
+  HELP_OVERLAY_CLOSE,
   /*
   PAGE_DIRTY,
 

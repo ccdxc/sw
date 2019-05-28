@@ -31,6 +31,7 @@
             <a class="app-shell-doclink" [href]="docLink" target="_blank">
               <button [disableRipple]="true" mat-button>DOCS</button>
             </a>
+            <app-helpoverlay *ngIf="false" fxFlex="none"></app-helpoverlay>
             <!-- Commenting out for August release -->
             <!-- <button mat-button>Save</button> -->
             <button *roleGuard="'monitoringAlert_read'" mat-icon-button
@@ -207,5 +208,19 @@
         System Upgrade
       </button>
     </div>
+  </div>
+</ng-template>
+
+
+<!-- TODO: Remove once real help text is set -->
+<ng-template cdkPortal #AppHelp="cdkPortal">
+  <h1>
+    Pensando help text
+  </h1>
+  <div>
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+    labore et dolore magna aliqua. Est pellentesque elit ullamcorper dignissim cras tincidunt
+    lobortis feugiat vivamus. Nulla facilisi morbi tempus iaculis urna id. Quisque egestas diam in
+    arcu cursus euismod. Sit amet nisl purus in mollis nunc sed.
   </div>
 </ng-template>

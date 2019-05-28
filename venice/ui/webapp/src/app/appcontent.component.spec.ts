@@ -41,7 +41,6 @@ import { AlerttableService } from '@app/services/alerttable.service';
 import { SearchComponent } from '@app/components/search/search/search.component';
 import { SearchboxComponent } from '@app/components/search/searchbox/searchbox.component';
 import { SearchsuggestionsComponent } from '@app/components/search/searchsuggestions/searchsuggestions.component';
-import { SearchresultComponent } from '@app/components/search/searchresult/searchresult.component';
 import { GuidesearchComponent } from '@app/components/search/guidedsearch/guidedsearch.component';
 
 import { AppcontentComponent } from '@app/appcontent.component';
@@ -53,6 +52,8 @@ import { ToasterComponent, ToasterItemComponent } from '@app/widgets/toaster/toa
 import { ConfirmationService } from 'primeng/primeng';
 import { ClusterService } from './services/generated/cluster.service';
 import { MessageService } from './services/message.service';
+import { HelpoverlayComponent } from './widgets/helpcontent/helpoverlay.component';
+import { PortalModule } from '@angular/cdk/portal';
 
 
 describe('AppcontentComponent', () => {
@@ -66,7 +67,8 @@ describe('AppcontentComponent', () => {
         SearchsuggestionsComponent,
         GuidesearchComponent,
         ToasterComponent,
-        ToasterItemComponent
+        ToasterItemComponent,
+        HelpoverlayComponent
       ],
       imports: [
         // Other modules...
@@ -81,7 +83,8 @@ describe('AppcontentComponent', () => {
         LoginModule,
         NgIdleKeepaliveModule.forRoot(),
         NoopAnimationsModule,
-        SharedModule
+        SharedModule,
+        PortalModule
       ],
       providers: [
         ControllerService,

@@ -21,6 +21,7 @@ import { AUTH_KEY, AUTH_BODY } from '@app/core/auth/auth.reducer';
 import { ConfirmationService, Confirmation } from 'primeng/primeng';
 import { MessageService } from './message.service';
 import { Utility } from '@app/common/Utility';
+import { HelpData } from '@app/models/frontend/shared/helpdata.interface';
 
 interface Message {
   type: Eventtypes;
@@ -67,6 +68,9 @@ export class ControllerService {
   private subscriptions = {};
   private _loginUserInfo: {};
   private toolbarData: ToolbarData = {};
+  // Keeping help data format as any until we have
+  // a better idea of what this looks like.
+  private helpData: HelpData = {};
   private userSettings: any = {
     dashboardPinned: []
   };
@@ -199,6 +203,17 @@ export class ControllerService {
     if (!_.isEqual(this.toolbarData, data)) {
       this.toolbarData = _.cloneDeep(data);
       this.publish(Eventtypes.TOOLBAR_DATA_CHANGE, data);
+    }
+  }
+
+  public getHelpOverlayData(): HelpData {
+    return this.helpData;
+  }
+
+  public setHelpOverlayData(data: HelpData) {
+    if (!_.isEqual(this.helpData, data)) {
+      this.helpData = data;
+      this.publish(Eventtypes.HELP_CONTENT_CHANGE, data);
     }
   }
 

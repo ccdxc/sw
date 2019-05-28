@@ -1,5 +1,5 @@
 import { OverlayContainer } from '@angular/cdk/overlay';
-import { Component, HostBinding, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, HostBinding, OnDestroy, OnInit, ViewChild, ViewEncapsulation, AfterViewInit } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { MatSidenav, MatSidenavContainer } from '@angular/material/sidenav';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
@@ -25,6 +25,7 @@ import { ControllerService } from './services/controller.service';
 import { AuthService } from './services/generated/auth.service';
 import { ClusterService } from './services/generated/cluster.service';
 import { sideNavMenu, SideNavItem } from './appcontent.sidenav';
+import { TemplatePortalDirective } from '@angular/cdk/portal';
 
 export interface GetUserObjRequest {
   success: (resp: { body: IAuthUser | IApiStatus | Error; statusCode: number; }) => void;
@@ -41,7 +42,7 @@ export interface GetUserObjRequest {
   encapsulation: ViewEncapsulation.None,
   providers: []
 })
-export class AppcontentComponent extends CommonComponent implements OnInit, OnDestroy {
+export class AppcontentComponent extends CommonComponent implements OnInit, OnDestroy, AfterViewInit {
   os = '';
   browsertype = '';
   browserversion = '';
@@ -84,6 +85,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
   @ViewChild('rightSideNav') _rightSideNav: MatSidenav;
   @ViewChild('container') _container: MatSidenavContainer;
   @ViewChild('breadcrumbToolbar') _breadcrumbToolbar: ToolbarComponent;
+  @ViewChild('AppHelp') helpTemplate: TemplatePortalDirective;
 
   protected _rightSivNavIndicator = 'notifications';
 
@@ -123,6 +125,20 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
       this.userName = authBody.meta.name;
     }
   }
+
+  ngAfterViewInit() {
+    // Example usage of setting help content
+    // Once actual help data is in place
+    // this should be removed.
+    // TODO: Remove setting help template
+    this._controllerService.setHelpOverlayData({
+      template: this.helpTemplate
+    });
+  }
+
+
+
+
 
   getVersion() {
     this.versionEventUtility = new HttpEventUtility<ClusterVersion>(ClusterVersion, true);

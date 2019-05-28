@@ -72,7 +72,9 @@ import { ToasterComponent, ToasterItemComponent } from './widgets/toaster/toaste
 import { MissingpageComponent } from './widgets/missingpage/missingpage.component';
 import { MessageService } from './services/message.service';
 import {AuditService} from '@app/services/generated/audit.service';
-
+import { HelpoverlayComponent } from './widgets/helpcontent/helpoverlay.component';
+import { DragDropModule } from '@angular/cdk/drag-drop';
+import { PortalModule } from '@angular/cdk/portal';
 
 /**
  * This is pensando UI web-app module. It imports all required libraries.
@@ -98,11 +100,13 @@ import {AuditService} from '@app/services/generated/audit.service';
     GuidesearchComponent,
     ToasterItemComponent,
     ToasterComponent,
-    MissingpageComponent
+    MissingpageComponent,
+    HelpoverlayComponent
   ],
   entryComponents: [
     BaseComponent,
-    IdleWarningComponent
+    IdleWarningComponent,
+    HelpoverlayComponent
   ],
   imports: [
     // Needs to be before other lazy loaded modules to have
@@ -139,6 +143,8 @@ import {AuditService} from '@app/services/generated/audit.service';
     MomentModule,
     GridsterModule,
     FlexLayoutModule,
+    DragDropModule,
+    PortalModule,
   ],
   providers: [
     // Generated Services
