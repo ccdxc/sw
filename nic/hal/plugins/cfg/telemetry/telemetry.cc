@@ -41,6 +41,72 @@ hal::if_t *g_telemetry_mirror_dest_if;
 hal::if_t *g_telemetry_mirror_session_dest_if[MAX_MIRROR_SESSION_DEST];
 int g_telemetry_mirror_dest_if_rc = 0;
 
+hal_ret_t
+telemetry_eval_sessions (void)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    hal::cfg_op_t op;
+    
+    op = hal_cfg_db_get_mode();
+    // Close the config db to avoid any deadlocks with FTE
+    hal::hal_cfg_db_close();
+
+    auto walk_func = [](void *entry, void *ctxt) {
+        hal::session_t  *session = (session_t *)entry;
+        dllist_ctxt_t   *list_head = (dllist_ctxt_t *) ctxt;
+
+        hal_handle_id_list_entry_t *list_entry = (hal_handle_id_list_entry_t *)g_hal_state->
+                    hal_handle_id_list_entry_slab()->alloc();
+        if (list_entry == NULL) {
+            HAL_TRACE_ERR("Out of memory - skipping delete session {}", session->hal_handle);
+            return false;
+        }
+        HAL_TRACE_DEBUG("add the handle {}", session->hal_handle);
+        list_entry->handle_id = session->hal_handle;
+        dllist_add(list_head, &list_entry->dllist_ctxt);
+        return false;
+    };
+
+    // build list of session_ids
+    dllist_ctxt_t session_list;
+    dllist_reset(&session_list);
+
+    HAL_TRACE_DEBUG("Calling walk func");
+    g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, &session_list);
+
+    HAL_TRACE_DEBUG("Update sessions");
+    ret = session_update_list(&session_list, true);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Session update list failed {}", ret);
+    }
+    
+    // Re-open the db
+    hal_cfg_db_open(op);
+    return ret;
+}
+
+bool
+telemetry_is_mirror_session_configured (void)
+{
+    for (int i = 0; i < MAX_MIRROR_SESSION_DEST; i++) {
+        if (g_telemetry_mirror_session_dest_if[i] != NULL) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool
+telemetry_is_export_configured (void)
+{
+    for (int i = 0; i < HAL_MAX_TELEMETRY_COLLECTORS; i++) {
+        if (telemetry_collector_id_db[i] != -1) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static inline int
 telemetry_collector_get_id (int spec_id)
 {
@@ -304,6 +370,7 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
     } else {
         HAL_TRACE_DEBUG("Create Succeeded {}", session.id);
     }
+
     return ret;
 }
 
@@ -387,14 +454,15 @@ mirror_session_delete (MirrorSessionDeleteRequest &req, MirrorSessionDeleteRespo
     pd::pd_func_args_t pd_func_args = {0};
     mirror_session_t session;
     hal_ret_t ret;
+    int id;
 
     HAL_TRACE_DEBUG("Delete Mirror Session ID {}",
             req.key_or_handle().mirrorsession_id());
     memset(&session, 0, sizeof(session));
-    session.id = req.key_or_handle().mirrorsession_id();
+    id = session.id = req.key_or_handle().mirrorsession_id();
     // Adjust ref count if current mirror session was using the cached dest_if
     // for uplinks
-    if (g_telemetry_mirror_session_dest_if[session.id] ==
+    if (g_telemetry_mirror_session_dest_if[id] ==
                                         g_telemetry_mirror_dest_if) {
         g_telemetry_mirror_dest_if_rc--;
         if (!g_telemetry_mirror_dest_if_rc) {
@@ -410,6 +478,7 @@ mirror_session_delete (MirrorSessionDeleteRequest &req, MirrorSessionDeleteRespo
         rsp->set_api_status(types::API_STATUS_OK);
         rsp->mutable_key_or_handle()->set_mirrorsession_id(session.id);
     }
+    g_telemetry_mirror_session_dest_if[id] = NULL;
     return ret;
 }
 
@@ -549,6 +618,7 @@ collector_delete (CollectorDeleteRequest &req, CollectorDeleteResponse *rsp)
         rsp->set_api_status(types::API_STATUS_OK);
         rsp->mutable_key_or_handle()->set_collector_id(args.cfg->collector_id);
         g_hal_state->telemetry_collectors_bmp()->clear(id);
+        telemetry_collector_id_db[id] = -1;
     } else {
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
     }
@@ -784,6 +854,13 @@ end:
             rsp->set_api_status(types::API_STATUS_ERR);
         }
     }
+    // Reeval telemetry sessions
+    if (ret == HAL_RET_OK) {
+        ret = telemetry_eval_sessions();
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("telemetry_eval_sessions failed {}", ret);
+        }
+    }
     return ret;
 }
 
@@ -854,6 +931,13 @@ flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDele
     rsp->set_api_status(types::API_STATUS_OK);
 
 end:
+    // Reeval telemetry sessions
+    if (ret == HAL_RET_OK) {
+        ret = telemetry_eval_sessions();
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("telemetry_eval_sessions failed {}", ret);
+        }
+    }
     return ret;
 }
 
