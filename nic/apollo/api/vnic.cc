@@ -67,6 +67,7 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     this->subnet_ = spec->subnet;
     this->v4_meter_ = spec->v4_meter;
     this->v6_meter_ = spec->v6_meter;
+    this->vnic_encap_ = spec->vnic_encap;
     this->fabric_encap_ = spec->fabric_encap;
     return SDK_RET_OK;
 }

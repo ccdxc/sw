@@ -191,6 +191,10 @@ public:
         return v6_meter_;
     }
 
+    /// \brief     return vnic encap information of vnic
+    /// \return    vnic encap type and value
+    pds_encap_t vnic_encap(void) { return vnic_encap_; }
+
     /// \brief     return fabric encap information of vnic
     /// \return    fabric encap type and value
     pds_encap_t fabric_encap(void) { return fabric_encap_; }
@@ -212,6 +216,7 @@ private:
     pds_subnet_key_t  subnet_;           ///< subnet of this vnic
     pds_meter_key_t   v4_meter_;         ///< IPv4 metering policy
     pds_meter_key_t   v6_meter_;         ///< IPv6 metering policy
+    pds_encap_t       vnic_encap_;       ///< vnic's vlan encap
     pds_encap_t       fabric_encap_;     ///< fabric encap information
     ht_ctxt_t         ht_ctxt_;          ///< hash table context
     impl_base         *impl_;            ///< impl object instance

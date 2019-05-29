@@ -44,10 +44,10 @@ $GDB apollo_route_test -c hal.json -f apollo --gtest_output="xml:${GEN_TEST_RESU
 echo "Running policy test"
 $GDB apollo_policy_test -c hal.json -f apollo -n 1024 --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_policy_test.xml" > apollo_policy_test.log.txt
 [[ $? -ne 0 ]] && echo "apollo_policy_test failed!" && exit 1
+echo "Running vnic test"
+$GDB apollo_vnic_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_vnic_test.xml" > apollo_vnic_test.log.txt
+[[ $? -ne 0 ]] && echo "apollo_vnic_test failed!" && exit 1
 
-#echo "Running vnic test"
-#$GDB apollo_vnic_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_vnic_test.xml" > apollo_vnic_test.log.txt
-#[[ $? -ne 0 ]] && echo "apollo_vnic_test failed!" && exit 1
 #echo "Running tep test"
 #$GDB apollo_tep_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_tep_test.xml" > apollo_tep_test.log.txt
 #[[ $? -ne 0 ]] && echo "apollo_tep_test failed!" && exit 1
