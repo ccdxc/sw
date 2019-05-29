@@ -73,7 +73,7 @@ route_table_util::create(void) const {
     spec.key.id = this->id;
     spec.af = this->af;
     spec.num_routes = this->num_routes;
-    spec.routes = (pds_route_t *)malloc(
+    spec.routes = (pds_route_t *)calloc(1,
         (this->num_routes * sizeof(pds_route_t)));
     for (uint32_t i = 0; i < this->num_routes; ++i) {
         spec.routes[i].prefix = this->routes[i].ip_pfx;
@@ -106,7 +106,7 @@ route_table_util::update(void) const {
     spec.key.id = this->id;
     spec.af = this->af;
     spec.num_routes = this->num_routes;
-    spec.routes = (pds_route_t *)malloc(
+    spec.routes = (pds_route_t *)calloc(1,
         (this->num_routes * sizeof(pds_route_t)));
     for (uint32_t i = 0; i < this->num_routes; ++i) {
         spec.routes[i].prefix = this->routes[i].ip_pfx;

@@ -131,15 +131,14 @@ meter_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         for (uint32_t j = 0; j < spec->rules[i].num_prefixes; j++) {
             rtable->routes[n].prefix = spec->rules[i].prefixes[j];
             rtable->routes[n].nhid = policer_idx_ + i;
+            rtable->routes[n].prio = spec->rules[i].priority;
             n++;
         }
     }
-#if 0
     ret = lpm_tree_create(rtable, (spec->af == IP_AF_IPV4) ? ITREE_TYPE_METER_V4 :
                                                      ITREE_TYPE_METER_V6,
                           lpm_root_addr_,
                           meter_impl_db()->table_size(spec->af));
-#endif
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to build LPM meter table, err : %u", ret);
     }
