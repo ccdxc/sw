@@ -104,13 +104,6 @@ int p4pd_global_table_ds_decoded_string_get(uint32_t   tableid,
     return 0;
 }
 
-// global table properties get
-int p4pd_global_table_properties_get(uint32_t tableid,
-                                     void *tbl_ctx)
-{
-    return 0;
-}
-
 // }   // namespace p4
 // }   // namespace pd
 // }   // namespace sdk

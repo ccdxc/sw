@@ -22,15 +22,15 @@
             "max_ports" : "9",
             "ports"     :
             [
-                { "port_num" : "0", "mac_id" : "0", "mac_ch" : "0", "sbus_addr" : "0" },
-                { "port_num" : "1", "mac_id" : "0", "mac_ch" : "1", "sbus_addr" : "0" },
-                { "port_num" : "2", "mac_id" : "0", "mac_ch" : "2", "sbus_addr" : "0" },
-                { "port_num" : "3", "mac_id" : "0", "mac_ch" : "3", "sbus_addr" : "0" },
-                { "port_num" : "4", "mac_id" : "1", "mac_ch" : "0", "sbus_addr" : "0" },
-                { "port_num" : "5", "mac_id" : "1", "mac_ch" : "1", "sbus_addr" : "0" },
-                { "port_num" : "6", "mac_id" : "1", "mac_ch" : "2", "sbus_addr" : "0" },
-                { "port_num" : "7", "mac_id" : "1", "mac_ch" : "3", "sbus_addr" : "0" },
-                { "port_num" : "8", "mac_id" : "2", "mac_ch" : "0", "sbus_addr" : "0" }
+                { "port_num" : "0", "mac_id" : "0", "mac_ch" : "0", "sbus_addr" : "0", "tm_port" : "0" },
+                { "port_num" : "1", "mac_id" : "0", "mac_ch" : "1", "sbus_addr" : "0", "tm_port" : "2" },
+                { "port_num" : "2", "mac_id" : "0", "mac_ch" : "2", "sbus_addr" : "0", "tm_port" : "4" },
+                { "port_num" : "3", "mac_id" : "0", "mac_ch" : "3", "sbus_addr" : "0", "tm_port" : "5" },
+                { "port_num" : "4", "mac_id" : "1", "mac_ch" : "0", "sbus_addr" : "0", "tm_port" : "1" },
+                { "port_num" : "5", "mac_id" : "1", "mac_ch" : "1", "sbus_addr" : "0", "tm_port" : "3" },
+                { "port_num" : "6", "mac_id" : "1", "mac_ch" : "2", "sbus_addr" : "0", "tm_port" : "6" },
+                { "port_num" : "7", "mac_id" : "1", "mac_ch" : "3", "sbus_addr" : "0", "tm_port" : "7" },
+                { "port_num" : "8", "mac_id" : "2", "mac_ch" : "0", "sbus_addr" : "0", "tm_port" : "8" }
             ]
         }
     ],
@@ -46,7 +46,7 @@
         "fw"             : "serdes.0x1087_244D.rom",
         "build_id"       : "0x1087",
         "rev_id"         : "0x244D",
-        "serdes_file"    : "serdes_68-0003.json",
+        "serdes_file"    : "serdes_68-0007.json",
         "jtag_id"        : "0xA2BF8001",
         "num_sbus_rings" : "2",
         "aacs_server"    : "0",
@@ -72,12 +72,18 @@
         { "port_num" : "3", "type" : "mgmt", "num_lanes" : "1", "breakout_modes" : [] }
     ],
 
-    "num_uplink_ports" : "3",
-    "uplink_ports"     :
+    "num_logical_ports" : "9",
+    "logical_ports"     :
     [
-        {"port_num" : "1", "asic" : "0", "asic_port" : "0" , "speed" : "100G", "num_lanes" : "4", "type" : "eth",  "enabled": "false", "fec": "rs" },
-        {"port_num" : "2", "asic" : "0", "asic_port" : "4" , "speed" : "100G", "num_lanes" : "4", "type" : "eth",  "enabled": "false", "fec": "rs" },
-        {"port_num" : "3", "asic" : "0", "asic_port" : "8" , "speed" : "1G",   "num_lanes" : "1", "type" : "mgmt", "enabled": "true",  "fec": "none" }
+        {"port_num" : "1", "asic" : "0", "asic_port" : "0" },
+        {"port_num" : "2", "asic" : "0", "asic_port" : "1" },
+        {"port_num" : "3", "asic" : "0", "asic_port" : "2" },
+        {"port_num" : "4", "asic" : "0", "asic_port" : "3" },
+        {"port_num" : "5", "asic" : "0", "asic_port" : "4" },
+        {"port_num" : "6", "asic" : "0", "asic_port" : "5" },
+        {"port_num" : "7", "asic" : "0", "asic_port" : "6" },
+        {"port_num" : "8", "asic" : "0", "asic_port" : "7" },
+        {"port_num" : "9", "asic" : "0", "asic_port" : "8" }
     ],
 
     "bx" : {
