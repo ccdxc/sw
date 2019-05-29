@@ -16,7 +16,7 @@ action flow_hash(entry_valid, session_index, epoch, flow_role, hash1, hint1,
         if (scratch_metadata.epoch < control_metadata.epoch) {
             // entry is old
             modify_field(service_header.flow_done, TRUE);
-            modify_field(p4i_i2e.session_index, 0);
+            modify_field(control_metadata.pipe_id, PIPE_CPS);
         }
 
         // if hardware register indicates miss, compare hashes with r1
@@ -56,11 +56,11 @@ action flow_hash(entry_valid, session_index, epoch, flow_role, hash1, hint1,
             modify_field(service_header.flow_ohash, scratch_metadata.flow_hint);
         } else {
             modify_field(service_header.flow_done, TRUE);
-            modify_field(p4i_i2e.session_index, 0);
+            modify_field(control_metadata.pipe_id, PIPE_CPS);
         }
     } else {
         modify_field(service_header.flow_done, TRUE);
-        modify_field(p4i_i2e.session_index, 0);
+        modify_field(control_metadata.pipe_id, PIPE_CPS);
     }
 
     modify_field(scratch_metadata.flag, entry_valid);
@@ -118,7 +118,7 @@ action ipv4_flow_hash(entry_valid, session_index, epoch, flow_role,
         if (scratch_metadata.epoch < control_metadata.epoch) {
             // entry is old
             modify_field(service_header.flow_done, TRUE);
-            modify_field(p4i_i2e.session_index, 0);
+            modify_field(control_metadata.pipe_id, PIPE_CPS);
         }
 
         // if hardware register indicates miss, compare hashes with r1
@@ -148,11 +148,11 @@ action ipv4_flow_hash(entry_valid, session_index, epoch, flow_role,
             modify_field(service_header.flow_ohash, scratch_metadata.flow_hint);
         } else {
             modify_field(service_header.flow_done, TRUE);
-            modify_field(p4i_i2e.session_index, 0);
+            modify_field(control_metadata.pipe_id, PIPE_CPS);
         }
     } else {
         modify_field(service_header.flow_done, TRUE);
-        modify_field(p4i_i2e.session_index, 0);
+        modify_field(control_metadata.pipe_id, PIPE_CPS);
     }
 
     modify_field(scratch_metadata.flag, entry_valid);

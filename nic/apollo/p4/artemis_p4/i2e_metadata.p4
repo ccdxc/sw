@@ -9,6 +9,5 @@ header_type artemis_i2e_metadata_t {
         flow_role           : 1;
         session_index       : 23;
         vnic_id             : 8;
-        pad0                : 7;
     }
 }

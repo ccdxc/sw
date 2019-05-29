@@ -40,7 +40,7 @@ flow_hash:
     bcf         [c1&c2], label_flow_hash_hit
     add         r2, r0, d.flow_hash_d.more_hints
 label_flow_miss:
-    phvwr.e     p.p4i_i2e_session_index, 0
+    phvwr.e     p.control_metadata_pipe_id, PIPE_CPS
     phvwr.f     p.service_header_flow_done, TRUE
 
 label_flow_hit:

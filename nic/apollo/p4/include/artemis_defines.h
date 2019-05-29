@@ -61,6 +61,7 @@
 #define PIPE_CPS                        1
 #define PIPE_CLASSIC_NIC                2
 #define PIPE_ARM                        3
+#define PIPE_RECIRC                     4
 
 /*****************************************************************************/
 /* Rewrite flags                                                             */
@@ -144,17 +145,14 @@
 /* Header sizes                                                              */
 /*****************************************************************************/
 #define ARTEMIS_PREDICATE_HDR_SZ        0
-#define ARTEMIS_P4_TO_RXDMA_HDR_SZ      0
+#define ARTEMIS_P4_TO_RXDMA_HDR_SZ      48
 #define ARTEMIS_P4_TO_ARM_HDR_SZ        0
-#define ARTEMIS_P4_TO_TXDMA_HDR_SZ      0
 #define ARTEMIS_I2E_HDR_SZ              0
+#define ARTEMIS_TXDMA_TO_P4E_HDR_SZ     0
 
-#define ARTEMIS_INGRESS_MIRROR_BLOB_SZ  (CAPRI_RXDMA_INTRINSIC_HDR_SZ - \
-                                         CAPRI_P4_INTRINSIC_HDR_SZ + \
-                                         ARTEMIS_P4_TO_RXDMA_HDR_SZ + \
+#define ARTEMIS_INGRESS_MIRROR_BLOB_SZ  (CAPRI_P4_INTRINSIC_HDR_SZ + \
                                          ARTEMIS_PREDICATE_HDR_SZ + \
-                                         ARTEMIS_PREDICATE_HDR_SZ + \
-                                         ARTEMIS_P4_TO_TXDMA_HDR_SZ + \
+                                         ARTEMIS_TXDMA_TO_P4E_HDR_SZ + \
                                          ARTEMIS_I2E_HDR_SZ)
 
 #define PKTQ_PAGE_SIZE                  10240

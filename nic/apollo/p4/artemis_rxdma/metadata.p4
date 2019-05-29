@@ -38,34 +38,34 @@ header_type flow_key_t {
 
 header_type lpm_metadata_t {
     fields {
-        lpm1_key                : 128;
-        pad0                    : 6;
-        lpm1_base_addr          : 34;
-        pad1                    : 6;
-        lpm1_next_addr          : 34;
+        lpm1_key        : 128;
+        pad0            : 6;
+        lpm1_base_addr  : 34;
+        pad1            : 6;
+        lpm1_next_addr  : 34;
 
-        pad2                    : 6;
-        lpm2_base_addr          : 34;
-        pad3                    : 6;
-        lpm2_next_addr          : 34;
+        pad2            : 6;
+        lpm2_base_addr  : 34;
+        pad3            : 6;
+        lpm2_next_addr  : 34;
 
-        pad4                    : 6;
-        tag_base_addr           : 34;
-        pad5                    : 6;
-        meter_base_addr         : 34;
+        pad4            : 6;
+        tag_base_addr   : 34;
+        pad5            : 6;
+        meter_base_addr : 34;
 
 
-        sip_classid             :10; // Bytes 0 and 1
-        dip_classid             :10; // Bytes 1 and 2
-        tag_classid             :10; // Bytes 2 and 3
-        pad6                    :2;  // Byte 3 ends
-        dport_classid           :8;  // Byte 4
-        sport_classid           :7;  // Byte 5
-        pad7                    :1;  // Byte 5 ends
-        meter_result            :10; // Byte 6 and 7
-        pad8                    :6;  // Byte 7 ends
+        sip_classid     : 10; // Bytes 0 and 1
+        dip_classid     : 10; // Bytes 1 and 2
+        tag_classid     : 10; // Bytes 2 and 3
+        pad6            : 2;  // Byte 3 ends
+        dport_classid   : 8;  // Byte 4
+        sport_classid   : 7;  // Byte 5
+        pad7            : 1;  // Byte 5 ends
+        meter_result    : 10; // Byte 6 and 7
+        pad8            : 6;  // Byte 7 ends
 
-        lpm2_key                : 128;
+        lpm2_key        : 128;
     }
 }
 
@@ -85,9 +85,6 @@ metadata p4_2_p4plus_ext_app_header_t ext_app_header;
 @pragma dont_trim
 @pragma pa_header_union ingress app_header
 metadata artemis_p4_to_rxdma_header_t p4_to_rxdma;
-@pragma dont_trim
-@pragma pa_header_union ingress ext_app_header
-metadata predicate_header_t predicate_header;
 
 @pragma dont_trim
 metadata p4plus_common_to_stage_t to_stage_0;

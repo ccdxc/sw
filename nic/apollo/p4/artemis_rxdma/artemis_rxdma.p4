@@ -16,9 +16,9 @@ parser start {
 
 control ingress {
     if (app_header.table3_valid == 1) {
+        vnic_info();
         sacl();
         pkt_enqueue();
-        vnic_info();
     } else {
         common_p4plus_stage0();
         if (app_header.table0_valid == 1) {

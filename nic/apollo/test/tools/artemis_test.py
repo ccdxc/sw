@@ -29,3 +29,15 @@ opkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 dump_pkt(ipkt)
 dump_pkt(opkt)
+
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
+        Dot1Q(vlan=100) / \
+        IP(dst='10.10.1.1', src='11.11.1.1') / \
+        TCP(sport=0x1234, dport=0xabcd) / payload
+opkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
+        Dot1Q(vlan=100) / \
+        IP(dst='10.10.1.1', src='11.11.1.1') / \
+        TCP(sport=0x1234, dport=0xabcd) / payload
+dump_pkt(ipkt)
+dump_pkt(opkt)
