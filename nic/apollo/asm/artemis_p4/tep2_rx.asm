@@ -10,7 +10,9 @@ struct phv_ p;
 %%
 
 tep2_rx_info:
-    nop.e
+    phvwr.!c1.e     p.control_metadata_p4i_drop_reason[P4I_DROP_TEP2_RX_MISS], 1
+    phvwr.!c1       p.capri_intrinsic_drop, TRUE
+    phvwr.e.f       p.vnic_metadata_src_vpc_id, d.tep2_rx_info_d.src_vpc_id
     nop
 
 /*****************************************************************************/

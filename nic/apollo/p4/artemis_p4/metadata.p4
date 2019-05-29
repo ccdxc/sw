@@ -98,6 +98,7 @@ header_type scratch_metadata_t {
         last_seen_timestamp : 48;
         tcp_flags           : 8;
         session_stats_addr  : 34;
+        tag_root_addr       : 40;
     }
 }
 

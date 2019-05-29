@@ -3,6 +3,7 @@
 /******************************************************************************/
 action tep1_rx_info(decap_next, src_vpc_id) {
     // if table lookup is a miss, drop
+    ingress_drop(P4I_DROP_TEP1_RX_MISS);
 
     modify_field(tunnel_metadata.decap_next, decap_next);
     modify_field(vnic_metadata.src_vpc_id, src_vpc_id);
@@ -24,6 +25,7 @@ table tep1_rx {
 /******************************************************************************/
 action tep2_rx_info(src_vpc_id) {
     // if table lookup is a miss, drop
+    ingress_drop(P4I_DROP_TEP2_RX_MISS);
 
     modify_field(vnic_metadata.src_vpc_id, src_vpc_id);
 }

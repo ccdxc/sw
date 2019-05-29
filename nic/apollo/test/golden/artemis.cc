@@ -36,7 +36,7 @@
 #include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
 
-#define EPOCH 0xb055
+#define EPOCH 0x55
 
 using namespace sdk::platform::utils;
 using namespace sdk::platform::capri;
@@ -76,7 +76,8 @@ typedef struct cache_line_s {
     uint8_t packed_entry[CACHE_LINE_SIZE-sizeof(action_pc)];
 } cache_line_t;
 
-uint16_t g_vpc_id1 = 0;
+uint16_t g_vnic_id1 = 0x1A;;
+uint16_t g_vpc_id1 = 0xC1;
 uint32_t g_session_index1 = 0x700DBA;
 
 uint64_t g_smac1 = 0x00C1C2C3C4C5ULL;
@@ -468,6 +469,32 @@ key_tunneled2_init (void)
 }
 
 static void
+vnic_init (void)
+{
+    vnic_mapping_swkey_t key;
+    vnic_mapping_swkey_mask_t mask;
+    vnic_mapping_actiondata_t data;
+    vnic_mapping_vnic_mapping_info_t *mapping_info =
+        &data.action_u.vnic_mapping_vnic_mapping_info;
+    uint32_t tbl_id = P4TBL_ID_VNIC_MAPPING;
+    uint32_t index = 0;
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    data.action_id = VNIC_MAPPING_VNIC_MAPPING_INFO_ID;
+    key.capri_intrinsic_lif = 0;
+    memcpy(key.ethernet_1_srcAddr, &g_smac1, 6);
+    mask.capri_intrinsic_lif_mask = -1;
+    memset(mask.ethernet_1_srcAddr_mask, 0xFF,
+           sizeof(mask.ethernet_1_srcAddr_mask));
+    mapping_info->epoch = EPOCH;
+    mapping_info->vnic_id = g_vnic_id1;
+    mapping_info->vpc_id = g_vpc_id1;
+    entry_write(tbl_id, index, &key, &mask, &data, false, 0);
+}
+
+static void
 ipv4_flow_init (void)
 {
     ipv4_flow_swkey_t key;
@@ -487,6 +514,7 @@ ipv4_flow_init (void)
     flow_hash_info->entry_valid = true;
     flow_hash_info->session_index = g_session_index1;
     flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
+    flow_hash_info->epoch = EPOCH;
     entry_write(tbl_id, 0, &key, NULL, &data, true, FLOW_TABLE_SIZE);
 
     key.vnic_metadata_vpc_id = g_vpc_id1;
@@ -498,6 +526,7 @@ ipv4_flow_init (void)
     flow_hash_info->entry_valid = true;
     flow_hash_info->flow_role = TCP_FLOW_RESPONDER;
     flow_hash_info->session_index = g_session_index1;
+    flow_hash_info->epoch = EPOCH;
     entry_write(tbl_id, 0, &key, NULL, &data, true, FLOW_TABLE_SIZE);
 }
 
@@ -650,6 +679,7 @@ TEST_F(artemis_test, test1)
     key_native_init();
     key_tunneled_init();
     key_tunneled2_init();
+    vnic_init();
     ipv4_flow_init();
     inter_pipe_init();
 

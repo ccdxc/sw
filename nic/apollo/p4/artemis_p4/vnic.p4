@@ -3,6 +3,7 @@
 /******************************************************************************/
 action vnic_mapping_info(epoch, vnic_id, vpc_id) {
     // if table lookup is a miss, drop
+    ingress_drop(P4I_DROP_VNIC_MAPPING_MISS);
 
     modify_field(control_metadata.epoch, epoch);
     modify_field(vnic_metadata.vnic_id, vnic_id);

@@ -40,6 +40,7 @@ flow_hash:
     bcf         [c1&c2], label_flow_hash_hit
     add         r2, r0, d.flow_hash_d.more_hints
 label_flow_miss:
+    phvwr       p.p4_to_rxdma_tag_root, r5
     phvwr.e     p.control_metadata_pipe_id, PIPE_CPS
     phvwr.f     p.service_header_flow_done, TRUE
 

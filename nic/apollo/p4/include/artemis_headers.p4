@@ -11,13 +11,15 @@ header_type artemis_p4_to_rxdma_header_t {
         sacl_bypass     : 1;
         direction       : 1;
         vnic_id         : 8;
-        service_tag     : 32;
+        tag_root        : 40;
+
+        pad1            : 24;
 
         flow_src        : 128;
         flow_sport      : 16;
         flow_dport      : 16;
         flow_proto      : 8;
-        padn            : 32;
         flow_dst        : 128;
+        service_tag     : 32;
     }
 }

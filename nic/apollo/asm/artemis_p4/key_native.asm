@@ -67,8 +67,12 @@ native_nonip_packet:
 
 .align
 set_tep1_dst:
+    seq             c1, k.ipv4_1_valid, TRUE
+    phvwr.c1.e      p.key_metadata_mapping_ip, k.ipv4_1_dstAddr
+    seq             c1, k.ipv6_1_valid, TRUE
+    phvwr.c1        p.key_metadata_mapping_ip[127:8], k.ipv6_1_dstAddr_s0_e119
     nop.e
-    nop
+    phvwr.c1        p.key_metadata_mapping_ip[7:0], k.ipv6_1_dstAddr_s120_e127
 
 /*****************************************************************************/
 /* error function                                                            */

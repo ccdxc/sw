@@ -17,6 +17,7 @@ action flow_hash(entry_valid, session_index, epoch, flow_role, hash1, hint1,
             // entry is old
             modify_field(service_header.flow_done, TRUE);
             modify_field(control_metadata.pipe_id, PIPE_CPS);
+            modify_field(p4_to_rxdma.tag_root, scratch_metadata.tag_root_addr);
         }
 
         // if hardware register indicates miss, compare hashes with r1
@@ -57,10 +58,12 @@ action flow_hash(entry_valid, session_index, epoch, flow_role, hash1, hint1,
         } else {
             modify_field(service_header.flow_done, TRUE);
             modify_field(control_metadata.pipe_id, PIPE_CPS);
+            modify_field(p4_to_rxdma.tag_root, scratch_metadata.tag_root_addr);
         }
     } else {
         modify_field(service_header.flow_done, TRUE);
         modify_field(control_metadata.pipe_id, PIPE_CPS);
+        modify_field(p4_to_rxdma.tag_root, scratch_metadata.tag_root_addr);
     }
 
     modify_field(scratch_metadata.flag, entry_valid);
@@ -119,6 +122,7 @@ action ipv4_flow_hash(entry_valid, session_index, epoch, flow_role,
             // entry is old
             modify_field(service_header.flow_done, TRUE);
             modify_field(control_metadata.pipe_id, PIPE_CPS);
+            modify_field(p4_to_rxdma.tag_root, scratch_metadata.tag_root_addr);
         }
 
         // if hardware register indicates miss, compare hashes with r1
@@ -149,10 +153,12 @@ action ipv4_flow_hash(entry_valid, session_index, epoch, flow_role,
         } else {
             modify_field(service_header.flow_done, TRUE);
             modify_field(control_metadata.pipe_id, PIPE_CPS);
+            modify_field(p4_to_rxdma.tag_root, scratch_metadata.tag_root_addr);
         }
     } else {
         modify_field(service_header.flow_done, TRUE);
         modify_field(control_metadata.pipe_id, PIPE_CPS);
+        modify_field(p4_to_rxdma.tag_root, scratch_metadata.tag_root_addr);
     }
 
     modify_field(scratch_metadata.flag, entry_valid);

@@ -10,8 +10,11 @@ struct phv_ p;
 %%
 
 vnic_mapping_info:
-    nop.e
-    nop
+    phvwr.!c1.e     p.control_metadata_p4i_drop_reason[P4I_DROP_VNIC_MAPPING_MISS], 1
+    phvwr.!c1       p.capri_intrinsic_drop, 1
+    phvwr           p.control_metadata_epoch, d.vnic_mapping_info_d.epoch
+    phvwr.e         p.vnic_metadata_vnic_id, d.vnic_mapping_info_d.vnic_id
+    phvwr.f         p.vnic_metadata_vpc_id, d.vnic_mapping_info_d.vpc_id
 
 /*****************************************************************************/
 /* error function                                                            */
