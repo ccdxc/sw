@@ -45,11 +45,33 @@ tag_impl::destroy(tag_impl *impl) {
 //       for this object
 sdk_ret_t
 tag_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    uint32_t lpm_block_id;
+    pds_tag_spec_t *spec = &obj_ctxt->api_params->tag_spec;
+
+    // allocate free lpm slab for this tag table
+    if (tag_impl_db()->alloc(spec->af, &lpm_block_id) != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to allocate LPM block for tag %u",
+                      spec->key.id);
+        return sdk::SDK_RET_NO_RESOURCE;
+    }
+    lpm_root_addr_ =
+        tag_impl_db()->region_addr(spec->af) +
+            tag_impl_db()->table_size(spec->af) * lpm_block_id;
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 tag_impl::release_resources(api_base *api_obj) {
+    uint32_t lpm_block_id;
+    tag_entry *tag = (tag_entry *)api_obj;
+
+    // just free the lpm block we are using
+    if (lpm_root_addr_ != 0xFFFFFFFFFFFFFFFFUL) {
+        lpm_block_id =
+            (lpm_root_addr_ - tag_impl_db()->region_addr(tag->af()))/
+                tag_impl_db()->table_size(tag->af());
+        tag_impl_db()->free(tag->af(), lpm_block_id);
+    }
     return SDK_RET_OK;
 }
 

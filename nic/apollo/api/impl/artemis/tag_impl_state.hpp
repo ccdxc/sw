@@ -46,6 +46,18 @@ public:
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_transaction_end(void);
 
+    /// \brief      allocate a free lpm block from the db
+    /// \param[in]  af    IP address family
+    /// \param[out]  lpm_block_idx    pointer to the lpm block index
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t alloc(uint8_t af, uint32_t *lpm_block_idx);
+
+    /// \brief      free a lpm block back to the db
+    /// \param[in]  af    IP address family
+    /// \param[in]  lpm_block_idx    LPM block index to be freed
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t free(uint8_t af, uint32_t lpm_block_idx);
+
     /// \brief      return lpm region's base/start address in memory based on IP
     ///             address family
     /// \param[in]  af IP address family
@@ -88,6 +100,8 @@ private:
     mem_addr_t    v6_lpm_region_addr_;     ///< base address for the v6 lpm reg
     uint32_t      v6_lpm_table_size_;      ///< size of each v6 lpm table
     uint32_t      v6_lpm_max_prefixes_;    ///< max IPv6 routes per tag tree
+    uint8_t       v4_lpm_bmap_;            ///< bitmap to keep track of free IPv4 region
+    uint8_t       v6_lpm_bmap_;            ///< bitmap to keep track of free IPv6 region
 };
 
 /// \@}
