@@ -130,6 +130,10 @@ meter_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     for (uint32_t i = 0; i < spec->num_rules; i++) {
         // TODO: program the policer here when table is available !!!
         for (uint32_t j = 0; j < spec->rules[i].num_prefixes; j++) {
+            PDS_TRACE_DEBUG("Processing meter table %u, pfx %s prio %u",
+                            spec->key.id,
+                            ippfx2str(&spec->rules[i].prefixes[j]),
+                            spec->rules[i].priority);
             rtable->routes[n].prefix = spec->rules[i].prefixes[j];
             rtable->routes[n].nhid = policer_idx_ + i;
             rtable->routes[n].prio = spec->rules[i].priority;

@@ -60,7 +60,7 @@
         },
         {
             "kind" : "metering",
-            "count" : "0",
+            "count" : "64",
             "scale" : "1023",
             "type" : "pps",
             "pps_bps" : "102400",

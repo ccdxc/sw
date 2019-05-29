@@ -117,6 +117,10 @@ tag_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     rtable->num_routes = num_prefixes;
     for (uint32_t i = 0; i < spec->num_rules; i++) {
         for (uint32_t j = 0; j < spec->rules[i].num_prefixes; j++) {
+            PDS_TRACE_DEBUG("Processing tag table %u, pfx %s -> tag %u, "
+                            "prio %u", spec->key.id,
+                            ippfx2str(&spec->rules[i].prefixes[j]),
+                            spec->rules[i].tag, spec->rules[i].priority);
             rtable->routes[n].prefix = spec->rules[i].prefixes[j];
             rtable->routes[n].nhid = spec->rules[i].tag;
             rtable->routes[n].prio = spec->rules[i].priority;
