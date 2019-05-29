@@ -6,56 +6,67 @@
 
 /**** table declarations ****/
 
-#define tx_table_s0_t0 s0_t0
-#define tx_table_s0_t1 s0_t1
-#define tx_table_s0_t2 s0_t2
+#define tx_table_s0_t0 s0_t0_nvme_sesspostdgst_tx
+#define tx_table_s0_t1 s0_t1_nvme_sesspostdgst_tx
+#define tx_table_s0_t2 s0_t2_nvme_sesspostdgst_tx
+#define tx_table_s0_t3 s0_t3_nvme_sesspostdgst_tx
 
-#define tx_table_s1_t0 s1_t0
-#define tx_table_s1_t1 s1_t1
-#define tx_table_s1_t2 s1_t2
+#define tx_table_s1_t0 s1_t0_nvme_sesspostdgst_tx
+#define tx_table_s1_t1 s1_t1_nvme_sesspostdgst_tx
+#define tx_table_s1_t2 s1_t2_nvme_sesspostdgst_tx
+#define tx_table_s1_t3 s1_t3_nvme_sesspostdgst_tx
 
-#define tx_table_s2_t0 s2_t0
-#define tx_table_s2_t1 s2_t1
-#define tx_table_s2_t2 s2_t2
+#define tx_table_s2_t0 s2_t0_nvme_sesspostdgst_tx
+#define tx_table_s2_t1 s2_t1_nvme_sesspostdgst_tx
+#define tx_table_s2_t2 s2_t2_nvme_sesspostdgst_tx
+#define tx_table_s2_t3 s2_t3_nvme_sesspostdgst_tx
 
-#define tx_table_s3_t0 s3_t0
-#define tx_table_s3_t1 s3_t1
-#define tx_table_s3_t2 s3_t2
+#define tx_table_s3_t0 s3_t0_nvme_sesspostdgst_tx
+#define tx_table_s3_t1 s3_t1_nvme_sesspostdgst_tx
+#define tx_table_s3_t2 s3_t2_nvme_sesspostdgst_tx
+#define tx_table_s3_t3 s3_t3_nvme_sesspostdgst_tx
 
-#define tx_table_s4_t0 s4_t0
-#define tx_table_s4_t1 s4_t1
-#define tx_table_s4_t2 s4_t2
+#define tx_table_s4_t0 s4_t0_nvme_sesspostdgst_tx
+#define tx_table_s4_t1 s4_t1_nvme_sesspostdgst_tx
+#define tx_table_s4_t2 s4_t2_nvme_sesspostdgst_tx
+#define tx_table_s4_t3 s4_t3_nvme_sesspostdgst_tx
 
-#define tx_table_s5_t0 s5_t0
-#define tx_table_s5_t1 s5_t1
-#define tx_table_s5_t2 s5_t2
+#define tx_table_s5_t0 s5_t0_nvme_sesspostdgst_tx
+#define tx_table_s5_t1 s5_t1_nvme_sesspostdgst_tx
+#define tx_table_s5_t2 s5_t2_nvme_sesspostdgst_tx
+#define tx_table_s5_t3 s5_t3_nvme_sesspostdgst_tx
 
-#define tx_table_s6_t0 s6_t0
-#define tx_table_s6_t1 s6_t1
-#define tx_table_s6_t2 s6_t2
+#define tx_table_s6_t0 s6_t0_nvme_sesspostdgst_tx
+#define tx_table_s6_t1 s6_t1_nvme_sesspostdgst_tx
+#define tx_table_s6_t2 s6_t2_nvme_sesspostdgst_tx
+#define tx_table_s6_t3 s6_t3_nvme_sesspostdgst_tx
 
-#define tx_table_s7_t0 s7_t0
-#define tx_table_s7_t1 s7_t1
-#define tx_table_s7_t2 s7_t2
+#define tx_table_s7_t0 s7_t0_nvme_sesspostdgst_tx
+#define tx_table_s7_t1 s7_t1_nvme_sesspostdgst_tx
+#define tx_table_s7_t2 s7_t2_nvme_sesspostdgst_tx
+#define tx_table_s7_t3 s7_t3_nvme_sesspostdgst_tx
+
+#define tx_stage0_lif_params_table lif_params_nvme_sesspostdgst_tx
+#define tx_table_s5_t4_lif_rate_limiter_table lif_rate_limiter_nvme_sesspostdgst_tx
 
 /**** action declarations ****/
 
-#define tx_table_s0_t0_action nvme_sesspostdgst_tx_cb_process
+#define tx_table_s0_t0_action cb_process
 
-#define tx_table_s1_t0_action nvme_sesspostdgst_tx_sess_wqe_process
+#define tx_table_s1_t0_action sess_wqe_process
 
 //checks hdgst/ddgst status
-#define tx_table_s2_t0_action nvme_sesspostdgst_tx_pdu_ctxt_process
+#define tx_table_s2_t0_action pdu_ctxt_process
 
 //check out 'n' descriptors from tcp tx q
-#define tx_table_s3_t0_action nvme_sesspostdgst_tx_sessprodcb_process
+#define tx_table_s3_t0_action sessprodcb_process
 
 //releases busy lock
-#define tx_table_s4_t0_action nvme_sesspostdgst_tx_cb_writeback_process
+#define tx_table_s4_t0_action cb_writeback_process
 
 //prepares tcp tso descriptors
-#define tx_table_s5_t0_action nvme_sesspostdgst_tx_cb_tso_process_t0
-#define tx_table_s5_t1_action nvme_sesspostdgst_tx_cb_tso_process_t1
+#define tx_table_s5_t0_action cb_tso_process_t0
+#define tx_table_s5_t1_action cb_tso_process_t1
 
 #include "common_txdma.p4"
 #include "nvme_common.p4"
@@ -294,7 +305,7 @@ metadata dma_cmd_phv2mem_t sessdgst_q_cindex_dma;   //dma cmd 3
 /*
  * Stage 0 table 0 action
  */
-action nvme_sesspostdgst_tx_cb_process (SESSDGSTTXCB_PARAMS) {
+action cb_process (SESSDGSTTXCB_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -306,7 +317,7 @@ action nvme_sesspostdgst_tx_cb_process (SESSDGSTTXCB_PARAMS) {
     GENERATE_SESSDGSTTXCB_D
 }
 
-action nvme_sesspostdgst_tx_sess_wqe_process (SESS_WQE_PARAMS) {
+action sess_wqe_process (SESS_WQE_PARAMS) {
 
     // from ki global
     GENERATE_GLOBAL_K
@@ -321,7 +332,7 @@ action nvme_sesspostdgst_tx_sess_wqe_process (SESS_WQE_PARAMS) {
     GENERATE_SESS_WQE_D
 }
 
-action nvme_sesspostdgst_tx_pdu_ctxt_process (PDU_CTXT0_PARAMS) {
+action pdu_ctxt_process (PDU_CTXT0_PARAMS) {
 
     // from ki global
     GENERATE_GLOBAL_K
@@ -336,7 +347,7 @@ action nvme_sesspostdgst_tx_pdu_ctxt_process (PDU_CTXT0_PARAMS) {
     GENERATE_PDU_CTXT0_D
 }
 
-action nvme_sesspostdgst_tx_sessprodcb_process (SESSPRODCB_PARAMS) {
+action sessprodcb_process (SESSPRODCB_PARAMS) {
 
     // from ki global
     GENERATE_GLOBAL_K
@@ -352,7 +363,7 @@ action nvme_sesspostdgst_tx_sessprodcb_process (SESSPRODCB_PARAMS) {
     GENERATE_SESSPRODCB_D
 }
 
-action nvme_sesspostdgst_tx_cb_writeback_process (SESSDGSTTXCB_PARAMS_NON_STG0) {
+action cb_writeback_process (SESSDGSTTXCB_PARAMS_NON_STG0) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -367,7 +378,7 @@ action nvme_sesspostdgst_tx_cb_writeback_process (SESSDGSTTXCB_PARAMS_NON_STG0) 
     GENERATE_SESSDGSTTXCB_D_NON_STG0
 }
 
-action nvme_sesspostdgst_tx_cb_tso_process_t0 () {
+action cb_tso_process_t0 () {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -381,7 +392,7 @@ action nvme_sesspostdgst_tx_cb_tso_process_t0 () {
     modify_field(t0_s2s_writeback_to_tso_info_scr.pad, t0_s2s_writeback_to_tso_info.pad);
 }
 
-action nvme_sesspostdgst_tx_cb_tso_process_t1 () {
+action cb_tso_process_t1 () {
     // from ki global
     GENERATE_GLOBAL_K
 

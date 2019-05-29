@@ -1,11 +1,11 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "INGRESS_s0_t0_k.h"
+#include "INGRESS_s0_t0_nvme_req_tx_k.h"
 #include "capri.h"
 #include "nvme_common.h"
 
 struct phv_ p;
-struct s0_t0_k_ k;
+struct s0_t0_nvme_req_tx_k_ k;
 struct s0_t0_nvme_req_tx_sqcb_process_d d;
 
 %%

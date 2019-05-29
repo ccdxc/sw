@@ -1,11 +1,11 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "INGRESS_s1_t2_k.h"
+#include "INGRESS_s1_t2_nvme_sessprexts_tx_k.h"
 #include "capri.h"
 #include "nvme_common.h"
 
 struct phv_ p;
-struct s1_t2_k_ k;
+struct s1_t2_nvme_sessprexts_tx_k_ k;
 struct s1_t2_nvme_sessprexts_tx_nmdpr_process_d d;
 
 #define NMDPR_ENTRY_P   r7

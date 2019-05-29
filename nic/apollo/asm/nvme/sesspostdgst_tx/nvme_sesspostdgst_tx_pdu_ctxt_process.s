@@ -1,11 +1,11 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "INGRESS_s2_t0_k.h"
+#include "INGRESS_s2_t0_nvme_sesspostdgst_tx_k.h"
 #include "capri.h"
 #include "nvme_common.h"
 
 struct phv_ p;
-struct s2_t0_k_ k;
+struct s2_t0_nvme_sesspostdgst_tx_k_ k;
 struct s2_t0_nvme_sesspostdgst_tx_pdu_ctxt_process_d d;
 
 #define SESSPRODCB_P r1

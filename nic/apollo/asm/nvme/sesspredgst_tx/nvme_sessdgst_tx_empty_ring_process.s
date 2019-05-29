@@ -1,10 +1,10 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "INGRESS_s0_t0_k.h"
+#include "INGRESS_s0_t0_nvme_sesspredgst_tx_k.h"
 #include "capri.h"
 
 struct phv_ p;
-struct s0_t0_k_ k;
+struct s0_t0_nvme_sesspredgst_tx_k_ k;
 struct s0_t0_nvme_sesspredgst_tx_cb_process_d d;
 
 %%

@@ -1,11 +1,11 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "INGRESS_s5_t2_k.h"
+#include "INGRESS_s5_t2_nvme_req_tx_k.h"
 #include "capri.h"
 #include "nvme_common.h"
 
 struct phv_ p;
-struct s5_t2_k_ k;
+struct s5_t2_nvme_req_tx_k_ k;
 struct s5_t2_nvme_req_tx_pduid_fetch_process_d d;
 
 #define DMA_CMD_BASE    r5

@@ -1,6 +1,6 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "INGRESS_s5_t0_k.h"
+#include "INGRESS_s5_t0_nvme_sesspostdgst_tx_k.h"
 #include "capri.h"
 #include "nvme_common.h"
 
@@ -9,7 +9,7 @@ struct phv_ p;
 // of tcp wqes to be posted. Since the structure definition for s5_t0_k_
 // and s5_t1_k_ are same, k[] declaration based on one structure type is
 // sufficient
-struct s5_t0_k_ k;
+struct s5_t0_nvme_sesspostdgst_tx_k_ k;
 
 #define PHV_TCP_WQE_BASE              r1
 #define PDU_CTXT_PAGE_ENTRY_BASE  r2

@@ -6,60 +6,72 @@
 
 /**** table declarations ****/
 
-#define tx_table_s0_t0 s0_t0
-#define tx_table_s0_t1 s0_t1
-#define tx_table_s0_t2 s0_t2
+#define tx_table_s0_t0 s0_t0_nvme_req_tx
+#define tx_table_s0_t1 s0_t1_nvme_req_tx
+#define tx_table_s0_t2 s0_t2_nvme_req_tx
+#define tx_table_s0_t3 s0_t3_nvme_req_tx
 
-#define tx_table_s1_t0 s1_t0
-#define tx_table_s1_t1 s1_t1
-#define tx_table_s1_t2 s1_t2
+#define tx_table_s1_t0 s1_t0_nvme_req_tx
+#define tx_table_s1_t1 s1_t1_nvme_req_tx
+#define tx_table_s1_t2 s1_t2_nvme_req_tx
+#define tx_table_s1_t3 s1_t3_nvme_req_tx
 
-#define tx_table_s2_t0 s2_t0
-#define tx_table_s2_t1 s2_t1
-#define tx_table_s2_t2 s2_t2
+#define tx_table_s2_t0 s2_t0_nvme_req_tx
+#define tx_table_s2_t1 s2_t1_nvme_req_tx
+#define tx_table_s2_t2 s2_t2_nvme_req_tx
+#define tx_table_s2_t3 s2_t3_nvme_req_tx
 
-#define tx_table_s3_t0 s3_t0
-#define tx_table_s3_t1 s3_t1
-#define tx_table_s3_t2 s3_t2
+#define tx_table_s3_t0 s3_t0_nvme_req_tx
+#define tx_table_s3_t1 s3_t1_nvme_req_tx
+#define tx_table_s3_t2 s3_t2_nvme_req_tx
+#define tx_table_s3_t3 s3_t3_nvme_req_tx
 
-#define tx_table_s4_t0 s4_t0
-#define tx_table_s4_t1 s4_t1
-#define tx_table_s4_t2 s4_t2
+#define tx_table_s4_t0 s4_t0_nvme_req_tx
+#define tx_table_s4_t1 s4_t1_nvme_req_tx
+#define tx_table_s4_t2 s4_t2_nvme_req_tx
+#define tx_table_s4_t3 s4_t3_nvme_req_tx
 
-#define tx_table_s5_t0 s5_t0
-#define tx_table_s5_t1 s5_t1
-#define tx_table_s5_t2 s5_t2
+#define tx_table_s5_t0 s5_t0_nvme_req_tx
+#define tx_table_s5_t1 s5_t1_nvme_req_tx
+#define tx_table_s5_t2 s5_t2_nvme_req_tx
+#define tx_table_s5_t3 s5_t3_nvme_req_tx
 
-#define tx_table_s6_t0 s6_t0
-#define tx_table_s6_t1 s6_t1
-#define tx_table_s6_t2 s6_t2
+#define tx_table_s6_t0 s6_t0_nvme_req_tx
+#define tx_table_s6_t1 s6_t1_nvme_req_tx
+#define tx_table_s6_t2 s6_t2_nvme_req_tx
+#define tx_table_s6_t3 s6_t3_nvme_req_tx
 
-#define tx_table_s7_t0 s7_t0
-#define tx_table_s7_t1 s7_t1
-#define tx_table_s7_t2 s7_t2
+#define tx_table_s7_t0 s7_t0_nvme_req_tx
+#define tx_table_s7_t1 s7_t1_nvme_req_tx
+#define tx_table_s7_t2 s7_t2_nvme_req_tx
+#define tx_table_s7_t3 s7_t3_nvme_req_tx
+
+#define tx_stage0_lif_params_table lif_params_req_tx
+#define tx_table_s5_t4_lif_rate_limiter_table lif_rate_limiter_req_tx
+
 
 /**** action declarations ****/
 
-#define tx_table_s0_t0_action nvme_req_tx_sqcb_process
+#define tx_table_s0_t0_action sqcb_process
 
-#define tx_table_s1_t0_action nvme_req_tx_sqe_process
+#define tx_table_s1_t0_action sqe_process
 
-#define tx_table_s2_t0_action nvme_req_tx_nscb_process
+#define tx_table_s2_t0_action nscb_process
 
-#define tx_table_s3_t0_action nvme_req_tx_sess_bitmap0_process
-#define tx_table_s3_t1_action nvme_req_tx_sess_bitmap1_process
-#define tx_table_s3_t2_action nvme_req_tx_sqe_prp_process
+#define tx_table_s3_t0_action sess_bitmap0_process
+#define tx_table_s3_t1_action sess_bitmap1_process
+#define tx_table_s3_t2_action sqe_prp_process
 
-#define tx_table_s4_t0_action nvme_req_tx_sess_select_process
-#define tx_table_s4_t1_action nvme_req_tx_resourcecb_process
+#define tx_table_s4_t0_action sess_select_process
+#define tx_table_s4_t1_action resourcecb_process
 
-#define tx_table_s5_t0_action nvme_req_tx_sessprodcb_process
-#define tx_table_s5_t1_action nvme_req_tx_cmdid_fetch_process
-#define tx_table_s5_t2_action nvme_req_tx_pduid_fetch_process
+#define tx_table_s5_t0_action sessprodcb_process
+#define tx_table_s5_t1_action cmdid_fetch_process
+#define tx_table_s5_t2_action pduid_fetch_process
 
-#define tx_table_s6_t0_action nvme_req_tx_sqcb_writeback_process
+#define tx_table_s6_t0_action sqcb_writeback_process
 
-#define tx_table_s7_t1_action nvme_req_tx_sq_statscb_process
+#define tx_table_s7_t1_action sq_statscb_process
 
 #include "common_txdma.p4"
 #include "nvme_common.p4"
@@ -396,7 +408,7 @@ metadata dma_cmd_phv2mem_t session_db_dma;      //dma cmd 10
 /*
  * Stage 0 table 0 action
  */
-action nvme_req_tx_sqcb_process (SQCB_PARAMS) {
+action sqcb_process (SQCB_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -408,7 +420,7 @@ action nvme_req_tx_sqcb_process (SQCB_PARAMS) {
     GENERATE_SQCB_D
 }
 
-action nvme_req_tx_sqe_process (NVME_SQE_PARAMS) {
+action sqe_process (NVME_SQE_PARAMS) {
 
     // from ki global
     GENERATE_GLOBAL_K
@@ -424,7 +436,7 @@ action nvme_req_tx_sqe_process (NVME_SQE_PARAMS) {
     GENERATE_NVME_SQE_D
 }
 
-action nvme_req_tx_nscb_process (NSCB_PARAMS) {
+action nscb_process (NSCB_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -444,7 +456,7 @@ action nvme_req_tx_nscb_process (NSCB_PARAMS) {
     GENERATE_NSCB_D
 }
 
-action nvme_req_tx_sqe_prp_process (SQE_PRP_LIST_PARAMS) {
+action sqe_prp_process (SQE_PRP_LIST_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -459,7 +471,7 @@ action nvme_req_tx_sqe_prp_process (SQE_PRP_LIST_PARAMS) {
 }
 
 
-action nvme_req_tx_sess_bitmap0_process () {
+action sess_bitmap0_process () {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -470,7 +482,7 @@ action nvme_req_tx_sess_bitmap0_process () {
     modify_field(t0_s2s_nscb_to_sess_bitmap_info_scr.pad, t0_s2s_nscb_to_sess_bitmap_info.pad);
 }
 
-action nvme_req_tx_sess_bitmap1_process () {
+action sess_bitmap1_process () {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -481,7 +493,7 @@ action nvme_req_tx_sess_bitmap1_process () {
     modify_field(t1_s2s_nscb_to_sess_bitmap_info_scr.pad, t1_s2s_nscb_to_sess_bitmap_info.pad);
 }
 
-action nvme_req_tx_sess_select_process () {
+action sess_select_process () {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -492,7 +504,7 @@ action nvme_req_tx_sess_select_process () {
     modify_field(t0_s2s_sess_bitmap_to_sess_select_info_scr.pad, t0_s2s_sess_bitmap_to_sess_select_info.pad);
 }
 
-action nvme_req_tx_resourcecb_process (RESOURCECB_PARAMS) {
+action resourcecb_process (RESOURCECB_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -507,7 +519,7 @@ action nvme_req_tx_resourcecb_process (RESOURCECB_PARAMS) {
 }
 
 
-action nvme_req_tx_sessprodcb_process (SESSPRODCB_PARAMS) {
+action sessprodcb_process (SESSPRODCB_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -528,7 +540,7 @@ action nvme_req_tx_sessprodcb_process (SESSPRODCB_PARAMS) {
     GENERATE_SESSPRODCB_D
 }
 
-action nvme_req_tx_cmdid_fetch_process (CMDID_RING_ENTRY_PARAMS) {
+action cmdid_fetch_process (CMDID_RING_ENTRY_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -549,7 +561,7 @@ action nvme_req_tx_cmdid_fetch_process (CMDID_RING_ENTRY_PARAMS) {
     GENERATE_CMDID_RING_ENTRY_D
 }
 
-action nvme_req_tx_pduid_fetch_process (PDUID_RING_ENTRY_PARAMS) {
+action pduid_fetch_process (PDUID_RING_ENTRY_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -570,7 +582,7 @@ action nvme_req_tx_pduid_fetch_process (PDUID_RING_ENTRY_PARAMS) {
     GENERATE_PDUID_RING_ENTRY_D
 }
 
-action nvme_req_tx_sqcb_writeback_process (SQCB_PARAMS_NON_STG0) {
+action sqcb_writeback_process (SQCB_PARAMS_NON_STG0) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -584,7 +596,7 @@ action nvme_req_tx_sqcb_writeback_process (SQCB_PARAMS_NON_STG0) {
     GENERATE_SQCB_D_NON_STG0
 }
 
-action nvme_req_tx_sq_statscb_process (SQ_STATSCB_PARAMS) {
+action sq_statscb_process (SQ_STATSCB_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
