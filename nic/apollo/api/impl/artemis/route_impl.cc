@@ -160,7 +160,6 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             break;
         }
     }
-#if 0
     ret = lpm_tree_create(rtable,
                           (spec->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4 :
                                                      ITREE_TYPE_IPV6,
@@ -168,7 +167,6 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                           (spec->af == IP_AF_IPV4) ?
                           route_table_impl_db()->v4_table_size() :
                           route_table_impl_db()->v6_table_size());
-#endif
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to build LPM route table, err : %u", ret);
     }
