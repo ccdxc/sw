@@ -22,7 +22,9 @@ ExecStart=/usr/pensando/bin/kubelet \
   $READONLY_PORT \
   $CLIENT_CAFILE \
   $TLS_CERTFILE \
-  $TLS_KEYFILE
+  $TLS_KEYFILE \
+  $IMAGE_GC_HIGH_THRESHOLD \
+  $IMAGE_GC_LOW_THRESHOLD
 
 Restart=always
 RestartSec=10s

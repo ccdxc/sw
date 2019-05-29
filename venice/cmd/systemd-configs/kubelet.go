@@ -23,13 +23,15 @@ const (
 func generateSystemdKubeletConfig(nodeID string) error {
 	const (
 		// Environment variables
-		kubeletAddressVar    = "KUBELET_ADDRESS"
-		allowPrivilegedVar   = "ALLOW_PRIVILEGED"
-		requireKubeconfigVar = "REQUIRE_KUBE_CONFIG"
-		cgroupDriverVar      = "CGROUP_DRIVER"
-		nodeIPVar            = "NODEIP"
-		hostNameOverrideVar  = "HOSTNAME_OVERRIDE"
-		readOnlyPortVar      = "READONLY_PORT"
+		kubeletAddressVar       = "KUBELET_ADDRESS"
+		allowPrivilegedVar      = "ALLOW_PRIVILEGED"
+		requireKubeconfigVar    = "REQUIRE_KUBE_CONFIG"
+		cgroupDriverVar         = "CGROUP_DRIVER"
+		nodeIPVar               = "NODEIP"
+		hostNameOverrideVar     = "HOSTNAME_OVERRIDE"
+		readOnlyPortVar         = "READONLY_PORT"
+		imageGCHighThresholdVar = "IMAGE_GC_HIGH_THRESHOLD"
+		imageGCLowThresholdVar  = "IMAGE_GC_LOW_THRESHOLD"
 
 		// Parameters
 		kubeletAddressParam    = "--address"
@@ -39,6 +41,11 @@ func generateSystemdKubeletConfig(nodeID string) error {
 		nodeIPParam            = "--node-ip"
 		hostNameOverrideParam  = "--hostname-override"
 		readOnlyPortParam      = "--read-only-port"
+
+		// Image collection (GC)
+		imageGCHighThresholdParam = "--image-gc-high-threshold" //  the percent of disk usage which triggers image garbage collection. Default is 85%.
+		imageGCLowThresholdParam  = "--image-gc-low-threshold"  // the percent of disk usage to which image garbage collection attempts to free. Default is 80%.
+
 	)
 
 	// Kubelet gets a single set of credentials that it uses to:
@@ -66,6 +73,10 @@ func generateSystemdKubeletConfig(nodeID string) error {
 	cfgMap[clientCAFileVar] = fmt.Sprintf("%s %s", clientCAFileParam, kubeletCACertFile)
 	cfgMap[tlsKeyFileVar] = fmt.Sprintf("%s %s", tlsKeyFileParam, kubeletKeyFile)
 	cfgMap[tlsCertFileVar] = fmt.Sprintf("%s %s", tlsCertFileParam, kubeletCertFile)
+
+	// garbage collection config
+	cfgMap[imageGCHighThresholdVar] = fmt.Sprintf("%s=%d", imageGCHighThresholdParam, 100)
+	cfgMap[imageGCLowThresholdVar] = fmt.Sprintf("%s=%d", imageGCLowThresholdParam, 100)
 
 	return systemd.WriteCfgMapToFile(cfgMap, path.Join(globals.KubeletConfigDir, kubeletSystemdCfgFile))
 }
