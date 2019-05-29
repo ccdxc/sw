@@ -561,6 +561,20 @@ artemis_impl::table_init_(void) {
     // reset bit 31 (saves one asm instruction)
     addr &= ~((uint64_t)1 << 31);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_SESSION, addr);
+
+    // program IPv4 tag tree's root address as table constant of v4 flow tables
+    addr = api::g_pds_state.mempartition()->start_addr("tag_v4");
+    SDK_ASSERT(addr != INVALID_MEM_ADDRESS);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_IPV4_FLOW, addr);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_IPV4_FLOW_OHASH,
+                                                 addr);
+
+    // program IPv6 tag tree's root address as table constant of v6 flow tables
+    addr = api::g_pds_state.mempartition()->start_addr("tag_v6");
+    SDK_ASSERT(addr != INVALID_MEM_ADDRESS);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_FLOW, addr);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_FLOW_OHASH, addr);
+
     return SDK_RET_OK;
 }
 
