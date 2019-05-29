@@ -7,7 +7,7 @@
       <mat-toolbar color="primary">
         <mat-toolbar-row class="app-shell-tool-bar-row">
           <div class="app-shell-header-logo-div">
-            <img id="app-header-logo" class="navbar-btn app-header-logo"
+            <img id="app-header-logo" class="navbar-btn app-header-logo" (click)="redirectHome()"
                  src="../../../assets/images/headers/pensando-header-logo.svg" />
             <!-- Commenting out collapsed sidenav for August release
                             The pin/unpin isn't completely smooth
@@ -76,24 +76,7 @@
           <ul class="list-unstyled components">
             <ng-container *ngTemplateOutlet="SideNavMenu; context:{items:sideNavMenu}">
             </ng-container>
-            <li>
-              <div class="app-shell-version-text">
-                <div style="margin:10px;">
-                  <b>Build Version:</b>
-                  <br>{{version?.status["build-version"]}}
-                </div>
-                <div style="margin:10px;">
-                  <b>VCS Commit ID:</b>
-                  <br>{{ version?.status["vcs-commit"] }}
-                </div>
-                <div style="margin:10px;">
-                  <b>Build Date:</b>
-                  <br>{{ version?.status["build-date"] }}
-                </div>
-              </div>
-            </li>
           </ul>
-
         </mat-sidenav>
 
         <mat-sidenav-content>
@@ -144,10 +127,47 @@
         </mat-sidenav-content>
       </mat-sidenav-container>
 
-      <mat-toolbar class="app-shell-footer">Pensando Systems</mat-toolbar>
+      <mat-toolbar class="app-shell-footer">
+        <div fxFlexFill fxLayout="row">
+          <div fxLayout="column" fxLayoutAlign="center start">Pensando Systems</div>
+          <div fxFlex fxLayout="column"></div>
+          <div fxLayout="column" fxLayoutAlign="center end" (click)="versionOp.toggle($event)"
+               style="cursor: pointer;">{{version?.status["build-version"]}}</div>
+        </div>
+      </mat-toolbar>
     </ng-container>
   </div>
 </div>
+
+<p-overlayPanel #versionOp>
+  <div class="" fxLayout="column">
+    <div fxLayout="row">
+      <div fxLayout="column">
+        <div><b>Build Version:</b></div>
+        <div>{{version?.status["build-version"]}}</div>
+      </div>
+    </div>
+    <div fxLayout="row">
+      <div fxLayout="column">
+        <div><b>VCS Commit ID:</b></div>
+        <div>{{ version?.status["vcs-commit"] }}</div>
+      </div>
+    </div>
+    <div fxLayout="row">
+      <div fxLayout="column">
+        <div><b>VCS Commit ID:</b>
+        </div>
+        <div>{{ version?.status["vcs-commit"] }}</div>
+      </div>
+    </div>
+    <div fxLayout="row">
+      <div fxLayout="column">
+        <div><b>Build Date:</b></div>
+        <div>{{ version?.status["build-date"] }}</div>
+      </div>
+    </div>
+  </div>
+</p-overlayPanel>
 
 <ng-template #SideNavMenu let-items="items">
   <ng-container *ngFor="let item of items">

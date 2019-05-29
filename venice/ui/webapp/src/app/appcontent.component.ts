@@ -136,9 +136,9 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     });
   }
 
-
-
-
+  redirectHome() {
+    this.uiconfigsService.navigateToHomepage();
+  }
 
   getVersion() {
     this.versionEventUtility = new HttpEventUtility<ClusterVersion>(ClusterVersion, true);
