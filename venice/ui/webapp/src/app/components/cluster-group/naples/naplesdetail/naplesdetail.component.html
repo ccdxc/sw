@@ -52,116 +52,197 @@
 </app-pagebody>
 
 <ng-template #detailsTable>
-  <div fxFlex="none" fxLayout="column" class="naplesdetail-node-table-container">
-    <div fxFlex="none" fxLayout="column" class="naplesdetail-details">
+  <div fxFlex="nogrow" fxLayout="column" class="naplesdetail-node-table-container">
+    <div fxFlex="nogrow" fxLayout="column" class="naplesdetail-details">
       <!-- <div fxFlex="none" class="cluster-details-title"> Naples Detail </div> -->
       <div fxFlex="none" fxLayout="row">
-        <!-- Field titles -->
-        <div fxFlex="50" fxLayout="column">
-          <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
-               fxLayoutAlign="start center">
-            <div>MAC Address:</div>
-          </div>
-          <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
-               fxLayoutAlign="start center">
-            <div>IP Address:</div>
-          </div>
-          <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
-               fxLayoutAlign="start center">
-            <div>Host Name:</div>
-          </div>
-          <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
-               fxLayoutAlign="start center">
-            <div>Phase</div>
-          </div>
-          <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
-               fxLayoutAlign="start center">
-            <div>Serial Number:</div>
-          </div>
-          <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
-               fxLayoutAlign="start center">
-            <div>Version:</div>
-          </div>
-          <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
-               fxLayoutAlign="start center">
-            <div>
-              Labels:
-              <mat-icon matTooltip="Edit Label" class="global-table-action-icon"
-                        (click)="editLabels($event)"
-                        *roleGuard="'clustersmartnic_update'">edit
-              </mat-icon>
+        <div fxFlex="none" fxLayout="column">
+          <div fxFlex="none" fxLayout="row">
+            <div fxFlex="50px"></div>
+            <!-- Field titles -->
+            <div fxFlex="none" fxLayout="column">
+              <div fxFlex="none" fxLayout="column">
+                <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                     fxLayoutAlign="start center">
+                  <div>MAC Address:</div>
+                </div>
+                <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                     fxLayoutAlign="start center">
+                  <div>IP Address:</div>
+                </div>
+                <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                     fxLayoutAlign="start center">
+                  <div>Host Name:</div>
+                </div>
+                <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                     fxLayoutAlign="start center">
+                  <div>Phase</div>
+                </div>
+                <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                     fxLayoutAlign="start center">
+                  <div>Smart Nic Version:</div>
+                </div>
+                <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                     fxLayoutAlign="start center">
+                  <div>
+                    Labels:
+                    <mat-icon matTooltip="Edit Label" class="global-table-action-icon"
+                              (click)="editLabels($event)"
+                              *roleGuard="'clustersmartnic_update'">edit
+                    </mat-icon>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div fxFlex="40px"></div>
+            <!-- Values -->
+            <div fxFlex="none" fxLayout="column">
+              <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                   class="naplesdetail-node-value">
+                <div class="naplesdetail-details-panel-virtual-ip">
+                  {{ selectedObj?.status['primary-mac'] }}</div>
+              </div>
+              <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                   class="naplesdetail-node-value">
+                <div class="naplesdetail-details-panel-virtual-ip">
+                  {{ selectedObj?.status['ip-config'] ? selectedObj?.status['ip-config']["ip-address"] : '' }}
+                </div>
+              </div>
+              <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                   class="naplesdetail-node-value">
+                <div class="naplesdetail-details-panel-ntp-servers">
+                  {{ selectedObj?.spec['hostname'] }}
+                </div>
+              </div>
+              <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                   class="naplesdetail-node-value">
+                <div *ngIf="selectedObj"
+                     class="naplesdetail-details-panel-last-leader-transition-time"
+                     [matTooltip]="selectedObj.status['admission-phase'] === 'REJECTED' || selectedObj.status['admission-phase'] === 'PENDING' ? selectedObj.status['adm-phase-reason'] : ''">
+                  {{ selectedObj ? admissionPhaseEnum[selectedObj.status['admission-phase']] : '' }}
+                  <mat-icon *ngIf="selectedObj.status['admission-phase'] === 'REJECTED'"
+                            fxFlex="nogrow"
+                            [inline]="true"
+                            class="global-alert-warning-icon naplesdetail-phase-icon">error
+                  </mat-icon>
+                  <mat-icon *ngIf="selectedObj.status['admission-phase'] === 'PENDING'"
+                            fxFlex="nogrow"
+                            [inline]="true"
+                            class="global-alert-info-icon naplesdetail-phase-icon">notifications
+                  </mat-icon>
+                </div>
+              </div>
+              <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                   class="naplesdetail-node-value">
+                <div class="naplesdetail-panel-version">
+                  {{ selectedObj?.status['smartNicVersion'] }}
+                </div>
+              </div>
+              <div fxFlex="" fxLayout="row" fxLayoutAlign="start center"
+                   class="naplesdetail-node-value">
+                <div class="naplesdetail-panel-labels" fxFlex="200px">
+                  <p-table [value]="genKeys()" *ngIf="ifLabelExists()" [autoLayout]="true">
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-key>
+                      <tr>
+                        <td style="word-break: break-all;">{{key}}</td>
+                        <td style="word-break: break-all;">{{this.selectedObj.meta.labels[key]}}
+                        </td>
+                      </tr>
+                    </ng-template>
+                  </p-table>
+                </div>
+                <app-labeleditor [data]="selectedObj" [metadata]="labelEditorMetaData"
+                                 (saveEmitter)="handleEditSave($event)"
+                                 (cancelEmitter)="handleEditCancel($event)"
+                                 [inLabelEditMode]="inLabelEditMode"></app-labeleditor>
+
+              </div>
             </div>
           </div>
         </div>
-        <!-- Values -->
-        <div fxFlex="none" fxLayout="column">
-          <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
-               class="naplesdetail-node-value">
-            <div class="naplesdetail-details-panel-virtual-ip">
-              {{ selectedObj?.status['primary-mac'] }}</div>
-          </div>
-          <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
-               class="naplesdetail-node-value">
-            <div class="naplesdetail-details-panel-virtual-ip">
-              {{ selectedObj?.status['ip-config'] ? selectedObj?.status['ip-config']["ip-address"] : '' }}
-            </div>
-          </div>
-          <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
-               class="naplesdetail-node-value">
-            <div class="naplesdetail-details-panel-ntp-servers">
-              {{ selectedObj?.spec['hostname'] }}
-            </div>
-          </div>
-          <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
-               class="naplesdetail-node-value">
-            <div *ngIf="selectedObj" class="naplesdetail-details-panel-last-leader-transition-time"
-                 [matTooltip]="selectedObj.status['admission-phase'] === 'REJECTED' || selectedObj.status['admission-phase'] === 'PENDING' ? selectedObj.status['adm-phase-reason'] : ''">
-              {{ selectedObj ? admissionPhaseEnum[selectedObj.status['admission-phase']] : '' }}
-              <mat-icon *ngIf="selectedObj.status['admission-phase'] === 'REJECTED'" fxFlex="nogrow"
-                        [inline]="true"
-                        class="global-alert-warning-icon naplesdetail-phase-icon">error</mat-icon>
-              <mat-icon *ngIf="selectedObj.status['admission-phase'] === 'PENDING'" fxFlex="nogrow"
-                        [inline]="true"
-                        class="global-alert-info-icon naplesdetail-phase-icon">notifications
-              </mat-icon>
-            </div>
-          </div>
-          <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
-               class="naplesdetail-node-value">
-            <div class="naplesdetail-panel-auto-admit-nics">
-              {{ selectedObj?.status['serial-num'] }}
-            </div>
-          </div>
-          <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
-               class="naplesdetail-node-value">
-            <div class="naplesdetail-panel-version">
-              {{ selectedObj?.status['smartNicVersion'] }}
-            </div>
-          </div>
-          <div fxFlex="" fxLayout="row" fxLayoutAlign="start center"
-               class="naplesdetail-node-value">
-            <div class="naplesdetail-panel-labels" fxFlex="200px">
-              <p-table [value]="genKeys()" *ngIf="ifLabelExists()" [autoLayout]="true">
-                <ng-template pTemplate="header">
-                  <tr>
-                    <th>Key</th>
-                    <th>Value</th>
-                  </tr>
-                </ng-template>
-                <ng-template pTemplate="body" let-key>
-                  <tr>
-                    <td style="word-break: break-all;">{{key}}</td>
-                    <td style="word-break: break-all;">{{this.selectedObj.meta.labels[key]}}</td>
-                  </tr>
-                </ng-template>
-              </p-table>
-            </div>
-            <app-labeleditor [data]="selectedObj" [metadata]="labelEditorMetaData"
-                             (saveEmitter)="handleEditSave($event)"
-                             (cancelEmitter)="handleEditCancel($event)"
-                             [inLabelEditMode]="inLabelEditMode"></app-labeleditor>
+        <div fxFlex="50px"></div>
 
+        <div fxFlex="none" fxLayout="column" *ngIf="showExpandedDetailsCard"
+             [@slideInOutHorizontal]>
+          <div fxFlex="none" fxLayout="row">
+            <!-- Field titles -->
+            <div fxFlex="none" fxLayout="column">
+              <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                   fxLayoutAlign="start center">
+                <div>Serial Number:</div>
+              </div>
+              <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                   fxLayoutAlign="start center">
+                <div>Smart Nic Sku:</div>
+              </div>
+              <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                   fxLayoutAlign="start center">
+                <div>OS Type:</div>
+              </div>
+              <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                   fxLayoutAlign="start center">
+                <div>Kernel Release</div>
+              </div>
+              <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                   fxLayoutAlign="start center">
+                <div>Processor</div>
+              </div>
+            </div>
+            <div fxFlex="40px"></div>
+            <!-- Values -->
+            <div fxFlex="none" fxLayout="column">
+              <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                   class="naplesdetail-node-value">
+                <div class="naplesdetail-panel-auto-admit-nics">
+                  {{ selectedObj?.status['serial-num'] }}
+                </div>
+              </div>
+              <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                   class="naplesdetail-node-value">
+                <div class="naplesdetail-details-panel-virtual-ip">
+                  {{ selectedObj?.status['smartNicSku']}}
+                </div>
+              </div>
+              <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                   class="naplesdetail-node-value">
+                <div class="naplesdetail-details-panel-ntp-servers">
+                  {{ selectedObj?.status['system-info']['os-info']['type'] }}
+                </div>
+              </div>
+              <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                   class="naplesdetail-node-value">
+                <div class="naplesdetail-details-panel-ntp-servers">
+                  {{ selectedObj?.status['system-info']['os-info']['kernel-relase'] }}
+                </div>
+              </div>
+              <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                   class="naplesdetail-node-value">
+                <div class="naplesdetail-panel-auto-admit-nics">
+                  {{ selectedObj?.status['system-info']['os-info']['processor'] }}
+                </div>
+              </div>
+            </div>
           </div>
+        </div>
+        <div fxFlex="10px"></div>
+
+        <div fxFlex fxLayout="column" fxLayoutAlign="center end">
+          <div fxFlex="none" fxLayout="row">
+            <div [@slideInOutHorizontal] fxFlex="10" (click)="expandDetailsCard()">
+              <mat-icon fxFlex="none" title="More Details" *ngIf="!showExpandedDetailsCard">
+                chevron_right</mat-icon>
+              <mat-icon fxFlex="none" title="More Details" *ngIf="showExpandedDetailsCard">
+                chevron_left</mat-icon>
+            </div>
+          </div>
+
+
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import {Component, OnInit, OnDestroy} from '@angular/core';
 import { BaseComponent } from '@app/components/base/base.component';
+import { Animations } from '@app/animations';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ClusterSmartNIC, ClusterSmartNICStatus_admission_phase_uihint } from '@sdk/v1/models/generated/cluster';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
@@ -22,7 +23,8 @@ import {LabelEditorMetadataModel} from '@components/shared/labeleditor';
 @Component({
   selector: 'app-naplesdetail',
   templateUrl: './naplesdetail.component.html',
-  styleUrls: ['./naplesdetail.component.scss']
+  styleUrls: ['./naplesdetail.component.scss'],
+  animations: [Animations]
 })
 export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDestroy {
   subscriptions = [];
@@ -46,6 +48,8 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   // Id of the object the user has navigated to
   selectedId: string;
   selectedObj: ClusterSmartNIC;
+
+  showExpandedDetailsCard: boolean;
 
   // Holds all objects, should be only one item in the array
   objList: ReadonlyArray<ClusterSmartNIC>;
@@ -130,6 +134,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     this.objList = [];
     this.selectedObj = null;
     this.alertseventsSelector = null;
+    this.showExpandedDetailsCard = false;
 
     this.heroCards.forEach((card) => {
       card.firstStat.value = null;
@@ -409,5 +414,9 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       }
     }
     return false;
+  }
+
+  expandDetailsCard() {
+    this.showExpandedDetailsCard = !this.showExpandedDetailsCard;
   }
 }

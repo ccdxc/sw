@@ -53,4 +53,14 @@ export const Animations = [
       animate(EXPANSION_PANEL_ANIMATION_TIMING_FAST, style({ height: '0px', visibility: 'hidden' })),
     ]),
   ]),
+  trigger('slideInOutHorizontal', [
+    transition(':enter', [
+      style({ width: '0px', visibility: 'hidden', overflow: 'hidden' }),
+      animate(EXPANSION_PANEL_ANIMATION_TIMING, style({ width: '*', visibility: 'visible' })),
+    ]),
+    transition(':leave', [
+      style({ width: '*', visibility: 'visible', overflow: 'hidden' }),
+      animate(EXPANSION_PANEL_ANIMATION_TIMING, style({ width: '0px', visibility: 'hidden' })),
+    ]),
+  ]),
 ];
