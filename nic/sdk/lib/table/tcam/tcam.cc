@@ -621,8 +621,7 @@ tcam::deprogram_table_(tcam_entry_t *te)
     pd_err = p4pd_entry_write(id_, te->index, (uint8_t *)hwkey,
                               (uint8_t *)hwkeymask, te->data);
     SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
-
-    SDK_TRACE_DEBUG("%s: Index: %d de-programmed\n", name_, te->index);
+    SDK_TRACE_DEBUG("%s: Index: %d de-programmed", name_, te->index);
 
 end:
 

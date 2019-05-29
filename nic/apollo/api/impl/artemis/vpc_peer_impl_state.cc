@@ -49,7 +49,8 @@ vpc_peer_impl_state::vpc_peer_impl_state(pds_state *state) {
 }
 
 vpc_peer_impl_state::~vpc_peer_impl_state() {
-    mem_hash::destroy(vpc_peer_tbl_);
+    // TODO: uncomment later when table is placed
+    //mem_hash::destroy(vpc_peer_tbl_);
     slab::destroy(vpc_peer_impl_slab_);
 }
 

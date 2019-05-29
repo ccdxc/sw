@@ -46,7 +46,8 @@ lif_impl_state::lif_impl_state(pds_state *state) {
 
 lif_impl_state::~lif_impl_state() {
     ht::destroy(lif_ht_);
-    directmap::destroy(tx_rate_limiter_tbl_);
+    // TODO: uncomment later when rate limter table comes
+    //directmap::destroy(tx_rate_limiter_tbl_);
 }
 
 lif_impl *

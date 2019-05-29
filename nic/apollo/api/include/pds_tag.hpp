@@ -19,7 +19,7 @@
 /// @{
 
 #define PDS_MAX_TAG                 64
-#define PDS_MAX_PREFIX_PER_TAG      1023
+#define PDS_MAX_PREFIX_PER_TAG      16383
 
 /// \brief tag policy rule
 typedef struct pds_tag_rule_s {
