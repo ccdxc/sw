@@ -26,10 +26,10 @@ header_type txdma_control_metadata_t {
         sacl_result         : 1;
         remote_vnic_mapping_tx_ohash_lkp : 1; //TEMP: Replace with P4 to P4+ header
         pad6                :  4;
-        vpc_id              : 10;   //TEMP: Replace with P4 to P4+ header
+        vpc_id              : 10;
         nexthop_group_index : 16;
 
-        dst                 : 128;  //TEMP: Replace with P4 to P4+ header
+        remote_ip           : 128;  //TDO-KSM: Fill this in RXDMA Stage 0
         remote_vnic_mapping_tx_ohash : 32; //TEMP: Replace with P4 to P4+ header
         pad7                :  6;
         svc_id              : 10;

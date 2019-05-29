@@ -99,12 +99,12 @@ action mapping_info(entry_valid, nexthop_group_index,
     modify_field(scratch_metadata.vnic_mapping_hash, hash8);
 }
 
-@pragma stage 1
+@pragma stage 0
 @pragma hbm_table
 table mapping {
     reads {
-        txdma_control.vpc_id  : exact;
-        txdma_control.dst     : exact;
+        txdma_control.vpc_id    : exact;
+        txdma_control.remote_ip : exact;
     }
     actions {
         mapping_info;
@@ -112,7 +112,7 @@ table mapping {
     size : MAPPING_TABLE_SIZE;
 }
 
-@pragma stage 2
+@pragma stage 1
 @pragma hbm_table
 @pragma overflow_table mapping
 table mapping_ohash {

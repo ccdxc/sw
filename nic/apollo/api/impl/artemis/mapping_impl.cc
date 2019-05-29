@@ -65,10 +65,10 @@ namespace impl {
     memset((key), 0, sizeof(*(key)));                                        \
     (key)->txdma_control_vpc_id = vpc_hw_id;                                 \
     if ((ip)->af == IP_AF_IPV6) {                                            \
-        sdk::lib::memrev((key)->txdma_control_dst,                           \
+        sdk::lib::memrev((key)->txdma_control_remote_ip,                     \
                          (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);           \
     } else {                                                                 \
-        memcpy((key)->txdma_control_dst,                                     \
+        memcpy((key)->txdma_control_remote_ip,                               \
                &(ip)->addr.v4_addr, IP4_ADDR8_LEN);                          \
     }                                                                        \
 }
