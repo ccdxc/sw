@@ -29,7 +29,7 @@ ep_get_rmac (ep_t *pi_ep, l2seg_t *l2seg)
     network_t *nw;
     nw = ep_get_nw(pi_ep, l2seg);
     if (!nw) {
-        SDK_ASSERT(0);
+        return NULL;
     }
     return (&nw->rmac_addr);
 }

@@ -67,8 +67,10 @@ update_rewrite_info(fte::ctx_t&ctx)
         if (MAC_TO_UINT64(*dmac) != 0) {
             HEADER_SET_FLD(flowupd.header_rewrite, ether, dmac, *(ether_addr *)dmac);
         }
-        if (MAC_TO_UINT64(*smac) != 0) {
-            HEADER_SET_FLD(flowupd.header_rewrite, ether, smac, *(ether_addr *)smac);
+        if (smac) {
+            if (MAC_TO_UINT64(*smac) != 0) {
+                HEADER_SET_FLD(flowupd.header_rewrite, ether, smac, *(ether_addr *)smac);
+            }
         }
     }
 
@@ -81,8 +83,10 @@ update_rewrite_info(fte::ctx_t&ctx)
         if (MAC_TO_UINT64(*dmac) != 0) {
             HEADER_SET_FLD(flowupd.header_rewrite, ether, dmac, *(ether_addr *)dmac);
         }
-        if (MAC_TO_UINT64(*smac) != 0) {
-            HEADER_SET_FLD(flowupd.header_rewrite, ether, smac, *(ether_addr *)smac);
+        if (smac) {
+            if (MAC_TO_UINT64(*smac) != 0) {
+                HEADER_SET_FLD(flowupd.header_rewrite, ether, smac, *(ether_addr *)smac);
+            }
         }
     }
 
