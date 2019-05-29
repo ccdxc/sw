@@ -25,6 +25,7 @@ route_table_util::route_table_util() {
     this->id = PDS_ROUTE_TABLE_ID_INVALID;
     this->af = IP_AF_IPV4;
     this->num_routes = 0;
+    memset(routes, 0, sizeof(route_util) * (PDS_MAX_ROUTE_PER_TABLE + 1));
 }
 
 route_table_util::route_table_util(pds_route_table_id_t id,
@@ -35,6 +36,7 @@ route_table_util::route_table_util(pds_route_table_id_t id,
     uint32_t nh_offset = 0, nh_offset_max = PDS_MAX_TEP - 1;
     ip_addr_t route_addr;
 
+    memset(routes, 0, sizeof(route_util) * (PDS_MAX_ROUTE_PER_TABLE + 1));
     this->id = id;
     this->af = af;
     this->base_route_pfx = base_route_pfx;
