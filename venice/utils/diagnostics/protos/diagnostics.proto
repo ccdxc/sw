@@ -24,3 +24,7 @@ message Log {
 message Logs {
     repeated Log Logs = 1 [(gogoproto.jsontag) = "logs"];
 }
+
+message Stats {
+    map<string,string> Stats = 1 [(gogoproto.jsontag) = "stats,omitempty"];
+}

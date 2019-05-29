@@ -81,32 +81,20 @@ func (ms *MbusServer) Stats(kind, cname string) api.Counter {
 }
 
 // Start starts the RPC server
-func (ms *MbusServer) Start() {
-	ms.grpcServer.Start()
-}
+func (ms *MbusServer) Start() {}
 
 // Stop stops the rpc server
 func (ms *MbusServer) Stop() error {
-	// stop the rpc server
-	return ms.grpcServer.Stop()
+	return nil
 }
 
-// NewMbusServer creates a new instance of RPC server
-func NewMbusServer(svcName, listenURL string) (*MbusServer, error) {
+// NewMbusServer creates a new instance of message bus server
+func NewMbusServer(svcName string, grpcServer *rpckit.RPCServer) *MbusServer {
 	mbusServer := MbusServer{
 		svcName: svcName,
 		memDB:   memdb.NewMemdb(),
 		stats:   make(map[string]tsdb.Obj),
+		grpcServer: grpcServer,
 	}
-
-	// create an RPC server if URL is specified
-	if listenURL != "" {
-		grpcServer, err := rpckit.NewRPCServer(svcName, listenURL)
-		if err != nil {
-			log.Fatalf("Error creating rpc server. Err; %v", err)
-		}
-		mbusServer.grpcServer = grpcServer
-	}
-
-	return &mbusServer, nil
+	return &mbusServer
 }

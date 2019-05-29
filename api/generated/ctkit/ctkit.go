@@ -11,7 +11,11 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 
+	"github.com/pensando/sw/api/generated/diagnostics"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/balancer"
+	diag "github.com/pensando/sw/venice/utils/diagnostics"
+	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -30,6 +34,7 @@ type kindStore struct {
 type ctrlerCtx struct {
 	sync.Mutex                                // lock for the controller
 	name        string                        // controller name
+	rpcServer   *rpckit.RPCServer             // grpc server
 	apisrvURL   string                        // API server URL
 	logger      log.Logger                    // logger
 	resolver    resolver.Interface            // name resolver
@@ -42,13 +47,15 @@ type ctrlerCtx struct {
 	kinds       map[string]*kindStore         // DB of all kinds
 	apicl       apiclient.Services            // api client to write
 	stats       tsdb.Obj                      // ctkit stats
+	diagSvc     diag.Service
 }
 
 // Controller is the main interface provided by controller instance
 type Controller interface {
 	FindObject(kind string, ometa *api.ObjectMeta) (runtime.Object, error)
 	ListObjects(kind string) []runtime.Object
-	Stop() error // stop the controller
+	Stop() error                                                              // stop the controller
+	RegisterDiagnosticsHandler(rpcMethod, query string, handler diag.Handler) // registers diagnostics query handler
 
 	User() UserAPI                                       // return User API interface
 	AuthenticationPolicy() AuthenticationPolicyAPI       // return AuthenticationPolicy API interface
@@ -97,7 +104,7 @@ type Controller interface {
 }
 
 // NewController creates a new instance of controler
-func NewController(name string, apisrvURL string, resolver resolver.Interface, logger log.Logger) (Controller, error) {
+func NewController(name string, rpcServer *rpckit.RPCServer, apisrvURL string, resolver resolver.Interface, logger log.Logger) (Controller, error) {
 	keyTags := map[string]string{"node": "venice", "module": name, "kind": "CtkitStats"}
 	tsdbObj, err := tsdb.NewObj("CtkitStats", keyTags, nil, nil)
 	if err != nil {
@@ -108,6 +115,7 @@ func NewController(name string, apisrvURL string, resolver resolver.Interface, l
 	// create controller context
 	ctrl := ctrlerCtx{
 		name:        name,
+		rpcServer:   rpcServer,
 		apisrvURL:   apisrvURL,
 		logger:      logger.WithContext("submodule", name+"-Watcher"),
 		resolver:    resolver,
@@ -118,8 +126,11 @@ func NewController(name string, apisrvURL string, resolver resolver.Interface, l
 		handlers:    make(map[string]interface{}),
 		kinds:       make(map[string]*kindStore),
 		stats:       tsdbObj,
+		diagSvc:     diagsvc.GetDiagnosticsService(name, utils.GetHostname(), diagnostics.ModuleStatus_Venice, logger),
 	}
-
+	if rpcServer != nil {
+		diag.RegisterService(rpcServer.GrpcServer, ctrl.diagSvc)
+	}
 	return &ctrl, nil
 }
 
@@ -254,4 +265,14 @@ func (ct *ctrlerCtx) delObject(kind, key string) error {
 	delete(ks.objects, key)
 
 	return nil
+}
+
+// RegisterDiagnosticsHandler registers a diagnostics query handler if RPC server is enabled. This should be called before grpc server is started
+func (ct *ctrlerCtx) RegisterDiagnosticsHandler(rpcMethod, query string, handler diag.Handler) {
+	if ct.diagSvc != nil {
+		if err := ct.diagSvc.RegisterHandler(rpcMethod, query, handler); err != nil {
+			ct.logger.ErrorLog("method", "RegisterDiagnosticsHandler", "msg", fmt.Sprintf("failed to register handler for rpc method [%s], query [%s]", rpcMethod, query), "error", err)
+			// TODO throw an event
+		}
+	}
 }

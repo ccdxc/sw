@@ -31,29 +31,36 @@ package npm
 
 import (
 	"context"
-	"net/http"
 	"time"
 
+	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
 	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
+	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // Netctrler is a netctrler instance
 type Netctrler struct {
 	StateMgr   *statemgr.Statemgr // state manager
-	mserver    *nimbus.MbusServer // nimbu server
+	mserver    *nimbus.MbusServer // nimbus server
 	debugStats *debugStats.Stats
+	rpcServer  *rpckit.RPCServer
 }
 
 // NewNetctrler returns a controller instance
 func NewNetctrler(serverURL, restURL, apisrvURL, vmmURL string, resolver resolver.Interface, logger log.Logger) (*Netctrler, error) {
+	return NewNetctrlerWithDiagFlag(serverURL, restURL, apisrvURL, vmmURL, resolver, logger, false)
+}
 
-	debugStats := debugStats.New(restURL).Build()
+// NewNetctrlerWithDiagFlag returns a controller instance
+func NewNetctrlerWithDiagFlag(serverURL, restURL, apisrvURL, vmmURL string, resolver resolver.Interface, logger log.Logger, enableDiagnostics bool) (*Netctrler, error) {
 
 	// init tsdb client
 	tsdbOpts := &tsdb.Opts{
@@ -66,32 +73,38 @@ func NewNetctrler(serverURL, restURL, apisrvURL, vmmURL string, resolver resolve
 	}
 	tsdb.Init(context.Background(), tsdbOpts)
 
-	// create nimbus server
-	msrv, err := nimbus.NewMbusServer(globals.Npm, serverURL)
+	// create an RPC server
+	rpcServer, err := rpckit.NewRPCServer(globals.Npm, serverURL)
 	if err != nil {
-		log.Fatalf("Could not start RPC server. Err: %v", err)
+		logger.Fatalf("Error creating rpc server. Err; %v", err)
 	}
+	// create nimbus server
+	msrv := nimbus.NewMbusServer(globals.Npm, rpcServer)
 
+	var options []statemgr.Option
+	if enableDiagnostics {
+		options = append(options,
+			statemgr.WithDiagnosticsHandler("Debug", diagapi.DiagnosticsRequest_Log.String(), diagsvc.NewElasticLogsHandler(globals.Npm, utils.GetHostname(), diagapi.ModuleStatus_Venice, resolver, logger)),
+			statemgr.WithDiagnosticsHandler("Debug", diagapi.DiagnosticsRequest_Stats.String(), diagsvc.NewExpVarHandler(globals.Npm, utils.GetHostname(), diagapi.ModuleStatus_Venice, logger)))
+	}
 	// create network state manager
-	stateMgr, err := statemgr.NewStatemgr(apisrvURL, resolver, msrv, logger)
+	stateMgr, err := statemgr.NewStatemgr(rpcServer, apisrvURL, resolver, msrv, logger, options...)
 	if err != nil {
-		log.Errorf("Could not create network manager. Err: %v", err)
+		logger.Errorf("Could not create network manager. Err: %v", err)
 		return nil, err
 	}
 
-	log.Infof("RPC server is running at %v", serverURL)
-
-	// start a REST server for debug endpoints
-	go http.ListenAndServe(restURL, nil)
+	logger.Infof("RPC server is running at %v", serverURL)
 
 	// create the controller instance
 	ctrler := Netctrler{
-		StateMgr:   stateMgr,
-		mserver:    msrv,
-		debugStats: debugStats,
+		StateMgr:  stateMgr,
+		mserver:   msrv,
+		rpcServer: rpcServer,
 	}
 
 	// start the RPC server
+	rpcServer.Start()
 	msrv.Start()
 
 	return &ctrler, nil
@@ -99,6 +112,9 @@ func NewNetctrler(serverURL, restURL, apisrvURL, vmmURL string, resolver resolve
 
 // Stop server and release resources
 func (c *Netctrler) Stop() error {
+	if c.rpcServer != nil {
+		c.rpcServer.Stop()
+	}
 	if c.mserver != nil {
 		c.mserver.Stop()
 	}

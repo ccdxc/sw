@@ -32,8 +32,10 @@ var _ listerwatcher.WatcherClient
 var DiagnosticsRequest_QueryType_normal = map[string]string{
 	"Log":     "Log",
 	"Profile": "Profile",
+	"Stats":   "Stats",
 	"log":     "Log",
 	"profile": "Profile",
+	"stats":   "Stats",
 }
 
 // ModuleSpec_LoggingLevel_normal is a map of normalized values for the enum

@@ -25,7 +25,6 @@ type diagnosticsService struct {
 	node     string
 	category diagapi.ModuleStatus_CategoryType
 	logger   log.Logger
-	rslvr    resolver.Interface
 	stopped  bool
 }
 
@@ -129,14 +128,13 @@ func (d *diagnosticsService) GetCategory() diagapi.ModuleStatus_CategoryType {
 }
 
 // GetDiagnosticsService returns a singleton implementation of debug Service
-func GetDiagnosticsService(module, node string, category diagapi.ModuleStatus_CategoryType, rslvr resolver.Interface, logger log.Logger) diagnostics.Service {
+func GetDiagnosticsService(module, node string, category diagapi.ModuleStatus_CategoryType, logger log.Logger) diagnostics.Service {
 	serviceOnce.Do(func() {
 		gService = &diagnosticsService{
 			handlers: make(map[string]diagnostics.Handler),
 			module:   module,
 			node:     node,
 			category: category,
-			rslvr:    rslvr,
 			logger:   logger,
 			stopped:  true,
 		}
@@ -146,7 +144,7 @@ func GetDiagnosticsService(module, node string, category diagapi.ModuleStatus_Ca
 
 // GetDiagnosticsServiceWithDefaults returns debug Service with log service registered
 func GetDiagnosticsServiceWithDefaults(module, node string, category diagapi.ModuleStatus_CategoryType, rslvr resolver.Interface, logger log.Logger) diagnostics.Service {
-	server := GetDiagnosticsService(module, node, category, rslvr, logger)
+	server := GetDiagnosticsService(module, node, category, logger)
 	if err := server.RegisterHandler("Debug", diagapi.DiagnosticsRequest_Log.String(), NewElasticLogsHandler(module, node, category, rslvr, logger)); err != nil {
 		logger.ErrorLog("method", "GetDiagnosticsServiceWithDefaults", "msg", "failed to register elastic logs handler", "error", err)
 		// TODO throw an event

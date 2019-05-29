@@ -19,13 +19,10 @@ import (
 
 func newStatemgr() (*Statemgr, error) {
 	// create nimbus server
-	msrv, err := nimbus.NewMbusServer("npm-test", "")
-	if err != nil {
-		log.Fatalf("Could not start RPC server. Err: %v", err)
-	}
+	msrv := nimbus.NewMbusServer("npm-test", nil)
 
 	// create network state manager
-	stateMgr, err := NewStatemgr(globals.APIServer, nil, msrv, log.GetNewLogger(log.GetDefaultConfig("npm-test")))
+	stateMgr, err := NewStatemgr(nil, globals.APIServer, nil, msrv, log.GetNewLogger(log.GetDefaultConfig("npm-test")))
 	if err != nil {
 		log.Errorf("Could not create network manager. Err: %v", err)
 		return nil, err

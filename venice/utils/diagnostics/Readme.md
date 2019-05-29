@@ -90,7 +90,30 @@ POST https://{{VeniceServer}}:{{VenicePort}}/configs/diagnostics/v1/modules/node
     }
 }
 ```
-
+### Stats query on module
+You can query "cpustats", "memstats", "cmdline" or any expvars that were added. If action is not specified default is get. If expvar is not specified then all expvars are retrieved.
+Currently only npm supports stats query.  
+**Request**
+```
+POST https://{{VeniceServer}}:{{VenicePort}}/configs/diagnostics/v1/modules/node1-pen-npm/Debug
+     {
+     	"query": "Stats",
+     	"parameters":{
+     		"action": "get",
+     		"expvar": "cpustats"
+     	}
+     }
+```
+**Response**
+```
+{
+    "diagnostics": {
+        "stats": {
+            "cpustats": "{\"NumCPUs\":16,\"NumGoroutines\":170,\"NumCgoCalls\":1}"
+        }
+    }
+}
+```
 ### Integration
 You can register diagnostics service in your grpc server using following example
 ```

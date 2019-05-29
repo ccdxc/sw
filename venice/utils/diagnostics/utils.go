@@ -12,6 +12,7 @@ import (
 // list of supported modules for diagnostics
 var supportedModules = map[string]bool{
 	globals.Spyglass: true,
+	globals.Npm:      true,
 }
 
 // GetLogFilter maps log level in module object to log filter

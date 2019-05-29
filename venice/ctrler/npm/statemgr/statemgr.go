@@ -10,9 +10,11 @@ import (
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/diagnostics"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -41,11 +43,24 @@ type Statemgr struct {
 	periodicUpdaterQueue chan updatable     // queue for periodically writing items back to apiserver
 	ctrler               ctkit.Controller   // controller instance
 	topics               Topics             // message bus topics
+	logger               log.Logger
 }
 
 // ErrIsObjectNotFound returns true if the error is object not found
 func ErrIsObjectNotFound(err error) bool {
 	return (err == memdb.ErrObjectNotFound) || strings.Contains(err.Error(), "not found")
+}
+
+// Option fills the optional params for Statemgr
+type Option func(*Statemgr)
+
+// WithDiagnosticsHandler adds a diagnostics query handler to controller kit
+func WithDiagnosticsHandler(rpcMethod, query string, diagHdlr diagnostics.Handler) Option {
+	return func(sm *Statemgr) {
+		if sm.ctrler != nil {
+			sm.ctrler.RegisterDiagnosticsHandler(rpcMethod, query, diagHdlr)
+		}
+	}
 }
 
 // FindObject looks up an object in local db
@@ -72,93 +87,102 @@ func (sm *Statemgr) Stop() error {
 }
 
 // NewStatemgr creates a new state manager object
-func NewStatemgr(apisrvURL string, rslvr resolver.Interface, mserver *nimbus.MbusServer, logger log.Logger) (*Statemgr, error) {
+func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.Interface, mserver *nimbus.MbusServer, logger log.Logger, options ...Option) (*Statemgr, error) {
 	// create new statemgr instance
 	statemgr := &Statemgr{
-		mbus: mserver,
+		mbus:   mserver,
+		logger: logger,
 	}
 
 	// create controller instance
-	ctrler, err := ctkit.NewController(globals.Npm, apisrvURL, rslvr, logger)
+	ctrler, err := ctkit.NewController(globals.Npm, rpcServer, apisrvURL, rslvr, logger)
 	if err != nil {
-		log.Fatalf("Error creating controller. Err: %v", err)
+		logger.Fatalf("Error creating controller. Err: %v", err)
 	}
 	statemgr.ctrler = ctrler
 
+	for _, o := range options {
+		o(statemgr)
+	}
+
 	// start all object watches
+	err = ctrler.Module().Watch(statemgr)
+	if err != nil {
+		logger.Fatalf("Error watching module object")
+	}
 	err = ctrler.Tenant().Watch(statemgr)
 	if err != nil {
-		log.Fatalf("Error watching sg policy")
+		logger.Fatalf("Error watching sg policy")
 	}
 	err = ctrler.SGPolicy().Watch(statemgr)
 	if err != nil {
-		log.Fatalf("Error watching sg policy")
+		logger.Fatalf("Error watching sg policy")
 	}
 	err = ctrler.SecurityGroup().Watch(statemgr)
 	if err != nil {
-		log.Fatalf("Error watching security group")
+		logger.Fatalf("Error watching security group")
 	}
 	err = ctrler.App().Watch(statemgr)
 	if err != nil {
-		log.Fatalf("Error watching app")
+		logger.Fatalf("Error watching app")
 	}
 	err = ctrler.Network().Watch(statemgr)
 	if err != nil {
-		log.Fatalf("Error watching network")
+		logger.Fatalf("Error watching network")
 	}
 	err = ctrler.FirewallProfile().Watch(statemgr)
 	if err != nil {
-		log.Fatalf("Error watching firewall profile")
+		logger.Fatalf("Error watching firewall profile")
 	}
 	err = ctrler.SmartNIC().Watch(statemgr)
 	if err != nil {
-		log.Fatalf("Error watching smartnic")
+		logger.Fatalf("Error watching smartnic")
 	}
 	err = ctrler.Host().Watch(statemgr)
 	if err != nil {
-		log.Fatalf("Error watching host")
+		logger.Fatalf("Error watching host")
 	}
 	// FIXME: little hack here to get smart nics before workloads
 	// we need to make this timing independent..
 	time.Sleep(time.Second)
 	err = ctrler.Workload().Watch(statemgr)
 	if err != nil {
-		log.Fatalf("Error watching workloads")
+		logger.Fatalf("Error watching workloads")
 	}
 	err = ctrler.Endpoint().Watch(statemgr)
 	if err != nil {
-		log.Fatalf("Error watching endpoint")
+		logger.Fatalf("Error watching endpoint")
 	}
 
 	// create all topics on the message bus
 	statemgr.topics.EndpointTopic, err = nimbus.AddEndpointTopic(mserver, statemgr)
 	if err != nil {
-		log.Errorf("Error starting endpoint RPC server")
+		logger.Errorf("Error starting endpoint RPC server")
 		return nil, err
 	}
 	statemgr.topics.AppTopic, err = nimbus.AddAppTopic(mserver, nil)
 	if err != nil {
-		log.Errorf("Error starting App RPC server")
+		logger.Errorf("Error starting App RPC server")
 		return nil, err
 	}
 	statemgr.topics.SecurityProfileTopic, err = nimbus.AddSecurityProfileTopic(mserver, nil)
 	if err != nil {
-		log.Errorf("Error starting SecurityProfile RPC server")
+		logger.Errorf("Error starting SecurityProfile RPC server")
 		return nil, err
 	}
 	statemgr.topics.SecurityGroupTopic, err = nimbus.AddSecurityGroupTopic(mserver, nil)
 	if err != nil {
-		log.Errorf("Error starting SG RPC server")
+		logger.Errorf("Error starting SG RPC server")
 		return nil, err
 	}
 	statemgr.topics.SGPolicyTopic, err = nimbus.AddSGPolicyTopic(mserver, statemgr)
 	if err != nil {
-		log.Errorf("Error starting SG policy RPC server")
+		logger.Errorf("Error starting SG policy RPC server")
 		return nil, err
 	}
 	statemgr.topics.NetworkTopic, err = nimbus.AddNetworkTopic(mserver, nil)
 	if err != nil {
-		log.Errorf("Error starting network RPC server")
+		logger.Errorf("Error starting network RPC server")
 		return nil, err
 	}
 
