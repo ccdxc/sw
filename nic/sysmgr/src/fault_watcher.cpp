@@ -25,6 +25,7 @@ void FaultLoop::do_work()
     {
         reactor->on_fault(this->fault_reason);
     }
+    this->fault_pending = false;
 }
 
 bool FaultLoop::has_work()

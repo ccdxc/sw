@@ -10,6 +10,7 @@
 
 #include "eventlogger.hpp"
 #include "service_watcher.hpp"
+#include "switchroot_watcher.hpp"
 #include "utils.hpp"
 
 DelphiServicePtr DelphiService::create(delphi::SdkPtr sdk)
@@ -35,9 +36,9 @@ void DelphiService::OnMountComplete()
 {
     logger->debug("Service delphi started");
     ServiceLoop::getInstance()->queue_event(
-	ServiceEvent::create("delphi", SERVICE_EVENT_START));
+        ServiceEvent::create("delphi", SERVICE_EVENT_START));
     EventLogger::getInstance()->LogSystemEvent(
-	eventtypes::SYSTEM_COLDBOOT, "System booted");
+        eventtypes::SYSTEM_COLDBOOT, "System booted");
 }
 
 std::string DelphiService::Name()
@@ -50,7 +51,7 @@ delphi::error DelphiService::OnSysmgrServiceStatusCreate(
 {
     logger->debug("Service {} started", obj->key());
     ServiceLoop::getInstance()->queue_event(
-	ServiceEvent::create(obj->key(), SERVICE_EVENT_START));
+        ServiceEvent::create(obj->key(), SERVICE_EVENT_START));
     return delphi::error::OK();
 }
 
@@ -65,7 +66,7 @@ delphi::error DelphiService::OnSysmgrServiceStatusUpdate(
 {
     logger->debug("Service {} started", obj->key());
     ServiceLoop::getInstance()->queue_event(
-	ServiceEvent::create(obj->key(), SERVICE_EVENT_START));
+        ServiceEvent::create(obj->key(), SERVICE_EVENT_START));
     return delphi::error::OK();
 }
 
@@ -74,7 +75,7 @@ delphi::error DelphiService::OnDelphiClientStatusCreate(
 {
     logger->debug("Service {} heartbeat", obj->key());
     ServiceLoop::getInstance()->queue_event(
-	ServiceEvent::create(obj->key(), SERVICE_EVENT_HEARTBEAT));
+        ServiceEvent::create(obj->key(), SERVICE_EVENT_HEARTBEAT));
     return delphi::error::OK();
 }
 
@@ -89,7 +90,7 @@ delphi::error DelphiService::OnDelphiClientStatusUpdate(
 {
     logger->debug("Service {} heartbeat", obj->key());
     ServiceLoop::getInstance()->queue_event(
-	ServiceEvent::create(obj->key(), SERVICE_EVENT_HEARTBEAT));
+        ServiceEvent::create(obj->key(), SERVICE_EVENT_HEARTBEAT));
     return delphi::error::OK();
 }
 
@@ -98,6 +99,7 @@ delphi::error DelphiService::OnSysmgrShutdownReqCreate(
 {
     logger->info("Switching root");
     switch_root();
+    SwitchrootLoop::getInstance()->set_switchroot();
     return delphi::error::OK();
 }
 
@@ -112,5 +114,6 @@ delphi::error DelphiService::OnSysmgrShutdownReqUpdate(
 {
     logger->info("Switching root");
     switch_root();
+    SwitchrootLoop::getInstance()->set_switchroot();
     return delphi::error::OK();
 }

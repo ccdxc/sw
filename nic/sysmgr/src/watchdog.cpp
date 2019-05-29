@@ -20,6 +20,7 @@ WatchdogPtr Watchdog::create()
     
     wchdg->timer_watcher = TimerWatcher::create(1.0, 1.0, wchdg);
     FaultLoop::getInstance()->register_fault_reactor(wchdg);
+    SwitchrootLoop::getInstance()->register_switchroot_reactor(wchdg);
 
     int rc = pal_watchdog_init(PANIC_WDT);
     logger->info("pal_watchdog_init() rc = {}", rc);
@@ -44,3 +45,15 @@ void Watchdog::on_timer()
     pal_watchdog_kick();
 }
 
+void Watchdog::on_switchroot()
+{
+    logger->debug("Watchdog on_switchroot()");
+    this->stop();
+}
+
+void Watchdog::stop()
+{
+    logger->debug("Watchdgo stop()");
+    this->timer_watcher->stop();
+    pal_watchdog_stop();
+}
