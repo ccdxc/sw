@@ -160,7 +160,7 @@
             "cache": "p4plus-rxdma"
         },
         {
-            "name": "ing_sacl_v4",
+            "name": "sacl_ingress_v4",
             "_comment": "LPM tables:17472 + 17472 + 17472 + 2112 = 54528",
             "_comment": "RFC-C1:round64(2^17 * 64/51) + round64(2^18 * 64/51) + round64(2^20 * 64/46) = round64(164482) + round64(328965) + round64(1458888) = 164544 + 329024 + 1458944 = 1952512",
             "_comment": "RFC-C2:round64(2^17 * 64/51) + round64(2^15 * 64/51) + round64(2^20 * 64/46) = round64(164482) + round64(41120) + round64(1458888) = 164544 + 41152 + 1458944  = 1664640",
@@ -173,7 +173,7 @@
             "cache": "p4plus-all"
         },
         {
-            "name": "egr_sacl_v4",
+            "name": "sacl_egress_v4",
             "_comment": "LPM tables:17472 + 17472 + 17472 + 2112 = 54528",
             "_comment": "RFC-C1:round64(2^17 * 64/51) + round64(2^18 * 64/51) + round64(2^20 * 64/46) = round64(164482) + round64(328965) + round64(1458888) = 164544 + 329024 + 1458944 = 1952512",
             "_comment": "RFC-C2:round64(2^17 * 64/51) + round64(2^15 * 64/51) + round64(2^20 * 64/46) = round64(164482) + round64(41120) + round64(1458888) = 164544 + 41152 + 1458944  = 1664640",
@@ -186,7 +186,7 @@
             "cache": "p4plus-all"
         },
         {
-            "name": "ing_sacl_v6",
+            "name": "sacl_ingress_v6",
             "_comment": "LPM tables:87360 (SIP)+ 87360 (DIP) + 17472 (port+dport) + 2112 (sport) = 194304",
             "_comment": "RFC-C1:(((2^17 + 2^18) * 64)/51) + (2^20 * 64)/46 = round64(493450) + round64(1458890) = 493504 + 1458944 = 1952448",
             "_comment": "RFC-C2:(((2^17 + 2^15) * 64)/51) + (2^20 * 64)/46 = round64(205604) + round64(1458890) = 205632 + 1458944 = 1664576",
@@ -199,7 +199,7 @@
             "cache": "p4plus-all"
         },
         {
-            "name": "egr_sacl_v6",
+            "name": "sacl_egress_v6",
             "_comment": "LPM tables:87360 (SIP)+ 87360 (DIP) + 17472 (port+dport) + 2112 (sport) = 194304",
             "_comment": "RFC-C1:(((2^17 + 2^18) * 64)/51) + (2^20 * 64)/46 = round64(493450) + round64(1458890) = 493504 + 1458944 = 1952448",
             "_comment": "RFC-C2:(((2^17 + 2^15) * 64)/51) + (2^20 * 64)/46 = round64(205604) + round64(1458890) = 205632 + 1458944 = 1664576",

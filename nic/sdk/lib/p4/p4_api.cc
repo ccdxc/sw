@@ -459,3 +459,21 @@ p4pd_table_properties_get (uint32_t tableid, p4pd_table_properties_t *tbl_ctx)
     memcpy(tbl_ctx, _p4tbls + tableid, sizeof(p4pd_table_properties_t));
     return P4PD_SUCCESS;
 }
+
+uint32_t
+p4pd_global_actiondata_appdata_size_get (uint32_t tableid, uint8_t actionid)
+{
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
+        return p4pd_actiondata_appdata_size_get(tableid, actionid);
+    } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
+               (tableid <= p4pd_rxdma_tableid_max_get())) {
+        return p4pd_rxdma_actiondata_appdata_size_get(tableid, actionid);
+    } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
+               (tableid <= p4pd_txdma_tableid_max_get())) {
+        return p4pd_txdma_actiondata_appdata_size_get(tableid, actionid);
+    } else {
+        SDK_ASSERT(0);
+    }
+    return 0;
+}

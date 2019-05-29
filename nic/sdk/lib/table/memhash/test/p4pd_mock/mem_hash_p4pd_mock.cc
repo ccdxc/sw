@@ -312,9 +312,15 @@ p4pd_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
     return 0;
 }
 p4pd_error_t
-p4pd_global_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
+p4pd_global_table_properties_get (uint32_t table_id, void *props)
 {
-    return p4pd_table_properties_get(table_id, props);
+    return p4pd_table_properties_get(table_id, (p4pd_table_properties_t*)props);
+}
+
+uint32_t
+p4pd_global_actiondata_appdata_size_get (uint32_t tableid, uint8_t actionid)
+{
+    return p4pd_actiondata_appdata_size_get(tableid, actionid);
 }
 
 // ===================== NEW FUNCTIONS =======================

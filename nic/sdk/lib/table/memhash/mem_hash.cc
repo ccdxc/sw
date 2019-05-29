@@ -105,7 +105,7 @@ mem_hash::init_(sdk_table_factory_params_t *params) {
     props_->data2str = params->appdata2str;
     props_->entry_trace_en = params->entry_trace_en;
 
-    p4pdret = p4pd_table_properties_get(props_->ptable_id, &tinfo);
+    p4pdret = p4pd_global_table_properties_get(props_->ptable_id, &tinfo);
     SDK_ASSERT_RETURN(p4pdret == P4PD_SUCCESS, SDK_RET_ERR);
 
     props_->name = tinfo.tablename;
@@ -121,7 +121,8 @@ mem_hash::init_(sdk_table_factory_params_t *params) {
     SDK_ASSERT(props_->swdata_len);
     SDK_ASSERT(props_->swdata_len <= SDK_TABLE_MAX_SW_DATA_LEN);
 
-    props_->swappdata_len = p4pd_actiondata_appdata_size_get(props_->ptable_id, 0);
+    props_->swappdata_len =
+            p4pd_global_actiondata_appdata_size_get(props_->ptable_id, 0);
     SDK_ASSERT(props_->swappdata_len && 
                props_->swappdata_len <= SDK_TABLE_MAX_SW_DATA_LEN);
 
@@ -137,7 +138,7 @@ mem_hash::init_(sdk_table_factory_params_t *params) {
     // Assumption: All mem_hash tables will have a HINT table
     SDK_ASSERT(tinfo.has_oflow_table);
 
-    p4pdret = p4pd_table_properties_get(props_->stable_id, &ctinfo);
+    p4pdret = p4pd_global_table_properties_get(props_->stable_id, &ctinfo);
     SDK_ASSERT_RETURN(p4pdret == P4PD_SUCCESS, SDK_RET_ERR);
 
     props_->stable_size = ctinfo.tabledepth;

@@ -4107,11 +4107,11 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
     return (P4PD_SUCCESS);
 }
 
-//::        if genappdatafield_api:
 uint32_t
 ${api_prefix}_actiondata_appdata_size_get(uint32_t   tableid,
                             uint8_t    actionid)
 {
+//::        if genappdatafield_api:
     switch (tableid) {
 //::            for table, tid in tabledict.items():
 //::                if pddict['tables'][table]['appdatafields']:
@@ -4145,7 +4145,7 @@ ${api_prefix}_actiondata_appdata_size_get(uint32_t   tableid,
             return (P4PD_FAIL);
         break;
     }
-
+//::        #endif
     assert(0);
     return 0;
 }
@@ -4156,6 +4156,7 @@ ${api_prefix}_actiondata_appdata_set(uint32_t   tableid,
                             void       *appdata,
                             void       *actiondata)
 {
+//::        if genappdatafield_api:
     switch (tableid) {
 //::            for table, tid in tabledict.items():
 //::                if pddict['tables'][table]['appdatafields']:
@@ -4192,6 +4193,10 @@ ${api_prefix}_actiondata_appdata_set(uint32_t   tableid,
         break;
     }
     return (P4PD_SUCCESS);
+//::        else:
+    assert(0);
+    return (P4PD_FAIL);
+//::        #endif
 }
 
 p4pd_error_t
@@ -4200,6 +4205,7 @@ ${api_prefix}_actiondata_appdata_get(uint32_t   tableid,
                             void       *appdata,
                             void       *actiondata)
 {
+//::        if genappdatafield_api:
     switch (tableid) {
 //::            for table, tid in tabledict.items():
 //::                if pddict['tables'][table]['appdatafields']:
@@ -4236,9 +4242,11 @@ ${api_prefix}_actiondata_appdata_get(uint32_t   tableid,
         break;
     }
     return (P4PD_SUCCESS);
-}
-
+//::        else:
+    assert(0);
+    return (P4PD_FAIL);
 //::        #endif
+}
 
 //::        if genhwfields_actiondata_api:
 uint32_t

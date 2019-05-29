@@ -795,6 +795,9 @@ p4pd_global_table_ds_decoded_string_get(uint32_t   tableid,
 p4pd_error_t
 p4pd_global_table_properties_get(uint32_t tableid, void *tbl_ctx);
 
+uint32_t
+p4pd_global_actiondata_appdata_size_get(uint32_t tableid, uint8_t actionid);
+
 /*
  * Functions to read/modify Mem Hash entries.
  */
@@ -827,6 +830,12 @@ p4pd_actiondata_appdata_set(uint32_t   tableid,
 uint32_t
 p4pd_actiondata_appdata_size_get(uint32_t   tableid,
                                  uint8_t    actionid);
+uint32_t
+p4pd_txdma_actiondata_appdata_size_get(uint32_t tableid,
+                                       uint8_t  actionid);
+uint32_t
+p4pd_rxdma_actiondata_appdata_size_get(uint32_t tableid,
+                                       uint8_t  actionid);
 void
 p4pd_hbm_table_address_set(uint32_t tableid, mem_addr_t pa, mem_addr_t va);
 
