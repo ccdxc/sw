@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -60,6 +61,11 @@ type elasticLogRetriever struct {
 }
 
 func (f *elasticLogRetriever) HandleRequest(ctx context.Context, req *diagapi.DiagnosticsRequest) (*api.Any, error) {
+	defer f.RUnlock()
+	f.RLock()
+	if f.stopped || f.elasticClient == nil {
+		return nil, errors.New("elastic log retriever not initialized")
+	}
 	query := es.NewBoolQuery().QueryName("LogQuery")
 	query = query.Must(es.NewTermQuery("fields.category", strings.ToLower(f.category.String())),
 		es.NewTermQuery("module", f.module),

@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pensando/sw/api/generated/apiclient"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -196,6 +198,63 @@ var _ = Describe("diagnostics tests", func() {
 				}
 				return nil
 			}, 30, 1).Should(BeNil())
+		})
+	})
+	Context("apigw logs", func() {
+		var modObj *diagnostics.Module
+		var restSvc apiclient.Services
+		var node string
+		BeforeEach(func() {
+			var err error
+			Eventually(func() error {
+				node = ts.tu.GetNodeForService(globals.APIGw)
+				restSvc, err = apiclient.NewRestAPIClient(node)
+				if err != nil {
+					return err
+				}
+				modObj, err = ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.APIGw)})
+				return err
+			}, 10, 1).Should(BeNil())
+		})
+		It("check log query", func() {
+			modObj.Spec.LogLevel = diagnostics.ModuleSpec_Debug.String()
+			var updatedModObj *diagnostics.Module
+			var err error
+			Eventually(func() error {
+				updatedModObj, err = ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, modObj)
+				return err
+			}, 10, 1).Should(BeNil())
+			Expect(modObj.Spec.LogLevel).Should(Equal(diagnostics.ModuleSpec_Debug.String()))
+			Eventually(func() error {
+				// create debug logs by sending a request to APIGw on a particular node
+				if _, err := restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, modObj.GetObjectMeta()); err != nil {
+					return err
+				}
+				// query logs through Debug action
+				type debugResponse struct {
+					Diagnostics map[string]interface{} `json:"diagnostics"`
+				}
+				resp := debugResponse{}
+				var respStr string
+				if respStr, err = ts.tu.DebugOnAPIGw(ts.loggedInCtx, node, &diagnostics.DiagnosticsRequest{
+					ObjectMeta: api.ObjectMeta{Name: updatedModObj.Name},
+					Query:      diagnostics.DiagnosticsRequest_Log.String(),
+				}, &resp); err != nil {
+					return err
+				}
+				if !strings.Contains(respStr, "\"level\":\"debug\"") &&
+					!strings.Contains(respStr, "\"level\":\"info\"") &&
+					!strings.Contains(respStr, "\"level\":\"error\"") {
+					return fmt.Errorf("no logs returned: {%v}", respStr)
+				}
+				return nil
+			}, 30, 1).Should(BeNil())
+			// restore info log level
+			Eventually(func() error {
+				updatedModObj.Spec.LogLevel = diagnostics.ModuleSpec_Info.String()
+				modObj, err = ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, updatedModObj)
+				return err
+			}, 10, 1).Should(BeNil())
 		})
 	})
 })

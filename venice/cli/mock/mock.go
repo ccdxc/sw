@@ -20,6 +20,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
 	"github.com/pensando/sw/venice/utils/authn/testutils"
+	diagmock "github.com/pensando/sw/venice/utils/diagnostics/mock"
 	esmock "github.com/pensando/sw/venice/utils/elastic/mock/server"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
@@ -153,7 +154,9 @@ func Start() *Info {
 			"audit",
 			"objstore",
 		},
-		Auditor: auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), logger)),
+		Auditor:            auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), logger)),
+		ModuleWatcher:      diagmock.GetModuleWatcher(),
+		DiagnosticsService: diagmock.GetDiagnosticsService(),
 	}
 	tinfo.apigwsvc = apigwpkg.MustGetAPIGateway()
 	go tinfo.apigwsvc.Run(gwconfig)

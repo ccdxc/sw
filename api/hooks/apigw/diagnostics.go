@@ -23,6 +23,7 @@ type diagnosticsHooks struct {
 	logger       log.Logger
 	moduleGetter module.Getter
 	clientGetter diagnostics.ClientGetter // to support unit testing
+	diagSvc      diagnostics.Service
 }
 
 // DebugPreCallHook implements Debug action for module object
@@ -57,7 +58,7 @@ func (d *diagnosticsHooks) DebugPreCallHook(ctx context.Context, in interface{})
 	}
 	clGetter := d.clientGetter
 	if clGetter == nil { // will be not nil for unit testing. will set a mock
-		clGetter = diagnostics.GetClientGetter(globals.APIGw, svcURL, modObj.Status.Module)
+		clGetter = diagnostics.GetClientGetter(globals.APIGw, svcURL, modObj.Status.Module, d.diagSvc)
 	}
 	diagCl, err := clGetter.GetClient()
 	if err != nil {
@@ -66,6 +67,7 @@ func (d *diagnosticsHooks) DebugPreCallHook(ctx context.Context, in interface{})
 	}
 	defer diagCl.Close()
 	resp, err := diagCl.Debug(ctx, &diagapi.DiagnosticsRequest{
+		ObjectMeta: modObj.ObjectMeta,
 		Query:      obj.Query,
 		Parameters: obj.Parameters,
 	})
@@ -92,6 +94,7 @@ func registerDiagnosticsHooks(svc apigw.APIGatewayService, l log.Logger) error {
 		logger:    l,
 		rslvr:     gw.GetResolver(),
 		b:         balancer.New(gw.GetResolver()),
+		diagSvc:   gw.GetDiagnosticsService(),
 	}
 	d.moduleGetter = module.NewGetter(d.apiServer, d.rslvr, d.b, d.logger)
 	return d.registerDebugPreCallHook(svc)

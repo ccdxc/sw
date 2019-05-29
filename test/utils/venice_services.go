@@ -154,16 +154,18 @@ func StartAPIGatewayWithAuditor(serverAddr string, skipAuth bool, backends map[s
 
 	// Start the API Gateway
 	gwConfig := apigw.Config{
-		HTTPAddr:        serverAddr,
-		DebugMode:       true,
-		Logger:          l,
-		BackendOverride: backends,
-		Resolvers:       resolvers,
-		SkipAuth:        skipAuth,
-		SkipAuthz:       skipAuth,
-		SkipBackends:    skipServices,
-		Auditor:         auditor,
-		Resolver:        rslver,
+		HTTPAddr:           serverAddr,
+		DebugMode:          true,
+		Logger:             l,
+		BackendOverride:    backends,
+		Resolvers:          resolvers,
+		SkipAuth:           skipAuth,
+		SkipAuthz:          skipAuth,
+		SkipBackends:       skipServices,
+		Auditor:            auditor,
+		Resolver:           rslver,
+		ModuleWatcher:      diagmock.GetModuleWatcher(),
+		DiagnosticsService: diagmock.GetDiagnosticsService(),
 	}
 	// skip services
 	gwConfig.SkipBackends = append(gwConfig.SkipBackends, skipServices...)

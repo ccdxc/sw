@@ -592,7 +592,12 @@ func (tu *TestUtils) Search(ctx context.Context, query *search.SearchRequest, re
 
 // Debug performs a Debug  action to fetch debug logs, profile etc.
 func (tu *TestUtils) Debug(ctx context.Context, req *diagnostics.DiagnosticsRequest, resp interface{}) (string, error) {
-	debugURL := fmt.Sprintf("https://%s/configs/diagnostics/v1/modules/%s/Debug", tu.APIGwAddr, req.Name)
+	return tu.DebugOnAPIGw(ctx, tu.APIGwAddr, req, resp)
+}
+
+// DebugOnAPIGw performs a Debug action to fetch debug logs, profile etc on an API Gateway on a specific node
+func (tu *TestUtils) DebugOnAPIGw(ctx context.Context, apiGwAddr string, req *diagnostics.DiagnosticsRequest, resp interface{}) (string, error) {
+	debugURL := fmt.Sprintf("https://%s/configs/diagnostics/v1/modules/%s/Debug", apiGwAddr, req.Name)
 	restcl := netutils.NewHTTPClient()
 	restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 	// get authz header

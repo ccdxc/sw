@@ -11,6 +11,8 @@ import (
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/audit"
 	"github.com/pensando/sw/venice/utils/authz"
+	"github.com/pensando/sw/venice/utils/diagnostics"
+	"github.com/pensando/sw/venice/utils/diagnostics/module"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -57,6 +59,8 @@ type APIGateway interface {
 	GetAuditor() audit.Auditor
 	// GetAuthorizer gets the configured authorizer
 	GetAuthorizer() authz.Authorizer
+	// GetDiagnosticsService  gets the diagnostics service
+	GetDiagnosticsService() diagnostics.Service
 }
 
 // Config is all config used to start the API Gateway
@@ -85,6 +89,10 @@ type Config struct {
 	SkipAudit bool
 	// Resolver if set will be used instead of creating one. Used for tests only.
 	Resolver resolver.Interface
+	// ModuleWatcher if set will be used instead of default. Used for tests only.
+	ModuleWatcher module.Watcher
+	// DiagnosticsService if set will be used instead of default. Used for tests only.
+	DiagnosticsService diagnostics.Service
 }
 
 // Hooks definitions

@@ -24,6 +24,7 @@ import (
 	"github.com/pensando/sw/venice/spyglass/finder"
 	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
 	"github.com/pensando/sw/venice/utils/authn/testutils"
+	diagmock "github.com/pensando/sw/venice/utils/diagnostics/mock"
 	"github.com/pensando/sw/venice/utils/elastic"
 	esmock "github.com/pensando/sw/venice/utils/elastic/mock/server"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -194,7 +195,9 @@ func TestMain(m *testing.M) {
 			"telemetry_query",
 			"objstore",
 		},
-		Auditor: auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), l)),
+		Auditor:            auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), l)),
+		ModuleWatcher:      diagmock.GetModuleWatcher(),
+		DiagnosticsService: diagmock.GetDiagnosticsService(),
 	}
 	gw := apigwpkg.MustGetAPIGateway()
 	go gw.Run(tinfo.gwConfig)

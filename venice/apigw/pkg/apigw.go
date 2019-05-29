@@ -52,6 +52,7 @@ import (
 	"github.com/pensando/sw/venice/utils/bootstrapper"
 	"github.com/pensando/sw/venice/utils/diagnostics"
 	"github.com/pensando/sw/venice/utils/diagnostics/module"
+	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
 	vErrors "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/gzipserver"
@@ -87,6 +88,7 @@ type apiGw struct {
 	auditor         audit.Auditor
 	keypair         cert.KeyPair
 	moduleWatcher   module.Watcher
+	diagSvc         diagnostics.Service
 }
 
 // Singleton API Gateway Object with init gaurded by the Once.
@@ -352,6 +354,8 @@ func (a *apiGw) Run(config apigw.Config) {
 
 	a.auditor = config.Auditor
 	a.rslver = config.Resolver
+	a.moduleWatcher = config.ModuleWatcher
+	a.diagSvc = config.DiagnosticsService
 	// Http Connection
 	m := http.NewServeMux()
 
@@ -437,7 +441,12 @@ Loop:
 	}
 	a.logger.Infof("cleaned up DoneCh")
 
-	a.moduleWatcher = module.GetWatcher(fmt.Sprintf("%s-%s", utils.GetHostname(), globals.APIGw), grpcaddr, a.rslver, a.logger, a.moduleChangeCb)
+	if a.moduleWatcher == nil {
+		a.moduleWatcher = module.GetWatcher(fmt.Sprintf("%s-%s", utils.GetHostname(), globals.APIGw), grpcaddr, a.rslver, a.logger, a.moduleChangeCb)
+	}
+	if a.diagSvc == nil {
+		a.diagSvc = diagsvc.GetDiagnosticsServiceWithDefaults(globals.APIGw, utils.GetHostname(), diagapi.ModuleStatus_Venice, a.rslver, a.logger)
+	}
 	a.authGetter = authnmgr.GetAuthGetter(globals.APIGw, grpcaddr, a.rslver, a.logger)
 	a.permGetter = rbac.GetPermissionGetter(globals.APIGw, grpcaddr, a.rslver)
 	// create authentication manager
@@ -527,6 +536,7 @@ func (a *apiGw) Stop() {
 	a.auditor.Shutdown()
 	a.keypair.Stop()
 	a.moduleWatcher.Stop()
+	a.diagSvc.Stop()
 	if !a.sharedResolver && a.rslver != nil {
 		a.rslver.Stop()
 	}
@@ -575,6 +585,10 @@ func (a *apiGw) GetAuditor() audit.Auditor {
 
 func (a *apiGw) GetAuthorizer() authz.Authorizer {
 	return a.authzMgr
+}
+
+func (a *apiGw) GetDiagnosticsService() diagnostics.Service {
+	return a.diagSvc
 }
 
 // GetDevMode returns true if running in dev mode

@@ -39,6 +39,7 @@ import (
 	authnmgr "github.com/pensando/sw/venice/utils/authn/manager"
 	"github.com/pensando/sw/venice/utils/authz"
 	authzmgr "github.com/pensando/sw/venice/utils/authz/manager"
+	diagmock "github.com/pensando/sw/venice/utils/diagnostics/mock"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/log"
@@ -339,11 +340,13 @@ func TestRunApiGw(t *testing.T) {
 	logConfig := log.GetDefaultConfig("TestApiGw")
 	l := log.GetNewLogger(logConfig).SetOutput(buf)
 	config := apigw.Config{
-		HTTPAddr:  ":0",
-		DebugMode: true,
-		Logger:    l,
-		Resolvers: []string{""},
-		Auditor:   auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), l)),
+		HTTPAddr:           ":0",
+		DebugMode:          true,
+		Logger:             l,
+		Resolvers:          []string{""},
+		Auditor:            auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), l)),
+		ModuleWatcher:      diagmock.GetModuleWatcher(),
+		DiagnosticsService: diagmock.GetDiagnosticsService(),
 	}
 	_ = MustGetAPIGateway()
 	a := singletonAPIGw
