@@ -188,28 +188,28 @@ testcases:
         args    :
             type: local_only
 
-    -   name    : ADD_SG_POLICY
-        testcase: testcases.alg.add_config
+    #-   name    : ADD_SG_POLICY
+    #    testcase: testcases.alg.add_config
 
-    -   name    : MSRPC_MULTIPLE_BIND
-        testcase: testcases.alg.msrpc.msrpc_multiple_bind
-        args    :
-            type: local_only
+    #-   name    : MSRPC_MULTIPLE_BIND
+    #    testcase: testcases.alg.msrpc.msrpc_multiple_bind
+    #    args    :
+    #        type: local_only
 
-    -   name    : MSRPC_DIFFERENT_SIP
-        testcase: testcases.alg.msrpc.msrpc_different_sip
-        args    :
-            type: local_only
+    #-   name    : MSRPC_DIFFERENT_SIP
+    #    testcase: testcases.alg.msrpc.msrpc_different_sip
+    #    args    :
+    #        type: local_only
 
-    -   name    : MSRPC_DIFFERENT_APP
-        testcase: testcases.alg.msrpc.msrpc_test_different_app
-        args    :
-            type: local_only
+    #-   name    : MSRPC_DIFFERENT_APP
+    #    testcase: testcases.alg.msrpc.msrpc_test_different_app
+    #    args    :
+    #        type: local_only
 
-    -   name    : MSRPC_TEST_CONTROL_CLEAR
-        testcase: testcases.alg.msrpc.msrpc_test_control_session_clear
-        args    :
-            type: local_only
+    #-   name    : MSRPC_TEST_CONTROL_CLEAR
+    #    testcase: testcases.alg.msrpc.msrpc_test_control_session_clear
+    #    args    :
+    #        type: local_only
 
     #-   name    : MSRPC_TEST_CONTROL_CLOSE
     #    testcase: testcases.alg.msrpc.msrpc_test_control_session_close
