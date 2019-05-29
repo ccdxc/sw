@@ -6,12 +6,25 @@ import { MaterialModule } from '../../../material.module';
 import { PrimengModule } from '../../../primeng.module';
 import { ValueType } from './index';
 import { RepeaterComponent } from './repeater.component';
+import {DebugElement} from '@angular/core';
+
+function sendClick(elem: DebugElement, fixture: ComponentFixture<RepeaterComponent>) {
+  const elemNative = elem.nativeElement;
+  elemNative.click();
+  fixture.detectChanges();
+  return fixture.whenStable();
+}
+function sendBlur(elem: DebugElement, fixture: ComponentFixture<RepeaterComponent>) {
+  const elemNative = elem.nativeElement;
+  elemNative.dispatchEvent(new Event('blur'));
+  fixture.detectChanges();
+  return fixture.whenStable();
+}
 
 
 describe('RepeaterComponent', () => {
   let component: RepeaterComponent;
   let fixture: ComponentFixture<RepeaterComponent>;
-
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [RepeaterComponent],
@@ -378,4 +391,46 @@ it('should load form group data and set correct values-2', () => {
     expect(() => { component.ngOnInit(); }).toThrowError('value is not part of the known values supplied');
   });
 
+  it('should have onblur function working', () => {
+    component.keyFormName = 'keyControl';
+    component.operatorFormName = 'operatorControl';
+    component.valueFormName = 'valueControl';
+    component.formArray = new FormArray([
+      new FormGroup(
+        {
+          keyControl: new FormControl('name'),
+          operatorControl: new FormControl('is not'),
+          valueControl: new FormControl('testing')
+        }
+      ),
+      new FormGroup(
+        {
+          keyControl: new FormControl('severity'),
+          operatorControl: new FormControl('is'),
+          valueControl: new FormControl('critical')
+        }
+      )
+    ]);
+    component.customKeyOnBlur = ($event) => {
+      console.log('hello');
+    };
+    component.customValueOnBlur = ($event) => {
+      console.log('world');
+    };
+
+    spyOn(component, 'customValueOnBlur');
+
+
+    fixture.detectChanges();
+    const keyInputs = fixture.debugElement.queryAll(By.css('.repeater-input-key'));
+    const valueInputs = fixture.debugElement.queryAll(By.css('.repeater-input-value'));
+    expect(valueInputs.length).toBe(1);
+    expect(keyInputs.length).toBe(0);
+
+    sendClick(valueInputs[0], fixture);
+    sendBlur(valueInputs[0], fixture);
+    fixture.detectChanges();
+
+    expect(component.customValueOnBlur).toHaveBeenCalled();
+  });
 });

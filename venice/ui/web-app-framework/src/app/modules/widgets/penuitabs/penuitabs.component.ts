@@ -3,11 +3,11 @@ import { PenuitabComponent } from './penuitab/penuitab.component';
 
 /**
  * Tab group component that uses Material design tabs
- * Since disabling tab switching while the user is 
+ * Since disabling tab switching while the user is
  * editing data is a common pattern, we put all this logic into
  * a custom tab component.
- * 
- * This component uses penuitab component as a way to 
+ *
+ * This component uses penuitab component as a way to
  * detect tabs and their label metadata (title/count)
  * The penuitab then looks for an ng-template in its immediate children
  * which it will pass to penuitabs to plug in into the tab's body.
@@ -50,7 +50,7 @@ export class PenuitabsComponent implements OnInit, OnDestroy, AfterContentInit {
       this.startingIndex = 0;
     }
     if (typeof (this.startingIndex) !== 'number') {
-      throw new Error("staringIndex must be a number");
+      throw new Error('staringIndex must be a number');
     }
     this.selectedIndex = this.startingIndex;
   }
@@ -80,14 +80,14 @@ export class PenuitabsComponent implements OnInit, OnDestroy, AfterContentInit {
           if (content.editMode) {
             const subscription = content.editMode.subscribe((val: boolean) => {
               this.toggleTabsActive(val);
-            })
+            });
             this.subscriptions.push(subscription);
           }
-        })
+        });
         this.updateIsActiveTab();
-      })
+      });
       this.subscriptions.push(tabSubscription);
-    })
+    });
   }
 
   /**
@@ -123,9 +123,9 @@ export class PenuitabsComponent implements OnInit, OnDestroy, AfterContentInit {
             previousValue: prevVal,
             currentValue: newVal,
             firstChange: false,
-            isFirstChange: () => { return false; }
+            isFirstChange: () => false
           }
-        }
+        };
         if (content.ngOnChanges != null) {
           content.ngOnChanges(changes);
         }

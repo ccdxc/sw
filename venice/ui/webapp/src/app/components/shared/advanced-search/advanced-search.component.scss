@@ -1,0 +1,39 @@
+@import 'src/global-mixins';
+
+.advanced-search-bar {
+  padding: 10px;
+}
+
+.advanced-search-bar-input {
+  min-width: 300px
+}
+
+.advanced-search-bar-button {
+  height: 41px;
+}
+
+.advanced-search-bar-button-toggle.advanced-search-bar-button {
+  background-color: rgba(0, 0, 0, 0) !important;
+  color: black !important;
+}
+
+.advanced-search-bar-button-cancel.advanced-search-bar-button {
+  background-color: #bebebe !important;
+}
+
+.advanced-search-bar-button .fa {
+  padding-top: 10px;
+}
+
+.advanced-search-expansion {
+  @include primary-font(16px);
+  margin-bottom: 10px;
+}
+
+.advanced-search-general-search {
+  margin: 5px;
+}
+
+.advanced-search-expansion-span-label {
+  padding: 5px;
+}

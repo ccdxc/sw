@@ -17,6 +17,8 @@ export interface TableCol {
   class?: string;
   width: number;
   exportable?: boolean;
+  disableSearch?: boolean;
+  kind?: string;
 }
 
 export interface RowClickEvent {

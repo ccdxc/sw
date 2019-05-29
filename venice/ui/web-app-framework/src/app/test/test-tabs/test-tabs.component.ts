@@ -8,7 +8,7 @@ import { TabcontentComponent } from '@modules/widgets/penuitabs/tabcontent/tabco
   template: `<div class="tab-text">{{text}}</div> <p-button class="edit-button" label="toggleEdit" (onClick)="toggleEdit()"></p-button><p-button label="console log is active tab" (onClick)="activeTab()"></p-button>`,
 })
 export class SampleTabComponent extends TabcontentComponent implements OnChanges {
-  @Input() text: string = 'default text";'
+  @Input() text: string = 'default text";';
   inEdit: boolean = false;
 
   toggleEdit() {
@@ -20,7 +20,7 @@ export class SampleTabComponent extends TabcontentComponent implements OnChanges
   }
 
   ngOnChanges(changes) {
-    console.log('changes active tab', changes)
+    console.log('changes active tab', changes);
   }
 }
 

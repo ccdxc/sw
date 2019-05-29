@@ -32,6 +32,13 @@ export class TestRepeaterComponent implements OnInit {
     ])
   });
 
+  customKeyOnBlur = ($event) => {
+    console.log('hello');
+  };
+  customValueOnBlur = ($event) => {
+    console.log('world');
+  };
+
   @ViewChild('repeater2') repeater2: RepeaterComponent;
 
   constructor() { }

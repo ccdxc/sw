@@ -57,11 +57,11 @@ class TestWrapperComponent {
 
 @Component({
   selector: 'app-test-sampletab',
-  template: `<div class="tab-text">{{text}}</div> 
+  template: `<div class="tab-text">{{text}}</div>
             <p-button class="edit-button" label="toggleEdit" (onClick)="toggleEdit()">`,
 })
 export class SampleTabComponent extends TabcontentComponent implements OnChanges {
-  @Input() text: string = 'default text";'
+  @Input() text: string = 'default text';
   inEdit: boolean = false;
 
   toggleEdit() {
@@ -103,7 +103,7 @@ describe('PenuitabsComponent', () => {
     // waiting for the templates to render
     fixture.whenRenderingDone().then(() => {
       // after templates render, need a second
-      // detect changes to trigger the contentChildren 
+      // detect changes to trigger the contentChildren
       // of penuitab to be picked up (#tabContent)
       fixture.detectChanges();
 
@@ -119,8 +119,8 @@ describe('PenuitabsComponent', () => {
           expect(content.editMode.observers.length).toBe(1);
           // The first tab should be selected by default
           expect(content.isActiveTab).toBe(i === 0);
-        })
-      })
+        });
+      });
       // Test active tabs and the simple changes are done correctly
       // Check that the ngOnChanges is triggered
       const spy0 = spyOn(component.tabItems.toArray()[0].content.first, 'ngOnChanges');
@@ -131,7 +131,7 @@ describe('PenuitabsComponent', () => {
       component.tabItems.forEach((tab, i) => {
         tab.content.forEach((content) => {
           expect(content.isActiveTab).toBe(i === 1);
-        })
+        });
       });
 
       expect(spy0).toHaveBeenCalled();
@@ -166,7 +166,7 @@ describe('PenuitabsComponent', () => {
     // waiting for the templates to render
     fixture.whenRenderingDone().then(() => {
       // after templates render, need a second
-      // detect changes to trigger the contentChildren 
+      // detect changes to trigger the contentChildren
       // of penuitab to be picked up (#tabContent)
       fixture.detectChanges();
       // There should be 3 tabs, last tab is active
@@ -183,13 +183,13 @@ describe('PenuitabsComponent', () => {
       expect(label.children[2].nativeElement.textContent).toBe('0');
 
       // Checking the displayed content of the tab
-      let tabBodies = fixture.debugElement.queryAll(By.css('.mat-tab-body-active'));
+      const tabBodies = fixture.debugElement.queryAll(By.css('.mat-tab-body-active'));
       expect(tabBodies.length).toBe(1);
       expect(tabBodies[0].queryAll(By.css('.tab-text'))[0].nativeElement.textContent).toBe('tab 3-1');
       expect(tabBodies[0].queryAll(By.css('.tab-text'))[1].nativeElement.textContent).toBe('tab 3-2');
 
       // Check that the badge and text updates
-      component.tabItems.last.title = "NEW TAB 3";
+      component.tabItems.last.title = 'NEW TAB 3';
       component.tabItems.last.count = 4;
       fixture.detectChanges();
 
@@ -221,12 +221,12 @@ describe('PenuitabsComponent', () => {
       expect(spy0).toHaveBeenCalledTimes(1);
       expect(spy0).toHaveBeenCalledWith(1);
       activeTab = fixture.debugElement.queryAll(By.css('.mat-tab-label-active'));
-      label = activeTab[0].children[0].children[0]
+      label = activeTab[0].children[0].children[0];
       expect(label.children[0].nativeElement.textContent).toBe('TAB 2');
       expect(label.children[2].nativeElement.textContent).toBe('0');
 
     });
-  })
+  });
 
   it('should reject if no penuitab is given', () => {
     fixture.detectChanges();
@@ -234,6 +234,6 @@ describe('PenuitabsComponent', () => {
       component.tabItems = undefined;
       expect(() => component.ngAfterContentInit())
         .toThrowError('No Penuitab components were given');
-    })
-  })
+    });
+  });
 });

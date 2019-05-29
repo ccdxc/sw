@@ -56,7 +56,7 @@ export class TestUniqueRepeaterComponent implements OnInit {
         ],
         valueType: ValueType.inputField
       },
-    ]
+    ];
   }
 
   handleRepeaterData(values) {

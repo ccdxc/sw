@@ -1,7 +1,19 @@
-import { SearchInputTypeValue, SearchSpec, SearchExpression, SearchModelField } from '@app/components/search';
-import { Utility } from '@app/common/Utility';
-import { CategoryMapping } from '@sdk/v1/models/generated/category-mapping.model';
-import { SearchSuggestion, CompileSearchInputStringResult, SearchGrammarItem, SearchsuggestionTypes, SearchInputErrors, ExamineCategoryOrKindResult, GuidedSearchCriteria } from './';
+import {SearchExpression, SearchInputTypeValue, SearchModelField, SearchSpec} from '@app/components/search';
+import {Utility} from '@app/common/Utility';
+import {CategoryMapping} from '@sdk/v1/models/generated/category-mapping.model';
+import {
+  CompileSearchInputStringResult,
+  ExamineCategoryOrKindResult,
+  GuidedSearchCriteria,
+  SearchGrammarItem,
+  SearchInputErrors,
+  SearchSuggestion,
+  SearchsuggestionTypes
+} from './';
+import {TableCol} from '@components/shared/tableviewedit/tableviewedit.component';
+import {RepeaterData, RepeaterItem, ValueType} from 'web-app-framework';
+import {AdvancedSearchExpression} from '@components/shared/advanced-search';
+import {AdvancedSearchComponent} from '@components/shared/advanced-search/advanced-search.component';
 
 export class SearchUtil {
   public static LAST_SEARCH_DATA = 'last_search_data';
@@ -24,6 +36,23 @@ export class SearchUtil {
 
   public static SPECIAL_EVENT_KINDS = ['Event', 'AuditEvent'];
 
+  // This is a helper map to find the keyword for advancedSearchParser
+  // and taking action on detected keyword with it's own processFunc
+  public static advancedSearchKeywordMap: {
+    field: {
+      processFunc: (input: string) => AdvancedSearchExpression;
+    }
+  } = {
+    field: {
+      processFunc: (input: string): AdvancedSearchExpression => {
+        const endIdx = input.indexOf(';');
+        const first = input.substr(0, endIdx).trim(), last = input.substr(endIdx + 1).trim();
+        const exp = SearchUtil.parseToExpressionAdvancedSearch(first.split(':')[1]);
+        return {searchExpressions: [exp], generalSearch: [], remainingString: last};
+      }
+    }
+  };
+
   // For the backend, equal expects only one value, while in can support multiple
   // The UI hides this distinction and shows equal, but allows user to select multiple if they wish to.
   public static stringOperators = [
@@ -32,8 +61,8 @@ export class SearchUtil {
   ];
 
   public static numberOperators = [
-    { label: '=', value: 'equals' },
-    { label: '!=', value: 'not equals' },
+    { label: '=', value: 'in' },
+    { label: '!=', value: 'notIn' },
     { label: '>', value: 'gt' },
     { label: '>=', value: 'gte' },
     { label: '<', value: 'lt' },
@@ -694,7 +723,7 @@ export class SearchUtil {
     }
     if (isField) {
       if (inputString.startsWith(SearchUtil.SEARCHFIELD_META) ||
-        inputString.startsWith(SearchUtil.SEARCHFIELD_STATUS) ||
+        inputString.startsWith(SearchUtil.SEARCHFIELD_SPEC) ||
         inputString.startsWith(SearchUtil.SEARCHFIELD_STATUS) ||
         isEvent) {
         return inputString;
@@ -803,4 +832,150 @@ export class SearchUtil {
     }
     return output;
   }
+
+  // Specifying a kind in the tableCol data takes precedence, but if its null it defaults to the kind passed into the function.
+  public static tableColsToRepeaterData(cols: TableCol[], kind?: string): RepeaterData[] {
+    const res: RepeaterData[] = [];
+
+    cols.forEach(ele => {
+      // if user dont allow search, we dont build it in the RepeaterData aray
+      if (ele.disableSearch) {
+        return;
+      }
+
+      let kindTemp: string;
+      if (ele.kind) {
+        kindTemp = ele.kind;
+      } else if (kind) {
+        kindTemp = kind;
+      } else {
+        // if both kind in col and kind from param is not given, skip
+        return;
+      }
+
+      // dynamic detect op
+      const op = SearchUtil.getOperators(kindTemp, ele.field.split('.'));
+
+      res.push({
+        key: {label: ele.header, value: ele.header},
+        operators: op,
+        valueType: ValueType.inputField
+      });
+    });
+    return res;
+  }
+
+  public static  parseToExpressionAdvancedSearch(inputString: string): SearchExpression {
+    const operators = SearchUtil.SEARCH_FIELD_OPERATORS;
+    const searchExpression: SearchExpression = { key: null, operator: null, values: null };
+    for (let i = 0; i < operators.length; i++) {
+      const op = operators[i];
+      if (inputString.indexOf(op.operator) >= 0) {
+        const strs = inputString.split(op.operator);
+        searchExpression.key = strs[0];
+        searchExpression.operator = op.searchoperator;
+        searchExpression.values = [strs[1].trim()];
+      }
+    }
+    return (searchExpression.key) ? searchExpression : null;
+  }
+
+
+  // This is for custom syntax compiling in advanced search component
+  // TODO: support case detection for all lower case
+  public static advancedSearchCompiler(fieldInputs: any[], generalSearch: string): string {
+    const list = [];
+    fieldInputs.forEach((repeaterValueItem) => {
+      if (!Utility.isEmpty(repeaterValueItem.keyFormControl) && !Utility.isEmpty(repeaterValueItem.operatorFormControl) && !Utility.isEmpty(repeaterValueItem.valueFormControl)) {
+        const str = repeaterValueItem.keyFormControl + SearchUtil.convertSearchSpecOperator(repeaterValueItem.operatorFormControl) + repeaterValueItem.valueFormControl;
+        list.push(`field:${str};`);
+      }
+    });
+    // token and value
+    const fields = (list.length > 0) ? list.join(' ') : '';
+    const texts = (generalSearch) ? generalSearch : '';
+
+    return `${texts}${(fields && texts) ? ' ' : ''}${fields}`;
+  }
+  // This is for custom syntax parsing in advanced search component
+  // Parsing util to convert a string to AdvancedSearchExpression
+  // example:
+  // input = "test hello field:Who=~dasdsa; field:Act On (kind)=~1,2;"
+  // the parsed output will be
+  // {
+  //   searchExpressions: [{"key":"Who","operator":"in","values":["dasdsa"]},{"key":"Act On (kind)","operator":"in","values":["1,2"]}];
+  //   generalSearch: ['test', 'hello'];
+  // }
+  // TODO: support case detection for all lower case
+  public static advancedSearchParser(inputStr: string): AdvancedSearchExpression {
+    if (!inputStr) {
+      return null;
+    }
+    const result = {searchExpressions: [], generalSearch: []} as AdvancedSearchExpression;
+    let foundKeyword = false;
+
+    // default processFunc if no match
+    let processFunc = (input: string): AdvancedSearchExpression => {
+      let endIdx = input.indexOf(' ');
+      if (endIdx === -1) {
+        endIdx = input.length;  // not found
+      }
+      const first = input.substr(0, endIdx).trim(), last = input.substr(endIdx + 1).trim();
+      return {searchExpressions: [], generalSearch: [first], remainingString: last};
+    };
+
+    // overwriting processFunc if we found a keyword
+    Object.keys(SearchUtil.advancedSearchKeywordMap).forEach(key => {
+      if (inputStr.indexOf(key) === 0) {
+        foundKeyword = true;
+        processFunc = SearchUtil.advancedSearchKeywordMap[key].processFunc;
+      }
+    });
+
+    // process current chunk
+    let appendResult: AdvancedSearchExpression = processFunc(inputStr);
+    result.searchExpressions = result.searchExpressions.concat(appendResult.searchExpressions);
+    result.generalSearch = result.generalSearch.concat(appendResult.generalSearch);
+
+    // throw remaining into the recursive
+    appendResult = this.advancedSearchParser(appendResult.remainingString);
+    if (appendResult) {
+      result.searchExpressions = result.searchExpressions.concat(appendResult.searchExpressions);
+      result.generalSearch = result.generalSearch.concat(appendResult.generalSearch);
+    }
+
+    return result;
+  }
+
+  /**
+   * Build place-holder text for repeater-item
+   *
+   * @param repeater
+   * @param keyFormName
+   */
+  public static buildFieldValuePlaceholder(repeater: RepeaterItem, keyFormName: string) {
+    // TODO: may change this once we have enhanced category-mapping.ts
+    const key = repeater.formGroup.value[keyFormName];
+    if (key.startsWith(SearchUtil.SEARCHFIELD_META)) {
+      if (key.indexOf('time') > -1) {
+        return 'YYYY-MM-DDTHH:mm:ss.sssZ';
+      }
+    }
+    if (key.startsWith(SearchUtil.SEARCHFIELD_SPEC)) {
+      if (key.indexOf('-ip') > -1) {
+        return 'xxx.xxx.xxx.xxx';
+      }
+    }
+    if (key.startsWith(SearchUtil.SEARCHFIELD_STATUS)) {
+      if (key.indexOf('time') > -1) {
+        return 'YYYY-MM-DDTHH:mm:ss.sssZ';
+      }
+      if (key.indexOf('date') > -1) {
+        return 'YYYY-MM-DD';
+      }
+    }
+    return key;
+  }
+
+
 }

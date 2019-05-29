@@ -15,7 +15,9 @@
     (click)="setShowSelectField($event)"  [ngClass]="{'fa-plus':!isToSelectField,'fa-remove':isToSelectField}"  
     title="{{isToSelectField? 'Close' : 'Open'}}"
     ></i>
-  <app-repeater #repeater2 [data]="data2" (repeaterValues)="handleRepeater2Data($event)" 
+  <app-repeater #repeater2 [data]="data2" (repeaterValues)="handleRepeater2Data($event)"
+                [customValueOnBlur]="customValueOnBlur"
+                [customKeyOnBlur]="customKeyOnBlur"
   [formArray]="formGroup.get('test2')" *ngIf="isToSelectField"></app-repeater>
   <p-button label="Console log for Repeater2" (onClick)="repeater2Output()" *ngIf="isToSelectField"></p-button>
   <hr *ngIf="isToSelectField"/>

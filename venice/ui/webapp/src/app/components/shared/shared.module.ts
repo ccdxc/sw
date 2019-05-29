@@ -29,6 +29,7 @@ import { ErrorTooltipDirective } from './directives/errorTooltip.directive';
 import { TablevieweditHTMLComponent } from './tableviewedit/tableviewedit.component';
 import { RoleGuardDirective } from './directives/roleGuard.directive';
 import { LabeleditorComponent } from './labeleditor/labeleditor.component';
+import { AdvancedSearchComponent } from './advanced-search/advanced-search.component';
 
 @NgModule({
   imports: [
@@ -64,6 +65,7 @@ import { LabeleditorComponent } from './labeleditor/labeleditor.component';
     TablevieweditHTMLComponent,
     RoleGuardDirective,
     LabeleditorComponent,
+    AdvancedSearchComponent,
   ],
   exports: [
     PagebodyComponent,
@@ -88,7 +90,8 @@ import { LabeleditorComponent } from './labeleditor/labeleditor.component';
     ErrorTooltipDirective,
     TablevieweditHTMLComponent,
     RoleGuardDirective,
-    LabeleditorComponent
+    AdvancedSearchComponent,
+    LabeleditorComponent,
   ],
 })
 export class SharedModule { }

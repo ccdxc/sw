@@ -32,6 +32,7 @@ export class FieldselectorComponent implements OnInit, OnChanges {
 
   @Output() repeaterValues: EventEmitter<any> = new EventEmitter();
   fieldData: RepeaterData[] = [];
+  buildFieldValuePlaceholder = SearchUtil.buildFieldValuePlaceholder;
 
   constructor() { }
 
@@ -66,35 +67,9 @@ export class FieldselectorComponent implements OnInit, OnChanges {
   }
 
   getValues() {
-    return this.fieldRepeater ? this.formatRepeaterData(this.fieldRepeater.getValues()) : [];
+    return this.fieldRepeater ? Utility.formatRepeaterData(this.fieldRepeater.getValues(), this.valueFormName) : [];
   }
 
-  /**
-   * If the user hasn't specified a value, we don't add
-   * it into the values we return to the consumer.
-   * If a field is free form text, we split by comma to turn
-   * it into an array of values
-   */
-  formatRepeaterData(data) {
-    if (data == null) {
-      return null;
-    }
-    let retData = data.filter((item) => {
-      return item[this.valueFormName] != null && item[this.valueFormName].length !== 0;
-    });
-    // make sure the value field is an array
-    retData = retData.map((item) => {
-      if (item[this.valueFormName] instanceof Array) {
-        return item;
-      } else {
-        const arrVal = item[this.valueFormName].split(',');
-        item[this.valueFormName] = arrVal.map(val => {
-          return val.trim();
-        });
-      }
-    });
-    return retData;
-  }
 
   emitRepeaterValues(values) {
     this.repeaterValues.emit(this.getValues());
@@ -188,36 +163,4 @@ export class FieldselectorComponent implements OnInit, OnChanges {
   getFieldOperators(kind: string, keys: string[]): any[] {
     return SearchUtil.getOperators(kind, keys);
   }
-
-  /**
-   * Buidl place-holder text for repeater-item
-   *
-   * @param repeater
-   * @param keyFormName
-   */
-  buildFieldValuePlaceholder(repeater: RepeaterItem, keyFormName: string) {
-    // TODO: may change this once we have enhanced category-mapping.ts
-    const key = repeater.formGroup.value[keyFormName];
-    if (key.startsWith(SearchUtil.SEARCHFIELD_META)) {
-      if (key.indexOf('time') > -1) {
-        return 'YYYY-MM-DDTHH:mm:ss.sssZ';
-      }
-    }
-    if (key.startsWith(SearchUtil.SEARCHFIELD_SPEC)) {
-      if (key.indexOf('-ip') > -1) {
-        return 'xxx.xxx.xxx.xxx';
-      }
-    }
-    if (key.startsWith(SearchUtil.SEARCHFIELD_STATUS)) {
-      if (key.indexOf('time') > -1) {
-        return 'YYYY-MM-DDTHH:mm:ss.sssZ';
-      }
-      if (key.indexOf('date') > -1) {
-        return 'YYYY-MM-DD';
-      }
-    }
-    return key;
-  }
-
-
 }

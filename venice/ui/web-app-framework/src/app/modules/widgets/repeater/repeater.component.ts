@@ -3,6 +3,7 @@ import { AbstractControl, FormArray, FormControl, FormGroup } from '@angular/for
 import { SelectItem } from 'primeng/primeng';
 import { RepeaterData, RepeaterItem, ValueType } from './index';
 import { Animations } from '../../../animations';
+import * as _ from 'lodash';
 
 
 /**
@@ -50,7 +51,7 @@ export class RepeaterComponent implements OnInit, OnChanges {
   @Input() valueFormName: string = 'valueFormControl';
   @Input() keytextFormName: string = 'keytextFormName';
 
-  // This indicator whether to show filter box in key combo. It is very helpful if the number of selections is large 
+  // This indicator whether to show filter box in key combo. It is very helpful if the number of selections is large
   @Input() keyDropdownFilter = false;
 
   // Passed in data to load into the repeaters
@@ -61,6 +62,14 @@ export class RepeaterComponent implements OnInit, OnChanges {
   @Input() buildValuePlaceholder: (repeater: RepeaterItem, keyFormName: string) => string = null;
 
   @Input() styleClass: string;
+
+  @Input() customValueOnBlur: (any, RepeaterItem?) => void;
+  @Input() customValueOnKeydown: (any, RepeaterItem?) => void;
+  @Input() customKeyOnBlur: (any, RepeaterItem?) => void;
+  @Input() customKeyOnKeydown: (any, RepeaterItem?) => void;
+
+  // Determine if we want to generate valueLabelToValueMap in buildValuePlaceholder
+  @Input() valueLabelToValueMap: {};
 
   // Emits all the repeater values whenever there is a change
   @Output() repeaterValues: EventEmitter<any> = new EventEmitter();
@@ -75,6 +84,29 @@ export class RepeaterComponent implements OnInit, OnChanges {
   keyToValueHintText: { [key: string]: string };
 
 
+  valueOnBlur($event: any, repeaterItem: RepeaterItem) {
+    if (this.customValueOnBlur) {
+      this.customValueOnBlur($event, repeaterItem);
+    }
+  }
+
+  valueOnKeydown($event, repeaterItem: RepeaterItem){
+    if(this.customValueOnKeydown){
+      this.customValueOnKeydown($event, repeaterItem);
+    }
+  }
+
+  keyOnBlur($event: any, repeaterItem: RepeaterItem) {
+    if (this.customKeyOnBlur) {
+      this.customKeyOnBlur($event, repeaterItem);
+    }
+  }
+
+  keyOnKeydown($event, repeaterItem: RepeaterItem){
+    if(this.customKeyOnKeydown){
+      this.customKeyOnKeydown($event, repeaterItem);
+    }
+  }
 
   constructor() { }
 
@@ -398,7 +430,17 @@ export class RepeaterComponent implements OnInit, OnChanges {
 
   placeholderForValue(repeater, keyFormName): string {
     if (this.buildValuePlaceholder) {
-      return this.buildValuePlaceholder(repeater, keyFormName);
+      if (this.valueLabelToValueMap) {
+        const key = repeater.formGroup.value[keyFormName];
+        if (this.valueLabelToValueMap[key]) {
+          const repeaterCopy = _.cloneDeep(repeater);
+          repeaterCopy.formGroup.value[keyFormName] = this.valueLabelToValueMap[key];
+          return this.buildValuePlaceholder(repeaterCopy, keyFormName);
+        }
+        return this.buildValuePlaceholder(repeater, keyFormName);
+      } else {
+        return this.buildValuePlaceholder(repeater, keyFormName);
+      }
     }
     return this.keyToValueHintText[repeater.formGroup.value[keyFormName]];
   }

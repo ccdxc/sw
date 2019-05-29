@@ -41,7 +41,7 @@ describe('PenuitabComponent', () => {
 
   it('should find its content children', () => {
     expect(component.content.length).toBeGreaterThan(0);
-    expect(component.template).toBeDefined();;
+    expect(component.template).toBeDefined();
   });
 
 });

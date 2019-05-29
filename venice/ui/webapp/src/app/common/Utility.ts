@@ -45,6 +45,40 @@ export class Utility {
   myLogService: LogService;
 
   private constructor() { }
+  /**
+   * If the user hasn't specified a value, we don't add
+   * it into the values we return to the consumer.
+   * If a field is free form text, we split by comma to turn
+   * it into an array of values
+   */
+  public static formatRepeaterData(data, valueFormName) {
+    if (data == null) {
+      return null;
+    }
+    let retData = data.filter((item) => {
+      return item[valueFormName] != null && item[valueFormName].length !== 0;
+    });
+    // make sure the value field is an array
+    retData = retData.map((item) => {
+      if (item[valueFormName] instanceof Array) {
+        let arr = [];
+        item[valueFormName].forEach(ele => {
+          const arrVal = ele.split(',');
+          arr = arr.concat(arrVal.map(val => {
+            return val.trim();
+          }));
+        });
+        item[valueFormName] = arr;
+      } else {
+        const arrVal = item[valueFormName].split(',');
+        item[valueFormName] = arrVal.map(val => {
+          return val.trim();
+        });
+      }
+      return item;
+    });
+    return retData;
+  }
 
   public static getAuditEventCacheSize(): number {
     return 10; // For future code refactoring, we are planning to use user-preferences and env.variable

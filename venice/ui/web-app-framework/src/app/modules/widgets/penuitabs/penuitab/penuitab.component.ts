@@ -16,7 +16,7 @@ export class PenuitabComponent implements AfterContentInit {
   // Used by penuitabs to access the component that is contained
   // Will subscribe to the editmode and pass in the isActiveTab
   // to the component
-  @ContentChildren("tabContent") content: QueryList<any>;
+  @ContentChildren('tabContent') content: QueryList<any>;
   @Output() contentChanged: EventEmitter<boolean> = new EventEmitter();
 
   constructor() { }
@@ -29,7 +29,7 @@ export class PenuitabComponent implements AfterContentInit {
     // before setting up the listeners
     this.content.changes.subscribe(() => {
       this.contentChanged.emit(true);
-    })
+    });
   }
 
 }

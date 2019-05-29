@@ -2,23 +2,23 @@ import { Component, EventEmitter, Input, Output, OnChanges, ChangeDetectorRef, S
 
 export interface TabcontentInterface {
   isActiveTab: boolean;
-  editMode: EventEmitter<any>
+  editMode: EventEmitter<any>;
   ngOnChanges(changes: SimpleChanges): void;
 }
 
 /**
  * Basic tab content component. Any component that is set to be the
  * content of penuitab should inherit this.
- * 
+ *
  * Since there is a common pattern of a tab needing
  * to disable all other tabs while user is editing or creating
  * a form, we put all this logic in a base class.
- * 
- * This will automatically bind to the isActiveTab 
+ *
+ * This will automatically bind to the isActiveTab
  * passed from penuitabs, and penuitabs will automatically
  * listen to this components editMode. A component just needs to emit
  * an editMode event while it is the active tab to disable other tabs
- * 
+ *
  */
 @Component({
   selector: 'app-tabcontent',

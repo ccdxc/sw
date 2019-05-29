@@ -15,6 +15,8 @@ import {AuditEvent, IAuditEvent} from '@sdk/v1/models/generated/audit';
 import {SearchSearchQuery_kinds, SearchSearchRequest, SearchSearchRequest_sort_order, SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { LazyLoadEvent } from 'primeng/primeng';
 import { Subscription } from 'rxjs';
+import {AdvancedSearchComponent} from '@components/shared/advanced-search/advanced-search.component';
+import {RepeaterData} from 'web-app-framework';
 
 @Component({
   selector: 'app-auditevents',
@@ -26,7 +28,7 @@ import { Subscription } from 'rxjs';
 export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEvent> {
   public static AUDITEVENT: string = 'AuditEvent';
   @ViewChild(TablevieweditHTMLComponent) tableWrapper: TablevieweditHTMLComponent;
-  @ViewChild('fieldRepeater') fieldRepeater: FieldselectorComponent;
+  @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
   @ViewChild('auditeventSearchPanel') auditeventSearchExpansionPanel: MatExpansionPanel;
 
   dataObjects: ReadonlyArray<AuditEvent> = [];
@@ -63,17 +65,17 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
   };
   // Backend currently only supports time being sorted
   cols: TableCol[] = [
-    { field: 'user.name', header: 'Who', class: 'auditevents-column-common auditevents-column-who', sortable: false, width: 10 },
-    { field: 'meta.mod-time', header: 'Time', class: 'auditevents-column-common auditevents-column-date', sortable: true, width: 9 },
-    { field: 'action', header: 'Action', class: 'auditevents-column-common auditevents-column-action', sortable: false, width: 9 },
-    { field: 'resource.kind', header: 'Act On (kind)', class: 'auditevents-column-common auditevents-column-act_on', sortable: false, width: 9 },
-    { field: 'resource.name', header: 'Act On (name)', class: 'auditevents-column-common auditevents-column-act_on', sortable: false, width: 9 },
-    { field: 'stage', header: 'Stage', class: 'auditevents-column-common auditevents-column-stage', sortable: false, width: 9 },
-    { field: 'level', header: 'Level', class: 'auditevents-column-common auditevents-column-level', sortable: false, width: 9 },
-    { field: 'outcome', header: 'Outcome', class: 'auditevents-column-common auditevents-column-outcome', sortable: false, width: 9 },
-    { field: 'client-ips', header: 'Client', class: 'auditevents-column-common auditevents-column-client_ips', sortable: false, width: 9 },
-    { field: 'gateway-node', header: 'Service Node', class: 'auditevents-column-common auditevents-column-gateway_node', sortable: false, width: 9 },
-    { field: 'service-name', header: 'Service Name', class: 'auditevents-column-common auditevents-column-service_name', sortable: false, width: 9 },
+    { field: 'user.name', header: 'Who', class: 'auditevents-column-common auditevents-column-who', sortable: false, width: 10},
+    { field: 'meta.mod-time', header: 'Time', class: 'auditevents-column-common auditevents-column-date', sortable: true, width: 9},
+    { field: 'action', header: 'Action', class: 'auditevents-column-common auditevents-column-action', sortable: false, width: 9},
+    { field: 'resource.kind', header: 'Act On (kind)', class: 'auditevents-column-common auditevents-column-act_on', sortable: false, width: 9},
+    { field: 'resource.name', header: 'Act On (name)', class: 'auditevents-column-common auditevents-column-act_on', sortable: false, width: 9},
+    { field: 'stage', header: 'Stage', class: 'auditevents-column-common auditevents-column-stage', sortable: false, width: 9},
+    { field: 'level', header: 'Level', class: 'auditevents-column-common auditevents-column-level', sortable: false, width: 9},
+    { field: 'outcome', header: 'Outcome', class: 'auditevents-column-common auditevents-column-outcome', sortable: false, width: 9},
+    { field: 'client-ips', header: 'Client', class: 'auditevents-column-common auditevents-column-client_ips', sortable: false, width: 9},
+    { field: 'gateway-node', header: 'Service Node', class: 'auditevents-column-common auditevents-column-gateway_node', sortable: false, width: 9},
+    { field: 'service-name', header: 'Service Name', class: 'auditevents-column-common auditevents-column-service_name', sortable: false, width: 9},
   ];
 
   subscriptions: Subscription[] = [];
@@ -145,27 +147,7 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
 
     this.loading = true;
 
-    let sortOrder = SearchSearchRequest_sort_order.Ascending;
-    if (order === -1) {
-      sortOrder = SearchSearchRequest_sort_order.Descending;
-    }
-
-    let searchSearchRequest: SearchSearchRequest = new SearchSearchRequest(null, false);
-    const obj: GuidedSearchCriteria = this.genGuidedSearchCriteria();
-    const isEmpty = SearchUtil.isGuidedSearchCriteriaEmpty(obj);
-    if (!isEmpty && (obj.has && obj.has.length >= 0)) {
-      const searchInputString = SearchUtil.getSearchInputStringFromGuidedSearchCriteria(obj);
-
-      const grammarList = SearchUtil.parseSearchInputString(searchInputString);
-      const payload = this.buildComplexSearchPayload(grammarList, searchInputString);
-      searchSearchRequest = new SearchSearchRequest(payload, false);  // we don't to fill default values. So set the second parameter as false;
-      this.currentSearchCriteria = this.buildSearchCriteriaString();
-    }
-    searchSearchRequest.query.kinds = [SearchSearchQuery_kinds.AuditEvent];
-    searchSearchRequest['sort-by'] = field;
-    searchSearchRequest['sort-order'] = sortOrder;
-    searchSearchRequest.from = 0;
-    searchSearchRequest['max-results'] = this.maxRecords;
+    const searchSearchRequest = this.advancedSearchComponent.getSearchRequest(field, order, 'AuditEvent', this.maxRecords);
 
     this._callSearchRESTAPI(searchSearchRequest);
   }
@@ -270,7 +252,7 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
   genGuidedSearchCriteria(includeKind: boolean = true): GuidedSearchCriteria {
     const obj = {
       is: [AuditeventsComponent.AUDITEVENT],
-      has: (this.fieldRepeater) ? this.fieldRepeater.getValues() : []
+      has: (this.advancedSearchComponent) ? this.advancedSearchComponent.getValues() : []
     };
     if (!includeKind) {
       delete obj.is;

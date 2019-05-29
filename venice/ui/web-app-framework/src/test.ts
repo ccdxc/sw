@@ -36,15 +36,15 @@ if (environment.disableFocusTests) {
   localGlobal.fdescribe = (description, testFn) => {
     fdescribe(description, () => {
       it('', () => {
-        fail("fdescribe and fit tests are not allowed to be checked in");
-      })
-    })
+        fail('fdescribe and fit tests are not allowed to be checked in');
+      });
+    });
   };
   localGlobal.fit = (description, testFn) => {
     fit(description, () => {
-      fail("fdescribe and fit tests are not allowed to be checked in");
-    })
-  }
+      fail('fdescribe and fit tests are not allowed to be checked in');
+    });
+  };
 }
 
 // And load the modules.

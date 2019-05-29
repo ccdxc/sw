@@ -10,12 +10,14 @@
                       [filter]="keyDropdownFilter"
                       appendTo="body">
           </p-dropdown>
-          <input class="repeater-input" *ngIf="isToUseInputField(repeater)" 
+          <input class="repeater-input repeater-input-key" *ngIf="isToUseInputField(repeater)"
                                         (input)="emitValues()" 
                                         spellcheck="false" 
                                         type="text"  
                                         pInputText  
-                                        [placeholder]="placeholderForKey(repeater, keyFormName)" 
+                                        [placeholder]="placeholderForKey(repeater, keyFormName)"
+                                        (blur)="keyOnBlur($event, repeater)"
+                                        (keydown)="keyOnKeydown($event, repeater)"
                                         [formControlName]="keytextFormName">
       </div>
       <!-- Operator -->
@@ -46,13 +48,15 @@
                           [options]="keyToValues[repeater.formGroup.value[keyFormName]]"
                           appendTo="body">
           </p-multiSelect>
-          <input class="repeater-input" *ngIf="keyToValueType[repeater.formGroup.value[keyFormName]] == 'inputField'" 
+          <input class="repeater-input repeater-input-value" *ngIf="keyToValueType[repeater.formGroup.value[keyFormName]] == 'inputField'"
                                         (input)="emitValues()" 
                                         spellcheck="false" 
                                         type="text"  
                                         pInputText  
                                         [placeholder]="placeholderForValue(repeater, keyFormName)" 
-                                        [formControlName]="valueFormName">
+                                        [formControlName]="valueFormName"
+                                        (blur)="valueOnBlur($event, repeater)"
+                                        (keydown)="valueOnKeydown($event, repeater)">
       </div>
       <!-- Add and delete buttons -->
       <!-- Only show and if its the last row -->
