@@ -211,6 +211,7 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
       // Click was on the same row
       this.closeRowExpand();
     } else {
+      this.closeRowExpand();
       // fetch detail audit event data
       const auditEvent = event.rowData;
       this.auditEventDetail = this.cache.get(auditEvent.meta.uuid);  // cache hit
