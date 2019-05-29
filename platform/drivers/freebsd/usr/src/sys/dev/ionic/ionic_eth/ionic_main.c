@@ -519,7 +519,6 @@ ionic_port_reset(struct ionic *ionic)
 	return 0;
 }
 
-#if 0
 void
 ionic_set_port_state(struct ionic *ionic, uint8_t state)
 {
@@ -537,7 +536,6 @@ ionic_set_port_state(struct ionic *ionic, uint8_t state)
 		dev_err(ionic->dev, "Failed to set port state %s, err: %d\n",
 			ionic_port_admin_state_str(state), err);
 }
-#endif
 
 int ionic_qos_class_identify(struct ionic *ionic)
 {

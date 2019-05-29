@@ -193,33 +193,6 @@ ionic_read_notify_block(struct lif* lif)
 }
 
 /*
- * Read the current QoS config.
- */
-static void
-ionic_read_qos_cfg(struct lif *lif)
-{
-	struct identity *ident;
-	union qos_config *qos;
-	struct ionic_qos_tc *swtc;
-	int i;
-
-	if (ionic_qos_class_identify(lif->ionic)) {
-		IONIC_NETDEV_ERROR(lif->netdev, "failed to read current QoS config.\n");
-		return;
-	}
-
-	ident = &lif->ionic->ident;
-	for (i = 0; i < IONIC_QOS_CLASS_MAX; i++) {
-		qos = &ident->qos.config[i];
-		swtc = &lif->ionic->qos_tc[i];
-		
-		swtc->enable = (qos->flags & IONIC_QOS_CONFIG_F_ENABLE) ? true : false;
-		swtc->drop = (qos->flags & IONIC_QOS_CONFIG_F_DROP) ? true : false;
-		swtc->dot1q_pcp = qos->dot1q_pcp;
-		swtc->dwrr_weight = qos->dwrr_weight;
-	}
-}
-/*
  * Enable all the queues and unmask interrupts.
  */
 static void
@@ -262,10 +235,6 @@ ionic_open(struct lif *lif)
 	ionic_calc_rx_size(lif);
 
 	ionic_hw_open(lif);
-#if 0
-	/* Bring up the physical link. */
-	ionic_set_port_state(lif->ionic, PORT_ADMIN_STATE_UP);
-#endif
 	ifp->if_drv_flags |= IFF_DRV_RUNNING;
 	if_link_state_change(ifp, LINK_STATE_UP);
 }
@@ -290,10 +259,6 @@ ionic_stop(struct net_device *netdev)
 
 	IONIC_NETDEV_INFO(netdev, "stopping interface\n");
 
-#if 0
-	/* Bring down the physical link. */
-	ionic_set_port_state(lif->ionic, PORT_ADMIN_STATE_DOWN);
-#endif
 	lif->netdev->if_drv_flags &= ~IFF_DRV_RUNNING;
 	if_link_state_change(lif->netdev, LINK_STATE_DOWN);
 
@@ -2186,12 +2151,14 @@ ionic_lif_reset(struct lif *lif)
 static void
 ionic_lif_deinit(struct lif *lif)
 {
+	/* Stop the NQ before stopping data queues. */
+	ionic_lif_notifyq_deinit(lif);
+
 	ionic_rx_filters_deinit(lif);
 	ionic_lif_rss_deinit(lif);
 
 	ionic_lif_txqs_deinit(lif);
 	ionic_lif_rxqs_deinit(lif);
-	ionic_lif_notifyq_deinit(lif);
 	ionic_lif_adminq_deinit(lif);
 
 	ionic_lif_reset(lif);
@@ -3251,6 +3218,7 @@ ionic_lif_reinit(struct lif *lif)
 
 	ifp = lif->netdev;
 
+	IONIC_CORE_LOCK(lif);
 	was_open = false;
 	if (ifp->if_drv_flags & IFF_DRV_RUNNING) {
 		was_open = true;
@@ -3294,6 +3262,7 @@ ionic_lif_reinit(struct lif *lif)
 		ionic_hw_open(lif);
 		ifp->if_drv_flags |= IFF_DRV_RUNNING;
 	}
+	IONIC_CORE_UNLOCK(lif);
 
 	return (error);
 }

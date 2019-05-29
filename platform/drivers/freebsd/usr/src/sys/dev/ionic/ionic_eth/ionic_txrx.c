@@ -2831,8 +2831,15 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		IONIC_CORE_LOCK(lif);
 		ionic_open_or_stop(lif);
 		if (ifp->if_flags & IFF_UP) {
+#ifdef NETAPP_PATCH
+			ionic_set_port_state(lif->ionic, PORT_ADMIN_STATE_UP);
+#endif
 			ionic_set_rx_mode(lif->netdev);
 			ionic_set_mac(lif->netdev);
+		} else {
+#ifdef NETAPP_PATCH
+			ionic_set_port_state(lif->ionic, PORT_ADMIN_STATE_DOWN);
+#endif
 		}
 		IONIC_CORE_UNLOCK(lif);
 		break;

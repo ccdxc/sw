@@ -15,6 +15,8 @@ ionic_rx_filter.c \
 device_if.h bus_if.h vnode_if.h pci_if.h \
         opt_inet.h opt_inet6.h opt_rss.h
 
+# NetApp physical port
+#CFLAGS+= -DNETAPP_PATCH
 # To enable debugging at init time.
 #CFLAGS+= -DIONIC_DEBUG
 # Enable to print packet level debugging details.
