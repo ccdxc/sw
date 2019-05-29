@@ -1264,7 +1264,7 @@ ${table}_index_mapper(uint32_t tableid,
 //::                                tablebyte = kmbyte
     /* Field Union Key byte */
    *(hwkey + ((${mat_key_bit_length} - ${width} - ((${tablebyte} * 8) + ${containerstart}  - ${mat_key_start_bit})/* Dest bit position */) >> 3))
-        = (*(uint8_t*)((uint8_t*)&(swkey->${p4fldname}) + ${kbyte})) << (8 - ${width} - ${containerstart});
+        = (*(uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + ${kbyte})) << (8 - ${width} - ${containerstart});
 //::                            #endfor
 //::                        #endif
 //::                        if len(key_bit_format):
@@ -1300,7 +1300,7 @@ ${table}_index_mapper(uint32_t tableid,
 //::                                tablebyte = kmbyte
     /* Header Union Key byte */
    *(hwkey + ((${mat_key_bit_length} - ${width} - ((${tablebyte} * 8) + ${containerstart}  - ${mat_key_start_bit})/* Dest bit position */) >> 3))
-        = (*(uint8_t*)((uint8_t*)&(swkey->${p4fldname}) + ${kbyte})) << (8 - ${width} - ${containerstart});
+        = (*(uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + ${kbyte})) << (8 - ${width} - ${containerstart});
 //::                            #endfor
 //::                        #endif
 //::                        if len(key_bit_format):

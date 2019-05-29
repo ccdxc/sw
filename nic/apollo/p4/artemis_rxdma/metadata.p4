@@ -19,10 +19,8 @@ header_type scratch_metadata_t {
         lpm_base6       : 48;
         lpm_base7       : 48;
         lpm_base8       : 48;
-        acl_base        : 48;
-        meter_base      : 48;
         flag            :  1;
-        pad0            :  3;
+        pad0            :  7;
     }
 }
 
