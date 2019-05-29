@@ -139,11 +139,11 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             break;
         case PDS_NH_TYPE_TEP:
             // non vpc peering case
-            tep_key.ip_addr = spec->routes[i].nh_ip.addr.v4_addr;
+            tep_key.ip_addr = spec->routes[i].nh_ip;
             tep = tep_db()->find(&tep_key);
             if (tep == NULL) {
                 PDS_TRACE_ERR("TEP %s not found while processing route %s in "
-                              "route table %u", ipv4addr2str(tep_key.ip_addr),
+                              "route table %u", ipaddr2str(&tep_key.ip_addr),
                               ippfx2str(&spec->routes[i].prefix), spec->key.id);
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;

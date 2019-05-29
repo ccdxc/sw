@@ -38,7 +38,7 @@ static inline void
 debug_dump_tep_spec (pds_tep_spec_t *spec)
 {
     printf("Spec data : \n");
-    printf("Key IPv4 address %s", ipv4addr2str(spec->key.ip_addr));
+    printf("Key IPv4 address %s", ipaddr2str(&spec->key.ip_addr));
     printf(", TEP Type %d", spec->type);
     printf(", Encap %s", pdsencap2str(spec->encap));
     printf(", NAT %d", spec->nat);
@@ -83,7 +83,8 @@ tep_util::create(void) const {
     spec.type = this->type;
     spec.encap = this->encap;
     spec.nat = this->nat;
-    spec.key.ip_addr = this->ip_addr.addr.v4_addr;
+    spec.key.ip_addr.af = IP_AF_IPV4;
+    spec.key.ip_addr.addr.v4_addr = this->ip_addr.addr.v4_addr;
     return (pds_tep_create(&spec));
 }
 
@@ -94,7 +95,8 @@ tep_util::read(pds_tep_info_t *info) const {
 
     memset(&key, 0, sizeof(pds_tep_key_t));
     memset(info, 0, sizeof(pds_tep_info_t));
-    key.ip_addr = this->ip_addr.addr.v4_addr;
+    key.ip_addr.af = IP_AF_IPV4;
+    key.ip_addr.addr.v4_addr = this->ip_addr.addr.v4_addr;
 
     if ((rv = pds_tep_read(&key, info)) != sdk::SDK_RET_OK)
         return rv;
@@ -103,7 +105,7 @@ tep_util::read(pds_tep_info_t *info) const {
     debug_dump_tep_info(info);
 
     // validate TEP ip
-    if (this->ip_addr.addr.v4_addr != info->spec.key.ip_addr)
+    if (this->ip_addr.addr.v4_addr != info->spec.key.ip_addr.addr.v4_addr)
         return sdk::SDK_RET_ERR;
 
     // validate TEP type
@@ -129,7 +131,8 @@ tep_util::update(void) const {
     spec.type = this->type;
     spec.encap = this->encap;
     spec.nat = this->nat;
-    spec.key.ip_addr = this->ip_addr.addr.v4_addr;
+    spec.key.ip_addr.af = IP_AF_IPV4;
+    spec.key.ip_addr.addr.v4_addr = this->ip_addr.addr.v4_addr;
     return (pds_tep_update(&spec));
 }
 
@@ -138,7 +141,8 @@ tep_util::del(void) const {
     pds_tep_key_t pds_tep_key;
 
     memset(&pds_tep_key, 0, sizeof(pds_tep_key));
-    pds_tep_key.ip_addr = this->ip_addr.addr.v4_addr;
+    pds_tep_key.ip_addr.af = IP_AF_IPV4;
+    pds_tep_key.ip_addr.addr.v4_addr = this->ip_addr.addr.v4_addr;
     return (pds_tep_delete(&pds_tep_key));
 }
 

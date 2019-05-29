@@ -242,7 +242,7 @@ populate_remote_mapping_request (MappingRequest *req,
     ip_addr_to_spec(spec->mutable_id()->mutable_ipaddr(),
                     &remote_spec->key.ip_addr);
     spec->set_subnetid(remote_spec->subnet.id);
-    spec->set_tunnelid(remote_spec->tep.ip_addr);
+    spec->set_tunnelid(remote_spec->tep.ip_addr.addr.v4_addr);
     spec->set_macaddr(MAC_TO_UINT64(remote_spec->vnic_mac));
     pds_encap_to_proto_encap(spec->mutable_encap(), &remote_spec->fabric_encap);
     return;
@@ -304,37 +304,7 @@ populate_tunnel_request (TunnelRequest *req,
         return;
     }
     spec = req->add_request();
-    auto encap = spec->mutable_encap();
-
-    spec->set_id(tep_id);
-    // TODO: Only filling up remote-ip for now
-    ipv4_addr_to_spec(spec->mutable_remoteip(), &tep->key.ip_addr);
-    switch (tep->type) {
-    case PDS_TEP_TYPE_NONE:
-        spec->set_type(pds::TUNNEL_TYPE_NONE);
-        break;
-    case PDS_TEP_TYPE_IGW:
-        spec->set_type(pds::TUNNEL_TYPE_IGW);
-        break;
-    case PDS_TEP_TYPE_WORKLOAD:
-        spec->set_type(pds::TUNNEL_TYPE_WORKLOAD);
-        break;
-    default:
-        break;
-    }
-    switch (tep->encap.type) {
-       case PDS_ENCAP_TYPE_VXLAN:
-           encap->set_type(types::ENCAP_TYPE_VXLAN);
-           encap->mutable_value()->set_vnid(tep->encap.val.vnid);
-           break;
-       case PDS_ENCAP_TYPE_MPLSoUDP:
-           encap->set_type(types::ENCAP_TYPE_MPLSoUDP);
-           encap->mutable_value()->set_mplstag(tep->encap.val.mpls_tag);
-           break;
-       default:
-           break;
-    }
-
+    tep_api_spec_to_proto_spec(spec, tep);
     return;
 }
 

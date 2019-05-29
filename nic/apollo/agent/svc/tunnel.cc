@@ -7,33 +7,7 @@
 #include "nic/apollo/agent/core/tunnel.hpp"
 #include "nic/apollo/agent/svc/tunnel.hpp"
 #include "nic/apollo/agent/svc/util.hpp"
-
-// Populate proto buf spec from tep API spec
-static inline void
-tep_api_spec_to_proto_spec (pds::TunnelSpec *proto_spec,
-                            const pds_tep_spec_t *api_spec)
-{
-    if (api_spec->key.ip_addr != 0) {
-        proto_spec->mutable_remoteip()->set_af(types::IP_AF_INET);
-        proto_spec->mutable_remoteip()->set_v4addr(api_spec->key.ip_addr);
-    }
-    switch (api_spec->type) {
-    case PDS_TEP_TYPE_WORKLOAD:
-        proto_spec->set_type(pds::TUNNEL_TYPE_WORKLOAD);
-        break;
-    case PDS_TEP_TYPE_IGW:
-        proto_spec->set_type(pds::TUNNEL_TYPE_IGW);
-        break;
-    case PDS_TEP_TYPE_NONE:
-    default:
-        proto_spec->set_type(pds::TUNNEL_TYPE_NONE);
-        break;
-    }
-    proto_spec->set_macaddress(MAC_TO_UINT64(api_spec->mac));
-    pds_encap_to_proto_encap(proto_spec->mutable_encap(),
-                             &api_spec->encap);
-    proto_spec->set_nat(api_spec->nat);
-}
+#include "nic/apollo/agent/svc/specs.hpp"
 
 // Populate proto buf status from tep API status
 static inline void
@@ -95,9 +69,8 @@ tep_proto_spec_to_api_spec (pds_tep_spec_t *api_spec,
     default:
         break;
     }
-    if (types::IP_AF_INET == remoteip.af()) {
-        api_spec->key.ip_addr = remoteip.v4addr();
-    }
+
+    ipaddr_proto_spec_to_api_spec(&api_spec->key.ip_addr, remoteip);
     MAC_UINT64_TO_ADDR(api_spec->mac, proto_spec.macaddress());
     api_spec->nat = proto_spec.nat();
 }

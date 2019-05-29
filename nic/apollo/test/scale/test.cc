@@ -174,7 +174,7 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
     tep_offset = 3;
     v6route_table.af = IP_AF_IPV6;
     v6route_table.routes =
-            (pds_route_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+            (pds_route_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
                                       (num_routes * sizeof(pds_route_t)));
     v6route_table.num_routes = num_routes;
     for (uint32_t i = 1; i <= ntables; i++) {
@@ -251,7 +251,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
 
     route_table.af = IP_AF_IPV4;
     route_table.routes =
-        (pds_route_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+        (pds_route_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
                                   (num_routes * sizeof(pds_route_t)));
     route_table.num_routes = num_routes;
     for (uint32_t i = 1; i <= ntables; i++) {
@@ -464,7 +464,8 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     pds_remote_mapping.fabric_encap.val.mpls_tag =
                         remote_slot++;
                 }
-                pds_remote_mapping.tep.ip_addr =
+                pds_remote_mapping.tep.ip_addr.af = IP_AF_IPV4;
+                pds_remote_mapping.tep.ip_addr.addr.v4_addr =
                     teppfx->addr.addr.v4_addr + tep_offset;
                 MAC_UINT64_TO_ADDR(
                     pds_remote_mapping.vnic_mac,
@@ -492,7 +493,9 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                           g_test_params.v6_vpc_pfx.addr.addr.v6_addr;
                     CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_remote_v6_mapping.key.ip_addr.addr.v6_addr,
                                                     pds_remote_mapping.key.ip_addr.addr.v4_addr);
-                    pds_remote_v6_mapping.tep.ip_addr = teppfx->addr.addr.v4_addr + v6_tep_offset;
+                    pds_remote_v6_mapping.tep.ip_addr.af = IP_AF_IPV4;
+                    pds_remote_v6_mapping.tep.ip_addr.addr.v4_addr =
+                        teppfx->addr.addr.v4_addr + v6_tep_offset;
 #ifdef TEST_GRPC_APP
                     rv = create_remote_mapping_grpc(&pds_remote_v6_mapping);
                     if (rv != SDK_RET_OK) {
@@ -773,7 +776,7 @@ create_tags (uint32_t num_tags, uint32_t scale, uint32_t ip_af)
     pds_tag.af = ip_af;
     pds_tag.num_rules = scale/4;
     pds_tag.rules =
-            (pds_tag_rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_TAG,
+            (pds_tag_rule_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_TAG,
                             (pds_tag.num_rules * sizeof(pds_tag_rule_t)));
     for (uint32_t i = 0; i < num_tags; i++) {
         pds_tag.key.id = id++;
@@ -781,7 +784,7 @@ create_tags (uint32_t num_tags, uint32_t scale, uint32_t ip_af)
             pds_tag_rule_t *api_rule_spec = &pds_tag.rules[rule];
             api_rule_spec->tag = tag_value++;
             ip_prefix_t *prefixes =
-                    (ip_prefix_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,
+                    (ip_prefix_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_METER,
                                    (num_prefixes * sizeof(ip_prefix_t)));
             memset(prefixes, 0, num_prefixes * sizeof(ip_prefix_t));
             api_rule_spec->num_prefixes = num_prefixes;
@@ -832,7 +835,7 @@ create_meter (uint32_t num_meter, uint32_t meter_scale, pds_meter_type_t type,
     }
     memset(&pds_meter, 0, sizeof(pds_meter_spec_t));
     pds_meter.rules =
-            (pds_meter_rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,
+            (pds_meter_rule_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_METER,
                             (meter_scale * sizeof(pds_meter_rule_t)));
     pds_meter.af = ip_af;
     pds_meter.num_rules = meter_scale/16;
@@ -859,7 +862,7 @@ create_meter (uint32_t num_meter, uint32_t meter_scale, pds_meter_type_t type,
                 break;
             }
             ip_prefix_t *prefixes =
-                    (ip_prefix_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,
+                    (ip_prefix_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_METER,
                                    (num_prefixes * sizeof(ip_prefix_t)));
             memset(prefixes, 0, num_prefixes * sizeof(ip_prefix_t));
             pds_meter.rules[rule].num_prefixes = num_prefixes;
@@ -906,7 +909,8 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
         memset(&pds_tep, 0, sizeof(pds_tep));
         // 1st IP in the TEP prefix is gateway IP, 2nd is MyTEP IP,
         // so we skip the 1st (even for MyTEP we create a TEP)
-        pds_tep.key.ip_addr = ip_pfx->addr.addr.v4_addr + 1 + i;
+        pds_tep.key.ip_addr.af = IP_AF_IPV4;
+        pds_tep.key.ip_addr.addr.v4_addr = ip_pfx->addr.addr.v4_addr + 1 + i;
         if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
             pds_tep.encap.type = PDS_ENCAP_TYPE_VXLAN;
             pds_tep.type = PDS_TEP_TYPE_WORKLOAD;
@@ -971,7 +975,7 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
     policy.af = ip_af;
     policy.direction = ingress ? RULE_DIR_INGRESS : RULE_DIR_EGRESS;
     policy.num_rules = num_rules;
-    policy.rules = (rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_POLICY_RULES,
+    policy.rules = (rule_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_POLICY_RULES,
                                         num_rules * sizeof(rule_t));
     if (num_rules < num_sub_rules) {
         num_sub_rules = 1;

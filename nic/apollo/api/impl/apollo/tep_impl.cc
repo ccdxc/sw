@@ -107,13 +107,13 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     switch (tep_spec->encap.type) {
     case PDS_ENCAP_TYPE_MPLSoUDP:
         tep_data.action_id = TEP_MPLS_UDP_TEP_ID;
-        tep_data.tep_mpls_udp_action.dipo = tep_spec->key.ip_addr;
+        tep_data.tep_mpls_udp_action.dipo = tep_spec->key.ip_addr.addr.v4_addr;
         memcpy(tep_data.tep_mpls_udp_action.dmac, tep->mac(), ETH_ADDR_LEN);
         break;
 
     case PDS_ENCAP_TYPE_VXLAN:
         tep_data.action_id = TEP_VXLAN_TEP_ID;
-        tep_data.tep_vxlan_action.dipo = tep_spec->key.ip_addr;
+        tep_data.tep_vxlan_action.dipo = tep_spec->key.ip_addr.addr.v4_addr;
         memcpy(tep_data.tep_vxlan_action.dmac, tep->mac(), ETH_ADDR_LEN);
         break;
 
@@ -156,7 +156,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                       nh_id_, ret);
     }
     PDS_TRACE_DEBUG("Programmed TEP %s, MAC 0x%lx, hw id %u, nexthop id %u",
-                    ipv4addr2str(tep_spec->key.ip_addr),
+                    ipaddr2str(&tep_spec->key.ip_addr),
                     PDS_REMOTE_TEP_MAC, hw_id_, nh_id_);
     return ret;
 }
@@ -212,7 +212,8 @@ tep_impl::fill_spec_(nexthop_actiondata_t *nh_data,
 {
     if (tep_data->action_id == TEP_MPLS_UDP_TEP_ID) {
         spec->encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-        spec->key.ip_addr = tep_data->tep_mpls_udp_action.dipo;
+        spec->key.ip_addr.af = IP_AF_IPV4;
+        spec->key.ip_addr.addr.v4_addr = tep_data->tep_mpls_udp_action.dipo;
         switch (nh_data->nh_action.encap_type) {
         case GW_ENCAP:
             spec->type = PDS_TEP_TYPE_IGW;
@@ -227,7 +228,8 @@ tep_impl::fill_spec_(nexthop_actiondata_t *nh_data,
         spec->encap.type = PDS_ENCAP_TYPE_VXLAN;
         spec->encap.val.vnid =
             nh_data->action_u.nexthop_nexthop_info.dst_slot_id;
-        spec->key.ip_addr = tep_data->tep_vxlan_action.dipo;
+        spec->key.ip_addr.af = IP_AF_IPV4;
+        spec->key.ip_addr.addr.v4_addr = tep_data->tep_vxlan_action.dipo;
     }
     spec->nat = nh_data->action_u.nexthop_nexthop_info.snat_required;
 }
@@ -248,10 +250,8 @@ tep_impl::read_hw(obj_key_t *key, obj_info_t *info, void *arg) {
                                            &tep_data) != SDK_RET_OK) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
-
     fill_spec_(&nh_data, &tep_data, &tep_info->spec);
     fill_status_(&tep_data, &tep_info->status);
-
     return sdk::SDK_RET_OK;
 }
 

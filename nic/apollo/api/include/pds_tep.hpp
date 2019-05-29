@@ -27,12 +27,13 @@ typedef enum pds_tep_type_e {
                                   ///< to internet
     PDS_TEP_TYPE_WORKLOAD = 2,    ///< TEP for east-west traffic between
                                   ///< workloads
+    PDS_TEP_TYPE_SERVICE  = 3,    ///< service tunnel
 } pds_tep_type_t;
 
 /// \brief TEP specification
 typedef struct pds_tep_spec_s {
     pds_tep_key_t  key;        ///< key
-    ipv4_addr_t    ip_addr;    ///< outer source IP to be used
+    ip_addr_t    ip_addr;      ///< outer source IP to be used
                                ///< (unused currently)
     mac_addr_t     mac;        ///< MAC address of this TEP
     pds_tep_type_t type;       ///< type/role of the TEP

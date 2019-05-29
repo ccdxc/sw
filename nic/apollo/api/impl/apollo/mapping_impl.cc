@@ -132,7 +132,8 @@ mapping_impl::factory(pds_mapping_spec_t *pds_mapping) {
     device = device_db()->find();
     if (pds_mapping->is_local) {
         impl->is_local_ = true;
-        pds_mapping->tep.ip_addr = device->ip_addr();
+        pds_mapping->tep.ip_addr.af = IP_AF_IPV4;
+        pds_mapping->tep.ip_addr.addr.v4_addr = device->ip_addr();
     } else {
         impl->is_local_ = false;
     }
@@ -466,7 +467,7 @@ mapping_impl::reserve_remote_ip_mapping_resources_(api_base *api_obj,
     // reserve an entry in REMOTE_VNIC_MAPPING_RX table
     remote_vnic_mapping_rx_key.vnic_metadata_src_slot_id =
         spec->fabric_encap.val.mpls_tag;
-    remote_vnic_mapping_rx_key.ipv4_1_srcAddr = spec->tep.ip_addr;
+    remote_vnic_mapping_rx_key.ipv4_1_srcAddr = spec->tep.ip_addr.addr.v4_addr;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &remote_vnic_mapping_rx_key,
                                    NULL, 0, sdk::table::handle_t::null());
     ret = mapping_impl_db()->remote_vnic_mapping_rx_tbl()->reserve(&tparams);
@@ -501,7 +502,7 @@ mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
                     "pub_ip_valid %u, pub_ip %s, "
                     "prov_ip_valid %u, prov_ip %s",
                     spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr), is_local_,
-                    spec->subnet.id, ipv4addr2str(spec->tep.ip_addr),
+                    spec->subnet.id, ipaddr2str(&spec->tep.ip_addr),
                     spec->vnic.id, spec->public_ip_valid,
                     ipaddr2str(&spec->public_ip),
                     spec->provider_ip_valid, ipaddr2str(&spec->provider_ip));
@@ -648,7 +649,7 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vpc_entry *vpc,
     }
     PDS_TRACE_DEBUG("Programmed REMOTE_VNIC_MAPPING_TX table entry "
                     "TEP %s, vpc hw id %u, encap type %u, encap val %u "
-                    "nh id %u", ipv4addr2str(spec->tep.ip_addr),
+                    "nh id %u", ipaddr2str(&spec->tep.ip_addr),
                     vpc->hw_id(), spec->fabric_encap.type,
                     spec->fabric_encap.val.value, tep_impl_obj->nh_id());
 
@@ -782,7 +783,7 @@ mapping_impl::add_remote_vnic_mapping_rx_entries_(vpc_entry *vpc,
     }
     remote_vnic_mapping_rx_key.vnic_metadata_src_slot_id =
         spec->fabric_encap.val.mpls_tag;
-    remote_vnic_mapping_rx_key.ipv4_1_srcAddr = spec->tep.ip_addr;
+    remote_vnic_mapping_rx_key.ipv4_1_srcAddr = spec->tep.ip_addr.addr.v4_addr;
     remote_vnic_mapping_rx_data.vpc_id = vpc->hw_id();
     // TODO: why do we need subnet id here ??
     remote_vnic_mapping_rx_data.subnet_id = subnet->hw_id();
@@ -817,7 +818,7 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                     "overlay mac %s, fabric encap type %u "
                     "fabric encap value %u, vnic %u",
                     spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr),
-                    spec->subnet.id, ipv4addr2str(spec->tep.ip_addr),
+                    spec->subnet.id, ipaddr2str(&spec->tep.ip_addr),
                     macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
                     spec->fabric_encap.val.value, spec->vnic.id);
     if (is_local_) {
@@ -876,10 +877,12 @@ mapping_impl::fill_mapping_spec_(
     spec->fabric_encap.val.value = remote_vnic_map_tx_data->dst_slot_id;
     if (tep_data->action_id  == TEP_MPLS_UDP_TEP_ID) {
         spec->fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-        spec->tep.ip_addr = tep_data->tep_mpls_udp_action.dipo;
+        spec->tep.ip_addr.af = IP_AF_IPV4;
+        spec->tep.ip_addr.addr.v4_addr = tep_data->tep_mpls_udp_action.dipo;
     } else if (tep_data->action_id  == TEP_VXLAN_TEP_ID) {
         spec->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-        spec->tep.ip_addr = tep_data->tep_vxlan_action.dipo;
+        spec->tep.ip_addr.af = IP_AF_IPV4;
+        spec->tep.ip_addr.addr.v4_addr = tep_data->tep_vxlan_action.dipo;
     }
 }
 
@@ -980,7 +983,8 @@ mapping_impl::read_remote_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
         memset(&tparams, 0, sizeof(tparams));
         remote_vnic_mapping_rx_key.vnic_metadata_src_slot_id =
             spec->fabric_encap.val.mpls_tag;
-        remote_vnic_mapping_rx_key.ipv4_1_srcAddr = spec->tep.ip_addr;
+        remote_vnic_mapping_rx_key.ipv4_1_srcAddr =
+            spec->tep.ip_addr.addr.v4_addr;
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &remote_vnic_mapping_rx_key,
                                        &remote_vnic_mapping_rx_data,
                                        REMOTE_VNIC_MAPPING_RX_REMOTE_VNIC_MAPPING_RX_INFO_ID,

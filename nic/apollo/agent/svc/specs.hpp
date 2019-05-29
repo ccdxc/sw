@@ -10,6 +10,7 @@
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_meter.hpp"
 #include "nic/apollo/api/include/pds_tag.hpp"
+#include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/meter.hpp"
@@ -18,6 +19,7 @@
 #include "nic/apollo/agent/svc/tag.hpp"
 #include "nic/apollo/agent/svc/vnic.hpp"
 #include "nic/apollo/agent/svc/vpc.hpp"
+#include "nic/apollo/agent/svc/tunnel.hpp"
 #include "gen/proto/types.pb.h"
 
 //----------------------------------------------------------------------------
@@ -196,6 +198,36 @@ pds_agent_vpc_peer_api_spec_fill (pds_vpc_peer_spec_t *api_spec,
     api_spec->key.id = proto_spec.id();
     api_spec->vpc1.id = proto_spec.vpc1();
     api_spec->vpc2.id = proto_spec.vpc2();
+}
+
+// Populate proto buf spec from tep API spec
+static inline void
+tep_api_spec_to_proto_spec (pds::TunnelSpec *proto_spec,
+                            const pds_tep_spec_t *api_spec)
+{
+    ipaddr_api_spec_to_proto_spec(proto_spec->mutable_remoteip(),
+                                  &api_spec->key.ip_addr);
+    switch (api_spec->type) {
+    case PDS_TEP_TYPE_WORKLOAD:
+        proto_spec->set_type(pds::TUNNEL_TYPE_WORKLOAD);
+        break;
+    case PDS_TEP_TYPE_IGW:
+        proto_spec->set_type(pds::TUNNEL_TYPE_IGW);
+        break;
+    case PDS_TEP_TYPE_SERVICE:
+        proto_spec->set_type(pds::TUNNEL_TYPE_SERVICE);
+        break;
+    case PDS_TEP_TYPE_NONE:
+    default:
+        proto_spec->set_type(pds::TUNNEL_TYPE_NONE);
+        break;
+    }
+    ipaddr_api_spec_to_proto_spec(proto_spec->mutable_localip(),
+                                  &api_spec->ip_addr);
+    proto_spec->set_macaddress(MAC_TO_UINT64(api_spec->mac));
+    pds_encap_to_proto_encap(proto_spec->mutable_encap(),
+                             &api_spec->encap);
+    proto_spec->set_nat(api_spec->nat);
 }
 
 #endif    // __AGENT_SVC_SPECS_HPP__

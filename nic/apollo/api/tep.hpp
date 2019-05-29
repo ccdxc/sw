@@ -109,7 +109,7 @@ public:
 
     /// \brief return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "tep-"  + string(ipv4addr2str(key_.ip_addr));
+        return "tep-"  + string(ipaddr2str(&key_.ip_addr));
     }
 
     /// \brief     helper function to get key given TEP entry
@@ -146,7 +146,7 @@ public:
 
     /// \brief    return TEP IPv4 address
     /// \return    IPv4 address of the TEP
-    ipv4_addr_t ip(void) const { return key_.ip_addr; }
+    ip_addr_t& ip(void) { return key_.ip_addr; }
 
     /// \brief    return the MAC address corresponding to this TEP
     /// \return    ethernet MAC address of this TEP (configured/learnt)

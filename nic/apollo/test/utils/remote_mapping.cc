@@ -69,7 +69,8 @@ remote_mapping_util::create(void) const {
     }
 
     inet_aton(this->tep_ip.c_str(), &ipaddr);
-    remote_spec.tep.ip_addr = ntohl(ipaddr.s_addr);
+    remote_spec.tep.ip_addr.af = IP_AF_IPV4;
+    remote_spec.tep.ip_addr.addr.v4_addr = ntohl(ipaddr.s_addr);
     mac_str_to_addr((char *)this->vnic_mac.c_str(), remote_spec.vnic_mac);
 
     return pds_remote_mapping_create(&remote_spec);
@@ -98,7 +99,7 @@ remote_mapping_util::read(pds_remote_mapping_info_t *info) const {
               << " SW: vpc_id: " << this->vpc_id << "\n";
     std::cout << "HW: vnic ip: " << ipaddr2str(&info->spec.key.ip_addr)
               << " SW: vpc_id: " << this->vnic_ip.c_str() << "\n";
-    std::cout << "HW: tep ip: " << ipv4addr2str(info->spec.tep.ip_addr)
+    std::cout << "HW: tep ip: " << ipaddr2str(&info->spec.tep.ip_addr)
               << " SW: tep ip: " << this->tep_ip.c_str() << "\n";
     std::cout << "HW: mpls_tag: " << info->spec.fabric_encap.type
               << " SW: mpls_tag: " << this->mpls_tag << "\n";
@@ -119,7 +120,7 @@ remote_mapping_util::read(pds_remote_mapping_info_t *info) const {
     }
     // SDK_ASSERT((mac1 == mac2) == 0); // not stored in hw table
     SDK_ASSERT(strcmp(this->tep_ip.c_str(),
-                      ipv4addr2str(info->spec.tep.ip_addr)) == 0);
+                      ipaddr2str(&info->spec.tep.ip_addr)) == 0);
 
     return rv;
 }

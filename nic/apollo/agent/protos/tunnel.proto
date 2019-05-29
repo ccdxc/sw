@@ -23,6 +23,7 @@ enum TunnelType {
   TUNNEL_TYPE_NONE     = 0;
   TUNNEL_TYPE_IGW      = 1;    // Tunnel type for Internet Gateway
   TUNNEL_TYPE_WORKLOAD = 2;    // Tunnel type for east-traffic workloads
+  TUNNEL_TYPE_SERVICE  = 3;    // Service tunnel
 }
 
 // tunnel configuration

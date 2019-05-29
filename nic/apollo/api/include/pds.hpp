@@ -113,7 +113,7 @@ typedef struct pds_subnet_key_s {
 
 /// \brief    TEP key
 typedef struct pds_tep_key_s {
-    ipv4_addr_t ip_addr;    ///< TEP IP address
+    ip_addr_t ip_addr;    ///< TEP IP address
 } __PACK__ pds_tep_key_t;
 
 /// \brief VNIC key

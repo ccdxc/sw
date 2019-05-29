@@ -295,7 +295,7 @@ mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
                     "local %u, subnet %u, tep %s, vnic %u, "
                     "pub_ip_valid %u pub_ip %s",
                     spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr), is_local_,
-                    spec->subnet.id, ipv4addr2str(spec->tep.ip_addr),
+                    spec->subnet.id, ipaddr2str(&spec->tep.ip_addr),
                     spec->vnic.id, spec->public_ip_valid,
                     ipaddr2str(&spec->public_ip));
 
@@ -612,7 +612,7 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                     "overlay mac %s, fabric encap type %u "
                     "fabric encap value %u, vnic %u",
                     spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr),
-                    spec->subnet.id, ipv4addr2str(spec->tep.ip_addr),
+                    spec->subnet.id, ipaddr2str(&spec->tep.ip_addr),
                     macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
                     spec->fabric_encap.val.value, spec->vnic.id);
     if (is_local_) {

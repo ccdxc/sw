@@ -127,10 +127,10 @@ mirror_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
         // if the vpc is substrate VPC, dst IP must be a known TEP
         if (vpc->type() == PDS_VPC_TYPE_SUBSTRATE) {
-            tep_key.ip_addr = spec->erspan_spec.dst_ip.addr.v4_addr;
+            tep_key.ip_addr = spec->erspan_spec.dst_ip;
             if ((tep = tep_db()->find(&tep_key)) == NULL) {
                 PDS_TRACE_ERR("Unknown TEP IP %s",
-                              ipv4addr2str(tep_key.ip_addr));
+                              ipaddr2str(&tep_key.ip_addr));
                 return SDK_RET_INVALID_ARG;
             }
             // TODO: what if this TEP is local TEP itself ?
