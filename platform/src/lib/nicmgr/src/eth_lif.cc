@@ -2460,6 +2460,23 @@ EthLif::SendFWDownEvent()
         return;
     }
 
+    // Update local lif status
+    lif_status->link_status = 0;
+    lif_status->link_speed =  0;
+    ++lif_status->eid;
+    WRITE_MEM(lif_status_addr, (uint8_t *)lif_status, sizeof(struct lif_status), 0);
+
+    // Update host lif status
+    if (host_lif_status_addr != 0) {
+        edmaq->Post(
+            spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
+            lif_status_addr,
+            host_lif_status_addr,
+            sizeof(struct lif_status),
+            NULL
+        );
+    }
+
     if (notify_enabled == 0) {
         return;
     }
