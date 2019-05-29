@@ -16,8 +16,6 @@
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
-// reserved meter id
-#define PDS_RESERVED_METER_HW_ID    0
 #define PDS_MAX_METER_POLICER       8192
 
 namespace api {

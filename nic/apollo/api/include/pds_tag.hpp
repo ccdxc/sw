@@ -24,6 +24,8 @@
 /// \brief tag policy rule
 typedef struct pds_tag_rule_s {
     uint32_t       tag;             ///< tag value
+    uint32_t       priority;        ///< priority of the rule (numerically
+                                    ///< lower values is higher priority)
     uint32_t       num_prefixes;    ///< number of prefixes in this tag
     ip_prefix_t    *prefixes;       ///< prefixes of this tag rule
 } __PACK__ pds_tag_rule_t;

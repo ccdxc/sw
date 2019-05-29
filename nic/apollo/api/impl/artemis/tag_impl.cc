@@ -12,6 +12,7 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/tag.hpp"
+#include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 #include "nic/apollo/api/impl/artemis/tag_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/lpm/lpm.hpp"
@@ -83,12 +84,61 @@ tag_impl::nuke_resources(api_base *api_obj) {
 
 sdk_ret_t
 tag_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_OK;
+    sdk_ret_t         ret;
+    pds_tag_spec_t    *spec;
+    pds_vpc_key_t     vpc_key;
+    route_table_t     *rtable;
+    vpc_entry         *vpc;
+    tag_entry         *tag;
+    uint32_t          n = 0, num_prefixes = 0;
+
+    spec = &obj_ctxt->api_params->tag_spec;
+    // allocate memory for the library to build route table
+    for (uint32_t i = 0; i < spec->num_rules; i++) {
+        num_prefixes += spec->rules[i].num_prefixes;
+    }
+    if (num_prefixes > PDS_MAX_PREFIX_PER_TAG) {
+        PDS_TRACE_ERR("No. of prefixes in tag tree %u exceed max. supported %u",
+                      num_prefixes, PDS_MAX_PREFIX_PER_TAG);
+        return SDK_RET_INVALID_ARG;
+
+    }
+    rtable =
+        (route_table_t *)
+            SDK_MALLOC(PDS_MEM_ALLOC_ID_TAG,
+                       sizeof(route_table_t) +
+                           (num_prefixes * sizeof(route_t)));
+    if (rtable == NULL) {
+        return sdk::SDK_RET_OOM;
+    }
+    rtable->af = spec->af;
+    rtable->default_nhid = PDS_IMPL_RESERVED_TAG_ID;
+    rtable->max_routes = tag_impl_db()->max_prefixes(rtable->af);
+    rtable->num_routes = num_prefixes;
+    for (uint32_t i = 0; i < spec->num_rules; i++) {
+        for (uint32_t j = 0; j < spec->rules[i].num_prefixes; j++) {
+            rtable->routes[n].prefix = spec->rules[i].prefixes[j];
+            rtable->routes[n].nhid = spec->rules[i].tag;
+            rtable->routes[n].prio = spec->rules[i].priority;
+            n++;
+        }
+    }
+    ret = lpm_tree_create(rtable,
+                          (spec->af == IP_AF_IPV4) ? ITREE_TYPE_TAG_V4 :
+                                                     ITREE_TYPE_TAG_V6,
+                          lpm_root_addr_,
+                          tag_impl_db()->table_size(spec->af));
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to build LPM tag table %u, err : %u",
+                      spec->key.id, ret);
+    }
+    SDK_FREE(PDS_MEM_ALLOC_ID_TAG, rtable);
+    return ret;
 }
 
 sdk_ret_t
 tag_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
-                        api_op_t api_op, obj_ctxt_t *obj_ctxt)
+                      api_op_t api_op, obj_ctxt_t *obj_ctxt)
 {
     return SDK_RET_OK;
 }

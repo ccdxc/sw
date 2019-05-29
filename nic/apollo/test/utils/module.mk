@@ -2,5 +2,5 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libpdstestutils.so
-MODULE_PIPELINE = apollo
+MODULE_PIPELINE = apollo artemis
 include ${MKDEFS}/post.mk

@@ -12,6 +12,7 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/meter.hpp"
+#include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 #include "nic/apollo/api/impl/artemis/meter_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/lpm/lpm.hpp"
@@ -123,7 +124,7 @@ meter_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_OOM;
     }
     rtable->af = spec->af;
-    rtable->default_nhid = PDS_RESERVED_METER_HW_ID;
+    rtable->default_nhid = PDS_IMPL_RESERVED_METER_HW_ID;
     rtable->max_routes = meter_impl_db()->max_prefixes(rtable->af);
     rtable->num_routes = num_prefixes;
     for (uint32_t i = 0; i < spec->num_rules; i++) {
@@ -135,12 +136,14 @@ meter_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             n++;
         }
     }
-    ret = lpm_tree_create(rtable, (spec->af == IP_AF_IPV4) ? ITREE_TYPE_METER_V4 :
+    ret = lpm_tree_create(rtable,
+                          (spec->af == IP_AF_IPV4) ? ITREE_TYPE_METER_V4 :
                                                      ITREE_TYPE_METER_V6,
                           lpm_root_addr_,
                           meter_impl_db()->table_size(spec->af));
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to build LPM meter table, err : %u", ret);
+        PDS_TRACE_ERR("Failed to build LPM meter table %u, err : %u",
+                      spec->key.id, ret);
     }
     SDK_FREE(PDS_MEM_ALLOC_ID_METER, rtable);
     return ret;
