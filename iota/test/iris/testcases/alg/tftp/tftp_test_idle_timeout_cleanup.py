@@ -3,7 +3,7 @@ import os
 from iota.test.iris.testcases.alg.tftp.tftp_utils import *
 from iota.test.iris.testcases.alg.alg_utils import *
 
-GRACE_TIME=5
+GRACE_TIME=15
 
 def Setup(tc):
     update_app('tftp', tc.iterators.timeout)

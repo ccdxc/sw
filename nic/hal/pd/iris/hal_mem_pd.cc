@@ -924,7 +924,8 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                                        ENTRY_TRACE_EN, table_health_monitor);
             } else {
                 bool trace_en = true;
-                if (tid == P4TBL_ID_FLOW_STATS) {
+                if (tid == P4TBL_ID_FLOW_STATS || tid == P4TBL_ID_SESSION_STATE 
+                    || tid == P4TBL_ID_FLOW_INFO) {
                     trace_en = false;
                 }
                 dm_tables_[tid - P4TBL_ID_INDEX_MIN] =

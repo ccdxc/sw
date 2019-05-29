@@ -1,0 +1,83 @@
+21:49:10.398477 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [S], seq 1959809153, win 29200, options [mss 1460,sackOK,TS val 4294931094 ecr 0,nop,wscale 7], length 0
+21:49:10.398531 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [S.], seq 253367450, ack 1959809154, win 28960, options [mss 1460,sackOK,TS val 4294930076 ecr 4294931094,nop,wscale 7], length 0
+21:49:10.398769 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [.], ack 1, win 229, options [nop,nop,TS val 4294931097 ecr 4294930076], length 0
+21:49:10.400792 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [P.], seq 1:21, ack 1, win 227, options [nop,nop,TS val 4294930079 ecr 4294931097], length 20: FTP: 220 (vsFTPd 3.0.2)
+21:49:10.400978 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [.], ack 21, win 229, options [nop,nop,TS val 4294931099 ecr 4294930079], length 0
+21:49:10.401087 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [P.], seq 1:7, ack 21, win 229, options [nop,nop,TS val 4294931100 ecr 4294930079], length 6: FTP: SYST
+21:49:10.401096 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [.], ack 7, win 227, options [nop,nop,TS val 4294930079 ecr 4294931100], length 0
+21:49:10.401160 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [P.], seq 21:59, ack 7, win 227, options [nop,nop,TS val 4294930079 ecr 4294931100], length 38: FTP: 530 Please login with USER and PASS.
+21:49:10.401300 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [P.], seq 7:19, ack 59, win 229, options [nop,nop,TS val 4294931100 ecr 4294930079], length 12: FTP: USER admin
+21:49:10.401337 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [P.], seq 59:93, ack 19, win 227, options [nop,nop,TS val 4294930079 ecr 4294931100], length 34: FTP: 331 Please specify the password.
+21:49:10.401430 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [P.], seq 19:39, ack 93, win 229, options [nop,nop,TS val 4294931100 ecr 4294930079], length 20: FTP: PASS linuxpassword
+21:49:10.440742 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [.], ack 39, win 227, options [nop,nop,TS val 4294930119 ecr 4294931100], length 0
+21:49:10.443318 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [P.], seq 93:116, ack 39, win 227, options [nop,nop,TS val 4294930121 ecr 4294931100], length 23: FTP: 230 Login successful.
+21:49:10.443508 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [P.], seq 39:60, ack 116, win 229, options [nop,nop,TS val 4294931142 ecr 4294930121], length 21: FTP: CWD /home/admin/ftp
+21:49:10.443525 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [.], ack 60, win 227, options [nop,nop,TS val 4294930121 ecr 4294931142], length 0
+21:49:10.443607 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [P.], seq 116:153, ack 60, win 227, options [nop,nop,TS val 4294930121 ecr 4294931142], length 37: FTP: 250 Directory successfully changed.
+21:49:10.443737 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [P.], seq 60:65, ack 153, win 229, options [nop,nop,TS val 4294931142 ecr 4294930121], length 5: FTP: PWD
+21:49:10.443777 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [P.], seq 153:176, ack 65, win 227, options [nop,nop,TS val 4294930122 ecr 4294931142], length 23: FTP: 257 "/home/admin/ftp"
+21:49:10.443894 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [P.], seq 65:71, ack 176, win 229, options [nop,nop,TS val 4294931142 ecr 4294930122], length 6: FTP: PASV
+21:49:10.444084 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [P.], seq 176:230, ack 71, win 227, options [nop,nop,TS val 4294930122 ecr 4294931142], length 54: FTP: 227 Entering Passive Mode (192,168,100,101,130,165).
+21:49:10.449002 IP 192.168.100.102.47813 > 192.168.100.101.33445: Flags [S], seq 4027992896, win 29200, options [mss 1460,sackOK,TS val 4294931143 ecr 0,nop,wscale 7], length 0
+21:49:10.449034 IP 192.168.100.101.33445 > 192.168.100.102.47813: Flags [S.], seq 267338044, ack 4027992897, win 28960, options [mss 1460,sackOK,TS val 4294930127 ecr 4294931143,nop,wscale 7], length 0
+21:49:10.449165 IP 192.168.100.102.47813 > 192.168.100.101.33445: Flags [.], ack 1, win 229, options [nop,nop,TS val 4294931148 ecr 4294930127], length 0
+21:49:10.449265 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [P.], seq 71:77, ack 230, win 229, options [nop,nop,TS val 4294931148 ecr 4294930122], length 6: FTP: LIST
+21:49:10.449519 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [P.], seq 230:269, ack 77, win 227, options [nop,nop,TS val 4294930127 ecr 4294931148], length 39: FTP: 150 Here comes the directory listing.
+21:49:10.449609 IP 192.168.100.101.33445 > 192.168.100.102.47813: Flags [P.], seq 1:145, ack 1, win 227, options [nop,nop,TS val 4294930127 ecr 4294931148], length 144
+21:49:10.449638 IP 192.168.100.101.33445 > 192.168.100.102.47813: Flags [F.], seq 145, ack 1, win 227, options [nop,nop,TS val 4294930127 ecr 4294931148], length 0
+21:49:10.449725 IP 192.168.100.102.47813 > 192.168.100.101.33445: Flags [.], ack 145, win 237, options [nop,nop,TS val 4294931148 ecr 4294930127], length 0
+21:49:10.449813 IP 192.168.100.102.47813 > 192.168.100.101.33445: Flags [F.], seq 1, ack 146, win 237, options [nop,nop,TS val 4294931148 ecr 4294930127], length 0
+21:49:10.449823 IP 192.168.100.101.33445 > 192.168.100.102.47813: Flags [.], ack 2, win 227, options [nop,nop,TS val 4294930128 ecr 4294931148], length 0
+21:49:10.449863 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [P.], seq 269:293, ack 77, win 227, options [nop,nop,TS val 4294930128 ecr 4294931148], length 24: FTP: 226 Directory send OK.
+21:49:10.449950 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [.], ack 293, win 229, options [nop,nop,TS val 4294931148 ecr 4294930127], length 0
+21:49:10.450086 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [P.], seq 77:83, ack 293, win 229, options [nop,nop,TS val 4294931149 ecr 4294930127], length 6: FTP: PASV
+21:49:10.450201 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [P.], seq 293:347, ack 83, win 227, options [nop,nop,TS val 4294930128 ecr 4294931149], length 54: FTP: 227 Entering Passive Mode (192,168,100,101,111,253).
+21:49:10.454853 IP 192.168.100.102.44826 > 192.168.100.101.28669: Flags [S], seq 3455980580, win 29200, options [mss 1460,sackOK,TS val 4294931149 ecr 0,nop,wscale 7], length 0
+21:49:10.454901 IP 192.168.100.101.28669 > 192.168.100.102.44826: Flags [S.], seq 3554961472, ack 3455980581, win 28960, options [mss 1460,sackOK,TS val 4294930133 ecr 4294931149,nop,wscale 7], length 0
+21:49:10.455035 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [P.], seq 83:104, ack 347, win 229, options [nop,nop,TS val 4294931154 ecr 4294930128], length 21: FTP: NLST ftp_server.txt
+21:49:10.455055 IP 192.168.100.102.44826 > 192.168.100.101.28669: Flags [.], ack 1, win 229, options [nop,nop,TS val 4294931153 ecr 4294930133], length 0
+21:49:10.455230 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [P.], seq 347:386, ack 104, win 227, options [nop,nop,TS val 4294930133 ecr 4294931154], length 39: FTP: 150 Here comes the directory listing.
+21:49:10.455271 IP 192.168.100.101.28669 > 192.168.100.102.44826: Flags [P.], seq 1:17, ack 1, win 227, options [nop,nop,TS val 4294930133 ecr 4294931153], length 16
+21:49:10.455297 IP 192.168.100.101.28669 > 192.168.100.102.44826: Flags [F.], seq 17, ack 1, win 227, options [nop,nop,TS val 4294930133 ecr 4294931153], length 0
+21:49:10.455467 IP 192.168.100.102.44826 > 192.168.100.101.28669: Flags [.], ack 17, win 229, options [nop,nop,TS val 4294931154 ecr 4294930133], length 0
+21:49:10.455503 IP 192.168.100.102.44826 > 192.168.100.101.28669: Flags [F.], seq 1, ack 18, win 229, options [nop,nop,TS val 4294931154 ecr 4294930133], length 0
+21:49:10.455528 IP 192.168.100.101.28669 > 192.168.100.102.44826: Flags [.], ack 2, win 227, options [nop,nop,TS val 4294930133 ecr 4294931154], length 0
+21:49:10.455570 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [P.], seq 386:410, ack 104, win 227, options [nop,nop,TS val 4294930133 ecr 4294931154], length 24: FTP: 226 Directory send OK.
+21:49:10.455657 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [.], ack 410, win 229, options [nop,nop,TS val 4294931154 ecr 4294930133], length 0
+21:49:10.456418 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [P.], seq 104:110, ack 410, win 229, options [nop,nop,TS val 4294931155 ecr 4294930133], length 6: FTP: PASV
+21:49:10.456535 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [P.], seq 410:462, ack 110, win 227, options [nop,nop,TS val 4294930134 ecr 4294931155], length 52: FTP: 227 Entering Passive Mode (192,168,100,101,34,29).
+21:49:10.460565 IP 192.168.100.102.42494 > 192.168.100.101.8733: Flags [S], seq 4268649975, win 29200, options [mss 1460,sackOK,TS val 4294931155 ecr 0,nop,wscale 7], length 0
+21:49:10.460603 IP 192.168.100.101.8733 > 192.168.100.102.42494: Flags [S.], seq 1747334455, ack 4268649976, win 28960, options [mss 1460,sackOK,TS val 4294930138 ecr 4294931155,nop,wscale 7], length 0
+21:49:10.460736 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [P.], seq 110:131, ack 462, win 229, options [nop,nop,TS val 4294931159 ecr 4294930134], length 21: FTP: RETR ftp_server.txt
+21:49:10.460750 IP 192.168.100.102.42494 > 192.168.100.101.8733: Flags [.], ack 1, win 229, options [nop,nop,TS val 4294931159 ecr 4294930138], length 0
+21:49:10.460933 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [P.], seq 462:534, ack 131, win 227, options [nop,nop,TS val 4294930139 ecr 4294931159], length 72: FTP: 150 Opening BINARY mode data connection for ftp_server.txt (17 bytes).
+21:49:10.460977 IP 192.168.100.101.8733 > 192.168.100.102.42494: Flags [P.], seq 1:18, ack 1, win 227, options [nop,nop,TS val 4294930139 ecr 4294931159], length 17
+21:49:10.460998 IP 192.168.100.101.8733 > 192.168.100.102.42494: Flags [F.], seq 18, ack 1, win 227, options [nop,nop,TS val 4294930139 ecr 4294931159], length 0
+21:49:10.461082 IP 192.168.100.102.42494 > 192.168.100.101.8733: Flags [.], ack 18, win 229, options [nop,nop,TS val 4294931160 ecr 4294930139], length 0
+21:49:10.462414 IP 192.168.100.102.42494 > 192.168.100.101.8733: Flags [F.], seq 1, ack 19, win 229, options [nop,nop,TS val 4294931161 ecr 4294930139], length 0
+21:49:10.462446 IP 192.168.100.101.8733 > 192.168.100.102.42494: Flags [.], ack 2, win 227, options [nop,nop,TS val 4294930140 ecr 4294931161], length 0
+21:49:10.462513 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [P.], seq 534:558, ack 131, win 227, options [nop,nop,TS val 4294930140 ecr 4294931159], length 24: FTP: 226 Transfer complete.
+21:49:10.462658 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [.], ack 558, win 229, options [nop,nop,TS val 4294931161 ecr 4294930139], length 0
+21:49:10.463409 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [P.], seq 131:137, ack 558, win 229, options [nop,nop,TS val 4294931162 ecr 4294930139], length 6: FTP: PASV
+21:49:10.463522 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [P.], seq 558:610, ack 137, win 227, options [nop,nop,TS val 4294930141 ecr 4294931162], length 52: FTP: 227 Entering Passive Mode (192,168,100,101,74,67).
+21:49:10.466767 IP 192.168.100.102.51597 > 192.168.100.101.19011: Flags [S], seq 3998353523, win 29200, options [mss 1460,sackOK,TS val 4294931162 ecr 0,nop,wscale 7], length 0
+21:49:10.466808 IP 192.168.100.101.19011 > 192.168.100.102.51597: Flags [S.], seq 2562130961, ack 3998353524, win 28960, options [mss 1460,sackOK,TS val 4294930145 ecr 4294931162,nop,wscale 7], length 0
+21:49:10.466949 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [P.], seq 137:158, ack 610, win 229, options [nop,nop,TS val 4294931165 ecr 4294930141], length 21: FTP: STOR ftp_client.txt
+21:49:10.466962 IP 192.168.100.102.51597 > 192.168.100.101.19011: Flags [.], ack 1, win 229, options [nop,nop,TS val 4294931165 ecr 4294930145], length 0
+21:49:10.467174 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [P.], seq 610:632, ack 158, win 227, options [nop,nop,TS val 4294930145 ecr 4294931165], length 22: FTP: 150 Ok to send data.
+21:49:10.467896 IP 192.168.100.102.51597 > 192.168.100.101.19011: Flags [P.], seq 1:19, ack 1, win 229, options [nop,nop,TS val 4294931166 ecr 4294930145], length 18
+21:49:10.467923 IP 192.168.100.102.51597 > 192.168.100.101.19011: Flags [F.], seq 19, ack 1, win 229, options [nop,nop,TS val 4294931166 ecr 4294930145], length 0
+21:49:10.467966 IP 192.168.100.101.19011 > 192.168.100.102.51597: Flags [.], ack 19, win 227, options [nop,nop,TS val 4294930146 ecr 4294931166], length 0
+21:49:10.468017 IP 192.168.100.101.19011 > 192.168.100.102.51597: Flags [F.], seq 1, ack 20, win 227, options [nop,nop,TS val 4294930146 ecr 4294931166], length 0
+21:49:10.468133 IP 192.168.100.102.51597 > 192.168.100.101.19011: Flags [.], ack 2, win 229, options [nop,nop,TS val 4294931167 ecr 4294930146], length 0
+21:49:10.468202 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [P.], seq 632:656, ack 158, win 227, options [nop,nop,TS val 4294930146 ecr 4294931165], length 24: FTP: 226 Transfer complete.
+21:49:10.468412 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [.], ack 656, win 229, options [nop,nop,TS val 4294931167 ecr 4294930145], length 0
+21:49:10.468452 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [P.], seq 158:164, ack 656, win 229, options [nop,nop,TS val 4294931167 ecr 4294930145], length 6: FTP: QUIT
+21:49:10.468490 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [P.], seq 656:670, ack 164, win 227, options [nop,nop,TS val 4294930146 ecr 4294931167], length 14: FTP: 221 Goodbye.
+21:49:10.468521 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [F.], seq 670, ack 164, win 227, options [nop,nop,TS val 4294930146 ecr 4294931167], length 0
+21:49:10.468612 IP 192.168.100.102.55414 > 192.168.100.101.21: Flags [F.], seq 164, ack 671, win 229, options [nop,nop,TS val 4294931167 ecr 4294930146], length 0
+21:49:10.468638 IP 192.168.100.101.21 > 192.168.100.102.55414: Flags [.], ack 165, win 227, options [nop,nop,TS val 4294930146 ecr 4294931167], length 0
+21:49:39.474883 ARP, Reverse Request who-is 00:46:46:00:02:02 tell 00:46:46:00:02:02, length 46
+21:49:41.641610 ARP, Reverse Request who-is 00:46:46:00:02:01 tell 00:46:46:00:02:01, length 46
+21:50:31.866896 ARP, Reverse Request who-is 00:46:46:00:01:02 tell 00:46:46:00:01:02, length 46
+

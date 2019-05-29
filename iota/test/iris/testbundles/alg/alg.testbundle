@@ -34,7 +34,8 @@ testcases:
         testcase: testcases.alg.tftp.tftp_test_idle_timeout_cleanup
         iterators:
             type    : simple
-            timeout : [10s, 20s]
+            #timeout : [10s, 20s]
+            timeout : [10s]
         args    :
             type: local_only
         
@@ -53,7 +54,8 @@ testcases:
         iterators:
            type   : nested
            mode   : [ active, passive ]
-           timeout: [ 10s, 20s ]
+           #timeout: [ 10s, 20s ]
+           timeout : [10s]
         args     :
            type : local_only
 
@@ -261,7 +263,8 @@ testcases:
             type: local_only
         iterators:
             type   : simple
-            timeout : [30s, 15s]
+            #timeout : [30s, 15s]
+            timeout: [15s]
 
     -   name    : DNS_DROP_MAX_MSG_LENGTH
         testcase: testcases.alg.dns.dns_drop_max_message_length
