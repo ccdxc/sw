@@ -35,7 +35,7 @@ nvme_sesspostxts_tx_sessprodcb_process:
     //sess_wqe is populated in sess_wqe_process, but DMA cmd is enqueued here
     add         r3, d.dgst_q_base_addr, r3
     DMA_CMD_BASE_GET(DMA_CMD_BASE, session_wqe_dma)
-    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, sess_wqe_cid, sess_wqe_cid, r3)
+    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, sess_wqe_cmdid, sess_wqe_pduid, r3)
 
     //ring the doorbell of dgst_q
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, \

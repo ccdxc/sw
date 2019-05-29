@@ -34,11 +34,11 @@ service Nvme {
 //**********************   NVME Feature Enable *****************************//
 // NvmeEnable Request object
 message NvmeEnableRequest {
-  uint32                   max_ns          = 1;    // Max Namespaces
-  uint32                   max_sess        = 2;    // Max Sessions
-  uint32                   max_cmd_context = 3;    // Max Command Contexts
-  uint32                   tx_max_aol      = 4;    // Max Tx AOL descriptors
-  uint32                   rx_max_aol      = 5;    // Max Rx AOL descriptors
+  uint32                   max_ns               = 1;    // Max Namespaces
+  uint32                   max_sess             = 2;    // Max Sessions
+  uint32                   max_cmd_context      = 3;    // Max Command Contexts
+  uint32                   tx_max_pdu_context   = 4;    // Max Tx PDU Contexts
+  uint32                   rx_max_pdu_context   = 5;    // Max Rx PDU Contexts
 }
 
 // NvmeEnableRequestMsg is batched request

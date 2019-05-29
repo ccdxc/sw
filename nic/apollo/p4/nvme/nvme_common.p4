@@ -503,13 +503,13 @@ header_type resourcecb_t {
         page_ring_rsvd                  :  3;
         page_ring_choke_counter         :  8;
 
-        // ring of free AOL descriptor pairs
-        aol_ring_pi                     : 16;
-        aol_ring_proxy_ci               : 16;
-        aol_ring_ci                     : 16;
-        aol_ring_log_sz                 :  5;
-        aol_ring_rsvd                   :  3;
-        aol_ring_choke_counter          :  8;
+        // ring of free pduids 
+        pduid_ring_pi                   : 16;
+        pduid_ring_proxy_ci             : 16;
+        pduid_ring_ci                   : 16;
+        pduid_ring_log_sz               :  5;
+        pduid_ring_rsvd                 :  3;
+        pduid_ring_choke_counter        :  8;
 
         // ring of free cmdids
         cmdid_ring_pi                   : 16;
@@ -527,8 +527,8 @@ header_type resourcecb_t {
 #define RESOURCECB_PARAMS                                                      \
 page_ring_pi, page_ring_proxy_ci, page_ring_ci, page_ring_log_sz, \
 page_ring_rsvd, page_ring_choke_counter, \
-aol_ring_pi, aol_ring_proxy_ci, aol_ring_ci, aol_ring_log_sz, \
-aol_ring_rsvd, aol_ring_choke_counter, \
+pduid_ring_pi, pduid_ring_proxy_ci, pduid_ring_ci, pduid_ring_log_sz, \
+pduid_ring_rsvd, pduid_ring_choke_counter, \
 cmdid_ring_pi, cmdid_ring_proxy_ci, cmdid_ring_ci, cmdid_ring_log_sz, \
 cmdid_ring_rsvd, cmdid_ring_choke_counter, \
 pad
@@ -541,12 +541,12 @@ pad
     modify_field(resourcecb_d.page_ring_log_sz, page_ring_log_sz);              \
     modify_field(resourcecb_d.page_ring_rsvd, page_ring_rsvd);                  \
     modify_field(resourcecb_d.page_ring_choke_counter, page_ring_choke_counter);\
-    modify_field(resourcecb_d.aol_ring_pi, aol_ring_pi);                        \
-    modify_field(resourcecb_d.aol_ring_proxy_ci, aol_ring_proxy_ci);            \
-    modify_field(resourcecb_d.aol_ring_ci, aol_ring_ci);                        \
-    modify_field(resourcecb_d.aol_ring_log_sz, aol_ring_log_sz);                \
-    modify_field(resourcecb_d.aol_ring_rsvd, aol_ring_rsvd);                    \
-    modify_field(resourcecb_d.aol_ring_choke_counter, aol_ring_choke_counter);  \
+    modify_field(resourcecb_d.pduid_ring_pi, pduid_ring_pi);                    \
+    modify_field(resourcecb_d.pduid_ring_proxy_ci, pduid_ring_proxy_ci);        \
+    modify_field(resourcecb_d.pduid_ring_ci, pduid_ring_ci);                    \
+    modify_field(resourcecb_d.pduid_ring_log_sz, pduid_ring_log_sz);            \
+    modify_field(resourcecb_d.pduid_ring_rsvd, pduid_ring_rsvd);                \
+    modify_field(resourcecb_d.pduid_ring_choke_counter, pduid_ring_choke_counter);\
     modify_field(resourcecb_d.cmdid_ring_pi, cmdid_ring_pi);                    \
     modify_field(resourcecb_d.cmdid_ring_proxy_ci, cmdid_ring_proxy_ci);        \
     modify_field(resourcecb_d.cmdid_ring_ci, cmdid_ring_ci);                    \
@@ -567,17 +567,17 @@ header_type cmdid_ring_entry_t {
 #define GENERATE_CMDID_RING_ENTRY_D                                             \
     modify_field(cmdid_ring_entry_d.cmdid, cmdid);
 
-header_type aolid_ring_entry_t {
+header_type pduid_ring_entry_t {
     fields {
-        aolid                           : 16;
+        pduid                           : 16;
     }
 }
 
-#define AOLID_RING_ENTRY_PARAMS \
-    aolid
+#define PDUID_RING_ENTRY_PARAMS \
+    pduid
 
-#define GENERATE_AOLID_RING_ENTRY_D                                             \
-    modify_field(aolid_ring_entry_d.aolid, aolid);
+#define GENERATE_PDUID_RING_ENTRY_D                                             \
+    modify_field(pduid_ring_entry_d.pduid, pduid);
 
 
 
@@ -643,18 +643,24 @@ header_type cmd_context_t {
     log_host_page_size  :   5;
     rsvd2               :   3;
 
+    // these pointers would eventually keep track of where we left off 
+    // in the previous PDU
+    prp1                :   64;
+    prp2                :   64;
+
     prp1_offset         :   16;
-    aolid               :   16;
+    rsvd3               :   16;
     key_index           :   32;
     sec_key_index       :   32;
-    pad                 :  160;
+    pad                 :   32;
   }
 }
 
 #define CMD_CTXT_PARAMS \
 opc, fuse, rsvd0, psdt, cid, nsid, slba, nlb, rsvd1, \
 log_lba_size, lif, sq_id, session_id, num_prps, num_pages, num_aols, state, \
-log_host_page_size, rsvd2, prp1_offset, aolid, key_index, sec_key_index, pad
+log_host_page_size, rsvd2, prp1, prp2, \
+prp1_offset, rsvd3, key_index, sec_key_index, pad
 
 #define GENERATE_CMD_CTXT_D \
     modify_field(cmd_ctxt_d.opc, opc); \
@@ -676,25 +682,127 @@ log_host_page_size, rsvd2, prp1_offset, aolid, key_index, sec_key_index, pad
     modify_field(cmd_ctxt_d.state, state); \
     modify_field(cmd_ctxt_d.log_host_page_size, log_host_page_size); \
     modify_field(cmd_ctxt_d.rsvd2, rsvd2); \
+    modify_field(cmd_ctxt_d.prp1, prp1); \
+    modify_field(cmd_ctxt_d.prp2, prp2); \
     modify_field(cmd_ctxt_d.prp1_offset, prp1_offset); \
-    modify_field(cmd_ctxt_d.aolid, aolid); \
+    modify_field(cmd_ctxt_d.rsvd3, rsvd3); \
     modify_field(cmd_ctxt_d.key_index, key_index); \
     modify_field(cmd_ctxt_d.sec_key_index, sec_key_index); \
     modify_field(cmd_ctxt_d.pad, pad); \
 
+//64B
+header_type pdu_context0_t {
+  fields {
+    cmd_opc	            :   8;	// Cmd Opcode
+    pdu_opc             :   8;    // PUD Opcode
+    cid	                :   16;	// Command identifier
+    nsid                :   32;	// Namespace identifier
+
+    slba                :   64;	// Starting LBA for this PDU
+    nlb                 :   16;	// Number of logical blocks for this PDU
+
+    log_lba_size        :   5;
+    log_host_page_size  :   5;
+    rsvd0               :   6;
+
+    num_prps            :   8;
+    num_pages           :   8;
+
+    prp1_offset         :   16;
+
+    key_index           :   32;
+    sec_key_index       :   32;
+
+    //30B
+    session_id          :   16;
+    pad                 :   240;
+  }
+}
+
+#define PDU_CTXT0_PARAMS \
+cmd_opc, pdu_opc, cid, nsid, slba, nlb, log_lba_size, log_host_page_size, rsvd0, \
+num_prps, num_pages, prp1_offset, key_index, sec_key_index, session_id, pad
+
+#define GENERATE_PDU_CTXT0_D \
+    modify_field(pdu_ctxt0_d.cmd_opc, cmd_opc);\
+    modify_field(pdu_ctxt0_d.pdu_opc, pdu_opc);\
+    modify_field(pdu_ctxt0_d.cid, cid);\
+    modify_field(pdu_ctxt0_d.nsid, nsid);\
+    modify_field(pdu_ctxt0_d.slba, slba);\
+    modify_field(pdu_ctxt0_d.nlb, nlb);\
+    modify_field(pdu_ctxt0_d.log_lba_size, log_lba_size);\
+    modify_field(pdu_ctxt0_d.log_host_page_size, log_host_page_size);\
+    modify_field(pdu_ctxt0_d.rsvd0, rsvd0);\
+    modify_field(pdu_ctxt0_d.num_prps, num_prps);\
+    modify_field(pdu_ctxt0_d.num_pages, num_pages);\
+    modify_field(pdu_ctxt0_d.prp1_offset, prp1_offset);\
+    modify_field(pdu_ctxt0_d.key_index, key_index);\
+    modify_field(pdu_ctxt0_d.sec_key_index, sec_key_index);\
+    modify_field(pdu_ctxt0_d.session_id, session_id);\
+    modify_field(pdu_ctxt0_d.pad, pad);\
+
+//64B
+header_type pdu_context1_t {
+  fields {
+    //8B
+    //Common Header (CH)   
+    pdu_type            : 8;
+    flags               : 8;
+    hlen                : 8;    //Header Length in bytes (HDGST not included)
+    pdo                 : 8;    //PDU Data Offset in bytes (from start of PDU)
+    plen                : 32;   //Total PDU Length (CH+PSH+HDGST+PAD+DATA+DDGST)
+
+    //16B
+    //PDU Specific Header (PSH)
+    psh                 : 128;
+
+    //4B
+    rx_hdgst            : 32;   //Received Header Digest
+    //4B
+    rx_ddgst            : 32;   //Received Data Digest
+
+    //Computed Fields
+    //8B + 8B
+    hdgst_status        : 64;
+    hdgst               : 64;
+    
+    //8B + 8B
+    ddgst_status        : 64;
+    ddgst               : 64;
+  }
+}
+
+#define PDU_CTXT1_PARAMS \
+pdu_type, flags, hlen, pdo, plen, psh, rx_hdgst, rx_ddgst, \
+hdgst_status, hdgst, ddgst_status, ddgst
+
+#define GENERATE_PDU_CTXT1_D \
+    modify_field(pdu_ctxt1_d.pdu_type, pdu_type);\
+    modify_field(pdu_ctxt1_d.flags, flags);\
+    modify_field(pdu_ctxt1_d.hlen, hlen);\
+    modify_field(pdu_ctxt1_d.pdo, pdo);\
+    modify_field(pdu_ctxt1_d.plen, plen);\
+    modify_field(pdu_ctxt1_d.psh, psh);\
+    modify_field(pdu_ctxt1_d.rx_hdgst, rx_hdgst);\
+    modify_field(pdu_ctxt1_d.rx_ddgst, rx_ddgst);\
+    modify_field(pdu_ctxt1_d.hdgst_status, hdgst_status);\
+    modify_field(pdu_ctxt1_d.hdgst, hdgst);\
+    modify_field(pdu_ctxt1_d.ddgst_status, ddgst_status);\
+    modify_field(pdu_ctxt1_d.ddgst, ddgst);\
+
 // wqe that gets posted into session XTS/DGST queues
-// for now, the allocated backend command ID is what gets posted, but we may
-// add more fields later, hence defining a separate structure
 header_type sess_wqe_t {
     fields {
-        cid : 16;
+        cmdid : 16;
+        pduid : 16;
     }
 }
 #define SESS_WQE_PARAMS  \
-cid
+cmdid, pduid
 
 #define GENERATE_SESS_WQE_D \
-    modify_field(sess_wqe_d.cid, cid);
+    modify_field(sess_wqe_d.cmdid, cmdid); \
+    modify_field(sess_wqe_d.pduid, pduid); \
 
 
 // this is the cb that is used to track the barco xts engine ring.

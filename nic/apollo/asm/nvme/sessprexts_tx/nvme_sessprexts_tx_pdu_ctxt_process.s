@@ -6,21 +6,21 @@
 
 struct phv_ p;
 struct s2_t0_k_ k;
-struct s2_t0_nvme_sessprexts_tx_cmd_ctxt_process_d d;
+struct s2_t0_nvme_sessprexts_tx_pdu_ctxt_process_d d;
 
 #define DMA_CMD_BASE    r5
 #define AOL_P           r3
 #define SHIFT           r4
+#define PDU_CTXT_P      r7
 
 //this number encodes which 64B AOL segment given page pointer falls into
 #define AOL_NUM_ARR 0x5444333222111000
 
 %%
     .param  nvme_sessprexts_tx_cb_writeback_process
-    .param  nvme_tx_aol_base
 
 .align
-nvme_sessprexts_tx_cmd_ctxt_process:
+nvme_sessprexts_tx_pdu_ctxt_process:
     add         r1, r0, d.num_pages
     seq         c1, k.to_s2_info_incr_num_pages, 1
     cmov        r2, c1, 1, 0
@@ -37,24 +37,22 @@ nvme_sessprexts_tx_cmd_ctxt_process:
     tbladd.f    d.num_pages, r2 //Flush
 
     bcf         [!c1], skip_page_ptr_update
-    mfspr       r3, spr_tbladdr     //BD Slot
+    mfspr       PDU_CTXT_P, spr_tbladdr     //BD Slot
 
     //calculate the offset at which the page ptr need to be stored 
     //in the command context
-    add         r3, r3, NVME_CMD_CTXT_PAGE_LIST_OFFSET
+    add         r3, PDU_CTXT_P, NVME_PDU_CTXT_PAGE_LIST_OFFSET
     add         r3, r3, r1, LOG_NUM_PAGE_PTR_BYTES
 
     //dma command to store the page ptr
     DMA_CMD_BASE_GET(DMA_CMD_BASE, page_ptr_dma)
     DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, page_ptr_ptr, page_ptr_ptr, r3)
 
-    //we also need to incrementally prepare the data digest AOL chain 
-    //in the space pointed by the aolid. It has space for upto 8 AOLs and in each
-    //AOL we have space for 3 pointers and fourth one need to be left for chain.
+    //we also need to incrementally prepare the data digest AOL descriptor chain 
+    //in the bottom section of pdu context. It has space for upto 7 AOL descriptors and in each
+    //AOL descriptor we have space for 3 pointers and fourth one need to be left for chaining.
     //in summary, we need to divide the num_pages value by 3
-    addui       AOL_P, r0, hiword(nvme_tx_aol_base)
-    addi        AOL_P, AOL_P, loword(nvme_tx_aol_base)
-    add         AOL_P, AOL_P, d.aolid, LOG_AOL_ENTRY_SIZE
+    add         AOL_P, PDU_CTXT_P, NVME_PDU_CTXT_AOL_DESC_LIST_OFFSET
 
     sll         SHIFT, r1, LOG_BITS_PER_NIB
 
@@ -71,10 +69,10 @@ nvme_sessprexts_tx_cmd_ctxt_process:
 
 skip_page_ptr_update:
 
-    phvwr       p.{t0_s2s_cmd_ctxt_to_writeback_info_slba...t0_s2s_cmd_ctxt_to_writeback_info_nlb}, d.{slba...nlb}
-    phvwrpair   p.t0_s2s_cmd_ctxt_to_writeback_info_log_lba_size, d.log_lba_size, \
-                p.t0_s2s_cmd_ctxt_to_writeback_info_log_host_page_size, d.log_host_page_size
-    phvwr       p.t0_s2s_cmd_ctxt_to_writeback_info_prp1_offset, d.prp1_offset
+    phvwr       p.{t0_s2s_pdu_ctxt_to_writeback_info_slba...t0_s2s_pdu_ctxt_to_writeback_info_nlb}, d.{slba...nlb}
+    phvwrpair   p.t0_s2s_pdu_ctxt_to_writeback_info_log_lba_size, d.log_lba_size, \
+                p.t0_s2s_pdu_ctxt_to_writeback_info_log_host_page_size, d.log_host_page_size
+    phvwr       p.t0_s2s_pdu_ctxt_to_writeback_info_prp1_offset, d.prp1_offset
     
     //store the keys in the xts descr
     phvwr       p.xts_desc_key_desc_index, d.{key_index}.wx

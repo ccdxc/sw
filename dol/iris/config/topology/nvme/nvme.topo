@@ -29,12 +29,12 @@ security_profiles: None
 security_policy: None
 proxy: True
 nvme_proxy:
-    enable          : True
-    max_cmd_context : 512
-    max_sess        : 512
-    max_ns          : 256
-    tx_max_aol      : 256
-    rx_max_aol      : 256
+    enable              : True
+    max_cmd_context     : 512
+    max_sess            : 512
+    max_ns              : 256
+    tx_max_pdu_context  : 256
+    rx_max_pdu_context  : 256
 
 timers:
     - entry:

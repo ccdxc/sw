@@ -37,10 +37,10 @@ class NvmeGlobalObject(base.ConfigObjectBase):
     def Show(self):
         logger.info('Nvme Global')
         logger.info('   - max_cmd_context: %d max_ns: %d max_sess: %d \
-                          tx_max_aol: %d rx_max_aol: %d' \
+                          tx_max_pdu_context: %d rx_max_pdu_context: %d' \
                      %(self.spec.max_cmd_context, self.spec.max_ns, \
-                       self.spec.max_sess, self.spec.tx_max_aol, \
-                       self.spec.rx_max_aol))
+                       self.spec.max_sess, self.spec.tx_max_pdu_context, \
+                       self.spec.rx_max_pdu_context))
         logger.info('   - cmd_context_ring_base: 0x%x cmd_context_page_base: 0x%x' \
                      %(self.cmd_context_ring_base, self.cmd_context_page_base))
         return
@@ -50,8 +50,8 @@ class NvmeGlobalObject(base.ConfigObjectBase):
         req_spec.max_cmd_context = self.spec.max_cmd_context
         req_spec.max_ns = self.spec.max_ns
         req_spec.max_sess = self.spec.max_sess
-        req_spec.tx_max_aol = self.spec.tx_max_aol
-        req_spec.rx_max_aol = self.spec.rx_max_aol
+        req_spec.tx_max_pdu_context = self.spec.tx_max_pdu_context
+        req_spec.rx_max_pdu_context = self.spec.rx_max_pdu_context
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

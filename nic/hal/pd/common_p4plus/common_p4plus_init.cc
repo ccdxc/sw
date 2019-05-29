@@ -334,20 +334,20 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_RX_SESSPRODCB);
     i++;
 
-    symbols[i].name = NVME_TX_AOL_BASE;
-    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_TX_AOL); 
+    symbols[i].name = NVME_TX_PDU_CONTEXT_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_TX_PDU_CONTEXT); 
     i++;
 
-    symbols[i].name = NVME_TX_AOL_RING_BASE;
-    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_TX_AOL_RING); 
+    symbols[i].name = NVME_TX_PDU_CONTEXT_RING_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_TX_PDU_CONTEXT_RING); 
     i++;
 
-    symbols[i].name = NVME_RX_AOL_BASE;
-    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_RX_AOL); 
+    symbols[i].name = NVME_RX_PDU_CONTEXT_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_RX_PDU_CONTEXT); 
     i++;
 
-    symbols[i].name = NVME_RX_AOL_RING_BASE;
-    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_RX_AOL_RING); 
+    symbols[i].name = NVME_RX_PDU_CONTEXT_RING_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_RX_PDU_CONTEXT_RING); 
     i++;
 
     symbols[i].name = NVME_TX_SESS_XTSQ_BASE;

@@ -12,30 +12,46 @@ struct s1_t0_nvme_req_tx_sqe_process_d d;
     .param  nvme_req_tx_nscb_process
     .param  nvme_nscb_base
 
+#define CID     r3
+#define NSID    r4
+#define SLBA    r5
+#define NLB     r6
+
 .align
 nvme_req_tx_sqe_process:
 
-    //copy important sqe params to cmd ctxt
+    //copy important sqe params to cmd ctxt and pdu ctxt
 
     //phvwr       p.{cmd_ctxt_opc...cmd_ctxt_nsid}, d.{opc...nsid}
     //phvwr       p.{cmd_ctxt_slba...cmd_ctxt_nlb}, d.{slba...nlb}
+
+    add         CID, r0, d.{cid}.hx
+    add         NSID, r0, d.{nsid}.wx
+    add         SLBA, r0, d.{slba}.dx
+    add         NLB, r0, d.{nlb}.hx
 
     //store params in big-endian format in cmd-ctxt
     //for some reason, phvwrpair is not working in combination with 
     //endian conversion
     phvwr       p.{cmd_ctxt_opc...cmd_ctxt_psdt}, d.{opc...psdt}
-    phvwr       p.cmd_ctxt_cid, d.{cid}.hx
-    phvwr       p.cmd_ctxt_nsid, d.{nsid}.wx
-    phvwr       p.cmd_ctxt_slba, d.{slba}.dx
-    phvwr       p.cmd_ctxt_nlb, d.{nlb}.hx
+    phvwrpair   p.cmd_ctxt_cid, CID, \
+                p.cmd_ctxt_nsid, NSID
+    phvwrpair   p.cmd_ctxt_slba, SLBA, \
+                p.cmd_ctxt_nlb, NLB
+    phvwrpair   p.cmd_ctxt_prp1, d.prp1, \
+                p.cmd_ctxt_prp2, d.prp2
 
+    phvwrpair   p.pdu_ctxt0_cmd_opc, d.opc, \
+                p.pdu_ctxt0_pdu_opc, NVME_O_TCP_PDU_TYPE_CAPSULECMD
+    phvwrpair   p.pdu_ctxt0_slba, SLBA, \
+                p.pdu_ctxt0_nlb, NLB
     
     phvwrpair   p.{cmd_ctxt_lif...cmd_ctxt_sq_id}, K_GLOBAL_LIF_QID, \
                 p.{cmd_ctxt_num_prps...cmd_ctxt_state}, r0
 
     phvwr       p.to_s2_info_opc, d.opc
-    phvwr       p.to_s2_info_slba, d.{slba}.dx
-    phvwr       p.to_s2_info_nlb, d.{nlb}.hx
+    phvwrpair   p.to_s2_info_slba, SLBA, \
+                p.to_s2_info_nlb, NLB
    
     phvwr       p.t0_s2s_sqe_to_nscb_info_prp1, d.{prp1}.dx
     phvwr       p.t0_s2s_sqe_to_nscb_info_prp2, d.{prp2}.dx

@@ -14,7 +14,7 @@ struct s1_t0_nvme_sesspostxts_tx_sess_wqe_process_d d;
 
 .align
 nvme_sesspostxts_tx_sess_wqe_process:
-    phvwr       p.sess_wqe_cid, d.cid 
+    phvwr       p.sess_wqe_cmdid, d.cmdid 
 
     addui       r6, r0, hiword(nvme_txsessprodcb_base)
     addi        r6, r6, loword(nvme_txsessprodcb_base)

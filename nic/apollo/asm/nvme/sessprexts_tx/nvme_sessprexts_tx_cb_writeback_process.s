@@ -23,12 +23,12 @@ struct s3_t0_nvme_sessprexts_tx_cb_writeback_process_d d;
 #define F_END_OF_PAGE               c3
 #define F_FIRST_LBA_IN_PAGE         c4
 
-#define K_SLBA                  k.t0_s2s_cmd_ctxt_to_writeback_info_slba
-#define K_NLB                   k.t0_s2s_cmd_ctxt_to_writeback_info_nlb
-#define K_LOG_LBA_SIZE          k.t0_s2s_cmd_ctxt_to_writeback_info_log_lba_size
-#define K_PRP1_OFFSET           k.t0_s2s_cmd_ctxt_to_writeback_info_prp1_offset
-#define K_LOG_HOST_PAGE_SIZE    k.t0_s2s_cmd_ctxt_to_writeback_info_log_host_page_size
-#define K_CMD_CTXT_P            k.to_s3_info_cmd_ctxt_ptr
+#define K_SLBA                  k.t0_s2s_pdu_ctxt_to_writeback_info_slba
+#define K_NLB                   k.t0_s2s_pdu_ctxt_to_writeback_info_nlb
+#define K_LOG_LBA_SIZE          k.t0_s2s_pdu_ctxt_to_writeback_info_log_lba_size
+#define K_PRP1_OFFSET           k.t0_s2s_pdu_ctxt_to_writeback_info_prp1_offset
+#define K_LOG_HOST_PAGE_SIZE    k.t0_s2s_pdu_ctxt_to_writeback_info_log_host_page_size
+#define K_PDU_CTXT_P            k.to_s3_info_pdu_ctxt_ptr
 #define K_PAGE_PTR              k.to_s3_info_page_ptr
 
 #define D_NXT_LBA_OFFSET    d.nxt_lba_offset
@@ -128,8 +128,8 @@ post_tbl_updates:
     phvwrpair   p.to_s4_info_prp1_offset, r5, \
                 p.to_s4_info_prp1_bytes, r2
 
-    add         r2, K_CMD_CTXT_P, r6, LOG_NUM_PRP_BYTES
-    add         r2, r2, NVME_CMD_CTXT_PRP_LIST_OFFSET
+    add         r2, K_PDU_CTXT_P, r6, LOG_NUM_PRP_BYTES
+    add         r2, r2, NVME_PDU_CTXT_PRP_LIST_OFFSET
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS,
                               CAPRI_TABLE_SIZE_128_BITS,    //2 adjacent prps

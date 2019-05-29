@@ -102,6 +102,9 @@ sess_found:
     phvwrpair   p.cmd_ctxt_log_lba_size, d.log_lba_size, \
                 p.cmd_ctxt_log_host_page_size, k.to_s2_info_log_host_page_size
   
+    phvwrpair   p.pdu_ctxt0_log_lba_size, d.log_lba_size, \
+                p.pdu_ctxt0_log_host_page_size, k.to_s2_info_log_host_page_size
+
     //logic to download prps
 
     //calculate prp1_offset
@@ -109,6 +112,11 @@ sess_found:
     mincr       r1, k.to_s2_info_log_host_page_size, r0
     phvwrpair   p.cmd_ctxt_prp1_offset, r1, \
                 p.{cmd_ctxt_key_index...cmd_ctxt_sec_key_index}, d.{key_index...sec_key_index}
+    phvwrpair   p.pdu_ctxt0_prp1_offset, r1, \
+                p.{pdu_ctxt0_key_index...pdu_ctxt0_sec_key_index}, d.{key_index...sec_key_index}
+
+    //store backend_ns_id so that PDU is sent with this NSID
+    phvwr       p.pdu_ctxt0_nsid, d.backend_ns_id
 
     // add it to nlb * lba_size
     sll         r2, k.to_s2_info_nlb, d.log_lba_size
@@ -124,6 +132,8 @@ sess_found:
     sll         r4, r3, LOG_NUM_PRP_BYTES
 
     // if the number of prps are <=2, we only need one dma
+    phvwrpair   p.pdu_ctxt0_num_prps, r3, \
+                p.pdu_ctxt0_session_id, r5
     sle         c1, r3, 2
     bcf         [c1], one_dma 
     phvwrpair   p.cmd_ctxt_session_id, r5, \
@@ -147,7 +157,7 @@ sess_found:
     sle         c1, r4, r2
     bcf         [c1], two_dmas
     // only prp1 is valid in base cmd
-    // store prp pointers in cmd_ctxt in little endian format
+    // store prp pointers in pdu_ctxt in little endian format
     phvwr       p.prp1_ptr, k.{t0_s2s_sqe_to_nscb_info_prp1}.dx //BD Slot
 
 three_dmas:
@@ -183,9 +193,9 @@ two_dmas:
 
 one_dma:
     // if only one prp dma command needed, always copy prp1/prp2, 
-    // anyway num_prps field in cmd_ctxt going to guide whether prp2 is valid
+    // anyway num_prps field in pdu_ctxt going to guide whether prp2 is valid
     // or not
-    // store prp pointers in cmd_ctxt in little endian format
+    // store prp pointers in pdu_ctxt in little endian format
     phvwr       p.prp1_ptr, k.{t0_s2s_sqe_to_nscb_info_prp1}.dx
     phvwr.e     p.prp2_ptr, k.{t0_s2s_sqe_to_nscb_info_prp2}.dx
     // prp1_dma_valid = 1, prp2_dma_valid = 0, prp3_dma_valid = 0

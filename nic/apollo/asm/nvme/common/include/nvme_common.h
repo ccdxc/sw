@@ -14,11 +14,11 @@
 #define CMDID_RING_PI           d.{cmdid_ring_pi}.hx
 #define CMDID_RING_CI           d.{cmdid_ring_ci}.hx
 #define CMDID                   d.{cmdid}.hx
-#define AOL_RING_PROXY_CI       d.{aol_ring_proxy_ci}.hx
-#define AOL_RING_PROXY_CI_LE    d.{aol_ring_proxy_ci}
-#define AOL_RING_PI             d.{aol_ring_pi}.hx
-#define AOL_RING_CI             d.{aol_ring_ci}.hx
-#define AOLID                   d.{aolid}.hx
+#define PDUID_RING_PROXY_CI     d.{pduid_ring_proxy_ci}.hx
+#define PDUID_RING_PROXY_CI_LE  d.{pduid_ring_proxy_ci}
+#define PDUID_RING_PI           d.{pduid_ring_pi}.hx
+#define PDUID_RING_CI           d.{pduid_ring_ci}.hx
+#define PDUID                   d.{pduid}.hx
 #define XTS_Q_PI                d.{xts_q_pi}.hx
 #define XTS_Q_CI                d.{xts_q_ci}.hx
 #define DGST_Q_PI               d.{dgst_q_pi}.hx
@@ -41,16 +41,14 @@
 
 #define LOG_CMDID_SIZE              1   //2^1 = 2
 #define LOG_CMDID_RING_ENTRY_SIZE   LOG_CMDID_SIZE
-#define LOG_CMD_CTXT_SIZE           11  //2^11=2K
 
-#define LOG_AOLID_SIZE              1   //2^1 = 2
-#define LOG_AOL_RING_ENTRY_SIZE     LOG_AOLID_SIZE
-#define LOG_AOL_ENTRY_SIZE          9   //2^9=512(8x64B AOLs)
+#define LOG_PDUID_SIZE              1   //2^1 = 2
+#define LOG_PDUID_RING_ENTRY_SIZE   LOG_PDUID_SIZE
 
-#define LOG_SESS_Q_ENTRY_SIZE   LOG_CMDID_SIZE
+#define LOG_SESS_Q_ENTRY_SIZE   (LOG_CMDID_SIZE+LOG_PDUID_SIZE)
 #define LOG_XTS_DESC_SIZE       7   //2^7 = 128
-#define LOG_AOL_SIZE            6   //2^6 = 64
-#define AOL_SIZE                (1 << (LOG_AOL_SIZE))
+#define LOG_AOL_DESC_SIZE       6   //2^6 = 64
+#define AOL_DESC_SIZE           (1 << (LOG_AOL_DESC_SIZE))
 #define LOG_AOL_PAIR_SIZE       7   //2^7 = 128
 #define LOG_IV_SIZE             4   //2^4 = 16
 #define LOG_ONE_AOL_SIZE        4   //2^4 = 16
@@ -111,21 +109,34 @@
 #define NVME_SESS_POST_DGST_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(tcp_wqe_dma0_dma_cmd_pad)/16)
 
 //command context offsets
-#define NVME_CMD_CTXT_HDR_SIZE          64
-#define NVME_CMD_CTXT_PRP_LIST_OFFSET   NVME_CMD_CTXT_HDR_SIZE
-#define NVME_CMD_CTXT_MAX_PRPS          40  // ideally we need 33 prps, but aligning
-                                            // to next cache line boundary
-#define NVME_CMD_CTXT_PRP_LIST_SIZE     (NVME_CMD_CTXT_MAX_PRPS << LOG_NUM_PRP_BYTES)
-#define NVME_CMD_CTXT_PAGE_LIST_OFFSET  (NVME_CMD_CTXT_HDR_SIZE + NVME_CMD_CTXT_PRP_LIST_SIZE)
+#define LOG_CMD_CTXT_SIZE               6   //2^6 = 64
+#define NVME_CMD_CTXT_SIZE              (1 << LOG_CMD_CTXT_SIZE)
 
-#define NVME_CMD_CTXT_MAX_PAGE_PTRS     16
-#define NVME_CMD_CTXT_PAGE_LIST_SIZE    (NVME_CMD_CTXT_MAX_PAGE_PTRS << LOG_NUM_PAGE_PTR_BYTES)
+//pdu context offsets
+#define LOG_PDU_CTXT_SIZE               10  //2^10 = 1024
+#define NVME_PDU_CTXT_SIZE              (1 << LOG_PDU_CTXT_SIZE)
+#define NVME_PDU_CTXT0_SIZE             64
+#define NVME_PDU_CTXT1_SIZE             64
+#define NVME_PDU_CTXT_HDR_SIZE          (NVME_PDU_CTXT0_SIZE + NVME_PDU_CTXT1_SIZE)
 
-struct nvme_cmd_ctxt_page_entry_t {
+#define NVME_PDU_CTXT_PRP_LIST_OFFSET   NVME_PDU_CTXT_HDR_SIZE
+#define NVME_PDU_CTXT_MAX_PRPS          40  // ideally we need 33 prps, but aligning
+#define NVME_PDU_CTXT_PRP_LIST_SIZE     (NVME_PDU_CTXT_MAX_PRPS << LOG_NUM_PRP_BYTES)
+
+#define NVME_PDU_CTXT_PAGE_LIST_OFFSET  (NVME_PDU_CTXT_HDR_SIZE + NVME_PDU_CTXT_PRP_LIST_SIZE)
+#define NVME_PDU_CTXT_MAX_PAGE_PTRS     16
+#define NVME_PDU_CTXT_PAGE_LIST_SIZE    (NVME_PDU_CTXT_MAX_PAGE_PTRS << LOG_NUM_PAGE_PTR_BYTES)
+
+#define NVME_PDU_CTXT_AOL_DESC_LIST_OFFSET  (NVME_PDU_CTXT_HDR_SIZE + NVME_PDU_CTXT_PRP_LIST_SIZE + NVME_PDU_CTXT_PAGE_LIST_SIZE)
+#define NVME_PDU_CTXT_MAX_AOL_DESCS         7 //7*64B
+#define NVME_PDU_CTXT_AOL_DESC_LIST_SIZE    (NVME_PDU_CTXT_MAX_AOL_DESCS  << LOG_AOL_DESC_SIZE)
+
+struct nvme_pdu_ctxt_page_entry_t {
     len:16;
     page_addr:48;
 };
-#define NVME_CMD_CTXT_PAGE_ENTRY_SIZE sizeof(struct nvme_cmd_ctxt_page_entry_t)
+
+#define NVME_PDU_CTXT_PAGE_ENTRY_SIZE sizeof(struct nvme_pdu_ctxt_page_entry_t)
 
 struct hbm_al_ring_entry_t {
     pad : 16;
@@ -164,5 +175,16 @@ struct hbm_al_ring_entry_t {
 #define NVME_O_TCP_CMD_CAPSULE_HEADER_SIZE  \
     (NVME_O_TCP_CH_SIZE + NVME_O_TCP_PSH_CMD_CAPSULE_SIZE + NVME_O_TCP_HDGST_SIZE)
 #define NVME_O_TCP_DDGST_SIZE               4
+
+//PDU types
+#define NVME_O_TCP_PDU_TYPE_ICREQ           0
+#define NVME_O_TCP_PDU_TYPE_ICRESP          1
+#define NVME_O_TCP_PDU_TYPE_H2CTERMREQ      2
+#define NVME_O_TCP_PDU_TYPE_C2HTERMREQ      3
+#define NVME_O_TCP_PDU_TYPE_CAPSULECMD      4
+#define NVME_O_TCP_PDU_TYPE_CAPSULERESP     5
+#define NVME_O_TCP_PDU_TYPE_H2CDATA         6
+#define NVME_O_TCP_PDU_TYPE_C2HDATA         7
+#define NVME_O_TCP_PDU_TYPE_R2T             9
 
 #endif //__NVME_COMMON_H

@@ -271,13 +271,13 @@ typedef struct nvme_resourcecb_s {
         uint64_t cmdid_ring_proxy_ci: 16;
         uint64_t cmdid_ring_pi: 16;
 
-        // ring of free AOL descriptor pairs
-        uint64_t aol_ring_choke_counter: 8;
-        uint64_t aol_ring_rsvd: 3;
-        uint64_t aol_ring_log_sz: 5;
-        uint64_t aol_ring_ci: 16;
-        uint64_t aol_ring_proxy_ci: 16;
-        uint64_t aol_ring_pi: 16;
+        // ring of free pduids
+        uint64_t pduid_ring_choke_counter: 8;
+        uint64_t pduid_ring_rsvd: 3;
+        uint64_t pduid_ring_log_sz: 5;
+        uint64_t pduid_ring_ci: 16;
+        uint64_t pduid_ring_proxy_ci: 16;
+        uint64_t pduid_ring_pi: 16;
 
         // ring of free data pages
         uint64_t page_ring_choke_counter: 8;
@@ -292,12 +292,25 @@ typedef struct nvme_resourcecb_s {
 
 
 typedef struct nvme_cmd_context_s {
-    uint8_t pad[2048];
+    uint8_t pad[64];
 } nvme_cmd_context_t;
 
 typedef struct nvme_cmd_context_ring_entry_s {
     uint16_t id;
 } nvme_cmd_context_ring_entry_t;
+
+typedef struct nvme_pdu_context_s {
+    uint8_t pad[1024];
+} nvme_pdu_context_t;
+
+typedef struct nvme_pdu_context_ring_entry_s {
+    uint16_t id;
+} nvme_pdu_context_ring_entry_t;
+
+typedef struct nvme_sess_wqe_s {
+    uint16_t    cmdid;
+    uint16_t    pduid;
+} nvme_sess_wqe_t;
 
 typedef struct nvme_aol_s {
     uint8_t pad[128];
@@ -306,10 +319,6 @@ typedef struct nvme_aol_s {
 typedef struct nvme_iv_s {
     uint8_t pad[16];
 } nvme_iv_t;
-
-typedef struct nvme_aol_ring_entry_s {
-    uint16_t id;
-} nvme_aol_ring_entry_t;
 
 typedef struct nvme_tx_hwxtscb_s {
  
@@ -351,16 +360,16 @@ static_assert(sizeof(nvme_tx_hwdgstcb_t) == 64);
 #define nvme_rx_hwdgstcb_t nvme_tx_hwdgstcb_t
 
 #define NVME_TX_SESS_XTSQ_DEPTH 64
-#define NVME_TX_SESS_XTSQ_ENTRY_SIZE sizeof(nvme_cmd_context_ring_entry_t)
+#define NVME_TX_SESS_XTSQ_ENTRY_SIZE sizeof(nvme_sess_wqe_t)
 #define NVME_TX_SESS_XTSQ_SIZE NVME_TX_SESS_XTSQ_DEPTH * NVME_TX_SESS_XTSQ_ENTRY_SIZE
 #define NVME_TX_SESS_DGSTQ_DEPTH 64
-#define NVME_TX_SESS_DGSTQ_ENTRY_SIZE sizeof(nvme_cmd_context_ring_entry_t)
+#define NVME_TX_SESS_DGSTQ_ENTRY_SIZE sizeof(nvme_sess_wqe_t)
 #define NVME_TX_SESS_DGSTQ_SIZE NVME_TX_SESS_DGSTQ_DEPTH * NVME_TX_SESS_DGSTQ_ENTRY_SIZE
 #define NVME_RX_SESS_XTSQ_DEPTH 64
-#define NVME_RX_SESS_XTSQ_ENTRY_SIZE sizeof(nvme_cmd_context_ring_entry_t)
+#define NVME_RX_SESS_XTSQ_ENTRY_SIZE sizeof(nvme_sess_wqe_t)
 #define NVME_RX_SESS_XTSQ_SIZE NVME_RX_SESS_XTSQ_DEPTH * NVME_RX_SESS_XTSQ_ENTRY_SIZE
 #define NVME_RX_SESS_DGSTQ_DEPTH 64
-#define NVME_RX_SESS_DGSTQ_ENTRY_SIZE sizeof(nvme_cmd_context_ring_entry_t)
+#define NVME_RX_SESS_DGSTQ_ENTRY_SIZE sizeof(nvme_sess_wqe_t)
 #define NVME_RX_SESS_DGSTQ_SIZE NVME_RX_SESS_DGSTQ_DEPTH * NVME_RX_SESS_DGSTQ_ENTRY_SIZE
 
 //HBM organization of NVME data path tables
@@ -373,10 +382,10 @@ typedef enum nvme_dpath_ds_type_s {
     NVME_TYPE_RX_RESOURCECB,
     NVME_TYPE_TX_SESSPRODCB,
     NVME_TYPE_RX_SESSPRODCB,
-    NVME_TYPE_TX_AOL,
-    NVME_TYPE_TX_AOL_RING,
-    NVME_TYPE_RX_AOL,
-    NVME_TYPE_RX_AOL_RING,
+    NVME_TYPE_TX_PDU_CONTEXT,
+    NVME_TYPE_TX_PDU_CONTEXT_RING,
+    NVME_TYPE_RX_PDU_CONTEXT,
+    NVME_TYPE_RX_PDU_CONTEXT_RING,
     NVME_TYPE_TX_SESS_XTSQ,
     NVME_TYPE_TX_SESS_DGSTQ,
     NVME_TYPE_RX_SESS_XTSQ,
@@ -402,10 +411,10 @@ static nvme_hbm_alloc_info_t nvme_hbm_alloc_table[] = {
     {NVME_TYPE_RX_RESOURCECB, 1, sizeof(nvme_resourcecb_t)},
     {NVME_TYPE_TX_SESSPRODCB, 512, sizeof(nvme_txsessprodcb_t)},
     {NVME_TYPE_RX_SESSPRODCB, 512, sizeof(nvme_rxsessprodcb_t)},
-    {NVME_TYPE_TX_AOL, 512, 4 * sizeof(nvme_aol_t)},
-    {NVME_TYPE_TX_AOL_RING, 512, sizeof(nvme_aol_ring_entry_t)},
-    {NVME_TYPE_RX_AOL, 512, 4 * sizeof(nvme_aol_t)},
-    {NVME_TYPE_RX_AOL_RING, 512, sizeof(nvme_aol_ring_entry_t)},
+    {NVME_TYPE_TX_PDU_CONTEXT, 512, sizeof(nvme_pdu_context_t)},
+    {NVME_TYPE_TX_PDU_CONTEXT_RING, 512, sizeof(nvme_pdu_context_ring_entry_t)},
+    {NVME_TYPE_RX_PDU_CONTEXT, 512, sizeof(nvme_pdu_context_t)},
+    {NVME_TYPE_RX_PDU_CONTEXT_RING, 512, sizeof(nvme_pdu_context_ring_entry_t)},
     {NVME_TYPE_TX_SESS_XTSQ, 512, NVME_TX_SESS_XTSQ_DEPTH * NVME_TX_SESS_XTSQ_ENTRY_SIZE},
     {NVME_TYPE_TX_SESS_DGSTQ, 512, NVME_TX_SESS_DGSTQ_DEPTH * NVME_TX_SESS_DGSTQ_ENTRY_SIZE},
     {NVME_TYPE_RX_SESS_XTSQ, 512, NVME_RX_SESS_XTSQ_DEPTH * NVME_RX_SESS_XTSQ_ENTRY_SIZE},

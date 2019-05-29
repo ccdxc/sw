@@ -6,7 +6,7 @@
 
 struct phv_ p;
 struct s2_t0_k_ k;
-struct s2_t0_nvme_sesspostdgst_tx_cmd_ctxt_process_d d;
+struct s2_t0_nvme_sesspostdgst_tx_pdu_ctxt_process_d d;
 
 #define SESSPRODCB_P r1
 %%
@@ -14,7 +14,7 @@ struct s2_t0_nvme_sesspostdgst_tx_cmd_ctxt_process_d d;
     .param    nvme_sesspostdgst_tx_sessprodcb_process
 
 .align
-nvme_sesspostdgst_tx_cmd_ctxt_process:
+nvme_sesspostdgst_tx_pdu_ctxt_process:
     // pass num_pages to sessprodcb_process to compute number of sesq ring
     // entries required to send this PDU and to sesspostdgst_tx_cb_writeback
     // to trigger one or two tso_process depending on the total number of

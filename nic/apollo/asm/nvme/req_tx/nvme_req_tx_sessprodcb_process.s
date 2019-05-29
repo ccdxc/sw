@@ -32,9 +32,9 @@ nvme_req_tx_sessprodcb_process:
     tblmincri.f XTS_Q_PI, d.log_num_xts_q_entries, 1    //Flush
     add         r3, d.xts_q_base_addr, r3
 
-    //sess_wqe is populated in cmdid_fetch_process, but DMA cmd is enqueued here
+    //sess_wqe is populated in cmdid/pduid_fetch_process, but DMA cmd is enqueued here
     DMA_CMD_BASE_GET(DMA_CMD_BASE, session_wqe_dma)
-    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, sess_wqe_cid, sess_wqe_cid, r3)
+    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, sess_wqe_cmdid, sess_wqe_pduid, r3)
 
     //ring the doorbell of xts_q
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, \

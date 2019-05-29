@@ -39,14 +39,14 @@ typedef struct nvme_global_info_s {
     uint32_t max_cmd_context;
     uint64_t cmd_context_page_base;
     uint64_t cmd_context_ring_base;
-    uint32_t tx_max_aol;
-    uint64_t tx_aol_page_base;
-    uint64_t tx_aol_ring_base;
+    uint32_t tx_max_pdu_context;
+    uint64_t tx_pdu_context_page_base;
+    uint64_t tx_pdu_context_ring_base;
     uint64_t tx_nmdpr_ring_base;
     uint64_t tx_nmdpr_ring_size;
-    uint32_t rx_max_aol;
-    uint64_t rx_aol_page_base;
-    uint64_t rx_aol_ring_base;
+    uint32_t rx_max_pdu_context;
+    uint64_t rx_pdu_context_page_base;
+    uint64_t rx_pdu_context_ring_base;
     uint64_t rx_nmdpr_ring_base;
     uint64_t rx_nmdpr_ring_size;
     uint64_t tx_resourcecb_addr;
@@ -203,48 +203,48 @@ nvme_cmd_context_ring_entry_write (uint16_t index,
 }
 
 hal_ret_t
-nvme_tx_aol_ring_entry_write (uint16_t index, 
-                              uint16_t aol_id)
+nvme_tx_pdu_context_ring_entry_write (uint16_t index, 
+                                      uint16_t pdu_id)
 {
     uint64_t            base_addr;
 
-    SDK_ASSERT(index < g_nvme_global_info.tx_max_aol);
+    SDK_ASSERT(index < g_nvme_global_info.tx_max_pdu_context);
 
-    base_addr = g_nvme_global_info.tx_aol_ring_base;
+    base_addr = g_nvme_global_info.tx_pdu_context_ring_base;
 
     pd::pd_capri_hbm_write_mem_args_t args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
-    args.addr = (uint64_t)(base_addr + (index * sizeof(nvme_aol_ring_entry_t)));
-    args.buf = (uint8_t*)&aol_id;
-    args.size = sizeof(nvme_aol_ring_entry_t);
+    args.addr = (uint64_t)(base_addr + (index * sizeof(nvme_pdu_context_ring_entry_t)));
+    args.buf = (uint8_t*)&pdu_id;
+    args.size = sizeof(nvme_pdu_context_ring_entry_t);
     pd_func_args.pd_capri_hbm_write_mem = &args;
     pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
 
-    HAL_TRACE_DEBUG("Writing tx_aol_ring[{}] = {}",
-                    index, aol_id);
+    HAL_TRACE_DEBUG("Writing tx_pdu_context_ring[{}] = {}",
+                    index, pdu_id);
     return (HAL_RET_OK);
 }
 
 hal_ret_t
-nvme_rx_aol_ring_entry_write (uint16_t index, 
-                              uint16_t aol_id)
+nvme_rx_pdu_context_ring_entry_write (uint16_t index, 
+                                      uint16_t pdu_id)
 {
     uint64_t            base_addr;
 
-    SDK_ASSERT(index < g_nvme_global_info.rx_max_aol);
+    SDK_ASSERT(index < g_nvme_global_info.rx_max_pdu_context);
 
-    base_addr = g_nvme_global_info.rx_aol_ring_base;
+    base_addr = g_nvme_global_info.rx_pdu_context_ring_base;
 
     pd::pd_capri_hbm_write_mem_args_t args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
-    args.addr = (uint64_t)(base_addr + (index * sizeof(nvme_aol_ring_entry_t)));
-    args.buf = (uint8_t*)&aol_id;
-    args.size = sizeof(nvme_aol_ring_entry_t);
+    args.addr = (uint64_t)(base_addr + (index * sizeof(nvme_pdu_context_ring_entry_t)));
+    args.buf = (uint8_t*)&pdu_id;
+    args.size = sizeof(nvme_pdu_context_ring_entry_t);
     pd_func_args.pd_capri_hbm_write_mem = &args;
     pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
 
-    HAL_TRACE_DEBUG("Writing rx_aol_ring[{}] = {}",
-                    index, aol_id);
+    HAL_TRACE_DEBUG("Writing rx_pdu_context_ring[{}] = {}",
+                    index, pdu_id);
     return (HAL_RET_OK);
 }
 
@@ -255,8 +255,8 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
     int32_t            max_ns;
     int32_t            max_sess;
     int32_t            max_cmd_context;
-    int32_t            tx_max_aol;
-    int32_t            rx_max_aol;
+    int32_t            tx_max_pdu_context;
+    int32_t            rx_max_pdu_context;
     uint32_t           total_size;
     int32_t            index;
     hal_ret_t          ret;
@@ -270,19 +270,19 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
     max_ns  = spec.max_ns();
     max_sess  = spec.max_sess();
     max_cmd_context  = spec.max_cmd_context();
-    tx_max_aol  = spec.tx_max_aol();
-    rx_max_aol  = spec.rx_max_aol();
+    tx_max_pdu_context = spec.tx_max_pdu_context();
+    rx_max_pdu_context = spec.rx_max_pdu_context();
 
     HAL_TRACE_DEBUG("max_ns: {}, max_sess: {}, max_cmd_context: {}, "
-                    "tx_max_aol: {}, rx_max_aol: {}\n",
+                    "tx_max_pdu_context: {}, rx_max_pdu_context: {}\n",
                      max_ns, max_sess, max_cmd_context, 
-                     tx_max_aol, rx_max_aol);
+                     tx_max_pdu_context, rx_max_pdu_context);
 
     SDK_ASSERT(max_ns <= nvme_hbm_resource_max(NVME_TYPE_NSCB));
     SDK_ASSERT(max_sess <= nvme_hbm_resource_max(NVME_TYPE_TX_SESSPRODCB));
     SDK_ASSERT(max_cmd_context <= nvme_hbm_resource_max(NVME_TYPE_CMD_CONTEXT));
-    SDK_ASSERT(tx_max_aol <= nvme_hbm_resource_max(NVME_TYPE_TX_AOL));
-    SDK_ASSERT(rx_max_aol <= nvme_hbm_resource_max(NVME_TYPE_RX_AOL));
+    SDK_ASSERT(tx_max_pdu_context <= nvme_hbm_resource_max(NVME_TYPE_TX_PDU_CONTEXT));
+    SDK_ASSERT(rx_max_pdu_context <= nvme_hbm_resource_max(NVME_TYPE_RX_PDU_CONTEXT));
     SDK_ASSERT(nvme_hbm_offset(NVME_TYPE_MAX) <= (int)nvme_manager()->MRSize(CAPRI_HBM_REG_NVME));
 
     memset(&g_nvme_global_info, 0, sizeof(g_nvme_global_info));
@@ -290,8 +290,8 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
     g_nvme_global_info.max_ns = max_ns;
     g_nvme_global_info.max_sess = max_sess;
     g_nvme_global_info.max_cmd_context = max_cmd_context;
-    g_nvme_global_info.tx_max_aol = tx_max_aol;
-    g_nvme_global_info.rx_max_aol = rx_max_aol;
+    g_nvme_global_info.tx_max_pdu_context = tx_max_pdu_context;
+    g_nvme_global_info.rx_max_pdu_context = rx_max_pdu_context;
 
     uint64_t nvme_hbm_start = nvme_manager()->MRStartAddress(CAPRI_HBM_REG_NVME);
     //ns
@@ -343,17 +343,17 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
     //cmd context ring
     g_nvme_global_info.cmd_context_ring_base = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_CMD_CONTEXT_RING); 
 
-    //tx aol page
-    g_nvme_global_info.tx_aol_page_base = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_TX_AOL); 
+    //tx pdu context page
+    g_nvme_global_info.tx_pdu_context_page_base = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_TX_PDU_CONTEXT); 
 
-    //tx aol ring
-    g_nvme_global_info.tx_aol_ring_base = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_TX_AOL_RING); 
+    //tx pdu context ring
+    g_nvme_global_info.tx_pdu_context_ring_base = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_TX_PDU_CONTEXT_RING); 
 
-    //rx aol page
-    g_nvme_global_info.rx_aol_page_base = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_RX_AOL); 
+    //rx pdu context page
+    g_nvme_global_info.rx_pdu_context_page_base = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_RX_PDU_CONTEXT); 
 
-    //rx aol ring
-    g_nvme_global_info.rx_aol_ring_base = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_RX_AOL_RING); 
+    //rx pdu context ring
+    g_nvme_global_info.rx_pdu_context_ring_base = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_RX_PDU_CONTEXT_RING); 
 
     //tx aol ring
     g_nvme_global_info.tx_xts_aol_array_addr = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_TX_XTS_AOL_ARRAY); 
@@ -399,17 +399,17 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
     HAL_TRACE_DEBUG("cmd_context_page_base: {:#x}, "
                     "g_nvme_ns_info: {:#x}, " 
                     "cmd_context_ring_base: {:#x}, total_size: {}, "
-                    "tx_aol_page_base: {:#x}, tx_aol_ring_base: {:#x}, "
-                    "rx_aol_page_base: {:#x}, rx_aol_ring_base: {:#x}, "
+                    "tx_pdu_context_page_base: {:#x}, tx_pdu_context_ring_base: {:#x}, "
+                    "rx_pdu_context_page_base: {:#x}, rx_pdu_context_ring_base: {:#x}, "
                     "tx_xts_aol_array_addr: {:#x}, tx_xts_iv_array_addr : {:#x}, "
                     "rx_xts_aol_array_addr: {:#x}, rx_xts_iv_array_addr : {:#x}",
                     g_nvme_global_info.cmd_context_page_base,
                     (uint64_t)g_nvme_ns_info,
                     g_nvme_global_info.cmd_context_ring_base, total_size,
-                    g_nvme_global_info.tx_aol_page_base, 
-                    g_nvme_global_info.tx_aol_ring_base,
-                    g_nvme_global_info.rx_aol_page_base, 
-                    g_nvme_global_info.rx_aol_ring_base,
+                    g_nvme_global_info.tx_pdu_context_page_base, 
+                    g_nvme_global_info.tx_pdu_context_ring_base,
+                    g_nvme_global_info.rx_pdu_context_page_base, 
+                    g_nvme_global_info.rx_pdu_context_ring_base,
                     g_nvme_global_info.tx_xts_aol_array_addr, 
                     g_nvme_global_info.tx_xts_iv_array_addr, 
                     g_nvme_global_info.rx_xts_aol_array_addr, 
@@ -420,14 +420,14 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
         nvme_cmd_context_ring_entry_write(index, index);
     }
 
-    //Fill the ring with tx_aol page addresses
-    for (index = 0; index < tx_max_aol; index++) {
-        nvme_tx_aol_ring_entry_write(index, index);
+    //Fill the ring with tx pdu context page addresses
+    for (index = 0; index < tx_max_pdu_context; index++) {
+        nvme_tx_pdu_context_ring_entry_write(index, index);
     }
 
-    //Fill the ring with rx_aol page addresses
-    for (index = 0; index < rx_max_aol; index++) {
-        nvme_rx_aol_ring_entry_write(index, index);
+    //Fill the ring with rx pdu context page addresses
+    for (index = 0; index < rx_max_pdu_context; index++) {
+        nvme_rx_pdu_context_ring_entry_write(index, index);
     }
 
     rsp->set_cmd_context_page_base(g_nvme_global_info.cmd_context_page_base);
@@ -478,10 +478,10 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
     tx_resourcecb.cmdid_ring_pi = 0;
     tx_resourcecb.cmdid_ring_proxy_ci = 0;
 
-    tx_resourcecb.aol_ring_log_sz = log2(tx_max_aol);
-    tx_resourcecb.aol_ring_ci = 0;
-    tx_resourcecb.aol_ring_pi = 0;
-    tx_resourcecb.aol_ring_proxy_ci = 0;
+    tx_resourcecb.pduid_ring_log_sz = log2(tx_max_pdu_context);
+    tx_resourcecb.pduid_ring_ci = 0;
+    tx_resourcecb.pduid_ring_pi = 0;
+    tx_resourcecb.pduid_ring_proxy_ci = 0;
 
     tx_resourcecb.page_ring_log_sz = log2(g_nvme_global_info.tx_nmdpr_ring_size);
     tx_resourcecb.page_ring_ci = 0;
@@ -500,10 +500,10 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
     rx_resourcecb.cmdid_ring_pi = 0;
     rx_resourcecb.cmdid_ring_proxy_ci = 0;
 
-    rx_resourcecb.aol_ring_log_sz = log2(rx_max_aol);
-    rx_resourcecb.aol_ring_ci = 0;
-    rx_resourcecb.aol_ring_pi = 0;
-    rx_resourcecb.aol_ring_proxy_ci = 0;
+    rx_resourcecb.pduid_ring_log_sz = log2(rx_max_pdu_context);
+    rx_resourcecb.pduid_ring_ci = 0;
+    rx_resourcecb.pduid_ring_pi = 0;
+    rx_resourcecb.pduid_ring_proxy_ci = 0;
 
     rx_resourcecb.page_ring_log_sz = log2(g_nvme_global_info.rx_nmdpr_ring_size);
     rx_resourcecb.page_ring_ci = 0;

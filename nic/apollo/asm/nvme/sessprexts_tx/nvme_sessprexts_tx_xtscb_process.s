@@ -46,7 +46,7 @@ nvme_sessprexts_tx_xtscb_process:
     phvwr       p.xts_desc_input_list_address, r3.dx
     
     //move addr to point to op desc
-    add         r3, r3, AOL_SIZE
+    add         r3, r3, AOL_DESC_SIZE
 
     //DMA instr for op desc
     DMA_CMD_BASE_GET(DMA_CMD_BASE, op_desc_dma)

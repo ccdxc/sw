@@ -45,7 +45,7 @@
 #define tx_table_s1_t0_action nvme_sessprexts_tx_sess_wqe_process
 #define tx_table_s1_t2_action nvme_sessprexts_tx_nmdpr_process
 
-#define tx_table_s2_t0_action nvme_sessprexts_tx_cmd_ctxt_process
+#define tx_table_s2_t0_action nvme_sessprexts_tx_pdu_ctxt_process
 #define tx_table_s2_t1_action nvme_sessprexts_tx_xtscb_process
 #define tx_table_s2_t2_action nvme_sessprexts_tx_page_fetch_process
 
@@ -84,7 +84,7 @@ header_type nvme_sessprexts_tx_to_stage_sess_wqe_info_t {
     }
 }
 
-header_type nvme_sessprexts_tx_to_stage_cmd_ctxt_info_t {
+header_type nvme_sessprexts_tx_to_stage_pdu_ctxt_info_t {
     fields {
         incr_num_pages                   :    1;
         pad                              :  127;
@@ -94,7 +94,7 @@ header_type nvme_sessprexts_tx_to_stage_cmd_ctxt_info_t {
 header_type nvme_sessprexts_tx_to_stage_writeback_info_t {
     fields {
         page_ptr                         :   64;
-        cmd_ctxt_ptr                     :   64;
+        pdu_ctxt_ptr                     :   64;
     }
 }
 
@@ -120,7 +120,7 @@ header_type nvme_sessprexts_tx_cb_to_nmdpr_t {
     }
 }
 
-header_type nvme_sessprexts_tx_sess_wqe_to_cmd_ctxt_t {
+header_type nvme_sessprexts_tx_sess_wqe_to_pdu_ctxt_t {
     fields {
         pad                 : 160;
     }
@@ -138,7 +138,7 @@ header_type nvme_sessprexts_tx_nmdpr_to_page_fetch_t {
     }
 }
 
-header_type nvme_sessprexts_tx_cmd_ctxt_to_writeback_t {
+header_type nvme_sessprexts_tx_pdu_ctxt_to_writeback_t {
     fields {
         slba                :  64;
         nlb                 :  16;
@@ -179,7 +179,7 @@ metadata xtscb_t xtscb_d;
 metadata nmdpr_page_t nmdpr_page_d;
 
 @pragma scratch_metadata
-metadata cmd_context_t cmd_ctxt_d;
+metadata pdu_context0_t pdu_ctxt0_d;
 
 @pragma scratch_metadata
 metadata prp_pair_t prp_pair_d;
@@ -203,9 +203,9 @@ metadata nvme_sessprexts_tx_to_stage_sess_wqe_info_t to_s1_info_scr;
 
 //To-Stage-2
 @pragma pa_header_union ingress to_stage_2
-metadata nvme_sessprexts_tx_to_stage_cmd_ctxt_info_t to_s2_info;
+metadata nvme_sessprexts_tx_to_stage_pdu_ctxt_info_t to_s2_info;
 @pragma scratch_metadata
-metadata nvme_sessprexts_tx_to_stage_cmd_ctxt_info_t to_s2_info_scr;
+metadata nvme_sessprexts_tx_to_stage_pdu_ctxt_info_t to_s2_info_scr;
 
 //To-Stage-3
 @pragma pa_header_union ingress to_stage_3
@@ -222,19 +222,19 @@ metadata nvme_sessprexts_tx_to_stage_ip_op_desc_info_t to_s4_info_scr;
 /**** stage to stage header unions ****/
 
 //Table-0
-@pragma pa_header_union ingress common_t0_s2s t0_s2s_cb_to_sess_wqe_info t0_s2s_sess_wqe_to_cmd_ctxt_info t0_s2s_cmd_ctxt_to_writeback_info t0_s2s_writeback_to_ip_desc_info
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_cb_to_sess_wqe_info t0_s2s_sess_wqe_to_pdu_ctxt_info t0_s2s_pdu_ctxt_to_writeback_info t0_s2s_writeback_to_ip_desc_info
 
 metadata nvme_sessprexts_tx_cb_to_sess_wqe_t t0_s2s_cb_to_sess_wqe_info;
 @pragma scratch_metadata
 metadata nvme_sessprexts_tx_cb_to_sess_wqe_t t0_s2s_cb_to_sess_wqe_info_scr;
 
-metadata nvme_sessprexts_tx_sess_wqe_to_cmd_ctxt_t t0_s2s_sess_wqe_to_cmd_ctxt_info;
+metadata nvme_sessprexts_tx_sess_wqe_to_pdu_ctxt_t t0_s2s_sess_wqe_to_pdu_ctxt_info;
 @pragma scratch_metadata
-metadata nvme_sessprexts_tx_sess_wqe_to_cmd_ctxt_t t0_s2s_sess_wqe_to_cmd_ctxt_info_scr;
+metadata nvme_sessprexts_tx_sess_wqe_to_pdu_ctxt_t t0_s2s_sess_wqe_to_pdu_ctxt_info_scr;
 
-metadata nvme_sessprexts_tx_cmd_ctxt_to_writeback_t t0_s2s_cmd_ctxt_to_writeback_info;
+metadata nvme_sessprexts_tx_pdu_ctxt_to_writeback_t t0_s2s_pdu_ctxt_to_writeback_info;
 @pragma scratch_metadata
-metadata nvme_sessprexts_tx_cmd_ctxt_to_writeback_t t0_s2s_cmd_ctxt_to_writeback_info_scr;
+metadata nvme_sessprexts_tx_pdu_ctxt_to_writeback_t t0_s2s_pdu_ctxt_to_writeback_info_scr;
 
 metadata nvme_sessprexts_tx_writeback_to_ip_desc_t t0_s2s_writeback_to_ip_desc_info;
 @pragma scratch_metadata
@@ -345,7 +345,7 @@ action nvme_sessprexts_tx_nmdpr_process (NMDPR_PARAMS) {
     GENERATE_NMDPR_D
 }
 
-action nvme_sessprexts_tx_cmd_ctxt_process (CMD_CTXT_PARAMS) {
+action nvme_sessprexts_tx_pdu_ctxt_process (PDU_CTXT0_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -354,10 +354,10 @@ action nvme_sessprexts_tx_cmd_ctxt_process (CMD_CTXT_PARAMS) {
     modify_field(to_s2_info_scr.pad, to_s2_info.pad);
     
     // stage to stage
-    modify_field(t0_s2s_sess_wqe_to_cmd_ctxt_info_scr.pad, t0_s2s_sess_wqe_to_cmd_ctxt_info.pad);
+    modify_field(t0_s2s_sess_wqe_to_pdu_ctxt_info_scr.pad, t0_s2s_sess_wqe_to_pdu_ctxt_info.pad);
 
     // D-vector
-    GENERATE_CMD_CTXT_D
+    GENERATE_PDU_CTXT0_D
 }
 
 action nvme_sessprexts_tx_xtscb_process (XTSCB_PARAMS) {
@@ -398,15 +398,15 @@ action nvme_sessprexts_tx_cb_writeback_process (SESSXTSTXCB_PARAMS_NON_STG0) {
 
     // to stage
     modify_field(to_s3_info_scr.page_ptr, to_s3_info.page_ptr);
-    modify_field(to_s3_info_scr.cmd_ctxt_ptr, to_s3_info.cmd_ctxt_ptr);
+    modify_field(to_s3_info_scr.pdu_ctxt_ptr, to_s3_info.pdu_ctxt_ptr);
     
     // stage to stage
-    modify_field(t0_s2s_cmd_ctxt_to_writeback_info_scr.slba, t0_s2s_cmd_ctxt_to_writeback_info.slba);
-    modify_field(t0_s2s_cmd_ctxt_to_writeback_info_scr.nlb, t0_s2s_cmd_ctxt_to_writeback_info.nlb);
-    modify_field(t0_s2s_cmd_ctxt_to_writeback_info_scr.log_lba_size, t0_s2s_cmd_ctxt_to_writeback_info.log_lba_size);
-    modify_field(t0_s2s_cmd_ctxt_to_writeback_info_scr.log_host_page_size, t0_s2s_cmd_ctxt_to_writeback_info.log_host_page_size);
-    modify_field(t0_s2s_cmd_ctxt_to_writeback_info_scr.prp1_offset, t0_s2s_cmd_ctxt_to_writeback_info.prp1_offset);
-    modify_field(t0_s2s_cmd_ctxt_to_writeback_info_scr.pad, t0_s2s_cmd_ctxt_to_writeback_info.pad);
+    modify_field(t0_s2s_pdu_ctxt_to_writeback_info_scr.slba, t0_s2s_pdu_ctxt_to_writeback_info.slba);
+    modify_field(t0_s2s_pdu_ctxt_to_writeback_info_scr.nlb, t0_s2s_pdu_ctxt_to_writeback_info.nlb);
+    modify_field(t0_s2s_pdu_ctxt_to_writeback_info_scr.log_lba_size, t0_s2s_pdu_ctxt_to_writeback_info.log_lba_size);
+    modify_field(t0_s2s_pdu_ctxt_to_writeback_info_scr.log_host_page_size, t0_s2s_pdu_ctxt_to_writeback_info.log_host_page_size);
+    modify_field(t0_s2s_pdu_ctxt_to_writeback_info_scr.prp1_offset, t0_s2s_pdu_ctxt_to_writeback_info.prp1_offset);
+    modify_field(t0_s2s_pdu_ctxt_to_writeback_info_scr.pad, t0_s2s_pdu_ctxt_to_writeback_info.pad);
 
     // D-vector
     GENERATE_SESSXTSTXCB_D_NON_STG0
