@@ -126,12 +126,11 @@ public:
 
     /// \brief return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "vpc-peer-" + std::to_string(key_.vpc1.id) + "," +
-                   std::to_string(key_.vpc2.id);
+        return "vpc-peer-" + std::to_string(key_.id);
     }
 
     /// \brief    return the key of this object
-    /// \return    key containing pair of vpc keys
+    /// \return    key contains ID of vpc peer
     pds_vpc_peer_key_t key(void) { return key_; }
 
 private:
@@ -147,10 +146,10 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_vpc_peer_key_t key_;        ///< VPC peering key
-    impl_base          *impl_;      ///< impl object instance
+    pds_vpc_peer_key_t key_;         ///< VPC peering key
+    impl_base          *impl_;       ///< impl object instance
 
-    friend class vpc_peer_state;    ///< a friend of vpc_peer_entry
+    friend class vpc_peer_state;     ///< a friend of vpc_peer_entry
 } __PACK__;
 
 /// \@}

@@ -41,6 +41,7 @@ typedef uint32_t pds_ifindex_t;
 typedef uint32_t pds_mirror_session_id_t;
 typedef uint32_t pds_meter_id_t;
 typedef uint32_t pds_tag_id_t;
+typedef uint32_t pds_vpc_peer_id_t;
 
 /// \brief Encapsulation type
 typedef enum pds_encap_type_e {
@@ -169,8 +170,7 @@ typedef struct pds_svc_mapping_key_s {
 
 /// \brief    vpc peering key
 typedef struct pds_vpc_peer_key_s {
-    pds_vpc_key_t vpc1;    ///< vpc1 key
-    pds_vpc_key_t vpc2;    ///< vpc2 VPC
+    pds_vpc_peer_id_t id;
 } __PACK__ pds_vpc_peer_key_t;
 
 #endif    // __INCLUDE_API_PDS_HPP__

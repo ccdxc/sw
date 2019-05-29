@@ -84,17 +84,17 @@ vpc_peer_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     sdk_table_api_params_t api_params;
 
     spec = &obj_ctxt->api_params->vpc_peer_spec;
-    vpc1 = vpc_db()->find(&spec->key.vpc1);
+    vpc1 = vpc_db()->find(&spec->vpc1);
     if (unlikely(vpc1 == NULL)) {
         return SDK_RET_INVALID_ARG;
     }
 
-    vpc2 = vpc_db()->find(&spec->key.vpc2);
+    vpc2 = vpc_db()->find(&spec->vpc2);
     if (unlikely(vpc2 == NULL)) {
         return SDK_RET_INVALID_ARG;
     }
     PDS_TRACE_DEBUG("Reserving resources for vpc peering of (vpc %u, vpc %u)",
-                    spec->key.vpc1.id, spec->key.vpc2.id);
+                    spec->vpc1.id, spec->vpc2.id);
 
 #if 0
     // reserve an entry in VPC_PEER table with (vpc1, vpc2) as key
@@ -171,25 +171,25 @@ vpc_peer_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                           api_op_t api_op, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     vpc_entry *vpc1, *vpc2;
-    pds_vpc_peer_key_t vpc_peer_key;
+    pds_vpc_peer_spec_t *vpc_peer_spec;
     vpc_peer_entry *vpc_peer = (vpc_peer_entry *)api_obj;
     //vpc_peer_swkey_t vpc_peer_key;
     //vpc_peer_swdata_t vpc_peer_data;
     sdk_table_api_params_t api_params;
 
-    vpc_peer_key = vpc_peer->key();
-    vpc1 = vpc_db()->find(&vpc_peer_key.vpc1);
+    vpc_peer_spec = &obj_ctxt->api_params->vpc_peer_spec;
+    vpc1 = vpc_db()->find(&vpc_peer_spec->vpc1);
     if (unlikely(vpc1 == NULL)) {
         return SDK_RET_INVALID_ARG;
     }
 
-    vpc2 = vpc_db()->find(&vpc_peer_key.vpc2);
+    vpc2 = vpc_db()->find(&vpc_peer_spec->vpc2);
     if (unlikely(vpc2 == NULL)) {
         return SDK_RET_INVALID_ARG;
     }
 
     PDS_TRACE_DEBUG("Programming vpc peering for (vpc %u, vpc %u)",
-                    vpc_peer_key.vpc1.id, vpc_peer_key.vpc2.id);
+                    vpc_peer_spec->vpc1.id, vpc_peer_spec->vpc2.id);
 
 #if 0
     // program (vpc1, vpc2) entry

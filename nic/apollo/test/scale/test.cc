@@ -728,10 +728,11 @@ create_vpc_peers (uint32_t num_vpcs)
     SDK_ASSERT(num_vpcs <= PDS_MAX_VPC);
     for (uint32_t i = 1; i <= num_vpcs; i+=2) {
         memset(&pds_vpc_peer, 0, sizeof(pds_vpc_peer));
-        pds_vpc_peer.key.vpc1.id = i;
-        pds_vpc_peer.key.vpc2.id = i+1;
+        pds_vpc_peer.key.id = vpc_peer_id++;
+        pds_vpc_peer.vpc1.id = i;
+        pds_vpc_peer.vpc2.id = i+1;
 #ifdef TEST_GRPC_APP
-        rv = create_vpc_peer_grpc(vpc_peer_id++, &pds_vpc_peer);
+        rv = create_vpc_peer_grpc(&pds_vpc_peer);
         if (rv != SDK_RET_OK) {
             return rv;
         }
@@ -744,7 +745,7 @@ create_vpc_peers (uint32_t num_vpcs)
     }
 #ifdef TEST_GRPC_APP
     // Batching: push leftover vpc and subnet objects
-    rv = create_vpc_peer_grpc(0, NULL);
+    rv = create_vpc_peer_grpc(NULL);
     if (rv != SDK_RET_OK) {
         SDK_ASSERT(0);
         return rv;

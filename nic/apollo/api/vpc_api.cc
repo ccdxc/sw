@@ -213,12 +213,6 @@ pds_vpc_peer_read (pds_vpc_peer_key_t *key, pds_vpc_peer_info_t *info)
 }
 
 sdk_ret_t
-pds_vpc_peer_update (pds_vpc_peer_spec_t *spec)
-{
-    return (pds_vpc_peer_api_handle(api::API_OP_UPDATE, NULL, spec));
-}
-
-sdk_ret_t
 pds_vpc_peer_delete (pds_vpc_peer_key_t *key)
 {
     return (pds_vpc_peer_api_handle(api::API_OP_DELETE, key, NULL));

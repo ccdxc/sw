@@ -54,14 +54,14 @@ TagRequest               g_tag_req;
 #define APP_GRPC_BATCH_COUNT    5000
 
 sdk_ret_t
-create_route_table_grpc (pds_route_table_spec_t *rt)
+create_route_table_grpc (pds_route_table_spec_t *spec)
 {
     ClientContext       context;
     RouteTableResponse  response;
     Status              ret_status;
 
-    populate_route_table_request(&g_route_table_req, rt);
-    if ((g_route_table_req.request_size() >= APP_GRPC_BATCH_COUNT) || !rt) {
+    populate_route_table_request(&g_route_table_req, spec);
+    if ((g_route_table_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_route_table_stub_->RouteTableCreate(&context, g_route_table_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
             printf("%s failed!\n", __FUNCTION__);
@@ -74,14 +74,14 @@ create_route_table_grpc (pds_route_table_spec_t *rt)
 }
 
 sdk_ret_t
-create_policy_grpc (pds_policy_spec_t *policy)
+create_policy_grpc (pds_policy_spec_t *spec)
 {
     ClientContext             context;
     SecurityPolicyResponse    response;
     Status                    ret_status;
 
-    populate_policy_request(&g_policy_req, policy);
-    if ((g_policy_req.request_size() >= APP_GRPC_BATCH_COUNT) || !policy) {
+    populate_policy_request(&g_policy_req, spec);
+    if ((g_policy_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_policy_stub_->SecurityPolicyCreate(&context,
                                                           g_policy_req,
                                                           &response);
@@ -95,14 +95,14 @@ create_policy_grpc (pds_policy_spec_t *policy)
     return SDK_RET_OK;
 }
 sdk_ret_t
-create_local_mapping_grpc (pds_local_mapping_spec_t *local_spec)
+create_local_mapping_grpc (pds_local_mapping_spec_t *spec)
 {
     ClientContext   context;
     MappingResponse response;
     Status          ret_status;
 
-    populate_local_mapping_request(&g_mapping_req, local_spec);
-    if ((g_mapping_req.request_size() >= APP_GRPC_BATCH_COUNT) || !local_spec) {
+    populate_local_mapping_request(&g_mapping_req, spec);
+    if ((g_mapping_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_mapping_stub_->MappingCreate(&context, g_mapping_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
             printf("%s failed!\n", __FUNCTION__);
@@ -115,14 +115,14 @@ create_local_mapping_grpc (pds_local_mapping_spec_t *local_spec)
 }
 
 sdk_ret_t
-create_remote_mapping_grpc (pds_remote_mapping_spec_t *remote_spec)
+create_remote_mapping_grpc (pds_remote_mapping_spec_t *spec)
 {
     ClientContext   context;
     MappingResponse response;
     Status          ret_status;
 
-    populate_remote_mapping_request(&g_mapping_req, remote_spec);
-    if ((g_mapping_req.request_size() >= APP_GRPC_BATCH_COUNT) || !remote_spec) {
+    populate_remote_mapping_request(&g_mapping_req, spec);
+    if ((g_mapping_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_mapping_stub_->MappingCreate(&context, g_mapping_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
             printf("%s failed!\n", __FUNCTION__);
@@ -135,17 +135,17 @@ create_remote_mapping_grpc (pds_remote_mapping_spec_t *remote_spec)
 }
 
 sdk_ret_t
-create_vnic_grpc (pds_vnic_spec_t *vnic)
+create_vnic_grpc (pds_vnic_spec_t *spec)
 {
     ClientContext   context;
     VnicResponse    response;
     Status          ret_status;
 
-    if (vnic != NULL) {
+    if (spec != NULL) {
         pds::VnicSpec *proto_spec = g_vnic_req.add_request();
-        vnic_api_spec_to_proto_spec(vnic, proto_spec);
+        vnic_api_spec_to_proto_spec(spec, proto_spec);
     }
-    if ((g_vnic_req.request_size() >= APP_GRPC_BATCH_COUNT) || !vnic) {
+    if ((g_vnic_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_vnic_stub_->VnicCreate(&context, g_vnic_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
             printf("%s failed!\n", __FUNCTION__);
@@ -158,14 +158,14 @@ create_vnic_grpc (pds_vnic_spec_t *vnic)
 }
 
 sdk_ret_t
-create_subnet_grpc (pds_subnet_spec_t *subnet)
+create_subnet_grpc (pds_subnet_spec_t *spec)
 {
     ClientContext   context;
     SubnetResponse  response;
     Status          ret_status;
 
-    populate_subnet_request(&g_subnet_req, subnet);
-    if ((g_subnet_req.request_size() >= APP_GRPC_BATCH_COUNT) || !subnet) {
+    populate_subnet_request(&g_subnet_req, spec);
+    if ((g_subnet_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_subnet_stub_->SubnetCreate(&context, g_subnet_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
             printf("%s failed!\n", __FUNCTION__);
@@ -178,14 +178,14 @@ create_subnet_grpc (pds_subnet_spec_t *subnet)
 }
 
 sdk_ret_t
-create_vpc_grpc (pds_vpc_spec_t *vpc)
+create_vpc_grpc (pds_vpc_spec_t *spec)
 {
     ClientContext   context;
     VPCResponse     response;
     Status          ret_status;
 
-    populate_vpc_request(&g_vpc_req, vpc);
-    if ((g_vpc_req.request_size() >= APP_GRPC_BATCH_COUNT) || !vpc) {
+    populate_vpc_request(&g_vpc_req, spec);
+    if ((g_vpc_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_vpc_stub_->VPCCreate(&context, g_vpc_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
             printf("%s failed!\n", __FUNCTION__);
@@ -198,18 +198,17 @@ create_vpc_grpc (pds_vpc_spec_t *vpc)
 }
 
 sdk_ret_t
-create_vpc_peer_grpc (uint32_t vpc_peer_id,
-                      pds_vpc_peer_spec_t *vpc_peer)
+create_vpc_peer_grpc (pds_vpc_peer_spec_t *spec)
 {
     ClientContext   context;
     VPCPeerResponse response;
     Status          ret_status;
 
-    if (vpc_peer != NULL) {
-        pds::VPCPeerSpec *spec = g_vpc_peer_req.add_request();
-        vpc_peer_api_spec_to_proto_spec(vpc_peer_id, vpc_peer, spec);
+    if (spec != NULL) {
+        pds::VPCPeerSpec *proto_spec = g_vpc_peer_req.add_request();
+        vpc_peer_api_spec_to_proto_spec(proto_spec, spec);
     }
-    if ((g_vpc_peer_req.request_size() >= APP_GRPC_BATCH_COUNT) || !vpc_peer) {
+    if ((g_vpc_peer_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_vpc_stub_->VPCPeerCreate(&context, g_vpc_peer_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
             printf("%s failed!\n", __FUNCTION__);
@@ -222,17 +221,17 @@ create_vpc_peer_grpc (uint32_t vpc_peer_id,
 }
 
 sdk_ret_t
-create_tag_grpc (pds_tag_spec_t *pds_tag)
+create_tag_grpc (pds_tag_spec_t *spec)
 {
     ClientContext context;
     TagResponse   response;
     Status        ret_status;
 
-    if (pds_tag != NULL) {
-        pds::TagSpec *spec = g_tag_req.add_request();
-        tag_api_spec_to_proto_spec(pds_tag, spec);
+    if (spec != NULL) {
+        pds::TagSpec *proto_spec = g_tag_req.add_request();
+        tag_api_spec_to_proto_spec(spec, proto_spec);
     }
-    if ((g_tag_req.request_size() >= APP_GRPC_BATCH_COUNT) || !pds_tag) {
+    if ((g_tag_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_tag_stub_->TagCreate(&context, g_tag_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
             printf("%s failed!\n", __FUNCTION__);
@@ -244,17 +243,17 @@ create_tag_grpc (pds_tag_spec_t *pds_tag)
 }
 
 sdk_ret_t
-create_meter_grpc (pds_meter_spec_t *pds_meter)
+create_meter_grpc (pds_meter_spec_t *spec)
 {
     ClientContext context;
     MeterResponse response;
     Status        ret_status;
 
-    if (pds_meter != NULL) {
-        MeterSpec *spec = g_meter_req.add_request();
-        meter_api_spec_to_proto_spec(pds_meter, spec);
+    if (spec != NULL) {
+        MeterSpec *proto_spec = g_meter_req.add_request();
+        meter_api_spec_to_proto_spec(spec, proto_spec);
     }
-    if ((g_meter_req.request_size() >= APP_GRPC_BATCH_COUNT) || !pds_meter) {
+    if ((g_meter_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_meter_stub_->MeterCreate(&context, g_meter_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
             printf("%s failed!\n", __FUNCTION__);
@@ -266,14 +265,14 @@ create_meter_grpc (pds_meter_spec_t *pds_meter)
 }
 
 sdk_ret_t
-create_tunnel_grpc (uint32_t id, pds_tep_spec_t *tep)
+create_tunnel_grpc (uint32_t id, pds_tep_spec_t *spec)
 {
     ClientContext   context;
     TunnelResponse  response;
     Status          ret_status;
 
-    populate_tunnel_request(&g_tunnel_req, id, tep);
-    if ((g_tunnel_req.request_size() >= APP_GRPC_BATCH_COUNT) || !tep) {
+    populate_tunnel_request(&g_tunnel_req, id, spec);
+    if ((g_tunnel_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_tunnel_stub_->TunnelCreate(&context, g_tunnel_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
             printf("%s failed!\n", __FUNCTION__);
@@ -286,14 +285,14 @@ create_tunnel_grpc (uint32_t id, pds_tep_spec_t *tep)
 }
 
 sdk_ret_t
-create_device_grpc (pds_device_spec_t *device)
+create_device_grpc (pds_device_spec_t *spec)
 {
     DeviceRequest   request;
     ClientContext   context;
     DeviceResponse  response;
     Status          ret_status;
 
-    populate_device_request(&request, device);
+    populate_device_request(&request, spec);
     ret_status = g_device_stub_->DeviceCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed!\n", __FUNCTION__);
@@ -304,14 +303,14 @@ create_device_grpc (pds_device_spec_t *device)
 }
 
 sdk_ret_t
-create_mirror_session_grpc (pds_mirror_session_spec_t *ms)
+create_mirror_session_grpc (pds_mirror_session_spec_t *spec)
 {
     ClientContext            context;
     MirrorSessionResponse    response;
     Status                   status;
 
-    populate_mirror_session_request(&g_mirror_session_req, ms);
-    if ((g_mirror_session_req.request_size() >= APP_GRPC_BATCH_COUNT) || !ms) {
+    populate_mirror_session_request(&g_mirror_session_req, spec);
+    if ((g_mirror_session_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         status = g_mirror_stub_->MirrorSessionCreate(&context,
                                                      g_mirror_session_req,
                                                      &response);

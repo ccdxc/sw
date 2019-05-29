@@ -25,6 +25,7 @@ using sdk::lib::slab;
 namespace core {
 
 typedef sdk::sdk_ret_t (*vpc_walk_cb_t)(pds_vpc_spec_t *spec, void *ctxt);
+typedef sdk::sdk_ret_t (*vpc_peer_walk_cb_t)(pds_vpc_peer_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*subnet_walk_cb_t)(pds_subnet_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*vnic_walk_cb_t)(pds_vnic_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*meter_walk_cb_t)(pds_meter_spec_t *spec, void *ctxt);
@@ -38,6 +39,7 @@ typedef slab *slab_ptr_t;
 typedef enum slab_id_e {
     SLAB_ID_MIN,
     SLAB_ID_VPC = SLAB_ID_MIN,
+    SLAB_ID_VPC_PEER,
     SLAB_ID_SUBNET,
     SLAB_ID_TEP,
     SLAB_ID_VNIC,
@@ -50,6 +52,7 @@ typedef enum slab_id_e {
 } slab_id_t;
 
 typedef unordered_map<uint32_t, pds_vpc_spec_t *> vpc_db_t;
+typedef unordered_map<uint32_t, pds_vpc_peer_spec_t *> vpc_peer_db_t;
 typedef unordered_map<uint32_t, pds_subnet_spec_t *> subnet_db_t;
 typedef unordered_map<uint32_t, pds_tep_spec_t *> tep_db_t;
 typedef unordered_map<uint32_t, pds_vnic_spec_t *> vnic_db_t;
@@ -70,6 +73,7 @@ public:
     pds_device_spec_t *device(void) { return &device_; }
     tep_db_t *tep_map(void) { return tep_map_; }
     vpc_db_t *vpc_map(void) { return vpc_map_; }
+    vpc_peer_db_t *vpc_peer_map(void) { return vpc_peer_map_; }
     subnet_db_t *subnet_map(void) { return subnet_map_; }
     vnic_db_t *vnic_map(void) { return vnic_map_; }
     meter_db_t *meter_map(void) { return meter_map_; }
@@ -87,6 +91,9 @@ public:
     }
     slab_ptr_t vpc_slab(void) const {
         return slabs_[SLAB_ID_VPC];
+    }
+    slab_ptr_t vpc_peer_slab(void) const {
+        return slabs_[SLAB_ID_VPC_PEER];
     }
     slab_ptr_t subnet_slab(void) const {
         return slabs_[SLAB_ID_SUBNET];
@@ -118,6 +125,7 @@ private:
 private:
     tep_db_t *tep_map_;
     vpc_db_t *vpc_map_;
+    vpc_peer_db_t *vpc_peer_map_;
     pds_vpc_id_t substrate_vpc_id_;
     subnet_db_t *subnet_map_;
     vnic_db_t *vnic_map_;
@@ -152,6 +160,13 @@ public:
     sdk_ret_t vpc_db_walk(vpc_walk_cb_t cb, void *ctxt);
     bool del_from_vpc_db(pds_vpc_key_t *key);
     slab_ptr_t vpc_slab(void) const { return cfg_db_->vpc_slab(); }
+
+    pds_vpc_peer_spec_t *find_in_vpc_peer_db(pds_vpc_peer_key_t *key);
+    sdk_ret_t add_to_vpc_peer_db(pds_vpc_peer_key_t *key,
+                                 pds_vpc_peer_spec_t *spec);
+    sdk_ret_t vpc_peer_db_walk(vpc_peer_walk_cb_t cb, void *ctxt);
+    bool del_from_vpc_peer_db(pds_vpc_peer_key_t *key);
+    slab_ptr_t vpc_peer_slab(void) const { return cfg_db_->vpc_peer_slab(); }
 
     pds_subnet_spec_t *find_in_subnet_db(pds_subnet_key_t *key);
     sdk_ret_t add_to_subnet_db(pds_subnet_key_t *key,
@@ -220,6 +235,7 @@ private:
     void cleanup(void);
     tep_db_t *tep_map(void) const { return cfg_db_->tep_map();  }
     vpc_db_t *vpc_map(void) const { return cfg_db_->vpc_map();  }
+    vpc_peer_db_t *vpc_peer_map(void) const { return cfg_db_->vpc_peer_map();  }
     subnet_db_t *subnet_map(void) const { return cfg_db_->subnet_map();  }
     vnic_db_t *vnic_map(void) const { return cfg_db_->vnic_map();  }
     meter_db_t *meter_map(void) const { return cfg_db_->meter_map();  }

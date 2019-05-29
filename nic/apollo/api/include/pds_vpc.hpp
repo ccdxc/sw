@@ -99,6 +99,8 @@ sdk_ret_t pds_vpc_delete(pds_vpc_key_t *key);
 /// \brief VPC peering specification
 typedef struct pds_vpc_peer_spec_s {
     pds_vpc_peer_key_t    key;    ///< key
+    pds_vpc_key_t         vpc1;   ///< vpc1 key
+    pds_vpc_key_t         vpc2;   ///< vpc2 VPC
 } __PACK__ pds_vpc_peer_spec_t;
 
 /// \brief VPC peering status
@@ -124,6 +126,12 @@ typedef struct pds_vpc_peer_info_s {
 /// \param[in] spec specification
 /// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_vpc_peer_create(pds_vpc_peer_spec_t *spec);
+
+/// \brief     update VPC peering
+/// \param[in] spec specification
+/// \return    #SDK_RET_OK on success, failure status code on error
+/// \remark    A valid VPC specification should be passed
+sdk_ret_t pds_vpc_peer_update(pds_vpc_peer_spec_t *spec);
 
 /// \brief      read VPC peering related information
 /// \param[in]  key  key

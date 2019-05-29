@@ -174,16 +174,28 @@ vnic_api_spec_to_proto_spec (const pds_vnic_spec_t *api_spec,
 
 // Populate VPCPeer protobuf spec from VPCPeer API spec
 static inline void
-vpc_peer_api_spec_to_proto_spec (uint32_t vpc_peer_id,
-                                 const pds_vpc_peer_spec_t *api_spec,
-                                 pds::VPCPeerSpec *proto_spec)
+vpc_peer_api_spec_to_proto_spec (pds::VPCPeerSpec *proto_spec,
+                                 const pds_vpc_peer_spec_t *api_spec)
 {
     if (!api_spec || !proto_spec) {
         return;
     }
-    proto_spec->set_id(vpc_peer_id);
-    proto_spec->set_vpc1(api_spec->key.vpc1.id);
-    proto_spec->set_vpc2(api_spec->key.vpc2.id);
+    proto_spec->set_id(api_spec->key.id);
+    proto_spec->set_vpc1(api_spec->vpc1.id);
+    proto_spec->set_vpc2(api_spec->vpc2.id);
+}
+
+// Populate VPCPeer api spec from VPCPeer proto spec
+static inline void
+pds_agent_vpc_peer_api_spec_fill (pds_vpc_peer_spec_t *api_spec,
+                                  const pds::VPCPeerSpec &proto_spec)
+{
+    if (!api_spec) {
+        return;
+    }
+    api_spec->key.id = proto_spec.id();
+    api_spec->vpc1.id = proto_spec.vpc1();
+    api_spec->vpc2.id = proto_spec.vpc2();
 }
 
 #endif    // __AGENT_SVC_SPECS_HPP__

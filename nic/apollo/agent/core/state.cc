@@ -56,6 +56,12 @@ cfg_db::init(void) {
     }
     vpc_map_ = new(mem) vpc_db_t();
 
+    mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(vpc_peer_db_t));
+    if (mem == NULL) {
+        return false;
+    }
+    vpc_peer_map_ = new(mem) vpc_peer_db_t();
+
     mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(subnet_db_t));
     if (mem == NULL) {
         return false;
@@ -101,6 +107,9 @@ cfg_db::init(void) {
     slabs_[SLAB_ID_VPC] =
         slab::factory("vpc", SLAB_ID_VPC, sizeof(pds_vpc_spec_t),
                       16, true, true, true);
+    slabs_[SLAB_ID_VPC_PEER] =
+        slab::factory("vpc-peer", SLAB_ID_VPC_PEER, sizeof(pds_vpc_peer_spec_t),
+                      16, true, true, true);
     slabs_[SLAB_ID_SUBNET] =
         slab::factory("subnet", SLAB_ID_SUBNET, sizeof(pds_subnet_spec_t),
                       16, true, true, true);
@@ -136,6 +145,7 @@ cfg_db::init(void) {
 cfg_db::cfg_db() {
     tep_map_ = NULL;
     vpc_map_ = NULL;
+    vpc_peer_map_ = NULL;
     subnet_map_ = NULL;
     vnic_map_ = NULL;
     meter_map_ = NULL;
@@ -176,6 +186,7 @@ cfg_db::~cfg_db() {
 
     FREE(MEM_ALLOC_ID_INFRA, tep_map_);
     FREE(MEM_ALLOC_ID_INFRA, vpc_map_);
+    FREE(MEM_ALLOC_ID_INFRA, vpc_peer_map_);
     FREE(MEM_ALLOC_ID_INFRA, subnet_map_);
     FREE(MEM_ALLOC_ID_INFRA, vnic_map_);
     FREE(MEM_ALLOC_ID_INFRA, meter_map_);
@@ -288,6 +299,33 @@ agent_state::vpc_db_walk(vpc_walk_cb_t cb, void *ctxt) {
 bool
 agent_state::del_from_vpc_db(pds_vpc_key_t *key) {
     DEL_FROM_DB(vpc, key);
+}
+
+sdk_ret_t
+agent_state::add_to_vpc_peer_db(pds_vpc_peer_key_t *key, pds_vpc_peer_spec_t *spec) {
+    ADD_TO_DB(vpc_peer, key, spec);
+}
+
+pds_vpc_peer_spec_t *
+agent_state::find_in_vpc_peer_db(pds_vpc_peer_key_t *key) {
+    FIND_IN_DB(vpc_peer, key);
+}
+
+sdk_ret_t
+agent_state::vpc_peer_db_walk(vpc_peer_walk_cb_t cb, void *ctxt) {
+    auto it_begin = DB_BEGIN(vpc_peer);
+    auto it_end = DB_END(vpc_peer);
+
+    for (auto it = it_begin; it != it_end; it ++) {
+        cb(it->second, ctxt);
+    }
+
+    return SDK_RET_OK;
+}
+
+bool
+agent_state::del_from_vpc_peer_db(pds_vpc_peer_key_t *key) {
+    DEL_FROM_DB(vpc_peer, key);
 }
 
 sdk_ret_t

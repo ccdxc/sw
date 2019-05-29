@@ -28,6 +28,14 @@ public:
     Status VPCGet(ServerContext *context,
                   const pds::VPCGetRequest *proto_req,
                   pds::VPCGetResponse *proto_rsp) override;
+    Status VPCPeerCreate(ServerContext *context, const pds::VPCPeerRequest *req,
+                         pds::VPCPeerResponse *rsp) override;
+    Status VPCPeerDelete(ServerContext *context,
+                         const pds::VPCPeerDeleteRequest *proto_req,
+                         pds::VPCPeerDeleteResponse *proto_rsp) override;
+    Status VPCPeerGet(ServerContext *context,
+                      const pds::VPCPeerGetRequest *proto_req,
+                      pds::VPCPeerGetResponse *proto_rsp) override;
 };
 
 #endif    // __AGENT_SVC_VPC_HPP__
