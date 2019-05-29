@@ -21,6 +21,7 @@ header_type scratch_metadata_t {
         lpm_base8       : 48;
         flag            :  1;
         pad0            :  7;
+        remote_ip       : 128;
     }
 }
 

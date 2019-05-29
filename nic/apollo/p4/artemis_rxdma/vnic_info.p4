@@ -5,16 +5,25 @@
 action vnic_info(entry_valid, lpm_base1, lpm_base2, lpm_base3,
                  lpm_base4, lpm_base5, lpm_base6, lpm_base7,
                  lpm_base8) {
-    if (entry_valid == TRUE) {
-        modify_field(scratch_metadata.flag, entry_valid);
-        modify_field(scratch_metadata.lpm_base1, lpm_base1);
-        modify_field(scratch_metadata.lpm_base2, lpm_base2);
-        modify_field(scratch_metadata.lpm_base3, lpm_base3);
-        modify_field(scratch_metadata.lpm_base4, lpm_base4);
-        modify_field(scratch_metadata.lpm_base5, lpm_base5);
-        modify_field(scratch_metadata.lpm_base6, lpm_base6);
-        modify_field(scratch_metadata.lpm_base7, lpm_base7);
-        modify_field(scratch_metadata.lpm_base8, lpm_base8);
+    // Fill the keys only in first pass
+    if (capri_p4_intr.recirc_count == 0) {
+        if (entry_valid == TRUE) {
+            modify_field(scratch_metadata.flag, entry_valid);
+            modify_field(scratch_metadata.lpm_base1, lpm_base1);
+            modify_field(scratch_metadata.lpm_base2, lpm_base2);
+            modify_field(scratch_metadata.lpm_base3, lpm_base3);
+            modify_field(scratch_metadata.lpm_base4, lpm_base4);
+            modify_field(scratch_metadata.lpm_base5, lpm_base5);
+            modify_field(scratch_metadata.lpm_base6, lpm_base6);
+            modify_field(scratch_metadata.lpm_base7, lpm_base7);
+            modify_field(scratch_metadata.lpm_base8, lpm_base8);
+        }
+    }
+    // Always fill the remote_ip from p4 keys based on the direction
+    if (p4_to_rxdma.direction == TX_FROM_HOST) {
+        modify_field(scratch_metadata.remote_ip, p4_to_rxdma.flow_dst);
+    } else {
+        modify_field(scratch_metadata.remote_ip, p4_to_rxdma.flow_src);
     }
 }
 
@@ -27,9 +36,9 @@ action vnic_info(entry_valid, lpm_base1, lpm_base2, lpm_base3,
 @pragma hbm_table
 table vnic_info {
     reads {
-        // TMP: Right now these 2 fields are treated as Union by P4C, Mahesh
+        // TODO-MAHESH: Right now these 2 fields are treated as Union by P4C, Mahesh
         // will fix this to generate struct for these 2 fields instead of Union
-        p4_to_rxdma.direction : exact;
+        //p4_to_rxdma.direction : exact;
         p4_to_rxdma.vnic_id : exact;
     }
     actions {
