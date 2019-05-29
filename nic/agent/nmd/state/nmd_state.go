@@ -770,12 +770,40 @@ func NaplesCoreDeleteHandler(r *http.Request) (interface{}, error) {
 	return resp, nil
 }
 
+func appendAuthorizedKeyFile(sshPubKeyFile string) error {
+	file, err := os.OpenFile("/root/.ssh/authorized_keys", os.O_WRONLY|os.O_APPEND, os.ModeAppend)
+	if err != nil {
+		log.Errorf("failed opening file: %s", err)
+		return err
+	}
+	defer file.Close()
+
+	data, err := ioutil.ReadFile(sshPubKeyFile)
+	if err != nil {
+		log.Errorf("failed reading data from file: %s", err)
+		return err
+	}
+
+	_, err = file.WriteString(string(data))
+	if err != nil {
+		log.Errorf("failed writing to file: %s", err)
+		return err
+	}
+	return nil
+}
+
 func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
 	parts := strings.Fields(req.Opts)
 	if req.Executable == "/bin/date" && req.Opts != "" {
 		parts = strings.SplitN(req.Opts, " ", 2)
 	} else if req.Executable == "pensettimezone" {
 		err := ioutil.WriteFile("/etc/timezone", []byte(req.Opts), 0644)
+		if err != nil {
+			return err.Error(), err
+		}
+		return "", nil
+	} else if req.Executable == "setsshauthkey" {
+		err := appendAuthorizedKeyFile(req.Opts)
 		if err != nil {
 			return err.Error(), err
 		}

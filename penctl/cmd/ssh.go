@@ -5,130 +5,100 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"io"
-	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ssh"
+
+	nmd "github.com/pensando/sw/nic/agent/protos/nmd"
 )
 
-var sshCmd = &cobra.Command{
-	Use:                "rexec",
-	Short:              "SSH Commands to Naples",
-	Long:               "\n------------------------------------\n Execute Commands on Naples via SSH \n------------------------------------\n",
-	Run:                sshCmdHandler,
-	DisableFlagParsing: true,
-	Hidden:             true,
-	Args:               execBinCmdArgsValidator,
+var setSSHConfigCmd = &cobra.Command{
+	Use:   "ssh-pub-key",
+	Short: "Configure ssh pub-key on Naples",
+	Long:  "\n---------------------------------\n Configure ssh pub-key on Naples \n---------------------------------\n",
+	RunE:  setSSHConfigCmdHandler,
 }
+
+var delSSHConfigCmd = &cobra.Command{
+	Use:   "ssh-pub-key",
+	Short: "Delete ssh pub-key on Naples",
+	Long:  "\n------------------------------\n Delete ssh pub-key on Naples \n------------------------------\n",
+	RunE:  delSSHConfigCmdHandler,
+}
+
+var uploadPubKeyFile string
 
 func init() {
-	rootCmd.AddCommand(sshCmd)
+	updateCmd.AddCommand(setSSHConfigCmd)
+	deleteCmd.AddCommand(delSSHConfigCmd)
+
+	setSSHConfigCmd.Flags().StringVarP(&uploadPubKeyFile, "file", "f", "", "Public Key file location/name")
+	setSSHConfigCmd.MarkFlagRequired("file")
 }
 
-func sshCmdHandler(cmd *cobra.Command, args []string) {
-	var escapePrompt = []byte{'#', ' '}
-	if mockMode {
-		escapePrompt[0] = '$'
-		naplesIP = "192.168.68.155" //srv3
+func delSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
+	v := &nmd.NaplesCmdExecute{
+		Executable: "/bin/rm",
+		Opts:       strings.Join([]string{"/root/.ssh/authorized_keys"}, ""),
 	}
-	arg := os.Args[2:]
-	config := &ssh.ClientConfig{
-		User: getNaplesUser(),
-		Auth: []ssh.AuthMethod{
-			ssh.Password(getNaplesPwd()),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	return naplesExecCmd(v)
+}
+
+func setSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
+	v := &nmd.NaplesCmdExecute{
+		Executable: "/bin/mkdir",
+		Opts:       strings.Join([]string{"/root/.ssh/"}, ""),
 	}
-	dialURL := naplesIP + ":" + "22"
-	client, err := ssh.Dial("tcp", dialURL, config)
+	naplesExecCmd(v)
+
+	v = &nmd.NaplesCmdExecute{
+		Executable: "/bin/touch",
+		Opts:       strings.Join([]string{"/root/.ssh/authorized_keys"}, ""),
+	}
+	if err := naplesExecCmd(v); err != nil {
+		return err
+	}
+
+	if errF := canOpen(uploadPubKeyFile); errF != nil {
+		return errF
+	}
+	//prepare the reader instances to encode
+	values := map[string]io.Reader{
+		"uploadFile": mustOpen(uploadPubKeyFile),
+		"uploadPath": strings.NewReader("/update/"),
+	}
+	_, err := restPostForm("update/", values)
 	if err != nil {
-		printErr(err)
-		return
-	}
-
-	defer client.Close()
-	session, err := client.NewSession()
-
-	if err != nil {
-		fmt.Printf("unable to create session: %s", err)
-		return
-	}
-	defer session.Close()
-
-	modes := ssh.TerminalModes{
-		ssh.ECHO:          0,     // disable echoing
-		ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
-		ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
-	}
-
-	if err := session.RequestPty("xterm", 80, 40, modes); err != nil {
-		printErr(err)
-		return
-	}
-	w, err := session.StdinPipe()
-	if err != nil {
-		printErr(err)
-		return
-	}
-	r, err := session.StdoutPipe()
-	if err != nil {
-		printErr(err)
-		return
-	}
-	if err := session.Start("/bin/sh"); err != nil {
-		printErr(err)
-		return
-	}
-	readUntil(r, escapePrompt)
-
-	cli := strings.Join(arg, " ")
-	write(w, cli)
-	out, err := readUntil(r, escapePrompt)
-	fmt.Printf("%s\n", *out)
-
-	write(w, "exit")
-
-	session.Wait()
-}
-
-func write(w io.WriteCloser, command string) error {
-	_, err := w.Write([]byte(command + "\n"))
-	return err
-}
-
-func readUntil(r io.Reader, matchingByte []byte) (*string, error) {
-	var buf [64 * 1024]byte
-	var t int
-	for {
-		n, err := r.Read(buf[t:])
-		if err != nil {
-			return nil, err
-		}
-		t += n
-		if isMatch(buf[:t], t, matchingByte) {
-			stringResult := string(buf[:t])
-			return &stringResult, nil
-		}
-	}
-}
-
-func isMatch(bytes []byte, t int, matchingBytes []byte) bool {
-	if t >= len(matchingBytes) {
-		for i := 0; i < len(matchingBytes); i++ {
-			if bytes[t-len(matchingBytes)+i] != matchingBytes[i] {
-				return false
-			}
-		}
-		return true
-	}
-	return false
-}
-
-func printErr(err error) {
-	if verbose {
 		fmt.Println(err)
+		return err
 	}
+
+	pubKeyFile := filepath.Base(uploadPubKeyFile)
+
+	v = &nmd.NaplesCmdExecute{
+		Executable: "setsshauthkey",
+		Opts:       strings.Join([]string{"/update/" + pubKeyFile}, ""),
+	}
+
+	if err = naplesExecCmd(v); err != nil {
+		fmt.Println(err)
+		v = &nmd.NaplesCmdExecute{
+			Executable: "rm",
+			Opts:       strings.Join([]string{"-rf ", "/update/" + pubKeyFile}, ""),
+		}
+		if err := naplesExecCmd(v); err != nil {
+			return err
+		}
+		return errors.New("Unable to install pubKeyFile " + pubKeyFile)
+	}
+
+	v = &nmd.NaplesCmdExecute{
+		Executable: "rm",
+		Opts:       strings.Join([]string{"-rf ", "/update/" + pubKeyFile}, ""),
+	}
+	return naplesExecCmd(v)
 }
