@@ -37,9 +37,9 @@ unsigned int devcmd_timeout = 60;
 module_param(devcmd_timeout, uint, 0);
 MODULE_PARM_DESC(devcmd_timeout, "Devcmd timeout in seconds (default 60 secs)");
 
-unsigned int core_count = SONIC_DEFAULT_CORES;
+unsigned int core_count = 0;
 module_param(core_count, uint, 0444);
-MODULE_PARM_DESC(core_count, "max number of cores to use for sonic driver (default=1)");
+MODULE_PARM_DESC(core_count, "max number of cores to use for sonic driver (default=#system CPU cores, capped at 32)");
 
 module_param_named(log_level, g_osal_log_level, uint, 0644);
 MODULE_PARM_DESC(log_level, "logging level: 0=EMERG,1=ALERT,2=CRIT,3=ERR,4=WARN(default),5=NOTICE,6=INFO,7=DBG");
@@ -480,9 +480,10 @@ static int __init sonic_init_module(void)
 
 	osal_log_init(g_osal_log_level, "sonic");
 	if (core_count <= 0)
-		core_count = 1;
-	else if (core_count > SONIC_MAX_CORES)
+		core_count = osal_get_core_count();
+	if (core_count > SONIC_MAX_CORES)
 		core_count = SONIC_MAX_CORES;
+	OSAL_ASSERT(core_count);
 
 	sonic_struct_size_checks();
 	sonic_debugfs_create();

@@ -205,7 +205,6 @@ struct seq_queue_batch {
 	MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES :		\
 	MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES)
 #define SONIC_MAX_CORES (32 < OSAL_MAX_CORES ? 32 : OSAL_MAX_CORES)
-#define SONIC_DEFAULT_CORES (20 < OSAL_MAX_CORES ? 20 : OSAL_MAX_CORES)
 
 struct queue_tracking {
 	struct queue *queues;

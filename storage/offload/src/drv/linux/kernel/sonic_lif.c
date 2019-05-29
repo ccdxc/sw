@@ -1171,9 +1171,6 @@ sonic_sysctl_lif_reset_handler(SYSCTL_HANDLER_ARGS)
 		return err;	}
 
 	OSAL_LOG_DEBUG("sonic systcl reset %d", reset_sense);
-	if (reset_sense == lif->reset_ctl.sense)
-		return 0;
-
 	lif->reset_ctl.sense = reset_sense;
 	if (reset_sense)
 		sonic_lif_reset_ctl_start(lif);
@@ -2382,7 +2379,7 @@ void
 sonic_pprint_seq_bmps(struct per_core_resource *pcr)
 {
 	sonic_pprint_queue_tracking(&pcr->cpdc_statusq_track, "CPDC STATUS");
-	sonic_pprint_queue_tracking(&pcr->crypto_statusq_track, "CPDC STATUS");
+	sonic_pprint_queue_tracking(&pcr->crypto_statusq_track, "Crypto STATUS");
 }
 
 void sonic_pprint_ev_lists(void)
