@@ -133,6 +133,9 @@ window_calc_done:
 
     sle         c3, r4, r3
     add.c3      r4, r0, r3
+    sle.c3      c3, r4, d.rcv_mss
+    sne.c3      c3, r4, r0
+    add.c3      r4, r0, d.rcv_mss
 
     /* Make sure the receive window calculated is greater than MSS */
     slt         c3, r4, d.rcv_mss

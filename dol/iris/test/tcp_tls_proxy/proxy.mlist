@@ -1161,7 +1161,9 @@ modules:
             maxflows       : 1
             send_ack_flow1 : 1
             rcv_scale      : 4
-            rcv_wnd        : 127056 
+            rcv_wnd        : 196864
+            serq_pi        : 0
+            serq_ci        : 100 
         iterate :
             - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
               segment   : filter://native=False
@@ -1206,7 +1208,7 @@ modules:
             serq_pi        : 0
             serq_ci        : 2
             rcv_mss        : 536
-            rcv_wnd        : 500
+            rcv_wnd        : 64
         iterate :
             - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
               segment   : filter://native=False
@@ -1241,7 +1243,7 @@ modules:
             serq_pi        : 0
             serq_ci        : 2
             rcv_mss        : 536
-            rcv_wnd        : 500
+            rcv_wnd        : 64
         iterate :
             - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
               segment   : filter://native=False

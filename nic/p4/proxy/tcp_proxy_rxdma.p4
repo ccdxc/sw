@@ -436,7 +436,6 @@ header_type to_stage_1_phv_t {
         rcv_wnd_adv             : 16;
         serq_cidx               : 12;
         ip_dsfield              : 8;
-        window_update           : 1;
     }
 }
 
@@ -863,7 +862,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
         snd_wnd, serq_pidx, num_dup_acks, dup_acks_rcvd, pure_acks_rcvd, cc_flags, quick, \
         flag, state, parsed_state, rcv_wscale, \
         alloc_descr_L, dont_send_ack_L, unused_flags_L, \
-        limited_transmit, pending, window_update
+        limited_transmit, pending
 
 #define TCP_RX_CB_D \
     modify_field(tcp_rx_d.ooq_not_empty, ooq_not_empty); \
@@ -916,7 +915,6 @@ action tcp_rx(TCP_RX_CB_PARAMS) {
         modify_field(to_s1_scratch.rcv_wnd_adv, to_s1.rcv_wnd_adv);
         modify_field(to_s1_scratch.serq_cidx, to_s1.serq_cidx);
         modify_field(to_s1_scratch.ip_dsfield, to_s1.ip_dsfield);
-        modify_field(to_s1_scratch.window_update, to_s1.window_update);
     }
 
     if (rcv_wscale == 1) {

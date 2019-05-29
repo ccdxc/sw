@@ -72,7 +72,7 @@ packets:
                 seq     : callback://tcpcb/tcpcb/GetPktOutSeqNum
                 ack     : callback://tcpcb/tcpcb/GetPktOutAckNum
                 options : callback://tcpcb/tcpcb/GetPktOutTcpOptions
-                window  : 7941
+                window  : 12304
                 flags   : ack
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data
@@ -101,7 +101,7 @@ packets:
                 dport   : ref://testcase/config/flow/sport
                 seq     : callback://tcpcb/tcpcb/GetAckPktSeqNum
                 ack     : callback://tcpcb/tcpcb/GetAckPktAckNum
-                window  : 8176
+                window  : 12300
                 flags   : ack, ece
                 options : callback://tcpcb/tcpcb/GetPktAckOutTcpOptions
 
