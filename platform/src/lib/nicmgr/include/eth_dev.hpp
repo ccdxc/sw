@@ -215,6 +215,8 @@ private:
     // Tasks
     static void StatsUpdate(void *obj);
     static void StatsUpdateComplete(void *obj);
+    static void PortConfigUpdate(void *obj);
+    static void PortStatusUpdate(void *obj);
 
     const char *opcode_to_str(cmd_opcode_t opcode);
     const char *qos_class_to_str(uint8_t qos_class);

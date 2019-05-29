@@ -873,7 +873,7 @@ Eth::_CmdPortInit(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
 
-    if (spec->uplink_port_num == 0) {
+    if (spec->eth_type != ETH_HOST && spec->eth_type != ETH_MNIC_OOB_MGMT) {
         return (IONIC_RC_SUCCESS);
     }
 
@@ -900,6 +900,9 @@ Eth::_CmdPortInit(void *req, void *req_data, void *resp, void *resp_data)
                     spec->name, host_port_stats_addr);
     }
 
+    memcpy(port_config, cfg, sizeof(*port_config));
+    PortConfigUpdate(this);
+
     return (IONIC_RC_SUCCESS);
 }
 
@@ -910,7 +913,7 @@ Eth::_CmdPortReset(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
 
-    if (spec->uplink_port_num == 0) {
+    if (spec->eth_type != ETH_HOST && spec->eth_type != ETH_MNIC_OOB_MGMT) {
         return (IONIC_RC_SUCCESS);
     }
 
@@ -932,7 +935,7 @@ Eth::_CmdPortSetAttr(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode),
         cmd->attr);
 
-    if (spec->uplink_port_num == 0) {
+    if (spec->eth_type != ETH_HOST && spec->eth_type != ETH_MNIC_OOB_MGMT) {
         return (IONIC_RC_SUCCESS);
     }
 
@@ -976,6 +979,9 @@ Eth::_CmdPortSetAttr(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
+    memcpy(port_config, &cfg, sizeof(*port_config));
+    PortConfigUpdate(this);
+
     return (IONIC_RC_SUCCESS);
 }
 
@@ -990,7 +996,7 @@ Eth::_CmdPortGetAttr(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode),
         cmd->attr);
 
-    if (spec->uplink_port_num == 0) {
+    if (spec->eth_type != ETH_HOST && spec->eth_type != ETH_MNIC_OOB_MGMT) {
         return (IONIC_RC_SUCCESS);
     }
 
@@ -1025,6 +1031,9 @@ Eth::_CmdPortGetAttr(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_ERR("{}: Unknown attr {}", spec->name, cmd->attr);
         return (IONIC_RC_ERROR);
     }
+
+    memcpy(port_config, &cfg, sizeof(*port_config));
+    PortConfigUpdate(this);
 
     return (IONIC_RC_SUCCESS);
 }
@@ -1335,25 +1344,8 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
     // TODO: Workaround for linkmgr not setting port id
     port_status->id = spec->uplink_port_num;
 
-    if (host_port_config_addr) {
-        eth_lif->EdmaProxy(
-            spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-            port_config_addr,
-            host_port_config_addr,
-            sizeof(union port_config),
-            NULL
-        );
-    }
-
-    if (host_port_status_addr) {
-        eth_lif->EdmaProxy(
-            spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-            port_status_addr,
-            host_port_status_addr,
-            sizeof(struct port_status),
-            NULL
-        );
-    }
+    PortConfigUpdate(this);
+    PortStatusUpdate(this);
 
     // Update link status
     eth_lif->LinkEventHandler((port_status_t *)port_status);
@@ -1484,6 +1476,54 @@ Eth::StatsUpdateComplete(void *obj)
     Eth *eth = (Eth *)obj;
 
     evutil_timer_again(eth->loop, &eth->stats_timer);
+}
+
+void
+Eth::PortConfigUpdate(void *obj)
+{
+    Eth *eth = (Eth *)obj;
+    EthLif *eth_lif = NULL;
+
+    auto it = eth->lif_map.find(eth->lif_base);
+    if (it == eth->lif_map.cend()) {
+        NIC_FUNC_ERR("{}: Unable to find lif {}", eth->spec->name, eth->lif_base);
+        return;
+    }
+    eth_lif = it->second;
+
+    if (eth->host_port_config_addr) {
+        eth_lif->EdmaProxy(
+            eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
+            eth->port_config_addr,
+            eth->host_port_config_addr,
+            sizeof(union port_config),
+            NULL
+        );
+    }
+}
+
+void
+Eth::PortStatusUpdate(void *obj)
+{
+    Eth *eth = (Eth *)obj;
+    EthLif *eth_lif = NULL;
+
+    auto it = eth->lif_map.find(eth->lif_base);
+    if (it == eth->lif_map.cend()) {
+        NIC_FUNC_ERR("{}: Unable to find lif {}", eth->spec->name, eth->lif_base);
+        return;
+    }
+    eth_lif = it->second;
+
+    if (eth->host_port_status_addr) {
+        eth_lif->EdmaProxy(
+            eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
+            eth->port_status_addr,
+            eth->host_port_status_addr,
+            sizeof(struct port_status),
+            NULL
+        );
+    }
 }
 
 /*
