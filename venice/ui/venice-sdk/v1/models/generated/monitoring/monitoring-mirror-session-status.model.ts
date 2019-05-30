@@ -11,24 +11,18 @@ import { MonitoringMirrorSessionStatus_oper_state,  MonitoringMirrorSessionStatu
 
 export interface IMonitoringMirrorSessionStatus {
     'oper-state': MonitoringMirrorSessionStatus_oper_state;
-    'pcap-file-url'?: string;
     'started-at'?: Date;
 }
 
 
 export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitoringMirrorSessionStatus {
     'oper-state': MonitoringMirrorSessionStatus_oper_state = null;
-    'pcap-file-url': string = null;
     'started-at': Date = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'oper-state': {
             enum: MonitoringMirrorSessionStatus_oper_state_uihint,
             default: 'NONE',
             required: true,
-            type: 'string'
-        },
-        'pcap-file-url': {
-            required: false,
             type: 'string'
         },
         'started-at': {
@@ -74,13 +68,6 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
         } else {
             this['oper-state'] = null
         }
-        if (values && values['pcap-file-url'] != null) {
-            this['pcap-file-url'] = values['pcap-file-url'];
-        } else if (fillDefaults && MonitoringMirrorSessionStatus.hasDefaultValue('pcap-file-url')) {
-            this['pcap-file-url'] = MonitoringMirrorSessionStatus.propInfo['pcap-file-url'].default;
-        } else {
-            this['pcap-file-url'] = null
-        }
         if (values && values['started-at'] != null) {
             this['started-at'] = values['started-at'];
         } else if (fillDefaults && MonitoringMirrorSessionStatus.hasDefaultValue('started-at')) {
@@ -96,7 +83,6 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'oper-state': CustomFormControl(new FormControl(this['oper-state'], [required, enumValidator(MonitoringMirrorSessionStatus_oper_state), ]), MonitoringMirrorSessionStatus.propInfo['oper-state']),
-                'pcap-file-url': CustomFormControl(new FormControl(this['pcap-file-url']), MonitoringMirrorSessionStatus.propInfo['pcap-file-url']),
                 'started-at': CustomFormControl(new FormControl(this['started-at']), MonitoringMirrorSessionStatus.propInfo['started-at']),
             });
         }
@@ -110,7 +96,6 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['oper-state'].setValue(this['oper-state']);
-            this._formGroup.controls['pcap-file-url'].setValue(this['pcap-file-url']);
             this._formGroup.controls['started-at'].setValue(this['started-at']);
         }
     }

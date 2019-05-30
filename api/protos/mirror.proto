@@ -123,8 +123,7 @@ enum MirrorSessionState {
 
 message MirrorSessionStatus {
     string State            = 1 [(gogoproto.jsontag) = "oper-state,inline", (venice.check) = "StrEnum(MirrorSessionState)"];
-    string PcapFileURL      = 2 [(gogoproto.jsontag) = "pcap-file-url,inline)"];
-    api.Timestamp StartedAt = 3 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "started-at,inline"];
+    api.Timestamp StartedAt = 2 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "started-at,inline"];
 }
 
 //------------------

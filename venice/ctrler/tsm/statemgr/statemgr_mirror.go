@@ -3,7 +3,6 @@
 package statemgr
 
 import (
-	"strings"
 	"sync"
 	"time"
 
@@ -45,7 +44,6 @@ func (mss *MirrorSessionState) handleSchTimer() {
 	mss.Statemgr.mirrorTimerWatcher <- MirrorTimerEvent{
 		Type:               mirrorSchTimer,
 		MirrorSessionState: mss}
-	return
 }
 
 func (mss *MirrorSessionState) getExpDuration() time.Duration {
@@ -71,7 +69,6 @@ func (mss *MirrorSessionState) handleExpTimer() {
 	mss.Statemgr.mirrorTimerWatcher <- MirrorTimerEvent{
 		Type:               mirrorExpTimer,
 		MirrorSessionState: mss}
-	return
 }
 
 func (mss *MirrorSessionState) setMirrorSessionRunning() {
@@ -159,7 +156,7 @@ func (sm *Statemgr) UpdateMirrorSession(ms *monitoring.MirrorSession) error {
 	return nil
 }
 
-func (mss *MirrorSessionState) canUpdateMirrorSession(ms *monitoring.MirrorSession) bool {
+func (mss *MirrorSessionState) canUpdateMirrorSession(*monitoring.MirrorSession) bool {
 	// All updates are now supported (until we find any problems)
 
 	switch mss.State {
@@ -272,23 +269,10 @@ func (sm *Statemgr) deleteMirrorSession(mss *MirrorSessionState) {
 		sm.MirrorSessionCountFree()
 	}
 	mss.State = monitoring.MirrorSessionState_STOPPED
-	// delete minio bucket used for packet capture
-	if mss.Status.PcapFileURL != "" {
-		// XXX delete this bucket from minio server
-		mss.Status.PcapFileURL = ""
-	}
+	// XXX delete minio bucket used for packet capture from minio server when we support local captures
 
 	// delete mirror session state from DB
 	_ = sm.memDB.DeleteObject(mss)
-}
-
-func (mss *MirrorSessionState) mirrorSessionGetPcapLink() string {
-	// Create a name for packet file directory as -
-	//  packet_capture/<tenant-name>/<mirror-session-name>
-	// XXX Replace all the not-allowed characters by '_' OR add it to validator
-	// so that mirror session name cannot have those (?What about TenantName)
-	s := []string{"packet_capture", mss.Tenant, mss.Name}
-	return strings.Join(s, "/")
 }
 
 func (sm *Statemgr) scheduleMirrorSession(mss *MirrorSessionState) {
@@ -305,7 +289,6 @@ func (sm *Statemgr) scheduleMirrorSession(mss *MirrorSessionState) {
 	log.Infof("scheduleMirrorSession(): Mirror Session %v - %v", mss.Name, mss.Status.State)
 	mss.schTimer = nil
 	sm.writer.WriteMirrorSession(mss.MirrorSession)
-	return
 }
 
 func (sm *Statemgr) stopMirrorSession(mss *MirrorSessionState) {
@@ -325,7 +308,6 @@ func (sm *Statemgr) stopMirrorSession(mss *MirrorSessionState) {
 	mss.expTimer = nil
 	sm.memDB.UpdateObject(mss)
 	sm.writer.WriteMirrorSession(mss.MirrorSession)
-	return
 }
 
 // GetMirrorSessionState : Get the specified mirror sessions state

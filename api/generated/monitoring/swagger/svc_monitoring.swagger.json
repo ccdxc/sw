@@ -417,12 +417,6 @@
             "type": "string"
           },
           {
-            "name": "status.pcap-file-url",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
             "name": "status.started-at",
             "in": "query",
             "required": false,
@@ -5510,12 +5504,6 @@
           },
           {
             "name": "status.oper-state",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "status.pcap-file-url",
             "in": "query",
             "required": false,
             "type": "string"
@@ -14366,9 +14354,6 @@
             "SCHEDULED": "Scheduled",
             "STOPPED": "Stopped"
           }
-        },
-        "pcap-file-url": {
-          "type": "string"
         },
         "started-at": {
           "type": "string",

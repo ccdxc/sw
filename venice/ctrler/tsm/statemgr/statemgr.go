@@ -13,7 +13,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
-	"github.com/pensando/sw/venice/utils/objstore/client"
+	objstore "github.com/pensando/sw/venice/utils/objstore/client"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -120,23 +120,10 @@ func (sm *Statemgr) runTechSupportWatchers() {
 	log.Infof("TechSupportRequest Watcher running")
 
 	// loop till channel is closed
-	for {
-		select {
-		case evt, ok := <-sm.TechSupportWatcher:
-			// if channel has error, we are done..
-			if !ok {
-				// Since the channel is within the same controller process... no need to restart it
-				return
-			}
-			sm.handleTechSupportEvent(&evt)
-		}
+	for evt := range sm.TechSupportWatcher {
+		evt := evt // create a copy for range scope variable.
+		sm.handleTechSupportEvent(&evt)
 	}
-}
-
-func (sm *Statemgr) stopped() bool {
-	sm.stopFlag.RLock()
-	defer sm.stopFlag.RUnlock()
-	return sm.stopFlag.flag
 }
 
 func (sm *Statemgr) setStop() {
@@ -191,7 +178,7 @@ func (sm *Statemgr) Stop() {
 }
 
 // NewStatemgr creates a new state manager object
-func NewStatemgr(wr writer.Writer, resolver resolver.Interface) (*Statemgr, error) {
+func NewStatemgr(wr writer.Writer, rslvr resolver.Interface) (*Statemgr, error) {
 	// create new statemgr instance
 	stateMgr := &Statemgr{
 		memDB:                memdb.NewMemdb(),
@@ -206,23 +193,23 @@ func NewStatemgr(wr writer.Writer, resolver resolver.Interface) (*Statemgr, erro
 		numMirrorSessions: 0,
 	}
 
-	if resolver != nil {
+	if rslvr != nil {
 
 		bucket := "techsupport"
 		tlsp, err := rpckit.GetDefaultTLSProvider(globals.Vos)
 		if err != nil {
 			log.Errorf("Error getting tls provider (%s)", err)
-			return nil, fmt.Errorf("Error getting tls provider (%s)", err)
+			return nil, fmt.Errorf("error getting tls provider (%s)", err)
 		}
 
 		tlsc, err := tlsp.GetClientTLSConfig(globals.Vos)
 		if err != nil {
 			log.Errorf("Error getting tls client (%s)", err)
-			return nil, fmt.Errorf("Error getting tls client (%s)", err)
+			return nil, fmt.Errorf("error getting tls client (%s)", err)
 		}
 		tlsc.ServerName = globals.Vos
 
-		stateMgr.objstoreClient, err = objstore.NewClient("default", bucket, resolver, objstore.WithTLSConfig(tlsc))
+		stateMgr.objstoreClient, err = objstore.NewClient("default", bucket, rslvr, objstore.WithTLSConfig(tlsc))
 		if err != nil {
 			stateMgr.objstoreClient = nil
 			log.Errorf("Failed to create objstore client. Err : %v", err)

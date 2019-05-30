@@ -129,7 +129,7 @@ func (sm *Statemgr) updateTechSupportObjectState(state TechSupportObjectState, o
 func (sm *Statemgr) deleteTechSupportObjectState(obj TechSupportObject) error {
 	state, err := sm.GetTechSupportObjectState(obj)
 	if err != nil {
-		return fmt.Errorf("Error deleting TechSupport object %s: %v", obj.GetObjectMeta().Name, err)
+		return fmt.Errorf("error deleting TechSupport object %s: %v", obj.GetObjectMeta().Name, err)
 	}
 
 	if obj.GetObjectKind() == KindTechSupportRequest && sm.objstoreClient != nil {
@@ -199,7 +199,7 @@ func (sm *Statemgr) handleTechSupportEvent(evt *kvstore.WatchEvent) {
 		}
 
 	default:
-		err = fmt.Errorf("Unknown event type %+v, Object: %+v", evt.Type, obj)
+		err = fmt.Errorf("unknown event type %+v, Object: %+v", evt.Type, obj)
 	}
 
 	if err != nil {
@@ -254,12 +254,12 @@ func (sm *Statemgr) UpdateTechSupportObject(obj TechSupportObject) error {
 
 	tsr, ok := obj.(*monitoring.TechSupportRequest)
 	if !ok {
-		return fmt.Errorf("Unsupported object type: %T", obj)
+		return fmt.Errorf("unsupported object type: %T", obj)
 	}
 
 	err = sm.memDB.UpdateObject(sm.updateTechSupportObjectState(state, tsr))
 	if err != nil {
-		return fmt.Errorf("Error updating state for object %+v: %v", tsr, err)
+		return fmt.Errorf("error updating state for object %+v: %v", tsr, err)
 	}
 	return sm.writer.WriteTechSupportRequest(tsr)
 }

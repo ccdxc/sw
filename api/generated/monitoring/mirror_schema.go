@@ -103,7 +103,6 @@ var typesMapMirror = map[string]*api.Struct{
 			"oper-state":       api.CLIInfo{Path: "Status.State", Skip: false, Insert: "", Help: ""},
 			"packet-filters":   api.CLIInfo{Path: "Spec.PacketFilters", Skip: false, Insert: "", Help: ""},
 			"packet-size":      api.CLIInfo{Path: "Spec.PacketSize", Skip: false, Insert: "", Help: ""},
-			"pcap-file-url":    api.CLIInfo{Path: "Status.PcapFileURL", Skip: false, Insert: "", Help: ""},
 			"proto-ports":      api.CLIInfo{Path: "Spec.MatchRules[].AppProtoSel.ProtoPorts", Skip: false, Insert: "", Help: ""},
 			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
@@ -132,8 +131,6 @@ var typesMapMirror = map[string]*api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorSessionStatus{}) },
 		Fields: map[string]api.Field{
 			"State": api.Field{Name: "State", CLITag: api.CLIInfo{ID: "oper-state", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "oper-state", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"PcapFileURL": api.Field{Name: "PcapFileURL", CLITag: api.CLIInfo{ID: "pcap-file-url", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pcap-file-url", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"StartedAt": api.Field{Name: "StartedAt", CLITag: api.CLIInfo{ID: "started-at", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "started-at", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 		},
