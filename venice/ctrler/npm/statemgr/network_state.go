@@ -349,11 +349,12 @@ func (sm *Statemgr) OnNetworkCreate(nw *ctkit.Network) error {
 // OnNetworkUpdate handles network update
 func (sm *Statemgr) OnNetworkUpdate(nw *ctkit.Network, nnw *network.Network) error {
 	// see if anything changed
-	nw.ObjectMeta = nnw.ObjectMeta
 	_, ok := ref.ObjDiff(nw.Spec, nnw.Spec)
 	if (nnw.GenerationID == nw.GenerationID) && !ok {
+		nw.ObjectMeta = nnw.ObjectMeta
 		return nil
 	}
+	nw.ObjectMeta = nnw.ObjectMeta
 	nw.Spec = nnw.Spec
 	return nil
 }

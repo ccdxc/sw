@@ -213,11 +213,12 @@ func (sm *Statemgr) OnSecurityGroupCreate(sg *ctkit.SecurityGroup) error {
 // OnSecurityGroupUpdate handles sg updates
 func (sm *Statemgr) OnSecurityGroupUpdate(sg *ctkit.SecurityGroup, nsg *security.SecurityGroup) error {
 	// see if anything changed
-	sg.ObjectMeta = nsg.ObjectMeta
 	_, ok := ref.ObjDiff(sg.Spec, nsg.Spec)
 	if (nsg.GenerationID == sg.GenerationID) && !ok {
+		sg.ObjectMeta = nsg.ObjectMeta
 		return nil
 	}
+	sg.ObjectMeta = nsg.ObjectMeta
 	sg.Spec = nsg.Spec
 	return nil
 }

@@ -335,11 +335,12 @@ func (sm *Statemgr) OnSGPolicyUpdate(sgp *ctkit.SGPolicy, nsgp *security.SGPolic
 	log.Infof("Got sgpolicy update for %#v, %d rules. have %d rules", nsgp.ObjectMeta, len(nsgp.Spec.Rules), len(sgp.Spec.Rules))
 
 	// see if anything changed
-	sgp.ObjectMeta = nsgp.ObjectMeta
 	_, ok := ref.ObjDiff(sgp.Spec, nsgp.Spec)
 	if (nsgp.GenerationID == sgp.GenerationID) && !ok {
+		sgp.ObjectMeta = nsgp.ObjectMeta
 		return nil
 	}
+	sgp.ObjectMeta = nsgp.ObjectMeta
 	sgp.Spec = nsgp.Spec
 
 	// find the policy state

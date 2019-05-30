@@ -197,11 +197,12 @@ func (sm *Statemgr) OnAppCreate(app *ctkit.App) error {
 // OnAppUpdate handles update app event
 func (sm *Statemgr) OnAppUpdate(app *ctkit.App, napp *security.App) error {
 	// see if anything changed
-	app.ObjectMeta = napp.ObjectMeta
 	_, ok := ref.ObjDiff(app.Spec, napp.Spec)
 	if (napp.GenerationID == app.GenerationID) && !ok {
+		app.ObjectMeta = napp.ObjectMeta
 		return nil
 	}
+	app.ObjectMeta = napp.ObjectMeta
 	app.Spec = napp.Spec
 
 	aps, err := sm.FindApp(app.Tenant, app.Name)

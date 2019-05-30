@@ -148,7 +148,7 @@ func (sm *Statemgr) OnWorkloadUpdate(w *ctkit.Workload, nwrk *workload.Workload)
 		log.Errorf("Error deleting old endpoint. Err: %v", err)
 	}
 
-	// update ethe spec
+	// update the spec
 	w.Spec = nwrk.Spec
 
 	// trigger creation of new endpoints

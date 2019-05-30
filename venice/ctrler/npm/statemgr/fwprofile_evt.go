@@ -92,11 +92,12 @@ func (sm *Statemgr) OnFirewallProfileCreate(fwProfile *ctkit.FirewallProfile) er
 // OnFirewallProfileUpdate handles update event
 func (sm *Statemgr) OnFirewallProfileUpdate(fwProfile *ctkit.FirewallProfile, nfwp *security.FirewallProfile) error {
 	// see if anything changed
-	fwProfile.ObjectMeta = nfwp.ObjectMeta
 	_, ok := ref.ObjDiff(fwProfile.Spec, nfwp.Spec)
 	if (nfwp.GenerationID == fwProfile.GenerationID) && !ok {
+		fwProfile.ObjectMeta = nfwp.ObjectMeta
 		return nil
 	}
+	fwProfile.ObjectMeta = nfwp.ObjectMeta
 	fwProfile.Spec = nfwp.Spec
 
 	fps, err := sm.FindFirewallProfile(fwProfile.Tenant, fwProfile.Name)

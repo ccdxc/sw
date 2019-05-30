@@ -126,6 +126,25 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 		return true, nil
 	}, "SgPolicy status was not updated", "100ms", it.pollTimeout())
 
+	// perform dummy update that just increments the generation id
+	_, err = it.restClient.SecurityV1().SGPolicy().Update(ctx, &sgp)
+	AssertOk(c, err, "Error updating security policy")
+
+	// verify sgpolicy status reflects propagation status
+	AssertEventually(c, func() (bool, interface{}) {
+		tsgp, gerr := it.restClient.SecurityV1().SGPolicy().Get(ctx, &sgp.ObjectMeta)
+		if err != nil {
+			return false, gerr
+		}
+		if tsgp.Status.PropagationStatus.GenerationID != tsgp.ObjectMeta.GenerationID {
+			return false, tsgp
+		}
+		if (tsgp.Status.PropagationStatus.Updated != int32(it.config.NumHosts)) || (tsgp.Status.PropagationStatus.Pending != 0) {
+			return false, tsgp
+		}
+		return true, nil
+	}, "SgPolicy status was not updated", "100ms", it.pollTimeout())
+
 	// delete policy
 	_, err = it.restClient.SecurityV1().SGPolicy().Delete(ctx, &sgp.ObjectMeta)
 	AssertOk(c, err, "Error deleting sgpolicy")
