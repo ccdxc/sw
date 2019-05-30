@@ -181,6 +181,8 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 		if err != nil {
 			log.Errorf("Error persisting the default naples config in EmDB, err: %+v", err)
 		}
+
+		BackupNMDDB()
 	}
 
 	// create NMD object

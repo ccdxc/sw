@@ -446,6 +446,8 @@ class NaplesManagement(EntityManagement):
         #clean up db that was setup by previous
         self.SendlineExpect("rm -rf /sysconfig/config0/*.db", "#")
         self.SendlineExpect("rm -rf /sysconfig/config0/*.conf", "#")
+        self.SendlineExpect("rm -rf /sysconfig/config1/*.db", "#")
+        self.SendlineExpect("rm -rf /sysconfig/config1/*.conf", "#")
 
         self.SendlineExpect("rm -rf /data/log && sync", "#")
         self.SendlineExpect("rm -rf /data/core/* && sync", "#")

@@ -86,6 +86,7 @@ func (n *NMD) CreateNaplesProfile(profile nmd.NaplesProfile) error {
 		log.Errorf("Failed to persist naples profile. Err: %v", err)
 		return err
 	}
+	BackupNMDDB()
 
 	// Update in memory state
 	n.profiles = append(n.profiles, &profile)
