@@ -33,7 +33,7 @@ func (na *Nagent) CreateRoute(rt *netproto.Route) error {
 		return nil
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(rt.Tenant, rt.Namespace)
+	ns, err := na.FindNamespace(rt.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func (na *Nagent) FindRoute(meta api.ObjectMeta) (*netproto.Route, error) {
 // UpdateRoute updates a route. ToDo implement route updates in datapath
 func (na *Nagent) UpdateRoute(rt *netproto.Route) error {
 	// find the corresponding namespace
-	_, err := na.FindNamespace(rt.Tenant, rt.Namespace)
+	_, err := na.FindNamespace(rt.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func (na *Nagent) DeleteRoute(tn, namespace, name string) error {
 		return err
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(rt.Tenant, rt.Namespace)
+	ns, err := na.FindNamespace(rt.ObjectMeta)
 	if err != nil {
 		return err
 	}

@@ -438,19 +438,57 @@ func (dn *DNode) newQueryStore() error {
 }
 
 // executeAggQuery executes a query on query store
-func (dn *DNode) executeAggQuery(ctx context.Context, req *tproto.QueryReq, query string, database string) (*tproto.QueryResp, error) {
+func (dn *DNode) executeAggQuery(ctx context.Context, req *tproto.QueryReq, querystr string, database string) (*tproto.QueryResp, error) {
 	var resp tproto.QueryResp
 
 	// aggreagted query
-	ch, err := dn.tsQueryStore.ExecuteQuery(query, database)
+	ch, err := dn.tsQueryStore.ExecuteQuery(querystr, database)
 	if err != nil {
-		dn.logger.Errorf("Error executing query aggregator %s on db %s. Err: %v", query, database, err)
+		dn.logger.Errorf("Error executing query aggregator %s on db %s. Err: %v", querystr, database, err)
 		return &resp, err
 	}
 
 	// read the result
+	var respResults []*query.Result
+	for r := range ch {
+		l := len(respResults)
+		if l == 0 {
+			respResults = append(respResults, r)
+		} else if respResults[l-1].StatementID == r.StatementID {
+			if r.Err != nil {
+				respResults[l-1] = r
+				continue
+			}
+
+			cr := respResults[l-1]
+			rowsMerged := 0
+			if len(cr.Series) > 0 {
+				lastSeries := cr.Series[len(cr.Series)-1]
+
+				for _, row := range r.Series {
+					if !lastSeries.SameSeries(row) {
+						// Next row is for a different series than last.
+						break
+					}
+					// Values are for the same series, so append them.
+					lastSeries.Values = append(lastSeries.Values, row.Values...)
+					rowsMerged++
+				}
+			}
+
+			// Append remaining rows as new rows.
+			r.Series = r.Series[rowsMerged:]
+			cr.Series = append(cr.Series, r.Series...)
+			cr.Messages = append(cr.Messages, r.Messages...)
+			cr.Partial = r.Partial
+		} else {
+			respResults = append(respResults, r)
+		}
+
+	}
+
 	var result []*tproto.Result
-	for res := range ch {
+	for _, res := range respResults {
 		s, jerr := res.MarshalJSON()
 		if jerr != nil {
 			dn.logger.Errorf("Error marshaling the output. Err: %v", err)
@@ -632,13 +670,9 @@ func (dn *DNode) queryAllShards(ctx context.Context, req *tproto.QueryReq) ([]<-
 	// check if any shards are remote
 	cl := dn.watcher.GetCluster(meta.ClusterTypeTstore)
 
-	// check if a shard replica is on this data node
+	// walk thru each shard and query it
 	for _, shard := range cl.ShardMap.Shards {
-		if _, ok := queryShards[shard.ShardID]; ok {
-			continue
-		}
-
-		// query remote
+		// query one of the repicas in each shard
 		for _, replica := range shard.Replicas {
 			dn.logger.Infof("query remote shard %d, replica: %v, node: %v", shard.ShardID, replica.ReplicaID, replica.NodeUUID)
 

@@ -36,7 +36,7 @@ func (na *Nagent) CreateNatPolicy(np *netproto.NatPolicy) error {
 	}
 
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(np.Tenant, np.Namespace)
+	ns, err := na.FindNamespace(np.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func (na *Nagent) CreateNatPolicy(np *netproto.NatPolicy) error {
 			log.Errorf("could not find nat pool for the rule. Rule: {%v}. Err: %v", rule, err)
 			return err
 		}
-		natPoolNS, err := na.FindNamespace(np.Tenant, natPool.Namespace)
+		natPoolNS, err := na.FindNamespace(np.ObjectMeta)
 		if err != nil {
 			log.Errorf("could not find the nat pool namespace. NatPool Namespace: {%v}. Err: %v", natPoolNS, err)
 			return err
@@ -159,7 +159,7 @@ func (na *Nagent) ListNatPolicy() []*netproto.NatPolicy {
 // UpdateNatPolicy updates a nat policy
 func (na *Nagent) UpdateNatPolicy(np *netproto.NatPolicy) error {
 	// find the corresponding namespace
-	_, err := na.FindNamespace(np.Tenant, np.Namespace)
+	_, err := na.FindNamespace(np.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -210,7 +210,7 @@ func (na *Nagent) DeleteNatPolicy(tn, namespace, name string) error {
 		return err
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(np.Tenant, np.Namespace)
+	ns, err := na.FindNamespace(np.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -249,7 +249,7 @@ func (na *Nagent) DeleteNatPolicy(tn, namespace, name string) error {
 			log.Errorf("could not find nat pool for the rule. Rule: {%v}. Err: %v", rule, err)
 			return err
 		}
-		natPoolNS, err := na.FindNamespace(np.Tenant, natPool.Namespace)
+		natPoolNS, err := na.FindNamespace(np.ObjectMeta)
 		if err != nil {
 			log.Errorf("could not find the nat pool namespace. NatPool Namespace: {%v}. Err: %v", natPoolNS, err)
 			return err

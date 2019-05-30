@@ -77,6 +77,7 @@ var typesMapSgpolicy = map[string]*api.Struct{
 			"ports":                api.CLIInfo{Path: "Spec.Rules[].ProtoPorts[].Ports", Skip: false, Insert: "", Help: ""},
 			"protocol":             api.CLIInfo{Path: "Spec.Rules[].ProtoPorts[].Protocol", Skip: false, Insert: "", Help: ""},
 			"resource-version":     api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
+			"rule-hash":            api.CLIInfo{Path: "Status.RuleStatus[].RuleHash", Skip: false, Insert: "", Help: ""},
 			"self-link":            api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"tenant":               api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
 			"to-ip":                api.CLIInfo{Path: "Spec.Rules[].ToIPAddresses", Skip: false, Insert: "", Help: ""},
@@ -111,6 +112,8 @@ var typesMapSgpolicy = map[string]*api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGPolicyStatus{}) },
 		Fields: map[string]api.Field{
 			"PropagationStatus": api.Field{Name: "PropagationStatus", CLITag: api.CLIInfo{ID: "propagation-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "propagation-status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SGPolicyPropagationStatus"},
+
+			"RuleStatus": api.Field{Name: "RuleStatus", CLITag: api.CLIInfo{ID: "rule-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rule-status", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SGRuleStatus"},
 		},
 	},
 	"security.SGRule": &api.Struct{
@@ -129,6 +132,12 @@ var typesMapSgpolicy = map[string]*api.Struct{
 			"FromSecurityGroups": api.Field{Name: "FromSecurityGroups", CLITag: api.CLIInfo{ID: "from-security-groups", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "from-security-groups", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"ToSecurityGroups": api.Field{Name: "ToSecurityGroups", CLITag: api.CLIInfo{ID: "to-security-groups", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "to-security-groups", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
+	"security.SGRuleStatus": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGRuleStatus{}) },
+		Fields: map[string]api.Field{
+			"RuleHash": api.Field{Name: "RuleHash", CLITag: api.CLIInfo{ID: "rule-hash", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rule-hash", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

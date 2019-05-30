@@ -1,0 +1,22 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for security group policy
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package dnetproto;
+
+// Mandatory imports.
+import "github.com/pensando/sw/nic/agent/protos/netproto/sgpolicy.proto";
+import "delphi.proto";
+
+
+// SGPolicy object
+message SGPolicy {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta   Meta        = 1;
+    string              Key         = 2;
+    netproto.SGPolicy   SGPolicy    = 3;
+}
+

@@ -33,7 +33,7 @@ func (na *Nagent) CreateIPSecSAEncrypt(ipSecSAEncrypt *netproto.IPSecSAEncrypt) 
 	}
 
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(ipSecSAEncrypt.Tenant, ipSecSAEncrypt.Namespace)
+	ns, err := na.FindNamespace(ipSecSAEncrypt.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func (na *Nagent) ListIPSecSAEncrypt() []*netproto.IPSecSAEncrypt {
 // UpdateIPSecSAEncrypt updates an IPSec encrypt SA
 func (na *Nagent) UpdateIPSecSAEncrypt(ipSecEncryptSA *netproto.IPSecSAEncrypt) error {
 	// find the corresponding namespace
-	_, err := na.FindNamespace(ipSecEncryptSA.Tenant, ipSecEncryptSA.Namespace)
+	_, err := na.FindNamespace(ipSecEncryptSA.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -196,7 +196,7 @@ func (na *Nagent) DeleteIPSecSAEncrypt(tn, namespace, name string) error {
 	}
 
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(existingIPSecSAEncrypt.Tenant, existingIPSecSAEncrypt.Namespace)
+	ns, err := na.FindNamespace(existingIPSecSAEncrypt.ObjectMeta)
 	if err != nil {
 		return err
 	}

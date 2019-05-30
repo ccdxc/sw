@@ -37,7 +37,7 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 		return nil
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(nt.Tenant, nt.Namespace)
+	ns, err := na.FindNamespace(nt.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func (na *Nagent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) {
 func (na *Nagent) UpdateNetwork(nt *netproto.Network) error {
 	// find the corresponding namespace
 	log.Infof("Update Network: %v", nt)
-	_, err := na.FindNamespace(nt.Tenant, nt.Namespace)
+	_, err := na.FindNamespace(nt.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -193,7 +193,7 @@ func (na *Nagent) DeleteNetwork(tn, namespace, name string) error {
 		return err
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(nt.Tenant, nt.Namespace)
+	ns, err := na.FindNamespace(nt.ObjectMeta)
 	if err != nil {
 		return err
 	}

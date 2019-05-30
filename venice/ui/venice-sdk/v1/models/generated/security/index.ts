@@ -55,6 +55,7 @@ export * from './security-sg-policy-propagation-status.model';
 export * from './security-sg-policy-spec.model';
 export * from './security-sg-policy-status.model';
 export * from './security-sg-rule.model';
+export * from './security-sg-rule-status.model';
 export * from './security-security-group.model';
 export * from './security-security-group-list.model';
 export * from './security-security-group-spec.model';

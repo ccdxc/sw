@@ -195,6 +195,27 @@ func (m *SGRule) Defaults(ver string) bool {
 	return ret
 }
 
+// Clone clones the object into into or creates one of into is nil
+func (m *SGRuleStatus) Clone(into interface{}) (interface{}, error) {
+	var out *SGRuleStatus
+	var ok bool
+	if into == nil {
+		out = &SGRuleStatus{}
+	} else {
+		out, ok = into.(*SGRuleStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*SGRuleStatus))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *SGRuleStatus) Defaults(ver string) bool {
+	return false
+}
+
 // Validators and Requirements
 
 func (m *ProtoPort) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -478,6 +499,19 @@ func (m *SGRule) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) 
 func (m *SGRule) Normalize() {
 
 	m.Action = SGRule_PolicyAction_normal[strings.ToLower(m.Action)]
+
+}
+
+func (m *SGRuleStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *SGRuleStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *SGRuleStatus) Normalize() {
 
 }
 

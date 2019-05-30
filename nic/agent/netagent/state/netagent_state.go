@@ -4,6 +4,7 @@ package state
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/state/dependencies"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -20,8 +22,11 @@ import (
 // Nagent is an instance of network agent.
 type Nagent types.NetAgent
 
+// ErrObjectNotFound is returned when object is not found
+var ErrObjectNotFound = errors.New("object not found")
+
 // NewNetAgent creates a new network agent
-func NewNetAgent(dp types.NetDatapathAPI, dbPath string) (*Nagent, error) {
+func NewNetAgent(dp types.NetDatapathAPI, dbPath string, delphiClient clientApi.Client) (*Nagent, error) {
 	var na Nagent
 	var emdb emstore.Emstore
 	var err error
@@ -38,6 +43,7 @@ func NewNetAgent(dp types.NetDatapathAPI, dbPath string) (*Nagent, error) {
 
 	na.init(emdb, dp)
 	na.Mode = "host-managed"
+	na.DelphiClient = delphiClient
 
 	tn := netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},

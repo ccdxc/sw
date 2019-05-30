@@ -81,9 +81,14 @@ message SGPolicyPropagationStatus {
     string MinVersion = 4 [(gogoproto.jsontag) = "min-version"];
 }
 
+message SGRuleStatus {
+    string RuleHash = 1 [(gogoproto.jsontag) = "rule-hash"];
+}
+
 message SGPolicyStatus {
     // The status of the configuration propagation to the Naples
     SGPolicyPropagationStatus PropagationStatus = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "propagation-status"];
+    repeated SGRuleStatus RuleStatus            = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "rule-status,omitempty"];
 }
 
 // Sgpolicy represents a security policy for security groups

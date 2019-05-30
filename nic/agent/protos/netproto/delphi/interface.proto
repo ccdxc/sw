@@ -1,0 +1,21 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for interface
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package dnetproto;
+
+// Mandatory imports.
+import "github.com/pensando/sw/nic/agent/protos/netproto/interface.proto";
+import "delphi.proto";
+
+
+// Interface object
+message Interface {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta   Meta        = 1;
+    string              Key         = 2;
+    netproto.Interface  Interface   = 3;
+}

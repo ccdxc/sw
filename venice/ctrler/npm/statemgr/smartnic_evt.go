@@ -149,8 +149,11 @@ func (sm *Statemgr) OnSmartNICUpdate(smartNic *ctkit.SmartNIC, nsnic *cluster.Sm
 				sm.PeriodicUpdaterPush(policy)
 			}
 		} else {
-			delete(policy.NodeVersions, smartNic.SmartNIC.Name)
-			sm.PeriodicUpdaterPush(policy)
+			ver, ok := policy.NodeVersions[smartNic.SmartNIC.Name]
+			if ok && ver == "" {
+				delete(policy.NodeVersions, smartNic.SmartNIC.Name)
+				sm.PeriodicUpdaterPush(policy)
+			}
 		}
 	}
 

@@ -27,6 +27,7 @@ service SecurityProfileApi {
     rpc GetSecurityProfile (api.ObjectMeta) returns (SecurityProfile) {};
     rpc ListSecurityProfiles (api.ObjectMeta) returns (SecurityProfileList) {};
     rpc WatchSecurityProfiles (api.ObjectMeta) returns (stream SecurityProfileEvent) {};
+    rpc UpdateSecurityProfile (SecurityProfile) returns (SecurityProfile) {};
 }
 
 // SecurityProfile object

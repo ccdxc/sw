@@ -33,7 +33,7 @@ func (na *Nagent) CreatePort(port *netproto.Port) error {
 	}
 
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(port.Tenant, port.Namespace)
+	ns, err := na.FindNamespace(port.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func (na *Nagent) FindPort(meta api.ObjectMeta) (*netproto.Port, error) {
 // UpdatePort updates a port.
 func (na *Nagent) UpdatePort(port *netproto.Port) error {
 	// find the corresponding namespace
-	_, err := na.FindNamespace(port.Tenant, port.Namespace)
+	_, err := na.FindNamespace(port.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func (na *Nagent) DeletePort(tn, namespace, name string) error {
 		return err
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(port.Tenant, port.Namespace)
+	ns, err := na.FindNamespace(port.ObjectMeta)
 	if err != nil {
 		return err
 	}

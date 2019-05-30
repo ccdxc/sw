@@ -55,7 +55,9 @@ public:
     static inline BaseObjectPtr Create(const string &name, const string &data) {
         map<string, ObjectFactory*> fctries = *(BaseObject::GetFactoryMap());
         ObjectFactory *fctry = fctries[name];
-        assert(fctry != NULL);
+        if (fctry == NULL) {
+		return nullptr;
+	}
 
         return fctry->Create(data);
     }

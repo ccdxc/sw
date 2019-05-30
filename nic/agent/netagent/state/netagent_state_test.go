@@ -10,6 +10,8 @@ import (
 
 	hal "github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/nic/delphi/gosdk"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 type mockCtrler struct {
@@ -36,6 +38,18 @@ func (ctrler *mockCtrler) EndpointDeleteReq(epinfo *netproto.Endpoint) (*netprot
 	return epinfo, nil
 }
 
+// mock delphi service
+type mockService struct {
+}
+
+func (svc *mockService) OnMountComplete() {
+	log.Infof("Mock service OnMountComplete() got called")
+}
+
+func (svc *mockService) Name() string {
+	return "netagent-test"
+}
+
 // createNetAgent creates a netagent scaffolding
 func createNetAgent(t *testing.T) (*Nagent, *mockCtrler, *hal.Datapath) {
 	dp, err := hal.NewHalDatapath("mock")
@@ -46,8 +60,13 @@ func createNetAgent(t *testing.T) (*Nagent, *mockCtrler, *hal.Datapath) {
 		epdb: make(map[string]*netproto.Endpoint),
 	}
 
+	cl, err := gosdk.NewClient(&mockService{})
+	if err != nil {
+		t.Fatalf("Error creating delphi client. Err: %v", err)
+	}
+
 	// create new network agent
-	nagent, err := NewNetAgent(dp, "")
+	nagent, err := NewNetAgent(dp, "", cl)
 
 	if err != nil {
 		t.Fatalf("Error creating network agent. Err: %v", err)

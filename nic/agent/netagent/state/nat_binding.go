@@ -34,7 +34,7 @@ func (na *Nagent) CreateNatBinding(nb *netproto.NatBinding) error {
 	}
 
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(nb.Tenant, nb.Namespace)
+	ns, err := na.FindNamespace(nb.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func (na *Nagent) CreateNatBinding(nb *netproto.NatBinding) error {
 	}
 
 	// find the corresponding natpool's namespace
-	natPoolNS, err := na.FindNamespace(nb.Tenant, np.Namespace)
+	natPoolNS, err := na.FindNamespace(np.ObjectMeta)
 	if err != nil {
 		log.Errorf("Could not find nat pool's namespace. NatPool : {%v}", np)
 	}
@@ -147,7 +147,7 @@ func (na *Nagent) ListNatBinding() []*netproto.NatBinding {
 // UpdateNatBinding updates a nat binding
 func (na *Nagent) UpdateNatBinding(nb *netproto.NatBinding) error {
 	// find the corresponding namespace
-	_, err := na.FindNamespace(nb.Tenant, nb.Namespace)
+	_, err := na.FindNamespace(nb.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -206,7 +206,7 @@ func (na *Nagent) DeleteNatBinding(tn, namespace, name string) error {
 		return err
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(nb.Tenant, nb.Namespace)
+	ns, err := na.FindNamespace(nb.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -225,7 +225,7 @@ func (na *Nagent) DeleteNatBinding(tn, namespace, name string) error {
 	}
 
 	// find the corresponding natpool's namespace
-	natPoolNS, err := na.FindNamespace(nb.Tenant, np.Namespace)
+	natPoolNS, err := na.FindNamespace(np.ObjectMeta)
 	if err != nil {
 		log.Errorf("Could not find nat pool's namespace. NatPool : {%v}", np)
 	}

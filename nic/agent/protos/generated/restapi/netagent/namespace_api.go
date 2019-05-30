@@ -76,7 +76,7 @@ func (s *RestServer) deleteNamespaceHandler(r *http.Request) (interface{}, error
 
 	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
 	name, _ := mux.Vars(r)["ObjectMeta.Name"]
-	err := s.agent.DeleteNamespace(tenant, name)
+	err := s.agent.DeleteNamespace(tenant, name, name)
 
 	res.References = []string{r.RequestURI}
 

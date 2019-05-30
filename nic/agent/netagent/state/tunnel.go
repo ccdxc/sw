@@ -33,7 +33,7 @@ func (na *Nagent) CreateTunnel(tun *netproto.Tunnel) error {
 		return nil
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(tun.Tenant, tun.Namespace)
+	ns, err := na.FindNamespace(tun.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,7 @@ func (na *Nagent) FindTunnel(meta api.ObjectMeta) (*netproto.Tunnel, error) {
 // UpdateTunnel updates a tunnel. ToDo implement tunnel updates in datapath
 func (na *Nagent) UpdateTunnel(tun *netproto.Tunnel) error {
 	// find the corresponding namespace
-	_, err := na.FindNamespace(tun.Tenant, tun.Namespace)
+	_, err := na.FindNamespace(tun.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -173,7 +173,7 @@ func (na *Nagent) DeleteTunnel(tn, namespace, name string) error {
 		return err
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(tun.Tenant, tun.Namespace)
+	ns, err := na.FindNamespace(tun.ObjectMeta)
 	if err != nil {
 		return err
 	}

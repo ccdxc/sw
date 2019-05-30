@@ -220,3 +220,37 @@ func EncodeGrpcRespSGRule(ctx context.Context, response interface{}) (interface{
 func DecodeGrpcRespSGRule(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
+
+func encodeHTTPSGRuleStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSGRuleStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SGRuleStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSGRuleStatus encodes GRPC request
+func EncodeGrpcReqSGRuleStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SGRuleStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqSGRuleStatus decodes GRPC request
+func DecodeGrpcReqSGRuleStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SGRuleStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespSGRuleStatus encodes GRC response
+func EncodeGrpcRespSGRuleStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSGRuleStatus decodes GRPC response
+func DecodeGrpcRespSGRuleStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}

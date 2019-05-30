@@ -15,6 +15,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
+	dnetproto "github.com/pensando/sw/nic/agent/protos/generated/delphi/netproto/delphi"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -44,8 +45,12 @@ func (na *Nagent) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.Endpoi
 	}
 
 	// call the datapath
-	intfInfo, err := na.CreateEndpoint(ep)
-	return ep, intfInfo, err
+	err = na.CreateEndpoint(ep)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return ep, nil, nil
 }
 
 // EndpointDeleteReq deletes an endpoint
@@ -62,11 +67,11 @@ func (na *Nagent) EndpointDeleteReq(epinfo *netproto.Endpoint) error {
 }
 
 // CreateEndpoint creates an endpoint
-func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error) {
+func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) error {
 	// check if the endpoint already exists and convert it to an update
 	err := na.validateMeta(ep.Kind, ep.ObjectMeta)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	key := na.Solver.ObjectKey(ep.ObjectMeta, ep.TypeMeta)
 	na.Lock()
@@ -77,24 +82,24 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error)
 		// check if endpoint contents are same
 		if !proto.Equal(oldEp, ep) {
 			log.Errorf("Endpoint %+v already exists. New ep {%+v}", oldEp, ep)
-			return nil, errors.New("Endpoint already exists")
+			return errors.New("Endpoint already exists")
 		}
 
 		log.Infof("Received duplicate endpoint create for ep {%+v}", ep)
-		return nil, nil
+		return nil
 	}
 
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(ep.Tenant, ep.Namespace)
+	ns, err := na.FindNamespace(ep.ObjectMeta)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// find the corresponding vrf.
 	vrf, err := na.ValidateVrf(ep.Tenant, ep.Namespace, ep.Spec.VrfName)
 	if err != nil {
 		log.Errorf("Failed to find the vrf %v", ep.Spec.VrfName)
-		return nil, err
+		return err
 	}
 
 	// check if we have the network endpoint is referring to
@@ -102,7 +107,7 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error)
 	nw, err := na.FindNetwork(api.ObjectMeta{Tenant: ep.Tenant, Namespace: ep.Namespace, Name: ep.Spec.NetworkName})
 	if err != nil {
 		log.Errorf("Error finding the network %v. Err: %v", ep.Spec.NetworkName, err)
-		return nil, err
+		return err
 	}
 
 	// check if security groups its referring to exists
@@ -112,7 +117,7 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error)
 		sg, serr := na.FindSecurityGroup(api.ObjectMeta{Tenant: ep.Tenant, Namespace: ep.Namespace, Name: sgname})
 		if serr != nil {
 			log.Errorf("Error finding security group %v. Err: %v", sgname, serr)
-			return nil, serr
+			return serr
 		}
 
 		sgs = append(sgs, sg)
@@ -125,7 +130,7 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error)
 			// Try parsing as IP
 			if len(net.ParseIP(ep.Spec.IPv4Address)) == 0 {
 				log.Errorf("Endpoint IP Addresses %v invalid. Must either be a CIDR or IP", ep.Spec.IPv4Address)
-				return nil, fmt.Errorf("endpoint IP Addresses %v invalid. Must either be a CIDR or IP", ep.Spec.IPv4Address)
+				return fmt.Errorf("endpoint IP Addresses %v invalid. Must either be a CIDR or IP", ep.Spec.IPv4Address)
 			}
 			// Slap a /32 if not specified
 			ep.Spec.IPv4Address = fmt.Sprintf("%s/32", ep.Spec.IPv4Address)
@@ -133,76 +138,128 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error)
 	}
 
 	// call the datapath
-	var intfInfo *types.IntfInfo
 	if ep.Spec.NodeUUID == na.NodeUUID {
 		// User specified a local ep create on a specific lif
 		lifID, err := na.findIntfID(ep, Local)
 		if err != nil {
 			log.Errorf("could not find an interface to associate to the endpoint")
-			return nil, err
+			return err
 		}
 
 		// Allocate an ENIC ID. ToDo capture the allocated enic ID in status to ensure that this can be deleted in the datapath
 		enicID, err := na.Store.GetNextID(types.InterfaceID)
 		if err != nil {
 			log.Errorf("Could not allocate enic for the local EP. %v", err)
-			return nil, err
+			return err
 		}
 		// Ensure the ID is non-overlapping with existing hw interfaces. Allcate IDs from 10000 onwards.
 		// Since HAL has some predefined interfaces which overlaps at 1K interfaces
 		enicID = enicID + types.EnicOffset
 		// save the enic id in the ep status for deletions
 		ep.Status.EnicID = enicID
-		intfInfo, err = na.Datapath.CreateLocalEndpoint(ep, nw, sgs, lifID, enicID, vrf)
+		_, err = na.Datapath.CreateLocalEndpoint(ep, nw, sgs, lifID, enicID, vrf)
 		if err != nil {
 			log.Errorf("Error creating the endpoint {%+v} in datapath. Err: %v", ep, err)
-			return nil, err
+			return err
 		}
 
 	} else {
 		intfID, err := na.findIntfID(ep, Remote)
 		if err != nil {
 			log.Errorf("could not find an interface to associate to the endpoint")
-			return nil, err
+			return err
 		}
 		err = na.Datapath.CreateRemoteEndpoint(ep, nw, sgs, intfID, vrf)
 		if err != nil {
 			log.Errorf("Error creating the endpoint {%+v} in datapath. Err: %v", ep, err)
-			return nil, err
+			return err
 		}
 	}
 	err = na.Solver.Add(nw, ep)
 	if err != nil {
 		log.Errorf("Could not add dependency. Parent: %v. Child: %v", nw, ep)
-		return nil, err
+		return err
 	}
 
 	err = na.Solver.Add(ns, ep)
 	if err != nil {
 		log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, ep)
-		return nil, err
+		return err
 	}
 
 	err = na.Solver.Add(vrf, ep)
 	if err != nil {
 		log.Errorf("Could not add dependency. Parent: %v. Child: %v", vrf, ep)
-		return nil, err
+		return err
 	}
+
+	// add the ep to database
+	err = na.saveEndpoint(ep)
+
+	// done
+	return err
+}
+
+// saveEndpoint saves endpoint to state stores
+func (na *Nagent) saveEndpoint(ep *netproto.Endpoint) error {
+	key := na.Solver.ObjectKey(ep.ObjectMeta, ep.TypeMeta)
 
 	// add the ep to database
 	na.Lock()
 	na.EndpointDB[key] = ep
 	na.Unlock()
-	err = na.Store.Write(ep)
 
-	// done
-	return intfInfo, err
+	// write to delphi
+	if na.DelphiClient != nil && ep.Spec.NodeUUID == na.NodeUUID {
+		dep := dnetproto.Endpoint{
+			Key:      key,
+			Endpoint: ep,
+		}
+
+		err := na.DelphiClient.SetObject(&dep)
+		if err != nil {
+			log.Errorf("Error writing Endpoint %s to delphi. Err: %v", key, err)
+			return err
+		}
+	}
+
+	err := na.Store.Write(ep)
+
+	return err
+}
+
+// discardEndpoint deletes endpoint from state stores
+func (na *Nagent) discardEndpoint(ep *netproto.Endpoint) error {
+	key := na.Solver.ObjectKey(ep.ObjectMeta, ep.TypeMeta)
+
+	// remove from the database
+	na.Lock()
+	delete(na.EndpointDB, key)
+	na.Unlock()
+
+	// delete it from delphi
+	if na.DelphiClient != nil && ep.Spec.NodeUUID == na.NodeUUID {
+		dep := dnetproto.Endpoint{
+			Key:      key,
+			Endpoint: ep,
+		}
+
+		err := na.DelphiClient.DeleteObject(&dep)
+		if err != nil {
+			log.Errorf("Error deleting Endpoint %s from delphi. Err: %v", key, err)
+			return err
+		}
+	}
+
+	err := na.Store.Delete(ep)
+
+	return err
 }
 
 // UpdateEndpoint updates an endpoint. ToDo Handle updates in datapath
 func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	// find the corresponding namespace
-	_, err := na.FindNamespace(ep.Tenant, ep.Namespace)
+	_, err := na.FindNamespace(ep.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -287,10 +344,7 @@ func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	}
 
 	// add the ep to database
-	na.Lock()
-	na.EndpointDB[key] = ep
-	na.Unlock()
-	err = na.Store.Write(ep)
+	err = na.saveEndpoint(ep)
 
 	return err
 }
@@ -310,7 +364,7 @@ func (na *Nagent) DeleteEndpoint(tn, namespace, name string) error {
 		return err
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(ep.Tenant, ep.Namespace)
+	ns, err := na.FindNamespace(ep.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -379,10 +433,7 @@ func (na *Nagent) DeleteEndpoint(tn, namespace, name string) error {
 	}
 
 	// remove from the database
-	na.Lock()
-	delete(na.EndpointDB, key)
-	na.Unlock()
-	err = na.Store.Delete(ep)
+	err = na.discardEndpoint(ep)
 
 	// done
 	return err

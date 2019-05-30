@@ -28,14 +28,14 @@ func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*
 		},
 	}
 
-	for _, r := range sgp.Spec.Rules {
-		ruleMatches, err := hd.buildHALRuleMatches(r.Src, r.Dst, ruleIDAppLUT, &r.ID)
+	for idx, r := range sgp.Spec.Rules {
+		ruleMatches, err := hd.buildHALRuleMatches(r.Src, r.Dst, ruleIDAppLUT, &idx)
 		if err != nil {
 			log.Errorf("Could not convert match criteria Err: %v", err)
 			return err
 		}
 		for _, match := range ruleMatches {
-			ruleAction, err := convertRuleAction(r.ID, ruleIDAppLUT, r.Action)
+			ruleAction, err := convertRuleAction(idx, ruleIDAppLUT, r.Action)
 			if err != nil {
 				log.Errorf("Failed to convert rule action. Err: %v", err)
 				return err
@@ -65,6 +65,8 @@ func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*
 			},
 		},
 	}
+
+	log.Infof("Sending SGPolicy Create to datapath: %+v", sgPolicyReqMsg)
 
 	if hd.Kind == "hal" {
 		resp, err := hd.Hal.Sgclient.SecurityPolicyCreate(context.Background(), sgPolicyReqMsg)
@@ -103,15 +105,15 @@ func (hd *Datapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, ruleIDA
 		},
 	}
 
-	for _, r := range sgp.Spec.Rules {
-		ruleMatches, err := hd.buildHALRuleMatches(r.Src, r.Dst, ruleIDAppLUT, &r.ID)
+	for idx, r := range sgp.Spec.Rules {
+		ruleMatches, err := hd.buildHALRuleMatches(r.Src, r.Dst, ruleIDAppLUT, &idx)
 		if err != nil {
 			log.Errorf("Could not convert match criteria Err: %v", err)
 			return err
 		}
 
 		for _, match := range ruleMatches {
-			ruleAction, err := convertRuleAction(r.ID, ruleIDAppLUT, r.Action)
+			ruleAction, err := convertRuleAction(idx, ruleIDAppLUT, r.Action)
 			if err != nil {
 				log.Errorf("Failed to convert rule action. Err: %v", err)
 				return err
@@ -140,6 +142,8 @@ func (hd *Datapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, ruleIDA
 			},
 		},
 	}
+
+	log.Infof("Sending SGPolicy Update to datapath: %+v", sgPolicyUpdateReqMsg)
 
 	if hd.Kind == "hal" {
 		resp, err := hd.Hal.Sgclient.SecurityPolicyUpdate(context.Background(), sgPolicyUpdateReqMsg)
@@ -192,6 +196,8 @@ func (hd *Datapath) DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
 		},
 	}
 
+	log.Infof("Sending SGPolicy Delete to datapath: %+v", sgPolicyDelReq)
+
 	if hd.Kind == "hal" {
 		resp, err := hd.Hal.Sgclient.SecurityPolicyDelete(context.Background(), sgPolicyDelReq)
 		if err != nil {
@@ -215,10 +221,10 @@ func (hd *Datapath) DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
 	return nil
 }
 
-func convertRuleAction(ruleID uint64, ruleIDAppLUT *sync.Map, action string) (*halproto.SecurityRuleAction, error) {
+func convertRuleAction(ruleIdx int, ruleIDAppLUT *sync.Map, action string) (*halproto.SecurityRuleAction, error) {
 	var ruleAction halproto.SecurityRuleAction
 
-	obj, ok := ruleIDAppLUT.Load(ruleID)
+	obj, ok := ruleIDAppLUT.Load(ruleIdx)
 	// Rule has a corresponding ALG information
 	if ok {
 		app, ok := obj.(*netproto.App)

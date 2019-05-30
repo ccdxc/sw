@@ -194,7 +194,7 @@ DbSubtreePtr DelphiServer::GetSubtree(string kind) {
 }
 
 // addObject adds an object into a subtree based on kind
-    error DelphiServer::addObject(string kind, string key, ObjectDataPtr obj,
+error DelphiServer::addObject(string kind, string key, ObjectDataPtr obj,
 	bool skipPersistence) {
     std::map<string, ObjectDataPtr>::iterator it;
 
@@ -544,8 +544,12 @@ error DelphiServer::HandleChangeReq(int sockCtx, vector<ObjectData> req, vector<
         // log the update
         if (traceEnabled_ && !isKindPeriodic(kind)) {
             BaseObjectPtr objinfo = BaseObject::Create(kind, newObj->data());
-            LogInfo("{}: for {}/{} data: {}", ObjectOperation_Name(iter->op()),
+	    if (objinfo != nullptr) {
+                LogInfo("{}: for {}/{} data: {}", ObjectOperation_Name(iter->op()),
                         kind, key, objinfo->GetMessage()->ShortDebugString());
+	    } else {
+                LogInfo("{}: for {}/{} ", ObjectOperation_Name(iter->op()), kind, key);
+            }
         }
 
         // add or remove it from db

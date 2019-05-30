@@ -73,7 +73,7 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 	}
 
 	// wait for all endpoints to be propagated to other agents
-	for _, sn := range it.snics {
+	for i, sn := range it.snics {
 		go func(ag *netagent.Agent) {
 			found := CheckEventually(func() (bool, interface{}) {
 				return len(ag.NetworkAgent.ListEndpoint()) == it.config.NumHosts, nil
@@ -84,10 +84,10 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 				return
 			}
 			foundLocal := false
-			for _, sn := range it.snics {
-				name, err := strconv.ParseMacAddr(sn.macAddr)
+			for _, snl := range it.snics {
+				name, err := strconv.ParseMacAddr(snl.macAddr)
 				if err != nil {
-					name = sn.agent.NetworkAgent.NodeUUID
+					name = snl.agent.NetworkAgent.NodeUUID
 				}
 				epname := fmt.Sprintf("testWorkload-%s-%s", name, name)
 				epmeta := api.ObjectMeta{
@@ -104,7 +104,6 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 				if sep.Spec.NodeUUID == ag.NetworkAgent.NodeUUID {
 					foundLocal = true
 				}
-
 			}
 			if !foundLocal {
 				waitCh <- fmt.Errorf("No local endpoint found on %s", ag.NetworkAgent.NodeUUID)
@@ -113,6 +112,27 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 
 			waitCh <- nil
 		}(sn.agent)
+
+		AssertEventually(c, func() (bool, interface{}) {
+			name, err := strconv.ParseMacAddr(sn.macAddr)
+			if err != nil {
+				name = sn.agent.NetworkAgent.NodeUUID
+			}
+			epname := fmt.Sprintf("testWorkload-%s-%s", name, name)
+			epmeta := api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      epname,
+			}
+			gep, gerr := it.apisrvClient.WorkloadV1().Endpoint().Get(ctx, &epmeta)
+			if gerr != nil {
+				return false, fmt.Errorf("Endpoint %s not found in apiserver", epname)
+			}
+			if gep.Status.MacAddress != wrloads[i].Spec.Interfaces[0].MACAddress {
+				return false, fmt.Errorf("Endpoint %s not found in apiserver", epname)
+			}
+			return true, nil
+		}, "100ms", it.pollTimeout())
 	}
 
 	// wait for all goroutines to complete

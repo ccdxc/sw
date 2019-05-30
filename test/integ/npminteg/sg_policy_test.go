@@ -76,6 +76,9 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 			(tsgp.Status.PropagationStatus.MinVersion != "") {
 			return false, tsgp
 		}
+		if len(tsgp.Status.RuleStatus) != len(sgp.Spec.Rules) {
+			return false, tsgp
+		}
 		return true, nil
 	}, "SgPolicy status was not updated after creating the policy", "100ms", it.pollTimeout())
 
@@ -321,13 +324,13 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 	AssertOk(c, err, "Error updating new snic")
 	agent.nagent.Stop()
 
-	// verify policy status reflects unhealthy snic
+	// verify policy status is not changed by unhealthy snic
 	AssertEventually(c, func() (bool, interface{}) {
 		tsgp, gerr := it.apisrvClient.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
 		if gerr != nil {
 			return false, gerr
 		}
-		if (tsgp.Status.PropagationStatus.Updated != int32(it.numAgents)) || (tsgp.Status.PropagationStatus.Pending != 0) ||
+		if (tsgp.Status.PropagationStatus.Updated != int32(it.numAgents+1)) || (tsgp.Status.PropagationStatus.Pending != 0) ||
 			(tsgp.Status.PropagationStatus.MinVersion != "") {
 			return false, tsgp
 		}
@@ -618,6 +621,7 @@ func (it *integTestSuite) TestNpmSgPolicyMultiApp(c *C) {
 			},
 		},
 	}
+	time.Sleep(time.Millisecond * 100)
 
 	// create sg policy
 	_, err = it.apisrvClient.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
@@ -628,12 +632,12 @@ func (it *integTestSuite) TestNpmSgPolicyMultiApp(c *C) {
 		AssertEventually(c, func() (bool, interface{}) {
 			gsgp, gerr := ag.nagent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
 			if gerr != nil {
-				return false, nil
+				return false, fmt.Errorf("Error finding sgpolicy for %+v", sgp.ObjectMeta)
 			}
 			if len(gsgp.Spec.Rules) != 2 {
 				return false, gsgp.Spec.Rules
 			}
-			if gsgp.Spec.Rules[0].ID == gsgp.Spec.Rules[1].ID {
+			if gsgp.Spec.Rules[0].ID != gsgp.Spec.Rules[1].ID {
 				return false, gsgp.Spec.Rules
 			}
 			return true, nil

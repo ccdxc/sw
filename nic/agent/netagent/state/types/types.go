@@ -12,6 +12,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/venice/utils/emstore"
 )
 
@@ -121,6 +122,7 @@ type NetAgent struct {
 	NodeUUID          string                              // Node's UUID
 	Datapath          NetDatapathAPI                      // network datapath
 	Ctrlerif          CtrlerAPI                           // controller object
+	DelphiClient      clientApi.Client                    // delphi client
 	Solver            DepSolver                           // Object dependency resolver
 	NetworkDB         map[string]*netproto.Network        // Network object db ToDo Add updating in memory state from persisted DB in case of agent restarts
 	EndpointDB        map[string]*netproto.Endpoint       // Endpoint object db
@@ -176,7 +178,7 @@ type CtrlerIntf interface {
 	DeleteNetwork(tn, ns, name string) error                                    // delete a network
 	ListNetwork() []*netproto.Network                                           // lists all networks
 	FindNetwork(meta api.ObjectMeta) (*netproto.Network, error)                 // finds a network
-	CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error)                    // create an endpoint
+	CreateEndpoint(ep *netproto.Endpoint) error                                 // create an endpoint
 	UpdateEndpoint(ep *netproto.Endpoint) error                                 // update an endpoint
 	DeleteEndpoint(tn, ns, name string) error                                   // delete an endpoint
 	FindEndpoint(meta api.ObjectMeta) (*netproto.Endpoint, error)               // find an endpoint
@@ -187,11 +189,13 @@ type CtrlerIntf interface {
 	FindSecurityGroup(meta api.ObjectMeta) (*netproto.SecurityGroup, error)     // find an sg
 	ListSecurityGroup() []*netproto.SecurityGroup                               // list all sgs
 	CreateTenant(tn *netproto.Tenant) error                                     // create a tenant
-	DeleteTenant(name string) error                                             // delete a tenant
+	DeleteTenant(tn, ns, name string) error                                     // delete a tenant
+	FindTenant(meta api.ObjectMeta) (*netproto.Tenant, error)                   // find a tenant
 	ListTenant() []*netproto.Tenant                                             // lists all tenants
 	UpdateTenant(tn *netproto.Tenant) error                                     // updates a tenant
 	CreateNamespace(ns *netproto.Namespace) error                               // create a namespace
-	DeleteNamespace(tn, name string) error                                      // delete a namespace
+	DeleteNamespace(tn, ns, name string) error                                  // delete a namespace
+	FindNamespace(meta api.ObjectMeta) (*netproto.Namespace, error)             // find a namespace
 	ListNamespace() []*netproto.Namespace                                       // lists all namespaces
 	UpdateNamespace(ns *netproto.Namespace) error                               // updates a namespace
 	CreateInterface(intf *netproto.Interface) error                             // creates an interface

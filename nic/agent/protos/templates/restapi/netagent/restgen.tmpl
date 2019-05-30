@@ -58,11 +58,8 @@ import (
                             o.ModTime = api.Timestamp{
                                 Timestamp: *c,
                             }
-                          {{if strEq $crudObject "Endpoint"}}
-                              _, err = s.agent.Create{{title $crudObject}}(&o)
-                          {{else}}
+                        
                              err = s.agent.Create{{title $crudObject}}(&o)
-                          {{end}}
                         {{else if strEq . "put"}}
                              var o netproto.{{title $crudObject}}
                              b, _ := ioutil.ReadAll(r.Body)
@@ -78,11 +75,11 @@ import (
                         {{else if strEq . "delete"}}
                              {{if strEq $crudObject "Tenant"}}
                                 name, _ := mux.Vars(r)["ObjectMeta.Name"]
-                                err := s.agent.Delete{{title $crudObject}}(name)
+                                err := s.agent.Delete{{title $crudObject}}(name, name, name)
                              {{else if strEq $crudObject "Namespace"}}
                                 tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
                                 name, _ := mux.Vars(r)["ObjectMeta.Name"]
-                                err := s.agent.Delete{{title $crudObject}}(tenant, name)
+                                err := s.agent.Delete{{title $crudObject}}(tenant, name, name)
                              {{else}}
                                 tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
                                 namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]

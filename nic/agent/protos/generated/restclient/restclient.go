@@ -2,7 +2,6 @@
 
 /*
 Package netproto is a auto generated package.
-Input file: vrf.proto
 */
 
 package restclient

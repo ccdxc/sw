@@ -14,6 +14,9 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+// maxQueueDepth maximum queue depth of update queue
+const maxQueueDepth = 1000
+
 // The main map holding the objects in the local copy of the databse.
 type subtree map[string]clientApi.BaseObject
 
@@ -413,7 +416,7 @@ func NewClient(service clientApi.Service) (clientApi.Client, error) {
 		service:        service,
 		subtrees:       make(map[string]subtree),
 		watchers:       make(map[string][]clientApi.BaseReactor),
-		changeQueue:    make(chan *change),
+		changeQueue:    make(chan *change, maxQueueDepth),
 		mountListeners: make([]clientApi.MountListener, 0),
 		globalLock:     &sync.Mutex{},
 		stopChan:       make(chan bool),

@@ -12,6 +12,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
+	dnetproto "github.com/pensando/sw/nic/agent/protos/generated/delphi/netproto/delphi"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -39,7 +40,7 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(sgp.Tenant, sgp.Namespace)
+	ns, err := na.FindNamespace(sgp.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -97,7 +98,7 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 
 			}
 
-			na.RuleIDAppLUT.Store(ruleHash, app)
+			na.RuleIDAppLUT.Store(i, app)
 		}
 	}
 
@@ -143,13 +144,59 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	// save it in db
+	err = na.saveSGPolicy(sgp)
+
+	return err
+}
+
+func (na *Nagent) saveSGPolicy(sgp *netproto.SGPolicy) error {
+	// save it in db
 	key := na.Solver.ObjectKey(sgp.ObjectMeta, sgp.TypeMeta)
 	na.Lock()
 	na.SGPolicyDB[key] = sgp
 	na.Unlock()
-	err = na.Store.Write(sgp)
+
+	// write to delphi
+	if na.DelphiClient != nil {
+		dsgp := dnetproto.SGPolicy{
+			Key:      key,
+			SGPolicy: sgp,
+		}
+
+		err := na.DelphiClient.SetObject(&dsgp)
+		if err != nil {
+			log.Errorf("Error writing SGPolicy %s to delphi. Err: %v", key, err)
+			return err
+		}
+	}
+
+	err := na.Store.Write(sgp)
 
 	return err
+}
+
+func (na *Nagent) discardSGPolicy(sgp *netproto.SGPolicy) error {
+	// delete from db
+	key := na.Solver.ObjectKey(sgp.ObjectMeta, sgp.TypeMeta)
+	na.Lock()
+	delete(na.SGPolicyDB, key)
+	na.Unlock()
+
+	// remove it from delphi
+	if na.DelphiClient != nil {
+		dsgp := dnetproto.SGPolicy{
+			Key:      key,
+			SGPolicy: sgp,
+		}
+
+		err := na.DelphiClient.DeleteObject(&dsgp)
+		if err != nil {
+			log.Errorf("Error Deleting SGPolicy %s from delphi. Err: %v", key, err)
+			return err
+		}
+	}
+
+	return na.Store.Delete(sgp)
 }
 
 // FindSGPolicy finds a security group policy in local db
@@ -188,7 +235,7 @@ func (na *Nagent) ListSGPolicy() []*netproto.SGPolicy {
 // UpdateSGPolicy updates a security group policy
 func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 	// find the corresponding namespace
-	_, err := na.FindNamespace(sgp.Tenant, sgp.Namespace)
+	_, err := na.FindNamespace(sgp.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -229,7 +276,7 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 				return fmt.Errorf("could not find the corresponding app. %v", r.AppName)
 			}
 
-			na.RuleIDAppLUT.Store(ruleHash, app)
+			na.RuleIDAppLUT.Store(i, app)
 		}
 	}
 
@@ -242,11 +289,7 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 	// Flush the look up table as it always reconstructed
 	na.RuleIDAppLUT = sync.Map{}
 
-	key := na.Solver.ObjectKey(sgp.ObjectMeta, sgp.TypeMeta)
-	na.Lock()
-	na.SGPolicyDB[key] = sgp
-	na.Unlock()
-	err = na.Store.Write(sgp)
+	err = na.saveSGPolicy(sgp)
 	return err
 }
 
@@ -265,7 +308,7 @@ func (na *Nagent) DeleteSGPolicy(tn, namespace, name string) error {
 		return err
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(sgp.Tenant, sgp.Namespace)
+	ns, err := na.FindNamespace(sgp.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -337,11 +380,7 @@ func (na *Nagent) DeleteSGPolicy(tn, namespace, name string) error {
 	}
 
 	// delete from db
-	key := na.Solver.ObjectKey(sgp.ObjectMeta, sgp.TypeMeta)
-	na.Lock()
-	delete(na.SGPolicyDB, key)
-	na.Unlock()
-	err = na.Store.Delete(sgp)
+	err = na.discardSGPolicy(sgp)
 
 	return err
 }

@@ -59,4 +59,5 @@ service TenantApi {
     rpc GetTenant (api.ObjectMeta) returns (Tenant) {};
     rpc ListTenants (api.ObjectMeta) returns (TenantList) {};
     rpc WatchTenants (api.ObjectMeta) returns (stream TenantEvent) {};
+    rpc UpdateTenant (Tenant) returns (Tenant) {};
 }

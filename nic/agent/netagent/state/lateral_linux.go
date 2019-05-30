@@ -151,7 +151,7 @@ func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 	}
 
 	log.Infof("Creating internal endpoint %v", ep)
-	if _, err := na.CreateEndpoint(ep); err != nil {
+	if err := na.CreateEndpoint(ep); err != nil {
 		log.Errorf("Failed to create TEP EP. Err: %v", err)
 		return err
 	}

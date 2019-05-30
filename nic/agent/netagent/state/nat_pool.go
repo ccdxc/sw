@@ -33,7 +33,7 @@ func (na *Nagent) CreateNatPool(np *netproto.NatPool) error {
 	}
 
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(np.Tenant, np.Namespace)
+	ns, err := na.FindNamespace(np.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func (na *Nagent) ListNatPool() []*netproto.NatPool {
 // UpdateNatPool updates a nat pool
 func (na *Nagent) UpdateNatPool(np *netproto.NatPool) error {
 	// find the corresponding namespace
-	_, err := na.FindNamespace(np.Tenant, np.Namespace)
+	_, err := na.FindNamespace(np.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func (na *Nagent) DeleteNatPool(tn, namespace, name string) error {
 		return err
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(np.Tenant, np.Namespace)
+	ns, err := na.FindNamespace(np.ObjectMeta)
 	if err != nil {
 		return err
 	}

@@ -78,6 +78,8 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 	AssertEquals(t, sgps.SGPolicy.Spec.AttachGroups, sgp.Spec.AttachGroups, "Security policy params did not match")
 	Assert(t, (len(sgps.groups) == 1), "Sg was not added to sgpolicy", sgps)
 	Assert(t, sgps.groups["procurement"].SecurityGroup.Name == "procurement", "Sgpolicy is not linked to sg", sgps)
+	Assert(t, len(sgps.SGPolicy.Status.RuleStatus) == len(sgps.SGPolicy.Spec.Rules), "Rule status was not updated")
+	Assert(t, sgps.SGPolicy.Status.RuleStatus[0].RuleHash != "", "Rule hash was not updated")
 
 	// verify sg has the policy info
 	prsg, err := stateMgr.FindSecurityGroup("default", "procurement")
@@ -367,9 +369,8 @@ func TestSGPolicySmartNICEvents(t *testing.T) {
 		return true, nil
 	}, "SGPolicy propagation state incorrect", "300ms", "10s")
 
-	// mark the smartnic as unhealthy
-	snic2.Status.Conditions[0].Status = "UNKNOWN"
-	err = stateMgr.ctrler.SmartNIC().Update(snic2)
+	// delete smartnic
+	err = stateMgr.ctrler.SmartNIC().Delete(snic2)
 	AssertOk(t, err, "Couldn't update smartnic")
 
 	// verify propagation status
@@ -643,6 +644,6 @@ func TestSGPolicyMultiApp(t *testing.T) {
 	nsgp, err := stateMgr.mbus.FindSGPolicy(&sgp.ObjectMeta)
 	AssertOk(t, err, "Error finding endpoint in mbus")
 	Assert(t, len(nsgp.Spec.Rules) == 2, "Invalid number of rules in mbus")
-	Assert(t, (nsgp.Spec.Rules[0].ID != nsgp.Spec.Rules[1].ID), "Invalid rule ids in mbus")
+	Assert(t, (nsgp.Spec.Rules[0].ID == nsgp.Spec.Rules[1].ID), "Invalid rule ids in mbus")
 
 }

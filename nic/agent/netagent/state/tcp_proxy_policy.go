@@ -33,7 +33,7 @@ func (na *Nagent) CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy) error {
 		return nil
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(tcp.Tenant, tcp.Namespace)
+	ns, err := na.FindNamespace(tcp.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func (na *Nagent) FindTCPProxyPolicy(meta api.ObjectMeta) (*netproto.TCPProxyPol
 // UpdateTCPProxyPolicy updates a tcp proxy policy. ToDo implement tcp proxy policy updates in datapath
 func (na *Nagent) UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy) error {
 	// find the corresponding namespace
-	_, err := na.FindNamespace(tcp.Tenant, tcp.Namespace)
+	_, err := na.FindNamespace(tcp.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func (na *Nagent) DeleteTCPProxyPolicy(tn, namespace, name string) error {
 		return err
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(tcp.Tenant, tcp.Namespace)
+	ns, err := na.FindNamespace(tcp.ObjectMeta)
 	if err != nil {
 		return err
 	}

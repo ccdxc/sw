@@ -39,7 +39,7 @@ func setup(name string) (*evtsproxy.EventsProxy, *policy.Manager, string, string
 		return nil, nil, "", "", nil, err
 	}
 
-	eps, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, ":0",
+	eps, err := evtsproxy.NewEventsProxy(name, globals.EvtsProxy, ":0",
 		nil, 100*time.Second, time.Second, &events.StoreConfig{Dir: proxyEventsStoreDir}, logger)
 	if err != nil {
 		return nil, nil, "", "", nil, err

@@ -171,12 +171,11 @@ func (act *ActionCtx) VerifyPolicyStatus(spc *SGPolicyCollection) error {
 
 		// verify policy status
 		if pstat.Status.PropagationStatus.GenerationID != pstat.ObjectMeta.GenerationID {
-			log.Warnf("Propagation generation id did not match: Meta: %+v, Status: %+v", pstat.ObjectMeta, pstat.Status)
+			log.Warnf("Propagation generation id did not match: Meta: %+v, PropagationStatus: %+v", pstat.ObjectMeta, pstat.Status.PropagationStatus)
 			return fmt.Errorf("Propagation generation id did not match")
 		}
-		if (pstat.Status.PropagationStatus.Updated != int32(len(act.model.naples))) || (pstat.Status.PropagationStatus.Pending != 0) ||
-			(pstat.Status.PropagationStatus.MinVersion != "") {
-			log.Warnf("Propagation status incorrect: Meta: %+v, Status: %+v", pstat.ObjectMeta, pstat.Status)
+		if (pstat.Status.PropagationStatus.Updated != int32(len(act.model.naples))) || (pstat.Status.PropagationStatus.Pending != 0) {
+			log.Warnf("Propagation status incorrect: Meta: %+v, PropagationStatus: %+v", pstat.ObjectMeta, pstat.Status.PropagationStatus)
 			return fmt.Errorf("Propagation status was incorrect")
 		}
 	}

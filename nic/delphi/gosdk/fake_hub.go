@@ -124,17 +124,14 @@ func (h *hub) runLoop() {
 }
 
 func (h *hub) handleMessage(conn net.Conn, message *messenger.Message) {
-	log.Printf("Hub: MesssageIn: %v", message)
 	switch message.GetType() {
 	case messenger.MessageType_MountReq:
 		h.clientsMux.Lock()
 		h.sendMountResp(h.clients[conn], message)
 		h.clientsMux.Unlock()
 	case messenger.MessageType_ChangeReq:
-		log.Printf("Hub: ChangeReq")
 		h.clientsMux.Lock()
 		for _, c := range h.clients {
-			log.Printf("Hub: Handle Message sending Notify")
 			h.sendNotify(c, message)
 		}
 		h.clientsMux.Unlock()
@@ -210,10 +207,9 @@ func (h *hub) sendNotify(cl *hubClient, msg *messenger.Message) {
 
 	buffer.EncodeMessage(&message)
 
-	log.Printf("Hub: MesssageOut: %v", message)
 	_, err := cl.connection.Write(buffer.Bytes())
 	if err != nil {
-		panic(err)
+		log.Printf("Error sending notify: Err %v", err)
 	}
 }
 

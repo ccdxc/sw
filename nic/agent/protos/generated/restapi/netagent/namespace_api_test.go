@@ -42,7 +42,7 @@ func TestNamespacePost(t *testing.T) {
 	var namespaceList []*netproto.Namespace
 
 	postData := netproto.Namespace{
-		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Name:      "testPostNamespace",
@@ -173,6 +173,12 @@ func TestNamespaceUpdateErr(t *testing.T) {
 			Name:      "badObject"},
 	}
 
+	badDelData = netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{Tenant: "default",
+			Namespace: "",
+			Name:      "badObject"},
+	}
 	err := netutils.HTTPPut("http://"+agentRestURL+"/api/namespaces/default/badObject", &badDelData, &resp)
 
 	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")

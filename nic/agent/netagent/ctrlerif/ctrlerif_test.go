@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
@@ -22,6 +23,7 @@ import (
 )
 
 type fakeAgent struct {
+	sync.Mutex
 	name       string
 	netAdded   map[string]*netproto.Network
 	netUpdated map[string]*netproto.Network
@@ -84,11 +86,15 @@ func (ag *fakeAgent) GetNetagentUptime() (string, error) {
 }
 
 func (ag *fakeAgent) CreateNetwork(nt *netproto.Network) error {
+	ag.Lock()
+	defer ag.Unlock()
 	ag.netAdded[objectKey(nt.ObjectMeta)] = nt
 	return nil
 }
 
 func (ag *fakeAgent) UpdateNetwork(nt *netproto.Network) error {
+	ag.Lock()
+	defer ag.Unlock()
 	ag.netUpdated[objectKey(nt.ObjectMeta)] = nt
 	return nil
 }
@@ -99,6 +105,8 @@ func (ag *fakeAgent) DeleteNetwork(tn, namespace, name string) error {
 		Namespace: namespace,
 		Name:      name,
 	}
+	ag.Lock()
+	defer ag.Unlock()
 	ag.netDeleted[objectKey(meta)] = true
 	return nil
 }
@@ -123,12 +131,16 @@ func (ag *fakeAgent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error)
 	return nil, fmt.Errorf("Network not found")
 }
 
-func (ag *fakeAgent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error) {
+func (ag *fakeAgent) CreateEndpoint(ep *netproto.Endpoint) error {
+	ag.Lock()
+	defer ag.Unlock()
 	ag.epAdded[objectKey(ep.ObjectMeta)] = ep
-	return nil, nil
+	return nil
 }
 
 func (ag *fakeAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
+	ag.Lock()
+	defer ag.Unlock()
 	ag.epUpdated[objectKey(ep.ObjectMeta)] = ep
 	return nil
 }
@@ -148,6 +160,8 @@ func (ag *fakeAgent) DeleteEndpoint(tn, namespace, name string) error {
 		Namespace: namespace,
 		Name:      name,
 	}
+	ag.Lock()
+	defer ag.Unlock()
 	ag.epDeleted[objectKey(meta)] = true
 	return nil
 }
@@ -164,16 +178,22 @@ func (ag *fakeAgent) ListEndpoint() []*netproto.Endpoint {
 }
 
 func (ag *fakeAgent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
+	ag.Lock()
+	defer ag.Unlock()
 	ag.sgAdded[objectKey(sg.ObjectMeta)] = sg
 	return nil
 }
 
 func (ag *fakeAgent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
+	ag.Lock()
+	defer ag.Unlock()
 	ag.sgUpdated[objectKey(sg.ObjectMeta)] = sg
 	return nil
 }
 
 func (ag *fakeAgent) DeleteSecurityGroup(tn, namespace, name string) error {
+	ag.Lock()
+	defer ag.Unlock()
 	meta := api.ObjectMeta{
 		Tenant:    tn,
 		Namespace: namespace,
@@ -209,8 +229,12 @@ func (ag *fakeAgent) CreateTenant(tn *netproto.Tenant) error {
 }
 
 // DeleteTenant deletes a tenant. Stubbed out to satisfy the interface
-func (ag *fakeAgent) DeleteTenant(name string) error {
+func (ag *fakeAgent) DeleteTenant(tn, ns, name string) error {
 	return nil
+}
+
+func (ag *fakeAgent) FindTenant(meta api.ObjectMeta) (*netproto.Tenant, error) {
+	return nil, nil
 }
 
 // ListTenant lists tenants. Stubbed out to satisfy the interface
@@ -229,13 +253,17 @@ func (ag *fakeAgent) CreateNamespace(ns *netproto.Namespace) error {
 }
 
 // DeleteNamespace deletes a namespace. Stubbed out to satisfy the interface
-func (ag *fakeAgent) DeleteNamespace(tn, name string) error {
+func (ag *fakeAgent) DeleteNamespace(tn, ns, name string) error {
 	return nil
 }
 
 // ListNamespace lists namespaces. Stubbed out to satisfy the interface
 func (ag *fakeAgent) ListNamespace() []*netproto.Namespace {
 	return nil
+}
+
+func (ag *fakeAgent) FindNamespace(meta api.ObjectMeta) (*netproto.Namespace, error) {
+	return nil, nil
 }
 
 // UpdateNamespace updates a namespace. Stubbed out to satisfy the interface
@@ -461,6 +489,8 @@ func (ag *fakeAgent) DeleteIPSecSADecrypt(tn, namespace, name string) error {
 
 // CreateSGPolicy creates a security group policy
 func (ag *fakeAgent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
+	ag.Lock()
+	defer ag.Unlock()
 	ag.sgpAdded[objectKey(sgp.ObjectMeta)] = sgp
 	return nil
 }
@@ -489,12 +519,16 @@ func (ag *fakeAgent) ListSGPolicy() []*netproto.SGPolicy {
 
 // UpdateSGPolicy updates a security group policy
 func (ag *fakeAgent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
+	ag.Lock()
+	defer ag.Unlock()
 	ag.sgpUpdated[objectKey(sgp.ObjectMeta)] = sgp
 	return nil
 }
 
 // DeleteSGPolicy deletes a security group policy
 func (ag *fakeAgent) DeleteSGPolicy(tn, namespace, name string) error {
+	ag.Lock()
+	defer ag.Unlock()
 	meta := api.ObjectMeta{
 		Tenant:    tn,
 		Namespace: namespace,
@@ -581,6 +615,8 @@ func (ag *fakeAgent) DeletePort(tn, ns, name string) error {
 
 // CreateSecurityProfile creates a security profile. Stubbed out to satisfy interface
 func (ag *fakeAgent) CreateSecurityProfile(profile *netproto.SecurityProfile) error {
+	ag.Lock()
+	defer ag.Unlock()
 	ag.secpAdded[objectKey(profile.ObjectMeta)] = profile
 	return nil
 }
@@ -602,6 +638,8 @@ func (ag *fakeAgent) ListSecurityProfile() []*netproto.SecurityProfile {
 
 // UpdateSecurityProfile updates a security profile. Stubbed out to satisfy interface
 func (ag *fakeAgent) UpdateSecurityProfile(profile *netproto.SecurityProfile) error {
+	ag.Lock()
+	defer ag.Unlock()
 	ag.secpUpdated[objectKey(profile.ObjectMeta)] = profile
 
 	return nil
@@ -609,6 +647,8 @@ func (ag *fakeAgent) UpdateSecurityProfile(profile *netproto.SecurityProfile) er
 
 // DeleteSecurityProfile deletes a security profile. Stubbed out to satisfy interface
 func (ag *fakeAgent) DeleteSecurityProfile(tn, ns, name string) error {
+	ag.Lock()
+	defer ag.Unlock()
 	meta := api.ObjectMeta{
 		Tenant:    tn,
 		Namespace: ns,
@@ -646,6 +686,8 @@ func (ag *fakeAgent) DeleteVrf(tn, ns, name string) error {
 
 // CreateApp creates an app. Stubbed out to satisfy interface
 func (ag *fakeAgent) CreateApp(app *netproto.App) error {
+	ag.Lock()
+	defer ag.Unlock()
 	ag.appAdded[objectKey(app.ObjectMeta)] = app
 	return nil
 }
@@ -667,6 +709,8 @@ func (ag *fakeAgent) ListApp() []*netproto.App {
 
 // UpdateApp updates an app. Stubbed out to satisfy interface
 func (ag *fakeAgent) UpdateApp(app *netproto.App) error {
+	ag.Lock()
+	defer ag.Unlock()
 	ag.appUpdated[objectKey(app.ObjectMeta)] = app
 	return nil
 }
@@ -678,6 +722,8 @@ func (ag *fakeAgent) GetNaplesInfo() (info *types.NaplesInfo, err error) {
 
 // DeleteApp deletes an app. Stubbed out to satisfy interface
 func (ag *fakeAgent) DeleteApp(tn, ns, name string) error {
+	ag.Lock()
+	defer ag.Unlock()
 	meta := api.ObjectMeta{
 		Tenant:    tn,
 		Namespace: ns,
@@ -731,7 +777,7 @@ func createRPCServer(t *testing.T) *fakeRPCServer {
 	// register self as rpc handler
 	netproto.RegisterNetworkApiServer(grpcServer.GrpcServer, &srv)
 	netproto.RegisterEndpointApiServer(grpcServer.GrpcServer, &srv)
-	netproto.RegisterSecurityApiServer(grpcServer.GrpcServer, &srv)
+	netproto.RegisterSecurityGroupApiServer(grpcServer.GrpcServer, &srv)
 	netproto.RegisterSGPolicyApiServer(grpcServer.GrpcServer, &srv)
 	netproto.RegisterSecurityProfileApiServer(grpcServer.GrpcServer, &srv)
 	netproto.RegisterAppApiServer(grpcServer.GrpcServer, &srv)
@@ -745,7 +791,7 @@ func (srv *fakeRPCServer) GetNetwork(context.Context, *api.ObjectMeta) (*netprot
 }
 
 func (srv *fakeRPCServer) ListNetworks(context.Context, *api.ObjectMeta) (*netproto.NetworkList, error) {
-	return nil, nil
+	return &netproto.NetworkList{}, nil
 }
 
 func (srv *fakeRPCServer) WatchNetworks(meta *api.ObjectMeta, stream netproto.NetworkApi_WatchNetworksServer) error {
@@ -784,6 +830,10 @@ func (srv *fakeRPCServer) WatchNetworks(meta *api.ObjectMeta, stream netproto.Ne
 	return nil
 }
 
+func (srv *fakeRPCServer) UpdateNetwork(ctx context.Context, obj *netproto.Network) (*netproto.Network, error) {
+	return obj, nil
+}
+
 func (srv *fakeRPCServer) CreateEndpoint(ctx context.Context, ep *netproto.Endpoint) (*netproto.Endpoint, error) {
 	return ep, nil
 }
@@ -793,7 +843,7 @@ func (srv *fakeRPCServer) GetEndpoint(context.Context, *api.ObjectMeta) (*netpro
 }
 
 func (srv *fakeRPCServer) ListEndpoints(context.Context, *api.ObjectMeta) (*netproto.EndpointList, error) {
-	return nil, nil
+	return &netproto.EndpointList{}, nil
 }
 
 func (srv *fakeRPCServer) DeleteEndpoint(ctx context.Context, ep *netproto.Endpoint) (*netproto.Endpoint, error) {
@@ -836,15 +886,19 @@ func (srv *fakeRPCServer) WatchEndpoints(meta *api.ObjectMeta, stream netproto.E
 	return nil
 }
 
+func (srv *fakeRPCServer) UpdateEndpoint(ctx context.Context, obj *netproto.Endpoint) (*netproto.Endpoint, error) {
+	return obj, nil
+}
+
 func (srv *fakeRPCServer) GetSecurityGroup(ctx context.Context, ometa *api.ObjectMeta) (*netproto.SecurityGroup, error) {
 	return nil, nil
 }
 
 func (srv *fakeRPCServer) ListSecurityGroups(context.Context, *api.ObjectMeta) (*netproto.SecurityGroupList, error) {
-	return nil, nil
+	return &netproto.SecurityGroupList{}, nil
 }
 
-func (srv *fakeRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream netproto.SecurityApi_WatchSecurityGroupsServer) error {
+func (srv *fakeRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream netproto.SecurityGroupApi_WatchSecurityGroupsServer) error {
 	// walk local db and send stream resp
 	for _, sg := range srv.sgdb {
 		// watch event
@@ -879,13 +933,16 @@ func (srv *fakeRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream netpro
 
 	return nil
 }
+func (srv *fakeRPCServer) UpdateSecurityGroup(ctx context.Context, obj *netproto.SecurityGroup) (*netproto.SecurityGroup, error) {
+	return obj, nil
+}
 
 func (srv *fakeRPCServer) GetSGPolicy(ctx context.Context, ometa *api.ObjectMeta) (*netproto.SGPolicy, error) {
 	return nil, nil
 }
 
 func (srv *fakeRPCServer) ListSGPolicys(context.Context, *api.ObjectMeta) (*netproto.SGPolicyList, error) {
-	return nil, nil
+	return &netproto.SGPolicyList{}, nil
 }
 
 func (srv *fakeRPCServer) UpdateSGPolicy(ctx context.Context, sgp *netproto.SGPolicy) (*netproto.SGPolicy, error) {
@@ -936,7 +993,7 @@ func (srv *fakeRPCServer) GetSecurityProfile(ctx context.Context, ometa *api.Obj
 }
 
 func (srv *fakeRPCServer) ListSecurityProfiles(context.Context, *api.ObjectMeta) (*netproto.SecurityProfileList, error) {
-	return nil, nil
+	return &netproto.SecurityProfileList{}, nil
 }
 
 func (srv *fakeRPCServer) WatchSecurityProfiles(sel *api.ObjectMeta, stream netproto.SecurityProfileApi_WatchSecurityProfilesServer) error {
@@ -975,12 +1032,16 @@ func (srv *fakeRPCServer) WatchSecurityProfiles(sel *api.ObjectMeta, stream netp
 	return nil
 }
 
+func (srv *fakeRPCServer) UpdateSecurityProfile(ctx context.Context, obj *netproto.SecurityProfile) (*netproto.SecurityProfile, error) {
+	return obj, nil
+}
+
 func (srv *fakeRPCServer) GetApp(ctx context.Context, ometa *api.ObjectMeta) (*netproto.App, error) {
 	return nil, nil
 }
 
 func (srv *fakeRPCServer) ListApps(context.Context, *api.ObjectMeta) (*netproto.AppList, error) {
-	return nil, nil
+	return &netproto.AppList{}, nil
 }
 
 func (srv *fakeRPCServer) WatchApps(sel *api.ObjectMeta, stream netproto.AppApi_WatchAppsServer) error {
@@ -1017,6 +1078,10 @@ func (srv *fakeRPCServer) WatchApps(sel *api.ObjectMeta, stream netproto.AppApi_
 	}
 
 	return nil
+}
+
+func (srv *fakeRPCServer) UpdateApp(ctx context.Context, obj *netproto.App) (*netproto.App, error) {
+	return obj, nil
 }
 
 func TestNpmclient(t *testing.T) {
@@ -1067,6 +1132,7 @@ func TestNpmclient(t *testing.T) {
 
 	// stop the client
 	cl.Stop()
+	time.Sleep(time.Second)
 }
 
 func TestNpmClientWatch(t *testing.T) {

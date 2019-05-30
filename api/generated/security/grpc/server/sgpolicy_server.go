@@ -331,6 +331,7 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		"security.SGPolicySpec":              apisrvpkg.NewMessage("security.SGPolicySpec"),
 		"security.SGPolicyStatus":            apisrvpkg.NewMessage("security.SGPolicyStatus"),
 		"security.SGRule":                    apisrvpkg.NewMessage("security.SGRule"),
+		"security.SGRuleStatus":              apisrvpkg.NewMessage("security.SGRuleStatus"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

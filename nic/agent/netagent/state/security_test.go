@@ -72,7 +72,7 @@ func TestSecurityGroupCreateDelete(t *testing.T) {
 	}
 
 	// create endpoint referring to security group
-	_, err = ag.CreateEndpoint(&epinfo)
+	err = ag.CreateEndpoint(&epinfo)
 	AssertOk(t, err, "Endpoint creation with security group failed")
 
 	// try creating an endpoint with non-existing security group
@@ -90,7 +90,7 @@ func TestSecurityGroupCreateDelete(t *testing.T) {
 			SecurityGroups: []string{"test-sg", "unknown-sg"},
 		},
 	}
-	_, err = ag.CreateEndpoint(&ep2)
+	err = ag.CreateEndpoint(&ep2)
 	Assert(t, err != nil, "Endpoint create with unknown sg succeeded", ep2)
 
 	// delete sg

@@ -38,7 +38,7 @@ func (na *Nagent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	}
 
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(ipSec.Tenant, ipSec.Namespace)
+	ns, err := na.FindNamespace(ipSec.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -199,7 +199,7 @@ func (na *Nagent) ListIPSecPolicy() []*netproto.IPSecPolicy {
 // UpdateIPSecPolicy updates an IPSec policy
 func (na *Nagent) UpdateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	// find the corresponding namespace
-	_, err := na.FindNamespace(ipSec.Tenant, ipSec.Namespace)
+	_, err := na.FindNamespace(ipSec.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -247,7 +247,7 @@ func (na *Nagent) DeleteIPSecPolicy(tn, namespace, name string) error {
 		return err
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(ipSec.Tenant, ipSec.Namespace)
+	ns, err := na.FindNamespace(ipSec.ObjectMeta)
 	if err != nil {
 		return err
 	}

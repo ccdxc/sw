@@ -56,7 +56,7 @@ func (s *RestServer) postEndpointHandler(r *http.Request) (interface{}, error) {
 		Timestamp: *c,
 	}
 
-	_, err = s.agent.CreateEndpoint(&o)
+	err = s.agent.CreateEndpoint(&o)
 
 	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
 

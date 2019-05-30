@@ -38,7 +38,7 @@ func ipv4Touint32(ip net.IP) uint32 {
 
 // buildHALRuleMatches converts agent match object to hal match object.
 // RuleMatches for L4 Ports are built either using App/ALG Data or match selectors
-func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Map, ruleID *uint64) ([]*halproto.RuleMatch, error) {
+func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Map, ruleID *int) ([]*halproto.RuleMatch, error) {
 	var srcIPRanges, dstIPRanges []*halproto.IPAddressObj
 	var srcProtoPorts, dstProtoPorts []string
 	var appProtoPorts []string
@@ -54,12 +54,10 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 		if ok {
 			app, ok = obj.(*netproto.App)
 			if !ok {
-				log.Infof("failed to cast App object. %v", obj)
+				log.Errorf("failed to cast App object. %v", obj)
 				return nil, fmt.Errorf("failed to cast App object. %v", obj)
 			}
 			appProtoPorts = app.Spec.ProtoPorts
-		} else {
-			log.Infof("ruleIDApp NOT found for rule %d", *ruleID)
 		}
 	}
 
@@ -85,9 +83,6 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 			return nil, err
 		}
 
-		// Build proto/port from dst app configs.
-		log.Infof("Convert Port: %v", dst.AppConfigs)
-
 		for _, d := range dst.AppConfigs {
 			// TODO Unify the proto/port definitions between App Object and Match Selectors to avoid manually building this.
 			protoPort := fmt.Sprintf("%s/%s", d.Protocol, d.Port)
@@ -107,7 +102,6 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 	switch {
 	// ICMP ALG Handler
 	case app != nil && app.Spec.ALG.ICMP != nil:
-		log.Info("Convert Rule for ICMP ALG")
 		var ruleMatch halproto.RuleMatch
 
 		ruleMatch.SrcAddress = srcIPRanges
@@ -126,8 +120,6 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 		return ruleMatches, nil
 
 	case len(srcProtoPorts) == 0 && len(dstProtoPorts) != 0:
-		log.Info("Convert Rule for empty src proto ports")
-
 		for _, protoPort := range dstProtoPorts {
 			var ruleMatch halproto.RuleMatch
 			var appMatch halproto.RuleMatch_AppMatch
@@ -170,8 +162,6 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 		}
 		return ruleMatches, nil
 	case len(dstProtoPorts) == 0 && len(srcProtoPorts) != 0:
-		log.Info("Convert Rule for empty dst proto ports")
-
 		for _, protoPort := range srcProtoPorts {
 			var ruleMatch halproto.RuleMatch
 			var appMatch halproto.RuleMatch_AppMatch
@@ -215,8 +205,6 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 		}
 		return ruleMatches, nil
 	case len(srcProtoPorts) > 0 && len(dstProtoPorts) > 0:
-		log.Info("Convert Rule for both src and dst proto ports")
-
 		for _, sProtoPort := range srcProtoPorts {
 			for _, dProtoPort := range dstProtoPorts {
 				var ruleMatch halproto.RuleMatch
@@ -276,8 +264,6 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 		return ruleMatches, nil
 		// Empty src and dst proto ports. No flattening needed.
 	case len(srcProtoPorts) == 0 && len(dstProtoPorts) == 0:
-		log.Info("Convert Rule for empty src and dst proto ports")
-
 		var ruleMatch halproto.RuleMatch
 		ruleMatch.SrcAddress = srcIPRanges
 		ruleMatch.DstAddress = dstIPRanges

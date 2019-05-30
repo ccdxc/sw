@@ -40,6 +40,7 @@
 		SGPolicySpec
 		SGPolicyStatus
 		SGRule
+		SGRuleStatus
 		AppList
 		AutoMsgAppWatchHelper
 		AutoMsgCertificateWatchHelper

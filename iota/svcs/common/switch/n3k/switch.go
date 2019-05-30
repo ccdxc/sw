@@ -163,7 +163,7 @@ func confCmd(exp expect.Expecter, cmd string, timeout time.Duration) error {
 }
 
 func interfaceConfigured(exp expect.Expecter, buf *bytes.Buffer, port, mode, status, speed string, timeout time.Duration) error {
-	sendStr := fmt.Sprintf("show interface %s brief | grep %s", port, status)
+	sendStr := fmt.Sprintf("show interface %s brief | grep Eth", port)
 
 	port = strings.Replace(port, "e", "Eth", -1)
 
@@ -175,6 +175,9 @@ func interfaceConfigured(exp expect.Expecter, buf *bytes.Buffer, port, mode, sta
 
 	}
 
+	if err := exp.Send("show clock" + "\n"); err != nil {
+		return err
+	}
 	if err := exp.Send(sendStr + "\n"); err != nil {
 		return err
 	}
@@ -211,7 +214,7 @@ func CheckInterfaceConigured(n3k *ConnectCtx, port, mode, status, speed string, 
 	}
 
 	//try twice
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 5; i++ {
 	    err = interfaceConfigured(exp, buf, port, mode, status, speed, timeout)
 	    if err == nil {
 		    break

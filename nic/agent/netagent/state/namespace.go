@@ -20,7 +20,7 @@ func (na *Nagent) CreateNamespace(ns *netproto.Namespace) error {
 	if err != nil {
 		return err
 	}
-	oldNs, err := na.FindNamespace(ns.Tenant, ns.Name)
+	oldNs, err := na.FindNamespace(ns.ObjectMeta)
 	if err == nil {
 		// check if the contents are same
 		if !proto.Equal(oldNs, ns) {
@@ -44,7 +44,7 @@ func (na *Nagent) CreateNamespace(ns *netproto.Namespace) error {
 		return err
 	}
 
-	tn, err := na.FindTenant(ns.Tenant)
+	tn, err := na.FindTenant(ns.ObjectMeta)
 	if err != nil {
 		log.Errorf("Could not find the tenant %v for namespace %v. Err: %v", ns.Tenant, ns.Name, err)
 		return err
@@ -68,18 +68,21 @@ func (na *Nagent) CreateNamespace(ns *netproto.Namespace) error {
 }
 
 // FindNamespace finds a namespace in local db
-func (na *Nagent) FindNamespace(tenant, name string) (*netproto.Namespace, error) {
+func (na *Nagent) FindNamespace(ometa api.ObjectMeta) (*netproto.Namespace, error) {
 	nsTypeMeta := api.TypeMeta{
 		Kind: "Namespace",
 	}
 	meta := api.ObjectMeta{
-		Tenant: tenant,
-		Name:   name,
+		Tenant: ometa.Tenant,
+		Name:   ometa.Namespace,
+	}
+	if meta.Name == "" {
+		meta.Name = ometa.Name
 	}
 	// Find the corresponding tenant
-	_, err := na.FindTenant(meta.Tenant)
+	_, err := na.FindTenant(meta)
 	if err != nil {
-		log.Errorf("Could not find the tenant: {%+v}", tenant)
+		log.Errorf("Could not find the tenant: {%+v}", ometa.Tenant)
 		return nil, err
 	}
 	// lock the db
@@ -90,7 +93,7 @@ func (na *Nagent) FindNamespace(tenant, name string) (*netproto.Namespace, error
 	key := na.Solver.ObjectKey(meta, nsTypeMeta)
 	ns, ok := na.NamespaceDB[key]
 	if !ok {
-		return nil, fmt.Errorf("namespace not found %v", name)
+		return nil, fmt.Errorf("namespace not found %v", ometa.Namespace)
 	}
 
 	return ns, nil
@@ -112,7 +115,7 @@ func (na *Nagent) ListNamespace() []*netproto.Namespace {
 
 // UpdateNamespace updates a namespace
 func (na *Nagent) UpdateNamespace(ns *netproto.Namespace) error {
-	existingNs, err := na.FindNamespace(ns.Tenant, ns.Name)
+	existingNs, err := na.FindNamespace(ns.ObjectMeta)
 	if err != nil {
 		log.Errorf("Namespace %v not found", ns.ObjectMeta)
 		return err
@@ -131,7 +134,7 @@ func (na *Nagent) UpdateNamespace(ns *netproto.Namespace) error {
 }
 
 // DeleteNamespace deletes a namespace
-func (na *Nagent) DeleteNamespace(tn, name string) error {
+func (na *Nagent) DeleteNamespace(tn, unused, name string) error {
 	ns := &netproto.Namespace{
 		TypeMeta: api.TypeMeta{Kind: "Namespace"},
 		ObjectMeta: api.ObjectMeta{
@@ -143,7 +146,7 @@ func (na *Nagent) DeleteNamespace(tn, name string) error {
 		return errors.New("default namespaces under default tenant cannot be deleted")
 	}
 
-	existingNamespace, err := na.FindNamespace(ns.Tenant, ns.Name)
+	existingNamespace, err := na.FindNamespace(ns.ObjectMeta)
 	if err != nil {
 		log.Errorf("Namespace %+v not found", ns.ObjectMeta)
 		return errors.New("namespace not found")
@@ -158,7 +161,7 @@ func (na *Nagent) DeleteNamespace(tn, name string) error {
 	}
 
 	// update the parent references.
-	tenant, _ := na.FindTenant(existingNamespace.Tenant)
+	tenant, _ := na.FindTenant(existingNamespace.ObjectMeta)
 	err = na.Solver.Remove(tenant, existingNamespace)
 	if err != nil {
 		log.Errorf("Could not remove the reference to the tenant: %v. Err: %v", existingNamespace.Tenant, err)

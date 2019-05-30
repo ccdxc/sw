@@ -34,7 +34,7 @@ func (na *Nagent) CreateSecurityProfile(profile *netproto.SecurityProfile) error
 	}
 
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(profile.Tenant, profile.Namespace)
+	ns, err := na.FindNamespace(profile.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (na *Nagent) UpdateSecurityProfile(profile *netproto.SecurityProfile) error
 	var attachmentVrfs []*netproto.Vrf
 
 	// find the corresponding namespace
-	_, err := na.FindNamespace(profile.Tenant, profile.Namespace)
+	_, err := na.FindNamespace(profile.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -186,7 +186,7 @@ func (na *Nagent) DeleteSecurityProfile(tn, namespace, name string) error {
 		return err
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(sgp.Tenant, sgp.Namespace)
+	ns, err := na.FindNamespace(sgp.ObjectMeta)
 	if err != nil {
 		return err
 	}

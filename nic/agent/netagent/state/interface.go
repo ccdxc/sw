@@ -37,7 +37,7 @@ func (na *Nagent) CreateInterface(intf *netproto.Interface) error {
 		return nil
 	}
 
-	_, err = na.FindNamespace(intf.Tenant, intf.Namespace)
+	_, err = na.FindNamespace(intf.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (na *Nagent) ListInterface() []*netproto.Interface {
 // UpdateInterface updates an interface
 func (na *Nagent) UpdateInterface(intf *netproto.Interface) error {
 	// find the corresponding namespace
-	_, err := na.FindNamespace(intf.Tenant, intf.Namespace)
+	_, err := na.FindNamespace(intf.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func (na *Nagent) DeleteInterface(tn, namespace, name string) error {
 		return err
 	}
 	// find the corresponding namespace
-	_, err = na.FindNamespace(intf.Tenant, intf.Namespace)
+	_, err = na.FindNamespace(intf.ObjectMeta)
 	if err != nil {
 		return err
 	}

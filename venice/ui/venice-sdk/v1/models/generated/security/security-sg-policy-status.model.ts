@@ -8,16 +8,23 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecuritySGPolicyPropagationStatus, ISecuritySGPolicyPropagationStatus } from './security-sg-policy-propagation-status.model';
+import { SecuritySGRuleStatus, ISecuritySGRuleStatus } from './security-sg-rule-status.model';
 
 export interface ISecuritySGPolicyStatus {
     'propagation-status'?: ISecuritySGPolicyPropagationStatus;
+    'rule-status'?: Array<ISecuritySGRuleStatus>;
 }
 
 
 export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPolicyStatus {
     'propagation-status': SecuritySGPolicyPropagationStatus = null;
+    'rule-status': Array<SecuritySGRuleStatus> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'propagation-status': {
+            required: false,
+            type: 'object'
+        },
+        'rule-status': {
             required: false,
             type: 'object'
         },
@@ -46,6 +53,7 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['propagation-status'] = new SecuritySGPolicyPropagationStatus();
+        this['rule-status'] = new Array<SecuritySGRuleStatus>();
         this.setValues(values, setDefaults);
     }
 
@@ -59,6 +67,11 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
         } else {
             this['propagation-status'].setValues(null, fillDefaults);
         }
+        if (values) {
+            this.fillModelArray<SecuritySGRuleStatus>(this, 'rule-status', values['rule-status'], SecuritySGRuleStatus);
+        } else {
+            this['rule-status'] = [];
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -67,10 +80,18 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'propagation-status': CustomFormGroup(this['propagation-status'].$formGroup, SecuritySGPolicyStatus.propInfo['propagation-status'].required),
+                'rule-status': new FormArray([]),
             });
+            // generate FormArray control elements
+            this.fillFormArray<SecuritySGRuleStatus>('rule-status', this['rule-status'], SecuritySGRuleStatus);
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('propagation-status') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('propagation-status').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('rule-status') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('rule-status').get(field);
                 control.updateValueAndValidity();
             });
         }
@@ -84,6 +105,7 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this['propagation-status'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<SecuritySGRuleStatus>(this, 'rule-status', this['rule-status'], SecuritySGRuleStatus);
         }
     }
 }

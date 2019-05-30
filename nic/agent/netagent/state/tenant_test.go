@@ -27,7 +27,7 @@ func TestTenantCreateDelete(t *testing.T) {
 	// create tenant
 	err := ag.CreateTenant(&tn)
 	AssertOk(t, err, "Error creating tenant")
-	tnt, err := ag.FindTenant(tn.Name)
+	tnt, err := ag.FindTenant(tn.ObjectMeta)
 	AssertOk(t, err, "Tenant was not found in DB")
 	Assert(t, tnt.Name == "testTenant", "Tenant names did not match", tnt)
 
@@ -40,13 +40,13 @@ func TestTenantCreateDelete(t *testing.T) {
 	Assert(t, len(tenantList) == 2, "Incorrect number of tenants")
 
 	// delete the network and verify its gone from db
-	err = ag.DeleteTenant(tn.Name)
+	err = ag.DeleteTenant(tn.Name, tn.Name, tn.Name)
 	AssertOk(t, err, "Error deleting tenant")
-	_, err = ag.FindTenant(tn.Name)
+	_, err = ag.FindTenant(tn.ObjectMeta)
 	Assert(t, err != nil, "Tenant was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing tenant
-	err = ag.DeleteTenant(tn.Name)
+	err = ag.DeleteTenant(tn.Name, tn.Name, tn.Name)
 	Assert(t, err != nil, "deleting non-existing tenant succeeded", ag)
 }
 
@@ -69,7 +69,7 @@ func TestTenantUpdate(t *testing.T) {
 	// create tenant
 	err := ag.CreateTenant(&tn)
 	AssertOk(t, err, "Error creating tenant")
-	tnt, err := ag.FindTenant(tn.Name)
+	tnt, err := ag.FindTenant(tn.ObjectMeta)
 	AssertOk(t, err, "Tenant was not found in DB")
 	Assert(t, tnt.Name == "updateTenant", "Tenant names did not match", tnt)
 
@@ -137,6 +137,6 @@ func TestDefaultTenantDelete(t *testing.T) {
 	}
 
 	// create tenant
-	err := ag.DeleteTenant(tn.Name)
+	err := ag.DeleteTenant(tn.Name, tn.Name, tn.Name)
 	Assert(t, err != nil, "default tenants should not be able to be deleted")
 }

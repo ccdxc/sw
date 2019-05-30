@@ -111,7 +111,7 @@ func NewAgent(datapath string, dbPath, ctrlerURL string, resolverClient resolver
 	}
 
 	// create a new network agent
-	nagent, err := state.NewNetAgent(dp, dbPath)
+	nagent, err := state.NewNetAgent(dp, dbPath, cl)
 	ag.NetworkAgent = nagent
 	ag.datapath = dp
 	ag.ResolverClient = resolverClient

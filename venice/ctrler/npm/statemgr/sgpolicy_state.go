@@ -33,8 +33,11 @@ func versionToInt(v string) int {
 }
 
 // convertRules need not handle validation as the rules are already validate by the precommit api server hook
-func convertRules(veniceRules []security.SGRule, sgPolicyKey string) (agentRules []netproto.PolicyRule) {
-	for _, v := range veniceRules {
+func convertRules(sgp *SgpolicyState, sgPolicyKey string) (agentRules []netproto.PolicyRule) {
+	sgp.SGPolicy.Status.RuleStatus = make([]security.SGRuleStatus, len(sgp.SGPolicy.Spec.Rules))
+	for idx, v := range sgp.SGPolicy.Spec.Rules {
+		rhash := generateRuleHash(v, sgPolicyKey)
+		sgp.SGPolicy.Status.RuleStatus[idx].RuleHash = fmt.Sprintf("%d", rhash)
 		if len(v.Apps) > 0 {
 			for _, app := range v.Apps {
 				a := netproto.PolicyRule{
@@ -49,9 +52,8 @@ func convertRules(veniceRules []security.SGRule, sgPolicyKey string) (agentRules
 						AppConfigs:     convertAppConfig(v.Apps, v.ProtoPorts),
 					},
 					AppName: app,
+					ID:      rhash,
 				}
-				a.ID = generateRuleHash(a, sgPolicyKey)
-
 				agentRules = append(agentRules, a)
 			}
 		} else {
@@ -66,8 +68,8 @@ func convertRules(veniceRules []security.SGRule, sgPolicyKey string) (agentRules
 					Addresses:      v.ToIPAddresses,
 					AppConfigs:     convertAppConfig(v.Apps, v.ProtoPorts),
 				},
+				ID: rhash,
 			}
-			a.ID = generateRuleHash(a, sgPolicyKey)
 			agentRules = append(agentRules, a)
 		}
 	}
@@ -92,7 +94,7 @@ func convertAppConfig(apps []string, protoPorts []security.ProtoPort) (agentAppC
 }
 
 // generateRuleHash generates the hash of the rule
-func generateRuleHash(r netproto.PolicyRule, key string) uint64 {
+func generateRuleHash(r security.SGRule, key string) uint64 {
 	h := fnv.New64()
 	rule, err := r.Marshal()
 	if err != nil {
@@ -112,7 +114,7 @@ func convertSGPolicy(sgp *SgpolicyState) *netproto.SGPolicy {
 		Spec: netproto.SGPolicySpec{
 			AttachTenant: sgp.SGPolicy.Spec.AttachTenant,
 			AttachGroup:  sgp.SGPolicy.Spec.AttachGroups,
-			Rules:        convertRules(sgp.SGPolicy.Spec.Rules, sgp.GetKey()),
+			Rules:        convertRules(sgp, sgp.GetKey()),
 		},
 	}
 
@@ -140,7 +142,7 @@ func (sgp *SgpolicyState) Write() error {
 			prop.Updated++
 		} else {
 			prop.Pending++
-			if versionToInt(ver) < versionToInt(prop.MinVersion) {
+			if prop.MinVersion == "" || versionToInt(ver) < versionToInt(prop.MinVersion) {
 				prop.MinVersion = ver
 			}
 		}
@@ -323,6 +325,8 @@ func (sm *Statemgr) OnSGPolicyCreate(sgp *ctkit.SGPolicy) error {
 		return err
 	}
 
+	sm.PeriodicUpdaterPush(sgps)
+
 	return nil
 }
 
@@ -367,6 +371,7 @@ func (sm *Statemgr) OnSGPolicyUpdate(sgp *ctkit.SGPolicy, nsgp *security.SGPolic
 	}
 
 	log.Infof("Updated sgpolicy %#v", sgp.ObjectMeta)
+	sm.PeriodicUpdaterPush(sgps)
 
 	return nil
 }

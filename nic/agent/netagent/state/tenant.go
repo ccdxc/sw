@@ -22,7 +22,7 @@ func (na *Nagent) CreateTenant(tn *netproto.Tenant) error {
 	if err != nil {
 		return err
 	}
-	oldTn, err := na.FindTenant(tn.ObjectMeta.Name)
+	oldTn, err := na.FindTenant(tn.ObjectMeta)
 	if err == nil {
 		// check if the contents are same
 		if !proto.Equal(oldTn, tn) {
@@ -71,9 +71,12 @@ func (na *Nagent) CreateTenant(tn *netproto.Tenant) error {
 }
 
 // FindTenant finds a tenant in local db
-func (na *Nagent) FindTenant(tenant string) (*netproto.Tenant, error) {
+func (na *Nagent) FindTenant(ometa api.ObjectMeta) (*netproto.Tenant, error) {
 	meta := api.ObjectMeta{
-		Name: tenant,
+		Name: ometa.Tenant,
+	}
+	if meta.Name == "" {
+		meta.Name = ometa.Name
 	}
 	typeMeta := api.TypeMeta{
 		Kind: "Tenant",
@@ -108,7 +111,7 @@ func (na *Nagent) ListTenant() []*netproto.Tenant {
 
 // UpdateTenant updates a tenant
 func (na *Nagent) UpdateTenant(tn *netproto.Tenant) error {
-	existingTn, err := na.FindTenant(tn.ObjectMeta.Name)
+	existingTn, err := na.FindTenant(tn.ObjectMeta)
 	if err != nil {
 		log.Errorf("Tenant %v not found", tn.ObjectMeta)
 		return err
@@ -128,7 +131,7 @@ func (na *Nagent) UpdateTenant(tn *netproto.Tenant) error {
 }
 
 // DeleteTenant deletes a tenant
-func (na *Nagent) DeleteTenant(name string) error {
+func (na *Nagent) DeleteTenant(unused1, unused2, name string) error {
 	tn := &netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
@@ -139,7 +142,7 @@ func (na *Nagent) DeleteTenant(name string) error {
 		return errors.New("default tenants can not be deleted")
 	}
 
-	existingTenant, err := na.FindTenant(tn.ObjectMeta.Name)
+	existingTenant, err := na.FindTenant(tn.ObjectMeta)
 	if err != nil {
 		log.Errorf("Tenant %+v not found", tn.ObjectMeta)
 		return errors.New("tenant not found")
@@ -167,7 +170,7 @@ func (na *Nagent) DeleteTenant(name string) error {
 		return err
 	}
 
-	err = na.DeleteNamespace(defaultNS.Tenant, defaultNS.Name)
+	err = na.DeleteNamespace(defaultNS.Tenant, defaultNS.Name, defaultNS.Name)
 	if err != nil {
 		log.Errorf("Failed to delete default namespace under %v tenant. Err: %v", existingTenant.Name, err)
 		return err

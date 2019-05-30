@@ -137,9 +137,21 @@ import (
                             }
                             err := netutils.HTTPPost("http://"+agentRestURL+"/api/endpoints/", &{{lower .}}Data, &resp)
                             getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
-                         {{else if (or (strEq $crudObject "Tenant") (strEq $crudObject "Namespace"))}}
+                         {{else if strEq $crudObject "Tenant"}}
                             {{lower .}}Data := netproto.{{title $crudObject}}{
                                                     TypeMeta: api.TypeMeta{Kind: "Tenant"},
+                                                    ObjectMeta : api.ObjectMeta{
+                                                                        Tenant:"",
+                                                                        Name: "test{{title .}}{{title $crudObject}}",
+                                                                        Namespace: "",
+                                                    },
+                            }
+
+                            err := netutils.HTTPPost("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower .}}Data, &resp)
+                            getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
+                         {{else if strEq $crudObject "Namespace"}}
+                        {{lower .}}Data := netproto.{{title $crudObject}}{
+                         TypeMeta: api.TypeMeta{Kind: "Namespace"},
                                                     ObjectMeta : api.ObjectMeta{
                                                                         Tenant:"default",
                                                                         Name: "test{{title .}}{{title $crudObject}}",
@@ -1747,8 +1759,20 @@ import (
                      }
 
      {{if strEq $crudObject "Tenant"}}
+     badDelData = netproto.{{title $crudObject}}{
+                     TypeMeta: api.TypeMeta{Kind: "{{title $crudObject}}"},
+                     ObjectMeta: api.ObjectMeta{ Tenant:"",
+                                                 Namespace:"",
+                                                 Name:"badObject" },
+                     }
         err := netutils.HTTPPut("http://"+agentRestURL+"/api/tenants/badObject", &badDelData, &resp)
      {{else if strEq $crudObject "Namespace"}}
+     badDelData = netproto.{{title $crudObject}}{
+                     TypeMeta: api.TypeMeta{Kind: "{{title $crudObject}}"},
+                     ObjectMeta: api.ObjectMeta{ Tenant:"default",
+                                                 Namespace:"",
+                                                 Name:"badObject" },
+                     }
         err := netutils.HTTPPut("http://"+agentRestURL+"/api/namespaces/default/badObject", &badDelData, &resp)
      {{else if strEq $crudObject "Network"}}
         err := netutils.HTTPPut("http://"+agentRestURL+"/api/networks/default/default/badObject", &badDelData, &resp)

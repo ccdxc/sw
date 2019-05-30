@@ -11,6 +11,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/pensando/sw/api"
+	dnetproto "github.com/pensando/sw/nic/agent/protos/generated/delphi/netproto/delphi"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -141,7 +142,7 @@ func (na *Nagent) CreateApp(app *netproto.App) error {
 		return fmt.Errorf("multiple ALG configurations specified in a single app object. %v", app)
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(app.Tenant, app.Namespace)
+	ns, err := na.FindNamespace(app.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -154,11 +155,59 @@ func (na *Nagent) CreateApp(app *netproto.App) error {
 	}
 
 	// save it in db
+	return na.saveApp(app)
+}
+
+// saveApp saves the app in state stores
+func (na *Nagent) saveApp(app *netproto.App) error {
+	// save it in db
 	key := na.Solver.ObjectKey(app.ObjectMeta, app.TypeMeta)
 	na.Lock()
 	na.AppDB[key] = app
 	na.Unlock()
-	err = na.Store.Write(app)
+
+	// write to delphi
+	if na.DelphiClient != nil {
+		dapp := dnetproto.App{
+			Key: key,
+			App: app,
+		}
+
+		err := na.DelphiClient.SetObject(&dapp)
+		if err != nil {
+			log.Errorf("Error writing App %s to delphi. Err: %v", key, err)
+			return err
+		}
+	}
+
+	// write to emstore
+	err := na.Store.Write(app)
+	return err
+}
+
+// discardApp removes the app from state stores
+func (na *Nagent) discardApp(app *netproto.App) error {
+	// delete from db
+	key := na.Solver.ObjectKey(app.ObjectMeta, app.TypeMeta)
+	na.Lock()
+	delete(na.AppDB, key)
+	na.Unlock()
+
+	// remove from delphi
+	if na.DelphiClient != nil {
+		dapp := dnetproto.App{
+			Key: key,
+			App: app,
+		}
+
+		err := na.DelphiClient.DeleteObject(&dapp)
+		if err != nil {
+			log.Errorf("Error writing App %s to delphi. Err: %v", key, err)
+			return err
+		}
+	}
+
+	err := na.Store.Delete(app)
 
 	return err
 }
@@ -204,7 +253,7 @@ func (na *Nagent) UpdateApp(app *netproto.App) error {
 	var algMapper int
 
 	// find the corresponding namespace
-	_, err := na.FindNamespace(app.Tenant, app.Namespace)
+	_, err := na.FindNamespace(app.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -330,11 +379,7 @@ func (na *Nagent) UpdateApp(app *netproto.App) error {
 		return fmt.Errorf("multiple ALG configurations specified in a single app object. %v", app)
 	}
 
-	key := na.Solver.ObjectKey(app.ObjectMeta, app.TypeMeta)
-	na.Lock()
-	na.AppDB[key] = app
-	na.Unlock()
-	err = na.Store.Write(app)
+	err = na.saveApp(app)
 
 	// Find the sg policies that are currently referring to this App and trigger an SGPolicy Update
 	for _, sgp := range na.ListSGPolicy() {
@@ -371,7 +416,7 @@ func (na *Nagent) DeleteApp(tn, namespace, name string) error {
 		return err
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(app.Tenant, app.Namespace)
+	ns, err := na.FindNamespace(app.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -391,13 +436,7 @@ func (na *Nagent) DeleteApp(tn, namespace, name string) error {
 	}
 
 	// delete from db
-	key := na.Solver.ObjectKey(app.ObjectMeta, app.TypeMeta)
-	na.Lock()
-	delete(na.AppDB, key)
-	na.Unlock()
-	err = na.Store.Delete(app)
-
-	return err
+	return na.discardApp(app)
 }
 
 // setBit sets a particular bit position to 1. This is used for ALG Mapper

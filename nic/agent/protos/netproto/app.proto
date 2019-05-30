@@ -24,6 +24,7 @@ service AppApi {
     rpc GetApp (api.ObjectMeta) returns (App) {};
     rpc ListApps (api.ObjectMeta) returns (AppList) {};
     rpc WatchApps (api.ObjectMeta) returns (stream AppEvent) {};
+    rpc UpdateApp (App) returns (App) {};
 }
 
 // app object

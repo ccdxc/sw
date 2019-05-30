@@ -1,0 +1,20 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for security group profile
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package dnetproto;
+
+// Mandatory imports.
+import "github.com/pensando/sw/nic/agent/protos/netproto/secprofile.proto";
+import "delphi.proto";
+
+// SecurityProfile object
+message SecurityProfile {
+   option (delphi.update_event) = true;
+    delphi.ObjectMeta         Meta            = 1;
+    string                    Key             = 2;
+    netproto.SecurityProfile  SecurityProfile = 3;
+}

@@ -2,6 +2,11 @@
  templates:
    - template: "nimbus_server.tmpl"
      outputpath: "{FILE}_mserver.go"
+   - template: "nimbus_client.tmpl"
+     outputpath: "{FILE}_mclient.go"
    - template: "nimbus_global.tmpl"
      outputpath: "nimbus_server.go"
-     once: true   
+     once: true
+   - template: "nimbus_client_global.tmpl"
+     outputpath: "nimbus_client.go"
+     once: true

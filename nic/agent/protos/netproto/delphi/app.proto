@@ -1,0 +1,17 @@
+// app object
+
+syntax = "proto3";
+
+package dnetproto;
+
+// Mandatory imports.
+import "github.com/pensando/sw/nic/agent/protos/netproto/app.proto";
+import "delphi.proto";
+
+// app object
+message App {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta   Meta        = 1;
+    string              Key         = 2;
+    netproto.App        App         = 3;
+}

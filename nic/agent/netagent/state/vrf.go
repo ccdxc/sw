@@ -36,7 +36,7 @@ func (na *Nagent) CreateVrf(vrf *netproto.Vrf) error {
 	}
 
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(vrf.Tenant, vrf.Namespace)
+	ns, err := na.FindNamespace(vrf.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ func (na *Nagent) ListVrf() []*netproto.Vrf {
 // UpdateVrf updates a vrf
 func (na *Nagent) UpdateVrf(vrf *netproto.Vrf) error {
 	// find the corresponding namespace
-	_, err := na.FindNamespace(vrf.Tenant, vrf.Namespace)
+	_, err := na.FindNamespace(vrf.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -160,7 +160,7 @@ func (na *Nagent) DeleteVrf(tn, namespace, name string) error {
 		return err
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(vrf.Tenant, vrf.Namespace)
+	ns, err := na.FindNamespace(vrf.ObjectMeta)
 	if err != nil {
 		return err
 	}

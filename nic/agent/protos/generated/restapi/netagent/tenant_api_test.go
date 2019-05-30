@@ -44,9 +44,9 @@ func TestTenantPost(t *testing.T) {
 	postData := netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
+			Tenant:    "",
 			Name:      "testPostTenant",
-			Namespace: "testPostTenant",
+			Namespace: "",
 		},
 	}
 
@@ -175,6 +175,12 @@ func TestTenantUpdateErr(t *testing.T) {
 			Name:      "badObject"},
 	}
 
+	badDelData = netproto.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{Tenant: "",
+			Namespace: "",
+			Name:      "badObject"},
+	}
 	err := netutils.HTTPPut("http://"+agentRestURL+"/api/tenants/badObject", &badDelData, &resp)
 
 	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")

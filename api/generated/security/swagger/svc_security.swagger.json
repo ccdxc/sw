@@ -6622,6 +6622,12 @@
         "propagation-status": {
           "$ref": "#/definitions/securitySGPolicyPropagationStatus",
           "title": "The status of the configuration propagation to the Naples"
+        },
+        "rule-status": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/securitySGRuleStatus"
+          }
         }
       }
     },
@@ -6687,6 +6693,14 @@
             "type": "string"
           },
           "title": "outbound rule from a given security group"
+        }
+      }
+    },
+    "securitySGRuleStatus": {
+      "type": "object",
+      "properties": {
+        "rule-hash": {
+          "type": "string"
         }
       }
     },

@@ -2,6 +2,7 @@ package messenger
 
 import (
 	"fmt"
+	"log"
 	"net"
 
 	"github.com/golang/protobuf/descriptor"
@@ -85,7 +86,8 @@ func (c *client) sendMessage(msgType delphi_messenger.MessageType, objlist []*de
 
 	_, err := c.connection.Write(buffer.Bytes())
 	if err != nil {
-		panic(err)
+		log.Printf("Error sending message. Err: %v", err)
+		return err
 	}
 
 	return nil

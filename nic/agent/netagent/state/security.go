@@ -36,7 +36,7 @@ func (na *Nagent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	}
 
 	// find the corresponding namespace
-	_, err = na.FindNamespace(sg.Tenant, sg.Namespace)
+	_, err = na.FindNamespace(sg.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func (na *Nagent) FindSecurityGroup(meta api.ObjectMeta) (*netproto.SecurityGrou
 // UpdateSecurityGroup updates an existing security group. ToDo implement updates in datapath
 func (na *Nagent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	// find the corresponding namespace
-	_, err := na.FindNamespace(sg.Tenant, sg.Namespace)
+	_, err := na.FindNamespace(sg.ObjectMeta)
 	if err != nil {
 		return err
 	}
@@ -150,7 +150,7 @@ func (na *Nagent) DeleteSecurityGroup(tn, namespace, name string) error {
 		return err
 	}
 	// find the corresponding namespace
-	_, err = na.FindNamespace(sg.Tenant, sg.Namespace)
+	_, err = na.FindNamespace(sg.ObjectMeta)
 	if err != nil {
 		return err
 	}

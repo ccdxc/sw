@@ -107,7 +107,7 @@ func TestMirrorSessionCreateVeniceKnownCollector(t *testing.T) {
 
 	err = ag.CreateNetwork(knownNet)
 	AssertOk(t, err, "Network Create failed. Err: %v", err)
-	_, err = ag.CreateEndpoint(knownEP)
+	err = ag.CreateEndpoint(knownEP)
 	AssertOk(t, err, "Endpoint Create failed. Err: %v", err)
 
 	oldNwCount := len(ag.ListNetwork())
@@ -196,7 +196,7 @@ func TestNetflowSessionCreateVeniceKnownCollector(t *testing.T) {
 
 	err = ag.CreateNetwork(knownNet)
 	AssertOk(t, err, "Network Create failed. Err: %v", err)
-	_, err = ag.CreateEndpoint(knownEP)
+	err = ag.CreateEndpoint(knownEP)
 	AssertOk(t, err, "Endpoint Create failed. Err: %v", err)
 
 	oldNwCount := len(ag.ListNetwork())
@@ -372,7 +372,7 @@ func TestTwoMirrorSessionCreateVeniceKnownCollector(t *testing.T) {
 
 	err = ag.CreateNetwork(knownNet)
 	AssertOk(t, err, "Network Create failed. Err: %v", err)
-	_, err = ag.CreateEndpoint(knownEP)
+	err = ag.CreateEndpoint(knownEP)
 	AssertOk(t, err, "Endpoint Create failed. Err: %v", err)
 
 	oldNwCount := len(ag.ListNetwork())
@@ -465,7 +465,7 @@ func TestTwoNetflowSessionCreateVeniceKnownCollector(t *testing.T) {
 
 	err = ag.CreateNetwork(knownNet)
 	AssertOk(t, err, "Network Create failed. Err: %v", err)
-	_, err = ag.CreateEndpoint(knownEP)
+	err = ag.CreateEndpoint(knownEP)
 	AssertOk(t, err, "Endpoint Create failed. Err: %v", err)
 
 	oldNwCount := len(ag.ListNetwork())
@@ -888,7 +888,7 @@ func TestCreateDeleteLateralObjVeniceKnownCollectorWithTunnel(t *testing.T) {
 
 	err = ag.CreateNetwork(knownNet)
 	AssertOk(t, err, "Network Create failed. Err: %v", err)
-	_, err = ag.CreateEndpoint(knownEP)
+	err = ag.CreateEndpoint(knownEP)
 	AssertOk(t, err, "Endpoint Create failed. Err: %v", err)
 
 	oldNwCount := len(ag.ListNetwork())

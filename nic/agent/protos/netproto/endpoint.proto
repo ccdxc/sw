@@ -26,6 +26,7 @@ service EndpointApi {
     rpc ListEndpoints (api.ObjectMeta) returns (EndpointList) {};
     rpc DeleteEndpoint (Endpoint) returns (Endpoint) {};
     rpc WatchEndpoints (api.ObjectMeta) returns (stream EndpointEvent) {};
+    rpc UpdateEndpoint (Endpoint) returns (Endpoint) {};
 }
 
 // Endpoint Object

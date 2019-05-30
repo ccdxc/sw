@@ -70,7 +70,7 @@ func AddSecurityGroupTopic(server *MbusServer, reactor SecurityGroupStatusReacto
 
 	// register the RPC handlers
 	if server.grpcServer != nil {
-		netproto.RegisterSecurityApiServer(server.grpcServer.GrpcServer, &handler)
+		netproto.RegisterSecurityGroupApiServer(server.grpcServer.GrpcServer, &handler)
 	}
 
 	return &handler, nil
@@ -184,7 +184,7 @@ func (eh *SecurityGroupTopic) ListSecurityGroups(ctx context.Context, objsel *ap
 }
 
 // WatchSecurityGroups watches SecurityGroups and sends streaming resp
-func (eh *SecurityGroupTopic) WatchSecurityGroups(ometa *api.ObjectMeta, stream netproto.SecurityApi_WatchSecurityGroupsServer) error {
+func (eh *SecurityGroupTopic) WatchSecurityGroups(ometa *api.ObjectMeta, stream netproto.SecurityGroupApi_WatchSecurityGroupsServer) error {
 	// watch for changes
 	watchChan := make(chan memdb.Event, memdb.WatchLen)
 	defer close(watchChan)

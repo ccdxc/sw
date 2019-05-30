@@ -181,33 +181,14 @@ func NewEndpointState(epinfo *ctkit.Endpoint, stateMgr *Statemgr) (*EndpointStat
 
 // OnEndpointAgentStatusSet gets called when agent sends create request
 func (sm *Statemgr) OnEndpointAgentStatusSet(nodeID string, objinfo *netproto.Endpoint) error {
-	// build the endpoint params
-	epp := workload.Endpoint{
-		TypeMeta:   objinfo.TypeMeta,
-		ObjectMeta: objinfo.ObjectMeta,
-		Status: workload.EndpointStatus{
-			WorkloadName:   objinfo.Spec.WorkloadName,
-			Network:        objinfo.Spec.NetworkName,
-			HomingHostAddr: objinfo.Spec.HomingHostAddr,
-			HomingHostName: objinfo.Spec.HomingHostName,
-			NodeUUID:       objinfo.Spec.NodeUUID,
-		},
-	}
-
-	return sm.ctrler.Endpoint().Create(&epp)
+	// FIXME: handle endpoint status updates from agent
+	return nil
 }
 
 // OnEndpointAgentStatusDelete is called when agent sends delete request
 func (sm *Statemgr) OnEndpointAgentStatusDelete(nodeID string, objinfo *netproto.Endpoint) error {
-	// find the endpoint
-	eps, err := sm.FindEndpoint(objinfo.Tenant, objinfo.Name)
-	if err != nil {
-		log.Errorf("Could not find the endpoint %+v", objinfo.ObjectMeta)
-		return err
-	}
-
-	// delete the endpoint
-	return sm.ctrler.Endpoint().Delete(&eps.Endpoint.Endpoint)
+	// FIXME: handle endpoint status updates from agent
+	return nil
 }
 
 // FindEndpoint finds endpointy by name

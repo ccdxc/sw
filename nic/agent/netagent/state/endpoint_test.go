@@ -161,7 +161,7 @@ func TestLocalEndpointUpdate(t *testing.T) {
 	}
 
 	// update the endpoint
-	_, err = ag.CreateEndpoint(epinfo)
+	err = ag.CreateEndpoint(epinfo)
 	AssertOk(t, err, "Endpoint create failed.")
 
 	ep, err := ag.FindEndpoint(epinfo.ObjectMeta)
@@ -214,7 +214,7 @@ func TestEndpointUpdate(t *testing.T) {
 	}
 
 	// create the endpoint
-	_, err = ag.CreateEndpoint(&epinfo)
+	err = ag.CreateEndpoint(&epinfo)
 	AssertOk(t, err, "Error creating endpoint")
 
 	// security group
@@ -307,7 +307,7 @@ func TestEndpointConcurrency(t *testing.T) {
 			}
 
 			// create the endpoint
-			_, eperr := ag.CreateEndpoint(&epinfo)
+			eperr := ag.CreateEndpoint(&epinfo)
 			waitCh <- eperr
 		}(i)
 	}
@@ -376,7 +376,7 @@ func TestLocalEndpointPointingToAnyLif(t *testing.T) {
 		}}
 
 	// create the endpoint
-	_, err = ag.CreateEndpoint(epinfo)
+	err = ag.CreateEndpoint(epinfo)
 	AssertOk(t, err, "creating a local ep pointing to any lif failed")
 }
 
@@ -424,7 +424,7 @@ func TestLocalEndpointPointingToPredefinedLIF(t *testing.T) {
 	}
 
 	// create the endpoint
-	_, err = ag.CreateEndpoint(epinfo)
+	err = ag.CreateEndpoint(epinfo)
 	AssertOk(t, err, "creating local ep pointing to pre defined lif failed")
 }
 
@@ -470,7 +470,7 @@ func TestRemoteEndpointPointingToAnyUplink(t *testing.T) {
 	}
 
 	// create the endpoint
-	_, err = ag.CreateEndpoint(epinfo)
+	err = ag.CreateEndpoint(epinfo)
 	AssertOk(t, err, "creating a local ep pointing to any lif failed")
 }
 
@@ -518,7 +518,7 @@ func TestRemoteEndpointPointingToPredefinedUplink(t *testing.T) {
 	}
 
 	// create the endpoint
-	_, err = ag.CreateEndpoint(epinfo)
+	err = ag.CreateEndpoint(epinfo)
 	AssertOk(t, err, "creating local ep pointing to pre defined lif failed")
 }
 
@@ -585,7 +585,7 @@ func TestRemoteEndpointPointingToLocalTunnel(t *testing.T) {
 	}
 
 	// create the endpoint
-	_, err = ag.CreateEndpoint(epinfo)
+	err = ag.CreateEndpoint(epinfo)
 	AssertOk(t, err, "creating a remote ep pointing to a tunnel failed")
 }
 
@@ -663,7 +663,7 @@ func TestRemoteEndpointPointingToRemoteTunnel(t *testing.T) {
 	}
 
 	// create the endpoint
-	_, err = ag.CreateEndpoint(epinfo)
+	err = ag.CreateEndpoint(epinfo)
 	AssertOk(t, err, "creating a remote ep pointing to a tunnel failed")
 }
 
@@ -709,7 +709,7 @@ func TestFindLocalEndpoint(t *testing.T) {
 	}
 
 	// create the endpoint
-	_, err = ag.CreateEndpoint(epinfo)
+	err = ag.CreateEndpoint(epinfo)
 	AssertOk(t, err, "creating a local endpoint failed")
 	_, err = ag.FindLocalEndpoint("default", "default")
 	AssertOk(t, err, "failed to find local endpoint")
@@ -810,7 +810,7 @@ func TestRemoteEndpointOnNonExistentInterface(t *testing.T) {
 	}
 
 	// create the endpoint
-	_, err = ag.CreateEndpoint(epinfo)
+	err = ag.CreateEndpoint(epinfo)
 	Assert(t, err != nil, "Creating an endpoint with non existent interfaces should fail.")
 }
 
@@ -904,7 +904,7 @@ func TestRemoteEndpointOnNonExistentRemoteTunnel(t *testing.T) {
 	}
 
 	// create the endpoint
-	_, err = ag.CreateEndpoint(epinfo)
+	err = ag.CreateEndpoint(epinfo)
 	Assert(t, err != nil, "remote ep creates on non-existent tunnels should fail")
 }
 
@@ -951,7 +951,7 @@ func TestEndpointCreateInvalidIPAddress(t *testing.T) {
 	}
 
 	// create the endpoint
-	_, err = ag.CreateEndpoint(epinfo)
+	err = ag.CreateEndpoint(epinfo)
 	Assert(t, err != nil, "ep creates with invalid IP Address must fail")
 }
 
@@ -998,7 +998,7 @@ func TestEndpointCreateCIDRIP(t *testing.T) {
 	}
 
 	// create the endpoint
-	_, err = ag.CreateEndpoint(epinfo)
+	err = ag.CreateEndpoint(epinfo)
 	AssertOk(t, err, "ep creates with CIDR ipv4 addresses must succeed")
 }
 
@@ -1045,7 +1045,7 @@ func TestEndpointCreateIP(t *testing.T) {
 	}
 
 	// create the endpoint
-	_, err = ag.CreateEndpoint(epinfo)
+	err = ag.CreateEndpoint(epinfo)
 	AssertOk(t, err, "ep creates with CIDR ipv4 addresses must succeed")
 	foundEP, err := ag.FindEndpoint(epinfo.ObjectMeta)
 	AssertOk(t, err, "Failed to find the endpoint. Err: %v", err)

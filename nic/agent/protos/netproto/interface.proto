@@ -27,6 +27,7 @@ service InterfaceApi {
     rpc GetInterface (api.ObjectMeta) returns (Interface) {};
     rpc ListInterfaces (api.ObjectMeta) returns (InterfaceList) {};
     rpc WatchInterfaces (api.ObjectMeta) returns (stream InterfaceEvent) {};
+    rpc UpdateInterface (Interface) returns (Interface) {};
 }
 
 // Interface object

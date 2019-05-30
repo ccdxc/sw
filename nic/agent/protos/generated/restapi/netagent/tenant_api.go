@@ -75,7 +75,7 @@ func (s *RestServer) deleteTenantHandler(r *http.Request) (interface{}, error) {
 	var res Response
 
 	name, _ := mux.Vars(r)["ObjectMeta.Name"]
-	err := s.agent.DeleteTenant(name)
+	err := s.agent.DeleteTenant(name, name, name)
 
 	res.References = []string{r.RequestURI}
 

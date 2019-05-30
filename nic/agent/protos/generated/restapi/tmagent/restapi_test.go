@@ -55,7 +55,7 @@ func setup() (*restapi.RestServer, error) {
 	// Set tenant creation expectation
 	dp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
 
-	nagent, err := state.NewNetAgent(dp, "")
+	nagent, err := state.NewNetAgent(dp, "", nil)
 	if err != nil {
 		log.Errorf("Could not create net agent")
 		return nil, err
@@ -130,7 +130,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			MacAddress:   "42:42:42:42:42:42",
 		},
 	}
-	_, err = nagent.CreateEndpoint(&ep)
+	err = nagent.CreateEndpoint(&ep)
 	if err != nil {
 		log.Errorf("Failed to create endpoint. {%v}", ep)
 		return
