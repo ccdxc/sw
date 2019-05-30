@@ -205,6 +205,9 @@ jobd/apollo/x86_64/container:${JOBD_PREREQS}
 	${NICDIR}/apollo/tools/dev-docker/build_dev_docker.sh 0 x86_64
 	rm -rf ${TOPDIR}/apollo_sw
 
+.PHONY: jobd/artemis/scale_test_mock
+jobd/apollo/scale_test_mock: ${JOBD_PREREQS}
+	#${NICDIR}/apollo/test/scale/artemis/run_scale_test_mock.sh
 
 .PHONY: jobd/mbt/base
 jobd/mbt/base: ${JOBD_PREREQS}
