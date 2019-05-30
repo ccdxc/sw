@@ -14,7 +14,7 @@ import {LRUMap} from 'lru_map';
 import {AuditEvent, IAuditEvent} from '@sdk/v1/models/generated/audit';
 import {SearchSearchQuery_kinds, SearchSearchRequest, SearchSearchRequest_sort_order, SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { LazyLoadEvent } from 'primeng/primeng';
-import { Subscription } from 'rxjs';
+import {Observable, Subscription, zip} from 'rxjs';
 import {AdvancedSearchComponent} from '@components/shared/advanced-search/advanced-search.component';
 import {RepeaterData} from 'web-app-framework';
 
@@ -52,6 +52,7 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
   loading: boolean = false;
   auditEventDetail: AuditEvent;
 
+  // This will be a map from meta.name to AuditEvent
   cache = new LRUMap<String, AuditEvent>(Utility.getAuditEventCacheSize());  // cache with limit 10
 
   lastUpdateTime: string = '';
@@ -68,14 +69,12 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
     { field: 'user.name', header: 'Who', class: 'auditevents-column-common auditevents-column-who', sortable: false, width: 10},
     { field: 'meta.mod-time', header: 'Time', class: 'auditevents-column-common auditevents-column-date', sortable: true, width: 9},
     { field: 'action', header: 'Action', class: 'auditevents-column-common auditevents-column-action', sortable: false, width: 9},
-    { field: 'resource.kind', header: 'Act On (kind)', class: 'auditevents-column-common auditevents-column-act_on', sortable: false, width: 9},
+    { field: 'resource.kind', header: 'Act On (kind)', class: 'auditevents-column-common auditevents-column-act_on', sortable: false, width: 13},
     { field: 'resource.name', header: 'Act On (name)', class: 'auditevents-column-common auditevents-column-act_on', sortable: false, width: 9},
-    { field: 'stage', header: 'Stage', class: 'auditevents-column-common auditevents-column-stage', sortable: false, width: 9},
-    { field: 'level', header: 'Level', class: 'auditevents-column-common auditevents-column-level', sortable: false, width: 9},
-    { field: 'outcome', header: 'Outcome', class: 'auditevents-column-common auditevents-column-outcome', sortable: false, width: 9},
-    { field: 'client-ips', header: 'Client', class: 'auditevents-column-common auditevents-column-client_ips', sortable: false, width: 9},
+    { field: 'outcome', header: 'Outcome', class: 'auditevents-column-common auditevents-column-outcome', sortable: false, width: 10},
+    { field: 'client-ips', header: 'Client', class: 'auditevents-column-common auditevents-column-client_ips', sortable: false, width: 17},
     { field: 'gateway-node', header: 'Service Node', class: 'auditevents-column-common auditevents-column-gateway_node', sortable: false, width: 9},
-    { field: 'service-name', header: 'Service Name', class: 'auditevents-column-common auditevents-column-service_name', sortable: false, width: 9},
+    { field: 'service-name', header: 'Service Name', class: 'auditevents-column-common auditevents-column-service_name', sortable: false, width: 14},
   ];
 
   subscriptions: Subscription[] = [];
@@ -187,8 +186,9 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
           });
         }
         this.lastUpdateTime = new Date().toISOString();
-        this.dataObjects = entries;
-        this.totalRecords = parseInt(data['total-hits'], 10);
+        this.dataObjects = this.mergeEntriesByName(entries);
+        // TODO: This isn't technically the total records anymore, but its hard to figure out what is
+        this.totalRecords = this.dataObjects.length;
         this.loading = false;
       },
       (error) => {
@@ -200,12 +200,37 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
   }
 
   /**
+   * Merge Audit Event by meta.name to remove redundant info
+   * It will also preserve uuids in a list for getting request and response
+   * @param entries
+   */
+  mergeEntriesByName(entries: IAuditEvent[]): AuditEvent[] {
+      const tmpMap = {};
+      entries.forEach(ele => {
+        const eleCopy = Utility.getLodash().cloneDeep(ele);
+        const key = ele.meta.name;
+          if (tmpMap.hasOwnProperty(key)) {
+            tmpMap[key] = Utility.getLodash().merge(tmpMap[key], eleCopy);
+            tmpMap[key]['uuids'].push(eleCopy.meta.uuid);
+          } else {
+            tmpMap[key] = eleCopy;
+            tmpMap[key]['uuids'] = [eleCopy.meta.uuid];
+          }
+      });
+      return Object.values(tmpMap);
+  }
+
+  /**
    * This API serves html template
    */
   displayAuditEvent(): string {
     return JSON.stringify(this.auditEventDetail, null, 1);
   }
 
+  /**
+   * Handle logics when user click the row
+   * @param event
+   */
   onAuditeventsTableRowClick(event: RowClickEvent) {
     if (this.expandedRowData === event.rowData) {
       // Click was on the same row
@@ -214,18 +239,39 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
       this.closeRowExpand();
       // fetch detail audit event data
       const auditEvent = event.rowData;
-      this.auditEventDetail = this.cache.get(auditEvent.meta.uuid);  // cache hit
+      this.auditEventDetail = this.cache.get(auditEvent.meta.name);  // cache hit
       if (!this.auditEventDetail) {
         // cache miss
-        this.auditService.GetGetEvent(auditEvent.meta.uuid).subscribe(resp => {
-          this.auditEventDetail = resp.body as AuditEvent;  // fetching actual data
-          this.cache.set(auditEvent.meta.uuid, this.auditEventDetail);
-          this.expandRowRequest(event.event, event.rowData);
-        }, this.controllerService.restErrorHandler('Failed to get Audit Event'));
+        this.fetchAuditEventDetailByUUIDs(auditEvent.uuids, auditEvent, event);
       } else {
         this.expandRowRequest(event.event, event.rowData);
       }
     }
+  }
+
+  /**
+   * Helper function to fetch audit events by uuids
+   * Then, it will merge those audit events as one whole piece with request and reponse object
+   * @param uuids
+   * @param auditEvent
+   * @param event
+   */
+  fetchAuditEventDetailByUUIDs(uuids: string[], auditEvent: AuditEvent, event: RowClickEvent) {
+    this.auditEventDetail = {} as AuditEvent;
+    const obs: Observable<any>[] = [];
+    uuids.forEach(uuid => {
+      const sub = this.auditService.GetGetEvent(uuid);
+      obs.push(sub);
+    });
+    // wait till all observable resolved
+    zip(...obs).subscribe(all => {
+      this.auditEventDetail = {} as AuditEvent;
+      all.forEach(ele => {
+        this.auditEventDetail = Utility.getLodash().merge(this.auditEventDetail, (ele.body as AuditEvent));
+      });
+      this.cache.set(auditEvent.meta.name, this.auditEventDetail);
+      this.expandRowRequest(event.event, event.rowData);
+    }, this.controllerService.restErrorHandler('Failed to get Audit Event'));
   }
 
   /**
