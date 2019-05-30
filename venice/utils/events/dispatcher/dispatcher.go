@@ -26,7 +26,7 @@ const (
 	defaultSendInterval = 10 * time.Second
 
 	// defaultDedupInterval to be used if the user given value is invalid <=0
-	defaultDedupInterval = 30 * time.Second
+	defaultDedupInterval = 10 * time.Second
 )
 
 // dispatcherImpl implements the `Dispatcher` interface. It is responsible for

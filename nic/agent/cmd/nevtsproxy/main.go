@@ -152,7 +152,7 @@ func main() {
 	var (
 		agentDbPath     = flag.String("agent-db", "/tmp/naples-nevtsproxy.db", "Agent database file")
 		evtsStoreDir    = flag.String("evts-store-dir", globals.EventsDir, "Local events store directory")
-		dedupInterval   = flag.Duration("dedup-interval", 30*time.Second, "Events de-duplication interval") // default 24hrs
+		dedupInterval   = flag.Duration("dedup-interval", 10*time.Second, "Events de-duplication interval") // default 24hrs
 		batchInterval   = flag.Duration("batch-interval", 10*time.Second, "Events batching interval")       // default 10s
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
 		logToFile       = flag.String("log-to-file", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.EvtsProxy)), "Path of the log file")

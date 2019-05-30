@@ -27,7 +27,7 @@ func main() {
 	var (
 		listenURL       = flag.String("listen-url", fmt.Sprintf(":%s", globals.EvtsProxyRPCPort), "RPC listen URL")
 		evtsStoreDir    = flag.String("evts-store-dir", globals.EventsDir, "Local events store directory")
-		dedupInterval   = flag.Duration("dedup-interval", 30*time.Second, "Events de-duplication interval") // default 24hrs
+		dedupInterval   = flag.Duration("dedup-interval", 10*time.Second, "Events de-duplication interval") // default 24hrs
 		batchInterval   = flag.Duration("batch-interval", 10*time.Second, "Events batching interval")       // default 10s
 		evtsMgrURL      = flag.String("evts-mgr-url", fmt.Sprintf(":%s", globals.EvtsMgrRPCPort), "RPC listen URL of events manager")
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
