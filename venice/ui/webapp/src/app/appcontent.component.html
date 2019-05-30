@@ -37,7 +37,8 @@
             <button *roleGuard="'monitoringAlert_read'" mat-icon-button
                     (click)="onToolbarIconClick($event, 'notifications')">
               <mat-icon>notifications </mat-icon>
-              <span class="app-notification-number" *ngIf="alertNumbers>0">{{alertNumbers}}</span>
+              <span class="app-notification-number" [ngClass]=getAlertNotificationClass()
+                    *ngIf="alertNumbers>0">{{alertNumbers}}</span>
             </button>
             <button mat-icon-button class="app-user-button" [matMenuTriggerFor]="toolbarUserMenu">
               <mat-icon>person</mat-icon>

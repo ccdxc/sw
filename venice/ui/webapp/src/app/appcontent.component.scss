@@ -104,7 +104,6 @@
 /*====== alert notification icon =====*/
 .app-notification-number {
   z-index: 2;
-  background-color: #dd3b09;
   color: #fff;
   border-radius: 50%;
   min-width: 20px;
@@ -123,6 +122,18 @@
   margin: auto 10px;
   box-shadow: 0 0 0 rgba(221, 59, 9, 0.4);
   animation: notification-number-pulse 2s infinite;
+}
+
+.app-notification-critical {
+  background-color: #dd3b09;
+}
+
+.app-notification-warn {
+  background-color: #fcb710;
+}
+
+.app-notification-info {
+  background-color: #6ba0e5;
 }
 
 .app-notification-number:hover {

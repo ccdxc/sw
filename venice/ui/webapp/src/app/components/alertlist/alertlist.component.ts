@@ -60,6 +60,12 @@ export class AlertlistComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   public computeAlertNumbers( ) {
+    this.alertnumber = {
+      TOTAL: 0,
+      CRITICAL: 0,
+      WARN: 0,
+      INFO: 0
+    };
     this.alertnumber.TOTAL = this.alerts.length;
       this.alerts.forEach(alert => {
         this.alertnumber[alert.status.severity] += 1;

@@ -68,7 +68,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
   alertSubscription: Subscription;
   alerts: ReadonlyArray<MonitoringAlert> = [];
   alertNumbers = 0;
-
+  alertHighestSeverity: string;
   alertQuery = {};
 
   sideNavMenu: SideNavItem[] = sideNavMenu;
@@ -376,6 +376,29 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     }, 500);
   }
 
+  updateHighestSeverity() {
+    this.alertHighestSeverity = 'INFO';
+    let alert: MonitoringAlert;
+    for (let i = 0 ; i < this.alerts.length ; i++) {
+      alert = this.alerts[i];
+      if (alert.status.severity === 'CRITICAL') {
+        this.alertHighestSeverity = 'CRITICAL';
+        break;
+      } else if (alert.status.severity === 'WARN' && this.alertHighestSeverity !== 'CRITICAL') {
+        this.alertHighestSeverity = 'WARN';
+      }
+    }
+  }
+
+  getAlertNotificationClass() {
+    if (this.alertHighestSeverity === 'CRITICAL') {
+      return 'app-notification-critical';
+    } else if (this.alertHighestSeverity === 'WARN') {
+      return 'app-notification-warn';
+    } else if (this.alertHighestSeverity === 'INFO') {
+      return 'app-notification-info';
+    }
+  }
   /**
    * Call server to fetch all alerts to populate RHS alert-list
    */
@@ -391,6 +414,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
         this.alerts = this.alertsEventUtility.array.filter((alert: MonitoringAlert) => {
           return (this.isAlertInOpenState(alert));
         });
+        this.updateHighestSeverity();
         // We are watching alerts. So when there are new alerts coming in, we display a toaster.
         if (this.alertNumbers > 0 && this.alertNumbers < this.alerts.length) {
           const diff = this.alerts.length - this.alertNumbers;
