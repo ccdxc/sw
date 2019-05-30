@@ -1,10 +1,5 @@
-nic/build/x86_64/iris/out/libdelphishm_a/libdelphishm.a
-nic/build/aarch64/iris/out/libdelphishm_a/libdelphishm.a
-nic/build/x86_64/iris/out/libdelphiutils_a/libdelphiutils.a
-nic/build/aarch64/iris/out/libdelphiutils_a/libdelphiutils.a
-nic/build/x86_64/iris/out/libdelphisdk_so/libdelphisdk.so
-nic/build/aarch64/iris/out/libdelphisdk_so/libdelphisdk.so
-nic/build/x86_64/iris/out/libsdkpal_so/libsdkpal.so
-nic/build/aarch64/iris/out/libsdkpal_so/libsdkpal.so
-nic/build/aarch64/iris/out/liblogger_so/liblogger.so
-nic/build/x86_64/iris/out/liblogger_so/liblogger.so
+nic/third-party/libdelphi/x86_64/liblogger.so
+nic/third-party/libdelphi/x86_64/libdelphiutils.a
+nic/third-party/libdelphi/x86_64/libdelphishm.a
+nic/third-party/libdelphi/x86_64/libsdkpal.so
+nic/third-party/libdelphi/x86_64/libdelphisdk.so

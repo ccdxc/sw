@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <iostream>
+#define DISABLE_BACKTRACE // disable backtrace for alpine builds
 #include <spdlog/fmt/ostr.h>
 #include <spdlog/spdlog.h>
 

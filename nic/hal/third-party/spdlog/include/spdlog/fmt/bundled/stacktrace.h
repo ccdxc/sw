@@ -12,6 +12,7 @@
 /** Print a demangled stack backtrace of the caller function to FILE* out. */
 static inline void print_stacktrace(FILE *out = stderr, unsigned int max_frames = 63)
 {
+#ifndef DISABLE_BACKTRACE
     fprintf(out, "stack trace:\n");
 
     // storage array for stack trace address data
@@ -101,6 +102,7 @@ static inline void print_stacktrace(FILE *out = stderr, unsigned int max_frames 
 
     free(funcname);
     free(symbollist);
+#endif // DISABLE_BACKTRACE
 }
 
 #endif // _STACKTRACE_H_

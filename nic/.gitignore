@@ -87,6 +87,7 @@ mmap.bin
 build
 third-party/gflags/include
 third-party/gflags/x86_64
+third-party/libdelphi
 model.json
 mpu_prog_info.json
 *.tar
