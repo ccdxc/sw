@@ -120,7 +120,7 @@ func (n *nClient) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 	n.evtServices.Lock()
 	defer n.evtServices.Unlock()
 
-	n.evtServices.nodeName = obj.GetHostname()
+	n.evtServices.nodeName = obj.GetID()
 	if obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND || obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_OOB {
 		var controllers []string
 

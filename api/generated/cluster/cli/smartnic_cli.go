@@ -29,7 +29,7 @@ var CreateSmartNICFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
-		ID:     "hostname",
+		ID:     "id",
 		Type:   "String",
 		Help:   "",
 		Skip:   false,

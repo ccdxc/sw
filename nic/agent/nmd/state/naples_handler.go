@@ -98,8 +98,8 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 
 	// Remove this once we have a way to pick up the real mac address as hostname when
 	// hostname is not passed as a parameter for mode update.
-	if cfg.Spec.Mode == cmd.SmartNICSpec_NETWORK.String() && len(cfg.Spec.Hostname) == 0 {
-		log.Errorf("Hostname cannot be empty. Cannot update NaplesConfig.")
+	if cfg.Spec.Mode == cmd.SmartNICSpec_NETWORK.String() && len(cfg.Spec.ID) == 0 {
+		log.Errorf("ID cannot be empty. Cannot update NaplesConfig.")
 		return errors.New("hostname cannot be empty")
 	}
 

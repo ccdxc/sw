@@ -58,8 +58,8 @@ message SmartNICSpec {
     // Admit allows a SmartNIC to join the cluster
     bool Admit                      = 1 [(gogoproto.jsontag) = "admit,omitempty"];
 
-    // Hostname is used as a user friendly identifier in logs/events
-    string Hostname                 = 2 [(gogoproto.jsontag) = "hostname,omitempty"];
+    // ID is used as a user friendly identifier in logs/events
+    string ID                 = 2 [(gogoproto.jsontag) = "id,omitempty"];
 
     // IPConfig defines the static IP configuration. If not specified, DHCP will be attempted
     IPConfig IPConfig               = 3 [(gogoproto.jsontag) = "ip-config,omitempty"];

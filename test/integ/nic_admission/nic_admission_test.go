@@ -295,7 +295,7 @@ func createNMD(t *testing.T, dbPath, priMac, restURL, mgmtMode string) (*nmdInfo
 	cfg.Spec.NetworkMode = proto.NetworkMode_INBAND.String()
 	cfg.Spec.IPConfig = ipConfig
 	cfg.Spec.MgmtVlan = 0
-	cfg.Spec.Hostname = priMac
+	cfg.Spec.ID = priMac
 
 	nmdHandle.SetNaplesConfig(cfg.Spec)
 	nmdHandle.IPClient.Update()
@@ -402,7 +402,7 @@ func TestCreateNMDs(t *testing.T) {
 								Mode:        proto.MgmtMode_NETWORK.String(),
 								NetworkMode: proto.NetworkMode_OOB.String(),
 								Controllers: []string{"localhost"},
-								Hostname:    priMac,
+								ID:          priMac,
 								PrimaryMAC:  priMac,
 							},
 						}

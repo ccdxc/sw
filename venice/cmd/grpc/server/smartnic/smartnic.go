@@ -269,7 +269,7 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC,
 }
 
 func (s *RPCServer) isHostnameUnique(subj *cluster.SmartNIC) bool {
-	nic := s.stateMgr.GetSmartNICByHostname(subj.Spec.Hostname)
+	nic := s.stateMgr.GetSmartNICByID(subj.Spec.ID)
 	// no need to lock nic for reading as Name is immutable
 	return nic == nil || nic.Name == subj.Name
 }
@@ -791,7 +791,7 @@ func (s *RPCServer) InitiateNICRegistration(nic *cluster.SmartNIC) {
 					NetworkMode: nicObj.Spec.NetworkMode,
 					PrimaryMAC:  nicObj.Name,
 					Controllers: []string{controller},
-					Hostname:    nicObj.Spec.Hostname,
+					ID:          nicObj.Spec.ID,
 					IPConfig:    nicObj.Spec.IPConfig,
 				},
 			}

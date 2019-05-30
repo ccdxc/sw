@@ -262,7 +262,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
    * @param col
    * @param tablename
    *
-   * VS-312  requests to have rollout status page's NAPLE table should display NIC hostname (human readable text)
+   * VS-312  requests to have rollout status page's NAPLE table should display NIC id (human readable text)
    * We check "tablename" to build name column display.
    */
   displayNameColumn(data: any, col: TableCol, tablename: string): string {
@@ -270,18 +270,18 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
         const fields = col.field.split('.');
         const value = Utility.getObjectValueByPropertyPath(data, fields);
         const column = col.field;
-        const hostname  = this.getNICHostName(value);
-        return hostname;
+        const id  = this.getNICID(value);
+        return id;
       } else {
         return this.displayColumn(data, col);
       }
   }
 
-  getNICHostName(nicNameInMAC: string): string {
+  getNICID(nicNameInMAC: string): string {
     const matchedNaple  = this.naples.find(naple => {
       return naple.meta.name === nicNameInMAC;
     });
-    return matchedNaple ? matchedNaple.spec.hostname : nicNameInMAC;
+    return matchedNaple ? matchedNaple.spec.id : nicNameInMAC;
   }
 
   isVeniceOnly(): boolean {

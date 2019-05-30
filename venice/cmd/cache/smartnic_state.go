@@ -85,7 +85,7 @@ func (sm *Statemgr) CreateSmartNIC(sn *cluster.SmartNIC, writeback bool) (*Smart
 		return esn, sm.UpdateSmartNIC(sn, writeback)
 	}
 
-	if sn.Spec.Hostname == "" {
+	if sn.Spec.ID == "" {
 		err = fmt.Errorf("Error creating new smartnic state: SmartNIC has empty hostname: %+v", sn)
 		log.Errorf(err.Error())
 		return nil, err
@@ -105,12 +105,12 @@ func (sm *Statemgr) CreateSmartNIC(sn *cluster.SmartNIC, writeback bool) (*Smart
 	// In this case we don't update the map
 	if sn.Status.AdmissionPhase != cluster.SmartNICStatus_REJECTED.String() {
 		sm.hostnameToSmartNICMapLock.Lock()
-		nic, ok := sm.hostnameToSmartNICMap[sn.Spec.Hostname]
+		nic, ok := sm.hostnameToSmartNICMap[sn.Spec.ID]
 		if ok || nic != nil {
-			log.Errorf("Error updating hostnameToSmartNICMap, key %s, exists: %v, value:%+v", sn.Spec.Hostname, ok, nic)
+			log.Errorf("Error updating hostnameToSmartNICMap, key %s, exists: %v, value:%+v", sn.Spec.ID, ok, nic)
 			// continue anyway
 		}
-		sm.hostnameToSmartNICMap[sn.Spec.Hostname] = sn
+		sm.hostnameToSmartNICMap[sn.Spec.ID] = sn
 		sm.hostnameToSmartNICMapLock.Unlock()
 	}
 
@@ -149,7 +149,7 @@ func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.SmartNIC, writeback bool) err
 		return fmt.Errorf("SmartNIC not found")
 	}
 
-	if updObj.Spec.Hostname == "" {
+	if updObj.Spec.ID == "" {
 		err = fmt.Errorf("Error updating smartnic state: SmartNIC has empty hostname: %+v", updObj)
 		log.Errorf(err.Error())
 		return err
@@ -162,19 +162,19 @@ func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.SmartNIC, writeback bool) err
 	}
 
 	sm.hostnameToSmartNICMapLock.Lock()
-	if cachedState.Spec.Hostname != updObj.Spec.Hostname &&
+	if cachedState.Spec.ID != updObj.Spec.ID &&
 		cachedState.Status.AdmissionPhase != cluster.SmartNICStatus_REJECTED.String() {
-		_, ok := sm.hostnameToSmartNICMap[cachedState.Spec.Hostname]
-		if !ok || cachedState.Spec.Hostname == "" {
-			log.Errorf("Error updating hostnameToSmartNICMap, key %s does not exist or is empty", cachedState.Spec.Hostname)
+		_, ok := sm.hostnameToSmartNICMap[cachedState.Spec.ID]
+		if !ok || cachedState.Spec.ID == "" {
+			log.Errorf("Error updating hostnameToSmartNICMap, key %s does not exist or is empty", cachedState.Spec.ID)
 			// continue anyway
 		}
-		delete(sm.hostnameToSmartNICMap, cachedState.Spec.Hostname)
+		delete(sm.hostnameToSmartNICMap, cachedState.Spec.ID)
 	}
 	// update hostnameToSmartNICMap entry even if there is no hostname change so the map
 	// and the cache stay in sync and we don't keep old objects around
 	if updObj.Status.AdmissionPhase != cluster.SmartNICStatus_REJECTED.String() {
-		sm.hostnameToSmartNICMap[updObj.Spec.Hostname] = updObj
+		sm.hostnameToSmartNICMap[updObj.Spec.ID] = updObj
 	}
 	sm.hostnameToSmartNICMapLock.Unlock()
 
@@ -222,12 +222,12 @@ func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.SmartNIC, writeback bool) err
 func (sm *Statemgr) DeleteSmartNIC(sn *cluster.SmartNIC) error {
 	if sn.Status.AdmissionPhase != cluster.SmartNICStatus_REJECTED.String() {
 		sm.hostnameToSmartNICMapLock.Lock()
-		_, ok := sm.hostnameToSmartNICMap[sn.Spec.Hostname]
-		if !ok || sn.Spec.Hostname == "" {
-			log.Errorf("Error updating hostnameToSmartNICMap, key %s does not exist or is empty", sn.Spec.Hostname)
+		_, ok := sm.hostnameToSmartNICMap[sn.Spec.ID]
+		if !ok || sn.Spec.ID == "" {
+			log.Errorf("Error updating hostnameToSmartNICMap, key %s does not exist or is empty", sn.Spec.ID)
 			// continue anyway
 		}
-		delete(sm.hostnameToSmartNICMap, sn.Spec.Hostname)
+		delete(sm.hostnameToSmartNICMap, sn.Spec.ID)
 		sm.hostnameToSmartNICMapLock.Unlock()
 	}
 
@@ -243,8 +243,8 @@ func (sm *Statemgr) DeleteSmartNIC(sn *cluster.SmartNIC) error {
 	return nil
 }
 
-// GetSmartNICByHostname returns the SmartNIC object for a given hostname
-func (sm *Statemgr) GetSmartNICByHostname(hostname string) *cluster.SmartNIC {
+// GetSmartNICByID returns the SmartNIC object for a given hostname
+func (sm *Statemgr) GetSmartNICByID(hostname string) *cluster.SmartNIC {
 	sm.hostnameToSmartNICMapLock.RLock()
 	defer sm.hostnameToSmartNICMapLock.RUnlock()
 	return sm.hostnameToSmartNICMap[hostname]

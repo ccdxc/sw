@@ -302,7 +302,7 @@ func (c *IPClient) updateDelphiNaplesObject() error {
 		NaplesMode:      naplesMode,
 		TransitionPhase: transitionPhase,
 		MgmtIP:          mgmtIP,
-		Hostname:        c.nmdState.config.Spec.Hostname,
+		ID:              c.nmdState.config.Spec.ID,
 		SmartNicName:    c.nmdState.config.Status.SmartNicName,
 		Fru: &delphiProto.NaplesFru{
 			ManufacturingDate: c.nmdState.config.Status.Fru.ManufacturingDate,
@@ -601,7 +601,7 @@ func (c *IPClient) startDhclient() error {
 	killDhclient()
 
 	dynamicIPCommandString := getDhclientCommand(c.iface)
-	err := createDhclientConf(c.nmdState.config.Spec.Hostname)
+	err := createDhclientConf(c.nmdState.config.Spec.ID)
 	if err != nil {
 		return err
 	}

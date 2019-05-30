@@ -73,8 +73,8 @@ describe('NaplesdetailComponent', () => {
     } else {
       expect(fields[1].nativeElement.textContent.trim()).toBe('');
     }
-    if (naples.spec['hostname'] != null) {
-      expect(fields[2].nativeElement.textContent).toContain(naples.spec['hostname']);
+    if (naples.spec['id'] != null) {
+      expect(fields[2].nativeElement.textContent).toContain(naples.spec['id']);
     } else {
       expect(fields[2].nativeElement.textContent.trim()).toBe('');
     }
@@ -185,7 +185,7 @@ describe('NaplesdetailComponent', () => {
       },
       'spec': {
         'admit': true,
-        'hostname': 'naples1-host',
+        'id': 'naples1-host',
         'mgmt-mode': 'NETWORK'
       },
       'status': {

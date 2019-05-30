@@ -92,7 +92,7 @@ func (sm *Statemgr) OnHostUpdate(host *ctkit.Host, nhst *cluster.Host) error {
 		rescanEps = true
 	} else {
 		for idx, sn := range nhst.Spec.SmartNICs {
-			if host.Spec.SmartNICs[idx].Name != sn.Name || host.Spec.SmartNICs[idx].MACAddress != sn.MACAddress {
+			if host.Spec.SmartNICs[idx].ID != sn.ID || host.Spec.SmartNICs[idx].MACAddress != sn.MACAddress {
 				rescanEps = true
 			}
 		}
@@ -104,10 +104,10 @@ func (sm *Statemgr) OnHostUpdate(host *ctkit.Host, nhst *cluster.Host) error {
 		var snic *SmartNICState
 		// find the smart nic by name or mac addr
 		for jj := range host.Host.Spec.SmartNICs {
-			if host.Host.Spec.SmartNICs[jj].Name != "" {
-				snic, err = sm.FindSmartNICByHname(host.Host.Spec.SmartNICs[jj].Name)
+			if host.Host.Spec.SmartNICs[jj].ID != "" {
+				snic, err = sm.FindSmartNICByHname(host.Host.Spec.SmartNICs[jj].ID)
 				if err != nil {
-					log.Errorf("Error finding smart nic for name %v", host.Host.Spec.SmartNICs[jj].Name)
+					log.Errorf("Error finding smart nic for name %v", host.Host.Spec.SmartNICs[jj].ID)
 				}
 			} else if host.Host.Spec.SmartNICs[jj].MACAddress != "" {
 				snicMac := host.Host.Spec.SmartNICs[jj].MACAddress

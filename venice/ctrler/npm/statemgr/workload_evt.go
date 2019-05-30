@@ -255,10 +255,10 @@ func (ws *WorkloadState) createEndpoints() error {
 		nodeUUID := ""
 		// find the smart nic by name or mac addr
 		for jj := range host.Host.Spec.SmartNICs {
-			if host.Host.Spec.SmartNICs[jj].Name != "" {
-				snic, err := ws.stateMgr.FindSmartNICByHname(host.Host.Spec.SmartNICs[jj].Name)
+			if host.Host.Spec.SmartNICs[jj].ID != "" {
+				snic, err := ws.stateMgr.FindSmartNICByHname(host.Host.Spec.SmartNICs[jj].ID)
 				if err != nil {
-					log.Warnf("Error finding smart nic for name %v", host.Host.Spec.SmartNICs[jj].Name)
+					log.Warnf("Error finding smart nic for name %v", host.Host.Spec.SmartNICs[jj].ID)
 					return nil
 				}
 				nodeUUID = snic.SmartNIC.Name

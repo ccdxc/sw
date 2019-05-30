@@ -126,7 +126,7 @@ func (m *mockCtrler) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICRes
 
 	key := objectKey(nic.ObjectMeta)
 	m.nicDB[key] = nic
-	if strings.HasPrefix(nic.Spec.Hostname, nicKey1) {
+	if strings.HasPrefix(nic.Spec.ID, nicKey1) {
 		// we don't have the actual csr from the NIC request, so we just make up
 		// a certificate on the spot
 		key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -164,7 +164,7 @@ func (m *mockCtrler) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICRes
 		return resp, nil
 	}
 
-	if strings.HasPrefix(nic.Spec.Hostname, nicKey2) {
+	if strings.HasPrefix(nic.Spec.ID, nicKey2) {
 		return grpc.RegisterNICResponse{
 			AdmissionResponse: &grpc.NICAdmissionResponse{
 				Phase: cmd.SmartNICStatus_PENDING.String(),
@@ -433,7 +433,7 @@ func TestCtrlrSmartNICRegisterAndUpdate(t *testing.T) {
 			Name: nicKey1,
 		},
 		Spec: cmd.SmartNICSpec{
-			Hostname: nicKey1,
+			ID: nicKey1,
 		},
 	}
 
@@ -678,7 +678,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 		Spec: nmd.NaplesSpec{
 			Mode:        nmd.MgmtMode_NETWORK.String(),
 			Controllers: []string{"192.168.30.10"},
-			Hostname:    nicKey1,
+			ID:          nicKey1,
 			IPConfig: &cmd.IPConfig{
 				IPAddress: "10.10.10.10/24",
 			},
@@ -766,7 +766,7 @@ func TestNaplesNetworkModeManualApproval(t *testing.T) {
 		Spec: nmd.NaplesSpec{
 			Mode:        nmd.MgmtMode_NETWORK.String(),
 			PrimaryMAC:  nicKey2,
-			Hostname:    nicKey2,
+			ID:          nicKey2,
 			Controllers: []string{"localhost"},
 			IPConfig: &cmd.IPConfig{
 				IPAddress: "10.10.10.10/24",
@@ -836,7 +836,7 @@ func TestNaplesNetworkModeInvalidNIC(t *testing.T) {
 		Spec: nmd.NaplesSpec{
 			Mode:        nmd.MgmtMode_NETWORK.String(),
 			PrimaryMAC:  nicKey3,
-			Hostname:    nicKey3,
+			ID:          nicKey3,
 			Controllers: []string{"localhost"},
 			IPConfig: &cmd.IPConfig{
 				IPAddress: "10.10.10.10/24",
@@ -912,7 +912,7 @@ func TestNaplesRestartNetworkMode(t *testing.T) {
 			NetworkMode: nmd.NetworkMode_OOB.String(),
 			PrimaryMAC:  nicKey1,
 			Controllers: []string{"localhost"},
-			Hostname:    nicKey1,
+			ID:          nicKey1,
 			IPConfig: &cmd.IPConfig{
 				IPAddress: "10.10.10.10/24",
 			},

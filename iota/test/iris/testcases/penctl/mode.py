@@ -11,7 +11,7 @@ def_mode_set_error_strs = [
                             "invalid management mode a. Must be either host or network",
                             "host managed mode needs an accompanying feature profile. Specify it with --naples-profile",
                             "invalid management IP a specified. Must be in CIDR Format",
-                            "invalid hostname a:",
+                            "invalid id a:",
                             "invalid MAC Address a specified",
                             "deleting default profile is disallowed",
                             "specified profile nonExistentProfile doesn't exist"

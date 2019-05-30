@@ -1730,8 +1730,8 @@
             "format": "boolean"
           },
           {
-            "name": "spec.hostname",
-            "description": "Hostname is used as a user friendly identifier in logs/events.",
+            "name": "spec.id",
+            "description": "ID is used as a user friendly identifier in logs/events.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4727,7 +4727,7 @@
     "clusterSmartNICID": {
       "type": "object",
       "properties": {
-        "name": {
+        "id": {
           "type": "string",
           "title": "Name contains the name of the SmartNIC on a host"
         },
@@ -4801,9 +4801,9 @@
           "format": "boolean",
           "title": "Admit allows a SmartNIC to join the cluster"
         },
-        "hostname": {
+        "id": {
           "type": "string",
-          "title": "Hostname is used as a user friendly identifier in logs/events"
+          "title": "ID is used as a user friendly identifier in logs/events"
         },
         "ip-config": {
           "$ref": "#/definitions/clusterIPConfig",

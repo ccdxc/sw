@@ -156,7 +156,7 @@ export class NewtechsupportComponent extends BaseComponent implements OnInit, Af
     this.targetNaples.length = 0;
     this.naples.forEach ( (naple: ClusterSmartNIC) => {
       this.sourceNaples.push({
-        label: naple.spec.hostname,  // naple name
+        label: naple.spec.id,  // naple name
         value: naple,
         title: naple.meta.name  // mac address
       });

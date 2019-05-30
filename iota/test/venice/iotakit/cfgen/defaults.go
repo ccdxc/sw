@@ -160,7 +160,7 @@ var smartNicTemplate = &cluster.SmartNIC{
 		Name: "{{mac:00.ac.dd}}",
 	},
 	Spec: cluster.SmartNICSpec{
-		Hostname: "host-{{iter}}",
+		ID: "host-{{iter}}",
 		IPConfig: &cluster.IPConfig{
 			IPAddress: "0.0.0.0/0",
 		},

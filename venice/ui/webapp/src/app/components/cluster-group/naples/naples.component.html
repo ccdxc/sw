@@ -50,8 +50,8 @@
       <ng-template pTemplate="body" let-rowData>
         <tr>
           <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
-            <div *ngSwitchCase="'spec.hostname'">
-              <a routerLink="./{{rowData.meta.name}}">{{rowData.spec.hostname}}</a>
+            <div *ngSwitchCase="'spec.id'">
+              <a routerLink="./{{rowData.meta.name}}">{{rowData.spec.id}}</a>
             </div>
             <div *ngSwitchCase="'meta.mod-time'">
               {{rowData.meta['mod-time'] | PrettyDate }}

@@ -13,7 +13,7 @@ import { ClusterSmartNICSpec_network_mode,  ClusterSmartNICSpec_network_mode_uih
 
 export interface IClusterSmartNICSpec {
     'admit'?: boolean;
-    'hostname'?: string;
+    'id'?: string;
     'ip-config'?: IClusterIPConfig;
     'mgmt-mode': ClusterSmartNICSpec_mgmt_mode;
     'network-mode': ClusterSmartNICSpec_network_mode;
@@ -24,7 +24,7 @@ export interface IClusterSmartNICSpec {
 
 export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSpec {
     'admit': boolean = null;
-    'hostname': string = null;
+    'id': string = null;
     'ip-config': ClusterIPConfig = null;
     'mgmt-mode': ClusterSmartNICSpec_mgmt_mode = null;
     'network-mode': ClusterSmartNICSpec_network_mode = null;
@@ -36,7 +36,7 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
             required: false,
             type: 'boolean'
         },
-        'hostname': {
+        'id': {
             required: false,
             type: 'string'
         },
@@ -106,12 +106,12 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
         } else {
             this['admit'] = null
         }
-        if (values && values['hostname'] != null) {
-            this['hostname'] = values['hostname'];
-        } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('hostname')) {
-            this['hostname'] = ClusterSmartNICSpec.propInfo['hostname'].default;
+        if (values && values['id'] != null) {
+            this['id'] = values['id'];
+        } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('id')) {
+            this['id'] = ClusterSmartNICSpec.propInfo['id'].default;
         } else {
-            this['hostname'] = null
+            this['id'] = null
         }
         if (values) {
             this['ip-config'].setValues(values['ip-config'], fillDefaults);
@@ -154,7 +154,7 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'admit': CustomFormControl(new FormControl(this['admit']), ClusterSmartNICSpec.propInfo['admit']),
-                'hostname': CustomFormControl(new FormControl(this['hostname']), ClusterSmartNICSpec.propInfo['hostname']),
+                'id': CustomFormControl(new FormControl(this['id']), ClusterSmartNICSpec.propInfo['id']),
                 'ip-config': CustomFormGroup(this['ip-config'].$formGroup, ClusterSmartNICSpec.propInfo['ip-config'].required),
                 'mgmt-mode': CustomFormControl(new FormControl(this['mgmt-mode'], [required, enumValidator(ClusterSmartNICSpec_mgmt_mode), ]), ClusterSmartNICSpec.propInfo['mgmt-mode']),
                 'network-mode': CustomFormControl(new FormControl(this['network-mode'], [required, enumValidator(ClusterSmartNICSpec_network_mode), ]), ClusterSmartNICSpec.propInfo['network-mode']),
@@ -177,7 +177,7 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['admit'].setValue(this['admit']);
-            this._formGroup.controls['hostname'].setValue(this['hostname']);
+            this._formGroup.controls['id'].setValue(this['id']);
             this['ip-config'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['mgmt-mode'].setValue(this['mgmt-mode']);
             this._formGroup.controls['network-mode'].setValue(this['network-mode']);

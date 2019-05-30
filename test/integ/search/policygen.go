@@ -94,7 +94,7 @@ func createNIC(mac, phase, host string, condition *cluster.SmartNICCondition) *c
 			},
 		},
 		Spec: cluster.SmartNICSpec{
-			Hostname: host,
+			ID: host,
 			IPConfig: &cluster.IPConfig{
 				IPAddress: "0.0.0.0/0",
 			},

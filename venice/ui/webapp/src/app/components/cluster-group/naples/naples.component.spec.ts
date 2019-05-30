@@ -43,7 +43,7 @@ describe('NaplesComponent', () => {
       'creation-time': '2018-08-23T17:30:08.534909931Z'
     },
     'spec': {
-      'hostname': 'naples1-host'
+      'id': 'naples1-host'
     },
     'status': {
       'ip-config': {
@@ -65,7 +65,7 @@ describe('NaplesComponent', () => {
       'creation-time': '2018-08-23T17:20:08.534909931Z'
     },
     'spec': {
-      'hostname': 'naples2-host'
+      'id': 'naples2-host'
     },
     'status': {
       'ip-config': {
@@ -87,7 +87,7 @@ describe('NaplesComponent', () => {
       'creation-time': '2018-08-23T17:20:08.534909931Z'
     },
     'spec': {
-      'hostname': 'naples2-host'
+      'id': 'naples2-host'
     },
     'status': {
       'ip-config': {

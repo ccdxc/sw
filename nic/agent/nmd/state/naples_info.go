@@ -411,7 +411,7 @@ func (n *NMD) UpdateNaplesInfoFromConfig() error {
 		nic.TypeMeta.Kind = "SmartNIC"
 		nic.ObjectMeta.Name = n.config.Status.SmartNicName
 		nic.Spec.IPConfig = n.config.Spec.IPConfig
-		nic.Spec.Hostname = n.config.Spec.Hostname
+		nic.Spec.ID = n.config.Spec.ID
 		nic.Spec.MgmtMode = n.config.Spec.Mode
 		nic.Spec.NetworkMode = n.config.Spec.NetworkMode
 		nic.Spec.MgmtVlan = n.config.Spec.MgmtVlan
@@ -434,7 +434,7 @@ func (n *NMD) UpdateNaplesInfoFromConfig() error {
 				Name: n.config.Status.SmartNicName,
 			},
 			Spec: cmd.SmartNICSpec{
-				Hostname:    n.config.Spec.Hostname,
+				ID:          n.config.Spec.ID,
 				IPConfig:    n.config.Spec.IPConfig,
 				MgmtMode:    n.config.Spec.Mode,
 				NetworkMode: n.config.Spec.NetworkMode,

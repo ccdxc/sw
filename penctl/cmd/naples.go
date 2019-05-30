@@ -62,7 +62,7 @@ var naplesProfileDeleteCmd = &cobra.Command{
 
 var numLifs int32
 var controllers []string
-var managedBy, managementNetwork, priMac, hostname, mgmtIP, defaultGW, naplesProfile, profileName, portDefault string
+var managedBy, managementNetwork, priMac, id, mgmtIP, defaultGW, naplesProfile, profileName, portDefault string
 var dnsServers []string
 
 func init() {
@@ -71,11 +71,11 @@ func init() {
 	createCmd.AddCommand(naplesProfileCreateCmd)
 	deleteCmd.AddCommand(naplesProfileDeleteCmd)
 
-	naplesCmd.Flags().StringSliceVarP(&controllers, "controllers", "c", make([]string, 0), "List of controller IP addresses or hostnames")
+	naplesCmd.Flags().StringSliceVarP(&controllers, "controllers", "c", make([]string, 0), "List of controller IP addresses or ids")
 	naplesCmd.Flags().StringVarP(&managedBy, "managed-by", "o", "host", "NAPLES Management. host or network")
 	naplesCmd.Flags().StringVarP(&managementNetwork, "management-network", "k", "", "Management Network. inband or oob")
 	naplesCmd.Flags().StringVarP(&priMac, "primary-mac", "p", "", "Primary mac")
-	naplesCmd.Flags().StringVarP(&hostname, "hostname", "n", "", "Host name")
+	naplesCmd.Flags().StringVarP(&id, "id", "i", "", "Naples ID")
 	naplesCmd.Flags().StringVarP(&mgmtIP, "mgmt-ip", "m", "", "Management IP in CIDR format")
 	naplesCmd.Flags().StringVarP(&defaultGW, "default-gw", "g", "", "Default GW for mgmt")
 	naplesCmd.Flags().StringVarP(&naplesProfile, "naples-profile", "f", "default", "Active NAPLES Profile")
@@ -103,9 +103,9 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 	} else {
 		managementMode = nmd.MgmtMode_NETWORK
 		// TODO : Remove this check once we have means to automatically generated a
-		// hostname on Naples, if hostname is not explicitly passed for network managed mode.
-		if hostname == "" {
-			return errors.New("hostname parameter cannot be empty")
+		// id on Naples, if id is not explicitly passed for network managed mode.
+		if id == "" {
+			return errors.New("id parameter cannot be empty")
 		}
 	}
 
@@ -118,7 +118,7 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 	naplesCfg := nmd.Naples{
 		Spec: nmd.NaplesSpec{
 			PrimaryMAC: priMac,
-			Hostname:   hostname,
+			ID:         id,
 			IPConfig: &cluster.IPConfig{
 				IPAddress:  mgmtIP,
 				DefaultGW:  defaultGW,
@@ -261,10 +261,10 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 			return
 		}
 
-		if len(hostname) != 0 {
-			vErr := vldtor.HostAddr(hostname)
+		if len(id) != 0 {
+			vErr := vldtor.HostAddr(id)
 			if vErr != nil {
-				err = fmt.Errorf("invalid hostname %v: %s", hostname, vErr.Error())
+				err = fmt.Errorf("invalid id %v: %s", id, vErr.Error())
 				return
 			}
 		}
@@ -316,10 +316,10 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 			err = fmt.Errorf("naples profile is not applicable when NAPLES is manged by network")
 		}
 
-		if len(hostname) != 0 {
-			vErr := vldtor.HostAddr(hostname)
+		if len(id) != 0 {
+			vErr := vldtor.HostAddr(id)
 			if vErr != nil {
-				err = fmt.Errorf("invalid hostname %v: %s", hostname, vErr.Error())
+				err = fmt.Errorf("invalid id %v: %s", id, vErr.Error())
 				return
 			}
 			return

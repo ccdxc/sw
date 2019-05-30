@@ -89,7 +89,7 @@ func (sm *Statemgr) OnSmartNICCreate(smartNic *ctkit.SmartNIC) error {
 	for _, host := range sm.ctrler.Host().List() {
 		associated := false
 		for _, snid := range host.Spec.SmartNICs {
-			if (snid.Name == smartNic.SmartNIC.Spec.Hostname) || (snid.MACAddress == smartNic.SmartNIC.Status.PrimaryMAC) {
+			if (snid.ID == smartNic.SmartNIC.Spec.ID) || (snid.MACAddress == smartNic.SmartNIC.Status.PrimaryMAC) {
 				associated = true
 			}
 		}
@@ -179,7 +179,7 @@ func (sm *Statemgr) OnSmartNICDelete(smartNic *ctkit.SmartNIC) error {
 	for _, host := range sm.ctrler.Host().List() {
 		associated := false
 		for _, snid := range host.Spec.SmartNICs {
-			if (snid.Name == smartNic.SmartNIC.Spec.Hostname) || (snid.MACAddress == smartNic.SmartNIC.Status.PrimaryMAC) {
+			if (snid.ID == smartNic.SmartNIC.Spec.ID) || (snid.MACAddress == smartNic.SmartNIC.Status.PrimaryMAC) {
 				associated = true
 			}
 		}
@@ -247,7 +247,7 @@ func (sm *Statemgr) FindSmartNICByHname(hname string) (*SmartNICState, error) {
 			return nil, err
 		}
 
-		if snic.SmartNIC.Spec.Hostname == hname {
+		if snic.SmartNIC.Spec.ID == hname {
 			return snic, nil
 		}
 	}

@@ -29,7 +29,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
 
   cols: any[] = [
-    { field: 'spec.hostname', header: 'Name', class: 'naples-column-date', sortable: true },
+    { field: 'spec.id', header: 'Name', class: 'naples-column-date', sortable: true },
     { field: 'status.primary-mac', header: 'MAC Address', class: 'naples-column-host-name', sortable: true },
     { field: 'status.smartNicVersion', header: 'Version', class: 'naples-column-version', sortable: true },
     { field: 'status.ip-config.ip-address', header: 'Management IP Address', class: 'naples-column-mgmt-cidr', sortable: false },
@@ -245,7 +245,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
       } else {
         const thirdStatNaples = this.getNaplesByKey(maxNaples.name);
         if ((thirdStatNaples) != null) {
-          const thirdStatName = thirdStatNaples.spec.hostname;
+          const thirdStatName = thirdStatNaples.spec.id;
           let thirdStat: string = thirdStatName;
           if (thirdStat.length > 0) {
             if (thirdStat.length > 10) {

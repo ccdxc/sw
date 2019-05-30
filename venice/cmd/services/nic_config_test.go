@@ -278,7 +278,7 @@ func TestNICConfig(t *testing.T) {
 							IPConfig: &cmd.IPConfig{
 								IPAddress: "0.0.0.0/0",
 							},
-							Hostname:    hostID,
+							ID:          hostID,
 							MgmtMode:    cmd.SmartNICSpec_NETWORK.String(),
 							NetworkMode: cmd.SmartNICSpec_OOB.String(),
 						},

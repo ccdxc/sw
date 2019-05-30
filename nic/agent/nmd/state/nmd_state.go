@@ -147,7 +147,7 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 		Spec: nmd.NaplesSpec{
 			Mode:          naplesMode,
 			PrimaryMAC:    macAddr,
-			Hostname:      nodeUUID,
+			ID:            nodeUUID,
 			NaplesProfile: "default",
 			IPConfig: &cluster.IPConfig{
 				IPAddress:  "",

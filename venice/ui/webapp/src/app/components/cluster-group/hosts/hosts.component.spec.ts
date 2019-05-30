@@ -66,7 +66,7 @@ describe('HostsComponent', () => {
     'spec': {
       'smart-nics': [
         {
-          'name': 'test'
+          'id': 'test'
         }
       ]
     },
@@ -88,14 +88,14 @@ describe('HostsComponent', () => {
     'spec': {
       'smart-nics': [
         {
-          'name': 'test3'
+          'id': 'test3'
         }
       ]
     },
     'status': {}
   };
 
-  // hostname test => mac address 00ae.cd00.1142
+  // id test => mac address 00ae.cd00.1142
   const naple1 = {
     'kind': 'SmartNIC',
     'api-version': 'v1',
@@ -110,7 +110,7 @@ describe('HostsComponent', () => {
     },
     'spec': {
       'admit': true,
-      'hostname': 'test',
+      'id': 'test',
       'ip-config': {
         'ip-address': '1.2.3.4'
       },

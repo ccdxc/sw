@@ -77,7 +77,7 @@ func (s *service) handleNaplesObjectUpdates(obj *delphiProto.NaplesStatus) {
 
 		// Create a new Techsupport Agent
 		// NewTSMClient(name string, mac string, kind string, configPath string, controllers []string)
-		tsmClient := tsa.NewTSMClient(obj.Hostname, obj.Fru.MacStr, string(cluster.KindSmartNIC), s.configFile, controllers)
+		tsmClient := tsa.NewTSMClient(obj.ID, obj.Fru.MacStr, string(cluster.KindSmartNIC), s.configFile, controllers)
 		s.tsmClient = tsmClient
 
 		if s.tsmClient != nil {

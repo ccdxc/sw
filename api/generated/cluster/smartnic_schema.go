@@ -93,7 +93,7 @@ var typesMapSmartnic = map[string]*api.Struct{
 			"fw-minor-ver":         api.CLIInfo{Path: "Status.SystemInfo.BiosInfo.FwMinorVersion", Skip: false, Insert: "", Help: ""},
 			"generation-id":        api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"host":                 api.CLIInfo{Path: "Status.Host", Skip: false, Insert: "", Help: ""},
-			"hostname":             api.CLIInfo{Path: "Spec.Hostname", Skip: false, Insert: "", Help: ""},
+			"id":                   api.CLIInfo{Path: "Spec.ID", Skip: false, Insert: "", Help: ""},
 			"interfaces":           api.CLIInfo{Path: "Status.Interfaces", Skip: false, Insert: "", Help: ""},
 			"ip-address":           api.CLIInfo{Path: "Status.IPConfig.IPAddress", Skip: false, Insert: "", Help: ""},
 			"kind":                 api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
@@ -153,7 +153,7 @@ var typesMapSmartnic = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"Admit": api.Field{Name: "Admit", CLITag: api.CLIInfo{ID: "admit", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "admit", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 
-			"Hostname": api.Field{Name: "Hostname", CLITag: api.CLIInfo{ID: "hostname", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "hostname", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"ID": api.Field{Name: "ID", CLITag: api.CLIInfo{ID: "id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"IPConfig": api.Field{Name: "IPConfig", CLITag: api.CLIInfo{ID: "ip-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-config", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.IPConfig"},
 

@@ -1116,7 +1116,7 @@ func TestHostUpdates(t *testing.T) {
 			Name: "testSmartNIC",
 		},
 		Spec: cluster.SmartNICSpec{
-			Hostname: "test-snic",
+			ID: "test-snic",
 		},
 		Status: cluster.SmartNICStatus{
 			PrimaryMAC: "0001.0203.0405",
@@ -1144,7 +1144,7 @@ func TestHostUpdates(t *testing.T) {
 	// now associate by name
 	nhst = ref.DeepCopy(nhst).(cluster.Host)
 	nhst.Spec.SmartNICs[0].MACAddress = ""
-	nhst.Spec.SmartNICs[0].Name = "test-snic"
+	nhst.Spec.SmartNICs[0].ID = "test-snic"
 	err = stateMgr.ctrler.Host().Update(&nhst)
 	AssertOk(t, err, "Error updating the host")
 

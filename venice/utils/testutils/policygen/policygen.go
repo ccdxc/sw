@@ -206,7 +206,7 @@ func CreateSmartNIC(mac, phase, node string, condition *cluster.SmartNICConditio
 			},
 		},
 		Spec: cluster.SmartNICSpec{
-			Hostname: node,
+			ID: node,
 			IPConfig: &cluster.IPConfig{
 				IPAddress: "0.0.0.0/0",
 			},

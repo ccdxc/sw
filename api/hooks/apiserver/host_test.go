@@ -31,7 +31,7 @@ func makeHostObj(hostName, macAddr, nicName string) *cluster.Host {
 			SmartNICs: []cluster.SmartNICID{
 				{
 					MACAddress: macAddr,
-					Name:       nicName,
+					ID:         nicName,
 				},
 			},
 		},
@@ -131,7 +131,7 @@ func TestHostObjectValidation(t *testing.T) {
 							MACAddress: "01-02-03-04-05-06",
 						},
 						{
-							Name: "hello-world",
+							ID: "hello-world",
 						},
 					},
 				},

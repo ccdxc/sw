@@ -9,17 +9,17 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IClusterSmartNICID {
-    'name'?: string;
+    'id'?: string;
     'mac-address'?: string;
 }
 
 
 export class ClusterSmartNICID extends BaseModel implements IClusterSmartNICID {
-    'name': string = null;
+    'id': string = null;
     /** should be a valid MAC address */
     'mac-address': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'name': {
+        'id': {
             required: false,
             type: 'string'
         },
@@ -61,12 +61,12 @@ export class ClusterSmartNICID extends BaseModel implements IClusterSmartNICID {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['name'] != null) {
-            this['name'] = values['name'];
-        } else if (fillDefaults && ClusterSmartNICID.hasDefaultValue('name')) {
-            this['name'] = ClusterSmartNICID.propInfo['name'].default;
+        if (values && values['id'] != null) {
+            this['id'] = values['id'];
+        } else if (fillDefaults && ClusterSmartNICID.hasDefaultValue('id')) {
+            this['id'] = ClusterSmartNICID.propInfo['id'].default;
         } else {
-            this['name'] = null
+            this['id'] = null
         }
         if (values && values['mac-address'] != null) {
             this['mac-address'] = values['mac-address'];
@@ -82,7 +82,7 @@ export class ClusterSmartNICID extends BaseModel implements IClusterSmartNICID {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'name': CustomFormControl(new FormControl(this['name']), ClusterSmartNICID.propInfo['name']),
+                'id': CustomFormControl(new FormControl(this['id']), ClusterSmartNICID.propInfo['id']),
                 'mac-address': CustomFormControl(new FormControl(this['mac-address']), ClusterSmartNICID.propInfo['mac-address']),
             });
         }
@@ -95,7 +95,7 @@ export class ClusterSmartNICID extends BaseModel implements IClusterSmartNICID {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['name'].setValue(this['name']);
+            this._formGroup.controls['id'].setValue(this['id']);
             this._formGroup.controls['mac-address'].setValue(this['mac-address']);
         }
     }

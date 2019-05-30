@@ -78,7 +78,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
         this.naplesEventUtility.processEvents(response);
         // mac-address to name map
         for (const smartnic of this.naples) {
-          this.nameToMacMap[smartnic.spec.hostname] = smartnic.meta.name;
+          this.nameToMacMap[smartnic.spec.id] = smartnic.meta.name;
         }
       },
       this.controllerService.restErrorHandler('Failed to get NAPLES info')
@@ -116,10 +116,10 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
 
     // We only have one entry at this point
     return value.map(v => {
-      if (v.hasOwnProperty('name') && v['name']) {
+      if (v.hasOwnProperty('id') && v['id']) {
         return {
-          text: v['name'],
-          mac: this.nameToMacMap[v['name']] || '',
+          text: v['id'],
+          mac: this.nameToMacMap[v['id']] || '',
           admitted: this.isAdmitted(value, statusValue)
         };
       } else if (v.hasOwnProperty('mac-address') && v['mac-address']) {

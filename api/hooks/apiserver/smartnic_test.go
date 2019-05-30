@@ -39,7 +39,7 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 			Name: "00ae.cd01.0001",
 		},
 		Spec: cluster.SmartNICSpec{
-			Hostname: "hostname",
+			ID: "hostname",
 			IPConfig: &cluster.IPConfig{
 				IPAddress: "0.0.0.0/0",
 			},

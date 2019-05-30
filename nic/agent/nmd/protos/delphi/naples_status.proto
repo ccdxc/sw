@@ -58,8 +58,8 @@ message NaplesStatus {
 
     Transition TransitionPhase              = 5;
 
-    // Hostname is used as a user friendly identifier in logs/events
-    string                      Hostname    = 6;
+    // ID is used as a user friendly identifier in logs/events
+    string                      ID           = 6;
 
     // IPConfig defines the static IP configuration. If not specified, DHCP will be attempted
     string                      MgmtIP       = 7;

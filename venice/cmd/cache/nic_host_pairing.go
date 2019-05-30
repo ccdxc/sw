@@ -20,7 +20,7 @@ func isNICHostPair(nic *cluster.SmartNIC, host *cluster.Host) bool {
 	// report conflicts between SmartNICIDs belonging to the same host.
 	for _, nicID := range host.Spec.SmartNICs {
 		if nic != nil && nic.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() &&
-			((nicID.Name != "" && nicID.Name == nic.Spec.Hostname) || (nicID.MACAddress != "" && nicID.MACAddress == nic.Status.PrimaryMAC)) {
+			((nicID.ID != "" && nicID.ID == nic.Spec.ID) || (nicID.MACAddress != "" && nicID.MACAddress == nic.Status.PrimaryMAC)) {
 			return true
 		}
 	}
@@ -50,10 +50,10 @@ func (sm *Statemgr) UpdateHostPairingStatus(et kvstore.WatchEventType, newNIC, o
 					sm.UpdateHost(host, true)
 					nic.Status.Host = host.Name
 					sm.UpdateSmartNIC(nic, true)
-					log.Infof("NIC %s(%s) paired with host %s", nic.Name, nic.Spec.Hostname, host.Name)
+					log.Infof("NIC %s(%s) paired with host %s", nic.Name, nic.Spec.ID, host.Name)
 				} else if nic.Status.Host != host.Name {
-					errMsg := fmt.Sprintf("NIC %s(%s) matches Spec IDs of host %s but is already associated with host %s", nic.Name, nic.Spec.Hostname, host.Name, nic.Status.Host)
-					recorder.Event(eventtypes.HOST_SMART_NIC_SPEC_CONFLICT, errMsg, nic)
+					errMsg := fmt.Sprintf("NIC %s(%s) matches Spec IDs of host %s but is already associated with host %s", nic.Name, nic.Spec.ID, host.Name, nic.Status.Host)
+					recorder.Event(eventtypes.HOST_SMART_NIC_SPEC_CONFLICT, errMsg, nil)
 					log.Errorf(errMsg)
 				}
 			}
@@ -70,7 +70,7 @@ func (sm *Statemgr) UpdateHostPairingStatus(et kvstore.WatchEventType, newNIC, o
 				if hostNIC == nic.Name {
 					host.Status.AdmittedSmartNICs = append(host.Status.AdmittedSmartNICs[:ii], host.Status.AdmittedSmartNICs[ii+1:]...)
 					sm.UpdateHost(host, true)
-					log.Infof("Removed pairing between NIC %s(%s) and host %s", nic.Name, nic.Spec.Hostname, host.Name)
+					log.Infof("Removed pairing between NIC %s(%s) and host %s", nic.Name, nic.Spec.ID, host.Name)
 					break
 				}
 			}
@@ -89,7 +89,7 @@ func (sm *Statemgr) UpdateHostPairingStatus(et kvstore.WatchEventType, newNIC, o
 		// We don't care about updates for non-admitted NICs.
 		// The de-admission case is handled explicitly in venice/cmd/services/master.go
 		if newNIC.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
-			if oldNIC != nil && oldNIC.Spec.Hostname != newNIC.Spec.Hostname {
+			if oldNIC != nil && oldNIC.Spec.ID != newNIC.Spec.ID {
 				handleDelete(oldNIC)
 				newNIC.Status.Host = ""
 				sm.UpdateSmartNIC(newNIC, true)
@@ -125,10 +125,10 @@ func (sm *Statemgr) UpdateNICPairingStatus(et kvstore.WatchEventType, newHost, o
 					sm.UpdateHost(host, true)
 					nic.Status.Host = host.Name
 					sm.UpdateSmartNIC(nic.SmartNIC, true)
-					log.Infof("NIC %s(%s) paired with host %s", nic.Name, nic.Spec.Hostname, host.Name)
+					log.Infof("NIC %s(%s) paired with host %s", nic.Name, nic.Spec.ID, host.Name)
 				} else if nic.Status.Host != host.Name {
-					errMsg := fmt.Sprintf("NIC %s(%s) matches Spec IDs of host %s but is already associated with host %s", nic.Name, nic.Spec.Hostname, host.Name, nic.Status.Host)
-					recorder.Event(eventtypes.HOST_SMART_NIC_SPEC_CONFLICT, errMsg, nic)
+					errMsg := fmt.Sprintf("NIC %s(%s) matches Spec IDs of host %s but is already associated with host %s", nic.Name, nic.Spec.ID, host.Name, nic.Status.Host)
+					recorder.Event(eventtypes.HOST_SMART_NIC_SPEC_CONFLICT, errMsg, nil)
 					log.Errorf(errMsg)
 				}
 			}
@@ -146,7 +146,7 @@ func (sm *Statemgr) UpdateNICPairingStatus(et kvstore.WatchEventType, newHost, o
 			}
 			nic.Lock()
 			nic.Status.Host = ""
-			log.Infof("Removed pairing between NIC %s(%s) and host %s", nic.Name, nic.Spec.Hostname, host.Name)
+			log.Infof("Removed pairing between NIC %s(%s) and host %s", nic.Name, nic.Spec.ID, host.Name)
 			// See if they can be paired with another host
 			err = sm.UpdateHostPairingStatus(kvstore.Created, nic.SmartNIC, nil)
 			if err != nil {

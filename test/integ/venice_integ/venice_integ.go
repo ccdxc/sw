@@ -373,7 +373,7 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 		cfg.Spec.NetworkMode = nmdproto.NetworkMode_INBAND.String()
 		cfg.Spec.IPConfig = ipConfig
 		cfg.Spec.MgmtVlan = 0
-		cfg.Spec.Hostname = snic.snicName
+		cfg.Spec.ID = snic.snicName
 
 		n.SetNaplesConfig(cfg.Spec)
 		n.IPClient.Update()

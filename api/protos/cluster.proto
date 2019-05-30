@@ -433,7 +433,7 @@ message HostSpec {
 message SmartNICID {
 
     // Name contains the name of the SmartNIC on a host
-    string Name = 1 [(gogoproto.jsontag) = "name,omitempty"];
+    string ID = 1 [(gogoproto.jsontag) = "id,omitempty"];
 
     // MACAddress contains the primary MAC address of a SmartNIC
     string MACAddress = 2 [(gogoproto.jsontag) = "mac-address,omitempty",

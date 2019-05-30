@@ -79,7 +79,7 @@ func (cl *clusterHooks) getHostSmartNICConflicts(ctx context.Context, host *clus
 			}
 			for _, otherHostNIC := range otherHost.Spec.SmartNICs {
 				if (hostNIC.MACAddress != "" && hostNIC.MACAddress == otherHostNIC.MACAddress) ||
-					(hostNIC.Name != "" && hostNIC.Name == otherHostNIC.Name) {
+					(hostNIC.ID != "" && hostNIC.ID == otherHostNIC.ID) {
 					conflicts = append(conflicts, otherHost.Name)
 				}
 			}
@@ -127,7 +127,7 @@ func (cl *clusterHooks) validateHostSmartNICs(host *cluster.Host) []error {
 
 	// validate each SmartNIC spec
 	for _, sn := range host.Spec.SmartNICs {
-		if (sn.MACAddress == "") == (sn.Name == "") { // both empty or both non-empty
+		if (sn.MACAddress == "") == (sn.ID == "") { // both empty or both non-empty
 			err = append(err, cl.errInvalidSmartNIC())
 		}
 	}

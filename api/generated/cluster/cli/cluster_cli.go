@@ -72,6 +72,13 @@ func removeClusterOper(obj interface{}) error {
 // CreateHostFlags specifies flags for Host create operation
 var CreateHostFlags = []gen.CliFlag{
 	{
+		ID:     "id",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "mac-address",
 		Type:   "StringSlice",
 		Help:   "",
