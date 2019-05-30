@@ -94,7 +94,7 @@ func (f *elasticLogRetriever) HandleRequest(ctx context.Context, req *diagapi.Di
 	}
 	result, err := f.elasticClient.Search(ctx, index, "", query, nil, int32(from), int32(maxResults), "@timestamp", true)
 	if err != nil {
-		f.logger.ErrorLog("method", "HandleRequest", "msg", fmt.Sprintf("search failed for query: %+v, result: %+v", *query, result), "error", err)
+		f.logger.ErrorLog("method", "HandleRequest", "msg", fmt.Sprintf("search failed for query: %+v, result: %+v", *query, result), "err", err)
 		return nil, err
 	}
 	f.logger.DebugLog("method", "HandleRequest", "msg", fmt.Sprintf("hits: %d, query: %#v", len(result.Hits.Hits), *query))
@@ -138,7 +138,7 @@ func (f *elasticLogRetriever) HandleRequest(ctx context.Context, req *diagapi.Di
 	}
 	anyObj, err := types.MarshalAny(logs)
 	if err != nil {
-		f.logger.ErrorLog("method", "HandleRequest", "msg", "unable to marshal logs {%+v} to Any object", logs, "error", err)
+		f.logger.ErrorLog("method", "HandleRequest", "msg", "unable to marshal logs {%+v} to Any object", logs, "err", err)
 		return nil, err
 	}
 	return &api.Any{Any: *anyObj}, nil
@@ -154,7 +154,7 @@ func (f *elasticLogRetriever) Start() error {
 				return elastic.NewAuthenticatedClient("", f.rslvr, f.logger.WithContext("submodule", "elasticLogRetriever"))
 			}, elasticWaitIntvl, maxElasticRetries)
 			if err != nil {
-				f.logger.ErrorLog("method", "Start", "msg", "failed to create elastic client", "error", err)
+				f.logger.ErrorLog("method", "Start", "msg", "failed to create elastic client", "err", err)
 				return err
 			}
 			f.logger.DebugLog("method", "Start", "msg", "created Elastic client")

@@ -605,7 +605,7 @@ func (a *grpcObjClusterV1Cluster) Watch(ctx context.Context, options *api.ListWa
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -825,7 +825,7 @@ func (a *grpcObjClusterV1Node) Watch(ctx context.Context, options *api.ListWatch
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1014,7 +1014,7 @@ func (a *grpcObjClusterV1Host) Watch(ctx context.Context, options *api.ListWatch
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1203,7 +1203,7 @@ func (a *grpcObjClusterV1SmartNIC) Watch(ctx context.Context, options *api.ListW
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1392,7 +1392,7 @@ func (a *grpcObjClusterV1Tenant) Watch(ctx context.Context, options *api.ListWat
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1581,7 +1581,7 @@ func (a *grpcObjClusterV1Version) Watch(ctx context.Context, options *api.ListWa
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1754,7 +1754,7 @@ func (a *crudClientClusterV1) Watch(ctx context.Context, options *api.ListWatchO
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1762,7 +1762,7 @@ func (a *crudClientClusterV1) Watch(ctx context.Context, options *api.ListWatchO
 				ev := kvstore.WatchEvent{Type: kvstore.WatchEventType(e.Type)}
 				robj, err := listerwatcher.GetObject(e)
 				if err != nil {
-					a.logger.ErrorLog("msg", "error on receive unmarshall", "error", err)
+					a.logger.ErrorLog("msg", "error on receive unmarshall", "err", err)
 					close(lw.OutCh)
 					return
 				}

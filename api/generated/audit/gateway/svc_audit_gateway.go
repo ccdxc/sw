@@ -136,7 +136,7 @@ func (e *sAuditV1GwService) CompleteRegistration(ctx context.Context,
 
 	err := registerSwaggerDef(m, logger)
 	if err != nil {
-		logger.ErrorLog("msg", "failed to register swagger spec", "service", "audit.AuditV1", "error", err)
+		logger.ErrorLog("msg", "failed to register swagger spec", "service", "audit.AuditV1", "err", err)
 	}
 	wg.Add(1)
 	go func() {
@@ -164,7 +164,7 @@ func (e *sAuditV1GwService) CompleteRegistration(ctx context.Context,
 				err = errors.Wrap(err, "failed to create client")
 			}
 			cancel()
-			logger.ErrorLog("msg", "failed to register", "service", "audit.AuditV1", "error", err)
+			logger.ErrorLog("msg", "failed to register", "service", "audit.AuditV1", "err", err)
 			select {
 			case <-ctx.Done():
 				return
@@ -201,7 +201,7 @@ func (e *sAuditV1GwService) newClient(ctx context.Context, grpcAddr string, rslv
 		go func() {
 			<-ctx.Done()
 			if cerr := client.Close(); cerr != nil {
-				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "error", cerr)
+				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "err", cerr)
 			}
 		}()
 	}()

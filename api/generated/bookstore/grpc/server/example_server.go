@@ -123,7 +123,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.ApplyDiscountReq{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*bookstore.ApplyDiscountReq)
@@ -138,13 +138,13 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				var cur bookstore.ApplyDiscountReq
 				err = kvs.Get(ctx, key, &cur)
 				if err != nil {
-					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 					return nil, err
 				}
 				r.UUID = cur.UUID
@@ -156,7 +156,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					err = kvs.Update(ctx, key, &r)
 				}
 				if err != nil {
-					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 				}
 
 			}
@@ -170,7 +170,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.ApplyDiscountReq{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*bookstore.ApplyDiscountReq)
@@ -185,19 +185,19 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur bookstore.ApplyDiscountReq
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*bookstore.ApplyDiscountReq)
@@ -206,7 +206,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					var cur bookstore.ApplyDiscountReq
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -222,7 +222,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -254,20 +254,20 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.ApplyDiscountReq{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.ApplyDiscountReq{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
@@ -317,7 +317,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.Book{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*bookstore.Book)
@@ -332,21 +332,21 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				if updateFn != nil {
 					into := &bookstore.Book{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 					if err != nil {
-						l.ErrorLog("msg", "Consistent update failed", "error", err)
+						l.ErrorLog("msg", "Consistent update failed", "err", err)
 					}
 					r = *into
 				} else {
 					var cur bookstore.Book
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return nil, err
 					}
 					r.UUID = cur.UUID
@@ -358,7 +358,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 						err = kvs.Update(ctx, key, &r)
 					}
 					if err != nil {
-						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+						l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 					}
 				}
 
@@ -373,7 +373,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.Book{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*bookstore.Book)
@@ -388,19 +388,19 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur bookstore.Book
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*bookstore.Book)
@@ -409,7 +409,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					var cur bookstore.Book
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -425,7 +425,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -457,20 +457,20 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.Book{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Book{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
@@ -545,7 +545,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					if !dryRun {
 						gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
 						if err != nil {
-							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)
 							ret.GenerationID = "2"
 						} else {
 							ret.GenerationID = fmt.Sprintf("%d", gen+1)
@@ -586,7 +586,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			ctx = apiutils.SetVar(ctx, "ObjKind", "bookstore.Book")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -626,7 +626,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.Coupon{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*bookstore.Coupon)
@@ -641,13 +641,13 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				var cur bookstore.Coupon
 				err = kvs.Get(ctx, key, &cur)
 				if err != nil {
-					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 					return nil, err
 				}
 				r.UUID = cur.UUID
@@ -659,7 +659,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					err = kvs.Update(ctx, key, &r)
 				}
 				if err != nil {
-					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 				}
 
 			}
@@ -673,7 +673,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.Coupon{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*bookstore.Coupon)
@@ -688,19 +688,19 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur bookstore.Coupon
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*bookstore.Coupon)
@@ -709,7 +709,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					var cur bookstore.Coupon
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -725,7 +725,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -757,20 +757,20 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.Coupon{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Coupon{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
@@ -803,7 +803,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			ctx = apiutils.SetVar(ctx, "ObjKind", "bookstore.Coupon")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -841,7 +841,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.Customer{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*bookstore.Customer)
@@ -856,21 +856,21 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				if updateFn != nil {
 					into := &bookstore.Customer{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 					if err != nil {
-						l.ErrorLog("msg", "Consistent update failed", "error", err)
+						l.ErrorLog("msg", "Consistent update failed", "err", err)
 					}
 					r = *into
 				} else {
 					var cur bookstore.Customer
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return nil, err
 					}
 					r.UUID = cur.UUID
@@ -882,7 +882,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 						err = kvs.Update(ctx, key, &r)
 					}
 					if err != nil {
-						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+						l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 					}
 				}
 
@@ -897,7 +897,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.Customer{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*bookstore.Customer)
@@ -912,19 +912,19 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur bookstore.Customer
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*bookstore.Customer)
@@ -933,7 +933,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					var cur bookstore.Customer
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -949,7 +949,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -981,20 +981,20 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.Customer{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Customer{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
@@ -1069,7 +1069,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					if !dryRun {
 						gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
 						if err != nil {
-							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)
 							ret.GenerationID = "2"
 						} else {
 							ret.GenerationID = fmt.Sprintf("%d", gen+1)
@@ -1109,7 +1109,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			ctx = apiutils.SetVar(ctx, "ObjKind", "bookstore.Customer")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			err = into.ApplyStorageTransformer(ctx, false)
@@ -1153,7 +1153,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.Order{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*bookstore.Order)
@@ -1168,21 +1168,21 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				if updateFn != nil {
 					into := &bookstore.Order{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 					if err != nil {
-						l.ErrorLog("msg", "Consistent update failed", "error", err)
+						l.ErrorLog("msg", "Consistent update failed", "err", err)
 					}
 					r = *into
 				} else {
 					var cur bookstore.Order
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return nil, err
 					}
 					r.UUID = cur.UUID
@@ -1194,7 +1194,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 						err = kvs.Update(ctx, key, &r)
 					}
 					if err != nil {
-						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+						l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 					}
 				}
 
@@ -1209,7 +1209,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.Order{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*bookstore.Order)
@@ -1224,19 +1224,19 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur bookstore.Order
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*bookstore.Order)
@@ -1245,7 +1245,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					var cur bookstore.Order
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -1261,7 +1261,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -1293,20 +1293,20 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.Order{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Order{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
@@ -1381,7 +1381,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					if !dryRun {
 						gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
 						if err != nil {
-							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)
 							ret.GenerationID = "2"
 						} else {
 							ret.GenerationID = fmt.Sprintf("%d", gen+1)
@@ -1422,7 +1422,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			ctx = apiutils.SetVar(ctx, "ObjKind", "bookstore.Order")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -1461,7 +1461,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.OutageRequest{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*bookstore.OutageRequest)
@@ -1476,13 +1476,13 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				var cur bookstore.OutageRequest
 				err = kvs.Get(ctx, key, &cur)
 				if err != nil {
-					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 					return nil, err
 				}
 				r.UUID = cur.UUID
@@ -1494,7 +1494,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					err = kvs.Update(ctx, key, &r)
 				}
 				if err != nil {
-					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 				}
 
 			}
@@ -1508,7 +1508,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.OutageRequest{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*bookstore.OutageRequest)
@@ -1523,19 +1523,19 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur bookstore.OutageRequest
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*bookstore.OutageRequest)
@@ -1544,7 +1544,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					var cur bookstore.OutageRequest
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -1560,7 +1560,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -1592,20 +1592,20 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.OutageRequest{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.OutageRequest{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
@@ -1649,7 +1649,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.Publisher{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*bookstore.Publisher)
@@ -1664,21 +1664,21 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				if updateFn != nil {
 					into := &bookstore.Publisher{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 					if err != nil {
-						l.ErrorLog("msg", "Consistent update failed", "error", err)
+						l.ErrorLog("msg", "Consistent update failed", "err", err)
 					}
 					r = *into
 				} else {
 					var cur bookstore.Publisher
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return nil, err
 					}
 					r.UUID = cur.UUID
@@ -1690,7 +1690,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 						err = kvs.Update(ctx, key, &r)
 					}
 					if err != nil {
-						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+						l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 					}
 				}
 
@@ -1705,7 +1705,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.Publisher{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*bookstore.Publisher)
@@ -1720,19 +1720,19 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur bookstore.Publisher
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*bookstore.Publisher)
@@ -1741,7 +1741,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					var cur bookstore.Publisher
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -1757,7 +1757,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -1789,20 +1789,20 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.Publisher{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Publisher{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
@@ -1877,7 +1877,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					if !dryRun {
 						gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
 						if err != nil {
-							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)
 							ret.GenerationID = "2"
 						} else {
 							ret.GenerationID = fmt.Sprintf("%d", gen+1)
@@ -1917,7 +1917,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			ctx = apiutils.SetVar(ctx, "ObjKind", "bookstore.Publisher")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -1956,7 +1956,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.RestockRequest{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*bookstore.RestockRequest)
@@ -1971,13 +1971,13 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				var cur bookstore.RestockRequest
 				err = kvs.Get(ctx, key, &cur)
 				if err != nil {
-					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 					return nil, err
 				}
 				r.UUID = cur.UUID
@@ -1989,7 +1989,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					err = kvs.Update(ctx, key, &r)
 				}
 				if err != nil {
-					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 				}
 
 			}
@@ -2003,7 +2003,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.RestockRequest{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*bookstore.RestockRequest)
@@ -2018,19 +2018,19 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur bookstore.RestockRequest
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*bookstore.RestockRequest)
@@ -2039,7 +2039,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					var cur bookstore.RestockRequest
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -2055,7 +2055,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -2087,20 +2087,20 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.RestockRequest{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.RestockRequest{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
@@ -2144,7 +2144,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.RestockResponse{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*bookstore.RestockResponse)
@@ -2159,13 +2159,13 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				var cur bookstore.RestockResponse
 				err = kvs.Get(ctx, key, &cur)
 				if err != nil {
-					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 					return nil, err
 				}
 				r.UUID = cur.UUID
@@ -2177,7 +2177,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					err = kvs.Update(ctx, key, &r)
 				}
 				if err != nil {
-					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 				}
 
 			}
@@ -2191,7 +2191,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.RestockResponse{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*bookstore.RestockResponse)
@@ -2206,19 +2206,19 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur bookstore.RestockResponse
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*bookstore.RestockResponse)
@@ -2227,7 +2227,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					var cur bookstore.RestockResponse
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -2243,7 +2243,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -2275,20 +2275,20 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.RestockResponse{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.RestockResponse{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
@@ -2332,7 +2332,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.Store{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*bookstore.Store)
@@ -2347,21 +2347,21 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				if updateFn != nil {
 					into := &bookstore.Store{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 					if err != nil {
-						l.ErrorLog("msg", "Consistent update failed", "error", err)
+						l.ErrorLog("msg", "Consistent update failed", "err", err)
 					}
 					r = *into
 				} else {
 					var cur bookstore.Store
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return nil, err
 					}
 					r.UUID = cur.UUID
@@ -2373,7 +2373,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 						err = kvs.Update(ctx, key, &r)
 					}
 					if err != nil {
-						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+						l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 					}
 				}
 
@@ -2388,7 +2388,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					upd := &bookstore.Store{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*bookstore.Store)
@@ -2403,19 +2403,19 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur bookstore.Store
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*bookstore.Store)
@@ -2424,7 +2424,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					var cur bookstore.Store
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -2440,7 +2440,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -2472,20 +2472,20 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.Store{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Store{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
@@ -2560,7 +2560,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					if !dryRun {
 						gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
 						if err != nil {
-							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)
 							ret.GenerationID = "2"
 						} else {
 							ret.GenerationID = fmt.Sprintf("%d", gen+1)
@@ -2600,7 +2600,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			ctx = apiutils.SetVar(ctx, "ObjKind", "bookstore.Store")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -2915,7 +2915,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 				defer cancel()
 				watcher, err := kvs.WatchFiltered(nctx, key, *options)
 				if err != nil {
-					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "BookstoreV1")
+					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "BookstoreV1")
 					return err
 				}
 				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
@@ -2941,7 +2941,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "bookstore.Order")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "bookstore.Order")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "bookstore.Order")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -2953,7 +2953,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "bookstore.Order")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "bookstore.Order")
 					return err
 				}
 				events = &bookstore.AutoMsgOrderWatchHelper{}
@@ -3041,7 +3041,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "bookstore.Book")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "bookstore.Book")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "bookstore.Book")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -3053,7 +3053,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "bookstore.Book")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "bookstore.Book")
 					return err
 				}
 				events = &bookstore.AutoMsgBookWatchHelper{}
@@ -3141,7 +3141,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "bookstore.Publisher")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "bookstore.Publisher")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "bookstore.Publisher")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -3153,7 +3153,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "bookstore.Publisher")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "bookstore.Publisher")
 					return err
 				}
 				events = &bookstore.AutoMsgPublisherWatchHelper{}
@@ -3241,7 +3241,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "bookstore.Store")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "bookstore.Store")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "bookstore.Store")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -3253,7 +3253,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "bookstore.Store")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "bookstore.Store")
 					return err
 				}
 				events = &bookstore.AutoMsgStoreWatchHelper{}
@@ -3341,7 +3341,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "bookstore.Coupon")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "bookstore.Coupon")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "bookstore.Coupon")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -3353,7 +3353,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "bookstore.Coupon")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "bookstore.Coupon")
 					return err
 				}
 				events = &bookstore.AutoMsgCouponWatchHelper{}
@@ -3441,7 +3441,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "bookstore.Customer")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "bookstore.Customer")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "bookstore.Customer")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -3453,7 +3453,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "bookstore.Customer")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "bookstore.Customer")
 					return err
 				}
 				events = &bookstore.AutoMsgCustomerWatchHelper{}

@@ -146,7 +146,7 @@ func GetDiagnosticsService(module, node string, category diagapi.ModuleStatus_Ca
 func GetDiagnosticsServiceWithDefaults(module, node string, category diagapi.ModuleStatus_CategoryType, rslvr resolver.Interface, logger log.Logger) diagnostics.Service {
 	server := GetDiagnosticsService(module, node, category, logger)
 	if err := server.RegisterHandler("Debug", diagapi.DiagnosticsRequest_Log.String(), NewElasticLogsHandler(module, node, category, rslvr, logger)); err != nil {
-		logger.ErrorLog("method", "GetDiagnosticsServiceWithDefaults", "msg", "failed to register elastic logs handler", "error", err)
+		logger.ErrorLog("method", "GetDiagnosticsServiceWithDefaults", "msg", "failed to register elastic logs handler", "err", err)
 		// TODO throw an event
 	}
 	return server

@@ -231,7 +231,7 @@ func (a *grpcObjStagingV1Buffer) Watch(ctx context.Context, options *api.ListWat
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -408,7 +408,7 @@ func (a *crudClientStagingV1) Watch(ctx context.Context, options *api.ListWatchO
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -416,7 +416,7 @@ func (a *crudClientStagingV1) Watch(ctx context.Context, options *api.ListWatchO
 				ev := kvstore.WatchEvent{Type: kvstore.WatchEventType(e.Type)}
 				robj, err := listerwatcher.GetObject(e)
 				if err != nil {
-					a.logger.ErrorLog("msg", "error on receive unmarshall", "error", err)
+					a.logger.ErrorLog("msg", "error on receive unmarshall", "err", err)
 					close(lw.OutCh)
 					return
 				}

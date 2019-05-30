@@ -150,7 +150,7 @@ func NewGrpcAPIClient(clientName, url string, logger log.Logger, opts ...rpckit.
 	opts = append(opts, rpckit.WithLogger(logger))
 	client, err := rpckit.NewRPCClient(clientName, url, opts...)
 	if err != nil {
-		logger.ErrorLog("msg", "Failed to connect to gRPC server", "URL", url, "error", err)
+		logger.ErrorLog("msg", "Failed to connect to gRPC server", "URL", url, "err", err)
 		return nil, err
 	}
 	return &apiGrpcServerClient{

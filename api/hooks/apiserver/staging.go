@@ -58,7 +58,7 @@ func (h *stagingHooks) updateStatus(ctx context.Context, buf *staging.Buffer) (*
 			// Transform the object from Storage if needed.
 			obj, err := status.Items[it].Object.Clone(nil)
 			if err != nil {
-				h.l.ErrorLog("msg", "could not clone object", "error", err)
+				h.l.ErrorLog("msg", "could not clone object", "err", err)
 				return buf, err
 			}
 			m := reflect.ValueOf(obj).MethodByName("ApplyStorageTransformer")
@@ -67,12 +67,12 @@ func (h *stagingHooks) updateStatus(ctx context.Context, buf *staging.Buffer) (*
 				ev := m.Call(args)
 				if !ev[0].IsNil() {
 					err := ev[0].Interface().(error)
-					h.l.ErrorLog("msg", "failed to tranform from storage", "error", err, "key", status.Items[it].Key)
+					h.l.ErrorLog("msg", "failed to tranform from storage", "err", err, "key", status.Items[it].Key)
 				}
 			}
 			p, err := types.MarshalAny(obj.(proto.Message))
 			if err != nil {
-				h.l.ErrorLog("msg", "failed to marshalAny", "tenant", buf.Tenant, "buffer", buf.Name, "error", err)
+				h.l.ErrorLog("msg", "failed to marshalAny", "tenant", buf.Tenant, "buffer", buf.Name, "err", err)
 			}
 			item := &staging.Item{
 				ItemId: staging.ItemId{
@@ -108,7 +108,7 @@ func (h *stagingHooks) getBuffer(ctx context.Context, kvs kvstore.Interface, pre
 	h.l.Infof("received response writer hook for get Buffer")
 	buf, ok := resp.(staging.Buffer)
 	if !ok {
-		h.l.ErrorLog("invalid object in post commit hook for staging GetBuffer")
+		h.l.Error("invalid object in post commit hook for staging GetBuffer")
 	}
 	h.l.Infof("in get buffer item count is %d", len(buf.Status.Items))
 	_, err := h.updateStatus(ctx, &buf)
@@ -150,7 +150,7 @@ func (h *stagingHooks) commitAction(ctx context.Context, kv kvstore.Interface, t
 	var err error
 	buf, ok := i.(staging.CommitAction)
 	if !ok {
-		h.l.ErrorLog("invalid object in post commit hook for staging Commit")
+		h.l.Error("invalid object in post commit hook for staging Commit")
 		return nil, false, errors.New("invalid object")
 	}
 	ov, err := cache.GetOverlay(buf.Tenant, buf.Name)
@@ -174,7 +174,7 @@ func (h *stagingHooks) clearAction(ctx context.Context, kv kvstore.Interface, tx
 	var err error
 	buf, ok := i.(staging.ClearAction)
 	if !ok {
-		h.l.ErrorLog("invalid object in post commit hook for staging Clear")
+		h.l.Error("invalid object in post commit hook for staging Clear")
 		return nil, false, errors.New("invalid object")
 	}
 	ov, err := cache.GetOverlay(buf.Tenant, buf.Name)

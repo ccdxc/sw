@@ -28,7 +28,7 @@ func SvcWatch(ctx context.Context, watcher kvstore.Watcher, stream grpc.ServerSt
 	sendToStream := func() error {
 		log.DebugLog("msg", "writing to stream", "len", len(events.Events))
 		if err := stream.SendMsg(events); err != nil {
-			l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+			l.DebugLog("msg", "Stream send error'ed for Order", "err", err)
 			return err
 		}
 		events = &api.WatchEventList{}

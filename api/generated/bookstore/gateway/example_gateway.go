@@ -1352,7 +1352,7 @@ func (e *sBookstoreV1GwService) CompleteRegistration(ctx context.Context,
 
 	err := registerSwaggerDef(m, logger)
 	if err != nil {
-		logger.ErrorLog("msg", "failed to register swagger spec", "service", "bookstore.BookstoreV1", "error", err)
+		logger.ErrorLog("msg", "failed to register swagger spec", "service", "bookstore.BookstoreV1", "err", err)
 	}
 	{
 		name := "_RProxy_" + "/" + "uploads"
@@ -1393,7 +1393,7 @@ func (e *sBookstoreV1GwService) CompleteRegistration(ctx context.Context,
 				err = errors.Wrap(err, "failed to create client")
 			}
 			cancel()
-			logger.ErrorLog("msg", "failed to register", "service", "bookstore.BookstoreV1", "error", err)
+			logger.ErrorLog("msg", "failed to register", "service", "bookstore.BookstoreV1", "err", err)
 			select {
 			case <-ctx.Done():
 				return
@@ -1429,7 +1429,7 @@ func (e *sBookstoreV1GwService) newClient(ctx context.Context, grpcAddr string, 
 		go func() {
 			<-ctx.Done()
 			if cerr := client.Close(); cerr != nil {
-				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "error", cerr)
+				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "err", cerr)
 			}
 		}()
 	}()

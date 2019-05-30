@@ -85,7 +85,7 @@ func (s *srolloutSvc_rolloutBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			ctx = apiutils.SetVar(ctx, "ObjKind", "rollout.RolloutAction")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -111,7 +111,7 @@ func (s *srolloutSvc_rolloutBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			ctx = apiutils.SetVar(ctx, "ObjKind", "rollout.Rollout")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -266,7 +266,7 @@ func (s *srolloutSvc_rolloutBackend) regWatchersFunc(ctx context.Context, logger
 				defer cancel()
 				watcher, err := kvs.WatchFiltered(nctx, key, *options)
 				if err != nil {
-					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "RolloutV1")
+					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "RolloutV1")
 					return err
 				}
 				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
@@ -292,7 +292,7 @@ func (s *srolloutSvc_rolloutBackend) regWatchersFunc(ctx context.Context, logger
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "rollout.Rollout")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "rollout.Rollout")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "rollout.Rollout")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -304,7 +304,7 @@ func (s *srolloutSvc_rolloutBackend) regWatchersFunc(ctx context.Context, logger
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "rollout.Rollout")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "rollout.Rollout")
 					return err
 				}
 				events = &rollout.AutoMsgRolloutWatchHelper{}
@@ -392,7 +392,7 @@ func (s *srolloutSvc_rolloutBackend) regWatchersFunc(ctx context.Context, logger
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "rollout.RolloutAction")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "rollout.RolloutAction")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "rollout.RolloutAction")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -404,7 +404,7 @@ func (s *srolloutSvc_rolloutBackend) regWatchersFunc(ctx context.Context, logger
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "rollout.RolloutAction")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "rollout.RolloutAction")
 					return err
 				}
 				events = &rollout.AutoMsgRolloutActionWatchHelper{}

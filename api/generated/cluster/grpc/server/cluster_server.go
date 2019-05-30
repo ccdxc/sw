@@ -70,7 +70,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					upd := &cluster.Cluster{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*cluster.Cluster)
@@ -85,21 +85,21 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				if updateFn != nil {
 					into := &cluster.Cluster{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 					if err != nil {
-						l.ErrorLog("msg", "Consistent update failed", "error", err)
+						l.ErrorLog("msg", "Consistent update failed", "err", err)
 					}
 					r = *into
 				} else {
 					var cur cluster.Cluster
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return nil, err
 					}
 					r.UUID = cur.UUID
@@ -111,7 +111,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 						err = kvs.Update(ctx, key, &r)
 					}
 					if err != nil {
-						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+						l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 					}
 				}
 
@@ -126,7 +126,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					upd := &cluster.Cluster{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*cluster.Cluster)
@@ -141,19 +141,19 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur cluster.Cluster
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*cluster.Cluster)
@@ -162,7 +162,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					var cur cluster.Cluster
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -178,7 +178,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -210,20 +210,20 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			r := cluster.Cluster{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := cluster.Cluster{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
@@ -298,7 +298,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					if !dryRun {
 						gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
 						if err != nil {
-							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)
 							ret.GenerationID = "2"
 						} else {
 							ret.GenerationID = fmt.Sprintf("%d", gen+1)
@@ -349,7 +349,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					upd := &cluster.ClusterAuthBootstrapRequest{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*cluster.ClusterAuthBootstrapRequest)
@@ -364,13 +364,13 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				var cur cluster.ClusterAuthBootstrapRequest
 				err = kvs.Get(ctx, key, &cur)
 				if err != nil {
-					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 					return nil, err
 				}
 				r.UUID = cur.UUID
@@ -382,7 +382,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					err = kvs.Update(ctx, key, &r)
 				}
 				if err != nil {
-					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 				}
 
 			}
@@ -396,7 +396,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					upd := &cluster.ClusterAuthBootstrapRequest{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*cluster.ClusterAuthBootstrapRequest)
@@ -411,19 +411,19 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur cluster.ClusterAuthBootstrapRequest
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*cluster.ClusterAuthBootstrapRequest)
@@ -432,7 +432,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					var cur cluster.ClusterAuthBootstrapRequest
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -448,7 +448,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -480,20 +480,20 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			r := cluster.ClusterAuthBootstrapRequest{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := cluster.ClusterAuthBootstrapRequest{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
@@ -540,7 +540,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					upd := &cluster.Host{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*cluster.Host)
@@ -555,21 +555,21 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				if updateFn != nil {
 					into := &cluster.Host{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 					if err != nil {
-						l.ErrorLog("msg", "Consistent update failed", "error", err)
+						l.ErrorLog("msg", "Consistent update failed", "err", err)
 					}
 					r = *into
 				} else {
 					var cur cluster.Host
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return nil, err
 					}
 					r.UUID = cur.UUID
@@ -581,7 +581,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 						err = kvs.Update(ctx, key, &r)
 					}
 					if err != nil {
-						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+						l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 					}
 				}
 
@@ -596,7 +596,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					upd := &cluster.Host{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*cluster.Host)
@@ -611,19 +611,19 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur cluster.Host
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*cluster.Host)
@@ -632,7 +632,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					var cur cluster.Host
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -648,7 +648,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -680,20 +680,20 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			r := cluster.Host{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := cluster.Host{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
@@ -768,7 +768,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					if !dryRun {
 						gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
 						if err != nil {
-							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)
 							ret.GenerationID = "2"
 						} else {
 							ret.GenerationID = fmt.Sprintf("%d", gen+1)
@@ -824,7 +824,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					upd := &cluster.Node{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*cluster.Node)
@@ -839,21 +839,21 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				if updateFn != nil {
 					into := &cluster.Node{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 					if err != nil {
-						l.ErrorLog("msg", "Consistent update failed", "error", err)
+						l.ErrorLog("msg", "Consistent update failed", "err", err)
 					}
 					r = *into
 				} else {
 					var cur cluster.Node
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return nil, err
 					}
 					r.UUID = cur.UUID
@@ -865,7 +865,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 						err = kvs.Update(ctx, key, &r)
 					}
 					if err != nil {
-						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+						l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 					}
 				}
 
@@ -880,7 +880,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					upd := &cluster.Node{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*cluster.Node)
@@ -895,19 +895,19 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur cluster.Node
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*cluster.Node)
@@ -916,7 +916,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					var cur cluster.Node
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -932,7 +932,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -964,20 +964,20 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			r := cluster.Node{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := cluster.Node{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
@@ -1052,7 +1052,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					if !dryRun {
 						gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
 						if err != nil {
-							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)
 							ret.GenerationID = "2"
 						} else {
 							ret.GenerationID = fmt.Sprintf("%d", gen+1)
@@ -1111,7 +1111,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					upd := &cluster.UpdateTLSConfigRequest{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*cluster.UpdateTLSConfigRequest)
@@ -1126,13 +1126,13 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				var cur cluster.UpdateTLSConfigRequest
 				err = kvs.Get(ctx, key, &cur)
 				if err != nil {
-					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 					return nil, err
 				}
 				r.UUID = cur.UUID
@@ -1144,7 +1144,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					err = kvs.Update(ctx, key, &r)
 				}
 				if err != nil {
-					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 				}
 
 			}
@@ -1158,7 +1158,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					upd := &cluster.UpdateTLSConfigRequest{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*cluster.UpdateTLSConfigRequest)
@@ -1173,19 +1173,19 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur cluster.UpdateTLSConfigRequest
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*cluster.UpdateTLSConfigRequest)
@@ -1194,7 +1194,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					var cur cluster.UpdateTLSConfigRequest
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -1210,7 +1210,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -1242,20 +1242,20 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			r := cluster.UpdateTLSConfigRequest{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := cluster.UpdateTLSConfigRequest{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
@@ -1299,7 +1299,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					upd := &cluster.Version{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*cluster.Version)
@@ -1314,21 +1314,21 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				if updateFn != nil {
 					into := &cluster.Version{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 					if err != nil {
-						l.ErrorLog("msg", "Consistent update failed", "error", err)
+						l.ErrorLog("msg", "Consistent update failed", "err", err)
 					}
 					r = *into
 				} else {
 					var cur cluster.Version
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return nil, err
 					}
 					r.UUID = cur.UUID
@@ -1340,7 +1340,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 						err = kvs.Update(ctx, key, &r)
 					}
 					if err != nil {
-						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+						l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 					}
 				}
 
@@ -1355,7 +1355,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					upd := &cluster.Version{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*cluster.Version)
@@ -1370,19 +1370,19 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur cluster.Version
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*cluster.Version)
@@ -1391,7 +1391,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					var cur cluster.Version
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -1407,7 +1407,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -1439,20 +1439,20 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			r := cluster.Version{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := cluster.Version{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
@@ -1527,7 +1527,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					if !dryRun {
 						gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
 						if err != nil {
-							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)
 							ret.GenerationID = "2"
 						} else {
 							ret.GenerationID = fmt.Sprintf("%d", gen+1)

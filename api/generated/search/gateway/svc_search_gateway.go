@@ -157,7 +157,7 @@ func (e *sSearchV1GwService) CompleteRegistration(ctx context.Context,
 
 	err := registerSwaggerDef(m, logger)
 	if err != nil {
-		logger.ErrorLog("msg", "failed to register swagger spec", "service", "search.SearchV1", "error", err)
+		logger.ErrorLog("msg", "failed to register swagger spec", "service", "search.SearchV1", "err", err)
 	}
 	wg.Add(1)
 	go func() {
@@ -185,7 +185,7 @@ func (e *sSearchV1GwService) CompleteRegistration(ctx context.Context,
 				err = errors.Wrap(err, "failed to create client")
 			}
 			cancel()
-			logger.ErrorLog("msg", "failed to register", "service", "search.SearchV1", "error", err)
+			logger.ErrorLog("msg", "failed to register", "service", "search.SearchV1", "err", err)
 			select {
 			case <-ctx.Done():
 				return
@@ -222,7 +222,7 @@ func (e *sSearchV1GwService) newClient(ctx context.Context, grpcAddr string, rsl
 		go func() {
 			<-ctx.Done()
 			if cerr := client.Close(); cerr != nil {
-				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "error", cerr)
+				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "err", cerr)
 			}
 		}()
 	}()

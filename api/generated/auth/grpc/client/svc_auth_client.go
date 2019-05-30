@@ -516,7 +516,7 @@ func (a *grpcObjAuthV1User) Watch(ctx context.Context, options *api.ListWatchOpt
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -754,7 +754,7 @@ func (a *grpcObjAuthV1AuthenticationPolicy) Watch(ctx context.Context, options *
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -989,7 +989,7 @@ func (a *grpcObjAuthV1Role) Watch(ctx context.Context, options *api.ListWatchOpt
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1181,7 +1181,7 @@ func (a *grpcObjAuthV1RoleBinding) Watch(ctx context.Context, options *api.ListW
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1345,7 +1345,7 @@ func (a *crudClientAuthV1) Watch(ctx context.Context, options *api.ListWatchOpti
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1353,7 +1353,7 @@ func (a *crudClientAuthV1) Watch(ctx context.Context, options *api.ListWatchOpti
 				ev := kvstore.WatchEvent{Type: kvstore.WatchEventType(e.Type)}
 				robj, err := listerwatcher.GetObject(e)
 				if err != nil {
-					a.logger.ErrorLog("msg", "error on receive unmarshall", "error", err)
+					a.logger.ErrorLog("msg", "error on receive unmarshall", "err", err)
 					close(lw.OutCh)
 					return
 				}

@@ -141,7 +141,7 @@ func (kp *clusterKeyPair) processClusterEvent(evt *kvstore.WatchEvent, clusterOb
 	case kvstore.Created, kvstore.Updated:
 		cert, err := tls.X509KeyPair([]byte(clusterObj.Spec.Certs), []byte(clusterObj.Spec.Key))
 		if err != nil {
-			kp.logger.ErrorLog("method", "processClusterEvent", "msg", "error creating key pair", "error", err)
+			kp.logger.ErrorLog("method", "processClusterEvent", "msg", "error creating key pair", "err", err)
 			if evt.Type == kvstore.Created {
 				recorder.Event(eventtypes.AUTO_GENERATED_TLS_CERT, AutoGenTLSCertEventMsg, nil)
 			}

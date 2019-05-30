@@ -215,7 +215,7 @@ func (a *grpcObjDiagnosticsV1Module) Watch(ctx context.Context, options *api.Lis
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -374,7 +374,7 @@ func (a *crudClientDiagnosticsV1) Watch(ctx context.Context, options *api.ListWa
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -382,7 +382,7 @@ func (a *crudClientDiagnosticsV1) Watch(ctx context.Context, options *api.ListWa
 				ev := kvstore.WatchEvent{Type: kvstore.WatchEventType(e.Type)}
 				robj, err := listerwatcher.GetObject(e)
 				if err != nil {
-					a.logger.ErrorLog("msg", "error on receive unmarshall", "error", err)
+					a.logger.ErrorLog("msg", "error on receive unmarshall", "err", err)
 					close(lw.OutCh)
 					return
 				}

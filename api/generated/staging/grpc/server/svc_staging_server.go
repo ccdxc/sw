@@ -83,7 +83,7 @@ func (s *sstagingSvc_stagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			ctx = apiutils.SetVar(ctx, "ObjKind", "staging.Buffer")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -206,7 +206,7 @@ func (s *sstagingSvc_stagingBackend) regWatchersFunc(ctx context.Context, logger
 				defer cancel()
 				watcher, err := kvs.WatchFiltered(nctx, key, *options)
 				if err != nil {
-					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "StagingV1")
+					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "StagingV1")
 					return err
 				}
 				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
@@ -232,7 +232,7 @@ func (s *sstagingSvc_stagingBackend) regWatchersFunc(ctx context.Context, logger
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "staging.Buffer")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "staging.Buffer")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "staging.Buffer")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -244,7 +244,7 @@ func (s *sstagingSvc_stagingBackend) regWatchersFunc(ctx context.Context, logger
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "staging.Buffer")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "staging.Buffer")
 					return err
 				}
 				events = &staging.AutoMsgBufferWatchHelper{}

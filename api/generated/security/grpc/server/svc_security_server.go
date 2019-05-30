@@ -110,7 +110,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			ctx = apiutils.SetVar(ctx, "ObjKind", "security.App")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -148,7 +148,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			ctx = apiutils.SetVar(ctx, "ObjKind", "security.Certificate")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -180,7 +180,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			ctx = apiutils.SetVar(ctx, "ObjKind", "security.FirewallProfile")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -212,7 +212,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			ctx = apiutils.SetVar(ctx, "ObjKind", "security.SGPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -244,7 +244,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			ctx = apiutils.SetVar(ctx, "ObjKind", "security.SecurityGroup")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -276,7 +276,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			ctx = apiutils.SetVar(ctx, "ObjKind", "security.TrafficEncryptionPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -572,7 +572,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 				defer cancel()
 				watcher, err := kvs.WatchFiltered(nctx, key, *options)
 				if err != nil {
-					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "SecurityV1")
+					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "SecurityV1")
 					return err
 				}
 				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
@@ -598,7 +598,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "security.SecurityGroup")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.SecurityGroup")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "security.SecurityGroup")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -610,7 +610,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "security.SecurityGroup")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "security.SecurityGroup")
 					return err
 				}
 				events = &security.AutoMsgSecurityGroupWatchHelper{}
@@ -698,7 +698,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "security.SGPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.SGPolicy")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "security.SGPolicy")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -710,7 +710,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "security.SGPolicy")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "security.SGPolicy")
 					return err
 				}
 				events = &security.AutoMsgSGPolicyWatchHelper{}
@@ -798,7 +798,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "security.App")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.App")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "security.App")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -810,7 +810,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "security.App")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "security.App")
 					return err
 				}
 				events = &security.AutoMsgAppWatchHelper{}
@@ -898,7 +898,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "security.FirewallProfile")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.FirewallProfile")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "security.FirewallProfile")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -910,7 +910,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "security.FirewallProfile")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "security.FirewallProfile")
 					return err
 				}
 				events = &security.AutoMsgFirewallProfileWatchHelper{}
@@ -998,7 +998,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "security.Certificate")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.Certificate")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "security.Certificate")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -1010,7 +1010,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "security.Certificate")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "security.Certificate")
 					return err
 				}
 				events = &security.AutoMsgCertificateWatchHelper{}
@@ -1098,7 +1098,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "security.TrafficEncryptionPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.TrafficEncryptionPolicy")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "security.TrafficEncryptionPolicy")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -1110,7 +1110,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "security.TrafficEncryptionPolicy")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "security.TrafficEncryptionPolicy")
 					return err
 				}
 				events = &security.AutoMsgTrafficEncryptionPolicyWatchHelper{}

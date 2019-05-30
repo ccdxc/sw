@@ -98,7 +98,7 @@ func (b *balancer) Up(addr grpc.Address) func(error) {
 	// This is the Down function that grpc will invoke when this connection breaks.
 	return func(err error) {
 		b.Lock()
-		log.ErrorLog("msg", "address DOWN notified", "addr", addr, "target", b.service, "error", err)
+		log.ErrorLog("msg", "address DOWN notified", "addr", addr, "target", b.service, "err", err)
 		for ii := range b.upConns {
 			if b.upConns[ii] == addr {
 				b.upConns = append(b.upConns[:ii], b.upConns[ii+1:]...)

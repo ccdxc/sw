@@ -576,7 +576,7 @@ func (a *grpcObjSecurityV1SecurityGroup) Watch(ctx context.Context, options *api
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -768,7 +768,7 @@ func (a *grpcObjSecurityV1SGPolicy) Watch(ctx context.Context, options *api.List
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -960,7 +960,7 @@ func (a *grpcObjSecurityV1App) Watch(ctx context.Context, options *api.ListWatch
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1152,7 +1152,7 @@ func (a *grpcObjSecurityV1FirewallProfile) Watch(ctx context.Context, options *a
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1344,7 +1344,7 @@ func (a *grpcObjSecurityV1Certificate) Watch(ctx context.Context, options *api.L
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1536,7 +1536,7 @@ func (a *grpcObjSecurityV1TrafficEncryptionPolicy) Watch(ctx context.Context, op
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1712,7 +1712,7 @@ func (a *crudClientSecurityV1) Watch(ctx context.Context, options *api.ListWatch
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1720,7 +1720,7 @@ func (a *crudClientSecurityV1) Watch(ctx context.Context, options *api.ListWatch
 				ev := kvstore.WatchEvent{Type: kvstore.WatchEventType(e.Type)}
 				robj, err := listerwatcher.GetObject(e)
 				if err != nil {
-					a.logger.ErrorLog("msg", "error on receive unmarshall", "error", err)
+					a.logger.ErrorLog("msg", "error on receive unmarshall", "err", err)
 					close(lw.OutCh)
 					return
 				}

@@ -88,7 +88,7 @@ func (s *sworkloadSvc_workloadBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			ctx = apiutils.SetVar(ctx, "ObjKind", "workload.Endpoint")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -120,7 +120,7 @@ func (s *sworkloadSvc_workloadBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			ctx = apiutils.SetVar(ctx, "ObjKind", "workload.Workload")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -264,7 +264,7 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 				defer cancel()
 				watcher, err := kvs.WatchFiltered(nctx, key, *options)
 				if err != nil {
-					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "WorkloadV1")
+					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "WorkloadV1")
 					return err
 				}
 				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
@@ -290,7 +290,7 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "workload.Endpoint")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "workload.Endpoint")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "workload.Endpoint")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -302,7 +302,7 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "workload.Endpoint")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "workload.Endpoint")
 					return err
 				}
 				events = &workload.AutoMsgEndpointWatchHelper{}
@@ -390,7 +390,7 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "workload.Workload")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "workload.Workload")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "workload.Workload")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -402,7 +402,7 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "workload.Workload")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "workload.Workload")
 					return err
 				}
 				events = &workload.AutoMsgWorkloadWatchHelper{}

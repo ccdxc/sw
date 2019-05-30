@@ -102,7 +102,7 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			ctx = apiutils.SetVar(ctx, "ObjKind", "network.LbPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -134,7 +134,7 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			ctx = apiutils.SetVar(ctx, "ObjKind", "network.Network")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -166,7 +166,7 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			ctx = apiutils.SetVar(ctx, "ObjKind", "network.Service")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -198,7 +198,7 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			ctx = apiutils.SetVar(ctx, "ObjKind", "network.VirtualRouter")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -376,7 +376,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 				defer cancel()
 				watcher, err := kvs.WatchFiltered(nctx, key, *options)
 				if err != nil {
-					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "NetworkV1")
+					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "NetworkV1")
 					return err
 				}
 				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
@@ -402,7 +402,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "network.Network")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "network.Network")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "network.Network")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -414,7 +414,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "network.Network")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "network.Network")
 					return err
 				}
 				events = &network.AutoMsgNetworkWatchHelper{}
@@ -502,7 +502,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "network.Service")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "network.Service")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "network.Service")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -514,7 +514,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "network.Service")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "network.Service")
 					return err
 				}
 				events = &network.AutoMsgServiceWatchHelper{}
@@ -602,7 +602,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "network.LbPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "network.LbPolicy")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "network.LbPolicy")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -614,7 +614,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "network.LbPolicy")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "network.LbPolicy")
 					return err
 				}
 				events = &network.AutoMsgLbPolicyWatchHelper{}
@@ -702,7 +702,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "network.VirtualRouter")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "network.VirtualRouter")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "network.VirtualRouter")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -714,7 +714,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "network.VirtualRouter")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "network.VirtualRouter")
 					return err
 				}
 				events = &network.AutoMsgVirtualRouterWatchHelper{}

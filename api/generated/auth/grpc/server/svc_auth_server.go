@@ -98,7 +98,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			ctx = apiutils.SetVar(ctx, "ObjKind", "auth.AuthenticationPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			err = into.ApplyStorageTransformer(ctx, false)
@@ -138,7 +138,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			ctx = apiutils.SetVar(ctx, "ObjKind", "auth.RoleBinding")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -170,7 +170,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			ctx = apiutils.SetVar(ctx, "ObjKind", "auth.Role")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -202,7 +202,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			ctx = apiutils.SetVar(ctx, "ObjKind", "auth.User")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			err = into.ApplyStorageTransformer(ctx, false)
@@ -478,7 +478,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 				defer cancel()
 				watcher, err := kvs.WatchFiltered(nctx, key, *options)
 				if err != nil {
-					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "AuthV1")
+					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "AuthV1")
 					return err
 				}
 				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
@@ -504,7 +504,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "auth.User")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "auth.User")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "auth.User")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -516,7 +516,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "auth.User")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "auth.User")
 					return err
 				}
 				events = &auth.AutoMsgUserWatchHelper{}
@@ -611,7 +611,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "auth.AuthenticationPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "auth.AuthenticationPolicy")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "auth.AuthenticationPolicy")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -623,7 +623,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "auth.AuthenticationPolicy")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "auth.AuthenticationPolicy")
 					return err
 				}
 				events = &auth.AutoMsgAuthenticationPolicyWatchHelper{}
@@ -718,7 +718,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "auth.Role")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "auth.Role")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "auth.Role")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -730,7 +730,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "auth.Role")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "auth.Role")
 					return err
 				}
 				events = &auth.AutoMsgRoleWatchHelper{}
@@ -818,7 +818,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "auth.RoleBinding")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "auth.RoleBinding")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "auth.RoleBinding")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -830,7 +830,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "auth.RoleBinding")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "auth.RoleBinding")
 					return err
 				}
 				events = &auth.AutoMsgRoleBindingWatchHelper{}

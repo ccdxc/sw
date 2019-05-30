@@ -112,7 +112,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.Cluster")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			err = into.ApplyStorageTransformer(ctx, false)
@@ -142,7 +142,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.Host")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -168,7 +168,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.Node")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -194,7 +194,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.SmartNIC")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -220,7 +220,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.Tenant")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -246,7 +246,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.Version")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -556,7 +556,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 				defer cancel()
 				watcher, err := kvs.WatchFiltered(nctx, key, *options)
 				if err != nil {
-					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "ClusterV1")
+					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "ClusterV1")
 					return err
 				}
 				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
@@ -582,7 +582,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "cluster.Cluster")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "cluster.Cluster")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "cluster.Cluster")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -594,7 +594,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "cluster.Cluster")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "cluster.Cluster")
 					return err
 				}
 				events = &cluster.AutoMsgClusterWatchHelper{}
@@ -689,7 +689,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "cluster.Node")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "cluster.Node")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "cluster.Node")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -701,7 +701,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "cluster.Node")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "cluster.Node")
 					return err
 				}
 				events = &cluster.AutoMsgNodeWatchHelper{}
@@ -789,7 +789,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "cluster.Host")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "cluster.Host")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "cluster.Host")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -801,7 +801,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "cluster.Host")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "cluster.Host")
 					return err
 				}
 				events = &cluster.AutoMsgHostWatchHelper{}
@@ -889,7 +889,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "cluster.SmartNIC")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "cluster.SmartNIC")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "cluster.SmartNIC")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -901,7 +901,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "cluster.SmartNIC")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "cluster.SmartNIC")
 					return err
 				}
 				events = &cluster.AutoMsgSmartNICWatchHelper{}
@@ -989,7 +989,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "cluster.Tenant")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "cluster.Tenant")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "cluster.Tenant")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -1001,7 +1001,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "cluster.Tenant")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "cluster.Tenant")
 					return err
 				}
 				events = &cluster.AutoMsgTenantWatchHelper{}
@@ -1089,7 +1089,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "cluster.Version")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "cluster.Version")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "cluster.Version")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -1101,7 +1101,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "cluster.Version")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "cluster.Version")
 					return err
 				}
 				events = &cluster.AutoMsgVersionWatchHelper{}

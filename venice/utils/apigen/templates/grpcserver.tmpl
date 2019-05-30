@@ -88,7 +88,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 				upd := &{{$pkgname}}.{{.Name}}{}
 				n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*{{$pkgname}}.{{.Name}})
@@ -103,21 +103,21 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 				}
         		err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else { {{if isSpecStatusMessage .}}
 				if updateFn != nil  {
 					into := &{{$pkgname}}.{{.Name}}{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 					if err != nil {
-						l.ErrorLog("msg", "Consistent update failed", "error", err)
+						l.ErrorLog("msg", "Consistent update failed", "err", err)
 					}
 					r = *into
 				} else { {{end}}
 				var cur {{$pkgname}}.{{.Name}}
 				err = kvs.Get(ctx, key, &cur)
 				if err != nil {
-					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 					return nil, err
 				}
 				r.UUID = cur.UUID
@@ -129,7 +129,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 					err = kvs.Update(ctx, key, &r)
 				}
 				if err != nil {
-					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 				}{{if isSpecStatusMessage .}}
 				} {{end}}
 
@@ -144,7 +144,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 					upd := &{{$pkgname}}.{{.Name}}{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*{{$pkgname}}.{{.Name}})
@@ -159,19 +159,19 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur {{$pkgname}}.{{.Name}}
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*{{$pkgname}}.{{.Name}})
@@ -180,7 +180,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 					var cur {{$pkgname}}.{{.Name}}
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -196,7 +196,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -228,20 +228,20 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 			r := {{$pkgname}}.{{.Name}}{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := {{$pkgname}}.{{.Name}}{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object{
@@ -317,7 +317,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 					if !dryRun {
 						gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
 						if err != nil {
-							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)
 							ret.GenerationID = "2"
 						} else {
 							ret.GenerationID = fmt.Sprintf("%d", gen + 1)
@@ -362,7 +362,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 			ctx = apiutils.SetVar(ctx, "ObjKind", "{{$objname}}")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}{{with (index $storageTransformers.Map (derefStr .Name))}}{{if .HasTransformers}}
 			err = into.ApplyStorageTransformer(ctx, false)
@@ -443,7 +443,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 				defer cancel()
 				watcher, err := kvs.WatchFiltered(nctx, key, *options)
 				if err != nil {
-					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "{{.Name}}")
+					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "{{.Name}}")
 					return err
 				}
 				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
@@ -470,7 +470,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "{{$pkgname}}.{{.}}")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "{{$pkgname}}.{{.}}")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "{{$pkgname}}.{{.}}")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -482,7 +482,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "{{$pkgname}}.{{.}}")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "{{$pkgname}}.{{.}}")
 					return err
 				}
 				events = &{{$pkgname}}.AutoMsg{{.}}WatchHelper{}

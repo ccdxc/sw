@@ -620,7 +620,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 	auditLevelStr, ok := prof.GetAuditLevel()
 	if ok {
 		if auditLevel, err = audit.GetAuditLevelFromString(auditLevelStr); err != nil {
-			a.logger.ErrorLog("msg", "unknown audit level in profile", "error", err, "level", auditLevelStr)
+			a.logger.ErrorLog("msg", "unknown audit level in profile", "err", err, "level", auditLevelStr)
 			auditLevel = auditapi.Level_RequestResponse
 		}
 	}
@@ -638,7 +638,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 		nctx, i, skip, err = h(nctx, i)
 		skipAuth = skipAuth || skip
 		if err != nil {
-			a.logger.ErrorLog("method", "HandleRequest", "msg", "PreAuthNHook failed", "error", err)
+			a.logger.ErrorLog("method", "HandleRequest", "msg", "PreAuthNHook failed", "err", err)
 			return nil, apierrors.ToGrpcError("Authentication failed", []string{err.Error()}, int32(codes.Unauthenticated), "", nil)
 		}
 	}
@@ -665,7 +665,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 			for _, h := range pzHooks {
 				nctx, i, err = h(nctx, i)
 				if err != nil {
-					a.logger.ErrorLog("method", "HandleRequest", "msg", "PreAuthZHook failed", "user", user.Name, "tenant", user.Tenant, "error", err)
+					a.logger.ErrorLog("method", "HandleRequest", "msg", "PreAuthZHook failed", "user", user.Name, "tenant", user.Tenant, "err", err)
 					return nil, apierrors.ToGrpcError("Pre authorization processing failed", []string{err.Error()}, int32(codes.InvalidArgument), "", nil)
 				}
 			}
@@ -898,7 +898,7 @@ func (p *RProxyHandler) director(r *http.Request) {
 	}
 	durl, err := url.Parse(destURL)
 	if err != nil {
-		p.apiGw.logger.ErrorLog("msg", "could not resolve URL", "path", p.path, "service", p.destination, "error", err)
+		p.apiGw.logger.ErrorLog("msg", "could not resolve URL", "path", p.path, "service", p.destination, "err", err)
 		r.Host, r.URL.Host = "", ""
 		return
 	}

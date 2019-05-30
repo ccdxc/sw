@@ -23,7 +23,7 @@ func newContextWithUserPerms(ctx context.Context, permGetter rbac.PermissionGett
 	perms := permGetter.GetPermissions(user)
 	nctx, err := authzgrpcctx.NewOutgoingContextWithUserPerms(ctx, user, perms)
 	if err != nil {
-		logger.ErrorLog("method", "setUserContext", "msg", "error creating outgoing context with user permissions", "user", user.Name, "tenant", user.Tenant, "error", err)
+		logger.ErrorLog("method", "setUserContext", "msg", "error creating outgoing context with user permissions", "user", user.Name, "tenant", user.Tenant, "err", err)
 		return ctx, err
 	}
 	return nctx, nil

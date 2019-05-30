@@ -876,7 +876,7 @@ func (a *grpcObjMonitoringV1EventPolicy) Watch(ctx context.Context, options *api
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1068,7 +1068,7 @@ func (a *grpcObjMonitoringV1StatsPolicy) Watch(ctx context.Context, options *api
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1260,7 +1260,7 @@ func (a *grpcObjMonitoringV1FwlogPolicy) Watch(ctx context.Context, options *api
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1452,7 +1452,7 @@ func (a *grpcObjMonitoringV1FlowExportPolicy) Watch(ctx context.Context, options
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1644,7 +1644,7 @@ func (a *grpcObjMonitoringV1Alert) Watch(ctx context.Context, options *api.ListW
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1836,7 +1836,7 @@ func (a *grpcObjMonitoringV1AlertPolicy) Watch(ctx context.Context, options *api
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -2028,7 +2028,7 @@ func (a *grpcObjMonitoringV1AlertDestination) Watch(ctx context.Context, options
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -2220,7 +2220,7 @@ func (a *grpcObjMonitoringV1MirrorSession) Watch(ctx context.Context, options *a
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -2412,7 +2412,7 @@ func (a *grpcObjMonitoringV1TroubleshootingSession) Watch(ctx context.Context, o
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -2604,7 +2604,7 @@ func (a *grpcObjMonitoringV1TechSupportRequest) Watch(ctx context.Context, optio
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -2801,7 +2801,7 @@ func (a *crudClientMonitoringV1) Watch(ctx context.Context, options *api.ListWat
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
 				close(lw.OutCh)
 				return
 			}
@@ -2809,7 +2809,7 @@ func (a *crudClientMonitoringV1) Watch(ctx context.Context, options *api.ListWat
 				ev := kvstore.WatchEvent{Type: kvstore.WatchEventType(e.Type)}
 				robj, err := listerwatcher.GetObject(e)
 				if err != nil {
-					a.logger.ErrorLog("msg", "error on receive unmarshall", "error", err)
+					a.logger.ErrorLog("msg", "error on receive unmarshall", "err", err)
 					close(lw.OutCh)
 					return
 				}

@@ -91,7 +91,7 @@ func (w *Watcher) initiateWatches(apicl apiclient.Services) {
 	for _, kind := range w.kinds {
 		watcher, err := w.watch(ctx, apicl, kind)
 		if err != nil {
-			w.logger.ErrorLog("method", "initiateWatches", "msg", fmt.Sprintf("failed to start watcher for %s", kind), "error", err)
+			w.logger.ErrorLog("method", "initiateWatches", "msg", fmt.Sprintf("failed to start watcher for %s", kind), "err", err)
 			return
 		}
 		defer watcher.Stop()
@@ -255,7 +255,7 @@ func (w *Watcher) processEvent(event *kvstore.WatchEvent) error {
 		obj, _ := runtime.GetObjectMeta(event.Object)
 		w.logger.ErrorLog("method", "processEvent",
 			"msg", fmt.Sprintf("watch event processing timed out for watch event obj kind [%s], objmeta [%v]", event.Object.GetObjectKind(), obj),
-			"error", ctx.Err())
+			"err", ctx.Err())
 		recorder.Event(eventtypes.SERVICE_UNRESPONSIVE,
 			fmt.Sprintf("module [%s] timed out processing watch events, please check system resources", w.module), event.Object)
 		return ctx.Err()

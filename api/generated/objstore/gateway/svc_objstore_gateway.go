@@ -576,7 +576,7 @@ func (e *sObjstoreV1GwService) CompleteRegistration(ctx context.Context,
 
 	err := registerSwaggerDef(m, logger)
 	if err != nil {
-		logger.ErrorLog("msg", "failed to register swagger spec", "service", "objstore.ObjstoreV1", "error", err)
+		logger.ErrorLog("msg", "failed to register swagger spec", "service", "objstore.ObjstoreV1", "err", err)
 	}
 	{
 		name := "_RProxy_" + "/" + "uploads/images"
@@ -617,7 +617,7 @@ func (e *sObjstoreV1GwService) CompleteRegistration(ctx context.Context,
 				err = errors.Wrap(err, "failed to create client")
 			}
 			cancel()
-			logger.ErrorLog("msg", "failed to register", "service", "objstore.ObjstoreV1", "error", err)
+			logger.ErrorLog("msg", "failed to register", "service", "objstore.ObjstoreV1", "err", err)
 			select {
 			case <-ctx.Done():
 				return
@@ -654,7 +654,7 @@ func (e *sObjstoreV1GwService) newClient(ctx context.Context, grpcAddr string, r
 		go func() {
 			<-ctx.Done()
 			if cerr := client.Close(); cerr != nil {
-				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "error", cerr)
+				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "err", cerr)
 			}
 		}()
 	}()

@@ -119,9 +119,9 @@ func TestLevels(t *testing.T) {
 
 	// Debug
 	buf.Reset()
-	l.DebugLog("msg", "testmsg1", "error", "TestError")
+	l.DebugLog("msg", "testmsg1", "err", "TestError")
 	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=debug") ||
-		!strings.Contains(buf.String(), "error=TestError") {
+		!strings.Contains(buf.String(), "err=TestError") {
 		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg] and [level=debug]", buf.String())
 	}
 

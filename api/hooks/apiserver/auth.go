@@ -85,7 +85,7 @@ func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn 
 		// validate password
 		pc := password.NewPolicyChecker()
 		if err := k8serrors.NewAggregate(pc.Validate(r.Spec.GetPassword())); err != nil {
-			s.logger.ErrorLog("method", "hashPassword", "msg", "password validation failed", "error", err)
+			s.logger.ErrorLog("method", "hashPassword", "msg", "password validation failed", "err", err)
 			return r, true, err
 		}
 		// get password hasher
@@ -93,7 +93,7 @@ func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn 
 		// generate hash
 		passwdhash, err := hasher.GetPasswordHash(r.Spec.GetPassword())
 		if err != nil {
-			s.logger.ErrorLog("method", "hashPassword", "msg", "creating password hash failed", "error", err)
+			s.logger.ErrorLog("method", "hashPassword", "msg", "creating password hash failed", "err", err)
 			return r, true, errCreatingPasswordHash
 		}
 		r.Spec.Password = passwdhash
@@ -102,12 +102,12 @@ func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn 
 		cur := &auth.User{}
 		if err := kv.Get(ctx, key, cur); err != nil {
 			s.logger.ErrorLog("method", "hashPassword",
-				"msg", fmt.Sprintf("error getting user with key [%s] in API server hashPassword pre-commit hook for update user", key), "error", err)
+				"msg", fmt.Sprintf("error getting user with key [%s] in API server hashPassword pre-commit hook for update user", key), "err", err)
 			return r, true, err
 		}
 		// decrypt password as it is stored as secret. Cannot use passed in context because peer id in it is APIGw and transform returns empty password in that case
 		if err := cur.ApplyStorageTransformer(context.Background(), false); err != nil {
-			s.logger.ErrorLog("method", "hashPassword", "msg", "decrypting password field failed", "error", err)
+			s.logger.ErrorLog("method", "hashPassword", "msg", "decrypting password field failed", "err", err)
 			return r, true, err
 		}
 		r.Spec.Password = cur.Spec.Password
@@ -202,7 +202,7 @@ func (s *authHooks) resetPassword(ctx context.Context, kv kvstore.Interface, txn
 	}
 	genPasswd, err := password.CreatePassword()
 	if err != nil {
-		s.logger.ErrorLog("method", "resetPassword", "msg", "error generating password", "user", key, "error", err)
+		s.logger.ErrorLog("method", "resetPassword", "msg", "error generating password", "user", key, "err", err)
 		return nil, true, err
 	}
 	cur := &auth.User{}
@@ -309,7 +309,7 @@ func (s *authHooks) generateSecret(ctx context.Context, kv kvstore.Interface, tx
 	}
 	secret, err := authn.CreateSecret(128)
 	if err != nil {
-		s.logger.ErrorLog("method", "generateSecret", "msg", "error generating secret", "error", err)
+		s.logger.ErrorLog("method", "generateSecret", "msg", "error generating secret", "err", err)
 		return r, true, err
 	}
 	r.Spec.Secret = secret
@@ -326,7 +326,7 @@ func (s *authHooks) generateSecretAction(ctx context.Context, kv kvstore.Interfa
 	}
 	secret, err := authn.CreateSecret(128)
 	if err != nil {
-		s.logger.ErrorLog("method", "generateSecretAction", "msg", "error generating secret", "error", err)
+		s.logger.ErrorLog("method", "generateSecretAction", "msg", "error generating secret", "err", err)
 		return r, true, err
 	}
 	cur := &auth.AuthenticationPolicy{}
@@ -337,24 +337,24 @@ func (s *authHooks) generateSecretAction(ctx context.Context, kv kvstore.Interfa
 		}
 		// decrypt secrets. Cannot use passed in context because peer id in it is APIGw and transform returns empty password in that case
 		if err := policyObj.ApplyStorageTransformer(context.Background(), false); err != nil {
-			s.logger.ErrorLog("method", "generateSecretAction", "msg", "decrypting secret fields failed", "error", err)
+			s.logger.ErrorLog("method", "generateSecretAction", "msg", "decrypting secret fields failed", "err", err)
 			return policyObj, err
 		}
 		policyObj.Spec.Secret = secret
 		// encrypt token secret as it is stored as secret
 		if err := policyObj.ApplyStorageTransformer(ctx, true); err != nil {
-			s.logger.ErrorLog("method", "generateSecretAction", "msg", "error encrypting auth policy secret fields", "error", err)
+			s.logger.ErrorLog("method", "generateSecretAction", "msg", "error encrypting auth policy secret fields", "err", err)
 			return policyObj, err
 		}
 		genID, err := strconv.ParseInt(policyObj.GenerationID, 10, 64)
 		if err != nil {
-			s.logger.ErrorLog("method", "generateSecretAction", "msg", "error parsing generation ID", "error", err)
+			s.logger.ErrorLog("method", "generateSecretAction", "msg", "error parsing generation ID", "err", err)
 			return policyObj, err
 		}
 		policyObj.GenerationID = fmt.Sprintf("%d", genID+1)
 		return policyObj, nil
 	}); err != nil {
-		s.logger.ErrorLog("method", "generateSecretAction", "msg", "error updating auth policy", "error", err)
+		s.logger.ErrorLog("method", "generateSecretAction", "msg", "error updating auth policy", "err", err)
 		return nil, true, err
 	}
 	policy := auth.AuthenticationPolicy{}
@@ -386,7 +386,7 @@ func (s *authHooks) populateSecretsInAuthPolicy(ctx context.Context, kv kvstore.
 			// copy spec from auth policy sent in request
 			cloneObj, err := r.Spec.Clone(nil)
 			if err != nil {
-				s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "cloning auth policy spec failed", "error", err)
+				s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "cloning auth policy spec failed", "err", err)
 				return oldObj, err
 			}
 			policySpecCopy := *cloneObj.(*auth.AuthenticationPolicySpec)
@@ -418,29 +418,29 @@ func (s *authHooks) populateSecretsInAuthPolicy(ctx context.Context, kv kvstore.
 			policyObj.Labels = r.Labels
 			// encrypt token secret as it is stored as secret
 			if err := policyObj.ApplyStorageTransformer(ctx, true); err != nil {
-				s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "error encrypting auth policy secret fields", "error", err)
+				s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "error encrypting auth policy secret fields", "err", err)
 				return policyObj, err
 			}
 			genID, err := strconv.ParseInt(policyObj.GenerationID, 10, 64)
 			if err != nil {
-				s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "error parsing generation ID", "error", err)
+				s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "error parsing generation ID", "err", err)
 				return policyObj, err
 			}
 			policyObj.GenerationID = fmt.Sprintf("%d", genID+1)
 			return policyObj, nil
 		}); err != nil {
-			s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "error updating auth policy", "error", err)
+			s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "error updating auth policy", "err", err)
 			return nil, true, err
 		}
 		// Create a copy as cur is pointing to an object in API server cache.
 		ret, err := cur.Clone(nil)
 		if err != nil {
-			s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "error creating a copy of auth policy obj", "error", err)
+			s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "error creating a copy of auth policy obj", "err", err)
 			return nil, true, err
 		}
 		policy := ret.(*auth.AuthenticationPolicy)
 		if err := policy.ApplyStorageTransformer(ctx, false); err != nil {
-			s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "decrypting secret fields failed", "error", err)
+			s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "decrypting secret fields failed", "err", err)
 			return nil, true, err
 		}
 		return *policy, false, nil
@@ -488,7 +488,7 @@ func (s *authHooks) privilegeEscalationCheck(ctx context.Context, kv kvstore.Int
 	if err := kv.Get(ctx, cluster.MakeKey("cluster"), cluster); err != nil {
 		s.logger.ErrorLog("method", "privilegeEscalationCheck",
 			"msg", "error getting cluster with key",
-			"error", err)
+			"err", err)
 		return i, true, err
 	}
 	// check authorization only if request is coming from API Gateway and auth has been bootstrapped
@@ -498,7 +498,7 @@ func (s *authHooks) privilegeEscalationCheck(ctx context.Context, kv kvstore.Int
 		if err := kv.Get(ctx, roleKey, role); err != nil {
 			s.logger.ErrorLog("method", "privilegeEscalationCheck",
 				"msg", fmt.Sprintf("error getting role with key [%s]", roleKey),
-				"error", err)
+				"err", err)
 			return i, true, err
 		}
 		userMeta, ok := authzgrpcctx.UserMetaFromIncomingContext(ctx)
@@ -510,7 +510,7 @@ func (s *authHooks) privilegeEscalationCheck(ctx context.Context, kv kvstore.Int
 		// check if user is authorized to create the role binding
 		authorizer, err := authzgrpc.NewAuthorizer(ctx)
 		if err != nil {
-			s.logger.ErrorLog("method", "privilegeEscalationCheck", "msg", "error creating grpc authorizer", "error", err)
+			s.logger.ErrorLog("method", "privilegeEscalationCheck", "msg", "error creating grpc authorizer", "err", err)
 			return i, true, status.Error(codes.Internal, err.Error())
 		}
 		ops := authz.GetOperationsFromPermissions(role.Spec.Permissions)
@@ -596,17 +596,17 @@ func (s *authHooks) returnAuthPolicy(ctx context.Context, kvs kvstore.Interface,
 	key := ic.MakeKey("auth")
 	cur := auth.AuthenticationPolicy{}
 	if err := kvs.Get(ctx, key, &cur); err != nil {
-		s.logger.ErrorLog("method", "returnAuthPolicy", "msg", fmt.Sprintf("error getting auth policy with key [%s] in API server response writer hook for create/update auth policy", key), "error", err)
+		s.logger.ErrorLog("method", "returnAuthPolicy", "msg", fmt.Sprintf("error getting auth policy with key [%s] in API server response writer hook for create/update auth policy", key), "err", err)
 		return nil, err
 	}
 	if err := cur.ApplyStorageTransformer(ctx, false); err != nil {
-		s.logger.ErrorLog("method", "returnAuthPolicy", "msg", "error applying storage transformer", "error", err)
+		s.logger.ErrorLog("method", "returnAuthPolicy", "msg", "error applying storage transformer", "err", err)
 		return nil, err
 	}
 	// Create a copy as cur is pointing to an object in API server cache.
 	ret, err := cur.Clone(nil)
 	if err != nil {
-		s.logger.ErrorLog("method", "returnAuthPolicy", "msg", "error creating a copy of auth policy obj", "error", err)
+		s.logger.ErrorLog("method", "returnAuthPolicy", "msg", "error creating a copy of auth policy obj", "err", err)
 		return nil, err
 	}
 	policy := ret.(*auth.AuthenticationPolicy)

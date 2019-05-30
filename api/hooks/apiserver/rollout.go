@@ -125,12 +125,12 @@ func performRolloutUpdate(ctx context.Context, kv kvstore.Interface, txn kvstore
 
 	buf, ok := i.(rollout.Rollout)
 	if !ok {
-		h.l.ErrorLog("Invalid object for rolloutAction")
+		h.l.Error("Invalid object for rolloutAction")
 		return nil, false, errors.New("invalid object")
 	}
 
 	if kv == nil || txn == nil {
-		h.l.ErrorLog("Invalid kvstore and txn objects for rolloutAction")
+		h.l.Error("Invalid kvstore and txn objects for rolloutAction")
 		return nil, false, errors.New("invalid kvstore and txn objects")
 	}
 

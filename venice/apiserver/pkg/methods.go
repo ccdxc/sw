@@ -196,7 +196,7 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 	l := singletonAPISrv.Logger
 	key, err := m.getMethDbKey(i, oper)
 	if err != nil {
-		l.ErrorLog("msg", "could not get key", "error", err, "oper", oper)
+		l.ErrorLog("msg", "could not get key", "err", err, "oper", oper)
 		return nil, errInternalError.makeError(nil, []string{"Could not create key from object"}, "")
 	}
 
@@ -207,7 +207,7 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 	uri, err := m.MakeURI(i)
 	if err != nil {
 		uri = key
-		l.DebugLog("msg", "unable to construct URI for staging call", "error", err)
+		l.DebugLog("msg", "unable to construct URI for staging call", "err", err)
 	}
 	switch oper {
 	case apiintf.CreateOper:
@@ -218,7 +218,7 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 			origObj = m.requestType.GetRuntimeObject(orig)
 		}
 		if err != nil {
-			l.ErrorLog("msg", "Unable to update self link", "oper", "Create", "error", err)
+			l.ErrorLog("msg", "Unable to update self link", "oper", "Create", "err", err)
 			return nil, errInternalError.makeError(i, []string{"Unable to update self link"}, "")
 		}
 		switch {
@@ -258,7 +258,7 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 			origObj = m.requestType.GetRuntimeObject(orig)
 		}
 		if err != nil {
-			l.ErrorLog("msg", "Unable to update self link", "oper", "Create", "error", err)
+			l.ErrorLog("msg", "Unable to update self link", "oper", "Create", "err", err)
 			return nil, errInternalError.makeError(i, []string{"Unable to update self link"}, "")
 		}
 
@@ -309,25 +309,25 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 		}
 		err = kv.DeletePrimary(ctx, svcName, methName, uri, key, origObj.(runtime.Object), resp.(runtime.Object))
 		if err != nil {
-			l.ErrorLog("msg", "failed KV store operation", "oper", "Delete", "error", err)
+			l.ErrorLog("msg", "failed KV store operation", "oper", "Delete", "err", err)
 			return nil, errKVStoreNotFound.makeError(i, []string{err.Error()}, "")
 		}
 		resp = reflect.Indirect(reflect.ValueOf(resp)).Interface()
 	case apiintf.GetOper:
 		resp, err = m.requestType.GetFromKv(ctx, kv, key)
 		if err != nil {
-			l.ErrorLog("msg", "failed KV store operation", "oper", "Get", "error", err)
+			l.ErrorLog("msg", "failed KV store operation", "oper", "Get", "err", err)
 			return nil, errKVStoreNotFound.makeError(i, []string{err.Error()}, "")
 		}
 	case apiintf.ListOper:
 		options := i.(api.ListWatchOptions)
 		resp, err = m.responseType.ListFromKv(ctx, kv, &options, m.svcPrefix)
 		if err != nil {
-			l.ErrorLog("msg", "kv store operation failed", "oper", "list", "error", err)
+			l.ErrorLog("msg", "kv store operation failed", "oper", "list", "err", err)
 			return nil, errKVStoreNotFound.makeError(i, []string{err.Error()}, "")
 		}
 	default:
-		l.ErrorLog("msg", "unknown operation", "oper", oper, "error", err)
+		l.ErrorLog("msg", "unknown operation", "oper", oper, "err", err)
 		return nil, errUnknownOperation.makeError(i, []string{fmt.Sprintf("operation - [%s]", oper)}, "")
 	}
 	return resp, err
@@ -343,7 +343,7 @@ func (m *MethodHdlr) retrieveFromKvStore(ctx context.Context, i interface{}, ope
 	l := singletonAPISrv.Logger
 	key, err := m.getMethDbKey(i, oper)
 	if err != nil {
-		l.ErrorLog("msg", "could not get key", "error", err, "oper", oper)
+		l.ErrorLog("msg", "could not get key", "err", err, "oper", oper)
 		return nil, errInternalError.makeError(nil, []string{"Could not create key from object"}, "")
 	}
 
@@ -362,18 +362,18 @@ func (m *MethodHdlr) retrieveFromKvStore(ctx context.Context, i interface{}, ope
 		// Transactions are not supported for a GET operation.
 		resp, err = m.requestType.GetFromKv(ctx, kvs, key)
 		if err != nil {
-			l.ErrorLog("msg", "failed KV store operation", "oper", "Get", "error", err)
+			l.ErrorLog("msg", "failed KV store operation", "oper", "Get", "err", err)
 			return nil, errKVStoreNotFound.makeError(i, []string{err.Error()}, "")
 		}
 	case apiintf.ListOper:
 		options := i.(api.ListWatchOptions)
 		resp, err = m.responseType.ListFromKv(ctx, kvs, &options, m.svcPrefix)
 		if err != nil {
-			l.ErrorLog("msg", "kv store operation failed", "oper", "list", "error", err)
+			l.ErrorLog("msg", "kv store operation failed", "oper", "list", "err", err)
 			return nil, errKVStoreNotFound.makeError(i, []string{err.Error()}, "")
 		}
 	default:
-		l.ErrorLog("msg", "unknown operation", "oper", oper, "error", err)
+		l.ErrorLog("msg", "unknown operation", "oper", oper, "err", err)
 		return nil, errUnknownOperation.makeError(i, []string{fmt.Sprintf("operation - [%s]", oper)}, "")
 	}
 	return resp, nil
@@ -473,7 +473,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	if dryRun {
 		i, err = m.requestType.TransformFromStorage(context.Background(), oper, i)
 		if err != nil {
-			l.ErrorLog("msg", "transform from storage failed", "error", err, "URI", URI)
+			l.ErrorLog("msg", "transform from storage failed", "err", err, "URI", URI)
 			return nil, errInternalError.makeError(i, []string{err.Error()}, "")
 		}
 	}
@@ -484,7 +484,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		}
 		oobj, err := robj.Clone(nil)
 		if err != nil || oobj == nil {
-			l.ErrorLog("msg", "could not clone object", "error", err)
+			l.ErrorLog("msg", "could not clone object", "err", err)
 			return nil, errInternalError.makeError(i, []string{fmt.Sprintf("could not clone object (%s)", err)}, "")
 		}
 		return reflect.Indirect(reflect.ValueOf(oobj)).Interface(), nil
@@ -500,7 +500,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		l.DebugLog("msg", "version mismatch", "version-from", singletonAPISrv.version, "version-to", ver)
 		i, err = m.requestType.PrepareMsg(ver, singletonAPISrv.version, i)
 		if err != nil {
-			l.ErrorLog("msg", "Version transformation failed", "version-from", ver, "version-to", singletonAPISrv.version, "error", err, "URI", URI)
+			l.ErrorLog("msg", "Version transformation failed", "version-from", ver, "version-to", singletonAPISrv.version, "err", err, "URI", URI)
 			return nil, errInternalError.makeError(i, []string{"Version transformation error"}, "")
 		}
 	}
@@ -545,20 +545,20 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		if !dryRun {
 			i, err = m.requestType.CreateUUID(i)
 			if err != nil {
-				l.ErrorLog("msg", "UUID creation failed", "error", err, "URI", URI)
+				l.ErrorLog("msg", "UUID creation failed", "err", err, "URI", URI)
 				return nil, errInternalError.makeError(i, []string{err.Error()}, "")
 			}
 		}
 		i, err = m.requestType.WriteCreationTime(i)
 		if err != nil {
-			l.ErrorLog("msg", "CTime updation failed", "error", err, "URI", URI)
+			l.ErrorLog("msg", "CTime updation failed", "err", err, "URI", URI)
 			return nil, errInternalError.makeError(i, []string{err.Error()}, "")
 		}
 	}
 	if oper == apiintf.CreateOper || oper == apiintf.UpdateOper {
 		i, err = m.requestType.WriteModTime(i)
 		if err != nil {
-			l.ErrorLog("msg", "Mtime updation failed", "error", err, "URI", URI)
+			l.ErrorLog("msg", "Mtime updation failed", "err", err, "URI", URI)
 			return nil, errInternalError.makeError(i, []string{err.Error()}, "")
 		}
 	}
@@ -582,7 +582,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 			id := URI + "[" + uuid.NewV4().String() + "](" + ctxutils.GetPeerID(ctx) + ")"
 			ov, err = singletonAPISrv.newLocalOverlayFunc(tenant, id, globals.StagingBasePath, singletonAPISrv.apiCache, &singletonAPISrv)
 			if err != err {
-				l.ErrorLog("msg", "failed to create overlay", "error", err, "oper", oper, "URI", URI)
+				l.ErrorLog("msg", "failed to create overlay", "err", err, "oper", oper, "URI", URI)
 				return nil, errInternalError.makeError(i, []string{err.Error()}, URI)
 			}
 			localBuffer = true
@@ -609,7 +609,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	}
 	key, err = m.getMethDbKey(i, oper)
 	if err != nil {
-		l.ErrorLog("msg", "could not get key", "error", err, "URI", URI)
+		l.ErrorLog("msg", "could not get key", "err", err, "URI", URI)
 		return nil, errInternalError.makeError(i, []string{err.Error()}, "")
 	}
 	// Invoke registered pre-commit hooks
@@ -621,7 +621,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		// Precommit errors are allowed in staged requests but not in dryRun calls or non-staged requests
 		s, sok := err.(*api.Status)
 		if err != nil && (bufid == "" || localBuffer || dryRun) {
-			l.ErrorLog("msg", "precommit hook failed", "error", err, "URI", URI)
+			l.ErrorLog("msg", "precommit hook failed", "err", err, "URI", URI)
 			if sok {
 				return nil, apierrors.AddDetails(s)
 			}
@@ -636,7 +636,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	if kvwrite {
 		key, err = m.getMethDbKey(i, oper)
 		if err != nil {
-			l.ErrorLog("msg", "could not get key", "error", err, "URI", URI)
+			l.ErrorLog("msg", "could not get key", "err", err, "URI", URI)
 			return nil, errInternalError.makeError(i, []string{err.Error()}, "")
 		}
 	}
@@ -646,7 +646,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		} else {
 			refs, err := m.requestType.GetReferences(i)
 			if err != nil {
-				l.ErrorLog("msg", "failed to get references", "error", err, "oper", oper, "URI", URI)
+				l.ErrorLog("msg", "failed to get references", "err", err, "oper", oper, "URI", URI)
 			}
 			if len(refs) != 0 {
 				reqs.NewRefRequirement(oper, key, refs)
@@ -662,13 +662,13 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		if oper == apiintf.CreateOper || oper == apiintf.UpdateOper {
 			i, err = m.requestType.TransformToStorage(ctx, oper, i)
 			if err != nil {
-				l.ErrorLog("msg", "transform to storage failed", "error", err, "URI", URI)
+				l.ErrorLog("msg", "transform to storage failed", "err", err, "URI", URI)
 				return nil, errInternalError.makeError(i, []string{err.Error()}, "")
 			}
 			if bufid != "" || localBuffer {
 				orig, err = m.requestType.TransformToStorage(ctx, oper, orig)
 				if err != nil {
-					l.ErrorLog("msg", "transform to storage failed", "error", err, "URI", URI, "dryRun", dryRun)
+					l.ErrorLog("msg", "transform to storage failed", "err", err, "URI", URI, "dryRun", dryRun)
 					return nil, errInternalError.makeError(orig, []string{err.Error()}, "")
 				}
 			}
@@ -722,7 +722,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		retobj := m.requestType.GetRuntimeObject(resp)
 		err = kv.Get(ctx, key, retobj)
 		if err != nil {
-			l.ErrorLog("msg", "unable to get object from kvstore", "key", key, "error", err)
+			l.ErrorLog("msg", "unable to get object from kvstore", "key", key, "err", err)
 		}
 		if retobj != nil {
 			resp = reflect.Indirect(reflect.ValueOf(retobj)).Interface()
@@ -732,7 +732,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	// contains full object
 	resp, err = m.requestType.TransformFromStorage(ctx, oper, resp)
 	if err != nil {
-		l.ErrorLog("msg", "transform from storage failed", "error", err, "URI", URI)
+		l.ErrorLog("msg", "transform from storage failed", "err", err, "URI", URI)
 		return nil, errInternalError.makeError(i, []string{err.Error()}, "")
 	}
 
@@ -753,7 +753,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		l.DebugLog("msg", "response overide is enabled")
 		resp, err = m.responseWriter(ctx, kv, m.svcPrefix, i, old, resp, oper)
 		if err != nil {
-			l.ErrorLog("msg", "response writer returned", "error", err, "URI", URI)
+			l.ErrorLog("msg", "response writer returned", "err", err, "URI", URI)
 			if s, ok := err.(*api.Status); ok {
 				return nil, apierrors.AddDetails(s)
 			}

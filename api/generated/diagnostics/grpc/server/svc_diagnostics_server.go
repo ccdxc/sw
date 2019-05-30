@@ -76,7 +76,7 @@ func (s *sdiagnosticsSvc_diagnosticsBackend) regMsgsFunc(l log.Logger, scheme *r
 			ctx = apiutils.SetVar(ctx, "ObjKind", "diagnostics.Module")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
 			return into, nil
@@ -186,7 +186,7 @@ func (s *sdiagnosticsSvc_diagnosticsBackend) regWatchersFunc(ctx context.Context
 				defer cancel()
 				watcher, err := kvs.WatchFiltered(nctx, key, *options)
 				if err != nil {
-					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "DiagnosticsV1")
+					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "DiagnosticsV1")
 					return err
 				}
 				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
@@ -212,7 +212,7 @@ func (s *sdiagnosticsSvc_diagnosticsBackend) regWatchersFunc(ctx context.Context
 			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "diagnostics.Module")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "diagnostics.Module")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "diagnostics.Module")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -224,7 +224,7 @@ func (s *sdiagnosticsSvc_diagnosticsBackend) regWatchersFunc(ctx context.Context
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "diagnostics.Module")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "diagnostics.Module")
 					return err
 				}
 				events = &diagnostics.AutoMsgModuleWatchHelper{}

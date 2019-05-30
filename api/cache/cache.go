@@ -196,7 +196,7 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup, startCh 
 			if err == nil {
 				return
 			}
-			p.parent.logger.ErrorLog("func", "prefixWatcher.worker", "msg", "failed to establish watcher", "error", err)
+			p.parent.logger.ErrorLog("func", "prefixWatcher.worker", "msg", "failed to establish watcher", "err", err)
 			select {
 			case <-time.After(kvWatcherRetryInterval):
 				continue
@@ -241,7 +241,7 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup, startCh 
 			} else {
 				evtype = ev.Type
 				if evtype == kvstore.WatcherError {
-					p.parent.logger.ErrorLog("func", "kvwatcher", "path", p.path, "msg", "received error event", "key", ev.Key, "error", ev.Object)
+					p.parent.logger.ErrorLog("func", "kvwatcher", "path", p.path, "msg", "received error event", "key", ev.Key, "err", ev.Object)
 					watchErrors.Add(1)
 					p.parent.store.Mark(p.path)
 
@@ -259,7 +259,7 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup, startCh 
 						hdr.Record("kvstore.WatchLatency", time.Since(upd))
 					}
 				} else {
-					p.parent.logger.ErrorLog("msg", "error converting timestamp", "error", err)
+					p.parent.logger.ErrorLog("msg", "error converting timestamp", "err", err)
 				}
 				switch evtype {
 				case kvstore.Created:

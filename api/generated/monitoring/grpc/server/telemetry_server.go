@@ -69,7 +69,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 					upd := &monitoring.FlowExportPolicy{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*monitoring.FlowExportPolicy)
@@ -84,21 +84,21 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				if updateFn != nil {
 					into := &monitoring.FlowExportPolicy{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 					if err != nil {
-						l.ErrorLog("msg", "Consistent update failed", "error", err)
+						l.ErrorLog("msg", "Consistent update failed", "err", err)
 					}
 					r = *into
 				} else {
 					var cur monitoring.FlowExportPolicy
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return nil, err
 					}
 					r.UUID = cur.UUID
@@ -110,7 +110,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 						err = kvs.Update(ctx, key, &r)
 					}
 					if err != nil {
-						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+						l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 					}
 				}
 
@@ -125,7 +125,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 					upd := &monitoring.FlowExportPolicy{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*monitoring.FlowExportPolicy)
@@ -140,19 +140,19 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur monitoring.FlowExportPolicy
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*monitoring.FlowExportPolicy)
@@ -161,7 +161,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 					var cur monitoring.FlowExportPolicy
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -177,7 +177,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -209,20 +209,20 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 			r := monitoring.FlowExportPolicy{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := monitoring.FlowExportPolicy{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
@@ -297,7 +297,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 					if !dryRun {
 						gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
 						if err != nil {
-							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)
 							ret.GenerationID = "2"
 						} else {
 							ret.GenerationID = fmt.Sprintf("%d", gen+1)
@@ -350,7 +350,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 					upd := &monitoring.FwlogPolicy{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*monitoring.FwlogPolicy)
@@ -365,21 +365,21 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				if updateFn != nil {
 					into := &monitoring.FwlogPolicy{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 					if err != nil {
-						l.ErrorLog("msg", "Consistent update failed", "error", err)
+						l.ErrorLog("msg", "Consistent update failed", "err", err)
 					}
 					r = *into
 				} else {
 					var cur monitoring.FwlogPolicy
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return nil, err
 					}
 					r.UUID = cur.UUID
@@ -391,7 +391,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 						err = kvs.Update(ctx, key, &r)
 					}
 					if err != nil {
-						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+						l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 					}
 				}
 
@@ -406,7 +406,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 					upd := &monitoring.FwlogPolicy{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*monitoring.FwlogPolicy)
@@ -421,19 +421,19 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur monitoring.FwlogPolicy
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*monitoring.FwlogPolicy)
@@ -442,7 +442,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 					var cur monitoring.FwlogPolicy
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -458,7 +458,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -490,20 +490,20 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 			r := monitoring.FwlogPolicy{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := monitoring.FwlogPolicy{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
@@ -578,7 +578,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 					if !dryRun {
 						gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
 						if err != nil {
-							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)
 							ret.GenerationID = "2"
 						} else {
 							ret.GenerationID = fmt.Sprintf("%d", gen+1)
@@ -631,7 +631,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 					upd := &monitoring.StatsPolicy{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*monitoring.StatsPolicy)
@@ -646,21 +646,21 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				if updateFn != nil {
 					into := &monitoring.StatsPolicy{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 					if err != nil {
-						l.ErrorLog("msg", "Consistent update failed", "error", err)
+						l.ErrorLog("msg", "Consistent update failed", "err", err)
 					}
 					r = *into
 				} else {
 					var cur monitoring.StatsPolicy
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return nil, err
 					}
 					r.UUID = cur.UUID
@@ -672,7 +672,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 						err = kvs.Update(ctx, key, &r)
 					}
 					if err != nil {
-						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+						l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 					}
 				}
 
@@ -687,7 +687,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 					upd := &monitoring.StatsPolicy{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*monitoring.StatsPolicy)
@@ -702,19 +702,19 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur monitoring.StatsPolicy
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*monitoring.StatsPolicy)
@@ -723,7 +723,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 					var cur monitoring.StatsPolicy
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -739,7 +739,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -771,20 +771,20 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 			r := monitoring.StatsPolicy{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := monitoring.StatsPolicy{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
@@ -859,7 +859,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 					if !dryRun {
 						gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
 						if err != nil {
-							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)
 							ret.GenerationID = "2"
 						} else {
 							ret.GenerationID = fmt.Sprintf("%d", gen+1)

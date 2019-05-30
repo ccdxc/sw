@@ -67,7 +67,7 @@ func (s *sbrowserBrowserBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					upd := &browser.BrowseRequest{}
 					n, err := updateFn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
 					new := n.(*browser.BrowseRequest)
@@ -82,13 +82,13 @@ func (s *sbrowserBrowserBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
 				var cur browser.BrowseRequest
 				err = kvs.Get(ctx, key, &cur)
 				if err != nil {
-					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 					return nil, err
 				}
 				r.UUID = cur.UUID
@@ -100,7 +100,7 @@ func (s *sbrowserBrowserBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					err = kvs.Update(ctx, key, &r)
 				}
 				if err != nil {
-					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
 				}
 
 			}
@@ -114,7 +114,7 @@ func (s *sbrowserBrowserBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					upd := &browser.BrowseRequest{}
 					n, err := updatefn(upd)
 					if err != nil {
-						l.ErrorLog("msg", "could not create new object", "error", err)
+						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
 					new := n.(*browser.BrowseRequest)
@@ -129,19 +129,19 @@ func (s *sbrowserBrowserBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = txn.Create(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
 				}
 			} else {
 				if updatefn != nil {
 					var cur browser.BrowseRequest
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					robj, err := updatefn(&cur)
 					if err != nil {
-						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
 					r = *robj.(*browser.BrowseRequest)
@@ -150,7 +150,7 @@ func (s *sbrowserBrowserBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					var cur browser.BrowseRequest
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
-						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
 						return err
 					}
 					r.UUID = cur.UUID
@@ -166,7 +166,7 @@ func (s *sbrowserBrowserBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				}
 				err = txn.Update(key, &r)
 				if err != nil {
-					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
 				}
 			}
 			return err
@@ -198,20 +198,20 @@ func (s *sbrowserBrowserBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			r := browser.BrowseRequest{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := browser.BrowseRequest{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
-				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			err := txn.Delete(key)
 			if err != nil {
-				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {

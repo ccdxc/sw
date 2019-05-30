@@ -92,7 +92,7 @@ func (a *synchAuditor) Run(stopCh <-chan struct{}) error {
 			return elastic.NewAuthenticatedClient(a.elasticServer, a.rslver, a.logger)
 		}, a.elasticWaitIntvl, a.maxElasticRetries)
 		if err != nil {
-			a.logger.ErrorLog("method", "Run", "msg", "failed to create elastic client", "error", err)
+			a.logger.ErrorLog("method", "Run", "msg", "failed to create elastic client", "err", err)
 			return err
 		}
 		a.logger.DebugLog("method", "Run", "msg", "created elastic client")
