@@ -15,6 +15,7 @@
 #include "nic/sdk/include/sdk/mem.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
+#include "nic/apollo/api/include/pds_nexthop.hpp"
 
 /// \defgroup PDS_ROUTE Route API
 /// @{
@@ -23,20 +24,12 @@
 #define PDS_MAX_ROUTE_TABLE            1024
 #define PDS_MAX_ROUTE_PER_TABLE        1023
 
-/// \brief nexthop type
-typedef enum pds_nh_type_e {
-    PDS_NH_TYPE_NONE      = 0,
-    PDS_NH_TYPE_BLACKHOLE = 1,    ///< blackhole/drop nexthop
-    PDS_NH_TYPE_TEP       = 2,    ///< any of the possible types of TEP
-    PDS_NH_TYPE_PEER_VPC  = 3,    ///< VPC id of the peer VPC
-} pds_nh_type_t;
-
 /// \brief route
 typedef struct pds_route_s {
     ip_prefix_t          prefix;     ///< prefix
     pds_nh_type_t        nh_type;    ///< nexthop type
     union {
-        ip_addr_t        nh_ip;      ///< nexthop IP address
+        ip_addr_t        nh_ip;      ///< nexthop (TEP & non-TEP native) IP address
         pds_vpc_key_t    vpc;        ///< peer vpc id, in case of vpc peering
     };
 } __PACK__ pds_route_t;
