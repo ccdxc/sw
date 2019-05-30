@@ -425,7 +425,7 @@ populate_port_get_response_spec (port_args_t *port_args,
                                          port_args->loopback_mode));
         spec->set_mac_id(port_args->mac_id);
         spec->set_mac_ch(port_args->mac_ch);
-        spec->set_num_lanes(port_args->num_lanes);
+        spec->set_num_lanes(port_args->num_lanes_cfg);
         spec->set_mtu(port_args->mtu);
 
         // user configured AN
@@ -447,6 +447,7 @@ populate_port_get_response_spec (port_args_t *port_args,
                 linkmgr::sdk_port_speed_to_port_speed_spec(
                                           port_args->port_speed));
         link_status->set_auto_neg_enable(port_args->auto_neg_enable);
+        link_status->set_num_lanes(port_args->num_lanes);
 
         // transceiver status
         xcvr_status->set_port(port_args->xcvr_event_info.phy_port);

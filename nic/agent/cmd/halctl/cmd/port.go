@@ -489,7 +489,7 @@ func portXcvrShowResp(resp *halproto.PortGetResponse) {
 
 func portShowOneResp(resp *halproto.PortGetResponse) {
 	spec := resp.GetSpec()
-	macStr := fmt.Sprintf("%d/%d/%d", spec.GetMacId(), spec.GetMacCh(), spec.GetNumLanes())
+	macStr := fmt.Sprintf("%d/%d/%d", spec.GetMacId(), spec.GetMacCh(), resp.GetStatus().GetLinkStatus().GetNumLanes())
 	speedStr := strings.Replace(spec.GetPortSpeed().String(), "PORT_SPEED_", "", -1)
 	fecStr := strings.Replace(spec.GetFecType().String(), "PORT_FEC_TYPE_", "", -1)
 	linkSmStr := strings.Replace(resp.GetLinksmState().String(), "PORT_LINK_SM_", "", -1)
