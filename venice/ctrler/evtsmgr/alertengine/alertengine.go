@@ -17,6 +17,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/events/generated/eventattrs"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/alertengine/exporter"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
 	"github.com/pensando/sw/venice/globals"
@@ -273,12 +274,19 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 
 		// if there is no alert from the same event, check if there is an alert from some other event.
 		if evt.GetObjectRef() != nil {
-			outstandingAlerts = a.memDb.GetAlerts(
+			filters := []memdb.FilterFn{
 				memdb.WithTenantFilter(alertPolicy.GetTenant()),
 				memdb.WithAlertStateFilter([]monitoring.AlertState{monitoring.AlertState_OPEN, monitoring.AlertState_ACKNOWLEDGED}),
 				memdb.WithAlertPolicyIDFilter(alertPolicy.GetName()),
-				memdb.WithEventMessageFilter(evt.GetMessage()),
-				memdb.WithObjectRefFilter(evt.GetObjectRef()))
+				memdb.WithObjectRefFilter(evt.GetObjectRef()),
+			}
+			// check event message for events that are not threshold based.
+			// because, threshold based events will carry the current usage which will vary for each
+			// event though it is the same event.
+			if evt.GetCategory() != eventattrs.Category_Resource.String() {
+				filters = append(filters, memdb.WithEventMessageFilter(evt.GetMessage()))
+			}
+			outstandingAlerts = a.memDb.GetAlerts(filters...)
 			if len(outstandingAlerts) >= 1 { // there should be exactly one outstanding alert; not more than that
 				a.logger.Debug("1 or more outstanding alert found that matches the object ref. and policy")
 				return false, nil

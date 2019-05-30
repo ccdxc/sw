@@ -32,6 +32,11 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'LINK_DOWN',
     'LINK_UP',
   ],
+  Resource: [
+    'CPU_THRESHOLD_EXCEEDED',
+    'DISK_THRESHOLD_EXCEEDED',
+    'MEM_THRESHOLD_EXCEEDED',
+  ],
   System: [
     'NAPLES_SERVICE_STOPPED',
     'SERVICE_PENDING',
@@ -148,6 +153,21 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "LINK_UP",
       "Severity": EventsEvent_severity.INFO,
       "Desc": "Port is linked up",
+  },
+  'CPU_THRESHOLD_EXCEEDED' : {
+      "Name": "CPU_THRESHOLD_EXCEEDED",
+      "Severity": EventsEvent_severity.CRITICAL,
+      "Desc": "CPU threshold exceeded",
+  },
+  'DISK_THRESHOLD_EXCEEDED' : {
+      "Name": "DISK_THRESHOLD_EXCEEDED",
+      "Severity": EventsEvent_severity.CRITICAL,
+      "Desc": "Disk threshold exceeded",
+  },
+  'MEM_THRESHOLD_EXCEEDED' : {
+      "Name": "MEM_THRESHOLD_EXCEEDED",
+      "Severity": EventsEvent_severity.CRITICAL,
+      "Desc": "Memory threshold exceeded",
   },
   'NAPLES_SERVICE_STOPPED' : {
       "Name": "NAPLES_SERVICE_STOPPED",

@@ -201,6 +201,24 @@ func init() {
 		Category: "System",
 		Desc:     "System cold booted"}
 
+	eventTypes[MEM_THRESHOLD_EXCEEDED] = &EventTypeAttributes{
+		EType:    "MEM_THRESHOLD_EXCEEDED",
+		Severity: "CRITICAL",
+		Category: "Resource",
+		Desc:     "Memory threshold exceeded"}
+
+	eventTypes[CPU_THRESHOLD_EXCEEDED] = &EventTypeAttributes{
+		EType:    "CPU_THRESHOLD_EXCEEDED",
+		Severity: "CRITICAL",
+		Category: "Resource",
+		Desc:     "CPU threshold exceeded"}
+
+	eventTypes[DISK_THRESHOLD_EXCEEDED] = &EventTypeAttributes{
+		EType:    "DISK_THRESHOLD_EXCEEDED",
+		Severity: "CRITICAL",
+		Category: "Resource",
+		Desc:     "Disk threshold exceeded"}
+
 }
 
 func GetEventTypeAttrs(eType EventType) *EventTypeAttributes {

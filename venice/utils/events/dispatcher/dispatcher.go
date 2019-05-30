@@ -13,6 +13,8 @@ import (
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/utils"
 	memcache "github.com/pensando/sw/venice/utils/cache"
@@ -141,6 +143,20 @@ func (d *dispatcherImpl) addEvent(event *evtsapi.Event) error {
 		event.EventAttributes.Source = &evtsapi.EventSource{}
 	}
 	event.EventAttributes.Source.NodeName = d.nodeName // set node name on the event
+
+	// populate object ref
+	if event.ObjectRef == nil {
+		node := &cluster.Node{}
+		node.Defaults("all")
+		node.Name = d.nodeName
+		event.ObjectRef = &api.ObjectRef{
+			Kind:      node.GetKind(),
+			Name:      node.GetName(),
+			Tenant:    node.GetTenant(),
+			Namespace: node.GetNamespace(),
+			URI:       node.GetSelfLink(),
+		}
+	}
 
 	if err := events.ValidateEvent(event); err != nil {
 		d.logger.Errorf("event {%s} validation failed, err: %v", event.GetUUID(), err)

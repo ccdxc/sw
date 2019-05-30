@@ -522,7 +522,8 @@
           "enum": [
             "Cluster",
             "Network",
-            "System"
+            "System",
+            "Resource"
           ],
           "default": "Cluster"
         },
@@ -570,7 +571,8 @@
           "enum": [
             "Cluster",
             "Network",
-            "System"
+            "System",
+            "Resource"
           ],
           "default": "Cluster",
           "title": "Category represents the category of an event. e.g. Cluster/Network/Datapath"
