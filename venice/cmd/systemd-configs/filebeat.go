@@ -55,7 +55,6 @@ filebeat.prospectors:
   symlinks: true
   json.keys_under_root: true
   json.add_error_key: true
-  json.message_key: msg
   processors:
    - drop_event.when.regexp.level: '^info$' # drop info logs
 #================================ General =====================================
