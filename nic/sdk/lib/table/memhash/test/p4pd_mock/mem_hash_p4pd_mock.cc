@@ -789,6 +789,15 @@ p4pd_actiondata_appdata_get(uint32_t   tableid,
     return (P4PD_SUCCESS);
 }
 
+p4pd_error_t
+p4pd_global_actiondata_appdata_get(uint32_t tableid, uint8_t actionid,
+                                   void *appdata, void *actiondata)
+{
+    return p4pd_actiondata_appdata_get(tableid, actionid,
+                                       appdata, actiondata);
+}
+
+
 uint32_t
 p4pd_actiondata_appdata_size_get(uint32_t   tableid,
                                  uint8_t    actionid)

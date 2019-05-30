@@ -242,7 +242,7 @@ mem_hash_p4pd_appdata_get(mem_hash_api_context *ctx, void *appdata) {
         return P4PD_SUCCESS;
     }
     MEMHASH_P4PD_STATS_INCR(appdata_get);
-    return p4pd_global_actiondata_appdata_set(ctx->table_id,
+    return p4pd_global_actiondata_appdata_get(ctx->table_id,
                                               ctx->params->action_id,
                                               appdata, ctx->sw_data);
 }

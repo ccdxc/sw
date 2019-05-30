@@ -501,6 +501,28 @@ p4pd_global_actiondata_appdata_set (uint32_t tableid, uint8_t actionid,
 }
 
 p4pd_error_t
+p4pd_global_actiondata_appdata_get (uint32_t tableid, uint8_t actionid,
+                                    void *appdata, void *actiondata)
+{
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
+        return p4pd_actiondata_appdata_get(tableid, actionid,
+                                           appdata, actiondata);
+    } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
+               (tableid <= p4pd_rxdma_tableid_max_get())) {
+        return p4pd_rxdma_actiondata_appdata_get(tableid, actionid,
+                                                 appdata, actiondata);
+    } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
+               (tableid <= p4pd_txdma_tableid_max_get())) {
+        return p4pd_txdma_actiondata_appdata_get(tableid, actionid,
+                                                 appdata, actiondata);
+    } else {
+        SDK_ASSERT(0);
+    }
+    return P4PD_SUCCESS;
+}
+
+p4pd_error_t
 p4pd_global_entry_install (uint32_t tableid, uint32_t index,
                            void *swkey, void *swkey_mask,
                            void *actiondata)
