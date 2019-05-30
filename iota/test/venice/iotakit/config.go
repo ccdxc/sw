@@ -768,7 +768,7 @@ func (tb *TestBed) GetSmartNICByName(snicName string) (sn *cluster.SmartNIC, err
 
 	// walk all smartnics and see if the mac addr range matches
 	for _, snic := range snicList {
-		if snic.Spec.Hostname == snicName {
+		if snic.Spec.ID == snicName {
 			return snic, nil
 		}
 	}
