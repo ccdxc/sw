@@ -10,6 +10,7 @@
 #include "./common_metadata.p4"
 #include "./mapping.p4"
 #include "./remote_46_mapping.p4"
+#include "./vnic_info_txdma.p4"
 
 @pragma scratch_metadata
 metadata common_scratch_metadata_t common_scratch_metadata0;
@@ -1064,7 +1065,8 @@ control ingress {
         sacl();
         dma();
 
-        // TODO-KSM: Launch this table only in TxDMA Pass 2
+        // TODO-AJEER: Launch vnic_info_txdma and mapping tables only in TxDMA second pass
+        vnic_info_txdma();
 
         // LPM Tables does set the table2_valid predicate bit in pass 1 as follows:
         //   = 0 for NH_TYPE= VNET or WORKLOAD  (then launch Mapping table based on vnet/vpc id)

@@ -23,6 +23,7 @@
 #define RXDMA_VNIC_INFO_TABLE_SIZE                          512
 
 //TXDMA Tables
+#define RXDMA_VNIC_INFO_TXDMA_TABLE_SIZE                    256
 #define MAPPING_TABLE_SIZE                                  2097152     // 2M
 #define MAPPING_OHASH_TABLE_SIZE                            262144      // 256K
 #define REMOTE_46_MAPPING_TABLE_SIZE                        1024

@@ -24,13 +24,15 @@ header_type txdma_control_metadata_t {
         p2_class_id         : 10;
         p3_class_id         : 20;
         sacl_result         : 1;
-        remote_vnic_mapping_tx_ohash_lkp : 1; //TEMP: Replace with P4 to P4+ header
+        remote_vnic_mapping_tx_ohash_lkp : 1; //TODO-KSM: Replace with P4 to P4+ header
         pad6                :  4;
-        vpc_id              : 10;
+        vpc_id              : 10;   //TODO-AJEER: Change this to 8 bits
+                                    //TODO-ART: Fill original vnic id in RxDMA
         nexthop_group_index : 16;
 
-        remote_ip           : 128;  //TDO-KSM: Fill this in RXDMA Stage 0
-        remote_vnic_mapping_tx_ohash : 32; //TEMP: Replace with P4 to P4+ header
+        // TODO-JOHN/MURTY: Find a way to pass the keys from RxDMA to TxDMA
+        remote_ip           : 128;  //TODO-KSM: Fill this in RxDMA
+        remote_vnic_mapping_tx_ohash : 32; //TODO-KSM: Replace with P4 to P4+ header
         pad7                :  6;
         svc_id              : 10;
     }
@@ -63,6 +65,7 @@ header_type scratch_metadata_t {
         vnic_mapping_hint   : 18;
         remote_vnic_mapping_tx_ohash : 32;
         ipv6_tx_da          : 128;       
+        vpc_peer_base       : 40;
     }
 }
 
