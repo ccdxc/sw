@@ -627,3 +627,21 @@ p4pd_global_actiondata_hwfield_get (uint32_t tableid, uint8_t actionid,
     }
     return P4PD_SUCCESS;
 }
+
+void
+p4pd_global_hbm_table_address_set (uint32_t tableid, mem_addr_t pa,
+                                   mem_addr_t va)
+{
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
+        p4pd_hbm_table_address_set (tableid, pa, va);
+    } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
+               (tableid <= p4pd_rxdma_tableid_max_get())) {
+        p4pd_rxdma_hbm_table_address_set (tableid, pa, va);
+    } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
+               (tableid <= p4pd_txdma_tableid_max_get())) {
+        p4pd_txdma_hbm_table_address_set (tableid, pa, va);
+    } else {
+        SDK_ASSERT(0);
+    }
+}

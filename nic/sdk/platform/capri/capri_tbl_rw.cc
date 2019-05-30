@@ -242,7 +242,7 @@ capri_program_hbm_table_base_addr (int tableid, int stage_tableid, char *tablena
         va = (mem_addr_t)sdk::lib::pal_mem_map(start_offset, size);
         SDK_TRACE_DEBUG("Table %s, pa 0x%llx, va 0x%lx, sz %llu",
                         tablename, start_offset, va, size);
-        p4pd_hbm_table_address_set(tableid, start_offset, va);
+        p4pd_global_hbm_table_address_set(tableid, start_offset, va);
     }
 
     if (sdk::asic::is_slave_init())

@@ -553,30 +553,32 @@ extern void p4pluspd_rxdma_cleanup();
 
 extern p4pd_error_t p4pluspd_rxdma_table_properties_get(uint32_t tableid,
     p4pd_table_properties_t *tbl_ctx);
+extern void p4pd_rxdma_hbm_table_address_set(uint32_t tableid, mem_addr_t pa,
+                                             mem_addr_t va);
 
-extern void p4pd_txdma_hwentry_query(uint32_t tableid, uint32_t *hwkey_len,
+extern void p4pd_rxdma_hwentry_query(uint32_t tableid, uint32_t *hwkey_len,
     uint32_t *hwkeymask_len, uint32_t *hwactiondata_len);
-extern p4pd_error_t p4pd_txdma_entry_write_with_datamask(uint32_t tableid,
+extern p4pd_error_t p4pd_rxdma_entry_write_with_datamask(uint32_t tableid,
     uint32_t index, uint8_t *hwkey, uint8_t *hwkey_y, void *actiondata,
     void *actiondata_mask);
-extern p4pd_error_t p4pd_txdma_entry_write(uint32_t tableid, uint32_t index,
+extern p4pd_error_t p4pd_rxdma_entry_write(uint32_t tableid, uint32_t index,
     uint8_t *hwkey, uint8_t *hwkey_y, void *actiondata);
-extern p4pd_error_t p4pd_txdma_entry_read(uint32_t tableid, uint32_t index,
+extern p4pd_error_t p4pd_rxdma_entry_read(uint32_t tableid, uint32_t index,
     void *swkey, void *swkey_mask, void *actiondata);
-extern p4pd_error_t p4pd_txdma_table_entry_decoded_string_get(uint32_t tableid,
+extern p4pd_error_t p4pd_rxdma_table_entry_decoded_string_get(uint32_t tableid,
     uint32_t index, uint8_t* hwentry, uint8_t* hwentry_y,
     uint16_t hwentry_len, char* buffer, uint16_t buf_len);
-extern p4pd_error_t p4pd_txdma_table_ds_decoded_string_get(uint32_t tableid,
+extern p4pd_error_t p4pd_rxdma_table_ds_decoded_string_get(uint32_t tableid,
     uint32_t index, void* sw_key, void* sw_key_mask, void* action_data,
     char* buffer, uint16_t buf_len);
-extern void p4pd_txdma_prep_p4tbl_sw_struct_sizes(void);
-extern void p4pd_txdma_prep_p4tbl_names(void);
-extern int p4pd_txdma_get_max_action_id(uint32_t tableid);
-extern void p4pd_txdma_get_action_name(uint32_t tableid, int actionid,
+extern void p4pd_rxdma_prep_p4tbl_sw_struct_sizes(void);
+extern void p4pd_rxdma_prep_p4tbl_names(void);
+extern int p4pd_rxdma_get_max_action_id(uint32_t tableid);
+extern void p4pd_rxdma_get_action_name(uint32_t tableid, int actionid,
                                        char *action_name);
-extern char p4pd_txdma_tbl_names[][P4TBL_NAME_MAX_LEN];
-extern uint16_t p4pd_txdma_tbl_swkey_size[];
-extern uint16_t p4pd_txdma_tbl_sw_action_data_size[];
+extern char p4pd_rxdma_tbl_names[][P4TBL_NAME_MAX_LEN];
+extern uint16_t p4pd_rxdma_tbl_swkey_size[];
+extern uint16_t p4pd_rxdma_tbl_sw_action_data_size[];
 
 extern uint32_t p4pd_rxdma_tableid_min_get();
 extern uint32_t p4pd_rxdma_tableid_max_get();
@@ -605,30 +607,32 @@ extern void p4pluspd_txdma_cleanup();
 
 extern p4pd_error_t p4pluspd_txdma_table_properties_get(uint32_t tableid,
     p4pd_table_properties_t *tbl_ctx);
+extern void p4pd_txdma_hbm_table_address_set(uint32_t tableid, mem_addr_t pa,
+                                             mem_addr_t va);
 
-extern void p4pd_rxdma_hwentry_query(uint32_t tableid, uint32_t *hwkey_len,
+extern void p4pd_txdma_hwentry_query(uint32_t tableid, uint32_t *hwkey_len,
     uint32_t *hwkeymask_len, uint32_t *hwactiondata_len);
-extern p4pd_error_t p4pd_rxdma_entry_write_with_datamask(uint32_t tableid,
+extern p4pd_error_t p4pd_txdma_entry_write_with_datamask(uint32_t tableid,
     uint32_t index, uint8_t *hwkey, uint8_t *hwkey_y, void *actiondata,
     void *actiondata_mask);
-extern p4pd_error_t p4pd_rxdma_entry_write(uint32_t tableid, uint32_t index,
+extern p4pd_error_t p4pd_txdma_entry_write(uint32_t tableid, uint32_t index,
     uint8_t *hwkey, uint8_t *hwkey_y, void *actiondata);
-extern p4pd_error_t p4pd_rxdma_entry_read(uint32_t tableid, uint32_t index,
+extern p4pd_error_t p4pd_txdma_entry_read(uint32_t tableid, uint32_t index,
     void *swkey, void *swkey_mask, void *actiondata);
-extern p4pd_error_t p4pd_rxdma_table_entry_decoded_string_get(uint32_t tableid,
+extern p4pd_error_t p4pd_txdma_table_entry_decoded_string_get(uint32_t tableid,
     uint32_t index, uint8_t* hwentry, uint8_t* hwentry_y,
     uint16_t hwentry_len, char* buffer, uint16_t buf_len);
-extern p4pd_error_t p4pd_rxdma_table_ds_decoded_string_get(uint32_t tableid,
+extern p4pd_error_t p4pd_txdma_table_ds_decoded_string_get(uint32_t tableid,
     uint32_t index, void* sw_key, void* sw_key_mask, void* action_data,
     char* buffer, uint16_t buf_len);
-extern void p4pd_rxdma_prep_p4tbl_sw_struct_sizes(void);
-extern void p4pd_rxdma_prep_p4tbl_names(void);
-extern int p4pd_rxdma_get_max_action_id(uint32_t tableid);
-extern void p4pd_rxdma_get_action_name(uint32_t tableid, int actionid,
+extern void p4pd_txdma_prep_p4tbl_sw_struct_sizes(void);
+extern void p4pd_txdma_prep_p4tbl_names(void);
+extern int p4pd_txdma_get_max_action_id(uint32_t tableid);
+extern void p4pd_txdma_get_action_name(uint32_t tableid, int actionid,
                                        char *action_name);
-extern char p4pd_rxdma_tbl_names[][P4TBL_NAME_MAX_LEN];
-extern uint16_t p4pd_rxdma_tbl_swkey_size[];
-extern uint16_t p4pd_rxdma_tbl_sw_action_data_size[];
+extern char p4pd_txdma_tbl_names[][P4TBL_NAME_MAX_LEN];
+extern uint16_t p4pd_txdma_tbl_swkey_size[];
+extern uint16_t p4pd_txdma_tbl_sw_action_data_size[];
 
 extern uint32_t p4pd_txdma_tableid_min_get();
 extern uint32_t p4pd_txdma_tableid_max_get();
@@ -835,6 +839,11 @@ p4pd_global_actiondata_appdata_size_get(uint32_t tableid, uint8_t actionid);
 p4pd_error_t
 p4pd_global_actiondata_appdata_set(uint32_t tableid, uint8_t actionid,
                                    void *appdata, void *actiondata);
+
+void
+p4pd_global_hbm_table_address_set(uint32_t tableid, mem_addr_t pa,
+                                  mem_addr_t va);
+
 /*
  * Functions to read/modify Mem Hash entries.
  */
@@ -957,7 +966,5 @@ p4pd_txdma_actiondata_appdata_size_get(uint32_t tableid,
 uint32_t
 p4pd_rxdma_actiondata_appdata_size_get(uint32_t tableid,
                                        uint8_t  actionid);
-void
-p4pd_hbm_table_address_set(uint32_t tableid, mem_addr_t pa, mem_addr_t va);
 
 #endif    // __P4_API_H__
