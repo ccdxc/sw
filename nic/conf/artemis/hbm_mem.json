@@ -128,6 +128,16 @@
             "cache": "p4plus-txdma"
         },
         {
+            "name": "mapping",
+            "size": "131072K",
+            "cache": "p4plus-txdma"
+        },
+        {
+            "name": "mapping_ohash",
+            "size": "16384K",
+            "cache": "p4plus-txdma"
+        },
+        {
             "name": "meter_v4",
             "_comment": "(64+1) * (64 + 16 * 64 + 16 * 16 * 64)",
             "size": "2M",
@@ -237,9 +247,9 @@
         },
         {
             "name": "session",
-            "size": "256M",
+            "size": "512M",
             "cache": "p4eg",
-            "_comment": "8M * 32B"
+            "_comment": "8M * 64B"
         },
         {
             "name": "nexthop",
