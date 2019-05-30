@@ -92,6 +92,13 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := network.LbPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "network.LbPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -117,6 +124,13 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := network.Network{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "network.Network")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -142,6 +156,13 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := network.Service{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "network.Service")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -167,6 +188,13 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := network.VirtualRouter{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "network.VirtualRouter")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {

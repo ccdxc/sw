@@ -81,6 +81,7 @@ func (s *srolloutSvc_rolloutBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := rollout.RolloutAction{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "rollout.RolloutAction")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -106,6 +107,7 @@ func (s *srolloutSvc_rolloutBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := rollout.Rollout{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "rollout.Rollout")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {

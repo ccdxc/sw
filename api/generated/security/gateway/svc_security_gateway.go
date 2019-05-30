@@ -474,7 +474,11 @@ func (a adapterSecurityV1) AutoListApp(oldctx oldcontext.Context, t *api.ListWat
 	}
 
 	if t.Tenant == "" {
-		t.Tenant = globals.DefaultTenant
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		t.Tenant = user.Tenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "App", t.Tenant, t.Namespace, "security", ""
@@ -502,7 +506,11 @@ func (a adapterSecurityV1) AutoListCertificate(oldctx oldcontext.Context, t *api
 	}
 
 	if t.Tenant == "" {
-		t.Tenant = globals.DefaultTenant
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		t.Tenant = user.Tenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Certificate", t.Tenant, t.Namespace, "security", ""
@@ -530,7 +538,11 @@ func (a adapterSecurityV1) AutoListFirewallProfile(oldctx oldcontext.Context, t 
 	}
 
 	if t.Tenant == "" {
-		t.Tenant = globals.DefaultTenant
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		t.Tenant = user.Tenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "FirewallProfile", t.Tenant, t.Namespace, "security", ""
@@ -558,7 +570,11 @@ func (a adapterSecurityV1) AutoListSGPolicy(oldctx oldcontext.Context, t *api.Li
 	}
 
 	if t.Tenant == "" {
-		t.Tenant = globals.DefaultTenant
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		t.Tenant = user.Tenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "SGPolicy", t.Tenant, t.Namespace, "security", ""
@@ -586,7 +602,11 @@ func (a adapterSecurityV1) AutoListSecurityGroup(oldctx oldcontext.Context, t *a
 	}
 
 	if t.Tenant == "" {
-		t.Tenant = globals.DefaultTenant
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		t.Tenant = user.Tenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "SecurityGroup", t.Tenant, t.Namespace, "security", ""
@@ -614,7 +634,11 @@ func (a adapterSecurityV1) AutoListTrafficEncryptionPolicy(oldctx oldcontext.Con
 	}
 
 	if t.Tenant == "" {
-		t.Tenant = globals.DefaultTenant
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		t.Tenant = user.Tenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", ""
@@ -832,6 +856,13 @@ func (a adapterSecurityV1) AutoWatchSecurityGroup(oldctx oldcontext.Context, in 
 		return nil, errors.New("unknown service profile")
 	}
 
+	if in.Tenant == "" {
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		in.Tenant = user.Tenant
+	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "SecurityGroup", in.Tenant, in.Namespace, "security"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
@@ -888,6 +919,13 @@ func (a adapterSecurityV1) AutoWatchSGPolicy(oldctx oldcontext.Context, in *api.
 		return nil, errors.New("unknown service profile")
 	}
 
+	if in.Tenant == "" {
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		in.Tenant = user.Tenant
+	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "SGPolicy", in.Tenant, in.Namespace, "security"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
@@ -944,6 +982,13 @@ func (a adapterSecurityV1) AutoWatchApp(oldctx oldcontext.Context, in *api.ListW
 		return nil, errors.New("unknown service profile")
 	}
 
+	if in.Tenant == "" {
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		in.Tenant = user.Tenant
+	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "App", in.Tenant, in.Namespace, "security"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
@@ -1000,6 +1045,13 @@ func (a adapterSecurityV1) AutoWatchFirewallProfile(oldctx oldcontext.Context, i
 		return nil, errors.New("unknown service profile")
 	}
 
+	if in.Tenant == "" {
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		in.Tenant = user.Tenant
+	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "FirewallProfile", in.Tenant, in.Namespace, "security"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
@@ -1056,6 +1108,13 @@ func (a adapterSecurityV1) AutoWatchCertificate(oldctx oldcontext.Context, in *a
 		return nil, errors.New("unknown service profile")
 	}
 
+	if in.Tenant == "" {
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		in.Tenant = user.Tenant
+	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Certificate", in.Tenant, in.Namespace, "security"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
@@ -1112,6 +1171,13 @@ func (a adapterSecurityV1) AutoWatchTrafficEncryptionPolicy(oldctx oldcontext.Co
 		return nil, errors.New("unknown service profile")
 	}
 
+	if in.Tenant == "" {
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		in.Tenant = user.Tenant
+	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "TrafficEncryptionPolicy", in.Tenant, in.Namespace, "security"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)

@@ -108,6 +108,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := cluster.Cluster{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.Cluster")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -137,6 +138,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := cluster.Host{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.Host")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -162,6 +164,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := cluster.Node{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.Node")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -187,6 +190,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := cluster.SmartNIC{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.SmartNIC")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -212,6 +216,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := cluster.Tenant{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.Tenant")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -237,6 +242,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := cluster.Version{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.Version")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {

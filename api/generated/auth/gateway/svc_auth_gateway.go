@@ -362,7 +362,11 @@ func (a adapterAuthV1) AutoListRole(oldctx oldcontext.Context, t *api.ListWatchO
 	}
 
 	if t.Tenant == "" {
-		t.Tenant = globals.DefaultTenant
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		t.Tenant = user.Tenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Role", t.Tenant, t.Namespace, "auth", ""
@@ -390,7 +394,11 @@ func (a adapterAuthV1) AutoListRoleBinding(oldctx oldcontext.Context, t *api.Lis
 	}
 
 	if t.Tenant == "" {
-		t.Tenant = globals.DefaultTenant
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		t.Tenant = user.Tenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "RoleBinding", t.Tenant, t.Namespace, "auth", ""
@@ -418,7 +426,11 @@ func (a adapterAuthV1) AutoListUser(oldctx oldcontext.Context, t *api.ListWatchO
 	}
 
 	if t.Tenant == "" {
-		t.Tenant = globals.DefaultTenant
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		t.Tenant = user.Tenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "User", t.Tenant, t.Namespace, "auth", ""
@@ -728,6 +740,13 @@ func (a adapterAuthV1) AutoWatchUser(oldctx oldcontext.Context, in *api.ListWatc
 		return nil, errors.New("unknown service profile")
 	}
 
+	if in.Tenant == "" {
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		in.Tenant = user.Tenant
+	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "User", in.Tenant, in.Namespace, "auth"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
@@ -841,6 +860,13 @@ func (a adapterAuthV1) AutoWatchRole(oldctx oldcontext.Context, in *api.ListWatc
 		return nil, errors.New("unknown service profile")
 	}
 
+	if in.Tenant == "" {
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		in.Tenant = user.Tenant
+	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Role", in.Tenant, in.Namespace, "auth"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
@@ -897,6 +923,13 @@ func (a adapterAuthV1) AutoWatchRoleBinding(oldctx oldcontext.Context, in *api.L
 		return nil, errors.New("unknown service profile")
 	}
 
+	if in.Tenant == "" {
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		in.Tenant = user.Tenant
+	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "RoleBinding", in.Tenant, in.Namespace, "auth"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)

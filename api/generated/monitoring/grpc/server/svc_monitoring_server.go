@@ -124,6 +124,13 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := monitoring.AlertDestination{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.AlertDestination")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -149,6 +156,13 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := monitoring.Alert{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.Alert")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -174,6 +188,13 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := monitoring.AlertPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.AlertPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -209,6 +230,13 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := monitoring.EventPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.EventPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -234,6 +262,13 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := monitoring.FlowExportPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.FlowExportPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -259,6 +294,13 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := monitoring.FwlogPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.FwlogPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -284,6 +326,13 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := monitoring.MirrorSession{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.MirrorSession")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -309,6 +358,13 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := monitoring.StatsPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.StatsPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -334,6 +390,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := monitoring.TechSupportRequest{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.TechSupportRequest")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -359,6 +416,13 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := monitoring.TroubleshootingSession{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.TroubleshootingSession")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {

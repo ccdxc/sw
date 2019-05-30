@@ -18,6 +18,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/venice/apigw/pkg"
+
 	"google.golang.org/grpc/codes"
 
 	"github.com/deckarep/golang-set"
@@ -29,7 +32,6 @@ import (
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/test/utils"
-	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/utils/netutils"
 
@@ -67,6 +69,42 @@ func addToWatchList(eventslist *[]kvstore.WatchEvent, obj interface{}, evtype kv
 		Object: evp.(runtime.Object),
 	}
 	return append(*eventslist, ev)
+}
+
+func restartAPIGatewayAndServer(t *testing.T) {
+	apisrv := apisrvpkg.MustGetAPIServer()
+	apisrv.Stop()
+	gw := apigwpkg.MustGetAPIGateway()
+	gw.Stop()
+	// allow ports to close
+	time.Sleep(time.Second)
+	config := tinfo.apisrvConfig
+
+	go apisrv.Run(config)
+	apisrv.WaitRunning()
+	addr, err := apisrv.GetAddr()
+	if err != nil {
+		t.Fatalf("could not get apiserver address after restart(%s)", err)
+	}
+	_, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		os.Exit(-1)
+	}
+	tinfo.apiserverport = port
+	gwconfig := tinfo.gwConfig
+	gwconfig.BackendOverride["pen-apiserver"] = "localhost:" + port
+	go gw.Run(gwconfig)
+	gw.WaitRunning()
+	gwaddr, err := gw.GetAddr()
+	if err != nil {
+		os.Exit(-1)
+	}
+	_, port, err = net.SplitHostPort(gwaddr.String())
+	if err != nil {
+		os.Exit(-1)
+	}
+	tinfo.apigwport = port
+	tinfo.cache = apisrvpkg.GetAPIServerCache()
 }
 
 func TestCrudOps(t *testing.T) {
@@ -2370,39 +2408,8 @@ func TestStaging(t *testing.T) {
 		}
 		bufobj, err := restcl.StagingV1().Buffer().Get(ctx, &opts)
 		AssertOk(t, err, "failed to get staging buffer (%s)", err)
-		apisrv := apisrvpkg.MustGetAPIServer()
-		apisrv.Stop()
-		gw := apigwpkg.MustGetAPIGateway()
-		gw.Stop()
-		// allow ports to close
-		time.Sleep(time.Second)
-		config := tinfo.apisrvConfig
-		// config.GrpcServerPort = ":" + tinfo.apiserverport
-		go apisrv.Run(config)
-		apisrv.WaitRunning()
-		addr, err := apisrv.GetAddr()
-		if err != nil {
-			t.Fatalf("could not get apiserver address after restart(%s)", err)
-		}
-		_, port, err := net.SplitHostPort(addr)
-		if err != nil {
-			os.Exit(-1)
-		}
-		tinfo.apiserverport = port
-		gwconfig := tinfo.gwConfig
-		gwconfig.BackendOverride["pen-apiserver"] = "localhost:" + port
-		go gw.Run(gwconfig)
-		gw.WaitRunning()
-		gwaddr, err := gw.GetAddr()
-		if err != nil {
-			os.Exit(-1)
-		}
-		_, port, err = net.SplitHostPort(gwaddr.String())
-		if err != nil {
-			os.Exit(-1)
-		}
-		tinfo.apigwport = port
-		tinfo.cache = apisrvpkg.GetAPIServerCache()
+		// restart the apiserver and apigateway
+		restartAPIGatewayAndServer(t)
 		restcl.Close()
 		apicl.Close()
 		restcl, err = apiclient.NewRestAPIClient("https://localhost:" + tinfo.apigwport)
@@ -3308,4 +3315,111 @@ func TestConsistentUpdate(t *testing.T) {
 
 	b1, err := apicl.BookstoreV1().Book().Get(ctx, &b.ObjectMeta)
 	AssertEquals(t, b1.Status.Inventory, int32(99), "Updated did not end up with final object")
+}
+
+func TestCrossTenantList(t *testing.T) {
+	// restart API server with multi tenant flag enabled.
+	tinfo.apisrvConfig.AllowMultiTenant = true
+	restartAPIGatewayAndServer(t)
+
+	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
+
+	ctx := context.Background()
+	// gRPC client
+	apicl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+	AssertOk(t, err, "cannot create grpc client")
+	defer apicl.Close()
+
+	// REST Client
+	restcl, err := apiclient.NewRestAPIClient("https://localhost:" + tinfo.apigwport)
+	AssertOk(t, err, "cannot create REST client")
+
+	defer restcl.Close()
+	// create logged in context
+	ctx, err = NewLoggedInContext(ctx, "https://localhost:"+tinfo.apigwport, tinfo.userCred)
+	AssertOk(t, err, "cannot create logged in context")
+
+	// Create new Tenant
+	testTenant := cluster.Tenant{}
+	testTenant.Name = "testtenant"
+	_, err = apicl.ClusterV1().Tenant().Create(ctx, &testTenant)
+	AssertOk(t, err, "failed to create testTenant")
+
+	// Create Networks in both tenants
+	opts := &api.ListWatchOptions{}
+	netlist, err := apicl.NetworkV1().Network().List(ctx, opts)
+	AssertOk(t, err, "Failed to get list of networks")
+	for _, n := range netlist {
+		apicl.NetworkV1().Network().Delete(ctx, &n.ObjectMeta)
+	}
+	netlist, err = apicl.NetworkV1().Network().List(ctx, opts)
+	AssertOk(t, err, "Failed to get list of networks")
+	Assert(t, len(netlist) == 0, "found residual network objects")
+
+	defNetworks := []network.Network{}
+	for i := 0; i < 3; i++ {
+		net := network.Network{}
+		net.Defaults("v1")
+		net.Tenant = globals.DefaultTenant
+		net.Name = fmt.Sprintf("nework-%d", i)
+		defNetworks = append(defNetworks, net)
+		_, err := apicl.NetworkV1().Network().Create(ctx, &net)
+		AssertOk(t, err, "failed to create network [%d](%s)", i, err)
+	}
+
+	testNetworks := []network.Network{}
+	for i := 0; i < 2; i++ {
+		net := network.Network{}
+		net.Defaults("v1")
+		net.Tenant = "testtenant"
+		net.Name = fmt.Sprintf("nework-%d", i)
+		testNetworks = append(testNetworks, net)
+		_, err := apicl.NetworkV1().Network().Create(ctx, &net)
+		AssertOk(t, err, "failed to create network [%d](%s)", i, err)
+	}
+
+	// REST list with empty tenant
+	opts.Tenant = ""
+	netlist, err = restcl.NetworkV1().Network().List(ctx, opts)
+	AssertOk(t, err, "failed to get list of networks(%s)", err)
+	Assert(t, len(netlist) == len(defNetworks), "did not get correct number of networks with empty tenant [%+v]", netlist)
+
+	// REST list with proper tenant
+	opts.Tenant = globals.DefaultTenant
+	netlist, err = restcl.NetworkV1().Network().List(ctx, opts)
+	AssertOk(t, err, "failed to get list of networks(%s)", err)
+	Assert(t, len(netlist) == len(defNetworks), "did not get correct number of networks with empty tenant [%+v]", netlist)
+
+	// grpc list with empty tenant
+	opts.Tenant = ""
+	netlist, err = apicl.NetworkV1().Network().List(ctx, opts)
+	AssertOk(t, err, "failed to get list of networks(%s)", err)
+	Assert(t, len(netlist) == (len(defNetworks)+len(testNetworks)), "did not get correct number of networks with empty tenant [%+v]", netlist)
+
+	// grpc list with default tenant
+	opts.Tenant = globals.DefaultTenant
+	netlist, err = restcl.NetworkV1().Network().List(ctx, opts)
+	AssertOk(t, err, "failed to get list of networks(%s)", err)
+	Assert(t, len(netlist) == len(defNetworks), "did not get correct number of networks with empty tenant [%+v]", netlist)
+	// grpc list with testTenant
+	opts.Tenant = "testtenant"
+	netlist, err = restcl.NetworkV1().Network().List(ctx, opts)
+	AssertOk(t, err, "failed to get list of networks(%s)", err)
+	Assert(t, len(netlist) == len(testNetworks), "did not get correct number of networks with empty tenant [%+v]", netlist)
+
+	// delete objects
+	{
+		opts := &api.ListWatchOptions{}
+		netlist, err = apicl.NetworkV1().Network().List(ctx, opts)
+		AssertOk(t, err, "Failed to get list of networks")
+		for _, n := range netlist {
+			apicl.NetworkV1().Network().Delete(ctx, &n.ObjectMeta)
+		}
+		netlist, err = apicl.NetworkV1().Network().List(ctx, opts)
+		AssertOk(t, err, "Failed to get list of networks")
+		Assert(t, len(netlist) == 0, "found residual network objects")
+	}
+	// restart API server
+	tinfo.apisrvConfig.AllowMultiTenant = false
+	restartAPIGatewayAndServer(t)
 }

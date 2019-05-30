@@ -63,7 +63,11 @@ func (a adapter{{$svcname}}) {{.Name}} (oldctx oldcontext.Context, t *{{getInput
 	} {{if isAutoGenMethod .}}{{if isAutoList .}}
 	{{if isTenanted (getListTypeMsg .ResponseType)}}
 	if t.Tenant == "" {
-		t.Tenant = globals.DefaultTenant
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		t.Tenant = user.Tenant
 	}{{else}}
 	t.Tenant = ""{{end}}{{if isNamespaced (getListTypeMsg .ResponseType)}}{{else}}
     t.Namespace = ""{{end}}
@@ -149,7 +153,14 @@ func (a adapter{{$svcname}}) AutoWatch{{.}}(oldctx oldcontext.Context, in *api.L
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	{{if isObjTenanted $svc.File . }}{{else}}
+	{{if isObjTenanted $svc.File . }}
+    if in.Tenant == "" {
+    	user, ok := apigwpkg.UserFromContext(ctx)
+    	if !ok {
+    		return nil, errors.New("could not determine user")
+    	}
+    	in.Tenant = user.Tenant
+    }{{else}}
 	in.Tenant = ""{{end}}{{if isObjNamespaced $svc.File . }}{{else}}
 		in.Namespace = "" {{end}}
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "{{.}}", in.Tenant, in.Namespace, "{{$svcparams.Prefix}}"

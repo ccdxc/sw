@@ -73,6 +73,13 @@ func (s *sstagingSvc_stagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := staging.Buffer{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "staging.Buffer")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {

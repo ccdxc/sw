@@ -198,7 +198,11 @@ func (a adapterWorkloadV1) AutoListEndpoint(oldctx oldcontext.Context, t *api.Li
 	}
 
 	if t.Tenant == "" {
-		t.Tenant = globals.DefaultTenant
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		t.Tenant = user.Tenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Endpoint", t.Tenant, t.Namespace, "workload", ""
@@ -226,7 +230,11 @@ func (a adapterWorkloadV1) AutoListWorkload(oldctx oldcontext.Context, t *api.Li
 	}
 
 	if t.Tenant == "" {
-		t.Tenant = globals.DefaultTenant
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		t.Tenant = user.Tenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Workload", t.Tenant, t.Namespace, "workload", ""
@@ -352,6 +360,13 @@ func (a adapterWorkloadV1) AutoWatchEndpoint(oldctx oldcontext.Context, in *api.
 		return nil, errors.New("unknown service profile")
 	}
 
+	if in.Tenant == "" {
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		in.Tenant = user.Tenant
+	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Endpoint", in.Tenant, in.Namespace, "workload"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
@@ -408,6 +423,13 @@ func (a adapterWorkloadV1) AutoWatchWorkload(oldctx oldcontext.Context, in *api.
 		return nil, errors.New("unknown service profile")
 	}
 
+	if in.Tenant == "" {
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		in.Tenant = user.Tenant
+	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Workload", in.Tenant, in.Namespace, "workload"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)

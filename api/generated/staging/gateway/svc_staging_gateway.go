@@ -129,7 +129,11 @@ func (a adapterStagingV1) AutoListBuffer(oldctx oldcontext.Context, t *api.ListW
 	}
 
 	if t.Tenant == "" {
-		t.Tenant = globals.DefaultTenant
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		t.Tenant = user.Tenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Buffer", t.Tenant, t.Namespace, "staging", ""
@@ -278,6 +282,13 @@ func (a adapterStagingV1) AutoWatchBuffer(oldctx oldcontext.Context, in *api.Lis
 		return nil, errors.New("unknown service profile")
 	}
 
+	if in.Tenant == "" {
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		in.Tenant = user.Tenant
+	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Buffer", in.Tenant, in.Namespace, "staging"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)

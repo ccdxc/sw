@@ -100,6 +100,13 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			r := security.App{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "security.App")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -131,6 +138,13 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			r := security.Certificate{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "security.Certificate")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -156,6 +170,13 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			r := security.FirewallProfile{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "security.FirewallProfile")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -181,6 +202,13 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			r := security.SGPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "security.SGPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -206,6 +234,13 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			r := security.SecurityGroup{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "security.SecurityGroup")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -231,6 +266,13 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			r := security.TrafficEncryptionPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "security.TrafficEncryptionPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {

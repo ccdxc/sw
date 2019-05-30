@@ -72,6 +72,7 @@ func (s *sdiagnosticsSvc_diagnosticsBackend) regMsgsFunc(l log.Logger, scheme *r
 			r := diagnostics.Module{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "diagnostics.Module")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {

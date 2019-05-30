@@ -94,6 +94,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			r := auth.AuthenticationPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "auth.AuthenticationPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -127,6 +128,13 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			r := auth.RoleBinding{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "auth.RoleBinding")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -152,6 +160,13 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			r := auth.Role{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "auth.Role")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -177,6 +192,13 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			r := auth.User{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "auth.User")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {

@@ -582,6 +582,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.Book{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "bookstore.Book")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -798,6 +799,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.Coupon{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "bookstore.Coupon")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -1103,6 +1105,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.Customer{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "bookstore.Customer")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -1415,6 +1418,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.Order{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "bookstore.Order")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -1909,6 +1913,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.Publisher{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "bookstore.Publisher")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
@@ -2591,6 +2596,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.Store{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+
 			ctx = apiutils.SetVar(ctx, "ObjKind", "bookstore.Store")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
