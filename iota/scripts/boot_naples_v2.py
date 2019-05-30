@@ -3,6 +3,7 @@ import argparse
 import pexpect
 import sys
 import os
+import re
 import time
 import socket
 import pdb
@@ -233,13 +234,18 @@ sys.stdout = FlushFile(sys.stdout)
 
 class EntityManagement:
     def __init__(self, ipaddr = None, username = None, password = None):
-        if ipaddr:
-            self.ipaddr = ipaddr
-            self.ssh_host = "%s@%s" % (username, ipaddr)
-            self.scp_pfx = "sshpass -p %s scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no " % password
-            self.ssh_pfx = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no " % password
+        self.ipaddr = ipaddr
         self.host = None
+        self.hdl = None
+        self.username = username
+        self.password = password
+        self.SSHPassInit()
         return
+
+    def SSHPassInit(self):
+        self.ssh_host = "%s@%s" % (self.username, self.ipaddr)
+        self.scp_pfx = "sshpass -p %s scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no " % self.password
+        self.ssh_pfx = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no " % self.password
 
     def SendlineExpect(self, line, expect, hdl = None,
                        timeout = GlobalOptions.timeout):
@@ -264,6 +270,9 @@ class EntityManagement:
         raise Exception("Host : {} did not up".format(self.ipaddr))
 
     def IsSSHUP(self, port = 22):
+        if not self.ipaddr:
+            print("No IP set , SSH not up")
+            return False
         print("Waiting for IP:%s to be up." % self.ipaddr)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         ret = sock.connect_ex(('%s' % self.ipaddr, port))
@@ -285,6 +294,13 @@ class EntityManagement:
             raise Exception(full_command)
         return retcode
 
+    def __run_cmd(self, cmd):
+        self.hdl.sendline(cmd)
+        self.hdl.expect("#")
+
+    def RunCommoandOnConsoleWithOutput(self, cmd):
+        self.__run_cmd(cmd)
+        return self.hdl.before
 
     @_exceptionWrapper(_errCodes.ENTITY_COPY_FAILED, "Entity command failed")
     def CopyIN(self, src_filename, entity_dir):
@@ -308,9 +324,8 @@ class EntityManagement:
         return self.RunSshCmd(full_command, ignore_failure)
 
 class NaplesManagement(EntityManagement):
-    def __init__(self, ipaddr = None, username = None, password = None):
-        super().__init__(ipaddr = ipaddr, username = username, password = password)
-        self.hdl = None
+    def __init__(self, username = None, password = None):
+        super().__init__(ipaddr = None, username = username, password = password)
         return
 
     @_exceptionWrapper(_errCodes.NAPLES_TELNET_CLEARLINE_FAILED, "Failed to clear line")
@@ -354,7 +369,7 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("reboot", "capri-gold login:")
         self.__login()
         time.sleep(60)
-        self.__run_dhclient()
+        self.__read_ip()
         self.WaitForSsh()
 
     def Reboot(self):
@@ -405,7 +420,6 @@ class NaplesManagement(EntityManagement):
         except:
             return "4G"
 
-
     @_exceptionWrapper(_errCodes.NAPLES_MEMORY_SIZE_INCOMPATIBLE, "Memroy size check failed")
     def CheckMemorySize(self, size):
         if self._getMemorySize().lower() != size.lower():
@@ -413,11 +427,20 @@ class NaplesManagement(EntityManagement):
             raise Exception(msg)
 
 
+    def __read_ip(self):
+        self.__run_dhclient()
+        output = self.RunCommoandOnConsoleWithOutput("ifconfig oob_mnic0")
+        ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
+        x = re.findall(ifconfig_regexp.encode(), output)
+        if len(x) > 0:
+            self.ipaddr = x[0].decode('utf-8')
+            self.SSHPassInit()
+
     @_exceptionWrapper(_errCodes.NAPLES_LOGIN_FAILED, "Login Failed")
     def Login(self, bringup_oob=True):
         self.__login()
         if bringup_oob:
-            self.__run_dhclient()
+            self.__read_ip()
 
     @_exceptionWrapper(_errCodes.NAPLES_GOLDFW_UNKNOWN, "Gold FW unknown")
     def ReadGoldFwVersion(self):
@@ -750,7 +773,7 @@ def AtExitCleanup():
 def NaplesOnlySetup():
 
     global naples
-    naples = NaplesManagement(ipaddr = GlobalOptions.oob_ip, username='root', password='pen123')
+    naples = NaplesManagement(username='root', password='pen123')
 
     global host
     host = HostManagement(GlobalOptions.host_ip)
@@ -825,7 +848,7 @@ def NaplesOnlySetup():
 
 def Main():
     global naples
-    naples = NaplesManagement(ipaddr = GlobalOptions.oob_ip, username='root', password='pen123')
+    naples = NaplesManagement(username='root', password='pen123')
 
     global host
     host = HostManagement(GlobalOptions.host_ip)
@@ -867,17 +890,14 @@ def Main():
             host.WaitForSsh()
             host.UnloadDriver()
 
+    naples.Connect()
 
     host.WaitForSsh()
-
 
     if GlobalOptions.only_init == True:
         # Case 3: Only INIT option.
         host.Init(driver_pkg = GlobalOptions.drivers_pkg, cleanup = True)
         return
-
-    # Connect to Naples console.
-    naples.Connect()
 
     #Read Naples Gold FW version.
     naples.ReadGoldFwVersion()
