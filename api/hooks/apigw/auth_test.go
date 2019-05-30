@@ -1379,3 +1379,100 @@ func TestAdminRoleBindingPreCallHookRegistration(t *testing.T) {
 	err = r.registerAdminRoleBindingPreCallHook(svc)
 	Assert(t, err != nil, "expected error in adminRoleBindingPreCallHook hook registration")
 }
+
+func TestRolePreAuthZHook(t *testing.T) {
+	tests := []struct {
+		name  string
+		user  *auth.User
+		in    interface{}
+		perms []auth.Permission
+		err   error
+	}{
+		{
+			name: "invalid object",
+			in:   &struct{ name string }{name: "invalid object type"},
+			err:  errors.New("invalid input type"),
+		},
+		{
+			name: "no user in context",
+			in:   &auth.Role{},
+			err:  apigwpkg.ErrNoUserInContext,
+		},
+		{
+			name: "user in non-default tenant",
+			user: &auth.User{
+				ObjectMeta: api.ObjectMeta{
+					Name:   "testuser",
+					Tenant: "testtenant",
+				},
+			},
+			in:    login.NewRole("testRole", "testtenant", login.NewPermission("", string(apiclient.GroupAuth), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String())),
+			perms: []auth.Permission{login.NewPermission("testtenant", string(apiclient.GroupAuth), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String())},
+			err:   nil,
+		},
+		{
+			name: "user in default tenant with non-default permission",
+			user: &auth.User{
+				ObjectMeta: api.ObjectMeta{
+					Name:   "testuser",
+					Tenant: globals.DefaultTenant,
+				},
+			},
+			in:    login.NewRole("testRole", globals.DefaultTenant, login.NewPermission("testtenant", string(apiclient.GroupAuth), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String())),
+			perms: []auth.Permission{login.NewPermission("testtenant", string(apiclient.GroupAuth), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String())},
+			err:   nil,
+		},
+		{
+			name: "user in default tenant",
+			user: &auth.User{
+				ObjectMeta: api.ObjectMeta{
+					Name:   "testuser",
+					Tenant: globals.DefaultTenant,
+				},
+			},
+			in:    login.NewRole("testRole", globals.DefaultTenant, login.NewPermission("", string(apiclient.GroupAuth), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String())),
+			perms: []auth.Permission{login.NewPermission(globals.DefaultTenant, string(apiclient.GroupAuth), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String())},
+			err:   nil,
+		},
+	}
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	r := &authHooks{}
+	r.logger = l
+	for _, test := range tests {
+		ctx := context.TODO()
+		if test.user != nil {
+			ctx = apigwpkg.NewContextWithUser(ctx, test.user)
+		}
+		_, out, err := r.rolePreAuthZHook(ctx, test.in)
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected error [%v], got [%v]", test.name, test.err, err))
+		if test.err == nil {
+			role := out.(*auth.Role)
+			Assert(t, reflect.DeepEqual(role.Spec.Permissions, test.perms), "[%s] test failed, expected perms [%#v], got [%#v]", test.perms, role.Spec.Permissions)
+		}
+	}
+}
+
+func TestRolePreAuthZHookRegistration(t *testing.T) {
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	svc := mocks.NewFakeAPIGwService(l, false)
+	r := &authHooks{}
+	r.logger = l
+	err := r.registerRolePreAuthZHook(svc)
+	AssertOk(t, err, "rolePreAuthZHook hook registration failed")
+
+	ids := []serviceID{
+		{"Role", apiintf.CreateOper},
+		{"Role", apiintf.UpdateOper},
+	}
+	for _, id := range ids {
+		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
+		AssertOk(t, err, "error getting service profile for [%s] [%s]", id.kind, id.action)
+		Assert(t, len(prof.PreAuthZHooks()) == 1, fmt.Sprintf("unexpected number of pre-authz hooks [%d] for [%s] [%s] profile", len(prof.PreAuthZHooks()), id.kind, id.action))
+	}
+	// test err
+	svc = mocks.NewFakeAPIGwService(l, true)
+	err = r.registerRolePreAuthZHook(svc)
+	Assert(t, err != nil, "expected error in rolePreAuthZHook hook registration")
+}

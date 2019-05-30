@@ -185,8 +185,8 @@ func ValidateResource(tenant, group, kind, name string) error {
 		if err != nil {
 			log.Infof("unknown resource kind [%q], err: %v", kind, err)
 		}
-		if ok && tenant != "" {
-			return fmt.Errorf("tenant should be empty for cluster scoped resource kind [%q]", kind)
+		if ok && (tenant != globals.DefaultTenant && tenant != "") {
+			return fmt.Errorf("tenant should be empty or [%q] for cluster scoped resource kind [%q]", globals.DefaultTenant, kind)
 		}
 		ok, err = s.IsTenantScoped(kind)
 		if err != nil {

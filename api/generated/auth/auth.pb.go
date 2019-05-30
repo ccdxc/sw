@@ -802,9 +802,8 @@ func (*PasswordResetRequest) Descriptor() ([]byte, []int) { return fileDescripto
 
 // Permission defines if actions are allowed on resource group, resource type, resource name or arbitrary API endpoints.
 type Permission struct {
-	// ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant
-	// to which role object belongs. Exception are roles in "default" tenant. Role in "default" tenant can include permissions for resources in other tenants.
-	// Specifying "_All_" will match all tenants.
+	// ResourceTenant is the tenant to which resource belongs. It will be automatically set to the tenant to which role object belongs. Exception are roles in "default" tenant.
+	// Role in "default" tenant can include permissions for resources in other tenants. Specifying "_All_" will match all tenants.
 	ResourceTenant string `protobuf:"bytes,1,opt,name=ResourceTenant,json=resource-tenant,omitempty,proto3" json:"resource-tenant,omitempty"`
 	// ResourceGroup is grouping of resource types for which a permission is defined. It is empty for Search, Event, MetricsQuery and non-api server endpoint.
 	// Specifying "_All_" will match all api groups including empty group for non-api server endpoints like those defined in ResrcKind enum.

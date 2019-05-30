@@ -57,7 +57,7 @@ func TestSubjectAccessReviewValidationFailures(t *testing.T) {
 			name: "invalid resource",
 			op: &auth.Operation{
 				Resource: &auth.Resource{
-					Tenant: globals.DefaultTenant,
+					Tenant: "testtenant",
 					Group:  string(apiclient.GroupAuth),
 					Kind:   string(auth.KindAuthenticationPolicy),
 				},
@@ -66,14 +66,14 @@ func TestSubjectAccessReviewValidationFailures(t *testing.T) {
 			opStatus: &auth.OperationStatus{
 				Operation: &auth.Operation{
 					Resource: &auth.Resource{
-						Tenant: globals.DefaultTenant,
+						Tenant: "testtenant",
 						Group:  string(apiclient.GroupAuth),
 						Kind:   string(auth.KindAuthenticationPolicy),
 					},
 					Action: auth.Permission_Create.String(),
 				},
 				Allowed: false,
-				Message: "tenant should be empty for cluster scoped resource kind [\"AuthenticationPolicy\"]",
+				Message: "tenant should be empty or [\"default\"] for cluster scoped resource kind [\"AuthenticationPolicy\"]",
 			},
 		},
 		{
@@ -95,7 +95,7 @@ func TestSubjectAccessReviewValidationFailures(t *testing.T) {
 			},
 		},
 		{
-			name: "authorized operation",
+			name: "authorized tenant scoped operation",
 			op: &auth.Operation{
 				Resource: &auth.Resource{
 					Tenant: globals.DefaultTenant,
@@ -110,6 +110,52 @@ func TestSubjectAccessReviewValidationFailures(t *testing.T) {
 						Tenant: globals.DefaultTenant,
 						Group:  string(apiclient.GroupAuth),
 						Kind:   string(auth.KindRole),
+					},
+					Action: auth.Permission_Create.String(),
+				},
+				Allowed: true,
+				Message: "",
+			},
+		},
+		{
+			name: "authorized cluster scoped operation",
+			op: &auth.Operation{
+				Resource: &auth.Resource{
+					Tenant: "",
+					Group:  string(apiclient.GroupAuth),
+					Kind:   string(auth.KindAuthenticationPolicy),
+				},
+				Action: auth.Permission_Create.String(),
+			},
+			opStatus: &auth.OperationStatus{
+				Operation: &auth.Operation{
+					Resource: &auth.Resource{
+						Tenant: "",
+						Group:  string(apiclient.GroupAuth),
+						Kind:   string(auth.KindAuthenticationPolicy),
+					},
+					Action: auth.Permission_Create.String(),
+				},
+				Allowed: true,
+				Message: "",
+			},
+		},
+		{
+			name: "authorized cluster scoped operation with default tenant specified",
+			op: &auth.Operation{
+				Resource: &auth.Resource{
+					Tenant: globals.DefaultTenant,
+					Group:  string(apiclient.GroupAuth),
+					Kind:   string(auth.KindAuthenticationPolicy),
+				},
+				Action: auth.Permission_Create.String(),
+			},
+			opStatus: &auth.OperationStatus{
+				Operation: &auth.Operation{
+					Resource: &auth.Resource{
+						Tenant: globals.DefaultTenant,
+						Group:  string(apiclient.GroupAuth),
+						Kind:   string(auth.KindAuthenticationPolicy),
 					},
 					Action: auth.Permission_Create.String(),
 				},

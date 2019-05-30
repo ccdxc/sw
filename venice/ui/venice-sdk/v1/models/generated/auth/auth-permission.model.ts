@@ -20,9 +20,8 @@ export interface IAuthPermission {
 
 
 export class AuthPermission extends BaseModel implements IAuthPermission {
-    /** ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant
-    to which role object belongs. Exception are roles in "default" tenant. Role in "default" tenant can include permissions for resources in other tenants.
-    Specifying "_All_" will match all tenants. */
+    /** ResourceTenant is the tenant to which resource belongs. It will be automatically set to the tenant to which role object belongs. Exception are roles in "default" tenant.
+    Role in "default" tenant can include permissions for resources in other tenants. Specifying "_All_" will match all tenants. */
     'resource-tenant': string = null;
     /** ResourceGroup is grouping of resource types for which a permission is defined. It is empty for Search, Event, MetricsQuery and non-api server endpoint.
     Specifying "_All_" will match all api groups including empty group for non-api server endpoints like those defined in ResrcKind enum. */
@@ -36,7 +35,7 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
     'actions': Array<AuthPermission_actions> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'resource-tenant': {
-            description:  'ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant to which role object belongs. Exception are roles in &quot;default&quot; tenant. Role in &quot;default&quot; tenant can include permissions for resources in other tenants. Specifying &quot;_All_&quot; will match all tenants.',
+            description:  'ResourceTenant is the tenant to which resource belongs. It will be automatically set to the tenant to which role object belongs. Exception are roles in &quot;default&quot; tenant. Role in &quot;default&quot; tenant can include permissions for resources in other tenants. Specifying &quot;_All_&quot; will match all tenants.',
             required: false,
             type: 'string'
         },

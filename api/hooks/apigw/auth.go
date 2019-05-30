@@ -329,6 +329,36 @@ func (a *authHooks) adminRoleBindingPreCallHook(ctx context.Context, in interfac
 	return ctx, in, false, nil
 }
 
+// rolePreAuthZHook is to populate resource tenant in permissions
+func (a *authHooks) rolePreAuthZHook(ctx context.Context, in interface{}) (context.Context, interface{}, error) {
+	obj, ok := in.(*auth.Role)
+	if !ok {
+		return ctx, nil, errors.New("invalid input type")
+	}
+	user, ok := apigwpkg.UserFromContext(ctx)
+	if !ok || user == nil {
+		a.logger.ErrorLog("method", "rolePreAuthZHook", "msg", "no user present in context")
+		return ctx, nil, apigwpkg.ErrNoUserInContext
+	}
+	var nperms []auth.Permission
+	for _, perm := range obj.Spec.Permissions {
+		switch user.Tenant {
+		case globals.DefaultTenant:
+			if perm.ResourceTenant == "" {
+				perm.ResourceTenant = globals.DefaultTenant
+			}
+		default:
+			// for non-default tenant, set resource tenant to be user tenant
+			perm.ResourceTenant = user.Tenant
+		}
+		// set resource namespace to all
+		perm.ResourceNamespace = authz.ResourceNamespaceAll
+		nperms = append(nperms, perm)
+	}
+	obj.Spec.Permissions = nperms
+	return ctx, obj, nil
+}
+
 func (a *authHooks) registerAddAuthzInfoHook(svc apigw.APIGatewayService) error {
 	opers := []apiintf.APIOperType{apiintf.CreateOper, apiintf.UpdateOper, apiintf.DeleteOper, apiintf.GetOper, apiintf.ListOper}
 	for _, oper := range opers {
@@ -507,6 +537,21 @@ func (a *authHooks) registerAdminRoleBindingPreCallHook(svc apigw.APIGatewayServ
 	return nil
 }
 
+func (a *authHooks) registerRolePreAuthZHook(svc apigw.APIGatewayService) error {
+	ids := []serviceID{
+		{"Role", apiintf.CreateOper},
+		{"Role", apiintf.UpdateOper},
+	}
+	for _, id := range ids {
+		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
+		if err != nil {
+			return err
+		}
+		prof.AddPreAuthZHook(a.rolePreAuthZHook)
+	}
+	return nil
+}
+
 func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	gw := apigwpkg.MustGetAPIGateway()
 	grpcaddr := globals.APIServer
@@ -527,6 +572,11 @@ func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 
 	// register post call hook to add roles to user status
 	if err := r.registerAddAuthzInfoHook(svc); err != nil {
+		return err
+	}
+
+	// register pre-authz hook to populate resource tenant in permissions
+	if err := r.registerRolePreAuthZHook(svc); err != nil {
 		return err
 	}
 
