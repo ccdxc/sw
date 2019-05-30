@@ -189,7 +189,10 @@ class TestSuite:
         for tbun in self.__testbundles:
             self.__curr_tbun = tbun
             ret = tbun.Main()
-            if ret != types.status.SUCCESS:
+            #Don't propogate disabled status up.
+            if ret == types.status.DISABLED:
+                ret = types.status.SUCCESS
+            elif ret != types.status.SUCCESS:
                 result = ret
                 if GlobalOptions.no_keep_going:
                     return ret
