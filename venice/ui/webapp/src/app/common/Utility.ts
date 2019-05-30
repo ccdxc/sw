@@ -1,7 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { AbstractControl, FormArray, FormGroup, ValidatorFn, ValidationErrors } from '@angular/forms';
 import { SearchExpression } from '@app/components/search/index.ts';
-import { TableCol } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { AUTH_BODY, AUTH_KEY } from '@app/core/auth/auth.reducer';
 import { CategoryMapping } from '@sdk/v1/models/generated/category-mapping.model';
 import { FieldsRequirement_operator } from '@sdk/v1/models/generated/monitoring';
@@ -1038,73 +1037,7 @@ export class Utility {
     }
   }
 
-  public static exportTable(columns: TableCol[], data, filename, customExportFunc: ({ data: any, field: string }) => string = null, csvSeparator = ',') {
-    let csv = '\ufeff';
 
-    // headers
-    for (let i = 0; i < columns.length; i++) {
-      const column = columns[i];
-      if (column.exportable !== false && column.field) {
-        csv += '"' + (column.header || column.field) + '"';
-
-        if (i < (columns.length - 1)) {
-          csv += csvSeparator;
-        }
-      }
-    }
-
-    // body
-    data.forEach((record, ii) => {
-      csv += '\n';
-      for (let i = 0; i < columns.length; i++) {
-        const column = columns[i];
-        if (column.exportable !== false && column.field) {
-          let cellData = _.get(record, column.field);
-
-          if (cellData != null) {
-            if (customExportFunc) {
-              cellData = customExportFunc({
-                data: cellData,
-                field: column.field
-              });
-            } else {
-              cellData = String(cellData).replace(/"/g, '""');
-            }
-          } else {
-            cellData = '';
-          }
-
-
-          csv += '"' + cellData + '"';
-
-          if (i < (columns.length - 1)) {
-            csv += csvSeparator;
-          }
-        }
-      }
-    });
-
-    const blob = new Blob([csv], {
-      type: 'text/csv;charset=utf-8;'
-    });
-
-    if (window.navigator.msSaveOrOpenBlob) {
-      navigator.msSaveOrOpenBlob(blob, filename + '.csv');
-    } else {
-      const link = document.createElement('a');
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      if (link.download !== undefined) {
-        link.setAttribute('href', URL.createObjectURL(blob));
-        link.setAttribute('download', filename + '.csv');
-        link.click();
-      } else {
-        csv = 'data:text/csv;charset=utf-8,' + csv;
-        window.open(encodeURI(csv));
-      }
-      document.body.removeChild(link);
-    }
-  }
 
   /**
    * This API extract table data to JSON
@@ -1328,6 +1261,7 @@ export class Utility {
   // TODO: Create a BaseType for this function to take in
   public static TrimDefaultsAndEmptyFields(request: any) {
     request = _.cloneDeep(request);
+    // if helperFunc returns true, we delete the entry
     const helperFunc = (obj): boolean => {
       let retValue = true;
       for (const key in obj) {

@@ -3,19 +3,20 @@ import { configureTestSuite } from 'ng-bullet';
 
 import { TableheaderComponent } from './tableheader.component';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
+import { PrettyDatePipe } from '../Pipes/PrettyDate.pipe';
 
 describe('TableheaderComponent', () => {
   let component: TableheaderComponent;
   let fixture: ComponentFixture<TableheaderComponent>;
 
   configureTestSuite(() => {
-     TestBed.configureTestingModule({
-      declarations: [TableheaderComponent],
+    TestBed.configureTestingModule({
+      declarations: [TableheaderComponent, PrettyDatePipe],
       imports: [
         MaterialdesignModule
       ]
     });
-      });
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(TableheaderComponent);

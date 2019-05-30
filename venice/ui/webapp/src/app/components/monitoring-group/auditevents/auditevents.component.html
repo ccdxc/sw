@@ -33,15 +33,11 @@
 
 <!-- TABLE HEADER -->
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader title="Audit Events" [max]="maxRecords" [total]="totalRecords" width="250px">
+  <app-tableheader title="Audit Events" [max]="maxRecords" [total]="totalRecords" width="250px"
+                   [tableMenuItems]="tableMenuItems"
+                   [lastUpdateTime]="lastUpdateTime" [showRefreshIcon]="true"
+                   (refreshIconClick)="getAuditevents()">
   </app-tableheader>
-  <div fxFlex></div>
-  <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="end center"
-       class="auditevents auditevents-lastupdate">
-    <div fxFlex="30px">
-      Last Updated: {{ lastUpdateTime | PrettyDate }}
-    </div>
-  </div>
 </ng-template>
 
 <ng-template #bodyTemplate let-rowData let-col="col">

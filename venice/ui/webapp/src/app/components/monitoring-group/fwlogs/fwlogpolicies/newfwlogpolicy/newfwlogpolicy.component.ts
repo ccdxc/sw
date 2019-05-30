@@ -151,24 +151,19 @@ export class NewfwlogpolicyComponent extends BaseComponent implements OnInit, Af
    */
   /* VS-124.
      When there is any NONE-ALL options selected, OPTION_ALL will be removed
-     When none is seleced, we set OPTION_AL as default.
+     When none is seleced, we set OPTION_ALL as default.
   */
   onLogOptionChange(event) {
     const values = this.logOptionsMultiSelect.value;
-    if (values.length >= 1) {
-      const index = values.indexOf(NewfwlogpolicyComponent.LOGOPTIONS_ALL);
-      if (index > -1) {
+    if (values.length >= 1 && values.includes(NewfwlogpolicyComponent.LOGOPTIONS_ALL)) {
+      // When all is set, we untoggle everything else.
+      if (event.itemValue === NewfwlogpolicyComponent.LOGOPTIONS_ALL) {
+        this.logOptionsMultiSelect.value = [NewfwlogpolicyComponent.LOGOPTIONS_ALL];
+      } else {
+        const index = values.indexOf(NewfwlogpolicyComponent.LOGOPTIONS_ALL);
         values.splice(index, 1);
         this.logOptionsMultiSelect.value = values;
-        this.filterOptions = Utility.convertEnumToSelectItem(MonitoringFwlogPolicySpec.propInfo['filter'].enum,
-          [NewfwlogpolicyComponent.LOGOPTIONS_NONE, NewfwlogpolicyComponent.LOGOPTIONS_ALL]);
-
       }
-    } else {
-      // when there is no log option selected, set ALL as default
-      this.logOptionsMultiSelect.value = [NewfwlogpolicyComponent.LOGOPTIONS_ALL];
-      this.filterOptions = Utility.convertEnumToSelectItem(MonitoringFwlogPolicySpec.propInfo['filter'].enum,
-        [NewfwlogpolicyComponent.LOGOPTIONS_NONE]);
     }
   }
 }

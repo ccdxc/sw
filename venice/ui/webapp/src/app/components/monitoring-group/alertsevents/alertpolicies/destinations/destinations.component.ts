@@ -6,9 +6,10 @@ import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { IApiStatus, IMonitoringAlertDestination, MonitoringAlertDestination } from '@sdk/v1/models/generated/monitoring';
 import { Observable } from 'rxjs';
-import { TableCol, TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { TableCol } from '@app/components/shared/tableviewedit';
 
 
 @Component({
@@ -39,6 +40,8 @@ export class DestinationpolicyComponent extends TablevieweditAbstract<IMonitorin
     // { field: 'spec.email-list', header: 'Email List', class: 'destinationpolicy-column-email-list', sortable: true },
     // { field: 'spec.snmp-trap-servers', header: 'SNMP TRAP Servers', class: 'destinationpolicy-column-snmp_trap_servers', sortable: false },
   ];
+
+  exportFilename: string = 'Venice-alert-destinations';
 
   constructor(protected controllerService: ControllerService,
     protected cdr: ChangeDetectorRef,

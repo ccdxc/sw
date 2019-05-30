@@ -1,5 +1,5 @@
 
-import { AfterViewInit, Component, OnDestroy, OnInit, ViewEncapsulation, EventEmitter, Output } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Animations } from '@app/animations';
 
@@ -13,11 +13,11 @@ import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
 import { Utility } from '@common/Utility';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
-import { IApiStatus, IRolloutRollout, RolloutRollout, RolloutRolloutSpec, RolloutRolloutStatus_state } from '@sdk/v1/models/generated/rollout';
-import { TableCol } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { RolloutRollout, RolloutRolloutStatus_state } from '@sdk/v1/models/generated/rollout';
 import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
 import { RolloutUtil } from '../RolloutUtil';
 import { EnumRolloutOptions } from '../';
+import { TableCol } from '@app/components/shared/tableviewedit';
 
 /**
  * This component let user monitor a rollout status.

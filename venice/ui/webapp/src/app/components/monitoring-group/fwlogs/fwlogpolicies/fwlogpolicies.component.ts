@@ -1,9 +1,8 @@
-import { ChangeDetectorRef, Component, DoCheck, Input, IterableDiffer, IterableDiffers, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectorRef, Component, DoCheck, Input, IterableDiffer, IterableDiffers,  OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { Animations } from '@app/animations';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Utility } from '@app/common/Utility';
-import { TableCol, TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
-import { Eventtypes } from '@app/enum/eventtypes.enum';
+import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
@@ -12,6 +11,7 @@ import { Table } from 'primeng/table';
 import { Observable } from 'rxjs';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { TableCol } from '@app/components/shared/tableviewedit';
 
 @Component({
   selector: 'app-fwlogpolicies',
@@ -47,11 +47,13 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
     matIcon: 'grid_on'
   };
 
-  cols: any[] = [
+  cols: TableCol[] = [
     { field: 'meta.name', header: 'Targets', class: 'fwlogpolicies-column-name', sortable: false, width: 30 },
     { field: 'spec.filter', header: 'Exports', class: 'fwlogpolicies-column-filter', sortable: false, width: 35 },
-    { field: 'spec.targets', header: 'Targets', class: 'fwlogpolicies-column-targets', sortable: false, isLast: false, width: 35 },
+    { field: 'spec.targets', header: 'Targets', class: 'fwlogpolicies-column-targets', sortable: false, width: 35 },
   ];
+
+  exportFilename: string = 'Venice-fwlog-policies';
 
   constructor(protected controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,

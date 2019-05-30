@@ -3,7 +3,7 @@ import { Animations } from '@app/animations';
 import { Observable } from 'rxjs';
 
 import { ControllerService } from '@app/services/controller.service';
-import { TableCol, TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { ObjstoreService } from '@app/services/generated/objstore.service';
 import { IApiStatus, IObjstoreObject, ObjstoreObject, IObjstoreObjectList, ObjstoreObjectList } from '@sdk/v1/models/generated/objstore';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
@@ -11,8 +11,8 @@ import { Utility } from '@app/common/Utility';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { AUTH_KEY } from '@app/core';
 import { RolloutUtil } from '@app/components/settings-group/systemupgrade/rollouts/RolloutUtil';
-import { RolloutImageLabel, RolloutImageOption } from '@app/components/settings-group/systemupgrade/rollouts/';
-import { environment } from '@env/environment';
+import { RolloutImageLabel } from '@app/components/settings-group/systemupgrade/rollouts/';
+import { TableCol } from '@app/components/shared/tableviewedit';
 
 /**
  * This component let user upload Venice rollout images and manage existing images.
@@ -67,6 +67,8 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     { field: 'meta.labels.Version', header: 'Version', class: 'imageupload-column-common imageupload-column-version', sortable: true, width: 15 },
     { field: 'meta.labels', header: 'Details', class: 'imageupload-column-common imageupload-column-labels', sortable: false, width: 40 },
   ];
+
+  exportFilename: string = 'Venice-images';
 
   constructor(protected controllerService: ControllerService, private objstoreService: ObjstoreService,
     protected cdr: ChangeDetectorRef,

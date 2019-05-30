@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, ViewEncapsulation, OnInit } from '@angula
 import { Animations } from '@app/animations';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Utility } from '@app/common/Utility';
-import { RowClickEvent, TableCol, TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
@@ -10,6 +10,8 @@ import { IApiStatus, IMonitoringTechSupportRequest, MonitoringTechSupportRequest
 import { Observable } from 'rxjs';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { TableCol, RowClickEvent } from '@app/components/shared/tableviewedit';
+import { TableUtility } from '@app/components/shared/tableviewedit/tableutility';
 
 
 @Component({
@@ -45,7 +47,9 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     { field: 'meta.mod-time', header: 'Time', class: 'techsupportrequests-column-date', sortable: true, width: 15 },
     { field: 'spec.node-selector', header: 'Selected Nodes', class: ' techsupportrequests-column-node_selector', sortable: false, width: 35 },
     { field: 'status.status', header: 'Status', class: ' techsupportrequests-column-status_status', sortable: true, width: 35 },
-     ];
+  ];
+
+  exportFilename: string = 'Venice-tech-support-requests';
 
   isTabComponent = false;
   disableTableWhenRowExpanded = true;
@@ -113,7 +117,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
       case 'spec.collection-selector':
         return this.displayColumn_collectionselector(fields, value);
       default:
-        return Utility.displayColumn(data, col);
+        return TableUtility.displayColumn(data, col);
     }
   }
 

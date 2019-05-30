@@ -26,15 +26,11 @@
     </div>
     <div fxFlex="auto" fxLayout="row">
       <app-tableheader fxFlex="auto" title="Firewall Logs" [max]="maxRecords"
-                       [total]="dataObjects.length" [icon]="headerIcon">
+                       [total]="dataObjects.length" [icon]="headerIcon"
+                       [tableMenuItems]="tableMenuItems"
+                       [lastUpdateTime]="lastUpdateTime" [showRefreshIcon]="true"
+                       (refreshIconClick)="getFwlogs()">
       </app-tableheader>
-      <div fxFlex></div>
-      <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="end center"
-           class="fwlogs fwlogs-lastupdate">
-        <div fxFlex="30px">
-          Last Updated: {{ lastUpdateTime | PrettyDate }}
-        </div>
-      </div>
     </div>
   </div>
 </ng-template>
@@ -43,6 +39,10 @@
   <ng-container [ngSwitch]="col.field">
     <ng-container *ngSwitchCase="'time'">
       {{rowData.time | PrettyDate:'ns' }}
+    </ng-container>
+    <ng-container *ngSwitchCase="'reporter-id'">
+      <a
+         routerLink="/cluster/naples/{{ rowData['reporter-id'] }}">{{ getNaplesNameFromReporterID(rowData) }}</a>
     </ng-container>
     <ng-container *ngSwitchDefault>
       {{displayColumn(rowData, col)}}
@@ -74,11 +74,15 @@
       <div fxFlex="10px"></div>
       <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
         <input appErrorTooltip fxFlex="nogrow" class="fwlogs-input" spellcheck="false" type="text"
-               formControlName="source-ips" pInputText placeholder="10.1.1.1, 10.1.1.2">
+               formControlName="source-ips" pInputText
+               (keyup)="keyUpInput($event)"
+               placeholder="10.1.1.1, 10.1.1.2">
       </div>
       <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
         <input appErrorTooltip fxFlex="nogrow" class="fwlogs-input" spellcheck="false" type="text"
-               formControlName="dest-ips" pInputText placeholder="10.1.1.1, 10.1.1.2">
+               formControlName="dest-ips" pInputText
+               (keyup)="keyUpInput($event)"
+               placeholder="10.1.1.1, 10.1.1.2">
       </div>
     </div>
     <div fxFlex="nogrow" fxLayout="column">
@@ -87,12 +91,14 @@
         <input matTooltip="Ports are comma separated. Ex 8000, 8001" fxFlex="nogrow"
                class="fwlogs-inputport" spellcheck="false"
                formControlName="source-ports" type="text" pInputText
+               (keyup)="keyUpInput($event)"
                placeholder="Ports">
       </div>
       <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
         <input matTooltip="Ports are comma separated. Ex 8000, 8001" fxFlex="nogrow"
                class="fwlogs-inputport" spellcheck="false"
                formControlName="dest-ports" type="text" pInputText
+               (keyup)="keyUpInput($event)"
                placeholder="Ports">
       </div>
     </div>
@@ -110,7 +116,9 @@
       <div fxFlex="10px"></div>
       <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
         <input fxFlex="nogrow" class="fwlogs-input" spellcheck="false" type="text"
-               formControlName="protocols" pInputText placeholder="TCP, UDP">
+               formControlName="protocols" pInputText
+               (keyup)="keyUpInput($event)"
+               placeholder="TCP, UDP">
       </div>
       <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
         <p-multiSelect class="fwlogs-multiselect"

@@ -9,22 +9,9 @@ import { Observable, Subscription } from 'rxjs';
 import { TabcontentInterface } from 'web-app-framework';
 import { LazyrenderComponent } from '../lazyrender/lazyrender.component';
 import { LazyLoadEvent } from 'primeng/primeng';
-
-export interface TableCol {
-  field: string;
-  header: string;
-  sortable?: boolean;
-  class?: string;
-  width: number;
-  exportable?: boolean;
-  disableSearch?: boolean;
-  kind?: string;
-}
-
-export interface RowClickEvent {
-  event: any;
-  rowData: any;
-}
+import { TableCol, RowClickEvent } from '.';
+import { TableMenuItem } from '../tableheader/tableheader.component';
+import { TableUtility } from './tableutility';
 
 
 /**
@@ -144,6 +131,7 @@ export abstract class TableviewAbstract<I, T extends I> implements OnInit, OnDes
   @Output() tableRowExpandClick: EventEmitter<any> = new EventEmitter();
 
   @ViewChild(TablevieweditHTMLComponent) tableContainer: TablevieweditHTMLComponent;
+
   subscriptions: Subscription[] = [];
 
   // Tab Component attributes
@@ -159,10 +147,23 @@ export abstract class TableviewAbstract<I, T extends I> implements OnInit, OnDes
   // Whether the toolbar buttons should be enabled
   shouldEnableButtons: boolean = true;
 
+  tableMenuItems: TableMenuItem[] = [
+    {
+      text: 'Export',
+      onClick: () => {
+        this.exportTableData();
+      }
+    }
+  ];
+
+
   abstract dataObjects: ReadonlyArray<T> = [];
   // Whether or not this component is a tab
   abstract isTabComponent: boolean;
   abstract disableTableWhenRowExpanded: boolean;
+
+  abstract exportFilename: string;
+  abstract cols: TableCol[];
 
   abstract getClassName(): string;
   abstract setDefaultToolbar(): void;
@@ -254,6 +255,10 @@ export abstract class TableviewAbstract<I, T extends I> implements OnInit, OnDes
     }
   }
 
+  exportTableData() {
+    TableUtility.exportTable(this.cols, this.dataObjects, this.exportFilename);
+    this.controllerService.invokeInfoToaster('File Exported', this.exportFilename + '.csv');
+  }
 
 
   ngOnDestroy() {
@@ -306,8 +311,7 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
   }
 
   /** API hook for extended component to act after deleteRecord() is completed */
-  postDeleteRecord () {}
-
+  postDeleteRecord() {}
 
   onDeleteRecord(event, object: T) {
     // Should not be able to delete any record while we are editing

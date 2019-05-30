@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, Input, ViewEncapsulation } from '@angular/core';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
-import { TableCol, TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
@@ -10,6 +10,7 @@ import { IApiStatus, IMonitoringAlertPolicy, MonitoringAlertDestination, Monitor
 import { Observable } from 'rxjs';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { TableCol } from '@app/components/shared/tableviewedit';
 
 
 @Component({
@@ -41,6 +42,8 @@ export class EventalertpolicyComponent extends TablevieweditAbstract<IMonitoring
     { field: 'status.open-alerts', header: 'Open', class: 'eventalertpolicies-column-openalerts', sortable: false, width: 10 },
     { field: 'status.acknowledged-alerts', header: 'Acknowledged', class: 'eventalertpolicies-column-acknowledgedalerts', sortable: false, width: 15 }
   ];
+
+  exportFilename: string = 'Venice-event-alert-policies';
 
   isTabComponent = true;
   disableTableWhenRowExpanded = true;

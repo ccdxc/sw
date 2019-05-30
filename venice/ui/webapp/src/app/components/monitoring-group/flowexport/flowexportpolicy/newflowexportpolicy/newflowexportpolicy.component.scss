@@ -43,11 +43,6 @@ $vertical-gutter: 5px;
   @include primary-font();
 }
 
-.newflowexportpolicy-border {
-  border-bottom: 6px solid #6ba0e5;
-  z-index: 100;
-}
-
 .newflowexportpolicy-divider {
   border-bottom: 1px solid #dddddd;
 }

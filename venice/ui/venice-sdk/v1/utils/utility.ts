@@ -13,6 +13,11 @@ import * as _ from 'lodash';
       let retValue = true;
       for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
+          // We want to send the timestamp as a string
+          // to the backend, not as a js date object.
+          if (obj[key] instanceof Date) {
+            obj[key] = obj[key].toISOString();
+          }
           if (_.isObjectLike(obj[key])) {
             if (helperFunc(obj[key], model[key])) {
               delete obj[key];

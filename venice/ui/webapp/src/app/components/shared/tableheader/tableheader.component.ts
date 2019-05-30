@@ -1,5 +1,11 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, EventEmitter, Output } from '@angular/core';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
+
+export interface TableMenuItem {
+  text: string;
+  onClick: () => void;
+  disabled?: boolean;
+}
 
 @Component({
   selector: 'app-tableheader',
@@ -13,6 +19,13 @@ export class TableheaderComponent implements OnInit {
   @Input() total: number;
   @Input() max: number;
   @Input() width: string;
+
+  // Right hand side options
+  @Input() lastUpdateTime: string;
+  @Input() showRefreshIcon: boolean = false;
+  @Input() tableMenuItems: TableMenuItem[] = [];
+
+  @Output() refreshIconClick: EventEmitter<any> = new EventEmitter<any>();
 
   _iconStyles: any;
 

@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, OnInit, ViewEncapsulation } from '@angula
 import { Animations } from '@app/animations';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Utility } from '@app/common/Utility';
-import { TableCol, TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
@@ -11,6 +11,7 @@ import { FieldsRequirement, IApiStatus, IMonitoringEventPolicy, MonitoringEventP
 import { Observable } from 'rxjs';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { TableCol } from '@app/components/shared/tableviewedit';
 
 @Component({
   selector: 'app-eventpolicy',
@@ -47,6 +48,8 @@ export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEvent
     // { field: 'spec.selector', header: 'Filters', class: 'eventpolicy-column-name', sortable: false, width: 30 },
     { field: 'spec.targets', header: 'Targets', class: 'eventpolicy-column-targets', sortable: false, width: 65 },
   ];
+
+  exportFilename: string = 'Venice-event-policies';
 
   isTabComponent = false;
   disableTableWhenRowExpanded = true;

@@ -24,7 +24,34 @@
       {{title}} ({{count | number}} / {{ total | number }})
     </div>
   </div>
-  <div class="tableheader-content" fxFlex="fxFlex" fxLayoutAlign="start center">
+  <div class="tableheader-content" fxFlex="auto" fxLayoutAlign="start center">
     <ng-content></ng-content>
+  </div>
+  <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end center" fxLayoutGap="5px">
+    <ng-container *ngIf="lastUpdateTime != null || lastUpdateTime == ''">
+      <div class="tableheader-lastupdate" fxFlex="noshrink"
+           fxLayout="column" fxLayoutAlign="center end">
+        <div fxFlex="nogrow">
+          Last Updated: {{ lastUpdateTime | PrettyDate }}
+        </div>
+      </div>
+      <mat-icon class="global-table-action-icon tableheader-icon-button" *ngIf="showRefreshIcon"
+                (click)="refreshIconClick.emit($event)" fxFlex="36px">refresh</mat-icon>
+    </ng-container>
+
+    <!-- Buffer -->
+    <div fxFlex="5px"></div>
+
+    <ng-container *ngIf="tableMenuItems.length > 0">
+      <mat-icon class="global-table-action-icon tableheader-icon-button" fxFlex="36px"
+                [matMenuTriggerFor]="menu">settings</mat-icon>
+      <mat-menu fxFlex #menu="matMenu">
+        <button mat-menu-item *ngFor="let item of tableMenuItems" (click)="item.onClick()"
+                [disabled]="item.disabled" [disableRipple]="true">
+          {{ item.text }}
+        </button>
+      </mat-menu>
+
+    </ng-container>
   </div>
 </div>

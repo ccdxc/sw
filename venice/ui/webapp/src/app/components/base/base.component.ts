@@ -4,8 +4,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SortEvent } from 'primeng/components/common/api';
 import { CommonComponent } from '../../common.component';
 import { ControllerService } from '../../services/controller.service';
-import { Utility } from '@app/common/Utility';
-import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
+import { TableUtility } from '../shared/tableviewedit/tableutility';
 // declare var google: any;
 
 /**
@@ -217,7 +216,7 @@ export class BaseComponent extends CommonComponent implements OnInit {
 
 
   displayColumn(data, col, hasUiHints: boolean = true): any {
-    return Utility.displayColumn(data, col, hasUiHints);
+    return TableUtility.displayColumn(data, col, hasUiHints);
   }
 
   controlAsFormArray(control: AbstractControl): FormArray {

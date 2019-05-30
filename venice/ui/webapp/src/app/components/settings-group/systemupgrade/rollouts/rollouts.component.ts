@@ -1,17 +1,17 @@
 import {ChangeDetectorRef, Component, Input, ViewEncapsulation} from '@angular/core';
 import {Animations} from '@app/animations';
 import {Utility} from '@app/common/Utility';
-import {TableCol, TablevieweditAbstract} from '@app/components/shared/tableviewedit/tableviewedit.component';
-import {Icon} from '@app/models/frontend/shared/icon.interface';
+import { TablevieweditAbstract} from '@app/components/shared/tableviewedit/tableviewedit.component';
 import {ControllerService} from '@app/services/controller.service';
 import {ObjstoreService} from '@app/services/generated/objstore.service';
 import {RolloutService} from '@app/services/generated/rollout.service';
 import {IApiStatus, IRolloutRollout, RolloutRollout, RolloutRolloutStatus_state} from '@sdk/v1/models/generated/rollout';
-import { IObjstoreObject, ObjstoreObject, IObjstoreObjectList, ObjstoreObjectList } from '@sdk/v1/models/generated/objstore';
+import { IObjstoreObjectList  } from '@sdk/v1/models/generated/objstore';
 import {Observable} from 'rxjs';
 import {Router} from '@angular/router';
 import {HttpEventUtility} from '@common/HttpEventUtility';
 import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
+import { TableCol } from '@app/components/shared/tableviewedit';
 
 /**
  * This component let user manage Venice Rollouts.
@@ -62,6 +62,8 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
     {field: 'status.prev-version', header: 'Prev Version', class: '', sortable: true, width: 15},
     {field: 'status.state', header: 'State', class: '', sortable: true, width: 20},
   ];
+
+  exportFilename: string = 'Venice-rollouts';
 
   tabIndex: number = 0;
 

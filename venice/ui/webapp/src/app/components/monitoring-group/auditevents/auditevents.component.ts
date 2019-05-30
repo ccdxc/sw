@@ -6,7 +6,7 @@ import { Utility } from '@app/common/Utility';
 import { GuidedSearchCriteria, SearchGrammarItem, SearchsuggestionTypes } from '@app/components/search/';
 import { SearchUtil } from '@app/components/search/SearchUtil';
 import { FieldselectorComponent } from '@app/components/shared/fieldselector/fieldselector.component';
-import { RowClickEvent, TableCol, TableviewAbstract, TablevieweditHTMLComponent } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { TableviewAbstract, TablevieweditHTMLComponent } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { ControllerService } from '@app/services/controller.service';
 import { SearchService } from '@app/services/generated/search.service';
 import {AuditService} from '@app/services/generated/audit.service';
@@ -17,6 +17,8 @@ import { LazyLoadEvent } from 'primeng/primeng';
 import {Observable, Subscription, zip} from 'rxjs';
 import {AdvancedSearchComponent} from '@components/shared/advanced-search/advanced-search.component';
 import {RepeaterData} from 'web-app-framework';
+import { RowClickEvent, TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
+import { TableUtility } from '@app/components/shared/tableviewedit/tableutility';
 
 @Component({
   selector: 'app-auditevents',
@@ -100,16 +102,6 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
   setDefaultToolbar() {
     this.controllerService.setToolbarData({
       buttons: [
-        {
-          cssClass: 'global-button-primary auditevents-toolbar-button',
-          text: 'EXPORT',
-          callback: () => { this.exportTableData(); },
-        },
-        {
-          cssClass: 'global-button-primary auditevents-toolbar-button',
-          text: 'REFRESH',
-          callback: () => { this.getAuditevents(); },
-        },
         /*  This block is experimental. debug to "toCSVJSON"
         {
           cssClass: 'global-button-primary auditevents-toolbar-button',
@@ -122,9 +114,17 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
     });
   }
 
+  /**
+   * Overiding from tableview component
+   */
   exportTableData() {
     // TODO: Setting hard limit of 8000 for now, Export should be moved to the backend eventually
-    Utility.exportTable(this.cols, this.dataObjects, this.exportFilename);
+    const exportMap: CustomExportMap = {};
+    exportMap['client-ips'] = (opts) => {
+      const value = Utility.getObjectValueByPropertyPath(opts.data, opts.field);
+      return Array.isArray(opts.data) ? value.join(',') : value;
+    };
+    TableUtility.exportTable(this.cols, this.dataObjects, this.exportFilename, exportMap);
     this.controllerService.invokeInfoToaster('File Exported', this.exportFilename + '.csv');
   }
 

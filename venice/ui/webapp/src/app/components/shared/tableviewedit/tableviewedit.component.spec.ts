@@ -15,10 +15,11 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { LogService } from '@app/services/logging/log.service';
 import { MessageService } from '@app/services/message.service';
 import { BehaviorSubject } from 'rxjs';
-import { TableCol, TablevieweditHTMLComponent, TablevieweditAbstract } from './tableviewedit.component';
+import { TablevieweditHTMLComponent, TablevieweditAbstract } from './tableviewedit.component';
 import { LazyrenderComponent } from '../lazyrender/lazyrender.component';
 import { SorticonComponent } from '../sorticon/sorticon.component';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { TableCol } from '.';
 
 export class TestTablevieweditRBAC {
   fixture: ComponentFixture<any>;
@@ -166,6 +167,8 @@ class DummyObj implements IDummyObj {
 })
 class DummyComponent extends TablevieweditAbstract<IDummyObj, DummyObj> {
   @Input() dataObjects: ReadonlyArray<DummyObj> = [];
+
+  exportFilename = 'test-export';
 
   cols: TableCol[] = [
     { field: 'name', header: 'Name', width: 50 },

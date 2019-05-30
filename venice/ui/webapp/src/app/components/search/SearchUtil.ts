@@ -10,7 +10,7 @@ import {
   SearchSuggestion,
   SearchsuggestionTypes
 } from './';
-import {TableCol} from '@components/shared/tableviewedit/tableviewedit.component';
+import {TableCol} from '@components/shared/tableviewedit';
 import {RepeaterData, RepeaterItem, ValueType} from 'web-app-framework';
 import {AdvancedSearchExpression} from '@components/shared/advanced-search';
 import {AdvancedSearchComponent} from '@components/shared/advanced-search/advanced-search.component';

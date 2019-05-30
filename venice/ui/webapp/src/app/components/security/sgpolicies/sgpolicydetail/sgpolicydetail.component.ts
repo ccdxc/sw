@@ -16,8 +16,8 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchPolicySearchRequest, ISearchPolicyMatchEntry } from '@sdk/v1/models/generated/search';
 import { ISecuritySGRule, SecuritySGPolicy, SecuritySGRule_action_uihint } from '@sdk/v1/models/generated/security';
 import { Table } from 'primeng/table';
-import { TableCol } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { CustomFormControl } from '@sdk/v1/utils/validators';
+import { TableCol } from '@app/components/shared/tableviewedit';
 
 /**
  * Component for displaying a security policy and providing IP searching

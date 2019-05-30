@@ -13,6 +13,7 @@
 .tableviewedit-tablecontainer {
   position: relative;
   height: 100%;
+  background: white;
 }
 
 .tableviewedit-widget {
@@ -45,4 +46,8 @@
     position: relative; // needed for z-index to take effect
     background-color: rgb(234, 241, 249) !important;
   }
+}
+
+.tableviewedit-creation-border {
+  border-bottom: 6px solid #6ba0e5;
 }

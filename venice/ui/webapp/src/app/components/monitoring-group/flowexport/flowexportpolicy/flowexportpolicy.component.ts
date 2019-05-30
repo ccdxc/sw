@@ -6,9 +6,10 @@ import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { IApiStatus, IMonitoringFlowExportPolicy, IMonitoringMatchRule, MonitoringFlowExportPolicy } from '@sdk/v1/models/generated/monitoring';
 import { Observable } from 'rxjs';
-import { TableCol, TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { TableCol } from '@app/components/shared/tableviewedit';
 
 @Component({
   selector: 'app-flowexportpolicy',
@@ -33,6 +34,8 @@ export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoring
     { field: 'spec.match-rules', header: 'Match Rules', class: 'flowexportpolicy-column-match-rules', sortable: false, width: 35 },
     { field: 'spec.exports', header: 'Targets', class: 'flowexportpolicy-column-targets', sortable: false, width: 40 },
   ];
+
+  exportFilename: string = 'Venice-flow-export-policies';
 
   isTabComponent = false;
   disableTableWhenRowExpanded = true;

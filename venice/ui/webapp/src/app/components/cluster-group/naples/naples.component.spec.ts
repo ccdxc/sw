@@ -148,21 +148,6 @@ describe('NaplesComponent', () => {
     // check table contents
     const tableBody = fixture.debugElement.query(By.css('.ui-table-scrollable-body tbody'));
     expect(tableBody).toBeTruthy();
-    const caseMap = {
-      'status.admission-phase': (field, rowData, rowIndex) => {
-        expect(field.nativeElement.textContent).toContain(ClusterSmartNICStatus_admission_phase_uihint[rowData.status['admission-phase']]);
-
-        if (rowData.status['admission-phase'] === 'REJECTED' || rowData.status['admission-phase'] === 'PENDING' ) {
-          expect(field.children.length).toBe(2);
-          if (rowData.status['admission-phase'] === 'REJECTED') {
-            expect(field.children[1].nativeElement.textContent).toContain('error');
-          }
-          if (rowData.status['admission-phase'] === 'PENDING') {
-            expect(field.children[1].nativeElement.textContent).toContain('notifications');
-          }
-        }
-      },
-    };
     TestingUtility.verifyTable([new ClusterSmartNIC(naples1), new ClusterSmartNIC(naples2), new ClusterSmartNIC(naples3)], component.cols, tableBody);
   });
 

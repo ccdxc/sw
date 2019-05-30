@@ -11,7 +11,7 @@ import {RepeaterComponent, RepeaterData, RepeaterItem, ValueType} from 'web-app-
 import {FormArray, FormControl} from '@angular/forms';
 import {SearchUtil} from '@components/search/SearchUtil';
 import {Animations} from '@app/animations';
-import {TableCol} from '@components/shared/tableviewedit/tableviewedit.component';
+import {TableCol} from '@components/shared/tableviewedit';
 import * as _ from 'lodash';
 import {SearchSearchRequest, SearchSearchRequest_sort_order} from '@sdk/v1/models/generated/search';
 import {ControllerService} from '@app/services/controller.service';

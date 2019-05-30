@@ -5,10 +5,11 @@ import {ClusterService} from '@app/services/generated/cluster.service';
 import {ClusterHost, IClusterHost} from '@sdk/v1/models/generated/cluster/cluster-host.model';
 import {HttpEventUtility} from '@common/HttpEventUtility';
 import {Subscription} from 'rxjs';
-import {TableCol, TablevieweditAbstract} from '@components/shared/tableviewedit/tableviewedit.component';
+import { TablevieweditAbstract} from '@components/shared/tableviewedit/tableviewedit.component';
 import {Observable} from 'rxjs';
 import {ClusterSmartNIC, IApiStatus} from '@sdk/v1/models/generated/cluster';
 import {Icon} from '@app/models/frontend/shared/icon.interface';
+import { TableCol } from '@app/components/shared/tableviewedit';
 
 @Component({
   selector: 'app-hosts',
@@ -49,6 +50,8 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     {field: 'spec.smart-nics', header: 'Smart Nics', class: 'hosts-column-smart-nics', sortable: false, width: 30},
   ];
 
+  exportFilename: string = 'Venice-hosts';
+
   constructor(private clusterService: ClusterService,
               protected cdr: ChangeDetectorRef,
               protected controllerService: ControllerService) {
@@ -76,7 +79,8 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     const subscription = this.clusterService.WatchSmartNIC().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
-        // mac-address to name map
+        // name to mac-address map
+        this.nameToMacMap = {};
         for (const smartnic of this.naples) {
           this.nameToMacMap[smartnic.spec.id] = smartnic.meta.name;
         }

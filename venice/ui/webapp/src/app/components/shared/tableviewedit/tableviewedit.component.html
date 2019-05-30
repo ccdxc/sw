@@ -1,6 +1,7 @@
 <div fxFlex="auto" fxLayout="column" class="tableviewedit-widget">
   <div [@slideInOut] *ngIf="creatingMode" fxFlex="none" fxLayout="column">
     <ng-container table *ngTemplateOutlet="createTemplate"></ng-container>
+    <div fxFlex="0px" class="tableviewedit-creation-border"></div>
   </div>
   <div fxFlex class="tableviewedit-tablecontainer">
     <ng-container #table *ngTemplateOutlet="TableTemplate"></ng-container>
@@ -10,7 +11,7 @@
 </div>
 
 <ng-template #TableTemplate>
-  <app-lazyrender [data]="data" [rows]="28" [runDoCheck]="runDoCheck"
+  <app-lazyrender fxFlex [data]="data" [rows]="28" [runDoCheck]="runDoCheck"
                   [virtualRowHeight]="virtualRowHeight"
                   [isToFetchDataOnSort]="isToFetchDataOnSort"
                   (dataUpdate)='dataUpdated()'
@@ -68,6 +69,7 @@
               <ng-container
                             *ngTemplateOutlet="expandTemplate; context: {$implicit: rowData, columns: columns}">
               </ng-container>
+              j<div fxFlex="0px" class="tableviewedit-creation-border"></div>
             </div>
           </td>
         </tr>
