@@ -90,6 +90,9 @@ main(int argc, char *argv[])
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
 #endif
 
+    //check for panic dump
+    checkpanicdump();
+
     // Register for sysmond metrics
     delphi::objects::AsicTemperatureMetrics::CreateTable();
     delphi::objects::AsicPowerMetrics::CreateTable();

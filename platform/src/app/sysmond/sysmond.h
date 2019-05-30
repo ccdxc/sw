@@ -45,5 +45,6 @@ static monfunc_t monfunc_t_##fnc \
     .func = fnc, \
 }
 
+void checkpanicdump (void);
 void sysmgrsystemled (systemled_t led);
 #endif /*__SYSMOND_H__*/
