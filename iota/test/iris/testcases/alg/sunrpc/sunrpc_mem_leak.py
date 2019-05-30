@@ -61,7 +61,7 @@ def Trigger(tc):
         tc.cmd_cookies.append("show security flow-gate")
 
     # Get the timeout from the config
-    api.Trigger_AddNaplesCommand(req, naples.node_name, "sleep 120", timeout=300)
+    api.Trigger_AddNaplesCommand(req, naples.node_name, "sleep 200", timeout=300)
     tc.cmd_cookies.append("sleep")
 
     api.Trigger_AddNaplesCommand(req, naples.node_name,
