@@ -76,8 +76,8 @@ mem_hash_p4pd_hwkey_hwmask_build(uint32_t tableid, void *swkey,
         return P4PD_SUCCESS;
     }
     MEMHASH_P4PD_STATS_INCR(hwkey_build);
-    return p4pd_hwkey_hwmask_build(tableid, swkey, swkey_mask,
-                                   hw_key, hw_key_y);
+    return p4pd_global_hwkey_hwmask_build(tableid, swkey, swkey_mask,
+                                          hw_key, hw_key_y);
 }
 
 p4pd_error_t
@@ -86,9 +86,11 @@ mem_hash_p4pd_set_entry_valid(mem_hash_api_context *ctx, uint32_t entry_valid) {
         return P4PD_SUCCESS;
     }
     MEMHASH_P4PD_STATS_INCR(hwfield_set);
-    return p4pd_actiondata_hwfield_set(ctx->table_id, ctx->params->action_id,
-                           HWFIELD_SLOT_ID_ENTRY_VALID,
-                           (uint8_t *)&entry_valid, ctx->sw_data);
+    return p4pd_global_actiondata_hwfield_set(ctx->table_id,
+                                              ctx->params->action_id,
+                                              HWFIELD_SLOT_ID_ENTRY_VALID,
+                                              (uint8_t *)&entry_valid,
+                                              ctx->sw_data);
 }
 
 uint32_t
@@ -99,9 +101,11 @@ mem_hash_p4pd_get_entry_valid(mem_hash_api_context *ctx) {
         return 0;
     }
     MEMHASH_P4PD_STATS_INCR(hwfield_get);
-    ret = p4pd_actiondata_hwfield_get(ctx->table_id, ctx->params->action_id,
-                              HWFIELD_SLOT_ID_ENTRY_VALID,
-                              (uint8_t *)&entry_valid, ctx->sw_data);
+    ret = p4pd_global_actiondata_hwfield_get(ctx->table_id,
+                                             ctx->params->action_id,
+                                             HWFIELD_SLOT_ID_ENTRY_VALID,
+                                             (uint8_t *)&entry_valid,
+                                             ctx->sw_data);
     SDK_ASSERT(ret == P4PD_SUCCESS);
     return entry_valid;
 }
@@ -113,9 +117,10 @@ mem_hash_p4pd_set_hint(mem_hash_api_context *ctx,
         return P4PD_SUCCESS;
     }
     MEMHASH_P4PD_STATS_INCR(hwfield_set);
-    return p4pd_actiondata_hwfield_set(ctx->table_id, ctx->params->action_id,
-                           HWFIELD_SLOT_ID_HINT(slot),
-                           (uint8_t *)&hint, ctx->sw_data);
+    return p4pd_global_actiondata_hwfield_set(ctx->table_id,
+                                              ctx->params->action_id,
+                                              HWFIELD_SLOT_ID_HINT(slot),
+                                              (uint8_t *)&hint, ctx->sw_data);
 }
 
 uint32_t
@@ -126,9 +131,10 @@ mem_hash_p4pd_get_hint(mem_hash_api_context *ctx, uint32_t slot) {
         return 0;
     }
     MEMHASH_P4PD_STATS_INCR(hwfield_get);
-    ret = p4pd_actiondata_hwfield_get(ctx->table_id, ctx->params->action_id,
-                              HWFIELD_SLOT_ID_HINT(slot),
-                              (uint8_t *)&hint, ctx->sw_data);
+    ret = p4pd_global_actiondata_hwfield_get(ctx->table_id,
+                                             ctx->params->action_id,
+                                             HWFIELD_SLOT_ID_HINT(slot),
+                                             (uint8_t *)&hint, ctx->sw_data);
     SDK_ASSERT(ret == P4PD_SUCCESS);
     return hint;
 }
@@ -139,9 +145,10 @@ mem_hash_p4pd_set_more_hints(mem_hash_api_context *ctx, uint32_t more_hints) {
         return P4PD_SUCCESS;
     }
     MEMHASH_P4PD_STATS_INCR(hwfield_set);
-    return p4pd_actiondata_hwfield_set(ctx->table_id, ctx->params->action_id,
-                           HWFIELD_SLOT_ID_MORE_HINTS(ctx->props->num_hints),
-                           (uint8_t *)&more_hints, ctx->sw_data);
+    return p4pd_global_actiondata_hwfield_set(ctx->table_id,
+               ctx->params->action_id,
+               HWFIELD_SLOT_ID_MORE_HINTS(ctx->props->num_hints),
+               (uint8_t *)&more_hints, ctx->sw_data);
 }
 
 uint32_t
@@ -152,9 +159,10 @@ mem_hash_p4pd_get_more_hints(mem_hash_api_context *ctx) {
         return 0;
     }
     MEMHASH_P4PD_STATS_INCR(hwfield_get);
-    ret = p4pd_actiondata_hwfield_get(ctx->table_id, ctx->params->action_id,
-                              HWFIELD_SLOT_ID_MORE_HINTS(ctx->props->num_hints),
-                              (uint8_t *)&more_hints, ctx->sw_data);
+    ret = p4pd_global_actiondata_hwfield_get(ctx->table_id,
+              ctx->params->action_id,
+              HWFIELD_SLOT_ID_MORE_HINTS(ctx->props->num_hints),
+              (uint8_t *)&more_hints, ctx->sw_data);
     SDK_ASSERT(ret == P4PD_SUCCESS);
     return more_hints;
 }
@@ -166,9 +174,10 @@ mem_hash_p4pd_set_hash(mem_hash_api_context *ctx,
         return P4PD_SUCCESS;
     }
     MEMHASH_P4PD_STATS_INCR(hwfield_set);
-    return p4pd_actiondata_hwfield_set(ctx->table_id, ctx->params->action_id,
-                                       HWFIELD_SLOT_ID_HASH(slot),
-                                       (uint8_t *)&hash, ctx->sw_data);
+    return p4pd_global_actiondata_hwfield_set(ctx->table_id,
+                                              ctx->params->action_id,
+                                              HWFIELD_SLOT_ID_HASH(slot),
+                                              (uint8_t *)&hash, ctx->sw_data);
 }
 
 uint32_t
@@ -179,9 +188,10 @@ mem_hash_p4pd_get_hash(mem_hash_api_context *ctx, uint32_t slot) {
         return 0;
     }
     MEMHASH_P4PD_STATS_INCR(hwfield_get);
-    ret = p4pd_actiondata_hwfield_get(ctx->table_id, ctx->params->action_id,
-                                      HWFIELD_SLOT_ID_HASH(slot),
-                                      (uint8_t *)&hash, ctx->sw_data);
+    ret = p4pd_global_actiondata_hwfield_get(ctx->table_id,
+                                             ctx->params->action_id,
+                                             HWFIELD_SLOT_ID_HASH(slot),
+                                             (uint8_t *)&hash, ctx->sw_data);
     SDK_ASSERT(ret == P4PD_SUCCESS);
     return hash;
 }
@@ -193,9 +203,10 @@ mem_hash_p4pd_set_more_hashs(mem_hash_api_context *ctx,
         return P4PD_SUCCESS;
     }
     MEMHASH_P4PD_STATS_INCR(hwfield_set);
-    return p4pd_actiondata_hwfield_set(ctx->table_id, ctx->params->action_id,
-                           HWFIELD_SLOT_ID_MORE_HASHS(ctx->props->num_hints),
-                           (uint8_t *)&more_hashs, ctx->sw_data);
+    return p4pd_global_actiondata_hwfield_set(ctx->table_id,
+               ctx->params->action_id,
+               HWFIELD_SLOT_ID_MORE_HASHS(ctx->props->num_hints),
+               (uint8_t *)&more_hashs, ctx->sw_data);
 }
 
 uint32_t
@@ -206,9 +217,10 @@ mem_hash_p4pd_get_more_hashs(mem_hash_api_context *ctx) {
         return 0;
     }
     MEMHASH_P4PD_STATS_INCR(hwfield_get);
-    ret = p4pd_actiondata_hwfield_get(ctx->table_id, ctx->params->action_id,
-                              HWFIELD_SLOT_ID_MORE_HASHS(ctx->props->num_hints),
-                              (uint8_t *)&more_hashs, ctx->sw_data);
+    ret = p4pd_global_actiondata_hwfield_get(ctx->table_id,
+              ctx->params->action_id,
+              HWFIELD_SLOT_ID_MORE_HASHS(ctx->props->num_hints),
+              (uint8_t *)&more_hashs, ctx->sw_data);
     SDK_ASSERT(ret == P4PD_SUCCESS);
     return more_hashs;
 }
@@ -219,8 +231,9 @@ mem_hash_p4pd_appdata_set(mem_hash_api_context *ctx, void *appdata) {
         return P4PD_SUCCESS;
     }
     MEMHASH_P4PD_STATS_INCR(appdata_set);
-    return p4pd_actiondata_appdata_set(ctx->table_id, ctx->params->action_id,
-                                       appdata, ctx->sw_data);
+    return p4pd_global_actiondata_appdata_set(ctx->table_id,
+                                              ctx->params->action_id,
+                                              appdata, ctx->sw_data);
 }
 
 p4pd_error_t
@@ -229,8 +242,9 @@ mem_hash_p4pd_appdata_get(mem_hash_api_context *ctx, void *appdata) {
         return P4PD_SUCCESS;
     }
     MEMHASH_P4PD_STATS_INCR(appdata_get);
-    return p4pd_actiondata_appdata_get(ctx->table_id, ctx->params->action_id,
-                                       appdata, ctx->sw_data);
+    return p4pd_global_actiondata_appdata_set(ctx->table_id,
+                                              ctx->params->action_id,
+                                              appdata, ctx->sw_data);
 }
 
 p4pd_error_t
@@ -241,10 +255,11 @@ mem_hash_p4pd_entry_read(uint32_t tableid, uint32_t index,
         return P4PD_SUCCESS;
     }
     MEMHASH_P4PD_STATS_INCR(entry_read);
-    return p4pd_entry_read(tableid, index, swkey, swkey_mask, actiondata);
+    return p4pd_global_entry_read(tableid, index, swkey,
+                                  swkey_mask, actiondata);
 }
 
-p4pd_error_t 
+p4pd_error_t
 mem_hash_p4pd_entry_install(uint32_t tableid, uint32_t index,
                             void *swkey, void *swkey_mask,
                             void *actiondata) {
@@ -252,5 +267,6 @@ mem_hash_p4pd_entry_install(uint32_t tableid, uint32_t index,
         return P4PD_SUCCESS;
     }
     MEMHASH_P4PD_STATS_INCR(entry_install);
-    return p4pd_entry_install(tableid, index, swkey, swkey_mask, actiondata);
+    return p4pd_global_entry_install(tableid, index, swkey,
+                                     swkey_mask, actiondata);
 }

@@ -83,7 +83,7 @@ p4pd_global_hwentry_query (uint32_t tableid,
 p4pd_error_t
 p4pd_global_entry_write (uint32_t tableid,
                          uint32_t  index,
-                         uint8_t   *hwkey, 
+                         uint8_t   *hwkey,
                          uint8_t   *hwkey_mask,
                          void      *actiondata)
 {
@@ -112,14 +112,14 @@ p4pd_global_entry_write (uint32_t tableid,
 p4pd_error_t
 p4pd_global_entry_write_with_datamask (uint32_t tableid,
                                        uint32_t  index,
-                                       uint8_t   *hwkey, 
+                                       uint8_t   *hwkey,
                                        uint8_t   *hwkey_mask,
                                        void      *actiondata,
                                        void      *actiondata_mask)
 {
     if ((tableid >= p4pd_tableid_min_get()) &&
         (tableid <= p4pd_tableid_max_get())) {
-        return (p4pd_entry_write_with_datamask(tableid, index, hwkey, hwkey_mask, 
+        return (p4pd_entry_write_with_datamask(tableid, index, hwkey, hwkey_mask,
                                                actiondata, actiondata_mask));
     } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
                (tableid <= p4pd_rxdma_tableid_max_get())) {
@@ -307,9 +307,9 @@ p4pd_tbl_packing_json_parse (p4pd_cfg_t *p4pd_cfg)
     BOOST_FOREACH(pt::ptree::value_type &p4_tbl, json_pt.get_child(JSON_KEY_TABLES)) {
         std::string tablename = p4_tbl.second.get<std::string>(JSON_KEY_TABLE_NAME);
         std::string match_type = p4_tbl.second.get<std::string>(JSON_KEY_MATCH_TYPE);
-        std::string direction = p4_tbl.second.get<std::string>(JSON_KEY_DIRECTION); 
-        std::string overflow  = p4_tbl.second.get<std::string>(JSON_KEY_OVERFLOW); 
-        std::string overflow_parent  = p4_tbl.second.get<std::string>(JSON_KEY_OVERFLOW_PARENT); 
+        std::string direction = p4_tbl.second.get<std::string>(JSON_KEY_DIRECTION);
+        std::string overflow  = p4_tbl.second.get<std::string>(JSON_KEY_OVERFLOW);
+        std::string overflow_parent  = p4_tbl.second.get<std::string>(JSON_KEY_OVERFLOW_PARENT);
 
         tableid = p4pd_get_tableid_from_tablename(tablename.c_str());
         if (tableid == -1) {
@@ -476,4 +476,132 @@ p4pd_global_actiondata_appdata_size_get (uint32_t tableid, uint8_t actionid)
         SDK_ASSERT(0);
     }
     return 0;
+}
+
+p4pd_error_t
+p4pd_global_actiondata_appdata_set (uint32_t tableid, uint8_t actionid,
+                                    void *appdata, void *actiondata)
+{
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
+        return p4pd_actiondata_appdata_set(tableid, actionid,
+                                           appdata, actiondata);
+    } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
+               (tableid <= p4pd_rxdma_tableid_max_get())) {
+        return p4pd_rxdma_actiondata_appdata_set(tableid, actionid,
+                                                 appdata, actiondata);
+    } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
+               (tableid <= p4pd_txdma_tableid_max_get())) {
+        return p4pd_txdma_actiondata_appdata_set(tableid, actionid,
+                                                 appdata, actiondata);
+    } else {
+        SDK_ASSERT(0);
+    }
+    return P4PD_SUCCESS;
+}
+
+p4pd_error_t
+p4pd_global_entry_install (uint32_t tableid, uint32_t index,
+                           void *swkey, void *swkey_mask,
+                           void *actiondata)
+{
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
+        return p4pd_entry_install(tableid, index, swkey,
+                                  swkey_mask, actiondata);
+    } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
+               (tableid <= p4pd_rxdma_tableid_max_get())) {
+        return p4pd_rxdma_entry_install(tableid, index, swkey,
+                                        swkey_mask, actiondata);
+    } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
+               (tableid <= p4pd_txdma_tableid_max_get())) {
+        return p4pd_txdma_entry_install(tableid, index, swkey,
+                                        swkey_mask, actiondata);
+    } else {
+        SDK_ASSERT(0);
+    }
+    return P4PD_SUCCESS;
+}
+
+p4pd_error_t
+p4pd_global_hwkey_hwmask_build (uint32_t tableid, void *swkey,
+                                void *swkey_mask, uint8_t *hw_key,
+                                uint8_t *hw_key_mask)
+{
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
+        return p4pd_hwkey_hwmask_build(tableid, swkey,
+                                       swkey_mask, hw_key, hw_key_mask);
+    } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
+               (tableid <= p4pd_rxdma_tableid_max_get())) {
+        return p4pd_rxdma_hwkey_hwmask_build(tableid, swkey,
+                                             swkey_mask, hw_key, hw_key_mask);
+    } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
+               (tableid <= p4pd_txdma_tableid_max_get())) {
+        return p4pd_txdma_hwkey_hwmask_build(tableid, swkey,
+                                             swkey_mask, hw_key, hw_key_mask);
+    } else {
+        SDK_ASSERT(0);
+    }
+    return P4PD_SUCCESS;
+}
+
+p4pd_error_t
+p4pd_global_actiondata_hwfield_set (uint32_t tableid, uint8_t actionid,
+                                    uint32_t argument_slotid,
+                                    uint8_t *argumentvalue,
+                                    void *actiondata)
+{
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
+        return p4pd_actiondata_hwfield_set(tableid, actionid,
+                                           argument_slotid,
+                                           argumentvalue,
+                                           actiondata);
+    } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
+               (tableid <= p4pd_rxdma_tableid_max_get())) {
+        return p4pd_rxdma_actiondata_hwfield_set(tableid, actionid,
+                                                 argument_slotid,
+                                                 argumentvalue,
+                                                 actiondata);
+    } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
+               (tableid <= p4pd_txdma_tableid_max_get())) {
+        return p4pd_txdma_actiondata_hwfield_set(tableid, actionid,
+                                                 argument_slotid,
+                                                 argumentvalue,
+                                                 actiondata);
+    } else {
+        SDK_ASSERT(0);
+    }
+    return P4PD_SUCCESS;
+}
+
+p4pd_error_t
+p4pd_global_actiondata_hwfield_get (uint32_t tableid, uint8_t actionid,
+                                    uint32_t argument_slotid,
+                                    uint8_t *argumentvalue,
+                                    void *actiondata)
+{
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
+        return p4pd_actiondata_hwfield_get(tableid, actionid,
+                                           argument_slotid,
+                                           argumentvalue,
+                                           actiondata);
+    } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
+               (tableid <= p4pd_rxdma_tableid_max_get())) {
+        return p4pd_rxdma_actiondata_hwfield_get(tableid, actionid,
+                                                 argument_slotid,
+                                                 argumentvalue,
+                                                 actiondata);
+    } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
+               (tableid <= p4pd_txdma_tableid_max_get())) {
+        return p4pd_txdma_actiondata_hwfield_get(tableid, actionid,
+                                                 argument_slotid,
+                                                 argumentvalue,
+                                                 actiondata);
+    } else {
+        SDK_ASSERT(0);
+    }
+    return P4PD_SUCCESS;
 }

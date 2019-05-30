@@ -105,7 +105,6 @@ security_policy_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     policy.num_rules = spec->num_rules;
     policy.rules = spec->rules;
     PDS_TRACE_DEBUG("Processing security policy %u", spec->key.id);
-#if 0
     ret = rfc_policy_create(&policy, security_policy_root_addr_,
               security_policy_impl_db()->security_policy_table_size(spec->af,
                                                                     spec->direction));
@@ -113,9 +112,6 @@ security_policy_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         PDS_TRACE_ERR("Failed to build RFC policy table, err : %u", ret);
     }
     return ret;
-#endif
-    // TODO: REMOVE
-    return SDK_RET_ERR;
 }
 
 sdk_ret_t

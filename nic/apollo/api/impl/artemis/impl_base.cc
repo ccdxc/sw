@@ -101,6 +101,9 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
     case IMPL_OBJ_ID_SVC_MAPPING:
         return svc_mapping_impl::factory((pds_svc_mapping_spec_t *)args);
 
+    case IMPL_OBJ_ID_VPC_PEER:
+        return vpc_peer_impl::factory((pds_vpc_peer_spec_t *)args);
+
     default:
         break;
     }
@@ -183,6 +186,9 @@ impl_base::destroy(impl_obj_id_t obj_id, impl_base *impl) {
 
     case IMPL_OBJ_ID_SVC_MAPPING:
         return svc_mapping_impl::destroy((svc_mapping_impl *)impl);
+
+    case IMPL_OBJ_ID_VPC_PEER:
+        return vpc_peer_impl::destroy((vpc_peer_impl *)impl);
 
     default:
         break;

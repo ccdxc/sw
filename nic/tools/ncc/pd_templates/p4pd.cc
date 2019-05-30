@@ -4248,10 +4248,10 @@ ${api_prefix}_actiondata_appdata_get(uint32_t   tableid,
 //::        #endif
 }
 
-//::        if genhwfields_actiondata_api:
 uint32_t
 ${api_prefix}_actiondata_hwfields_count_get(uint32_t tableid, uint8_t actionid)
 {
+//::        if genhwfields_actiondata_api:
     switch (tableid) {
 //::            for table, tid in tabledict.items():
 //::                if pddict['tables'][table]['hwfields']:
@@ -4284,6 +4284,10 @@ ${api_prefix}_actiondata_hwfields_count_get(uint32_t tableid, uint8_t actionid)
         break;
     }
     return (0);
+//::        else:
+    assert(0);
+    return (0);
+//::        #endif
 }
 
 p4pd_error_t
@@ -4293,6 +4297,7 @@ ${api_prefix}_actiondata_hwfield_set(uint32_t   tableid,
                             uint8_t    *argumentvalue,
                             void       *actiondata)
 {
+//::        if genhwfields_actiondata_api:
     switch (tableid) {
 //::            for table, tid in tabledict.items():
 //::                if pddict['tables'][table]['hwfields']:
@@ -4353,6 +4358,10 @@ ${api_prefix}_actiondata_hwfield_set(uint32_t   tableid,
         break;
     }
     return (P4PD_SUCCESS);
+//::        else:
+    assert(0);
+    return (P4PD_FAIL);
+//::        #endif
 }
 
 p4pd_error_t
@@ -4362,6 +4371,7 @@ ${api_prefix}_actiondata_hwfield_get(uint32_t   tableid,
                             uint8_t    *argumentvalue,
                             void       *actiondata)
 {
+//::        if genhwfields_actiondata_api:
     switch (tableid) {
 //::            for table, tid in tabledict.items():
 //::                if pddict['tables'][table]['hwfields']:
@@ -4421,9 +4431,11 @@ ${api_prefix}_actiondata_hwfield_get(uint32_t   tableid,
         break;
     }
     return (P4PD_SUCCESS);
-}
-
+//::        else:
+    assert(0);
+    return (P4PD_FAIL);
 //::        #endif
+}
 
 //::    #endif
 

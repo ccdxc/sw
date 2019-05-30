@@ -220,7 +220,7 @@ vpc_peer_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
 error:
     return ret;
 #endif
-    return SDK_RET_ERR;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

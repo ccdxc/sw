@@ -31,7 +31,7 @@ typedef struct mem_hash_mock_table_size_ {
 } mem_hash_mock_table_size_t;
 
 mem_hash_mock_table_size_t mem_hash_mock_table_sizes[] = {
-    [ MEM_HASH_P4TBL_ID_NONE ] = {  
+    [ MEM_HASH_P4TBL_ID_NONE ] = {
         // MEM_HASH_P4TBL_ID_NONE
         .name = "NONE",
         .ksize = 0,
@@ -42,7 +42,7 @@ mem_hash_mock_table_size_t mem_hash_mock_table_sizes[] = {
     [ MEM_HASH_P4TBL_ID_H5 ] = {
         // MEM_HASH_P4TBL_ID_H5
         .name = "MEM_HASH_P4TBL_ID_H5",
-        .ksize = sizeof(mem_hash_h5_key_t), 
+        .ksize = sizeof(mem_hash_h5_key_t),
         .dsize = sizeof(mem_hash_h5_actiondata_t),
         .asize = sizeof(mem_hash_h5_appdata_t),
         .tsize = 16*1024*1024,
@@ -50,7 +50,7 @@ mem_hash_mock_table_size_t mem_hash_mock_table_sizes[] = {
     [ MEM_HASH_P4TBL_ID_H5_OHASH ] = {
         // MEM_HASH_P4TBL_ID_H5_OHASH
         .name = "MEM_HASH_P4TBL_ID_H5_OHASH",
-        .ksize = sizeof(mem_hash_h5_key_t), 
+        .ksize = sizeof(mem_hash_h5_key_t),
         .dsize = sizeof(mem_hash_h5_actiondata_t),
         .asize = sizeof(mem_hash_h5_appdata_t),
         .tsize = 2*1024*1024,
@@ -58,7 +58,7 @@ mem_hash_mock_table_size_t mem_hash_mock_table_sizes[] = {
     [ MEM_HASH_P4TBL_ID_H10 ] = {
         // MEM_HASH_P4TBL_ID_H10
         .name = "MEM_HASH_P4TBL_ID_H10",
-        .ksize = sizeof(mem_hash_h10_key_t), 
+        .ksize = sizeof(mem_hash_h10_key_t),
         .dsize = sizeof(mem_hash_h10_actiondata_t),
         .asize = sizeof(mem_hash_h10_appdata_t),
         .tsize = 256*1024,
@@ -66,12 +66,12 @@ mem_hash_mock_table_size_t mem_hash_mock_table_sizes[] = {
     [ MEM_HASH_P4TBL_ID_H10_OHASH ] = {
         // MEM_HASH_P4TBL_ID_H10_OHASH
         .name = "MEM_HASH_P4TBL_ID_H10_OHASH",
-        .ksize = sizeof(mem_hash_h10_key_t), 
+        .ksize = sizeof(mem_hash_h10_key_t),
         .dsize = sizeof(mem_hash_h10_actiondata_t),
         .asize = sizeof(mem_hash_h10_appdata_t),
         .tsize = 64*1024,
     },
-    [ MEM_HASH_P4TBL_ID_MAX ] = {  
+    [ MEM_HASH_P4TBL_ID_MAX ] = {
         // MEM_HASH_P4TBL_ID_MAX
         .name = "NONE",
         .ksize = 0,
@@ -118,7 +118,7 @@ mem_hash_mock_init ()
         if (table_size == 0) {
             continue;
         }
-        
+
         mocktables[tid].klist = calloc(table_size, ksize);
         mocktables[tid].dlist = calloc(table_size, dsize);
 
@@ -160,7 +160,7 @@ mem_hash_mock_get_valid_count (uint32_t table_id)
         case MEM_HASH_P4TBL_ID_H5_OHASH:
         {
             mem_hash_h5_actiondata_t *dlist = (mem_hash_h5_actiondata_t *)(mocktables[table_id].dlist);
-            if (dlist[i].action_u.info.entry_valid) { 
+            if (dlist[i].action_u.info.entry_valid) {
                 assert(dlist[i].action_u.info.entry_valid == 1);
             }
             count = count + dlist[i].action_u.info.entry_valid;
@@ -184,14 +184,14 @@ p4pd_hwentry_query(uint32_t tableid,
     return;
 }
 
-int 
+int
 p4pd_entry_write (unsigned int table_id, unsigned int index, unsigned char *hwkey,
                   unsigned char *hwkey_y, void *actiondata)
 {
     uint32_t ksize = 0;
     uint32_t dsize = 0;
     get_key_data_sizes_(table_id, &ksize, &dsize);
-    
+
     assert(index < mem_hash_mock_table_sizes[table_id].tsize);
     switch (table_id) {
     case MEM_HASH_P4TBL_ID_H10:
@@ -215,7 +215,7 @@ p4pd_entry_write (unsigned int table_id, unsigned int index, unsigned char *hwke
     default:
         assert(0);
     }
-    
+
     return 0;
 }
 
@@ -231,7 +231,17 @@ p4pd_entry_install(uint32_t tableid,
                             (unsigned char *)swkey_mask, actiondata);
 }
 
-int 
+p4pd_error_t
+p4pd_global_entry_install(uint32_t tableid,
+                          uint32_t index,
+                          void    *swkey,
+                          void    *swkey_mask,
+                          void    *actiondata)
+{
+    return p4pd_entry_install(tableid, index, swkey, swkey_mask, actiondata);
+}
+
+int
 p4pd_entry_read(uint32_t table_id, uint32_t index, void *swkey,
                 void *swkey_mask, void *actiondata)
 {
@@ -266,6 +276,12 @@ p4pd_entry_read(uint32_t table_id, uint32_t index, void *swkey,
     return 0;
 }
 
+int
+p4pd_global_entry_read(uint32_t table_id, uint32_t index, void *swkey,
+                       void *swkey_mask, void *actiondata) {
+    return p4pd_entry_read(table_id, index, swkey, swkey_mask, actiondata);
+}
+
 p4pd_error_t
 p4pd_hwkey_hwmask_build(uint32_t   tableid,
                         void       *swkey,
@@ -279,6 +295,16 @@ p4pd_hwkey_hwmask_build(uint32_t   tableid,
     return 0;
 }
 
+p4pd_error_t
+p4pd_global_hwkey_hwmask_build(uint32_t   tableid,
+                               void       *swkey,
+                               void       *swkey_mask,
+                               uint8_t    *hw_key,
+                               uint8_t    *hw_key_y)
+{
+    return p4pd_hwkey_hwmask_build(tableid, swkey, swkey_mask,
+                                   hw_key, hw_key_y);
+}
 
 p4pd_error_t
 p4pd_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
@@ -300,7 +326,7 @@ p4pd_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
     props->tabledepth = sizeinfo->tsize;
     props->hbm_layout.entry_width = 64;
 
-    
+
     if (table_id == MEM_HASH_P4TBL_ID_H5) {
         props->has_oflow_table = 1;
         props->oflow_table_id = MEM_HASH_P4TBL_ID_H5_OHASH;
@@ -395,8 +421,8 @@ p4pd_mem_hash_entry_set_hint(uint32_t table_id,
     case MEM_HASH_P4TBL_ID_H10_OHASH:
     {
         mem_hash_h10_actiondata_t *dst = (mem_hash_h10_actiondata_t *)data;
-        if (slot == 1) { dst->action_u.info.hint1 = hint; } 
-        else if (slot == 2) { dst->action_u.info.hint2 = hint; } 
+        if (slot == 1) { dst->action_u.info.hint1 = hint; }
+        else if (slot == 2) { dst->action_u.info.hint2 = hint; }
         else if (slot == 3) { dst->action_u.info.hint3 = hint; }
         else if (slot == 4) { dst->action_u.info.hint4 = hint; }
         else if (slot == 5) { dst->action_u.info.hint5 = hint; }
@@ -727,6 +753,15 @@ p4pd_actiondata_appdata_set(uint32_t   tableid,
 }
 
 p4pd_error_t
+p4pd_global_actiondata_appdata_set(uint32_t   tableid,
+                                   uint8_t    actionid,
+                                   void       *appdata,
+                                   void       *actiondata)
+{
+    return p4pd_actiondata_appdata_set(tableid, actionid, appdata, actiondata);
+}
+
+p4pd_error_t
 p4pd_actiondata_appdata_get(uint32_t   tableid,
                             uint8_t    actionid,
                             void       *appdata,
@@ -853,6 +888,17 @@ p4pd_actiondata_hwfield_set(uint32_t   tableid,
 }
 
 p4pd_error_t
+p4pd_global_actiondata_hwfield_set(uint32_t   tableid,
+                                   uint8_t    actionid,
+                                   uint32_t   argument_slotid,
+                                   uint8_t    *argumentvalue,
+                                   void       *actiondata)
+{
+    return p4pd_actiondata_hwfield_set(tableid, actionid, argument_slotid,
+                                       argumentvalue, actiondata);
+}
+
+p4pd_error_t
 p4pd_actiondata_hwfield_get(uint32_t   tableid,
                             uint8_t    actionid,
                             uint32_t   argument_slotid,
@@ -920,6 +966,17 @@ p4pd_actiondata_hwfield_get(uint32_t   tableid,
     return (P4PD_SUCCESS);
 }
 
+p4pd_error_t
+p4pd_global_actiondata_hwfield_get(uint32_t   tableid,
+                                   uint8_t    actionid,
+                                   uint32_t   argument_slotid,
+                                   uint8_t    *argumentvalue,
+                                   void       *actiondata)
+{
+    return p4pd_actiondata_hwfield_get(tableid, actionid, argument_slotid,
+                                       argumentvalue, actiondata);
+}
+
 static char*
 rawstr(void *data, uint32_t len) {
     static char pool[4][512];
@@ -946,10 +1003,10 @@ p4pd_global_table_ds_decoded_string_get (uint32_t   tableid,
                                          void*      sw_key_mask,
                                          void*      action_data,
                                          char*      buffer,
-                                         uint16_t   buf_len) 
+                                         uint16_t   buf_len)
 {
     memset(buffer, 0, buf_len);
-    
+
     switch (tableid) {
     case MEM_HASH_P4TBL_ID_H10:
     case MEM_HASH_P4TBL_ID_H10_OHASH:
@@ -964,7 +1021,7 @@ p4pd_global_table_ds_decoded_string_get (uint32_t   tableid,
         mem_hash_h5_actiondata_t *data = (mem_hash_h5_actiondata_t *)(action_data);
         mem_hash_h5_info_t *info = &(data->action_u.info);
 
-        snprintf(buffer, buf_len, 
+        snprintf(buffer, buf_len,
                  "KEY = type:%#x,sport:%#x,proto:%#x,src:%s,\n"
                  "      tag:%#x,dport:%#x,dst:%s\n"
                  "DAT = action_id:%d,entry_valid:%#x,d1:%#x,d2:%#x,\n"
@@ -972,7 +1029,7 @@ p4pd_global_table_ds_decoded_string_get (uint32_t   tableid,
                  "      hash3:%#x,hint3:%#x,hash4:%#x,hint4:%#x,\n"
                  "      hash5:%#x,hint5:%#x,more_hashs:%#x,more_hints:%#x",
                  key->type, key->sport, key->proto,
-                 rawstr(key->src, 16), key->tag, 
+                 rawstr(key->src, 16), key->tag,
                  key->dport, rawstr(key->dst, 16),
                  data->action_id, info->entry_valid, info->d1, info->d2,
                  info->hash1, info->hint1, info->hash2, info->hint2,

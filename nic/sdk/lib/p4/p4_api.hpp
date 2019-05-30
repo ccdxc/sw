@@ -240,6 +240,23 @@ p4pd_error_t p4pd_hwkey_hwmask_build(uint32_t   tableid,
                                      uint8_t    *hw_key,
                                      uint8_t    *hw_key_mask);
 
+p4pd_error_t p4pd_rxdma_hwkey_hwmask_build(uint32_t   tableid,
+                                           void       *swkey,
+                                           void       *swkey_mask,
+                                           uint8_t    *hw_key,
+                                           uint8_t    *hw_key_mask);
+
+p4pd_error_t p4pd_txdma_hwkey_hwmask_build(uint32_t   tableid,
+                                           void       *swkey,
+                                           void       *swkey_mask,
+                                           uint8_t    *hw_key,
+                                           uint8_t    *hw_key_mask);
+
+p4pd_error_t p4pd_global_hwkey_hwmask_build(uint32_t   tableid,
+                                           void       *swkey,
+                                           void       *swkey_mask,
+                                           uint8_t    *hw_key,
+                                           uint8_t    *hw_key_mask);
 /*
  * Build index value that pipeline uses to lookup
  * p4-table (index based lookup tables). The returned index
@@ -303,6 +320,23 @@ p4pd_error_t p4pd_entry_install(uint32_t tableid,
                                 void    *swkey_mask,
                                 void    *actiondata);
 
+p4pd_error_t p4pd_rxdma_entry_install(uint32_t tableid,
+                                      uint32_t index,
+                                      void    *swkey,
+                                      void    *swkey_mask,
+                                      void    *actiondata);
+
+p4pd_error_t p4pd_txdma_entry_install(uint32_t tableid,
+                                      uint32_t index,
+                                      void    *swkey,
+                                      void    *swkey_mask,
+                                      void    *actiondata);
+
+p4pd_error_t p4pd_global_entry_install(uint32_t tableid,
+                                       uint32_t index,
+                                       void    *swkey,
+                                       void    *swkey_mask,
+                                       void    *actiondata);
 /* Install entry into P4-table (using hw keys).
  *
  * Arguments:
@@ -798,6 +832,9 @@ p4pd_global_table_properties_get(uint32_t tableid, void *tbl_ctx);
 uint32_t
 p4pd_global_actiondata_appdata_size_get(uint32_t tableid, uint8_t actionid);
 
+p4pd_error_t
+p4pd_global_actiondata_appdata_set(uint32_t tableid, uint8_t actionid,
+                                   void *appdata, void *actiondata);
 /*
  * Functions to read/modify Mem Hash entries.
  */
@@ -809,11 +846,53 @@ p4pd_actiondata_hwfield_set(uint32_t   tableid,
                             void       *actiondata);
 
 p4pd_error_t
+p4pd_rxdma_actiondata_hwfield_set(uint32_t   tableid,
+                                  uint8_t    actionid,
+                                  uint32_t   argument_slotid,
+                                  uint8_t    *argumentvalue,
+                                  void       *actiondata);
+
+p4pd_error_t
+p4pd_txdma_actiondata_hwfield_set(uint32_t   tableid,
+                                  uint8_t    actionid,
+                                  uint32_t   argument_slotid,
+                                  uint8_t    *argumentvalue,
+                                  void       *actiondata);
+
+p4pd_error_t
+p4pd_global_actiondata_hwfield_set(uint32_t   tableid,
+                                   uint8_t    actionid,
+                                   uint32_t   argument_slotid,
+                                   uint8_t    *argumentvalue,
+                                   void       *actiondata);
+
+p4pd_error_t
 p4pd_actiondata_hwfield_get(uint32_t   tableid,
                             uint8_t    actionid,
                             uint32_t   argument_slotid,
                             uint8_t    *argumentvalue,
                             void       *actiondata);
+
+p4pd_error_t
+p4pd_rxdma_actiondata_hwfield_get(uint32_t   tableid,
+                                  uint8_t    actionid,
+                                  uint32_t   argument_slotid,
+                                  uint8_t    *argumentvalue,
+                                  void       *actiondata);
+
+p4pd_error_t
+p4pd_txdma_actiondata_hwfield_get(uint32_t   tableid,
+                                  uint8_t    actionid,
+                                  uint32_t   argument_slotid,
+                                  uint8_t    *argumentvalue,
+                                  void       *actiondata);
+
+p4pd_error_t
+p4pd_global_actiondata_hwfield_get(uint32_t   tableid,
+                                   uint8_t    actionid,
+                                   uint32_t   argument_slotid,
+                                   uint8_t    *argumentvalue,
+                                   void       *actiondata);
 
 p4pd_error_t
 p4pd_actiondata_appdata_get(uint32_t   tableid,
@@ -822,10 +901,52 @@ p4pd_actiondata_appdata_get(uint32_t   tableid,
                             void       *actiondata);
 
 p4pd_error_t
+p4pd_rxdma_actiondata_appdata_get(uint32_t   tableid,
+                                  uint8_t    actionid,
+                                  void       *appdata,
+                                  void       *actiondata);
+
+p4pd_error_t
+p4pd_txdma_actiondata_appdata_get(uint32_t   tableid,
+                                  uint8_t    actionid,
+                                  void       *appdata,
+                                  void       *actiondata);
+
+p4pd_error_t
+p4pd_global_actiondata_appdata_get(uint32_t   tableid,
+                                   uint8_t    actionid,
+                                   void       *appdata,
+                                   void       *actiondata);
+
+p4pd_error_t
 p4pd_actiondata_appdata_set(uint32_t   tableid,
                             uint8_t    actionid,
                             void       *appdata,
                             void       *actiondata);
+
+p4pd_error_t
+p4pd_rxdma_actiondata_appdata_set(uint32_t   tableid,
+                                  uint8_t    actionid,
+                                  void       *appdata,
+                                  void       *actiondata);
+
+p4pd_error_t
+p4pd_txdma_actiondata_appdata_set(uint32_t   tableid,
+                                  uint8_t    actionid,
+                                  void       *appdata,
+                                  void       *actiondata);
+
+p4pd_error_t
+p4pd_rxdma_actiondata_appdata_set(uint32_t   tableid,
+                                  uint8_t    actionid,
+                                  void       *appdata,
+                                  void       *actiondata);
+
+p4pd_error_t
+p4pd_txdma_actiondata_appdata_set(uint32_t   tableid,
+                                  uint8_t    actionid,
+                                  void       *appdata,
+                                  void       *actiondata);
 
 uint32_t
 p4pd_actiondata_appdata_size_get(uint32_t   tableid,
