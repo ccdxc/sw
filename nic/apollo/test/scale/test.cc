@@ -1332,6 +1332,7 @@ create_objects (void)
         if (ret != SDK_RET_OK) {
             return ret;
         }
+
         // create v4 meter
         // meter ids: 1 to num_meter
         ret = create_meter(g_test_params.num_meter, g_test_params.meter_scale,
@@ -1349,12 +1350,14 @@ create_objects (void)
             return ret;
         }
     }
+
+    // create TEPs including MyTEP
+    ret = create_teps(g_test_params.num_teps + 1, &g_test_params.tep_pfx);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
     if (apollo()) {
-        // create TEPs including MyTEP
-        ret = create_teps(g_test_params.num_teps + 1, &g_test_params.tep_pfx);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
         // create route tables
         ret = create_route_tables(g_test_params.num_teps, g_test_params.num_vpcs,
                                   g_test_params.num_subnets,
@@ -1364,6 +1367,7 @@ create_objects (void)
         if (ret != SDK_RET_OK) {
             return ret;
         }
+
         // create security policies
         ret = create_security_policy(g_test_params.num_vpcs,
                                      g_test_params.num_subnets,
@@ -1390,12 +1394,14 @@ create_objects (void)
             return ret;
         }
     }
+
     // create vpcs and subnets
     ret = create_vpcs(g_test_params.num_vpcs, &g_test_params.vpc_pfx,
                       &g_test_params.v6_vpc_pfx, g_test_params.num_subnets);
     if (ret != SDK_RET_OK) {
         return ret;
     }
+
     if (artemis()) {
         // create vpc peers
         ret = create_vpc_peers(g_test_params.num_vpcs);
@@ -1403,6 +1409,7 @@ create_objects (void)
             return ret;
         }
     }
+
     if (apollo()) {
         // create RSPAN mirror sessions
         if (g_test_params.mirror_en && (g_test_params.num_rspan > 0)) {
@@ -1412,6 +1419,7 @@ create_objects (void)
             }
         }
     }
+
     // create vnics
     ret = create_vnics(g_test_params.num_vpcs, g_test_params.num_subnets,
                        g_test_params.num_vnics, g_test_params.vlan_start,
@@ -1419,16 +1427,19 @@ create_objects (void)
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    // create mappings
-    ret = create_mappings(g_test_params.num_teps, g_test_params.num_vpcs,
-                          g_test_params.num_subnets, g_test_params.num_vnics,
-                          g_test_params.num_ip_per_vnic, &g_test_params.tep_pfx,
-                          &g_test_params.nat_pfx, &g_test_params.v6_nat_pfx,
-                          g_test_params.num_remote_mappings,
-                          &g_test_params.provider_pfx,
-                          &g_test_params.v6_provider_pfx);
-    if (ret != SDK_RET_OK) {
-        return ret;
+
+    if (apollo()) {
+        // create mappings
+        ret = create_mappings(g_test_params.num_teps, g_test_params.num_vpcs,
+                              g_test_params.num_subnets, g_test_params.num_vnics,
+                              g_test_params.num_ip_per_vnic, &g_test_params.tep_pfx,
+                              &g_test_params.nat_pfx, &g_test_params.v6_nat_pfx,
+                              g_test_params.num_remote_mappings,
+                              &g_test_params.provider_pfx,
+                              &g_test_params.v6_provider_pfx);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
     }
 
 #ifdef TEST_GRPC_APP
@@ -1453,6 +1464,8 @@ create_objects (void)
         return ret;
     }
 #endif
+
+end:
 
 #ifdef TEST_GRPC_APP
     /* BATCH COMMIT */

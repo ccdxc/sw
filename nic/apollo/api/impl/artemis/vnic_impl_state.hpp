@@ -51,15 +51,17 @@ public:
 private:
     indexer *vnic_idxr(void) { return vnic_idxr_; }
     sltcam *vnic_mapping_tbl(void) { return vnic_mapping_tbl_; }
-    directmap *ingress_vnic_info_tbl(void) { return ingress_vnic_info_tbl_; }
+    directmap *rxdma_vnic_info_tbl(void) { return rxdma_vnic_info_tbl_; }
+    directmap *txdma_vnic_info_tbl(void) { return txdma_vnic_info_tbl_; }
     friend class vnic_impl;   // vnic_impl class is friend of vnic_impl_state
 
 private:
-    indexer     *vnic_idxr_;                ///< indexer to allocate hw vnic id
     // NOTE: there is no explicit table mgmt for rx and tx stats, we directly
     //       index using hw_id_ of vnic and and bzero out when we create vnic
-    sltcam      *vnic_mapping_tbl_;         ///< tcam table for VNIC_MAPPING
-    directmap   *ingress_vnic_info_tbl_;    ///< directmap table for INGRESS_VNIC_INFO
+    indexer     *vnic_idxr_;              ///< indexer to allocate hw vnic id
+    sltcam      *vnic_mapping_tbl_;       ///< tcam table for VNIC_MAPPING
+    directmap   *rxdma_vnic_info_tbl_;    ///< directmap table for rxdma VNIC_INFO
+    directmap   *txdma_vnic_info_tbl_;    ///< directmap table for txdma VNIC_INFO
 };
 
 /// @}
