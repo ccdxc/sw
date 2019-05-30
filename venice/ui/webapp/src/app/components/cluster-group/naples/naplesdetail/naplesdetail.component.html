@@ -234,10 +234,11 @@
 
         <div fxFlex fxLayout="column" fxLayoutAlign="center end">
           <div fxFlex="none" fxLayout="row">
-            <div [@slideInOutHorizontal] fxFlex="10" (click)="expandDetailsCard()">
-              <mat-icon fxFlex="none" title="More Details" *ngIf="!showExpandedDetailsCard">
+            <div class="naplesdetail-details-toggle-expand" [@slideInOutHorizontal] fxFlex="10"
+                 (click)="toggleDetailsCard()">
+              <mat-icon fxFlex="none" matTooltip="More Details" *ngIf="!showExpandedDetailsCard">
                 chevron_right</mat-icon>
-              <mat-icon fxFlex="none" title="More Details" *ngIf="showExpandedDetailsCard">
+              <mat-icon fxFlex="none" matTooltip="Less Details" *ngIf="showExpandedDetailsCard">
                 chevron_left</mat-icon>
             </div>
           </div>

@@ -416,7 +416,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     return false;
   }
 
-  expandDetailsCard() {
+  toggleDetailsCard() {
     this.showExpandedDetailsCard = !this.showExpandedDetailsCard;
   }
 }

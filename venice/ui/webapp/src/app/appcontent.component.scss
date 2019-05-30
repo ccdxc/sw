@@ -269,8 +269,5 @@ $sidenavWidth: 200px;
 }
 
 .app-shell-version-text {
-  position: absolute;
-  bottom: 0;
-  line-height: 1;
-  color: white;
+  @include primary-font();
 }
