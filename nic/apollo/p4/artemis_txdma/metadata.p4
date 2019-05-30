@@ -25,7 +25,7 @@ header_type txdma_control_metadata_t {
         p3_class_id         : 20;
         sacl_result         : 1;
         remote_vnic_mapping_tx_ohash_lkp : 1; //TODO-KSM: Replace with P4 to P4+ header
-        pad6                :  4;
+        pad6                : 4;
         vpc_id              : 10;   //TODO-AJEER: Change this to 8 bits
                                     //TODO-ART: Fill original vnic id in RxDMA
         nexthop_group_index : 16;
@@ -33,8 +33,9 @@ header_type txdma_control_metadata_t {
         // TODO-JOHN/MURTY: Find a way to pass the keys from RxDMA to TxDMA
         remote_ip           : 128;  //TODO-KSM: Fill this in RxDMA
         remote_vnic_mapping_tx_ohash : 32; //TODO-KSM: Replace with P4 to P4+ header
-        pad7                :  6;
+        pad7                : 6;
         svc_id              : 10;
+        vnic_id             : 8;
     }
 }
 

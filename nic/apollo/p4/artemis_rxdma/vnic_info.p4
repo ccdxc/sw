@@ -1,7 +1,5 @@
-
-
-// VNIC Info Table Action: Get all LPM roots for a VNET - different roots in Tx & Rx direction
-// Pass the roots to later stages thru PHV
+// VNIC Info Table Action: Get all LPM roots for a VNET - different roots in
+// Tx & Rx direction. Pass the roots to later stages thru PHV
 action vnic_info(entry_valid, lpm_base1, lpm_base2, lpm_base3,
                  lpm_base4, lpm_base5, lpm_base6, lpm_base7,
                  lpm_base8) {
@@ -31,7 +29,7 @@ action vnic_info(entry_valid, lpm_base1, lpm_base2, lpm_base3,
 // VNIC Info table is 256 deep (accomodates 64 VMs with 4 VNETs/VM)
 // We will need separate table for Rx and Tx, but this is defined
 // as single table with direction bit, so a total of 1+8 = 9 bits
-// used as key to index to 512 entries. 
+// used as key to index to 512 entries.
 @pragma stage 0
 @pragma hbm_table
 table vnic_info {

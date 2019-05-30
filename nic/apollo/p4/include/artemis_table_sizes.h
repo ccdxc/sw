@@ -1,6 +1,6 @@
 #define KEY_MAPPING_TABLE_SIZE                              64
-#define VNIC_MAPPING_TABLE_SIZE                             64
-#define VNIC_INFO_TABLE_SIZE                                64
+#define VNIC_MAPPING_TABLE_SIZE                             256
+#define VNIC_INFO_TABLE_SIZE                                256
 #define TEP1_RX_TABLE_SIZE                                  64
 #define TEP2_RX_TABLE_SIZE                                  64
 #define LOCAL_IP_MAPPING_HASH_TABLE_SIZE                    4096        // 4K
@@ -16,14 +16,12 @@
 #define NAT_TABLE_SIZE                                      65536       // 64K
 #define LOCAL_46_MAPPING_TABLE_SIZE                         256
 #define NEXTHOP_TABLE_SIZE                                  1048576     // 1M
-#define VNIC_STATS_TABLE_SIZE                               64
+#define VNIC_STATS_TABLE_SIZE                               256
 #define DROP_STATS_TABLE_SIZE                               64
 
 //RXDMA Tables
 #define RXDMA_VNIC_INFO_TABLE_SIZE                          512
 
-//TXDMA Tables
-#define RXDMA_VNIC_INFO_TXDMA_TABLE_SIZE                    256
 #define MAPPING_TABLE_SIZE                                  2097152     // 2M
 #define MAPPING_OHASH_TABLE_SIZE                            262144      // 256K
 #define REMOTE_46_MAPPING_TABLE_SIZE                        1024

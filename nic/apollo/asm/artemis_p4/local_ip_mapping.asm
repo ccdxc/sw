@@ -10,8 +10,18 @@ struct phv_ p;
 %%
 
 local_ip_mapping_info:
-    nop.e
-    nop
+    nop.!c1.e
+    seq             c1, d.local_ip_mapping_info_d.vnic_id, r0
+    phvwr.c1        p.vnic_metadata_vnic_id, d.local_ip_mapping_info_d.vnic_id
+    phvwr.c1        p.vnic_metadata_vpc_id, d.local_ip_mapping_info_d.vpc_id
+    phvwr.e         p.p4_to_rxdma_service_tag, \
+                        d.local_ip_mapping_info_d.service_tag
+    phvwr.f         p.{p4i_i2e_pa_or_ca_xlate_idx, \
+                        p4i_i2e_public_xlate_idx, \
+                        p4i_i2e_ca6_xlate_idx}, \
+                        d.{local_ip_mapping_info_d.pa_or_ca_xlate_idx,\
+                            local_ip_mapping_info_d.public_xlate_idx, \
+                            local_ip_mapping_info_d.ca6_xlate_idx}
 
 /*****************************************************************************/
 /* error function                                                            */

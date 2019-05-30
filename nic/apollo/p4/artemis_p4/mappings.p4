@@ -1,8 +1,6 @@
 /******************************************************************************/
 /* Local IP mappings                                                          */
 /******************************************************************************/
-@pragma capi appdatafields vnic_id vpc_id service_tag pa_or_ca_xlate_idx public_xlate_idx ca6_xlate_idx
-@pragma capi hwfields_access_api
 action local_ip_mapping_info(vnic_id, vpc_id, service_tag, pa_or_ca_xlate_idx,
                              public_xlate_idx, ca6_xlate_idx) {
     // if table lookup is a miss, return
@@ -45,8 +43,6 @@ table local_ip_mapping_otcam {
 /******************************************************************************/
 /* Service mappings                                                           */
 /******************************************************************************/
-@pragma capi appdatafields service_xlate_idx service_xlate_port
-@pragma capi hwfields_access_api
 action service_mapping_info(service_xlate_idx, service_xlate_port) {
     // if table lookup is a miss, return
 
