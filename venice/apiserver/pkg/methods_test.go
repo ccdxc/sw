@@ -172,23 +172,92 @@ func TestMethodKvWrite(t *testing.T) {
 	if req.Kvreads != 1 {
 		t.Errorf("Expecting [1] read but found [%v]", req.Kvreads)
 	}
+	var updateSpecCall, updateStatusCall int
+	updateSpecFunc := func(ctx context.Context, in interface{}) kvstore.UpdateFunc {
+		return func(oldObj runtime.Object) (newObj runtime.Object, err error) {
+			updateSpecCall++
+			return oldObj, nil
+		}
+	}
+	updateStatusFunc := func(interface{}) kvstore.UpdateFunc {
+		return func(oldObj runtime.Object) (newObj runtime.Object, err error) {
+			updateStatusCall++
+			return oldObj, nil
+		}
+	}
+
+	req.WithReplaceSpecFunction(updateSpecFunc)
+	req.WithReplaceStatusFunction(updateStatusFunc)
 	// Now add the object and check
 	md1 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "POST")
 	ftxn.Empty = true
 	ctx1 := metadata.NewIncomingContext(context.Background(), md1)
 	m.HandleInvocation(ctx1, reqmsg)
-	if globFakeOverlay.CreatePrimaries != 1 && globFakeOverlay.Commits != 1 {
-		t.Errorf("Expecting [1] CreatePrimary and [1] Commit got [%v/%v]", globFakeOverlay.CreatePrimaries, globFakeOverlay.Commits)
+	if globFakeOverlay.CreatePrimaries != 1 || ftxn.CommitOps != 1 {
+		t.Errorf("Expecting [1] CreatePrimary and [1] Commit got [%v/%v]", globFakeOverlay.CreatePrimaries, ftxn.CommitOps)
 	}
+
+	// invoke with updateSpec
+	md1 = metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "POST", apisrv.RequestParamReplaceStatusField, "true")
+	ftxn.Empty = true
+	ctx1 = metadata.NewIncomingContext(context.Background(), md1)
+	m.HandleInvocation(ctx1, reqmsg)
+	if globFakeOverlay.CreatePrimaries != 2 || ftxn.CommitOps != 2 {
+		t.Errorf("Expecting [2] CreatePrimary and [2] Commit got [%v/%v]", globFakeOverlay.CreatePrimaries, ftxn.CommitOps)
+	}
+	if updateSpecCall != 1 {
+		t.Errorf("Update spec was not called")
+	}
+
+	// invoke with updateStatus
+	md1 = metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "POST", apisrv.RequestParamUpdateStatus, "true")
+	ftxn.Empty = true
+	ctx1 = metadata.NewIncomingContext(context.Background(), md1)
+	m.HandleInvocation(ctx1, reqmsg)
+	if globFakeOverlay.CreatePrimaries != 3 || ftxn.CommitOps != 3 {
+		t.Errorf("Expecting [3] CreatePrimary and [3] Commit got [%v/%v]", globFakeOverlay.CreatePrimaries, ftxn.CommitOps)
+	}
+	if updateStatusCall != 1 {
+		t.Errorf("Update status was not called")
+	}
+
 	// Now modify the object and check
 	md2 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "PUT")
 	ctx2 := metadata.NewIncomingContext(context.Background(), md2)
 	m.HandleInvocation(ctx2, reqmsg)
-	if globFakeOverlay.UpdatePrimaries != 1 && globFakeOverlay.Commits != 2 {
-		t.Errorf("Expecting [2] CreatePrimary and [2] Commit got [%v/%v]", globFakeOverlay.UpdatePrimaries, globFakeOverlay.Commits)
+	if globFakeOverlay.UpdatePrimaries != 1 || ftxn.CommitOps != 4 {
+		t.Errorf("Expecting [1] CreatePrimary and [4] Commit got [%v/%v]", globFakeOverlay.UpdatePrimaries, ftxn.CommitOps)
 	}
+
+	// invoke with updateSpec
+	updateSpecCall, updateStatusCall = 0, 0
+	md2 = metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "PUT", apisrv.RequestParamReplaceStatusField, "true")
+	ctx2 = metadata.NewIncomingContext(context.Background(), md2)
+	m.HandleInvocation(ctx2, reqmsg)
+	if globFakeOverlay.UpdatePrimaries != 2 || ftxn.CommitOps != 5 {
+		t.Errorf("Expecting [2] CreatePrimary and [5] Commit got [%v/%v]", globFakeOverlay.UpdatePrimaries, ftxn.CommitOps)
+	}
+	if updateSpecCall != 1 {
+		t.Errorf("Update spec was not called")
+	}
+
+	// invoke with updateStatus
+	md2 = metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "PUT", apisrv.RequestParamUpdateStatus, "true")
+	ctx2 = metadata.NewIncomingContext(context.Background(), md2)
+	m.HandleInvocation(ctx2, reqmsg)
+	if globFakeOverlay.UpdatePrimaries != 3 || ftxn.CommitOps != 6 {
+		t.Errorf("Expecting [3] CreatePrimary and [6] Commit got [%v/%v]", globFakeOverlay.UpdatePrimaries, ftxn.CommitOps)
+	}
+	if updateStatusCall != 1 {
+		t.Errorf("Update status was not called")
+	}
+
 	// Now delete the object and check
 	md3 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "DELETE")

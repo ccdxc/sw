@@ -99,6 +99,7 @@ type OverlayInterface interface {
 	ClearBuffer(ctx context.Context, items []OverlayKey) error
 	Verify(ctx context.Context) (OverlayStatus, error)
 	GetRequirements() RequirementSet
+	NewWrappedTxn(ctx context.Context) kvstore.Txn
 }
 
 // RequirementSet is a collection Requirement objects

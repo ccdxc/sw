@@ -447,6 +447,11 @@ func (f *FakeOverlay) NewTxn() kvstore.Txn {
 	return &FakeTxn{}
 }
 
+// NewWrappedTxn is a mock implementation
+func (f *FakeOverlay) NewWrappedTxn(ctx context.Context) kvstore.Txn {
+	return f.NewTxn()
+}
+
 // FakeRequirement is a mock implementation
 type FakeRequirement struct {
 	CheckCalled, ApplyCalled, FinalizeCalled int

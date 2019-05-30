@@ -290,6 +290,8 @@ type FakeMessage struct {
 	KeyGens             int
 	RuntimeObj          runtime.Object
 	RefMap              map[string]apiintf.ReferenceObj
+	UpdateSpecFunc      func(context.Context, interface{}) kvstore.UpdateFunc
+	UpdateStatusFunc    func(interface{}) kvstore.UpdateFunc
 
 	listFromKvFunc    apisrv.ListFromKvFunc
 	getFromKvFunc     apisrv.GetFromKvFunc
@@ -370,11 +372,13 @@ func (m *FakeMessage) WithUpdateMetaFunction(fn func(ctx context.Context, in int
 
 // WithReplaceSpecFunction is a consistent update function for replacing the Spec
 func (m *FakeMessage) WithReplaceSpecFunction(fn func(context.Context, interface{}) kvstore.UpdateFunc) apisrv.Message {
+	m.UpdateSpecFunc = fn
 	return m
 }
 
 // WithReplaceStatusFunction is a consistent update function for replacing the Status
 func (m *FakeMessage) WithReplaceStatusFunction(fn func(interface{}) kvstore.UpdateFunc) apisrv.Message {
+	m.UpdateStatusFunc = fn
 	return m
 }
 
@@ -605,6 +609,9 @@ func (m *FakeMessage) GetUpdateMetaFunc() func(context.Context, interface{}, boo
 
 // GetUpdateSpecFunc returns the Update function for Spec update
 func (m *FakeMessage) GetUpdateSpecFunc() func(context.Context, interface{}) kvstore.UpdateFunc {
+	if m.UpdateSpecFunc != nil {
+		return m.UpdateSpecFunc
+	}
 	return func(ctx context.Context, i interface{}) kvstore.UpdateFunc {
 		return func(old runtime.Object) (runtime.Object, error) {
 			return old, nil
@@ -614,6 +621,9 @@ func (m *FakeMessage) GetUpdateSpecFunc() func(context.Context, interface{}) kvs
 
 // GetUpdateStatusFunc returns the Update function for Status update
 func (m *FakeMessage) GetUpdateStatusFunc() func(interface{}) kvstore.UpdateFunc {
+	if m.UpdateStatusFunc != nil {
+		return m.UpdateStatusFunc
+	}
 	return func(i interface{}) kvstore.UpdateFunc {
 		return func(old runtime.Object) (runtime.Object, error) {
 			return old, nil

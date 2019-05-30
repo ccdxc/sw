@@ -577,6 +577,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		}
 		kv = ov
 		reqs = ov.GetRequirements()
+		txn = ov.NewWrappedTxn(ctx)
 	} else {
 		if oper == apiintf.CreateOper || oper == apiintf.UpdateOper || oper == apiintf.DeleteOper {
 			id := URI + "[" + uuid.NewV4().String() + "](" + ctxutils.GetPeerID(ctx) + ")"
@@ -593,20 +594,21 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 			kv = ov
 			reqs = ov.GetRequirements()
 			defer cache.DelOverlay(tenant, id)
+			txn = ov.NewWrappedTxn(ctx)
 		} else {
 			kv = singletonAPISrv.getKvConn()
 			if kv == nil {
 				return nil, errShuttingDown.makeError(nil, []string{}, "")
 			}
+			txn = kv.NewTxn()
 		}
 	}
-
-	ctx = apiutils.SetRequirements(ctx, reqs)
-	txn = kv.NewTxn()
 	if txn == nil {
 		// Backend is not established yet, cannot continue
 		return nil, errInternalError.makeError(i, []string{"Connection error, please retry"}, "")
 	}
+	ctx = apiutils.SetRequirements(ctx, reqs)
+
 	key, err = m.getMethDbKey(i, oper)
 	if err != nil {
 		l.ErrorLog("msg", "could not get key", "err", err, "URI", URI)

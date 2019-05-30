@@ -435,8 +435,11 @@ func (a *apiSrv) GetAddr() (string, error) {
 
 // GetVersion returns the native API version
 func (a *apiSrv) GetVersion() string {
-	defer a.RUnlock()
-	a.RLock()
+	if running := a.getRunState(); running {
+		defer a.RUnlock()
+		a.RLock()
+		return a.version
+	}
 	return a.version
 }
 

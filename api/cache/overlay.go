@@ -1419,6 +1419,11 @@ func (c *overlay) NewTxn() kvstore.Txn {
 	return &overlayTxn{ov: c, context: context.TODO()}
 }
 
+// NewWrappedTxn creates a Txn on the overlay wrapped in a context
+func (c *overlay) NewWrappedTxn(ctx context.Context) kvstore.Txn {
+	return &overlayTxn{ov: c, context: ctx}
+}
+
 type overlayTxn struct {
 	ov      *overlay
 	used    bool
@@ -1427,23 +1432,29 @@ type overlayTxn struct {
 
 // Create stages an object creation in a transaction.
 func (t *overlayTxn) Create(key string, obj runtime.Object) error {
-	if getDryRun(t.context) == nil {
+	var verVer int64
+	if dm := getDryRun(t.context); dm == nil {
 		defer t.ov.Unlock()
 		t.ov.Lock()
+	} else {
+		verVer = dm.verVer
 	}
 
-	t.ov.create(t.context, "", "", "", key, nil, obj, 0, false)
+	t.ov.create(t.context, "", "", "", key, nil, obj, verVer, false)
 	t.used = true
 	return nil
 }
 
 // Delete stages an object deletion in a transaction.
 func (t *overlayTxn) Delete(key string, cs ...kvstore.Cmp) error {
-	if getDryRun(t.context) == nil {
+	var verVer int64
+	if dm := getDryRun(t.context); dm == nil {
 		defer t.ov.Unlock()
 		t.ov.Lock()
+	} else {
+		verVer = dm.verVer
 	}
-	t.ov.delete(t.context, "", "", "", key, nil, nil, 0, false)
+	t.ov.delete(t.context, "", "", "", key, nil, nil, verVer, false)
 	t.ov.comparators = append(t.ov.comparators, cs...)
 	t.used = true
 	return nil
