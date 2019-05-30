@@ -112,7 +112,7 @@ typedef struct test_params_s {
     };
     // tags config
     struct {
-        uint32_t num_tags;
+        uint32_t num_tag_trees;
         uint32_t tags_v4_scale;
         uint32_t tags_v6_scale;
     };
@@ -156,6 +156,17 @@ meter_str_to_type (std::string meter_type_str,
     }
 }
 
+static inline void
+route_ipv6pfx_set (ip_prefix_t *pfx, ip_prefix_t *initial_pfx,
+                   uint32_t shift_val, uint32_t len)
+{
+    *pfx = *initial_pfx;
+    pfx->addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-2] = htonl(0xF1D0D1D0);
+    pfx->addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
+                                    htonl((0xC << 28) | (shift_val << 8));
+    pfx->len = len;
+}
+
 //----------------------------------------------------------------------------
 // create route tables
 //------------------------------------------------------------------------------
@@ -181,12 +192,8 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
         v6rtnum = 0;
         v6route_table.key.id = ntables + i;
         for (uint32_t j = 0; j < num_routes; j++) {
-            v6route_table.routes[j].prefix = *v6_route_pfx;
-            v6route_table.routes[j].prefix.addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-2] =
-                htonl(0xF1D0D1D0);
-            v6route_table.routes[j].prefix.addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
-                htonl((0xC << 28) | (v6rtnum++ << 8));
-            v6route_table.routes[j].prefix.len = 120;
+            route_ipv6pfx_set(&v6route_table.routes[j].prefix, v6_route_pfx,
+                              v6rtnum++, 120);
             v6route_table.routes[j].nh_ip.af = IP_AF_IPV4;
             v6route_table.routes[j].nh_ip.addr.v4_addr =
                     tep_pfx->addr.addr.v4_addr + tep_offset++;
@@ -757,45 +764,86 @@ create_vpc_peers (uint32_t num_vpcs)
     return SDK_RET_OK;
 }
 
+static sdk_ret_t
+populate_tags_api_rule_spec (uint32_t id, pds_tag_rule_t *api_rule_spec,
+                             uint32_t *tag_value, uint32_t num_prefixes,
+                             uint32_t *tag_pfx_count, uint8_t ip_af,
+                             ip_prefix_t *v6_route_pfx)
+{
+    api_rule_spec->tag = *tag_value++;
+    ip_prefix_t *prefixes =
+            (ip_prefix_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_METER,
+                           (num_prefixes * sizeof(ip_prefix_t)));
+    memset(prefixes, 0, num_prefixes * sizeof(ip_prefix_t));
+    api_rule_spec->num_prefixes = num_prefixes;
+    api_rule_spec->prefixes = prefixes;
+    for (uint32_t pfx = 0;
+                  pfx < api_rule_spec->num_prefixes; pfx++) {
+        prefixes[pfx].addr.af = ip_af;
+        if (ip_af == IP_AF_IPV4) {
+            prefixes[pfx].len = 24;
+            prefixes[pfx].addr.addr.v4_addr =
+                          ((0xC << 28) | ((*tag_pfx_count)++ << 8));
+        } else {
+            route_ipv6pfx_set(&prefixes[pfx], v6_route_pfx, (*tag_pfx_count)++, 120);
+        }
+        printf("Tag %u, tag_pfx_count %u, ippfx %s\n",
+               id, *tag_pfx_count, ippfx2str(&prefixes[pfx]));
+    }
+    return SDK_RET_OK;
+}
+
+#define DEFAULT_TAGS_NUM_PREFIXES_TESTAPP 4
 sdk_ret_t
-create_tags (uint32_t num_tags, uint32_t scale, uint32_t ip_af)
+create_tags (uint32_t num_tag_trees, uint32_t scale,
+             uint8_t ip_af, ip_prefix_t *v6_route_pfx)
 {
     sdk_ret_t ret;
     pds_tag_spec_t pds_tag;
-    uint32_t num_prefixes = 4;
+    uint32_t num_prefixes = DEFAULT_TAGS_NUM_PREFIXES_TESTAPP;
     // unique IDs across tags
     static pds_tag_id_t id = 0;
     static uint32_t tag_pfx_count = 0;
     static uint32_t tag_value = 0;
 
-    if (num_tags == 0) {
+    if (num_tag_trees == 0) {
         return SDK_RET_OK;
     }
 
     memset(&pds_tag, 0, sizeof(pds_tag));
     pds_tag.af = ip_af;
-    pds_tag.num_rules = scale/4;
+
+    // if scale < DEFAULT_TAGS_NUM_PREFIXES_TESTAPP,
+    // create num_rules=scale with num_prefixes=1
+    if (scale < DEFAULT_TAGS_NUM_PREFIXES_TESTAPP) {
+        num_prefixes = 1;
+    }
+
+    // if the scale is not divisible by num_prefixes, then create
+    // remainder rules with num_prefixes=1
+    uint32_t num_rules = scale/num_prefixes;
+    uint32_t num_rules_rem = scale % num_prefixes;
+
+    pds_tag.num_rules = num_rules + num_rules_rem;
+
+    // allocate (pds_tag.num_rules + num_rules_rem)
     pds_tag.rules =
             (pds_tag_rule_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_TAG,
-                            (pds_tag.num_rules * sizeof(pds_tag_rule_t)));
-    for (uint32_t i = 0; i < num_tags; i++) {
+                        (pds_tag.num_rules * sizeof(pds_tag_rule_t)));
+    for (uint32_t i = 0; i < num_tag_trees; i++) {
         pds_tag.key.id = id++;
-        for (uint32_t rule = 0; rule < pds_tag.num_rules; rule++) {
+        for (uint32_t rule = 0; rule < num_rules; rule++) {
             pds_tag_rule_t *api_rule_spec = &pds_tag.rules[rule];
-            api_rule_spec->tag = tag_value++;
-            ip_prefix_t *prefixes =
-                    (ip_prefix_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_METER,
-                                   (num_prefixes * sizeof(ip_prefix_t)));
-            memset(prefixes, 0, num_prefixes * sizeof(ip_prefix_t));
-            api_rule_spec->num_prefixes = num_prefixes;
-            api_rule_spec->prefixes = prefixes;
-            for (uint32_t pfx = 0;
-                    pfx < api_rule_spec->num_prefixes; pfx++) {
-                prefixes[pfx].len = 24;
-                prefixes[pfx].addr.af = IP_AF_IPV4;
-                prefixes[pfx].addr.addr.v4_addr =
-                              ((0xC << 28) | (tag_pfx_count++ << 8));
-            }
+            populate_tags_api_rule_spec(id ,api_rule_spec, &tag_value,
+                                        num_prefixes, &tag_pfx_count, ip_af,
+                                        v6_route_pfx);
+        }
+        for (uint32_t rule = num_rules;
+                      rule < (num_rules + num_rules_rem); rule++) {
+            pds_tag_rule_t *api_rule_spec = &pds_tag.rules[rule];
+            populate_tags_api_rule_spec(
+                    id, api_rule_spec, &tag_value, 1, &tag_pfx_count,
+                    ip_af, v6_route_pfx);
         }
 #ifdef TEST_GRPC_APP
         ret = create_tag_grpc(&pds_tag);
@@ -1292,7 +1340,7 @@ create_objects (void)
                 g_test_params.pps_bps = std::stol(obj.second.get<std::string>("pps_bps"));
                 g_test_params.burst = std::stol(obj.second.get<std::string>("burst"));
             } else if (kind == "tags") {
-                g_test_params.num_tags = std::stol(obj.second.get<std::string>("count"));
+                g_test_params.num_tag_trees = std::stol(obj.second.get<std::string>("count"));
                 g_test_params.tags_v4_scale = std::stol(obj.second.get<std::string>("v4_scale"));
                 g_test_params.tags_v6_scale = std::stol(obj.second.get<std::string>("v6_scale"));
             }
@@ -1321,14 +1369,14 @@ create_objects (void)
 
     if (artemis()) {
         // create v4 tags
-        ret = create_tags(g_test_params.num_tags/2, g_test_params.tags_v4_scale,
-                          IP_AF_IPV4);
+        ret = create_tags(g_test_params.num_tag_trees/2, g_test_params.tags_v4_scale,
+                          IP_AF_IPV4, &g_test_params.v6_route_pfx);
         if (ret != SDK_RET_OK) {
             return ret;
         }
         // create v6 tags
-        ret = create_tags(g_test_params.num_tags/2, g_test_params.tags_v6_scale,
-                          IP_AF_IPV6);
+        ret = create_tags(g_test_params.num_tag_trees/2, g_test_params.tags_v6_scale,
+                          IP_AF_IPV6, &g_test_params.v6_route_pfx);
         if (ret != SDK_RET_OK) {
             return ret;
         }
