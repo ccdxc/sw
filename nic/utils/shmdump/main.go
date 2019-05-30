@@ -32,6 +32,7 @@ func main() {
 		Filter:      log.AllowAllFilter,
 		CtxSelector: log.ContextAll,
 		LogToFile:   true,
+		Debug:       true,
 		FileCfg: log.FileConfig{
 			Filename:   "/tmp/shmdump.log",
 			MaxSize:    10,
@@ -52,9 +53,12 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+
+		log.Infof("{%s} reading venice events", *filepath)
 		for _, evt := range eventsShmReader.Dump() {
 			fmt.Println(evt)
 		}
+		log.Infof("{%s} done reading venice events", *filepath)
 	case fwLog:
 		mSize := int(ipc.GetSharedConstant("IPC_MEM_SIZE"))
 		instCount := int(ipc.GetSharedConstant("IPC_INSTANCES"))
@@ -65,10 +69,13 @@ func main() {
 		}
 
 		for i := 0; i < instCount; i++ { // read fwlog from all the instances/partitions in the shared memory
+			log.Infof("{%s} reading fwlog events from IPC instance[%v]", *filepath, i)
 			ipc := fwlogShmReader.IPCInstance()
 			for _, fwlog := range ipc.Dump() {
 				fmt.Println(fwlog)
 			}
+			log.Infof("{%s} done reading fwlog events from IPC instance[%v]", *filepath, i)
+
 		}
 	default:
 		log.Fatal("invalid message type")

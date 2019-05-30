@@ -124,9 +124,10 @@ func (ipc *IPC) Receive(ctx context.Context, h func(*ipcproto.FWEvent, time.Time
 // Dump dumps all the available fw events from the shared memory
 func (ipc *IPC) Dump() []*ipcproto.FWEvent {
 	var evts []*ipcproto.FWEvent
-	ro := binary.LittleEndian.Uint32(ipc.base[ipc.readIndex:])
+	ro := uint32(0)
 	wo := binary.LittleEndian.Uint32(ipc.base[ipc.writeIndex:])
 	avail := int((wo + ipc.numBufs - ro) % ipc.numBufs)
+	log.Debugf("reading fwlog events from index[%v]...[%v], total messages to be read: %v", ro, wo, avail)
 	if avail <= 0 {
 		return evts
 	}
@@ -134,6 +135,7 @@ func (ipc *IPC) Dump() []*ipcproto.FWEvent {
 	for ix := 0; ix < avail; ix++ {
 		ev, err := ipc.readMsg(ro)
 		if err != nil {
+			log.Errorf("failed to read message from index[%v], err: %v", ro, err)
 			continue
 		}
 		evts = append(evts, ev)

@@ -73,9 +73,10 @@ func (r *IPCReader) Receive(ctx context.Context, handler MessageHandler) {
 // Dump returns all the available events from underlying shared memory
 func (r *IPCReader) Dump() []*halproto.Event {
 	var evts []*halproto.Event
-	ro := binary.LittleEndian.Uint32(r.Base[r.ReadIndex:])
+	ro := uint32(0)
 	wo := binary.LittleEndian.Uint32(r.Base[r.WriteIndex:])
 	avail := int((wo + r.NumBuffers - ro) % r.NumBuffers)
+	log.Debugf("reading events from index[%v]...[%v], total messages to be read: %v", ro, wo, avail)
 	if avail <= 0 {
 		return evts
 	}
@@ -83,6 +84,7 @@ func (r *IPCReader) Dump() []*halproto.Event {
 	for ix := 0; ix < avail; ix++ {
 		evt, err := r.readMsg(ro)
 		if err != nil {
+			log.Errorf("failed to read message from index[%v], err: %v", ro, err)
 			continue
 		}
 		evts = append(evts, evt)
