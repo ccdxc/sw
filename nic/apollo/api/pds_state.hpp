@@ -1,12 +1,12 @@
 /**
  * Copyright (c) 2018 Pensando Systems, Inc.
  *
- * @file    state.hpp
+ * @file    pds_state.hpp
  *
  * @brief   This file captures all the state maintained in s/w
  */
 
-#if !defined (__PDS_STATE_HPP__)
+#ifndef __PDS_STATE_HPP__
 #define __PDS_STATE_HPP__
 
 #include "nic/sdk/lib/slab/slab.hpp"
@@ -27,6 +27,8 @@
 #include "nic/apollo/api/tag_state.hpp"
 #include "nic/apollo/api/service_state.hpp"
 #include "nic/apollo/api/vpc_peer_state.hpp"
+#include "nic/apollo/api/nexthop_state.hpp"
+#include "nic/apollo/api/nexthop_group_state.hpp"
 
 using std::string;
 
@@ -88,6 +90,8 @@ public:
     tag_state *tag_db(void) { return &tag_db_; }
     svc_mapping_state *svc_mapping_db(void) { return &svc_mapping_db_; }
     vpc_peer_state *vpc_peer_db(void) { return &vpc_peer_db_; }
+    nexthop_state *nexthop_db(void) { return &nexthop_db_; }
+    nexthop_group_state *nexthop_group_db(void) { return &nexthop_group_db_; }
 
 private:
     string                  cfg_path_;
@@ -114,6 +118,8 @@ private:
     tag_state               tag_db_;
     svc_mapping_state       svc_mapping_db_;
     vpc_peer_state          vpc_peer_db_;
+    nexthop_state           nexthop_db_;
+    nexthop_group_state     nexthop_group_db_;
 };
 extern pds_state g_pds_state;
 
@@ -207,4 +213,16 @@ vpc_peer_db (void)
     return api::g_pds_state.vpc_peer_db();
 }
 
-#endif    /** __PDS_STATE_HPP__ */
+static inline nexthop_state *
+nexthop_db (void)
+{
+    return api::g_pds_state.nexthop_db();
+}
+
+static inline nexthop_group_state *
+nexthop_group_db (void)
+{
+    return api::g_pds_state.nexthop_group_db();
+}
+
+#endif    // __PDS_STATE_HPP__

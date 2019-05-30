@@ -26,6 +26,7 @@
 #include "nic/apollo/api/include/pds_meter.hpp"
 #include "nic/apollo/api/include/pds_tag.hpp"
 #include "nic/apollo/api/include/pds_service.hpp"
+#include "nic/apollo/api/include/pds_nexthop.hpp"
 
 namespace api {
 
@@ -56,6 +57,10 @@ typedef union api_params_u {
     pds_svc_mapping_spec_t       svc_mapping_spec;
     pds_vpc_peer_key_t           vpc_peer_key;
     pds_vpc_peer_spec_t          vpc_peer_spec;
+    pds_nexthop_key_t            nexthop_key;
+    pds_nexthop_spec_t           nexthop_spec;
+    pds_nexthop_group_key_t      nexthop_group_key;
+    pds_nexthop_group_spec_t     nexthop_group_spec;
 } api_params_t;
 
 /// \brief Per API context maintained by framework while processing
