@@ -14,10 +14,14 @@
 #define CMDID_RING_PI           d.{cmdid_ring_pi}.hx
 #define CMDID_RING_CI           d.{cmdid_ring_ci}.hx
 #define CMDID                   d.{cmdid}.hx
-#define PDUID_RING_PROXY_CI     d.{pduid_ring_proxy_ci}.hx
-#define PDUID_RING_PROXY_CI_LE  d.{pduid_ring_proxy_ci}
-#define PDUID_RING_PI           d.{pduid_ring_pi}.hx
-#define PDUID_RING_CI           d.{pduid_ring_ci}.hx
+#define TX_PDUID_RING_PROXY_CI     d.{tx_pduid_ring_proxy_ci}.hx
+#define TX_PDUID_RING_PROXY_CI_LE  d.{tx_pduid_ring_proxy_ci}
+#define TX_PDUID_RING_PI           d.{tx_pduid_ring_pi}.hx
+#define TX_PDUID_RING_CI           d.{tx_pduid_ring_ci}.hx
+#define RX_PDUID_RING_PROXY_CI     d.{rx_pduid_ring_proxy_ci}.hx
+#define RX_PDUID_RING_PROXY_CI_LE  d.{rx_pduid_ring_proxy_ci}
+#define RX_PDUID_RING_PI           d.{rx_pduid_ring_pi}.hx
+#define RX_PDUID_RING_CI           d.{rx_pduid_ring_ci}.hx
 #define PDUID                   d.{pduid}.hx
 #define XTS_Q_PI                d.{xts_q_pi}.hx
 #define XTS_Q_CI                d.{xts_q_ci}.hx
@@ -44,6 +48,8 @@
 
 #define LOG_PDUID_SIZE              1   //2^1 = 2
 #define LOG_PDUID_RING_ENTRY_SIZE   LOG_PDUID_SIZE
+#define TX_LOG_PDUID_RING_ENTRY_SIZE    LOG_PDUID_RING_ENTRY_SIZE
+#define RX_LOG_PDUID_RING_ENTRY_SIZE    LOG_PDUID_RING_ENTRY_SIZE
 
 #define LOG_SESS_Q_ENTRY_SIZE   (LOG_CMDID_SIZE+LOG_PDUID_SIZE)
 #define LOG_XTS_DESC_SIZE       7   //2^7 = 128

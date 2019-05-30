@@ -318,12 +318,8 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_CMD_CONTEXT_RING);
     i++;
 
-    symbols[i].name = NVME_TX_RESOURCECB;
-    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_TX_RESOURCECB);
-    i++;
-
-    symbols[i].name = NVME_RX_RESOURCECB;
-    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_RX_RESOURCECB);
+    symbols[i].name = NVME_RESOURCECB;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_RESOURCECB);
     i++;
 
     symbols[i].name = NVME_TXSESSPRODCB_BASE;

@@ -49,8 +49,7 @@ typedef struct nvme_global_info_s {
     uint64_t rx_pdu_context_ring_base;
     uint64_t rx_nmdpr_ring_base;
     uint64_t rx_nmdpr_ring_size;
-    uint64_t tx_resourcecb_addr;
-    uint64_t rx_resourcecb_addr;
+    uint64_t resourcecb_addr;
     uint64_t tx_hwxtscb_addr;
     uint64_t rx_hwxtscb_addr;
     uint64_t tx_hwdgstcb_addr;
@@ -315,11 +314,8 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
     //rx_sess_dgstq
     g_nvme_global_info.rx_sess_dgstq_base = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_RX_SESS_DGSTQ);
 
-    //tx_resourcecb
-    g_nvme_global_info.tx_resourcecb_addr = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_TX_RESOURCECB);
-
-    //rx_resourcecb
-    g_nvme_global_info.rx_resourcecb_addr = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_RX_RESOURCECB);
+    //resourcecb
+    g_nvme_global_info.resourcecb_addr = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_RESOURCECB);
 
     //tx_hwxtscb
     opaque_tag_addr = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + hal::pd::get_opaque_tag_offset(types::BARCO_RING_XTS0);
@@ -371,13 +367,12 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
                     "txsessprodcb_base: {:#x}, "
                     "tx_sess_xtsq_base: {:#x}, "
                     "tx_sess_dgstq_base: {:#x}, "
-                    "tx_resourcecb_addr: {:#x}, "
+                    "resourcecb_addr: {:#x}, "
                     "tx_hwxtscb_addr: {:#x}, "
                     "tx_hwdgstcb_addr: {:#x}, "
                     "rxsessprodcb_base: {:#x}, "
                     "rx_sess_xtsq_base: {:#x}, "
                     "rx_sess_dgstq_base: {:#x}, "
-                    "rx_resourcecb_addr: {:#x}, "
                     "rx_hwxtscb_addr: {:#x}, "
                     "rx_hwdgstcb_addr: {:#x}, "
                     "sess_bitmap_addr: {:#x}\n",
@@ -385,13 +380,12 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
                     g_nvme_global_info.txsessprodcb_base,
                     g_nvme_global_info.tx_sess_xtsq_base,
                     g_nvme_global_info.tx_sess_dgstq_base,
-                    g_nvme_global_info.tx_resourcecb_addr,
+                    g_nvme_global_info.resourcecb_addr,
                     g_nvme_global_info.tx_hwxtscb_addr,
                     g_nvme_global_info.tx_hwdgstcb_addr,
                     g_nvme_global_info.rxsessprodcb_base,
                     g_nvme_global_info.rx_sess_xtsq_base,
                     g_nvme_global_info.rx_sess_dgstq_base,
-                    g_nvme_global_info.rx_resourcecb_addr,
                     g_nvme_global_info.rx_hwxtscb_addr,
                     g_nvme_global_info.rx_hwdgstcb_addr,
                     g_nvme_global_info.sess_bitmap_addr);
@@ -470,48 +464,26 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
 
 
     //Setup tx_resourcecb
-    nvme_resourcecb_t tx_resourcecb;
+    nvme_resourcecb_t resourcecb;
 
-    memset(&tx_resourcecb, 0, sizeof(nvme_resourcecb_t));
-    tx_resourcecb.cmdid_ring_log_sz = log2(max_cmd_context);
-    tx_resourcecb.cmdid_ring_ci = 0;
-    tx_resourcecb.cmdid_ring_pi = 0;
-    tx_resourcecb.cmdid_ring_proxy_ci = 0;
+    memset(&resourcecb, 0, sizeof(nvme_resourcecb_t));
+    resourcecb.cmdid_ring_log_sz = log2(max_cmd_context);
+    resourcecb.cmdid_ring_ci = 0;
+    resourcecb.cmdid_ring_pi = 0;
+    resourcecb.cmdid_ring_proxy_ci = 0;
 
-    tx_resourcecb.pduid_ring_log_sz = log2(tx_max_pdu_context);
-    tx_resourcecb.pduid_ring_ci = 0;
-    tx_resourcecb.pduid_ring_pi = 0;
-    tx_resourcecb.pduid_ring_proxy_ci = 0;
+    resourcecb.tx_pduid_ring_log_sz = log2(tx_max_pdu_context);
+    resourcecb.tx_pduid_ring_ci = 0;
+    resourcecb.tx_pduid_ring_pi = 0;
+    resourcecb.tx_pduid_ring_proxy_ci = 0;
 
-    tx_resourcecb.page_ring_log_sz = log2(g_nvme_global_info.tx_nmdpr_ring_size);
-    tx_resourcecb.page_ring_ci = 0;
-    tx_resourcecb.page_ring_pi = 0;
-    tx_resourcecb.page_ring_proxy_ci = 0;
+    resourcecb.rx_pduid_ring_log_sz = log2(rx_max_pdu_context);
+    resourcecb.rx_pduid_ring_ci = 0;
+    resourcecb.rx_pduid_ring_pi = 0;
+    resourcecb.rx_pduid_ring_proxy_ci = 0;
 
-    memrev((uint8_t*)&tx_resourcecb, sizeof(nvme_resourcecb_t));
-    nvme_hbm_write(g_nvme_global_info.tx_resourcecb_addr, (void *)&tx_resourcecb, sizeof(nvme_resourcecb_t));
-
-    //Setup rx_resourcecb
-    nvme_resourcecb_t rx_resourcecb;
-
-    memset(&rx_resourcecb, 0, sizeof(nvme_resourcecb_t));
-    rx_resourcecb.cmdid_ring_log_sz = log2(max_cmd_context);
-    rx_resourcecb.cmdid_ring_ci = 0;
-    rx_resourcecb.cmdid_ring_pi = 0;
-    rx_resourcecb.cmdid_ring_proxy_ci = 0;
-
-    rx_resourcecb.pduid_ring_log_sz = log2(rx_max_pdu_context);
-    rx_resourcecb.pduid_ring_ci = 0;
-    rx_resourcecb.pduid_ring_pi = 0;
-    rx_resourcecb.pduid_ring_proxy_ci = 0;
-
-    rx_resourcecb.page_ring_log_sz = log2(g_nvme_global_info.rx_nmdpr_ring_size);
-    rx_resourcecb.page_ring_ci = 0;
-    rx_resourcecb.page_ring_pi = 0;
-    rx_resourcecb.page_ring_proxy_ci = 0;
-
-    memrev((uint8_t*)&rx_resourcecb, sizeof(nvme_resourcecb_t));
-    nvme_hbm_write(g_nvme_global_info.rx_resourcecb_addr, (void *)&rx_resourcecb, sizeof(nvme_resourcecb_t));
+    memrev((uint8_t*)&resourcecb, sizeof(nvme_resourcecb_t));
+    nvme_hbm_write(g_nvme_global_info.resourcecb_addr, (void *)&resourcecb, sizeof(nvme_resourcecb_t));
 
     //Setup Tx HW/Barco XTS CB
     nvme_tx_hwxtscb_t tx_hwxtscb;

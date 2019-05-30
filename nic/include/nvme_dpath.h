@@ -271,21 +271,21 @@ typedef struct nvme_resourcecb_s {
         uint64_t cmdid_ring_proxy_ci: 16;
         uint64_t cmdid_ring_pi: 16;
 
-        // ring of free pduids
-        uint64_t pduid_ring_choke_counter: 8;
-        uint64_t pduid_ring_rsvd: 3;
-        uint64_t pduid_ring_log_sz: 5;
-        uint64_t pduid_ring_ci: 16;
-        uint64_t pduid_ring_proxy_ci: 16;
-        uint64_t pduid_ring_pi: 16;
+        // ring of free tx pduids
+        uint64_t tx_pduid_ring_choke_counter: 8;
+        uint64_t tx_pduid_ring_rsvd: 3;
+        uint64_t tx_pduid_ring_log_sz: 5;
+        uint64_t tx_pduid_ring_ci: 16;
+        uint64_t tx_pduid_ring_proxy_ci: 16;
+        uint64_t tx_pduid_ring_pi: 16;
 
-        // ring of free data pages
-        uint64_t page_ring_choke_counter: 8;
-        uint64_t page_ring_rsvd: 3;
-        uint64_t page_ring_log_sz: 5;
-        uint64_t page_ring_ci: 16;
-        uint64_t page_ring_proxy_ci: 16;
-        uint64_t page_ring_pi: 16;
+        // ring of free rx pduids
+        uint64_t rx_pduid_ring_choke_counter: 8;
+        uint64_t rx_pduid_ring_rsvd: 3;
+        uint64_t rx_pduid_ring_log_sz: 5;
+        uint64_t rx_pduid_ring_ci: 16;
+        uint64_t rx_pduid_ring_proxy_ci: 16;
+        uint64_t rx_pduid_ring_pi: 16;
 
 } PACKED nvme_resourcecb_t;
 
@@ -378,8 +378,7 @@ typedef enum nvme_dpath_ds_type_s {
     NVME_TYPE_NSCB = 0,
     NVME_TYPE_CMD_CONTEXT,
     NVME_TYPE_CMD_CONTEXT_RING,
-    NVME_TYPE_TX_RESOURCECB,
-    NVME_TYPE_RX_RESOURCECB,
+    NVME_TYPE_RESOURCECB,
     NVME_TYPE_TX_SESSPRODCB,
     NVME_TYPE_RX_SESSPRODCB,
     NVME_TYPE_TX_PDU_CONTEXT,
@@ -407,8 +406,7 @@ static nvme_hbm_alloc_info_t nvme_hbm_alloc_table[] = {
     {NVME_TYPE_NSCB, 512, sizeof(nvme_nscb_t)},
     {NVME_TYPE_CMD_CONTEXT, 512, sizeof(nvme_cmd_context_t)},
     {NVME_TYPE_CMD_CONTEXT_RING, 512, sizeof(nvme_cmd_context_ring_entry_t)},
-    {NVME_TYPE_TX_RESOURCECB, 1, sizeof(nvme_resourcecb_t)},
-    {NVME_TYPE_RX_RESOURCECB, 1, sizeof(nvme_resourcecb_t)},
+    {NVME_TYPE_RESOURCECB, 1, sizeof(nvme_resourcecb_t)},
     {NVME_TYPE_TX_SESSPRODCB, 512, sizeof(nvme_txsessprodcb_t)},
     {NVME_TYPE_RX_SESSPRODCB, 512, sizeof(nvme_rxsessprodcb_t)},
     {NVME_TYPE_TX_PDU_CONTEXT, 512, sizeof(nvme_pdu_context_t)},

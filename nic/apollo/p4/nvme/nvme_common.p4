@@ -495,21 +495,21 @@ wb_r0_busy, rsvd2, r1_busy, rsvd3, wb_r1_busy, rsvd4, session_id, pad
 // resource cb
 header_type resourcecb_t {
     fields {
-        // ring of free data pages
-        page_ring_pi                    : 16;
-        page_ring_proxy_ci              : 16;
-        page_ring_ci                    : 16;
-        page_ring_log_sz                :  5;
-        page_ring_rsvd                  :  3;
-        page_ring_choke_counter         :  8;
+        // ring of free rx pduids
+        rx_pduid_ring_pi                : 16;
+        rx_pduid_ring_proxy_ci          : 16;
+        rx_pduid_ring_ci                : 16;
+        rx_pduid_ring_log_sz            :  5;
+        rx_pduid_ring_rsvd              :  3;
+        rx_pduid_ring_choke_counter     :  8;
 
-        // ring of free pduids 
-        pduid_ring_pi                   : 16;
-        pduid_ring_proxy_ci             : 16;
-        pduid_ring_ci                   : 16;
-        pduid_ring_log_sz               :  5;
-        pduid_ring_rsvd                 :  3;
-        pduid_ring_choke_counter        :  8;
+        // ring of free tx pduids 
+        tx_pduid_ring_pi                : 16;
+        tx_pduid_ring_proxy_ci          : 16;
+        tx_pduid_ring_ci                : 16;
+        tx_pduid_ring_log_sz            :  5;
+        tx_pduid_ring_rsvd              :  3;
+        tx_pduid_ring_choke_counter     :  8;
 
         // ring of free cmdids
         cmdid_ring_pi                   : 16;
@@ -525,28 +525,28 @@ header_type resourcecb_t {
 }
 
 #define RESOURCECB_PARAMS                                                      \
-page_ring_pi, page_ring_proxy_ci, page_ring_ci, page_ring_log_sz, \
-page_ring_rsvd, page_ring_choke_counter, \
-pduid_ring_pi, pduid_ring_proxy_ci, pduid_ring_ci, pduid_ring_log_sz, \
-pduid_ring_rsvd, pduid_ring_choke_counter, \
+rx_pduid_ring_pi, rx_pduid_ring_proxy_ci, rx_pduid_ring_ci, rx_pduid_ring_log_sz, \
+rx_pduid_ring_rsvd, rx_pduid_ring_choke_counter, \
+tx_pduid_ring_pi, tx_pduid_ring_proxy_ci, tx_pduid_ring_ci, tx_pduid_ring_log_sz, \
+tx_pduid_ring_rsvd, tx_pduid_ring_choke_counter, \
 cmdid_ring_pi, cmdid_ring_proxy_ci, cmdid_ring_ci, cmdid_ring_log_sz, \
 cmdid_ring_rsvd, cmdid_ring_choke_counter, \
 pad
 
 
 #define GENERATE_RESOURCECB_D                                                   \
-    modify_field(resourcecb_d.page_ring_pi, page_ring_pi);                      \
-    modify_field(resourcecb_d.page_ring_proxy_ci, page_ring_proxy_ci);          \
-    modify_field(resourcecb_d.page_ring_ci, page_ring_ci);                      \
-    modify_field(resourcecb_d.page_ring_log_sz, page_ring_log_sz);              \
-    modify_field(resourcecb_d.page_ring_rsvd, page_ring_rsvd);                  \
-    modify_field(resourcecb_d.page_ring_choke_counter, page_ring_choke_counter);\
-    modify_field(resourcecb_d.pduid_ring_pi, pduid_ring_pi);                    \
-    modify_field(resourcecb_d.pduid_ring_proxy_ci, pduid_ring_proxy_ci);        \
-    modify_field(resourcecb_d.pduid_ring_ci, pduid_ring_ci);                    \
-    modify_field(resourcecb_d.pduid_ring_log_sz, pduid_ring_log_sz);            \
-    modify_field(resourcecb_d.pduid_ring_rsvd, pduid_ring_rsvd);                \
-    modify_field(resourcecb_d.pduid_ring_choke_counter, pduid_ring_choke_counter);\
+    modify_field(resourcecb_d.rx_pduid_ring_pi, rx_pduid_ring_pi);                    \
+    modify_field(resourcecb_d.rx_pduid_ring_proxy_ci, rx_pduid_ring_proxy_ci);        \
+    modify_field(resourcecb_d.rx_pduid_ring_ci, rx_pduid_ring_ci);                    \
+    modify_field(resourcecb_d.rx_pduid_ring_log_sz, rx_pduid_ring_log_sz);            \
+    modify_field(resourcecb_d.rx_pduid_ring_rsvd, rx_pduid_ring_rsvd);                \
+    modify_field(resourcecb_d.rx_pduid_ring_choke_counter, rx_pduid_ring_choke_counter);\
+    modify_field(resourcecb_d.tx_pduid_ring_pi, tx_pduid_ring_pi);                    \
+    modify_field(resourcecb_d.tx_pduid_ring_proxy_ci, tx_pduid_ring_proxy_ci);        \
+    modify_field(resourcecb_d.tx_pduid_ring_ci, tx_pduid_ring_ci);                    \
+    modify_field(resourcecb_d.tx_pduid_ring_log_sz, tx_pduid_ring_log_sz);            \
+    modify_field(resourcecb_d.tx_pduid_ring_rsvd, tx_pduid_ring_rsvd);                \
+    modify_field(resourcecb_d.tx_pduid_ring_choke_counter, tx_pduid_ring_choke_counter);\
     modify_field(resourcecb_d.cmdid_ring_pi, cmdid_ring_pi);                    \
     modify_field(resourcecb_d.cmdid_ring_proxy_ci, cmdid_ring_proxy_ci);        \
     modify_field(resourcecb_d.cmdid_ring_ci, cmdid_ring_ci);                    \
@@ -1048,3 +1048,132 @@ prp1, prp2, pad
     modify_field(prp_pair_d.prp1, prp1); \
     modify_field(prp_pair_d.prp2, prp2); \
     modify_field(prp_pair_d.pad, pad); \
+
+// rqcb for stage 0
+header_type rqcb_t {
+    fields {
+        pc                             : 8;
+        // 7 Bytes intrinsic header
+        CAPRI_QSTATE_HEADER_COMMON
+        // 4 Bytes RQ ring
+        CAPRI_QSTATE_HEADER_RING(0)
+        /* 12 Bytes/96 bits Fixed header */
+
+        //6B
+        base_addr                       : 34;
+        log_num_entries                 : 5;
+        ring_empty_sched_eval_done      : 1;
+        rsvd0                           : 8;
+        
+        //R0 stage0 flags
+        //1B
+        r0_busy                         : 1;
+        rsvd1                           : 7;
+
+        //R0 writeback stage flags
+        //1B
+        wb_r0_busy                      : 1;
+        rsvd2                           : 7;
+
+        pad                             : 352;
+
+    }
+}
+
+#define RQCB_PARAMS                                                                                   \
+rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, \
+base_addr, log_num_entries, ring_empty_sched_eval_done, rsvd0, \
+r0_busy, rsvd1, wb_r0_busy, rsvd2, pad
+
+#define GENERATE_RQCB_D                                           \
+    modify_field(rqcb_d.rsvd, rsvd);                              \
+    modify_field(rqcb_d.cosA, cosA);                              \
+    modify_field(rqcb_d.cosB, cosB);                              \
+    modify_field(rqcb_d.cos_sel, cos_sel);                        \
+    modify_field(rqcb_d.eval_last, eval_last);                    \
+    modify_field(rqcb_d.host, host);                              \
+    modify_field(rqcb_d.total, total);                            \
+    modify_field(rqcb_d.pid, pid);                                \
+    modify_field(rqcb_d.pi_0, pi_0);                              \
+    modify_field(rqcb_d.ci_0, ci_0);                              \
+    modify_field(rqcb_d.base_addr, base_addr);                    \
+    modify_field(rqcb_d.log_num_entries, log_num_entries);        \
+    modify_field(rqcb_d.ring_empty_sched_eval_done, ring_empty_sched_eval_done);\
+    modify_field(rqcb_d.rsvd0, rsvd0);                            \
+    modify_field(rqcb_d.r0_busy, r0_busy);                        \
+    modify_field(rqcb_d.rsvd1, rsvd1);                            \
+    modify_field(rqcb_d.wb_r0_busy, wb_r0_busy);                  \
+    modify_field(rqcb_d.rsvd2, rsvd2);                            \
+    modify_field(rqcb_d.pad, pad);                                \
+
+#define RQCB_PARAMS_NON_STG0 \
+    pc, RQCB_PARAMS
+
+#define GENERATE_RQCB_D_NON_STG0                                \
+    modify_field(rqcb_d.pc, pc);                                \
+    GENERATE_RQCB_D
+
+// RQ stats cb
+header_type rq_statscb_t {
+    fields {
+        num_total_pdus                  : 64;
+        num_respcap_pdus                : 64;
+        num_c2hdata_pdus                : 64;
+        num_r2t_pdus                    : 64;
+
+        //32 Bytes
+        pad                             : 256;
+    }
+}
+
+#define RQ_STATSCB_PARAMS                                                      \
+num_total_pdus, num_respcap_pdus, num_c2hdata_pdus, num_r2t_pdus, pad
+
+#define GENERATE_RQ_STATSCB_D                                                  \
+    modify_field(rq_statscb_d.num_total_pdus, num_total_pdus);      \
+    modify_field(rq_statscb_d.num_respcap_pdus, num_respcap_pdus);  \
+    modify_field(rq_statscb_d.num_c2hdata_pdus, num_c2hdata_pdus);  \
+    modify_field(rq_statscb_d.num_r2t_pdus, num_r2t_pdus);          \
+    modify_field(rq_statscb_d.pad, pad);                            \
+
+// note that it is a copy of serq_entry_new_t structure defined in TLS
+// though it was defined as 64B structure there, actual descriptor is
+// only 24B with 8B pad. So log_wqe_size for serq is 32B.
+header_type nvme_rqe_t {
+   fields {
+        idesc                           : 64;
+        A0                              : 64;
+        O0                              : 32;
+        L0                              : 32;
+        pad                             : 64; 
+    }
+}
+
+#define NVME_RQE_PARAMS                                             \
+idesc, A0, O0, L0, pad
+
+#define GENERATE_NVME_RQE_D                                         \
+    modify_field(nvme_rqe_d.idesc, idesc);                          \
+    modify_field(nvme_rqe_d.A0, A0);                                \
+    modify_field(nvme_rqe_d.O0, O0);                                \
+    modify_field(nvme_rqe_d.L0, L0);                                \
+    modify_field(nvme_rqe_d.pad, pad);                              \
+
+header_type pdu_hdr_t {
+    fields {
+        ch                              :   64;     //8B
+        psh                             :   128;    //16B
+        hdgst                           :   32;     //4B
+        pad                             :   32;     //4B
+    }
+}
+
+#define PDU_HDR_PARAMS                                              \
+ch, psh, hdgst, pad
+
+#define GENERATE_PDU_HDR_D                                          \
+    modify_field(pdu_hdr_d.ch, ch);                                 \
+    modify_field(pdu_hdr_d.psh, psh);                               \
+    modify_field(pdu_hdr_d.hdgst, hdgst);                           \
+    modify_field(pdu_hdr_d.pad, pad);                               \
+

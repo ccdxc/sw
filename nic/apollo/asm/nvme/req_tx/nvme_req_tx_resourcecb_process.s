@@ -11,8 +11,8 @@ struct s4_t1_nvme_req_tx_resourcecb_process_d d;
 #define CMDID_RING_CI_OFFSET \
     FIELD_OFFSET(s4_t1_nvme_req_tx_resourcecb_process_d, cmdid_ring_ci)
 
-#define PDUID_RING_CI_OFFSET \
-    FIELD_OFFSET(s4_t1_nvme_req_tx_resourcecb_process_d, pduid_ring_ci)
+#define TX_PDUID_RING_CI_OFFSET \
+    FIELD_OFFSET(s4_t1_nvme_req_tx_resourcecb_process_d, tx_pduid_ring_ci)
 
 #define DMA_CMD_BASE    r5
 
@@ -32,8 +32,8 @@ nvme_req_tx_resourcecb_process:
     //XXX: check for ring empty
 
     //checkout a new pduid
-    add             r2, r0, PDUID_RING_PROXY_CI
-    tblmincri       PDUID_RING_PROXY_CI, d.pduid_ring_log_sz, 1
+    add             r2, r0, TX_PDUID_RING_PROXY_CI
+    tblmincri       TX_PDUID_RING_PROXY_CI, d.tx_pduid_ring_log_sz, 1
 
     //XXX: check for ring empty
 
@@ -59,11 +59,11 @@ nvme_req_tx_resourcecb_process:
 
     addui           r6, r0, hiword(nvme_tx_pdu_context_ring_base)
     addi            r6, r6, loword(nvme_tx_pdu_context_ring_base)
-    add             r6, r6, r2, LOG_PDUID_RING_ENTRY_SIZE
+    add             r6, r6, r2, TX_LOG_PDUID_RING_ENTRY_SIZE
      
-    phvwr           p.pduid_cindex_index, PDUID_RING_PROXY_CI_LE
+    phvwr           p.pduid_cindex_index, TX_PDUID_RING_PROXY_CI_LE
     mfspr           r3, spr_tbladdr 
-    add             r3, r3, PDUID_RING_CI_OFFSET
+    add             r3, r3, TX_PDUID_RING_CI_OFFSET
 
     DMA_CMD_BASE_GET(DMA_CMD_BASE, pduid_cindex_dma)
     DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, pduid_cindex_index, pduid_cindex_index, r3)
