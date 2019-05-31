@@ -231,47 +231,30 @@ class capri_p4pd:
             p4fldwidth = cf.width
         return p4fldname, p4fldwidth
 
+    def do_fields_overlap_in_phv_space(self, f1, f2):
+        if f1.phv_bit > f2.phv_bit and f1.phv_bit < f2.phv_bit + f2.width:
+            return True
+        if f2.phv_bit > f1.phv_bit and f2.phv_bit < f1.phv_bit + f1.width:
+            return True
+        if f1.phv_bit == f2.phv_bit:
+            return True
+        return False
+
     def build_table_keys_from_hdr_union(self, ctable, cf_table_keylist, \
                                         tbl_km_byte_format, \
                                         tbl_km_bit_format):
-        processedhdrunion = []
-        hdr_unions = {}
-        for cfield, ctype in cf_table_keylist.items():
-            if cfield.is_hdr_union \
-               or (cfield.is_union_storage() and not cfield.is_fld_union):
-                # Get list of other headers that this table key-field's
-                # header is unionized with.
-                # Check if table key is header field from any unionizedheaders
-                hdrs = self.be.pa.gress_pa[ctable.d].hdr_unions.values()
-                cfieldhdr = cfield.get_p4_hdr()
-
-                if cfieldhdr not in self.be.pa.gress_pa[ctable.d].hdr_unions:
-                    continue
-
-                _ , unionizedhdrlist, hdrcontainer = \
-                    self.be.pa.gress_pa[ctable.d].hdr_unions[cfieldhdr]
-
-                for h in unionizedhdrlist:
-                    if h in processedhdrunion:
-                        continue
-                    hfields = self.be.pa.gress_pa[ctable.d].get_header_all_cfields(h)
-                    unionkeys = []
-                    for kcf , kcftype in cf_table_keylist.items():
-                        if kcf in hfields and kcf not in unionkeys:
-                            unionkeys.append((kcf, kcftype))
-                    if len(unionkeys):
-                        hdr_unions[h] = unionkeys
-                    processedhdrunion.append(h)
-
-        # None of table keys are hdr unions
-        if not hdr_unions:
-            return []
-
         hdr_u_keys = []
-        for k, values in hdr_unions.items():
-            u_keys = []
-            for cf, ctype in values:
-                p4fldname, p4fldwidth, mask = self.cfield_get_p4name_width_mask(cf, ctype)
+        for cfield, ctype in cf_table_keylist.items():
+            if cfield.is_hdr_union or cfield.is_hdr_union_storage:
+                # check for key fields that are overlapping in phv space.
+                # unionize such fields.
+                for keyfield, keytype in cf_table_keylist.items():
+                    if keyfield == cfield:
+                        continue
+                    if self.do_fields_overlap_in_phv_space(keyfield, cfield):
+                        assert(0), pdb.set_trace()
+
+                p4fldname, p4fldwidth, mask = self.cfield_get_p4name_width_mask(cfield, ctype)
                 if CHECK_INVALID_C_VARIABLE.search(p4fldname):
                     p4fldname = \
                         self.convert_p4fldname_to_valid_c_variable(p4fldname)
@@ -279,17 +262,11 @@ class capri_p4pd:
                                 # at byte extraction boundary
                 bitformat = []  # Entry formatting that goes into HW table
                                 # at bit extraction boundary
-                if cf in tbl_km_byte_format.keys():
-                    byteformat = tbl_km_byte_format[cf]
-                if cf in tbl_km_bit_format.keys():
-                    bitformat = tbl_km_bit_format[cf]
-                u_keys.append((p4fldname, p4fldwidth, mask, byteformat, bitformat))
-            union_name = k.name
-            if CHECK_INVALID_C_VARIABLE.search(union_name):
-                union_name = \
-                        self.convert_p4fldname_to_valid_c_variable(unionname)
-            hdr_u_keys.append((union_name, u_keys))
-
+                if cfield in tbl_km_byte_format.keys():
+                    byteformat = tbl_km_byte_format[cfield]
+                if cfield in tbl_km_bit_format.keys():
+                    bitformat = tbl_km_bit_format[cfield]
+                hdr_u_keys.append((p4fldname, p4fldwidth, mask, byteformat, bitformat))
         return hdr_u_keys
 
     def build_table_keys_from_fld_union(self, ctable, cf_table_keylist, \
@@ -582,7 +559,6 @@ class capri_p4pd:
                 cfield = k[0]
                 ctype = k[1]
                 cf_keylist[cfield] = ctype
-
 
             # Build KeyFormat as done in KM.
             kdict = self.build_table_key_hwformat(ctable, cf_keylist)
@@ -1044,15 +1020,24 @@ class capri_p4pd:
                     if phv_byte_sourced_with_intermixed_multihdr:
                         for k, v  in self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields.items():
                             containerstart, cf_startbit, width = v
+                            if containerstart > previous_containerstart + previous_width:
+                                #hole detected in list of fields contained in the byte
+                                #Add pad field
+                                hole_start = previous_containerstart + previous_width
+                                ki_or_kd_to_cf_map[kbit + hole_start] = [(None, kbit + hole_start, containerstart - hole_start, "P", "UnusedBits")]
                             cf = self.be.pa.get_field(k, ctable.d)
                             if cf == None:
                                 ki_or_kd_to_cf_map[kbit + containerstart] = [(cf, cf_startbit, width, "D", "__Pad" + k)]
                             else:
                                 ki_or_kd_to_cf_map[kbit + containerstart] = [(cf, cf_startbit, width, "D")]
+                            previous_containerstart = containerstart
+                            previous_width = width
                         continue
 
                     fields_of_same_header_in_byte = {}
                     total_p4_fld_width = 0
+                    previous_containerstart = 0
+                    previous_width = 0
                     for k, v  in self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields.items():
                         field_found = False
                         for cf in ctable.input_fields:
@@ -1064,6 +1049,12 @@ class capri_p4pd:
                                     continue
                                 containerstart, cf_startbit, width = \
                                     self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields[cf.hfname]
+                                if containerstart > previous_containerstart + previous_width:
+                                    #hole detected in list of fields contained in the byte
+                                    #Add pad field
+                                    hole_start = previous_containerstart + previous_width
+                                    ki_or_kd_to_cf_map[kbit + hole_start] = [(None, kbit + hole_start, containerstart - hole_start, "P", "UnusedBits")]
+                                    total_p4_fld_width += containerstart - hole_start
                                 if cf.is_hv:
                                     cf_hname = cf.hfname
                                 else:
@@ -1080,7 +1071,8 @@ class capri_p4pd:
                                     if (cf, cf_startbit, width, "I") not in ki_or_kd_to_cf_map[kbit+cs]:
                                         ki_or_kd_to_cf_map[kbit+cs].append((cf, cf_startbit, width, "I"))
                                         total_p4_fld_width += width
-
+                                previous_containerstart = containerstart
+                                previous_width = width
 
                         if field_found:
                             # There can be cases where cf is both key and input. For such cases
@@ -1095,6 +1087,12 @@ class capri_p4pd:
                                     key_encountered = True
                                 containerstart, cf_startbit, width = \
                                     self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields[cf.hfname]
+                                if containerstart > previous_containerstart + previous_width:
+                                    #hole detected in list of fields contained in the byte
+                                    #Add pad field
+                                    hole_start = previous_containerstart + previous_width
+                                    ki_or_kd_to_cf_map[kbit + hole_start] = [(None, kbit + hole_start, containerstart - hole_start, "P", "UnusedBits")]
+                                    total_p4_fld_width += containerstart - hole_start
                                 if cf.is_hv:
                                     cf_hname = cf.hfname
                                 else:
@@ -1111,6 +1109,8 @@ class capri_p4pd:
                                     if (cf, cf_startbit, width, "K") not in ki_or_kd_to_cf_map[kbit+cs]:
                                         ki_or_kd_to_cf_map[kbit+cs].append((cf, cf_startbit, width, "K"))
                                         total_p4_fld_width += width
+                                previous_containerstart = containerstart
+                                previous_width = width
 
                         put_pad = False
                         if not field_found and is_tcam:
@@ -1128,10 +1128,18 @@ class capri_p4pd:
                                 if cs >= total_p4_fld_width:
                                     ki_or_kd_to_cf_map[kbit+cs] = [(None, kbit+containerstart, width, "P", cf_hname)]
                                     total_p4_fld_width += width
+                                if containerstart > previous_containerstart + previous_width:
+                                    #hole detected in list of fields contained in the byte
+                                    #Add pad field
+                                    hole_start = previous_containerstart + previous_width
+                                    ki_or_kd_to_cf_map[kbit + hole_start] = [(None, kbit + hole_start, containerstart - hole_start, "P", "UnusedBits")]
+                                    total_p4_fld_width += containerstart - hole_start
                             else:
                                 if (None, kbit+containerstart, width, "P", cf_hname) not in ki_or_kd_to_cf_map[kbit+cs]:
                                     ki_or_kd_to_cf_map[kbit+cs].append((None, kbit+containerstart, width, "P", cf_hname))
                                     total_p4_fld_width += width
+                            previous_containerstart = containerstart
+                            previous_width = width
 
                     # Since a list of p4fields shared same phv byte, get max field width and
                     # if it is less than 8 bits, then pad remaining bits

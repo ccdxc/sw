@@ -162,38 +162,6 @@ class ${table}():
 //::                #endif
 //::            #endfor
                 # endfor fldunion_keys
-                # for each hdrunion_keys
-//::            for hdrunion in pddict['tables'][table]['hdrunion_keys']:
-//::                (union_name, un_fields) = hdrunion
-//::                if len(un_fields) > 1:
-//::                    for fields in un_fields:
-//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
-//::                        if p4fldname.startswith("__"):
-//::                           continue
-//::                        #endif
-//::                        if (p4fldwidth <= 32):
-
-        if ('${p4fldname}' in ctx['swkey']):
-            values = ctx['swkey']['${p4fldname}'].split()
-            if len(values) != 1:
-                return
-            self.swkey.${table}_hdr_u${i}.${p4fldname} = int(values[0], 0)
-
-//::                        else:
-
-        if ('${p4fldname}' in ctx['swkey']):
-            values = ctx['swkey']['${p4fldname}'].split()
-            if len(values) == 0 or len(values) > ( int((${p4fldwidth} + 7) / 8)):
-                return
-
-            for i in range(len(values)):
-                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey.${table}_hdr_u${i}.${p4fldname}, i, int(values[i], 0))
-//::                        #endif
-//::                    #endfor
-//::                    i+=1
-//::                #endif
-//::            #endfor
-                # endfor hdrunion_keys
                 # foreach keys
 //::            for fields in pddict['tables'][table]['keys']:
 //::                (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
@@ -253,24 +221,19 @@ class ${table}():
 //::            #endfor
                 # endfor fldunion_keys
                 # for each hdrunion_keys
-//::            for fldunion in pddict['tables'][table]['hdrunion_keys']:
-//::                (container_field, un_fields) = fldunion
-//::                if len(un_fields) > 1:
-//::                    i+=1
-//::                else:
-//::                    for fields in un_fields:
-//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
-//::                        if p4fldname.startswith("__"):
-//::                           continue
-//::                        #endif
-//::                        if (p4fldwidth <= 32):
+//::            for fields in pddict['tables'][table]['hdrunion_keys']:
+//::                (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                if p4fldname.startswith("__"):
+//::                    continue
+//::                #endif
+//::                if (p4fldwidth <= 32):
         if ('${p4fldname}' in ctx['swkey']):
             values = ctx['swkey']['${p4fldname}'].split()
             if len(values) != 1:
                 return
 
             self.swkey.${p4fldname} = int(values[0], 0)
-//::                        else:
+//::                 else:
         if ('${p4fldname}' in ctx['swkey']):
             values = ctx['swkey']['${p4fldname}'].split()
             if len(values) == 0 or len(values) > ( int((${p4fldwidth} + 7) / 8)):
@@ -278,12 +241,9 @@ class ${table}():
 
             for i in range(len(values)):
                 ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey.${p4fldname}, i, int(values[i]))
-//::                        #endif
-//::                    #endfor
-//::                #endif
+//::                 #endif
 //::            #endfor
                 # endfor hdrunion_keys
-
 //::        #endif
             # endif table type != Index
 
@@ -325,38 +285,6 @@ class ${table}():
 //::                #endif
 //::            #endfor
                 # endfor fldunion_keys
-                # for each hdrunion_keys
-//::            for hdrunion in pddict['tables'][table]['hdrunion_keys']:
-//::                (union_name, un_fields) = hdrunion
-//::                if len(un_fields) > 1:
-
-//::                    for fields in un_fields:
-//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
-//::                        if p4fldname.startswith("__"):
-//::                           continue
-//::                        #endif
-//::                        if (p4fldwidth <= 32):
-        if ('${p4fldname}_mask' in ctx['swkey_mask']):
-            values = ctx['swkey_mask']['${p4fldname}'].split()
-            if len(values) != 1:
-                return
-
-            self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask = int(values[0], 0)
-
-//::                        else:
-        if ('${p4fldname}_mask' in ctx['swkey_mask']):
-            values = ctx['swkey_mask']['${p4fldname}'].split()
-            if len(values) == 0 or len(values) > ( int((${p4fldwidth} + 7) / 8)):
-                return
-
-            for i in range(len(values)):
-                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, i, int(values[i], 0))
-//::                        #endif
-//::                    #endfor
-//::                    i+=1
-//::                #endif
-//::            #endfor
-                # endfor hdrunion_keys
 
                 # for each keys
 //::            for fields in pddict['tables'][table]['keys']:
@@ -417,24 +345,19 @@ class ${table}():
 //::            #endfor
                 # endfor fldunion_keys
                 # for each hdrunion_keys
-//::            for fldunion in pddict['tables'][table]['hdrunion_keys']:
-//::                (container_field, un_fields) = fldunion
-//::                if len(un_fields) > 1:
-//::                    i+=1
-//::                else:
-//::                    for fields in un_fields:
-//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
-//::                        if p4fldname.startswith("__"):
-//::                           continue
-//::                        #endif
-//::                        if (p4fldwidth <= 32):
+//::            for fields in pddict['tables'][table]['hdrunion_keys']:
+//::                (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                if p4fldname.startswith("__"):
+//::                    continue
+//::                #endif
+//::                if (p4fldwidth <= 32):
         if ('${p4fldname}_mask' in ctx['swkey_mask']):
             values = ctx['swkey_mask']['${p4fldname}'].split()
             if len(values) != 1:
                 return
 
             self.swkey_mask.${p4fldname}_mask = int(values[0], 0)
-//::                        else:
+//::                else:
         if ('${p4fldname}_mask' in ctx['swkey_mask']):
             values = ctx['swkey_mask']['${p4fldname}'].split()
             if len(values) == 0 or len(values) > ( int((${p4fldwidth} + 7) / 8)):
@@ -442,12 +365,9 @@ class ${table}():
 
             for i in range(len(values)):
                 ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey_mask.${p4fldname}_mask, i, int(values[i], 0))
-//::                        #endif
-//::                    #endfor
 //::                #endif
 //::            #endfor
                 # endfor hdrunion_keys
-
 //::        #endif
             # endif table type Ternary or OTcam
 
@@ -562,24 +482,17 @@ class ${table}():
         index = ctx['index']
         rsp_msg = ${pddict['cli-name']}.allocate_debug_response_msg()
         size    = new_intp()
-        intp_assign(size, 0)
-        num_read = 1
 
-        while num_read:
-            ret = ${pddict['cli-name']}.${api_prefix}_entry_read(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, size)
+        ret = ${pddict['cli-name']}.${api_prefix}_entry_read(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, size)
+        if ret < 0:
+            print('Error: ${api_prefix}_entry_read() returned %d!' % (ret))
+            return;
+
+        for i in range (0, intp_value(size)):
+            ret = ${pddict['cli-name']}.${api_prefix}_entry_populate(self.table_id, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, i)
             if ret < 0:
-                print('Error: ${api_prefix}_entry_read() returned %d!' % (ret))
+                print('Error: ${api_prefix}_entry_populate() returned %d!' % (ret))
                 return;
-
-            num_read = intp_value(size)
-            for i in range (0, num_read):
-                ret = ${pddict['cli-name']}.${api_prefix}_entry_populate(self.table_id, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, i)
-                if ret < 0:
-                    print('Error: ${api_prefix}_entry_populate() returned %d!' % (ret))
-                    return;
-            if num_read:
-               intp_assign(size, num_read)
-            num_read = 0
 
         delete_intp(size)
         ${pddict['cli-name']}.free_debug_response_msg(rsp_msg)
@@ -643,17 +556,29 @@ class ${table}():
         self.print_entry();
 //::    else:
         index   = ctx['index']
+        rsp_msg = ${pddict['cli-name']}.allocate_debug_response_msg()
+        size    = new_intp()
 
-        ret = ${pddict['cli-name']}.${api_prefix}_entry_read(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p, None, None)
+        ret = ${pddict['cli-name']}.${api_prefix}_entry_read(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, size)
         if ret < 0:
             print('Error: ${api_prefix}_entry_read() returned %d!' % (ret))
             return;
 
+        for i in range (0, intp_value(size)):
+            ret = ${pddict['cli-name']}.${api_prefix}_entry_populate(self.table_id, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, i)
+            if ret < 0:
+                print('Error: ${api_prefix}_entry_populate() returned %d!' % (ret))
+                return;
+
+            print ('Index: %d' % (index + i))
+            self.print_entry();
+            print ('')
+
+        delete_intp(size)
+        ${pddict['cli-name']}.free_debug_response_msg(rsp_msg)
 //::    #endif
 
     def print_entry(self):
-        return
-
 //::        if pddict['tables'][table]['type'] != 'Index':
 
         print('${table}_swkey_t:')
@@ -745,51 +670,20 @@ class ${table}():
 //::                    #endfor
 //::                #endif
 //::            #endfor
-//::            for hdrunion in pddict['tables'][table]['hdrunion_keys']:
-//::            (union_name, un_fields) = hdrunion
-//::                if len(un_fields) > 1:
-
-        print('  ${table}_hdr_union${i}_t:')
-//::                    for fields in un_fields:
-//::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
-//::                        if p4fldname.startswith("__"):
-//::                           continue
-//::                        #endif
-//::                        if (p4fldwidth <= 8):
-        print('    ${p4fldname}: %d (0x%02x)' % (self.swkey.${table}_hdr_union${i}_t.${p4fldname}, self.swkey.${table}_hdr_union${i}_t.${p4fldname}))
-//::                        elif (p4fldwidth <= 16):
-        print('    ${p4fldname}: %d (0x%04x)' % (self.swkey.${table}_hdr_union${i}_t.${p4fldname}, self.swkey.${table}_hdr_union${i}_t.${p4fldname}))
-//::                        elif (p4fldwidth <= 32):
-        print('    ${p4fldname}: %d (0x%08x)' % (self.swkey.${table}_hdr_union${i}_t.${p4fldname}, self.swkey.${table}_hdr_union${i}_t.${p4fldname}))
-//::                        elif (p4fldwidth <= 64):
-        print('    ${p4fldname}: %d (0x%016x)' % (self.swkey.${table}_hdr_union${i}_t.${p4fldname}, self.swkey.${table}_hdr_union${i}_t.${p4fldname}))
-//::                        else:
-        valstr = '  ${p4fldname}[]: '
-        lenstr = len(valstr)
-        for i in range( int((${p4fldwidth} + 7) / 8)):
-            if i != 0 and (i % array_cols) == 0:
-                valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey.${table}_hdr_union${i}_t.${p4fldname}, i))
-        print(valstr)
-
-//::                        #endif
-//::                    #endfor
-//::                    i+=1
-//::                else:
-//::                    for fields in un_fields:
-//::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
-//::                        if p4fldname.startswith("__"):
-//::                           continue
-//::                        #endif
-//::                        if (p4fldwidth <= 8):
+//::            for fields in pddict['tables'][table]['hdrunion_keys']:
+//::                (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                if p4fldname.startswith("__"):
+//::                    continue
+//::                #endif
+//::                if (p4fldwidth <= 8):
         print('  ${p4fldname}: %d (0x%02x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
-//::                        elif (p4fldwidth <= 16):
+//::                elif (p4fldwidth <= 16):
         print('  ${p4fldname}: %d (0x%04x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
-//::                        elif (p4fldwidth <= 32):
+//::                elif (p4fldwidth <= 32):
         print('  ${p4fldname}: %d (0x%08x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
-//::                        elif (p4fldwidth <= 64):
+//::                elif (p4fldwidth <= 64):
         print('  ${p4fldname}: %d (0x%016x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
-//::                        else:
+//::                else:
         valstr = '  ${p4fldname}[]: '
         lenstr = len(valstr)
         for i in range( int((${p4fldwidth} + 7) / 8)):
@@ -798,8 +692,6 @@ class ${table}():
             valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey.${p4fldname}, i))
         print(valstr)
 
-//::                        #endif
-//::                    #endfor
 //::                #endif
 //::            #endfor
 //::        #endif
@@ -892,51 +784,20 @@ class ${table}():
 //::                    #endfor
 //::                #endif
 //::            #endfor
-//::            for fldunion in pddict['tables'][table]['hdrunion_keys']:
-//::            (unionname, un_fields) = fldunion
-//::                if len(un_fields) > 1:
-
-        print('  ${table}_hdr_union${i}_t:')
-//::                    for fields in un_fields:
-//::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
-//::                        if p4fldname.startswith("__"):
-//::                           continue
-//::                        #endif
-//::                        if (p4fldwidth <= 8):
-        print('    ${p4fldname}_mask: %d (0x%02x)' % (self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask))
-//::                        elif (p4fldwidth <= 16):
-        print('    ${p4fldname}_mask: %d (0x%04x)' % (self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask))
-//::                        elif (p4fldwidth <= 32):
-        print('    ${p4fldname}_mask: %d (0x%08x)' % (self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask))
-//::                        elif (p4fldwidth <= 64):
-        print('    ${p4fldname}_mask: %d (0x%016x)' % (self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask))
-//::                        else:
-        valstr = '    ${p4fldname}_mask[]: '
-        lenstr = len(valstr)
-        for i in range( int((${p4fldwidth} + 7) / 8)):
-            if i != 0 and (i % array_cols) == 0:
-                valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, i))
-        print(valstr)
-
-//::                        #endif
-//::                    #endfor
-//::                    i += 1
-//::                else:
-//::                    for fields in un_fields:
-//::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
-//::                        if p4fldname.startswith("__"):
-//::                           continue
-//::                        #endif
-//::                        if (p4fldwidth <= 8):
+//::            for fields in pddict['tables'][table]['hdrunion_keys']:
+//::                (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                if p4fldname.startswith("__"):
+//::                    continue
+//::                #endif
+//::                if (p4fldwidth <= 8):
         print('  ${p4fldname}_mask: %d (0x%02x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
-//::                        elif (p4fldwidth <= 16):
+//::                elif (p4fldwidth <= 16):
         print('  ${p4fldname}_mask: %d (0x%04x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
-//::                        elif (p4fldwidth <= 32):
+//::                elif (p4fldwidth <= 32):
         print('  ${p4fldname}_mask: %d (0x%08x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
-//::                        elif (p4fldwidth <= 64):
+//::                elif (p4fldwidth <= 64):
         print('  ${p4fldname}_mask: %d (0x%016x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
-//::                        else:
+//::                else:
         valstr = '  ${p4fldname}_mask[]: '
         lenstr = len(valstr)
         for i in range( int((${p4fldwidth} + 7) / 8)):
@@ -945,8 +806,6 @@ class ${table}():
             valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey_mask.${p4fldname}_mask, i))
         print(valstr)
 
-//::                        #endif
-//::                    #endfor
 //::                #endif
 //::            #endfor
 //::        #endif
@@ -978,6 +837,8 @@ class ${table}():
             print('      ${actionfldname}: %d (0x%04x)' % (self.actiondata.action_u.${table}_${actionname}.${actionfldname}, self.actiondata.action_u.${table}_${actionname}.${actionfldname}))
 //::                    elif (actionfldwidth <= 32):
             print('      ${actionfldname}: %d (0x%08x)' % (self.actiondata.action_u.${table}_${actionname}.${actionfldname}, self.actiondata.action_u.${table}_${actionname}.${actionfldname}))
+//::                    elif (actionfldwidth <= 64):
+            print('      ${actionfldname}: %d (0x%016x)' % (self.actiondata.action_u.${table}_${actionname}.${actionfldname}, self.actiondata.action_u.${table}_${actionname}.${actionfldname}))
 //::                    else:
             valstr =   '      ${actionfldname}[]: '
             lenstr = len(valstr)

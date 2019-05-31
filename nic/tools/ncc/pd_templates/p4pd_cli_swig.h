@@ -130,28 +130,6 @@ ${union_str}
 //::                #endif
 //::            #endfor
 
-//::            for hdrunion in pddict['tables'][table]['hdrunion_keys']:
-//::                (union_name, un_fields) = hdrunion
-//::                if len(un_fields) > 1:
-typedef union __${table}_hdr_union${i}_t { /* Sourced from header union */
-//::                    for fields in un_fields:
-//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
-//::                        if (p4fldwidth <= 8):
-    uint8_t ${p4fldname};
-//::                        elif (p4fldwidth <= 16):
-    uint16_t ${p4fldname};
-//::                        elif (p4fldwidth <= 32):
-    uint32_t ${p4fldname};
-//::                        else:
-//::                            p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
-    uint8_t ${p4fldname}[${p4fldwidth_byte}];
-//::                        #endif
-//::                    #endfor
-} ${table}_hdr_union${i}_t;
-//::                    i+=1
-//::                #endif
-//::            #endfor
-
 typedef struct __attribute__((__packed__)) ${table}_swkey {
 //::            for fields in pddict['tables'][table]['keys']:
 //::                (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
@@ -188,25 +166,17 @@ typedef struct __attribute__((__packed__)) ${table}_swkey {
 //::                    #endfor
 //::                #endif
 //::            #endfor
-//::            for hdrunion in pddict['tables'][table]['hdrunion_keys']:
-//::                (union_name, un_fields) = hdrunion
-//::                if len(un_fields) > 1:
-    ${table}_hdr_union${i}_t ${table}_hdr_u${i};
-//::                    i+=1
-//::                else:
-//::                    for fields in un_fields:
-//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
-//::                        if (p4fldwidth <= 8):
+//::            for fields in pddict['tables'][table]['hdrunion_keys']:
+//::                (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                if (p4fldwidth <= 8):
     uint8_t ${p4fldname};/* Sourced from header union */
-//::                        elif (p4fldwidth <= 16):
+//::                elif (p4fldwidth <= 16):
     uint16_t ${p4fldname};/* Sourced from header union */
-//::                        elif (p4fldwidth <= 32):
+//::                elif (p4fldwidth <= 32):
     uint32_t ${p4fldname};/* Sourced from header union */
-//::                        else:
-//::                            p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
+//::                else:
+//::                    p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
     uint8_t ${p4fldname}[${p4fldwidth_byte}];/* Sourced from header union */
-//::                        #endif
-//::                    #endfor
 //::                #endif
 //::            #endfor
 } ${table}_swkey_t;
@@ -247,27 +217,6 @@ ${union_str}
 //::                        i += 1
 //::                    #endif
 //::                #endfor
-//::                for fldunion in pddict['tables'][table]['hdrunion_keys']:
-//::                    (unionname, un_fields) = fldunion
-//::                    if len(un_fields) > 1:
-typedef union __${table}_mask_hdr_union${i}_t { /* Sourced from header union */
-//::                        for fields in un_fields:
-//::                            (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
-//::                            if (p4fldwidth <= 8):
-    uint8_t ${p4fldname}_mask;
-//::                            elif (p4fldwidth <= 16):
-    uint16_t ${p4fldname}_mask;
-//::                            elif (p4fldwidth <= 32):
-    uint32_t ${p4fldname}_mask;
-//::                            else:
-//::                                p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
-    uint8_t ${p4fldname}_mask[${p4fldwidth_byte}];
-//::                            #endif
-//::                        #endfor
-} ${table}_mask_hdr_union${i}_t;
-//::                        i += 1
-//::                    #endif
-//::                #endfor
 
 typedef struct __attribute__((__packed__)) ${table}_swkey_mask {
 //::                for fields in pddict['tables'][table]['keys']:
@@ -305,26 +254,18 @@ typedef struct __attribute__((__packed__)) ${table}_swkey_mask {
 //::                        #endfor
 //::                    #endif
 //::                #endfor
-//::                for fldunion in pddict['tables'][table]['hdrunion_keys']:
-//::                    (unionname, un_fields) = fldunion
-//::                    if len(un_fields) > 1:
-    ${table}_mask_hdr_union${i}_t ${table}_mask_hdr_u${i};
-//::                        i += 1
-//::                    else:
-//::                        for fields in un_fields:
-//::                            (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
-//::                            if (p4fldwidth <= 8):
+//::                for fields in pddict['tables'][table]['hdrunion_keys']:
+//::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                    if (p4fldwidth <= 8):
     uint8_t ${p4fldname}_mask;/* Sourced from header union */
-//::                            elif (p4fldwidth <= 16):
+//::                        elif (p4fldwidth <= 16):
     uint16_t ${p4fldname}_mask;/* Sourced from header union */
-//::                            elif (p4fldwidth <= 32):
+//::                        elif (p4fldwidth <= 32):
     uint32_t ${p4fldname}_mask;/* Sourced from header union */
-//::                            else:
+//::                        else:
 //::                                p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
     uint8_t ${p4fldname}_mask[${p4fldwidth_byte}];/* Sourced from header union */
-//::                            #endif
-//::                        #endfor
-//::                    #endif
+//::                        #endif
 //::                #endfor
 } ${table}_swkey_mask_t;
 //::            #endif

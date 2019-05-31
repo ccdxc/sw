@@ -146,25 +146,6 @@ typedef union __${table}_union${i}_bitfield_t { /* Sourced from field union */
 //::                #endif
 //::                i+=1
 //::            #endfor
-//::            i = 1
-//::            for hdrunion in pddict['tables'][table]['hdrunion_keys']:
-//::                (union_name, un_fields) = hdrunion
-//::                if len(un_fields) > 1:
-typedef union __${table}_hdr_union${i}_bitfield_t { /* Sourced from header union */
-//::                    for fields in reversed(un_fields):
-//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
-//::                        if (p4fldwidth <= 64):
-    uint64_t ${p4fldname} : ${p4fldwidth};
-//::                        else:
-//::                            p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
-    uint8_t ${p4fldname}[${p4fldwidth_byte}];
-//::                        #endif
-//::                    #endfor
-} ${table}_hdr_union${i}_bitfield_t;
-
-//::                #endif
-//::                i+=1
-//::            #endfor
 
 typedef struct __attribute__((__packed__)) ${table}_bitfield_swkey {
 //::            if pddict['tables'][table]['keys']:
@@ -196,23 +177,14 @@ typedef struct __attribute__((__packed__)) ${table}_bitfield_swkey {
 //::                #endif
 //::                i+=1
 //::            #endfor
-//::            i = 1
-//::            for hdrunion in pddict['tables'][table]['hdrunion_keys']:
-//::                (union_name, un_fields) = hdrunion
-//::                if len(un_fields) > 1:
-    ${table}_hdr_union${i}_bitfield_t ${table}_hdr_u${i};
-//::                else:
-//::                    for fields in reversed(un_fields):
-//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
-//::                        if (p4fldwidth <= 64):
+//::            for fields in reversed(pddict['tables'][table]['hdrunion_keys']):
+//::                (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                if (p4fldwidth <= 64):
     uint64_t ${p4fldname} : ${p4fldwidth};/* Sourced from header union */
-//::                        else:
-//::                            p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
+//::                else:
+//::                    p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
     uint8_t ${p4fldname}[${p4fldwidth_byte}];/* Sourced from header union */
-//::                        #endif
-//::                    #endfor
 //::                #endif
-//::                i+=1
 //::            #endfor
 } ${table}_swkey_bitfield_t;
 
@@ -239,25 +211,6 @@ typedef union __${table}_mask_union${i}_bitfield_t { /* Sourced from field union
     };
 //::                        #endfor
 } ${table}_mask_union${i}_bitfield_t;
-
-//::                        i += 1
-//::                    #endif
-//::                #endfor
-//::                i = 1
-//::                for fldunion in pddict['tables'][table]['hdrunion_keys']:
-//::                    (unionname, un_fields) = fldunion
-//::                    if len(un_fields) > 1:
-typedef union __${table}_mask_hdr_union${i}_bitfield_t { /* Sourced from header union */
-//::                        for fields in reversed(un_fields):
-//::                            (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
-//::                            if (p4fldwidth <= 64):
-    uint64_t ${p4fldname}_mask : ${p4fldwidth};
-//::                            else:
-//::                                p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
-    uint8_t ${p4fldname}_mask[${p4fldwidth_byte}];
-//::                            #endif
-//::                        #endfor
-} ${table}_mask_hdr_union${i}_bitfield_t;
 
 //::                        i += 1
 //::                    #endif
@@ -292,26 +245,16 @@ typedef struct __attribute__((__packed__)) ${table}_swkey_mask_bitfield {
 //::                        #endfor
 //::                    #endif
 //::                #endfor
-//::                i = 1
-//::                for fldunion in pddict['tables'][table]['hdrunion_keys']:
-//::                    (unionname, un_fields) = fldunion
-//::                    if len(un_fields) > 1:
-    ${table}_mask_hdr_union${i}_bitfield_t ${table}_mask_hdr_u${i};
-//::                        i += 1
-//::                    else:
-//::                        for fields in reversed(un_fields):
-//::                            (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
-//::                            if (p4fldwidth <= 64):
+//::                for fields in reversed(pddict['tables'][table]['hdrunion_keys']):
+//::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                    if (p4fldwidth <= 64):
     uint64_t ${p4fldname}_mask : ${p4fldwidth};/* Sourced from header union */
-//::                            else:
+//::                    else:
 //::                                p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
     uint8_t ${p4fldname}_mask[${p4fldwidth_byte}];/* Sourced from header union */
-//::                            #endif
-//::                        #endfor
 //::                    #endif
 //::                #endfor
 } ${table}_swkey_mask_bitfield_t;
-
 //::            #endif
 //::        #endif
 //::        if len(pddict['tables'][table]['actions']):
