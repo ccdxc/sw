@@ -115,7 +115,7 @@ vnic_impl::nuke_resources(api_base *api_obj) {
     return SDK_RET_OK;
 }
 
-#define rxdma_vnic_info    action_u.vnic_info_vnic_info
+#define rxdma_vnic_info    action_u.vnic_info_rxdma_vnic_info_rxdma
 #define txdma_vnic_info    action_u.vnic_info_txdma_vnic_info_txdma
 sdk_ret_t
 vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
@@ -129,13 +129,13 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     p4pd_error_t p4pd_ret;
     pds_policy_key_t policy_key;
     pds_route_table_key_t route_table_key;
-    vnic_info_actiondata_t tx_rxdma_vnic_info_data = { 0 };
-    vnic_info_actiondata_t rx_rxdma_vnic_info_data = { 0 };
+    vnic_info_rxdma_actiondata_t tx_rxdma_vnic_info_data = { 0 };
+    vnic_info_rxdma_actiondata_t rx_rxdma_vnic_info_data = { 0 };
     vnic_info_txdma_actiondata_t txdma_vnic_info_data = { 0 };
 
     // prepare RXDMA_VNIC_INFO entries in RX & TX directions
-    tx_rxdma_vnic_info_data.action_id = VNIC_INFO_VNIC_INFO_ID;
-    rx_rxdma_vnic_info_data.action_id = VNIC_INFO_VNIC_INFO_ID;
+    tx_rxdma_vnic_info_data.action_id = VNIC_INFO_RXDMA_VNIC_INFO_RXDMA_ID;
+    rx_rxdma_vnic_info_data.action_id = VNIC_INFO_RXDMA_VNIC_INFO_RXDMA_ID;
 
     // prepare VNIC_INFO_TXDMA entry
     txdma_vnic_info_data.action_id = VNIC_INFO_TXDMA_VNIC_INFO_TXDMA_ID;
@@ -228,7 +228,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     }
 
     // program RXDMA_VNIC_INFO entry for TX direction at hw_id_ index
-    p4pd_ret = p4pd_global_entry_write(P4_ARTEMIS_RXDMA_TBL_ID_VNIC_INFO,
+    p4pd_ret = p4pd_global_entry_write(P4_ARTEMIS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
                                        hw_id_, NULL, NULL,
                                        &tx_rxdma_vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {
@@ -237,7 +237,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     }
 
     // program VNIC_INFO_TXDMA entry for RX direction at (2 * hw_id_) index
-    p4pd_ret = p4pd_global_entry_write(P4_ARTEMIS_RXDMA_TBL_ID_VNIC_INFO,
+    p4pd_ret = p4pd_global_entry_write(P4_ARTEMIS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
                                        hw_id_ << 1, NULL, NULL,
                                        &rx_rxdma_vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {

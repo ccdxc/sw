@@ -1,6 +1,6 @@
 // VNIC Info Table Action: Get all LPM roots for a VNET - different roots in Tx & Rx direction
 // Pass the roots to later stages thru PHV
-action vnic_info(lpm_base1, lpm_base2, lpm_base3, lpm_base4,
+action vnic_info_rxdma(lpm_base1, lpm_base2, lpm_base3, lpm_base4,
                  lpm_base5, lpm_base6, lpm_base7, lpm_base8) {
 
     // Disable lookup for further passes
@@ -46,7 +46,7 @@ action vnic_info(lpm_base1, lpm_base2, lpm_base3, lpm_base4,
 // used as key to index to 512 entries.
 @pragma stage 0
 @pragma hbm_table
-table vnic_info {
+table vnic_info_rxdma {
     reads {
         // TODO-MAHESH: Right now these 2 fields are treated as Union by P4C, Mahesh
         // will fix this to generate struct for these 2 fields instead of Union
@@ -54,12 +54,12 @@ table vnic_info {
         p4_to_rxdma.vnic_id : exact;
     }
     actions {
-        vnic_info;
+        vnic_info_rxdma;
     }
-    size : RXDMA_VNIC_INFO_TABLE_SIZE;
+    size : VNIC_INFO_RXDMA_TABLE_SIZE;
 }
 
-control vnic_info {
+control vnic_info_rxdma {
     // TMP: Launch this look up only in first pass (recirc == 0)
-    apply(vnic_info);
+    apply(vnic_info_rxdma);
 }

@@ -12,7 +12,7 @@ action vnic_info_txdma(entry_valid, lpm_base1, lpm_base2) {
 }
 
 @pragma stage 0
-@pragma hbm_table
+@pragma index_table
 table vnic_info_txdma {
     reads {
         txdma_control.vnic_id   : exact;

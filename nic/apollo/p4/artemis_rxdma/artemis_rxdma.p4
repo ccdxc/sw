@@ -10,7 +10,7 @@
 #include "rxlpm1.p4"
 #include "rxlpm2.p4"
 #include "recirc.p4"
-#include "vnic_info.p4"
+#include "vnic_info_rxdma.p4"
 #include "packet_queue.p4"
 #include "common_rxdma.p4"
 
@@ -24,7 +24,7 @@ control ingress {
             rxlpm1();
         }
         if (p4_to_rxdma.vnic_info_en == TRUE) {
-            vnic_info();
+            vnic_info_rxdma();
         }
         if (p4_to_rxdma.lpm2_enable == TRUE) {
             rxlpm2();
