@@ -35,9 +35,24 @@ tree_base_addr_size (mem_addr_t rfc_block_base_addr, itree_type_t tree_type,
                      mem_addr_t *tree_base_addr, uint32_t *tree_size)
 {
     switch (tree_type) {
-    case ITREE_TYPE_IPV4_ACL:
-        *tree_base_addr = rfc_block_base_addr + SACL_IP_TABLE_OFFSET;
-        *tree_size = SACL_IPV4_TABLE_SIZE;
+    case ITREE_TYPE_IPV4_SIP_ACL:
+        *tree_base_addr = rfc_block_base_addr + SACL_IPV4_SIP_TABLE_OFFSET;
+        *tree_size = SACL_IPV4_SIP_TABLE_SIZE;
+        break;
+
+    case ITREE_TYPE_IPV6_SIP_ACL:
+        *tree_base_addr = rfc_block_base_addr + SACL_IPV6_SIP_TABLE_OFFSET;
+        *tree_size = SACL_IPV6_SIP_TABLE_SIZE;
+        break;
+
+    case ITREE_TYPE_IPV4_DIP_ACL:
+        *tree_base_addr = rfc_block_base_addr + SACL_DIP_TABLE_OFFSET;
+        *tree_size = SACL_IPV4_DIP_TABLE_SIZE;
+        break;
+
+    case ITREE_TYPE_IPV6_DIP_ACL:
+        *tree_base_addr = rfc_block_base_addr + SACL_DIP_TABLE_OFFSET;
+        *tree_size = SACL_IPV6_DIP_TABLE_SIZE;
         break;
 
     case ITREE_TYPE_PORT:
@@ -48,11 +63,6 @@ tree_base_addr_size (mem_addr_t rfc_block_base_addr, itree_type_t tree_type,
     case ITREE_TYPE_PROTO_PORT:
         *tree_base_addr = rfc_block_base_addr + SACL_PROTO_DPORT_TABLE_OFFSET;
         *tree_size = SACL_PROTO_DPORT_TABLE_SIZE;
-        break;
-
-    case ITREE_TYPE_IPV6_ACL:
-        *tree_base_addr = rfc_block_base_addr + SACL_IP_TABLE_OFFSET;
-        *tree_size = SACL_IPV6_TABLE_SIZE;
         break;
 
     default:
@@ -82,9 +92,12 @@ rfc_build_lpm_tree (lpm_itable_t *lpm_itable, rfc_tree_t *rfc_tree,
     itable_t     *itable = &rfc_tree->itable;
 
     for (uint32_t i = 0; i < lpm_itable->num_intervals; i++) {
-        if ((lpm_itable->tree_type == ITREE_TYPE_IPV4_ACL) ||
-            (lpm_itable->tree_type == ITREE_TYPE_IPV6_ACL)) {
+        if ((lpm_itable->tree_type == ITREE_TYPE_IPV4_SIP_ACL) ||
+            (lpm_itable->tree_type == ITREE_TYPE_IPV6_SIP_ACL)) {
             lpm_itable->nodes[i].ipaddr = itable->nodes[i].ipaddr;
+        } else if ((lpm_itable->tree_type == ITREE_TYPE_IPV4_DIP_ACL) ||
+                   (lpm_itable->tree_type == ITREE_TYPE_IPV6_DIP_ACL)) {
+                    lpm_itable->nodes[i].ipaddr = itable->nodes[i].ipaddr;
         } else if (lpm_itable->tree_type == ITREE_TYPE_PORT) {
             lpm_itable->nodes[i].port = itable->nodes[i].port;
         } else if (lpm_itable->tree_type == ITREE_TYPE_PROTO_PORT) {
@@ -139,13 +152,13 @@ rfc_build_lpm_trees (rfc_ctxt_t *rfc_ctxt,
     /**< build LPM tree for th SIP portion of the rules */
     itable.num_intervals = rfc_ctxt->sip_tree.num_intervals;
     if (rfc_ctxt->policy->af == IP_AF_IPV4) {
-        itable.tree_type = ITREE_TYPE_IPV4_ACL;
-        nodes = SACL_IPV4_TREE_MAX_NODES >> 1;
+        itable.tree_type = ITREE_TYPE_IPV4_SIP_ACL;
+        nodes = SACL_IPV4_SIP_TREE_MAX_NODES >> 1;
     } else {
-        itable.tree_type = ITREE_TYPE_IPV6_ACL;
-        nodes = SACL_IPV6_TREE_MAX_NODES >> 1;
+        itable.tree_type = ITREE_TYPE_IPV6_SIP_ACL;
+        nodes = SACL_IPV6_SIP_TREE_MAX_NODES >> 1;
     }
-    // @ajeer please fix this one (it doesnt have SIP/DIP into consideration)
+
     tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
                         &tree_base_addr, &tree_size);
     ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->sip_tree,
@@ -157,11 +170,11 @@ rfc_build_lpm_trees (rfc_ctxt_t *rfc_ctxt,
     /**< build LPM tree for th DIP portion of the rules */
     itable.num_intervals = rfc_ctxt->dip_tree.num_intervals;
     if (rfc_ctxt->policy->af == IP_AF_IPV4) {
-        itable.tree_type = ITREE_TYPE_IPV4_ACL;
-        nodes = SACL_IPV4_TREE_MAX_NODES >> 1;
+        itable.tree_type = ITREE_TYPE_IPV4_DIP_ACL;
+        nodes = SACL_IPV4_DIP_TREE_MAX_NODES >> 1;
     } else {
-        itable.tree_type = ITREE_TYPE_IPV6_ACL;
-        nodes = SACL_IPV6_TREE_MAX_NODES >> 1;
+        itable.tree_type = ITREE_TYPE_IPV6_DIP_ACL;
+        nodes = SACL_IPV6_DIP_TREE_MAX_NODES >> 1;
     }
     tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
                         &tree_base_addr, &tree_size);

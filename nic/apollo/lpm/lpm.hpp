@@ -18,14 +18,16 @@ typedef enum itree_type_e {
     ITREE_TYPE_NONE,            /**< invalid tree type */
     ITREE_TYPE_IPV4,            /**< IPv4 route interval tree */
     ITREE_TYPE_IPV6,            /**< IPv6 route interval tree */
+    ITREE_TYPE_IPV4_ACL,        /**< IPv4 SIP/DIP ACL interval tree */
+    ITREE_TYPE_IPV6_ACL,        /**< IPv6 SIP/DIP ACL interval tree */
     ITREE_TYPE_PORT,            /**< tree with port as key */
     ITREE_TYPE_PROTO_PORT,      /**< tree with protocol + port as key */
     ITREE_TYPE_METER_V4,        /**< IPv4 meter LPM interval tree */
     ITREE_TYPE_METER_V6,        /**< IPv6 meter LPM interval tree */
     ITREE_TYPE_TAG_V4,          /**< IPv4 tag LPM interval tree */
     ITREE_TYPE_TAG_V6,          /**< IPv6 tag LPM interval tree */
-    ITREE_TYPE_IPV4_ACL,        /**< IPv4 DIP ACL interval tree */
-    ITREE_TYPE_IPV6_ACL,        /**< IPv6 DIP ACL interval tree */
+    ITREE_TYPE_IPV4_DIP_ACL,    /**< IPv4 DIP ACL interval tree */
+    ITREE_TYPE_IPV6_DIP_ACL,    /**< IPv6 DIP ACL interval tree */
     ITREE_TYPE_IPV4_SIP_ACL,    /**< IPv4 SIP ACL interval tree */
     ITREE_TYPE_IPV6_SIP_ACL,    /**< IPv6 SIP ACL interval tree */
     ITREE_TYPE_IPV4_PEER_ROUTE, /**< IPv4 Peer VNET interval tree */

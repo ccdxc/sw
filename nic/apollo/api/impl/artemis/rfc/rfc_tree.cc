@@ -133,8 +133,8 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
     }
     new (&rfc_ctxt->sip_tree.rfc_table.cbm_map) cbm_map_t();
     rfc_ctxt->sip_tree.rfc_table.max_classes =
-        (policy->af == IP_AF_IPV4) ? SACL_IPV4_TREE_MAX_CLASSES :
-                                     SACL_IPV6_TREE_MAX_CLASSES;
+        (policy->af == IP_AF_IPV4) ? SACL_IPV4_SIP_TREE_MAX_CLASSES :
+                                     SACL_IPV6_SIP_TREE_MAX_CLASSES;
 
     // setup memory for DIP LPM tree
     rfc_ctxt->dip_tree.itable.nodes =
@@ -144,8 +144,8 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
     }
     new (&rfc_ctxt->dip_tree.rfc_table.cbm_map) cbm_map_t();
     rfc_ctxt->dip_tree.rfc_table.max_classes =
-            (policy->af == IP_AF_IPV4) ? SACL_IPV4_TREE_MAX_CLASSES :
-                                         SACL_IPV6_TREE_MAX_CLASSES;
+            (policy->af == IP_AF_IPV4) ? SACL_IPV4_DIP_TREE_MAX_CLASSES :
+                                         SACL_IPV6_DIP_TREE_MAX_CLASSES;
 
     // setup memory for sport LPM tree
     rfc_ctxt->port_tree.itable.nodes =

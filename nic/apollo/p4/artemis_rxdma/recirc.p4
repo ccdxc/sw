@@ -79,7 +79,7 @@ action setup_recirc()
         // Setup root address of DIP lookup on LPM2
         modify_field(lpm_metadata.lpm2_base_addr,
                      lpm_metadata.sacl_base_addr +
-                     SACL_IP_TABLE_OFFSET);
+                     SACL_DIP_TABLE_OFFSET);
 
         // Enable LPM1
         modify_field(p4_to_rxdma.lpm1_enable, TRUE);

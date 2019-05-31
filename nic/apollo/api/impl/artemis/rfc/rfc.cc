@@ -211,9 +211,15 @@ rfc_itree_dump (rfc_tree_t *rfc_tree, itree_type_t tree_type)
                     rfc_tree->num_intervals);
     for (uint32_t i = 0; i < rfc_tree->num_intervals; i++) {
         inode = &itable->nodes[i];
-        if ((tree_type == ITREE_TYPE_IPV4_ACL) ||
-            (tree_type == ITREE_TYPE_IPV6_ACL)) {
-            PDS_TRACE_DEBUG("inode %u, IP %s, classid %u, rule# %u, start %s",
+        if ((tree_type == ITREE_TYPE_IPV4_SIP_ACL) ||
+            (tree_type == ITREE_TYPE_IPV6_SIP_ACL)) {
+            PDS_TRACE_DEBUG("inode %u, SIP %s, classid %u, rule# %u, start %s",
+                            i, ipaddr2str(&inode->ipaddr), inode->rfc.class_id,
+                            inode->rfc.rule_no,
+                            inode->rfc.start ? "true" : "false");
+        } else if ((tree_type == ITREE_TYPE_IPV4_DIP_ACL) ||
+                   (tree_type == ITREE_TYPE_IPV6_DIP_ACL)) {
+            PDS_TRACE_DEBUG("inode %u, DIP %s, classid %u, rule# %u, start %s",
                             i, ipaddr2str(&inode->ipaddr), inode->rfc.class_id,
                             inode->rfc.rule_no,
                             inode->rfc.start ? "true" : "false");
@@ -240,16 +246,16 @@ rfc_compute_p0_classes (rfc_ctxt_t *rfc_ctxt)
 
     ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->sip_tree,
               rfc_p0_pfx_tree_inode_eq_cb,
-              (rfc_ctxt->policy->af == IP_AF_IPV4) ? SACL_IPV4_TREE_MAX_NODES :
-                                                     SACL_IPV6_TREE_MAX_NODES);
+              (rfc_ctxt->policy->af == IP_AF_IPV4) ? SACL_IPV4_SIP_TREE_MAX_NODES :
+                                                     SACL_IPV6_SIP_TREE_MAX_NODES);
     if (ret != SDK_RET_OK) {
         return ret;
     }
 
     ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->dip_tree,
               rfc_p0_pfx_tree_inode_eq_cb,
-              (rfc_ctxt->policy->af == IP_AF_IPV4) ? SACL_IPV4_TREE_MAX_NODES :
-                                                     SACL_IPV6_TREE_MAX_NODES);
+              (rfc_ctxt->policy->af == IP_AF_IPV4) ? SACL_IPV4_DIP_TREE_MAX_NODES :
+                                                     SACL_IPV6_DIP_TREE_MAX_NODES);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -298,15 +304,15 @@ rfc_p0_eq_class_tables_dump (rfc_ctxt_t *rfc_ctxt)
 {
     PDS_TRACE_DEBUG("RFC P0 SIP prefix interval tree dump :");
     rfc_itree_dump(&rfc_ctxt->sip_tree,
-                   (rfc_ctxt->policy->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4_ACL :
-                                                          ITREE_TYPE_IPV6_ACL);
+                   (rfc_ctxt->policy->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4_SIP_ACL :
+                                                          ITREE_TYPE_IPV6_SIP_ACL);
     PDS_TRACE_DEBUG("RFC P0 SIP prefix tree equivalence class table dump :");
     rfc_eq_class_table_dump(&rfc_ctxt->sip_tree.rfc_table);
 
     PDS_TRACE_DEBUG("RFC P0 DIP prefix interval tree dump :");
     rfc_itree_dump(&rfc_ctxt->dip_tree,
-                   (rfc_ctxt->policy->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4_ACL :
-                                                          ITREE_TYPE_IPV6_ACL);
+                   (rfc_ctxt->policy->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4_DIP_ACL :
+                                                          ITREE_TYPE_IPV6_DIP_ACL);
     PDS_TRACE_DEBUG("RFC P0 DIP prefix tree equivalence class table dump :");
     rfc_eq_class_table_dump(&rfc_ctxt->dip_tree.rfc_table);
 

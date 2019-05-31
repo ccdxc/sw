@@ -54,16 +54,27 @@
 #define SACL_P3_4_TABLE_NUM_ENTRIES       (1 << 20) // (2^10 * 2^10)
 #define SACL_P3_4_TABLE_SIZE              1458944   // round64((1<<20)*(64/46))
 
-#define SACL_IPV4_TABLE_SIZE              17472     // 64+(16*64)+(16*16*64)
-#define SACL_IPV6_TABLE_SIZE              87360     // 64+(4*64)+(16*64)+(64*64)
-// +(256*64)+(1024*64)
-#define SACL_IPV4_TREE_MAX_NODES          2047      // for 1023 prefixes.
-// 15+(16*15)+(256*7)
-#define SACL_IPV6_TREE_MAX_NODES          2047      // for 1023 prefixes.
-// 3+(4*3)+(16*3)+(64*3)
-// +(256*3)+(1024*1)
-#define SACL_IPV4_TREE_MAX_CLASSES        1024
-#define SACL_IPV6_TREE_MAX_CLASSES        1024
+#define SACL_IPV4_DIP_TABLE_SIZE          17472     // 64+(16*64)+(16*16*64)
+#define SACL_IPV6_DIP_TABLE_SIZE          87360     // 64+(4*64)+(16*64)+(64*64)
+                                                    // +(256*64)+(1024*64)
+#define SACL_IPV4_DIP_TREE_MAX_NODES      2047      // for 1023 prefixes.
+                                                    // 15+(16*15)+(256*7)
+#define SACL_IPV6_DIP_TREE_MAX_NODES      2047      // for 1023 prefixes.
+                                                    // 3+(4*3)+(16*3)+(64*3)
+                                                    // +(256*3)+(1024*1)
+#define SACL_IPV4_DIP_TREE_MAX_CLASSES    1024
+#define SACL_IPV6_DIP_TREE_MAX_CLASSES    1024
+
+#define SACL_IPV4_SIP_TABLE_SIZE          17472     // 64+(16*64)+(16*16*64)
+#define SACL_IPV6_SIP_TABLE_SIZE          87360     // 64+(4*64)+(16*64)+(64*64)
+                                                    // +(256*64)+(1024*64)
+#define SACL_IPV4_SIP_TREE_MAX_NODES      2047      // for 1023 prefixes.
+                                                    // 15+(16*15)+(256*7)
+#define SACL_IPV6_SIP_TREE_MAX_NODES      2047      // for 1023 prefixes.
+                                                    // 3+(4*3)+(16*3)+(64*3)
+                                                    // +(256*3)+(1024*1)
+#define SACL_IPV4_SIP_TREE_MAX_CLASSES    1024
+#define SACL_IPV6_SIP_TREE_MAX_CLASSES    1024
 
 #define SACL_SPORT_TABLE_OFFSET         0
 #define SACL_PROTO_DPORT_TABLE_OFFSET   (SACL_SPORT_TABLE_SIZE)
@@ -91,9 +102,9 @@
                                          SACL_P3_2_TABLE_SIZE)
 #define SACL_P3_4_TABLE_OFFSET          (SACL_P3_3_TABLE_OFFSET +\
                                          SACL_P3_3_TABLE_SIZE)
-#define SACL_IP_TABLE_OFFSET            (SACL_P3_4_TABLE_OFFSET +\
+#define SACL_DIP_TABLE_OFFSET           (SACL_P3_4_TABLE_OFFSET +\
                                          SACL_P3_4_TABLE_SIZE)
-#define SACL_IPV4_SIP_TABLE_OFFSET      (SACL_IP_TABLE_OFFSET +\
-                                         SACL_IPV4_TABLE_SIZE)
-#define SACL_IPV6_SIP_TABLE_OFFSET      (SACL_IP_TABLE_OFFSET +\
-                                         SACL_IPV6_TABLE_SIZE)
+#define SACL_IPV4_SIP_TABLE_OFFSET      (SACL_DIP_TABLE_OFFSET +\
+                                         SACL_IPV4_DIP_TABLE_SIZE)
+#define SACL_IPV6_SIP_TABLE_OFFSET      (SACL_DIP_TABLE_OFFSET +\
+                                         SACL_IPV6_DIP_TABLE_SIZE)

@@ -43,7 +43,7 @@ pass0:
     phvwr            p.lpm_metadata_lpm2_key[39:0], k.p4_to_rxdma_flow_dst_sbit88_ebit127
 
     /* Setup root for DIP lookup on LPM2 */
-    addi             r1, r0, SACL_IP_TABLE_OFFSET
+    addi             r1, r0, SACL_DIP_TABLE_OFFSET
     add              r1, r1, k.lpm_metadata_sacl_base_addr
     phvwr            p.lpm_metadata_lpm2_base_addr, r1
 

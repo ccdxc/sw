@@ -827,7 +827,7 @@ rfc_compute_p3_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
                 ruleidx = rte_bitmap_get_global_bit_pos(cbm->index2-1, new_posn);
                 PDS_TRACE_DEBUG("ruleidx = %u", ruleidx);
 
-                if (priority < rfc_ctxt->policy->rules[ruleidx].priority) {
+                if (priority > rfc_ctxt->policy->rules[ruleidx].priority) {
                     priority = rfc_ctxt->policy->rules[ruleidx].priority;
                     result = 0;
                     if (rfc_ctxt->policy->rules[ruleidx].stateful) {
