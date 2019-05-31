@@ -5,8 +5,10 @@
 #ifndef __AGENT_SVC_SPECS_HPP__
 #define __AGENT_SVC_SPECS_HPP__
 
+#include "nic/sdk/linkmgr/port_mac.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/sdk/include/sdk/types.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_meter.hpp"
 #include "nic/apollo/api/include/pds_tag.hpp"
@@ -22,6 +24,7 @@
 #include "nic/apollo/agent/svc/vpc.hpp"
 #include "nic/apollo/agent/svc/tunnel.hpp"
 #include "nic/apollo/agent/svc/service.hpp"
+#include "nic/apollo/agent/svc/port.hpp"
 #include "gen/proto/types.pb.h"
 
 //----------------------------------------------------------------------------
@@ -291,6 +294,69 @@ service_proto_spec_to_api_spec (pds_svc_mapping_spec_t *api_spec,
     ipaddr_proto_spec_to_api_spec(&api_spec->backend_provider_ip, proto_spec.providerip());
     api_spec->svc_port = proto_spec.port();
     api_spec->vpc.id = proto_spec.vpcid();
+}
+
+static inline port_fec_type_t
+proto_port_fec_type_to_sdk_fec_type (pds::PortFecType fec_type)
+{
+    switch (fec_type) {
+    case pds::PORT_FEC_TYPE_NONE:
+        return port_fec_type_t::PORT_FEC_TYPE_NONE;
+    case pds::PORT_FEC_TYPE_FC:
+        return port_fec_type_t::PORT_FEC_TYPE_FC;
+    case pds::PORT_FEC_TYPE_RS:
+        return port_fec_type_t::PORT_FEC_TYPE_RS;
+    default:
+        return port_fec_type_t::PORT_FEC_TYPE_NONE;
+    }
+}
+
+static inline port_speed_t
+proto_port_speed_to_sdk_port_speed (pds::PortSpeed port_speed)
+{
+    switch (port_speed) {
+    case pds::PORT_SPEED_NONE:
+        return port_speed_t::PORT_SPEED_NONE;
+    case pds::PORT_SPEED_1G:
+        return port_speed_t::PORT_SPEED_1G;
+    case pds::PORT_SPEED_10G:
+        return port_speed_t::PORT_SPEED_10G;
+    case pds::PORT_SPEED_25G:
+        return port_speed_t::PORT_SPEED_25G;
+    case pds::PORT_SPEED_40G:
+        return port_speed_t::PORT_SPEED_40G;
+    case pds::PORT_SPEED_50G:
+        return port_speed_t::PORT_SPEED_50G;
+    case pds::PORT_SPEED_100G:
+        return port_speed_t::PORT_SPEED_100G;
+    default:
+        return port_speed_t::PORT_SPEED_NONE;
+    }
+}
+
+static inline port_admin_state_t
+proto_port_admin_state_to_sdk_admin_state (pds::PortAdminState proto_state)
+{
+    switch (proto_state) {
+    case pds::PORT_ADMIN_STATE_NONE:
+        return port_admin_state_t::PORT_ADMIN_STATE_NONE;
+    case pds::PORT_ADMIN_STATE_DOWN:
+        return port_admin_state_t::PORT_ADMIN_STATE_DOWN;
+    case pds::PORT_ADMIN_STATE_UP:
+        return port_admin_state_t::PORT_ADMIN_STATE_UP;
+    default:
+        return port_admin_state_t::PORT_ADMIN_STATE_NONE;
+    }
+}
+
+static inline void
+proto_port_spec_to_port_args (port_args_t *port_args,
+                              const pds::PortSpec &spec)
+{
+    port_args->admin_state = proto_port_admin_state_to_sdk_admin_state(spec.adminstate());
+    port_args->port_speed = proto_port_speed_to_sdk_port_speed(spec.speed());
+    port_args->auto_neg_enable = spec.autonegen();
+    port_args->fec_type = proto_port_fec_type_to_sdk_fec_type(spec.fectype());
 }
 
 #endif    // __AGENT_SVC_SPECS_HPP__

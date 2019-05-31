@@ -32,7 +32,7 @@ sdk_ret_t port_get(uint32_t fp_port, port_get_cb_t port_get_cb, void *ctxt);
  * @param[in]    admin_state   port admin state
  * @return       SDK_RET_OK on success, failure status code on error
  */
-sdk_ret_t update_port(pds_ifindex_t ifindex, port_admin_state_t admin_state);
+sdk_ret_t update_port(pds_ifindex_t ifindex, port_args_t *api_port_info);
 
 /**
  * @brief     create all ports based on the catalog information

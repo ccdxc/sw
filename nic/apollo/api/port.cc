@@ -101,7 +101,7 @@ xcvr_event_cb (xcvr_event_info_t *xcvr_event_info)
  * @return       SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-update_port (pds_ifindex_t ifindex, port_admin_state_t admin_state)
+update_port (pds_ifindex_t ifindex, port_args_t *api_port_info)
 {
     sdk_ret_t ret;
     if_entry *intf;
@@ -122,7 +122,12 @@ update_port (pds_ifindex_t ifindex, port_admin_state_t admin_state)
     port_info.port_num = intf->key();
 
     // set the admin state as per the argument
-    port_info.admin_state = admin_state;
+    port_info.admin_state = api_port_info->admin_state;
+    port_info.user_admin_state = api_port_info->admin_state;
+    port_info.auto_neg_enable = api_port_info->auto_neg_enable;
+    port_info.auto_neg_cfg = api_port_info->auto_neg_enable;
+    port_info.port_speed = api_port_info->port_speed;
+    port_info.fec_type = api_port_info->fec_type;
 
     ret = sdk::linkmgr::port_update(intf->if_info(), &port_info);
     return ret;

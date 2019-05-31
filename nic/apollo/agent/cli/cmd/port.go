@@ -28,6 +28,9 @@ const InvalidIfIndex = 0xFFFFFFFF
 var (
 	portID         string
 	portAdminState string
+	portFecType    string
+	portAutoNeg    string
+	portSpeed      string
 )
 
 var portShowCmd = &cobra.Command{
@@ -67,7 +70,9 @@ func init() {
 	debugCmd.AddCommand(portUpdateCmd)
 	portUpdateCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify Port ID. Ex: Eth1/2")
 	portUpdateCmd.Flags().StringVarP(&portAdminState, "admin-state", "a", "up", "Set port admin state - up, down")
-	portUpdateCmd.MarkFlagRequired("admin-state")
+	portUpdateCmd.Flags().StringVar(&portFecType, "fec-type", "none", "Specify fec-type - rs, fc, none")
+	portUpdateCmd.Flags().StringVar(&portAutoNeg, "auto-neg", "enable", "Enable or disable auto-neg using enable | disable")
+	portUpdateCmd.Flags().StringVar(&portSpeed, "speed", "", "Set port speed - none, 1g, 10g, 25g, 40g, 50g, 100g")
 	portUpdateCmd.MarkFlagRequired("port")
 }
 
@@ -80,24 +85,59 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	adminState := inputToAdminState("none")
-
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
 		return
 	}
 
-	if cmd.Flags().Changed("admin-state") == false ||
-		cmd.Flags().Changed("port") == false {
+	if cmd.Flags().Changed("admin-state") == false &&
+		cmd.Flags().Changed("auto-neg") == false &&
+		cmd.Flags().Changed("speed") == false &&
+		cmd.Flags().Changed("fec-type") == false {
 		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
 		return
 	}
 
-	if isAdminStateValid(portAdminState) == false {
-		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
-		return
+	fecType := inputToFecType("none")
+	adminState := inputToAdminState("none")
+	speed := inputToSpeed("none")
+	autoNeg := false
+
+	if cmd.Flags().Changed("fec-type") == true {
+		if isFecTypeValid(portFecType) == false {
+			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			return
+		}
+		fecType = inputToFecType(portFecType)
 	}
-	adminState = inputToAdminState(portAdminState)
+
+	if cmd.Flags().Changed("auto-neg") == true {
+		if strings.Compare(portAutoNeg, "disable") == 0 {
+			autoNeg = false
+		} else if strings.Compare(portAutoNeg, "enable") == 0 {
+			autoNeg = true
+		} else {
+			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			return
+		}
+	}
+
+	if cmd.Flags().Changed("admin-state") == true {
+		if isAdminStateValid(portAdminState) == false {
+			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			return
+		}
+		adminState = inputToAdminState(portAdminState)
+	}
+
+	if cmd.Flags().Changed("speed") == true {
+		if isSpeedValid(strings.ToUpper(portSpeed)) == false {
+			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			return
+		}
+		speed = inputToSpeed(strings.ToUpper(portSpeed))
+		autoNeg = false
+	}
 
 	client := pds.NewPortSvcClient(c)
 
@@ -107,12 +147,46 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	getReq := &pds.PortGetRequest{
+		Id: []uint32{ifIndex},
+	}
+
+	// PDS call
+	getRespMsg, err := client.PortGet(context.Background(), getReq)
+	if err != nil {
+		fmt.Printf("Getting Port failed. %v\n", err)
+		return
+	}
+
+	if getRespMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", getRespMsg.ApiStatus)
+		return
+	}
+
+	for _, resp := range getRespMsg.Response {
+		if cmd.Flags().Changed("fec-type") == false {
+			fecType = resp.GetSpec().GetFECType()
+		}
+		if cmd.Flags().Changed("auto-neg") == false && cmd.Flags().Changed("speed") == false {
+			autoNeg = resp.GetSpec().GetAutoNegEn()
+		}
+		if cmd.Flags().Changed("admin-state") == false {
+			adminState = resp.GetSpec().GetAdminState()
+		}
+		if cmd.Flags().Changed("speed") == false {
+			speed = resp.GetSpec().GetSpeed()
+		}
+	}
+
 	var req *pds.PortUpdateRequest
 
 	req = &pds.PortUpdateRequest{
 		Spec: &pds.PortSpec{
-			Id:     ifIndex,
+			Id:         ifIndex,
 			AdminState: adminState,
+			Speed:      speed,
+			FECType:    fecType,
+			AutoNegEn:  autoNeg,
 		},
 	}
 
@@ -150,6 +224,74 @@ func inputToAdminState(str string) pds.PortAdminState {
 		return pds.PortAdminState_PORT_ADMIN_STATE_DOWN
 	default:
 		return pds.PortAdminState_PORT_ADMIN_STATE_NONE
+	}
+}
+
+func isFecTypeValid(str string) bool {
+	switch str {
+	case "none":
+		return true
+	case "rs":
+		return true
+	case "fc":
+		return true
+	default:
+		return false
+	}
+}
+
+func inputToFecType(str string) pds.PortFecType {
+	switch str {
+	case "none":
+		return pds.PortFecType_PORT_FEC_TYPE_NONE
+	case "rs":
+		return pds.PortFecType_PORT_FEC_TYPE_RS
+	case "fc":
+		return pds.PortFecType_PORT_FEC_TYPE_FC
+	default:
+		return pds.PortFecType_PORT_FEC_TYPE_NONE
+	}
+}
+
+func isSpeedValid(str string) bool {
+	switch str {
+	case "none":
+		return true
+	case "1G":
+		return true
+	case "10G":
+		return true
+	case "25G":
+		return true
+	case "40G":
+		return true
+	case "50G":
+		return true
+	case "100G":
+		return true
+	default:
+		return false
+	}
+}
+
+func inputToSpeed(str string) pds.PortSpeed {
+	switch str {
+	case "none":
+		return pds.PortSpeed_PORT_SPEED_NONE
+	case "1G":
+		return pds.PortSpeed_PORT_SPEED_1G
+	case "10G":
+		return pds.PortSpeed_PORT_SPEED_10G
+	case "25G":
+		return pds.PortSpeed_PORT_SPEED_25G
+	case "40G":
+		return pds.PortSpeed_PORT_SPEED_40G
+	case "50G":
+		return pds.PortSpeed_PORT_SPEED_50G
+	case "100G":
+		return pds.PortSpeed_PORT_SPEED_100G
+	default:
+		return pds.PortSpeed_PORT_SPEED_NONE
 	}
 }
 
