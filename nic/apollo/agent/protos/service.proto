@@ -76,7 +76,7 @@ message SvcMappingResponse {
 // service mapping get request
 message SvcMappingGetRequest {
   // batched request
-  repeated uint32 SvcMappingId = 1;
+  repeated SvcKey Key = 1;
 }
 
 // service mapping get response
@@ -89,7 +89,7 @@ message SvcMappingGetResponse {
 // service mapping delete request
 message SvcMappingDeleteRequest {
   // batched request
-  repeated uint32 SvcMappingId = 1;
+  repeated SvcKey Key = 1;
 }
 
 // service mapping delete response

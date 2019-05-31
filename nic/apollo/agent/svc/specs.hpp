@@ -11,6 +11,7 @@
 #include "nic/apollo/api/include/pds_meter.hpp"
 #include "nic/apollo/api/include/pds_tag.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
+#include "nic/apollo/api/include/pds_service.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/meter.hpp"
@@ -20,6 +21,7 @@
 #include "nic/apollo/agent/svc/vnic.hpp"
 #include "nic/apollo/agent/svc/vpc.hpp"
 #include "nic/apollo/agent/svc/tunnel.hpp"
+#include "nic/apollo/agent/svc/service.hpp"
 #include "gen/proto/types.pb.h"
 
 //----------------------------------------------------------------------------
@@ -228,6 +230,67 @@ tep_api_spec_to_proto_spec (pds::TunnelSpec *proto_spec,
     pds_encap_to_proto_encap(proto_spec->mutable_encap(),
                              &api_spec->encap);
     proto_spec->set_nat(api_spec->nat);
+}
+
+// Populate proto buf spec from service API spec
+static inline void
+service_api_spec_to_proto_spec (pds::SvcMappingSpec *proto_spec,
+                                const pds_svc_mapping_spec_t *api_spec)
+{
+    auto proto_key = proto_spec->mutable_key();
+    proto_key->set_vpcid(api_spec->key.vpc.id);
+    proto_key->set_svcport(api_spec->key.svc_port);
+    ipaddr_api_spec_to_proto_spec(
+                proto_key->mutable_ipaddr(), &api_spec->key.vip);
+    ipaddr_api_spec_to_proto_spec(
+                proto_spec->mutable_privateip(), &api_spec->backend_ip);
+    ipaddr_api_spec_to_proto_spec(
+                proto_spec->mutable_providerip(), &api_spec->backend_provider_ip);
+    proto_spec->set_vpcid(api_spec->vpc.id);
+    proto_spec->set_port(api_spec->svc_port);
+}
+
+// Populate proto buf status from service API status
+static inline void
+service_api_status_to_proto_status (pds::SvcMappingStatus *proto_status,
+                                    const pds_svc_mapping_status_t *api_status)
+{
+}
+
+// Populate proto buf stats from service API stats
+static inline void
+service_api_stats_to_proto_stats (pds::SvcMappingStats *proto_stats,
+                                  const pds_svc_mapping_stats_t *api_stats)
+{
+}
+
+// Populate proto buf from service API info
+static inline void
+service_api_info_to_proto (const pds_svc_mapping_info_t *api_info, void *ctxt)
+{
+    pds::SvcMappingGetResponse *proto_rsp = (pds::SvcMappingGetResponse *)ctxt;
+    auto service = proto_rsp->add_response();
+    pds::SvcMappingSpec *proto_spec = service->mutable_spec();
+    pds::SvcMappingStatus *proto_status = service->mutable_status();
+    pds::SvcMappingStats *proto_stats = service->mutable_stats();
+
+    service_api_spec_to_proto_spec(proto_spec, &api_info->spec);
+    service_api_status_to_proto_status(proto_status, &api_info->status);
+    service_api_stats_to_proto_stats(proto_stats, &api_info->stats);
+}
+
+// Build service API spec from proto buf spec
+static inline void
+service_proto_spec_to_api_spec (pds_svc_mapping_spec_t *api_spec,
+                                const pds::SvcMappingSpec &proto_spec)
+{
+    api_spec->key.vpc.id = proto_spec.key().vpcid();
+    api_spec->key.svc_port = proto_spec.key().svcport();
+    ipaddr_proto_spec_to_api_spec(&api_spec->key.vip, proto_spec.key().ipaddr());
+    ipaddr_proto_spec_to_api_spec(&api_spec->backend_ip, proto_spec.privateip());
+    ipaddr_proto_spec_to_api_spec(&api_spec->backend_provider_ip, proto_spec.providerip());
+    api_spec->svc_port = proto_spec.port();
+    api_spec->vpc.id = proto_spec.vpcid();
 }
 
 #endif    // __AGENT_SVC_SPECS_HPP__

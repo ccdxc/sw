@@ -15,6 +15,7 @@
 #include <stdbool.h>
 #include <sys/types.h>
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/sdk/lib/ht/ht.hpp"
 
 /// \defgroup PDS_BASE Base enums and macros
 /// @{
@@ -170,7 +171,21 @@ typedef struct pds_svc_mapping_key_s {
     pds_vpc_key_t vpc;    ///< VPC this service is in
     ip_addr_t vip;        ///< Virtual IP (VIP) of the service
     uint16_t svc_port;    ///< L4 service port
+
+    // operator== is required to compare keys in case of hash collision
+    bool operator==(const struct pds_svc_mapping_key_s &p) const {
+        return (vpc.id == p.vpc.id) && (svc_port == p.svc_port) &&
+            (!memcmp(&vip, &p.vip, sizeof(ip_addr_t)));
+    }
+
 } __PACK__ pds_svc_mapping_key_t;
+
+class pds_svc_mapping_hash_fn { 
+public: 
+    std::size_t operator()(const pds_svc_mapping_key_t &key) const { 
+        return hash_algo::fnv_hash((void *)&key, sizeof(key));
+    } 
+};
 
 /// \brief    vpc peering key
 typedef struct pds_vpc_peer_key_s {

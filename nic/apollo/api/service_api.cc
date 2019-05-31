@@ -63,7 +63,7 @@ pds_svc_mapping_create (pds_svc_mapping_spec_t *spec)
 }
 
 sdk_ret_t
-pds_svc__mapping_read (pds_svc_mapping_key_t *key, pds_svc_mapping_info_t *info)
+pds_svc_mapping_read (pds_svc_mapping_key_t *key, pds_svc_mapping_info_t *info)
 {
     sdk_ret_t rv;
     svc_mapping *entry = NULL;

@@ -32,6 +32,25 @@ namespace core {
     return true;                                                               \
 }
 
+// APIs for cases where key isn't just an id 
+#define ADD_TO_DB_WITH_KEY(obj, key, value) {                                  \
+    obj##_map()->insert(make_pair(*key, value));                               \
+    return SDK_RET_OK;                                                         \
+}
+
+#define FIND_IN_DB_WITH_KEY(obj, key) {                                        \
+    obj##_db_t::const_iterator iterator =                                      \
+        obj##_map()->find(*key);                                               \
+    if (iterator == obj##_map()->end()) {                                      \
+        return NULL;                                                           \
+    }                                                                          \
+    return iterator->second;                                                   \
+}
+
+#define DEL_FROM_DB_WITH_KEY(obj, key) {                                       \
+    obj##_map()->erase(*key);                                                  \
+    return true;                                                               \
+}
 #define DB_BEGIN(obj) (obj##_map()->begin())
 #define DB_END(obj) (obj##_map()->end())
 
@@ -67,6 +86,12 @@ cfg_db::init(void) {
         return false;
     }
     subnet_map_ = new(mem) subnet_db_t();
+
+    mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(service_db_t));
+    if (mem == NULL) {
+        return false;
+    }
+    service_map_ = new(mem) service_db_t();
 
     mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(vnic_db_t));
     if (mem == NULL) {
@@ -113,6 +138,9 @@ cfg_db::init(void) {
     slabs_[SLAB_ID_SUBNET] =
         slab::factory("subnet", SLAB_ID_SUBNET, sizeof(pds_subnet_spec_t),
                       16, true, true, true);
+    slabs_[SLAB_ID_SERVICE] =
+        slab::factory("service", SLAB_ID_SERVICE, sizeof(pds_svc_mapping_spec_t),
+                      16, true, true, true);
     slabs_[SLAB_ID_TEP] =
         slab::factory("tep", SLAB_ID_TEP, sizeof(pds_tep_spec_t),
                       16, true, true, true);
@@ -147,6 +175,7 @@ cfg_db::cfg_db() {
     vpc_map_ = NULL;
     vpc_peer_map_ = NULL;
     subnet_map_ = NULL;
+    service_map_ = NULL;
     vnic_map_ = NULL;
     meter_map_ = NULL;
     tag_map_ = NULL;
@@ -188,6 +217,7 @@ cfg_db::~cfg_db() {
     FREE(MEM_ALLOC_ID_INFRA, vpc_map_);
     FREE(MEM_ALLOC_ID_INFRA, vpc_peer_map_);
     FREE(MEM_ALLOC_ID_INFRA, subnet_map_);
+    FREE(MEM_ALLOC_ID_INFRA, service_map_);
     FREE(MEM_ALLOC_ID_INFRA, vnic_map_);
     FREE(MEM_ALLOC_ID_INFRA, meter_map_);
     FREE(MEM_ALLOC_ID_INFRA, tag_map_);
@@ -352,6 +382,32 @@ agent_state::subnet_db_walk(subnet_walk_cb_t cb, void *ctxt) {
 bool
 agent_state::del_from_subnet_db(pds_subnet_key_t *key) {
     DEL_FROM_DB(subnet, key);
+}
+
+sdk_ret_t
+agent_state::add_to_service_db(pds_svc_mapping_key_t *key, pds_svc_mapping_spec_t *spec) {
+    ADD_TO_DB_WITH_KEY(service, key, spec);
+}
+
+pds_svc_mapping_spec_t *
+agent_state::find_in_service_db(pds_svc_mapping_key_t *key) {
+    FIND_IN_DB_WITH_KEY(service, key);
+}
+
+sdk_ret_t
+agent_state::service_db_walk(service_walk_cb_t cb, void *ctxt) {
+    auto it_begin = DB_BEGIN(service);
+    auto it_end = DB_END(service);
+
+    for (auto it = it_begin; it != it_end; it ++) {
+        cb(it->second, ctxt);
+    }
+    return SDK_RET_OK;
+}
+
+bool
+agent_state::del_from_service_db(pds_svc_mapping_key_t *key) {
+    DEL_FROM_DB_WITH_KEY(service, key);
 }
 
 sdk_ret_t
