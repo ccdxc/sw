@@ -787,8 +787,6 @@ populate_tags_api_rule_spec (uint32_t id, pds_tag_rule_t *api_rule_spec,
         } else {
             route_ipv6pfx_set(&prefixes[pfx], v6_route_pfx, (*tag_pfx_count)++, 120);
         }
-        printf("Tag %u, tag_pfx_count %u, ippfx %s\n",
-               id, *tag_pfx_count, ippfx2str(&prefixes[pfx]));
     }
     return SDK_RET_OK;
 }
@@ -868,60 +866,95 @@ create_tags (uint32_t num_tag_trees, uint32_t scale,
     return SDK_RET_OK;
 }
 
+static inline void
+populate_meter_api_rule_spec (uint32_t id, pds_meter_rule_t *api_rule_spec,
+                              pds_meter_type_t type, uint64_t pps_bps,
+                              uint64_t burst, uint32_t num_prefixes,
+                              uint32_t *meter_pfx_count)
+{
+    api_rule_spec->type = type;
+    switch (type) {
+    case PDS_METER_TYPE_PPS_POLICER:
+        api_rule_spec->pps = pps_bps;
+        api_rule_spec->pkt_burst = burst;
+        break;
+
+    case PDS_METER_TYPE_BPS_POLICER:
+        api_rule_spec->bps = pps_bps;
+        api_rule_spec->byte_burst = burst;
+        break;
+
+    case PDS_METER_TYPE_ACCOUNTING:
+        break;
+
+    case PDS_METER_TYPE_NONE:
+    default:
+        break;
+    }
+    ip_prefix_t *prefixes =
+            (ip_prefix_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_METER,
+                           (num_prefixes * sizeof(ip_prefix_t)));
+    memset(prefixes, 0, num_prefixes * sizeof(ip_prefix_t));
+    api_rule_spec->num_prefixes = num_prefixes;
+    api_rule_spec->prefixes = prefixes;
+    for (uint32_t pfx = 0;
+            pfx < api_rule_spec->num_prefixes; pfx++) {
+        prefixes[pfx].len = 24;
+        prefixes[pfx].addr.af = IP_AF_IPV4;
+        prefixes[pfx].addr.addr.v4_addr =
+                      ((0xC << 28) | ((*meter_pfx_count)++ << 8));
+    }
+}
+
+#define DEFAULT_METER_NUM_PREFIXES_TESTAPP 16
 sdk_ret_t
-create_meter (uint32_t num_meter, uint32_t meter_scale, pds_meter_type_t type,
+create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
               uint64_t pps_bps, uint64_t burst, uint32_t ip_af)
 {
     sdk_ret_t ret;
     pds_meter_spec_t pds_meter;
+    uint32_t num_prefixes = DEFAULT_METER_NUM_PREFIXES_TESTAPP;
+    // unique IDs across meters
     static pds_meter_id_t id = 1;
     static uint32_t meter_pfx_count = 0;
-    uint32_t num_prefixes = 16;
 
     if (num_meter == 0) {
         return SDK_RET_OK;
     }
+
     memset(&pds_meter, 0, sizeof(pds_meter_spec_t));
+    pds_meter.af = ip_af;
+
+    // if scale < DEFAULT_METER_NUM_PREFIXES_TESTAPP,
+    // create num_rules=scale with num_prefixes=1
+    if (scale < DEFAULT_METER_NUM_PREFIXES_TESTAPP) {
+        num_prefixes = 1;
+    }
+
+    // if the scale is not divisible by num_prefixes, then create
+    // remainder rules with num_prefixes=1
+    uint32_t num_rules = scale/num_prefixes;
+    uint32_t num_rules_rem = scale % num_prefixes;
+
+    pds_meter.num_rules = num_rules + num_rules_rem;
+
     pds_meter.rules =
             (pds_meter_rule_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_METER,
-                            (meter_scale * sizeof(pds_meter_rule_t)));
-    pds_meter.af = ip_af;
-    pds_meter.num_rules = meter_scale/16;
+                            (pds_meter.num_rules * sizeof(pds_meter_rule_t)));
     for (uint32_t i = 0; i < num_meter; i++) {
         pds_meter.key.id = id++;
-        for (uint32_t rule = 0; rule < pds_meter.num_rules; rule++) {
-            pds_meter.rules[rule].type = type;
-            switch (type) {
-            case PDS_METER_TYPE_PPS_POLICER:
-                pds_meter.rules[rule].pps = pps_bps;
-                pds_meter.rules[rule].pkt_burst = burst;
-                break;
-
-            case PDS_METER_TYPE_BPS_POLICER:
-                pds_meter.rules[rule].bps = pps_bps;
-                pds_meter.rules[rule].byte_burst = burst;
-                break;
-
-            case PDS_METER_TYPE_ACCOUNTING:
-                break;
-
-            case PDS_METER_TYPE_NONE:
-            default:
-                break;
-            }
-            ip_prefix_t *prefixes =
-                    (ip_prefix_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_METER,
-                                   (num_prefixes * sizeof(ip_prefix_t)));
-            memset(prefixes, 0, num_prefixes * sizeof(ip_prefix_t));
-            pds_meter.rules[rule].num_prefixes = num_prefixes;
-            pds_meter.rules[rule].prefixes = prefixes;
-            for (uint32_t pfx = 0;
-                    pfx < pds_meter.rules[rule].num_prefixes; pfx++) {
-                prefixes[pfx].len = 24;
-                prefixes[pfx].addr.af = IP_AF_IPV4;
-                prefixes[pfx].addr.addr.v4_addr =
-                              ((0xC << 28) | (meter_pfx_count++ << 8));
-            }
+        for (uint32_t rule = 0; rule < num_rules; rule++) {
+            pds_meter_rule_t *api_rule_spec = &pds_meter.rules[rule];
+            populate_meter_api_rule_spec(
+                                pds_meter.key.id, api_rule_spec, type, pps_bps,
+                                burst, num_prefixes, &meter_pfx_count);
+        }
+        for (uint32_t rule = num_rules;
+                      rule < (num_rules + num_rules_rem); rule++) {
+            pds_meter_rule_t *api_rule_spec = &pds_meter.rules[rule];
+            populate_meter_api_rule_spec(
+                               pds_meter.key.id, api_rule_spec, type, pps_bps,
+                               burst, 1, &meter_pfx_count);
         }
 #ifdef TEST_GRPC_APP
         ret = create_meter_grpc(&pds_meter);
