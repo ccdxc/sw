@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    vnic.cc
- *
- * @brief   vnic entry handling
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// vnic entry handling
+///
+//----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/core/trace.hpp"
@@ -16,11 +18,9 @@
 
 namespace api {
 
-/**
- * @defgroup PDS_VNIC_ENTRY - vnic entry functionality
- * @ingroup PDS_VNIC
- * @{
- */
+/// \defgroup PDS_VNIC_ENTRY - vnic functionality
+/// \ingroup PDS_VNIC
+/// @{
 
 vnic_entry::vnic_entry() {
     //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
@@ -160,6 +160,6 @@ vnic_entry::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_VNIC, this);
 }
 
-/** @} */    // end of PDS_VNIC_ENTRY
+/// @}     // end of PDS_VNIC_ENTRY
 
 }    // namespace api

@@ -8,7 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
-#if !defined (__VNIC_HPP__)
+#ifndef __VNIC_HPP__
 #define __VNIC_HPP__
 
 #include "nic/sdk/lib/ht/ht.hpp"
@@ -230,4 +230,4 @@ private:
 
 using api::vnic_entry;
 
-#endif    /** __VNIC_HPP__ */
+#endif    // __VNIC_HPP__

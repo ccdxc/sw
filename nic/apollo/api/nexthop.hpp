@@ -92,6 +92,17 @@ public:
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief re-activate config in the hardware stage 0 tables relevant to
+    ///        this object, if any, this reactivation must be based on existing
+    ///        state and any of the state present in the dirty object list
+    ///        (like clone objects etc.) only and not directly on db objects
+    /// \param[in] api_op API operation
+    /// \return #SDK_RET_OK on success, failure status code on error
+    /// NOTE: this method is called when an object is in the dependent/puppet
+    ///       object list
+    virtual sdk_ret_t reactivate_config(pds_epoch_t epoch,
+                                        api_op_t api_op) override;
+
     /// \brief  add given nexthop to the database
     /// \return SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t add_to_db(void) override;
@@ -144,6 +155,14 @@ public:
         return false;
     }
 
+    /// \brief     return key/id of the nexthop
+    /// \return    key/id of the nexthop
+    pds_nexthop_key_t key(void) const { return key_; }
+
+    /// \brief     return the type of the nexthop
+    /// \return    type of the nexthop
+    pds_nh_type_t type(void) const { return type_; }
+
     /// \brief     return impl instance of this nexthop object
     /// \return    impl instance of the nexthop object
     impl_base *impl(void) { return impl_; }
@@ -161,11 +180,12 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_nexthop_key_t key_;                   ///< nexthop key
-    ht_ctxt_t ht_ctxt_;                       ///< hash table context
-    impl_base *impl_;                         ///< impl object instance
+    pds_nexthop_key_t key_;    ///< nexthop key
+    pds_nh_type_t type_;       ///< nexthop type
+    ht_ctxt_t ht_ctxt_;        ///< hash table context
+    impl_base *impl_;          ///< impl object instance
 
-    friend class nexthop_state;               ///< a friend of nexthop
+    friend class nexthop_state;    ///< a friend of nexthop
 } __PACK__;
 
 /// \@}

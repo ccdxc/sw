@@ -31,6 +31,8 @@ typedef enum impl_obj_id_e {
     IMPL_OBJ_ID_MAX,
     IMPL_OBJ_ID_SVC_MAPPING,
     IMPL_OBJ_ID_VPC_PEER,
+    IMPL_OBJ_ID_NEXTHOP,
+    IMPL_OBJ_ID_NEXTHOP_GROUP,
 } impl_obj_id_t;
 
 }    // namespace impl
