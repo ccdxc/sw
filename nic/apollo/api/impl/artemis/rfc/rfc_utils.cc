@@ -58,13 +58,21 @@ sdk_ret_t
 rfc_sort_itables (rfc_ctxt_t *rfc_ctxt)
 {
     if (rfc_ctxt->policy->af == IP_AF_IPV4) {
-        qsort_r(rfc_ctxt->pfx_tree.itable.nodes,
-                rfc_ctxt->pfx_tree.itable.num_nodes,
+        qsort_r(rfc_ctxt->sip_tree.itable.nodes,
+                rfc_ctxt->sip_tree.itable.num_nodes,
+                sizeof(inode_t), inode_compare_cb,
+                (void *)ITREE_TYPE_IPV4);
+        qsort_r(rfc_ctxt->dip_tree.itable.nodes,
+                rfc_ctxt->dip_tree.itable.num_nodes,
                 sizeof(inode_t), inode_compare_cb,
                 (void *)ITREE_TYPE_IPV4);
     } else if (rfc_ctxt->policy->af == IP_AF_IPV6) {
-        qsort_r(rfc_ctxt->pfx_tree.itable.nodes,
-                rfc_ctxt->pfx_tree.itable.num_nodes,
+        qsort_r(rfc_ctxt->sip_tree.itable.nodes,
+                rfc_ctxt->sip_tree.itable.num_nodes,
+                sizeof(inode_t), inode_compare_cb,
+                (void *)ITREE_TYPE_IPV6);
+        qsort_r(rfc_ctxt->dip_tree.itable.nodes,
+                rfc_ctxt->dip_tree.itable.num_nodes,
                 sizeof(inode_t), inode_compare_cb,
                 (void *)ITREE_TYPE_IPV6);
     }

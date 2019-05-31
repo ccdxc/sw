@@ -116,11 +116,13 @@ rfc_build_lpm_trees (rfc_ctxt_t *rfc_ctxt,
 {
     sdk_ret_t       ret;
     lpm_itable_t    itable;
-    uint32_t        max_intervals, tree_size;
+    uint32_t        max_intervals, tree_size, nodes;
     mem_addr_t      tree_base_addr;
 
-    max_intervals = MAX(rfc_ctxt->pfx_tree.num_intervals,
-                        rfc_ctxt->port_tree.num_intervals);
+    max_intervals = MAX(rfc_ctxt->sip_tree.num_intervals,
+                        rfc_ctxt->dip_tree.num_intervals);
+    max_intervals = MAX(rfc_ctxt->port_tree.num_intervals,
+                        max_intervals);
     max_intervals = MAX(rfc_ctxt->proto_port_tree.num_intervals,
                         max_intervals);
 
@@ -134,26 +136,37 @@ rfc_build_lpm_trees (rfc_ctxt_t *rfc_ctxt,
         return sdk::SDK_RET_OOM;
     }
 
-    /**< build LPM tree for the prefix portion of the rules */
-
+    /**< build LPM tree for th SIP portion of the rules */
+    itable.num_intervals = rfc_ctxt->sip_tree.num_intervals;
     if (rfc_ctxt->policy->af == IP_AF_IPV4) {
         itable.tree_type = ITREE_TYPE_IPV4_ACL;
-        itable.num_intervals = rfc_ctxt->pfx_tree.num_intervals;
-        tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
-                            &tree_base_addr, &tree_size);
-        ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->pfx_tree,
-                                 tree_base_addr, tree_size,
-                                 SACL_IPV4_TREE_MAX_NODES >> 1);
+        nodes = SACL_IPV4_TREE_MAX_NODES >> 1;
     } else {
         itable.tree_type = ITREE_TYPE_IPV6_ACL;
-        itable.num_intervals = rfc_ctxt->pfx_tree.num_intervals;
-        tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
-                            &tree_base_addr, &tree_size);
-        ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->pfx_tree,
-                                 tree_base_addr, tree_size,
-                                 SACL_IPV6_TREE_MAX_NODES >> 1);
+        nodes = SACL_IPV6_TREE_MAX_NODES >> 1;
+    }
+    // @ajeer please fix this one (it doesnt have SIP/DIP into consideration)
+    tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
+                        &tree_base_addr, &tree_size);
+    ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->sip_tree,
+                             tree_base_addr, tree_size, nodes);
+    if (ret != SDK_RET_OK) {
+        goto cleanup;
     }
 
+    /**< build LPM tree for th DIP portion of the rules */
+    itable.num_intervals = rfc_ctxt->dip_tree.num_intervals;
+    if (rfc_ctxt->policy->af == IP_AF_IPV4) {
+        itable.tree_type = ITREE_TYPE_IPV4_ACL;
+        nodes = SACL_IPV4_TREE_MAX_NODES >> 1;
+    } else {
+        itable.tree_type = ITREE_TYPE_IPV6_ACL;
+        nodes = SACL_IPV6_TREE_MAX_NODES >> 1;
+    }
+    tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
+                        &tree_base_addr, &tree_size);
+    ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->dip_tree,
+                             tree_base_addr, tree_size, nodes);
     if (ret != SDK_RET_OK) {
         goto cleanup;
     }

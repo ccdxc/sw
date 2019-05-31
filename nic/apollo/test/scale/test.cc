@@ -1448,32 +1448,36 @@ create_objects (void)
         if (ret != SDK_RET_OK) {
             return ret;
         }
+    }
 
-        // create security policies
-        ret = create_security_policy(g_test_params.num_vpcs,
-                                     g_test_params.num_subnets,
-                                     g_test_params.num_ipv4_rules, IP_AF_IPV4, false);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
-        ret = create_security_policy(g_test_params.num_vpcs,
-                                     g_test_params.num_subnets,
-                                     g_test_params.num_ipv4_rules, IP_AF_IPV4, true);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
-        ret = create_security_policy(g_test_params.num_vpcs,
-                                     g_test_params.num_subnets,
-                                     g_test_params.num_ipv6_rules, IP_AF_IPV6, false);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
-        ret = create_security_policy(g_test_params.num_vpcs,
-                                     g_test_params.num_subnets,
-                                     g_test_params.num_ipv6_rules, IP_AF_IPV6, true);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
+    // create security policies
+    ret = create_security_policy(g_test_params.num_vpcs,
+                                 g_test_params.num_subnets,
+                                 g_test_params.num_ipv4_rules,
+                                 IP_AF_IPV4, false);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    ret = create_security_policy(g_test_params.num_vpcs,
+                                 g_test_params.num_subnets,
+                                 g_test_params.num_ipv4_rules,
+                                 IP_AF_IPV4, true);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    ret = create_security_policy(g_test_params.num_vpcs,
+                                 g_test_params.num_subnets,
+                                 g_test_params.num_ipv6_rules,
+                                 IP_AF_IPV6, false);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    ret = create_security_policy(g_test_params.num_vpcs,
+                                 g_test_params.num_subnets,
+                                 g_test_params.num_ipv6_rules,
+                                 IP_AF_IPV6, true);
+    if (ret != SDK_RET_OK) {
+        return ret;
     }
 
     // create vpcs and subnets
@@ -1532,17 +1536,19 @@ create_objects (void)
 #endif
 
 #ifndef TEST_GRPC_APP
-    g_flow_test_obj->set_cfg_params(g_test_params.dual_stack,
-                                    g_test_params.num_tcp,
-                                    g_test_params.num_udp,
-                                    g_test_params.num_icmp,
-                                    g_test_params.sport_lo,
-                                    g_test_params.sport_hi,
-                                    g_test_params.dport_lo,
-                                    g_test_params.dport_hi);
-    ret = g_flow_test_obj->create_flows();
-    if (ret != SDK_RET_OK) {
-        return ret;
+    if (apollo()) {
+        g_flow_test_obj->set_cfg_params(g_test_params.dual_stack,
+                                        g_test_params.num_tcp,
+                                        g_test_params.num_udp,
+                                        g_test_params.num_icmp,
+                                        g_test_params.sport_lo,
+                                        g_test_params.sport_hi,
+                                        g_test_params.dport_lo,
+                                        g_test_params.dport_hi);
+        ret = g_flow_test_obj->create_flows();
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
     }
 #endif
 

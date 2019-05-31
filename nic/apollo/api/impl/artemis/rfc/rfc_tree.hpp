@@ -67,11 +67,11 @@ typedef struct rfc_tree_s {
 typedef struct rfc_ctxt_s {
     policy_t      *policy;        /**< user configured policy */
     /**< phase 0 information */
-    rfc_tree_t    pfx_tree;       /**< RFC tree for prefix */
+    rfc_tree_t    sip_tree;       /**< RFC tree for SIP */
+    rfc_tree_t    dip_tree;       /**< RFC tree for prefix */
     rfc_tree_t    port_tree;      /**< RFC tree for port */
     rfc_tree_t    proto_port_tree;/**< RFC tree for protocol-port */
-    rfc_tree_t    sip_tree;       /**< RFC tree for SIP */
-    rfc_tree_t    tag_tree;       /**< RFC tree for TAG */
+    //rfc_tree_t    tag_tree;       /**< RFC tree for TAG */
     rfc_table_t   p1_table;       /**< phase 1 RFC table */
     rfc_table_t   p2_table;       /**< phase 2 RFC table */
     rte_bitmap    *cbm;           /**< RFC class bitmap instance used as

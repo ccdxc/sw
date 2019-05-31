@@ -55,15 +55,19 @@ meter_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
         meter_impl_db()->region_addr(spec->af) +
             meter_impl_db()->table_size(spec->af) * lpm_block_id;
 
+    // TODO: support only accounting for now
+    num_policers_ = 0;
+
     // allocate all the policer indices as well
-    if (meter_impl_db()->policer_idxr()->alloc_block(&policer_idx_,
-                                                     spec->num_rules) !=
-            sdk::lib::indexer::SUCCESS) {
-        PDS_TRACE_ERR("Failed to allocate %u policers for meter %u",
-                      spec->num_rules, spec->key.id);
-        return sdk::SDK_RET_NO_RESOURCE;
+    if (num_policers_) {
+        if (meter_impl_db()->policer_idxr()->alloc_block(&policer_idx_,
+                                                         spec->num_rules) !=
+                sdk::lib::indexer::SUCCESS) {
+            PDS_TRACE_ERR("Failed to allocate %u policers for meter %u",
+                          spec->num_rules, spec->key.id);
+            return sdk::SDK_RET_NO_RESOURCE;
+        }
     }
-    num_policers_ = spec->num_rules;
     return SDK_RET_OK;
 }
 

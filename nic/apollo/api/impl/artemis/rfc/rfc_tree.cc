@@ -103,11 +103,11 @@ rfc_tree_destroy (rfc_tree_t *rfc_tree)
 void
 rfc_ctxt_destroy (rfc_ctxt_t *rfc_ctxt)
 {
-    rfc_tree_destroy(&rfc_ctxt->pfx_tree);
+    rfc_tree_destroy(&rfc_ctxt->sip_tree);
+    rfc_tree_destroy(&rfc_ctxt->dip_tree);
     rfc_tree_destroy(&rfc_ctxt->port_tree);
     rfc_tree_destroy(&rfc_ctxt->proto_port_tree);
-    rfc_tree_destroy(&rfc_ctxt->sip_tree);
-    rfc_tree_destroy(&rfc_ctxt->tag_tree);
+    //rfc_tree_destroy(&rfc_ctxt->tag_tree);
     rfc_table_destroy(&rfc_ctxt->p1_table);
     rfc_table_destroy(&rfc_ctxt->p2_table);
     if (rfc_ctxt->cbm) {
@@ -124,17 +124,30 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
 
     memset(rfc_ctxt, 0, sizeof(rfc_ctxt_t));
     rfc_ctxt->policy = policy;
-    rfc_ctxt->pfx_tree.itable.nodes =
-        (inode_t *)malloc(sizeof(inode_t) * num_nodes);
-    if (rfc_ctxt->pfx_tree.itable.nodes == NULL) {
+
+    // setup memory for SIP LPM tree
+    rfc_ctxt->sip_tree.itable.nodes =
+            (inode_t *)malloc(sizeof(inode_t) * num_nodes);
+    if (rfc_ctxt->sip_tree.itable.nodes == NULL) {
         return sdk::SDK_RET_OOM;
     }
-    new (&rfc_ctxt->pfx_tree.rfc_table.cbm_map) cbm_map_t();
-    rfc_ctxt->pfx_tree.rfc_table.max_classes =
-            (policy->af == IP_AF_IPV4) ?
-            SACL_IPV4_TREE_MAX_CLASSES:
-            SACL_IPV6_TREE_MAX_CLASSES;
+    new (&rfc_ctxt->sip_tree.rfc_table.cbm_map) cbm_map_t();
+    rfc_ctxt->sip_tree.rfc_table.max_classes =
+        (policy->af == IP_AF_IPV4) ? SACL_IPV4_TREE_MAX_CLASSES :
+                                     SACL_IPV6_TREE_MAX_CLASSES;
 
+    // setup memory for DIP LPM tree
+    rfc_ctxt->dip_tree.itable.nodes =
+        (inode_t *)malloc(sizeof(inode_t) * num_nodes);
+    if (rfc_ctxt->dip_tree.itable.nodes == NULL) {
+        return sdk::SDK_RET_OOM;
+    }
+    new (&rfc_ctxt->dip_tree.rfc_table.cbm_map) cbm_map_t();
+    rfc_ctxt->dip_tree.rfc_table.max_classes =
+            (policy->af == IP_AF_IPV4) ? SACL_IPV4_TREE_MAX_CLASSES :
+                                         SACL_IPV6_TREE_MAX_CLASSES;
+
+    // setup memory for sport LPM tree
     rfc_ctxt->port_tree.itable.nodes =
         (inode_t *)malloc(sizeof(inode_t) * num_nodes);
     if (rfc_ctxt->port_tree.itable.nodes == NULL) {
@@ -144,6 +157,7 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
     rfc_ctxt->port_tree.rfc_table.max_classes =
         SACL_SPORT_TREE_MAX_CLASSES;
 
+    // setup memory for protocol + dport LPM tree
     rfc_ctxt->proto_port_tree.itable.nodes =
         (inode_t *)malloc(sizeof(inode_t) * num_nodes);
     if (rfc_ctxt->proto_port_tree.itable.nodes == NULL) {
@@ -153,17 +167,7 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
     rfc_ctxt->proto_port_tree.rfc_table.max_classes =
         SACL_PROTO_DPORT_TREE_MAX_CLASSES;
 
-    rfc_ctxt->sip_tree.itable.nodes =
-            (inode_t *)malloc(sizeof(inode_t) * num_nodes);
-    if (rfc_ctxt->sip_tree.itable.nodes == NULL) {
-        return sdk::SDK_RET_OOM;
-    }
-    new (&rfc_ctxt->sip_tree.rfc_table.cbm_map) cbm_map_t();
-    rfc_ctxt->sip_tree.rfc_table.max_classes =
-            (policy->af == IP_AF_IPV4) ?
-            SACL_IPV4_TREE_MAX_CLASSES:
-            SACL_IPV6_TREE_MAX_CLASSES;
-
+#if 0
     rfc_ctxt->tag_tree.itable.nodes =
             (inode_t *)malloc(sizeof(inode_t) * num_nodes);
     if (rfc_ctxt->tag_tree.itable.nodes == NULL) {
@@ -174,6 +178,7 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
             (policy->af == IP_AF_IPV4) ?
             SACL_IPV4_TREE_MAX_CLASSES:
             SACL_IPV6_TREE_MAX_CLASSES;
+#endif
 
     new (&rfc_ctxt->p1_table.cbm_map) cbm_map_t();
     rfc_ctxt->p1_table.max_classes = SACL_P1_MAX_CLASSES;
@@ -186,7 +191,7 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
     posix_memalign((void **)&bits, CACHE_LINE_SIZE, rfc_ctxt->cbm_size);
     if (bits) {
         rfc_ctxt->cbm = rte_bitmap_init(policy->max_rules, bits,
-                                         rfc_ctxt->cbm_size);
+                                        rfc_ctxt->cbm_size);
     }
     rfc_ctxt->base_addr = base_addr;
     rfc_ctxt->mem_size = mem_size;

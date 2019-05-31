@@ -1041,24 +1041,25 @@ rfc_compute_p3_tables (rfc_ctxt_t *rfc_ctxt, uint64_t addr_offset)
 sdk_ret_t
 rfc_build_eqtables (rfc_ctxt_t *rfc_ctxt)
 {
-    /* Combination 1*/
+    /* Combination 1 */
     rfc_compute_p1_tables(rfc_ctxt,
                           &rfc_ctxt->sip_tree.rfc_table,
                           &rfc_ctxt->port_tree.rfc_table,
                           SACL_P1_1_TABLE_OFFSET);
     rfc_p1_eq_class_tables_dump(rfc_ctxt);
     rfc_compute_p2_tables(rfc_ctxt,
-                          &rfc_ctxt->pfx_tree.rfc_table,
+                          &rfc_ctxt->dip_tree.rfc_table,
                           &rfc_ctxt->proto_port_tree.rfc_table,
                           SACL_P2_1_TABLE_OFFSET);
     rfc_p2_eq_class_tables_dump(rfc_ctxt);
     rfc_compute_p3_tables(rfc_ctxt,
                           SACL_P3_1_TABLE_OFFSET);
 
-    /* Combination 2*/
+#if 0
+    /* Combination 2 */
     rfc_compute_p1_tables(rfc_ctxt,
                           &rfc_ctxt->tag_tree.rfc_table,
-                          &rfc_ctxt->pfx_tree.rfc_table,
+                          &rfc_ctxt->dip_tree.rfc_table,
                           SACL_P1_2_TABLE_OFFSET);
     rfc_p1_eq_class_tables_dump(rfc_ctxt);
     rfc_compute_p2_tables(rfc_ctxt,
@@ -1069,7 +1070,7 @@ rfc_build_eqtables (rfc_ctxt_t *rfc_ctxt)
     rfc_compute_p3_tables(rfc_ctxt,
                           SACL_P3_2_TABLE_OFFSET);
 
-    /* Combination 3*/
+    /* Combination 3 */
     rfc_compute_p1_tables(rfc_ctxt,
                           &rfc_ctxt->tag_tree.rfc_table,
                           &rfc_ctxt->sip_tree.rfc_table,
@@ -1083,7 +1084,7 @@ rfc_build_eqtables (rfc_ctxt_t *rfc_ctxt)
     rfc_compute_p3_tables(rfc_ctxt,
                           SACL_P3_3_TABLE_OFFSET);
 
-    /* Combination 4*/
+    /* Combination 4 */
     rfc_compute_p1_tables(rfc_ctxt,
                           &rfc_ctxt->tag_tree.rfc_table,
                           &rfc_ctxt->port_tree.rfc_table,
@@ -1096,6 +1097,7 @@ rfc_build_eqtables (rfc_ctxt_t *rfc_ctxt)
     rfc_p2_eq_class_tables_dump(rfc_ctxt);
     rfc_compute_p3_tables(rfc_ctxt,
                           SACL_P3_4_TABLE_OFFSET);
+#endif
 
     return SDK_RET_OK;
 }

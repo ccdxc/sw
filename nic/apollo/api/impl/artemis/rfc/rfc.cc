@@ -94,37 +94,36 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
     rule_t      *rule;
     uint32_t    rule_num = 0;
     policy_t    *policy = rfc_ctxt->policy;
-    itable_t    *addr_itable = &rfc_ctxt->pfx_tree.itable;
+    itable_t    *sip_itable = &rfc_ctxt->sip_tree.itable;
+    itable_t    *dip_itable = &rfc_ctxt->dip_tree.itable;
     itable_t    *port_itable = &rfc_ctxt->port_tree.itable;
     itable_t    *proto_port_itable = &rfc_ctxt->proto_port_tree.itable;
-    inode_t     *addr_inode, *port_inode, *proto_port_inode;
+    inode_t     *sip_inode, *dip_inode, *port_inode, *proto_port_inode;
 
     /** walk the policy and start building tables */
-    //SDK_ASSERT(policy->af == IP_AF_IPV4);
-    addr_inode = &addr_itable->nodes[0];
+    sip_inode = &sip_itable->nodes[0];
+    dip_inode = &dip_itable->nodes[0];
     port_inode = &port_itable->nodes[0];
     proto_port_inode = &proto_port_itable->nodes[0];
     for (rule_num = 0; rule_num < policy->num_rules; rule_num++) {
         rule = &policy->rules[rule_num];
         rfc_policy_rule_dump(policy, rule_num);
-        if (policy->direction == RULE_DIR_INGRESS) {
-            itable_add_address_inodes(rule_num, addr_inode,
-                                      &rule->match.l3_match.src_ip_pfx);
-        } else {
-            itable_add_address_inodes(rule_num, addr_inode,
-                                      &rule->match.l3_match.dst_ip_pfx);
-        }
+        itable_add_address_inodes(rule_num, sip_inode,
+                                  &rule->match.l3_match.src_ip_pfx);
+        itable_add_address_inodes(rule_num, dip_inode,
+                                  &rule->match.l3_match.dst_ip_pfx);
         itable_add_port_inodes(rule_num, port_inode,
                                &rule->match.l4_match.sport_range);
         itable_add_proto_port_inodes(rule_num, proto_port_inode,
                                      rule->match.l3_match.ip_proto,
                                      &rule->match.l4_match.dport_range);
-        addr_inode += 2;
+        sip_inode += 2;
+        dip_inode += 2;
         port_inode += 2;
         proto_port_inode += 2;
     }
-    addr_itable->num_nodes = port_itable->num_nodes =
-    proto_port_itable->num_nodes = rule_num << 1;
+    sip_itable->num_nodes = dip_itable->num_nodes =
+        port_itable->num_nodes = proto_port_itable->num_nodes = rule_num << 1;
     return SDK_RET_OK;
 }
 
@@ -239,11 +238,18 @@ rfc_compute_p0_classes (rfc_ctxt_t *rfc_ctxt)
 {
     sdk_ret_t   ret;
 
-    ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->pfx_tree,
-                                       rfc_p0_pfx_tree_inode_eq_cb,
-                                       rfc_ctxt->policy->af == IP_AF_IPV4 ?
-                                       SACL_IPV4_TREE_MAX_NODES:
-                                       SACL_IPV6_TREE_MAX_NODES);
+    ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->sip_tree,
+              rfc_p0_pfx_tree_inode_eq_cb,
+              (rfc_ctxt->policy->af == IP_AF_IPV4) ? SACL_IPV4_TREE_MAX_NODES :
+                                                     SACL_IPV6_TREE_MAX_NODES);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->dip_tree,
+              rfc_p0_pfx_tree_inode_eq_cb,
+              (rfc_ctxt->policy->af == IP_AF_IPV4) ? SACL_IPV4_TREE_MAX_NODES :
+                                                     SACL_IPV6_TREE_MAX_NODES);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -290,12 +296,19 @@ rfc_eq_class_table_dump (rfc_table_t *rfc_table)
 static inline void
 rfc_p0_eq_class_tables_dump (rfc_ctxt_t *rfc_ctxt)
 {
-    PDS_TRACE_DEBUG("RFC P0 prefix interval tree dump :");
-    rfc_itree_dump(&rfc_ctxt->pfx_tree,
-                   (rfc_ctxt->policy->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4_ACL:
-                   ITREE_TYPE_IPV6_ACL);
-    PDS_TRACE_DEBUG("RFC P0 prefix tree equivalence class table dump :");
-    rfc_eq_class_table_dump(&rfc_ctxt->pfx_tree.rfc_table);
+    PDS_TRACE_DEBUG("RFC P0 SIP prefix interval tree dump :");
+    rfc_itree_dump(&rfc_ctxt->sip_tree,
+                   (rfc_ctxt->policy->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4_ACL :
+                                                          ITREE_TYPE_IPV6_ACL);
+    PDS_TRACE_DEBUG("RFC P0 SIP prefix tree equivalence class table dump :");
+    rfc_eq_class_table_dump(&rfc_ctxt->sip_tree.rfc_table);
+
+    PDS_TRACE_DEBUG("RFC P0 DIP prefix interval tree dump :");
+    rfc_itree_dump(&rfc_ctxt->dip_tree,
+                   (rfc_ctxt->policy->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4_ACL :
+                                                          ITREE_TYPE_IPV6_ACL);
+    PDS_TRACE_DEBUG("RFC P0 DIP prefix tree equivalence class table dump :");
+    rfc_eq_class_table_dump(&rfc_ctxt->dip_tree.rfc_table);
 
     PDS_TRACE_DEBUG("RFC P0 port interval tree dump :");
     rfc_itree_dump(&rfc_ctxt->port_tree, ITREE_TYPE_PORT);

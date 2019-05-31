@@ -62,7 +62,7 @@
             "kind" : "metering",
             "count" : "64",
             "scale" : "1023",
-            "type" : "pps",
+            "type" : "account",
             "pps_bps" : "102400",
             "burst" : "3276800"
         },
