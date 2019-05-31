@@ -53,10 +53,13 @@
                     <div fxLayout="row">
                       <!-- Field Title -->
                       <div fxFlex="nogrow" fxLayout="column">
-                        <div class="newrole-fieldtitle" fxFlex="30px" fxLayout="row"
+                        <!-- comment out permission.resource-tenant per VS-241 (GS-release) -->
+                        <!--
+                          <div class="newrole-fieldtitle" fxFlex="30px" fxLayout="row"
                              fxLayoutAlign="start start">
                           <span>Tenant:</span>
-                        </div>
+                        </div> 
+                         -->
                         <div class="newrole-fieldtitle" fxFlex="30px" fxLayout="row"
                              fxLayoutAlign="start start">
                           <span>Group:</span>
@@ -77,11 +80,14 @@
                       <!-- Field Values -->
                       <div fxFlex fxLayout="column">
                         <ng-container>
+                          <!-- comment out permission.resource-tenant per VS-241 (GS-release) -->
+                          <!-- 
                           <div fxFlex="30px" fxLayout="row" class="newrole-value">
                             <input fxFlex="nogrow" formControlName="resource-tenant"
                                    class="newrole-host" spellcheck="false"
                                    type="text" pInputText placeholder="tenant...">
-                          </div>
+                          </div> 
+                           -->
                           <div fxFlex="30px" fxLayout="row" class="newrole-value">
                             <p-dropdown class="newrole-severity" fxFlex="170px"
                                         formControlName="resource-group" styleClass="newrole-font"

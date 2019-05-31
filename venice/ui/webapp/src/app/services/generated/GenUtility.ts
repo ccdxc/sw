@@ -13,7 +13,7 @@ import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum'
 export class GenServiceUtility {
   protected _http;
   protected urlServiceMap: { [method: string]: Observable<VeniceResponse> } = {};
-  protected urlWsMap: { [method: string]: WebSocketSubject<any>} = {};
+  protected urlWsMap: { [method: string]: WebSocketSubject<any> } = {};
   protected ajaxStartCallback: (payload: any) => void;
   protected ajaxEndCallback: (payload: any) => void;
   protected useWebSockets: boolean;
@@ -97,7 +97,7 @@ export class GenServiceUtility {
       const oboeService = oboe(config);
 
       // The '!' will only consume complete json objects
-      oboeService.node ('!', (data) => {
+      oboeService.node('!', (data) => {
         observer.next({ body: data, statusCode: null });
       });
 
@@ -143,7 +143,7 @@ export class GenServiceUtility {
             next: (v) => {
               // when the socket connection opens, we save the
               // variable that subscribers will be listening too
-               // _output is an internal variable, but is the only way to get the subscriber state.
+              // _output is an internal variable, but is the only way to get the subscriber state.
               // tslint:disable-next-line
               output = observer._output;
             }
@@ -184,7 +184,7 @@ export class GenServiceUtility {
   }
 
   public invokeAJAX(method: string, url: string, payload: any,
-                       eventPayloadID: any, isOnline: boolean = false): Observable<VeniceResponse> {
+    eventPayloadID: any, isOnline: boolean = false): Observable<VeniceResponse> {
     // Removing time fields as null values will be attempted to be parsed
     if (payload != null) {
       if (payload.meta != null) {

@@ -171,6 +171,8 @@ export class UIConfigsService {
     this.controllerService.publish(Eventtypes.NEW_USER_PERMISSIONS, null);
   }
 
+
+
   /**
    * Looks up the route in the pageRequirements object
    * If the url isn't present it is allowed by default

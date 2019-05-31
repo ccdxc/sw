@@ -64,7 +64,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     protected _authService: AuthService,
     protected stagingService: StagingService
   ) {
-    super(_controllerService, _authService, stagingService);
+    super(_controllerService, _authService, stagingService, null);
   }
 
   /**
@@ -339,8 +339,8 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     } else {
       permission[NewroleComponent.KINDOPTIONS] = this.getKindOptions(permission);
     }
-
-    this.setPermissionInputOnGroupChange($event.value, permission);
+    // comment out permission.resource-tenant per VS-241 (GS-release)
+    // this.setPermissionInputOnGroupChange($event.value, permission);
   }
 
   setPermissionInputOnGroupChange(value: string, permission: FormControl) {

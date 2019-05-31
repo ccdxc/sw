@@ -10,8 +10,12 @@ import { ErrorStateMatcher } from '@angular/material';
 import { BaseComponent } from '@app/components/base/base.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { ControllerService } from '@app/services/controller.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+
 import { Utility } from '@app/common/Utility';
 import { UserDataReadyMap } from './';
+import { AUTH_BODY } from '@app/core';
 
 import { AuthService } from '@app/services/generated/auth.service';
 import { StagingService } from '@app/services/generated/staging.service';
@@ -21,7 +25,7 @@ import {
   AuthUserList, AuthUser, AuthRoleList, AuthPasswordChangeRequest
 } from '@sdk/v1/models/generated/auth';
 import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
-import { required , patternValidator} from '@sdk/v1/utils/validators';
+import { required, patternValidator } from '@sdk/v1/utils/validators';
 
 export enum ACTIONTYPE {
   CREATE = 'Create',
@@ -117,7 +121,8 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
 
   constructor(protected _controllerService: ControllerService,
     protected _authService: AuthService,
-    protected stagingService: StagingService
+    protected stagingService: StagingService,
+    protected uiconfigsService: UIConfigsService
   ) {
     super(_controllerService, null);  // we don't want to use messageService.
   }
@@ -128,30 +133,49 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   }
 
   protected setToolbarItems() {
+    const buttons = [
+      {
+        cssClass: 'global-button-primary users-toolbar-button users-toolbar-button-refresh',
+        text: 'Refresh',
+        callback: () => { this.getData(); },
+      }
+    ];
+    const options = [];
+    // always add [user] item so that user can manage his user info.
+    options.push({ label: UsersComponent.UI_PANEL_USER, value: UsersComponent.UI_PANEL_USER });
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.authrole_read)) {
+      options.push({ label: UsersComponent.UI_PANEL_ROLE, value: UsersComponent.UI_PANEL_ROLE });
+    }
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.authrolebinding_read)) {
+      options.push({ label: UsersComponent.UI_PANEL_ROLEBINDING, value: UsersComponent.UI_PANEL_ROLEBINDING });
+    }
+    const dropdowns = [
+      {
+        callback: (event, sbutton) => {
+          this.onLayoutDropDownChange(sbutton);
+        },
+        options: options,
+        model: this.selectedDropdown,
+        placeholder: 'Select'
+      }
+    ];
     this._controllerService.setToolbarData({
-      buttons: [
-        {
-          cssClass: 'global-button-primary users-toolbar-button users-toolbar-button-refresh',
-          text: 'Refresh',
-          callback: () => { this.getData(); },
-        }
-      ],
-      breadcrumb: [{ label: 'RBAC Management', url: '' }],
-      dropdowns: [
-        {
-          callback: (event, sbutton) => {
-            this.onLayoutDropDownChange(sbutton);
-          },
-          options: [
-            { label: UsersComponent.UI_PANEL_USER, value: UsersComponent.UI_PANEL_USER },
-            { label: UsersComponent.UI_PANEL_ROLE, value: UsersComponent.UI_PANEL_ROLE },
-            { label: UsersComponent.UI_PANEL_ROLEBINDING, value: UsersComponent.UI_PANEL_ROLEBINDING }
-          ],
-          model: this.selectedDropdown,
-          placeholder: 'Select layout'
-        }
-      ]
+      buttons: buttons,
+      dropdowns: dropdowns,
+      breadcrumb: [{ label: 'RBAC Management', url: '' }]
     });
+  }
+
+  /**
+   * This function controls whether to list users or get one user.
+   * Admin user can manage user/role/role-binding
+   * Regular user can see/change his own user information.
+   *
+   * note: authuse_read is not enough.  non-admin user can GetUser(himself) but will fail to invoke ListUser().  Admin user will invoke ListUser() in User-Management UI page.
+   * It is expected that admin user must have all staging permissions.
+   */
+  canManageRBAC(): boolean {
+    return (this.uiconfigsService.isAuthorized(UIRolePermissions.authuser_create) && this.uiconfigsService.isAuthorized(UIRolePermissions.authuser_update));
   }
 
   onLayoutDropDownChange(sbutton: any) {
@@ -184,9 +208,14 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   }
 
   getData() {
-    this.getUsers();
-    this.getAuthRoles();
-    this.getRolebindings();
+    // If login user does not have RBAC management permission, he should be able to check his own user info
+    if (this.canManageRBAC()) {
+      this.getUsers();
+      this.getAuthRoles();
+      this.getRolebindings();
+    } else {
+      this.getCurrentUser();
+    }
   }
 
   combineData() {
@@ -207,16 +236,47 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   }
 
   getUsers() {
-    this._authService.ListUser().subscribe(
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.authuser_read)) {
+      this._authService.ListUser().subscribe(
+        (data) => {
+          const authUserList: AuthUserList = new AuthUserList(<IAuthUserList>data.body);
+          if (authUserList.items.length > 0) {
+            this.authusers.length = 0;
+            this.authusers = authUserList.items;
+            this.setDataReadyMap('users', true);
+          }
+        },
+        this._controllerService.restErrorHandler('Failed to get Users')
+      );
+    } else {
+      const authBody = JSON.parse(sessionStorage.getItem(AUTH_BODY));
+      let username = '';
+      if (authBody != null && authBody.meta != null && authBody.meta.name != null) {
+        username = authBody.meta.name;
+      }
+      this._authService.GetUser(username).subscribe(
+        (data) => {
+          const authUser: AuthUser = new AuthUser(data.body);
+          if (authUser != null) {
+            this.authusers.length = 0;
+            this.authusers = [authUser];
+            this.setDataReadyMap('users', true);
+          }
+        },
+        this._controllerService.restErrorHandler('Failed to get Users')
+      );
+    }
+  }
+
+  getCurrentUser() {
+    const userName = Utility.getInstance().getLoginName();
+    this._authService.GetUser(userName).subscribe(
       (data) => {
-        const authUserList: AuthUserList = new AuthUserList(<IAuthUserList>data.body);
-        if (authUserList.items.length > 0) {
-          this.authusers.length = 0;
-          this.authusers = authUserList.items;
-          this.setDataReadyMap('users', true);
-        }
+        const user: AuthUser = new AuthUser(data.body);
+        this.authusers.length = 0;
+        this.authusers.push(user);
       },
-      this._controllerService.restErrorHandler('Failed to get Users')
+      this._controllerService.restErrorHandler('Failed to get User ' + userName)
     );
   }
 
@@ -410,8 +470,8 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     }
 
     // Whenever, we have to call delete buffer, there must be error occurred. We print out the buffer detail here.
-    this.stagingService.GetBuffer(buffername).subscribe( (res) => {
-      console.error(this.getClassName() +  '.deleteStagingBuffer() API. Invoke GetBuffer():' , res);
+    this.stagingService.GetBuffer(buffername).subscribe((res) => {
+      console.error(this.getClassName() + '.deleteStagingBuffer() API. Invoke GetBuffer():', res);
     });
     this.stagingService.DeleteBuffer(buffername).subscribe(
       response => {
@@ -482,27 +542,27 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
           // Delete role after delete role-bindings.
           if (observables.length > 0) {
             return forkJoin(observables)// (B-C)
-                  .pipe (
-                    switchMap(results => {
-                      const isAllOK = Utility.isForkjoinResultAllOK(results);
-                      if (isAllOK) {
-                        return this._authService.DeleteRole(deletedRole.meta.name, buffername).pipe(  // (C) delete role
-                          switchMap(() => {
-                            return this.commitStagingBuffer(buffername);  // (D) commit buffer
-                          })
-                        );
-                      } else {
-                        const error = Utility.joinErrors(results);
-                        return throwError(error);
-                      }
-                    })
-                  );
+              .pipe(
+                switchMap(results => {
+                  const isAllOK = Utility.isForkjoinResultAllOK(results);
+                  if (isAllOK) {
+                    return this._authService.DeleteRole(deletedRole.meta.name, buffername).pipe(  // (C) delete role
+                      switchMap(() => {
+                        return this.commitStagingBuffer(buffername);  // (D) commit buffer
+                      })
+                    );
+                  } else {
+                    const error = Utility.joinErrors(results);
+                    return throwError(error);
+                  }
+                })
+              );
           } else {
             // It is possible that client delete role-bindings manually first, observables[] is empty
             return this._authService.DeleteRole(deletedRole.meta.name, buffername).pipe(  // (C) delete role
-                    switchMap(() => {
-                      return this.commitStagingBuffer(buffername);  // (D) commit buffer
-                    })
+              switchMap(() => {
+                return this.commitStagingBuffer(buffername);  // (D) commit buffer
+              })
             );
           }
         })
@@ -711,7 +771,11 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
       return;
     }
     if (this.userEditAction === UsersComponent.USER_ACTION_UPDATE) {
-      this.updateUser_with_staging();
+      if (this.canManageRBAC()) {
+        this.updateUser_with_staging();  // admin user need staging buffer as role-binding may be changed.
+      } else {
+        this.updateUser_without_staging();  // non-admin user does not need staging buffer.
+      }
     } else if (this.userEditAction === UsersComponent.USER_ACTION_CHANGEPWD) {
       this.changeUserPassword();
     }
@@ -937,10 +1001,12 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     this.userEditAction = UsersComponent.USER_ACTION_CHANGEPWD;
     this.authPasswordChangeRequest = new AuthPasswordChangeRequest();
     this.authPasswordChangeRequest.$formGroup.get(['old-password']).setValidators([required]);
-    this.authPasswordChangeRequest.$formGroup.get(['new-password']).setValidators([required, patternValidator(UsersComponent.PASSWORD_REGEX, UsersComponent.PASSWORD_MESSAGE )]);
+    this.authPasswordChangeRequest.$formGroup.get(['new-password']).setValidators([required, patternValidator(UsersComponent.PASSWORD_REGEX, UsersComponent.PASSWORD_MESSAGE)]);
 
     const selectedUserData = this.selectedAuthUser.getFormGroupValues();
+    selectedUserData.meta.name = this.selectedAuthUser.meta.name; // make sure to have name.
     this.authPasswordChangeRequest.setValues(selectedUserData); // this will populate data.
+
 
   }
 

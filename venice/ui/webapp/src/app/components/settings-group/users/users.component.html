@@ -3,15 +3,17 @@
   <div pagebody-options>
     <button class="global-button-primary users-toolbar-button users-add-button users-adduser-button"
             [disabled]="isToShowAddUserPanel"
-            (click)="onAddUser($event)" *ngIf="whichPanel=='user'" title="Add User">Add User
+            (click)="onAddUser($event)" *ngIf="whichPanel=='user' && canManageRBAC()"
+            title="Add User">Add User
     </button>
     <button class="global-button-primary users-toolbar-button users-add-button users-addrole-button"
             [disabled]="isToShowAddRolePanel"
-            (click)="onAddRole($event)" *ngIf="whichPanel=='role'" title="Add Role">Add Role
+            (click)="onAddRole($event)" *ngIf="whichPanel=='role' && canManageRBAC()"
+            title="Add Role">Add Role
     </button>
     <button class="global-button-primary users-toolbar-button users-add-button users-addrolebinding-button"
             [disabled]="isToShowAddRolebindingPanel"
-            (click)="onAddRoleBinding($event)" *ngIf="whichPanel=='rolebinding'"
+            (click)="onAddRoleBinding($event)" *ngIf="whichPanel=='rolebinding' && canManageRBAC()"
             title="Add Role-binding">Add
       Rolebinding
     </button>
@@ -247,7 +249,8 @@
 
     <div class="usertemplate-div-card-edituser-div"
          *ngIf="isUserEditMode(user) && userEditAction==='update'">
-      <div fxLayout="row wrap" fxLayoutAlign="start" class="usertemplate-rolegroup-header-edit-row">
+      <div fxLayout="row wrap" fxLayoutAlign="start" class="usertemplate-rolegroup-header-edit-row"
+           *ngIf="canManageRBAC()">
         <div class="usertemplate-rolegroup-header-edit-label">New Roles:</div>
         <p-multiSelect class="user-rolebinding" fxFlex="200px" styleClass="user-rolebinding-select"
                        [options]="rolebindingOptions"

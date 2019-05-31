@@ -49,9 +49,9 @@ export class AuthService extends Authv1Service {
   }
 
   protected invokeAJAX(method: string, url: string, payload: any, opts: MethodOpts, forceReal: boolean = false): Observable<VeniceResponse> {
-
+    const username = Utility.getInstance().getLoginName();
     const key = this.serviceUtility.convertEventID(opts);
-    if (!this.uiconfigsService.isAuthorized(key)) {
+    if ( username && (username.length === 0 || !url.includes('/users/' + username)) && !this.uiconfigsService.isAuthorized(key)) {
       return NEVER;
     }
     const isOnline = !this.isToMockData() || forceReal;

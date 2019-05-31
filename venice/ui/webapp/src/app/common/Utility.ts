@@ -1404,9 +1404,9 @@ export class Utility {
 
   public static actionMethodNameToObject(methodName) {
     let ret;
-    Object.keys(CategoryMapping).some((cat) => {
-      return Object.keys(CategoryMapping[cat]).some((kind) => {
-        const actions = CategoryMapping[cat][kind].actions.map(a => a.toLowerCase());
+    Object.keys(CategoryMapping).some( (cat) => {
+      return Object.keys(CategoryMapping[cat]).some( (kind) => {
+        const actions = CategoryMapping[cat][kind].actions.map( a => a.toLowerCase());
         if (actions.includes(methodName.toLowerCase())) {
           ret = {
             category: cat,

@@ -50,7 +50,7 @@ export class NewrolebindingComponent extends UsersComponent implements OnInit, O
     protected _authService: AuthService,
     protected stagingService: StagingService
   ) {
-    super(_controllerService, _authService, stagingService);
+    super(_controllerService, _authService, stagingService, null);
   }
 
   /**

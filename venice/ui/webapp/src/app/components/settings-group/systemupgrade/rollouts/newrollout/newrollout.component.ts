@@ -263,18 +263,15 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     const rollout: IRolloutRollout = this.buildRollout();
     let handler: Observable<{ body: IRolloutRollout | IApiStatus | Error, statusCode: number }>;
 
-    /**  Disable this block as back-end does not support Add/Update(..) but using DoRollout(..)
     if (this.isInline) {
       // Using this.newRollout to get name, as the name is gone when we call getFormGroupValues
       // This is beacuse we disabled it in the form group to stop the user from editing it.
       // When you disable an angular control, in doesn't show up when you get the value of the group
 
-       handler = this.rolloutService.UpdateRollout(this.newRollout.meta.name, rollout);
+       handler = this.rolloutService.UpdateRollout(rollout);
     } else {
-       handler = this.rolloutService.AddRollout(rollout);
+       handler = this.rolloutService.CreateRollout(rollout);
     }
-    */
-    handler = this.rolloutService.CreateRollout(rollout, null, false); // TODO: For now, add trimObject parameter as false because rollout.spec["scheduled-start-time"] got trimmed.
     const sub = handler.subscribe(
       (response) => {
         if (this.isInline) {
