@@ -18,6 +18,8 @@
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/test/utils/base.hpp"
+#include "nic/apollo/test/utils/workflow.hpp"
+#include "nic/apollo/test/utils/batch.hpp"
 #include "nic/apollo/test/utils/vnic.hpp"
 #include "nic/apollo/test/utils/device.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
@@ -243,19 +245,6 @@ protected:
 /// --------------------------- IPv4 MAPPINGS -----------------------
 
 static void
-local_mapping_stepper_seed_init (local_mapping_stepper_seed_t *seed,
-                                 uint16_t base_vnic_id, uint32_t base_encap_val,
-                                 uint64_t base_mac_64, std::string vnic_ip_cidr,
-                                 std::string public_ip_cidr)
-{
-    seed->vnic_id_stepper = base_vnic_id;
-    seed->encap_val_stepper = base_encap_val;
-    seed->vnic_mac_stepper = base_mac_64;
-    seed->vnic_ip_stepper = vnic_ip_cidr;
-    seed->public_ip_stepper = public_ip_cidr;
-}
-
-static void
 remote_mapping_stepper_seed_init (remote_mapping_stepper_seed_t *seed,
                                   uint32_t base_encap_val, uint64_t base_mac_64,
                                   std::string vnic_ip_cidr,
@@ -287,892 +276,996 @@ step_up_ip_next (ip_prefix_t *pfx, uint16_t num_steps)
 
 /// --------------------------- LOCAL MAPPINGS -----------------------
 
-/// \brief Dummy test case to check
-/// create/read/delete operations on
-/// one mapping using one vnic and one IPv4
-TEST_F(mapping_test, DISABLED_v4_dummy_mapping_test) {
-    pds_batch_params_t batch_params = {0};
-    pds_local_mapping_info_t l_info = {0};
-    pds_remote_mapping_info_t r_info = {0};
-
-    // setup
-    local_mapping_util local_obj(api_test::g_vpc_id, api_test::g_subnet_id,
-                                 api_test::vnic_test_ip, api_test::g_vnic_id,
-                                 api_test::g_base_vnic_mac);
-    remote_mapping_util rem_obj(api_test::g_vpc_id, api_test::g_subnet_id,
-                                api_test::remote_test_ip, api_test::tep_test_ip,
-                                api_test::g_remote_vnic_mac);
-
-    // trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(local_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(rem_obj.create() == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(rem_obj.del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(local_obj.del() == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(rem_obj.del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    // Verify using read
-    ASSERT_TRUE(local_obj.read(&l_info) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(rem_obj.read(&r_info) == sdk::SDK_RET_OK);
-}
-
-/// \brief Create and delete max local mappings in the same batch
-/// The operation should be de-duped by framework and is
-/// a NO-OP from hardware perspective
-/// [ Create SetMax, Delete SetMax ] - Read
+/// \brief local mappings WF_1
 TEST_F(mapping_test, v4_local_mapping_workflow_1) {
-    uint32_t num_vnics = PDS_MAX_VNIC;
-    uint32_t num_ip_per_vnic = PDS_MAX_VNIC_IP;
-    pds_batch_params_t batch_params = {0};
-    local_mapping_stepper_seed_t map_seed = {0};
+    local_mapping_stepper_seed_t seed = {0};
 
-    local_mapping_stepper_seed_init(
-        &map_seed, api_test::g_vnic_id, api_test::g_encap_val,
-        api_test::g_base_vnic_mac, api_test::g_vnic_cidr_v4,
-        api_test::g_public_ip_v4);
-
-    // trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &map_seed) == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic, num_vnics,
-    //                                              api_test::g_vpc_id,
-    //                                              &map_seed) ==
-    //                                              sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    ASSERT_TRUE(local_mapping_util::many_read(
-                    num_ip_per_vnic, num_vnics, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &map_seed, PDS_ENCAP_TYPE_MPLSoUDP,
-                    false, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+    LOCAL_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_vnic_cidr_v4.c_str(), true,
+                            g_public_ip_v4.c_str());
+    seed.num_vnics = PDS_MAX_VNIC;
+    seed.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+    workflow_1<local_mapping_util, local_mapping_stepper_seed_t>(&seed);
 }
 
-///\brief Create, delete and create max local mappings in the same batch
-/// Create and delete should be de-deduped by framework and subsequent create
-/// should result in successful creation
-/// [ Create SetMax - Delete SetMax - Create SetMax ] - Read
+/// \brief local mappings WF_2
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_2) {
-    uint32_t num_vnics = PDS_MAX_VNIC;
-    uint32_t num_ip_per_vnic = PDS_MAX_VNIC_IP;
-    pds_batch_params_t batch_params = {0};
-    local_mapping_stepper_seed_t map_seed;
+    local_mapping_stepper_seed_t seed = {0};
 
-    local_mapping_stepper_seed_init(
-        &map_seed, api_test::g_vnic_id, api_test::g_encap_val,
-        api_test::g_base_vnic_mac, api_test::g_vnic_cidr_v4,
-        api_test::g_public_ip_v4);
+    LOCAL_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_vnic_cidr_v4.c_str(), true,
+                            g_public_ip_v4.c_str());
+    seed.num_vnics = PDS_MAX_VNIC;
+    seed.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+    workflow_2<local_mapping_util, local_mapping_stepper_seed_t>(&seed);
 
-    // trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &map_seed) == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic, num_vnics,
-    // api_test::g_vpc_id,
-    //                                          &map_seed) == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(local_mapping_util::many_create(num_ip_per_vnic, num_vnics,
-    // api_test::g_vpc_id,
-    //                                            api_test::g_subnet_id,
-    //                                            &map_seed) ==
-    //                                            sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    // Verify using read
-    // ASSERT_TRUE(local_mapping_util::many_read(num_ip_per_vnic, num_vnics,
-    // api_test::g_vpc_id,
-    //                                          api_test::g_subnet_id,
-    //                                          &map_seed) == sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic, num_vnics,
-    // api_test::g_vpc_id,
-    //                                            &map_seed) ==
-    //                                            sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
-/// \brief Create two sets, followed by delete one of the sets and creating one
-/// more new set Read operation shoud successfully read last two sets and return
-/// entries not found for deleted set [ Create Set1, Set2 - Delete Set1 - Create
-/// Set3 ] - Read
+/// \brief local mappings WF_3
 TEST_F(mapping_test, DISABLED_local_mapping_workflow_3) {
     uint32_t num_ip_per_vnic = PDS_MAX_VNIC_IP;
     uint32_t num_vnics_per_set = 341;
     uint32_t ip_stepper = num_ip_per_vnic * num_vnics_per_set;
     std::string vnic_ip_cidr = "0.0.0.0/8";
     std::string pub_ip_cidr = "0.0.0.0/8";
-    pds_batch_params_t batch_params = {0};
     ip_prefix_t vip_pfx;
     ip_prefix_t pip_pfx;
-    local_mapping_stepper_seed_t s1_seed;
-    local_mapping_stepper_seed_t s2_seed;
-    local_mapping_stepper_seed_t s3_seed;
+    local_mapping_stepper_seed_t s1;
+    local_mapping_stepper_seed_t s2;
+    local_mapping_stepper_seed_t s3;
 
-    local_mapping_stepper_seed_init(
-        &s1_seed, api_test::g_vnic_id, api_test::g_encap_val,
-        api_test::g_base_vnic_mac, api_test::g_vnic_cidr_v4,
-        api_test::g_public_ip_v4);
+    LOCAL_MAPPING_SEED_INIT(&s1, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_vnic_cidr_v4.c_str(), true,
+                            g_public_ip_v4.c_str());
+    s1.num_vnics = num_vnics_per_set;
+    s1.num_ip_per_vnic = num_ip_per_vnic;
 
-    str2ipv4pfx((char *)api_test::g_vnic_cidr_v4.c_str(), &vip_pfx);
+    str2ipv4pfx((char *)g_vnic_cidr_v4.c_str(), &vip_pfx);
     step_up_ip(&vip_pfx, ip_stepper);
     vnic_ip_cidr = ippfx2str(&vip_pfx);
-    str2ipv4pfx((char *)api_test::g_public_ip_v4.c_str(), &pip_pfx);
+    str2ipv4pfx((char *)g_public_ip_v4.c_str(), &pip_pfx);
     step_up_ip(&pip_pfx, ip_stepper);
     pub_ip_cidr = ippfx2str(&pip_pfx);
-    local_mapping_stepper_seed_init(
-        &s2_seed, api_test::g_vnic_id + num_vnics_per_set,
-        api_test::g_encap_val + num_vnics_per_set,
-        api_test::g_base_vnic_mac + num_vnics_per_set, vnic_ip_cidr.c_str(),
-        pub_ip_cidr.c_str());
+
+    LOCAL_MAPPING_SEED_INIT(&s2, g_vpc_id, g_subnet_id,
+                            g_vnic_id + num_vnics_per_set,
+                            PDS_ENCAP_TYPE_MPLSoUDP,
+                            g_encap_val + num_vnics_per_set,
+                            g_base_vnic_mac + num_vnics_per_set,
+                            vnic_ip_cidr.c_str(), true, pub_ip_cidr.c_str());
+    s2.num_vnics = num_vnics_per_set;
+    s2.num_ip_per_vnic = num_ip_per_vnic;
 
     step_up_ip(&vip_pfx, ip_stepper);
     step_up_ip(&pip_pfx, ip_stepper);
-    local_mapping_stepper_seed_init(&s3_seed, api_test::g_vnic_id + 682,
-                                    api_test::g_encap_val + 682,
-                                    api_test::g_base_vnic_mac + 682,
-                                    ippfx2str(&vip_pfx), ippfx2str(&pip_pfx));
-
-    // trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &s1_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &s2_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(local_mapping_util::many_delete(
-                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vpc_id,
-                    &s1_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, 342, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &s3_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    // set 1 : expected = entry not found
-    ASSERT_TRUE(local_mapping_util::many_read(
-                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &s1_seed, PDS_ENCAP_TYPE_MPLSoUDP,
-                    false, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
-
-    // set 2, 3: expected = entries present
-    ASSERT_TRUE(local_mapping_util::many_read(
-                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &s2_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(local_mapping_util::many_read(
-                    num_ip_per_vnic, 342, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &s3_seed) == sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic,
-    // num_vnics_per_set,
-    //                                              api_test::g_vpc_id,
-    //                                              &s2_seed) ==
-    //                                              sdk::SDK_RET_OK);
-    // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic, 342,
-    //                                              api_test::g_vpc_id,
-    //                                              &s3_seed) ==
-    //                                              sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    LOCAL_MAPPING_SEED_INIT(&s3, g_vpc_id, g_subnet_id,
+                            g_vnic_id + (num_vnics_per_set * 2),
+                            PDS_ENCAP_TYPE_MPLSoUDP,
+                            g_encap_val + (num_vnics_per_set * 2),
+                            g_base_vnic_mac + (num_vnics_per_set * 2),
+                            ippfx2str(&vip_pfx), true,
+                            ippfx2str(&pip_pfx));
+    s3.num_vnics = num_vnics_per_set + 1; // 341 + 341 + 342 = 1024
+    s3.num_ip_per_vnic = num_ip_per_vnic;
+    workflow_3<local_mapping_util, local_mapping_stepper_seed_t>(&s1, &s2, &s3);
 }
 
-/// \brief Create and delete local mappings in two batches
-/// The hardware should create and delete mappings correctly.
-/// Validate using reads at each batch end
-/// [ Create SetMax ] - Read - [ Delete SetMax ] - Read
+/// \brief local mappings WF_4
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_4) {
-    uint32_t num_vnics = PDS_MAX_VNIC;
-    uint32_t num_ip_per_vnic = PDS_MAX_VNIC_IP;
-    pds_batch_params_t batch_params = {0};
-    local_mapping_stepper_seed_t map_seed;
+    local_mapping_stepper_seed_t seed = {0};
 
-    local_mapping_stepper_seed_init(
-        &map_seed, api_test::g_vnic_id, api_test::g_encap_val,
-        api_test::g_base_vnic_mac, api_test::g_vnic_cidr_v4,
-        api_test::g_public_ip_v4);
-
-    // trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &map_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    // ASSERT_TRUE(local_mapping_util::many_read(num_ip_per_vnic, num_vnics,
-    //                                          api_test::g_vpc_id,
-    //                                          api_test::g_subnet_id,
-    //                                          &map_seed) == sdk::SDK_RET_OK);
-
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic, num_vnics,
-    //                                              api_test::g_vpc_id,
-    //                                              api_test::g_subnet_id,
-    //                                              &map_seed) ==
-    //                                              sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    // ASSERT_TRUE(local_mapping_util::many_read(num_ip_per_vnic, num_vnics,
-    // api_test::g_vpc_id,
-    //                                          api_test::g_subnet_id,
-    //                                          &map_seed,
-    //                                          PDS_ENCAP_TYPE_MPLSoUDP, false,
-    //                                           sdk::SDK_RET_ENTRY_NOT_FOUND)
-    //                                           == sdk::SDK_RET_OK);
+    LOCAL_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_vnic_cidr_v4.c_str(), true,
+                            g_public_ip_v4.c_str());
+    seed.num_vnics = PDS_MAX_VNIC;
+    seed.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+    workflow_4<local_mapping_util, local_mapping_stepper_seed_t>(&seed);
 }
 
-/// \brief Create and delete mix and match of mappings in two batches
-/// [ Create Set1, Set2 ] - Read - [Delete Set1 - Create Set3 ] - Read
+/// \brief local mappings WF_5
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_5) {
     uint32_t num_ip_per_vnic = PDS_MAX_VNIC_IP;
     uint32_t num_vnics_per_set = 341;
     uint32_t ip_stepper = num_ip_per_vnic * num_vnics_per_set;
     std::string vnic_ip_cidr = "0.0.0.0/8";
     std::string pub_ip_cidr = "0.0.0.0/8";
-    pds_batch_params_t batch_params = {0};
     ip_prefix_t vip_pfx;
     ip_prefix_t pip_pfx;
-    local_mapping_stepper_seed_t s1_seed;
-    local_mapping_stepper_seed_t s2_seed;
-    local_mapping_stepper_seed_t s3_seed;
+    local_mapping_stepper_seed_t s1;
+    local_mapping_stepper_seed_t s2;
+    local_mapping_stepper_seed_t s3;
 
-    local_mapping_stepper_seed_init(
-        &s1_seed, api_test::g_vnic_id, api_test::g_encap_val,
-        api_test::g_base_vnic_mac, api_test::g_vnic_cidr_v4,
-        api_test::g_public_ip_v4);
+    LOCAL_MAPPING_SEED_INIT(&s1, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_vnic_cidr_v4.c_str(), true,
+                            g_public_ip_v4.c_str());
+    s1.num_vnics = num_vnics_per_set;
+    s1.num_ip_per_vnic = num_ip_per_vnic;
 
-    str2ipv4pfx((char *)api_test::g_vnic_cidr_v4.c_str(), &vip_pfx);
+    str2ipv4pfx((char *)g_vnic_cidr_v4.c_str(), &vip_pfx);
     step_up_ip(&vip_pfx, ip_stepper);
     vnic_ip_cidr = ippfx2str(&vip_pfx);
-    str2ipv4pfx((char *)api_test::g_public_ip_v4.c_str(), &pip_pfx);
+    str2ipv4pfx((char *)g_public_ip_v4.c_str(), &pip_pfx);
     step_up_ip(&pip_pfx, ip_stepper);
     pub_ip_cidr = ippfx2str(&pip_pfx);
-    local_mapping_stepper_seed_init(
-        &s2_seed, api_test::g_vnic_id + num_vnics_per_set,
-        api_test::g_encap_val + num_vnics_per_set,
-        api_test::g_base_vnic_mac + num_vnics_per_set, vnic_ip_cidr.c_str(),
-        pub_ip_cidr.c_str());
 
-    step_up_ip(&vip_pfx, ip_stepper * 2);
-    step_up_ip(&pip_pfx, ip_stepper * 2);
-    local_mapping_stepper_seed_init(&s3_seed, api_test::g_vnic_id + 682,
-                                    api_test::g_encap_val + 682,
-                                    api_test::g_base_vnic_mac + 682,
-                                    ippfx2str(&vip_pfx), ippfx2str(&pip_pfx));
+    LOCAL_MAPPING_SEED_INIT(&s2, g_vpc_id, g_subnet_id,
+                            g_vnic_id + num_vnics_per_set,
+                            PDS_ENCAP_TYPE_MPLSoUDP,
+                            g_encap_val + num_vnics_per_set,
+                            g_base_vnic_mac + num_vnics_per_set,
+                            vnic_ip_cidr.c_str(), true, pub_ip_cidr.c_str());
+    s2.num_vnics = num_vnics_per_set;
+    s2.num_ip_per_vnic = num_ip_per_vnic;
 
-    // trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &s1_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &s2_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic,
-    // num_vnics_per_set,
-    //                                              api_test::g_vpc_id,
-    //                                              &s1_seed) ==
-    //                                              sdk::SDK_RET_OK);
-    ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, 342, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &s3_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    // set 1 : expected = entry not found
-    // ASSERT_TRUE(local_mapping_util::many_read(num_ip_per_vnic,
-    // num_vnics_per_set, api_test::g_vpc_id,
-    //                                          api_test::g_subnet_id, &s1_seed,
-    //                                          PDS_ENCAP_TYPE_MPLSoUDP, false,
-    //                                           sdk::SDK_RET_ENTRY_NOT_FOUND)
-    //                                           == sdk::SDK_RET_OK);
-
-    // set 2, 3: expected = entries present
-    // ASSERT_TRUE(local_mapping_util::many_read(num_ip_per_vnic,
-    // num_vnics_per_set,
-    //                                          api_test::g_vpc_id,
-    //                                          api_test::g_subnet_id, &s2_seed)
-    //                                          == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(local_mapping_util::many_read(num_ip_per_vnic, 342,
-    //                                          api_test::g_vpc_id,
-    //                                          api_test::g_subnet_id, &s3_seed)
-    //                                          == sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic, 342,
-    //                                              api_test::g_vpc_id,
-    //                                              &s3_seed) ==
-    //                                              sdk::SDK_RET_OK);
-    // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic,
-    // num_vnics_per_set,
-    //                                              api_test::g_vpc_id,
-    //                                              &s2_seed) ==
-    //                                              sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    step_up_ip(&vip_pfx, ip_stepper);
+    step_up_ip(&pip_pfx, ip_stepper);
+    LOCAL_MAPPING_SEED_INIT(&s3, g_vpc_id, g_subnet_id,
+                            g_vnic_id + (num_vnics_per_set * 2),
+                            PDS_ENCAP_TYPE_MPLSoUDP,
+                            g_encap_val + (num_vnics_per_set * 2),
+                            g_base_vnic_mac + (num_vnics_per_set * 2),
+                            ippfx2str(&vip_pfx), true,
+                            ippfx2str(&pip_pfx));
+    s3.num_vnics = num_vnics_per_set + 1; // 341 + 341 + 342 = 1024
+    s3.num_ip_per_vnic = num_ip_per_vnic;
+    workflow_5<local_mapping_util, local_mapping_stepper_seed_t>(&s1, &s2, &s3);
 }
 
-/// \brief Create maximum number of mappings in two batches
-/// [ Create SetMax ] - [ Create SetMax ] - Read
+/// \brief local mappings WF_6
+TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_6) {
+    local_mapping_stepper_seed_t seed1 = {0};
+    local_mapping_stepper_seed_t seed1A = {0};
+    local_mapping_stepper_seed_t seed1B = {0};
+
+    LOCAL_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_vnic_cidr_v4.c_str(), true,
+                            g_public_ip_v4.c_str());
+    seed1.num_vnics = PDS_MAX_VNIC;
+    seed1.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    LOCAL_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id + 10, g_vnic_id,
+                            PDS_ENCAP_TYPE_VXLAN, g_encap_val + 1024,
+                            g_base_vnic_mac, g_vnic_cidr_v4.c_str(), true,
+                            g_public_ip_v4.c_str());
+    seed1A.num_vnics = PDS_MAX_VNIC;
+    seed1A.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    LOCAL_MAPPING_SEED_INIT(&seed1B, g_vpc_id, g_subnet_id + 20, g_vnic_id,
+                            PDS_ENCAP_TYPE_VXLAN, g_encap_val + 2048,
+                            g_base_vnic_mac, g_vnic_cidr_v4.c_str(), false, "");
+    seed1B.num_vnics = PDS_MAX_VNIC;
+    seed1B.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    workflow_6<local_mapping_util, local_mapping_stepper_seed_t>(&seed1, &seed1A, &seed1B);
+}
+
+/// \brief local mappings WF_7
+TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_7) {
+    local_mapping_stepper_seed_t seed1 = {0};
+    local_mapping_stepper_seed_t seed1A = {0};
+    local_mapping_stepper_seed_t seed1B = {0};
+
+    LOCAL_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_vnic_cidr_v4.c_str(), true,
+                            g_public_ip_v4.c_str());
+    seed1.num_vnics = PDS_MAX_VNIC;
+    seed1.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    LOCAL_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id + 10, g_vnic_id,
+                            PDS_ENCAP_TYPE_VXLAN, g_encap_val + 1024,
+                            g_base_vnic_mac, g_vnic_cidr_v4.c_str(), true,
+                            g_public_ip_v4.c_str());
+    seed1A.num_vnics = PDS_MAX_VNIC;
+    seed1A.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    LOCAL_MAPPING_SEED_INIT(&seed1B, g_vpc_id, g_subnet_id + 20, g_vnic_id,
+                            PDS_ENCAP_TYPE_VXLAN, g_encap_val + 20,
+                            g_base_vnic_mac, g_vnic_cidr_v4.c_str(), false, "");
+    seed1B.num_vnics = PDS_MAX_VNIC;
+    seed1B.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    workflow_7<local_mapping_util, local_mapping_stepper_seed_t>(&seed1, &seed1A, &seed1B);
+}
+
+/// \brief local mappings WF_8
+TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_8) {
+    local_mapping_stepper_seed_t seed1 = {0};
+    local_mapping_stepper_seed_t seed1A = {0};
+    local_mapping_stepper_seed_t seed1B = {0};
+
+    LOCAL_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_vnic_cidr_v4.c_str(), true,
+                            g_public_ip_v4.c_str());
+    seed1.num_vnics = PDS_MAX_VNIC;
+    seed1.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    LOCAL_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id + 10, g_vnic_id,
+                            PDS_ENCAP_TYPE_VXLAN, g_encap_val + 1024,
+                            g_base_vnic_mac, g_vnic_cidr_v4.c_str(), true,
+                            g_public_ip_v4.c_str());
+    seed1A.num_vnics = PDS_MAX_VNIC;
+    seed1A.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    LOCAL_MAPPING_SEED_INIT(&seed1B, g_vpc_id, g_subnet_id + 20, g_vnic_id,
+                            PDS_ENCAP_TYPE_VXLAN, g_encap_val + 2048,
+                            g_base_vnic_mac, g_vnic_cidr_v4.c_str(), false, "");
+    seed1B.num_vnics = PDS_MAX_VNIC;
+    seed1B.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    workflow_8<local_mapping_util, local_mapping_stepper_seed_t>(&seed1, &seed1A, &seed1B);
+}
+
+/// \brief local mappings WF_9
+TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_9) {
+    local_mapping_stepper_seed_t seed1 = {0};
+    local_mapping_stepper_seed_t seed1A = {0};
+
+    LOCAL_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_vnic_cidr_v4.c_str(), true,
+                            g_public_ip_v4.c_str());
+    seed1.num_vnics = PDS_MAX_VNIC;
+    seed1.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    LOCAL_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + 2048,
+                            g_base_vnic_mac + 1024, g_vnic_cidr_v4.c_str(), true,
+                            g_public_ip_v4.c_str());
+    seed1A.num_vnics = PDS_MAX_VNIC;
+    seed1A.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    workflow_9<local_mapping_util, local_mapping_stepper_seed_t>(&seed1, &seed1A);
+}
+
+/// \brief local mappings WF_10
+TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_10) {
+    uint32_t per_set_vnics = 256;
+    uint32_t ip_stepper = per_set_vnics * PDS_MAX_VNIC_IP;
+    local_mapping_stepper_seed_t seed1 = {0};
+    local_mapping_stepper_seed_t seed2 = {0};
+    local_mapping_stepper_seed_t seed2A = {0};
+    local_mapping_stepper_seed_t seed3 = {0};
+    local_mapping_stepper_seed_t seed3A = {0};
+    local_mapping_stepper_seed_t seed4 = {0};
+    std::string vnic_ip_cidr = "0.0.0.0/8";
+    std::string pub_ip_cidr = "0.0.0.0/8";
+    ip_prefix_t vip_pfx;
+    ip_prefix_t pip_pfx;
+
+
+    LOCAL_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_vnic_cidr_v4.c_str(), true,
+                            g_public_ip_v4.c_str());
+    seed1.num_vnics = per_set_vnics;
+    seed1.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    str2ipv4pfx((char *)g_vnic_cidr_v4.c_str(), &vip_pfx);
+    step_up_ip(&vip_pfx, ip_stepper);
+    vnic_ip_cidr = ippfx2str(&vip_pfx);
+    str2ipv4pfx((char *)g_public_ip_v4.c_str(), &pip_pfx);
+    step_up_ip(&pip_pfx, ip_stepper);
+    pub_ip_cidr = ippfx2str(&pip_pfx);
+
+    LOCAL_MAPPING_SEED_INIT(&seed2, g_vpc_id, g_subnet_id, g_vnic_id + per_set_vnics,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + per_set_vnics,
+                            g_base_vnic_mac + per_set_vnics, vnic_ip_cidr.c_str(), true,
+                            pub_ip_cidr.c_str());
+    seed2.num_vnics = per_set_vnics;
+    seed2.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    LOCAL_MAPPING_SEED_INIT(&seed2A, g_vpc_id, g_subnet_id + 10, g_vnic_id + per_set_vnics,
+                            PDS_ENCAP_TYPE_VXLAN, g_encap_val + per_set_vnics,
+                            g_base_vnic_mac + per_set_vnics, vnic_ip_cidr.c_str(), true,
+                            pub_ip_cidr.c_str());
+    seed2.num_vnics = per_set_vnics;
+    seed2.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    step_up_ip(&vip_pfx, ip_stepper);
+    vnic_ip_cidr = ippfx2str(&vip_pfx);
+    LOCAL_MAPPING_SEED_INIT(&seed3, g_vpc_id, g_subnet_id, g_vnic_id + (per_set_vnics * 2),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + (per_set_vnics * 2),
+                            g_base_vnic_mac + (per_set_vnics * 2), vnic_ip_cidr.c_str(), false, "");
+    seed3.num_vnics = per_set_vnics;
+    seed3.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    LOCAL_MAPPING_SEED_INIT(&seed3A, g_vpc_id, g_subnet_id + 20, g_vnic_id + (per_set_vnics * 2),
+                            PDS_ENCAP_TYPE_VXLAN, g_encap_val + (per_set_vnics * 2),
+                            g_base_vnic_mac + (per_set_vnics * 2), vnic_ip_cidr.c_str(), false, "");
+    seed3.num_vnics = per_set_vnics;
+    seed3.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    step_up_ip(&vip_pfx, ip_stepper);
+    vnic_ip_cidr = ippfx2str(&vip_pfx);
+    LOCAL_MAPPING_SEED_INIT(&seed4, g_vpc_id, g_subnet_id, g_vnic_id + (per_set_vnics * 3),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + (per_set_vnics * 3),
+                            g_base_vnic_mac + (per_set_vnics * 3), vnic_ip_cidr.c_str(), false, "");
+    seed4.num_vnics = per_set_vnics;
+    seed4.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    workflow_10<local_mapping_util, local_mapping_stepper_seed_t>(&seed1, &seed2, &seed2A,
+                                                                  &seed3, &seed3A, &seed4);
+}
+
+/// \brief local mappings WF_N_1
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_1) {
-    uint32_t num_vnics = PDS_MAX_VNIC;
-    uint32_t num_ip_per_vnic = PDS_MAX_VNIC_IP;
-    pds_batch_params_t batch_params = {0};
-    local_mapping_stepper_seed_t map_seed;
+    local_mapping_stepper_seed_t seed = {0};
 
-    local_mapping_stepper_seed_init(
-        &map_seed, api_test::g_vnic_id, api_test::g_encap_val,
-        api_test::g_base_vnic_mac, api_test::g_vnic_cidr_v4,
-        api_test::g_public_ip_v4);
-
-    // trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &map_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    // ASSERT_TRUE(local_mapping_util::many_read(num_ip_per_vnic, num_vnics,
-    // api_test::g_vpc_id,
-    //                                          api_test::g_subnet_id,
-    //                                          &map_seed) == sdk::SDK_RET_OK);
-
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &map_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic, num_vnics,
-    //                                              api_test::g_vpc_id,
-    //                                              &map_seed) ==
-    //                                              sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    LOCAL_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_vnic_cidr_v4, true,
+                            g_public_ip_v4);
+    seed.num_vnics = PDS_MAX_VNIC;
+    seed.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+    workflow_neg_1<local_mapping_util, local_mapping_stepper_seed_t>(&seed);
 }
 
-/// \brief Create more than maximum number of mappings supported.
-/// [ Create SetMax+1] - Read
+/// \brief local mappings WF_N_2
 TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_2) {
-    uint32_t num_vnics = PDS_MAX_VNIC;
-    uint32_t num_ip_per_vnic = PDS_MAX_VNIC_IP;
-    uint32_t vnic_id = 1024;
-    uint64_t vnic_mac =
-        api_test::g_base_vnic_mac + (num_ip_per_vnic * num_vnics);
-    std::string vnic_cidr = "10.10.0.3";
-    pds_batch_params_t batch_params = {0};
-    local_mapping_stepper_seed_t map_seed;
+    local_mapping_stepper_seed_t seed = {0};
 
-    local_mapping_stepper_seed_init(
-        &map_seed, api_test::g_vnic_id, api_test::g_encap_val,
-        api_test::g_base_vnic_mac, api_test::g_vnic_cidr_v4,
-        api_test::g_public_ip_v4);
-
-    local_mapping_util mapping_obj(api_test::g_vpc_id, api_test::g_subnet_id,
-                                   vnic_cidr, vnic_id, vnic_mac);
-
-    // trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &map_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(mapping_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
-
-    // ASSERT_TRUE(local_mapping_util::many_read(num_ip_per_vnic, num_vnics,
-    // api_test::g_vpc_id,
-    //                                          api_test::g_subnet_id,
-    //                                          &map_seed,
-    //                                          PDS_ENCAP_TYPE_MPLSoUDP, false,
-    //                                          sdk::SDK_RET_ENTRY_NOT_FOUND) ==
-    //                                          sdk::SDK_RET_OK);
+    LOCAL_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_vnic_cidr_v4, true,
+                            g_public_ip_v4);
+    seed.num_vnics = PDS_MAX_VNIC + 1;
+    seed.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+    workflow_neg_2<local_mapping_util, local_mapping_stepper_seed_t>(&seed);
 }
 
-/// \brief Read of a non-existing VNIC should return entry not found.
-/// Read NonEx
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_neg_3a) {
+/// \brief local mappings WF_N_3
+TEST_F(mapping_test, DISABLED_local_mapping_workflow_neg_3) {
     uint32_t vnic_id = 9999;
     uint64_t vnic_mac = 0x0000000040302010;
     std::string vnic_cidr = "100.99.98.97";
-    pds_batch_params_t batch_params = {0};
-    pds_local_mapping_info_t info = {0};
+    std::string public_ip_cidr = "200.97.98.99";
+    local_mapping_stepper_seed_t seed = {0};
 
-    // setup
-    local_mapping_util mapping_obj(api_test::g_vpc_id, api_test::g_subnet_id,
-                                   vnic_cidr, vnic_id, vnic_mac);
-
-    // trigger
-    ASSERT_TRUE(mapping_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    LOCAL_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, 4000,
+                            vnic_mac, vnic_cidr, true,
+                            public_ip_cidr);
+    seed.num_vnics = 1;
+    seed.num_ip_per_vnic = 1;
+    workflow_neg_3<local_mapping_util, local_mapping_stepper_seed_t>(&seed);
 }
 
-/// \brief Deletion of a non-existing VNICs should fail.
-/// [Delete NonEx]
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_neg_3b) {
-    uint32_t vnic_id = 9999;
-    uint64_t vnic_mac = 0x00000000000abcde;
-    std::string vnic_cidr = "97.98.99.100";
-    pds_batch_params_t batch_params = {0};
-    pds_local_mapping_info_t info = {0};
+/// \brief local mappings WF_N_4
+TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_4) {
+    uint32_t num_ip_per_vnic = PDS_MAX_VNIC_IP;
+    uint32_t num_vnics_per_set = 512;
+    uint32_t ip_stepper = num_ip_per_vnic * num_vnics_per_set;
+    std::string vnic_ip_cidr = "0.0.0.0/8";
+    std::string pub_ip_cidr = "0.0.0.0/8";
+    ip_prefix_t vip_pfx;
+    ip_prefix_t pip_pfx;
+    local_mapping_stepper_seed_t s1;
+    local_mapping_stepper_seed_t s2;
 
-    // setup
-    local_mapping_util mapping_obj(api_test::g_vpc_id, api_test::g_subnet_id,
-                                   vnic_cidr, vnic_id, vnic_mac);
+    LOCAL_MAPPING_SEED_INIT(&s1, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_vnic_cidr_v4.c_str(), true,
+                            g_public_ip_v4.c_str());
+    s1.num_vnics = num_vnics_per_set;
+    s1.num_ip_per_vnic = num_ip_per_vnic;
 
-    // trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(mapping_obj.del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+    str2ipv4pfx((char *)g_vnic_cidr_v4.c_str(), &vip_pfx);
+    step_up_ip(&vip_pfx, ip_stepper);
+    vnic_ip_cidr = ippfx2str(&vip_pfx);
+    str2ipv4pfx((char *)g_public_ip_v4.c_str(), &pip_pfx);
+    step_up_ip(&pip_pfx, ip_stepper);
+    pub_ip_cidr = ippfx2str(&pip_pfx);
+
+    LOCAL_MAPPING_SEED_INIT(&s2, g_vpc_id, g_subnet_id,
+                            g_vnic_id + num_vnics_per_set,
+                            PDS_ENCAP_TYPE_MPLSoUDP,
+                            g_encap_val + num_vnics_per_set,
+                            g_base_vnic_mac + num_vnics_per_set,
+                            vnic_ip_cidr.c_str(), true, pub_ip_cidr.c_str());
+    s2.num_vnics = num_vnics_per_set;
+    s2.num_ip_per_vnic = num_ip_per_vnic;
+
+    workflow_neg_4<local_mapping_util, local_mapping_stepper_seed_t>(&s1, &s2);
+}
+
+/// \brief local mappings WF_N_5
+TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_5) {
+    local_mapping_stepper_seed_t seed1 = {0};
+    local_mapping_stepper_seed_t seed1A = {0};
+
+    LOCAL_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_vnic_cidr_v4, true,
+                            g_public_ip_v4);
+    seed1.num_vnics = PDS_MAX_VNIC;
+    seed1.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    LOCAL_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + 1024,
+                            g_base_vnic_mac + 2048, g_vnic_cidr_v4, false, "");
+    seed1A.num_vnics = PDS_MAX_VNIC;
+    seed1A.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    workflow_neg_5<local_mapping_util, local_mapping_stepper_seed_t>(&seed1, &seed1A);
+}
+
+/// \brief local mappings WF_N_6
+TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_6) {
+    local_mapping_stepper_seed_t seed1 = {0};
+    local_mapping_stepper_seed_t seed1A = {0};
+
+    LOCAL_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_vnic_cidr_v4, true,
+                            g_public_ip_v4);
+    seed1.num_vnics = PDS_MAX_VNIC;
+    seed1.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    LOCAL_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + 2048,
+                            g_base_vnic_mac + 1024, g_vnic_cidr_v4, false, "");
+    seed1A.num_vnics = PDS_MAX_VNIC + 1;
+    seed1A.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    workflow_neg_6<local_mapping_util, local_mapping_stepper_seed_t>(&seed1, &seed1A);
+}
+
+/// \brief local mappings WF_N_7
+TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_7) {
+    uint32_t num_vnics_per_set = 512;
+    uint32_t ip_stepper = num_vnics_per_set * PDS_MAX_VNIC_IP;
+    local_mapping_stepper_seed_t seed1 = {0};
+    local_mapping_stepper_seed_t seed1A = {0};
+    local_mapping_stepper_seed_t seed2 = {0};
+    std::string vnic_ip_cidr = "0.0.0.0/8";
+    std::string pub_ip_cidr = "0.0.0.0/8";
+    ip_prefix_t vip_pfx;
+    ip_prefix_t pip_pfx;
+
+    LOCAL_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_vnic_cidr_v4, true,
+                            g_public_ip_v4);
+    seed1.num_vnics = num_vnics_per_set;
+    seed1.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    LOCAL_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + 2048,
+                            g_base_vnic_mac + 1024, g_vnic_cidr_v4, false, "");
+    seed1A.num_vnics = num_vnics_per_set;
+    seed1A.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    str2ipv4pfx((char *)g_vnic_cidr_v4.c_str(), &vip_pfx);
+    step_up_ip(&vip_pfx, ip_stepper);
+    vnic_ip_cidr = ippfx2str(&vip_pfx);
+    str2ipv4pfx((char *)g_public_ip_v4.c_str(), &pip_pfx);
+    step_up_ip(&pip_pfx, ip_stepper);
+    pub_ip_cidr = ippfx2str(&pip_pfx);
+
+    LOCAL_MAPPING_SEED_INIT(&seed2, g_vpc_id, g_subnet_id, g_vnic_id + num_vnics_per_set,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + num_vnics_per_set,
+                            g_base_vnic_mac + num_vnics_per_set, vnic_ip_cidr, true,
+                            pub_ip_cidr);
+    seed1.num_vnics = num_vnics_per_set;
+    seed1.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    workflow_neg_7<local_mapping_util, local_mapping_stepper_seed_t>(&seed1, &seed1A, &seed2);
+}
+
+/// \brief local mappings WF_N_8
+TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_8) {
+    uint32_t num_vnics_per_set = 512;
+    uint32_t ip_stepper = num_vnics_per_set * PDS_MAX_VNIC_IP;
+    local_mapping_stepper_seed_t seed1 = {0};
+    local_mapping_stepper_seed_t seed2 = {0};
+    std::string vnic_ip_cidr = "0.0.0.0/8";
+    std::string pub_ip_cidr = "0.0.0.0/8";
+    ip_prefix_t vip_pfx;
+    ip_prefix_t pip_pfx;
+
+    LOCAL_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_id,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_vnic_cidr_v4, true,
+                            g_public_ip_v4);
+    seed1.num_vnics = num_vnics_per_set;
+    seed1.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    str2ipv4pfx((char *)g_vnic_cidr_v4.c_str(), &vip_pfx);
+    step_up_ip(&vip_pfx, ip_stepper);
+    vnic_ip_cidr = ippfx2str(&vip_pfx);
+    str2ipv4pfx((char *)g_public_ip_v4.c_str(), &pip_pfx);
+    step_up_ip(&pip_pfx, ip_stepper);
+    pub_ip_cidr = ippfx2str(&pip_pfx);
+
+    LOCAL_MAPPING_SEED_INIT(&seed2, g_vpc_id, g_subnet_id, g_vnic_id + num_vnics_per_set,
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + num_vnics_per_set,
+                            g_base_vnic_mac + num_vnics_per_set, vnic_ip_cidr, true,
+                            pub_ip_cidr);
+    seed1.num_vnics = num_vnics_per_set;
+    seed1.num_ip_per_vnic = PDS_MAX_VNIC_IP;
+
+    workflow_neg_8<local_mapping_util, local_mapping_stepper_seed_t>(&seed1, &seed2);
 }
 
 /// --------------------------- END LOCAL MAPPINGS -----------------------
 
 /// --------------------------- REMOTE MAPPINGS -----------------------
 
-/// \brief Create and delete max remote mappings in the same batch
-/// The operation should be de-duped by framework and is
-/// a NO-OP from hardware perspective
-/// [ Create SetMax, Delete SetMax ] - Read
+/// \brief remote mappings WF_1
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_1) {
-    uint32_t num_vnics = PDS_MAX_VNIC;
-    uint32_t num_teps = 1022;
-    remote_mapping_stepper_seed_t seed;
-    pds_batch_params_t batch_params = {0};
+    remote_mapping_stepper_seed_t seed = {0};
 
-    remote_mapping_stepper_seed_init(
-        &seed, api_test::g_encap_val, api_test::g_base_vnic_mac,
-        api_test::g_vnic_cidr_v4, api_test::g_tep_cidr_v4);
-    // trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics, num_teps, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics, num_teps,
-                                                 api_test::g_vpc_id,
-                                                 &seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    ASSERT_TRUE(remote_mapping_util::many_read(
-                    num_vnics, num_teps, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &seed, PDS_ENCAP_TYPE_MPLSoUDP,
-                    sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    REMOTE_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    seed.num_vnics = PDS_MAX_VNIC;
+    seed.num_teps = PDS_MAX_TEP - 1;
+    workflow_1<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed);
 }
 
-///\brief Create, delete and create max remote mappings in the same batch
-/// Create and delete should be de-deduped by framework and subsequent create
-/// should result in successful creation
-/// [ Create SetMax - Delete SetMax - Create SetMax ] - Read
+/// \brief remote mappings WF_2
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_2) {
-    uint32_t num_vnics = PDS_MAX_VNIC;
-    uint32_t num_teps = 8;
-    remote_mapping_stepper_seed_t seed;
-    pds_batch_params_t batch_params = {0};
+    remote_mapping_stepper_seed_t seed = {0};
 
-    remote_mapping_stepper_seed_init(
-        &seed, api_test::g_encap_val, api_test::g_base_vnic_mac,
-        api_test::g_vnic_cidr_v4, api_test::g_tep_cidr_v4);
-    // trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics, num_teps, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics, num_teps,
-                                                 api_test::g_vpc_id,
-                                                 &seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics, num_teps, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    ASSERT_TRUE(remote_mapping_util::many_read(
-                    num_vnics, num_teps, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics, num_teps,
-                                                 api_test::g_vpc_id,
-                                                 &seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    REMOTE_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    seed.num_vnics = PDS_MAX_VNIC;
+    seed.num_teps = PDS_MAX_TEP - 1;
+    workflow_2<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed);
 }
 
-/// \brief Create two sets, followed by delete one of the sets and creating one
-/// more new set Read operation shoud successfully read last two sets and return
-/// entries not found for deleted set [ Create Set1, Set2 - Delete Set1 - Create
-/// Set3 ] - Read
+/// \brief remote mappings WF_3
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_3) {
     uint32_t num_vnics_per_set = PDS_MAX_VNIC;
-    uint32_t num_teps_per_set = 50;
+    uint32_t num_teps_per_set = 341;
     uint32_t stepper = num_teps_per_set * num_vnics_per_set;
     ip_prefix_t vip_pfx;
     ip_prefix_t tip_pfx;
-    remote_mapping_stepper_seed_t s1_seed = {0};
-    remote_mapping_stepper_seed_t s2_seed = {0};
-    remote_mapping_stepper_seed_t s3_seed = {0};
+    remote_mapping_stepper_seed_t s1 = {0};
+    remote_mapping_stepper_seed_t s2 = {0};
+    remote_mapping_stepper_seed_t s3 = {0};
 
-    pds_batch_params_t batch_params = {0};
+    REMOTE_MAPPING_SEED_INIT(&s1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    s1.num_vnics = num_vnics_per_set;
+    s1.num_teps = num_teps_per_set;
 
-    remote_mapping_stepper_seed_init(
-        &s1_seed, api_test::g_encap_val, api_test::g_base_vnic_mac,
-        api_test::g_vnic_cidr_v4, api_test::g_tep_cidr_v4);
-
-    str2ipv4pfx((char *)api_test::g_vnic_cidr_v4.c_str(), &vip_pfx);
+    str2ipv4pfx((char *)g_vnic_cidr_v4.c_str(), &vip_pfx);
     step_up_ip_next(&vip_pfx, num_teps_per_set);
-    str2ipv4pfx((char *)api_test::g_tep_cidr_v4.c_str(), &tip_pfx);
+    str2ipv4pfx((char *)g_tep_cidr_v4.c_str(), &tip_pfx);
     step_up_ip_next(&tip_pfx, num_teps_per_set);
-    remote_mapping_stepper_seed_init(&s2_seed, api_test::g_encap_val + stepper,
-                                     api_test::g_base_vnic_mac + stepper,
-                                     ippfx2str(&vip_pfx), ippfx2str(&tip_pfx));
+    REMOTE_MAPPING_SEED_INIT(&s2, g_vpc_id + num_teps_per_set,
+                             g_subnet_id + num_teps_per_set,
+                             ippfx2str(&vip_pfx),
+                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + stepper,
+                             g_base_vnic_mac + stepper, ippfx2str(&tip_pfx));
+    s2.num_vnics = num_vnics_per_set;
+    s2.num_teps = num_teps_per_set;
 
     step_up_ip_next(&vip_pfx, num_teps_per_set);
     step_up_ip_next(&tip_pfx, num_teps_per_set);
-    remote_mapping_stepper_seed_init(&s3_seed,
-                                     api_test::g_encap_val + (stepper * 2),
-                                     api_test::g_base_vnic_mac + (stepper * 2),
-                                     ippfx2str(&vip_pfx), ippfx2str(&tip_pfx));
+    REMOTE_MAPPING_SEED_INIT(&s3, g_vpc_id + (num_teps_per_set * 2),
+                             g_subnet_id + (num_teps_per_set * 2),
+                             ippfx2str(&vip_pfx),
+                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + (stepper * 2),
+                             g_base_vnic_mac + (stepper * 2), ippfx2str(&tip_pfx));
+    s3.num_vnics = num_vnics_per_set;
+    s3.num_teps = num_teps_per_set - 1;
 
-    // trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics_per_set, num_teps_per_set, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &s1_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics_per_set, num_teps_per_set,
-                    api_test::g_vpc_id + num_teps_per_set,
-                    api_test::g_subnet_id + num_teps_per_set,
-                    &s2_seed) == sdk::SDK_RET_OK);
-#if 0
-    ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics_per_set, num_teps_per_set, api_test::g_vpc_id,
-                                                 &s1_seed) == sdk::SDK_RET_OK);
-#endif
-    ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics_per_set, num_teps_per_set,
-                    api_test::g_vpc_id + (num_teps_per_set * 2),
-                    api_test::g_subnet_id + (num_teps_per_set * 2),
-                    &s3_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    ASSERT_TRUE(remote_mapping_util::many_read(
-                    num_vnics_per_set, num_teps_per_set, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &s1_seed, PDS_ENCAP_TYPE_MPLSoUDP,
-                    sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
-
-    ASSERT_TRUE(
-        remote_mapping_util::many_read(num_vnics_per_set, num_teps_per_set,
-                                       api_test::g_vpc_id + num_teps_per_set,
-                                       api_test::g_subnet_id + num_teps_per_set,
-                                       &s2_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_read(
-                    num_vnics_per_set, num_teps_per_set,
-                    api_test::g_vpc_id + (num_teps_per_set * 2),
-                    api_test::g_subnet_id + (num_teps_per_set * 2),
-                    &s3_seed) == sdk::SDK_RET_OK);
-
-#if 0
-    // cleanup
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics_per_set, num_teps_per_set,
-                                                 api_test::g_vpc_id + (num_teps_per_set * 2),
-                                                 &s3_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics_per_set, num_teps_per_set,
-                                                 api_test::g_vpc_id + num_teps_per_set,
-                                                 &s2_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-#endif
+    workflow_3<remote_mapping_util, remote_mapping_stepper_seed_t>(&s1, &s2, &s3);
 }
 
-/// \brief Create and delete remote mappings in two batches
-/// The hardware should create and delete mappings correctly.
-/// Validate using reads at each batch end
-/// [ Create SetMax ] - Read - [ Delete SetMax ] - Read
+/// \brief remote mappings WF_4
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_4) {
-    uint32_t num_vnics = PDS_MAX_VNIC;
-    uint32_t num_teps = 700;
-    remote_mapping_stepper_seed_t seed;
-    pds_batch_params_t batch_params = {0};
+    remote_mapping_stepper_seed_t seed = {0};
 
-    remote_mapping_stepper_seed_init(
-        &seed, api_test::g_encap_val, api_test::g_base_vnic_mac,
-        api_test::g_vnic_cidr_v4, api_test::g_tep_cidr_v4);
-    // trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics, num_teps, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    ASSERT_TRUE(remote_mapping_util::many_read(
-                    num_vnics, num_teps, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
-
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics, num_teps,
-                                                 api_test::g_vpc_id,
-                                                 &seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    ASSERT_TRUE(remote_mapping_util::many_read(
-                    num_vnics, num_teps, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &seed, PDS_ENCAP_TYPE_MPLSoUDP,
-                    sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    REMOTE_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    seed.num_vnics = PDS_MAX_VNIC;
+    seed.num_teps = PDS_MAX_TEP - 1;
+    workflow_4<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed);
 }
 
-/// \brief Create and delete mix and match of mappings in two batches
-/// [ Create Set1, Set2 ] - Read - [Delete Set1 - Create Set3 ] - Read
+/// \brief remote mappings WF_5
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_5) {
     uint32_t num_vnics_per_set = PDS_MAX_VNIC;
-    uint32_t num_teps = 2;
-    uint32_t stepper = num_teps * num_vnics_per_set;
+    uint32_t num_teps_per_set = 341;
+    uint32_t stepper = num_teps_per_set * num_vnics_per_set;
     ip_prefix_t vip_pfx;
     ip_prefix_t tip_pfx;
-    remote_mapping_stepper_seed_t s1_seed = {0};
-    remote_mapping_stepper_seed_t s2_seed = {0};
-    remote_mapping_stepper_seed_t s3_seed = {0};
+    remote_mapping_stepper_seed_t s1 = {0};
+    remote_mapping_stepper_seed_t s2 = {0};
+    remote_mapping_stepper_seed_t s3 = {0};
 
-    pds_batch_params_t batch_params = {0};
+    REMOTE_MAPPING_SEED_INIT(&s1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    s1.num_vnics = num_vnics_per_set;
+    s1.num_teps = num_teps_per_set;
 
-    remote_mapping_stepper_seed_init(
-        &s1_seed, api_test::g_encap_val, api_test::g_base_vnic_mac,
-        api_test::g_vnic_cidr_v4, api_test::g_tep_cidr_v4);
+    str2ipv4pfx((char *)g_vnic_cidr_v4.c_str(), &vip_pfx);
+    step_up_ip_next(&vip_pfx, num_teps_per_set);
+    str2ipv4pfx((char *)g_tep_cidr_v4.c_str(), &tip_pfx);
+    step_up_ip_next(&tip_pfx, num_teps_per_set);
+    REMOTE_MAPPING_SEED_INIT(&s2, g_vpc_id + num_teps_per_set,
+                             g_subnet_id + num_teps_per_set,
+                             ippfx2str(&vip_pfx),
+                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + stepper,
+                             g_base_vnic_mac + stepper, ippfx2str(&tip_pfx));
+    s2.num_vnics = num_vnics_per_set;
+    s2.num_teps = num_teps_per_set;
 
-    str2ipv4pfx((char *)api_test::g_vnic_cidr_v4.c_str(), &vip_pfx);
-    step_up_ip_next(&vip_pfx, num_teps);
-    str2ipv4pfx((char *)api_test::g_tep_cidr_v4.c_str(), &tip_pfx);
-    step_up_ip_next(&tip_pfx, num_teps);
-    remote_mapping_stepper_seed_init(&s2_seed, api_test::g_encap_val + stepper,
-                                     api_test::g_base_vnic_mac + stepper,
-                                     ippfx2str(&vip_pfx), ippfx2str(&tip_pfx));
+    step_up_ip_next(&vip_pfx, num_teps_per_set);
+    step_up_ip_next(&tip_pfx, num_teps_per_set);
+    REMOTE_MAPPING_SEED_INIT(&s3, g_vpc_id + (num_teps_per_set * 2),
+                             g_subnet_id + (num_teps_per_set * 2),
+                             ippfx2str(&vip_pfx),
+                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + (stepper * 2),
+                             g_base_vnic_mac + (stepper * 2), ippfx2str(&tip_pfx));
+    s3.num_vnics = num_vnics_per_set;
+    s3.num_teps = num_teps_per_set - 1;
 
-    step_up_ip_next(&vip_pfx, (num_teps * 2));
-    step_up_ip_next(&tip_pfx, (num_teps * 2));
-    remote_mapping_stepper_seed_init(&s3_seed,
-                                     api_test::g_encap_val + (stepper * 2),
-                                     api_test::g_base_vnic_mac + (stepper * 2),
-                                     ippfx2str(&vip_pfx), ippfx2str(&tip_pfx));
-
-    // trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics_per_set, num_teps, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &s1_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics_per_set, num_teps, api_test::g_vpc_id + num_teps,
-                    api_test::g_subnet_id, &s2_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    // ASSERT_TRUE(remote_mapping_util::many_read(num_vnics_per_set, num_teps,
-    // api_test::g_vpc_id + num_teps,
-    //                                          api_test::g_subnet_id, &s2_seed)
-    //                                          == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(remote_mapping_util::many_read(num_vnics_per_set, num_teps,
-    // api_test::g_vpc_id,
-    //                                          api_test::g_subnet_id, &s1_seed)
-    //                                          == sdk::SDK_RET_OK);
-
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics_per_set, num_teps,
-    // api_test::g_vpc_id,
-    //                                            &s1_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics_per_set, num_teps,
-                    api_test::g_vpc_id + (num_teps * 2), api_test::g_subnet_id,
-                    &s3_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    // ASSERT_TRUE(remote_mapping_util::many_read(342, num_teps,
-    // api_test::g_vpc_id + (num_teps * 2),
-    //                                          api_test::g_subnet_id, &s3_seed)
-    //                                          == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(remote_mapping_util::many_read(num_vnics_per_set, num_teps,
-    // api_test::g_vpc_id,
-    //                                          api_test::g_subnet_id, &s1_seed,
-    //                                          sdk::SDK_RET_ENTRY_FOUND) ==
-    //                                          sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(remote_mapping_util::many_delete(342, num_teps,
-    // api_test::g_vpc_id + (num_teps * 2),
-    //                                            &s3_seed) == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics_per_set, num_teps,
-    // api_test::g_vpc_id + num_teps,
-    //                                            &s2_seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    workflow_3<remote_mapping_util, remote_mapping_stepper_seed_t>(&s1, &s2, &s3);
 }
 
-/// \brief Create maximum number of mappings in two batches
-/// [ Create SetMax ] - [ Create SetMax ] - Read
+/// \brief remote mappings WF_6
+TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_6) {
+    remote_mapping_stepper_seed_t seed1 = {0};
+    remote_mapping_stepper_seed_t seed1A = {0};
+    remote_mapping_stepper_seed_t seed1B = {0};
+
+    REMOTE_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    seed1.num_vnics = PDS_MAX_VNIC;
+    seed1.num_teps = PDS_MAX_TEP - 1;
+
+    REMOTE_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id + 10, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + 100,
+                            g_base_vnic_mac + 200, g_tep_cidr_v4.c_str());
+    seed1A.num_vnics = PDS_MAX_VNIC;
+    seed1A.num_teps = PDS_MAX_TEP - 1;
+
+    REMOTE_MAPPING_SEED_INIT(&seed1B, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_VXLAN, g_encap_val + 200,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    seed1B.num_vnics = PDS_MAX_VNIC;
+    seed1B.num_teps = PDS_MAX_TEP - 1;
+
+    workflow_6<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed1, &seed1A, &seed1B);
+}
+
+/// \brief remote mappings WF_7
+TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_7) {
+    remote_mapping_stepper_seed_t seed1 = {0};
+    remote_mapping_stepper_seed_t seed1A = {0};
+    remote_mapping_stepper_seed_t seed1B = {0};
+
+    REMOTE_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    seed1.num_vnics = PDS_MAX_VNIC;
+    seed1.num_teps = PDS_MAX_TEP - 1;
+
+    REMOTE_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id + 10, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + 100,
+                            g_base_vnic_mac + 200, g_tep_cidr_v4.c_str());
+    seed1A.num_vnics = PDS_MAX_VNIC;
+    seed1A.num_teps = PDS_MAX_TEP - 1;
+
+    REMOTE_MAPPING_SEED_INIT(&seed1B, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_VXLAN, g_encap_val + 200,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    seed1B.num_vnics = PDS_MAX_VNIC;
+    seed1B.num_teps = PDS_MAX_TEP - 1;
+
+    workflow_7<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed1, &seed1A, &seed1B);
+}
+
+/// \brief remote mappings WF_8
+TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_8) {
+    remote_mapping_stepper_seed_t seed1 = {0};
+    remote_mapping_stepper_seed_t seed1A = {0};
+    remote_mapping_stepper_seed_t seed1B = {0};
+
+    REMOTE_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    seed1.num_vnics = PDS_MAX_VNIC;
+    seed1.num_teps = PDS_MAX_TEP - 1;
+
+    REMOTE_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id + 10, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + 100,
+                            g_base_vnic_mac + 200, g_tep_cidr_v4.c_str());
+    seed1A.num_vnics = PDS_MAX_VNIC;
+    seed1A.num_teps = PDS_MAX_TEP - 1;
+
+    REMOTE_MAPPING_SEED_INIT(&seed1B, g_vpc_id, g_subnet_id + 20, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_VXLAN, g_encap_val + 20,
+                            g_base_vnic_mac + 20, g_tep_cidr_v4.c_str());
+    seed1B.num_vnics = PDS_MAX_VNIC;
+    seed1B.num_teps = PDS_MAX_TEP - 1;
+
+    workflow_8<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed1, &seed1A, &seed1B);
+}
+
+/// \brief remote mappings WF_9
+TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_9) {
+    remote_mapping_stepper_seed_t seed1 = {0};
+    remote_mapping_stepper_seed_t seed1A = {0};
+
+    REMOTE_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    seed1.num_vnics = PDS_MAX_VNIC;
+    seed1.num_teps = PDS_MAX_TEP - 1;
+
+    REMOTE_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id + 10, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + 100,
+                            g_base_vnic_mac + 1000, g_tep_cidr_v4.c_str());
+    seed1A.num_vnics = PDS_MAX_VNIC;
+    seed1A.num_teps = PDS_MAX_TEP - 1;
+
+    workflow_9<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed1, &seed1A);
+}
+
+/// \brief remote mappings WF_10
+TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_10) {
+    uint32_t num_vnics_per_set = PDS_MAX_VNIC;
+    uint32_t num_teps_per_set = 256;
+    uint32_t stepper = num_teps_per_set * num_vnics_per_set;
+    ip_prefix_t vip_pfx;
+    ip_prefix_t tip_pfx;
+    remote_mapping_stepper_seed_t s1 = {0};
+    remote_mapping_stepper_seed_t s2 = {0};
+    remote_mapping_stepper_seed_t s2A = {0};
+    remote_mapping_stepper_seed_t s3 = {0};
+    remote_mapping_stepper_seed_t s3A = {0};
+    remote_mapping_stepper_seed_t s4 = {0};
+
+    REMOTE_MAPPING_SEED_INIT(&s1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    s1.num_vnics = num_vnics_per_set;
+    s1.num_teps = num_teps_per_set;
+
+    str2ipv4pfx((char *)g_vnic_cidr_v4.c_str(), &vip_pfx);
+    step_up_ip_next(&vip_pfx, num_teps_per_set);
+    str2ipv4pfx((char *)g_tep_cidr_v4.c_str(), &tip_pfx);
+    step_up_ip_next(&tip_pfx, num_teps_per_set);
+    REMOTE_MAPPING_SEED_INIT(&s2, g_vpc_id + num_teps_per_set,
+                             g_subnet_id + num_teps_per_set,
+                             ippfx2str(&vip_pfx),
+                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + stepper,
+                             g_base_vnic_mac + stepper, ippfx2str(&tip_pfx));
+    s2.num_vnics = num_vnics_per_set;
+    s2.num_teps = num_teps_per_set;
+
+    REMOTE_MAPPING_SEED_INIT(&s2A, g_vpc_id + num_teps_per_set,
+                             g_subnet_id + num_teps_per_set,
+                             ippfx2str(&vip_pfx),
+                             PDS_ENCAP_TYPE_VXLAN, g_encap_val + 100,
+                             g_base_vnic_mac + 100, ippfx2str(&tip_pfx));
+    s2A.num_vnics = num_vnics_per_set;
+    s2A.num_teps = num_teps_per_set;
+
+    step_up_ip_next(&vip_pfx, num_teps_per_set);
+    step_up_ip_next(&tip_pfx, num_teps_per_set);
+    REMOTE_MAPPING_SEED_INIT(&s3, g_vpc_id + (num_teps_per_set * 2),
+                             g_subnet_id + (num_teps_per_set * 2),
+                             ippfx2str(&vip_pfx),
+                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + (stepper * 2),
+                             g_base_vnic_mac + (stepper * 2), ippfx2str(&tip_pfx));
+    s3.num_vnics = num_vnics_per_set;
+    s3.num_teps = num_teps_per_set - 1;
+
+    REMOTE_MAPPING_SEED_INIT(&s3A, g_vpc_id + (num_teps_per_set * 2),
+                             g_subnet_id + (num_teps_per_set * 2),
+                             ippfx2str(&vip_pfx),
+                             PDS_ENCAP_TYPE_VXLAN, g_encap_val + stepper,
+                             g_base_vnic_mac + stepper, ippfx2str(&tip_pfx));
+    s3A.num_vnics = num_vnics_per_set;
+    s3A.num_teps = num_teps_per_set - 1;
+
+    step_up_ip_next(&vip_pfx, num_teps_per_set);
+    step_up_ip_next(&tip_pfx, num_teps_per_set);
+    REMOTE_MAPPING_SEED_INIT(&s4, g_vpc_id + (num_teps_per_set * 3),
+                             g_subnet_id + (num_teps_per_set * 3),
+                             ippfx2str(&vip_pfx),
+                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + (stepper * 3),
+                             g_base_vnic_mac + (stepper * 3), ippfx2str(&tip_pfx));
+    s4.num_vnics = num_vnics_per_set;
+    s4.num_teps = num_teps_per_set - 2; // total = 256 + 256 + 256 + 254 = 1022
+
+    workflow_10<remote_mapping_util, remote_mapping_stepper_seed_t>(&s1, &s2, &s2A,
+                                                                    &s3, &s3A, &s4);
+}
+
+/// \brief remote mappings WF_N_1
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_1) {
-    uint32_t num_vnics = PDS_MAX_VNIC;
-    uint32_t num_teps = 2;
-    remote_mapping_stepper_seed_t seed;
-    pds_batch_params_t batch_params = {0};
+    remote_mapping_stepper_seed_t seed = {0};
 
-    remote_mapping_stepper_seed_init(
-        &seed, api_test::g_encap_val, api_test::g_base_vnic_mac,
-        api_test::g_vnic_cidr_v4, api_test::g_tep_cidr_v4);
-    // trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics, num_teps, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics, num_teps, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
-
-    // ASSERT_TRUE(remote_mapping_util::many_read(num_vnics, num_teps,
-    // api_test::g_vpc_id,
-    //                                          api_test::g_subnet_id, &seed) ==
-    //                                          sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics, num_teps,
-    // api_test::g_vpc_id,
-    //                                            &seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    REMOTE_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    seed.num_vnics = PDS_MAX_VNIC;
+    seed.num_teps = PDS_MAX_TEP - 1;
+    workflow_neg_1<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed);
 }
 
-/// \brief Create more than maximum number of mappings supported
-/// [ Create SetMax+1] - Read
+/// \brief remote mappings WF_N_2
 TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_2) {
-    uint32_t num_vnics = PDS_MAX_VNIC;
-    uint32_t num_teps = PDS_MAX_TEP;
-    remote_mapping_stepper_seed_t seed;
-    pds_batch_params_t batch_params = {0};
+    remote_mapping_stepper_seed_t seed = {0};
 
-    remote_mapping_stepper_seed_init(
-        &seed, api_test::g_encap_val, api_test::g_base_vnic_mac,
-        api_test::g_vnic_cidr_v4, api_test::g_tep_cidr_v4);
-    // trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics, num_teps, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
-
-    // ASSERT_TRUE(remote_mapping_util::many_read(num_vnics, num_teps,
-    // api_test::g_vpc_id,
-    //                                          api_test::g_subnet_id, &seed,
-    //                                          sdk::SDK_RET_ENTRY_NOT_FOUND) ==
-    //                                          sdk::SDK_RET_OK);
+    REMOTE_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    seed.num_vnics = PDS_MAX_VNIC + 1;
+    seed.num_teps = PDS_MAX_TEP - 1;
+    workflow_neg_2<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed);
 }
 
-/// \brief Read and delete of a non-existing mappings should return entry not
-/// found [Delete NonEx] - Read NonEx
+/// \brief remote mappings WF_N_3
 TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_3) {
-    remote_mapping_stepper_seed_t seed;
-    pds_batch_params_t batch_params = {0};
-    pds_remote_mapping_info_t info = {0};
+    remote_mapping_stepper_seed_t seed = {0};
 
-    remote_mapping_stepper_seed_init(
-        &seed, api_test::g_encap_val, api_test::g_base_vnic_mac,
-        api_test::g_vnic_cidr_v4, api_test::g_tep_cidr_v4);
-
-    remote_mapping_util remote_obj(1, 1, seed.vnic_ip_stepper,
-                                   seed.tep_ip_stepper, seed.vnic_mac_stepper);
-    // trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_obj.del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
-
-    // ASSERT_TRUE(remote_obj.read(&info, false) ==
-    // sdk::SDK_RET_ENTRY_NOT_FOUND);
+    REMOTE_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    seed.num_vnics = 1;
+    seed.num_teps = 1;
+    workflow_neg_3<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed);
 }
 
-/// \brief Invalid batch shouldn't affect entries of previous batch
-/// [ Create Set1 ] - [Delete Set1, Set2 ] - Read
+/// \brief remote mappings WF_N_4
 TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_4) {
-    uint32_t num_vnics = 10;
-    uint32_t num_teps = 1;
-    remote_mapping_stepper_seed_t seed;
-    pds_batch_params_t batch_params = {0};
-    pds_remote_mapping_info_t info = {0};
+    uint32_t num_vnics_per_set = PDS_MAX_VNIC;
+    uint32_t num_teps_per_set = 511;
+    uint32_t stepper = num_teps_per_set * num_vnics_per_set;
+    ip_prefix_t vip_pfx;
+    ip_prefix_t tip_pfx;
+    remote_mapping_stepper_seed_t s1 = {0};
+    remote_mapping_stepper_seed_t s2 = {0};
 
-    remote_mapping_stepper_seed_init(
-        &seed, api_test::g_encap_val, api_test::g_base_vnic_mac,
-        api_test::g_vnic_cidr_v4, api_test::g_tep_cidr_v4);
+    REMOTE_MAPPING_SEED_INIT(&s1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    s1.num_vnics = num_vnics_per_set;
+    s1.num_teps = num_teps_per_set;
 
-    // trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics, num_teps, api_test::g_vpc_id,
-                    api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    str2ipv4pfx((char *)g_vnic_cidr_v4.c_str(), &vip_pfx);
+    step_up_ip_next(&vip_pfx, num_teps_per_set);
+    str2ipv4pfx((char *)g_tep_cidr_v4.c_str(), &tip_pfx);
+    step_up_ip_next(&tip_pfx, num_teps_per_set);
+    REMOTE_MAPPING_SEED_INIT(&s2, g_vpc_id + num_teps_per_set,
+                             g_subnet_id + num_teps_per_set,
+                             ippfx2str(&vip_pfx),
+                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + stepper,
+                             g_base_vnic_mac + stepper, ippfx2str(&tip_pfx));
+    s2.num_vnics = num_vnics_per_set;
+    s2.num_teps = num_teps_per_set;
 
-    remote_mapping_util remote_obj(1, 1, seed.vnic_ip_stepper,
-                                   seed.tep_ip_stepper, seed.vnic_mac_stepper);
+    workflow_neg_4<remote_mapping_util, remote_mapping_stepper_seed_t>(&s1, &s2);
+}
 
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics, num_teps,
-    // api_test::g_vpc_id,
-    //                                            &seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(remote_obj.del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+/// \brief remote mappings WF_N_5
+TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_5) {
+    remote_mapping_stepper_seed_t seed1 = {0};
+    remote_mapping_stepper_seed_t seed1A = {0};
 
-    // ASSERT_TRUE(remote_mapping_util::many_read(num_vnics, num_teps,
-    // api_test::g_vpc_id,
-    //                                          api_test::g_subnet_id, &seed) ==
-    //                                          sdk::SDK_RET_OK);
+    REMOTE_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    seed1.num_vnics = PDS_MAX_VNIC;
+    seed1.num_teps = PDS_MAX_TEP - 1;
 
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    // ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics, num_teps,
-    // api_test::g_vpc_id,
-    //                                            &seed) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    REMOTE_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_VXLAN, g_encap_val + 100,
+                            g_base_vnic_mac + 200, g_tep_cidr_v4.c_str());
+    seed1A.num_vnics = PDS_MAX_VNIC;
+    seed1A.num_teps = PDS_MAX_TEP - 1;
+
+    workflow_neg_5<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed1, &seed1A);
+}
+
+/// \brief remote mappings WF_N_6
+TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_6) {
+    remote_mapping_stepper_seed_t seed1 = {0};
+    remote_mapping_stepper_seed_t seed1A = {0};
+
+    REMOTE_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    seed1.num_vnics = PDS_MAX_VNIC;
+    seed1.num_teps = PDS_MAX_TEP - 1;
+
+    REMOTE_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_VXLAN, g_encap_val + 100,
+                            g_base_vnic_mac + 200, g_tep_cidr_v4.c_str());
+    seed1A.num_vnics = PDS_MAX_VNIC;
+    seed1A.num_teps = PDS_MAX_TEP;
+
+    workflow_neg_6<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed1, &seed1A);
+}
+
+/// \brief remote mappings WF_N_7
+TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_7) {
+    uint32_t num_vnics_per_set = PDS_MAX_VNIC;
+    uint32_t num_teps_per_set = 511;
+    uint32_t stepper = num_teps_per_set * num_vnics_per_set;
+    ip_prefix_t vip_pfx;
+    ip_prefix_t tip_pfx;
+    remote_mapping_stepper_seed_t seed1 = {0};
+    remote_mapping_stepper_seed_t seed1A = {0};
+    remote_mapping_stepper_seed_t seed2 = {0};
+
+    REMOTE_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    seed1.num_vnics = num_vnics_per_set;
+    seed1.num_teps = num_teps_per_set;
+
+    REMOTE_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_VXLAN, g_encap_val + 100,
+                            g_base_vnic_mac + 200, g_tep_cidr_v4.c_str());
+    seed1A.num_vnics = num_vnics_per_set;
+    seed1A.num_teps = num_teps_per_set;
+
+    str2ipv4pfx((char *)g_vnic_cidr_v4.c_str(), &vip_pfx);
+    step_up_ip_next(&vip_pfx, num_teps_per_set);
+    str2ipv4pfx((char *)g_tep_cidr_v4.c_str(), &tip_pfx);
+    step_up_ip_next(&tip_pfx, num_teps_per_set);
+    REMOTE_MAPPING_SEED_INIT(&seed2, g_vpc_id + num_teps_per_set,
+                             g_subnet_id + num_teps_per_set,
+                             ippfx2str(&vip_pfx),
+                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + stepper,
+                             g_base_vnic_mac + stepper, ippfx2str(&tip_pfx));
+    seed2.num_vnics = num_vnics_per_set;
+    seed2.num_teps = num_teps_per_set;
+
+    workflow_neg_7<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed1, &seed1A, &seed2);
+}
+
+/// \brief remote mappings WF_N_8
+TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_8) {
+    uint32_t num_vnics_per_set = PDS_MAX_VNIC;
+    uint32_t num_teps_per_set = 511;
+    uint32_t stepper = num_teps_per_set * num_vnics_per_set;
+    ip_prefix_t vip_pfx;
+    ip_prefix_t tip_pfx;
+    remote_mapping_stepper_seed_t seed1 = {0};
+    remote_mapping_stepper_seed_t seed2 = {0};
+
+    REMOTE_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
+                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
+                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+    seed1.num_vnics = num_vnics_per_set;
+    seed1.num_teps = num_teps_per_set;
+
+    str2ipv4pfx((char *)g_vnic_cidr_v4.c_str(), &vip_pfx);
+    step_up_ip_next(&vip_pfx, num_teps_per_set);
+    str2ipv4pfx((char *)g_tep_cidr_v4.c_str(), &tip_pfx);
+    step_up_ip_next(&tip_pfx, num_teps_per_set);
+    REMOTE_MAPPING_SEED_INIT(&seed2, g_vpc_id + num_teps_per_set,
+                             g_subnet_id + num_teps_per_set,
+                             ippfx2str(&vip_pfx),
+                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + stepper,
+                             g_base_vnic_mac + stepper, ippfx2str(&tip_pfx));
+    seed2.num_vnics = num_vnics_per_set;
+    seed2.num_teps = num_teps_per_set;
+
+    workflow_neg_8<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed1, &seed2);
 }
 
 /// --------------------------END REMOTE MAPPINGS -----------------------

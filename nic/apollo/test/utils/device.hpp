@@ -124,7 +124,7 @@ public:
     /// \brief Indicates whether device is stateful
     ///
     /// \returns FALSE for device which is stateless
-    static bool is_stateful(void) { return FALSE; }
+    static bool is_stateful(void) { return true; }
 
 private:
     void __init();

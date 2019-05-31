@@ -16,7 +16,9 @@
 
 namespace api_test {
 
-remote_mapping_util::remote_mapping_util() {}
+remote_mapping_util::remote_mapping_util() {
+    __init();
+}
 
 remote_mapping_util::remote_mapping_util(pds_vpc_id_t vpc_id,
                                          pds_subnet_id_t sub_id,
@@ -25,9 +27,11 @@ remote_mapping_util::remote_mapping_util(pds_vpc_id_t vpc_id,
                                          pds_encap_type_t encap_type,
                                          uint32_t encap_val) {
     mac_addr_t mac;
+
+    __init();
     this->vpc_id = vpc_id;
-    this->vnic_ip = vnic_ip;
     this->sub_id = sub_id;
+    this->vnic_ip = vnic_ip;
     this->tep_ip = tep_ip;
     this->encap_type = encap_type;
     switch (encap_type) {
@@ -77,13 +81,40 @@ remote_mapping_util::create(void) const {
 }
 
 sdk::sdk_ret_t
+remote_mapping_util::update(void) const {
+    pds_remote_mapping_spec_t remote_spec = {0};
+    struct in_addr ipaddr;
+
+    remote_spec.key.vpc.id = this->vpc_id;
+    extract_ip_addr(this->vnic_ip.c_str(), &remote_spec.key.ip_addr);
+    remote_spec.subnet.id = this->sub_id;
+
+    switch (this->encap_type) {
+    case PDS_ENCAP_TYPE_MPLSoUDP:
+        remote_spec.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+        remote_spec.fabric_encap.val.mpls_tag = this->mpls_tag;
+        break;
+    case PDS_ENCAP_TYPE_VXLAN:
+        remote_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+        remote_spec.fabric_encap.val.vnid = this->vxlan_id;
+        break;
+    default:
+        break;
+    }
+
+    inet_aton(this->tep_ip.c_str(), &ipaddr);
+    remote_spec.tep.ip_addr.af = IP_AF_IPV4;
+    remote_spec.tep.ip_addr.addr.v4_addr = ntohl(ipaddr.s_addr);
+    mac_str_to_addr((char *)this->vnic_mac.c_str(), remote_spec.vnic_mac);
+
+    return pds_remote_mapping_update(&remote_spec);
+}
+
+sdk::sdk_ret_t
 remote_mapping_util::read(pds_remote_mapping_info_t *info) const {
-    // uint64_t mac1, mac2;
     sdk_ret_t rv = sdk::SDK_RET_OK;
     pds_mapping_key_t key = {0};
-    // mac_addr_t mac;
 
-    // mac_str_to_addr((char *)this->vnic_mac.c_str(), mac);
     key.vpc.id = this->vpc_id;
     extract_ip_addr(this->vnic_ip.c_str(), &key.ip_addr);
     memset(info, 0, sizeof(*info));
@@ -101,14 +132,10 @@ remote_mapping_util::read(pds_remote_mapping_info_t *info) const {
               << " SW: vpc_id: " << this->vnic_ip.c_str() << "\n";
     std::cout << "HW: tep ip: " << ipaddr2str(&info->spec.tep.ip_addr)
               << " SW: tep ip: " << this->tep_ip.c_str() << "\n";
-    std::cout << "HW: mpls_tag: " << info->spec.fabric_encap.type
-              << " SW: mpls_tag: " << this->mpls_tag << "\n";
+    std::cout << "HW: encap_type: " << info->spec.fabric_encap.type
+              << " HW: encap_val: " << info->spec.fabric_encap.val.value << "\n";
 
-    // mac1 = MAC_TO_UINT64(mac);
-    // mac2 = MAC_TO_UINT64(info->spec.vnic_mac);
     SDK_ASSERT(this->vpc_id == info->spec.key.vpc.id);
-    // SDK_ASSERT(this->sub_id == info->spec.subnet.id); // not stored in hw
-    // table
     SDK_ASSERT(strcmp(this->vnic_ip.c_str(),
                       ipaddr2str(&info->spec.key.ip_addr)) == 0);
     if (this->encap_type == PDS_ENCAP_TYPE_MPLSoUDP) {
@@ -118,7 +145,6 @@ remote_mapping_util::read(pds_remote_mapping_info_t *info) const {
         SDK_ASSERT(PDS_ENCAP_TYPE_VXLAN == info->spec.fabric_encap.type);
         SDK_ASSERT(this->vxlan_id == info->spec.fabric_encap.val.vnid);
     }
-    // SDK_ASSERT((mac1 == mac2) == 0); // not stored in hw table
     SDK_ASSERT(strcmp(this->tep_ip.c_str(),
                       ipaddr2str(&info->spec.tep.ip_addr)) == 0);
 
@@ -141,12 +167,10 @@ remote_mapping_util::del(void) const {
 /// eg. tep ip = 10.10.0.1,
 /// then vnic_ip = 10.10.0.2
 static inline sdk::sdk_ret_t
-mapping_util_object_stepper (
-    utils_op_t op, uint32_t num_vnics, pds_vpc_id_t vpc_id,
-    pds_subnet_id_t sub_id, uint32_t num_teps,
-    remote_mapping_stepper_seed_t *seed,
-    pds_encap_type_t encap_type = PDS_ENCAP_TYPE_MPLSoUDP,
-    sdk::sdk_ret_t expected_result = sdk::SDK_RET_OK) {
+mapping_util_object_stepper (utils_op_t op, remote_mapping_stepper_seed_t *seed,
+                             sdk::sdk_ret_t expected_result = sdk::SDK_RET_OK) {
+    uint32_t curr_vpc_id;
+    uint32_t curr_sub_id;
     uint32_t curr_encap_val;
     uint64_t curr_vnic_mac;
     sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
@@ -183,25 +207,24 @@ mapping_util_object_stepper (
         tep_ip = ipv4addr2str(tep_ipaddr.addr.v4_addr);
     }
 
+    curr_vpc_id = seed->vpc_id;
+    curr_sub_id = seed->subnet_id;
     curr_vnic_mac = seed->vnic_mac_stepper;
     curr_encap_val = seed->encap_val_stepper;
 
-    SDK_ASSERT(num_vnics * num_teps <= (1 << 20));
-    for (uint32_t tep_indx = 0; tep_indx < num_teps; tep_indx++) {
-        for (uint32_t vnic_indx = 1; vnic_indx <= num_vnics; vnic_indx++) {
-            remote_mapping_util mapping_obj(vpc_id, sub_id, vnic_ip, tep_ip,
-                                            curr_vnic_mac++, encap_type,
+    SDK_ASSERT(seed->num_vnics * seed->num_teps <= (1 << 20));
+    for (uint32_t tep_indx = 0; tep_indx < seed->num_teps; tep_indx++) {
+        for (uint32_t vnic_indx = 1; vnic_indx <= seed->num_vnics; vnic_indx++) {
+            remote_mapping_util mapping_obj(curr_vpc_id, curr_sub_id, vnic_ip, tep_ip,
+                                            curr_vnic_mac++, seed->encap_type,
                                             curr_encap_val++);
 
-            std::cout << "vpc_id: " << vpc_id << " and vnic_indx:" << vnic_indx
-                      << "\n ";
-            std::cout << "vnic_ip:" << vnic_ip << " and tep_ip: " << tep_ip
-                      << "\n";
-            // std::cout << "encap_val:" << curr_encap_val << "and " <<
-            // "vnic_mac:" << curr_vnic_mac << "\n";
             switch (op) {
             case OP_MANY_CREATE:
                 rv = mapping_obj.create();
+                break;
+            case OP_MANY_UPDATE:
+                rv = mapping_obj.update();
                 break;
             case OP_MANY_DELETE:
                 rv = mapping_obj.del();
@@ -215,6 +238,8 @@ mapping_util_object_stepper (
 
             if (rv != expected_result) {
                 return sdk::SDK_RET_ERR;
+            } else {
+                rv = sdk::SDK_RET_OK;
             }
 
             // Increment to next mapping i.e. next vnic ip
@@ -232,8 +257,8 @@ mapping_util_object_stepper (
             }
         }
 
-        vpc_id++;
-        sub_id++;
+        curr_vpc_id++;
+        curr_sub_id++;
         ip_prefix_ip_next(&ippfx, &ipaddr);
         if (ip_version(vnic_ip.c_str()) == IP_AF_IPV6) {
             vnic_ip = ipv6addr2str(ipaddr.addr.v6_addr);
@@ -254,31 +279,54 @@ mapping_util_object_stepper (
 }
 
 sdk::sdk_ret_t
-remote_mapping_util::many_create(uint16_t num_vnics, uint16_t num_teps,
-                                 pds_vpc_id_t vpc_id, pds_subnet_id_t sub_id,
-                                 remote_mapping_stepper_seed_t *seed,
-                                 pds_encap_type_t encap_type) {
-    return (mapping_util_object_stepper(OP_MANY_CREATE, num_vnics, vpc_id,
-                                        sub_id, num_teps, seed, encap_type));
+remote_mapping_util::many_create(remote_mapping_stepper_seed_t *seed) {
+    return (mapping_util_object_stepper(OP_MANY_CREATE, seed));
 }
 
 sdk::sdk_ret_t
-remote_mapping_util::many_delete(uint16_t num_vnics, uint16_t num_teps,
-                                 pds_vpc_id_t vpc_id,
-                                 remote_mapping_stepper_seed_t *seed) {
-    return (mapping_util_object_stepper(OP_MANY_DELETE, num_vnics, vpc_id, 0, 0,
-                                        seed));
+remote_mapping_util::many_update(remote_mapping_stepper_seed_t *seed) {
+    return (mapping_util_object_stepper(OP_MANY_UPDATE, seed));
 }
 
 sdk::sdk_ret_t
-remote_mapping_util::many_read(uint16_t num_vnics, uint16_t num_teps,
-                               pds_vpc_id_t vpc_id, pds_subnet_id_t sub_id,
-                               remote_mapping_stepper_seed_t *seed,
-                               pds_encap_type_t encap_type,
+remote_mapping_util::many_delete(remote_mapping_stepper_seed_t *seed) {
+    return (mapping_util_object_stepper(OP_MANY_DELETE, seed));
+}
+
+sdk::sdk_ret_t
+remote_mapping_util::many_read(remote_mapping_stepper_seed_t *seed,
                                sdk::sdk_ret_t expected_result) {
-    return (mapping_util_object_stepper(OP_MANY_READ, num_vnics, vpc_id, sub_id,
-                                        num_teps, seed, encap_type,
+    return (mapping_util_object_stepper(OP_MANY_READ, seed,
                                         expected_result));
+}
+
+sdk::sdk_ret_t
+remote_mapping_util::remote_mapping_stepper_seed_init(remote_mapping_stepper_seed_t *seed,
+                                                      uint32_t vpc_id, uint32_t subnet_id,
+                                                      std::string base_vnic_ip, pds_encap_type_t encap_type,
+                                                      uint32_t base_encap_val, uint64_t base_mac_64,
+                                                      std::string tep_ip_cidr) {
+
+    seed->vpc_id = vpc_id;
+    seed->subnet_id = subnet_id;
+    seed->vnic_ip_stepper = base_vnic_ip;
+    seed->tep_ip_stepper = tep_ip_cidr;
+    seed->encap_type = encap_type;
+    seed->encap_val_stepper = base_encap_val;
+    seed->vnic_mac_stepper = base_mac_64;
+    return sdk::SDK_RET_OK;
+}
+
+void
+remote_mapping_util::__init(void)
+{
+    this->vpc_id = 0;
+    this->sub_id = 0;
+    this->vnic_ip = "0";
+    this->tep_ip = "0";
+    this->encap_type = PDS_ENCAP_TYPE_MPLSoUDP;
+    this->mpls_tag = 0;
+    this->vnic_mac = "0";
 }
 
 }    // namespace api_test

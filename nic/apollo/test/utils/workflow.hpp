@@ -12,6 +12,8 @@
 #ifndef __TEST_UTILS_WORKFLOW_HPP__
 #define __TEST_UTILS_WORKFLOW_HPP__
 
+#include "nic/apollo/test/utils/batch.hpp"
+
 namespace api_test {
 
 #define MANY_CREATE(seed)                                           \
@@ -204,7 +206,7 @@ inline void workflow_8(seed_T *seed1, seed_T *seed1A, seed_T *seed1B) {
 
 // WF_9: [ Create SetMax ] - Read - [ Update SetMax - Delete SetMax ] - Read
 template <typename class_T, typename seed_T>
-inline void workflow_9(seed_T *seed1, seed_T *seed2) {
+inline void workflow_9(seed_T *seed1, seed_T *seed1A) {
     // trigger
     batch_start();
     MANY_CREATE(seed1);
@@ -213,11 +215,11 @@ inline void workflow_9(seed_T *seed1, seed_T *seed2) {
     MANY_READ(seed1);
 
     batch_start();
-    MANY_UPDATE(seed2);
-    MANY_DELETE(seed2);
+    MANY_UPDATE(seed1A);
+    MANY_DELETE(seed1A);
     batch_commit();
 
-    MANY_READ_FAIL(seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed1A, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 // WF_10: [ Create Set1, Set2, Set3 - Delete Set1 - Update Set2 ] - Read -

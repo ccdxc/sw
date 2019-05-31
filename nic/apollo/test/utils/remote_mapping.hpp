@@ -18,18 +18,48 @@
 
 namespace api_test {
 
+#define REMOTE_MAPPING_CREATE(obj)                                              \
+    ASSERT_TRUE(obj.create() == sdk::SDK_RET_OK)
+
+#define REMOTE_MAPPING_DELETE(obj)                                              \
+    ASSERT_TRUE(obj.del() == sdk::SDK_RET_OK)
+
+#define REMOTE_MAPPING_MANY_CREATE(seed)                                        \
+    ASSERT_TRUE(remote_mapping_util::many_create(seed) == sdk::SDK_RET_OK)
+
+#define REMOTE_MAPPING_MANY_READ(seed, expected_res)                            \
+    ASSERT_TRUE(remote_mapping_util::many_read(                                 \
+        seed, expected_res) == sdk::SDK_RET_OK)
+
+#define REMOTE_MAPPING_MANY_UPDATE(seed)                                        \
+    ASSERT_TRUE(remote_mapping_util::many_update(seed) == sdk::SDK_RET_OK)
+
+#define REMOTE_MAPPING_MANY_DELETE(seed)                                        \
+    ASSERT_TRUE(remote_mapping_util::many_delete(seed) == sdk::SDK_RET_OK)
+
+#define REMOTE_MAPPING_SEED_INIT remote_mapping_util::remote_mapping_stepper_seed_init
+
 typedef struct remote_mapping_stepper_seed_s {
-    uint32_t encap_val_stepper;
-    uint64_t vnic_mac_stepper;
+    uint32_t vpc_id;
+    uint32_t subnet_id;
     std::string vnic_ip_stepper;
+    uint64_t vnic_mac_stepper;
     std::string tep_ip_stepper;
+    pds_encap_type_t encap_type;
+    uint32_t encap_val_stepper;
+
+    // Used to create total remote mappings
+    // part of workflows creation
+    uint32_t num_vnics;
+    uint32_t num_teps;
+
 } remote_mapping_stepper_seed_t;
 
 class remote_mapping_util {
 public:
-    pds_vpc_id_t vpc_id;
+    uint32_t vpc_id;
+    uint32_t sub_id;
     std::string vnic_ip;
-    pds_subnet_id_t sub_id;
     std::string tep_ip;
     std::string vnic_mac;
     pds_encap_type_t encap_type;
@@ -40,7 +70,7 @@ public:
 
     remote_mapping_util();
 
-    remote_mapping_util(pds_vpc_id_t vpc_id, pds_subnet_id_t sub_id,
+    remote_mapping_util(uint32_t vpc_id, uint32_t sub_id,
                         std::string vnic_ip, std::string tep_ip,
                         uint64_t vnic_mac,
                         pds_encap_type_t encap_type = PDS_ENCAP_TYPE_MPLSoUDP,
@@ -58,7 +88,7 @@ public:
 
     /// \brief Update remote IP mapping
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update(pds_remote_mapping_spec_t *spec) const;
+    sdk_ret_t update(void) const;
 
     /// \brief Delete remote ip mapping
     ///
@@ -68,27 +98,41 @@ public:
     /// \brief Create many remote IP mapping for the given <vpc, subnet>
     /// max num_mappings = num_vnics * num_teps
     /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t
-    many_create(uint16_t num_vnics, uint16_t num_teps, pds_vpc_id_t vpc_id,
-                pds_subnet_id_t sub_id, remote_mapping_stepper_seed_t *seed,
-                pds_encap_type_t encap_type = PDS_ENCAP_TYPE_MPLSoUDP);
+    static sdk_ret_t many_create(remote_mapping_stepper_seed_t *seed);
+
+    /// \brief Update many remote IP mapping for the given <vpc, subnet>
+    /// max num_mappings = num_vnics * num_teps
+    /// \returns #SDK_RET_OK on success, failure status code on error
+    static sdk_ret_t many_update(remote_mapping_stepper_seed_t *seed);
 
     /// \brief Delete many remote IP mapping for the given VNIC
     /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_delete(uint16_t num_vnics, uint16_t num_teps,
-                                 pds_vpc_id_t vpc_id,
-                                 remote_mapping_stepper_seed_t *seed);
+    static sdk_ret_t many_delete(remote_mapping_stepper_seed_t *seed);
 
     /// \brief Read many remote IP mapping for the given <vpc, subnet>
     /// max num_mappings = num_vnics * num_teps
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t
-    many_read(uint16_t num_vnics, uint16_t num_teps, pds_vpc_id_t vpc_id,
-              pds_subnet_id_t sub_id, remote_mapping_stepper_seed_t *seed,
-              pds_encap_type_t encap_type = PDS_ENCAP_TYPE_MPLSoUDP,
+    many_read(remote_mapping_stepper_seed_t *seed,
               sdk::sdk_ret_t expected_result = sdk::SDK_RET_OK);
+
+    /// \brief Initialize the seed for remote mappings
+    /// \param[out] seed remote mapping seed
+    /// \returns #SDK_RET_OK on success, failure status code on error
+    static sdk_ret_t remote_mapping_stepper_seed_init(remote_mapping_stepper_seed_t *seed,
+                                       uint32_t vpc_id, uint32_t subnet_id,
+                                       std::string base_vnic_ip, pds_encap_type_t encap_type,
+                                       uint32_t base_encap_val, uint64_t base_mac_64,
+                                       std::string tep_ip_cidr);
+
+    /// \brief Indicates whether mapping is stateful
+    /// \returns TRUE for mapping which is stateful
+    static bool is_stateful(void) { return false; }
+
+private:
+    void __init();
 };
 
 }    // namespace api_test
 
-#endif    // __TEST_UTILS_LOCAL_MAPPING_HPP__
+#endif    // __TEST_UTILS_REMOTE_MAPPING_HPP__
