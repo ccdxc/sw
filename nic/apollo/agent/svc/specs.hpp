@@ -25,6 +25,7 @@
 #include "nic/apollo/agent/svc/tunnel.hpp"
 #include "nic/apollo/agent/svc/service.hpp"
 #include "nic/apollo/agent/svc/port.hpp"
+#include "nic/apollo/agent/svc/policy.hpp"
 #include "gen/proto/types.pb.h"
 
 //----------------------------------------------------------------------------
@@ -357,6 +358,53 @@ proto_port_spec_to_port_args (port_args_t *port_args,
     port_args->port_speed = proto_port_speed_to_sdk_port_speed(spec.speed());
     port_args->auto_neg_enable = spec.autonegen();
     port_args->fec_type = proto_port_fec_type_to_sdk_fec_type(spec.fectype());
+}
+
+// Populate proto buf spec from policy API spec
+inline void
+policy_api_spec_to_proto_spec (const pds_policy_spec_t *api_spec,
+                               pds::SecurityPolicySpec *proto_spec)
+{
+    if (!api_spec || !proto_spec) {
+        return;
+    }
+
+    proto_spec->set_id(api_spec->key.id);
+    if (api_spec->af == IP_AF_IPV4) {
+        proto_spec->set_addrfamily(types::IP_AF_INET);
+    } else if (api_spec->af == IP_AF_IPV6) {
+        proto_spec->set_addrfamily(types::IP_AF_INET6);
+    }
+    if (api_spec->direction == RULE_DIR_INGRESS) {
+        proto_spec->set_direction(types::RULE_DIR_INGRESS);
+    } else if (api_spec->direction == RULE_DIR_EGRESS) {
+        proto_spec->set_direction(types::RULE_DIR_EGRESS);
+    }
+
+    for (uint32_t i = 0; i < api_spec->num_rules; i++) {
+        pds::SecurityRule *proto_rule = proto_spec->add_rules();
+        rule_t *api_rule = &api_spec->rules[i];
+        proto_rule->set_priority(api_rule->priority);
+        if (api_rule->stateful) {
+            proto_rule->set_stateful(true);
+        }
+        if (api_rule->match.l3_match.ip_proto) {
+            proto_rule->mutable_match()->mutable_l3match()->set_protocol(
+                                            api_rule->match.l3_match.ip_proto);
+        }
+        ip_pfx_to_spec(
+            proto_rule->mutable_match()->mutable_l3match()->mutable_srcprefix(),
+            &api_rule->match.l3_match.src_ip_pfx);
+        ip_pfx_to_spec(
+            proto_rule->mutable_match()->mutable_l3match()->mutable_dstprefix(),
+            &api_rule->match.l3_match.dst_ip_pfx);
+        proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_srcportrange()->set_portlow(api_rule->match.l4_match.sport_range.port_lo);
+        proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_srcportrange()->set_porthigh(api_rule->match.l4_match.sport_range.port_hi);
+        proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_dstportrange()->set_portlow(api_rule->match.l4_match.dport_range.port_lo);
+        proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_dstportrange()->set_porthigh(api_rule->match.l4_match.dport_range.port_hi);
+    }
+
+    return;
 }
 
 #endif    // __AGENT_SVC_SPECS_HPP__

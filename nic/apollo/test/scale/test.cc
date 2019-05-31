@@ -1068,6 +1068,7 @@ create_device_cfg (ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip)
     return rv;
 }
 
+#define TESTAPP_POLICY_PRIORITY_STEP 4
 sdk_ret_t
 create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                         uint32_t num_rules, uint32_t ip_af, bool ingress)
@@ -1079,6 +1080,8 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
     uint32_t             num_sub_rules = 10;
     uint16_t             step = 4;
     bool                 done;
+    uint32_t             priority = 0;
+    uint32_t             priority_step = TESTAPP_POLICY_PRIORITY_STEP;
 
     policy.policy_type = POLICY_TYPE_FIREWALL;
     policy.af = ip_af;
@@ -1095,10 +1098,21 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
             memset(policy.rules, 0, num_rules * sizeof(rule_t));
             policy.key.id = policy_id++;
             done = false;
+            priority = 0;
+            priority_step = TESTAPP_POLICY_PRIORITY_STEP;
             for (uint32_t k = 0; k < num_pfx; k++) {
                 uint16_t dport_base = 1024;
                 for (uint32_t l = 0; l < num_sub_rules; l++) {
                     rule = &policy.rules[idx];
+                    if (priority_step == TESTAPP_POLICY_PRIORITY_STEP) {
+                        priority = idx + (priority_step - 1);
+                    }
+                    rule->priority = priority;
+                    priority--;
+                    priority_step--;
+                    if (priority_step == 0) {
+                        priority_step = TESTAPP_POLICY_PRIORITY_STEP;
+                    }
                     rule->action_data.fw_action.action =
                         SECURITY_RULE_ACTION_ALLOW;
                     rule->stateful = g_test_params.stateful;

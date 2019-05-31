@@ -158,49 +158,6 @@ populate_route_table_request (RouteTableRequest *req,
 }
 
 static void
-populate_policy_request (SecurityPolicyRequest *req, pds_policy_spec_t *policy)
-{
-    if (!policy || !req) {
-        return;
-    }
-
-    SecurityPolicySpec *spec = req->add_request();
-    spec->set_id(policy->key.id);
-    if (policy->af == IP_AF_IPV4) {
-        spec->set_addrfamily(types::IP_AF_INET);
-    } else if (policy->af == IP_AF_IPV6) {
-        spec->set_addrfamily(types::IP_AF_INET6);
-    }
-    if (policy->direction == RULE_DIR_INGRESS) {
-        spec->set_direction(types::RULE_DIR_INGRESS);
-    } else if (policy->direction == RULE_DIR_EGRESS) {
-        spec->set_direction(types::RULE_DIR_EGRESS);
-    }
-
-    for (uint32_t i = 0; i < policy->num_rules; i++) {
-        SecurityRule *rule = spec->add_rules();
-        if (policy->rules[i].stateful) {
-            rule->set_stateful(true);
-        }
-        if (policy->rules[i].match.l3_match.ip_proto) {
-            rule->mutable_match()->mutable_l3match()->set_protocol(policy->rules[i].match.l3_match.ip_proto);
-        }
-        ip_pfx_to_spec(
-            rule->mutable_match()->mutable_l3match()->mutable_srcprefix(),
-            &policy->rules[i].match.l3_match.src_ip_pfx);
-        ip_pfx_to_spec(
-            rule->mutable_match()->mutable_l3match()->mutable_dstprefix(),
-            &policy->rules[i].match.l3_match.dst_ip_pfx);
-        rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_srcportrange()->set_portlow(policy->rules[i].match.l4_match.sport_range.port_lo);
-        rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_srcportrange()->set_porthigh(policy->rules[i].match.l4_match.sport_range.port_hi);
-        rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_dstportrange()->set_portlow(policy->rules[i].match.l4_match.dport_range.port_lo);
-        rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_dstportrange()->set_porthigh(policy->rules[i].match.l4_match.dport_range.port_hi);
-    }
-
-    return;
-}
-
-static void
 populate_local_mapping_request (MappingRequest *req,
                                 pds_local_mapping_spec_t *local_spec)
 {

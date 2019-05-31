@@ -80,7 +80,10 @@ create_policy_grpc (pds_policy_spec_t *spec)
     SecurityPolicyResponse    response;
     Status                    ret_status;
 
-    populate_policy_request(&g_policy_req, spec);
+    if (spec != NULL) {
+        pds::SecurityPolicySpec *proto_spec = g_policy_req.add_request();
+        policy_api_spec_to_proto_spec(spec, proto_spec);
+    }
     if ((g_policy_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_policy_stub_->SecurityPolicyCreate(&context,
                                                           g_policy_req,
@@ -94,6 +97,7 @@ create_policy_grpc (pds_policy_spec_t *spec)
 
     return SDK_RET_OK;
 }
+
 sdk_ret_t
 create_local_mapping_grpc (pds_local_mapping_spec_t *spec)
 {

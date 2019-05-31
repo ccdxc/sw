@@ -83,6 +83,12 @@ MeterSvcImpl::MeterCreate(ServerContext *context,
         }
         ret = core::meter_create(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+
+        // free the rules memory
+        if (api_spec->rules != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_ID_METER, api_spec->rules);
+            api_spec->rules = NULL;
+        }
         if (ret != sdk::SDK_RET_OK) {
             break;
         }
@@ -118,6 +124,12 @@ MeterSvcImpl::MeterUpdate(ServerContext *context,
         }
         ret = core::meter_update(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+
+        // free the rules memory
+        if (api_spec->rules != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_ID_METER, api_spec->rules);
+            api_spec->rules = NULL;
+        }
         if (ret != sdk::SDK_RET_OK) {
             break;
         }

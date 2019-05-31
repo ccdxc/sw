@@ -72,6 +72,12 @@ TagSvcImpl::TagCreate(ServerContext *context,
         }
         ret = core::tag_create(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+
+        // free the rules memory
+        if (api_spec->rules != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_ID_TAG, api_spec->rules);
+            api_spec->rules = NULL;
+        }
         if (ret != sdk::SDK_RET_OK) {
             break;
         }
@@ -107,6 +113,12 @@ TagSvcImpl::TagUpdate(ServerContext *context,
         }
         ret = core::tag_update(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+
+        // free the rules memory
+        if (api_spec->rules != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_ID_TAG, api_spec->rules);
+            api_spec->rules = NULL;
+        }
         if (ret != sdk::SDK_RET_OK) {
             break;
         }
