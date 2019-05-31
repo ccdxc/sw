@@ -155,7 +155,7 @@
         "timeout": 30.0
     },
     {
-        "name": "pen-techsupport",
+        "name": "pen-ntsa",
         "command": "/nic/bin/ntsa -config /nic/conf/naples-tsa.json",
         "dependencies": [
                 {
@@ -168,6 +168,6 @@
                 }
         ],
         "flags": ["restartable", "save_stdout_on_crash"],
-        "timeout": 30.0
+        "timeout": 0.0
     }
 ]

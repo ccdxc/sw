@@ -132,7 +132,7 @@ func main() {
 	log.Info("Log configuration set.")
 
 	var delphiService = &service{
-		name:       "naples-techsupport",
+		name:       globals.NaplesTechSupport,
 		configFile: *configFile,
 	}
 
