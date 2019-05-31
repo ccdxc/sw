@@ -9,6 +9,7 @@
 #include "linkmgr_src.hpp"
 #include "nic/linkmgr/utils.hpp"
 #include "nic/linkmgr/linkmgr_utils.hpp"
+#include "nic/hal/hal.hpp"
 #include "nic/sdk/platform/drivers/xcvr.hpp"
 #include "nic/sdk/include/sdk/asic/capri/cap_mx_api.h"
 #include "nic/sdk/lib/pal/pal.hpp"
@@ -610,7 +611,14 @@ port_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     // send the obj to PD for update
     pi_p = (port_t *)dhl_entry->cloned_obj;
 
+    /*
+     * Port Update -> Link mgr ctrl
+     * Link mgr ctrl -> del timer -> twheel lock
+     * periodic timer -> twheel lock -> callback -> wlock
+     */
+    hal::hal_handle_cfg_db_lock(false, false);   // Release wlock
     sdk_ret = sdk::linkmgr::port_update(pi_p->pd_p, port_args);
+    hal::hal_handle_cfg_db_lock(false, true);    // Acquire wlock
 
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 

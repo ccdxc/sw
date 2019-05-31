@@ -119,7 +119,7 @@ private:
             SDK_TRACE_ERR("twentry null");
             return;
         }
-        
+
         if (twentry->next_) {
 #if SDK_TWHEEL_DEBUG
             SDK_TRACE_ERR("next is not null next : %p, next_prev : %p "
@@ -131,19 +131,19 @@ private:
         }
         if (twentry->prev_ == NULL) {
             // removing the head of the list
-#if SDK_TWHEEL_DEBUG       
+#if SDK_TWHEEL_DEBUG
             SDK_TRACE_ERR("prev is null in slice %d  slice_head %p t->n : %p",
                           twentry->slice_, twheel_[twentry->slice_].slice_head_,
                           twentry->next_);
 #endif
             twheel_[twentry->slice_].slice_head_ = twentry->next_;
         } else {
-#if SDK_TWHEEL_DEBUG            
+#if SDK_TWHEEL_DEBUG
             SDK_TRACE_ERR("next is not null t->p->n : %p, t->n : %p ",
                           twentry->prev_->next_, twentry->next_);
 #endif
             twentry->prev_->next_ = twentry->next_;
-        } 
+        }
         num_entries_--;
     }
 
@@ -161,6 +161,16 @@ private:
         unlink_timer_(twentry);
         twentry->valid_ = FALSE;
     }
+
+    inline twentry_t *last_timer_in_slice(tw_slice_t *slice) {
+        twentry_t *last = slice->slice_head_;
+        while(last != NULL && last->next_ != NULL) {
+            last = last->next_;
+        }
+        return last;
+    }
+
+
 
     void upd_timer_(twentry_t *twentry, uint64_t timeout, bool periodic);
 };

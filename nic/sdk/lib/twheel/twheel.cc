@@ -315,7 +315,7 @@ void
 twheel::tick(uint32_t msecs_elapsed)
 {
     uint32_t     nslices = 0;
-    twentry_t    *twentry, *next_entry;
+    twentry_t    *twentry, *prev_entry;
 
     // check if full slice interval has elapsed since last invokation
     if (msecs_elapsed < slice_intvl_) {
@@ -329,14 +329,14 @@ twheel::tick(uint32_t msecs_elapsed)
     // process all the timer events from current slice
     do {
         TWHEEL_LOCK_SLICE(curr_slice_);
-        twentry = twheel_[curr_slice_].slice_head_;
+        twentry = last_timer_in_slice(&twheel_[curr_slice_]);
 #if SDK_TWHEEL_DEBUG
-        SDK_TRACE_VERBOSE("curr_slice_ : %d", curr_slice_);
+        SDK_TRACE_DEBUG("curr_slice_ : %d", curr_slice_);
 #endif
         while (twentry) {
             if (twentry->valid_ == FALSE) {
                 // delay deleting memory for already freed timer
-                next_entry = twentry->next_;
+                prev_entry = twentry->prev_;
 #if SDK_TWHEEL_DEBUG
                 SDK_TRACE_VERBOSE("free to slab timer id : %d, timeout : %d, "
                                   "periodic : %d, twentry : %p",
@@ -345,7 +345,7 @@ twheel::tick(uint32_t msecs_elapsed)
 #endif
                 unlink_timer_(twentry);
                 free_to_slab_(twentry);
-                twentry = next_entry;
+                twentry = prev_entry;
             } else {
                 if (twentry->nspins_) {
 #if SDK_TWHEEL_DEBUG
@@ -355,11 +355,11 @@ twheel::tick(uint32_t msecs_elapsed)
 #endif
                     // revisit this after one more full spin
                     twentry->nspins_ -= 1;
-                    twentry = twentry->next_;
+                    twentry = twentry->prev_;
                 } else {
                     // cache the next entry, in case callback function does
                     // something to this timer (it shouldn't ideally)
-                    next_entry = twentry->next_;
+                    prev_entry = twentry->prev_;
 #if SDK_TWHEEL_DEBUG
                     SDK_TRACE_VERBOSE("calling the callback for timer id : %d, "
                                       "timeout : %d, periodic : %d, "
@@ -397,16 +397,16 @@ twheel::tick(uint32_t msecs_elapsed)
 #if SDK_TWHEEL_DEBUG
                             SDK_TRACE_VERBOSE("add to delay del timer id : %u, "
                                               "timeout : %u, periodic : %u, "
-                                              "twentry : %p next entry : %p",
+                                              "twentry : %p prev entry : %p",
                                               twentry->timer_id_,
                                               twentry->timeout_,
                                               twentry->periodic_, twentry,
-                                              next_entry);
+                                              prev_entry);
 #endif
                             delay_delete_(twentry);
                         }
                     }
-                    twentry = next_entry;
+                    twentry = prev_entry;
                 }
             }
         }
