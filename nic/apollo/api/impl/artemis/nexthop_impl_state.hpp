@@ -45,12 +45,15 @@ public:
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_transaction_end(void);
 
+    /// \brief  return the nexthop table instance
+    /// \return pointer to the nexthop table instance
+    directmap *nh_tbl(void) { return nh_tbl_; }
+
 private:
-    indexer *nexthop_idxr(void) { return nexthop_idxr_; }
     friend class nexthop_impl;   // nexthop_impl is friend of nexthop_impl_state
 
 private:
-    indexer    *nexthop_idxr_;    ///< indexer to allocate nexthop hw id
+    directmap *nh_tbl_;    // directmap table for nexthop
 };
 
 /// @}

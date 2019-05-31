@@ -25,6 +25,7 @@
 #include "nic/apollo/api/impl/artemis/tag_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/service_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/vpc_peer_impl_state.hpp"
+#include "nic/apollo/api/impl/artemis/nexthop_impl_state.hpp"
 
 namespace api {
 namespace impl {
@@ -72,6 +73,9 @@ public:
     vpc_peer_impl_state *vpc_peer_impl_db(void) {
         return vpc_peer_impl_db_;
     }
+    nexthop_impl_state *nexthop_impl_db(void) {
+        return nexthop_impl_db_;
+    }
 
 private:
     artemis_impl_state             *artemis_impl_db_;
@@ -86,6 +90,7 @@ private:
     tag_impl_state                *tag_impl_db_;
     svc_mapping_impl_state        *svc_mapping_impl_db_;
     vpc_peer_impl_state           *vpc_peer_impl_db_;
+    nexthop_impl_state            *nexthop_impl_db_;
 };
 extern pds_impl_state g_pds_impl_state;
 
@@ -161,6 +166,12 @@ static inline vpc_peer_impl_state *
 vpc_peer_impl_db (void)
 {
     return g_pds_impl_state.vpc_peer_impl_db();
+}
+
+static inline nexthop_impl_state *
+nexthop_impl_db (void)
+{
+    return g_pds_impl_state.nexthop_impl_db();
 }
 
 /// @}

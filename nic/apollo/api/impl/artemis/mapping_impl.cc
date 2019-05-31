@@ -16,9 +16,10 @@
 #include "nic/apollo/api/mapping.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/vnic_impl.hpp"
 #include "nic/apollo/api/impl/artemis/mapping_impl.hpp"
-#include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/artemis/nexthop_impl.hpp"
 #include "nic/apollo/p4/include/defines.h"
 #include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
 
@@ -169,7 +170,7 @@ mapping_impl::reserve_remote_mapping_resources_(api_base *api_obj,
     mapping_hdl_ = api_params.handle;
 
     // reserve an entry in NEXTHOP table
-    ret = artemis_impl_db()->nh_tbl()->reserve(&nh_idx_);
+    ret = nexthop_impl_db()->nh_tbl()->reserve(&nh_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in NH table, err %u", ret);
         return ret;
@@ -345,7 +346,7 @@ mapping_impl::nuke_resources(api_base *api_obj) {
         mapping_impl_db()->mapping_tbl()->remove(&api_params);
     }
     if (nh_idx_ != PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID) {
-        artemis_impl_db()->nh_tbl()->remove(nh_idx_);
+        nexthop_impl_db()->nh_tbl()->remove(nh_idx_);
     }
     return SDK_RET_OK;
 }
@@ -371,7 +372,7 @@ mapping_impl::release_local_ip_mapping_resources_(api_base *api_obj) {
         mapping_impl_db()->mapping_tbl()->release(&api_params);
     }
     if (nh_idx_ != PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID) {
-        artemis_impl_db()->nh_tbl()->release(nh_idx_);
+        nexthop_impl_db()->nh_tbl()->release(nh_idx_);
     }
 
     // TODO: change the api calls here once DM APIs are standardized
@@ -402,7 +403,7 @@ mapping_impl::release_remote_mapping_resources_(api_base *api_obj) {
         mapping_impl_db()->mapping_tbl()->release(&api_params);
     }
     if (nh_idx_ != PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID) {
-        artemis_impl_db()->nh_tbl()->release(nh_idx_);
+        nexthop_impl_db()->nh_tbl()->release(nh_idx_);
     }
     return SDK_RET_OK;
 }
@@ -450,7 +451,7 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
                      tep->mac(), ETH_ADDR_LEN);
     sdk::lib::memrev(nh_data.action_u.nexthop_nexthop_info.dmaci,
                      spec->overlay_mac, ETH_ADDR_LEN);
-    ret = artemis_impl_db()->nh_tbl()->insert_atid(&nh_data, nh_idx_);
+    ret = nexthop_impl_db()->nh_tbl()->insert_atid(&nh_data, nh_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NEXTHOP table at %u, err %u",
                       nh_idx_, ret);

@@ -16,7 +16,7 @@
 namespace api {
 namespace impl {
 
-/// \defgroup PDS_ARTEMIS_IMPL_STATE - tep database functionality
+/// \defgroup PDS_ARTEMIS_IMPL_STATE - pipeline database functionality
 /// \ingroup PDS_ARTEMIS
 /// \@{
 
@@ -85,13 +85,6 @@ artemis_impl_state::artemis_impl_state(pds_state *state) {
     // reserve 0th entry for no xlation
     nat_tbl_->reserve_index(PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX);
 
-    p4pd_table_properties_get(P4TBL_ID_NEXTHOP, &tinfo);
-    nh_tbl_ = directmap::factory(tinfo.tablename, P4TBL_ID_NEXTHOP,
-                                 tinfo.tabledepth,
-                                 tinfo.actiondata_struct_size,
-                                 false, true, NULL);
-    nh_tbl_->reserve_index(PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID);
-    SDK_ASSERT(nh_tbl_ != NULL);
 }
 
 // destructor
@@ -103,20 +96,17 @@ artemis_impl_state::~artemis_impl_state() {
     tcam::destroy(egress_drop_stats_tbl_);
     tcam::destroy(nacl_tbl_);
     directmap::destroy(nat_tbl_);
-    directmap::destroy(nh_tbl_);
 }
 
 sdk_ret_t
 artemis_impl_state::table_transaction_begin(void) {
     //nat_tbl_->txn_start();
-    //nh_tbl_->txn_start();
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 artemis_impl_state::table_transaction_end(void) {
     //nat_tbl_->txn_end();
-    //nh_tbl_->txn_end();
     return SDK_RET_OK;
 }
 

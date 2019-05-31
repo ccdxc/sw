@@ -48,7 +48,6 @@ public:
     tcam *egress_drop_stats_tbl(void) { return egress_drop_stats_tbl_; }
     tcam *nacl_tbl(void) { return nacl_tbl_; }
     directmap *nat_tbl(void) { return nat_tbl_; }
-    directmap *nh_tbl(void) { return nh_tbl_; }
 
     /// \brief    API to initiate transaction over all the table manamgement
     ///           library instances
@@ -71,7 +70,6 @@ private:
     tcam *egress_drop_stats_tbl_;   // egress drop stats table
     tcam *nacl_tbl_;                // NACL tcam table
     directmap *nat_tbl_;            // NAT table
-    directmap *nh_tbl_;             // directmap table for NH
     uint32_t key_native_tbl_idx_[MAX_KEY_NATIVE_TBL_ENTRIES];
     uint32_t key_tunneled_tbl_idx_[MAX_KEY_TUNNELED_TBL_ENTRIES];
 };
