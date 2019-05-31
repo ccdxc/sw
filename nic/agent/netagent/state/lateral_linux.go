@@ -214,14 +214,6 @@ func (na *Nagent) DeleteLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 		}
 	}
 
-	// Stop the existing ARP Refresh loop if the lateral objects are successfully deleted
-	cancel, ok := na.ArpCache.DoneCache[destIP]
-	if !ok {
-		log.Error("Failed to get the delete handler for ARP Loop refresh")
-		return errors.New("failed to get the delete handler for ARP Loop refresh")
-	}
-	cancel()
-
 	return nil
 }
 func getMgmtLink(mgmtIP string) (mgmtLink netlink.Link) {
