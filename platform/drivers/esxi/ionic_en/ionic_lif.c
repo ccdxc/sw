@@ -1833,6 +1833,11 @@ static void ionic_lif_deinit(struct lif *lif)
                 return;
         }
 
+        if (lif->notifyqcq->is_netpoll_enabled) {
+                ionic_qcq_disable(lif->notifyqcq);
+        }
+        ionic_lif_qcq_deinit(lif->notifyqcq);
+
 	if (lif->uplink_handle->hw_features & ETH_HW_RX_HASH &&
             (!lif->uplink_handle->is_mgmt_nic) && lif->uplink_handle->DRSS) {
                 ionic_lif_rss_teardown(lif);
@@ -1841,15 +1846,6 @@ static void ionic_lif_deinit(struct lif *lif)
         ionic_lif_txqs_deinit(lif);
 	ionic_lif_rxqs_deinit(lif);
 	ionic_rx_filters_deinit(lif);
-
-        if (lif->notifyqcq->is_netpoll_enabled) {
-                vmk_IntrDisable(lif->notifyqcq->intr.cookie);
-                vmk_IntrSync(lif->notifyqcq->intr.cookie);
-                vmk_NetPollDisable(lif->notifyqcq->netpoll);
-                lif->notifyqcq->is_netpoll_enabled = VMK_FALSE;
-                vmk_NetPollInterruptUnSet(lif->notifyqcq->netpoll);
-        }
-        ionic_lif_qcq_deinit(lif->notifyqcq);
 
         if (lif->adminqcq->is_netpoll_enabled) {
                 vmk_IntrDisable(lif->adminqcq->intr.cookie);
