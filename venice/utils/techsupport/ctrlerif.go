@@ -128,7 +128,7 @@ func (ag *TSMClient) handleTechSupportEvents(events *tsproto.TechSupportRequestE
 			tsWork := event.Request
 			ag.tsCh <- *tsWork
 			log.Infof("Got request %v", tsWork)
-			ag.sendUpdate(*tsWork, tsproto.TechSupportRequestStatus_Queued)
+			ag.sendUpdate(tsWork, tsproto.TechSupportRequestStatus_Queued)
 		}
 	}
 }
@@ -196,7 +196,7 @@ func (ag *TSMClient) isWatching() bool {
 	return atomic.LoadInt32(&ag.watching) != 0
 }
 
-func (ag *TSMClient) sendUpdate(work tsproto.TechSupportRequest, status tsproto.TechSupportRequestStatus_ActionStatus) {
+func (ag *TSMClient) sendUpdate(work *tsproto.TechSupportRequest, status tsproto.TechSupportRequestStatus_ActionStatus) {
 	update := &tsproto.TechSupportRequest{
 		TypeMeta: api.TypeMeta{
 			Kind: kindTechSupportRequest,
@@ -216,6 +216,7 @@ func (ag *TSMClient) sendUpdate(work tsproto.TechSupportRequest, status tsproto.
 		startTime := api.Timestamp{}
 		startTime.Parse("now()")
 		update.Status.StartTime = &startTime
+		work.Status.StartTime = &startTime
 	} else if status == tsproto.TechSupportRequestStatus_Failed || status == tsproto.TechSupportRequestStatus_Completed {
 		endTime := api.Timestamp{}
 		err := endTime.Parse("now()")
@@ -223,6 +224,7 @@ func (ag *TSMClient) sendUpdate(work tsproto.TechSupportRequest, status tsproto.
 			log.Errorf("Error parsing time.")
 			return
 		}
+		update.Status.StartTime = work.Status.StartTime
 		update.Status.EndTime = &endTime
 		update.Status.URI = work.Status.URI
 	}
@@ -271,33 +273,33 @@ func (ag *TSMClient) StartWorking() {
 // DoWork executes commands for collecting techsupport
 func (ag *TSMClient) DoWork(work tsproto.TechSupportRequest) error {
 	log.Info("Worker doing work.")
-	ag.sendUpdate(work, tsproto.TechSupportRequestStatus_InProgress)
-	err := ag.pre(work)
+	ag.sendUpdate(&work, tsproto.TechSupportRequestStatus_InProgress)
+	err := ag.pre(&work)
 	if err != nil {
 		log.Errorf("Failed to finish pre-work : %v", err)
-		ag.sendUpdate(work, tsproto.TechSupportRequestStatus_Failed)
+		ag.sendUpdate(&work, tsproto.TechSupportRequestStatus_Failed)
 		return err
 	}
 
-	err = ag.do(work)
+	err = ag.do(&work)
 	if err != nil {
 		log.Errorf("Failed to finish work : %v", err)
-		ag.sendUpdate(work, tsproto.TechSupportRequestStatus_Failed)
+		ag.sendUpdate(&work, tsproto.TechSupportRequestStatus_Failed)
 		return err
 	}
 
-	err = ag.post(work)
+	err = ag.post(&work)
 	if err != nil {
 		log.Errorf("Failed to finish post-work : %v", err)
-		ag.sendUpdate(work, tsproto.TechSupportRequestStatus_Failed)
+		ag.sendUpdate(&work, tsproto.TechSupportRequestStatus_Failed)
 		return err
 	}
 
-	ag.sendUpdate(work, tsproto.TechSupportRequestStatus_Completed)
+	ag.sendUpdate(&work, tsproto.TechSupportRequestStatus_Completed)
 	return nil
 }
 
-func (ag *TSMClient) handleTechSupportRetention(work tsproto.TechSupportRequest) error {
+func (ag *TSMClient) handleTechSupportRetention(work *tsproto.TechSupportRequest) error {
 	if ag.cfg.Retention == tsconfig.TechSupportConfig_Manual {
 		return nil
 	}
@@ -314,12 +316,12 @@ func (ag *TSMClient) handleTechSupportRetention(work tsproto.TechSupportRequest)
 }
 
 // Move these into their own directory
-func (ag *TSMClient) pre(work tsproto.TechSupportRequest) error {
+func (ag *TSMClient) pre(work *tsproto.TechSupportRequest) error {
 	log.Info("PreWork")
 	return nil
 }
 
-func (ag *TSMClient) do(work tsproto.TechSupportRequest) error {
+func (ag *TSMClient) do(work *tsproto.TechSupportRequest) error {
 	log.Info("Actual Work")
 	var instanceID, instanceName string
 	if work.Spec.InstanceID == "" {
@@ -358,7 +360,7 @@ func (ag *TSMClient) do(work tsproto.TechSupportRequest) error {
 	return nil
 }
 
-func (ag *TSMClient) post(work tsproto.TechSupportRequest) error {
+func (ag *TSMClient) post(work *tsproto.TechSupportRequest) error {
 	log.Info("Post Work")
 	return ag.handleTechSupportRetention(work)
 }
