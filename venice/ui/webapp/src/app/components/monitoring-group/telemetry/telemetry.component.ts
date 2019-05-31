@@ -7,11 +7,28 @@ import { ControllerService } from '@app/services/controller.service';
 import { MetricsqueryService, TelemetryPollingMetricQueries } from '@app/services/metricsquery.service';
 import { ITelemetry_queryMetricsQueryResponse } from '@sdk/v1/models/telemetry_query';
 import { ChartOptions } from 'chart.js';
-import { UIChart } from 'primeng/primeng';
 import { Observer, Subject, Subscription } from 'rxjs';
-import { sourceFieldKey } from './utility';
-import { ChartData, ChartDataSets, ColorTransform, DisplayLabelTransform, GroupByTransform, DataSource } from './transforms';
+import { sourceFieldKey, getFieldData } from './utility';
 import { MetricMeasurement, MetricsMetadata } from '@sdk/metrics/generated/metadata';
+import { ChartData, ChartDataSets, ColorTransform, DisplayLabelTransform, GroupByTransform, DataSource, MetricTransform, TransformDataset, TransformDatasets, GraphTransform } from './transforms';
+import { AxisTransform } from './transforms/axis.transform';
+import { TimeRange } from '@app/components/shared/timerange/utility';
+import { UIChartComponent } from '@app/components/shared/primeng-chart/chart';
+
+/**
+ * A data source allows a user to select a single measurement,
+ * multiple fields, and other options such as filtering.
+ *
+ * A data source translates to one or more telemetry queries.
+ * Each data source has a set of transforms registered. These transforms will
+ * have their hooks called, and are able to modify the telemetry query, as well
+ * as the response data set.
+ *
+ * Each transform should ideally be independent of each other, but it is
+ * possible for transforms to read state from each other.
+ *
+ * Graph transforms are similar, but only affect graph level options.
+ */
 
 
 @Component({
@@ -22,7 +39,7 @@ import { MetricMeasurement, MetricsMetadata } from '@sdk/metrics/generated/metad
   animations: [Animations]
 })
 export class TelemetryComponent extends BaseComponent implements OnInit, OnDestroy {
-  @ViewChild('pChart') chartContainer: UIChart;
+  @ViewChild('pChart') chartContainer: UIChartComponent;
 
   lineData: ChartData = {
     datasets: []
@@ -41,48 +58,7 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
   metricsMetadata: { [key: string]: MetricMeasurement } = MetricsMetadata;
   measurements: MetricMeasurement[] = [];
 
-  graphOptions: ChartOptions = {
-    title: {
-        display: false,
-    },
-    legend: {
-        display: true,
-        position: 'bottom'
-    },
-    layout: {
-      padding: 20
-    },
-    animation: {
-      duration: 0
-    },
-    scales: {
-      xAxes: [{
-        type: 'time',
-        display: true,
-        gridLines: {
-          display: true
-        },
-        scaleLabel: {
-          display: true
-        },
-        ticks: {
-          display: true,
-        },
-      }],
-      yAxes: [{
-        gridLines: {
-          display: true
-        },
-        display: true,
-        scaleLabel: {
-          display: true
-        },
-        ticks: {
-          display: true,
-        }
-      }]
-    }
-  };
+  graphOptions: ChartOptions = this.generateDefaultGraphOptions();
 
   // Holds last response from the metric poll
   metricData: ITelemetry_queryMetricsQueryResponse;
@@ -93,6 +69,14 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
 
   // Subject to be passed into data sources so that they can request data
   getMetricsSubject: Subject<any> = new Subject<any>();
+
+  graphTransforms: GraphTransform[] = [
+    new AxisTransform(),
+  ];
+
+  activeTabNumber = 0;
+
+  selectedTimeRange: TimeRange;
 
   constructor(protected controllerService: ControllerService,
     protected telemetryqueryService: MetricsqueryService) {
@@ -121,6 +105,51 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
     }
   }
 
+  generateDefaultGraphOptions(): ChartOptions {
+    return {
+      title: {
+          display: false,
+      },
+      legend: {
+          display: true,
+          position: 'bottom'
+      },
+      layout: {
+        padding: 20
+      },
+      animation: {
+        duration: 0
+      },
+      scales: {
+        xAxes: [{
+          type: 'time',
+          display: true,
+          gridLines: {
+            display: true
+          },
+          scaleLabel: {
+            display: true
+          },
+          ticks: {
+            display: true,
+          },
+        }],
+        yAxes: [{
+          gridLines: {
+            display: true
+          },
+          display: true,
+          scaleLabel: {
+            display: true
+          },
+          ticks: {
+            display: true,
+          }
+        }]
+      }
+    };
+  }
+
   getSelectedSource(): DataSource {
     if (this.selectedDataSourceIndex == null) {
       return null;
@@ -128,10 +157,19 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
     return this.dataSources[this.selectedDataSourceIndex];
   }
 
-  checkAddDataSource(): boolean {
+  // User is allowed to add a new data source if there are no incomplete data sources
+  canAddDataSource(): boolean {
     const current = this.getSelectedSource();
     if (current != null && current.fields.length === 0) {
       // Incomplete source, don't allow them to add another
+      return false;
+    }
+    return true;
+  }
+
+  // Whether or not user is allowed to switch to the graph options tab
+  canChangeGraphOptions(): boolean {
+    if (this.dataSources.length === 0 || this.dataSources[0] == null || this.dataSources[0].fields.length === 0) {
       return false;
     }
     return true;
@@ -157,6 +195,10 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
     }
   }
 
+  setTimeRange(timeRange: TimeRange) {
+    this.selectedTimeRange = timeRange;
+    this.getMetrics();
+  }
 
   getMetrics() {
     if (this.metricSubscription) {
@@ -170,6 +212,9 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
     this.dataSources.forEach( (source) => {
       if (source.fields != null && source.fields.length !== 0) {
         const query = MetricsUtility.timeSeriesQueryPolling(source.measurement);
+        // Set timerange
+        query.query['start-time'] = this.selectedTimeRange.getTime().startTime.toISOString() as any;
+        query.query['end-time'] = this.selectedTimeRange.getTime().endTime.toISOString() as any;
         source.transformQuery({query: query.query});
         queryList.queries.push(query);
       }
@@ -216,7 +261,14 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
       }
     });
 
-    // let resDataSets: TransformDatasets = [];
+    // Start with a clean array so that we don't accidentally
+    // have stale state transfer from the old options
+    // All transforms should be relatively stateless
+    const newGraphOptions: ChartOptions = this.generateDefaultGraphOptions();
+
+    // Will be passed to graph transforms
+    const allResultsDatasets = [];
+
     const resDataSets: ChartDataSets[] = [];
     this.metricData.results.forEach( (res, index) => {
       if (!MetricsUtility.resultHasData(res)) {
@@ -225,7 +277,7 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
       }
       // Should be one to one with response length
       const source = this.dataSources[index];
-      const singleResultDatasets = [];
+      const singleResultDatasets: TransformDatasets = [];
       res.series.forEach( (s) => {
         source.fields.forEach( (field) => {
           const fieldIndex = s.columns.findIndex((f) => {
@@ -244,11 +296,15 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
             // If the dataset is currently being hidden, we continue to hide it
             hidden: hiddenDatasets[key] != null ? true : false,
           };
-          const opt = {
+          const opt: TransformDataset = {
             dataset: dataset,
             series: s,
             measurement: source.measurement,
             field: field,
+            // We put unit in here. Transforms are allowed
+            // to change the unit type (kb -> mb), and should update this unit
+            // property if they do
+            units: getFieldData(source.measurement, field).units,
             fieldIndex: fieldIndex
           };
           source.transformDataset(opt);
@@ -257,7 +313,21 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
         });
       });
       source.transformDatasets(singleResultDatasets);
+      singleResultDatasets.forEach( (opt) => {
+          allResultsDatasets.push(opt);
+        }
+      );
     });
+
+    this.graphTransforms.forEach( (t) => {
+      t.transformGraphOptions({
+        data: allResultsDatasets,
+        graphOptions: newGraphOptions,
+        oldGraphOptions: this.graphOptions,
+      });
+    });
+
+    this.graphOptions = newGraphOptions;
 
     this.lineData = {
       datasets: resDataSets
@@ -276,7 +346,7 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
   // ------ HTML functions ------
 
   addDataSourceClick() {
-    if (this.checkAddDataSource()) {
+    if (this.canAddDataSource()) {
       this.addDataSource();
       this.selectedDataSourceIndex = this.dataSources.length - 1;
     }
@@ -293,7 +363,8 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
     }
   }
 
-  deleteSourceClick(index) {
+  deleteSourceClick($event, index) {
+    $event.stopPropagation(); // prevents the source from trying to expand
     this.removeDataSource(index);
   }
 

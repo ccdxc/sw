@@ -1,9 +1,9 @@
 import { ITelemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
 import { ITelemetry_queryMetricsResultSeries } from '@sdk/v1/models/telemetry_query';
-import { ChartData as ChartJSData, ChartDataSets as ChartJSDataSets } from 'chart.js';
+import { ChartData as ChartJSData, ChartDataSets as ChartJSDataSets, ChartOptions } from 'chart.js';
 import { Observer } from 'rxjs';
 import { Utility } from '@app/common/Utility';
-import { MetricsMetadata } from '@sdk/metrics/generated/metadata';
+import { MetricsMetadata, MetricField } from '@sdk/metrics/generated/metadata';
 
 export interface ChartDataSets extends ChartJSDataSets {
   sourceID: string;
@@ -24,7 +24,14 @@ export interface TransformDataset {
   series: ITelemetry_queryMetricsResultSeries;
   measurement: string;
   field: string;
+  units: string;
   fieldIndex: number;
+}
+
+export interface TransformGraphOptions {
+  data: TransformDataset[];
+  graphOptions: ChartOptions;
+  oldGraphOptions: ChartOptions;
 }
 
 export interface TransformDatasets extends Array<TransformDataset> {}
@@ -49,6 +56,20 @@ export abstract class MetricTransform {
     this.reqMetrics.next(true);
   }
 
+  getFieldData(measurement, field) {
+    return MetricsMetadata[measurement].fields.find(x => x.name === field);
+  }
+}
+
+export abstract class GraphTransform {
+  abstract transformName: string;
+
+  // Hooks to be overridden
+  transformDataset(opts: TransformDataset) {}
+  transformDatasets(opts: TransformDatasets) {}
+  transformGraphOptions(opts: TransformGraphOptions) {}
+
+  // Utility functions
   getFieldData(measurement, field) {
     return MetricsMetadata[measurement].fields.find(x => x.name === field);
   }

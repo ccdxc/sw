@@ -716,6 +716,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "CPUUsedPercent",
       "displayName": "Percent CPU Used",
       "description": "CPU usage (percent) ",
+      "units": "Percent",
       "baseType": "number",
       "scaleMin": 0,
       "scaleMax": 100
@@ -742,6 +743,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "DiskUsedPercent",
       "displayName": "Percent disk Used",
       "description": "Disk usage (percent) ",
+      "units": "Percent",
       "baseType": "number",
       "scaleMin": 0,
       "scaleMax": 100
@@ -780,6 +782,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "MemUsedPercent",
       "displayName": "Percent Memory Used",
       "description": "Memory usage (percent) ",
+      "units": "Percent",
       "baseType": "number",
       "scaleMin": 0,
       "scaleMax": 100
@@ -803,6 +806,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "CPUUsedPercent",
       "displayName": "Percent CPU Used",
       "description": "CPU usage (percent) ",
+      "units": "Percent",
       "baseType": "number",
       "scaleMin": 0,
       "scaleMax": 100
@@ -829,6 +833,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "DiskUsedPercent",
       "displayName": "Percent Disk Used",
       "description": "Disk usage (percent) ",
+      "units": "Percent",
       "baseType": "number",
       "scaleMin": 0,
       "scaleMax": 100
@@ -866,6 +871,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     {
       "name": "MemUsedPercent",
       "displayName": "Percent Memory Used",
+      "units": "Percent",
       "description": "Memory usage (percent) ",
       "baseType": "number",
       "scaleMin": 0,

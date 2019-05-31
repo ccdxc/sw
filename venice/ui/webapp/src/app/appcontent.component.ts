@@ -1,9 +1,10 @@
 import { OverlayContainer } from '@angular/cdk/overlay';
+import * as moment from 'moment';
 import { Component, HostBinding, OnDestroy, OnInit, ViewChild, ViewEncapsulation, AfterViewInit } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { MatSidenav, MatSidenavContainer } from '@angular/material/sidenav';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { AUTH_BODY, logout } from '@app/core';
+import { logout } from '@app/core';
 import { AlerttableService } from '@app/services/alerttable.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { LogService } from '@app/services/logging/log.service';
@@ -120,11 +121,37 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
 
     this._subscribeToEvents();
     this._bindtoStore();
-    const authBody = JSON.parse(sessionStorage.getItem(AUTH_BODY));
-    if (authBody != null && authBody.meta != null && authBody.meta.name != null) {
-      this.userName = authBody.meta.name;
-    }
+    this.userName = Utility.getInstance().getLoginName() ;
+    this.setMomentJSSettings();
   }
+
+  setMomentJSSettings() {
+    moment.updateLocale('en', {
+      relativeTime : {
+          future: 'in %s',
+          past:   '%s ago',
+          s  : 'one seconds',
+          ss : '%d seconds',
+          m:  'one minute',
+          mm: '%d minutes',
+          h:  'one hour',
+          hh: '%d hours',
+          d:  'one day',
+          dd: '%d days',
+          M:  'one month',
+          MM: '%d months',
+          y:  'one year',
+          yy: '%d years'
+      }
+    });
+    moment.relativeTimeThreshold('ss', 0);
+    moment.relativeTimeThreshold('s', 60);
+    moment.relativeTimeThreshold('m', 60);
+    moment.relativeTimeThreshold('h', 24);
+    moment.relativeTimeThreshold('d', 31);
+    moment.relativeTimeThreshold('M', 12);
+  }
+
 
   ngAfterViewInit() {
     // Example usage of setting help content

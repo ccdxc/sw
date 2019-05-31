@@ -30,6 +30,8 @@ import { TablevieweditHTMLComponent } from './tableviewedit/tableviewedit.compon
 import { RoleGuardDirective } from './directives/roleGuard.directive';
 import { LabeleditorComponent } from './labeleditor/labeleditor.component';
 import { AdvancedSearchComponent } from './advanced-search/advanced-search.component';
+import { TimeRangeComponent } from './timerange/timerange.component';
+import { UIChartComponent } from './primeng-chart/chart';
 
 @NgModule({
   imports: [
@@ -66,6 +68,8 @@ import { AdvancedSearchComponent } from './advanced-search/advanced-search.compo
     RoleGuardDirective,
     LabeleditorComponent,
     AdvancedSearchComponent,
+    TimeRangeComponent,
+    UIChartComponent
   ],
   exports: [
     PagebodyComponent,
@@ -92,6 +96,8 @@ import { AdvancedSearchComponent } from './advanced-search/advanced-search.compo
     RoleGuardDirective,
     AdvancedSearchComponent,
     LabeleditorComponent,
+    TimeRangeComponent,
+    UIChartComponent
   ],
 })
 export class SharedModule { }

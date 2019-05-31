@@ -1,0 +1,88 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.timerange {
+  @include primary-font();
+}
+
+.timerange-overlay-panel {
+  z-index: 30;
+}
+
+.timerange-button {
+  @include primary-font(16px, #6ba0e5);
+  padding: 4px 10px;
+  line-height: 25px;
+  margin: 0px 10px;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.06);
+  }
+}
+
+.timerange-input {
+  height: 30px;
+  @include primary-font();
+  // Padding for the calendar button
+  padding-right: 30px !important;
+}
+
+.timerange-value {
+  margin: $vertical-gutter $horizontal-gutter;
+  @include primary-font();
+}
+
+.timerange-fieldtitle {
+  margin: $vertical-gutter $horizontal-gutter;
+  @include primary-font();
+}
+
+.timerange-overlay {
+  width: 500px;
+  height: 200px;
+}
+
+.timerange-time-text {
+  margin: 10px 0px 5px 3px;
+}
+
+.timerange-timeoption {
+  @include primary-font(16px, #6ba0e5);
+  padding: 4px 10px;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+p-calendar {
+  .timerange-calendar {
+    .ui-calendar-button {
+      height: 28px;
+      left: -29px;
+      border-radius: 1px;
+
+      &:hover,
+      &:focus {
+        border: solid 1px #6ba0e5 !important;
+        background: #6ba0e5 !important;
+      }
+    }
+
+    input.timerange-calendar-input {
+      &:focus {
+        box-shadow: none !important;
+        border: none !important;
+      }
+
+      height: 30px;
+      width: 0px !important;
+      padding: 0px !important;
+      border: none !important;
+    }
+  }
+}

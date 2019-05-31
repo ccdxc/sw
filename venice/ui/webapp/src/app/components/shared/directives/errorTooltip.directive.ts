@@ -53,6 +53,7 @@ export class ErrorTooltipDirective extends MatTooltip implements OnInit {
 
   // Description to show on hover. Overrides any message picked up from swagger.
   @Input() appErrorTooltip: string;
+  @Input() errorMessage: string = '';
 
   ngOnInit() {
   }
@@ -62,6 +63,10 @@ export class ErrorTooltipDirective extends MatTooltip implements OnInit {
     if (!this.control) {
       this.tooltipClass = this.tooltipDefaultClass;
       return this.appErrorTooltip;
+    }
+    if (this.errorMessage.length > 0) {
+      this.tooltipClass = this.tooltipErrorClass;
+      return this.errorMessage;
     }
     if (this.control.touched && this.control.invalid && this.control.dirty) {
       const msgs = [];
@@ -73,9 +78,9 @@ export class ErrorTooltipDirective extends MatTooltip implements OnInit {
           }
         }
       }
-      this.tooltipClass = 'global-error-tooltip';
       this.tooltipClass = this.tooltipErrorClass;
-      return msgs.join('\n');
+      const ret = msgs.join('\n');
+      return ret;
     }
 
     if (this.appErrorTooltip != null && this.appErrorTooltip !== '') {

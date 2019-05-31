@@ -92,7 +92,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   initRolloutData() {
     if (!this.isInline) {  // create mode
       this.newRollout = new RolloutRollout();
-      const today = new Date().getTime() + 3600 * 1000; // VS-331 set default time. Now + 1 hour.
+      const today = new Date().getTime() + 300 * 1000; // VS-331 set default time. Now + 5 min
       this.newRollout.spec['scheduled-start-time'] = new Date(today);
       this.newRollout.setFormGroupValuesToBeModelValues();
       this.newRollout.$formGroup.get(['spec', 'suspend']).disable();
