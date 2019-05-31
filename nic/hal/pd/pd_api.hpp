@@ -837,6 +837,7 @@ typedef struct pd_session_create_args_s {
     uint32_t           iflow_hash;
     nwsec_profile_t    *nwsec_prof;
     bool               update_iflow;
+    bool               update_rflow;
     session_t          *session;
     session_state_t    *session_state;
     SessionResponse    *rsp;
@@ -851,6 +852,7 @@ pd_session_create_args_init (pd_session_create_args_t *args)
     args->session_state = NULL;
     args->rsp = NULL;
     args->update_iflow = false;
+    args->update_rflow = false;
     args->clock = 0;
 
     return;
@@ -882,6 +884,7 @@ typedef struct pd_session_update_args_s {
     uint32_t           iflow_hash;
     nwsec_profile_t    *nwsec_prof;
     bool               update_iflow;
+    bool               update_rflow;
     session_t          *session;
     session_state_t    *session_state;
     SessionResponse    *rsp;
@@ -896,6 +899,7 @@ pd_session_update_args_init (pd_session_update_args_t *args)
     args->session_state = NULL;
     args->rsp = NULL;
     args->update_iflow = false;
+    args->update_rflow = false;
     args->iflow_hash = 0;
     args->clock = 0;
 

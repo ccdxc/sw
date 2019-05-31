@@ -606,16 +606,17 @@ p4pd_fill_flow_hash_key (flow_key_t *flow_key, uint32_t lkp_vrf,
 // program flow hash table entry for a given flow
 //------------------------------------------------------------------------------
 hal_ret_t
-p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
+p4pd_add_upd_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
                                 uint8_t lkp_inst, pd_flow_t *flow_pd,
                                 uint32_t hash_val, uint8_t export_en,
-                                uint32_t *flow_hash_p)
+                                uint32_t *flow_hash_p, bool update=false)
 {
     hal_ret_t ret = HAL_RET_OK;
     flow_hash_swkey_t key = { 0 };
     flow_hash_appdata_t appdata = { 0 };
 
-    if (flow_pd->installed == true) {
+    HAL_TRACE_VERBOSE("update {} flow_pd->installed {}", update, flow_pd->installed);
+    if (!update && flow_pd->installed) {
         return HAL_RET_OK;
     }
 
@@ -687,13 +688,14 @@ p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
         HAL_TRACE_DEBUG("Dst:");
         HAL_TRACE_DEBUG("{}", dst_buf.c_str());
     }
-
-    if (hash_val) {
-        ret = g_hal_state_pd->flow_table_pd_get()->insert(&key, &appdata,
-                                                          &hash_val, true);
+    
+    bool hash_valid = (hash_val) ? true : false;
+    if (update) {
+        ret = g_hal_state_pd->flow_table_pd_get()->update(&key, &appdata,
+                                                          &hash_val, hash_valid);
     } else {
         ret = g_hal_state_pd->flow_table_pd_get()->insert(&key, &appdata,
-                                                          &hash_val, false);
+                                                          &hash_val, hash_valid);
     }
 
     if (ret != HAL_RET_OK) {
@@ -797,24 +799,34 @@ p4pd_del_flow_hash_table_entries (pd_session_t *session_pd)
 }
 
 //------------------------------------------------------------------------------
-// program flow hash table entry with given data (flow index)
+// Program flow hash table entry with given data (flow index)
+// This will be called from session update and create
 //------------------------------------------------------------------------------
 hal_ret_t
-p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
-                                  pd_session_create_args_t *args)
+p4pd_add_upd_flow_hash_table_entries (pd_session_t *session_pd,
+                                      pd_session_create_args_t *args,
+                                      bool update)
 {
     hal_ret_t               ret = HAL_RET_OK;
     session_t               *session = (session_t *)session_pd->session;
     uint32_t                flow_hash = 0;
 
-    if (session_pd->rflow.valid && !session_pd->rflow.installed) {
-        ret = p4pd_add_flow_hash_table_entry(&session->rflow->config.key,
+    HAL_TRACE_VERBOSE("Add flow hash table entries update {} rflow.valid {} "
+                    "rflow.installed {} iflow.installed {} "
+                    "update_iflow {} rflow_aug.valid {} "
+                    "rflow_aug.installed {}", update, session_pd->rflow.valid,
+                    session_pd->rflow.installed, session_pd->iflow.installed,
+                    args->update_iflow, session_pd->rflow_aug.valid,
+                    session_pd->rflow_aug.installed);
+    if (session_pd->rflow.valid &&
+            (args->update_rflow || !session_pd->rflow.installed)) {
+        ret = p4pd_add_upd_flow_hash_table_entry(&session->rflow->config.key,
                                              session->rflow->pgm_attrs.vrf_hwid,
                                              session->rflow->pgm_attrs.lkp_inst,
                                              &session_pd->rflow,
                                              0,
                                              session->rflow->pgm_attrs.export_en,
-                                             &flow_hash);
+                                             &flow_hash, update);
 
         if (args->rsp) {
             args->rsp->mutable_status()->mutable_rflow_status()->set_flow_hash(flow_hash);
@@ -823,15 +835,16 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
             goto p4pd_add_flow_hash_table_entries_return;
         }
 
-        if (session_pd->rflow_aug.valid && !session_pd->rflow_aug.installed) {
+        if (session_pd->rflow_aug.valid &&
+                (args->update_rflow || !session_pd->rflow_aug.installed)) {
             // TODO: key has to involve service done? populate in flow_attrs
-            ret = p4pd_add_flow_hash_table_entry(&session->rflow->assoc_flow->config.key,
+            ret = p4pd_add_upd_flow_hash_table_entry(&session->rflow->assoc_flow->config.key,
                                                  session->rflow->assoc_flow->pgm_attrs.vrf_hwid,
                                                  session->rflow->assoc_flow->pgm_attrs.lkp_inst,
                                                  &session_pd->rflow_aug,
                                                  0,
                                                  session->rflow->assoc_flow->pgm_attrs.export_en,
-                                                 &flow_hash);
+                                                 &flow_hash, update);
             if (args->rsp) {
                 args->rsp->mutable_status()->mutable_rflow_status()->set_flow_hash(flow_hash);
             }
@@ -841,14 +854,15 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
         }
     }
 
-    if (!session_pd->iflow.installed && args->update_iflow) {
-        ret = p4pd_add_flow_hash_table_entry(&session->iflow->config.key,
+    if (session_pd->iflow.valid &&
+            (args->update_iflow || !session_pd->iflow.installed)) {
+        ret = p4pd_add_upd_flow_hash_table_entry(&session->iflow->config.key,
                                              session->iflow->pgm_attrs.vrf_hwid,
                                              session->iflow->pgm_attrs.lkp_inst,
                                              &session_pd->iflow,
                                              args->iflow_hash,
                                              session->iflow->pgm_attrs.export_en,
-                                             &flow_hash);
+                                             &flow_hash, update);
         if (args->rsp) {
             args->rsp->mutable_status()->mutable_iflow_status()->set_flow_hash(flow_hash);
         }
@@ -858,15 +872,15 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
         }
     }
 
-    if (args->update_iflow && session_pd->iflow_aug.valid &&\
-        !session_pd->iflow_aug.installed) {
-        ret = p4pd_add_flow_hash_table_entry(&session->iflow->assoc_flow->config.key,
+    if (session_pd->iflow_aug.valid &&
+            (args->update_iflow || !session_pd->iflow_aug.installed)) {
+        ret = p4pd_add_upd_flow_hash_table_entry(&session->iflow->assoc_flow->config.key,
                                              session->iflow->assoc_flow->pgm_attrs.vrf_hwid,
                                              session->iflow->assoc_flow->pgm_attrs.lkp_inst,
                                              &session_pd->iflow_aug,
                                              0,
                                              session->iflow->assoc_flow->pgm_attrs.export_en,
-                                             &flow_hash);
+                                             &flow_hash, update);
         if (args->rsp) {
             args->rsp->mutable_status()->mutable_iflow_status()->set_flow_hash(flow_hash);
         }
@@ -899,7 +913,7 @@ pd_session_create (pd_func_args_t *pd_func_args)
     timespec_t                              ts;
     pd_func_args_t                          pd_clock_fn_args = {0};
 
-    HAL_TRACE_DEBUG("Creating pd state for session");
+    HAL_TRACE_VERBOSE("Creating pd state for session");
 
     session_pd = session_pd_alloc_init();
     if (session_pd == NULL) {
@@ -961,7 +975,7 @@ pd_session_create (pd_func_args_t *pd_func_args)
         goto cleanup;
     }
 
-    ret = p4pd_add_flow_hash_table_entries(session_pd, args);
+    ret = p4pd_add_upd_flow_hash_table_entries(session_pd, args, false);
     if (ret != HAL_RET_OK) {
         goto cleanup;
     }
@@ -995,7 +1009,7 @@ pd_session_update (pd_func_args_t *pd_func_args)
     session_t                           *session = args->session;
     uint64_t                             sw_ns = 0, clock=0;
 
-    //HAL_TRACE_DEBUG("Updating pd state for session");
+    HAL_TRACE_VERBOSE("Updating pd state for session");
 
     session_pd = session->pd;
 
@@ -1038,9 +1052,12 @@ pd_session_update (pd_func_args_t *pd_func_args)
         HAL_TRACE_ERR("Flow info table entry upd failure");
         goto cleanup;
     }
-
-    ret = p4pd_add_flow_hash_table_entries(session_pd,
-                                           (pd_session_create_args_t *)args);
+    
+    // Typecasting to pd_session_create_args_t even though its an update case
+    // since the structures are the same. Can be unified in the future
+    ret = p4pd_add_upd_flow_hash_table_entries(session_pd,
+                                              (pd_session_create_args_t *)args,
+                                               true);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Flow hash table entry upd failure");
         goto cleanup;

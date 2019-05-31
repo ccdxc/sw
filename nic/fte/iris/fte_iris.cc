@@ -637,6 +637,11 @@ ctx_t::update_flow_table()
         if (iflow->valid_skip_sfw_reval_info()) {
             session_cfg.skip_sfw_reval = 1;
         }
+        if (existing_session() && iflow->valid_export_info()) {
+            session_args.update_iflow = true;
+        } else {
+            session_args.update_iflow = false;
+        }
 
         HAL_TRACE_DEBUG("fte::update_flow_table: iflow.{} key={} lkp_inst={} "
                         "lkp_vrf={} action={} smac_rw={} dmac-rw={} "
@@ -721,6 +726,12 @@ ctx_t::update_flow_table()
 
         if (rflow->valid_flow_state()) {
             session_state.rflow_state = rflow->flow_state();
+        }
+
+        if (existing_session() && rflow->valid_export_info()) {
+            session_args.update_rflow = true;
+        } else {
+            session_args.update_rflow = false;
         }
 
         HAL_TRACE_DEBUG("fte::update_flow_table: rflow.{} key={} lkp_inst={} "

@@ -210,6 +210,33 @@ flow_table_pd::insert(void *key, void *appdata,
 }
 
 // -----------------------------------------------------------------------
+// update(): Update flow into flow table
+// -----------------------------------------------------------------------
+hal_ret_t
+flow_table_pd::update(void *key, void *appdata,
+                      uint32_t *hash_value, bool hash_valid) {
+    sdk_table_api_params_t params = { 0 };
+    sdk_ret_t sret = SDK_RET_OK;
+    hal_ret_t ret = HAL_RET_OK;
+    
+    params.key = key;
+    params.appdata = appdata;
+    params.hash_32b = *hash_value;
+    params.hash_valid = hash_valid;
+
+    sret = table_->update(&params);
+    ret = hal_sdk_ret_to_hal_ret(sret);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+    if (hash_valid == false) {
+        *hash_value = params.hash_32b;
+    }
+
+    return HAL_RET_OK;
+}
+
+// -----------------------------------------------------------------------
 // remove(): Remove flow from flow table
 // -----------------------------------------------------------------------
 hal_ret_t

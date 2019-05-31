@@ -359,6 +359,8 @@ typedef struct session_args_s {
     flow_pgm_attrs_t   *rflow_attrs[MAX_SESSION_FLOWS];   // responder flow attrs
     session_state_t    *session_state;                    // connection tracking state
     bool               valid_rflow;                       // Rflow valid ?
+    bool               update_iflow;                      // Update Iflow ?
+    bool               update_rflow;                      // Update Rflow ?
     vrf_t              *vrf;                              // src vrf
     ep_t               *sep;                              // spurce ep
     ep_t               *dep;                              // dest ep

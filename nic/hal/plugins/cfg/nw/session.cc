@@ -1481,7 +1481,6 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     pd_session_args.session = session;
     pd_session_args.session_state = args->session_state;
     pd_session_args.rsp = args->rsp;
-    pd_session_args.update_iflow = true;
 
     pd_func_args.pd_session_create = &pd_session_args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_CREATE, &pd_func_args);
@@ -1582,6 +1581,8 @@ session_update(const session_args_t *args, session_t *session)
     pd_session_args.session = session;
     pd_session_args.session_state = args->session_state;
     pd_session_args.rsp = args->rsp;
+    pd_session_args.update_iflow = args->update_iflow;
+    pd_session_args.update_rflow = args->update_rflow;
 
     pd_func_args.pd_session_update = &pd_session_args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_UPDATE, &pd_func_args);

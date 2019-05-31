@@ -27,6 +27,8 @@ public:
     hal_ret_t init();
     hal_ret_t insert(void *key, void *data,
                      uint32_t *hash_value, bool hash_valid);
+    hal_ret_t update(void *key, void *data,
+                     uint32_t *hash_value, bool hash_valid);
     hal_ret_t remove(void *key);
     hal_ret_t get(void *key, FlowHashGetResponse *entry);
     
