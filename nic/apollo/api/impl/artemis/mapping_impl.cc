@@ -345,7 +345,7 @@ mapping_impl::nuke_resources(api_base *api_obj) {
         api_params.handle = mapping_hdl_;
         mapping_impl_db()->mapping_tbl()->remove(&api_params);
     }
-    if (nh_idx_ != PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID) {
+    if (nh_idx_ != 0xFFFFFFFF) {
         nexthop_impl_db()->nh_tbl()->remove(nh_idx_);
     }
     return SDK_RET_OK;
@@ -371,7 +371,7 @@ mapping_impl::release_local_ip_mapping_resources_(api_base *api_obj) {
         api_params.handle = mapping_hdl_;
         mapping_impl_db()->mapping_tbl()->release(&api_params);
     }
-    if (nh_idx_ != PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID) {
+    if (nh_idx_ != 0xFFFFFFFF) {
         nexthop_impl_db()->nh_tbl()->release(nh_idx_);
     }
 
@@ -402,7 +402,7 @@ mapping_impl::release_remote_mapping_resources_(api_base *api_obj) {
         api_params.handle = mapping_hdl_;
         mapping_impl_db()->mapping_tbl()->release(&api_params);
     }
-    if (nh_idx_ != PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID) {
+    if (nh_idx_ != 0xFFFFFFFF) {
         nexthop_impl_db()->nh_tbl()->release(nh_idx_);
     }
     return SDK_RET_OK;

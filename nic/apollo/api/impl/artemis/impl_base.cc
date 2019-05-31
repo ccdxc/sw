@@ -23,6 +23,7 @@
 #include "nic/apollo/api/impl/artemis/tag_impl.hpp"
 #include "nic/apollo/api/impl/artemis/service_impl.hpp"
 #include "nic/apollo/api/impl/artemis/vpc_peer_impl.hpp"
+#include "nic/apollo/api/impl/artemis/nexthop_impl.hpp"
 
 namespace api {
 namespace impl {
@@ -103,6 +104,9 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
 
     case IMPL_OBJ_ID_VPC_PEER:
         return vpc_peer_impl::factory((pds_vpc_peer_spec_t *)args);
+
+    case IMPL_OBJ_ID_NEXTHOP:
+        return nexthop_impl::factory((pds_nexthop_spec_t *)args);
 
     default:
         break;
@@ -189,6 +193,9 @@ impl_base::destroy(impl_obj_id_t obj_id, impl_base *impl) {
 
     case IMPL_OBJ_ID_VPC_PEER:
         return vpc_peer_impl::destroy((vpc_peer_impl *)impl);
+
+    case IMPL_OBJ_ID_NEXTHOP:
+        return nexthop_impl::destroy((nexthop_impl *)impl);
 
     default:
         break;

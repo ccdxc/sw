@@ -136,7 +136,7 @@ private:
         overlay_ip_to_public_ip_nat_hdl_ = PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX;
         overlay_ip_to_provider_ip_nat_hdl_ = PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX;
         to_overlay_ip_nat_hdl_ = PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX;
-        nh_idx_ = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
+        nh_idx_ = 0xFFFFFFFF;
         overlay_ip_hdl_ = handle_t::null();
         public_ip_hdl_ = handle_t::null();
         provider_ip_hdl_ = handle_t::null();

@@ -101,7 +101,9 @@ public:
     virtual sdk_ret_t activate_hw(api_base *api_obj,
                                   pds_epoch_t epoch,
                                   api_op_t api_op,
-                                  obj_ctxt_t *obj_ctxt) override;
+                                  obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief      re-activate config in the hardware stage 0 tables relevant
     ///             to this object, if any, this reactivation must be based on
@@ -136,7 +138,7 @@ private:
     ~nexthop_impl() {}
 
 private:
-    uint16_t    hw_id_;                 ///< hardware id
+    uint32_t    hw_id_;    ///< hardware id
 };
 
 /// @}
