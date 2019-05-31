@@ -1052,7 +1052,6 @@ func (tb *TestBed) setupTestBed() error {
 		node := tb.Nodes[i]
 		for _, nr := range tb.addNodeResp.Nodes {
 			if node.NodeName == nr.Name {
-				log.Infof("Adding node %v as not used", node.topoNode.NodeName)
 				node.NodeUUID = nr.NodeUuid
 				node.iotaNode = nr
 				nodeAdded = true
@@ -1061,7 +1060,6 @@ func (tb *TestBed) setupTestBed() error {
 		}
 		//Probably node not added, release the instance
 		if !nodeAdded {
-			log.Infof("Releasing node %v as not used", node.topoNode.NodeName)
 			tb.addAvailableInstance(node.instParams)
 		}
 	}
