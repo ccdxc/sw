@@ -40,4 +40,5 @@ struct txlpm1_d            d;
 
 %%
 
+#include "../include/lpm.h"
 #include "route_result.h"

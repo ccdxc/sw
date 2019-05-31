@@ -39,7 +39,6 @@ ingress_to_egress:
     phvwr.c1        p.{vxlan_2_valid,udp_2_valid,ipv4_2_valid,ipv6_2_valid, \
                         ctag_2_valid,ethernet_2_valid}, 0
 
-
 .align
 ingress_to_cps:
     /*
@@ -67,8 +66,9 @@ ingress_to_cps:
                         (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
                          CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
                          ARTEMIS_P4_TO_RXDMA_HDR_SZ)
-    phvwr.e         p.p4_to_rxdma_table3_valid, TRUE
-    phvwr           p.p4_to_rxdma_direction, k.control_metadata_direction
+    phvwr           p.p4_to_rxdma_vnic_info_en, TRUE
+    phvwr.e         p.p4_to_rxdma_cps_path_en, TRUE
+    phvwr.f         p.p4_to_rxdma_direction, k.control_metadata_direction
 
 .align
 ingress_to_classic_nic:

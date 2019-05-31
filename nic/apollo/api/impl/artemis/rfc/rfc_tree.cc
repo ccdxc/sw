@@ -106,7 +106,10 @@ rfc_ctxt_destroy (rfc_ctxt_t *rfc_ctxt)
     rfc_tree_destroy(&rfc_ctxt->pfx_tree);
     rfc_tree_destroy(&rfc_ctxt->port_tree);
     rfc_tree_destroy(&rfc_ctxt->proto_port_tree);
+    rfc_tree_destroy(&rfc_ctxt->sip_tree);
+    rfc_tree_destroy(&rfc_ctxt->tag_tree);
     rfc_table_destroy(&rfc_ctxt->p1_table);
+    rfc_table_destroy(&rfc_ctxt->p2_table);
     if (rfc_ctxt->cbm) {
         free(rfc_ctxt->cbm);
     }
@@ -149,6 +152,28 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
     new (&rfc_ctxt->proto_port_tree.rfc_table.cbm_map) cbm_map_t();
     rfc_ctxt->proto_port_tree.rfc_table.max_classes =
         SACL_PROTO_DPORT_TREE_MAX_CLASSES;
+
+    rfc_ctxt->sip_tree.itable.nodes =
+            (inode_t *)malloc(sizeof(inode_t) * num_nodes);
+    if (rfc_ctxt->sip_tree.itable.nodes == NULL) {
+        return sdk::SDK_RET_OOM;
+    }
+    new (&rfc_ctxt->sip_tree.rfc_table.cbm_map) cbm_map_t();
+    rfc_ctxt->sip_tree.rfc_table.max_classes =
+            (policy->af == IP_AF_IPV4) ?
+            SACL_IPV4_TREE_MAX_CLASSES:
+            SACL_IPV6_TREE_MAX_CLASSES;
+
+    rfc_ctxt->tag_tree.itable.nodes =
+            (inode_t *)malloc(sizeof(inode_t) * num_nodes);
+    if (rfc_ctxt->tag_tree.itable.nodes == NULL) {
+        return sdk::SDK_RET_OOM;
+    }
+    new (&rfc_ctxt->tag_tree.rfc_table.cbm_map) cbm_map_t();
+    rfc_ctxt->tag_tree.rfc_table.max_classes =
+            (policy->af == IP_AF_IPV4) ?
+            SACL_IPV4_TREE_MAX_CLASSES:
+            SACL_IPV6_TREE_MAX_CLASSES;
 
     new (&rfc_ctxt->p1_table.cbm_map) cbm_map_t();
     rfc_ctxt->p1_table.max_classes = SACL_P1_MAX_CLASSES;

@@ -1,6 +1,5 @@
 #include "common_rxdma_dummy.p4"
 #include "../include/common_headers.p4"
-#include "./vnic_info.p4"
 
 @pragma scratch_metadata
 metadata common_scratch_metadata_t common_scratch_metadata0;

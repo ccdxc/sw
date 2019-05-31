@@ -29,10 +29,8 @@ struct rxlpm2_3_d          d;
 #define key                k.lpm_metadata_lpm2_key
 #define keylo              k.lpm_metadata_lpm2_key[63:0]
 #define keyhi              k.lpm_metadata_lpm2_key[127:64]
-#define base_addr          k.{lpm_metadata_lpm2_base_addr_sbit0_ebit1...\
-                              lpm_metadata_lpm2_base_addr_sbit2_ebit33}
-#define curr_addr          k.{lpm_metadata_lpm2_next_addr_sbit0_ebit1...\
-                              lpm_metadata_lpm2_next_addr_sbit2_ebit33}
+#define base_addr          k.lpm_metadata_lpm2_base_addr
+#define curr_addr          k.lpm_metadata_lpm2_next_addr
 
 // Define PHV field names
 #define next_addr          p.lpm_metadata_lpm2_next_addr

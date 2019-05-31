@@ -1,28 +1,42 @@
-// VNIC Info Table Action: Get all LPM roots for a VNET - different roots in
-// Tx & Rx direction. Pass the roots to later stages thru PHV
-action vnic_info(entry_valid, lpm_base1, lpm_base2, lpm_base3,
-                 lpm_base4, lpm_base5, lpm_base6, lpm_base7,
-                 lpm_base8) {
-    // Fill the keys only in first pass
-    if (capri_p4_intr.recirc_count == 0) {
-        if (entry_valid == TRUE) {
-            modify_field(scratch_metadata.flag, entry_valid);
-            modify_field(scratch_metadata.lpm_base1, lpm_base1);
-            modify_field(scratch_metadata.lpm_base2, lpm_base2);
-            modify_field(scratch_metadata.lpm_base3, lpm_base3);
-            modify_field(scratch_metadata.lpm_base4, lpm_base4);
-            modify_field(scratch_metadata.lpm_base5, lpm_base5);
-            modify_field(scratch_metadata.lpm_base6, lpm_base6);
-            modify_field(scratch_metadata.lpm_base7, lpm_base7);
-            modify_field(scratch_metadata.lpm_base8, lpm_base8);
-        }
+// VNIC Info Table Action: Get all LPM roots for a VNET - different roots in Tx & Rx direction
+// Pass the roots to later stages thru PHV
+action vnic_info(lpm_base1, lpm_base2, lpm_base3, lpm_base4,
+                 lpm_base5, lpm_base6, lpm_base7, lpm_base8) {
+
+    // Disable lookup for further passes
+    modify_field(p4_to_rxdma.vnic_info_en, FALSE);
+
+    // Copy the LPM roots to PHV based on AF
+    if (p4_to_rxdma.iptype == IPTYPE_IPV4) {
+        modify_field(lpm_metadata.sacl_base_addr, lpm_base1);
+        modify_field(lpm_metadata.meter_base_addr, lpm_base3);
+        // Setup root address of DPORT lookup
+        modify_field(lpm_metadata.lpm2_base_addr, lpm_base1 +
+                     SACL_PROTO_DPORT_TABLE_OFFSET);
+    } else {
+        modify_field(lpm_metadata.sacl_base_addr, lpm_base2);
+        modify_field(lpm_metadata.meter_base_addr, lpm_base4);
+        // Setup root address of DPORT lookup
+        modify_field(lpm_metadata.lpm2_base_addr, lpm_base2 +
+                     SACL_PROTO_DPORT_TABLE_OFFSET);
     }
+
+    modify_field(scratch_metadata.field40, lpm_base5);
+    modify_field(scratch_metadata.field40, lpm_base6);
+    modify_field(scratch_metadata.field40, lpm_base7);
+    modify_field(scratch_metadata.field40, lpm_base8);
+
     // Always fill the remote_ip from p4 keys based on the direction
     if (p4_to_rxdma.direction == TX_FROM_HOST) {
-        modify_field(scratch_metadata.remote_ip, p4_to_rxdma.flow_dst);
+        modify_field(lpm_metadata.remote_ip, p4_to_rxdma.flow_dst);
     } else {
-        modify_field(scratch_metadata.remote_ip, p4_to_rxdma.flow_src);
+        modify_field(lpm_metadata.remote_ip, p4_to_rxdma.flow_src);
     }
+
+    // Setup key for DPORT lookup
+    modify_field(lpm_metadata.lpm2_key, p4_to_rxdma.flow_dport);
+    // Enable LPM2
+    modify_field(p4_to_rxdma.lpm2_enable, TRUE);
 }
 
 

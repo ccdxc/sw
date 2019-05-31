@@ -419,10 +419,10 @@ rfc_p1_action_data_flush (mem_addr_t addr, void *actiondata)
     sacl_p1_actiondata_t    *action_data;
 
     action_data = (sacl_p1_actiondata_t *)actiondata;
-    ret = impl_base::pipeline_impl()->write_to_rxdma_table(addr,
-                                                           P4_ARTEMIS_TXDMA_TBL_ID_SACL_P1,
-                                                           SACL_P1_SACL_ACTION_P1_ID,
-                                                           action_data);
+    ret = impl_base::pipeline_impl()->write_to_txdma_table(addr,
+                                   P4_ARTEMIS_TXDMA_TBL_ID_SACL_P1,
+                                   SACL_P1_SACL_ACTION_P1_ID,
+                                   action_data);
     // reset the action data after flushing it
     memset(action_data, 0, sizeof(*action_data));
     return ret;
@@ -441,7 +441,7 @@ rfc_p2_action_data_flush (mem_addr_t addr, void *actiondata)
     sacl_p2_actiondata_t    *action_data;
 
     action_data = (sacl_p2_actiondata_t *)actiondata;
-    ret = impl_base::pipeline_impl()->write_to_rxdma_table(addr,
+    ret = impl_base::pipeline_impl()->write_to_txdma_table(addr,
               P4_ARTEMIS_TXDMA_TBL_ID_SACL_P2,
               SACL_P2_SACL_ACTION_P2_ID,
               action_data);
@@ -472,7 +472,7 @@ rfc_p1_eq_class_tables_dump (rfc_ctxt_t *rfc_ctxt)
 static inline void
 rfc_p2_eq_class_tables_dump (rfc_ctxt_t *rfc_ctxt)
 {
-    rfc_table_t    *rfc_table = &rfc_ctxt->p1_table;
+    rfc_table_t    *rfc_table = &rfc_ctxt->p2_table;
 
     PDS_TRACE_DEBUG("RFC P2 equivalence class table dump : ");
     rfc_eq_class_table_dump(rfc_table);
@@ -757,7 +757,7 @@ rfc_p3_action_data_flush (mem_addr_t addr, void *actiondata)
     sacl_p3_actiondata_t    *action_data;
 
     action_data = (sacl_p3_actiondata_t *)actiondata;
-    ret = impl_base::pipeline_impl()->write_to_rxdma_table(addr,
+    ret = impl_base::pipeline_impl()->write_to_txdma_table(addr,
               P4_ARTEMIS_TXDMA_TBL_ID_SACL_P3,
               SACL_P3_SACL_ACTION_P3_ID, action_data);
     // reset the action data after flushing it

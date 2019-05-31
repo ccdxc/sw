@@ -1,14 +1,13 @@
 header_type artemis_p4_to_rxdma_header_t {
     fields {
         p4plus_app_id   : 4;
-        table0_valid    : 1;
-        table1_valid    : 1;
-        table2_valid    : 1;
-        table3_valid    : 1;
+        lpm1_enable     : 1;
+        lpm2_enable     : 1;
+        vnic_info_en    : 1;
+        cps_path_en     : 1;
 
-        pad0            : 5;
+        pad0            : 6;
         iptype          : 1;
-        sacl_bypass     : 1;
         direction       : 1;
         vnic_id         : 8;
         tag_root        : 40;

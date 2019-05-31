@@ -4,9 +4,13 @@
 #include "../include/artemis_defines.h"
 #include "../include/artemis_headers.p4"
 #include "../include/artemis_table_sizes.h"
+#include "../include/lpm_defines.h"
 
 #include "metadata.p4"
-#include "sacl.p4"
+#include "rxlpm1.p4"
+#include "rxlpm2.p4"
+#include "recirc.p4"
+#include "vnic_info.p4"
 #include "packet_queue.p4"
 #include "common_rxdma.p4"
 
@@ -15,11 +19,18 @@ parser start {
 }
 
 control ingress {
-    if (app_header.table3_valid == 1) {
-        sacl();
+    if (p4_to_rxdma.cps_path_en == 1) {
+        if (p4_to_rxdma.lpm1_enable == TRUE) {
+            rxlpm1();
+        }
+        if (p4_to_rxdma.vnic_info_en == TRUE) {
+            vnic_info();
+        }
+        if (p4_to_rxdma.lpm2_enable == TRUE) {
+            rxlpm2();
+        }
+        recirc();
         pkt_enqueue();
-        //TODO-KSM Launch this table/lookup only in First Pass
-        vnic_info();
     } else {
         common_p4plus_stage0();
         if (app_header.table0_valid == 1) {

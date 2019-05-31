@@ -46,7 +46,8 @@ action ingress_to_cps() {
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
                  (CAPRI_GLOBAL_INTRINSIC_HDR_SZ +
                   CAPRI_RXDMA_INTRINSIC_HDR_SZ + ARTEMIS_P4_TO_RXDMA_HDR_SZ));
-    modify_field(p4_to_rxdma.table3_valid, TRUE);
+    modify_field(p4_to_rxdma.cps_path_en, TRUE);
+    modify_field(p4_to_rxdma.vnic_info_en, TRUE);
     modify_field(p4_to_rxdma.direction, control_metadata.direction);
 }
 

@@ -2,8 +2,6 @@
 /* General Purpose LPM lookup - 1                                            */
 /*****************************************************************************/
 
-#include "../include/lpm_defines.h"
-
 /**    Global Definitions    **/
 /* Select key-widths and define table field names for them */
 #define key_field32b       scratch_metadata.field32
@@ -162,3 +160,14 @@
 #undef lpm_result128b
 #undef result_handler32b
 #undef result_handler128b
+
+control rxlpm1 {
+    apply(rxlpm1_0);
+    apply(rxlpm1_1);
+    apply(rxlpm1_2);
+    apply(rxlpm1_3);
+    apply(rxlpm1_4);
+    apply(rxlpm1_5);
+    apply(rxlpm1_6);
+    apply(rxlpm1);
+}

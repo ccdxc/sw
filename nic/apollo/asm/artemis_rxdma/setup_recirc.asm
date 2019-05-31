@@ -12,36 +12,61 @@ struct setup_recirc_k      k;
 setup_recirc:
     /* Is this the first pass? */
     seq              c1, k.capri_p4_intr_recirc_count, 0
-    /* If not, go to not_0 */
-    bcf              [!c1], not_0
-    /* First Pass. Is direction == TX_FROM_HOST? */
-    sne              c1, k.p4_to_rxdma_direction, TX_FROM_HOST
-    /* If so, reset LPM2 key to SIP */
-    phvwr.c1         p.lpm_metadata_lpm2_key, k.lpm_metadata_lpm1_key
-    /* Reset LPM2 base address to METER root */
-    phvwr.e          p.lpm_metadata_lpm2_base_addr, k.{lpm_metadata_meter_base_addr_sbit0_ebit1...\
-                                                       lpm_metadata_meter_base_addr_sbit2_ebit33}
-    /* Set Recirc bit */
-    phvwr            p.capri_p4_intr_recirc, 1
-
-not_0:
+    /* If so, go to pass0 */
+    bcf              [c1], pass0
     /* Is this the second pass? */
     seq              c1, k.capri_p4_intr_recirc_count, 1
-    /* If not, go to not_0_or_1 */
-    bcf              [!c1], not_0_or_1
-    /* Second Pass. Create Proto+DPort Key = ((Proto<<16)|(DPort)) */
-    or               r1, k.p4_to_rxdma_flow_dport, k.p4_to_rxdma_flow_proto, 16
-    /* Reset LPM2 key to Proto_DPort */
-    phvwr            p.lpm_metadata_lpm2_key, r1
-    /* Reset LPM2 base address to DPORT root */
-    add              r1, r0, k.{lpm_metadata_lpm2_base_addr_sbit0_ebit1...\
-                                lpm_metadata_lpm2_base_addr_sbit2_ebit33}
-    add              r1, r1, SACL_PROTO_DPORT_TABLE_OFFSET
-    phvwr.e          p.lpm_metadata_lpm2_base_addr, r1
-    /* Set Recirc bit */
-    phvwr            p.capri_p4_intr_recirc, 1
-
-not_0_or_1:
-    /* Nothing to do. Quit! */
+    /* If so, go to pass1 */
+    bcf              [c1], pass1
+    /* Third pass. Stop */
+    nop
     nop.e
     nop
+
+pass0:
+    /* Setup key for SIP lookup on LPM1 */
+    phvwr            p.lpm_metadata_lpm1_key[127:120], k.p4_to_rxdma_flow_src_sbit0_ebit7
+    phvwr            p.lpm_metadata_lpm1_key[119:64], k.p4_to_rxdma_flow_src_sbit8_ebit127[119:64]
+    phvwr            p.lpm_metadata_lpm1_key[63:0],  k.p4_to_rxdma_flow_src_sbit8_ebit127[63:0]
+
+    /* Setup root for SIP lookup on LPM1 */
+    seq              c1, k.p4_to_rxdma_iptype, IPTYPE_IPV4
+    addi.c1          r1, r0, SACL_IPV4_SIP_TABLE_OFFSET
+    addi.!c1         r1, r0, SACL_IPV6_SIP_TABLE_OFFSET
+    add              r1, r1, k.lpm_metadata_sacl_base_addr
+    phvwr            p.lpm_metadata_lpm1_base_addr, r1
+
+    /* Setup key for DIP lookup on LPM2 */
+    phvwr            p.lpm_metadata_lpm2_key[127:64], k.p4_to_rxdma_flow_dst_sbit0_ebit79[79:16]
+    phvwr            p.lpm_metadata_lpm2_key[63:48], k.p4_to_rxdma_flow_dst_sbit0_ebit79[15:0]
+    phvwr            p.lpm_metadata_lpm2_key[47:40], k.p4_to_rxdma_flow_dst_sbit80_ebit87
+    phvwr            p.lpm_metadata_lpm2_key[39:0], k.p4_to_rxdma_flow_dst_sbit88_ebit127
+
+    /* Setup root for DIP lookup on LPM2 */
+    addi             r1, r0, SACL_IP_TABLE_OFFSET
+    add              r1, r1, k.lpm_metadata_sacl_base_addr
+    phvwr            p.lpm_metadata_lpm2_base_addr, r1
+
+    /* Enable LPM1 */
+    phvwr.e          p.p4_to_rxdma_lpm1_enable, TRUE
+    /* Enable Recirc */
+    phvwr            p.capri_p4_intr_recirc, TRUE
+
+pass1:
+    /* Setup key for TAG Lookup on LPM1 */
+    phvwr            p.lpm_metadata_lpm1_key[63:0], k.lpm_metadata_remote_ip[63:0]
+    phvwr            p.lpm_metadata_lpm1_key[127:64], k.lpm_metadata_remote_ip[127:64]
+
+    /* Setup root for TAG Lookup on LPM1 */
+    phvwr            p.lpm_metadata_lpm1_base_addr, k.{p4_to_rxdma_tag_root_sbit0_ebit7...\
+                                                       p4_to_rxdma_tag_root_sbit16_ebit39}
+
+    /* Setup key for METER Lookup on LPM1 */
+    phvwr            p.lpm_metadata_lpm2_key[63:0], k.lpm_metadata_remote_ip[63:0]
+    phvwr            p.lpm_metadata_lpm2_key[127:64], k.lpm_metadata_remote_ip[127:64]
+
+    /* Setup root for METER Lookup on LPM2 */
+    phvwr.e          p.lpm_metadata_lpm2_base_addr, k.lpm_metadata_meter_base_addr
+    /* Enable Recirc */
+    phvwr            p.capri_p4_intr_recirc, TRUE
+

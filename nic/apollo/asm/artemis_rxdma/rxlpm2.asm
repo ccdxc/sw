@@ -34,10 +34,8 @@ struct rxlpm2_d            d;
 #define key                k.lpm_metadata_lpm2_key
 #define keylo              k.lpm_metadata_lpm2_key[63:0]
 #define keyhi              k.lpm_metadata_lpm2_key[127:64]
-#define base_addr          k.{lpm_metadata_lpm2_base_addr_sbit0_ebit1...\
-                              lpm_metadata_lpm2_base_addr_sbit2_ebit33}
-#define curr_addr          k.{lpm_metadata_lpm2_next_addr_sbit0_ebit1...\
-                              lpm_metadata_lpm2_next_addr_sbit2_ebit33}
+#define base_addr          k.lpm_metadata_lpm2_base_addr
+#define curr_addr          k.lpm_metadata_lpm2_next_addr
 
 // Define PHV field names
 #define next_addr          p.lpm_metadata_lpm2_next_addr
@@ -60,23 +58,25 @@ nop_res_handler:
 rxlpm2_res_handler:
     /* Is this the first pass? */
     seq              c1, k.capri_p4_intr_recirc_count, 0
-    /* If so, write the DIP classid result, and stop */
-    phvwr.c1.e       p.lpm_metadata_dip_classid, res_reg
+    /* If so, go to pass0 */
+    bcf              [c1], pass0
     /* Is this the second pass? */
     seq              c1, k.capri_p4_intr_recirc_count, 1
+    /* If so, write the DIP classid result, and stop */
+    phvwr.c1.e       p.lpm_metadata_dip_classid, res_reg
+    /* Is this the third pass? */
+    seq              c1, k.capri_p4_intr_recirc_count, 2
     /* If so, write the METER classid result, and stop */
-    phvwr.c1.e       p.lpm_metadata_meter_result, res_reg
+    phvwr.c1         p.lpm_metadata_meter_result, res_reg
+    /* Else, Stop anyway */
+    nop.e
     nop
-    /* Third pass. Write DPORT classid result */
+
+pass0:
+    /* Write the DPORT classid */
     phvwr            p.lpm_metadata_dport_classid, res_reg
-    /* Reset LPM2 key to SPORT */
+    /* Setup key for SPORT Lookup on LPM2 */
     phvwr            p.lpm_metadata_lpm2_key, k.p4_to_rxdma_flow_sport
-    /* Reset LPM2 base address to SPORT root */
-    add              r1, r0, k.{lpm_metadata_lpm2_base_addr_sbit0_ebit1...\
-                                lpm_metadata_lpm2_base_addr_sbit2_ebit33}
-    add              r1, r1, SACL_SPORT_TABLE_OFFSET
-    phvwr.e          p.lpm_metadata_lpm2_base_addr, r1
-    nop
-
-
-
+    /* Setup root for SPORT Lookup on LPM2 */
+    add.e            r1, k.lpm_metadata_sacl_base_addr, SACL_SPORT_TABLE_OFFSET
+    phvwr            p.lpm_metadata_lpm2_base_addr, r1

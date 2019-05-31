@@ -10,6 +10,8 @@ struct phv_ p;
 %%
 
 nacl_permit:
+    nop.e
+    nop
 
 .align
 nacl_redirect:
