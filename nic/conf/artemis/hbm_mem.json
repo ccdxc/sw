@@ -176,7 +176,7 @@
             "cache": "p4plus-rxdma"
         },
         {
-            "name": "vnic_info",
+            "name": "vnic_info_rxdma",
             "_comment": "512 * 64B",
             "size": "32768B",
             "cache": "p4plus-rxdma"
