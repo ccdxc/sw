@@ -289,6 +289,7 @@ func (agent *Service) Trigger(ctx context.Context, in *iota.TriggerMsg) (*iota.T
 func (agent *Service) CheckHealth(ctx context.Context, in *iota.NodeHealth) (*iota.NodeHealth, error) {
 	/* Check if the node running an instance to add a workload */
 	if agent.node == nil || agent.node.NodeName() != in.GetNodeName() {
+		agent.logger.Printf("Check health failed %v %v\n", agent.node.NodeName(), in.GetNodeName())
 		return &iota.NodeHealth{HealthCode: iota.NodeHealth_NODE_DOWN}, nil
 	}
 
@@ -310,6 +311,7 @@ var iotaNodes = map[iota.PersonalityType]func() IotaNode{
 	iota.PersonalityType_PERSONALITY_NAPLES_BITW:          newNaplesBitw,
 	iota.PersonalityType_PERSONALITY_NAPLES_BITW_PERF:     newNaplesBitwPerf,
 	iota.PersonalityType_PERSONALITY_NAPLES_SIM:           newNaplesSim,
+	iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM:     newNaplesMultiSim,
 	iota.PersonalityType_PERSONALITY_VENICE:               newVenice,
 	iota.PersonalityType_PERSONALITY_NAPLES_SIM_WITH_QEMU: newNaplesQemu,
 	iota.PersonalityType_PERSONALITY_THIRD_PARTY_NIC:      newThirdPartyNic,
@@ -342,6 +344,10 @@ func newThirdPartyNic() IotaNode {
 
 func newCommandNode() IotaNode {
 	return &commandNode{iotaNode: iotaNode{name: "command-node"}}
+}
+
+func newNaplesMultiSim() IotaNode {
+	return &naplesMultiSimNode{dataNode: dataNode{iotaNode: iotaNode{name: "naples-multi-sim"}}}
 }
 
 func newNaplesSim() IotaNode {

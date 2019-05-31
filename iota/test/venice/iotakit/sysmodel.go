@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"math/rand"
 	"os"
@@ -16,6 +17,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/workload"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfgen"
 	"github.com/pensando/sw/venice/utils/log"
@@ -77,6 +79,11 @@ func NewSysModel(tb *TestBed) (*SysModel, error) {
 		} else if nr.Personality == iota.PersonalityType_PERSONALITY_VENICE {
 			// create
 			err := sm.createVeniceNode(nr.iotaNode)
+			if err != nil {
+				return nil, err
+			}
+		} else if nr.Personality == iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM {
+			err := sm.createMultiSimNaples(nr)
 			if err != nil {
 				return nil, err
 			}
@@ -174,15 +181,17 @@ func (sm *SysModel) SetupDefaultConfig(scale, scaleData bool) error {
 	}
 
 	// generate scale configuration if required
-	if scale {
-		err := sm.populateScaleConfig()
-		if err != nil {
-			return fmt.Errorf("Error generating scale config: %s", err)
-		}
+	err := sm.populateConfig(sm.tb.GetBaseVlan(), scale)
+	if err != nil {
+		return fmt.Errorf("Error generating scale config: %s", err)
 	}
 
+	err = sm.AssociateHosts()
+	if err != nil {
+		return fmt.Errorf("Error associating hosts: %s", err)
+	}
 	// create some networks
-	for i := 0; i < defaultNumNetworks; i++ {
+	/*for i := 0; i < defaultNumNetworks; i++ {
 		vlanID := sm.tb.allocatedVlans[i]
 		err := sm.createNetwork(vlanID, fmt.Sprintf("192.168.%d.0/24", i+2))
 		if err != nil {
@@ -191,22 +200,64 @@ func (sm *SysModel) SetupDefaultConfig(scale, scaleData bool) error {
 		}
 	}
 
-	snc := sm.Networks()
+	//snc := sm.Networks() */
 
-	// Create Host Objects
-	for _, n := range naplesNodes {
-		h, err := sm.createHost(n)
+	hosts, err := sm.ListRealHosts()
+	if err != nil {
+		log.Error("Error finding real hosts to run traffic tests")
+		return err
+	}
+
+	if len(hosts) == 0 {
+		msg := "No real hosts run traffic tests"
+		return errors.New(msg)
+	}
+
+	nwMap := make(map[uint32]uint32)
+
+	for _, h := range hosts {
+
+		for i := 2 + sm.tb.GetBaseVlan(); i <= defaultNumNetworks+sm.tb.GetBaseVlan()+1; i++ {
+			nwMap[((uint32)(i))] = 0
+		}
+		wloadsPerNetwork := defaultWorkloadPerHost / defaultNumNetworks
+
+		//Keep track of number of workloads per network
+		wloadsToCreate := []*workload.Workload{}
+
+		wloads, err := sm.ListWorkloadsOnHost(h.veniceHost)
 		if err != nil {
-			log.Errorf("Error creating host: %#v. Err: %v", n, err)
+			log.Error("Error finding real workloads on hosts.")
 			return err
 		}
 
-		for i := 0; i < defaultWorkloadPerHost; i++ {
-			name := fmt.Sprintf("%s_wrkld_%d", n.NodeName, i)
-			subnet := snc.subnets[i%len(snc.subnets)]
-			wrk, err := sm.createWorkload(sm.tb.Topo.WorkloadType, sm.tb.Topo.WorkloadImage, name, h, subnet)
+		if len(wloads) == 0 {
+			log.Error("No workloads created on real hosts.")
+			return err
+		}
+
+		for _, wload := range wloads {
+			nw := wload.GetSpec().Interfaces[0].GetExternalVlan()
+			if _, ok := nwMap[nw]; ok {
+				if nwMap[nw] > ((uint32)(wloadsPerNetwork)) {
+					//This network is done.
+					continue
+				}
+				nwMap[nw] = nwMap[nw] + 1
+				wloadsToCreate = append(wloadsToCreate, wload)
+				log.Infof("Adding workload %v (host:%v NodeUUID:(%v) iotaNode:%v nw:%v) to create list", wload.GetName(), h.veniceHost.GetName(), h.iotaNode.GetNodeUuid(), h.iotaNode.Name, nw)
+
+				if len(wloadsToCreate) == defaultWorkloadPerHost {
+					// We have enough workloads already for this host.
+					break
+				}
+			}
+		}
+
+		for _, wload := range wloadsToCreate {
+			wrk, err := sm.createWorkload(wload, sm.tb.Topo.WorkloadType, sm.tb.Topo.WorkloadImage, h)
 			if err != nil {
-				log.Errorf("Error creating workload %v. Err: %v", name, err)
+				log.Errorf("Error creating workload %v. Err: %v", wload.GetName(), err)
 				return err
 			}
 			wc.workloads = append(wc.workloads, wrk)
@@ -280,7 +331,7 @@ func (sm *SysModel) SetupDefaultConfig(scale, scaleData bool) error {
 	}
 
 	// create a default firewall profile
-	err := sm.updateDefaultFwprofile()
+	err = sm.updateDefaultFwprofile()
 	if err != nil {
 		log.Errorf("Error creating firewall profile: %v", err)
 		return err
@@ -303,74 +354,136 @@ func (sm *SysModel) SetupDefaultConfig(scale, scaleData bool) error {
 	return nil
 }
 
-// populateScaleConfig creates scale configuration based on some predetermined parameters
+func timeTrack(start time.Time, name string) {
+	elapsed := time.Since(start)
+	log.Infof("%s took %s\n", name, elapsed)
+}
+
+// populateConfig creates scale configuration based on some predetermined parameters
 // TBD: we can enhance this to take the scale parameters fromt he user
-func (sm *SysModel) populateScaleConfig() error {
+func (sm *SysModel) populateConfig(vlanBase uint32, scale bool) error {
 	cfg := cfgen.DefaultCfgenParams
 	cfg.SGPolicyParams.NumPolicies = 1
-	cfg.SGPolicyParams.NumRulesPerPolicy = 50000
-	cfg.WorkloadParams.WorkloadsPerHost = 200
-	cfg.AppParams.NumApps = 5000
+
+	if scale {
+		cfg.SGPolicyParams.NumRulesPerPolicy = 50000
+		cfg.WorkloadParams.WorkloadsPerHost = 100
+		cfg.AppParams.NumApps = 5000
+	} else {
+		cfg.SGPolicyParams.NumRulesPerPolicy = 5
+		cfg.WorkloadParams.WorkloadsPerHost = 50
+		cfg.AppParams.NumApps = 4
+	}
 	// TBD - override default-policy
 	// cfg.SGPolicyParams.SGPolicyTemplate.ObjectMeta.Name = "default-policy"
 
 	smartnics := []*cluster.SmartNIC{}
+	realHostNames := make(map[string]bool)
 	for _, naples := range sm.naples {
 		smartnics = append(smartnics, naples.smartNic)
 	}
+
+	//Add sim naples too.
+	for _, naples := range sm.fakeNaples {
+		smartnics = append(smartnics, naples.smartNic)
+	}
+
 	cfg.Smartnics = smartnics
 
-	// generate the configuration now
-	cfg.Do()
-
-	// verify and keep the data in some file
-	ofile, err := os.OpenFile("/tmp/scale.json", os.O_RDWR|os.O_CREATE, 0755)
-	if err != nil {
-		panic(err)
+	generateConfig := func() error {
+		defer timeTrack(time.Now(), "Config generation")
+		// generate the configuration now
+		cfg.Do()
+		return nil
 	}
 
-	for _, o := range cfg.Networks {
-		j, err := json.MarshalIndent(o, "", "  ")
-		if err != nil {
-			return err
-		}
-		ofile.Write(j)
-		ofile.WriteString("\n")
+	configFile := "/tmp/scale.json"
 
+	writeConfig := func() {
+		ofile, err := os.OpenFile(configFile, os.O_RDWR|os.O_CREATE, 0755)
+		if err != nil {
+			panic(err)
+		}
+		j, err := json.MarshalIndent(&cfg.ConfigItems, "", "  ")
+		ofile.Write(j)
+		ofile.Close()
+	}
+
+	readConfig := func() {
+		jsonFile, err := os.OpenFile(configFile, os.O_RDONLY, 0755)
+		if err != nil {
+			panic(err)
+		}
+		byteValue, _ := ioutil.ReadAll(jsonFile)
+
+		err = json.Unmarshal(byteValue, &cfg.ConfigItems)
+		if err != nil {
+			panic(err)
+		}
+		jsonFile.Close()
+	}
+
+	if !sm.tb.skipSetup {
+		//Generate fresh config if not skip setup
+		generateConfig()
+		// verify and keep the data in some file
+		writeConfig()
+	} else {
+		readConfig()
+	}
+
+	for _, o := range cfg.ConfigItems.Networks {
 		sm.fakeSubnets[o.ObjectMeta.Name] = &Network{veniceNetwork: o}
-		if err := sm.tb.CreateNetwork(o); err != nil {
-			return fmt.Errorf("error creating network: %s", err)
-		}
 	}
-	for _, o := range cfg.Hosts {
-		j, err := json.MarshalIndent(o, "", "  ")
-		if err != nil {
-			return err
-		}
-		ofile.Write(j)
-		ofile.WriteString("\n")
 
-		sm.fakeHosts[o.ObjectMeta.Name] = &Host{veniceHost: o}
-		// TBD: push the workloads and host when we simulate Naples
-	}
-	for _, o := range cfg.Workloads {
-		j, err := json.MarshalIndent(o, "", "  ")
-		if err != nil {
-			return err
-		}
-		ofile.Write(j)
-		ofile.WriteString("\n")
+	createHosts := func() error {
+		defer timeTrack(time.Now(), "Creating hosts")
+		for _, o := range cfg.ConfigItems.Hosts {
+			h := &Host{veniceHost: o}
+			sm.fakeHosts[o.ObjectMeta.Name] = h
 
-		sm.fakeWorkloads[o.ObjectMeta.Name] = &Workload{veniceWorkload: o}
-		// TBD: push the workloads and host when we simulate Naples
-	}
-	for _, o := range cfg.Apps {
-		j, err := json.MarshalIndent(o, "", "  ")
-		if err != nil {
-			return err
+			err := sm.tb.CreateHost(h.veniceHost)
+			if err != nil {
+				log.Errorf("Error creating host: %+v. Err: %v", h, err)
+				return err
+			}
+			// TBD: push the workloads and host when we simulate Naples
 		}
-		ofile.Write(j)
-		ofile.WriteString("\n")
+
+		return nil
+
+	}
+
+	if err := createHosts(); err != nil {
+		return err
+	}
+
+	createWorkloads := func() error {
+
+		defer timeTrack(time.Now(), "Create workloads")
+		for _, o := range cfg.ConfigItems.Workloads {
+			w := &Workload{veniceWorkload: o}
+			if _, ok := realHostNames[o.Spec.HostName]; ok {
+				//sm.hosts[o.ObjectMeta.Name] = &Host{veniceHost: o}
+			} else {
+				//
+				sm.fakeWorkloads[o.ObjectMeta.Name] = w
+			}
+
+			w.veniceWorkload.Spec.Interfaces[0].ExternalVlan += vlanBase
+			err := sm.tb.CreateWorkload(w.veniceWorkload)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	if err := createWorkloads(); err != nil {
+		return err
+	}
+
+	for _, o := range cfg.ConfigItems.Apps {
 
 		sm.fakeApps[o.ObjectMeta.Name] = &App{veniceApp: o}
 		if err := sm.tb.CreateApp(o); err != nil {
@@ -378,41 +491,50 @@ func (sm *SysModel) populateScaleConfig() error {
 		}
 	}
 
-	if len(cfg.SGPolicies) > 1 {
+	if len(cfg.ConfigItems.SGPolicies) > 1 {
 		panic("can't have more than one sgpolicy")
 	}
 
-	for _, o := range cfg.SGPolicies {
-		j, err := json.MarshalIndent(o, "", "  ")
-		if err != nil {
-			return err
-		}
-		ofile.Write(j)
-		ofile.WriteString("\n")
+	for _, o := range cfg.ConfigItems.SGPolicies {
 
-		sm.fakeSGPolicies[o.ObjectMeta.Name] = &SGPolicy{venicePolicy: o}
-		if err := sm.tb.CreateSGPolicy(o); err != nil {
-			return fmt.Errorf("error creating sgpolicy: %s", err)
+		createSgPolicy := func() error {
+			defer timeTrack(time.Now(), "Create Sg Policy")
+
+			sm.fakeSGPolicies[o.ObjectMeta.Name] = &SGPolicy{venicePolicy: o}
+			if err := sm.tb.CreateSGPolicy(o); err != nil {
+				return fmt.Errorf("error creating sgpolicy: %s", err)
+			}
+
+			return nil
+		}
+
+		if err := createSgPolicy(); err != nil {
+			return err
 		}
 
 		// verify that sgpolicy object has reached all naples
-		iter := 1
-		for ; iter <= 20; iter++ {
-			time.Sleep(time.Second * time.Duration(iter))
-			if retSgp, err := sm.tb.GetSGPolicy(&o.ObjectMeta); err != nil {
-				return fmt.Errorf("error getting back policy %s", o.ObjectMeta.Name)
-			} else if retSgp.Status.PropagationStatus.Updated == int32(len(smartnics)) {
-				log.Infof("got back policy satus %+v", o.Status.PropagationStatus)
-				break
+		policyPushCheck := func() error {
+			defer timeTrack(time.Now(), "Sg Policy Push")
+			iter := 1
+			for ; iter <= 2000; iter++ {
+				time.Sleep(time.Second * time.Duration(iter))
+				if retSgp, err := sm.tb.GetSGPolicy(&o.ObjectMeta); err != nil {
+					return fmt.Errorf("error getting back policy %s %v", o.ObjectMeta.Name, err.Error())
+				} else if retSgp.Status.PropagationStatus.Updated == int32(len(smartnics)) {
+					log.Infof("got back policy satus %+v", o.Status.PropagationStatus)
+					return nil
+				}
 			}
-		}
-		if iter > 20 {
 			return fmt.Errorf("unable to update policy '%s' on all naples %+v",
 				o.ObjectMeta.Name, o.Status.PropagationStatus)
 		}
+
+		if err := policyPushCheck(); err != nil {
+			return err
+		}
+
 	}
 
-	ofile.Close()
 	return nil
 }
 

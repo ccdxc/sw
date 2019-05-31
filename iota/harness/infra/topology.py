@@ -110,6 +110,12 @@ class Node(object):
         #Simenv does not have nic type
         return ""
 
+    def GetNetwork(self):
+        if getattr(self.__inst, "Resource", None):
+            return getattr(self.__inst.Resource, "Network", None)
+        #Simenv does not have nic type
+        return ""
+
     def GetNicMgmtIP(self):
         return self.__nic_mgmt_ip
 
@@ -126,6 +132,8 @@ class Node(object):
         return self.__role == topo_pb2.PERSONALITY_VENICE
     def IsNaplesSim(self):
         return self.__role == topo_pb2.PERSONALITY_NAPLES_SIM
+    def IsNaplesMultiSim(self):
+        return self.__role == topo_pb2.PERSONALITY_NAPLES_MULTI_SIM
     def IsNaplesHw(self):
         return self.__role == topo_pb2.PERSONALITY_NAPLES
     def IsNaplesHwWithBumpInTheWire(self):
@@ -217,6 +225,14 @@ class Node(object):
         else:
             if self.IsThirdParty() and not self.IsNaplesHwWithBumpInTheWire():
                 msg.third_party_nic_config.nic_type = self.GetNicType()
+            elif self.Role() == topo_pb2.PERSONALITY_NAPLES_MULTI_SIM:
+                msg.naples_multi_sim_config.num_instances = 3
+                msg.naples_multi_sim_config.network = self.GetNetwork().address
+                msg.naples_multi_sim_config.gateway = self.GetNetwork().gateway
+                msg.naples_multi_sim_config.nic_type = self.GetNicType()
+                msg.image = os.path.basename(testsuite.GetImages().naples_sim)
+                #Just test code
+                msg.naples_multi_sim_config.venice_ips.append("1.2.3.4")
             else:
                 msg.naples_config.nic_type = self.GetNicType()
                 msg.naples_config.control_intf = self.__control_intf

@@ -54,6 +54,11 @@ type InstanceParams struct {
 		NICType    string // NIC type (naples, intel, mellanox etc)
 		NICUuid    string // NIC's mac address
 		ServerType string // baremetal server type (server-a or server-d)
+		Network    struct {
+			Address string
+			Gateway string
+			IPRange string
+		}
 	}
 	DataNetworks []DataNetworkParams // data networks
 }
@@ -71,16 +76,17 @@ type TestBedParams struct {
 
 // TestNode contains state of a node in the testbed
 type TestNode struct {
-	NodeName     string               // node name specific to this topology
-	NodeUUID     string               // node UUID
-	Type         iota.TestBedNodeType // node type
-	Personality  iota.PersonalityType // node topology
-	NodeMgmtIP   string
-	VeniceConfig iota.VeniceConfig // venice specific configuration
-	NaplesConfig iota.NaplesConfig // naples specific config
-	iotaNode     *iota.Node        // node info we got from iota
-	instParams   *InstanceParams   // instance params we got from warmd.json
-	topoNode     *TopoNode         // node info from topology
+	NodeName            string               // node name specific to this topology
+	NodeUUID            string               // node UUID
+	Type                iota.TestBedNodeType // node type
+	Personality         iota.PersonalityType // node topology
+	NodeMgmtIP          string
+	VeniceConfig        iota.VeniceConfig         // venice specific configuration
+	NaplesConfig        iota.NaplesConfig         // naples specific config
+	NaplesMultSimConfig iota.NaplesMultiSimConfig // naples multiple sim specific config
+	iotaNode            *iota.Node                // node info we got from iota
+	instParams          *InstanceParams           // instance params we got from warmd.json
+	topoNode            *TopoNode                 // node info from topology
 }
 
 // TestBed is the state of the testbed
@@ -171,10 +177,6 @@ func newTestBed(topoName string, paramsFile string, skipSetup bool) (*TestBed, e
 		log.Errorf("Topology requires atleast %d nodes. Testbed has only %d nodes", len(topo.Nodes), len(params.Instances))
 		return nil, fmt.Errorf("Not enough nodes in testbed")
 	}
-
-	// setup test params
-	gomega.SetDefaultEventuallyTimeout(time.Minute * 3)
-	gomega.SetDefaultEventuallyPollingInterval(time.Second * 10)
 
 	// create a testbed instance
 	tb := TestBed{
@@ -268,6 +270,16 @@ func (tb *TestBed) IsMockMode() bool {
 	return tb.mockMode
 }
 
+//GetBaseVlan Return base vlan for the testbed
+func (tb *TestBed) GetBaseVlan() uint32 {
+	for _, inst := range tb.Params.Instances {
+		if inst.ID != 0 {
+			return (uint32)(inst.ID)
+		}
+	}
+	return 0
+}
+
 // getAvailableInstance returns next instance of a given type
 func (tb *TestBed) getAvailableInstance(instType iota.TestBedNodeType) *InstanceParams {
 	for idx, inst := range tb.unallocatedInstances {
@@ -279,6 +291,11 @@ func (tb *TestBed) getAvailableInstance(instType iota.TestBedNodeType) *Instance
 			}
 		case iota.TestBedNodeType_TESTBED_NODE_TYPE_HW:
 			if inst.Type == "bm" {
+				tb.unallocatedInstances = append(tb.unallocatedInstances[:idx], tb.unallocatedInstances[idx+1:]...)
+				return inst
+			}
+		case iota.TestBedNodeType_TESTBED_NODE_TYPE_MULTI_SIM:
+			if inst.Type == "bm" && inst.Resource.Network.Address != "" {
 				tb.unallocatedInstances = append(tb.unallocatedInstances[:idx], tb.unallocatedInstances[idx+1:]...)
 				return inst
 			}
@@ -304,6 +321,22 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 
 	// check if testbed node can take this personality
 	switch nodeType {
+	case iota.TestBedNodeType_TESTBED_NODE_TYPE_MULTI_SIM:
+		if node.instParams.Type != "bm" {
+			log.Errorf("Incompatible testbed node %v for personality %v/%v", node.instParams.Type, nodeType, personality)
+			return fmt.Errorf("Incompatible testbed node")
+		}
+
+		tb.hasNaplesSim = true
+		node.NaplesMultSimConfig = iota.NaplesMultiSimConfig{
+			Network:      node.instParams.Resource.Network.Address,
+			Gateway:      node.instParams.Resource.Network.Gateway,
+			IpAddrRange:  node.instParams.Resource.Network.IPRange,
+			NumInstances: (uint32)(node.topoNode.NumInstances),
+			VeniceIps:    nil,
+			NicType:      node.instParams.Resource.NICType,
+			Parent:       "eno1",
+		}
 	case iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM:
 		switch personality {
 		case iota.PersonalityType_PERSONALITY_NAPLES_SIM:
@@ -396,6 +429,15 @@ func (tb *TestBed) setupVeniceIPs(node *TestNode) error {
 			}
 
 			node.NaplesConfig.VeniceIps = veniceIps
+		case iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM:
+			var veniceIps []string
+			for _, vn := range tb.Nodes {
+				if vn.Personality == iota.PersonalityType_PERSONALITY_VENICE {
+					veniceIps = append(veniceIps, vn.NodeMgmtIP) // in HW setups, use venice mgmt ip
+				}
+			}
+
+			node.NaplesMultSimConfig.VeniceIps = veniceIps
 		case iota.PersonalityType_PERSONALITY_VENICE:
 			if tb.hasNaplesSim {
 				for _, vn := range tb.Nodes {
@@ -631,9 +673,11 @@ func (tb *TestBed) initNodeState() error {
 			log.Debugf("Invalid number if naples Instances")
 		}
 		bringUpNaples = naplesInst
+		log.Infof("Bringing up naples instances %v", bringUpNaples)
+	} else {
+		log.Infof("Bringing up all naples instances")
 	}
 
-	log.Infof("Bringing up naples instances %v\n", bringUpNaples)
 	// setup all nodes
 	count := 0
 	for i := 0; i < len(tb.Nodes); i++ {
@@ -854,13 +898,14 @@ func (tb *TestBed) setupTestBed() error {
 
 	// Allocate VLANs
 	testBedMsg := &iota.TestBedMsg{
-		NaplesImage:  tb.Topo.NaplesImage,
-		VeniceImage:  tb.Topo.VeniceImage,
-		Username:     tb.Params.Provision.Username,
-		Password:     tb.Params.Provision.Password,
-		ApiResponse:  &iota.IotaAPIResponse{},
-		Nodes:        []*iota.TestBedNode{},
-		DataSwitches: []*iota.DataSwitch{},
+		NaplesImage:    tb.Topo.NaplesImage,
+		VeniceImage:    tb.Topo.VeniceImage,
+		NaplesSimImage: tb.Topo.NaplesSimImage,
+		Username:       tb.Params.Provision.Username,
+		Password:       tb.Params.Provision.Password,
+		ApiResponse:    &iota.IotaAPIResponse{},
+		Nodes:          []*iota.TestBedNode{},
+		DataSwitches:   []*iota.DataSwitch{},
 	}
 
 	dsmap := make(map[string]*iota.DataSwitch)
@@ -1001,6 +1046,17 @@ func (tb *TestBed) setupTestBed() error {
 					Name: node.NodeName + "_naples",
 				},
 			}
+		case iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM:
+			tbn.Image = filepath.Base(tb.Topo.NaplesSimImage)
+			tbn.NodeInfo = &iota.Node_NaplesMultiSimConfig{
+				NaplesMultiSimConfig: &node.NaplesMultSimConfig,
+			}
+			tbn.Entities = []*iota.Entity{
+				{
+					Type: iota.EntityType_ENTITY_TYPE_HOST,
+					Name: node.NodeName + "_host",
+				},
+			}
 		case iota.PersonalityType_PERSONALITY_VENICE:
 			tbn.Image = filepath.Base(tb.Topo.VeniceImage)
 			tbn.NodeInfo = &iota.Node_VeniceConfig{
@@ -1052,6 +1108,7 @@ func (tb *TestBed) setupTestBed() error {
 		node := tb.Nodes[i]
 		for _, nr := range tb.addNodeResp.Nodes {
 			if node.NodeName == nr.Name {
+				log.Infof("Adding node %v as used", node.topoNode.NodeName)
 				node.NodeUUID = nr.NodeUuid
 				node.iotaNode = nr
 				nodeAdded = true
@@ -1435,6 +1492,16 @@ func (tb *TestBed) Cleanup() error {
 // InitSuite initializes test suite
 func InitSuite(topoName, paramsFile string, scale, scaleData bool) (*TestBed, *SysModel, error) {
 	// create testbed
+
+	// setup test params
+	if scale {
+		gomega.SetDefaultEventuallyTimeout(time.Minute * 15)
+		gomega.SetDefaultEventuallyPollingInterval(time.Second * 30)
+	} else {
+		gomega.SetDefaultEventuallyTimeout(time.Minute * 3)
+		gomega.SetDefaultEventuallyPollingInterval(time.Second * 10)
+	}
+
 	tb, err := NewTestBed(topoName, paramsFile)
 	if err != nil {
 		return nil, nil, err

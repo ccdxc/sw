@@ -3,14 +3,17 @@
 package iotakit
 
 import (
+	"bytes"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"strings"
 
 	"github.com/willf/bitset"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/workload"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -79,7 +82,7 @@ func (sm *SysModel) createHost(n *TestNode) (*Host, error) {
 	if !ok || naples.smartNic == nil {
 		return nil, fmt.Errorf("Could not find the naples object for snic: %v", n.NodeName)
 	}
-	host := cluster.Host{
+	host := &cluster.Host{
 		TypeMeta: api.TypeMeta{Kind: "Host"},
 		ObjectMeta: api.ObjectMeta{
 			Name: n.NodeName,
@@ -94,10 +97,20 @@ func (sm *SysModel) createHost(n *TestNode) (*Host, error) {
 	}
 
 	// create the host in venice
-	err := sm.tb.CreateHost(&host)
+	err := sm.tb.CreateHost(host)
 	if err != nil {
 		log.Errorf("Error creating host: %+v. Err: %v", host, err)
-		return nil, err
+		//Check whether host is already ADMITTED
+		hosts, _ := sm.tb.ListHost()
+		for _, curHost := range hosts {
+			if curHost.ObjectMeta.Name == n.NodeName {
+				host = curHost
+				break
+			}
+		}
+		if host == nil {
+			return nil, err
+		}
 	}
 
 	bs := bitset.New(uint(4096))
@@ -105,7 +118,7 @@ func (sm *SysModel) createHost(n *TestNode) (*Host, error) {
 
 	h := Host{
 		iotaNode:    n.iotaNode,
-		veniceHost:  &host,
+		veniceHost:  host,
 		naples:      naples,
 		maxVlans:    4094,
 		vlanBitmask: bs,
@@ -152,6 +165,7 @@ func (hst *Host) allocUsegVlan() (uint32, error) {
 	return uint32(vlanBit), nil
 }
 
+/*
 // NewWorkload creates new workload on the host in each specified subnet
 func (hc *HostCollection) NewWorkload(namePrefix string, snc *NetworkCollection) *WorkloadCollection {
 	if snc.err != nil {
@@ -184,6 +198,7 @@ func (hc *HostCollection) NewWorkload(namePrefix string, snc *NetworkCollection)
 
 	return &wc
 }
+*/
 
 // createNaples creates a naples instance
 func (sm *SysModel) createNaples(node *TestNode) error {
@@ -204,6 +219,33 @@ func (sm *SysModel) createNaples(node *TestNode) error {
 	}
 
 	sm.naples[node.NodeName] = &naples
+
+	return nil
+}
+
+// createNaples creates a naples instance
+func (sm *SysModel) createMultiSimNaples(node *TestNode) error {
+
+	log.Infof("Adding fake naples : %v", (node.NaplesMultSimConfig.GetNumInstances()))
+	for i := 0; i < int(node.NaplesMultSimConfig.GetNumInstances()); i++ {
+		//TODO: (iota agent is also following the same format.)
+		simName := node.NodeName + "-sim-" + strconv.Itoa(i)
+		snic, err := sm.tb.GetSmartNICByName(simName)
+		if err != nil {
+			err := fmt.Errorf("Failed to get smartnc object for name %v. Err: %+v", node.NodeName, err)
+			log.Errorf("%v", err)
+			return err
+		}
+
+		naples := Naples{
+			iotaNode: node.iotaNode,
+			testNode: node,
+			smartNic: snic,
+			sm:       sm,
+		}
+
+		sm.fakeNaples[simName] = &naples
+	}
 
 	return nil
 }
@@ -386,4 +428,89 @@ hostLoop:
 		return nil, fmt.Errorf("%v not found", notFound)
 	}
 	return ret, nil
+}
+
+// ListRealHosts gets all real hosts from venice cluster
+func (sm *SysModel) ListRealHosts() ([]*Host, error) {
+
+	hosts := []*Host{}
+	for _, h := range sm.hosts {
+		if h.iotaNode.Type == iota.PersonalityType_PERSONALITY_NAPLES {
+			hosts = append(hosts, h)
+		}
+	}
+
+	return hosts, nil
+}
+
+// AssociateHosts gets all real hosts from venice cluster
+func (sm *SysModel) AssociateHosts() error {
+	objs, err := sm.tb.ListHost()
+	if err != nil {
+		return err
+	}
+
+	if sm.tb.IsMockMode() {
+		//One on One association if mock mode
+		convertMac := func(s string) string {
+			mac := strings.Replace(s, ".", "", -1)
+			var buffer bytes.Buffer
+			var l1 = len(mac) - 1
+			for i, rune := range mac {
+				buffer.WriteRune(rune)
+				if i%2 == 1 && i != l1 {
+					buffer.WriteRune(':')
+				}
+			}
+			return buffer.String()
+		}
+		//In mockmode we retrieve mac from the snicList, so we should convert to format that venice likes.
+		for _, naples := range sm.naples {
+			naples.iotaNode.NodeUuid = convertMac(naples.iotaNode.NodeUuid)
+		}
+	}
+
+	//TOOD:Associate fake naples too
+	for _, n := range sm.naples {
+		nodeMac := strings.Replace(n.iotaNode.GetNodeUuid(), ":", "", -1)
+		for _, obj := range objs {
+			objMac := strings.Replace(obj.GetSpec().SmartNICs[0].MACAddress, ".", "", -1)
+			if objMac == nodeMac {
+				log.Infof("Associting host %v with %v\n", obj.GetName(), n.iotaNode.Name)
+				bs := bitset.New(uint(4096))
+				bs.Set(0).Set(1).Set(4095)
+				h := Host{
+					iotaNode:    n.iotaNode,
+					veniceHost:  obj,
+					naples:      n,
+					maxVlans:    4094,
+					vlanBitmask: bs,
+					sm:          sm,
+				}
+				sm.hosts[obj.GetName()] = &h
+				break
+			}
+		}
+	}
+
+	log.Infof("Total number of host associated %v\n", len(sm.hosts))
+	return nil
+}
+
+// ListWorkloadsOnHost gets workloads on host
+func (sm *SysModel) ListWorkloadsOnHost(h *cluster.Host) (objs []*workload.Workload, err error) {
+	objs, err = sm.tb.ListWorkload()
+	if err != nil {
+		return nil, err
+	}
+
+	i := 0
+	for _, obj := range objs {
+		if obj.Spec.HostName == h.ObjectMeta.Name {
+			objs[i] = obj
+			i++
+		}
+	}
+
+	return objs[:i], nil
 }

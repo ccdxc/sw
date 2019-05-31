@@ -28,18 +28,18 @@ func (act *ActionCtx) PingAndCapturePackets(wpc *WorkloadPairCollection, wc *Wor
 	if wc.HasError() {
 		return wc.Error()
 	}
-        
-	cmds := []*iota.Command{}
-        // Add tcpdump command
-        cmd := iota.Command{
-                Mode:       iota.CommandMode_COMMAND_BACKGROUND,
-                Command:    fmt.Sprintf("tcpdump -x -nni %v ip proto gre", wc.workloads[wlnum].iotaWorkload.Interface),
-                EntityName: wc.workloads[wlnum].iotaWorkload.WorkloadName,
-                NodeName:   wc.workloads[wlnum].iotaWorkload.NodeName,
-        }
-        cmds = append(cmds, &cmd)
 
-        // Add ping command
+	cmds := []*iota.Command{}
+	// Add tcpdump command
+	cmd := iota.Command{
+		Mode:       iota.CommandMode_COMMAND_BACKGROUND,
+		Command:    fmt.Sprintf("tcpdump -x -nni %v ip proto gre", wc.workloads[wlnum].iotaWorkload.Interface),
+		EntityName: wc.workloads[wlnum].iotaWorkload.WorkloadName,
+		NodeName:   wc.workloads[wlnum].iotaWorkload.NodeName,
+	}
+	cmds = append(cmds, &cmd)
+
+	// Add ping command
 	var pairNames []string
 	for _, pair := range wpc.pairs {
 		pairNames = append(pairNames, fmt.Sprintf("%s -> %s; ", pair.second.iotaWorkload.WorkloadName, pair.first.iotaWorkload.WorkloadName))
@@ -55,7 +55,7 @@ func (act *ActionCtx) PingAndCapturePackets(wpc *WorkloadPairCollection, wc *Wor
 
 	log.Infof("Testing ping between workloads %v ", pairNames)
 	log.Infof("Collecting tcpdump on %#v interface %v", wc.workloads[wlnum].iotaWorkload.WorkloadName,
-                                                            wc.workloads[wlnum].iotaWorkload.Interface)
+		wc.workloads[wlnum].iotaWorkload.Interface)
 
 	trmode := iota.TriggerMode_TRIGGER_SERIAL
 	trigMsg := &iota.TriggerMsg{
@@ -74,7 +74,7 @@ func (act *ActionCtx) PingAndCapturePackets(wpc *WorkloadPairCollection, wc *Wor
 
 	log.Infof("Terminate commands")
 	trig := act.model.tb.NewTrigger()
-        stopResp, err := trig.StopCommands(triggerResp.Commands)
+	stopResp, err := trig.StopCommands(triggerResp.Commands)
 	if err != nil {
 		log.Errorf("Error stopping ping and tcpdump cmds. Err: %v. trig: %+v, resp: %+v", err, stopResp)
 		return fmt.Errorf("Error stopping ping and tcpdump cmds. Err: %v", err)
@@ -82,13 +82,13 @@ func (act *ActionCtx) PingAndCapturePackets(wpc *WorkloadPairCollection, wc *Wor
 
 	for _, cmdResp := range stopResp {
 		//log.Infof("Dumping command in stopResponse: %v stdout: %v stderr: %v", cmdResp.Command, cmdResp.Stdout, cmdResp.Stderr)
-                if strings.Contains(cmdResp.Command, "tcpdump") {
-		    //log.Infof("tcpdump stdout: %v stderr: %v", cmdResp.Stdout, cmdResp.Stderr)
-                    if !strings.Contains(cmdResp.Stdout, "GREv0, length") {
-			log.Errorf("PingCapture trigger failed. Did not find GRE pkts in tcpdump! Resp: %#v", cmdResp)
-			return fmt.Errorf("PingCapture trigger failed on %s. code %v, Out: %v, StdErr: %v", cmdResp.EntityName, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
-                    }
-                }
+		if strings.Contains(cmdResp.Command, "tcpdump") {
+			//log.Infof("tcpdump stdout: %v stderr: %v", cmdResp.Stdout, cmdResp.Stderr)
+			if !strings.Contains(cmdResp.Stdout, "GREv0, length") {
+				log.Errorf("PingCapture trigger failed. Did not find GRE pkts in tcpdump! Resp: %#v", cmdResp)
+				return fmt.Errorf("PingCapture trigger failed on %s. code %v, Out: %v, StdErr: %v", cmdResp.EntityName, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+			}
+		}
 	}
 
 	return nil
@@ -408,9 +408,10 @@ func (act *ActionCtx) VerifyWorkloadStatus(wc *WorkloadCollection) error {
 		if ep.Status.NodeUUID != wr.host.naples.smartNic.Name {
 			return fmt.Errorf("Invalid node uuid %v for endpoint on workload %v", ep.Status.NodeUUID, wr.veniceWorkload.Name)
 		}
-		if ep.Status.Network != wr.subnet.Name {
-			return fmt.Errorf("Invalid subnet %v for endpoint on workload %v", ep.Status.Network, wr.veniceWorkload.Name)
-		}
+		//No need to verify subnet
+		//if ep.Status.Network != wr.subnet.Name {
+		//	return fmt.Errorf("Invalid subnet %v for endpoint on workload %v", ep.Status.Network, wr.veniceWorkload.Name)
+		//}
 	}
 
 	return nil

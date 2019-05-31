@@ -9,27 +9,29 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# check HAL's health
-HAL_GRPC_PORT="${HAL_GRPC_PORT:-50054}"
-HAL_SERVER="localhost:$HAL_GRPC_PORT"
-curl "$HAL_SERVER"
-if [ $? -ne 0 ]; then
-    echo "HAL not running"
-    exit 1
-fi
+if [  -z "$NO_DATAPATH" ]; then
+    # check HAL's health
+    HAL_GRPC_PORT="${HAL_GRPC_PORT:-50054}"
+    HAL_SERVER="localhost:$HAL_GRPC_PORT"
+    curl "$HAL_SERVER"
+    if [ $? -ne 0 ]; then
+        echo "HAL not running"
+        exit 1
+    fi
 
-# check CAPRI's health
-PID=`ps -eaf | grep cap_model | grep -v grep | awk '{print $2}'`
-if [[ "" ==  "$PID" ]]; then
-    echo "CAPRI model not running"
-    exit 1
-fi
+    # check CAPRI's health
+    PID=`ps -eaf | grep cap_model | grep -v grep | awk '{print $2}'`
+    if [[ "" ==  "$PID" ]]; then
+        echo "CAPRI model not running"
+        exit 1
+    fi
 
-# check hntap's health
-PID=`ps -eaf | grep nic_infra_hntap | grep -v grep | awk '{print $2}'`
-if [[ "" ==  "$PID" ]]; then
-    echo "hntap service model not running"
-    exit 1
+    # check hntap's health
+    PID=`ps -eaf | grep nic_infra_hntap | grep -v grep | awk '{print $2}'`
+    if [[ "" ==  "$PID" ]]; then
+        echo "hntap service model not running"
+        exit 1
+    fi
 fi
 
 echo "NAPLES health - ok"

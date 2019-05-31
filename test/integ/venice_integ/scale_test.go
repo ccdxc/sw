@@ -53,27 +53,27 @@ func (it *veniceIntegSuite) TestScale(c *C) {
 
 func (it *veniceIntegSuite) createScaleConfig(loginCtx context.Context, c *C, cfg *cfgen.Cfgen) {
 	// create configuration: networks, hosts, workloads, firewal profile, apps, and sgpolifies
-	for _, n := range cfg.Networks {
+	for _, n := range cfg.ConfigItems.Networks {
 		_, err := it.apisrvClient.NetworkV1().Network().Create(loginCtx, n)
 		AssertOk(c, err, fmt.Sprintf("Error creating network %+v", *n))
 	}
 
-	for _, h := range cfg.Hosts {
+	for _, h := range cfg.ConfigItems.Hosts {
 		_, err := it.apisrvClient.ClusterV1().Host().Create(loginCtx, h)
 		AssertOk(c, err, fmt.Sprintf("Error creating host %+v", *h))
 	}
 
-	for _, w := range cfg.Workloads {
+	for _, w := range cfg.ConfigItems.Workloads {
 		_, err := it.restClient.WorkloadV1().Workload().Create(loginCtx, w)
 		AssertOk(c, err, fmt.Sprintf("Error creating workload %+v", *w))
 	}
 
-	for _, app := range cfg.Apps {
+	for _, app := range cfg.ConfigItems.Apps {
 		_, err := it.restClient.SecurityV1().App().Create(loginCtx, app)
 		AssertOk(c, err, fmt.Sprintf("Error creating sgp %+v", *app))
 	}
 
-	for _, sgp := range cfg.SGPolicies {
+	for _, sgp := range cfg.ConfigItems.SGPolicies {
 		_, err := it.restClient.SecurityV1().SGPolicy().Create(loginCtx, sgp)
 		AssertOk(c, err, fmt.Sprintf("Error creating sgp %+v", *sgp))
 	}
@@ -88,7 +88,7 @@ func (it *veniceIntegSuite) verifyCreateConfig(loginCtx context.Context, c *C, c
 	for _, sn := range it.snics {
 		go func(ag *netagent.Agent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return len(ag.NetworkAgent.ListNetwork()) == len(cfg.Networks), nil
+				return len(ag.NetworkAgent.ListNetwork()) == len(cfg.ConfigItems.Networks), nil
 			}, "10ms", it.pollTimeout())
 			fmt.Println(found)
 			if !found {
@@ -96,7 +96,7 @@ func (it *veniceIntegSuite) verifyCreateConfig(loginCtx context.Context, c *C, c
 				return
 			}
 			agObjs := ag.NetworkAgent.ListNetwork()
-			for _, obj := range cfg.Networks {
+			for _, obj := range cfg.ConfigItems.Networks {
 				foundObj := false
 				for ii := 0; ii < len(agObjs); ii++ {
 					if obj.ObjectMeta.Name == agObjs[ii].ObjectMeta.Name {
@@ -119,7 +119,7 @@ func (it *veniceIntegSuite) verifyCreateConfig(loginCtx context.Context, c *C, c
 	for _, sn := range it.snics {
 		go func(ag *netagent.Agent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return len(ag.NetworkAgent.ListApp()) == len(cfg.Apps), nil
+				return len(ag.NetworkAgent.ListApp()) == len(cfg.ConfigItems.Apps), nil
 			}, "10ms", it.pollTimeout())
 			fmt.Println(found)
 			if !found {
@@ -127,7 +127,7 @@ func (it *veniceIntegSuite) verifyCreateConfig(loginCtx context.Context, c *C, c
 				return
 			}
 			agObjs := ag.NetworkAgent.ListApp()
-			for _, obj := range cfg.Apps {
+			for _, obj := range cfg.ConfigItems.Apps {
 				foundObj := false
 				for ii := 0; ii < len(agObjs); ii++ {
 					if obj.ObjectMeta.Name == agObjs[ii].ObjectMeta.Name {
@@ -150,16 +150,16 @@ func (it *veniceIntegSuite) verifyCreateConfig(loginCtx context.Context, c *C, c
 	for _, sn := range it.snics {
 		go func(ag *netagent.Agent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return len(ag.NetworkAgent.ListSGPolicy()) == len(cfg.SGPolicies), nil
+				return len(ag.NetworkAgent.ListSGPolicy()) == len(cfg.ConfigItems.SGPolicies), nil
 			}, "10ms", it.pollTimeout())
 			fmt.Println(found)
 			if !found {
 				waitCh <- fmt.Errorf("Scale: SGPolicy count incorrect found %d expected %d",
-					len(ag.NetworkAgent.ListSGPolicy()), len(cfg.SGPolicies))
+					len(ag.NetworkAgent.ListSGPolicy()), len(cfg.ConfigItems.SGPolicies))
 				return
 			}
 			agObjs := ag.NetworkAgent.ListSGPolicy()
-			for _, obj := range cfg.SGPolicies {
+			for _, obj := range cfg.ConfigItems.SGPolicies {
 				foundObj := false
 				for ii := 0; ii < len(agObjs); ii++ {
 					if obj.ObjectMeta.Name == agObjs[ii].ObjectMeta.Name {
@@ -182,21 +182,21 @@ func (it *veniceIntegSuite) verifyCreateConfig(loginCtx context.Context, c *C, c
 
 // delete objects from venice
 func (it *veniceIntegSuite) deleteScaleConfig(loginCtx context.Context, c *C, cfg *cfgen.Cfgen) {
-	for _, sgp := range cfg.SGPolicies {
+	for _, sgp := range cfg.ConfigItems.SGPolicies {
 		_, err := it.restClient.SecurityV1().SGPolicy().Delete(loginCtx, &sgp.ObjectMeta)
 		AssertOk(c, err, fmt.Sprintf("Error deleting sgp %+v", *sgp))
 	}
-	for _, app := range cfg.Apps {
+	for _, app := range cfg.ConfigItems.Apps {
 		_, err := it.restClient.SecurityV1().App().Delete(loginCtx, &app.ObjectMeta)
 		AssertOk(c, err, fmt.Sprintf("Error deleting app %+v", &app.ObjectMeta))
 	}
 
-	for _, w := range cfg.Workloads {
+	for _, w := range cfg.ConfigItems.Workloads {
 		_, err := it.restClient.WorkloadV1().Workload().Delete(loginCtx, &w.ObjectMeta)
 		AssertOk(c, err, fmt.Sprintf("Error deleting workload %+v", &w.ObjectMeta))
 	}
 
-	for _, h := range cfg.Hosts {
+	for _, h := range cfg.ConfigItems.Hosts {
 		_, err := it.restClient.ClusterV1().Host().Delete(loginCtx, &h.ObjectMeta)
 		AssertOk(c, err, fmt.Sprintf("Error deleting host %+v", &h.ObjectMeta))
 	}
@@ -215,7 +215,7 @@ func (it *veniceIntegSuite) deleteScaleConfig(loginCtx context.Context, c *C, cf
 		time.Sleep(time.Second)
 	}
 
-	for _, n := range cfg.Networks {
+	for _, n := range cfg.ConfigItems.Networks {
 		_, err := it.apisrvClient.NetworkV1().Network().Delete(loginCtx, &n.ObjectMeta)
 		AssertOk(c, err, fmt.Sprintf("Error deleting network %+v", &n.ObjectMeta), "1s", it.pollTimeout())
 	}

@@ -240,8 +240,8 @@ func (spc *SGPolicyCollection) AddRuleForWorkloadCombo(wpc *WorkloadPairCollecti
 	for _, wpair := range wpc.pairs {
 		firstIP := strings.Split(wpair.first.iotaWorkload.IpPrefix, "/")[0]
 		secondIP := strings.Split(wpair.second.iotaWorkload.IpPrefix, "/")[0]
-		firstSubnet := wpair.first.subnet.ipPrefix
-		secondSubnet := wpair.second.subnet.ipPrefix
+		firstSubnet := wpair.first.iotaWorkload.IpPrefix
+		secondSubnet := wpair.second.iotaWorkload.IpPrefix
 		// build the rule
 		rule := security.SGRule{
 			Action: action,

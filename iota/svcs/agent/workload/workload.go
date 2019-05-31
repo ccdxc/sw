@@ -64,6 +64,7 @@ type Workload interface {
 	MgmtIP() string
 	GetWorkloadAgent() interface{}
 	TearDown()
+	Type() string
 }
 
 func isFreeBsd() bool {
@@ -81,6 +82,7 @@ type workloadBase struct {
 	logger     *log.Logger
 	bgCmdIndex uint64
 	baseDir    string
+	wlType     string
 }
 
 type remoteWorkload struct {
@@ -142,6 +144,10 @@ func (app *workloadBase) BringUp(args ...string) error {
 
 func (app *workloadBase) Reinit() error {
 	return nil
+}
+
+func (app *workloadBase) Type() string {
+	return app.wlType
 }
 
 func (app *workloadBase) SetBaseDir(dir string) error {
@@ -847,27 +853,33 @@ func (app *remoteWorkload) StopCommand(commandHandle string) (*Cmd.CommandCtx, e
 }
 
 func newContainerWorkload(name string, parent string, logger *log.Logger) Workload {
-	return &containerWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}
+	return &containerWorkload{workloadBase: workloadBase{
+		wlType: WorkloadTypeContainer, name: name, parent: parent, logger: logger}}
 }
 
 func newBareMetalWorkload(name string, parent string, logger *log.Logger) Workload {
-	return &bareMetalWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}
+	return &bareMetalWorkload{workloadBase: workloadBase{
+		wlType: WorkloadTypeBareMetal, name: name, parent: parent, logger: logger}}
 }
 
 func newBareMetalMacVlanWorkload(name string, parent string, logger *log.Logger) Workload {
-	return &bareMetalMacVlanWorkload{bareMetalWorkload: bareMetalWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}}
+	return &bareMetalMacVlanWorkload{bareMetalWorkload: bareMetalWorkload{workloadBase: workloadBase{
+		wlType: WorkloadTypeMacVlan, name: name, parent: parent, logger: logger}}}
 }
 
 func newBareMetalMacVlanEncapWorkload(name string, parent string, logger *log.Logger) Workload {
-	return &bareMetalMacVlanEncapWorkload{bareMetalWorkload: bareMetalWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}}
+	return &bareMetalMacVlanEncapWorkload{bareMetalWorkload: bareMetalWorkload{workloadBase: workloadBase{
+		wlType: WorkloadTypeMacVlanEncap, name: name, parent: parent, logger: logger}}}
 }
 
 func newVMWorkload(name string, parent string, logger *log.Logger) Workload {
-	return &vmWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}
+	return &vmWorkload{workloadBase: workloadBase{
+		wlType: WorkloadTypeVM, name: name, parent: parent, logger: logger}}
 }
 
 func newRemoteWorkload(name string, parent string, logger *log.Logger) Workload {
-	return &remoteWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}
+	return &remoteWorkload{workloadBase: workloadBase{
+		wlType: WorkloadTypeRemote, name: name, parent: parent, logger: logger}}
 }
 
 var iotaWorkloads = map[string]func(name string, parent string, logger *log.Logger) Workload{

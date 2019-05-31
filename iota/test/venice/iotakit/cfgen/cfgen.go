@@ -70,6 +70,14 @@ type FlowExportPolicyParams struct {
 	NumFlowExportPolicies    int
 	FlowExportPolicyTemplate monitoring.FlowExportPolicy
 }
+
+type CfgItems struct {
+	Networks   []*network.Network   `json:"Networks"`
+	Hosts      []*cluster.Host      `json:"Hosts"`
+	Workloads  []*workload.Workload `json:"Workloads"`
+	SGPolicies []*security.SGPolicy `json:"SGPolicies"`
+	Apps       []*security.App      `json:"Apps"`
+}
 type Cfgen struct {
 	UserParams
 	RoleParams
@@ -88,13 +96,10 @@ type Cfgen struct {
 	Smartnics []*cluster.SmartNIC
 
 	// generated objects
-	Networks   []*network.Network
-	Hosts      []*cluster.Host
-	Workloads  []*workload.Workload
-	WPairs     []*WPair
-	SGPolicies []*security.SGPolicy
-	Apps       []*security.App
-	Fwprofile  *security.FirewallProfile
+	WPairs      []*WPair
+	ConfigItems CfgItems
+
+	Fwprofile *security.FirewallProfile
 }
 
 func (cfgen *Cfgen) Do() {
@@ -104,11 +109,11 @@ func (cfgen *Cfgen) Do() {
 	}
 
 	// order the generation in specific way
-	cfgen.Networks = cfgen.genNetworks()
-	cfgen.Hosts = cfgen.genHosts()
-	cfgen.Workloads = cfgen.genWorkloads()
-	cfgen.Apps = cfgen.genApps()
-	cfgen.SGPolicies = cfgen.genSGPolicies()
+	cfgen.ConfigItems.Networks = cfgen.genNetworks()
+	cfgen.ConfigItems.Hosts = cfgen.genHosts()
+	cfgen.ConfigItems.Workloads = cfgen.genWorkloads()
+	cfgen.ConfigItems.Apps = cfgen.genApps()
+	cfgen.ConfigItems.SGPolicies = cfgen.genSGPolicies()
 }
 
 func (cfgen *Cfgen) genNetworks() []*network.Network {
@@ -142,9 +147,9 @@ func (cfgen *Cfgen) genHosts() []*cluster.Host {
 func (cfgen *Cfgen) genWorkloads() []*workload.Workload {
 	workloads := []*workload.Workload{}
 
-	subnets := make([]string, len(cfgen.Networks))
-	nIters := make([]*iterContext, len(cfgen.Networks))
-	for netIdx, n := range cfgen.Networks {
+	subnets := make([]string, len(cfgen.ConfigItems.Networks))
+	nIters := make([]*iterContext, len(cfgen.ConfigItems.Networks))
+	for netIdx, n := range cfgen.ConfigItems.Networks {
 		subnet := strings.Split(n.Spec.IPv4Subnet, "/")[0]
 		subnets[netIdx] = "ipv4:" + strings.Replace(subnet, ".0", ".x", -1)
 		nIters[netIdx] = NewIterContext()
@@ -153,17 +158,17 @@ func (cfgen *Cfgen) genWorkloads() []*workload.Workload {
 	w := cfgen.WorkloadParams.WorkloadTemplate
 	wCtx := NewIterContext()
 	for ii := 0; ii < len(cfgen.Smartnics); ii++ {
-		h := cfgen.Hosts[ii]
+		h := cfgen.ConfigItems.Hosts[ii]
 		w.Spec.HostName = h.ObjectMeta.Name
 		for jj := 0; jj < cfgen.WorkloadParams.WorkloadsPerHost; jj++ {
 			tWorkload := wCtx.transform(w).(*workload.Workload)
 			tWorkload.ObjectMeta.Name = fmt.Sprintf("workload-%s-w%d", w.Spec.HostName, jj)
 
 			// fix up the workload IP with that of a network it belongs to
-			netIdx := rand.Intn(len(cfgen.Networks))
+			netIdx := rand.Intn(len(cfgen.ConfigItems.Networks))
 			tWorkload.Spec.Interfaces[0].IpAddresses[0] = nIters[netIdx].ipSub(subnets[netIdx])
 			tWorkload.Spec.Interfaces[0].MicroSegVlan = (uint32)(jj + 1)
-			tWorkload.Spec.Interfaces[0].ExternalVlan = cfgen.Networks[netIdx].Spec.VlanID
+			tWorkload.Spec.Interfaces[0].ExternalVlan = cfgen.ConfigItems.Networks[netIdx].Spec.VlanID
 
 			workloads = append(workloads, tWorkload)
 		}
@@ -173,7 +178,8 @@ func (cfgen *Cfgen) genWorkloads() []*workload.Workload {
 
 func (cfgen *Cfgen) genSGPolicies() []*security.SGPolicy {
 	sgpolicies := []*security.SGPolicy{}
-	cfgen.SGPolicyParams.SGRuleTemplate.Apps = []string{fmt.Sprintf("app-{{iter-appid:1-%d}}", cfgen.AppParams.NumApps)}
+	//Ignore apps for now
+	//cfgen.SGPolicyParams.SGRuleTemplate.Apps = []string{fmt.Sprintf("app-{{iter-appid:1-%d}}", cfgen.AppParams.NumApps)}
 
 	sgp := cfgen.SGPolicyParams.SGPolicyTemplate
 
@@ -187,13 +193,13 @@ func (cfgen *Cfgen) genSGPolicies() []*security.SGPolicy {
 		for jj := 0; jj < cfgen.SGPolicyParams.NumRulesPerPolicy; jj++ {
 			tRule := ruleCtx.transform(rule).(*security.SGRule)
 
-			fromIpIdx := rand.Intn(len(cfgen.Workloads))
-			toIpIdx := rand.Intn(len(cfgen.Workloads))
-			fromW := cfgen.Workloads[fromIpIdx]
-			toW := cfgen.Workloads[toIpIdx]
+			fromIpIdx := rand.Intn(len(cfgen.ConfigItems.Workloads))
+			toIpIdx := rand.Intn(len(cfgen.ConfigItems.Workloads))
+			fromW := cfgen.ConfigItems.Workloads[fromIpIdx]
+			toW := cfgen.ConfigItems.Workloads[toIpIdx]
 			tRule.FromIPAddresses = []string{fromW.Spec.Interfaces[0].IpAddresses[0]}
 			tRule.ToIPAddresses = []string{toW.Spec.Interfaces[0].IpAddresses[0]}
-			tRule.ProtoPorts = []security.ProtoPort{}
+			tRule.ProtoPorts = []security.ProtoPort{security.ProtoPort{Protocol: "tcp", Ports: "1000-65000"}}
 			cfgen.WPairs = append(cfgen.WPairs, &WPair{From: fromW, To: toW})
 			rules = append(rules, *tRule)
 		}

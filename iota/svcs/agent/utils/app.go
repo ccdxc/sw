@@ -13,6 +13,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 )
@@ -617,6 +618,58 @@ func NewContainer(name string,
 	Run(nsCmd, 0, false, false, nil)
 	_container.NS.Init(true)
 	return _container, nil
+}
+
+func createNetwork(name, parent, driver, ipRange, ipGateway, ipSubnet string) (string, error) {
+
+	nwOptions := types.NetworkCreate{Driver: driver}
+
+	ipamConfig := network.IPAMConfig{IPRange: ipRange, Gateway: ipGateway, Subnet: ipSubnet}
+
+	nwOptions.Options = make(map[string]string)
+
+	nwOptions.Options["parent"] = parent
+	nwOptions.IPAM = &network.IPAM{}
+	nwOptions.IPAM.Config = append(nwOptions.IPAM.Config, ipamConfig)
+	fmt.Printf("Create network %v \n", nwOptions)
+	resp, err := _DockerClient.NetworkCreate(_DockerCtx, name, nwOptions)
+
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to create docker network")
+	}
+
+	return resp.ID, nil
+}
+
+//DeleteDockerNetworkByName delete docker network by name
+func DeleteDockerNetworkByName(name string) error {
+
+	nws, err := _DockerClient.NetworkList(_DockerCtx, types.NetworkListOptions{})
+
+	if err != nil {
+		return errors.Wrap(err, "Failed to list network")
+	}
+
+	for _, nw := range nws {
+		if nw.Name == name {
+			err = _DockerClient.NetworkRemove(_DockerCtx, nw.ID)
+			if err != nil {
+				return errors.Wrap(err, "Failed to delete network")
+			}
+			break
+		}
+	}
+	return nil
+}
+
+//CreateMacVlanDockerNetwork create macvlan network
+func CreateMacVlanDockerNetwork(name, parent, ipRange, ipGateway, ipSubnet string) (string, error) {
+	return createNetwork(name, parent, "macvlan", ipRange, ipGateway, ipSubnet)
+}
+
+//ConnectToDockerNetwork connect container to network
+func ConnectToDockerNetwork(ctr *Container, networkID string) error {
+	return _DockerClient.NetworkConnect(_DockerCtx, networkID, ctr.ctrID, nil)
 }
 
 //GetContainer handle

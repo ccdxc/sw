@@ -33,10 +33,15 @@ fru_base='{
 mac_base="00:ae:cd:01:02:"
 rand=$((RANDOM%100))
 
-if (( $rand > 9 )); then
-    mac='"00:ae:cd:01:02:'$rand'"'
+
+if [ -z "$SYSUUID" ]; then
+    if (( $rand > 9 )); then
+        mac='"00:ae:cd:01:02:'$rand'"'
+    else
+        mac='"00:ae:cd:01:02:0'$rand'"'
+    fi
 else
-    mac='"00:ae:cd:01:02:0'$rand'"'
+    mac='"'$SYSUUID'"'
 fi
 
 fru_final=$fru_base$mac"}"
@@ -124,80 +129,85 @@ cd "$LOG_DIR"
 
 #$NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 +plog=info +model_debug=$HAL_CONFIG_PATH/iris/model_debug.json > $LOG_DIR/model.log 2>&1 &
 
-if [ $WITH_QEMU == 1 ]; then
-    echo "Running Capri model WITH Qemu"
-    cd $PLATFORM_DIR/bin && sh setup_pcie.sh && cd - && SIMSOCK_PATH=/naples/data/simsock-turin LD_LIBRARY_PATH=$PLATFORM_DIR/lib:$LD_LIBRARY_PATH $PLATFORM_DIR/bin/model_server +PLOG_MAX_QUIT_COUNT=0 +plog=info -d type=eth,bdf=03:00.0,lif=2,intr_base=0,devcmd_pa=0x13809b000,devcmddb_pa=0x13809c000 > $LOG_DIR/model.log 2>&1 &
-    PID=`ps -eaf | grep model_server | grep -v grep | awk '{print $2}'`
+if [ ! -z "$NO_DATAPATH" ]; then
+    echo "Starting sysmgr ...no datapth"
+    $NIC_DIR/bin/sysmgr $NIC_DIR/conf/sysmgr_no_datapath.json &
 else
-    echo "Running Capri model WITHOUT Qemu"
-    $NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 > /dev/null 2>&1 &
-    # $NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 > $LOG_DIR/model.log 2>&1 &
-    # $NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 +plog=info +model_debug=$HAL_CONFIG_PATH/iris/model_debug.json > $LOG_DIR/model.log 2>&1 &
-    PID=`ps -eaf | grep cap_model | grep -v grep | awk '{print $2}'`
-fi
-
-if [[ "" ==  "$PID" ]]; then
-    echo "Failed to start CAPRI model"
-    #exit $?
-else
-    echo "CAPRI model started, pid is $PID"
-fi
-
-echo "Starting sysmgr ..."
-$NIC_DIR/bin/sysmgr $NIC_DIR/conf/sysmgr.json &
-
-# wait for HAL to open gRPC port before spawning agent(s)
-HAL_WAIT_TIMEOUT=1
-HAL_GRPC_PORT="${HAL_GRPC_PORT:-50054}"
-HAL_SERVER="localhost/$HAL_GRPC_PORT"
-HAL_UP=-1
-MAX_RETRIES=600
-i=0
-until (( HAL_UP == 0 )) || (( i == MAX_RETRIES ))
-do
-    echo "Waiting for HAL GRPC server to be up ..."
-    sleep "$HAL_WAIT_TIMEOUT"
-    timeout 1 bash -c "cat < /dev/null > /dev/tcp/$HAL_SERVER"
-    HAL_UP="$?"
-    if [ "$HAL_UP" -eq 0 ]; then
-        echo "HAL is up"
+    if [ $WITH_QEMU == 1 ]; then
+        echo "Running Capri model WITH Qemu"
+        cd $PLATFORM_DIR/bin && sh setup_pcie.sh && cd - && SIMSOCK_PATH=/naples/data/simsock-turin LD_LIBRARY_PATH=$PLATFORM_DIR/lib:$LD_LIBRARY_PATH $PLATFORM_DIR/bin/model_server +PLOG_MAX_QUIT_COUNT=0 +plog=info -d type=eth,bdf=03:00.0,lif=2,intr_base=0,devcmd_pa=0x13809b000,devcmddb_pa=0x13809c000 > $LOG_DIR/model.log 2>&1 &
+        PID=`ps -eaf | grep model_server | grep -v grep | awk '{print $2}'`
     else
-        echo "HAL not up yet"
+        echo "Running Capri model WITHOUT Qemu"
+        $NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 > /dev/null 2>&1 &
+        # $NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 > $LOG_DIR/model.log 2>&1 &
+        # $NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 +plog=info +model_debug=$HAL_CONFIG_PATH/iris/model_debug.json > $LOG_DIR/model.log 2>&1 &
+        PID=`ps -eaf | grep cap_model | grep -v grep | awk '{print $2}'`
     fi
-    let "i++"
-done
 
-if [ "$i" -eq "$MAX_RETRIES" ]; then
-    echo "HAL server failed to come up"
-    exit 1
-fi
-
-if [ $WITH_QEMU != 1 ]; then
-# start fake NIC manager and allow it to create uplinks
-    echo "Starting fake nicmgr ..."
-    "$NIC_DIR"/bin/fake_nic_mgr
-    if [ $? -ne 0 ]; then
-        echo "Failed to start nic mgr"
-        exit $?
+    if [[ "" ==  "$PID" ]]; then
+        echo "Failed to start CAPRI model"
+        #exit $?
+    else
+        echo "CAPRI model started, pid is $PID"
     fi
-fi
+    echo "Starting sysmgr ..."
+    $NIC_DIR/bin/sysmgr $NIC_DIR/conf/sysmgr.json &
 
-echo "Starting hntap ..."
+    # wait for HAL to open gRPC port before spawning agent(s)
+    HAL_WAIT_TIMEOUT=1
+    HAL_GRPC_PORT="${HAL_GRPC_PORT:-50054}"
+    HAL_SERVER="localhost/$HAL_GRPC_PORT"
+    HAL_UP=-1
+    MAX_RETRIES=600
+    i=0
+    until (( HAL_UP == 0 )) || (( i == MAX_RETRIES ))
+    do
+        echo "Waiting for HAL GRPC server to be up ..."
+        sleep "$HAL_WAIT_TIMEOUT"
+        timeout 1 bash -c "cat < /dev/null > /dev/tcp/$HAL_SERVER"
+        HAL_UP="$?"
+        if [ "$HAL_UP" -eq 0 ]; then
+            echo "HAL is up"
+        else
+            echo "HAL not up yet"
+        fi
+        let "i++"
+    done
 
-if [ $WITH_QEMU == 1 ]; then
-    echo "Starting hntap with Qemu mode"
-    $NIC_DIR/bin/nic_infra_hntap -f $NIC_DIR/conf/hntap-with-qemu-cfg.json > $LOG_DIR/hntap.log 2>&1 &
-else
-    echo "Starting hntap in standalone mode"
-    $NIC_DIR/bin/nic_infra_hntap -f $NIC_DIR/conf/hntap-cfg.json > $LOG_DIR/hntap.log 2>&1 &
-fi
+    if [ "$i" -eq "$MAX_RETRIES" ]; then
+        echo "HAL server failed to come up"
+        exit 1
+    fi
 
-PID=`ps -eaf | grep nic_infra_hntap | grep -v grep | awk '{print $2}'`
-if [[ "" ==  "$PID" ]]; then
-    echo "Failed to start hntap service"
-    #exit $?
-else
-    echo "hntap service started, pid is $PID"
+    if [ $WITH_QEMU != 1 ]; then
+    # start fake NIC manager and allow it to create uplinks
+        echo "Starting fake nicmgr ..."
+        "$NIC_DIR"/bin/fake_nic_mgr
+        if [ $? -ne 0 ]; then
+            echo "Failed to start nic mgr"
+            exit $?
+        fi
+    fi
+
+
+    echo "Starting hntap ..."
+    if [ $WITH_QEMU == 1 ]; then
+        echo "Starting hntap with Qemu mode"
+        $NIC_DIR/bin/nic_infra_hntap -f $NIC_DIR/conf/hntap-with-qemu-cfg.json > $LOG_DIR/hntap.log 2>&1 &
+    else
+        echo "Starting hntap in standalone mode"
+        $NIC_DIR/bin/nic_infra_hntap -f $NIC_DIR/conf/hntap-cfg.json > $LOG_DIR/hntap.log 2>&1 &
+    fi
+
+    PID=`ps -eaf | grep nic_infra_hntap | grep -v grep | awk '{print $2}'`
+    if [[ "" ==  "$PID" ]]; then
+        echo "Failed to start hntap service"
+        #exit $?
+    else
+        echo "hntap service started, pid is $PID"
+    fi
+
 fi
 
 echo "NAPLES services/processes up and running ..."

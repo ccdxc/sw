@@ -43,6 +43,40 @@ e2e-targets:
           VmOs: linux
           EsxUsername: root
           EsxPassword: Pen0trl!
-
+#e2e-venice-2naples-scale:
+#        #commands: ["make", "-C", "iota/test/venice/hwtest", "jobd"]
+#  commands: [ "cat /warmd.json && sleep 30000000"]
+#  owners: ["email:venice-dev@pensando.io"]
+#  area:
+#  sub-area:
+#  feature:
+#  build-dependencies:
+#    - build-iris-arm
+#    - build-venice-image
+#  clusters:
+#    - image: build-115
+#      count: 1
+#      resources:
+#        cpus: 16
+#        memory: 32
+#        pvt-networks:
+#        - control-1
+#        - control-2
+#    - image: build-10
+#      count: 2
+#      resources:
+#        # server-type could be server-a or server-d
+#        server-type: server-a
+#        # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+#        nic-type: naples
+#  provision:
+#      username: vm
+#      password: vm
+#      vars:
+#         BmOs: esx
+#         VmOs: linux
+#         EsxUsername: root
+#         EsxPassword: Pen0trl!
+#
 logfiles:
   - /go/src/github.com/pensando/sw/iota/logs/venice-iota.tgz

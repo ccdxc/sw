@@ -12,7 +12,7 @@ import json
 
 NAPLES_VER = "v1"
 NAPLES_IMAGE = "pensando/naples:" + NAPLES_VER
-NAPLES_IMAGE_DIRECTORY = os.environ.get("NAPLES_HOME") or "/vagrant"
+NAPLES_IMAGE_DIRECTORY = os.environ.get("NAPLES_IMAGE_DIR") or os.environ.get("NAPLES_HOME") or "/vagrant"
 NAPLES_IMAGE_FILE = "naples-docker-" + NAPLES_VER + ".tgz"
 
 
@@ -60,7 +60,7 @@ NAPLES_UUID = {"SYSUUID" : ""}
 
 # Move it out to a configu
 _APP_IMAGES = [
-    "networkstatic/iperf3"
+    #"networkstatic/iperf3"
 ]
 
 _NAPLES_DIRECTORIES = [
@@ -139,11 +139,6 @@ def __pull_naples_image():
 
 
 def __load_naples_image():
-    try:
-        print "Deleting naples images."
-        _DOCKER_API_CLIENT.remove_image(NAPLES_IMAGE, force=True)
-    except:
-        print "No old naples image found.."
     print "Trying to import naples image from : %s ...\n" % NAPLES_IMAGE_FILE
     load_cmd = ["docker", "load", "--input", NAPLES_IMAGE_DIRECTORY + "/" + NAPLES_IMAGE_FILE]
     ret = RunShellCmd(load_cmd)
@@ -209,6 +204,10 @@ def __setup_hntap(container_obj, args):
     def __ip2int(ipstr): return struct.unpack('!I', socket.inet_aton(ipstr))[0]
 
     def __int2ip(n): return socket.inet_ntoa(struct.pack('!I', n))
+
+    if args.data_intfs == None or len(args.data_intfs) == 0:
+        print "No data interfaces be specified, skipping hntap setup"
+        return
 
     #TODO, logic has to be cleaned up.
     node_ip = None
@@ -289,34 +288,6 @@ def __setup_control_network(container_obj, args):
     if args.control_intf:
         __move_control_intf_to_naples_sim(container_obj, args.control_intf, args.control_ip)
 
-# This is not being used for now.
-def __setup_ovs_data_network(args):
-    def __ip2int(ipstr): return struct.unpack('!I', socket.inet_aton(ipstr))[0]
-
-    def __int2ip(n): return socket.inet_ntoa(struct.pack('!I', n))
-
-    def __add_tunnel(port_name, peer_ip):
-        cmd = ["ovs-vsctl", "add-port", args.ovs_br_name, port_name]
-        cmd.extend(["--", "set", "interface", port_name, "type=vxlan"])
-        cmd.extend(["options:key=11111", "options:remote_ip=" + peer_ip])
-        RunShellCmd(cmd)
-
-    cmd = ["ovs-vsctl", "br-exists", args.ovs_br_name]
-    if not RunShellCmd(cmd):
-        print ("Setting up OVS bridge : ", args.ovs_br_name)
-        cmd = ["ovs-vsctl", "add-br", args.ovs_br_name]
-        RunShellCmd(cmd)
-    start_ip = __ip2int(args.tunnel_ip_start)
-    if int(args.node_id) == 1:
-        # If you are the master node (1), connect to all other nodes.
-        for peer in range(1, args.node_cnt):
-            port_name = args.tun_port_prefix + str(peer + 1)
-            peer_ip = __int2ip(start_ip + peer)
-            __add_tunnel(port_name, peer_ip)
-    else:
-        # Else Just connnect to the master node (1).
-        __add_tunnel(args.tun_port_prefix + "1", args.tunnel_ip_start)
-
 
 def __wait_for_line_log(log_file, line_match):
     loop = 1
@@ -337,29 +308,36 @@ def __bringdown_naples_container(args):
         time.sleep(5)
     except:
         print "Bringing down Naples container : %s failed " % (args.sim_name)
-    try:
-        print "Removing Naples image : %s" % NAPLES_IMAGE
-        _DOCKER_API_CLIENT.remove_image(NAPLES_IMAGE, force=True)
-    except:
-        print "Removing Naples image : %s failed" % NAPLES_IMAGE
+    if not args.skip_load:
+        try:
+            print "Removing Naples image : %s" % NAPLES_IMAGE
+            _DOCKER_API_CLIENT.remove_image(NAPLES_IMAGE, force=True)
+        except:
+            print "Removing Naples image : %s failed" % NAPLES_IMAGE
 
 
 def __bringup_naples_container(args):
     __bringdown_naples_container(args)
-    try:
-        __load_naples_image()
-    except:
-        print "Loading naples image failed!"
-        print "Trying to pull naples image..."
-        __pull_naples_image()
+    if not args.skip_load:
+        try:
+            __load_naples_image()
+        except:
+            print "Loading naples image failed!"
+            print "Trying to pull naples image..."
+            __pull_naples_image()
     naples_sim_log_file = NAPLES_DATA_DIR + "/logs/start-naples.log"
     agent_log_file = NAPLES_LOGS + "/pensando/pen-netagent.log"
+    nmd_log_file = NAPLES_LOGS + "/pensando/pen-nmd.log"
 
     def __wait_for_naples_sim_to_be_up():
         __wait_for_line_log(naples_sim_log_file, "NAPLES services/processes up and running")
 
     def __wait_for_agent_to_be_up():
         __wait_for_line_log(agent_log_file, "Starting server at")
+
+    def __wait_for_nmd_to_be_up():
+        __wait_for_line_log(nmd_log_file, "Started NMD Rest server")
+
     print "Bringing up naples container...\n"
     if args.with_qemu:
         NAPLES_ENV.update(QEMU_ENV)
@@ -372,12 +350,20 @@ def __bringup_naples_container(args):
     if args.control_intf:
         NETAGENT_CTRL_INTF = {"NETAGENT_CTRL_INTF" : args.control_intf}
         NAPLES_ENV.update(NETAGENT_CTRL_INTF)
+    global NAPLES_PORT_MAPS
+    if args.disable_portmap:
+        NAPLES_PORT_MAPS = {}
+    if args.disable_datapath:
+        DISABLE_DATAPATH = {"NO_DATAPATH" : "1"}
+        NAPLES_ENV.update(DISABLE_DATAPATH)
     if args.sys_uuid:
         NAPLES_UUID = {"SYSUUID" : args.sys_uuid}
-    else:
+    elif args.control_intf:
         with open("/sys/class/net/" + args.control_intf + "/address", 'r') as myfile:
             NAPLES_UUID = {"SYSUUID" : myfile.read().replace('\n', '')}
-        
+    else:
+        NAPLES_UUID = {"SYSUUID" : ""}
+
     NAPLES_ENV.update(NAPLES_UUID)
 
     naples_obj = _DOCKER_CLIENT.containers.run(NAPLES_IMAGE,
@@ -401,12 +387,14 @@ def __bringup_naples_container(args):
     print "Wating for agent server to be up"
     time.sleep(20)
     __wait_for_agent_to_be_up()
+    __wait_for_nmd_to_be_up()
     print "Nic container bring up was successfull"
 
 
-    print "Setting uplink data network for  %s " % (NAPLES_IMAGE)
-    __setup_data_network(naples_obj, args)
-    print "Setting uplink data network  : %s  success" % (NAPLES_IMAGE)
+    if not args.disable_datapath:
+        print "Setting uplink data network for  %s " % (NAPLES_IMAGE)
+        __setup_data_network(naples_obj, args)
+        print "Setting uplink data network  : %s  success" % (NAPLES_IMAGE)
 
 
 def __run_bootstrap_naples(args):
@@ -426,16 +414,8 @@ def __stop_bootstrap_naples():
     RunShellCmd(kill_cmd)
 
 
-def __delete_ovs_bridge(args):
-    print ("Deleting OVS bridge : ", args.ovs_br_name)
-    cmd = ["ovs-vsctl", "del-br", args.ovs_br_name]
-    RunShellCmd(cmd)
-
-
 def __reset(args):
     __stop_bootstrap_naples()
-    __delete_ovs_bridge(args)
-
 
 def main():
 
@@ -460,8 +440,6 @@ def main():
                         help='List of data IPs to be used.')
     parser.add_argument('--network-parent', dest='nw_parent', default="eth2",
                         help='Parent network for docker network')
-    parser.add_argument('--ovs-br-name', dest='ovs_br_name', default="data-net",
-                        help='Ovs bridge name')
     parser.add_argument('--tunnel-ip-start', dest='tunnel_ip_start', default="192.168.10.11",
                         help='Start address of tunnel IPs')
     parser.add_argument('--node-id', dest='node_id', default="1",
@@ -478,16 +456,22 @@ def main():
                         choices=["tunnel", "passthrough"], help='Hntap Mode to run in naples sim')
     parser.add_argument('--nmd-hostname', dest='nmd_hostname', default=None,
                         help="Nmd hostname")
+    parser.add_argument('--disable-portmap', dest='disable_portmap',
+                        action='store_true', help='Disable port mapping')
+    parser.add_argument('--disable-datapath', dest='disable_datapath',
+                        action='store_true', help='Disable datapath')
+    parser.add_argument('--skip-image-load', dest='skip_load',
+                        action='store_true', help='Skip loading of image')
+
+
     args = parser.parse_args()
 
     if args.data_ips:
         args.data_ips = args.data_ips.split(',')
     if args.data_ips:
         args.naples_ips = args.naples_ips.split(',')
-    if len(args.data_intfs) == 0:
-        print "No data interfaces be specified..."
-        sys.exit(1)
-    args.data_intfs = args.data_intfs.split(',')
+    if args.data_intfs:
+        args.data_intfs = args.data_intfs.split(',')
     __reset(args)
     __initial_setup()
     __pull_app_docker_images()

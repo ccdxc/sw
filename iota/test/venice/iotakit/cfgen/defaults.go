@@ -85,7 +85,7 @@ var scaleCfgenParams = &Cfgen{
 			FromIPAddresses: []string{},
 			ToIPAddresses:   []string{},
 			ProtoPorts:      []security.ProtoPort{{Protocol: "{{rand:tcp|udp}}", Ports: "{{iter-portnum:5000-50000}}"}},
-			Apps:            []string{"app-{{iter-appid:1-20000}}"},
+			//Apps:            []string{"app-{{iter-appid:1-20000}}"},
 		},
 	},
 	FirewallProfileParams: FirewallProfileParams{

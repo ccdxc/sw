@@ -3,7 +3,6 @@
 package fwlog_test
 
 import (
-	"context"
 	"flag"
 	"os"
 
@@ -49,33 +48,13 @@ func TestIotaFwlogTest(t *testing.T) {
 
 // BeforeSuite runs before the test suite and sets up the testbed
 var _ = BeforeSuite(func() {
-	tb, err := iotakit.NewTestBed(*topoName, *testbedParams)
+	tb, model, err := iotakit.InitSuite(*topoName, *testbedParams, *scaleFlag, *scaleDataFlag)
+
 	Expect(err).ShouldNot(HaveOccurred())
 
-	// make cluster & setup auth
-	err = tb.SetupConfig(context.TODO())
-	Expect(err).ShouldNot(HaveOccurred())
-
-	model, err := iotakit.NewSysModel(tb)
-	Expect(err).ShouldNot(HaveOccurred())
-	Expect(model).ShouldNot(BeNil())
-
-	model.NewSGPolicy("test-policy").Delete()
-
-	err = model.SetupDefaultConfig(*scaleFlag, *scaleDataFlag)
-	Expect(err).ShouldNot(HaveOccurred())
-
-	// collect logs at the end of setup, in case setup fails
-	defer tb.CollectLogs()
-
-	// verify cluster is in good health
+	// verify cluster, workload are in good health
 	Eventually(func() error {
-		return model.Action().VerifyClusterStatus()
-	}).Should(Succeed())
-
-	// verify ping is successful across all workloads
-	Eventually(func() error {
-		return model.Action().PingPairs(model.WorkloadPairs().WithinNetwork())
+		return model.Action().VerifySystemHealth()
 	}).Should(Succeed())
 
 	// test suite

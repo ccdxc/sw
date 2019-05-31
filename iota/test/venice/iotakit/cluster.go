@@ -66,6 +66,7 @@ func (tb *TestBed) getVeniceIPAddrs() []string {
 func (tb *TestBed) CheckIotaClusterHealth() error {
 	// check cluster health
 	topoClient := iota.NewTopologyApiClient(tb.iotaClient.Client)
+	tb.addNodeResp.ClusterDone = tb.makeClustrResp != nil
 	healthResp, err := topoClient.CheckClusterHealth(context.Background(), tb.addNodeResp)
 	if err != nil {
 		log.Errorf("Failed to check health of the cluster. Err: %v", err)
@@ -151,7 +152,7 @@ func (tb *TestBed) SetupVeniceNodes() error {
 			trig.AddCommand(fmt.Sprintf("sudo cp -r /var/lib/pensando/pki/kubernetes/apiserver-client /pensando/iota/k8s/"), entity, node.NodeName)
 			trig.AddCommand(fmt.Sprintf("sudo chmod -R 777 /pensando/iota/k8s/"), entity, node.NodeName)
 			trig.AddCommand(fmt.Sprintf("mkdir -p /pensando/iota/bin; docker run -v /pensando/iota/bin:/import registry.test.pensando.io:5000/pens-debug:v0.1"), entity, node.NodeName)
-			trig.AddCommand(fmt.Sprintf(`echo '/pensando/iota/bin/kubectl config set-cluster e2e --server=https://%s:6443 --certificate-authority=/pensando/iota/k8s/apiserver-client/ca-bundle.pem; 
+			trig.AddCommand(fmt.Sprintf(`echo '/pensando/iota/bin/kubectl config set-cluster e2e --server=https://%s:6443 --certificate-authority=/pensando/iota/k8s/apiserver-client/ca-bundle.pem;
 				/pensando/iota/bin/kubectl config set-context e2e --cluster=e2e --user=admin;
 				/pensando/iota/bin/kubectl config use-context e2e;
 				/pensando/iota/bin/kubectl config set-credentials admin --client-certificate=/pensando/iota/k8s/apiserver-client/cert.pem --client-key=/pensando/iota/k8s/apiserver-client/key.pem;

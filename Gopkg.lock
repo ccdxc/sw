@@ -2776,6 +2776,7 @@
     "github.com/docker/docker/api/types",
     "github.com/docker/docker/api/types/container",
     "github.com/docker/docker/api/types/mount",
+    "github.com/docker/docker/api/types/network",
     "github.com/docker/docker/client",
     "github.com/fatih/structs",
     "github.com/fsnotify/fsnotify",

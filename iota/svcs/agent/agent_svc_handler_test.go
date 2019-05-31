@@ -84,6 +84,55 @@ func TestMain(m *testing.M) {
 
 }
 
+func TestAgentService_Node_Multi_Naples_Add_Delete(t *testing.T) {
+	/*
+		iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM, Name: "naples-multi"}
+		iotaNode.NodeInfo = &iota.Node_NaplesMultiSimConfig{NaplesMultiSimConfig: &iota.NaplesMultiSimConfig{
+			Gateway: "172.17.0.1", Parent: "eth0", Network: "172.17.0.0/24", NumInstances: 1,
+			VeniceIps: []string{"10.1.1.3/24"}}}
+
+		nodeResp, err := agentClient.DeleteNode(context.Background(), iotaNode)
+		if err != nil {
+			t.Errorf("Delete Node call failed. Err: %v", err)
+		}
+
+		TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Delete node success!")
+
+		resp, err := agentClient.AddNode(context.Background(), iotaNode)
+		if err != nil {
+			t.Errorf("Add Node call failed. Err: %v", err)
+		}
+
+		TestUtils.Assert(t, resp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add node failed")
+
+		iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM, Name: "naples-multi"}
+		resp, err = agentClient.AddNode(context.Background(), iotaNode)
+		if err != nil {
+			t.Errorf("Add Node call failed. Err: %v", err)
+		}
+
+		TestUtils.Assert(t, resp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Duplicate add node success!")
+
+		iotaNodeHealth := &iota.NodeHealth{NodeName: "naples-multi"}
+		if err != nil {
+			t.Errorf("Check health call failed. Err: %v", err)
+		}
+		iotaNodeHealth, err = agentClient.CheckHealth(context.Background(), iotaNodeHealth)
+		if err != nil {
+			t.Errorf("Check health call failed. Err: %v", err)
+		}
+		TestUtils.Assert(t, iotaNodeHealth.GetHealthCode() != iota.NodeHealth_HEALTH_OK, "Node health not ok!")
+
+		iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM, Name: "naples-multi"}
+		nodeResp, err = agentClient.DeleteNode(context.Background(), iotaNode)
+		if err != nil {
+			t.Errorf("Delete Node call failed. Err: %v", err)
+		}
+
+		TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Delete node faild!")
+	*/
+}
+
 func TestAgentService_Node_Naples_Add_Delete(t *testing.T) {
 	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
 	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: "eth1",

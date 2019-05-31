@@ -104,6 +104,10 @@ class _Testbed:
             ven_img = getattr(images, 'venice', None)
             if ven_img:
                 msg.venice_image = self.__get_full_path(ven_img)
+            nap_sim_img = getattr(images, 'naples_sim', None)
+            if nap_sim_img:
+                msg.naples_sim_image = self.__get_full_path(nap_sim_img)
+
 
         msg.username = self.__tbspec.Provision.Username
         msg.password = self.__tbspec.Provision.Password

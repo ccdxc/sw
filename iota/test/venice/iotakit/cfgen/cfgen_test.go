@@ -53,32 +53,32 @@ func TestCfgenPolicyGen(t *testing.T) {
 		panic(err)
 	}
 
-	for _, o := range cfg.Networks {
+	for _, o := range cfg.ConfigItems.Networks {
 		if j, err := json.MarshalIndent(o, "", "  "); err == nil {
 			ofile.Write(j)
 			ofile.WriteString("\n")
 		}
 	}
-	for _, o := range cfg.Hosts {
+	for _, o := range cfg.ConfigItems.Hosts {
 		if j, err := json.MarshalIndent(o, "", "  "); err == nil {
 			ofile.Write(j)
 			ofile.WriteString("\n")
 		}
 	}
-	for _, o := range cfg.Workloads {
+	for _, o := range cfg.ConfigItems.Workloads {
 		if j, err := json.MarshalIndent(o, "", "  "); err == nil {
 			ofile.Write(j)
 			ofile.WriteString("\n")
 		}
 	}
-	for _, o := range cfg.Apps {
+	for _, o := range cfg.ConfigItems.Apps {
 		if j, err := json.MarshalIndent(o, "", "  "); err == nil {
 			ofile.Write(j)
 			ofile.WriteString("\n")
 		}
 	}
 
-	for _, o := range cfg.SGPolicies {
+	for _, o := range cfg.ConfigItems.SGPolicies {
 		if j, err := json.MarshalIndent(o, "", "  "); err == nil {
 			ofile.Write(j)
 			ofile.WriteString("\n")

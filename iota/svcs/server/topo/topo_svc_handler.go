@@ -257,6 +257,7 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 			commonCopyArtifacts := []string{
 				ts.TestBedInfo.VeniceImage,
 				ts.TestBedInfo.NaplesImage,
+				ts.TestBedInfo.NaplesSimImage,
 			}
 
 			pool.Go(func() error {
@@ -952,7 +953,7 @@ func (ts *TopologyService) CheckClusterHealth(ctx context.Context, req *iota.Nod
 
 	for _, reqNode := range req.Nodes {
 		if node, ok := ts.ProvisionedNodes[reqNode.Name]; ok {
-			nodeHealth := &iota.NodeHealth{NodeName: reqNode.Name}
+			nodeHealth := &iota.NodeHealth{NodeName: reqNode.Name, ClusterDone: req.GetClusterDone()}
 			nodeResp, err := node.AgentClient.CheckHealth(ctx, nodeHealth)
 			if err == nil {
 				resp.Health = append(resp.Health, nodeResp)

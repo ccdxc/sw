@@ -3,17 +3,16 @@
 package iotakit
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"math/rand"
 	"os"
 	"strings"
 
-	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/workload"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/strconv"
 )
 
 // Workload represents a VM/container/Baremetal workload (endpoints are associated with the workload)
@@ -45,77 +44,47 @@ type WorkloadPairCollection struct {
 }
 
 // createWorkload creates a workload
-func (sm *SysModel) createWorkload(wtype iota.WorkloadType, wimage, name string, host *Host, subnet *Network) (*Workload, error) {
-	// allocate mac addr for the workload
-	mac, err := sm.allocMacAddress()
+func (sm *SysModel) createWorkload(w *workload.Workload, wtype iota.WorkloadType, wimage string, host *Host) (*Workload, error) {
+	/*err := sm.tb.CreateWorkload(w)
 	if err != nil {
 		return nil, err
-	}
+	}*/
 
-	priMac, err := strconv.ParseMacAddr(mac)
-	if err != nil {
-		return nil, err
-	}
-
-	// allocate useg vlan
-	usegVlan, err := host.allocUsegVlan()
-	if err != nil {
-		return nil, err
-	}
-
-	// get an IP address for the owrkload
-	ipAddr, err := subnet.allocateIPAddr()
-	if err != nil {
-
-		return nil, err
-	}
-	// venice workload
-	w := workload.Workload{
-		TypeMeta: api.TypeMeta{Kind: "Workload"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      name,
-		},
-		Spec: workload.WorkloadSpec{
-			HostName: host.veniceHost.Name,
-			Interfaces: []workload.WorkloadIntfSpec{
-				{
-					ExternalVlan: subnet.vlan,
-					MicroSegVlan: usegVlan,
-					MACAddress:   priMac,
-					IpAddresses:  []string{ipAddr},
-				},
-			},
-		},
-	}
-	err = sm.tb.CreateWorkload(&w)
-	if err != nil {
-		return nil, err
+	convertMac := func(s string) string {
+		mac := strings.Replace(s, ".", "", -1)
+		var buffer bytes.Buffer
+		var l1 = len(mac) - 1
+		for i, rune := range mac {
+			buffer.WriteRune(rune)
+			if i%2 == 1 && i != l1 {
+				buffer.WriteRune(':')
+			}
+		}
+		return buffer.String()
 	}
 
 	// create iota workload object
 	iotaWorkload := iota.Workload{
 		WorkloadType:    wtype,
-		WorkloadName:    name,
-		NodeName:        host.veniceHost.Name,
+		WorkloadName:    w.GetName(),
+		NodeName:        host.iotaNode.Name,
 		WorkloadImage:   wimage,
-		EncapVlan:       usegVlan,
-		IpPrefix:        ipAddr,
-		MacAddress:      mac,
+		EncapVlan:       w.Spec.Interfaces[0].MicroSegVlan,
+		IpPrefix:        w.Spec.Interfaces[0].IpAddresses[0] + "/24", //Assuming it is /24 for now
+		MacAddress:      convertMac(w.Spec.Interfaces[0].MACAddress),
 		Interface:       "lif100", // ugly hack here: iota agent creates interfaces like lif100. matching that behavior
 		ParentInterface: "lif100", // ugly hack here: iota agent creates interfaces like lif100. matching that behavior
 		InterfaceType:   iota.InterfaceType_INTERFACE_TYPE_VSS,
 		PinnedPort:      1, // another hack: always pinning to first uplink
-		UplinkVlan:      subnet.vlan,
+		UplinkVlan:      w.Spec.Interfaces[0].ExternalVlan,
 	}
 
 	wr := Workload{
 		iotaWorkload:   &iotaWorkload,
-		veniceWorkload: &w,
+		veniceWorkload: w,
 		host:           host,
-		subnet:         subnet,
-		sm:             sm,
+		//	subnet:         subnet,
+		sm: sm,
 	}
 
 	sm.workloads[w.Name] = &wr
@@ -280,8 +249,8 @@ func (wc *WorkloadCollection) Bringup() error {
 		for _, gwrk := range appResp.Workloads {
 			if gwrk.WorkloadName == wrk.iotaWorkload.WorkloadName {
 				wrk.iotaWorkload.MgmtIp = gwrk.MgmtIp
-                                wrk.iotaWorkload.Interface = gwrk.GetInterface()
-                                log.Infof("Dumping interface %#v", wrk.iotaWorkload.Interface)
+				wrk.iotaWorkload.Interface = gwrk.GetInterface()
+				log.Infof("Dumping interface %#v", wrk.iotaWorkload.Interface)
 			}
 		}
 	}
