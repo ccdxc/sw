@@ -1655,6 +1655,7 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
     struct eth_rx_cfg_qstate rx_cfg = {0};
     struct eth_tx_cfg_qstate tx_cfg = {0};
     struct admin_cfg_qstate admin_cfg = {0};
+    struct notify_cfg_qstate notify_cfg = {0};
 
     NIC_LOG_DEBUG("{}: {}: type {} index {} oper {}",
         hal_lif_info_.name,
@@ -1733,6 +1734,27 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
         WRITE_MEM(addr + offsetof(admin_qstate_t, cfg), (uint8_t *)&admin_cfg, sizeof(admin_cfg), 0);
         PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(admin_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+        break;
+    case IONIC_QTYPE_NOTIFYQ:
+        if (cmd->index >= spec->eq_count) {
+            NIC_LOG_ERR("{}: bad qid {}", hal_lif_info_.name, cmd->index);
+            return (IONIC_RC_EQID);
+        }
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_NOTIFYQ_QTYPE,
+                cmd->index);
+        if (addr < 0) {
+            NIC_LOG_ERR("{}: Failed to get qstate address for NOTIFYQ qid {}",
+                hal_lif_info_.name, cmd->index);
+            return (IONIC_RC_ERROR);
+        }
+        READ_MEM(addr + offsetof(notify_qstate_t, cfg), (uint8_t *)&notify_cfg, sizeof(notify_cfg), 0);
+        if (cmd->oper == IONIC_Q_ENABLE)
+            notify_cfg.enable = 0x1;
+        else if (cmd->oper == IONIC_Q_DISABLE)
+            notify_cfg.enable = 0x0;
+        WRITE_MEM(addr + offsetof(notify_qstate_t, cfg), (uint8_t *)&notify_cfg, sizeof(notify_cfg), 0);
+        PAL_barrier();
+        p4plus_invalidate_cache(addr, sizeof(notify_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
         break;
     default:
         NIC_LOG_ERR("{}: invalid qtype {}", hal_lif_info_.name, cmd->type);
