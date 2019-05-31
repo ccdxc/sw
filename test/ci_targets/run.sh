@@ -4,7 +4,7 @@ export E2E_CONFIG="test/e2e/cluster/tb_config_ci.json"
 cd $GOPATH/src/github.com/pensando/sw/bin
 tar zxvf venice.tgz || :
 cd $GOPATH/src/github.com/pensando/sw
-make $1
+make $*
 if [ $? -ne 0 ]; then
   for node in $(docker ps -f label=pens-dind --format '{{.Names}}'); do
     mkdir -p /tmp/ClusterLogs/$node/events
