@@ -46,13 +46,16 @@ func (mss *MirrorSessionState) handleSchTimer() {
 		MirrorSessionState: mss}
 }
 
+/* XXX Uncomment after NAPLES adds support for mirror expiry
 func (mss *MirrorSessionState) getExpDuration() time.Duration {
 	// format conversion and max duration (2h) is checked by common Venice parameter checker hook
 	expDuration, _ := time.ParseDuration(mss.MirrorSession.Spec.StopConditions.ExpiryDuration)
 	return expDuration
-}
+} */
 
 func (mss *MirrorSessionState) runMsExpTimer() bool {
+	return true
+	/* XXX Uncomment after NAPLES adds support for mirror expiry
 	expDuration := mss.getExpDuration()
 	expTime := mss.schTime.Add(expDuration)
 	if expTime.After(time.Now()) {
@@ -61,7 +64,7 @@ func (mss *MirrorSessionState) runMsExpTimer() bool {
 		return true
 	}
 	log.Infof("Expiry Time expired in the past %v for %v\n", expTime, mss.Name)
-	return false
+	return false */
 }
 
 func (mss *MirrorSessionState) handleExpTimer() {

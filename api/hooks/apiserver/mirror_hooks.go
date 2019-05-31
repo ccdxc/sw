@@ -89,12 +89,6 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 			return i, false, fmt.Errorf("Unsupported format used for schedule-time")
 		}
 	}
-	if numVeniceCollectors != 0 {
-		if ms.Spec.StopConditions.MaxPacketCount == 0 || ms.Spec.StopConditions.MaxPacketCount > veniceMaxPacketCount {
-			errStr := fmt.Errorf("Invalid max-packets specified for Venice collector must be 0 < max-packets < %d", veniceMaxPacketCount)
-			return i, false, errStr
-		}
-	}
 	dropAllFilter := false
 	dropReasonFilter := false
 	allPktsFilter := false

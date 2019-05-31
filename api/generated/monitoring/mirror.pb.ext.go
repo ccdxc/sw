@@ -231,7 +231,6 @@ func (m *MirrorSessionSpec) Defaults(ver string) bool {
 		i := m.MatchRules[k]
 		ret = i.Defaults(ver) || ret
 	}
-	ret = m.StopConditions.Defaults(ver) || ret
 	ret = true
 	switch ver {
 	default:
@@ -288,33 +287,6 @@ func (m *MirrorStartConditions) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *MirrorStartConditions) Defaults(ver string) bool {
 	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *MirrorStopConditions) Clone(into interface{}) (interface{}, error) {
-	var out *MirrorStopConditions
-	var ok bool
-	if into == nil {
-		out = &MirrorStopConditions{}
-	} else {
-		out, ok = into.(*MirrorStopConditions)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*MirrorStopConditions))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *MirrorStopConditions) Defaults(ver string) bool {
-	var ret bool
-	ret = true
-	switch ver {
-	default:
-		m.ExpiryDuration = "2h"
-	}
-	return ret
 }
 
 // Validators and Requirements
@@ -598,17 +570,6 @@ func (m *MirrorSessionSpec) Validate(ver, path string, ignoreStatus bool, ignore
 			ret = append(ret, errs...)
 		}
 	}
-
-	{
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "StopConditions"
-		if errs := m.StopConditions.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
 	if vs, ok := validatorMapMirror["MirrorSessionSpec"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
@@ -640,8 +601,6 @@ func (m *MirrorSessionSpec) Normalize() {
 	for k, v := range m.PacketFilters {
 		m.PacketFilters[k] = MirrorSessionSpec_MirrorPacketFilter_normal[strings.ToLower(v)]
 	}
-
-	m.StopConditions.Normalize()
 
 }
 
@@ -683,32 +642,6 @@ func (m *MirrorStartConditions) Validate(ver, path string, ignoreStatus bool, ig
 }
 
 func (m *MirrorStartConditions) Normalize() {
-
-}
-
-func (m *MirrorStopConditions) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
-
-}
-
-func (m *MirrorStopConditions) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
-	var ret []error
-	if vs, ok := validatorMapMirror["MirrorStopConditions"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapMirror["MirrorStopConditions"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	}
-	return ret
-}
-
-func (m *MirrorStopConditions) Normalize() {
 
 }
 
@@ -788,19 +721,6 @@ func init() {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"State", vals)
-		}
-		return nil
-	})
-
-	validatorMapMirror["MirrorStopConditions"] = make(map[string][]func(string, interface{}) error)
-	validatorMapMirror["MirrorStopConditions"]["all"] = append(validatorMapMirror["MirrorStopConditions"]["all"], func(path string, i interface{}) error {
-		m := i.(*MirrorStopConditions)
-		args := make([]string, 0)
-		args = append(args, "0")
-		args = append(args, "2h")
-
-		if err := validators.Duration(m.ExpiryDuration, args); err != nil {
-			return fmt.Errorf("%v failed validation: %s", path+"."+"ExpiryDuration", err.Error())
 		}
 		return nil
 	})

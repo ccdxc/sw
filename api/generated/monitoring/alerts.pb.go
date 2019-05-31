@@ -50,7 +50,6 @@
 		MirrorSessionSpec
 		MirrorSessionStatus
 		MirrorStartConditions
-		MirrorStopConditions
 		AlertDestinationList
 		AlertList
 		AlertPolicyList

@@ -29,13 +29,6 @@ var CreateMirrorSessionFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
-		ID:     "expiry-duration",
-		Type:   "String",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
 		ID:     "ip-addresses",
 		Type:   "StringSlice",
 		Help:   "",
@@ -45,13 +38,6 @@ var CreateMirrorSessionFlags = []gen.CliFlag{
 	{
 		ID:     "mac-addresses",
 		Type:   "StringSlice",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
-		ID:     "max-packets",
-		Type:   "String",
 		Help:   "",
 		Skip:   false,
 		Insert: "",

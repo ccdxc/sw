@@ -91,13 +91,11 @@ var typesMapMirror = map[string]*api.Struct{
 			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"applications":     api.CLIInfo{Path: "Spec.MatchRules[].AppProtoSel.Apps", Skip: false, Insert: "", Help: ""},
 			"endpoints":        api.CLIInfo{Path: "Spec.MatchRules[].Dst.Endpoints", Skip: false, Insert: "", Help: ""},
-			"expiry-duration":  api.CLIInfo{Path: "Spec.StopConditions.ExpiryDuration", Skip: false, Insert: "", Help: ""},
 			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"ip-addresses":     api.CLIInfo{Path: "Spec.MatchRules[].Dst.IPAddresses", Skip: false, Insert: "", Help: ""},
 			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"mac-addresses":    api.CLIInfo{Path: "Spec.MatchRules[].Dst.MACAddresses", Skip: false, Insert: "", Help: ""},
-			"max-packets":      api.CLIInfo{Path: "Spec.StopConditions.MaxPacketCount", Skip: false, Insert: "", Help: ""},
 			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
 			"oper-state":       api.CLIInfo{Path: "Status.State", Skip: false, Insert: "", Help: ""},
@@ -118,8 +116,6 @@ var typesMapMirror = map[string]*api.Struct{
 
 			"StartConditions": api.Field{Name: "StartConditions", CLITag: api.CLIInfo{ID: "start-condition", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "start-condition", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.MirrorStartConditions"},
 
-			"StopConditions": api.Field{Name: "StopConditions", CLITag: api.CLIInfo{ID: "stop-condition", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "stop-condition", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.MirrorStopConditions"},
-
 			"Collectors": api.Field{Name: "Collectors", CLITag: api.CLIInfo{ID: "collectors", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "collectors", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.MirrorCollector"},
 
 			"MatchRules": api.Field{Name: "MatchRules", CLITag: api.CLIInfo{ID: "match-rules", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "match-rules", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.MatchRule"},
@@ -139,14 +135,6 @@ var typesMapMirror = map[string]*api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorStartConditions{}) },
 		Fields: map[string]api.Field{
 			"ScheduleTime": api.Field{Name: "ScheduleTime", CLITag: api.CLIInfo{ID: "schedule-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "schedule-time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
-		},
-	},
-	"monitoring.MirrorStopConditions": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorStopConditions{}) },
-		Fields: map[string]api.Field{
-			"MaxPacketCount": api.Field{Name: "MaxPacketCount", CLITag: api.CLIInfo{ID: "max-packets", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max-packets", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
-
-			"ExpiryDuration": api.Field{Name: "ExpiryDuration", CLITag: api.CLIInfo{ID: "expiry-duration", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "expiry-duration", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

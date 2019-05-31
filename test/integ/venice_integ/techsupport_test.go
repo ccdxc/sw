@@ -178,7 +178,7 @@ func (it *veniceIntegSuite) deleteSmartNICNode(ctx context.Context, node *api.Ob
 	return err
 }
 
-func newTechSupportRequest(name string, nodeNames []string, labels *labels.Selector) *monitoring.TechSupportRequest {
+func newTechSupportRequest(name string, nodeNames []string, label *labels.Selector) *monitoring.TechSupportRequest {
 	return &monitoring.TechSupportRequest{
 		ObjectMeta: api.ObjectMeta{
 			Name: name,
@@ -191,9 +191,9 @@ func newTechSupportRequest(name string, nodeNames []string, labels *labels.Selec
 			Verbosity: rand.Int31n(7),
 			NodeSelector: &monitoring.TechSupportRequestSpec_NodeSelectorSpec{
 				Names:  nodeNames,
-				Labels: labels,
+				Labels: label,
 			},
-			CollectionSelector: labels,
+			CollectionSelector: label,
 		},
 	}
 }
@@ -211,7 +211,7 @@ func newTechSupportAgent(name, kind string, matchingRequests []*monitoring.TechS
 	return tsa
 }
 
-func newSmartNICNode(name string, labels map[string]string) *cluster.SmartNIC {
+func newSmartNICNode(name string, label map[string]string) *cluster.SmartNIC {
 	nic := policygen.CreateSmartNIC(name,
 		cluster.SmartNICStatus_ADMITTED.String(),
 		"esx-1",
@@ -219,7 +219,7 @@ func newSmartNICNode(name string, labels map[string]string) *cluster.SmartNIC {
 			Type:   cluster.SmartNICCondition_HEALTHY.String(),
 			Status: cluster.ConditionStatus_FALSE.String(),
 		})
-	nic.ObjectMeta.Labels = labels
+	nic.ObjectMeta.Labels = label
 	return nic
 }
 

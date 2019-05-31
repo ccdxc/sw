@@ -288,37 +288,3 @@ func EncodeGrpcRespMirrorStartConditions(ctx context.Context, response interface
 func DecodeGrpcRespMirrorStartConditions(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
-
-func encodeHTTPMirrorStopConditions(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPMirrorStopConditions(_ context.Context, r *http.Request) (interface{}, error) {
-	var req MirrorStopConditions
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqMirrorStopConditions encodes GRPC request
-func EncodeGrpcReqMirrorStopConditions(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*MirrorStopConditions)
-	return req, nil
-}
-
-// DecodeGrpcReqMirrorStopConditions decodes GRPC request
-func DecodeGrpcReqMirrorStopConditions(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*MirrorStopConditions)
-	return req, nil
-}
-
-// EncodeGrpcRespMirrorStopConditions encodes GRC response
-func EncodeGrpcRespMirrorStopConditions(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespMirrorStopConditions decodes GRPC response
-func DecodeGrpcRespMirrorStopConditions(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}

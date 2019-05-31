@@ -25,13 +25,11 @@ message MirrorSessionSpec {
     // StartConditions
     MirrorStartConditions   StartConditions = 2 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "start-condition,inline"];
 
-    MirrorStopConditions    StopConditions  = 3 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "stop-condition,inline"];
-
     // Mirrored packet collectors
-    repeated MirrorCollector Collectors     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "collectors,inline"];
+    repeated MirrorCollector Collectors     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "collectors,inline"];
 
     // Traffic Selection Rules - Matching pakcets are mirrored, based on packet filters and start/stop conditions
-    repeated MatchRule      MatchRules      = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "match-rules,inline"];
+    repeated MatchRule      MatchRules      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "match-rules,inline"];
 
     // Filter selected packets further - mirror only those packets that match atleast one of the PacketFilers
     enum MirrorPacketFilter {
@@ -44,21 +42,12 @@ message MirrorSessionSpec {
         // ui-hint: Firewall Policy Drops
         FIREWALL_POLICY_DROP    = 3;
     }
-    repeated string PacketFilters           = 6 [(gogoproto.jsontag) = "packet-filters,omitempty", (venice.check) = "StrEnum(MirrorSessionSpec.MirrorPacketFilter)"];
+    repeated string PacketFilters           = 5 [(gogoproto.jsontag) = "packet-filters,omitempty", (venice.check) = "StrEnum(MirrorSessionSpec.MirrorPacketFilter)"];
 }
 
 // MirrorStartConditions - Conditions to start mirroring
 message MirrorStartConditions {
     api.Timestamp   ScheduleTime    = 1 [(gogoproto.jsontag) = "schedule-time,omitempty"];
-}
-
-// MirrorStopConditions - A MirrorSession will stop mirroring after this condition is met
-message MirrorStopConditions {
-    // Stop after capturing specified number of packets
-    uint32          MaxPacketCount  = 1 [(gogoproto.jsontag) = "max-packets,omitempty"];
-    // Stop after specified amount of time. E.g. 1h, 20min
-    // Maximum length allowed is 2h
-    string          ExpiryDuration  = 2 [(gogoproto.jsontag) = "expiry-duration,omitempty", (venice.default)="2h", (venice.check)="Duration(0,2h)"];
 }
 
 enum PacketCollectorType {

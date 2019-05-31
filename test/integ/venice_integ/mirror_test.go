@@ -36,9 +36,6 @@ var testMirrorSessions = []monitoring.MirrorSession{
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
 			PacketFilters: []string{"ALL_PKTS"},
-			StopConditions: monitoring.MirrorStopConditions{
-				MaxPacketCount: 1000,
-			},
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "ERSPAN",
@@ -88,12 +85,6 @@ var testMirrorSessions = []monitoring.MirrorSession{
 					},
 				},
 			},
-
-			StopConditions: monitoring.MirrorStopConditions{
-				MaxPacketCount: 1000,
-				ExpiryDuration: "5m",
-			},
-
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "ERSPAN",
@@ -420,18 +411,6 @@ func (it *veniceIntegSuite) TestMirrorSessionUpdate(c *C) {
 		}
 		return false, "Not running yet"
 	}, "T4: running session is not found", intervals...)
-
-	ms.Spec.StopConditions.ExpiryDuration = "0s"
-	_, err = it.restClient.MonitoringV1().MirrorSession().Update(ctx, &ms)
-	Assert(c, err == nil, "T4: update failed")
-	// make sure it stops running
-	AssertEventually(c, func() (bool, interface{}) {
-		tms, _ := it.restClient.MonitoringV1().MirrorSession().Get(ctx, &ms.ObjectMeta)
-		if tms.Status.State == monitoring.MirrorSessionState_STOPPED.String() {
-			return true, nil
-		}
-		return false, "Not stopped yet"
-	}, "T4: running session is not stopped", intervals...)
 
 	log.Infof("----- T5: Update non-existing session")
 	ms = testMirrorSessions[0]

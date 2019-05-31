@@ -8,7 +8,6 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMirrorStartConditions, IMonitoringMirrorStartConditions } from './monitoring-mirror-start-conditions.model';
-import { MonitoringMirrorStopConditions, IMonitoringMirrorStopConditions } from './monitoring-mirror-stop-conditions.model';
 import { MonitoringMirrorCollector, IMonitoringMirrorCollector } from './monitoring-mirror-collector.model';
 import { MonitoringMatchRule, IMonitoringMatchRule } from './monitoring-match-rule.model';
 import { MonitoringMirrorSessionSpec_packet_filters,  MonitoringMirrorSessionSpec_packet_filters_uihint  } from './enums';
@@ -16,7 +15,6 @@ import { MonitoringMirrorSessionSpec_packet_filters,  MonitoringMirrorSessionSpe
 export interface IMonitoringMirrorSessionSpec {
     'packet-size'?: number;
     'start-condition'?: IMonitoringMirrorStartConditions;
-    'stop-condition'?: IMonitoringMirrorStopConditions;
     'collectors'?: Array<IMonitoringMirrorCollector>;
     'match-rules'?: Array<IMonitoringMatchRule>;
     'packet-filters': Array<MonitoringMirrorSessionSpec_packet_filters>;
@@ -26,7 +24,6 @@ export interface IMonitoringMirrorSessionSpec {
 export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitoringMirrorSessionSpec {
     'packet-size': number = null;
     'start-condition': MonitoringMirrorStartConditions = null;
-    'stop-condition': MonitoringMirrorStopConditions = null;
     'collectors': Array<MonitoringMirrorCollector> = null;
     'match-rules': Array<MonitoringMatchRule> = null;
     'packet-filters': Array<MonitoringMirrorSessionSpec_packet_filters> = null;
@@ -36,10 +33,6 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
             type: 'number'
         },
         'start-condition': {
-            required: false,
-            type: 'object'
-        },
-        'stop-condition': {
             required: false,
             type: 'object'
         },
@@ -82,7 +75,6 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['start-condition'] = new MonitoringMirrorStartConditions();
-        this['stop-condition'] = new MonitoringMirrorStopConditions();
         this['collectors'] = new Array<MonitoringMirrorCollector>();
         this['match-rules'] = new Array<MonitoringMatchRule>();
         this['packet-filters'] = new Array<MonitoringMirrorSessionSpec_packet_filters>();
@@ -105,11 +97,6 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
             this['start-condition'].setValues(values['start-condition'], fillDefaults);
         } else {
             this['start-condition'].setValues(null, fillDefaults);
-        }
-        if (values) {
-            this['stop-condition'].setValues(values['stop-condition'], fillDefaults);
-        } else {
-            this['stop-condition'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<MonitoringMirrorCollector>(this, 'collectors', values['collectors'], MonitoringMirrorCollector);
@@ -137,7 +124,6 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
             this._formGroup = new FormGroup({
                 'packet-size': CustomFormControl(new FormControl(this['packet-size']), MonitoringMirrorSessionSpec.propInfo['packet-size']),
                 'start-condition': CustomFormGroup(this['start-condition'].$formGroup, MonitoringMirrorSessionSpec.propInfo['start-condition'].required),
-                'stop-condition': CustomFormGroup(this['stop-condition'].$formGroup, MonitoringMirrorSessionSpec.propInfo['stop-condition'].required),
                 'collectors': new FormArray([]),
                 'match-rules': new FormArray([]),
                 'packet-filters': CustomFormControl(new FormControl(this['packet-filters']), MonitoringMirrorSessionSpec.propInfo['packet-filters']),
@@ -149,11 +135,6 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('start-condition') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('start-condition').get(field);
-                control.updateValueAndValidity();
-            });
-            // We force recalculation of controls under a form group
-            Object.keys((this._formGroup.get('stop-condition') as FormGroup).controls).forEach(field => {
-                const control = this._formGroup.get('stop-condition').get(field);
                 control.updateValueAndValidity();
             });
             // We force recalculation of controls under a form group
@@ -178,7 +159,6 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
         if (this._formGroup) {
             this._formGroup.controls['packet-size'].setValue(this['packet-size']);
             this['start-condition'].setFormGroupValuesToBeModelValues();
-            this['stop-condition'].setFormGroupValuesToBeModelValues();
             this.fillModelArray<MonitoringMirrorCollector>(this, 'collectors', this['collectors'], MonitoringMirrorCollector);
             this.fillModelArray<MonitoringMatchRule>(this, 'match-rules', this['match-rules'], MonitoringMatchRule);
             this._formGroup.controls['packet-filters'].setValue(this['packet-filters']);

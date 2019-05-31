@@ -88,9 +88,6 @@ var testMirrorSessions = []monitoring.MirrorSession{
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
 			PacketFilters: []string{"ALL_PKTS"},
-			StopConditions: monitoring.MirrorStopConditions{
-				MaxPacketCount: 1000,
-			},
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -140,11 +137,6 @@ var testMirrorSessions = []monitoring.MirrorSession{
 					},
 				},
 			},
-			StopConditions: monitoring.MirrorStopConditions{
-				MaxPacketCount: 1000,
-				ExpiryDuration: "5m",
-			},
-
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",

@@ -29,10 +29,6 @@ var _ = Describe("MirrorSession Tests", func() {
 				Spec: monitoring.MirrorSessionSpec{
 					PacketSize:    128,
 					PacketFilters: []string{"ALL_PKTS"},
-					StopConditions: monitoring.MirrorStopConditions{
-						MaxPacketCount: 1000,
-						ExpiryDuration: "5s",
-					},
 					Collectors: []monitoring.MirrorCollector{
 						{
 							Type: "ERSPAN",
@@ -102,6 +98,7 @@ var _ = Describe("MirrorSession Tests", func() {
 				return true
 			}, 5, 1).Should(BeTrue(), fmt.Sprintf("Failed to start %s", ms.Name))
 
+			/* XXX Reenable after session expiry is added in NAPLES
 			By("Checking that MirrorSession has stopped using expriy time------")
 			Eventually(func() bool {
 				tms, err := mirrorRestIf.Get(ctx, &ms.ObjectMeta)
@@ -114,7 +111,7 @@ var _ = Describe("MirrorSession Tests", func() {
 					return false
 				}
 				return true
-			}, 10, 1).Should(BeTrue(), fmt.Sprintf("Failed to stop %s", ms.Name))
+			}, 10, 1).Should(BeTrue(), fmt.Sprintf("Failed to stop %s", ms.Name)) */
 			By("Deleting MirrorSession ------")
 			_, err = mirrorRestIf.Delete(ctx, &ms.ObjectMeta)
 			Expect(err).ShouldNot(HaveOccurred())

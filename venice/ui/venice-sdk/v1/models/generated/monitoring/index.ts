@@ -82,7 +82,6 @@ export * from './monitoring-mirror-session-list.model';
 export * from './monitoring-mirror-session-spec.model';
 export * from './monitoring-mirror-session-status.model';
 export * from './monitoring-mirror-start-conditions.model';
-export * from './monitoring-mirror-stop-conditions.model';
 export * from './monitoring-privacy-config.model';
 export * from './monitoring-snmp-export.model';
 export * from './monitoring-snmp-trap-server.model';

@@ -30,10 +30,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
 			PacketFilters: []string{"ALL_PKTS"},
-			StopConditions: monitoring.MirrorStopConditions{
-				MaxPacketCount: 1000,
-			},
-			Collectors: []monitoring.MirrorCollector{},
+			Collectors:    []monitoring.MirrorCollector{},
 
 			MatchRules: []monitoring.MatchRule{
 				{
@@ -76,12 +73,6 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 					},
 				},
 			},
-
-			StopConditions: monitoring.MirrorStopConditions{
-				MaxPacketCount: 1000,
-				ExpiryDuration: "5m",
-			},
-
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -113,11 +104,6 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
 			PacketFilters: []string{"ALL_DROPS"},
-			StopConditions: monitoring.MirrorStopConditions{
-				MaxPacketCount: 0,
-				ExpiryDuration: "5m",
-			},
-
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -145,11 +131,6 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
 			PacketFilters: []string{"ALL_PKTS"},
-			StopConditions: monitoring.MirrorStopConditions{
-				MaxPacketCount: 50,
-				ExpiryDuration: "5m",
-			},
-
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -177,11 +158,6 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
 			PacketFilters: []string{"ALL_DROPS"},
-			StopConditions: monitoring.MirrorStopConditions{
-				MaxPacketCount: 50,
-				ExpiryDuration: "5m",
-			},
-
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -215,11 +191,6 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
 			PacketFilters: []string{"ALL_DROPS"},
-			StopConditions: monitoring.MirrorStopConditions{
-				MaxPacketCount: 5000,
-				ExpiryDuration: "5m",
-			},
-
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -247,11 +218,6 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
 			PacketFilters: []string{"ALL_PKTS"},
-			StopConditions: monitoring.MirrorStopConditions{
-				MaxPacketCount: 500,
-				ExpiryDuration: "5m",
-			},
-
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -281,11 +247,6 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
 			PacketFilters: []string{"ALL_DROPS"},
-			StopConditions: monitoring.MirrorStopConditions{
-				MaxPacketCount: 500,
-				ExpiryDuration: "5m",
-			},
-
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -323,11 +284,6 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
 			PacketFilters: []string{"ALL_DROPS", "NETWORK_POLICY_DROP"},
-			StopConditions: monitoring.MirrorStopConditions{
-				MaxPacketCount: 500,
-				ExpiryDuration: "5m",
-			},
-
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -365,11 +321,6 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    1024,
 			PacketFilters: []string{"ALL_PKTS"},
-			StopConditions: monitoring.MirrorStopConditions{
-				MaxPacketCount: 500,
-				ExpiryDuration: "5m",
-			},
-
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -400,11 +351,6 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
 			PacketFilters: []string{"ALL_PKTS"},
-			StopConditions: monitoring.MirrorStopConditions{
-				MaxPacketCount: 50,
-				ExpiryDuration: "5m",
-			},
-
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "VENICE",
@@ -428,9 +374,6 @@ var testGoodMirrorSession = []monitoring.MirrorSession{
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
 			PacketFilters: []string{"ALL_PKTS"},
-			StopConditions: monitoring.MirrorStopConditions{
-				MaxPacketCount: 1000,
-			},
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "ERSPAN",

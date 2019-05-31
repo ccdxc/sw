@@ -387,21 +387,6 @@
             "format": "date-time"
           },
           {
-            "name": "stop-condition.max-packets",
-            "description": "Stop after capturing specified number of packets.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "stop-condition.expiry-duration",
-            "description": "Stop after specified amount of time. E.g. 1h, 20min\nMaximum length allowed is 2h. should be a valid time duration of at most 2h0m0s",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
             "name": "mirror-session-spec.packet-filters",
             "in": "query",
             "required": false,
@@ -5477,21 +5462,6 @@
             "required": false,
             "type": "string",
             "format": "date-time"
-          },
-          {
-            "name": "stop-condition.max-packets",
-            "description": "Stop after capturing specified number of packets.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "stop-condition.expiry-duration",
-            "description": "Stop after specified amount of time. E.g. 1h, 20min\nMaximum length allowed is 2h. should be a valid time duration of at most 2h0m0s",
-            "in": "query",
-            "required": false,
-            "type": "string"
           },
           {
             "name": "mirror-session-spec.packet-filters",
@@ -14292,9 +14262,6 @@
           "$ref": "#/definitions/monitoringMirrorStartConditions",
           "title": "StartConditions"
         },
-        "stop-condition": {
-          "$ref": "#/definitions/monitoringMirrorStopConditions"
-        },
         "collectors": {
           "type": "array",
           "items": {
@@ -14370,27 +14337,6 @@
         }
       },
       "title": "MirrorStartConditions - Conditions to start mirroring"
-    },
-    "monitoringMirrorStopConditions": {
-      "type": "object",
-      "required": [
-        "expiry-duration"
-      ],
-      "properties": {
-        "max-packets": {
-          "type": "integer",
-          "format": "int64",
-          "title": "Stop after capturing specified number of packets"
-        },
-        "expiry-duration": {
-          "type": "string",
-          "default": "2h",
-          "example": "2h",
-          "description": "should be a valid time duration of at most 2h0m0s",
-          "title": "Stop after specified amount of time. E.g. 1h, 20min\nMaximum length allowed is 2h"
-        }
-      },
-      "title": "MirrorStopConditions - A MirrorSession will stop mirroring after this condition is met"
     },
     "monitoringPrivacyConfig": {
       "type": "object",

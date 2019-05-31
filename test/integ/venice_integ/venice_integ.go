@@ -222,7 +222,7 @@ func NewVeniceIntegSuite(cfg SuiteConfig) VeniceSuite {
 func (it *veniceIntegSuite) APIClient() pencluster.ClusterV1Interface {
 	return it.apisrvClient.ClusterV1()
 }
-func (it *veniceIntegSuite) CheckNICVersionForAdmission(nicSku string, nicVersion string) (string, string) {
+func (it *veniceIntegSuite) CheckNICVersionForAdmission(nicSku, nicVersion string) (string, string) {
 	return "", ""
 }
 
@@ -336,7 +336,7 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 
 		snic := it.snics[i]
 		restURL := "localhost:0"
-		dbPath := fmt.Sprintf("/tmp/nmd-%d.db", i)
+		dbPath := fmt.Sprintf("/tmp/nmdAg-%d.db", i)
 
 		tutils.CreateFruJSON(it.getNaplesMac(i))
 
@@ -353,21 +353,19 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 		}
 
 		// Create the new NMD
-		nmd, err := nmd.NewAgent(pa, uc, dbPath, snic.snicName, snic.macAddr, smartNICServerURL, restURL, "", "", "network",
+		nmdAg, err := nmd.NewAgent(pa, uc, dbPath, snic.snicName, snic.macAddr, smartNICServerURL, restURL, "", "", "network",
 			globals.NicRegIntvl*time.Second, globals.NicUpdIntvl*time.Second, it.resolverClient)
 		if err != nil {
 			log.Fatalf("Error creating NMD. Err: %v", err)
 		}
 		// start NMDs rest server and
-		n := nmd.GetNMD()
+		n := nmdAg.GetNMD()
 
 		n.CreateMockIPClient(nil)
-		//n.UpdateMgmtIP()
 		// Fake IPConfig
 		ipConfig := &cluster.IPConfig{
 			IPAddress: "1.2.3.4",
 		}
-		//n.IPClient.Update(nmdproto.NetworkMode_INBAND, ipConfig, 0, hostID, []string{"localhost"})
 		cfg := n.GetNaplesConfig()
 		cfg.Spec.Controllers = []string{"localhost"}
 		cfg.Spec.NetworkMode = nmdproto.NetworkMode_INBAND.String()
@@ -377,7 +375,7 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 
 		n.SetNaplesConfig(cfg.Spec)
 		n.IPClient.Update()
-		snic.nmd = nmd
+		snic.nmd = nmdAg
 	}
 
 	// verify NIC is admitted with CMD
@@ -715,21 +713,21 @@ func (it *veniceIntegSuite) startAgent() {
 		it.tmpFiles = append(it.tmpFiles, n)
 
 		log.Infof("creating telemetry policy agent")
-		tpa, aerr := tpa.NewPolicyAgent("mock", agent.NetworkAgent, agent.GetMgmtIPAddr)
+		tpAgent, aerr := tpa.NewPolicyAgent("mock", agent.NetworkAgent, agent.GetMgmtIPAddr)
 		if aerr != nil {
 			log.Fatalf("Error creating TPAgent. Err: %v", aerr)
 		}
-		if tpa == nil {
+		if tpAgent == nil {
 			log.Fatalf("cannot create telemetry policy agent. Err: %v", aerr)
 		}
-		if err := tpa.NewTpClient(fmt.Sprintf("dummy-uuid-%d", i), rc); err != nil {
+		if err := tpAgent.NewTpClient(fmt.Sprintf("dummy-uuid-%d", i), rc); err != nil {
 			log.Fatalf("cannot create telemetry client. Err: %v", aerr)
 		}
 		log.Infof("created telemetry policy agent")
 
 		// create new RestServer instance. Not started yet.
 		restURL := fmt.Sprintf("localhost:%d", it.config.NetAgentRestPort+i)
-		restServer, err := restapi.NewRestServer(agent.NetworkAgent, tsa.TroubleShootingAgent, tpa.TpState, restURL)
+		restServer, err := restapi.NewRestServer(agent.NetworkAgent, tsa.TroubleShootingAgent, tpAgent.TpState, restURL)
 		if aerr != nil {
 			log.Fatalf("Error creating agent REST server. Err: %v", aerr)
 		}
@@ -995,7 +993,6 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 
 	// start API gateway
 	logConf = log.GetDefaultConfig("api-gw")
-	// logConf.Filter = log.AllowAllFilter
 	l = log.GetNewLogger(logConf)
 	svcs := map[string]string{globals.APIServer: it.apiSrvAddr, globals.Spyglass: it.fdrAddr}
 	it.apiGw, it.apiGwAddr, err = testutils.StartAPIGateway(fmt.Sprintf(":%s", it.config.APIGatewayPort), it.config.APIGatewaySkipAuth, svcs, it.disabledServices, []string{"localhost:" + globals.CMDResolverPort}, nil, l)
