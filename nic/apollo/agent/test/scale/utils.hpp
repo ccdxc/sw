@@ -304,6 +304,7 @@ populate_tunnel_request (TunnelRequest *req,
         return;
     }
     spec = req->add_request();
+    spec->set_id(tep_id);
     tep_api_spec_to_proto_spec(spec, tep);
     return;
 }

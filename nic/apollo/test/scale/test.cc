@@ -791,14 +791,14 @@ populate_tags_api_rule_spec (uint32_t id, pds_tag_rule_t *api_rule_spec,
     return SDK_RET_OK;
 }
 
-#define DEFAULT_TAGS_NUM_PREFIXES_TESTAPP 4
+#define TESTAPP_TAGS_NUM_PREFIXES 4
 sdk_ret_t
 create_tags (uint32_t num_tag_trees, uint32_t scale,
              uint8_t ip_af, ip_prefix_t *v6_route_pfx)
 {
     sdk_ret_t ret;
     pds_tag_spec_t pds_tag;
-    uint32_t num_prefixes = DEFAULT_TAGS_NUM_PREFIXES_TESTAPP;
+    uint32_t num_prefixes = TESTAPP_TAGS_NUM_PREFIXES;
     // unique IDs across tags
     static pds_tag_id_t id = 0;
     static uint32_t tag_pfx_count = 0;
@@ -811,9 +811,9 @@ create_tags (uint32_t num_tag_trees, uint32_t scale,
     memset(&pds_tag, 0, sizeof(pds_tag));
     pds_tag.af = ip_af;
 
-    // if scale < DEFAULT_TAGS_NUM_PREFIXES_TESTAPP,
+    // if scale < TESTAPP_TAGS_NUM_PREFIXES,
     // create num_rules=scale with num_prefixes=1
-    if (scale < DEFAULT_TAGS_NUM_PREFIXES_TESTAPP) {
+    if (scale < TESTAPP_TAGS_NUM_PREFIXES) {
         num_prefixes = 1;
     }
 
@@ -870,9 +870,10 @@ static inline void
 populate_meter_api_rule_spec (uint32_t id, pds_meter_rule_t *api_rule_spec,
                               pds_meter_type_t type, uint64_t pps_bps,
                               uint64_t burst, uint32_t num_prefixes,
-                              uint32_t *meter_pfx_count)
+                              uint32_t *meter_pfx_count, uint32_t priority)
 {
     api_rule_spec->type = type;
+    api_rule_spec->priority = priority;
     switch (type) {
     case PDS_METER_TYPE_PPS_POLICER:
         api_rule_spec->pps = pps_bps;
@@ -906,14 +907,18 @@ populate_meter_api_rule_spec (uint32_t id, pds_meter_rule_t *api_rule_spec,
     }
 }
 
-#define DEFAULT_METER_NUM_PREFIXES_TESTAPP 16
+#define TESTAPP_METER_NUM_PREFIXES 16
+#define TESTAPP_METER_PRIORITY_STEP 4
 sdk_ret_t
 create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
               uint64_t pps_bps, uint64_t burst, uint32_t ip_af)
 {
     sdk_ret_t ret;
     pds_meter_spec_t pds_meter;
-    uint32_t num_prefixes = DEFAULT_METER_NUM_PREFIXES_TESTAPP;
+    uint32_t num_prefixes = TESTAPP_METER_NUM_PREFIXES;
+    uint32_t priority = 0;
+    uint32_t step = 0;
+
     // unique IDs across meters
     static pds_meter_id_t id = 1;
     static uint32_t meter_pfx_count = 0;
@@ -925,9 +930,9 @@ create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
     memset(&pds_meter, 0, sizeof(pds_meter_spec_t));
     pds_meter.af = ip_af;
 
-    // if scale < DEFAULT_METER_NUM_PREFIXES_TESTAPP,
+    // if scale < TESTAPP_METER_NUM_PREFIXES,
     // create num_rules=scale with num_prefixes=1
-    if (scale < DEFAULT_METER_NUM_PREFIXES_TESTAPP) {
+    if (scale < TESTAPP_METER_NUM_PREFIXES) {
         num_prefixes = 1;
     }
 
@@ -941,20 +946,43 @@ create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
     pds_meter.rules =
             (pds_meter_rule_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_METER,
                             (pds_meter.num_rules * sizeof(pds_meter_rule_t)));
+
     for (uint32_t i = 0; i < num_meter; i++) {
         pds_meter.key.id = id++;
+
+        // priority is per meter
+        priority = 0;
+        step = TESTAPP_METER_PRIORITY_STEP;
         for (uint32_t rule = 0; rule < num_rules; rule++) {
             pds_meter_rule_t *api_rule_spec = &pds_meter.rules[rule];
+            if (step == TESTAPP_METER_PRIORITY_STEP) {
+                priority = rule + (step - 1);
+            }
             populate_meter_api_rule_spec(
                                 pds_meter.key.id, api_rule_spec, type, pps_bps,
-                                burst, num_prefixes, &meter_pfx_count);
+                                burst, num_prefixes, &meter_pfx_count,
+                                priority);
+            priority--;
+            step--;
+            if (step == 0) {
+                step = TESTAPP_METER_PRIORITY_STEP;
+            }
         }
         for (uint32_t rule = num_rules;
                       rule < (num_rules + num_rules_rem); rule++) {
             pds_meter_rule_t *api_rule_spec = &pds_meter.rules[rule];
+            if (step == TESTAPP_METER_PRIORITY_STEP) {
+                priority = rule + (step - 1);
+            }
             populate_meter_api_rule_spec(
                                pds_meter.key.id, api_rule_spec, type, pps_bps,
-                               burst, 1, &meter_pfx_count);
+                               burst, 1, &meter_pfx_count,
+                               priority);
+            priority--;
+            step--;
+            if (step == 0) {
+                step = TESTAPP_METER_PRIORITY_STEP;
+            }
         }
 #ifdef TEST_GRPC_APP
         ret = create_meter_grpc(&pds_meter);

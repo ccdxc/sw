@@ -12,7 +12,6 @@ BatchSvcImpl::BatchStart(ServerContext *context,
                          const pds::BatchSpec *proto_spec,
                          pds::BatchStatus *proto_status) {
     pds_batch_params_t api_batch_params = {0};
-
     api_batch_params.epoch = proto_spec->epoch();
 
 #ifdef PDS_FLOW_TEST
@@ -25,15 +24,6 @@ BatchSvcImpl::BatchStart(ServerContext *context,
         if (ret != sdk::SDK_RET_OK) {
             return Status::CANCELLED;
         }
-#if 0
-        // DUAL STACK is handled in flow test itself
-        //ret = g_flow_test_obj->create_flows(1024*1024, 17, 100, 100, true);
-        ret = g_flow_test_obj->create_flows();
-        if (ret != sdk::SDK_RET_OK) {
-            return Status::CANCELLED;
-        }
-#endif
-        return Status::OK;
     }
 #endif
 
@@ -42,7 +32,7 @@ BatchSvcImpl::BatchStart(ServerContext *context,
             return Status::OK;
         }
     }
-    return Status::CANCELLED;
+    return Status::OK;
 }
 
 Status

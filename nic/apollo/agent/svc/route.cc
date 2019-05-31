@@ -85,6 +85,12 @@ RouteSvcImpl::RouteTableCreate(ServerContext *context,
         }
         ret = core::route_table_create(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+
+        // free the routes memory
+        if (api_spec->routes != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, api_spec->routes);
+            api_spec->routes = NULL;
+        }
         if (ret != sdk::SDK_RET_OK) {
             break;
         }
@@ -119,6 +125,12 @@ RouteSvcImpl::RouteTableUpdate(ServerContext *context,
         }
         ret = core::route_table_update(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+
+        // free the routes memory
+        if (api_spec->routes != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, api_spec->routes);
+            api_spec->routes = NULL;
+        }
         if (ret != sdk::SDK_RET_OK) {
             break;
         }

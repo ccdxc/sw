@@ -198,7 +198,7 @@ vpc_peer_create_validate (pds_vpc_peer_spec_t *spec)
         PDS_TRACE_ERR("Failed to create vpc_peer {}, vpc doesn't exist {}", spec->key.id, spec->vpc1.id);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
-    if (agent_state::state()->find_in_vpc_db(&spec->vpc2) != NULL) {
+    if (agent_state::state()->find_in_vpc_db(&spec->vpc2) == NULL) {
         PDS_TRACE_ERR("Failed to create vpc_peer {}, vpc doesn't exist {}", spec->key.id, spec->vpc2.id);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
