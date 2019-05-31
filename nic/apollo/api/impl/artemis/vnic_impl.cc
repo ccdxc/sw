@@ -135,9 +135,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
 
     // prepare RXDMA_VNIC_INFO entries in RX & TX directions
     tx_rxdma_vnic_info_data.action_id = VNIC_INFO_VNIC_INFO_ID;
-    tx_rxdma_vnic_info_data.rxdma_vnic_info.entry_valid = TRUE;
     rx_rxdma_vnic_info_data.action_id = VNIC_INFO_VNIC_INFO_ID;
-    rx_rxdma_vnic_info_data.rxdma_vnic_info.entry_valid = TRUE;
 
     // prepare VNIC_INFO_TXDMA entry
     txdma_vnic_info_data.action_id = VNIC_INFO_TXDMA_VNIC_INFO_TXDMA_ID;
