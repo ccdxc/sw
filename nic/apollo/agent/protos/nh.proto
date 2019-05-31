@@ -30,13 +30,13 @@ enum NexthopType {
 
 message IPNexthopInfo {
   // egress VRF id
-  uint32           VCNId      = 1;
+  uint32           VPCId = 1;
   // nexthop's IP address
-  types.IPAddress  IP         = 2;
-  // egress interface
-  uint32           IntefaceId = 3;
+  types.IPAddress  IP    = 2;
   // egress vlan
-  uint32           Vlan       = 4;
+  uint32           Vlan  = 3;
+  // optional mac address
+  uint64           Mac   = 4;
 }
 
 // nexthop specification

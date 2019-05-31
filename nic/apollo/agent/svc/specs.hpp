@@ -14,6 +14,7 @@
 #include "nic/apollo/api/include/pds_tag.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_service.hpp"
+#include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/meter.hpp"
@@ -26,6 +27,7 @@
 #include "nic/apollo/agent/svc/service.hpp"
 #include "nic/apollo/agent/svc/port.hpp"
 #include "nic/apollo/agent/svc/policy.hpp"
+#include "nic/apollo/agent/svc/nh.hpp"
 #include "gen/proto/types.pb.h"
 
 //----------------------------------------------------------------------------
@@ -405,6 +407,118 @@ policy_api_spec_to_proto_spec (const pds_policy_spec_t *api_spec,
     }
 
     return;
+}
+
+// Build nh API spec from protobuf spec
+static inline void
+pds_agent_nh_api_spec_fill (pds_nexthop_spec_t *api_spec,
+                            const pds::NexthopSpec &proto_spec)
+{
+    pds::NexthopType type;
+
+    api_spec->key = proto_spec.id();
+    type = proto_spec.type();
+    if (type == pds::NEXTHOP_TYPE_NONE) {
+        api_spec->type = PDS_NH_TYPE_NONE;
+    } else if (type == pds::NEXTHOP_TYPE_IP) {
+        api_spec->type = PDS_NH_TYPE_IP;
+        api_spec->vpc.id = proto_spec.ipnhinfo().vpcid();
+        ipaddr_proto_spec_to_api_spec(&api_spec->ip, proto_spec.ipnhinfo().ip());
+        api_spec->vlan = proto_spec.ipnhinfo().vlan();
+        if (proto_spec.ipnhinfo().mac() != 0) {
+            MAC_UINT64_TO_ADDR(api_spec->mac, proto_spec.ipnhinfo().mac());
+        }
+    }
+}
+
+// Populate proto buf spec from nh API spec
+static inline void
+nh_api_spec_to_proto_spec (pds::NexthopSpec *proto_spec,
+                           const pds_nexthop_spec_t *api_spec)
+{
+    proto_spec->set_id(api_spec->key);
+    if (api_spec->type == PDS_NH_TYPE_NONE) {
+        proto_spec->set_type(pds::NEXTHOP_TYPE_NONE);
+    } else if (api_spec->type == PDS_NH_TYPE_IP) {
+        proto_spec->set_type(pds::NEXTHOP_TYPE_IP);
+        auto ipnhinfo = proto_spec->mutable_ipnhinfo();
+        ipnhinfo->set_vpcid(api_spec->vpc.id);
+        ipaddr_api_spec_to_proto_spec(ipnhinfo->mutable_ip(), &api_spec->ip);
+        ipnhinfo->set_vlan(api_spec->vlan);
+        ipnhinfo->set_mac(MAC_TO_UINT64(api_spec->mac));
+    }
+}
+
+// Populate proto buf status from nh API status
+static inline void
+nh_api_status_to_proto_status (pds::NexthopStatus *proto_status,
+                               const pds_nexthop_status_t *api_status)
+{
+}
+
+// Populate proto buf stats from nh API stats
+static inline void
+nh_api_stats_to_proto_stats (pds::NexthopStats *proto_stats,
+                             const pds_nexthop_stats_t *api_stats)
+{
+}
+
+// Populate proto buf from nh API info
+static inline void
+nh_api_info_to_proto (const pds_nexthop_info_t *api_info, void *ctxt)
+{
+    pds::NexthopGetResponse *proto_rsp = (pds::NexthopGetResponse *)ctxt;
+    auto nh = proto_rsp->add_response();
+    pds::NexthopSpec *proto_spec = nh->mutable_spec();
+    pds::NexthopStatus *proto_status = nh->mutable_status();
+    pds::NexthopStats *proto_stats = nh->mutable_stats();
+
+    nh_api_spec_to_proto_spec(proto_spec, &api_info->spec);
+    nh_api_status_to_proto_status(proto_status, &api_info->status);
+    nh_api_stats_to_proto_stats(proto_stats, &api_info->stats);
+}
+
+// Build nh group API spec from protobuf spec
+static inline void
+pds_agent_nh_group_api_spec_fill (pds_nexthop_group_spec_t *api_spec,
+                                  const pds::NhGroupSpec &proto_spec)
+{
+}
+
+// Populate proto buf spec from nh API spec
+static inline void
+nh_group_api_spec_to_proto_spec (pds::NhGroupSpec *proto_spec,
+                                 const pds_nexthop_group_spec_t *api_spec)
+{
+}
+
+// Populate proto buf status from nh group API status
+static inline void
+nh_group_api_status_to_proto_status (pds::NhGroupStatus *proto_status,
+                                     const pds_nexthop_group_status_t *api_status)
+{
+}
+
+// Populate proto buf stats from nh group API stats
+static inline void
+nh_group_api_stats_to_proto_stats (pds::NhGroupStats *proto_stats,
+                                   const pds_nexthop_group_stats_t *api_stats)
+{
+}
+
+// Populate proto buf from nh API info
+static inline void
+nh_group_api_info_to_proto (const pds_nexthop_group_info_t *api_info, void *ctxt)
+{
+    pds::NhGroupGetResponse *proto_rsp = (pds::NhGroupGetResponse *)ctxt;
+    auto nh = proto_rsp->add_response();
+    pds::NhGroupSpec *proto_spec = nh->mutable_spec();
+    pds::NhGroupStatus *proto_status = nh->mutable_status();
+    pds::NhGroupStats *proto_stats = nh->mutable_stats();
+
+    nh_group_api_spec_to_proto_spec(proto_spec, &api_info->spec);
+    nh_group_api_status_to_proto_status(proto_status, &api_info->status);
+    nh_group_api_stats_to_proto_stats(proto_stats, &api_info->stats);
 }
 
 #endif    // __AGENT_SVC_SPECS_HPP__
