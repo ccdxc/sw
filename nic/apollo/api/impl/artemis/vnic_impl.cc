@@ -22,6 +22,7 @@
 #include "nic/apollo/api/impl/artemis/vnic_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/p4/include/artemis_table_sizes.h"
 #include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
 #include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
 
@@ -133,7 +134,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     vnic_info_rxdma_actiondata_t rx_rxdma_vnic_info_data = { 0 };
     vnic_info_txdma_actiondata_t txdma_vnic_info_data = { 0 };
 
-    // prepare RXDMA_VNIC_INFO entries in RX & TX directions
+    // prepare VNIC_INFO_RXDMA entries in RX & TX directions
     tx_rxdma_vnic_info_data.action_id = VNIC_INFO_RXDMA_VNIC_INFO_RXDMA_ID;
     rx_rxdma_vnic_info_data.action_id = VNIC_INFO_RXDMA_VNIC_INFO_RXDMA_ID;
 
@@ -227,21 +228,22 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
                                 addr, 5);
     }
 
-    // program RXDMA_VNIC_INFO entry for TX direction at hw_id_ index
+    // program VNIC_INFO_RXDMA entry for TX direction in 2nd half of the table
+    // at hw_id_ index
     p4pd_ret = p4pd_global_entry_write(P4_ARTEMIS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
-                                       hw_id_, NULL, NULL,
-                                       &tx_rxdma_vnic_info_data);
+                                       VNIC_INFO_TABLE_SIZE + hw_id_,
+                                       NULL, NULL, &tx_rxdma_vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program RXDMA_VNIC_INFO table at %u", hw_id_);
+        PDS_TRACE_ERR("Failed to program VNIC_INFO_RXDMA table at %u", hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
-    // program VNIC_INFO_TXDMA entry for RX direction at (2 * hw_id_) index
+    // program VNIC_INFO_RXDMA entry for RX direction at hw_id_ index
     p4pd_ret = p4pd_global_entry_write(P4_ARTEMIS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
-                                       hw_id_ << 1, NULL, NULL,
+                                       hw_id_, NULL, NULL,
                                        &rx_rxdma_vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program RXDMA_VNIC_INFO table at %u",
+        PDS_TRACE_ERR("Failed to program VNIC_INFO_RXDMA table at %u",
                       (1 << hw_id_));
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
@@ -251,7 +253,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
                                        hw_id_, NULL, NULL,
                                        &txdma_vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program RXDMA_VNIC_INFO table at %u",
+        PDS_TRACE_ERR("Failed to program VNIC_INFO_TXDMA table at %u",
                       (1 << hw_id_));
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
