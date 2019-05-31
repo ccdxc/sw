@@ -1334,12 +1334,10 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
         }
     };
 
-    /*
-    if (cmd->index == 0 && spec->uplink_port_num != 0 && spec->uplink_port_num != 9 && host_port_stats_addr != 0) {
+    if (spec->eth_type == ETH_HOST && cmd->index == 0 && host_port_stats_addr != 0) {
         NIC_LOG_INFO("{}: port{}: Starting stats update", spec->name, spec->uplink_port_num);
         evutil_timer_start(EV_A_ &stats_timer, &Eth::StatsUpdate, this, 0.0, 0.2);
     }
-    */
 
     // TODO: Workaround for linkmgr not setting port id
     port_status->id = spec->uplink_port_num;
@@ -1394,12 +1392,10 @@ Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
     }
     eth_lif = it->second;
 
-    /*
-    if (cmd->index == 0 && spec->uplink_port_num != 0 && spec->uplink_port_num != 9 && host_port_stats_addr != 0) {
+    if (spec->eth_type == ETH_HOST && cmd->index == 0 && host_port_stats_addr != 0) {
         NIC_LOG_INFO("{}: port{}: Stopping stats update", spec->name, spec->uplink_port_num);
         evutil_timer_stop(EV_A_ &stats_timer);
     }
-    */
 
     ret = eth_lif->Reset(req, req_data, resp, resp_data);
     if (ret != IONIC_RC_SUCCESS) {
@@ -1454,18 +1450,32 @@ Eth::StatsUpdate(void *obj)
     eth_lif = it->second;
 
     struct edmaq_ctx ctx = {
+        .cb = NULL,
+        .obj = obj
+    };
+
+    struct edmaq_ctx last_ctx = {
         .cb = &Eth::StatsUpdateComplete,
         .obj = obj
     };
 
     if (eth->port_stats_addr != 0 && eth->host_port_stats_addr != 0) {
-        eth_lif->EdmaProxy(
-            eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-            eth->port_stats_addr,
-            eth->host_port_stats_addr,
-            eth->port_stats_size,
-            &ctx
-        );
+        /* MS cannot handle > 64B transfers. */
+        auto offset = 0;
+        auto bytes_left = sizeof(struct port_status);
+        while (bytes_left > 0) {
+            auto end = bytes_left <= 64;
+            auto transfer_sz = end ? bytes_left : 64;
+            eth_lif->EdmaProxy(
+                eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
+                eth->port_stats_addr + offset,
+                eth->host_port_stats_addr + offset,
+                transfer_sz,
+                end ? &last_ctx : &ctx
+            );
+            offset += transfer_sz;
+            bytes_left -= transfer_sz;
+        };
         evutil_timer_stop(eth->loop, &eth->stats_timer);
     }
 }

@@ -46,7 +46,7 @@ enum eth_hw_qtype {
 
 #define ETH_EDMAQ_QTYPE                 7
 #define ETH_EDMAQ_QID                   1
-#define LG2_ETH_EDMAQ_RING_SIZE         4
+#define LG2_ETH_EDMAQ_RING_SIZE         6
 #define ETH_EDMAQ_RING_SIZE             (1 << LG2_ETH_EDMAQ_RING_SIZE)
 
 #define ETH_ADMINQ_REQ_QTYPE            7
