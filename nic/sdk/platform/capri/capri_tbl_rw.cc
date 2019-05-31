@@ -217,8 +217,8 @@ capri_program_table_mpu_pc (int tableid, bool ingress, int stage,
 }
 
 void
-capri_program_hbm_table_base_addr (int tableid, int stage_tableid, char *tablename,
-                                   int stage, int pipe)
+capri_program_hbm_table_base_addr (int tableid, int stage_tableid,
+                                   char *tablename, int stage, int pipe)
 {
     mem_addr_t va, start_offset;
     uint64_t size;

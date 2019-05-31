@@ -143,6 +143,14 @@ private:
     /// \brief  destructor
     ~vnic_impl() {}
 
+    /// \brief      program vnic info tables in rxdma and txdma
+    /// \param[in]  vpc       vpc of the vnic
+    /// \param[in]  subnet    subnet of the vnic
+    /// \param[in]  spec      vnic configuration
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
+                                 pds_vnic_spec_t *spec);
+
     /// \brief      program VNIC_MAPPING table and activate the config
     /// \param[in]  api_op          api operation
     /// \param[in]  api_obj         vnic entry object

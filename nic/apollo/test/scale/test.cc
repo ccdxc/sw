@@ -1513,8 +1513,6 @@ create_objects (void)
     }
 #endif
 
-end:
-
 #ifdef TEST_GRPC_APP
     /* BATCH COMMIT */
     ret = batch_commit_grpc();

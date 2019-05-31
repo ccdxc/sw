@@ -51,8 +51,6 @@ public:
 private:
     indexer *vnic_idxr(void) { return vnic_idxr_; }
     sltcam *vnic_mapping_tbl(void) { return vnic_mapping_tbl_; }
-    directmap *rxdma_vnic_info_tbl(void) { return rxdma_vnic_info_tbl_; }
-    directmap *txdma_vnic_info_tbl(void) { return txdma_vnic_info_tbl_; }
     friend class vnic_impl;   // vnic_impl class is friend of vnic_impl_state
 
 private:
@@ -60,8 +58,6 @@ private:
     //       index using hw_id_ of vnic and and bzero out when we create vnic
     indexer     *vnic_idxr_;              ///< indexer to allocate hw vnic id
     sltcam      *vnic_mapping_tbl_;       ///< tcam table for VNIC_MAPPING
-    directmap   *rxdma_vnic_info_tbl_;    ///< directmap table for rxdma VNIC_INFO
-    directmap   *txdma_vnic_info_tbl_;    ///< directmap table for txdma VNIC_INFO
 };
 
 /// @}

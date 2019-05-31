@@ -138,12 +138,18 @@
             "cache": "p4plus-txdma"
         },
         {
+            "name": "vnic_info_txdma",
+            "_comment": "512 * 16B",
+            "size": "8K",
+            "cache": "p4plus-txdma"
+        },
+        {
             "name": "meter_v4",
             "_comment": "(64+1) * (64 + 16 * 64 + 16 * 16 * 64)",
             "size": "2M",
             "block_size": "17472B",
             "max_elements": "1K",
-            "_commented_out_cache": "p4plus-rxdma"
+            "cache": "p4plus-rxdma"
         },
         {
             "name": "meter_v6",
@@ -151,7 +157,7 @@
             "size": "6M",
             "block_size": "87360B",
             "max_elements": "1K",
-            "_commented_out_cache": "p4plus-rxdma"
+            "cache": "p4plus-rxdma"
         },
         {
             "name": "tag_v4",
@@ -167,6 +173,12 @@
             "size": "2796160B",
             "block_size": "1398080B",
             "max_elements": "16K",
+            "cache": "p4plus-rxdma"
+        },
+        {
+            "name": "vnic_info",
+            "_comment": "512 * 64B",
+            "size": "32768B",
             "cache": "p4plus-rxdma"
         },
         {

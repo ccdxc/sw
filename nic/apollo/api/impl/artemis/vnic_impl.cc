@@ -8,6 +8,8 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/sdk/lib/p4/p4_api.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
@@ -20,8 +22,8 @@
 #include "nic/apollo/api/impl/artemis/vnic_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/api/pds_state.hpp"
-#include "nic/sdk/lib/p4/p4_api.hpp"
-#include "nic/sdk/lib/utils/utils.hpp"
+#include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
+#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
 
 namespace api {
 namespace impl {
@@ -113,6 +115,151 @@ vnic_impl::nuke_resources(api_base *api_obj) {
     return SDK_RET_OK;
 }
 
+#define rxdma_vnic_info    action_u.vnic_info_vnic_info
+#define txdma_vnic_info    action_u.vnic_info_txdma_vnic_info_txdma
+sdk_ret_t
+vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
+                              pds_vnic_spec_t *spec)
+{
+    sdk_ret_t ret;
+    mem_addr_t addr;
+    policy *sec_policy;
+    meter_entry *meter;
+    route_table *rtable;
+    p4pd_error_t p4pd_ret;
+    pds_policy_key_t policy_key;
+    pds_route_table_key_t route_table_key;
+    vnic_info_actiondata_t tx_rxdma_vnic_info_data = { 0 };
+    vnic_info_actiondata_t rx_rxdma_vnic_info_data = { 0 };
+    vnic_info_txdma_actiondata_t txdma_vnic_info_data = { 0 };
+
+    // prepare RXDMA_VNIC_INFO entries in RX & TX directions
+    tx_rxdma_vnic_info_data.action_id = VNIC_INFO_VNIC_INFO_ID;
+    tx_rxdma_vnic_info_data.rxdma_vnic_info.entry_valid = TRUE;
+    rx_rxdma_vnic_info_data.action_id = VNIC_INFO_VNIC_INFO_ID;
+    rx_rxdma_vnic_info_data.rxdma_vnic_info.entry_valid = TRUE;
+
+    // prepare VNIC_INFO_TXDMA entry
+    txdma_vnic_info_data.action_id = VNIC_INFO_TXDMA_VNIC_INFO_TXDMA_ID;
+    txdma_vnic_info_data.txdma_vnic_info.entry_valid = TRUE;
+
+    // egress v4 & v6 policy roots are programmed in RX direction entry
+    policy_key = subnet->egr_v4_policy();
+    sec_policy = policy_db()->policy_find(&policy_key);
+    if (sec_policy) {
+        addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
+        PDS_TRACE_DEBUG("IPv4 egr policy root addr 0x%llx", addr);
+        MEM_ADDR_TO_P4_MEM_ADDR(tx_rxdma_vnic_info_data.rxdma_vnic_info.lpm_base1,
+                                addr, 5);
+    }
+    policy_key = subnet->egr_v6_policy();
+    sec_policy = policy_db()->policy_find(&policy_key);
+    if (sec_policy) {
+        addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
+        PDS_TRACE_DEBUG("IPv6 egr policy root addr 0x%llx", addr);
+        MEM_ADDR_TO_P4_MEM_ADDR(tx_rxdma_vnic_info_data.rxdma_vnic_info.lpm_base2,
+                                addr, 5);
+    }
+
+    // ingress v4 & v6 policy roots are programmed in RX direction entry
+    policy_key = subnet->ing_v4_policy();
+    sec_policy = policy_db()->policy_find(&policy_key);
+    if (sec_policy) {
+        addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
+        PDS_TRACE_DEBUG("IPv4 ing policy root addr 0x%llx", addr);
+        MEM_ADDR_TO_P4_MEM_ADDR(rx_rxdma_vnic_info_data.rxdma_vnic_info.lpm_base1,
+                                addr, 5);
+    }
+    policy_key = subnet->ing_v6_policy();
+    sec_policy = policy_db()->policy_find(&policy_key);
+    if (sec_policy) {
+        addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
+        PDS_TRACE_DEBUG("IPv6 ing policy root addr 0x%llx", addr);
+        MEM_ADDR_TO_P4_MEM_ADDR(rx_rxdma_vnic_info_data.rxdma_vnic_info.lpm_base2,
+                                addr, 5);
+    }
+
+    meter = meter_db()->find(&spec->v4_meter);
+    if (meter) {
+        addr = ((impl::meter_impl *)(meter->impl()))->lpm_root_addr();
+        PDS_TRACE_DEBUG("IPv4 meter root addr 0x%llx", addr);
+        MEM_ADDR_TO_P4_MEM_ADDR(tx_rxdma_vnic_info_data.rxdma_vnic_info.lpm_base3,
+                                addr, 5);
+        MEM_ADDR_TO_P4_MEM_ADDR(rx_rxdma_vnic_info_data.rxdma_vnic_info.lpm_base3,
+                                addr, 5);
+    }
+    meter = meter_db()->find(&spec->v6_meter);
+    if (meter) {
+        addr = ((impl::meter_impl *)(meter->impl()))->lpm_root_addr();
+        PDS_TRACE_DEBUG("IPv6 meter root addr 0x%llx", addr);
+        MEM_ADDR_TO_P4_MEM_ADDR(tx_rxdma_vnic_info_data.rxdma_vnic_info.lpm_base4,
+                                addr, 5);
+        MEM_ADDR_TO_P4_MEM_ADDR(rx_rxdma_vnic_info_data.rxdma_vnic_info.lpm_base4,
+                                addr, 5);
+    }
+
+    route_table_key = subnet->v4_route_table();
+    rtable = route_table_db()->find(&route_table_key);
+    if (rtable) {
+        addr =
+            ((impl::route_table_impl *)(rtable->impl()))->lpm_root_addr();
+        PDS_TRACE_DEBUG("IPv4 lpm root addr 0x%llx", addr);
+        MEM_ADDR_TO_P4_MEM_ADDR(tx_rxdma_vnic_info_data.rxdma_vnic_info.lpm_base5,
+                                addr, 5);
+        MEM_ADDR_TO_P4_MEM_ADDR(rx_rxdma_vnic_info_data.rxdma_vnic_info.lpm_base5,
+                                addr, 5);
+        MEM_ADDR_TO_P4_MEM_ADDR(txdma_vnic_info_data.txdma_vnic_info.lpm_base1,
+                                addr, 5);
+    }
+
+    route_table_key = subnet->v6_route_table();
+    if (route_table_key.id != PDS_ROUTE_TABLE_ID_INVALID) {
+        rtable = route_table_db()->find(&route_table_key);
+    } else {
+        rtable = NULL;
+    }
+    if (rtable) {
+        addr = ((impl::route_table_impl *)(rtable->impl()))->lpm_root_addr();
+        PDS_TRACE_DEBUG("IPv6 lpm root addr 0x%llx", addr);
+        MEM_ADDR_TO_P4_MEM_ADDR(tx_rxdma_vnic_info_data.rxdma_vnic_info.lpm_base6,
+                                addr, 5);
+        MEM_ADDR_TO_P4_MEM_ADDR(rx_rxdma_vnic_info_data.rxdma_vnic_info.lpm_base6,
+                                addr, 5);
+        MEM_ADDR_TO_P4_MEM_ADDR(txdma_vnic_info_data.txdma_vnic_info.lpm_base2,
+                                addr, 5);
+    }
+
+    // program RXDMA_VNIC_INFO entry for TX direction at hw_id_ index
+    p4pd_ret = p4pd_global_entry_write(P4_ARTEMIS_RXDMA_TBL_ID_VNIC_INFO,
+                                       hw_id_, NULL, NULL,
+                                       &tx_rxdma_vnic_info_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program RXDMA_VNIC_INFO table at %u", hw_id_);
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    // program VNIC_INFO_TXDMA entry for RX direction at (2 * hw_id_) index
+    p4pd_ret = p4pd_global_entry_write(P4_ARTEMIS_RXDMA_TBL_ID_VNIC_INFO,
+                                       hw_id_ << 1, NULL, NULL,
+                                       &rx_rxdma_vnic_info_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program RXDMA_VNIC_INFO table at %u",
+                      (1 << hw_id_));
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    // program TXDMA_VNIC_INFO entry at hw_id_ index
+    p4pd_ret = p4pd_global_entry_write(P4_ARTEMIS_TXDMA_TBL_ID_VNIC_INFO_TXDMA,
+                                       hw_id_, NULL, NULL,
+                                       &txdma_vnic_info_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program RXDMA_VNIC_INFO table at %u",
+                      (1 << hw_id_));
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+    return SDK_RET_OK;
+}
+
 #define ingress_vnic_info_action    action_u.ingress_vnic_info_ingress_vnic_info
 #define egress_vnic_info_action     action_u.egress_vnic_info_egress_vnic_info
 #define local_46_mapping_action     action_u.local_46_mapping_local_46_info
@@ -126,16 +273,9 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     p4pd_error_t p4pd_ret;
     pds_vnic_spec_t *spec;
     pds_vpc_key_t vpc_key;
-    meter_entry *meter;
     pds_subnet_key_t subnet_key;
-    pds_policy_key_t policy_key;
-    policy *ing_v4_policy, *ing_v6_policy;
-    policy *egr_v4_policy, *egr_v6_policy;
-    pds_route_table_key_t route_table_key;
-    route_table *v4_route_table, *v6_route_table;
     vnic_rx_stats_actiondata_t vnic_rx_stats_data = { 0 };
     vnic_tx_stats_actiondata_t vnic_tx_stats_data = { 0 };
-    //ingress_vnic_info_actiondata_t ing_vnic_info = { 0 };
     egress_vnic_info_actiondata_t egr_vnic_info = { 0 };
     local_46_mapping_actiondata_t local_46_mapping_data = { 0 };
 
@@ -209,92 +349,9 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
-#if 0
-#endif
-
-    route_table_key = subnet->v4_route_table();
-    v4_route_table = route_table_db()->find(&route_table_key);
-    route_table_key = subnet->v6_route_table();
-    if (route_table_key.id != PDS_ROUTE_TABLE_ID_INVALID) {
-        v6_route_table =
-            route_table_db()->find(&route_table_key);
-    } else {
-        v6_route_table = NULL;
-    }
-    policy_key = subnet->ing_v4_policy();
-    ing_v4_policy = policy_db()->policy_find(&policy_key);
-    policy_key = subnet->ing_v6_policy();
-    ing_v6_policy = policy_db()->policy_find(&policy_key);
-    policy_key = subnet->egr_v4_policy();
-    egr_v4_policy = policy_db()->policy_find(&policy_key);
-    policy_key = subnet->egr_v6_policy();
-    egr_v6_policy = policy_db()->policy_find(&policy_key);
-
-    if (v4_route_table) {
-        addr =
-            ((impl::route_table_impl *)(v4_route_table->impl()))->lpm_root_addr();
-        PDS_TRACE_DEBUG("IPv4 lpm root addr 0x%llx", addr);
-        //MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v4_lpm,
-                                //addr, 5);
-    }
-    if (v6_route_table) {
-        addr =
-            ((impl::route_table_impl *)(v6_route_table->impl()))->lpm_root_addr();
-        PDS_TRACE_DEBUG("IPv6 lpm root addr 0x%llx", addr);
-        //MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v6_lpm,
-                                //addr, 5);
-    }
-
-    if (ing_v4_policy) {
-        addr = ((impl::security_policy_impl *)(ing_v4_policy->impl()))->security_policy_root_addr();
-        PDS_TRACE_DEBUG("IPv4 ing policy root addr 0x%llx", addr);
-        //MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v4_sacl,
-                                //addr, 5);
-    }
-    if (ing_v6_policy) {
-        addr = ((impl::security_policy_impl *)(ing_v6_policy->impl()))->security_policy_root_addr();
-        PDS_TRACE_DEBUG("IPv6 ing policy root addr 0x%llx", addr);
-        //MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v6_sacl,
-                                //addr, 5);
-    }
-    if (egr_v4_policy) {
-        addr = ((impl::security_policy_impl *)(egr_v4_policy->impl()))->security_policy_root_addr();
-        PDS_TRACE_DEBUG("IPv4 egr policy root addr 0x%llx", addr);
-        //MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v4_sacl,
-                                //addr, 5);
-    }
-    if (egr_v6_policy) {
-        addr = ((impl::security_policy_impl *)(egr_v6_policy->impl()))->security_policy_root_addr();
-        PDS_TRACE_DEBUG("IPv6 egr policy root addr 0x%llx", addr);
-        //MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v6_sacl,
-                                //addr, 5);
-    }
-
-    meter = meter_db()->find(&spec->v4_meter);
-    if (meter) {
-        addr = ((impl::meter_impl *)(meter->impl()))->lpm_root_addr();
-        PDS_TRACE_DEBUG("IPv4 meter root addr 0x%llx", addr);
-        //MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v4_meter,
-                                //addr, 5);
-    }
-    meter = meter_db()->find(&spec->v6_meter);
-    if (meter) {
-        addr = ((impl::meter_impl *)(meter->impl()))->lpm_root_addr();
-        PDS_TRACE_DEBUG("IPv6 meter root addr 0x%llx", addr);
-        //MEM_ADDR_TO_P4_MEM_ADDR(ing_vnic_info.ingress_vnic_info_action.v6_meter,
-                                //addr, 5);
-    }
-
-#if 0
-    ing_vnic_info.action_id = INGRESS_VNIC_INFO_INGRESS_VNIC_INFO_ID;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INGRESS_VNIC_INFO,
-                                       hw_id_, NULL, NULL,
-                                       &ing_vnic_info);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        return sdk::SDK_RET_HW_PROGRAM_ERR;
-    }
-#endif
-    return SDK_RET_OK;
+    // program vnic info tables in rxdma and txdma
+    ret = program_vnic_info_(vpc, subnet, spec);
+    return ret;
 }
 
 // TODO: when epoch support is added to these tables, we should pick
