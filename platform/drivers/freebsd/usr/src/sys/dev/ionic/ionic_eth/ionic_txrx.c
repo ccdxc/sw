@@ -1699,7 +1699,7 @@ ionic_media_status_sysctl(SYSCTL_HANDLER_ARGS)
 			port_config->mtu,
 			port_config->an_enable ? "enabled" : "disabled",
 			ionic_port_fec_type_str(port_config->fec_type),
-			ionic_port_pause_type_str(port_config->pause_type),
+			ionic_port_pause_type_str(port_config->pause_type & IONIC_PAUSE_TYPE_MASK),
 			ionic_port_loopback_mode_str(port_config->loopback_mode));
 
 	sbuf_printf(sb, "  xcvr_status state=%s phy=%s pid=0x%x\n",

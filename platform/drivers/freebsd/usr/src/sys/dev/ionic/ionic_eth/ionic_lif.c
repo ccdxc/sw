@@ -56,6 +56,7 @@ static void ionic_lif_rss_free(struct lif *lif);
 static int ionic_lif_rss_init(struct lif *lif);
 static int ionic_lif_rss_deinit(struct lif *lif);
 
+static int ionic_ifmedia_xcvr(struct lif *lif);
 static void ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr);
 static int ionic_media_change(struct ifnet *ifp);
 
@@ -1717,6 +1718,8 @@ static void
 ionic_lif_ifnet_init(struct lif *lif)
 {
 	struct ifnet *ifp;
+	int media;
+	struct ionic_dev* idev = &lif->ionic->idev;
 
 	ifp = lif->netdev;
 	lif->max_frame_size = ifp->if_mtu + ETHER_HDR_LEN + ETHER_VLAN_ENCAP_LEN + ETHER_CRC_LEN;
@@ -1727,27 +1730,37 @@ ionic_lif_ifnet_init(struct lif *lif)
 	ifmedia_init(&lif->media, IFM_IMASK, ionic_media_change,
 		ionic_media_status);
 
+	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_AUTO);
+	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_UNKNOWN);
+
 	if (lif->ionic->is_mgmt_nic) {
 		ifmedia_add(&lif->media, IFM_ETHER | IFM_1000_KX, 0, NULL);
-	} else {
-		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_100G_CR4);
-		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_100G_SR4);
-		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_100G_LR4);
-		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_40G_CR4);
-		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_40G_SR4);
-		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_40G_LR4);
-		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_CR);
-		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_SR);
-		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_LR);
-		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_AOC);
-		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_SR);
-		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_LR);
-		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_LRM);
-		ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_ER);
+		ifmedia_set(&lif->media, IFM_ETHER | IFM_AUTO);
+		return;
 	}
 
-	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_AUTO);
-	ifmedia_set(&lif->media, IFM_ETHER | IFM_AUTO);
+	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_100G_CR4);
+	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_100G_SR4);
+	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_100G_LR4);
+	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_40G_CR4);
+	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_40G_SR4);
+	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_40G_LR4);
+	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_CR);
+	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_SR);
+	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_LR);
+	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_AOC);
+	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_SR);
+	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_LR);
+	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_LRM);
+	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_ER);
+
+	media = ionic_ifmedia_xcvr(lif);
+	if (idev->port_info->config.pause_type & IONIC_PAUSE_F_RX)
+		media |= IFM_ETH_RXPAUSE;
+	if (idev->port_info->config.pause_type & IONIC_PAUSE_F_TX)
+		media |= IFM_ETH_TXPAUSE;
+	IONIC_NETDEV_ERROR(lif->netdev, "media %x\n", media);
+	ifmedia_set(&lif->media, media);
 }
 
 static int
@@ -2688,6 +2701,90 @@ ionic_lif_rxqs_init(struct lif *lif)
 	return 0;
 }
 
+static int
+ionic_ifmedia_xcvr(struct lif *lif)
+{
+	struct ionic_dev* idev = &lif->ionic->idev;
+	unsigned int media = IFM_ETHER;
+
+	switch(idev->port_info->status.xcvr.pid) {
+	/* Copper media. */
+	case XCVR_PID_QSFP_100G_CR4:
+		media |= IFM_100G_CR4;
+		break;
+
+	case XCVR_PID_QSFP_40GBASE_CR4:
+		media |= IFM_40G_CR4;
+		break;
+
+	case XCVR_PID_SFP_25GBASE_CR_S:
+	case XCVR_PID_SFP_25GBASE_CR_L:
+	case XCVR_PID_SFP_25GBASE_CR_N:
+		media |= IFM_25G_CR;
+		break;
+
+	/* Fiber */
+	case XCVR_PID_QSFP_100G_SR4:
+	case XCVR_PID_QSFP_100G_AOC:
+		media |= IFM_100G_SR4;
+		break;
+
+	case XCVR_PID_QSFP_100G_LR4:
+	case XCVR_PID_QSFP_100G_ER4:
+		media |= IFM_100G_LR4;
+		break;
+
+	case XCVR_PID_QSFP_40GBASE_SR4:
+	case XCVR_PID_QSFP_40GBASE_AOC:
+		media |= IFM_40G_SR4;
+		break;
+
+	case XCVR_PID_QSFP_40GBASE_LR4:
+		media |= IFM_40G_LR4;
+		break;
+
+	case XCVR_PID_SFP_25GBASE_SR:
+		media |= IFM_25G_SR;
+		break;
+
+	case XCVR_PID_SFP_25GBASE_LR:
+		media |= IFM_25G_LR;
+		break;
+
+	case XCVR_PID_SFP_25GBASE_AOC:
+		media |= IFM_25G_AOC;
+		break;
+
+	case XCVR_PID_SFP_10GBASE_SR:
+		media |= IFM_10G_SR;
+		break;
+
+	case XCVR_PID_SFP_10GBASE_LR:
+		media |= IFM_10G_LR;
+		break;
+
+	case XCVR_PID_SFP_10GBASE_LRM:
+		media |= IFM_10G_LRM;
+		break;
+
+	case XCVR_PID_SFP_10GBASE_ER:
+		media |= IFM_10G_ER;
+		break;
+
+	case XCVR_PID_QSFP_100G_ACC:
+	case XCVR_PID_QSFP_40GBASE_ER4:
+	case XCVR_PID_SFP_25GBASE_ER:
+	case XCVR_PID_SFP_10GBASE_AOC:
+	case XCVR_PID_SFP_10GBASE_CU:
+	case XCVR_PID_UNKNOWN:
+	default:
+		media |= IFM_UNKNOWN;
+		break;
+	}
+
+	return media;
+}
+
 static void
 ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr)
 {
@@ -2714,92 +2811,18 @@ ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr)
 	ifmr->ifm_status |= IFM_ACTIVE;
 	ifmr->ifm_active |= IFM_FDX;
 
-	ifmr->ifm_active &= ~(IFM_ETH_TXPAUSE | IFM_ETH_RXPAUSE);
-	if (idev->port_info->config.pause_type & IONIC_PAUSE_F_RX)
-		ifmr->ifm_active |= IFM_ETH_RXPAUSE;
-	if (idev->port_info->config.pause_type & IONIC_PAUSE_F_TX)
-		ifmr->ifm_active |= IFM_ETH_TXPAUSE;
-
 	if (ionic->is_mgmt_nic) {
 		ifmr->ifm_active |= IFM_1000_KX;
 		IONIC_CORE_UNLOCK(lif);
 		return;
 	}
 
-	switch(idev->port_info->status.xcvr.pid) {
-	/* Copper media. */
-	case XCVR_PID_QSFP_100G_CR4:
-		ifmr->ifm_active |= IFM_100G_CR4;
-		break;
+	ifmr->ifm_active |= ionic_ifmedia_xcvr(lif);
 
-	case XCVR_PID_QSFP_40GBASE_CR4:
-		ifmr->ifm_active |= IFM_40G_CR4;
-		break;
-
-	case XCVR_PID_SFP_25GBASE_CR_S:
-	case XCVR_PID_SFP_25GBASE_CR_L:
-	case XCVR_PID_SFP_25GBASE_CR_N:
-		ifmr->ifm_active |= IFM_25G_CR;
-		break;
-
-	/* Fiber */
-	case XCVR_PID_QSFP_100G_SR4:
-	case XCVR_PID_QSFP_100G_AOC:
-		ifmr->ifm_active |= IFM_100G_SR4;
-		break;
-
-	case XCVR_PID_QSFP_100G_LR4:
-	case XCVR_PID_QSFP_100G_ER4:
-		ifmr->ifm_active |= IFM_100G_LR4;
-		break;
-
-	case XCVR_PID_QSFP_40GBASE_SR4:
-	case XCVR_PID_QSFP_40GBASE_AOC:
-		ifmr->ifm_active |= IFM_40G_SR4;
-		break;
-
-	case XCVR_PID_QSFP_40GBASE_LR4:
-		ifmr->ifm_active |= IFM_40G_LR4;
-		break;
-
-	case XCVR_PID_SFP_25GBASE_SR:
-		ifmr->ifm_active |= IFM_25G_SR;
-		break;
-
-	case XCVR_PID_SFP_25GBASE_LR:
-		ifmr->ifm_active |= IFM_25G_LR;
-		break;
-
-	case XCVR_PID_SFP_25GBASE_AOC:
-		ifmr->ifm_active |= IFM_25G_AOC;
-		break;
-
-	case XCVR_PID_SFP_10GBASE_SR:
-		ifmr->ifm_active |= IFM_10G_SR;
-		break;
-
-	case XCVR_PID_SFP_10GBASE_LR:
-		ifmr->ifm_active |= IFM_10G_LR;
-		break;
-
-	case XCVR_PID_SFP_10GBASE_LRM:
-		ifmr->ifm_active |= IFM_10G_LRM;
-		break;
-
-	case XCVR_PID_SFP_10GBASE_ER:
-		ifmr->ifm_active |= IFM_10G_ER;
-		break;
-
-	case XCVR_PID_QSFP_100G_ACC:
-	case XCVR_PID_QSFP_40GBASE_ER4:
-	case XCVR_PID_SFP_25GBASE_ER:
-	case XCVR_PID_SFP_10GBASE_AOC:
-	case XCVR_PID_SFP_10GBASE_CU:
-	case XCVR_PID_UNKNOWN:
-	default:
-		ifmr->ifm_active |= IFM_UNKNOWN;
-		break;
-	}
+	if (idev->port_info->config.pause_type & IONIC_PAUSE_F_RX)
+		ifmr->ifm_active |= IFM_ETH_RXPAUSE;
+	if (idev->port_info->config.pause_type & IONIC_PAUSE_F_TX)
+		ifmr->ifm_active |= IFM_ETH_TXPAUSE;
 
 	IONIC_CORE_UNLOCK(lif);
 }
