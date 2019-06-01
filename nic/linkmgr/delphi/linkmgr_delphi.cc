@@ -223,7 +223,7 @@ port_event_notify (uint32_t port_num, port_event_t event,
                             eventtypes::LINK_UP,
                             "PortKeyHandle",
                             port_key_handle,
-                            "Link UP");
+                            "Port: %d, Link UP", port_num);
         break;
 
     case port_event_t::PORT_EVENT_LINK_DOWN:
@@ -236,7 +236,7 @@ port_event_notify (uint32_t port_num, port_event_t event,
                             eventtypes::LINK_DOWN,
                             "PortKeyHandle",
                             port_key_handle,
-                            "Link DOWN");
+                            "Port: %d, Link DOWN", port_num);
         break;
 
     default:
