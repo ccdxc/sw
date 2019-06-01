@@ -297,8 +297,7 @@ capri_program_p4plus_table_mpu_pc_args (int tbl_id, cap_te_csr_t *te_csr,
 #define CAPRI_P4PLUS_TXDMA_EXT_PROG	"txdma_stage0_ext.bin"
 
 void
-capri_program_p4plus_sram_table_mpu_pc (int tableid, int stage_tbl_id,
-                                        int stage)
+capri_program_p4plus_table_mpu_pc (int tableid, int stage_tbl_id, int stage)
 {
     uint64_t pc = 0;
     cap_te_csr_t *te_csr = NULL;
@@ -327,7 +326,6 @@ capri_program_p4plus_sram_table_mpu_pc (int tableid, int stage_tbl_id,
                     stage, tableid, stage_tbl_id, pc);
     te_csr->cfg_table_property[stage_tbl_id].read();
     te_csr->cfg_table_property[stage_tbl_id].mpu_pc(pc >> 6);
-    te_csr->cfg_table_property[stage_tbl_id].addr_base(0);
     te_csr->cfg_table_property[stage_tbl_id].write();
 }
 

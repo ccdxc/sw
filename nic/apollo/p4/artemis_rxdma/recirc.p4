@@ -31,7 +31,10 @@ action rxlpm2_res_handler()
         modify_field(lpm_metadata.lpm2_base_addr,
                      lpm_metadata.sacl_base_addr +
                      SACL_SPORT_TABLE_OFFSET);
-
+        // Set next address same as the root address
+        modify_field(lpm_metadata.lpm2_next_addr,
+                     lpm_metadata.sacl_base_addr +
+                     SACL_SPORT_TABLE_OFFSET);
     } else {
         if (capri_p4_intr.recirc_count == 1) {
             // Write the derived DIP result to PHV

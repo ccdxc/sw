@@ -20,7 +20,7 @@
 #include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
-#include "nic/apollo/p4/include/defines.h"
+#include "nic/apollo/p4/include/artemis_defines.h"
 #include "gen/p4gen/artemis/include/p4pd.h"
 #include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
 #include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
@@ -455,23 +455,22 @@ artemis_impl::key_tunneled2_init_(void) {
     return ret;
 }
 
-#if 0
 sdk_ret_t
-artemis_impl::ingress_to_rxdma_init_(void) {
+artemis_impl::inter_pipe_init_(void) {
     p4pd_error_t p4pd_ret;
-    ingress_to_rxdma_actiondata_t data = { 0 };
+    inter_pipe_ingress_actiondata_t data = { 0 };
 
-    data.action_id = INGRESS_TO_RXDMA_CLASSIC_NIC_APP_ID;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INGRESS_TO_RXDMA,
-                                       P4PLUS_APPTYPE_CLASSIC_NIC,
+    data.action_id = INTER_PIPE_INGRESS_INGRESS_TO_EGRESS_ID;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INTER_PIPE_INGRESS,
+                                       PIPE_EGRESS,
                                        NULL, NULL, &data);
     if (p4pd_ret != P4PD_SUCCESS) {
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
-    data.action_id = INGRESS_TO_RXDMA_REDIRECT_TO_ARM_ID;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INGRESS_TO_RXDMA,
-                                       P4PLUS_APPTYPE_CPU,
+    data.action_id = INTER_PIPE_INGRESS_INGRESS_TO_CPS_ID;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INTER_PIPE_INGRESS,
+                                       PIPE_CPS,
                                        NULL, NULL, &data);
     if (p4pd_ret != P4PD_SUCCESS) {
         return sdk::SDK_RET_HW_PROGRAM_ERR;
@@ -479,7 +478,6 @@ artemis_impl::ingress_to_rxdma_init_(void) {
 
     return SDK_RET_OK;
 }
-#endif
 
 sdk_ret_t
 artemis_impl::egress_drop_stats_init_(void) {
@@ -547,12 +545,10 @@ artemis_impl::table_init_(void) {
     if (ret != SDK_RET_OK) {
         return ret;
     }
-#if 0
-    ret = ingress_to_rxdma_init_();
+    ret = inter_pipe_init_();
     if (ret != SDK_RET_OK) {
         return ret;
     }
-#endif
 
     // program session stats table base address as table constant
     // of session table

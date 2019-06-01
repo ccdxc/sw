@@ -176,17 +176,15 @@ asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
     for (uint32_t i = p4pd_rxdma_tableid_min_get();
          i < p4pd_rxdma_tableid_max_get(); i++) {
         p4pd_global_table_properties_get(i, &tbl_info);
-        capri_program_p4plus_sram_table_mpu_pc(i,
-                                               tbl_info.stage_tableid,
-                                               tbl_info.stage);
+        capri_program_p4plus_table_mpu_pc(i, tbl_info.stage_tableid,
+                                          tbl_info.stage);
     }
 
     for (uint32_t i = p4pd_txdma_tableid_min_get();
          i < p4pd_txdma_tableid_max_get(); i++) {
         p4pd_global_table_properties_get(i, &tbl_info);
-        capri_program_p4plus_sram_table_mpu_pc(i,
-                                               tbl_info.stage_tableid,
-                                               tbl_info.stage);
+        capri_program_p4plus_table_mpu_pc(i, tbl_info.stage_tableid,
+                                          tbl_info.stage);
     }
     return SDK_RET_OK;
 }

@@ -11,6 +11,7 @@ struct rxlpm2_2_d          d;
 
 // Define Table Name and Action Names
 #define table_name         rxlpm2_2
+#define action_keys16b     match2_2_16b
 #define action_keys32b     match2_2_32b
 #define action_keys128b    match2_2_128b
 #define action_data16b     match2_2_16b_retrieve
@@ -72,5 +73,6 @@ pass0:
     /* Setup key for SPORT Lookup on LPM2 */
     phvwr            p.lpm_metadata_lpm2_key, k.p4_to_rxdma_flow_sport
     /* Setup root for SPORT Lookup on LPM2 */
-    add.e            r1, k.lpm_metadata_sacl_base_addr, SACL_SPORT_TABLE_OFFSET
-    phvwr            p.lpm_metadata_lpm2_base_addr, r1
+    add              r1, k.lpm_metadata_sacl_base_addr, SACL_SPORT_TABLE_OFFSET
+    phvwr.e          p.lpm_metadata_lpm2_base_addr, r1
+    phvwr            p.lpm_metadata_lpm2_next_addr, r1

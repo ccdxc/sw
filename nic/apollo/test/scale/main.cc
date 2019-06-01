@@ -283,7 +283,7 @@ send_packet (void)
             }
         }
     }
-
+#if 0
     tcid++;
     if (!vxlan_encap) {
         if (tcid_filter == 0 || tcid == tcid_filter) {
@@ -369,7 +369,7 @@ send_packet (void)
             }
         }
     }
-
+#endif
     exit_simulation();
 }
 #endif

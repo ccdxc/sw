@@ -10,6 +10,7 @@ struct rxlpm2_4_d          d;
 
 // Define Table Name and Action Names
 #define table_name         rxlpm2_4
+#define action_keys16b     match2_4_16b
 #define action_keys32b     match2_4_32b
 #define action_keys128b    match2_4_128b
 #define action_data16b     match2_4_16b_retrieve

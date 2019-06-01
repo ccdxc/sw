@@ -9,7 +9,12 @@ struct phv_             p;
 %%
 
 pkt_enqueue:
-    phvwr.e     p.capri_intr_drop, 1
+    /* Is this the last pass? */
+    seq          c1, k.capri_p4_intr_recirc_count, 2
+    /* Then enque to Tx. Drop for now */
+    phvwr.c1     p.capri_intr_drop, 1
+    /* Else do nothing */
+    nop.e
     nop
 
 txdma_q_full:
