@@ -455,7 +455,7 @@ def PenctlStaticControllersCheck(n):
     status_controllers = PenctlGetControllersStatus(n)
 
     if len(spec_controllers) <= 0 or len(status_controllers) <= 0:
-        return api.types.status.FAILURE 
+        return api.types.status.FAILURE
 
     if spec_controllers[0] != status_controllers[0]:
         api.types.status.FAILURE
@@ -554,6 +554,7 @@ def ResetNMDState(n):
     api.Trigger_AddNaplesCommand(req, n, "rm -rf /var/log/pensando/pen-nmd.log")
     api.Trigger_AddNaplesCommand(req, n, "rm -rf /sysconfig/config0/nmd.db")
     api.Trigger_AddNaplesCommand(req, n, "rm -rf /sysconfig/config0/app-start.conf")
+    api.Trigger_AddNaplesCommand(req, n, "rm -rf /sysconfig/config0/device.conf")
     resp = api.Trigger(req)
 
 def GetNaplesFruJson(n):

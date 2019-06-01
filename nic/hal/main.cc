@@ -236,7 +236,7 @@ main (int argc, char **argv)
     }
 
     // parse the ini file, if it exists
-    hal::hal_parse_ini(ini_file.c_str(), &hal::g_hal_cfg);
+    // hal::hal_parse_ini(ini_file.c_str(), &hal::g_hal_cfg);
 
     // initialize HAL
     if (hal::hal_init(&hal::g_hal_cfg) != HAL_RET_OK) {

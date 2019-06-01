@@ -285,6 +285,16 @@ def demote():
         os.setuid(uid)
         os.environ['USER'] = (os.environ['SUDO_USER'])
 
+def create_device_conf(fname, mode):
+    f = open(fname, "w+")
+    f.write("{\n")
+    f.write("\"forwarding-mode\": \"%s\",\n" % (mode))
+    f.write("\"feature-profile\": 1,\n")
+    f.write("\"port-admin-state\": \"PORT_ADMIN_STATE_ENABLE\",\n")
+    f.write("\"mgmt-if-mac\": 0\n")
+    f.write("}\n")
+    f.close()
+
 def run_hal(args):
     snort_dir = nic_dir + "/hal/third-party/snort3/export"
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
@@ -319,6 +329,16 @@ def run_hal(args):
     os.environ["HAL_LOG_DIR"] = hal_log_dir
     hal_log = hal_log_dir + "/hal.log"
     os.system("rm -rf %s/hal.log.*" % hal_log_dir)
+    device_conf_file = nic_dir + "/conf/device.conf"
+    if args.hostpin:
+        create_device_conf(device_conf_file, "FORWARDING_MODE_HOSTPIN")
+    elif args.classic:
+        create_device_conf(device_conf_file, "FORWARDING_MODE_CLASSIC")
+    else:
+        create_device_conf(device_conf_file, "FORWARDING_MODE_SWITCH")
+
+
+    '''
     os.system("cp " + nic_dir + "/conf/hal_switch.ini " + nic_dir + "/conf/hal.ini")
     if args.hostpin:
         #jsonfile = 'hal_hostpin.json'
@@ -326,6 +346,7 @@ def run_hal(args):
     if args.classic:
         #jsonfile = 'hal_classic.json'
         os.system("cp " + nic_dir + "/conf/hal_classic.ini " + nic_dir + "/conf/hal.ini")
+    '''
 
     FNULL = open(os.devnull, 'w')
     print (bin_dir + '/hal', jsonfile)
@@ -342,7 +363,9 @@ def run_hal(args):
     time.sleep(10)
     #return
 
-    os.system("rm " + nic_dir + "/conf/hal.ini")
+    #os.system("rm " + nic_dir + "/conf/hal.ini")
+    #os.system("rm " + nic_dir + "/conf/device.conf")
+
     return
 
 

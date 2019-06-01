@@ -102,6 +102,7 @@ hal_get_forwarding_mode (std::string mode)
     return HAL_FORWARDING_MODE_NONE;
 }
 
+#if 0
 //------------------------------------------------------------------------------
 // parse HAL .ini file
 //------------------------------------------------------------------------------
@@ -149,6 +150,7 @@ end:
 
     return HAL_RET_OK;
 }
+#endif
 
 //------------------------------------------------------------------------------
 // bring up delphi thread
@@ -183,10 +185,16 @@ hal_init (hal_cfg_t *hal_cfg)
     int                tid;
     sdk::lib::catalog  *catalog = NULL;
     hal_ret_t          ret      = HAL_RET_OK;
-    std::string         mpart_json =
-        hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC ?
-        hal_cfg->cfg_path + "/" + hal_cfg->feature_set + "/hbm_classic_mem.json" :
-        hal_cfg->cfg_path + "/" + hal_cfg->feature_set + "/hbm_mem.json";
+    std::string         mpart_json;
+
+    // read the startup device config
+    hal_device_cfg_init(hal_cfg);
+
+    if (hal_cfg->device_cfg.forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
+        mpart_json = hal_cfg->cfg_path + "/" + hal_cfg->feature_set + "/hbm_classic_mem.json";
+    } else {
+        mpart_json = hal_cfg->cfg_path + "/" + hal_cfg->feature_set + "/hbm_mem.json";
+    }
 
     // do SDK initialization, if any
     hal_sdk_init();
@@ -213,9 +221,6 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // initialize random number generator
     srand(time(NULL));
-
-    // read the startup device config
-    hal_device_cfg_init(&hal_cfg->device_cfg);
 
     // instantiate delphi thread
     hal_delphi_thread_init(hal_cfg);
@@ -244,7 +249,7 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_TRACE_DEBUG("Spawned all HAL threads");
 
     // do platform dependent clock delta computation initialization
-    if ((hal_cfg->forwarding_mode != HAL_FORWARDING_MODE_CLASSIC) &&
+    if ((hal_cfg->device_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC) &&
         (hal_cfg->features != HAL_FEATURE_SET_GFT)) {
          ret = pd::hal_pd_clock_delta_comp_init(hal_cfg);
          SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
@@ -263,7 +268,7 @@ hal_init (hal_cfg_t *hal_cfg)
     //svc::hal_init_done();
 
     if (!getenv("DISABLE_FTE")) {
-        if (hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
+        if (hal_cfg->device_cfg.forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
             // starting fte thread for fte-span
             tid = HAL_THREAD_ID_FTE_MIN;
             hal_thread_start(tid, hal_thread_get(tid));

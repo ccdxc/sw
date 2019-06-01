@@ -281,7 +281,7 @@ hal_thread_init (hal_cfg_t *hal_cfg)
     uint64_t            cores_mask = 0x0;
     sdk::lib::thread    *hal_thread;
 
-    if (hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
+    if (hal_cfg->device_cfg.forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
         // 1 FTE thread for fte-span
         tid = HAL_THREAD_ID_FTE_MIN;
         HAL_TRACE_DEBUG("Spawning FTE thread {}", tid);
@@ -619,11 +619,11 @@ hal_device_cfg_init_defaults (device_cfg_t *device_cfg)
 static inline hal_forwarding_mode_t
 parse_forwarding_mode (std::string forwarding_mode)
 {
-    if (forwarding_mode == "classic") {
+    if (forwarding_mode == "FORWARDING_MODE_CLASSIC") {
         return HAL_FORWARDING_MODE_CLASSIC;
-    } else if (forwarding_mode == "smart-switch") {
+    } else if (forwarding_mode == "FORWARDING_MODE_SWITCH") {
         return HAL_FORWARDING_MODE_SMART_SWITCH;
-    } else if (forwarding_mode == "smart-host-pinned") {
+    } else if (forwarding_mode == "FORWARDING_MODE_HOSTPIN") {
         return HAL_FORWARDING_MODE_SMART_HOST_PINNED;
     }
     return HAL_FORWARDING_MODE_CLASSIC;
@@ -644,14 +644,22 @@ parse_feature_profile (std::string feature_profile)
 // initialize port control operations
 //------------------------------------------------------------------------------
 hal_ret_t
-hal_device_cfg_init (device_cfg_t *device_cfg)
+hal_device_cfg_init (hal_cfg_t *hal_cfg)
 {
+    device_cfg_t *device_cfg = &hal_cfg->device_cfg;
     ptree prop_tree;
     std::string forwarding_mode;
     std::string feature_profile;
     std::string port_admin_state;
-    std::string device_cfg_fname =
-                        std::string(SYSCONFIG_PATH) + std::string(DEVICE_CFG);
+    std::string device_cfg_fname;
+
+    if (hal_cfg->platform == platform_type_t::PLATFORM_TYPE_HW) {
+        device_cfg_fname =
+            std::string(SYSCONFIG_PATH) + std::string(DEVICE_CFG);
+    } else {
+        device_cfg_fname = hal_cfg->cfg_path + "/" + std::string(DEVICE_CFG);
+    }
+
 
     hal_device_cfg_init_defaults(device_cfg);
     if (access(device_cfg_fname.c_str(), R_OK) < 0) {
@@ -660,7 +668,7 @@ hal_device_cfg_init (device_cfg_t *device_cfg)
         return HAL_RET_OK;
     }
     boost::property_tree::read_json(device_cfg_fname, prop_tree);
-    forwarding_mode = prop_tree.get<std::string>("forwarding-mode", "classic");
+    forwarding_mode = prop_tree.get<std::string>("forwarding-mode", "FORWARDING_MODE_CLASSIC");
     device_cfg->forwarding_mode = parse_forwarding_mode(forwarding_mode);
     feature_profile = prop_tree.get<std::string>("feature-profile",
                                                  "classic-default");
@@ -675,6 +683,7 @@ hal_device_cfg_init (device_cfg_t *device_cfg)
     } catch (std::exception const &e) {
         g_mgmt_if_mac = 0;
     }
+    printf("Hal forwarding mode: %s\n", forwarding_mode.c_str());
     return HAL_RET_OK;
 }
 

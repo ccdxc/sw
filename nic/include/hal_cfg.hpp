@@ -43,16 +43,14 @@ typedef enum hal_feature_profile_s {
      ENTRY(HAL_UPLINK_FLOOD_MODE_NONE,   0, "HAL_UPLINK_FLOOD_MODE_NONE")                           \
      ENTRY(HAL_UPLINK_FLOOD_MODE_RPF,    1, "HAL_UPLINK_FLOOD_MODE_RPF")                            \
      ENTRY(HAL_UPLINK_FLOOD_MODE_PINNED, 2, "HAL_UPLINK_FLOOD_MODE_PINNED")
-
  DEFINE_ENUM(hal_uplink_flood_mode_t, UPLINK_FLOOD_MODES)
  #undef UPLINK_FLOOD_MODES
 
 #define FORWARDING_MODES(ENTRY)                                                                     \
-     ENTRY(HAL_FORWARDING_MODE_NONE,    0, "HAL_FORWARDING_MODE_NONE")                              \
-     ENTRY(HAL_FORWARDING_MODE_SMART_SWITCH,    1, "HAL_FORWARDING_MODE_SMART_SWITCH")              \
-     ENTRY(HAL_FORWARDING_MODE_SMART_HOST_PINNED,    2, "HAL_FORWARDING_MODE_SMART_HOST_PINNED")    \
-     ENTRY(HAL_FORWARDING_MODE_CLASSIC,    3, "HAL_FORWARDING_MODE_CLASSIC")
-
+     ENTRY(HAL_FORWARDING_MODE_NONE,                0, "HAL_FORWARDING_MODE_NONE")                  \
+     ENTRY(HAL_FORWARDING_MODE_CLASSIC,             1, "HAL_FORWARDING_MODE_CLASSIC")               \
+     ENTRY(HAL_FORWARDING_MODE_SMART_SWITCH,        2, "HAL_FORWARDING_MODE_SMART_SWITCH")          \
+     ENTRY(HAL_FORWARDING_MODE_SMART_HOST_PINNED,   3, "HAL_FORWARDING_MODE_SMART_HOST_PINNED")
  DEFINE_ENUM(hal_forwarding_mode_t, FORWARDING_MODES)
  #undef FORWARDING_MODES
 
@@ -68,7 +66,7 @@ typedef struct hal_cfg_s {
     std::string              grpc_port;
     char                     feature_set[HAL_MAX_NAME_STR];
     hal_feature_set_t        features;
-    hal_forwarding_mode_t    forwarding_mode;
+    // hal_forwarding_mode_t    forwarding_mode;
     bool                     sync_mode_logging;
     std::string              cfg_path;                  // full HAL config path
     std::string              catalog_file;              // full path of catalog file
@@ -84,6 +82,16 @@ typedef struct hal_cfg_s {
     bool                     qemu;                      // true if this is running on QEMU
     bool                     bypass_fte;                // test mode, for PMD testing
 } hal_cfg_t;
+
+#if 0
+static const char *
+fwdmode_to_str(device::ForwardingMode mode) {
+    case device::FORWARDING_MODE_CLASSIC: return "FORWARDING_MODE_CLASSIC";
+    case device::FORWARDING_MODE_HOSTPIN: return "FORWARDING_MODE_HOSTPIN";
+    case device::FORWARDING_MODE_SWITCH: return "FORWARDING_MODE_SWITCH";
+    default: return "FORWARDING_MODE_UNKNOWN"
+}
+#endif
 
 }    // namespace hal
 

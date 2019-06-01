@@ -104,7 +104,7 @@ hal_initialize (const char c_file[], bool disable_fte=true)
 {
     char        cfg_file[32];
     char        def_cfg_file[] = "hal.json";
-    std::string ini_file = "hal.ini";
+    // std::string ini_file = "hal.ini";
 
     if (disable_fte)
         setenv("DISABLE_FTE", "true", 1);
@@ -132,20 +132,40 @@ hal_initialize (const char c_file[], bool disable_fte=true)
     server_builder->AddListeningPort(g_grpc_server_addr,
                                      grpc::InsecureServerCredentials());
 
+#if 0
     // parse the ini
     if (hal::hal_parse_ini(ini_file.c_str(), &hal::g_hal_cfg) != HAL_RET_OK) {
         fprintf(stderr, "HAL ini file parsing failed, quitting ...\n");
         exit(1);
     }
+#endif
 
     // disabling async logging
     hal::g_hal_cfg.sync_mode_logging = true;
+
+    /*
+       {
+       "forwarding-mode": 1,
+       "feature-profile": 1,
+       "port-admin-state": "PORT_ADMIN_STATE_ENABLE",
+       "mgmt-if-mac": 0
+       }
+       */
+    FILE *fp = fopen("/sw/nic/conf/device.conf", "w");
+    fprintf(fp, "{\n");
+    fprintf(fp, "\"forwarding-mode\": \"FORWARDING_MODE_HOSTPIN\",\n");
+    fprintf(fp, "\"feature-profile\": 1,\n");
+    fprintf(fp, "\"port-admin-state\": \"PORT_ADMIN_STATE_ENABLE\",\n");
+    fprintf(fp, "\"mgmt-if-mac\": 0\n");
+    fprintf(fp, "}\n");
+    fclose(fp);
 
     // initialize HAL
     if (hal::hal_init(&hal::g_hal_cfg) != HAL_RET_OK) {
         fprintf(stderr, "HAL initialization failed, quitting ...\n");
         exit(1);
     }
+    hal::g_hal_cfg.device_cfg.forwarding_mode = hal::HAL_FORWARDING_MODE_SMART_HOST_PINNED;
 
 #if 0
     sdk::lib::thread *grpc_thread =

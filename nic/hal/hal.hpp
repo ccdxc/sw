@@ -33,11 +33,13 @@ typedef enum hal_status_e {
 // TODO: remove these two from here and move to HAL core
 thread *hal_get_current_thread(void);
 
+#if 0
 //------------------------------------------------------------------------------
 // parse HAL initialization
 //------------------------------------------------------------------------------
 extern hal_ret_t hal_parse_ini(const char *inifile __IN__,
                                hal_cfg_t *hal_cfg __OUT__);
+#endif
 
 //------------------------------------------------------------------------------
 // hal initialization main routine

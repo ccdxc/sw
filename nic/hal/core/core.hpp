@@ -41,7 +41,7 @@ sdk::lib::thread *hal_get_thread(uint32_t thread_id);
 hal_ret_t hal_thread_add(sdk::lib::thread *hal_thread);
 hal_ret_t hal_wait(void);
 hal_ret_t hal_thread_destroy(void);
-hal_ret_t hal_device_cfg_init(device_cfg_t *device_cfg);
+hal_ret_t hal_device_cfg_init(hal_cfg_t *hal_cfg);
 
 //------------------------------------------------------------------------------
 // system or infra timers

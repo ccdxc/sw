@@ -45,7 +45,7 @@ lif_init (hal_cfg_t *hal_cfg)
     g_pinfo = program_info::factory((hal_cfg->cfg_path +
                                      "/gen/mpu_prog_info.json").c_str());
     std::string mpart_json =
-        hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC ?
+        hal_cfg->device_cfg.forwarding_mode == HAL_FORWARDING_MODE_CLASSIC ?
         hal_cfg->cfg_path + "/" + hal_cfg->feature_set + "/hbm_classic_mem.json" :
         hal_cfg->cfg_path + "/" + hal_cfg->feature_set + "/hbm_mem.json";
     mpartition *mp = mpartition::factory(mpart_json.c_str());

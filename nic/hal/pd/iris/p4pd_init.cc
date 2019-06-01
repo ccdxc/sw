@@ -1463,7 +1463,7 @@ p4pd_forwarding_mode_init (p4pd_def_cfg_t *p4pd_def_cfg)
                               (tbl_ctx.gress == P4_GRESS_INGRESS));
     val = be64toh(val);
 
-    if (p4pd_def_cfg->hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
+    if (p4pd_def_cfg->hal_cfg->device_cfg.forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
         nic_mode = NIC_MODE_CLASSIC;
     } else {
         // host-pinned & default
@@ -1480,7 +1480,7 @@ p4pd_forwarding_mode_init (p4pd_def_cfg_t *p4pd_def_cfg)
         HAL_TRACE_DEBUG("Nic forwarding mode SMART");
     }
     HAL_TRACE_DEBUG("Nic specific forwarding mode: {}",
-                    p4pd_def_cfg->hal_cfg->forwarding_mode);
+                    p4pd_def_cfg->hal_cfg->device_cfg.forwarding_mode);
     val = htobe64(val);
     sdk::platform::capri::capri_table_constant_write(val, tbl_ctx.stage, tbl_ctx.stage_tableid,
                                (tbl_ctx.gress == P4_GRESS_INGRESS));

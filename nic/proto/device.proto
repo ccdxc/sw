@@ -46,7 +46,7 @@ message SystemSpec {
   option (delphi.update_event)          = true;
   option (delphi.singleton)             = true;
   delphi.ObjectMeta  Meta               = 1;    // common delphi meta
-  ForwardingMode     fwd_mode           = 2 [(gogoproto.jsontag) = "forwarding-mode,omitempty"];    // forwarding mode
+  string     fwd_mode                   = 2 [(gogoproto.jsontag) = "forwarding-mode,omitempty"];    // forwarding mode
   FeatureProfile     feature_profile    = 3 [(gogoproto.jsontag) = "feature-profile"]; // feature profile
   string             port_admin_state   = 4 [(gogoproto.jsontag) = "port-admin-state"];
   fixed64            mgmt_if_mac        = 5 [(gogoproto.jsontag) = "mgmt-if-mac"];

@@ -38,7 +38,7 @@ upgrade_handler::LinkDownHandler(UpgCtx& upgCtx)
 
     // send TCP FIN on sessions with local EPs
     if ((hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) &&
-        (hal::g_hal_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC)) {
+        (hal::g_hal_cfg.device_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC)) {
         ret = session_handle_upgrade();
         if (ret != HAL_RET_OK) {
             return HdlrResp(::upgrade::FAIL, HAL_RET_ENTRIES_str(ret));

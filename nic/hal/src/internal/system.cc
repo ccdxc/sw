@@ -536,7 +536,7 @@ system_get (SystemResponse *rsp)
     hal::hal_cfg_db_close();
 
     if ((hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) &&
-        (hal::g_hal_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC)) {
+        (hal::g_hal_cfg.device_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC)) {
 
         // FTE stats get
         system_fte_stats_get(rsp);
@@ -545,7 +545,7 @@ system_get (SystemResponse *rsp)
             rsp->set_api_status(types::API_STATUS_ERR);
             goto end;
         }
-        
+
         system_fte_txrx_stats_get(rsp);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);

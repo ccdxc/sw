@@ -110,6 +110,7 @@ DeviceManager::ParseDeviceConf(string filename)
 {
 #if !defined(APOLLO) && !defined(ARTEMIS)
     boost::property_tree::ptree spec;
+    std::string forwarding_mode;
 
     cout << "Parsing Device conf, input: " << filename << endl;
     if (filename.compare("none") == 0) {
@@ -119,17 +120,25 @@ DeviceManager::ParseDeviceConf(string filename)
 
     /* Parse the input device.conf json file */
     boost::property_tree::read_json(filename, spec);
-    int fw_mode = spec.get<int>("forwarding-mode");
+    forwarding_mode = spec.get<std::string>("forwarding-mode", "FORWARDING_MODE_CLASSIC");
+
+    // int fw_mode = spec.get<int>("forwarding-mode");
     int feature_profile = spec.get<int>("feature-profile");
+    cout << "fw_mode: " << forwarding_mode << endl;
+#if 0
     cout << "fw_mode: " <<
         device::ForwardingMode_Name(device::ForwardingMode(fw_mode)) << endl;
+#endif
     cout << "feature_profile: " <<
         device::FeatureProfile_Name(device::FeatureProfile(feature_profile)) << endl;
-
+#if 0
     if ((fw_mode == device::FORWARDING_MODE_HOSTPIN) ||
         (fw_mode == device::FORWARDING_MODE_SWITCH)) {
+#endif
+    if (forwarding_mode == "FORWARDING_MODE_HOSTPIN" ||
+         forwarding_mode == "FORWARDING_MODE_SWITCH") {
         return string("/platform/etc/nicmgrd/eth_smart.json");
-    } else if (fw_mode == device::FORWARDING_MODE_CLASSIC) {
+    } else if (forwarding_mode == "FORWARDING_MODE_CLASSIC") {
         if (feature_profile == device::FEATURE_PROFILE_CLASSIC_DEFAULT) {
             return string("/platform/etc/nicmgrd/device.json");
         } else if (feature_profile == device::FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE) {

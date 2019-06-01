@@ -140,7 +140,7 @@ init (hal_cfg_t *hal_cfg)
     svc_reg((ServerBuilder *)hal_cfg->server_builder, hal_cfg->features);
 
     // set the forwarding mode
-    g_hal_state->set_forwarding_mode(hal_cfg->forwarding_mode);
+    g_hal_state->set_forwarding_mode(hal_cfg->device_cfg.forwarding_mode);
 
     // default set to local switch prom. for DOLs to pass
     g_hal_state->set_allow_local_switch_for_promiscuous(true);
@@ -168,7 +168,7 @@ nw_thread_init (int tid)
 
     // Init periodic timer for session garbage collection
     if ((hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) &&
-        (hal::g_hal_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC))
+        (hal::g_hal_cfg.device_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC))
         HAL_ABORT(hal::session_init(&hal::g_hal_cfg) == HAL_RET_OK);
 
     return;

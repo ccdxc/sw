@@ -214,7 +214,7 @@ func (n *NMD) GetIPClient() *IPClient {
 //PersistHALConfiguration updates feature profile
 func (n *NMD) PersistHALConfiguration(profileName string, mgmtIfMAC uint64) (err error) {
 	if n.config.Spec.Mode == nmd.MgmtMode_HOST.String() {
-		fwdMode := device.ForwardingMode_FORWARDING_MODE_CLASSIC
+		fwdMode := device.ForwardingMode_FORWARDING_MODE_CLASSIC.String()
 		var featureProfile device.FeatureProfile
 		var profile *nmd.NaplesProfile
 		var defaultPortAdmin string
@@ -252,7 +252,7 @@ func (n *NMD) PersistHALConfiguration(profileName string, mgmtIfMAC uint64) (err
 		return
 	}
 
-	err = n.PersistDeviceSpec(device.ForwardingMode_FORWARDING_MODE_HOSTPIN, device.FeatureProfile_FEATURE_PROFILE_NONE, device.PortAdminState_PORT_ADMIN_STATE_ENABLE.String(), mgmtIfMAC)
+	err = n.PersistDeviceSpec(device.ForwardingMode_FORWARDING_MODE_HOSTPIN.String(), device.FeatureProfile_FEATURE_PROFILE_NONE, device.PortAdminState_PORT_ADMIN_STATE_ENABLE.String(), mgmtIfMAC)
 	return
 }
 
@@ -291,7 +291,7 @@ func (n *NMD) UpdateCurrentManagementMode() {
 }
 
 // PersistDeviceSpec accepts forwarding mode and feature profile and persists this in device.conf
-func (n *NMD) PersistDeviceSpec(fwdMode device.ForwardingMode, featureProfile device.FeatureProfile, defaultPortAdmin string, mgmtIfMAC uint64) (err error) {
+func (n *NMD) PersistDeviceSpec(fwdMode string, featureProfile device.FeatureProfile, defaultPortAdmin string, mgmtIfMAC uint64) (err error) {
 	log.Infof("Setting forwarding mode to : %v", fwdMode)
 	log.Infof("Setting default port admin to : %v", defaultPortAdmin)
 	deviceSpec := device.SystemSpec{
@@ -320,7 +320,7 @@ func (n *NMD) PersistDeviceSpec(fwdMode device.ForwardingMode, featureProfile de
 	// Update app-start.conf file. TODO Remove this workaround when all the processes are migrated to read from device.conf
 	var appStartSpec []byte
 	switch fwdMode {
-	case device.ForwardingMode_FORWARDING_MODE_HOSTPIN:
+	case device.ForwardingMode_FORWARDING_MODE_HOSTPIN.String():
 		appStartSpec = []byte("hostpin")
 	default:
 		appStartSpec = []byte("classic")
