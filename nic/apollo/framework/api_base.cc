@@ -57,6 +57,12 @@ api_base::factory(api_ctxt_t *api_ctxt) {
     case OBJ_ID_VPC_PEER:
         return vpc_peer_entry::factory(&api_ctxt->api_params->vpc_peer_spec);
 
+    case OBJ_ID_NEXTHOP:
+        return nexthop::factory(&api_ctxt->api_params->nexthop_spec);
+
+    //case OBJ_ID_NEXTHOP_GROUP:
+        //return nexthop_group::factory(&api_ctxt->api_params->nexthop_group_spec);
+
     default:
         break;
     }
@@ -170,6 +176,20 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
             return policy_db()->policy_find(&api_ctxt->api_params->policy_key);
         }
         return policy_db()->policy_find(&api_ctxt->api_params->policy_spec.key);
+
+    case OBJ_ID_NEXTHOP:
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return nexthop_db()->find(&api_ctxt->api_params->nexthop_key);
+        }
+        return nexthop_db()->find(&api_ctxt->api_params->nexthop_spec.key);
+
+#if 0
+    case OBJ_ID_NEXTHOP_GROUP:
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return nexthop_group_db()->find(&api_ctxt->api_params->nexthop_group_key);
+        }
+        return nexthop_group_db()->find(&api_ctxt->api_params->nexthop_group_spec.key);
+#endif
 
     case OBJ_ID_MAPPING:
     case OBJ_ID_MIRROR_SESSION:

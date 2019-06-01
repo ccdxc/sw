@@ -62,7 +62,7 @@ sdk_ret_t
 tep_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_tep_spec_t *spec = &api_ctxt->api_params->tep_spec;
 
-    PDS_TRACE_VERBOSE("Initializing TEP %s", ipaddr2str(&spec->key.ip_addr));
+    PDS_TRACE_DEBUG("Initializing TEP %s", ipaddr2str(&spec->key.ip_addr));
     memcpy(&this->key_, &spec->key, sizeof(pds_tep_key_t));
     if (is_mac_set(spec->mac)) {
         memcpy(mac_, spec->mac, sizeof(ETH_ADDR_LEN));

@@ -88,6 +88,16 @@ slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
         vpc_peer_entry::destroy((vpc_peer_entry *)elem);
         break;
 
+    case PDS_SLAB_ID_NEXTHOP:
+        nexthop::destroy((nexthop *)elem);
+        break;
+
+#if 0
+    case PDS_SLAB_ID_NEXTHOP_GROUP:
+        nexthop_group::destroy((nexthop_group *)elem);
+        break;
+#endif
+
     default:
         PDS_TRACE_ERR("Unknown slab id {}", slab_id);
         SDK_ASSERT(false);
