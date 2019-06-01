@@ -180,7 +180,7 @@ meter_api_info_to_proto (const pds_meter_info_t *api_info, void *ctxt)
     pds::MeterStatus *proto_status = meter->mutable_status();
     pds::MeterStats *proto_stats = meter->mutable_stats();
 
-    meter_api_spec_to_proto_spec(&api_info->spec, proto_spec);
+    meter_api_spec_to_proto_spec(proto_spec, &api_info->spec);
     meter_api_status_to_proto_status(&api_info->status, proto_status);
     meter_api_stats_to_proto_stats(&api_info->stats, proto_stats);
 }

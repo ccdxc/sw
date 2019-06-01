@@ -116,6 +116,10 @@ typedef struct test_params_s {
         uint32_t tags_v4_scale;
         uint32_t tags_v6_scale;
     };
+    // nexthop config
+    struct {
+        uint32_t num_nh;
+    };
 } test_params_t;
 test_params_t g_test_params = { 0 };
 
@@ -1007,6 +1011,54 @@ create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
     return SDK_RET_OK;
 }
 
+static inline sdk_ret_t
+create_nexthops (uint32_t num_nh, ip_prefix_t *ip_pfx, uint32_t num_vpcs)
+{
+    sdk_ret_t ret;
+    pds_nexthop_spec_t pds_nh;
+    uint32_t id = 1;
+    uint32_t vlan_id = 4096;
+    uint32_t vpc_id = 0;
+
+    for (uint32_t nh = 1; nh <= num_nh; nh++) {
+        memset(&pds_nh, 0, sizeof(pds_nexthop_spec_t));
+        pds_nh.key = id++;
+        pds_nh.type = PDS_NH_TYPE_IP;
+        pds_nh.ip.af = IP_AF_IPV4;
+        pds_nh.ip.addr.v4_addr = ip_pfx->addr.addr.v4_addr + 1 + nh;
+#if 0
+        pds_nh.vpc.id = vpc_id++;
+        if (vpc_id > num_vpcs) {
+            vpc_id = 1;
+        }
+        pds_nh.vlan = vlan_id++;
+#endif
+        MAC_UINT64_TO_ADDR(pds_nh.mac,
+                           (((((uint64_t)vpc_id & 0x7FF) << 22) |
+                             ((1 & 0x7FF) << 11) | (id & 0x7FF))));
+#ifdef TEST_GRPC_APP
+        ret = create_nexthop_grpc(&pds_nh);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+#else
+        ret = pds_nexthop_create(&pds_nh);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+#endif
+    }
+#ifdef TEST_GRPC_APP
+    // Batching: push leftover objects
+    ret = create_nexthop_grpc(NULL);
+    if (ret != SDK_RET_OK) {
+        SDK_ASSERT(0);
+        return ret;
+    }
+#endif
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
 {
@@ -1418,6 +1470,8 @@ create_objects (void)
                 g_test_params.num_tag_trees = std::stol(obj.second.get<std::string>("count"));
                 g_test_params.tags_v4_scale = std::stol(obj.second.get<std::string>("v4_scale"));
                 g_test_params.tags_v6_scale = std::stol(obj.second.get<std::string>("v6_scale"));
+            } else if (kind == "nexthop") {
+                g_test_params.num_nh = std::stol(obj.second.get<std::string>("count"));
             }
         }
     } catch (std::exception const &e) {
@@ -1469,6 +1523,13 @@ create_objects (void)
         ret = create_meter(g_test_params.num_meter, g_test_params.meter_scale,
                            g_test_params.meter_type, g_test_params.pps_bps,
                            g_test_params.burst, IP_AF_IPV6);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+
+        // create nexthops
+        ret = create_nexthops(g_test_params.num_nh, &g_test_params.tep_pfx,
+                              g_test_params.num_vpcs);
         if (ret != SDK_RET_OK) {
             return ret;
         }

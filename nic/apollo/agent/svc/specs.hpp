@@ -81,8 +81,8 @@ ip_pfx_to_spec (types::IPPrefix *ip_pfx_spec,
 
 // Populate proto buf spec from meter API spec
 static inline void
-meter_api_spec_to_proto_spec (const pds_meter_spec_t *api_spec,
-                              pds::MeterSpec *proto_spec)
+meter_api_spec_to_proto_spec (pds::MeterSpec *proto_spec,
+                              const pds_meter_spec_t *api_spec)
 {
     if (!api_spec || !proto_spec) {
         return;
@@ -129,8 +129,8 @@ meter_api_spec_to_proto_spec (const pds_meter_spec_t *api_spec,
 
 // Populate proto buf spec from tag API spec
 static inline void
-tag_api_spec_to_proto_spec (const pds_tag_spec_t *api_spec,
-                            pds::TagSpec *proto_spec)
+tag_api_spec_to_proto_spec (pds::TagSpec *proto_spec,
+                            const pds_tag_spec_t *api_spec)
 {
     proto_spec->set_id(api_spec->key.id);
     proto_spec->set_af(pds_af_api_spec_to_proto_spec(api_spec->af));
@@ -146,8 +146,8 @@ tag_api_spec_to_proto_spec (const pds_tag_spec_t *api_spec,
 
 // Populate proto buf spec from vnic API spec
 static inline void
-vnic_api_spec_to_proto_spec (const pds_vnic_spec_t *api_spec,
-                             pds::VnicSpec *proto_spec)
+vnic_api_spec_to_proto_spec (pds::VnicSpec *proto_spec,
+                             const pds_vnic_spec_t *api_spec)
 {
     if (!api_spec || !proto_spec) {
         return;
@@ -364,8 +364,8 @@ proto_port_spec_to_port_args (port_args_t *port_args,
 
 // Populate proto buf spec from policy API spec
 inline void
-policy_api_spec_to_proto_spec (const pds_policy_spec_t *api_spec,
-                               pds::SecurityPolicySpec *proto_spec)
+policy_api_spec_to_proto_spec (pds::SecurityPolicySpec *proto_spec,
+                               const pds_policy_spec_t *api_spec)
 {
     if (!api_spec || !proto_spec) {
         return;

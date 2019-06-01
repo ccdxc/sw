@@ -34,5 +34,6 @@ void test_app_init(void);
 sdk_ret_t test_app_push_configs(void);
 sdk_ret_t create_meter_grpc(pds_meter_spec_t *spec);
 sdk_ret_t create_tag_grpc(pds_tag_spec_t *spec);
+sdk_ret_t create_nexthop_grpc(pds_nexthop_spec_t *spec);
 
 #endif

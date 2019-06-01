@@ -38,6 +38,7 @@ std::unique_ptr<pds::SecurityPolicySvc::Stub>    g_policy_stub_;
 std::unique_ptr<pds::MirrorSvc::Stub>            g_mirror_stub_;
 std::unique_ptr<pds::MeterSvc::Stub>             g_meter_stub_;
 std::unique_ptr<pds::TagSvc::Stub>               g_tag_stub_;
+std::unique_ptr<pds::NhSvc::Stub>                g_nexthop_stub_;
 
 RouteTableRequest        g_route_table_req;
 SecurityPolicyRequest    g_policy_req;
@@ -50,6 +51,7 @@ TunnelRequest            g_tunnel_req;
 MirrorSessionRequest     g_mirror_session_req;
 MeterRequest             g_meter_req;
 TagRequest               g_tag_req;
+NexthopRequest           g_nexthop_req;
 
 #define APP_GRPC_BATCH_COUNT    5000
 
@@ -82,7 +84,7 @@ create_policy_grpc (pds_policy_spec_t *spec)
 
     if (spec != NULL) {
         pds::SecurityPolicySpec *proto_spec = g_policy_req.add_request();
-        policy_api_spec_to_proto_spec(spec, proto_spec);
+        policy_api_spec_to_proto_spec(proto_spec, spec);
     }
     if ((g_policy_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_policy_stub_->SecurityPolicyCreate(&context,
@@ -147,7 +149,7 @@ create_vnic_grpc (pds_vnic_spec_t *spec)
 
     if (spec != NULL) {
         pds::VnicSpec *proto_spec = g_vnic_req.add_request();
-        vnic_api_spec_to_proto_spec(spec, proto_spec);
+        vnic_api_spec_to_proto_spec(proto_spec, spec);
     }
     if ((g_vnic_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_vnic_stub_->VnicCreate(&context, g_vnic_req, &response);
@@ -233,7 +235,7 @@ create_tag_grpc (pds_tag_spec_t *spec)
 
     if (spec != NULL) {
         pds::TagSpec *proto_spec = g_tag_req.add_request();
-        tag_api_spec_to_proto_spec(spec, proto_spec);
+        tag_api_spec_to_proto_spec(proto_spec, spec);
     }
     if ((g_tag_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_tag_stub_->TagCreate(&context, g_tag_req, &response);
@@ -255,7 +257,7 @@ create_meter_grpc (pds_meter_spec_t *spec)
 
     if (spec != NULL) {
         MeterSpec *proto_spec = g_meter_req.add_request();
-        meter_api_spec_to_proto_spec(spec, proto_spec);
+        meter_api_spec_to_proto_spec(proto_spec, spec);
     }
     if ((g_meter_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_meter_stub_->MeterCreate(&context, g_meter_req, &response);
@@ -264,6 +266,30 @@ create_meter_grpc (pds_meter_spec_t *spec)
             return SDK_RET_ERR;
         }
         g_meter_req.clear_request();
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+create_nexthop_grpc (pds_nexthop_spec_t *spec)
+{
+    ClientContext   context;
+    NexthopResponse response;
+    Status          ret_status;
+
+    if (spec != NULL) {
+        NexthopSpec *proto_spec = g_nexthop_req.add_request();
+        nh_api_spec_to_proto_spec(proto_spec, spec);
+    }
+    if ((g_nexthop_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
+       ret_status = g_nexthop_stub_->NexthopCreate(
+                                        &context, g_nexthop_req, &response);
+        if (!ret_status.ok() ||
+                        (response.apistatus() != types::API_STATUS_OK)) {
+            printf("%s failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        g_nexthop_req.clear_request();
     }
     return SDK_RET_OK;
 }
@@ -418,6 +444,7 @@ test_app_init (void)
     g_mirror_stub_ = pds::MirrorSvc::NewStub(channel);
     g_meter_stub_ = pds::MeterSvc::NewStub(channel);
     g_tag_stub_ = pds::TagSvc::NewStub(channel);
+    g_nexthop_stub_ = pds::NhSvc::NewStub(channel);
 
     return;
 }

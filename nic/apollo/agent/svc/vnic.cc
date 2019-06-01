@@ -164,7 +164,7 @@ vnic_api_info_to_proto (const pds_vnic_info_t *api_info, void *ctxt)
     pds::VnicStatus *proto_status = vnic->mutable_status();
     pds::VnicStats *proto_stats = vnic->mutable_stats();
 
-    vnic_api_spec_to_proto_spec(&api_info->spec, proto_spec);
+    vnic_api_spec_to_proto_spec(proto_spec, &api_info->spec);
     vnic_api_status_to_proto_status(&api_info->status, proto_status);
     vnic_api_stats_to_proto_stats(&api_info->stats, proto_stats);
 }

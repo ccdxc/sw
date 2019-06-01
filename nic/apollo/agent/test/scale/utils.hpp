@@ -19,6 +19,7 @@
 #include "gen/proto/mirror.grpc.pb.h"
 #include "gen/proto/meter.grpc.pb.h"
 #include "gen/proto/tags.grpc.pb.h"
+#include "gen/proto/nh.grpc.pb.h"
 #include "gen/proto/types.grpc.pb.h"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
@@ -32,6 +33,7 @@
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_meter.hpp"
 #include "nic/apollo/api/include/pds_tag.hpp"
+#include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 
 using grpc::Channel;
@@ -90,6 +92,9 @@ using pds::MeterRuleSpec;
 using pds::TagRequest;
 using pds::TagResponse;
 using pds::TagSpec;
+using pds::NexthopRequest;
+using pds::NexthopResponse;
+using pds::NexthopSpec;
 
 static void
 pds_encap_to_proto_encap (types::Encap *encap_spec, pds_encap_t *encap)

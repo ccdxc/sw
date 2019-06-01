@@ -169,7 +169,7 @@ tag_api_info_to_proto (const pds_tag_info_t *api_info, void *ctxt)
     pds::TagStatus *proto_status = tag->mutable_status();
     pds::TagStats *proto_stats = tag->mutable_stats();
 
-    tag_api_spec_to_proto_spec(&api_info->spec, proto_spec);
+    tag_api_spec_to_proto_spec(proto_spec, &api_info->spec);
     tag_api_status_to_proto_status(&api_info->status, proto_status);
     tag_api_stats_to_proto_stats(&api_info->stats, proto_stats);
 }
