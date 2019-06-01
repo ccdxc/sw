@@ -24,6 +24,8 @@
 #include "nic/hal/plugins/cfg/ipsec/ipsec.hpp"
 #include "nic/hal/plugins/cfg/l4lb/l4lb.hpp"
 #include "nic/hal/plugins/cfg/tcp_proxy/tcp_proxy.hpp"
+#include "nic/hal/plugins/cfg/nvme/nvme_sesscb.hpp"
+#include "nic/hal/plugins/cfg/nvme/nvme_global.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"
 #include "nic/hal/src/internal/system.hpp"
 #include "nic/hal/src/internal/rawrcb.hpp"
@@ -3089,6 +3091,31 @@ typedef struct pd_tcp_global_stats_get_args_s {
     uint64_t tcp_debug10;
 } pd_tcp_global_stats_get_args_t;
 
+// nvme_sesscb
+typedef struct pd_nvme_sesscb_create_args_s {
+    nvme_sesscb_t            *nvme_sesscb;
+} __PACK__ pd_nvme_sesscb_create_args_t;
+
+static inline void
+pd_nvme_sesscb_create_args_init (pd_nvme_sesscb_create_args_t *args)
+{
+    args->nvme_sesscb = NULL;
+    return;
+}
+
+// nvme_global
+typedef struct pd_nvme_global_create_args_s {
+    nvme_global_t            *nvme_global;
+} __PACK__ pd_nvme_global_create_args_t;
+
+static inline void
+pd_nvme_global_create_args_init (pd_nvme_global_create_args_t *args)
+{
+    args->nvme_global = NULL;
+    return;
+}
+
+
 // generic pd call macros
 #define PD_FUNC_IDS(ENTRY)                                                              \
     ENTRY(PD_FUNC_ID_MEM_INIT,              0, "pd_func_id_pd_mem_init")                \
@@ -3398,7 +3425,13 @@ typedef struct pd_tcp_global_stats_get_args_s {
     ENTRY(PD_FUNC_ID_SYSTEM_DROP_STATS_GET,    305, "PD_FUNC_ID_SYSTEM_DROP_STATS_GET")\
     ENTRY(PD_FUNC_ID_SPAN_THRESHOLD_UPDATE,    306, "PD_FUNC_ID_SPAN_THRESHOLD_UPDATE") \
     ENTRY(PD_FUNC_ID_MIRROR_SESSION_UPDATE,    307, "PD_FUNC_ID_MIRROR_SESSION_UPDATE")\
-    ENTRY(PD_FUNC_ID_MAX,                      308, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_NVME_SESSCB_CREATE,       308, "PD_FUNC_ID_NVME_SESSCB_CREATE")\
+    ENTRY(PD_FUNC_ID_NVME_SESSCB_DELETE,       309, "PD_FUNC_ID_NVME_SESSCB_DELETE")\
+    ENTRY(PD_FUNC_ID_NVME_SESSCB_UPDATE,       310, "PD_FUNC_ID_NVME_SESSCB_UPDATE")\
+    ENTRY(PD_FUNC_ID_NVME_SESSCB_GET,          311, "PD_FUNC_ID_NVME_SESSCB_GET")\
+    ENTRY(PD_FUNC_ID_NVME_GLOBAL_CREATE,       312, "PD_FUNC_ID_NVME_GLOBAL_CREATE")\
+    ENTRY(PD_FUNC_ID_NVME_GLOBAL_GET,          313, "PD_FUNC_ID_NVME_GLOBAL_GET")\
+    ENTRY(PD_FUNC_ID_MAX,                      314, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3834,6 +3867,16 @@ typedef struct pd_func_args_s {
 
         // Uplink TM Control
         PD_UNION_ARGS_FIELD(pd_uplink_tm_control);
+
+        // nvme_sesscb calls
+        PD_UNION_ARGS_FIELD(pd_nvme_sesscb_create);
+        //PD_UNION_ARGS_FIELD(pd_nvme_sesscb_update);
+        //PD_UNION_ARGS_FIELD(pd_nvme_sesscb_delete);
+        //PD_UNION_ARGS_FIELD(pd_nvme_sesscb_get);
+
+        // nvme_global calls
+        PD_UNION_ARGS_FIELD(pd_nvme_global_create);
+        //PD_UNION_ARGS_FIELD(pd_nvme_global_get);
     };
 } pd_func_args_t;
 
@@ -4293,6 +4336,16 @@ PD_FUNCP_TYPEDEF(pd_snake_test_create);
 PD_FUNCP_TYPEDEF(pd_snake_test_delete);
 
 PD_FUNCP_TYPEDEF(pd_uplink_tm_control);
+
+// nvme_sesscb calls
+PD_FUNCP_TYPEDEF(pd_nvme_sesscb_create);
+//PD_FUNCP_TYPEDEF(pd_nvme_sesscb_update);
+//PD_FUNCP_TYPEDEF(pd_nvme_sesscb_delete);
+//PD_FUNCP_TYPEDEF(pd_nvme_sesscb_get);
+
+// nvme_global calls
+PD_FUNCP_TYPEDEF(pd_nvme_global_create);
+//PD_FUNCP_TYPEDEF(pd_nvme_global_get);
 
 hal_ret_t hal_pd_call(pd_func_id_t pd_func_id, pd_func_args_t *args);
 

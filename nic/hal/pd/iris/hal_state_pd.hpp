@@ -97,6 +97,8 @@ public:
     slab *session_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SESSION_PD)]; }
     slab *tlscb_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TLSCB_PD)]; }
     slab *tcpcb_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TCPCB_PD)]; }
+    slab *nvme_global_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_GLOBAL_PD)]; }
+    slab *nvme_sesscb_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_SESSCB_PD)]; }
     slab *qos_class_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_QOS_CLASS_PD)]; }
     slab *acl_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ACL_PD)]; }
     slab *wring_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_WRING_PD)]; }
@@ -123,6 +125,7 @@ public:
     ht *flow_lkupid_ht(void) const { return flow_lkupid_ht_; }
     ht *tlscb_hwid_ht(void) const { return tlscb_hwid_ht_; }
     ht *tcpcb_hwid_ht(void) const { return tcpcb_hwid_ht_; }
+    ht *nvme_sesscb_hwid_ht(void) const { return nvme_sesscb_hwid_ht_; }
     ht *wring_hwid_ht(void) const { return wring_hwid_ht_; }
     ht *ipseccb_hwid_ht(void) const { return ipseccb_hwid_ht_; }
     ht *ipseccb_decrypt_hwid_ht(void) const { return ipseccb_decrypt_hwid_ht_; }
@@ -264,6 +267,12 @@ private:
         ht         *tcpcb_hwid_ht_;
     } __PACK__;
 
+    // nvme_sesscb related state
+    struct {
+        ht         *nvme_sesscb_hwid_ht_;
+    } __PACK__;
+
+    // Qos related state
     // Qos related state
     struct {
         // Array of indexers for each of the tm port types - uplink, p4, dma

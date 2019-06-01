@@ -157,6 +157,8 @@ public:
     slab *crypto_cert_store_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_CRYPTO_CERT_STORE]); }
     slab *tlscb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_TLSCB]); }
     slab *tcpcb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_TCPCB]); }
+    slab *nvme_global_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NVME_GLOBAL]); }
+    slab *nvme_sesscb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NVME_SESSCB]); }
     slab *qos_class_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_QOS_CLASS]); }
     slab *copp_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_COPP]); }
     slab *acl_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_ACL]); }
@@ -258,6 +260,7 @@ public:
     ht *tlscb_id_ht(void) const { return tlscb_id_ht_; }
 
     ht *tcpcb_id_ht(void) const { return tcpcb_id_ht_; }
+    ht *nvme_sesscb_id_ht(void) const { return nvme_sesscb_id_ht_; }
     ht *copp_ht(void) const { return copp_ht_; }
     ht *acl_ht(void) const { return acl_ht_; }
     ht *wring_id_ht(void) const { return wring_id_ht_; }
@@ -375,6 +378,7 @@ private:
     ht    *l4lb_ht_;
     ht    *tlscb_id_ht_;
     ht    *tcpcb_id_ht_;
+    ht    *nvme_sesscb_id_ht_;
     ht    *qos_class_ht_;
     ht    *copp_ht_;
     ht    *wring_id_ht_;
@@ -566,6 +570,13 @@ public:
     // get APIs for TCP CB state
     slab *tcpcb_slab(void) const { return cfg_db_->tcpcb_slab(); }
     ht *tcpcb_id_ht(void) const { return oper_db_->tcpcb_id_ht(); }
+
+    // get APIs for NVME GLOBAL state
+    slab *nvme_global_slab(void) const { return cfg_db_->nvme_global_slab(); }
+
+    // get APIs for NVME SESS CB state
+    slab *nvme_sesscb_slab(void) const { return cfg_db_->nvme_sesscb_slab(); }
+    ht *nvme_sesscb_id_ht(void) const { return oper_db_->nvme_sesscb_id_ht(); }
 
     // get APIs for qos-class state
     slab *qos_class_slab(void) const { return cfg_db_->qos_class_slab(); }

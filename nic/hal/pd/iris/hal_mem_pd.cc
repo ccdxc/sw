@@ -29,6 +29,8 @@
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/hal/pd/iris/internal/tlscb_pd.hpp"
 #include "nic/hal/pd/iris/internal/tcpcb_pd.hpp"
+#include "nic/hal/pd/iris/nvme/nvme_sesscb_pd.hpp"
+#include "nic/hal/pd/iris/nvme/nvme_global_pd.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/pd/iris/internal/crypto_keys_pd.hpp"
@@ -305,6 +307,29 @@ hal_state_pd::init(void)
                   hal::pd::tcpcb_pd_compare_hw_key_func);
     SDK_ASSERT_RETURN((tcpcb_hwid_ht_ != NULL), false);
 
+    // initialize NVME_SESSCB related data structures
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_SESSCB_PD)] =
+        slab::factory("nvme_sesscb_pd", HAL_SLAB_NVME_SESSCB_PD,
+                      sizeof(hal::pd::pd_nvme_sesscb_t), 16,
+                      true, true, true);
+    SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_SESSCB_PD)] != NULL),
+                      false);
+
+    HAL_HT_CREATE("nvme_sesscb_hw_id", nvme_sesscb_hwid_ht_,
+                  HAL_MAX_HW_NVME_SESSCBS >> 1,
+                  hal::pd::nvme_sesscb_pd_get_hw_key_func,
+                  hal::pd::nvme_sesscb_pd_compute_hw_hash_func,
+                  hal::pd::nvme_sesscb_pd_compare_hw_key_func);
+    SDK_ASSERT_RETURN((nvme_sesscb_hwid_ht_ != NULL), false);
+
+    // initialize NVME_GLOBAL related data structures
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_GLOBAL_PD)] =
+        slab::factory("nvme_global_pd", HAL_SLAB_NVME_GLOBAL_PD,
+                      sizeof(hal::pd::pd_nvme_global_t), 8,
+                      true, true, true);
+    SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_GLOBAL_PD)] != NULL),
+                      false);
+
     // initialize Acl PD related data structures
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ACL_PD)] =
         slab::factory("acl_pd", HAL_SLAB_ACL_PD,
@@ -574,6 +599,7 @@ hal_state_pd::hal_state_pd()
     flow_lkupid_ht_          = NULL;
     tlscb_hwid_ht_           = NULL;
     tcpcb_hwid_ht_           = NULL;
+    nvme_sesscb_hwid_ht_     = NULL;
     wring_hwid_ht_           = NULL;
     ipseccb_hwid_ht_         = NULL;
     ipseccb_decrypt_hwid_ht_ = NULL;
@@ -613,6 +639,7 @@ hal_state_pd::~hal_state_pd()
     flow_lkupid_ht_ ? ht::destroy(flow_lkupid_ht_) : HAL_NOP;
     tlscb_hwid_ht_ ? ht::destroy(tlscb_hwid_ht_) : HAL_NOP;
     tcpcb_hwid_ht_ ? ht::destroy(tcpcb_hwid_ht_) : HAL_NOP;
+    nvme_sesscb_hwid_ht_ ? ht::destroy(nvme_sesscb_hwid_ht_) : HAL_NOP;
     wring_hwid_ht_ ? ht::destroy(wring_hwid_ht_) : HAL_NOP;
     ipseccb_hwid_ht_ ? ht::destroy(ipseccb_hwid_ht_) : HAL_NOP;
     ipseccb_decrypt_hwid_ht_ ? ht::destroy(ipseccb_decrypt_hwid_ht_) : HAL_NOP;
@@ -1319,6 +1346,14 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_TCPCB_PD:
         g_hal_state_pd->tcpcb_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_NVME_GLOBAL_PD:
+        g_hal_state_pd->nvme_global_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_NVME_SESSCB_PD:
+        g_hal_state_pd->nvme_sesscb_slab()->free(elem);
         break;
 
     case HAL_SLAB_QOS_CLASS_PD:

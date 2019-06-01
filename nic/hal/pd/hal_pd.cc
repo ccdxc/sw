@@ -503,6 +503,16 @@ hal_pd_load_symbols (void)
     // Uplink TM Control
     PD_FUNC_LOAD(PD_FUNC_ID_UPLINK_TM_CONTROL, pd_uplink_tm_control);
 
+    // nvme sesscb pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_NVME_SESSCB_CREATE, pd_nvme_sesscb_create);
+    //PD_FUNC_LOAD(PD_FUNC_ID_NVME_SESSCB_DELETE, pd_nvme_sesscb_delete);
+    //PD_FUNC_LOAD(PD_FUNC_ID_NVME_SESSCB_UPDATE, pd_nvme_sesscb_update);
+    //PD_FUNC_LOAD(PD_FUNC_ID_NVME_SESSCB_GET, pd_nvme_sesscb_get);
+
+    // nvme global pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_NVME_GLOBAL_CREATE, pd_nvme_global_create);
+    //PD_FUNC_LOAD(PD_FUNC_ID_NVME_GLOBAL_GET, pd_nvme_global_get);
+
     return ret;
 }
 

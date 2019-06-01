@@ -9,7 +9,7 @@ MODULE_PREREQS  = iris.p4bin \
                   ipsec_p4plus_esp_v4_tun_hton.p4bin \
                   ipsec_p4plus_esp_v4_tun_ntoh.p4bin \
                   p4pt.p4bin tls.p4bin rdma.p4bin smbdc.p4bin \
-                  storage.p4bin
+                  storage.p4bin iris_nvme.p4bin
 MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/aclqos/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/internal/*.cc) \
@@ -20,6 +20,7 @@ MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/rdma/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/ipsec/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/tcp_proxy/*.cc) \
+                  $(wildcard ${MODULE_SRC_DIR}/nvme/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/debug/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/firewall/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/dos/*.cc) \

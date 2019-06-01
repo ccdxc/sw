@@ -303,6 +303,15 @@ wring_pd_get_base_addr(types::WRingType type, uint32_t wring_id, wring_hw_id_t* 
 }
 
 hal_ret_t
+wring_pd_get_num_entries (types::WRingType type, uint32_t *num_entries)
+{
+    pd_wring_meta_t     *meta = &g_meta[type];
+
+    *num_entries = meta->num_slots;
+
+    return HAL_RET_OK;
+}
+hal_ret_t
 wring_pd_table_init (types::WRingType type, uint32_t wring_id)
 {
     hal_ret_t           ret = HAL_RET_OK;

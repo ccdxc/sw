@@ -79,6 +79,10 @@ hal_ret_t wring_pd_get_base_addr(types::WRingType type,
                                  uint32_t wring_id,
                                  wring_hw_id_t* wring_base);
 
+// Get the num_entries for the ring
+hal_ret_t wring_pd_get_num_entries(types::WRingType type,
+                                   uint32_t *num_entries);
+
 pd_wring_meta_t* wring_pd_get_meta(types::WRingType type);
 hal_ret_t wring_pd_table_init(types::WRingType type, uint32_t wring_id); 
 

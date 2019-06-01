@@ -24,6 +24,8 @@
 #include "nic/hal/src/internal/event.hpp"
 #include "nic/hal/src/internal/tls_proxy_cb.hpp"
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"
+#include "nic/hal/plugins/cfg/nvme/nvme_global.hpp"
+#include "nic/hal/plugins/cfg/nvme/nvme_sesscb.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group_api.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
@@ -510,6 +512,20 @@ hal_cfg_db::init_vss(hal_cfg_t *hal_cfg)
     slab = register_slab(HAL_SLAB_TCPCB,
                          slab_args={.name="tcpcb",
                         .size=sizeof(hal::tcpcb_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    SDK_ASSERT_RETURN((slab != NULL), false);
+
+    // initialize NVME GLOBAL related data structures
+    slab = register_slab(HAL_SLAB_NVME_GLOBAL,
+                         slab_args={.name="nvme_global",
+                        .size=sizeof(hal::nvme_global_t), .num_elements=8,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    SDK_ASSERT_RETURN((slab != NULL), false);
+
+    // initialize NVME SESSCB related data structures
+    slab = register_slab(HAL_SLAB_NVME_SESSCB,
+                         slab_args={.name="nvme_sesscb",
+                        .size=sizeof(hal::nvme_sesscb_t), .num_elements=16,
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
 
@@ -1123,6 +1139,14 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::tcpcb_compute_hash_func,
                   hal::tcpcb_compare_key_func);
     SDK_ASSERT_RETURN((tcpcb_id_ht_ != NULL), false);
+
+    // initialize NVME SESS CB related data structures
+    HAL_HT_CREATE("nvme_sesscb", nvme_sesscb_id_ht_,
+                  HAL_MAX_NVME_SESSCB >> 1,
+                  hal::nvme_sesscb_get_key_func,
+                  hal::nvme_sesscb_compute_hash_func,
+                  hal::nvme_sesscb_compare_key_func);
+    SDK_ASSERT_RETURN((nvme_sesscb_id_ht_ != NULL), false);
 
     telemetry_collectors_bmp_ = bitmap::factory(HAL_MAX_TELEMETRY_COLLECTORS, true);
     SDK_ASSERT_RETURN((telemetry_collectors_bmp_ != NULL), false);
@@ -1909,6 +1933,14 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_TCPCB:
         g_hal_state->tcpcb_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_NVME_GLOBAL:
+        g_hal_state->nvme_global_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_NVME_SESSCB:
+        g_hal_state->nvme_sesscb_slab()->free(elem);
         break;
 
     case HAL_SLAB_QOS_CLASS:
