@@ -42,18 +42,19 @@ func (m *HistMap) Record(name string, d time.Duration) {
 	}
 }
 
-func (m *HistMap) printone(key string, h *safeHistogram) {
+func (m *HistMap) sprintone(key string, h *safeHistogram) string {
 	c, _ := m.histcount.Load(key)
 	cnt := c.(*uint64)
-	fmt.Printf("--[ %s ] Total: %d/%d Mean: %.3f Max: %.3f Min: %.3f\n", key, h.TotalCount(), atomic.LoadUint64(cnt),
+	ret := fmt.Sprintf("--[ %s ] Total: %d/%d Mean: %.3f Max: %.3f Min: %.3f\n", key, h.TotalCount(), atomic.LoadUint64(cnt),
 		float64(h.Mean())/float64(time.Millisecond),
 		float64(h.Max())/float64(time.Millisecond),
 		float64(h.Min())/float64(time.Millisecond))
-	fmt.Printf("     10: %.3f 50: %.3f 90: %.3f 99: %.3f\n",
+	ret = ret + fmt.Sprintf("     10: %.3f 50: %.3f 90: %.3f 99: %.3f\n",
 		float64(h.ValueAtQuantile(10))/float64(time.Millisecond),
 		float64(h.ValueAtQuantile(50))/float64(time.Millisecond),
 		float64(h.ValueAtQuantile(90))/float64(time.Millisecond),
 		float64(h.ValueAtQuantile(99))/float64(time.Millisecond))
+	return ret
 }
 
 // PrintAll prints all the histograms
@@ -61,7 +62,8 @@ func (m *HistMap) PrintAll() {
 	printhdr := func(key, value interface{}) bool {
 		h := value.(*safeHistogram)
 		h.Lock()
-		m.printone(key.(string), h)
+		ret := m.sprintone(key.(string), h)
+		fmt.Printf("%s", ret)
 		h.Unlock()
 		return true
 	}
@@ -73,9 +75,23 @@ func (m *HistMap) PrintOne(key string) {
 	if value, ok := m.histmap.Load(key); ok {
 		h := value.(*safeHistogram)
 		h.Lock()
-		m.printone(key, h)
+		ret := m.sprintone(key, h)
+		fmt.Printf("%s", ret)
 		h.Unlock()
 	}
+}
+
+// SprintOne returns one histogram as string
+func (m *HistMap) SprintOne(key string) string {
+	ret := ""
+	if value, ok := m.histmap.Load(key); ok {
+		h := value.(*safeHistogram)
+		h.Lock()
+		ret = m.sprintone(key, h)
+		h.Unlock()
+
+	}
+	return ret
 }
 
 // GetStats returns a map of all collected Stats in human friendly form
