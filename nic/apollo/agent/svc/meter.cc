@@ -43,6 +43,7 @@ pds_meter_proto_spec_to_api_spec (pds_meter_spec_t *api_spec,
             api_rule_spec->type = PDS_METER_TYPE_ACCOUNTING;
         }
 
+        api_rule_spec->priority = proto_rule_spec.priority();
         api_rule_spec->num_prefixes = proto_rule_spec.prefix_size();
         api_rule_spec->prefixes =
                  (ip_prefix_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,

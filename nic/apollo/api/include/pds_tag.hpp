@@ -71,6 +71,7 @@ struct pds_tag_spec_s {
                                num_rules * sizeof(pds_tag_rule_t));
         for (uint32_t i = 0; i < num_rules; i++) {
             rules[i].tag = spec.rules[i].tag;
+            rules[i].priority = spec.rules[i].priority;
             rules[i].num_prefixes = spec.rules[i].num_prefixes;
             rules[i].prefixes =
                 (ip_prefix_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_TAG,

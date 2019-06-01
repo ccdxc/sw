@@ -91,6 +91,7 @@ struct pds_meter_spec_s {
                                num_rules * sizeof(pds_meter_rule_t));
         for (uint32_t i = 0; i < num_rules; i++) {
             rules[i].type = spec.rules[i].type;
+            rules[i].priority = spec.rules[i].priority;
             if (rules[i].type == PDS_METER_TYPE_PPS_POLICER) {
                 rules[i].pps = spec.rules[i].pps;
                 rules[i].pkt_burst = spec.rules[i].pkt_burst;

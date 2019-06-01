@@ -178,10 +178,11 @@ sdk_ret_t
 create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
                         uint32_t num_subnets, uint32_t num_routes,
                         ip_prefix_t *tep_pfx, ip_prefix_t *route_pfx,
-                        ip_prefix_t *v6_route_pfx)
+                        ip_prefix_t *v6_route_pfx, uint32_t num_nh)
 {
     uint32_t ntables = num_vpcs * num_subnets;
     uint32_t tep_offset = 3;
+    uint32_t nh_id = 1;
     uint32_t v6rtnum;
     pds_route_table_spec_t v6route_table;
     sdk_ret_t rv = SDK_RET_OK;
@@ -198,17 +199,24 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
         for (uint32_t j = 0; j < num_routes; j++) {
             route_ipv6pfx_set(&v6route_table.routes[j].prefix, v6_route_pfx,
                               v6rtnum++, 120);
-            v6route_table.routes[j].nh_ip.af = IP_AF_IPV4;
-            v6route_table.routes[j].nh_ip.addr.v4_addr =
-                    tep_pfx->addr.addr.v4_addr + tep_offset++;
+            if (apollo()) {
+                v6route_table.routes[j].nh_ip.af = IP_AF_IPV4;
+                v6route_table.routes[j].nh_ip.addr.v4_addr =
+                        tep_pfx->addr.addr.v4_addr + tep_offset++;
 
-            tep_offset %= (num_teps + 3);
-            if (tep_offset == 0) {
-                // skip MyTEP and gateway IPs
-                tep_offset += 3;
+                tep_offset %= (num_teps + 3);
+                if (tep_offset == 0) {
+                    // skip MyTEP and gateway IPs
+                    tep_offset += 3;
+                }
+                v6route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
+            } else if (artemis()) {
+                v6route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
+                v6route_table.routes[j].nh = nh_id++;
+                if (nh_id > num_nh) {
+                    nh_id = 1;
+                }
             }
-
-            v6route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
         }
 
 #ifdef TEST_GRPC_APP
@@ -252,10 +260,12 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
 sdk_ret_t
 create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                      uint32_t num_routes, ip_prefix_t *tep_pfx,
-                     ip_prefix_t *route_pfx, ip_prefix_t *v6_route_pfx)
+                     ip_prefix_t *route_pfx, ip_prefix_t *v6_route_pfx,
+                     uint32_t num_nh)
 {
     uint32_t ntables = num_vpcs * num_subnets;
     uint32_t tep_offset = 3;
+    uint32_t nh_id = 1;
     uint32_t rtnum;
     pds_route_table_spec_t route_table;
     sdk_ret_t rv = SDK_RET_OK;
@@ -273,16 +283,23 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
             route_table.routes[j].prefix.addr.af = IP_AF_IPV4;
             route_table.routes[j].prefix.addr.addr.v4_addr =
                 ((0xC << 28) | (rtnum++ << 8));
-            route_table.routes[j].nh_ip.af = IP_AF_IPV4;
-            route_table.routes[j].nh_ip.addr.v4_addr =
-                tep_pfx->addr.addr.v4_addr + tep_offset++;
-
-            tep_offset %= (num_teps + 3);
-            if (tep_offset == 0) {
-                // skip MyTEP and gateway IPs
-                tep_offset += 3;
+            if (apollo()) {
+                route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
+                route_table.routes[j].nh_ip.af = IP_AF_IPV4;
+                route_table.routes[j].nh_ip.addr.v4_addr =
+                    tep_pfx->addr.addr.v4_addr + tep_offset++;
+                tep_offset %= (num_teps + 3);
+                if (tep_offset == 0) {
+                    // skip MyTEP and gateway IPs
+                    tep_offset += 3;
+                }
+            } else if (artemis()) {
+                route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
+                route_table.routes[j].nh = nh_id++;
+                if (nh_id > num_nh) {
+                    nh_id = 1;
+                }
             }
-            route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
         }
 #ifdef TEST_GRPC_APP
         rv = create_route_table_grpc(&route_table);
@@ -314,7 +331,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
 
     if (g_test_params.dual_stack) {
         rv = create_v6_route_tables(num_teps, num_vpcs, num_subnets, num_routes,
-                                    tep_pfx, route_pfx, v6_route_pfx);
+                                    tep_pfx, route_pfx, v6_route_pfx, num_nh);
     }
     return rv;
 }
@@ -1025,7 +1042,9 @@ create_nexthops (uint32_t num_nh, ip_prefix_t *ip_pfx, uint32_t num_vpcs)
         pds_nh.key = id++;
         pds_nh.type = PDS_NH_TYPE_IP;
         pds_nh.ip.af = IP_AF_IPV4;
-        pds_nh.ip.addr.v4_addr = ip_pfx->addr.addr.v4_addr + 1 + nh;
+        // 1st IP in the TEP prefix is gateway IP, 2nd is MyTEP IP,
+        // so skip the first 2 IPs
+        pds_nh.ip.addr.v4_addr = ip_pfx->addr.addr.v4_addr + 2 + nh;
 #if 0
         pds_nh.vpc.id = vpc_id++;
         if (vpc_id > num_vpcs) {
@@ -1472,6 +1491,9 @@ create_objects (void)
                 g_test_params.tags_v6_scale = std::stol(obj.second.get<std::string>("v6_scale"));
             } else if (kind == "nexthop") {
                 g_test_params.num_nh = std::stol(obj.second.get<std::string>("count"));
+                // 1st IP in the TEP prefix is gateway IP, 2nd is MyTEP IP,
+                // so skip the first 2 IPs
+                g_test_params.num_nh -= 2;
             }
         }
     } catch (std::exception const &e) {
@@ -1541,16 +1563,15 @@ create_objects (void)
         return ret;
     }
 
-    if (apollo()) {
-        // create route tables
-        ret = create_route_tables(g_test_params.num_teps, g_test_params.num_vpcs,
-                                  g_test_params.num_subnets,
-                                  g_test_params.num_routes,
-                                  &g_test_params.tep_pfx, &g_test_params.route_pfx,
-                                  &g_test_params.v6_route_pfx);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
+    // create route tables
+    ret = create_route_tables(g_test_params.num_teps, g_test_params.num_vpcs,
+                              g_test_params.num_subnets,
+                              g_test_params.num_routes,
+                              &g_test_params.tep_pfx, &g_test_params.route_pfx,
+                              &g_test_params.v6_route_pfx,
+                              g_test_params.num_nh);
+    if (ret != SDK_RET_OK) {
+        return ret;
     }
 
     // create security policies

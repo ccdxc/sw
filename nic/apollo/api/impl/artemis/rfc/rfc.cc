@@ -78,6 +78,7 @@ rfc_policy_rule_dump (policy_t *policy, uint32_t rule_num)
             rule_str += "unknown";
         }
     }
+    rule_str += ", prio = " + std::to_string(rule->priority);
     PDS_TRACE_DEBUG_NO_HEADER("%s", rule_str.c_str());
 }
 
