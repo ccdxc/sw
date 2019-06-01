@@ -7,14 +7,13 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
-	"github.com/pensando/sw/venice/apigw/pkg"
-
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/utils/runtime"
-
+	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/browser"
+	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -64,6 +63,19 @@ func TestBrowserPreCallHooks_NoURIMap(t *testing.T) {
 
 func TestBrowserPreCallHooks(t *testing.T) {
 	ctx := context.Background()
+	ctx = apigwpkg.NewContextWithUser(ctx, &auth.User{
+		TypeMeta: api.TypeMeta{Kind: "User"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "testTenant",
+			Name:   "testUser",
+		},
+		Spec: auth.UserSpec{
+			Fullname: "Test User",
+			Password: "password",
+			Email:    "testuser@pensandio.io",
+			Type:     auth.UserSpec_Local.String(),
+		},
+	})
 
 	mdata := map[string]string{
 		apiserver.RequestParamsRequestURI: "/configs/browser/dependencies/testgrp/v1/testobj/testname",

@@ -24,6 +24,19 @@ import (
 )
 
 func TestSearchOperationsHook(t *testing.T) {
+	testuser := &auth.User{
+		TypeMeta: api.TypeMeta{Kind: "User"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "testTenant",
+			Name:   "testUser",
+		},
+		Spec: auth.UserSpec{
+			Fullname: "Test User",
+			Password: "password",
+			Email:    "testuser@pensandio.io",
+			Type:     auth.UserSpec_Local.String(),
+		},
+	}
 	tests := []struct {
 		name               string
 		user               *auth.User
@@ -34,24 +47,12 @@ func TestSearchOperationsHook(t *testing.T) {
 	}{
 		{
 			name: "search query",
-			user: &auth.User{
-				TypeMeta: api.TypeMeta{Kind: "User"},
-				ObjectMeta: api.ObjectMeta{
-					Tenant: "testTenant",
-					Name:   "testUser",
-				},
-				Spec: auth.UserSpec{
-					Fullname: "Test User",
-					Password: "password",
-					Email:    "testuser@pensandio.io",
-					Type:     auth.UserSpec_Local.String(),
-				},
-			},
-			in: &search.SearchRequest{},
+			user: testuser,
+			in:   &search.SearchRequest{},
 			expectedOperations: []authz.Operation{
-				authz.NewOperation(authz.NewResource("testTenant",
+				authz.NewOperation(authz.NewResourceWithOwner("testTenant",
 					"", auth.Permission_Search.String(),
-					"", ""),
+					"", "", testuser),
 					auth.Permission_Read.String()),
 			},
 			out: &search.SearchRequest{},
@@ -59,19 +60,7 @@ func TestSearchOperationsHook(t *testing.T) {
 		},
 		{
 			name: "policy search query",
-			user: &auth.User{
-				TypeMeta: api.TypeMeta{Kind: "User"},
-				ObjectMeta: api.ObjectMeta{
-					Tenant: "testTenant",
-					Name:   "testUser",
-				},
-				Spec: auth.UserSpec{
-					Fullname: "Test User",
-					Password: "password",
-					Email:    "testuser@pensandio.io",
-					Type:     auth.UserSpec_Local.String(),
-				},
-			},
+			user: testuser,
 			in: &search.PolicySearchRequest{
 				Tenant:    "testTenant",
 				Namespace: "default",
@@ -92,19 +81,7 @@ func TestSearchOperationsHook(t *testing.T) {
 		},
 		{
 			name: "no tenant in policy search query",
-			user: &auth.User{
-				TypeMeta: api.TypeMeta{Kind: "User"},
-				ObjectMeta: api.ObjectMeta{
-					Tenant: "testTenant",
-					Name:   "testUser",
-				},
-				Spec: auth.UserSpec{
-					Fullname: "Test User",
-					Password: "password",
-					Email:    "testuser@pensandio.io",
-					Type:     auth.UserSpec_Local.String(),
-				},
-			},
+			user: testuser,
 			in: &search.PolicySearchRequest{
 				Namespace: "default",
 				SGPolicy:  "testSGPolicy",
@@ -131,20 +108,8 @@ func TestSearchOperationsHook(t *testing.T) {
 			err:                true,
 		},
 		{
-			name: "invalid object",
-			user: &auth.User{
-				TypeMeta: api.TypeMeta{Kind: "User"},
-				ObjectMeta: api.ObjectMeta{
-					Tenant: "testTenant",
-					Name:   "testUser",
-				},
-				Spec: auth.UserSpec{
-					Fullname: "Test User",
-					Password: "password",
-					Email:    "testuser@pensandio.io",
-					Type:     auth.UserSpec_Local.String(),
-				},
-			},
+			name:               "invalid object",
+			user:               testuser,
 			in:                 &struct{ name string }{name: "invalid object type"},
 			expectedOperations: nil,
 			out:                &struct{ name string }{name: "invalid object type"},
@@ -167,13 +132,7 @@ func TestSearchOperationsHook(t *testing.T) {
 }
 
 func TestUserContextHook(t *testing.T) {
-	testUserRole := login.NewRole("UserRole", "testTenant", login.NewPermission(
-		"testTenant",
-		"",
-		auth.Permission_Search.String(),
-		"",
-		"",
-		auth.Permission_Read.String()),
+	testUserRole := login.NewRole("UserRole", "testTenant",
 		login.NewPermission(
 			"testTenant",
 			string(apiclient.GroupSecurity),
@@ -211,13 +170,6 @@ func TestUserContextHook(t *testing.T) {
 			expectedPerms: []auth.Permission{
 				login.NewPermission(
 					"testTenant",
-					"",
-					auth.Permission_Search.String(),
-					"",
-					"",
-					auth.Permission_Read.String()),
-				login.NewPermission(
-					"testTenant",
 					string(apiclient.GroupSecurity),
 					string(security.KindSGPolicy),
 					authz.ResourceNamespaceAll,
@@ -251,13 +203,6 @@ func TestUserContextHook(t *testing.T) {
 				SGPolicy:  "testSGPolicy",
 			},
 			expectedPerms: []auth.Permission{
-				login.NewPermission(
-					"testTenant",
-					"",
-					auth.Permission_Search.String(),
-					"",
-					"",
-					auth.Permission_Read.String()),
 				login.NewPermission(
 					"testTenant",
 					string(apiclient.GroupSecurity),
@@ -294,13 +239,6 @@ func TestUserContextHook(t *testing.T) {
 				SGPolicy:  "testSGPolicy",
 			},
 			expectedPerms: []auth.Permission{
-				login.NewPermission(
-					"testTenant",
-					"",
-					auth.Permission_Search.String(),
-					"",
-					"",
-					auth.Permission_Read.String()),
 				login.NewPermission(
 					"testTenant",
 					string(apiclient.GroupSecurity),

@@ -3288,7 +3288,6 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 	defer MustDeleteUser(tInfo.apiClient, "noRoleUser", "tesla")
 	// create network search role
 	MustCreateRole(tInfo.apiClient, "NetworkSearchRole", "tesla",
-		login.NewPermission("tesla", "", auth.Permission_Search.String(), "", "", auth.Permission_Read.String()),
 		login.NewPermission("tesla", string(apiclient.GroupNetwork), string(network.KindNetwork), authz.ResourceNamespaceAll, "", auth.Permission_Read.String()))
 	defer MustDeleteRole(tInfo.apiClient, "NetworkSearchRole", "tesla")
 	// create user with network search role
@@ -3298,7 +3297,6 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 	defer MustDeleteRoleBinding(tInfo.apiClient, "NetworkSearchRoleBinding", "tesla")
 	// create network search role in default tenant
 	MustCreateRole(tInfo.apiClient, "NetworkSearchRole", globals.DefaultTenant,
-		login.NewPermission(globals.DefaultTenant, "", auth.Permission_Search.String(), "", "", auth.Permission_Read.String()),
 		login.NewPermission(globals.DefaultTenant, string(apiclient.GroupNetwork), string(network.KindNetwork), authz.ResourceNamespaceAll, "", auth.Permission_Read.String()))
 	defer MustDeleteRole(tInfo.apiClient, "NetworkSearchRole", globals.DefaultTenant)
 	// create user with network search role
@@ -3308,7 +3306,6 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 	defer MustDeleteRoleBinding(tInfo.apiClient, "NetworkSearchRoleBinding", globals.DefaultTenant)
 	// create event search role in default tenant
 	MustCreateRole(tInfo.apiClient, "EventSearchRole", globals.DefaultTenant,
-		login.NewPermission(globals.DefaultTenant, "", auth.Permission_Search.String(), "", "", auth.Permission_Read.String()),
 		login.NewPermission(globals.DefaultTenant, "", auth.Permission_Event.String(), authz.ResourceNamespaceAll, "", auth.Permission_Read.String()))
 	defer MustDeleteRole(tInfo.apiClient, "EventSearchRole", globals.DefaultTenant)
 	// create user with event search role

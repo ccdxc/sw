@@ -48,6 +48,7 @@ func (e *searchHooks) operations(ctx context.Context, in interface{}) (context.C
 			auth.Permission_Search.String(),
 			"",
 			"")
+		resource.SetOwner(user)
 		operations = append(operations, authz.NewOperation(resource, auth.Permission_Read.String()))
 	default:
 		return ctx, in, errors.New("invalid input type")

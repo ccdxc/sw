@@ -16,13 +16,7 @@ import (
 )
 
 func TestNewContextWithUserPerms(t *testing.T) {
-	testUserRole := login.NewRole("UserRole", "testTenant", login.NewPermission(
-		"testTenant",
-		"",
-		auth.Permission_Search.String(),
-		"",
-		"",
-		auth.Permission_Read.String()),
+	testUserRole := login.NewRole("UserRole", "testTenant",
 		login.NewPermission(
 			"testTenant",
 			"",
@@ -54,13 +48,6 @@ func TestNewContextWithUserPerms(t *testing.T) {
 				},
 			},
 			expectedPerms: []auth.Permission{
-				login.NewPermission(
-					"testTenant",
-					"",
-					auth.Permission_Search.String(),
-					"",
-					"",
-					auth.Permission_Read.String()),
 				login.NewPermission(
 					"testTenant",
 					"",

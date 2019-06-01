@@ -946,18 +946,6 @@ func (fdr *Finder) authzQuery(ctx context.Context, tenants []string) (es.Query, 
 	var authorizedTenantsFound, authorizedClusterKindsFound bool
 	query := es.NewBoolQuery().QueryName("AllowedKindsForTenants")
 	for _, tenant := range tenants {
-		// check if user has search permission on tenant
-		resource := authz.NewResource(
-			tenant,
-			"",
-			auth.Permission_Search.String(),
-			"",
-			"")
-
-		ok, _ := authorizer.IsAuthorized(user, authz.NewOperation(resource, auth.Permission_Read.String()))
-		if !ok {
-			continue
-		}
 		allowedTenantScopedOps := authorizer.AuthorizedOperations(user, tenant, authz.ResourceNamespaceAll, auth.Permission_Read)
 		if len(allowedTenantScopedOps) > 0 {
 			var allowedTenantScopedKinds []string

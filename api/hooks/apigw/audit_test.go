@@ -110,13 +110,7 @@ func TestAuditOperationsHook(t *testing.T) {
 }
 
 func TestAuditUserContextHook(t *testing.T) {
-	testUserRole := login.NewRole("UserRole", "testTenant", login.NewPermission(
-		"testTenant",
-		"",
-		auth.Permission_Search.String(),
-		"",
-		"",
-		auth.Permission_Read.String()),
+	testUserRole := login.NewRole("UserRole", "testTenant",
 		login.NewPermission(
 			"testTenant",
 			"",
@@ -151,21 +145,13 @@ func TestAuditUserContextHook(t *testing.T) {
 				},
 			},
 			in: &audit.EventRequest{},
-			expectedPerms: []auth.Permission{
-				login.NewPermission(
-					"testTenant",
-					"",
-					auth.Permission_Search.String(),
-					"",
-					"",
-					auth.Permission_Read.String()),
-				login.NewPermission(
-					"testTenant",
-					"",
-					auth.Permission_AuditEvent.String(),
-					"",
-					"",
-					auth.Permission_Read.String()),
+			expectedPerms: []auth.Permission{login.NewPermission(
+				"testTenant",
+				"",
+				auth.Permission_AuditEvent.String(),
+				"",
+				"",
+				auth.Permission_Read.String()),
 			},
 			out:      &audit.EventRequest{},
 			skipCall: false,

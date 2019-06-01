@@ -49,13 +49,19 @@ func (h *browserHooks) addOperations(ctx context.Context, i interface{}) (contex
 	if !ok {
 		return ctx, i, errors.New("invalid input")
 	}
+	user, ok := apigwpkg.UserFromContext(ctx)
+	if !ok || user == nil {
+		h.logger.ErrorLog("msg", "no user present in context passed to browser  addOperations PreAuthZ hook")
+		return ctx, in, apigwpkg.ErrNoUserInContext
+	}
 	operations, _ := apigwpkg.OperationsFromContext(ctx)
 	resource := authz.NewResource(
-		in.Tenant,
+		user.Tenant,
 		"",
 		auth.Permission_Search.String(),
 		"",
 		"")
+	resource.SetOwner(user)
 	operations = append(operations, authz.NewOperation(resource, auth.Permission_Read.String()))
 	nctx := apigwpkg.NewContextWithOperations(ctx, operations...)
 	return nctx, i, nil

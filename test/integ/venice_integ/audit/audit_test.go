@@ -380,7 +380,6 @@ func TestAuditAuthz(t *testing.T) {
 		login.NewPermission(testTenant, string(apiclient.GroupStaging), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
 		login.NewPermission(testTenant, string(apiclient.GroupNetwork), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
 		login.NewPermission(testTenant, string(apiclient.GroupWorkload), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
-		login.NewPermission(testTenant, "", auth.Permission_Search.String(), "", "", auth.Permission_Read.String()),
 	)
 	defer MustDeleteRole(ti.apicl, "NoAuditingPerms", testTenant)
 	MustCreateRoleBinding(ti.apicl, "NoAuditingPermsRB", testTenant, "NoAuditingPerms", []string{testUser}, nil)
