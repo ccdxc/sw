@@ -52,11 +52,11 @@ rxlpm1_res_handler:
     /* Is this the second pass? */
     seq              c1, k.capri_p4_intr_recirc_count, 1
     /* If so, write SIP classid result, and Stop */
-    phvwr.c1.e       p.lpm_metadata_sip_classid, res_reg
+    phvwr.c1.e       p.rx_to_tx_hdr_sip_classid, res_reg
     /* Is this the third pass? */
     seq              c1, k.capri_p4_intr_recirc_count, 2
     /* If so, write TAG classid result, and Stop */
-    phvwr.c1         p.lpm_metadata_tag_classid, res_reg
+    phvwr.c1         p.rx_to_tx_hdr_tag_classid, res_reg
     /* Else, Stop anyway */
     nop.e
     nop

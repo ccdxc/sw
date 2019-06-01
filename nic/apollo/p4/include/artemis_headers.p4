@@ -22,3 +22,21 @@ header_type artemis_p4_to_rxdma_header_t {
         service_tag     : 32;
     }
 }
+
+header_type artemis_rx_to_tx_header_t {
+    fields {
+        remote_ip       : 128;// Bytes 0 to 15
+        sacl_base_addr  : 40; // Bytes 16 to 20
+        route_base_addr : 40; // Bytes 21 to 25
+        sip_classid     : 10; // Bytes 26 and 27
+        dip_classid     : 10; // Bytes 27 and 28
+        tag_classid     : 10; // Bytes 28 and 29
+        meter_result    : 10; // Bytes 29 and 30
+        dport_classid   : 8;  // Byte 31
+        sport_classid   : 7;  // Byte 32
+        pad0            : 1;  // Byte 32
+        vnic_id         : 8;  // Byte 33
+        tag2_classid    : 8;  // Byte 34
+    }
+}
+

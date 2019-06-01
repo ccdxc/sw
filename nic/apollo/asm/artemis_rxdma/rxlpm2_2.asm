@@ -58,21 +58,21 @@ rxlpm2_res_handler:
     /* Is this the second pass? */
     seq              c1, k.capri_p4_intr_recirc_count, 1
     /* If so, write the DIP classid result, and stop */
-    phvwr.c1.e       p.lpm_metadata_dip_classid, res_reg
+    phvwr.c1.e       p.rx_to_tx_hdr_dip_classid, res_reg
     /* Is this the third pass? */
     seq              c1, k.capri_p4_intr_recirc_count, 2
     /* If so, write the METER classid result, and stop */
-    phvwr.c1         p.lpm_metadata_meter_result, res_reg
+    phvwr.c1         p.rx_to_tx_hdr_meter_result, res_reg
     /* Else, Stop anyway */
     nop.e
     nop
 
 pass0:
     /* Write the DPORT classid */
-    phvwr            p.lpm_metadata_dport_classid, res_reg
+    phvwr            p.rx_to_tx_hdr_dport_classid, res_reg
     /* Setup key for SPORT Lookup on LPM2 */
     phvwr            p.lpm_metadata_lpm2_key, k.p4_to_rxdma_flow_sport
     /* Setup root for SPORT Lookup on LPM2 */
-    add              r1, k.lpm_metadata_sacl_base_addr, SACL_SPORT_TABLE_OFFSET
+    add              r1, k.rx_to_tx_hdr_sacl_base_addr, SACL_SPORT_TABLE_OFFSET
     phvwr.e          p.lpm_metadata_lpm2_base_addr, r1
     phvwr            p.lpm_metadata_lpm2_next_addr, r1

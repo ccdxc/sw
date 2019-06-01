@@ -41,17 +41,7 @@ header_type lpm_metadata_t {
         lpm2_base_addr  : 40;
         lpm2_next_addr  : 40;
 
-        remote_ip       : 128;
-        sacl_base_addr  : 40;
         meter_base_addr : 40;
-
-        sip_classid     : 10; // Bytes 0 and 1
-        dip_classid     : 10; // Bytes 1 and 2
-        tag_classid     : 10; // Bytes 2 and 3
-        meter_result    : 10; // Bytes 3 and 4
-        dport_classid   : 8;  // Byte 5
-        sport_classid   : 7;  // Byte 6
-        pad0            : 1;  // Byte 6
     }
 }
 
@@ -160,3 +150,5 @@ metadata dma_cmd_phv2mem_t      doorbell2_phv2mem;
 @pragma dont_trim
 metadata lpm_metadata_t         lpm_metadata;
 
+@pragma dont_trim
+metadata artemis_rx_to_tx_header_t rx_to_tx_hdr;

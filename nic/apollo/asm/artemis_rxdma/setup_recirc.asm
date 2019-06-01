@@ -20,7 +20,8 @@ setup_recirc:
     bcf              [c1], pass1
     /* Third pass. Stop */
     nop
-    nop.e
+    /* Disable Recirc */
+    phvwr.e          p.capri_p4_intr_recirc, FALSE
     nop
 
 pass0:
@@ -33,7 +34,7 @@ pass0:
     seq              c1, k.p4_to_rxdma_iptype, IPTYPE_IPV4
     addi.c1          r1, r0, SACL_IPV4_SIP_TABLE_OFFSET
     addi.!c1         r1, r0, SACL_IPV6_SIP_TABLE_OFFSET
-    add              r1, r1, k.lpm_metadata_sacl_base_addr
+    add              r1, r1, k.rx_to_tx_hdr_sacl_base_addr
     phvwr            p.lpm_metadata_lpm1_base_addr, r1
 
     /* Setup key for DIP lookup on LPM2 */
@@ -44,7 +45,7 @@ pass0:
 
     /* Setup root for DIP lookup on LPM2 */
     addi             r1, r0, SACL_DIP_TABLE_OFFSET
-    add              r1, r1, k.lpm_metadata_sacl_base_addr
+    add              r1, r1, k.rx_to_tx_hdr_sacl_base_addr
     phvwr            p.lpm_metadata_lpm2_base_addr, r1
 
     /* Enable LPM1 */
@@ -54,16 +55,16 @@ pass0:
 
 pass1:
     /* Setup key for TAG Lookup on LPM1 */
-    phvwr            p.lpm_metadata_lpm1_key[63:0], k.lpm_metadata_remote_ip[63:0]
-    phvwr            p.lpm_metadata_lpm1_key[127:64], k.lpm_metadata_remote_ip[127:64]
+    phvwr            p.lpm_metadata_lpm1_key[63:0], k.rx_to_tx_hdr_remote_ip[63:0]
+    phvwr            p.lpm_metadata_lpm1_key[127:64], k.rx_to_tx_hdr_remote_ip[127:64]
 
     /* Setup root for TAG Lookup on LPM1 */
     phvwr            p.lpm_metadata_lpm1_base_addr, k.{p4_to_rxdma_tag_root_sbit0_ebit7...\
                                                        p4_to_rxdma_tag_root_sbit16_ebit39}
 
     /* Setup key for METER Lookup on LPM1 */
-    phvwr            p.lpm_metadata_lpm2_key[63:0], k.lpm_metadata_remote_ip[63:0]
-    phvwr            p.lpm_metadata_lpm2_key[127:64], k.lpm_metadata_remote_ip[127:64]
+    phvwr            p.lpm_metadata_lpm2_key[63:0], k.rx_to_tx_hdr_remote_ip[63:0]
+    phvwr            p.lpm_metadata_lpm2_key[127:64], k.rx_to_tx_hdr_remote_ip[127:64]
 
     /* Setup root for METER Lookup on LPM2 */
     phvwr.e          p.lpm_metadata_lpm2_base_addr, k.lpm_metadata_meter_base_addr

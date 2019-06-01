@@ -8,29 +8,29 @@ action vnic_info_rxdma(lpm_base1, lpm_base2, lpm_base3, lpm_base4,
 
     // Copy the LPM roots to PHV based on AF
     if (p4_to_rxdma.iptype == IPTYPE_IPV4) {
-        modify_field(lpm_metadata.sacl_base_addr, lpm_base1);
+        modify_field(rx_to_tx_hdr.sacl_base_addr, lpm_base1);
         modify_field(lpm_metadata.meter_base_addr, lpm_base3);
+        modify_field(rx_to_tx_hdr.route_base_addr, lpm_base5);
         // Setup root address of DPORT lookup
         modify_field(lpm_metadata.lpm2_base_addr, lpm_base1 +
                      SACL_PROTO_DPORT_TABLE_OFFSET);
     } else {
-        modify_field(lpm_metadata.sacl_base_addr, lpm_base2);
+        modify_field(rx_to_tx_hdr.sacl_base_addr, lpm_base2);
         modify_field(lpm_metadata.meter_base_addr, lpm_base4);
+        modify_field(rx_to_tx_hdr.route_base_addr, lpm_base6);
         // Setup root address of DPORT lookup
         modify_field(lpm_metadata.lpm2_base_addr, lpm_base2 +
                      SACL_PROTO_DPORT_TABLE_OFFSET);
     }
 
-    modify_field(scratch_metadata.field40, lpm_base5);
-    modify_field(scratch_metadata.field40, lpm_base6);
     modify_field(scratch_metadata.field40, lpm_base7);
     modify_field(scratch_metadata.field40, lpm_base8);
 
     // Always fill the remote_ip from p4 keys based on the direction
     if (p4_to_rxdma.direction == TX_FROM_HOST) {
-        modify_field(lpm_metadata.remote_ip, p4_to_rxdma.flow_dst);
+        modify_field(rx_to_tx_hdr.remote_ip, p4_to_rxdma.flow_dst);
     } else {
-        modify_field(lpm_metadata.remote_ip, p4_to_rxdma.flow_src);
+        modify_field(rx_to_tx_hdr.remote_ip, p4_to_rxdma.flow_src);
     }
 
     // Setup key for DPORT lookup

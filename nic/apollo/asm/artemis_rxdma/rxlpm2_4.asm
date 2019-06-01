@@ -46,7 +46,7 @@ struct rxlpm2_4_d          d;
 #include "../include/lpm.h"
 
 sport_res_handler:
-    phvwr.e         p.lpm_metadata_sport_classid, res_reg
+    phvwr.e         p.rx_to_tx_hdr_sport_classid, res_reg
     nop
 
 nop_res_handler:
