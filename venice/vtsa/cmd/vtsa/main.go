@@ -54,7 +54,7 @@ func main() {
 	}
 
 	// Plugging in default values when the agent is created.
-	tsmClient := tsa.NewTSMClient(hostname, "NA", string(cluster.KindNode), *configFile, controllers)
+	tsmClient := tsa.NewTSMClient(hostname, "NA", string(cluster.KindNode), *configFile, controllers, "")
 
 	go tsmClient.Start()
 

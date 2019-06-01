@@ -44,3 +44,8 @@ func (rs *RestServer) CollectTechSupport(w http.ResponseWriter, r *http.Request)
 func (rs *RestServer) ListTechSupportRequests(w http.ResponseWriter, r *http.Request) {
 	log.Infof("Received request to list all pending tech support requests")
 }
+
+// HandleDiagnostics handles diagnostics request
+func (rs *RestServer) HandleDiagnostics(w http.ResponseWriter, r *http.Request) {
+	log.Infof("Handling diagnostics request")
+}

@@ -36,8 +36,8 @@ func NewRestServer(port string, tsCh chan<- tsproto.TechSupportRequest) *RestSer
 func (s *RestServer) Start() {
 	log.Infof("Starting Tech Support REST server on URL : " + s.listenURL)
 	router := mux.NewRouter()
-	router.HandleFunc("/api/v1/techsupport/collect", s.CollectTechSupport).Methods("POST")
-	router.HandleFunc("/api/v1/techsupport/list", s.ListTechSupportRequests).Methods("GET")
+	router.HandleFunc("/api/techsupport/", s.CollectTechSupport).Methods("POST")
+	router.HandleFunc("/api/diagnostics/", s.HandleDiagnostics).Methods("POST")
 	log.Infof("Created REST endpoints")
 
 	listener, err := net.Listen("tcp", s.listenURL)

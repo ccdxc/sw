@@ -208,8 +208,9 @@ const (
 	RolloutRPCPort = "9015"
 
 	// TechSupport
-	VeniceTechSupport = "pen-vtsa"
-	NaplesTechSupport = "pen-ntsa"
+	VeniceTechSupport         = "pen-vtsa"
+	NaplesTechSupport         = "pen-ntsa"
+	NaplesTechSupportRestPort = "9017"
 
 	// DefaultClusterVersionName
 	DefaultVersionName = "clusterVersion"

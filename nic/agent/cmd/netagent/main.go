@@ -183,6 +183,10 @@ func main() {
 		"/api/system/debug":           "http://127.0.0.1:" + globals.AgentRESTPort,
 
 		"/api ": "http://127.0.0.1:" + globals.AgentRESTPort,
+
+		// Techsupport
+		"/api/techsupport/": "http://127.0.0.1:" + globals.NaplesTechSupportRestPort,
+		"/api/diagnostics/": "http://127.0.0.1:" + globals.NaplesTechSupportRestPort,
 	}
 
 	proxyRouter, err := revproxy.NewRevProxyRouter(*revProxyURL, proxyConfig)
