@@ -210,10 +210,11 @@ clean:
 
 
 helper-containers:
+	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.4 .
+	@cd tools/docker-files/pens-base-2; docker build -t ${REGISTRY_URL}/pens-base-2:v0.4 .
 	@cd tools/docker-files/vinstall; docker build -t ${REGISTRY_URL}/pens-vinstall:v0.1 .
-	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.4 .
-	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.3 .
-	@cd tools/docker-files/pens-base-2; docker build -t ${REGISTRY_URL}/pens-base-2:v0.3 .
+	@#keep pens-ntp version in sync in tools/scripts/createImage.py
+	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.5 .
 	@cd tools/docker-files/build-container; docker build -t ${REGISTRY_URL}/${BUILD_CONTAINER} .
 	@cd tools/docker-files/dind; docker build -t ${REGISTRY_URL}/${DIND_CONTAINER}  .
 	@cd tools/docker-files/e2e; docker build -t ${REGISTRY_URL}/${E2E_CONTAINER} .
