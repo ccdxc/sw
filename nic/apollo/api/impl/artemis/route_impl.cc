@@ -13,6 +13,7 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/route.hpp"
 #include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
+#include "nic/apollo/api/impl/artemis/nexthop_impl.hpp"
 #include "nic/apollo/api/impl/artemis/route_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/lpm/lpm.hpp"
@@ -104,6 +105,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     pds_vpc_key_t             vpc_key;
     route_table_t             *rtable;
     vpc_entry                 *vpc;
+    nexthop                   *nh;
 
     spec = &obj_ctxt->api_params->route_table_spec;
     // allocate memory for the library to build route table
@@ -123,14 +125,14 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         rtable->max_routes = route_table_impl_db()->v6_max_routes();
     }
     rtable->num_routes = spec->num_routes;
+    PDS_TRACE_DEBUG("Processing route table %u", spec->key.id);
     for (uint32_t i = 0; i < rtable->num_routes; i++) {
         rtable->routes[i].prefix = spec->routes[i].prefix;
         rtable->routes[i].prio = 128 - spec->routes[i].prefix.len;
         switch (spec->routes[i].nh_type) {
         case PDS_NH_TYPE_BLACKHOLE:
             rtable->routes[i].nhid = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
-            PDS_TRACE_DEBUG("Processing route table %u, route %s -> blackhole "
-                            "nh id %u, ", spec->key.id,
+            PDS_TRACE_DEBUG("Processing route %s -> blackhole nh id %u",
                             ippfx2str(&rtable->routes[i].prefix),
                             rtable->routes[i].nhid);
             break;
@@ -146,10 +148,16 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             }
             rtable->routes[i].nhid =
                 PDS_IMPL_NH_TYPE_PEER_VPC_MASK | vpc->hw_id();
-            PDS_TRACE_DEBUG("Processing route table %u, route %s -> vpc hw "
-                            "id %u, ", spec->key.id,
+            PDS_TRACE_DEBUG("Processing route %s -> vpc hw id %u",
                             ippfx2str(&rtable->routes[i].prefix),
                             rtable->routes[i].nhid);
+            break;
+        case PDS_NH_TYPE_IP:
+            nh  = nexthop_db()->find(&spec->routes[i].nh);
+            rtable->routes[i].nhid = ((nexthop_impl *)nh->impl())->hw_id();
+            PDS_TRACE_DEBUG("Processing route %s -> nh %u, hw id %u",
+                            ippfx2str(&rtable->routes[i].prefix),
+                            nh->key(), rtable->routes[i].nhid);
             break;
         default:
             PDS_TRACE_ERR("Unknown nh type %u while processing route %s in "

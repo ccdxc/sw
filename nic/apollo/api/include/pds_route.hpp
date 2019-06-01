@@ -26,11 +26,12 @@
 
 /// \brief route
 typedef struct pds_route_s {
-    ip_prefix_t          prefix;     ///< prefix
-    pds_nh_type_t        nh_type;    ///< nexthop type
+    ip_prefix_t              prefix;     ///< prefix
+    pds_nh_type_t            nh_type;    ///< nexthop type
     union {
-        ip_addr_t        nh_ip;      ///< nexthop (TEP & non-TEP native) IP address
-        pds_vpc_key_t    vpc;        ///< peer vpc id, in case of vpc peering
+        ip_addr_t            nh_ip;      ///< nexthop TEP IP address
+        pds_vpc_key_t        vpc;        ///< peer vpc id, in case of vpc peering
+        pds_nexthop_key_t    nh;         ///< nexthop key
     };
 } __PACK__ pds_route_t;
 
