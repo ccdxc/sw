@@ -591,6 +591,24 @@ func (s *authHooks) adminRoleBindingCheck(ctx context.Context, kv kvstore.Interf
 	return in, true, nil
 }
 
+// permissionTenantCheck is a pre-commit hook for role create/update to check if resource tenant exists in permission
+func (s *authHooks) permissionTenantCheck(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, in interface{}) (interface{}, bool, error) {
+	s.logger.DebugLog("method", "permissionTenantCheck", "msg", "AuthHook called to check permission resource tenant")
+	obj, ok := in.(auth.Role)
+	if !ok {
+		return in, true, errInvalidInputType
+	}
+	for _, perm := range obj.Spec.Permissions {
+		if perm.ResourceTenant != "" && perm.ResourceTenant != authz.ResourceTenantAll {
+			resourceTenant := cluster.Tenant{}
+			resourceTenant.Defaults("all")
+			resourceTenant.Name = perm.ResourceTenant
+			txn.AddComparator(kvstore.Compare(kvstore.WithVersion(resourceTenant.MakeKey("cluster")), ">", 0))
+		}
+	}
+	return in, true, nil
+}
+
 func (s *authHooks) returnAuthPolicy(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
 	ic := resp.(auth.AuthenticationPolicy)
 	key := ic.MakeKey("auth")
@@ -621,8 +639,8 @@ func registerAuthHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("User", apiintf.UpdateOper).WithPreCommitHook(r.hashPassword)
 	svc.GetCrudService("AuthenticationPolicy", apiintf.CreateOper).WithPreCommitHook(r.generateSecret).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
 	svc.GetCrudService("AuthenticationPolicy", apiintf.UpdateOper).WithPreCommitHook(r.populateSecretsInAuthPolicy).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
-	svc.GetCrudService("Role", apiintf.CreateOper).WithPreCommitHook(r.adminRoleCheck).GetRequestType().WithValidate(r.validateRolePerms)
-	svc.GetCrudService("Role", apiintf.UpdateOper).WithPreCommitHook(r.adminRoleCheck).GetRequestType().WithValidate(r.validateRolePerms)
+	svc.GetCrudService("Role", apiintf.CreateOper).WithPreCommitHook(r.adminRoleCheck).WithPreCommitHook(r.permissionTenantCheck).GetRequestType().WithValidate(r.validateRolePerms)
+	svc.GetCrudService("Role", apiintf.UpdateOper).WithPreCommitHook(r.adminRoleCheck).WithPreCommitHook(r.permissionTenantCheck).GetRequestType().WithValidate(r.validateRolePerms)
 	svc.GetCrudService("Role", apiintf.DeleteOper).WithPreCommitHook(r.adminRoleCheck)
 	svc.GetCrudService("RoleBinding", apiintf.CreateOper).WithPreCommitHook(r.privilegeEscalationCheck)
 	svc.GetCrudService("RoleBinding", apiintf.UpdateOper).WithPreCommitHook(r.adminRoleBindingCheck).WithPreCommitHook(r.privilegeEscalationCheck)

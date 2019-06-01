@@ -774,6 +774,9 @@ func TestValidatePerms(t *testing.T) {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, adminCred, tinfo.l)
+	// create testtenant
+	MustCreateTenant(tinfo.apicl, testTenant)
+	defer MustDeleteTenant(tinfo.apicl, testTenant)
 	ctx, err := NewLoggedInContext(context.Background(), tinfo.apiGwAddr, adminCred)
 	AssertOk(t, err, "error creating logged in context")
 	tests := []struct {
@@ -852,6 +855,34 @@ func TestValidatePerms(t *testing.T) {
 			valid:  true,
 			tenant: testTenant,
 			errmsg: "",
+		},
+		{
+			name:   "non existent tenant",
+			perm:   login.NewPermission("All", authz.ResourceGroupAll, authz.ResourceKindAll, "", "", auth.Permission_AllActions.String()),
+			valid:  false,
+			tenant: "All",
+			errmsg: "Commit to backend failed: KVError: Key not found, key: /venice/config/cluster/tenants/All, version: 0",
+		},
+		{
+			name:   "all tenants",
+			perm:   login.NewPermission(authz.ResourceTenantAll, authz.ResourceGroupAll, authz.ResourceKindAll, "", "", auth.Permission_AllActions.String()),
+			valid:  true,
+			tenant: authz.ResourceTenantAll,
+			errmsg: "",
+		},
+		{
+			name:   "all tenants for a specific tenant scoped kind",
+			perm:   login.NewPermission(authz.ResourceTenantAll, string(apiclient.GroupAuth), string(auth.KindRole), "", "", auth.Permission_AllActions.String()),
+			valid:  true,
+			tenant: authz.ResourceTenantAll,
+			errmsg: "",
+		},
+		{
+			name:   "all tenants for a specific cluster scoped kind",
+			perm:   login.NewPermission(authz.ResourceTenantAll, string(apiclient.GroupAuth), string(auth.KindAuthenticationPolicy), "", "", auth.Permission_AllActions.String()),
+			valid:  false,
+			tenant: authz.ResourceTenantAll,
+			errmsg: fmt.Sprintf("tenant should be empty or [%q] for cluster scoped resource kind [%q]", globals.DefaultTenant, string(auth.KindAuthenticationPolicy)),
 		},
 	}
 	for i, test := range tests {
