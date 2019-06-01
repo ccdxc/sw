@@ -20,11 +20,12 @@ service RouteSvc {
 
 // route object
 message Route {
-  types.IPPrefix      Prefix  = 1;
-  // route either points to a TEP IP or peer-VPC in case of VPC peering
+  types.IPPrefix      Prefix    = 1;
+  // route either points to a Nexthop ID or peer-VPC in case of VPC peering
   oneof Nh {
-      types.IPAddress NextHop = 2;
-      uint32          VPCId   = 3;
+      types.IPAddress NextHop   = 2;
+      uint32          NexthopId = 3;
+      uint32          VPCId     = 4;
   }
 }
 

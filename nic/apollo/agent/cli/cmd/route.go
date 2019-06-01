@@ -92,10 +92,10 @@ func routeShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printRouteHeader() {
-	hdrLine := strings.Repeat("-", 54)
+	hdrLine := strings.Repeat("-", 48)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-6s%-6s%-20s%-16s\n",
-		"ID", "IPAF", "VPCID", "Prefix", "NextHop")
+	fmt.Printf("%-6s%-6s%-20s%-16s\n",
+		"ID", "IPAF", "Prefix", "NextHop/VPC")
 	fmt.Println(hdrLine)
 }
 
@@ -111,10 +111,23 @@ func printRoute(rt *pds.RouteTable) {
 		if first != true {
 			fmt.Printf("%-6s%-6s", "", "")
 		}
-		fmt.Printf("%-6d%-20s%-16s\n",
-			route.GetVPCId(),
-			utils.IPPrefixToStr(route.GetPrefix()),
-			utils.IPAddrToStr(route.GetNextHop()))
-		first = false
+		switch route.GetNh().(type) {
+		case *pds.Route_NextHop:
+			fmt.Printf("%-20s%-16s\n",
+				utils.IPPrefixToStr(route.GetPrefix()),
+				utils.IPAddrToStr(route.GetNextHop()))
+			first = false
+		case *pds.Route_NexthopId:
+			fmt.Printf("%-20s%-16d\n",
+				utils.IPPrefixToStr(route.GetPrefix()),
+				route.GetNexthopId)
+			first = false
+		case *pds.Route_VPCId:
+			fmt.Printf("%-20s%-16d\n",
+				utils.IPPrefixToStr(route.GetPrefix()),
+				route.GetVPCId())
+			first = false
+		default:
+		}
 	}
 }

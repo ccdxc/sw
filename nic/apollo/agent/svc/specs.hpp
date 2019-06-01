@@ -15,6 +15,7 @@
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_service.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
+#include "nic/apollo/api/include/pds_route.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/meter.hpp"
@@ -28,6 +29,7 @@
 #include "nic/apollo/agent/svc/port.hpp"
 #include "nic/apollo/agent/svc/policy.hpp"
 #include "nic/apollo/agent/svc/nh.hpp"
+#include "nic/apollo/agent/svc/route.hpp"
 #include "gen/proto/types.pb.h"
 
 //----------------------------------------------------------------------------
@@ -519,6 +521,60 @@ nh_group_api_info_to_proto (const pds_nexthop_group_info_t *api_info, void *ctxt
     nh_group_api_spec_to_proto_spec(proto_spec, &api_info->spec);
     nh_group_api_status_to_proto_status(proto_status, &api_info->status);
     nh_group_api_stats_to_proto_stats(proto_stats, &api_info->stats);
+}
+
+static inline sdk_ret_t
+pds_agent_route_table_api_spec_fill (pds_route_table_spec_t *api_spec,
+                                     const pds::RouteTableSpec &proto_spec)
+{
+    uint32_t num_routes = 0;
+
+    api_spec->key.id = proto_spec.id();
+    switch (proto_spec.af()) {
+    case types::IP_AF_INET:
+        api_spec->af = IP_AF_IPV4;
+        break;
+
+    case types::IP_AF_INET6:
+        api_spec->af = IP_AF_IPV6;
+        break;
+
+    default:
+        return SDK_RET_INVALID_ARG;
+    }
+    num_routes = proto_spec.routes_size();
+    api_spec->num_routes = num_routes;
+    api_spec->routes = (pds_route_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                                 sizeof(pds_route_t) *
+                                                 num_routes);
+    if (unlikely(api_spec->routes == NULL)) {
+        PDS_TRACE_ERR("Failed to allocate memory for route table {}",
+                      api_spec->key.id);
+        return sdk::SDK_RET_OOM;
+    }
+    for (uint32_t i = 0; i < num_routes; i++) {
+        const pds::Route &proto_route = proto_spec.routes(i);
+        ippfx_proto_spec_to_api_spec(&api_spec->routes[i].prefix, proto_route.prefix());
+        switch (proto_route.Nh_case()) {
+        case pds::Route::kNextHop:
+            ipaddr_proto_spec_to_api_spec(&api_spec->routes[i].nh_ip, proto_route.nexthop());
+            api_spec->routes[i].nh_type = PDS_NH_TYPE_TEP;
+            break;
+        case pds::Route::kNexthopId:
+            api_spec->routes[i].nh = proto_route.nexthopid();
+            api_spec->routes[i].nh_type = PDS_NH_TYPE_IP;
+            break;
+        case pds::Route::kVPCId:
+            api_spec->routes[i].vpc.id = proto_route.vpcid();
+            api_spec->routes[i].nh_type = PDS_NH_TYPE_PEER_VPC;
+            break;
+        default:
+            api_spec->routes[i].nh_type = PDS_NH_TYPE_BLACKHOLE;
+            break;
+        }
+    }
+
+    return SDK_RET_OK;
 }
 
 #endif    // __AGENT_SVC_SPECS_HPP__
