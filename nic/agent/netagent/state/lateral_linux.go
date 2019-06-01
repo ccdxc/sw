@@ -55,6 +55,10 @@ func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 	}
 	na.ArpClient = client
 
+	//// Cache the handler for outer done. This needs to be called during the object deletes
+	refreshCtx, done := context.WithCancel(context.Background())
+	na.ArpCache.DoneCache[destIP] = done
+
 	log.Infof("Resolving for: %s", destIP)
 	routes, err := netlink.RouteGet(net.ParseIP(destIP))
 	if err != nil || len(routes) == 0 {
@@ -71,10 +75,6 @@ func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 	dIP := net.ParseIP(destIP)
 
 	log.Infof("Starting refresh loop for %s", dIP.String())
-
-	//// Cache the handler for outer done. This needs to be called during the object deletes
-	refreshCtx, done := context.WithCancel(context.Background())
-	na.ArpCache.DoneCache[dIP.String()] = done
 
 	go na.startRefreshLoop(refreshCtx, dIP)
 
@@ -214,6 +214,11 @@ func (na *Nagent) DeleteLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 		}
 	}
 
+	// Stop the existing ARP Refresh loop if the lateral objects are successfully deleted. This is valid only for venice unknown objects
+	cancel, ok := na.ArpCache.DoneCache[destIP]
+	if ok {
+		cancel()
+	}
 	return nil
 }
 func getMgmtLink(mgmtIP string) (mgmtLink netlink.Link) {
