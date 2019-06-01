@@ -122,6 +122,7 @@ ionic_rxq_enable(struct rxque *rxq)
 {
 	int err;
 
+	IONIC_QUE_INFO(rxq, "Enabling\n");
 	err = ionic_q_enable_disable(rxq->lif, rxq->index, rxq->type, true /* enable */);
 	if (err)
 		IONIC_QUE_WARN(rxq, "failed to enable, err: %d\n", err);
@@ -132,6 +133,7 @@ ionic_rxq_disable(struct rxque *rxq)
 {
 	int err;
 
+	IONIC_QUE_INFO(rxq, "Disabling\n");
 	err = ionic_q_enable_disable(rxq->lif, rxq->index, rxq->type, false /* disable */);
 	if (err)
 		IONIC_QUE_WARN(rxq, "failed to disable, err: %d\n", err);
@@ -142,6 +144,7 @@ ionic_txq_enable(struct txque *txq)
 {
 	int err;
 
+	IONIC_QUE_INFO(txq, "Enabling\n");
 	err = ionic_q_enable_disable(txq->lif, txq->index, txq->type, true /* enable */);
 	if (err)
 		IONIC_QUE_WARN(txq, "failed to enable, err: %d\n", err);
@@ -152,6 +155,7 @@ ionic_txq_disable(struct txque *txq)
 {
 	int err;
 
+	IONIC_QUE_INFO(txq, "Disabling\n");
 	err = ionic_q_enable_disable(txq->lif, txq->index, txq->type, false /* disable */);
 	if (err)
 		IONIC_QUE_WARN(txq, "failed to disable, err: %d\n", err);

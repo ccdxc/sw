@@ -2101,12 +2101,20 @@ ionic_setup_mac_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
 			&stats->frames_rx_8192b_9215b, "");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_other", CTLFLAG_RD,
 			&stats->frames_rx_other, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_pause_1us_count", CTLFLAG_RD,
+			&stats->rx_pause_1us_count, "");
 	/* Transmit stats. */
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_ok", CTLFLAG_RD,
 			&stats->frames_tx_ok, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_all", CTLFLAG_RD,
+			&stats->frames_tx_all, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_bad", CTLFLAG_RD,
+			&stats->frames_tx_bad, "");
 
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "octets_tx_ok", CTLFLAG_RD,
 			&stats->octets_tx_ok, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "octets_tx_total", CTLFLAG_RD,
+			&stats->octets_tx_total, "");
 
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_unicast", CTLFLAG_RD,
 			&stats->frames_tx_unicast, "");
@@ -2119,6 +2127,8 @@ ionic_setup_mac_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
 
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_pripause", CTLFLAG_RD,
 			&stats->frames_tx_pripause, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_vlan", CTLFLAG_RD,
+			&stats->frames_tx_vlan, "");
 
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_less_than_64b", CTLFLAG_RD,
 			&stats->frames_tx_less_than_64b, "");

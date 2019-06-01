@@ -265,12 +265,39 @@ static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
 	}
 }
 
+static void
+ionic_adminq_flush(struct lif *lif)
+{
+	struct adminq* adminq = lif->adminq;
+	struct admin_cmd *cmd;
+	struct ionic_admin_ctx *ctx;
+	int cmd_index;
+
+	IONIC_ADMIN_LOCK(adminq);
+	do {
+		cmd_index = adminq->tail_index;
+		cmd = &adminq->cmd_ring[cmd_index];
+		IONIC_QUE_WARN(adminq, "flushing tail: %d cmd %s(%d)\n",
+				adminq->tail_index, ionic_opcode_to_str(cmd->opcode),
+				cmd->opcode);
+		ctx = adminq->ctx_ring[cmd_index];
+		memset(cmd, 0, sizeof(*cmd));
+		adminq->ctx_ring[cmd_index] = NULL;
+		adminq->tail_index = IONIC_MOD_INC(adminq, tail_index);
+	} while (!IONIC_Q_EMPTY(adminq));
+	IONIC_ADMIN_UNLOCK(adminq);
+
+	IONIC_QUE_INFO(adminq, "head :%d tail: %d comp index: %d\n",
+		adminq->head_index, adminq->tail_index, adminq->comp_index);
+}
+
 int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 	bool timeout)
 {
 	struct net_device *netdev = lif->netdev;
 	const char *name;
 	const char *status;
+	int err = 0;
 
 	if (ctx->comp.comp.status || timeout) {
 		name = ionic_opcode_to_str(ctx->cmd.cmd.opcode);
@@ -280,10 +307,14 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 			ctx->cmd.cmd.opcode,
 			timeout ? "TIMEOUT": status,
 			timeout ? -1 : ctx->comp.comp.status);
-		return ctx->comp.comp.status;
+
+		err = timeout ? ETIMEDOUT : ctx->comp.comp.status;
+		if (timeout)
+			ionic_adminq_flush(lif);
+
 	}
 
-	return 0;
+	return err;
 }
 
 int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
