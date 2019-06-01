@@ -48,9 +48,7 @@ action vnic_info_rxdma(lpm_base1, lpm_base2, lpm_base3, lpm_base4,
 @pragma hbm_table
 table vnic_info_rxdma {
     reads {
-        // TODO-MAHESH: Right now these 2 fields are treated as Union by P4C, Mahesh
-        // will fix this to generate struct for these 2 fields instead of Union
-        //p4_to_rxdma.direction : exact;
+        p4_to_rxdma.direction : exact;
         p4_to_rxdma.vnic_id : exact;
     }
     actions {
