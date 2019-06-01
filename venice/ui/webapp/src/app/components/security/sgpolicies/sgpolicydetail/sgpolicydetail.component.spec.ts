@@ -1,5 +1,5 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { DebugElement, Component, Directive, Input } from '@angular/core';
+import { DebugElement, Component, Directive, Input, NO_ERRORS_SCHEMA } from '@angular/core';
 /**-----
  Angular imports
  ------------------*/
@@ -33,6 +33,8 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { RouterLinkStubDirective } from '@app/common/RouterLinkStub.directive.spec';
 import { MessageService } from '@app/services/message.service';
 import { AuthService } from '@app/services/auth.service';
+import { MetricsqueryService } from '@app/services/metricsquery.service';
+import { FlexLayoutModule } from '@angular/flex-layout';
 
 
 
@@ -144,6 +146,9 @@ describe('SgpolicydetailComponent', () => {
               });
             }
 
+            break;
+          case 'TotalHits':
+            expect(field.nativeElement.textContent).toContain('');
             break;
           default:
             const fieldData = Utility.getObjectValueByPropertyPath(data[rowIndex], colData.field.split('.'));
@@ -257,11 +262,13 @@ describe('SgpolicydetailComponent', () => {
         UIConfigsService,
         AuthService,
         MessageService,
+        MetricsqueryService,
         {
           provide: ActivatedRoute,
           useClass: MockActivatedRoute
         }
-      ]
+      ],
+      schemas: [NO_ERRORS_SCHEMA],
     });
       });
 

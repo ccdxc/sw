@@ -131,10 +131,10 @@
         </ng-template>
         <!-- Table Header -->
         <ng-template pTemplate="header" let-columns>
-          <tr>
+          <tr fxLayout="row">
             <th *ngFor="let col of cols; let last = last"
                 [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class"
-                [style.width]="col.width + '%'"
+                [fxFlex]="col.width"
                 [colSpan]="1">
               <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
               </app-sorticon>
@@ -144,9 +144,13 @@
         <!-- Table Body -->
         <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
           <tr
+              fxLayout="row"
               [class]="rowData.order===selectedRuleIndex ? 'sgpolicy-row sgpolicy-match' : 'sgpolicy-row'">
             <td *ngFor="let col of cols; let last = last" [ngSwitch]="col.field" [class]="col.class"
-                [style.width]="col.width + '%'">
+                [fxFlex]="col.width"
+                [matTooltip]=" col.field === 'TotalHits' && ruleMetricsTooltip.length > rowData.order ? ruleMetricsTooltip[rowData.order]: ''"
+                [matTooltipShowDelay]="100"
+                [matTooltipClass]="'global-info-tooltip sgpolicy-tooltip'">
               {{displayColumn(rowData, col)}}
         </ng-template>
       </p-table>

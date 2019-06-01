@@ -214,3 +214,15 @@ $vertical-gutter: 5px;
 .sgpolicy-row {
   min-height: 36px;
 }
+
+
+.sgpolicy-rule-overlay {
+  @include primary-font();
+  width: 120px;
+}
+
+.sgpolicy-tooltip {
+  white-space: pre;
+  @include primary-font(18px);
+  font-size: 14px !important;
+}

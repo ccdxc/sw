@@ -18,6 +18,10 @@ import { ISecuritySGRule, SecuritySGPolicy, SecuritySGRule_action_uihint } from 
 import { Table } from 'primeng/table';
 import { CustomFormControl } from '@sdk/v1/utils/validators';
 import { TableCol } from '@app/components/shared/tableviewedit';
+import { MetricsqueryService, TelemetryPollingMetricQueries } from '@app/services/metricsquery.service';
+import { ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function, Telemetry_queryMetricsQuerySpec_sort_order, LabelsRequirement_operator } from '@sdk/v1/models/generated/telemetry_query';
+import { ITelemetry_queryMetricsQueryResponse } from '@sdk/v1/models/telemetry_query';
+import { SelectItem } from 'primeng/api';
 
 /**
  * Component for displaying a security policy and providing IP searching
@@ -63,6 +67,15 @@ class SecuritySGRuleWrapper {
   rule: ISecuritySGRule;
 }
 
+interface RuleHitEntry {
+    EspHits: number;
+    IcmpHits: number;
+    OtherHits: number;
+    TcpHits: number;
+    TotalHits: number;
+    UdpHits: number;
+}
+
 @Component({
   selector: 'app-sgpolicydetail',
   templateUrl: './sgpolicydetail.component.html',
@@ -78,10 +91,20 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
 
   cols: TableCol[] = [
     { field: 'ruleNum', header: '', class: 'sgpolicy-rule-number', width: 4 },
-    { field: 'sourceIPs', header: 'Source IPs', class: 'sgpolicy-source-ip', width: 24 },
-    { field: 'destIPs', header: 'Destination IPs', class: 'sgpolicy-dest-ip', width: 24 },
+    { field: 'sourceIPs', header: 'Source IPs', class: 'sgpolicy-source-ip', width: 22 },
+    { field: 'destIPs', header: 'Destination IPs', class: 'sgpolicy-dest-ip', width: 22 },
     { field: 'action', header: 'Action', class: 'sgpolicy-action', width: 24 },
-    { field: 'protocolPort', header: 'Protocol/Ports', class: 'sgpolicy-port', width: 24 },
+    { field: 'protocolPort', header: 'Protocol/Ports', class: 'sgpolicy-port', width: 20 },
+    { field: 'TotalHits', header: 'Total Hits', class: 'sgpolicy-rule-stat', width: 10 },
+  ];
+
+  ruleHitItems: SelectItem[] = [
+    { label: 'TCP Hits', value: 'TcpHits'},
+    { label: 'UDP Hits', value: 'UdpHits'},
+    { label: 'ICMP Hits', value: 'IcmpHits'},
+    { label: 'ESP Hits', value: 'EspHits'},
+    { label: 'Other Hits', value: 'OtherHits'},
+    { label: 'Total Hits', value: 'TotalHits'},
   ];
 
   // Used for the table - when true there is a loading icon displayed
@@ -149,11 +172,18 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
 
   ruleCount: number = 0;
 
+  // Map from rule index to aggregate hits
+  ruleMetrics: RuleHitEntry[] = [];
+  // Map from rule index to tooltip string
+  // Helps avoid rebuidling the string unless there are changes
+  ruleMetricsTooltip: string[] = [];
+
   constructor(protected _controllerService: ControllerService,
     protected securityService: SecurityService,
     protected searchService: SearchService,
     private _route: ActivatedRoute,
     protected uiconfigsService: UIConfigsService,
+    protected metricsqueryService: MetricsqueryService,
   ) {
     super(_controllerService, uiconfigsService);
   }
@@ -175,7 +205,6 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
           { label: id, url: Utility.getBaseUIUrl() + 'security/sgpolicies/' + id }]
       });
     });
-
   }
 
   initializeData() {
@@ -466,6 +495,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
           // Set sgpolicyrules
           this.selectedPolicy = this.sgPolicies[0];
           this.searchPolicyInvoked = false;
+          this.getPolicyMetrics();
           this.updateRulesByPolicy();
         } else {
           // Must have received a delete event.
@@ -481,6 +511,80 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     );
     this.subscriptions.push(subscription);
   }
+
+  getPolicyMetrics() {
+    if (this.selectedPolicy == null) {
+      return;
+    }
+    const queryList: TelemetryPollingMetricQueries = {
+      queries: [],
+      tenant: Utility.getInstance().getTenant()
+    };
+    this.selectedPolicy.status['rule-status'].forEach((rule, index) => {
+      queryList.queries.push(
+        { query: this.generateRuleQuery(rule['rule-hash']) }
+      );
+    });
+    // We create a new query for each rule
+    // We then group each rule by reporter ID
+    // We then sum them to generate the total for the rule
+    const sub = this.metricsqueryService.pollMetrics('sgpolicyDetail', queryList).subscribe(
+      (data: ITelemetry_queryMetricsQueryResponse) => {
+        if (data && data.results) {
+          this.ruleMetrics = [];
+          this.ruleMetricsTooltip = [];
+          data.results.forEach((res) => {
+            const ruleHits: RuleHitEntry = {
+              EspHits: 0,
+              IcmpHits: 0,
+              OtherHits: 0,
+              TcpHits: 0,
+              TotalHits: 0,
+              UdpHits: 0
+            };
+            res.series.forEach( (s) => {
+              if (s.values.length === 0) {
+                return;
+              }
+              this.ruleHitItems.map(item => item.value).forEach( (col) => {
+                const index = s.columns.indexOf(col);
+                ruleHits[col] += s.values[0][index];
+              });
+            });
+            this.ruleMetrics.push(ruleHits);
+            this.ruleMetricsTooltip.push(this.createRuleTooltip(ruleHits));
+          });
+        }
+      },
+    );
+    this.subscriptions.push(sub);
+  }
+
+  generateRuleQuery(ruleHash: string) {
+    const query: ITelemetry_queryMetricsQuerySpec = {
+      'kind': 'RuleMetrics',
+      name: null,
+      selector: {
+        'requirements': [
+          {
+            'key': 'name',
+            'operator': LabelsRequirement_operator.equals,
+            'values': [ruleHash]
+          }
+        ]
+      },
+      function: Telemetry_queryMetricsQuerySpec_function.NONE,
+      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.Descending,
+      pagination: {
+        count: 1,
+        offset: 0,
+      },
+      'group-by-field': 'reporterID',
+      fields: [],
+    };
+    return query;
+  }
+
 
   /**
    * Adds a wrapper object around the rules to store ordering
@@ -528,7 +632,33 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
         return rowData.rule['to-ip-addresses'].join(', ');
       case 'action':
         return SecuritySGRule_action_uihint[rowData.rule.action];
+      case 'TotalHits':
+        const entry = this.ruleMetrics[rowData.order];
+        if (entry == null) {
+          return '';
+        }
+        return entry.TotalHits;
     }
+  }
+
+  createRuleTooltip(ruleMetric: RuleHitEntry): string {
+    const defaultSpacing = 2;
+    let retStrs = this.ruleHitItems
+      .filter(item => {
+        return ruleMetric[item.value] !== 0;
+      }).map(item => {
+        return item.label + ': ' + ruleMetric[item.value].toString();
+      });
+    // Right aligning numbers
+    let maxLength = 0;
+    retStrs.forEach((str) => {
+      maxLength = Math.max(maxLength, str.length);
+    });
+    retStrs = retStrs.map( (str) => {
+      const items = str.split(' ');
+      return str.substr(0, str.length - 1) + ' '.repeat(maxLength - str.length + defaultSpacing) + items[items.length - 1];
+    });
+    return retStrs.join('\n');
   }
 
   formatApp(rule: ISecuritySGRule) {
