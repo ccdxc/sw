@@ -480,10 +480,10 @@ ctx_t::update_flow(const flow_update_t& flowupd,
             LOG_FLOW_UPDATE(aging_info);
         }
         break;
-    case FLOWUPD_SKIP_SFW_REVAL_INFO:
-        ret = flow->set_skip_sfw_reval_info();
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_VERBOSE("Unable to set skip sfw reval info");
+    case FLOWUPD_SFW_INFO:
+        ret = flow->set_sfw_info(flowupd.sfw_info);
+        if (ret == HAL_RET_OK) {
+            LOG_FLOW_UPDATE(sfw_info);
         }
         break;
     }
@@ -844,6 +844,14 @@ std::ostream& operator<<(std::ostream& os, const export_info_t& val)
 std::ostream& operator<<(std::ostream& os, const aging_info_t& val)
 {
     os << "{ idle_timeout=" << val.idle_timeout;
+    return os << "}";
+}
+
+std::ostream& operator<<(std::ostream& os, const sfw_flow_info_t& val)
+{
+    os << "{ sfw_rule_id=" << (uint64_t)val.sfw_rule_id;
+    os << " ,sfw_action="  << val.sfw_action;
+    os << " ,skip_sfw_reval=" << val.skip_sfw_reval;
     return os << "}";
 }
 

@@ -31,7 +31,11 @@ TEST_F(tftp_test, tftp_session)
     EXPECT_FALSE(ctx_.drop_flow());
     EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
     EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg, nwsec::APP_SVC_TFTP);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->rule_id, 0);
     hal::session_t *session = ctx_.session();
+    EXPECT_NE(session->sfw_rule_id, 0);
+    EXPECT_EQ(session->skip_sfw_reval, 0);
+    EXPECT_EQ(session->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
 
     //send response 
     udp = Tins::UDP(1000, 1001) /
@@ -40,8 +44,12 @@ TEST_F(tftp_test, tftp_session)
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop());
     EXPECT_NE(ctx_.session(), session);
-    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_NONE);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
     EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg, nwsec::APP_SVC_TFTP);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->rule_id, 0);
+    EXPECT_EQ(ctx_.session()->skip_sfw_reval, 1);
+    EXPECT_EQ(ctx_.session()->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
+    EXPECT_NE(ctx_.session()->sfw_rule_id, 0);
 
     req.set_session_handle(session->hal_handle);
     ret = hal::session_get(req, &rsp);

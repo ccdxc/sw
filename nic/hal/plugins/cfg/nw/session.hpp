@@ -345,9 +345,11 @@ typedef struct session_cfg_s {
     uint8_t             tcp_sack_perm_option:1;
     uint8_t             conn_track_en:1;          // enable connection tracking
     uint8_t             skip_sfw_reval:1;         // skip firewall reval
+    uint8_t             sfw_action:2;             // sfw action
 
     session_id_t        session_id;               // unique session id
     uint32_t            idle_timeout;             // Session idle timeout
+    uint64_t            sfw_rule_id;              // SFW rule id that was hit
 } __PACK__ session_cfg_t;
 
 static const uint8_t MAX_SESSION_FLOWS = 2;
@@ -382,10 +384,13 @@ typedef struct session_args_s {
 //------------------------------------------------------------------------------
 struct session_s {
     sdk_spinlock_t      slock;                    // lock to protect this structure
-    uint8_t             fte_id:4;                 // FTE that created this session
-    uint8_t             conn_track_en:1;          // enable connection tracking
-    uint8_t             skip_sfw_reval:1;         // do not reeval session
-    uint8_t             is_ipfix_flow:1;          // to track ipfix flows
+    uint16_t            fte_id:4;                 // FTE that created this session
+    uint16_t            conn_track_en:1;          // enable connection tracking
+    uint16_t            skip_sfw_reval:1;         // do not reeval session
+    uint16_t            is_ipfix_flow:1;          // to track ipfix flows
+    uint16_t            sfw_action:2;             // sfw action to log
+    uint64_t            sfw_rule_id;              // sfw rule id
+
     flow_t              *iflow;                   // initiator flow
     flow_t              *rflow;                   // responder flow, if any
     hal_handle_t        vrf_handle;               // src vrf handle
@@ -405,8 +410,6 @@ struct session_s {
     hal_handle_t        sep_handle;               // Source EP Handle
     hal_handle_t        dep_handle;               // Destination EP Handle
     /* TODO: SEP and DEP handles need to be removed */
-    dllist_ctxt_t       sif_session_lentry;       // source interface's session list context
-    dllist_ctxt_t       dif_session_lentry;       // destination interface's session list context
     dllist_ctxt_t       feature_list_head;        // List of feature specific states
 } __PACK__;
 

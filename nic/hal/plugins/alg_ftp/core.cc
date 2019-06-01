@@ -99,6 +99,8 @@ fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx) {
     if (l4_sess == NULL || l4_sess->alg != nwsec::APP_SVC_FTP)
         return fte::PIPELINE_CONTINUE;
 
+    ctx.flow_log()->alg = l4_sess->alg;
+ 
     app_sess = l4_sess->app_session;
     if (l4_sess->isCtrl == true) {
         if (ctx.force_delete() == true || session_state_is_reset(ctx.session()) ||
@@ -484,6 +486,7 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
     sfw_info_t *sfw_info = sfw::sfw_feature_state(ctx);
     l4_alg_status_t *entry = NULL;
     ftp_info_t      *ftp_info = NULL;
+    hal_ret_t        ret = HAL_RET_OK;
 
     entry = (l4_alg_status_t *)wentry;
     ftp_info = (ftp_info_t *)entry->info;
@@ -493,6 +496,18 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
     }
     ctx.set_feature_name(FTE_FEATURE_ALG_FTP.c_str());
     ctx.register_feature_session_state(&entry->fte_feature_state);
+
+    flow_update_t flowupd = {type: FLOWUPD_SFW_INFO};
+    flowupd.sfw_info.skip_sfw_reval = 1;
+    flowupd.sfw_info.sfw_rule_id = entry->rule_id;
+    flowupd.sfw_info.sfw_action = (uint8_t)nwsec::SECURITY_RULE_ACTION_ALLOW;
+    ret = ctx.update_flow(flowupd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to update sfw action");
+    }
+
+    ctx.flow_log()->sfw_action = nwsec::SECURITY_RULE_ACTION_ALLOW;
+    ctx.flow_log()->rule_id = entry->rule_id;
     ctx.flow_log()->alg = entry->alg;
     ctx.flow_log()->parent_session_id = entry->sess_hdl;
 
@@ -536,6 +551,7 @@ static void add_expected_flow(fte::ctx_t &ctx, l4_alg_status_t *l4_sess,
     exp_flow->entry.handler = expected_flow_handler;
     exp_flow->isCtrl = false;
     exp_flow->alg = l4_sess->alg;
+    exp_flow->rule_id = (ctx.session())?ctx.session()->sfw_rule_id:0;
     exp_flow->idle_timeout = l4_sess->idle_timeout;
     data_ftp_info = (ftp_info_t *)g_ftp_state->alg_info_slab()->alloc();
     SDK_ASSERT(data_ftp_info != NULL);

@@ -62,6 +62,8 @@ fte::pipeline_action_t alg_dns_session_delete_cb(fte::ctx_t &ctx) {
     if (l4_sess == NULL || l4_sess->alg != nwsec::APP_SVC_DNS)
         return fte::PIPELINE_CONTINUE;
 
+    ctx.flow_log()->alg = l4_sess->alg;
+
     /*
      * Cleanup ALG state. No concept of control vs data here
      * so cleanup everything.

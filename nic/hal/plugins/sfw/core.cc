@@ -39,6 +39,19 @@ namespace hal {
 namespace plugins {
 namespace sfw {
 
+fte::pipeline_action_t 
+sfw_session_delete_cb (fte::ctx_t &ctx) {
+    if (ctx.role() != hal::FLOW_ROLE_INITIATOR)
+        return fte::PIPELINE_CONTINUE;
+
+    if (ctx.session()) {
+        ctx.flow_log()->sfw_action = (nwsec::SecurityAction)ctx.session()->sfw_action;
+        ctx.flow_log()->rule_id = ctx.session()->sfw_rule_id;
+    }    
+
+    return fte::PIPELINE_CONTINUE;
+}
+
 hal_ret_t
 net_sfw_match_app_redir(ctx_t                   &ctx,
                         nwsec_rule_t            *rule,
@@ -343,7 +356,6 @@ sfw_exec(ctx_t& ctx)
             }
             ctx.set_feature_name(FTE_FEATURE_SFW.c_str());
             sfw_info->sfw_done = true;
-            flowupd.action = session::FLOW_ACTION_DROP;
         }
     }
 
@@ -379,6 +391,16 @@ sfw_exec(ctx_t& ctx)
                 // to handle the case if it happens
             }
         }
+
+        flow_update_t flowupd = {type: FLOWUPD_SFW_INFO};
+        flowupd.sfw_info.skip_sfw_reval = 0;
+        flowupd.sfw_info.sfw_rule_id = match_rslt.rule_id;
+        flowupd.sfw_info.sfw_action = (uint8_t)match_rslt.sfw_action;
+        ret = ctx.update_flow(flowupd);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to update sfw action");
+        }
+
         ctx.flow_log()->sfw_action = match_rslt.sfw_action;
         ctx.flow_log()->alg = match_rslt.alg;
         ctx.flow_log()->rule_id = match_rslt.rule_id;

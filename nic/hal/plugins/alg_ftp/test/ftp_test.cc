@@ -45,7 +45,11 @@ TEST_F(ftp_test, ftp_session)
     EXPECT_EQ(ctx_.session()->rflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
     EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
     EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg, nwsec::APP_SVC_FTP);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->rule_id, 0);
     hal::session_t *session = ctx_.session();
+    EXPECT_NE(session->sfw_rule_id, 0);
+    EXPECT_EQ(session->skip_sfw_reval, 0);
+    EXPECT_EQ(session->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
 
     // TCP SYN/ACK on ALG_CFLOW_LIFQ
     tcp = Tins::TCP(2000, FTP_PORT);
@@ -93,11 +97,18 @@ TEST_F(ftp_test, ftp_session)
     EXPECT_EQ(ctx_.session(), session);
 
     CHECK_ALLOW_TCP(client_eph, server_eph, 37075, FTP_DATA_PORT, "c:20 -> s:37075");
-    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_NONE);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
     EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg, nwsec::APP_SVC_FTP);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->rule_id, 0);
+    EXPECT_EQ(ctx_.session()->skip_sfw_reval, 1);
+    EXPECT_EQ(ctx_.session()->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
+    EXPECT_NE(ctx_.session()->sfw_rule_id, 0);
     CHECK_DENY_TCP(client_eph, server_eph, 37075, 2000, "c:2000 -> s:37075");
     EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_DENY);
     EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg, nwsec::APP_SVC_NONE);
+    EXPECT_EQ(ctx_.session()->skip_sfw_reval, 0);
+    EXPECT_EQ(ctx_.session()->sfw_action, nwsec::SECURITY_RULE_ACTION_DENY);
+    EXPECT_NE(ctx_.session()->sfw_rule_id, 0);
     CHECK_DENY_TCP(server_eph, client_eph,  37075, 2000, "c:2000 -> s:37075"); 
     CHECK_DENY_TCP(client_eph, server_eph, 37075, 2001, "c:2001 -> s:37075");
 
@@ -190,8 +201,9 @@ TEST_F(ftp_test, ftp_session_allow_mismatch)
     EXPECT_EQ(ctx_.session(), session);
 
     CHECK_ALLOW_TCP(client_eph, server_eph1, 37075, FTP_DATA_PORT, "c:20 -> s:37075");
-    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_NONE);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
     EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg, nwsec::APP_SVC_FTP);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->rule_id, 0);
     CHECK_DENY_TCP(client_eph, server_eph1, 37075, 2000, "c:2000 -> s:37075");
     EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_DENY);
     EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg, nwsec::APP_SVC_NONE);

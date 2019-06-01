@@ -46,7 +46,7 @@ DEFINE_ENUM(pipeline_event_t, FTE_PIPELINE_EVENT_ENTRIES)
     ENTRY(FLOWUPD_EXPORT_INFO,          11, "export info")                      \
     ENTRY(FLOWUPD_LKP_KEY,              12, "flow key")                         \
     ENTRY(FLOWUPD_AGING_INFO,           13, "Session Aging info")               \
-    ENTRY(FLOWUPD_SKIP_SFW_REVAL_INFO,  14, "Skip firewall reval")              \
+    ENTRY(FLOWUPD_SFW_INFO,             14, "SFW info")                         \
 
 DEFINE_ENUM(flow_update_type_t, FTE_FLOW_UPDATE_CODES)
 #undef FTE_FLOW_UPDATE_CODES
@@ -287,6 +287,14 @@ typedef struct aging_info_s {
 
 std::ostream& operator<<(std::ostream& os, const aging_info_t& val);
 
+typedef struct sfw_flow_info_s {
+    uint8_t   skip_sfw_reval;
+    uint8_t   sfw_action;
+    uint64_t  sfw_rule_id;
+} sfw_flow_info_t;
+
+std::ostream& operator<<(std::ostream& os, const sfw_flow_info_t& val);
+
 typedef struct ingress_info_s {
     // Expected source interface for host pinning mode
     hal::if_t *expected_sif;
@@ -345,6 +353,7 @@ typedef struct flow_update_s {
         export_info_t export_info;
         hal::flow_key_t    key;
         aging_info_t  aging_info;
+        sfw_flow_info_t sfw_info;
     };
 }__PACK__ flow_update_t;
 

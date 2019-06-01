@@ -123,6 +123,8 @@ fte::pipeline_action_t alg_rtsp_session_delete_cb(fte::ctx_t &ctx) {
 
     HAL_TRACE_DEBUG("Cleaning up RTSP session for session: {}", ctx.session()->hal_handle);
 
+    ctx.flow_log()->alg = l4_sess->alg;
+
     app_sess = l4_sess->app_session;
     if (l4_sess->isCtrl == true) {
         if (ctx.force_delete() || session_state_is_reset(ctx.session()) ||
@@ -231,16 +233,18 @@ expected_flow_handler(fte::ctx_t &ctx, alg_utils::expected_flow_t *entry)
 
     ctx.set_feature_name(FTE_FEATURE_ALG_RTSP.c_str());
     ctx.register_feature_session_state(&exp_flow->fte_feature_state);
-#if 0
-    // create l4_sess for data flow
-    ret = g_rtsp_state->alloc_and_insert_l4_sess(exp_flow->app_session, &l4_sess);
-    SDK_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-    l4_sess->isCtrl = FALSE;
-    l4_sess->info = rtsp_sess;
-    l4_sess->alg = nwsec::APP_SVC_RTSP;
-    ctx.set_feature_name(FTE_FEATURE_ALG_RTSP.c_str());
-    ctx.register_feature_session_state(&l4_sess->fte_feature_state);
-#endif
+
+    flow_update_t flowupd = {type: FLOWUPD_SFW_INFO};
+    flowupd.sfw_info.skip_sfw_reval = 1;
+    flowupd.sfw_info.sfw_rule_id = exp_flow->rule_id;
+    flowupd.sfw_info.sfw_action = (uint8_t)nwsec::SECURITY_RULE_ACTION_ALLOW;
+    ret = ctx.update_flow(flowupd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to update sfw action");
+    }
+
+    ctx.flow_log()->sfw_action = nwsec::SECURITY_RULE_ACTION_ALLOW;
+    ctx.flow_log()->rule_id = exp_flow->rule_id;
     ctx.flow_log()->alg = exp_flow->alg;
     ctx.flow_log()->parent_session_id = exp_flow->sess_hdl;
 
@@ -288,7 +292,7 @@ add_expected_flows(fte::ctx_t &ctx, alg_utils::app_session_t *app_sess,
         exp_flow->alg =  nwsec::APP_SVC_RTSP;
         exp_flow->info = rtsp_sess;
         exp_flow->sess_hdl = HAL_HANDLE_INVALID;
-
+        exp_flow->rule_id = (ctx.session())?ctx.session()->sfw_rule_id:0;
     }
 
     return HAL_RET_OK;

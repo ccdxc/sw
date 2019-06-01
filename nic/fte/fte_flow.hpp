@@ -8,7 +8,7 @@ namespace fte {
 
 class flow_t {
 public:
-    void from_config(const hal::flow_cfg_t &config, const hal::flow_pgm_attrs_t &attrs);
+    void from_config(const hal::flow_cfg_t &config, const hal::flow_pgm_attrs_t &attrs, const hal::session_t *session);
     hal_ret_t to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attrs) const;
     hal_ret_t merge_flow(const flow_t& flow);
     hal_ret_t header_pop(const header_pop_info_t &header_pop);
@@ -251,13 +251,18 @@ public:
         return info;
     }
 
-    hal_ret_t set_skip_sfw_reval_info() {
-        valid_.skip_sfw_reval_info = true;
+    hal_ret_t set_sfw_info(const sfw_flow_info_t sfw_info) {
+        sfw_info_ = sfw_info;
+        valid_.sfw_info = true;
         return HAL_RET_OK;
     }
 
-    bool valid_skip_sfw_reval_info() const {
-        return valid_.skip_sfw_reval_info;
+    bool valid_sfw_info() const {
+        return valid_.sfw_info;
+    }
+
+    const sfw_flow_info_t& sfw_info() const {
+        return sfw_info_;
     }
 
     hal_ret_t set_aging_info(const aging_info_t& aging_info) {
@@ -307,7 +312,7 @@ private:
         uint16_t export_info:1;
         uint16_t aging_info:1;
         uint16_t l2_info:1;
-        uint16_t skip_sfw_reval_info:1;
+        uint16_t sfw_info:1;
      } valid_;
 
     hal::flow_key_t           key_;                 // flow's key
@@ -324,6 +329,7 @@ private:
     lkp_info_t                lkp_info_;            // Flow lookup info
     export_info_t             export_info_;         // Flow Export info
     aging_info_t              aging_info_;          // Aging info
+    sfw_flow_info_t           sfw_info_;            // SFW info
 
     uint8_t                   num_header_updates_; // no.of valid updates
     header_update_t           header_updates_[MAX_HEADER_UPDATES];

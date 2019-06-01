@@ -92,7 +92,11 @@ TEST_F(rpc_test, msrpc_session)
     EXPECT_EQ(ctx_.session()->rflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
     EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
     EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg, nwsec::APP_SVC_MSFT_RPC);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->rule_id, 0);
     hal::session_t *session = ctx_.session();
+    EXPECT_NE(session->sfw_rule_id, 0);
+    EXPECT_EQ(session->skip_sfw_reval, 0);
+    EXPECT_EQ(session->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
 
     // TCP SYN re-transmit on ALG_CFLOW_LIFQ
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
@@ -157,11 +161,19 @@ TEST_F(rpc_test, msrpc_session)
     EXPECT_EQ(ctx_.session(), session);
 
     CHECK_ALLOW_TCP(server_eph, client_eph, 49154, 49153, "c:49153 -> s:49154");
-    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_NONE);
     EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg, nwsec::APP_SVC_MSFT_RPC);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->rule_id, 0);
+    EXPECT_EQ(ctx_.session()->skip_sfw_reval, 1);
+    EXPECT_EQ(ctx_.session()->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
+    EXPECT_NE(ctx_.session()->sfw_rule_id, 0);
     CHECK_ALLOW_TCP(server_eph, client_eph, 49154, 59374, "c:59374 -> s:49154");
-    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_NONE);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
     EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg, nwsec::APP_SVC_MSFT_RPC);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->rule_id, 0);
+    EXPECT_EQ(ctx_.session()->skip_sfw_reval, 1);
+    EXPECT_EQ(ctx_.session()->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
+    EXPECT_NE(ctx_.session()->sfw_rule_id, 0);
     CHECK_DENY_UDP(server_eph, client_eph, 49154, 49153, "c:49153 -> s:49154");
     EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_DENY);
     CHECK_DENY_UDP(server_eph, client_eph, 49154, 59374, "c:59374 -> s:49154");

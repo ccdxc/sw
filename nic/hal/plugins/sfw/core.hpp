@@ -3,6 +3,7 @@
 //-----------------------------------------------------------------------------
 
 #pragma once
+#include "nic/include/fte.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
@@ -17,6 +18,8 @@ namespace sfw {
 
 const std::string FTE_FEATURE_SFW("pensando.io/sfw:sfw");
 const std::string FTE_FEATURE_CONNTRACK("pensando.io/sfw:conntrack");
+
+fte::pipeline_action_t sfw_session_delete_cb(fte::ctx_t &ctx);
 
 // Stateful firewall state
 typedef struct sfw_info_s {

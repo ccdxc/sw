@@ -303,33 +303,33 @@ ctx_t::init_ctxt_from_session(hal::session_t *sess)
 
     // TODO(goli) handle post svc flows
     if (hflow->config.role == hal::FLOW_ROLE_INITIATOR) {
-        iflow_[stage]->from_config(hflow->config, hflow->pgm_attrs);
+        iflow_[stage]->from_config(hflow->config, hflow->pgm_attrs, session_);
             if (sess->rflow) {
                 rflow_[stage]->from_config(sess->rflow->config,
-                                           sess->rflow->pgm_attrs);
+                                           sess->rflow->pgm_attrs, session_);
                 valid_rflow_ = true;
                 if (sess->rflow->assoc_flow) {
                     rflow_[++stage]->from_config(
                                        sess->rflow->assoc_flow->config,
-                                       sess->rflow->assoc_flow->pgm_attrs);
+                                       sess->rflow->assoc_flow->pgm_attrs, session_);
                 }
             }
             if (hflow->assoc_flow) {
                 iflow_[++stage]->from_config(hflow->assoc_flow->config,
-                                           hflow->assoc_flow->pgm_attrs);
+                                           hflow->assoc_flow->pgm_attrs, session_);
             }
     } else {
-        rflow_[stage]->from_config(hflow->config, hflow->pgm_attrs);
+        rflow_[stage]->from_config(hflow->config, hflow->pgm_attrs, session_);
         if (hflow->assoc_flow) {
             rflow_[++stage]->from_config(hflow->assoc_flow->config,
-                                         hflow->assoc_flow->pgm_attrs);
+                                         hflow->assoc_flow->pgm_attrs, session_);
         }
         iflow_[stage]->from_config(hflow->reverse_flow->config,
-                                   hflow->reverse_flow->pgm_attrs);
+                                   hflow->reverse_flow->pgm_attrs, session_);
         if (sess->iflow->assoc_flow) {
             iflow_[++stage]->from_config(
                                        sess->iflow->assoc_flow->config,
-                                       sess->iflow->assoc_flow->pgm_attrs);
+                                       sess->iflow->assoc_flow->pgm_attrs, session_);
         }
 
         valid_rflow_ = true;
@@ -493,8 +493,9 @@ ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
     t_fwlg.set_parent_session_id(log->parent_session_id);
     t_fwlg.set_rule_id(log->rule_id);
 
-    if (logger_ != NULL)
+    if (logger_ != NULL) {
         fw_log(logger_, t_fwlg);
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -544,6 +545,7 @@ ctx_t::update_flow_table()
     hal::pd::pd_func_args_t          pd_func_args = {0};
     std::string      update_type = "create";
     hal::app_redir::app_redir_ctx_t* app_ctx = hal::app_redir::app_redir_ctx(*this, false);
+    bool             session_exists = existing_session();
 
     session_args.session = &session_cfg;
     session_cfg.idle_timeout = HAL_MAX_INACTIVTY_TIMEOUT;
@@ -634,8 +636,10 @@ ctx_t::update_flow_table()
         if (is_proxy_enabled()) {
             iflow_attrs.is_proxy_en = 1;
         }
-        if (iflow->valid_skip_sfw_reval_info()) {
-            session_cfg.skip_sfw_reval = 1;
+        if (iflow->valid_sfw_info()) {
+            session_cfg.skip_sfw_reval = (iflow->sfw_info().skip_sfw_reval&0x1);
+            session_cfg.sfw_rule_id = iflow->sfw_info().sfw_rule_id;
+            session_cfg.sfw_action = (iflow->sfw_info().sfw_action&0x3);
         }
         if (existing_session() && iflow->valid_export_info()) {
             session_args.update_iflow = true;
@@ -652,7 +656,8 @@ ctx_t::update_flow_table()
                         "slif_en={} slif={} qos_class_en={} qos_class_id={} "
                         "is_proxy_en={} is_proxy_mcast={} export_en={} export_id1={} "
                         "export_id2={} export_id3={} export_id4={} conn_track_en={} "
-                        "session_idle_timeout={} smac={} dmac={} l2seg_id={}",
+                        "session_idle_timeout={} smac={} dmac={} l2seg_id={}, skip_sfw_reval={} "
+                        "sfw_rule_id={}, sfw_action={}",
                         stage, iflow_cfg.key, iflow_attrs.lkp_inst, iflow_attrs.vrf_hwid,
                         iflow_cfg.action, iflow_attrs.mac_sa_rewrite,
                         iflow_attrs.mac_da_rewrite, iflow_attrs.ttl_dec, iflow_attrs.mcast_en,
@@ -669,7 +674,8 @@ ctx_t::update_flow_table()
                         session_cfg.conn_track_en, session_cfg.idle_timeout,
                         ether_ntoa((struct ether_addr*)&iflow_cfg.l2_info.smac),
                         ether_ntoa((struct ether_addr*)&iflow_cfg.l2_info.dmac),
-                        iflow_cfg.l2_info.l2seg_id);
+                        iflow_cfg.l2_info.l2seg_id, session_cfg.skip_sfw_reval, session_cfg.sfw_rule_id,
+                        session_cfg.sfw_action);
     }
 
     for (uint8_t stage = 0; valid_rflow_ && !hal_cleanup() && stage <= rstage_; stage++) {
@@ -775,7 +781,6 @@ ctx_t::update_flow_table()
     session_args.spec        = sess_spec_;
     session_args.rsp         = sess_resp_;
     session_args.valid_rflow = valid_rflow_;
-    session_handle           = (session_)?session_->hal_handle:HAL_HANDLE_INVALID;
 
     if (hal_cleanup() == true) {
         // Cleanup session if hal_cleanup is set
@@ -809,7 +814,7 @@ ctx_t::update_flow_table()
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Session {} failed, ret = {}", update_type, ret);
     } else {
-        //HAL_TRACE_DEBUG("Session {} of session {} successful", update_type, session_handle);
+        HAL_TRACE_DEBUG("Session {} of session {} successful", update_type, session_handle);
     }
 
     if (protobuf_request()) {
@@ -817,7 +822,8 @@ ctx_t::update_flow_table()
     }
 
 end:
-    if (!ipc_logging_disable()) {
+    if (!ipc_logging_disable() && 
+        ((session_exists == false) || (update_type == "delete"))) {
         /* Add flow logging only for initiator flows */
         uint8_t istage = 0;
         add_flow_logging(key_, session_handle, &iflow_log_[istage]);

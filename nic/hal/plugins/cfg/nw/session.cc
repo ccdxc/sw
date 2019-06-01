@@ -1472,6 +1472,8 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     session->conn_track_en = args->session->conn_track_en;
     session->idle_timeout = args->session->idle_timeout;
     session->skip_sfw_reval = args->session->skip_sfw_reval;
+    session->sfw_rule_id = args->session->sfw_rule_id;
+    session->sfw_action = args->session->sfw_action;
 
     // allocate all PD resources and finish programming, if any
     pd::pd_session_create_args_init(&pd_session_args);

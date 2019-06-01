@@ -627,7 +627,8 @@ hal_ret_t flow_t::merge_flow(const flow_t &flow)
 }
 
 void flow_t::from_config(const hal::flow_cfg_t &flow_cfg,
-                         const hal::flow_pgm_attrs_t  &attrs)
+                         const hal::flow_pgm_attrs_t  &attrs,
+                         const hal::session_t *session)
 {
     header_update_t *entry;
 
@@ -694,6 +695,18 @@ void flow_t::from_config(const hal::flow_cfg_t &flow_cfg,
                                                              export_info_.export_id3;
     export_info_.export_id4 = (attrs.export_en & (1 << 3)) ? attrs.export_id4 :
                                                              export_info_.export_id4;
+    export_info_.export_en = attrs.export_en;
+
+    if (session->idle_timeout != HAL_MAX_INACTIVTY_TIMEOUT) {
+        aging_info_.idle_timeout = session->idle_timeout;
+        valid_.aging_info = true;
+    }
+
+    if (session->sfw_rule_id) {
+        sfw_info_.sfw_rule_id = session->sfw_rule_id;
+        sfw_info_.sfw_action = session->sfw_action;
+        sfw_info_.skip_sfw_reval = session->skip_sfw_reval;
+    }
 
     // Header rewrite
     entry = &header_updates_[num_header_updates_++];

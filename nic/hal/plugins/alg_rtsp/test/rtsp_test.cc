@@ -95,10 +95,16 @@ TEST_F(rtsp_test, rtsp_session)
     EXPECT_TRUE(ctx_.session()->rflow->pgm_attrs.mcast_en);
     EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
     EXPECT_EQ(ctx_.session()->rflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->rule_id, 0);
     session = ctx_.session();
+    EXPECT_NE(session->sfw_rule_id, 0);
+    EXPECT_EQ(session->skip_sfw_reval, 0);
+    EXPECT_EQ(session->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
 
-    // TCP SYN re-transmit on ALG_CFLOW_LIFQ
-    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
+    // TCP SYN re-transmit
+    ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->rule_id, 0);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, 0);
     EXPECT_EQ(ret, HAL_RET_OK);
 
 
@@ -149,6 +155,12 @@ TEST_F(rtsp_test, rtsp_session)
 
     // Check expected flows
     CHECK_ALLOW_UDP(server_eph, client_eph, 6256, 4588, "c:4588 -> s:6256");
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg, nwsec::APP_SVC_RTSP);
+    EXPECT_NE(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->rule_id, 0);
+    EXPECT_EQ(ctx_.session()->skip_sfw_reval, 1);
+    EXPECT_EQ(ctx_.session()->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
+    EXPECT_NE(ctx_.session()->sfw_rule_id, 0);
     CHECK_ALLOW_UDP(server_eph, client_eph, 6257, 4589, "c:4589 -> s:6257");
     CHECK_ALLOW_UDP(client_eph, server_eph, 4588, 6256, "c:4588 <- s:6256");
     CHECK_ALLOW_UDP(client_eph, server_eph, 4589, 6257, "c:4589 <- s:6257");
