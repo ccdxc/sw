@@ -37,8 +37,9 @@ slhctx::calchash() {
         SLHASH_TRACE_DEBUG("Generating Hash: TableID=%d, KeyLength=%d, "
                            "DataLength=%d", props->table_id,
                            props->hwkey_len, props->hwdata_len);
-        auto p4pdret = p4pd_hwkey_hwmask_build(props->table_id,
-                                               params->key, NULL, hwkey, NULL);
+        auto p4pdret = p4pd_global_hwkey_hwmask_build(props->table_id,
+                                                      params->key, NULL,
+                                                      hwkey, NULL);
         SDK_ASSERT(p4pdret == P4PD_SUCCESS);
         SLHASH_TRACE_PRINT("HW Key:[%s]", rawstr(hwkey, props->hwkey_len));
         hash_32b = crc32gen_->compute_crc(hwkey, props->hwkey_len,
@@ -66,8 +67,8 @@ slhctx::read() {
     SDK_ASSERT(index_valid);
 
     SLHASH_TRACE_DEBUG("index:%d", index);
-    auto p4pdret =  p4pd_entry_read(props->table_id, index,
-                                    swkey, swkeymask, swdata);
+    auto p4pdret =  p4pd_global_entry_read(props->table_id, index,
+                                           swkey, swkeymask, swdata);
     print_sw();
     return p4pdret == P4PD_SUCCESS ? sdk::SDK_RET_OK : sdk::SDK_RET_ERR;
 }
@@ -120,8 +121,8 @@ slhctx::write() {
         print_sw();
     }
 
-    auto p4pdret = p4pd_entry_install(props->table_id, index,
-                                      swkey, swkeymask, swdata);
+    auto p4pdret = p4pd_global_entry_install(props->table_id, index,
+                                             swkey, swkeymask, swdata);
     return p4pdret == P4PD_SUCCESS ? sdk::SDK_RET_OK : sdk::SDK_RET_ERR;
 }
 
@@ -197,7 +198,7 @@ slhctx::print_params() {
     }
 }
 
-sdk_ret_t 
+sdk_ret_t
 slhctx::init(sdk_table_api_op_t op,
              sdk::table::sdk_table_api_params_t *params,
              sdk::table::slhash_internal::properties *props) {
@@ -211,7 +212,7 @@ slhctx::init(sdk_table_api_op_t op,
     this->op = op;
     this->hash_32b = 0;
     this->hash_valid = false;
-   
+
     this->tcam_params_valid = false;
     if (params) {
         this->tcam_params = *params;

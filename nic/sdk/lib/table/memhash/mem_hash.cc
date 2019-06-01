@@ -123,7 +123,7 @@ mem_hash::init_(sdk_table_factory_params_t *params) {
 
     props_->swappdata_len =
             p4pd_global_actiondata_appdata_size_get(props_->ptable_id, 0);
-    SDK_ASSERT(props_->swappdata_len && 
+    SDK_ASSERT(props_->swappdata_len &&
                props_->swappdata_len <= SDK_TABLE_MAX_SW_DATA_LEN);
 
     props_->hash_poly = tinfo.hash_type;
@@ -155,10 +155,11 @@ mem_hash::init_(sdk_table_factory_params_t *params) {
     MEMHASH_TRACE_VERBOSE("- swkey_len:%dB swdata_len:%dB ",
                           props_->swkey_len, props_->swdata_len);
     MEMHASH_TRACE_VERBOSE("- num_hints:%d max_recircs:%d hash_poly:%d",
-                          props_->num_hints, props_->max_recircs, props_->hash_poly);
+                          props_->num_hints, props_->max_recircs,
+                          props_->hash_poly);
 
-    p4pd_hwentry_query(props_->ptable_id, &props_->hwkey_len,
-                       NULL, &props_->hwdata_len);
+    p4pd_global_hwentry_query(props_->ptable_id, &props_->hwkey_len,
+                              NULL, &props_->hwdata_len);
     MEMHASH_TRACE_VERBOSE("- swkey_len:%dbits swdata_len:%dbits ",
                           props_->hwkey_len, props_->hwdata_len);
 

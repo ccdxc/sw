@@ -50,9 +50,17 @@ p4pd_hwentry_query(uint32_t tableid, uint32_t *hwkey_len,
     return;
 }
 
-int 
-p4pd_entry_write (unsigned int table_id, unsigned int index, unsigned char *hwkey,
-                  unsigned char *hwkey_y, void *actiondata)
+void
+p4pd_global_hwentry_query(uint32_t tableid, uint32_t *hwkey_len,
+                          uint32_t *hwkeymask_len, uint32_t *hwactiondata_len)
+{
+    p4pd_hwentry_query(tableid, hwkey_len, hwkeymask_len, hwactiondata_len);
+}
+
+int
+p4pd_entry_write (unsigned int table_id, unsigned int index,
+                  unsigned char *hwkey, unsigned char *hwkey_y,
+                  void *actiondata)
 {
     slhash_mock_table_t *tab = GET_TABLE(table_id);
     assert(index < TABLE_SIZE);
@@ -62,16 +70,34 @@ p4pd_entry_write (unsigned int table_id, unsigned int index, unsigned char *hwke
     return 0;
 }
 
+int
+p4pd_global_entry_write (unsigned int table_id, unsigned int index,
+                         unsigned char *hwkey, unsigned char *hwkey_y,
+                         void *actiondata)
+{
+    return p4pd_entry_write(table_id, index, hwkey, hwkey_y, actiondata);
+}
+
 p4pd_error_t
 p4pd_entry_install (uint32_t tableid, uint32_t index, void *swkey,
                     void *swkey_mask, void *actiondata)
 {
-    return p4pd_entry_write(tableid, index,
-                            (unsigned char *)swkey,
-                            (unsigned char *)swkey_mask, actiondata);
+    return p4pd_global_entry_write(tableid, index,
+                                   (unsigned char *)swkey,
+                                   (unsigned char *)swkey_mask, actiondata);
 }
 
-int 
+p4pd_error_t
+p4pd_global_entry_install(uint32_t tableid,
+                          uint32_t index,
+                          void    *swkey,
+                          void    *swkey_mask,
+                          void    *actiondata)
+{
+    return p4pd_entry_install(tableid, index, swkey, swkey_mask, actiondata);
+}
+
+int
 p4pd_entry_read(uint32_t table_id, uint32_t index, void *swkey,
                 void *swkey_mask, void *actiondata)
 {
@@ -82,6 +108,12 @@ p4pd_entry_read(uint32_t table_id, uint32_t index, void *swkey,
     return 0;
 }
 
+int
+p4pd_global_entry_read(uint32_t table_id, uint32_t index, void *swkey,
+                       void *swkey_mask, void *actiondata) {
+    return p4pd_entry_read(table_id, index, swkey, swkey_mask, actiondata);
+}
+
 p4pd_error_t
 p4pd_hwkey_hwmask_build(uint32_t tableid, void *swkey, void *swkey_mask,
                         uint8_t *hw_key, uint8_t *hw_key_y)
@@ -90,6 +122,16 @@ p4pd_hwkey_hwmask_build(uint32_t tableid, void *swkey, void *swkey_mask,
     return 0;
 }
 
+p4pd_error_t
+p4pd_global_hwkey_hwmask_build(uint32_t   tableid,
+                               void       *swkey,
+                               void       *swkey_mask,
+                               uint8_t    *hw_key,
+                               uint8_t    *hw_key_y)
+{
+    return p4pd_hwkey_hwmask_build(tableid, swkey, swkey_mask,
+                                   hw_key, hw_key_y);
+}
 
 p4pd_error_t
 p4pd_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
@@ -101,7 +143,7 @@ p4pd_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
     props->hash_type = 0;
     props->tabledepth = TABLE_SIZE;
     props->hbm_layout.entry_width = 64;
-    
+
     if (table_id == SLHASH_TABLE_ID_MOCK) {
         props->has_oflow_table = 1;
         props->oflow_table_id = SLHASH_TABLE_ID_OTCAM_MOCK;
@@ -113,9 +155,10 @@ p4pd_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
 }
 
 p4pd_error_t
-p4pd_global_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
+p4pd_global_table_properties_get (uint32_t table_id, void *props)
 {
-    return p4pd_table_properties_get(table_id, props);
+    return p4pd_table_properties_get(table_id,
+                                     (p4pd_table_properties_t *)props);
 }
 
 p4pd_error_t
@@ -127,7 +170,7 @@ p4pd_global_table_ds_decoded_string_get (uint32_t   table_id,
                                          void*      sw_key_mask,
                                          void*      action_data,
                                          char*      buffer,
-                                         uint16_t   buf_len) 
+                                         uint16_t   buf_len)
 {
     slhash_table_key_t *key = (slhash_table_key_t*)sw_key;
     slhash_table_mask_t *mask = (slhash_table_mask_t*)sw_key_mask;
@@ -135,15 +178,15 @@ p4pd_global_table_ds_decoded_string_get (uint32_t   table_id,
     slhash_table_info_t *info = (slhash_table_info_t*)(&acdata->action_u.info);
 
     memset(buffer, 0, buf_len);
-    
+
     if (table_id == SLHASH_TABLE_ID_MOCK) {
-        snprintf(buffer, buf_len, 
+        snprintf(buffer, buf_len,
                  "KEY = k1:%#x,k2:%#x\n"
                  "DAT = d1:%#x,d2:%#x,epoch1:%d,epoch2:%d,v1:%d,v2:%d\n",
                  key->k1, key->k2, info->d1, info->d2, info->epoch1,
                  info->epoch2, info->valid1, info->valid2);
     } else {
-        snprintf(buffer, buf_len, 
+        snprintf(buffer, buf_len,
                  "KEY = k1:%#x,k2:%#x\n"
                  "MSK = k1:%#x,k2:%#x\n"
                  "DAT = d1:%#x,d2:%#x,epoch1:%d,epoch2:%d,v1:%d,v2:%d\n",

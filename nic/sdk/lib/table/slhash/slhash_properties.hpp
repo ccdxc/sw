@@ -56,7 +56,7 @@ public:
         p4pd_error_t p4pdret;
         p4pd_table_properties_t tinfo;
 
-        p4pdret = p4pd_table_properties_get(params->table_id, &tinfo);
+        p4pdret = p4pd_global_table_properties_get(params->table_id, &tinfo);
         SDK_ASSERT_RETURN(p4pdret == P4PD_SUCCESS, SDK_RET_ERR);
 
         name = tinfo.tablename;
@@ -67,7 +67,8 @@ public:
         swdata_len = tinfo.actiondata_struct_size;
         SDK_ASSERT(swdata_len <= SDK_TABLE_MAX_SW_DATA_LEN);
 
-        p4pd_hwentry_query(table_id, &hwkey_len, &hwkeymask_len, &hwdata_len);
+        p4pd_global_hwentry_query(table_id, &hwkey_len,
+                                  &hwkeymask_len, &hwdata_len);
         hwkey_len = SDK_TABLE_BITS_TO_BYTES(hwkey_len);
         SDK_ASSERT(hwkey_len <= SDK_TABLE_MAX_HW_KEY_LEN);
         hwkeymask_len = SDK_TABLE_BITS_TO_BYTES(hwkeymask_len);

@@ -184,6 +184,15 @@ p4pd_hwentry_query(uint32_t tableid,
     return;
 }
 
+void
+p4pd_global_hwentry_query(uint32_t tableid,
+                          uint32_t *hwkey_len,
+                          uint32_t *hwkeymask_len,
+                          uint32_t *hwactiondata_len)
+{
+    p4pd_hwentry_query(tableid, hwkey_len, hwkeymask_len, hwactiondata_len);
+}
+
 int
 p4pd_entry_write (unsigned int table_id, unsigned int index, unsigned char *hwkey,
                   unsigned char *hwkey_y, void *actiondata)
@@ -337,6 +346,7 @@ p4pd_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
 
     return 0;
 }
+
 p4pd_error_t
 p4pd_global_table_properties_get (uint32_t table_id, void *props)
 {
