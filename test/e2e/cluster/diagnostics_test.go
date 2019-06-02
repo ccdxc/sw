@@ -128,6 +128,29 @@ var _ = Describe("diagnostics tests", func() {
 				return err
 			}, 10, 1).Should(BeNil())
 		})
+		It("check stats query", func() {
+			var err error
+			// query stats through Debug action
+			Eventually(func() error {
+				type debugResponse struct {
+					Diagnostics map[string]interface{} `json:"diagnostics"`
+				}
+				resp := debugResponse{}
+				var respStr string
+				if respStr, err = ts.tu.Debug(ts.loggedInCtx, &diagnostics.DiagnosticsRequest{
+					ObjectMeta: api.ObjectMeta{Name: modObj.Name},
+					Query:      diagnostics.DiagnosticsRequest_Stats.String(),
+				}, &resp); err != nil {
+					return err
+				}
+				if !strings.Contains(respStr, "\"cmdline\":") ||
+					!strings.Contains(respStr, "\"cpustats\":") ||
+					!strings.Contains(respStr, "\"memstats\":") {
+					return fmt.Errorf("no stats returned: {%v}", respStr)
+				}
+				return nil
+			}, 30, 1).Should(BeNil())
+		})
 	})
 	Context("npm", func() {
 		var modObj *diagnostics.Module
@@ -255,6 +278,29 @@ var _ = Describe("diagnostics tests", func() {
 				modObj, err = ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, updatedModObj)
 				return err
 			}, 10, 1).Should(BeNil())
+		})
+		It("check stats query", func() {
+			var err error
+			// query stats through Debug action
+			Eventually(func() error {
+				type debugResponse struct {
+					Diagnostics map[string]interface{} `json:"diagnostics"`
+				}
+				resp := debugResponse{}
+				var respStr string
+				if respStr, err = ts.tu.Debug(ts.loggedInCtx, &diagnostics.DiagnosticsRequest{
+					ObjectMeta: api.ObjectMeta{Name: modObj.Name},
+					Query:      diagnostics.DiagnosticsRequest_Stats.String(),
+				}, &resp); err != nil {
+					return err
+				}
+				if !strings.Contains(respStr, "\"cmdline\":") ||
+					!strings.Contains(respStr, "\"cpustats\":") ||
+					!strings.Contains(respStr, "\"memstats\":") {
+					return fmt.Errorf("no stats returned: {%v}", respStr)
+				}
+				return nil
+			}, 30, 1).Should(BeNil())
 		})
 	})
 })

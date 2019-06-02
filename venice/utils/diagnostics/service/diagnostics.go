@@ -149,6 +149,10 @@ func GetDiagnosticsServiceWithDefaults(module, node string, category diagapi.Mod
 		logger.ErrorLog("method", "GetDiagnosticsServiceWithDefaults", "msg", "failed to register elastic logs handler", "err", err)
 		// TODO throw an event
 	}
+	if err := server.RegisterHandler("Debug", diagapi.DiagnosticsRequest_Stats.String(), NewExpVarHandler(module, node, category, logger)); err != nil {
+		logger.ErrorLog("method", "GetDiagnosticsServiceWithDefaults", "msg", "failed to register expvar handler", "err", err)
+		// TODO throw an event
+	}
 	return server
 }
 
