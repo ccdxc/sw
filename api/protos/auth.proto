@@ -6,6 +6,7 @@ package auth;
 
 // Mandatory imports.
 import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
@@ -398,4 +399,37 @@ message SubjectAccessReviewRequest {
     repeated Operation Operations = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "operations,omitempty"];
 
     option (venice.objectPrefix) = {Collection: "users", Path: "/{O.Tenant}"};
+}
+
+// ----------------------------- User Preference -----------------------------
+
+// Holds a byte stream of the user preference. 
+// The typing of the user preference will be in the UI code.
+message UserPreferenceSpec {
+    string Options= 1 [(gogoproto.jsontag) = "options, omitempty"];
+}
+
+// User Preference Status, currently holds nothing.
+message UserPreferenceStatus {
+
+}
+
+// UserPreference holds all user customization info
+message UserPreference {
+  // KV store prefix
+  option (venice.objectPrefix)   = {Collection: "user-preferences", Path: "/{O.Tenant}"};
+
+  api.TypeMeta      T            = 1 [(gogoproto.embed) = true,
+                                      (gogoproto.nullable) = false,
+                                      (gogoproto.jsontag) = ",inline"];
+
+  api.ObjectMeta    O            = 2 [(gogoproto.embed) = true,
+                                      (gogoproto.nullable) = false,
+                                      (gogoproto.jsontag) = "meta, omitempty"];
+
+  UserPreferenceSpec   Spec      = 3 [(gogoproto.nullable) = false,
+                                      (gogoproto.jsontag) = "spec, omitempty"];
+
+  UserPreferenceStatus Status    = 4 [(gogoproto.nullable) = false,
+                                      (gogoproto.jsontag) = "status, omitempty"];
 }

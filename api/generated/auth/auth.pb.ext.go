@@ -194,6 +194,16 @@ func (m *User) MakeURI(cat, ver, prefix string) string {
 	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/users/", in.Name)
 }
 
+// MakeKey generates a KV store key for the object
+func (m *UserPreference) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "user-preferences/", m.Tenant, "/", m.Name)
+}
+
+func (m *UserPreference) MakeURI(cat, ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/user-preferences/", in.Name)
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *AuthenticationPolicy) Clone(into interface{}) (interface{}, error) {
 	var out *AuthenticationPolicy
@@ -921,6 +931,75 @@ func (m *User) Defaults(ver string) bool {
 	ret = m.Spec.Defaults(ver) || ret
 	ret = m.Status.Defaults(ver) || ret
 	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *UserPreference) Clone(into interface{}) (interface{}, error) {
+	var out *UserPreference
+	var ok bool
+	if into == nil {
+		out = &UserPreference{}
+	} else {
+		out, ok = into.(*UserPreference)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*UserPreference))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *UserPreference) Defaults(ver string) bool {
+	var ret bool
+	m.Kind = "UserPreference"
+	ret = m.Tenant != "default" || m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *UserPreferenceSpec) Clone(into interface{}) (interface{}, error) {
+	var out *UserPreferenceSpec
+	var ok bool
+	if into == nil {
+		out = &UserPreferenceSpec{}
+	} else {
+		out, ok = into.(*UserPreferenceSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*UserPreferenceSpec))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *UserPreferenceSpec) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *UserPreferenceStatus) Clone(into interface{}) (interface{}, error) {
+	var out *UserPreferenceStatus
+	var ok bool
+	if into == nil {
+		out = &UserPreferenceStatus{}
+	} else {
+		out, ok = into.(*UserPreferenceStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*UserPreferenceStatus))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *UserPreferenceStatus) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -1935,6 +2014,85 @@ func (m *User) Normalize() {
 
 }
 
+func (m *UserPreference) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+}
+
+func (m *UserPreference) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for UserPreference"))
+	}
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "ObjectMeta"
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *UserPreference) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+}
+
+func (m *UserPreferenceSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *UserPreferenceSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *UserPreferenceSpec) Normalize() {
+
+}
+
+func (m *UserPreferenceStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *UserPreferenceStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *UserPreferenceStatus) Normalize() {
+
+}
+
 func (m *UserSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -2182,6 +2340,7 @@ func init() {
 		&SubjectAccessReviewRequest{},
 		&TokenSecretRequest{},
 		&User{},
+		&UserPreference{},
 	)
 
 	validatorMapAuth = make(map[string]map[string][]func(string, interface{}) error)

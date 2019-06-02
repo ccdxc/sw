@@ -16,14 +16,13 @@ import (
 	"google.golang.org/grpc/status"
 	k8serrors "k8s.io/apimachinery/pkg/util/errors"
 
-	"github.com/pensando/sw/api/interfaces"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/security"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/password"
@@ -2251,5 +2250,161 @@ func TestPermissionTenantCheck(t *testing.T) {
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected err [%v], got [%v]", test.name, test.err, err))
 		Assert(t, result == test.result, fmt.Sprintf("[%s] test failed, expected result [%v], got [%v]", test.name, test.result, result))
 		Assert(t, reflect.DeepEqual(out, test.out), fmt.Sprintf("[%s] test failed, expected obj [%v], got [%v]", test.name, test.out, out))
+	}
+}
+
+func TestDeleteUserPref(t *testing.T) {
+	logConfig := log.GetDefaultConfig("TestAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+
+	authHooks := &authHooks{
+		logger: l,
+	}
+
+	tests := []struct {
+		name     string
+		oper     apiintf.APIOperType
+		in       interface{}
+		out      interface{}
+		result   bool
+		err      bool
+		txnEmpty bool
+	}{
+		{
+			name: "invalid request",
+			oper: apiintf.CreateOper,
+			in: auth.User{
+				ObjectMeta: api.ObjectMeta{
+					Name:   "hello",
+					Tenant: "world",
+				},
+			},
+			out: auth.User{
+				ObjectMeta: api.ObjectMeta{
+					Name:   "hello",
+					Tenant: "world",
+				},
+			},
+			result:   true,
+			err:      false,
+			txnEmpty: true,
+		},
+		{
+			name: "valid request",
+			oper: apiintf.DeleteOper,
+			in: auth.User{
+				ObjectMeta: api.ObjectMeta{
+					Name:   "hello",
+					Tenant: "world",
+				},
+			},
+			out: auth.User{
+				ObjectMeta: api.ObjectMeta{
+					Name:   "hello",
+					Tenant: "world",
+				},
+			},
+			result:   true,
+			err:      false,
+			txnEmpty: false,
+		},
+	}
+	ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancelFunc()
+	for _, test := range tests {
+		txn := kvs.NewTxn()
+
+		out, ok, err := authHooks.deleteUserPref(ctx, kvs, txn, "", test.oper, false, test.in)
+		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, test.err == (err != nil), fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.out, out), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))
+		Assert(t, test.txnEmpty == txn.IsEmpty(), fmt.Sprintf("[%v] test failed, expected txn empty to be [%v], got [%v]", test.name, test.txnEmpty, txn.IsEmpty()))
+	}
+}
+
+func TestGenerateUserPref(t *testing.T) {
+	logConfig := log.GetDefaultConfig("TestAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+
+	authHooks := &authHooks{
+		logger: l,
+	}
+
+	tests := []struct {
+		name     string
+		oper     apiintf.APIOperType
+		in       interface{}
+		out      interface{}
+		result   bool
+		err      bool
+		txnEmpty bool
+	}{
+		{
+			name: "valid request",
+			oper: apiintf.CreateOper,
+			in: auth.User{
+				ObjectMeta: api.ObjectMeta{
+					Name:   "hello",
+					Tenant: "world",
+				},
+			},
+			out: auth.User{
+				ObjectMeta: api.ObjectMeta{
+					Name:   "hello",
+					Tenant: "world",
+				},
+			},
+			result:   true,
+			err:      false,
+			txnEmpty: false,
+		},
+		{
+			name: "invalid request",
+			oper: apiintf.DeleteOper,
+			in: auth.User{
+				ObjectMeta: api.ObjectMeta{
+					Name:   "hello",
+					Tenant: "world",
+				},
+			},
+			out: auth.User{
+				ObjectMeta: api.ObjectMeta{
+					Name:   "hello",
+					Tenant: "world",
+				},
+			},
+			result:   true,
+			err:      false,
+			txnEmpty: true,
+		},
+	}
+	ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancelFunc()
+	for _, test := range tests {
+		txn := kvs.NewTxn()
+
+		out, ok, err := authHooks.generateUserPref(ctx, kvs, txn, "", test.oper, false, test.in)
+		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, test.err == (err != nil), fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.out, out), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))
+		Assert(t, test.txnEmpty == txn.IsEmpty(), fmt.Sprintf("[%v] test failed, expected txn empty to be [%v], got [%v]", test.name, test.txnEmpty, txn.IsEmpty()))
 	}
 }

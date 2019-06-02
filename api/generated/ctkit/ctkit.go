@@ -61,6 +61,7 @@ type Controller interface {
 	AuthenticationPolicy() AuthenticationPolicyAPI       // return AuthenticationPolicy API interface
 	Role() RoleAPI                                       // return Role API interface
 	RoleBinding() RoleBindingAPI                         // return RoleBinding API interface
+	UserPreference() UserPreferenceAPI                   // return UserPreference API interface
 	Order() OrderAPI                                     // return Order API interface
 	Book() BookAPI                                       // return Book API interface
 	Publisher() PublisherAPI                             // return Publisher API interface

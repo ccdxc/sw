@@ -47,22 +47,27 @@ type EndpointsAuthV1Client struct {
 	AutoAddRoleEndpoint                    endpoint.Endpoint
 	AutoAddRoleBindingEndpoint             endpoint.Endpoint
 	AutoAddUserEndpoint                    endpoint.Endpoint
+	AutoAddUserPreferenceEndpoint          endpoint.Endpoint
 	AutoDeleteAuthenticationPolicyEndpoint endpoint.Endpoint
 	AutoDeleteRoleEndpoint                 endpoint.Endpoint
 	AutoDeleteRoleBindingEndpoint          endpoint.Endpoint
 	AutoDeleteUserEndpoint                 endpoint.Endpoint
+	AutoDeleteUserPreferenceEndpoint       endpoint.Endpoint
 	AutoGetAuthenticationPolicyEndpoint    endpoint.Endpoint
 	AutoGetRoleEndpoint                    endpoint.Endpoint
 	AutoGetRoleBindingEndpoint             endpoint.Endpoint
 	AutoGetUserEndpoint                    endpoint.Endpoint
+	AutoGetUserPreferenceEndpoint          endpoint.Endpoint
 	AutoListAuthenticationPolicyEndpoint   endpoint.Endpoint
 	AutoListRoleEndpoint                   endpoint.Endpoint
 	AutoListRoleBindingEndpoint            endpoint.Endpoint
 	AutoListUserEndpoint                   endpoint.Endpoint
+	AutoListUserPreferenceEndpoint         endpoint.Endpoint
 	AutoUpdateAuthenticationPolicyEndpoint endpoint.Endpoint
 	AutoUpdateRoleEndpoint                 endpoint.Endpoint
 	AutoUpdateRoleBindingEndpoint          endpoint.Endpoint
 	AutoUpdateUserEndpoint                 endpoint.Endpoint
+	AutoUpdateUserPreferenceEndpoint       endpoint.Endpoint
 	IsAuthorizedEndpoint                   endpoint.Endpoint
 	LdapBindCheckEndpoint                  endpoint.Endpoint
 	LdapConnectionCheckEndpoint            endpoint.Endpoint
@@ -82,27 +87,33 @@ type EndpointsAuthV1RestClient struct {
 	AutoAddRoleEndpoint                    endpoint.Endpoint
 	AutoAddRoleBindingEndpoint             endpoint.Endpoint
 	AutoAddUserEndpoint                    endpoint.Endpoint
+	AutoAddUserPreferenceEndpoint          endpoint.Endpoint
 	AutoDeleteAuthenticationPolicyEndpoint endpoint.Endpoint
 	AutoDeleteRoleEndpoint                 endpoint.Endpoint
 	AutoDeleteRoleBindingEndpoint          endpoint.Endpoint
 	AutoDeleteUserEndpoint                 endpoint.Endpoint
+	AutoDeleteUserPreferenceEndpoint       endpoint.Endpoint
 	AutoGetAuthenticationPolicyEndpoint    endpoint.Endpoint
 	AutoGetRoleEndpoint                    endpoint.Endpoint
 	AutoGetRoleBindingEndpoint             endpoint.Endpoint
 	AutoGetUserEndpoint                    endpoint.Endpoint
+	AutoGetUserPreferenceEndpoint          endpoint.Endpoint
 	AutoListAuthenticationPolicyEndpoint   endpoint.Endpoint
 	AutoListRoleEndpoint                   endpoint.Endpoint
 	AutoListRoleBindingEndpoint            endpoint.Endpoint
 	AutoListUserEndpoint                   endpoint.Endpoint
+	AutoListUserPreferenceEndpoint         endpoint.Endpoint
 	AutoUpdateAuthenticationPolicyEndpoint endpoint.Endpoint
 	AutoUpdateRoleEndpoint                 endpoint.Endpoint
 	AutoUpdateRoleBindingEndpoint          endpoint.Endpoint
 	AutoUpdateUserEndpoint                 endpoint.Endpoint
+	AutoUpdateUserPreferenceEndpoint       endpoint.Endpoint
 	AutoWatchAuthenticationPolicyEndpoint  endpoint.Endpoint
 	AutoWatchRoleEndpoint                  endpoint.Endpoint
 	AutoWatchRoleBindingEndpoint           endpoint.Endpoint
 	AutoWatchSvcAuthV1Endpoint             endpoint.Endpoint
 	AutoWatchUserEndpoint                  endpoint.Endpoint
+	AutoWatchUserPreferenceEndpoint        endpoint.Endpoint
 	IsAuthorizedEndpoint                   endpoint.Endpoint
 	LdapBindCheckEndpoint                  endpoint.Endpoint
 	LdapConnectionCheckEndpoint            endpoint.Endpoint
@@ -122,22 +133,27 @@ type EndpointsAuthV1Server struct {
 	AutoAddRoleEndpoint                    endpoint.Endpoint
 	AutoAddRoleBindingEndpoint             endpoint.Endpoint
 	AutoAddUserEndpoint                    endpoint.Endpoint
+	AutoAddUserPreferenceEndpoint          endpoint.Endpoint
 	AutoDeleteAuthenticationPolicyEndpoint endpoint.Endpoint
 	AutoDeleteRoleEndpoint                 endpoint.Endpoint
 	AutoDeleteRoleBindingEndpoint          endpoint.Endpoint
 	AutoDeleteUserEndpoint                 endpoint.Endpoint
+	AutoDeleteUserPreferenceEndpoint       endpoint.Endpoint
 	AutoGetAuthenticationPolicyEndpoint    endpoint.Endpoint
 	AutoGetRoleEndpoint                    endpoint.Endpoint
 	AutoGetRoleBindingEndpoint             endpoint.Endpoint
 	AutoGetUserEndpoint                    endpoint.Endpoint
+	AutoGetUserPreferenceEndpoint          endpoint.Endpoint
 	AutoListAuthenticationPolicyEndpoint   endpoint.Endpoint
 	AutoListRoleEndpoint                   endpoint.Endpoint
 	AutoListRoleBindingEndpoint            endpoint.Endpoint
 	AutoListUserEndpoint                   endpoint.Endpoint
+	AutoListUserPreferenceEndpoint         endpoint.Endpoint
 	AutoUpdateAuthenticationPolicyEndpoint endpoint.Endpoint
 	AutoUpdateRoleEndpoint                 endpoint.Endpoint
 	AutoUpdateRoleBindingEndpoint          endpoint.Endpoint
 	AutoUpdateUserEndpoint                 endpoint.Endpoint
+	AutoUpdateUserPreferenceEndpoint       endpoint.Endpoint
 	IsAuthorizedEndpoint                   endpoint.Endpoint
 	LdapBindCheckEndpoint                  endpoint.Endpoint
 	LdapConnectionCheckEndpoint            endpoint.Endpoint
@@ -149,6 +165,7 @@ type EndpointsAuthV1Server struct {
 	watchHandlerAuthenticationPolicy func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerRole                 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerRoleBinding          func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerUserPreference       func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
 
 // AutoAddAuthenticationPolicy is endpoint for AutoAddAuthenticationPolicy
@@ -204,6 +221,20 @@ func (e EndpointsAuthV1Client) AutoAddUser(ctx context.Context, in *User) (*User
 
 type respAuthV1AutoAddUser struct {
 	V   User
+	Err error
+}
+
+// AutoAddUserPreference is endpoint for AutoAddUserPreference
+func (e EndpointsAuthV1Client) AutoAddUserPreference(ctx context.Context, in *UserPreference) (*UserPreference, error) {
+	resp, err := e.AutoAddUserPreferenceEndpoint(ctx, in)
+	if err != nil {
+		return &UserPreference{}, err
+	}
+	return resp.(*UserPreference), nil
+}
+
+type respAuthV1AutoAddUserPreference struct {
+	V   UserPreference
 	Err error
 }
 
@@ -263,6 +294,20 @@ type respAuthV1AutoDeleteUser struct {
 	Err error
 }
 
+// AutoDeleteUserPreference is endpoint for AutoDeleteUserPreference
+func (e EndpointsAuthV1Client) AutoDeleteUserPreference(ctx context.Context, in *UserPreference) (*UserPreference, error) {
+	resp, err := e.AutoDeleteUserPreferenceEndpoint(ctx, in)
+	if err != nil {
+		return &UserPreference{}, err
+	}
+	return resp.(*UserPreference), nil
+}
+
+type respAuthV1AutoDeleteUserPreference struct {
+	V   UserPreference
+	Err error
+}
+
 // AutoGetAuthenticationPolicy is endpoint for AutoGetAuthenticationPolicy
 func (e EndpointsAuthV1Client) AutoGetAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error) {
 	resp, err := e.AutoGetAuthenticationPolicyEndpoint(ctx, in)
@@ -316,6 +361,20 @@ func (e EndpointsAuthV1Client) AutoGetUser(ctx context.Context, in *User) (*User
 
 type respAuthV1AutoGetUser struct {
 	V   User
+	Err error
+}
+
+// AutoGetUserPreference is endpoint for AutoGetUserPreference
+func (e EndpointsAuthV1Client) AutoGetUserPreference(ctx context.Context, in *UserPreference) (*UserPreference, error) {
+	resp, err := e.AutoGetUserPreferenceEndpoint(ctx, in)
+	if err != nil {
+		return &UserPreference{}, err
+	}
+	return resp.(*UserPreference), nil
+}
+
+type respAuthV1AutoGetUserPreference struct {
+	V   UserPreference
 	Err error
 }
 
@@ -375,6 +434,20 @@ type respAuthV1AutoListUser struct {
 	Err error
 }
 
+// AutoListUserPreference is endpoint for AutoListUserPreference
+func (e EndpointsAuthV1Client) AutoListUserPreference(ctx context.Context, in *api.ListWatchOptions) (*UserPreferenceList, error) {
+	resp, err := e.AutoListUserPreferenceEndpoint(ctx, in)
+	if err != nil {
+		return &UserPreferenceList{}, err
+	}
+	return resp.(*UserPreferenceList), nil
+}
+
+type respAuthV1AutoListUserPreference struct {
+	V   UserPreferenceList
+	Err error
+}
+
 // AutoUpdateAuthenticationPolicy is endpoint for AutoUpdateAuthenticationPolicy
 func (e EndpointsAuthV1Client) AutoUpdateAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error) {
 	resp, err := e.AutoUpdateAuthenticationPolicyEndpoint(ctx, in)
@@ -428,6 +501,20 @@ func (e EndpointsAuthV1Client) AutoUpdateUser(ctx context.Context, in *User) (*U
 
 type respAuthV1AutoUpdateUser struct {
 	V   User
+	Err error
+}
+
+// AutoUpdateUserPreference is endpoint for AutoUpdateUserPreference
+func (e EndpointsAuthV1Client) AutoUpdateUserPreference(ctx context.Context, in *UserPreference) (*UserPreference, error) {
+	resp, err := e.AutoUpdateUserPreferenceEndpoint(ctx, in)
+	if err != nil {
+		return &UserPreference{}, err
+	}
+	return resp.(*UserPreference), nil
+}
+
+type respAuthV1AutoUpdateUserPreference struct {
+	V   UserPreference
 	Err error
 }
 
@@ -539,6 +626,11 @@ func (e EndpointsAuthV1Client) AutoWatchRoleBinding(ctx context.Context, in *api
 	return e.Client.AutoWatchRoleBinding(ctx, in)
 }
 
+// AutoWatchUserPreference performs Watch for UserPreference
+func (e EndpointsAuthV1Client) AutoWatchUserPreference(ctx context.Context, in *api.ListWatchOptions) (AuthV1_AutoWatchUserPreferenceClient, error) {
+	return e.Client.AutoWatchUserPreference(ctx, in)
+}
+
 // AutoAddAuthenticationPolicy implementation on server Endpoint
 func (e EndpointsAuthV1Server) AutoAddAuthenticationPolicy(ctx context.Context, in AuthenticationPolicy) (AuthenticationPolicy, error) {
 	resp, err := e.AutoAddAuthenticationPolicyEndpoint(ctx, in)
@@ -625,6 +717,28 @@ func MakeAuthV1AutoAddUserEndpoint(s ServiceAuthV1Server, logger log.Logger) end
 		}, nil
 	}
 	return trace.ServerEndpoint("AuthV1:AutoAddUser")(f)
+}
+
+// AutoAddUserPreference implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoAddUserPreference(ctx context.Context, in UserPreference) (UserPreference, error) {
+	resp, err := e.AutoAddUserPreferenceEndpoint(ctx, in)
+	if err != nil {
+		return UserPreference{}, err
+	}
+	return *resp.(*UserPreference), nil
+}
+
+// MakeAuthV1AutoAddUserPreferenceEndpoint creates  AutoAddUserPreference endpoints for the service
+func MakeAuthV1AutoAddUserPreferenceEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*UserPreference)
+		v, err := s.AutoAddUserPreference(ctx, *req)
+		return respAuthV1AutoAddUserPreference{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoAddUserPreference")(f)
 }
 
 // AutoDeleteAuthenticationPolicy implementation on server Endpoint
@@ -715,6 +829,28 @@ func MakeAuthV1AutoDeleteUserEndpoint(s ServiceAuthV1Server, logger log.Logger) 
 	return trace.ServerEndpoint("AuthV1:AutoDeleteUser")(f)
 }
 
+// AutoDeleteUserPreference implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoDeleteUserPreference(ctx context.Context, in UserPreference) (UserPreference, error) {
+	resp, err := e.AutoDeleteUserPreferenceEndpoint(ctx, in)
+	if err != nil {
+		return UserPreference{}, err
+	}
+	return *resp.(*UserPreference), nil
+}
+
+// MakeAuthV1AutoDeleteUserPreferenceEndpoint creates  AutoDeleteUserPreference endpoints for the service
+func MakeAuthV1AutoDeleteUserPreferenceEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*UserPreference)
+		v, err := s.AutoDeleteUserPreference(ctx, *req)
+		return respAuthV1AutoDeleteUserPreference{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoDeleteUserPreference")(f)
+}
+
 // AutoGetAuthenticationPolicy implementation on server Endpoint
 func (e EndpointsAuthV1Server) AutoGetAuthenticationPolicy(ctx context.Context, in AuthenticationPolicy) (AuthenticationPolicy, error) {
 	resp, err := e.AutoGetAuthenticationPolicyEndpoint(ctx, in)
@@ -801,6 +937,28 @@ func MakeAuthV1AutoGetUserEndpoint(s ServiceAuthV1Server, logger log.Logger) end
 		}, nil
 	}
 	return trace.ServerEndpoint("AuthV1:AutoGetUser")(f)
+}
+
+// AutoGetUserPreference implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoGetUserPreference(ctx context.Context, in UserPreference) (UserPreference, error) {
+	resp, err := e.AutoGetUserPreferenceEndpoint(ctx, in)
+	if err != nil {
+		return UserPreference{}, err
+	}
+	return *resp.(*UserPreference), nil
+}
+
+// MakeAuthV1AutoGetUserPreferenceEndpoint creates  AutoGetUserPreference endpoints for the service
+func MakeAuthV1AutoGetUserPreferenceEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*UserPreference)
+		v, err := s.AutoGetUserPreference(ctx, *req)
+		return respAuthV1AutoGetUserPreference{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoGetUserPreference")(f)
 }
 
 // AutoListAuthenticationPolicy implementation on server Endpoint
@@ -891,6 +1049,28 @@ func MakeAuthV1AutoListUserEndpoint(s ServiceAuthV1Server, logger log.Logger) en
 	return trace.ServerEndpoint("AuthV1:AutoListUser")(f)
 }
 
+// AutoListUserPreference implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoListUserPreference(ctx context.Context, in api.ListWatchOptions) (UserPreferenceList, error) {
+	resp, err := e.AutoListUserPreferenceEndpoint(ctx, in)
+	if err != nil {
+		return UserPreferenceList{}, err
+	}
+	return *resp.(*UserPreferenceList), nil
+}
+
+// MakeAuthV1AutoListUserPreferenceEndpoint creates  AutoListUserPreference endpoints for the service
+func MakeAuthV1AutoListUserPreferenceEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListUserPreference(ctx, *req)
+		return respAuthV1AutoListUserPreference{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoListUserPreference")(f)
+}
+
 // AutoUpdateAuthenticationPolicy implementation on server Endpoint
 func (e EndpointsAuthV1Server) AutoUpdateAuthenticationPolicy(ctx context.Context, in AuthenticationPolicy) (AuthenticationPolicy, error) {
 	resp, err := e.AutoUpdateAuthenticationPolicyEndpoint(ctx, in)
@@ -977,6 +1157,28 @@ func MakeAuthV1AutoUpdateUserEndpoint(s ServiceAuthV1Server, logger log.Logger) 
 		}, nil
 	}
 	return trace.ServerEndpoint("AuthV1:AutoUpdateUser")(f)
+}
+
+// AutoUpdateUserPreference implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoUpdateUserPreference(ctx context.Context, in UserPreference) (UserPreference, error) {
+	resp, err := e.AutoUpdateUserPreferenceEndpoint(ctx, in)
+	if err != nil {
+		return UserPreference{}, err
+	}
+	return *resp.(*UserPreference), nil
+}
+
+// MakeAuthV1AutoUpdateUserPreferenceEndpoint creates  AutoUpdateUserPreference endpoints for the service
+func MakeAuthV1AutoUpdateUserPreferenceEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*UserPreference)
+		v, err := s.AutoUpdateUserPreference(ctx, *req)
+		return respAuthV1AutoUpdateUserPreference{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoUpdateUserPreference")(f)
 }
 
 // IsAuthorized implementation on server Endpoint
@@ -1175,6 +1377,19 @@ func MakeAutoWatchRoleBindingEndpoint(s ServiceAuthV1Server, logger log.Logger) 
 	}
 }
 
+// AutoWatchUserPreference is the watch handler for UserPreference on the server side.
+func (e EndpointsAuthV1Server) AutoWatchUserPreference(in *api.ListWatchOptions, stream AuthV1_AutoWatchUserPreferenceServer) error {
+	return e.watchHandlerUserPreference(in, stream)
+}
+
+// MakeAutoWatchUserPreferenceEndpoint creates the Watch endpoint
+func MakeAutoWatchUserPreferenceEndpoint(s ServiceAuthV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(AuthV1_AutoWatchUserPreferenceServer)
+		return s.AutoWatchUserPreference(options, wstream)
+	}
+}
+
 // MakeAuthV1ServerEndpoints creates server endpoints
 func MakeAuthV1ServerEndpoints(s ServiceAuthV1Server, logger log.Logger) EndpointsAuthV1Server {
 	return EndpointsAuthV1Server{
@@ -1184,22 +1399,27 @@ func MakeAuthV1ServerEndpoints(s ServiceAuthV1Server, logger log.Logger) Endpoin
 		AutoAddRoleEndpoint:                    MakeAuthV1AutoAddRoleEndpoint(s, logger),
 		AutoAddRoleBindingEndpoint:             MakeAuthV1AutoAddRoleBindingEndpoint(s, logger),
 		AutoAddUserEndpoint:                    MakeAuthV1AutoAddUserEndpoint(s, logger),
+		AutoAddUserPreferenceEndpoint:          MakeAuthV1AutoAddUserPreferenceEndpoint(s, logger),
 		AutoDeleteAuthenticationPolicyEndpoint: MakeAuthV1AutoDeleteAuthenticationPolicyEndpoint(s, logger),
 		AutoDeleteRoleEndpoint:                 MakeAuthV1AutoDeleteRoleEndpoint(s, logger),
 		AutoDeleteRoleBindingEndpoint:          MakeAuthV1AutoDeleteRoleBindingEndpoint(s, logger),
 		AutoDeleteUserEndpoint:                 MakeAuthV1AutoDeleteUserEndpoint(s, logger),
+		AutoDeleteUserPreferenceEndpoint:       MakeAuthV1AutoDeleteUserPreferenceEndpoint(s, logger),
 		AutoGetAuthenticationPolicyEndpoint:    MakeAuthV1AutoGetAuthenticationPolicyEndpoint(s, logger),
 		AutoGetRoleEndpoint:                    MakeAuthV1AutoGetRoleEndpoint(s, logger),
 		AutoGetRoleBindingEndpoint:             MakeAuthV1AutoGetRoleBindingEndpoint(s, logger),
 		AutoGetUserEndpoint:                    MakeAuthV1AutoGetUserEndpoint(s, logger),
+		AutoGetUserPreferenceEndpoint:          MakeAuthV1AutoGetUserPreferenceEndpoint(s, logger),
 		AutoListAuthenticationPolicyEndpoint:   MakeAuthV1AutoListAuthenticationPolicyEndpoint(s, logger),
 		AutoListRoleEndpoint:                   MakeAuthV1AutoListRoleEndpoint(s, logger),
 		AutoListRoleBindingEndpoint:            MakeAuthV1AutoListRoleBindingEndpoint(s, logger),
 		AutoListUserEndpoint:                   MakeAuthV1AutoListUserEndpoint(s, logger),
+		AutoListUserPreferenceEndpoint:         MakeAuthV1AutoListUserPreferenceEndpoint(s, logger),
 		AutoUpdateAuthenticationPolicyEndpoint: MakeAuthV1AutoUpdateAuthenticationPolicyEndpoint(s, logger),
 		AutoUpdateRoleEndpoint:                 MakeAuthV1AutoUpdateRoleEndpoint(s, logger),
 		AutoUpdateRoleBindingEndpoint:          MakeAuthV1AutoUpdateRoleBindingEndpoint(s, logger),
 		AutoUpdateUserEndpoint:                 MakeAuthV1AutoUpdateUserEndpoint(s, logger),
+		AutoUpdateUserPreferenceEndpoint:       MakeAuthV1AutoUpdateUserPreferenceEndpoint(s, logger),
 		IsAuthorizedEndpoint:                   MakeAuthV1IsAuthorizedEndpoint(s, logger),
 		LdapBindCheckEndpoint:                  MakeAuthV1LdapBindCheckEndpoint(s, logger),
 		LdapConnectionCheckEndpoint:            MakeAuthV1LdapConnectionCheckEndpoint(s, logger),
@@ -1211,6 +1431,7 @@ func MakeAuthV1ServerEndpoints(s ServiceAuthV1Server, logger log.Logger) Endpoin
 		watchHandlerAuthenticationPolicy: MakeAutoWatchAuthenticationPolicyEndpoint(s, logger),
 		watchHandlerRole:                 MakeAutoWatchRoleEndpoint(s, logger),
 		watchHandlerRoleBinding:          MakeAutoWatchRoleBindingEndpoint(s, logger),
+		watchHandlerUserPreference:       MakeAutoWatchUserPreferenceEndpoint(s, logger),
 	}
 }
 
@@ -1296,6 +1517,19 @@ func (m loggingAuthV1MiddlewareClient) AutoAddUser(ctx context.Context, in *User
 	resp, err = m.next.AutoAddUser(ctx, in)
 	return
 }
+func (m loggingAuthV1MiddlewareClient) AutoAddUserPreference(ctx context.Context, in *UserPreference) (resp *UserPreference, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoAddUserPreference", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoAddUserPreference(ctx, in)
+	return
+}
 func (m loggingAuthV1MiddlewareClient) AutoDeleteAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy) (resp *AuthenticationPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1346,6 +1580,19 @@ func (m loggingAuthV1MiddlewareClient) AutoDeleteUser(ctx context.Context, in *U
 		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoDeleteUser", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteUser(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) AutoDeleteUserPreference(ctx context.Context, in *UserPreference) (resp *UserPreference, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoDeleteUserPreference", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoDeleteUserPreference(ctx, in)
 	return
 }
 func (m loggingAuthV1MiddlewareClient) AutoGetAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy) (resp *AuthenticationPolicy, err error) {
@@ -1400,6 +1647,19 @@ func (m loggingAuthV1MiddlewareClient) AutoGetUser(ctx context.Context, in *User
 	resp, err = m.next.AutoGetUser(ctx, in)
 	return
 }
+func (m loggingAuthV1MiddlewareClient) AutoGetUserPreference(ctx context.Context, in *UserPreference) (resp *UserPreference, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoGetUserPreference", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoGetUserPreference(ctx, in)
+	return
+}
 func (m loggingAuthV1MiddlewareClient) AutoListAuthenticationPolicy(ctx context.Context, in *api.ListWatchOptions) (resp *AuthenticationPolicyList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1452,6 +1712,19 @@ func (m loggingAuthV1MiddlewareClient) AutoListUser(ctx context.Context, in *api
 	resp, err = m.next.AutoListUser(ctx, in)
 	return
 }
+func (m loggingAuthV1MiddlewareClient) AutoListUserPreference(ctx context.Context, in *api.ListWatchOptions) (resp *UserPreferenceList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoListUserPreference", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoListUserPreference(ctx, in)
+	return
+}
 func (m loggingAuthV1MiddlewareClient) AutoUpdateAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy) (resp *AuthenticationPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1502,6 +1775,19 @@ func (m loggingAuthV1MiddlewareClient) AutoUpdateUser(ctx context.Context, in *U
 		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateUser", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateUser(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) AutoUpdateUserPreference(ctx context.Context, in *UserPreference) (resp *UserPreference, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateUserPreference", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoUpdateUserPreference(ctx, in)
 	return
 }
 func (m loggingAuthV1MiddlewareClient) IsAuthorized(ctx context.Context, in *SubjectAccessReviewRequest) (resp *User, err error) {
@@ -1649,6 +1935,19 @@ func (m loggingAuthV1MiddlewareClient) AutoWatchRoleBinding(ctx context.Context,
 	resp, err = m.next.AutoWatchRoleBinding(ctx, in)
 	return
 }
+func (m loggingAuthV1MiddlewareClient) AutoWatchUserPreference(ctx context.Context, in *api.ListWatchOptions) (resp AuthV1_AutoWatchUserPreferenceClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoWatchUserPreference", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoWatchUserPreference(ctx, in)
+	return
+}
 
 func (m loggingAuthV1MiddlewareServer) AutoAddAuthenticationPolicy(ctx context.Context, in AuthenticationPolicy) (resp AuthenticationPolicy, err error) {
 	defer func(begin time.Time) {
@@ -1700,6 +1999,19 @@ func (m loggingAuthV1MiddlewareServer) AutoAddUser(ctx context.Context, in User)
 		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoAddUser", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoAddUser(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareServer) AutoAddUserPreference(ctx context.Context, in UserPreference) (resp UserPreference, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoAddUserPreference", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddUserPreference(ctx, in)
 	return
 }
 func (m loggingAuthV1MiddlewareServer) AutoDeleteAuthenticationPolicy(ctx context.Context, in AuthenticationPolicy) (resp AuthenticationPolicy, err error) {
@@ -1754,6 +2066,19 @@ func (m loggingAuthV1MiddlewareServer) AutoDeleteUser(ctx context.Context, in Us
 	resp, err = m.next.AutoDeleteUser(ctx, in)
 	return
 }
+func (m loggingAuthV1MiddlewareServer) AutoDeleteUserPreference(ctx context.Context, in UserPreference) (resp UserPreference, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoDeleteUserPreference", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteUserPreference(ctx, in)
+	return
+}
 func (m loggingAuthV1MiddlewareServer) AutoGetAuthenticationPolicy(ctx context.Context, in AuthenticationPolicy) (resp AuthenticationPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1804,6 +2129,19 @@ func (m loggingAuthV1MiddlewareServer) AutoGetUser(ctx context.Context, in User)
 		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoGetUser", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoGetUser(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareServer) AutoGetUserPreference(ctx context.Context, in UserPreference) (resp UserPreference, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoGetUserPreference", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetUserPreference(ctx, in)
 	return
 }
 func (m loggingAuthV1MiddlewareServer) AutoListAuthenticationPolicy(ctx context.Context, in api.ListWatchOptions) (resp AuthenticationPolicyList, err error) {
@@ -1858,6 +2196,19 @@ func (m loggingAuthV1MiddlewareServer) AutoListUser(ctx context.Context, in api.
 	resp, err = m.next.AutoListUser(ctx, in)
 	return
 }
+func (m loggingAuthV1MiddlewareServer) AutoListUserPreference(ctx context.Context, in api.ListWatchOptions) (resp UserPreferenceList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoListUserPreference", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListUserPreference(ctx, in)
+	return
+}
 func (m loggingAuthV1MiddlewareServer) AutoUpdateAuthenticationPolicy(ctx context.Context, in AuthenticationPolicy) (resp AuthenticationPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1908,6 +2259,19 @@ func (m loggingAuthV1MiddlewareServer) AutoUpdateUser(ctx context.Context, in Us
 		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateUser", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateUser(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareServer) AutoUpdateUserPreference(ctx context.Context, in UserPreference) (resp UserPreference, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateUserPreference", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateUserPreference(ctx, in)
 	return
 }
 func (m loggingAuthV1MiddlewareServer) IsAuthorized(ctx context.Context, in SubjectAccessReviewRequest) (resp User, err error) {
@@ -2055,6 +2419,19 @@ func (m loggingAuthV1MiddlewareServer) AutoWatchRoleBinding(in *api.ListWatchOpt
 	err = m.next.AutoWatchRoleBinding(in, stream)
 	return
 }
+func (m loggingAuthV1MiddlewareServer) AutoWatchUserPreference(in *api.ListWatchOptions, stream AuthV1_AutoWatchUserPreferenceServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "AuthV1", "method", "AutoWatchUserPreference", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchUserPreference(in, stream)
+	return
+}
 
 func (r *EndpointsAuthV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
 	val, ok := loginctx.AuthzHeaderFromContext(ctx)
@@ -2100,6 +2477,12 @@ func makeURIAuthV1AutoAddUserCreateOper(in *User) string {
 }
 
 //
+func makeURIAuthV1AutoAddUserPreferenceCreateOper(in *UserPreference) string {
+	return ""
+
+}
+
+//
 func makeURIAuthV1AutoDeleteAuthenticationPolicyDeleteOper(in *AuthenticationPolicy) string {
 	return ""
 
@@ -2121,6 +2504,12 @@ func makeURIAuthV1AutoDeleteUserDeleteOper(in *User) string {
 }
 
 //
+func makeURIAuthV1AutoDeleteUserPreferenceDeleteOper(in *UserPreference) string {
+	return ""
+
+}
+
+//
 func makeURIAuthV1AutoGetAuthenticationPolicyGetOper(in *AuthenticationPolicy) string {
 	return fmt.Sprint("/configs/auth/v1", "/authn-policy")
 }
@@ -2138,6 +2527,11 @@ func makeURIAuthV1AutoGetRoleBindingGetOper(in *RoleBinding) string {
 //
 func makeURIAuthV1AutoGetUserGetOper(in *User) string {
 	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/users/", in.Name)
+}
+
+//
+func makeURIAuthV1AutoGetUserPreferenceGetOper(in *UserPreference) string {
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/user-preferences/", in.Name)
 }
 
 //
@@ -2162,6 +2556,12 @@ func makeURIAuthV1AutoListUserListOper(in *api.ListWatchOptions) string {
 }
 
 //
+func makeURIAuthV1AutoListUserPreferenceListOper(in *api.ListWatchOptions) string {
+	return ""
+
+}
+
+//
 func makeURIAuthV1AutoUpdateAuthenticationPolicyUpdateOper(in *AuthenticationPolicy) string {
 	return fmt.Sprint("/configs/auth/v1", "/authn-policy")
 }
@@ -2179,6 +2579,11 @@ func makeURIAuthV1AutoUpdateRoleBindingUpdateOper(in *RoleBinding) string {
 //
 func makeURIAuthV1AutoUpdateUserUpdateOper(in *User) string {
 	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/users/", in.Name)
+}
+
+//
+func makeURIAuthV1AutoUpdateUserPreferenceUpdateOper(in *UserPreference) string {
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/user-preferences/", in.Name)
 }
 
 //
@@ -2205,6 +2610,12 @@ func makeURIAuthV1AutoWatchSvcAuthV1WatchOper(in *api.ListWatchOptions) string {
 //
 func makeURIAuthV1AutoWatchUserWatchOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/auth/v1", "/watch/tenant/", in.Tenant, "/users")
+}
+
+//
+func makeURIAuthV1AutoWatchUserPreferenceWatchOper(in *api.ListWatchOptions) string {
+	return ""
+
 }
 
 //
@@ -2933,6 +3344,113 @@ func (r *EndpointsAuthV1RestClient) AutoWatchRoleBinding(ctx context.Context, op
 	bridgefn := func(lw *listerwatcher.WatcherClient) {
 		for {
 			in := &AutoMsgRoleBindingWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
+	return lw, nil
+}
+
+// AutoAddUserPreference CRUD method for UserPreference
+func (r *EndpointsAuthV1RestClient) AutoAddUserPreference(ctx context.Context, in *UserPreference) (*UserPreference, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoUpdateUserPreference CRUD method for UserPreference
+func (r *EndpointsAuthV1RestClient) AutoUpdateUserPreference(ctx context.Context, in *UserPreference) (*UserPreference, error) {
+	path := makeURIAuthV1AutoUpdateUserPreferenceUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespAuthV1AutoUpdateUserPreference(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*UserPreference), err
+}
+
+// AutoGetUserPreference CRUD method for UserPreference
+func (r *EndpointsAuthV1RestClient) AutoGetUserPreference(ctx context.Context, in *UserPreference) (*UserPreference, error) {
+	path := makeURIAuthV1AutoGetUserPreferenceGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespAuthV1AutoGetUserPreference(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*UserPreference), err
+}
+
+// AutoDeleteUserPreference CRUD method for UserPreference
+func (r *EndpointsAuthV1RestClient) AutoDeleteUserPreference(ctx context.Context, in *UserPreference) (*UserPreference, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoListUserPreference CRUD method for UserPreference
+func (r *EndpointsAuthV1RestClient) AutoListUserPreference(ctx context.Context, options *api.ListWatchOptions) (*UserPreferenceList, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoWatchUserPreference CRUD method for UserPreference
+func (r *EndpointsAuthV1RestClient) AutoWatchUserPreference(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIAuthV1AutoWatchUserPreferenceWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgUserPreferenceWatchHelper{}
 			err := conn.ReadJSON(in)
 			if err != nil {
 				return

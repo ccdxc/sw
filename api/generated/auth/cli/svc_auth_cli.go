@@ -357,6 +357,63 @@ func restPutRoleBinding(hostname, token string, obj interface{}) error {
 
 }
 
+func restGetUserPreference(hostname, tenant, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*auth.UserPreference); ok {
+		nv, err := restcl.AuthV1().UserPreference().Get(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+
+	if v, ok := obj.(*auth.UserPreferenceList); ok {
+		objMeta := api.ObjectMeta{}
+		nv, err := restcl.AuthV1().UserPreference().Get(loginCtx, &objMeta)
+		if err != nil {
+			return err
+		}
+		v.Items = append(v.Items, nv)
+	}
+	return nil
+
+}
+
+func restDeleteUserPreference(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("delete operation not supported for UserPreference object")
+}
+
+func restPostUserPreference(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("create operation not supported for UserPreference object")
+}
+
+func restPutUserPreference(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*auth.UserPreference); ok {
+		nv, err := restcl.AuthV1().UserPreference().Update(loginCtx, v)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
 func init() {
 	cl := gen.GetInfo()
 	if cl == nil {
@@ -382,5 +439,8 @@ func init() {
 	cl.AddRestDeleteFunc("auth.RoleBinding", "v1", restDeleteRoleBinding)
 	cl.AddRestPutFunc("auth.RoleBinding", "v1", restPutRoleBinding)
 	cl.AddRestGetFunc("auth.RoleBinding", "v1", restGetRoleBinding)
+
+	cl.AddRestPutFunc("auth.UserPreference", "v1", restPutUserPreference)
+	cl.AddRestGetFunc("auth.UserPreference", "v1", restGetUserPreference)
 
 }

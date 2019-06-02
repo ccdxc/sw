@@ -468,6 +468,36 @@ func TestGetVersionInfo(t *testing.T) {
 	}, fmt.Sprintf("error while retrieving version"))
 }
 
+func TestGetUserPreference(t *testing.T) {
+	adminCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	}
+	// create default tenant and global admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, adminCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, adminCred, tinfo.l)
+
+	// create normalUser2 with limited access
+	MustCreateTestUser(tinfo.apicl, "normalUser2", testPassword, globals.DefaultTenant)
+	defer MustDeleteUser(tinfo.apicl, "normalUser2", globals.DefaultTenant)
+
+	// logged in as an normal user with no access
+	ctx, err := NewLoggedInContext(context.Background(), tinfo.apiGwAddr, &auth.PasswordCredential{
+		Username: "normalUser2",
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	})
+	AssertOk(t, err, "error creating logged in context")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := tinfo.restcl.AuthV1().UserPreference().Get(ctx, &api.ObjectMeta{Name: "normalUser2", Tenant: globals.DefaultTenant})
+		return err == nil, err
+	}, fmt.Sprintf("error while retrieving user preference"))
+}
+
 func TestUserSelfOperations(t *testing.T) {
 	userCred := &auth.PasswordCredential{
 		Username: testUser,

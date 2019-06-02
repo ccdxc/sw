@@ -54,22 +54,27 @@ type eAuthV1Endpoints struct {
 	fnAutoAddRole                    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddRoleBinding             func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddUser                    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddUserPreference          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteAuthenticationPolicy func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteRole                 func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteRoleBinding          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteUser                 func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteUserPreference       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetAuthenticationPolicy    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetRole                    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetRoleBinding             func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetUser                    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetUserPreference          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListAuthenticationPolicy   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListRole                   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListRoleBinding            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListUser                   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListUserPreference         func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateAuthenticationPolicy func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateRole                 func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateRoleBinding          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateUser                 func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateUserPreference       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnIsAuthorized                   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnLdapBindCheck                  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnLdapConnectionCheck            func(ctx context.Context, t interface{}) (interface{}, error)
@@ -81,6 +86,7 @@ type eAuthV1Endpoints struct {
 	fnAutoWatchAuthenticationPolicy func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchRole                 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchRoleBinding          func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchUserPreference       func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 
 func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
@@ -120,6 +126,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 		"auth.AutoMsgAuthenticationPolicyWatchHelper": apisrvpkg.NewMessage("auth.AutoMsgAuthenticationPolicyWatchHelper"),
 		"auth.AutoMsgRoleBindingWatchHelper":          apisrvpkg.NewMessage("auth.AutoMsgRoleBindingWatchHelper"),
 		"auth.AutoMsgRoleWatchHelper":                 apisrvpkg.NewMessage("auth.AutoMsgRoleWatchHelper"),
+		"auth.AutoMsgUserPreferenceWatchHelper":       apisrvpkg.NewMessage("auth.AutoMsgUserPreferenceWatchHelper"),
 		"auth.AutoMsgUserWatchHelper":                 apisrvpkg.NewMessage("auth.AutoMsgUserWatchHelper"),
 		"auth.RoleBindingList": apisrvpkg.NewMessage("auth.RoleBindingList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -221,6 +228,38 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			r := i.(auth.UserList)
 			return &r
 		}),
+		"auth.UserPreferenceList": apisrvpkg.NewMessage("auth.UserPreferenceList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := auth.UserPreferenceList{}
+			into.Kind = "UserPreferenceList"
+			r := auth.UserPreference{}
+			r.ObjectMeta = options.ObjectMeta
+			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
+			ctx = apiutils.SetVar(ctx, "ObjKind", "auth.UserPreference")
+			err := kvs.ListFiltered(ctx, key, &into, *options)
+			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
+				return nil, err
+			}
+			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(auth.UserPreferenceList)
+			r.APIVersion = ver
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
+			}
+			return r, nil
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(auth.UserPreferenceList)
+			return &r
+		}),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
@@ -273,6 +312,11 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/users/", in.Name), nil
 		}).HandleInvocation
 
+		s.endpointsAuthV1.fnAutoAddUserPreference = srv.AddMethod("AutoAddUserPreference",
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.UserPreference"], pkgMessages["auth.UserPreference"], "auth", "AutoAddUserPreference")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
 		s.endpointsAuthV1.fnAutoDeleteAuthenticationPolicy = srv.AddMethod("AutoDeleteAuthenticationPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "AutoDeleteAuthenticationPolicy")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
@@ -303,6 +347,11 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/users/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsAuthV1.fnAutoDeleteUserPreference = srv.AddMethod("AutoDeleteUserPreference",
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.UserPreference"], pkgMessages["auth.UserPreference"], "auth", "AutoDeleteUserPreference")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoGetAuthenticationPolicy = srv.AddMethod("AutoGetAuthenticationPolicy",
@@ -337,6 +386,15 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/users/", in.Name), nil
 		}).HandleInvocation
 
+		s.endpointsAuthV1.fnAutoGetUserPreference = srv.AddMethod("AutoGetUserPreference",
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.UserPreference"], pkgMessages["auth.UserPreference"], "auth", "AutoGetUserPreference")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(auth.UserPreference)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/user-preferences/", in.Name), nil
+		}).HandleInvocation
+
 		s.endpointsAuthV1.fnAutoListAuthenticationPolicy = srv.AddMethod("AutoListAuthenticationPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["auth.AuthenticationPolicyList"], "auth", "AutoListAuthenticationPolicy")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
@@ -369,6 +427,11 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/users/", in.Name), nil
 		}).HandleInvocation
 
+		s.endpointsAuthV1.fnAutoListUserPreference = srv.AddMethod("AutoListUserPreference",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["auth.UserPreferenceList"], "auth", "AutoListUserPreference")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
 		s.endpointsAuthV1.fnAutoUpdateAuthenticationPolicy = srv.AddMethod("AutoUpdateAuthenticationPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "AutoUpdateAuthenticationPolicy")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy"), nil
@@ -399,6 +462,15 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/users/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsAuthV1.fnAutoUpdateUserPreference = srv.AddMethod("AutoUpdateUserPreference",
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.UserPreference"], pkgMessages["auth.UserPreference"], "auth", "AutoUpdateUserPreference")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(auth.UserPreference)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/user-preferences/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnIsAuthorized = srv.AddMethod("IsAuthorized",
@@ -451,6 +523,8 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 
 		s.endpointsAuthV1.fnAutoWatchRoleBinding = pkgMessages["auth.RoleBinding"].WatchFromKv
 
+		s.endpointsAuthV1.fnAutoWatchUserPreference = pkgMessages["auth.UserPreference"].WatchFromKv
+
 		s.Services = map[string]apiserver.Service{
 			"auth.AuthV1": srv,
 		}
@@ -458,7 +532,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		endpoints := auth.MakeAuthV1ServerEndpoints(s.endpointsAuthV1, logger)
 		server := auth.MakeGRPCServerAuthV1(ctx, endpoints, logger)
 		auth.RegisterAuthV1Server(grpcserver.GrpcServer, server)
-		svcObjs := []string{"User", "AuthenticationPolicy", "Role", "RoleBinding"}
+		svcObjs := []string{"User", "AuthenticationPolicy", "Role", "RoleBinding", "UserPreference"}
 		fieldhooks.RegisterImmutableFieldsServiceHooks("auth", "AuthV1", svcObjs)
 	}
 }
@@ -899,6 +973,106 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			}
 		})
 
+		pkgMessages["auth.UserPreference"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+			o := auth.UserPreference{}
+			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
+			wstream := stream.(auth.AuthV1_AutoWatchUserPreferenceServer)
+			nctx, cancel := context.WithCancel(wstream.Context())
+			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
+			nctx = apiutils.SetVar(nctx, "ObjKind", "auth.UserPreference")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "auth.UserPreference")
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
+			if err != nil {
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "auth.UserPreference")
+				return err
+			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &auth.AutoMsgUserPreferenceWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "auth.UserPreference")
+					return err
+				}
+				events = &auth.AutoMsgUserPreferenceWatchHelper{}
+				return nil
+			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "auth.UserPreference")
+			for {
+				select {
+				case ev, ok := <-watcher.EventChan():
+					if !ok {
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "auth.UserPreference")
+						return nil
+					}
+					evin, ok := ev.Object.(*auth.UserPreference)
+					if !ok {
+						status, ok := ev.Object.(*api.Status)
+						if !ok {
+							return errors.New("unknown error")
+						}
+						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
+					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*auth.UserPreference)
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "auth")
+
+					strEvent := &auth.AutoMsgUserPreferenceWatchHelper_WatchEvent{
+						Type:   string(ev.Type),
+						Object: in,
+					}
+					l.DebugLog("msg", "received UserPreference watch event from KV", "type", ev.Type)
+					if version != in.APIVersion {
+						i, err := txfn(in.APIVersion, version, in)
+						if err != nil {
+							l.ErrorLog("msg", "Failed to transform message", "type", "UserPreference", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "auth.UserPreference")
+							break
+						}
+						strEvent.Object = i.(*auth.UserPreference)
+					}
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
+						return err
+					}
+				case <-nctx.Done():
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "auth.UserPreference")
+					return wstream.Context().Err()
+				}
+			}
+		})
+
 	}
 
 }
@@ -950,6 +1124,14 @@ func (e *eAuthV1Endpoints) AutoAddUser(ctx context.Context, t auth.User) (auth.U
 	return auth.User{}, err
 
 }
+func (e *eAuthV1Endpoints) AutoAddUserPreference(ctx context.Context, t auth.UserPreference) (auth.UserPreference, error) {
+	r, err := e.fnAutoAddUserPreference(ctx, t)
+	if err == nil {
+		return r.(auth.UserPreference), err
+	}
+	return auth.UserPreference{}, err
+
+}
 func (e *eAuthV1Endpoints) AutoDeleteAuthenticationPolicy(ctx context.Context, t auth.AuthenticationPolicy) (auth.AuthenticationPolicy, error) {
 	r, err := e.fnAutoDeleteAuthenticationPolicy(ctx, t)
 	if err == nil {
@@ -980,6 +1162,14 @@ func (e *eAuthV1Endpoints) AutoDeleteUser(ctx context.Context, t auth.User) (aut
 		return r.(auth.User), err
 	}
 	return auth.User{}, err
+
+}
+func (e *eAuthV1Endpoints) AutoDeleteUserPreference(ctx context.Context, t auth.UserPreference) (auth.UserPreference, error) {
+	r, err := e.fnAutoDeleteUserPreference(ctx, t)
+	if err == nil {
+		return r.(auth.UserPreference), err
+	}
+	return auth.UserPreference{}, err
 
 }
 func (e *eAuthV1Endpoints) AutoGetAuthenticationPolicy(ctx context.Context, t auth.AuthenticationPolicy) (auth.AuthenticationPolicy, error) {
@@ -1014,6 +1204,14 @@ func (e *eAuthV1Endpoints) AutoGetUser(ctx context.Context, t auth.User) (auth.U
 	return auth.User{}, err
 
 }
+func (e *eAuthV1Endpoints) AutoGetUserPreference(ctx context.Context, t auth.UserPreference) (auth.UserPreference, error) {
+	r, err := e.fnAutoGetUserPreference(ctx, t)
+	if err == nil {
+		return r.(auth.UserPreference), err
+	}
+	return auth.UserPreference{}, err
+
+}
 func (e *eAuthV1Endpoints) AutoListAuthenticationPolicy(ctx context.Context, t api.ListWatchOptions) (auth.AuthenticationPolicyList, error) {
 	r, err := e.fnAutoListAuthenticationPolicy(ctx, t)
 	if err == nil {
@@ -1046,6 +1244,14 @@ func (e *eAuthV1Endpoints) AutoListUser(ctx context.Context, t api.ListWatchOpti
 	return auth.UserList{}, err
 
 }
+func (e *eAuthV1Endpoints) AutoListUserPreference(ctx context.Context, t api.ListWatchOptions) (auth.UserPreferenceList, error) {
+	r, err := e.fnAutoListUserPreference(ctx, t)
+	if err == nil {
+		return r.(auth.UserPreferenceList), err
+	}
+	return auth.UserPreferenceList{}, err
+
+}
 func (e *eAuthV1Endpoints) AutoUpdateAuthenticationPolicy(ctx context.Context, t auth.AuthenticationPolicy) (auth.AuthenticationPolicy, error) {
 	r, err := e.fnAutoUpdateAuthenticationPolicy(ctx, t)
 	if err == nil {
@@ -1076,6 +1282,14 @@ func (e *eAuthV1Endpoints) AutoUpdateUser(ctx context.Context, t auth.User) (aut
 		return r.(auth.User), err
 	}
 	return auth.User{}, err
+
+}
+func (e *eAuthV1Endpoints) AutoUpdateUserPreference(ctx context.Context, t auth.UserPreference) (auth.UserPreference, error) {
+	r, err := e.fnAutoUpdateUserPreference(ctx, t)
+	if err == nil {
+		return r.(auth.UserPreference), err
+	}
+	return auth.UserPreference{}, err
 
 }
 func (e *eAuthV1Endpoints) IsAuthorized(ctx context.Context, t auth.SubjectAccessReviewRequest) (auth.User, error) {
@@ -1138,6 +1352,9 @@ func (e *eAuthV1Endpoints) AutoWatchRole(in *api.ListWatchOptions, stream auth.A
 }
 func (e *eAuthV1Endpoints) AutoWatchRoleBinding(in *api.ListWatchOptions, stream auth.AuthV1_AutoWatchRoleBindingServer) error {
 	return e.fnAutoWatchRoleBinding(in, stream, "auth")
+}
+func (e *eAuthV1Endpoints) AutoWatchUserPreference(in *api.ListWatchOptions, stream auth.AuthV1_AutoWatchUserPreferenceServer) error {
+	return e.fnAutoWatchUserPreference(in, stream, "auth")
 }
 func (e *eAuthV1Endpoints) AutoWatchSvcAuthV1(in *api.ListWatchOptions, stream auth.AuthV1_AutoWatchSvcAuthV1Server) error {
 	return e.fnAutoWatchSvcAuthV1(in, stream, "")

@@ -69,11 +69,24 @@ type AuthV1RoleBindingInterface interface {
 	Allowed(oper apiintf.APIOperType) bool
 }
 
+// AuthV1UserPreferenceInterface exposes the CRUD methods for UserPreference
+type AuthV1UserPreferenceInterface interface {
+	Create(ctx context.Context, in *UserPreference) (*UserPreference, error)
+	Update(ctx context.Context, in *UserPreference) (*UserPreference, error)
+	UpdateStatus(ctx context.Context, in *UserPreference) (*UserPreference, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*UserPreference, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*UserPreference, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*UserPreference, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiintf.APIOperType) bool
+}
+
 // AuthV1Interface exposes objects with CRUD operations allowed by the service
 type AuthV1Interface interface {
 	User() AuthV1UserInterface
 	AuthenticationPolicy() AuthV1AuthenticationPolicyInterface
 	Role() AuthV1RoleInterface
 	RoleBinding() AuthV1RoleBindingInterface
+	UserPreference() AuthV1UserPreferenceInterface
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

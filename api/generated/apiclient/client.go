@@ -54,7 +54,7 @@ const (
 type Services interface {
 	Close() error
 
-	// Package is auth and len of messages is 4
+	// Package is auth and len of messages is 5
 	AuthV1() auth.AuthV1Interface
 	// Package is bookstore and len of messages is 6
 	BookstoreV1() bookstore.BookstoreV1Interface

@@ -12,6 +12,8 @@ import (
 	"github.com/gogo/protobuf/types"
 	"github.com/satori/go.uuid"
 
+	"github.com/pensando/sw/api/generated/apiclient"
+
 	"github.com/pensando/sw/api/generated/auth"
 	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/globals"
@@ -117,6 +119,22 @@ func NewPermission(tenant, resourceGroup, resourceKind, resourceNamespace, resou
 		perm.Actions = stringToSlice(actions)
 	}
 	return perm
+}
+
+// NewUserPreference is a helper to create new User Preference
+func NewUserPreference(name, tenant, apiVersion string) *auth.UserPreference {
+	userPref := &auth.UserPreference{}
+	userPref.Defaults("all")
+	userPref.Tenant = tenant
+	userPref.Name = name
+	userPref.UUID = uuid.NewV4().String()
+	ts, _ := types.TimestampProto(time.Now())
+	userPref.CreationTime.Timestamp = *ts
+	userPref.ModTime.Timestamp = *ts
+	userPref.GenerationID = "1"
+	userPref.APIVersion = apiVersion
+	userPref.SelfLink = userPref.MakeURI("configs", userPref.APIVersion, string(apiclient.GroupAuth))
+	return userPref
 }
 
 // NewRole is a helper to create new role

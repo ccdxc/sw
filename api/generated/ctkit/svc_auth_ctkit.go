@@ -1578,3 +1578,392 @@ func (api *rolebindingAPI) Watch(handler RoleBindingHandler) error {
 func (ct *ctrlerCtx) RoleBinding() RoleBindingAPI {
 	return &rolebindingAPI{ct: ct}
 }
+
+// UserPreference is a wrapper object that implements additional functionality
+type UserPreference struct {
+	sync.Mutex
+	auth.UserPreference
+	HandlerCtx interface{} // additional state handlers can store
+	ctrler     *ctrlerCtx  // reference back to the controller instance
+}
+
+func (obj *UserPreference) Write() error {
+	// if there is no API server to connect to, we are done
+	if (obj.ctrler == nil) || (obj.ctrler.resolver == nil) || obj.ctrler.apisrvURL == "" {
+		return nil
+	}
+
+	apicl, err := obj.ctrler.apiClient()
+	if err != nil {
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
+		return err
+	}
+
+	obj.ctrler.stats.Counter("UserPreference_Writes").Inc()
+
+	// write to api server
+	if obj.ObjectMeta.ResourceVersion != "" {
+		// update it
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.AuthV1().UserPreference().Update(context.Background(), &obj.UserPreference)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
+	} else {
+		//  create
+		_, err = apicl.AuthV1().UserPreference().Create(context.Background(), &obj.UserPreference)
+	}
+
+	return nil
+}
+
+// UserPreferenceHandler is the event handler for UserPreference object
+type UserPreferenceHandler interface {
+	OnUserPreferenceCreate(obj *UserPreference) error
+	OnUserPreferenceUpdate(oldObj *UserPreference, newObj *auth.UserPreference) error
+	OnUserPreferenceDelete(obj *UserPreference) error
+}
+
+// handleUserPreferenceEvent handles UserPreference events from watcher
+func (ct *ctrlerCtx) handleUserPreferenceEvent(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *auth.UserPreference:
+		eobj := evt.Object.(*auth.UserPreference)
+		kind := "UserPreference"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		userpreferenceHandler := handler.(UserPreferenceHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &UserPreference{
+					UserPreference: *eobj,
+					HandlerCtx:     nil,
+					ctrler:         ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("UserPreference_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				err = userpreferenceHandler.OnUserPreferenceCreate(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.delObject(kind, eobj.GetKey())
+					return err
+				}
+			} else {
+				obj := fobj.(*UserPreference)
+
+				ct.stats.Counter("UserPreference_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				err = userpreferenceHandler.OnUserPreferenceUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
+				}
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*UserPreference)
+
+			ct.stats.Counter("UserPreference_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			err = userpreferenceHandler.OnUserPreferenceDelete(obj)
+			obj.Unlock()
+			if err != nil {
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+			}
+
+			ct.delObject(kind, eobj.GetKey())
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on UserPreference watch channel", tp)
+	}
+
+	return nil
+}
+
+// diffUserPreference does a diff of UserPreference objects between local cache and API server
+func (ct *ctrlerCtx) diffUserPreference(apicl apiclient.Services) {
+	opts := api.ListWatchOptions{}
+
+	// get a list of all objects from API server
+	objlist, err := apicl.AuthV1().UserPreference().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
+		return
+	}
+
+	ct.logger.Infof("diffUserPreference(): UserPreferenceList returned %d objects", len(objlist))
+
+	// build an object map
+	objmap := make(map[string]*auth.UserPreference)
+	for _, obj := range objlist {
+		objmap[obj.GetKey()] = obj
+	}
+
+	// if an object is in our local cache and not in API server, trigger delete for it
+	for _, obj := range ct.UserPreference().List() {
+		_, ok := objmap[obj.GetKey()]
+		if !ok {
+			ct.logger.Infof("diffUserPreference(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
+			evt := kvstore.WatchEvent{
+				Type:   kvstore.Deleted,
+				Key:    obj.GetKey(),
+				Object: &obj.UserPreference,
+			}
+			ct.handleUserPreferenceEvent(&evt)
+		}
+	}
+
+	// trigger create event for all others
+	for _, obj := range objlist {
+		ct.logger.Infof("diffUserPreference(): Adding object %#v", obj.GetKey())
+		evt := kvstore.WatchEvent{
+			Type:   kvstore.Created,
+			Key:    obj.GetKey(),
+			Object: obj,
+		}
+		ct.handleUserPreferenceEvent(&evt)
+	}
+}
+
+func (ct *ctrlerCtx) runUserPreferenceWatcher() {
+	kind := "UserPreference"
+
+	// if there is no API server to connect to, we are done
+	if (ct.resolver == nil) || ct.apisrvURL == "" {
+		return
+	}
+
+	// create context
+	ctx, cancel := context.WithCancel(context.Background())
+	ct.Lock()
+	ct.watchCancel[kind] = cancel
+	ct.Unlock()
+	opts := api.ListWatchOptions{}
+
+	// setup wait group
+	ct.waitGrp.Add(1)
+	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "UserPreferenceWatcher")
+
+	ct.stats.Counter("UserPreference_Watch").Inc()
+	defer ct.stats.Counter("UserPreference_Watch").Dec()
+
+	// loop forever
+	for {
+		// create a grpc client
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		if err != nil {
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			ct.stats.Counter("UserPreference_ApiClientErr").Inc()
+		} else {
+			logger.Infof("API client connected {%+v}", apicl)
+
+			// UserPreference object watcher
+			wt, werr := apicl.AuthV1().UserPreference().Watch(ctx, &opts)
+			if werr != nil {
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				// wait for a second and retry connecting to api server
+				apicl.Close()
+				time.Sleep(time.Second)
+				continue
+			}
+			ct.Lock()
+			ct.watchers[kind] = wt
+			ct.Unlock()
+
+			// perform a diff with API server and local cache
+			time.Sleep(time.Millisecond * 100)
+			ct.diffUserPreference(apicl)
+
+			// handle api server watch events
+		innerLoop:
+			for {
+				// wait for events
+				select {
+				case evt, ok := <-wt.EventChan():
+					if !ok {
+						logger.Error("Error receiving from apisrv watcher")
+						ct.stats.Counter("UserPreference_WatchErrors").Inc()
+						break innerLoop
+					}
+
+					// handle event
+					ct.handleUserPreferenceEvent(evt)
+				}
+			}
+			apicl.Close()
+		}
+
+		// if stop flag is set, we are done
+		if ct.stoped {
+			logger.Infof("Exiting API server watcher")
+			return
+		}
+
+		// wait for a second and retry connecting to api server
+		time.Sleep(time.Second)
+	}
+}
+
+// WatchUserPreference starts watch on UserPreference object
+func (ct *ctrlerCtx) WatchUserPreference(handler UserPreferenceHandler) error {
+	kind := "UserPreference"
+
+	ct.Lock()
+	defer ct.Unlock()
+
+	// see if we already have a watcher
+	_, ok := ct.watchers[kind]
+	if ok {
+		return fmt.Errorf("UserPreference watcher already exists")
+	}
+
+	// save handler
+	ct.handlers[kind] = handler
+
+	// run UserPreference watcher in a go routine
+	go ct.runUserPreferenceWatcher()
+
+	return nil
+}
+
+// UserPreferenceAPI returns
+type UserPreferenceAPI interface {
+	Create(obj *auth.UserPreference) error
+	Update(obj *auth.UserPreference) error
+	Delete(obj *auth.UserPreference) error
+	Find(meta *api.ObjectMeta) (*UserPreference, error)
+	List() []*UserPreference
+	Watch(handler UserPreferenceHandler) error
+}
+
+// dummy struct that implements UserPreferenceAPI
+type userpreferenceAPI struct {
+	ct *ctrlerCtx
+}
+
+// Create creates UserPreference object
+func (api *userpreferenceAPI) Create(obj *auth.UserPreference) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.AuthV1().UserPreference().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.AuthV1().UserPreference().Update(context.Background(), obj)
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// Update triggers update on UserPreference object
+func (api *userpreferenceAPI) Update(obj *auth.UserPreference) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.AuthV1().UserPreference().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
+	return api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+}
+
+// Delete deletes UserPreference object
+func (api *userpreferenceAPI) Delete(obj *auth.UserPreference) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		apicl.AuthV1().UserPreference().Delete(context.Background(), &obj.ObjectMeta)
+	}
+
+	return api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+}
+
+// Find returns an object by meta
+func (api *userpreferenceAPI) Find(meta *api.ObjectMeta) (*UserPreference, error) {
+	// find the object
+	obj, err := api.ct.FindObject("UserPreference", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *UserPreference:
+		hobj := obj.(*UserPreference)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
+// List returns a list of all UserPreference objects
+func (api *userpreferenceAPI) List() []*UserPreference {
+	var objlist []*UserPreference
+
+	objs := api.ct.ListObjects("UserPreference")
+	for _, obj := range objs {
+		switch tp := obj.(type) {
+		case *UserPreference:
+			eobj := obj.(*UserPreference)
+			objlist = append(objlist, eobj)
+		default:
+			log.Fatalf("Got invalid object type %v while looking for UserPreference", tp)
+		}
+	}
+
+	return objlist
+}
+
+// Watch sets up a event handlers for UserPreference object
+func (api *userpreferenceAPI) Watch(handler UserPreferenceHandler) error {
+	return api.ct.WatchUserPreference(handler)
+}
+
+// UserPreference returns UserPreferenceAPI
+func (ct *ctrlerCtx) UserPreference() UserPreferenceAPI {
+	return &userpreferenceAPI{ct: ct}
+}

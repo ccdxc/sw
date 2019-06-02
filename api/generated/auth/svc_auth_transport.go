@@ -29,22 +29,27 @@ type grpcServerAuthV1 struct {
 	AutoAddRoleHdlr                    grpctransport.Handler
 	AutoAddRoleBindingHdlr             grpctransport.Handler
 	AutoAddUserHdlr                    grpctransport.Handler
+	AutoAddUserPreferenceHdlr          grpctransport.Handler
 	AutoDeleteAuthenticationPolicyHdlr grpctransport.Handler
 	AutoDeleteRoleHdlr                 grpctransport.Handler
 	AutoDeleteRoleBindingHdlr          grpctransport.Handler
 	AutoDeleteUserHdlr                 grpctransport.Handler
+	AutoDeleteUserPreferenceHdlr       grpctransport.Handler
 	AutoGetAuthenticationPolicyHdlr    grpctransport.Handler
 	AutoGetRoleHdlr                    grpctransport.Handler
 	AutoGetRoleBindingHdlr             grpctransport.Handler
 	AutoGetUserHdlr                    grpctransport.Handler
+	AutoGetUserPreferenceHdlr          grpctransport.Handler
 	AutoListAuthenticationPolicyHdlr   grpctransport.Handler
 	AutoListRoleHdlr                   grpctransport.Handler
 	AutoListRoleBindingHdlr            grpctransport.Handler
 	AutoListUserHdlr                   grpctransport.Handler
+	AutoListUserPreferenceHdlr         grpctransport.Handler
 	AutoUpdateAuthenticationPolicyHdlr grpctransport.Handler
 	AutoUpdateRoleHdlr                 grpctransport.Handler
 	AutoUpdateRoleBindingHdlr          grpctransport.Handler
 	AutoUpdateUserHdlr                 grpctransport.Handler
+	AutoUpdateUserPreferenceHdlr       grpctransport.Handler
 	IsAuthorizedHdlr                   grpctransport.Handler
 	LdapBindCheckHdlr                  grpctransport.Handler
 	LdapConnectionCheckHdlr            grpctransport.Handler
@@ -89,6 +94,13 @@ func MakeGRPCServerAuthV1(ctx context.Context, endpoints EndpointsAuthV1Server, 
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddUser", logger)))...,
 		),
 
+		AutoAddUserPreferenceHdlr: grpctransport.NewServer(
+			endpoints.AutoAddUserPreferenceEndpoint,
+			DecodeGrpcReqUserPreference,
+			EncodeGrpcRespUserPreference,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddUserPreference", logger)))...,
+		),
+
 		AutoDeleteAuthenticationPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteAuthenticationPolicyEndpoint,
 			DecodeGrpcReqAuthenticationPolicy,
@@ -115,6 +127,13 @@ func MakeGRPCServerAuthV1(ctx context.Context, endpoints EndpointsAuthV1Server, 
 			DecodeGrpcReqUser,
 			EncodeGrpcRespUser,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteUser", logger)))...,
+		),
+
+		AutoDeleteUserPreferenceHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteUserPreferenceEndpoint,
+			DecodeGrpcReqUserPreference,
+			EncodeGrpcRespUserPreference,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteUserPreference", logger)))...,
 		),
 
 		AutoGetAuthenticationPolicyHdlr: grpctransport.NewServer(
@@ -145,6 +164,13 @@ func MakeGRPCServerAuthV1(ctx context.Context, endpoints EndpointsAuthV1Server, 
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetUser", logger)))...,
 		),
 
+		AutoGetUserPreferenceHdlr: grpctransport.NewServer(
+			endpoints.AutoGetUserPreferenceEndpoint,
+			DecodeGrpcReqUserPreference,
+			EncodeGrpcRespUserPreference,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetUserPreference", logger)))...,
+		),
+
 		AutoListAuthenticationPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListAuthenticationPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -173,6 +199,13 @@ func MakeGRPCServerAuthV1(ctx context.Context, endpoints EndpointsAuthV1Server, 
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListUser", logger)))...,
 		),
 
+		AutoListUserPreferenceHdlr: grpctransport.NewServer(
+			endpoints.AutoListUserPreferenceEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespUserPreferenceList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListUserPreference", logger)))...,
+		),
+
 		AutoUpdateAuthenticationPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateAuthenticationPolicyEndpoint,
 			DecodeGrpcReqAuthenticationPolicy,
@@ -199,6 +232,13 @@ func MakeGRPCServerAuthV1(ctx context.Context, endpoints EndpointsAuthV1Server, 
 			DecodeGrpcReqUser,
 			EncodeGrpcRespUser,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateUser", logger)))...,
+		),
+
+		AutoUpdateUserPreferenceHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateUserPreferenceEndpoint,
+			DecodeGrpcReqUserPreference,
+			EncodeGrpcRespUserPreference,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateUserPreference", logger)))...,
 		),
 
 		IsAuthorizedHdlr: grpctransport.NewServer(
@@ -317,6 +357,24 @@ func decodeHTTPrespAuthV1AutoAddUser(_ context.Context, r *http.Response) (inter
 	return &resp, err
 }
 
+func (s *grpcServerAuthV1) AutoAddUserPreference(ctx oldcontext.Context, req *UserPreference) (*UserPreference, error) {
+	_, resp, err := s.AutoAddUserPreferenceHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoAddUserPreference).V
+	return &r, resp.(respAuthV1AutoAddUserPreference).Err
+}
+
+func decodeHTTPrespAuthV1AutoAddUserPreference(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp UserPreference
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerAuthV1) AutoDeleteAuthenticationPolicy(ctx oldcontext.Context, req *AuthenticationPolicy) (*AuthenticationPolicy, error) {
 	_, resp, err := s.AutoDeleteAuthenticationPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -385,6 +443,24 @@ func decodeHTTPrespAuthV1AutoDeleteUser(_ context.Context, r *http.Response) (in
 		return nil, errorDecoder(r)
 	}
 	var resp User
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) AutoDeleteUserPreference(ctx oldcontext.Context, req *UserPreference) (*UserPreference, error) {
+	_, resp, err := s.AutoDeleteUserPreferenceHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoDeleteUserPreference).V
+	return &r, resp.(respAuthV1AutoDeleteUserPreference).Err
+}
+
+func decodeHTTPrespAuthV1AutoDeleteUserPreference(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp UserPreference
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -461,6 +537,24 @@ func decodeHTTPrespAuthV1AutoGetUser(_ context.Context, r *http.Response) (inter
 	return &resp, err
 }
 
+func (s *grpcServerAuthV1) AutoGetUserPreference(ctx oldcontext.Context, req *UserPreference) (*UserPreference, error) {
+	_, resp, err := s.AutoGetUserPreferenceHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoGetUserPreference).V
+	return &r, resp.(respAuthV1AutoGetUserPreference).Err
+}
+
+func decodeHTTPrespAuthV1AutoGetUserPreference(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp UserPreference
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerAuthV1) AutoListAuthenticationPolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*AuthenticationPolicyList, error) {
 	_, resp, err := s.AutoListAuthenticationPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -533,6 +627,24 @@ func decodeHTTPrespAuthV1AutoListUser(_ context.Context, r *http.Response) (inte
 	return &resp, err
 }
 
+func (s *grpcServerAuthV1) AutoListUserPreference(ctx oldcontext.Context, req *api.ListWatchOptions) (*UserPreferenceList, error) {
+	_, resp, err := s.AutoListUserPreferenceHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoListUserPreference).V
+	return &r, resp.(respAuthV1AutoListUserPreference).Err
+}
+
+func decodeHTTPrespAuthV1AutoListUserPreference(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp UserPreferenceList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerAuthV1) AutoUpdateAuthenticationPolicy(ctx oldcontext.Context, req *AuthenticationPolicy) (*AuthenticationPolicy, error) {
 	_, resp, err := s.AutoUpdateAuthenticationPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -601,6 +713,24 @@ func decodeHTTPrespAuthV1AutoUpdateUser(_ context.Context, r *http.Response) (in
 		return nil, errorDecoder(r)
 	}
 	var resp User
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) AutoUpdateUserPreference(ctx oldcontext.Context, req *UserPreference) (*UserPreference, error) {
+	_, resp, err := s.AutoUpdateUserPreferenceHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoUpdateUserPreference).V
+	return &r, resp.(respAuthV1AutoUpdateUserPreference).Err
+}
+
+func decodeHTTPrespAuthV1AutoUpdateUserPreference(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp UserPreference
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -731,6 +861,10 @@ func (s *grpcServerAuthV1) AutoWatchRole(in *api.ListWatchOptions, stream AuthV1
 
 func (s *grpcServerAuthV1) AutoWatchRoleBinding(in *api.ListWatchOptions, stream AuthV1_AutoWatchRoleBindingServer) error {
 	return s.Endpoints.AutoWatchRoleBinding(in, stream)
+}
+
+func (s *grpcServerAuthV1) AutoWatchUserPreference(in *api.ListWatchOptions, stream AuthV1_AutoWatchUserPreferenceServer) error {
+	return s.Endpoints.AutoWatchUserPreference(in, stream)
 }
 
 func encodeHTTPAuthenticationPolicyList(ctx context.Context, req *http.Request, request interface{}) error {
@@ -866,5 +1000,39 @@ func EncodeGrpcRespUserList(ctx context.Context, response interface{}) (interfac
 
 // DecodeGrpcRespUserList decodes the GRPC response
 func DecodeGrpcRespUserList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPUserPreferenceList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPUserPreferenceList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req UserPreferenceList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqUserPreferenceList encodes GRPC request
+func EncodeGrpcReqUserPreferenceList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*UserPreferenceList)
+	return req, nil
+}
+
+// DecodeGrpcReqUserPreferenceList decodes GRPC request
+func DecodeGrpcReqUserPreferenceList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*UserPreferenceList)
+	return req, nil
+}
+
+// EncodeGrpcRespUserPreferenceList endodes the GRPC response
+func EncodeGrpcRespUserPreferenceList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespUserPreferenceList decodes the GRPC response
+func DecodeGrpcRespUserPreferenceList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }

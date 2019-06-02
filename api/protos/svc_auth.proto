@@ -22,6 +22,7 @@ service AuthV1 {
     option (venice.apiGrpcCrudService) = "AuthenticationPolicy";
     option (venice.apiGrpcCrudService) = "Role";
     option (venice.apiGrpcCrudService) = "RoleBinding";
+    option (venice.apiGrpcCrudService) = "UserPreference";
 
     option (venice.apiRestService) = {
         Object: "User"
@@ -51,6 +52,10 @@ service AuthV1 {
     option (venice.apiRestService) = {
         Object: "AuthenticationPolicy"
         Method: [ "get", "put", "post", "watch" ]
+    };
+    option (venice.apiRestService) = {
+        Object: "UserPreference"
+        Method: [ "get", "put"]
     };
     // Action to test ldap connection with the passed in AuthenticationPolicy object. It doesn't test ldap config in AuthenticationPolicy
     // already saved in API server. If user wants to test saved config, then user will have to fetch it first and use it with this action.

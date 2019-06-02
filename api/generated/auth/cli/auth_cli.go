@@ -254,6 +254,28 @@ func removeUserOper(obj interface{}) error {
 	return nil
 }
 
+// CreateUserPreferenceFlags specifies flags for UserPreference create operation
+var CreateUserPreferenceFlags = []gen.CliFlag{
+	{
+		ID:     "options",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+}
+
+func removeUserPreferenceOper(obj interface{}) error {
+	if v, ok := obj.(*auth.UserPreference); ok {
+		v.UUID = ""
+		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
+		v.Status = auth.UserPreferenceStatus{}
+	}
+	return nil
+}
+
 func init() {
 	cl := gen.GetInfo()
 
@@ -268,5 +290,8 @@ func init() {
 
 	cl.AddCliInfo("auth.User", "create", CreateUserFlags)
 	cl.AddRemoveObjOperFunc("auth.User", removeUserOper)
+
+	cl.AddCliInfo("auth.UserPreference", "create", CreateUserPreferenceFlags)
+	cl.AddRemoveObjOperFunc("auth.UserPreference", removeUserPreferenceOper)
 
 }

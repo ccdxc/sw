@@ -2,6 +2,7 @@ import { AuthUser } from './auth';
 import { AuthAuthenticationPolicy } from './auth';
 import { AuthRole } from './auth';
 import { AuthRoleBinding } from './auth';
+import { AuthUserPreference } from './auth';
 import { ClusterCluster } from './cluster';
 import { ClusterNode } from './cluster';
 import { ClusterHost } from './cluster';
@@ -67,6 +68,11 @@ export const CategoryMapping: CatMap  = {
     },
     "RoleBinding" : {
       instance: new AuthRoleBinding(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "UserPreference" : {
+      instance: new AuthUserPreference(),
       scopes: [ 'tenant', ] ,
       actions:  [] ,
     },

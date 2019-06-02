@@ -143,6 +143,29 @@ func (a adapterAuthV1) AutoAddUser(oldctx oldcontext.Context, t *auth.User, opti
 	return ret.(*auth.User), err
 }
 
+func (a adapterAuthV1) AutoAddUserPreference(oldctx oldcontext.Context, t *auth.UserPreference, options ...grpc.CallOption) (*auth.UserPreference, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddUserPreference")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "UserPreference", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.UserPreference)
+		return a.service.AutoAddUserPreference(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.UserPreference), err
+}
+
 func (a adapterAuthV1) AutoDeleteAuthenticationPolicy(oldctx oldcontext.Context, t *auth.AuthenticationPolicy, options ...grpc.CallOption) (*auth.AuthenticationPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -235,6 +258,29 @@ func (a adapterAuthV1) AutoDeleteUser(oldctx oldcontext.Context, t *auth.User, o
 	return ret.(*auth.User), err
 }
 
+func (a adapterAuthV1) AutoDeleteUserPreference(oldctx oldcontext.Context, t *auth.UserPreference, options ...grpc.CallOption) (*auth.UserPreference, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteUserPreference")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "UserPreference", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.UserPreference)
+		return a.service.AutoDeleteUserPreference(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.UserPreference), err
+}
+
 func (a adapterAuthV1) AutoGetAuthenticationPolicy(oldctx oldcontext.Context, t *auth.AuthenticationPolicy, options ...grpc.CallOption) (*auth.AuthenticationPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -325,6 +371,29 @@ func (a adapterAuthV1) AutoGetUser(oldctx oldcontext.Context, t *auth.User, opti
 		return nil, err
 	}
 	return ret.(*auth.User), err
+}
+
+func (a adapterAuthV1) AutoGetUserPreference(oldctx oldcontext.Context, t *auth.UserPreference, options ...grpc.CallOption) (*auth.UserPreference, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetUserPreference")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "UserPreference", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.UserPreference)
+		return a.service.AutoGetUserPreference(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.UserPreference), err
 }
 
 func (a adapterAuthV1) AutoListAuthenticationPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*auth.AuthenticationPolicyList, error) {
@@ -449,6 +518,38 @@ func (a adapterAuthV1) AutoListUser(oldctx oldcontext.Context, t *api.ListWatchO
 	return ret.(*auth.UserList), err
 }
 
+func (a adapterAuthV1) AutoListUserPreference(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*auth.UserPreferenceList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListUserPreference")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	if t.Tenant == "" {
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		t.Tenant = user.Tenant
+	}
+	t.Namespace = ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "UserPreference", t.Tenant, t.Namespace, "auth", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListUserPreference(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.UserPreferenceList), err
+}
+
 func (a adapterAuthV1) AutoUpdateAuthenticationPolicy(oldctx oldcontext.Context, t *auth.AuthenticationPolicy, options ...grpc.CallOption) (*auth.AuthenticationPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -539,6 +640,29 @@ func (a adapterAuthV1) AutoUpdateUser(oldctx oldcontext.Context, t *auth.User, o
 		return nil, err
 	}
 	return ret.(*auth.User), err
+}
+
+func (a adapterAuthV1) AutoUpdateUserPreference(oldctx oldcontext.Context, t *auth.UserPreference, options ...grpc.CallOption) (*auth.UserPreference, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateUserPreference")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "UserPreference", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.UserPreference)
+		return a.service.AutoUpdateUserPreference(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.UserPreference), err
 }
 
 func (a adapterAuthV1) IsAuthorized(oldctx oldcontext.Context, t *auth.SubjectAccessReviewRequest, options ...grpc.CallOption) (*auth.User, error) {
@@ -979,6 +1103,69 @@ func (a adapterAuthV1) AutoWatchRoleBinding(oldctx oldcontext.Context, in *api.L
 	return ret.(auth.AuthV1_AutoWatchRoleBindingClient), err
 }
 
+func (a adapterAuthV1) AutoWatchUserPreference(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (auth.AuthV1_AutoWatchUserPreferenceClient, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchUserPreference")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	if in.Tenant == "" {
+		user, ok := apigwpkg.UserFromContext(ctx)
+		if !ok {
+			return nil, errors.New("could not determine user")
+		}
+		in.Tenant = user.Tenant
+	}
+	in.Namespace = ""
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "UserPreference", in.Tenant, in.Namespace, "auth"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
+		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
+			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
+			if !ok {
+				return nil, errors.New("unable to retrieve request")
+			}
+			iw, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPWriter)
+			if !ok {
+				return nil, errors.New("unable to retrieve writer")
+			}
+			conn, err := wsUpgrader.Upgrade(iw.(http.ResponseWriter), ir.(*http.Request), nil)
+			if err != nil {
+				log.Errorf("WebSocket Upgrade failed (%s)", err)
+				return nil, err
+			}
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchUserPreference] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
+		}
+		return a.service.AutoWatchUserPreference(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(auth.AuthV1_AutoWatchUserPreferenceClient), err
+}
+
 func (e *sAuthV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "auth", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
@@ -1006,6 +1193,8 @@ func (e *sAuthV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoGetUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiintf.GetOper)
 
+	e.svcProf["AutoGetUserPreference"] = apigwpkg.NewServiceProfile(e.defSvcProf, "UserPreference", "auth", apiintf.GetOper)
+
 	e.svcProf["AutoListRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleList", "auth", apiintf.ListOper)
 
 	e.svcProf["AutoListRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleBindingList", "auth", apiintf.ListOper)
@@ -1019,6 +1208,8 @@ func (e *sAuthV1GwService) setupSvcProfile() {
 	e.svcProf["AutoUpdateRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleBinding", "auth", apiintf.UpdateOper)
 
 	e.svcProf["AutoUpdateUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiintf.UpdateOper)
+
+	e.svcProf["AutoUpdateUserPreference"] = apigwpkg.NewServiceProfile(e.defSvcProf, "UserPreference", "auth", apiintf.UpdateOper)
 
 	e.svcProf["AutoWatchAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgAuthenticationPolicyWatchHelper", "auth", apiintf.WatchOper)
 

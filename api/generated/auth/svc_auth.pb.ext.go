@@ -66,6 +66,16 @@ func (m *UserList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *UserPreferenceList) MakeKey(prefix string) string {
+	obj := UserPreference{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *UserPreferenceList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *AutoMsgAuthenticationPolicyWatchHelper) MakeKey(prefix string) string {
 	obj := AuthenticationPolicy{}
 	return obj.MakeKey(prefix)
@@ -80,6 +90,12 @@ func (m *AutoMsgRoleBindingWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgRoleWatchHelper) MakeKey(prefix string) string {
 	obj := Role{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgUserPreferenceWatchHelper) MakeKey(prefix string) string {
+	obj := UserPreference{}
 	return obj.MakeKey(prefix)
 }
 
@@ -237,6 +253,48 @@ func (m *AutoMsgRoleWatchHelper_WatchEvent) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgUserPreferenceWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgUserPreferenceWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgUserPreferenceWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgUserPreferenceWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgUserPreferenceWatchHelper))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgUserPreferenceWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgUserPreferenceWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgUserPreferenceWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgUserPreferenceWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgUserPreferenceWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgUserPreferenceWatchHelper_WatchEvent))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgUserPreferenceWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgUserWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgUserWatchHelper
 	var ok bool
@@ -338,6 +396,27 @@ func (m *UserList) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *UserList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *UserPreferenceList) Clone(into interface{}) (interface{}, error) {
+	var out *UserPreferenceList
+	var ok bool
+	if into == nil {
+		out = &UserPreferenceList{}
+	} else {
+		out, ok = into.(*UserPreferenceList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*UserPreferenceList))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *UserPreferenceList) Defaults(ver string) bool {
 	return false
 }
 
@@ -574,6 +653,65 @@ func (m *AutoMsgRoleWatchHelper_WatchEvent) Normalize() {
 
 }
 
+func (m *AutoMsgUserPreferenceWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgUserPreferenceWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgUserPreferenceWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
+func (m *AutoMsgUserPreferenceWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgUserPreferenceWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	if m.Object != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgUserPreferenceWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *AutoMsgUserWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -724,6 +862,35 @@ func (m *UserList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 }
 
 func (m *UserList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
+func (m *UserPreferenceList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *UserPreferenceList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *UserPreferenceList) Normalize() {
 
 	for _, v := range m.Items {
 		if v != nil {

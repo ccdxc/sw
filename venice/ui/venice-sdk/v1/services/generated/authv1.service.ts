@@ -4,7 +4,7 @@ import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
 
-import { IAuthAuthenticationPolicy,AuthAuthenticationPolicy,IApiStatus,ApiStatus,AuthTokenSecretRequest,IAuthTokenSecretRequest,IAuthRoleBindingList,AuthRoleBindingList,IAuthRoleBinding,AuthRoleBinding,IAuthRoleList,AuthRoleList,IAuthRole,AuthRole,IAuthUserList,AuthUserList,IAuthUser,AuthUser,AuthSubjectAccessReviewRequest,IAuthSubjectAccessReviewRequest,AuthPasswordChangeRequest,IAuthPasswordChangeRequest,AuthPasswordResetRequest,IAuthPasswordResetRequest,IAuthAutoMsgAuthenticationPolicyWatchHelper,AuthAutoMsgAuthenticationPolicyWatchHelper,IAuthAutoMsgRoleBindingWatchHelper,AuthAutoMsgRoleBindingWatchHelper,IAuthAutoMsgRoleWatchHelper,AuthAutoMsgRoleWatchHelper,IAuthAutoMsgUserWatchHelper,AuthAutoMsgUserWatchHelper } from '../../models/generated/auth';
+import { IAuthAuthenticationPolicy,AuthAuthenticationPolicy,IApiStatus,ApiStatus,AuthTokenSecretRequest,IAuthTokenSecretRequest,IAuthRoleBindingList,AuthRoleBindingList,IAuthRoleBinding,AuthRoleBinding,IAuthRoleList,AuthRoleList,IAuthRole,AuthRole,IAuthUserPreference,AuthUserPreference,IAuthUserList,AuthUserList,IAuthUser,AuthUser,AuthSubjectAccessReviewRequest,IAuthSubjectAccessReviewRequest,AuthPasswordChangeRequest,IAuthPasswordChangeRequest,AuthPasswordResetRequest,IAuthPasswordResetRequest,IAuthAutoMsgAuthenticationPolicyWatchHelper,AuthAutoMsgAuthenticationPolicyWatchHelper,IAuthAutoMsgRoleBindingWatchHelper,AuthAutoMsgRoleBindingWatchHelper,IAuthAutoMsgRoleWatchHelper,AuthAutoMsgRoleWatchHelper,IAuthAutoMsgUserWatchHelper,AuthAutoMsgUserWatchHelper } from '../../models/generated/auth';
 
 @Injectable()
 export class Authv1Service extends AbstractService {
@@ -468,6 +468,43 @@ export class Authv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Get UserPreference object */
+  public GetUserPreference(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/user-preferences/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'GetUserPreference',
+      objType: 'AuthUserPreference',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Update UserPreference object */
+  public UpdateUserPreference(O_Name, body: IAuthUserPreference, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/user-preferences/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'UpdateUserPreference',
+      objType: 'AuthUserPreference',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new AuthUserPreference(body))
+    }
+    return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** List User objects */
   public ListUser(queryParam: any = null, stagingID: string = ""):Observable<{body: IAuthUserList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/users';
@@ -612,6 +649,41 @@ export class Authv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new AuthPasswordResetRequest(body))
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get UserPreference object */
+  public GetUserPreference_1(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/user-preferences/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'GetUserPreference_1',
+      objType: 'AuthUserPreference',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Update UserPreference object */
+  public UpdateUserPreference_1(O_Name, body: IAuthUserPreference, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/user-preferences/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'UpdateUserPreference_1',
+      objType: 'AuthUserPreference',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new AuthUserPreference(body))
+    }
+    return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List User objects */

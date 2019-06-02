@@ -36,6 +36,9 @@ The following Messages are defined.
   TLSOptions
   TokenSecretRequest
   User
+  UserPreference
+  UserPreferenceSpec
+  UserPreferenceStatus
   UserSpec
   UserStatus
 

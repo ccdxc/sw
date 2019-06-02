@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
@@ -631,12 +632,47 @@ func (s *authHooks) returnAuthPolicy(ctx context.Context, kvs kvstore.Interface,
 	return *policy, nil
 }
 
+func (s *authHooks) generateUserPref(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	r, ok := i.(auth.User)
+	if !ok {
+		s.logger.ErrorLog("method", "generateUserPref", "msg", fmt.Sprintf("API server hook to generate user pref called for invalid object type [%#v]", i))
+		return i, true, errInvalidInputType
+	}
+	switch oper {
+	case apiintf.CreateOper:
+		userPref := login.NewUserPreference(r.GetName(), r.GetTenant(), apisrvpkg.MustGetAPIServer().GetVersion())
+		if err := txn.Create(userPref.MakeKey("auth"), userPref); err != nil {
+			return r, true, err
+		}
+		return r, true, nil
+	}
+	return r, true, nil
+}
+
+func (s *authHooks) deleteUserPref(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	r, ok := i.(auth.User)
+	if !ok {
+		s.logger.ErrorLog("method", "deleteUserPref", "msg", fmt.Sprintf("API server hook to delete user pref called for invalid object type [%#v]", i))
+		return i, true, errInvalidInputType
+	}
+	switch oper {
+	case apiintf.DeleteOper:
+		userPref := login.NewUserPreference(r.GetName(), r.GetTenant(), apisrvpkg.MustGetAPIServer().GetVersion())
+		if err := txn.Delete(userPref.MakeKey("auth")); err != nil {
+			return r, true, err
+		}
+		return r, true, nil
+	}
+	return r, true, nil
+}
+
 func registerAuthHooks(svc apiserver.Service, logger log.Logger) {
 	r := authHooks{}
 	r.logger = logger.WithContext("Service", "AuthHooks")
 	logger.Log("msg", "registering Hooks")
-	svc.GetCrudService("User", apiintf.CreateOper).WithPreCommitHook(r.hashPassword)
+	svc.GetCrudService("User", apiintf.CreateOper).WithPreCommitHook(r.hashPassword).WithPreCommitHook(r.generateUserPref)
 	svc.GetCrudService("User", apiintf.UpdateOper).WithPreCommitHook(r.hashPassword)
+	svc.GetCrudService("User", apiintf.DeleteOper).WithPreCommitHook(r.deleteUserPref)
 	svc.GetCrudService("AuthenticationPolicy", apiintf.CreateOper).WithPreCommitHook(r.generateSecret).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
 	svc.GetCrudService("AuthenticationPolicy", apiintf.UpdateOper).WithPreCommitHook(r.populateSecretsInAuthPolicy).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
 	svc.GetCrudService("Role", apiintf.CreateOper).WithPreCommitHook(r.adminRoleCheck).WithPreCommitHook(r.permissionTenantCheck).GetRequestType().WithValidate(r.validateRolePerms)

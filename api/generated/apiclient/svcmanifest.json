@@ -7,7 +7,8 @@
           "User",
           "AuthenticationPolicy",
           "Role",
-          "RoleBinding"
+          "RoleBinding",
+          "UserPreference"
         ],
         "Properties": {
           "AuthenticationPolicy": {
@@ -68,6 +69,15 @@
               "PasswordChange",
               "PasswordReset",
               "IsAuthorized"
+            ]
+          },
+          "UserPreference": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "put"
             ]
           }
         }

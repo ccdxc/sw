@@ -776,6 +776,27 @@ func TestAddOwner(t *testing.T) {
 		err                bool
 	}{
 		{
+			name: "user preference",
+			in:   &auth.UserPreference{},
+			operations: []authz.Operation{
+				authz.NewOperation(authz.NewResource(globals.DefaultTenant,
+					string(apiclient.GroupAuth), string(auth.KindUser),
+					"", "test"),
+					auth.Permission_Update.String()),
+			},
+			expectedOperations: []authz.Operation{
+				authz.NewOperation(authz.NewResourceWithOwner(globals.DefaultTenant,
+					string(apiclient.GroupAuth), string(auth.KindUser),
+					"", "test",
+					&auth.User{
+						ObjectMeta: api.ObjectMeta{Name: "test", Tenant: globals.DefaultTenant},
+					}),
+					auth.Permission_Update.String()),
+			},
+			out: &auth.UserPreference{},
+			err: false,
+		},
+		{
 			name: "password change",
 			in:   &auth.PasswordChangeRequest{},
 			operations: []authz.Operation{
@@ -935,9 +956,14 @@ func TestAddOwnerHookRegistration(t *testing.T) {
 
 	opers := []apiintf.APIOperType{apiintf.UpdateOper, apiintf.GetOper}
 	for _, oper := range opers {
+		// user operation
 		prof, err := svc.GetCrudServiceProfile("User", oper)
 		AssertOk(t, err, fmt.Sprintf("error getting service profile for oper :%v", oper))
 		Assert(t, len(prof.PreAuthZHooks()) == 1, fmt.Sprintf("unexpected number of pre authz hooks [%d] for User operation [%v]", len(prof.PreAuthZHooks()), oper))
+		// user preference operation
+		prof, err = svc.GetCrudServiceProfile("UserPreference", oper)
+		AssertOk(t, err, fmt.Sprintf("error getting service profile for oper :%v", oper))
+		Assert(t, len(prof.PreAuthZHooks()) == 1, fmt.Sprintf("unexpected number of pre authz hooks [%d] for UserPreference operation [%v]", len(prof.PreAuthZHooks()), oper))
 	}
 	methods := []string{"PasswordChange", "PasswordReset", "IsAuthorized"}
 	for _, method := range methods {

@@ -1003,6 +1003,108 @@ func DecodeGrpcRespUser(ctx context.Context, response interface{}) (interface{},
 	return response, nil
 }
 
+func encodeHTTPUserPreference(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPUserPreference(_ context.Context, r *http.Request) (interface{}, error) {
+	var req UserPreference
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqUserPreference encodes GRPC request
+func EncodeGrpcReqUserPreference(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*UserPreference)
+	return req, nil
+}
+
+// DecodeGrpcReqUserPreference decodes GRPC request
+func DecodeGrpcReqUserPreference(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*UserPreference)
+	return req, nil
+}
+
+// EncodeGrpcRespUserPreference encodes GRC response
+func EncodeGrpcRespUserPreference(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespUserPreference decodes GRPC response
+func DecodeGrpcRespUserPreference(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPUserPreferenceSpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPUserPreferenceSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req UserPreferenceSpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqUserPreferenceSpec encodes GRPC request
+func EncodeGrpcReqUserPreferenceSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*UserPreferenceSpec)
+	return req, nil
+}
+
+// DecodeGrpcReqUserPreferenceSpec decodes GRPC request
+func DecodeGrpcReqUserPreferenceSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*UserPreferenceSpec)
+	return req, nil
+}
+
+// EncodeGrpcRespUserPreferenceSpec encodes GRC response
+func EncodeGrpcRespUserPreferenceSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespUserPreferenceSpec decodes GRPC response
+func DecodeGrpcRespUserPreferenceSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPUserPreferenceStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPUserPreferenceStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req UserPreferenceStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqUserPreferenceStatus encodes GRPC request
+func EncodeGrpcReqUserPreferenceStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*UserPreferenceStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqUserPreferenceStatus decodes GRPC request
+func DecodeGrpcReqUserPreferenceStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*UserPreferenceStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespUserPreferenceStatus encodes GRC response
+func EncodeGrpcRespUserPreferenceStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespUserPreferenceStatus decodes GRPC response
+func DecodeGrpcRespUserPreferenceStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPUserSpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

@@ -62,7 +62,7 @@ func (a *authHooks) authBootstrap(ctx context.Context, i interface{}) (context.C
 func (a *authHooks) addOwner(ctx context.Context, in interface{}) (context.Context, interface{}, error) {
 	a.logger.DebugLog("msg", "APIGw addOwner pre-authz hook called")
 	switch in.(type) {
-	case *auth.User, *auth.PasswordResetRequest, *auth.PasswordChangeRequest, *auth.SubjectAccessReviewRequest:
+	case *auth.User, *auth.PasswordResetRequest, *auth.PasswordChangeRequest, *auth.SubjectAccessReviewRequest, *auth.UserPreference:
 	default:
 		return ctx, in, errors.New("invalid input type")
 	}
@@ -488,12 +488,15 @@ func (a *authHooks) registerAddOwnerHook(svc apigw.APIGatewayService) error {
 	}
 	// user should be able to get/update his info
 	opers := []apiintf.APIOperType{apiintf.UpdateOper, apiintf.GetOper}
+	crudObjs := []string{"User", "UserPreference"}
 	for _, oper := range opers {
-		prof, err := svc.GetCrudServiceProfile("User", oper)
-		if err != nil {
-			return err
+		for _, crudObj := range crudObjs {
+			prof, err := svc.GetCrudServiceProfile(crudObj, oper)
+			if err != nil {
+				return err
+			}
+			prof.AddPreAuthZHook(a.addOwner)
 		}
-		prof.AddPreAuthZHook(a.addOwner)
 	}
 	return nil
 }

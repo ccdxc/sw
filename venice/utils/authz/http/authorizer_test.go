@@ -140,6 +140,7 @@ func TestAuthorizedOperations(t *testing.T) {
 			namespace: globals.DefaultNamespace,
 			ops: []authz.Operation{authz.NewOperation(authz.NewResource(globals.DefaultTenant, string(apiclient.GroupAuth), string(auth.KindRole), globals.DefaultNamespace, ""), auth.Permission_AllActions.String()),
 				authz.NewOperation(authz.NewResource(globals.DefaultTenant, string(apiclient.GroupAuth), string(auth.KindRoleBinding), globals.DefaultNamespace, ""), auth.Permission_AllActions.String()),
+				authz.NewOperation(authz.NewResource(globals.DefaultTenant, string(apiclient.GroupAuth), string(auth.KindUserPreference), globals.DefaultNamespace, ""), auth.Permission_AllActions.String()),
 				authz.NewOperation(authz.NewResource(globals.DefaultTenant, string(apiclient.GroupAuth), string(auth.KindUser), globals.DefaultNamespace, ""), auth.Permission_AllActions.String())},
 			action: auth.Permission_AllActions,
 		},

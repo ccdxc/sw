@@ -86,6 +86,20 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 		).Endpoint()
 		lAutoAddUserEndpoint = trace.ClientEndPoint("AuthV1:AutoAddUser")(lAutoAddUserEndpoint)
 	}
+	var lAutoAddUserPreferenceEndpoint endpoint.Endpoint
+	{
+		lAutoAddUserPreferenceEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoAddUserPreference",
+			auth.EncodeGrpcReqUserPreference,
+			auth.DecodeGrpcRespUserPreference,
+			&auth.UserPreference{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddUserPreferenceEndpoint = trace.ClientEndPoint("AuthV1:AutoAddUserPreference")(lAutoAddUserPreferenceEndpoint)
+	}
 	var lAutoDeleteAuthenticationPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoDeleteAuthenticationPolicyEndpoint = grpctransport.NewClient(
@@ -141,6 +155,20 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteUserEndpoint = trace.ClientEndPoint("AuthV1:AutoDeleteUser")(lAutoDeleteUserEndpoint)
+	}
+	var lAutoDeleteUserPreferenceEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteUserPreferenceEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoDeleteUserPreference",
+			auth.EncodeGrpcReqUserPreference,
+			auth.DecodeGrpcRespUserPreference,
+			&auth.UserPreference{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteUserPreferenceEndpoint = trace.ClientEndPoint("AuthV1:AutoDeleteUserPreference")(lAutoDeleteUserPreferenceEndpoint)
 	}
 	var lAutoGetAuthenticationPolicyEndpoint endpoint.Endpoint
 	{
@@ -198,6 +226,20 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 		).Endpoint()
 		lAutoGetUserEndpoint = trace.ClientEndPoint("AuthV1:AutoGetUser")(lAutoGetUserEndpoint)
 	}
+	var lAutoGetUserPreferenceEndpoint endpoint.Endpoint
+	{
+		lAutoGetUserPreferenceEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoGetUserPreference",
+			auth.EncodeGrpcReqUserPreference,
+			auth.DecodeGrpcRespUserPreference,
+			&auth.UserPreference{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetUserPreferenceEndpoint = trace.ClientEndPoint("AuthV1:AutoGetUserPreference")(lAutoGetUserPreferenceEndpoint)
+	}
 	var lAutoListAuthenticationPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoListAuthenticationPolicyEndpoint = grpctransport.NewClient(
@@ -254,6 +296,20 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 		).Endpoint()
 		lAutoListUserEndpoint = trace.ClientEndPoint("AuthV1:AutoListUser")(lAutoListUserEndpoint)
 	}
+	var lAutoListUserPreferenceEndpoint endpoint.Endpoint
+	{
+		lAutoListUserPreferenceEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoListUserPreference",
+			auth.EncodeGrpcReqListWatchOptions,
+			auth.DecodeGrpcRespUserPreferenceList,
+			&auth.UserPreferenceList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListUserPreferenceEndpoint = trace.ClientEndPoint("AuthV1:AutoListUserPreference")(lAutoListUserPreferenceEndpoint)
+	}
 	var lAutoUpdateAuthenticationPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoUpdateAuthenticationPolicyEndpoint = grpctransport.NewClient(
@@ -309,6 +365,20 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoUpdateUserEndpoint = trace.ClientEndPoint("AuthV1:AutoUpdateUser")(lAutoUpdateUserEndpoint)
+	}
+	var lAutoUpdateUserPreferenceEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateUserPreferenceEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoUpdateUserPreference",
+			auth.EncodeGrpcReqUserPreference,
+			auth.DecodeGrpcRespUserPreference,
+			&auth.UserPreference{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateUserPreferenceEndpoint = trace.ClientEndPoint("AuthV1:AutoUpdateUserPreference")(lAutoUpdateUserPreferenceEndpoint)
 	}
 	var lIsAuthorizedEndpoint endpoint.Endpoint
 	{
@@ -401,22 +471,27 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 		AutoAddRoleEndpoint:                    lAutoAddRoleEndpoint,
 		AutoAddRoleBindingEndpoint:             lAutoAddRoleBindingEndpoint,
 		AutoAddUserEndpoint:                    lAutoAddUserEndpoint,
+		AutoAddUserPreferenceEndpoint:          lAutoAddUserPreferenceEndpoint,
 		AutoDeleteAuthenticationPolicyEndpoint: lAutoDeleteAuthenticationPolicyEndpoint,
 		AutoDeleteRoleEndpoint:                 lAutoDeleteRoleEndpoint,
 		AutoDeleteRoleBindingEndpoint:          lAutoDeleteRoleBindingEndpoint,
 		AutoDeleteUserEndpoint:                 lAutoDeleteUserEndpoint,
+		AutoDeleteUserPreferenceEndpoint:       lAutoDeleteUserPreferenceEndpoint,
 		AutoGetAuthenticationPolicyEndpoint:    lAutoGetAuthenticationPolicyEndpoint,
 		AutoGetRoleEndpoint:                    lAutoGetRoleEndpoint,
 		AutoGetRoleBindingEndpoint:             lAutoGetRoleBindingEndpoint,
 		AutoGetUserEndpoint:                    lAutoGetUserEndpoint,
+		AutoGetUserPreferenceEndpoint:          lAutoGetUserPreferenceEndpoint,
 		AutoListAuthenticationPolicyEndpoint:   lAutoListAuthenticationPolicyEndpoint,
 		AutoListRoleEndpoint:                   lAutoListRoleEndpoint,
 		AutoListRoleBindingEndpoint:            lAutoListRoleBindingEndpoint,
 		AutoListUserEndpoint:                   lAutoListUserEndpoint,
+		AutoListUserPreferenceEndpoint:         lAutoListUserPreferenceEndpoint,
 		AutoUpdateAuthenticationPolicyEndpoint: lAutoUpdateAuthenticationPolicyEndpoint,
 		AutoUpdateRoleEndpoint:                 lAutoUpdateRoleEndpoint,
 		AutoUpdateRoleBindingEndpoint:          lAutoUpdateRoleBindingEndpoint,
 		AutoUpdateUserEndpoint:                 lAutoUpdateUserEndpoint,
+		AutoUpdateUserPreferenceEndpoint:       lAutoUpdateUserPreferenceEndpoint,
 		IsAuthorizedEndpoint:                   lIsAuthorizedEndpoint,
 		LdapBindCheckEndpoint:                  lLdapBindCheckEndpoint,
 		LdapConnectionCheckEndpoint:            lLdapConnectionCheckEndpoint,
@@ -1290,6 +1365,198 @@ func (a *restObjAuthV1RoleBinding) Allowed(oper apiintf.APIOperType) bool {
 	}
 }
 
+type grpcObjAuthV1UserPreference struct {
+	logger log.Logger
+	client auth.ServiceAuthV1Client
+}
+
+func (a *grpcObjAuthV1UserPreference) Create(ctx context.Context, in *auth.UserPreference) (*auth.UserPreference, error) {
+	a.logger.DebugLog("msg", "received call", "object", "UserPreference", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddUserPreference(nctx, in)
+}
+
+func (a *grpcObjAuthV1UserPreference) Update(ctx context.Context, in *auth.UserPreference) (*auth.UserPreference, error) {
+	a.logger.DebugLog("msg", "received call", "object", "UserPreference", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateUserPreference(nctx, in)
+}
+
+func (a *grpcObjAuthV1UserPreference) UpdateStatus(ctx context.Context, in *auth.UserPreference) (*auth.UserPreference, error) {
+	a.logger.DebugLog("msg", "received call", "object", "UserPreference", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateUserPreference(nctx, in)
+}
+
+func (a *grpcObjAuthV1UserPreference) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.UserPreference, error) {
+	a.logger.DebugLog("msg", "received call", "object", "UserPreference", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := auth.UserPreference{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetUserPreference(nctx, &in)
+}
+
+func (a *grpcObjAuthV1UserPreference) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*auth.UserPreference, error) {
+	a.logger.DebugLog("msg", "received call", "object", "UserPreference", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := auth.UserPreference{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteUserPreference(nctx, &in)
+}
+
+func (a *grpcObjAuthV1UserPreference) List(ctx context.Context, options *api.ListWatchOptions) ([]*auth.UserPreference, error) {
+	a.logger.DebugLog("msg", "received call", "object", "UserPreference", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListUserPreference(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjAuthV1UserPreference) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "UserPreference", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchUserPreference(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(auth.AuthV1_AutoWatchUserPreferenceClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjAuthV1UserPreference) Allowed(oper apiintf.APIOperType) bool {
+	return true
+}
+
+type restObjAuthV1UserPreference struct {
+	endpoints auth.EndpointsAuthV1RestClient
+	instance  string
+}
+
+func (a *restObjAuthV1UserPreference) Create(ctx context.Context, in *auth.UserPreference) (*auth.UserPreference, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddUserPreference(ctx, in)
+}
+
+func (a *restObjAuthV1UserPreference) Update(ctx context.Context, in *auth.UserPreference) (*auth.UserPreference, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateUserPreference(ctx, in)
+}
+
+func (a *restObjAuthV1UserPreference) UpdateStatus(ctx context.Context, in *auth.UserPreference) (*auth.UserPreference, error) {
+	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjAuthV1UserPreference) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.UserPreference, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := auth.UserPreference{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetUserPreference(ctx, &in)
+}
+
+func (a *restObjAuthV1UserPreference) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*auth.UserPreference, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := auth.UserPreference{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteUserPreference(ctx, &in)
+}
+
+func (a *restObjAuthV1UserPreference) List(ctx context.Context, options *api.ListWatchOptions) ([]*auth.UserPreference, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
+	}
+	r, err := a.endpoints.AutoListUserPreference(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjAuthV1UserPreference) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoWatchUserPreference(ctx, options)
+}
+
+func (a *restObjAuthV1UserPreference) Allowed(oper apiintf.APIOperType) bool {
+	switch oper {
+	case apiintf.CreateOper:
+		return false
+	case apiintf.UpdateOper:
+		return true
+	case apiintf.GetOper:
+		return true
+	case apiintf.DeleteOper:
+		return false
+	case apiintf.ListOper:
+		return false
+	case apiintf.WatchOper:
+		return false
+	default:
+		return false
+	}
+}
+
 type crudClientAuthV1 struct {
 	logger log.Logger
 	client auth.ServiceAuthV1Client
@@ -1298,6 +1565,7 @@ type crudClientAuthV1 struct {
 	grpcAuthenticationPolicy auth.AuthV1AuthenticationPolicyInterface
 	grpcRole                 auth.AuthV1RoleInterface
 	grpcRoleBinding          auth.AuthV1RoleBindingInterface
+	grpcUserPreference       auth.AuthV1UserPreferenceInterface
 }
 
 // NewGrpcCrudClientAuthV1 creates a GRPC client for the service
@@ -1311,6 +1579,7 @@ func NewGrpcCrudClientAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.Auth
 		grpcAuthenticationPolicy: &grpcObjAuthV1AuthenticationPolicy{client: client, logger: logger},
 		grpcRole:                 &grpcObjAuthV1Role{client: client, logger: logger},
 		grpcRoleBinding:          &grpcObjAuthV1RoleBinding{client: client, logger: logger},
+		grpcUserPreference:       &grpcObjAuthV1UserPreference{client: client, logger: logger},
 	}
 }
 
@@ -1328,6 +1597,10 @@ func (a *crudClientAuthV1) Role() auth.AuthV1RoleInterface {
 
 func (a *crudClientAuthV1) RoleBinding() auth.AuthV1RoleBindingInterface {
 	return a.grpcRoleBinding
+}
+
+func (a *crudClientAuthV1) UserPreference() auth.AuthV1UserPreferenceInterface {
+	return a.grpcUserPreference
 }
 
 func (a *crudClientAuthV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
@@ -1377,6 +1650,7 @@ type crudRestClientAuthV1 struct {
 	restAuthenticationPolicy auth.AuthV1AuthenticationPolicyInterface
 	restRole                 auth.AuthV1RoleInterface
 	restRoleBinding          auth.AuthV1RoleBindingInterface
+	restUserPreference       auth.AuthV1UserPreferenceInterface
 }
 
 // NewRestCrudClientAuthV1 creates a REST client for the service.
@@ -1391,6 +1665,7 @@ func NewRestCrudClientAuthV1(url string, httpClient *http.Client) auth.AuthV1Int
 		restAuthenticationPolicy: &restObjAuthV1AuthenticationPolicy{endpoints: endpoints, instance: url},
 		restRole:                 &restObjAuthV1Role{endpoints: endpoints, instance: url},
 		restRoleBinding:          &restObjAuthV1RoleBinding{endpoints: endpoints, instance: url},
+		restUserPreference:       &restObjAuthV1UserPreference{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -1406,6 +1681,7 @@ func NewStagedRestCrudClientAuthV1(url string, id string, httpClient *http.Clien
 		restAuthenticationPolicy: &restObjAuthV1AuthenticationPolicy{endpoints: endpoints, instance: url},
 		restRole:                 &restObjAuthV1Role{endpoints: endpoints, instance: url},
 		restRoleBinding:          &restObjAuthV1RoleBinding{endpoints: endpoints, instance: url},
+		restUserPreference:       &restObjAuthV1UserPreference{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -1423,6 +1699,10 @@ func (a *crudRestClientAuthV1) Role() auth.AuthV1RoleInterface {
 
 func (a *crudRestClientAuthV1) RoleBinding() auth.AuthV1RoleBindingInterface {
 	return a.restRoleBinding
+}
+
+func (a *crudRestClientAuthV1) UserPreference() auth.AuthV1UserPreferenceInterface {
+	return a.restUserPreference
 }
 
 func (a *crudRestClientAuthV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
