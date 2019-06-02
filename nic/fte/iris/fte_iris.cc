@@ -800,7 +800,7 @@ ctx_t::update_flow_table()
         ret = hal::session_create(&session_args, &session_handle, &session);
         if (ret == HAL_RET_OK) {
             session_ = session;
-            // Insert session sepcific feature state
+            // Insert session specific feature state
             for (uint16_t id = 0; id < num_features_; id++) {
                 feature_session_state_t *state = feature_state_[id].session_state;
                 if (state) {

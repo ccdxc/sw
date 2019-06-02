@@ -103,13 +103,14 @@ def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collecto
     elif feature == 'flowmon':
         api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
                                "tcpdump -nni %s udp and dst port 2055" % (collector_w.interface), background=True)
+
     cmd = GetHping3Cmd(protocol, src_wl, destination_ip, destination_port)
     api.Trigger_AddCommand(req, src_wl.node_name, src_wl.workload_name, cmd)
     api.Logger.info("Running from src_wl_ip {} COMMAND {}".format(src_wl.ip_address, cmd))
 
     trig_resp = api.Trigger(req)
     if feature == 'flowmon':
-        time.sleep(3)
+        time.sleep(6)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
     for cmd in resp.commands:

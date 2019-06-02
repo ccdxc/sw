@@ -61,9 +61,13 @@ telemetry_eval_sessions (void)
             HAL_TRACE_ERR("Out of memory - skipping delete session {}", session->hal_handle);
             return false;
         }
-        HAL_TRACE_DEBUG("add the handle {}", session->hal_handle);
-        list_entry->handle_id = session->hal_handle;
-        dllist_add(list_head, &list_entry->dllist_ctxt);
+        if (!session->is_ipfix_flow) {
+            HAL_TRACE_DEBUG("add the handle {}", session->hal_handle);
+            list_entry->handle_id = session->hal_handle;
+            dllist_add(list_head, &list_entry->dllist_ctxt);
+        } else {
+            HAL_TRACE_DEBUG("Skipping IPFIX flow {}", session->hal_handle);
+        }
         return false;
     };
 

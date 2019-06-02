@@ -186,14 +186,36 @@ telemetry_exec_delete (fte::ctx_t &ctx)
         hal::session_t *ls = (session_t *)
             g_hal_state->session_hal_telemetry_ht()->lookup(&session->hal_handle);
         if (ls) {
-            HAL_TRACE_DEBUG("Found IPFIX session. Deleting from HT");
+            HAL_TRACE_DEBUG("Found IPFIX session {} Deleting from HT",
+                                               session->hal_handle);
             g_hal_state->session_hal_telemetry_ht()->remove_entry(session,
-                                                &session->hal_telemetry_ht_ctxt);
+                                               &session->hal_telemetry_ht_ctxt);
         }
     }
 
     return fte::PIPELINE_CONTINUE;
 }
+
+static void
+telemetry_completion_hdlr (fte::ctx_t& ctx, bool status)
+{
+    hal::session_t *session = ctx.session();
+    
+    // Insert IPFIX sessions to telemetry db
+    if (session && ctx.is_ipfix_flow()) {
+        hal::session_t *ls = (session_t *)
+            g_hal_state->session_hal_telemetry_ht()->lookup(&session->hal_handle);
+        if (!ls) {
+            session->hal_telemetry_ht_ctxt.reset();
+            HAL_TRACE_DEBUG("Inserting IPFIX session {} into HT",
+                                               session->hal_handle);
+            g_hal_state->session_hal_telemetry_ht()->insert(session,
+                                               &session->hal_telemetry_ht_ctxt);
+            session->is_ipfix_flow = true;
+        }
+    }
+}
+
 
 /*
  * telemetry_exec
@@ -210,24 +232,12 @@ telemetry_exec (fte::ctx_t &ctx)
     if ((session && session->is_ipfix_flow) ||
             (ctx.cpu_rxhdr() && (ctx.cpu_rxhdr()->src_lif == HAL_LIF_CPU) &&
             (ctx.cpu_rxhdr()->src_app_id == P4PLUS_APPTYPE_TELEMETRY))) {
+        HAL_TRACE_DEBUG("Processing IPFIX flow");
         /* Skip rflow for IPFIX pkts */
         ctx.set_valid_rflow(false);
+        ctx.set_is_ipfix_flow(true);
+        ctx.register_completion_handler(telemetry_completion_hdlr);
         telemetry_pick_dest_if(ctx);
-        
-        // Insert IPFIX sessions to local db
-        if (ctx.pipeline_event() != fte::FTE_SESSION_UPDATE) {
-            if (session) {
-            hal::session_t *ls = (session_t *)
-                g_hal_state->session_hal_telemetry_ht()->lookup(&session->hal_handle);
-            if (!ls) {
-                session->hal_telemetry_ht_ctxt.reset();
-                HAL_TRACE_DEBUG("Inserting IPFIX session into HT");
-                g_hal_state->session_hal_telemetry_ht()->insert(session,
-                                                    &session->hal_telemetry_ht_ctxt);
-            }
-            session->is_ipfix_flow = true;
-            }
-        }
         // No need to evaluate telemetry rules for IPFIX flows
         return fte::PIPELINE_CONTINUE;
     }

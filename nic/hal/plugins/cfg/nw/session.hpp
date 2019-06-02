@@ -363,6 +363,7 @@ typedef struct session_args_s {
     bool               valid_rflow;                       // Rflow valid ?
     bool               update_iflow;                      // Update Iflow ?
     bool               update_rflow;                      // Update Rflow ?
+    bool               is_ipfix_flow;                     // IPFix flow ?
     vrf_t              *vrf;                              // src vrf
     ep_t               *sep;                              // spurce ep
     ep_t               *dep;                              // dest ep

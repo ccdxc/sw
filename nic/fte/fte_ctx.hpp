@@ -650,6 +650,9 @@ public:
     bool valid_rflow() const { return valid_rflow_; }
     void set_valid_rflow(bool val) { valid_rflow_ = val; }
 
+    bool is_ipfix_flow() const { return is_ipfix_flow_; }
+    void set_is_ipfix_flow(bool val) { is_ipfix_flow_ = val; }
+
     flow_t *flow(hal::flow_role_t role, uint8_t stage=0) {
          if (role == hal::FLOW_ROLE_INITIATOR) {
              return (iflow_[stage]);
@@ -781,6 +784,7 @@ private:
     uint8_t               rstage_;          // current rflow stage
     bool                  valid_iflow_;     // Is iflow valid
     bool                  valid_rflow_;     // Is rflow valid
+    bool                  is_ipfix_flow_;   // Is rflow valid
     bool                  ignore_session_create_; //ignore session creation for the flow.
     flow_t                *iflow_[MAX_STAGES];       // iflow
     flow_t                *rflow_[MAX_STAGES];       // rflow
