@@ -18,11 +18,15 @@ export enum ApiListWatchOptions_sort_order {
     'ByModTimeReverse' = "ByModTimeReverse",
 }
 
-export enum LabelsRequirement_operator {
+export enum FieldsRequirement_operator {
     'equals' = "equals",
     'notEquals' = "notEquals",
     'in' = "in",
     'notIn' = "notIn",
+    'gt' = "gt",
+    'gte' = "gte",
+    'lt' = "lt",
+    'lte' = "lte",
 }
 
 export enum Telemetry_queryFwlog_action {
@@ -76,7 +80,11 @@ export enum ApiListWatchOptions_sort_order_uihint {
     'None' = "None",
 }
 
-export enum LabelsRequirement_operator_uihint {
+export enum FieldsRequirement_operator_uihint {
+    'gt' = "greater than",
+    'gte' = "greater than or equals",
+    'lt' = "less than",
+    'lte' = "less than or equals",
     'notEquals' = "not equals",
     'notIn' = "not in",
 }
@@ -135,7 +143,7 @@ export class AllEnums {
     }
 
     ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
-    LabelsRequirement_operator = LabelsRequirement_operator;
+    FieldsRequirement_operator = FieldsRequirement_operator;
     Telemetry_queryFwlog_action = Telemetry_queryFwlog_action;
     Telemetry_queryFwlog_direction = Telemetry_queryFwlog_direction;
     Telemetry_queryFwlogsQuerySpec_actions = Telemetry_queryFwlogsQuerySpec_actions;
@@ -145,7 +153,7 @@ export class AllEnums {
     Telemetry_queryMetricsQuerySpec_sort_order = Telemetry_queryMetricsQuerySpec_sort_order;
 
     ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;
-    LabelsRequirement_operator_uihint = LabelsRequirement_operator_uihint;
+    FieldsRequirement_operator_uihint = FieldsRequirement_operator_uihint;
     Telemetry_queryFwlog_action_uihint = Telemetry_queryFwlog_action_uihint;
     Telemetry_queryFwlog_direction_uihint = Telemetry_queryFwlog_direction_uihint;
     Telemetry_queryFwlogsQuerySpec_actions_uihint = Telemetry_queryFwlogsQuerySpec_actions_uihint;

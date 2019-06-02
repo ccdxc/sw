@@ -15,8 +15,8 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/errors"
+	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/telemetry_query"
-	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/citadel/broker/mock"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -120,7 +120,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				Name:   "test",
 				Fields: []string{"cpu"},
 			},
-			resp: "SELECT cpu FROM test-db WHERE \"meta.name\" = 'test' ORDER BY time ASC",
+			resp: "SELECT cpu FROM test-db WHERE \"Name\" = 'test' ORDER BY time ASC",
 			pass: true,
 		},
 		{
@@ -129,10 +129,10 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
 				},
-				Selector: &labels.Selector{
-					Requirements: []*labels.Requirement{
-						&labels.Requirement{
-							Key:      "meta.name",
+				Selector: &fields.Selector{
+					Requirements: []*fields.Requirement{
+						&fields.Requirement{
+							Key:      "Name",
 							Operator: "equals",
 							Values:   []string{"test"},
 						},
@@ -140,7 +140,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				},
 				Fields: []string{"cpu"},
 			},
-			resp: "SELECT cpu FROM test-db WHERE \"meta.name\" = 'test' ORDER BY time ASC",
+			resp: "SELECT cpu FROM test-db WHERE \"Name\" = 'test' ORDER BY time ASC",
 			pass: true,
 		},
 		{
@@ -654,7 +654,7 @@ func TestValidateQuerySpec(t *testing.T) {
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
-				Selector: &labels.Selector{
+				Selector: &fields.Selector{
 					Requirements: nil,
 				},
 				Function:     "mean",
@@ -671,8 +671,8 @@ func TestValidateQuerySpec(t *testing.T) {
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
-				Selector: &labels.Selector{
-					Requirements: []*labels.Requirement{},
+				Selector: &fields.Selector{
+					Requirements: []*fields.Requirement{},
 				},
 				Function:     "mean",
 				Fields:       []string{},
@@ -688,10 +688,10 @@ func TestValidateQuerySpec(t *testing.T) {
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
-				Selector: &labels.Selector{
-					Requirements: []*labels.Requirement{
-						&labels.Requirement{
-							Key:      "meta.name",
+				Selector: &fields.Selector{
+					Requirements: []*fields.Requirement{
+						&fields.Requirement{
+							Key:      "Name",
 							Operator: "equals",
 						},
 					},
@@ -712,10 +712,10 @@ func TestValidateQuerySpec(t *testing.T) {
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
-				Selector: &labels.Selector{
-					Requirements: []*labels.Requirement{
-						&labels.Requirement{
-							Key:      "meta.name",
+				Selector: &fields.Selector{
+					Requirements: []*fields.Requirement{
+						&fields.Requirement{
+							Key:      "Name",
 							Operator: "equals",
 							Values:   []string{"test"},
 						},
@@ -803,10 +803,10 @@ func TestMetricsQuery(t *testing.T) {
 						TypeMeta: api.TypeMeta{
 							Kind: "Node",
 						},
-						Selector: &labels.Selector{
-							Requirements: []*labels.Requirement{
-								&labels.Requirement{
-									Key:      "meta.name",
+						Selector: &fields.Selector{
+							Requirements: []*fields.Requirement{
+								&fields.Requirement{
+									Key:      "Name",
 									Operator: "equals",
 									Values:   []string{"test"},
 								},
@@ -819,10 +819,10 @@ func TestMetricsQuery(t *testing.T) {
 						TypeMeta: api.TypeMeta{
 							Kind: "Node",
 						},
-						Selector: &labels.Selector{
-							Requirements: []*labels.Requirement{
-								&labels.Requirement{
-									Key:      "meta.name",
+						Selector: &fields.Selector{
+							Requirements: []*fields.Requirement{
+								&fields.Requirement{
+									Key:      "Name",
 									Operator: "equals",
 									Values:   []string{"test1"},
 								},
@@ -835,10 +835,10 @@ func TestMetricsQuery(t *testing.T) {
 						TypeMeta: api.TypeMeta{
 							Kind: "Node",
 						},
-						Selector: &labels.Selector{
-							Requirements: []*labels.Requirement{
-								&labels.Requirement{
-									Key:      "meta.name",
+						Selector: &fields.Selector{
+							Requirements: []*fields.Requirement{
+								&fields.Requirement{
+									Key:      "Name",
 									Operator: "equals",
 									Values:   []string{"test2"},
 								},
@@ -849,7 +849,7 @@ func TestMetricsQuery(t *testing.T) {
 					},
 				},
 			},
-			citadelQuery: "SELECT * FROM Node WHERE \"meta.name\" = 'test' ORDER BY time ASC; SELECT * FROM Node WHERE \"meta.name\" = 'test1' ORDER BY time ASC; SELECT * FROM Node WHERE \"meta.name\" = 'test2' ORDER BY time ASC",
+			citadelQuery: "SELECT * FROM Node WHERE \"Name\" = 'test' ORDER BY time ASC; SELECT * FROM Node WHERE \"Name\" = 'test1' ORDER BY time ASC; SELECT * FROM Node WHERE \"Name\" = 'test2' ORDER BY time ASC",
 			errMsg:       "",
 			clusterCheckResponse: &ClusterCheckResponse{
 				err: nil,

@@ -7,16 +7,16 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { LabelsRequirement, ILabelsRequirement } from './labels-requirement.model';
+import { FieldsRequirement, IFieldsRequirement } from './fields-requirement.model';
 
-export interface ILabelsSelector {
-    'requirements'?: Array<ILabelsRequirement>;
+export interface IFieldsSelector {
+    'requirements'?: Array<IFieldsRequirement>;
 }
 
 
-export class LabelsSelector extends BaseModel implements ILabelsSelector {
+export class FieldsSelector extends BaseModel implements IFieldsSelector {
     /** Requirements are ANDed. */
-    'requirements': Array<LabelsRequirement> = null;
+    'requirements': Array<FieldsRequirement> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'requirements': {
             description:  'Requirements are ANDed.',
@@ -26,19 +26,19 @@ export class LabelsSelector extends BaseModel implements ILabelsSelector {
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return LabelsSelector.propInfo[propName];
+        return FieldsSelector.propInfo[propName];
     }
 
     public getPropInfoConfig(): { [key:string]:PropInfoItem } {
-        return LabelsSelector.propInfo;
+        return FieldsSelector.propInfo;
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (LabelsSelector.propInfo[prop] != null &&
-                        LabelsSelector.propInfo[prop].default != null);
+        return (FieldsSelector.propInfo[prop] != null &&
+                        FieldsSelector.propInfo[prop].default != null);
     }
 
     /**
@@ -47,7 +47,7 @@ export class LabelsSelector extends BaseModel implements ILabelsSelector {
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this['requirements'] = new Array<LabelsRequirement>();
+        this['requirements'] = new Array<FieldsRequirement>();
         this.setValues(values, setDefaults);
     }
 
@@ -57,7 +57,7 @@ export class LabelsSelector extends BaseModel implements ILabelsSelector {
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<LabelsRequirement>(this, 'requirements', values['requirements'], LabelsRequirement);
+            this.fillModelArray<FieldsRequirement>(this, 'requirements', values['requirements'], FieldsRequirement);
         } else {
             this['requirements'] = [];
         }
@@ -71,7 +71,7 @@ export class LabelsSelector extends BaseModel implements ILabelsSelector {
                 'requirements': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<LabelsRequirement>('requirements', this['requirements'], LabelsRequirement);
+            this.fillFormArray<FieldsRequirement>('requirements', this['requirements'], FieldsRequirement);
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('requirements') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('requirements').get(field);
@@ -87,7 +87,7 @@ export class LabelsSelector extends BaseModel implements ILabelsSelector {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<LabelsRequirement>(this, 'requirements', this['requirements'], LabelsRequirement);
+            this.fillModelArray<FieldsRequirement>(this, 'requirements', this['requirements'], FieldsRequirement);
         }
     }
 }

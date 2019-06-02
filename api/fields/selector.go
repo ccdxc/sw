@@ -236,6 +236,30 @@ func (r *Requirement) Print() string {
 	return buffer.String()
 }
 
+// PrintSQL returns a SQL style human-readable string that represents this
+// Requirement. If called on an invalid Requirement, an error is
+// returned. See NewRequirement for creating a valid Requirement.
+func (r *Requirement) PrintSQL() (string, error) {
+	var buffer bytes.Buffer
+	buffer.WriteString(fmt.Sprintf("\"%s\"", r.Key))
+
+	if len(r.Values) != 1 {
+		return "", fmt.Errorf("Only a single value supported")
+	}
+
+	switch Operator(Operator_value[r.Operator]) {
+	case Operator_equals:
+		buffer.WriteString(" = ")
+	case Operator_notEquals:
+		buffer.WriteString(" != ")
+	default:
+		return "", fmt.Errorf("%v not supported", Operator(Operator_value[r.Operator]))
+	}
+
+	buffer.WriteString(fmt.Sprintf("'%s'", r.Values[0]))
+	return buffer.String(), nil
+}
+
 // Validate validates the requirement.
 // Dummy function to help compile .ext.go files that include Requirement.
 func (r *Requirement) Validate(ver, path string, ignoreStatus, ignoreSpec bool) []error {
@@ -253,6 +277,19 @@ func (s *Selector) Print() string {
 		reqs = append(reqs, s.Requirements[ii].Print())
 	}
 	return strings.Join(reqs, ",")
+}
+
+// PrintSQL returns a sql style human-readable string for the Selector.
+func (s *Selector) PrintSQL() (string, error) {
+	var reqs []string
+	for ii := range s.Requirements {
+		reqStr, err := s.Requirements[ii].PrintSQL()
+		if err != nil {
+			return "", err
+		}
+		reqs = append(reqs, reqStr)
+	}
+	return strings.Join(reqs, " AND "), nil
 }
 
 // Validate validates the selector.

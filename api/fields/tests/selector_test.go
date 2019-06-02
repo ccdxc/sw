@@ -13,6 +13,7 @@ import (
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/network"
+	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 func TestSelectorParse(t *testing.T) {
@@ -707,5 +708,89 @@ func TestMatchesOnNonStringKeys(t *testing.T) {
 		if tests[ii].selector.MatchesObj(a) != tests[ii].match {
 			t.Fatalf("Expected to match, but failed: index %v, selector %v", ii, tests[ii].selector)
 		}
+	}
+}
+
+func TestPrintSQL(t *testing.T) {
+	testCases := []struct {
+		sel    *Selector
+		expStr string
+		expErr bool
+	}{
+		{&Selector{
+			Requirements: []*Requirement{
+				{
+					Key:      "keyA",
+					Operator: "equals",
+					Values:   []string{"valA"},
+				},
+			},
+		},
+			`"keyA" = 'valA'`,
+			false,
+		},
+		{&Selector{
+			Requirements: []*Requirement{
+				{
+					Key:      "keyA",
+					Operator: "equals",
+					Values:   []string{"valA"},
+				},
+				{
+					Key:      "keyB",
+					Operator: "notEquals",
+					Values:   []string{"valB"},
+				},
+			},
+		},
+			`"keyA" = 'valA' AND "keyB" != 'valB'`,
+			false,
+		},
+		{&Selector{
+			Requirements: []*Requirement{
+				{
+					Key:      "keyA",
+					Operator: "equals",
+					Values:   []string{"valA", "AA"},
+				},
+				{
+					Key:      "keyB",
+					Operator: "notEquals",
+					Values:   []string{"valB"},
+				},
+			},
+		},
+			``,
+			true,
+		},
+		{&Selector{
+			Requirements: []*Requirement{
+				{
+					Key:      "keyA",
+					Operator: "equals",
+					Values:   []string{"valA"},
+				},
+				{
+					Key:      "keyB",
+					Operator: "in",
+					Values:   []string{"valB", "BB"},
+				},
+			},
+		},
+			``,
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		actStr, err := tc.sel.PrintSQL()
+		if tc.expErr {
+			Assert(t, err != nil, "Expected error parsing %+v", *tc.sel)
+			continue
+		} else {
+			AssertOk(t, err, "PrintSQL: %v", err)
+		}
+
+		Assert(t, actStr == tc.expStr, "expected: %s, got: %s", tc.expStr, actStr)
 	}
 }

@@ -1,4 +1,4 @@
-import { ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function, Telemetry_queryMetricsQuerySpec, LabelsRequirement_operator, ILabelsSelector, Telemetry_queryMetricsQuerySpec_sort_order } from '@sdk/v1/models/generated/telemetry_query';
+import { ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function, Telemetry_queryMetricsQuerySpec, FieldsRequirement_operator, IFieldsSelector, Telemetry_queryMetricsQuerySpec_sort_order } from '@sdk/v1/models/generated/telemetry_query';
 import { Utility } from './Utility';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
@@ -111,7 +111,7 @@ export class MetricsUtility {
     }
   }
 
-  public static timeSeriesQuery(kind: string, selector: ILabelsSelector = null): Telemetry_queryMetricsQuerySpec {
+  public static timeSeriesQuery(kind: string, selector: IFieldsSelector = null): Telemetry_queryMetricsQuerySpec {
     const timeSeriesQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': kind,
       'name': null,
@@ -131,7 +131,7 @@ export class MetricsUtility {
     return new Telemetry_queryMetricsQuerySpec(timeSeriesQuery);
   }
 
-  public static timeSeriesQueryPolling(kind: string, selector: ILabelsSelector = null): MetricsPollingQuery {
+  public static timeSeriesQueryPolling(kind: string, selector: IFieldsSelector = null): MetricsPollingQuery {
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
       mergeFunction: MetricsUtility.timeSeriesQueryMerge
@@ -173,7 +173,7 @@ export class MetricsUtility {
     return currData;
   }
 
-  public static pastFiveMinAverageQuery(kind: string, selector: ILabelsSelector = null): Telemetry_queryMetricsQuerySpec {
+  public static pastFiveMinAverageQuery(kind: string, selector: IFieldsSelector = null): Telemetry_queryMetricsQuerySpec {
     const avgQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': kind,
       'name': null,
@@ -191,7 +191,7 @@ export class MetricsUtility {
     return new Telemetry_queryMetricsQuerySpec(avgQuery);
   }
 
-  public static pastFiveMinAverageQueryPolling(kind: string, selector: ILabelsSelector = null): MetricsPollingQuery {
+  public static pastFiveMinAverageQueryPolling(kind: string, selector: IFieldsSelector = null): MetricsPollingQuery {
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.pastFiveMinQueryUpdate,
     };
@@ -203,7 +203,7 @@ export class MetricsUtility {
     queryBody['end-time'] = 'now()' as any;
   }
 
-  public static intervalAverageQuery(kind: string, startTime, endTime, selector: ILabelsSelector = null): Telemetry_queryMetricsQuerySpec {
+  public static intervalAverageQuery(kind: string, startTime, endTime, selector: IFieldsSelector = null): Telemetry_queryMetricsQuerySpec {
     const avgQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': kind,
       'name': null,
@@ -229,7 +229,7 @@ export class MetricsUtility {
   }
 
 
-  public static pastDayAverageQuery(kind: string, selector: ILabelsSelector = null): Telemetry_queryMetricsQuerySpec {
+  public static pastDayAverageQuery(kind: string, selector: IFieldsSelector = null): Telemetry_queryMetricsQuerySpec {
     const avgQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': kind,
       'name': null,
@@ -247,7 +247,7 @@ export class MetricsUtility {
     return new Telemetry_queryMetricsQuerySpec(avgQuery);
   }
 
-  public static pastDayAverageQueryPolling(kind: string, selector: ILabelsSelector = null): MetricsPollingQuery {
+  public static pastDayAverageQueryPolling(kind: string, selector: IFieldsSelector = null): MetricsPollingQuery {
     const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastDayAverageQuery(kind, selector);
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.pastDayAverageQueryUpdate,
@@ -261,7 +261,7 @@ export class MetricsUtility {
     queryBody['end-time'] = 'now()' as any;
   }
 
-  public static maxObjQuery(kind: string, selector: ILabelsSelector = null): Telemetry_queryMetricsQuerySpec {
+  public static maxObjQuery(kind: string, selector: IFieldsSelector = null): Telemetry_queryMetricsQuerySpec {
     const maxNodeQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': kind,
       'name': null,
@@ -281,7 +281,7 @@ export class MetricsUtility {
     return new Telemetry_queryMetricsQuerySpec(maxNodeQuery);
   }
 
-  public static maxObjQueryPolling(kind: string, selector: ILabelsSelector = null): MetricsPollingQuery {
+  public static maxObjQueryPolling(kind: string, selector: IFieldsSelector = null): MetricsPollingQuery {
     const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.maxObjQuery(kind, selector);
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.maxObjQueryUpdate,
@@ -357,13 +357,13 @@ export class MetricsUtility {
     }
   }
 
-  public static createNameSelector(name: string): ILabelsSelector {
+  public static createNameSelector(name: string): IFieldsSelector {
     if (name != null) {
       return {
         'requirements': [
           {
             'key': 'Name',
-            'operator': LabelsRequirement_operator.equals,
+            'operator': FieldsRequirement_operator.equals,
             'values': [name]
           }
         ]

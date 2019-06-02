@@ -12,9 +12,9 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/telemetry_query"
-	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/nic/agent/tmagent/state/fwgen/fwevent"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/telemetryclient"
@@ -456,11 +456,11 @@ var _ = Describe("telemetry tests", func() {
 										Kind: "SmartNIC",
 									},
 									StartTime: stime,
-									Selector: &labels.Selector{
-										Requirements: []*labels.Requirement{
+									Selector: &fields.Selector{
+										Requirements: []*fields.Requirement{
 											{
 												Key:      "reporterID",
-												Operator: labels.Operator_equals.String(),
+												Operator: fields.Operator_equals.String(),
 												Values:   []string{smartnic},
 											},
 										},

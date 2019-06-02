@@ -7,20 +7,20 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { LabelsRequirement_operator,  LabelsRequirement_operator_uihint  } from './enums';
+import { FieldsRequirement_operator,  FieldsRequirement_operator_uihint  } from './enums';
 
-export interface ILabelsRequirement {
+export interface IFieldsRequirement {
     'key'?: string;
-    'operator': LabelsRequirement_operator;
+    'operator': FieldsRequirement_operator;
     'values'?: Array<string>;
 }
 
 
-export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
+export class FieldsRequirement extends BaseModel implements IFieldsRequirement {
     /** The label key that the condition applies to. */
     'key': string = null;
     /** Condition checked for the key. */
-    'operator': LabelsRequirement_operator = null;
+    'operator': FieldsRequirement_operator = null;
     /** Values contains one or more values corresponding to the label key. "equals" and
     "notEquals" operators need a single Value. "in" and "notIn" operators can have
     one or more values. */
@@ -32,7 +32,7 @@ export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
             type: 'string'
         },
         'operator': {
-            enum: LabelsRequirement_operator_uihint,
+            enum: FieldsRequirement_operator_uihint,
             default: 'equals',
             description:  'Condition checked for the key.',
             required: true,
@@ -46,19 +46,19 @@ export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return LabelsRequirement.propInfo[propName];
+        return FieldsRequirement.propInfo[propName];
     }
 
     public getPropInfoConfig(): { [key:string]:PropInfoItem } {
-        return LabelsRequirement.propInfo;
+        return FieldsRequirement.propInfo;
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (LabelsRequirement.propInfo[prop] != null &&
-                        LabelsRequirement.propInfo[prop].default != null);
+        return (FieldsRequirement.propInfo[prop] != null &&
+                        FieldsRequirement.propInfo[prop].default != null);
     }
 
     /**
@@ -78,22 +78,22 @@ export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
     setValues(values: any, fillDefaults = true): void {
         if (values && values['key'] != null) {
             this['key'] = values['key'];
-        } else if (fillDefaults && LabelsRequirement.hasDefaultValue('key')) {
-            this['key'] = LabelsRequirement.propInfo['key'].default;
+        } else if (fillDefaults && FieldsRequirement.hasDefaultValue('key')) {
+            this['key'] = FieldsRequirement.propInfo['key'].default;
         } else {
             this['key'] = null
         }
         if (values && values['operator'] != null) {
             this['operator'] = values['operator'];
-        } else if (fillDefaults && LabelsRequirement.hasDefaultValue('operator')) {
-            this['operator'] = <LabelsRequirement_operator>  LabelsRequirement.propInfo['operator'].default;
+        } else if (fillDefaults && FieldsRequirement.hasDefaultValue('operator')) {
+            this['operator'] = <FieldsRequirement_operator>  FieldsRequirement.propInfo['operator'].default;
         } else {
             this['operator'] = null
         }
         if (values && values['values'] != null) {
             this['values'] = values['values'];
-        } else if (fillDefaults && LabelsRequirement.hasDefaultValue('values')) {
-            this['values'] = [ LabelsRequirement.propInfo['values'].default];
+        } else if (fillDefaults && FieldsRequirement.hasDefaultValue('values')) {
+            this['values'] = [ FieldsRequirement.propInfo['values'].default];
         } else {
             this['values'] = [];
         }
@@ -104,9 +104,9 @@ export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'key': CustomFormControl(new FormControl(this['key']), LabelsRequirement.propInfo['key']),
-                'operator': CustomFormControl(new FormControl(this['operator'], [required, enumValidator(LabelsRequirement_operator), ]), LabelsRequirement.propInfo['operator']),
-                'values': CustomFormControl(new FormControl(this['values']), LabelsRequirement.propInfo['values']),
+                'key': CustomFormControl(new FormControl(this['key']), FieldsRequirement.propInfo['key']),
+                'operator': CustomFormControl(new FormControl(this['operator'], [required, enumValidator(FieldsRequirement_operator), ]), FieldsRequirement.propInfo['operator']),
+                'values': CustomFormControl(new FormControl(this['values']), FieldsRequirement.propInfo['values']),
             });
         }
         return this._formGroup;

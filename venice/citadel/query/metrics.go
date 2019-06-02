@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/pensando/sw/api/labels"
+	"github.com/pensando/sw/api/fields"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/errors"
@@ -184,35 +184,35 @@ func (q *Server) Metrics(c context.Context, ql *telemetry_query.MetricsQueryList
 
 func buildCitadelMetricsQuery(qs *telemetry_query.MetricsQuerySpec) (string, error) {
 	measurement := qs.Kind
-	fields := []string{"*"}
+	selectedFields := []string{"*"}
 	var selectors []string
 
 	if len(qs.Fields) > 0 {
-		fields = qs.Fields
+		selectedFields = qs.Fields
 	}
 
 	if qs.Function != "" {
 		switch qs.Function {
 		case telemetry_query.TsdbFunctionType_MEAN.String(), telemetry_query.TsdbFunctionType_MAX.String():
 			newFields := []string{}
-			for _, field := range fields {
+			for _, field := range selectedFields {
 				newFields = append(newFields, fmt.Sprintf("%s(%s)", qs.Function, field))
 			}
 			if qs.Function == telemetry_query.TsdbFunctionType_MAX.String() {
 				// We add * to select the other fields to give the max query context
 				newFields = append(newFields, "*")
 			}
-			fields = newFields
+			selectedFields = newFields
 		case telemetry_query.TsdbFunctionType_NONE.String():
 			//none
 		}
 	}
 
-	q := fmt.Sprintf("SELECT %s FROM %s", strings.Join(fields, ","), measurement)
+	q := fmt.Sprintf("SELECT %s FROM %s", strings.Join(selectedFields, ","), measurement)
 
 	if qs.Name != "" {
-		req := &labels.Requirement{
-			Key:      "meta.name",
+		req := &fields.Requirement{
+			Key:      "Name",
 			Operator: "equals",
 			Values:   []string{qs.Name},
 		}

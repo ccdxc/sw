@@ -7,7 +7,7 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
+import { FieldsSelector, IFieldsSelector } from './fields-selector.model';
 import { Telemetry_queryMetricsQuerySpec_function,  } from './enums';
 import { Telemetry_queryPaginationSpec, ITelemetry_queryPaginationSpec } from './telemetry-query-pagination-spec.model';
 import { Telemetry_queryMetricsQuerySpec_sort_order,  } from './enums';
@@ -16,7 +16,7 @@ export interface ITelemetry_queryMetricsQuerySpec {
     'kind'?: string;
     'api-version'?: string;
     'name'?: string;
-    'selector'?: ILabelsSelector;
+    'selector'?: IFieldsSelector;
     'fields'?: Array<string>;
     'function': Telemetry_queryMetricsQuerySpec_function;
     'start-time'?: Date;
@@ -33,7 +33,7 @@ export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelem
     'api-version': string = null;
     /** Name is the name of the API object. */
     'name': string = null;
-    'selector': LabelsSelector = null;
+    'selector': FieldsSelector = null;
     /** must start and end with alpha numeric and can have alphanumeric, -, _, . */
     'fields': Array<string> = null;
     'function': Telemetry_queryMetricsQuerySpec_function = null;
@@ -128,7 +128,7 @@ export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelem
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this['selector'] = new LabelsSelector();
+        this['selector'] = new FieldsSelector();
         this['fields'] = new Array<string>();
         this['pagination'] = new Telemetry_queryPaginationSpec();
         this.setValues(values, setDefaults);
