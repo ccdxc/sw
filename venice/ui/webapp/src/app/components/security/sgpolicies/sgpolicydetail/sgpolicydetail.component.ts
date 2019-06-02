@@ -19,7 +19,7 @@ import { Table } from 'primeng/table';
 import { CustomFormControl } from '@sdk/v1/utils/validators';
 import { TableCol } from '@app/components/shared/tableviewedit';
 import { MetricsqueryService, TelemetryPollingMetricQueries } from '@app/services/metricsquery.service';
-import { ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function, Telemetry_queryMetricsQuerySpec_sort_order, LabelsRequirement_operator } from '@sdk/v1/models/generated/telemetry_query';
+import { ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function, Telemetry_queryMetricsQuerySpec_sort_order, FieldsRequirement_operator } from '@sdk/v1/models/generated/telemetry_query';
 import { ITelemetry_queryMetricsQueryResponse } from '@sdk/v1/models/telemetry_query';
 import { SelectItem } from 'primeng/api';
 
@@ -568,7 +568,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
         'requirements': [
           {
             'key': 'name',
-            'operator': LabelsRequirement_operator.equals,
+            'operator': FieldsRequirement_operator.equals,
             'values': [ruleHash]
           }
         ]
