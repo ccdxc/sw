@@ -581,12 +581,12 @@ func (p *policyDb) deleteFlowMonitorRule(ctx context.Context, ruleID uint64) err
 	return nil
 }
 
-func (p *policyDb) createHalFlowMonitorRule(ctx context.Context, ruleKey types.FlowMonitorRuleKey) error {
+func (p *policyDb) createHalFlowMonitorRule(ctx context.Context, ruleKey types.FlowMonitorRuleKey, linkPolicy bool) error {
 	// create rule id
 	var ruleID uint64
 	var err error
 
-	log.Infof("create new rule %+v ", ruleKey)
+	log.Infof("create rule %+v ", ruleKey)
 	ruleID, err = p.state.store.GetNextID(tstype.FlowMonitorRuleIDType)
 	if err != nil {
 		log.Errorf("failed to allocate object id for flow monitor %s", err)
@@ -596,7 +596,7 @@ func (p *policyDb) createHalFlowMonitorRule(ctx context.Context, ruleKey types.F
 	//todo: delete only if there is any change in collector config
 	flowRuleData, ok := p.flowMonitorTable.FlowRules[ruleKey.String()]
 	if ok {
-		log.Infof("rule already exists, %+v ", ruleKey)
+		log.Infof("rule %+v already exists, deleting ", ruleKey)
 		// delete and set new id
 		p.deleteFlowMonitorRule(ctx, flowRuleData.RuleID)
 		flowRuleData.RuleID = ruleID
@@ -610,8 +610,16 @@ func (p *policyDb) createHalFlowMonitorRule(ctx context.Context, ruleKey types.F
 		p.flowMonitorTable.FlowRules[ruleKey.String()] = flowRuleData
 		flowRuleData.Collectors[getObjMetaKey(&p.objMeta)] = map[string]bool{}
 	}
+
+	if linkPolicy {
+		// link new policy
+		if _, ok := flowRuleData.Collectors[getObjMetaKey(&p.objMeta)]; !ok {
+			flowRuleData.Collectors[getObjMetaKey(&p.objMeta)] = map[string]bool{}
+		}
+		flowRuleData.PolicyNames[getObjMetaKey(&p.objMeta)] = true
+	}
+
 	p.flowRuleKeys[ruleKey] = true
-	flowRuleData.PolicyNames[getObjMetaKey(&p.objMeta)] = true
 
 	srcIPObj := utils.BuildIPAddrDetails(ruleKey.SourceIP)
 	destIPObj := utils.BuildIPAddrDetails(ruleKey.DestIP)
@@ -628,18 +636,24 @@ func (p *policyDb) createHalFlowMonitorRule(ctx context.Context, ruleKey types.F
 	collectorKeys := []*halproto.CollectorKeyHandle{}
 
 	// add new collectors
+	newKeys := map[string]bool{}
 	for ckey := range p.collectorKeys {
 		if cdata, ok := p.collectorTable.Collector[ckey.String()]; ok {
 			collectorKeys = append(collectorKeys, &halproto.CollectorKeyHandle{
 				KeyOrHandle: &halproto.CollectorKeyHandle_CollectorId{
 					CollectorId: cdata.CollectorID,
 				}})
+			newKeys[ckey.String()] = true
 		}
 	}
 
 	// now pick up existing collectors
 	for _, cmap := range flowRuleData.Collectors {
 		for ckey := range cmap {
+			// skip already added collectors
+			if ok := newKeys[ckey]; ok {
+				continue
+			}
 			if cdata, ok := p.collectorTable.Collector[ckey]; ok {
 				collectorKeys = append(collectorKeys, &halproto.CollectorKeyHandle{
 					KeyOrHandle: &halproto.CollectorKeyHandle_CollectorId{
@@ -705,12 +719,13 @@ func (p *policyDb) createHalFlowMonitorRule(ctx context.Context, ruleKey types.F
 	}
 
 	// update collectors in flowrule
-	if policyData, ok := flowRuleData.Collectors[getObjMetaKey(&p.objMeta)]; ok {
-		for ckey := range p.collectorKeys {
-			policyData[ckey.String()] = true
+	if linkPolicy {
+		if policyData, ok := flowRuleData.Collectors[getObjMetaKey(&p.objMeta)]; ok {
+			for ckey := range p.collectorKeys {
+				policyData[ckey.String()] = true
+			}
 		}
 	}
-
 	// save
 	p.writeCollectorTable()
 	p.writeFlowMonitorTable()
@@ -729,7 +744,7 @@ func (p *policyDb) createIPFlowMonitorRule(ctx context.Context, ipFmRuleList []*
 			VrfID:        p.vrf,
 		}
 
-		if err := p.createHalFlowMonitorRule(ctx, ruleKey); err != nil {
+		if err := p.createHalFlowMonitorRule(ctx, ruleKey, true); err != nil {
 			log.Errorf("failed to create ip rule %+v in hal, %s", ruleKey, err)
 			return err
 		}
@@ -752,7 +767,7 @@ func (p *policyDb) createMacFlowMonitorRule(ctx context.Context, macFmRuleList [
 			VrfID:        p.vrf,
 		}
 
-		if err := p.createHalFlowMonitorRule(ctx, ruleKey); err != nil {
+		if err := p.createHalFlowMonitorRule(ctx, ruleKey, true); err != nil {
 			log.Errorf("failed to create ip rule %+v in hal, %s", ruleKey, err)
 			return err
 		}
@@ -915,10 +930,7 @@ func (s *PolicyState) createPolicyContext(p *tpmprotos.FlowExportPolicy) (*polic
 	}
 
 	polObj, err := policyCtx.readFlowExportPolicyTable(p)
-	if err != nil {
-		log.Warnf("flow export policy %s doesn't exist ", p.Name)
-
-	} else {
+	if err == nil {
 		policyCtx.tpmPolicy = polObj
 	}
 
@@ -964,7 +976,6 @@ func (s *PolicyState) CreateFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 	policyCtx.collectorKeys = collKeys
 
 	numCollector := policyCtx.findNumCollectors()
-	log.Infof("total num. of collectors %d", numCollector)
 
 	if numCollector > maxFlowExportCollectors {
 		return fmt.Errorf("exceeds(%d>%d) maximum collector configs", numCollector, maxFlowExportCollectors)
@@ -1008,7 +1019,6 @@ func (p *policyDb) cleanupTables(ctx context.Context, del bool) {
 		for ckey := range p.tpmPolicy.CollectorKeys {
 			collectorKeys[ckey] = true
 		}
-
 	} else {
 		// read it from context for cleanup
 		for fkey := range p.flowRuleKeys {
@@ -1021,17 +1031,18 @@ func (p *policyDb) cleanupTables(ctx context.Context, del bool) {
 
 	for fkey := range flowRuleKeys {
 		if fdata, ok := p.flowMonitorTable.FlowRules[fkey]; ok {
-			for ckey := range collectorKeys {
-				delete(fdata.Collectors[getObjMetaKey(&p.objMeta)], ckey)
-			}
+
+			log.Infof("delete collectors from %v", p.objMeta.Name)
+			delete(fdata.Collectors, getObjMetaKey(&p.objMeta))
+
 			// update new collectors to hal, delete & add
 			delete(fdata.PolicyNames, getObjMetaKey(&p.objMeta))
 			if len(fdata.PolicyNames) != 0 {
 				// this delete/add if the flowrule exists
 				log.Infof("updating rule %+v", fdata.RuleKey)
-				p.createHalFlowMonitorRule(ctx, fdata.RuleKey)
+				p.createHalFlowMonitorRule(ctx, fdata.RuleKey, false)
 			} else {
-				log.Infof("rule id %d is not used, delete", fdata.RuleID)
+				log.Infof("delete rule %+v", fdata.RuleID)
 				p.deleteFlowMonitorRule(ctx, fdata.RuleID)
 				delete(p.flowMonitorTable.FlowRules, fkey)
 			}
@@ -1042,6 +1053,7 @@ func (p *policyDb) cleanupTables(ctx context.Context, del bool) {
 		if cdata, ok := p.collectorTable.Collector[ckey]; ok {
 			delete(cdata.PolicyNames, getObjMetaKey(&p.objMeta))
 			if len(cdata.PolicyNames) == 0 {
+				log.Infof("delete collector %+v", ckey)
 				p.deleteCollectorPolicy(ctx, cdata.CollectorID)
 				delete(p.collectorTable.Collector, ckey)
 			}
@@ -1201,7 +1213,6 @@ func (s *PolicyState) Debug(r *http.Request) (interface{}, error) {
 						cr = append(cr, k)
 					}
 					cmap[pname] = cr
-
 				}
 
 				// policy names

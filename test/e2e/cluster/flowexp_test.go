@@ -83,14 +83,13 @@ var _ = Describe("flow export policy tests", func() {
 					Exports: []monitoring.ExportConfig{
 						{
 							// todo: configure only 1 collector for now till agent is fixed
-							//Destination: fmt.Sprintf("192.168.100.%d", i+1),
-							Destination: fmt.Sprintf("192.168.100.11"),
-							Transport:   "TCP/5545",
+							Destination: fmt.Sprintf("192.168.100.%d", i+1),
+							Transport:   "UDP/5545",
 						},
-						//{
-						//	Destination: fmt.Sprintf("192.168.100.%d", i+1),
-						//	Transport:   "UDP/5545",
-						//},
+						{
+							Destination: fmt.Sprintf("192.168.100.%d", i+1),
+							Transport:   "UDP/5565",
+						},
 					},
 				}
 			}
@@ -230,6 +229,423 @@ var _ = Describe("flow export policy tests", func() {
 				}
 				return nil
 			}, 120, 2).Should(BeNil(), "failed to verify flow export policy")
+		})
+
+		It("Should create/delete multiple flow export policy with the same collector", func() {
+			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			defer cancel()
+			ctx := ts.tu.NewLoggedInContext(pctx)
+
+			testFwSpecList := make([]monitoring.FlowExportPolicySpec, tpm.MaxCollectorPerPolicy)
+
+			for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
+				testFwSpecList[i] = monitoring.FlowExportPolicySpec{
+					VrfName:  globals.DefaultVrf,
+					Interval: "10s",
+					Format:   monitoring.FlowExportPolicySpec_Ipfix.String(),
+					MatchRules: []monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{fmt.Sprintf("192.168.100.%d", i+1)},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{fmt.Sprintf("192.168.200.%d", i+1)},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"tcp/5500"},
+							},
+						},
+					},
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "192.168.10.1",
+							Transport:   "UDP/5545",
+						},
+						{
+							Destination: "192.168.10.2",
+							Transport:   "UDP/5565",
+						},
+					},
+				}
+			}
+
+			for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
+				flowPolicy := &monitoring.FlowExportPolicy{
+					TypeMeta: api.TypeMeta{
+						Kind: "FlowExportPolicy",
+					},
+					ObjectMeta: api.ObjectMeta{
+						Name:      fmt.Sprintf("e2e-collector-%d", i),
+						Tenant:    globals.DefaultTenant,
+						Namespace: globals.DefaultNamespace,
+					},
+					Spec: testFwSpecList[i],
+				}
+				_, err := flowExpClient.Create(ctx, flowPolicy)
+				Expect(err).ShouldNot(HaveOccurred())
+				By(fmt.Sprintf("create flow export Policy %v", flowPolicy.Name))
+			}
+
+			Eventually(func() error {
+				By("verify flow export policy in Venice")
+				pl, err := flowExpClient.List(ctx, &api.ListWatchOptions{})
+				if err != nil {
+					return err
+				}
+
+				if len(pl) != len(testFwSpecList) {
+					By(fmt.Sprintf("received flow export policy from venice %+v", pl))
+					return fmt.Errorf("invalid number of policy in Venice, got %v expected %+v", len(pl), len(testFwSpecList))
+				}
+
+				for _, naples := range ts.tu.NaplesNodes {
+					By(fmt.Sprintf("verify flow export policy in %v", naples))
+					st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:8888/api/telemetry/flowexports/"))
+					var naplesPol []tpmprotos.FlowExportPolicy
+					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
+						By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))
+						return err
+					}
+
+					if len(naplesPol) != len(testFwSpecList) {
+						By(fmt.Sprintf("received flow export policy from naples: %v, %v", naples, naplesPol))
+						return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
+					}
+
+					st = ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:9007/debug/tpa"))
+					naplesDbg := struct {
+						FlowRuleTable []struct {
+							PolicyNames []string
+						}
+						CollectorTable []struct {
+							PolicyNames []string
+						}
+					}{}
+
+					By(fmt.Sprintf("received debug info %+v", string(st)))
+					if err := json.Unmarshal([]byte(st), &naplesDbg); err != nil {
+						By(fmt.Sprintf("received flow export debug from naples: %v, %+v", naples, st))
+						return err
+					}
+
+					if len(naplesDbg.FlowRuleTable) != tpm.MaxCollectorPerPolicy {
+						By(fmt.Sprintf("received %d rules, expected %v", len(naplesDbg.FlowRuleTable), tpm.MaxCollectorPerPolicy))
+						return err
+					}
+
+					if len(naplesDbg.CollectorTable) != tpm.MaxCollectorPerPolicy {
+						By(fmt.Sprintf("received %d collectors, expected 2", len(naplesDbg.CollectorTable)))
+						return err
+					}
+
+					for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
+						if len(naplesDbg.CollectorTable[i].PolicyNames) != tpm.MaxCollectorPerPolicy {
+							By(fmt.Sprintf("received %d policynames in collector, expected 2", len(naplesDbg.CollectorTable[i].PolicyNames)))
+							return err
+						}
+						if len(naplesDbg.FlowRuleTable[i].PolicyNames) != 1 {
+							By(fmt.Sprintf("received %d policynames in flow-rule, expected 1", len(naplesDbg.FlowRuleTable)))
+							return err
+						}
+					}
+
+				}
+				return nil
+			}, 120, 2).Should(BeNil(), "failed to find flow export policy")
+
+			for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
+				expRules := tpm.MaxCollectorPerPolicy - i - 1
+				expCollectors := tpm.MaxCollectorPerPolicy - i*2
+
+				flowPolicy := &monitoring.FlowExportPolicy{
+					TypeMeta: api.TypeMeta{
+						Kind: "FlowExportPolicy",
+					},
+					ObjectMeta: api.ObjectMeta{
+						Name:      fmt.Sprintf("e2e-collector-%d", i),
+						Tenant:    globals.DefaultTenant,
+						Namespace: globals.DefaultNamespace,
+					},
+				}
+
+				By(fmt.Sprintf("delete policy %v", flowPolicy.Name))
+				_, err := flowExpClient.Delete(ctx, &flowPolicy.ObjectMeta)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				By("verify flow export policy in Venice")
+				pl, err := flowExpClient.List(ctx, &api.ListWatchOptions{})
+				Expect(err).ShouldNot(HaveOccurred())
+				testFwSpecList[0] = testFwSpecList[len(testFwSpecList)-1]
+				testFwSpecList = testFwSpecList[0 : len(testFwSpecList)-1]
+				Expect(len(pl)).To(Equal(len(testFwSpecList)))
+
+				Eventually(func() error {
+					for _, naples := range ts.tu.NaplesNodes {
+						By(fmt.Sprintf("verify flow export policy in %v", naples))
+						st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:8888/api/telemetry/flowexports/"))
+						var naplesPol []tpmprotos.FlowExportPolicy
+						if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
+							By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))
+							return err
+						}
+
+						if len(naplesPol) != expRules {
+							By(fmt.Sprintf("received flow export policy from naples: %v, %v", naples, naplesPol))
+							return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), expRules)
+						}
+
+						st = ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:9007/debug/tpa"))
+						naplesDbg := struct {
+							FlowRuleTable []struct {
+								PolicyNames []string
+							}
+							CollectorTable []struct {
+								PolicyNames []string
+							}
+						}{}
+
+						By(fmt.Sprintf("received debug info %+v", string(st)))
+						if err := json.Unmarshal([]byte(st), &naplesDbg); err != nil {
+							By(fmt.Sprintf("received flow export debug from naples: %v, %+v", naples, st))
+							return err
+						}
+
+						if len(naplesDbg.FlowRuleTable) != expRules {
+							By(fmt.Sprintf("received %d rules, expected %v", len(naplesDbg.FlowRuleTable), expRules))
+							return err
+						}
+
+						for j := 0; j < expRules; j++ {
+							if len(naplesDbg.FlowRuleTable[j].PolicyNames) != 1 {
+								By(fmt.Sprintf("received %d policynames, expected 1", len(naplesDbg.FlowRuleTable)))
+								return err
+							}
+						}
+
+						if len(naplesDbg.CollectorTable) != expCollectors {
+							By(fmt.Sprintf("received %d collectors, expected %d", len(naplesDbg.CollectorTable), expCollectors))
+							return err
+						}
+
+						for j := 0; j < expCollectors; j++ {
+							if len(naplesDbg.CollectorTable[j].PolicyNames) != 1 {
+								By(fmt.Sprintf("received %d policynames in collector, expected 2", len(naplesDbg.CollectorTable[j].PolicyNames)))
+								return err
+							}
+						}
+					}
+					return nil
+				}, 120, 2).Should(BeNil(), "failed to find flow export policy")
+			}
+
+		})
+
+		It("Should create/delete multiple flow export policy with the same match-rule", func() {
+			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			defer cancel()
+			ctx := ts.tu.NewLoggedInContext(pctx)
+
+			testFwSpecList := make([]monitoring.FlowExportPolicySpec, tpm.MaxCollectorPerPolicy)
+
+			for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
+				testFwSpecList[i] = monitoring.FlowExportPolicySpec{
+					VrfName:  globals.DefaultVrf,
+					Interval: "10s",
+					Format:   monitoring.FlowExportPolicySpec_Ipfix.String(),
+					MatchRules: []monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{fmt.Sprintf("192.168.20.%d", i+1)},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{fmt.Sprintf("192.168.20.%d", i+1)},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"tcp/5500"},
+							},
+						},
+					},
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: fmt.Sprintf("192.168.10.%d", i+1),
+							Transport:   "UDP/5545",
+						},
+					},
+				}
+			}
+
+			for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
+				flowPolicy := &monitoring.FlowExportPolicy{
+					TypeMeta: api.TypeMeta{
+						Kind: "FlowExportPolicy",
+					},
+					ObjectMeta: api.ObjectMeta{
+						Name:      fmt.Sprintf("e2e-matchrule-%d", i),
+						Tenant:    globals.DefaultTenant,
+						Namespace: globals.DefaultNamespace,
+					},
+					Spec: testFwSpecList[i],
+				}
+				_, err := flowExpClient.Create(ctx, flowPolicy)
+				Expect(err).ShouldNot(HaveOccurred())
+				By(fmt.Sprintf("create flow export Policy %v", flowPolicy.Name))
+			}
+
+			Eventually(func() error {
+				By("verify flow export policy in Venice")
+				pl, err := flowExpClient.List(ctx, &api.ListWatchOptions{})
+				if err != nil {
+					return err
+				}
+
+				if len(pl) != len(testFwSpecList) {
+					By(fmt.Sprintf("received flow export policy from venice %+v", pl))
+					return fmt.Errorf("invalid number of policy in Venice, got %v expected %+v", len(pl), len(testFwSpecList))
+				}
+
+				for _, naples := range ts.tu.NaplesNodes {
+					By(fmt.Sprintf("verify flow export policy in %v", naples))
+					st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:8888/api/telemetry/flowexports/"))
+					var naplesPol []tpmprotos.FlowExportPolicy
+					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
+						By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))
+						return err
+					}
+
+					if len(naplesPol) != len(testFwSpecList) {
+						By(fmt.Sprintf("received flow export policy from naples: %v, %v", naples, naplesPol))
+						return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
+					}
+
+					st = ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:9007/debug/tpa"))
+					naplesDbg := struct {
+						FlowRuleTable []struct {
+							PolicyNames []string
+						}
+						CollectorTable []struct {
+							PolicyNames []string
+						}
+					}{}
+
+					By(fmt.Sprintf("received debug info %+v", string(st)))
+					if err := json.Unmarshal([]byte(st), &naplesDbg); err != nil {
+						By(fmt.Sprintf("received flow export debug from naples: %v, %+v", naples, st))
+						return err
+					}
+
+					if len(naplesDbg.FlowRuleTable) != tpm.MaxCollectorPerPolicy {
+						By(fmt.Sprintf("received %d rules, expected %v", len(naplesDbg.FlowRuleTable), tpm.MaxCollectorPerPolicy))
+						return err
+					}
+
+					By(fmt.Sprintf("received  info %+v", naplesDbg))
+
+					if len(naplesDbg.CollectorTable) != tpm.MaxCollectorPerPolicy {
+						By(fmt.Sprintf("received %d collectors, expected 2", len(naplesDbg.CollectorTable)))
+						return err
+					}
+
+					for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
+						if len(naplesDbg.CollectorTable[i].PolicyNames) != tpm.MaxCollectorPerPolicy {
+							By(fmt.Sprintf("received %d policynames in collector, expected 2", len(naplesDbg.CollectorTable[i].PolicyNames)))
+							return err
+						}
+						if len(naplesDbg.FlowRuleTable[i].PolicyNames) != 1 {
+							By(fmt.Sprintf("received %d policynames in flow-rule, expected 1", len(naplesDbg.FlowRuleTable)))
+							return err
+						}
+					}
+
+				}
+				return nil
+			}, 120, 2).Should(BeNil(), "failed to find flow export policy")
+
+			for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
+				expRules := tpm.MaxCollectorPerPolicy - 2*i
+				expCollectors := tpm.MaxCollectorPerPolicy - 1 - i
+
+				flowPolicy := &monitoring.FlowExportPolicy{
+					TypeMeta: api.TypeMeta{
+						Kind: "FlowExportPolicy",
+					},
+					ObjectMeta: api.ObjectMeta{
+						Name:      fmt.Sprintf("e2e-matchrule-%d", i),
+						Tenant:    globals.DefaultTenant,
+						Namespace: globals.DefaultNamespace,
+					},
+				}
+
+				By(fmt.Sprintf("delete policy %v", flowPolicy.Name))
+				_, err := flowExpClient.Delete(ctx, &flowPolicy.ObjectMeta)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				By("verify flow export policy in Venice")
+				pl, err := flowExpClient.List(ctx, &api.ListWatchOptions{})
+				Expect(err).ShouldNot(HaveOccurred())
+				testFwSpecList[0] = testFwSpecList[len(testFwSpecList)-1]
+				testFwSpecList = testFwSpecList[0 : len(testFwSpecList)-1]
+				Expect(len(pl)).To(Equal(len(testFwSpecList)))
+
+				Eventually(func() error {
+					for _, naples := range ts.tu.NaplesNodes {
+						By(fmt.Sprintf("verify flow export policy in %v", naples))
+						st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:8888/api/telemetry/flowexports/"))
+						var naplesPol []tpmprotos.FlowExportPolicy
+						if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
+							By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))
+							return err
+						}
+
+						if len(naplesPol) != len(testFwSpecList) {
+							By(fmt.Sprintf("received flow export policy from naples: %v, %v", naples, naplesPol))
+							return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
+						}
+
+						st = ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:9007/debug/tpa"))
+						naplesDbg := struct {
+							FlowRuleTable []struct {
+								PolicyNames []string
+							}
+							CollectorTable []struct {
+								PolicyNames []string
+							}
+						}{}
+
+						By(fmt.Sprintf("received debug info %+v", string(st)))
+						if err := json.Unmarshal([]byte(st), &naplesDbg); err != nil {
+							By(fmt.Sprintf("received flow export debug from naples: %v, %+v", naples, st))
+							return err
+						}
+
+						if len(naplesDbg.FlowRuleTable) != expRules {
+							By(fmt.Sprintf("received %d rules, expected %v", len(naplesDbg.FlowRuleTable), expRules))
+							return err
+						}
+
+						for j := 0; j < expRules; j++ {
+							if len(naplesDbg.FlowRuleTable[j].PolicyNames) != 1 {
+								By(fmt.Sprintf("received %d policynames, expected 1", len(naplesDbg.FlowRuleTable)))
+								return err
+							}
+						}
+
+						if len(naplesDbg.CollectorTable) != expCollectors {
+							By(fmt.Sprintf("received %d collectors, expected %d", len(naplesDbg.CollectorTable), expCollectors))
+							return err
+						}
+
+						for j := 0; j < expCollectors; j++ {
+							if len(naplesDbg.CollectorTable[j].PolicyNames) != 1 {
+								By(fmt.Sprintf("received %d policynames in collector, expected 2", len(naplesDbg.CollectorTable[j].PolicyNames)))
+								return err
+							}
+						}
+
+					}
+					return nil
+				}, 120, 2).Should(BeNil(), "failed to find flow export policy")
+			}
+
 		})
 
 		It("validate flow export policy", func() {
