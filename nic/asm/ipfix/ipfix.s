@@ -52,6 +52,10 @@ ipfix_flow_hash_overflow_scan:
     tbladd      d.{u.ipfix_start_d.flow_hash_index_next}.wx, 1
 
 ipfix_flow_hash_overflow_scan_complete:
+    seq         c1, d.{u.ipfix_start_d.flow_hash_index_next}.wx, \
+                    d.{u.ipfix_start_d.flow_hash_overflow_index_max}.wx
+    bcf         [!c1], ipfix_exit
+    tbladd.c1   d.{u.ipfix_start_d.flow_hash_index_next}.wx, 1
     phvwr       p.ipfix_metadata_scan_complete, 1
     // set table type and index for next scan
     tblwr.l     d.{u.ipfix_start_d.flow_hash_index_next}, 0

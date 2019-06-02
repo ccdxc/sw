@@ -174,8 +174,8 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
     } else {
         // For HW mode, we need to walk the full flow hash table
         qstate.flow_hash_index_next = 0;
-        qstate.flow_hash_index_max = FLOW_HASH_TABLE_SIZE - 1;
-        qstate.flow_hash_overflow_index_max = FLOW_HASH_OVERFLOW_TABLE_SIZE - 1;
+        qstate.flow_hash_index_max = FLOW_HASH_TABLE_SIZE;
+        qstate.flow_hash_overflow_index_max = FLOW_HASH_OVERFLOW_TABLE_SIZE;
     }
 
     lif_manager()->write_qstate(lif_id, 0, qid,
