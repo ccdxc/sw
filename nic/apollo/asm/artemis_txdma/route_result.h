@@ -5,8 +5,7 @@ route_result_handler:
     phvwr           p.app_header_table0_valid, FALSE       // LPM bypass
 route_result_nexthop_group:
     phvwr.e         p.txdma_control_nexthop_group_index, res_reg
-    phvwr           p.txdma_control_vpc_id, k.{txdma_control_vpc_id_sbit0_ebit1...\
-                                               txdma_control_vpc_id_sbit2_ebit9}
+    phvwr           p.txdma_control_vpc_id, k.txdma_control_vpc_id
 route_result_vpc:
     phvwr.e         p.txdma_control_vpc_id, res_reg
     nop

@@ -33,8 +33,7 @@ header_type artemis_rx_to_tx_header_t {
         tag_classid     : 10; // Bytes 28 and 29
         meter_result    : 10; // Bytes 29 and 30
         dport_classid   : 8;  // Byte 31
-        sport_classid   : 7;  // Byte 32
-        pad0            : 1;  // Byte 32
+        sport_classid   : 8;  // Byte 32
         vnic_id         : 8;  // Byte 33
         tag2_classid    : 8;  // Byte 34
     }

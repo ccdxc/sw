@@ -1062,16 +1062,14 @@ control ingress {
     if (app_header.table3_valid == 1) {
         read_qstate();
         route_lookup();
-        sacl();
+        rfc();
         dma();
 
-        // TODO-AJEER: Launch vnic_info_txdma and mapping tables only in TxDMA second pass
         vnic_info_txdma();
 
         // LPM Tables does set the table2_valid predicate bit in pass 1 as follows:
         //   = 0 for NH_TYPE= VNET or WORKLOAD  (then launch Mapping table based on vnet/vpc id)
         //   = 1 for NH_TYPE= ST or WORKLOAD  (then launch Remote_46_Mapping table based on svc id)
-        // TODO-AJEER : To set this table2_valid predicate bit in pass 1 from his ASM code
         // TODO-KSM: Both Action routines would reset this table2_valid bit
         if (app_header.table2_valid == 1) {
             mapping();

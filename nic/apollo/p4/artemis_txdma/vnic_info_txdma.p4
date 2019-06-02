@@ -15,7 +15,7 @@ action vnic_info_txdma(entry_valid, lpm_base1, lpm_base2) {
 @pragma index_table
 table vnic_info_txdma {
     reads {
-        txdma_control.vnic_id   : exact;
+        rx_to_tx_hdr.vnic_id   : exact;
     }
     actions {
         vnic_info_txdma;

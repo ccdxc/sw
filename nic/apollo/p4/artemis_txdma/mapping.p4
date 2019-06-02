@@ -103,8 +103,8 @@ action mapping_info(entry_valid, nexthop_group_index,
 @pragma hbm_table
 table mapping {
     reads {
-        txdma_control.vpc_id    : exact;
-        txdma_control.remote_ip : exact;
+        txdma_control.vpc_id   : exact;
+        rx_to_tx_hdr.remote_ip : exact;
     }
     actions {
         mapping_info;

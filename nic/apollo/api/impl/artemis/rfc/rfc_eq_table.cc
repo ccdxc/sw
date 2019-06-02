@@ -58,163 +58,163 @@ static inline sdk_ret_t
 rfc_p1_table_entry_pack (uint32_t running_id, void *actiondata,
                          uint32_t entry_num, uint16_t cid)
 {
-    sacl_p1_actiondata_t    *action_data;
+    rfc_p1_actiondata_t    *action_data;
 
     PDS_TRACE_DEBUG("running id %u, class id %u", running_id, cid);
-    action_data = (sacl_p1_actiondata_t *)actiondata;
+    action_data = (rfc_p1_actiondata_t *)actiondata;
     switch (entry_num) {
     case 0:
-        action_data->action_u.sacl_p1_sacl_action_p1.id00 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id00 = cid;
         break;
     case 1:
-        action_data->action_u.sacl_p1_sacl_action_p1.id01 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id01 = cid;
         break;
     case 2:
-        action_data->action_u.sacl_p1_sacl_action_p1.id02 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id02 = cid;
         break;
     case 3:
-        action_data->action_u.sacl_p1_sacl_action_p1.id03 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id03 = cid;
         break;
     case 4:
-        action_data->action_u.sacl_p1_sacl_action_p1.id04 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id04 = cid;
         break;
     case 5:
-        action_data->action_u.sacl_p1_sacl_action_p1.id05 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id05 = cid;
         break;
     case 6:
-        action_data->action_u.sacl_p1_sacl_action_p1.id06 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id06 = cid;
         break;
     case 7:
-        action_data->action_u.sacl_p1_sacl_action_p1.id07 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id07 = cid;
         break;
     case 8:
-        action_data->action_u.sacl_p1_sacl_action_p1.id08 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id08 = cid;
         break;
     case 9:
-        action_data->action_u.sacl_p1_sacl_action_p1.id09 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id09 = cid;
         break;
     case 10:
-        action_data->action_u.sacl_p1_sacl_action_p1.id10 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id10 = cid;
         break;
     case 11:
-        action_data->action_u.sacl_p1_sacl_action_p1.id11 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id11 = cid;
         break;
     case 12:
-        action_data->action_u.sacl_p1_sacl_action_p1.id12 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id12 = cid;
         break;
     case 13:
-        action_data->action_u.sacl_p1_sacl_action_p1.id13 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id13 = cid;
         break;
     case 14:
-        action_data->action_u.sacl_p1_sacl_action_p1.id14 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id14 = cid;
         break;
     case 15:
-        action_data->action_u.sacl_p1_sacl_action_p1.id15 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id15 = cid;
         break;
     case 16:
-        action_data->action_u.sacl_p1_sacl_action_p1.id16 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id16 = cid;
         break;
     case 17:
-        action_data->action_u.sacl_p1_sacl_action_p1.id17 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id17 = cid;
         break;
     case 18:
-        action_data->action_u.sacl_p1_sacl_action_p1.id18 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id18 = cid;
         break;
     case 19:
-        action_data->action_u.sacl_p1_sacl_action_p1.id19 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id19 = cid;
         break;
     case 20:
-        action_data->action_u.sacl_p1_sacl_action_p1.id20 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id20 = cid;
         break;
     case 21:
-        action_data->action_u.sacl_p1_sacl_action_p1.id21 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id21 = cid;
         break;
     case 22:
-        action_data->action_u.sacl_p1_sacl_action_p1.id22 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id22 = cid;
         break;
     case 23:
-        action_data->action_u.sacl_p1_sacl_action_p1.id23 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id23 = cid;
         break;
     case 24:
-        action_data->action_u.sacl_p1_sacl_action_p1.id24 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id24 = cid;
         break;
     case 25:
-        action_data->action_u.sacl_p1_sacl_action_p1.id25 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id25 = cid;
         break;
     case 26:
-        action_data->action_u.sacl_p1_sacl_action_p1.id26 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id26 = cid;
         break;
     case 27:
-        action_data->action_u.sacl_p1_sacl_action_p1.id27 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id27 = cid;
         break;
     case 28:
-        action_data->action_u.sacl_p1_sacl_action_p1.id28 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id28 = cid;
         break;
     case 29:
-        action_data->action_u.sacl_p1_sacl_action_p1.id29 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id29 = cid;
         break;
     case 30:
-        action_data->action_u.sacl_p1_sacl_action_p1.id30 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id30 = cid;
         break;
     case 31:
-        action_data->action_u.sacl_p1_sacl_action_p1.id31 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id31 = cid;
         break;
     case 32:
-        action_data->action_u.sacl_p1_sacl_action_p1.id32 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id32 = cid;
         break;
     case 33:
-        action_data->action_u.sacl_p1_sacl_action_p1.id33 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id33 = cid;
         break;
     case 34:
-        action_data->action_u.sacl_p1_sacl_action_p1.id34 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id34 = cid;
         break;
     case 35:
-        action_data->action_u.sacl_p1_sacl_action_p1.id35 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id35 = cid;
         break;
     case 36:
-        action_data->action_u.sacl_p1_sacl_action_p1.id36 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id36 = cid;
         break;
     case 37:
-        action_data->action_u.sacl_p1_sacl_action_p1.id37 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id37 = cid;
         break;
     case 38:
-        action_data->action_u.sacl_p1_sacl_action_p1.id38 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id38 = cid;
         break;
     case 39:
-        action_data->action_u.sacl_p1_sacl_action_p1.id39 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id39 = cid;
         break;
     case 40:
-        action_data->action_u.sacl_p1_sacl_action_p1.id40 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id40 = cid;
         break;
     case 41:
-        action_data->action_u.sacl_p1_sacl_action_p1.id41 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id41 = cid;
         break;
     case 42:
-        action_data->action_u.sacl_p1_sacl_action_p1.id42 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id42 = cid;
         break;
     case 43:
-        action_data->action_u.sacl_p1_sacl_action_p1.id43 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id43 = cid;
         break;
     case 44:
-        action_data->action_u.sacl_p1_sacl_action_p1.id44 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id44 = cid;
         break;
     case 45:
-        action_data->action_u.sacl_p1_sacl_action_p1.id45 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id45 = cid;
         break;
     case 46:
-        action_data->action_u.sacl_p1_sacl_action_p1.id46 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id46 = cid;
         break;
     case 47:
-        action_data->action_u.sacl_p1_sacl_action_p1.id47 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id47 = cid;
         break;
     case 48:
-        action_data->action_u.sacl_p1_sacl_action_p1.id48 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id48 = cid;
         break;
     case 49:
-        action_data->action_u.sacl_p1_sacl_action_p1.id49 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id49 = cid;
         break;
     case 50:
-        action_data->action_u.sacl_p1_sacl_action_p1.id50 = cid;
+        action_data->action_u.rfc_p1_rfc_action_p1.id50 = cid;
         break;
     default:
         PDS_TRACE_ERR("Invalid entry number %u while packing RFC P1 table",
@@ -239,163 +239,163 @@ static inline sdk_ret_t
 rfc_p2_table_entry_pack (uint32_t running_id, void *actiondata,
                          uint32_t entry_num, uint16_t cid)
 {
-    sacl_p2_actiondata_t    *action_data;
+    rfc_p2_actiondata_t    *action_data;
 
     PDS_TRACE_DEBUG("running id %u, class id %u", running_id, cid);
-    action_data = (sacl_p2_actiondata_t *)actiondata;
+    action_data = (rfc_p2_actiondata_t *)actiondata;
     switch (entry_num) {
         case 0:
-            action_data->action_u.sacl_p2_sacl_action_p2.id00 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id00 = cid;
             break;
         case 1:
-            action_data->action_u.sacl_p2_sacl_action_p2.id01 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id01 = cid;
             break;
         case 2:
-            action_data->action_u.sacl_p2_sacl_action_p2.id02 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id02 = cid;
             break;
         case 3:
-            action_data->action_u.sacl_p2_sacl_action_p2.id03 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id03 = cid;
             break;
         case 4:
-            action_data->action_u.sacl_p2_sacl_action_p2.id04 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id04 = cid;
             break;
         case 5:
-            action_data->action_u.sacl_p2_sacl_action_p2.id05 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id05 = cid;
             break;
         case 6:
-            action_data->action_u.sacl_p2_sacl_action_p2.id06 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id06 = cid;
             break;
         case 7:
-            action_data->action_u.sacl_p2_sacl_action_p2.id07 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id07 = cid;
             break;
         case 8:
-            action_data->action_u.sacl_p2_sacl_action_p2.id08 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id08 = cid;
             break;
         case 9:
-            action_data->action_u.sacl_p2_sacl_action_p2.id09 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id09 = cid;
             break;
         case 10:
-            action_data->action_u.sacl_p2_sacl_action_p2.id10 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id10 = cid;
             break;
         case 11:
-            action_data->action_u.sacl_p2_sacl_action_p2.id11 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id11 = cid;
             break;
         case 12:
-            action_data->action_u.sacl_p2_sacl_action_p2.id12 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id12 = cid;
             break;
         case 13:
-            action_data->action_u.sacl_p2_sacl_action_p2.id13 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id13 = cid;
             break;
         case 14:
-            action_data->action_u.sacl_p2_sacl_action_p2.id14 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id14 = cid;
             break;
         case 15:
-            action_data->action_u.sacl_p2_sacl_action_p2.id15 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id15 = cid;
             break;
         case 16:
-            action_data->action_u.sacl_p2_sacl_action_p2.id16 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id16 = cid;
             break;
         case 17:
-            action_data->action_u.sacl_p2_sacl_action_p2.id17 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id17 = cid;
             break;
         case 18:
-            action_data->action_u.sacl_p2_sacl_action_p2.id18 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id18 = cid;
             break;
         case 19:
-            action_data->action_u.sacl_p2_sacl_action_p2.id19 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id19 = cid;
             break;
         case 20:
-            action_data->action_u.sacl_p2_sacl_action_p2.id20 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id20 = cid;
             break;
         case 21:
-            action_data->action_u.sacl_p2_sacl_action_p2.id21 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id21 = cid;
             break;
         case 22:
-            action_data->action_u.sacl_p2_sacl_action_p2.id22 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id22 = cid;
             break;
         case 23:
-            action_data->action_u.sacl_p2_sacl_action_p2.id23 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id23 = cid;
             break;
         case 24:
-            action_data->action_u.sacl_p2_sacl_action_p2.id24 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id24 = cid;
             break;
         case 25:
-            action_data->action_u.sacl_p2_sacl_action_p2.id25 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id25 = cid;
             break;
         case 26:
-            action_data->action_u.sacl_p2_sacl_action_p2.id26 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id26 = cid;
             break;
         case 27:
-            action_data->action_u.sacl_p2_sacl_action_p2.id27 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id27 = cid;
             break;
         case 28:
-            action_data->action_u.sacl_p2_sacl_action_p2.id28 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id28 = cid;
             break;
         case 29:
-            action_data->action_u.sacl_p2_sacl_action_p2.id29 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id29 = cid;
             break;
         case 30:
-            action_data->action_u.sacl_p2_sacl_action_p2.id30 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id30 = cid;
             break;
         case 31:
-            action_data->action_u.sacl_p2_sacl_action_p2.id31 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id31 = cid;
             break;
         case 32:
-            action_data->action_u.sacl_p2_sacl_action_p2.id32 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id32 = cid;
             break;
         case 33:
-            action_data->action_u.sacl_p2_sacl_action_p2.id33 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id33 = cid;
             break;
         case 34:
-            action_data->action_u.sacl_p2_sacl_action_p2.id34 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id34 = cid;
             break;
         case 35:
-            action_data->action_u.sacl_p2_sacl_action_p2.id35 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id35 = cid;
             break;
         case 36:
-            action_data->action_u.sacl_p2_sacl_action_p2.id36 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id36 = cid;
             break;
         case 37:
-            action_data->action_u.sacl_p2_sacl_action_p2.id37 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id37 = cid;
             break;
         case 38:
-            action_data->action_u.sacl_p2_sacl_action_p2.id38 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id38 = cid;
             break;
         case 39:
-            action_data->action_u.sacl_p2_sacl_action_p2.id39 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id39 = cid;
             break;
         case 40:
-            action_data->action_u.sacl_p2_sacl_action_p2.id40 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id40 = cid;
             break;
         case 41:
-            action_data->action_u.sacl_p2_sacl_action_p2.id41 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id41 = cid;
             break;
         case 42:
-            action_data->action_u.sacl_p2_sacl_action_p2.id42 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id42 = cid;
             break;
         case 43:
-            action_data->action_u.sacl_p2_sacl_action_p2.id43 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id43 = cid;
             break;
         case 44:
-            action_data->action_u.sacl_p2_sacl_action_p2.id44 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id44 = cid;
             break;
         case 45:
-            action_data->action_u.sacl_p2_sacl_action_p2.id45 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id45 = cid;
             break;
         case 46:
-            action_data->action_u.sacl_p2_sacl_action_p2.id46 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id46 = cid;
             break;
         case 47:
-            action_data->action_u.sacl_p2_sacl_action_p2.id47 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id47 = cid;
             break;
         case 48:
-            action_data->action_u.sacl_p2_sacl_action_p2.id48 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id48 = cid;
             break;
         case 49:
-            action_data->action_u.sacl_p2_sacl_action_p2.id49 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id49 = cid;
             break;
         case 50:
-            action_data->action_u.sacl_p2_sacl_action_p2.id50 = cid;
+            action_data->action_u.rfc_p2_rfc_action_p2.id50 = cid;
             break;
         default:
         PDS_TRACE_ERR("Invalid entry number %u while packing RFC P2 table",
@@ -416,12 +416,12 @@ static inline sdk_ret_t
 rfc_p1_action_data_flush (mem_addr_t addr, void *actiondata)
 {
     sdk_ret_t                        ret;
-    sacl_p1_actiondata_t    *action_data;
+    rfc_p1_actiondata_t    *action_data;
 
-    action_data = (sacl_p1_actiondata_t *)actiondata;
+    action_data = (rfc_p1_actiondata_t *)actiondata;
     ret = impl_base::pipeline_impl()->write_to_txdma_table(addr,
-                                   P4_ARTEMIS_TXDMA_TBL_ID_SACL_P1,
-                                   SACL_P1_SACL_ACTION_P1_ID,
+                                   P4_ARTEMIS_TXDMA_TBL_ID_RFC_P1,
+                                   RFC_P1_RFC_ACTION_P1_ID,
                                    action_data);
     // reset the action data after flushing it
     memset(action_data, 0, sizeof(*action_data));
@@ -438,12 +438,12 @@ static inline sdk_ret_t
 rfc_p2_action_data_flush (mem_addr_t addr, void *actiondata)
 {
     sdk_ret_t                        ret;
-    sacl_p2_actiondata_t    *action_data;
+    rfc_p2_actiondata_t    *action_data;
 
-    action_data = (sacl_p2_actiondata_t *)actiondata;
+    action_data = (rfc_p2_actiondata_t *)actiondata;
     ret = impl_base::pipeline_impl()->write_to_txdma_table(addr,
-              P4_ARTEMIS_TXDMA_TBL_ID_SACL_P2,
-              SACL_P2_SACL_ACTION_P2_ID,
+              P4_ARTEMIS_TXDMA_TBL_ID_RFC_P2,
+              RFC_P2_RFC_ACTION_P2_ID,
               action_data);
     // reset the action data after flushing it
     memset(action_data, 0, sizeof(*action_data));
@@ -546,196 +546,196 @@ static inline sdk_ret_t
 rfc_p3_table_entry_pack (uint32_t running_id, void *actiondata,
                          uint32_t entry_num, uint16_t result)
 {
-    sacl_p3_actiondata_t    *action_data;
+    rfc_p3_actiondata_t    *action_data;
 
-    action_data = (sacl_p3_actiondata_t *)actiondata;
+    action_data = (rfc_p3_actiondata_t *)actiondata;
     result &= (uint16_t)0x7FF; // Only 11 bits are valid
     PDS_TRACE_DEBUG("running id %u, result 0x%x", running_id,
             result);
     switch (entry_num) {
     case 0:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr00 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res00 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr00 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res00 = result&0x01;
         break;
     case 1:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr01 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res01 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr01 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res01 = result&0x01;
         break;
     case 2:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr02 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res02 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr02 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res02 = result&0x01;
         break;
     case 3:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr03 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res03 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr03 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res03 = result&0x01;
         break;
     case 4:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr04 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res04 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr04 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res04 = result&0x01;
         break;
     case 5:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr05 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res05 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr05 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res05 = result&0x01;
         break;
     case 6:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr06 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res06 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr06 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res06 = result&0x01;
         break;
     case 7:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr07 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res07 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr07 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res07 = result&0x01;
         break;
     case 8:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr08 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res08 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr08 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res08 = result&0x01;
         break;
     case 9:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr09 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res09 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr09 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res09 = result&0x01;
         break;
     case 10:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr10 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res10 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr10 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res10 = result&0x01;
         break;
     case 11:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr11 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res11 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr11 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res11 = result&0x01;
         break;
     case 12:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr12 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res12 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr12 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res12 = result&0x01;
         break;
     case 13:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr13 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res13 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr13 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res13 = result&0x01;
         break;
     case 14:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr14 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res14 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr14 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res14 = result&0x01;
         break;
     case 15:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr15 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res15 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr15 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res15 = result&0x01;
         break;
     case 16:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr16 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res16 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr16 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res16 = result&0x01;
         break;
     case 17:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr17 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res17 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr17 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res17 = result&0x01;
         break;
     case 18:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr18 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res18 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr18 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res18 = result&0x01;
         break;
     case 19:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr19 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res19 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr19 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res19 = result&0x01;
         break;
     case 20:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr20 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res20 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr20 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res20 = result&0x01;
         break;
     case 21:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr21 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res21 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr21 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res21 = result&0x01;
         break;
     case 22:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr22 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res22 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr22 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res22 = result&0x01;
         break;
     case 23:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr23 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res23 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr23 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res23 = result&0x01;
         break;
     case 24:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr24 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res24 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr24 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res24 = result&0x01;
         break;
     case 25:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr25 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res25 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr25 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res25 = result&0x01;
         break;
     case 26:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr26 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res26 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr26 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res26 = result&0x01;
         break;
     case 27:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr27 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res27 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr27 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res27 = result&0x01;
         break;
     case 28:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr28 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res28 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr28 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res28 = result&0x01;
         break;
     case 29:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr29 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res29 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr29 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res29 = result&0x01;
         break;
     case 30:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr30 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res30 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr30 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res30 = result&0x01;
         break;
     case 31:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr31 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res31 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr31 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res31 = result&0x01;
         break;
     case 32:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr32 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res32 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr32 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res32 = result&0x01;
         break;
     case 33:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr33 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res33 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr33 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res33 = result&0x01;
         break;
     case 34:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr34 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res34 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr34 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res34 = result&0x01;
         break;
     case 35:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr35 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res35 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr35 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res35 = result&0x01;
         break;
     case 36:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr36 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res36 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr36 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res36 = result&0x01;
         break;
     case 37:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr37 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res37 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr37 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res37 = result&0x01;
         break;
     case 38:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr38 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res38 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr38 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res38 = result&0x01;
         break;
     case 39:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr39 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res39 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr39 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res39 = result&0x01;
         break;
     case 40:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr40 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res40 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr40 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res40 = result&0x01;
         break;
     case 41:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr41 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res41 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr41 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res41 = result&0x01;
         break;
     case 42:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr42 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res42 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr42 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res42 = result&0x01;
         break;
     case 43:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr43 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res43 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr43 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res43 = result&0x01;
         break;
     case 44:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr44 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res44 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr44 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res44 = result&0x01;
         break;
     case 45:
-        action_data->action_u.sacl_p3_sacl_action_p3.pr45 = result>>1;
-        action_data->action_u.sacl_p3_sacl_action_p3.res45 = result&0x01;
+        action_data->action_u.rfc_p3_rfc_action_p3.pr45 = result>>1;
+        action_data->action_u.rfc_p3_rfc_action_p3.res45 = result&0x01;
         break;
     default:
         break;
@@ -754,12 +754,12 @@ static inline sdk_ret_t
 rfc_p3_action_data_flush (mem_addr_t addr, void *actiondata)
 {
     sdk_ret_t               ret;
-    sacl_p3_actiondata_t    *action_data;
+    rfc_p3_actiondata_t    *action_data;
 
-    action_data = (sacl_p3_actiondata_t *)actiondata;
+    action_data = (rfc_p3_actiondata_t *)actiondata;
     ret = impl_base::pipeline_impl()->write_to_txdma_table(addr,
-              P4_ARTEMIS_TXDMA_TBL_ID_SACL_P3,
-              SACL_P3_SACL_ACTION_P3_ID, action_data);
+              P4_ARTEMIS_TXDMA_TBL_ID_RFC_P3,
+              RFC_P3_RFC_ACTION_P3_ID, action_data);
     // reset the action data after flushing it
     memset(action_data, 0, sizeof(*action_data));
     return ret;
@@ -962,7 +962,7 @@ rfc_compute_p1_tables (rfc_ctxt_t *rfc_ctxt,
                        rfc_table_t *table2,
                        uint64_t addr_offset)
 {
-    sacl_p1_actiondata_t action_data = { 0 };
+    rfc_p1_actiondata_t action_data = { 0 };
 
     rfc_compute_eq_class_tables(rfc_ctxt,
                                 table1,
@@ -992,7 +992,7 @@ rfc_compute_p2_tables (rfc_ctxt_t *rfc_ctxt,
                        rfc_table_t *table4,
                        uint64_t addr_offset)
 {
-    sacl_p2_actiondata_t     action_data = { 0 };
+    rfc_p2_actiondata_t     action_data = { 0 };
 
     rfc_compute_eq_class_tables(rfc_ctxt,
                                 table3,
@@ -1017,7 +1017,7 @@ rfc_compute_p2_tables (rfc_ctxt_t *rfc_ctxt,
 static inline sdk_ret_t
 rfc_compute_p3_tables (rfc_ctxt_t *rfc_ctxt, uint64_t addr_offset)
 {
-    sacl_p3_actiondata_t     action_data = { 0 };
+    rfc_p3_actiondata_t     action_data = { 0 };
 
     rfc_compute_eq_class_tables(rfc_ctxt,
                                 &rfc_ctxt->p1_table,

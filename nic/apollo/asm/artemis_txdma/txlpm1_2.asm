@@ -19,10 +19,8 @@ struct txlpm1_2_d          d;
 
 // Define key field names
 #define key                k.txdma_control_lpm1_key
-#define base_addr          k.{txdma_control_lpm1_base_addr_sbit0_ebit1...\
-                              txdma_control_lpm1_base_addr_sbit2_ebit33}
-#define curr_addr          k.{txdma_control_lpm1_base_addr_sbit0_ebit1...\
-                              txdma_control_lpm1_base_addr_sbit2_ebit33}
+#define base_addr          k.txdma_control_lpm1_base_addr
+#define curr_addr          k.txdma_control_lpm1_base_addr
 
 // Define PHV field names
 #define next_addr          p.txdma_control_lpm1_next_addr

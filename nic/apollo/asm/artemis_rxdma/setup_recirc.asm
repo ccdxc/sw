@@ -71,3 +71,11 @@ pass1:
     /* Enable Recirc */
     phvwr            p.capri_p4_intr_recirc, TRUE
 
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+setup_recirc_error:
+    phvwr.e         p.capri_intr_drop, 1
+    nop

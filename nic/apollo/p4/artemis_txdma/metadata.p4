@@ -3,39 +3,28 @@
 
 header_type txdma_control_metadata_t {
     fields {
-        pad0                : 6;
-        control_addr        : 34;
-        pad1                : 6;
-        rxdma_cindex_addr   : 34;
-        pad2                : 6;
-        rfc_table_addr      : 34;
-        pad3                : 6;
-        lpm1_base_addr      : 34;
-        pad4                : 6;
-        lpm1_next_addr      : 34;
+        control_addr        : 40;
+        rxdma_cindex_addr   : 40;
+        rfc_table_addr      : 40;
+        lpm1_base_addr      : 40;
+        lpm1_next_addr      : 40;
         lpm1_key            : 128;
 
         payload_addr        : 40;
         cindex              : 16;
 
-        pad5                : 6;
-        rule_priority       : 10;
-        p1_class_id         : 10;
-        p2_class_id         : 10;
-        p3_class_id         : 20;
-        sacl_result         : 1;
         remote_vnic_mapping_tx_ohash_lkp : 1; //TODO-KSM: Replace with P4 to P4+ header
-        pad6                : 4;
-        vpc_id              : 10;   //TODO-AJEER: Change this to 8 bits
-                                    //TODO-ART: Fill original vnic id in RxDMA
-        nexthop_group_index : 16;
-
-        // TODO-JOHN/MURTY: Find a way to pass the keys from RxDMA to TxDMA
-        remote_ip           : 128;  //TODO-KSM: Fill this in RxDMA
-        remote_vnic_mapping_tx_ohash : 32; //TODO-KSM: Replace with P4 to P4+ header
-        pad7                : 6;
+        sacl_result         : 1;
+        rfc_p1_classid      : 10;
+        rule_priority       : 10;
         svc_id              : 10;
-        vnic_id             : 8;
+
+        vpc_id              : 8;
+        nexthop_group_index : 16;
+        remote_vnic_mapping_tx_ohash : 32; //TODO-KSM: Replace with P4 to P4+ header
+
+        pad0                : 4;
+        rfc_index           : 20;
     }
 }
 
@@ -45,7 +34,9 @@ header_type scratch_metadata_t {
         field2          :  2;
         field10         : 10;
         field16         : 16;
+        field20         : 20;
         field32         : 32;
+        field40         : 40;
         field64         : 64;
         field128        : 128;
         field512        : 512;
@@ -101,3 +92,6 @@ metadata qstate_hdr_t           scratch_qstate_hdr;
 @pragma dont_trim
 @pragma scratch_metadata
 metadata qstate_info_t          scratch_qstate_info;
+
+@pragma dont_trim
+metadata artemis_rx_to_tx_header_t rx_to_tx_hdr;
