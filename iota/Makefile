@@ -70,15 +70,18 @@ CUR_TIME:=$(shell date +%Y-%m-%d_%H.%M.%S)
 CONTAINER_NAME:=${CUR_USER}_${CUR_TIME}
 docker/install_box:
 	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi
+	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:${NIC_CONTAINER_VERSION}; fi
 
 docker/build-runtime-image: docker/install_box
-	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:${NIC_CONTAINER_VERSION}; fi
 	cd .. && BOX_INCLUDE_ENV="NO_COPY USER USER_UID USER_GID GROUP_NAME" NO_COPY=1 USER_UID=$$(id -u) USER_GID=$$(id -g) GROUP_NAME=$$(id -gn) box -t pensando/nic nic/box.rb
+
+docker/build-iota-runtime-image: docker/install_box
+	cd .. && BOX_INCLUDE_ENV="NO_COPY USER USER_UID USER_GID GROUP_NAME" NO_COPY=1 USER_UID=$$(id -u) USER_GID=$$(id -g) GROUP_NAME=$$(id -gn) box -t pensando/nic iota/box.rb
 
 docker/run: docker/build-runtime-image
 	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -w /sw/iota pensando/nic su -l $(CUR_USER) -c 'set -o pipefail && cd ../iota && make && ./iota.py --testbed ${HARDWARE_TESTBED_COPIED} --testsuite ${TESTSUITE}  2>&1 | tee run.log'
 
-docker/run-iota: docker/build-runtime-image
+docker/run-iota: docker/build-iota-runtime-image
 	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -w /sw/iota pensando/nic su -l $(CUR_USER) -c 'set -o pipefail && cd ../iota && ./iota.py --testbed ${HARDWARE_TESTBED_COPIED} --testsuite ${TESTSUITE}  2>&1 | tee run.log'
 
 docker/build-iota: docker/build-runtime-image

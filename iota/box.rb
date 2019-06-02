@@ -41,7 +41,7 @@ end
 
 workdir "/sw"
 
-copy "nic/entrypoint.sh", "/entrypoint.sh"
+copy "iota/entrypoint.sh", "/entrypoint.sh"
 run "chmod +x /entrypoint.sh"
 
 entrypoint "/entrypoint.sh"
