@@ -12,7 +12,7 @@ struct key_entry_aligned_t d;
 
 #define K_ACC_CTRL CAPRI_KEY_FIELD(IN_P, acc_ctrl)
 #define K_VA       CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit7, va_sbit56_ebit63)
-#define K_LEN      CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit7, len_sbit24_ebit31)
+#define K_LEN      CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit7, len_sbit24_ebit31) // TODO 64b
 #define K_ZBVA     CAPRI_KEY_FIELD(IN_P, zbva)
 #define K_R_KEY    CAPRI_KEY_RANGE(IN_P, r_key_sbit0_ebit7, r_key_sbit24_ebit31)
 #define K_MW_TYPE  CAPRI_KEY_FIELD(IN_P, mw_type) 

@@ -170,6 +170,7 @@ def ResetErrQState(tc):
     rs.lqp.sq.qstate.data.qp_err_dis_lkey_inv_pd = 0
     rs.lqp.sq.qstate.data.qp_err_dis_lkey_rsvd_lkey = 0
     rs.lqp.sq.qstate.data.qp_err_dis_lkey_access_violation = 0
+    rs.lqp.sq.qstate.data.qp_err_dis_bind_mw_len_exceeded = 0
     rs.lqp.sq.qstate.data.qp_err_dis_bind_mw_rkey_inv_pd = 0
     rs.lqp.sq.qstate.data.qp_err_dis_bind_mw_rkey_inv_zbva = 0
     rs.lqp.sq.qstate.data.qp_err_dis_bind_mw_rkey_inv_len = 0

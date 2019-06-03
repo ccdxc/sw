@@ -256,9 +256,10 @@ header_type req_tx_to_stage_stats_info_t {
         qp_err_dis_lkey_inv_pd           :    1;
         qp_err_dis_lkey_rsvd_lkey        :    1;
         qp_err_dis_lkey_access_violation :    1;
+        qp_err_dis_bind_mw_len_exceeded          : 1;
         qp_err_dis_bind_mw_rkey_inv_pd           : 1;
         qp_err_dis_bind_mw_rkey_inv_zbva         : 1;
-        qp_err_dis_bind_mw_rkey_inv_len          : 1; 
+        qp_err_dis_bind_mw_rkey_inv_len          : 1;
         qp_err_dis_bind_mw_rkey_inv_mw_state     : 1;
         qp_err_dis_bind_mw_rkey_type_disallowed  : 1;
         qp_err_dis_bind_mw_lkey_state_valid      : 1;
@@ -283,7 +284,7 @@ header_type req_tx_to_stage_stats_info_t {
         qp_err_dis_inv_optype                    : 1;
         qp_err_dis_err_retry_exceed              : 1;
         qp_err_dis_rnr_retry_exceed              : 1;
-        qp_err_dis_rsvd                          : 27;
+        qp_err_dis_rsvd                          : 26;
         pad                                      : 34;
     }
 }
@@ -661,7 +662,7 @@ header_type req_tx_frpmr_lkey_to_wb_info_t {
 header_type req_tx_sqwqe_to_lkey_mw_info_t {
     fields {
         va                               : 64;
-        len                              : 32;
+        len                              : 32; // TODO 64b
         r_key                            : 32;
         new_r_key_key                    : 8;
         acc_ctrl                         : 8;
@@ -674,7 +675,7 @@ header_type req_tx_sqwqe_to_lkey_mw_info_t {
 header_type req_tx_sqlkey_to_rkey_mw_info_t {
     fields {
         va                               : 64;
-        len                              : 32;
+        len                              : 32; // TODO 64b
         mw_pt_base                       : 32;
         new_r_key_key                    : 8;
         acc_ctrl                         : 8;
@@ -2194,6 +2195,7 @@ action req_tx_stats_process () {
     modify_field(to_s7_stats_info_scr.qp_err_dis_lkey_inv_pd, to_s7_stats_info.qp_err_dis_lkey_inv_pd);
     modify_field(to_s7_stats_info_scr.qp_err_dis_lkey_rsvd_lkey, to_s7_stats_info.qp_err_dis_lkey_rsvd_lkey);
     modify_field(to_s7_stats_info_scr.qp_err_dis_lkey_access_violation, to_s7_stats_info.qp_err_dis_lkey_access_violation);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_bind_mw_len_exceeded, to_s7_stats_info.qp_err_dis_bind_mw_len_exceeded);
     modify_field(to_s7_stats_info_scr.qp_err_dis_bind_mw_rkey_inv_pd, to_s7_stats_info.qp_err_dis_bind_mw_rkey_inv_pd);
     modify_field(to_s7_stats_info_scr.qp_err_dis_bind_mw_rkey_inv_zbva, to_s7_stats_info.qp_err_dis_bind_mw_rkey_inv_zbva);
     modify_field(to_s7_stats_info_scr.qp_err_dis_bind_mw_rkey_inv_len, to_s7_stats_info.qp_err_dis_bind_mw_rkey_inv_len);

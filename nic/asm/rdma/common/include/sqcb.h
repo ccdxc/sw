@@ -290,6 +290,7 @@ struct sqcb4_t {
     qp_err_dis_lkey_inv_pd           :    1;
     qp_err_dis_lkey_rsvd_lkey        :    1;
     qp_err_dis_lkey_access_violation :    1;
+    qp_err_dis_bind_mw_len_exceeded          : 1;
     qp_err_dis_bind_mw_rkey_inv_pd           : 1;
     qp_err_dis_bind_mw_rkey_inv_zbva         : 1;
     qp_err_dis_bind_mw_rkey_inv_len          : 1;
@@ -317,7 +318,7 @@ struct sqcb4_t {
     qp_err_dis_inv_optype                    : 1;
     qp_err_dis_err_retry_exceed              : 1;
     qp_err_dis_rnr_retry_exceed              : 1;
-    qp_err_dis_rsvd                          : 27;
+    qp_err_dis_rsvd                          : 26;
     pad: 48;
 };
 

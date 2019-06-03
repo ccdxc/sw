@@ -2208,7 +2208,7 @@ static int ionic_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 {
 	switch (dev->rdma_version) {
 	case 1:
-		if (dev->admin_opcodes > IONIC_V1_ADMIN_DESTROY_MR)
+		if (dev->admin_opcodes > IONIC_V1_ADMIN_CREATE_MR)
 			return ionic_v1_create_mr_cmd(dev, pd, mr,
 						      addr, length);
 		return -ENOSYS;

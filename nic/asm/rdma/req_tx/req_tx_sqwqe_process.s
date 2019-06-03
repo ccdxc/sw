@@ -341,8 +341,16 @@ bind_mw:
 
     // bind_mw_sqlkey_process should be invoked in stage4 T0 and T1.
     CAPRI_RESET_TABLE_0_ARG()
-    phvwr          CAPRI_PHV_RANGE(SQWQE_TO_LKEY_MW_T0_P, va, len), d.{bind_mw.va, bind_mw.len}
-    phvwrpair      CAPRI_PHV_FIELD(SQWQE_TO_LKEY_MW_T0_P, r_key), d.base.key, CAPRI_PHV_FIELD(SQWQE_TO_LKEY_MW_T0_P, new_r_key_key), d.base.new_r_key_key
+
+    // TODO 64b bind_mw.len; limit to 32b for now
+    srl            r4, d.bind_mw.len, 32
+    bne            r0, r4, bind_mw_len_error
+    nop // BD Slot
+
+    phvwrpair      CAPRI_PHV_FIELD(SQWQE_TO_LKEY_MW_T0_P, va), d.bind_mw.va, \
+                   CAPRI_PHV_FIELD(SQWQE_TO_LKEY_MW_T0_P, len), d.bind_mw.len[31:0]
+    phvwrpair      CAPRI_PHV_FIELD(SQWQE_TO_LKEY_MW_T0_P, r_key), d.base.key, \
+                   CAPRI_PHV_FIELD(SQWQE_TO_LKEY_MW_T0_P, new_r_key_key), d.base.new_r_key_key
     phvwrpair      CAPRI_PHV_FIELD(SQWQE_TO_LKEY_MW_T0_P, acc_ctrl), d.{bind_mw.access_ctrl}, \
                    CAPRI_PHV_FIELD(SQWQE_TO_LKEY_MW_T0_P, zbva), d.{bind_mw.access_ctrl.zbva}
     add            r4, 1, d.bind_mw.inv_en
@@ -458,7 +466,12 @@ invalid_optype:
     b              ud_error
     phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
                    CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_inv_optype), 1 // BD Slot
-    
+
+bind_mw_len_error:
+    b              ud_error
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_bind_mw_len_exceeded), 1 // BD Slot
+
 ud_error:
     // Any error should move Qstate to SQ_ERR and halt SQ processing
     phvwrpair      p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_QP_OPER_ERR << 1 | 1), \
@@ -470,7 +483,7 @@ ud_error:
 clear_poll_in_progress:
     CAPRI_RESET_TABLE_2_ARG()
     b              trigger_dcqcn
-    phvwr CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, poll_failed), 1
+    phvwr CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, poll_failed), 1 // BD Slot
 
 skip_npg_wqe:
     CAPRI_RESET_TABLE_2_ARG()

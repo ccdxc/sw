@@ -14,7 +14,7 @@ struct key_entry_aligned_t d;
 
 #define K_ACC_CTRL         CAPRI_KEY_FIELD(IN_P, acc_ctrl)
 #define K_VA               CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit7, va_sbit56_ebit63)
-#define K_LEN              CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit7, len_sbit24_ebit31)
+#define K_LEN              CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit7, len_sbit24_ebit31) // TODO 64b
 #define K_ZBVA             CAPRI_KEY_FIELD(IN_P, zbva)
 #define K_LOG_PAGE_SIZE    CAPRI_KEY_RANGE(IN_P, log_page_size_sbit0_ebit4, log_page_size_sbit5_ebit7)
 #define K_USER_KEY         CAPRI_KEY_FIELD(IN_P, new_r_key_key)
@@ -48,10 +48,11 @@ req_tx_bind_mw_rkey_process:
     nop            // Branch Delay Slot
 
     beqi           r2, MR_TYPE_MW_TYPE_2, type2_mw_bind
+
 type1_mw_bind:
     // type1 mw bind is allowed if current state is free or valid but
     // not if invalid
-    seq            c1, d.state, KEY_STATE_INVALID
+    seq            c1, d.state, KEY_STATE_INVALID // Branch Delay Slot
     bcf            [c1], invalid_mw_state
 
     seq            c1, K_ZBVA, 1 // Branch Delay Slot

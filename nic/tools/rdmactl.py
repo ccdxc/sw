@@ -484,6 +484,7 @@ class RdmaReqTxStats(Packet):
         BitField("qp_err_dis_lkey_rsvd_lkey", 0, 1),
         BitField("qp_err_dis_lkey_access_violation", 0, 1),
         BitField("qp_err_dis_bind_mw_rkey_inv_pd", 0, 1),
+        BitField("qp_err_dis_bind_mw_len_exceeded", 0, 1),
         BitField("qp_err_dis_bind_mw_rkey_inv_zbva", 0, 1),
         BitField("qp_err_dis_bind_mw_rkey_inv_len", 0, 1),
         BitField("qp_err_dis_bind_mw_rkey_inv_mw_state", 0, 1),
@@ -510,7 +511,7 @@ class RdmaReqTxStats(Packet):
         BitField("qp_err_dis_inv_optype", 0, 1),
         BitField("qp_err_dis_err_retry_exceed", 0, 1),
         BitField("qp_err_dis_rnr_retry_exceed", 0, 1),
-        BitField("qp_err_dis_rsvd", 0, 27),
+        BitField("qp_err_dis_rsvd", 0, 26),
         BitField("sqcb4", 0, 48),
     ]
 
@@ -883,25 +884,26 @@ class RdmaDcqcnCB(Packet):
 class RdmaKeyTableEntry(Packet):
     name = "RdmaKeyTableEntry"
     fields_desc = [
-        ByteField("user_key", 0),
+        XByteField("user_key", 0),
         BitField("state", 0, 4),
         BitField("type", 0, 4),
         XByteField("acc_ctrl", 0),
         ByteField("log_page_size", 0),
         LongField("len", 0),
-        LongField("base_va", 0),
-        IntField("pt_base", 0),
+        XLongField("base_va", 0),
+        XLongField("pt_base", 0),
         IntField("pd", 0),
         BitField("host_addr", 0, 1),
         BitField("override_lif_vld", 0, 1),
         BitField("override_lif", 0, 12),
-        BitField("rsvd1", 0, 18),
+        BitField("is_phy_addr", 0, 1),
+        BitField("rsvd1", 0, 17),
         XByteField("flags", 0),
         X3BytesField("qp", 0),
-        IntField("mr_l_key", 0),
-        IntField("mr_cookie", 0),
+        XIntField("mr_l_key", 0),
+        XIntField("mr_cookie", 0),
         IntField("num_pt_entries_rsvd", 0),
-        BitField("rsvd2", 0, 128)
+        BitField("rsvd2", 0, 96)
     ]
 
 class RdmaPageTableEntry(Packet):

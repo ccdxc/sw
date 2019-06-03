@@ -698,11 +698,11 @@ struct sqwqe_atomic_t {
     struct sge_t sge;
 };
 
-// 18B + 30B pad
+// 22B + 26B pad
 // Bind Memory Window
 struct sqwqe_bind_mw_t {
     va                 : 64;
-    len                : 32;
+    len                : 64;
     l_key              : 32;
 
     //total flags - 16 bits
@@ -712,8 +712,8 @@ struct sqwqe_bind_mw_t {
     //8 bit access_ctrl flags
     union access_ctrl_flags_t access_ctrl; //8 bits
 
-    //30B
-    pad                : 240;
+    //26B
+    pad                : 208;
 };
 
 

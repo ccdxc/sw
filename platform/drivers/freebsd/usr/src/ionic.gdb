@@ -934,7 +934,9 @@ define _ionic_wqe_print_local_inv
 end
 
 define _ionic_wqe_print_bind_mw
-	printf "TBD\n"
+	# Not possible to get here - bind_mw is a userspace op,
+	# but userspace sqe are not present in the kernel core
+	printf "\n"
 end
 
 define ionic_sqe_print
@@ -989,7 +991,7 @@ end
 document ionic_sqe_print
 Print information about the given send WQE.
 The is_posted flag controls whether queue entry metadata is decoded.
-TODO: ATOMIC, BIND_MW
+TODO: ATOMIC
 Usage: ionic_sqe_print [qp] [sqe] [is_posted]
 end
 

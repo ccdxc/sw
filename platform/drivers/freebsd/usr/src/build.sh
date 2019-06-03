@@ -66,6 +66,10 @@ cd perftest
 make -j12 || exit
 cd -
 
+# In some network configurations, qperf will not work as a server until
+# this setting is added to /etc/rc.conf:
+# ipv6_ipv4mapping="YES"
+#
 cd qperf
 ./autogen.sh || exit
 ./configure || exit

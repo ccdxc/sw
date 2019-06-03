@@ -1617,13 +1617,19 @@ static int ionic_v1_prep_inv(struct ionic_qp *qp, struct ibv_send_wr *wr)
 	return 0;
 }
 
-static int ionic_v1_prep_bind(struct ionic_qp *qp, struct ibv_send_wr *wr)
+static int ionic_v1_prep_bind(struct ionic_qp *qp,
+			      struct ibv_send_wr *wr,
+			      bool send_path)
 {
 	struct ionic_sq_meta *meta;
 	struct ionic_v1_wqe *wqe;
 	int flags;
 
 	if (wr->send_flags & (IBV_SEND_SOLICITED | IBV_SEND_INLINE))
+		return EINVAL;
+
+	/* type 1 must use bind_mw; type 2 must use post_send */
+	if (send_path == (wr->bind_mw.mw->type == IBV_MW_TYPE_1))
 		return EINVAL;
 
 	/* only remote access is allowed */
@@ -1658,7 +1664,7 @@ static int ionic_v1_prep_bind(struct ionic_qp *qp, struct ibv_send_wr *wr)
 	wqe->base.num_sge_key = wr->bind_mw.rkey;
 	wqe->base.imm_data_key = htobe32(wr->bind_mw.mw->rkey);
 	wqe->bind_mw.va = htobe64(wr->bind_mw.bind_info.addr);
-	wqe->bind_mw.length = htobe32(wr->bind_mw.bind_info.length);
+	wqe->bind_mw.length = htobe64(wr->bind_mw.bind_info.length);
 	wqe->bind_mw.lkey = htobe32(wr->bind_mw.bind_info.mr->lkey);
 	wqe->bind_mw.flags = htobe16(flags);
 
@@ -1668,7 +1674,8 @@ static int ionic_v1_prep_bind(struct ionic_qp *qp, struct ibv_send_wr *wr)
 }
 
 static int ionic_v1_prep_one_rc(struct ionic_qp *qp,
-				struct ibv_send_wr *wr)
+				struct ibv_send_wr *wr,
+				bool send_path)
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
 	int rc = 0;
@@ -1692,10 +1699,7 @@ static int ionic_v1_prep_one_rc(struct ionic_qp *qp,
 		rc = ionic_v1_prep_inv(qp, wr);
 		break;
 	case IBV_WR_BIND_MW:
-		if (wr->bind_mw.mw->type != IBV_MW_TYPE_2)
-			rc = EINVAL;
-		else
-			rc = ionic_v1_prep_bind(qp, wr);
+		rc = ionic_v1_prep_bind(qp, wr, send_path);
 		break;
 	default:
 		ionic_dbg(ctx, "invalid opcode %d", wr->opcode);
@@ -1817,7 +1821,8 @@ static int ionic_post_send_common(struct ionic_ctx *ctx,
 				  struct ionic_cq *cq,
 				  struct ionic_qp *qp,
 				  struct ibv_send_wr *wr,
-				  struct ibv_send_wr **bad)
+				  struct ibv_send_wr **bad,
+				  bool send_path)
 {
 	uint16_t old_prod;
 	int spend, rc = 0;
@@ -1867,7 +1872,7 @@ static int ionic_post_send_common(struct ionic_ctx *ctx,
 				goto out;
 			}
 
-			rc = ionic_v1_prep_one_rc(qp, wr);
+			rc = ionic_v1_prep_one_rc(qp, wr, send_path);
 			if (rc)
 				goto out;
 
@@ -2078,7 +2083,7 @@ static int ionic_post_send(struct ibv_qp *ibqp,
 	struct ionic_qp *qp = to_ionic_qp(ibqp);
 	struct ionic_cq *cq = to_ionic_cq(ibqp->send_cq);
 
-	return ionic_post_send_common(ctx, cq, qp, wr, bad);
+	return ionic_post_send_common(ctx, cq, qp, wr, bad, true);
 }
 
 static int ionic_post_recv(struct ibv_qp *ibqp,
@@ -2272,8 +2277,12 @@ static int ionic_destroy_ah(struct ibv_ah *ibah)
 static int ionic_bind_mw(struct ibv_qp *ibqp, struct ibv_mw *ibmw,
 			 struct ibv_mw_bind *bind)
 {
+	struct ionic_ctx *ctx = to_ionic_ctx(ibqp->context);
 	struct ionic_qp *qp = to_ionic_qp(ibqp);
+	struct ionic_cq *cq = to_ionic_cq(ibqp->send_cq);
+	struct ibv_send_wr *bad;
 	struct ibv_send_wr wr = {
+		.opcode = IBV_WR_BIND_MW,
 		.wr_id = bind->wr_id,
 		.send_flags = bind->send_flags,
 		.bind_mw = {
@@ -2284,13 +2293,10 @@ static int ionic_bind_mw(struct ibv_qp *ibqp, struct ibv_mw *ibmw,
 	};
 	int rc;
 
-	if (ibmw->type != IBV_MW_TYPE_1)
-		return EINVAL;
-
 	if (bind->bind_info.length)
 		wr.bind_mw.rkey = ibv_inc_rkey(ibmw->rkey);
 
-	rc = ionic_v1_prep_bind(qp, &wr);
+	rc = ionic_post_send_common(ctx, cq, qp, &wr, &bad, false);
 	if (!rc)
 		ibmw->rkey = wr.bind_mw.rkey;
 
@@ -2323,6 +2329,11 @@ int fallback_rereg_mr(struct ibv_mr *ibmr, int flags, struct ibv_pd *pd,
 
 int fallback_dereg_mr(struct ibv_mr *ibmr);
 
+struct ibv_mw *fallback_alloc_mw(struct ibv_pd *ibpd,
+                                 enum ibv_mw_type type);
+
+int fallback_dealloc_mw(struct ibv_mw *mw);
+
 static const struct ibv_context_ops ionic_ctx_ops = {
 	.query_device		= fallback_query_device,
 	.query_port		= fallback_query_port,
@@ -2349,7 +2360,9 @@ static const struct ibv_context_ops ionic_ctx_ops = {
 	.post_recv		= ionic_post_recv,
 	.create_ah		= ionic_create_ah,
 	.destroy_ah		= ionic_destroy_ah,
+	.alloc_mw		= fallback_alloc_mw,
 	.bind_mw		= ionic_bind_mw,
+	.dealloc_mw		= fallback_dealloc_mw,
 };
 
 void ionic_set_ops(struct ibv_context *ibctx)

@@ -31,7 +31,7 @@ struct req_tx_to_stage_2_t {
 #if 0
 struct req_tx_sqwqe_to_lkey_mw_info_t {
     va                           : 64;
-    len                          : 32;
+    len                          : 32; // TODO 64b
     r_key                        : 32;
     new_r_key_key                : 8;
     acc_ctrl                     : 8;
@@ -43,7 +43,7 @@ struct req_tx_sqwqe_to_lkey_mw_info_t {
 
 struct req_tx_sqlkey_to_rkey_mw_info_t {
     va                           : 64;
-    len                          : 32;
+    len                          : 32; // TODO 64b
     mw_pt_base                   : 32;
     new_r_key_key                : 8;
     acc_ctrl                     : 8;

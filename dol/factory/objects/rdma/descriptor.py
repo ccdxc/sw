@@ -60,16 +60,16 @@ class RdmaSqDescriptorAtomic(Packet):
         IntField("pad", 0),
     ]
 
-#18B + 30B pad
+#22B + 26B pad
 class RdmaSqDescriptorBindMw(Packet):
      fields_desc = [
          LongField("va", 0),
-         IntField("len", 0),
+         LongField("len", 0),
          IntField("l_key", 0),
          BitField("inv_en", 0, 1),
          BitField("rsvd_flags", 0, 7),
          ByteField("access_ctrl", 0),
-         BitField("pad", 0, 240),
+         BitField("pad", 0, 208),
      ]
 
 #40B + 8B pad

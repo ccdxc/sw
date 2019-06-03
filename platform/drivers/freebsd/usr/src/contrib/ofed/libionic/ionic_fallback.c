@@ -465,8 +465,8 @@ static int fallback_destroy_ah(struct ibv_ah *ibah)
 	return 0;
 }
 
-static struct ibv_mw *fallback_alloc_mw(struct ibv_pd *ibpd,
-					enum ibv_mw_type type)
+struct ibv_mw *fallback_alloc_mw(struct ibv_pd *ibpd,
+				 enum ibv_mw_type type)
 {
 	struct ibv_mw *ibmw;
 	struct ibv_alloc_mw cmd;
@@ -494,7 +494,7 @@ err_mw:
 	return NULL;
 }
 
-static int fallback_dealloc_mw(struct ibv_mw *ibmw)
+int fallback_dealloc_mw(struct ibv_mw *ibmw)
 {
 	struct ibv_dealloc_mw cmd;
 	int rc;

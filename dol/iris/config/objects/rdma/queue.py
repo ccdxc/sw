@@ -540,6 +540,7 @@ class RdmaSQstate(Packet):
         BitField("qp_err_dis_lkey_inv_pd", 0, 1),
         BitField("qp_err_dis_lkey_rsvd_lkey", 0, 1),
         BitField("qp_err_dis_lkey_access_violation", 0, 1),
+        BitField("qp_err_dis_bind_mw_len_exceeded", 0, 1),
         BitField("qp_err_dis_bind_mw_rkey_inv_pd", 0, 1),
         BitField("qp_err_dis_bind_mw_rkey_inv_zbva", 0, 1),
         BitField("qp_err_dis_bind_mw_rkey_inv_len", 0, 1),
@@ -567,7 +568,7 @@ class RdmaSQstate(Packet):
         BitField("qp_err_dis_inv_optype", 0, 1),
         BitField("qp_err_dis_err_retry_exceed", 0, 1),
         BitField("qp_err_dis_rnr_retry_exceed", 0, 1),
-        BitField("qp_err_dis_rsvd", 0, 27),
+        BitField("qp_err_dis_rsvd", 0, 26),
         BitField("sqcb4", 0, 48),
 
         #SQCB5
