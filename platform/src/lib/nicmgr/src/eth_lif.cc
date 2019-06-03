@@ -1037,6 +1037,7 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
         cmd->intr_index,
         (cmd->flags & IONIC_QINIT_F_SG) ? 'S' : '-',
         (cmd->flags & IONIC_QINIT_F_IRQ) ? 'I' : '-',
+        (cmd->flags & IONIC_QINIT_F_DEBUG) ? 'D' : '-',
         (cmd->flags & IONIC_QINIT_F_ENA) ? 'E' : '-');
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
@@ -1103,22 +1104,13 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
     qstate.sta.color = 1;
     qstate.sta.spec_miss = 0;
     qstate.cfg.enable = (cmd->flags & IONIC_QINIT_F_ENA) ? 1 : 0;
+    qstate.cfg.debug = (cmd->flags & IONIC_QINIT_F_DEBUG) ? 1 : 0;
     qstate.cfg.intr_enable = (cmd->flags & IONIC_QINIT_F_IRQ) ? 1 : 0;
     qstate.cfg.host_queue = spec->host_dev;
-
-    // Apollo VPP changes
     if (hal_lif_info_.type == sdk::platform::lif_type_t::LIF_TYPE_MNIC_CPU) {
         qstate.cfg.cpu_queue = 1;
     } else {
         qstate.cfg.cpu_queue = 0;
-    }
-
-    // FIXME: Workaround for mnic
-    if (spec->host_dev) {
-        // TODO: this doesn't work on TOT
-        //qstate.cfg.intr_enable = cmd->I;
-    } else {
-        qstate.cfg.intr_enable = 1;
     }
 
     if (spec->host_dev) {
@@ -1177,6 +1169,7 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
         cmd->intr_index,
         (cmd->flags & IONIC_QINIT_F_SG) ? 'S' : '-',
         (cmd->flags & IONIC_QINIT_F_IRQ) ? 'I' : '-',
+        (cmd->flags & IONIC_QINIT_F_DEBUG) ? 'D' : '-',
         (cmd->flags & IONIC_QINIT_F_ENA) ? 'E' : '-');
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
@@ -1240,22 +1233,13 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
     qstate.comp_index = 0;
     qstate.sta.color = 1;
     qstate.cfg.enable = (cmd->flags & IONIC_QINIT_F_ENA) ? 1 : 0;
+    qstate.cfg.debug = (cmd->flags & IONIC_QINIT_F_DEBUG) ? 1 : 0;
     qstate.cfg.intr_enable = (cmd->flags & IONIC_QINIT_F_IRQ) ? 1 : 0;
     qstate.cfg.host_queue = spec->host_dev;
-
-    // Apollo VPP changes
     if (hal_lif_info_.type == sdk::platform::lif_type_t::LIF_TYPE_MNIC_CPU)
         qstate.cfg.cpu_queue = 1;
     else
         qstate.cfg.cpu_queue = 0;
-
-    // FIXME: Workaround for mnic
-    if (spec->host_dev) {
-        // TODO: this doesn't work on TOT
-        //qstate.cfg.intr_enable = cmd->I;
-    } else {
-        qstate.cfg.intr_enable = 1;
-    }
 
     if (spec->host_dev) {
         qstate.ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->ring_base);
@@ -1302,6 +1286,7 @@ EthLif::NotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
         cmd->ring_size,
         cmd->intr_index,
         (cmd->flags & IONIC_QINIT_F_IRQ) ? 'I' : '-',
+        (cmd->flags & IONIC_QINIT_F_DEBUG) ? 'D' : '-',
         (cmd->flags & IONIC_QINIT_F_ENA) ? 'E' : '-');
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
@@ -1355,6 +1340,7 @@ EthLif::NotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     qstate.c_index0 = 0;
     qstate.host_pindex = 0;
     qstate.sta = {0};
+    qstate.cfg.debug = (cmd->flags & IONIC_QINIT_F_DEBUG) ? 1 : 0;
     qstate.cfg.enable = (cmd->flags & IONIC_QINIT_F_ENA) ? 1 : 0;
     qstate.cfg.intr_enable = (cmd->flags & IONIC_QINIT_F_IRQ) ? 1 : 0;
     qstate.cfg.host_queue = spec->host_dev;
@@ -1403,6 +1389,7 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
         cmd->ring_size,
         cmd->intr_index,
         (cmd->flags & IONIC_QINIT_F_IRQ) ? 'I' : '-',
+        (cmd->flags & IONIC_QINIT_F_DEBUG) ? 'D' : '-',
         (cmd->flags & IONIC_QINIT_F_ENA) ? 'E' : '-');
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
@@ -1469,6 +1456,7 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
     qstate.comp_index = 0;
     qstate.ci_fetch = 0;
     qstate.sta.color = 1;
+    qstate.cfg.debug = (cmd->flags & IONIC_QINIT_F_DEBUG) ? 1 : 0;
     qstate.cfg.enable = (cmd->flags & IONIC_QINIT_F_ENA) ? 1 : 0;
     qstate.cfg.intr_enable = (cmd->flags & IONIC_QINIT_F_IRQ) ? 1 : 0;
     qstate.cfg.host_queue = spec->host_dev;

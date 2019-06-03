@@ -62,7 +62,7 @@ EdmaQ::Init(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
     comp_tail = 0;
     exp_color = 1;
 
-    // Reset rings
+    // Init rings
     MEM_SET(ring_base, 0, (sizeof(struct edma_cmd_desc) * ring_size), 0);
     MEM_SET(comp_base, 0, (sizeof(struct edma_comp_desc) * ring_size), 0);
 
@@ -107,19 +107,30 @@ EdmaQ::Init(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
 bool
 EdmaQ::Reset()
 {
-    uint64_t addr = pd->lm_->get_lif_qstate_addr(lif, qtype, qid);
+    uint64_t addr, req_db_addr;
+
+    addr = pd->lm_->get_lif_qstate_addr(lif, qtype, qid);
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for edma queue",
             name);
         return false;
     }
+    NIC_LOG_DEBUG("{}: resetting edma qstate {:#x}", name, addr);
+
     MEM_SET(addr, 0, fldsiz(edma_qstate_t, pc_offset), 0);
     PAL_barrier();
     p4plus_invalidate_cache(addr, sizeof(edma_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
-    // Reset rings
-    MEM_SET(ring_base, 0, (sizeof(struct edma_cmd_desc) * ring_size), 0);
-    MEM_SET(comp_base, 0, (sizeof(struct edma_comp_desc) * ring_size), 0);
+    req_db_addr =
+#ifdef __aarch64__
+                CAP_ADDR_BASE_DB_WA_OFFSET +
+#endif
+                CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
+                (0b0 << 17) +
+                (lif << 6) +
+                (qtype << 3);
+
+    WRITE_DB64(req_db_addr, qid << 24);
 
     return true;
 }

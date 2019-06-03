@@ -97,7 +97,7 @@ AdminQ::AdminRequestQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
     req_comp_tail = 0;
     req_exp_color = 1;
 
-    // Reset rings
+    // Init rings
     MEM_SET(req_ring_base, 0, sizeof(struct nicmgr_req_desc) * req_ring_size, 0);
     MEM_SET(req_comp_base, 0, sizeof(struct nicmgr_req_comp_desc) * req_ring_size, 0);
 
@@ -149,7 +149,7 @@ AdminQ::AdminResponseQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
     resp_comp_tail = 0;
     resp_exp_color = 1;
 
-    // Reset rings
+    // Init rings
     MEM_SET(resp_ring_base, 0, sizeof(struct nicmgr_resp_desc) * resp_ring_size, 0);
     MEM_SET(resp_comp_base, 0, sizeof(struct nicmgr_resp_comp_desc) * resp_ring_size, 0);
 
@@ -214,7 +214,9 @@ AdminQ::Reset()
 bool
 AdminQ::AdminRequestQReset()
 {
-    uint64_t req_qstate_addr = pd->lm_->get_lif_qstate_addr(lif, req_qtype, req_qid);
+    uint64_t req_qstate_addr, req_db_addr;
+
+    req_qstate_addr = pd->lm_->get_lif_qstate_addr(lif, req_qtype, req_qid);
     if (req_qstate_addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for request queue", name);
         return false;
@@ -226,8 +228,16 @@ AdminQ::AdminRequestQReset()
     p4plus_invalidate_cache(req_qstate_addr, sizeof(nicmgr_req_qstate_t),
         P4PLUS_CACHE_INVALIDATE_TXDMA);
 
-    MEM_SET(req_ring_base, 0, sizeof(struct nicmgr_req_desc) * req_ring_size, 0);
-    MEM_SET(req_comp_base, 0, sizeof(struct nicmgr_req_comp_desc) * req_ring_size, 0);
+    req_db_addr =
+#ifdef __aarch64__
+                CAP_ADDR_BASE_DB_WA_OFFSET +
+#endif
+                CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
+                (0b0 << 17) +
+                (lif << 6) +
+                (req_qtype << 3);
+
+    WRITE_DB64(req_db_addr, req_qid << 24);
 
     return true;
 }
@@ -235,7 +245,9 @@ AdminQ::AdminRequestQReset()
 bool
 AdminQ::AdminResponseQReset()
 {
-    uint64_t resp_qstate_addr = pd->lm_->get_lif_qstate_addr(lif, resp_qtype, resp_qid);
+    uint64_t resp_qstate_addr, resp_db_addr;
+
+    resp_qstate_addr = pd->lm_->get_lif_qstate_addr(lif, resp_qtype, resp_qid);
     if (resp_qstate_addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for response queue", name);
         return false;
@@ -247,8 +259,16 @@ AdminQ::AdminResponseQReset()
     p4plus_invalidate_cache(resp_qstate_addr, sizeof(nicmgr_resp_qstate_t),
         P4PLUS_CACHE_INVALIDATE_TXDMA);
 
-    MEM_SET(resp_ring_base, 0, sizeof(struct nicmgr_resp_desc) * resp_ring_size, 0);
-    MEM_SET(resp_comp_base, 0, sizeof(struct nicmgr_resp_comp_desc) * resp_ring_size, 0);
+    resp_db_addr =
+#ifdef __aarch64__
+                CAP_ADDR_BASE_DB_WA_OFFSET +
+#endif
+                CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
+                (0b0 << 17) +
+                (lif << 6) +
+                (resp_qtype << 3);
+
+    WRITE_DB64(resp_db_addr, resp_qid << 24);
 
     return true;
 }

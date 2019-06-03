@@ -584,8 +584,8 @@ eth_qdump(uint16_t lif, uint8_t qtype, uint32_t qid, uint8_t ring)
                 struct notify_desc desc = {0};
                 for (uint16_t i = 0; i < (1 << qstate.ring_size); i++) {
                     sdk::lib::pal_mem_read(desc_addr, (uint8_t *)&desc, sizeof(desc));
-                    printf("[%5d] eid = %10lu ecode = %5d", i, desc.eid, desc.ecode);
-                    for (uint16_t j = 0; i < sizeof(desc); j++) {
+                    printf("[%5d] eid = %lu ecode = %d data = ", i, desc.eid, desc.ecode);
+                    for (uint16_t j = 0; j < sizeof(desc.data); j++) {
                         printf(" %02x", desc.data[j]);
                     }
                     printf("\n");
@@ -614,6 +614,62 @@ eth_qdump(uint16_t lif, uint8_t qtype, uint32_t qid, uint8_t ring)
                     sdk::lib::pal_mem_read(desc_addr, (uint8_t *)&desc, sizeof(desc));
                     printf("[%5d] status = %3d comp_index = %5d color = %d\n",
                         i, desc.status, desc.comp_index, desc.color);
+                    desc_addr += sizeof(desc);
+                }
+            }
+        }
+        if (qid == 2) {
+            struct admin_nicmgr_qstate qstate = {0};
+            sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate, sizeof(qstate));
+            if (ring == 0) {
+                uint64_t desc_addr = qstate.ring_base;
+                struct nicmgr_req_desc desc = {0};
+                for (uint16_t i = 0; i < (1 << qstate.ring_size); i++) {
+                    sdk::lib::pal_mem_read(desc_addr, (uint8_t *)&desc, sizeof(desc));
+                    uint8_t *data = (uint8_t *)&desc.cmd;
+                    printf("[%5d] lif = %d qtype = %d qid = %d comp = %d data = ",
+                        i, desc.lif, desc.qtype, desc.qid, desc.comp_index);
+                    for (uint16_t j = 0; j < sizeof(desc.cmd); j++) {
+                        printf(" %02x", data[j]);
+                    }
+                    printf("\n");
+                    desc_addr += sizeof(desc);
+                }
+            }
+            if (ring == 1) {
+                uint64_t desc_addr = qstate.cq_ring_base;
+                struct nicmgr_req_comp_desc desc = {0};
+                for (uint16_t i = 0; i < (1 << qstate.ring_size); i++) {
+                    sdk::lib::pal_mem_read(desc_addr, (uint8_t *)&desc, sizeof(desc));
+                    printf("[%5d] color %d\n", i, desc.color);
+                    desc_addr += sizeof(desc);
+                }
+            }
+        }
+        if (qid == 3) {
+            struct admin_nicmgr_qstate qstate = {0};
+            sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate, sizeof(qstate));
+            if (ring == 0) {
+                uint64_t desc_addr = qstate.ring_base;
+                struct nicmgr_resp_desc desc = {0};
+                for (uint16_t i = 0; i < (1 << qstate.ring_size); i++) {
+                    sdk::lib::pal_mem_read(desc_addr, (uint8_t *)&desc, sizeof(desc));
+                    uint8_t *data = (uint8_t *)&desc.comp;
+                    printf("[%5d] lif = %d qtype = %d qid = %d comp = %d data = ",
+                        i, desc.lif, desc.qtype, desc.qid, desc.comp_index);
+                    for (uint16_t j = 0; j < sizeof(desc.comp); j++) {
+                        printf(" %02x", data[j]);
+                    }
+                    printf("\n");
+                    desc_addr += sizeof(desc);
+                }
+            }
+            if (ring == 1) {
+                uint64_t desc_addr = qstate.cq_ring_base;
+                struct nicmgr_resp_comp_desc desc = {0};
+                for (uint16_t i = 0; i < (1 << qstate.ring_size); i++) {
+                    sdk::lib::pal_mem_read(desc_addr, (uint8_t *)&desc, sizeof(desc));
+                    printf("[%5d] color %d\n", i, desc.color);
                     desc_addr += sizeof(desc);
                 }
             }

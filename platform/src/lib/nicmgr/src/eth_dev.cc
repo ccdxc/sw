@@ -1462,7 +1462,7 @@ Eth::StatsUpdate(void *obj)
     if (eth->port_stats_addr != 0 && eth->host_port_stats_addr != 0) {
         /* MS cannot handle > 64B transfers. */
         auto offset = 0;
-        auto bytes_left = sizeof(struct port_status);
+        auto bytes_left = sizeof(struct port_stats);
         while (bytes_left > 0) {
             auto end = bytes_left <= 64;
             auto transfer_sz = end ? bytes_left : 64;

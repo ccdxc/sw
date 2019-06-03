@@ -512,6 +512,7 @@ struct q_init_cmd {
 #define IONIC_QINIT_F_ENA	0x02	/* Enable the queue */
 #define IONIC_QINIT_F_SG	0x04	/* Enable scatter/gather on the queue */
 #define IONIC_QINIT_F_EQ	0x08	/* Enable event queue */
+#define IONIC_QINIT_F_DEBUG 0x80	/* Enable queue debugging */
 	u8     cos;
 	u8     ring_size;
 	__le64 ring_base;
