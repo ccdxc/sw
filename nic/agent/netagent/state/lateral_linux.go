@@ -60,15 +60,26 @@ func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 	na.ArpCache.DoneCache[destIP] = done
 
 	log.Infof("Resolving for: %s", destIP)
-	routes, err := netlink.RouteGet(net.ParseIP(destIP))
-	if err != nil || len(routes) == 0 {
-		log.Errorf("No routes found for the dest IP %s. Err: %v", destIP, err)
-		err = fmt.Errorf("no routes found for the dest IP %s. Err: %v", destIP, err)
-	}
+	addrs, err := netlink.AddrList(mgmtLink, netlink.FAMILY_V4)
+	mgmtSubnet := addrs[0].IPNet
 
-	// Pick the first route. Dest IP in not in the local subnet. Use GW IP as the destIP for ARP'ing
-	if routes[0].Gw != nil {
-		destIP = routes[0].Gw.String()
+	// Check if in the same subnet
+	if !mgmtSubnet.Contains(net.ParseIP(destIP)) {
+		routes, err := netlink.RouteGet(net.ParseIP(destIP))
+		if err != nil || len(routes) == 0 {
+			log.Errorf("No routes found for the dest IP %s. Err: %v", destIP, err)
+			return fmt.Errorf("no routes found for the dest IP %s. Err: %v", destIP, err)
+		}
+
+		// Pick the first route. Dest IP in not in the local subnet. Use GW IP as the destIP for ARP'ing
+		if routes[0].Gw == nil {
+			log.Errorf("Default gateway not configured for destIP %s.", destIP)
+			return fmt.Errorf("default gateway not configured for destIP %s", destIP)
+		}
+		gwIP := routes[0].Gw.String()
+		log.Infof("Dest IP %s not in management subnet %v. Using Gateway IP: %v  as destIP for ARPing...", destIP, mgmtSubnet, gwIP)
+		// Update destIP to be GwIP
+		destIP = gwIP
 	}
 
 	// Set the correct dIP
