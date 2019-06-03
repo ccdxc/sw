@@ -758,17 +758,15 @@ static int ionic_get_module_info(struct net_device *netdev,
 {
 	struct lif *lif = netdev_priv(netdev);
 	struct ionic_dev *idev = &lif->ionic->idev;
-	struct sfp_sprom_data *sprom;
 	struct xcvr_status *xcvr;
 
 	if (ionic_is_mnic(lif->ionic))
 		return 0;
 
 	xcvr = &idev->port_info->status.xcvr;
-	sprom = (struct sfp_sprom_data *)xcvr->sprom;
 
 	/* report the module data type and length */
-	switch (sprom->id) {
+	switch (xcvr->sprom[0]) {
 	case 0x03: /* SFP */
 		modinfo->type = ETH_MODULE_SFF_8079;
 		modinfo->eeprom_len = ETH_MODULE_SFF_8079_LEN;
@@ -779,7 +777,8 @@ static int ionic_get_module_info(struct net_device *netdev,
 		modinfo->eeprom_len = ETH_MODULE_SFF_8436_LEN;
 		break;
 	default:
-		netdev_info(netdev, "unknown xcvr type 0x%02x\n", sprom->id);
+		netdev_info(netdev, "unknown xcvr type 0x%02x\n",
+			    xcvr->sprom[0]);
 		break;
 	}
 

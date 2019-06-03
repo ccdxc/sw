@@ -41,6 +41,7 @@
 #include <netinet/udp.h>
 #include <net/ethernet.h>
 #include <sys/buf_ring.h>
+#include <net/sff8472.h>
 
 #include <sys/sockio.h>
 #include <sys/kdb.h>
@@ -1721,9 +1722,9 @@ ionic_media_status_sysctl(SYSCTL_HANDLER_ARGS)
 	case XCVR_PID_QSFP_40GBASE_AOC:
 		qsfp = (struct qsfp_sprom_data *)xcvr->sprom;
 		sbuf_printf(sb, "    QSFP Vendor: %-.*s P/N: %-.*s S/N: %-.*s\n",
-			(int)sizeof(qsfp->vendor_name), qsfp->vendor_name,
-			(int)sizeof(qsfp->vendor_pn), qsfp->vendor_pn,
-			(int)sizeof(qsfp->vendor_sn), qsfp->vendor_sn);
+			16, &xcvr->sprom[SFF_8472_VENDOR_START],
+			16, &xcvr->sprom[SFF_8472_PN_START],
+			16, &xcvr->sprom[SFF_8472_SN_START]);
 		break;
 
 	case XCVR_PID_SFP_25GBASE_CR_S:
@@ -1741,9 +1742,9 @@ ionic_media_status_sysctl(SYSCTL_HANDLER_ARGS)
 	case XCVR_PID_SFP_10GBASE_CU:
 		sfp = (struct sfp_sprom_data *)xcvr->sprom;
 		sbuf_printf(sb, "    SFP Vendor: %-.*s P/N: %-.*s S/N: %-.*s\n",
-			(int)sizeof(sfp->vendor_name), sfp->vendor_name,
-			(int)sizeof(sfp->vendor_pn), sfp->vendor_pn,
-			(int)sizeof(sfp->vendor_sn), sfp->vendor_sn);
+			16, &xcvr->sprom[SFF_8472_VENDOR_START],
+			16, &xcvr->sprom[SFF_8472_PN_START],
+			16, &xcvr->sprom[SFF_8472_SN_START]);
 		break;
 
 	default:
