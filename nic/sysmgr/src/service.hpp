@@ -28,9 +28,9 @@ public:
 typedef std::shared_ptr<ServiceDep> ServiceDepPtr;
 
 class Service : public std::enable_shared_from_this<Service>,
-		public ServiceReactor,
-		public ChildReactor,
-		public TimerReactor
+                public ServiceReactor,
+                public ChildReactor,
+                public TimerReactor
 {
 private:
     ServiceSpecPtr spec;
@@ -41,6 +41,7 @@ private:
     void check_dep_and_launch();
     void start_heartbeat();
     void launch();
+    
     int restart_count;
 public:
     static std::shared_ptr<Service> create(ServiceSpecPtr spec);

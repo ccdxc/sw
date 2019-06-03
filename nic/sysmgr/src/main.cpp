@@ -51,6 +51,10 @@ main(int argc, char *argv[])
     service_factory->load_config(argv[1]);
     logger->debug("Config loaded!\n");
 
+    logger->debug("Trying /data/sysmgr.json");
+    service_factory->load_config("/data/sysmgr.json");
+    logger->debug("Done with /data/sysmgr.json");
+
     // Needed in order to process custom events before blocking for an
     // actual event
     loop.run(EVRUN_NOWAIT);

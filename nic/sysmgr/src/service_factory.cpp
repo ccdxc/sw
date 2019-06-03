@@ -3,6 +3,8 @@
 #include <memory>
 #include <string>
 
+#include <unistd.h>
+
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/algorithm/string.hpp>
@@ -102,7 +104,21 @@ void ServiceFactory::on_config_add(ServiceSpecPtr spec)
 void ServiceFactory::load_config(std::string path)
 {
     pt::ptree root;
-    read_json(path, root);
+
+    if (access(path.c_str(), F_OK) == -1 )
+    {
+        logger->error("Config file '{}' not found", path);
+        return;
+    }
+    
+    try
+    {
+        read_json(path, root);
+    }
+    catch (...)
+    {
+        logger->error("Failed to parse config file {}", path);
+    }
 
     for (auto obj: root)
     {
