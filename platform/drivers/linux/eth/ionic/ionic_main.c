@@ -78,6 +78,47 @@ static const char *ionic_error_to_str(enum status_code code)
 	}
 }
 
+static int ionic_error_to_errno(enum status_code code)
+{
+	switch (code) {
+	case IONIC_RC_SUCCESS:
+		return 0;
+	case IONIC_RC_EVERSION:
+	case IONIC_RC_EQTYPE:
+	case IONIC_RC_EQID:
+	case IONIC_RC_EINVAL:
+		return -EINVAL;
+	case IONIC_RC_EPERM:
+		return -EPERM;
+	case IONIC_RC_ENOENT:
+		return -ENOENT;
+	case IONIC_RC_EAGAIN:
+		return -EAGAIN;
+	case IONIC_RC_ENOMEM:
+		return -ENOMEM;
+	case IONIC_RC_EFAULT:
+		return -EFAULT;
+	case IONIC_RC_EBUSY:
+		return -EBUSY;
+	case IONIC_RC_EEXIST:
+		return -EEXIST;
+	case IONIC_RC_ENOSPC:
+		return -ENOSPC;
+	case IONIC_RC_ERANGE:
+		return -ERANGE;
+	case IONIC_RC_BAD_ADDR:
+		return -EFAULT;
+	case IONIC_RC_EOPCODE:
+	case IONIC_RC_EINTR:
+	case IONIC_RC_DEV_CMD:
+	case IONIC_RC_ERROR:
+	case IONIC_RC_ERDMA:
+	case IONIC_RC_EIO:
+	default:
+		return -EIO;
+	}
+}
+
 static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
 {
 	switch (opcode) {
@@ -140,24 +181,44 @@ static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
 	}
 }
 
-int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
-			   bool timeout)
+static void ionic_adminq_flush(struct lif *lif)
+{
+	struct queue *adminq = &lif->adminqcq->q;
+
+	spin_lock(&lif->adminq_lock);
+
+	while (adminq->tail != adminq->head) {
+		memset(adminq->tail->desc, 0, sizeof(*adminq->tail->desc));
+		adminq->tail->cb = NULL;
+		adminq->tail->cb_arg = NULL;
+		adminq->tail = adminq->tail->next;
+	}
+	spin_unlock(&lif->adminq_lock);
+}
+
+static int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
+				  bool timeout)
 {
 	struct net_device *netdev = lif->netdev;
-	const char *name;
-	const char *status;
+	const char *opcode_str;
+	const char *status_str;
+	int err = 0;
 
 	if (ctx->comp.comp.status || timeout) {
-		name = ionic_opcode_to_str(ctx->cmd.cmd.opcode);
-		status = ionic_error_to_str(ctx->comp.comp.status);
+		opcode_str = ionic_opcode_to_str(ctx->cmd.cmd.opcode);
+		status_str = ionic_error_to_str(ctx->comp.comp.status);
+		err = timeout ? -ETIMEDOUT :
+				ionic_error_to_errno(ctx->comp.comp.status);
+
 		netdev_err(netdev, "%s (%d) failed: %s (%d)\n",
-			   name, ctx->cmd.cmd.opcode,
-			   timeout ? "TIMEOUT" : status,
-			   timeout ? -1 : ctx->comp.comp.status);
-		return -EIO;
+			   opcode_str, ctx->cmd.cmd.opcode,
+			   timeout ? "TIMEOUT" : status_str, err);
+
+		if (timeout)
+			ionic_adminq_flush(lif);
 	}
 
-	return 0;
+	return err;
 }
 
 int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
@@ -258,7 +319,7 @@ try_again:
 			ionic_opcode_to_str(opcode), opcode,
 			ionic_error_to_str(err), err);
 
-		return -EIO;
+		return ionic_error_to_errno(err);
 	}
 
 	return 0;
