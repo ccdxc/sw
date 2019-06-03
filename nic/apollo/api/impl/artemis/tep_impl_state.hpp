@@ -47,7 +47,7 @@ public:
     sdk_ret_t table_transaction_end(void);
 
 private:
-    indexer *remote_46_tep_idxr(void) { return tep_idxr_; }
+    indexer *remote_46_tep_idxr(void) { return remote_46_tep_idxr_; }
     friend class tep_impl;         ///< tep_impl, friend of tep_impl_state
 
 private:
