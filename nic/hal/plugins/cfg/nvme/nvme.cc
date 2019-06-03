@@ -181,76 +181,6 @@ roundup_to_pow_2(uint32_t x)
 }
 
 hal_ret_t
-nvme_cmd_context_ring_entry_write (uint16_t index, 
-                                   uint16_t cmd_id)
-{
-    uint64_t            base_addr;
-
-    SDK_ASSERT(index < g_nvme_global_info.max_cmd_context);
-
-    base_addr = g_nvme_global_info.cmd_context_ring_base;
-
-    pd::pd_capri_hbm_write_mem_args_t args = {0};
-    pd::pd_func_args_t          pd_func_args = {0};
-    args.addr = (uint64_t)(base_addr + (index * sizeof(nvme_cmd_context_ring_entry_t)));
-    args.buf = (uint8_t*)&cmd_id;
-    args.size = sizeof(nvme_cmd_context_ring_entry_t);
-    pd_func_args.pd_capri_hbm_write_mem = &args;
-    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
-
-    HAL_TRACE_DEBUG("Writing cmd_context_ring[{}] = {}",
-                    index, cmd_id);
-    return (HAL_RET_OK);
-}
-
-hal_ret_t
-nvme_tx_pdu_context_ring_entry_write (uint16_t index, 
-                                      uint16_t pdu_id)
-{
-    uint64_t            base_addr;
-
-    SDK_ASSERT(index < g_nvme_global_info.tx_max_pdu_context);
-
-    base_addr = g_nvme_global_info.tx_pdu_context_ring_base;
-
-    pd::pd_capri_hbm_write_mem_args_t args = {0};
-    pd::pd_func_args_t          pd_func_args = {0};
-    args.addr = (uint64_t)(base_addr + (index * sizeof(nvme_pdu_context_ring_entry_t)));
-    args.buf = (uint8_t*)&pdu_id;
-    args.size = sizeof(nvme_pdu_context_ring_entry_t);
-    pd_func_args.pd_capri_hbm_write_mem = &args;
-    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
-
-    HAL_TRACE_DEBUG("Writing tx_pdu_context_ring[{}] = {}",
-                    index, pdu_id);
-    return (HAL_RET_OK);
-}
-
-hal_ret_t
-nvme_rx_pdu_context_ring_entry_write (uint16_t index, 
-                                      uint16_t pdu_id)
-{
-    uint64_t            base_addr;
-
-    SDK_ASSERT(index < g_nvme_global_info.rx_max_pdu_context);
-
-    base_addr = g_nvme_global_info.rx_pdu_context_ring_base;
-
-    pd::pd_capri_hbm_write_mem_args_t args = {0};
-    pd::pd_func_args_t          pd_func_args = {0};
-    args.addr = (uint64_t)(base_addr + (index * sizeof(nvme_pdu_context_ring_entry_t)));
-    args.buf = (uint8_t*)&pdu_id;
-    args.size = sizeof(nvme_pdu_context_ring_entry_t);
-    pd_func_args.pd_capri_hbm_write_mem = &args;
-    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
-
-    HAL_TRACE_DEBUG("Writing rx_pdu_context_ring[{}] = {}",
-                    index, pdu_id);
-    return (HAL_RET_OK);
-}
-
-
-hal_ret_t
 nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
 {
     int32_t            max_ns;
@@ -446,25 +376,6 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
                         g_nvme_global_info.rx_nmdpr_ring_base,
                         g_nvme_global_info.rx_nmdpr_ring_size);
     }
-
-#if 0
-    //Fill the ring with cmd context page addresses
-    int index = 0;
-    for (index = 0; index < max_cmd_context; index++) {
-        nvme_cmd_context_ring_entry_write(index, index);
-    }
-
-    //Fill the ring with tx pdu context page addresses
-    for (index = 0; index < tx_max_pdu_context; index++) {
-        nvme_tx_pdu_context_ring_entry_write(index, index);
-    }
-
-    //Fill the ring with rx pdu context page addresses
-    for (index = 0; index < rx_max_pdu_context; index++) {
-        nvme_rx_pdu_context_ring_entry_write(index, index);
-    }
-
-#endif
 
     ret = nvme_global_create(MAX_LIFS, max_ns, max_sess, 
                              max_cmd_context, tx_max_pdu_context,

@@ -63,13 +63,6 @@ typedef struct nvme_iv_s {
 #define NVME_RX_SESS_DGSTQ_ENTRY_SIZE sizeof(s1_t0_nvme_sesspredgst_tx_sess_wqe_process_bitfield_t)
 #define NVME_RX_SESS_DGSTQ_SIZE NVME_RX_SESS_DGSTQ_DEPTH * NVME_RX_SESS_DGSTQ_ENTRY_SIZE
 
-#define nvme_nscb_t s2_t0_nvme_req_tx_nscb_process_bitfield_t
-#define nvme_txsessprodcb_t s5_t0_nvme_req_tx_sessprodcb_process_bitfield_t
-#define nvme_rxsessprodcb_t s5_t0_nvme_req_rx_sessprodcb_process_bitfield_t
-#define nvme_resourcecb_t s4_t1_nvme_req_tx_resourcecb_process_bitfield_t
-#define nvme_cmd_context_ring_entry_t s5_t1_nvme_req_tx_cmdid_fetch_process_bitfield_t
-#define nvme_pdu_context_ring_entry_t s5_t2_nvme_req_tx_pduid_fetch_process_bitfield_t
-
 //HBM organization of NVME data path tables
 
 typedef enum nvme_dpath_ds_type_s {
@@ -108,9 +101,9 @@ static nvme_hbm_alloc_info_t nvme_hbm_alloc_table[] = {
     {NVME_TYPE_TX_SESSPRODCB, 512, sizeof(nvme_txsessprodcb_t)},
     {NVME_TYPE_RX_SESSPRODCB, 512, sizeof(nvme_rxsessprodcb_t)},
     {NVME_TYPE_TX_PDU_CONTEXT, 512, sizeof(nvme_pdu_context_t)},
-    {NVME_TYPE_TX_PDU_CONTEXT_RING, 512, sizeof(nvme_pdu_context_ring_entry_t)},
+    {NVME_TYPE_TX_PDU_CONTEXT_RING, 512, sizeof(nvme_tx_pdu_context_ring_entry_t)},
     {NVME_TYPE_RX_PDU_CONTEXT, 512, sizeof(nvme_pdu_context_t)},
-    {NVME_TYPE_RX_PDU_CONTEXT_RING, 512, sizeof(nvme_pdu_context_ring_entry_t)},
+    {NVME_TYPE_RX_PDU_CONTEXT_RING, 512, sizeof(nvme_rx_pdu_context_ring_entry_t)},
     {NVME_TYPE_TX_SESS_XTSQ, 512, NVME_TX_SESS_XTSQ_DEPTH * NVME_TX_SESS_XTSQ_ENTRY_SIZE},
     {NVME_TYPE_TX_SESS_DGSTQ, 512, NVME_TX_SESS_DGSTQ_DEPTH * NVME_TX_SESS_DGSTQ_ENTRY_SIZE},
     {NVME_TYPE_RX_SESS_XTSQ, 512, NVME_RX_SESS_XTSQ_DEPTH * NVME_RX_SESS_XTSQ_ENTRY_SIZE},

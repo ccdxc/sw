@@ -23,9 +23,8 @@ struct pd_nvme_sesscb_s {
 
     // operational state of nvme_sesscb pd
     nvme_sesscb_hw_id_t      hw_id;               // hw id for this nvme_sesscb
-    nvme_sesscb_hw_id_t      hw_id_qtype1;        // hw id for qtype 1
 
-    // meta data maintained for TCP CB pd
+    // meta data maintained for NVME CB pd
     ht_ctxt_t          hw_ht_ctxt;           // h/w id based hash table ctxt
 } __PACK__;
 

@@ -22,6 +22,7 @@
 #include "nvme_pd.hpp"
 #include "p4pd_nvme_api.h"
 #include "nic/sdk/nvme/nvme_common.h"
+#include "nic/hal/pd/iris/internal/tcpcb_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -56,17 +57,9 @@ uint64_t nvme_sesscb_pd_sesq_prod_ci_addr_get(uint32_t g_sess_id)
     uint64_t addr;
 
     addr = g_pd_nvme_global->txsessprodcb_base + g_sess_id * sizeof(nvme_txsessprodcb_t);
-    //addr += offsetof(nvme_txsessprodcb_t, tcp_q_ci);
-    addr += 28; //XXX
+    //assumption: tcp_q_ci is at offset 0 of the struct nvme_txsessprodcb_t
 
     return addr;
-}
-
-static uint64_t
-get_nvme_tx_sessprodcb_addr (uint32_t g_sess_id)
-{
-    SDK_ASSERT(g_sess_id < g_pd_nvme_global->nvme_global->max_sess);
-    return (g_pd_nvme_global->txsessprodcb_base + g_sess_id * sizeof(nvme_txsessprodcb_t));
 }
 
 hal_ret_t
@@ -92,7 +85,7 @@ hal_ret_t
 p4pd_add_or_del_txsessprodcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del)
 {
     hal_ret_t ret = HAL_RET_OK;
-    s5_t0_nvme_req_tx_sessprodcb_process_bitfield_t data = { 0 };
+    nvme_txsessprodcb_t data = { 0 };
     uint64_t data_addr = 0;
     uint32_t g_sess_id, lif_sess_id, sesq_qid;
     uint64_t tx_sess_xtsq_base;
@@ -117,6 +110,14 @@ p4pd_add_or_del_txsessprodcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del)
     data.xts_qid = lif_sess_id;
     SDK_ASSERT((NVME_TX_SESS_XTSQ_DEPTH & (NVME_TX_SESS_XTSQ_DEPTH - 1)) == 0);
 
+    // Get Tx Sess DGSTQ base address
+    tx_sess_dgstq_base = g_pd_nvme_global->tx_sess_dgstq_base + g_sess_id * NVME_TX_SESS_DGSTQ_SIZE;
+    data.dgst_q_base_addr = tx_sess_dgstq_base;
+    data.dgst_q_pi = 0;
+    data.dgst_q_ci = 0;
+    data.log_num_dgst_q_entries = log2(NVME_TX_SESS_DGSTQ_DEPTH);
+    data.dgst_qid = lif_sess_id;
+
     // Get SESQ address of the TCP flow
     wring_hw_id_t  sesq_base;
     ret = wring_pd_get_base_addr(types::WRING_TYPE_SESQ,
@@ -138,19 +139,18 @@ p4pd_add_or_del_txsessprodcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del)
     HAL_TRACE_DEBUG("Sesq id: {:#x} Sesq base: {:#x}, size: {}",
                     sesq_qid, sesq_base, sesq_size);
 
-    // Get Tx Sess DGSTQ base address
-    tx_sess_dgstq_base = g_pd_nvme_global->tx_sess_dgstq_base + g_sess_id * NVME_TX_SESS_DGSTQ_SIZE;
-    data.dgst_q_base_addr = tx_sess_dgstq_base;
-    data.dgst_q_pi = 0;
-    data.dgst_q_ci = 0;
-    data.log_num_dgst_q_entries = log2(NVME_TX_SESS_DGSTQ_DEPTH);
-    data.dgst_qid = lif_sess_id;
     data.tcp_q_base_addr = sesq_base;
     data.tcp_q_pi = 0;
     data.tcp_q_ci = 0;
     data.log_num_tcp_q_entries = log2(sesq_size);
     SDK_ASSERT((NVME_TX_SESS_DGSTQ_DEPTH & (NVME_TX_SESS_DGSTQ_DEPTH - 1)) == 0);
 
+    data.tcpcb_sesq_db_addr = tcpcb_sesq_db_addr(sesq_qid);
+    data.tcpcb_sesq_db_data = tcpcb_sesq_db_data(sesq_qid);
+    
+    HAL_TRACE_DEBUG("Programming txsessprodcb with tcpcb sesq db_addr: {:#x} data: {:#x}",
+                    data.tcpcb_sesq_db_addr, data.tcpcb_sesq_db_data);
+    
     HAL_TRACE_DEBUG("Programming txsessprodcb at addr: {:#x}", 
                     data_addr);
 
@@ -161,6 +161,12 @@ p4pd_add_or_del_txsessprodcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del)
         ret = HAL_RET_HW_FAIL;
     }
 
+    ret = p4pd_update_sesq_ci_addr(sesq_qid, data_addr + 0);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to write TCP CB with sesq_ci_addr");
+        ret = HAL_RET_HW_FAIL;
+    }
+
     return (ret);
 }
 
@@ -168,7 +174,7 @@ hal_ret_t
 p4pd_add_or_del_sessxtstxcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del)
 {
     hal_ret_t ret = HAL_RET_OK;
-    s0_t0_nvme_sessprexts_tx_cb_process_bitfield_t data = { 0 };
+    nvme_sessxtstxcb_t data = { 0 };
     uint64_t data_addr = 0;
     uint32_t lif, g_sess_id, lif_sess_id;
     uint64_t tx_sess_xtsq_base;
@@ -218,7 +224,7 @@ hal_ret_t
 p4pd_add_or_del_sessdgsttxcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del)
 {
     hal_ret_t ret = HAL_RET_OK;
-    s0_t0_nvme_sesspredgst_tx_cb_process_bitfield_t data = { 0 };
+    nvme_sessdgsttxcb_t data = { 0 };
     uint64_t data_addr = 0;
     uint32_t lif, g_sess_id, lif_sess_id;
     uint64_t tx_sess_dgstq_base;
@@ -310,7 +316,7 @@ pd_nvme_sesscb_create (pd_func_args_t *pd_func_args)
     }
     HAL_TRACE_DEBUG("Alloc done");
     nvme_sesscb_pd->nvme_sesscb = args->nvme_sesscb;
-    nvme_sesscb_pd->hw_id = get_nvme_tx_sessprodcb_addr(args->nvme_sesscb->g_sess_id);
+    nvme_sesscb_pd->hw_id = args->nvme_sesscb->g_sess_id;
 
     HAL_TRACE_DEBUG("Creating NVME Session CB at addr: 0x{:x} qid: {}",
             nvme_sesscb_pd->hw_id, nvme_sesscb_pd->nvme_sesscb->cb_id);

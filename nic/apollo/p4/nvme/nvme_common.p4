@@ -256,11 +256,16 @@ header_type sessprodcb_t {
         dgst_q_pi                       : 16;
         dgst_q_ci                       : 16;
 
-        tcp_q_pi                        : 16;
-        tcp_q_ci                        : 16;
 
-        //28 Bytes
-        pad                             : 224;
+        //16 Bytes
+        pad                             : 128;
+
+        tcpcb_sesq_db_addr              : 64;
+        tcpcb_sesq_db_data              : 32;
+
+        tcp_q_pi                        : 16;
+        //Keep this as the last field - as we need to pass its address elsewhere
+        tcp_q_ci                        : 16;
     }
 }
 
@@ -270,8 +275,9 @@ dgst_q_base_addr, log_num_dgst_q_entries, rsvd2, dgst_q_choke_counter, dgst_qid,
 tcp_q_base_addr, log_num_tcp_q_entries, rsvd4, tcp_q_choke_counter, rsvd5,     \
 xts_q_pi, xts_q_ci,                                                            \
 dgst_q_pi, dgst_q_ci,                                                          \
-tcp_q_pi, tcp_q_ci,                                                            \
-pad
+pad,                                                                           \
+tcpcb_sesq_db_addr, tcpcb_sesq_db_data,                                        \
+tcp_q_pi, tcp_q_ci
 
 
 #define GENERATE_SESSPRODCB_D                                                  \
@@ -294,9 +300,11 @@ pad
     modify_field(sessprodcb_d.xts_q_ci, xts_q_ci);                             \
     modify_field(sessprodcb_d.dgst_q_pi, dgst_q_pi);                           \
     modify_field(sessprodcb_d.dgst_q_ci, dgst_q_ci);                           \
+    modify_field(sessprodcb_d.pad, pad);                                       \
+    modify_field(sessprodcb_d.tcpcb_sesq_db_addr, tcpcb_sesq_db_addr);         \
+    modify_field(sessprodcb_d.tcpcb_sesq_db_data, tcpcb_sesq_db_data);         \
     modify_field(sessprodcb_d.tcp_q_pi, tcp_q_pi);                             \
     modify_field(sessprodcb_d.tcp_q_ci, tcp_q_ci);                             \
-    modify_field(sessprodcb_d.pad, pad);                                       \
 
 // session xts tx cb
 // 64B

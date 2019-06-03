@@ -13,7 +13,7 @@
 #define CMDID_RING_PROXY_CI_LE  d.{cmdid_ring_proxy_ci}
 #define CMDID_RING_PI           d.{cmdid_ring_pi}.hx
 #define CMDID_RING_CI           d.{cmdid_ring_ci}.hx
-#define CMDID                   d.{cmdid}.hx
+#define CMDID                   d.{cmdid}
 #define TX_PDUID_RING_PROXY_CI     d.{tx_pduid_ring_proxy_ci}.hx
 #define TX_PDUID_RING_PROXY_CI_LE  d.{tx_pduid_ring_proxy_ci}
 #define TX_PDUID_RING_PI           d.{tx_pduid_ring_pi}.hx
@@ -22,7 +22,7 @@
 #define RX_PDUID_RING_PROXY_CI_LE  d.{rx_pduid_ring_proxy_ci}
 #define RX_PDUID_RING_PI           d.{rx_pduid_ring_pi}.hx
 #define RX_PDUID_RING_CI           d.{rx_pduid_ring_ci}.hx
-#define PDUID                   d.{pduid}.hx
+#define PDUID                   d.{pduid}
 #define XTS_Q_PI                d.{xts_q_pi}.hx
 #define XTS_Q_CI                d.{xts_q_ci}.hx
 #define DGST_Q_PI               d.{dgst_q_pi}.hx

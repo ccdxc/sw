@@ -26,7 +26,7 @@ setup_resourcecb (uint64_t data_addr,
 {
     //Setup resourcecb
     hal_ret_t ret = HAL_RET_OK;
-    s4_t1_nvme_req_tx_resourcecb_process_bitfield_t data = { 0 };
+    nvme_resourcecb_t data = { 0 };
 
     data.cmdid_ring_ci = 0;
     data.cmdid_ring_pi = 0;
@@ -57,7 +57,7 @@ setup_txhwxtscb (uint64_t data_addr)
     hal_ret_t ret = HAL_RET_OK;
 
     //Setup Tx HW/Barco XTS CB
-    s2_t1_nvme_sessprexts_tx_xtscb_process_bitfield_t data = { 0 };
+    nvme_txhwxtscb_t data = { 0 };
 
     data.log_sz = log2(CAPRI_BARCO_XTS_RING_SLOTS);
     data.xts_ring_base_addr = get_mem_addr(CAPRI_HBM_REG_BARCO_RING_XTS0);
@@ -82,7 +82,7 @@ setup_txhwdgstcb (uint64_t data_addr)
     hal_ret_t ret = HAL_RET_OK;
 
     //Setup Tx HW/Barco XTS CB
-    s3_t0_nvme_sesspredgst_tx_dgstcb_process_bitfield_t data = { 0 };
+    nvme_txhwdgstcb_t data = { 0 };
 
     data.log_sz = log2(BARCO_CRYPTO_CP_RING_SIZE);
     data.dgst_ring_base_addr = get_mem_addr(CAPRI_HBM_REG_BARCO_RING_CP);
@@ -107,12 +107,12 @@ nvme_cmd_context_ring_entry_prepare (pd_nvme_global_t *nvme_global_pd,
                                      uint16_t cmd_id)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    s5_t1_nvme_req_tx_cmdid_fetch_process_bitfield_t data = { 0 };
-    s5_t1_nvme_req_tx_cmdid_fetch_process_bitfield_t *ring
-        = (s5_t1_nvme_req_tx_cmdid_fetch_process_bitfield_t *)tmp_cmd_context_ring;
+    nvme_cmd_context_ring_entry_t data = { 0 };
+    nvme_cmd_context_ring_entry_t *ring
+        = (nvme_cmd_context_ring_entry_t *)tmp_cmd_context_ring;
 
     SDK_ASSERT(index < nvme_global_pd->nvme_global->max_cmd_context);
-    SDK_ASSERT(sizeof(s5_t1_nvme_req_tx_cmdid_fetch_process_bitfield_t) == sizeof(uint16_t));
+    SDK_ASSERT(sizeof(nvme_cmd_context_ring_entry_t) == sizeof(uint16_t));
 
     data.cmdid = cmd_id;
 
@@ -126,16 +126,15 @@ nvme_cmd_context_ring_entry_prepare (pd_nvme_global_t *nvme_global_pd,
 }
 
 static hal_ret_t
-nvme_cmd_context_ring_hbm_write (pd_nvme_global_t *nvme_global_pd,
+nvme_cmd_context_ring_hbm_write (uint64_t dst_addr,
                                  void *tmp_cmd_context_ring)
 {
     hal_ret_t ret = HAL_RET_OK;
-    uint64_t dst_addr = nvme_global_pd->cmd_context_ring_base;
     uint32_t data_size = nvme_hbm_resource_max(NVME_TYPE_CMD_CONTEXT_RING) * \
                          nvme_hbm_resource_size(NVME_TYPE_CMD_CONTEXT_RING);
 
     SDK_ASSERT(nvme_hbm_resource_size(NVME_TYPE_CMD_CONTEXT_RING) \
-               == sizeof(s5_t1_nvme_req_tx_cmdid_fetch_process_bitfield_t));
+               == sizeof(nvme_cmd_context_ring_entry_t));
 
     if(!p4plus_hbm_write(dst_addr, (uint8_t *)tmp_cmd_context_ring, data_size,
                 P4PLUS_CACHE_INVALIDATE_BOTH)) {
@@ -154,12 +153,11 @@ nvme_tx_pdu_context_ring_entry_prepare (pd_nvme_global_t *nvme_global_pd,
                                         uint16_t pdu_id)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    s5_t2_nvme_req_tx_pduid_fetch_process_bitfield_t data = { 0 };
-    s5_t2_nvme_req_tx_pduid_fetch_process_bitfield_t *ring
-        = (s5_t2_nvme_req_tx_pduid_fetch_process_bitfield_t *)tmp_tx_pdu_context_ring;
+    nvme_tx_pdu_context_ring_entry_t data = { 0 };
+    nvme_tx_pdu_context_ring_entry_t *ring
+        = (nvme_tx_pdu_context_ring_entry_t *)tmp_tx_pdu_context_ring;
 
     SDK_ASSERT(index < nvme_global_pd->nvme_global->max_cmd_context);
-    SDK_ASSERT(sizeof(s5_t2_nvme_req_tx_pduid_fetch_process_bitfield_t) == sizeof(uint16_t));
 
     data.pduid = pdu_id;
 
@@ -173,16 +171,11 @@ nvme_tx_pdu_context_ring_entry_prepare (pd_nvme_global_t *nvme_global_pd,
 }
 
 static hal_ret_t
-nvme_tx_pdu_context_ring_hbm_write (pd_nvme_global_t *nvme_global_pd,
+nvme_tx_pdu_context_ring_hbm_write (uint64_t dst_addr,
                                     void *tmp_tx_pdu_context_ring)
 {
     hal_ret_t ret = HAL_RET_OK;
-    uint64_t dst_addr = nvme_global_pd->tx_pdu_context_ring_base;
-    uint32_t data_size = nvme_hbm_resource_max(NVME_TYPE_TX_PDU_CONTEXT_RING) * \
-                         nvme_hbm_resource_size(NVME_TYPE_TX_PDU_CONTEXT_RING);
-
-    SDK_ASSERT(nvme_hbm_resource_size(NVME_TYPE_TX_PDU_CONTEXT_RING) \
-               == sizeof(s5_t2_nvme_req_tx_pduid_fetch_process_bitfield_t));
+    uint32_t data_size = nvme_hbm_resource_total_mem(NVME_TYPE_TX_PDU_CONTEXT_RING);
 
     if(!p4plus_hbm_write(dst_addr, (uint8_t *)tmp_tx_pdu_context_ring, data_size,
                 P4PLUS_CACHE_INVALIDATE_BOTH)) {
@@ -201,12 +194,11 @@ nvme_rx_pdu_context_ring_entry_prepare (pd_nvme_global_t *nvme_global_pd,
                                         uint16_t pdu_id)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    s5_t1_nvme_req_rx_pduid_fetch_process_bitfield_t data = { 0 };
-    s5_t1_nvme_req_rx_pduid_fetch_process_bitfield_t *ring
-        = (s5_t1_nvme_req_rx_pduid_fetch_process_bitfield_t *)tmp_rx_pdu_context_ring;
+    nvme_rx_pdu_context_ring_entry_t data = { 0 };
+    nvme_rx_pdu_context_ring_entry_t *ring
+        = (nvme_rx_pdu_context_ring_entry_t *)tmp_rx_pdu_context_ring;
 
     SDK_ASSERT(index < nvme_global_pd->nvme_global->max_cmd_context);
-    SDK_ASSERT(sizeof(s5_t1_nvme_req_rx_pduid_fetch_process_bitfield_t) == sizeof(uint16_t));
 
     data.pduid = pdu_id;
 
@@ -220,16 +212,11 @@ nvme_rx_pdu_context_ring_entry_prepare (pd_nvme_global_t *nvme_global_pd,
 }
 
 static hal_ret_t
-nvme_rx_pdu_context_ring_hbm_write (pd_nvme_global_t *nvme_global_pd,
+nvme_rx_pdu_context_ring_hbm_write (uint64_t dst_addr,
                                     void *tmp_rx_pdu_context_ring)
 {
     hal_ret_t ret = HAL_RET_OK;
-    uint64_t dst_addr = nvme_global_pd->rx_pdu_context_ring_base;
-    uint32_t data_size = nvme_hbm_resource_max(NVME_TYPE_RX_PDU_CONTEXT_RING) * \
-                         nvme_hbm_resource_size(NVME_TYPE_RX_PDU_CONTEXT_RING);
-
-    SDK_ASSERT(nvme_hbm_resource_size(NVME_TYPE_RX_PDU_CONTEXT_RING) \
-               == sizeof(s5_t1_nvme_req_rx_pduid_fetch_process_bitfield_t));
+    uint32_t data_size = nvme_hbm_resource_total_mem(NVME_TYPE_RX_PDU_CONTEXT_RING);
 
     if(!p4plus_hbm_write(dst_addr, (uint8_t *)tmp_rx_pdu_context_ring, data_size,
                 P4PLUS_CACHE_INVALIDATE_BOTH)) {
@@ -406,24 +393,28 @@ create_nvme_global_state (pd_nvme_global_t *nvme_global_pd)
     SDK_ASSERT(nvme_hbm_resource_size(NVME_TYPE_RX_PDU_CONTEXT_RING) == sizeof(uint16_t));
 
     void *temp = malloc(sizeof(uint16_t) * max);
+    if (temp == NULL) {
+        HAL_TRACE_ERR("Failed to allocate temp memory of size: {}", sizeof(uint16_t) * max);
+        return (HAL_RET_OOM);
+    }
 
     //Fill the ring with cmd context page addresses
     for (index = 0; index < max_cmd_context; index++) {
         nvme_cmd_context_ring_entry_prepare(nvme_global_pd, temp, index, index);
     }
-    nvme_cmd_context_ring_hbm_write(nvme_global_pd, temp);
+    nvme_cmd_context_ring_hbm_write(nvme_global_pd->cmd_context_ring_base, temp);
 
     //Fill the ring with tx pdu context page addresses
     for (index = 0; index < tx_max_pdu_context; index++) {
         nvme_tx_pdu_context_ring_entry_prepare(nvme_global_pd, temp, index, index);
     }
-    nvme_tx_pdu_context_ring_hbm_write(nvme_global_pd, temp);
+    nvme_tx_pdu_context_ring_hbm_write(nvme_global_pd->tx_pdu_context_ring_base, temp);
 
     //Fill the ring with tx pdu context page addresses
     for (index = 0; index < rx_max_pdu_context; index++) {
         nvme_rx_pdu_context_ring_entry_prepare(nvme_global_pd, temp, index, index);
     }
-    nvme_rx_pdu_context_ring_hbm_write(nvme_global_pd, temp);
+    nvme_rx_pdu_context_ring_hbm_write(nvme_global_pd->rx_pdu_context_ring_base, temp);
 
     free(temp);
     temp = NULL;

@@ -278,7 +278,7 @@ uint64_t tcpcb_pd_read_notify_addr_get(uint32_t qid)
             qid) + (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_TCP_RETX);
     // offsetof does not work on bitfields
     //addr += offsetof(s3_t0_tcp_tx_retx_d, read_notify_bytes);
-    addr += 32;
+    addr += 36;
 
     return addr;
 }
@@ -1177,13 +1177,13 @@ p4pd_add_or_del_tcp_tx_tcp_retx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 
         if (tcpcb_pd->tcpcb->bypass_tls) {
             data.sesq_ci_addr =
-                htonl(tcpcb_pd_serq_prod_ci_addr_get(tcpcb_pd->tcpcb->other_qid));
+                htonll(tcpcb_pd_serq_prod_ci_addr_get(tcpcb_pd->tcpcb->other_qid));
         } else {
             uint64_t tls_stage0_addr;
             tls_stage0_addr = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_TLS_PROXY, 0,
                         tcpcb_pd->tcpcb->other_qid);
             data.sesq_ci_addr =
-                htonl(tls_stage0_addr + pd_tlscb_sesq_ci_offset_get());
+                htonll(tls_stage0_addr + pd_tlscb_sesq_ci_offset_get());
         }
         data.retx_snd_una = htonl(tcpcb_pd->tcpcb->snd_una);
 
@@ -1834,6 +1834,39 @@ pd_tcp_global_stats_get (pd_func_args_t *pd_func_args)
                                    sizeof(pd_tcp_global_stats_get_args_t));
     return hal_sdk_ret_to_hal_ret(ret);
 }
+
+//Short term fix. Bypasses state
+hal_ret_t
+p4pd_update_sesq_ci_addr (uint32_t qid, uint64_t ci_addr)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    s3_t0_tcp_tx_retx_d     data = {0};
+    uint64_t                addr = 0;
+
+    addr = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_TCP_PROXY, 0,
+            qid) + (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_TCP_RETX);
+
+    if(sdk::asic::asic_mem_read(addr,  (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to get rx: read_tx2rx entry for TCP CB");
+        return HAL_RET_HW_FAIL;
+    }
+
+    data.sesq_ci_addr = htonll(ci_addr);
+
+    HAL_TRACE_DEBUG("Updating sesq_ci_addr for for TCP CB qid: {:#x} "
+                    "sesq_ci_addr: {:#x} TCPCB write addr: {:#x}", 
+                    qid, ci_addr, addr);
+
+    if(!p4plus_hbm_write(addr,  (uint8_t *)&data, sizeof(data),
+                P4PLUS_CACHE_INVALIDATE_BOTH)){
+        HAL_TRACE_ERR("Failed to update sesq_ci_addr for for TCP CB qid: {:#x} "
+                      "sesq_ci_addr: {:#x} TCPCB write addr: {:#x}", 
+                      qid, ci_addr, addr);
+        ret = HAL_RET_HW_FAIL;
+    }
+    return ret;
+}
+
 
 }    // namespace pd
 }    // namespace hal

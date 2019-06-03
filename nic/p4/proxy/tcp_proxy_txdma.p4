@@ -277,7 +277,7 @@ header_type common_global_phv_t {
 
 header_type to_stage_1_phv_t {
     fields {
-        sesq_ci_addr            : HBM_ADDRESS_WIDTH;
+        sesq_ci_addr            : 64;
     }
 }
 

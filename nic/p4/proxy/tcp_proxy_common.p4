@@ -69,7 +69,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
 
 #define TCB_RETX_SHARED_STATE \
         retx_snd_una                    : SEQ_NUMBER_WIDTH      ;\
-        sesq_ci_addr                    : HBM_ADDRESS_WIDTH     ;\
+        sesq_ci_addr                    : 64                    ;\
         gc_base                         : 64                    ;\
         last_ack                        : 32                    ;\
         partial_pkt_ack_cnt             : 32                    ;\

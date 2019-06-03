@@ -5,6 +5,7 @@
 #include "lib/ht/ht.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/include/tcp_common.h"
+#include "nic/sdk/platform/capri/capri_common.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using namespace sdk::platform::capri;
@@ -98,6 +99,23 @@ extern void *tcpcb_pd_get_hw_key_func(void *entry);
 extern uint32_t tcpcb_pd_compute_hw_hash_func(void *key, uint32_t ht_size);
 extern bool tcpcb_pd_compare_hw_key_func(void *key1, void *key2);
 extern uint64_t tcpcb_pd_serq_prod_ci_addr_get(uint32_t qid);
+
+//Short term fix. Bypasses state
+hal_ret_t
+p4pd_update_sesq_ci_addr(uint32_t qid, uint64_t ci_addr);
+
+static inline
+uint64_t tcpcb_sesq_db_addr (uint32_t qid)
+{
+    return _CAPRI_SETUP_DB_ADDR(DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_EVAL, SERVICE_LIF_TCP_PROXY, 0 /*QTYPE*/);
+}
+
+static inline
+uint64_t tcpcb_sesq_db_data (uint32_t qid)
+{
+    return _CAPRI_SETUP_DB_DATA(qid, 0 /*ring_id*/, 0 /*pindex*/);
+}
+
 
 }   // namespace pd
 }   // namespace hal

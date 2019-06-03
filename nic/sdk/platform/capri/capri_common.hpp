@@ -436,6 +436,26 @@ namespace capri {
 #define DB_SCHED_UPD_CLEAR             (0x2)
 #define DB_SCHED_UPD_SET               (0x3)
 
+#define DB_RING_UPD_SHIFT      2
+#define DB_UPD_SHIFT          17
+#define DB_LIF_SHIFT           6
+#define DB_QTYPE_SHIFT         3
+#define DB_RING_SHIFT         16
+#define DB_QID_SHIFT          24
+
+#define _CAPRI_ENCODE_DB_ADDR_UPD_BITS(__ring_upd, __sched_wr) \
+   (DB_ADDR_BASE + (((__ring_upd << DB_RING_UPD_SHIFT) + __sched_wr) << DB_UPD_SHIFT))
+
+#define _CAPRI_SETUP_DB_ADDR(_ring_upd, _sched_wr, _lif, _qtype) \
+   (_lif  << DB_LIF_SHIFT) | \
+   (_qtype << DB_QTYPE_SHIFT) | \
+   _CAPRI_ENCODE_DB_ADDR_UPD_BITS(_ring_upd, _sched_wr);
+
+#define _CAPRI_SETUP_DB_DATA(_qid, _ring_id, _index) \
+   (_qid << DB_QID_SHIFT) | \
+   (_ring_id << DB_RING_SHIFT) | \
+   (_index)
+
 /*
  * Producer/Consumer ring sizes
  */
