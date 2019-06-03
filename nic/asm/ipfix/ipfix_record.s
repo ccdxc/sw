@@ -119,11 +119,12 @@ ipfix_header_fixups:
     sub         r1, d.{u.ipfix_create_record_d.next_record_offset}.hx, \
                     d.{u.ipfix_create_record_d.ipfix_hdr_offset}.hx
     phvwr       p.ipfix_record_header_len, r1
-    phvwr       p.ipfix_record_header_export_time, 0
     phvwr       p.ipfix_record_header_seq_num, \
                     d.{u.ipfix_create_record_d.seq_no}.wx
     phvwr       p.ipfix_record_header_domain_id, \
                     d.{u.ipfix_create_record_d.domain_id}.wx
+    phvwr       p.ipfix_record_header_export_time, \
+                    d.{u.ipfix_create_record_d.export_time}.wx
 
     phvwr       p.phv2mem_cmd3_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr       p.phv2mem_cmd3_dma_cmd_phv_start_addr, \

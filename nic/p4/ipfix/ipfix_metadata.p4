@@ -160,5 +160,7 @@ header_type ipfix_qstate_metadata_t {
         flow_hash_index_next : 32;
         flow_hash_index_max : 32;
         flow_hash_overflow_index_max : 32;
+        
+        export_time : 32;
     }
 }

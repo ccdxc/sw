@@ -62,11 +62,8 @@ telemetry_eval_sessions (void)
             return false;
         }
         if (!session->is_ipfix_flow) {
-            HAL_TRACE_DEBUG("add the handle {}", session->hal_handle);
             list_entry->handle_id = session->hal_handle;
             dllist_add(list_head, &list_entry->dllist_ctxt);
-        } else {
-            HAL_TRACE_DEBUG("Skipping IPFIX flow {}", session->hal_handle);
         }
         return false;
     };
@@ -78,7 +75,7 @@ telemetry_eval_sessions (void)
     HAL_TRACE_DEBUG("Calling walk func");
     g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, &session_list);
 
-    HAL_TRACE_DEBUG("Update sessions");
+    HAL_TRACE_DEBUG("Update sessions, count {}", dllist_count(&session_list));
     ret = session_update_list(&session_list, true);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Session update list failed {}", ret);

@@ -45,8 +45,10 @@ typedef struct __attribute__((__packed__)) ipfix_qstate_  {
     uint64_t flow_hash_index_next : 32;
     uint64_t flow_hash_index_max : 32;
     uint64_t flow_hash_overflow_index_max : 32;
+    
+    uint64_t export_time : 32;
 
-    uint8_t  pad[(512-376)/8];
+    uint8_t  pad[(512-408)/8];
 } ipfix_qstate_t;
 
 static void
@@ -196,11 +198,21 @@ ipfix_doorbell_ring_cb (void *timer, uint32_t timer_id, void *ctxt)
     uint64_t address, data, qid;
     uint64_t upd = 3;
     uint64_t qtype = 0, pid = 0, ring_id = 0, p_index = 0;
+    lif_id_t lif_id = SERVICE_LIF_IPFIX;
+    ipfix_qstate_t  qstate = { 0 };
 
     // qid is equal to the exporter id which is encoded in the timer_id
     qid = timer_id - HAL_TIMER_ID_IPFIX_MIN;
     address = DB_ADDR_BASE + (upd << DB_UPD_SHFT) + (SERVICE_LIF_IPFIX << DB_LIF_SHFT) + (qtype << DB_TYPE_SHFT);
     data = (pid << DB_PID_SHFT) | (qid << DB_QID_SHFT) | (ring_id << DB_RING_SHFT) | p_index;
+    
+    // Update (RMW) export time in the Qstate table
+    lif_manager()->read_qstate(lif_id, 0, qid+16,
+                                (uint8_t *)&qstate, sizeof(qstate));
+    qstate.export_time = (uint32_t)time(NULL);
+    lif_manager()->write_qstate(lif_id, 0, qid + 16,
+                                (uint8_t *)&qstate, sizeof(qstate));
+
     HAL_TRACE_DEBUG("cpupkt: ringing Doorbell with addr: {:#x} data: {:#x}",
                     address, data);
     sdk::asic::asic_ring_doorbell(address, data);
