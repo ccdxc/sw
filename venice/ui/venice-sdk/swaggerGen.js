@@ -279,7 +279,6 @@ function generateUIPermissionsFile(manifestData, versionData) {
   }
   permEnum.push('auditevent' + delimiter + 'read');
   permEnum.push('eventsevent' + delimiter + 'read');
-  permEnum.push('search' + delimiter + 'read');
   permEnum.push('metricsquery' + delimiter + 'read');
   permEnum.push('fwlogsquery' + delimiter + 'read');
 

@@ -204,7 +204,7 @@ describe('ControllerService', () => {
           {
             severity: 'error',
             summary: Utility.VENICE_CONNECT_FAILURE_SUMMARY,
-            detail: 'Your credentials have expired. Please sign in again.',
+            detail: 'Your credentials have expired.\n Please sign in again.',
             sticky: true,
             buttons: [signoutButton]
           },
@@ -219,7 +219,7 @@ describe('ControllerService', () => {
           {
             severity: 'error',
             summary: Utility.VENICE_CONNECT_FAILURE_SUMMARY,
-            detail: 'Your authorization is insufficient. Please check with your system administrator.',
+            detail: 'Your authorization is insufficient.\n Please check with your system administrator.',
             sticky: true,
             buttons: []
           },
@@ -235,14 +235,14 @@ describe('ControllerService', () => {
           {
             severity: 'error',
             summary: Utility.VENICE_CONNECT_FAILURE_SUMMARY,
-            detail: 'Venice is temporarily unavailable. Please try again later.',
+            detail: 'Venice is temporarily unavailable.\n Please try again later.',
             sticky: true,
             buttons: []
           },
           {
             severity: 'error',
             summary: Utility.VENICE_CONNECT_FAILURE_SUMMARY,
-            detail: 'Venice is temporarily unavailable. Please try again later.',
+            detail: 'Venice is temporarily unavailable.\n Please try again later.',
             sticky: true,
             buttons: []
           },
@@ -257,7 +257,7 @@ describe('ControllerService', () => {
           {
             severity: 'error',
             summary: Utility.VENICE_CONNECT_FAILURE_SUMMARY,
-            detail: 'Your credentials are expired/insufficient or Venice is temporarily unavailable. Please sign in again or contact system administrator.',
+            detail: 'Your credentials are expired/insufficient or Venice is temporarily unavailable.\n Please sign in again or contact system administrator.',
             sticky: true,
             buttons: [signoutButton]
           },

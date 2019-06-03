@@ -275,7 +275,6 @@ export enum UIRolePermissions {
   'workloadworkload_clear' = 'workloadworkload_clear',
   'auditevent_read' = 'auditevent_read',
   'eventsevent_read' = 'eventsevent_read',
-  'search_read' = 'search_read',
   'metricsquery_read' = 'metricsquery_read',
   'fwlogsquery_read' = 'fwlogsquery_read',
 }

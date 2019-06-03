@@ -23,7 +23,7 @@ export const sideNavMenu: SideNavItem[] = [
     link: ['/dashboard']
   },
   {
-    label: 'Cluster',
+    label: 'System',
     icon: {
       cssClass: 'app-l-side-nav-cluster',
     },

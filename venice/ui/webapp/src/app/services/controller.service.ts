@@ -519,7 +519,14 @@ export class ControllerService {
     };
   }
 
-  invokeErrorToaster(summary: string, errorMsg: string, buttons: ToolbarButton[] = []) {
+  invokeErrorToaster(summary: string, errorMsg: string, buttons: ToolbarButton[] = [], shouldSplitLines: boolean = true) {
+    if (shouldSplitLines) {
+      const toAddPeriod  = errorMsg[errorMsg.length - 1] === '.';
+      errorMsg = errorMsg.split('.').filter(x => x.length > 0).join('.\n');
+      if (toAddPeriod) {
+        errorMsg += '.';
+      }
+    }
     this.messageService.add({
       severity: 'error',
       summary: summary,
