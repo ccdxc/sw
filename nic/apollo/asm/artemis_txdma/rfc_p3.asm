@@ -12,7 +12,7 @@ rfc_p3:
     mod        r7, k.txdma_control_rfc_index, 46
     mul        r7, r7, 11
     /* Access the classid at the index */
-    tblrdp.e   r7, r7, 0, 11
+    tblrdp     r7, r7, 0, 11
     /* Priority = r7 >> 1 */
     srl        r1, r7, 1
     /* Result = r7 & 0x01 */

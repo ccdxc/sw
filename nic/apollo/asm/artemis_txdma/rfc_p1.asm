@@ -13,7 +13,7 @@ rfc_p1:
     mod        r7, k.txdma_control_rfc_index, 51
     mul        r7, r7, 10
     /* Access the classid at the index */
-    tblrdp.e   r7, r7, 0, 10
+    tblrdp     r7, r7, 0, 10
     /* Write the classid to phv */
     phvwr      p.txdma_control_rfc_p1_classid, r7
     /* Load sacl base addr to r1 */

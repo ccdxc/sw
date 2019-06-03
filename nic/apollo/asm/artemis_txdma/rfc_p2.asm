@@ -13,7 +13,7 @@ rfc_p2:
     mod        r7, k.txdma_control_rfc_index, 51
     mul        r7, r7, 10
     /* Access the classid at the index */
-    tblrdp.e   r7, r7, 0, 10
+    tblrdp     r7, r7, 0, 10
     /* Load sacl base addr to r1 */
     add        r1, r0, k.rx_to_tx_hdr_sacl_base_addr
     /* Is this the first pass? */
