@@ -100,12 +100,6 @@
       "DisplayName": "Sequencer queues information",
       "Fields": [
         {
-          "Name": "Key",
-          "DisplayName": "Key indices",
-          "Units": "ID",
-          "BaseType": ".accel_metrics.AccelSeqQueueKey"
-        },
-        {
           "Name": "QStateAddr",
           "DisplayName": "Q State Add",
           "Description": "queue state memory address",
@@ -133,12 +127,6 @@
       "Description": "Key indices are - LifID and QId",
       "DisplayName": "Metrics for sequencer queues",
       "Fields": [
-        {
-          "Name": "Key",
-          "DisplayName": "Key indices",
-          "Units": "ID",
-          "BaseType": ".accel_metrics.AccelSeqQueueKey"
-        },
         {
           "Name": "InterruptsRaised",
           "DisplayName": "Interrupts Raised",

@@ -3,7 +3,9 @@ export interface MetricField {
   description?: string,
   displayName: string,
   units?: string,
-  baseType?: string,
+  baseType: string,
+  jsType: string,
+  allowedValues?: string[],
   scaleMin?: number,
   scaleMax?: number,
 }

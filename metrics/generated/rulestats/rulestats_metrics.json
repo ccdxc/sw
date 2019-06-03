@@ -1,0 +1,56 @@
+{
+  "FileName": "rulestats.proto",
+  "Package": "rulestats",
+  "Prefix": "rulestats",
+  "Messages": [
+    {
+      "Name": "RuleMetrics",
+      "Description": "Key index - Rule ID",
+      "DisplayName": "per-Rule Statistics",
+      "Fields": [
+        {
+          "Name": "tcp_hits",
+          "DisplayName": "TCP Hits",
+          "Description": "Number of TCP packets that hit the rule",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "udp_hits",
+          "DisplayName": "UDP Hits",
+          "Description": "Number of UDP packets that hit the rule",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "icmp_hits",
+          "DisplayName": "ICMP Hits",
+          "Description": "Number of ICMP packets that hit the rule",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "esp_hits",
+          "DisplayName": "ESP Hits",
+          "Description": "Number of ESP packets that hit the rule",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "other_hits",
+          "DisplayName": "Other Hits",
+          "Description": "Number of non-TCP/UDP/ICMP/ESP packets that hit the rule",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "total_hits",
+          "DisplayName": "Total Hits",
+          "Description": "Number of total packets that hit the rule",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ]
+    }
+  ]
+}

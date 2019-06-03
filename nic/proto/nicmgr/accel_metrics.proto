@@ -60,7 +60,7 @@ message AccelSeqQueueInfoMetrics {
         Description: "Key indices are - LifID and QId"
     };
     option (delphi.datapath_metrics) = true;
-    AccelSeqQueueKey    Key                  = 1 [(venice.metricsField) = {DisplayName: "Key indices" Description:"", Units: ID}];
+    AccelSeqQueueKey    Key                  = 1;
 
     delphi.Counter      QStateAddr           = 2 [(venice.metricsField) = {DisplayName: "Q State Add" Description:"queue state memory address"}];
     delphi.Counter      QGroup               = 3 [(venice.metricsField) = {DisplayName: "Q Group" Description:"queue group\\n"
@@ -84,7 +84,7 @@ message AccelSeqQueueMetrics {
         DisplayName: "Metrics for sequencer queues",
         Description: "Key indices are - LifID and QId"
     };
-    AccelSeqQueueKey    Key                  = 1 [(venice.metricsField) = {DisplayName: "Key indices" Description:"", Units: ID}];
+    AccelSeqQueueKey    Key                  = 1;
 
     delphi.Counter InterruptsRaised          = 2 [(venice.metricsField) = {DisplayName: "Interrupts Raised" Description:"CPU interrupts raised"}];
     delphi.Counter NextDBsRung               = 3 [(venice.metricsField) = {DisplayName: "Next DBs Rung" Description:"chaining doorbells rung"}];

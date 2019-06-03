@@ -172,6 +172,28 @@ function readAndCompileTemplateFile(templateFileName) {
 }
 
 function generateMetricMetadata() {
+  const basetypeToJSType = {
+    int8: 'number',
+    uint8: 'number',
+    int16: 'number',
+    uint16: 'number',
+    int32: 'number',
+    uint32: 'number',
+    int64: 'number',
+    uint64: 'number',
+    int: 'number',
+    uint: 'number',
+    Counter: 'number',
+    float32: 'number',
+    float64: 'number',
+    complex64: 'number',
+    complex128: 'number',
+    byte: 'number',
+    number: 'number',
+
+    string: 'string',
+  }
+
   files = recFindByExt('../../../metrics/generated/', 'json')
   messages = [];
   files.forEach( (f) => {
@@ -185,6 +207,10 @@ function generateMetricMetadata() {
         if (field.DisplayName == null) {
           field.DisplayName = field.Name;
         }
+        if (basetypeToJSType[field.BaseType] == null) {
+          throw new Error("base type " + field.BaseType + " not recognized for field " + field.Name);
+        }
+        field.jsType = basetypeToJSType[field.BaseType];
         return _.transform(field, function (result, val, key) {
           result[_.camelCase(key)] = val;
         });

@@ -4,7 +4,8 @@ METRICS_PATHS =\
 	venicepapi:api/protos \
 	nicmgr:nic/proto/nicmgr \
 	dropstats:nic/proto/dropstats \
-	ftestats:nic/proto/ftestats
+	ftestats:nic/proto/ftestats \
+	rulestats:nic/proto/rulestats
 
 # all generated files are in the generated/<prefix> path
 
