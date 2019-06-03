@@ -11,7 +11,7 @@
 
 #define DRV_NAME		"ionic"
 #define DRV_DESCRIPTION		"Pensando Ethernet NIC Driver"
-#define DRV_VERSION		"0.8.0"
+#define DRV_VERSION		"0.10.0"
 
 // TODO: register these with the official include/linux/pci_ids.h
 #define PCI_VENDOR_ID_PENSANDO			0x1dd8
@@ -24,18 +24,16 @@
 #define IONIC_SUBDEV_ID_NAPLES_100_4	0x4001
 #define IONIC_SUBDEV_ID_NAPLES_100_8	0x4002
 
-
 extern unsigned int max_slaves;
 extern unsigned int rx_copybreak;
 extern unsigned int devcmd_timeout;
-
 
 struct ionic {
 	struct pci_dev *pdev;
 	struct platform_device *pfdev;
 	struct device *dev;
 	struct ionic_dev idev;
-	struct mutex dev_cmd_lock;
+	struct mutex dev_cmd_lock;	/* lock for dev_cmd operations */
 	struct dentry *dentry;
 	struct ionic_dev_bar bars[IONIC_BARS_MAX];
 	unsigned int num_bars;

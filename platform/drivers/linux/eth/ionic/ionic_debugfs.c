@@ -8,17 +8,7 @@
 #include "ionic_lif.h"
 #include "ionic_debugfs.h"
 
-/*
- * The debugfs contents are an informative resoure for debugging, only.  They
- * should not be relied on as a stable api from user space.  The location,
- * arrangement, names, internal formats and structures of these files may
- * change without warning.  Any documentation, including this, is very likely
- * to be incorrect or incomplete.  You have been warned.
- */
-
 #ifdef CONFIG_DEBUG_FS
-
-#ifdef DEBUGFS_TEST_API
 
 static int blob_open(struct inode *inode, struct file *filp)
 {
@@ -76,62 +66,6 @@ struct dentry *debugfs_create_blob(const char *name, umode_t mode,
 				   &blob_fops);
 }
 
-#define SIZE_SCRATCH_BUF	(4 * PAGE_SIZE)
-
-static int scratch_bufs_alloc(struct ionic *ionic)
-{
-	unsigned int i;
-
-	for (i = 0; i < ARRAY_SIZE(ionic->scratch_bufs); i++) {
-		ionic->scratch_bufs[i] = dma_alloc_coherent(ionic->dev,
-			SIZE_SCRATCH_BUF, &ionic->scratch_bufs_pa[i],
-			GFP_KERNEL | GFP_DMA);
-		if (!ionic->scratch_bufs[i])
-			return -ENOMEM;
-	}
-
-	return 0;
-}
-
-static int scratch_bufs_add(struct ionic *ionic, struct dentry *parent)
-{
-	struct dentry *scratch_dentry;
-	unsigned int i;
-	char name[32];
-	int err;
-
-	err = scratch_bufs_alloc(ionic);
-	if (err)
-		return err;
-
-	scratch_dentry = debugfs_create_dir("scratch_bufs", parent);
-	if (IS_ERR_OR_NULL(scratch_dentry))
-		return PTR_ERR(scratch_dentry);
-
-	for (i = 0; i < ARRAY_SIZE(ionic->scratch_bufs); i++) {
-		ionic->scratch_bufs_blob[i].data = ionic->scratch_bufs[i];
-		ionic->scratch_bufs_blob[i].size = SIZE_SCRATCH_BUF;
-		snprintf(name, sizeof(name), "0x%016llx",
-			 ionic->scratch_bufs_pa[i]);
-		debugfs_create_blob(name, 0600, scratch_dentry,
-				    &ionic->scratch_bufs_blob[i]);
-	}
-
-	return 0;
-}
-
-static void scratch_bufs_free(struct ionic *ionic)
-{
-	unsigned int i;
-
-	for (i = 0; i < ARRAY_SIZE(ionic->scratch_bufs); i++)
-		dma_free_coherent(ionic->dev, SIZE_SCRATCH_BUF,
-				  ionic->scratch_bufs[i],
-				  ionic->scratch_bufs_pa[i]);
-}
-
-#endif
-
 static struct dentry *ionic_dir;
 
 #define single(name) \
@@ -161,9 +95,6 @@ void ionic_debugfs_destroy(void)
 int ionic_debugfs_add_dev(struct ionic *ionic)
 {
 	struct dentry *dentry;
-#ifdef DEBUGFS_TEST_API
-	int err;
-#endif
 
 	dentry = debugfs_create_dir(ionic_bus_info(ionic), ionic_dir);
 	if (IS_ERR_OR_NULL(dentry))
@@ -171,21 +102,11 @@ int ionic_debugfs_add_dev(struct ionic *ionic)
 
 	ionic->dentry = dentry;
 
-#ifdef DEBUGFS_TEST_API
-	err = scratch_bufs_add(ionic, dentry);
-	if (err)
-		debugfs_remove_recursive(ionic->dentry);
-	return err;
-#else
 	return 0;
-#endif
 }
 
 void ionic_debugfs_del_dev(struct ionic *ionic)
 {
-#ifdef DEBUGFS_TEST_API
-	scratch_bufs_free(ionic);
-#endif
 	debugfs_remove_recursive(ionic->dentry);
 	ionic->dentry = NULL;
 }
@@ -260,7 +181,7 @@ int ionic_debugfs_add_dev_cmd(struct ionic *ionic)
 }
 
 static void identity_show_qtype(struct seq_file *seq, const char *name,
-			       struct lif_logical_qtype *qtype)
+				struct lif_logical_qtype *qtype)
 {
 	seq_printf(seq, "%s_qtype:\t%d\n", name, qtype->qtype);
 	seq_printf(seq, "%s_count:\t%d\n", name, qtype->qid_count);

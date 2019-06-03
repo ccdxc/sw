@@ -41,7 +41,6 @@ static int ionic_intr_remaining(struct ionic *ionic);
 static int ionic_set_nic_features(struct lif *lif, netdev_features_t features);
 static int ionic_notifyq_clean(struct lif *lif, int budget);
 
-
 static void ionic_lif_deferred_work(struct work_struct *work)
 {
 	struct lif *lif = container_of(work, struct lif, deferred.work);
@@ -74,9 +73,9 @@ static void ionic_lif_deferred_work(struct work_struct *work)
 			if (ionic_is_platform_dev(lif->ionic)) {
 				netdev_info(lif->netdev, "Handling the LIF_RESET event\n");
 				ionic_lif_handle_fw_down(lif);
-			}
-			else
+			} else {
 				netdev_info(lif->netdev, "Ignoring the LIF_RESET event\n");
+			}
 			break;
 		};
 		kfree(w);
@@ -185,7 +184,6 @@ static int ionic_lif_open(struct lif *lif)
 	    netif_running(lif->ionic->master_lif->netdev)) {
 		netif_carrier_on(lif->upper_dev);
 		netif_tx_wake_all_queues(lif->upper_dev);
-
 	}
 	set_bit(LIF_UP, lif->state);
 
@@ -664,8 +662,8 @@ static int ionic_lif_addr(struct lif *lif, const u8 *addr, bool add)
 
 		if ((is_multicast_ether_addr(addr) && lif->nmcast < nmfilters))
 			lif->nmcast++;
-		else if ((!is_multicast_ether_addr(addr) &&
-						lif->nucast < nufilters))
+		else if (!is_multicast_ether_addr(addr) &&
+			 lif->nucast < nufilters)
 			lif->nucast++;
 		else
 			return -ENOSPC;
@@ -813,7 +811,7 @@ static void ionic_set_rx_mode(struct net_device *netdev)
 }
 
 static int ionic_set_features(struct net_device *netdev,
-				     netdev_features_t features)
+			      netdev_features_t features)
 {
 	struct lif *lif = netdev_priv(netdev);
 	int err;
@@ -839,7 +837,7 @@ static int ionic_set_mac_address(struct net_device *netdev, void *sa)
 
 	if (!is_zero_ether_addr(netdev->dev_addr)) {
 		netdev_info(netdev, "deleting mac addr %pM\n",
-			   netdev->dev_addr);
+			    netdev->dev_addr);
 		ionic_addr_del(netdev, netdev->dev_addr);
 	}
 
@@ -1125,7 +1123,7 @@ static void ionic_dfwd_del_station(struct net_device *lower_dev, void *priv)
 	if ((master_lif->nxqs + index) == lower_dev->real_num_tx_queues) {
 		int max = lower_dev->real_num_tx_queues;
 
-		while (master_lif->txqcqs[max-1].qcq == NULL)
+		while (!master_lif->txqcqs[max-1].qcq)
 			max--;
 		netif_set_real_num_tx_queues(lower_dev, max);
 		qdisc_reset_all_tx(lower_dev);
@@ -1689,8 +1687,8 @@ static struct lif *ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 		 */
 		nqueues = ionic->ntxqs_per_lif + ionic->nslaves;
 		dev_info(ionic->dev, "nxqs=%d nslaves=%d nqueues=%d nintrs=%d\n",
-			ionic->ntxqs_per_lif, ionic->nslaves,
-			nqueues, ionic->nintrs);
+			 ionic->ntxqs_per_lif, ionic->nslaves,
+			 nqueues, ionic->nintrs);
 
 		netdev = ionic_alloc_netdev(ionic);
 		if (!netdev) {
@@ -1856,9 +1854,9 @@ static void ionic_lif_reset(struct lif *lif)
 	mutex_unlock(&lif->ionic->dev_cmd_lock);
 }
 
-static void ionic_lif_handle_fw_down(struct lif* lif)
+static void ionic_lif_handle_fw_down(struct lif *lif)
 {
-	struct ionic* ionic = lif->ionic;
+	struct ionic *ionic = lif->ionic;
 
 	clear_bit(LIF_F_FW_READY, lif->state);
 	ionic_lifs_unregister(ionic);
@@ -2534,13 +2532,13 @@ static int ionic_station_set(struct lif *lif)
 
 	if (!is_zero_ether_addr(netdev->dev_addr)) {
 		netdev_info(lif->netdev, "deleting station MAC addr %pM\n",
-			   netdev->dev_addr);
+			    netdev->dev_addr);
 		ionic_lif_addr(lif, netdev->dev_addr, false);
 	}
 	memcpy(netdev->dev_addr, ctx.comp.lif_getattr.mac,
 	       netdev->addr_len);
 	netdev_info(lif->netdev, "adding station MAC addr %pM\n",
-		   netdev->dev_addr);
+		    netdev->dev_addr);
 	ionic_lif_addr(lif, netdev->dev_addr, true);
 
 	return 0;
@@ -2716,7 +2714,7 @@ static void ionic_lif_set_netdev_info(struct lif *lif)
 			sizeof(ctx.cmd.lif_setattr.name));
 
 	dev_info(lif->ionic->dev, "NETDEV_CHANGENAME %s %s\n",
-		lif->name, ctx.cmd.lif_setattr.name);
+		 lif->name, ctx.cmd.lif_setattr.name);
 
 	ionic_adminq_post_wait(lif, &ctx);
 }
@@ -2811,23 +2809,21 @@ int ionic_lif_identify(struct ionic *ionic)
 	if (err)
 		return (err);
 
-	dev_info(ionic->dev, "capabilities 0x%llx ",
-		 le64_to_cpu(ident->lif.capabilities));
-
-	dev_info(ionic->dev, "eth.max_ucast_filters 0x%x ",
+	dev_dbg(ionic->dev, "capabilities 0x%llx ",
+		le64_to_cpu(ident->lif.capabilities));
+	dev_dbg(ionic->dev, "eth.max_ucast_filters 0x%x ",
 		le32_to_cpu(ident->lif.eth.max_ucast_filters));
-	dev_info(ionic->dev, "eth.max_mcast_filters 0x%x ",
+	dev_dbg(ionic->dev, "eth.max_mcast_filters 0x%x ",
 		le32_to_cpu(ident->lif.eth.max_mcast_filters));
-
-	dev_info(ionic->dev, "eth.features 0x%llx ",
+	dev_dbg(ionic->dev, "eth.features 0x%llx ",
 		le64_to_cpu(ident->lif.eth.config.features));
-	dev_info(ionic->dev, "eth.queue_count[IONIC_QTYPE_ADMINQ] 0x%x ",
+	dev_dbg(ionic->dev, "eth.queue_count[IONIC_QTYPE_ADMINQ] 0x%x ",
 		le32_to_cpu(ident->lif.eth.config.queue_count[IONIC_QTYPE_ADMINQ]));
-	dev_info(ionic->dev, "eth.queue_count[IONIC_QTYPE_NOTIFYQ] 0x%x ",
+	dev_dbg(ionic->dev, "eth.queue_count[IONIC_QTYPE_NOTIFYQ] 0x%x ",
 		le32_to_cpu(ident->lif.eth.config.queue_count[IONIC_QTYPE_NOTIFYQ]));
-	dev_info(ionic->dev, "eth.queue_count[IONIC_QTYPE_RXQ] 0x%x ",
+	dev_dbg(ionic->dev, "eth.queue_count[IONIC_QTYPE_RXQ] 0x%x ",
 		le32_to_cpu(ident->lif.eth.config.queue_count[IONIC_QTYPE_RXQ]));
-	dev_info(ionic->dev, "eth.queue_count[IONIC_QTYPE_TXQ] 0x%x ",
+	dev_dbg(ionic->dev, "eth.queue_count[IONIC_QTYPE_TXQ] 0x%x ",
 		le32_to_cpu(ident->lif.eth.config.queue_count[IONIC_QTYPE_TXQ]));
 
 	return 0;

@@ -278,7 +278,6 @@ void ionic_rx_fill(struct queue *q)
 	bool ring_doorbell;
 
 	for (i = ionic_q_space_avail(q); i; i--) {
-
 		skb = ionic_rx_skb_alloc(q, len, &dma_addr);
 		if (!skb)
 			return;
@@ -388,7 +387,7 @@ static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
 	if (skb) {
 		queue_index = skb_get_queue_mapping(skb);
 		if (unlikely(__netif_subqueue_stopped(q->lif->netdev,
-			   queue_index))) {
+						      queue_index))) {
 			netif_wake_subqueue(q->lif->netdev, queue_index);
 			q->wake++;
 		}
@@ -413,7 +412,6 @@ static void ionic_tx_tcp_inner_pseudo_csum(struct sk_buff *skb)
 					 &inner_ipv6_hdr(skb)->daddr,
 					 0, IPPROTO_TCP, 0);
 	}
-
 }
 
 static void ionic_tx_tcp_pseudo_csum(struct sk_buff *skb)
@@ -574,8 +572,8 @@ static int ionic_tx_tso(struct queue *q, struct sk_buff *skb)
 			if (frag_left > 0) {
 				len = min(frag_left, left);
 				frag_left -= len;
-				elem->addr = cpu_to_le64(
-						ionic_tx_map_frag(q, frag,
+				elem->addr =
+				    cpu_to_le64(ionic_tx_map_frag(q, frag,
 								  offset, len));
 				if (!elem->addr)
 					goto err_out_abort;
@@ -587,12 +585,11 @@ static int ionic_tx_tso(struct queue *q, struct sk_buff *skb)
 				if (nfrags > 0 && frag_left > 0)
 					continue;
 				done = (nfrags == 0 && left == 0);
-				ionic_tx_tso_post(q, desc, skb,
-						desc_addr, desc_nsge, desc_len,
-						hdrlen, mss,
-						outer_csum,
-						vlan_tci, has_vlan,
-						start, done);
+				ionic_tx_tso_post(q, desc, skb, desc_addr,
+						  desc_nsge, desc_len,
+						  hdrlen, mss, outer_csum,
+						  vlan_tci, has_vlan,
+						  start, done);
 				total_pkts++;
 				total_bytes += start ? len : len + hdrlen;
 				desc = ionic_tx_tso_next(q, &elem);
@@ -611,12 +608,11 @@ static int ionic_tx_tso(struct queue *q, struct sk_buff *skb)
 				if (nfrags > 0 && frag_left > 0)
 					continue;
 				done = (nfrags == 0 && left == 0);
-				ionic_tx_tso_post(q, desc, skb,
-						desc_addr, desc_nsge, desc_len,
-						hdrlen, mss,
-						outer_csum,
-						vlan_tci, has_vlan,
-						start, done);
+				ionic_tx_tso_post(q, desc, skb, desc_addr,
+						  desc_nsge, desc_len,
+						  hdrlen, mss, outer_csum,
+						  vlan_tci, has_vlan,
+						  start, done);
 				total_pkts++;
 				total_bytes += start ? len : len + hdrlen;
 				desc = ionic_tx_tso_next(q, &elem);

@@ -244,10 +244,10 @@ void ionic_dev_cmd_port_loopback(struct ionic_dev *idev, u8 loopback_mode);
 
 void ionic_dev_cmd_lif_identify(struct ionic_dev *idev, u8 type, u8 ver);
 void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u16 lif_index,
-	dma_addr_t addr);
+			    dma_addr_t addr);
 void ionic_dev_cmd_lif_reset(struct ionic_dev *idev, u16 lif_index);
 void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct qcq *qcq,
-	u16 lif_index, u16 intr_index);
+			       u16 lif_index, u16 intr_index);
 
 char *ionic_dev_asic_name(u8 asic_type);
 int ionic_db_page_num(struct lif *lif, int pid);

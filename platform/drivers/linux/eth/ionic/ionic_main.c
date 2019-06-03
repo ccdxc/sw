@@ -22,8 +22,7 @@ MODULE_PARM_DESC(max_slaves, "Maximum number of slave lifs");
 
 unsigned int rx_copybreak = IONIC_RX_COPYBREAK_DEFAULT;
 module_param(rx_copybreak, uint, 0);
-MODULE_PARM_DESC(rx_copybreak,
-	"Maximum size of packet that is copied to a bounce buffer on RX");
+MODULE_PARM_DESC(rx_copybreak, "Maximum size of packet that is copied to a bounce buffer on RX");
 
 unsigned int devcmd_timeout = 30;
 module_param(devcmd_timeout, uint, 0);
@@ -152,10 +151,9 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 		name = ionic_opcode_to_str(ctx->cmd.cmd.opcode);
 		status = ionic_error_to_str(ctx->comp.comp.status);
 		netdev_err(netdev, "%s (%d) failed: %s (%d)\n",
-				name,
-				ctx->cmd.cmd.opcode,
-				timeout ? "TIMEOUT" : status,
-				timeout ? -1 : ctx->comp.comp.status);
+			   name, ctx->cmd.cmd.opcode,
+			   timeout ? "TIMEOUT" : status,
+			   timeout ? -1 : ctx->comp.comp.status);
 		return -EIO;
 	}
 
@@ -233,10 +231,9 @@ try_again:
 	duration = jiffies - start_time;
 
 	opcode = idev->dev_cmd_regs->cmd.cmd.opcode;
-	dev_dbg(ionic->dev,
-		 "DEVCMD %s (%d) done=%d took %ld secs (%ld jiffies)\n",
-		 ionic_opcode_to_str(opcode), opcode,
-		 done, duration/HZ, duration);
+	dev_dbg(ionic->dev, "DEVCMD %s (%d) done=%d took %ld secs (%ld jiffies)\n",
+		ionic_opcode_to_str(opcode), opcode,
+		done, duration / HZ, duration);
 
 	if (!done && !time_before(jiffies, max_wait)) {
 		dev_warn(ionic->dev, "DEVCMD %s (%d) timeout after %ld secs\n",

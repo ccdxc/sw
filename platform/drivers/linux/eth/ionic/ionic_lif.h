@@ -107,7 +107,7 @@ struct deferred_work {
 };
 
 struct deferred {
-	spinlock_t lock;
+	spinlock_t lock;		/* lock for deferred work list */
 	struct list_head list;
 	struct work_struct work;
 };
@@ -150,7 +150,7 @@ struct lif {
 	unsigned int hw_index;
 	unsigned int kern_pid;
 	u64 __iomem *kern_dbpage;
-	spinlock_t adminq_lock;
+	spinlock_t adminq_lock;		/* lock for AdminQ operations */
 	struct qcq *adminqcq;
 	struct qcq *notifyqcq;
 	struct qcqst *txqcqs;
@@ -182,7 +182,7 @@ struct lif {
 	struct deferred deferred;
 	u32 tx_coalesce_usecs;
 	u32 rx_coalesce_usecs;
-	struct mutex dbid_inuse_lock;
+	struct mutex dbid_inuse_lock;	/* lock the dbid bit list */
 	unsigned long *dbid_inuse;
 	unsigned int dbid_count;
 	void *api_private;
@@ -192,31 +192,34 @@ struct lif {
 	struct work_struct tx_timeout_work;
 };
 
-#define lif_to_txqcq(lif, i)	(lif->txqcqs[i].qcq)
-#define lif_to_rxqcq(lif, i)	(lif->rxqcqs[i].qcq)
-#define lif_to_txq(lif, i)	(&lif_to_txqcq(lif, i)->q)
-#define lif_to_rxq(lif, i)	(&lif_to_txqcq(lif, i)->q)
+#define lif_to_txqcq(lif, i)	((lif)->txqcqs[i].qcq)
+#define lif_to_rxqcq(lif, i)	((lif)->rxqcqs[i].qcq)
+#define lif_to_txq(lif, i)	(&lif_to_txqcq((lif), i)->q)
+#define lif_to_rxq(lif, i)	(&lif_to_txqcq((lif), i)->q)
 #define is_master_lif(lif)	((lif)->index == 0)
 
 static inline bool ionic_is_platform_dev(struct ionic *ionic)
 {
-	return (ionic->pfdev ? true:false);
+	return !!ionic->pfdev;
 }
 
 static inline bool ionic_is_mnic(struct ionic *ionic)
 {
 	return ionic->pfdev ||
-	       ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT;
+	       (ionic->pdev &&
+	        ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT);
 }
 
 static inline bool ionic_is_pf(struct ionic *ionic)
 {
-	return ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_PF;
+	return ionic->pdev &&
+	       ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_PF;
 }
 
 static inline bool ionic_is_vf(struct ionic *ionic)
 {
-	return ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_VF;
+	return ionic->pdev &&
+	       ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_VF;
 }
 
 static inline bool ionic_is_25g(struct ionic *ionic)
@@ -241,7 +244,7 @@ void ionic_lifs_unregister(struct ionic *ionic);
 int ionic_lif_identify(struct ionic *ionic);
 int ionic_lifs_size(struct ionic *ionic);
 int ionic_lif_rss_config(struct lif *lif, u16 types,
-	const u8 *key, const u32 *indir);
+			 const u8 *key, const u32 *indir);
 
 int ionic_intr_alloc(struct lif *lif, struct intr *intr);
 void ionic_intr_free(struct lif *lif, int index);

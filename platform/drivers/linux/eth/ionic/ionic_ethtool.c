@@ -258,6 +258,9 @@ fake_port_type++;
 			 idev->port_info->status.xcvr.pid);
 		break;
 	case XCVR_PID_UNKNOWN:
+		if (ionic_is_mnic(lif->ionic))
+			break;
+		/* fall through */
 	default:
 		dev_info(lif->ionic->dev, "unknown xcvr type pid=%d / 0x%x\n",
 			 idev->port_info->status.xcvr.pid,
@@ -518,7 +521,7 @@ static int ionic_set_ringparam(struct net_device *netdev,
 	bool running;
 	int i, j;
 
-	if ((ring->rx_mini_pending) || (ring->rx_jumbo_pending)) {
+	if (ring->rx_mini_pending || ring->rx_jumbo_pending) {
 		netdev_info(netdev, "Changing jumbo or mini descriptors not supported\n");
 		return -EINVAL;
 	}
@@ -540,8 +543,8 @@ static int ionic_set_ringparam(struct net_device *netdev,
 	}
 
 	/* if nothing to do return success */
-	if ((ring->tx_pending == lif->ntxq_descs) &&
-	    (ring->rx_pending == lif->nrxq_descs))
+	if (ring->tx_pending == lif->ntxq_descs &&
+	    ring->rx_pending == lif->nrxq_descs)
 		return 0;
 
 	while (test_and_set_bit(LIF_QUEUE_RESET, lif->state))
@@ -717,7 +720,8 @@ static int ionic_set_priv_flags(struct net_device *netdev, u32 priv_flags)
 }
 
 static int ionic_set_tunable(struct net_device *dev,
-	const struct ethtool_tunable *tuna, const void *data)
+			     const struct ethtool_tunable *tuna,
+			     const void *data)
 {
 	struct lif *lif = netdev_priv(dev);
 
@@ -733,7 +737,7 @@ static int ionic_set_tunable(struct net_device *dev,
 }
 
 static int ionic_get_tunable(struct net_device *netdev,
-	const struct ethtool_tunable *tuna, void *data)
+			     const struct ethtool_tunable *tuna, void *data)
 {
 	struct lif *lif = netdev_priv(netdev);
 
@@ -756,6 +760,9 @@ static int ionic_get_module_info(struct net_device *netdev,
 	struct ionic_dev *idev = &lif->ionic->idev;
 	struct sfp_sprom_data *sprom;
 	struct xcvr_status *xcvr;
+
+	if (ionic_is_mnic(lif->ionic))
+		return 0;
 
 	xcvr = &idev->port_info->status.xcvr;
 	sprom = (struct sfp_sprom_data *)xcvr->sprom;

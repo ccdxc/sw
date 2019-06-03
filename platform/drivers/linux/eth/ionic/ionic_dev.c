@@ -348,7 +348,7 @@ int ionic_db_page_num(struct lif *lif, int pid)
 }
 
 void ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
-		    unsigned long index)
+		     unsigned long index)
 {
 	ionic_intr_clean(idev->intr_ctrl, index);
 	intr->index = index;
@@ -455,7 +455,8 @@ int ionic_q_init(struct lif *lif, struct ionic_dev *idev, struct queue *q,
 	q->num_descs = num_descs;
 	q->desc_size = desc_size;
 	q->sg_desc_size = sg_desc_size;
-	q->head = q->tail = q->info;
+	q->tail = q->info;
+	q->head = q->tail;
 	q->pid = pid;
 
 	snprintf(q->name, sizeof(q->name), "L%d-%s%u", lif->index, name, index);
