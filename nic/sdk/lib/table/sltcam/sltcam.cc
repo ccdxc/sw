@@ -132,6 +132,7 @@ sltcam::write_(sltctx *ctx) {
 sdk_ret_t
 sltcam::read_(sltctx *ctx) {
     p4pd_error_t p4pdret;
+    SDK_ASSERT(ctx->tcam_index < props_.table_size);
     SLTCAM_TRACE_DEBUG("hw index:%d", ctx->tcam_index);
     p4pdret =  p4pd_entry_read(ctx->props->table_id, ctx->tcam_index,
                                ctx->swkey, ctx->swkeymask, ctx->swdata);

@@ -33,6 +33,10 @@ __label__ done;
             // then the entry will be present in TCAM
             return sdk::SDK_RET_ENTRY_NOT_FOUND;
         }
+        if (!buckets_[ctx.index].isreserved()) {
+            return sdk::SDK_RET_ENTRY_NOT_FOUND;
+        }
+        return SDK_RET_OK;
     } else {
         // Calculate the hash
         ret = ctx.calchash();

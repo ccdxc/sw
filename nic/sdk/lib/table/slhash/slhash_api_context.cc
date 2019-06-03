@@ -192,6 +192,7 @@ slhctx::print_params() {
         printbytes("Key", props->key2str, params->key, props->swkey_len);
         printbytes("Mask", props->key2str, params->mask, props->swkey_len);
         printbytes("Data", props->data2str, params->appdata, props->swdata_len);
+        SLHASH_TRACE_VERBOSE("Handle: %s", params->handle.tostr());
         if (params->hash_valid) {
             SLHASH_TRACE_VERBOSE("Hash32b:%#x", params->hash_32b);
         }

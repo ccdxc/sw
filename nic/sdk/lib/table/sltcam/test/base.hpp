@@ -48,7 +48,7 @@ sltcam_data2str(void *data)
 
 class SltcamCache {
 private:
-    SltcamCacheEntry entries[TABLE_SIZE];
+    SltcamCacheEntry entries[SLTCAM_MOCK_TABLE_SIZE];
     uint32_t count_;
 
 public:

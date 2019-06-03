@@ -100,7 +100,7 @@ TEST_F(TEST_CLASS_NAME, reserve_insert)
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
-TEST_F(TEST_CLASS_NAME, reserve_insert_remove)
+TEST_F(TEST_CLASS_NAME, DISABLED_reserve_insert_remove)
 {
     sdk_ret_t rs;
     rs = TxnStart();
@@ -118,7 +118,7 @@ TEST_F(TEST_CLASS_NAME, reserve_insert_remove)
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
-TEST_F(TEST_CLASS_NAME, reserve_dup_insert)
+TEST_F(TEST_CLASS_NAME, DISABLED_reserve_dup_insert)
 {
     sdk_ret_t rs;
     rs = TxnStart();
@@ -129,14 +129,14 @@ TEST_F(TEST_CLASS_NAME, reserve_dup_insert)
     rs = Insert(cache.count(), sdk::SDK_RET_OK,
                 TEST_USE_HANDLE_OR_KEY, TEST_SET_OR_CLR_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
-    rs = Remove(cache.count(), sdk::SDK_RET_OK,
+    rs = Insert(cache.count(), sdk::SDK_RET_ENTRY_EXISTS,
                 TEST_USE_HANDLE_OR_KEY, TEST_SET_OR_CLR_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
     rs = TxnEnd();
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
-TEST_F(TEST_CLASS_NAME, reserve_remove)
+TEST_F(TEST_CLASS_NAME, DISABLED_reserve_remove)
 {
     sdk_ret_t rs;
     rs = TxnStart();

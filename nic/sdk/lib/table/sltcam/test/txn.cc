@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------------
 #include "base.hpp"
 
-#define TXN_TEST_COUNT TABLE_SIZE
+#define TXN_TEST_COUNT SLTCAM_MOCK_TABLE_SIZE
 
 class txn: public SltcamGtestBase {
 };

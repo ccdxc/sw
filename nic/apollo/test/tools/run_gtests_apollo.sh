@@ -64,3 +64,5 @@ $GDB apollo_vnic_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/ap
 echo "Running memhash test"
 MEMHASH_PRELOADS=${BUILD_DIR}/lib/libmemhashp4pd_mock.so
 LD_PRELOAD=${MEMHASH_PRELOADS} $ARGS memhash_test > memhash_test.log.txt
+
+slhash_test > slhash_test_log.txt

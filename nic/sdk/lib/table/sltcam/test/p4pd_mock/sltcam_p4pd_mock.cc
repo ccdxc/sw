@@ -26,7 +26,7 @@ uint32_t
 sltcam_mock_get_valid_count (uint32_t table_id)
 {
     uint32_t count = 0;
-    for (uint32_t i = 0; i < TABLE_SIZE; i++) {
+    for (uint32_t i = 0; i < SLTCAM_MOCK_TABLE_SIZE; i++) {
         if (mocktable.entries[i].key.entry_inactive == 0) {
             count++;
         }
@@ -47,7 +47,7 @@ int
 p4pd_entry_write (unsigned int table_id, unsigned int index, unsigned char *hwkey,
                   unsigned char *hwkey_y, void *actiondata)
 {
-    assert(index < TABLE_SIZE);
+    assert(index < SLTCAM_MOCK_TABLE_SIZE);
     mocktable.entries[index].key = *(sltcam_table_key_t *)hwkey;
     mocktable.entries[index].mask = *(sltcam_table_mask_t *)hwkey_y;
     mocktable.entries[index].data = *(sltcam_table_actiondata_t*)actiondata;
@@ -67,6 +67,7 @@ int
 p4pd_entry_read(uint32_t table_id, uint32_t index, void *swkey,
                 void *swkey_mask, void *actiondata)
 {
+    assert(index < SLTCAM_MOCK_TABLE_SIZE);
     *(sltcam_table_key_t*)swkey = mocktable.entries[index].key;
     *(sltcam_table_mask_t *)swkey_mask = mocktable.entries[index].mask;
     *(sltcam_table_actiondata_t*)actiondata = mocktable.entries[index].data;
@@ -90,7 +91,7 @@ p4pd_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
     props->key_struct_size = KEY_SIZE;
     props->actiondata_struct_size = DATA_SIZE;
     props->hash_type = 0;
-    props->tabledepth = TABLE_SIZE;
+    props->tabledepth = SLTCAM_MOCK_TABLE_SIZE;
     props->hbm_layout.entry_width = 64;
     return 0;
 }

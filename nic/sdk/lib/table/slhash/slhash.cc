@@ -139,14 +139,17 @@ __label__ done, outhandle;
     ret = txn_.validate(ctx_);
     SLHASH_RET_CHECK_AND_GOTO(ret, done, "txn validate, r:%d", ret);
 
-    // Check if an entry with same key exists already.
-    ret = find_();
-    if (ret == sdk::SDK_RET_OK) {
-        ret = sdk::SDK_RET_ENTRY_EXISTS;
-        // Return the handle of the existing entry
-        goto outhandle;
-    } else if (ret != sdk::SDK_RET_ENTRY_NOT_FOUND) {
-        SLHASH_TRACE_ERROR_AND_GOTO(done, "find, r:%d", ret);
+    // If handle is valid, we dont need to find the entry.
+    if (!params->handle.valid()) {
+        // Check if an entry with same key exists already.
+        ret = find_();
+        if (ret == sdk::SDK_RET_OK) {
+            ret = sdk::SDK_RET_ENTRY_EXISTS;
+            // Return the handle of the existing entry
+            goto outhandle;
+        } else if (ret != sdk::SDK_RET_ENTRY_NOT_FOUND) {
+            SLHASH_TRACE_ERROR_AND_GOTO(done, "find, r:%d", ret);
+        }
     }
 
     // Insert the entry

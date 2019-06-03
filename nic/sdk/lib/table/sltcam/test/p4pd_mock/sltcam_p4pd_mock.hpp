@@ -7,7 +7,7 @@
 #include <stdint.h>
 #define KEY_SIZE sizeof(sltcam_table_key_t)
 #define DATA_SIZE sizeof(sltcam_table_actiondata_t)
-#define TABLE_SIZE 16*1024
+#define SLTCAM_MOCK_TABLE_SIZE 1*1024
 
 typedef struct __attribute__((__packed__)) __sltcam_table_key {
     uint8_t entry_inactive;
@@ -48,7 +48,7 @@ typedef struct sltcam_mock_table_entry_s {
 } sltcam_mock_table_entry_t;
 
 typedef struct sltcam_mock_table_s {
-    sltcam_mock_table_entry_t entries[TABLE_SIZE];
+    sltcam_mock_table_entry_t entries[SLTCAM_MOCK_TABLE_SIZE];
 } sltcam_mock_table_t;
 
 int

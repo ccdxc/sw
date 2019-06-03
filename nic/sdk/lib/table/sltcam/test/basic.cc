@@ -2,7 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
 #include "base.hpp"
-#define BASIC_TEST_COUNT TABLE_SIZE
+#define BASIC_TEST_COUNT SLTCAM_MOCK_TABLE_SIZE
 
 class basic: public SltcamGtestBase {
 };

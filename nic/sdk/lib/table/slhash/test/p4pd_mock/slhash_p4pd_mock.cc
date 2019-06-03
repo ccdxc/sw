@@ -101,6 +101,7 @@ int
 p4pd_entry_read(uint32_t table_id, uint32_t index, void *swkey,
                 void *swkey_mask, void *actiondata)
 {
+    assert(index < TABLE_SIZE);
     slhash_mock_table_t *tab = GET_TABLE(table_id);
     *(slhash_table_key_t*)swkey = tab->entries[index].key;
     *(slhash_table_mask_t *)swkey_mask = tab->entries[index].mask;
@@ -141,14 +142,15 @@ p4pd_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
     props->key_struct_size = KEY_SIZE;
     props->actiondata_struct_size = DATA_SIZE;
     props->hash_type = 0;
-    props->tabledepth = TABLE_SIZE;
     props->hbm_layout.entry_width = 64;
 
     if (table_id == SLHASH_TABLE_ID_MOCK) {
         props->has_oflow_table = 1;
         props->oflow_table_id = SLHASH_TABLE_ID_OTCAM_MOCK;
+        props->tabledepth = TABLE_SIZE;
     } else {
         props->tablename = (char *) "SlTcamMockTable";
+        props->tabledepth = TABLE_SIZE/8;
     }
 
     return 0;
