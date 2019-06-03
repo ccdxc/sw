@@ -98,13 +98,19 @@ namespace impl {
 mapping_impl *
 mapping_impl::factory(pds_mapping_spec_t *spec) {
     mapping_impl    *impl;
+    device_entry    *device;
 
     impl = mapping_impl_db()->alloc();
     if (unlikely(impl == NULL)) {
         return NULL;
     }
     new (impl) mapping_impl();
+    device = device_db()->find();
     impl->is_local_ = spec->is_local;
+    if (spec->is_local) {
+        spec->tep.ip_addr.af = IP_AF_IPV4;
+        spec->tep.ip_addr.addr.v4_addr = device->ip_addr();
+    }
     return impl;
 }
 

@@ -21,8 +21,8 @@
 /// @{
 
 #define PDS_EPOCH_INVALID             0x0    ///< Invalid epoch
-#define PDS_ROUTE_TABLE_ID_INVALID    0x0    ///< Invalid route table ID
-#define PDS_POLICY_ID_INVALID         0x0    ///< Invalid policy ID
+#define PDS_ROUTE_TABLE_ID_INVALID    0x0    ///< Invalid route table id
+#define PDS_POLICY_ID_INVALID         0x0    ///< Invalid policy id
 
 // Basic PDS data types
 typedef uint32_t                  pds_vpc_id_t;
@@ -45,6 +45,7 @@ typedef uint32_t                  pds_tag_id_t;
 typedef uint32_t                  pds_vpc_peer_id_t;
 typedef uint32_t                  pds_nexthop_id_t;
 typedef uint32_t                  pds_nexthop_group_id_t;
+typedef uint32_t                  pds_tep_id_t;
 typedef pds_nexthop_id_t          pds_nexthop_key_t;
 typedef pds_nexthop_group_id_t    pds_nexthop_group_key_t;
 
@@ -107,13 +108,13 @@ pdsencap2str (pds_encap_t encap)
 
 /// \brief    VPC key
 typedef struct pds_vpc_key_s {
-    pds_vpc_id_t id;    ///< VPC ID
+    pds_vpc_id_t id;    ///< VPC id
 } __PACK__ pds_vpc_key_t;
 
 /// \brief    subnet key
 /// \remark subnet id is not scoped under a vpc, it is globally unique id
 typedef struct pds_subnet_key_s {
-    pds_subnet_id_t id;    ///< Subnet ID
+    pds_subnet_id_t id;    ///< Subnet id
 } __PACK__ pds_subnet_key_t;
 
 /// \brief    TEP key
@@ -123,17 +124,17 @@ typedef struct pds_tep_key_s {
 
 /// \brief VNIC key
 typedef struct pds_vnic_key_s {
-    pds_vnic_id_t id;    ///< Unique VNIC ID (in the range 0 to 1024)
+    pds_vnic_id_t id;    ///< Unique VNIC id (in the range 0 to 1024)
 } __PACK__ pds_vnic_key_t;
 
 /// \brief Meter key
 typedef struct pds_meter_key_s {
-    pds_meter_id_t id;    ///< Unique meter ID
+    pds_meter_id_t id;    ///< Unique meter id
 } __PACK__ pds_meter_key_t;
 
 /// \brief Tag key
 typedef struct pds_tag_key_s {
-    pds_tag_id_t id;    ///< Unique tag ID
+    pds_tag_id_t id;    ///< Unique tag id
 } __PACK__ pds_tag_key_t;
 
 /// \brief    mapping key
@@ -152,7 +153,7 @@ typedef struct pds_route_table_key_s {
 
 /// \brief    policy key
 typedef struct pds_policy_key_s {
-    pds_policy_id_t    id;    ///< Unique ID for the policy
+    pds_policy_id_t    id;    ///< Unique id for the policy
 } __PACK__ pds_policy_key_t;
 
 /// \brief    mirror session key
@@ -163,7 +164,7 @@ typedef struct pds_mirror_session_key_s {
 
 /// \brief    resource pool key
 typedef struct pds_rsc_pool_key_s {
-    pds_rsc_pool_id_t id;    ///< Resource pool ID
+    pds_rsc_pool_id_t id;    ///< Resource pool id
 } __PACK__ pds_rsc_pool_key_t;
 
 /// \brief    service mapping key
@@ -180,11 +181,11 @@ typedef struct pds_svc_mapping_key_s {
 
 } __PACK__ pds_svc_mapping_key_t;
 
-class pds_svc_mapping_hash_fn { 
-public: 
-    std::size_t operator()(const pds_svc_mapping_key_t &key) const { 
+class pds_svc_mapping_hash_fn {
+public:
+    std::size_t operator()(const pds_svc_mapping_key_t &key) const {
         return hash_algo::fnv_hash((void *)&key, sizeof(key));
-    } 
+    }
 };
 
 /// \brief    vpc peering key
