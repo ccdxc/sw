@@ -151,6 +151,14 @@ public:
         return "device-cfg";
     }
 
+   /**
+     * @brief read config
+     * @param[in]  key Pointer to the key object
+     * @param[out] info Pointer to the info object
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t read(pds_device_info_t *info);
+
     /**
      * @brief     return impl instance of this device object
      * @return    impl instance of the tep object

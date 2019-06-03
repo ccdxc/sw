@@ -123,6 +123,12 @@ svc_mapping::activate_config(pds_epoch_t epoch, api_op_t api_op,
 }
 
 sdk_ret_t
+svc_mapping::read(pds_svc_mapping_key_t *key, pds_svc_mapping_info_t *info) {
+    return impl_->read_hw(this, (impl::obj_key_t *)key,
+                          (impl::obj_info_t *)info);
+}
+
+sdk_ret_t
 svc_mapping::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     // service mappings are not added to s/w db, so its a no-op, however, since
     // update operation is not supported on this object, we shouldn't endup here

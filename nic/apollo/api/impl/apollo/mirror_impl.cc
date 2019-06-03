@@ -209,13 +209,13 @@ mirror_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
 }
 
 sdk_ret_t
-mirror_impl::read_hw(obj_key_t *key, obj_info_t *info, void *arg) {
+mirror_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     p4pd_error_t p4pd_ret;
     mirror_actiondata_t mirror_data;
     uint16_t hw_id;
     pds_mirror_session_key_t *mkey = (pds_mirror_session_key_t *)key;
     pds_mirror_session_info_t *minfo = (pds_mirror_session_info_t *)info;
-    (void)arg;
+    (void)api_obj;
 
     hw_id = mkey->id-1;
     if ((mirror_impl_db()->session_bmap_ & (1 << hw_id)) == 0) {

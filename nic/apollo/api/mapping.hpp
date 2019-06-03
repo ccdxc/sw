@@ -190,6 +190,21 @@ public:
     }
 
     /**
+     * @brief read config
+     * @param[in]  key Pointer to the key object
+     * @param[out] info Pointer to the info object
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t read(pds_mapping_key_t *key, pds_mapping_info_t *info);
+
+    /**
+     * @brief set object is local or remote
+     * @param[in] local ture if it is local false otherwise
+     */
+    void set_local(bool local) { local_ = local; }
+    bool is_local() { return local_; }
+
+    /**
      * @brief     return impl instance of this vnic object
      * @return    impl instance of the vnic object
      */
@@ -211,6 +226,7 @@ private:
 
 private:
     impl_base        *impl_;      /**< impl object instance */
+    bool             local_;      /**< is it local or remote object */
 } __PACK__;
 
 

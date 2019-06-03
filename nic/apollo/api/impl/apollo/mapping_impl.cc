@@ -1008,16 +1008,15 @@ mapping_impl::read_remote_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
 }
 
 sdk_ret_t
-mapping_impl::read_hw(obj_key_t *key, obj_info_t *info, void *arg) {
+mapping_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     sdk_ret_t ret;
     vpc_entry *vpc;
     nat_actiondata_t nat_data = { 0 };
     pds_mapping_key_t *mkey = (pds_mapping_key_t *)key;
     pds_mapping_info_t *minfo = (pds_mapping_info_t *)info;
+    mapping_entry *mapping = (mapping_entry *)api_obj;
 
-    SDK_ASSERT(arg != NULL);
-    is_local_ = *(bool *)arg;
-
+    is_local_ = mapping->is_local();
     vpc = vpc_db()->find(&mkey->vpc);
     if (is_local_) {
         ret = read_local_mapping_(vpc, &minfo->spec);

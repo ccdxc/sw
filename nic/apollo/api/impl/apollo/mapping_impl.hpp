@@ -113,12 +113,12 @@ public:
                                   obj_ctxt_t *obj_ctxt) override;
 
     /// \brief      read spec, statistics and status from hw tables
+    /// \param[in]  api_obj API object
     /// \param[in]  key  pointer to mapping key
     /// \param[out] info pointer to mapping info
-    /// \param[in]  arg  pointer to boolean having local true/false
     /// \return     SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t read_hw(obj_key_t *key, obj_info_t *info,
-                              void *arg = NULL) override;
+    virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
+                              obj_info_t *info) override;
 
     /// \brief  return true if mapping is local, false otherwise
     /// \return true or false

@@ -105,6 +105,7 @@ public:
     virtual sdk_ret_t reactivate_config(pds_epoch_t epoch,
                                         api_op_t api_op) override;
 
+
     /// \brief    add given vnic to the database
     /// \return   SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t add_to_db(void) override;
@@ -168,6 +169,12 @@ public:
         }
         return false;
     }
+
+    ///\brief read config
+    ///\param[in]  key Pointer to the key object
+    ///\param[out] info Pointer to the info object
+    ///\return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_vnic_key_t *key, pds_vnic_info_t *info);
 
     /// \brief     return the key/id of this vnic
     /// \return    key/id of the vnic object

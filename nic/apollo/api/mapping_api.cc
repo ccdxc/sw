@@ -156,7 +156,6 @@ pds_local_mapping_read (pds_mapping_key_t *key,
     pds_mapping_info_t info;
     mapping_entry *entry = NULL;
     sdk_ret_t rv = SDK_RET_OK;
-    bool is_local = true;
 
     if (key == NULL || local_info == NULL)
         return SDK_RET_INVALID_ARG;
@@ -165,8 +164,8 @@ pds_local_mapping_read (pds_mapping_key_t *key,
         return SDK_RET_ENTRY_NOT_FOUND;
 
     info.spec.key = *key;
-    rv = entry->impl()->read_hw((obj_key_t *)key, (obj_info_t *)&info,
-                               (void *)&is_local);
+    entry->set_local(true);
+    rv = entry->read(key, &info);
     pds_mapping_spec_to_local_spec(&local_info->spec, &info.spec);
     return rv;
 }
@@ -178,7 +177,6 @@ pds_remote_mapping_read (pds_mapping_key_t *key,
     pds_mapping_info_t info;
     mapping_entry *entry = NULL;
     sdk_ret_t rv = SDK_RET_OK;
-    bool is_local = false;
 
     if (key == NULL || remote_info == NULL) {
         return SDK_RET_INVALID_ARG;
@@ -189,8 +187,8 @@ pds_remote_mapping_read (pds_mapping_key_t *key,
     }
 
     info.spec.key = *key;
-    rv = entry->impl()->read_hw((obj_key_t *)key, (obj_info_t *)&info,
-                                (void *)&is_local);
+    entry->set_local(false);
+    rv = entry->read(key, &info);
     pds_mapping_spec_to_remote_spec(&remote_info->spec, &info.spec);
     return rv;
 }

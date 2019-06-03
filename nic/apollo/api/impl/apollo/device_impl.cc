@@ -70,10 +70,10 @@ device_impl::fill_ing_drop_stats_(pds_device_ing_drop_stats_t *ing_drop_stats) {
 }
 
 sdk_ret_t
-device_impl::read_hw(obj_key_t *key, obj_info_t *info, void *arg) {
+device_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     pds_device_info_t *dinfo = (pds_device_info_t *)info;
+    (void)api_obj;
     (void)key;
-    (void)arg;
 
     fill_spec_(&dinfo->spec);
     fill_ing_drop_stats_(&dinfo->stats.ing_drop_stats);

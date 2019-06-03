@@ -76,6 +76,11 @@ device_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
 }
 
 sdk_ret_t
+device_entry::read(pds_device_info_t *info) {
+    return impl_->read_hw(this, NULL, (impl::obj_info_t *)info);
+}
+
+sdk_ret_t
 device_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }

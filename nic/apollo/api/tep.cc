@@ -145,6 +145,12 @@ tep_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
 }
 
 sdk_ret_t
+tep_entry::read(pds_tep_key_t *key, pds_tep_info_t *info) {
+    return impl_->read_hw(this, (impl::obj_key_t *)key,
+                          (impl::obj_info_t *)info);
+}
+
+sdk_ret_t
 tep_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }

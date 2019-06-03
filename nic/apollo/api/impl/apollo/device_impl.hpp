@@ -91,12 +91,12 @@ public:
                                   obj_ctxt_t *obj_ctxt) override;
 
      /// \brief      read spec, statistics and status from hw tables
+     /// \param[in]  api_obj API object
      /// \param[in]  key not used
      /// \param[out] info pointer to device info
-     /// \param[in]  arg not used
      /// \return     SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t read_hw(obj_key_t *key, obj_info_t *info,
-                              void *arg = NULL) override;
+    virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
+                              obj_info_t *info) override;
 
 private:
     /// \brief      populate specification with hardware information

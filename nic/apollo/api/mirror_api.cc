@@ -73,8 +73,7 @@ pds_mirror_session_read (pds_mirror_session_key_t *key,
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
     info->spec.key = *key;
-
-    return entry->impl()->read_hw((obj_key_t *)key, (obj_info_t *)info);
+    return entry->read(key, info);
 }
 
 sdk_ret_t

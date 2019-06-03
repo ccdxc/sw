@@ -72,6 +72,5 @@ pds_device_read (pds_device_info_t *info)
 
     // fill from software state
     pds_device_spec_fill(entry, &info->spec);
-
-    return entry->impl()->read_hw(NULL, (obj_info_t *)info);
+    return entry->read(info);
 }

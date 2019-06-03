@@ -77,7 +77,7 @@ pds_svc_mapping_read (pds_svc_mapping_key_t *key, pds_svc_mapping_info_t *info)
     }
 
     info->spec.key = *key;
-    rv = entry->impl()->read_hw((obj_key_t *)key, (obj_info_t *)&info);
+    rv = entry->read(key, info);
     return rv;
 }
 

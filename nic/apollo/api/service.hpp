@@ -156,6 +156,12 @@ public:
         return "svc-";
     }
 
+    ///\brief read config
+    ///\param[in]  key Pointer to the key object
+    ///\param[out] info Pointer to the info object
+    ///\return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_svc_mapping_key_t *key, pds_svc_mapping_info_t *info);
+
     /// \brief     return impl instance of this service mapping object
     /// \return    impl instance of the service mapping object
     impl_base *impl(void) { return impl_; }

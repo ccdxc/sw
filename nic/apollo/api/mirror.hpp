@@ -130,6 +130,13 @@ public:
         return "ms-" + std::to_string(key_.id);
     }
 
+    ///\brief read config
+    ///\param[in]  key Pointer to the key object
+    ///\param[out] info Pointer to the info object
+    ///\return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_mirror_session_key_t *key, pds_mirror_session_info_t *info);
+
+
     /// \brief     return impl instance of this mirror session object
     /// \return    impl instance of the mirror session object
     impl_base *impl(void) { return impl_; }

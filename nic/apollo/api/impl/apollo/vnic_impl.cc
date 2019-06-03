@@ -752,7 +752,7 @@ vnic_impl::fill_vnic_spec_(
 }
 
 sdk_ret_t
-vnic_impl::read_hw(obj_key_t *key, obj_info_t *info, void *arg) {
+vnic_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
     sdk_table_api_params_t api_params = { 0 };
@@ -766,7 +766,7 @@ vnic_impl::read_hw(obj_key_t *key, obj_info_t *info, void *arg) {
     local_vnic_by_slot_rx_actiondata_t vnic_by_slot_data = { 0 };
     pds_vnic_key_t *vkey = (pds_vnic_key_t *)key;
     pds_vnic_info_t *vinfo = (pds_vnic_info_t *)info;
-    (void)arg;
+    (void)api_obj;
 
     // read VNIC_TX_STATS and VNIC_RX_STATS
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VNIC_TX_STATS, hw_id_, NULL,

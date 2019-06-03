@@ -235,12 +235,12 @@ tep_impl::fill_spec_(nexthop_actiondata_t *nh_data,
 }
 
 sdk_ret_t
-tep_impl::read_hw(obj_key_t *key, obj_info_t *info, void *arg) {
+tep_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     nexthop_actiondata_t nh_data;
     tep_actiondata_t tep_data;
     pds_tep_info_t *tep_info = (pds_tep_info_t *)info;
+    (void)api_obj;
     (void)key;
-    (void)arg;
 
     if (tep_impl_db()->nh_tbl()->retrieve(nh_id_,
                                           &nh_data) != SDK_RET_OK) {

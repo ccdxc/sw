@@ -112,6 +112,13 @@ public:
         return "tep-"  + string(ipaddr2str(&key_.ip_addr));
     }
 
+    ///\brief read config
+    ///\param[in]  key Pointer to the key object
+    ///\param[out] info Pointer to the info object
+    ///\return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_tep_key_t *key, pds_tep_info_t *info);
+
+
     /// \brief     helper function to get key given TEP entry
     /// \param[in] entry pointer to TEP instance
     /// \return    pointer to the TEP instance's key

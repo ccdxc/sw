@@ -184,11 +184,11 @@ public:
     }
 
     /// \brief read config from hardware
-    /// \param[in] key Pointer to the key object
-    /// \param[in] info Pointer to the info object
-    /// \param[in] arg Impl specific argument
-    virtual sdk_ret_t read_hw(obj_key_t *key, obj_info_t *info,
-                              void *arg = NULL) {
+    /// \param[in]  api_obj API object
+    /// \param[in]  key Pointer to the key object
+    /// \param[out] info Pointer to the info object
+    virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
+                              obj_info_t *info) {
         return sdk::SDK_RET_INVALID_OP;
     }
 

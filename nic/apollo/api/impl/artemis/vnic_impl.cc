@@ -533,7 +533,7 @@ vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
 }
 
 sdk_ret_t
-vnic_impl::read_hw(obj_key_t *key, obj_info_t *info, void *arg) {
+vnic_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     return SDK_RET_INVALID_OP;
 }
 

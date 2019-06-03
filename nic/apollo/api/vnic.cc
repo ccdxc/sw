@@ -137,6 +137,12 @@ vnic_entry::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
 }
 
 sdk_ret_t
+vnic_entry::read(pds_vnic_key_t *key, pds_vnic_info_t *info) {
+    return impl_->read_hw(this, (impl::obj_key_t *)key,
+                          (impl::obj_info_t *)info);
+}
+
+sdk_ret_t
 vnic_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }

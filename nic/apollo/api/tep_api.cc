@@ -53,7 +53,7 @@ pds_tep_read (pds_tep_key_t *key, pds_tep_info_t *info)
     }
 
     info->spec.key = *key;
-    return entry->impl()->read_hw(NULL, (obj_info_t *)info);
+    return entry->read(key, info);
 }
 
 sdk_ret_t
