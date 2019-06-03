@@ -92,7 +92,6 @@ protected:
         vnic_stepper_seed_t vnic_seed = {};
         pds_batch_params_t batch_params = {0};
         std::string subnet_cidr = api_test::g_subnet_cidr_v4;
-        std::string rt_ip = api_test::g_rt_cidr_v4;
         std::string nr_cidr = "100.0.0.1/16";
         ip_prefix_t ip_pfx, rt_pfx, nr_pfx;
         ip_addr_t ipaddr, rt_addr, nr_addr;
@@ -107,6 +106,7 @@ protected:
         extract_ip_pfx((char *)api_test::g_rt_cidr_v4.c_str(), &rt_pfx);
         extract_ip_pfx((char *)nr_cidr.c_str(), &nr_pfx);
 
+        rt_addr = rt_pfx.addr;
         tep_util tep_obj(api_test::g_device_ip);
 
         BATCH_START();
@@ -122,11 +122,9 @@ protected:
             route_table_util rt_obj(rt_id_v4 + idx, nr_pfx, rt_addr);
             ip_prefix_ip_next(&rt_pfx, &rt_addr);
             rt_pfx.addr = rt_addr;
-            rt_ip = ipv4addr2str(rt_addr.addr.v4_addr);
 
             ip_prefix_ip_next(&nr_pfx, &nr_addr);
             nr_pfx.addr = nr_addr;
-            nr_cidr = ippfx2str(&nr_pfx);
 
             ROUTE_TABLE_CREATE(rt_obj);
         }

@@ -112,12 +112,11 @@ namespace impl {
     (api_params)->handle = (hdl);                                            \
 }
 
-#define nat_action                action_u.nat_nat
-#define nh_action                 action_u.nexthop_nexthop_info
-#define tep_mpls_udp_action       action_u.tep_mpls_udp_tep
-#define tep_vxlan_action          action_u.tep_vxlan_tep
-#define tep_mpls_udp_action       action_u.tep_mpls_udp_tep
-#define tep_vxlan_action          action_u.tep_vxlan_tep
+#define nat_action                    action_u.nat_nat
+#define nh_action                     action_u.nexthop_nexthop_info
+#define tep_mpls_udp_action           action_u.tep_mpls_udp_tep
+#define tep_vxlan_action              action_u.tep_vxlan_tep
+#define local_vnic_by_slot_rx_info    action_u.local_vnic_by_slot_rx_local_vnic_info_rx
 
 mapping_impl *
 mapping_impl::factory(pds_mapping_spec_t *pds_mapping) {
@@ -159,15 +158,15 @@ mapping_impl::build(pds_mapping_key_t *key) {
     mapping_impl                          *impl;
     uint16_t                              vnic_hw_id;
     bool                                  local_mapping = false;
-    sdk_table_api_params_t                api_params;
-    remote_vnic_mapping_tx_swkey_t        remote_vnic_mapping_tx_key;
-    remote_vnic_mapping_tx_appdata_t      remote_vnic_mapping_tx_data;
-    remote_vnic_mapping_rx_swkey_t        remote_vnic_mapping_rx_key;
-    remote_vnic_mapping_rx_appdata_t      remote_vnic_mapping_rx_data;
-    local_ip_mapping_swkey_t              local_ip_mapping_key;
-    local_ip_mapping_appdata_t            local_ip_mapping_data;
-    local_vnic_by_slot_rx_swkey_t         local_vnic_by_slot_rx_key;
-    local_vnic_by_slot_rx_actiondata_t    local_vnic_by_slot_rx_data;
+    sdk_table_api_params_t                api_params = { 0 };
+    remote_vnic_mapping_tx_swkey_t        remote_vnic_mapping_tx_key = { 0 };
+    remote_vnic_mapping_tx_appdata_t      remote_vnic_mapping_tx_data = { 0 };
+    remote_vnic_mapping_rx_swkey_t        remote_vnic_mapping_rx_key = { 0 };
+    remote_vnic_mapping_rx_appdata_t      remote_vnic_mapping_rx_data = { 0 };
+    local_ip_mapping_swkey_t              local_ip_mapping_key = { 0 };
+    local_ip_mapping_appdata_t            local_ip_mapping_data = { 0 };
+    local_vnic_by_slot_rx_swkey_t         local_vnic_by_slot_rx_key = { 0 };
+    local_vnic_by_slot_rx_actiondata_t    local_vnic_by_slot_rx_data = { 0 };
     nexthop_actiondata_t                  nh_data;
     tep_actiondata_t                      tep_data;
     nat_actiondata_t                      nat_data;
@@ -252,12 +251,13 @@ mapping_impl::build(pds_mapping_key_t *key) {
         local_vnic_by_slot_rx_key.vxlan_1_vni =
             remote_vnic_mapping_tx_data.dst_slot_id;
     }
-    //ret =
-    //vnic_impl_db()->local_vnic_by_slot_rx_tbl()->retrieve(&local_vnic_by_slot_rx_key,
-    //                                                      &local_vnic_by_slot_rx_data);
-    //if (ret != SDK_RET_OK) {
-        //goto error;
-    //}
+
+    ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->retrieve_using_key(
+                              &local_vnic_by_slot_rx_key, NULL, &local_vnic_by_slot_rx_data);
+    if (ret != SDK_RET_OK) {
+        goto error;
+    }
+
     vnic_hw_id =
         local_vnic_by_slot_rx_data.action_u.local_vnic_by_slot_rx_local_vnic_info_rx.vpc_id;
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key, vnic_hw_id,
@@ -852,7 +852,7 @@ error:
 
 sdk_ret_t
 mapping_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -886,7 +886,6 @@ mapping_impl::fill_mapping_spec_(
     }
 }
 
-#define local_vnic_by_slot_rx_info    action_u.local_vnic_by_slot_rx_local_vnic_info_rx
 sdk_ret_t
 mapping_impl::read_local_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
     sdk_ret_t                           ret;
@@ -946,7 +945,7 @@ mapping_impl::read_remote_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
     tep_actiondata_t                    tep_data;
     remote_vnic_mapping_rx_swkey_t      remote_vnic_mapping_rx_key = { 0 };
     remote_vnic_mapping_rx_appdata_t    remote_vnic_mapping_rx_data = { 0 };
-    sdk_table_api_params_t              tparams;
+    sdk_table_api_params_t              tparams = { 0 };
     uint32_t                            nh_index, tep_index;
 
     PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
