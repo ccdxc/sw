@@ -33,11 +33,7 @@ pc_res_init(struct pc_res_init_params *pc_init,
 static void
 pc_res_deinit(struct per_core_resource *pcr);
 static void
-pc_res_reset(struct per_core_resource *pcr);
-static void
 pc_res_pre_reset(struct per_core_resource *pcr);
-static void
-pc_res_pre_reset_wait(struct per_core_resource *pcr);
 
 static pnso_error_t
 pc_res_interm_buf_init(struct pc_res_init_params *pc_init,
@@ -136,12 +132,6 @@ pnso_init(struct pnso_init_params *pnso_init)
 	/* Register callbacks for LIF reset */
 	pnso_lif_reset_ctl_register(RESET_CTL_ST_PRE_RESET,
 				    pnso_lif_reset_ctl_pre_reset_cb,
-				    NULL);
-	pnso_lif_reset_ctl_register(RESET_CTL_ST_RESET,
-				    pnso_lif_reset_ctl_reset_cb,
-				    NULL);
-	pnso_lif_reset_ctl_register(RESET_CTL_ST_REINIT,
-				    pnso_lif_reset_ctl_reinit_cb,
 				    NULL);
 
 	for (i = 0; (err == PNSO_OK) && (i < num_pc_res); i++) {
@@ -250,25 +240,6 @@ pnso_deinit(void)
 }
 
 void
-pnso_pre_reset_wait(void)
-{
-	struct lif			*lif = sonic_get_lif();
-	struct per_core_resource	*pcr;
-	uint32_t			num_pc_res;
-	uint32_t			i;
-
-	if (!pnso_initialized)
-		return;
-	//g_osal_log_level = OSAL_LOG_LEVEL_DEBUG;
-
-	num_pc_res = sonic_get_num_per_core_res(lif);
-	for (i = 0; i < num_pc_res; i++) {
-		pcr = sonic_get_per_core_res_by_res_id(lif, i);
-		pc_res_pre_reset_wait(pcr);
-	}
-}
-
-void
 pnso_pre_reset(void)
 {
 	struct lif			*lif = sonic_get_lif();
@@ -284,31 +255,6 @@ pnso_pre_reset(void)
 	for (i = 0; i < num_pc_res; i++) {
 		pcr = sonic_get_per_core_res_by_res_id(lif, i);
 		pc_res_pre_reset(pcr);
-	}
-}
-
-void
-pnso_reset(void)
-{
-	struct lif			*lif = sonic_get_lif();
-	struct per_core_resource	*pcr;
-	uint32_t			num_pc_res;
-	uint32_t			i;
-
-	if (!pnso_initialized)
-		return;
-	//g_osal_log_level = OSAL_LOG_LEVEL_DEBUG;
-
-	num_pc_res = sonic_get_num_per_core_res(lif);
-	for (i = 0; i < num_pc_res; i++) {
-		pcr = sonic_get_per_core_res_by_res_id(lif, i);
-		if (pcr->core_id >= 0) {
-			//pas_show_stats(&pcr->api_stats);
-			//cpdc_pprint_mpools(pcr);
-			//sonic_pprint_seq_bmps(pcr);
-			//sonic_pprint_pcr_ev_list(pcr);
-		}
-		pc_res_reset(pcr);
 	}
 }
 
@@ -374,41 +320,24 @@ pc_res_deinit(struct per_core_resource *pcr)
 	pc_res_interm_buf_deinit(pcr);
 }
 
-#define PNSO_PRE_RESET_TIMEOUT (OSAL_NSEC_PER_SEC * 2)
-
-static void
-pc_res_pre_reset_wait(struct per_core_resource *pcr)
-{
-	uint64_t start_ts = osal_get_clock_nsec();
-
-	/* wait for existing submissions to complete */
-	while (sonic_is_reserved_per_core_res(pcr)) {
-		if ((osal_get_clock_nsec() - start_ts) >
-		    PNSO_PRE_RESET_TIMEOUT) {
-			OSAL_LOG_WARN("Timed out during LIF pre_reset, proceeding");
-			break;
-		}
-		osal_msleep(10);
-	}
-}
-
 static void
 pc_res_pre_reset(struct per_core_resource *pcr)
 {
+	sonic_reserve_exclusive_per_core_res(pcr);
+
 	/* timeout all remaining batch and chain requests */
 	bat_poll_timeout_all(pcr);
 	chn_poll_timeout_all(pcr);
-}
 
-static void
-pc_res_reset(struct per_core_resource *pcr)
-{
+	/* bulk mpool cleanup */
 	mpool_reset(pcr->mpools[MPOOL_TYPE_SHARED_STATUS_DESC]);
 	mpool_reset(pcr->mpools[MPOOL_TYPE_CHAIN_SGL_PDMA]);
 
 	cpdc_reset_accelerator(pcr);
 	crypto_reset_accelerator(pcr);
 	pc_res_interm_buf_reset(pcr);
+
+	sonic_unreserve_exclusive_per_core_res(pcr);
 }
 
 static pnso_error_t

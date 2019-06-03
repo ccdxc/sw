@@ -129,6 +129,9 @@ pprint_service_result(struct pnso_service_result *res)
 	}
 }
 
+static void *batch_to_poll_ctx(struct batch_info *batch);
+static struct batch_info *poll_ctx_to_batch(void *poll_ctx);
+
 static void *
 get_mpool_batch_object(struct per_core_resource *pcr,
 		enum mem_pool_type pool_type)
@@ -186,9 +189,9 @@ put_mpool_batch_object(struct per_core_resource *pcr,
 	}
 
 	if (pool_type == MPOOL_TYPE_BATCH_PAGE)
-		mpool_put_object(batch_page_mpool, p);
+		err = mpool_put_object(batch_page_mpool, p);
 	else
-		mpool_put_object(batch_info_mpool, p);
+		err = mpool_put_object(batch_info_mpool, p);
 
 	OSAL_LOG_DEBUG("returned batch page/info object to mpool. pcr: 0x " PRIx64 " pool_type: %d",
 			(uint64_t) pcr, pool_type);
@@ -343,14 +346,15 @@ init_batch_info(struct per_core_resource *pcr,
 
 	gen_id = batch_info->bi_gen_id;
 	memset(batch_info, 0, sizeof(struct batch_info));
-	batch_info->bi_gen_id = gen_id;
+	batch_info->bi_gen_id = gen_id + 1;
 
 	batch_info->bi_svc_type = req->svc[0].svc_type;
 	batch_info->bi_mpool_type = mpool_type;
 	batch_info->bi_pcr = pcr;
 	batch_info->bi_polled_idx = 0;
 
-	pcr->batch_info = batch_info;
+	pcr->batch_ctx = batch_to_poll_ctx(batch_info);
+
 out:
 	return batch_info;
 }
@@ -417,14 +421,14 @@ bat_destroy_batch(struct per_core_resource *pcr)
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	batch_info = pcr->batch_info;
+	batch_info = poll_ctx_to_batch(pcr->batch_ctx);
 	if (!batch_info) {
-		OSAL_LOG_DEBUG("batch not found! pcr: 0x" PRIx64,
-				(uint64_t) pcr);
+		OSAL_LOG_DEBUG("batch not found! pcr: 0x" PRIx64 " poll_ctx: 0x" PRIx64,
+				(uint64_t) pcr, (uint64_t) pcr->batch_ctx);
 		goto out;
 	}
+	pcr->batch_ctx = NULL;
 	deinit_batch(batch_info);
-	pcr->batch_info = NULL;
 
 out:
 	OSAL_LOG_DEBUG("exit!");
@@ -473,50 +477,68 @@ static void *batch_to_poll_ctx(struct batch_info *batch)
 				   batch->bi_gen_id, batch->bi_pcr);
 }
 
+static inline struct batch_info *
+poll_ctx_to_batch_params(void *poll_ctx, uint16_t *gen_id,
+			 struct per_core_resource **pcr)
+{
+	struct batch_info *batch;
+	uint8_t mpool_type;
+
+	batch = (struct batch_info *) poll_ctx_to_req_obj(poll_ctx, &mpool_type,
+							  gen_id, pcr);
+	if (!batch || mpool_type != MPOOL_TYPE_BATCH_INFO) {
+		OSAL_LOG_DEBUG("invalid batch poll ctx 0x" PRIx64,
+			       (uint64_t) poll_ctx);
+		return NULL;
+	}
+	return batch;
+}
+
 static struct batch_info *poll_ctx_to_batch(void *poll_ctx)
 {
 	struct batch_info *batch;
 	uint16_t gen_id;
-	uint8_t mpool_type;
+	struct per_core_resource *pcr;
 
-	batch = (struct batch_info *) poll_ctx_to_req_obj(poll_ctx, &mpool_type, &gen_id);
-	if (!batch || mpool_type != MPOOL_TYPE_BATCH_INFO) {
-		OSAL_LOG_ERROR("invalid batch poll ctx, mpool_type %d", mpool_type);
+	batch = poll_ctx_to_batch_params(poll_ctx, &gen_id, &pcr);
+	if (!batch)
 		return NULL;
-	}
 
 	if (batch->bi_gen_id != gen_id) {
-		OSAL_LOG_ERROR("old batch gen_id %d found, expected %d",
-			       gen_id, batch->bi_gen_id);
+		OSAL_LOG_ERROR("new batch gen_id %d found, expected %d",
+			       batch->bi_gen_id, gen_id);
 		return NULL;
 	}
 
 	return batch;
 }
 
-pnso_error_t bat_poller(void *pnso_poll_ctx);
-pnso_error_t bat_poll_timeout(void *pnso_poll_ctx);
+pnso_error_t bat_poller(struct batch_info *batch_info, uint16_t gen_id, bool is_timeout);
 
 pnso_error_t
-bat_poller(void *poll_ctx)
+bat_poller(struct batch_info *batch_info, uint16_t gen_id, bool is_timeout)
 {
 	pnso_error_t err = EINVAL;
-	struct batch_info *batch_info = poll_ctx_to_batch(poll_ctx);
-	completion_cb_t	cb;
-	void *cb_ctx;
+	completion_cb_t	cb = NULL;
+	void *cb_ctx = NULL;
 
 	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_LOG_DEBUG("core_id: %u", osal_get_coreid());
 
-	if (!batch_info) {
-		OSAL_LOG_ERROR("invalid batch poll context 0x" PRIx64 "! err: %d",
-			       (uint64_t) poll_ctx, err);
-		goto out;
-	}
 	PPRINT_BATCH_INFO(batch_info);
 
-	err = poll_all_chains(batch_info);
+	if (batch_info->bi_gen_id != gen_id) {
+		OSAL_LOG_ERROR("new batch gen_id %d found, expected %d",
+			       batch_info->bi_gen_id, gen_id);
+		goto out;
+	}
+
+	if (is_timeout) {
+		err = ETIMEDOUT;
+	} else {
+		err = poll_all_chains(batch_info);
+	}
 	if (err) {
 		OSAL_LOG_DEBUG("poll failed! batch_info: 0x" PRIx64 "err: %d",
 			(uint64_t) batch_info, err);
@@ -541,9 +563,10 @@ bat_poller(void *poll_ctx)
 	if (cb && cb_ctx) {
 		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 "err: %d",
 				(uint64_t) cb_ctx, err);
-
 		cb(cb_ctx, NULL);
 	}
+
+	return err;
 
 out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
@@ -551,50 +574,34 @@ out:
 }
 
 pnso_error_t
-bat_poll_timeout(void *poll_ctx)
+pnso_batch_poller(void *poll_ctx)
 {
-	pnso_error_t err = EINVAL;
-	struct batch_info *batch_info = poll_ctx_to_batch(poll_ctx);
-	completion_cb_t	cb;
-	void *cb_ctx;
+	pnso_error_t err;
+	struct per_core_resource *pcr;
+	struct batch_info *batch_info;
+	uint16_t gen_id;
 
-	OSAL_LOG_DEBUG("enter ...");
+	batch_info = poll_ctx_to_batch_params(poll_ctx, &gen_id, &pcr);
+	if (!batch_info)
+		return EINVAL;
 
-	OSAL_LOG_DEBUG("core_id: %u", osal_get_coreid());
+	if (!sonic_try_reserve_per_core_res(pcr))
+		return PNSO_LIF_IO_ERROR;
 
-	if (!batch_info) {
-		OSAL_LOG_ERROR("invalid batch poll context 0x" PRIx64 "during timeout! err: %d",
-			       (uint64_t) poll_ctx, err);
-		goto out;
-	}
-	PPRINT_BATCH_INFO(batch_info);
+	err = bat_poller(batch_info, gen_id, false);
 
-	err = ETIMEDOUT;
-	read_write_error_result_all_chains(batch_info, err);
+	sonic_unreserve_per_core_res(pcr);
 
-	/* save caller's cb and context ahead of destroy */
-	cb = batch_info->bi_req_cb;
-	cb_ctx = (void *) atomic64_xchg(&batch_info->bi_req_cb_ctx, 0);
-
-	deinit_batch(batch_info);
-
-	if (cb && cb_ctx) {
-		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 "err: %d",
-				(uint64_t) cb_ctx, err);
-
-		cb(cb_ctx, NULL);
-	}
-
-out:
-	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
 
+/* Note: assumes this is called only while pcr is exclusively reserved */
 void
 bat_poll_timeout_all(struct per_core_resource *pcr)
 {
 	struct mem_pool *batch_info_mpool;
 	void *obj = NULL;
+	struct batch_info *batch_info;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -605,7 +612,9 @@ bat_poll_timeout_all(struct per_core_resource *pcr)
 
 	obj = mpool_get_first_inuse_object(batch_info_mpool);
 	while (obj) {
-		bat_poll_timeout(batch_to_poll_ctx((struct batch_info *) obj));
+		batch_info = (struct batch_info *) obj;
+		bat_poller(batch_info, batch_info->bi_gen_id, true);
+
 		obj = mpool_get_next_inuse_object(batch_info_mpool, obj);
 	}
 
@@ -662,7 +671,7 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 		poll_ctx = batch_to_poll_ctx(batch_info);
 		if (req_params->rp_flags & REQUEST_RFLAG_MODE_POLL) {
 			/* for caller to poll */
-			*req_params->rp_poll_fn = bat_poller;
+			*req_params->rp_poll_fn = pnso_batch_poller;
 			*req_params->rp_poll_ctx = poll_ctx;
 		}
 	}
@@ -724,7 +733,7 @@ bat_add_to_batch(struct per_core_resource *pcr,
 		struct pnso_service_result *svc_res)
 {
 	pnso_error_t err = EINVAL;
-	struct batch_info *batch_info;
+	struct batch_info *batch_info = NULL;
 	struct batch_page *batch_page;
 	struct batch_page_entry *page_entry;
 	uint16_t req_svc_type;
@@ -732,7 +741,8 @@ bat_add_to_batch(struct per_core_resource *pcr,
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	batch_info = pcr->batch_info;
+	if (pcr->batch_ctx)
+		batch_info = poll_ctx_to_batch(pcr->batch_ctx);
 	if (!batch_info) {
 		batch_info = init_batch_info(pcr, svc_req);
 		if (!batch_info) {
@@ -778,8 +788,8 @@ bat_add_to_batch(struct per_core_resource *pcr,
 	return err;
 
 out_batch:
+	pcr->batch_ctx = NULL;
 	deinit_batch(batch_info);
-	pcr->batch_info = NULL;
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
@@ -937,7 +947,7 @@ bat_flush_batch(struct request_params *req_params)
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	batch_info = pcr->batch_info;
+	batch_info = poll_ctx_to_batch(pcr->batch_ctx);
 	if (!batch_info) {
 		OSAL_LOG_DEBUG("invalid thread/request! err: %d", err);
 		goto out;
@@ -960,7 +970,7 @@ bat_flush_batch(struct request_params *req_params)
 	/* do not read or write batch_info after this point */
 
 	if (!is_sync_mode)
-		pcr->batch_info = NULL;
+		pcr->batch_ctx = NULL;
 
 	OSAL_LOG_DEBUG("exit!");
 	return err;

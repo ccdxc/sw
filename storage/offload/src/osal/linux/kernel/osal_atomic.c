@@ -139,7 +139,55 @@ void osal_spin_lock(osal_spinlock_t *lock)
 	spin_lock(lock);
 }
 
+bool osal_spin_trylock(osal_spinlock_t *lock)
+{
+	return (spin_trylock(lock) != 0);
+}
+
 void osal_spin_unlock(osal_spinlock_t *lock)
 {
 	spin_unlock(lock);
+}
+
+void osal_rw_lock_init(osal_rwlock_t *lock)
+{
+	rwlock_init(lock);
+}
+
+void osal_rw_rlock(osal_rwlock_t *lock)
+{
+	read_lock(lock);
+}
+
+bool osal_rw_try_rlock(osal_rwlock_t *lock)
+{
+#ifdef _KERNEL
+	return (rw_try_rlock(&lock->rw) != 0);
+#else
+	return (read_trylock(lock) != 0);
+#endif
+}
+
+void osal_rw_runlock(osal_rwlock_t *lock)
+{
+	read_unlock(lock);
+}
+
+void osal_rw_wlock(osal_rwlock_t *lock)
+{
+	write_lock(lock);
+}
+
+bool osal_rw_try_wlock(osal_rwlock_t *lock)
+{
+#ifdef _KERNEL
+	return (rw_try_wlock(&lock->rw) != 0);
+#else
+	return (write_trylock(lock) != 0);
+#endif
+}
+
+void osal_rw_wunlock(osal_rwlock_t *lock)
+{
+	write_unlock(lock);
 }

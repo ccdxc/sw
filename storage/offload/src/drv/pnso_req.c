@@ -882,13 +882,12 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 	OSAL_LOG_DEBUG("enter...");
 	PAS_START_PERF();
 
-	if (pnso_lif_reset_ctl_pending()) {
+	pcr = putil_get_per_core_resource();
+	if (!pcr || pnso_lif_reset_ctl_pending()) {
 		err = PNSO_LIF_IO_ERROR;
 		OSAL_LOG_DEBUG("pnso pending error reset! err: %d", err);
-		pcr = NULL;
 		goto out;
 	}
-	pcr = putil_get_per_core_resource();
 
 	PAS_INC_NUM_REQUESTS(pcr);
 
@@ -963,13 +962,12 @@ pnso_add_to_batch(struct pnso_service_request *svc_req,
 
 	OSAL_LOG_DEBUG("enter...");
 
-	if (pnso_lif_reset_ctl_pending()) {
+	pcr = putil_get_per_core_resource();
+	if (!pcr || pnso_lif_reset_ctl_pending()) {
 		err = PNSO_LIF_IO_ERROR;
 		OSAL_LOG_DEBUG("pnso pending error reset! err: %d", err);
-		pcr = NULL;
 		goto out;
 	}
-	pcr = putil_get_per_core_resource();
 
 	REQ_PPRINT_REQUEST(svc_req);
 	REQ_PPRINT_RESULT(svc_res);
@@ -1034,13 +1032,12 @@ pnso_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 	OSAL_LOG_DEBUG("enter...");
 	PAS_START_PERF();
 
-	if (pnso_lif_reset_ctl_pending()) {
+	pcr = putil_get_per_core_resource();
+	if (!pcr || pnso_lif_reset_ctl_pending()) {
 		err = PNSO_LIF_IO_ERROR;
 		OSAL_LOG_DEBUG("pnso pending error reset! err: %d", err);
-		pcr = NULL;
 		goto out;
 	}
-	pcr = putil_get_per_core_resource();
 
 	err = get_request_mode(cb, cb_ctx, pnso_poll_fn,
 			pnso_poll_ctx, &req_flags);
@@ -1084,73 +1081,58 @@ out:
 }
 OSAL_EXPORT_SYMBOL(pnso_flush_batch);
 
-static void
-get_poll_context_type(void *poll_ctx, bool *is_chain, bool *is_batch)
-{
-	union request_poll_context req_poll_ctx = {.val = (uint64_t) poll_ctx};
-
-	if (req_poll_ctx.s.mpool_type == MPOOL_TYPE_BATCH_INFO) {
-		*is_batch = true;
-	} else if (req_poll_ctx.s.mpool_type == MPOOL_TYPE_SERVICE_CHAIN) {
-		*is_chain = true;
-	}
-
-	OSAL_LOG_DEBUG(" poll context! poll_ctx: 0x" PRIx64 " is_chain: %d is_batch: %d",
-				(uint64_t) poll_ctx, *is_chain, *is_batch);
-}
-
-pnso_error_t
-pnso_request_poller(void *poll_ctx)
+static inline pnso_error_t
+req_poller(void *poll_ctx, bool is_expired)
 {
 	pnso_error_t err = EINVAL;
-	bool is_chain, is_batch;
+	struct per_core_resource *pcr;
+	void *object;
+	uint8_t mpool_type;
+	uint16_t gen_id;
 
-	if (!poll_ctx) {
+	object = poll_ctx_to_req_obj(poll_ctx, &mpool_type, &gen_id, &pcr);
+	if (!object) {
 		OSAL_LOG_ERROR("invalid poll context! poll_ctx: 0x" PRIx64 " err: %d",
 				(uint64_t) poll_ctx, err);
 		goto out;
 	}
 
-	is_chain = is_batch = false;
-	get_poll_context_type(poll_ctx, &is_chain, &is_batch);
-
-	if ((is_chain && is_batch) || (!is_chain && !is_batch)) {
-		OSAL_LOG_ERROR("invalid poll context type! poll_ctx: 0x" PRIx64 " err: %d",
-				(uint64_t) poll_ctx, err);
+	if (!sonic_try_reserve_per_core_res(pcr)) {
+		err = PNSO_LIF_IO_ERROR;
 		goto out;
 	}
 
-	err = is_chain ? chn_poller(poll_ctx) : bat_poller(poll_ctx);
+	switch (mpool_type) {
+	case MPOOL_TYPE_BATCH_INFO:
+		err = bat_poller((struct batch_info *) object, gen_id,
+				 is_expired);
+		break;
+	case MPOOL_TYPE_SERVICE_CHAIN:
+		err = chn_poller((struct service_chain *) object, gen_id,
+				 is_expired);
+		break;
+	default:
+		OSAL_LOG_ERROR("invalid poll context type! poll_ctx: 0x" PRIx64 " err: %d",
+				(uint64_t) poll_ctx, err);
+		break;
+	}
+
+	sonic_unreserve_per_core_res(pcr);
 out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
+}
+
+pnso_error_t
+pnso_request_poller(void *poll_ctx)
+{
+	return req_poller(poll_ctx, false);
 }
 OSAL_EXPORT_SYMBOL(pnso_request_poller);
 
 pnso_error_t
 pnso_request_poll_timeout(void *poll_ctx)
 {
-	pnso_error_t err = EINVAL;
-	bool is_chain, is_batch;
-
-	if (!poll_ctx) {
-		OSAL_LOG_ERROR("invalid poll context during timeout! poll_ctx: 0x" PRIx64 " err: %d",
-				(uint64_t) poll_ctx, err);
-		goto out;
-	}
-
-	is_chain = is_batch = false;
-	get_poll_context_type(poll_ctx, &is_chain, &is_batch);
-
-	if ((is_chain && is_batch) || (!is_chain && !is_batch)) {
-		OSAL_LOG_ERROR("invalid poll context type during timeout! poll_ctx: 0x" PRIx64 " err: %d",
-				(uint64_t) poll_ctx, err);
-		goto out;
-	}
-
-	err = is_chain ? chn_poll_timeout(poll_ctx) : bat_poll_timeout(poll_ctx);
-out:
-	OSAL_LOG_DEBUG("exit! err: %d", err);
-	return err;
+	return req_poller(poll_ctx, true);
 }
 OSAL_EXPORT_SYMBOL(pnso_request_poll_timeout);

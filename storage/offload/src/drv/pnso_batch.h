@@ -79,9 +79,9 @@ pnso_error_t bat_flush_batch(struct request_params *req_params);
 
 void bat_destroy_batch(struct per_core_resource *pcr);
 
-pnso_error_t bat_poller(void *poll_ctx);
-pnso_error_t bat_poll_timeout(void *poll_ctx);
+pnso_error_t bat_poller(struct batch_info *batch_info, uint16_t gen_id, bool is_timeout);
 void bat_poll_timeout_all(struct per_core_resource *pcr);
+pnso_error_t pnso_batch_poller(void *poll_ctx);
 
 #ifdef __cplusplus
 }

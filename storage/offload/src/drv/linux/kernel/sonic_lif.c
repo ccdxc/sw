@@ -857,6 +857,7 @@ static int sonic_lif_per_core_resources_alloc(struct lif *lif)
 		res->core_id = -1;
 		res->cpdc_statusq_track.queues = &res->cpdc_seq_status_qs[0];
 		res->crypto_statusq_track.queues = &res->crypto_seq_status_qs[0];
+		osal_rw_lock_init(&res->rwlock);
                 spin_lock_init(&res->cpdc_statusq_track.lock);
                 spin_lock_init(&res->crypto_statusq_track.lock);
 	}
@@ -1168,7 +1169,8 @@ sonic_sysctl_lif_reset_handler(SYSCTL_HANDLER_ARGS)
 	err = sysctl_handle_8(oidp, &reset_sense, 0, req);
 	if (err) {
 		dev_err(dev, "Failed to set sonic systcl reset\n");
-		return err;	}
+		return err;
+	}
 
 	OSAL_LOG_DEBUG("sonic systcl reset %d", reset_sense);
 	lif->reset_ctl.sense = reset_sense;
@@ -2272,16 +2274,30 @@ sonic_get_per_core_res(struct lif *lif)
 	return lif->res.pc_res[pc_res_idx];
 }
 
-struct per_core_resource *
-sonic_reserve_per_core_res(struct lif *lif)
+void
+sonic_reserve_per_core_res(struct per_core_resource *pcr)
 {
-	struct per_core_resource *pcr = sonic_get_per_core_res(lif);
+	//((volatile struct per_core_resource *) pcr)->reserved = true;
+	osal_rw_rlock(&pcr->rwlock);
+}
 
-	if (pcr) {
-		((volatile struct per_core_resource *) pcr)->reserved = true;
-	}
+void
+sonic_reserve_exclusive_per_core_res(struct per_core_resource *pcr)
+{
+	//((volatile struct per_core_resource *) pcr)->reserved = true;
+	osal_rw_wlock(&pcr->rwlock);
+}
 
-	return pcr;
+bool
+sonic_try_reserve_per_core_res(struct per_core_resource *pcr)
+{
+	return osal_rw_try_rlock(&pcr->rwlock);
+}
+
+bool
+sonic_try_reserve_exclusive_per_core_res(struct per_core_resource *pcr)
+{
+	return osal_rw_try_wlock(&pcr->rwlock);
 }
 
 void
@@ -2290,16 +2306,27 @@ sonic_unreserve_per_core_res(struct per_core_resource *pcr)
 	if (!pcr)
 		return;
 
-	((volatile struct per_core_resource *) pcr)->reserved = false;
+	//((volatile struct per_core_resource *) pcr)->reserved = false;
+	osal_rw_runlock(&pcr->rwlock);
 }
 
-bool
-sonic_is_reserved_per_core_res(struct per_core_resource *pcr)
+void
+sonic_unreserve_exclusive_per_core_res(struct per_core_resource *pcr)
 {
 	if (!pcr)
-		return false;
+		return;
 
-	return ((volatile struct per_core_resource *) pcr)->reserved;
+	//((volatile struct per_core_resource *) pcr)->reserved = false;
+	osal_rw_wunlock(&pcr->rwlock);
+}
+
+bool sonic_is_reserved_per_core_res(struct per_core_resource *pcr)
+{
+	if (sonic_try_reserve_exclusive_per_core_res(pcr)) {
+		sonic_unreserve_exclusive_per_core_res(pcr);
+		return false;
+	}
+	return true;
 }
 
 uint32_t

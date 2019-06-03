@@ -290,59 +290,78 @@ static void *chain_to_poll_ctx(struct service_chain *chain)
 				   chain->sc_gen_id, chain->sc_pcr);
 }
 
+static inline struct service_chain *
+poll_ctx_to_chain_params(void *poll_ctx, uint16_t *gen_id,
+			 struct per_core_resource **pcr)
+{
+	struct service_chain *chain;
+	uint8_t mpool_type;
+
+	chain = (struct service_chain *) poll_ctx_to_req_obj(poll_ctx, &mpool_type,
+							     gen_id, pcr);
+	if (!chain || mpool_type != MPOOL_TYPE_SERVICE_CHAIN) {
+		OSAL_LOG_DEBUG("invalid chain poll ctx 0x" PRIx64,
+			       (uint64_t) poll_ctx);
+		return NULL;
+	}
+	return chain;
+}
+
+#if 0
 static struct service_chain *poll_ctx_to_chain(void *poll_ctx)
 {
 	struct service_chain *chain;
+	struct per_core_resource *pcr;
 	uint16_t gen_id;
-	uint8_t mpool_type;
 
-	chain = (struct service_chain *) poll_ctx_to_req_obj(poll_ctx, &mpool_type, &gen_id);
-	if (!chain || mpool_type != MPOOL_TYPE_SERVICE_CHAIN) {
-		OSAL_LOG_ERROR("invalid chain poll ctx, mpool_type %d", mpool_type);
+	chain = poll_ctx_to_chain_params(poll_ctx, &gen_id, &pcr);
+	if (!chain)
 		return NULL;
-	}
 
 	if (chain->sc_gen_id != gen_id) {
-		OSAL_LOG_ERROR("old chain gen_id %d found, expected %d",
-			       gen_id, chain->sc_gen_id);
+		OSAL_LOG_ERROR("new chain gen_id %d found, expected %d",
+			       chain->sc_gen_id, gen_id);
 		return NULL;
 	}
 
 	return chain;
 }
+#endif
 
-pnso_error_t chn_poller(void *pnso_poll_ctx);
-pnso_error_t chn_poll_timeout(void *pnso_poll_ctx);
+pnso_error_t chn_poller(struct service_chain *chain, uint16_t gen_id,
+			bool is_timeout);
 
 pnso_error_t
-chn_poller(void *poll_ctx)
+chn_poller(struct service_chain *chain, uint16_t gen_id, bool is_timeout)
 {
 	pnso_error_t err = EINVAL;
-	struct service_chain *chain = poll_ctx_to_chain(poll_ctx);
-	struct pnso_service_result *res;
-	completion_cb_t	cb;
-	void *cb_ctx;
+	struct pnso_service_result *res = NULL;
+	completion_cb_t	cb = NULL;
+	void *cb_ctx = NULL;
 
 	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_LOG_DEBUG("core_id: %u", osal_get_coreid());
 
-	if (!chain) {
-		OSAL_LOG_ERROR("invalid chain poll context 0x" PRIx64 "! err: %d",
-			       (uint64_t) poll_ctx, err);
-		goto out;
-	}
 	PPRINT_CHAIN(chain);
 
-	res = chain->sc_res;
+	if (chain->sc_gen_id != gen_id) {
+		OSAL_LOG_ERROR("new chain gen_id %d found, expected %d",
+			       chain->sc_gen_id, gen_id);
+		goto out;
+	}
 
-	err = chn_poll_all_services(chain);
+	res = chain->sc_res;
+	if (is_timeout) {
+		err = ETIMEDOUT;
+	} else {
+		err = chn_poll_all_services(chain);
+	}
 	if (err) {
 		OSAL_LOG_DEBUG("poll failed! chain: 0x" PRIx64 " err: %d",
 				(uint64_t) chain, err);
 		if (err == EBUSY)
 			goto out;
-
 		res->err = err; /* ETIMEDOUT most likely */
 	} else {
 		chn_read_write_result(chain);
@@ -362,59 +381,42 @@ chn_poller(void *poll_ctx)
 		cb(cb_ctx, res);
 	}
 
+	return err;
+
 out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
 
 pnso_error_t
-chn_poll_timeout(void *poll_ctx)
+pnso_chain_poller(void *poll_ctx)
 {
-	pnso_error_t err = EINVAL;
-	struct service_chain *chain = poll_ctx_to_chain(poll_ctx);
-	struct pnso_service_result *res;
-	completion_cb_t	cb;
-	void *cb_ctx;
+	pnso_error_t err;
+	struct per_core_resource *pcr;
+	struct service_chain *chain;
+	uint16_t gen_id;
 
-	OSAL_LOG_DEBUG("enter ...");
+	chain = poll_ctx_to_chain_params(poll_ctx, &gen_id, &pcr);
+	if (!chain)
+		return EINVAL;
 
-	OSAL_LOG_DEBUG("core_id: %u", osal_get_coreid());
+	if (!sonic_try_reserve_per_core_res(pcr))
+		return PNSO_LIF_IO_ERROR;
 
-	if (!chain) {
-		OSAL_LOG_ERROR("invalid chain poll context 0x" PRIx64 "during timeout! err: %d",
-			       (uint64_t) poll_ctx, err);
-		goto out;
-	}
-	PPRINT_CHAIN(chain);
+	err = chn_poller(chain, gen_id, false);
 
-	res = chain->sc_res;
+	sonic_unreserve_per_core_res(pcr);
 
-	err = ETIMEDOUT;
-	res->err = err;
-
-	/* save caller's cb and context ahead of destroy */
-	cb = chain->sc_req_cb;
-	cb_ctx = (void *) atomic64_xchg(&chain->sc_req_cb_ctx, 0);
-
-	chn_destroy_chain(chain);
-
-	if (cb && cb_ctx) {
-		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 " res: 0x" PRIx64 " err: %d",
-				(uint64_t) cb_ctx, (uint64_t) res, err);
-
-		cb(cb_ctx, res);
-	}
-
-out:
-	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
 
+/* Note: assumes this is called only while pcr is exclusively reserved */
 void
 chn_poll_timeout_all(struct per_core_resource *pcr)
 {
 	struct mem_pool *mpool;
 	void *obj = NULL;
+	struct service_chain *chain;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -425,7 +427,9 @@ chn_poll_timeout_all(struct per_core_resource *pcr)
 
 	obj = mpool_get_first_inuse_object(mpool);
 	while (obj) {
-		chn_poll_timeout(chain_to_poll_ctx((struct service_chain *) obj));
+		chain = (struct service_chain *) obj;
+		chn_poller(chain, chain->sc_gen_id, true);
+
 		obj = mpool_get_next_inuse_object(mpool, obj);
 	}
 
@@ -846,7 +850,7 @@ chn_create_chain(struct request_params *req_params,
 	}
 	gen_id = chain->sc_gen_id;
 	memset(chain, 0, sizeof(struct service_chain));
-	chain->sc_gen_id = gen_id;
+	chain->sc_gen_id = gen_id + 1;
 
 	req = req_params->rp_svc_req;
 	res = req_params->rp_svc_res;
@@ -875,7 +879,7 @@ chn_create_chain(struct request_params *req_params,
 		poll_ctx = chain_to_poll_ctx(chain);
 		if (chain->sc_flags & CHAIN_CFLAG_MODE_POLL) {
 			/* for caller to poll */
-			*req_params->rp_poll_fn = chn_poller;
+			*req_params->rp_poll_fn = pnso_chain_poller;
 			*req_params->rp_poll_ctx = poll_ctx;
 		}
 	}

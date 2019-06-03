@@ -831,7 +831,6 @@ putil_is_bulk_desc_in_use(uint16_t flags)
 			 (flags & CHAIN_SFLAG_FIRST_SERVICE))) ? true : false;
 }
 
-/* TODO-stats: get rid of local 'get_per_core_resource()' */
 struct per_core_resource *
 putil_get_per_core_resource(void)
 {
@@ -844,10 +843,14 @@ putil_get_per_core_resource(void)
 		goto out;
 	}
 
-	pcr = sonic_reserve_per_core_res(lif);
+	pcr = sonic_get_per_core_res(lif);
 	if (!pcr) {
 		OSAL_ASSERT(0);
 		goto out;
+	}
+
+	if (!sonic_try_reserve_per_core_res(pcr)) {
+		pcr = NULL;
 	}
 
 	return pcr;

@@ -220,6 +220,7 @@ struct per_core_resource {
 	int core_id;
 	int idx;
 	struct lif *lif;
+	osal_rwlock_t rwlock;
 
 	struct queue cp_seq_q;
 	struct queue dc_seq_q;
@@ -235,7 +236,7 @@ struct per_core_resource {
 	struct sonic_event_list *evl; /* top half event list */
 
 	struct mem_pool *mpools[MPOOL_TYPE_MAX];
-	struct batch_info *batch_info;
+	void *batch_ctx;
 	struct pnso_api_stats api_stats;
 };
 

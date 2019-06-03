@@ -179,28 +179,10 @@ pnso_lif_reset_ctl_pre_reset_cb(struct lif *lif, void *cb_arg)
 {
 	int err;
 
-	pnso_pre_reset_wait();
 	err = sonic_lif_reset_ctl_pre_reset(lif, cb_arg);
 	pnso_pre_reset();
 
 	return err;
-}
-
-static inline int
-pnso_lif_reset_ctl_reset_cb(struct lif *lif, void *cb_arg)
-{
-	int err;
-
-	pnso_reset();
-	err = sonic_lif_reset_ctl_reset(lif, cb_arg);
-
-	return err;
-}
-
-static inline int
-pnso_lif_reset_ctl_reinit_cb(struct lif *lif, void *cb_arg)
-{
-	return sonic_lif_reset_ctl_reinit(lif, cb_arg);
 }
 
 static inline bool
@@ -232,7 +214,8 @@ req_obj_to_poll_ctx(void *obj, uint8_t mpool_type, uint16_t gen_id,
 }
 
 static inline void *
-poll_ctx_to_req_obj(void *poll_ctx, uint8_t *mpool_type, uint16_t *gen_id)
+poll_ctx_to_req_obj(void *poll_ctx, uint8_t *mpool_type, uint16_t *gen_id,
+		    struct per_core_resource **pc_res)
 {
 	void *obj;
 	struct per_core_resource *pcr;
@@ -241,9 +224,7 @@ poll_ctx_to_req_obj(void *poll_ctx, uint8_t *mpool_type, uint16_t *gen_id)
 
 	*gen_id = req_poll_ctx.s.gen_id;
 	*mpool_type = req_poll_ctx.s.mpool_type;
-
-	if (!poll_ctx)
-		return NULL;
+	*pc_res = NULL;
 
 	if (!mpool_type_is_valid(req_poll_ctx.s.mpool_type))
 		return NULL;
@@ -251,6 +232,7 @@ poll_ctx_to_req_obj(void *poll_ctx, uint8_t *mpool_type, uint16_t *gen_id)
 	pcr = sonic_get_per_core_res_by_res_id(sonic_get_lif(), req_poll_ctx.s.pcr_id);
 	if (!pcr)
 		return NULL;
+	*pc_res = pcr;
 
 	mpool = pcr->mpools[req_poll_ctx.s.mpool_type];
 	if (!mpool)
@@ -260,5 +242,26 @@ poll_ctx_to_req_obj(void *poll_ctx, uint8_t *mpool_type, uint16_t *gen_id)
 
 	return obj;
 }
+
+static inline uint16_t
+poll_ctx_to_gen_id(void *poll_ctx)
+{
+	union request_poll_context req_poll_ctx = {.val = (uint64_t) poll_ctx};
+
+	return req_poll_ctx.s.gen_id;
+}
+
+static inline struct per_core_resource *
+poll_ctx_to_per_core_res(void *poll_ctx)
+{
+	union request_poll_context req_poll_ctx = {.val = (uint64_t) poll_ctx};
+
+	if (!poll_ctx)
+		return NULL;
+
+	return sonic_get_per_core_res_by_res_id(sonic_get_lif(), req_poll_ctx.s.pcr_id);
+}
+
+
 
 #endif  /* __PNSO_UTILS_H__ */

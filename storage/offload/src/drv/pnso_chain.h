@@ -343,9 +343,10 @@ void chn_notify_caller(struct service_chain *chain);
 
 bool chn_is_poll_done(struct service_chain *chain);
 
-pnso_error_t chn_poller(void *poll_ctx);
-pnso_error_t chn_poll_timeout(void *poll_ctx);
+pnso_error_t chn_poller(struct service_chain *chain, uint16_t gen_id,
+			bool is_timeout);
 void chn_poll_timeout_all(struct per_core_resource *pcr);
+pnso_error_t pnso_chain_poller(void *poll_ctx);
 
 void chn_pprint_chain(const struct service_chain *chain);
 

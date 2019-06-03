@@ -452,6 +452,6 @@ crypto_put_desc(const struct service_info *svc_info, bool per_block,
 void
 crypto_put_batch_bulk_desc(struct mem_pool *mpool, struct crypto_desc *desc)
 {
-	return mpool_put_object(mpool, desc);
+	mpool_put_object(mpool, desc);
 }
 

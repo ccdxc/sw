@@ -189,8 +189,15 @@ uint32_t sonic_get_num_per_core_res(struct lif *lif);
 struct per_core_resource *sonic_get_per_core_res_by_res_id(struct lif *lif,
 		uint32_t res_id);
 struct per_core_resource *sonic_get_per_core_res(struct lif *lif);
-struct per_core_resource *sonic_reserve_per_core_res(struct lif *lif);
+
+void sonic_reserve_per_core_res(struct per_core_resource *pcr);
+bool sonic_try_reserve_per_core_res(struct per_core_resource *pcr);
 void sonic_unreserve_per_core_res(struct per_core_resource *pcr);
+
+void sonic_reserve_exclusive_per_core_res(struct per_core_resource *pcr);
+bool sonic_try_reserve_exclusive_per_core_res(struct per_core_resource *pcr);
+void sonic_unreserve_exclusive_per_core_res(struct per_core_resource *pcr);
+
 bool sonic_is_reserved_per_core_res(struct per_core_resource *pcr);
 
 static inline struct lif *

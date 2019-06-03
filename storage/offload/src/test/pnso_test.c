@@ -1189,7 +1189,7 @@ static pnso_error_t test_submit_request(struct request_context *req_ctx,
 		poll_ctx = NULL;
 		break;
 	case SYNC_MODE_POLL:
-		cb = batch_completion_cb;
+		cb = batch_completion_safe_cb;
 		cb_ctx = (void *) batch_ctx->cb_ctx.val;
 		poll_fn = &batch_ctx->poll_fn;
 		poll_ctx = &batch_ctx->poll_ctx;
@@ -2251,7 +2251,7 @@ error:
 	batch_ctx->stats.io_stats[0].failures++;
 	batch_ctx->poll_fn = NULL; /* prevent polling on error */
 	/* Manually call completion callback */
-	if (testcase->sync_mode == SYNC_MODE_ASYNC) {
+	if (testcase->sync_mode != SYNC_MODE_SYNC) {
 		batch_completion_safe_cb((void *) batch_ctx->cb_ctx.val,
 			req_ctx ? &req_ctx->svc_res : NULL);
 	} else {
