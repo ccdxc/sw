@@ -421,6 +421,7 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
                                           pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
     tep_entry *tep;
+    ip_addr_t *dipo;
     mapping_swkey_t mapping_key;
     mapping_appdata_t mapping_data;
     sdk_table_api_params_t api_params;
@@ -440,13 +441,25 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
         goto error;
     }
 
-    tep = tep_db()->find(&spec->tep);
     nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     //nh_data.action_u.nexthop_nexthop_info.port = ;
     //nh_data.action_u.nexthop_nexthop_info.vni = ;
     //nh_data.action_u.nexthop_nexthop_info.ip_type = ;
-    memcpy(nh_data.action_u.nexthop_nexthop_info.dipo,
-           &spec->tep.ip_addr, IP4_ADDR8_LEN);
+    tep = tep_db()->find(&spec->tep);
+    if (spec->provider_ip_valid) {
+        dipo = &spec->provider_ip;
+    } else {
+        dipo = &spec->tep.ip_addr;
+    }
+    if (dipo->af == IP_AF_IPV6) {
+        nh_data.action_u.nexthop_nexthop_info.ip_type = IPTYPE_IPV6;
+        sdk::lib::memrev(nh_data.action_u.nexthop_nexthop_info.dipo,
+                         dipo->addr.v6_addr.addr8, IP4_ADDR8_LEN);
+    } else {
+        nh_data.action_u.nexthop_nexthop_info.ip_type = IPTYPE_IPV4;
+        memcpy(nh_data.action_u.nexthop_nexthop_info.dipo,
+               &dipo->addr.v4_addr, IP4_ADDR8_LEN);
+    }
     sdk::lib::memrev(nh_data.action_u.nexthop_nexthop_info.dmaco,
                      tep->mac(), ETH_ADDR_LEN);
     sdk::lib::memrev(nh_data.action_u.nexthop_nexthop_info.dmaci,
@@ -457,7 +470,6 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
                       nh_idx_, ret);
         goto error;
     }
-
     return SDK_RET_OK;
 
     // TODO:

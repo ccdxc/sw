@@ -30,6 +30,7 @@ pds_impl_state::init(pds_state *state) {
     tag_impl_db_ = new tag_impl_state(state);
     vpc_peer_impl_db_ = new vpc_peer_impl_state(state);
     nexthop_impl_db_ = new nexthop_impl_state(state);
+    tep_impl_db_ = new tep_impl_state(state);
     return SDK_RET_OK;
 }
 
@@ -47,6 +48,7 @@ pds_impl_state::destroy(pds_impl_state *impl_state) {
     delete impl_state->tag_impl_db_;
     delete impl_state->vpc_peer_impl_db_;
     delete impl_state->nexthop_impl_db_;
+    delete impl_state->tep_impl_db_;
 }
 
 pds_impl_state::pds_impl_state() {
@@ -62,6 +64,7 @@ pds_impl_state::pds_impl_state() {
     tag_impl_db_ = NULL;
     vpc_peer_impl_db_ = NULL;
     nexthop_impl_db_ = NULL;
+    tep_impl_db_ = NULL;
 }
 
 pds_impl_state::~pds_impl_state() {
