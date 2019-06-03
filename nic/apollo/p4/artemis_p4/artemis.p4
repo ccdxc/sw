@@ -21,6 +21,7 @@
 #include "nat.p4"
 #include "nexthop.p4"
 #include "stats.p4"
+#include "mirror.p4"
 
 action nop() {
 }
@@ -53,9 +54,13 @@ control ingress {
 /* Egress pipeline                                                           */
 /*****************************************************************************/
 control egress {
-    session_lookup();
-    egress_vnic_info();
-    nat();
-    nexthop();
-    egress_stats();
+    if (control_metadata.span_copy == TRUE) {
+        mirror();
+    } else {
+        session_lookup();
+        egress_vnic_info();
+        nat();
+        nexthop();
+        egress_stats();
+    }
 }

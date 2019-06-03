@@ -63,6 +63,7 @@ header ipv4_t ipv4_0;
 header ipv6_t ipv6_0;
 header udp_t udp_0;
 header vxlan_t vxlan_0;
+header gre_t gre_0;
 header erspan_header_t3_t erspan;
 
 // layer 1
@@ -613,12 +614,12 @@ parser deparse_egress {
     extract(ipv6_0);
     extract(udp_0);
     extract(vxlan_0);
+    extract(gre_0);
     extract(erspan);
 
     return parse_egress_packet;
 }
 
-#if 0
 /******************************************************************************
  * Checksums : Layer 0 (compute only, no verification)                        *
  *****************************************************************************/
@@ -637,6 +638,7 @@ field_list ipv4_0_checksum_list {
 }
 
 @pragma checksum update_len capri_deparser_len.ipv4_0_hdr_len
+@pragma checksum gress egress
 field_list_calculation ipv4_0_checksum {
     input {
         ipv4_0_checksum_list;
@@ -645,7 +647,6 @@ field_list_calculation ipv4_0_checksum {
     output_width : 16;
 }
 
-@pragma checksum gress egress
 calculated_field ipv4_0.hdrChecksum  {
     update ipv4_0_checksum;
 }
@@ -702,6 +703,7 @@ field_list ipv4_2_checksum_list {
 
 @pragma checksum hdr_len_expr ohi.ipv4_2_len + 0
 @pragma checksum verify_len ohi.ipv4_2_len
+@pragma checksum gress ingress
 field_list_calculation ipv4_2_checksum {
     input {
         ipv4_2_checksum_list;
@@ -710,7 +712,6 @@ field_list_calculation ipv4_2_checksum {
     output_width : 16;
 }
 
-@pragma checksum gress ingress
 calculated_field ipv4_2.hdrChecksum  {
     verify ipv4_2_checksum;
 }
@@ -734,6 +735,7 @@ field_list ipv4_3_checksum_list {
 
 @pragma checksum hdr_len_expr ohi.ipv4_3_len + 0
 @pragma checksum verify_len ohi.ipv4_3_len
+@pragma checksum gress ingress
 field_list_calculation ipv4_3_checksum {
     input {
         ipv4_3_checksum_list;
@@ -742,8 +744,6 @@ field_list_calculation ipv4_3_checksum {
     output_width : 16;
 }
 
-@pragma checksum gress ingress
 calculated_field ipv4_3.hdrChecksum  {
     verify ipv4_3_checksum;
 }
-#endif

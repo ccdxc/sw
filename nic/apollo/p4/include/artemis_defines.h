@@ -35,7 +35,8 @@
 #define P4I_DROP_REASON_MIN             0
 #define P4I_DROP_REASON_MAX             0
 
-#define P4E_DROP_FLOW_HIT               1
+#define P4E_DROP_INVALID_SESSION        0
+#define P4E_DROP_SESSION_HIT            1
 #define P4E_DROP_REASON_MIN             0
 #define P4E_DROP_REASON_MAX             0
 
@@ -80,6 +81,7 @@
 #define TX_REWRITE_SRC_IP_FROM_PUBLIC           1
 #define TX_REWRITE_SRC_IP_FROM_SERVICE          2
 #define TX_REWRITE_SRC_IP_FROM_46               3
+#define TX_REWRITE_SRC_IP_BITS                  2:1
 
 #define TX_REWRITE_DPORT_SHIFT                  3
 #define TX_REWRITE_DPORT_MASK                   1
@@ -118,6 +120,7 @@
 #define RX_REWRITE_DST_IP_FROM_CA               1
 #define RX_REWRITE_DST_IP_FROM_SERVICE          2
 #define RX_REWRITE_DST_IP_FROM_64               3
+#define RX_REWRITE_DST_IP_BITS                  5:4
 
 #define TX_REWRITE(a, attr, val) \
     ((((a) >> TX_REWRITE_ ## attr ## _SHIFT) & TX_REWRITE_ ## attr ## _MASK) == TX_REWRITE_ ## attr ## _ ## val)

@@ -7,6 +7,9 @@ action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
                     rflow_tcp_win_scale, tx_dst_ip, tx_dst_l4port, nexthop_idx,
                     tx_rewrite_flags, rx_rewrite_flags, tx_policer_idx,
                     rx_policer_idx, meter_idx, timestamp, drop) {
+    if (p4e_i2e.session_index == 0) {
+        egress_drop(P4E_DROP_INVALID_SESSION);
+    }
     modify_field(scratch_metadata.session_stats_addr,
                  scratch_metadata.session_stats_addr +
                  (p4e_i2e.session_index * 8 * 4));
@@ -14,7 +17,7 @@ action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
 
     modify_field(scratch_metadata.flag, drop);
     if (drop == TRUE) {
-        egress_drop(P4E_DROP_FLOW_HIT);
+        egress_drop(P4E_DROP_SESSION_HIT);
     }
 
     if (tcp.valid == TRUE) {
