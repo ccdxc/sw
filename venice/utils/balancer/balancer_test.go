@@ -2,6 +2,7 @@ package balancer
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -142,16 +143,17 @@ WaitLoop:
 			addrs = append(addrs, n)
 
 		case <-time.After(time.Second):
-			if len(addrs) == 2 {
+			if len(addrs) == 3 {
 				break WaitLoop
 			}
 			t.Fatalf("Timed out waiting for resolver notification [%v]", addrs)
 		}
 	}
 
-	Assert(t, len(addrs) == 2, "expecting 2 notifications got [%d]", len(addrs))
+	Assert(t, len(addrs) == 3, "expecting 3 notifications got [%d]", len(addrs))
 	Assert(t, len(addrs[0]) == 0, "expecting first notification to be empty")
 	Assert(t, len(addrs[1]) == 1, "expecting second notification to have 1 entry")
+	Assert(t, len(addrs[2]) == 1, "expecting third notification to have 1 entry")
 	AssertEquals(t, "node1:8888", addrs[1][0].Addr, fmt.Sprintf("Expected node1:8888, got %v", addrs[1][0].Addr))
 	b.Close()
 	b1.Close()
@@ -299,4 +301,27 @@ loop5:
 	// close and ensure monitor exits
 	b.wakeUpMonitor(fmt.Errorf("test end"))
 	b.Wait()
+
+	// test close when monitor is not yet running
+	var closeWg sync.WaitGroup
+	closefn := func() {
+		b.Close()
+		closeWg.Done()
+	}
+	monitorFn := func() {
+		b.monitor()
+		closeWg.Done()
+	}
+
+	b.monitorExit = nil
+	b.running = true
+	b.upCh = make(chan struct{})
+	b.notifyCh = make(chan []grpc.Address, 128)
+	closeWg.Add(1)
+	b.Add(1) // for the monitor
+	go closefn()
+	time.Sleep(time.Millisecond * 10)
+	closeWg.Add(1)
+	go monitorFn()
+	closeWg.Wait()
 }

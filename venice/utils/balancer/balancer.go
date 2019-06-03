@@ -52,7 +52,7 @@ func New(resolver resolver.Interface) Balancer {
 		resolver:      resolver,
 		upConns:       make([]grpc.Address, 0),
 		rand:          rand.New(rand.NewSource(int64(time.Now().Nanosecond()))),
-		monitorCh:     make(chan error),
+		monitorCh:     make(chan error, 1),
 		monitorOfset:  defaultMonitorOfset,
 		monitorJitter: defaultMonitorJitter,
 	}
