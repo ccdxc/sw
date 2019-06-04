@@ -126,13 +126,19 @@ fte::pipeline_action_t alg_rpc_session_delete_cb(fte::ctx_t &ctx) {
                    (ctx.session()->iflow->state >= session::FLOW_TCP_STATE_FIN_RCVD) ||
                    (ctx.session()->rflow &&
                     (ctx.session()->rflow->state >= session::FLOW_TCP_STATE_FIN_RCVD))) {
+            alg_utils::l4_alg_status_t   *ctrl_l4_sess = g_rpc_state->get_ctrl_l4sess(app_sess);
+
             /*
              * We received FIN/RST on the control session
-             * We let the HAL cleanup happen while we keep the
-             * app_session state if there are data sessions
+             * we dont want to cleanup this one as we need this 
+             * for firewall policy evaluation
              */
-            l4_sess->sess_hdl = HAL_HANDLE_INVALID;
-            return fte::PIPELINE_CONTINUE;
+            ctx.set_feature_status(HAL_RET_INVALID_CTRL_SESSION_OP);
+             // Mark this entry for deletion so we cleanup
+             // when we clean up the data sessions
+             if (ctrl_l4_sess)
+                 ctrl_l4_sess->entry.deleting = true;
+             return fte::PIPELINE_END;
         } else {
             /*
              * Dont cleanup if control session is timed out
@@ -151,13 +157,27 @@ fte::pipeline_action_t alg_rpc_session_delete_cb(fte::ctx_t &ctx) {
         dllist_count(&app_sess->l4_sess_lhead) == 1 &&
         ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
                 l4_alg_status_t, l4_sess_lentry))->sess_hdl == HAL_HANDLE_INVALID) {
+        alg_utils::l4_alg_status_t   *ctrl_l4_sess = g_rpc_state->get_ctrl_l4sess(app_sess);
         /*
          * If this was the last session hanging and there is no
          * HAL session for control session. This is the right time
          * to clean it
-         */
-        g_rpc_state->cleanup_app_session(l4_sess->app_session);
-    }
+         */ 
+        if (ctrl_l4_sess != NULL && ctrl_l4_sess->isCtrl == true &&
+            ctrl_l4_sess->entry.deleting == true) {
+            hal::session_t *session = hal::find_session_by_handle(ctrl_l4_sess->sess_hdl);
+
+            if (session != NULL &&
+                (session->iflow->config.key.proto == IP_PROTO_UDP ||
+                 session->iflow->state == session::FLOW_TCP_STATE_BIDIR_FIN_RCVD)) {
+                if (session->fte_id == fte::fte_id()) {
+                    session_delete_in_fte(session->hal_handle);
+                } else {
+                    fte::session_delete_async(session);
+                }
+            }
+        }
+    } 
 
     return fte::PIPELINE_CONTINUE;
 }

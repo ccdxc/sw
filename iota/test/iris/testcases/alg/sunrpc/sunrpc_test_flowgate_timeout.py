@@ -55,6 +55,10 @@ def Trigger(tc):
                            "/nic/bin/halctl show nwsec flow-gate | grep SUN_RPC")
     tc.cmd_cookies.append("show flow-gate timeout")
 
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                           "/nic/bin/halctl show session --alg sun_rpc --yaml")
+    tc.cmd_cookies.append("show session after flow-gate timeout")
+
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
@@ -85,6 +89,9 @@ def Verify(tc):
             result = api.types.status.FAILURE
         #Check if flow-gate timed out
         if (tc.cmd_cookies[cookie_idx].find("show flow-gate timeout") != -1 and \
+            cmd.stdout != ''):
+            result = api.types.status.FAILURE
+        if (tc.cmd_cookies[cookie_idx].find("show session after flow-gate timeout") != -1 and \
             cmd.stdout != ''):
             result = api.types.status.FAILURE
         cookie_idx += 1

@@ -89,6 +89,7 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
     }
 }
 
+#if 0
 static hal_forwarding_mode_t
 hal_get_forwarding_mode (std::string mode)
 {
@@ -102,7 +103,6 @@ hal_get_forwarding_mode (std::string mode)
     return HAL_FORWARDING_MODE_NONE;
 }
 
-#if 0
 //------------------------------------------------------------------------------
 // parse HAL .ini file
 //------------------------------------------------------------------------------

@@ -68,7 +68,7 @@ def Verify(tc):
             else:
                 result = api.types.status.FAILURE
         if (tc.cmd_cookies[cookie_idx].find("show session") != -1 and \
-            cmd.stdout != ''):
+            cmd.stdout == ''):
             result = api.types.status.FAILURE
         if (tc.cmd_cookies[cookie_idx].find("show security flow-gate") != -1 and \
             cmd.stdout == ''):
