@@ -56,7 +56,7 @@ func (ms *mockIotaServer) startPalazzo() {
 				// kill old instance of palazzo if its running
 				exec.Command("pkill", "palazzo").CombinedOutput()
 
-				palazzoCmd := fmt.Sprintf("%s/bin/palazzo -hosts %d > /tmp/palazzo.log", gopath, ms.tb.numNaples())
+				palazzoCmd := fmt.Sprintf("%s/bin/palazzo -hosts %d > %s/src/github.com/pensando/sw/iota/palazzo.log", gopath, ms.tb.numNaples(), gopath)
 				log.Infof("Starting palazzo (venice emulator): %s", palazzoCmd)
 				time.Sleep(time.Second * 5)
 

@@ -1408,9 +1408,31 @@ func (tb *TestBed) PrintResult() {
 
 // CollectLogs collects all logs files from the testbed
 func (tb *TestBed) CollectLogs() error {
+
+	// create logs directory if it doesnt exists
+	cmdStr := fmt.Sprintf("mkdir -p %s/src/github.com/pensando/sw/iota/logs", os.Getenv("GOPATH"))
+	cmd := exec.Command("bash", "-c", cmdStr)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Errorf("creating log directory failed with: %s\n", err)
+	}
+
 	if tb.mockMode {
+		// create a tar.gz from all log files
+		cmdStr := fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz ../*.log && popd", os.Getenv("GOPATH"))
+		cmd = exec.Command("bash", "-c", cmdStr)
+		out, err = cmd.CombinedOutput()
+		if err != nil {
+			fmt.Printf("tar command out:\n%s\n", string(out))
+			log.Errorf("Collecting server log files failed with: %s.\n", err)
+		} else {
+			log.Infof("created %s/src/github.com/pensando/sw/iota/logs/venice-iota.tgz", os.Getenv("GOPATH"))
+		}
+
 		return nil
 	}
+
+	// collect tech-support on naples
 	trig := tb.NewTrigger()
 	for _, node := range tb.Nodes {
 		switch node.Personality {
@@ -1438,14 +1460,6 @@ func (tb *TestBed) CollectLogs() error {
 		}
 	}
 	log.Infof("Collected Venice/Naples logs")
-
-	// create logs directory if it doesnt exists
-	cmdStr := fmt.Sprintf("mkdir -p %s/src/github.com/pensando/sw/iota/logs", os.Getenv("GOPATH"))
-	cmd := exec.Command("bash", "-c", cmdStr)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Errorf("creating log directory failed with: %s\n", err)
-	}
 
 	// copy the files out
 	for _, node := range tb.Nodes {
