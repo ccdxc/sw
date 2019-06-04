@@ -277,8 +277,8 @@ uint64_t tcpcb_pd_read_notify_addr_get(uint32_t qid)
     addr = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_TCP_PROXY, 0,
             qid) + (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_TCP_RETX);
     // offsetof does not work on bitfields
-    //addr += offsetof(s3_t0_tcp_tx_retx_d, read_notify_bytes);
-    addr += 36;
+    // addr += offsetof(s3_t0_tcp_tx_retx_d, read_notify_bytes);
+    addr += 0;
 
     return addr;
 }

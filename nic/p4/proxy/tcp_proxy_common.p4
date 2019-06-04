@@ -67,7 +67,14 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         rx2tx_end_marker                : 21                    ;\
         pad_rx2tx_extra                 : 152                   ;\
 
+/*
+* Keep read_notify_bytes as the first member so that the offset
+* hardcoded in tcpcb_pd_read_notify_addr_get() will be consistent
+* with this definition.
+*/
 #define TCB_RETX_SHARED_STATE \
+        read_notify_bytes               : 16                    ;\
+        read_notify_bytes_local         : 16                    ;\
         retx_snd_una                    : SEQ_NUMBER_WIDTH      ;\
         sesq_ci_addr                    : 64                    ;\
         gc_base                         : 64                    ;\
@@ -77,8 +84,6 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         last_snd_wnd                    : 16                    ;\
         tx_window_update_pi             : 16                    ;\
         consumer_qid                    : 16                    ;\
-        read_notify_bytes               : 16                    ;\
-        read_notify_bytes_local         : 16                    ;\
         tx_rst_sent                     : 1                     ;\
 
 #define TCB_XMIT_SHARED_STATE \
@@ -122,6 +127,8 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         tcp_opt_flags                   : 8                     ;\
 
 #define RETX_SHARED_PARAMS \
+read_notify_bytes,\
+read_notify_bytes_local,\
 retx_snd_una,\
 sesq_ci_addr,\
 gc_base,\
@@ -131,8 +138,6 @@ tx_ring_pi,\
 last_snd_wnd,\
 tx_window_update_pi,\
 consumer_qid,\
-read_notify_bytes,\
-read_notify_bytes_local,\
 tx_rst_sent
 
 #define XMIT_SHARED_PARAMS \
@@ -150,6 +155,8 @@ bytes_sent, smss, pkts_sent, pure_acks_sent, zero_window_sent, \
 tcp_opt_flags
 
 #define GENERATE_RETX_SHARED_D \
+    modify_field(retx_d.read_notify_bytes, read_notify_bytes); \
+    modify_field(retx_d.read_notify_bytes_local, read_notify_bytes_local); \
     modify_field(retx_d.retx_snd_una, retx_snd_una); \
     modify_field(retx_d.sesq_ci_addr, sesq_ci_addr); \
     modify_field(retx_d.gc_base, gc_base); \
@@ -159,8 +166,6 @@ tcp_opt_flags
     modify_field(retx_d.last_snd_wnd, last_snd_wnd); \
     modify_field(retx_d.tx_window_update_pi, tx_window_update_pi); \
     modify_field(retx_d.consumer_qid, consumer_qid); \
-    modify_field(retx_d.read_notify_bytes, read_notify_bytes); \
-    modify_field(retx_d.read_notify_bytes_local, read_notify_bytes_local); \
     modify_field(retx_d.tx_rst_sent, tx_rst_sent); \
 
 #define GENERATE_XMIT_SHARED_D \
