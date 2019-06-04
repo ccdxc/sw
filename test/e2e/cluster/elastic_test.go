@@ -102,6 +102,8 @@ var _ = Describe("Elastic cluster test", func() {
 	})
 
 	It("Elasticsearch node(s) failure test", func() {
+		Skip("disable until we add elastic health check and repair unassigned/unallocated shards")
+
 		minMasters := ts.tu.NumQuorumNodes/2 + 1
 
 		// elastic search should be in healthy (GREEN, 100.0 shards) state
@@ -169,6 +171,8 @@ var _ = Describe("Elastic cluster test", func() {
 
 	// tests data loss during node restart/deletion. It checks shard counts during node restarts.
 	It("Elasticsearch data loss test", func() {
+		Skip("disable until we add elastic health check and repair unassigned/unallocated shards")
+
 		if ts.tu.NumQuorumNodes <= 1 {
 			Skip("cannot run data loss test with single node")
 		}
