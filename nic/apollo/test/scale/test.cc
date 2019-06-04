@@ -1034,7 +1034,6 @@ create_nexthops (uint32_t num_nh, ip_prefix_t *ip_pfx, uint32_t num_vpcs)
     sdk_ret_t ret;
     pds_nexthop_spec_t pds_nh;
     uint32_t id = 1;
-    uint32_t vlan_id = 4096;
     uint32_t vpc_id = 0;
 
     for (uint32_t nh = 1; nh <= num_nh; nh++) {
@@ -1637,18 +1636,16 @@ create_objects (void)
         return ret;
     }
 
-    if (apollo()) {
-        // create mappings
-        ret = create_mappings(g_test_params.num_teps, g_test_params.num_vpcs,
-                              g_test_params.num_subnets, g_test_params.num_vnics,
-                              g_test_params.num_ip_per_vnic, &g_test_params.tep_pfx,
-                              &g_test_params.nat_pfx, &g_test_params.v6_nat_pfx,
-                              g_test_params.num_remote_mappings,
-                              &g_test_params.provider_pfx,
-                              &g_test_params.v6_provider_pfx);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
+    // create mappings
+    ret = create_mappings(g_test_params.num_teps, g_test_params.num_vpcs,
+                          g_test_params.num_subnets, g_test_params.num_vnics,
+                          g_test_params.num_ip_per_vnic, &g_test_params.tep_pfx,
+                          &g_test_params.nat_pfx, &g_test_params.v6_nat_pfx,
+                          g_test_params.num_remote_mappings,
+                          &g_test_params.provider_pfx,
+                          &g_test_params.v6_provider_pfx);
+    if (ret != SDK_RET_OK) {
+        return ret;
     }
 
 #ifdef TEST_GRPC_APP

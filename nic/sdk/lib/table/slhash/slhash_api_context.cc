@@ -86,7 +86,7 @@ slhctx::clear_() {
 void
 slhctx::copyin_() {
     memcpy(swkey, params->key, props->swkey_len);
-    memcpy(swkeymask, params->mask, props->swkey_len);
+    memset(swkeymask, ~0, props->swkey_len);
     memcpy(swdata, params->appdata, props->swdata_len);
     return;
 }

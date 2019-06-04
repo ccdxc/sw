@@ -84,7 +84,11 @@ sltctx::clearhw() {
 void
 sltctx::copyin() {
     memcpy(swkey, params->key, props->swkey_len);
-    memcpy(swkeymask, params->mask, props->swkey_len);
+    if (params->mask) {
+        memcpy(swkeymask, params->mask, props->swkey_len);
+    } else {
+        memset(swkeymask, ~0, props->swkey_len);
+    }
     memcpy(swdata, params->appdata, props->swdata_len);
     return;
 }
@@ -136,7 +140,7 @@ sltctx::print_params() {
     }
 }
 
-sdk_ret_t 
+sdk_ret_t
 sltctx::init() {
     params = NULL;
     tcam_index = 0;
