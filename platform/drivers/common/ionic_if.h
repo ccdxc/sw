@@ -500,10 +500,11 @@ struct lif_init_comp {
  */
 struct q_init_cmd {
 	u8     opcode;
-	u8     type;
-	u8     ver;
 	u8     rsvd;
 	__le16 lif_index;
+	u8     type;
+	u8     ver;
+	u8     rsvd1[2];
 	__le32 index;
 	__le16 pid;
 	__le16 intr_index;
@@ -519,7 +520,7 @@ struct q_init_cmd {
 	__le64 cq_ring_base;
 	__le64 sg_ring_base;
 	__le32 eq_index;
-	u8     rsvd2[18];
+	u8     rsvd2[16];
 };
 
 /**
@@ -1756,9 +1757,10 @@ enum fw_control_oper {
  */
 struct fw_control_cmd {
 	u8  opcode;
+	u8  rsvd[3];
 	u8  oper;
 	u8  slot;
-	u8  rsvd[61];
+	u8  rsvd1[58];
 };
 
 /**
@@ -1767,9 +1769,12 @@ struct fw_control_cmd {
  * @slot:      slot where the firmware was installed
  */
 struct fw_control_comp {
-	u8  status;
-	u8  slot;
-	u8  rsvd[14];
+	u8     status;
+	u8     rsvd;
+	__le16 comp_index;
+	u8     slot;
+	u8     rsvd1[10];
+	u8     color;
 };
 
 /******************************************************************
