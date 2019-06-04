@@ -48,8 +48,8 @@ const filebeatTemplate = `
 # https://www.elastic.co/guide/en/beats/filebeat/index.html
 
 #=========================== Filebeat prospectors =============================
-filebeat.prospectors:
-- input_type: log
+filebeat.inputs:
+- type: log
   paths:
    - {{.LogDir}}/*.log
   symlinks: true
@@ -57,6 +57,14 @@ filebeat.prospectors:
   json.add_error_key: true
   processors:
    - drop_event.when.regexp.level: '^info$' # drop info logs
+- type: log # for elastic and filebeat logs #
+  paths:
+   - {{.LogDir}}/elastic/*.log
+   - {{.LogDir}}/filebeat/*.log
+  multiline:
+    pattern: '^\['
+    negate: true
+    match: after
 #================================ General =====================================
 fields:
     category: "venice"
@@ -64,6 +72,12 @@ fields:
 processors:
  - add_locale:
      format: offset
+ - rename:
+     fields:
+      - from: "error"
+        to: "err"
+     ignore_missing: false
+     fail_on_error: true
 #================================ Outputs =====================================
 #-------------------------- Elasticsearch output ------------------------------
 output.elasticsearch:
@@ -92,7 +106,7 @@ logging:
     level: warning
     selectors: ["*"]
     files:
-        path: /tmp/log/filebeat
+        path: {{.LogDir}}/filebeat
         name: beat.log
         keepfiles: 5
         rotateeverybytes: 10485760 # 10 MB
