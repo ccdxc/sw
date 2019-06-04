@@ -93,10 +93,14 @@ func subnetShowCmdHandler(cmd *cobra.Command, args []string) {
 
 func printSubnetHeader() {
 	hdrLine := strings.Repeat("-", 144)
+	fmt.Printf("\n")
+	fmt.Printf("V4RtTblID - IPv4 Route Table ID                V6RtTblID - IPv6 Route Table ID\n")
+	fmt.Printf("IngV4SGID - Ingress IPv4 Security Group ID     IngV6SGID - Ingress IPv6 Security Group ID\n")
+	fmt.Printf("EgV4SGID  - Egress IPv4 Security Group ID      EgV6SGID  - Egress IPv6 Security Group ID\n")
 	fmt.Println(hdrLine)
 	fmt.Printf("%-6s%-6s%-20s%-16s%-20s%-10s%-10s%-14s%-14s%-14s%-14s\n",
 		"ID", "VpcID", "IPPrefix", "VRouterIP", "VRouterMAC", "V4RtTblID",
-		"V6RtTblID", "IngV4SecPlcID", "IngV6SecPlcID", "EgV4SecPlcID", "EgV6SecPlcID")
+		"V6RtTblID", "IngV4SGID", "IngV6SGID", "EgV4SGID", "EgV6SGID")
 	fmt.Println(hdrLine)
 }
 
