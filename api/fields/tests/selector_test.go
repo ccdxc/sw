@@ -750,6 +750,40 @@ func TestPrintSQL(t *testing.T) {
 			Requirements: []*Requirement{
 				{
 					Key:      "keyA",
+					Operator: "notIn",
+					Values:   []string{"valA", "AA"},
+				},
+				{
+					Key:      "keyB",
+					Operator: "gt",
+					Values:   []string{"valB"},
+				},
+			},
+		},
+			`( "keyA" != 'valA' AND "keyA" != 'AA' ) AND "keyB" > valB`,
+			false,
+		},
+		{&Selector{
+			Requirements: []*Requirement{
+				{
+					Key:      "keyA",
+					Operator: "equals",
+					Values:   []string{"valA"},
+				},
+				{
+					Key:      "keyB",
+					Operator: "in",
+					Values:   []string{"valB", "BB"},
+				},
+			},
+		},
+			`"keyA" = 'valA' AND ( "keyB" = 'valB' OR "keyB" = 'BB' )`,
+			false,
+		},
+		{&Selector{
+			Requirements: []*Requirement{
+				{
+					Key:      "keyA",
 					Operator: "equals",
 					Values:   []string{"valA", "AA"},
 				},
@@ -767,12 +801,12 @@ func TestPrintSQL(t *testing.T) {
 			Requirements: []*Requirement{
 				{
 					Key:      "keyA",
-					Operator: "equals",
+					Operator: "gt",
 					Values:   []string{"valA"},
 				},
 				{
 					Key:      "keyB",
-					Operator: "in",
+					Operator: "lt",
 					Values:   []string{"valB", "BB"},
 				},
 			},

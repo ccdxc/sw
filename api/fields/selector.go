@@ -240,24 +240,63 @@ func (r *Requirement) Print() string {
 // Requirement. If called on an invalid Requirement, an error is
 // returned. See NewRequirement for creating a valid Requirement.
 func (r *Requirement) PrintSQL() (string, error) {
-	var buffer bytes.Buffer
-	buffer.WriteString(fmt.Sprintf("\"%s\"", r.Key))
 
-	if len(r.Values) != 1 {
-		return "", fmt.Errorf("Only a single value supported")
+	if len(r.Values) == 0 {
+		return "", fmt.Errorf("Values cannot be empty")
+	}
+	if len(r.Values) > 1 {
+		switch Operator(Operator_value[r.Operator]) {
+		case Operator_in, Operator_notIn:
+		default:
+			return "", fmt.Errorf("Values must be of length 1 for operator %v", Operator(Operator_value[r.Operator]))
+		}
 	}
 
+	var operator string
+	// Will be OR for in, and AND for notIn
+	var joinOperator string
+	// whether or not the value should be surrounded in quotes
+	var useQuotes bool
+
 	switch Operator(Operator_value[r.Operator]) {
-	case Operator_equals:
-		buffer.WriteString(" = ")
-	case Operator_notEquals:
-		buffer.WriteString(" != ")
+	case Operator_equals, Operator_in:
+		operator = "="
+		joinOperator = "OR"
+		useQuotes = true
+	case Operator_notEquals, Operator_notIn:
+		operator = "!="
+		joinOperator = "AND"
+		useQuotes = true
+	case Operator_lt:
+		operator = "<"
+		useQuotes = false
+	case Operator_lte:
+		operator = "<="
+		useQuotes = false
+	case Operator_gt:
+		operator = ">"
+		useQuotes = false
+	case Operator_gte:
+		operator = ">="
+		useQuotes = false
 	default:
 		return "", fmt.Errorf("%v not supported", Operator(Operator_value[r.Operator]))
 	}
 
-	buffer.WriteString(fmt.Sprintf("'%s'", r.Values[0]))
-	return buffer.String(), nil
+	var reqStrings []string
+	for _, v := range r.Values {
+		if useQuotes {
+			v = fmt.Sprintf("'%s'", v)
+		}
+		req := fmt.Sprintf("\"%s\" %s %s", r.Key, operator, v)
+		reqStrings = append(reqStrings, req)
+	}
+
+	if len(reqStrings) == 1 {
+		return reqStrings[0], nil
+	}
+
+	return fmt.Sprintf("( %s )", strings.Join(reqStrings, fmt.Sprintf(" %s ", joinOperator))), nil
 }
 
 // Validate validates the requirement.

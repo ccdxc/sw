@@ -133,14 +133,14 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 					Requirements: []*fields.Requirement{
 						&fields.Requirement{
 							Key:      "Name",
-							Operator: "equals",
-							Values:   []string{"test"},
+							Operator: "gt",
+							Values:   []string{"2"},
 						},
 					},
 				},
 				Fields: []string{"cpu"},
 			},
-			resp: "SELECT cpu FROM test-db WHERE \"Name\" = 'test' ORDER BY time ASC",
+			resp: "SELECT cpu FROM test-db WHERE \"Name\" > 2 ORDER BY time ASC",
 			pass: true,
 		},
 		{
@@ -702,7 +702,7 @@ func TestValidateQuerySpec(t *testing.T) {
 				SortOrder:    telemetry_query.SortOrder_Ascending.String(),
 			},
 			errMsgs: []string{
-				"Failed to parse selector requirements: Only a single value supported",
+				"Failed to parse selector requirements: Values cannot be empty",
 			},
 			pass: false,
 		},
