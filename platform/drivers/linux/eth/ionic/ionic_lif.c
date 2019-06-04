@@ -984,7 +984,9 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 {
 	struct lif *master_lif = netdev_priv(lower_dev);
 	struct ionic *ionic = master_lif->ionic;
+	union lif_identity *lid;
 	struct lif *lif;
+	int nqueues;
 	int index;
 	int err;
 
@@ -997,6 +999,21 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 		return NULL;
 	}
 
+	/* For now, we need to assure we don't try to set up for multiqueue
+	 * macvlan channels.  Sometime in the future this will help us set
+	 * up for those multiqueue channels.
+	 */
+	lid = kzalloc(sizeof(*lid), GFP_KERNEL);
+	if (!lid)
+		return NULL;
+	ionic_lif_identify(ionic, IONIC_LIF_TYPE_MACVLAN, lid);
+	nqueues = le32_to_cpu(lid->eth.config.queue_count[IONIC_QTYPE_RXQ]);
+	kfree(lid);
+	lid = NULL;
+
+	if (nqueues > 1)
+		netdev_warn(lower_dev, "Only 1 queue used per slave LIF\n");
+
 	/* master_lif index is 0, slave index starts at 1 */
 	index = ionic_slave_alloc(ionic);
 	if (index < 0) {
@@ -1006,8 +1023,6 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 	}
 	netdev_info(lower_dev, "slave index %d for macvlan dev %s\n",
 		    index, upper_dev->name);
-
-	/* TODO: ionic_lif_identify(ionic, IONIC_LIF_TYPE_MACVLAN) */
 
 	lif = ionic_lif_alloc(ionic, index);
 	if (IS_ERR(lif)) {
@@ -2791,40 +2806,44 @@ void ionic_lifs_unregister(struct ionic *ionic)
 		unregister_netdev(ionic->master_lif->netdev);
 }
 
-int ionic_lif_identify(struct ionic *ionic)
+int ionic_lif_identify(struct ionic *ionic, u8 lif_type,
+		       union lif_identity *lid)
 {
-	struct identity *ident = &ionic->ident;
 	struct ionic_dev *idev = &ionic->idev;
 	size_t sz;
 	int err;
 
-	sz = min(sizeof(ident->lif), sizeof(idev->dev_cmd_regs->data));
+	sz = min(sizeof(*lid), sizeof(idev->dev_cmd_regs->data));
 
 	mutex_lock(&ionic->dev_cmd_lock);
-	ionic_dev_cmd_lif_identify(idev, IONIC_LIF_TYPE_CLASSIC,
-				   IONIC_IDENTITY_VERSION_1);
+	ionic_dev_cmd_lif_identify(idev, lif_type, IONIC_IDENTITY_VERSION_1);
 	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
-	memcpy_fromio(&ident->lif, &idev->dev_cmd_regs->data, sz);
+	memcpy_fromio(lid, &idev->dev_cmd_regs->data, sz);
 	mutex_unlock(&ionic->dev_cmd_lock);
 	if (err)
 		return (err);
 
-	dev_dbg(ionic->dev, "capabilities 0x%llx ",
-		le64_to_cpu(ident->lif.capabilities));
-	dev_dbg(ionic->dev, "eth.max_ucast_filters 0x%x ",
-		le32_to_cpu(ident->lif.eth.max_ucast_filters));
-	dev_dbg(ionic->dev, "eth.max_mcast_filters 0x%x ",
-		le32_to_cpu(ident->lif.eth.max_mcast_filters));
-	dev_dbg(ionic->dev, "eth.features 0x%llx ",
-		le64_to_cpu(ident->lif.eth.config.features));
-	dev_dbg(ionic->dev, "eth.queue_count[IONIC_QTYPE_ADMINQ] 0x%x ",
-		le32_to_cpu(ident->lif.eth.config.queue_count[IONIC_QTYPE_ADMINQ]));
-	dev_dbg(ionic->dev, "eth.queue_count[IONIC_QTYPE_NOTIFYQ] 0x%x ",
-		le32_to_cpu(ident->lif.eth.config.queue_count[IONIC_QTYPE_NOTIFYQ]));
-	dev_dbg(ionic->dev, "eth.queue_count[IONIC_QTYPE_RXQ] 0x%x ",
-		le32_to_cpu(ident->lif.eth.config.queue_count[IONIC_QTYPE_RXQ]));
-	dev_dbg(ionic->dev, "eth.queue_count[IONIC_QTYPE_TXQ] 0x%x ",
-		le32_to_cpu(ident->lif.eth.config.queue_count[IONIC_QTYPE_TXQ]));
+	dev_dbg(ionic->dev, "capabilities 0x%llx\n",
+		le64_to_cpu(lid->capabilities));
+
+	dev_dbg(ionic->dev, "eth.max_ucast_filters %d\n",
+		le32_to_cpu(lid->eth.max_ucast_filters));
+	dev_dbg(ionic->dev, "eth.max_mcast_filters %d\n",
+		le32_to_cpu(lid->eth.max_mcast_filters));
+	dev_dbg(ionic->dev, "eth.features 0x%llx\n",
+		le64_to_cpu(lid->eth.config.features));
+	dev_dbg(ionic->dev, "eth.queue_count[IONIC_QTYPE_ADMINQ] %d\n",
+		le32_to_cpu(lid->eth.config.queue_count[IONIC_QTYPE_ADMINQ]));
+	dev_dbg(ionic->dev, "eth.queue_count[IONIC_QTYPE_NOTIFYQ] %d\n",
+		le32_to_cpu(lid->eth.config.queue_count[IONIC_QTYPE_NOTIFYQ]));
+	dev_dbg(ionic->dev, "eth.queue_count[IONIC_QTYPE_RXQ] %d\n",
+		le32_to_cpu(lid->eth.config.queue_count[IONIC_QTYPE_RXQ]));
+	dev_dbg(ionic->dev, "eth.queue_count[IONIC_QTYPE_TXQ] %d\n",
+		le32_to_cpu(lid->eth.config.queue_count[IONIC_QTYPE_TXQ]));
+	dev_dbg(ionic->dev, "eth.config.name %s\n", lid->eth.config.name);
+	dev_dbg(ionic->dev, "eth.config.mac %pM\n", lid->eth.config.mac);
+	dev_dbg(ionic->dev, "eth.config.mtu %d\n",
+		le32_to_cpu(lid->eth.config.mtu));
 
 	return 0;
 }

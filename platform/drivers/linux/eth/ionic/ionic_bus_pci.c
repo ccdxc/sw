@@ -242,7 +242,8 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	}
 
 	/* Configure LIFs */
-	err = ionic_lif_identify(ionic);
+	err = ionic_lif_identify(ionic, IONIC_LIF_TYPE_CLASSIC,
+				 &ionic->ident.lif);
 	if (err) {
 		dev_err(dev, "Cannot identify LIFs: %d, aborting\n", err);
 		goto err_out_port_reset;

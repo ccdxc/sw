@@ -271,7 +271,8 @@ int ionic_probe(struct platform_device *pfdev)
 	}
 
 	/* Allocate and init LIFs, creating a netdev per LIF */
-	err = ionic_lif_identify(ionic);
+	err = ionic_lif_identify(ionic, IONIC_LIF_TYPE_CLASSIC,
+				 &ionic->ident.lif);
 	if (err) {
 		dev_err(dev, "Cannot identify LIFs: %d, aborting\n", err);
 		goto err_out_unmap_bars;

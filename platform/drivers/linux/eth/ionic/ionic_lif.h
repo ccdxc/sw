@@ -241,7 +241,8 @@ void ionic_lifs_deinit(struct ionic *ionic);
 int ionic_lifs_init(struct ionic *ionic);
 int ionic_lifs_register(struct ionic *ionic);
 void ionic_lifs_unregister(struct ionic *ionic);
-int ionic_lif_identify(struct ionic *ionic);
+int ionic_lif_identify(struct ionic *ionic, u8 lif_type,
+		       union lif_identity *lif_ident);
 int ionic_lifs_size(struct ionic *ionic);
 int ionic_lif_rss_config(struct lif *lif, u16 types,
 			 const u8 *key, const u32 *indir);
