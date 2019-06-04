@@ -14,6 +14,7 @@ import { MonitoringExportConfig, IMonitoringExportConfig } from './monitoring-ex
 export interface IMonitoringFlowExportPolicySpec {
     'vrf-name'?: string;
     'interval': string;
+    'template_interval': string;
     'format': MonitoringFlowExportPolicySpec_format;
     'match-rules'?: Array<IMonitoringMatchRule>;
     'exports'?: Array<IMonitoringExportConfig>;
@@ -24,6 +25,8 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
     'vrf-name': string = null;
     /** should be a valid time duration between 1s and 24h0m0s */
     'interval': string = null;
+    /** should be a valid time duration between 3m0s and 24h0m0s */
+    'template_interval': string = null;
     'format': MonitoringFlowExportPolicySpec_format = null;
     'match-rules': Array<MonitoringMatchRule> = null;
     /** Export contains export parameters. */
@@ -36,6 +39,13 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
         'interval': {
             default: '10s',
             description:  'should be a valid time duration between 1s and 24h0m0s',
+            hint:  '2h',
+            required: true,
+            type: 'string'
+        },
+        'template_interval': {
+            default: '3m',
+            description:  'should be a valid time duration between 3m0s and 24h0m0s',
             hint:  '2h',
             required: true,
             type: 'string'
@@ -103,6 +113,13 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
         } else {
             this['interval'] = null
         }
+        if (values && values['template_interval'] != null) {
+            this['template_interval'] = values['template_interval'];
+        } else if (fillDefaults && MonitoringFlowExportPolicySpec.hasDefaultValue('template_interval')) {
+            this['template_interval'] = MonitoringFlowExportPolicySpec.propInfo['template_interval'].default;
+        } else {
+            this['template_interval'] = null
+        }
         if (values && values['format'] != null) {
             this['format'] = values['format'];
         } else if (fillDefaults && MonitoringFlowExportPolicySpec.hasDefaultValue('format')) {
@@ -129,6 +146,7 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
             this._formGroup = new FormGroup({
                 'vrf-name': CustomFormControl(new FormControl(this['vrf-name']), MonitoringFlowExportPolicySpec.propInfo['vrf-name']),
                 'interval': CustomFormControl(new FormControl(this['interval'], [required, ]), MonitoringFlowExportPolicySpec.propInfo['interval']),
+                'template_interval': CustomFormControl(new FormControl(this['template_interval'], [required, ]), MonitoringFlowExportPolicySpec.propInfo['template_interval']),
                 'format': CustomFormControl(new FormControl(this['format'], [required, enumValidator(MonitoringFlowExportPolicySpec_format), ]), MonitoringFlowExportPolicySpec.propInfo['format']),
                 'match-rules': new FormArray([]),
                 'exports': new FormArray([]),
@@ -159,6 +177,7 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
         if (this._formGroup) {
             this._formGroup.controls['vrf-name'].setValue(this['vrf-name']);
             this._formGroup.controls['interval'].setValue(this['interval']);
+            this._formGroup.controls['template_interval'].setValue(this['template_interval']);
             this._formGroup.controls['format'].setValue(this['format']);
             this.fillModelArray<MonitoringMatchRule>(this, 'match-rules', this['match-rules'], MonitoringMatchRule);
             this.fillModelArray<MonitoringExportConfig>(this, 'exports', this['exports'], MonitoringExportConfig);

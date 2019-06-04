@@ -135,12 +135,16 @@ message FlowExportPolicySpec {
     // The value is specified as a string format, '10s', '20m'
     string Interval                 = 2 [(gogoproto.jsontag) = "interval,omitempty", (venice.default)="10s", (venice.check)="Duration(1s,24h)"];
 
-    string Format                   = 3 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(FlowExportPolicySpec.Formats)"];
+    // TemplateInterval defines how often to send ipfix templates to an external collector
+    // The value is specified as a string format, '3m', '10m'
+    string TemplateInterval         = 3 [(gogoproto.jsontag) = "template_interval,omitempty", (venice.default)="3m", (venice.check)="Duration(3m,24h)"];
 
-    repeated MatchRule  MatchRules  = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "match-rules,omitempty"];
+    string Format                   = 4 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(FlowExportPolicySpec.Formats)"];
+
+    repeated MatchRule  MatchRules  = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "match-rules,omitempty"];
 
     // Export contains export parameters.
-    repeated ExportConfig Exports   = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "exports,omitempty"];
+    repeated ExportConfig Exports   = 6 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "exports,omitempty"];
 }
 
 message FlowExportPolicy {
