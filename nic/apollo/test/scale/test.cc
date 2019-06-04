@@ -807,7 +807,8 @@ populate_tags_api_rule_spec (uint32_t id, pds_tag_rule_t *api_rule_spec,
             prefixes[pfx].addr.addr.v4_addr =
                           ((0xC << 28) | ((*tag_pfx_count)++ << 8));
         } else {
-            route_ipv6pfx_set(&prefixes[pfx], v6_route_pfx, (*tag_pfx_count)++, 120);
+            route_ipv6pfx_set(&prefixes[pfx], v6_route_pfx,
+                              (*tag_pfx_count)++, 120);
         }
     }
     return SDK_RET_OK;
@@ -913,7 +914,9 @@ static inline void
 populate_meter_api_rule_spec (uint32_t id, pds_meter_rule_t *api_rule_spec,
                               pds_meter_type_t type, uint64_t pps_bps,
                               uint64_t burst, uint32_t num_prefixes,
-                              uint32_t *meter_pfx_count, uint32_t priority)
+                              uint32_t *meter_pfx_count,
+                              uint8_t ip_af, ip_prefix_t *v6_route_pfx,
+                              uint32_t priority)
 {
     api_rule_spec->type = type;
     api_rule_spec->priority = priority;
@@ -943,10 +946,15 @@ populate_meter_api_rule_spec (uint32_t id, pds_meter_rule_t *api_rule_spec,
     api_rule_spec->prefixes = prefixes;
     for (uint32_t pfx = 0;
             pfx < api_rule_spec->num_prefixes; pfx++) {
-        prefixes[pfx].len = 24;
-        prefixes[pfx].addr.af = IP_AF_IPV4;
-        prefixes[pfx].addr.addr.v4_addr =
-                      ((0xC << 28) | ((*meter_pfx_count)++ << 8));
+        if (ip_af == IP_AF_IPV4) {
+            prefixes[pfx].len = 24;
+            prefixes[pfx].addr.af = IP_AF_IPV4;
+            prefixes[pfx].addr.addr.v4_addr =
+                          ((0xC << 28) | ((*meter_pfx_count)++ << 8));
+        } else {
+            route_ipv6pfx_set(&prefixes[pfx], v6_route_pfx,
+                              (*meter_pfx_count)++, 120);
+        }
     }
 }
 
@@ -954,7 +962,8 @@ populate_meter_api_rule_spec (uint32_t id, pds_meter_rule_t *api_rule_spec,
 #define TESTAPP_METER_PRIORITY_STEP 4
 sdk_ret_t
 create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
-              uint64_t pps_bps, uint64_t burst, uint32_t ip_af)
+              uint64_t pps_bps, uint64_t burst, uint32_t ip_af,
+              ip_prefix_t *v6_route_pfx)
 {
     sdk_ret_t ret;
     pds_meter_spec_t pds_meter;
@@ -1004,7 +1013,7 @@ create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
             populate_meter_api_rule_spec(
                                 pds_meter.key.id, api_rule_spec, type, pps_bps,
                                 burst, num_prefixes, &meter_pfx_count,
-                                priority);
+                                ip_af, v6_route_pfx, priority);
             priority--;
             step--;
             if (step == 0) {
@@ -1020,7 +1029,7 @@ create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
             populate_meter_api_rule_spec(
                                pds_meter.key.id, api_rule_spec, type, pps_bps,
                                burst, 1, &meter_pfx_count,
-                               priority);
+                               ip_af, v6_route_pfx, priority);
             priority--;
             step--;
             if (step == 0) {
@@ -1561,7 +1570,8 @@ create_objects (void)
         // meter ids: 1 to num_meter
         ret = create_meter(g_test_params.num_meter, g_test_params.meter_scale,
                            g_test_params.meter_type, g_test_params.pps_bps,
-                           g_test_params.burst, IP_AF_IPV4);
+                           g_test_params.burst, IP_AF_IPV4,
+                           &g_test_params.v6_route_pfx);
         if (ret != SDK_RET_OK) {
             return ret;
         }
@@ -1569,7 +1579,8 @@ create_objects (void)
         // meter ids: num_meter+1 to 2*num_meter
         ret = create_meter(g_test_params.num_meter, g_test_params.meter_scale,
                            g_test_params.meter_type, g_test_params.pps_bps,
-                           g_test_params.burst, IP_AF_IPV6);
+                           g_test_params.burst, IP_AF_IPV6,
+                           &g_test_params.v6_route_pfx);
         if (ret != SDK_RET_OK) {
             return ret;
         }
