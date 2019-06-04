@@ -20,8 +20,8 @@ const (
 	defaultRanges                  = 10
 	defaultSendInterval            = 10 * time.Second
 	defaultConnectionRetryInterval = 100 * time.Millisecond
-	defaultNumPoints               = 500
-	defaultNumFwlogPoints          = 50000 // when connected to Venice
+	defaultNumPoints               = 1000
+	defaultNumFwlogPoints          = 30000 // when connected to Venice
 )
 
 var (
