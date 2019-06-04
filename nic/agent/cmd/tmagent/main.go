@@ -8,6 +8,7 @@ import (
 
 	"github.com/pensando/sw/nic/agent/tmagent/state"
 	"github.com/pensando/sw/nic/agent/tpa/ctrlerif"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -16,7 +17,7 @@ import (
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
 	"github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi"
 	delphi "github.com/pensando/sw/nic/delphi/gosdk"
-	"github.com/pensando/sw/nic/delphi/gosdk/client_api"
+	clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	dproto "github.com/pensando/sw/nic/delphi/proto/delphi"
 	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
 	"github.com/pensando/sw/venice/globals"
@@ -63,18 +64,15 @@ func (s *service) Name() string {
 // OnNaplesStatusCreate event handler
 func (s *service) OnNaplesStatusCreate(obj *delphiProto.NaplesStatus) {
 	s.handleVeniceCoordinates(obj)
-	return
 }
 
 // OnNaplesStatusUpdate event handler
-func (s *service) OnNaplesStatusUpdate(old, new *delphiProto.NaplesStatus) {
-	s.handleVeniceCoordinates(new)
-	return
+func (s *service) OnNaplesStatusUpdate(old, newStat *delphiProto.NaplesStatus) {
+	s.handleVeniceCoordinates(newStat)
 }
 
 // OnNaplesStatusDelete event handler
 func (s *service) OnNaplesStatusDelete(obj *delphiProto.NaplesStatus) {
-	return
 }
 
 func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
@@ -169,7 +167,14 @@ func main() {
 	}
 
 	// Initialize logger config
-	log.SetConfig(logConfig)
+	logger := log.SetConfig(logConfig)
+
+	// create events recorder
+	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{Component: globals.Tmagent}, logger)
+	if err != nil {
+		log.Fatalf("failed to create events recorder, err: %v", err)
+	}
+	defer evtsRecorder.Close()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
