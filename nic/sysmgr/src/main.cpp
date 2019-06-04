@@ -22,7 +22,7 @@ main(int argc, char *argv[])
     ev::default_loop loop;
     ServiceFactoryPtr service_factory = ServiceFactory::getInstance();
     DelphiServicePtr svc = DelphiService::create(delphi_sdk);
-    WatchdogPtr watchdog = Watchdog::create();
+    WatchdogPtr watchdog;
 
     if (argc < 2) {
        fprintf(stderr, "Please use %s <CONFIG_FILE>\n`", argv[0]);
@@ -46,6 +46,7 @@ main(int argc, char *argv[])
 
     delphi_sdk->RegisterService(svc);
     logger = penlog::logger_init(delphi_sdk, "sysmgr");
+    watchdog = Watchdog::create();
 
     logger->debug("Loading config\n");
     service_factory->load_config(argv[1]);

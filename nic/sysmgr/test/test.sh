@@ -54,5 +54,5 @@ runtest 10s test.json "Service example2 started"
 runtest 10s test-exit-code.json "Service example2 Exited normally with code: 12" \
         "ProcessStatus example2, .*, 4, Exited normally with code: 12"
 
-runtest 60s test-critical-watchdog.json "Service example2 timed out" \
-        "System in fault mode"
+runtest 120s test-critical-watchdog.json "Service example2 timed out" \
+        "System in fault mode" "Simulation Watchdog Expired"

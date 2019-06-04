@@ -12,6 +12,64 @@
 
 extern penlog::LoggerPtr logger;
 
+class PALWatchdog : public AbstractWatchdog {
+public:
+    static std::shared_ptr<PALWatchdog> create();
+    PALWatchdog();
+    virtual void kick();
+};
+typedef std::shared_ptr<PALWatchdog> PALWatchdogPtr;
+
+class SimulationWatchdog : public AbstractWatchdog,
+                           public TimerReactor
+{
+private:
+    TimerWatcherPtr timer_watcher;
+public:
+    static std::shared_ptr<SimulationWatchdog> create();
+    virtual void kick();
+    virtual void on_timer();
+};
+typedef std::shared_ptr<SimulationWatchdog> SimulationWatchdogPtr;
+
+PALWatchdogPtr PALWatchdog::create()
+{
+    PALWatchdogPtr watchdog = std::make_shared<PALWatchdog>();
+    return watchdog;
+}
+
+PALWatchdog::PALWatchdog()
+{
+    int rc = pal_watchdog_init(PANIC_WDT);
+    logger->info("pal_watchdog_init() rc = {}", rc);
+}
+
+void PALWatchdog::kick()
+{
+    pal_watchdog_kick();
+}
+
+SimulationWatchdogPtr SimulationWatchdog::create()
+{
+    SimulationWatchdogPtr watchdog = std::make_shared<SimulationWatchdog>();
+    watchdog->timer_watcher = TimerWatcher::create(60.0, 60.0, watchdog);
+
+    return watchdog;
+}
+
+void SimulationWatchdog::kick()
+{
+    this->timer_watcher->repeat();
+}
+
+void SimulationWatchdog::on_timer()
+{
+    logger->critical("Simulation Watchdog Expired");
+    // Kill all children
+    kill(-getpid(), SIGTERM);
+    throw std::runtime_error("SimulationWatchdog expired");
+}
+
 WatchdogPtr Watchdog::create()
 {
     WatchdogPtr wchdg = std::make_shared<Watchdog>();
@@ -22,8 +80,15 @@ WatchdogPtr Watchdog::create()
     FaultLoop::getInstance()->register_fault_reactor(wchdg);
     SwitchrootLoop::getInstance()->register_switchroot_reactor(wchdg);
 
-    int rc = pal_watchdog_init(PANIC_WDT);
-    logger->info("pal_watchdog_init() rc = {}", rc);
+    logger->info("Creating watchdog");
+    if (std::getenv("PAL_WATCHDOG_ENABLED")) {
+        wchdg->watchdog = PALWatchdog::create();
+        logger->info("Using PAL watchdog");
+    } else {
+        wchdg->watchdog = SimulationWatchdog::create();
+        logger->info("Using Simulation watchdog");
+    }
+    
     wchdg->timer_watcher->repeat();
     
     return wchdg;
@@ -42,7 +107,7 @@ void Watchdog::on_timer()
         return;
     }
     logger->debug("Kicking watchdog");
-    pal_watchdog_kick();
+    this->watchdog->kick();
 }
 
 void Watchdog::on_switchroot()

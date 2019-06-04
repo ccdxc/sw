@@ -8,10 +8,10 @@
     "name": "example1",
     "command": "/sw/nic/build/x86_64/iris/bin/sysmgr_example --name example1",
     "dependencies": [
-	{
-	    "kind": "service",
-	    "service-name": "delphi"
-	}
+        {
+            "kind": "service",
+            "service-name": "delphi"
+        }
     ],
     "flags": [],
     "timeout": 30.0
@@ -19,15 +19,15 @@
     "name": "example2",
     "command": "/sw/nic/build/x86_64/iris/bin/sysmgr_example --name example2 --no-heartbeat",
     "dependencies": [
-	{
-	    "kind": "service",
-	    "service-name": "delphi"
-	},
-	{
-	    "kind": "service",
-	    "service-name": "example1"
-	}
+        {
+            "kind": "service",
+            "service-name": "delphi"
+        },
+        {
+            "kind": "service",
+            "service-name": "example1"
+        }
     ],
-    "flags": [],
+    "flags": ["critical"],
     "timeout": 30.0
 }]
