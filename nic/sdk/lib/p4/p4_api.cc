@@ -634,13 +634,13 @@ p4pd_global_hbm_table_address_set (uint32_t tableid, mem_addr_t pa,
 {
     if ((tableid >= p4pd_tableid_min_get()) &&
         (tableid <= p4pd_tableid_max_get())) {
-        p4pd_hbm_table_address_set (tableid, pa, va);
+        p4pd_hbm_table_address_set(tableid, pa, va);
     } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
                (tableid <= p4pd_rxdma_tableid_max_get())) {
-        p4pd_rxdma_hbm_table_address_set (tableid, pa, va);
+        p4pd_rxdma_hbm_table_address_set(tableid, pa, va);
     } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
                (tableid <= p4pd_txdma_tableid_max_get())) {
-        p4pd_txdma_hbm_table_address_set (tableid, pa, va);
+        p4pd_txdma_hbm_table_address_set(tableid, pa, va);
     } else {
         SDK_ASSERT(0);
     }

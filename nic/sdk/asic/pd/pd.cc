@@ -540,7 +540,7 @@ asicpd_hbm_table_entry_write (uint32_t tableid,
     ret = capri_hbm_table_entry_write(tableid, index, hwentry,
                                       entry_size, cap_tbl_info);
 
-    uint64_t    entry_addr = (index * cap_tbl_info.entry_width);
+    uint64_t entry_addr = (index * cap_tbl_info.entry_width);
     ret |= capri_hbm_table_entry_cache_invalidate(tbl_ctx.gress == P4_GRESS_INGRESS,
                                                   entry_addr,
                                                   cap_tbl_info.base_mem_pa);
@@ -562,7 +562,7 @@ asicpd_hbm_table_entry_write (uint32_t tableid,
                                             sizeof(buffer));
     SDK_TRACE_DEBUG("%s", buffer);
 #endif
-time_profile_end(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_WRITE);
+    time_profile_end(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_WRITE);
     return ret;
 }
 

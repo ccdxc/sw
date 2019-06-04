@@ -27,13 +27,13 @@ fi
 /nic/bin/memtun &
 
 # bring up oob
-# echo "Bringing up OOB ..."
-# $NIC_DIR/tools/bringup_mgmt_ifs.sh >/var/log/pensando/mgmt_if.log
+#echo "Bringing up OOB ..."
+#$NIC_DIR/tools/bringup_mgmt_ifs.sh >/var/log/pensando/mgmt_if.log
 
 # start vpp
-echo "Bringing up vpp ..."
-if [[ -f $NIC_DIR/tools/start-vpp.sh ]]; then
-    echo "Launching VPP ..."
-    $NIC_DIR/tools/start-vpp.sh &
-    [[ $? -ne 0 ]] && echo "Aborting Sysinit - VPP failed to start!" && exit 1
-fi
+#echo "Bringing up vpp ..."
+#if [[ -f $NIC_DIR/tools/start-vpp.sh ]]; then
+    #echo "Launching VPP ..."
+    #$NIC_DIR/tools/start-vpp.sh &
+    #[[ $? -ne 0 ]] && echo "Aborting Sysinit - VPP failed to start!" && exit 1
+#fi
