@@ -397,29 +397,8 @@ batch_commit_grpc (void)
 sdk_ret_t
 test_app_push_configs (void)
 {
-#if 0
-    BatchStatus         status;
-    Status              ret_status;
-    BatchSpec           spec;
-    ClientContext       start_context;
-    pds_batch_params_t  params;
-#endif
-    /* Create objects */
+    // create objects
     create_objects();
-
-#if 0
-    // TODO: Temp change to push batch start and create flows here
-    params.epoch = 0;
-    populate_batch_spec(&spec, &params);
-
-    /* Batch start */
-    ret_status = g_batch_stub_->BatchStart(&start_context, spec, &status);
-    if (!ret_status.ok()) {
-        printf("%s failed!\n", __FUNCTION__);
-        return SDK_RET_ERR;
-    }
-#endif
-
     return SDK_RET_OK;
 }
 
@@ -430,8 +409,9 @@ test_app_init (void)
     if (g_svc_endpoint_.empty()) {
         g_svc_endpoint_ = std::string("localhost:9999");
     }
-    std::shared_ptr<Channel> channel = grpc::CreateChannel(g_svc_endpoint_,
-                               grpc::InsecureChannelCredentials());
+    std::shared_ptr<Channel> channel =
+        grpc::CreateChannel(g_svc_endpoint_,
+                            grpc::InsecureChannelCredentials());
     g_route_table_stub_ = pds::RouteSvc::NewStub(channel);
     g_policy_stub_ = pds::SecurityPolicySvc::NewStub(channel);
     g_mapping_stub_ = pds::MappingSvc::NewStub(channel);

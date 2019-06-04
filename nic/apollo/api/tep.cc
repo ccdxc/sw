@@ -31,14 +31,14 @@ tep_entry::tep_entry() {
 }
 
 tep_entry *
-tep_entry::factory(pds_tep_spec_t *pds_tep) {
+tep_entry::factory(pds_tep_spec_t *spec) {
     tep_entry *tep;
 
     // create tep entry with defaults, if any
     tep = tep_db()->alloc();
     if (tep) {
         new (tep) tep_entry();
-        tep->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_TEP, pds_tep);
+        tep->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_TEP, spec);
     }
     return tep;
 }

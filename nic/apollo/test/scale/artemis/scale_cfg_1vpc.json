@@ -19,21 +19,21 @@
         {
             "_comment_" : "routes per routing table, middle 2 octets are used to create routes",
             "kind" : "route-table",
-            "count" : "1023",
+            "count" : "4",
             "prefix-start" : "4.0.0.0/8",
             "v6-prefix-start" : "2021::/96"
         },
         {
             "_comment_" : "security policy parameters here are per subnet per direction",
             "kind" : "security-policy",
-            "v4-count" : "1023",
-            "v6-count" : "15",
+            "v4-count" : "4",
+            "v6-count" : "4",
             "stateful" : "false"
         },
         {
             "_comment_" : "All VPCs have same prefix",
             "kind" : "vpc",
-            "count" : "64",
+            "count" : "1",
             "prefix" : "2.0.0.0/8",
             "v6-prefix" : "2019::/96",
             "subnets" : "1"
@@ -47,7 +47,7 @@
         {
             "kind" : "mappings",
             "remotes" : "512",
-            "locals" : "8",
+            "locals" : "32",
             "nat-prefix" : "3.0.0.0/8",
             "v6-nat-prefix": "2020::/96",
             "provider-prefix" : "1.1.0.0/16",
@@ -61,7 +61,7 @@
         },
         {
             "kind" : "metering",
-            "count" : "64",
+            "count" : "1",
             "scale" : "1023",
             "type" : "account",
             "pps_bps" : "102400",
@@ -80,12 +80,12 @@
         {
             "kind" : "flows",
             "num_tcp": "0",
-            "num_udp": "8388608",
+            "num_udp": "32768",
             "num_icmp": "0",
             "sport_lo": "100",
             "sport_hi": "100",
             "dport_lo": "100",
-            "dport_hi": "115"
+            "dport_hi": "101"
         }
     ]
 }

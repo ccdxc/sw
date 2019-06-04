@@ -50,6 +50,7 @@ typedef struct test_params_s {
     struct {
         uint32_t num_teps;
         ip_prefix_t tep_pfx;
+        ip_prefix_t svc_tep_pfx;
     };
     // route config
     struct {
@@ -161,8 +162,18 @@ meter_str_to_type (std::string meter_type_str,
 }
 
 static inline void
-route_ipv6pfx_set (ip_prefix_t *pfx, ip_prefix_t *initial_pfx,
+compute_ipv6_addr (ip_addr_t *addr, ip_prefix_t *initial_pfx,
                    uint32_t shift_val, uint32_t len)
+{
+    *addr = initial_pfx->addr;
+    addr->addr.v6_addr.addr32[IP6_ADDR32_LEN-2] = htonl(0xF1D0D1D0);
+    addr->addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
+        htonl((0xC << 28) | (shift_val << 8));
+}
+
+static inline void
+compute_ipv6_prefix (ip_prefix_t *pfx, ip_prefix_t *initial_pfx,
+                     uint32_t shift_val, uint32_t len)
 {
     *pfx = *initial_pfx;
     pfx->addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-2] = htonl(0xF1D0D1D0);
@@ -197,8 +208,8 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
         v6rtnum = 0;
         v6route_table.key.id = ntables + i;
         for (uint32_t j = 0; j < num_routes; j++) {
-            route_ipv6pfx_set(&v6route_table.routes[j].prefix, v6_route_pfx,
-                              v6rtnum++, 120);
+            compute_ipv6_prefix(&v6route_table.routes[j].prefix, v6_route_pfx,
+                                v6rtnum++, 120);
             if (apollo()) {
                 v6route_table.routes[j].nh_ip.af = IP_AF_IPV4;
                 v6route_table.routes[j].nh_ip.addr.v4_addr =
@@ -807,8 +818,8 @@ populate_tags_api_rule_spec (uint32_t id, pds_tag_rule_t *api_rule_spec,
             prefixes[pfx].addr.addr.v4_addr =
                           ((0xC << 28) | ((*tag_pfx_count)++ << 8));
         } else {
-            route_ipv6pfx_set(&prefixes[pfx], v6_route_pfx,
-                              (*tag_pfx_count)++, 120);
+            compute_ipv6_prefix(&prefixes[pfx], v6_route_pfx,
+                                (*tag_pfx_count)++, 120);
         }
     }
     return SDK_RET_OK;
@@ -952,8 +963,8 @@ populate_meter_api_rule_spec (uint32_t id, pds_meter_rule_t *api_rule_spec,
             prefixes[pfx].addr.addr.v4_addr =
                           ((0xC << 28) | ((*meter_pfx_count)++ << 8));
         } else {
-            route_ipv6pfx_set(&prefixes[pfx], v6_route_pfx,
-                              (*meter_pfx_count)++, 120);
+            compute_ipv6_prefix(&prefixes[pfx], v6_route_pfx,
+                                (*meter_pfx_count)++, 120);
         }
     }
 }
@@ -1011,9 +1022,9 @@ create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
                 priority = rule + (step - 1);
             }
             populate_meter_api_rule_spec(
-                                pds_meter.key.id, api_rule_spec, type, pps_bps,
-                                burst, num_prefixes, &meter_pfx_count,
-                                ip_af, v6_route_pfx, priority);
+                pds_meter.key.id, api_rule_spec, type, pps_bps,
+                burst, num_prefixes, &meter_pfx_count, ip_af,
+                v6_route_pfx, priority);
             priority--;
             step--;
             if (step == 0) {
@@ -1027,9 +1038,9 @@ create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
                 priority = rule + (step - 1);
             }
             populate_meter_api_rule_spec(
-                               pds_meter.key.id, api_rule_spec, type, pps_bps,
-                               burst, 1, &meter_pfx_count,
-                               ip_af, v6_route_pfx, priority);
+                pds_meter.key.id, api_rule_spec, type, pps_bps,
+                burst, 1, &meter_pfx_count, ip_af,
+                v6_route_pfx, priority);
             priority--;
             step--;
             if (step == 0) {
@@ -1103,6 +1114,40 @@ create_nexthops (uint32_t num_nh, ip_prefix_t *ip_pfx, uint32_t num_vpcs)
     if (ret != SDK_RET_OK) {
         SDK_ASSERT(0);
         return ret;
+    }
+#endif
+    return SDK_RET_OK;
+}
+
+// NOTE: all service TEPs are remote TEPs
+sdk_ret_t
+create_service_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
+{
+    sdk_ret_t      rv;
+    pds_tep_spec_t pds_tep;
+
+    for (uint32_t i = 1; i <= num_teps; i++) {
+        memset(&pds_tep, 0, sizeof(pds_tep));
+        compute_ipv6_addr(&pds_tep.key.ip_addr, ip_pfx, i, 120);
+        pds_tep.type = PDS_TEP_TYPE_SERVICE;
+#ifdef TEST_GRPC_APP
+        rv = create_tunnel_grpc(i, &pds_tep);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+#else
+        rv = pds_tep_create(&pds_tep);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+#endif
+    }
+#ifdef TEST_GRPC_APP
+    // push leftover objects
+    rv = create_tunnel_grpc(0, NULL);
+    if (rv != SDK_RET_OK) {
+        SDK_ASSERT(0);
+        return rv;
     }
 #endif
     return SDK_RET_OK;
@@ -1444,6 +1489,11 @@ create_objects (void)
                 g_test_params.num_teps -= 2;
                 pfxstr = obj.second.get<std::string>("prefix");
                 assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.tep_pfx) == 0);
+                pfxstr = obj.second.get<std::string>("svc-prefix", "");
+                if (pfxstr.empty() == false) {
+                    assert(str2ipv6pfx((char *)pfxstr.c_str(),
+                                       &g_test_params.svc_tep_pfx) == 0);
+                }
             } else if (kind == "route-table") {
                 g_test_params.num_routes = std::stol(obj.second.get<std::string>("count"));
                 pfxstr = obj.second.get<std::string>("prefix-start");
@@ -1597,6 +1647,14 @@ create_objects (void)
     ret = create_teps(g_test_params.num_teps + 1, &g_test_params.tep_pfx);
     if (ret != SDK_RET_OK) {
         return ret;
+    }
+    if (artemis()) {
+        // create service TEPs
+        ret = create_service_teps(g_test_params.num_teps,
+                                  &g_test_params.svc_tep_pfx);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
     }
 
     // create route tables

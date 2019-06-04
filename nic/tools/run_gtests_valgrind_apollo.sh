@@ -9,7 +9,7 @@ export BUILD_DIR=${NICDIR}/build/x86_64/apollo/
 export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 export HAL_CONFIG_PATH=${NICDIR}/conf
 export CAPRI_MOCK_MODE=1
-
+#export GDB='gdb --args'
 export VAL_CMD=valgrind
 export VALGRIND_DIR=${BUILD_DIR}/valgrind
 export VAL_TR=${VALGRIND_DIR}/test_results
@@ -22,6 +22,7 @@ then
 fi
 
 ${VAL_CMD} --track-origins=yes --leak-check=summary --show-leak-kinds=definite -v --log-file=${LOG_FILE} --suppressions=${NICDIR}/apollo/test/tools/valgrind_suppression.txt ${NICDIR}/build/x86_64/apollo/bin/apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg_1vpc.json -f apollo --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
+#$GDB ${NICDIR}/build/x86_64/apollo/bin/apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg_1vpc.json -f apollo
 
 python ${NICDIR}/tools/parse_valgrind_log.py ${LOG_FILE}
 function finish {

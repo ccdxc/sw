@@ -25,8 +25,13 @@ namespace impl {
 /// @{
 
 tep_impl *
-tep_impl::factory(pds_tep_spec_t *pds_tep) {
+tep_impl::factory(pds_tep_spec_t *spec) {
     tep_impl *impl;
+
+    if (spec->type != PDS_TEP_TYPE_SERVICE) {
+        // other type of TEPs are not supported in this pipeline
+        return NULL;
+    }
 
     // TODO: move to slab later
     impl = (tep_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_TEP_IMPL,
@@ -100,12 +105,12 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                                            hw_id_, NULL, NULL,
                                            &remote_46_mapping_data);
 
-        if (unlikely(ret != SDK_RET_OK)) {
+        if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
             PDS_TRACE_ERR("TEP table programming failed for TEP %s, "
-                          "TEP hw id %u, err %u", api_obj->key2str().c_str(),
-                          hw_id_, ret);
-            return ret;
+                          "TEP hw id %u", api_obj->key2str().c_str(), hw_id_);
+            return sdk::SDK_RET_HW_PROGRAM_ERR;
         }
+        ret = SDK_RET_OK;
         break;
     default:
         ret = SDK_RET_INVALID_ARG;

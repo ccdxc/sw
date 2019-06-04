@@ -13,6 +13,7 @@
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/impl/artemis/device_impl.hpp"
+#include "nic/apollo/api/impl/artemis/tep_impl.hpp"
 #include "nic/apollo/api/impl/artemis/vpc_impl.hpp"
 #include "nic/apollo/api/impl/artemis/vnic_impl.hpp"
 #include "nic/apollo/api/impl/artemis/mapping_impl.hpp"
@@ -74,6 +75,9 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
     switch (obj_id) {
     case IMPL_OBJ_ID_DEVICE:
         return device_impl::factory((pds_device_spec_t *)args);
+
+    case IMPL_OBJ_ID_TEP:
+        return tep_impl::factory((pds_tep_spec_t *)args);
 
     case IMPL_OBJ_ID_VPC:
         return vpc_impl::factory((pds_vpc_spec_t *)args);
@@ -163,6 +167,9 @@ impl_base::destroy(impl_obj_id_t obj_id, impl_base *impl) {
     switch (obj_id) {
     case IMPL_OBJ_ID_DEVICE:
         return device_impl::destroy((device_impl *)impl);
+
+    case IMPL_OBJ_ID_TEP:
+        return tep_impl::destroy((tep_impl *)impl);
 
     case IMPL_OBJ_ID_VPC:
         return vpc_impl::destroy((vpc_impl *)impl);
