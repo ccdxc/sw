@@ -5,15 +5,19 @@
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
+#include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
 
 namespace hal {
 namespace pd {
+
+using hal::pd::utils::acl_tcam_entry_handle_t;
 
 struct pd_lif_s {
     uint32_t    hw_lif_id;                  // Id used to carve out buffers
     uint32_t    lif_lport_id;               // Index into O/PMapping table
     uint32_t    tx_sched_table_offset;
     uint32_t    tx_sched_num_table_entries;
+    acl_tcam_entry_handle_t host_mgmt_acl_handle;
 
     // pi ptr
     void        *pi_lif;
@@ -47,6 +51,8 @@ hal_ret_t pd_lif_handle_promiscous_filter_change (lif_t *lif,
                                                   pd_lif_update_args_t *args,
                                                   bool skip_hw_pgm);
 uint32_t pd_lif_get_enic_lport(lif_id_t lif_id);
+hal_ret_t pd_lif_pgm_host_mgmt (pd_lif_t *pd_lif);
+hal_ret_t pd_lif_depgm_host_mgmt (pd_lif_t *pd_lif);
 
 }   // namespace pd
 }   // namespace hal

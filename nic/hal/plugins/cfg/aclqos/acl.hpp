@@ -56,6 +56,7 @@ namespace hal {
 #define ACL_EPLEARN_ENTRY_PRIORITY_END         7
 #define ACL_SNAKE_TEST_PRIORITY_BEGIN          8
 #define ACL_SNAKE_TEST_PRIORITY_END            23
+#define ACL_HOSTPIN_HOST_MGMT_DROP             24
 
 
 typedef struct acl_eth_match_spec_s {

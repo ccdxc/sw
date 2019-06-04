@@ -367,6 +367,7 @@ lif_pd_init (pd_lif_t *lif)
     }
     // Set here if you want to initialize any fields
     lif->tx_sched_table_offset = INVALID_INDEXER_INDEX;
+    lif->host_mgmt_acl_handle = INVALID_INDEXER_INDEX;
 
     return lif;
 }
@@ -380,6 +381,7 @@ lif_pd_program_hw (pd_lif_t *pd_lif)
     hal_ret_t            ret;
     lif_t                *lif = (lif_t *)pd_lif->pi_lif;
     sdk_ret_t sdk_ret;
+
 
     // Program the rx-policer.
     ret = lif_pd_rx_policer_program_hw(pd_lif, false);
@@ -421,6 +423,17 @@ lif_pd_program_hw (pd_lif_t *pd_lif)
         goto end;
     }
 
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED &&
+        lif->type == types::LIF_TYPE_HOST_MANAGEMENT) {
+        ret = pd_lif_pgm_host_mgmt(pd_lif);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to program NACL to prevent "
+                          "non-classic traffic on host-mgmt. ret: {}", ret);
+            ret = HAL_RET_ERR;
+            goto end;
+        }
+    }
+
 end:
     return ret;
 }
@@ -459,6 +472,13 @@ lif_pd_deprogram_hw (pd_lif_t *pd_lif)
     ret = lif_pd_tx_policer_deprogram_hw(pd_lif);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("unable to deprogram hw for tx policer");
+        goto end;
+    }
+
+    ret = pd_lif_depgm_host_mgmt(pd_lif);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("unable to deprogram NACL to prevent "
+                      "non-classic traffic on host-mgmt. ret: {}", ret);
         goto end;
     }
 
@@ -1290,7 +1310,68 @@ end:
     return ret;
 }
 
+hal_ret_t
+pd_lif_pgm_host_mgmt (pd_lif_t *pd_lif)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    lif_t               *pi_lif = (lif_t *)pd_lif->pi_lif;
+    nacl_swkey_t        key;
+    nacl_swkey_mask_t   mask;
+    nacl_actiondata_t   data;
+    acl_tcam            *acl_tbl = NULL;
 
+    acl_tbl = g_hal_state_pd->acl_table();
+    SDK_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    key.entry_inactive_nacl = 0;
+    mask.entry_inactive_nacl_mask = 0x1;
+
+    key.capri_intrinsic_lif = pd_lif->hw_lif_id;
+    mask.capri_intrinsic_lif_mask =
+        ~(mask.capri_intrinsic_lif_mask & 0);
+    key.control_metadata_nic_mode = NIC_MODE_SMART;
+    mask.control_metadata_nic_mode_mask =
+        ~(mask.control_metadata_nic_mode_mask & 0);
+    data.action_id = NACL_NACL_DENY_ID;
+
+    ret = acl_tbl->insert(&key, &mask, &data,
+                          ACL_HOSTPIN_HOST_MGMT_DROP, &pd_lif->host_mgmt_acl_handle);
+    if (ret == HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Programmed nacl to prevent non-classic traffic "
+                        "on host-mgmt.");
+    } else {
+        HAL_TRACE_ERR("Unable to program nacl to prevent non-classic traffic "
+                      "on host-mgmt. ret: {}", ret);
+    }
+
+    return ret;
+}
+
+hal_ret_t
+pd_lif_depgm_host_mgmt (pd_lif_t *pd_lif)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    acl_tcam  *acl_tbl = NULL;
+
+    acl_tbl = g_hal_state_pd->acl_table();
+    SDK_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
+
+    if (pd_lif->host_mgmt_acl_handle != INVALID_INDEXER_INDEX) {
+        ret = acl_tbl->remove(pd_lif->host_mgmt_acl_handle);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to cleanup for acl: {}",
+                          pd_lif->host_mgmt_acl_handle);
+        } else {
+            HAL_TRACE_DEBUG("Programmed cleanup acl: {}",
+                            pd_lif->host_mgmt_acl_handle);
+        }
+    }
+    return ret;
+}
 
 }    // namespace pd
 }    // namespace hal

@@ -74,6 +74,7 @@ action nacl_deny() {
 table nacl {
     reads {
         entry_inactive.nacl                 : ternary;
+        capri_intrinsic.lif                 : ternary;
         control_metadata.nic_mode           : ternary;
         control_metadata.from_cpu           : ternary;
         flow_lkp_metadata.lkp_dir           : ternary;

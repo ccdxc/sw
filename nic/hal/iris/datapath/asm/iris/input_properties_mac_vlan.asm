@@ -20,8 +20,8 @@ input_properties_mac_vlan:
                        capri_p4_intrinsic_frame_size_sbit6_ebit13}, r1
 
   seq           c3, k.recirc_header_valid, TRUE
-  phvwrpair.c3  p.control_metadata_recirc_reason, k.recirc_header_reason[1:0], \
-                p.qos_metadata_qos_class_id[4:0], k.capri_intrinsic_tm_iq[4:0]
+  phvwr.c3      p.control_metadata_recirc_reason, k.recirc_header_reason[1:0]
+  phvwr.c3      p.qos_metadata_qos_class_id[4:0], k.capri_intrinsic_tm_iq[4:0]
   sub.c3        r1, r1, P4_RECIRC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ
 
   // if table lookup is miss, return
@@ -44,7 +44,7 @@ input_properties_mac_vlan:
   or            r1, d.input_properties_mac_vlan_d.tunnel_vnid, \
                     d.input_properties_mac_vlan_d.tunnel_rewrite_index, 30
   phvwr         p.{flow_miss_metadata_tunnel_rewrite_index, \
-                    _flit_pad__930, \
+                    _flit_pad__2834, \
                     flow_miss_metadata_tunnel_vnid}, r1
   or            r1, d.input_properties_mac_vlan_d.src_lport, \
                     d.input_properties_mac_vlan_d.dst_lport, 16
