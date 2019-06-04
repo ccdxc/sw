@@ -81,19 +81,18 @@ func (eh *TenantTopic) CreateTenant(ctx context.Context, objinfo *netproto.Tenan
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received CreateTenant from node %v: {%+v}", nodeID, objinfo)
 
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-		return nil, err
+	// trigger callbacks. we allow creates to happen before it exists in memdb
+	if eh.statusReactor != nil {
+		eh.statusReactor.OnTenantAgentStatusSet(nodeID, objinfo)
 	}
 
 	// increment stats
 	eh.server.Stats("Tenant", "AgentCreate").Inc()
 
-	// trigger callbacks
-	if eh.statusReactor != nil {
-		eh.statusReactor.OnTenantAgentStatusSet(nodeID, objinfo)
+	// add object to node state
+	err := eh.server.AddNodeState(nodeID, objinfo)
+	if err != nil {
+		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -127,11 +126,6 @@ func (eh *TenantTopic) DeleteTenant(ctx context.Context, objinfo *netproto.Tenan
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received DeleteTenant from node %v: {%+v}", nodeID, objinfo)
 
-	// trigger callbacks
-	if eh.statusReactor != nil {
-		eh.statusReactor.OnTenantAgentStatusDelete(nodeID, objinfo)
-	}
-
 	// incr stats
 	eh.server.Stats("Tenant", "AgentDelete").Inc()
 
@@ -139,7 +133,11 @@ func (eh *TenantTopic) DeleteTenant(ctx context.Context, objinfo *netproto.Tenan
 	err := eh.server.DelNodeState(nodeID, objinfo)
 	if err != nil {
 		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-		return nil, err
+	}
+
+	// trigger callbacks
+	if eh.statusReactor != nil {
+		eh.statusReactor.OnTenantAgentStatusDelete(nodeID, objinfo)
 	}
 
 	return objinfo, nil

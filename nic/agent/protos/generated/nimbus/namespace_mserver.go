@@ -81,19 +81,18 @@ func (eh *NamespaceTopic) CreateNamespace(ctx context.Context, objinfo *netproto
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received CreateNamespace from node %v: {%+v}", nodeID, objinfo)
 
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-		return nil, err
+	// trigger callbacks. we allow creates to happen before it exists in memdb
+	if eh.statusReactor != nil {
+		eh.statusReactor.OnNamespaceAgentStatusSet(nodeID, objinfo)
 	}
 
 	// increment stats
 	eh.server.Stats("Namespace", "AgentCreate").Inc()
 
-	// trigger callbacks
-	if eh.statusReactor != nil {
-		eh.statusReactor.OnNamespaceAgentStatusSet(nodeID, objinfo)
+	// add object to node state
+	err := eh.server.AddNodeState(nodeID, objinfo)
+	if err != nil {
+		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -127,11 +126,6 @@ func (eh *NamespaceTopic) DeleteNamespace(ctx context.Context, objinfo *netproto
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received DeleteNamespace from node %v: {%+v}", nodeID, objinfo)
 
-	// trigger callbacks
-	if eh.statusReactor != nil {
-		eh.statusReactor.OnNamespaceAgentStatusDelete(nodeID, objinfo)
-	}
-
 	// incr stats
 	eh.server.Stats("Namespace", "AgentDelete").Inc()
 
@@ -139,7 +133,11 @@ func (eh *NamespaceTopic) DeleteNamespace(ctx context.Context, objinfo *netproto
 	err := eh.server.DelNodeState(nodeID, objinfo)
 	if err != nil {
 		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-		return nil, err
+	}
+
+	// trigger callbacks
+	if eh.statusReactor != nil {
+		eh.statusReactor.OnNamespaceAgentStatusDelete(nodeID, objinfo)
 	}
 
 	return objinfo, nil

@@ -81,19 +81,18 @@ func (eh *EndpointTopic) CreateEndpoint(ctx context.Context, objinfo *netproto.E
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received CreateEndpoint from node %v: {%+v}", nodeID, objinfo)
 
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-		return nil, err
+	// trigger callbacks. we allow creates to happen before it exists in memdb
+	if eh.statusReactor != nil {
+		eh.statusReactor.OnEndpointAgentStatusSet(nodeID, objinfo)
 	}
 
 	// increment stats
 	eh.server.Stats("Endpoint", "AgentCreate").Inc()
 
-	// trigger callbacks
-	if eh.statusReactor != nil {
-		eh.statusReactor.OnEndpointAgentStatusSet(nodeID, objinfo)
+	// add object to node state
+	err := eh.server.AddNodeState(nodeID, objinfo)
+	if err != nil {
+		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -127,11 +126,6 @@ func (eh *EndpointTopic) DeleteEndpoint(ctx context.Context, objinfo *netproto.E
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received DeleteEndpoint from node %v: {%+v}", nodeID, objinfo)
 
-	// trigger callbacks
-	if eh.statusReactor != nil {
-		eh.statusReactor.OnEndpointAgentStatusDelete(nodeID, objinfo)
-	}
-
 	// incr stats
 	eh.server.Stats("Endpoint", "AgentDelete").Inc()
 
@@ -139,7 +133,11 @@ func (eh *EndpointTopic) DeleteEndpoint(ctx context.Context, objinfo *netproto.E
 	err := eh.server.DelNodeState(nodeID, objinfo)
 	if err != nil {
 		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-		return nil, err
+	}
+
+	// trigger callbacks
+	if eh.statusReactor != nil {
+		eh.statusReactor.OnEndpointAgentStatusDelete(nodeID, objinfo)
 	}
 
 	return objinfo, nil

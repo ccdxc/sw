@@ -81,19 +81,18 @@ func (eh *SecurityGroupTopic) CreateSecurityGroup(ctx context.Context, objinfo *
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received CreateSecurityGroup from node %v: {%+v}", nodeID, objinfo)
 
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-		return nil, err
+	// trigger callbacks. we allow creates to happen before it exists in memdb
+	if eh.statusReactor != nil {
+		eh.statusReactor.OnSecurityGroupAgentStatusSet(nodeID, objinfo)
 	}
 
 	// increment stats
 	eh.server.Stats("SecurityGroup", "AgentCreate").Inc()
 
-	// trigger callbacks
-	if eh.statusReactor != nil {
-		eh.statusReactor.OnSecurityGroupAgentStatusSet(nodeID, objinfo)
+	// add object to node state
+	err := eh.server.AddNodeState(nodeID, objinfo)
+	if err != nil {
+		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -127,11 +126,6 @@ func (eh *SecurityGroupTopic) DeleteSecurityGroup(ctx context.Context, objinfo *
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received DeleteSecurityGroup from node %v: {%+v}", nodeID, objinfo)
 
-	// trigger callbacks
-	if eh.statusReactor != nil {
-		eh.statusReactor.OnSecurityGroupAgentStatusDelete(nodeID, objinfo)
-	}
-
 	// incr stats
 	eh.server.Stats("SecurityGroup", "AgentDelete").Inc()
 
@@ -139,7 +133,11 @@ func (eh *SecurityGroupTopic) DeleteSecurityGroup(ctx context.Context, objinfo *
 	err := eh.server.DelNodeState(nodeID, objinfo)
 	if err != nil {
 		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-		return nil, err
+	}
+
+	// trigger callbacks
+	if eh.statusReactor != nil {
+		eh.statusReactor.OnSecurityGroupAgentStatusDelete(nodeID, objinfo)
 	}
 
 	return objinfo, nil
