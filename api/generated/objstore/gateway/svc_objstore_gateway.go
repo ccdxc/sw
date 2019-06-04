@@ -224,11 +224,7 @@ func (a adapterObjstoreV1) AutoListObject(oldctx oldcontext.Context, t *api.List
 	}
 
 	if t.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		t.Tenant = user.Tenant
+		t.Tenant = globals.DefaultTenant
 	}
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Object", t.Tenant, t.Namespace, "", ""
 
@@ -411,11 +407,7 @@ func (a adapterObjstoreV1) AutoWatchObject(oldctx oldcontext.Context, in *api.Li
 	}
 
 	if in.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		in.Tenant = user.Tenant
+		in.Tenant = globals.DefaultTenant
 	}
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Object", in.Tenant, in.Namespace, ""
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)

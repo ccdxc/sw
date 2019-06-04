@@ -336,11 +336,7 @@ func (a adapterNetworkV1) AutoListLbPolicy(oldctx oldcontext.Context, t *api.Lis
 	}
 
 	if t.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		t.Tenant = user.Tenant
+		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "LbPolicy", t.Tenant, t.Namespace, "network", ""
@@ -368,11 +364,7 @@ func (a adapterNetworkV1) AutoListNetwork(oldctx oldcontext.Context, t *api.List
 	}
 
 	if t.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		t.Tenant = user.Tenant
+		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Network", t.Tenant, t.Namespace, "network", ""
@@ -400,11 +392,7 @@ func (a adapterNetworkV1) AutoListService(oldctx oldcontext.Context, t *api.List
 	}
 
 	if t.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		t.Tenant = user.Tenant
+		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Service", t.Tenant, t.Namespace, "network", ""
@@ -432,11 +420,7 @@ func (a adapterNetworkV1) AutoListVirtualRouter(oldctx oldcontext.Context, t *ap
 	}
 
 	if t.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		t.Tenant = user.Tenant
+		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "VirtualRouter", t.Tenant, t.Namespace, "network", ""
@@ -609,11 +593,7 @@ func (a adapterNetworkV1) AutoWatchNetwork(oldctx oldcontext.Context, in *api.Li
 	}
 
 	if in.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		in.Tenant = user.Tenant
+		in.Tenant = globals.DefaultTenant
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Network", in.Tenant, in.Namespace, "network"
@@ -672,11 +652,7 @@ func (a adapterNetworkV1) AutoWatchService(oldctx oldcontext.Context, in *api.Li
 	}
 
 	if in.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		in.Tenant = user.Tenant
+		in.Tenant = globals.DefaultTenant
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Service", in.Tenant, in.Namespace, "network"
@@ -735,11 +711,7 @@ func (a adapterNetworkV1) AutoWatchLbPolicy(oldctx oldcontext.Context, in *api.L
 	}
 
 	if in.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		in.Tenant = user.Tenant
+		in.Tenant = globals.DefaultTenant
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "LbPolicy", in.Tenant, in.Namespace, "network"
@@ -798,11 +770,7 @@ func (a adapterNetworkV1) AutoWatchVirtualRouter(oldctx oldcontext.Context, in *
 	}
 
 	if in.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		in.Tenant = user.Tenant
+		in.Tenant = globals.DefaultTenant
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "VirtualRouter", in.Tenant, in.Namespace, "network"

@@ -69,8 +69,6 @@ func (r *constUpdateReq) Apply(ctx context.Context, txn kvstore.Txn, cache apiin
 			log.Infof("Overriding resVer [%v]", v.ResourceVersion)
 			rVer = v.ResourceVersion
 		}
-		// XXX-TODO(sanjayt): remove dumping of object
-		log.Infof("updated object is ver[%v][%+v]", rVer, o)
 		txn.AddComparator(kvstore.Compare(kvstore.WithVersion(v.Key), "=", rVer))
 	}
 	return nil

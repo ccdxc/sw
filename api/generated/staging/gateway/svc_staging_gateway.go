@@ -129,11 +129,7 @@ func (a adapterStagingV1) AutoListBuffer(oldctx oldcontext.Context, t *api.ListW
 	}
 
 	if t.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		t.Tenant = user.Tenant
+		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Buffer", t.Tenant, t.Namespace, "staging", ""
@@ -283,11 +279,7 @@ func (a adapterStagingV1) AutoWatchBuffer(oldctx oldcontext.Context, in *api.Lis
 	}
 
 	if in.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		in.Tenant = user.Tenant
+		in.Tenant = globals.DefaultTenant
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Buffer", in.Tenant, in.Namespace, "staging"

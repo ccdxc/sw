@@ -750,11 +750,7 @@ func (a adapterMonitoringV1) AutoListAlert(oldctx oldcontext.Context, t *api.Lis
 	}
 
 	if t.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		t.Tenant = user.Tenant
+		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Alert", t.Tenant, t.Namespace, "monitoring", ""
@@ -782,11 +778,7 @@ func (a adapterMonitoringV1) AutoListAlertDestination(oldctx oldcontext.Context,
 	}
 
 	if t.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		t.Tenant = user.Tenant
+		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "AlertDestination", t.Tenant, t.Namespace, "monitoring", ""
@@ -814,11 +806,7 @@ func (a adapterMonitoringV1) AutoListAlertPolicy(oldctx oldcontext.Context, t *a
 	}
 
 	if t.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		t.Tenant = user.Tenant
+		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "AlertPolicy", t.Tenant, t.Namespace, "monitoring", ""
@@ -846,11 +834,7 @@ func (a adapterMonitoringV1) AutoListEventPolicy(oldctx oldcontext.Context, t *a
 	}
 
 	if t.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		t.Tenant = user.Tenant
+		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "EventPolicy", t.Tenant, t.Namespace, "monitoring", ""
@@ -878,11 +862,7 @@ func (a adapterMonitoringV1) AutoListFlowExportPolicy(oldctx oldcontext.Context,
 	}
 
 	if t.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		t.Tenant = user.Tenant
+		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "FlowExportPolicy", t.Tenant, t.Namespace, "monitoring", ""
@@ -910,11 +890,7 @@ func (a adapterMonitoringV1) AutoListFwlogPolicy(oldctx oldcontext.Context, t *a
 	}
 
 	if t.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		t.Tenant = user.Tenant
+		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "FwlogPolicy", t.Tenant, t.Namespace, "monitoring", ""
@@ -942,11 +918,7 @@ func (a adapterMonitoringV1) AutoListMirrorSession(oldctx oldcontext.Context, t 
 	}
 
 	if t.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		t.Tenant = user.Tenant
+		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "MirrorSession", t.Tenant, t.Namespace, "monitoring", ""
@@ -974,11 +946,7 @@ func (a adapterMonitoringV1) AutoListStatsPolicy(oldctx oldcontext.Context, t *a
 	}
 
 	if t.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		t.Tenant = user.Tenant
+		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "StatsPolicy", t.Tenant, t.Namespace, "monitoring", ""
@@ -1032,11 +1000,7 @@ func (a adapterMonitoringV1) AutoListTroubleshootingSession(oldctx oldcontext.Co
 	}
 
 	if t.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		t.Tenant = user.Tenant
+		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", ""
@@ -1347,11 +1311,7 @@ func (a adapterMonitoringV1) AutoWatchEventPolicy(oldctx oldcontext.Context, in 
 	}
 
 	if in.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		in.Tenant = user.Tenant
+		in.Tenant = globals.DefaultTenant
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "EventPolicy", in.Tenant, in.Namespace, "monitoring"
@@ -1410,11 +1370,7 @@ func (a adapterMonitoringV1) AutoWatchStatsPolicy(oldctx oldcontext.Context, in 
 	}
 
 	if in.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		in.Tenant = user.Tenant
+		in.Tenant = globals.DefaultTenant
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "StatsPolicy", in.Tenant, in.Namespace, "monitoring"
@@ -1473,11 +1429,7 @@ func (a adapterMonitoringV1) AutoWatchFwlogPolicy(oldctx oldcontext.Context, in 
 	}
 
 	if in.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		in.Tenant = user.Tenant
+		in.Tenant = globals.DefaultTenant
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "FwlogPolicy", in.Tenant, in.Namespace, "monitoring"
@@ -1536,11 +1488,7 @@ func (a adapterMonitoringV1) AutoWatchFlowExportPolicy(oldctx oldcontext.Context
 	}
 
 	if in.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		in.Tenant = user.Tenant
+		in.Tenant = globals.DefaultTenant
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "FlowExportPolicy", in.Tenant, in.Namespace, "monitoring"
@@ -1599,11 +1547,7 @@ func (a adapterMonitoringV1) AutoWatchAlert(oldctx oldcontext.Context, in *api.L
 	}
 
 	if in.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		in.Tenant = user.Tenant
+		in.Tenant = globals.DefaultTenant
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Alert", in.Tenant, in.Namespace, "monitoring"
@@ -1662,11 +1606,7 @@ func (a adapterMonitoringV1) AutoWatchAlertPolicy(oldctx oldcontext.Context, in 
 	}
 
 	if in.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		in.Tenant = user.Tenant
+		in.Tenant = globals.DefaultTenant
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "AlertPolicy", in.Tenant, in.Namespace, "monitoring"
@@ -1725,11 +1665,7 @@ func (a adapterMonitoringV1) AutoWatchAlertDestination(oldctx oldcontext.Context
 	}
 
 	if in.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		in.Tenant = user.Tenant
+		in.Tenant = globals.DefaultTenant
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "AlertDestination", in.Tenant, in.Namespace, "monitoring"
@@ -1788,11 +1724,7 @@ func (a adapterMonitoringV1) AutoWatchMirrorSession(oldctx oldcontext.Context, i
 	}
 
 	if in.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		in.Tenant = user.Tenant
+		in.Tenant = globals.DefaultTenant
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "MirrorSession", in.Tenant, in.Namespace, "monitoring"
@@ -1851,11 +1783,7 @@ func (a adapterMonitoringV1) AutoWatchTroubleshootingSession(oldctx oldcontext.C
 	}
 
 	if in.Tenant == "" {
-		user, ok := apigwpkg.UserFromContext(ctx)
-		if !ok {
-			return nil, errors.New("could not determine user")
-		}
-		in.Tenant = user.Tenant
+		in.Tenant = globals.DefaultTenant
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "TroubleshootingSession", in.Tenant, in.Namespace, "monitoring"
