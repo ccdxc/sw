@@ -39,7 +39,11 @@ export class GroupByTransform extends MetricTransform {
   transformDataset(opts: TransformDataset) {
     if (opts.series.tags != null) {
       const groupByValue = opts.series.tags[this.groupBy];
-      opts.dataset.label += ' - ' + groupByValue;
+      if (groupByValue != null && groupByValue.length > 0) {
+        opts.dataset.label += ' - ' + groupByValue;
+      }
+    } else {
+      opts.dataset.label = 'Avg ' + opts.dataset.label;
     }
   }
 }

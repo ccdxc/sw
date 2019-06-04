@@ -46,6 +46,7 @@ export abstract class MetricTransform {
   fields;
 
   // Hooks to be overridden
+  onMeasurementChange() {}
   onFieldChange() {}
   transformQuery(opts: TransformQuery) {}
   transformDataset(opts: TransformDataset) {}
@@ -116,6 +117,8 @@ export class DataSource {
     this.transforms.forEach( (t) => {
       t.measurement = this.measurement;
       t.fields = null;
+      t.onMeasurementChange();
+      t.onFieldChange();
     });
     this.reqMetrics.next(true);
   }

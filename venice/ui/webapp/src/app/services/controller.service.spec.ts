@@ -235,14 +235,14 @@ describe('ControllerService', () => {
           {
             severity: 'error',
             summary: Utility.VENICE_CONNECT_FAILURE_SUMMARY,
-            detail: 'Venice is temporarily unavailable.\n Please try again later.',
+            detail: 'Venice encountered an internal error.\n Some services may be temporarily unavailable.',
             sticky: true,
             buttons: []
           },
           {
             severity: 'error',
             summary: Utility.VENICE_CONNECT_FAILURE_SUMMARY,
-            detail: 'Venice is temporarily unavailable.\n Please try again later.',
+            detail: 'Venice encountered an internal error.\n Some services may be temporarily unavailable.',
             sticky: true,
             buttons: []
           },

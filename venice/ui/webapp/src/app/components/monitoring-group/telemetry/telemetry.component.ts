@@ -14,6 +14,7 @@ import { ChartData, ChartDataSets, ColorTransform, DisplayLabelTransform, GroupB
 import { AxisTransform } from './transforms/axis.transform';
 import { TimeRange } from '@app/components/shared/timerange/utility';
 import { UIChartComponent } from '@app/components/shared/primeng-chart/chart';
+import { FieldSelectorTransform } from './transforms/fieldselector.transform';
 
 /**
  * A data source allows a user to select a single measurement,
@@ -28,6 +29,8 @@ import { UIChartComponent } from '@app/components/shared/primeng-chart/chart';
  * possible for transforms to read state from each other.
  *
  * Graph transforms are similar, but only affect graph level options.
+ *
+ * To see methods and hooks that transforms have access to, look at transforms/types.ts
  */
 
 
@@ -106,13 +109,13 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
   }
 
   generateDefaultGraphOptions(): ChartOptions {
-    return {
+    const options: ChartOptions = {
       title: {
           display: false,
       },
       legend: {
           display: true,
-          position: 'bottom'
+          position: 'bottom',
       },
       layout: {
         padding: 20
@@ -148,6 +151,7 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
         }]
       }
     };
+    return options;
   }
 
   getSelectedSource(): DataSource {
@@ -180,6 +184,7 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
       new DisplayLabelTransform(),
       new ColorTransform(),
       new GroupByTransform(),
+      new FieldSelectorTransform(),
     ]);
     this.dataSources.push(source);
   }
@@ -193,6 +198,7 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
     } else if (this.selectedDataSourceIndex > index) {
       this.selectedDataSourceIndex -= 1;
     }
+    this.getMetrics();
   }
 
   setTimeRange(timeRange: TimeRange) {

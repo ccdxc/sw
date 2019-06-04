@@ -467,13 +467,16 @@ export class ControllerService {
       this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, 'Your authorization is insufficient. Please check with your system administrator.');
       return;
     } else if (error.statusCode >= 500) {
-      this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, 'Venice is temporarily unavailable. Please try again later.');
+      this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, 'Venice encountered an internal error. Some services may be temporarily unavailable.');
       return;
     }
 
     if (error.statusCode !== 0) {
       // If status code is 400, we should almost always have a body with error message
-      const errorMsg = error.body != null ? error.body.message : 'Bad request';
+      let errorMsg = error.body != null ? error.body.message : 'Bad request';
+      if (errorMsg instanceof Array) {
+        errorMsg = errorMsg.join('\n');
+      }
       this.invokeErrorToaster(summary, errorMsg);
       return;
     }

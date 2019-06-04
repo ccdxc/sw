@@ -78,7 +78,7 @@ $vertical-gutter: 5px;
 
 .telemetry-data-sources {
   margin: 10px;
-
+  overflow: hidden;
 }
 
 .telemetry-data-border-top {
@@ -134,4 +134,19 @@ $vertical-gutter: 5px;
   height: 10px;
   width: 10px;
   border-radius: 50%;
+}
+
+.telemetry-field-selector-title {
+  margin-top: 9px;
+}
+
+.telemetry-view-transforms {
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.telemetry-field-transforms {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }

@@ -3,7 +3,7 @@ import { AbstractControl, FormArray, FormGroup, ValidatorFn, ValidationErrors } 
 import { SearchExpression } from '@app/components/search/index.ts';
 import { AUTH_BODY, AUTH_KEY } from '@app/core/auth/auth.reducer';
 import { CategoryMapping } from '@sdk/v1/models/generated/category-mapping.model';
-import { FieldsRequirement_operator } from '@sdk/v1/models/generated/monitoring';
+import { FieldsRequirement_operator, IFieldsSelector } from '@sdk/v1/models/generated/monitoring';
 import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
@@ -15,6 +15,7 @@ import { RepeaterComponent } from 'web-app-framework';
 import { Eventtypes } from '../enum/eventtypes.enum';
 import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
+import { FieldsSelector } from '@sdk/v1/models/generated/search';
 
 
 
@@ -50,7 +51,7 @@ export class Utility {
    * If a field is free form text, we split by comma to turn
    * it into an array of values
    */
-  public static formatRepeaterData(data, valueFormName) {
+  public static formatRepeaterData(data: any[], valueFormName: string = 'valueFormControl') {
     if (data == null) {
       return null;
     }
@@ -77,6 +78,45 @@ export class Utility {
       return item;
     });
     return retData;
+  }
+
+  public static stringifyRepeaterData(data: IFieldsSelector[], keyFormName: string = 'keyFormControl', operatorFormName: string = 'operatorFormControl', valueFormName: string = 'valueFormControl'): string[] {
+    if (data == null) {
+      return [];
+    }
+    const ret = [];
+    data.forEach((item) => {
+      const key = item[keyFormName];
+      let operator = item[operatorFormName];
+      switch (operator) {
+        case 'equals':
+        case 'in':
+          operator = '=';
+          break;
+        case 'notEquals':
+        case 'notIn':
+          operator = '!=';
+          break;
+        case 'gt':
+          operator = '>';
+          break;
+        case 'gte':
+          operator = '>=';
+          break;
+        case 'lt':
+          operator = '<';
+          break;
+        case 'lte':
+          operator = '<=';
+          break;
+        default:
+          break;
+      }
+      const values = item[valueFormName].join(', ');
+      const res = `${key} ${operator} ${values}`;
+      ret.push(res);
+    });
+    return ret;
   }
 
   public static getAuditEventCacheSize(): number {

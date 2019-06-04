@@ -83,7 +83,7 @@
 </ng-template>
 
 <ng-template #ViewSource let-source let-index="index">
-  <div fxFlex="none" fxLayout="row">
+  <div fxFlex="auto" fxLayout="row">
     <div fxFlex="none" fxLayout="row" fxLayoutGap="5px">
       <div fxFlex="none" [matTooltip]="getMeasurementMetadata(source.measurement).description">
         {{ getMeasurementMetadata(source.measurement).displayName }} </div>
@@ -94,16 +94,24 @@
       </div>
     </div>
     <div fxFlex="15px"></div>
-    <div fxFlex="none" fxLayout="row wrap" fxLayoutGap="10px">
+    <div fxFlex="nogrow" fxLayout="row" fxLayoutGap="10px" class="telemetry-view-transforms">
       <ng-container *ngFor="let t of source.transforms" [ngSwitch]="t.transformName">
+
         <ng-container *ngSwitchCase="'GroupBy'">
           <ng-container
-                        *ngTemplateOutlet="GroupByView; context:{groupBySource: t}">
+                        *ngTemplateOutlet="GroupByView; context:{transform: t}">
           </ng-container>
         </ng-container>
+
+        <ng-container *ngSwitchCase="'FieldSelector'">
+          <ng-container
+                        *ngTemplateOutlet="FieldSelectorView; context:{transform: t}">
+          </ng-container>
+        </ng-container>
+
       </ng-container>
     </div>
-    <div fxFlex></div>
+    <div fxFlex="auto"></div>
 
     <!-- COLOR TRANSFORM -->
     <div fxFlex="none" fxLayout="row" fxLayoutGap="5px" fxLayoutAlign="center center"
@@ -157,14 +165,38 @@
     </div>
     <div [@fastSlideInOut] *ngIf="source.fields.length != 0" fxFlex="none" fxLayout="column">
       <div fxFlex="10px"></div>
-      <div fxFlex="none" fxLayout="row wrap" fxLayoutAlign="space-between center">
+
+      <div fxFlex="none" fxLayout="row wrap" fxLayoutAlign="start center">
+        <!-- Field selector and label selector are always on their own row -->
         <ng-container *ngFor="let t of source.transforms" [ngSwitch]="t.transformName">
-          <ng-container *ngSwitchCase="'GroupBy'">
-            <ng-container *ngTemplateOutlet="GroupByEdit; context:{groupBySource: t}">
+
+          <ng-container *ngSwitchCase="'FieldSelector'">
+            <ng-container *ngTemplateOutlet="FieldSelectorEdit; context:{transform: t}">
             </ng-container>
           </ng-container>
+
+          <ng-container *ngSwitchCase="'LabelSelector'">
+            <ng-container *ngTemplateOutlet="LabelSelectorEdit; context:{transform: t}">
+            </ng-container>
+          </ng-container>
+
         </ng-container>
       </div>
+
+      <div fxFlex="5px"></div>
+
+      <div fxFlex="none" fxLayout="row wrap" fxLayoutAlign="start center">
+        <!-- Rest of the transforms -->
+        <ng-container *ngFor="let t of source.transforms" [ngSwitch]="t.transformName">
+
+          <ng-container *ngSwitchCase="'GroupBy'">
+            <ng-container *ngTemplateOutlet="GroupByEdit; context:{transform: t}">
+            </ng-container>
+          </ng-container>
+
+        </ng-container>
+      </div>
+
       <div fxFlex="10px"></div>
     </div>
   </div>
@@ -175,21 +207,67 @@
 </ng-template>
 
 
-<!-- Transforms -->
-<ng-template #GroupByEdit let-groupBySource="groupBySource">
-  <div *ngIf="groupBySource.groupByOptions != null && groupBySource.groupByOptions.length > 1"
-       fxFlex="none" fxLayout="row" fxLayoutAlign="start center">
-    <div fxFlex="None">Group by: </div>
-    <div fxFlex="5px"></div>
-    <p-dropdown appendTo="body" fxFlex="200px" [options]="groupBySource.groupByOptions"
-                [(ngModel)]="groupBySource.groupBy"></p-dropdown>
+<!-- -------------- TRANSFORMS -------------- -->
+<!-- Group By -->
+<ng-template #GroupByEdit let-transform="transform">
+  <div *ngIf="transform.groupByOptions != null && transform.groupByOptions.length > 1"
+       fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center">
+    <div fxFlex="nogrow">Group by: </div>
+    <div fxFlex="50px"></div>
+    <p-dropdown appendTo="body" fxFlex="290px" [options]="transform.groupByOptions"
+                [(ngModel)]="transform.groupBy"></p-dropdown>
   </div>
 </ng-template>
 
-<ng-template #GroupByView let-groupBySource="groupBySource">
-  <div *ngIf="groupBySource.groupBy != null" fxFlex="none" fxLayout="row" fxLayoutGap="5px"
+<ng-template #GroupByView let-transform="transform">
+  <div *ngIf="transform.groupBy != null" fxFlex="none" fxLayout="row" fxLayoutGap="5px"
        fxLayoutAlign="start center">
-    <div fxFlex="None">Group by:</div>
-    <div fxFlex="None">{{ groupBySource.groupBy }} </div>
+    <div fxFlex="none">Group by:</div>
+    <div fxFlex="none" class="telemetry-wrap">{{ transform.groupBy }} </div>
+  </div>
+</ng-template>
+
+
+<!-- Field Selector -->
+<ng-template #FieldSelectorEdit let-transform="transform">
+  <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start">
+    <div fxFlex="nogrow" class="telemetry-field-selector-title">Filter by fields: </div>
+    <div fxFlex="5px"></div>
+    <app-repeater fxFlex="auto"
+                  [data]="transform.fieldData"
+                  [formArray]="transform.formArray"
+                  [keyDropdownFilter]="true"
+                  [buildValuePlaceholder]="transform.buildFieldValuePlaceholder">
+    </app-repeater>
+  </div>
+</ng-template>
+
+<ng-template #FieldSelectorView let-transform="transform">
+  <div *ngIf="transform.stringForm.length > 0" fxFlex="none" fxLayout="row" fxLayoutGap="5px"
+       fxLayoutAlign="start center">
+    <div fxFlex="none">Filter:</div>
+    <div class="telemetry-field-transforms" fxFlex="none" class="telemetry-wrap">
+      {{ transform.stringForm }} </div>
+  </div>
+</ng-template>
+
+<!-- Label Selector -->
+<ng-template #LabelSelectorEdit let-transform="transform">
+  <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center">
+    <div fxFlex="nogrow">Filter by labels: </div>
+    <div fxFlex="5px"></div>
+    <app-repeater
+                  [data]="transform.labelData"
+                  [formArray]="transform.formArray"
+                  [buildValuePlaceholder]="transform.buildFieldValuePlaceholder">
+    </app-repeater>
+  </div>
+</ng-template>
+
+<ng-template #LabelSelectorView let-transform="transform">
+  <div *ngIf="transform.stringForm.length > 0" fxFlex="nogrow" fxLayout="row" fxLayoutGap="5px"
+       fxLayoutAlign="start center">
+    <div fxFlex="nogrow">Filter by labels:</div>
+    <div fxFlex="nogrow">{{ transform.stringForm }} </div>
   </div>
 </ng-template>
