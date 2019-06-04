@@ -13,6 +13,7 @@ export interface IMonitoringTechSupportNodeResult {
     'start-time'?: Date;
     'end-time'?: Date;
     'status': MonitoringTechSupportNodeResult_status;
+    'reason'?: string;
     'uri'?: string;
 }
 
@@ -21,6 +22,7 @@ export class MonitoringTechSupportNodeResult extends BaseModel implements IMonit
     'start-time': Date = null;
     'end-time': Date = null;
     'status': MonitoringTechSupportNodeResult_status = null;
+    'reason': string = null;
     'uri': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'start-time': {
@@ -35,6 +37,10 @@ export class MonitoringTechSupportNodeResult extends BaseModel implements IMonit
             enum: MonitoringTechSupportNodeResult_status,
             default: 'Scheduled',
             required: true,
+            type: 'string'
+        },
+        'reason': {
+            required: false,
             type: 'string'
         },
         'uri': {
@@ -94,6 +100,13 @@ export class MonitoringTechSupportNodeResult extends BaseModel implements IMonit
         } else {
             this['status'] = null
         }
+        if (values && values['reason'] != null) {
+            this['reason'] = values['reason'];
+        } else if (fillDefaults && MonitoringTechSupportNodeResult.hasDefaultValue('reason')) {
+            this['reason'] = MonitoringTechSupportNodeResult.propInfo['reason'].default;
+        } else {
+            this['reason'] = null
+        }
         if (values && values['uri'] != null) {
             this['uri'] = values['uri'];
         } else if (fillDefaults && MonitoringTechSupportNodeResult.hasDefaultValue('uri')) {
@@ -111,6 +124,7 @@ export class MonitoringTechSupportNodeResult extends BaseModel implements IMonit
                 'start-time': CustomFormControl(new FormControl(this['start-time']), MonitoringTechSupportNodeResult.propInfo['start-time']),
                 'end-time': CustomFormControl(new FormControl(this['end-time']), MonitoringTechSupportNodeResult.propInfo['end-time']),
                 'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(MonitoringTechSupportNodeResult_status), ]), MonitoringTechSupportNodeResult.propInfo['status']),
+                'reason': CustomFormControl(new FormControl(this['reason']), MonitoringTechSupportNodeResult.propInfo['reason']),
                 'uri': CustomFormControl(new FormControl(this['uri']), MonitoringTechSupportNodeResult.propInfo['uri']),
             });
         }
@@ -126,6 +140,7 @@ export class MonitoringTechSupportNodeResult extends BaseModel implements IMonit
             this._formGroup.controls['start-time'].setValue(this['start-time']);
             this._formGroup.controls['end-time'].setValue(this['end-time']);
             this._formGroup.controls['status'].setValue(this['status']);
+            this._formGroup.controls['reason'].setValue(this['reason']);
             this._formGroup.controls['uri'].setValue(this['uri']);
         }
     }

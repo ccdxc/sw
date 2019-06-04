@@ -232,6 +232,10 @@ func (ag *TSMClient) sendUpdate(work *tsproto.TechSupportRequest, status tsproto
 		update.Status.StartTime = work.Status.StartTime
 		update.Status.EndTime = &endTime
 		update.Status.URI = work.Status.URI
+
+		if len(work.Status.Reason) > 0 {
+			update.Status.Reason = work.Status.Reason
+		}
 	}
 
 	updParams := &tsproto.UpdateTechSupportResultParameters{
@@ -282,6 +286,7 @@ func (ag *TSMClient) DoWork(work tsproto.TechSupportRequest) error {
 	err := ag.pre(&work)
 	if err != nil {
 		log.Errorf("Failed to finish pre-work : %v", err)
+		work.Status.Reason = fmt.Sprintf("Pre-Work failed. Err : %v", err)
 		ag.sendUpdate(&work, tsproto.TechSupportRequestStatus_Failed)
 		return err
 	}
@@ -289,6 +294,7 @@ func (ag *TSMClient) DoWork(work tsproto.TechSupportRequest) error {
 	err = ag.do(&work)
 	if err != nil {
 		log.Errorf("Failed to finish work : %v", err)
+		work.Status.Reason = fmt.Sprintf("Failed Work. Err : %v", err)
 		ag.sendUpdate(&work, tsproto.TechSupportRequestStatus_Failed)
 		return err
 	}
@@ -296,6 +302,7 @@ func (ag *TSMClient) DoWork(work tsproto.TechSupportRequest) error {
 	err = ag.post(&work)
 	if err != nil {
 		log.Errorf("Failed to finish post-work : %v", err)
+		work.Status.Reason = fmt.Sprintf("Post-Work failed. Err : %v", err)
 		ag.sendUpdate(&work, tsproto.TechSupportRequestStatus_Failed)
 		return err
 	}

@@ -41,7 +41,8 @@ message TechSupportRequestStatus {
   ActionStatus      Status        = 1 [(gogoproto.jsontag) = "status,omitempty"];
   api.Timestamp     StartTime     = 2 [(gogoproto.jsontag) = "start-time,omitempty"];
   api.Timestamp     EndTime       = 3 [(gogoproto.jsontag) = "end-time,omitempty"];
-  string            URI           = 4 [(gogoproto.jsontag) = "uri,omitempty"];
+  string            Reason        = 4 [(gogoproto.jsontag) = "reason,omitempty"];
+  string            URI           = 5 [(gogoproto.jsontag) = "uri,omitempty"];
 }
 
 message TechSupportRequest {

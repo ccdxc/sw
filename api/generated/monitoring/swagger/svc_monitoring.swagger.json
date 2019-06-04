@@ -14599,6 +14599,9 @@
           ],
           "default": "Scheduled"
         },
+        "reason": {
+          "type": "string"
+        },
         "uri": {
           "type": "string"
         }
