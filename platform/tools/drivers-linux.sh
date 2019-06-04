@@ -89,11 +89,10 @@ rsync -r --copy-links \
   "$COMMON_SRC/" "$COMMON_GEN_DIR"
 
 # Copy rdma-core sources to gen dir
-rsync -r --delete --delete-excluded --copy-links \
+# Use --links to preserve the link in rdma-core/pyverbs.
+rsync -r --delete --delete-excluded --links \
   --exclude=".git/" \
   --exclude="build/" \
-  --exclude="ionic/" \
-  --exclude="ionic-abi.h" \
   "$RDMACORE_SRC/" "$GEN_DIR/rdma-core"
 # Create relative symbolic links within the gen dir to driver sources
 ln -s "../../drivers/rdma/lib/ionic" \
@@ -102,55 +101,15 @@ ln -s "../../../drivers/rdma/drv/ionic/uapi/rdma/ionic-abi.h" \
     "$GEN_DIR/rdma-core/kernel-headers/rdma/ionic-abi.h"
 
 # Copy krping sources to gen dir
-rsync -r "$KRPING_SRC/" "$GEN_DIR/krping"
+rsync -r --delete --delete-excluded --exclude=".git/" \
+  "$KRPING_SRC/" "$GEN_DIR/krping"
 
 # Copy perftest sources to gen dir
-rsync -r --delete --delete-excluded \
-  --exclude=".git/" \
-  --exclude="*.a" \
-  --exclude="*.o" \
-  --exclude="ib_send_bw" \
-  --exclude="ib_send_lat" \
-  --exclude="ib_write_bw" \
-  --exclude="ib_write_lat" \
-  --exclude="ib_read_bw" \
-  --exclude="ib_read_lat" \
-  --exclude="ib_atomic_bw" \
-  --exclude="ib_atomic_lat" \
-  --exclude="raw_ethernet_burst_lat" \
-  --exclude="raw_ethernet_bw" \
-  --exclude="raw_ethernet_fs_rate" \
-  --exclude="raw_ethernet_lat" \
-  --exclude="src/.deps/" \
-  --exclude="src/.dirstamp" \
-  --exclude="libtool" \
-  --exclude="stamp-h1" \
-  --exclude="m4/" \
+rsync -r --delete --delete-excluded --exclude=".git/" \
   "$PERFTEST_SRC/" "$GEN_DIR/perftest"
 
 # Copy qperf sources to gen dir
-rsync -r --delete --delete-excluded \
-  --exclude=".git/" \
-  --exclude="ChangeLog" \
-  --exclude="Makefile" \
-  --exclude="Makefile.in" \
-  --exclude="NEWS" \
-  --exclude="aclocal.m4" \
-  --exclude="autom4te.cache/" \
-  --exclude="compile" \
-  --exclude="config.log" \
-  --exclude="config.status" \
-  --exclude="configure" \
-  --exclude="depcomp" \
-  --exclude="install-sh" \
-  --exclude="missing" \
-  --exclude="src/.deps/" \
-  --exclude="src/Makefile" \
-  --exclude="src/Makefile.in" \
-  --exclude="src/help.c" \
-  --exclude="*.o" \
-  --exclude="src/qperf" \
-  --exclude="src/qperf.1" \
+rsync -r --delete --delete-excluded --exclude=".git/" \
   "$QPERF_SRC/" "$GEN_DIR/qperf"
 
 # Set version string

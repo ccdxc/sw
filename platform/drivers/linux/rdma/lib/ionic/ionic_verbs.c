@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -1050,8 +1050,8 @@ static struct ibv_qp *ionic_create_qp_ex(struct ibv_context *ibctx,
 	req.rq_spec = qp->rq_spec;
 
 	rc = ibv_cmd_create_qp_ex2(ibctx, &qp->vqp, sizeof(qp->vqp), ex,
-				   &req.ibv_cmd, sizeof(req.ibv_cmd), sizeof(req),
-				   &resp.ibv_resp, sizeof(resp.ibv_resp), sizeof(resp));
+				   &req.ibv_cmd, sizeof(req),
+				   &resp.ibv_resp, sizeof(resp));
 	if (rc)
 		goto err_cmd;
 

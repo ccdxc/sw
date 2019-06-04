@@ -73,6 +73,7 @@ struct ionic_qdesc {
 
 struct ionic_ah_resp {
 	__u32 ahid;
+	__u32 pad;
 };
 
 struct ionic_cq_req {
@@ -81,6 +82,7 @@ struct ionic_cq_req {
 
 struct ionic_cq_resp {
 	__u32 cqid;
+	__u32 pad;
 };
 
 struct ionic_qp_req {

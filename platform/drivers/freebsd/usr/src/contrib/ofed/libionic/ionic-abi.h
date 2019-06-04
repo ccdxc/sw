@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -76,6 +76,7 @@ struct ionic_qdesc {
 struct uionic_ah_resp {
 	struct ibv_create_ah_resp ibv_resp;
 	__u32 ahid;
+	__u32 pad;
 };
 
 struct uionic_cq {
@@ -86,6 +87,7 @@ struct uionic_cq {
 struct uionic_cq_resp {
 	struct ibv_create_cq_resp ibv_resp;
 	__u32 cqid;
+	__u32 pad;
 };
 
 struct uionic_qp {

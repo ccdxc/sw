@@ -1,11 +1,28 @@
 #!/bin/bash
 
- exists()
+exists()
 {
   command -v "$1" >/dev/null 2>&1
 }
 
- if exists yum; then
+# Ugh. libnl3-devel is required for rdma-core, but Oracle
+# has moved it to the 'optional' repo.
+yum_repo()
+{
+    cat <<-EOF > /etc/yum.repos.d/oraclelinux-optional-ol7.repo
+	[ol7_optional]
+	name=Oracle Linux \$releasever Optional Packages (\$basearch)
+	baseurl=https://yum\$ociregion.oracle.com/repo/OracleLinux/OL7/optional/latest/\$basearch/
+	gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle
+	gpgcheck=1
+	enabled=1
+	EOF
+}
+
+if exists yum; then
+  if grep -q oracle /etc/os-release ; then
+    yum_repo
+  fi
   yum install -y \
     libtool \
     automake \
@@ -28,8 +45,8 @@
     psmisc \
     hping3
 
- else
-   apt-get install -y \
+else
+  apt-get install -y \
     build-essential \
     libtool \
     automake \

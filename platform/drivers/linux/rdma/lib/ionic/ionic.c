@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -128,7 +128,8 @@ static int ionic_env_spec(int kspec)
 }
 
 static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
-						 int cmd_fd)
+						 int cmd_fd,
+						 void *private_data)
 {
 	struct ionic_dev *dev = to_ionic_dev(ibdev);
 	struct ionic_ctx *ctx;
@@ -317,4 +318,4 @@ static const struct verbs_device_ops ionic_dev_ops = {
 	.alloc_context		= ionic_alloc_context,
 	.free_context		= ionic_free_context,
 };
-PROVIDER_DRIVER(ionic_dev_ops);
+PROVIDER_DRIVER(ionic, ionic_dev_ops);

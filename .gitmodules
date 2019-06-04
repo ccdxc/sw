@@ -19,3 +19,15 @@
 [submodule "nic/sdk/dpdk"]
 	path = nic/sdk/dpdk
 	url = git@github.com:/pensando/dpdk
+[submodule "platform/src/third-party/rdma/qperf"]
+	path = platform/src/third-party/rdma/qperf
+	url = git@github.com:pensando/qperf.git
+[submodule "platform/src/third-party/rdma/perftest"]
+	path = platform/src/third-party/rdma/perftest
+	url = git@github.com:pensando/perftest.git
+[submodule "platform/src/third-party/rdma/krping"]
+	path = platform/src/third-party/rdma/krping
+	url = git@github.com:pensando/krping.git
+[submodule "platform/src/third-party/rdma/rdma-core"]
+	path = platform/src/third-party/rdma/rdma-core
+	url = git@github.com:pensando/rdma-core.git

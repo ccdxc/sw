@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -107,34 +107,35 @@ static struct ibv_mr *fallback_reg_mr(struct ibv_pd *ibpd,
 				      size_t len,
 				      int access)
 {
-	struct ibv_mr *ibmr;
+	struct verbs_mr *vmr;
 	struct ibv_reg_mr req = {};
 	struct ib_uverbs_reg_mr_resp resp = {};
 	int rc;
 
-	ibmr = calloc(1, sizeof(*ibmr));
-	if (!ibmr) {
+	vmr = calloc(1, sizeof(*vmr));
+	if (!vmr) {
 		rc = errno;
 		goto err_mr;
 	}
 
-	rc = ibv_cmd_reg_mr(ibpd, addr, len, (uintptr_t)addr, access, ibmr,
+	rc = ibv_cmd_reg_mr(ibpd, addr, len, (uintptr_t)addr, access, vmr,
 			    &req, sizeof(req),
 			    &resp, sizeof(resp));
 	if (rc)
 		goto err_cmd;
 
-	return ibmr;
+	return &vmr->ibv_mr;
 
 err_cmd:
-	free(ibmr);
+	free(vmr);
 err_mr:
 	errno = rc;
 	return NULL;
 }
 
-static int fallback_rereg_mr(struct ibv_mr *ibmr, int flags, struct ibv_pd *pd,
-			     void *addr, size_t length, int access)
+static int fallback_rereg_mr(struct verbs_mr *vmr, int flags,
+			     struct ibv_pd *pd, void *addr, size_t length,
+			     int access)
 {
 	struct ibv_rereg_mr cmd;
 	struct ib_uverbs_rereg_mr_resp resp;
@@ -142,21 +143,21 @@ static int fallback_rereg_mr(struct ibv_mr *ibmr, int flags, struct ibv_pd *pd,
 	if (flags & IBV_REREG_MR_KEEP_VALID)
 		return ENOTSUP;
 
-	return ibv_cmd_rereg_mr(ibmr, flags, addr, length,
+	return ibv_cmd_rereg_mr(vmr, flags, addr, length,
 				(uintptr_t)addr, access, pd,
 				&cmd, sizeof(cmd),
 				&resp, sizeof(resp));
 }
 
-static int fallback_dereg_mr(struct ibv_mr *ibmr)
+static int fallback_dereg_mr(struct verbs_mr *vmr)
 {
 	int rc;
 
-	rc = ibv_cmd_dereg_mr(ibmr);
+	rc = ibv_cmd_dereg_mr(vmr);
 	if (rc)
 		return rc;
 
-	free(ibmr);
+	free(vmr);
 
 	return 0;
 }
@@ -238,8 +239,8 @@ static struct ibv_qp *fallback_create_qp_ex(struct ibv_context *ibctx,
 	}
 
 	rc = ibv_cmd_create_qp_ex2(ibctx, vqp, sizeof(*vqp), ex,
-				   &req, sizeof(req), sizeof(req),
-				   &resp, sizeof(resp), sizeof(resp));
+				   &req, sizeof(req),
+				   &resp, sizeof(resp));
 	if (rc)
 		goto err_cmd;
 
@@ -483,10 +484,9 @@ err_mw:
 
 static int fallback_dealloc_mw(struct ibv_mw *ibmw)
 {
-	struct ibv_dealloc_mw cmd;
 	int rc;
 
-	rc = ibv_cmd_dealloc_mw(ibmw, &cmd, sizeof(cmd));
+	rc = ibv_cmd_dealloc_mw(ibmw);
 	if (rc)
 		return rc;
 
