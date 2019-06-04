@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
@@ -55,17 +56,17 @@ type endpointMetric struct {
 	TxBandwidth   api.Summary
 }
 
-func TestSetup(t *testing.T) {
+func Setup(startLocalServer bool) error {
 	s, err := rpckit.NewRPCServer("fake-collector", ":0", rpckit.WithLoggerEnabled(false))
 	if err != nil {
-		t.Fatalf("failed to start grpc server: %v", err)
+		return fmt.Errorf("failed to start grpc server: %v", err)
 	}
 	metricServer := &mock.Collector{}
 	metric.RegisterMetricApiServer(s.GrpcServer, metricServer)
 	s.Start()
 	rpcClient, err := rpckit.NewRPCClient("collector-client", s.GetListenURL(), rpckit.WithLoggerEnabled(false))
 	if err != nil {
-		t.Fatalf("fail to dial: %v", err)
+		return fmt.Errorf("fail to dial: %v", err)
 	}
 	nctx, cancel := context.WithCancel(context.Background())
 	ts = &testSuite{
@@ -77,15 +78,59 @@ func TestSetup(t *testing.T) {
 	}
 
 	options := &Opts{
-		ClientName:       t.Name(),
+		ClientName:       "tsdb-test",
 		Collector:        ts.rpcServer.GetListenURL(),
 		SendInterval:     testSendInterval,
 		DBName:           "objMetrics",
 		LocalPort:        0,
-		StartLocalServer: true,
+		StartLocalServer: startLocalServer,
 	}
 
 	Init(ts.context, options)
+	return nil
+}
+
+func TestFwlogPointLimits(t *testing.T) {
+	AssertEventually(t, func() (bool, interface{}) {
+		return maxFwlogPoints == defaultNumFwlogPoints, fmt.Sprintf("invalid limit for fwlogs, %v", maxFwlogPoints)
+	}, "didn't set fwlog limits", "1s", "10s")
+
+	// stop collector
+	ts.rpcServer.Stop()
+
+	keyTags := map[string]string{objID: t.Name()}
+	obj, err := NewObj(t.Name(), keyTags, nil, nil)
+	AssertOk(t, err, "unable to create obj")
+	defer obj.Delete()
+
+	err = obj.Points([]*Point{
+		{
+			Tags:   map[string]string{"src": "10.1.1.1", "dest": "11.1.1.1", "port": "8080"},
+			Fields: map[string]interface{}{"action": "rejected"},
+		},
+	}, time.Now())
+	AssertOk(t, err, "unable to create point")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		return maxFwlogPoints == defaultNumPoints, fmt.Sprintf("invalid limit for fwlogs, %v", maxFwlogPoints)
+	}, "didn't reset fwlog limits", "1s", "10s")
+
+	TearDown()
+	Cleanup()
+	Setup(true)
+
+	err = obj.Points([]*Point{
+		{
+			Tags:   map[string]string{"src": "10.1.1.1", "dest": "11.1.1.1", "port": "8080"},
+			Fields: map[string]interface{}{"action": "rejected"},
+		},
+	}, time.Now())
+	AssertOk(t, err, "unable to create point")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		return maxFwlogPoints == defaultNumFwlogPoints, fmt.Sprintf("invalid limit for fwlogs, %v", maxFwlogPoints)
+	}, "didn't set fwlog limits", "1s", "20s")
+
 }
 
 func TestVeniceObj(t *testing.T) {
@@ -389,23 +434,30 @@ func TestMaxPoints(t *testing.T) {
 	AssertOk(t, err, "unable to create obj")
 	defer obj.Delete()
 
-	for i := 0; i < maxPoints+5; i++ {
+	savedMax := maxFwlogPoints
+	maxFwlogPoints = 600
+
+	for i := 0; i < int(maxFwlogPoints)+5; i++ {
 		err := obj.Points([]*Point{
 			{
 				Tags:   map[string]string{"src": "10.1.1.1", "dest": "11.1.1.1", "port": "8080"},
 				Fields: map[string]interface{}{"action": "rejected"},
 			},
 		}, time.Now())
-		AssertOk(t, err, "unable to create obj")
-		Assert(t, len(obj.(*iObj).metricPoints) <= maxPoints, "exceeded number of points %d", len(obj.(*iObj).metricPoints))
+		AssertOk(t, err, "unable to create point")
+		Assert(t, len(obj.(*iObj).metricPoints) <= int(maxFwlogPoints), "exceeded number of points %d", len(obj.(*iObj).metricPoints))
 	}
 
-	obj.PrecisionGauge("pgauge").Set(1.0, time.Now())
-	Assert(t, len(obj.(*iObj).metricPoints) <= maxPoints, "exceeded number of points %d", len(obj.(*iObj).metricPoints))
-	obj.Bool("pstatus").Set(true, time.Now())
-	Assert(t, len(obj.(*iObj).metricPoints) <= maxPoints, "exceeded number of points %d", len(obj.(*iObj).metricPoints))
-	obj.String("Name").Set(t.Name(), time.Now())
-	Assert(t, len(obj.(*iObj).metricPoints) <= maxPoints, "exceeded number of points %d", len(obj.(*iObj).metricPoints))
+	err = obj.Points([]*Point{
+		{
+			Tags:   map[string]string{"src": "20.1.1.1", "dest": "11.1.1.1", "port": "8080"},
+			Fields: map[string]interface{}{"action": "rejected"},
+		},
+	}, time.Now())
+	AssertOk(t, err, "unable to create point")
+
+	Assert(t, len(obj.(*iObj).metricPoints) <= int(maxFwlogPoints), "exceeded number of points %d", len(obj.(*iObj).metricPoints))
+	maxFwlogPoints = savedMax
 }
 
 func TestAttributeChangeWithAggregation(t *testing.T) {
@@ -925,10 +977,10 @@ func TestOptionObjPrecision(t *testing.T) {
 
 func TestVeniceObjPerf(t *testing.T) {
 	ts.metricServer.ClearMetrics()
-	tmpMaxPoints := maxPoints
-	maxPoints = 50000
+	tmpMaxPoints := maxMetricsPoints
+	maxMetricsPoints = 50000
 	defer func() {
-		maxPoints = tmpMaxPoints
+		maxMetricsPoints = tmpMaxPoints
 	}()
 
 	time.Sleep(3 * testSendInterval)
@@ -991,7 +1043,7 @@ func TestVeniceObjPerf(t *testing.T) {
 	ts.metricServer.ClearMetrics()
 }
 
-func TestSetupCleanup(t *testing.T) {
+func TearDown() {
 	ts.cancelFunc()
 	ts.rpcServer.Stop()
 	ts.rpcClient.Close()
@@ -1026,4 +1078,13 @@ func validateSendInterval(t *testing.T, sendInterval time.Duration) bool {
 		time.Sleep(sendInterval)
 	}
 	return retryID != maxRetriesPerTest
+}
+
+func TestMain(m *testing.M) {
+	if err := Setup(false); err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+	m.Run()
+	TearDown()
 }

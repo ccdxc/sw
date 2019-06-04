@@ -44,7 +44,8 @@ func establishConn() bool {
 	}
 
 	global.mc = metric.NewMetricApiClient(global.rpcClient.ClientConn)
-	log.Infof("connected to %+v", global.mc)
+	atomic.CompareAndSwapUint64(&maxFwlogPoints, uint64(defaultNumPoints), uint64(defaultNumFwlogPoints))
+	log.Infof("connected to %+v, set fwlog limit to %v", global.opts.Collector, atomic.LoadUint64(&maxFwlogPoints))
 	return true
 }
 
@@ -63,6 +64,8 @@ func periodicTransmit() {
 			if err != nil {
 				// Force a reconnection
 				global.mc = nil
+				atomic.CompareAndSwapUint64(&maxFwlogPoints, uint64(defaultNumFwlogPoints), uint64(defaultNumPoints))
+				log.Infof("lost connection, set fwlog limit to %v", atomic.LoadUint64(&maxFwlogPoints))
 			}
 		case <-global.context.Done():
 			// flush any metrics that are not yet pushed out
@@ -178,7 +181,7 @@ func createNewMetricPoint(obj *iObj, ts time.Time) {
 	}
 
 	// limit number of points stored in TSDB client
-	if len(obj.metricPoints) >= maxPoints {
+	if len(obj.metricPoints) >= maxMetricsPoints {
 		atomic.AddUint64(&global.ignoredPoints, 1)
 		return
 	}
@@ -254,7 +257,7 @@ func createNewMetricPointFromKeysFields(obj *iObj, keys map[string]string, field
 
 	// limit number of points stored in TSDB client
 	obj.Lock()
-	if len(obj.metricPoints) >= maxPoints {
+	if uint64(len(obj.metricPoints)) >= atomic.LoadUint64(&maxFwlogPoints) {
 		obj.Unlock()
 		atomic.AddUint64(&global.ignoredPoints, 1)
 		return

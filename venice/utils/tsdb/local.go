@@ -22,15 +22,14 @@ import (
 
 // startLocalRESTServer starts a rest server to expose local metrics directly from the process
 func startLocalRESTServer(global *globalInfo) {
+	defer global.wg.Done()
 	if !global.opts.StartLocalServer {
-		global.wg.Done()
 		return
 	}
 	http.HandleFunc("/", LocalMetricsHandler)
 
 	srv := &http.Server{Addr: fmt.Sprintf("%s:%d", globals.Localhost, global.opts.LocalPort)}
 	global.httpServer = srv
-	global.wg.Done()
 
 	addr := srv.Addr
 	if addr == "" {
@@ -60,8 +59,9 @@ func stopLocalRESTServer() {
 		return
 	}
 	if global.httpServer != nil {
-		global.httpServer.Shutdown(nil)
+		global.httpServer.Close()
 		global.httpServer = nil
+		global.listener.Close()
 		global.listener = nil
 	}
 }

@@ -20,10 +20,13 @@ const (
 	defaultRanges                  = 10
 	defaultSendInterval            = 10 * time.Second
 	defaultConnectionRetryInterval = 100 * time.Millisecond
+	defaultNumPoints               = 500
+	defaultNumFwlogPoints          = 50000 // when connected to Venice
 )
 
 var (
-	maxPoints = 500
+	maxMetricsPoints = defaultNumPoints
+	maxFwlogPoints   = uint64(defaultNumPoints)
 )
 
 // global information is maintained per client during Init time
@@ -99,11 +102,11 @@ func Cleanup() {
 	if global == nil {
 		return
 	}
+	stopLocalRESTServer()
 
 	// cancel the context to stop any running go threads
 	global.cancelFunc()
 	global.wg.Wait() // Wait for startLocalRESTServer call to complete ; Also wait for periodic timer Thread to exit
-	stopLocalRESTServer()
 
 	global = nil
 }
