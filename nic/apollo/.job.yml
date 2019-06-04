@@ -1,8 +1,17 @@
 ---
 version: 2.0
 targets:
-  apollo/gtest:
-    commands: ["make", "PIPELINE=apollo", "jobd/apollo/gtest"]
+  apollo/gtest_1:
+    commands: ["make", "PIPELINE=apollo", "jobd/apollo/gtest_1"]
+    owners: ["email:jcruz@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-apollo-x86
+
+  apollo/gtest_2:
+    commands: ["make", "PIPELINE=apollo", "jobd/apollo/gtest_2"]
     owners: ["email:jcruz@pensando.io"]
     area:
     sub-area:
