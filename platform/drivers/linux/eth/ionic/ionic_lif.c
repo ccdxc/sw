@@ -2916,19 +2916,19 @@ try_again:
 
 try_fewer:
 	if (nnqs_per_lif > 1) {
-		--nnqs_per_lif;
+		nnqs_per_lif >>= 1;
 		goto try_again;
 	}
 	if (neqs > 1) {
-		--neqs;
+		neqs >>= 1;
 		goto try_again;
 	}
 	if (nslaves) {
-		--nslaves;
+		nslaves >>= 1;
 		goto try_again;
 	}
 	if (nxqs > 1) {
-		--nxqs;
+		nxqs >>= 1;
 		goto try_again;
 	}
 	dev_err(ionic->dev, "Can't get minimum %d intrs from OS\n", min_intrs);
