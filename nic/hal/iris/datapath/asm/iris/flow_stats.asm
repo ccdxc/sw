@@ -1,10 +1,11 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_flow_stats_k.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "platform/capri/capri_common.hpp"
 #include "nw.h"
 
-struct flow_stats_k k;
+struct flow_stats_k_ k;
 struct flow_stats_d d;
 struct phv_         p;
 
@@ -25,15 +26,11 @@ flow_stats:
   seq         c1, d.flow_stats_d.permit_packets, 0xF
   bcf         [c1], flow_stats_permitted_overflow
   tbladd      d.flow_stats_d.permit_packets, 1
-  tbladd.e    d.flow_stats_d.permit_bytes, \
-                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
+  tbladd.e    d.flow_stats_d.permit_bytes, k.capri_p4_intrinsic_packet_len
   nop
 
 flow_stats_permitted_overflow:
-  add         r7, d.flow_stats_d.permit_bytes, \
-                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
+  add         r7, d.flow_stats_d.permit_bytes, k.capri_p4_intrinsic_packet_len
   or          r7, r7, 0x10, 32
   or          r7, r7, 1, 56
   or          r7, r7, r5[31:27], 58
@@ -51,15 +48,11 @@ flow_stats_dropped:
   seq         c1, d.flow_stats_d.drop_packets, 0xF
   bcf         [c1], flow_stats_dropped_overflow
   tbladd      d.flow_stats_d.drop_packets, 1
-  tbladd.e    d.flow_stats_d.drop_bytes, \
-                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
+  tbladd.e    d.flow_stats_d.drop_bytes, k.capri_p4_intrinsic_packet_len
   nop
 
 flow_stats_dropped_overflow:
-  add         r7, d.flow_stats_d.drop_bytes, \
-                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
+  add         r7, d.flow_stats_d.drop_bytes, k.capri_p4_intrinsic_packet_len
   or          r7, r7, 0x10, 32
   or          r7, r7, 1, 56
   or          r7, r7, r5[31:27], 58

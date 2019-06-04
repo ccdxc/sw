@@ -72,6 +72,25 @@ def _resolve_len_expr(parser, hdr, l_exp, hlen_fld_name, hlen_dummy):
     if isinstance(l_exp.right, p4.p4_expression):
         _resolve_len_expr(parser, hdr, l_exp.right, hlen_fld_name, hlen_dummy)
 
+def _topo_sort_headers(parser, node, sorted_list, marker):
+    if node in marker:
+        if marker[node] == 1:
+            parser.logger.debug("Loop at %s" % (node.name()))
+            ncc_assert(0);
+            return True #cycles
+        if marker[node] == 2:
+            return False
+    else:
+        marker[node] = 1
+        for next_node in node.branches:
+            if _topo_sort_headers(parser, next_node, sorted_list, marker):
+                return True
+        #print "Confirm node %s" % node.name
+        marker[node] = 2
+        sorted_list.insert(0, node)
+        return False
+
+
 # Only two types of loops are supported -
 # 1. loops with header stack (mpls) where only one header stack is supported per loop
 #       new state is created for each header instance in a stack
@@ -877,6 +896,24 @@ class capri_parser_len_chk_profile:
         self.cmp_op = 'gt'
         self.prof_id = None
 
+class capri_header:
+    def __init__(self, p4_header):
+        self.p4_header = p4_header
+        self.branches = []
+
+    def add_branch(self, chdr):
+        if chdr == self: return # not sure why headers are repeated on paths - check
+        if chdr not in self.branches:
+            self.branches.append(chdr)
+
+    def name(self):
+        return self.p4_header.name if self.p4_header else 'Root'
+
+    def __repr__(self):
+        return "Hdr:%s => %s" % \
+            (self.name(), \
+            [h.name() for h in self.branches])
+
 class capri_parser:
     # one per direction
     def __init__(self, capri_be, d):
@@ -928,6 +965,8 @@ class capri_parser:
 
         self.len_chk_profiles = \
             [None for _ in range(self.be.hw_model['parser']['num_len_chk_profiles'])]
+
+        self.hdr_graph = None
 
     def get_header_size(self, hdr):
         # return fixed len or P4field/expression that represents len
@@ -1412,6 +1451,12 @@ class capri_parser:
                 hdrs_covered[hdr] = True
         for h in self.headers:
             ncc_assert(h in hdrs_covered, "Missed header %s in path calculations" % h.name)
+
+        # create correct header order and replace self.headers with it.
+        # header order created based on topo-sorted states is incorrect when the same header
+        # is extracted from multiple states
+        # XXX PHV allocation is still broken (can get the code from Sorrento where it is fixed)
+        self.create_header_graph()
         # Remove impossible branches - these are added to create deparser parse-graph
         # Removing them will reduce processing and resource requirements like saved registers
         # 'impossible' branch is the one where mask is set to mask off non-zero bits in case val
@@ -1973,7 +2018,27 @@ class capri_parser:
         for next_node in node_list:
             if not isinstance(next_node, capri_parse_state) or not next_node.p4_state:
                 # terminate
-                paths.append(path_hdrs+extracted_hdrs)
+                # check duplicate headers
+
+                # do not terminate if there are other exit paths (this path will be a subset)
+                if len(node_list) > 1:
+                    continue
+
+                new_path_hdrs = []
+                for h in path_hdrs:
+                    if h in new_path_hdrs:
+                        self.logger.warning("Multiple extractions of header %s on path %s" % \
+                            (h.name, new_path_hdrs))
+                    else:
+                        new_path_hdrs.append(h)
+                for h in extracted_hdrs:
+                    if h in new_path_hdrs:
+                        self.logger.warning("Multiple extractions of header %s on path %s" % \
+                            (h.name, new_path_hdrs))
+                    else:
+                        new_path_hdrs.append(h)
+                #paths.append(path_hdrs+extracted_hdrs)
+                paths.append(new_path_hdrs)
                 path_states.append(current_path+traversed_nodes)
                 continue
             if 'xgress' in next_node.p4_state._parsed_pragmas:
@@ -3516,6 +3581,46 @@ class capri_parser:
         self.logger.debug("%s: path len histogram %s" % \
             (self.d.name, [((i*bin_size), s) for i,s in bin_count.items()]))
 
+    def create_header_graph(self):
+        # go thru all parse paths, 
+        # create capri_header object if not created already
+        # create branch from current node to new header if not already
+        hdrs_added = OrderedDict()
+        paths = sorted(self.paths, key=lambda p: len(p), reverse=True)
+        self.hdr_graph = capri_header(None)
+        hdrs_added['Root'] = self.hdr_graph
+        for path in paths:
+            current_node = self.hdr_graph
+            for hdr in path:
+                if hdr.name not in hdrs_added:
+                    chdr = capri_header(hdr)
+                    hdrs_added[hdr.name] = chdr
+                else:
+                    chdr = hdrs_added[hdr.name]
+                    
+                current_node.add_branch(chdr)
+                current_node = chdr
+        # print
+        self.logger.debug("Header graph")
+        for h in hdrs_added.values():
+            self.logger.debug("%s" % h)
+
+        # toposort header graph
+        marker = {}
+        sorted_list = []
+        if _topo_sort_headers(self, self.hdr_graph, sorted_list, marker):
+            ncc_assert(0, 'loops in topo sort of headers')
+
+        self.logger.debug("Toposorted headers[%d]: %s" % \
+                            (len(sorted_list), [h.name() for h in sorted_list]))
+        # replace headers list with new topo-sorted list
+        ncc_assert(len(sorted_list)-1 == len(self.headers), "Incorrect topo-sorted header list")
+        self.headers = []
+        for h in sorted_list:
+            if h.p4_header:
+                self.headers.append(h.p4_header)
+
+
     def print_long_paths(self, path_len):
         # print all paths above path_len
         num_long_paths = 0
@@ -3562,6 +3667,7 @@ class capri_parser:
                             (self.d.name, hdr.name, hdr_phv_bit, cs.name, last_cs.name, last_flit, path))
                         ncc_assert(0)
                         return True
+                    last_cs = cs
 
                 for cf in cs.meta_extracted_fields:
                     cs_flit = cf.phv_bit / flit_sz
@@ -3571,10 +3677,19 @@ class capri_parser:
                             (self.d.name, cf.hfname, cf.phv_bit, cs.name, last_cs.name, last_flit, path))
                         ncc_assert(0)
                         return True
+                    last_cs = cs
 
                 if cs_flit >= 0:
                     last_flit = cs_flit
-                last_cs = cs
 
         self.logger.info("%s:No parser flit violations detected" % (self.d.name))
         return False
+
+    def get_hdr_loop(self, h):
+        # return all headers of a loop if h is part of loop
+        for hdr_group in self.hdr_order_groups:
+                if h in hdr_group:
+                    # All headers in hdr order group must fit in the same flit as parser
+                    # can loop thru' them in any order
+                    return hdr_group
+        return None

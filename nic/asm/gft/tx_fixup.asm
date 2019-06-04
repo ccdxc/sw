@@ -72,7 +72,7 @@ tx_fixup_upd_tcp_seq:
 tx_fixup_rdma_done:
     phvwr           p.capri_deparser_len_tx_l4_payload_len, r3
     // set l4 checksum flags
-    .assert(offsetof(p, udp_1_csum) - offsetof(p, ipv4_1_udp_csum) == 3)
+    .assert(offsetof(p, udp_1_csum) - offsetof(p, ipv4_1_udp_csum) == 6)
     or              r7, k.udp_1_valid, k.udp_1_valid, 3
     phvwrm          p.{udp_1_csum...ipv4_1_udp_csum}, r7, 0x9
     phvwrpair.e     p.tcp_1_csum, k.tcp_1_valid, p.ipv4_1_tcp_csum, k.tcp_1_valid

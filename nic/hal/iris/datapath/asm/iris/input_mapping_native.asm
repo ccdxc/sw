@@ -36,14 +36,13 @@ native_ipv4_packet_common:
   phvwrpair     p.flow_lkp_metadata_lkp_dst[31:0], k.ipv4_dstAddr, \
                     p.flow_lkp_metadata_lkp_src[31:0], k.ipv4_srcAddr
 
-  phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
+  phvwrpair     p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr, \
+                p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
+
   phvwr         p.flow_lkp_metadata_ip_ttl, k.ipv4_ttl
 
-  or            r1, k.ipv4_flags, k.ethernet_srcAddr, 3
-  or            r1, r1, k.ipv4_ihl, 51
-  phvwr         p.{flow_lkp_metadata_ipv4_hlen, \
-                   flow_lkp_metadata_lkp_srcMacAddr, \
-                   flow_lkp_metadata_ipv4_flags}, r1
+  phvwr         p.flow_lkp_metadata_ipv4_flags, k.ipv4_flags
+  phvwr         p.flow_lkp_metadata_ipv4_hlen, k.ipv4_ihl
 
   bbeq          k.esp_valid, TRUE, native_ipv4_esp_packet
   phvwr         p.{tunnel_metadata_tunnel_type,tunnel_metadata_tunnel_vni}, r0

@@ -159,9 +159,9 @@ class capri_field:
 
     def __repr__(self):
         w = self.width if self.width != p4.P4_AUTO_WIDTH else 0
-        pstr = '([%d]:%s d=%s w=%d ohi=%s union=%s hv=%s meta=%s internal=%s flit_pad=%s relo=%s)\n' % \
+        pstr = '([%d]:%s d=%s w=%d ohi=%s union=%s u-store=%s hv=%s meta=%s internal=%s flit_pad=%s relo=%s)\n' % \
             (self.phv_bit, self.hfname, self.d.name, w, self.is_ohi, \
-            self.is_union(), self.is_hv, \
+            self.is_union(), self.is_union_storage(), self.is_hv, \
             self.is_meta, self.is_internal, self.is_flit_pad, self.allow_relocation)
         return pstr
 
@@ -643,6 +643,132 @@ class capri_flit:
                 return
         ncc_assert(0)
 
+HGID = 0
+class capri_hfgroup:
+    def __init__(self, pa, d):
+        self.gress_pa = pa
+        self.d = d
+        self.hfs = set()
+        self.extract_states = set()
+        self.branches = []
+        self.predecessors = []
+        global HGID
+        self.name = 'HFG_%d' % HGID
+        HGID += 1
+    
+    def add_branch(self, hfg):
+        if hfg == self:
+            return
+        if hfg not in self.branches:
+            self.branches.append(hfg)
+        if self not in hfg.predecessors:
+            hfg.predecessors.append(self)
+
+    def insert(self, hf, cs):
+        # check header and field unions and add those too
+        if isinstance(hf, capri_field):
+            if hf in self.gress_pa.fld_unions:
+                for cf in self.gress_pa.fld_unions[hf][0]:
+                    if is_synthetic_header(cf.p4_fld.instance):
+                        continue
+                    self.hfs.add(cf)
+            else:
+                self.hfs.add(hf)
+        else:
+            # header
+            if is_synthetic_header(hf):
+                return;
+            if hf in self.gress_pa.hdr_unions:
+                for h in self.gress_pa.hdr_unions[hf][1]:
+                    if not is_synthetic_header(h):
+                        self.hfs.add(h)
+            else:
+                # check if any of the fields are unioned, in that case add corresponding header
+                # to this group
+                self.hfs.add(hf)
+                for f in hf.fields:
+                    cf = self.gress_pa.get_field(get_hfname(f))
+                    if not cf: continue
+                    if cf in self.gress_pa.fld_unions:
+                        for uf in self.gress_pa.fld_unions[cf][0]:
+                            if uf == cf:
+                                continue
+                            if is_synthetic_header(uf.p4_fld.instance):
+                                continue
+                            if uf.is_meta:
+                                # don't add metadata headers(structs)
+                                # add fields directly
+                                self.hfs.add(uf)
+                            else:
+                                self.hfs.add(uf.p4_fld.instance)
+
+            # check if this is a loop header, get all headers in the loop and their unions XXX
+            # unions will be process when each loop header is added (from its state)
+            hdr_loop_group = self.gress_pa.pa.be.parsers[self.d].get_hdr_loop(hf)
+            if hdr_loop_group != None:
+                for h in hdr_loop_group:
+                    if h == hf:
+                        continue
+                    if h in self.gress_pa.pa.be.parsers[self.d].deparse_only_hdrs:
+                        continue
+                    self.hfs.add(h)
+
+        self.extract_states.add(cs)
+
+    def empty(self):
+        return True if len(self.hfs) == 0 else False
+
+    def merge(self, hfgroup, update_cs_to_group=False):
+        # self.gress_pa.logger.debug("%s: Merge %s -> %s" % \
+        #    (self.gress_pa.d.name, hfgroup, self))
+        for hf in hfgroup.hfs:
+            # no self.add to avoid union processing again
+            self.hfs.add(hf)
+        for cs in hfgroup.extract_states:
+            self.extract_states.add(cs)
+        if update_cs_to_group:
+            for cs in self.extract_states:
+                self.gress_pa.cs_to_group[cs] = self
+
+    def intersects(self, other):
+        return True if len(self.hfs & other.hfs) != 0 else False
+
+    def get_storage_size(self):
+        sum = 0
+        for hf in self.hfs:
+            if isinstance(hf, capri_field):
+                sum += hf.storage_size()
+            else:
+                sum += self.gress_pa.get_header_storage_size(hf) * 8
+        return sum
+
+    def sorted_hfs(self):
+        # return a list of sorted hfs.. use this to process them in a stable
+        # order
+        sorted_hdrs = [hf for hf in self.hfs if not isinstance(hf, capri_field)]
+        sorted_meta = [hf for hf in self.hfs if isinstance(hf, capri_field)]
+        sorted_hdrs.sort(key=lambda k: k.name)
+        sorted_meta.sort(key=lambda k: k.hfname)
+        return sorted_hdrs + sorted_meta
+
+    def __repr__(self):
+        return self.name
+        return pstr
+
+    def print_all(self):
+        pstr = 'HFGroup: %s ' % self.name
+        pstr += '['
+        for hf in self.sorted_hfs():
+            if isinstance(hf, capri_field):
+                pstr += hf.hfname
+            else:
+                pstr += hf.name
+            pstr += ','
+        pstr += '], States: ['
+        for cs in self.extract_states:
+            pstr += cs.name + ','
+        pstr += ']#'
+        return pstr
 
 class capri_gress_pa:
     def __init__(self, capri_pa, d):
@@ -669,6 +795,10 @@ class capri_gress_pa:
         self.capri_deparser_pad_hdr = None
         self.capri_gso_csum_hdr = None
         self.parser_end_off_cf = None
+        self.hfgroups = []
+        self.topo_sorted_hfgroups = []
+        self.cs_to_group = OrderedDict() # {cs: capri_group}
+        self.hf_to_group = OrderedDict() # {hf: capri_group/None}
 
     def initialize(self):
         hw_model = self.pa.be.hw_model
@@ -687,57 +817,33 @@ class capri_gress_pa:
 
     def print_field_order_info(self, msg='Field-Ordering'):
         ohi_bits = 0
-        flit_pad_bits = 0
-        union_pad_bits = 0
         meta_bits = 0
         hdr_bits = 0
         hv_bits = 0
-        hv_pad_bits = 0
-        for f in self.field_order:
-            if not f.width:
+        total_phv_bits = 0
+        field_order = sorted(self.field_order, key=lambda cf: cf.phv_bit)
+        for cf in field_order:
+            if cf.phv_bit < 0:
+                ohi_bits += cf.width
+                # no assert here as this may be called before phv allocation is done or has failed
+                #ncc_assert(cf.is_ohi, "%s:Phv is not allocated for %s" % (self.d.name, cf.hfname))
                 continue
-            if f.is_ohi:
-                ohi_bits += f.width
+
+            if cf.is_union():
                 continue
-            elif f.is_flit_pad:
-                flit_pad_bits += f.width
-            elif f.is_hv_pad:
-                hv_pad_bits += f.width
-            elif f.is_union_pad:
-                union_pad_bits += f.width
-            elif f.is_meta and not f.is_union():
-                meta_bits += f.width
-            elif f.is_hv:
-                hv_bits += f.width
-            elif not f.is_union():
-                hdr_bits += f.width
+            if cf.is_hv:
+                hv_bits += cf.width
+            elif cf.is_meta:
+                meta_bits += cf.width
             else:
-                pass
+                hdr_bits += cf.width
 
-        ncc_assert(hv_bits <= self.pa.be.hw_model['parser']['max_hv_bits'])
-        # ignore trailing flit pad
-        tail_pad = 0
-        if len(self.field_order):
-            pad_cf = None
-            for cf in reversed(self.field_order):
-                if not cf.is_flit_pad and not cf.is_alignment_pad:
-                    break
-                tail_pad += cf.width
-                pad_cf = cf
-
-            if self.field_order[-1].is_flit_pad:
-                flit_pad_bits -= self.field_order[-1].width
-                tail_pad -= self.field_order[-1].width
-
-        total_phv_bits = flit_pad_bits + union_pad_bits + meta_bits + hv_bits + hv_pad_bits + \
-                            hdr_bits
-        phv_bits = flit_pad_bits + union_pad_bits + meta_bits + hv_bits + hv_pad_bits + hdr_bits - \
-                            tail_pad
+            total_phv_bits += cf.width
+                
         self.logger.info('%s: %s' %(self.d.name, msg))
         self.logger.info(\
-            "%s:Total Phv bits %d, hdr %d ohi %d meta %d hv %d flit_pad %d u_pad %d hv_pad %d tail %d" %\
-            (self.d.name, phv_bits, hdr_bits, ohi_bits, meta_bits, hv_bits, flit_pad_bits,
-             union_pad_bits, hv_pad_bits, tail_pad))
+            "%s:Total Phv bits %d, hdr %d ohi %d meta %d hv %d " %\
+            (self.d.name, total_phv_bits, hdr_bits, ohi_bits, meta_bits, hv_bits))
         return total_phv_bits
 
     def validate_field_order(self):
@@ -909,8 +1015,405 @@ class capri_gress_pa:
                 (self.d.name, tcf.hfname, self.field_order[idx].hfname, idx))
             self.field_order.insert(idx, tcf)
 
+    def insert_table_meta_fields2(self):
+        # place tbl meta fields close to headers used by the table
+        gtm = self.pa.be.tables.gress_tm[self.d]
+        # collect all the tables that use a given key and headers associated with that table
+        # At the end of a table whose headers appear first in the phv header order
+        key_to_tbl_hfids = OrderedDict()
+
+        for tname, tbl in gtm.tables.items():
+            tbl_key_hdrs = []
+            # For new phv allocation - only hdr are stroed in hdr_fld list
+            # add the table meta fld right after the relevant hdr
+            if len(tbl.keys) == 0:
+                continue
+            if len(tbl.meta_fields) == 0:
+                continue
+
+            tbl_key_hdrs = [cf.get_p4_hdr() for cf,_,_ in tbl.keys if not cf.is_meta and not cf.is_hv]
+            if len(tbl_key_hdrs) == 0:
+                continue
+
+            placed_meta_keys = []
+            for cf,_,_ in tbl.keys:
+                if not cf.is_meta or cf.is_hv or cf not in self.hf_to_group:
+                    continue
+                placed_meta_keys.append(cf)
+
+            tbl_meta_key_indices = [self.find_hf_idx_in_hfgs(hf) for hf in placed_meta_keys]
+            tbl_key_hdrs = sorted(tbl_key_hdrs, key = lambda h:self.find_hf_idx_in_hfgs(h))
+            tbl_hf_indices = [self.find_hf_idx_in_hfgs(h) for h in tbl_key_hdrs]
+            tbl_hf_indices += tbl_meta_key_indices
+            tbl_hf_indices = sorted(tbl_hf_indices)
+
+            for cf,_,_ in tbl.keys:
+                if not cf.is_meta or cf.is_hv:
+                    continue
+                # collect all metadata keys of a table
+                key_to_tbl_hfids[cf] = OrderedDict()
+                key_to_tbl_hfids[cf][tbl] = (tbl_hf_indices[0], tbl_hf_indices[-1])
+
+        #pdb.set_trace()
+        for cf,v in key_to_tbl_hfids.items():
+            min_hf_idx = None
+            max_hf_idx = None
+            for tbl,hf_indices in v.items(): 
+                if min_hf_idx == None or hf_indices[0] < min_hf_idx:
+                    min_hf_idx = hf_indices[0]
+                    max_hf_idx = hf_indices[1]
+
+            ncc_assert(min_hf_idx)
+            if cf not in self.hf_to_group:
+                self.field_order.append(cf)
+                self.topo_sorted_hfgroups.insert(max_hf_idx+1, cf)
+                self.hf_to_group[cf] = None
+                self.logger.debug("%s:Insert table meta-key %s at %d in topo_sorted list" % \
+                                    (self.d.name, cf.hfname, max_hf_idx+1))
+
+            # add rest of the table meta I data after that tables last k field
+            for tbl,hf_indices in v.items():
+                max_hf_idx = hf_indices[1]
+                for mf in tbl.meta_fields:
+                    if mf.is_key or mf.is_hv:
+                        continue
+                    if mf not in self.hf_to_group:
+                        self.field_order.append(mf)
+                        self.topo_sorted_hfgroups.insert(max_hf_idx+1, mf)
+                        self.hf_to_group[mf] = None
+                        self.logger.debug("%s:Insert table meta-input %s at %d in topo_sorted list" % \
+                                     (self.d.name, mf.hfname, max_hf_idx+1))
+
+    def find_hf_idx_in_hfgs(self, hf):
+        for i, hfg_list in enumerate(self.topo_sorted_hfgroups):
+            for hfg in hfg_list:
+                if hf in hfg.hfs:
+                    return i
+                
+    def add_hfgroup(self, hfgroup):
+        # self.logger.debug('%s:Add group %s' % (self.d.name, hfgroup))
+        merge_hfg = None
+        for hfg in self.hfgroups:
+            if hfg == hfgroup:
+                continue
+            if hfg.intersects(hfgroup):
+                # has intersection, merge hfgroup into hfg
+                merge_hfg = hfg
+                break
+        if merge_hfg == None:
+            if hfgroup not in self.hfgroups:
+                self.hfgroups.append(hfgroup)
+            for cs in hfgroup.extract_states:
+                self.cs_to_group[cs] = hfgroup
+            return
+        # merge needs to be recursive E.g.
+        # if (x,y) is added to hfgroups (a, x), (b, y)
+        # this will give (a,x, y) which should be further merged with (b, y)
+        merge_hfg.merge(hfgroup, False)
+        # for cs in hfgroup.extract_states:
+        #     self.cs_to_group[cs] = hfg
+
+        # remove it from the list and add it back
+        self.hfgroups.remove(merge_hfg)
+
+        self.add_hfgroup(merge_hfg)
+
+    def validate_hfgs(self):
+        # make sure cs_to_group referes to valid hfg
+        for hfg in self.cs_to_group.values():
+            ncc_assert(hfg in self.hfgroups, "Invalid HFG")
+
+        # make sure all headers and meta fields are covered - XXX
+
+    def create_hfgroup_list(self):
+        self.logger.debug("%s:Create HFG graph" % (self.d.name))
+        self.logger.debug("%s:HFGs = %d" % (self.d.name, len(self.hfgroups)))
+        for hfg in self.hfgroups:
+            self.logger.debug("%s: %s" % (self.d.name, hfg.print_all()))
+        parser = self.pa.be.parsers[self.d]
+        root = capri_hfgroup(self, self.d)
+        # create cross dependent groups (from Sorrento)
+        # this is needed as loops can be created by setting same metadata field
+        # on different path in different order
+        precedence_map = {} # tuple(G1, G2)
+        cross_dependence_map = {} # {G1: set(G2, G5..)}
+        for cs_path in parser.path_states:
+            for i,cs in enumerate(cs_path):
+                if cs not in self.cs_to_group:
+                    continue
+                g1 = self.cs_to_group[cs]
+                for j in range(i+1, len(cs_path)):
+                    cs2 = cs_path[j]
+                    if cs2 not in self.cs_to_group:
+                        continue
+                    g2 = self.cs_to_group[cs2]
+                    if g1 == g2:
+                        continue
+                    precedence_map[(g1, g2)] = True
+                    if (g2,g1) in precedence_map:
+                        if g1 not in cross_dependence_map:
+                            cross_dependence_map[g1] = set([g1, g2])
+                        else:
+                            cross_dependence_map[g1].add(g2)
+
+        # create cross dependency sets to merge
+        remove_list = {}
+        for i,g1 in enumerate(cross_dependence_map.keys()):
+            if g1 in remove_list:
+                continue
+            s1 = cross_dependence_map[g1]
+            for j in range(i+1, len(cross_dependence_map.keys())):
+                g2 = cross_dependence_map.keys()[j]
+                if g2 in remove_list:
+                    continue
+                s2 = cross_dependence_map[g2]
+                if len(s1 & s2) != 0:
+                    remove_list[g2] = 1
+                    s1 |= s2
+
+        # merge cross dependent group (set)
+        for g, cross_set in cross_dependence_map.items():
+            if g in remove_list:
+                continue
+            self.logger.debug('%s:Merge cross set %s' % (self.d.name, [s.name for s in cross_set]))
+            g0 = None
+            cross_set_list = list(cross_set)
+            cross_set_list.sort(key=lambda k:k.name)
+            for gs in cross_set_list:
+                if not g0:
+                    g0 = gs
+                else:
+                    g0.merge(gs, True)
+                    self.hfgroups.remove(gs)
+
+        # per path merging
+        for cs_path in parser.path_states:
+            path_hfgs = []
+            for cs in cs_path:
+                if cs not in self.cs_to_group:
+                    # no phv writes in this state
+                    continue
+                hfg = self.cs_to_group[cs]
+                if hfg in path_hfgs:
+                    idx = path_hfgs.index(hfg)
+                    # merge all groups between two occurances of the same hfg, E.g.
+                    # G1 G2 G3 G1 => merge G1-G4
+                    for i in range(idx+1, len(path_hfgs)):
+                        self.logger.debug('%s:Merge on path %s <- %s' % \
+                            (self.d.name, hfg, path_hfgs[i]))
+                        hfg.merge(path_hfgs[i], True)
+                        self.hfgroups.remove(path_hfgs[i])
+                    remove_until = len(path_hfgs)
+                    for i in range(idx+1, remove_until):
+                        path_hfgs.pop(idx+1)
+                else:
+                    path_hfgs.append(hfg)
+
+        ## Avoid handling of branches during merge (TBD) slow
+        for cs_path in parser.path_states:
+            current_node = root
+            for cs in cs_path:
+                if cs not in self.cs_to_group:
+                    # no phv writes in this state
+                    continue
+                hfg = self.cs_to_group[cs]
+                current_node.add_branch(hfg)
+                current_node = hfg
+
+        # rebuild hfgrups after all merging is done
+        num_hfgs = len(self.hfgroups)
+        self.hfgroups = []
+        for hfg in self.cs_to_group.values():
+            if hfg not in self.hfgroups:
+                self.hfgroups.append(hfg)
+
+        # create map for all preceeding nodes for each node
+        pred_hfgs = OrderedDict()
+        root_nodes = [root]
+        pred_hfgs[root] = set([])
+        for hfg in self.hfgroups:
+            pred_hfgs[hfg] = set(hfg.predecessors)
+
+        self.logger.debug("%s:Pred_HFGs: %s" % (self.d.name, pred_hfgs))
+        #pdb.set_trace()
+
+        def remove_preds(pred_hfgs, rm_nodes):
+            new_root_nodes = []
+            for node in rm_nodes:
+                for hfg, pred in pred_hfgs.items():
+                    if hfg in rm_nodes:
+                        continue
+                    pred.discard(node)
+                    if len(pred) == 0 and hfg not in new_root_nodes:
+                        new_root_nodes.append(hfg)
+
+            for node in rm_nodes:
+                if node not in pred_hfgs: pdb.set_trace()
+                pred_hfgs.pop(node)
+
+            return new_root_nodes
+
+        #pdb.set_trace()
+        sorted_list = []
+
+        while len(root_nodes):
+            sorted_list.append(root_nodes)
+            root_nodes = remove_preds(pred_hfgs, root_nodes)
+            root_nodes.sort(key=lambda k:k.name)
+            
+        ncc_assert(len(pred_hfgs) == 0, "Invalid HFG graph")
+        self.logger.debug("%s:Sorted HFGs" % (self.d.name))
+        for hfgs in sorted_list:
+            self.logger.debug("%s" % (hfgs))
+
+        #pdb.set_trace()    
+        self.topo_sorted_hfgroups = sorted_list
+
+    def init_field_ordering2(self):
+        # create groups from each state extraction
+        # ignore deparse-only states and synthetic headers
+        parser = self.pa.be.parsers[self.d]
+        cs_to_hfgroup = {}
+        for cs in parser.states:
+            if cs.deparse_only:
+                # should take care of syn headers as well, since they cannot be extracted
+                # in normal states
+                continue
+            hfgroup = capri_hfgroup(self, self.d)
+            for h in cs.headers:
+                hfgroup.insert(h, cs) # check header and field unions and add those too? or do it when add ??
+            for cf in cs.meta_extracted_fields:
+                hfgroup.insert(cf, cs)
+
+            if hfgroup.empty():
+                continue
+
+            # merge with another group if there is intersection
+            # update states in the group and state_to_group mapping
+            self.add_hfgroup(hfgroup)
+
+        # create a (topo sort like) list of hfgroups.
+        # Each element in the list is a set of HFGs which do not preceed or succeed one another
+        # but HFGs in a given element have predecessors in previous elements
+        self.create_hfgroup_list()
+
+        for hfgs in self.topo_sorted_hfgroups:
+            for hfg in hfgs:
+                #hflist = sorted(hfg.hfs, key=lambda k: k.hfname if isinstance(k, capri_field) else k.name)
+                for hf in hfg.hfs:
+                    self.hf_to_group[hf] = hfg
+
+        # add synthetic and deparse-only headers
+        if not self.pa.be.args.split_deparse_only_headers:
+            for hdr in self.pa.be.parsers[self.d].deparse_only_hdrs:
+                # add deparse only hdrs at the end as they are not bound by flit order
+                if hdr in self.hf_to_group:
+                    # this can happen due to header unions
+                    continue
+                # self.hdr_fld_order.append(hdr)
+                self.topo_sorted_hfgroups.append(hdr)
+                self.hf_to_group[hdr] = None # not in any group
+
+        # fix header unions (needed for existing code) since all unioned headers are added in one 
+        # group, any of then can be marked as storage location
+        for h,v in self.hdr_unions.items():
+            union_storage = None
+            for uh in v[1]:
+                if is_synthetic_header(uh):
+                    continue # don't make this a storage - special case
+                else:
+                    union_storage = uh
+                    break
+            ncc_assert(union_storage != None)
+            for uh in v[1]:
+                # fix all header entries in this union
+                self.hdr_unions[uh] = (v[0], v[1], union_storage)
+                for f in uh.fields:
+                    uf = self.get_field(get_hfname(f))
+                    if uh == union_storage:
+                        uf.is_hdr_union_storage = True
+                    else:
+                        uf.is_hdr_union = True
+
+        # clear fld union destinations from earlier round, so we can re-compute
+        for k,v in self.fld_unions.items():
+            self.fld_unions[k] = (v[0], None)
+
+        for cf in self.fld_unions:
+            hdr = cf.p4_fld.instance
+            fld_union_storage = None
+            # try to get headers, followed meta followed by deparse_only headers
+            fld_union_list = self.fld_unions[cf][0]
+            fld_union_list = sorted(fld_union_list, key=lambda xf: 100 if xf.is_meta else \
+                        50 if xf.p4_fld.instance in self.pa.be.parsers[self.d].deparse_only_hdrs \
+                        else 0)
+            for uf in fld_union_list:
+                if is_synthetic_header(uf.p4_fld.instance):
+                    continue
+                elif uf.is_ohi:
+                    continue
+                else:
+                    fld_union_storage = uf
+                    break
+            if fld_union_storage == None:
+                # everything in Ohi
+                continue
+            # set destination field
+            for uf in self.fld_unions[cf][0]:
+                self.fld_unions[uf] = (self.fld_unions[uf][0], fld_union_storage)
+                if uf != fld_union_storage:
+                    uf.is_fld_union = True
+                else:
+                    uf.is_fld_union_storage = True
+
+            self.logger.debug("%s:union %s => %s" % \
+                            (self.d.name, self.fld_unions[cf][0], fld_union_storage))
+            ps = max([uf.width if not uf.is_ohi else 0 for uf in self.fld_unions[cf][0]])
+            f_phv_width = 0 if fld_union_storage.is_ohi else fld_union_storage.width
+            if ps > f_phv_width:
+                fld_union_storage.union_pad_size = ps-f_phv_width
+
+        # add other metadata fields that are not referenced by parser
+        self.insert_table_meta_fields2()
+
+        # add other metadata fields that are not referred to by the parser
+        # Add fields from a given header consecutively to start with,
+        # these flds can be moved around later
+        for h in self.pa.be.h.p4_header_instances.values():
+            if not h.metadata:
+                continue
+            if h == self.capri_p4_intr_hdr:
+                continue
+
+            if h in self.hf_to_group or is_parser_local_header(h) or is_scratch_header(h) or \
+                h.name == 'standard_metadata':
+                continue
+
+            for f in h.fields:
+                cf = self.get_field(get_hfname(f))
+                if not cf:
+                    continue # could be unused in this direction
+                if cf not in self.field_order:
+                    self.field_order.append(cf)
+                if h not in self.hf_to_group and is_atomic_header(h):
+                    # self.hdr_fld_order.append(h)
+                    self.topo_sorted_hfgroups.append(h)
+                    self.hf_to_group[h] = None # not in any group
+                    continue
+
+                if cf not in self.hf_to_group:
+                    self.topo_sorted_hfgroups.append(cf)
+                    self.hf_to_group[cf] = None # not in any group
+
+                    if not cf.is_wide_ki() and (self.d == xgress.INGRESS or cf not in self.i2e_fields):
+                        # Always allow relocation
+                        cf.allow_relocation = True
+
     def init_field_ordering(self):
         self.field_order = self.pa.be.parsers[self.d].extracted_fields[:]
+        if not self.pa.be.args.old_phv_allocation and not self.pa.be.args.p4_plus:
+            self.init_field_ordering2()
+            return
         # follow the parser field order and collect headers
         # collecting headers from parser has problem since synthetic and deparse-only headers
         # can appear much early on in topo order
@@ -987,10 +1490,6 @@ class capri_gress_pa:
                 self.hdr_fld_order.append(hdr)
 
         self.validate_field_order()
-
-        self.print_field_order_info(msg="PHV order(Init)")
-        #self.logger.debug("Field Order(Pre) %s" % self.field_order)
-
 
         # clear fld union destinations from earlier round, so we can re-compute
         for k,v in self.fld_unions.items():
@@ -1429,80 +1928,6 @@ class capri_gress_pa:
         ncc_assert((0) )# field not found??
         return 0
 
-    '''
-    def _create_flit_hv_flds(self, flit, name, num_bits):
-        for i in range(num_bits):
-            hv_field = capri_field(None, self.d, 1, '%s_%d' % (name, i))
-            hv_field.is_hv = True
-            flit.add_cfield(hv_field)
-
-    def _add_intrinsic_meta_and_hv(self, flit, add_hv):
-        ncc_assert(flit.id == 0)
-        bits_used = 0
-        if self.capri_intr_hdr:
-            for f in self.capri_intr_hdr.fields:
-                cf = self.get_field(get_hfname(f))
-                ncc_assert(cf)
-                cf.is_ohi = False
-                ncc_assert(cf.is_intrinsic)
-                flit.add_cfield(cf)
-
-            bits_used += (get_header_size(self.capri_intr_hdr) * 8)
-
-        if self.capri_p4_intr_hdr:
-            for f in self.capri_p4_intr_hdr.fields:
-                cf = self.get_field(get_hfname(f))
-                ncc_assert(cf)
-                cf.is_ohi = False
-                flit.add_cfield(cf)
-
-            bits_used += (get_header_size(self.capri_p4_intr_hdr) * 8)
-
-        if self.capri_deparser_len_hdr:
-            # Variable len slots for deparser to use can only come from PHV flit-1
-            # allocate PHV in that region.
-            dpa_variable_len_phv_start_bit = self.pa.be.hw_model['deparser']['len_phv_start']
-            phv_bit = flit.flit_chunk_alloc((get_header_size(self.capri_deparser_len_hdr) * 8),\
-                                             dpa_variable_len_phv_start_bit, 0, 0, 1, False)
-            ncc_assert(phv_bit == dpa_variable_len_phv_start_bit)
-            self.assign_phv_to_hdr_flds(flit, self.capri_deparser_len_hdr, phv_bit)
-
-        if self.capri_deparser_pad_hdr:
-            dpa_pad_hdr_phv_start_bit = self.pa.be.hw_model['deparser']['pad_phv_start']
-            phv_bit = flit.flit_chunk_alloc((get_header_size(self.capri_deparser_pad_hdr) * 8),\
-                                             dpa_pad_hdr_phv_start_bit, 0, 0, 1, False)
-            ncc_assert(phv_bit == dpa_pad_hdr_phv_start_bit)
-            self.assign_phv_to_hdr_flds(flit, self.capri_deparser_pad_hdr, phv_bit)
-
-
-        # add cfields used for predication
-        pred_cfs = {}
-        for c_pred in self.pa.be.tables.gress_tm[self.d].table_predicates.values():
-            for cf,_ in c_pred.cfield_vals:
-                if cf not in pred_cfs:
-                    pred_cfs[cf] = True
-                    if cf.is_hv or cf.is_intrinsic:
-                        continue
-                    # cannot use hdr flds as predicate, as they cannot be placed in 1st 512 bits
-                    ncc_assert(cf.is_meta)
-                    cf.is_predicate = True
-                    flit.add_cfield(cf)
-                    bits_used += cf.width
-
-        if add_hv:
-            hv_location = self.pa.be.hw_model['parser']['hv_location']
-            max_hv_bits = self.pa.be.hw_model['parser']['max_hv_bits']
-            flit_hv_bits = self.pa.be.hw_model['parser']['flit_hv_bits']
-
-            tmp_pad = hv_location - bits_used
-            dummy_pf = capri_field(None, self.d, tmp_pad, 'pad_before_hv_%d_' % (tmp_pad))
-            # XXX set a flag so we can relocate meta flds in here later
-            # cannot set flit_pad.. it pushes it to end on sorting
-            dummy_pf.is_hv_pad = True
-            flit.add_cfield(dummy_pf)
-            self._create_flit_hv_flds(flit, 'flit_%d_hv' % (flit.id), max_hv_bits)
-    '''
-
     def add_cfield(self, cf, f_id):
         for i in range(0, f_id):
             flit = self.flits[i]
@@ -1510,49 +1935,6 @@ class capri_gress_pa:
                 return True
         return self.flits[f_id].add_cfield(cf)
 
-    '''
-    def _create_flits(self, add_hv=False):
-        # XXX To be removed.. old phv allocation scheme
-        cfid = 0
-        flits_used = 0
-        max_hv_bits = self.pa.be.hw_model['parser']['max_hv_bits']
-        flit_hv_bits = self.pa.be.hw_model['parser']['flit_hv_bits']
-        self.clear_phv_assignment()
-        for id, flit in enumerate(self.flits):
-            if cfid >= len(self.field_order):
-                break;
-            # add_hv == False indicates p4_plus - completely skip special flit0 programming
-            if id == 0 and add_hv:
-                self._add_intrinsic_meta_and_hv(flit, add_hv)
-                if not self.pa.be.args.p4_plus:
-                    # special handling for i2e_meta and hv_bits
-                    if self.d == xgress.INGRESS and self.i2e_hdr:
-                        flit.headers[self.i2e_hdr] = 1
-
-            # try to place cfield into current or earlier flits if allowed
-            while self.add_cfield(self.field_order[cfid], id):
-                # cfield was successfully added
-                cfid +=1
-                if cfid >= len(self.field_order):
-                    break;
-            flits_used += 1
-            flit.flit_close()
-            # flit is full
-
-        # check if all fields were added into flits
-        if cfid != len(self.field_order):
-            self.logger.critical("Not enough space in phv")
-            self.print_field_order_info("PHV order(PHV FAILURE)")
-            ncc_assert(0)
-
-        # combine lists from flits into a common list
-        self.logger.info("%s:Number of flits = %d" % (self.d.name, flits_used))
-        self.field_order = []
-        for flit in self.flits:
-            self.field_order += flit.field_order
-            self.logger.debug("Flit %d: %s" % (flit.id, flit.field_order))
-            flit.flit_reset()
-    '''
 
     def hdr_get_byte_aligned_fld_chunks(self, hdr):
         # return {cf : num_contiguous_phv_bytes}, do not break flds
@@ -1901,10 +2283,94 @@ class capri_gress_pa:
             wct.isize = -1 # reset these values for the rest of the processing
             wct.key_size = -1 # reset these values for the rest of the processing
 
+    def create_flits2(self, add_hv=False):
+        hfid = 0
+        for fid, flit in enumerate(self.flits):
+            if hfid == len(self.topo_sorted_hfgroups):
+                break
+            while True:
+                if hfid == len(self.topo_sorted_hfgroups):
+                    break
+                # add as many hdr/flds to this flit as possible
+                e = self.topo_sorted_hfgroups[hfid]
+                if isinstance(e, list):
+                    # All hfgs are added as list (even a single hfg)
+                    # create a best fit combination from available hfs
+                    hfg_list = e[:]
+                    # get consistent allocation order
+                    sorted(hfg_list, key=lambda h: (h.get_storage_size(), h.name), reverse=True)
+                    # XXX try best fit later.. for now start with largest to smallest
+                    all_done = True
+                    for hfg in hfg_list:
+                        # just use any element to allocate the group
+                        hf = None
+                        for h in hfg.hfs:
+                            hf = h
+                            break
+                        if hf and not self.allocate_phv_for_hf(flit, hf):
+                            all_done = False
+                    if all_done:
+                        hfid += 1
+                    else:
+                        # if one of the hfgs in the list failed
+                        # go to next flit and try this hfg set again
+                        # successfully allocated hfgs will be automatically skipped
+                        break
+                else:
+                    hf = e
+                    if not self.allocate_phv_for_hf(flit, hf):
+                        break
+                    else:
+                        hfid += 1
+
+            # this flit is done, check for special phv allocation and move to next flit
+            # allocate special phvs at the end of a flit if possible
+            if self.parser_end_off_cf and self.parser_end_off_cf.phv_bit == -1:
+                self.allocate_parser_end_off_phv(flit)
+                self.allocated_hf[self.parser_end_off_cf] = self.parser_end_off_cf.phv_bit
+
+            if self.capri_gso_csum_hdr and self.capri_gso_csum_hdr not in self.allocated_hf:
+                # GSO Final Csum computed value (using partially computed csum) captured in this header.
+                # capri_parser expects this 16b csum to be first 16b in any 512b PHV flit.
+                phv_flit_sz = self.pa.be.hw_model['phv']['flit_size']
+                gso_phv_start_bit = self.pa.be.hw_model['phv']['gso_csum_phv_start'] + phv_flit_sz
+                #gso_flit = self.flits[gso_phv_start_bit / self.pa.be.hw_model['parser']['flit_size']]
+                phv_bit = flit.flit_chunk_alloc((get_header_size(self.capri_gso_csum_hdr) * 8),\
+                                                 flit.base_phv_bit+gso_phv_start_bit, 0, 0, 1, False)
+                if phv_bit >= 0:
+                    self.assign_phv_to_hdr_flds(flit, self.capri_gso_csum_hdr, phv_bit)
+                    self.allocated_hf[self.capri_gso_csum_hdr] = phv_bit
+            # move to next flit
+
+        phv_error = False
+        if hfid == len(self.topo_sorted_hfgroups) and self.pa.be.args.split_deparse_only_headers:
+            # no errors so far - allocate deparse-only headers
+            for hf in self.pa.be.parsers[self.d].deparse_only_hdrs:
+                if hf in self.allocated_hf:
+                    # could be synthetic header
+                    self.logger.debug("%s:Deparse only header %s is aloready allocated" % \
+                                        (self.d.name, hf))
+                    continue
+                if not self.split_allocate_deparse_only_header(hf):
+                    phv_error = True
+                    break
+
+        if hfid < len(self.topo_sorted_hfgroups) or phv_error:
+            # not enough phvs
+            self.pa.logger.critical("Not enough space in phv")
+            self.print_field_order_info("PHV order(PHV FAILURE)")
+            self.pa.logger.debug("%s:Field Allocation %s" % (self.d.name,
+                                sorted(self.field_order, key=lambda cf: cf.phv_bit)))
+            for fid, flit in enumerate(self.flits):
+                self.pa.logger.debug("%s:Flit %d, available bits %d chunks %s" % \
+                                    (self.d.name, flit.id, flit.flit_avail, flit.free_chunks))
+            ncc_assert(0)
+
+        self.field_order = sorted(self.field_order, key=lambda k: k.phv_bit)
+        
     def create_flits(self, add_hv=False):
-        if self.pa.be.args.old_phv_allocation:
-            return self._create_flits(add_hv)
         self.clear_phv_assignment()
+
         # XXX reset the flit
         # add intrinsic headers and special flds to flit0
         self.pa.logger.debug("%s:HdrFldOrder(Init) %s" % \
@@ -1926,6 +2392,13 @@ class capri_gress_pa:
 
         flit = self.flits[0]
         self.add_intrinsic_meta_and_hv(flit, add_hv)
+
+        if len(self.topo_sorted_hfgroups):
+            self.pa.logger.debug("%s:HFG Order(Init) %s" % \
+                (self.d.name, self.topo_sorted_hfgroups))
+            return self.create_flits2(add_hv)
+
+        # old phv allocation --->
         hfid = 0
         for fid, flit in enumerate(self.flits):
             if hfid == len(self.hdr_fld_order):
@@ -2250,76 +2723,82 @@ class capri_gress_pa:
         # - Flit restriction is not applied
         # - meta flds can be hdr or fld unions
         # - There are no connected/associtated hdr and flds since flit restriction is not there
-
-        if hf in self.allocated_hf:
-            return True
-
-        if isinstance(hf, capri_field):
-            if hf.is_union():
-                ncc_assert(hf.phv_bit >= 0)
-
-            if hf.phv_bit >= 0:
-                # already assigned a phv
+        if hf not in self.hf_to_group or self.hf_to_group[hf] == None:
+            if hf in self.allocated_hf:
                 return True
-            self.pa.logger.debug("%s:Flit %d Start allocation for %s" % \
-                (self.d.name, flit.id, hf.hfname))
-        else:
-            if self.pa.be.args.split_deparse_only_headers:
-                # special check for deparse-only headers - these are allocated outside this function
-                if hf in self.pa.be.parsers[self.d].deparse_only_hdrs:
+
+            if isinstance(hf, capri_field):
+                if hf.is_union():
+                    ncc_assert(hf.phv_bit >= 0)
+
+                if hf.phv_bit >= 0:
+                    # already assigned a phv
                     return True
-
-            if hf in self.hdr_unions and hf != self.hdr_unions[hf][2]:
-                # union-ed header but not storage for union
-                return True
-            self.pa.logger.debug("%s:Flit %d Start allocation for Hdr %s" % \
-                (self.d.name, flit.id, hf.name))
-
-        if isinstance(hf, capri_field) and hf.allow_relocation:
-            # Previously relocation was not allowed for table k or i fields so alignment and
-            # Relocating table k,i fields
-            justify = JUSTIFY_LEFT
-            if hf in self.i2e_fields or \
-                ((hf.is_key or hf.is_input) and hf.storage_size() >= 4) or \
-                hf.is_fld_union_storage:
-                align = 8
+                self.pa.logger.debug("%s:Flit %d Start allocation for %s" % \
+                    (self.d.name, flit.id, hf.hfname))
             else:
-                align = 0
-            if hf.is_index_key:
-                # Earlier the alignment was done only for flds >= 4 size (not sure why)
-                justify = JUSTIFY_RIGHT
-                align = 8
+                if self.pa.be.args.split_deparse_only_headers:
+                    # special check for deparse-only headers - these are allocated outside this function
+                    if hf in self.pa.be.parsers[self.d].deparse_only_hdrs:
+                        return True
 
-            # try to allocate in prior flits and then this flit
-            for fid in range(flit.id-1, -1, -1):
-                phv_bit = self.flits[fid].flit_chunk_alloc(hf.width, -1, align, justify, 0, False)
+                if hf in self.hdr_unions and hf != self.hdr_unions[hf][2]:
+                    # union-ed header but not storage for union
+                    return True
+                self.pa.logger.debug("%s:Flit %d Start allocation for Hdr %s" % \
+                    (self.d.name, flit.id, hf.name))
+
+            if isinstance(hf, capri_field) and hf.allow_relocation:
+                # Previously relocation was not allowed for table k or i fields so alignment and
+                # Relocating table k,i fields
+                justify = JUSTIFY_LEFT
+                if hf in self.i2e_fields or \
+                    ((hf.is_key or hf.is_input) and hf.storage_size() >= 4) or \
+                    hf.is_fld_union_storage:
+                    align = 8
+                else:
+                    align = 0
+                if hf.is_index_key:
+                    # Earlier the alignment was done only for flds >= 4 size (not sure why)
+                    justify = JUSTIFY_RIGHT
+                    align = 8
+
+                # try to allocate in prior flits and then this flit
+                for fid in range(flit.id-1, -1, -1):
+                    phv_bit = self.flits[fid].flit_chunk_alloc(hf.width, -1, align, justify, 0, False)
+                    if phv_bit >= 0:
+                        hf.phv_bit = phv_bit
+                        self.pa.logger.debug("%s:Allocated %s at %d in closed flit %d" % \
+                            (self.d.name, hf.hfname, hf.phv_bit, fid))
+                        # check unions (useful for syn hdr flds)
+                        if hf.is_fld_union_storage:
+                            for uf in self.fld_unions[hf][0]:
+                                uf.phv_bit = phv_bit
+                                self.allocated_hf[uf] = phv_bit
+                        return True
+
+                # try current flit - fallthru' to use the common code
+                '''
+                phv_bit = flit.flit_chunk_alloc(hf.width, -1, align, justify, 0, False)
                 if phv_bit >= 0:
                     hf.phv_bit = phv_bit
-                    self.pa.logger.debug("%s:Allocated %s at %d in closed flit %d" % \
-                        (self.d.name, hf.hfname, hf.phv_bit, fid))
-                    # check unions (useful for syn hdr flds)
-                    if hf.is_fld_union_storage:
-                        for uf in self.fld_unions[hf][0]:
-                            uf.phv_bit = phv_bit
-                            self.allocated_hf[uf] = phv_bit
                     return True
-
-            # try current flit - fallthru' to use the common code
-            '''
-            phv_bit = flit.flit_chunk_alloc(hf.width, -1, align, justify, 0, False)
-            if phv_bit >= 0:
-                hf.phv_bit = phv_bit
-                return True
-            # cannot allocate in current flit
-            return False
-            '''
+                # cannot allocate in current flit
+                return False
+                '''
 
         # get all the headers and flds that need to go into a single flit
         hf_list = []; cs_list = []
         if self.pa.be.args.p4_plus:
             hf_list.append(hf)
         else:
-            self.find_hf_flit_group(hf_list, cs_list, hf)
+            # use new hf groups created
+            if hf in self.hf_to_group and self.hf_to_group[hf] != None:
+                hfg = self.hf_to_group[hf]
+                self.pa.logger.debug("%s:Start allocation of %s" % (self.d.name, hfg))
+                hf_list += hfg.sorted_hfs()
+            else:
+                hf_list.append(hf)
 
         # allocate phv for the headers/flds that are not already placed
         # i2e header - XXX
@@ -2477,8 +2956,6 @@ class capri_gress_pa:
                     ncc_assert(phv_bit >= 0)
 
                 ncc_assert(cf not in self.allocated_hf )# duplicate allocation
-                if capri_i2e_hdr not in self.allocated_hf:
-                    self.allocated_hf[capri_i2e_hdr] = phv_bit
                 # check fld unions
                 if cf.is_fld_union_storage:
                     for uf in self.fld_unions[cf][0]:
@@ -2487,6 +2964,10 @@ class capri_gress_pa:
                         new_allocated_hfs.append(uf)
                 cf.phv_bit = phv_bit
                 phv_bit += cf.storage_size()
+
+            if not overflow:
+                self.allocated_hf[capri_i2e_hdr] = phv_bit
+                new_allocated_hfs.append(capri_i2e_hdr)
 
         if overflow:
             self.pa.logger.debug("%s:Close flit %d, Overflow: bits avail %d while allocating %s" % \
@@ -3291,13 +3772,13 @@ class capri_pa:
             if self.be.args.p4_plus:
                 add_hv=False
             self.gress_pa[d].create_flits(add_hv)
-            total_phv_bits = self.gress_pa[d].print_field_order_info("PHV order(Post Flit)")
+            #total_phv_bits = self.gress_pa[d].print_field_order_info("PHV order(Post Flit)")
             if self.be.args.old_phv_allocation:
                 self.gress_pa[d].assign_phv()
             new_phv_bits = self.gress_pa[d].print_field_order_info("PHV order(Post relocate Meta)")
-            ncc_assert(total_phv_bits == new_phv_bits)
-            self.logger.debug("%s" % [cf for cf in self.gress_pa[d].field_order \
-                if not cf.is_ohi and not cf.is_flit_pad])
+            #ncc_assert(total_phv_bits == new_phv_bits)
+            self.logger.debug("%s" % sorted([cf for cf in self.gress_pa[d].field_order \
+                if not cf.is_ohi and not cf.is_flit_pad], key=lambda k: k.phv_bit))
 
     def replace_hv_field(self, fidx, cf, d):
         return self.gress_pa[d].replace_hv_field(fidx, cf)
@@ -3305,9 +3786,6 @@ class capri_pa:
     def init_field_ordering(self):
         for d in xgress:
             self.gress_pa[d].init_field_ordering()
-            self.gress_pa[d].print_field_order_info("PHV order(Post unions)")
-            self.logger.debug("%s" % [cf for cf in self.gress_pa[d].field_order \
-                if not cf.is_ohi and not cf.is_flit_pad])
 
     def get_header_cfields(self, hdr, d):
         return self.gress_pa[d].get_header_cfields(hdr)

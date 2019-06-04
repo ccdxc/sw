@@ -1,11 +1,12 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_input_properties_mac_vlan_k.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nw.h"
 
-struct input_properties_mac_vlan_k k;
-struct input_properties_mac_vlan_d d;
-struct phv_                        p;
+struct input_properties_mac_vlan_k_ k;
+struct input_properties_mac_vlan_d  d;
+struct phv_                         p;
 
 %%
 
@@ -16,8 +17,7 @@ input_properties_mac_vlan:
   cmov          r1, c2, (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
                          CAPRI_TXDMA_INTRINSIC_HDR_SZ + P4PLUS_TO_P4_HDR_SZ), \
                         CAPRI_GLOBAL_INTRINSIC_HDR_SZ
-  sub           r1, k.{capri_p4_intrinsic_frame_size_sbit0_ebit5, \
-                       capri_p4_intrinsic_frame_size_sbit6_ebit13}, r1
+  sub           r1, k.capri_p4_intrinsic_frame_size, r1
 
   seq           c3, k.recirc_header_valid, TRUE
   phvwr.c3      p.control_metadata_recirc_reason, k.recirc_header_reason[1:0]
@@ -29,12 +29,10 @@ input_properties_mac_vlan:
   phvwr         p.capri_p4_intrinsic_packet_len, r1
 
   seq           c1, d.input_properties_mac_vlan_d.src_lif_check_en, 1
-  seq           c2, d.input_properties_mac_vlan_d.src_lif, \
-                    k.{capri_intrinsic_lif_sbit0_ebit2, \
-                       capri_intrinsic_lif_sbit3_ebit10}
+  or            r2, k.capri_intrinsic_lif_s3_e10, k.capri_intrinsic_lif_s0_e2, 8
+  seq           c2, d.input_properties_mac_vlan_d.src_lif, r2
   bcf           [c1&!c2], dejavu_check_failed
-  phvwr         p.control_metadata_src_lif, k.{capri_intrinsic_lif_sbit0_ebit2,\
-                                               capri_intrinsic_lif_sbit3_ebit10}
+  phvwr         p.control_metadata_src_lif, r2
   phvwr         p.control_metadata_flow_miss_idx, \
                     d.input_properties_mac_vlan_d.flow_miss_idx
   phvwr         p.flow_miss_metadata_tunnel_originate, \
@@ -44,7 +42,7 @@ input_properties_mac_vlan:
   or            r1, d.input_properties_mac_vlan_d.tunnel_vnid, \
                     d.input_properties_mac_vlan_d.tunnel_rewrite_index, 30
   phvwr         p.{flow_miss_metadata_tunnel_rewrite_index, \
-                    _flit_pad__2834, \
+                    _pad_2818_, \
                     flow_miss_metadata_tunnel_vnid}, r1
   or            r1, d.input_properties_mac_vlan_d.src_lport, \
                     d.input_properties_mac_vlan_d.dst_lport, 16
@@ -63,8 +61,8 @@ input_properties_mac_vlan:
                     control_metadata_mirror_on_drop_session_id}, \
                     d.{input_properties_mac_vlan_d.mirror_on_drop_en, \
                     input_properties_mac_vlan_d.mirror_on_drop_session_id}
-  phvwrpair.e   p.control_metadata_nic_mode, NIC_MODE_SMART, \
-                    p.flow_lkp_metadata_lkp_dir, \
+  phvwr         p.control_metadata_nic_mode, NIC_MODE_SMART
+  phvwr.e       p.flow_lkp_metadata_lkp_dir, \
                     d.input_properties_mac_vlan_d.dir
   phvwr.f       p.l4_metadata_profile_idx, \
                     d.input_properties_mac_vlan_d.l4_profile_idx

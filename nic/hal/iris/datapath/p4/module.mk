@@ -6,6 +6,7 @@ MODULE_PIPELINE     = iris
 MODULE_NCC_OPTS     = --asm-out --pd-gen --gen-dir ${BLD_P4GEN_DIR} \
                       --cfg-dir ${BLD_PGMBIN_DIR} \
                       --split-deparse-only-headers \
+                      --phv-flits=10 \
                       --pipeline ${PIPELINE}
 ifeq ($(PLATFORM),haps)
 MODULE_NCC_OPTS     += --fe-flags="-DPLATFORM_HAPS -I${TOPDIR} -I${SDKDIR}"

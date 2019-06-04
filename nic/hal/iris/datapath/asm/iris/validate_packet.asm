@@ -1,10 +1,11 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_validate_packet_k.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nw.h"
 
-struct validate_packet_k k;
-struct phv_              p;
+struct validate_packet_k_ k;
+struct phv_               p;
 
 %%
 
@@ -47,8 +48,8 @@ f_check_parser_errors:
   // do not use c1 register in this function
   bbeq        k.control_metadata_uplink, TRUE, check_parser_errors_uplink
   seq         c2, k.capri_p4_intrinsic_len_err, 0
-  smneb.!c2   c2, k.{p4plus_to_p4_update_udp_len...p4plus_to_p4_update_ip_len},\
-                0x5, 0
+  smneb.!c2   c2, k.{p4plus_to_p4_update_udp_len, p4plus_to_p4_update_tcp_seq_no, \
+                     p4plus_to_p4_update_ip_len}, 0x5, 0
   jrcf        [c2], r7
   phvwr.!c2.e p.control_metadata_drop_reason[DROP_PARSER_LEN_ERR], 1
   phvwr       p.capri_intrinsic_drop, 1

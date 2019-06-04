@@ -1,11 +1,12 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_flow_hash_k.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nw.h"
 
-struct flow_hash_k k;
-struct flow_hash_d d;
-struct phv_        p;
+struct flow_hash_k_ k;
+struct flow_hash_d  d;
+struct phv_         p;
 
 %%
 

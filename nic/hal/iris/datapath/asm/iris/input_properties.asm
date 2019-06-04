@@ -1,11 +1,12 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_input_properties_k.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nw.h"
 
-struct input_properties_k k;
-struct input_properties_d d;
-struct phv_               p;
+struct input_properties_k_  k;
+struct input_properties_d   d;
+struct phv_                 p;
 
 %%
 
@@ -16,8 +17,7 @@ input_properties:
                     d.input_properties_d.dst_lport, 16
   phvwrpair     p.{control_metadata_dst_lport,control_metadata_src_lport}, r1, \
                     p.flow_lkp_metadata_lkp_vrf, d.input_properties_d.vrf
-  or            r1, k.capri_intrinsic_lif_sbit3_ebit10, \
-                    k.capri_intrinsic_lif_sbit0_ebit2, 8
+  or            r1, k.capri_intrinsic_lif_s3_e10, k.capri_intrinsic_lif_s0_e2, 8
   phvwr         p.control_metadata_src_lif, r1
   phvwr         p.control_metadata_flow_miss_idx, \
                     d.input_properties_d.flow_miss_idx
@@ -36,8 +36,8 @@ input_properties:
                    control_metadata_mirror_on_drop_session_id}, \
                     d.{input_properties_d.mirror_on_drop_en, \
                        input_properties_d.mirror_on_drop_session_id}
-  phvwrpair.e   p.control_metadata_nic_mode, d.input_properties_d.nic_mode, \
-                    p.flow_lkp_metadata_lkp_dir, d.input_properties_d.dir
+  phvwr         p.control_metadata_nic_mode, d.input_properties_d.nic_mode
+  phvwr.e       p.flow_lkp_metadata_lkp_dir, d.input_properties_d.dir
   phvwr.f       p.l4_metadata_profile_idx, d.input_properties_d.l4_profile_idx
 
 /*****************************************************************************/

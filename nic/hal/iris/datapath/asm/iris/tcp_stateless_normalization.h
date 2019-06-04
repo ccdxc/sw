@@ -115,11 +115,11 @@ tcp_stateless_normalization:
 lb_tcp_rsvd_flags:
   seq         c2, k.l4_metadata_tcp_rsvd_flags_action, NORMALIZATION_ACTION_ALLOW
   b.c2        lb_tcp_unexpected_mss
-  seq         c2, k.l4_metadata_tcp_unexpected_mss_action, \
-                     NORMALIZATION_ACTION_ALLOW
+  seq         c2, k.l4_metadata_tcp_unexpected_mss_action, NORMALIZATION_ACTION_ALLOW
   sne         c3, k.tcp_res, r0
   b.!c3       lb_tcp_unexpected_mss
-  seq         c4, k.l4_metadata_tcp_rsvd_flags_action, NORMALIZATION_ACTION_DROP
+  seq         c4, k.l4_metadata_tcp_rsvd_flags_action, \
+                NORMALIZATION_ACTION_DROP
   phvwr.c4.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c4    p.capri_intrinsic_drop, 1
   // If not Allow/Drop then its EDIT
@@ -129,14 +129,15 @@ lb_tcp_rsvd_flags:
 
 // C2 has lb_tcp_unexpected_mss_action == ALLOW
 lb_tcp_unexpected_mss:
-  or          r1, r0, k.l4_metadata_tcp_unexpected_win_scale_action
+  or          r1, k.l4_metadata_tcp_unexpected_win_scale_action_s1_e1, \
+                  k.l4_metadata_tcp_unexpected_win_scale_action_s0_e0, 1
   b.c2        lb_tcp_unexpected_win_scale
   seq         c2, r1, NORMALIZATION_ACTION_ALLOW
   smneb       c3, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   seq         c4, k.tcp_option_mss_valid, TRUE
   bcf         ![c3 & c4], lb_tcp_unexpected_win_scale
   seq         c3, k.l4_metadata_tcp_unexpected_mss_action, \
-                     NORMALIZATION_ACTION_DROP
+                NORMALIZATION_ACTION_DROP
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
   // Edit option: Remove the mss option

@@ -1164,7 +1164,7 @@ class capri_table:
             if i_in_key:
                 self.gtm.tm.logger.debug("%s:%s has input fields %d (bits) mixed with key" % \
                     (self.d, self.p4_table.name, i_in_key))
-                #self.i_in_key = i_in_key # for printing (for analysis)
+                self.i_in_key = i_in_key # for printing (for analysis)
             kf.k_phv_chunks = k_phv_chunks # [(phv_bit, width)]
 
         # Add info from different flits into a common place
@@ -2378,6 +2378,155 @@ class capri_table:
             if km_prof.bit_loc1 >= 0:
                 km_prof.bit_loc1 += 1
 
+    def remove_i_in_k(self):
+        if len(self.i2k_pad_chunks) == 0:
+            return
+
+        max_km_width = self.gtm.tm.be.hw_model['match_action']['key_maker_width']
+        max_kmB = max_km_width/8
+        # hw need tcam key to start at 2B boundary to use AXI shift for aligning the key
+        k_start = self.start_key_off / 8
+        key_szB = (self.final_key_size + 7)/8
+        # for tcam do not use start key_off_delta, just include non-k bits into k and mask them
+        # this is for axi shift adjustment
+        if self.start_key_off_delta:
+            self.gtm.tm.logger.debug("%s:Reset start_key_off_delta(%d) for tcam table" % \
+                (self.p4_table.name, self.start_key_off_delta))
+            self.start_key_off_delta = 0
+
+        if self.is_otcam:
+            # This needs to be fixed by fixing its parent hash table key - XXX
+            ncc_assert((k_start % 2) == 0)
+
+        km0_prof = self.key_makers[0].shared_km.combined_profile \
+            if self.key_makers[0].shared_km else \
+            self.key_makers[0].combined_profile
+
+        km1_prof = None
+        if self.num_km > 1:
+            km1_prof = self.key_makers[1].shared_km.combined_profile \
+                        if self.key_makers[1].shared_km \
+                        else self.key_makers[1].combined_profile
+
+        fix_km_prof = None
+        k_end = self.end_key_off / 8
+        is_shared_km = False
+        if k_start < max_kmB:
+            fix_km_prof = km0_prof
+            is_shared_km = self.key_makers[0].shared_km != None
+        else:
+            fix_km_prof = km1_prof
+            is_shared_km = self.key_makers[1].shared_km != None
+
+        km_kstart = k_start % max_kmB
+        km_kend = k_end % max_kmB
+
+        if len(self.i2k_pad_chunks):
+            # ignore Banyon and remove i2k chunk out of key and place them rigth after the key
+            self.gtm.tm.logger.debug("%s: Remove i-chunks mixed with key for table %s:%s" % \
+                                        (self.gtm.d.name, self.p4_table.name, self.i2k_pad_chunks))
+            ibytes_in_k = []
+            for cstart, clen in self.i2k_pad_chunks:
+                ncc_assert(cstart % 8 == 0)
+                ibyte = cstart / 8
+                for b in range(clen/8):
+                    ibytes_in_k.append(ibyte+b)
+
+            # if key spans two kms, any i-bytes removed from km0 should be added before the key
+            # (i.e shift key to right). If i-bytes are removed from km1, add them after
+            # the key. When keys are contained in one km, move i-bytes after the key
+            one_km = True if k_start/max_kmB == k_end/max_kmB else False
+            moved_bits = 0
+            if one_km:
+                # list is reversred so that bytes get re-inserted in ascending order 
+                ibytes_in_k.sort(reverse=True)
+                update_bit_loc = True if (fix_km_prof.bit_loc >= km_kstart and \
+                                         fix_km_prof.bit_loc <= km_kend) \
+                                      else False
+                update_bit_loc1 = True if (fix_km_prof.bit_loc1 >= km_kstart and \
+                                           fix_km_prof.bit_loc1 <= km_kend) \
+                                       else False
+                for b in ibytes_in_k:
+                    ncc_assert(b in fix_km_prof.k_byte_sel)
+                    rm_index = fix_km_prof.byte_sel.index(b)
+                    fix_km_prof.byte_sel.remove(b)
+                    fix_km_prof.k_byte_sel.remove(b)
+                    fix_km_prof.i2_byte_sel.append(b)
+                    fix_km_prof.byte_sel.insert(km_kend, b)
+                    moved_bits += 8
+                    k_end -= 1
+                    km_kend -= 1
+                    self.end_key_off -= 8
+                    # update bit locations
+                    if update_bit_loc and rm_index < fix_km_prof.bit_loc:
+                        fix_km_prof.bit_loc -= 1
+                    if update_bit_loc1 and rm_index < fix_km_prof.bit_loc1:
+                        fix_km_prof.bit_loc1 -= 1
+            else:
+                ibytes_in_k.sort()
+                km0_i2k_bytes = []
+                km1_i2k_bytes = []
+                for b in ibytes_in_k:
+                    if b in km0_prof.k_byte_sel:
+                        km0_i2k_bytes.append(b)
+                    elif b in km1_prof.k_byte_sel:
+                        km1_i2k_bytes.append(b)
+                    else:
+                        ncc_assert(0)
+            
+                if len(km0_i2k_bytes) % 2:
+                    # keep 1 byte in key so that start ofset stays on 2B alignment
+                    use_byte = None
+                    for cs, cl in self.i2k_pad_chunks:
+                        if cl == 1 and (cs/8) in km0_i2k_bytes:
+                            use_byte = cs / 8
+                            break
+                    if use_byte != None:
+                        km0_i2k_bytes.remove(use_byte)
+                    else:
+                        km0_i2k_bytes.pop()
+
+                for b in km0_i2k_bytes:
+                    rm_index = km0_prof.byte_sel.index(b)
+                    km0_prof.byte_sel.remove(b)
+                    km0_prof.k_byte_sel.remove(b)
+                    km0_prof.i1_byte_sel.append(b)
+                    km0_prof.byte_sel.insert(km_kstart, b)
+                    moved_bits += 8
+                    k_start += 1
+                    km_start += 1
+                    self.start_key_off += 8
+                    bit_loc = km0_prof.bit_loc
+                    bit_loc1 = km0_prof.bit_loc1
+                    if bit_loc >= km_kstart and bit_loc < rm_index:
+                        km0_prof.bit_loc += 1
+                    if bit_loc1 >= km_kstart and bit_loc1 < rm_index:
+                        km0_prof.bit_loc1 += 1
+
+                for b in km1_i2k_bytes.reverse():
+                    ncc_assert(b in fix_km_prof.k_byte_sel)
+                    rm_index = km1_prof.byte_sel.index(b)
+                    km1_prof.byte_sel.remove(b)
+                    km1_prof.k_byte_sel.remove(b)
+                    km1_prof.i2_byte_sel.append(b)
+                    fix_km_prof.byte_sel.insert(km_kend, b)
+                    moved_bits += 8
+                    k_end -= 1
+                    km_kend -= 1
+                    self.end_key_off -= 8
+                    bit_loc = km1_prof.bit_loc
+                    bit_loc1 = km1_prof.bit_loc1
+                    if bit_loc <= km_kend and bit_loc > rm_index:
+                        km1_prof.bit_loc -= 1
+                    if bit_loc1 <= km_kstart and bit_lo > rm_index:
+                        km1_prof.bit_loc1 -= 1
+
+            self.key_size -= moved_bits
+            self.key_phv_size -= moved_bits
+            self.final_key_size -= moved_bits
+            self.i_size -= moved_bits
+            self.i_phv_size -= moved_bits
+
     def _fix_tcam_table_key(self):
         max_km_width = self.gtm.tm.be.hw_model['match_action']['key_maker_width']
         max_kmB = max_km_width/8
@@ -2395,17 +2544,16 @@ class capri_table:
             # This needs to be fixed by fixing its parent hash table key - XXX
             ncc_assert((k_start % 2) == 0)
 
-        if (k_start % 2) == 0:
-            return False
-
         km0_prof = self.key_makers[0].shared_km.combined_profile \
             if self.key_makers[0].shared_km else \
             self.key_makers[0].combined_profile
 
+        km1_prof = None
         if self.num_km > 1:
             km1_prof = self.key_makers[1].shared_km.combined_profile \
                         if self.key_makers[1].shared_km \
                         else self.key_makers[1].combined_profile
+
         fix_km_prof = None
         k_end = self.end_key_off / 8
         is_shared_km = False
@@ -2417,6 +2565,11 @@ class capri_table:
             is_shared_km = self.key_makers[1].shared_km != None
 
         km_kstart = k_start % max_kmB
+        km_kend = k_end % max_kmB
+
+        if (k_start % 2) == 0:
+            return False
+
 
         self.gtm.tm.logger.debug("_fix_tcam_table_key:%s: key_offs %d, %d bit_loc %d, %d" % \
             (self.p4_table.name, self.start_key_off, self.end_key_off,
@@ -2448,7 +2601,7 @@ class capri_table:
             # key maker is full
             # if the kstart bytes of tcam are shared with another index
             # table, moving/inserting byte after km_kstart can cause problems for the
-            # index table if an unused byte
+            # index table
             # just increase tcam key width by 1 byte by moving start_key off back by 1 byte
             if is_shared_km:
                 # since km is shared, don't insert bytes as it can un-align the shared table
@@ -4178,6 +4331,13 @@ class capri_stage:
                         ct.ct_update_key_offsets()
             if ct.is_wide_key:
                 ct.ct_update_wide_key_size()
+
+        # Last HACK: Ignore Banyon restriction and try to remove i in key bytes from tcam tables to
+        # reduce tcam size
+        for ct in ct_list:
+            if not ct.is_tcam_table():
+                continue
+            ct.remove_i_in_k()
 
         max_km_profiles = self.gtm.tm.be.hw_model['match_action']['num_km_profiles']
         km_prof_normal = []

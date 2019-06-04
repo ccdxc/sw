@@ -37,13 +37,11 @@ tunneled_ipv4_packet_common:
   phvwrpair     p.flow_lkp_metadata_lkp_dst[31:0], k.inner_ipv4_dstAddr, \
                     p.flow_lkp_metadata_lkp_src[31:0], k.inner_ipv4_srcAddr
 
-  or            r1, k.inner_ipv4_flags, r4[47:0], 3
-  or            r1, r1, k.inner_ipv4_ihl, 51
-  phvwr         p.{flow_lkp_metadata_ipv4_hlen, \
-                   flow_lkp_metadata_lkp_srcMacAddr, \
-                   flow_lkp_metadata_ipv4_flags}, r1
-
+  phvwr         p.flow_lkp_metadata_ipv4_hlen, k.inner_ipv4_ihl
+  phvwr         p.flow_lkp_metadata_ipv4_flags, k.inner_ipv4_flags
+  phvwr         p.flow_lkp_metadata_lkp_srcMacAddr, r4[47:0]
   phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, r5[47:0]
+
   phvwr         p.flow_lkp_metadata_ip_ttl, k.inner_ipv4_ttl
   phvwr         p.flow_lkp_metadata_ipv4_hlen, k.inner_ipv4_ihl
   phvwrpair     p.l3_metadata_ip_frag, k.l3_metadata_inner_ip_frag, \

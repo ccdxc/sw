@@ -30,13 +30,14 @@ header_type l4_metadata_t {
         // ip_invalid_len_action: Check for Outer IP only. Packet can be trimmed based on config.
         // ip_normalize_ttl: If non-zero, replace all IP packet ttl with this value.
         ip_rsvd_flags_action                     : 2;
+
+        // IP Independent
+        ip_fragment_drop                         : 1;
+
         ip_df_action                             : 2;
         ip_options_action                        : 2;
         ip_invalid_len_action                    : 2;
         ip_normalize_ttl                         : 8;
-
-        // IP Independent
-        ip_fragment_drop                         : 1;
 
         // ICMP Normalization
         icmp_deprecated_msgs_drop                : 1;

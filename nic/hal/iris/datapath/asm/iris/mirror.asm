@@ -1,11 +1,12 @@
 #include "egress.h"
 #include "EGRESS_p.h"
+#include "EGRESS_mirror_k.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nw.h"
 
-struct mirror_k k;
-struct mirror_d d;
-struct phv_     p;
+struct mirror_k_ k;
+struct mirror_d  d;
+struct phv_      p;
 
 %%
 
@@ -21,10 +22,8 @@ local_span:
   phvwrpair     p.p4_to_p4plus_mirror_session_id, \
                     k.capri_intrinsic_tm_span_session, \
                     p.p4_to_p4plus_mirror_original_len[13:0], \
-                    k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                       capri_p4_intrinsic_packet_len_sbit6_ebit13}
-  phvwr         p.p4_to_p4plus_mirror_lif, k.{capri_intrinsic_lif_sbit0_ebit2, \
-                                              capri_intrinsic_lif_sbit3_ebit10}
+                    k.capri_p4_intrinsic_packet_len
+  phvwr         p.p4_to_p4plus_mirror_lif, k.capri_intrinsic_lif
 
   add           r1, r0, d.u.local_span_d.truncate_len
   phvwr         p.control_metadata_dst_lport, d.u.local_span_d.dst_lport
@@ -61,7 +60,7 @@ erspan_mirror:
   phvwr.c1      p.vlan_tag_valid, 0
   phvwr.c1      p.{vlan_tag_pcp...vlan_tag_etherType}, 0
   phvwrpair.c1  p.erspan_t3_vlan, \
-                    k.{vlan_tag_vid_sbit0_ebit3,vlan_tag_vid_sbit4_ebit11}, \
+                    k.vlan_tag_vid, \
                     p.erspan_t3_cos, k.vlan_tag_pcp
   phvwr         p.erspan_t3_span_id, k.capri_intrinsic_tm_span_session
   add           r1, r0, d.u.erspan_mirror_d.truncate_len
@@ -84,8 +83,7 @@ drop_mirror:
   phvwr         p.control_metadata_egress_drop_reason[EGRESS_DROP_MIRROR], 1
 
 span_truncation:
-  sub           r2, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                       capri_p4_intrinsic_packet_len_sbit6_ebit13}, 14
+  sub           r2, k.capri_p4_intrinsic_packet_len, 14
   slt           c1, r1, r2
   nop.!c1.e
   phvwr         p.capri_intrinsic_tm_span_session, 0

@@ -36,10 +36,7 @@ ingress_to_rxdma:
     phvwr           p.capri_rxdma_intrinsic_valid, TRUE
     phvwr           p.capri_p4_intrinsic_valid, TRUE
     */
-    phvwrmi         p.{service_header_valid, \
-                       p4plus_to_p4_vlan_valid, \
-                       p4plus_to_p4_valid, \
-                       p4i_apollo_i2e_valid, \
+    phvwr           p.{ p4i_apollo_i2e_valid, \
                        p4_to_txdma_header_valid, \
                        txdma_to_p4e_header_valid, \
                        p4_to_arm_valid, \
@@ -48,9 +45,13 @@ ingress_to_rxdma:
                        predicate_header2_valid, \
                        predicate_header_valid, \
                        p4_to_rxdma_header_valid, \
+                       p4plus_to_p4_vlan_valid, \
+                       p4plus_to_p4_valid, \
                        capri_txdma_intrinsic_valid, \
                        capri_rxdma_intrinsic_valid, \
-                       capri_p4_intrinsic_valid}, 0x0C3B, 0x7FFF
+                       service_header_valid, \
+                       capri_p4_intrinsic_valid}, 0x61C5
+
     add             r1, k.capri_p4_intrinsic_packet_len, APOLLO_I2E_HDR_SZ
     phvwr           p.p4_to_rxdma_header_table3_valid, TRUE
     phvwr           p.p4_to_rxdma_header_direction, k.control_metadata_direction
@@ -76,10 +77,7 @@ ingress_to_egress:
     phvwr           p.capri_rxdma_intrinsic_valid, FALSE
     phvwr           p.capri_p4_intrinsic_valid, TRUE
     */
-    phvwrmi         p.{service_header_valid, \
-                       p4plus_to_p4_vlan_valid, \
-                       p4plus_to_p4_valid, \
-                       p4i_apollo_i2e_valid, \
+    phvwr           p.{ p4i_apollo_i2e_valid, \
                        p4_to_txdma_header_valid, \
                        txdma_to_p4e_header_valid, \
                        p4_to_arm_valid, \
@@ -88,21 +86,25 @@ ingress_to_egress:
                        predicate_header2_valid, \
                        predicate_header_valid, \
                        p4_to_rxdma_header_valid, \
+                       p4plus_to_p4_vlan_valid, \
+                       p4plus_to_p4_valid, \
                        capri_txdma_intrinsic_valid, \
                        capri_rxdma_intrinsic_valid, \
-                       capri_p4_intrinsic_valid}, 0x0A15, 0x7FFF
+                       service_header_valid, \
+                       capri_p4_intrinsic_valid}, 0x5089
     phvwr.e         p.predicate_header_direction, k.control_metadata_direction
     phvwr           p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
 
 recirc_packet:
-    phvwrmi         p.{predicate_header_valid, \
+    phvwr.e         p.{predicate_header_valid, \
                        p4_to_rxdma_header_valid, \
+                       p4plus_to_p4_vlan_valid, \
+                       p4plus_to_p4_valid, \
                        capri_txdma_intrinsic_valid, \
                        capri_rxdma_intrinsic_valid, \
-                       capri_p4_intrinsic_valid}, 0x1, 0x1F
-    phvwr.e         p.capri_intrinsic_tm_oport, TM_PORT_INGRESS
-    phvwrmi         p.{service_header_valid,p4plus_to_p4_vlan_valid, \
-                       p4plus_to_p4_valid}, 0x4, 0x7
+                       service_header_valid, \
+                       capri_p4_intrinsic_valid}, 0x3
+    phvwr           p.capri_intrinsic_tm_oport, TM_PORT_INGRESS
 
 .align
 classic_nic_app:
@@ -177,7 +179,7 @@ redirect_to_arm:
     phvwr           capri_rxdma_intrinsic_valid,TRUE
     phvwr           p.capri_p4_intrinsic_valid, TRUE
     */
-    phvwrmi         p.{p4i_apollo_i2e_valid, \
+    phvwr           p.{p4i_apollo_i2e_valid, \
                        p4_to_txdma_header_valid, \
                        txdma_to_p4e_header_valid, \
                        p4_to_arm_valid, \
@@ -186,9 +188,13 @@ redirect_to_arm:
                        predicate_header2_valid, \
                        predicate_header_valid, \
                        p4_to_rxdma_header_valid, \
+                       p4plus_to_p4_vlan_valid, \
+                       p4plus_to_p4_valid, \
                        capri_txdma_intrinsic_valid, \
                        capri_rxdma_intrinsic_valid, \
-                       capri_p4_intrinsic_valid}, 0x9C3, 0xFFF
+                       service_header_valid, \
+                       capri_p4_intrinsic_valid}, 0x0E05
+
     or              r1, k.ctag_1_valid, k.ipv4_1_valid, \
                         APOLLO_CPU_FLAGS_IPV4_1_VALID_BIT_POS
     or              r1, r1, k.ipv6_1_valid, \

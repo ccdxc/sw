@@ -93,7 +93,7 @@ jobd/dol/pin: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/multicast
 jobd/dol/multicast: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --topo multicast --feature multicast
+	${NICDIR}/run.py ${COVERAGE_OPTS} --topo multicast --feature multicast --modellogs
 
 .PHONY: jobd/dol/pinl2mc
 jobd/dol/pinl2mc: ${JOBD_PREREQS}

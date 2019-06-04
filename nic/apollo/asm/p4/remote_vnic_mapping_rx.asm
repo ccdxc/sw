@@ -1,6 +1,7 @@
 #include "apollo.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_remote_vnic_mapping_rx_k.h"
 
 struct remote_vnic_mapping_rx_k k;
 struct remote_vnic_mapping_rx_d d;
@@ -67,8 +68,8 @@ remote_vnic_mapping_rx_miss:
 remote_vnic_mapping_rx_hit:
     seq         c1, k.vnic_metadata_vpc_id, \
                     d.remote_vnic_mapping_rx_info_d.vpc_id
-    or          r1, d.remote_vnic_mapping_rx_info_d.overlay_mac_sbit5_ebit47, \
-                    d.remote_vnic_mapping_rx_info_d.overlay_mac_sbit0_ebit4, 43
+    or          r1, d.remote_vnic_mapping_rx_info_d.overlay_mac_sbit21_ebit47, \
+                    d.remote_vnic_mapping_rx_info_d.overlay_mac_sbit0_ebit20, 27
     phvwr.c1.e  p.p4i_apollo_i2e_rvpath_subnet_id, \
                     d.remote_vnic_mapping_rx_info_d.subnet_id
     phvwr.c1    p.p4i_apollo_i2e_rvpath_overlay_mac, r1

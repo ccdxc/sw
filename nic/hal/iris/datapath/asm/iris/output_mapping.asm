@@ -1,11 +1,12 @@
 #include "egress.h"
 #include "EGRESS_p.h"
+#include "EGRESS_output_mapping_k.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nw.h"
 
-struct output_mapping_k k;
-struct output_mapping_d d;
-struct phv_             p;
+struct output_mapping_k_ k;
+struct output_mapping_d  d;
+struct phv_              p;
 
 %%
 
@@ -39,13 +40,12 @@ set_tm_oport:
   phvwr       p.control_metadata_p4plus_app_id, d.u.set_tm_oport_d.p4plus_app_id
 
   sne         c1, d.u.set_tm_oport_d.access_vlan_id, 0
-  seq.c1      c1, k.{vlan_tag_vid_sbit0_ebit3,vlan_tag_vid_sbit4_ebit11}, \
+  seq.c1      c1, k.vlan_tag_vid, \
                 d.u.set_tm_oport_d.access_vlan_id
   bcf         [!c1], set_tm_oport_common
   sub         r7, 28, r7, 2
   // access vlan processing
-  sub         r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                     capri_p4_intrinsic_packet_len_sbit6_ebit13}, 4
+  sub         r1, k.capri_p4_intrinsic_packet_len, 4
   phvwr       p.vlan_tag_valid, FALSE
   phvwr       p.ethernet_etherType, k.vlan_tag_etherType
   phvwr       p.capri_p4_intrinsic_packet_len, r1

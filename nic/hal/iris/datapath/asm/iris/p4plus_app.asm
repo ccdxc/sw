@@ -1,11 +1,12 @@
 #include "egress.h"
 #include "EGRESS_p.h"
+#include "EGRESS_p4plus_app_k.h"
 #include "CSUM_EGRESS.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nw.h"
 
-struct p4plus_app_k k;
-struct phv_         p;
+struct p4plus_app_k_ k;
+struct phv_          p;
 
 %%
 
@@ -24,18 +25,17 @@ p4plus_app_classic_nic:
   .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_option_mss_valid) == 11)
   phvwr         p.{tcp_option_eol_valid...tcp_option_mss_valid}, r0
   // r7 : packet_len
-  or            r7, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
-                    k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  or            r7, r0, k.capri_p4_intrinsic_packet_len
   phvwr         p.p4_to_p4plus_classic_nic_l2csum, TRUE
 
   seq           c1, k.vlan_tag_valid, TRUE
   seq           c2, k.control_metadata_vlan_strip, TRUE
   bcf           ![c1&c2], p4plus_app_classic_nic_no_vlan_strip
-  add           r1, k.vlan_tag_vid_sbit4_ebit11, k.vlan_tag_vid_sbit0_ebit3, 8
+  add           r1, r0, k.vlan_tag_vid
   phvwr         p.p4_to_p4plus_classic_nic_vlan_valid, TRUE
   phvwr         p.ethernet_etherType, k.vlan_tag_etherType
-  phvwrpair     p.{p4_to_p4plus_classic_nic_vlan_pcp...p4_to_p4plus_classic_nic_vlan_dei}, \
-                    k.{vlan_tag_pcp...vlan_tag_dei}, \
+  phvwrpair     p.{p4_to_p4plus_classic_nic_vlan_pcp, p4_to_p4plus_classic_nic_vlan_dei}, \
+                    k.{vlan_tag_pcp, vlan_tag_dei}, \
                     p.p4_to_p4plus_classic_nic_vlan_vid, r1
   phvwr         p.vlan_tag_valid, FALSE
   sub           r7, r7, 4
@@ -73,8 +73,7 @@ p4plus_app_tcp_proxy:
   phvwrpair     p.inner_ipv4_option_rr_valid, 0, p.ipv4_option_rr_valid, 0
   .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_options_blob_valid) == 12)
   phvwrpair.!c7 p.{tcp_option_eol_valid...tcp_options_blob_valid}, r0, p.tcp_valid, r0
-  or            r3, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
-                    k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  or            r3, r0, k.capri_p4_intrinsic_packet_len
   add           r3, r3, P4PLUS_CPU_PKT_SZ
   add.!c7       r3, r0, k.l4_metadata_tcp_data_len
 
@@ -94,7 +93,7 @@ p4plus_app_tcp_proxy:
   or            r2, r2, k.tcp_option_timestamp_valid, 3
   seq           c1, k.ipv4_valid, 1
   or.c1         r2, r2, k.ipv4_diffserv[1:0], 4
-  or.!c1        r2, r2, k.ipv6_trafficClass_sbit4_ebit7[1:0]
+  or.!c1        r2, r2, k.ipv6_trafficClass_s4_e7[1:0]
   or            r3, r3, r2, 16
   phvwr         p.{p4_to_p4plus_tcp_proxy_ecn, \
                     p4_to_p4plus_tcp_proxy_timestamp_valid, \
@@ -144,8 +143,7 @@ p4plus_app_cpu_l4_udp:
   phvwr       p.p4_to_p4plus_cpu_l4_dport, k.udp_dstPort
 
 p4plus_app_cpu_common:
-  or          r2, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
-                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  add         r2, r0, k.capri_p4_intrinsic_packet_len
   add         r2, P4PLUS_CPU_PKT_SZ, r2
   phvwr       p.p4_to_p4plus_cpu_packet_len, r2
 
@@ -213,7 +211,7 @@ p4plus_app_rdma:
 
 p4plus_app_rdma_ipv6:
   phvwr.c1      p.p4_to_p4plus_roce_ipv6_valid, TRUE
-  phvwr         p.p4_to_p4plus_roce_ecn, k.ipv6_trafficClass_sbit4_ebit7[1:0]
+  phvwr         p.p4_to_p4plus_roce_ecn, k.ipv6_trafficClass_s4_e7[1:0]
 
 p4plus_app_rdma_common:
   phvwr         p.p4_to_p4plus_roce_p4plus_app_id, k.control_metadata_p4plus_app_id
@@ -265,8 +263,7 @@ p4plus_app_p4pt:
 p4plus_app_mirror:
   phvwr       p.p4_to_p4plus_mirror_p4plus_app_id, \
                 k.control_metadata_p4plus_app_id
-  or          r1, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
-                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  add         r1, r0, k.capri_p4_intrinsic_packet_len
   add         r2, r1, P4PLUS_MIRROR_PKT_SZ
   phvwrpair   p.p4_to_p4plus_mirror_payload_len, r2, \
                 p.p4_to_p4plus_mirror_capture_len, r1
@@ -287,12 +284,13 @@ f_p4plus_cpu_pkt:
   phvwr       p.p4_to_p4plus_cpu_pkt_src_app_id, k.control_metadata_src_app_id
   phvwr       p.{p4_to_p4plus_cpu_tcp_pkt_valid,p4_to_p4plus_cpu_pkt_valid}, 0x3
   phvwr       p.p4_to_p4plus_cpu_pkt_src_lif, k.{control_metadata_src_lif}.hx
-  or          r1, k.capri_intrinsic_lif_sbit3_ebit10, k.capri_intrinsic_lif_sbit0_ebit2, 8
+  or          r1, k.capri_intrinsic_lif_s3_e10, k.capri_intrinsic_lif_s0_e2, 8
   phvwr       p.p4_to_p4plus_cpu_pkt_lif, r1[15:0].hx
   phvwr       p.p4_to_p4plus_cpu_pkt_qid, k.{control_metadata_qid}.wx
   phvwr       p.p4_to_p4plus_cpu_pkt_qtype, k.control_metadata_qtype
   phvwr       p.p4_to_p4plus_cpu_pkt_lkp_vrf, k.{flow_lkp_metadata_lkp_vrf}.hx
-  phvwr       p.{p4_to_p4plus_cpu_pkt_lkp_dir...p4_to_p4plus_cpu_pkt_lkp_type}, \
+  phvwr       p.{p4_to_p4plus_cpu_pkt_lkp_dir, p4_to_p4plus_cpu_pkt_lkp_inst, \
+                 p4_to_p4plus_cpu_pkt_lkp_type}, \
                   k.control_metadata_lkp_flags_egress[3:0]
   phvwr       p.p4_to_p4plus_cpu_pkt_flow_hash, k.{rewrite_metadata_entropy_hash}.wx
   seq         c1, k.control_metadata_lkp_flags_egress[CPU_LKP_FLAGS_LKP_DIR], FLOW_DIR_FROM_DMA

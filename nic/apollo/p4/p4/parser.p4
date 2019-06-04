@@ -562,7 +562,6 @@ parser deparse_egress {
     extract(capri_p4_intrinsic);
     extract(capri_txdma_intrinsic);
     // Below are headers used in case of egress-to-egress recirc
-    extract(egress_service_header);
     extract(predicate_header);
     extract(txdma_to_p4e_header);
     extract(p4e_apollo_i2e);

@@ -1,10 +1,12 @@
 #include "egress.h"
 #include "EGRESS_p.h"
+#include "EGRESS_tunnel_decap_k.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nw.h"
 
 struct phv_ p;
-struct tunnel_decap_k k;
+//struct tunnel_decap_k k;
+struct tunnel_decap_k_ k;
 
 %%
 

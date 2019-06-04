@@ -1,11 +1,12 @@
 #include "nw.h"
 #include "ingress.h"
+#include "INGRESS_flow_info_k.h"
 #include "INGRESS_p.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 
-struct flow_info_k k;
-struct flow_info_d d;
-struct phv_        p;
+struct flow_info_k_ k;
+struct flow_info_d  d;
+struct phv_         p;
 
 %%
 
@@ -40,8 +41,8 @@ flow_info:
   phvwr         p.rewrite_metadata_flags, d.u.flow_info_d.rewrite_flags
 
   // nat info
-  phvwr.e       p.{nat_metadata_nat_l4_port,nat_metadata_twice_nat_idx}, \
-                    d.{u.flow_info_d.nat_l4_port,u.flow_info_d.twice_nat_idx}
+  phvwr         p.nat_metadata_nat_l4_port, d.u.flow_info_d.nat_l4_port
+  phvwr.e       p.nat_metadata_twice_nat_idx, d.u.flow_info_d.twice_nat_idx
   phvwr.f       p.nat_metadata_nat_ip, d.u.flow_info_d.nat_ip
 
 f_flow_info_thread_1:
@@ -116,7 +117,9 @@ flow_miss_common:
   b             flow_miss_multicast
   nop
   .brcase FLOW_MISS_ACTION_REDIRECT
-  phvwr.e       p.rewrite_metadata_tunnel_rewrite_index, k.control_metadata_flow_miss_idx
+  or            r1, k.control_metadata_flow_miss_idx_s8_e15, \
+                    k.control_metadata_flow_miss_idx_s0_e7, 8
+  phvwr.e       p.rewrite_metadata_tunnel_rewrite_index, r1
   nop
   .brend
 
@@ -128,8 +131,10 @@ flow_miss_unicast:
 flow_miss_multicast:
   seq           c1, k.control_metadata_allow_flood, TRUE
   bcf           [!c1], flow_miss_mdest_not_pinned_drop
+  or            r1, k.control_metadata_flow_miss_idx_s8_e15, \
+                    k.control_metadata_flow_miss_idx_s0_e7, 8
   phvwrpair.c1  p.capri_intrinsic_tm_replicate_ptr, \
-                    k.control_metadata_flow_miss_idx, \
+                    r1, \
                     p.capri_intrinsic_tm_replicate_en, 1
   phvwr         p.tunnel_metadata_tunnel_originate[0], \
                     k.flow_miss_metadata_tunnel_originate
@@ -169,7 +174,7 @@ flow_info_from_cpu:
   phvwr         p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
   seq.e         c1, k.p4plus_to_p4_dst_lport_valid, TRUE
   phvwr.c1      p.control_metadata_dst_lport, \
-                    k.{p4plus_to_p4_dst_lport_sbit0_ebit7, p4plus_to_p4_dst_lport_sbit8_ebit10}
+                    k.p4plus_to_p4_dst_lport
 
 .align
 flow_hit_from_vm_bounce:
@@ -190,8 +195,7 @@ nop:
 
 validate_ipv4_flow_key:
   sub           r7, r0, 1
-  add           r6, k.flow_lkp_metadata_lkp_src_sbit104_ebit127, \
-                    k.flow_lkp_metadata_lkp_src_sbit96_ebit103, 24
+  add           r6, r0, k.flow_lkp_metadata_lkp_src
   seq           c1, r6[31:24], 0x7f
   seq           c2, r6[31:28], 0xe
   seq           c3, r6[31:0], r7[31:0]
@@ -206,10 +210,8 @@ validate_ipv4_flow_key:
 
 validate_ipv6_flow_key:
   // srcAddr => r2(hi) r3(lo)
-  add           r2, r0, k.flow_lkp_metadata_lkp_src_sbit0_ebit95[95:32]
-  add           r3, k.flow_lkp_metadata_lkp_src_sbit104_ebit127, \
-                    k.flow_lkp_metadata_lkp_src_sbit96_ebit103, 24
-  add           r3, r3, k.flow_lkp_metadata_lkp_src_sbit0_ebit95[31:0], 32
+  add           r2, r0, k.flow_lkp_metadata_lkp_src[127:64]
+  add           r3, r0, k.flow_lkp_metadata_lkp_src[63:0]
   // dstAddr ==> r4(hi), r5(lo)
   add           r4, r0, k.flow_lkp_metadata_lkp_dst[127:64]
   add           r5, r0, k.flow_lkp_metadata_lkp_dst[63:0]

@@ -1,9 +1,10 @@
 #include "egress.h"
 #include "EGRESS_p.h"
+#include "EGRESS_tunnel_encap_update_inner_k.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 
-struct tunnel_encap_update_inner_k k;
-struct phv_                        p;
+struct tunnel_encap_update_inner_k_ k;
+struct phv_                         p;
 
 %%
 
@@ -67,7 +68,8 @@ encap_inner_ipv4_unknown_rewrite:
 
 .align
 encap_inner_ipv6_udp_rewrite:
-  phvwr       p.{inner_ipv6_version...inner_ipv6_srcAddr}, k.{ipv6_version...ipv6_srcAddr_sbit96_ebit127}
+  phvwr       p.inner_ipv6_version, k.ipv6_version
+  phvwr       p.{inner_ipv6_trafficClass...inner_ipv6_srcAddr}, k.{ipv6_trafficClass...ipv6_srcAddr}
   phvwr       p.{inner_ipv6_dstAddr}, k.{ipv6_dstAddr}
   phvwr       p.{inner_udp_srcPort...inner_udp_checksum}, k.{udp_srcPort...udp_checksum}
   phvwr       p.tunnel_metadata_inner_ip_proto, IP_PROTO_IPV6
@@ -79,7 +81,8 @@ encap_inner_ipv6_udp_rewrite:
 
 .align
 encap_inner_ipv6_tcp_rewrite:
-  phvwr       p.{inner_ipv6_version...inner_ipv6_srcAddr}, k.{ipv6_version...ipv6_srcAddr_sbit96_ebit127}
+  phvwr       p.inner_ipv6_version, k.ipv6_version
+  phvwr       p.{inner_ipv6_trafficClass...inner_ipv6_srcAddr}, k.{ipv6_trafficClass...ipv6_srcAddr}
   phvwr       p.{inner_ipv6_dstAddr}, k.{ipv6_dstAddr}
   phvwr       p.tunnel_metadata_inner_ip_proto, IP_PROTO_IPV6
   phvwrpair.e p.inner_ipv6_valid, TRUE, p.ipv6_valid, FALSE
@@ -90,7 +93,8 @@ encap_inner_ipv6_tcp_rewrite:
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 encap_inner_ipv6_icmp_rewrite:
 encap_inner_ipv6_unknown_rewrite:
-  phvwr       p.{inner_ipv6_version...inner_ipv6_srcAddr}, k.{ipv6_version...ipv6_srcAddr_sbit96_ebit127}
+  phvwr       p.inner_ipv6_version, k.ipv6_version
+  phvwr       p.{inner_ipv6_trafficClass...inner_ipv6_srcAddr}, k.{ipv6_trafficClass...ipv6_srcAddr}
   phvwr       p.{inner_ipv6_dstAddr}, k.{ipv6_dstAddr}
   phvwr       p.tunnel_metadata_inner_ip_proto, IP_PROTO_IPV6
   phvwrpair.e p.inner_ipv6_valid, TRUE, p.ipv6_valid, FALSE

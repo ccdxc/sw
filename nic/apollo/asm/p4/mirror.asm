@@ -49,8 +49,8 @@ erspan:
 
     // ipv4
     phvwr           p.{ipv4_0_version,ipv4_0_ihl}, 0x45
-    phvwr           p.{ipv4_0_srcAddr,ipv4_0_dstAddr}, \
-                        d.{u.erspan_d.sip,u.erspan_d.dip}
+    phvwr           p.ipv4_0_srcAddr, d.u.erspan_d.sip
+    phvwr           p.ipv4_0_dstAddr, d.u.erspan_d.dip
     phvwr           p.{ipv4_0_ttl,ipv4_0_protocol}, (64 << 8) | IP_PROTO_GRE
     add             r1, r5, 36
     phvwr           p.ipv4_0_totalLen, r1

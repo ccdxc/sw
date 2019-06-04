@@ -582,6 +582,13 @@ def capri_asm_output_pa(gress_pa, asm_output=True):
             continue
 
         if (cf.phv_bit / flit_sz) != fid:
+            # it is possible to have a pad at the start of new flit where next cf does not
+            # start at the start of the flit, in that case part of pad goes at the end of previous
+            # flit and part at the start of new flit
+            # XXX completely empty flits are not handled
+            flit_start = ((fid+1) * flit_sz)
+            flit_end_pad = flit_start - phv_bit
+            flit_start_pad = cf.phv_bit - flit_start
             if active_union:
                 # print union...
                 cstr = active_union.print_union()
@@ -589,13 +596,13 @@ def capri_asm_output_pa(gress_pa, asm_output=True):
                 cfields.append(cstr)
                 phv_bit = active_union.end_phv
                 active_union = None
-            flit_pad = cf.phv_bit - phv_bit
-            ncc_assert(flit_pad >= 0)
-            if flit_pad > 0:
-                cstr = cstruct_data_type_get(asm_output, flit_pad, indent)
-                width_str = phv_width_string_get(asm_output, flit_pad)
-                cstr += '_flit_%d_pad_%d_%s; // FLE[%d:%d]\n' % \
-                    (fid, phv_bit, width_str,
+
+            ncc_assert(flit_end_pad >= 0)
+            if flit_end_pad > 0:
+                cstr = cstruct_data_type_get(asm_output, flit_end_pad, indent)
+                width_str = phv_width_string_get(asm_output, flit_end_pad)
+                cstr += '_flit_%d_pad_%d_%s; // BE[%d] FLE[%d:%d]\n' % \
+                    (fid, phv_bit, width_str, phv_bit,
                     _phv_bit_flit_le_bit(phv_bit), _phv_bit_flit_le_bit(cf.phv_bit-1))
                 pstr += cstr
                 cfields.append(cstr)
@@ -610,6 +617,14 @@ def capri_asm_output_pa(gress_pa, asm_output=True):
             #pdb.set_trace()
             pstr = indent + '//----- Flit %d -----\n' % fid
             flit_cstr = pstr
+            if flit_start_pad > 0:
+                cstr = cstruct_data_type_get(asm_output, flit_start_pad, indent)
+                width_str = phv_width_string_get(asm_output, flit_start_pad)
+                cstr += '_flit_%d_start_pad_%d_%s; // BE[%d] FLE[%d:%d]\n' % \
+                    (fid, phv_bit, width_str, flit_start,
+                    _phv_bit_flit_le_bit(flit_start), _phv_bit_flit_le_bit(cf.phv_bit-1))
+                pstr += cstr
+                cfields.append(cstr)
 
         if not cf.is_union_storage() and not cf.is_union():
             if active_union:
@@ -624,8 +639,8 @@ def capri_asm_output_pa(gress_pa, asm_output=True):
                 ncc_assert((cf.phv_bit - phv_bit) >= 0)
                 cstr = cstruct_data_type_get(asm_output, cf.phv_bit - phv_bit, indent)
                 width_str = phv_width_string_get(asm_output, cf.phv_bit - phv_bit)
-                cstr += '_pad_%d_%s; // FLE[%d:%d]\n' % \
-                    (phv_bit, width_str,
+                cstr += '_pad_%d_%s; // BE[%d] FLE[%d:%d]\n' % \
+                    (phv_bit, width_str, phv_bit,
                     _phv_bit_flit_le_bit(phv_bit),_phv_bit_flit_le_bit(cf.phv_bit-1))
                 pstr += cstr
                 cfields.append(cstr)
@@ -660,6 +675,18 @@ def capri_asm_output_pa(gress_pa, asm_output=True):
             else:
                 active_union = _phv_union(storage_hdr_name, asm_output)
                 active_union.add_cfld(hdr_name, cf)
+
+                # check for gaps
+                if phv_bit != cf.phv_bit:
+                    ncc_assert((cf.phv_bit - phv_bit) >= 0)
+                    cstr = cstruct_data_type_get(asm_output, cf.phv_bit - phv_bit, indent)
+                    width_str = phv_width_string_get(asm_output, cf.phv_bit - phv_bit)
+                    cstr += '_pad_%d_%s; // BE[%d] FLE[%d:%d]\n' % \
+                        (phv_bit, width_str, phv_bit,
+                        _phv_bit_flit_le_bit(phv_bit),_phv_bit_flit_le_bit(cf.phv_bit-1))
+                    pstr += cstr
+                    cfields.append(cstr)
+
             phv_bit = active_union.end_phv
 
         elif cf.is_fld_union_storage or cf.is_fld_union:
@@ -678,6 +705,17 @@ def capri_asm_output_pa(gress_pa, asm_output=True):
             else:
                 active_union = _phv_union(storage_fld_name, asm_output)
                 active_union.add_cfld(cf.hfname, cf)
+                # check for gaps
+                if phv_bit != cf.phv_bit:
+                    ncc_assert((cf.phv_bit - phv_bit) >= 0)
+                    cstr = cstruct_data_type_get(asm_output, cf.phv_bit - phv_bit, indent)
+                    width_str = phv_width_string_get(asm_output, cf.phv_bit - phv_bit)
+                    cstr += '_pad_%d_%s; // BE[%d] FLE[%d:%d]\n' % \
+                        (phv_bit, width_str, phv_bit,
+                        _phv_bit_flit_le_bit(phv_bit),_phv_bit_flit_le_bit(cf.phv_bit-1))
+                    pstr += cstr
+                    cfields.append(cstr)
+
                 phv_bit = active_union.end_phv
         else:
             pass # covered first
@@ -739,6 +777,9 @@ def capri_asm_output_pa(gress_pa, asm_output=True):
         indent = '    '
         for cf in gress_pa.field_order:
             if cf.width == 0 or cf.is_ohi:
+                continue
+            if cf.get_p4_hdr() and is_synthetic_header(cf.get_p4_hdr()) and cf.is_union():
+                # hv bits do not have header associated with them
                 continue
             pstr += indent + "phvwr p.%s, 0\n" % _get_output_name(cf.hfname)
         pstr += indent + 'nop.e\n'
@@ -1259,7 +1300,8 @@ def capri_asm_output_table(be, ctable):
                 continue
             #}
 
-            phc_flds = sorted(gress_pa.phcs[phc].fields.items(), key=lambda k: k[0])
+            # sort based on position in the phv container
+            phc_flds = sorted(gress_pa.phcs[phc].fields.items(), key=lambda k: k[1][0])
 
             for fname, t in phc_flds:   #{
                 cf = gress_pa.get_field(fname)
@@ -1267,6 +1309,7 @@ def capri_asm_output_table(be, ctable):
                 _add_cf_to_fld_map(km_off, cf, t, active_cfs, fld_map)
             #}
             _close_active_cfs(new_cfs, active_cfs, fld_map)
+
             km_off += 8
         #}
 
@@ -1300,29 +1343,40 @@ def capri_asm_output_table(be, ctable):
     #pdb.set_trace()
     active_union = None
     ki_flds = []
+    exp_km_off = 0
 
     sorted_fld_map = sorted(fld_map.items(), key=lambda k: k[0])
     #pdb.set_trace()
     for km_off,flist in sorted_fld_map:
+        # XXX pad flds within union are not expected/handled ??
         if active_union:
             if km_off == active_union.union_end:
                 ki_flds.append(copy.copy(active_union))
                 active_union = None
+                exp_km_off = km_off
             else:
                 active_union.fladd(km_off, flist)
                 continue
 
         ncc_assert(active_union == None)
 
+        if km_off > exp_km_off:
+            ctable.gtm.tm.logger.debug("%s:Table %s insert km pad of %d at %s" % \
+                                (ctable.gtm.d, ctable.p4_table.name, km_off-exp_km_off, flist))
+            ki_flds.append((None, 0, km_off-exp_km_off, True))
+            exp_km_off = km_off
+
         if len(flist) > 1:
             active_union = _ki_union(km_off, flist)
         else:
             ki_flds.append(flist[0])
+            exp_km_off += flist[0][2]
 
     #pdb.set_trace()
     if active_union:
         ki_flds.append(copy.copy(active_union))
         active_union = None
+
     pstr = 'struct %s_k_ {\n' % ctable.p4_table.name
     indent = '    '
     km_off = 0
