@@ -1175,6 +1175,10 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
     uint32_t             priority = 0;
     uint32_t             priority_step = TESTAPP_POLICY_PRIORITY_STEP;
 
+    if (num_rules == 0) {
+        return SDK_RET_OK;
+    }
+
     policy.policy_type = POLICY_TYPE_FIREWALL;
     policy.af = ip_af;
     policy.direction = ingress ? RULE_DIR_INGRESS : RULE_DIR_EGRESS;
