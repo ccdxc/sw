@@ -3,7 +3,7 @@
 
 header_type txdma_control_metadata_t {
     fields {
-        control_addr        : 40;
+        pktdesc_addr        : 40;
         rxdma_cindex_addr   : 40;
         rfc_table_addr      : 40;
         lpm1_base_addr      : 40;
@@ -56,7 +56,7 @@ header_type scratch_metadata_t {
         remote_vnic_mapping_tx_ohash_lkp    : 1;
         vnic_mapping_hint   : 18;
         remote_vnic_mapping_tx_ohash : 32;
-        ipv6_tx_da          : 128;       
+        ipv6_tx_da          : 128;
         vpc_peer_base       : 40;
     }
 }
@@ -64,11 +64,24 @@ header_type scratch_metadata_t {
 // PHV instantiation
 @pragma dont_trim
 metadata txdma_control_metadata_t txdma_control;
-@pragma dont_trim
-metadata txdma_to_p4e_header_t txdma_to_p4e;
 
 @pragma dont_trim
+@pragma pa_header_union ingress to_stage_1
 metadata doorbell_data_t    doorbell_data;
+
+// Scratch metadata
+@pragma scratch_metadata
+metadata scratch_metadata_t     scratch_metadata;
+
+@pragma scratch_metadata
+metadata qstate_hdr_t           scratch_qstate_hdr;
+
+@pragma scratch_metadata
+metadata qstate_info_t          scratch_qstate_info;
+
+@pragma pa_align 512
+@pragma dont_trim
+metadata artemis_rx_to_tx_header_t  rx_to_tx_hdr;
 
 @pragma pa_align 128
 @pragma dont_trim
@@ -80,18 +93,3 @@ metadata dma_cmd_phv2mem_t rxdma_ci_update;     // dma cmd 3
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t doorbell_ci_update;  // dma cmd 4
 
-// Scratch metadata
-@pragma dont_trim
-@pragma scratch_metadata
-metadata scratch_metadata_t     scratch_metadata;
-
-@pragma dont_trim
-@pragma scratch_metadata
-metadata qstate_hdr_t           scratch_qstate_hdr;
-
-@pragma dont_trim
-@pragma scratch_metadata
-metadata qstate_info_t          scratch_qstate_info;
-
-@pragma dont_trim
-metadata artemis_rx_to_tx_header_t rx_to_tx_hdr;

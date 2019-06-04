@@ -127,28 +127,20 @@ metadata doorbell_addr_t        doorbell_addr;
 @pragma pa_header_union ingress to_stage_1
 metadata doorbell_data_t        doorbell_data;
 
-// DMA commands
-@pragma dont_trim
-@pragma pa_header_union ingress to_stage_2
-metadata dma_cmd_pkt2mem_t      pktdesc_pkt2mem;
-
-@pragma dont_trim
-@pragma pa_header_union ingress to_stage_3
-metadata dma_cmd_pkt2mem_t      pktbuf_pkt2mem;
-
-@pragma dont_trim
-@pragma pa_header_union ingress to_stage_4
-metadata dma_cmd_phv2mem_t      predicate_phv2mem;
-@pragma dont_trim
-@pragma pa_header_union ingress to_stage_4
-metadata dma_cmd_phv2mem_t      doorbell_phv2mem;
-
-@pragma dont_trim
-@pragma pa_header_union ingress to_stage_5
-metadata dma_cmd_phv2mem_t      doorbell2_phv2mem;
-
 @pragma dont_trim
 metadata lpm_metadata_t         lpm_metadata;
 
 @pragma dont_trim
 metadata artemis_rx_to_tx_header_t rx_to_tx_hdr;
+
+// DMA commands
+@pragma pa_align 128
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t      pktdesc_phv2mem;
+
+@pragma dont_trim
+metadata dma_cmd_pkt2mem_t      pktbuf_pkt2mem;
+
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t      doorbell_phv2mem;
+

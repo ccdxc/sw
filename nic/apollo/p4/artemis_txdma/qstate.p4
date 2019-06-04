@@ -11,10 +11,10 @@ action read_qstate_info(PKTQ_QSTATE) {
         modify_field(capri_intr.drop, TRUE);
     } else {
         modify_field(app_header.table3_valid, TRUE);
-        modify_field(txdma_control.control_addr,
+        modify_field(txdma_control.pktdesc_addr,
                      scratch_qstate_info.ring0_base +
                      (scratch_qstate_info.sw_cindex0 * PKTQ_PAGE_SIZE));
-        modify_field(txdma_control.payload_addr, txdma_control.control_addr + (1<<6));
+        modify_field(txdma_control.payload_addr, txdma_control.pktdesc_addr + (1<<6));
         modify_field(scratch_qstate_info.sw_cindex0,
                      scratch_qstate_info.sw_cindex0 + 1);
         modify_field(txdma_control.cindex, scratch_qstate_info.sw_cindex0);
@@ -36,22 +36,22 @@ table read_qstate {
     }
 }
 
-action read_control_info (data) {
+action read_pktdesc(data) {
     modify_field(scratch_metadata.field512, data);
 }
 
 @pragma stage 1
 @pragma raw_index_table
-table read_control {
+table read_pktdesc {
     reads {
-        txdma_control.control_addr  : exact;
+        txdma_control.pktdesc_addr  : exact;
     }
     actions {
-        read_control_info;
+        read_pktdesc;
     }
 }
 
 control read_qstate {
     apply(read_qstate);
-    apply(read_control);
+    apply(read_pktdesc);
 }

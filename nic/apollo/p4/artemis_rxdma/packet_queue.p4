@@ -7,16 +7,12 @@ action pkt_enqueue(PKTQ_QSTATE) {
     //          check sw_cindex0, pindex0
     //          tbl-wr sw_cindex0++
     //          doorbell(dma) cindex0
-    // d-vector
-
     if (capri_p4_intr.recirc_count == 2) {
+        // d-vector
         PKTQ_QSTATE_DVEC_SCRATCH(scratch_qstate_hdr, scratch_qstate_info);
 
         // k-vector
-        modify_field(scratch_metadata.qid, capri_rxdma_intr.qid);
-        modify_field(scratch_metadata.dma_size, (capri_p4_intr.packet_len +
-                                                 ARTEMIS_PREDICATE_HDR_SZ +
-                                                 ARTEMIS_I2E_HDR_SZ));
+        modify_field(scratch_metadata.dma_size, capri_p4_intr.packet_len);
     }
 }
 

@@ -199,8 +199,32 @@ table key_tunneled2 {
     size : KEY_MAPPING_TABLE_SIZE;
 }
 
+action process_service_header() {
+    if (service_header.valid == TRUE) {
+        modify_field(control_metadata.flow_ohash_lkp,
+                     ~service_header.flow_done);
+    }
+}
+
+action init_config() {
+    process_service_header();
+    subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,
+             offset_metadata.l2_1);
+    if (capri_intrinsic.tm_oq != TM_P4_RECIRC_QUEUE) {
+        modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
+    }
+}
+
+@pragma stage 1
+table init_config {
+    actions {
+        init_config;
+    }
+}
+
 control key_init {
     apply(key_native);
     apply(key_tunneled);
     apply(key_tunneled2);
+    apply(init_config);
 }

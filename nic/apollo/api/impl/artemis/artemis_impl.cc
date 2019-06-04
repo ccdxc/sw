@@ -576,12 +576,12 @@ artemis_impl::table_init_(void) {
 
 sdk_ret_t
 artemis_impl::p4plus_table_init_(void) {
+    p4pd_table_properties_t tbl_ctx_txdma_act;
+    p4plus_prog_t prog;
+
 #if 0
     p4pd_table_properties_t tbl_ctx_apphdr;
     p4pd_table_properties_t tbl_ctx_apphdr_off;
-    p4pd_table_properties_t tbl_ctx_txdma_act;
-    p4pd_table_properties_t tbl_ctx_txdma_act_ext;
-    p4plus_prog_t prog;
 
     p4pd_global_table_properties_get(P4_APOLLO_RXDMA_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE,
                                      &tbl_ctx_apphdr);
@@ -593,8 +593,9 @@ artemis_impl::p4plus_table_init_(void) {
     prog.prog_name = "rxdma_stage0.bin";
     prog.pipe = P4_PIPELINE_RXDMA;
     sdk::platform::capri::capri_p4plus_table_init(&prog, api::g_pds_state.platform_type());
+#endif
 
-    p4pd_global_table_properties_get(P4_APOLLO_TXDMA_TBL_ID_TX_TABLE_S0_T0,
+    p4pd_global_table_properties_get(P4_ARTEMIS_TXDMA_TBL_ID_TX_TABLE_S0_T0,
                                      &tbl_ctx_txdma_act);
     memset(&prog, 0, sizeof(prog));
     prog.stageid = tbl_ctx_txdma_act.stage;
@@ -603,20 +604,6 @@ artemis_impl::p4plus_table_init_(void) {
     prog.prog_name = "txdma_stage0.bin";
     prog.pipe = P4_PIPELINE_TXDMA;
     sdk::platform::capri::capri_p4plus_table_init(&prog, api::g_pds_state.platform_type());
-
-    p4pd_table_properties_t props;
-    p4plus_prog_t prog;
-
-    p4pd_global_table_properties_get(P4_ARTEMIS_TXDMA_TBL_ID_MAPPING, &props);
-    memset(&prog, 0, sizeof(prog));
-    prog.stageid = props.stage;
-    prog.stage_tableid = props.stage_tableid;
-    prog.control = "artemis_txdma";
-    prog.prog_name = "mapping.bin";
-    prog.pipe = P4_PIPELINE_TXDMA;
-    sdk::platform::capri::capri_p4plus_table_init(&prog,
-                                                  api::g_pds_state.platform_type());
-#endif
 
     return SDK_RET_OK;
 }

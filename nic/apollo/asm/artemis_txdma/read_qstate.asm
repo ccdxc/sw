@@ -13,7 +13,7 @@ read_qstate_info:
                     d.{read_qstate_info_d.p_index0}.hx
     bcf         [c2], txdma_q_empty
 
-    // Compute control offset based on current cindex
+    // Compute pktdesc offset based on current cindex
     mul         r2, d.read_qstate_info_d.sw_cindex0, PKTQ_PAGE_SIZE
     add         r3, d.{read_qstate_info_d.ring1_base}.dx, \
                     d.read_qstate_info_d.sw_cindex0, 6
@@ -25,7 +25,7 @@ read_qstate_info:
     phvwr       p.app_header_table3_valid, TRUE
     phvwr       p.txdma_control_rxdma_cindex_addr, d.{read_qstate_info_d.rxdma_cindex_addr}.dx
     phvwr       p.txdma_control_cindex, d.read_qstate_info_d.sw_cindex0
-    phvwr       p.txdma_control_control_addr, r3
+    phvwr       p.txdma_control_pktdesc_addr, r3
     add.e       r2, r2, d.{read_qstate_info_d.ring0_base}.dx
     phvwr.f     p.txdma_control_payload_addr, r2
 

@@ -231,6 +231,7 @@ init_service_lif ()
                  (uint8_t *)&txdma_qstate, sizeof(txdma_qstate));
 }
 
+#if 0
 static uint8_t *
 memrev (uint8_t *block, size_t elnum)
 {
@@ -243,6 +244,7 @@ memrev (uint8_t *block, size_t elnum)
     }
     return block;
 }
+#endif
 
 static int
 sdk_trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
