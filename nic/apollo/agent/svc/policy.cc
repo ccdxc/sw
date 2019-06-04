@@ -173,6 +173,7 @@ pds_policy_proto_to_api_spec (const pds::SecurityPolicySpec &proto_spec,
     }
     for (uint32_t i = 0; i < num_rules; i++) {
         const pds::SecurityRule &proto_rule = proto_spec.rules(i);
+        api_spec->rules[i].priority = proto_rule.priority();
         api_spec->rules[i].stateful = proto_rule.stateful();
         api_spec->rules[i].action_data.fw_action.action =
                                                  SECURITY_RULE_ACTION_ALLOW;

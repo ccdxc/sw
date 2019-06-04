@@ -789,9 +789,10 @@ static sdk_ret_t
 populate_tags_api_rule_spec (uint32_t id, pds_tag_rule_t *api_rule_spec,
                              uint32_t *tag_value, uint32_t num_prefixes,
                              uint32_t *tag_pfx_count, uint8_t ip_af,
-                             ip_prefix_t *v6_route_pfx)
+                             ip_prefix_t *v6_route_pfx, uint32_t priority)
 {
     api_rule_spec->tag = *tag_value++;
+    api_rule_spec->priority = priority;
     ip_prefix_t *prefixes =
             (ip_prefix_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_METER,
                            (num_prefixes * sizeof(ip_prefix_t)));
@@ -813,6 +814,7 @@ populate_tags_api_rule_spec (uint32_t id, pds_tag_rule_t *api_rule_spec,
 }
 
 #define TESTAPP_TAGS_NUM_PREFIXES 4
+#define TESTAPP_TAGS_PRIORITY_STEP 4
 sdk_ret_t
 create_tags (uint32_t num_tag_trees, uint32_t scale,
              uint8_t ip_af, ip_prefix_t *v6_route_pfx)
@@ -820,6 +822,8 @@ create_tags (uint32_t num_tag_trees, uint32_t scale,
     sdk_ret_t ret;
     pds_tag_spec_t pds_tag;
     uint32_t num_prefixes = TESTAPP_TAGS_NUM_PREFIXES;
+    uint32_t priority = 0;
+    uint32_t step = TESTAPP_TAGS_PRIORITY_STEP;
     // unique IDs across tags
     static pds_tag_id_t id = 0;
     static uint32_t tag_pfx_count = 0;
@@ -851,18 +855,36 @@ create_tags (uint32_t num_tag_trees, uint32_t scale,
                         (pds_tag.num_rules * sizeof(pds_tag_rule_t)));
     for (uint32_t i = 0; i < num_tag_trees; i++) {
         pds_tag.key.id = id++;
+        priority = 0;
+        step = TESTAPP_TAGS_PRIORITY_STEP;
         for (uint32_t rule = 0; rule < num_rules; rule++) {
             pds_tag_rule_t *api_rule_spec = &pds_tag.rules[rule];
+            if (step == TESTAPP_TAGS_PRIORITY_STEP) {
+                priority = rule + (step - 1);
+            }
             populate_tags_api_rule_spec(id ,api_rule_spec, &tag_value,
                                         num_prefixes, &tag_pfx_count, ip_af,
-                                        v6_route_pfx);
+                                        v6_route_pfx, priority);
+            priority--;
+            step--;
+            if (step == 0) {
+                step = TESTAPP_TAGS_PRIORITY_STEP;
+            }
         }
         for (uint32_t rule = num_rules;
                       rule < (num_rules + num_rules_rem); rule++) {
             pds_tag_rule_t *api_rule_spec = &pds_tag.rules[rule];
+            if (step == TESTAPP_TAGS_PRIORITY_STEP) {
+                priority = rule + (step - 1);
+            }
             populate_tags_api_rule_spec(
                     id, api_rule_spec, &tag_value, 1, &tag_pfx_count,
-                    ip_af, v6_route_pfx);
+                    ip_af, v6_route_pfx, priority);
+            priority--;
+            step--;
+            if (step == 0) {
+                step = TESTAPP_TAGS_PRIORITY_STEP;
+            }
         }
 #ifdef TEST_GRPC_APP
         ret = create_tag_grpc(&pds_tag);
