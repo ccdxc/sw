@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"testing"
@@ -77,36 +78,55 @@ func TestLoginFailures(t *testing.T) {
 		name     string
 		cred     *auth.PasswordCredential
 		expected int
+		errMsg   string
 	}{
 		{
 			name:     "non existent username",
 			cred:     &auth.PasswordCredential{Username: "xxx", Password: "", Tenant: testTenant},
 			expected: http.StatusUnauthorized,
+			errMsg:   "Invalid username/password",
 		},
 		{
 			name:     "invalid password",
 			cred:     &auth.PasswordCredential{Username: testUser, Password: "xxx", Tenant: testTenant},
 			expected: http.StatusUnauthorized,
+			errMsg:   "Invalid username/password",
 		},
 		{
 			name:     "invalid tenant",
 			cred:     &auth.PasswordCredential{Username: testUser, Password: testPassword, Tenant: "xxx"},
 			expected: http.StatusUnauthorized,
+			errMsg:   "Invalid username/password",
 		},
 		{
 			name:     "empty username",
 			cred:     &auth.PasswordCredential{Username: "", Password: testPassword, Tenant: testTenant},
 			expected: http.StatusUnauthorized,
+			errMsg:   "Invalid username/password",
 		},
 		{
 			name:     "empty username and password",
 			cred:     &auth.PasswordCredential{Username: "", Password: "", Tenant: testTenant},
 			expected: http.StatusUnauthorized,
+			errMsg:   "Invalid username/password",
 		},
 		{
 			name:     "empty tenant",
 			cred:     &auth.PasswordCredential{Username: testUser, Password: testPassword, Tenant: ""},
 			expected: http.StatusUnauthorized,
+			errMsg:   "Invalid username/password",
+		},
+		{
+			name:     "nil credentials",
+			cred:     nil,
+			expected: http.StatusUnauthorized,
+			errMsg:   "Invalid username/password",
+		},
+		{
+			name:     "request body greater than 1MB",
+			cred:     &auth.PasswordCredential{Username: testUser, Password: CreateAlphabetString(2 * 1024 * 1024), Tenant: testTenant},
+			expected: http.StatusRequestEntityTooLarge,
+			errMsg:   "http: request body too large",
 		},
 	}
 
@@ -124,15 +144,27 @@ func TestLoginFailures(t *testing.T) {
 	for _, test := range tests {
 		var resp *http.Response
 		var statusCode int
+		apiStatus := &api.Status{}
 		AssertEventually(t, func() (bool, interface{}) {
 			var err error
 			resp, err = Login(fmt.Sprintf("https://%s", tinfo.apiGwAddr), test.cred)
 			if err == nil {
 				statusCode = resp.StatusCode
-			}
-			return err == nil && statusCode == test.expected, err
-		}, fmt.Sprintf("[%v] test failed, returned status code [%d], expected [%d]", test.name, statusCode, test.expected))
 
+			}
+			if resp != nil {
+				defer resp.Body.Close()
+				b, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					return false, err
+				}
+				err = json.Unmarshal(b, apiStatus)
+				if err != nil {
+					return false, err
+				}
+			}
+			return err == nil && statusCode == test.expected && strings.Contains(apiStatus.Message[0], test.errMsg), err
+		}, fmt.Sprintf("[%v] test failed, returned status code [%d], expected [%d]", test.name, statusCode, test.expected))
 		cookies := resp.Cookies()
 		Assert(t, len(cookies) == 0, fmt.Sprintf("[%v] test failed, cookie should not be set in response", test.name))
 		Assert(t, resp.Header.Get(apigw.GrpcMDCsrfHeader) == "", fmt.Sprintf("[%v] test failed, CSRF token is present", test.name))
@@ -547,13 +579,25 @@ func TestUsernameConflict(t *testing.T) {
 	MustCreateTestUser(tinfo.apicl, config.LdapUser, testPassword, testTenant)
 	var resp *http.Response
 	var statusCode int
+	apiStatus := &api.Status{}
 	AssertEventually(t, func() (bool, interface{}) {
 		var err error
 		resp, err = Login(fmt.Sprintf("https://%s", tinfo.apiGwAddr), ldapUserCred)
 		if err == nil {
 			statusCode = resp.StatusCode
 		}
-		return err == nil && statusCode == http.StatusConflict, err
+		if resp != nil {
+			defer resp.Body.Close()
+			b, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return false, err
+			}
+			err = json.Unmarshal(b, apiStatus)
+			if err != nil {
+				return false, err
+			}
+		}
+		return err == nil && statusCode == http.StatusConflict && strings.Contains(apiStatus.Message[0], "local user name conflicts with external user"), err
 	}, fmt.Sprintf("for username conflict expected status code [%d], got [%d]", http.StatusConflict, statusCode))
 	MustDeleteUser(tinfo.apicl, config.LdapUser, testTenant)
 	// ldap login should succeed after local user is deleted

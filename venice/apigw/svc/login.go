@@ -39,7 +39,6 @@ import (
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/balancer"
-	vErrors "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/log"
@@ -56,6 +55,8 @@ const (
 	LoginSvcPath = "login/"
 	// LoginAction for audit log
 	LoginAction = "Login"
+	// maxRequestBytes is the maximum bytes to read from the login request
+	maxRequestBytes = 1024 * 1024
 )
 
 var (
@@ -127,19 +128,17 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 	router := mux.NewRouter()
 	router.Path(login.LoginURLPath).Methods("POST").HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		body, err := ioutil.ReadAll(req.Body)
+		body, err := ioutil.ReadAll(http.MaxBytesReader(w, req.Body, maxRequestBytes))
 		if err != nil {
 			s.logger.Errorf("failed to read body from login request: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			vErrors.SendInternalError(w, errors.New("Failed to read body from login request: "+err.Error()))
+			s.httpErrorHandler(w, req, fmt.Sprintf("Failed to read body from login request: %s", err.Error()), http.StatusRequestEntityTooLarge)
 			return
 		}
 
 		cred := &auth.PasswordCredential{}
 		if err := json.Unmarshal(body, cred); err != nil {
 			s.logger.Errorf("failed to unmarshal credentials from request body: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			vErrors.SendInternalError(w, errors.New("Failed to unmarshal credentials from request body: "+err.Error()))
+			s.httpErrorHandler(w, req, fmt.Sprintf("Failed to unmarshal credentials from request body: %s", err.Error()), http.StatusBadRequest)
 			return
 		}
 
@@ -156,14 +155,12 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 		}()
 		switch err {
 		case ErrInternal:
-			w.WriteHeader(http.StatusInternalServerError)
-			vErrors.SendInternalError(w, err)
+			s.httpErrorHandler(w, req, err.Error(), http.StatusInternalServerError)
 			return
 		case nil:
 			// do nothing
 		default:
-			w.WriteHeader(http.StatusUnauthorized)
-			vErrors.SendUnauthorized(w, "Invalid username/password")
+			s.httpErrorHandler(w, req, "Invalid username/password", http.StatusUnauthorized)
 			return
 		}
 
@@ -171,21 +168,18 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 		user, sessionToken, csrfToken, exp, err := s.postLogin(ctx, user, cred.Password)
 		switch err {
 		case ErrUsernameConflict:
-			w.WriteHeader(http.StatusConflict)
-			vErrors.SendConflict(w, user.Kind, fmt.Sprintf("%s|%s", user.Tenant, user.Name), err)
+			s.httpErrorHandler(w, req, fmt.Sprintf("%s|%s %s", user.Tenant, user.Name, err.Error()), http.StatusConflict)
 			return
 		case nil:
 			// do nothing
 		default:
-			w.WriteHeader(http.StatusInternalServerError)
-			vErrors.SendInternalError(w, err)
+			s.httpErrorHandler(w, req, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		// remove user password
 		user.Spec.Password = ""
 		if err := s.audit(user, getClientIPs(req), req.RequestURI); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			vErrors.SendInternalError(w, err)
+			s.httpErrorHandler(w, req, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		w.Header().Set(apigw.GrpcMDCsrfHeader, csrfToken)
@@ -375,6 +369,23 @@ func (s *loginV1GwService) audit(user *auth.User, clientIPs []string, reqURI str
 		}
 	}
 	return nil
+}
+
+// HTTPOtherErrorHandler converts error to api.Status before writing to response
+func (s *loginV1GwService) httpErrorHandler(w http.ResponseWriter, _ *http.Request, msg string, code int) {
+	status := api.Status{
+		Message: []string{msg},
+		Code:    int32(code),
+		Result:  api.StatusResult{Str: http.StatusText(code)},
+	}
+	// Assume JSON encoding here.
+	buf, err := json.MarshalIndent(&status, "", "  ")
+	if err != nil {
+		http.Error(w, msg, code)
+		return
+	}
+	w.WriteHeader(code)
+	w.Write(buf)
 }
 
 func createCookie(token string, expiration time.Time) *http.Cookie {
