@@ -190,8 +190,9 @@ p4pd_add_or_del_sessxtstxcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del)
     data_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_TX_SESS_XTSQ, lif_sess_id);
     SDK_ASSERT(data_addr != 0);
 
-    data.total = MAX_SESSXTSTX_RINGS;
-    data.host = MAX_SESSXTSTX_HOST_RINGS;
+    //total and host are reversed in auto-generated structs
+    data.host = MAX_SESSXTSTX_RINGS;
+    data.total = MAX_SESSXTSTX_HOST_RINGS;
 
     get_program_offset((char *)"txdma_stage0.bin",
                        (char *)"nvme_tx_sessxts_stage0",
@@ -240,8 +241,9 @@ p4pd_add_or_del_sessdgsttxcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del)
     data_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_TX_SESS_DGSTQ, lif_sess_id);
     SDK_ASSERT(data_addr != 0);
 
-    data.total = MAX_SESSDGSTTX_RINGS;
-    data.host = MAX_SESSDGSTTX_HOST_RINGS;
+    //total and host are reversed in auto-generated structs
+    data.host = MAX_SESSDGSTTX_RINGS;
+    data.total = MAX_SESSDGSTTX_HOST_RINGS;
 
     get_program_offset((char *)"txdma_stage0.bin",
                        (char *)"nvme_tx_sessdgst_stage0",
