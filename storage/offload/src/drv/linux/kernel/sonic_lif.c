@@ -1172,6 +1172,9 @@ sonic_sysctl_lif_reset_handler(SYSCTL_HANDLER_ARGS)
 		return err;
 	}
 
+	if (!req->newptr)
+		return 0;
+
 	OSAL_LOG_DEBUG("sonic systcl reset %d", reset_sense);
 	lif->reset_ctl.sense = reset_sense;
 	if (reset_sense)
