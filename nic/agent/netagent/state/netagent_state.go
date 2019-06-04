@@ -69,6 +69,50 @@ func NewNetAgent(dp types.NetDatapathAPI, dbPath string, delphiClient clientApi.
 			emdb.Close()
 			return nil, err
 		}
+	} else {
+		// update netagent state. This is a temporary fix till we decide on flash perf implications of a full config replay
+		c, _ := gogoproto.TimestampProto(time.Now())
+
+		tn := netproto.Tenant{
+			TypeMeta: api.TypeMeta{Kind: "Tenant"},
+			ObjectMeta: api.ObjectMeta{
+				Name: "default",
+				CreationTime: api.Timestamp{
+					Timestamp: *c,
+				},
+				ModTime: api.Timestamp{
+					Timestamp: *c,
+				},
+			},
+			Status: netproto.TenantStatus{
+				TenantID: 1,
+			},
+		}
+
+		defVrf := netproto.Vrf{
+			TypeMeta: api.TypeMeta{Kind: "Vrf"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      "default",
+				CreationTime: api.Timestamp{
+					Timestamp: *c,
+				},
+				ModTime: api.Timestamp{
+					Timestamp: *c,
+				},
+			},
+			Spec: netproto.VrfSpec{
+				VrfType: "CUSTOMER",
+			},
+			Status: netproto.VrfStatus{
+				VrfID: types.VrfOffset + 1,
+			},
+		}
+		na.Lock()
+		na.TenantDB[na.Solver.ObjectKey(tn.ObjectMeta, tn.TypeMeta)] = &tn
+		na.VrfDB[na.Solver.ObjectKey(defVrf.ObjectMeta, defVrf.TypeMeta)] = &defVrf
+		na.Unlock()
 	}
 
 	err = na.GetUUID()

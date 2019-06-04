@@ -3,16 +3,57 @@
 package state
 
 import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
 	"testing"
 
-	"fmt"
-	"strings"
-
+	"github.com/pensando/sw/api"
 	hal "github.com/pensando/sw/nic/agent/netagent/datapath"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/nic/delphi/gosdk"
 	"github.com/pensando/sw/venice/utils/log"
+	. "github.com/pensando/sw/venice/utils/testutils"
 )
+
+func TestNetAgentCfgPersistence(t *testing.T) {
+	db, err := ioutil.TempFile("", "netagent.db")
+	defer os.Remove(db.Name())
+	AssertOk(t, err, "Failed to create temp file")
+	dp, err := hal.NewHalDatapath("mock")
+	AssertOk(t, err, "Failed to instantiate mock datapath")
+
+	ag, err := NewNetAgent(dp, db.Name(), nil)
+
+	AssertOk(t, err, "Failed to create new netagent: ")
+	oMeta := api.ObjectMeta{
+		Name:      "default",
+		Namespace: "default",
+		Tenant:    "default",
+	}
+
+	_, err = ag.FindTenant(oMeta)
+	AssertOk(t, err, "Failed to find default tenant")
+
+	defVrf, err := ag.FindVrf(oMeta)
+	AssertOk(t, err, "Failed to find default VRF")
+	AssertEquals(t, uint64(types.VrfOffset+1), defVrf.Status.VrfID, "VRF ID did not match")
+	err = ag.Stop()
+	AssertOk(t, err, "Failed to stop agent")
+
+	// Simulate restart by pointing a new Agent to the same DB
+	newAg, err := NewNetAgent(dp, db.Name(), nil)
+	defer newAg.Stop()
+	AssertOk(t, err, "Failed to create new netagent: ")
+	_, err = newAg.FindTenant(oMeta)
+	AssertOk(t, err, "Failed to find default tenant")
+
+	defVrf1, err := newAg.FindVrf(oMeta)
+	AssertOk(t, err, "Failed to find default VRF")
+	AssertEquals(t, uint64(types.VrfOffset+1), defVrf1.Status.VrfID, "VRF ID did not match")
+}
 
 type mockCtrler struct {
 	epdb map[string]*netproto.Endpoint
