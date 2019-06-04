@@ -474,6 +474,7 @@ class NaplesManagement(EntityManagement):
 
         self.SendlineExpect("rm -rf /data/log && sync", "#")
         self.SendlineExpect("rm -rf /data/core/* && sync", "#")
+        self.SendlineExpect("rm -rf /data/*.dat && sync", "#")
         return
 
     def Close(self):
