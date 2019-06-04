@@ -61,6 +61,8 @@
 
 #define tx_table_s6_t0_action cb_writeback_process
 
+#define tx_table_s7_t0_action pdu_ctxt_process
+
 #include "common_txdma.p4"
 #include "nvme_common.p4"
 
@@ -100,6 +102,13 @@ header_type nvme_sesspostxts_tx_to_stage_sessprodcb_info_t {
 
 header_type nvme_sesspostxts_tx_to_stage_writeback_info_t {
     fields {
+        pduid                            :  16;
+        pad                              :  112;
+    }
+}
+
+header_type nvme_sesspostxts_tx_to_stage_pdu_ctxt_info_t {
+    fields {
         pad                              :  128;
     }
 }
@@ -122,6 +131,12 @@ header_type nvme_sesspostxts_tx_sessprodcb_to_writeback_t {
     }
 }
 
+header_type nvme_sesspostxts_tx_writeback_to_pdu_ctxt_t {
+    fields {
+        pad                 : 160;
+    }
+}
+
 /**** scratch for D-vectors ****/
 
 @pragma scratch_metadata
@@ -132,6 +147,9 @@ metadata sess_wqe_t sess_wqe_d;
 
 @pragma scratch_metadata
 metadata sessprodcb_t sessprodcb_d;
+
+@pragma scratch_metadata
+metadata pdu_context0_t pdu_ctxt0_d;
 
 /**** global header unions ****/
 
@@ -162,10 +180,17 @@ metadata nvme_sesspostxts_tx_to_stage_writeback_info_t to_s6_info;
 @pragma scratch_metadata
 metadata nvme_sesspostxts_tx_to_stage_writeback_info_t to_s6_info_scr;
 
+//To-Stage-7
+@pragma pa_header_union ingress to_stage_7
+metadata nvme_sesspostxts_tx_to_stage_pdu_ctxt_info_t to_s7_info;
+@pragma scratch_metadata
+metadata nvme_sesspostxts_tx_to_stage_pdu_ctxt_info_t to_s7_info_scr;
+
+
 /**** stage to stage header unions ****/
 
 //Table-0
-@pragma pa_header_union ingress common_t0_s2s t0_s2s_cb_to_sess_wqe_info t0_s2s_sess_wqe_to_sessprodcb_info t0_s2s_sessprodcb_to_writeback_info
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_cb_to_sess_wqe_info t0_s2s_sess_wqe_to_sessprodcb_info t0_s2s_sessprodcb_to_writeback_info t0_s2s_writeback_to_pdu_ctxt_info
 
 metadata nvme_sesspostxts_tx_cb_to_sess_wqe_t t0_s2s_cb_to_sess_wqe_info;
 @pragma scratch_metadata
@@ -179,17 +204,46 @@ metadata nvme_sesspostxts_tx_sessprodcb_to_writeback_t t0_s2s_sessprodcb_to_writ
 @pragma scratch_metadata
 metadata nvme_sesspostxts_tx_sessprodcb_to_writeback_t t0_s2s_sessprodcb_to_writeback_info_scr;
 
+metadata nvme_sesspostxts_tx_writeback_to_pdu_ctxt_t  t0_s2s_writeback_to_pdu_ctxt_info;
+@pragma scratch_metadata
+metadata nvme_sesspostxts_tx_writeback_to_pdu_ctxt_t t0_s2s_writeback_to_pdu_ctxt_info_scr;
+
 //Table-1
 
 //Table-2
 
 /**** PHV Layout ****/
 @pragma dont_trim
+metadata dgst_aol_desc_t last_ddgst_aol_desc;
+@pragma dont_trim
+@pragma pa_align 512
+metadata ptr64_t aol0_next_ptr;
+@pragma dont_trim
+metadata ptr64_t aol1_next_ptr;
+@pragma dont_trim
+metadata ptr64_t aol2_next_ptr;
+@pragma dont_trim
+metadata ptr64_t aol3_next_ptr;
+@pragma dont_trim
+metadata ptr64_t aol4_next_ptr;
+@pragma dont_trim
 metadata sess_wqe_t sess_wqe;
 @pragma dont_trim
 metadata data64_t session_db;
 
 @pragma pa_align 128
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t last_ddgst_aol_desc_dma;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t aol0_next_ptr_dma;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t aol1_next_ptr_dma;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t aol2_next_ptr_dma;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t aol3_next_ptr_dma;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t aol4_next_ptr_dma;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t session_wqe_dma;         //dma cmd 0
 @pragma dont_trim
@@ -246,6 +300,7 @@ action cb_writeback_process (SESSXTSTXCB_PARAMS_NON_STG0) {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s6_info_scr.pduid, to_s6_info.pduid);
     modify_field(to_s6_info_scr.pad, to_s6_info.pad);
     
     // stage to stage
@@ -253,4 +308,18 @@ action cb_writeback_process (SESSXTSTXCB_PARAMS_NON_STG0) {
 
     // D-vector
     GENERATE_SESSXTSTXCB_D_NON_STG0
+}
+
+action pdu_ctxt_process (PDU_CTXT0_PARAMS) {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s7_info_scr.pad, to_s7_info.pad);
+
+    // stage to stage
+    modify_field(t0_s2s_writeback_to_pdu_ctxt_info_scr.pad, t0_s2s_writeback_to_pdu_ctxt_info.pad);
+
+    // D-vector
+    GENERATE_PDU_CTXT0_D
 }

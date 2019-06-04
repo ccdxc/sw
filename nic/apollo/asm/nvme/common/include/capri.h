@@ -1228,4 +1228,7 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
         CAPRI_SETUP_TIMER_DATA(__data, _qtype, _qid, _ring, _delta_time); \
         memwr.dx        __addr, __data;
 
+//TODO Move this to common capri header file
+#define CAP_ADDR_BASE_MD_HENS_OFFSET 0x6580000
+#define CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q_PD_IDX_BYTE_ADDRESS 0x510
 #endif //__CAPRI_H

@@ -935,10 +935,7 @@ header_type dgst_desc_t {
     fields {
         src             : 64;
         dst             : 64;
-        cmd             : 16;
-        datain_len      : 16;
-        extended_len    : 16;
-        threshold_len   : 16;
+        cmd             : 64;
         status_addr     : 64;
         doorbell_addr   : 64;
         doorbell_data   : 64;
@@ -1056,6 +1053,48 @@ prp1, prp2, pad
     modify_field(prp_pair_d.prp1, prp1); \
     modify_field(prp_pair_d.prp2, prp2); \
     modify_field(prp_pair_d.pad, pad); \
+
+header_type page_list_t {
+    fields {
+         len0    : 16;
+         page0   : 48;
+         len1    : 16;
+         page1   : 48;
+         len2    : 16;
+         page2   : 48;
+         len3    : 16;
+         page3   : 48;
+         len4    : 16;
+         page4   : 48;
+         len5    : 16;
+         page5   : 48;
+         len6    : 16;
+         page6   : 48;
+         len7    : 16;
+         page7   : 48;
+    }
+}
+
+#define PAGE_LIST_PARAMS \
+len0, page0, len1, page1, len2, page2, len3, page3, len4, page4, len5, page5, len6, page6, len7, page7
+
+#define GENERATE_PAGE_LIST_D     \
+    modify_field(page_list_d.len0, len0); \
+    modify_field(page_list_d.page0, page0); \
+    modify_field(page_list_d.len1, len1); \
+    modify_field(page_list_d.page1, page1); \
+    modify_field(page_list_d.len2, len2); \
+    modify_field(page_list_d.page2, page2); \
+    modify_field(page_list_d.len3, len3); \
+    modify_field(page_list_d.page3, page3); \
+    modify_field(page_list_d.len4, len4); \
+    modify_field(page_list_d.page4, page4); \
+    modify_field(page_list_d.len5, len5); \
+    modify_field(page_list_d.page5, page5); \
+    modify_field(page_list_d.len6, len6); \
+    modify_field(page_list_d.page6, page6); \
+    modify_field(page_list_d.len7, len7); \
+    modify_field(page_list_d.page7, page7); \
 
 // rqcb for stage 0
 header_type rqcb_t {

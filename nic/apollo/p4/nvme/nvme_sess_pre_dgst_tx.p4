@@ -55,7 +55,7 @@
 
 #define tx_table_s1_t0_action sess_wqe_process
 
-#define tx_table_s2_t0_action cmd_ctxt_process
+#define tx_table_s2_t0_action pdu_ctxt_process
 
 #define tx_table_s3_t0_action dgstcb_process
 
@@ -94,7 +94,7 @@ header_type nvme_sesspredgst_tx_to_stage_sess_wqe_info_t {
     }
 }
 
-header_type nvme_sesspredgst_tx_to_stage_cmd_ctxt_info_t {
+header_type nvme_sesspredgst_tx_to_stage_pdu_ctxt_info_t {
     fields {
         pad                              :  128;
     }
@@ -108,7 +108,8 @@ header_type nvme_sesspredgst_tx_to_stage_dgstcb_info_t {
 
 header_type nvme_sesspredgst_tx_to_stage_writeback_info_t {
     fields {
-        pad                              :  128;
+        pduid                            :  16;
+        pad                              :  112;
     }
 }
 
@@ -124,7 +125,7 @@ header_type nvme_sesspredgst_tx_cb_to_sess_wqe_t {
     }
 }
 
-header_type nvme_sesspredgst_tx_sess_wqe_to_cmd_ctxt_t {
+header_type nvme_sesspredgst_tx_sess_wqe_to_pdu_ctxt_t {
     fields {
         pad                 : 160;
     }
@@ -163,10 +164,13 @@ metadata sessdgsttxcb_t sessdgsttxcb_d;
 metadata sess_wqe_t sess_wqe_d;
 
 @pragma scratch_metadata
-metadata cmd_context_t cmd_ctxt_d;
+metadata pdu_context0_t pdu_ctxt0_d;
 
 @pragma scratch_metadata
 metadata dgstcb_t dgstcb_d;
+
+@pragma scratch_metadata
+metadata page_list_t page_list_d;
 
 /**** global header unions ****/
 
@@ -187,9 +191,9 @@ metadata nvme_sesspredgst_tx_to_stage_sess_wqe_info_t to_s1_info_scr;
 
 //To-Stage-2
 @pragma pa_header_union ingress to_stage_2
-metadata nvme_sesspredgst_tx_to_stage_cmd_ctxt_info_t to_s2_info;
+metadata nvme_sesspredgst_tx_to_stage_pdu_ctxt_info_t to_s2_info;
 @pragma scratch_metadata
-metadata nvme_sesspredgst_tx_to_stage_cmd_ctxt_info_t to_s2_info_scr;
+metadata nvme_sesspredgst_tx_to_stage_pdu_ctxt_info_t to_s2_info_scr;
 
 //To-Stage-3
 @pragma pa_header_union ingress to_stage_3
@@ -212,15 +216,15 @@ metadata nvme_sesspredgst_tx_to_stage_hdgst_ddgst_info_t to_s5_info_scr;
 /**** stage to stage header unions ****/
 
 //Table-0
-@pragma pa_header_union ingress common_t0_s2s t0_s2s_cb_to_sess_wqe_info t0_s2s_sess_wqe_to_cmd_ctxt_info t0_s2s_cmd_ctxt_to_dgstcb_info t0_s2s_dgstcb_to_writeback_info t0_s2s_writeback_to_hdgst_info
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_cb_to_sess_wqe_info t0_s2s_sess_wqe_to_pdu_ctxt_info t0_s2s_cmd_ctxt_to_dgstcb_info t0_s2s_dgstcb_to_writeback_info t0_s2s_writeback_to_hdgst_info
 
 metadata nvme_sesspredgst_tx_cb_to_sess_wqe_t t0_s2s_cb_to_sess_wqe_info;
 @pragma scratch_metadata
 metadata nvme_sesspredgst_tx_cb_to_sess_wqe_t t0_s2s_cb_to_sess_wqe_info_scr;
 
-metadata nvme_sesspredgst_tx_sess_wqe_to_cmd_ctxt_t t0_s2s_sess_wqe_to_cmd_ctxt_info;
+metadata nvme_sesspredgst_tx_sess_wqe_to_pdu_ctxt_t t0_s2s_sess_wqe_to_pdu_ctxt_info;
 @pragma scratch_metadata
-metadata nvme_sesspredgst_tx_sess_wqe_to_cmd_ctxt_t t0_s2s_sess_wqe_to_cmd_ctxt_info_scr;
+metadata nvme_sesspredgst_tx_sess_wqe_to_pdu_ctxt_t t0_s2s_sess_wqe_to_pdu_ctxt_info_scr;
 
 metadata nvme_sesspredgst_tx_cmd_ctxt_to_dgstcb_t t0_s2s_cmd_ctxt_to_dgstcb_info;
 @pragma scratch_metadata
@@ -248,25 +252,17 @@ metadata nvme_sesspredgst_tx_writeback_to_ddgst_t t1_s2s_writeback_to_ddgst_info
 @pragma dont_trim
 metadata dgst_desc_t ddgst_desc;
 @pragma dont_trim
-metadata dgst_aol_desc_t ddgst_aol_desc;    //Do we need it ?
-@pragma dont_trim
 metadata dgst_desc_t hdgst_desc;
 @pragma dont_trim
-metadata dgst_aol_desc_t hdgst_aol_desc;
-@pragma dont_trim
-metadata doorbell_data_t dgst_db;
+metadata index32_t dgst_db;
 
 @pragma pa_align 128
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t ddgst_aol_desc_dma;  //dma cmd 0
+metadata dma_cmd_phv2mem_t ddgst_desc_dma;      //dma cmd 0
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t ddgst_desc_dma;      //dma cmd 1
+metadata dma_cmd_phv2mem_t hdgst_desc_dma;      //dma cmd 1
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t hdgst_aol_desc_dma;  //dma cmd 2
-@pragma dont_trim
-metadata dma_cmd_phv2mem_t hdgst_desc_dma;      //dma cmd 3
-@pragma dont_trim
-metadata dma_cmd_phv2mem_t dgst_db_dma;         //dma cmd 4
+metadata dma_cmd_phv2mem_t dgst_db_dma;         //dma cmd 2
 
 /*
  * Stage 0 table 0 action
@@ -298,7 +294,7 @@ action sess_wqe_process (SESS_WQE_PARAMS) {
     GENERATE_SESS_WQE_D
 }
 
-action cmd_ctxt_process (CMD_CTXT_PARAMS) {
+action pdu_ctxt_process (PDU_CTXT0_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -306,10 +302,10 @@ action cmd_ctxt_process (CMD_CTXT_PARAMS) {
     modify_field(to_s2_info_scr.pad, to_s2_info.pad);
     
     // stage to stage
-    modify_field(t0_s2s_sess_wqe_to_cmd_ctxt_info_scr.pad, t0_s2s_sess_wqe_to_cmd_ctxt_info.pad);
+    modify_field(t0_s2s_sess_wqe_to_pdu_ctxt_info_scr.pad, t0_s2s_sess_wqe_to_pdu_ctxt_info.pad);
 
     // D-vector
-    GENERATE_CMD_CTXT_D
+    GENERATE_PDU_CTXT0_D
 }
 
 action dgstcb_process (DGSTCB_PARAMS) {
@@ -327,19 +323,22 @@ action dgstcb_process (DGSTCB_PARAMS) {
     GENERATE_DGSTCB_D
 }
 
-action cb_writeback_process () {
+action cb_writeback_process (SESSDGSTTXCB_PARAMS_NON_STG0) {
     // from ki global
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s4_info_scr.pduid, to_s4_info.pduid);
     modify_field(to_s4_info_scr.pad, to_s4_info.pad);
     
     // stage to stage
     modify_field(t0_s2s_dgstcb_to_writeback_info_scr.pad, t0_s2s_dgstcb_to_writeback_info.pad);
+
+    GENERATE_SESSDGSTTXCB_D_NON_STG0
 }
 
 
-action hdgst_process() {
+action hdgst_process(PAGE_LIST_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -348,6 +347,8 @@ action hdgst_process() {
     
     // stage to stage
     modify_field(t0_s2s_writeback_to_hdgst_info_scr.pad, t0_s2s_writeback_to_hdgst_info.pad);
+
+    GENERATE_PAGE_LIST_D
 }
 
 action ddgst_process() {

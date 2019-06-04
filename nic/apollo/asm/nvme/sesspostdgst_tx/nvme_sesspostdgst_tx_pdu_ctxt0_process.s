@@ -1,12 +1,12 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "INGRESS_s2_t0_nvme_sesspostdgst_tx_k.h"
+#include "INGRESS_s3_t0_nvme_sesspostdgst_tx_k.h"
 #include "capri.h"
 #include "nvme_common.h"
 
 struct phv_ p;
-struct s2_t0_nvme_sesspostdgst_tx_k_ k;
-struct s2_t0_nvme_sesspostdgst_tx_pdu_ctxt_process_d d;
+struct s3_t0_nvme_sesspostdgst_tx_k_ k;
+struct s3_t0_nvme_sesspostdgst_tx_pdu_ctxt0_process_d d;
 
 #define SESSPRODCB_P r1
 %%
@@ -14,13 +14,13 @@ struct s2_t0_nvme_sesspostdgst_tx_pdu_ctxt_process_d d;
     .param    nvme_sesspostdgst_tx_sessprodcb_process
 
 .align
-nvme_sesspostdgst_tx_pdu_ctxt_process:
+nvme_sesspostdgst_tx_pdu_ctxt0_process:
     // pass num_pages to sessprodcb_process to compute number of sesq ring
     // entries required to send this PDU and to sesspostdgst_tx_cb_writeback
     // to trigger one or two tso_process depending on the total number of
     // pages to post to TCP
-    phvwr          p.to_s3_info_num_pages, d.num_pages
     phvwr          p.to_s4_info_num_pages, d.num_pages
+    phvwr          p.to_s5_info_num_pages, d.num_pages
 
     addui          SESSPRODCB_P, r0, hiword(nvme_txsessprodcb_base)
     addi           SESSPRODCB_P, SESSPRODCB_P, loword(nvme_txsessprodcb_base)

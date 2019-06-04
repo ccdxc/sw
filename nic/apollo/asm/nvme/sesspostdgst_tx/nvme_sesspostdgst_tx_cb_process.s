@@ -33,7 +33,7 @@ nvme_sesspostdgst_tx_cb_process:
     // set sesspostdgst dma_cmd ptr in phv
     phvwr          p.p4_txdma_intr_dma_cmd_ptr, NVME_SESS_POST_DGST_TX_DMA_CMD_PTR
 
-    sll            SESS_WQE_P, DGST_R1_C_INDEX, LOG_SESS_Q_ENTRY_SIZE
+    sll            SESS_WQE_P, SESSPOSTDGSTTX_C_INDEX, LOG_SESS_Q_ENTRY_SIZE
     add            SESS_WQE_P, d.base_addr, SESS_WQE_P
 
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS,

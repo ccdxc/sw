@@ -21,7 +21,7 @@ nvme_sessdgst_tx_empty_ring_process:
                        CAPRI_TXDMA_INTRINSIC_QTYPE,
                        CAPRI_TXDMA_INTRINSIC_QID,
                        r2, r3)
-    tblwr       d.ring_empty_sched_eval_done, 1        
+    tblwr       d.ring_empty_sched_eval_done, 1
 
 exit:
     phvwr.e     p.p4_intr_global_drop, 1

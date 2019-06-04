@@ -45,6 +45,8 @@ nvme_sessprexts_tx_cb_writeback_process:
     add         NEW_LBA_OFFSET, CURR_LBA_OFFSET, 1
     seq         F_LAST_LBA, NEW_LBA_OFFSET, K_NLB
 
+    sub         LOG_MAX_NUM_LBAS_IN_PAGE, NVME_LOG_MAX_DATA_SIZE_IN_PAGE, K_LOG_LBA_SIZE
+
     bcf         [!F_LAST_LBA], non_last_lba
     tblmincri   d.wb_r0_busy, 1, 1  //BD Slot
 
@@ -72,7 +74,6 @@ non_last_lba:
     // we store integral multiple of LBAs in each page
     // see if the post-incremented lba needs a new page
     // if so, we need to reset the page_ptr in the cb.
-    sub         LOG_MAX_NUM_LBAS_IN_PAGE, NVME_LOG_MAX_DATA_SIZE_IN_PAGE, K_LOG_LBA_SIZE
     mincr       NEW_LBA_OFFSET, LOG_MAX_NUM_LBAS_IN_PAGE, 0
     
     seq         F_END_OF_PAGE, NEW_LBA_OFFSET, r0

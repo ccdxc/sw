@@ -32,10 +32,10 @@
 #define SESSPOSTXTSTX_P_INDEX   d.{pi_1}.hx
 #define SESSPOSTXTSTX_C_INDEX   d.{ci_1}.hx
 #define NMDPR_IDX               d.{idx}.wx
-#define DGST_R0_P_INDEX         d.{pi_0}.hx
-#define DGST_R0_C_INDEX         d.{ci_0}.hx
-#define DGST_R1_P_INDEX         d.{pi_1}.hx
-#define DGST_R1_C_INDEX         d.{ci_1}.hx
+#define SESSPREDGSTTX_P_INDEX   d.{pi_0}.hx
+#define SESSPREDGSTTX_C_INDEX   d.{ci_0}.hx
+#define SESSPOSTDGSTTX_P_INDEX  d.{pi_1}.hx
+#define SESSPOSTDGSTTX_C_INDEX  d.{ci_1}.hx
 
 //cb, ring entry sizes
 #define LOG_SQE_SIZE            6   //2^6 = 64
@@ -58,6 +58,7 @@
 #define LOG_AOL_PAIR_SIZE       7   //2^7 = 128
 #define LOG_IV_SIZE             4   //2^4 = 16
 #define LOG_ONE_AOL_SIZE        4   //2^4 = 16
+#define LOG_DGST_DESC_SIZE      6   //2^6 = 64
 
 #define LOG_NMDPR_RING_SIZE     (CAPRI_TNMDPR_BIG_RING_SHIFT)
 #define NMDPR_RING_SIZE         (1 << LOG_NMDPR_RING_SIZE)
@@ -111,8 +112,41 @@
 //dma cmd ptrs
 #define NVME_REQ_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(cmd_ctxt_dma_dma_cmd_type)/16)
 #define NVME_SESSPREXTSTX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(pkt_desc_dma_dma_cmd_type)/16)
-#define NVME_SESSPOSTXTSTX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(session_wqe_dma_dma_cmd_type)/16)
-#define NVME_SESS_POST_DGST_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(tcp_wqe_dma0_dma_cmd_pad)/16)
+#define NVME_SESSPOSTXTSTX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(last_ddgst_aol_desc_dma_dma_cmd_type)/16)
+#define NVME_SESS_POST_DGST_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(tcp_wqe_dma0_dma_cmd_type)/16)
+#define NVME_SESS_PRE_DGST_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(ddgst_desc_dma_dma_cmd_type)/16)
+
+//Digest related defines
+#define DGST_CB_CI_OFFSET                    4
+
+#define HW_DGST_STATUS_SIZE                  8
+#define HW_DGST_INTG_TAG_SIZE                8
+
+#define HW_DGST_DB_ADDR                      (CAP_ADDR_BASE_MD_HENS_OFFSET + CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q_PD_IDX_BYTE_ADDRESS)
+#define HW_CMD_DGST_DB_ON                    (1<<3)
+#define HW_CMD_DGST_OPAQUE_TAG_ON            (1<<4)
+#define HW_CMD_DGST_SRC_LIST_ADDR            (1<<5)
+#define HW_CMD_DGST_INTG_TAG_TYPE_CRC32C     (1<<13)
+#define HW_CMD_HDGST                         (HW_CMD_DGST_OPAQUE_TAG_ON | HW_CMD_DGST_DB_ON | HW_CMD_DGST_INTG_TAG_TYPE_CRC32C)
+#define HW_CMD_DDGST                         (HW_CMD_DGST_SRC_LIST_ADDR | HW_CMD_DGST_INTG_TAG_TYPE_CRC32C)
+#define HW_DGST_NEXT_PTR_OFFSET              48
+
+#define HW_DGST_STATUS_VALID_BIT             15
+#define HW_DGST_STATUS_ENC_ERR_START_BIT     12
+
+#define HW_DGST_STATUS_VALID                 (1<<3)
+#define HW_DGST_STATUS_NO_ERR                0
+#define HW_DGST_STATUS_AXI_TIMEOUT           1
+#define HW_DGST_STATUS_AXI_DATA_ERR          2
+#define HW_DGST_STATUS_AXI_ADDR_ERR          3
+#define HW_DGST_STATUS_COMP_FAIL             4
+#define HW_DGST_STATUS_DATA_TOO_LONG         5
+#define HW_DGST_STATUS_CKSUM_FAIL            6
+#define HW_DGST_STATUS_SGL_DESC_ERR          7
+
+#define HW_DGST_STATUS_SUCCESS               (HW_DGST_STATUS_VALID | HW_DGST_STATUS_NO_ERR)
+
+
 
 //command context offsets
 #define LOG_CMD_CTXT_SIZE               6   //2^6 = 64
@@ -136,6 +170,9 @@
 #define NVME_PDU_CTXT_AOL_DESC_LIST_OFFSET  (NVME_PDU_CTXT_HDR_SIZE + NVME_PDU_CTXT_PRP_LIST_SIZE + NVME_PDU_CTXT_PAGE_LIST_SIZE)
 #define NVME_PDU_CTXT_MAX_AOL_DESCS         7 //7*64B
 #define NVME_PDU_CTXT_AOL_DESC_LIST_SIZE    (NVME_PDU_CTXT_MAX_AOL_DESCS  << LOG_AOL_DESC_SIZE)
+
+#define NVME_PDU_CTXT_HDGST_STATUS_OFFSET  (NVME_PDU_CTXT0_SIZE + 32)
+#define NVME_PDU_CTXT_DDGST_STATUS_OFFSET  (NVME_PDU_CTXT_HDGST_STATUS_OFFSET + HW_DGST_STATUS_SIZE + HW_DGST_INTG_TAG_SIZE)
 
 struct nvme_pdu_ctxt_page_entry_t {
     len:16;
@@ -180,7 +217,9 @@ struct hbm_al_ring_entry_t {
 #define NVME_O_TCP_HDGST_SIZE               4
 #define NVME_O_TCP_CMD_CAPSULE_HEADER_SIZE  \
     (NVME_O_TCP_CH_SIZE + NVME_O_TCP_PSH_CMD_CAPSULE_SIZE + NVME_O_TCP_HDGST_SIZE)
+#define NVME_O_TCP_CMD_CAPSULE_CH_PSH_SIZE (NVME_O_TCP_CH_SIZE + NVME_O_TCP_PSH_CMD_CAPSULE_SIZE)
 #define NVME_O_TCP_DDGST_SIZE               4
+#define TCP_PAGE_NVME_O_TCP_CH_OFFSET       128
 
 //PDU types
 #define NVME_O_TCP_PDU_TYPE_ICREQ           0
