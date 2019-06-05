@@ -87,8 +87,15 @@ type postUpgImgMeta struct {
 }
 
 func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
+	var file string
 	if isPreUpg {
-		preUpgJSONFile, err := os.Open("/sw/nic/upgrade_manager/meta/upgrade_metadata.json")
+		_, err := os.Stat("/nic/tools/fwupdate")
+		if err == nil {
+			file = "/tmp/running_meta.json"
+		} else {
+			file = "/sw/nic/upgrade_manager/meta/upgrade_metadata.json"
+		}
+		preUpgJSONFile, err := os.Open(file)
 		if err != nil {
 			log.Infof("Error %s", err)
 			return err
@@ -106,7 +113,13 @@ func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
 		upgCtx.PreUpgMeta.KernelVersion = preImgMeta.Uboot.Image.KernelVersion
 		upgCtx.PreUpgMeta.PcieVersion = preImgMeta.Uboot.Image.PcieVersion
 	} else {
-		postUpgJSONFile, err := os.Open("/sw/nic/upgrade_manager/meta/MANIFEST.json")
+		_, err := os.Stat("/nic/tools/fwupdate")
+		if err == nil {
+			file = "/tmp/upg_meta.json"
+		} else {
+			file = "/sw/nic/upgrade_manager/meta/MANIFEST.json"
+		}
+		postUpgJSONFile, err := os.Open(file)
 		if err != nil {
 			log.Infof("Error %s", err)
 			return err

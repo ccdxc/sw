@@ -54,6 +54,7 @@ def Main(step):
                 return ret
 
     for naplesHost in naplesHosts:
+        common.stopTestUpgApp(naplesHost, True)
         ret = __installBinary(naplesHost, "build/aarch64/iris/out/" + common.UPGRADE_TEST_APP + "_bin/" + common.UPGRADE_TEST_APP + ".bin")
         if ret != api.types.status.SUCCESS:
             return ret
