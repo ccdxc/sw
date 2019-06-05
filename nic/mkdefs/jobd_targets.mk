@@ -334,6 +334,9 @@ jobd/halctl: ${JOBD_PREREQS}
 jobd/gtests: ${JOBD_PREREQS}
 	${NICDIR}/tools/run_gtests.sh ${COVERAGE_OPTS}
 	${NICDIR}/tools/trace_valid.py
+
+.PHONY: jobd/gtests/platform
+jobd/gtests/platform: ${JOBD_PREREQS}
 	${NICDIR}/tools/trace_valid.py ${NICDIR}/../platform
 
 .PHONY: jobd/gtests-valgrind

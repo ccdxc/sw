@@ -1023,8 +1023,8 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG("{}: {}: "
         "type {} index {} cos {} "
-        "ring_base {:#x} cq_ring_base {:#x} sg_ring_base {:#x} ring_size {}"
-        " intr_index {} flags {}{}{}",
+        "ring_base {:#x} cq_ring_base {:#x} sg_ring_base {:#x} ring_size {} "
+        "intr_index {} flags {}{}{}{}",
         hal_lif_info_.name,
         opcode_to_str((cmd_opcode_t)cmd->opcode),
         cmd->type,
@@ -1156,7 +1156,7 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_DEBUG("{}: {}: "
         "type {} index {} cos {} "
         "ring_base {:#x} cq_ring_base {:#x} sg_ring_base {:#x} ring_size {}"
-        " intr_index {} flags {}{}{}",
+        " intr_index {} flags {}{}{}{}",
         hal_lif_info_.name,
         opcode_to_str((cmd_opcode_t)cmd->opcode),
         cmd->type,
@@ -1277,7 +1277,8 @@ EthLif::NotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     struct q_init_comp *comp = (struct q_init_comp *)resp;
 
     NIC_LOG_INFO("{}: {}: "
-        "type {} index {} ring_base {:#x} ring_size {} intr_index {} flags {}{}",
+        "type {} index {} ring_base {:#x} ring_size {} intr_index {} "
+        "flags {}{}{}",
         hal_lif_info_.name,
         opcode_to_str((cmd_opcode_t)cmd->opcode),
         cmd->type,
@@ -1380,7 +1381,8 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
     struct q_init_comp *comp = (struct q_init_comp *)resp;
 
     NIC_LOG_DEBUG("{}: {}: "
-        "type {} index {} ring_base {:#x} ring_size {} intr_index {} flags {}{}",
+        "type {} index {} ring_base {:#x} ring_size {} intr_index {} "
+        "flags {}{}{}",
         hal_lif_info_.name,
         opcode_to_str((cmd_opcode_t)cmd->opcode),
         cmd->type,

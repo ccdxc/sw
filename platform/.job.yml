@@ -13,6 +13,12 @@ targets:
     area:
     sub-area:
     feature:
+  gtests:
+    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw/nic && make jobd/gtests/platform"]
+    owners: ["email:neel@pensando.io"]
+    area:
+    sub-area:
+    feature:
   ##nicmgr_gtest: [ "sh", "-c", "make && cd /sw/nic && ./run.py --nicmgr_gtest" ]
   ##nicmgr_classic_gtest: [ "sh", "-c", "make && cd /sw/nic && ./run.py --nicmgr_gtest --classic" ]
 cache:
