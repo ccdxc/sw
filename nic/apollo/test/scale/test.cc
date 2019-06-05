@@ -1785,6 +1785,3 @@ create_objects (void)
 #endif
     return ret;
 }
-
-
-

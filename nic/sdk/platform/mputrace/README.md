@@ -264,8 +264,8 @@ Following is a sample config.json file for reference -
 
 4. dump
     'captrace dump <file path>'
-    This will dump the contents from HBM (High Bandwidth Memory) into the 
-    specified file. The file needs to be copied out and decoded to get 
+    This will dump the contents from HBM (High Bandwidth Memory) into the
+    specified file. The file needs to be copied out and decoded to get
     the actual instructions executed by the MPUs.
 ```
     # captrace dump /tmp/captrace.bin
@@ -280,7 +280,7 @@ Following is a sample config.json file for reference -
         - /nic/conf/gen/mpu_prog_info.json file from the naples device
     2 Generate captrace.syms symbol file in container (from /sw/nic dir).
         - sdk/platform/mputrace/captrace.py gen_syms --pipeline=<pipeline>
-            - <pipeline> can be iris or apollo
+            - <pipeline> can be iris or apollo or artemis or gft
         - this will generate captrace.syms in nic/
     2 Run captrace.py script on the binary with mpu_prog_info.conf and
       captrace.syms files
