@@ -208,6 +208,7 @@ ionic_hw_open(struct lif *lif)
 	struct txque *txq;
 	unsigned int i;
 
+	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s is not locked", lif->name));
 	for (i = 0; i < lif->nrxqs; i++) {
 		rxq = lif->rxqs[i];
 		IONIC_RX_LOCK(rxq);
@@ -230,6 +231,7 @@ ionic_open(struct lif *lif)
 	struct ifnet *ifp = lif->netdev;
 	
 	KASSERT(lif, ("lif is NULL"));
+	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s is not locked", lif->name));
 
 	/* already running? */
 	if (ifp->if_drv_flags & IFF_DRV_RUNNING)
@@ -256,7 +258,7 @@ ionic_stop(struct net_device *netdev)
 	unsigned int i;
 
 	KASSERT(lif, ("lif is NULL"));
-	KASSERT(IONIC_CORE_LOCK_OWNED(lif), ("%s is not locked", lif->name));
+	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s is not locked", lif->name));
 
 	/* already stopped? */
 	if (!(netdev->if_drv_flags & IFF_DRV_RUNNING))
@@ -471,12 +473,12 @@ ionic_lif_addr_work(struct work_struct *work)
 
 	IONIC_NETDEV_ADDR_INFO(w->lif->netdev, w->addr, "Work start: rx_filter %s ADDR Work: %p",
 			   w->add ? "add" : "del", w);
-	IONIC_CORE_LOCK(w->lif);
+	IONIC_LIF_LOCK(w->lif);
 	if (w->add)
 		_ionic_lif_addr_add(w->lif, w->addr);
 	else
 		_ionic_lif_addr_del(w->lif, w->addr);
-	IONIC_CORE_UNLOCK(w->lif);
+	IONIC_LIF_UNLOCK(w->lif);
 
 	free(w, M_IONIC);
 }
@@ -566,9 +568,9 @@ ionic_lif_rx_mode_work(struct work_struct *work)
 {
 	struct rx_mode_work *w  = container_of(work, struct rx_mode_work, work);
 
-	IONIC_CORE_LOCK(w->lif);
+	IONIC_LIF_LOCK(w->lif);
 	_ionic_lif_rx_mode(w->lif, w->rx_mode);
-	IONIC_CORE_UNLOCK(w->lif);
+	IONIC_LIF_UNLOCK(w->lif);
 	
 	free(w, M_IONIC);
 }
@@ -861,13 +863,13 @@ ionic_lif_vlan_work(struct work_struct *work)
 	struct ifnet *netdev = w->lif->netdev;
 
 	IONIC_NETDEV_INFO(netdev, "Work start: %s VLAN%d\n", w->add ? "add" : "del", w->vid);
-	IONIC_CORE_LOCK(w->lif);
+	IONIC_LIF_LOCK(w->lif);
 	if (w->add)
 		_ionic_vlan_add(netdev, w->vid);
 	else
 		_ionic_vlan_del(netdev, w->vid);
 	
-	IONIC_CORE_UNLOCK(w->lif);
+	IONIC_LIF_UNLOCK(w->lif);
 
 	free(w, M_IONIC);
 }
@@ -923,13 +925,13 @@ ionic_register_vlan(void *arg, struct ifnet *ifp, u16 vtag)
 
 	if (lif->vlan_bitmap[index] & BIT(bit)) {
 		IONIC_NETDEV_WARN(lif->netdev, "VLAN: %d is already registered\n", vtag);
-		IONIC_CORE_UNLOCK(lif);
+		IONIC_LIF_UNLOCK(lif);
 		return;
 	}
 
 	if (ionic_lif_vlan(lif, vtag, true)) {
 		IONIC_NETDEV_ERROR(lif->netdev, "VLAN: %d register failed\n", vtag);
-		IONIC_CORE_UNLOCK(lif);
+		IONIC_LIF_UNLOCK(lif);
 		return;
 	}
 
@@ -954,13 +956,13 @@ ionic_unregister_vlan(void *arg, struct ifnet *ifp, u16 vtag)
 
 	if ((lif->vlan_bitmap[index] & BIT(bit)) == 0) {
 		IONIC_NETDEV_WARN(lif->netdev, "VLAN: %d is not registered\n", vtag);
-		IONIC_CORE_UNLOCK(lif);
+		IONIC_LIF_UNLOCK(lif);
 		return;
 	}
 
 	if (ionic_lif_vlan(lif, vtag, false)) {
 		IONIC_NETDEV_ERROR(lif->netdev, "VLAN: %d unregister failed\n", vtag);
-		IONIC_CORE_UNLOCK(lif);
+		IONIC_LIF_UNLOCK(lif);
 		return;
 	}
 
@@ -2168,6 +2170,7 @@ ionic_lif_reset(struct lif *lif)
 static void
 ionic_lif_deinit(struct lif *lif)
 {
+	IONIC_LIF_LOCK(lif);
 	/* Stop the NQ before stopping data queues. */
 	ionic_lif_notifyq_deinit(lif);
 
@@ -2179,6 +2182,7 @@ ionic_lif_deinit(struct lif *lif)
 	ionic_lif_adminq_deinit(lif);
 
 	ionic_lif_reset(lif);
+	IONIC_LIF_UNLOCK(lif);
 }
 
 void
@@ -2255,11 +2259,11 @@ ionic_process_event(struct notifyq* notifyq, union notifyq_comp *comp)
 			lif->last_eid = comp->event.eid;
 		}
 
-		IONIC_CORE_LOCK(lif);
+		IONIC_LIF_LOCK(lif);
 
 		ionic_open_or_stop(lif);
 
-		IONIC_CORE_UNLOCK(lif);
+		IONIC_LIF_UNLOCK(lif);
 		if_printf(ifp, "[eid:%ld]link status: %s speed: %d\n",
 			lif->last_eid, (lif->link_up ? "up" : "down"), lif->link_speed);
 		break;
@@ -2796,7 +2800,7 @@ ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr)
 	struct ionic* ionic = lif->ionic;
 	struct ionic_dev* idev = &ionic->idev;
 
-	IONIC_CORE_LOCK(lif);
+	IONIC_LIF_LOCK(lif);
 	ionic_read_notify_block(lif);
 
 	ifmr->ifm_status = IFM_AVALID;
@@ -2806,7 +2810,7 @@ ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr)
 	ionic_open_or_stop(lif);
 
 	if (!lif->link_up) {
-		IONIC_CORE_UNLOCK(lif);
+		IONIC_LIF_UNLOCK(lif);
 		return;
 	}
 
@@ -2817,7 +2821,7 @@ ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr)
 
 	if (ionic->is_mgmt_nic) {
 		ifmr->ifm_active |= IFM_1000_KX;
-		IONIC_CORE_UNLOCK(lif);
+		IONIC_LIF_UNLOCK(lif);
 		return;
 	}
 
@@ -2828,7 +2832,7 @@ ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr)
 	if (idev->port_info->config.pause_type & IONIC_PAUSE_F_TX)
 		ifmr->ifm_active |= IFM_ETH_TXPAUSE;
 
-	IONIC_CORE_UNLOCK(lif);
+	IONIC_LIF_UNLOCK(lif);
 }
 
 static int
@@ -2982,7 +2986,7 @@ ionic_set_mac(struct net_device *netdev)
 	int err = 0;
 
 	KASSERT(lif, ("lif is NULL"));
-	KASSERT(IONIC_CORE_LOCK_OWNED(lif), ("%s is not locked", lif->name));
+	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s is not locked", lif->name));
 
 	addr = IF_LLADDR(netdev);
 	if (is_zero_ether_addr(addr)) {
@@ -3165,6 +3169,7 @@ ionic_lif_init(struct lif *lif)
 		return err;
 	}
 
+	IONIC_LIF_LOCK(lif);
 	/* Enable notifyQ and arm it. */
 	if (lif->notifyq) {
 		err = ionic_lif_notifyq_init(lif, lif->notifyq);
@@ -3197,6 +3202,7 @@ ionic_lif_init(struct lif *lif)
 	ionic_read_notify_block(lif);
 
 
+	IONIC_LIF_UNLOCK(lif);
 	return err;
 
 err_out_rss_deinit:
@@ -3210,6 +3216,7 @@ err_out_notifyq_deinit:
 err_out_adminq_deinit:
 	ionic_lif_adminq_deinit(lif);
 
+	IONIC_LIF_UNLOCK(lif);
 	return err;
 }
 
@@ -3245,7 +3252,7 @@ ionic_lif_reinit(struct lif *lif)
 
 	ifp = lif->netdev;
 
-	IONIC_CORE_LOCK(lif);
+	IONIC_LIF_LOCK(lif);
 	was_open = false;
 	if (ifp->if_drv_flags & IFF_DRV_RUNNING) {
 		was_open = true;
@@ -3289,7 +3296,7 @@ ionic_lif_reinit(struct lif *lif)
 		ionic_hw_open(lif);
 		ifp->if_drv_flags |= IFF_DRV_RUNNING;
 	}
-	IONIC_CORE_UNLOCK(lif);
+	IONIC_LIF_UNLOCK(lif);
 
 	return (error);
 }
@@ -3387,7 +3394,8 @@ ionic_lif_register(struct lif *lif)
 	int err;
 	
 	ifp = lif->netdev;
-	
+
+	IONIC_LIF_LOCK(lif);
 	err = ionic_station_add(lif);
 	if (err) {
 		IONIC_NETDEV_ERROR(lif->netdev, "ionic_station_add failed, error = %d\n", err);
@@ -3418,6 +3426,7 @@ ionic_lif_register(struct lif *lif)
 	lif->registered = true;
 
 	ionic_setup_sysctls(lif);
+	IONIC_LIF_UNLOCK(lif);
 
 	return 0;
 }

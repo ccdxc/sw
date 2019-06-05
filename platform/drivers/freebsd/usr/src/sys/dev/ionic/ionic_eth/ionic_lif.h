@@ -356,11 +356,11 @@ struct lif {
 };
 
 /* lif lock. */
-#define IONIC_CORE_LOCK_INIT(x)		sx_init(&(x)->sx, (x)->sx_name)
-#define IONIC_CORE_LOCK_DESTROY(x)	sx_destroy(&(x)->sx)
-#define IONIC_CORE_LOCK(x)		sx_xlock(&(x)->sx)
-#define IONIC_CORE_UNLOCK(x)		sx_xunlock(&(x)->sx)
-#define IONIC_CORE_LOCK_OWNED(x)	sx_xlocked(&(x)->sx)
+#define IONIC_LIF_LOCK_INIT(x)		sx_init(&(x)->sx, (x)->sx_name)
+#define IONIC_LIF_LOCK_DESTROY(x)	sx_destroy(&(x)->sx)
+#define IONIC_LIF_LOCK(x)		sx_xlock(&(x)->sx)
+#define IONIC_LIF_UNLOCK(x)		sx_xunlock(&(x)->sx)
+#define IONIC_LIF_LOCK_OWNED(x)	sx_xlocked(&(x)->sx)
 
 #define IONIC_ADMIN_LOCK_INIT(x) 	mtx_init(&(x)->mtx, (x)->mtx_name, NULL, MTX_DEF)
 #define IONIC_ADMIN_LOCK_DESTROY(x)	mtx_destroy(&(x)->mtx)

@@ -1368,9 +1368,9 @@ ionic_if_init(void *arg)
 {
 	struct lif *lif = arg;
 
-	IONIC_CORE_LOCK(lif);
+	IONIC_LIF_LOCK(lif);
 	ionic_open_or_stop(lif);
-	IONIC_CORE_UNLOCK(lif);
+	IONIC_LIF_UNLOCK(lif);
 }
 
 int
@@ -1408,7 +1408,7 @@ ionic_lif_netdev_alloc(struct lif *lif, int ndescs)
 	/* Connect lif to ifnet. */
 	lif->netdev = ifp;
 
-	IONIC_CORE_LOCK_INIT(lif);
+	IONIC_LIF_LOCK_INIT(lif);
 
 	return (0);
 }
@@ -2690,7 +2690,7 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 	{
 		mask = ifr->ifr_reqcap ^ if_getcapenable(ifp);
 
-		IONIC_CORE_LOCK(lif);
+		IONIC_LIF_LOCK(lif);
 
 		hw_features = lif->hw_features;
 
@@ -2783,11 +2783,11 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		if (error) {
 			IONIC_NETDEV_ERROR(lif->netdev, "Failed to set capabilities, err: %d\n",
 				error);
-			IONIC_CORE_UNLOCK(lif);
+			IONIC_LIF_UNLOCK(lif);
 			break;
 		}
 
-		IONIC_CORE_UNLOCK(lif);
+		IONIC_LIF_UNLOCK(lif);
 		VLAN_CAPABILITIES(ifp);
 
 		break;
@@ -2800,15 +2800,15 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 			error = EINVAL;
 			break;
 		}
-		IONIC_CORE_LOCK(lif);
+		IONIC_LIF_LOCK(lif);
 		error = ionic_change_mtu(ifp, ifr->ifr_mtu);
 		if (error) {
 			IONIC_NETDEV_ERROR(lif->netdev, "Failed to set mtu, err: %d\n", error);
-			IONIC_CORE_UNLOCK(lif);
+			IONIC_LIF_UNLOCK(lif);
 			break;
 		}
 		if_setmtu(ifp, ifr->ifr_mtu);
-		IONIC_CORE_UNLOCK(lif);
+		IONIC_LIF_UNLOCK(lif);
 		break;
 
 	case SIOCADDMULTI:
@@ -2826,7 +2826,7 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 			IONIC_NETDEV_ERROR(ifp, "Failed to set ip, err: %d\n", error);
 			break;
 		}
-		IONIC_CORE_LOCK(lif);
+		IONIC_LIF_LOCK(lif);
 		if (ifp->if_flags & IFF_UP) {
 			if ((ifp->if_drv_flags & IFF_DRV_RUNNING) == 0) {
 				/* if_init = ionic_open is done from ether_ioctl */
@@ -2834,12 +2834,12 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 			ionic_set_rx_mode(lif->netdev);
 			ionic_set_mac(lif->netdev);
 		}
-		IONIC_CORE_UNLOCK(lif);
+		IONIC_LIF_UNLOCK(lif);
 		break;
 
 	case SIOCSIFFLAGS:
 		IONIC_NETDEV_INFO(ifp, "ioctl: SIOCSIFFLAGS (Set interface flags)\n");
-		IONIC_CORE_LOCK(lif);
+		IONIC_LIF_LOCK(lif);
 		ionic_open_or_stop(lif);
 		if (ifp->if_flags & IFF_UP) {
 #ifdef NETAPP_PATCH
@@ -2852,7 +2852,7 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 			ionic_set_port_state(lif->ionic, PORT_ADMIN_STATE_DOWN);
 #endif
 		}
-		IONIC_CORE_UNLOCK(lif);
+		IONIC_LIF_UNLOCK(lif);
 		break;
 
 	default:

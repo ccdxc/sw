@@ -320,6 +320,7 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
 	int err, remaining;
+	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s is not locked", lif->name));
 
 	err = ionic_api_adminq_post(lif, ctx);
 	if (err) {
