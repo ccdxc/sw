@@ -19,7 +19,7 @@ typedef uint64_t    nvme_sesscb_hw_id_t;
 
 // nvme_sesscb pd state
 struct pd_nvme_sesscb_s {
-    nvme_sesscb_t           *nvme_sesscb;              // PI TCP CB
+    nvme_sesscb_t           *nvme_sesscb;              // PI CB
 
     // operational state of nvme_sesscb pd
     nvme_sesscb_hw_id_t      hw_id;               // hw id for this nvme_sesscb

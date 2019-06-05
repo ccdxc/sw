@@ -68,9 +68,10 @@ add_nvme_sesscb_to_db (nvme_sesscb_t *nvme_sesscb)
 
 hal_ret_t
 nvme_sesscb_create (uint32_t lif,
+                    uint32_t g_nsid,
                     uint32_t g_sess_id,
-                    uint32_t ns_sess_id,
                     uint32_t lif_sess_id,
+                    uint32_t ns_sess_id,
                     uint32_t sesq_qid,
                     uint32_t serq_qid)
 {
@@ -88,6 +89,7 @@ nvme_sesscb_create (uint32_t lif,
     nvme_sesscb->cb_id = g_sess_id;
 
     nvme_sesscb->lif = lif;
+    nvme_sesscb->g_nsid = g_nsid;
     nvme_sesscb->g_sess_id = g_sess_id;
     nvme_sesscb->lif_sess_id = lif_sess_id;
     nvme_sesscb->ns_sess_id = ns_sess_id;

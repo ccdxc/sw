@@ -26,6 +26,7 @@
 #include "nic/hal/plugins/cfg/tcp_proxy/tcp_proxy.hpp"
 #include "nic/hal/plugins/cfg/nvme/nvme_sesscb.hpp"
 #include "nic/hal/plugins/cfg/nvme/nvme_global.hpp"
+#include "nic/hal/plugins/cfg/nvme/nvme_ns.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"
 #include "nic/hal/src/internal/system.hpp"
 #include "nic/hal/src/internal/rawrcb.hpp"
@@ -3115,6 +3116,18 @@ pd_nvme_global_create_args_init (pd_nvme_global_create_args_t *args)
     return;
 }
 
+// nvme_ns
+typedef struct pd_nvme_ns_create_args_s {
+    nvme_ns_t            *nvme_ns;
+} __PACK__ pd_nvme_ns_create_args_t;
+
+static inline void
+pd_nvme_ns_create_args_init (pd_nvme_ns_create_args_t *args)
+{
+    args->nvme_ns = NULL;
+    return;
+}
+
 
 // generic pd call macros
 #define PD_FUNC_IDS(ENTRY)                                                              \
@@ -3431,7 +3444,11 @@ pd_nvme_global_create_args_init (pd_nvme_global_create_args_t *args)
     ENTRY(PD_FUNC_ID_NVME_SESSCB_GET,          311, "PD_FUNC_ID_NVME_SESSCB_GET")\
     ENTRY(PD_FUNC_ID_NVME_GLOBAL_CREATE,       312, "PD_FUNC_ID_NVME_GLOBAL_CREATE")\
     ENTRY(PD_FUNC_ID_NVME_GLOBAL_GET,          313, "PD_FUNC_ID_NVME_GLOBAL_GET")\
-    ENTRY(PD_FUNC_ID_MAX,                      314, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_NVME_NS_CREATE,           314, "PD_FUNC_ID_NVME_NS_CREATE")\
+    ENTRY(PD_FUNC_ID_NVME_NS_DELETE,           315, "PD_FUNC_ID_NVME_NS_DELETE")\
+    ENTRY(PD_FUNC_ID_NVME_NS_UPDATE,           316, "PD_FUNC_ID_NVME_NS_UPDATE")\
+    ENTRY(PD_FUNC_ID_NVME_NS_GET,              317, "PD_FUNC_ID_NVME_NS_GET")\
+    ENTRY(PD_FUNC_ID_MAX,                      318, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3877,6 +3894,14 @@ typedef struct pd_func_args_s {
         // nvme_global calls
         PD_UNION_ARGS_FIELD(pd_nvme_global_create);
         //PD_UNION_ARGS_FIELD(pd_nvme_global_get);
+
+        // nvme_ns calls
+        PD_UNION_ARGS_FIELD(pd_nvme_ns_create);
+        //PD_UNION_ARGS_FIELD(pd_nvme_ns_update);
+        //PD_UNION_ARGS_FIELD(pd_nvme_ns_delete);
+        //PD_UNION_ARGS_FIELD(pd_nvme_ns_get);
+
+
     };
 } pd_func_args_t;
 
@@ -4346,6 +4371,13 @@ PD_FUNCP_TYPEDEF(pd_nvme_sesscb_create);
 // nvme_global calls
 PD_FUNCP_TYPEDEF(pd_nvme_global_create);
 //PD_FUNCP_TYPEDEF(pd_nvme_global_get);
+
+// nvme_ns calls
+PD_FUNCP_TYPEDEF(pd_nvme_ns_create);
+//PD_FUNCP_TYPEDEF(pd_nvme_ns_update);
+//PD_FUNCP_TYPEDEF(pd_nvme_ns_delete);
+//PD_FUNCP_TYPEDEF(pd_nvme_ns_get);
+
 
 hal_ret_t hal_pd_call(pd_func_id_t pd_func_id, pd_func_args_t *args);
 

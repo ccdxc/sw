@@ -99,6 +99,7 @@ public:
     slab *tcpcb_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TCPCB_PD)]; }
     slab *nvme_global_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_GLOBAL_PD)]; }
     slab *nvme_sesscb_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_SESSCB_PD)]; }
+    slab *nvme_ns_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_NS_PD)]; }
     slab *qos_class_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_QOS_CLASS_PD)]; }
     slab *acl_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ACL_PD)]; }
     slab *wring_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_WRING_PD)]; }
@@ -126,6 +127,7 @@ public:
     ht *tlscb_hwid_ht(void) const { return tlscb_hwid_ht_; }
     ht *tcpcb_hwid_ht(void) const { return tcpcb_hwid_ht_; }
     ht *nvme_sesscb_hwid_ht(void) const { return nvme_sesscb_hwid_ht_; }
+    ht *nvme_ns_hwid_ht(void) const { return nvme_ns_hwid_ht_; }
     ht *wring_hwid_ht(void) const { return wring_hwid_ht_; }
     ht *ipseccb_hwid_ht(void) const { return ipseccb_hwid_ht_; }
     ht *ipseccb_decrypt_hwid_ht(void) const { return ipseccb_decrypt_hwid_ht_; }
@@ -270,6 +272,11 @@ private:
     // nvme_sesscb related state
     struct {
         ht         *nvme_sesscb_hwid_ht_;
+    } __PACK__;
+
+    // nvme_ns related state
+    struct {
+        ht         *nvme_ns_hwid_ht_;
     } __PACK__;
 
     // Qos related state

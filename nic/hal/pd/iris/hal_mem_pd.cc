@@ -30,6 +30,7 @@
 #include "nic/hal/pd/iris/internal/tlscb_pd.hpp"
 #include "nic/hal/pd/iris/internal/tcpcb_pd.hpp"
 #include "nic/hal/pd/iris/nvme/nvme_sesscb_pd.hpp"
+#include "nic/hal/pd/iris/nvme/nvme_ns_pd.hpp"
 #include "nic/hal/pd/iris/nvme/nvme_global_pd.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
@@ -330,6 +331,22 @@ hal_state_pd::init(void)
     SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_GLOBAL_PD)] != NULL),
                       false);
 
+    // initialize NVME_NS related data structures
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_NS_PD)] =
+        slab::factory("nvme_ns_pd", HAL_SLAB_NVME_NS_PD,
+                      sizeof(hal::pd::pd_nvme_ns_t), 16,
+                      true, true, true);
+    SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_NS_PD)] != NULL),
+                      false);
+
+    HAL_HT_CREATE("nvme_ns_hw_id", nvme_ns_hwid_ht_,
+                  HAL_MAX_HW_NVME_NSS >> 1,
+                  hal::pd::nvme_ns_pd_get_hw_key_func,
+                  hal::pd::nvme_ns_pd_compute_hw_hash_func,
+                  hal::pd::nvme_ns_pd_compare_hw_key_func);
+    SDK_ASSERT_RETURN((nvme_ns_hwid_ht_ != NULL), false);
+
+
     // initialize Acl PD related data structures
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ACL_PD)] =
         slab::factory("acl_pd", HAL_SLAB_ACL_PD,
@@ -600,6 +617,7 @@ hal_state_pd::hal_state_pd()
     tlscb_hwid_ht_           = NULL;
     tcpcb_hwid_ht_           = NULL;
     nvme_sesscb_hwid_ht_     = NULL;
+    nvme_ns_hwid_ht_         = NULL;
     wring_hwid_ht_           = NULL;
     ipseccb_hwid_ht_         = NULL;
     ipseccb_decrypt_hwid_ht_ = NULL;
@@ -640,6 +658,7 @@ hal_state_pd::~hal_state_pd()
     tlscb_hwid_ht_ ? ht::destroy(tlscb_hwid_ht_) : HAL_NOP;
     tcpcb_hwid_ht_ ? ht::destroy(tcpcb_hwid_ht_) : HAL_NOP;
     nvme_sesscb_hwid_ht_ ? ht::destroy(nvme_sesscb_hwid_ht_) : HAL_NOP;
+    nvme_ns_hwid_ht_ ? ht::destroy(nvme_ns_hwid_ht_) : HAL_NOP;
     wring_hwid_ht_ ? ht::destroy(wring_hwid_ht_) : HAL_NOP;
     ipseccb_hwid_ht_ ? ht::destroy(ipseccb_hwid_ht_) : HAL_NOP;
     ipseccb_decrypt_hwid_ht_ ? ht::destroy(ipseccb_decrypt_hwid_ht_) : HAL_NOP;
@@ -1354,6 +1373,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_NVME_SESSCB_PD:
         g_hal_state_pd->nvme_sesscb_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_NVME_NS_PD:
+        g_hal_state_pd->nvme_ns_slab()->free(elem);
         break;
 
     case HAL_SLAB_QOS_CLASS_PD:

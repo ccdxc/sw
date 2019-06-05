@@ -684,8 +684,8 @@ nvme_cq_create (NvmeCqSpec& spec, NvmeCqResponse *rsp)
 hal_ret_t
 nvme_ns_create (NvmeNsSpec& spec, NvmeNsResponse *rsp)
 {
+    hal_ret_t    ret = HAL_RET_OK;
     uint32_t     lif = spec.hw_lif_id();
-    nvme_nscb_t  nscb;
     uint64_t     nscb_addr;
     uint32_t     g_nsid;
     nvme_ns_info_t *ns_info_p;
@@ -710,14 +710,6 @@ nvme_ns_create (NvmeNsSpec& spec, NvmeNsResponse *rsp)
     //1 based
     nscb_addr = g_nvme_lif_info[lif].nscb_base_addr + (spec.nsid() - 1) * sizeof(nvme_nscb_t);
 
-    memset(&nscb, 0, sizeof(nvme_nscb_t));
-    nscb.backend_ns_id = spec.backend_nsid();
-    nscb.ns_size = spec.size(); //size in LBAs
-    nscb.key_index = spec.key_index();
-    nscb.sec_key_index = spec.sec_key_index();
-    nscb.log_lba_size = log2(spec.lba_size());
-    nscb.sess_prodcb_start = (g_nvme_lif_info[lif].sess_start + g_nvme_lif_info[lif].cur_sess);
-
     //update global ns info
     g_nsid = g_nvme_lif_info[lif].ns_start + spec.nsid() - 1;
     SDK_ASSERT(g_nsid <= g_nvme_global_info.max_ns);
@@ -739,56 +731,21 @@ nvme_ns_create (NvmeNsSpec& spec, NvmeNsResponse *rsp)
 
     rsp->set_nscb_addr(nscb_addr);
 
-    // write to hardware
-    HAL_TRACE_DEBUG("LIF: {}: Writing initial NSCB State, addr: {:#x}, size: {}",
-                    lif, nscb_addr, sizeof(nvme_nscb_t));
+    ret = nvme_ns_create(lif, spec.nsid(), g_nsid, spec.backend_nsid(), 
+                         spec.max_sess(), spec.size(), spec.lba_size(),
+                         spec.key_index(), spec.sec_key_index(), 
+                         ns_info_p->sess_start);
 
-    // Convert data before writting to HBM
-    memrev((uint8_t*)&nscb, sizeof(nvme_nscb_t));
-
-    nvme_hbm_write(nscb_addr, (void *)&nscb, sizeof(nvme_nscb_t));
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed(ret: {}) to create nvme_sesscb for lif: {} lif_nsid: {} g_nsid: {}",
+                      ret, lif, spec.nsid(), g_nsid);
+        return HAL_RET_ERR;
+    }
 
     rsp->set_api_status(types::API_STATUS_OK);
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
 
-    return (HAL_RET_OK);
-}
-
-static hal_ret_t
-nvme_ns_update_session_id (uint32_t lif, uint32_t nsid, uint16_t sess_id)
-{
-    nvme_ns_info_t *ns_info_p;
-    uint64_t       nscb_addr;
-    uint32_t       g_nsid;
-    nvme_nscb_t    nscb;
-    uint8_t        bit_index, byte_index;
-
-    SDK_ASSERT(lif < MAX_LIFS);
-    SDK_ASSERT(nsid <= g_nvme_lif_info[lif].max_ns);
-
-    g_nsid = g_nvme_lif_info[lif].ns_start + nsid - 1;
-    SDK_ASSERT(g_nsid <= g_nvme_global_info.max_ns);
-
-    SDK_ASSERT(sess_id < 256); //XXX
-
-    ns_info_p = &g_nvme_ns_info[g_nsid];
-    SDK_ASSERT(sess_id < ns_info_p->max_sess);
-
-    nscb_addr = g_nvme_lif_info[lif].nscb_base_addr + (nsid - 1) * sizeof(nvme_nscb_t);
-
-    nvme_hbm_read(nscb_addr, (void *)&nscb, sizeof(nvme_nscb_t));
-    // Convert data after reading from HBM
-    memrev((uint8_t*)&nscb, sizeof(nvme_nscb_t));
-
-    byte_index = sess_id / 8; //Byte number
-    bit_index  = sess_id % 8; //Bit in Byte
-    nscb.valid_session_bitmap[byte_index] |= (1 << bit_index);
-
-    // Convert data before writting to HBM
-    memrev((uint8_t*)&nscb, sizeof(nvme_nscb_t));
-    nvme_hbm_write(nscb_addr, (void *)&nscb, sizeof(nvme_nscb_t));
-
-    return (HAL_RET_OK);
+    return (ret);
 }
 
 hal_ret_t
@@ -875,17 +832,13 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     //LIF local session id
     rsp->set_sess_id(lif_sess_id);
 
-    ret = nvme_sesscb_create(lif, g_sess_id, lif_sess_id, ns_sess_id, sesq_qid, serq_qid);
+    ret = nvme_sesscb_create(lif, g_nsid, g_sess_id, lif_sess_id, ns_sess_id, sesq_qid, serq_qid);
 
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed(ret: {}) to create nvme_sesscb for lif: {} sess_id: {}",
                       ret, lif, g_sess_id);
         return HAL_RET_ERR;
     }
-
-    //update NSCB active session bitmap
-    nvme_ns_update_session_id(lif, spec.nsid(), ns_sess_id);
-
 
     // Get Sesq address
     ret = wring_get_meta(types::WRING_TYPE_SESQ,

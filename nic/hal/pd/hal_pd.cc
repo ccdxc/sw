@@ -512,6 +512,13 @@ hal_pd_load_symbols (void)
     // nvme global pd calls
     PD_FUNC_LOAD(PD_FUNC_ID_NVME_GLOBAL_CREATE, pd_nvme_global_create);
     //PD_FUNC_LOAD(PD_FUNC_ID_NVME_GLOBAL_GET, pd_nvme_global_get);
+    
+    // nvme nscb pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_NVME_NS_CREATE, pd_nvme_ns_create);
+    //PD_FUNC_LOAD(PD_FUNC_ID_NVME_NS_DELETE, pd_nvme_ns_delete);
+    //PD_FUNC_LOAD(PD_FUNC_ID_NVME_NS_UPDATE, pd_nvme_ns_update);
+    //PD_FUNC_LOAD(PD_FUNC_ID_NVME_NS_GET, pd_nvme_ns_get);
+
 
     return ret;
 }

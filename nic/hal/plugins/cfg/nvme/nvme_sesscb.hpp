@@ -22,12 +22,12 @@ typedef struct nvme_sesscb_s {
     sdk_spinlock_t        slock;                   // lock to protect this structure
 
     uint32_t lif;
+    uint32_t g_nsid;
     uint32_t cb_id; //LIF local
-    uint8_t  cb_q_type;
 
-    uint32_t ns_sess_id;
-    uint32_t lif_sess_id;
     uint32_t g_sess_id;
+    uint32_t lif_sess_id;
+    uint32_t ns_sess_id;
 
     uint32_t serq_qid;
     uint32_t sesq_qid;
@@ -100,8 +100,8 @@ extern uint32_t nvme_sesscb_compute_handle_hash_func(void *key, uint32_t ht_size
 extern bool nvme_sesscb_compare_handle_key_func(void *key1, void *key2);
 
 
-hal_ret_t nvme_sesscb_create(uint32_t lif, uint32_t g_sess_id, uint32_t ns_sess_id,
-                             uint32_t lif_sess_id, uint32_t sesq_qid, uint32_t serq_qid);
+hal_ret_t nvme_sesscb_create(uint32_t lif, uint32_t g_nsid, uint32_t g_sess_id, uint32_t lif_sess_id,
+                             uint32_t ns_sess_id, uint32_t sesq_qid, uint32_t serq_qid);
 
 
 } //namespace hal

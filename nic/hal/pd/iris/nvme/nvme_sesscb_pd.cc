@@ -18,6 +18,7 @@
 #include "platform/capri/capri_common.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 #include "nvme_sesscb_pd.hpp"
+#include "nvme_ns_pd.hpp"
 #include "nvme_global_pd.hpp"
 #include "nvme_pd.hpp"
 #include "p4pd_nvme_api.h"
@@ -118,6 +119,13 @@ p4pd_add_or_del_txsessprodcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del)
     data.log_num_dgst_q_entries = log2(NVME_TX_SESS_DGSTQ_DEPTH);
     data.dgst_qid = lif_sess_id;
 
+    HAL_TRACE_DEBUG("lif: {} g_sess_id: {} lif_sess_id: {} ns_sess_id: {}",
+                    nvme_sesscb_pd->nvme_sesscb->lif,
+                    g_sess_id, lif_sess_id, nvme_sesscb_pd->nvme_sesscb->ns_sess_id);
+
+    HAL_TRACE_DEBUG("xts_qid: {} xts_q_base_addr: {:#x} dgst_qid: {} dgst_q_base_addr: {:#x}",
+                    data.xts_qid, data.xts_q_base_addr, data.dgst_qid, data.dgst_q_base_addr);
+
     // Get SESQ address of the TCP flow
     wring_hw_id_t  sesq_base;
     ret = wring_pd_get_base_addr(types::WRING_TYPE_SESQ,
@@ -197,7 +205,7 @@ p4pd_add_or_del_sessxtstxcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del)
     get_program_offset((char *)"txdma_stage0.bin",
                        (char *)"nvme_tx_sessxts_stage0",
                        &offset);
-    data.rsvd = offset; //pc
+    data.pc = offset; //pc
 
     HAL_TRACE_DEBUG("sess_num: {}, tx sessxts pc: {:#x}", g_sess_id, offset);
 
@@ -248,7 +256,7 @@ p4pd_add_or_del_sessdgsttxcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del)
     get_program_offset((char *)"txdma_stage0.bin",
                        (char *)"nvme_tx_sessdgst_stage0",
                        &offset);
-    data.rsvd = offset; //pc
+    data.pc = offset; //pc
 
     HAL_TRACE_DEBUG("sess_num: {}, tx sessdgst pc: {:#x}", g_sess_id, offset);
 
@@ -280,25 +288,33 @@ p4pd_add_or_del_nvme_sesscb (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del)
 
     ret = p4pd_add_or_del_txsessprodcb_entry(nvme_sesscb_pd, del);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to program txsessprodcb for session-id: {}, ret: {:x}",
+        HAL_TRACE_ERR("Failed to program txsessprodcb for session-id: {}, ret: {:#x}",
                       nvme_sesscb_pd->nvme_sesscb->g_sess_id, ret);
         return ret;
     }
 
     ret = p4pd_add_or_del_sessxtstxcb_entry(nvme_sesscb_pd, del);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to program sessxtstxcb for session-id: {}, ret: {:x}",
+        HAL_TRACE_ERR("Failed to program sessxtstxcb for session-id: {}, ret: {:#x}",
                       nvme_sesscb_pd->nvme_sesscb->g_sess_id, ret);
         return ret;
     }
 
     ret = p4pd_add_or_del_sessdgsttxcb_entry(nvme_sesscb_pd, del);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to program sessdgsttxcb for session-id: {}, ret: {:x}",
+        HAL_TRACE_ERR("Failed to program sessdgsttxcb for session-id: {}, ret: {:#x}",
                       nvme_sesscb_pd->nvme_sesscb->g_sess_id, ret);
         return ret;
     }
 
+    ret = nvme_ns_update_session_id(nvme_sesscb_pd->nvme_sesscb->g_nsid,
+                                    nvme_sesscb_pd->nvme_sesscb->ns_sess_id);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to update nscb bitmap for session-id: {} g_nsid: {} ret: {:#x}",
+                      nvme_sesscb_pd->nvme_sesscb->g_sess_id,
+                      nvme_sesscb_pd->nvme_sesscb->ns_sess_id, ret);
+        return ret;
+    }
     return ret;
 }
 
@@ -320,7 +336,7 @@ pd_nvme_sesscb_create (pd_func_args_t *pd_func_args)
     nvme_sesscb_pd->nvme_sesscb = args->nvme_sesscb;
     nvme_sesscb_pd->hw_id = args->nvme_sesscb->g_sess_id;
 
-    HAL_TRACE_DEBUG("Creating NVME Session CB at addr: 0x{:x} qid: {}",
+    HAL_TRACE_DEBUG("Creating NVME Session CB, PD Handle: {}, PI Handle: {}",
             nvme_sesscb_pd->hw_id, nvme_sesscb_pd->nvme_sesscb->cb_id);
 
     // program nvme_sesscb

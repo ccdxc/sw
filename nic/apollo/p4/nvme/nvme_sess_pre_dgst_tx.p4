@@ -334,6 +334,7 @@ action cb_writeback_process (SESSDGSTTXCB_PARAMS_NON_STG0) {
     // stage to stage
     modify_field(t0_s2s_dgstcb_to_writeback_info_scr.pad, t0_s2s_dgstcb_to_writeback_info.pad);
 
+    // D-vector
     GENERATE_SESSDGSTTXCB_D_NON_STG0
 }
 
