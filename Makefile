@@ -541,6 +541,8 @@ venice-base-iso:
 # and creates the venice iso file (from base iso downloaded from pull-assets)
 # This also creates files for the ability to pxe boot appliance installation inside pensando
 venice-iso:
+	mkdir -p bin/venice-install
+	mkdir -p bin/pxe
 	$(MAKE) -C tools/docker-files/vinstall venice-iso
 
 bundle-image:
