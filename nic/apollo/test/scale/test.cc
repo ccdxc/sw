@@ -767,6 +767,13 @@ create_vpc_peers (uint32_t num_vpcs)
     pds_vpc_peer_spec_t pds_vpc_peer;
     uint32_t vpc_peer_id = 1;
 
+    if (num_vpcs <= 1) {
+        return SDK_RET_OK;
+    } else if (num_vpcs & 0x1) {
+        // last VPC will be left out w.r.t peering if we have odd number of VPCs
+        num_vpcs -= 1;
+    }
+
     SDK_ASSERT(num_vpcs <= PDS_MAX_VPC);
     for (uint32_t i = 1; i <= num_vpcs; i+=2) {
         memset(&pds_vpc_peer, 0, sizeof(pds_vpc_peer));

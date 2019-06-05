@@ -72,6 +72,7 @@ private:
     directmap *nat_tbl_;            // NAT table
     uint32_t key_native_tbl_idx_[MAX_KEY_NATIVE_TBL_ENTRIES];
     uint32_t key_tunneled_tbl_idx_[MAX_KEY_TUNNELED_TBL_ENTRIES];
+    uint32_t key_tunneled2_tbl_idx_[MAX_KEY_TUNNELED_TBL_ENTRIES];
 };
 
 /// \@}    // end of PDS_ARTEMIS_IMPL_STATE

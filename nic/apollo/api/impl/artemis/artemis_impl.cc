@@ -154,13 +154,16 @@ artemis_impl::destroy(artemis_impl *impl) {
         artemis_impl_db()->key_native_tbl()->remove(
             artemis_impl_db()->key_native_tbl_idx_[i]);
     }
-#if 0
     // remove key tunneled table entries
     for (i = 0; i < MAX_KEY_TUNNELED_TBL_ENTRIES; i++) {
         artemis_impl_db()->key_tunneled_tbl()->remove(
             artemis_impl_db()->key_tunneled_tbl_idx_[i]);
     }
-#endif
+    // remove key tunneled2 table entries
+    for (i = 0; i < MAX_KEY_TUNNELED_TBL_ENTRIES; i++) {
+        artemis_impl_db()->key_tunneled2_tbl()->remove(
+            artemis_impl_db()->key_tunneled2_tbl_idx_[i]);
+    }
     // remove drop stats table entries
     for (i = P4E_DROP_REASON_MIN; i <= P4E_DROP_REASON_MAX; i++) {
         artemis_impl_db()->egress_drop_stats_tbl()->remove(i);
@@ -401,9 +404,9 @@ artemis_impl::key_tunneled2_init_(void) {
     mask.ethernet_3_valid_mask = 0xFF;
     mask.ipv4_3_valid_mask = 0xFF;
     mask.ipv6_3_valid_mask = 0xFF;
-    ret = artemis_impl_db()->key_tunneled_tbl()->insert(
+    ret = artemis_impl_db()->key_tunneled2_tbl()->insert(
               &key, &mask, &data,
-              &artemis_impl_db()->key_tunneled_tbl_idx_[idx++]);
+              &artemis_impl_db()->key_tunneled2_tbl_idx_[idx++]);
 
     // entry for double tunneled (inner-most) IPv6 packets (outer headers can
     // be IPv4 or IPv6)
@@ -424,9 +427,9 @@ artemis_impl::key_tunneled2_init_(void) {
     mask.ethernet_3_valid_mask = 0xFF;
     mask.ipv4_3_valid_mask = 0xFF;
     mask.ipv6_3_valid_mask = 0xFF;
-    ret = artemis_impl_db()->key_tunneled_tbl()->insert(
+    ret = artemis_impl_db()->key_tunneled2_tbl()->insert(
               &key, &mask, &data,
-              &artemis_impl_db()->key_tunneled_tbl_idx_[idx++]);
+              &artemis_impl_db()->key_tunneled2_tbl_idx_[idx++]);
 
     // entry for tunneled (inner) non-IP packets (outer can be IPv4 or IPv6)
     key.ipv4_1_valid = 0;
@@ -446,9 +449,9 @@ artemis_impl::key_tunneled2_init_(void) {
     mask.ethernet_3_valid_mask = 0xFF;
     mask.ipv4_3_valid_mask = 0xFF;
     mask.ipv6_3_valid_mask = 0xFF;
-    ret = artemis_impl_db()->key_tunneled_tbl()->insert(
+    ret = artemis_impl_db()->key_tunneled2_tbl()->insert(
               &key, &mask, &data,
-              &artemis_impl_db()->key_tunneled_tbl_idx_[idx++]);
+              &artemis_impl_db()->key_tunneled2_tbl_idx_[idx++]);
 
     // check max
     SDK_ASSERT(idx <= MAX_KEY_TUNNELED_TBL_ENTRIES);

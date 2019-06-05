@@ -16,6 +16,7 @@ cfgfile=artemis/scale_cfg.json
 if [[ "$1" ==  --cfg ]]; then
     cfgfile=$2
 fi
+echo "Using config file $cfgfile"
 
 export PATH=${PATH}:${BUILD_DIR}/bin
 $GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/$cfgfile -f artemis --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
