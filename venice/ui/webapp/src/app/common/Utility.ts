@@ -875,7 +875,7 @@ export class Utility {
         return cat + '/hosts';
       case 'Workload':
       case 'Endpoint':
-        return kind;
+        return 'workload';  // VS-363, when search is:Workload or is:Endpoint, we should /workload page
       case 'Alert':
       case 'Event':
         return cat + '/alertsevents';

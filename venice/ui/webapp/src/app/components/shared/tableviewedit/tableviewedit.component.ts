@@ -314,6 +314,9 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
   postDeleteRecord() {}
 
   onDeleteRecord(event, object: T) {
+    if (event) {
+      event.stopPropagation();
+    }
     // Should not be able to delete any record while we are editing
     if (this.isRowExpanded()) {
       return;

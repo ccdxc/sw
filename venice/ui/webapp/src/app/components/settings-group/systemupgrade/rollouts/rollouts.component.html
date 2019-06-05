@@ -73,9 +73,7 @@
 
 <!-- TABLE ACTION -->
 <ng-template #actionTemplatePending let-rowData>
-
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <!-- comment out this block as back-end has limit support on update rollout()  -->
     <mat-icon matTooltip="Edit rollout" class="global-table-action-icon"
               (click)="expandRowRequest($event, rowData)">edit
     </mat-icon>
