@@ -64,6 +64,7 @@ model_sim/libs/
 tools/ncc/csr_json/
 conf/init_bins
 conf/hal.ini
+conf/device.conf
 conf/dol.conf
 conf/hntap.conf
 debug_cli/swig/ccfiles/p4pd_wrap.cc
