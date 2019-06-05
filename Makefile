@@ -496,6 +496,19 @@ ui:
 	$(MAKE) ui-venice-sdk
 	cd venice/ui/webapp && yarn run build-prod && ./gzipDist.sh
 
+ui-mac:
+	@echo "you will need node v10.15.3, yarn installed";
+	@echo "Issues related to node-sass require running make clean before this target";
+	node -v;
+	yarn -v && yarn global add yalc;
+	cd venice/ui/web-app-framework && yarn;
+	$(MAKE) ui-framework
+	$(MAKE) ui-link-framework
+	cd venice/ui/venice-sdk && yarn;
+	cd venice/ui/webapp && yarn;
+	$(MAKE) ui-venice-sdk
+	cd venice/ui/webapp && yarn run build-prod && ./gzipDist.sh
+
 ui-autogen:
 	printf "\n+++++++++++++++++ Generating ui-autogen +++++++++++++++++\n";
 	echo docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make ui-venice-sdk; \
