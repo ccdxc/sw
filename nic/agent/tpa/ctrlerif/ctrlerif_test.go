@@ -271,6 +271,9 @@ func TestRpcServer(t *testing.T) {
 
 	}, "failed to connect to rpc server")
 
+	// wait for the mock calls to finish
+	time.Sleep(2 * time.Second)
+
 	// stop rpc server and client
 	f.Stop()
 	time.Sleep(time.Millisecond * 10)

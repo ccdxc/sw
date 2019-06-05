@@ -5,7 +5,10 @@ package fwlog_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
+
+	"github.com/pensando/sw/iota/test/venice/iotakit"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -95,6 +98,15 @@ var _ = Describe("fwlog tests", func() {
 					if tclient.CheckIPAddrInFwlog([]string{ips[1], ips[0]}, res.Results) != true {
 						err := fmt.Errorf("did not find %v in fwlog", ips)
 						By(fmt.Sprintf("fwlog query failed, %v", err))
+						ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
+							if out, err := ts.model.Action().RunNaplesCommand(nc,
+								"/nic/bin/shmdump -file=/dev/shm/fwlog_ipc_shm -type=fwlog"); err == nil {
+								By(fmt.Sprintf(strings.Join(out, ",")))
+							} else {
+								By(fmt.Sprintf("failed to run shmdump, %v", err))
+							}
+							return nil
+						})
 						return err
 					}
 				}
@@ -145,6 +157,16 @@ var _ = Describe("fwlog tests", func() {
 					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
 						err := fmt.Errorf("did not find %+v in fwlog", ips)
 						By(fmt.Sprintf("fwlog query failed, %v", err))
+						ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
+							if out, err := ts.model.Action().RunNaplesCommand(nc,
+								"/nic/bin/shmdump -file=/dev/shm/fwlog_ipc_shm -type=fwlog"); err == nil {
+								By(fmt.Sprintf(strings.Join(out, ",")))
+							} else {
+								By(fmt.Sprintf("failed to run shmdump, %v", err))
+							}
+							return nil
+						})
+
 						return err
 					}
 				}
@@ -196,6 +218,16 @@ var _ = Describe("fwlog tests", func() {
 					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
 						err := fmt.Errorf("did not find %+v in fwlog", ips)
 						By(fmt.Sprintf("fwlog query failed, %v", err))
+						ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
+							if out, err := ts.model.Action().RunNaplesCommand(nc,
+								"/nic/bin/shmdump -file=/dev/shm/fwlog_ipc_shm -type=fwlog"); err == nil {
+								By(fmt.Sprintf(strings.Join(out, ",")))
+							} else {
+								By(fmt.Sprintf("failed to run shmdump, %v", err))
+							}
+							return nil
+						})
+
 						return err
 					}
 				}
@@ -256,6 +288,16 @@ var _ = Describe("fwlog tests", func() {
 					if tclient.CheckIPAddrInFwlog([]string{ips[1], ips[0]}, res.Results) != true {
 						err := fmt.Errorf("did not find %+v in fwlog", ips)
 						By(fmt.Sprintf("fwlog query failed, %v", err))
+						ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
+							if out, err := ts.model.Action().RunNaplesCommand(nc,
+								"/nic/bin/shmdump -file=/dev/shm/fwlog_ipc_shm -type=fwlog"); err == nil {
+								By(fmt.Sprintf(strings.Join(out, ",")))
+							} else {
+								By(fmt.Sprintf("failed to run shmdump, %v", err))
+							}
+							return nil
+						})
+
 						return err
 					}
 				}
@@ -316,6 +358,16 @@ var _ = Describe("fwlog tests", func() {
 					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
 						err := fmt.Errorf("did not find %+v in fwlog", ips)
 						By(fmt.Sprintf("fwlog query failed, %v", err))
+						ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
+							if out, err := ts.model.Action().RunNaplesCommand(nc,
+								"/nic/bin/shmdump -file=/dev/shm/fwlog_ipc_shm -type=fwlog"); err == nil {
+								By(fmt.Sprintf(strings.Join(out, ",")))
+							} else {
+								By(fmt.Sprintf("failed to run shmdump, %v", err))
+							}
+							return nil
+						})
+
 						return err
 					}
 				}
@@ -377,6 +429,15 @@ var _ = Describe("fwlog tests", func() {
 					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
 						err := fmt.Errorf("did not find %+v in fwlog", ips)
 						By(fmt.Sprintf("fwlog query failed, %v", err))
+						ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
+							if out, err := ts.model.Action().RunNaplesCommand(nc,
+								"/nic/bin/shmdump -file=/dev/shm/fwlog_ipc_shm -type=fwlog"); err == nil {
+								By(fmt.Sprintf(strings.Join(out, ",")))
+							} else {
+								By(fmt.Sprintf("failed to run shmdump, %v", err))
+							}
+							return nil
+						})
 						return err
 					}
 				}
@@ -435,7 +496,16 @@ var _ = Describe("fwlog tests", func() {
 				for _, ips := range workloadPairs.ListIPAddr() {
 					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
 						err := fmt.Errorf("did not find %+v in fwlog", ips)
-						By(fmt.Sprintf("%fwlog query failed, v", err))
+						By(fmt.Sprintf("fwlog query failed, %v", err))
+						ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
+							if out, err := ts.model.Action().RunNaplesCommand(nc,
+								"/nic/bin/shmdump -file=/dev/shm/fwlog_ipc_shm -type=fwlog"); err == nil {
+								By(fmt.Sprintf(strings.Join(out, ",")))
+							} else {
+								By(fmt.Sprintf("failed to run shmdump, %v", err))
+							}
+							return nil
+						})
 						return err
 					}
 				}
@@ -494,6 +564,15 @@ var _ = Describe("fwlog tests", func() {
 					if tclient.CheckIPAddrInFwlog([]string{ips[1], ips[0]}, res.Results) != true {
 						err := fmt.Errorf("did not find %+v in fwlog", ips)
 						By(fmt.Sprintf("%v", err))
+						ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
+							if out, err := ts.model.Action().RunNaplesCommand(nc,
+								"/nic/bin/shmdump -file=/dev/shm/fwlog_ipc_shm -type=fwlog"); err == nil {
+								By(fmt.Sprintf(strings.Join(out, ",")))
+							} else {
+								By(fmt.Sprintf("failed to run shmdump, %v", err))
+							}
+							return nil
+						})
 						return err
 					}
 				}
@@ -555,6 +634,15 @@ var _ = Describe("fwlog tests", func() {
 					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
 						err := fmt.Errorf("did not find %+v in fwlog", ips)
 						By(fmt.Sprintf("%v", err))
+						ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
+							if out, err := ts.model.Action().RunNaplesCommand(nc,
+								"/nic/bin/shmdump -file=/dev/shm/fwlog_ipc_shm -type=fwlog"); err == nil {
+								By(fmt.Sprintf(strings.Join(out, ",")))
+							} else {
+								By(fmt.Sprintf("failed to run shmdump, %v", err))
+							}
+							return nil
+						})
 						return err
 					}
 				}
@@ -614,6 +702,15 @@ var _ = Describe("fwlog tests", func() {
 					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
 						err := fmt.Errorf("did not find %+v in fwlog", ips)
 						By(fmt.Sprintf("%v", err))
+						ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
+							if out, err := ts.model.Action().RunNaplesCommand(nc,
+								"/nic/bin/shmdump -file=/dev/shm/fwlog_ipc_shm -type=fwlog"); err == nil {
+								By(fmt.Sprintf(strings.Join(out, ",")))
+							} else {
+								By(fmt.Sprintf("failed to run shmdump, %v", err))
+							}
+							return nil
+						})
 						return err
 					}
 				}
