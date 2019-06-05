@@ -17,10 +17,6 @@ def Trigger(tc):
 
     tc.resp = api.Trigger(req)
 
-    for n in tc.Nodes:
-        resp = api.CopyFromHost(n, [penctldefs.PENCTL_DEST_DIR + "/%s.log" %(tc.iterators.option)], "%s/%s_%s.log" % (tc.GetLogsDir(), n, tc.iterators.option))
-
-
     return api.types.status.SUCCESS
 
 def Verify(tc):
