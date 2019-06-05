@@ -108,7 +108,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
 
   isToUseWebSocket(): boolean {
      // TODO:  in MAC dev env. Use:  return (environment.production) ;
-     return true;
+     return false;  // VS-390.  While waiting for rollout backend change, stop using web-socket for now.
   }
 
   /** Override parent API as watchRolloutImages() is not working. */
@@ -129,7 +129,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     const sub = this.objstoreService.WatchObject(Utility.ROLLOUT_IMGAGE_NAMESPACE).subscribe(
       response => {
         this.rolloutimagesEventUtility.processEvents(response);
-        this.processRolloutImages(response);
+       // comment it out for now. It cause VS-390  // this.processRolloutImages(response);
       },
     );
     this.subscriptions.push(sub);
@@ -158,7 +158,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     let metaImage: ObjstoreObject = null;
         let bundleTarImage: ObjstoreObject = null;
         const rolloutImages: IObjstoreObjectList = response.body as IObjstoreObjectList;
-        if (rolloutImages.items) {
+        if (rolloutImages && rolloutImages.items) {
           const entries = [];
           const allentries = [];
           rolloutImages.items.forEach((image: ObjstoreObject) => {
