@@ -1080,8 +1080,6 @@ port::port_link_sm_process(void)
                     break;
                 }
 
-                port_mac_faults_clear();
-
                 // transition to mac faults to be cleared
                 this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR);
 
