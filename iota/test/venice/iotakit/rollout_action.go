@@ -10,34 +10,24 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
-	"os/exec"
-	"strings"
 	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/rollout"
 	loginctx "github.com/pensando/sw/api/login/context"
+
 	//iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 func (actx *ActionCtx) PerformImageUpload() error {
 
-	imageUrl := []string{"http://pxe.pensando.io/kickstart/veniceImageForRollout/bundle.tar", "--output", "/tmp/bundle.tar"}
-	out, err := exec.Command("curl", imageUrl...).CombinedOutput()
-	outStr := strings.TrimSpace(string(out))
-	fmt.Println(fmt.Sprintf("curl output: %s, err: %v\n", outStr, err))
+	fileBuf, err := ioutil.ReadFile("/go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar")
 	if err != nil {
-		fmt.Println(fmt.Sprintf("curl Error: %s, err: %v\n", outStr, err))
-		fmt.Println()
+		log.Infof("Error (%+v) reading file /go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar", err)
+		return fmt.Errorf("Error (%+v) reading file /go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar", err)
 	}
-
-	fileBuf, err := ioutil.ReadFile("/tmp/bundle.tar")
-	if err != nil {
-		log.Infof("Error (%+v) reading file /tmp/bundle.tar", err)
-		return fmt.Errorf("Error (%+v) reading file /tmp/bundle.tar", err)
-	}
-	bkCtx, cancelFunc :=  context.WithTimeout(context.Background(), 10*time.Minute)
+	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancelFunc()
 	ctx, err := actx.model.tb.VeniceLoggedInCtx(bkCtx)
 	if err != nil {
@@ -47,6 +37,7 @@ func (actx *ActionCtx) PerformImageUpload() error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -98,7 +89,7 @@ func (actx *ActionCtx) UploadBundle(ctx context.Context, filename string, conten
 // VerifyRolloutStatus verifies status of rollout in the iota cluster
 func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 	var numRetries int
-	bkCtx, cancelFunc :=  context.WithTimeout(context.Background(), 40*time.Minute)
+	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 60*time.Minute)
 	defer cancelFunc()
 	ctx, err := act.model.tb.VeniceLoggedInCtx(bkCtx)
 
@@ -249,7 +240,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 	}
 
 	// Verify rollout service status
-	for numRetries = 0; numRetries < 60; numRetries++ {
+	for numRetries = 0; numRetries < 180; numRetries++ {
 		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
 		rollout, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
 		if err != nil {
@@ -274,6 +265,81 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 	}
 	if numRetries != 0 {
 		return fmt.Errorf("rollout services failed on some nodes")
+	}
+
+	// Verify rollout smartNIC status
+	for numRetries = 0; numRetries < 60; numRetries++ {
+		restcls, err := act.model.tb.VeniceRestClient()
+		if err != nil {
+			log.Infof("ts:%s Failed to get restclient err %+v", time.Now().String(),err)
+			time.Sleep(time.Second * 5)
+			continue
+		}
+		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
+		rollout, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
+		if err != nil {
+			log.Infof("ts:%s Rollout LIST failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, rollout)
+			time.Sleep(time.Second * 5)
+			continue
+		}
+		status := rollout.Status.GetSmartNICsStatus()
+		log.Infof("ts:%s Rollout smartNIC status len %d: status:  %+v", time.Now().String(), len(status), status)
+		var numNodes int
+		if len(status) == 0 {
+			log.Infof("ts:%s Rollout smartNIC status: not found", time.Now().String())
+			time.Sleep(time.Second * 5)
+			continue
+		}
+
+		for i := 0; i < len(status); i++ {
+			log.Infof("ts:%s SmartNIC Rollout status %s", time.Now().String(), status[i].Phase)
+			if status[i].Phase == "COMPLETE" {
+				numNodes++
+			}
+		}
+		if numNodes != len(status) {
+			log.Infof("ts:%s SmartNIC Rollout completed for : %d nodes", time.Now().String(), numNodes)
+			time.Sleep(time.Second * 5)
+			continue
+		}
+		log.Infof("ts:%s Rollout Smart NIC Status: Complete", time.Now().String())
+		numRetries = 0
+		break
+	}
+	if numRetries != 0 {
+		return fmt.Errorf("rollout smartNIC node failed.")
+	}
+
+	// Verify rollout overall status
+	for numRetries = 0; numRetries < 60; numRetries++ {
+		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
+		rollout, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
+		if err != nil {
+			log.Infof("ts:%s Rollout LIST failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, rollout)
+			time.Sleep(time.Second * 5)
+			continue
+		}
+		opState := rollout.Status.OperationalState
+
+		if opState == "PROGRESSING"  || opState == "SUSPEND_IN_PROGRESS"{
+			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), rollout.Status.OperationalState)
+			time.Sleep(time.Second * 5)
+			continue
+		}
+
+		if opState == "FAILURE" || opState == "DEADLINE_EXCEEDED" {
+			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), rollout.Status.OperationalState)
+			return fmt.Errorf("rollout smartNIC node failed.")
+		}
+
+		if opState == "SUCCESS" || opState == "SUSPENDED" {
+			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), rollout.Status.OperationalState)
+			break
+		}
+
+		log.Infof("ts:%s Overall Rollout Status: %s", time.Now().String(), opState)
+		numRetries = 0
+		break
 	}
 
 	// Verify delete on rollout object
@@ -312,7 +378,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 
 // performRollout performs a rollout in the cluster
 func (actx *ActionCtx) PerformRollout(rollout *rollout.Rollout) error {
-	bkCtx, cancelFunc :=  context.WithTimeout(context.Background(), 15*time.Minute)
+	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 15*time.Minute)
 	defer cancelFunc()
 	ctx, err := actx.model.tb.VeniceLoggedInCtx(bkCtx)
 	if err != nil {

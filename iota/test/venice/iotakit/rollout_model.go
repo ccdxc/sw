@@ -4,12 +4,8 @@ package iotakit
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
-	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -64,7 +60,7 @@ func (sm *SysModel) GetRolloutObject() (*rollout.Rollout, error) {
 			Seconds: seconds + 30, //Add a scheduled rollout with 30 second delay
 		},
 	}
-	jsonUrl := []string{"http://pxe.pensando.io/kickstart/veniceImageForRollout/metadata.json", "--output", "/tmp/metadata.json"}
+	/*jsonUrl := []string{"http://pxe.pensando.io/kickstart/veniceImageForRollout/metadata.json", "--output", "/tmp/metadata.json"}
 
 	out, err := exec.Command("curl", jsonUrl...).CombinedOutput()
 	outStr := strings.TrimSpace(string(out))
@@ -81,7 +77,10 @@ func (sm *SysModel) GetRolloutObject() (*rollout.Rollout, error) {
 		err := errors.New("Build Failure. Couldnt get version information")
 		return nil, err
 
-	}
+	}*/
+    //TODO hardcoding it for now to make asset-pull work
+
+	version := "0.10.0-256"
 
 	return &rollout.Rollout{
 		TypeMeta: api.TypeMeta{
@@ -95,7 +94,7 @@ func (sm *SysModel) GetRolloutObject() (*rollout.Rollout, error) {
 			ScheduledStartTime:          scheduledStartTime,
 			Duration:                    "",
 			Strategy:                    "LINEAR",
-			MaxParallel:                 0,
+			MaxParallel:                 1,
 			MaxNICFailuresBeforeAbort:   0,
 			OrderConstraints:            nil,
 			Suspend:                     false,

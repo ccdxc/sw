@@ -693,6 +693,7 @@ func upgradeDaemonSet(client k8sclient.Interface, module *protos.Module) error {
 		if err == nil {
 			log.Infof("Updated DaemonSet spec %+v", d)
 			//Wait for daemonset restart to be complete
+			time.Sleep(time.Second * 10)
 			for ii := 0; ii < maxIters; ii++ {
 				cd, _ := client.Extensions().DaemonSets(defaultNS).Get(module.Name, metav1.GetOptions{})
 				if cd.Status.NumberReady != cd.Status.DesiredNumberScheduled {
@@ -727,6 +728,7 @@ func upgradeDeployment(client k8sclient.Interface, module *protos.Module) error 
 		if err == nil {
 			log.Infof("Updated Deployment Spec %+v", d)
 			// Wait for service deployment to be complete
+			time.Sleep(time.Second * 10)
 			for ii := 0; ii < maxIters; ii++ {
 				cd, _ := client.Extensions().Deployments(defaultNS).Get(module.Name, metav1.GetOptions{})
 				log.Infof("ReadyReplicas %+v AvailableReplicas %+v", cd.Status.ReadyReplicas, cd.Status.AvailableReplicas)
