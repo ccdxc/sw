@@ -64,9 +64,9 @@ unsigned int interm_buf_size = 8192;
 module_param(interm_buf_size, uint, 0444);
 MODULE_PARM_DESC(interm_buf_size, "Intermediate buffer size (default=8KB)");
 
-bool error_reset_recovery_en = false;
+bool error_reset_recovery_en = true;
 module_param(error_reset_recovery_en, bool, 0444);
-MODULE_PARM_DESC(error_reset_recovery_en, "Enable hardware error reset recovery (default=false)");
+MODULE_PARM_DESC(error_reset_recovery_en, "Enable hardware error reset recovery (default=true)");
 
 int body(void);
 
