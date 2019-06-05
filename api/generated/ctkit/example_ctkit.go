@@ -49,7 +49,7 @@ func (obj *Order) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.BookstoreV1().Order().Update(context.Background(), &obj.Order)
+			_, err = apicl.BookstoreV1().Order().UpdateStatus(context.Background(), &obj.Order)
 			if err == nil {
 				break
 			}
@@ -438,7 +438,7 @@ func (obj *Book) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.BookstoreV1().Book().Update(context.Background(), &obj.Book)
+			_, err = apicl.BookstoreV1().Book().UpdateStatus(context.Background(), &obj.Book)
 			if err == nil {
 				break
 			}
@@ -827,7 +827,7 @@ func (obj *Publisher) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.BookstoreV1().Publisher().Update(context.Background(), &obj.Publisher)
+			_, err = apicl.BookstoreV1().Publisher().UpdateStatus(context.Background(), &obj.Publisher)
 			if err == nil {
 				break
 			}
@@ -1216,7 +1216,7 @@ func (obj *Store) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.BookstoreV1().Store().Update(context.Background(), &obj.Store)
+			_, err = apicl.BookstoreV1().Store().UpdateStatus(context.Background(), &obj.Store)
 			if err == nil {
 				break
 			}
@@ -1605,7 +1605,7 @@ func (obj *Coupon) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.BookstoreV1().Coupon().Update(context.Background(), &obj.Coupon)
+			_, err = apicl.BookstoreV1().Coupon().UpdateStatus(context.Background(), &obj.Coupon)
 			if err == nil {
 				break
 			}
@@ -1994,7 +1994,7 @@ func (obj *Customer) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.BookstoreV1().Customer().Update(context.Background(), &obj.Customer)
+			_, err = apicl.BookstoreV1().Customer().UpdateStatus(context.Background(), &obj.Customer)
 			if err == nil {
 				break
 			}

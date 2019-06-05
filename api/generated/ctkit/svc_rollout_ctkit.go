@@ -49,7 +49,7 @@ func (obj *Rollout) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.RolloutV1().Rollout().Update(context.Background(), &obj.Rollout)
+			_, err = apicl.RolloutV1().Rollout().UpdateStatus(context.Background(), &obj.Rollout)
 			if err == nil {
 				break
 			}
@@ -438,7 +438,7 @@ func (obj *RolloutAction) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.RolloutV1().RolloutAction().Update(context.Background(), &obj.RolloutAction)
+			_, err = apicl.RolloutV1().RolloutAction().UpdateStatus(context.Background(), &obj.RolloutAction)
 			if err == nil {
 				break
 			}

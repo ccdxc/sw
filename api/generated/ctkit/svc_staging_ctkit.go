@@ -49,7 +49,7 @@ func (obj *Buffer) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.StagingV1().Buffer().Update(context.Background(), &obj.Buffer)
+			_, err = apicl.StagingV1().Buffer().UpdateStatus(context.Background(), &obj.Buffer)
 			if err == nil {
 				break
 			}

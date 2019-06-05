@@ -49,7 +49,7 @@ func (obj *Network) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.NetworkV1().Network().Update(context.Background(), &obj.Network)
+			_, err = apicl.NetworkV1().Network().UpdateStatus(context.Background(), &obj.Network)
 			if err == nil {
 				break
 			}
@@ -438,7 +438,7 @@ func (obj *Service) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.NetworkV1().Service().Update(context.Background(), &obj.Service)
+			_, err = apicl.NetworkV1().Service().UpdateStatus(context.Background(), &obj.Service)
 			if err == nil {
 				break
 			}
@@ -827,7 +827,7 @@ func (obj *LbPolicy) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.NetworkV1().LbPolicy().Update(context.Background(), &obj.LbPolicy)
+			_, err = apicl.NetworkV1().LbPolicy().UpdateStatus(context.Background(), &obj.LbPolicy)
 			if err == nil {
 				break
 			}
@@ -1216,7 +1216,7 @@ func (obj *VirtualRouter) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.NetworkV1().VirtualRouter().Update(context.Background(), &obj.VirtualRouter)
+			_, err = apicl.NetworkV1().VirtualRouter().UpdateStatus(context.Background(), &obj.VirtualRouter)
 			if err == nil {
 				break
 			}

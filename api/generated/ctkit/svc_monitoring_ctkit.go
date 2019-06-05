@@ -49,7 +49,7 @@ func (obj *EventPolicy) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.MonitoringV1().EventPolicy().Update(context.Background(), &obj.EventPolicy)
+			_, err = apicl.MonitoringV1().EventPolicy().UpdateStatus(context.Background(), &obj.EventPolicy)
 			if err == nil {
 				break
 			}
@@ -438,7 +438,7 @@ func (obj *StatsPolicy) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.MonitoringV1().StatsPolicy().Update(context.Background(), &obj.StatsPolicy)
+			_, err = apicl.MonitoringV1().StatsPolicy().UpdateStatus(context.Background(), &obj.StatsPolicy)
 			if err == nil {
 				break
 			}
@@ -827,7 +827,7 @@ func (obj *FwlogPolicy) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.MonitoringV1().FwlogPolicy().Update(context.Background(), &obj.FwlogPolicy)
+			_, err = apicl.MonitoringV1().FwlogPolicy().UpdateStatus(context.Background(), &obj.FwlogPolicy)
 			if err == nil {
 				break
 			}
@@ -1216,7 +1216,7 @@ func (obj *FlowExportPolicy) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.MonitoringV1().FlowExportPolicy().Update(context.Background(), &obj.FlowExportPolicy)
+			_, err = apicl.MonitoringV1().FlowExportPolicy().UpdateStatus(context.Background(), &obj.FlowExportPolicy)
 			if err == nil {
 				break
 			}
@@ -1605,7 +1605,7 @@ func (obj *Alert) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.MonitoringV1().Alert().Update(context.Background(), &obj.Alert)
+			_, err = apicl.MonitoringV1().Alert().UpdateStatus(context.Background(), &obj.Alert)
 			if err == nil {
 				break
 			}
@@ -1994,7 +1994,7 @@ func (obj *AlertPolicy) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.MonitoringV1().AlertPolicy().Update(context.Background(), &obj.AlertPolicy)
+			_, err = apicl.MonitoringV1().AlertPolicy().UpdateStatus(context.Background(), &obj.AlertPolicy)
 			if err == nil {
 				break
 			}
@@ -2383,7 +2383,7 @@ func (obj *AlertDestination) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.MonitoringV1().AlertDestination().Update(context.Background(), &obj.AlertDestination)
+			_, err = apicl.MonitoringV1().AlertDestination().UpdateStatus(context.Background(), &obj.AlertDestination)
 			if err == nil {
 				break
 			}
@@ -2772,7 +2772,7 @@ func (obj *MirrorSession) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.MonitoringV1().MirrorSession().Update(context.Background(), &obj.MirrorSession)
+			_, err = apicl.MonitoringV1().MirrorSession().UpdateStatus(context.Background(), &obj.MirrorSession)
 			if err == nil {
 				break
 			}
@@ -3161,7 +3161,7 @@ func (obj *TroubleshootingSession) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.MonitoringV1().TroubleshootingSession().Update(context.Background(), &obj.TroubleshootingSession)
+			_, err = apicl.MonitoringV1().TroubleshootingSession().UpdateStatus(context.Background(), &obj.TroubleshootingSession)
 			if err == nil {
 				break
 			}
@@ -3550,7 +3550,7 @@ func (obj *TechSupportRequest) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.MonitoringV1().TechSupportRequest().Update(context.Background(), &obj.TechSupportRequest)
+			_, err = apicl.MonitoringV1().TechSupportRequest().UpdateStatus(context.Background(), &obj.TechSupportRequest)
 			if err == nil {
 				break
 			}

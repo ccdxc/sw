@@ -52,7 +52,7 @@ func (obj *{{.}}) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.{{$srvname}}().{{.}}().Update(context.Background(), &obj.{{.}})
+			_, err = apicl.{{$srvname}}().{{.}}().UpdateStatus(context.Background(), &obj.{{.}})
 			if err == nil {
 				break
 			}

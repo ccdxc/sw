@@ -49,7 +49,7 @@ func (obj *User) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.AuthV1().User().Update(context.Background(), &obj.User)
+			_, err = apicl.AuthV1().User().UpdateStatus(context.Background(), &obj.User)
 			if err == nil {
 				break
 			}
@@ -438,7 +438,7 @@ func (obj *AuthenticationPolicy) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.AuthV1().AuthenticationPolicy().Update(context.Background(), &obj.AuthenticationPolicy)
+			_, err = apicl.AuthV1().AuthenticationPolicy().UpdateStatus(context.Background(), &obj.AuthenticationPolicy)
 			if err == nil {
 				break
 			}
@@ -827,7 +827,7 @@ func (obj *Role) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.AuthV1().Role().Update(context.Background(), &obj.Role)
+			_, err = apicl.AuthV1().Role().UpdateStatus(context.Background(), &obj.Role)
 			if err == nil {
 				break
 			}
@@ -1216,7 +1216,7 @@ func (obj *RoleBinding) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.AuthV1().RoleBinding().Update(context.Background(), &obj.RoleBinding)
+			_, err = apicl.AuthV1().RoleBinding().UpdateStatus(context.Background(), &obj.RoleBinding)
 			if err == nil {
 				break
 			}
@@ -1605,7 +1605,7 @@ func (obj *UserPreference) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.AuthV1().UserPreference().Update(context.Background(), &obj.UserPreference)
+			_, err = apicl.AuthV1().UserPreference().UpdateStatus(context.Background(), &obj.UserPreference)
 			if err == nil {
 				break
 			}

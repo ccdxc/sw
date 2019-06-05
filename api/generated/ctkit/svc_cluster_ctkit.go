@@ -49,7 +49,7 @@ func (obj *Cluster) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.ClusterV1().Cluster().Update(context.Background(), &obj.Cluster)
+			_, err = apicl.ClusterV1().Cluster().UpdateStatus(context.Background(), &obj.Cluster)
 			if err == nil {
 				break
 			}
@@ -438,7 +438,7 @@ func (obj *Node) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.ClusterV1().Node().Update(context.Background(), &obj.Node)
+			_, err = apicl.ClusterV1().Node().UpdateStatus(context.Background(), &obj.Node)
 			if err == nil {
 				break
 			}
@@ -827,7 +827,7 @@ func (obj *Host) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.ClusterV1().Host().Update(context.Background(), &obj.Host)
+			_, err = apicl.ClusterV1().Host().UpdateStatus(context.Background(), &obj.Host)
 			if err == nil {
 				break
 			}
@@ -1216,7 +1216,7 @@ func (obj *SmartNIC) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.ClusterV1().SmartNIC().Update(context.Background(), &obj.SmartNIC)
+			_, err = apicl.ClusterV1().SmartNIC().UpdateStatus(context.Background(), &obj.SmartNIC)
 			if err == nil {
 				break
 			}
@@ -1605,7 +1605,7 @@ func (obj *Tenant) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.ClusterV1().Tenant().Update(context.Background(), &obj.Tenant)
+			_, err = apicl.ClusterV1().Tenant().UpdateStatus(context.Background(), &obj.Tenant)
 			if err == nil {
 				break
 			}
@@ -1994,7 +1994,7 @@ func (obj *Version) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.ClusterV1().Version().Update(context.Background(), &obj.Version)
+			_, err = apicl.ClusterV1().Version().UpdateStatus(context.Background(), &obj.Version)
 			if err == nil {
 				break
 			}

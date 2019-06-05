@@ -49,7 +49,7 @@ func (obj *Bucket) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.ObjstoreV1().Bucket().Update(context.Background(), &obj.Bucket)
+			_, err = apicl.ObjstoreV1().Bucket().UpdateStatus(context.Background(), &obj.Bucket)
 			if err == nil {
 				break
 			}
@@ -438,7 +438,7 @@ func (obj *Object) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.ObjstoreV1().Object().Update(context.Background(), &obj.Object)
+			_, err = apicl.ObjstoreV1().Object().UpdateStatus(context.Background(), &obj.Object)
 			if err == nil {
 				break
 			}

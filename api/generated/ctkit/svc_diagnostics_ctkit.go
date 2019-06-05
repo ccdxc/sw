@@ -49,7 +49,7 @@ func (obj *Module) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.DiagnosticsV1().Module().Update(context.Background(), &obj.Module)
+			_, err = apicl.DiagnosticsV1().Module().UpdateStatus(context.Background(), &obj.Module)
 			if err == nil {
 				break
 			}

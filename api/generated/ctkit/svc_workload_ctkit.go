@@ -49,7 +49,7 @@ func (obj *Endpoint) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.WorkloadV1().Endpoint().Update(context.Background(), &obj.Endpoint)
+			_, err = apicl.WorkloadV1().Endpoint().UpdateStatus(context.Background(), &obj.Endpoint)
 			if err == nil {
 				break
 			}
@@ -438,7 +438,7 @@ func (obj *Workload) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.WorkloadV1().Workload().Update(context.Background(), &obj.Workload)
+			_, err = apicl.WorkloadV1().Workload().UpdateStatus(context.Background(), &obj.Workload)
 			if err == nil {
 				break
 			}

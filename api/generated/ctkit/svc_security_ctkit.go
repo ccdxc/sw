@@ -49,7 +49,7 @@ func (obj *SecurityGroup) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.SecurityV1().SecurityGroup().Update(context.Background(), &obj.SecurityGroup)
+			_, err = apicl.SecurityV1().SecurityGroup().UpdateStatus(context.Background(), &obj.SecurityGroup)
 			if err == nil {
 				break
 			}
@@ -438,7 +438,7 @@ func (obj *SGPolicy) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.SecurityV1().SGPolicy().Update(context.Background(), &obj.SGPolicy)
+			_, err = apicl.SecurityV1().SGPolicy().UpdateStatus(context.Background(), &obj.SGPolicy)
 			if err == nil {
 				break
 			}
@@ -827,7 +827,7 @@ func (obj *App) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.SecurityV1().App().Update(context.Background(), &obj.App)
+			_, err = apicl.SecurityV1().App().UpdateStatus(context.Background(), &obj.App)
 			if err == nil {
 				break
 			}
@@ -1216,7 +1216,7 @@ func (obj *FirewallProfile) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.SecurityV1().FirewallProfile().Update(context.Background(), &obj.FirewallProfile)
+			_, err = apicl.SecurityV1().FirewallProfile().UpdateStatus(context.Background(), &obj.FirewallProfile)
 			if err == nil {
 				break
 			}
@@ -1605,7 +1605,7 @@ func (obj *Certificate) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.SecurityV1().Certificate().Update(context.Background(), &obj.Certificate)
+			_, err = apicl.SecurityV1().Certificate().UpdateStatus(context.Background(), &obj.Certificate)
 			if err == nil {
 				break
 			}
@@ -1994,7 +1994,7 @@ func (obj *TrafficEncryptionPolicy) Write() error {
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Update(context.Background(), &obj.TrafficEncryptionPolicy)
+			_, err = apicl.SecurityV1().TrafficEncryptionPolicy().UpdateStatus(context.Background(), &obj.TrafficEncryptionPolicy)
 			if err == nil {
 				break
 			}
