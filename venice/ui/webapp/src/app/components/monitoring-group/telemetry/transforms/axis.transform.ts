@@ -3,6 +3,7 @@ import { FormGroup, FormControl } from '@angular/forms';
 import { patternValidator } from '@sdk/v1/utils/validators';
 import { ChartYAxe, ChartOptions } from 'chart.js';
 import { getFieldData } from '../utility';
+import { Utility } from '@app/common/Utility';
 
 interface CommonAxisFormInf {
   showAxis: boolean;
@@ -52,6 +53,11 @@ export class AxisTransform extends GraphTransform {
    * We never set any of the form controls (except initialization)
    * That way, user selected state is preserved and the transform is idempotent
    *
+   * For all the fields that are of type Bytes, we find the max and determine
+   * an appropriate scaling.
+   *
+   * This transform also adds the units to the chart tooltips.
+   *
    * TODO: add option whether scale is soft or hard limit
    * TODO: If there are two data types, graph on 2 different y axis (one left and one right)
    *
@@ -64,13 +70,35 @@ export class AxisTransform extends GraphTransform {
     if (opts.graphOptions.scales.yAxes == null || opts.graphOptions.scales.yAxes.length === 0) {
       opts.graphOptions.scales.yAxes = [{}];
     }
-    // const yAxis = opts.graphOptions.scales.yAxes[0];
-
-    // if (opts.graphOptions.scales.xAxes == null || opts.graphOptions.scales.xAxes.length === 0) {
-    //   opts.graphOptions.scales.xAxes = [{}];
-    // }
-    // const xAxis = opts.graphOptions.scales.xAxes[0];
     this.setYAxis(opts);
+  }
+
+  convertBytes(opts: TransformGraphOptions) {
+    const byteData = opts.data.filter( (d) => {
+      return d.units === 'Bytes';
+    });
+    if (byteData.length === 0) {
+      return 0;
+    }
+    // For data that is in bytes, we scale them all
+    let max = 0;
+    byteData.forEach( (d) => {
+      d.series.values.forEach( (v) => {
+        const val = v[d.fieldIndex];
+        max = Math.max(val, max);
+      });
+    });
+    const byteUnits = Utility.getBytesType(max);
+    byteData.forEach( (d) => {
+      d.units = byteUnits;
+      d.dataset.data = (<any>d.dataset.data).map( (point) => {
+        point.y = Utility.scaleBytes(point.y, 2, byteUnits);
+        return point;
+      });
+    });
+    if (opts.graphOptions.tooltips.callbacks == null) {
+      opts.graphOptions.tooltips.callbacks = {};
+    }
   }
 
   // Attempts to set label to either the user given unit, or an autodetected one
@@ -99,6 +127,8 @@ export class AxisTransform extends GraphTransform {
     if (!yAxisOptions.scaleLabel.display || axisValues.yAxis.label !== '') {
       return;
     }
+
+    this.convertBytes(opts);
 
     // Auto detecting label
     let isSameUnit = true;
@@ -131,6 +161,24 @@ export class AxisTransform extends GraphTransform {
     } else {
       yAxisOptions.scaleLabel.labelString = '';
     }
+
+
+    opts.graphOptions.tooltips.callbacks.label = ((tooltipItem, data) => {
+      let label: any = tooltipItem.yLabel;
+      const labelVal = parseInt(label, 10);
+      if (!isNaN(labelVal)) {
+        label = labelVal.toFixed(2);
+      }
+
+      let units = opts.data[tooltipItem.datasetIndex].units;
+      if (units != null) {
+        if (units === 'Percent') {
+          units = '%';
+        }
+        return  label  + ' ' + units;
+      }
+      return label as any;
+    });
 
     // Setting scales
     // we either set to user value, 0-100 for percent, or leave

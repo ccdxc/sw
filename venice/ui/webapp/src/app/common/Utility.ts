@@ -933,6 +933,28 @@ export class Utility {
     return retData;
   }
 
+
+  public static scaleBytes(bytes: number, decimals = 2, unit: string = '') {
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    let i = sizes.findIndex(s => s === unit);
+    if (i == null) {
+      i = Math.floor(Math.log(bytes) / Math.log(k));
+    }
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm));
+  }
+
+  public static getBytesType(bytes: number, decimals = 2) {
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return sizes[i];
+  }
+
   /**
    * @param bytes amount in bytes to format
    * @param decimals number of decimal places

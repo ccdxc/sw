@@ -50,7 +50,7 @@ export class SearchService extends Searchv1Service {
   protected invokeAJAX(method: string, url: string, payload: any, opts: MethodOpts, forceReal: boolean = false): Observable<VeniceResponse> {
 
     const key = this.convertEventID(opts);
-    if (!this.uiconfigsService.isAuthorized(key)) {
+    if (key != null && !this.uiconfigsService.isAuthorized(key)) {
       return NEVER;
     }
     const isOnline = !this.isToMockData() || forceReal;
@@ -58,11 +58,9 @@ export class SearchService extends Searchv1Service {
   }
 
   convertEventID(opts: MethodOpts): UIRolePermissions {
-    let key: string;
+    let key: string = '';
     if (opts.eventID.includes('Policy')) {
       key = 'securitysgpolicy' + '_' + 'read';
-    } else {
-      key = 'search' + '_' + 'read';
     }
     // All event operations are reads, even posts.
     return UIRolePermissions[key];

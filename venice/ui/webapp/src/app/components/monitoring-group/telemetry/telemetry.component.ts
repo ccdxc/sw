@@ -117,6 +117,12 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
           display: true,
           position: 'bottom',
       },
+      tooltips: {
+        enabled: true,
+        intersect: false,
+        titleFontFamily: 'Fira Sans Condensed',
+        bodyFontFamily: 'Fira Sans Condensed'
+      },
       layout: {
         padding: 20
       },

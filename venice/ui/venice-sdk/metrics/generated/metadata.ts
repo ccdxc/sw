@@ -859,22 +859,28 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "DiskFree",
       "displayName": "Disk Free",
       "description": "Disk Free in bytes",
+      "units": "Bytes",
       "baseType": "number",
-      "jsType": "number"
+      "jsType": "number",
+      "scaleMin": 0
     },
     {
       "name": "DiskTotal",
       "displayName": "Total Disk Space",
       "description": "Total Disk Space in bytes",
+      "units": "Bytes",
       "baseType": "number",
-      "jsType": "number"
+      "jsType": "number",
+      "scaleMin": 0
     },
     {
       "name": "DiskUsed",
       "displayName": "Disk Used",
       "description": "Disk Used in bytes",
+      "units": "Bytes",
       "baseType": "number",
-      "jsType": "number"
+      "jsType": "number",
+      "scaleMin": 0
     },
     {
       "name": "DiskUsedPercent",
@@ -890,36 +896,46 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "InterfaceRxBytes",
       "displayName": "Interface Rx",
       "description": "Interface Rx in bytes",
+      "units": "Bytes",
       "baseType": "number",
-      "jsType": "number"
+      "jsType": "number",
+      "scaleMin": 0
     },
     {
       "name": "InterfaceTxBytes",
       "displayName": "Interface Tx",
       "description": "Interface Tx in bytes",
+      "units": "Bytes",
       "baseType": "number",
-      "jsType": "number"
+      "jsType": "number",
+      "scaleMin": 0
     },
     {
       "name": "MemFree",
       "displayName": "Memory Free",
       "description": "Memory Free in bytes",
+      "units": "Bytes",
       "baseType": "number",
-      "jsType": "number"
+      "jsType": "number",
+      "scaleMin": 0
     },
     {
       "name": "MemTotal",
       "displayName": "Total Memory Space",
       "description": "Total Memory Space in bytes",
+      "units": "Bytes",
       "baseType": "number",
-      "jsType": "number"
+      "jsType": "number",
+      "scaleMin": 0
     },
     {
       "name": "MemUsed",
       "displayName": "Memory Used",
       "description": "Memory Used in bytes",
+      "units": "Bytes",
       "baseType": "number",
-      "jsType": "number"
+      "jsType": "number",
+      "scaleMin": 0
     },
     {
       "name": "MemUsedPercent",
@@ -936,9 +952,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Reporting Node",
       "description": "Name of reporting node",
       "baseType": "string",
-      "jsType": "string",
-      "scaleMin": 0,
-      "scaleMax": 100
+      "jsType": "string"
     }
   ]
 },
@@ -961,22 +975,28 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "DiskFree",
       "displayName": "Disk Free",
       "description": "Disk Free in bytes",
+      "units": "Bytes",
       "baseType": "number",
-      "jsType": "number"
+      "jsType": "number",
+      "scaleMin": 0
     },
     {
       "name": "DiskTotal",
       "displayName": "Total Disk Space",
       "description": "Total Disk Space in bytes",
+      "units": "Bytes",
       "baseType": "number",
-      "jsType": "number"
+      "jsType": "number",
+      "scaleMin": 0
     },
     {
       "name": "DiskUsed",
       "displayName": "Disk Used",
       "description": "Disk Used in bytes",
+      "units": "Bytes",
       "baseType": "number",
-      "jsType": "number"
+      "jsType": "number",
+      "scaleMin": 0
     },
     {
       "name": "DiskUsedPercent",
@@ -992,36 +1012,46 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "InterfaceRxBytes",
       "displayName": "Interface Rx",
       "description": "Interface Rx in bytes",
+      "units": "Bytes",
       "baseType": "number",
-      "jsType": "number"
+      "jsType": "number",
+      "scaleMin": 0
     },
     {
       "name": "InterfaceTxBytes",
       "displayName": "Interface Tx",
       "description": "Interface Tx in bytes",
+      "units": "Bytes",
       "baseType": "number",
-      "jsType": "number"
+      "jsType": "number",
+      "scaleMin": 0
     },
     {
       "name": "MemFree",
       "displayName": "Memory Free",
       "description": "Memory Free in bytes",
+      "units": "Bytes",
       "baseType": "number",
-      "jsType": "number"
+      "jsType": "number",
+      "scaleMin": 0
     },
     {
       "name": "MemTotal",
       "displayName": "Total Memory Space",
       "description": "Total Memory Space in bytes",
+      "units": "Bytes",
       "baseType": "number",
-      "jsType": "number"
+      "jsType": "number",
+      "scaleMin": 0
     },
     {
       "name": "MemUsed",
       "displayName": "Memory Used",
       "description": "Memory Used in bytes",
+      "units": "Bytes",
       "baseType": "number",
-      "jsType": "number"
+      "jsType": "number",
+      "scaleMin": 0
     },
     {
       "name": "MemUsedPercent",
@@ -1038,9 +1068,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Reporting SmartNIC",
       "description": "Name of reporting SmartNIC",
       "baseType": "string",
-      "jsType": "string",
-      "scaleMin": 0,
-      "scaleMax": 100
+      "jsType": "string"
     }
   ]
 },
