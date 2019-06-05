@@ -29,8 +29,11 @@ typedef struct pds_route_s {
     ip_prefix_t              prefix;     ///< prefix
     pds_nh_type_t            nh_type;    ///< nexthop type
     union {
+        // PDS_NH_TYPE_TEP specific data
         ip_addr_t            nh_ip;      ///< nexthop TEP IP address
+        // PDS_NH_TYPE_PEER_VPC specific data
         pds_vpc_key_t        vpc;        ///< peer vpc id, in case of vpc peering
+        // PDS_NH_TYPE_IP specific data
         pds_nexthop_key_t    nh;         ///< nexthop key
     };
 } __PACK__ pds_route_t;
