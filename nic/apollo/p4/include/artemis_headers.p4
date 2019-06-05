@@ -5,8 +5,9 @@ header_type artemis_p4_to_rxdma_header_t {
         lpm2_enable     : 1;
         vnic_info_en    : 1;
         cps_path_en     : 1;
-
-        pad0            : 6;
+        aging_enable    : 1;
+        
+        pad0            : 5;
         iptype          : 1;
         direction       : 1;
         vnic_id         : 8;
