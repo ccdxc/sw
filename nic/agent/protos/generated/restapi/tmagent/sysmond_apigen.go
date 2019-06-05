@@ -104,6 +104,90 @@ func (s *RestServer) getAsicFrequencyMetricsHandler(r *http.Request) (interface{
 	return nil, nil
 }
 
+// AddAsicMemoryMetricsAPIRoutes adds routes for AsicMemoryMetrics
+func (s *RestServer) AddAsicMemoryMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getAsicMemoryMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listAsicMemoryMetricsHandler))
+}
+
+// listAsicMemoryMetricsHandler is the List Handler for AsicMemoryMetrics
+func (s *RestServer) listAsicMemoryMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewAsicMemoryMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.AsicMemoryMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("AsicMemoryMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for AsicMemoryMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getAsicMemoryMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getAsicMemoryMetricsPoints() ([]*tsdb.Point, error) {
+	iter, err := goproto.NewAsicMemoryMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	points := []*tsdb.Point{}
+
+	for iter.HasNext() {
+		m := iter.Next()
+		if m == nil {
+			continue
+		}
+
+		// translate key to meta
+		objMeta := s.GetObjectMeta("AsicMemoryMetricsKey", m.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for AsicMemoryMetrics key %+v", m.GetKey())
+			continue
+		}
+		tags := s.getTagsFromMeta(objMeta)
+		fields := structs.Map(m)
+
+		if len(fields) > 0 {
+			delete(fields, "ObjectMeta")
+			points = append(points, &tsdb.Point{Tags: tags, Fields: fields})
+		}
+	}
+
+	iter.Free()
+	return points, nil
+}
+
+// getAsicMemoryMetricsHandler is the Get Handler for AsicMemoryMetrics
+func (s *RestServer) getAsicMemoryMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request AsicMemoryMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
 // AddAsicPowerMetricsAPIRoutes adds routes for AsicPowerMetrics
 func (s *RestServer) AddAsicPowerMetricsAPIRoutes(r *mux.Router) {
 	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getAsicPowerMetricsHandler))

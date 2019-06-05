@@ -12,7 +12,7 @@ GetLogger()
         auto info_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>
             (INFO_LOG_FILENAME, LOG_MAX_FILESIZE, LOG_MAX_FILES);
         auto fatal_err_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>
-            (ERR_LOG_FILENAME, ERR_LOG_MAX_FILESIZE, 3, false);
+            (ERR_LOG_FILENAME, ERR_LOG_MAX_FILESIZE, 3);
 
         std::vector<spdlog::sink_ptr> sinks {info_sink, fatal_err_sink};
 

@@ -35,6 +35,29 @@ func frequencysystemShowCmdHandler(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+//cmd - memory
+//rootCmd = system
+//helpStr = System memory information:\n\n\nValue Description:\n\nTotal Memory: Total Memory of the system.\nAvailable Memory: Available Memory of the system.\nFree Memory: Free Memory of the system.\nThe memory is KB\n
+var memorysystemShowCmd = &cobra.Command{
+	Use:   "memory",
+	Short: "System memory information:\n\n\nValue Description:\n\nTotal Memory: Total Memory of the system.\nAvailable Memory: Available Memory of the system.\nFree Memory: Free Memory of the system.\nThe memory is KB\n",
+	Long:  "\n---------------------------------\n System memory information:\n\n\nValue Description:\n\nTotal Memory: Total Memory of the system.\nAvailable Memory: Available Memory of the system.\nFree Memory: Free Memory of the system.\nThe memory is KB\n\n---------------------------------\n",
+	RunE:  memorysystemShowCmdHandler,
+}
+
+func memorysystemShowCmdHandler(cmd *cobra.Command, args []string) error {
+	jsonFormat = true
+	bodyBytes, err := restGet("telemetry/v1/metrics/asicmemorymetrics/")
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	if bodyBytes == nil {
+		fmt.Println("No asicmemorymetrics object(s) found")
+	}
+	return nil
+}
+
 //cmd - power
 //rootCmd = system
 //helpStr = System power information:\n\n\nValue Description:\n\npin: Input power to the system.\npout1: Core output power.\npout2: Arm output power.\nThe power is milli Watt\n
@@ -93,6 +116,8 @@ var systemShowCmd = &cobra.Command{
 func init() {
 
 	systemShowCmd.AddCommand(frequencysystemShowCmd)
+
+	systemShowCmd.AddCommand(memorysystemShowCmd)
 
 	systemShowCmd.AddCommand(powersystemShowCmd)
 

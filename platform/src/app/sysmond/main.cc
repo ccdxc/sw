@@ -83,6 +83,8 @@ main(int argc, char *argv[])
     sdk::lib::logger::init(local_sdk_logger, obfl_sdk_logger);
 
     TRACE_INFO(GetLogger(), "Monitoring system events");
+    TRACE_INFO(GetObflLogger(), "Monitoring system memory");
+
     // initialize the pal
 #ifdef __x86_64__
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) == sdk::lib::PAL_RET_OK);
@@ -97,6 +99,7 @@ main(int argc, char *argv[])
     delphi::objects::AsicTemperatureMetrics::CreateTable();
     delphi::objects::AsicPowerMetrics::CreateTable();
     delphi::objects::AsicFrequencyMetrics::CreateTable();
+    delphi::objects::AsicMemoryMetrics::CreateTable();
 
     sdk::platform::capri::csr_init();
     catalog = sdk::lib::catalog::factory();
@@ -124,6 +127,7 @@ main(int argc, char *argv[])
         // Poll the system variables
         monitorsystem();
         TRACE_FLUSH(GetLogger());
+        TRACE_FLUSH(GetObflLogger());
     }
     return 0;
 }

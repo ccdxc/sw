@@ -72,3 +72,22 @@ message SysmondAsicFrequency {
     delphi.ObjectMeta      Meta   = 1;
     SpeedState             Speed  = 2;
 }
+
+message AsicMemoryMetrics {
+    option (venice.penctlCmd) = {
+        Cmd:     "memory",
+        HelpStr: "System memory information:\\n"
+                 "\\n\\nValue Description:\\n\\n"
+                 "Total Memory: Total Memory of the system.\\n"
+                 "Available Memory: Available Memory of the system.\\n"
+                 "Free Memory: Free Memory of the system.\\n"
+                 "The memory is KB\\n",
+        RootCmd: "system"
+    };
+    fixed64 Key = 1;
+
+    delphi.Counter totalmemory          = 2;
+    delphi.Counter availablememory      = 3;
+    delphi.Counter freememory           = 4;
+
+}

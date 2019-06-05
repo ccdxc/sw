@@ -13,6 +13,7 @@ func init() {
 	tstr.Register("AsicTemperatureMetricsKey", &asicTemperatureFns{})
 	tstr.Register("AsicPowerMetricsKey", &asicPowerFns{})
 	tstr.Register("AsicFrequencyMetricsKey", &asicFrequencyFns{})
+	tstr.Register("AsicMemoryMetricsKey", &asicMemoryFns{})
 }
 
 type asicTemperatureFns struct{}
@@ -61,6 +62,23 @@ func (n *asicFrequencyFns) KeyToMeta(key interface{}) *api.ObjectMeta {
 
 // MetaToKey converts meta to key
 func (n *asicFrequencyFns) MetaToKey(meta *api.ObjectMeta) interface{} {
+	var key uint64
+	fmt.Sscanf(meta.Name, "%s", &key)
+	return &key
+}
+
+type asicMemoryFns struct{}
+
+// KeyToMeta converts key to meta
+func (n *asicMemoryFns) KeyToMeta(key interface{}) *api.ObjectMeta {
+	if asicmemkey, ok := key.(uint64); ok {
+		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: fmt.Sprintf("%d", asicmemkey)}
+	}
+	return nil
+}
+
+// MetaToKey converts meta to key
+func (n *asicMemoryFns) MetaToKey(meta *api.ObjectMeta) interface{} {
 	var key uint64
 	fmt.Sscanf(meta.Name, "%s", &key)
 	return &key
