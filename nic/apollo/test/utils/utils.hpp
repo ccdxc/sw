@@ -61,7 +61,7 @@ extract_ip_addr (const char *ip, ip_addr_t *ip_addr)
 {
     int af;
     ip_prefix_t pfx;
-
+    memset(&pfx, 0x0, sizeof(ip_prefix_t));
     af = ip_version(ip);
     if (af == IP_AF_IPV4) {
         SDK_ASSERT(str2ipv4pfx((char *)ip, &pfx) == 0);

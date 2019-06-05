@@ -117,6 +117,8 @@ mirror_session_stepper_seed_init (int seed_base, uint8_t max_ms,
         seed->vpc_id = 1;
         std::string dst_ip = k_tep_ip1;
         std::string src_ip = "20.1.1.1";
+        memset(&seed->dst_ip, 0x0, sizeof(ip_addr_t));
+        memset(&seed->src_ip, 0x0, sizeof(ip_addr_t));
         extract_ip_addr((char *)dst_ip.c_str(), &seed->dst_ip);
         extract_ip_addr((char *)src_ip.c_str(), &seed->src_ip);
         seed->span_id = 1;

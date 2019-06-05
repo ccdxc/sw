@@ -53,9 +53,9 @@ $GDB apollo_tep_test -c hal.json -f apollo --gtest_output="xml:${GEN_TEST_RESULT
 #$GDB apollo_mapping_test -c hal.json -f apollo --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_mapping_test.xml" > apollo_mapping_test.log.txt
 #[[ $? -ne 0 ]] && echo "apollo_mapping_test failed!" && exit 1
 
-#echo "Running mirror session test"
-#$GDB apollo_mirror_session_test -c hal.json -f apollo --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_mirror_session_test.xml" > apollo_mirror_session_test.log.txt
-#[[ $? -ne 0 ]] && echo "apollo_mirror_session_test failed!" && exit 1
+echo "Running mirror session test"
+$GDB apollo_mirror_session_test -c hal.json -f apollo --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_mirror_session_test.xml" > apollo_mirror_session_test.log.txt
+[[ $? -ne 0 ]] && echo "apollo_mirror_session_test failed!" && exit 1
 #valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json
 
 echo "Running memhash test"
