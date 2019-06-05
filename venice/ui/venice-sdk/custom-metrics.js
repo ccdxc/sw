@@ -1,6 +1,7 @@
 metrics  = [
   {
     name: 'Node',
+    objectKind: 'Node',
     displayName: 'Node',
     description: 'Contains metrics reported from the Venice Nodes',
     fields: [
@@ -117,6 +118,7 @@ metrics  = [
   },
   {
     name: 'SmartNIC',
+    objectKind: 'SmartNIC',
     displayName: 'Naples',
     description: 'Contains metrics reported from the Naples',
     fields: [

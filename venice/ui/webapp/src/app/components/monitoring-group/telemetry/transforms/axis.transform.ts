@@ -163,12 +163,18 @@ export class AxisTransform extends GraphTransform {
     }
 
 
+    if (opts.graphOptions.tooltips.callbacks == null) {
+      opts.graphOptions.tooltips.callbacks = {};
+    }
+
     opts.graphOptions.tooltips.callbacks.label = ((tooltipItem, data) => {
-      let label: any = tooltipItem.yLabel;
-      const labelVal = parseInt(label, 10);
-      if (!isNaN(labelVal)) {
-        label = labelVal.toFixed(2);
+      let label = data.datasets[tooltipItem.datasetIndex].label;
+      let labelVal: any = tooltipItem.yLabel;
+      const labelValInt = parseInt(labelVal, 10);
+      if (!isNaN(labelValInt)) {
+        labelVal = labelVal.toFixed(2);
       }
+      label += '  ' + labelVal;
 
       let units = opts.data[tooltipItem.datasetIndex].units;
       if (units != null) {

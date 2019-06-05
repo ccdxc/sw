@@ -1,5 +1,5 @@
 import { ITelemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
-import { ITelemetry_queryMetricsResultSeries } from '@sdk/v1/models/telemetry_query';
+import { ITelemetry_queryMetricsResultSeries, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { ChartData as ChartJSData, ChartDataSets as ChartJSDataSets, ChartOptions } from 'chart.js';
 import { Observer } from 'rxjs';
 import { Utility } from '@app/common/Utility';
@@ -17,6 +17,10 @@ export interface ChartData extends ChartJSData {
 
 export interface TransformQuery {
   query: ITelemetry_queryMetricsQuerySpec;
+}
+
+export interface TransformMetricData {
+  result: ITelemetry_queryMetricsQueryResult;
 }
 
 export interface TransformDataset {
@@ -48,8 +52,13 @@ export abstract class MetricTransform {
   // Hooks to be overridden
   onMeasurementChange() {}
   onFieldChange() {}
+  // Hook called before query goes to Venice
   transformQuery(opts: TransformQuery) {}
+  // Hook called before data is converted to chart js datasets
+  transformMetricData(opts: TransformMetricData) {}
+  // Hook called after each dataset is created
   transformDataset(opts: TransformDataset) {}
+  // Hook called after all datasets have been created for a data source
   transformDatasets(opts: TransformDatasets) {}
 
   // Utility functions
@@ -66,8 +75,7 @@ export abstract class GraphTransform {
   abstract transformName: string;
 
   // Hooks to be overridden
-  transformDataset(opts: TransformDataset) {}
-  transformDatasets(opts: TransformDatasets) {}
+  // Hook to set graph options after all datasets have been created for all results
   transformGraphOptions(opts: TransformGraphOptions) {}
 
   // Utility functions
@@ -161,6 +169,12 @@ export class DataSource {
   transformQuery(opts: TransformQuery) {
     this.transforms.forEach( (t) => {
       t.transformQuery(opts);
+    });
+  }
+
+  transformMetricData(opts: TransformMetricData) {
+    this.transforms.forEach( (t) => {
+      t.transformMetricData(opts);
     });
   }
 

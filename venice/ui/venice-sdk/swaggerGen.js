@@ -203,6 +203,7 @@ function generateMetricMetadata() {
       m = _.transform(m, function (result, val, key) {
         result[_.camelCase(key)] = val;
       });
+      m.objectKind = "SmartNIC"
       m.fields = m.fields.map( (field) => {
         if (field.DisplayName == null) {
           field.DisplayName = field.Name;

@@ -14,6 +14,7 @@ export interface MetricMeasurement {
   name: string,
   description: string,
   displayName: string,
+  objectKind?: string,
   fields: MetricField[],
 }
 
@@ -239,7 +240,8 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "baseType": "Counter",
       "jsType": "number"
     }
-  ]
+  ],
+  "objectKind": "SmartNIC"
 },
   EgressDropMetrics: {
   "name": "EgressDropMetrics",
@@ -294,7 +296,8 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "baseType": "Counter",
       "jsType": "number"
     }
-  ]
+  ],
+  "objectKind": "SmartNIC"
 },
   FteCPSMetrics: {
   "name": "FteCPSMetrics",
@@ -317,7 +320,8 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "baseType": "Counter",
       "jsType": "number"
     }
-  ]
+  ],
+  "objectKind": "SmartNIC"
 },
   FteLifQMetrics: {
   "name": "FteLifQMetrics",
@@ -396,7 +400,8 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "baseType": "Counter",
       "jsType": "number"
     }
-  ]
+  ],
+  "objectKind": "SmartNIC"
 },
   SessionSummaryMetrics: {
   "name": "SessionSummaryMetrics",
@@ -491,7 +496,8 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "baseType": "Counter",
       "jsType": "number"
     }
-  ]
+  ],
+  "objectKind": "SmartNIC"
 },
   AccelHwRingMetrics: {
   "name": "AccelHwRingMetrics",
@@ -538,7 +544,8 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "baseType": "Counter",
       "jsType": "number"
     }
-  ]
+  ],
+  "objectKind": "SmartNIC"
 },
   AccelPfInfo: {
   "name": "AccelPfInfo",
@@ -593,7 +600,8 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "baseType": "uint32",
       "jsType": "number"
     }
-  ]
+  ],
+  "objectKind": "SmartNIC"
 },
   AccelSeqQueueInfoMetrics: {
   "name": "AccelSeqQueueInfoMetrics",
@@ -624,7 +632,8 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "baseType": "Counter",
       "jsType": "number"
     }
-  ]
+  ],
+  "objectKind": "SmartNIC"
 },
   AccelSeqQueueMetrics: {
   "name": "AccelSeqQueueMetrics",
@@ -783,7 +792,8 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "baseType": "Counter",
       "jsType": "number"
     }
-  ]
+  ],
+  "objectKind": "SmartNIC"
 },
   RuleMetrics: {
   "name": "RuleMetrics",
@@ -838,10 +848,12 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "baseType": "Counter",
       "jsType": "number"
     }
-  ]
+  ],
+  "objectKind": "SmartNIC"
 },
   Node: {
   "name": "Node",
+  "objectKind": "Node",
   "displayName": "Node",
   "description": "Contains metrics reported from the Venice Nodes",
   "fields": [
@@ -958,6 +970,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
 },
   SmartNIC: {
   "name": "SmartNIC",
+  "objectKind": "SmartNIC",
   "displayName": "Naples",
   "description": "Contains metrics reported from the Naples",
   "fields": [

@@ -5,7 +5,7 @@ import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
 import { ControllerService } from '@app/services/controller.service';
 import { MetricsqueryService, TelemetryPollingMetricQueries } from '@app/services/metricsquery.service';
-import { ITelemetry_queryMetricsQueryResponse } from '@sdk/v1/models/telemetry_query';
+import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { ChartOptions } from 'chart.js';
 import { Observer, Subject, Subscription } from 'rxjs';
 import { sourceFieldKey, getFieldData } from './utility';
@@ -15,6 +15,11 @@ import { AxisTransform } from './transforms/axis.transform';
 import { TimeRange } from '@app/components/shared/timerange/utility';
 import { UIChartComponent } from '@app/components/shared/primeng-chart/chart';
 import { FieldSelectorTransform } from './transforms/fieldselector.transform';
+import { FieldValueTransform, ValueMap, QueryMap } from './transforms/fieldvalue.transform';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+import { ClusterService } from '@app/services/generated/cluster.service';
+import { ITelemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
 
 /**
  * A data source allows a user to select a single measurement,
@@ -81,12 +86,62 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
 
   selectedTimeRange: TimeRange;
 
+  naples: ReadonlyArray<ClusterSmartNIC> = [];
+  // Used for processing the stream events
+  naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
+  macAddrToName: { [key: string]: string; } = {};
+  nameToMacAddr: { [key: string]: string; } = {};
+
+
+  fieldQueryMap: QueryMap = {
+    'SmartNIC': (res: ITelemetry_queryMetricsQuerySpec) => {
+      const field = 'reporterID';
+      res.selector.requirements.forEach( (req) => {
+        if (req.key === field) {
+          req.values = req.values.map( (v) => {
+            const mac = this.nameToMacAddr[v];
+            if (mac != null) {
+              return mac;
+            }
+            return v;
+          });
+        }
+      });
+    }
+  };
+
+  fieldValueMap: ValueMap = {
+    'SmartNIC': (res: ITelemetry_queryMetricsQueryResult) => {
+      const field = 'reporterID';
+      res.series.forEach( (s) => {
+        if (s.tags != null) {
+          const tagVal = s.tags[field];
+          if (tagVal != null && this.macAddrToName[tagVal] != null) {
+            s.tags[field] = this.macAddrToName[tagVal];
+          }
+        }
+        const fieldIndex = s.columns.findIndex((f) => {
+          return f.includes(field);
+        });
+        s.values = s.values.map( (v) => {
+          const mac = v[fieldIndex];
+          if (this.macAddrToName[mac] != null) {
+            v[fieldIndex] = this.macAddrToName[mac];
+          }
+          return v;
+        });
+      });
+    }
+  };
+
   constructor(protected controllerService: ControllerService,
+    protected clusterService: ClusterService,
     protected telemetryqueryService: MetricsqueryService) {
       super(controllerService);
   }
 
   ngOnInit() {
+    this.getNaples();
     this.controllerService.setToolbarData({
       buttons: [],
       breadcrumb: [{ label: 'Telemetry', url: Utility.getBaseUIUrl() + 'monitoring/telemetry' }]
@@ -106,6 +161,26 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
       this.addDataSource();
       this.selectedDataSourceIndex = 0;
     }
+  }
+
+  getNaples() {
+    this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
+    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
+    const subscription = this.clusterService.WatchSmartNIC().subscribe(
+      response => {
+        this.naplesEventUtility.processEvents(response);
+        // mac-address to name map
+        this.macAddrToName = {};
+        this.nameToMacAddr = {};
+        for (const smartnic of this.naples) {
+          this.macAddrToName[smartnic.meta.name] = smartnic.spec.id;
+          if (smartnic.spec.id != null || smartnic.spec.id.length > 0) {
+            this.nameToMacAddr[smartnic.spec.id] = smartnic.meta.name;
+          }
+        }
+      },
+    );
+    this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }
 
   generateDefaultGraphOptions(): ChartOptions {
@@ -187,10 +262,11 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
 
   addDataSource() {
     const source = new DataSource(this.getMetricsSubject as Observer<any>, [
-      new DisplayLabelTransform(),
+      new DisplayLabelTransform(), // This needs to be before groupByTransform
       new ColorTransform(),
       new GroupByTransform(),
       new FieldSelectorTransform(),
+      new FieldValueTransform(this.fieldQueryMap, this.fieldValueMap), // This needs to be last to transform the query properly
     ]);
     this.dataSources.push(source);
   }
@@ -289,6 +365,8 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
       }
       // Should be one to one with response length
       const source = this.dataSources[index];
+      source.transformMetricData({ result: res });
+
       const singleResultDatasets: TransformDatasets = [];
       res.series.forEach( (s) => {
         source.fields.forEach( (field) => {

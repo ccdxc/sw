@@ -19,6 +19,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { configureTestSuite } from 'ng-bullet';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { AuthService } from '@app/services/auth.service';
+import { ClusterService } from '@app/services/generated/cluster.service';
 
 
 @Component({
@@ -50,6 +51,7 @@ describe('TelemetryComponent', () => {
       ],
       providers: [
         ControllerService,
+        ClusterService,
         ConfirmationService,
         MatIconRegistry,
         LogService,
