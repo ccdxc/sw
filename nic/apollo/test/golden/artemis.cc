@@ -79,6 +79,7 @@ typedef struct cache_line_s {
 uint16_t g_vnic_id1 = 0x1A;;
 uint16_t g_vpc_id1 = 0xC1;
 uint32_t g_session_index1 = 0x700DBA;
+uint32_t g_nexthop_index1 = 0xE101;
 
 uint64_t g_smac1 = 0x00C1C2C3C4C5ULL;
 uint64_t g_dmac1 = 0x000102030405ULL;
@@ -533,6 +534,30 @@ ipv4_flow_init (void)
 }
 
 static void
+session_init (void)
+{
+    session_actiondata_t data;
+    session_session_info_t *session_info = &data.action_u.session_session_info;
+    uint32_t tbl_id = P4TBL_ID_SESSION;
+
+    memset(&data, 0, sizeof(data));
+    session_info->nexthop_idx = g_nexthop_index1;
+    entry_write(tbl_id, g_session_index1, NULL, NULL, &data, false, 0);
+}
+
+static void
+nexthop_init (void)
+{
+    nexthop_actiondata_t data;
+    nexthop_nexthop_info_t *nexthop_info = &data.action_u.nexthop_nexthop_info;
+    uint32_t tbl_id = P4TBL_ID_NEXTHOP;
+
+    memset(&data, 0, sizeof(data));
+    nexthop_info->port = TM_PORT_UPLINK_1;
+    entry_write(tbl_id, g_nexthop_index1, NULL, NULL, &data, false, 0);
+}
+
+static void
 inter_pipe_init (void)
 {
     inter_pipe_ingress_actiondata_t data;
@@ -683,6 +708,8 @@ TEST_F(artemis_test, test1)
     key_tunneled2_init();
     vnic_init();
     ipv4_flow_init();
+    session_init();
+    nexthop_init();
     inter_pipe_init();
 
 #ifdef SIM
@@ -724,6 +751,7 @@ TEST_F(artemis_test, test1)
         }
     }
 
+#if 0
     tcid++;
     if (tcid_filter == 0 || tcid == tcid_filter) {
         ipkt.resize(sizeof(g_snd_pkt2));
@@ -742,6 +770,7 @@ TEST_F(artemis_test, test1)
             testcase_end(tcid, i + 1);
         }
     }
+#endif
 
     exit_simulation();
 #endif

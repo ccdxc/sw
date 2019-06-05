@@ -58,7 +58,7 @@ action ipv6_vxlan_encap(vni, dipo, dmac) {
         modify_field(ethernet_1.etherType, ctag_1.etherType);
     }
     // account for new headers that are added
-    // 8 bytes of UDP header, 8 bytes of vxlan header, 20 bytes of IP header
+    // 8 bytes of UDP header, 8 bytes of vxlan header
     add_to_field(scratch_metadata.ip_totallen, 8 + 8);
 
     modify_field(ethernet_0.dstAddr, dmac);
@@ -84,16 +84,15 @@ action ipv6_vxlan_encap(vni, dipo, dmac) {
 
 action nexthop_info(port, vni, ip_type, dipo, dmaco, dmaci) {
     modify_field(capri_intrinsic.tm_oport, port);
-    if (control_metadata.direction == TX_FROM_HOST) {
+    if (TX_REWRITE(rewrite_metadata.flags, DMAC, FROM_NEXTHOP)) {
+        modify_field(ethernet_1.dstAddr, dmaci);
+    }
+    if (TX_REWRITE(rewrite_metadata.flags, ENCAP, VXLAN)) {
         modify_field(scratch_metadata.flag, ip_type);
         if (ip_type == IPTYPE_IPV4) {
             ipv4_vxlan_encap(vni, dipo, dmaco);
         } else {
             ipv6_vxlan_encap(vni, dipo, dmaco);
-        }
-    } else {
-        if (TX_REWRITE(rewrite_metadata.flags, DMAC, FROM_NEXTHOP)) {
-            modify_field(ethernet_1.dstAddr, dmaci);
         }
     }
 }
@@ -112,5 +111,7 @@ table nexthop {
 }
 
 control nexthop {
-    apply(nexthop);
+    if (control_metadata.direction == TX_FROM_HOST) {
+        apply(nexthop);
+    }
 }

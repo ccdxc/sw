@@ -74,6 +74,7 @@
 #define TX_REWRITE_DMAC_MASK                    1
 #define TX_REWRITE_DMAC_NONE                    0
 #define TX_REWRITE_DMAC_FROM_NEXTHOP            1
+#define TX_REWRITE_DMAC_BITS                    0:0
 
 #define TX_REWRITE_SRC_IP_SHIFT                 1
 #define TX_REWRITE_SRC_IP_MASK                  3
@@ -87,32 +88,38 @@
 #define TX_REWRITE_DPORT_MASK                   1
 #define TX_REWRITE_DPORT_NONE                   0
 #define TX_REWRITE_DPORT_FROM_SESSION           1
+#define TX_REWRITE_DPORT_BITS                   3:3
 
 #define TX_REWRITE_DST_IP_SHIFT                 4
 #define TX_REWRITE_DST_IP_MASK                  1
 #define TX_REWRITE_DST_IP_NONE                  0
 #define TX_REWRITE_DST_IP_FROM_SESSION          1
+#define TX_REWRITE_DST_IP_BITS                  4:4
 
 #define TX_REWRITE_ENCAP_SHIFT                  5
 #define TX_REWRITE_ENCAP_MASK                   1
 #define TX_REWRITE_ENCAP_NONE                   0
 #define TX_REWRITE_ENCAP_VXLAN                  1
+#define TX_REWRITE_ENCAP_BITS                   5:5
 
 #define RX_REWRITE_SMAC_SHIFT                   0
 #define RX_REWRITE_SMAC_MASK                    1
 #define RX_REWRITE_SMAC_NONE                    0
 #define RX_REWRITE_SMAC_FROM_VRMAC              1
+#define RX_REWRITE_SMAC_BITS                    0:0
 
 #define RX_REWRITE_SRC_IP_SHIFT                 1
 #define RX_REWRITE_SRC_IP_MASK                  3
 #define RX_REWRITE_SRC_IP_NONE                  0
 #define RX_REWRITE_SRC_IP_FROM_SESSION          1
 #define RX_REWRITE_SRC_IP_FROM_64               2
+#define RX_REWRITE_SRC_IP_BITS                  2:1
 
 #define RX_REWRITE_SPORT_SHIFT                  3
 #define RX_REWRITE_SPORT_MASK                   1
 #define RX_REWRITE_SPORT_NONE                   0
 #define RX_REWRITE_SPORT_FROM_SESSION           1
+#define RX_REWRITE_SPORT_BITS                   3:3
 
 #define RX_REWRITE_DST_IP_SHIFT                 4
 #define RX_REWRITE_DST_IP_MASK                  3

@@ -10,8 +10,8 @@ struct phv_ p;
 %%
 
 vnic_tx_stats:
-    nop.e
-    nop
+    tbladd.e        d.vnic_tx_stats_d.out_packets, 1
+    tbladd.f        d.vnic_tx_stats_d.out_packets, k.capri_p4_intrinsic_packet_len
 
 /*****************************************************************************/
 /* error function                                                            */
@@ -19,5 +19,5 @@ vnic_tx_stats:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 vnic_tx_stats_error:
-    phvwr.e             p.capri_intrinsic_drop, 1
+    phvwr.e         p.capri_intrinsic_drop, 1
     nop
