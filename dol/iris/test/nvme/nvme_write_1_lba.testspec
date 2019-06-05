@@ -1,6 +1,6 @@
 # Test Spec
 selectors:
-    root: ref://store/templates/id=NVME_SESSION
+    root: ref://store/templates/id=NVME_NS
 
 packets:
     - packet:

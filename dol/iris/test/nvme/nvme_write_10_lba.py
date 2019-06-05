@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 
-#from iris.test.nvme.utils import *
+from iris.test.nvme.utils import *
 import pdb
 import copy
 from infra.common.glopts import GlobalOptions
@@ -14,6 +14,7 @@ def Teardown(infra, module):
 
 def TestCaseSetup(tc):
     logger.info("NVME TestCaseSetup() Implementation.")
+    PopulatePreQStates(tc)
     return
 
 def TestCaseTrigger(tc):
@@ -22,6 +23,9 @@ def TestCaseTrigger(tc):
 
 def TestCaseVerify(tc):
     logger.info("NVME TestCaseVerify() Implementation.")
+    PopulatePostQStates(tc)
+    if not ValidateWriteTxChecks(tc):
+        return False
     return True
 
 def TestCaseStepVerify(tc, step):

@@ -17,9 +17,55 @@ from infra.common.glopts        import GlobalOptions
 
 from iris.config.objects.session     import SessionHelper
 
+import model_sim.src.model_wrap as model_wrap
+
 from scapy.utils import inet_aton, inet_ntoa, inet_pton
+from scapy.all import *
+
 import struct
 import socket
+
+class Nvmesessprodtxcb(Packet):
+    name = "Nvmesessprodtxcb"
+    fields_desc = [
+        BitField("xts_q_base_addr", 0, 34),
+        BitField("log_num_xts_q_entries", 0, 5),
+        BitField("rsvd0", 0, 1),
+        ByteField("xts_q_choke_counter", 0),
+        ShortField("xts_qid", 0),
+
+        BitField("dgst_q_base_addr", 0, 34),
+        BitField("log_num_dgst_q_entries", 0, 5),
+        BitField("rsvd2", 0, 1),
+        ByteField("dgst_q_choke_counter", 0),
+        ShortField("dgst_qid", 0),
+
+        BitField("tcp_q_base_addr", 0, 34),
+        BitField("log_num_tcp_q_entries", 0, 5),
+        BitField("rsvd4", 0, 1),
+        ByteField("tcp_q_choke_counter", 0),
+        ShortField("rsvd5", 0),
+
+        LEShortField("xts_q_pi", 0),
+        LEShortField("xts_q_ci", 0),
+
+        LEShortField("dgst_q_pi", 0),
+        LEShortField("dgst_q_ci", 0),
+
+        BitField("pad", 0, 128),
+
+        LongField("tcpcb_sesq_db_addr", 0),
+        IntField("tcpcb_sesq_db_data", 0),
+
+        LEShortField("tcp_q_pi", 0),
+        LEShortField("tcp_q_ci", 0),
+    ]
+
+class Nvmesessprodrxcb(Packet):
+    name = "Nvmesessprodrxcb"
+    fields_desc = [
+        BitField("pad", 0, 512),
+    ]
 
 class NvmeSessionObject(base.ConfigObjectBase):
     def __init__(self):
@@ -32,8 +78,8 @@ class NvmeSessionObject(base.ConfigObjectBase):
         self.GID("NvmeSession%d" % self.id)
         self.session = session
         self.IsIPV6 = session.IsIPV6()
-        self.sq_id = None
-        self.cq_id = None
+        self.sqid = None
+        self.cqid = None
         self.sq = None
         self.cq = None
         self.ns = None
@@ -163,6 +209,30 @@ class NvmeSessionObject(base.ConfigObjectBase):
     def ShowTestcaseConfig(self, obj):
         logger.info("Config Objects for %s" % self.GID())
         return
+
+    def NvmesessprodtxcbRead(self, debug=True):
+        cb_size = len(Nvmesessprodtxcb())
+        if (GlobalOptions.dryrun):
+            return Nvmesessprodtxcb(bytes(cb_size))
+               
+        if debug is True:
+            logger.info("Read sessprodtxcb @0x%x size: %d" % (self.txsessprodcb_addr, cb_size))
+
+        cb = Nvmesessprodtxcb(model_wrap.read_mem(self.txsessprodcb_addr, cb_size))
+        logger.ShowScapyObject(cb)
+        return cb
+
+    def NvmesessprodrxcbRead(self, debug=True):
+        cb_size = len(Nvmesessprodrxcb())
+        if (GlobalOptions.dryrun):
+            return Nvmesessprodrxcb(bytes(cb_size))
+               
+        if debug is True:
+            logger.info("Read sessprodrxcb @0x%x size: %d" % (self.rxsessprodcb_addr, cb_size))
+
+        cb = Nvmesessprodrxcb(model_wrap.read_mem(self.rxsessprodcb_addr, cb_size))
+        logger.ShowScapyObject(cb)
+        return cb
 
 class NvmeSessionObjectHelper:
     def __init__(self):

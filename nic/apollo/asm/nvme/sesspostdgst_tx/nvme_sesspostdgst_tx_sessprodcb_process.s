@@ -41,6 +41,7 @@ nvme_sesspostdgst_tx_sessprodcb_process:
 
     // Increment tcpq pi_index by number of pages posted
     add            r3, k.to_s4_info_num_pages, r0 // BD Slot
+    tblmincri      DGST_Q_CI, d.log_num_dgst_q_entries, 1
     tblmincr.f     d.tcp_q_pi, d.log_num_tcp_q_entries, r3
 
     // TODO post set p_index doorbell to TCP sesq ring

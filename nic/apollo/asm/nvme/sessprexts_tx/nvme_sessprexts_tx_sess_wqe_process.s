@@ -21,7 +21,7 @@ struct s1_t0_nvme_sessprexts_tx_sess_wqe_process_d d;
 nvme_sessprexts_tx_sess_wqe_process:
     addui   PDU_CTXT_P, r0, hiword(nvme_tx_pdu_context_base)
     addi    PDU_CTXT_P, PDU_CTXT_P, loword(nvme_tx_pdu_context_base)
-    add     PDU_CTXT_P, PDU_CTXT_P, d.cmdid, LOG_PDU_CTXT_SIZE
+    add     PDU_CTXT_P, PDU_CTXT_P, d.pduid, LOG_PDU_CTXT_SIZE
 
     phvwr   p.to_s3_info_pdu_ctxt_ptr, PDU_CTXT_P
 

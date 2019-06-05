@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import pdb
 import math
+import copy
 import time
 
 import infra.common.defs        as defs
@@ -37,7 +38,20 @@ class NvmeSQstate(Packet):
         LEShortField("p_index0", 0),
         LEShortField("c_index0", 0),
 
-        BitField("pad", 0, 416),
+        LongField("sq_base_addr", 0),
+
+        BitField("log_host_page_size", 0, 5),
+        BitField("log_wqe_size", 0, 5),
+        BitField("log_num_wqes", 0, 5),
+        BitField("ring_empty_sched_eval_done", 0, 1),
+
+        BitField("busy", 0, 1),
+        BitField("rsvd0", 0, 7),
+
+        ShortField("cq_id", 0),
+        ShortField("lif_ns_start", 0),
+
+        BitField("pad", 0, 296),
     ]
 
 class NvmeCQstate(Packet):
@@ -99,7 +113,30 @@ class NvmeSessXTSTxQstate(Packet):
         LEShortField("p_index1", 0),
         LEShortField("c_index1", 0),
 
-        BitField("pad", 0, 384),
+        BitField("base_addr", 0, 34),
+        BitField("log_num_entries", 0, 5),
+        BitField("ring_empty_sched_eval_done", 0, 1),
+        ByteField("rsvd0", 0),
+
+        BitField("r0_busy", 0, 1),
+        BitField("rsvd1", 0, 7),
+
+        BitField("wb_r0_busy", 0, 1),
+        BitField("rsvd2", 0, 7),
+
+        ShortField("nxt_lba_offset", 0),
+
+        BitField("r1_busy", 0, 1),
+        BitField("rsvd3", 0, 7),
+
+        BitField("wb_r1_busy", 0, 1),
+        BitField("rsvd4", 0, 7),
+
+        LongField("page_ptr", 0),
+
+        ShortField("session_id", 0),
+
+        BitField("pad", 0, 208),
     ]
 
 class NvmeSessDGSTTxQstate(Packet):
@@ -121,7 +158,30 @@ class NvmeSessDGSTTxQstate(Packet):
         LEShortField("p_index1", 0),
         LEShortField("c_index1", 0),
 
-        BitField("pad", 0, 384),
+        BitField("rx_q_base_addr", 0, 34),
+        BitField("rx_q_log_num_entries", 0, 5),
+        BitField("rsvd5", 0, 25),
+
+        BitField("base_addr", 0, 34),
+        BitField("log_num_entries", 0, 5),
+        BitField("ring_empty_sched_eval_done", 0, 1),
+        ByteField("rsvd0", 0),
+
+        BitField("r0_busy", 0, 1),
+        BitField("rsvd1", 0, 7),
+
+        BitField("wb_r0_busy", 0, 1),
+        BitField("rsvd2", 0, 7),
+
+        BitField("r1_busy", 0, 1),
+        BitField("rsvd3", 0, 7),
+
+        BitField("wb_r1_busy", 0, 1),
+        BitField("rsvd4", 0, 7),
+
+        ShortField("session_id", 0),
+
+        BitField("pad", 0, 224),
     ]
 
 class NvmeSessXTSRxQstate(Packet):
@@ -189,7 +249,7 @@ class NvmeQstateObject(object):
             self.proxy_cindex_en = True
         else:
             self.proxy_cindex_en = False
-        self.Read()
+        #self.Read()
 
     def Write(self, debug = True):
         if (GlobalOptions.dryrun): return
@@ -227,6 +287,8 @@ class NvmeQstateObject(object):
         self.data = qt_params[self.queue_type]['state'](model_wrap.read_mem(self.addr, self.size))
         if debug is True:
             logger.info("Read Qstate @0x%x Type: %s size: %d" % (self.addr, self.queue_type, self.size))
+        logger.ShowScapyObject(self.data)
+        return copy.deepcopy(self.data)
     
     def incr_pindex(self, ring, ring_size):
         assert(ring < 7)
@@ -299,7 +361,7 @@ class NvmeQueueObject(QueueObject):
         self.obj_helper_ring.Generate(self, spec)
         self.rings.SetAll(self.obj_helper_ring.rings)
 
-        self.Show()
+        #self.Show()
 
     @property
     def qstate(self):

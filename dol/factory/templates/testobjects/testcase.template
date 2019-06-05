@@ -79,6 +79,7 @@ config:
         rqp  : None # Remote QPair
         #session : None 
     nvmesession:
+    nvmens:
 
 tracker      : None
 packets      : None # Database packet objects for this testcase.

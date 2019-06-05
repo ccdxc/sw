@@ -6,6 +6,7 @@ import infra.config.base        as base
 
 import iris.config.resmgr       as resmgr
 
+from iris.config.store      import Store
 from infra.common.logging   import logger
 from infra.factory.store    import FactoryStore
 
@@ -26,11 +27,10 @@ class NvmeLifObject(base.ConfigObjectBase):
         self.total_slabs = 128
 
         #Namespaces
-        self.nsdb = objects.ObjectDatabase()
         self.obj_helper_ns = ns.NsObjectHelper()
         self.obj_helper_ns.Generate(self, spec.max_ns)
         if len(self.obj_helper_ns.ns_list):
-            self.nsdb.SetAll(self.obj_helper_ns.ns_list)
+            Store.objects.SetAll(self.obj_helper_ns.ns_list)
 
         #nsid dispenser to associate nvme sessions to namespaces on this lif
         self.next_nsid = 0

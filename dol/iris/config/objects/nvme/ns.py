@@ -18,6 +18,33 @@ import model_sim.src.model_wrap as model_wrap
 
 from infra.common.glopts import GlobalOptions
 
+from scapy.all import *
+
+class NvmeNscb(Packet):
+    name = "NvmeNscb"
+    fields_desc = [
+        LongField("ns_size", 0),
+        IntField("key_index", 0),
+        IntField("sec_key_index", 0),
+        BitField("ns_valid", 0, 1),
+        BitField("ns_active", 0, 1),
+        BitField("rsvd0", 0, 1),
+        BitField("log_lba_size", 0, 5),
+
+        IntField("backend_ns_id", 0),
+
+        BitField("num_sessions", 0, 11),    #1-based
+        BitField("rr_session_id_to_be_served", 0, 10), #0-based
+
+        BitField("num_outstanding_req", 0, 11), #1-based
+
+        ShortField("sess_prodcb_start", 0),
+
+        BitField("pad", 0, 40),
+
+        BitField("valid_session_bitmap", 0, 256),
+    ]
+
 class NvmeNsObject(base.ConfigObjectBase):
     def __init__(self, lif, ns_id, size, lba_size, key_type, key_size, key):
         super().__init__()
@@ -72,7 +99,38 @@ class NvmeNsObject(base.ConfigObjectBase):
         logger.info("Attaching nvme_sess: %s to ns: %s" \
                      %(nvme_sess.GID(), self.GID()))
         self.session_list.append(nvme_sess)
+
+    def SessionGet(self, ns_local_sessid):
+        return self.session_list[ns_local_sessid]
+
+    def NscbRead(self, debug=True):
+        nscb_size = len(NvmeNscb())
+        if (GlobalOptions.dryrun):
+            return NvmeNscb(bytes(nscb_size))
+               
+        if debug is True:
+            logger.info("Read Nscb @0x%x size: %d" % (self.nscb_addr, nscb_size))
+
+        nscb = NvmeNscb(model_wrap.read_mem(self.nscb_addr, nscb_size))
+        logger.ShowScapyObject(nscb)
+        return nscb
         
+    def IsFilterMatch(self, selectors):
+
+        #TBD: add nvme specific filters here
+        print(str(selectors))
+
+        match = super().IsFilterMatch(selectors.nvmens)
+        logger.info('Matching Nvme NS: %s match: %s' % (self.GID(), match))
+        return match
+
+    def SetupTestcaseConfig(self, obj):
+        obj.nvmens = self;
+        return
+
+    def ShowTestcaseConfig(self, obj):
+        logger.info("Config Objects for %s" % self.GID())
+        return
 
 class NsObjectHelper:
     def __init__(self):
@@ -115,3 +173,11 @@ class NsObjectHelper:
 
     def GetNs(self, nsid):
         return (self.ns_list[nsid-1])
+
+def GetMatchingObjects(selectors):
+    ns_store = Store.objects.GetAllByClass(NvmeNsObject)
+    ns_list = []
+    for ns in ns_store:
+        if ns.IsFilterMatch(selectors): 
+            ns_list.append(ns)
+    return ns_list
