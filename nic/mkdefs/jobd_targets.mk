@@ -179,12 +179,9 @@ jobd/dol/apollo/rfc: ${JOBD_PREREQS}
 jobd/dol/apollo/mirror: ${JOBD_PREREQS}
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo mirror --feature mirror
 
-.PHONY: jobd/apollo/scale_test_mock
-jobd/apollo/scale_test_mock: ${JOBD_PREREQS}
-	#${NICDIR}/apollo/test/scale/run_scale_test_mock.sh
-
-.PHONY: jobd/apollo/agent/testapp
-jobd/apollo/agent/testapp: ${JOBD_PREREQS}
+.PHONY: jobd/apollo/pds_scale_test_mock
+jobd/apollo/pds_scale_test_mock: ${JOBD_PREREQS}
+	${NICDIR}/apollo/test/scale/run_scale_test_mock.sh
 	${NICDIR}/apollo/tools/runtestapp.sh
 
 .PHONY: jobd/apollo/aarch64/container
@@ -205,9 +202,11 @@ jobd/apollo/x86_64/container:${JOBD_PREREQS}
 	${NICDIR}/apollo/tools/dev-docker/build_dev_docker.sh 0 x86_64
 	rm -rf ${TOPDIR}/apollo_sw
 
-.PHONY: jobd/artemis/scale_test_mock
-jobd/apollo/scale_test_mock: ${JOBD_PREREQS}
-	#${NICDIR}/apollo/test/scale/artemis/run_scale_test_mock.sh
+.PHONY: jobd/artemis/pds_scale_test_mock
+jobd/artemis/pds_scale_test_mock: ${JOBD_PREREQS}
+	${NICDIR}/apollo/test/scale/artemis/run_scale_test_mock.sh
+	${NICDIR}/apollo/test/scale/artemis/run_scale_test_mock.sh --cfg artemis/scale_cfg_1vpc.json
+	#${NICDIR}/apollo/tools/artemis/runtestapp.sh
 
 .PHONY: jobd/mbt/base
 jobd/mbt/base: ${JOBD_PREREQS}
