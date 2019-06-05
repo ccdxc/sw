@@ -6,6 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/venice/globals"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/nic/agent/troubleshooting/state/types"
@@ -18,7 +20,6 @@ import (
 // TsClient is the troubleshooting facilitator client
 type TsClient struct {
 	sync.Mutex
-	srvURL         string             // ??
 	resolverClient resolver.Interface // ??
 	waitGrp        sync.WaitGroup
 	tsagent        types.CtrlerIntf
@@ -35,12 +36,11 @@ func objectKey(meta api.ObjectMeta) string {
 }
 
 // NewTsClient creates Troubleshooting client object
-func NewTsClient(agent types.CtrlerIntf, srvURL string, resolverClient resolver.Interface) (*TsClient, error) {
+func NewTsClient(agent types.CtrlerIntf, resolverClient resolver.Interface) (*TsClient, error) {
 
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 
 	tsClient := TsClient{
-		srvURL:         srvURL,
 		resolverClient: resolverClient,
 		tsagent:        agent,
 		watchCtx:       watchCtx,
@@ -63,9 +63,9 @@ func (client *TsClient) runTroubleShootingWatcher(ctx context.Context) {
 	defer client.waitGrp.Done()
 
 	for {
-		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL, rpckit.WithBalancer(balancer.New(client.resolverClient)))
+		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), globals.Tsm, rpckit.WithBalancer(balancer.New(client.resolverClient)))
 		if err != nil {
-			log.Errorf("Error connecting to grpc server. Err: %v", err)
+			log.Errorf("Error connecting to grpc server %v. Err: %v", globals.Tsm, err)
 			if client.isStopped() {
 				return
 			}

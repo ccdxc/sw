@@ -50,9 +50,7 @@ type Agent struct {
 }
 
 // NewTsAgent creates troubleshooting agent instance
-func NewTsAgent(dp types.TsDatapathAPI, nodeUUID, ctrlerURL string, resolverClient resolver.Interface, na *netAgentState.Nagent, getMgmtIPAddr func() string) (*Agent, error) {
-
-	var tsClient *ctrlerif.TsClient
+func NewTsAgent(dp types.TsDatapathAPI, nodeUUID string, na *netAgentState.Nagent, getMgmtIPAddr func() string) (*Agent, error) {
 
 	tsAgent, err := state.NewTsAgent(dp, nodeUUID, na, getMgmtIPAddr)
 	if err != nil {
@@ -60,19 +58,25 @@ func NewTsAgent(dp types.TsDatapathAPI, nodeUUID, ctrlerURL string, resolverClie
 		return nil, err
 	}
 
-	tsClient, err = ctrlerif.NewTsClient(tsAgent, ctrlerURL, resolverClient)
-	if err != nil {
-		log.Errorf("Error creating TroubleShooting client. Err: %v", err)
-		return nil, err
-	}
-	log.Infof("TroubleShooting client {%+v} is running", tsClient)
-
 	agent := Agent{
 		datapath:             dp,
 		TroubleShootingAgent: tsAgent,
-		TsClient:             tsClient,
 	}
 	return &agent, nil
+}
+
+// NewTsPolicyClient create a new policy client to watch policy from TSM
+func (agent *Agent) NewTsPolicyClient(rc resolver.Interface) error {
+	tsClient, err := ctrlerif.NewTsClient(agent.TroubleShootingAgent, rc)
+	if err != nil {
+		log.Errorf("Error creating TroubleShooting policy client. Err: %v", err)
+		return err
+	}
+
+	agent.TsClient = tsClient
+	log.Infof("TroubleShooting policy client {%+v} is running", tsClient)
+	return nil
+
 }
 
 // Stop stops the agent

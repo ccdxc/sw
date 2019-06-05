@@ -28,7 +28,6 @@ func main() {
 		hostIf          = flag.String("hostif", "lo", "Host facing interface")
 		agentDbPath     = flag.String("agentdb", "/tmp/naples-netagent.db", "Agent Database file")
 		npmURL          = flag.String("npm", globals.Npm, "NPM RPC server URL")
-		tpmURL          = flag.String("tpm", "master.local:"+globals.TpmRPCPort, "TPM RPC server URL")
 		disableTSA      = flag.Bool("disabletsa", false, " Disable Telemetry and Troubleshooting agents")
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
 		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Netagent)), "Redirect logs to file")
@@ -111,7 +110,7 @@ func main() {
 		ag.RestServer = restServer
 	} else {
 
-		tsa, err := troubleshooting.NewTsAgent(tsdp, ag.NetworkAgent.NodeUUID, *tpmURL, nil, ag.NetworkAgent, ag.GetMgmtIPAddr)
+		tsa, err := troubleshooting.NewTsAgent(tsdp, ag.NetworkAgent.NodeUUID, ag.NetworkAgent, ag.GetMgmtIPAddr)
 		if err != nil {
 			log.Fatalf("Error creating Naples NetAgent. Err: %v", err)
 		}

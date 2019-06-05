@@ -12,8 +12,6 @@ import (
 	"github.com/pensando/sw/nic/agent/troubleshooting"
 
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
-	tsctrler "github.com/pensando/sw/nic/agent/troubleshooting/ctrlerif"
-
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	grpcDatapath "github.com/pensando/sw/nic/agent/netagent/datapath"
 	delphiDatapath "github.com/pensando/sw/nic/agent/netagent/datapath/delphidp"
@@ -21,7 +19,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
 	"github.com/pensando/sw/nic/delphi/gosdk"
-	clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
+	"github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
 	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
 	"github.com/pensando/sw/venice/globals"
@@ -253,18 +251,19 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 			ag.NpmClient = npmClient
 
 			if ag.TroubleShoot != nil {
-				ag.TroubleShoot.TsClient, err = tsctrler.NewTsClient(ag.TroubleShoot.TroubleShootingAgent, globals.Tsm, ag.ResolverClient)
-				if err != nil {
+				if err := ag.TroubleShoot.NewTsPolicyClient(ag.ResolverClient); err != nil {
 					log.Errorf("Error creating TroubleShooting client. Err: %v", err)
+				} else {
+					log.Infof("TroubleShooting client {%+v} is running", ag.TroubleShoot.TroubleShootingAgent)
 				}
-				log.Infof("TroubleShooting client {%+v} is running", ag.TroubleShoot.TroubleShootingAgent)
 			}
 
-			if ag.Tmagent != nil { // tmagent was enableds
+			if ag.Tmagent != nil { // tmagent was enabled
 				if err := ag.Tmagent.NewTpClient(ag.NetworkAgent.NodeUUID, ag.ResolverClient); err != nil {
 					log.Errorf("Error creating telemetry policy client, Err: %v", err)
+				} else {
+					log.Infof("telemetry policy client {%+v} is running", ag.Tmagent.TpState)
 				}
-				log.Infof("telemetry policy client {%+v} is running", ag.Tmagent.TpState)
 			}
 		}
 	}
