@@ -1,1 +1,1 @@
-bin/pen-install.iso
+bin/pen-base.iso

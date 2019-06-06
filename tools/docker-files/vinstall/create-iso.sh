@@ -6,19 +6,16 @@ set -o pipefail
 # This script runs inside a centos container to create the liveCD
 #   The liveCD on bootup will partition and format the sda UNCONDITIONALLY
 #   mainly useful for kickstarting and clean installation of the venice installations
-#   on fresh new machines
+#   on fresh new machines. This script creates base iso which is built once in a while
+# on every pensando build, the base iso is taken, added pensando specific scripts to create
+#  pensando iso as well as pxe bootable images
 
 
 #expected files
-#   /pen/venice.tgz : venice binaries
-#   /pen/PEN-VERSION : Version of the build
 #   /pen/isolinux.cfg : isolinux.cfg to show the menu on bootup of the iso
 #   /pen/venice-os.cfg : Redhat kickstart script to create the ISO
-#   /pen/venice-cleaninstall.sh : the script that runs to install ISO content to harddisk
-#   /venice-bin/venice.tgz : the venice file
 #   /venice-bin/cache is used to cache the packages during creation of iso
 
-#
 
 #start of script
 cd /
@@ -44,12 +41,12 @@ cp /pen/grub-efi.cfg /iso/EFI/BOOT/grub.cfg || :
 
 #finally create the iso back with our custom isolinux and grub
 cd /iso
-mkisofs -o /venice-bin/pen-install.iso \
+mkisofs -o /venice-bin/pen-base.iso \
   -J -r -hide-rr-moved -hide-joliet-trans-tbl -V pen-install \
   -b isolinux/isolinux.bin -c isolinux/boot.cat \
   -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e isolinux/efiboot.img -no-emul-boot  \
   -eltorito-alt-boot -e isolinux/macboot.img -no-emul-boot  \
   /iso
-/usr/bin/isohybrid -u -m /venice-bin/pen-install.iso
+/usr/bin/isohybrid -u -m /venice-bin/pen-base.iso
 
 exit 0

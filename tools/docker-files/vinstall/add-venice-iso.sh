@@ -21,11 +21,8 @@ set -o pipefail
 #
 
 #start of script
-rm -fr /venice-bin/pxe
-mkdir -p /venice-bin/pxe
-cd /venice-bin/pxe
-livecd-iso-to-pxeboot /venice-bin/pen-install.iso
 
+#creation of installer ISO
 cd /
 mkdir -p /venice-bin/venice-install
 
@@ -33,7 +30,7 @@ mkdir -p /venice-bin/venice-install
 # we mount at a temp location and copy because mounting of iso is done ro
 mkdir -p /t
 mkdir -p /iso
-mount /venice-bin/pen-install.iso /t
+mount /venice-bin/pen-base.iso /t
 cp -a /t/* /iso
 umount /t
 
@@ -68,24 +65,42 @@ umount /t2
 rm -f /iso/LiveOS/squashfs.img
 mksquashfs /t/squashfs-root /iso/LiveOS/squashfs.img -comp xz
 
-#also keep a copy so that we can do pxe-install
+#create a temp iso to be used for pxe bootable image
+cd /iso
+mkisofs -o /venice-bin/pen-install.iso \
+  -J -r -hide-rr-moved -hide-joliet-trans-tbl -V pen-install \
+  -b isolinux/isolinux.bin -c isolinux/boot.cat \
+  -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e isolinux/efiboot.img -no-emul-boot  \
+  -eltorito-alt-boot -e isolinux/macboot.img -no-emul-boot  \
+  /iso
+/usr/bin/isohybrid -u -m /venice-bin/pen-install.iso
+
+# creation of PXE bootable installer image
+rm -fr /venice-bin/pxe
+mkdir -p /venice-bin/pxe
+cd /venice-bin/pxe
+livecd-iso-to-pxeboot /venice-bin/pen-install.iso
+
+# PXE bootable minimal image is done. Once booted, it copies 
+#  squashfs etc from the below location to the harddisk and makes it bootable
 cp /iso/LiveOS/squashfs.img /venice-bin/venice-install/squashfs.img
 cp /iso/isolinux/vmlinuz0 /venice-bin/venice-install/vmlinuz0
 cp /iso/isolinux/initrd0.img /venice-bin/venice-install/initrd0.img
 
 
+# now create an installer DVD with venice, naples etc
+
 #copy my copy of isolinux.cfg
 cp /pen/isolinux.cfg /iso/isolinux/isolinux.cfg || :
 # our own grub.cfg indicating that EFI is not supported
 cp /pen/grub-efi.cfg /iso/EFI/BOOT/grub.cfg || :
-
+cp /pen/venice-cleaninstall.sh /iso/LiveOS/venice-cleaninstall.sh || :
 # this creates a full-fledged installation dvd with venice and naples
 cp /pen/PEN-VERSION /iso/LiveOS/PEN-VERSION || :
-cp /pen/venice-cleaninstall.sh /iso/LiveOS/venice-cleaninstall.sh || :
 cp /venice-bin/venice.tgz /iso/LiveOS/venice.tgz || :
 cp /nic/naples_fw.tar /iso/LiveOS/naples_fw.tar || :
 
-#finally create the iso back with our custom isolinux and grub
+#create the iso with all our contents and our custom isolinux and grub
 cd /iso
 mkisofs -o /venice-bin/pen-install.iso \
   -J -r -hide-rr-moved -hide-joliet-trans-tbl -V pen-install \
