@@ -18,7 +18,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
 	"github.com/pensando/sw/venice/cmd/ops"
-	"github.com/pensando/sw/venice/cmd/systemd-configs"
+	configs "github.com/pensando/sw/venice/cmd/systemd-configs"
 	"github.com/pensando/sw/venice/cmd/types"
 	k8stypes "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
