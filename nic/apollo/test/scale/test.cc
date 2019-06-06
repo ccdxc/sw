@@ -1768,6 +1768,15 @@ create_objects (void)
                                     g_test_params.sport_hi,
                                     g_test_params.dport_lo,
                                     g_test_params.dport_hi);
+#if defined(ARTEMIS)
+    g_flow_test_obj->set_session_info_cfg_params(
+                                g_test_params.num_vpcs,
+                                g_test_params.num_ip_per_vnic,
+                                g_test_params.num_remote_mappings,
+                                g_test_params.meter_scale,
+                                TESTAPP_METER_NUM_PREFIXES,
+                                g_test_params.num_nh);
+#endif
     ret = g_flow_test_obj->create_flows();
     if (ret != SDK_RET_OK) {
         return ret;

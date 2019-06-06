@@ -120,6 +120,19 @@ dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip,
     }
 }
 
+static void
+dump_session_info(uint32_t vpc, session_actiondata_t *actiondata)
+{
+    return;
+    static FILE *d_fp = fopen("/tmp/flow_log.log", "a+");
+    if (d_fp) {
+        fprintf(d_fp, "vpc %u, meter_idx %u, nh_idx %u\n",
+                vpc, actiondata->action_u.session_session_info.meter_idx,
+                actiondata->action_u.session_session_info.nexthop_idx);
+        fflush(d_fp);
+    }
+}
+
 #define MAX_VPCS        64
 #define MAX_LOCAL_EPS   8
 #define MAX_REMOTE_EPS  512
@@ -146,6 +159,15 @@ typedef struct vpc_ep_pair_s {
     ipv6_addr_t rip6;
     uint32_t valid;
 } vpc_ep_pair_t;
+
+typedef struct session_info_cfg_params_s {
+    uint32_t num_vpcs;
+    uint32_t num_ip_per_vnic;
+    uint32_t num_remote_mappings;
+    uint32_t meter_scale;
+    uint32_t meter_pfx_per_rule;
+    uint32_t num_nh;
+} session_info_cfg_params_t;
 
 typedef struct cfg_params_s {
     bool valid;
@@ -177,6 +199,12 @@ private:
     ftlv4_entry_t v4entry;
     vpc_ep_pair_t ep_pairs[MAX_EP_PAIRS_PER_VPC];
     cfg_params_t cfg_params;
+    session_info_cfg_params_t session_info_cfg_params;
+    uint32_t session_info_nexthop_idx;
+    uint32_t session_info_nexthop_start_idx;
+    uint32_t session_info_nexthop_end_idx;
+    uint32_t num_meter_idx_per_vpc;
+    uint32_t meter_idx;
     bool with_hash;
 
 private:
@@ -464,12 +492,45 @@ public:
         return;
     }
 
+    sdk_ret_t create_session_info(uint32_t vpc) {
+        session_actiondata_t actiondata;
+        p4pd_error_t p4pd_ret;
+        uint32_t tableid = P4TBL_ID_SESSION;
+        static uint32_t cur_vpc = 0;
+
+        // reset meter_idx to corresponding start value for the VPC
+        if (cur_vpc != vpc) {
+            cur_vpc = vpc;
+            meter_idx = (vpc-1) * num_meter_idx_per_vpc + 1;
+        }
+        memset(&actiondata, 0, sizeof(session_actiondata_t));
+        actiondata.action_id = SESSION_SESSION_INFO_ID;
+        actiondata.action_u.session_session_info.meter_idx = meter_idx++;
+        if (meter_idx == vpc * num_meter_idx_per_vpc) {
+            meter_idx = (vpc-1) * num_meter_idx_per_vpc + 1;
+        }
+        actiondata.action_u.session_session_info.nexthop_idx =
+                                        session_info_nexthop_idx++;
+        if (session_info_nexthop_idx == session_info_nexthop_end_idx) {
+            session_info_nexthop_idx = session_info_nexthop_start_idx;
+        }
+        dump_session_info(vpc, &actiondata);
+        p4pd_ret = p4pd_global_entry_write(
+                            tableid, session_index, NULL, NULL, &actiondata);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            SDK_TRACE_ERR("Failed to create session info index %u",
+                          session_index);
+            return SDK_RET_ERR;
+        }
+        return SDK_RET_OK;
+    }
+
     sdk_ret_t create_session(uint32_t vpc, ipv6_addr_t iflow_sip,
                              ipv6_addr_t iflow_dip, uint8_t proto,
                              uint16_t iflow_sport, uint16_t iflow_dport) {
         memset(&v6entry, 0, sizeof(ftlv6_entry_t));
         // Common DATA fields
-        v6entry.session_index = session_index++;
+        v6entry.session_index = session_index;
         v6entry.epoch = 0xFF;
         // Common KEY fields
         v6entry.ktype = 2;
@@ -500,7 +561,7 @@ public:
                              uint16_t iflow_sport, uint16_t iflow_dport) {
         memset(&v4entry, 0, sizeof(ftlv4_entry_t));
         // Common DATA fields
-        v4entry.session_index = session_index++;
+        v4entry.session_index = session_index;
         v4entry.epoch = 0xFF;
         // Common KEY fields
         v4entry.vpc_id = vpc - 1;
@@ -531,6 +592,7 @@ public:
         uint16_t fwd_sport = 0, fwd_dport = 0;
         uint16_t rev_sport = 0, rev_dport = 0;
         uint32_t nflows = 0;
+        sdk_ret_t ret;
 
         for (uint32_t vpc = 1; vpc <= MAX_VPCS; vpc++) {
             generate_ep_pairs(vpc, ipv6);
@@ -552,19 +614,24 @@ public:
                         }
 
                         if (ipv6) {
-                            auto ret = create_session(vpc, ep_pairs[i].lip6,
+                            ret = create_session(vpc, ep_pairs[i].lip6,
                                                       ep_pairs[i].rip6, proto,
                                                       fwd_sport, fwd_dport);
                             if (ret != SDK_RET_OK) {
                                 return ret;
                             }
                         } else {
-                            auto ret = create_session(vpc, ep_pairs[i].lip, ep_pairs[i].rip,
+                            ret = create_session(vpc, ep_pairs[i].lip, ep_pairs[i].rip,
                                                       proto, fwd_sport, fwd_dport);
                             if (ret != SDK_RET_OK) {
                                 return ret;
                             }
                         }
+                        ret = create_session_info(vpc);
+                        if (ret != SDK_RET_OK) {
+                            return ret;
+                        }
+                        session_index++;
                         nflows+=2;
                         if (nflows >= count) {
                             return SDK_RET_OK;
@@ -652,6 +719,24 @@ public:
             }
         }
         return SDK_RET_OK;
+    }
+
+    void set_session_info_cfg_params(
+                            uint32_t num_vpcs, uint32_t num_ip_per_vnic,
+                            uint32_t num_remote_mappings, uint32_t meter_scale,
+                            uint32_t meter_pfx_per_rule, uint32_t num_nh) {
+        session_info_cfg_params.num_vpcs = num_vpcs;
+        session_info_cfg_params.num_ip_per_vnic = num_ip_per_vnic;
+        session_info_cfg_params.num_remote_mappings = num_remote_mappings;
+        session_info_cfg_params.meter_scale = meter_scale;
+        session_info_cfg_params.meter_pfx_per_rule = meter_pfx_per_rule;
+        session_info_cfg_params.num_nh = num_nh;
+        session_info_nexthop_idx = session_info_nexthop_start_idx =
+                                num_nh + (num_ip_per_vnic * num_vpcs * 2) + 1;
+        session_info_nexthop_end_idx = session_info_nexthop_start_idx +
+                                    (num_remote_mappings * num_vpcs * 2);
+        num_meter_idx_per_vpc = (meter_scale/meter_pfx_per_rule) +
+                                (meter_scale % meter_pfx_per_rule);
     }
 
     void set_cfg_params(bool dual_stack, uint32_t num_tcp,
