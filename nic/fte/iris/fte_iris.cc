@@ -445,10 +445,12 @@ static inline void fw_log(ipc_logger *logger, fwlog::FWEvent ev)
 {
     uint8_t *buf = logger->get_buffer(LOG_SIZE(ev));
     if (buf == NULL) {
+        HAL_TRACE_ERR("Null buffer return");
         return;
     }
 
     if (!ev.SerializeToArray(buf, LOG_SIZE(ev))) {
+        HAL_TRACE_ERR("Unable to serialize");
         return;
     }
 
@@ -471,12 +473,15 @@ ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
     t_fwlg.set_dest_vrf(key.dvrf_id);
     t_fwlg.set_sipv4(key.sip.v4_addr);
     t_fwlg.set_dipv4(key.dip.v4_addr);
+    HAL_TRACE_VERBOSE("sip={}/dip={}", key.sip.v4_addr, key.dip.v4_addr);
 
     t_fwlg.set_ipprot(key.proto);
     if (key.proto == IP_PROTO_TCP || key.proto == IP_PROTO_UDP) {
+        HAL_TRACE_VERBOSE("proto={}/sport={}/dport={}", key.proto, key.sport,key.dport);
         t_fwlg.set_sport(key.sport);
         t_fwlg.set_dport(key.dport);
     } else if (key.proto == IP_PROTO_ICMP) {
+         HAL_TRACE_VERBOSE("proto=ICMP/type={}/code={}", key.icmp_type,key.icmp_code);
         t_fwlg.set_icmptype(key.icmp_type);
         t_fwlg.set_icmpcode(key.icmp_code);
         t_fwlg.set_icmpid(key.icmp_id);
@@ -495,6 +500,8 @@ ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
 
     if (logger_ != NULL) {
         fw_log(logger_, t_fwlg);
+    } else {
+        HAL_TRACE_ERR("fte logger is null");
     }
 }
 

@@ -175,6 +175,7 @@ ctx_t::init(const lifqid_t &lifq, feature_state_t feature_state[], uint16_t num_
 
     arm_lifq_ = lifq;
     update_session_ = false;
+    ipc_logging_disable_ = false;
 
     num_features_ = num_features;
     feature_state_ = feature_state;
@@ -560,8 +561,10 @@ ctx_t::process()
     // We are not in FTE thread for GET
     // and we do not want to log the get
     if (!ipc_logging_disable() &&
-        pipeline_event() != FTE_SESSION_GET)
+        pipeline_event() != FTE_SESSION_GET) {
+        HAL_TRACE_VERBOSE("get ipc logger");
         logger_  = get_current_ipc_logger_inst();
+    }
 
     // execute the pipeline
     ret = execute_pipeline(*this);

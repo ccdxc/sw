@@ -230,6 +230,7 @@ update_flow(fte::ctx_t&ctx)
     if (is_broadcast(ctx) ||
         (hal::g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED &&
          is_multicast_dmac(ctx))) {
+        HAL_TRACE_DEBUG("Ignore session create");
         ctx.set_ignore_session_create(true);
         ret = HAL_RET_OK;
         return ret;
