@@ -83,23 +83,29 @@ public:
                                   api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief      return LPM base/root address in the memory
+    /// \return     memory address of the meter LPM tree
     mem_addr_t lpm_root_addr(void) { return lpm_root_addr_; }
 
 private:
     /// \brief  constructor
     meter_impl() {
         lpm_root_addr_ = 0xFFFFFFFFFFFFFFFFUL;
-        policer_idx_ = 0xFFFFFFFF;
+        policer_base_hw_idx_ = 0xFFFFFFFF;
+        stats_base_hw_idx_ = 0xFFFFFFFF;
         num_policers_ = 0;
+        num_stats_entries_ = 0;
     }
 
     /// \brief  destructor
     ~meter_impl() {}
 
 private:
-    mem_addr_t    lpm_root_addr_;   ///< LPM tree's root node address
-    uint32_t      policer_idx_;     ///< starting policer index
-    uint32_t      num_policers_;    ///< number of policers allocated
+    mem_addr_t    lpm_root_addr_;          ///< LPM tree's root node address
+    uint32_t      policer_base_hw_idx_;    ///< policer base index
+    uint32_t      stats_base_hw_idx_;      ///< accounting stats base index
+    uint32_t      num_policers_;           ///< number of policers allocated
+    uint32_t      num_stats_entries_;      ///< number of meter stats entries allocated
 } __PACK__;
 
 /// @}

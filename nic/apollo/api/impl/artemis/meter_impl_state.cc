@@ -38,25 +38,25 @@ meter_impl_state::meter_impl_state(pds_state *state) {
     v6_lpm_table_size_ = state->mempartition()->block_size("meter_v6");
     v6_lpm_max_prefixes_ = state->mempartition()->max_elements("meter_v6") - 1;
     policer_idxr_ = indexer::factory(PDS_MAX_METER_POLICER);
+    SDK_ASSERT(policer_idxr_ != NULL);
+    stats_idxr_ = indexer::factory(PDS_MAX_METER_STATS_BLOCKS);
+    SDK_ASSERT(stats_idxr_ != NULL);
 }
 
 meter_impl_state::~meter_impl_state() {
     indexer::destroy(v4_lpm_idxr_);
     indexer::destroy(v6_lpm_idxr_);
     indexer::destroy(policer_idxr_);
+    indexer::destroy(stats_idxr_);
 }
 
 sdk_ret_t
 meter_impl_state::table_transaction_begin(void) {
-    //v4_idxr_->txn_start();
-    //v6_idxr_->txn_start();
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 meter_impl_state::table_transaction_end(void) {
-    //v4_idxr_->txn_end();
-    //v6_idxr_->txn_end();
     return SDK_RET_OK;
 }
 

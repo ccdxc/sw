@@ -22,6 +22,7 @@
 #include "nic/apollo/api/impl/artemis/nexthop_impl.hpp"
 #include "nic/apollo/p4/include/defines.h"
 #include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
+#include "nic/sdk/platform/capri/capri_p4.hpp"
 
 using sdk::table::sdk_table_api_params_t;
 
@@ -448,9 +449,12 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
     }
 
     nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
-    //nh_data.action_u.nexthop_nexthop_info.port = ;
+    if (is_local_) {
+        nh_data.action_u.nexthop_nexthop_info.port = TM_PORT_UPLINK_0;
+    } else {
+        nh_data.action_u.nexthop_nexthop_info.port = TM_PORT_UPLINK_1;
+    }
     //nh_data.action_u.nexthop_nexthop_info.vni = ;
-    //nh_data.action_u.nexthop_nexthop_info.ip_type = ;
     tep = tep_db()->find(&spec->tep);
     if (spec->provider_ip_valid) {
         dipo = &spec->provider_ip;

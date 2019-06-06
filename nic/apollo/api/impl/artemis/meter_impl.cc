@@ -55,19 +55,33 @@ meter_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
         meter_impl_db()->region_addr(spec->af) +
             meter_impl_db()->table_size(spec->af) * lpm_block_id;
 
-    // TODO: support only accounting for now
+    // TODO:
+    // supporting only accounting for now, ideally we should walk
+    // all the rules, count num_policers_ and num_stats_entries_
+    // and allocate resources accordingly
     num_policers_ = 0;
-
-    // allocate all the policer indices as well
     if (num_policers_) {
-        if (meter_impl_db()->policer_idxr()->alloc_block(&policer_idx_,
-                                                         spec->num_rules) !=
+        // allocate all the policer indices
+        if (meter_impl_db()->policer_idxr()->alloc_block(&policer_base_hw_idx_,
+                                                         num_policers_) !=
                 sdk::lib::indexer::SUCCESS) {
             PDS_TRACE_ERR("Failed to allocate %u policers for meter %u",
-                          spec->num_rules, spec->key.id);
+                          num_policers_, spec->key.id);
             return sdk::SDK_RET_NO_RESOURCE;
         }
     }
+    num_stats_entries_ = spec->num_rules;
+    if (num_stats_entries_) {
+        // allocate all the stats indices
+        if (meter_impl_db()->stats_idxr()->alloc_block(&stats_base_hw_idx_,
+                                                       num_stats_entries_) !=
+                sdk::lib::indexer::SUCCESS) {
+            PDS_TRACE_ERR("Failed to allocate %u stats entries for meter %u",
+                          num_stats_entries_, spec->key.id);
+            return sdk::SDK_RET_NO_RESOURCE;
+        }
+    }
+
     return SDK_RET_OK;
 }
 
@@ -83,9 +97,15 @@ meter_impl::release_resources(api_base *api_obj) {
                 meter_impl_db()->table_size(meter->af());
         meter_impl_db()->lpm_idxr(meter->af())->free(lpm_block_id);
         // free all the policers allocated for this policy
-        if (policer_idx_ != 0xFFFFFFFF) {
+        if (policer_base_hw_idx_ != 0xFFFFFFFF) {
             for (uint32_t i = 0; i < num_policers_; i++) {
-                meter_impl_db()->policer_idxr()->free(policer_idx_ + i);
+                meter_impl_db()->policer_idxr()->free(policer_base_hw_idx_ + i);
+            }
+        }
+        // free all the stats indices allocated for this policy
+        if (stats_base_hw_idx_ != 0xFFFFFFFF) {
+            for (uint32_t i = 0; i < num_stats_entries_; i++) {
+                meter_impl_db()->stats_idxr()->free(stats_base_hw_idx_ + i);
             }
         }
     }
@@ -106,7 +126,7 @@ meter_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     route_table_t       *rtable;
     vpc_entry           *vpc;
     meter_entry         *meter;
-    uint32_t            n = 0, policer_id, num_prefixes = 0;
+    uint32_t            n = 0, nh_id, num_prefixes = 0;
 
     spec = &obj_ctxt->api_params->meter_spec;
     // allocate memory for the library to build route table
@@ -132,14 +152,19 @@ meter_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     rtable->max_routes = meter_impl_db()->max_prefixes(rtable->af);
     rtable->num_routes = num_prefixes;
     for (uint32_t i = 0; i < spec->num_rules; i++) {
-        // TODO: program the policer here when table is available !!!
+        if (spec->rules[i].type == PDS_METER_TYPE_ACCOUNTING) {
+            nh_id = stats_base_hw_idx_ + i;
+        } else {
+            // TODO: other types are not supported
+            SDK_ASSERT(FALSE);
+        }
         for (uint32_t j = 0; j < spec->rules[i].num_prefixes; j++) {
             PDS_TRACE_DEBUG("Processing meter table %u, pfx %s prio %u",
                             spec->key.id,
                             ippfx2str(&spec->rules[i].prefixes[j]),
                             spec->rules[i].priority);
             rtable->routes[n].prefix = spec->rules[i].prefixes[j];
-            rtable->routes[n].nhid = policer_idx_ + i;
+            rtable->routes[n].nhid = nh_id;
             rtable->routes[n].prio = spec->rules[i].priority;
             n++;
         }

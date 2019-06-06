@@ -14,9 +14,13 @@
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
+#include "nic/apollo/api/include/pds_vnic.hpp"
+#include "nic/apollo/api/include/pds_route.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
-#define PDS_MAX_METER_POLICER       8192
+#define PDS_MAX_METER_POLICER         8192
+// one IPv4 meter LPM tree & one IPv6 LPM tree per VNIC
+#define PDS_MAX_METER_STATS_BLOCKS    (PDS_MAX_VNIC * 2 *  PDS_MAX_ROUTE_PER_TABLE)
 
 namespace api {
 namespace impl {
@@ -89,6 +93,9 @@ private:
     indexer *policer_idxr(void) {
         return policer_idxr_;
     }
+    indexer *stats_idxr(void) {
+        return stats_idxr_;
+    }
     friend class meter_impl;
 
 private:
@@ -101,7 +108,8 @@ private:
     mem_addr_t    v6_lpm_region_addr_;     ///< base address for the v6 lpm region
     uint32_t      v6_lpm_table_size_;      ///< size of each v6 lpm table
     uint32_t      v6_lpm_max_prefixes_;    ///< max IPv6 routes per meter
-    indexer       *policer_idxr_;          ///< indexer to allocate policer
+    indexer       *policer_idxr_;          ///< indexer to allocate policer indices
+    indexer       *stats_idxr_;            ///< indexer to allocate accounting stats indices
 };
 
 /// \@}
