@@ -1,7 +1,7 @@
 #include "artemis.h"
-#include "egress.h"
-#include "EGRESS_p.h"
-#include "EGRESS_vnic_tx_stats_k.h"
+#include "ingress.h"
+#include "INGRESS_p.h"
+#include "INGRESS_vnic_tx_stats_k.h"
 
 struct vnic_tx_stats_k_ k;
 struct vnic_tx_stats_d  d;

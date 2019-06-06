@@ -281,6 +281,11 @@
             "_comment": "8M * 16B * 2"
         },
         {
+            "name": "meter_stats",
+            "size": "2M",
+            "_comment": "256K * 8B"
+        },
+        {
             "name": "qos-hbm-fifo",
             "size": "256M"
         },

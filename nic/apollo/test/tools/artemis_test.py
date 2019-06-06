@@ -6,7 +6,6 @@ import socket
 sys.path.insert(0, '../dol')
 sys.path.insert(0, '../dol/third_party')
 from infra.penscapy.penscapy import *
-from scapy.contrib.mpls import MPLS
 
 def dump_pkt(pkt):
     print('***')
