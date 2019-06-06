@@ -14,6 +14,17 @@
 
 #define PACKED __attribute__((__packed__))
 
+#define SQ_RING_ID      RING_ID_0
+
+#define MAX_SQ_RINGS 1
+#define MAX_SQ_HOST_RINGS 1
+
+#define CQ_RING_ID      RING_ID_0
+
+#define MAX_CQ_RINGS 1
+#define MAX_CQ_HOST_RINGS 1
+
+
 #define SESSTX_PREXTS_RING_ID      RING_ID_0
 #define SESSTX_POSTXTS_RING_ID      RING_ID_1
 
@@ -151,6 +162,37 @@ memrev (uint8_t *block, size_t elnum)
         *t = tmp;
     }
      return block;
+}
+
+static inline hal_ret_t 
+get_program_offset (char *progname, char *labelname, uint64_t *offset) 
+{ 
+    int ret = sdk::p4::p4_program_label_to_offset("p4plus", 
+                                            progname, 
+                                            labelname, 
+                                            offset); 
+    if(ret != 0) { 
+        return HAL_RET_HW_FAIL; 
+    } 
+    *offset >>= MPU_PC_ADDR_SHIFT; 
+    return HAL_RET_OK; 
+} 
+
+/*
+ ** TODO: Need to remove this hardcoded values. They will go away
+ ** anyway once we move the code out to nicmgr.
+ **/
+#define CAP_ADDR_BASE_INTR_INTR_OFFSET 0x6000000
+#define CAP_INTR_CSR_DHS_INTR_ASSERT_BYTE_OFFSET 0x68000
+#define INTR_BASE               CAP_ADDR_BASE_INTR_INTR_OFFSET
+#define INTR_ASSERT_OFFSET      CAP_INTR_CSR_DHS_INTR_ASSERT_BYTE_OFFSET
+#define INTR_ASSERT_BASE        (INTR_BASE + INTR_ASSERT_OFFSET)
+#define INTR_ASSERT_STRIDE      0x4
+
+static inline uint64_t
+intr_assert_addr(const int intr)
+{
+    return INTR_ASSERT_BASE + (intr * INTR_ASSERT_STRIDE);
 }
 
 #define MAX3(x, y, z) ((x) > (y) ? ((x) > (z) ? (x) : (z)) : ((y) > (z) ? (y) : (z)))

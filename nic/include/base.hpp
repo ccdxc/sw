@@ -88,6 +88,8 @@ typedef uint32_t        hal_timer_id_t;
 typedef uint32_t        tcp_proxy_cb_id_t;
 typedef uint32_t        nvme_sesscb_id_t;
 typedef uint32_t        nvme_ns_id_t;
+typedef uint32_t        nvme_sq_id_t;
+typedef uint32_t        nvme_cq_id_t;
 
 #define HAL_ABORT(cond)                                    \
 do {                                                       \

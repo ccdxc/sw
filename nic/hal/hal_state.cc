@@ -27,6 +27,8 @@
 #include "nic/hal/plugins/cfg/nvme/nvme_global.hpp"
 #include "nic/hal/plugins/cfg/nvme/nvme_sesscb.hpp"
 #include "nic/hal/plugins/cfg/nvme/nvme_ns.hpp"
+#include "nic/hal/plugins/cfg/nvme/nvme_sq.hpp"
+#include "nic/hal/plugins/cfg/nvme/nvme_cq.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group_api.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
@@ -530,12 +532,27 @@ hal_cfg_db::init_vss(hal_cfg_t *hal_cfg)
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
 
-    // initialize NVME NSCB related data structures
+    // initialize NVME NS related data structures
     slab = register_slab(HAL_SLAB_NVME_NS,
                          slab_args={.name="nvme_ns",
                         .size=sizeof(hal::nvme_ns_t), .num_elements=16,
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
+
+    // initialize NVME SQ related data structures
+    slab = register_slab(HAL_SLAB_NVME_SQ,
+                         slab_args={.name="nvme_sq",
+                        .size=sizeof(hal::nvme_sq_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    SDK_ASSERT_RETURN((slab != NULL), false);
+
+    // initialize NVME CQ related data structures
+    slab = register_slab(HAL_SLAB_NVME_CQ,
+                         slab_args={.name="nvme_cq",
+                        .size=sizeof(hal::nvme_cq_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    SDK_ASSERT_RETURN((slab != NULL), false);
+
 
     // initialize WRing related data structures
     slab = register_slab(HAL_SLAB_WRING,
@@ -1156,13 +1173,30 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::nvme_sesscb_compare_key_func);
     SDK_ASSERT_RETURN((nvme_sesscb_id_ht_ != NULL), false);
 
-    // initialize NVME NSCB related data structures
+    // initialize NVME NS related data structures
     HAL_HT_CREATE("nvme_ns", nvme_ns_id_ht_,
                   HAL_MAX_NVME_NS >> 1,
                   hal::nvme_ns_get_key_func,
                   hal::nvme_ns_compute_hash_func,
                   hal::nvme_ns_compare_key_func);
     SDK_ASSERT_RETURN((nvme_ns_id_ht_ != NULL), false);
+
+    // initialize NVME SQ related data structures
+    HAL_HT_CREATE("nvme_sq", nvme_sq_id_ht_,
+                  HAL_MAX_NVME_SQ >> 1,
+                  hal::nvme_sq_get_key_func,
+                  hal::nvme_sq_compute_hash_func,
+                  hal::nvme_sq_compare_key_func);
+    SDK_ASSERT_RETURN((nvme_sq_id_ht_ != NULL), false);
+
+    // initialize NVME CQ related data structures
+    HAL_HT_CREATE("nvme_cq", nvme_cq_id_ht_,
+                  HAL_MAX_NVME_CQ >> 1,
+                  hal::nvme_cq_get_key_func,
+                  hal::nvme_cq_compute_hash_func,
+                  hal::nvme_cq_compare_key_func);
+    SDK_ASSERT_RETURN((nvme_cq_id_ht_ != NULL), false);
+
 
     telemetry_collectors_bmp_ = bitmap::factory(HAL_MAX_TELEMETRY_COLLECTORS, true);
     SDK_ASSERT_RETURN((telemetry_collectors_bmp_ != NULL), false);
@@ -1961,6 +1995,14 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_NVME_NS:
         g_hal_state->nvme_ns_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_NVME_SQ:
+        g_hal_state->nvme_sq_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_NVME_CQ:
+        g_hal_state->nvme_cq_slab()->free(elem);
         break;
 
     case HAL_SLAB_QOS_CLASS:

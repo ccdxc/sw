@@ -31,6 +31,8 @@
 #include "nic/hal/pd/iris/internal/tcpcb_pd.hpp"
 #include "nic/hal/pd/iris/nvme/nvme_sesscb_pd.hpp"
 #include "nic/hal/pd/iris/nvme/nvme_ns_pd.hpp"
+#include "nic/hal/pd/iris/nvme/nvme_sq_pd.hpp"
+#include "nic/hal/pd/iris/nvme/nvme_cq_pd.hpp"
 #include "nic/hal/pd/iris/nvme/nvme_global_pd.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
@@ -340,11 +342,43 @@ hal_state_pd::init(void)
                       false);
 
     HAL_HT_CREATE("nvme_ns_hw_id", nvme_ns_hwid_ht_,
-                  HAL_MAX_HW_NVME_NSS >> 1,
+                  HAL_MAX_HW_NVME_NS >> 1,
                   hal::pd::nvme_ns_pd_get_hw_key_func,
                   hal::pd::nvme_ns_pd_compute_hw_hash_func,
                   hal::pd::nvme_ns_pd_compare_hw_key_func);
     SDK_ASSERT_RETURN((nvme_ns_hwid_ht_ != NULL), false);
+
+
+    // initialize NVME_SQ related data structures
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_SQ_PD)] =
+        slab::factory("nvme_sq_pd", HAL_SLAB_NVME_SQ_PD,
+                      sizeof(hal::pd::pd_nvme_sq_t), 16,
+                      true, true, true);
+    SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_SQ_PD)] != NULL),
+                      false);
+
+    HAL_HT_CREATE("nvme_sq_hw_id", nvme_sq_hwid_ht_,
+                  HAL_MAX_HW_NVME_SQ >> 1,
+                  hal::pd::nvme_sq_pd_get_hw_key_func,
+                  hal::pd::nvme_sq_pd_compute_hw_hash_func,
+                  hal::pd::nvme_sq_pd_compare_hw_key_func);
+    SDK_ASSERT_RETURN((nvme_sq_hwid_ht_ != NULL), false);
+
+
+    // initialize NVME_CQ related data structures
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_CQ_PD)] =
+        slab::factory("nvme_cq_pd", HAL_SLAB_NVME_CQ_PD,
+                      sizeof(hal::pd::pd_nvme_cq_t), 16,
+                      true, true, true);
+    SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_CQ_PD)] != NULL),
+                      false);
+
+    HAL_HT_CREATE("nvme_cq_hw_id", nvme_cq_hwid_ht_,
+                  HAL_MAX_HW_NVME_CQ >> 1,
+                  hal::pd::nvme_cq_pd_get_hw_key_func,
+                  hal::pd::nvme_cq_pd_compute_hw_hash_func,
+                  hal::pd::nvme_cq_pd_compare_hw_key_func);
+    SDK_ASSERT_RETURN((nvme_cq_hwid_ht_ != NULL), false);
 
 
     // initialize Acl PD related data structures
@@ -618,6 +652,8 @@ hal_state_pd::hal_state_pd()
     tcpcb_hwid_ht_           = NULL;
     nvme_sesscb_hwid_ht_     = NULL;
     nvme_ns_hwid_ht_         = NULL;
+    nvme_sq_hwid_ht_         = NULL;
+    nvme_cq_hwid_ht_         = NULL;
     wring_hwid_ht_           = NULL;
     ipseccb_hwid_ht_         = NULL;
     ipseccb_decrypt_hwid_ht_ = NULL;
@@ -659,6 +695,8 @@ hal_state_pd::~hal_state_pd()
     tcpcb_hwid_ht_ ? ht::destroy(tcpcb_hwid_ht_) : HAL_NOP;
     nvme_sesscb_hwid_ht_ ? ht::destroy(nvme_sesscb_hwid_ht_) : HAL_NOP;
     nvme_ns_hwid_ht_ ? ht::destroy(nvme_ns_hwid_ht_) : HAL_NOP;
+    nvme_sq_hwid_ht_ ? ht::destroy(nvme_sq_hwid_ht_) : HAL_NOP;
+    nvme_cq_hwid_ht_ ? ht::destroy(nvme_cq_hwid_ht_) : HAL_NOP;
     wring_hwid_ht_ ? ht::destroy(wring_hwid_ht_) : HAL_NOP;
     ipseccb_hwid_ht_ ? ht::destroy(ipseccb_hwid_ht_) : HAL_NOP;
     ipseccb_decrypt_hwid_ht_ ? ht::destroy(ipseccb_decrypt_hwid_ht_) : HAL_NOP;
@@ -1377,6 +1415,14 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_NVME_NS_PD:
         g_hal_state_pd->nvme_ns_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_NVME_SQ_PD:
+        g_hal_state_pd->nvme_sq_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_NVME_CQ_PD:
+        g_hal_state_pd->nvme_cq_slab()->free(elem);
         break;
 
     case HAL_SLAB_QOS_CLASS_PD:

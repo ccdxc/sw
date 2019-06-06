@@ -127,7 +127,9 @@ typedef enum hal_slab_e {
     HAL_SLAB_NVME_SESSCB                     = 116,
     HAL_SLAB_NVME_GLOBAL                     = 117,
     HAL_SLAB_NVME_NS                         = 118,
-    HAL_SLAB_PI_MAX                          = 119,  // NOTE: MUST be last PI slab id
+    HAL_SLAB_NVME_SQ                         = 119,
+    HAL_SLAB_NVME_CQ                         = 120,
+    HAL_SLAB_PI_MAX                          = 121,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
     HAL_SLAB_PD_MIN                          = 1000,
@@ -176,9 +178,11 @@ typedef enum hal_slab_e {
     HAL_SLAB_NVME_SESSCB_PD                  = 1042,
     HAL_SLAB_NVME_GLOBAL_PD                  = 1043,
     HAL_SLAB_NVME_NS_PD                      = 1044,
-    HAL_SLAB_PD_MAX                          = 1045,   // NOTE: MUST be last PD slab id
-    HAL_SLAB_RSVD                            = 1046,   // all non-delay delete slabs can use this
-    HAL_SLAB_MAX                             = 1047,
+    HAL_SLAB_NVME_SQ_PD                      = 1045,
+    HAL_SLAB_NVME_CQ_PD                      = 1046,
+    HAL_SLAB_PD_MAX                          = 1047,   // NOTE: MUST be last PD slab id
+    HAL_SLAB_RSVD                            = 1048,   // all non-delay delete slabs can use this
+    HAL_SLAB_MAX                             = 1049,
     HAL_SLAB_ALL                             = 0xFFFFFFFF,  // reserved and shouldn't be used
 } hal_slab_t;
 

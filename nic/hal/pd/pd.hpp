@@ -31,6 +31,8 @@ typedef struct pd_tcp_proxy_cb_s pd_tcp_proxy_cb_t;
 typedef struct pd_nvme_sesscb_s pd_nvme_sesscb_t;
 typedef struct pd_nvme_global_s pd_nvme_global_t;
 typedef struct pd_nvme_ns_s pd_nvme_ns_t;
+typedef struct pd_nvme_sq_s pd_nvme_sq_t;
+typedef struct pd_nvme_cq_s pd_nvme_cq_t;
 typedef struct pd_qos_class_s pd_qos_class_t;
 typedef struct pd_acl_s pd_acl_t;
 typedef struct pd_wring_s pd_wring_t;

@@ -73,7 +73,8 @@ nvme_sesscb_create (uint32_t lif,
                     uint32_t lif_sess_id,
                     uint32_t ns_sess_id,
                     uint32_t sesq_qid,
-                    uint32_t serq_qid)
+                    uint32_t serq_qid,
+                    NvmeSessResponse *rsp)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     nvme_sesscb_t               *nvme_sesscb;
@@ -102,6 +103,7 @@ nvme_sesscb_create (uint32_t lif,
     // allocate all PD resources and finish programming
     pd::pd_nvme_sesscb_create_args_init(&pd_nvme_sesscb_args);
     pd_nvme_sesscb_args.nvme_sesscb = nvme_sesscb;
+    pd_nvme_sesscb_args.rsp = rsp;
     pd_func_args.pd_nvme_sesscb_create = &pd_nvme_sesscb_args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_NVME_SESSCB_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {

@@ -12,6 +12,7 @@
 #include "gen/proto/internal.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
+#include "nic/hal/plugins/cfg/nvme/nvme.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
@@ -79,7 +80,7 @@ nvme_global_free (nvme_global_t *nvme_global)
 
 hal_ret_t nvme_global_create(uint32_t max_lif, uint32_t max_ns, uint32_t max_sess,
                              uint32_t max_cmd_context, uint32_t tx_max_pdu_context, 
-                             uint32_t rx_max_pdu_context);
+                             uint32_t rx_max_pdu_context, NvmeEnableResponse *rsp);
 
 
 } //namespace hal

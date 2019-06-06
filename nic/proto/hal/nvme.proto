@@ -51,6 +51,15 @@ message NvmeEnableResponse {
   types.ApiStatus     api_status       = 1;      // API status code
   uint64              cmd_context_ring_base = 2; //Base address of command context ring
   uint64              cmd_context_page_base = 3; //Base address of command context pages
+  uint64              resourcecb_addr = 4; //resourcecb address
+  uint64              tx_pdu_context_ring_base = 5; //Base address of tx pdu context ring
+  uint64              tx_pdu_context_page_base = 6; //Base address of tx pdu context pages
+  uint64              rx_pdu_context_ring_base = 7; //Base address of rx pdu context ring
+  uint64              rx_pdu_context_page_base = 8; //Base address of rx pdu context pages
+  uint64              tx_hwxtscb_addr = 9; //tx hwxtscb address
+  uint64              tx_hwdgstcb_addr = 10; //tx hwdgstcb address
+  uint64              rx_hwxtscb_addr = 11; //rx hwxtscb address
+  uint64              rx_hwdgstcb_addr = 12; //rx hwdgstcb address
 }
 
 // NvmeEnableResponseMsg is batched Response

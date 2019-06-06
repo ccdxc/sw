@@ -54,7 +54,7 @@ nvme_ns_pd_compute_hw_hash_func (void *key, uint32_t ht_size)
  *******************************************/
 
 hal_ret_t
-p4pd_add_or_del_nvme_nscb (pd_nvme_ns_t *nvme_ns_pd, bool del)
+p4pd_add_or_del_nvme_nscb (pd_nvme_ns_t *nvme_ns_pd, bool del, uint64_t *nscb_addr)
 {
     hal_ret_t ret = HAL_RET_OK;
     nvme_nscb_t data = { 0 };
@@ -68,6 +68,7 @@ p4pd_add_or_del_nvme_nscb (pd_nvme_ns_t *nvme_ns_pd, bool del)
 
     data_addr = g_pd_nvme_global->nscb_base_addr + g_nsid * sizeof(nvme_nscb_t);
     SDK_ASSERT(data_addr != 0);
+    *nscb_addr = data_addr;
 
     data.backend_ns_id = nvme_ns_pd->nvme_ns->backend_nsid;
     data.ns_size = nvme_ns_pd->nvme_ns->size;
@@ -95,6 +96,7 @@ pd_nvme_ns_create (pd_func_args_t *pd_func_args)
     hal_ret_t                ret = HAL_RET_OK;
     pd_nvme_ns_create_args_t *args = pd_func_args->pd_nvme_ns_create;
     pd_nvme_ns_s             *nvme_ns_pd;
+    uint64_t                 nscb_addr = 0;
 
     SDK_ASSERT(args != NULL);
     SDK_ASSERT(args->nvme_ns != NULL);
@@ -128,7 +130,7 @@ pd_nvme_ns_create (pd_func_args_t *pd_func_args)
             nvme_ns_pd->hw_id, nvme_ns_pd->nvme_ns->cb_id);
 
     // program nvme_ns
-    ret = p4pd_add_or_del_nvme_nscb(nvme_ns_pd, false);
+    ret = p4pd_add_or_del_nvme_nscb(nvme_ns_pd, false, &nscb_addr);
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }
@@ -142,6 +144,10 @@ pd_nvme_ns_create (pd_func_args_t *pd_func_args)
     }
     HAL_TRACE_DEBUG("DB add done");
     args->nvme_ns->pd = nvme_ns_pd;
+
+    if (args->rsp != NULL) {
+        args->rsp->set_nscb_addr(nscb_addr);
+    }
 
     return HAL_RET_OK;
 

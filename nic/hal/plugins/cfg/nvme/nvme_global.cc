@@ -18,7 +18,8 @@ nvme_global_create (uint32_t max_lif,
                     uint32_t max_sess,
                     uint32_t max_cmd_context, 
                     uint32_t tx_max_pdu_context,
-                    uint32_t rx_max_pdu_context)
+                    uint32_t rx_max_pdu_context,
+                    NvmeEnableResponse *rsp)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     nvme_global_t               *nvme_global;
@@ -43,6 +44,7 @@ nvme_global_create (uint32_t max_lif,
     // allocate all PD resources and finish programming
     pd::pd_nvme_global_create_args_init(&pd_nvme_global_args);
     pd_nvme_global_args.nvme_global = nvme_global;
+    pd_nvme_global_args.rsp = rsp;
     pd_func_args.pd_nvme_global_create = &pd_nvme_global_args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_NVME_GLOBAL_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {

@@ -513,12 +513,23 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_NVME_GLOBAL_CREATE, pd_nvme_global_create);
     //PD_FUNC_LOAD(PD_FUNC_ID_NVME_GLOBAL_GET, pd_nvme_global_get);
     
-    // nvme nscb pd calls
+    // nvme ns pd calls
     PD_FUNC_LOAD(PD_FUNC_ID_NVME_NS_CREATE, pd_nvme_ns_create);
     //PD_FUNC_LOAD(PD_FUNC_ID_NVME_NS_DELETE, pd_nvme_ns_delete);
     //PD_FUNC_LOAD(PD_FUNC_ID_NVME_NS_UPDATE, pd_nvme_ns_update);
     //PD_FUNC_LOAD(PD_FUNC_ID_NVME_NS_GET, pd_nvme_ns_get);
 
+    // nvme sq pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_NVME_SQ_CREATE, pd_nvme_sq_create);
+    //PD_FUNC_LOAD(PD_FUNC_ID_NVME_SQ_DELETE, pd_nvme_sq_delete);
+    //PD_FUNC_LOAD(PD_FUNC_ID_NVME_SQ_UPDATE, pd_nvme_sq_update);
+    //PD_FUNC_LOAD(PD_FUNC_ID_NVME_SQ_GET, pd_nvme_sq_get);
+
+    // nvme cq pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_NVME_CQ_CREATE, pd_nvme_cq_create);
+    //PD_FUNC_LOAD(PD_FUNC_ID_NVME_CQ_DELETE, pd_nvme_cq_delete);
+    //PD_FUNC_LOAD(PD_FUNC_ID_NVME_CQ_UPDATE, pd_nvme_cq_update);
+    //PD_FUNC_LOAD(PD_FUNC_ID_NVME_CQ_GET, pd_nvme_cq_get);
 
     return ret;
 }

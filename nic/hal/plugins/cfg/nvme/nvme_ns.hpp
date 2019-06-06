@@ -12,6 +12,8 @@
 #include "gen/proto/internal.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
+#include "nic/hal/plugins/cfg/nvme/nvme.hpp"
+
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
@@ -112,7 +114,8 @@ nvme_ns_create(uint32_t lif,
                uint32_t lba_size,
                uint32_t key_index,
                uint32_t sec_key_index,
-               uint32_t g_sess_start);
+               uint32_t g_sess_start,
+               NvmeNsResponse *rsp);
 
 } //namespace hal
 

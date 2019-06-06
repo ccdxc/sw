@@ -12,6 +12,8 @@
 #include "gen/proto/internal.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
+#include "nic/hal/plugins/cfg/nvme/nvme.hpp"
+
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
@@ -101,7 +103,7 @@ extern bool nvme_sesscb_compare_handle_key_func(void *key1, void *key2);
 
 
 hal_ret_t nvme_sesscb_create(uint32_t lif, uint32_t g_nsid, uint32_t g_sess_id, uint32_t lif_sess_id,
-                             uint32_t ns_sess_id, uint32_t sesq_qid, uint32_t serq_qid);
+                             uint32_t ns_sess_id, uint32_t sesq_qid, uint32_t serq_qid, NvmeSessResponse *rsp);
 
 
 } //namespace hal

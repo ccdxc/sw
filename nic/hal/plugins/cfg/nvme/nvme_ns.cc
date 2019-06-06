@@ -76,7 +76,8 @@ nvme_ns_create (uint32_t lif,
                   uint32_t lba_size,
                   uint32_t key_index,
                   uint32_t sec_key_index, 
-                  uint32_t g_sess_start)
+                  uint32_t g_sess_start,
+                  NvmeNsResponse *rsp)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     nvme_ns_t                 *nvme_ns;
@@ -106,6 +107,7 @@ nvme_ns_create (uint32_t lif,
     // allocate all PD resources and finish programming
     pd::pd_nvme_ns_create_args_init(&pd_nvme_ns_args);
     pd_nvme_ns_args.nvme_ns = nvme_ns;
+    pd_nvme_ns_args.rsp = rsp;
     pd_func_args.pd_nvme_ns_create = &pd_nvme_ns_args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_NVME_NS_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {

@@ -21,6 +21,7 @@ pd_nvme_global_t *g_pd_nvme_global = NULL;
 
 static hal_ret_t
 setup_resourcecb (uint64_t data_addr, 
+                  int max_cmd_context, 
                   int tx_max_pdu_context, 
                   int rx_max_pdu_context)
 {
@@ -28,6 +29,7 @@ setup_resourcecb (uint64_t data_addr,
     hal_ret_t ret = HAL_RET_OK;
     nvme_resourcecb_t data = { 0 };
 
+    data.cmdid_ring_log_sz = log2(max_cmd_context);
     data.cmdid_ring_ci = 0;
     data.cmdid_ring_pi = 0;
     data.cmdid_ring_proxy_ci = 0;
@@ -468,7 +470,7 @@ create_nvme_global_state (pd_nvme_global_t *nvme_global_pd)
 
 
     ret = setup_resourcecb(nvme_global_pd->resourcecb_addr, 
-                           tx_max_pdu_context, rx_max_pdu_context);
+                           max_cmd_context, tx_max_pdu_context, rx_max_pdu_context);
 
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed(ret: {:#x}) to write to Resource CB for NVME Global Info",
@@ -516,13 +518,31 @@ create_nvme_global_state (pd_nvme_global_t *nvme_global_pd)
 }
 
 
+static void
+fill_response_params (NvmeEnableResponse *rsp)
+{
+    SDK_ASSERT(rsp != NULL);
+
+    rsp->set_cmd_context_page_base(g_pd_nvme_global->cmd_context_page_base);
+    rsp->set_cmd_context_ring_base(g_pd_nvme_global->cmd_context_ring_base);
+    rsp->set_resourcecb_addr(g_pd_nvme_global->resourcecb_addr);
+    rsp->set_tx_pdu_context_ring_base(g_pd_nvme_global->tx_pdu_context_ring_base);
+    rsp->set_tx_pdu_context_page_base(g_pd_nvme_global->tx_pdu_context_page_base);
+    rsp->set_rx_pdu_context_ring_base(g_pd_nvme_global->rx_pdu_context_ring_base);
+    rsp->set_rx_pdu_context_page_base(g_pd_nvme_global->rx_pdu_context_page_base);
+    rsp->set_tx_hwxtscb_addr(g_pd_nvme_global->tx_hwxtscb_addr);
+    rsp->set_tx_hwdgstcb_addr(g_pd_nvme_global->tx_hwdgstcb_addr);
+    rsp->set_rx_hwxtscb_addr(g_pd_nvme_global->rx_hwxtscb_addr);
+    rsp->set_rx_hwdgstcb_addr(g_pd_nvme_global->rx_hwdgstcb_addr);
+}
+
 
 hal_ret_t
 pd_nvme_global_create (pd_func_args_t *pd_func_args)
 {
-    hal_ret_t               ret = HAL_RET_OK;
+    hal_ret_t                    ret = HAL_RET_OK;
     pd_nvme_global_create_args_t *args = pd_func_args->pd_nvme_global_create;
-    pd_nvme_global_s              *nvme_global_pd;
+    pd_nvme_global_s             *nvme_global_pd;
 
     HAL_TRACE_DEBUG("Creating pd state for NVME Global.");
 
@@ -546,6 +566,10 @@ pd_nvme_global_create (pd_func_args_t *pd_func_args)
 
     HAL_TRACE_DEBUG("DB add done");
     args->nvme_global->pd = nvme_global_pd;
+
+    if (args->rsp != NULL) {
+        fill_response_params(args->rsp);
+    }
 
 cleanup:
     return ret;

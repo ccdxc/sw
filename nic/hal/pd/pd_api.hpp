@@ -27,6 +27,8 @@
 #include "nic/hal/plugins/cfg/nvme/nvme_sesscb.hpp"
 #include "nic/hal/plugins/cfg/nvme/nvme_global.hpp"
 #include "nic/hal/plugins/cfg/nvme/nvme_ns.hpp"
+#include "nic/hal/plugins/cfg/nvme/nvme_sq.hpp"
+#include "nic/hal/plugins/cfg/nvme/nvme_cq.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"
 #include "nic/hal/src/internal/system.hpp"
 #include "nic/hal/src/internal/rawrcb.hpp"
@@ -3095,6 +3097,7 @@ typedef struct pd_tcp_global_stats_get_args_s {
 // nvme_sesscb
 typedef struct pd_nvme_sesscb_create_args_s {
     nvme_sesscb_t            *nvme_sesscb;
+    NvmeSessResponse         *rsp;
 } __PACK__ pd_nvme_sesscb_create_args_t;
 
 static inline void
@@ -3107,6 +3110,7 @@ pd_nvme_sesscb_create_args_init (pd_nvme_sesscb_create_args_t *args)
 // nvme_global
 typedef struct pd_nvme_global_create_args_s {
     nvme_global_t            *nvme_global;
+    NvmeEnableResponse       *rsp;
 } __PACK__ pd_nvme_global_create_args_t;
 
 static inline void
@@ -3119,6 +3123,7 @@ pd_nvme_global_create_args_init (pd_nvme_global_create_args_t *args)
 // nvme_ns
 typedef struct pd_nvme_ns_create_args_s {
     nvme_ns_t            *nvme_ns;
+    NvmeNsResponse       *rsp;
 } __PACK__ pd_nvme_ns_create_args_t;
 
 static inline void
@@ -3128,7 +3133,31 @@ pd_nvme_ns_create_args_init (pd_nvme_ns_create_args_t *args)
     return;
 }
 
+// nvme_sq
+typedef struct pd_nvme_sq_create_args_s {
+    nvme_sq_t            *nvme_sq;
+    NvmeSqResponse       *rsp;
+} __PACK__ pd_nvme_sq_create_args_t;
 
+static inline void
+pd_nvme_sq_create_args_init (pd_nvme_sq_create_args_t *args)
+{
+    args->nvme_sq = NULL;
+    return;
+}
+
+// nvme_cq
+typedef struct pd_nvme_cq_create_args_s {
+    nvme_cq_t            *nvme_cq;
+    NvmeCqResponse       *rsp;
+} __PACK__ pd_nvme_cq_create_args_t;
+
+static inline void
+pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
+{
+    args->nvme_cq = NULL;
+    return;
+}
 // generic pd call macros
 #define PD_FUNC_IDS(ENTRY)                                                              \
     ENTRY(PD_FUNC_ID_MEM_INIT,              0, "pd_func_id_pd_mem_init")                \
@@ -3448,7 +3477,15 @@ pd_nvme_ns_create_args_init (pd_nvme_ns_create_args_t *args)
     ENTRY(PD_FUNC_ID_NVME_NS_DELETE,           315, "PD_FUNC_ID_NVME_NS_DELETE")\
     ENTRY(PD_FUNC_ID_NVME_NS_UPDATE,           316, "PD_FUNC_ID_NVME_NS_UPDATE")\
     ENTRY(PD_FUNC_ID_NVME_NS_GET,              317, "PD_FUNC_ID_NVME_NS_GET")\
-    ENTRY(PD_FUNC_ID_MAX,                      318, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_NVME_SQ_CREATE,           318, "PD_FUNC_ID_NVME_SQ_CREATE")\
+    ENTRY(PD_FUNC_ID_NVME_SQ_DELETE,           319, "PD_FUNC_ID_NVME_SQ_DELETE")\
+    ENTRY(PD_FUNC_ID_NVME_SQ_UPDATE,           320, "PD_FUNC_ID_NVME_SQ_UPDATE")\
+    ENTRY(PD_FUNC_ID_NVME_SQ_GET,              321, "PD_FUNC_ID_NVME_SQ_GET")\
+    ENTRY(PD_FUNC_ID_NVME_CQ_CREATE,           322, "PD_FUNC_ID_NVME_CQ_CREATE")\
+    ENTRY(PD_FUNC_ID_NVME_CQ_DELETE,           323, "PD_FUNC_ID_NVME_CQ_DELETE")\
+    ENTRY(PD_FUNC_ID_NVME_CQ_UPDATE,           324, "PD_FUNC_ID_NVME_CQ_UPDATE")\
+    ENTRY(PD_FUNC_ID_NVME_CQ_GET,              325, "PD_FUNC_ID_NVME_CQ_GET")\
+    ENTRY(PD_FUNC_ID_MAX,                      326, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3900,6 +3937,18 @@ typedef struct pd_func_args_s {
         //PD_UNION_ARGS_FIELD(pd_nvme_ns_update);
         //PD_UNION_ARGS_FIELD(pd_nvme_ns_delete);
         //PD_UNION_ARGS_FIELD(pd_nvme_ns_get);
+
+        // nvme_sq calls
+        PD_UNION_ARGS_FIELD(pd_nvme_sq_create);
+        //PD_UNION_ARGS_FIELD(pd_nvme_sq_update);
+        //PD_UNION_ARGS_FIELD(pd_nvme_sq_delete);
+        //PD_UNION_ARGS_FIELD(pd_nvme_sq_get);
+
+        // nvme_cq calls
+        PD_UNION_ARGS_FIELD(pd_nvme_cq_create);
+        //PD_UNION_ARGS_FIELD(pd_nvme_cq_update);
+        //PD_UNION_ARGS_FIELD(pd_nvme_cq_delete);
+        //PD_UNION_ARGS_FIELD(pd_nvme_cq_get);
 
 
     };
@@ -4377,6 +4426,18 @@ PD_FUNCP_TYPEDEF(pd_nvme_ns_create);
 //PD_FUNCP_TYPEDEF(pd_nvme_ns_update);
 //PD_FUNCP_TYPEDEF(pd_nvme_ns_delete);
 //PD_FUNCP_TYPEDEF(pd_nvme_ns_get);
+
+// nvme_sq calls
+PD_FUNCP_TYPEDEF(pd_nvme_sq_create);
+//PD_FUNCP_TYPEDEF(pd_nvme_sq_update);
+//PD_FUNCP_TYPEDEF(pd_nvme_sq_delete);
+//PD_FUNCP_TYPEDEF(pd_nvme_sq_get);
+
+// nvme_cq calls
+PD_FUNCP_TYPEDEF(pd_nvme_cq_create);
+//PD_FUNCP_TYPEDEF(pd_nvme_cq_update);
+//PD_FUNCP_TYPEDEF(pd_nvme_cq_delete);
+//PD_FUNCP_TYPEDEF(pd_nvme_cq_get);
 
 
 hal_ret_t hal_pd_call(pd_func_id_t pd_func_id, pd_func_args_t *args);

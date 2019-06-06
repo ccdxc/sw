@@ -13,7 +13,7 @@ using namespace sdk::platform::capri;
 namespace hal {
 namespace pd {
 
-#define HAL_MAX_HW_NVME_NSS 2048
+#define HAL_MAX_HW_NVME_NS 2048
 
 typedef uint64_t    nvme_ns_hw_id_t;
 

@@ -8,7 +8,7 @@
 #include "platform/capri/capri_pxb_pcie.hpp"
 #include "platform/capri/capri_txs_scheduler.hpp"
 #include "platform/capri/capri_common.hpp"
-#include "nic/include/nvme_dpath.h"
+#include "nic/hal/pd/iris/nvme/nvme_pd.hpp"
 #include "nic/hal/pd/capri/capri_barco_rings.hpp"
 
 namespace hal {

@@ -160,6 +160,8 @@ public:
     slab *nvme_global_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NVME_GLOBAL]); }
     slab *nvme_sesscb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NVME_SESSCB]); }
     slab *nvme_ns_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NVME_NS]); }
+    slab *nvme_sq_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NVME_SQ]); }
+    slab *nvme_cq_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NVME_CQ]); }
     slab *qos_class_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_QOS_CLASS]); }
     slab *copp_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_COPP]); }
     slab *acl_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_ACL]); }
@@ -263,6 +265,8 @@ public:
     ht *tcpcb_id_ht(void) const { return tcpcb_id_ht_; }
     ht *nvme_sesscb_id_ht(void) const { return nvme_sesscb_id_ht_; }
     ht *nvme_ns_id_ht(void) const { return nvme_ns_id_ht_; }
+    ht *nvme_sq_id_ht(void) const { return nvme_sq_id_ht_; }
+    ht *nvme_cq_id_ht(void) const { return nvme_cq_id_ht_; }
     ht *copp_ht(void) const { return copp_ht_; }
     ht *acl_ht(void) const { return acl_ht_; }
     ht *wring_id_ht(void) const { return wring_id_ht_; }
@@ -382,6 +386,8 @@ private:
     ht    *tcpcb_id_ht_;
     ht    *nvme_sesscb_id_ht_;
     ht    *nvme_ns_id_ht_;
+    ht    *nvme_sq_id_ht_;
+    ht    *nvme_cq_id_ht_;
     ht    *qos_class_ht_;
     ht    *copp_ht_;
     ht    *wring_id_ht_;
@@ -581,9 +587,17 @@ public:
     slab *nvme_sesscb_slab(void) const { return cfg_db_->nvme_sesscb_slab(); }
     ht *nvme_sesscb_id_ht(void) const { return oper_db_->nvme_sesscb_id_ht(); }
 
-    // get APIs for NVME NS CB state
+    // get APIs for NVME NS state
     slab *nvme_ns_slab(void) const { return cfg_db_->nvme_ns_slab(); }
     ht *nvme_ns_id_ht(void) const { return oper_db_->nvme_ns_id_ht(); }
+
+    // get APIs for NVME SQ state
+    slab *nvme_sq_slab(void) const { return cfg_db_->nvme_sq_slab(); }
+    ht *nvme_sq_id_ht(void) const { return oper_db_->nvme_sq_id_ht(); }
+
+    // get APIs for NVME CQ state
+    slab *nvme_cq_slab(void) const { return cfg_db_->nvme_cq_slab(); }
+    ht *nvme_cq_id_ht(void) const { return oper_db_->nvme_cq_id_ht(); }
 
     // get APIs for qos-class state
     slab *qos_class_slab(void) const { return cfg_db_->qos_class_slab(); }
