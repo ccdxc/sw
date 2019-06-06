@@ -986,8 +986,8 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 	struct ionic *ionic = master_lif->ionic;
 	union lif_identity *lid;
 	struct lif *lif;
+	int lif_index;
 	int nqueues;
-	int index;
 	int err;
 
 	if (!macvlan_supports_dest_filter(upper_dev))
@@ -1015,18 +1015,18 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 		netdev_warn(lower_dev, "Only 1 queue used per slave LIF\n");
 
 	/* master_lif index is 0, slave index starts at 1 */
-	index = ionic_slave_alloc(ionic);
-	if (index < 0) {
+	lif_index = ionic_slave_alloc(ionic);
+	if (lif_index < 0) {
 		netdev_info(lower_dev, "no lifs left for macvlan offload: %d, max=%d\n",
-			    index, ionic->nslaves);
+			    lif_index, ionic->nslaves);
 		return NULL;
 	}
 	netdev_info(lower_dev, "slave index %d for macvlan dev %s\n",
-		    index, upper_dev->name);
+		    lif_index, upper_dev->name);
 
-	lif = ionic_lif_alloc(ionic, index);
+	lif = ionic_lif_alloc(ionic, lif_index);
 	if (IS_ERR(lif)) {
-		ionic_slave_free(ionic, index);
+		ionic_slave_free(ionic, lif_index);
 		return NULL;
 	}
 
@@ -1034,7 +1034,7 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 	err = ionic_lif_init(lif);
 	if (err) {
 		netdev_err(lower_dev, "Cannot init slave lif %d for %s: %d\n",
-			   index, upper_dev->name, err);
+			   lif_index, upper_dev->name, err);
 		goto err_out_free_slave;
 	}
 
@@ -1048,10 +1048,10 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 			goto err_out_deinit_slave;
 	}
 
-	netdev_set_sb_channel(upper_dev, index);
+	netdev_set_sb_channel(upper_dev, lif_index);
 
 	/* bump up the netdev's in-use queue count if needed */
-	if ((master_lif->nxqs + index) > lower_dev->real_num_tx_queues) {
+	if ((master_lif->nxqs + lif_index) > lower_dev->real_num_tx_queues) {
 		int max = lower_dev->real_num_tx_queues + 1;
 
 		netif_set_real_num_tx_queues(lower_dev, max);
@@ -1117,7 +1117,7 @@ static void ionic_dfwd_del_station(struct net_device *lower_dev, void *priv)
 {
 	struct lif *master_lif = netdev_priv(lower_dev);
 	struct lif *lif = priv;
-	unsigned long index = lif->index;
+	unsigned long lif_index = lif->index;
 #ifndef HAVE_MACVLAN_SB_DEV
 	/* get vlan* now before lif is dismantled */
 	struct macvlan_dev *vlan = netdev_priv(lif->upper_dev);
@@ -1135,7 +1135,7 @@ static void ionic_dfwd_del_station(struct net_device *lower_dev, void *priv)
 	 * the number of queues in use and find the next
 	 * highest one in use
 	 */
-	if ((master_lif->nxqs + index) == lower_dev->real_num_tx_queues) {
+	if ((master_lif->nxqs + lif_index) == lower_dev->real_num_tx_queues) {
 		int max = lower_dev->real_num_tx_queues;
 
 		while (!master_lif->txqcqs[max-1].qcq)
@@ -1686,7 +1686,6 @@ static struct lif *ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 {
 	struct device *dev = ionic->dev;
 	struct lif *lif;
-	int dbpage_num;
 	int tbl_sz;
 	int err;
 
@@ -1765,34 +1764,6 @@ static struct lif *ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	INIT_LIST_HEAD(&lif->deferred.list);
 	INIT_WORK(&lif->deferred.work, ionic_lif_deferred_work);
 
-	mutex_init(&lif->dbid_inuse_lock);
-	lif->dbid_count = le32_to_cpu(ionic->ident.dev.ndbpgs_per_lif);
-	if (!lif->dbid_count) {
-		dev_err(dev, "No doorbell pages, aborting\n");
-		err = -EINVAL;
-		goto err_out_free_netdev;
-	}
-
-	lif->dbid_inuse = kzalloc(BITS_TO_LONGS(lif->dbid_count) * sizeof(long),
-				  GFP_KERNEL);
-	if (!lif->dbid_inuse) {
-		dev_err(dev, "Failed alloc doorbell id bitmap, aborting\n");
-		err = -ENOMEM;
-		goto err_out_free_netdev;
-	}
-
-	/* first doorbell id reserved for kernel (dbid aka pid == zero) */
-	set_bit(0, lif->dbid_inuse);
-	lif->kern_pid = 0;
-
-	dbpage_num = ionic_db_page_num(lif, 0);
-	lif->kern_dbpage = ionic_bus_map_dbpage(ionic, dbpage_num);
-	if (!lif->kern_dbpage) {
-		dev_err(dev, "Cannot map dbpage, aborting\n");
-		err = -ENOMEM;
-		goto err_out_free_dbid;
-	}
-
 	/* allocate lif info */
 	lif->info_sz = ALIGN(sizeof(*lif->info), PAGE_SIZE);
 	lif->info = dma_alloc_coherent(dev, lif->info_sz,
@@ -1800,7 +1771,7 @@ static struct lif *ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	if (!lif->info) {
 		dev_err(dev, "Failed to allocate lif info, aborting\n");
 		err = -ENOMEM;
-		goto err_out_unmap_dbell;
+		goto err_out_free_netdev;
 	}
 
 	/* allocate queues */
@@ -1830,12 +1801,6 @@ err_out_free_lif_info:
 	dma_free_coherent(dev, lif->info_sz, lif->info, lif->info_pa);
 	lif->info = NULL;
 	lif->info_pa = 0;
-err_out_unmap_dbell:
-	ionic_bus_unmap_dbpage(ionic, lif->kern_dbpage);
-	lif->kern_dbpage = NULL;
-err_out_free_dbid:
-	kfree(lif->dbid_inuse);
-	lif->dbid_inuse = NULL;
 err_out_free_netdev:
 	if (is_master_lif(lif))
 		free_netdev(lif->netdev);
@@ -2562,12 +2527,14 @@ static int ionic_station_set(struct lif *lif)
 static int ionic_lif_init(struct lif *lif)
 {
 	struct ionic_dev *idev = &lif->ionic->idev;
-	struct q_init_comp comp;
+	struct device *dev = lif->ionic->dev;
+	struct lif_init_comp comp;
+	int dbpage_num;
 	int err;
 
 	err = ionic_debugfs_add_lif(lif);
 	if (err) {
-		netdev_info(lif->netdev, "lif debugfs add failed: %d\n", err);
+		dev_err(dev, "lif debugfs add failed: %d\n", err);
 		return err;
 	}
 
@@ -2579,7 +2546,34 @@ static int ionic_lif_init(struct lif *lif)
 	if (err)
 		return err;
 
-	lif->hw_index = comp.hw_index;
+	lif->hw_index = le16_to_cpu(comp.hw_index);
+
+	/* now that we have the hw_index we can figure out our doorbell page */
+	mutex_init(&lif->dbid_inuse_lock);
+	lif->dbid_count = le32_to_cpu(lif->ionic->ident.dev.ndbpgs_per_lif);
+	if (!lif->dbid_count) {
+		dev_err(dev, "No doorbell pages, aborting\n");
+		return -EINVAL;
+	}
+
+	lif->dbid_inuse = kzalloc(BITS_TO_LONGS(lif->dbid_count) * sizeof(long),
+				  GFP_KERNEL);
+	if (!lif->dbid_inuse) {
+		dev_err(dev, "Failed alloc doorbell id bitmap, aborting\n");
+		return -ENOMEM;
+	}
+
+	/* first doorbell id reserved for kernel (dbid aka pid == zero) */
+	set_bit(0, lif->dbid_inuse);
+	lif->kern_pid = 0;
+
+	dbpage_num = ionic_db_page_num(lif, lif->kern_pid);
+	lif->kern_dbpage = ionic_bus_map_dbpage(lif->ionic, dbpage_num);
+	if (!lif->kern_dbpage) {
+		dev_err(dev, "Cannot map dbpage, aborting\n");
+		err = -ENOMEM;
+		goto err_out_free_dbid;
+	}
 
 	err = ionic_lif_adminq_init(lif);
 	if (err)
@@ -2619,6 +2613,11 @@ err_out_notifyq_deinit:
 err_out_adminq_deinit:
 	ionic_lif_qcq_deinit(lif, lif->adminqcq);
 	ionic_lif_reset(lif);
+	ionic_bus_unmap_dbpage(lif->ionic, lif->kern_dbpage);
+	lif->kern_dbpage = NULL;
+err_out_free_dbid:
+	kfree(lif->dbid_inuse);
+	lif->dbid_inuse = NULL;
 
 	return err;
 }
