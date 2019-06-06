@@ -440,6 +440,7 @@ class NaplesManagement(EntityManagement):
     def Login(self, bringup_oob=True):
         self.__login()
         if bringup_oob:
+            time.sleep(60)
             self.__read_ip()
 
     @_exceptionWrapper(_errCodes.NAPLES_GOLDFW_UNKNOWN, "Gold FW unknown")
@@ -939,6 +940,7 @@ def Main():
     host.Reboot()
 
     #Naples would have rebooted to, login again.
+    time.sleep(60)
     naples.Connect()
 
     # Common to Case 2 and Case 1.
