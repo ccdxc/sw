@@ -10,6 +10,7 @@ package: ${PKG_PREREQS}
 ifeq (,$(filter $(PIPELINE),hello l2switch elektra))
 	${MAKE} package-clean
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target host
+	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target test-utils
 ifeq ($(ARCH),aarch64)
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh

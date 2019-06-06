@@ -1,0 +1,2 @@
+# package test specific files
+nic/build/aarch64/iris/out/testupgapp_bin/testupgapp.bin                 /build/aarch64/iris/out/testupgapp_bin/

@@ -107,6 +107,16 @@ elif args.target == 'host':
     tar_name    = 'host'
     files = []
     files.append('nic/tools/package/pack_host.txt')
+elif args.target == 'test-utils':
+    print ("Packaging for test-utils")
+    arm_pkg     = 0
+    objcopy_bin = 'objcopy'
+    strip_bin   = 'strip'
+    output_dir  = pwd + '/fake_root_target/x86_64'
+    arch = 'x86_64'
+    tar_name    = 'test-utils'
+    files = []
+    files.append('nic/tools/package/pack_test_utils.txt')
 elif args.target == 'debug' or args.target == 'debug-arm':
     print ("Packaging for debug")
     if args.target == 'debug-arm':

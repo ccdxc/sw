@@ -43,6 +43,7 @@ iota: iota-proto bin/server/iota_server bin/agent/iota_agent bin/agent/iota_agen
 
 heimdall:
 	make -C $(NICDIR) heimdall.gobin
+	cp $(NICDIR)/build/x86_64/iris/bin/heimdall $(IOTA_BIN_DIR)/
 
 .PHONY: test
 test:

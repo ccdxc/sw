@@ -26,7 +26,7 @@ def __generate_config(cfgMetaFile, cfgOutputDir):
     os.system("rm -rf " + cfgOutputDir)
     os.mkdir(cfgOutputDir)
     tmpl_file = __generate_heimdall_template()
-    heimdallExec = api.GetTopDir() + '/nic/build/x86_64/iris/bin/heimdall'
+    heimdallExec = api.GetTopDir() + '/iota/bin/heimdall'
     cmd = heimdallExec + " gen -f " + cfgMetaFile + " -t " + tmpl_file +  " -o " + cfgOutputDir +  " -u node1 --remote-uuid node2"
     api.Logger.info("Generating config %s" % cmd)
     ret = os.system(cmd)
