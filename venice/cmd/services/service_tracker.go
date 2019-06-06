@@ -2,6 +2,8 @@ package services
 
 import (
 	"fmt"
+	"reflect"
+	"sort"
 	"sync"
 
 	"github.com/pensando/sw/venice/globals"
@@ -188,17 +190,31 @@ func (m *ServiceTracker) OnNotifyResolver(e protos.ServiceInstanceEvent) error {
 		return nil // we are not interested this service
 	}
 
+	var existingList []string
+	var newList []string
+
+	// get the existing list of addresses
+	for addr := range addrs {
+		existingList = append(existingList, addr)
+	}
+
 	switch e.Type {
 	case protos.ServiceInstanceEvent_Added:
 		addrs[e.Instance.Node] = struct{}{}
 	case protos.ServiceInstanceEvent_Deleted:
 		delete(addrs, e.Instance.Node)
 	}
-	var list []string
-	for a := range addrs {
-		list = append(list, a)
+
+	// new list of addresses
+	for addr := range addrs {
+		newList = append(newList, addr)
 	}
-	m.setAPIAddress(e.Instance.Service, list)
+
+	sort.Strings(existingList)
+	sort.Strings(newList)
+	if !reflect.DeepEqual(existingList, newList) {
+		m.setAPIAddress(e.Instance.Service, newList)
+	}
 	return nil
 }
 
