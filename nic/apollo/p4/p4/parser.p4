@@ -175,7 +175,7 @@ parser parse_txdma_app {
     extract(p4plus_to_p4_vlan);
     return select(p4plus_to_p4.p4plus_app_id) {
         P4PLUS_APPTYPE_CPU : parse_cpu_packet;
-        default : parse_packet;
+        default : parse_packet_from_host;
     }
 }
 
