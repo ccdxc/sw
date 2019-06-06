@@ -6,6 +6,8 @@ import (
 	"flag"
 	"strings"
 
+	"github.com/pensando/sw/venice/utils/events/recorder"
+
 	"github.com/pensando/sw/venice/ctrler/rollout"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
@@ -42,15 +44,23 @@ func main() {
 	}
 
 	// Initialize logger config
-	log.SetConfig(logConfig)
+	logger := log.SetConfig(logConfig)
 	log.SetTraceDebug()
 
 	// create a dummy channel to wait forever
 	waitCh := make(chan bool)
 	r := resolver.New(&resolver.Config{Name: globals.Rollout, Servers: strings.Split(*resolverURLs, ",")})
 
+	// create events recorder
+	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
+		Component: globals.Rollout}, logger)
+	if err != nil {
+		log.Fatalf("failed to create events recorder, err: %v", err)
+	}
+	defer evtsRecorder.Close()
+
 	// create the controller
-	_, err := rollout.NewCtrler(*listenURL, globals.APIServer, r)
+	_, err = rollout.NewCtrler(*listenURL, globals.APIServer, r, evtsRecorder)
 	if err != nil {
 		log.Fatalf("Error creating controller instance: %v", err)
 	}

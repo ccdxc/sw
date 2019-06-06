@@ -27,6 +27,10 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'NIC_UNHEALTHY',
     'NODE_DISJOINED',
     'NODE_JOINED',
+    'ROLLOUT_FAILED',
+    'ROLLOUT_STARTED',
+    'ROLLOUT_SUCCESS',
+    'ROLLOUT_SUSPENDED',
   ],
   Network: [
     'LINK_DOWN',
@@ -143,6 +147,26 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "NODE_JOINED",
       "Severity": EventsEvent_severity.INFO,
       "Desc": "Node joined the cluster",
+  },
+  'ROLLOUT_FAILED' : {
+      "Name": "ROLLOUT_FAILED",
+      "Severity": EventsEvent_severity.CRITICAL,
+      "Desc": "Rollout failed",
+  },
+  'ROLLOUT_STARTED' : {
+      "Name": "ROLLOUT_STARTED",
+      "Severity": EventsEvent_severity.INFO,
+      "Desc": "Rollout initiated",
+  },
+  'ROLLOUT_SUCCESS' : {
+      "Name": "ROLLOUT_SUCCESS",
+      "Severity": EventsEvent_severity.INFO,
+      "Desc": "Rollout successfully completed",
+  },
+  'ROLLOUT_SUSPENDED' : {
+      "Name": "ROLLOUT_SUSPENDED",
+      "Severity": EventsEvent_severity.INFO,
+      "Desc": "Rollout suspended",
   },
   'LINK_DOWN' : {
       "Name": "LINK_DOWN",

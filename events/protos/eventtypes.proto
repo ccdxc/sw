@@ -153,4 +153,20 @@ enum EventTypes {
     DISK_THRESHOLD_EXCEEDED         = 603 [(category) = Resource,
                                            (severity) = CRITICAL,
                                            (desc)     = "Disk threshold exceeded"];
+    // ------------------------------ Rollout events -------------------------- //
+    ROLLOUT_STARTED          = 701 [(category) = Cluster,
+                                          (severity) = INFO,
+                                          (desc)     = "Rollout initiated"];
+
+    ROLLOUT_SUCCESS          = 702 [(category) = Cluster,
+                                          (severity) = INFO,
+                                          (desc)     = "Rollout successfully completed"];
+
+    ROLLOUT_FAILED         = 703 [(category) = Cluster,
+                                          (severity) = CRITICAL,
+                                          (desc)     = "Rollout failed"];
+
+    ROLLOUT_SUSPENDED         = 704 [(category) = Cluster,
+                                 (severity) = INFO,
+                                 (desc)     = "Rollout suspended"];
 }

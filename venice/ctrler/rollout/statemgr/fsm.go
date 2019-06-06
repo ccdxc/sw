@@ -260,18 +260,21 @@ func fsmAcPreUpgSmartNIC(ros *RolloutState) {
 func fsmAcWaitForSchedule(ros *RolloutState) {
 	if ros.Spec.ScheduledStartTime == nil {
 		ros.eventChan <- fsmEvScheduleNow
+		ros.raiseRolloutEvent(rollout.RolloutStatus_PROGRESSING)
 		return
 	}
 	t, err := ros.Spec.ScheduledStartTime.Time()
 	now := time.Now()
 	if err != nil || now.After(t) { // specified time is in the past
 		ros.eventChan <- fsmEvScheduleNow
+		ros.raiseRolloutEvent(rollout.RolloutStatus_PROGRESSING)
 		return
 	}
 	d := t.Sub(now)
 	time.Sleep(d)
 	// TODO: Provide a way to cancel this when user Stops (or Deletes) Rollout
 	ros.eventChan <- fsmEvScheduleNow
+	ros.raiseRolloutEvent(rollout.RolloutStatus_PROGRESSING)
 	return
 }
 
@@ -341,20 +344,24 @@ func fsmAcRolloutSmartNICs(ros *RolloutState) {
 	}()
 }
 func fsmAcRolloutSuccess(ros *RolloutState) {
+
 	ros.setEndTime()
 	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUCCESS)]
 	ros.saveStatus()
 	ros.updateRolloutAction()
+	ros.raiseRolloutEvent(rollout.RolloutStatus_SUCCESS)
 }
 func fsmAcRolloutFail(ros *RolloutState) {
 	ros.setEndTime()
 	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_FAILURE)]
 	ros.saveStatus()
 	ros.updateRolloutAction()
+	ros.raiseRolloutEvent(rollout.RolloutStatus_FAILURE)
 }
 func fsmAcRolloutSuspend(ros *RolloutState) {
 	ros.setEndTime()
 	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUSPENDED)]
 	ros.saveStatus()
 	ros.updateRolloutAction()
+	ros.raiseRolloutEvent(rollout.RolloutStatus_SUSPENDED)
 }

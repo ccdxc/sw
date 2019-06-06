@@ -5,6 +5,8 @@ package statemgr
 import (
 	"sync"
 
+	"github.com/pensando/sw/venice/utils/events"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	roproto "github.com/pensando/sw/api/generated/rollout"
@@ -21,9 +23,10 @@ type syncFlag struct {
 
 // Statemgr is the object state manager
 type Statemgr struct {
-	waitGrp sync.WaitGroup // wait group to wait on all go routines to exit
-	memDB   *memdb.Memdb   // database of all objects
-	writer  writer.Writer  // writer to apiserver
+	waitGrp      sync.WaitGroup  // wait group to wait on all go routines to exit
+	memDB        *memdb.Memdb    // database of all objects
+	writer       writer.Writer   // writer to apiserver
+	evtsRecorder events.Recorder //events recorder for rollout
 
 	// Channels to receive events from api server and internal timers
 	RolloutWatcher  chan kvstore.WatchEvent // rolllout object watcher
@@ -132,11 +135,12 @@ func (sm *Statemgr) Stop() {
 }
 
 // NewStatemgr creates a new state manager object
-func NewStatemgr(wr writer.Writer) (*Statemgr, error) {
+func NewStatemgr(wr writer.Writer, er events.Recorder) (*Statemgr, error) {
 	// create new statemgr instance
 	stateMgr := &Statemgr{
 		memDB:           memdb.NewMemdb(),
 		writer:          wr,
+		evtsRecorder:    er,
 		RolloutWatcher:  make(chan kvstore.WatchEvent, watcherQueueLen),
 		NodeWatcher:     make(chan kvstore.WatchEvent, watcherQueueLen),
 		SmartNICWatcher: make(chan kvstore.WatchEvent, watcherQueueLen),

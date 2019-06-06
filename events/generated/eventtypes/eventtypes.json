@@ -94,6 +94,26 @@
    "Name": "NODE_JOINED",
    "Severity": "INFO",
    "Desc": "Node joined the cluster"
+  },
+  {
+   "Name": "ROLLOUT_FAILED",
+   "Severity": "CRITICAL",
+   "Desc": "Rollout failed"
+  },
+  {
+   "Name": "ROLLOUT_STARTED",
+   "Severity": "INFO",
+   "Desc": "Rollout initiated"
+  },
+  {
+   "Name": "ROLLOUT_SUCCESS",
+   "Severity": "INFO",
+   "Desc": "Rollout successfully completed"
+  },
+  {
+   "Name": "ROLLOUT_SUSPENDED",
+   "Severity": "INFO",
+   "Desc": "Rollout suspended"
   }
  ],
  "Network": [

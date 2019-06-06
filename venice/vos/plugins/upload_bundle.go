@@ -59,7 +59,7 @@ func getUploadBundleCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc 
 		log.InfoLog("bucket", bucket, "Stage", stage, "oper", oper, "msg", "logger plugin")
 
 		//TODO object name to be taken from objectstore.Object. in object is currently null
-		fr, err := client.GetObjectWithContext(ctx, "default.images", "bundle.tar", minio.GetObjectOptions{})
+		fr, err := client.GetObjectWithContext(ctx, "default.images", bundleImage, minio.GetObjectOptions{})
 		if err != nil {
 			log.Errorf("Could not get object (%s)", err)
 			return fmt.Errorf("Could not get object (%s)", err)
@@ -109,6 +109,14 @@ func getUploadBundleCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc 
 		versionMap := processMetadataFile(installerTmpDir + imageMetaFileName)
 		if versionMap == nil {
 			return fmt.Errorf("Failed to process metafile %s missing version info", installerTmpDir+"/"+imageMetaFileName)
+		}
+
+		//create version object to enable deletion
+		meta := make(map[string]string)
+		_, err = client.PutObject("default."+bucket, versionMap["Bundle"][metaVersion], bytes.NewBufferString(versionMap["Bundle"][metaVersion]), -1, minio.PutObjectOptions{UserMetadata: meta})
+		if err != nil {
+			log.Errorf("UploadImage: Could not put object [%s] to datastore (%s)", versionMap["Bundle"][metaName], err)
+			return err
 		}
 
 		for key := range versionMap {
@@ -173,6 +181,85 @@ func processMetadataFile(metadata string) map[string]map[string]string {
 
 	return versionMap
 }
+
+func getDeleteCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc {
+	return func(ctx context.Context, oper vos.ObjectOper, in *objstore.Object, client vos.BackendClient) error {
+		log.InfoLog("bucket", bucket, "Stage", stage, "oper", oper, "msg", "logger plugin")
+
+		if in == nil {
+			log.Infof("Passed in Object is empty")
+			return fmt.Errorf("Passed in structure is empty")
+		}
+		version := in.Name
+		log.Infof("Passed in object %+v.", in)
+
+		fr, err := client.GetObjectWithContext(ctx, "default.images", "Bundle/"+version+"_img/"+imageMetaFileName, minio.GetObjectOptions{})
+		if err != nil {
+			log.Errorf("Could not get object (%s)", err)
+			return fmt.Errorf("Could not get object (%s)", err)
+		}
+
+		objInfo, err := fr.Stat()
+		if objInfo.Key != "Bundle/"+version+"_img/"+imageMetaFileName {
+			log.Infof("Got delete call back for object %s. Returning", objInfo.Key)
+			return nil
+		}
+		if err := os.RemoveAll(installerTmpDir); err != nil {
+			log.Errorf("Error %s during removeAll of %s", err, installerTmpDir)
+			return err
+		}
+		if err := os.MkdirAll(installerTmpDir, 0700); err != nil {
+			log.Errorf("Error %s during mkdirAll of %s", err, installerTmpDir)
+			return err
+		}
+
+		of, err := os.Create(installerTmpDir + "/" + imageMetaFileName)
+		if err != nil {
+			log.Errorf("Could not create output file [%s](%s)", imageMetaFileName, err)
+			return fmt.Errorf("Could not create output file [%s](%s)", imageMetaFileName, err)
+		}
+		defer of.Close()
+		buf := make([]byte, 1024)
+		totsize := 0
+		for {
+			n, err := fr.Read(buf)
+			if err != nil && err != io.EOF {
+				log.Errorf("Error while reading object (%s)", err)
+				return fmt.Errorf("Error while reading object (%s)", err)
+			}
+			if n == 0 {
+				break
+			}
+			totsize += n
+			if _, err = of.Write(buf[:n]); err != nil {
+				log.Errorf("Error writing to output file (%s)", err)
+				return fmt.Errorf("Error writing to output file (%s)", err)
+			}
+		}
+		log.Infof("Got metadata.json of size [%d]", totsize)
+		versionMap := processMetadataFile(installerTmpDir + imageMetaFileName)
+		if versionMap == nil {
+			return fmt.Errorf("Failed to process metafile %s missing version info", installerTmpDir+"/"+imageMetaFileName)
+		}
+
+		log.Infof("Got versionMap %+v", versionMap)
+		for key := range versionMap {
+			if err := client.RemoveObject("default.images", key+"/"+versionMap[key][metaVersion]+"_img/"+versionMap[key][metaName]); err != nil {
+				log.Errorf("Failed to remove %s. Error %+v", versionMap[key][metaName], err)
+				return err
+			}
+			log.Infof("Removed %s in bucket[%s]", versionMap[key][metaName], "default."+bucket)
+		}
+
+		if err := os.RemoveAll(installerTmpDir); err != nil {
+			return fmt.Errorf("Error %s during removeAll of %s", err, installerTmpDir)
+		}
+
+		return nil
+	}
+}
+
 func uploadBundleImageCallbacks(instance vos.Interface) {
 	instance.RegisterCb("images", vos.PostOp, vos.Upload, getUploadBundleCbFunc("images", vos.PostOp))
+	instance.RegisterCb("images", vos.PreOp, vos.Delete, getDeleteCbFunc("images", vos.PreOp))
 }

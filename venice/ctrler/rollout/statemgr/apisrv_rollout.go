@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/events/generated/eventtypes"
+
 	"github.com/pensando/sw/api"
 	roproto "github.com/pensando/sw/api/generated/rollout"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -43,12 +45,38 @@ func (sm *Statemgr) handleRolloutEvent(et kvstore.WatchEventType, ro *roproto.Ro
 		}
 	case kvstore.Updated:
 		log.Infof("UpdateRollout - %s\n", ro.Name)
+		sm.updateRolloutState(ro)
 
 	case kvstore.Deleted:
 		log.Infof("deleteRolloutState - %s\n", ro.Name)
 
 		sm.deleteRolloutState(ro)
 	}
+}
+
+// updateRolloutState to create a Rollout Object in statemgr
+func (sm *Statemgr) updateRolloutState(ro *roproto.Rollout) error {
+	// All parameters are validated (using apiserver hooks) by the time we get here
+	ros, err := sm.GetRolloutState(ro.Tenant, ro.Name)
+	if err != nil {
+		log.Debugf("Error updating non-existent rollout {%+v}. Err: %v", ro, err)
+		return err
+	}
+
+	log.Infof("Updating Rollout %v", ros.Rollout.Name)
+
+	ros.Mutex.Lock()
+	// XXX validate parameters -
+	if ros.GetObjectKind() != kindRollout {
+		ros.Mutex.Unlock()
+		return fmt.Errorf("Unexpected object kind %s", ros.GetObjectKind())
+	}
+	ros.Spec.Suspend = ro.Spec.Suspend
+	ros.Status.OperationalState = ro.Status.OperationalState
+	ros.Mutex.Unlock()
+	sm.memDB.AddObject(ros)
+
+	return nil
 }
 
 // createRolloutState to create a Rollout Object in statemgr
@@ -128,6 +156,23 @@ func (ros *RolloutState) stop() {
 }
 
 // === Status updaters ===
+func (ros *RolloutState) raiseRolloutEvent(status roproto.RolloutStatus_RolloutOperationalState) {
+
+	if ros.Statemgr.evtsRecorder == nil {
+		log.Infof("Event recorder not found")
+		return
+	}
+	switch status {
+	case roproto.RolloutStatus_SUCCESS:
+		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_SUCCESS, "Rollout completed sucessfully", nil)
+	case roproto.RolloutStatus_SUSPENDED:
+		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_SUSPENDED, "Rollout suspended", nil)
+	case roproto.RolloutStatus_FAILURE:
+		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_FAILED, "Rollout Failed", nil)
+	case roproto.RolloutStatus_PROGRESSING:
+		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_STARTED, "Rollout started", nil)
+	}
+}
 func (ros *RolloutState) saveStatus() {
 	if ros != nil && ros.writer != nil {
 		ros.writer.WriteRollout(ros.Rollout)

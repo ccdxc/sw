@@ -7,6 +7,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/rollout/statemgr"
 	"github.com/pensando/sw/venice/ctrler/rollout/watcher"
 	"github.com/pensando/sw/venice/ctrler/rollout/writer"
+	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -20,7 +21,7 @@ type Ctrler struct {
 }
 
 // NewCtrler returns a controller instance
-func NewCtrler(serverURL, apisrvURL string, resolver resolver.Interface) (*Ctrler, error) {
+func NewCtrler(serverURL, apisrvURL string, resolver resolver.Interface, evtsRecorder events.Recorder) (*Ctrler, error) {
 
 	// create writer
 	wr, err := writer.NewAPISrvWriter(apisrvURL, resolver)
@@ -30,7 +31,7 @@ func NewCtrler(serverURL, apisrvURL string, resolver resolver.Interface) (*Ctrle
 	}
 
 	// create rollout state
-	stateMgr, err := statemgr.NewStatemgr(wr)
+	stateMgr, err := statemgr.NewStatemgr(wr, evtsRecorder)
 	if err != nil {
 		log.Errorf("Could not create rollout statemanager. Err: %v", err)
 		return nil, err

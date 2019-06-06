@@ -1,8 +1,12 @@
 package statemgr
 
 import (
+	"fmt"
 	"testing"
 	"time"
+
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gogo/protobuf/types"
@@ -12,10 +16,20 @@ import (
 	roproto "github.com/pensando/sw/api/generated/rollout"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 	. "github.com/pensando/sw/venice/utils/testutils"
+)
+
+var (
+	testServerURL = "localhost:0"
+	logConfig     = log.GetDefaultConfig(fmt.Sprintf("%s.%s", globals.Rollout, "test"))
+	logger        = log.SetConfig(logConfig)
+
+	// create mock events recorder
+	_ = recorder.Override(mockevtsrecorder.NewRecorder("statemgr_test", logger))
 )
 
 // dummy writer
@@ -34,9 +48,12 @@ func (d *dummyWriter) WriteRolloutAction(ro *roproto.Rollout) error {
 }
 func TestVeniceRolloutWatch(t *testing.T) {
 	// Create VeniceRolloutObject and see that its properly created and that watchers see the updates to the object
+	// create recorder
+	// create recorder
+	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
 
 	// create  state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(&dummyWriter{}, evtsRecorder)
 	AssertOk(t, err, "Error creating StateMgr")
 	defer stateMgr.Stop()
 
@@ -305,8 +322,13 @@ func createNodeHelper(stateMgr *Statemgr, name string) {
 
 func TestVeniceOnlyRollout(t *testing.T) {
 	const version = "v1.1"
+
+	// create recorder
+	// create recorder
+	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
+
 	// create  state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(&dummyWriter{}, evtsRecorder)
 	AssertOk(t, err, "Error creating StateMgr")
 	defer stateMgr.Stop()
 
@@ -419,8 +441,14 @@ func TestVeniceOnlyRollout(t *testing.T) {
 
 func TestSNICOrder(t *testing.T) {
 	const version = "v1.1"
+
+	// create recorder
+	// create recorder
+	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
+
 	// create  state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(&dummyWriter{}, evtsRecorder)
+
 	AssertOk(t, err, "Error creating StateMgr")
 	defer stateMgr.Stop()
 
@@ -477,8 +505,12 @@ func TestSNICOrder(t *testing.T) {
 
 func TestSNICOnlyRollout(t *testing.T) {
 	const version = "v1.1"
+	// create recorder
+	// create recorder
+	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
+
 	// create  state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(&dummyWriter{}, evtsRecorder)
 	AssertOk(t, err, "Error creating StateMgr")
 	defer stateMgr.Stop()
 
@@ -560,8 +592,12 @@ func TestSNICOnlyRollout(t *testing.T) {
 
 func TestFutureRollout(t *testing.T) {
 	const version = "v1.1"
+	// create recorder
+	// create recorder
+	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
+
 	// create  state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(&dummyWriter{}, evtsRecorder)
 	AssertOk(t, err, "Error creating StateMgr")
 	defer stateMgr.Stop()
 
@@ -625,8 +661,12 @@ func TestFutureRollout(t *testing.T) {
 // When a preupgrade fails, the rollout should go to Failed state
 func TestPreUpgFail(t *testing.T) {
 	const version = "v1.1"
+	// create recorder
+	// create recorder
+	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
+
 	// create  state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(&dummyWriter{}, evtsRecorder)
 	AssertOk(t, err, "Error creating StateMgr")
 	defer stateMgr.Stop()
 
@@ -684,8 +724,12 @@ func TestPreUpgTimeout(t *testing.T) {
 	}()
 
 	const version = "v1.1"
+	// create recorder
+	// create recorder
+	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
+
 	// create  state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(&dummyWriter{}, evtsRecorder)
 	AssertOk(t, err, "Error creating StateMgr")
 	defer stateMgr.Stop()
 
@@ -744,8 +788,11 @@ func TestMaxFailuresNotHit(t *testing.T) {
 	}()
 
 	const version = "v1.1"
+	// create recorder
+	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
+
 	// create  state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(&dummyWriter{}, evtsRecorder)
 	AssertOk(t, err, "Error creating StateMgr")
 	defer stateMgr.Stop()
 
@@ -807,8 +854,11 @@ func TestMaxFailuresHit(t *testing.T) {
 	}()
 
 	const version = "v1.1"
+	// create recorder
+	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
+
 	// create  state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(&dummyWriter{}, evtsRecorder)
 	AssertOk(t, err, "Error creating StateMgr")
 	defer stateMgr.Stop()
 
@@ -862,8 +912,11 @@ func TestMaxFailuresHit(t *testing.T) {
 
 func TestExponentialRollout(t *testing.T) {
 	const version = "v1.1"
+	// create recorder
+	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
+
 	// create  state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(&dummyWriter{}, evtsRecorder)
 	AssertOk(t, err, "Error creating StateMgr")
 	defer stateMgr.Stop()
 

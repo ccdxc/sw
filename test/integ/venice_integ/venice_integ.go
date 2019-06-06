@@ -121,7 +121,7 @@ var (
 	logger = log.GetNewLogger(log.GetDefaultConfig("venice_integ_test"))
 
 	// create events recorder
-	_, _ = recorder.NewRecorder(&recorder.Config{
+	evtsRecorder, _ = recorder.NewRecorder(&recorder.Config{
 		Component:     "venice_integ_test",
 		BackupDir:     "/tmp",
 		SkipEvtsProxy: true}, logger)
@@ -984,7 +984,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	it.startCitadel()
 
 	// create the rollout controller
-	it.rolloutCtrler, err = rollout.NewCtrler(integTestRolloutURL, globals.APIServer, rc)
+	it.rolloutCtrler, err = rollout.NewCtrler(integTestRolloutURL, globals.APIServer, rc, evtsRecorder)
 	c.Assert(err, check.IsNil)
 
 	// start spyglass and elasticsearch

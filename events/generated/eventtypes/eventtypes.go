@@ -219,6 +219,30 @@ func init() {
 		Category: "Resource",
 		Desc:     "Disk threshold exceeded"}
 
+	eventTypes[ROLLOUT_STARTED] = &EventTypeAttributes{
+		EType:    "ROLLOUT_STARTED",
+		Severity: "INFO",
+		Category: "Cluster",
+		Desc:     "Rollout initiated"}
+
+	eventTypes[ROLLOUT_SUCCESS] = &EventTypeAttributes{
+		EType:    "ROLLOUT_SUCCESS",
+		Severity: "INFO",
+		Category: "Cluster",
+		Desc:     "Rollout successfully completed"}
+
+	eventTypes[ROLLOUT_FAILED] = &EventTypeAttributes{
+		EType:    "ROLLOUT_FAILED",
+		Severity: "CRITICAL",
+		Category: "Cluster",
+		Desc:     "Rollout failed"}
+
+	eventTypes[ROLLOUT_SUSPENDED] = &EventTypeAttributes{
+		EType:    "ROLLOUT_SUSPENDED",
+		Severity: "INFO",
+		Category: "Cluster",
+		Desc:     "Rollout suspended"}
+
 }
 
 func GetEventTypeAttrs(eType EventType) *EventTypeAttributes {
