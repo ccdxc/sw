@@ -61,6 +61,12 @@ testcases:
     -   name    : CHECK_VERSION
         testcase: testcases.penctl.version
 
+    -   name    : CHECK_SSH
+        testcase: testcases.penctl.ssh
+        iterators :
+            type   : simple
+            option : ["system disable-sshd", "system enable-sshd"]
+
     -   name    : CHECK_TOP_HELP
         testcase: testcases.penctl.help
         iterators :

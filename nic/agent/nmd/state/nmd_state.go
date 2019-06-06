@@ -794,6 +794,19 @@ func appendAuthorizedKeyFile(sshPubKeyFile string) error {
 	return nil
 }
 
+func executeCmd(req *nmd.NaplesCmdExecute, parts []string) (string, error) {
+	cmd := exec.Command(req.Executable, parts...)
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, req.Env)
+
+	log.Infof("Naples Cmd Execute Request: %+v env: [%s]", req, os.Environ())
+	stdoutStderr, err := cmd.CombinedOutput()
+	if err != nil {
+		return string(fmt.Sprintf(err.Error()) + ":" + string(stdoutStderr)), err
+	}
+	return string(stdoutStderr), nil
+}
+
 func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
 	parts := strings.Fields(req.Opts)
 	if req.Executable == "/bin/date" && req.Opts != "" {
@@ -811,16 +824,7 @@ func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
 		}
 		return "", nil
 	}
-	cmd := exec.Command(req.Executable, parts...)
-	cmd.Env = os.Environ()
-	cmd.Env = append(cmd.Env, req.Env)
-
-	log.Infof("Naples Cmd Execute Request: %+v env: [%s]", req, os.Environ())
-	stdoutStderr, err := cmd.CombinedOutput()
-	if err != nil {
-		return string(fmt.Sprintf(err.Error()) + ":" + string(stdoutStderr)), err
-	}
-	return string(stdoutStderr), nil
+	return executeCmd(req, parts)
 }
 
 func naplesPkgVerify(pkgName string) (string, error) {

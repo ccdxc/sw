@@ -30,11 +30,27 @@ var delSSHConfigCmd = &cobra.Command{
 	RunE:  delSSHConfigCmdHandler,
 }
 
+var enableSSHConfigCmd = &cobra.Command{
+	Use:   "enable-sshd",
+	Short: "Enable sshd on Naples",
+	Long:  "\n------------------------------\n Enable sshd on Naples \n------------------------------\n",
+	RunE:  enableSSHConfigCmdHandler,
+}
+
+var disableSSHConfigCmd = &cobra.Command{
+	Use:   "disable-sshd",
+	Short: "Disable sshd on Naples",
+	Long:  "\n------------------------------\n Disable sshd on Naples \n------------------------------\n",
+	RunE:  disableSSHConfigCmdHandler,
+}
+
 var uploadPubKeyFile string
 
 func init() {
 	updateCmd.AddCommand(setSSHConfigCmd)
 	deleteCmd.AddCommand(delSSHConfigCmd)
+	sysCmd.AddCommand(enableSSHConfigCmd)
+	sysCmd.AddCommand(disableSSHConfigCmd)
 
 	setSSHConfigCmd.Flags().StringVarP(&uploadPubKeyFile, "file", "f", "", "Public Key file location/name")
 	setSSHConfigCmd.MarkFlagRequired("file")
@@ -99,6 +115,46 @@ func setSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 	v = &nmd.NaplesCmdExecute{
 		Executable: "rm",
 		Opts:       strings.Join([]string{"-rf ", "/update/" + pubKeyFile}, ""),
+	}
+	return naplesExecCmd(v)
+}
+
+func disableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
+	v := &nmd.NaplesCmdExecute{
+		Executable: "killall",
+		Opts:       strings.Join([]string{"sshd"}, ""),
+	}
+	if err := naplesExecCmd(v); err != nil {
+		fmt.Println(err)
+		return errors.New("Unable to killall sshd")
+	}
+	v = &nmd.NaplesCmdExecute{
+		Executable: "rm",
+		Opts:       strings.Join([]string{"-f ", "/var/lock/sshd /root/.ssh/authorized_keys"}, ""),
+	}
+	return naplesExecCmd(v)
+}
+
+func enableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
+	v := &nmd.NaplesCmdExecute{
+		Executable: "/usr/bin/ssh-keygen",
+		Opts:       strings.Join([]string{"-A"}, ""),
+	}
+	if err := naplesExecCmd(v); err != nil {
+		fmt.Println(err)
+		return errors.New("Unable to create missing keys")
+	}
+	v = &nmd.NaplesCmdExecute{
+		Executable: "/usr/sbin/sshd",
+		Opts:       strings.Join([]string{""}, ""),
+	}
+	if err := naplesExecCmd(v); err != nil {
+		fmt.Println(err)
+		return errors.New("Unable to start sshd")
+	}
+	v = &nmd.NaplesCmdExecute{
+		Executable: "touch",
+		Opts:       strings.Join([]string{"/var/lock/sshd"}, ""),
 	}
 	return naplesExecCmd(v)
 }
