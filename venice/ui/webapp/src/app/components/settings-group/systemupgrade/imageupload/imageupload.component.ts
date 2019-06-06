@@ -8,7 +8,6 @@ import { ObjstoreService } from '@app/services/generated/objstore.service';
 import { IApiStatus, IObjstoreObject, ObjstoreObject, IObjstoreObjectList, ObjstoreObjectList } from '@sdk/v1/models/generated/objstore';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { Utility } from '@app/common/Utility';
-import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { AUTH_KEY } from '@app/core';
 import { RolloutUtil } from '@app/components/settings-group/systemupgrade/rollouts/RolloutUtil';
 import { RolloutImageLabel } from '@app/components/settings-group/systemupgrade/rollouts/';
@@ -32,12 +31,11 @@ import { TableCol } from '@app/components/shared/tableviewedit';
   encapsulation: ViewEncapsulation.None
 })
 
-export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject, ObjstoreObject> implements OnInit , OnDestroy {
+export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject, ObjstoreObject> implements OnInit, OnDestroy {
 
   dataObjects: ReadonlyArray<ObjstoreObject> = [];
   isTabComponent: boolean = false;
   disableTableWhenRowExpanded: boolean = true;
-  rolloutimagesEventUtility: HttpEventUtility<ObjstoreObject>;
   loading: boolean = false;
 
   uploadedFiles: any[] = [];
@@ -60,11 +58,9 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   startingSortOrder: number = -1;
 
   cols: TableCol[] = [
-    { field: 'meta.name', header: 'Name', class: 'imageupload-column-common imageupload-column-who', sortable: true, width: 10 },
-    { field: 'meta.creation-time', header: 'Creation Time', class: 'imageupload-column-common imageupload-column-date', sortable: true, width: 10 },
-    { field: 'meta.mod-time', header: 'Mod Time', class: 'imageupload-column-common imageupload-column-date', sortable: true, width: 10 },
-    { field: 'status.size', header: 'File Size (bytes)', class: 'imageupload-column-common imageupload-column-filesize', sortable: true, width: 15 },
-    { field: 'meta.labels.Version', header: 'Version', class: 'imageupload-column-common imageupload-column-version', sortable: true, width: 15 },
+    { field: 'meta.name', header: 'Name', class: 'imageupload-column-common imageupload-column-who', sortable: true, width: 25 },
+    { field: 'meta.mod-time', header: 'Time', class: 'imageupload-column-common imageupload-column-date', sortable: true, width: 10 },
+    { field: 'meta.labels.Version', header: 'Version', class: 'imageupload-column-common imageupload-column-version', sortable: true, width: 25 },
     { field: 'meta.labels', header: 'Details', class: 'imageupload-column-common imageupload-column-labels', sortable: false, width: 40 },
   ];
 
@@ -82,16 +78,15 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   setDefaultToolbar(): void {
     const breadcrumb = [{ label: 'System Upgrade', url: Utility.getBaseUIUrl() + 'settings/upgrade' }, { label: 'Images', url: '' }];
     const buttons = [];
-    if (! this.isToUseWebSocket()) {
-      // TODO: delete the refresh button when  watchRolloutImages() is working.  For now, make a refresh button for VS-307
-      buttons.push(
-        {
-          cssClass: 'global-button-primary imageupload-toolbar-button imageupload-toolbar-button-refresh',
-          text: 'RERESH',
-          callback: () => { this.refreshImages(); },
-        }
-      );
-    }
+
+    buttons.push(
+      {
+        cssClass: 'global-button-primary imageupload-toolbar-button imageupload-toolbar-button-refresh',
+        text: 'RERESH',
+        callback: () => { this.refreshImages(); },
+      }
+    );
+
     this.controllerService.setToolbarData({
       buttons: buttons,
       breadcrumb: breadcrumb
@@ -99,40 +94,17 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   }
 
   postNgInit() {
-   if (this.isToUseWebSocket()) {
-     this.watchRolloutImages(); // This will fail and trigger "sign out" toaster when using local proxy. // TODO: fix me!
-   } else {
-      this.getRolloutImages();
-   }
+    this.getRolloutImages();
   }
 
-  isToUseWebSocket(): boolean {
-     // TODO:  in MAC dev env. Use:  return (environment.production) ;
-     return false;  // VS-390.  While waiting for rollout backend change, stop using web-socket for now.
-  }
 
   /** Override parent API as watchRolloutImages() is not working. */
   postDeleteRecord() {
-      this.refreshImages();
+    this.refreshImages();
   }
 
   refreshImages() {
-    if (! this.isToUseWebSocket()) {
-      this.getRolloutImages();
-    }
-  }
-
-  /** TODO: This function is not working in local dev using proxy.conf.js . */
-  watchRolloutImages() {
-    this.rolloutimagesEventUtility = new HttpEventUtility<ObjstoreObject>(ObjstoreObject);
-    this.dataObjects = this.rolloutimagesEventUtility.array;
-    const sub = this.objstoreService.WatchObject(Utility.ROLLOUT_IMGAGE_NAMESPACE).subscribe(
-      response => {
-        this.rolloutimagesEventUtility.processEvents(response);
-       // comment it out for now. It cause VS-390  // this.processRolloutImages(response);
-      },
-    );
-    this.subscriptions.push(sub);
+    this.getRolloutImages();
   }
 
   /**
@@ -140,12 +112,20 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
    * Once a bundle.tar is uploaded, back-end will un-tar it. Un-taring will have a matadata.json
    * We want take labels out fo metadata.json and add to bundle.tar
    * The image list table will only display bundle.tar
+   *
+   * 2019-06-05
+   * User can upload two bundle.tar files. 'bundle.tar' is fixed name. Logically, let us say bundle.tar-1, bundle.tar-2.
+   * bundle.tar-1 internally is version-1.0.1, bundle.tar-2 internally is version-2.0.a
+   * ListObject REST API will return two metadata.json.  We process the the json such that the image list table show two rows
+   * Also, we arrange the delete url as
+   *  https://10.7.100.39:10001/objstore/v1/tenant/default/images/objects/0version-1.0.1  // version-string is at the end of url
+   *
    */
 
   getRolloutImages() {
     const sub = this.objstoreService.ListObject(Utility.ROLLOUT_IMGAGE_NAMESPACE).subscribe(
       (response) => {
-          this.processRolloutImages(response);
+        this.processRolloutImages(response);
       },
       (error) => {
         this.controllerService.invokeRESTErrorToaster('Failed to fetch rollout images.', error);
@@ -154,42 +134,30 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     this.subscriptions.push(sub);
   }
 
+  /**
+   *
+   * @param response
+   */
   processRolloutImages(response) {
     let metaImage: ObjstoreObject = null;
-        let bundleTarImage: ObjstoreObject = null;
-        const rolloutImages: IObjstoreObjectList = response.body as IObjstoreObjectList;
-        if (rolloutImages && rolloutImages.items) {
-          const entries = [];
-          const allentries = [];
-          rolloutImages.items.forEach((image: ObjstoreObject) => {
-            if (image.meta.name.endsWith(RolloutUtil.ROLLOUT_METADATA_JSON)) {
-              metaImage = image;
-            } else if (image.meta.name.endsWith(RolloutUtil.ROLLOUT_BUNDLE_TAR)) {
-              bundleTarImage = image;
-              entries.push(bundleTarImage);
-            }
-            allentries.push(image);
-          });
-          if (bundleTarImage) {  // process only when bundle.tar is available.
-            const metaImageLabel: RolloutImageLabel = metaImage.meta.labels as RolloutImageLabel;
-            let bundletarImageLabel: RolloutImageLabel = bundleTarImage.meta.labels as RolloutImageLabel;
-            if (metaImageLabel) {
-              bundletarImageLabel = Utility.getLodash().cloneDeep(metaImageLabel);
-            } else {
-              const badLabels: RolloutImageLabel = {
-                Version: '',
-                Description: 'It does not look like a valid image'
-              };
-              bundletarImageLabel = badLabels;
-            }
-            bundleTarImage.meta.labels = bundletarImageLabel;
-          }
-          // in case user uploads a dummy tar file (not bundle.tar), we will show it. So that user can delete it. // 2019-05-17 // TODO: clean it up once back-end is ok.
-          this.dataObjects = (entries.length > 0) ? entries : allentries;
+    let rolloutImages: IObjstoreObjectList = null;
+    rolloutImages = (response) ? response.body as IObjstoreObjectList : rolloutImages;
+    if (rolloutImages && rolloutImages.items) {
+      const entries = [];
+      const allentries = [];
+      rolloutImages.items.forEach((image: ObjstoreObject) => {
+        if (image.meta.name.endsWith(RolloutUtil.ROLLOUT_METADATA_JSON)) {
+          metaImage = image;
+          entries.push(metaImage);
         }
+        allentries.push(image);
+      });
+      // in case user uploads a dummy tar file (not bundle.tar), we will show it. So that user can delete it. // 2019-05-17 // TODO: clean it up once back-end is ok.
+      this.dataObjects = (entries.length > 0) ? entries : allentries;
+    }
   }
 
-  onBeforeSend($event) {
+ onBeforeSend($event) {
     const xhr = $event.xhr;
     this._xhr = xhr;
     const headerName = AUTH_KEY;
@@ -231,7 +199,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   */
   onCancelUpload() {
     if (this.isFileUploadInProgress()) {
-       this.cancelUpload();  // cancel upload only when upload started.
+      this.cancelUpload();  // cancel upload only when upload started.
     }
   }
 
@@ -282,7 +250,11 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   }
 
   deleteRecord(object: IObjstoreObject): Observable<{ body: IObjstoreObject | IApiStatus | Error, statusCode: number }> {
-    return this.objstoreService.DeleteObject(Utility.ROLLOUT_IMGAGE_NAMESPACE, object.meta.name);
+    return this.objstoreService.DeleteObject(Utility.ROLLOUT_IMGAGE_NAMESPACE, this.getBundlerTarVersion(object));
+  }
+
+  getBundlerTarVersion(object: IObjstoreObject): string {
+    return (object.meta.labels && object.meta.labels['Version']) ? object.meta.labels['Version'] : object.meta.name;
   }
 
   generateDeleteConfirmMsg(object: IObjstoreObject) {
@@ -294,6 +266,8 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     const value = Utility.getObjectValueByPropertyPath(record, fields);
     const column = col.field;
     switch (column) {
+      case 'meta.name':
+        return 'bundle.tar';
       case 'meta.labels':
         return (value) ? Utility.displaySimpleObject(value) : '';
       case 'meta.labels.Version':
@@ -317,6 +291,6 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   }
 
   private isFileUploadInProgress(): boolean {
-    return (this._xhr !== null) || (this.fileUploadProgress > 0) ;
+    return (this._xhr !== null) || (this.fileUploadProgress > 0);
   }
 }

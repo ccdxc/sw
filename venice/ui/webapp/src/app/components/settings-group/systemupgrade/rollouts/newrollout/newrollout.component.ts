@@ -15,7 +15,7 @@ import { Observable } from 'rxjs';
 import { required } from '@sdk/v1/utils/validators';
 import { Utility } from '@common/Utility';
 import { RolloutImageLabel, EnumRolloutOptions, RolloutImageOption } from '../index';
-import { RolloutUtil} from '../RolloutUtil';
+import { RolloutUtil } from '../RolloutUtil';
 
 
 
@@ -51,7 +51,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
 
   @Output() formClose: EventEmitter<any> = new EventEmitter();
 
-
+  rolloutNowcheck: boolean = false;
   versiondescription: string = '';
 
   bodyicon: any = {
@@ -96,13 +96,16 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       this.newRollout.spec['scheduled-start-time'] = new Date(today);
       this.newRollout.setFormGroupValuesToBeModelValues();
       this.newRollout.$formGroup.get(['spec', 'suspend']).disable();
+      this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).enable();
     } else {   // edit mode
       const myrollout: IRolloutRollout = Utility.getLodash().cloneDeep(this.selectedRolloutData);
       myrollout.spec['scheduled-start-time'] = new Date(myrollout.spec['scheduled-start-time']);
       this.newRollout = new RolloutRollout(myrollout);
       this.newRollout.$formGroup.get(['meta', 'name']).disable();
       this.newRollout.$formGroup.get(['spec', 'version']).disable(); // disable version until version options are available.
-      this. selectedRolloutNicNodeTypes  = RolloutUtil.getRolloutNaplesVeniceType(this.newRollout);
+      this.selectedRolloutNicNodeTypes = RolloutUtil.getRolloutNaplesVeniceType(this.newRollout);
+      this.rolloutNowcheck = false;
+      this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).enable();
     }
     // set validators. TODO: 2019-05-15 wait for server set validator in rollout.proto
     if (this.newRollout.$formGroup.validator) {
@@ -146,7 +149,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   isRolloutScheduleTimeValid(): ValidatorFn {
     const greateThan = 1;
     const now = new Date();
-    return Utility.dateValidator( now, greateThan, 'schedule-time',  'Can not schedule rollout to the past' );
+    return Utility.dateValidator(now, greateThan, 'schedule-time', 'Can not schedule rollout to the past');
   }
 
   isRolloutNameValid(existingRollouts: RolloutRollout[]): ValidatorFn {
@@ -163,11 +166,22 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     if (Utility.isEmpty(this.newRollout.$formGroup.get(['spec', 'version']).value)) {
       return false;
     }
-    if (Utility.isEmpty(this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).value)) {
-      return false;
+    if (!this.rolloutNowcheck) {
+      if (Utility.isEmpty(this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).value)) {
+        return false;
+      }
     }
     const hasFormGroupError = Utility.getAllFormgroupErrors(this.newRollout.$formGroup);
     return hasFormGroupError === null;
+  }
+
+  onRolloutNowChange(checked) {
+    this.rolloutNowcheck = checked;
+    if (checked) {
+      this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).disable();
+    } else {
+      this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).enable();
+    }
   }
 
   ngOnDestroy() {
@@ -234,6 +248,10 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
    */
   buildRollout(): IRolloutRollout {
     const rollout: IRolloutRollout = this.newRollout.getFormGroupValues();
+    if (this.rolloutNowcheck) {
+      const today = new Date().getTime() + 30 * 1000; // If user wants to run rollout right the way, we give 30 seconds.
+      rollout.spec['scheduled-start-time'] = new Date(today);
+    }
     rollout.meta.name = (rollout.meta.name) ? rollout.meta.name : this.newRollout.meta.name;
     if (this.selectedRolloutNicNodeTypes === RolloutUtil.ROLLOUTTYPE_VENICE_ONLY) {
       rollout.spec['max-nic-failures-before-abort'] = null;
@@ -244,11 +262,11 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       rollout.spec['smartnics-only'] = true;
       this.setSpecOrderConstrains(rollout);
       rollout.spec['max-parallel'] = null;
-    } else if ( this.selectedRolloutNicNodeTypes === RolloutUtil.ROLLOUTTYPE_BOTH_NAPLES_VENICE) {
-       rollout.spec['smartnics-only'] = false;
-       this.setSpecOrderConstrains(rollout);
+    } else if (this.selectedRolloutNicNodeTypes === RolloutUtil.ROLLOUTTYPE_BOTH_NAPLES_VENICE) {
+      rollout.spec['smartnics-only'] = false;
+      this.setSpecOrderConstrains(rollout);
     }
-     return rollout;
+    return rollout;
   }
 
   private setSpecOrderConstrains(rollout: IRolloutRollout) {
@@ -268,9 +286,9 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       // This is beacuse we disabled it in the form group to stop the user from editing it.
       // When you disable an angular control, in doesn't show up when you get the value of the group
 
-       handler = this.rolloutService.UpdateRollout(rollout);
+      handler = this.rolloutService.UpdateRollout(rollout);
     } else {
-       handler = this.rolloutService.CreateRollout(rollout);
+      handler = this.rolloutService.CreateRollout(rollout);
     }
     const sub = handler.subscribe(
       (response) => {

@@ -51,6 +51,10 @@
                             appendTo="body" [showIcon]="true" [minDate]="minDate"
                             styleClass="newrollout-font, newrollout-input-common newrollout-calendar">
                 </p-calendar>
+                <p-checkbox binary="true" styleClass="newrollout-schedulenow-checkbox"
+                            [value]="rolloutNowcheck" label="Schedule Now"
+                            labelStyleClass="newrollout-schedulenow-text"
+                            (onChange)="onRolloutNowChange($event)"></p-checkbox>
               </div>
 
               <div fxFlex></div>
