@@ -1138,7 +1138,7 @@ create_service_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
         compute_ipv6_addr(&pds_tep.key.ip_addr, ip_pfx, i, 120);
         pds_tep.type = PDS_TEP_TYPE_SERVICE;
 #ifdef TEST_GRPC_APP
-        rv = create_tunnel_grpc(i, &pds_tep);
+        rv = create_tunnel_grpc(g_test_params.num_teps + i + 1, &pds_tep);
         if (rv != SDK_RET_OK) {
             return rv;
         }
@@ -1655,9 +1655,10 @@ create_objects (void)
     if (ret != SDK_RET_OK) {
         return ret;
     }
+
     if (artemis()) {
         // create service TEPs
-        ret = create_service_teps(g_test_params.num_teps,
+        ret = create_service_teps(g_test_params.num_teps + 2,
                                   &g_test_params.svc_tep_pfx);
         if (ret != SDK_RET_OK) {
             return ret;

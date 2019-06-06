@@ -303,8 +303,10 @@ create_tunnel_grpc (uint32_t id, pds_tep_spec_t *spec)
 
     populate_tunnel_request(&g_tunnel_req, id, spec);
     if ((g_tunnel_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
-        ret_status = g_tunnel_stub_->TunnelCreate(&context, g_tunnel_req, &response);
-        if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+        ret_status =
+            g_tunnel_stub_->TunnelCreate(&context, g_tunnel_req, &response);
+        if (!ret_status.ok() ||
+            (response.apistatus() != types::API_STATUS_OK)) {
             printf("%s failed!\n", __FUNCTION__);
             return SDK_RET_ERR;
         }
