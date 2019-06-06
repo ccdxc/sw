@@ -16,6 +16,7 @@ ExecStart=/usr/pensando/bin/systemd-docker \
   -v /var/lib/pensando/pki/shared/etcd-client-auth:/var/lib/pensando/pki/shared/etcd-client-auth \
    ${PEN_ETCD} \
   etcd --max-request-bytes 35000000 $NAME $DATA_DIR $ADV_CLIENT_URLS $LIS_CLIENT_URLS \
+  --quota-backend-bytes 8589934592 \
   $INIT_CLUSTER $INIT_CLUSTER_STATE $INIT_CLUSTER_TOKEN $ADV_PEER_URLS \
   $LIS_PEER_URLS --max-txn-ops 8192 \
   --peer-client-cert-auth --client-cert-auth  \
