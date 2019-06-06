@@ -259,12 +259,14 @@ protected:
             if (with_handle) {
                 params.handle = cache.gethandle(i);
             } else {
+                // Copy Key and Mask only for get by key
                 memcpy(&entry.key, &cache_entry->key, sizeof(entry.key));
-                params.key = &entry.key;
                 memcpy(&entry.mask, &cache_entry->mask, sizeof(entry.mask));
-                params.mask = &entry.mask;
-                params.appdata = &entry.data;
             }
+            // Set the Key, Data and Mask pointers
+            params.appdata = &entry.data;
+            params.key = &entry.key;
+            params.mask = &entry.mask;
             
             auto rs = get_(&params);
             SLTCAM_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);

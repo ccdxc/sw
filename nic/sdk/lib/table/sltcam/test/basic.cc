@@ -19,7 +19,7 @@ TEST_F(basic, insert_get)
     sdk_ret_t rs;
     rs = Insert(BASIC_TEST_COUNT, sdk::SDK_RET_OK);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
-    rs = GetAllCached(sdk::SDK_RET_OK, false);
+    rs = GetAllCached(sdk::SDK_RET_OK, true);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 

@@ -13,7 +13,7 @@
 #include "nic/utils/ftl/ftl_structs.hpp"
 
 typedef struct ftl_mock_table_s {
-    ftl_entry_t *entries;
+    ftlv6_entry_t *entries;
 } ftl_mock_table_t;
 
 static ftl_mock_table_t mocktables[FTL_TBLID_MAX];
@@ -23,10 +23,12 @@ typedef int p4pd_error_t;
 static uint32_t
 table_size_get(uint32_t table_id)
 {
-    if (table_id == FTL_TBLID_H5) {
-        return 16*1024*1024;
-    } else if (table_id == FTL_TBLID_H5_OHASH) {
-        return 2*1024*1024;
+    if (table_id == FTL_TBLID_IPV6 ||
+        table_id == FTL_TBLID_IPV4) {
+        return 8*1024*1024;
+    } else if (table_id == FTL_TBLID_IPV6_OHASH ||
+               table_id == FTL_TBLID_IPV4_OHASH) {
+        return 4*1024*1024;
     }
     return 0;
 }
@@ -34,19 +36,27 @@ table_size_get(uint32_t table_id)
 void
 ftl_mock_init ()
 {
-    mocktables[FTL_TBLID_H5].entries =
-        (ftl_entry_t *)calloc(table_size_get(FTL_TBLID_H5), sizeof(ftl_entry_t));
-    assert(mocktables[FTL_TBLID_H5].entries);
-    mocktables[FTL_TBLID_H5_OHASH].entries =
-        (ftl_entry_t *)calloc(table_size_get(FTL_TBLID_H5_OHASH), sizeof(ftl_entry_t));
-    assert(mocktables[FTL_TBLID_H5_OHASH].entries);
+    mocktables[FTL_TBLID_IPV6].entries =
+        (ftlv6_entry_t *)calloc(table_size_get(FTL_TBLID_IPV6), sizeof(ftlv6_entry_t));
+    assert(mocktables[FTL_TBLID_IPV6].entries);
+    mocktables[FTL_TBLID_IPV6_OHASH].entries =
+        (ftlv6_entry_t *)calloc(table_size_get(FTL_TBLID_IPV6_OHASH), sizeof(ftlv6_entry_t));
+    assert(mocktables[FTL_TBLID_IPV6_OHASH].entries);
+    mocktables[FTL_TBLID_IPV4].entries =
+        (ftlv6_entry_t *)calloc(table_size_get(FTL_TBLID_IPV4), sizeof(ftlv6_entry_t));
+    assert(mocktables[FTL_TBLID_IPV4].entries);
+    mocktables[FTL_TBLID_IPV4_OHASH].entries =
+        (ftlv6_entry_t *)calloc(table_size_get(FTL_TBLID_IPV4_OHASH), sizeof(ftlv6_entry_t));
+    assert(mocktables[FTL_TBLID_IPV4_OHASH].entries);
 }
 
 void
 ftl_mock_cleanup ()
 {
-    free(mocktables[FTL_TBLID_H5].entries);
-    free(mocktables[FTL_TBLID_H5_OHASH].entries);
+    free(mocktables[FTL_TBLID_IPV6].entries);
+    free(mocktables[FTL_TBLID_IPV6_OHASH].entries);
+    free(mocktables[FTL_TBLID_IPV4].entries);
+    free(mocktables[FTL_TBLID_IPV4_OHASH].entries);
 }
 
 uint32_t
@@ -71,12 +81,20 @@ p4pd_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
     props->base_mem_va = (uint64_t)(mocktables[table_id].entries);
     props->tabledepth = table_size_get(table_id);
 
-    if (table_id == FTL_TBLID_H5) {
-        props->tablename = (char *) "FlowTable";
+    if (table_id == FTL_TBLID_IPV6) {
+        props->tablename = (char *) "Ipv6FlowTable";
         props->has_oflow_table = 1;
-        props->oflow_table_id = FTL_TBLID_H5_OHASH;
+        props->oflow_table_id = FTL_TBLID_IPV6_OHASH;
+    } else if (table_id == FTL_TBLID_IPV4) {
+        props->tablename = (char *) "Ipv4FlowTable";
+        props->has_oflow_table = 1;
+        props->oflow_table_id = FTL_TBLID_IPV4_OHASH;
+    } else if (table_id == FTL_TBLID_IPV6_OHASH) {
+        props->tablename = (char *) "Ipv6FlowOhashTable";
+    } else if (table_id == FTL_TBLID_IPV4_OHASH) {
+        props->tablename = (char *) "Ipv4FlowOhashTable";
     } else {
-        props->tablename = (char *) "FlowOhashTable";
+        assert(0);
     }
 
     return 0;

@@ -4,10 +4,14 @@
 #ifndef __FTL_STRUCTS_HPP__
 #define __FTL_STRUCTS_HPP__
 
-#if PIPELINE == apollo
-#include "ftl_structs_apollo.hpp"
+#ifdef APOLLO
+#include "ftlv6_structs_apollo.hpp"
+#include "ftlv4_structs_apollo.hpp"
+#elif ARTEMIS
+#include "ftlv6_structs_artemis.hpp"
+#include "ftlv4_structs_artemis.hpp"
 #else
-#include "ftl_structs_iris.hpp"
+#error FTL is not suppored on IRIS pipeline (Yet!!).
 #endif
 
-#endif
+#endif // __FTL_STRUCTS_HPP__

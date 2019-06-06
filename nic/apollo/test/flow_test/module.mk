@@ -1,15 +1,15 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = apollo_flow_test.gtest
-MODULE_PIPELINE = apollo
+MODULE_TARGET   = flow_test.gtest
+MODULE_PIPELINE = apollo artemis
 MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl  pdstestutils \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_SDK_SOLIBS} ${NIC_HAL_PD_SOLIBS_${ARCH}} \
                   sdkp4 sdkp4utils sdkcapri_asicrw_if sdkcapri \
                   sdkplatformutils sdkxcvrdriver sdkasicpd lpmitree_${PIPELINE} \
-                  rfc_${PIPELINE} bm_allocator sdklinkmgr sdklinkmgrcsr ftl ftlv4 utils \
-                  sltcam ${NIC_${PIPELINE}_NICMGR_LIBS}
+                  rfc_${PIPELINE} bm_allocator sdklinkmgr sdklinkmgrcsr ftlv6 ftlv4 utils \
+                  sltcam slhash ${NIC_${PIPELINE}_NICMGR_LIBS}
 MODULE_LDLIBS   =  ${NIC_COMMON_LDLIBS} \
                    ${NIC_CAPSIM_LDLIBS} \
                    ${${PIPELINE}_GTEST_COMMON_LDLIBS} \

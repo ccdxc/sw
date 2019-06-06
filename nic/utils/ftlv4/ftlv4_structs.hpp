@@ -6,6 +6,8 @@
 
 #if PIPELINE == apollo
 #include "ftlv4_structs_apollo.hpp"
+#elif PIPELINE == artemis
+#include "ftlv4_structs_artemis.hpp"
 #else
 #include "ftlv4_structs_iris.hpp"
 #endif

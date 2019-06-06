@@ -4,8 +4,6 @@
 #ifndef __FTL_INDEXER_HPP__
 #define __FTL_INDEXER_HPP__
 
-#include "include/sdk/base.hpp"
-
 #define WORDSIZE 64
 #define I2W(_i) ((_i)/WORDSIZE)
 #define W2I(_w, _o) (((_w)*WORDSIZE)+(_o))

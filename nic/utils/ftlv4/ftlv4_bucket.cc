@@ -228,10 +228,9 @@ sdk_ret_t
 ftlv4_bucket::find_first_free_hint_(ftlv4_apictx *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
     uint32_t hintX = 0;
-    uint32_t hashX = 0;
 
     FOREACH_HINT(ctx->props->num_hints) {
-        FTLV4_ENTRY_GET_HINT_HASH(i, &ctx->entry, hintX, hashX);
+        FTLV4_ENTRY_GET_HINT(i, &ctx->entry, hintX);
         if (!FTLV4_HINT_IS_VALID(hintX)) {
             ctx->hint_slot = i;
             ctx->hint = hintX;

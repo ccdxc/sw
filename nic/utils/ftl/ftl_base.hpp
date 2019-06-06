@@ -1,40 +1,24 @@
 //-----------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
-#ifndef __FTL_HPP__
-#define __FTL_HPP__
+#ifndef FTL_ADDRESS_PREFIX
+#error ftl.hpp header cannot be included directly.
+#endif
 
-#include <string>
-
-#include "include/sdk/lock.hpp"
-#include "include/sdk/base.hpp"
-#include "include/sdk/mem.hpp"
-#include "include/sdk/table.hpp"
-#include "lib/table/common/table.hpp"
-#include "lib/utils/crc_fast.hpp"
-
-#include "ftl_stats.hpp"
-#include "ftl_apictx.hpp"
-#include "ftl_structs.hpp"
-
-using namespace std;
+#undef __FTL_INCLUDES_HPP__
+#include "ftl_includes.hpp"
 
 namespace sdk {
 namespace table {
 
-using sdk::utils::crcFast;
-using sdk::table::ftlint::ftl_api_stats;
-using sdk::table::ftlint::ftl_table_stats;
-using sdk::table::ftlint::ftl_apictx;
-
-class ftl {
+class FTL_AFPFX() {
 private:
     static sdk::table::properties_t *props_;
     static void *main_table_;
     static crcFast *crc32gen_;
-    ftl_api_stats api_stats_;
-    ftl_table_stats table_stats_;
-    ftl_apictx apictx_[FTL_MAX_API_CONTEXTS + 1];
+    apistats api_stats_;
+    tablestats tstats_;
+    FTL_MAKE_AFTYPE(apictx) apictx_[FTL_MAX_API_CONTEXTS + 1];
 
 private:
     sdk_ret_t init_(sdk_table_factory_params_t *params);
@@ -43,14 +27,11 @@ private:
                        sdk_table_api_params_t *params);
 
 public:
-    static ftl *factory(sdk_table_factory_params_t *params);
-    static void destroy(ftl *ftl);
+    static FTL_AFPFX() *factory(sdk_table_factory_params_t *params);
+    static void destroy(FTL_AFPFX() *f);
 
-    ftl() {
-    }
-
-    ~ftl() {
-    }
+    FTL_AFPFX()() {}
+    ~FTL_AFPFX()() {}
 
     sdk_ret_t txn_start();
     sdk_ret_t txn_end();
@@ -65,7 +46,3 @@ public:
 
 }   // namespace table
 }   // namespace sdk
-
-using sdk::table::ftl;
-
-#endif // __FTL_HPP__

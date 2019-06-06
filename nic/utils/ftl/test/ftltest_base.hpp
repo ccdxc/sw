@@ -9,15 +9,17 @@
 
 #include "include/sdk/base.hpp"
 #include "include/sdk/table.hpp"
-#include "nic/utils/ftl/ftl.hpp"
 #include "nic/utils/ftl/test/p4pd_mock/ftl_p4pd_mock.hpp"
+#include "nic/utils/ftl/ftlv4.hpp"
+#include "nic/utils/ftl/ftlv6.hpp"
 
-#include "common.hpp"
+#include "ftltest_common.hpp"
 
 #define WITH_HASH true
 #define WITHOUT_HASH false
 
-using sdk::table::ftl;
+using sdk::table::ftlv6;
+using sdk::table::ftlv4;
 using sdk::table::sdk_table_api_params_t;
 using sdk::table::sdk_table_api_stats_t;
 using sdk::table::sdk_table_stats_t;
@@ -27,7 +29,8 @@ using sdk::table::sdk_table_factory_params_t;
 
 class FtlGtestBase: public ::testing::Test {
 protected:
-    ftl *table;
+    ftlv6 *v6table;
+    ftlv4 *v4table;
     uint32_t num_insert;
     uint32_t num_remove;
     uint32_t num_update;
@@ -47,16 +50,22 @@ protected:
         SDK_TRACE_VERBOSE("============== SETUP : %s.%s ===============",
                           ::testing::UnitTest::GetInstance()->current_test_info()->test_case_name(),
                           ::testing::UnitTest::GetInstance()->current_test_info()->name());
-        sdk_table_factory_params_t params = { 0 };
         
-        params.table_id = FTL_TBLID_H5;
-        params.num_hints = 5;
-        params.max_recircs = MAX_RECIRCS;
-        params.entry_trace_en = false;
-
         ftl_mock_init();
-        table = ftl::factory(&params);
-        assert(table);
+        
+        sdk_table_factory_params_t params = { 0 };
+        params.max_recircs = MAX_RECIRCS;
+        params.entry_trace_en = true;
+        
+        params.table_id = FTL_TBLID_IPV6;
+        params.num_hints = 4;
+        v6table = ftlv6::factory(&params);
+        assert(v6table);
+
+        params.table_id = FTL_TBLID_IPV4;
+        params.num_hints = 2;
+        v4table = ftlv4::factory(&params);
+        assert(v4table);
 
         num_insert = 0;
         num_remove = 0;
@@ -71,9 +80,10 @@ protected:
         PrintStats();
     }
     virtual void TearDown() {
-        ftl::destroy(table);
-        reset_cache();
         ValidateStats();
+        ftlv6::destroy(v6table);
+        ftlv4::destroy(v4table);
+        reset_cache();
         ftl_mock_cleanup();
         SDK_TRACE_VERBOSE("============== TEARDOWN : %s.%s ===============",
                           ::testing::UnitTest::GetInstance()->current_test_info()->test_case_name(),
@@ -83,29 +93,29 @@ protected:
 private:
     sdk_ret_t insert_(sdk_table_api_params_t *params) {
         num_insert++;
-        return table->insert(params);
+        return v6table->insert(params);
     }
 
     sdk_ret_t remove_(sdk_table_api_params_t *params) {
         num_remove++;
-        return table->remove(params);
+        return v6table->remove(params);
     }
 
     sdk_ret_t update_(sdk_table_api_params_t *params) {
         num_update++;
-        return table->update(params);
+        return v6table->update(params);
     }
 
     sdk_ret_t get_(sdk_table_api_params_t *params) {
         num_get++;
-        return table->get(params);
+        return v6table->get(params);
     }
 
 protected:
     sdk_ret_t Insert(uint32_t count, sdk_ret_t expret, 
-                     bool with_hash = false) {
+                     bool with_hash = false, uint32_t hash_32b = 0) {
         for (auto i = 0; i < count; i++) {
-            auto params = gen_entry(i, with_hash);
+            auto params = gen_entry(i, with_hash, hash_32b);
             auto rs = insert_(params);
             MHTEST_CHECK_RETURN(rs == expret, rs);
             if (rs == SDK_RET_OK) {
@@ -117,9 +127,9 @@ protected:
     }
 
     sdk_ret_t Remove(uint32_t count, sdk_ret_t expret,
-                     bool with_hash = false) {
+                     bool with_hash = false, uint32_t hash_32b = 0) {
         for (auto i = 0; i < count; i++) {
-            auto params = gen_entry(i, with_hash);
+            auto params = gen_entry(i, with_hash, hash_32b);
             auto rs = remove_(params);
             MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
             if (rs == SDK_RET_OK) {
@@ -130,9 +140,9 @@ protected:
     }
 
     sdk_ret_t Update(uint32_t count, sdk_ret_t expret,
-                     bool with_hash = false) {
+                     bool with_hash = false, uint32_t hash_32b = 0) {
         for (auto i = 0; i < count; i++) {
-            auto params = gen_entry(i, with_hash);
+            auto params = gen_entry(i, with_hash, hash_32b);
             auto rs = update_(params);
             MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
         }
@@ -147,7 +157,7 @@ protected:
             auto rs = get_(params);
             MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
             assert(params->handle.valid());
-            if (memcmp(params->entry, params2->entry, sizeof(ftl_entry_t))) {
+            if (memcmp(params->entry, params2->entry, sizeof(ftlv6_entry_t))) {
                 return sdk::SDK_RET_ENTRY_NOT_FOUND;
             }
         }
@@ -155,8 +165,10 @@ protected:
     }
 
     void PrintStats() {
-        table->stats_get(&api_stats, &table_stats);
+        auto hw_count = ftl_mock_get_valid_count(FTL_TBLID_IPV6);
+        v6table->stats_get(&api_stats, &table_stats);
         SDK_TRACE_VERBOSE("GTest Table Stats: Entries:%d", table_count);
+        SDK_TRACE_VERBOSE("HW Table Stats: Entries=%d", hw_count);
         SDK_TRACE_VERBOSE("SW Table Stats: Entries=%d Collisions:%d",
                           table_stats.entries, table_stats.collisions);
         SDK_TRACE_VERBOSE("Test  API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d",
@@ -183,7 +195,7 @@ protected:
     static void
     IterateCallback(sdk_table_api_params_t *params) {
         static char buff[512];
-        FTLENTRY_STR(((ftl_entry_t *)params->entry), buff, 512);
+        ((ftlv6_entry_t *)params->entry)->tostr(buff, 512);
         SDK_TRACE_VERBOSE("Handle[%s] Entry[%s]",
                           params->handle.tostr(), buff);
         return;
@@ -192,7 +204,7 @@ protected:
     sdk_ret_t Iterate() {
         sdk_table_api_params_t params = { 0 };
         params.itercb = IterateCallback;
-        return table->iterate(&params);
+        return v6table->iterate(&params);
     }
 };
 #endif

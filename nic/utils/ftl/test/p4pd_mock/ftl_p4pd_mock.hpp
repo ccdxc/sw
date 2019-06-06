@@ -11,14 +11,16 @@
 
 typedef enum ftl_p4pd_table_ids_ {
     FTL_TBLID_NONE       = 0,
-    FTL_TBLID_H5         = 1,
-    FTL_TBLID_H5_OHASH   = 2,
-    FTL_TBLID_MAX        = 3,
+    FTL_TBLID_IPV6       = 1,
+    FTL_TBLID_IPV6_OHASH = 2,
+    FTL_TBLID_IPV4       = 3,
+    FTL_TBLID_IPV4_OHASH = 4,
+    FTL_TBLID_MAX        = 5,
 } ftl_p4_table_id;
 
-typedef enum ftl_h5_action_ids {
-    FTL_TBLID_H5_ACTION_ID_0    = 0,
-} ftl_h5_action_ids_t;
+typedef enum ftl_action_ids {
+    FTL_ACTION_ID_0    = 0,
+} ftl_action_ids_t;
 
 void
 ftl_mock_init ();

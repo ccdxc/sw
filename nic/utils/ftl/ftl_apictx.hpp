@@ -1,50 +1,35 @@
 //-----------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
-#ifndef __FTL_TYPES_HPP__
-#define __FTL_TYPES_HPP__
-
-#include "include/sdk/base.hpp"
-#include "include/sdk/table.hpp"
-#include "lib/p4/p4_api.hpp"
-
-#include "ftl_stats.hpp"
-#include "ftl_utils.hpp"
-#include "ftl_structs.hpp"
-
-using sdk::table::sdk_table_factory_params_t;
-
 #define FTL_MAX_API_CONTEXTS 8
 
 namespace sdk {
 namespace table {
-namespace ftlint {
+namespace FTL_MAKE_AFTYPE(internal) {
 
 #define HINT_SLOT_IS_INVALID(_slot) \
-        ((_slot) == ftl_apictx::hint_slot::HINT_SLOT_INVALID)
+        ((_slot) == FTL_MAKE_AFTYPE(apictx)::hint_slot::HINT_SLOT_INVALID)
 #define HINT_SLOT_IS_VALID(_slot) \
-        ((_slot) != ftl_apictx::hint_slot::HINT_SLOT_INVALID)
+        ((_slot) != FTL_MAKE_AFTYPE(apictx)::hint_slot::HINT_SLOT_INVALID)
 #define HINT_SLOT_SET_INVALID(_slot) \
-        ((_slot) = ftl_apictx::hint_slot::HINT_SLOT_INVALID)
+        ((_slot) = FTL_MAKE_AFTYPE(apictx)::hint_slot::HINT_SLOT_INVALID)
 #define HINT_SLOT_IS_MORE(_slot) \
-        ((_slot) == ftl_apictx::hint_slot::HINT_SLOT_MORE)
+        ((_slot) == FTL_MAKE_AFTYPE(apictx)::hint_slot::HINT_SLOT_MORE)
 #define HINT_SLOT_SET_MORE(_slot) \
-        ((_slot) = ftl_apictx::hint_slot::HINT_SLOT_MORE)
+        ((_slot) = FTL_MAKE_AFTYPE(apictx)::hint_slot::HINT_SLOT_MORE)
 #define HINT_SLOT_IS_MATCH(_ctx) \
         (HINT_SLOT_IS_FREE((_ctx)->hint_slot) &&\
          HINT_SLOT_IS_MORE((_ctx)->hint_slot))
 #define HINT_IS_VALID(_hint) \
-        ((_hint) != ftl_apictx::hint_index::HINT_INDEX_INVALID)
+        ((_hint) != FTL_MAKE_AFTYPE(apictx)::hint_index::HINT_INDEX_INVALID)
 #define HINT_SET_INVALID(_hint) \
-        ((_hint) = ftl_apictx::hint_index::HINT_INDEX_INVALID)
+        ((_hint) = FTL_MAKE_AFTYPE(apictx)::hint_index::HINT_INDEX_INVALID)
 
 #define PRINT_API_CTX(_name, _ctx) {\
     FTL_TRACE_VERBOSE("%s: %s, [%s]", _name, (_ctx)->idstr(), (_ctx)->metastr()); \
 }
 
-class ftl_bucket;
-
-class ftl_apictx {
+class FTL_MAKE_AFTYPE(apictx) {
 public:
     enum hint_index {
         // Hint index 0 is reserved
@@ -66,27 +51,27 @@ public:
 
 public:
     // Flow Table Entry
-    ftl_entry_t entry;
+    FTL_MAKE_AFTYPE(entry_t) entry;
 
-    // 32 Bits
-    uint32_t hash_msbits:11;
-    uint32_t match:1;
-    uint32_t exmatch:1;
-    uint32_t more_hashs:1;
-    uint32_t write_pending:1;
-    uint32_t inited:1;
-    uint32_t level:4;
-    uint32_t table_id:9;
-    uint32_t hint_slot:3;
-    // 32 Bits
-    uint32_t table_index:26;
-    uint32_t op:4;
-    uint32_t spare2:2;
-    // 32 Bits
-    uint32_t hint:26;
-    uint32_t spare3:6;
+    uint8_t hint_slot;
+    uint16_t hash_msbits;
+    uint16_t more_hashs;
+    uint8_t level;
+
+    bool match;
+    bool exmatch;
+    bool write_pending;
+    bool inited;
     
-    ftl_bucket *bucket;
+    uint32_t table_id;
+    
+    // 32 Bits
+    uint32_t table_index;
+    uint32_t op;
+    
+    // 32 Bits
+    uint32_t hint;
+    FTL_MAKE_AFTYPE(bucket) *bucket;
     
     // Properties of this table
     sdk::table::properties_t *props;
@@ -96,33 +81,28 @@ public:
     // 1st level HintTable: pctx = MainTable context.
     // 2nd level HintTable: pctx = 1st level HintTable context.
     // and so on...
-    ftl_apictx *pctx;
+    FTL_MAKE_AFTYPE(apictx) *pctx;
     // Table stats
-    ftl_table_stats *table_stats;
+    tablestats *tstats;
 
 public:
-    // Default constructor
-    ftl_apictx() {
-    }
-
-    // Destructor
-    ~ftl_apictx() {
-    }
+    FTL_MAKE_AFTYPE(apictx)() {}
+    ~FTL_MAKE_AFTYPE(apictx)() {}
 
     // Debug string
     char* metastr() {
         static char str[256];
-        FTL_SNPRINTF(str, sizeof(str), "%p: tid:%d,idx:%d,slt:%d,hnt:%d,"
-                     "more:%d,pndg:%d,hmsb:%#x,mat:%d exmat:%d", this, table_id,
-                     table_index, hint_slot, hint, more_hashs,
-                     write_pending, hash_msbits, match, exmatch);
+        snprintf(str, sizeof(str), "%p: tid:%d,idx:%d,slt:%d,hnt:%d,"
+                 "more:%d,pndg:%d,hmsb:%#x,mat:%d exmat:%d", this, table_id,
+                 table_index, hint_slot, hint, more_hashs,
+                 write_pending, hash_msbits, match, exmatch);
         return str;
     }
 
     const char* idstr() {
         static char str[32];
-        FTL_SNPRINTF(str, sizeof(str), "%s%d-L%d", level ? "H" : "M",
-                     table_index, level);
+        snprintf(str, sizeof(str), "%s%d-L%d", level ? "H" : "M",
+                 table_index, level);
         return str;
     }
 
@@ -130,49 +110,60 @@ public:
         return (level >= props->max_recircs);
     }
 
-} __attribute__((__packed__));
+    bool is_main() {
+        return (level == 0);
+    }
 
-#define FTL_API_CONTEXT_IS_MAIN(_ctx) ((_ctx)->level == 0)
+    void trace(bool trace_params = false,
+               const char *fname = __builtin_FUNCTION()) {
+        if (!props->entry_trace_en) return;
+        static char buff[512];
+        if (trace_params) {
+            ((FTL_MAKE_AFTYPE(entry_t)*)params->entry)->tostr(buff, sizeof(buff));
+        } else {
+            entry.tostr(buff, sizeof(buff));
+        }
+        FTL_TRACE_VERBOSE("%s: input entry:%s hash_32b:%#x hash_valid:%d",
+                          fname, buff, params->hash_32b, params->hash_valid);
+        (void)buff;
+        return;
+    }
 
-#define FTL_API_CONTEXT_INIT_MAIN(_ctx, _op, _params, _props, _ts) \
-{ \
-    memset(&_ctx, 0, sizeof(ftl_apictx));\
-    _ctx.op = _op; \
-    _ctx.props = _props; \
-    _ctx.params = _params; \
-    _ctx.table_stats = _ts; \
-    if (_ctx.params->entry) {\
+#if 0
+    static void print_entry(FTL_MAKE_AFTYPE(entry_t)* entry,
+                            uint32_t hash_32b, bool hash_valid) {
         static char buff[512];\
-        FTLENTRY_STR(((ftl_entry_t *)_ctx.params->entry), buff, 512);\
-        FTL_TRACE_VERBOSE("input entry:%s hash_32b:%#x hash_valid:%d",\
-                          buff, _params->hash_32b, _params->hash_valid);\
-        (void)buff;\
-    }\
-}
+        entry->tostr(buff, sizeof(buff));
+        FTL_TRACE_VERBOSE("input entry:%s hash_32b:%#x hash_valid:%d",
+                          buff, hash_32b, hash_valid);
+        (void)buff;
+    }
+#endif
 
-#define FTL_API_CONTEXT_INIT(_dstctx, _parctx) \
-{ \
-    memset(_dstctx, 0, sizeof(ftl_apictx)); \
-    _dstctx->op = _parctx->op; \
-    _dstctx->hash_msbits = _parctx->hash_msbits; \
-    _dstctx->level = _parctx->level + 1; \
-    _dstctx->props = _parctx->props; \
-    _dstctx->params = _parctx->params; \
-    _dstctx->table_stats = _parctx->table_stats; \
-    _dstctx->pctx = _parctx; \
-}
+    void init(sdk_table_api_op_t op, sdk_table_api_params_t *params,
+              sdk::table::properties_t *props, tablestats *tstats) {
+        memset(this, 0, sizeof(FTL_MAKE_AFTYPE(apictx)));
+        this->op = op;
+        this->props = props;
+        this->params = params;
+        this->tstats = tstats;
+        if (params->entry) {
+            trace(true);
+        }
+    }
 
-#define FTL_API_CONTEXT_PRINT_SW_FIELDS(_ctx) \
-{ \
-    static char buff[512];\
-    FTLENTRY_STR(&ctx->entry, buff, 512);\
-    FTL_TRACE_VERBOSE("ftl %s: TID:%d Idx:%d Entry:%s", _ctx->idstr(),\
-                      _ctx->table_id, _ctx->table_index, buff);\
-    (void)buff;\
-}
+    void init(FTL_MAKE_AFTYPE(apictx) *p) {
+         memset(this, 0, sizeof(FTL_MAKE_AFTYPE(apictx)));
+         this->op = p->op;
+         this->hash_msbits = p->hash_msbits;
+         this->level = p->level + 1;
+         this->props = p->props;
+         this->params = p->params;
+         this->tstats = p->tstats;
+         this->pctx = p;
+    }
+};
 
-} // namespace ftlint
+} // namespace FTL_MAKE_AFTYPE(internal)
 } // namespace table
 } // namespace sdk
-
-#endif // __FTL_TYPES_HPP__

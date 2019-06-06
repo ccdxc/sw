@@ -1,53 +1,36 @@
 //-----------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
-#include "include/sdk/base.hpp"
+#include "ftl_includes.hpp"
 
-#include "ftl_table.hpp"
-#include "ftl_apictx.hpp"
-#include "ftl_bucket.hpp"
-#include "ftl_utils.hpp"
+thread_local uint8_t FTL_MAKE_AFTYPE(hint_table)::nctx_ = 0;
 
-using sdk::table::ftlint::ftl_base_table;
-using sdk::table::ftlint::ftl_hint_table;
-using sdk::table::ftlint::ftl_apictx;
-using sdk::table::ftlint::ftl_bucket;
-using sdk::table::ftlint::ftl_bucket;
-
-thread_local uint8_t ftl_hint_table::nctx_ = 0;
-
-//---------------------------------------------------------------------------
-// Factory method to instantiate the ftl_main_table class
-//---------------------------------------------------------------------------
-ftl_hint_table *
-ftl_hint_table::factory(sdk::table::properties_t *props) {
+FTL_MAKE_AFTYPE(hint_table) *
+FTL_MAKE_AFTYPE(hint_table)::factory(sdk::table::properties_t *props) {
     void *mem = NULL;
-    ftl_hint_table *table = NULL;
+    FTL_MAKE_AFTYPE(hint_table) *table = NULL;
     sdk_ret_t ret = SDK_RET_OK;
 
-    mem = (ftl_hint_table *) SDK_CALLOC(SDK_MEM_ALLOC_FTL_HINT_TABLE,
-                                          sizeof(ftl_hint_table));
+    mem = (FTL_MAKE_AFTYPE(hint_table) *) SDK_CALLOC(SDK_MEM_ALLOC_FTL_HINT_TABLE,
+                                          sizeof(FTL_MAKE_AFTYPE(hint_table)));
     if (!mem) {
         return NULL;
     }
 
-    table = new (mem) ftl_hint_table();
+    table = new (mem) FTL_MAKE_AFTYPE(hint_table)();
 
     ret = table->init_(props);
     if (ret != SDK_RET_OK) {
-        table->~ftl_hint_table();
+        table->~FTL_MAKE_AFTYPE(hint_table)();
         SDK_FREE(SDK_MEM_ALLOC_FTL_HINT_TABLE, mem);
     }
 
     return table;
 }
 
-//---------------------------------------------------------------------------
-// ftl_hint_table init()
-//---------------------------------------------------------------------------
 sdk_ret_t
-ftl_hint_table::init_(sdk::table::properties_t *props) {
-    auto ret = ftl_base_table::init_(props->stable_id,
+FTL_MAKE_AFTYPE(hint_table)::init_(sdk::table::properties_t *props) {
+    auto ret = FTL_MAKE_AFTYPE(base_table)::init_(props->stable_id,
                                      props->stable_size);
     if (ret != SDK_RET_OK) {
         return ret;
@@ -60,34 +43,35 @@ ftl_hint_table::init_(sdk::table::properties_t *props) {
     uint32_t temp = 0;
     ret = indexer_.alloc(temp);
     SDK_ASSERT(ret == SDK_RET_OK);
-    FTL_TRACE_VERBOSE("Created ftl_main_table TableID:%d TableSize:%d "
+    FTL_TRACE_VERBOSE("Created FTL_MAKE_AFTYPE(hint_table) TableID:%d TableSize:%d "
                       "NumTableIndexBits:%d",
                       table_id_, table_size_, num_table_index_bits_);
     return ret;
 }
 
-//---------------------------------------------------------------------------
-// ftl_main_table destroy_
-//---------------------------------------------------------------------------
 void
-ftl_hint_table::destroy_(ftl_hint_table *table)
+FTL_MAKE_AFTYPE(hint_table)::destroy_(FTL_MAKE_AFTYPE(hint_table) *table)
 {
-    ftl_base_table::destroy_(table);
+    FTL_MAKE_AFTYPE(base_table)::destroy_(table);
     table->indexer_.deinit();
 }
 
-//---------------------------------------------------------------------------
-// ftl_main_table alloc_: Allocate a hint (bucket)
-//---------------------------------------------------------------------------
+inline FTL_MAKE_AFTYPE(apictx) *
+FTL_MAKE_AFTYPE(hint_table)::ctxnew_(FTL_MAKE_AFTYPE(apictx) *src) {
+    if (src->is_main()) {
+        nctx_ = 0;
+    } else {
+        SDK_ASSERT(nctx_ < FTL_MAX_API_CONTEXTS);
+    }
+    auto c = src + 1;
+    c->init(src);
+    nctx_++;
+    return c;
+}
+
 sdk_ret_t
-ftl_hint_table::alloc_(ftl_apictx *ctx) {
+FTL_MAKE_AFTYPE(hint_table)::alloc_(FTL_MAKE_AFTYPE(apictx) *ctx) {
     spin_lock_();
-#ifdef PERF
-    static uint32_t hint_index = 1;
-    ctx->hint = hint_index++;
-    spin_unlock_();
-    return SDK_RET_OK;
-#endif
     uint32_t hint = 0;
     auto ret = indexer_.alloc(hint);
     spin_unlock_();
@@ -103,11 +87,8 @@ ftl_hint_table::alloc_(ftl_apictx *ctx) {
     return SDK_RET_OK;
 }
 
-//---------------------------------------------------------------------------
-// ftl_main_table dealloc_: De-Allocate a hint (bucket)
-//---------------------------------------------------------------------------
 sdk_ret_t
-ftl_hint_table::dealloc_(ftl_apictx *ctx) {
+FTL_MAKE_AFTYPE(hint_table)::dealloc_(FTL_MAKE_AFTYPE(apictx) *ctx) {
     spin_lock_();
     indexer_.free(ctx->hint);
     spin_unlock_();
@@ -119,11 +100,8 @@ ftl_hint_table::dealloc_(ftl_apictx *ctx) {
     return SDK_RET_OK;
 }
 
-//---------------------------------------------------------------------------
-// ftl_hint_table initctx_ : Initialize API context
-//---------------------------------------------------------------------------
 sdk_ret_t
-ftl_hint_table::initctx_(ftl_apictx *ctx) {
+FTL_MAKE_AFTYPE(hint_table)::initctx_(FTL_MAKE_AFTYPE(apictx) *ctx) {
     // All HintTable api contexts must have parent api context.
     SDK_ASSERT(ctx->pctx);
 
@@ -131,21 +109,19 @@ ftl_hint_table::initctx_(ftl_apictx *ctx) {
     ctx->table_index = ctx->pctx->hint;
     // Save the table_id
     ctx->table_id = table_id_;
+    // Save the bucket for this context
+    ctx->bucket = &buckets_[ctx->table_index];
 
     FTL_TRACE_VERBOSE("%s: TID:%d Idx:%d", ctx->idstr(),
                       ctx->table_id, ctx->table_index);
-    return buckets_[ctx->table_index].read_(ctx);
+    return ctx->bucket->read_(ctx);
 }
 
-//---------------------------------------------------------------------------
-// ftl_hint_table insert_: Recursive function
-//                              level0 context is main table context
-//---------------------------------------------------------------------------
 sdk_ret_t
-ftl_hint_table::insert_(ftl_apictx *pctx) {
+FTL_MAKE_AFTYPE(hint_table)::insert_(FTL_MAKE_AFTYPE(apictx) *pctx) {
 __label__ done;
     sdk_ret_t ret = SDK_RET_OK;
-    ftl_apictx *hctx = NULL;
+    FTL_MAKE_AFTYPE(apictx) *hctx = NULL;
 
     if (unlikely((uint32_t)(pctx->level+1) >= pctx->props->max_recircs)) {
         FTL_TRACE_ERR("Max Recirc levels reached.");
@@ -163,7 +139,7 @@ __label__ done;
     // Initialize the context
     SDK_ASSERT_RETURN(initctx_(hctx) == SDK_RET_OK, SDK_RET_ERR);
 
-    ret = buckets_[hctx->table_index].insert_(hctx);
+    ret = hctx->bucket->insert_(hctx);
     if (unlikely(ret == SDK_RET_COLLISION)) {
         // Recursively call the insert_ with hint table context
         ret = insert_(hctx);
@@ -171,7 +147,7 @@ __label__ done;
 
     // Write to hardware
     if (ret == SDK_RET_OK) {
-        ret = buckets_[hctx->table_index].write_(hctx);
+        ret = hctx->bucket->write_(hctx);
     }
 
 done:
@@ -179,12 +155,12 @@ done:
 }
 
 //---------------------------------------------------------------------------
-// ftl_hint_table tail_: Finds the tail node of a hint chain
+// FTL_MAKE_AFTYPE(hint_table) tail_: Finds the tail node of a hint chain
 //                            and return the context
 //---------------------------------------------------------------------------
 sdk_ret_t
-ftl_hint_table::tail_(ftl_apictx *ctx,
-                           ftl_apictx **retctx) {
+FTL_MAKE_AFTYPE(hint_table)::tail_(FTL_MAKE_AFTYPE(apictx) *ctx,
+                           FTL_MAKE_AFTYPE(apictx) **retctx) {
     if (!HINT_IS_VALID(ctx->hint)) {
         FTL_TRACE_VERBOSE("No hints, setting TAIL = EXACT.");
         *retctx = ctx;
@@ -207,7 +183,7 @@ ftl_hint_table::tail_(ftl_apictx *ctx,
     // Initialize the context
     SDK_ASSERT_RETURN(initctx_(tctx) == SDK_RET_OK, SDK_RET_ERR);
 
-    auto ret = buckets_[tctx->table_index].find_last_hint_(tctx);
+    auto ret = tctx->bucket->find_last_hint_(tctx);
     if (ret == SDK_RET_OK) {
         FTL_TRACE_VERBOSE("%s: find_last_hint_ Ctx: [%s]", tctx->idstr(),
                               tctx->metastr(), ret);
@@ -231,13 +207,12 @@ ftl_hint_table::tail_(ftl_apictx *ctx,
 }
 
 //---------------------------------------------------------------------------
-// ftl_hint_table defragment_: Defragment the hint chain
+// FTL_MAKE_AFTYPE(hint_table) defragment_: Defragment the hint chain
 //---------------------------------------------------------------------------
 sdk_ret_t
-ftl_hint_table::defragment_(ftl_apictx *ectx) {
+FTL_MAKE_AFTYPE(hint_table)::defragment_(FTL_MAKE_AFTYPE(apictx) *ectx) {
     sdk_ret_t ret = SDK_RET_OK;
-    ftl_apictx *tctx = NULL;
-    ftl_apictx *tempctx = NULL;
+    FTL_MAKE_AFTYPE(apictx) *tctx = NULL;
 
     // Defragmentation Sequence
     // vars used in this function:
@@ -266,37 +241,24 @@ ftl_hint_table::defragment_(ftl_apictx *ectx) {
         return ret;
     }
 
-    ret = buckets_[ectx->table_index].defragment_(ectx, tctx);
+    ret = ectx->bucket->defragment_(ectx, tctx);
     SDK_ASSERT(ret == SDK_RET_OK);
 
     SDK_ASSERT(tctx);
-
-    // Destroy the all the api contexts of this chain
-    if (tctx != ectx) {
-        // We have to destroy only the chain built by the tail traversal
-        // when etcx == tctx, all the parent contexts will be freed when
-        // the recursive stack unwinds.
-        tempctx = tctx->pctx;
-        while (tctx && tctx != ectx) {
-            tctx = tempctx;
-            tempctx = tctx->pctx;
-        }
-    }
-
     return SDK_RET_OK;
 }
 
 //---------------------------------------------------------------------------
-// ftl_hint_table remove_: Remove entry from hint table
+// FTL_MAKE_AFTYPE(hint_table) remove_: Remove entry from hint table
 //---------------------------------------------------------------------------
 sdk_ret_t
-ftl_hint_table::remove_(ftl_apictx *ctx) {
+FTL_MAKE_AFTYPE(hint_table)::remove_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 __label__ done;
     // Initialize the context
     auto hctx = ctxnew_(ctx);
     SDK_ASSERT_RETURN(initctx_(hctx) == SDK_RET_OK, SDK_RET_ERR);
     // Remove entry from the bucket
-    auto ret = buckets_[hctx->table_index].remove_(hctx);
+    auto ret = hctx->bucket->remove_(hctx);
     FTL_RET_CHECK_AND_GOTO(ret, done, "bucket remove r:%d", ret);
 
     if (hctx->exmatch) {
@@ -313,18 +275,18 @@ done:
 }
 
 //---------------------------------------------------------------------------
-// ftl_hint_table remove_: Remove entry from hint table
+// FTL_MAKE_AFTYPE(hint_table) remove_: Remove entry from hint table
 //---------------------------------------------------------------------------
 sdk_ret_t
-ftl_hint_table::find_(ftl_apictx *ctx,
-                      ftl_apictx **match_ctx) {
+FTL_MAKE_AFTYPE(hint_table)::find_(FTL_MAKE_AFTYPE(apictx) *ctx,
+                      FTL_MAKE_AFTYPE(apictx) **match_ctx) {
 __label__ done;
     // Initialize the context
     auto hctx = ctxnew_(ctx);
     SDK_ASSERT_RETURN(initctx_(hctx) == SDK_RET_OK, SDK_RET_ERR);
 
     // Remove entry from the bucket
-    auto ret = buckets_[hctx->table_index].find_(hctx);
+    auto ret = hctx->bucket->find_(hctx);
     FTL_RET_CHECK_AND_GOTO(ret, done, "bucket find r:%d", ret);
 
     if (hctx->exmatch) {

@@ -5,9 +5,6 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 #include "include/sdk/base.hpp"
-#include "nic/utils/ftl/ftl.hpp"
-#include "nic/utils/ftl/test/p4pd_mock/ftl_p4pd_mock.hpp"
-using sdk::table::ftl;
 
 FILE *logfp;
 
@@ -21,11 +18,12 @@ ftl_debug_logger (sdk_trace_level_e trace_level, const char *format, ...)
         assert(logfp);
     }
 
-    if (trace_level <= sdk::lib::SDK_TRACE_LEVEL_VERBOSE) {
+    if (true || trace_level <= sdk::lib::SDK_TRACE_LEVEL_VERBOSE) {
         va_start(args, format);
         vsnprintf(logbuf, sizeof(logbuf), format, args);
         fprintf(logfp, "%s\n", logbuf);
         va_end(args);
+        fflush(logfp);
     }
     return 0;
 }

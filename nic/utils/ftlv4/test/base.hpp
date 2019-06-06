@@ -50,9 +50,9 @@ protected:
         sdk_table_factory_params_t params = { 0 };
         
         params.table_id = FTL_TBLID_H5;
-        params.num_hints = 5;
+        params.num_hints = 2;
         params.max_recircs = MAX_RECIRCS;
-        params.entry_trace_en = false;
+        params.entry_trace_en = true;
 
         ftlv4_mock_init();
         table = ftlv4::factory(&params);

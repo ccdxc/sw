@@ -3,8 +3,9 @@
 export GRPC_CPP_PLUGIN  := ${TOPDIR}/nic/hal/third-party/grpc/x86_64/bin/grpc_cpp_plugin
 export GRPC_PY_PLUGIN   := ${TOPDIR}/nic/hal/third-party/grpc/x86_64/bin/grpc_python_plugin
 
-NCPUS=$(shell grep processor /proc/cpuinfo | wc -l)
+NCPUS?=$(shell grep processor /proc/cpuinfo | wc -l)
 MAKEFLAGS += -j${NCPUS}
+
 ifdef JOB_ID
 include ${MKDEFS}/jobd_targets.mk
 endif

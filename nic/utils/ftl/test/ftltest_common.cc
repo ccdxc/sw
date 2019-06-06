@@ -6,8 +6,7 @@
 #include <string.h>
 
 #include "include/sdk/table.hpp"
-#include "nic/utils/ftl/ftl_structs.hpp"
-#include "common.hpp"
+#include "ftltest_common.hpp"
 
 uint32_t g_cache_index = 0;
 
@@ -28,7 +27,7 @@ gencrc32 (bool nextindex, bool nexthint)
 }
 
 void
-fill_entry (uint32_t index, ftl_entry_t *entry)
+fill_entry (uint32_t index, ftlv6_entry_t *entry)
 {
     entry->proto = 17;
     entry->sport = index;
@@ -52,8 +51,8 @@ fill_entry (uint32_t index, ftl_entry_t *entry)
 
 #define POOL_SIZE 16
 sdk_table_api_params_t *
-gen_entry (uint32_t index, bool with_hash) {
-    static ftl_entry_t entry[POOL_SIZE];
+gen_entry (uint32_t index, bool with_hash, uint32_t hash_32b) {
+    static ftlv6_entry_t entry[POOL_SIZE];
     static sdk_table_api_params_t params[POOL_SIZE];
     static uint32_t pidx = 0;
 
@@ -61,7 +60,7 @@ gen_entry (uint32_t index, bool with_hash) {
     params[pidx].entry = &entry[pidx];
     params[pidx].hash_valid = with_hash;
     if (with_hash) {
-        params[pidx].hash_32b = index;
+        params[pidx].hash_32b = hash_32b ? hash_32b : index;
     } else {
         params[pidx].hash_32b = 0;
     }

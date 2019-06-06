@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
-#include "base.hpp"
+#include "ftltest_base.hpp"
 #define BASIC_TEST_COUNT 1
 
 class basic: public FtlGtestBase {

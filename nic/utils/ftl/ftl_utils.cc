@@ -1,9 +1,7 @@
 //-----------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
-#include <string.h>
-#include <stdint.h>
-#include <stdio.h>
+#include "ftl_includes.hpp"
 
 char*
 ftlu_rawstr(void *data, uint32_t len) {

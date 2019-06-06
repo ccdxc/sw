@@ -1760,19 +1760,17 @@ create_objects (void)
 #endif
 
 #ifndef TEST_GRPC_APP
-    if (apollo()) {
-        g_flow_test_obj->set_cfg_params(g_test_params.dual_stack,
-                                        g_test_params.num_tcp,
-                                        g_test_params.num_udp,
-                                        g_test_params.num_icmp,
-                                        g_test_params.sport_lo,
-                                        g_test_params.sport_hi,
-                                        g_test_params.dport_lo,
-                                        g_test_params.dport_hi);
-        ret = g_flow_test_obj->create_flows();
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
+    g_flow_test_obj->set_cfg_params(g_test_params.dual_stack,
+                                    g_test_params.num_tcp,
+                                    g_test_params.num_udp,
+                                    g_test_params.num_icmp,
+                                    g_test_params.sport_lo,
+                                    g_test_params.sport_hi,
+                                    g_test_params.dport_lo,
+                                    g_test_params.dport_hi);
+    ret = g_flow_test_obj->create_flows();
+    if (ret != SDK_RET_OK) {
+        return ret;
     }
 #endif
 

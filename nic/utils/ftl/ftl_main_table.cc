@@ -1,39 +1,30 @@
 //-----------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
-#include <string.h>
-#include "include/sdk/base.hpp"
-
-#include "ftl_table.hpp"
-#include "ftl_apictx.hpp"
-#include "ftl_utils.hpp"
-
-using sdk::table::ftlint::ftl_base_table;
-using sdk::table::ftlint::ftl_main_table;
-using sdk::table::ftlint::ftl_apictx;
+#include "ftl_includes.hpp"
 
 #define MASK(_nbits) ((1 << (_nbits)) - 1)
 
 //---------------------------------------------------------------------------
-// Factory method to instantiate the ftl_main_table class
+// Factory method to instantiate the FTL_MAKE_AFTYPE(main_table) class
 //---------------------------------------------------------------------------
-ftl_main_table *
-ftl_main_table::factory(sdk::table::properties_t *props) {
+FTL_MAKE_AFTYPE(main_table) *
+FTL_MAKE_AFTYPE(main_table)::factory(sdk::table::properties_t *props) {
     void *mem = NULL;
-    ftl_main_table *table = NULL;
+    FTL_MAKE_AFTYPE(main_table) *table = NULL;
     sdk_ret_t ret = SDK_RET_OK;
 
-    mem = (ftl_main_table *) SDK_CALLOC(SDK_MEM_ALLOC_FTL_MAIN_TABLE,
-                                          sizeof(ftl_main_table));
+    mem = (FTL_MAKE_AFTYPE(main_table) *) SDK_CALLOC(SDK_MEM_ALLOC_FTL_MAIN_TABLE,
+                                          sizeof(FTL_MAKE_AFTYPE(main_table)));
     if (!mem) {
         return NULL;
     }
 
-    table = new (mem) ftl_main_table();
+    table = new (mem) FTL_MAKE_AFTYPE(main_table)();
 
     ret = table->init_(props);
     if (ret != SDK_RET_OK) {
-        table->~ftl_main_table();
+        table->~FTL_MAKE_AFTYPE(main_table)();
         SDK_FREE(SDK_MEM_ALLOC_FTL_MAIN_TABLE, mem);
     }
 
@@ -41,40 +32,44 @@ ftl_main_table::factory(sdk::table::properties_t *props) {
 }
 
 //---------------------------------------------------------------------------
-// ftl_main_table init_()
+// FTL_MAKE_AFTYPE(main_table) init_()
 //---------------------------------------------------------------------------
 sdk_ret_t
-ftl_main_table::init_(sdk::table::properties_t *props) {
+FTL_MAKE_AFTYPE(main_table)::init_(sdk::table::properties_t *props) {
     sdk_ret_t ret = SDK_RET_OK;
 
-    ret = ftl_base_table::init_(props->ptable_id,
-                                     props->ptable_size);
+    ret = FTL_MAKE_AFTYPE(base_table)::init_(props->ptable_id, props->ptable_size);
 
     num_hash_bits_ = 32 - num_table_index_bits_;
-    FTL_TRACE_VERBOSE("MainTable: Created ftl_main_table "
+    FTL_TRACE_VERBOSE("MainTable: Created FTL_MAKE_AFTYPE(main_table) "
                       "TableID:%d TableSize:%d NumTableIndexBits:%d NumHashBits:%d",
                       table_id_, table_size_, num_table_index_bits_, num_hash_bits_);
 
-    hint_table_ = ftl_hint_table::factory(props);
+    hint_table_ = FTL_MAKE_AFTYPE(hint_table)::factory(props);
     SDK_ASSERT_RETURN(hint_table_, SDK_RET_OOM);
 
     return ret;
 }
 
-//---------------------------------------------------------------------------
-// ftl_main_table destroy_
-//---------------------------------------------------------------------------
 void
-ftl_main_table::destroy_(ftl_main_table *table) {
-    ftl_hint_table::destroy_(table->hint_table_);
-    ftl_base_table::destroy_(table);
+FTL_MAKE_AFTYPE(main_table)::destroy_(FTL_MAKE_AFTYPE(main_table) *table) {
+    FTL_MAKE_AFTYPE(hint_table)::destroy_(table->hint_table_);
+    FTL_MAKE_AFTYPE(base_table)::destroy_(table);
 }
 
-//---------------------------------------------------------------------------
-// ftl_main_table initctx_ : Initialize API context
-//---------------------------------------------------------------------------
+inline void 
+FTL_MAKE_AFTYPE(main_table)::lock_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+    buckets_[ctx->table_index].lock_();
+}
+
+inline void
+FTL_MAKE_AFTYPE(main_table)::unlock_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+    buckets_[ctx->table_index].unlock_();
+}
+
+
 sdk_ret_t
-ftl_main_table::initctx_(ftl_apictx *ctx) {
+FTL_MAKE_AFTYPE(main_table)::initctx_(FTL_MAKE_AFTYPE(apictx) *ctx) {
     // By now, we should have a valid hash value.
     SDK_ASSERT(ctx->params->hash_valid);
 
@@ -84,43 +79,16 @@ ftl_main_table::initctx_(ftl_apictx *ctx) {
     ctx->table_index = ctx->params->hash_32b % table_size_;
     ctx->hash_msbits = (ctx->params->hash_32b >> num_table_index_bits_) & MASK(num_hash_bits_);
     FTL_TRACE_VERBOSE("M: TID:%d Idx:%d", ctx->table_id, ctx->table_index);
+    ctx->bucket = &buckets_[ctx->table_index];
 
-    return buckets_[ctx->table_index].read_(ctx);
+    return ctx->bucket->read_(ctx);
 }
 
 //---------------------------------------------------------------------------
-// ftl_main_table entry_lock_: Lock main table entry
-//---------------------------------------------------------------------------
-void
-ftl_main_table::entry_lock_(ftl_apictx *ctx) {
-#if 0
-retry:
-    spin_lock_();
-    if (buckets_[ctx->table_index].is_locked_()) {
-        spin_unlock_();    
-        goto retry;
-    }
-    buckets_[ctx->table_index].lock_();
-    spin_unlock_();
-#endif
-    buckets_[ctx->table_index].lock_();
-}
-
-//---------------------------------------------------------------------------
-// ftl_main_table entry_unlock_: Unlock main table entry
-//---------------------------------------------------------------------------
-void
-ftl_main_table::entry_unlock_(ftl_apictx *ctx) {
-    //spin_lock_();
-    buckets_[ctx->table_index].unlock_();
-    //spin_unlock_();    
-}
-
-//---------------------------------------------------------------------------
-// ftl_main_table insert_: Insert entry to main table
+// FTL_MAKE_AFTYPE(main_table) insert_: Insert entry to main table
 //---------------------------------------------------------------------------
 sdk_ret_t
-ftl_main_table::insert_(ftl_apictx *ctx) {
+FTL_MAKE_AFTYPE(main_table)::insert_(FTL_MAKE_AFTYPE(apictx) *ctx) {
     SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
 
     // INSERT SEQUENCE:
@@ -135,7 +103,7 @@ ftl_main_table::insert_(ftl_apictx *ctx) {
     //           Write the Main Table bucket to HW
     // 3) Else if SUCCESS, insert is complete.
 
-    entry_lock_(ctx);
+    lock_(ctx);
     auto ret = buckets_[ctx->table_index].insert_(ctx);
     if (unlikely(ret == SDK_RET_COLLISION)) {
         // COLLISION case
@@ -155,15 +123,15 @@ ftl_main_table::insert_(ftl_apictx *ctx) {
         FTL_TRACE_ERR("MainTable: insert failed: ret:%d", ret);
     }
 
-    entry_unlock_(ctx);
+    unlock_(ctx);
     return ret;
 }
 
 //---------------------------------------------------------------------------
-// ftl_main_table remove_: Remove entry from main table
+// FTL_MAKE_AFTYPE(main_table) remove_: Remove entry from main table
 //---------------------------------------------------------------------------
 sdk_ret_t
-ftl_main_table::remove_(ftl_apictx *ctx) {
+FTL_MAKE_AFTYPE(main_table)::remove_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 __label__ done;
     SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
 
@@ -189,18 +157,18 @@ done:
 }
 
 //---------------------------------------------------------------------------
-// ftl_main_table update_: Remove entry from main table
+// FTL_MAKE_AFTYPE(main_table) update_: Remove entry from main table
 //---------------------------------------------------------------------------
 sdk_ret_t
-ftl_main_table::find_(ftl_apictx *ctx,
-                      ftl_apictx **match_ctx) {
+FTL_MAKE_AFTYPE(main_table)::find_(FTL_MAKE_AFTYPE(apictx) *ctx,
+                      FTL_MAKE_AFTYPE(apictx) **match_ctx) {
 __label__ done;
     if (!ctx->inited) {
         // If entry_valid, then context is already initialized.
         SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
     }
 
-    auto ret = buckets_[ctx->table_index].find_(ctx);
+    auto ret = ctx->bucket->find_(ctx);
     FTL_RET_CHECK_AND_GOTO(ret, done, "bucket find r:%d", ret);
 
     if (ctx->exmatch) {
@@ -217,33 +185,27 @@ done:
     return ret;
 }
 
-//---------------------------------------------------------------------------
-// ftl_main_table update_: Remove entry from main table
-//---------------------------------------------------------------------------
 sdk_ret_t
-ftl_main_table::update_(ftl_apictx *ctx) {
+FTL_MAKE_AFTYPE(main_table)::update_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 __label__ done;
-    ftl_apictx *match_ctx = NULL;
+    FTL_MAKE_AFTYPE(apictx) *match_ctx = NULL;
 
     SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
 
     auto ret = find_(ctx, &match_ctx);
     FTL_RET_CHECK_AND_GOTO(ret, done, "find r:%d", ret);
 
-    ret = buckets_[match_ctx->table_index].update_(match_ctx);
+    ret = match_ctx->bucket->update_(match_ctx);
     FTL_RET_CHECK_AND_GOTO(ret, done, "bucket update r:%d", ret);
 
 done:
     return ret;
 }
 
-//---------------------------------------------------------------------------
-// ftl_main_table update_: Remove entry from main table
-//---------------------------------------------------------------------------
 sdk_ret_t
-ftl_main_table::get_(ftl_apictx *ctx) {
+FTL_MAKE_AFTYPE(main_table)::get_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 __label__ done;
-    ftl_apictx *match_ctx = NULL;
+    FTL_MAKE_AFTYPE(apictx) *match_ctx = NULL;
 
     SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
 
@@ -251,24 +213,24 @@ __label__ done;
     FTL_RET_CHECK_AND_GOTO(ret, done, "find r:%d", ret);
 
     // Set the Handle
-    if (FTL_API_CONTEXT_IS_MAIN(match_ctx)) {
+    if (match_ctx->is_main()) {
         match_ctx->params->handle.pindex(match_ctx->table_index);
     } else {
         match_ctx->params->handle.sindex(match_ctx->table_index);
     }
 
-    FTL_ENTRY_COPY_KEY_DATA((ftl_entry_t*)ctx->params->entry, &ctx->entry);
+    ctx->entry.copy_key_data((FTL_MAKE_AFTYPE(entry_t)*)ctx->params->entry);
 
 done:
     return ret;
 }
 
 //---------------------------------------------------------------------------
-// ftl_main_table iterate_: Iterate entries from main table
+// FTL_MAKE_AFTYPE(main_table) iterate_: Iterate entries from main table
 //---------------------------------------------------------------------------
 sdk_ret_t
-ftl_main_table::iterate_(ftl_apictx *ctx) {
-    auto ret = ftl_base_table::iterate_(ctx);
+FTL_MAKE_AFTYPE(main_table)::iterate_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+    auto ret = FTL_MAKE_AFTYPE(base_table)::iterate_(ctx);
     FTL_RET_CHECK_AND_GOTO(ret, done, "main table iterate r:%d", ret);
 
     ret = hint_table_->iterate_(ctx);

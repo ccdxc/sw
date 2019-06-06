@@ -17,4 +17,4 @@ set -e
 export PATH=${PATH}:${BLDDIR}/bin
 $ARGS ftl_test $*
 #perf record --call-graph fp ftl_test --gtest_filter="scale.insert1M"
-#gdb --args ftl_test --gtest_filter="basic.insert"
+#gdb --args ftl_test --gtest_filter="basic.insert_update_remove"

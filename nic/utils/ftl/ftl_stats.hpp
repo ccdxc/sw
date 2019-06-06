@@ -4,19 +4,11 @@
 #ifndef __FTL_STATS_HPP__
 #define __FTL_STATS_HPP__
 
-#include "include/sdk/base.hpp"
-#include "include/sdk/table.hpp"
-#include <string>
-
-#include "ftl_utils.hpp"
-
-using namespace std;
-
 namespace sdk {
 namespace table {
 namespace ftlint {
 
-class ftl_api_stats {
+class apistats {
 private:
     uint32_t insert_;
     uint32_t insert_duplicate_;
@@ -32,7 +24,7 @@ private:
     uint32_t release_fail_;
 
 public:
-    ftl_api_stats() {
+    apistats() {
         insert_ = 0;
         insert_duplicate_ = 0;
         insert_fail_ = 0;
@@ -47,7 +39,7 @@ public:
         release_fail_ = 0;
     }
 
-    ~ftl_api_stats() {
+    ~apistats() {
     }
 
     sdk_ret_t insert(sdk_ret_t status) {
@@ -121,18 +113,18 @@ public:
     }
 };
 
-class ftl_table_stats {
+class tablestats {
 private:
     uint32_t    entries_;
     uint32_t    hints_;
 
 public:
-    ftl_table_stats() {
+    tablestats() {
         entries_ = 0;
         hints_ = 0;
     }
 
-    ~ftl_table_stats() {
+    ~tablestats() {
     }
 
     sdk_ret_t insert(bool is_hint) {
@@ -164,4 +156,4 @@ public:
 } // namespace table
 } // namespace sdk
 
-#endif // __FTL_HPP__
+#endif // __FTL_STATS_HPP__

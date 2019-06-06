@@ -26,7 +26,6 @@
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "flow_test.hpp"
 
-
 using std::string;
 using sdk::utils::crcFast;
 namespace pt = boost::property_tree;
@@ -60,7 +59,7 @@ protected:
 TEST_F(flow_gtest, flows_create) {
     g_flow_test_obj = new flow_test(true);
     g_flow_test_obj->generate_dummy_epdb();
-    g_flow_test_obj->set_cfg_params(false, 0, PERF_TEST_SCALE, 0,
+    g_flow_test_obj->set_cfg_params(true, 0, PERF_TEST_SCALE, 0,
                                     100, 100, 1024, 2047);
     g_flow_test_obj->create_flows();
     delete g_flow_test_obj;
