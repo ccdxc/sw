@@ -1173,6 +1173,7 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
         // so we skip the 1st (even for MyTEP we create a TEP)
         pds_tep.key.ip_addr.af = IP_AF_IPV4;
         pds_tep.key.ip_addr.addr.v4_addr = ip_pfx->addr.addr.v4_addr + 1 + i;
+        MAC_UINT64_TO_ADDR(pds_tep.mac, (((uint64_t)0x0303 << 22) | i));
         if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
             pds_tep.encap.type = PDS_ENCAP_TYPE_VXLAN;
             pds_tep.type = PDS_TEP_TYPE_WORKLOAD;

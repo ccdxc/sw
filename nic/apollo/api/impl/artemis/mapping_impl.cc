@@ -454,7 +454,7 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
     } else {
         nh_data.action_u.nexthop_nexthop_info.port = TM_PORT_UPLINK_1;
     }
-    //nh_data.action_u.nexthop_nexthop_info.vni = ;
+    nh_data.action_u.nexthop_nexthop_info.vni = vpc->fabric_encap().val.vnid;
     tep = tep_db()->find(&spec->tep);
     if (spec->provider_ip_valid) {
         dipo = &spec->provider_ip;

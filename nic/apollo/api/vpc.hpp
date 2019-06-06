@@ -160,6 +160,10 @@ public:
     /// \return    IPv6 prefix to be used for NAT46
     ip_prefix_t& nat46_prefix(void) { return nat46_pfx_; }
 
+    /// \brief  return the fabric encap of this VPC
+    /// \return   VxLAN or MPLSoUDP encap type & val
+    pds_encap_t fabric_encap(void) const { return fabric_encap_; }
+
     /// \brief  return h/w index for this VPC
     /// \return h/w table index for this VPC
     uint16_t hw_id(void) { return hw_id_; }
