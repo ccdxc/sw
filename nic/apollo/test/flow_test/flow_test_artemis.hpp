@@ -505,14 +505,18 @@ public:
         }
         memset(&actiondata, 0, sizeof(session_actiondata_t));
         actiondata.action_id = SESSION_SESSION_INFO_ID;
-        actiondata.action_u.session_session_info.meter_idx = meter_idx++;
-        if (meter_idx == vpc * num_meter_idx_per_vpc) {
-            meter_idx = (vpc-1) * num_meter_idx_per_vpc + 1;
-        }
         actiondata.action_u.session_session_info.nexthop_idx =
                                         session_info_nexthop_idx++;
         if (session_info_nexthop_idx == session_info_nexthop_end_idx) {
             session_info_nexthop_idx = session_info_nexthop_start_idx;
+        }
+        // do DMACi rewrite and encap in the Tx direction
+        actiondata.action_u.session_session_info.tx_rewrite_flags = 0x21;
+        // do SMACi rewrite with VR MAC and go with CA-IP always
+        actiondata.action_u.session_session_info.rx_rewrite_flags = 0x11;
+        actiondata.action_u.session_session_info.meter_idx = meter_idx++;
+        if (meter_idx == vpc * num_meter_idx_per_vpc) {
+            meter_idx = (vpc-1) * num_meter_idx_per_vpc + 1;
         }
         dump_session_info(vpc, &actiondata);
         p4pd_ret = p4pd_global_entry_write(
