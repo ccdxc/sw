@@ -137,27 +137,6 @@ testcases:
             iperfthreads     :  1
             #capture_pcap : true
 
-    -   name    : UplinkIntf_TSO_AFTER_RESTART
-        testcase: testcases.drivers.features
-        enable  : True
-        iterators :
-            type               : nested
-            mtu                : [ '8192']
-            tso_offload        : [ 'on']
-            #Sg seems to be on for TSO testing.
-            sg_offload         : [ 'on']
-            #TSO requires rx and tx cheksum
-            rx_check_sum       : [ 'on']
-            tx_check_sum       : [ 'on']
-            pktsize            : [  8192 ]
-            proto              : [ 'tcp']
-            ipproto            : [ 'v4']
-            vlantag            : ['on', 'off']
-        args    :
-            test-type    : host
-            iperfthreads     :  1
-            restart      : true
-
     -   name    : UplinkIntf_RSS
         testcase: testcases.drivers.features
         disable : False
