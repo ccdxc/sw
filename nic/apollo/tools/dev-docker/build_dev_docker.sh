@@ -26,6 +26,7 @@ copy_files() {
     pkgf='nic/tools/package/package.py nic/tools/package/pack_host.txt nic/tools/package/pack_apollo.txt '
     pkgf+='nic/tools/update_version.sh nic/tools/core_count_check.sh nic/tools/package/pack_platform.txt '
     pkgf+='nic/tools/package/pack_debug.txt nic/tools/upgrade_version.sh nic/tools/gen_version.py '
+    pkgf+='nic/tools/package/pack_test_utils.txt '
 
     apollod='nic/apollo nic/conf/apollo '
 
