@@ -81,12 +81,16 @@ WatchdogPtr Watchdog::create()
     SwitchrootLoop::getInstance()->register_switchroot_reactor(wchdg);
 
     logger->info("Creating watchdog");
-    if (std::getenv("PAL_WATCHDOG_ENABLED")) {
-        wchdg->watchdog = PALWatchdog::create();
-        logger->info("Using PAL watchdog");
-    } else {
+
+    // If file "/data/no_watchdog" is present or NO_WATCHDOG is set then use
+    // the simulation watchdog
+    if ((access("/data/no_watchdog", F_OK) != -1) ||
+        (std::getenv("NO_WATCHDOG"))) {
         wchdg->watchdog = SimulationWatchdog::create();
         logger->info("Using Simulation watchdog");
+    } else {
+        wchdg->watchdog = PALWatchdog::create();
+        logger->info("Using PAL watchdog");
     }
     
     wchdg->timer_watcher->repeat();

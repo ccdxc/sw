@@ -5,6 +5,7 @@ TOPDIR="/sw/nic"
 BUILD_DIR=${TOPDIR}/build/x86_64/iris/
 
 export PENLOG_LOCATION="."
+export NO_WATCHDOG=1
 
 pushd ${TOPDIR}
 
