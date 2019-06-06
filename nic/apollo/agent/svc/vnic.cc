@@ -9,48 +9,6 @@
 #include "nic/apollo/agent/svc/vnic.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 
-// build VNIC api spec from proto buf spec
-static inline sdk_ret_t
-pds_vnic_proto_spec_to_api_spec (pds_vnic_spec_t *api_spec,
-                                 const pds::VnicSpec &proto_spec)
-{
-    uint32_t msid;
-
-    api_spec->key.id = proto_spec.vnicid();
-    api_spec->vpc.id = proto_spec.vpcid();
-    api_spec->subnet.id = proto_spec.subnetid();
-    api_spec->vnic_encap = proto_encap_to_pds_encap(proto_spec.vnicencap());
-    api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
-    MAC_UINT64_TO_ADDR(api_spec->mac_addr, proto_spec.macaddress());
-    //MAC_UINT64_TO_ADDR(api_spec->provider_mac_addr,
-    //                   proto_spec.providermacaddress());
-    api_spec->rsc_pool_id = proto_spec.resourcepoolid();
-    api_spec->src_dst_check = proto_spec.sourceguardenable();
-    for (int i = 0; i < proto_spec.txmirrorsessionid_size(); i++) {
-        msid = proto_spec.txmirrorsessionid(i);
-        if ((msid < 1) || (msid > 8)) {
-            PDS_TRACE_ERR("Invalid tx mirror session id {} in vnic {} spec, "
-                          "mirror session ids must be in the range [1-8]",
-                          msid, api_spec->key.id);
-            return SDK_RET_INVALID_ARG;
-        }
-        api_spec->tx_mirror_session_bmap |= (1 << (msid - 1));
-    }
-    for (int i = 0; i < proto_spec.rxmirrorsessionid_size(); i++) {
-        msid = proto_spec.rxmirrorsessionid(i);
-        if ((msid < 1) || (msid > 8)) {
-            PDS_TRACE_ERR("Invalid rx mirror session id {} in vnic {} spec",
-                          "mirror session ids must be in the range [1-8]",
-                          msid, api_spec->key.id);
-            return SDK_RET_INVALID_ARG;
-        }
-        api_spec->rx_mirror_session_bmap |= (1 << (msid - 1));
-    }
-    api_spec->v4_meter.id = proto_spec.v4meterid();
-    api_spec->v6_meter.id = proto_spec.v6meterid();
-    return SDK_RET_OK;
-}
-
 Status
 VnicSvcImpl::VnicCreate(ServerContext *context,
                         const pds::VnicRequest *proto_req,
@@ -138,35 +96,6 @@ VnicSvcImpl::VnicDelete(ServerContext *context,
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
     }
     return Status::OK;
-}
-
-// Populate proto buf status from vnic API status
-static inline void
-vnic_api_status_to_proto_status (const pds_vnic_status_t *api_status,
-                                 pds::VnicStatus *proto_status)
-{
-}
-
-// Populate proto buf stats from vnic API stats
-static inline void
-vnic_api_stats_to_proto_stats (const pds_vnic_stats_t *api_stats,
-                               pds::VnicStats *proto_stats)
-{
-}
-
-// Populate proto buf from vnic API info
-static inline void
-vnic_api_info_to_proto (const pds_vnic_info_t *api_info, void *ctxt)
-{
-    pds::VnicGetResponse *proto_rsp = (pds::VnicGetResponse *)ctxt;
-    auto vnic = proto_rsp->add_response();
-    pds::VnicSpec *proto_spec = vnic->mutable_spec();
-    pds::VnicStatus *proto_status = vnic->mutable_status();
-    pds::VnicStats *proto_stats = vnic->mutable_stats();
-
-    vnic_api_spec_to_proto_spec(proto_spec, &api_info->spec);
-    vnic_api_status_to_proto_status(&api_info->status, proto_status);
-    vnic_api_stats_to_proto_stats(&api_info->stats, proto_stats);
 }
 
 Status
