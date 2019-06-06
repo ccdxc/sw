@@ -72,7 +72,7 @@
   },
   {
    "Name": "NIC_HEALTH_UNKNOWN",
-   "Severity": "WARN",
+   "Severity": "CRITICAL",
    "Desc": "NIC health transitioned to 'unknown'"
   },
   {

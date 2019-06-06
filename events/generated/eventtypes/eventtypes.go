@@ -101,7 +101,7 @@ func init() {
 
 	eventTypes[NIC_HEALTH_UNKNOWN] = &EventTypeAttributes{
 		EType:    "NIC_HEALTH_UNKNOWN",
-		Severity: "WARN",
+		Severity: "CRITICAL",
 		Category: "Cluster",
 		Desc:     "NIC health transitioned to 'unknown'"}
 
