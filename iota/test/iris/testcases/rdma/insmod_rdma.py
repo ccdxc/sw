@@ -58,9 +58,6 @@ def Trigger(tc):
                                    rundir = 'rdma-drivers',
                                    timeout = 180)
             api.Trigger_AddHostCommand(req, n, "modprobe ib_uverbs")
-            api.Trigger_AddHostCommand(req, n, "modprobe ib_cm")
-            api.Trigger_AddHostCommand(req, n, "modprobe rdma_cm")
-            api.Trigger_AddHostCommand(req, n, "modprobe ib_ucm")
             api.Trigger_AddHostCommand(req, n, "modprobe rdma_ucm")
             api.Trigger_AddHostCommand(req, n, "(lsmod | grep rdma_krping >/dev/null) || insmod drivers-linux/krping/rdma_krping.ko",
                                        rundir = 'rdma-drivers')
