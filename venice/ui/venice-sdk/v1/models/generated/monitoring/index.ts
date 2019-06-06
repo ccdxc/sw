@@ -77,6 +77,7 @@ export * from './monitoring-match-rule.model';
 export * from './monitoring-match-selector.model';
 export * from './monitoring-matched-requirement.model';
 export * from './monitoring-mirror-collector.model';
+export * from './monitoring-mirror-export-config.model';
 export * from './monitoring-mirror-session.model';
 export * from './monitoring-mirror-session-list.model';
 export * from './monitoring-mirror-session-spec.model';

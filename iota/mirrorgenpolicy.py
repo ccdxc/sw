@@ -27,8 +27,7 @@ mirrorpolicy_template = {
           {
              "type": "ERSPAN",
              "export-config": {
-              "destination": "192.168.100.101",
-              "transport": "TCP/8000"
+              "destination": "192.168.100.101"
             },
             "pcap-dir-name": ""
           }

@@ -164,13 +164,13 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 				},
 				{
 					Type: "ERSPAN",
-					ExportCfg: &monitoring.ExportConfig{
+					ExportCfg: &monitoring.MirrorExportConfig{
 						Destination: "111.1.1.1",
 					},
 				},
 				{
 					Type: "ERSPAN",
-					ExportCfg: &monitoring.ExportConfig{
+					ExportCfg: &monitoring.MirrorExportConfig{
 						Destination: "111.1.1.2",
 					},
 				},
@@ -377,9 +377,8 @@ var testGoodMirrorSession = []monitoring.MirrorSession{
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "ERSPAN",
-					ExportCfg: &monitoring.ExportConfig{
+					ExportCfg: &monitoring.MirrorExportConfig{
 						Destination: "127.0.0.1",
-						Transport:   "UDP/5789",
 					},
 				},
 			},

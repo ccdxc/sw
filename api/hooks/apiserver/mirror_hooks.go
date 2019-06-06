@@ -20,7 +20,6 @@ type mirrorSessionHooks struct {
 const (
 	// Finalize these parameters once we decide how to store the packets captured by Venice
 	veniceMaxPacketSize           = 256
-	veniceMaxPacketCount          = 1000
 	veniceMaxCollectorsPerSession = 2
 )
 
@@ -100,7 +99,7 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 		} else {
 			allPktsFilter = true
 		}
-		if dropReasonFilter == true && dropAllFilter == true {
+		if dropReasonFilter && dropAllFilter {
 			return i, false, fmt.Errorf("DROP_ALL cannot be specified with any other drop reason")
 		}
 	}
@@ -113,7 +112,7 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 
 		if mr.AppProtoSel != nil {
 			for _, appName := range mr.AppProtoSel.Apps {
-				// XXX: Check the App database once it is avaialble
+				// XXX: Check the App database once it is available
 				return i, false, fmt.Errorf("Application Name %v is not identified, provide L4proto/port", appName)
 			}
 		}

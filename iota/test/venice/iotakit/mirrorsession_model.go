@@ -54,16 +54,15 @@ func (msc *MirrorSessionCollection) AddCollector(wc *WorkloadCollection, transpo
 	if wc.err != nil {
 		return &MirrorSessionCollection{err: wc.err}
 	}
-        collector := monitoring.MirrorCollector{
-                Type: "ERSPAN",
-                ExportCfg: &monitoring.ExportConfig{
-                        Destination: strings.Split(wc.workloads[wlnum].iotaWorkload.IpPrefix, "/")[0],
-                        Transport: transport,
-                },
-        }
-                
+	collector := monitoring.MirrorCollector{
+		Type: "ERSPAN",
+		ExportCfg: &monitoring.MirrorExportConfig{
+			Destination: strings.Split(wc.workloads[wlnum].iotaWorkload.IpPrefix, "/")[0],
+		},
+	}
+
 	for _, sess := range msc.sessions {
-                sess.veniceMirrorSess.Spec.Collectors = append(sess.veniceMirrorSess.Spec.Collectors, collector)
+		sess.veniceMirrorSess.Spec.Collectors = append(sess.veniceMirrorSess.Spec.Collectors, collector)
 	}
 
 	return msc
@@ -76,7 +75,7 @@ func (msc *MirrorSessionCollection) ClearCollectors() *MirrorSessionCollection {
 	}
 
 	for _, sess := range msc.sessions {
-                sess.veniceMirrorSess.Spec.Collectors = nil
+		sess.veniceMirrorSess.Spec.Collectors = nil
 	}
 
 	return msc

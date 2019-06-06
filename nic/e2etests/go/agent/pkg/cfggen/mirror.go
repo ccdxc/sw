@@ -6,14 +6,12 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/nic/e2etests/go/agent/pkg"
 )
 
 func (c *CfgGen) GenerateMirrorSessions() error {
-	var portOffset = 8000
 	var cfg pkg.IOTAConfig
 	var mirrors []*tsproto.MirrorSession
 	var mirrorManifest *pkg.Object
@@ -64,9 +62,8 @@ func (c *CfgGen) GenerateMirrorSessions() error {
 				Collectors: []tsproto.MirrorCollector{
 					{
 						Type: "ERSPAN",
-						ExportCfg: monitoring.ExportConfig{
+						ExportCfg: tsproto.MirrorExportConfig{
 							Destination: t.Spec.Dst,
-							Transport:   fmt.Sprintf("TCP/%d", portOffset+i),
 						},
 					},
 				},

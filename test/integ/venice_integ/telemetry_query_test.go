@@ -52,7 +52,7 @@ func (it *veniceIntegSuite) TestFwlogsQueryAuth(c *C) {
 
 	query := &telemetry_query.FwlogsQueryList{
 		Queries: []*telemetry_query.FwlogsQuerySpec{
-			&telemetry_query.FwlogsQuerySpec{},
+			{},
 		},
 	}
 
@@ -67,7 +67,7 @@ func (it *veniceIntegSuite) TestFwlogsQueryAuth(c *C) {
 		},
 		Spec: auth.RoleSpec{
 			Permissions: []auth.Permission{
-				auth.Permission{
+				{
 					ResourceTenant: globals.DefaultTenant,
 					ResourceKind:   resKind,
 					Actions: []string{
@@ -133,7 +133,7 @@ func (it *veniceIntegSuite) TestMetricsQueryAuth(c *C) {
 
 	query := &telemetry_query.MetricsQueryList{
 		Queries: []*telemetry_query.MetricsQuerySpec{
-			&telemetry_query.MetricsQuerySpec{
+			{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
@@ -152,7 +152,7 @@ func (it *veniceIntegSuite) TestMetricsQueryAuth(c *C) {
 		},
 		Spec: auth.RoleSpec{
 			Permissions: []auth.Permission{
-				auth.Permission{
+				{
 					ResourceTenant: globals.DefaultTenant,
 					ResourceKind:   resKind,
 					Actions: []string{
@@ -209,7 +209,7 @@ func (it *veniceIntegSuite) TestMetricsQueryAuth(c *C) {
 	AssertOk(c, err, "Metrics query should have succeeded")
 
 	role.Spec.Permissions = []auth.Permission{
-		auth.Permission{
+		{
 			ResourceGroup: string(apiclient.GroupCluster),
 			ResourceKind:  string(cluster.KindNode),
 			Actions: []string{

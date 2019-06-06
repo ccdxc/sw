@@ -35,13 +35,13 @@ func buildNICMirrorSession(mss *statemgr.MirrorSessionState) *tsproto.MirrorSess
 	tSpec.PacketSize = ms.Spec.PacketSize
 
 	for _, c := range ms.Spec.Collectors {
-		var export monitoring.ExportConfig
+		var export monitoring.MirrorExportConfig
 		if c.ExportCfg != nil {
 			export = *c.ExportCfg
 		}
 		tc := tsproto.MirrorCollector{
 			Type:      c.Type,
-			ExportCfg: export,
+			ExportCfg: tsproto.MirrorExportConfig{Destination: export.Destination},
 		}
 		tSpec.Collectors = append(tSpec.Collectors, tc)
 	}
@@ -149,7 +149,7 @@ func (r *MirrorSessionRPCServer) WatchMirrorSessions(sel *api.ObjectMeta, stream
 			watchEvtList = tsproto.MirrorSessionEventList{}
 			mss := evt.Obj.(*statemgr.MirrorSessionState)
 			mss.Mutex.Lock()
-			// Errorred session are not sent to Naples, so avoid all create/update/del transations
+			// Errorred session are not sent to Naples, so avoid all create/update/del transactions
 			if mss.State == monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION {
 				mss.Mutex.Unlock()
 				continue

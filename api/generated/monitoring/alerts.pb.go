@@ -46,6 +46,7 @@
 		MatchRule
 		MatchSelector
 		MirrorCollector
+		MirrorExportConfig
 		MirrorSession
 		MirrorSessionSpec
 		MirrorSessionStatus

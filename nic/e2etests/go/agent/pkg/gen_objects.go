@@ -464,7 +464,6 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string, sdevices []St
 
 func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object, error) {
 	var mirrors []tsproto.MirrorSession
-	var portOffset = 8000
 	specFile := "generated/mirrors.json"
 	if !genRequired(o) {
 		return o, nil
@@ -511,9 +510,8 @@ func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object
 				Collectors: []tsproto.MirrorCollector{
 					{
 						Type: "ERSPAN",
-						ExportCfg: monitoring.ExportConfig{
+						ExportCfg: tsproto.MirrorExportConfig{
 							Destination: greTunDst,
-							Transport:   fmt.Sprintf("TCP/%d", portOffset+i),
 						},
 					},
 				},

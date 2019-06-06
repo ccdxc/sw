@@ -9,7 +9,6 @@ import "google/api/annotations.proto";
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
-import "github.com/pensando/sw/api/protos/export.proto";
 import "matchrule.proto";
 //========================================================================================
 // Packet Mirroring
@@ -59,6 +58,11 @@ message MirrorStopConditions {
     uint32          MaxPacketCount  = 1 [(gogoproto.jsontag) = "max-packets,omitempty"];
 }
 
+message MirrorExportConfig {
+    // IP address or URL of the collector/entity to which the data is to be exported
+    string Destination = 1 [(gogoproto.jsontag) = "destination,omitempty", (venice.check) = "StrLen(1,2048)"];
+}
+
 // Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)
 message MirrorCollector {
     enum PacketCollectorType {
@@ -68,7 +72,8 @@ message MirrorCollector {
     string              Type        = 1 [(gogoproto.jsontag) = "type,omitempty", (venice.check) = "StrEnum(MirrorCollector.PacketCollectorType)"];
 
     // Collector export information for ERSPAN. Not required for VENICE collector
-    monitoring.ExportConfig    ExportCfg   = 2 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "export-config,omitempty"];
+    MirrorExportConfig  ExportCfg   = 2 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "export-config,omitempty"];
+
     string              PcapDirName = 3 [(gogoproto.jsontag) = "pcap-dir-name"];
 }
 

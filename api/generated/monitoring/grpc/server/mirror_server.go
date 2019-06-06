@@ -47,10 +47,11 @@ func (s *smonitoringMirrorBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 	l.Infof("registering message for smonitoringMirrorBackend")
 	s.Messages = map[string]apiserver.Message{
 
-		"monitoring.AppProtoSelector": apisrvpkg.NewMessage("monitoring.AppProtoSelector"),
-		"monitoring.MatchRule":        apisrvpkg.NewMessage("monitoring.MatchRule"),
-		"monitoring.MatchSelector":    apisrvpkg.NewMessage("monitoring.MatchSelector"),
-		"monitoring.MirrorCollector":  apisrvpkg.NewMessage("monitoring.MirrorCollector"),
+		"monitoring.AppProtoSelector":   apisrvpkg.NewMessage("monitoring.AppProtoSelector"),
+		"monitoring.MatchRule":          apisrvpkg.NewMessage("monitoring.MatchRule"),
+		"monitoring.MatchSelector":      apisrvpkg.NewMessage("monitoring.MatchSelector"),
+		"monitoring.MirrorCollector":    apisrvpkg.NewMessage("monitoring.MirrorCollector"),
+		"monitoring.MirrorExportConfig": apisrvpkg.NewMessage("monitoring.MirrorExportConfig"),
 		"monitoring.MirrorSession": apisrvpkg.NewMessage("monitoring.MirrorSession").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := monitoring.MirrorSession{}

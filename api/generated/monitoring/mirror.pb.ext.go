@@ -167,11 +167,36 @@ func (m *MirrorCollector) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *MirrorCollector) Defaults(ver string) bool {
 	var ret bool
+	if m.ExportCfg != nil {
+		ret = m.ExportCfg.Defaults(ver) || ret
+	}
 	ret = true
 	switch ver {
 	default:
 		m.Type = "ERSPAN"
 	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *MirrorExportConfig) Clone(into interface{}) (interface{}, error) {
+	var out *MirrorExportConfig
+	var ok bool
+	if into == nil {
+		out = &MirrorExportConfig{}
+	} else {
+		out, ok = into.(*MirrorExportConfig)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*MirrorExportConfig))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *MirrorExportConfig) Defaults(ver string) bool {
+	var ret bool
 	return ret
 }
 
@@ -452,6 +477,32 @@ func (m *MirrorCollector) Normalize() {
 
 }
 
+func (m *MirrorExportConfig) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *MirrorExportConfig) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	if vs, ok := validatorMapMirror["MirrorExportConfig"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapMirror["MirrorExportConfig"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *MirrorExportConfig) Normalize() {
+
+}
+
 func (m *MirrorSession) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	tenant = m.Tenant
@@ -691,6 +742,19 @@ func init() {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
+		}
+		return nil
+	})
+
+	validatorMapMirror["MirrorExportConfig"] = make(map[string][]func(string, interface{}) error)
+	validatorMapMirror["MirrorExportConfig"]["all"] = append(validatorMapMirror["MirrorExportConfig"]["all"], func(path string, i interface{}) error {
+		m := i.(*MirrorExportConfig)
+		args := make([]string, 0)
+		args = append(args, "1")
+		args = append(args, "2048")
+
+		if err := validators.StrLen(m.Destination, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"Destination", err.Error())
 		}
 		return nil
 	})

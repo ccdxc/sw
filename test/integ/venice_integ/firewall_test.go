@@ -600,7 +600,7 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 			ALG: &security.ALG{
 				Type: "SunRPC",
 				Sunrpc: []*security.Sunrpc{
-					&security.Sunrpc{
+					{
 						ProgramID: pgmID,
 						Timeout:   "2s",
 					},
@@ -626,7 +626,7 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 			ALG: &security.ALG{
 				Type: "MSRPC",
 				Msrpc: []*security.Msrpc{
-					&security.Msrpc{
+					{
 						ProgramUUID: pgmID,
 						Timeout:     "2s",
 					},

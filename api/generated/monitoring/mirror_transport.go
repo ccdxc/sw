@@ -153,6 +153,40 @@ func DecodeGrpcRespMirrorCollector(ctx context.Context, response interface{}) (i
 	return response, nil
 }
 
+func encodeHTTPMirrorExportConfig(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPMirrorExportConfig(_ context.Context, r *http.Request) (interface{}, error) {
+	var req MirrorExportConfig
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqMirrorExportConfig encodes GRPC request
+func EncodeGrpcReqMirrorExportConfig(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*MirrorExportConfig)
+	return req, nil
+}
+
+// DecodeGrpcReqMirrorExportConfig decodes GRPC request
+func DecodeGrpcReqMirrorExportConfig(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*MirrorExportConfig)
+	return req, nil
+}
+
+// EncodeGrpcRespMirrorExportConfig encodes GRC response
+func EncodeGrpcRespMirrorExportConfig(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespMirrorExportConfig decodes GRPC response
+func DecodeGrpcRespMirrorExportConfig(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPMirrorSession(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

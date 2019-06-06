@@ -14170,14 +14170,30 @@
           "default": "ERSPAN",
           "x-ui-hints": {
             "ERSPAN": "ERSPAN"
-          }
+          },
+          "title": "Type of Collector"
         },
         "export-config": {
-          "$ref": "#/definitions/monitoringExportConfig",
+          "$ref": "#/definitions/monitoringMirrorExportConfig",
           "title": "When collector type is Venice, collector export information is not required"
         }
       },
       "title": "Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)"
+    },
+    "monitoringMirrorExportConfig": {
+      "type": "object",
+      "required": [
+        "destination"
+      ],
+      "properties": {
+        "destination": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "description": "length of string should be between 1 and 2048",
+          "title": "IP address or URL of the collector/entity to which the data is to be exported"
+        }
+      }
     },
     "monitoringMirrorSession": {
       "type": "object",
