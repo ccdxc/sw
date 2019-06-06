@@ -56,7 +56,9 @@ def process(topospec):
     #any LIFs are configured
     nvme_proxy = getattr(topospec, 'nvme_proxy', False)
     if nvme_proxy:
-        NvmeGlobalObject().main(topospec.nvme_proxy)
+        nvme_gbl = NvmeGlobalObject()
+        nvme_gbl.main(topospec.nvme_proxy)
+        Store.objects.SetAll([nvme_gbl])
 
     # Uplinks
     UplinkHelper.main(topospec)

@@ -18,8 +18,8 @@ from cryptography.hazmat.backends import default_backend
 def GetPrp2Offset (tc, pkt, args):
     return (tc.config.nvmens.lif.spec.host_page_size) - args.nentries * 8
 
-def GetDataSize (tc, pkt, args):
-    return (tc.config.nvmens.lba_size) * args.nlb
+def GetDataSize (tc, pkt):
+    return (tc.config.nvmens.lba_size) * tc.pvtdata.nlb
 
 def PickPktTemplate(tc, pkt, args = None):
     if tc.config.nvmesession.session.IsIPV6():

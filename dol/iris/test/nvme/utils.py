@@ -3,6 +3,8 @@ import copy
 from infra.common.logging import logger as logger
 from infra.common.logging import logger as logger
 import binascii
+from iris.config.objects.nvme.gbl import NvmeGlobalObject 
+from iris.config.store import Store
 
 def VerifyEqual(tc, name, val, exp_val):
     logger.info("%s actual: %s expected: %s" \
@@ -66,6 +68,11 @@ def VerifyErrStatistics(tc):
     return True
 
 def PopulatePreQStates(tc):
+    tc.pvtdata.gbl = Store.objects.GetAllByClass(NvmeGlobalObject)[0]
+    tc.pvtdata.resourcecb_pre_state = tc.pvtdata.gbl.ResourcecbRead()
+    tc.pvtdata.hwxtstxcb_pre_state = tc.pvtdata.gbl.HwxtstxcbRead()
+    tc.pvtdata.hwdgsttxcb_pre_state = tc.pvtdata.gbl.HwdgsttxcbRead()
+
     nscb = tc.config.nvmens.NscbRead()
     tc.pvtdata.nscb_pre_state = nscb
 
@@ -128,6 +135,9 @@ def PopulatePreQStates(tc):
     return
 
 def PopulatePostQStates(tc):
+    tc.pvtdata.resourcecb_post_state = tc.pvtdata.gbl.ResourcecbRead()
+    tc.pvtdata.hwxtstxcb_post_state = tc.pvtdata.gbl.HwxtstxcbRead()
+    tc.pvtdata.hwdgsttxcb_post_state = tc.pvtdata.gbl.HwdgsttxcbRead()
     tc.pvtdata.nscb_post_state = tc.config.nvmens.NscbRead()
     tc.pvtdata.sqcb_post_state = tc.config.nvmesession.sq.qstate.Read()
     tc.pvtdata.cqcb_post_state = tc.config.nvmesession.cq.qstate.Read()
@@ -140,6 +150,9 @@ def PopulatePostQStates(tc):
     return
 
 def PostToPreCopyQStates(tc):
+    tc.pvtdata.resourcecb_pre_state = tc.pvtdata.resourcecb_post_state
+    tc.pvtdata.hwxtstxcb_pre_state = tc.pvtdata.hwxtstxcb_post_state
+    tc.pvtdata.hwdgsttxcb_pre_state = tc.pvtdata.hwdgsttxcb_post_state
     tc.pvtdata.nscb_pre_state = tc.pvtdata.nscb_post_state
     tc.pvtdata.sqcb_pre_state = tc.pvtdata.sqcb_post_state
     tc.pvtdata.cqcb_pre_state = tc.pvtdata.cqcb_post_state
@@ -155,7 +168,6 @@ def ValidateWriteTxChecks(tc):
     #this function verifies the sanity of various data structures in data path after write
     #command is transmitted.
 
-
     #sq pindex/cindex should have been incremented by 1
     if not VerifyFieldMincrModify(tc, tc.pvtdata.sqcb_pre_state, tc.pvtdata.sqcb_post_state,
                                  "p_index0", "log_num_wqes", 1):
@@ -168,6 +180,30 @@ def ValidateWriteTxChecks(tc):
     if not VerifyFieldAbsolute(tc, tc.pvtdata.sqcb_post_state, 'busy', 0):
         return False
     
+    #check if rr_session_id_to_be_served is updated to new value
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.nscb_post_state,
+                               "rr_session_id_to_be_served",
+                               tc.pvtdata.rr_session_id_nxt):
+        return False
+
+    #check if a CMD context and Tx PDU context is checkedout
+    if not VerifyFieldMincrModify(tc, tc.pvtdata.resourcecb_pre_state,
+                                  tc.pvtdata.resourcecb_post_state,
+                                  "cmdid_ring_proxy_ci", "cmdid_ring_log_sz", 1):
+        return False
+    if not VerifyFieldMincrModify(tc, tc.pvtdata.resourcecb_pre_state,
+                                  tc.pvtdata.resourcecb_post_state,
+                                  "cmdid_ring_ci", "cmdid_ring_log_sz", 1):
+        return False
+    if not VerifyFieldMincrModify(tc, tc.pvtdata.resourcecb_pre_state,
+                                  tc.pvtdata.resourcecb_post_state,
+                                  "tx_pduid_ring_proxy_ci", "tx_pduid_ring_log_sz", 1):
+        return False
+    if not VerifyFieldMincrModify(tc, tc.pvtdata.resourcecb_pre_state,
+                                  tc.pvtdata.resourcecb_post_state,
+                                  "tx_pduid_ring_ci", "tx_pduid_ring_log_sz", 1):
+        return False
+
     #sessprodcbtx xtsq pi/ci should have been incremented by 1
     if not VerifyFieldMincrModify(tc, tc.pvtdata.sessprodtxcb_pre_state,
                                   tc.pvtdata.sessprodtxcb_post_state,
@@ -232,13 +268,35 @@ def ValidateWriteTxChecks(tc):
                                   "c_index1", "log_num_entries", 1):
         return False
 
-    #sessdgsttxcb r0/r1 busy should have been toggled and become equal
+    #sessdgsttxcb r0/r1 busy should have become equal
     if not VerifyFieldsEqual(tc, tc.pvtdata.sessdgsttxcb_post_state, "r0_busy",
                              tc.pvtdata.sessdgsttxcb_post_state, "wb_r0_busy"):
         return False
     if not VerifyFieldsEqual(tc, tc.pvtdata.sessdgsttxcb_post_state, "r1_busy",
                              tc.pvtdata.sessdgsttxcb_post_state, "wb_r1_busy"):
         return False
+
+    #make sure xts descriptors are produced and consumed based on 
+    #number of lbas in the request
+    if not VerifyFieldMincrModify(tc, tc.pvtdata.hwxtstxcb_pre_state,
+                                  tc.pvtdata.hwxtstxcb_post_state,
+                                  "pi", "log_sz", tc.pvtdata.nlb):
+        return False
+    #XXX: for some reason opaqueue tag write is not updating the CI value in hwxtstxcb.
+    #TO BE FIXED and then re-enable below check
+    #if not VerifyFieldsEqual(tc, tc.pvtdata.hwxtstxcb_post_state, "pi",
+    #                         tc.pvtdata.hwxtstxcb_post_state, "ci"):
+    #    return False
+
+    #make sure two hw dgst descriptors are produced and consumed
+    if not VerifyFieldMincrModify(tc, tc.pvtdata.hwdgsttxcb_pre_state,
+                                  tc.pvtdata.hwdgsttxcb_post_state,
+                                  "pi", "log_sz", 2):
+        return False
+    if not VerifyFieldsEqual(tc, tc.pvtdata.hwdgsttxcb_post_state, "pi",
+                             tc.pvtdata.hwdgsttxcb_post_state, "ci"):
+        return False
+
 
     return True
 

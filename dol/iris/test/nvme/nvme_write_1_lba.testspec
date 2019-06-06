@@ -5,7 +5,7 @@ selectors:
 packets:
     - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : callback://nvme/nvme/GetDataSize/nlb=1
+        payloadsize : callback://nvme/nvme/GetDataSize
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:

@@ -14,6 +14,7 @@ def Teardown(infra, module):
 
 def TestCaseSetup(tc):
     logger.info("NVME TestCaseSetup() Implementation.")
+    tc.pvtdata.nlb = 10
     PopulatePreQStates(tc)
     return
 
