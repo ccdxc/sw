@@ -65,12 +65,10 @@ message MirrorCollector {
 // Traffic Selection Rules
 // Traffic can be matched using EP names or IPv4/v6 addresses/ranges/prefixes or MAC addresses
 message MatchSelector {
-    // Any one of the following match selector can be specified to select a packet from mirroring
-    repeated string Endpoints       = 1 [(gogoproto.jsontag) = "endpoints,omitempty"];
     // Each IPAddress can be single address(10.1.1.1)/range(10.1.1.10-20)/subnet(10.1.0.0/16)
-    repeated string IPAddresses     = 2 [(gogoproto.jsontag) = "ip-addresses,omitempty"];
+    repeated string IPAddresses     = 1 [(gogoproto.jsontag) = "ip-addresses,omitempty"];
     // List of MacAddresses - "aabb.ccdd.eeff", "0001.0203.0405"
-    repeated string MACAddresses    = 3 [(gogoproto.jsontag) = "mac-addresses,omitempty", (venice.check) = "EmptyOr(MacAddr())"];
+    repeated string MACAddresses    = 2 [(gogoproto.jsontag) = "mac-addresses,omitempty", (venice.check) = "EmptyOr(MacAddr())"];
 }
 
 // Application/protocol selector

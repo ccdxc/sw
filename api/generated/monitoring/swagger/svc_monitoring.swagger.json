@@ -896,16 +896,6 @@
             "type": "string"
           },
           {
-            "name": "source.endpoints",
-            "description": "Any one of the following match selector can be specified to select a packet from mirroring.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
             "name": "source.ip-addresses",
             "description": "Each IPAddress can be single address(10.1.1.1)/range(10.1.1.10-20)/subnet(10.1.0.0/16).",
             "in": "query",
@@ -918,16 +908,6 @@
           {
             "name": "source.mac-addresses",
             "description": "List of MacAddresses - \"aabb.ccdd.eeff\", \"0001.0203.0405\". should be a valid MAC address",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "destination.endpoints",
-            "description": "Any one of the following match selector can be specified to select a packet from mirroring.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -5996,16 +5976,6 @@
             "type": "string"
           },
           {
-            "name": "source.endpoints",
-            "description": "Any one of the following match selector can be specified to select a packet from mirroring.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
             "name": "source.ip-addresses",
             "description": "Each IPAddress can be single address(10.1.1.1)/range(10.1.1.10-20)/subnet(10.1.0.0/16).",
             "in": "query",
@@ -6018,16 +5988,6 @@
           {
             "name": "source.mac-addresses",
             "description": "List of MacAddresses - \"aabb.ccdd.eeff\", \"0001.0203.0405\". should be a valid MAC address",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "destination.endpoints",
-            "description": "Any one of the following match selector can be specified to select a packet from mirroring.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -14136,13 +14096,6 @@
     "monitoringMatchSelector": {
       "type": "object",
       "properties": {
-        "endpoints": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "Any one of the following match selector can be specified to select a packet from mirroring"
-        },
         "ip-addresses": {
           "type": "array",
           "items": {

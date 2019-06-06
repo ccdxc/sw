@@ -128,13 +128,13 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 			continue
 		}
 		if mr.Src != nil {
-			if len(mr.Src.Endpoints) == 0 && len(mr.Src.IPAddresses) == 0 && len(mr.Src.MACAddresses) == 0 {
+			if len(mr.Src.IPAddresses) == 0 && len(mr.Src.MACAddresses) == 0 {
 				allSrc = true
 			}
 			// TBD - Ensure only one of the three is specified? not all.
 		}
 		if mr.Dst != nil {
-			if len(mr.Dst.Endpoints) == 0 && len(mr.Dst.IPAddresses) == 0 && len(mr.Dst.MACAddresses) == 0 {
+			if len(mr.Dst.IPAddresses) == 0 && len(mr.Dst.MACAddresses) == 0 {
 				allDst = true
 			}
 		}

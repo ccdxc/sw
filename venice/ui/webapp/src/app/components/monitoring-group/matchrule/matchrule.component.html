@@ -64,9 +64,6 @@
       <div fxFlex="10px"></div>
       <div fxFlex="30px" class="matchrule-fieldtitle">{{ title.toUpperCase() }}</div>
       <div class="matchrule-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-        <span>Endpoints:</span>
-      </div>
-      <div class="matchrule-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
         <span>IP Address:</span>
       </div>
       <div class="matchrule-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
@@ -77,11 +74,6 @@
          [formGroup]="flowTarget.get(['match-rules', index, title])">
       <div fxFlex="10px"></div>
       <div fxFlex="30px" class="matchrule-fieldtitle"></div>
-      <div fxFlex="30px" fxLayout="row" class="matchrule-value">
-        <input fxFlex="nogrow" appErrorTooltip formControlName="endpoints" class="matchrule-input"
-               spellcheck="false" type="text" pInputText
-               placeholder="">
-      </div>
       <div fxFlex="30px" fxLayout="row" class="matchrule-value">
         <input fxFlex="nogrow" appErrorTooltip formControlName="ip-addresses"
                class="matchrule-input" spellcheck="false" type="text" pInputText

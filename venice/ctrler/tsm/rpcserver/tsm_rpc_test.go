@@ -103,7 +103,7 @@ var testMirrorSessions = []monitoring.MirrorSession{
 			MatchRules: []monitoring.MatchRule{
 				{
 					Src: &monitoring.MatchSelector{
-						Endpoints: []string{"Endpoint1"},
+						IPAddresses: []string{"192.168.100.1"},
 					},
 					AppProtoSel: &monitoring.AppProtoSelector{
 						ProtoPorts: []string{"1234"},
@@ -146,7 +146,7 @@ var testMirrorSessions = []monitoring.MirrorSession{
 			MatchRules: []monitoring.MatchRule{
 				{
 					Dst: &monitoring.MatchSelector{
-						Endpoints: []string{"Endpoint1"},
+						IPAddresses: []string{"192.168.100.2"},
 					},
 					AppProtoSel: &monitoring.AppProtoSelector{
 						ProtoPorts: []string{"UDP"},

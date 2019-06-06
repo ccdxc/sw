@@ -35,7 +35,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 			MatchRules: []monitoring.MatchRule{
 				{
 					Src: &monitoring.MatchSelector{
-						Endpoints: []string{"Endpoint1"},
+						IPAddresses: []string{"192.168.100.2"},
 					},
 					AppProtoSel: &monitoring.AppProtoSelector{
 						ProtoPorts: []string{"1234"},
@@ -43,7 +43,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 				},
 				{
 					Src: &monitoring.MatchSelector{
-						Endpoints: []string{"Endpoint1"},
+						IPAddresses: []string{"192.168.100.2"},
 					},
 					AppProtoSel: &monitoring.AppProtoSelector{
 						ProtoPorts: []string{"TCP/1234"},
@@ -262,7 +262,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 				},
 				{
 					Src: &monitoring.MatchSelector{
-						Endpoints: []string{"Endpoint1"},
+						IPAddresses: []string{"192.168.100.2"},
 					},
 					AppProtoSel: &monitoring.AppProtoSelector{
 						ProtoPorts: []string{"1234"},
@@ -299,7 +299,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 				},
 				{
 					Src: &monitoring.MatchSelector{
-						Endpoints: []string{"Endpoint1"},
+						IPAddresses: []string{"192.168.100.2"},
 					},
 					AppProtoSel: &monitoring.AppProtoSelector{
 						ProtoPorts: []string{"1234"},
@@ -329,7 +329,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 			MatchRules: []monitoring.MatchRule{
 				{
 					Src: &monitoring.MatchSelector{
-						Endpoints: []string{"Endpoint1"},
+						IPAddresses: []string{"192.168.100.2"},
 					},
 					AppProtoSel: &monitoring.AppProtoSelector{
 						ProtoPorts: []string{"1234"},
@@ -387,7 +387,7 @@ var testGoodMirrorSession = []monitoring.MirrorSession{
 			MatchRules: []monitoring.MatchRule{
 				{
 					Src: &monitoring.MatchSelector{
-						Endpoints: []string{"Endpoint1"},
+						IPAddresses: []string{"192.168.100.2"},
 					},
 					AppProtoSel: &monitoring.AppProtoSelector{
 						ProtoPorts: []string{"TCP/1234"},

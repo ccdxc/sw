@@ -36,8 +36,6 @@ var typesMapMirror = map[string]*api.Struct{
 	"monitoring.MatchSelector": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MatchSelector{}) },
 		Fields: map[string]api.Field{
-			"Endpoints": api.Field{Name: "Endpoints", CLITag: api.CLIInfo{ID: "endpoints", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "endpoints", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
 			"IPAddresses": api.Field{Name: "IPAddresses", CLITag: api.CLIInfo{ID: "ip-addresses", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-addresses", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"MACAddresses": api.Field{Name: "MACAddresses", CLITag: api.CLIInfo{ID: "mac-addresses", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-addresses", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
@@ -90,7 +88,6 @@ var typesMapMirror = map[string]*api.Struct{
 		CLITags: map[string]api.CLIInfo{
 			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"applications":     api.CLIInfo{Path: "Spec.MatchRules[].AppProtoSel.Apps", Skip: false, Insert: "", Help: ""},
-			"endpoints":        api.CLIInfo{Path: "Spec.MatchRules[].Dst.Endpoints", Skip: false, Insert: "", Help: ""},
 			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"ip-addresses":     api.CLIInfo{Path: "Spec.MatchRules[].Dst.IPAddresses", Skip: false, Insert: "", Help: ""},
 			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},

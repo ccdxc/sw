@@ -53,13 +53,11 @@ func buildNICMirrorSession(mss *statemgr.MirrorSessionState) *tsproto.MirrorSess
 		}
 		if mr.Src != nil {
 			tmr.Src = &tsproto.MatchSelector{}
-			tmr.Src.Endpoints = mr.Src.Endpoints
 			tmr.Src.IPAddresses = mr.Src.IPAddresses
 			tmr.Src.MACAddresses = mr.Src.MACAddresses
 		}
 		if mr.Dst != nil {
 			tmr.Dst = &tsproto.MatchSelector{}
-			tmr.Dst.Endpoints = mr.Dst.Endpoints
 			tmr.Dst.IPAddresses = mr.Dst.IPAddresses
 			tmr.Dst.MACAddresses = mr.Dst.MACAddresses
 		}

@@ -9,22 +9,16 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IMonitoringMatchSelector {
-    'endpoints'?: Array<string>;
     'ip-addresses'?: Array<string>;
     'mac-addresses'?: Array<string>;
 }
 
 
 export class MonitoringMatchSelector extends BaseModel implements IMonitoringMatchSelector {
-    'endpoints': Array<string> = null;
     'ip-addresses': Array<string> = null;
     /** should be a valid MAC address */
     'mac-addresses': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'endpoints': {
-            required: false,
-            type: 'Array<string>'
-        },
         'ip-addresses': {
             required: false,
             type: 'Array<string>'
@@ -59,7 +53,6 @@ export class MonitoringMatchSelector extends BaseModel implements IMonitoringMat
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this['endpoints'] = new Array<string>();
         this['ip-addresses'] = new Array<string>();
         this['mac-addresses'] = new Array<string>();
         this.setValues(values, setDefaults);
@@ -70,13 +63,6 @@ export class MonitoringMatchSelector extends BaseModel implements IMonitoringMat
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['endpoints'] != null) {
-            this['endpoints'] = values['endpoints'];
-        } else if (fillDefaults && MonitoringMatchSelector.hasDefaultValue('endpoints')) {
-            this['endpoints'] = [ MonitoringMatchSelector.propInfo['endpoints'].default];
-        } else {
-            this['endpoints'] = [];
-        }
         if (values && values['ip-addresses'] != null) {
             this['ip-addresses'] = values['ip-addresses'];
         } else if (fillDefaults && MonitoringMatchSelector.hasDefaultValue('ip-addresses')) {
@@ -98,7 +84,6 @@ export class MonitoringMatchSelector extends BaseModel implements IMonitoringMat
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'endpoints': CustomFormControl(new FormControl(this['endpoints']), MonitoringMatchSelector.propInfo['endpoints']),
                 'ip-addresses': CustomFormControl(new FormControl(this['ip-addresses']), MonitoringMatchSelector.propInfo['ip-addresses']),
                 'mac-addresses': CustomFormControl(new FormControl(this['mac-addresses']), MonitoringMatchSelector.propInfo['mac-addresses']),
             });
@@ -112,7 +97,6 @@ export class MonitoringMatchSelector extends BaseModel implements IMonitoringMat
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['endpoints'].setValue(this['endpoints']);
             this._formGroup.controls['ip-addresses'].setValue(this['ip-addresses']);
             this._formGroup.controls['mac-addresses'].setValue(this['mac-addresses']);
         }
