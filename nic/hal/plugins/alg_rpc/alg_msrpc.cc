@@ -340,8 +340,9 @@ __parse_msrpc_bind_ack_hdr(const uint8_t *pkt, uint32_t dlen,
                        (dlen-offset), (sizeof(p_result_t)*bind_ack.rlist.num_rslts));
             return 0;
         }
-        bind_ack.rlist.rslts[ele].result = pkt[offset++];
-        bind_ack.rlist.rslts[ele].fail_reason = pkt[offset++];
+        bind_ack.rlist.rslts[ele].result = __pack_uint16(pkt, &offset, rpc_info->data_rep);
+        bind_ack.rlist.rslts[ele].fail_reason = __pack_uint16(pkt, &offset, rpc_info->data_rep);
+        HAL_TRACE_VERBOSE("Parsing UUID at offset: {} byte: {}", offset, pkt[offset]);
         (void)__parse_uuid(pkt, &offset, &bind_ack.rlist.rslts[ele].xfer_syn.if_uuid, rpc_info->data_rep);
         bind_ack.rlist.rslts[ele].xfer_syn.if_vers = __pack_uint32(pkt, &offset, rpc_info->data_rep);
         ele++;
@@ -358,7 +359,8 @@ __parse_msrpc_bind_ack_hdr(const uint8_t *pkt, uint32_t dlen,
          }
     }
 
-    HAL_TRACE_DEBUG("Received Bind ACK: {}", bind_ack);
+    HAL_TRACE_VERBOSE("NDR 64bit: {} If uuid: {}", ndr_64bit, rslt->xfer_syn.if_uuid);
+    HAL_TRACE_VERBOSE("Received Bind ACK: {} NDR 64bit: {}", bind_ack, rpc_info->msrpc_64bit);
 
     return offset;
 }
@@ -433,7 +435,7 @@ __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
     twr->twr_arr.num_floors = (twr->twr_arr.num_floors > MAX_FLOORS)?MAX_FLOORS:\
                                     twr->twr_arr.num_floors;
     HAL_TRACE_DEBUG("Num floors: {}", twr->twr_arr.num_floors);
-    for (int i=0; (i<twr->twr_arr.num_floors && (dlen-offset) > 6); i++) {
+    for (int i=0; (i<twr->twr_arr.num_floors && (offset < dlen) && (dlen-offset) > 6); i++) {
         msrpc_epm_flr_t flr = {};
         flr.lhs_length = __pack_uint16(pkt, &offset, rpc_info->data_rep);
         flr.protocol = pkt[offset++];
@@ -736,7 +738,7 @@ static inline int get_is_uuid_allowed(rpc_info_t *rpc_info) {
     uuid_t     *uuid = (uuid_t *)rpc_info->uuid;
 
     for (uint8_t idx=0; idx<rpc_info->pgmid_sz; idx++) {
-        HAL_TRACE_DEBUG("RPC allowed uuid: {}  received uuid: {}", rpc[idx].uuid, *uuid);
+        HAL_TRACE_DEBUG("RPC allowed uuid: {}  received uuid: {}", *((uuid_t *)rpc[idx].uuid), *uuid);
         if (!memcmp(rpc_info->uuid, (uint8_t *)&rpc[idx].uuid, UUID_BYTES)) {
             return rpc[idx].timeout;
         }
@@ -1084,15 +1086,15 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
         uint8_t *pkt = ctx.pkt();
         rpc_info = (rpc_info_t *)l4_sess->info;
 
-        if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN | TCP_FLAG_ACK)) ==
-                     (TCP_FLAG_SYN | TCP_FLAG_ACK)) {
-            HAL_TRACE_DEBUG("Setting up buffer for rflow");
-            // Set up TCP buffer for RFLOW
-            l4_sess->tcpbuf[DIR_RFLOW] = tcp_buffer_t::factory(
+        if (l4_sess->isCtrl == true && ctx.key().proto == IP_PROTO_TCP) {
+            if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped()) {
+                HAL_TRACE_DEBUG("Setting up buffer for rflow");
+                // Set up TCP buffer for RFLOW
+                l4_sess->tcpbuf[DIR_RFLOW] = tcp_buffer_t::factory(
                                           htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
                                            NULL, parse_msrpc_cn_control_flow);
-        }
-        if (l4_sess->isCtrl == true && ctx.key().proto == IP_PROTO_TCP) {
+            }
+
             /*
              * This will only be executed for control channel packets that
              * would lead to opening up pinholes for FTP data sessions.

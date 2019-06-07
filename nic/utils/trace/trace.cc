@@ -8,7 +8,7 @@ namespace utils {
 // logger class static constants
 const size_t log::k_async_qsize_ = 64 * 1024;    // must be power of 2
 const spdlog::async_overflow_policy log::k_async_overflow_policy_ = spdlog::async_overflow_policy::discard_log_msg;
-const std::chrono::milliseconds log::k_flush_intvl_ms_ = std::chrono::milliseconds(10);
+const std::chrono::milliseconds log::k_flush_intvl_ms_ = std::chrono::milliseconds(5);
 uint64_t    g_logger_cpu_mask = 0;
 
 // logger class methods

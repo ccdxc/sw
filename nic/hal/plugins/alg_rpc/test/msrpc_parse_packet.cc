@@ -385,6 +385,77 @@ TEST_F(msrpc_parse_test, msrpc_parse_bind_req_rsp2) {
     ASSERT_EQ(rpc_info.pkt_type, PDU_BIND_ACK);
 
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
+    rxhdr.payload_offset = MSRPC_EPM_REQ2_PAYLOAD_OFFSET;
+    ctx3.init(&rxhdr, MSRPC_EPM_REQ1, MSRPC_EPM_REQ2_SZ, true, iflow, rflow, feature_state, num_features);
+    ctx3.set_key(key);
+    ctx3.set_feature_name(FEATURE_RPC, 0);
+    ctx3.register_feature_session_state(&alg_state.fte_feature_state);
+
+    ret = parse_msrpc_cn_control_flow((void *)&ctx3, &MSRPC_EPM_REQ2[MSRPC_EPM_REQ2_PAYLOAD_OFFSET],
+                              (MSRPC_EPM_REQ2_SZ-MSRPC_EPM_REQ2_PAYLOAD_OFFSET));
+    ASSERT_EQ(ret, (MSRPC_EPM_REQ2_SZ-MSRPC_EPM_REQ2_PAYLOAD_OFFSET));
+    ASSERT_EQ(rpc_info.pkt_type, PDU_REQ);
+
+    memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
+    rxhdr.payload_offset = MSRPC_EPM_RSP2_PAYLOAD_OFFSET;
+    ctx4.init(&rxhdr, MSRPC_EPM_RSP2, MSRPC_EPM_RSP2_SZ, true, iflow, rflow, feature_state, num_features);
+    ctx4.set_key(key);
+    ctx4.set_feature_name(FEATURE_RPC, 0);
+    ctx4.register_feature_session_state(&alg_state.fte_feature_state);
+
+    ret = parse_msrpc_cn_control_flow((void *)&ctx4, &MSRPC_EPM_RSP2[MSRPC_EPM_RSP2_PAYLOAD_OFFSET],
+                                 (MSRPC_EPM_RSP2_SZ-MSRPC_EPM_RSP2_PAYLOAD_OFFSET));
+    ASSERT_EQ(ret, (MSRPC_EPM_RSP2_SZ-MSRPC_EPM_RSP2_PAYLOAD_OFFSET));
+    ASSERT_EQ(rpc_info.pkt_type, PDU_NONE);
+}
+
+TEST_F(msrpc_parse_test, msrpc_parse_bind_req_rsp3) {
+    size_t           ret;
+    ctx_t            ctx1, ctx2, ctx3, ctx4;
+    fte::flow_t      iflow[2], rflow[2];
+    uint16_t         num_features = 1;
+    feature_state_t  feature_state[2];
+    l4_alg_status_t  alg_state;
+    rpc_info_t       rpc_info;
+    cpu_rxhdr_t      rxhdr;
+    hal::flow_key_t  key;
+    app_session_t    app_sess;
+
+    key.proto = (types::IPProtocol)IP_PROTO_TCP;
+    memset(&alg_state, 0, sizeof(l4_alg_status_t));
+    memset(&rpc_info, 0, sizeof(rpc_info_t));
+    memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
+    memset(&app_sess, 0, sizeof(app_session_t));
+    SDK_SPINLOCK_INIT(&app_sess.slock, PTHREAD_PROCESS_PRIVATE);
+    alg_state.info = &rpc_info;
+    alg_state.app_session = &app_sess;
+    alg_state.isCtrl = TRUE;
+    rpc_info.pkt_type = PDU_NONE;
+    rxhdr.payload_offset = MSRPC_BIND_REQ2_PAYLOAD_OFFSET;
+    ctx1.init(&rxhdr, MSRPC_BIND_REQ2, MSRPC_BIND_REQ2_SZ, true, iflow, rflow, feature_state, num_features);
+    ctx1.set_key(key);
+    ctx1.set_feature_name(FEATURE_RPC, 0);
+    ctx1.register_feature_session_state(&alg_state.fte_feature_state);
+
+    ret = parse_msrpc_cn_control_flow((void *)&ctx1, &MSRPC_BIND_REQ2[MSRPC_BIND_REQ2_PAYLOAD_OFFSET],
+                                    (MSRPC_BIND_REQ2_SZ-MSRPC_BIND_REQ2_PAYLOAD_OFFSET));
+    ASSERT_EQ(ret, (MSRPC_BIND_REQ2_SZ-MSRPC_BIND_REQ2_PAYLOAD_OFFSET));
+    ASSERT_EQ(rpc_info.num_msrpc_ctxt, 3);
+    ASSERT_EQ(rpc_info.pkt_type, PDU_BIND);
+
+    memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
+    rxhdr.payload_offset = MSRPC_BIND_RSP2_PAYLOAD_OFFSET;
+    ctx2.init(&rxhdr, MSRPC_BIND_RSP2, MSRPC_BIND_RSP2_SZ, true, iflow, rflow, feature_state, num_features);
+    ctx2.set_key(key);
+    ctx2.set_feature_name(FEATURE_RPC, 0);
+    ctx2.register_feature_session_state(&alg_state.fte_feature_state);
+
+    ret = parse_msrpc_cn_control_flow((void *)&ctx2, &MSRPC_BIND_RSP2[MSRPC_BIND_RSP2_PAYLOAD_OFFSET],
+                                   (MSRPC_BIND_RSP2_SZ-MSRPC_BIND_RSP2_PAYLOAD_OFFSET));
+    ASSERT_EQ(ret, (MSRPC_BIND_RSP2_SZ-MSRPC_BIND_RSP2_PAYLOAD_OFFSET));
+    ASSERT_EQ(rpc_info.pkt_type, PDU_BIND_ACK);
+
+    memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     rxhdr.payload_offset = MSRPC_EPM_REQ1_PAYLOAD_OFFSET;
     ctx3.init(&rxhdr, MSRPC_EPM_REQ1, MSRPC_EPM_REQ1_SZ, true, iflow, rflow, feature_state, num_features);
     ctx3.set_key(key);

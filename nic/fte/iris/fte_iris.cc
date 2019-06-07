@@ -544,7 +544,7 @@ hal_ret_t
 ctx_t::update_flow_table()
 {
     hal_ret_t       ret = HAL_RET_OK;
-    hal_handle_t    session_handle;
+    hal_handle_t    session_handle = (session())?session()->hal_handle:HAL_HANDLE_INVALID;
     hal::session_t *session = NULL;
     hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
     hal::pd::pd_tunnelif_get_rw_idx_args_t t_args;

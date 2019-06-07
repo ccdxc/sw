@@ -1112,6 +1112,38 @@ static inline void __str_to_uuid(char *uuid_str, uint8_t *uuid_arr) {
     }
 }
 
+//
+//API to convert MSRPC UUID to string
+//
+static inline std::string  __uuid_to_str(uint8_t *uuid) {
+    typedef struct  uuid_ {
+         uint32_t time_lo;
+         uint16_t time_mid;
+         uint16_t time_hi_vers;
+         uint8_t  clock_seq_hi;
+         uint8_t  clock_seq_lo;
+         uint8_t  node[6];
+    } uuid_t;
+    uuid_t  *u = (uuid_t *)uuid;
+    std::stringstream ss;
+    uint16_t clock_seq = ((u->clock_seq_hi << 8) | u->clock_seq_lo);
+
+    ss << hex << u->time_lo;
+    ss << "-";
+    ss << setw(4) << setfill('0') << hex << u->time_mid;
+    ss << "-";
+    ss << setw(4) << setfill('0') << hex << u->time_hi_vers;
+    ss << "-";
+    ss << setw(4) << setfill('0') << hex << clock_seq;
+    ss << "-";
+    for (int idx=0; idx<6; idx+=2) {
+       uint16_t node = ((u->node[idx] << 8) | u->node[idx+1]);
+       ss << setw(4) << setfill('0') << hex << node;
+    }
+
+    return ss.str();
+}
+
 //nwsec_rule related
 hal_ret_t
 extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
@@ -1155,7 +1187,9 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
                         __str_to_uuid((char *)app.msrpc_option_info().data(idx).program_id().c_str(),
                                       opt->msrpc_opts.uuids[idx].uuid);
                         opt->msrpc_opts.uuids[idx].timeout = app.msrpc_option_info().data(idx).idle_timeout();
-                        HAL_TRACE_VERBOSE("timeout: {}",  opt->msrpc_opts.uuids[idx].timeout);
+                        HAL_TRACE_VERBOSE("UUID: {} timeout: {} uuid_str: {}", 
+                                 fte::hex_str((uint8_t*)opt->msrpc_opts.uuids[idx].uuid, MAX_UUID_SZ),
+                                 opt->msrpc_opts.uuids[idx].timeout, __uuid_to_str(opt->msrpc_opts.uuids[idx].uuid));
                     }
                 }
             } else if (app.AppOptions_case() == AppData::kSunRpcOptionInfo) {
@@ -1894,8 +1928,9 @@ security_policy_rule_spec_build (nwsec_rule_t                          *rule,
         for (uint8_t idx = 0; idx < rule->fw_rule_action.app_options.opt.msrpc_opts.uuid_sz; idx++) {
             nwsec::AppData_RPCData* data = spec->mutable_action()->mutable_app_data()->mutable_msrpc_option_info()->add_data();
             uint8_t *uuid = rule->fw_rule_action.app_options.opt.msrpc_opts.uuids[idx].uuid;
-            std::string str(uuid, uuid+MAX_UUID_SZ);
+            std::string str;
 
+            str = __uuid_to_str(uuid);
             data->set_program_id(str);
             data->set_idle_timeout(rule->fw_rule_action.app_options.opt.msrpc_opts.uuids[idx].timeout);
         }
