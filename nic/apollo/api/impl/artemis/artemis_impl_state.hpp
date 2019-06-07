@@ -27,8 +27,8 @@ namespace impl {
 // forward declaration
 class artemis_impl;
 
-#define MAX_KEY_NATIVE_TBL_ENTRIES          4
-#define MAX_KEY_TUNNELED_TBL_ENTRIES        4
+#define MAX_KEY_NATIVE_TBL_ENTRIES          6
+#define MAX_KEY_TUNNELED_TBL_ENTRIES        6
 #define MAX_KEY_TUNNELED2_TBL_ENTRIES       3
 
 /// \brief    pipeline global state
