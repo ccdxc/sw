@@ -23,11 +23,11 @@ adminq_fetch_desc:
   bcf             [c1], adminq_queue_disabled
   seq             c2, d.ci_fetch, d.p_index0
   bcf             [c2], adminq_spurious_db
-
+#ifdef PHV_DEBUG
   seq             c7, d.debug, 1
   phvwr.c7        p.p4_intr_global_debug_trace, 1
   trace.c7        0x1
-
+#endif
   // Compute the descriptor address
   add             _r_desc_addr, d.{ring_base}.dx, d.{ci_fetch}.hx, LG2_ADMINQ_CMD_DESC_SIZE
 

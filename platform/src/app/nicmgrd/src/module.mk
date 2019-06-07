@@ -13,10 +13,15 @@ MODULE_SOLIBS   := nicmgr mnet \
                     upgrade upgrade_app upgradeutils \
                     sysmgr \
                     sdkcapri_asicrw_if \
-                    sdkasicpd pdcapri pdcommon hal_mock \
-                    sdkp4 sdkp4utils sdkxcvrdriver sdkfru p4pd_${PIPELINE} \
+                    sdkasicpd pdcapri pdcommon\
+                    sdkp4 sdkp4utils \
+                    p4pd_${PIPELINE} \
                     p4pd_common_p4plus_rxdma p4pd_common_p4plus_txdma \
-                    asicpd ${NIC_HAL_PD_SOLIBS_${ARCH}} lif_mgr devapi_iris rdmamgr_iris
+                    asicpd \
+                    hal_mock ${NIC_HAL_PD_SOLIBS_${ARCH}} \
+                    lif_mgr \
+                    devapi_iris rdmamgr_iris \
+                    sdkxcvrdriver sdkfru
 MODULE_LDLIBS   := crypto ${NIC_COMMON_LDLIBS} \
                     ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                     ${SDK_THIRDPARTY_CAPRI_LDLIBS} \

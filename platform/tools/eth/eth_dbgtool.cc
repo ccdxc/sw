@@ -15,9 +15,16 @@
 #include "nic/include/eth_common.h"
 #include "nic/include/notify.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
+#include "nic/sdk/lib/p4/p4_utils.hpp"
+#include "lib/table/directmap/directmap.hpp"
+#include "lib/table/common/table.hpp"
 #include "platform/capri/capri_common.hpp"
 #include "platform/src/lib/nicmgr/include/eth_if.h"
 #include "platform/utils/mpartition.hpp"
+#include "platform/capri/capri_tbl_rw.hpp"
+#include "nic/sdk/platform/devapi/devapi_types.hpp"
+#include "nic/sdk/platform/capri/capri_state.hpp"
 
 #include "gen/platform/mem_regions.hpp"
 
@@ -25,11 +32,51 @@
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_wa_c_hdr.h"
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_pics_c_hdr.h"
 
+#if defined(APOLLO)
+#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
+#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd_table.h"
+#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
+#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd_table.h"
+#elif defined(ARTEMIS)
+#include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
+#include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd_table.h"
+#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
+#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd_table.h"
+#else
+#include "gen/platform/mem_regions.hpp"
+#include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
+#include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h"
+#include "gen/p4gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
+#include "gen/p4gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h"
+#endif
+
+// Max number of LIFs supported
+#define MAX_LIFS                            (2048)
+#define ENTRY_TRACE_EN          true
+
+directmap    **p4plus_rxdma_dm_tables_;
+directmap    **p4plus_txdma_dm_tables_;
+
+using namespace sdk::platform::capri;
+using namespace sdk::platform::utils;
+
 typedef struct {
     uint64_t base;
     uint32_t size;
     uint32_t length;
 } queue_info_t;
+
+static uint8_t *memrev(uint8_t *block, size_t elnum)
+{
+    uint8_t *s, *t, tmp;
+
+    for (s = block, t = s + (elnum - 1); s < t; s++, t--) {
+        tmp = *s;
+        *s = *t;
+        *t = tmp;
+    }
+    return block;
+}
 
 bool
 get_lif_qstate(uint16_t lif, queue_info_t qinfo[8])
@@ -771,11 +818,9 @@ eth_debug(uint16_t lif, uint8_t qtype, uint32_t qid, uint8_t enable)
     eth_qstate(lif, qtype, qid);
 }
 
-void
-eth_stats(uint16_t lif)
+std::string
+hal_cfg_path()
 {
-    struct lif_stats stats;
-
     std::string hal_cfg_path_;
     if (std::getenv("HAL_CONFIG_PATH") == NULL) {
         hal_cfg_path_ = "/nic/conf";
@@ -783,30 +828,46 @@ eth_stats(uint16_t lif)
         hal_cfg_path_ = std::string(std::getenv("HAL_CONFIG_PATH"));
     }
 
-#ifdef APOLLO
-    std::string mpart_json = hal_cfg_path_ + "/apollo/hbm_mem.json";
-#else
-    std::string mpart_json;
+    return hal_cfg_path_;
+}
+
+std::string
+fwd_mode()
+{
     boost::property_tree::ptree spec;
     boost::property_tree::read_json("/sysconfig/config0/device.conf", spec);
 
-    enum ForwardingMode {
-        FORWARDING_MODE_NONE       = 0,
-        FORWARDING_MODE_CLASSIC    = 1,    // classic forwarding
-        FORWARDING_MODE_HOSTPIN    = 2,    // smartnic hostpin mode
-        FORWARDING_MODE_SWITCH     = 3,    // smartnic switch mode
-    };
+    return spec.get<std::string>("forwarding-mode");
+}
 
-    int fw_mode = spec.get<int>("forwarding-mode");
-    if ((fw_mode == FORWARDING_MODE_HOSTPIN) ||
-        (fw_mode == FORWARDING_MODE_SWITCH)) {
-        mpart_json = hal_cfg_path_ + "/iris/hbm_mem.json";
-    } else if (fw_mode == FORWARDING_MODE_CLASSIC) {
-        mpart_json = hal_cfg_path_ + "/iris/hbm_classic_mem.json";
-    }
+std::string
+mpart_cfg_path()
+{
+    std::string hal_cfg_path_ = hal_cfg_path();
+    std::string mpart_json;
+
+#if defined(APOLLO)
+    mpart_json = hal_cfg_path_ + "/apollo/hbm_mem.json";
+#elif defined(ARTEMIS)
+    mpart_json = hal_cfg_path_ + "/artemis/hbm_mem.json";
+#else
+    mpart_json = (fwd_mode() == "FORWARDING_MODE_CLASSIC") ?
+            hal_cfg_path_ + "/iris/hbm_classic_mem.json" :
+            hal_cfg_path_ + "/iris/hbm_mem.json";
 #endif
+
+    return mpart_json;
+}
+
+void
+eth_stats(uint16_t lif)
+{
+    struct lif_stats stats;
+
+    std::string mpart_json = mpart_cfg_path();
     sdk::platform::utils::mpartition *mp_ = mpartition::factory(mpart_json.c_str());
     assert(mp_);
+
     uint64_t addr = mp_->start_addr(MEM_REGION_LIF_STATS_NAME) + (lif << 10);
 
     printf("\naddr: 0x%lx\n\n", addr);
@@ -981,6 +1042,272 @@ lif_status(uint64_t addr)
     free(buf);
 }
 
+#if defined(APOLLO)
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN P4_APOLLO_RXDMA_TBL_ID_INDEX_MIN
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX P4_APOLLO_RXDMA_TBL_ID_INDEX_MAX
+#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN P4_APOLLO_TXDMA_TBL_ID_INDEX_MIN
+#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX P4_APOLLO_TXDMA_TBL_ID_INDEX_MAX
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN P4_APOLLO_RXDMA_TBL_ID_TBLMIN
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX P4_APOLLO_RXDMA_TBL_ID_TBLMAX
+#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN P4_APOLLO_TXDMA_TBL_ID_TBLMIN
+#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX P4_APOLLO_TXDMA_TBL_ID_TBLMAX
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_PARAMS P4_APOLLO_RXDMA_TBL_ID_ETH_RX_RSS_PARAMS
+#elif defined(ARTEMIS)
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN P4_ARTEMIS_RXDMA_TBL_ID_INDEX_MIN
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX P4_ARTEMIS_RXDMA_TBL_ID_INDEX_MAX
+#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN P4_ARTEMIS_TXDMA_TBL_ID_INDEX_MIN
+#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX P4_ARTEMIS_TXDMA_TBL_ID_INDEX_MAX
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN P4_ARTEMIS_RXDMA_TBL_ID_TBLMIN
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX P4_ARTEMIS_RXDMA_TBL_ID_TBLMAX
+#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN P4_ARTEMIS_TXDMA_TBL_ID_TBLMIN
+#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX P4_ARTEMIS_TXDMA_TBL_ID_TBLMAX
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_PARAMS P4_ARTEMIS_RXDMA_TBL_ID_ETH_RX_RSS_PARAMS
+#endif
+
+void table_health_monitor(uint32_t table_id,
+                          char *name,
+                          table_health_state_t curr_state,
+                          uint32_t capacity,
+                          uint32_t usage,
+                          table_health_state_t *new_state)
+{
+    printf("table id: %d, name: %s, capacity: %d, "
+            "usage: %d, curr state: %d, new state: %d",
+            table_id, name, capacity, usage, curr_state, *new_state);
+}
+
+int
+p4plus_rxdma_init_tables()
+{
+    uint32_t                   tid;
+    p4pd_table_properties_t    tinfo;
+    p4pd_error_t               rc;
+    std::string hal_cfg_path_ = hal_cfg_path();
+
+#if defined(APOLLO)
+    p4pd_cfg_t                 p4pd_cfg = {
+            .table_map_cfg_file  = "apollo/capri_rxdma_table_map.json",
+            .p4pd_pgm_name       = "apollo",
+            .p4pd_rxdma_pgm_name = "p4plus",
+            .p4pd_txdma_pgm_name = "p4plus",
+            .cfg_path            = hal_cfg_path_.c_str(),
+    };
+#elif defined(ARTEMIS)
+    p4pd_cfg_t                 p4pd_cfg = {
+            .table_map_cfg_file  = "artemis/capri_rxdma_table_map.json",
+            .p4pd_pgm_name       = "artemis",
+            .p4pd_rxdma_pgm_name = "p4plus",
+            .p4pd_txdma_pgm_name = "p4plus",
+            .cfg_path            = hal_cfg_path_.c_str(),
+    };
+#else
+    p4pd_cfg_t                 p4pd_cfg = {
+            .table_map_cfg_file  = "iris/capri_p4_rxdma_table_map.json",
+            .p4pd_pgm_name       = "iris",
+            .p4pd_rxdma_pgm_name = "p4plus",
+            .p4pd_txdma_pgm_name = "p4plus",
+            .cfg_path            = hal_cfg_path_.c_str(),
+    };
+#endif
+
+    memset(&tinfo, 0, sizeof(tinfo));
+
+    // parse the NCC generated table info file for p4+ tables
+    rc = p4pluspd_rxdma_init(&p4pd_cfg);
+    assert(rc == P4PD_SUCCESS);
+
+    // start instantiating tables based on the parsed information
+    p4plus_rxdma_dm_tables_ =
+            (directmap **)calloc(sizeof(directmap *),
+            (P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX -
+             P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN + 1));
+    assert(p4plus_rxdma_dm_tables_ != NULL);
+
+    // TODO:
+    // 1. take care of instantiating flow_table_, acl_table_ and met_table_
+    // 2. When tables are instantiated proper names are not passed today,
+    // waiting for an API from Mahesh that gives table name given table id
+
+    for (tid = P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN;
+         tid < P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX; tid++) {
+        rc = p4pluspd_rxdma_table_properties_get(tid, &tinfo);
+        assert(rc == P4PD_SUCCESS);
+
+        switch (tinfo.table_type) {
+            case P4_TBL_TYPE_INDEX:
+                if (tinfo.tabledepth) {
+                    p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
+                        directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size,
+                                           false, ENTRY_TRACE_EN, table_health_monitor);
+                    assert(p4plus_rxdma_dm_tables_
+                           [tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
+                }
+                break;
+
+            case P4_TBL_TYPE_MPU:
+            default:
+                break;
+        }
+    }
+
+    return 0;
+}
+
+int
+p4plus_txdma_init_tables()
+{
+    uint32_t                   tid;
+    p4pd_table_properties_t    tinfo;
+    p4pd_error_t               rc;
+    std::string hal_cfg_path_ = hal_cfg_path();
+
+#if defined(APOLLO)
+    p4pd_cfg_t                 p4pd_cfg = {
+        .table_map_cfg_file  = "apollo/capri_txdma_table_map.json",
+        .p4pd_pgm_name       = "apollo",
+        .p4pd_rxdma_pgm_name = "p4plus",
+        .p4pd_txdma_pgm_name = "p4plus",
+        .cfg_path            = hal_cfg_path_.c_str(),
+    };
+#elif defined(ARTEMIS)
+    p4pd_cfg_t                 p4pd_cfg = {
+        .table_map_cfg_file  = "artemis/capri_txdma_table_map.json",
+        .p4pd_pgm_name       = "artemis",
+        .p4pd_rxdma_pgm_name = "p4plus",
+        .p4pd_txdma_pgm_name = "p4plus",
+        .cfg_path            = hal_cfg_path_.c_str(),
+    };
+#else
+    p4pd_cfg_t                 p4pd_cfg = {
+        .table_map_cfg_file  = "iris/capri_p4_txdma_table_map.json",
+        .p4pd_pgm_name       = "iris",
+        .p4pd_rxdma_pgm_name = "p4plus",
+        .p4pd_txdma_pgm_name = "p4plus",
+        .cfg_path            = hal_cfg_path_.c_str(),
+    };
+#endif
+
+    memset(&tinfo, 0, sizeof(tinfo));
+
+    // parse the NCC generated table info file for p4+ tables
+    rc = p4pluspd_txdma_init(&p4pd_cfg);
+    assert(rc == P4PD_SUCCESS);
+
+    // start instantiating tables based on the parsed information
+    p4plus_txdma_dm_tables_ =
+        (directmap **)calloc(sizeof(directmap *),
+                             (P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX -
+                              P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN + 1));
+    SDK_ASSERT(p4plus_txdma_dm_tables_ != NULL);
+
+    // TODO:
+    // 1. take care of instantiating flow_table_, acl_table_ and met_table_
+    // 2. When tables are instantiated proper names are not passed today,
+    // waiting for an API from Mahesh that gives table name given table id
+
+    for (tid = P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN;
+         tid < P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX; tid++) {
+        rc = p4pluspd_txdma_table_properties_get(tid, &tinfo);
+        SDK_ASSERT(rc == P4PD_SUCCESS);
+
+        switch (tinfo.table_type) {
+        case P4_TBL_TYPE_INDEX:
+            if (tinfo.tabledepth) {
+                p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
+                    directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size,
+                                       false, ENTRY_TRACE_EN, table_health_monitor);
+                assert(p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
+            }
+            break;
+
+        case P4_TBL_TYPE_MPU:
+        default:
+            break;
+        }
+    }
+
+    return 0;
+}
+
+void
+pd_init()
+{
+    int ret;
+    sdk::platform::capri::capri_state_pd_init(NULL);
+
+    ret = p4plus_rxdma_init_tables();
+    assert(ret == 0);
+    ret = p4plus_txdma_init_tables();
+    assert(ret == 0);
+
+#if !defined(APOLLO) || !defined(ARTEMIS)
+    ret = capri_p4plus_table_rw_init();
+    assert(ret == 0);
+#endif
+}
+
+int
+p4pd_common_p4plus_rxdma_rss_params_table_entry_get(uint32_t hw_lif_id,
+    eth_rx_rss_params_actiondata_t *data)
+{
+    p4pd_error_t        pd_err;
+
+    assert(hw_lif_id < MAX_LIFS);
+
+    pd_err = p4pd_global_entry_read(P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_PARAMS,
+                                    hw_lif_id, NULL, NULL, data);
+    if (pd_err != P4PD_SUCCESS) {
+        assert(0);
+    }
+
+    return 0;
+}
+
+void
+p4pd_common_p4plus_rxdma_rss_params_table_entry_show(uint32_t hw_lif_id)
+{
+    eth_rx_rss_params_actiondata_t data = { 0 };
+
+    p4pd_common_p4plus_rxdma_rss_params_table_entry_get(hw_lif_id, &data);
+
+    memrev((uint8_t *)&data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key,
+           sizeof(data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key));
+
+    printf("type %x\n", data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_type);
+    printf("key ");
+    for (uint16_t i = 0; i < sizeof(data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key); i++) {
+        if (i != 0)
+            printf(":");
+        printf("%02x", data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key[i]);
+    }
+    printf("\n");
+    printf("debug %x\n", data.action_u.eth_rx_rss_params_eth_rx_rss_params.debug);
+}
+
+int
+p4pd_common_p4plus_rxdma_rss_params_table_entry_add(uint32_t hw_lif_id,
+    uint8_t debug)
+{
+    p4pd_error_t        pd_err;
+    eth_rx_rss_params_actiondata_t data = { 0 };
+
+    assert(hw_lif_id < MAX_LIFS);
+
+    p4pd_common_p4plus_rxdma_rss_params_table_entry_get(hw_lif_id, &data);
+
+    data.action_u.eth_rx_rss_params_eth_rx_rss_params.debug = debug;
+
+    pd_err = p4pd_global_entry_write(P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_PARAMS,
+                                     hw_lif_id, NULL, NULL, &data);
+    if (pd_err != P4PD_SUCCESS) {
+        assert(0);
+    }
+
+    p4pd_common_p4plus_rxdma_rss_params_table_entry_show(hw_lif_id);
+
+    return 0;
+}
+
 void
 qinfo(uint16_t lif)
 {
@@ -1010,7 +1337,7 @@ usage()
     printf("   qinfo          <lif>\n");
     printf("   qstate         <lif> <qtype> <qid>\n");
     printf("   qdump          <lif> <qtype> <qid> <ring>\n");
-    printf("   debug          <lif> <qtype> <qid>\n");
+    printf("   debug          <lif> <qtype> <qid> <enable>\n");
     printf("   nvme_qstate    <lif> <qtype> <qid>\n");
     printf("   qpoll          <lif> <qtype>\n");
     printf("   stats          <lif>\n");
@@ -1023,6 +1350,8 @@ usage()
     printf("   port_config    <addr>\n");
     printf("   port_status    <addr>\n");
     printf("   lif_status     <addr>\n");
+    printf("   rss            <lif>\n");
+    printf("   rss_debug      <lif> <enable>\n");
     exit(1);
 }
 
@@ -1034,6 +1363,7 @@ main(int argc, char **argv)
     }
 
     sdk::lib::logger::init(&debug_logger);
+    pd_init();
 
 #ifdef __x86_64__
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) ==
@@ -1206,6 +1536,19 @@ main(int argc, char **argv)
         }
         uint64_t addr = strtoul(argv[2], NULL, 16);
         lif_status(addr);
+    } else if (strcmp(argv[1], "rss") == 0) {
+        if (argc != 3) {
+            usage();
+        }
+        uint16_t lif_id = strtoul(argv[2], NULL, 0);
+        p4pd_common_p4plus_rxdma_rss_params_table_entry_show(lif_id);
+    } else if (strcmp(argv[1], "rss_debug") == 0) {
+        if (argc != 4) {
+            usage();
+        }
+        uint16_t lif_id = strtoul(argv[2], NULL, 0);
+        uint8_t enable = std::strtoul(argv[3], NULL, 0);
+        p4pd_common_p4plus_rxdma_rss_params_table_entry_add(lif_id, enable);
     } else {
         usage();
     }

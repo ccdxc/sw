@@ -15,7 +15,11 @@ struct eth_rx_rss_params_eth_rx_rss_params_d d;
 
 .align
 eth_rx_rss_params:
-
+#ifdef PHV_DEBUG
+  seq                 c7, d.debug, 1
+  phvwr.c7            p.p4_intr_global_debug_trace, 1
+  trace.c7            0x1
+#endif
   and                 r1, d.rss_type, k.p4_to_p4plus_pkt_type
   beq                 r1, r0, eth_rx_rss_none
   nop
@@ -79,7 +83,12 @@ eth_rx_rss_none:
 eth_rx_rss_ipv4_l4:
   phvwr               p.toeplitz_input0_data[63:32], k.{p4_to_p4plus_l4_sport, p4_to_p4plus_l4_dport}
 eth_rx_rss_ipv4:
+#ifdef APOLLO
+  phvwr               p.toeplitz_input0_data[95:64], k.p4_to_p4plus_ip_da[31:0]
+  phvwr.e             p.toeplitz_input0_data[127:96], k.p4_to_p4plus_ip_sa_s96_e127[31:0]
+#else
   phvwr.e             p.toeplitz_input0_data[127:64], k.p4_to_p4plus_ip_sa_s0_e95[63:0]
+#endif
   phvwr.f             p.toeplitz_key2_data[33:0], k.p4_rxdma_intr_qstate_addr
 eth_rx_rss_ipv6_l4:
   phvwr               p.toeplitz_input2_data, k.{p4_to_p4plus_l4_sport, p4_to_p4plus_l4_dport}

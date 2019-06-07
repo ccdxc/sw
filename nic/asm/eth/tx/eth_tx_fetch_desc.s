@@ -33,11 +33,11 @@ eth_tx_fetch_desc:
   seq             c2, d.p_index0, d.c_index0
   bcf             [c2], eth_tx_spurious_db
   seq             c3, d.spurious_db_cnt, 0
-
+#ifdef PHV_DEBUG
   seq             c7, d.debug, 1
   phvwr.c7        p.p4_intr_global_debug_trace, 1
   trace.c7        0x1
-
+#endif
   // if some PHV ahead of this PHV miss speculated then reset ci_fetch
   seq             c1, d.spec_miss, 1
 

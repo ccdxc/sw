@@ -1123,6 +1123,8 @@ header_type eth_rx_rss_params {
     fields {
         rss_type : 8;
         rss_key : 320;
+        debug : 1;
+        rsvd : 7;
     }
 }
 
@@ -1164,7 +1166,7 @@ metadata p4_to_p4plus_classic_nic_header_ext_t p4_to_p4plus;
 @pragma scratch_metadata
 metadata p4_to_p4plus_classic_nic_header_ext_t p4_to_p4plus_scratch;
 
-action eth_rx_rss_params(rss_type, rss_key)
+action eth_rx_rss_params(rss_type, rss_key, debug, rsvd)
 {
     // --- For K+I generation
 
@@ -1187,6 +1189,8 @@ action eth_rx_rss_params(rss_type, rss_key)
     // --- D-struct generation
     modify_field(eth_rx_rss_params_scratch.rss_type, rss_type);
     modify_field(eth_rx_rss_params_scratch.rss_key, rss_key);
+    modify_field(eth_rx_rss_params_scratch.debug, debug);
+    modify_field(eth_rx_rss_params_scratch.rsvd, rsvd);
 }
 
 @pragma stage 0
