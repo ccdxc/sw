@@ -631,13 +631,28 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     spec = &obj_ctxt->api_params->mapping_spec;
     vpc = vpc_db()->find(&spec->key.vpc);
     subnet = subnet_db()->find(&spec->subnet);
-    PDS_TRACE_DEBUG("Programming mapping (vpc %u, ip %s), subnet %u, tep %s, "
-                    "overlay mac %s, fabric encap type %u "
-                    "fabric encap value %u, vnic %u",
-                    spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr),
-                    spec->subnet.id, ipaddr2str(&spec->tep.ip_addr),
-                    macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
-                    spec->fabric_encap.val.value, spec->vnic.id);
+    if (is_local_) {
+        PDS_TRACE_DEBUG("Programming local mapping (vpc %u, ip %s), vnic %u, "
+                        "subnet %u, tep %s, overlay mac %s, "
+                        "fabric encap (%u, %u), public IP %s, provider IP %s",
+                        spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr),
+                        spec->vnic.id, spec->subnet.id,
+                        ipaddr2str(&spec->tep.ip_addr),
+                        macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
+                        spec->fabric_encap.val.value,
+                        ipaddr2str(&spec->public_ip),
+                        ipaddr2str(&spec->provider_ip));
+    } else {
+        PDS_TRACE_DEBUG("Programming remote mapping (vpc %u, ip %s), vnic %u, "
+                        "subnet %u, tep %s, overlay mac %s, "
+                        "fabric encap (%u, %u), provider IP %s",
+                        spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr),
+                        spec->vnic.id, spec->subnet.id,
+                        ipaddr2str(&spec->tep.ip_addr),
+                        macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
+                        spec->fabric_encap.val.value,
+                        ipaddr2str(&spec->provider_ip));
+    }
     if (is_local_) {
         // allocate NAT table entries
         ret = add_nat_entries_(spec);
