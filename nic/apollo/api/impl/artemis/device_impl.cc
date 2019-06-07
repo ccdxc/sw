@@ -15,7 +15,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/device.hpp"
 #include "nic/apollo/api/impl/artemis/device_impl.hpp"
-#include "nic/apollo/p4/include/defines.h"
+#include "nic/apollo/p4/include/artemis_defines.h"
 #include "gen/p4gen/artemis/include/p4pd.h"
 
 namespace api {

@@ -14,7 +14,6 @@
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/service_impl.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
-#include "nic/apollo/p4/include/defines.h"
 #include "gen/p4gen/artemis/include/p4pd.h"
 
 using sdk::table::sdk_table_factory_params_t;
