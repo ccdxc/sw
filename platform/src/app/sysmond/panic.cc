@@ -104,6 +104,7 @@ checkpanicdump(void)
             goto exit;
         }
         fclose(kfptr);
+        free(kdump);
 
         // erase the flash part
         mtd_erase.length = mtd_info.erasesize;

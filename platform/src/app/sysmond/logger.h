@@ -61,6 +61,7 @@ local_sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
     va_start(args, format);
     vsnprintf(logbuf, sizeof(logbuf), format, args);
     sysmon_sdk_logger (GetLogger(), tracel_level, logbuf);
+    va_end(args);
     return 0;
 }
 
@@ -73,6 +74,7 @@ obfl_sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
     va_start(args, format);
     vsnprintf(logbuf, sizeof(logbuf), format, args);
     sysmon_sdk_logger (GetObflLogger(), tracel_level, logbuf);
+    va_end(args);
     return 0;
 }
 #endif

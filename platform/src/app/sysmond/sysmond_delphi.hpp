@@ -1,7 +1,6 @@
 #ifndef _SYSMOND_DELPHI_H_
 #define _SYSMOND_DELPHI_H_
 
-#include "sysmond.h"
 #include "gen/proto/sysmgr.delphi.hpp"
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 

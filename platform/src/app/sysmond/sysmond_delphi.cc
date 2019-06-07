@@ -1,4 +1,4 @@
-#include "sysmond_delphi.hpp"
+#include "sysmond.h"
 
 using namespace std;
 

@@ -6,7 +6,7 @@
 #include "string.h"
 #include <map>
 
-#define PS_COMMAND "ps -o pid,rss,vsz,comm,args | grep -v \"\\[\""
+#define PS_COMMAND "ps -o pid,rss,vsz,comm,args | grep -v \"\\[\" | cut -c -80"
 #define MEMINFO "/proc/meminfo"
 #define TOTAL_MEMORY "MemTotal"
 #define FREE_MEMORY "MemFree"
@@ -131,9 +131,10 @@ getMemory(char *psline, monprocess_t *process) {
         return -1;
     }
     //do not process the first line
-    //skip the ps process
+    //skip the ps and cut processes
     if (tokens[0] == "PID" ||
-        tokens[3] == "ps") {
+        tokens[3] == "ps" ||
+        tokens[3] == "cut") {
         return -1;
     }
     process->command = tokens[3];
@@ -225,7 +226,7 @@ monitorfreememory(void) {
                 asicmemory.freememory = getmeminfo(line);
             }
         }
-        pclose(fptr);
+        fclose(fptr);
     }
 }
 
@@ -235,7 +236,6 @@ monitorfreememory(void) {
 static void
 monitorprocess(void) {
     FILE *fptr = NULL;
-    char cmd[80];
     char psline[100];
 
     fptr = popen(PS_COMMAND, "r");
