@@ -4,11 +4,13 @@
 #include <iostream>
 
 #include "nic/upgrade_manager/lib/upgrade.hpp"
+#include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
 using namespace std;
 using namespace upgrade;
 
 int main(int argc, char **argv) {
+    initializeLogger();
     // Create delphi SDK
     delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
     string myName = "upgrade";

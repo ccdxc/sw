@@ -353,6 +353,7 @@ delphi::error UpgReqReact::StartUpgrade() {
         if (ctx.upgType == UpgTypeDisruptive) {
             StateMachine = DisruptiveUpgradeStateMachine;
             upgReqStatus->set_upgreqtype(UpgTypeDisruptive);
+            UPG_OBFL_TRACE("Disruptive upgrade started");
         }
         if (!InvokePreStateHandler(UpgStateCompatCheck)) {
             UPG_LOG_DEBUG("PreState handler returned false");
@@ -371,6 +372,7 @@ delphi::error UpgReqReact::StartUpgrade() {
 delphi::error UpgReqReact::AbortUpgrade() {
     delphi::objects::UpgStateReqPtr upgReqStatus = findUpgStateReq();
     if (upgReqStatus != NULL) {
+        UPG_OBFL_TRACE("Upgrade aborted");
         upgReqType_ = UpgAbort;
         upgAborted_ = true;
         upgReqStatus->set_upgreqstate(UpgStateAbort);

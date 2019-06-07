@@ -7,8 +7,15 @@
 #include <iostream>
 #include <spdlog/fmt/ostr.h>
 #include <spdlog/spdlog.h>
+#include "nic/utils/trace/trace.hpp"
+#include "nic/sdk/lib/logger/logger.hpp"
 
 namespace upgrade {
+extern ::utils::log *upgrade_obfl_trace_logger;
+
+const auto OBFL_LOG_FILENAME = "/obfl/upgrade.log";
+const auto OBFL_LOG_MAX_FILESIZE = 1*1024*1024;
+const auto LOG_MAX_FILES = 5;
 
 typedef std::shared_ptr<spdlog::logger> Logger;
 
@@ -26,6 +33,22 @@ Logger GetLogger();
 #define UPG_LOG_WARN(args...) upgrade::GetLogger()->warn(args)
 #define UPG_LOG_ERROR(args...) upgrade::GetLogger()->error(args)
 #define UPG_LOG_FATAL(args...) { upgrade::GetLogger()->error(args); assert(0); }
+
+
+void initializeLogger();
+
+static inline std::shared_ptr<logger>
+GetUpgradeObflLogger (void)
+{
+    if (upgrade_obfl_trace_logger) {
+        return upgrade_obfl_trace_logger->logger();
+    }
+    UPG_LOG_INFO("upgrade_obfl_trace_logger is null");
+    return NULL;
+}
+
+#define UPG_OBFL_TRACE(args...) TRACE_INFO(GetUpgradeObflLogger(), args) \
+                                TRACE_FLUSH(GetUpgradeObflLogger());
 
 } // namespace upgrade
 

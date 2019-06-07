@@ -2,6 +2,20 @@
 
 namespace upgrade {
 
+::utils::log *upgrade_obfl_trace_logger;
+
+void initializeLogger() {
+    static bool initDone = false;
+    if (!initDone) {
+        upgrade_obfl_trace_logger = ::utils::log::factory("upgrade_obfl", 0x0,
+                                        ::utils::log_mode_sync, false,
+                                        OBFL_LOG_FILENAME, OBFL_LOG_MAX_FILESIZE,
+                                        LOG_MAX_FILES, ::utils::trace_debug,
+                                        ::utils::log_none);
+	UPG_OBFL_TRACE("Monitoring Upgrade Manager");
+        initDone = true;
+    }
+}
 
 // GetLogger returns a logger instance
 Logger GetLogger() {

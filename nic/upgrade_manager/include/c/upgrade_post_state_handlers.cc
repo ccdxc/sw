@@ -22,6 +22,7 @@ bool UpgPostStateHandler::PostCompatCheckHandler(UpgCtx &ctx) {
 }
 
 bool UpgPostStateHandler::PostPostRestartHandler(UpgCtx &ctx) {
+    UPG_OBFL_TRACE("Upgrade state machine running after switchroot");
     UPG_LOG_DEBUG("UpgPostStateHandler PostPostRestart returning");
     return true;
 }
@@ -63,6 +64,7 @@ bool UpgPostStateHandler::PostDataplaneDowntimePhase4Handler(UpgCtx &ctx) {
 
 bool UpgPostStateHandler::PostSuccessHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostSuccess returning");
+    UPG_OBFL_TRACE("Upgrade successful");
     return true;
     if (exists("/nic/tools/fwupdate")) {
 	int ret = 0;
@@ -77,6 +79,7 @@ bool UpgPostStateHandler::PostSuccessHandler(UpgCtx &ctx) {
 }
 
 bool UpgPostStateHandler::PostFailedHandler(UpgCtx &ctx) {
+    UPG_OBFL_TRACE("Upgrade failed");
     UPG_LOG_DEBUG("UpgPostStateHandler PostFailed returning");
     return true;
 }
@@ -108,6 +111,7 @@ bool UpgPostStateHandler::PostPostLinkUpHandler(UpgCtx &ctx) {
 
 bool UpgPostStateHandler::PostSaveStateHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostSaveState returning");
+    UPG_OBFL_TRACE("Going to restart system");
     if (exists("/nic/tools/fwupdate")) {
         ctx.sysMgr->restart_system();
     }

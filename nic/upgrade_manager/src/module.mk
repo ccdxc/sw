@@ -3,7 +3,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = upgrade.bin
 MODULE_PIPELINE = iris
-MODULE_SOLIBS   = upgrade upgradeutils delphisdk sysmgr upgradeproto sdkpal logger
+MODULE_SOLIBS   = upgrade upgradeutils delphisdk sysmgr upgradeproto sdkpal logger utils trace
 MODULE_ARLIBS   = delphishm
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev dl
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cc)

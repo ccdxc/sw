@@ -22,32 +22,6 @@ testcases:
         args      :
             sleep : 120
 
-    -   name: DISRUPTIVE_UPGRADE_FAIL_POST_SWITCHROOT
-        disable : True
-        ignore      : True
-        testcase    : testcases.naples_upgrade.disruptive_upgrade
-        iterators :
-            type : simple
-            option : ["postrestartfail", "hostupfail", "linkupfail", "postlinkupfail"]
-        args      :
-            sleep : 320
-
-    -   name: DISRUPTIVE_UPGRADE_PAUSE_PRE_SWITCHROOT
-        testcase    : testcases.naples_upgrade.disruptive_upgrade
-        iterators :
-            type : simple
-            option : ["compatcheckpause", "linkdownpause", "hostdownpause", "posthostdownpause", "savestatepause"]
-        args      :
-            sleep : 500
-
-    -   name: DISRUPTIVE_UPGRADE_PAUSE_POST_SWITCHROOT
-        testcase    : testcases.naples_upgrade.disruptive_upgrade
-        iterators :
-            type : simple
-            option : ["postrestartpause", "hostuppause", "linkuppause", "postlinkuppause"]
-        args      :
-            sleep : 550
-
     -   name: DISRUPTIVE_UPGRADE_COMPAT_CHECK_FAIL
         testcase    : testcases.naples_upgrade.disruptive_upgrade_compat_check
         args      :
