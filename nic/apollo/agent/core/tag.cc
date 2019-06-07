@@ -143,7 +143,7 @@ tag_get_all_cb (pds_tag_spec_t *spec, void *ctxt)
     pds_tag_info_t info;
     tag_db_cb_ctxt_t *cb_ctxt = (tag_db_cb_ctxt_t *)ctxt;
 
-    memcpy(&info.spec, spec, sizeof(pds_tag_spec_t));
+    info.spec = *spec;
     if (!agent_state::state()->pds_mock_mode()) {
         ret = pds_tag_read(&spec->key, &info);
     } else {

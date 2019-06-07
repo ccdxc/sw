@@ -151,6 +151,7 @@ tag_api_spec_to_proto_spec (pds::TagSpec *proto_spec,
 {
     proto_spec->set_id(api_spec->key.id);
     proto_spec->set_af(pds_af_api_spec_to_proto_spec(api_spec->af));
+#if 0 // We don't store rules in db for now
     for (uint32_t i = 0; i < api_spec->num_rules; i ++) {
         auto rule = proto_spec->add_rules();
         rule->set_tag(api_spec->rules[i].tag);
@@ -160,6 +161,7 @@ tag_api_spec_to_proto_spec (pds::TagSpec *proto_spec,
                     rule->add_prefix(), &api_spec->rules[i].prefixes[j]);
         }
     }
+#endif
 }
 
 // Populate proto buf status from tag API status

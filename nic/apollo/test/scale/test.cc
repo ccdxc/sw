@@ -844,7 +844,7 @@ create_tags (uint32_t num_tag_trees, uint32_t scale,
     uint32_t priority = 0;
     uint32_t step = TESTAPP_TAGS_PRIORITY_STEP;
     // unique IDs across tags
-    static pds_tag_id_t id = 0;
+    static pds_tag_id_t id = 1;
     static uint32_t tag_pfx_count = 0;
     static uint32_t tag_value = 0;
 

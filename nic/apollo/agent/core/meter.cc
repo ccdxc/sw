@@ -143,7 +143,7 @@ meter_get_all_cb (pds_meter_spec_t *spec, void *ctxt)
     pds_meter_info_t info;
     meter_db_cb_ctxt_t *cb_ctxt = (meter_db_cb_ctxt_t *)ctxt;
 
-    memcpy(&info.spec, spec, sizeof(pds_meter_spec_t));
+    info.spec = *spec;
     if (!agent_state::state()->pds_mock_mode()) {
         ret = pds_meter_read(&spec->key, &info);
     } else {

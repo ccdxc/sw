@@ -47,6 +47,11 @@ func tagShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	if cmd.Flags().Changed("yaml") == false {
+		fmt.Printf("Only yaml output is supported. Use --yaml flag\n")
+		return
+	}
+
 	client := pds.NewTagSvcClient(c)
 
 	var req *pds.TagGetRequest

@@ -20,16 +20,13 @@ PortSvcImpl::PortGet(ServerContext *context,
 
     if (proto_req) {
         for (int i = 0; i < proto_req->id_size(); i ++) {
-            if ((ret = api::port_get(proto_req->id(i), pds_port_fill,
-                                     proto_rsp)) != SDK_RET_OK) {
-                proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-            }
+            ret = api::port_get(proto_req->id(i), pds_port_fill,
+                                proto_rsp);
+            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         }
         if (proto_req->id_size() == 0) {
-            if ((ret = api::port_get(0, pds_port_fill,
-                                     proto_rsp)) != SDK_RET_OK) {
-                proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-            }
+            ret = api::port_get(0, pds_port_fill, proto_rsp);
+            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         }
     }
     return Status::OK;
