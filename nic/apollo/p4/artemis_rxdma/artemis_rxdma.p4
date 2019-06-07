@@ -14,6 +14,7 @@
 #include "packet_queue.p4"
 #include "common_rxdma.p4"
 #include "flow_aging.p4"
+#include "nat_rxdma.p4"
 
 parser start {
     return ingress;
@@ -24,8 +25,10 @@ control ingress {
         if (p4_to_rxdma.lpm1_enable == TRUE) {
             rxlpm1();
         }
+        // This bit is indication of first pass - change name
         if (p4_to_rxdma.vnic_info_en == TRUE) {
             vnic_info_rxdma();
+            nat_rxdma();
         }
         if (p4_to_rxdma.lpm2_enable == TRUE) {
             rxlpm2();

@@ -33,6 +33,23 @@ action vnic_info_rxdma(lpm_base1, lpm_base2, lpm_base3, lpm_base4,
         modify_field(rx_to_tx_hdr.remote_ip, p4_to_rxdma.flow_src);
     }
 
+    // Pick the correct xlate_idx out of 3 idx's passed by P4, only
+    // needed for traffic from Switch to Host direction
+    // If all 3 idx's are not valid, then xlate_idx is untouched as zero
+    if (p4_to_rxdma.direction == RX_FROM_SWITCH) {
+        if (p4_to_rxdma2.service_xlate_idx != 0) {
+            modify_field(rxdma_control.xlate_idx, p4_to_rxdma2.service_xlate_idx);
+        } else {
+            if (p4_to_rxdma2.pa_or_ca_xlate_idx != 0) {
+                modify_field(rxdma_control.xlate_idx, p4_to_rxdma2.pa_or_ca_xlate_idx);
+            } else {
+                if (p4_to_rxdma2.public_xlate_idx != 0) {
+                    modify_field(rxdma_control.xlate_idx, p4_to_rxdma2.public_xlate_idx);
+                }
+            }
+        }
+    }
+
     // Setup key for DPORT lookup
     modify_field(lpm_metadata.lpm2_key,
         (p4_to_rxdma.flow_dport | (p4_to_rxdma.flow_proto << 16)));

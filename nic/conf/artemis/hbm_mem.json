@@ -264,6 +264,12 @@
             "_comment": "8M * 64B"
         },
         {
+            "name": "session_aging",
+            "base_region": "session",
+            "size": "512M",
+            "_comment": "This is alias for session region, to refer fom rxdma; Dont configure cache; 8M * 64B"
+        },
+        {
             "name": "nexthop",
             "size": "32M",
             "cache": "p4eg",
@@ -274,6 +280,12 @@
             "size": "1M",
             "cache": "p4eg",
             "_comment": "64K * 16B"
+        },
+        {
+            "name": "nat_rxdma",
+            "base_region": "nat",
+            "size": "1M",
+            "_comment": "This is alias for nat region, to refer fom rxdma; Dont configure cache; 64K * 16B"
         },
         {
             "name": "session_stats",

@@ -31,6 +31,7 @@ header_type txdma_control_metadata_t {
 
         pad0                : 4;
         rfc_index           : 20;
+        ipv6_tx_da          : 128;
     }
 }
 
@@ -62,7 +63,6 @@ header_type scratch_metadata_t {
         remote_vnic_mapping_tx_ohash_lkp    : 1;
         vnic_mapping_hint   : 18;
         remote_vnic_mapping_tx_ohash : 32;
-        ipv6_tx_da          : 128;
         vpc_peer_base       : 40;
     }
 }

@@ -22,6 +22,7 @@ namespace utils {
 #define JKEY_MAX_ELEMENTS   "max_elements"
 #define JKEY_CACHE_PIPE     "cache"
 #define JKEY_RESET_REGION   "reset"
+#define JKEY_BASE_REGION    "base_region"
 
 mpartition *mpartition::instance_ = nullptr;
 
@@ -155,7 +156,22 @@ mpartition::region_init(const char *mpart_json_file, shmmgr *mmgr)
         reg->max_elements =
             extract_size(p4_tbl.second.get<std::string>(JKEY_MAX_ELEMENTS,
                                                         "4294967295B")); // -1 default
-        reg->start_offset = offset;
+
+        // If this region is aliased to some other base region, then dont allocate memory
+        // for this region, instead find that region's start offset and set for this region
+        std::string base_region =
+            p4_tbl.second.get<std::string>(JKEY_BASE_REGION, "null");
+        if (base_region != "null") {
+            mpartition_region_t *base = region(base_region.c_str());
+            if (base == NULL) {
+                SDK_TRACE_ERR("Unable to find base region %s for the region %s", base_region, reg->mem_reg_name);
+                return SDK_RET_ERR;
+            }
+            reg->start_offset = base->start_offset;
+        } else {
+            reg->start_offset = offset;
+            offset += reg->size;
+        }
 
         SDK_TRACE_DEBUG("region : %s, size : %u, block size : %u, "
                         "max elements : %u, reset : %u, cpipe : %s, "
@@ -164,7 +180,6 @@ mpartition::region_init(const char *mpart_json_file, shmmgr *mmgr)
                         reg->max_elements, reg->reset, cache_pipe_name.c_str(),
                         addr(reg->start_offset),
                         addr(reg->start_offset + reg->size));
-        offset += reg->size;
         reg++;
     }
     SDK_TRACE_DEBUG("Region Memory Usage %uM,%uK", offset >> 20,

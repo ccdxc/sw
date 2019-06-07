@@ -24,6 +24,15 @@ header_type artemis_p4_to_rxdma_header_t {
     }
 }
 
+header_type artemis_p4_to_rxdma_header2_t {
+    fields {
+        service_xlate_idx   : 16;
+        pa_or_ca_xlate_idx  : 16;
+        public_xlate_idx    : 16;
+        pad0                : 48;
+    }
+}
+
 header_type artemis_rx_to_tx_header_t {
     fields {
         remote_ip       : 128;// Bytes 0 to 15

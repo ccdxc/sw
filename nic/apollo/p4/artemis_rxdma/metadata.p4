@@ -45,6 +45,12 @@ header_type lpm_metadata_t {
     }
 }
 
+header_type rxdma_control_metadata_t {
+    fields {
+        xlate_idx       : 16;
+    }
+}
+
 // PHV instantiation
 @pragma dont_trim
 metadata cap_phv_intr_global_t capri_intr;
@@ -61,6 +67,10 @@ metadata p4_2_p4plus_ext_app_header_t ext_app_header;
 @pragma dont_trim
 @pragma pa_header_union ingress app_header
 metadata artemis_p4_to_rxdma_header_t p4_to_rxdma;
+
+@pragma dont_trim
+@pragma pa_header_union ingress ext_app_header
+metadata artemis_p4_to_rxdma_header2_t p4_to_rxdma2;
 
 @pragma dont_trim
 metadata p4plus_common_to_stage_t to_stage_0;
@@ -144,3 +154,5 @@ metadata dma_cmd_pkt2mem_t      pktbuf_pkt2mem;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t      doorbell_phv2mem;
 
+@pragma dont_trim
+metadata rxdma_control_metadata_t   rxdma_control;
