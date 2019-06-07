@@ -519,21 +519,6 @@ void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 				 q->dbval | q->head->index);
 }
 
-void ionic_q_rewind(struct queue *q, struct desc_info *start)
-{
-	struct desc_info *cur = start;
-
-	while (cur != q->head) {
-		if (cur->cb)
-			cur->cb(q, cur, NULL, cur->cb_arg);
-		cur->cb = NULL;
-		cur->cb_arg = NULL;
-		cur = cur->next;
-	}
-
-	q->head = start;
-}
-
 unsigned int ionic_q_space_avail(struct queue *q)
 {
 	unsigned int avail = q->tail->index;
@@ -568,6 +553,10 @@ void ionic_q_service(struct queue *q, struct cq_info *cq_info,
 	struct desc_info *desc_info;
 	void *cb_arg;
 	desc_cb cb;
+
+	/* check for empty queue */
+	if (q->tail->index == q->head->index)
+		return;
 
 	/* stop index must be for a descriptor that is not yet completed */
 	if (unlikely(!ionic_q_is_posted(q, stop_index)))
