@@ -39,7 +39,13 @@ bin/agent/iota_agent.freebsd: ${SRCS}
 	GOOS=freebsd go build -ldflags="-s -w" -o $(IOTA_AGENT_BIN_FREEBSD_DIR)/iota_agent github.com/pensando/sw/iota/svcs/cmd/iota-agent
 	GOOS=freebsd go build -ldflags="-s -w" -o $(IOTA_AGENT_TEST_BIN_FREEBSD_DIR)/iota-agent-test github.com/pensando/sw/iota/svcs/agent/test
 
-iota: iota-proto bin/server/iota_server bin/agent/iota_agent bin/agent/iota_agent.freebsd bin/esx-setup bin/tools/fuz heimdall
+iota-test:
+	go test -c ./svcs/agent/ -o bin/agent.test
+
+iota: iota-proto bin/server/iota_server bin/agent/iota_agent bin/agent/iota_agent.freebsd bin/esx-setup bin/tools/fuz heimdall iota-test
+
+iota-tarball: iota
+	tar -zcf iota.tgz bin protos && cp iota.tgz ../ 
 
 heimdall:
 	make -C $(NICDIR) heimdall.gobin

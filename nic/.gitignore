@@ -80,6 +80,7 @@ debug.tgz
 host.tar
 host.tgz
 naples.tgz
+test-utils.tgz
 debug_cli/cli/cli.py
 debug_cli/cli/cli_wrap.cc
 debug_cli/cli/.dir
