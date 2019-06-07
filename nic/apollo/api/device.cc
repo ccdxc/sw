@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    device.cc
- *
- * @brief   device entry handling
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// device entry handling
+///
+//----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/mem.hpp"
@@ -18,11 +20,9 @@
 
 namespace api {
 
-/**
- * @defgroup PDS_DEVICE_ENTRY - device entry functionality
- * @ingroup PDS_DEVICE
- * @{
- */
+/// \defgroup PDS_DEVICE_ENTRY - device entry functionality
+/// \ingroup PDS_DEVICE
+/// \@{
 
 device_entry *
 device_entry::factory(pds_device_spec_t *pds_device) {
@@ -103,6 +103,6 @@ device_entry::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_DEVICE, this);
 }
 
-/** @} */    // end of PDS_DEVICE_ENTRY
+/// \@}
 
 }    // namespace api

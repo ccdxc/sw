@@ -34,9 +34,9 @@ public:
 
     /// \brief     release all the s/w state associated with the given device,
     ///            if any, and free the memory
-    /// \param[in] device device to be freed
-    // NOTE: h/w entries should have been cleaned up (by calling
-    // impl->cleanup_hw() before calling this
+    /// \param[in] impl device to be freed
+    /// \NOTE:     h/w entries should have been cleaned up (by calling
+    ///            impl->cleanup_hw() before calling this
     static void destroy(device_impl *impl);
 
     /// \brief  constructor
@@ -47,6 +47,7 @@ public:
 
     /// \brief     program all h/w tables relevant to this object except
     ///            stage 0 table(s), if any
+    /// \param[in] api_obj  api object
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_hw(api_base *api_obj,
@@ -57,6 +58,7 @@ public:
     /// \brief     cleanup all h/w tables relevant to this object except stage 0
     ///            table(s), if any, by updating packed entries with latest
     ///            epoch#
+    /// \param[in] api_obj  api object
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_hw(api_base *api_obj,
@@ -67,7 +69,8 @@ public:
     /// \brief     update all h/w tables relevant to this object except stage 0
     ///            table(s), if any, by updating packed entries with latest
     ///            epoch#
-    /// \param[in] orig_obj old version of the unmodified object
+    /// \param[in] curr_obj current version of the unmodified object
+    /// \param[in] prev_obj previous version of the unmodified object
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t update_hw(api_base *curr_obj, api_base *prev_obj,
@@ -77,6 +80,7 @@ public:
 
     /// \brief     activate the epoch in the dataplane by programming stage 0
     ///            tables, if any
+    /// \param[in] api_obj  api object
     /// \param[in] epoch    epoch being activated
     /// \param[in] api_op   api operation
     /// \param[in] obj_ctxt transient state associated with this API
@@ -86,17 +90,19 @@ public:
                                   api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) override;
 
-    /// \brief read spec, statistics and status from hw tables
-    /// \param[out] info pointer to device info
+    /// \brief      read spec, statistics and status from hw tables
+    /// \param[in]  api_obj api object
+    /// \param[in]  key     object key
+    /// \param[out] info    pointer to device info
     /// \return     #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read_hw(pds_device_info_t *info);
+    sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info);
 
 private:
-    /// \brief Populate specification with hardware information
+    /// \brief      populate specification with hardware information
     /// \param[out] spec specification
     void fill_spec_(pds_device_spec_t *spec);
 
-     /// \brief Populate ingress drop stats with hardware information
+     /// \brief      populate ingress drop stats with hardware information
      /// \param[out] ing_drop_stats Ingress drop statistics
     void fill_ing_drop_stats_(pds_device_ing_drop_stats_t *ing_drop_stats);
 };

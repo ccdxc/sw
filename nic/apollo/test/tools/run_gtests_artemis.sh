@@ -26,6 +26,10 @@ trap finish EXIT
 export PATH=${PATH}:${BUILD_DIR}/bin
 
 # gtests
+echo "Running device test"
+$GDB device_test -c hal.json -f artemis --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/artemis_device_test.xml" > artemis_device_test.log.txt
+[[ $? -ne 0 ]] && echo "artemis_device_test failed!" && exit 1
+
 echo "Running tep test"
 $GDB tep_test -c hal.json -f artemis --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/artemis_tep_test.xml" > artemis_tep_test.log.txt
 [[ $? -ne 0 ]] && echo "artemis_tep_test failed!" && exit 1

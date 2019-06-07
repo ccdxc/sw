@@ -9,16 +9,21 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/device.hpp"
 #include "nic/apollo/api/impl/artemis/device_impl.hpp"
+#include "nic/apollo/p4/include/defines.h"
 #include "gen/p4gen/artemis/include/p4pd.h"
-#include "nic/sdk/lib/utils/utils.hpp"
 
 namespace api {
 namespace impl {
+
+/// \defgroup PDS_DEVICE_IMPL - device entry datapath implementation
+/// \ingroup PDS_DEVICE
+/// \@{
 
 // as there is no state in this impl, single instance is good enough
 device_impl    g_device_impl;
@@ -35,11 +40,18 @@ device_impl::destroy(device_impl *impl) {
 
 void
 device_impl::fill_spec_(pds_device_spec_t *spec) {
+    uint64_t val;
+
+    sdk::asic::pd::asicpd_read_table_constant(P4TBL_ID_VNIC_MAPPING,
+                                              &val);
+    spec->device_ip_addr = (ipv4_addr_t)val;
+    sdk::asic::pd::asicpd_read_table_constant(P4TBL_ID_TEP1_RX, &val);
+    MAC_UINT64_TO_ADDR(spec->device_mac_addr, val);
 }
 
 void
 device_impl::fill_ing_drop_stats_(pds_device_ing_drop_stats_t *ing_drop_stats) {
-#if 0
+#if 1
     p4pd_error_t pd_err = P4PD_SUCCESS;
     uint64_t pkts = 0;
     p4i_drop_stats_swkey_t key = { 0 };
@@ -60,17 +72,50 @@ device_impl::fill_ing_drop_stats_(pds_device_ing_drop_stats_t *ing_drop_stats) {
 }
 
 sdk_ret_t
-device_impl::read_hw(pds_device_info_t *info) {
-    fill_spec_(&info->spec);
-    fill_ing_drop_stats_(&info->stats.ing_drop_stats);
+device_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
+    pds_device_info_t *dinfo = (pds_device_info_t *)info;
+    (void)api_obj;
+    (void)key;
+
+    fill_spec_(&dinfo->spec);
+    fill_ing_drop_stats_(&dinfo->stats.ing_drop_stats);
     return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t
 device_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                          api_op_t api_op, obj_ctxt_t *obj_ctxt) {
+    device_entry *device;
+
+    switch (api_op) {
+    case API_OP_CREATE:
+    case API_OP_UPDATE:
+        device = (device_entry *)api_obj;
+        PDS_TRACE_DEBUG("Activating device IP %s, MAC %s as table constants",
+                        ipv4addr2str(device->ip_addr()),
+                        macaddr2str(device->mac()));
+        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_VNIC_MAPPING,
+                                                     device->ip_addr());
+        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP,
+                                                     device->ip_addr());
+        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP1_RX,
+                                                     MAC_TO_UINT64(device->mac()));
+        break;
+
+    case API_OP_DELETE:
+        PDS_TRACE_DEBUG("Cleaning up device config");
+        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_VNIC_MAPPING, 0);
+        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP, 0);
+        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP1_RX, 0);
+        break;
+
+    default:
+        return SDK_RET_INVALID_OP;
+    }
     return SDK_RET_OK;
 }
+
+/// \@}
 
 }    // namespace impl
 }    // namespace api

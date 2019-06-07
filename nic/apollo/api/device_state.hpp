@@ -20,12 +20,12 @@ namespace api {
 
 /// \defgroup PDS_DEVICE_STATE - device functionality
 /// \ingroup PDS_DEVICE
-/// @{
+/// \@{
 
-/// \brief    state maintained for devices
+/// \brief state maintained for devices
 class device_state : public state_base {
 public:
-    /// \brief    constructor
+    /// \brief constructor
     device_state() {
         device_cfg_ = NULL;
     }
@@ -33,12 +33,12 @@ public:
     /// \brief destructor
     ~device_state() {}
 
-    /// \brief    allocate memory required for device object
+    /// \brief  allocate memory required for device object
     /// \return pointer to the allocated device, NULL if no memory
     device_entry *alloc(void);
 
-    /// \brief    insert given device instance into the device db
-    /// \return   SDK_RET_OK on success, failure status code on error
+    /// \brief  insert given device instance into the device db
+    /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t insert(device_entry *device) {
         if (device_cfg_) {
             return sdk::SDK_RET_ENTRY_EXISTS;
@@ -47,8 +47,8 @@ public:
         return SDK_RET_OK;
     }
 
-    /// \brief      remove the (singleton) instance of device object from db
-    /// \return    pointer to the removed device instance or NULL, if not found
+    /// \brief  remove the (singleton) instance of device object from db
+    /// \return pointer to the removed device instance or NULL, if not found
     device_entry *remove(void) {
         device_entry *device;
 
@@ -57,28 +57,28 @@ public:
         return device;
     }
 
-    /// \brief      free device instance back to slab
-    /// \param[in]  device   pointer to the allocated device
+    /// \brief     free device instance back to slab
+    /// \param[in] device pointer to the allocated device
     void free(device_entry *device);
 
-    /// \@brief     lookup a device in database given the key
+    /// \@brief    lookup a device in database given the key
     /// \param[in] device_key device key
-    /// \return pointer to the instance of device config or NULL, if not found
+    /// \return    pointer to the instance of device config or NULL, if not found
     device_entry *find(void) {
         return device_cfg_;
     }
 
-    /// \brief API to walk all the db elements
-    /// \param[in] walk_cb    callback to be invoked for every node
-    /// \param[in] ctxt       opaque context passed back to the callback
-    /// \return   SDK_RET_OK on success, failure status code on error
+    /// \brief     API to walk all the db elements
+    /// \param[in] walk_cb callback to be invoked for every node
+    /// \param[in] ctxt    opaque context passed back to the callback
+    /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t walk(state_walk_cb_t walk_cb, void *ctxt) override;
 
 private:
-    device_entry    *device_cfg_;    ///< user provided config
+    device_entry *device_cfg_;    ///< user provided config
 };
 
-/// \@}    // end of PDS_SWITHCPORT_STATE
+/// \@}
 
 }    // namespace api
 
