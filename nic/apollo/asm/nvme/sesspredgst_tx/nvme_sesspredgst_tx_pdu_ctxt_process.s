@@ -46,8 +46,7 @@ trigger_dgstcb:
     addi           TX_HWDGSTCB_P, TX_HWDGSTCB_P, loword(nvme_tx_hwdgstcb_addr)
 
     // setup hdgst_desc opaque_tag_address to dgst_cb's CI offset
-    add            r3, TX_HWDGSTCB_P, DGST_CB_CI_OFFSET
-    phvwr          p.hdgst_desc_opaque_tag_addr, r3.dx
+    phvwr          p.hdgst_desc_opaque_tag_addr, TX_HWDGSTCB_P.dx
 
     // load tx_dgstcb to fetch PI indices for hdr and data dgst
     // to post to dgst engine

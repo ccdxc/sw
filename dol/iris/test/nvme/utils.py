@@ -282,11 +282,9 @@ def ValidateWriteTxChecks(tc):
                                   tc.pvtdata.hwxtstxcb_post_state,
                                   "pi", "log_sz", tc.pvtdata.nlb):
         return False
-    #XXX: for some reason opaqueue tag write is not updating the CI value in hwxtstxcb.
-    #TO BE FIXED and then re-enable below check
-    #if not VerifyFieldsEqual(tc, tc.pvtdata.hwxtstxcb_post_state, "pi",
-    #                         tc.pvtdata.hwxtstxcb_post_state, "ci"):
-    #    return False
+    if not VerifyFieldsEqual(tc, tc.pvtdata.hwxtstxcb_post_state, "pi",
+                             tc.pvtdata.hwxtstxcb_post_state, "ci"):
+        return False
 
     #make sure two hw dgst descriptors are produced and consumed
     if not VerifyFieldMincrModify(tc, tc.pvtdata.hwdgsttxcb_pre_state,

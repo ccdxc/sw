@@ -119,8 +119,6 @@
 #define NVME_SESS_PRE_DGST_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(ddgst_desc_dma_dma_cmd_type)/16)
 
 //Digest related defines
-#define DGST_CB_CI_OFFSET                    4
-
 #define HW_DGST_STATUS_SIZE                  8
 #define HW_DGST_INTG_TAG_SIZE                8
 
@@ -192,6 +190,8 @@ struct hbm_al_ring_entry_t {
 //XTS related defines
 #define HW_XTS_TX_DB_ADDR        CAPRI_BARCO_MD_HENS_REG_XTS0_PRODUCER_IDX
 #define HW_XTS_RX_DB_ADDR        CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX
+
+#define HW_XTS_DESC_FLAGS_OPAQUE_TAG_WR_EN 1
 
 #define HW_CMD_XTS_ENCRYPT      0x40000000
 #define HW_CMD_XTS_DECRYPT      0x40100000

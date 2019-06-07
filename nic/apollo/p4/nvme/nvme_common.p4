@@ -826,12 +826,14 @@ cmdid, pduid
 // corresponding session q to move the wqe to next phase.
 // since opaque tag data is 32 bits, to simplify the implementation, allocating 32 bit
 // value for ci/pi.
+// The ring's opaque tag dest address is pointed to the beginning of this structure.
+// Hence keep the ci as the first field in this struct
 
 //64B
 header_type xtscb_t {
   fields {
+    ci                  : 32; //Keep ci the first field(opaque tag write)
     pi                  : 32;
-    ci                  : 32;
     xts_ring_base_addr  : 34;
     log_sz              :  5;
     rsvd                :  1;
@@ -841,11 +843,11 @@ header_type xtscb_t {
 }
 
 #define XTSCB_PARAMS \
-pi, ci, xts_ring_base_addr, log_sz, rsvd, choke_counter, pad
+ci, pi, xts_ring_base_addr, log_sz, rsvd, choke_counter, pad
 
 #define GENERATE_XTSCB_D    \
-    modify_field(xtscb_d.pi, pi); \
     modify_field(xtscb_d.ci, ci); \
+    modify_field(xtscb_d.pi, pi); \
     modify_field(xtscb_d.xts_ring_base_addr, xts_ring_base_addr); \
     modify_field(xtscb_d.log_sz, log_sz); \
     modify_field(xtscb_d.rsvd, rsvd); \
@@ -854,12 +856,15 @@ pi, ci, xts_ring_base_addr, log_sz, rsvd, choke_counter, pad
 
 // this is the cb that is used to track the dgst accelerator engine ring.
 // rest of the details are same as above.
+// ci doesn't have to be the first one for this cb as the opaque tag address 
+// is always supplied along with the data in the descriptor
+// However, to keep it similar to xtscb, defining ci as the first one
 
 //16B
 header_type dgstcb_t {
   fields {
-    pi                  : 32;
     ci                  : 32;
+    pi                  : 32;
     dgst_ring_base_addr : 34;
     log_sz              :  5;
     rsvd                :  1;
@@ -869,11 +874,11 @@ header_type dgstcb_t {
 }
 
 #define DGSTCB_PARAMS \
-pi, ci, dgst_ring_base_addr, log_sz, rsvd, choke_counter, pad
+ci, pi, dgst_ring_base_addr, log_sz, rsvd, choke_counter, pad
 
 #define GENERATE_DGSTCB_D \
-    modify_field(dgstcb_d.pi, pi); \
     modify_field(dgstcb_d.ci, ci); \
+    modify_field(dgstcb_d.pi, pi); \
     modify_field(dgstcb_d.dgst_ring_base_addr, dgst_ring_base_addr); \
     modify_field(dgstcb_d.log_sz, log_sz); \
     modify_field(dgstcb_d.rsvd, rsvd); \
@@ -893,8 +898,7 @@ header_type xts_desc_t {
         header_size                         : 32;
         status_address                      : 64;
         opaque_tag_value                    : 32;
-        opaque_tag_write_en                 : 1;
-        rsvd1                               : 31;
+        flags                               : 32;
         sector_size                         : 16;
         application_tag                     : 16;
         sector_num                          : 32;

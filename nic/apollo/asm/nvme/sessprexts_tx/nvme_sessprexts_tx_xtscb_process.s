@@ -77,8 +77,10 @@ nvme_sessprexts_tx_xtscb_process:
     //write doorbell in little-endian
     phvwr       p.xts_db_index, r1.wx
 
-    phvwrpair.e p.xts_desc_opaque_tag_value, r1.wx, \
-                p.xts_desc_opaque_tag_write_en, 1
+    add         r2, r0, (HW_XTS_DESC_FLAGS_OPAQUE_TAG_WR_EN)
+
+    phvwrpair.e p.xts_desc_opaque_tag_value, r1, \
+                p.xts_desc_flags, r2.wx
     CAPRI_SET_TABLE_1_VALID(0)                      //Exit Slot
 
 
