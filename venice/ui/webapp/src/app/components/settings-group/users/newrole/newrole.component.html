@@ -100,6 +100,7 @@
                             <p-dropdown class="newrole-severity" fxFlex="170px"
                                         formControlName="resource-kind" styleClass="newrole-font"
                                         appendTo="body"
+                                        (onChange)="onKindChange($event, permission, index)"
                                         [options]="permission.kindOptions" placeholder="kind...">
                             </p-dropdown>
                           </div>
@@ -127,7 +128,7 @@
                     Actions:
                   </div>
                   <div>
-                    <p-listbox #actionListbox [options]="permissionOptions"
+                    <p-listbox #actionListbox [options]="permission.actionOptions"
                                formControlName="actions" multiple="multiple" checkbox="checkbox"
                                [showToggleAll]="false"
                                optionLabel="label"

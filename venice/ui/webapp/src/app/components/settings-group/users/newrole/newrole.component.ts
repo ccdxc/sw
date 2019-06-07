@@ -44,10 +44,10 @@ import { StagingBuffer, IStagingBuffer } from '@sdk/v1/models/generated/staging'
 export class NewroleComponent extends UsersComponent implements OnInit, OnDestroy, OnChanges {
 
   static KINDOPTIONS = 'kindOptions';
+  static ACTIONOPTIONS = 'actionOptions';
   static RESOURCE_TENANT = null;
   static ACTIONOPTIONS_ALL = 'AllActions';
   static _ALL_ = '_All_';
-  static NONE_GROUP = '';
 
   newAuthRole: AuthRole;
 
@@ -56,9 +56,6 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
   @Output() formClose: EventEmitter<any> = new EventEmitter();
 
   groupOptions: SelectItem[] = Utility.convertCategoriesToSelectItem();
-
-  permissionOptions: SelectItem[] = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint);
-
 
   constructor(protected _controllerService: ControllerService,
     protected _authService: AuthService,
@@ -77,10 +74,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
   ngOnInit() {
     // VS-209. add "ALL" option for group.
     this.groupOptions = this.addAllGroupOrKindItem(this.groupOptions);
-    this.groupOptions = this.addEmptyGroupItem(this.groupOptions);
   }
-
-
 
   setupData() {
     if (this.isEditMode()) {
@@ -113,7 +107,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
   }
 
   getPermissionActionItem(element: string): any {
-    const items = this.permissionOptions.filter(item => {
+    const items = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint).filter(item => {
       return (item.value === element);
     });
     return items[0];
@@ -128,6 +122,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     const permissions = newRole.spec.permissions;
     for (let i = 0; i < permissions.length; i++) {
       const actions = permissions[i].actions;
+
       // actions is like ["create" "update"], we want to change to [{label:value, value=create}, {label:update, value=update}]
       if (actions) {
         const actionsValues = [];
@@ -154,6 +149,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     const permissionControls = newAuthRole.$formGroup.get(['spec', 'permissions'])['controls'];
     for (let j = 0; j < permissionControls.length; j++) {
       permissionControls[j][NewroleComponent.KINDOPTIONS] = this.getKindOptions(permissionControls[j]);
+      permissionControls[j][NewroleComponent.ACTIONOPTIONS] = this.getActionOptions(permissionControls[j]);
     }
     return newAuthRole;
   }
@@ -286,6 +282,10 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
         });
         permissions[i].actions = actionsValues;
       }
+      // If kind should not have a group, we remove it now
+      if (Utility.KINDS_WITHOUT_GROUP.includes(permissions[i]['resource-kind'])) {
+        permissions[i]['resource-group'] = null;
+      }
       const resourcenames = permissions[i]['resource-names'];
       // resourcenames is "ns1, ns2" //TODO: server-side request to hide resource-names UI.
       if (resourcenames && !Array.isArray(resourcenames)) {
@@ -308,6 +308,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     const newPermission = new AuthPermission();
     newPermission['actions'] = []; // clear out action field's default value
     newPermission[NewroleComponent.KINDOPTIONS] = [];
+    newPermission[NewroleComponent.ACTIONOPTIONS] = [];
     permissionArray.insert(0, newPermission.$formGroup);
   }
 
@@ -334,13 +335,22 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     // for VS-209, when group is "ALL", kind option must be "ALL"
     if ($event.value === NewroleComponent._ALL_) {
       permission[NewroleComponent.KINDOPTIONS] = [{ label: 'All', value: NewroleComponent._ALL_ }];
-    } else if ($event.value === NewroleComponent.NONE_GROUP) {
-      permission[NewroleComponent.KINDOPTIONS] = this.buildNoneGroupKindOption();
     } else {
       permission[NewroleComponent.KINDOPTIONS] = this.getKindOptions(permission);
     }
+    // Resetting action options
+    permission[NewroleComponent.ACTIONOPTIONS] = [];
+    permission.get('actions').setValue([]);
     // comment out permission.resource-tenant per VS-241 (GS-release)
     // this.setPermissionInputOnGroupChange($event.value, permission);
+  }
+
+  onKindChange($event, permission, permissionIndex) {
+    permission[NewroleComponent.ACTIONOPTIONS] = this.getActionOptions(permission);
+    // Clearing out previous actions
+    // otherwise, if user goes from an object with all actions, checks one, and then
+    // moves to a kind with no group, we will accidentally send the old value as well.
+    permission.get('actions').setValue([]);
   }
 
   setPermissionInputOnGroupChange(value: string, permission: FormControl) {
@@ -367,27 +377,37 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     return (groupValue === 'cluster');
   }
 
-  buildNoneGroupKindOption() {
-    const kinds = Utility.KINDS_WITHOUT_GROUP;
-    const kindsItems = Utility.stringArrayToSelectItem(kinds, false);
-    return kindsItems;
-  }
-
   /**
    * This API serves html template
    * Given a permission control, we compute the available options for resource-kind field
    */
   getKindOptions(permission: AbstractControl): SelectItem[] {
     const groupValue = permission.get('resource-group').value;
-    if (Utility.isEmpty(groupValue)) {  // when kind is ['AuditEvent', 'Fwlog', 'Metric', 'Event'] , there is no group
-      return this.buildNoneGroupKindOption();
-    } else {
-      const selectedGroup = Utility.makeFirstLetterUppercase(groupValue);
-      let kinds = Utility.getKindsByCategory(selectedGroup);
-      kinds = Utility.getLodash().difference(kinds, Utility.KINDS_WITHOUT_GROUP); // CategoryMapping has [AuditEvent, Event] under Monitoring group. We have to clean up for RBAC role.
-      const kindsItems = Utility.stringArrayToSelectItem(kinds, false);
-      return this.addAllGroupOrKindItem(kindsItems);
+    const selectedGroup = Utility.makeFirstLetterUppercase(groupValue);
+    let kinds = Utility.getKindsByCategory(selectedGroup);
+    if (selectedGroup === `Monitoring`) {
+      // CategoryMapping has [AuditEvent, Event] under Monitoring group.
+      // We add Fwlogs as well.
+      kinds = Utility.getLodash().uniq(kinds.concat(Utility.KINDS_WITHOUT_GROUP));
     }
+    const kindsItems = Utility.stringArrayToSelectItem(kinds, false);
+    return this.addAllGroupOrKindItem(kindsItems);
+  }
+
+  /**
+   * This API serves html template
+   * Given a permission control, we compute the available options for resource-kind field
+   */
+  getActionOptions(permission: AbstractControl): SelectItem[] {
+    const selectedKind = permission.get('resource-kind').value;
+    // If it's a kind without a group, only read permission can be given
+    if (Utility.KINDS_WITHOUT_GROUP.includes(selectedKind)) {
+      return [{
+        label: AuthPermission_actions_uihint.Read,
+        value: AuthPermission_actions_uihint.Read
+      }];
+    }
+    return Utility.convertEnumToSelectItem(AuthPermission_actions_uihint);
   }
 
   /**
@@ -402,31 +422,26 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     return newSelectItems;
   }
 
-  addEmptyGroupItem(selectItems: SelectItem[]): SelectItem[] {
-    let newSelectItems: SelectItem[] = [];
-    newSelectItems.push({ label: 'None', value: NewroleComponent.NONE_GROUP });  // note: ['AuditEvent', 'Fwlog', 'Metric', 'Event'] has no group, user can only set kind
-    newSelectItems = newSelectItems.concat(selectItems);
-    return newSelectItems;
-  }
-
-
   onActionChange(event: any, permission: any, actionListboxWidget: any, permissionIndex: number) {
     const values = event.value;
+    if (Utility.KINDS_WITHOUT_GROUP.includes(permission.get('resource-kind').value)) {
+      return;
+    }
     if (values.length > 1) {
       const index = this.getAllActionIndex(values);
       if (index !== -1) {
         values.splice(index, 1);
         actionListboxWidget.value = values;
-        this.permissionOptions = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint, [NewroleComponent.ACTIONOPTIONS_ALL]);
+        permission[NewroleComponent.ACTIONOPTIONS] = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint, [NewroleComponent.ACTIONOPTIONS_ALL]);
       }
     } else if (values.length === 1) {  // there is only one option selected
       const index = this.getAllActionIndex(values);
       if (index === -1) {
         // NewroleComponent.ACTIONOTIONT_ALL is NOT the only selected option. we take out
-        this.permissionOptions = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint, [NewroleComponent.ACTIONOPTIONS_ALL]);
+        permission[NewroleComponent.ACTIONOPTIONS]  = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint, [NewroleComponent.ACTIONOPTIONS_ALL]);
       }
     } else {
-      this.permissionOptions = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint);
+      permission[NewroleComponent.ACTIONOPTIONS] = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint);
     }
 
   }

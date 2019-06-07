@@ -152,21 +152,11 @@ describe('NaplesComponent', () => {
   });
 
   describe('RBAC', () => {
-    it('metrics permission', () => {
-      TestingUtility.addPermissions(
-        [UIRolePermissions.metricsquery_read]
-      );
-    fixture.detectChanges();
-      // metrics should be visible
-      const cards = fixture.debugElement.queryAll(By.css('app-herocard'));
-      expect(cards.length).toBe(3);
-    });
-
     it('no permission', () => {
     fixture.detectChanges();
       // metrics should be hidden
       const cards = fixture.debugElement.queryAll(By.css('app-herocard'));
-      expect(cards.length).toBe(0);
+      expect(cards.length).toBe(3);
     });
 
   });

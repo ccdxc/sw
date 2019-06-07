@@ -1,7 +1,6 @@
 <app-pagebody [icon]="bodyicon" header="Naples Overview">
   <div fxFlex="none" fxLayout="row">
-    <div fxFlex="nogrow" fxLayout="row wrap" class="naples-card-container"
-         *roleGuard="'metricsquery_read'">
+    <div fxFlex="nogrow" fxLayout="row wrap" class="naples-card-container">
       <ng-container *ngFor="let cardData of heroCards">
         <app-herocard fxFlex="nogrow"
                       [title]="cardData.title"

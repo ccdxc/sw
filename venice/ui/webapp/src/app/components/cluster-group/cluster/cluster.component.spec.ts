@@ -179,40 +179,6 @@ describe('ClusterComponent', () => {
         expect(fixture.debugElement.queryAll(By.css('div.cluster-node-container')).length).toBe(0, 'Number of nodes displayed was incorrect');
       });
 
-      it('metric cards', () => {
-        TestingUtility.addPermissions([UIRolePermissions.metricsquery_read, UIRolePermissions.clusternode_read]);
-        fixture.detectChanges();
-        // metrics should be visible
-        let cards = fixture.debugElement.queryAll(By.css('app-herocard'));
-        expect(cards.length).toBe(3);
-
-        TestingUtility.removeAllPermissions();
-        TestingUtility.updateRoleGuards();
-        fixture.detectChanges();
-
-        // metrics should be hidden
-        cards = fixture.debugElement.queryAll(By.css('app-herocard'));
-        expect(cards.length).toBe(0);
-
-        TestingUtility.addPermissions([UIRolePermissions.clusternode_read]);
-        TestingUtility.updateRoleGuards();
-        fixture.detectChanges();
-
-        // metrics should be hidden
-        cards = fixture.debugElement.queryAll(By.css('app-herocard'));
-        expect(cards.length).toBe(0);
-
-        TestingUtility.removeAllPermissions();
-        TestingUtility.addPermissions([UIRolePermissions.metricsquery_read]);
-        TestingUtility.updateRoleGuards();
-        fixture.detectChanges();
-
-        // metrics should be hidden
-        cards = fixture.debugElement.queryAll(By.css('app-herocard'));
-        expect(cards.length).toBe(0);
-
-      });
-
       it('alertsevents table', () => {
         // both permissions
         TestingUtility.addPermissions([UIRolePermissions.monitoringalert_read, UIRolePermissions.eventsevent_read]);

@@ -19,7 +19,6 @@ export const sideNavMenu: SideNavItem[] = [
       cssClass: 'material-icons',
       matIconName: 'dashboard',
     },
-    roleGuard: UIRolePermissions.metricsquery_read,
     link: ['/dashboard']
   },
   {
@@ -130,7 +129,6 @@ export const sideNavMenu: SideNavItem[] = [
           cssClass: 'material-icons',
           matIconName: 'insert_chart_outlined'
         },
-        roleGuard: UIRolePermissions.metricsquery_read,
         link: ['/monitoring', 'telemetry']
       },
       {

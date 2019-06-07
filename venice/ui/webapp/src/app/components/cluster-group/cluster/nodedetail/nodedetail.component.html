@@ -1,22 +1,20 @@
 <app-pagebody [icon]="bodyicon" [header]="selectedId">
   <div fxFlex="none" fxLayout="row">
     <div fxFlex fxLayout="row wrap" class="nodedetail-card-container">
-      <ng-container *roleGuard="'metricsquery_read'">
-        <ng-container *ngFor="let cardData of heroCards">
-          <app-herocard fxFlex="nogrow"
-                        [title]="cardData.title"
-                        [firstStat]="cardData.firstStat"
-                        [secondStat]="cardData.secondStat"
-                        [thirdStat]="cardData.thirdStat"
-                        [backgroundIcon]="cardData.backgroundIcon"
-                        [themeColor]="cardData.themeColor"
-                        [icon]="cardData.icon"
-                        [data]="cardData.data"
-                        [arrowDirection]="cardData.arrowDirection"
-                        [lastUpdateTime]="lastUpdateTime"
-                        [cardState]="cardData.cardState">
-          </app-herocard>
-        </ng-container>
+      <ng-container *ngFor="let cardData of heroCards">
+        <app-herocard fxFlex="nogrow"
+                      [title]="cardData.title"
+                      [firstStat]="cardData.firstStat"
+                      [secondStat]="cardData.secondStat"
+                      [thirdStat]="cardData.thirdStat"
+                      [backgroundIcon]="cardData.backgroundIcon"
+                      [themeColor]="cardData.themeColor"
+                      [icon]="cardData.icon"
+                      [data]="cardData.data"
+                      [arrowDirection]="cardData.arrowDirection"
+                      [lastUpdateTime]="lastUpdateTime"
+                      [cardState]="cardData.cardState">
+        </app-herocard>
       </ng-container>
     </div>
   </div>

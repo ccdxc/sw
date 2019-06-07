@@ -8,7 +8,7 @@
   <div fxFlex="none" fxLayout="row">
     <div fxFlex fxLayout="row wrap" class="cluster-card-container">
       <ng-container *ngTemplateOutlet="nodeTable"></ng-container>
-      <ng-container *roleGuard="{req: ['metricsquery_read', 'clusterNode_read']}">
+      <ng-container *roleGuard="{req: ['clusterNode_read']}">
 
         <ng-container *ngFor="let cardData of heroCards">
           <app-herocard fxFlex="nogrow"

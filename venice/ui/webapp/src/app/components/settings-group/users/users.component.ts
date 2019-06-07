@@ -287,6 +287,15 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
         if (authRoleList.items.length > 0) {
           this.authRoles.length = 0;
           this.authRoles = authRoleList.items;
+          this.authRoles.forEach( (authRole) => {
+            authRole.spec.permissions.forEach( (permission) => {
+              // For kinds that have no group, we put under monitoring
+              if (permission['resource-group'] == null) {
+                permission['resource-group'] = 'monitoring';
+              }
+            });
+            authRole.setModelToBeFormGroupValues();
+          });
           this.setDataReadyMap('roles', true);
         }
       },

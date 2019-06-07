@@ -38,8 +38,8 @@ export class Utility {
   public static DELETE_SUCCESS_SUMMARY = 'Delete Successful';
   public static VENICE_CONNECT_FAILURE_SUMMARY = 'Failed to connect to Venice';
   public static ROLLOUT_IMGAGE_NAMESPACE = 'images';
-  // In RBAC, when kind is ['AuditEvent', 'Fwlog', 'Metric', 'Event'] , there is no group
-  public static KINDS_WITHOUT_GROUP = ['AuditEvent', 'Fwlog', 'Metric', 'Event'];
+  // In RBAC, when kind is ['AuditEvent', 'Fwlog', 'Event'] , there is no group
+  public static KINDS_WITHOUT_GROUP = ['AuditEvent', 'FwlogsQuery', 'Event'];
 
   myControllerService: ControllerService;
   myLogService: LogService;
