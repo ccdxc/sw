@@ -1,0 +1,281 @@
+meta:
+    name    : alg 
+    nics    : [ pensando, intel, mellanox, broadcom ]
+    os      : [ linux, esx ]
+    targetcount : 65 
+
+testcases:
+    -   name    : TFTP_RRQ_WRQ
+        testcase: testcases.alg.tftp.tftp_rrq_wrq
+        args    :
+            type: local_only
+    
+    -   name    : TFTP_RRQ_WRQ_OACK
+        testcase: testcases.alg.tftp.tftp_rrq_wrq_oack
+        args    :
+            type: local_only
+
+    -   name    : TFTP_RRQ_WRQ_ERROR
+        testcase: testcases.alg.tftp.tftp_rrq_wrq_error
+        args    :
+            type: local_only
+
+    -   name    : TFTP_RRQ_WRQ_TEST_CLEANUP
+        testcase: testcases.alg.tftp.tftp_rrq_wrq_test_cleanup
+        args    :
+            type: local_only
+
+    -   name    : TFTP_RRQ_WRQ_TEST_MEMLEAK
+        testcase: testcases.alg.tftp.tftp_rrq_wrq_test_memleak
+        args    :
+            type: local_only
+
+    -   name    : TFTP_TEST_IDLE_TIMEOUT_CLEANUP
+        testcase: testcases.alg.tftp.tftp_test_idle_timeout_cleanup
+        iterators:
+            type    : simple
+            #timeout : [10s, 20s]
+            timeout : [10s]
+        args    :
+            type: local_only
+        
+    -   name    : TFTP_TEST_UNKNOWN_OPCODE
+        testcase: testcases.alg.tftp.tftp_unknown_opcode
+        args    :
+            type: local_only
+
+    -   name    : TFTP_TEST_NON_STANDARD_PORT
+        testcase: testcases.alg.tftp.tftp_nonstandard_port
+        args    :
+           type: local_only
+
+    -   name     : FTP_GET_PUT
+        testcase : testcases.alg.ftp.ftp_basic
+        iterators:
+           type   : nested
+           mode   : [ active, passive ]
+           #timeout: [ 10s, 20s ]
+           timeout : [10s]
+        args     :
+           type : local_only
+
+    -   name    : FTP_TEST_MEMLEAK
+        testcase: testcases.alg.ftp.ftp_test_memleak
+        args    :
+            type: local_only
+            count: 10 
+
+    -   name     : FTP_EPSV
+        testcase : testcases.alg.ftp.ftp_epsv
+        args     :
+           type : local_only
+
+    -   name     : FTP_TEST_CONTROL_AGEOUT 
+        testcase : testcases.alg.ftp.ftp_test_control_ageout
+        args     :
+            type : local_only
+
+    -   name     : FTP_DENY_MISMATCH_IP
+        testcase : testcases.alg.ftp.ftp_deny_mismatch_ip
+        args     :
+            type : local_only
+
+    -   name     : FTP_ALLOW_MISMATCH_IP
+        testcase : testcases.alg.ftp.ftp_allow_mismatch_ip
+        args     :
+            type : local_only
+
+    -   name     : FTP_DATA_CONN_FAIL
+        testcase : testcases.alg.ftp.ftp_data_conn_fail
+        args     :
+            type : local_only
+
+    -   name     : FTP_NONSTANDARD_PORT
+        testcase : testcases.alg.ftp.ftp_nonstandard_port
+        args     :
+           type : local_only
+
+    -   name    : RTSP_BASIC
+        testcase: testcases.alg.rtsp.rtsp_basic
+        args    :
+            type: local_only
+
+    -   name    : RTSP_INTERLEAVED
+        testcase: testcases.alg.rtsp.rtsp_interleaved
+        args    :
+            type: local_only
+
+    -   name    : RTSP_MULTICAST_ONE_CLIENT
+        testcase: testcases.alg.rtsp.rtsp_multicast_one_client
+        args    :
+            type: local_only
+
+    -   name    : RTSP_MULTICAST_MULTIPLE_CLIENT
+        testcase: testcases.alg.rtsp.rtsp_multicast_multiple_clients
+        args    :
+            type: local_only
+ 
+    -   name    : RTSP_TEST_CONTROL_TIMEOUT
+        testcase: testcases.alg.rtsp.rtsp_control_session_timeout
+        args    :
+            type: local_only
+
+    -   name    : RTSP_TEST_MEMLEAK
+        testcase: testcases.alg.rtsp.rtsp_test_memleak
+        args    :
+            type: local_only
+            count: 10
+
+    -   name    : SUNRPC_BASIC
+        testcase: testcases.alg.sunrpc.sunrpc_basic
+        args    :
+           type: local_only
+ 
+    -   name    : SUNRPC_DIFFERENT_SIP
+        testcase: testcases.alg.sunrpc.sunrpc_different_sip
+        ignore  : True
+        args    :
+            type: local_only
+ 
+    -   name    : SUNRPC_DIFFERENT_DIR
+        testcase: testcases.alg.sunrpc.sunrpc_different_dir
+        args    :
+            type: local_only
+
+    -   name    : SUNRPC_DIFFERENT_DIR
+        testcase: testcases.alg.sunrpc.sunrpc_different_dir
+        args    :
+            type: local_only
+
+    -   name    : SUNRPC_DIFFERENT_APP
+        testcase: testcases.alg.sunrpc.sunrpc_test_different_app
+        args    :
+            type: local_only
+
+    -   name    : SUNRPC_UNKNOWN_SIP
+        testcase: testcases.alg.sunrpc.sunrpc_unknown_sip
+        args    :
+            type: local_only
+
+    -   name    : SUNRPC_TEST_CONTROL_SESSION_CLOSE
+        testcase: testcases.alg.sunrpc.sunrpc_test_control_session_close
+        args    :
+            type: local_only
+
+    -   name    : SUNRPC_TEST_FLOWGATE_TIMEOUT
+        testcase: testcases.alg.sunrpc.sunrpc_test_flowgate_timeout
+        args    :
+            type: local_only
+
+    -   name    : SUNRPC_TEST_CLEAR_CONTROL_SESSION
+        testcase: testcases.alg.sunrpc.sunrpc_test_control_session_clear
+        args    :
+            type: local_only
+
+    -   name    : SUNRPC_MEM_LEAK
+        testcase: testcases.alg.sunrpc.sunrpc_mem_leak
+        ignore  : True
+        args    :
+            type: local_only
+            count: 10
+
+    -   name    : SUNRPC_UDP
+        testcase: testcases.alg.sunrpc.sunrpc_udp
+        args    :
+            type: local_only
+
+    -   name    : MSRPC_BASIC
+        testcase: testcases.alg.msrpc.msrpc_basic
+        args    :
+            type: local_only
+
+    #-   name    : ADD_SG_POLICY
+    #    testcase: testcases.alg.add_config
+
+    #-   name    : MSRPC_MULTIPLE_BIND
+    #    testcase: testcases.alg.msrpc.msrpc_multiple_bind
+    #    args    :
+    #        type: local_only
+
+    #-   name    : MSRPC_DIFFERENT_SIP
+    #    testcase: testcases.alg.msrpc.msrpc_different_sip
+    #    args    :
+    #        type: local_only
+
+    #-   name    : MSRPC_DIFFERENT_APP
+    #    testcase: testcases.alg.msrpc.msrpc_test_different_app
+    #    args    :
+    #        type: local_only
+
+    #-   name    : MSRPC_TEST_CONTROL_CLEAR
+    #    testcase: testcases.alg.msrpc.msrpc_test_control_session_clear
+    #    args    :
+    #        type: local_only
+
+    #-   name    : MSRPC_TEST_CONTROL_CLOSE
+    #    testcase: testcases.alg.msrpc.msrpc_test_control_session_close
+    #    args    :
+    #        type: local_only
+
+    -   name    : DNS_QUERY
+        testcase: testcases.alg.dns.dns_basic
+        args    :
+            type: local_only
+
+    -   name    : DNS_TEST_MEMLEAK
+        testcase: testcases.alg.dns.dns_test_memleak
+        args    :
+            type: local_only
+            count: 10
+
+    -   name    : DNS_DROP_LONG_DOMAIN_NAME
+        testcase: testcases.alg.dns.dns_drop_long_domain_name
+        args    :
+            type: local_only
+
+    -   name    : DNS_ALLOW_LONG_DOMAIN_NAME
+        testcase: testcases.alg.dns.dns_allow_long_domain_name
+        args    :
+            type: local_only
+
+    -   name    : DNS_DROP_MULTI_QUESTION
+        testcase: testcases.alg.dns.dns_drop_multi_question
+        args    :
+            type: local_only
+
+    -   name    : DNS_ALLOW_MULTI_QUESTION
+        testcase: testcases.alg.dns.dns_allow_multi_question
+        args    :
+            type: local_only
+
+    -   name    : DNS_DROP_LONG_LABEL
+        testcase: testcases.alg.dns.dns_drop_long_label
+        args    :
+            type: local_only
+
+    -   name    : DNS_ALLOW_LONG_LABEL 
+        testcase: testcases.alg.dns.dns_allow_long_label
+        args    :
+            type: local_only
+
+    -   name    : DNS_TEST_QUERYTIMEOUT
+        testcase: testcases.alg.dns.dns_test_querytimeout
+        args    :
+            type: local_only
+        iterators:
+            type   : simple
+            #timeout : [30s, 15s]
+            timeout: [15s]
+
+    -   name    : DNS_DROP_MAX_MSG_LENGTH
+        testcase: testcases.alg.dns.dns_drop_max_message_length
+        args    :
+            type: local_only
+
+    -   name    : DNS_ALLOW_MAX_MESSAGE_LENGTH
+        testcase: testcases.alg.dns.dns_allow_max_message_length
+        args    :
+            type: local_only
+
+    -   name    : ADD_SG_POLICY
+        testcase: testcases.alg.add_config
