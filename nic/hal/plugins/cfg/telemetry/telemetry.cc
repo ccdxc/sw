@@ -30,7 +30,7 @@ using hal::drop_monitor_rule_t;
 extern uint64_t g_mgmt_if_mac;
 namespace hal {
 
-int telemetry_collector_id_db[HAL_MAX_TELEMETRY_COLLECTORS] = {-1}; 
+int telemetry_collector_id_db[HAL_MAX_TELEMETRY_COLLECTORS] = {-1};
 
 // Global structs
 acl::acl_config_t   flowmon_rule_config_glbl = { };
@@ -46,7 +46,7 @@ telemetry_eval_sessions (void)
 {
     hal_ret_t ret = HAL_RET_OK;
     hal::cfg_op_t op;
-    
+
     op = hal_cfg_db_get_mode();
     // Close the config db to avoid any deadlocks with FTE
     hal::hal_cfg_db_close();
@@ -80,7 +80,7 @@ telemetry_eval_sessions (void)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Session update list failed {}", ret);
     }
-    
+
     // Re-open the db
     hal_cfg_db_open(op);
     return ret;
@@ -135,9 +135,9 @@ mirror_session_update_uplink (if_t *uplink)
 
     args.session = &session;
     pd_func_args.pd_mirror_session_update = &args;
-    
+
     // Update all mirror sessions
-    for (int i = 0; i < MAX_FLOW_MONITOR_RULES; i++) {
+    for (int i = 0; i < MAX_MIRROR_SESSION_DEST; i++) {
         args.session->id = i;
         args.session->dest_if = uplink;
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_UPDATE, &pd_func_args);
@@ -155,7 +155,7 @@ telemetry_mirror_session_handle_repin (if_t *uplink)
 {
     hal_ret_t   ret = HAL_RET_OK;
     if_t        *dest_if = NULL;
-    
+
     if (!g_telemetry_mirror_dest_if) {
         // Nothing to be done
         goto end;
@@ -495,7 +495,7 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     uint32_t id;
 
     collector_spec_dump(spec);
-    // Get free collector id 
+    // Get free collector id
     sdk_ret_t sret = g_hal_state->telemetry_collectors_bmp()->first_free(&id);
     if (sret != SDK_RET_OK) {
         HAL_TRACE_ERR("Unable to allocate collector bitmap! ret: {}", sret);
@@ -526,7 +526,7 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     /* MAC DA */
     mac = ep_get_mac_addr(ep);
     memcpy(cfg.dest_mac, mac, sizeof(mac_addr_t));
-    
+
     cfg.template_id = spec.template_id();
     cfg.export_intvl = spec.export_interval();
     switch (spec.format()) {
@@ -559,7 +559,7 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
         MAC_UINT64_TO_ADDR(smac, g_mgmt_if_mac);
         memcpy(cfg.src_mac, smac, sizeof(mac_addr_t));
     }
-    
+
     /* Encap comes from the l2seg */
     auto encap = l2seg_get_wire_encap(cfg.l2seg);
     if (encap.type == types::ENCAP_TYPE_DOT1Q) {
@@ -641,7 +641,7 @@ collector_process_get (CollectorGetRequest &req, CollectorGetResponseMsg *rsp,
         return HAL_RET_INVALID_ARG;
     }
     HAL_TRACE_DEBUG("Collector ID {}, {}", args->cfg->collector_id, id);
-    
+
     args->cfg->collector_id = id;
     pd_func_args.pd_collector_get = args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_COLLECTOR_GET, &pd_func_args);
