@@ -19,6 +19,12 @@ update_fwupgrade_state()
     echo $1 >> /var/run/fwupgrade.state
 }
 
+save_fwupgrade_state()
+{
+    obfl_dir=`mount | grep obfl | cut -d' ' -f3`
+    cp /var/run/fwupgrade.state $obfl_dir && sync
+}
+
 mainfwa_partuuid=d4e53be5-7dc1-4199-914c-48edfea92c5e
 mainfwb_partuuid=e2fd6d28-3300-4979-8062-b8ab599f3898
 
@@ -50,8 +56,9 @@ if [ $cur_image == "mainfwa" ]; then
 elif [ $cur_image == "mainfwb" ]; then
     new_image="mainfwa"
 else
-    echo "Cannot swith_rootfs to altfw from $cur_image"
+    echo "Cannot switch_rootfs to altfw from $cur_image"
     echo "switch_rootfs failed!!!"
+    save_fwupgrade_state
     exit 1
 fi
 
@@ -63,6 +70,7 @@ elif [ $new_image == "mainfwb" ]; then
     partuuid=$mainfwb_partuuid
 else
     echo "Illegal fw name($1) provided"
+    save_fwupgrade_state
     usage
     exit 1
 fi
@@ -79,6 +87,7 @@ mount PARTUUID=$partuuid /new
 if [ $? -ne 0 ]; then
     echo "Cannot mount filesystem at PARTUUID: $partuuid"
     echo "Upgrade Failed !!!"
+    save_fwupgrade_state
     exit 1
 fi
 
@@ -87,11 +96,12 @@ update_fwupgrade_state "PRESERVING FWUPGRADE STATE TO NEW FILESYSTEM"
 mount -t tmpfs tmpfs /new/mnt
 mkdir -p /new/mnt/upper /new/mnt/work
 mount -t overlay overlay -o lowerdir=/new,upperdir=/new/mnt/upper,workdir=/new/mnt/work /new/rw
-cp -a /var/run/fwupdate.cache /new/rw/var/run/.
 cp -a /var/run/fwupgrade.state /new/rw/var/run/.
+cp -a /var/run/fwupdate.cache /new/rw/var/run/.
 
 if [ $? -ne 0 ]; then
     echo "Cannot find /var/run/fwupdate.cache !!!"
+    save_fwupgrade_state
     unmount_fs
     exit 1
 fi
@@ -119,6 +129,7 @@ touch /.rw
 
 if [ $? -ne 0 ]; then
     echo "Read-only filesystem under new image"
+    save_fwupgrade_state
     unmount_fs
     exit 1
 fi
@@ -129,6 +140,7 @@ ifconfig bond0 down
 rmmod mnet mnet_uio_pdrv_genirq ionic_mnic
 
 update_fwupgrade_state "KILLING INIT..."
+save_fwupgrade_state
 
 kill -QUIT 1
 

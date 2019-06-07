@@ -307,7 +307,8 @@ static int __init mnet_init(void)
 
 	if (IS_ERR(mnet_device)) {
 		pr_err("Failed to create device %s", DRV_NAME);
-		return PTR_ERR(mnet_class);
+		ret = PTR_ERR(mnet_class);
+		goto error_device_add;
 	}
 
 	dev_info(mnet_device, "device mnet created succussfully\n");
@@ -326,8 +327,10 @@ static int __init mnet_init(void)
 
 		mnet_inst = devm_kzalloc(mnet_device, sizeof(*mnet_inst), GFP_KERNEL);
 
-		if (mnet_inst == NULL)
-			return -ENOMEM;
+		if (mnet_inst == NULL) {
+			ret = PTR_ERR(mnet_class);
+			goto error_device_add;
+		}
 
 		snprintf(of_node_name, sizeof(of_node_name), "mnet%d", i);
 		mnet_inst->of_node = of_find_node_by_name(NULL, of_node_name);
@@ -348,6 +351,7 @@ static int __init mnet_init(void)
 
 error_device_add:
 	device_destroy(mnet_class, mnet_major);
+	unregister_chrdev_region(mnet_dev, NUM_MNET_DEVICES);
 error_chrdev:
 	class_destroy(mnet_class);
 
@@ -359,6 +363,7 @@ static void __exit mnet_cleanup(void)
 {
 	platform_driver_unregister(&mnet_driver);
 	device_destroy(mnet_class, MKDEV(mnet_major, 0));
+	unregister_chrdev_region(mnet_dev, NUM_MNET_DEVICES);
 	class_destroy(mnet_class);
 
 	return;
