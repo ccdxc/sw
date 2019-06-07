@@ -148,9 +148,7 @@ func performRolloutUpdate(ctx context.Context, kv kvstore.Interface, txn kvstore
 	if err = kv.Get(ctx, rolloutActionObjKey, rolloutActionObj); err != nil {
 		return buf, false, errors.New("RolloutAction object not present")
 	}
-	if err = kv.Get(ctx, rolloutObjKey, &rolloutObj); err != nil {
-		return buf, false, errors.New("RolloutObject not present")
-	}
+
 	h.l.InfoLog("msg", "Updating RolloutAction & Updating Rollout")
 
 	if _, err := updateRolloutActionObj(rolloutActionObj, &buf, txn, stop); err != nil {
@@ -158,6 +156,9 @@ func performRolloutUpdate(ctx context.Context, kv kvstore.Interface, txn kvstore
 		return buf, false, err
 	}
 
+	if err = kv.Get(ctx, rolloutObjKey, &rolloutObj); err != nil {
+		return buf, false, errors.New("RolloutObject not present")
+	}
 	if err := updateRolloutObj(ctx, kv, key, &buf, stop); err != nil {
 		h.l.Errorf("Error updating rollout: %v", err)
 		return nil, false, err

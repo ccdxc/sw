@@ -375,8 +375,13 @@ func LoadAndInstallVeniceOSImage() error {
 		return errors.New(errStr)
 	}
 	log.Errorf("Going to reboot...")
-	time.Sleep(10 * time.Second)
+	time.Sleep(2 * time.Second)
 	loginConnection.Reboot(false)
+	log.Errorf("Going to Sleep...")
+	//Adding sleep so that delay in reboot shouldnt affect rollout
+	time.Sleep(100 * time.Second)
+	//execution should not reach here
+	log.Errorf("Coming out of Sleep...")
 	return err
 }
 
