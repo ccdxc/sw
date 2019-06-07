@@ -231,7 +231,6 @@ capri_program_hbm_table_base_addr (int tableid, int stage_tableid,
     }
 
     assert(stage_tableid < 16);
-    SDK_TRACE_INFO("Table name %s ", tablename);
     reg = get_mem_region(tablename);
     if (reg == NULL) {
         return;

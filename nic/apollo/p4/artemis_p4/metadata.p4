@@ -66,6 +66,7 @@ header_type rewrite_metadata_t {
         flags               : 8;
         policer_idx         : 12;
         meter_idx           : 16;
+        meter_len           : 16;
     }
 }
 

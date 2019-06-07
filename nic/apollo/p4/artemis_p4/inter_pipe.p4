@@ -36,6 +36,7 @@ action ingress_to_cps() {
     add_header(capri_p4_intrinsic);
     add_header(capri_rxdma_intrinsic);
     add_header(p4_to_rxdma);
+    add_header(p4_to_rxdma2);
     remove_header(capri_txdma_intrinsic);
     remove_header(p4plus_to_p4);
     remove_header(p4plus_to_p4_vlan);

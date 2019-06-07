@@ -33,7 +33,8 @@ session_tcp_responder:
 
 session_info_common:
     phvwr           p.rewrite_metadata_nexthop_idx, d.session_info_d.nexthop_idx
-    phvwr           p.rewrite_metadata_meter_idx, d.session_info_d.meter_idx
+    add             r1, k.capri_p4_intrinsic_packet_len, d.session_info_d.meter_idx, 16
+    phvwr           p.{rewrite_metadata_meter_idx,rewrite_metadata_meter_len}, r1
     phvwr           p.rewrite_metadata_ip, d.session_info_d.tx_dst_ip
     bbeq            k.control_metadata_direction, TX_FROM_HOST, session_tx
     phvwr           p.rewrite_metadata_l4port, d.session_info_d.tx_dst_l4port

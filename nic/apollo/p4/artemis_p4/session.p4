@@ -39,6 +39,7 @@ action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
 
     modify_field(scratch_metadata.timestamp, timestamp);
     modify_field(rewrite_metadata.meter_idx, meter_idx);
+    modify_field(rewrite_metadata.meter_len, capri_p4_intrinsic.packet_len);
     modify_field(rewrite_metadata.ip, tx_dst_ip);
     modify_field(rewrite_metadata.l4port, tx_dst_l4port);
     modify_field(rewrite_metadata.nexthop_idx, nexthop_idx);
@@ -91,10 +92,10 @@ action meter_stats() {
     } else  {
         add_to_field(scratch_metadata.meter_idx, METER_STATS_TABLE_SIZE * 8);
     }
-    modify_field(scratch_metadata.packet_len, capri_p4_intrinsic.packet_len);
+    modify_field(scratch_metadata.packet_len, rewrite_metadata.meter_len);
 }
 
-@pragma stage 2
+@pragma stage 5
 table meter_stats {
     actions {
         meter_stats;
@@ -103,5 +104,5 @@ table meter_stats {
 
 control session_lookup {
     apply(session);
-    //apply(meter_stats);
+    apply(meter_stats);
 }

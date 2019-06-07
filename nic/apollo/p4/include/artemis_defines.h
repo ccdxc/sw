@@ -161,7 +161,7 @@
 /* Header sizes                                                              */
 /*****************************************************************************/
 #define ARTEMIS_PREDICATE_HDR_SZ        0
-#define ARTEMIS_P4_TO_RXDMA_HDR_SZ      48
+#define ARTEMIS_P4_TO_RXDMA_HDR_SZ      58
 #define ARTEMIS_P4_TO_ARM_HDR_SZ        0
 #define ARTEMIS_I2E_HDR_SZ              0
 #define ARTEMIS_TXDMA_TO_P4E_HDR_SZ     0

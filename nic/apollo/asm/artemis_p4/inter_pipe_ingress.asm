@@ -15,7 +15,7 @@ ingress_to_egress:
     phvwr           p.txdma_to_p4e_valid, TRUE
     phvwr           p.predicate_header_valid, TRUE
     phvwr           p.capri_p4_intrinsic_valid, TRUE
-    bitmap ==> 0 0001 1000 1001
+    bitmap ==> 11 0001 0000 1000
     */
     phvwr           p.{ p4i_i2e_valid, \
                         txdma_to_p4e_valid, \
@@ -23,13 +23,14 @@ ingress_to_egress:
                         p4_to_p4plus_classic_nic_ip_valid, \
                         p4_to_p4plus_classic_nic_valid, \
                         predicate_header_valid, \
+                        p4_to_rxdma2_valid, \
                         p4_to_rxdma_valid, \
                         capri_rxdma_intrinsic_valid, \
                         service_header_valid, \
                         capri_p4_intrinsic_valid, \
                         p4plus_to_p4_vlan_valid, \
                         p4plus_to_p4_valid, \
-                        capri_txdma_intrinsic_valid}, 0x1888
+                        capri_txdma_intrinsic_valid}, 0x3108
     phvwr           p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
     seq             c1, k.vxlan_1_valid, TRUE
     phvwr.c1        p.{vxlan_1_valid,udp_1_valid,ipv4_1_valid,ipv6_1_valid, \
@@ -42,10 +43,11 @@ ingress_to_egress:
 .align
 ingress_to_cps:
     /*
+    phvwr           p.p4_to_rxdma2_valid, TRUE
     phvwr           p.p4_to_rxdma_valid, TRUE
     phvwr           p.capri_rxdma_intrinsic_valid, TRUE
     phvwr           p.capri_p4_intrinsic_valid, TRUE
-    bitmap ==> 0 0000 0000 0111
+    bitmap ==> 00 0000 1110 1000
     */
     phvwr           p.{ p4i_i2e_valid, \
                         txdma_to_p4e_valid, \
@@ -53,13 +55,14 @@ ingress_to_cps:
                         p4_to_p4plus_classic_nic_ip_valid, \
                         p4_to_p4plus_classic_nic_valid, \
                         predicate_header_valid, \
+                        p4_to_rxdma2_valid, \
                         p4_to_rxdma_valid, \
                         capri_rxdma_intrinsic_valid, \
                         service_header_valid, \
                         capri_p4_intrinsic_valid, \
                         p4plus_to_p4_vlan_valid, \
                         p4plus_to_p4_valid, \
-                        capri_txdma_intrinsic_valid}, 0x068 
+                        capri_txdma_intrinsic_valid}, 0x00E8
     phvwr           p.capri_intrinsic_tm_oport, TM_PORT_DMA
     phvwr           p.capri_intrinsic_lif, ARTEMIS_SERVICE_LIF
     phvwr           p.capri_rxdma_intrinsic_rx_splitter_offset, \
