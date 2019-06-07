@@ -33,8 +33,8 @@ vpc_entry::factory(pds_vpc_spec_t *spec) {
     // create vpc entry with defaults, if any
     vpc = vpc_db()->alloc();
     if (vpc) {
-        vpc->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_VPC, spec);
         new (vpc) vpc_entry();
+        vpc->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_VPC, spec);
     }
     return vpc;
 }
