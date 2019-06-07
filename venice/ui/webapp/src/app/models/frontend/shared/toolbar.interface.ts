@@ -12,6 +12,7 @@ export interface ToolbarButton {
   cssClass?: string;
   callback: (...args: any[]) => void;
   computeClass?: any;
+  genTooltip?: () => string;
 }
 
 export interface SplitButton {

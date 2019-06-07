@@ -17,6 +17,7 @@
       </p-splitButton>
     </span>
     <span *ngFor="let button of buttons" class="toolbar-button"
+          [matTooltip]="button.genTooltip != null ? button.genTooltip() : ''"
           [ngClass]="[button.cssClass != null ? button.cssClass : '', button.computeClass != null ? button.computeClass() : '' ]"
           (click)="buttonCallback($event, button)">
       {{button.text}}

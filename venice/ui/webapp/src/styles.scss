@@ -54,7 +54,10 @@
 
   /* Button styling */
   .global-button-disabled {
-    pointer-events: none;
+    &:active {
+      pointer-events: none;
+    }
+
     opacity: 0.3;
     cursor: default;
   }

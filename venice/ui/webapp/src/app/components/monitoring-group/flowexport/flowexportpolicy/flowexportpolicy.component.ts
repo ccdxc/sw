@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, Input, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, ViewEncapsulation, IterableDiffer, IterableDiffers, DoCheck } from '@angular/core';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
@@ -10,6 +10,7 @@ import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tabl
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { TableCol } from '@app/components/shared/tableviewedit';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
 
 @Component({
   selector: 'app-flowexportpolicy',
@@ -18,7 +19,10 @@ import { TableCol } from '@app/components/shared/tableviewedit';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoringFlowExportPolicy, MonitoringFlowExportPolicy> {
+export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoringFlowExportPolicy, MonitoringFlowExportPolicy> implements DoCheck {
+  public static MAX_TARGETS_PER_POLICY = 2;
+  public static MAX_TOTAL_TARGETS = 8;
+
   @Input() dataObjects: ReadonlyArray<MonitoringFlowExportPolicy> = [];
 
   headerIcon: Icon = {
@@ -36,16 +40,26 @@ export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoring
   ];
 
   exportFilename: string = 'Venice-flow-export-policies';
-
   isTabComponent = false;
   disableTableWhenRowExpanded = true;
+  maxNewTargets: number = FlowexportpolicyComponent.MAX_TARGETS_PER_POLICY;
+  arrayDiffers: IterableDiffer<any>;
+
 
   constructor(protected controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected cdr: ChangeDetectorRef,
-    protected monitoringService: MonitoringService) {
-    super(controllerService, cdr);
+    protected monitoringService: MonitoringService,
+    protected _iterableDiffers: IterableDiffers) {
+      super(controllerService, cdr);
+      this.arrayDiffers = _iterableDiffers.find([]).create(HttpEventUtility.trackBy);
+    }
+
+
+  postNgInit() {
+    this.maxNewTargets = this.computetargets();
   }
+
 
   setDefaultToolbar() {
     let buttons = [];
@@ -53,7 +67,8 @@ export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoring
       buttons = [{
         cssClass: 'global-button-primary flowexportpolicy-button',
         text: 'ADD FlOW EXPORT',
-        computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
+       genTooltip: () => this.getTooltip(),
+        computeClass: () => this.shouldEnableButtons && this.maxNewTargets > 0 ? '' : 'global-button-disabled',
         callback: () => { this.createNewObject(); }
       }];
     }
@@ -64,9 +79,19 @@ export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoring
       ]
     });
   }
+  getTooltip(): string {
+    return this.maxNewTargets === 0 ? 'Cannot exceed 8 targets across policies' : '';
+  }
 
   getClassName(): string {
     return this.constructor.name;
+  }
+
+  ngDoCheck() {
+    const changes = this.arrayDiffers.diff(this.dataObjects);
+    if (changes) {
+      this.maxNewTargets = this.computetargets();
+    }
   }
 
   displayColumn(exportData, col): any {
@@ -140,6 +165,15 @@ export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoring
 
   generateDeleteSuccessMsg(object: IMonitoringFlowExportPolicy) {
     return 'Deleted policy ' + object.meta.name;
+  }
+
+  computetargets(): number {
+    let totaltargets: number = 0;
+    for (const i of this.dataObjects) {
+      totaltargets += i.spec.exports.length;
+    }
+    const remainder = FlowexportpolicyComponent.MAX_TOTAL_TARGETS - totaltargets;
+    return Math.min(remainder, FlowexportpolicyComponent.MAX_TARGETS_PER_POLICY);
   }
 
 }

@@ -14,7 +14,8 @@
 
 
 <ng-template #createTemplate>
-  <app-newflowexportpolicy (formClose)="creationFormClose()" fxFlex="none">
+  <app-newflowexportpolicy (formClose)="creationFormClose()" [maxTargets]="maxNewTargets"
+                           fxFlex="none">
   </app-newflowexportpolicy>
 </ng-template>
 
@@ -51,6 +52,7 @@
 </ng-template>
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
-  <app-newflowexportpolicy [policyData]="rowData" [isInline]="true" (formClose)="closeRowExpand()">
+  <app-newflowexportpolicy [policyData]="rowData" [isInline]="true" [maxTargets]="maxNewTargets"
+                           (formClose)="closeRowExpand()">
   </app-newflowexportpolicy>
 </ng-template>

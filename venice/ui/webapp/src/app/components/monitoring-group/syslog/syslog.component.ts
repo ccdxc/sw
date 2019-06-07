@@ -18,6 +18,7 @@ export class SyslogComponent extends BaseComponent implements OnInit {
   @Input() syslogExport: IMonitoringSyslogExport;
   @Input() showSyslogOptions: boolean = true;
   @Input() formatOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringSyslogExport.propInfo['format'].enum);
+  @Input() maxTargets: number;
   syslogServerForm: FormGroup;
 
   syslogOverrideOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringSyslogExportConfig.propInfo['facility-override'].enum);

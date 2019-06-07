@@ -26,6 +26,7 @@ export class NewflowexportpolicyComponent extends BaseComponent implements OnIni
 
   @Input() isInline: boolean = false;
   @Input() policyData: IMonitoringFlowExportPolicy;
+  @Input() maxTargets: number;
   @Output() formClose: EventEmitter<any> = new EventEmitter();
 
   syslogConfig: IMonitoringSyslogExport;
