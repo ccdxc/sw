@@ -95,9 +95,10 @@ class TestSuite:
             self.__setups = self.__spec.common.setups
 
     def __import_testbundles(self):
-        for bunfile in self.__spec.testbundles.sanity:
-            tbun = testbundle.TestBundle(bunfile, self)
-            self.__testbundles.append(tbun)
+        if not GlobalOptions.skip_sanity:
+            for bunfile in self.__spec.testbundles.sanity:
+                tbun = testbundle.TestBundle(bunfile, self)
+                self.__testbundles.append(tbun)
 
         if GlobalOptions.regression:
             for bunfile in getattr(self.__spec.testbundles, 'regression', []):
