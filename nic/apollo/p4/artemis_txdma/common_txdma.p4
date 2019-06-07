@@ -1051,30 +1051,29 @@ control common_tx_p4plus_stage0 {
     apply(tx_table_s0_t0);
 }
 
-
 parser start {
     return ingress;
 }
 
-
 control ingress {
     common_tx_p4plus_stage0();
-    if (app_header.table3_valid == 1) {
-        read_qstate();
-        route_lookup();
-        rfc();
-        dma();
+    if (txdma_control.cps_path_en == 1) {
+        if (txdma_control.pass_skip == 0) {
+            // LPM Tables does set the mapping_en predicate bit in pass 1 as follows:
+            //   = 0 for NH_TYPE= VNET or WORKLOAD  (then launch Mapping table based on vnet/vpc id)
+            //   = 1 for NH_TYPE= ST or WORKLOAD  (then launch Remote_46_Mapping table based on svc id)
+            // TODO-KSM: Both Action routines would reset this mapping_en bit
+            if (txdma_control.pass_two == 0) {
+                read_qstate();
+            } else {
+                vnic_info_txdma();
+                mapping();
+                remote_46_mapping();
+            }
 
-        vnic_info_txdma();
-
-        // LPM Tables does set the table2_valid predicate bit in pass 1 as follows:
-        //   = 0 for NH_TYPE= VNET or WORKLOAD  (then launch Mapping table based on vnet/vpc id)
-        //   = 1 for NH_TYPE= ST or WORKLOAD  (then launch Remote_46_Mapping table based on svc id)
-        // TODO-KSM: Both Action routines would reset this table2_valid bit
-        if (app_header.table2_valid == 1) {
-            mapping();
-        } else {
-            remote_46_mapping();
+            route_lookup();
+            rfc();
+            dma();
         }
     } else {
         if (app_header.table0_valid == 1) {

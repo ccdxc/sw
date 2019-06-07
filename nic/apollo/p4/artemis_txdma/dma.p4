@@ -11,8 +11,14 @@ table pkt_dma_setup {
 }
 
 action pkt_dma() {
-    modify_field(scratch_metadata.lif, capri_intr.lif);
-    modify_field(scratch_qstate_hdr.c_index0, txdma_control.cindex);
+    if (capri_p4_intr.recirc_count == 0) {
+        modify_field(scratch_metadata.lif, capri_intr.lif);
+        modify_field(scratch_qstate_hdr.c_index0, txdma_control.cindex);
+        modify_field(txdma_control.pass_two, TRUE);
+        modify_field(capri_p4_intr.recirc, TRUE);
+    } else {
+        modify_field(capri_p4_intr.recirc, FALSE);
+    }
 }
 
 @pragma stage 7

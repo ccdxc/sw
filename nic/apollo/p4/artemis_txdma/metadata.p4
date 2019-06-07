@@ -3,6 +3,12 @@
 
 header_type txdma_control_metadata_t {
     fields {
+        p4plus_app_id       : 4;
+        mapping_en          : 1;
+        pass_two            : 1;
+        pass_skip           : 1;
+        cps_path_en         : 1;
+
         pktdesc_addr        : 40;
         rxdma_cindex_addr   : 40;
         rfc_table_addr      : 40;
@@ -63,6 +69,7 @@ header_type scratch_metadata_t {
 
 // PHV instantiation
 @pragma dont_trim
+@pragma pa_header_union ingress app_header
 metadata txdma_control_metadata_t txdma_control;
 
 @pragma dont_trim

@@ -1,14 +1,17 @@
 #include "artemis_txdma.h"
 #include "INGRESS_p.h"
 #include "ingress.h"
+#include "INGRESS_tx_table_s0_t0_k.h"
 
 struct phv_                 p;
-struct read_qstate_k        k;
+struct tx_table_s0_t0_k_    k;
 struct read_qstate_d        d;
 
 %%
 
 read_qstate_info:
+    sne         c1, k.capri_p4_intr_recirc_count, 0
+    nop.c1.e
     seq         c2, d.read_qstate_info_d.sw_cindex0, \
                     d.{read_qstate_info_d.p_index0}.hx
     bcf         [c2], txdma_q_empty
@@ -30,8 +33,8 @@ read_qstate_info:
     phvwr.f     p.txdma_control_payload_addr, r2
 
 txdma_q_empty:
-    phvwr.e     p.capri_intr_drop, 1
-    nop
+    phvwr.e     p.txdma_control_pass_skip, TRUE
+    phvwr.f     p.capri_intr_drop, 1
 
 /*****************************************************************************/
 /* error function                                                            */
