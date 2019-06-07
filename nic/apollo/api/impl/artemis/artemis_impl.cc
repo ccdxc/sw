@@ -766,21 +766,33 @@ artemis_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
 
 sdk_ret_t
 artemis_impl::table_transaction_begin(void) {
+    vpc_impl_db()->table_transaction_begin();
     vnic_impl_db()->table_transaction_begin();
     mapping_impl_db()->table_transaction_begin();
     route_table_impl_db()->table_transaction_begin();
     security_policy_impl_db()->table_transaction_begin();
     meter_impl_db()->table_transaction_begin();
+    nexthop_impl_db()->table_transaction_begin();
+    svc_mapping_impl_db()->table_transaction_begin();
+    tag_impl_db()->table_transaction_begin();
+    tep_impl_db()->table_transaction_begin();
+    vpc_peer_impl_db()->table_transaction_begin();
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 artemis_impl::table_transaction_end(void) {
+    vpc_impl_db()->table_transaction_end();
     vnic_impl_db()->table_transaction_end();
     mapping_impl_db()->table_transaction_end();
     route_table_impl_db()->table_transaction_end();
     security_policy_impl_db()->table_transaction_end();
     meter_impl_db()->table_transaction_end();
+    nexthop_impl_db()->table_transaction_end();
+    svc_mapping_impl_db()->table_transaction_end();
+    tag_impl_db()->table_transaction_end();
+    tep_impl_db()->table_transaction_end();
+    vpc_peer_impl_db()->table_transaction_end();
     return SDK_RET_OK;
 }
 

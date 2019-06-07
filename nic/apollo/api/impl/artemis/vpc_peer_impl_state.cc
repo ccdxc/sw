@@ -66,13 +66,13 @@ vpc_peer_impl_state::free(vpc_peer_impl *impl) {
 
 sdk_ret_t
 vpc_peer_impl_state::table_transaction_begin(void) {
-    vpc_peer_tbl_->txn_start();
+    //vpc_peer_tbl_->txn_start();
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 vpc_peer_impl_state::table_transaction_end(void) {
-    vpc_peer_tbl_->txn_end();
+    //vpc_peer_tbl_->txn_end();
     return SDK_RET_OK;
 }
 
