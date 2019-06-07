@@ -125,7 +125,7 @@ export const eventTypes: { [name: string]: EventType } = {
   },
   'NIC_HEALTH_UNKNOWN' : {
       "Name": "NIC_HEALTH_UNKNOWN",
-      "Severity": EventsEvent_severity.WARN,
+      "Severity": EventsEvent_severity.CRITICAL,
       "Desc": "NIC health transitioned to &#x27;unknown&#x27;",
   },
   'NIC_REJECTED' : {
