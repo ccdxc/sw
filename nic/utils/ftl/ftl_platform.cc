@@ -48,7 +48,7 @@ memwr(FTL_MAKE_AFTYPE(apictx) *ctx) {
     auto basepa = ctx->level ? ctx->props->stable_base_mem_pa :
                                ctx->props->ptable_base_mem_pa;
     auto size = ctx->table_index * sizeof(FTL_MAKE_AFTYPE(entry_t));
-    capri_hbm_table_entry_cache_invalidate(true, size, basepa);
+    capri_hbm_table_entry_cache_invalidate(P4_TBL_CACHE_INGRESS, size, 1, basepa);
 #endif
 
     return SDK_RET_OK;

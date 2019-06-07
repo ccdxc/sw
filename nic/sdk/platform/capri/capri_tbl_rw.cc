@@ -222,6 +222,8 @@ capri_program_hbm_table_base_addr (int tableid, int stage_tableid,
 {
     mem_addr_t va, start_offset;
     uint64_t size;
+    mpartition_region_t *reg;
+    p4pd_table_cache_t cache = P4_TBL_CACHE_NONE;
 
     if (strcmp(tablename, MEM_REGION_RSS_INDIR_TABLE_NAME) == 0) {
         // TODO: Work with Neel to clean capri_toeplitz_init
@@ -229,20 +231,42 @@ capri_program_hbm_table_base_addr (int tableid, int stage_tableid,
     }
 
     assert(stage_tableid < 16);
-    start_offset = get_mem_addr(tablename);
-    SDK_TRACE_DEBUG("===HBM Tbl Name: %s, Stage: %d, StageTblID: %u, "
-                    "Addr: 0x%lx}===",
-                    tablename, stage, stage_tableid, start_offset);
-    if (start_offset == INVALID_MEM_ADDRESS) {
+    SDK_TRACE_INFO("Table name %s ", tablename);
+    reg = get_mem_region(tablename);
+    if (reg == NULL) {
         return;
     }
+
+    start_offset = get_mem_addr(tablename);
     size = get_mem_size_kb(tablename) << 10;
+
+    if (is_region_cache_pipe_p4_ig(reg)) {
+        cache = P4_TBL_CACHE_INGRESS;
+    } else if (is_region_cache_pipe_p4_eg(reg)) {
+        cache = P4_TBL_CACHE_EGRESS;
+    } else if (is_region_cache_pipe_p4plus_txdma(reg)) {
+        cache = P4_TBL_CACHE_TXDMA;
+    } else if (is_region_cache_pipe_p4plus_rxdma(reg)) {
+        cache = P4_TBL_CACHE_RXDMA;
+    } else if (is_region_cache_pipe_p4plus_all(reg)) {
+        cache = P4_TBL_CACHE_TXDMA_RXDMA;
+    }
+
+    SDK_TRACE_DEBUG("HBM Tbl Name %s, TblID %u, Stage %d, StageTblID %u, "
+                    "Addr 0x%lx",
+                    tablename, tableid, stage, stage_tableid, start_offset);
     // save the info in the table for future use
     if (tableid >= 0) {
         va = (mem_addr_t)sdk::lib::pal_mem_map(start_offset, size);
-        SDK_TRACE_DEBUG("Table %s, pa 0x%llx, va 0x%lx, sz %llu",
-                        tablename, start_offset, va, size);
-        p4pd_global_hbm_table_address_set(tableid, start_offset, va);
+        SDK_TRACE_DEBUG(
+            " PA 0x%llx, VA 0x%lx, SZ %llu, Cache %d(%s)", start_offset, va,
+            size, cache,
+            cache == P4_TBL_CACHE_INGRESS ? "Ingress"
+                : cache == P4_TBL_CACHE_EGRESS ? "Egress"
+                : cache == P4_TBL_CACHE_TXDMA ? "Txdma"
+                : cache == P4_TBL_CACHE_RXDMA ? "Rxdma"
+                : cache == P4_TBL_CACHE_TXDMA_RXDMA ? "Txdma/Rxdma" : "None");
+        p4pd_global_hbm_table_address_set(tableid, start_offset, va, cache);
     }
 
     if (sdk::asic::is_slave_init())
@@ -321,8 +345,8 @@ capri_program_p4plus_table_mpu_pc (int tableid, int stage_tbl_id, int stage)
     if (pc == 0) {
         return;
     }
-    SDK_TRACE_DEBUG("====Pipe: %s Stage: %d Tbl_id: %u, Stg_Tbl_id %u, "
-                    "Tbl base: 0x%lx====", ((pipe_rxdma) ? "RxDMA" : "TxDMA"),
+    SDK_TRACE_DEBUG("Pipe %s, Stage %d, Tbl_id %u, Stg_Tbl_id %u, "
+                    "Tbl base 0x%lx", ((pipe_rxdma) ? "RxDMA" : "TxDMA"),
                     stage, tableid, stage_tbl_id, pc);
     te_csr->cfg_table_property[stage_tbl_id].read();
     te_csr->cfg_table_property[stage_tbl_id].mpu_pc(pc >> 6);
@@ -1544,20 +1568,21 @@ capri_hbm_table_entry_write (uint32_t tableid,
                              uint32_t index,
                              uint8_t *hwentry,
                              uint16_t entry_size,
-                             p4_table_mem_layout_t &tbl_info)
+                             uint16_t entry_width,
+                             p4pd_table_properties_t *tbl_info)
 {
     mem_addr_t entry_start_addr, addr;
 
     time_profile_begin(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_WRITE);
-    assert((entry_size >> 3) <= tbl_info.entry_width);
-    assert(index < tbl_info.tabledepth);
-    entry_start_addr = (index * tbl_info.entry_width);
+    assert((entry_size >> 3) <= entry_width);
+    assert(index < tbl_info->tabledepth);
+    entry_start_addr = (index * entry_width);
 
-    if (tbl_info.base_mem_va) {
-        addr = tbl_info.base_mem_va + entry_start_addr;
+    if (tbl_info->base_mem_va) {
+        addr = tbl_info->base_mem_va + entry_start_addr;
         sdk::asic::asic_vmem_write(addr, hwentry, (entry_size >> 3));
-    } else if (tbl_info.base_mem_pa) {
-        addr  = tbl_info.base_mem_pa + entry_start_addr;
+    } else if (tbl_info->base_mem_pa) {
+        addr  = tbl_info->base_mem_pa + entry_start_addr;
         sdk::asic::asic_mem_write(addr, hwentry, (entry_size >> 3));
     } else {
         SDK_ASSERT(0);
@@ -1566,25 +1591,47 @@ capri_hbm_table_entry_write (uint32_t tableid,
     return CAPRI_OK;
 }
 
+static void
+p4_invalidate_cache (uint64_t addr, uint32_t size_in_bytes, p4pd_table_cache_t cache)
+{
+    while ((int)size_in_bytes > 0) {
+        uint32_t claddr = (addr >> CACHE_LINE_SIZE_SHIFT) << 1;
+        if (cache == P4_TBL_CACHE_INGRESS) {
+            if (csr_cache_inval_ingress_va) {
+                *csr_cache_inval_ingress_va = claddr;
+            } else {
+                sdk::lib::pal_reg_write(CSR_CACHE_INVAL_INGRESS_REG_ADDR, &claddr, 1);
+            }
+        } else {
+            if (csr_cache_inval_egress_va) {
+                *csr_cache_inval_egress_va = claddr;
+            } else {
+                sdk::lib::pal_reg_write(CSR_CACHE_INVAL_EGRESS_REG_ADDR, &claddr, 1);
+            }
+        }
+        size_in_bytes -= CACHE_LINE_SIZE;
+        addr += CACHE_LINE_SIZE;
+    }
+}
+
 int
-capri_hbm_table_entry_cache_invalidate (bool ingress,
+capri_hbm_table_entry_cache_invalidate (p4pd_table_cache_t cache,
                                         uint64_t entry_addr,
+                                        uint16_t entry_width,
                                         mem_addr_t base_mem_pa)
 {
     time_profile_begin(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_CACHE_INVALIDATE);
-    uint32_t claddr = ((base_mem_pa + entry_addr) >> CACHE_LINE_SIZE_SHIFT) << 1;
-    if (ingress) {
-        if (csr_cache_inval_ingress_va) {
-            *csr_cache_inval_ingress_va = claddr;
-        } else {
-            sdk::lib::pal_reg_write(CSR_CACHE_INVAL_INGRESS_REG_ADDR, &claddr, 1);
-        }
+    uint64_t addr = (base_mem_pa + entry_addr);
+    if (cache == P4_TBL_CACHE_INGRESS || cache == P4_TBL_CACHE_EGRESS) {
+        p4_invalidate_cache(addr, entry_width, cache);
+    } else if (cache == P4_TBL_CACHE_TXDMA_RXDMA) {
+        p4plus_invalidate_cache(addr, entry_width, P4PLUS_CACHE_INVALIDATE_BOTH);
+    } else if (cache == P4_TBL_CACHE_TXDMA) {
+        p4plus_invalidate_cache(addr, entry_width, P4PLUS_CACHE_INVALIDATE_TXDMA);
+    } else if (cache == P4_TBL_CACHE_RXDMA) {
+        p4plus_invalidate_cache(addr, entry_width, P4PLUS_CACHE_INVALIDATE_RXDMA);
     } else {
-        if (csr_cache_inval_egress_va) {
-            *csr_cache_inval_egress_va = claddr;
-        } else {
-            sdk::lib::pal_reg_write(CSR_CACHE_INVAL_EGRESS_REG_ADDR, &claddr, 1);
-        }
+        SDK_ASSERT(0);
     }
     time_profile_end(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_CACHE_INVALIDATE);
     return CAPRI_OK;

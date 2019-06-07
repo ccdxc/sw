@@ -161,6 +161,7 @@ p4pluspd_rxdma_tbl_packing_json_parse (p4pd_cfg_t *cfg)
         tbl->stage = p4_tbl.second.get<int>(JSON_KEY_STAGE);
         tbl->stage_tableid = p4_tbl.second.get<int>(JSON_KEY_STAGE_TBL_ID);
         tbl->tabledepth = p4_tbl.second.get<int>(JSON_KEY_NUM_ENTRIES);
+        tbl->pipe = P4_PIPELINE_RXDMA;
 
         /* Memory units used by the table */
         boost::optional<pt::ptree&>_tcam = p4_tbl.second.get_child_optional(JSON_KEY_TCAM);
@@ -235,13 +236,15 @@ p4pluspd_rxdma_init (p4pd_cfg_t *cfg)
 // set hbm address and mapped address
 //----------------------------------------------------------------------------
 void
-p4pd_rxdma_hbm_table_address_set (uint32_t tableid, mem_addr_t pa, mem_addr_t va)
+p4pd_rxdma_hbm_table_address_set (uint32_t tableid, mem_addr_t pa,
+                                  mem_addr_t va, p4pd_table_cache_t cache)
 {
     p4pd_table_properties_t *tbl;
 
     tbl = _p4plus_rxdma_tbls + tableid;
     tbl->base_mem_pa = pa;
     tbl->base_mem_va = va;
+    tbl->cache = cache;
 }
 
 /* P4PD API that uses tableID to return table properties that HAL

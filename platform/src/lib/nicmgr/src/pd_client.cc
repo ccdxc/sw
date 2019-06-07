@@ -80,23 +80,7 @@ PdClient::p4plus_rxdma_init_tables()
     uint32_t                   tid;
     p4pd_table_properties_t    tinfo;
     p4pd_error_t               rc;
-#if defined(APOLLO)
-    p4pd_cfg_t                 p4pd_cfg = {
-            .table_map_cfg_file  = "apollo/capri_rxdma_table_map.json",
-            .p4pd_pgm_name       = "apollo",
-            .p4pd_rxdma_pgm_name = "p4plus",
-            .p4pd_txdma_pgm_name = "p4plus",
-            .cfg_path            = hal_cfg_path_.c_str(),
-    };
-#elif defined(ARTEMIS)
-    p4pd_cfg_t                 p4pd_cfg = {
-            .table_map_cfg_file  = "artemis/capri_rxdma_table_map.json",
-            .p4pd_pgm_name       = "artemis",
-            .p4pd_rxdma_pgm_name = "p4plus",
-            .p4pd_txdma_pgm_name = "p4plus",
-            .cfg_path            = hal_cfg_path_.c_str(),
-    };
-#else
+#if !defined(APOLLO) && !defined(ARTEMIS)
     p4pd_cfg_t                 p4pd_cfg = {
             .table_map_cfg_file  = "iris/capri_p4_rxdma_table_map.json",
             .p4pd_pgm_name       = "iris",
@@ -104,14 +88,13 @@ PdClient::p4plus_rxdma_init_tables()
             .p4pd_txdma_pgm_name = "p4plus",
             .cfg_path            = hal_cfg_path_.c_str(),
     };
-#endif
-
-    memset(&tinfo, 0, sizeof(tinfo));
 
     // parse the NCC generated table info file for p4+ tables
     rc = p4pluspd_rxdma_init(&p4pd_cfg);
     assert(rc == P4PD_SUCCESS);
+#endif
 
+    memset(&tinfo, 0, sizeof(tinfo));
     // start instantiating tables based on the parsed information
     p4plus_rxdma_dm_tables_ =
             (directmap **)calloc(sizeof(directmap *),
@@ -155,23 +138,7 @@ PdClient::p4plus_txdma_init_tables()
     uint32_t                   tid;
     p4pd_table_properties_t    tinfo;
     p4pd_error_t               rc;
-#if defined(APOLLO)
-    p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file  = "apollo/capri_txdma_table_map.json",
-        .p4pd_pgm_name       = "apollo",
-        .p4pd_rxdma_pgm_name = "p4plus",
-        .p4pd_txdma_pgm_name = "p4plus",
-        .cfg_path            = hal_cfg_path_.c_str(),
-    };
-#elif defined(ARTEMIS)
-    p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file  = "artemis/capri_txdma_table_map.json",
-        .p4pd_pgm_name       = "artemis",
-        .p4pd_rxdma_pgm_name = "p4plus",
-        .p4pd_txdma_pgm_name = "p4plus",
-        .cfg_path            = hal_cfg_path_.c_str(),
-    };
-#else
+#if !defined(APOLLO) && !defined(ARTEMIS)
     p4pd_cfg_t                 p4pd_cfg = {
         .table_map_cfg_file  = "iris/capri_p4_txdma_table_map.json",
         .p4pd_pgm_name       = "iris",
@@ -179,14 +146,13 @@ PdClient::p4plus_txdma_init_tables()
         .p4pd_txdma_pgm_name = "p4plus",
         .cfg_path            = hal_cfg_path_.c_str(),
     };
-#endif
-
-    memset(&tinfo, 0, sizeof(tinfo));
 
     // parse the NCC generated table info file for p4+ tables
     rc = p4pluspd_txdma_init(&p4pd_cfg);
     assert(rc == P4PD_SUCCESS);
+#endif
 
+    memset(&tinfo, 0, sizeof(tinfo));
     // start instantiating tables based on the parsed information
     p4plus_txdma_dm_tables_ =
         (directmap **)calloc(sizeof(directmap *),
@@ -399,7 +365,7 @@ void PdClient::init(fwd_mode_t fwd_mode)
     lm_ = lif_mgr::factory(kNumMaxLIFs, mp_, kLif2QstateHBMLabel);
     assert(lm_);
 
-#if !defined(APOLLO) || !defined(ARTEMIS)
+#if !defined(APOLLO) && !defined(ARTEMIS)
     NIC_LOG_DEBUG("Initializing table rw ...");
     ret = capri_p4plus_table_rw_init();
     assert(ret == 0);

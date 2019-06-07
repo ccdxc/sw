@@ -531,20 +531,17 @@ asicpd_hbm_table_entry_write (uint32_t tableid,
 {
     int ret;
     p4pd_table_properties_t tbl_ctx;
-    p4_table_mem_layout_t cap_tbl_info = {0};
 
     time_profile_begin(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_WRITE);
     p4pd_global_table_properties_get(tableid, &tbl_ctx);
-    sdk::asic::pd::asicpd_copy_capri_table_info(&cap_tbl_info,
-                                                &tbl_ctx.hbm_layout, &tbl_ctx);
-    ret = capri_hbm_table_entry_write(tableid, index, hwentry,
-                                      entry_size, cap_tbl_info);
+    ret = capri_hbm_table_entry_write(tableid, index, hwentry, entry_size,
+                                      tbl_ctx.hbm_layout.entry_width, &tbl_ctx);
 
-    uint64_t entry_addr = (index * cap_tbl_info.entry_width);
-    ret |= capri_hbm_table_entry_cache_invalidate(tbl_ctx.gress == P4_GRESS_INGRESS,
+    uint64_t entry_addr = (index * tbl_ctx.hbm_layout.entry_width);
+    ret |= capri_hbm_table_entry_cache_invalidate(tbl_ctx.cache,
                                                   entry_addr,
-                                                  cap_tbl_info.base_mem_pa);
-
+                                                  tbl_ctx.hbm_layout.entry_width,
+                                                  tbl_ctx.base_mem_pa);
 #if SDK_LOG_TABLE_WRITE
     char    buffer[2048];
     memset(buffer, 0, sizeof(buffer));

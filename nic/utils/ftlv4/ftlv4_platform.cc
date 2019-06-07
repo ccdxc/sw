@@ -88,8 +88,8 @@ ftlv4_platform_write(ftlv4_apictx *ctx) {
     auto baseaddr = ctx->level ? ctx->props->stable_base_mem_pa :
                                  ctx->props->ptable_base_mem_pa;
     capri_hbm_table_entry_cache_invalidate(
-        true,    // ctx->props->gress == P4_GRESS_INGRESS,
-        ctx->table_index * sizeof(ftlv4_entry_t), baseaddr);
+        P4_TBL_CACHE_INGRESS,    // ctx->props->cache,
+        ctx->table_index * sizeof(ftlv4_entry_t), 1, baseaddr);
 #endif
 
     return SDK_RET_OK;

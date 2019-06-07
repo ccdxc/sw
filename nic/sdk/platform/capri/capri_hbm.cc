@@ -83,7 +83,7 @@ get_mem_size_kb (const char *reg_name)
 }
 
 mpartition_region_t *
-get_hbm_region (char *reg_name)
+get_mem_region (char *reg_name)
 {
     return g_capri_state_pd->mempartition()->region(reg_name);
 }

@@ -101,10 +101,12 @@ int capri_hbm_table_entry_write(uint32_t tableid,
                                 uint32_t index,
                                 uint8_t *hwentry,
                                 uint16_t entry_size,
-                                p4_table_mem_layout_t &tbl_info);
+                                uint16_t entry_width,
+                                p4pd_table_properties_t *tbl_info);
 
-int capri_hbm_table_entry_cache_invalidate(bool ingress,
+int capri_hbm_table_entry_cache_invalidate(p4pd_table_cache_t cache,
                                            uint64_t entry_addr,
+                                           uint16_t entry_width,
                                            mem_addr_t base_mem_pa);
 
 int capri_hbm_table_entry_read(uint32_t tableid,

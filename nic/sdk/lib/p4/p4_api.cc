@@ -345,6 +345,13 @@ p4pd_tbl_packing_json_parse (p4pd_cfg_t *p4pd_cfg)
         tbl->stage_tableid = p4_tbl.second.get<int>(JSON_KEY_STAGE_TBL_ID);
         tbl->tabledepth = p4_tbl.second.get<int>(JSON_KEY_NUM_ENTRIES);
 
+        // set pipeline
+        if (tbl->gress == P4_GRESS_INGRESS) {
+            tbl->pipe = P4_PIPELINE_INGRESS;
+        } else {
+            tbl->pipe = P4_PIPELINE_EGRESS;
+        }
+
         // memory units used by the table
         boost::optional<pt::ptree&>_tcam = p4_tbl.second.get_child_optional(JSON_KEY_TCAM);
         if (_tcam) {
@@ -422,14 +429,16 @@ p4pd_init (p4pd_cfg_t *p4pd_cfg)
 //----------------------------------------------------------------------------
 // set hbm address and mapped address
 //----------------------------------------------------------------------------
-void
-p4pd_hbm_table_address_set (uint32_t tableid, mem_addr_t pa, mem_addr_t va)
+static void
+p4pd_hbm_table_address_set (uint32_t tableid, mem_addr_t pa, mem_addr_t va,
+                            p4pd_table_cache_t cache)
 {
     p4pd_table_properties_t *tbl;
 
     tbl = _p4tbls + tableid;
     tbl->base_mem_pa = pa;
     tbl->base_mem_va = va;
+    tbl->cache = cache;
 }
 
 //-----------------------------------------------------------------------------
@@ -630,17 +639,17 @@ p4pd_global_actiondata_hwfield_get (uint32_t tableid, uint8_t actionid,
 
 void
 p4pd_global_hbm_table_address_set (uint32_t tableid, mem_addr_t pa,
-                                   mem_addr_t va)
+                                   mem_addr_t va, p4pd_table_cache_t cache)
 {
     if ((tableid >= p4pd_tableid_min_get()) &&
         (tableid <= p4pd_tableid_max_get())) {
-        p4pd_hbm_table_address_set(tableid, pa, va);
+        p4pd_hbm_table_address_set(tableid, pa, va, cache);
     } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
                (tableid <= p4pd_rxdma_tableid_max_get())) {
-        p4pd_rxdma_hbm_table_address_set(tableid, pa, va);
+        p4pd_rxdma_hbm_table_address_set(tableid, pa, va, cache);
     } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
                (tableid <= p4pd_txdma_tableid_max_get())) {
-        p4pd_txdma_hbm_table_address_set(tableid, pa, va);
+        p4pd_txdma_hbm_table_address_set(tableid, pa, va, cache);
     } else {
         SDK_ASSERT(0);
     }

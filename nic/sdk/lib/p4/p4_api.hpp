@@ -79,6 +79,15 @@ typedef enum p4pd_pipeline_ {
     P4_PIPELINE_TXDMA
 } p4pd_pipeline_t;
 
+typedef enum p4pd_table_cache_ {
+    P4_TBL_CACHE_NONE           = 0,
+    P4_TBL_CACHE_INGRESS,
+    P4_TBL_CACHE_EGRESS,
+    P4_TBL_CACHE_TXDMA,
+    P4_TBL_CACHE_RXDMA,
+    P4_TBL_CACHE_TXDMA_RXDMA
+} p4pd_table_cache_t;
+
 typedef struct p4pd_table_mem_layout_ {
     uint16_t    entry_width;    /* In units of memory words.. 16b  in case of PIPE tables */
                                 /* In units of bytes in case of HBM table */
@@ -120,6 +129,8 @@ typedef struct p4pd_table_properties_ {
     p4pd_table_mem_layout_t hbm_layout; /* Only if HBM table.. */
     mem_addr_t              base_mem_pa; /* physical addres in memory */
     mem_addr_t              base_mem_va; /* virtual  address in memory */
+    p4pd_table_cache_t      cache; /* Cache region info. Valid only for memory based tables */
+    p4pd_pipeline_t         pipe; /* Pipeline this table belongs to */
     uint8_t                 table_thread_count; /* Number of table execution threads. Min 1 */
     uint8_t                 thread_table_id[P4PD_TABLE_MAX_CONCURRENCY];
 } p4pd_table_properties_t;
@@ -554,8 +565,8 @@ extern void p4pluspd_rxdma_cleanup();
 extern p4pd_error_t p4pluspd_rxdma_table_properties_get(uint32_t tableid,
     p4pd_table_properties_t *tbl_ctx);
 extern void p4pd_rxdma_hbm_table_address_set(uint32_t tableid, mem_addr_t pa,
-                                             mem_addr_t va);
-
+                                             mem_addr_t va,
+                                             p4pd_table_cache_t cache);
 extern void p4pd_rxdma_hwentry_query(uint32_t tableid, uint32_t *hwkey_len,
     uint32_t *hwkeymask_len, uint32_t *hwactiondata_len);
 extern p4pd_error_t p4pd_rxdma_entry_write_with_datamask(uint32_t tableid,
@@ -608,8 +619,8 @@ extern void p4pluspd_txdma_cleanup();
 extern p4pd_error_t p4pluspd_txdma_table_properties_get(uint32_t tableid,
     p4pd_table_properties_t *tbl_ctx);
 extern void p4pd_txdma_hbm_table_address_set(uint32_t tableid, mem_addr_t pa,
-                                             mem_addr_t va);
-
+                                             mem_addr_t va,
+                                             p4pd_table_cache_t cache);
 extern void p4pd_txdma_hwentry_query(uint32_t tableid, uint32_t *hwkey_len,
     uint32_t *hwkeymask_len, uint32_t *hwactiondata_len);
 extern p4pd_error_t p4pd_txdma_entry_write_with_datamask(uint32_t tableid,
@@ -830,8 +841,7 @@ p4pd_global_table_ds_decoded_string_get(uint32_t   tableid,
                                         char*      buffer,
                                         uint16_t   buf_len);
 
-p4pd_error_t
-p4pd_global_table_properties_get(uint32_t tableid, void *tbl_ctx);
+p4pd_error_t p4pd_global_table_properties_get(uint32_t tableid, void *tbl_ctx);
 
 uint32_t
 p4pd_global_actiondata_appdata_size_get(uint32_t tableid, uint8_t actionid);
@@ -842,7 +852,7 @@ p4pd_global_actiondata_appdata_set(uint32_t tableid, uint8_t actionid,
 
 void
 p4pd_global_hbm_table_address_set(uint32_t tableid, mem_addr_t pa,
-                                  mem_addr_t va);
+                                  mem_addr_t va, p4pd_table_cache_t cache);
 
 /*
  * Functions to read/modify Mem Hash entries.
