@@ -17,6 +17,7 @@
 #include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/apollo/api/nexthop.hpp"
 #include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
+#include "gen/p4gen/artemis/include/p4pd.h"
 
 namespace api {
 namespace impl {
@@ -119,7 +120,7 @@ public:
                                     api_op_t api_op) override;
 
     /// \brief      read spec, statistics and status from hw tables
-    /// \param[in]  api_obj  API object
+    /// \param[in]  api_obj API object
     /// \param[in]  key  pointer to nexthop key
     /// \param[out] info pointer to nexthop info
     /// \return     #SDK_RET_OK on success, failure status code on error
@@ -136,6 +137,15 @@ private:
 
     /// \brief  destructor
     ~nexthop_impl() {}
+
+    /// \brief      populate specification with hardware information
+    /// \param[in]  data nexthop_tx table data
+    /// \param[out] spec specification
+    void fill_spec_(nexthop_actiondata_t *data, pds_nexthop_spec_t *spec);
+
+    /// \brief      populate status with hardware information
+    /// \param[out] status status
+    void fill_status_(pds_nexthop_status_t *status);
 
 private:
     uint32_t    hw_id_;    ///< hardware id

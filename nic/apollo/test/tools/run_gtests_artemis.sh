@@ -33,4 +33,7 @@ $GDB device_test -c hal.json -f artemis --gtest_output="xml:${GEN_TEST_RESULTS_D
 echo "Running tep test"
 $GDB tep_test -c hal.json -f artemis --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/artemis_tep_test.xml" > artemis_tep_test.log.txt
 [[ $? -ne 0 ]] && echo "artemis_tep_test failed!" && exit 1
+echo "Running nh test"
+$GDB artemis_nh_test -c hal.json -f artemis --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/artemis_nh_test.xml" > artemis_nh_test.log.txt
+[[ $? -ne 0 ]] && echo "artemis_nh_test failed!" && exit 1
 echo "Success"

@@ -463,7 +463,7 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
     if (dipo->af == IP_AF_IPV6) {
         nh_data.action_u.nexthop_nexthop_info.ip_type = IPTYPE_IPV6;
         sdk::lib::memrev(nh_data.action_u.nexthop_nexthop_info.dipo,
-                         dipo->addr.v6_addr.addr8, IP4_ADDR8_LEN);
+                         dipo->addr.v6_addr.addr8, IP6_ADDR8_LEN);
     } else {
         nh_data.action_u.nexthop_nexthop_info.ip_type = IPTYPE_IPV4;
         memcpy(nh_data.action_u.nexthop_nexthop_info.dipo,

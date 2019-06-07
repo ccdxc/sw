@@ -17,7 +17,6 @@
 #include "nic/apollo/api/impl/artemis/nexthop_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/api/pds_state.hpp"
-#include "gen/p4gen/artemis/include/p4pd.h"
 
 namespace api {
 namespace impl {
@@ -107,7 +106,12 @@ nexthop_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             // TODO: currently MAC must be specified in all cases
             SDK_ASSERT(0);
         }
+        break;
     default:
+        ret = SDK_RET_INVALID_ARG;
+        PDS_TRACE_ERR("Failed to program NEXTHOP table at %u, err %u",
+                      hw_id_, ret);
+        goto error;
         break;
     }
     ret = nexthop_impl_db()->nh_tbl()->insert_atid(&nh_data, hw_id_);
@@ -129,7 +133,7 @@ nexthop_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
 
 sdk_ret_t
 nexthop_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_INVALID_OP;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -144,9 +148,38 @@ nexthop_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
     return SDK_RET_ERR;
 }
 
+void
+nexthop_impl::fill_status_(pds_nexthop_status_t *status) {
+    status->hw_id = hw_id_;
+}
+
+void
+nexthop_impl::fill_spec_(nexthop_actiondata_t *data,
+                         pds_nexthop_spec_t *spec) {
+    if (PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID == hw_id_) {
+        spec->type = PDS_NH_TYPE_BLACKHOLE;
+        return;
+    }
+    // TODO: read DIPo, DIPi, other types
+    spec->type = PDS_NH_TYPE_IP;
+    spec->vlan = data->action_u.nexthop_nexthop_info.vni;
+    sdk::lib::memrev(spec->mac, data->action_u.nexthop_nexthop_info.dmaci,
+                     ETH_ADDR_LEN);
+}
+
 sdk_ret_t
 nexthop_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
-    return SDK_RET_INVALID_OP;
+    nexthop_actiondata_t nh_data = { 0 };
+    pds_nexthop_info_t *nh_info = (pds_nexthop_info_t *)info;
+
+    if (nexthop_impl_db()->nh_tbl()->retrieve(hw_id_,
+                                              &nh_data) != SDK_RET_OK) {
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
+    fill_spec_(&nh_data, &nh_info->spec);
+    fill_status_(&nh_info->status);
+
+    return SDK_RET_OK;
 }
 
 /// \@}    // end of PDS_NEXTHOP_IMPL

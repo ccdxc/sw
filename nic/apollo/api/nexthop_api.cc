@@ -77,7 +77,6 @@ pds_nexthop_create (pds_nexthop_spec_t *spec)
 sdk_ret_t
 pds_nexthop_read (pds_nexthop_key_t *key, pds_nexthop_info_t *info)
 {
-    sdk_ret_t rv;
     nexthop *entry = NULL;
 
     if (key == NULL || info == NULL) {
@@ -88,19 +87,8 @@ pds_nexthop_read (pds_nexthop_key_t *key, pds_nexthop_info_t *info)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    if ((rv = pds_nexthop_spec_fill(entry, &info->spec)) != SDK_RET_OK) {
-        return rv;
-    }
-
-    if ((rv = pds_nexthop_status_fill(entry, &info->status)) != SDK_RET_OK) {
-        return rv;
-    }
-
-    if ((rv = pds_nexthop_stats_fill(entry, &info->stats)) != SDK_RET_OK) {
-        return rv;
-    }
-
-    return SDK_RET_OK;
+    info->spec.key = *key;
+    return entry->read(key, info);
 }
 
 sdk_ret_t

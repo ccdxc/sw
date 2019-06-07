@@ -126,6 +126,15 @@ nexthop::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
 }
 
 sdk_ret_t
+nexthop::read(pds_nexthop_key_t *key, pds_nexthop_info_t *info) {
+    if (impl_) {
+        return impl_->read_hw(this, (impl::obj_key_t *)key,
+                              (impl::obj_info_t *)info);
+    }
+    return sdk::SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
 nexthop::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }

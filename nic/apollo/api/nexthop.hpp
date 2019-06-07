@@ -103,6 +103,12 @@ public:
     virtual sdk_ret_t reactivate_config(pds_epoch_t epoch,
                                         api_op_t api_op) override;
 
+    ///\brief read config from hardware
+    ///\param[in] key pointer to the key object
+    ///\param[out] info pointer to the info object
+    ///\return #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_nexthop_key_t *key, pds_nexthop_info_t *info);
+
     /// \brief  add given nexthop to the database
     /// \return SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t add_to_db(void) override;
