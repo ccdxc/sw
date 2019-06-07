@@ -319,7 +319,7 @@ metadata hbm_al_ring_entry_t tcp_wqe14;
 @pragma dont_trim
 metadata hbm_al_ring_entry_t tcp_wqe15;
 @pragma dont_trim
-metadata doorbell_data_t tcp_db;
+metadata data64_t tcp_db;
 @pragma dont_trim
 metadata index16_t sessdgst_q_cindex;
 

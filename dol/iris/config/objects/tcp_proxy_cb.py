@@ -15,6 +15,7 @@ import iris.config.hal.defs          as haldefs
 import iris.config.hal.api           as halapi
 
 import iris.test.tcp_tls_proxy.tcp_proxy as tcp_proxy
+import iris.test.nvme.nvme_o_tcp as nvme_o_tcp
 
 class TcpCbObject(base.ConfigObjectBase):
     def __init__(self):
@@ -55,7 +56,10 @@ class TcpCbObject(base.ConfigObjectBase):
             tcp_proxy.init_tcb1(self, session)
         elif is_iflow != None:
             logger.info("%s is rflow" % gid)
-            tcp_proxy.init_tcb2(self, session)
+            if session.iflow.label == 'NVME-PROXY':
+                nvme_o_tcp.init_tcb2(self, session)
+            else:
+                tcp_proxy.init_tcb2(self, session)
 
         self.debug_dol = tcp_proxy.tcp_debug_dol_dont_send_ack | \
                             tcp_proxy.tcp_debug_dol_bypass_barco

@@ -27,6 +27,8 @@
 #define XTS_Q_CI                d.{xts_q_ci}.hx
 #define DGST_Q_PI               d.{dgst_q_pi}.hx
 #define DGST_Q_CI               d.{dgst_q_ci}.hx
+#define TCP_Q_PI                d.{tcp_q_pi}.hx
+#define TCP_Q_CI                d.{tcp_q_ci}.hx
 #define SESSPREXTSTX_P_INDEX    d.{pi_0}.hx
 #define SESSPREXTSTX_C_INDEX    d.{ci_0}.hx
 #define SESSPOSTXTSTX_P_INDEX   d.{pi_1}.hx

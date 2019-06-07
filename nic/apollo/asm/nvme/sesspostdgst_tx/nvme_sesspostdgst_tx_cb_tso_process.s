@@ -40,6 +40,8 @@ write_one_tcp_wqe:
                    offsetof(struct nvme_pdu_ctxt_page_entry_t, len), \
                    sizeof(struct nvme_pdu_ctxt_page_entry_t.len)
 
+    // skip past scratch bytes and point to the start of pkt_Descr in the page
+    add            TCP_WQE_DESCR_ADDR, TCP_WQE_DESCR_ADDR, PKT_DESC_SCRATCH_OVERHEAD
     phvwrp         PHV_TCP_WQE_BASE, offsetof(struct hbm_al_ring_entry_t, descr_addr), \
                    sizeof(struct hbm_al_ring_entry_t.descr_addr), TCP_WQE_DESCR_ADDR
     phvwrp         PHV_TCP_WQE_BASE, offsetof(struct hbm_al_ring_entry_t, len), \

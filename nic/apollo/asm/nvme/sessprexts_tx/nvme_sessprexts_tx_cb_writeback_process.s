@@ -30,6 +30,7 @@ struct s3_t0_nvme_sessprexts_tx_cb_writeback_process_d d;
 #define K_LOG_HOST_PAGE_SIZE    k.t0_s2s_pdu_ctxt_to_writeback_info_log_host_page_size
 #define K_PDU_CTXT_P            k.to_s3_info_pdu_ctxt_ptr
 #define K_PAGE_PTR              k.to_s3_info_page_ptr
+#define K_PAGE_PTR_LE           k.{to_s3_info_page_ptr}.dx
 
 #define D_NXT_LBA_OFFSET    d.nxt_lba_offset
 
@@ -182,9 +183,10 @@ post_tbl_updates:
     or                  r7, K_PAGE_PTR, r6, NVME_PAGE_DATA_LEN_SHIFT
     phvwr               p.page_ptr_ptr, r7
 
-    phvwr               p.pkt_desc_one_aol_A0, K_PAGE_PTR
-    phvwrpair           p.pkt_desc_one_aol_O0, PKT_DESC_OVERHEAD, \
-                        p.pkt_desc_one_aol_L0, r5
+    phvwr               p.pkt_desc_one_aol_A0, K_PAGE_PTR_LE
+    add                 r7, PKT_DESC_OVERHEAD, r0
+    phvwrpair           p.pkt_desc_one_aol_O0, r7.wx, \
+                        p.pkt_desc_one_aol_L0, r5.wx
     add                 r7, K_PAGE_PTR, PKT_DESC_SCRATCH_OVERHEAD
     
     DMA_CMD_BASE_GET(DMA_CMD_BASE, pkt_desc_dma)

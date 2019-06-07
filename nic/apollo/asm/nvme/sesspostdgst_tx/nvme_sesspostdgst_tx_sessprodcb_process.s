@@ -28,8 +28,8 @@ nvme_sesspostdgst_tx_sessprodcb_process:
     // turn and come back to check again. If available, post all
     // pages taking into account of whether ring entries
     // are contiguous or wrapped around.
-    slt            c1, d.tcp_q_pi, d.tcp_q_ci
-    sub            NUM_AVAIL_TCPQ_ENTRIES, d.tcp_q_pi, d.tcp_q_ci
+    slt            c1, TCP_Q_PI, TCP_Q_CI
+    sub            NUM_AVAIL_TCPQ_ENTRIES, TCP_Q_PI, TCP_Q_CI
     mincr.c1       NUM_AVAIL_TCPQ_ENTRIES, d.log_num_tcp_q_entries, 0
     sll            NUM_TCPQ_ENTRIES, 1, d.log_num_tcp_q_entries
     sub            NUM_AVAIL_TCPQ_ENTRIES, NUM_TCPQ_ENTRIES, NUM_AVAIL_TCPQ_ENTRIES
@@ -39,19 +39,12 @@ nvme_sesspostdgst_tx_sessprodcb_process:
     sle            c2, k.to_s4_info_num_pages, NUM_AVAIL_TCPQ_ENTRIES
     bcf            [!c2], sessdgst_cb_writeback
 
-    // Increment tcpq pi_index by number of pages posted
-    add            r3, k.to_s4_info_num_pages, r0 // BD Slot
-    tblmincri      DGST_Q_CI, d.log_num_dgst_q_entries, 1
-    tblmincr.f     d.tcp_q_pi, d.log_num_tcp_q_entries, r3
-
-    // TODO post set p_index doorbell to TCP sesq ring
-
     // compose DMA cmds in phv, while tso_process will
     // prepare the actual tcp_wqe to DMA based on page_ptr and length
     // in the cmd_ctxt
-    add            TCPQ_ADDR0_P, d.tcp_q_base_addr, d.tcp_q_pi, LOG_HBM_AL_RING_ENTRY_SIZE
+    add            TCPQ_ADDR0_P, d.tcp_q_base_addr, TCP_Q_PI, LOG_HBM_AL_RING_ENTRY_SIZE // BD Slot
 
-    sub            DMA_CMD0_LEN, NUM_TCPQ_ENTRIES, d.tcp_q_pi
+    sub            DMA_CMD0_LEN, NUM_TCPQ_ENTRIES, TCP_Q_PI
     slt            c3, DMA_CMD0_LEN, k.to_s4_info_num_pages
     bcf            [!c3], tcp_wqe_dma0
     cmov           DMA_CMD0_LEN, c3, DMA_CMD0_LEN, k.to_s4_info_num_pages // BD Slot
@@ -65,18 +58,24 @@ tcp_wqe_dma1:
     add            DMA_CMD0_LEN, r0, DMA_CMD0_LEN, LOG_HBM_AL_RING_ENTRY_SIZE
     add            TCPQ_ADDR1_P, d.tcp_q_base_addr, r0
     DMA_HBM_PHV2MEM_START_SLEN_ELEN_SETUP(DMA_CMD_BASE, TMP_R, tcp_wqe0_pad, DMA_CMD0_LEN, DMA_CMD1_LEN, TCPQ_ADDR1_P)
-    DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE, c3)
 
 tcp_wqe_dma0:
     DMA_CMD_BASE_GET(DMA_CMD_BASE, tcp_wqe_dma0)
     add.!c3        DMA_CMD0_LEN, r0, DMA_CMD0_LEN, LOG_HBM_AL_RING_ENTRY_SIZE
     DMA_HBM_PHV2MEM_START_LEN_SETUP(DMA_CMD_BASE, TMP_R, tcp_wqe0_pad, DMA_CMD0_LEN, TCPQ_ADDR0_P)
-    DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE, !c3)
+
+    // Increment session's dgst ring ci as this dgst compuation is completed
+    tblmincri      DGST_Q_CI, d.log_num_dgst_q_entries, 1
+    // Increment tcpq pi_index by number of pages posted
+    add            r3, k.to_s4_info_num_pages, r0 // BD Slot
+    tblmincr.f     TCP_Q_PI, d.log_num_tcp_q_entries, r3
 
     // DMA cmd to ring tcp sesq upon enqueuing tcp pages
-    //DMA_CMD_BASE_GET(DMA_CMD_BASE, tcp_db_dma)
-    //DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, , , )
-    //DMA_SET_WR_FENCE_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
+    DMA_CMD_BASE_GET(DMA_CMD_BASE, tcp_db_dma)
+    add            r2, d.tcpcb_sesq_db_data, TCP_Q_PI
+    phvwr          p.tcp_db_data, r2.dx
+    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, tcp_db_data, tcp_db_data, d.tcpcb_sesq_db_addr)
+    DMA_SET_WR_FENCE_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
 
 sessdgst_cb_writeback:
     // TODO - just release busy if there in no available entries in tcpq
