@@ -108,13 +108,11 @@ recirc_packet:
 
 .align
 classic_nic_app:
-    seq             c1, k.capri_intrinsic_tm_oport, TM_PORT_DMA
-    bcf             [c1], classic_nic_to_rxdma
     phvwr           p.capri_p4_intrinsic_valid, TRUE
-
-classic_nic_to_uplink:
-    phvwr.e         p.{p4plus_to_p4_vlan_valid,p4plus_to_p4_valid}, 0
+    phvwr           p.{p4plus_to_p4_vlan_valid,p4plus_to_p4_valid}, 0
     phvwr           p.capri_txdma_intrinsic_valid, 0
+    seq             c1, k.capri_intrinsic_tm_oport, TM_PORT_DMA
+    nop.!c1.e
 
 classic_nic_to_rxdma:
     // r1 : packet_len

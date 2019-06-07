@@ -27,6 +27,8 @@ typedef struct pds_lif_spec_s {
     pds_lif_key_t    key;
     ///< if index of the pinned port/lif
     pds_ifindex_t    pinned_ifidx;
+    ///< type of lif
+    lif_type_t       type;
 } pds_lif_spec_t;
 
 /// \defgroup PDS_LIF_IMPL - lif entry datapath implementation
@@ -99,6 +101,19 @@ public:
     ///< \param[in] lif_params    lif configuration parameters
     sdk_ret_t program_flow_miss_nacl(lif_info_t *lif_params);
 
+    ///< \brief    program nacl entry for internal management
+    ///< \param[in] lif_params    lif configuration parameters
+    sdk_ret_t program_internal_mgmt_nacl(lif_info_t *lif_params);
+
+    /// \brief     get function for lif type
+    /// \return    type
+    lif_type_t type(void);
+
+    /// \brief     get function for lif key
+    /// \return    key
+    pds_lif_key_t key(void);
+
+
 private:
     ///< constructor
     lif_impl(pds_lif_spec_t *spec);
@@ -109,6 +124,7 @@ private:
 private:
     pds_lif_key_t    key_;               ///< (s/w & h/w) lif id
     pds_ifindex_t    pinned_if_idx_;     ///< pinnned if index, if any
+    lif_type_t       type_;
     ht_ctxt_t        ht_ctxt_;           ///< hash table context
 
     friend class lif_impl_state;         ///< lif_impl_state is friend of lif_impl

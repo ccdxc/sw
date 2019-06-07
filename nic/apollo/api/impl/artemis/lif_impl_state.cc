@@ -75,6 +75,11 @@ lif_impl_state::find(pds_lif_key_t *key) const {
     return (lif_impl *)(lif_ht_->lookup(key));
 }
 
+sdk_ret_t
+lif_impl_state::walk(state_walk_cb_t walk_cb, void *ctxt) {
+    return lif_ht_->walk(walk_cb, ctxt);
+}
+
 /// \@}
 
 }    // namespace impl

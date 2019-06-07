@@ -4,6 +4,7 @@ counter=300
 oob_mnic_up=0
 inb_mnic0_up=0
 inb_mnic1_up=0
+int_mnic0_up=0
 
 echo "Waiting for mgmt interfaces to show up"
 
@@ -30,7 +31,13 @@ do
         inb_mnic1_up=1
     fi
 
-    if [ $oob_mnic_up -eq 1 ] && [ $inb_mnic0_up -eq 1 ] && [ $inb_mnic1_up -eq 1 ]; then
+    if [ -d "/sys/class/net/int_mnic0" ] && [ $int_mnic0_up -eq 0 ] ; then
+        ethtool -K int_mnic0 rx off tx off
+        ifconfig int_mnic0 169.254.0.1 netmask 255.255.255.0
+        int_mnic0_up=1
+    fi
+
+    if [ $oob_mnic_up -eq 1 ] && [ $inb_mnic0_up -eq 1 ] && [ $inb_mnic1_up -eq 1 ] && [ $int_mnic0_up -eq 1 ]; then
         break
     else
         sleep 1
@@ -41,7 +48,7 @@ done
 
 echo ""
 
-if [ $oob_mnic_up -eq 1 ] && [ $inb_mnic0_up -eq 1 ] && [ $inb_mnic1_up -eq 1 ]; then
+if [ $oob_mnic_up -eq 1 ] && [ $inb_mnic0_up -eq 1 ] && [ $inb_mnic1_up -eq 1 ] && [ $int_mnic0_up -eq 1 ]; then
     echo "Brought up Management interfaces for Naples management"
 else
     echo "Management interfaces didn't show up for 5 minutes!!!"

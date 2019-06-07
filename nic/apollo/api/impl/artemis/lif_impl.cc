@@ -257,6 +257,12 @@ lif_impl::program_flow_miss_nacl(lif_info_t *lif_params) {
     return ret;
 }
 
+sdk_ret_t
+lif_impl::program_internal_mgmt_nacl(lif_info_t *lif_params) {
+    sdk_ret_t ret = SDK_RET_OK;
+    return ret;
+}
+
 /// \@}
 
 }    // namespace impl

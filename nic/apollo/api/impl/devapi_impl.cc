@@ -53,6 +53,7 @@ devapi_impl::lif_create(lif_info_t *info) {
 
     spec.key = info->lif_id;
     spec.pinned_ifidx = info->pinned_uplink_port_num;
+    spec.type = info->type;
     lif = lif_impl::factory(&spec);
     if (unlikely(lif == NULL)) {
         return sdk::SDK_RET_OOM;
@@ -66,8 +67,11 @@ devapi_impl::lif_create(lif_info_t *info) {
         lif->program_inband_filters(info);
     } else if ((info->type == sdk::platform::LIF_TYPE_MNIC_CPU)) {
         lif->program_flow_miss_nacl(info);
+    } else if (info->type == sdk::platform::LIF_TYPE_HOST_MANAGEMENT ||
+                info->type == sdk::platform::LIF_TYPE_MNIC_INTERNAL_MANAGEMENT) {
+        lif->program_internal_mgmt_nacl(info);
     }
-    PDS_TRACE_DEBUG("Programmed filter for lif %u %s %u",
+    PDS_TRACE_DEBUG("Programmed filters/NACLs for lif %u %s %u",
                     info->lif_id, info->name, info->type);
     return SDK_RET_OK;
 }

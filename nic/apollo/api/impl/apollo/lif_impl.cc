@@ -43,7 +43,19 @@ lif_impl::destroy(lif_impl *impl) {
 lif_impl::lif_impl(pds_lif_spec_t *spec) {
     memcpy(&key_, &spec->key, sizeof(key_));
     pinned_if_idx_ = spec->pinned_ifidx;
+    type_ = spec->type;
 }
+
+lif_type_t
+lif_impl::type(void) {
+    return type_;
+}
+
+pds_lif_key_t
+lif_impl::key(void) {
+    return key_;
+}
+
 
 #define lif_egress_rl_params       action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params
 sdk_ret_t
@@ -249,6 +261,79 @@ lif_impl::program_flow_miss_nacl(lif_info_t *lif_params) {
 #endif
 
     return ret;
+}
+
+typedef struct lif_internal_mgmt_ctx_s {
+    lif_impl **lif;
+    lif_type_t type;
+} __PACK__ lif_internal_mgmt_ctx_t;
+
+static bool
+lif_internal_mgmt_cb_(void *api_obj, void *ctxt) {
+    lif_impl *lif = (lif_impl *)api_obj;
+    lif_internal_mgmt_ctx_t *cb_ctx = (lif_internal_mgmt_ctx_t *)ctxt;
+
+    if (lif->type() == cb_ctx->type) {
+        *cb_ctx->lif = lif;
+        return true;
+    }
+    return false;
+}
+
+sdk_ret_t
+lif_impl::program_internal_mgmt_nacl(lif_info_t *lif_params) {
+    sdk_ret_t ret = SDK_RET_OK;
+    nacl_swkey_t key = { 0 };
+    nacl_swkey_mask_t mask = { 0 };
+    nacl_actiondata_t data =  { 0 };
+    uint32_t idx;
+    lif_impl *host_mgmt_lif = NULL, *mnic_int_mgmt_lif = NULL;
+    lif_internal_mgmt_ctx_t cb_ctx = {0};
+
+    if (lif_params->type == sdk::platform::LIF_TYPE_HOST_MANAGEMENT) {
+        host_mgmt_lif = this;
+        cb_ctx.type = sdk::platform::LIF_TYPE_MNIC_INTERNAL_MANAGEMENT;
+        cb_ctx.lif = &mnic_int_mgmt_lif;
+    } else if (lif_params->type == sdk::platform::LIF_TYPE_MNIC_INTERNAL_MANAGEMENT) {
+        mnic_int_mgmt_lif = this;
+        cb_ctx.type = sdk::platform::LIF_TYPE_HOST_MANAGEMENT;
+        cb_ctx.lif = &host_mgmt_lif;
+    }
+    lif_impl_db()->walk(lif_internal_mgmt_cb_, &cb_ctx);
+    if (!host_mgmt_lif || !mnic_int_mgmt_lif) {
+        return ret;
+    }
+
+    PDS_TRACE_DEBUG("programming nacls for internal management:");
+    // program host_mgmt -> mnic_int_mgmt
+    key.capri_intrinsic_lif = host_mgmt_lif->key();
+    mask.capri_intrinsic_lif_mask = 0xFFFF;
+    data.action_id = NACL_NACL_REDIRECT_ID;
+    data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
+    data.nacl_redirect_action.oport = TM_PORT_DMA;
+    data.nacl_redirect_action.lif = mnic_int_mgmt_lif->key();
+    ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed NACL entry for host_mgmt -> mnic_int_mgmt "
+                      "err %u", ret);
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    // program mnic_int_mgmt -> host_mgmt
+    key.capri_intrinsic_lif = mnic_int_mgmt_lif->key();
+    mask.capri_intrinsic_lif_mask = 0xFFFF;
+    data.action_id = NACL_NACL_REDIRECT_ID;
+    data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
+    data.nacl_redirect_action.oport = TM_PORT_DMA;
+    data.nacl_redirect_action.lif = host_mgmt_lif->key();
+    ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed NACL entry for mnic_int_mgmt -> host_mgmt"
+                      "err %u", ret);
+    }
 }
 
 /// \@}
