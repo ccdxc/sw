@@ -313,7 +313,8 @@ mapping_impl::build(pds_mapping_key_t *key) {
 error:
     if (impl) {
         impl->~mapping_impl();
-        SDK_FREE(SDK_MEM_ALLOC_PDS_MAPPING_IMPL, impl);
+        //SDK_FREE(SDK_MEM_ALLOC_PDS_MAPPING_IMPL, impl);
+        mapping_impl_db()->free(impl);
     }
     return NULL;
 }

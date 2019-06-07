@@ -275,7 +275,7 @@ step_up_ip_next (ip_prefix_t *pfx, uint16_t num_steps)
 /// --------------------------- LOCAL MAPPINGS -----------------------
 
 /// \brief local mappings WF_1
-TEST_F(mapping_test, v4_local_mapping_workflow_1) {
+TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_1) {
     local_mapping_stepper_seed_t seed = {0};
 
     LOCAL_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, g_vnic_id,
@@ -614,13 +614,20 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_2) {
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
                             g_base_vnic_mac, g_vnic_cidr_v4, true,
                             g_public_ip_v4);
-    seed.num_vnics = PDS_MAX_VNIC + 1;
+
+    batch_start();
+    seed.num_vnics = 1;
+    seed.num_ip_per_vnic = 1;
+    LOCAL_MAPPING_MANY_CREATE(&seed);
+    batch_commit();
+
+    seed.num_vnics = PDS_MAX_VNIC;
     seed.num_ip_per_vnic = PDS_MAX_VNIC_IP;
     workflow_neg_2<local_mapping_util, local_mapping_stepper_seed_t>(&seed);
 }
 
 /// \brief local mappings WF_N_3
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_neg_3) {
+TEST_F(mapping_test, v4_local_mapping_workflow_neg_3) {
     uint32_t vnic_id = 9999;
     uint64_t vnic_mac = 0x0000000040302010;
     std::string vnic_cidr = "100.99.98.97";
@@ -1109,18 +1116,29 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_2) {
     REMOTE_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
                             g_base_vnic_mac, g_tep_cidr_v4.c_str());
-    seed.num_vnics = PDS_MAX_VNIC + 1;
+
+    batch_start();
+    seed.num_vnics = 1;
+    seed.num_teps = 1;
+    REMOTE_MAPPING_MANY_CREATE(&seed);
+    batch_commit();
+
+    seed.num_vnics = PDS_MAX_VNIC;
     seed.num_teps = PDS_MAX_TEP - 1;
     workflow_neg_2<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed);
 }
 
 /// \brief remote mappings WF_N_3
-TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_3) {
+TEST_F(mapping_test, v4_remote_mapping_workflow_neg_3) {
+    uint64_t vnic_mac = 0x0000000040302010;
+    std::string vnic_cidr = "100.99.98.97";
+    std::string tep_cidr = "200.97.98.99";
     remote_mapping_stepper_seed_t seed = {0};
 
-    REMOTE_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
-                            PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+
+    REMOTE_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, vnic_cidr,
+                            PDS_ENCAP_TYPE_MPLSoUDP, 4000,
+                            vnic_mac, tep_cidr);
     seed.num_vnics = 1;
     seed.num_teps = 1;
     workflow_neg_3<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed);

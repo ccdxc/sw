@@ -214,6 +214,11 @@ mapping_util_object_stepper (utils_op_t op, remote_mapping_stepper_seed_t *seed,
 
     SDK_ASSERT(seed->num_vnics * seed->num_teps <= (1 << 20));
     for (uint32_t tep_indx = 0; tep_indx < seed->num_teps; tep_indx++) {
+        if (curr_vpc_id > PDS_MAX_VPC) {
+            curr_vpc_id = seed->vpc_id;
+            curr_sub_id = seed->subnet_id;
+        }
+
         for (uint32_t vnic_indx = 1; vnic_indx <= seed->num_vnics; vnic_indx++) {
             remote_mapping_util mapping_obj(curr_vpc_id, curr_sub_id, vnic_ip, tep_ip,
                                             curr_vnic_mac++, seed->encap_type,

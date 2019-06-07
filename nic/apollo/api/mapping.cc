@@ -98,7 +98,8 @@ mapping_entry::program_config(obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 mapping_entry::nuke_resources_(void) {
-    return impl_->nuke_resources(this);
+    if (this->impl_)
+        return impl_->nuke_resources(this);
 }
 
 sdk_ret_t
