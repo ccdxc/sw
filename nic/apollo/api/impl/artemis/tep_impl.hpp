@@ -16,6 +16,7 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
+#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
 
 namespace api {
 namespace impl {
@@ -101,6 +102,16 @@ private:
 
     /// \brief destructor
     ~tep_impl() {}
+
+    /// \brief      populate specification with hardware information
+    /// \param[in]  remote_46_mapping_data remote_46_mapping table data
+    /// \param[out] spec specification
+    void fill_spec_(remote_46_mapping_actiondata_t *remote_46_mapping_data,
+                    pds_tep_spec_t *spec);
+
+    /// \brief      populate status with hardware information
+    /// \param[out] status status
+    void fill_status_(pds_tep_status_t *status);
 
 private:
     // P4 datapath specific state

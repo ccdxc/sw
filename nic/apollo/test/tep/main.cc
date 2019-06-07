@@ -14,6 +14,7 @@
 #include "nic/apollo/test/utils/batch.hpp"
 #include "nic/apollo/test/utils/workflow.hpp"
 #include "nic/apollo/test/utils/tep.hpp"
+#include "nic/apollo/test/utils/utils.hpp"
 
 using std::cerr;
 using std::cout;
@@ -25,6 +26,7 @@ namespace api_test {
 static const char *g_cfg_file = NULL;
 static std::string g_pipeline("");
 static const char * const k_base_nh_ip = "50.50.1.1";
+static const std::string k_base_dipi = "50::50:1:1";
 static constexpr int k_max_tep = PDS_MAX_TEP;
 static constexpr pds_encap_t k_mplsoudp_encap = {PDS_ENCAP_TYPE_MPLSoUDP, 11};
 static constexpr pds_encap_t k_vxlan_encap = {PDS_ENCAP_TYPE_VXLAN, 22};
@@ -64,7 +66,11 @@ protected:
 TEST_F(tep_test, tep_workflow1) {
     tep_stepper_seed_t seed = {};
 
-    TEP_SEED_INIT(&seed, k_base_nh_ip);
+    if (IS_ARTEMIS())
+        TEP_SEED_INIT(&seed, k_base_nh_ip, k_max_tep, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+    else
+        TEP_SEED_INIT(&seed, k_base_nh_ip);
     workflow_1<tep_util, tep_stepper_seed_t>(&seed);
 }
 
@@ -72,7 +78,11 @@ TEST_F(tep_test, tep_workflow1) {
 TEST_F(tep_test, tep_workflow2) {
     tep_stepper_seed_t seed = {};
 
-    TEP_SEED_INIT(&seed, k_base_nh_ip);
+    if (IS_ARTEMIS())
+        TEP_SEED_INIT(&seed, k_base_nh_ip, k_max_tep, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+    else
+        TEP_SEED_INIT(&seed, k_base_nh_ip);
     workflow_2<tep_util, tep_stepper_seed_t>(&seed);
 }
 
@@ -80,9 +90,18 @@ TEST_F(tep_test, tep_workflow2) {
 TEST_F(tep_test, tep_workflow3) {
     tep_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {};
 
-    TEP_SEED_INIT(&seed1, "10.10.1.1", 10);
-    TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
-    TEP_SEED_INIT(&seed3, "30.30.1.1", 30);
+    if (IS_ARTEMIS()) {
+        TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
+        TEP_SEED_INIT(&seed2, "20.20.1.1", 10, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
+        TEP_SEED_INIT(&seed3, "30.30.1.1", 10, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
+    } else {
+        TEP_SEED_INIT(&seed1, "10.10.1.1", 10);
+        TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
+        TEP_SEED_INIT(&seed3, "30.30.1.1", 30);
+    }
     workflow_3<tep_util, tep_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
@@ -90,7 +109,11 @@ TEST_F(tep_test, tep_workflow3) {
 TEST_F(tep_test, tep_workflow4) {
     tep_stepper_seed_t seed = {};
 
-    TEP_SEED_INIT(&seed, k_base_nh_ip);
+    if (IS_ARTEMIS())
+        TEP_SEED_INIT(&seed, k_base_nh_ip, k_max_tep, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+    else
+        TEP_SEED_INIT(&seed, k_base_nh_ip);
     workflow_4<tep_util, tep_stepper_seed_t>(&seed);
 }
 
@@ -98,9 +121,18 @@ TEST_F(tep_test, tep_workflow4) {
 TEST_F(tep_test, tep_workflow5) {
     tep_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {};
 
-    TEP_SEED_INIT(&seed1, "10.10.1.1", 10);
-    TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
-    TEP_SEED_INIT(&seed3, "30.30.1.1", 30);
+    if (IS_ARTEMIS()) {
+        TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
+        TEP_SEED_INIT(&seed2, "20.20.1.1", 20, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
+        TEP_SEED_INIT(&seed3, "30.30.1.1", 30, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
+    } else {
+        TEP_SEED_INIT(&seed1, "10.10.1.1", 10);
+        TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
+        TEP_SEED_INIT(&seed3, "30.30.1.1", 30);
+    }
     workflow_5<tep_util, tep_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
@@ -108,12 +140,23 @@ TEST_F(tep_test, tep_workflow5) {
 TEST_F(tep_test, tep_workflow6) {
     tep_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
 
-    TEP_SEED_INIT(&seed1, k_base_nh_ip);
-    // seed1A =  seed1 + different encap
-    TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_vxlan_encap);
-    // seed1B =  seedA1 + different tunnel type, encap, nat
-    TEP_SEED_INIT(&seed1B, k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
-                  k_nat, PDS_TEP_TYPE_IGW);
+    if (IS_ARTEMIS()) {
+        TEP_SEED_INIT(&seed1, k_base_nh_ip, k_max_tep, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+        // seed1A =  seed1 + different dipi
+        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
+        // seed1B =  seed1A + different dipi
+        TEP_SEED_INIT(&seed1B, k_base_nh_ip, k_max_tep, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
+    } else {
+        TEP_SEED_INIT(&seed1, k_base_nh_ip);
+        // seed1A =  seed1 + different encap
+        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_vxlan_encap);
+        // seed1B =  seed1A + different tunnel type, encap, nat
+        TEP_SEED_INIT(&seed1B, k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
+                      k_nat, PDS_TEP_TYPE_IGW);
+    }
     workflow_6<tep_util, tep_stepper_seed_t>(&seed1, &seed1A, &seed1B);
 }
 
@@ -121,12 +164,23 @@ TEST_F(tep_test, tep_workflow6) {
 TEST_F(tep_test, tep_workflow7) {
     tep_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
 
-    TEP_SEED_INIT(&seed1, k_base_nh_ip);
-    // seed1A =  seed1 + different encap
-    TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_vxlan_encap);
-    // seed1B =  seed1A + different tunnel type, encap, nat
-    TEP_SEED_INIT(&seed1B, k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
-                  k_nat, PDS_TEP_TYPE_IGW);
+    if (IS_ARTEMIS()) {
+        TEP_SEED_INIT(&seed1, k_base_nh_ip, k_max_tep, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+        // seed1A =  seed1 + different dipi
+        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
+        // seed1B =  seed1A + different dipi
+        TEP_SEED_INIT(&seed1B, k_base_nh_ip, k_max_tep, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
+    } else {
+        TEP_SEED_INIT(&seed1, k_base_nh_ip);
+        // seed1A =  seed1 + different encap
+        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_vxlan_encap);
+        // seed1B =  seed1A + different tunnel type, encap, nat
+        TEP_SEED_INIT(&seed1B, k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
+                      k_nat, PDS_TEP_TYPE_IGW);
+    }
     workflow_7<tep_util, tep_stepper_seed_t>(&seed1, &seed1A, &seed1B);
 }
 
@@ -134,12 +188,23 @@ TEST_F(tep_test, tep_workflow7) {
 TEST_F(tep_test, DISABLED_tep_workflow8) {
     tep_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
 
-    TEP_SEED_INIT(&seed1, k_base_nh_ip);
-    // seed1A =  seed1 + different encap
-    TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_vxlan_encap);
-    // seed1B =  seed1A + different tunnel type, encap, nat
-    TEP_SEED_INIT(&seed1B, k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
-                  k_nat, PDS_TEP_TYPE_IGW);
+    if (IS_ARTEMIS()) {
+        TEP_SEED_INIT(&seed1, k_base_nh_ip, k_max_tep, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+        // seed1A =  seed1 + different dipi
+        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
+        // seed1B =  seed1A + different dipi
+        TEP_SEED_INIT(&seed1B, k_base_nh_ip, k_max_tep, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
+    } else {
+        TEP_SEED_INIT(&seed1, k_base_nh_ip);
+        // seed1A =  seed1 + different encap
+        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_vxlan_encap);
+        // seed1B =  seed1A + different tunnel type, encap, nat
+        TEP_SEED_INIT(&seed1B, k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
+                      k_nat, PDS_TEP_TYPE_IGW);
+    }
     workflow_8<tep_util, tep_stepper_seed_t>(&seed1, &seed1A, &seed1B);
 }
 
@@ -147,10 +212,18 @@ TEST_F(tep_test, DISABLED_tep_workflow8) {
 TEST_F(tep_test, tep_workflow9) {
     tep_stepper_seed_t seed1 = {}, seed1A = {};
 
-    TEP_SEED_INIT(&seed1, k_base_nh_ip);
-    // seed1A =  seed1 + different tunnel type, encap, nat
-    TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_vxlan_encap,
-                  k_nat, PDS_TEP_TYPE_IGW);
+    if (IS_ARTEMIS()) {
+        TEP_SEED_INIT(&seed1, k_base_nh_ip, k_max_tep, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+        // seed1A =  seed1 + different dipi
+        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
+    } else {
+        TEP_SEED_INIT(&seed1, k_base_nh_ip);
+        // seed1A =  seed1 + different tunnel type, encap, nat
+        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_vxlan_encap,
+                      k_nat, PDS_TEP_TYPE_IGW);
+    }
     workflow_9<tep_util, tep_stepper_seed_t>(&seed1, &seed1A);
 }
 
@@ -159,13 +232,28 @@ TEST_F(tep_test, DISABLED_tep_workflow10) {
     tep_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {}, seed4 = {};
     tep_stepper_seed_t seed2A = {}, seed3A = {};
 
-    TEP_SEED_INIT(&seed1, "10.10.1.1", 10);
-    TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
-    TEP_SEED_INIT(&seed2A, "20.20.1.1", 20, k_mplsoudp_encap,
-                  k_nat, PDS_TEP_TYPE_IGW);
-    TEP_SEED_INIT(&seed3, "30.30.1.1", 30);
-    TEP_SEED_INIT(&seed3A, "30.30.1.1", 30, k_mplsoudp_encap, k_nat);
-    TEP_SEED_INIT(&seed4, "40.40.1.1", 40);
+    if (IS_ARTEMIS()) {
+        TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
+        TEP_SEED_INIT(&seed2, "20.20.1.1", 20, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
+        TEP_SEED_INIT(&seed2A, "20.20.1.1", 20, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:20:21", 0);
+        TEP_SEED_INIT(&seed3, "30.30.1.1", 30, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
+        TEP_SEED_INIT(&seed3A, "30.30.1.1", 30, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "30::30:30:31", 0);
+        TEP_SEED_INIT(&seed4, "40.40.1.1", 40, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "40::40:1:1", 0);
+    } else {
+        TEP_SEED_INIT(&seed1, "10.10.1.1", 10);
+        TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
+        TEP_SEED_INIT(&seed2A, "20.20.1.1", 20, k_mplsoudp_encap,
+                      k_nat, PDS_TEP_TYPE_IGW);
+        TEP_SEED_INIT(&seed3, "30.30.1.1", 30);
+        TEP_SEED_INIT(&seed3A, "30.30.1.1", 30, k_mplsoudp_encap, k_nat);
+        TEP_SEED_INIT(&seed4, "40.40.1.1", 40);
+    }
     workflow_10<tep_util, tep_stepper_seed_t>(
                 &seed1, &seed2, &seed2A, &seed3, &seed3A, &seed4);
 }
@@ -174,7 +262,11 @@ TEST_F(tep_test, DISABLED_tep_workflow10) {
 TEST_F(tep_test, tep_workflow_neg_1) {
     tep_stepper_seed_t seed = {};
 
-    TEP_SEED_INIT(&seed, k_base_nh_ip);
+    if (IS_ARTEMIS())
+        TEP_SEED_INIT(&seed, k_base_nh_ip, k_max_tep, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+    else
+        TEP_SEED_INIT(&seed, k_base_nh_ip);
     workflow_neg_1<tep_util, tep_stepper_seed_t>(&seed);
 }
 
@@ -182,7 +274,11 @@ TEST_F(tep_test, tep_workflow_neg_1) {
 TEST_F(tep_test, tep_workflow_neg_2) {
     tep_stepper_seed_t seed = {};
 
-    TEP_SEED_INIT(&seed, k_base_nh_ip, k_max_tep+2);
+    if (IS_ARTEMIS())
+        TEP_SEED_INIT(&seed, k_base_nh_ip, k_max_tep+2, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+    else
+        TEP_SEED_INIT(&seed, k_base_nh_ip, k_max_tep+2);
     workflow_neg_2<tep_util, tep_stepper_seed_t>(&seed);
 }
 
@@ -190,7 +286,11 @@ TEST_F(tep_test, tep_workflow_neg_2) {
 TEST_F(tep_test, tep_workflow_neg_3) {
     tep_stepper_seed_t seed = {};
 
-    TEP_SEED_INIT(&seed, "150.150.1.1", k_max_tep);
+    if (IS_ARTEMIS())
+        TEP_SEED_INIT(&seed, "150.150.1.1", k_max_tep, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "150::150:1:1", 0);
+    else
+        TEP_SEED_INIT(&seed, "150.150.1.1");
     workflow_neg_3<tep_util, tep_stepper_seed_t>(&seed);
 }
 
@@ -198,8 +298,15 @@ TEST_F(tep_test, tep_workflow_neg_3) {
 TEST_F(tep_test, tep_workflow_neg_4) {
     tep_stepper_seed_t seed1 = {}, seed2 = {};
 
-    TEP_SEED_INIT(&seed1, k_base_nh_ip, 10);
-    TEP_SEED_INIT(&seed2, "60.60.1.1", 10);
+    if (IS_ARTEMIS()) {
+        TEP_SEED_INIT(&seed1, k_base_nh_ip, 10, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+        TEP_SEED_INIT(&seed2, "60.60.1.1", 10, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "60::60:1:1", 0);
+    } else {
+        TEP_SEED_INIT(&seed1, k_base_nh_ip, 10);
+        TEP_SEED_INIT(&seed2, "60.60.1.1", 10);
+    }
     workflow_neg_4<tep_util, tep_stepper_seed_t>(&seed1, &seed2);
 }
 
@@ -207,10 +314,17 @@ TEST_F(tep_test, tep_workflow_neg_4) {
 TEST_F(tep_test, DISABLED_tep_workflow_neg_5) {
     tep_stepper_seed_t seed1 = {}, seed1A = {};
 
-    TEP_SEED_INIT(&seed1, k_base_nh_ip);
-    // seed1A = seed + different tunnel type, nat
-    TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
-                  k_nat, PDS_TEP_TYPE_IGW);
+    if (IS_ARTEMIS()) {
+        TEP_SEED_INIT(&seed1, k_base_nh_ip, k_max_tep, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "60::60:1:1", 0);
+    } else {
+        TEP_SEED_INIT(&seed1, k_base_nh_ip);
+        // seed1A = seed + different tunnel type, nat
+        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
+                      k_nat, PDS_TEP_TYPE_IGW);
+    }
     workflow_neg_5<tep_util, tep_stepper_seed_t>(&seed1, &seed1A);
 }
 
@@ -218,10 +332,17 @@ TEST_F(tep_test, DISABLED_tep_workflow_neg_5) {
 TEST_F(tep_test, tep_workflow_neg_6) {
     tep_stepper_seed_t seed1 = {}, seed1A = {};
 
-    TEP_SEED_INIT(&seed1, k_base_nh_ip);
-    // seed1A = seed1 + different tunnel type, nat
-    TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep+1, k_mplsoudp_encap,
-                  k_nat, PDS_TEP_TYPE_IGW);
+    if (IS_ARTEMIS()) {
+        TEP_SEED_INIT(&seed1, k_base_nh_ip, k_max_tep, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep+1, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "60::60:1:1", 0);
+    } else {
+        TEP_SEED_INIT(&seed1, k_base_nh_ip);
+        // seed1A = seed1 + different tunnel type, nat
+        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep+1, k_mplsoudp_encap,
+                      k_nat, PDS_TEP_TYPE_IGW);
+    }
     workflow_neg_6<tep_util, tep_stepper_seed_t>(&seed1, &seed1A);
 }
 
@@ -229,10 +350,19 @@ TEST_F(tep_test, tep_workflow_neg_6) {
 TEST_F(tep_test, tep_workflow_neg_7) {
     tep_stepper_seed_t seed1 = {}, seed1A = {}, seed2 = {};
 
-    TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_mplsoudp_encap,
-                  k_nat, PDS_TEP_TYPE_IGW);
-    TEP_SEED_INIT(&seed1A, "10.10.1.1", 10);
-    TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
+    if (IS_ARTEMIS()) {
+        TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
+        TEP_SEED_INIT(&seed1A, "10.10.1.1", 10, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "60::60:1:1", 0);
+        TEP_SEED_INIT(&seed2, "20.20.1.1", 20, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
+    } else {
+        TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_mplsoudp_encap,
+                      k_nat, PDS_TEP_TYPE_IGW);
+        TEP_SEED_INIT(&seed1A, "10.10.1.1", 10);
+        TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
+    }
     workflow_neg_7<tep_util, tep_stepper_seed_t>(&seed1, &seed1A, &seed2);
 }
 
@@ -240,9 +370,16 @@ TEST_F(tep_test, tep_workflow_neg_7) {
 TEST_F(tep_test, tep_workflow_neg_8) {
     tep_stepper_seed_t seed1 = {}, seed2 = {};
 
-    TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_mplsoudp_encap,
-                  k_nat, PDS_TEP_TYPE_IGW);
-    TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
+    if (IS_ARTEMIS()) {
+        TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
+        TEP_SEED_INIT(&seed2, "20.20.1.1", 20, k_zero_encap,
+                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
+    } else {
+        TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_mplsoudp_encap,
+                      k_nat, PDS_TEP_TYPE_IGW);
+        TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
+    }
     workflow_neg_8<tep_util, tep_stepper_seed_t>(&seed1, &seed2);
 }
 
@@ -264,8 +401,7 @@ tep_test_options_validate (void)
         cerr << "HAL config file is not specified" << endl;
         return sdk::SDK_RET_ERR;
     }
-    if (api_test::g_pipeline != "apollo" &&
-        api_test::g_pipeline != "artemis") {
+    if (!IS_APOLLO() && !IS_ARTEMIS()) {
         cerr << "Pipeline specified is invalid" << endl;
         return sdk::SDK_RET_ERR;
     }

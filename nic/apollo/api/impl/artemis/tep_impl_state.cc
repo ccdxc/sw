@@ -27,7 +27,7 @@ tep_impl_state::tep_impl_state(pds_state *state) {
     // instantiate P4 tables for bookkeeping
     p4pd_global_table_properties_get(P4_ARTEMIS_TXDMA_TBL_ID_REMOTE_46_MAPPING,
                                      &tinfo);
-    // allocate indexer for vnic hw id allocation
+    // allocate indexer for remote 4to6 mapping table hw id
     remote_46_tep_idxr_ = indexer::factory(tinfo.tabledepth);
     SDK_ASSERT(remote_46_tep_idxr_ != NULL);
 }

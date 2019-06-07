@@ -17,6 +17,9 @@
 namespace api_test {
 
 extern const pds_encap_t k_default_tep_encap;
+extern const pds_tep_type_t k_default_tep_type;
+extern const pds_encap_t k_zero_encap;
+extern const ip_addr_t k_zero_ip;
 
 #define TEP_SEED_INIT tep_util::stepper_seed_init
 
@@ -55,6 +58,8 @@ extern const pds_encap_t k_default_tep_encap;
 // TEP object seed used as base seed in many_* operations
 typedef struct tep_stepper_seed_s {
     ip_addr_t ip_addr;
+    ip_addr_t dipi;
+    uint64_t dmac;
     pds_tep_type_t type;
     pds_encap_t encap;
     bool nat;
@@ -66,6 +71,8 @@ class tep_util {
 public:
     // Test parameters
     ip_addr_t ip_addr;            ///< TEP IP
+    ip_addr_t dipi;               ///< Inner destination IP
+    uint64_t dmac;                ///< MAC address of this TEP
     pds_tep_type_t type;          ///< TEP type
     pds_encap_t encap;            ///< TEP encap
     bool nat;                     ///< NAT state
@@ -76,7 +83,8 @@ public:
 
     /// \brief parameterized constructor
     tep_util(ip_addr_t ip_addr, pds_tep_type_t type=PDS_TEP_TYPE_WORKLOAD,
-             pds_encap_t encap=k_default_tep_encap, bool nat=FALSE);
+             pds_encap_t encap=k_default_tep_encap, bool nat=FALSE,
+             ip_addr_t dipi=k_zero_ip, uint64_t dmac=0);
 
     /// \brief destructor
     ~tep_util();
@@ -139,11 +147,15 @@ public:
     /// \param[in] encap TEP encap
     /// \param[in] nat NAT state
     /// \param[in] type TEP type
+    /// \param[in] dipi_str base outer source IP address
+    /// \param[in] dmac base mac address
     static void stepper_seed_init(tep_stepper_seed_t *seed, std::string ip_str,
                                   uint32_t num_tep=PDS_MAX_TEP,
                                   pds_encap_t encap=k_default_tep_encap,
-                                  bool nat=TRUE,
-                                  pds_tep_type_t type=PDS_TEP_TYPE_WORKLOAD);
+                                  bool nat=FALSE,
+                                  pds_tep_type_t type=k_default_tep_type,
+                                  std::string dipi_str="0.0.0.0",
+                                  uint64_t dmac=0);
 
     /// \brief Indicates whether TEP is stateful
     ///

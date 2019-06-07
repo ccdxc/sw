@@ -46,7 +46,7 @@ $GDB apollo_vnic_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/ap
 [[ $? -ne 0 ]] && echo "apollo_vnic_test failed!" && exit 1
 
 echo "Running tep test"
-$GDB apollo_tep_test -c hal.json -f apollo --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_tep_test.xml" > apollo_tep_test.log.txt
+$GDB tep_test -c hal.json -f apollo --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_tep_test.xml" > apollo_tep_test.log.txt
 [[ $? -ne 0 ]] && echo "apollo_tep_test failed!" && exit 1
 
 #echo "Running mapping test"

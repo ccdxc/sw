@@ -121,12 +121,14 @@ targets:
     sub-area:
     feature:
 
-  artemis/x86_build:
-    commands: ["make", "PIPELINE=artemis"]
-    owners: ["email:saratk@pensando.io","email:srikanth@pensando.io"]
+  artemis/gtest:
+    commands: ["make", "PIPELINE=artemis", "jobd/artemis/gtest"]
+    owners: ["email:jcruz@pensando.io"]
     area:
     sub-area:
     feature:
+    build-dependencies:
+    - build-artemis-x86
 
   artemis/pds_scale_test_mock:
     commands: ["make", "PIPELINE=artemis", "jobd/artemis/pds_scale_test_mock"]

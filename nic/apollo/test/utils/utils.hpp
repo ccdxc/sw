@@ -100,6 +100,24 @@ extract_ip_pfx (const char *str, ip_prefix_t *ip_pfx)
     }
 }
 
+#define IS_APOLLO()                                                    \
+    api_test::apollo(api_test::g_pipeline)
+
+#define IS_ARTEMIS()                                                   \
+    api_test::artemis(api_test::g_pipeline)
+
+inline bool
+apollo (const std::string pipeline_str)
+{
+    return pipeline_str == "apollo";
+}
+
+inline bool
+artemis (const std::string pipeline_str)
+{
+    return pipeline_str == "artemis";
+}
+
 // Returns true if mock_mode is enabled, otherwise false
 static inline bool
 capri_mock_mode (void)
