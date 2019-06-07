@@ -20,7 +20,6 @@
 #include "nic/apollo/api/impl/artemis/vnic_impl.hpp"
 #include "nic/apollo/api/impl/artemis/mapping_impl.hpp"
 #include "nic/apollo/api/impl/artemis/nexthop_impl.hpp"
-#include "nic/apollo/p4/include/defines.h"
 #include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
 #include "nic/sdk/platform/capri/capri_p4.hpp"
 
