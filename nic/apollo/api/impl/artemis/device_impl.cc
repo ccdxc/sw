@@ -98,7 +98,7 @@ device_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                                                      device->ip_addr());
         sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP,
                                                      device->ip_addr());
-        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP1_RX,
+        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_EGRESS_VNIC_INFO,
                                                      MAC_TO_UINT64(device->mac()));
         break;
 
@@ -106,7 +106,7 @@ device_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
         PDS_TRACE_DEBUG("Cleaning up device config");
         sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_VNIC_MAPPING, 0);
         sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP, 0);
-        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP1_RX, 0);
+        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_EGRESS_VNIC_INFO, 0);
         break;
 
     default:

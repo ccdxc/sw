@@ -61,7 +61,7 @@ header_type rewrite_metadata_t {
         encap_src_ip        : 128;
         ip                  : 128;
         l4port              : 16;
-        pa_mac              : 48;
+        device_mac          : 48;
         nexthop_idx         : 20;
         flags               : 8;
         policer_idx         : 12;

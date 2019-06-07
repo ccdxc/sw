@@ -10,13 +10,19 @@ struct phv_ p;
 %%
 
 egress_vnic_info:
-    phvwr           p.rewrite_metadata_pa_mac, d.egress_vnic_info_d.pa_mac
     seq             c1, k.control_metadata_direction, RX_FROM_SWITCH
     nop.!c1.e
+    phvwr           p.rewrite_metadata_device_mac, r5
+    phvwr           p.ethernet_1_dstAddr, d.egress_vnic_info_d.ca_mac
     seq             c1, k.rewrite_metadata_flags[RX_REWRITE_SMAC_BITS], \
                         RX_REWRITE_SMAC_FROM_VRMAC
-    phvwr.e         p.ethernet_1_dstAddr, d.egress_vnic_info_d.ca_mac
     phvwr.c1        p.ethernet_1_srcAddr, d.egress_vnic_info_d.vr_mac
+    phvwr           p.capri_intrinsic_tm_oport, d.egress_vnic_info_d.port
+    seq             c1, d.egress_vnic_info_d.port, TM_PORT_DMA
+    nop.!c1.e
+    phvwr.c1        p.capri_intrinsic_lif, d.egress_vnic_info_d.lif
+    phvwr.e         p.capri_rxdma_intrinsic_qtype, d.egress_vnic_info_d.qtype
+    phvwr.f         p.capri_rxdma_intrinsic_qid, d.egress_vnic_info_d.qid
 
 /*****************************************************************************/
 /* error function                                                            */

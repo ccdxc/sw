@@ -77,6 +77,8 @@ typedef struct cache_line_s {
     uint8_t packed_entry[CACHE_LINE_SIZE-sizeof(action_pc)];
 } cache_line_t;
 
+uint64_t g_device_mac = 0x00AABBCCDDEEULL;
+
 uint16_t g_vnic_id1 = 0x1A;;
 uint16_t g_vpc_id1 = 0xC1;
 uint16_t g_xlate_idx1 = 0xA1D1;
@@ -84,7 +86,6 @@ uint32_t g_session_idx1 = 0x700DBA;
 uint32_t g_nexthop_idx1 = 0xE101;
 
 uint64_t g_dmaco1 = 0x001234567890ULL;
-uint64_t g_smaco1 = 0x00AABBCCDDEEULL;
 uint32_t g_sipo1 = 0x64656667;
 uint32_t g_dipo1 = 0x0C0C0101;
 uint32_t g_tunnel_vni1 = 0xABCDEF;
@@ -316,6 +317,13 @@ txdma_symbols_init (void **p4plus_symbols,
 }
 
 static void
+table_constants_init (void)
+{
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_EGRESS_VNIC_INFO,
+                                                 g_device_mac);
+}
+
+static void
 key_native_init (void)
 {
     key_native_swkey_t key;
@@ -446,7 +454,7 @@ egress_vnic_init (void)
     uint32_t tbl_id = P4TBL_ID_EGRESS_VNIC_INFO;
 
     memset(&data, 0, sizeof(data));
-    memcpy(vnic_info->pa_mac, &g_smaco1, 6);
+    vnic_info->port = TM_PORT_UPLINK_0;
     entry_write(tbl_id, g_vnic_id1, NULL, NULL, &data, false, 0);
 }
 
@@ -692,6 +700,7 @@ TEST_F(artemis_test, test1)
 #endif
 
     init_service_lif();
+    table_constants_init();
     key_native_init();
     key_tunneled_init();
     key_tunneled2_init();

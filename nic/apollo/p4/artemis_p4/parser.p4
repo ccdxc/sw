@@ -607,6 +607,7 @@ parser deparse_egress {
     // intrinsic headers
     extract(capri_intrinsic);
     extract(capri_p4_intrinsic);
+    extract(capri_rxdma_intrinsic);
 
     // Below are headers used in case of egress-to-egress recirc
     extract(egress_service_header);

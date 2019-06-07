@@ -54,7 +54,7 @@ ipv4_vxlan_encap:
                         ctag_0_valid, \
                         ethernet_0_valid}, 0x1A5
     phvwr           p.capri_deparser_len_ipv4_0_hdr_len, 20
-    or              r7, ETHERTYPE_IPV4, k.rewrite_metadata_pa_mac, 16
+    or              r7, ETHERTYPE_IPV4, k.rewrite_metadata_device_mac, 16
     phvwr           p.{ethernet_0_srcAddr,ethernet_0_etherType}, r7
     add             r1, r1, 36
     phvwr           p.{ipv4_0_version,ipv4_0_ihl}, 0x45
@@ -85,7 +85,7 @@ ipv6_vxlan_encap:
                         ipv4_0_csum, \
                         ctag_0_valid, \
                         ethernet_0_valid}, 0x1C1
-    or              r7, ETHERTYPE_IPV6, k.rewrite_metadata_pa_mac, 16
+    or              r7, ETHERTYPE_IPV6, k.rewrite_metadata_device_mac, 16
     phvwr           p.{ethernet_0_srcAddr,ethernet_0_etherType}, r7
     add             r1, r1, 16
     phvwr           p.ipv6_0_version, 0x6

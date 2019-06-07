@@ -21,7 +21,7 @@ action ipv4_vxlan_encap(vni, dipo, dmac) {
     add_to_field(scratch_metadata.ip_totallen, 20 + 8 + 8);
 
     modify_field(ethernet_0.dstAddr, dmac);
-    modify_field(ethernet_0.srcAddr, rewrite_metadata.pa_mac);
+    modify_field(ethernet_0.srcAddr, rewrite_metadata.device_mac);
     modify_field(ethernet_0.etherType, ETHERTYPE_IPV4);
 
     modify_field(ipv4_0.version, 4);
@@ -62,7 +62,7 @@ action ipv6_vxlan_encap(vni, dipo, dmac) {
     add_to_field(scratch_metadata.ip_totallen, 8 + 8);
 
     modify_field(ethernet_0.dstAddr, dmac);
-    modify_field(ethernet_0.srcAddr, rewrite_metadata.pa_mac);
+    modify_field(ethernet_0.srcAddr, rewrite_metadata.device_mac);
     modify_field(ethernet_0.etherType, ETHERTYPE_IPV6);
 
     modify_field(ipv6_0.version, 6);

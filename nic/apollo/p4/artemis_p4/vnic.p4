@@ -32,13 +32,19 @@ control ingress_vnic_info {
 /******************************************************************************/
 /* Egress VNIC info                                                           */
 /******************************************************************************/
-action egress_vnic_info(vr_mac, ca_mac, pa_mac) {
-    modify_field(rewrite_metadata.pa_mac, pa_mac);
+action egress_vnic_info(vr_mac, ca_mac, port, lif, qtype, qid) {
+    // modify_field(rewrite_metadata.pa_mac, R5);
     if (control_metadata.direction == RX_FROM_SWITCH) {
         if (RX_REWRITE(rewrite_metadata.flags, SMAC, FROM_VRMAC)) {
             modify_field(ethernet_1.srcAddr, vr_mac);
         }
         modify_field(ethernet_1.dstAddr, ca_mac);
+        modify_field(capri_intrinsic.tm_oport, port);
+        if (port == TM_PORT_DMA) {
+            modify_field(capri_intrinsic.lif, lif);
+            modify_field(capri_rxdma_intrinsic.qtype, qtype);
+            modify_field(capri_rxdma_intrinsic.qid, qid);
+        }
     }
 }
 

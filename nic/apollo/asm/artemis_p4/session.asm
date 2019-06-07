@@ -39,8 +39,8 @@ session_info_common:
     bbeq            k.control_metadata_direction, TX_FROM_HOST, session_tx
     phvwr           p.rewrite_metadata_l4port, d.session_info_d.tx_dst_l4port
 session_rx:
-    phvwrpair       p.rewrite_metadata_flags, d.session_info_d.rx_rewrite_flags, \
-                        p.rewrite_metadata_policer_idx, d.session_info_d.rx_policer_idx
+    phvwr           p.rewrite_metadata_flags, d.session_info_d.rx_rewrite_flags
+    phvwr           p.rewrite_metadata_policer_idx, d.session_info_d.rx_policer_idx
     seq             c1, d.session_info_d.rx_rewrite_flags[RX_REWRITE_DST_IP_BITS], \
                         RX_REWRITE_DST_IP_FROM_SERVICE
     phvwr.c1        p.nat_metadata_xlate_idx, k.p4e_i2e_service_xlate_idx
@@ -50,8 +50,8 @@ session_rx:
     phvwr.c1        p.nat_metadata_xlate_idx, k.p4e_i2e_pa_or_ca_xlate_idx
 
 session_tx:
-    phvwrpair       p.rewrite_metadata_flags, d.session_info_d.tx_rewrite_flags, \
-                        p.rewrite_metadata_policer_idx, d.session_info_d.tx_policer_idx
+    phvwr           p.rewrite_metadata_flags, d.session_info_d.tx_rewrite_flags
+    phvwr           p.rewrite_metadata_policer_idx, d.session_info_d.tx_policer_idx
     add             r1, r0, k.p4e_i2e_pa_or_ca_xlate_idx
     seq             c1, d.session_info_d.tx_rewrite_flags[TX_REWRITE_SRC_IP_BITS], \
                         TX_REWRITE_SRC_IP_FROM_SERVICE
