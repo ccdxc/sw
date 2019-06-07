@@ -83,6 +83,9 @@ action ipv6_vxlan_encap(vni, dipo, dmac) {
 }
 
 action nexthop_info(port, vni, ip_type, dipo, dmaco, dmaci) {
+    if (rewrite_metadata.nexthop_idx == 0) {
+        egress_drop(P4E_DROP_INVALID_NEXTHOP);
+    }
     modify_field(capri_intrinsic.tm_oport, port);
     if (TX_REWRITE(rewrite_metadata.flags, DMAC, FROM_NEXTHOP)) {
         modify_field(ethernet_1.dstAddr, dmaci);

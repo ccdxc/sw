@@ -10,6 +10,10 @@ struct phv_ p;
 %%
 
 nexthop_info:
+    seq             c1, k.rewrite_metadata_nexthop_idx, r0
+    bcf             [c1], nexthop_error
+    phvwr.c1        p.control_metadata_p4e_drop_reason[P4E_DROP_INVALID_NEXTHOP], 1
+
     phvwr           p.txdma_to_p4e_valid, FALSE
     phvwr           p.predicate_header_valid, FALSE
     phvwr           p.p4e_i2e_valid, FALSE

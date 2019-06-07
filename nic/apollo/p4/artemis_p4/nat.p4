@@ -2,6 +2,10 @@
 /* NAT                                                                       */
 /*****************************************************************************/
 action nat_rewrite(nat_ip) {
+    if (nat_metadata.xlate_idx == 0) {
+        // return;
+    }
+
     if (control_metadata.direction == TX_FROM_HOST) {
         if (TX_REWRITE(rewrite_metadata.flags, SRC_IP, FROM_PUBLIC) or
             TX_REWRITE(rewrite_metadata.flags, SRC_IP, FROM_SERVICE)) {

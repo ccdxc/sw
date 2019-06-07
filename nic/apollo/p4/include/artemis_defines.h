@@ -37,6 +37,7 @@
 
 #define P4E_DROP_INVALID_SESSION        0
 #define P4E_DROP_SESSION_HIT            1
+#define P4E_DROP_INVALID_NEXTHOP        2
 #define P4E_DROP_REASON_MIN             0
 #define P4E_DROP_REASON_MAX             0
 

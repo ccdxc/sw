@@ -10,6 +10,8 @@ struct phv_ p;
 %%
 
 nat_rewrite:
+    seq             c1, k.nat_metadata_xlate_idx, r0
+    nop.c1.e
     seq             c1, k.ipv4_1_valid, TRUE
     seq             c2, k.ipv6_1_valid, TRUE
     bcf             [!c1 & !c2], nat_rewrite_done
