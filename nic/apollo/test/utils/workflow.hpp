@@ -24,10 +24,10 @@ namespace api_test {
         ASSERT_TRUE(class_T::many_read(seed) == sdk::SDK_RET_OK);   \
     }
 
-#define MANY_READ_FAIL(seed, exp_result)                            \
+#define MANY_READ_FAIL(seed)                                        \
     if (class_T::is_stateful()) {                                   \
         ASSERT_TRUE(class_T::many_read(seed,                        \
-            exp_result) == sdk::SDK_RET_OK);                        \
+            sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);      \
     }
 
 #define MANY_UPDATE(seed)                                           \
@@ -45,7 +45,7 @@ inline void workflow_1(seed_T *seed) {
     MANY_DELETE(seed);
     batch_commit();
 
-    MANY_READ_FAIL(seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed);
 }
 
 // WF_2: [ Create SetMax - Delete SetMax - Create SetMax ] - Read
@@ -65,7 +65,7 @@ inline void workflow_2(seed_T *seed) {
     MANY_DELETE(seed);
     batch_commit();
 
-    MANY_READ_FAIL(seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed);
 }
 
 // WF_3: [ Create Set1, Set2 - Delete Set1 - Create Set3 ] - Read
@@ -79,7 +79,7 @@ inline void workflow_3(seed_T *seed1, seed_T *seed2, seed_T *seed3) {
     MANY_CREATE(seed3);
     batch_commit();
 
-    MANY_READ_FAIL(seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed1);
     MANY_READ(seed2);
     MANY_READ(seed3);
 
@@ -89,8 +89,8 @@ inline void workflow_3(seed_T *seed1, seed_T *seed2, seed_T *seed3) {
     MANY_DELETE(seed3);
     batch_commit();
 
-    MANY_READ_FAIL(seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    MANY_READ_FAIL(seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed2);
+    MANY_READ_FAIL(seed3);
 }
 
 // WF_4: [ Create SetMax ] - Read - [ Delete SetMax ] - Read
@@ -107,7 +107,7 @@ inline void workflow_4(seed_T *seed) {
     MANY_DELETE(seed);
     batch_commit();
 
-    MANY_READ_FAIL(seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed);
 }
 
 // WF_5: [ Create Set1, Set2 ] - Read - [ Delete Set1 - Create Set3 ] - Read
@@ -127,7 +127,7 @@ inline void workflow_5(seed_T *seed1, seed_T *seed2, seed_T *seed3) {
     MANY_CREATE(seed3);
     batch_commit();
 
-    MANY_READ_FAIL(seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed1);
     MANY_READ(seed2);
     MANY_READ(seed3);
 
@@ -137,8 +137,8 @@ inline void workflow_5(seed_T *seed1, seed_T *seed2, seed_T *seed3) {
     MANY_DELETE(seed3);
     batch_commit();
 
-    MANY_READ_FAIL(seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    MANY_READ_FAIL(seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed2);
+    MANY_READ_FAIL(seed3);
 }
 
 // WF_6: [ Create SetMax - Update SetMax - Update SetMax - Delete SetMax ]
@@ -153,7 +153,7 @@ inline void workflow_6(seed_T *seed1, seed_T *seed1A, seed_T *seed1B) {
     MANY_DELETE(seed1B);
     batch_commit();
 
-    MANY_READ_FAIL(seed1B, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed1B);
 }
 
 // WF_7: [ Create SetMax - Delete SetMax - Create SetMax - Update SetMax -
@@ -176,7 +176,7 @@ inline void workflow_7(seed_T *seed1, seed_T *seed1A, seed_T *seed1B) {
     MANY_DELETE(seed1B);
     batch_commit();
 
-    MANY_READ_FAIL(seed1B, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed1B);
 }
 
 // WF_8: [ Create SetMax - Update SetMax ] - Read - [ Update SetMax ] - Read -
@@ -201,7 +201,7 @@ inline void workflow_8(seed_T *seed1, seed_T *seed1A, seed_T *seed1B) {
     MANY_DELETE(seed1B);
     batch_commit();
 
-    MANY_READ_FAIL(seed1B, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed1B);
 }
 
 // WF_9: [ Create SetMax ] - Read - [ Update SetMax - Delete SetMax ] - Read
@@ -219,7 +219,7 @@ inline void workflow_9(seed_T *seed1, seed_T *seed1A) {
     MANY_DELETE(seed1A);
     batch_commit();
 
-    MANY_READ_FAIL(seed1A, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed1A);
 }
 
 // WF_10: [ Create Set1, Set2, Set3 - Delete Set1 - Update Set2 ] - Read -
@@ -236,7 +236,7 @@ inline void workflow_10(seed_T *seed1, seed_T *seed2, seed_T *seed2A,
     MANY_UPDATE(seed2A);
     batch_commit();
 
-    MANY_READ_FAIL(seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed1);
     MANY_READ(seed2A);
     MANY_READ(seed3);
 
@@ -247,7 +247,7 @@ inline void workflow_10(seed_T *seed1, seed_T *seed2, seed_T *seed2A,
     batch_commit();
 
     MANY_READ(seed3A);
-    MANY_READ_FAIL(seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed2);
     MANY_READ(seed4);
 
     // cleanup
@@ -256,8 +256,8 @@ inline void workflow_10(seed_T *seed1, seed_T *seed2, seed_T *seed2A,
     MANY_DELETE(seed3A);
     batch_commit();
 
-    MANY_READ_FAIL(seed4, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    MANY_READ_FAIL(seed3A, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed4);
+    MANY_READ_FAIL(seed3A);
 }
 
 // WF_N_1: [ Create SetMax ] - [ Create SetMax ] - Read
@@ -282,7 +282,7 @@ inline void workflow_neg_1(seed_T *seed) {
     MANY_DELETE(seed);
     batch_commit();
 
-    MANY_READ_FAIL(seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed);
 }
 
 // WF_N_2: [ Create SetMax+1 ] - Read
@@ -294,14 +294,14 @@ inline void workflow_neg_2(seed_T *seed) {
     batch_commit_fail();
     batch_abort();
 
-    MANY_READ_FAIL(seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed);
 }
 
 // WF_N_3: Read NonEx - [ Delete NonExMax ] - [ Update NonExMax ] - Read
 template <typename class_T, typename seed_T>
 inline void workflow_neg_3(seed_T *seed) {
     // trigger
-    MANY_READ_FAIL(seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed);
 
     // trigger
     batch_start();
@@ -315,7 +315,7 @@ inline void workflow_neg_3(seed_T *seed) {
     batch_commit_fail();
     batch_abort();
 
-    MANY_READ_FAIL(seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed);
 }
 
 // WF_N_4: [ Create Set1 ] - Read - [ Delete Set1, Set2 ] - Read
@@ -335,14 +335,14 @@ inline void workflow_neg_4(seed_T *seed1, seed_T *seed2) {
     batch_abort();
 
     MANY_READ(seed1);
-    MANY_READ_FAIL(seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed2);
 
     // cleanup
     batch_start();
     MANY_DELETE(seed1);
     batch_commit();
 
-    MANY_READ_FAIL(seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed2);
 }
 
 // WF_N_5: [ Create SetMax ] - Read - [ Delete SetMax - Update SetMax ] - Read
@@ -368,7 +368,7 @@ inline void workflow_neg_5(seed_T *seed1, seed_T *seed1A) {
     MANY_DELETE(seed1);
     batch_commit();
 
-    MANY_READ_FAIL(seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed1);
 }
 
 // WF_N_6: [ Create SetMax ] - Read - [ Update SetMax + 1 ] - Read
@@ -393,7 +393,7 @@ inline void workflow_neg_6(seed_T *seed1, seed_T *seed1A) {
     MANY_DELETE(seed1);
     batch_commit();
 
-    MANY_READ_FAIL(seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed1);
 }
 
 // WF_N_7: [ Create Set1 ] - Read - [ Update Set1 - Update Set2 ] - Read
@@ -419,7 +419,7 @@ inline void workflow_neg_7(seed_T *seed1, seed_T *seed1A, seed_T *seed2) {
     MANY_DELETE(seed1);
     batch_commit();
 
-    MANY_READ_FAIL(seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed1);
 }
 
 // WF_N_8: [ Create Set1 ] - Read - [ Delete Set1 - Update Set2 ] - Read
@@ -445,7 +445,7 @@ inline void workflow_neg_8(seed_T *seed1, seed_T *seed2) {
     MANY_DELETE(seed1);
     batch_commit();
 
-    MANY_READ_FAIL(seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed1);
 }
 
 }    // end namespace
