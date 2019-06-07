@@ -58,6 +58,7 @@ testbundles:
         - firewall/policy_scale.testbundle
         - alg/alg_regression.testbundle
         - ipsec/ipsec.testbundle
+        - firewall/conntrack_regression.testbundle
 
 teardown:
     #- step      : verif.utils.collect_logs_and_cores

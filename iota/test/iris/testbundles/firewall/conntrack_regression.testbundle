@@ -9,7 +9,7 @@ testcases:
         testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     -   name    : TDL_NZ_LOW_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw
@@ -17,28 +17,28 @@ testcases:
             resp_flow: True
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
         
     -   name    : TDL_NZ_LOW_INSIDE_NOT_ALIGN
         testcase: testcases.security.conntrack.tcp_conntrack_in_window_not_left_aligned
         ignore:   False
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
         
     -   name    : TDL_NZ_LOW_ON_BORDER
         testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw_border
         ignore:   False
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
         
     -   name    : TDL_NZ_LOW_OVLP
         testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw_ovlp
         ignore:   False
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
     
     #ignoring below testcases as we need to reduce tcp close timeout
     -   name    : TDL_NZ_ROW_OVLP
@@ -46,21 +46,21 @@ testcases:
         ignore:   False
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     -   name    : TDL_NZ_ROW
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw
         ignore:   False
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
     #Data is trimmed and passed packet goes through need to debug if no data becomes aligned. 
     -   name    : TDL_Z_ROW_OVLP_RST
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_overlap_rst
         ignore:   False
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     #out of window exception set without data
     -   name    : TDL_NZ_ROW_RST
@@ -68,28 +68,28 @@ testcases:
         ignore:   False
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
     
     -   name    : TDL_NZ_LOW_INSIDE_NOT_ALIGN_RST
         testcase: testcases.security.conntrack.tcp_conntrack_in_window_not_left_aligned_rst
         ignore:   False
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     -   name    : TDL_NZ_ROW_FIN
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_fin
         ignore:   False
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     -   name    : TDL_NZ_ROW_OVLP_FIN
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_overlap_fin
         ignore:   False
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     -   name    : TDL_NZ_LOW_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw
@@ -97,7 +97,7 @@ testcases:
             resp_flow: True
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     -   name    : TDL_NZ_LOW_INSIDE_NOT_ALIGN_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_in_window_not_left_aligned
@@ -106,7 +106,7 @@ testcases:
             resp_flow: True
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     -   name    : TDL_NZ_LOW_ON_BORDER_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw_border
@@ -115,7 +115,7 @@ testcases:
             resp_flow: True
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     -   name    : TDL_NZ_LOW_OVLP_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw_ovlp
@@ -124,7 +124,7 @@ testcases:
             resp_flow: True
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
     
     #ignoring below testcases as we need to reduce tcp close timeout
     -   name    : TDL_NZ_ROW_OVLP_RESP
@@ -134,7 +134,7 @@ testcases:
             resp_flow: True
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
         
     -   name    : TDL_NZ_ROW_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw
@@ -143,7 +143,7 @@ testcases:
             resp_flow: True
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     #Data is trimmed and passed packet goes through need to debug 
     -   name    : TDL_Z_ROW_OVLP_RST_RESP
@@ -153,7 +153,7 @@ testcases:
             resp_flow: True
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
     #out of window exception
     -   name    : TDL_NZ_ROW_RST_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_rst
@@ -162,7 +162,7 @@ testcases:
             resp_flow: True
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     -   name    : TDL_NZ_LOW_INSIDE_NOT_ALIGN_RST_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_in_window_not_left_aligned_rst
@@ -171,7 +171,7 @@ testcases:
             resp_flow: True
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     -   name    : TDL_NZ_ROW_FIN_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_fin
@@ -180,7 +180,7 @@ testcases:
             resp_flow: True
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     -   name    : TDL_NZ_ROW_OVLP_FIN_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_overlap_fin
@@ -189,7 +189,7 @@ testcases:
             resp_flow: True
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     -   name    : TDL_DATA_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_data
@@ -198,7 +198,7 @@ testcases:
             resp_flow: True
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     -   name    : TDL_DATA_CLOSE_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_data_close
@@ -207,7 +207,7 @@ testcases:
             resp_flow: True
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     -   name    : TDL_SYN_FLAG_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_synflag
@@ -216,7 +216,7 @@ testcases:
             resp_flow: True
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     -   name    : TDL_SYN_CLOSE_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_syn_close
@@ -225,7 +225,7 @@ testcases:
             resp_flow: True
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     -   name    : TDL_TERM_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_term
@@ -234,7 +234,7 @@ testcases:
             resp_flow: True
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     # done / done resp
     -   name    : TDL_DATA
@@ -242,7 +242,7 @@ testcases:
         ignore:   False
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
     
     # tcpunexpectedpkt = True
     -   name    : TDL_DATA_CLOSE
@@ -250,7 +250,7 @@ testcases:
         ignore:   False
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     # 
     -   name    : TDL_SYN_FLAG
@@ -258,7 +258,7 @@ testcases:
         ignore:   False
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     # tcpunexpectedpkt = True
     -   name    : TDL_SYN_CLOSE
@@ -266,21 +266,21 @@ testcases:
         ignore:   False
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     -   name    : TDL_TERM
         testcase: testcases.security.conntrack.tcp_conntrack_term
         ignore:   False
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     -   name    : CONN_3WAY
         testcase: testcases.security.conntrack.tcp_conntrack_connection_est
         ignore:   False
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
     # trim the mss - default behaviour
     -   name    : CONN_MSS
         testcase: testcases.security.conntrack.tcp_conntrack_connection_mss
@@ -289,7 +289,7 @@ testcases:
             resp_flow: True
         iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     - name      : CONN_TS_RESP
       testcase: testcases.security.conntrack.tcp_conntrack_connection_ts
@@ -298,14 +298,14 @@ testcases:
             resp_flow: True
       iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
 
     - name      : CONN_TS
       testcase: testcases.security.conntrack.tcp_conntrack_connection_ts
       ignore:   False
       iterators:
             type : simple
-            kind : ["local"]
+            kind : ["local", "remote"]
         
         
 

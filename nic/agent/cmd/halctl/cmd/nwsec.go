@@ -56,7 +56,8 @@ func init() {
 	showCmd.AddCommand(nwsecShowCmd)
 	nwsecShowCmd.AddCommand(nwsecProfShowCmd)
 	nwsecShowCmd.AddCommand(nwsecPolicyShowCmd)
-	nwsecPolicyShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	// Commenting yaml option as on large polices halclt runs out of memory
+	//nwsecPolicyShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	nwsecShowCmd.AddCommand(nwsecFlowGateShowCmd)
 
 	nwsecProfShowCmd.Flags().Uint32Var(&nwsecProfID, "id", 1, "Specify security profile ID")
