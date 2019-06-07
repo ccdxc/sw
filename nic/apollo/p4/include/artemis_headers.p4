@@ -6,7 +6,7 @@ header_type artemis_p4_to_rxdma_header_t {
         vnic_info_en    : 1;
         cps_path_en     : 1;
         aging_enable    : 1;
-        
+
         pad0            : 5;
         iptype          : 1;
         direction       : 1;
@@ -50,4 +50,3 @@ header_type artemis_rx_to_tx_header_t {
         vcn_id          : 8;  // Byte 35
     }
 }
-

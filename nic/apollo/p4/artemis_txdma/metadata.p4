@@ -1,14 +1,18 @@
 #include "../../../p4/common-p4+/capri_dma_cmd.p4"
 #include "../../../p4/common-p4+/capri_doorbell.p4"
 
-header_type txdma_control_metadata_t {
+header_type txdma_predicate_metadata_t {
     fields {
         p4plus_app_id       : 4;
         mapping_en          : 1;
         pass_two            : 1;
         pass_skip           : 1;
         cps_path_en         : 1;
+    }
+}
 
+header_type txdma_control_metadata_t {
+    fields {
         pktdesc_addr        : 40;
         rxdma_cindex_addr   : 40;
         rfc_table_addr      : 40;
@@ -71,7 +75,7 @@ header_type scratch_metadata_t {
 // PHV instantiation
 @pragma dont_trim
 @pragma pa_header_union ingress app_header
-metadata txdma_control_metadata_t txdma_control;
+metadata txdma_predicate_metadata_t txdma_predicate;
 
 @pragma dont_trim
 @pragma pa_header_union ingress to_stage_1
@@ -86,6 +90,9 @@ metadata qstate_hdr_t           scratch_qstate_hdr;
 
 @pragma scratch_metadata
 metadata qstate_info_t          scratch_qstate_info;
+
+@pragma dont_trim
+metadata txdma_control_metadata_t txdma_control;
 
 @pragma pa_align 512
 @pragma dont_trim

@@ -99,6 +99,8 @@ header_type scratch_metadata_t {
         tcp_flags           : 8;
         session_stats_addr  : 34;
         tag_root_addr       : 40;
+        meter_idx           : 16;
+        packet_len          : 16;
     }
 }
 

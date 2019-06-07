@@ -1057,13 +1057,13 @@ parser start {
 
 control ingress {
     common_tx_p4plus_stage0();
-    if (txdma_control.cps_path_en == 1) {
-        if (txdma_control.pass_skip == 0) {
+    if (txdma_predicate.cps_path_en == 1) {
+        if (txdma_predicate.pass_skip == 0) {
             // LPM Tables does set the mapping_en predicate bit in pass 1 as follows:
             //   = 0 for NH_TYPE= VNET or WORKLOAD  (then launch Mapping table based on vnet/vpc id)
             //   = 1 for NH_TYPE= ST or WORKLOAD  (then launch Remote_46_Mapping table based on svc id)
             // TODO-KSM: Both Action routines would reset this mapping_en bit
-            if (txdma_control.pass_two == 0) {
+            if (txdma_predicate.pass_two == 0) {
                 read_qstate();
             } else {
                 vnic_info_txdma();

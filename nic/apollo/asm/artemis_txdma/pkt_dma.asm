@@ -16,7 +16,7 @@ pkt_dma:
     seq              c1, k.capri_p4_intr_recirc_count, 0
     /* Then enable Recirc */
     phvwr.c1.e      p.capri_p4_intr_recirc, TRUE
-    phvwr           p.txdma_control_pass_two, TRUE
+    phvwr           p.txdma_predicate_pass_two, TRUE
 
     /* Else disable Recirc */
     phvwr.!c1       p.capri_p4_intr_recirc, FALSE

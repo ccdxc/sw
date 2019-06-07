@@ -29,6 +29,7 @@ header predicate_header_t predicate_header;
 @pragma pa_field_union ingress p4_to_rxdma.flow_sport               key_metadata.sport
 @pragma pa_field_union ingress p4_to_rxdma.flow_dport               key_metadata.dport
 @pragma pa_field_union ingress p4_to_rxdma.vnic_id                  vnic_metadata.vnic_id
+@pragma pa_field_union ingress p4_to_rxdma.vpc_id                   vnic_metadata.vpc_id
 header artemis_p4_to_rxdma_header_t p4_to_rxdma;
 
 @pragma synthetic_header

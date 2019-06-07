@@ -82,6 +82,26 @@ table session {
     size : SESSION_TABLE_SIZE;
 }
 
+/*****************************************************************************/
+/* Meter stats                                                               */
+/*****************************************************************************/
+action meter_stats() {
+    if (control_metadata.direction == TX_FROM_HOST) {
+        modify_field(scratch_metadata.meter_idx, rewrite_metadata.meter_idx);
+    } else  {
+        add_to_field(scratch_metadata.meter_idx, METER_STATS_TABLE_SIZE * 8);
+    }
+    modify_field(scratch_metadata.packet_len, capri_p4_intrinsic.packet_len);
+}
+
+@pragma stage 2
+table meter_stats {
+    actions {
+        meter_stats;
+    }
+}
+
 control session_lookup {
     apply(session);
+    //apply(meter_stats);
 }

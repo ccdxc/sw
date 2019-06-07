@@ -19,6 +19,7 @@
 #define NEXTHOP_TABLE_SIZE                                  1048576     // 1M
 #define VNIC_STATS_TABLE_SIZE                               256
 #define DROP_STATS_TABLE_SIZE                               64
+#define METER_STATS_TABLE_SIZE                              65536       // 64K
 
 //RXDMA Tables
 // Single table with dir bit part of key along with VNIC id, so twice the size of 256
