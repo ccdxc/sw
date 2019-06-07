@@ -388,3 +388,7 @@ jobd/iota/venice-sim:jobd/naples-sim jobd/venice-image
 .PHONY: jobd/apollo/gtests-valgrind
 jobd/apollo/gtests-valgrind: ${JOBD_PREREQS}
 	${NICDIR}/apollo/test/tools/run_gtests_valgrind_apollo.sh ${COVERAGE_OPTS}
+
+.PHONY: jobd/artemis/gtests-valgrind
+jobd/artemis/gtests-valgrind: ${JOBD_PREREQS}
+	${NICDIR}/apollo/test/tools/run_gtests_valgrind_artemis.sh ${COVERAGE_OPTS}
