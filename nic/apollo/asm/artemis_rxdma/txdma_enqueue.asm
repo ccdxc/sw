@@ -31,7 +31,7 @@ pkt_enqueue:
     // dma pkt desc
     CAPRI_DMA_CMD_PHV2MEM_SETUP(pktdesc_phv2mem_dma_cmd, r3, \
                                 rx_to_tx_hdr_remote_ip, \
-                                rx_to_tx_hdr_tag2_classid)
+                                rx_to_tx_hdr_vcn_id)
     phvwr       p.pktdesc_phv2mem_dma_cmd_round, 1
 
     // use Qid1 to ring door-bell. Qid0 is used as a completionQ between txdma

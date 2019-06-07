@@ -36,8 +36,32 @@ table read_qstate {
     }
 }
 
-action read_pktdesc(data) {
-    modify_field(scratch_metadata.field512, data);
+action read_pktdesc(remote_ip,
+                    sacl_base_addr,
+                    route_base_addr,
+                    sip_classid,
+                    dip_classid,
+                    tag_classid,
+                    meter_result,
+                    dport_classid,
+                    sport_classid,
+                    tag2_classid,
+                    vnic_id,
+                    vcn_id
+                   )
+{
+    modify_field(scratch_metadata.field128, remote_ip);
+    modify_field(scratch_metadata.field40, sacl_base_addr);
+    modify_field(scratch_metadata.field40, route_base_addr);
+    modify_field(scratch_metadata.field10, sip_classid);
+    modify_field(scratch_metadata.field10, dip_classid);
+    modify_field(scratch_metadata.field10, tag_classid);
+    modify_field(scratch_metadata.field10, meter_result);
+    modify_field(scratch_metadata.field8, dport_classid);
+    modify_field(scratch_metadata.field8, sport_classid);
+    modify_field(scratch_metadata.field8, tag2_classid);
+    modify_field(scratch_metadata.field8, vnic_id);
+    modify_field(scratch_metadata.field8, vcn_id);
 }
 
 @pragma stage 1

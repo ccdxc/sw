@@ -1067,10 +1067,10 @@ control ingress {
                 read_qstate();
             } else {
                 vnic_info_txdma();
-                mapping();
                 remote_46_mapping();
             }
 
+            mapping();
             route_lookup();
             rfc();
             dma();

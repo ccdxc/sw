@@ -13,7 +13,8 @@ header_type artemis_p4_to_rxdma_header_t {
         vnic_id         : 8;
         tag_root        : 40;
 
-        pad1            : 24;
+        vcn_id          : 8;
+        pad1            : 16;
 
         flow_src        : 128;
         flow_sport      : 16;
@@ -44,8 +45,9 @@ header_type artemis_rx_to_tx_header_t {
         meter_result    : 10; // Bytes 29 and 30
         dport_classid   : 8;  // Byte 31
         sport_classid   : 8;  // Byte 32
-        vnic_id         : 8;  // Byte 33
-        tag2_classid    : 8;  // Byte 34
+        tag2_classid    : 8;  // Byte 33
+        vnic_id         : 8;  // Byte 34
+        vcn_id          : 8;  // Byte 35
     }
 }
 

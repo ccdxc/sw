@@ -18,7 +18,7 @@
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/impl/artemis/vpc_peer_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
-#include "nic/apollo/p4/include/defines.h"
+#include "nic/apollo/p4/include/artemis_defines.h"
 
 using sdk::table::sdk_table_api_params_t;
 

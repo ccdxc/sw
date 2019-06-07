@@ -18,8 +18,9 @@ read_pktdesc:
                         rx_to_tx_hdr_meter_result, \
                         rx_to_tx_hdr_dport_classid, \
                         rx_to_tx_hdr_sport_classid, \
+                        rx_to_tx_hdr_tag2_classid, \
                         rx_to_tx_hdr_vnic_id, \
-                        rx_to_tx_hdr_tag2_classid}, \
+                        rx_to_tx_hdr_vcn_id}, \
                         d[511:(512-(offsetof(p,rx_to_tx_hdr_remote_ip) + \
                             sizeof(p.rx_to_tx_hdr_remote_ip) - \
                             offsetof(p,rx_to_tx_hdr_tag2_classid)))]

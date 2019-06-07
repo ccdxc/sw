@@ -15,6 +15,7 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/p4/loader/loader.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
+#include "nic/apollo/p4/include/artemis_defines.h"
 
 #define PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID           0
 #define PDS_IMPL_PUBLIC_VPC_HW_ID                    0
@@ -25,8 +26,8 @@
 #define PDS_IMPL_RESERVED_METER_HW_ID                0
 #define PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX              0
 // next hop types
-#define PDS_IMPL_NH_TYPE_PEER_VPC_MASK               0x8000
-#define PDS_IMPL_NH_TYPE_SVC_TUNNEL_MASK             0x4000
+#define PDS_IMPL_NH_TYPE_PEER_VPC_MASK               ROUTE_RESULT_TYPE_PEER_VPC_MASK
+#define PDS_IMPL_NH_TYPE_SVC_TUNNEL_MASK             ROUTE_RESULT_TYPE_SVC_TUNNEL_MASK
 // NAT table entry reserved for no translation
 #define PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX              0
 #define PDS_IMPL_LOCAL_46_MAPPING_RSVD_ENTRY_IDX     0

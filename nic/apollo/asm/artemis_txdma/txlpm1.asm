@@ -1,3 +1,4 @@
+#include "../../p4/include/artemis_defines.h"
 #include "../../p4/include/lpm_defines.h"
 
 #include "artemis_txdma.h"
