@@ -41,6 +41,8 @@ typedef struct pds_remote_mapping_spec_s {
     pds_encap_t fabric_encap;    ///< fabric encap for this mapping
     pds_tep_key_t tep;           ///< Remote TEP address for this mapping
     mac_addr_t vnic_mac;         ///< VNIC MAC
+    bool provider_ip_valid;      ///< TRUE if provider IP is valid
+    ip_addr_t provider_ip;       ///< Provider IP address
 } __PACK__ pds_remote_mapping_spec_t;
 
 /// \brief    mapping status

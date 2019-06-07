@@ -246,6 +246,8 @@ populate_vpc_request (VPCRequest *req, pds_vpc_spec_t *vpc)
     ipv4_pfx_to_spec(spec->mutable_v4prefix(), &vpc->v4_pfx);
     ip_pfx_to_spec(spec->mutable_v6prefix(), &vpc->v6_pfx);
     spec->set_id(vpc->key.id);
+    pds_encap_to_proto_encap(spec->mutable_fabricencap(),
+                             &vpc->fabric_encap);
     if (vpc->type == PDS_VPC_TYPE_TENANT) {
         spec->set_type(pds::VPC_TYPE_TENANT);
     } else if (vpc->type == PDS_VPC_TYPE_SUBSTRATE) {

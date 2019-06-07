@@ -442,7 +442,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                             CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_local_v6_mapping.public_ip.addr.v6_addr,
                                                             pds_local_mapping.public_ip.addr.v4_addr);
                         }
-                        pds_local_v6_mapping.provider_ip_valid = true;
+                        pds_local_v6_mapping.provider_ip_valid = false;
                         pds_local_v6_mapping.provider_ip.addr.v6_addr = v6_provider_pfx->addr.addr.v6_addr;
                         CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_local_v6_mapping.provider_ip.addr.v6_addr,
                                                         pds_local_mapping.provider_ip.addr.v4_addr);
@@ -510,6 +510,10 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     pds_remote_mapping.vnic_mac,
                     (((((uint64_t)i & 0x7FF) << 22) | ((j & 0x7FF) << 11) |
                       ((num_vnics + k) & 0x7FF))));
+                pds_remote_mapping.provider_ip_valid = true;
+                pds_remote_mapping.provider_ip.addr.v4_addr =
+                                provider_pfx->addr.addr.v4_addr + ip_offset;
+                ip_offset++;
 
 #ifdef TEST_GRPC_APP
                 rv = create_remote_mapping_grpc(&pds_remote_mapping);
@@ -535,6 +539,10 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     pds_remote_v6_mapping.tep.ip_addr.af = IP_AF_IPV4;
                     pds_remote_v6_mapping.tep.ip_addr.addr.v4_addr =
                         teppfx->addr.addr.v4_addr + v6_tep_offset;
+                    pds_remote_v6_mapping.provider_ip_valid = true;
+                    pds_remote_v6_mapping.provider_ip.addr.v6_addr = v6_provider_pfx->addr.addr.v6_addr;
+                    CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_remote_v6_mapping.provider_ip.addr.v6_addr,
+                                                    pds_remote_mapping.provider_ip.addr.v4_addr);
 #ifdef TEST_GRPC_APP
                     rv = create_remote_mapping_grpc(&pds_remote_v6_mapping);
                     if (rv != SDK_RET_OK) {
@@ -727,6 +735,8 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_pfx,
         pds_vpc.v4_pfx.v4_addr = ipv4_pfx->addr.addr.v4_addr & 0xFF000000;
         pds_vpc.v4_pfx.len = 8; // fix this to /8
         pds_vpc.v6_pfx = *ipv6_pfx;
+        pds_vpc.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+        pds_vpc.fabric_encap.val.vnid = i;
 #ifdef TEST_GRPC_APP
         rv = create_vpc_grpc(&pds_vpc);
         if (rv != SDK_RET_OK) {

@@ -14,8 +14,12 @@ ifeq (,$(filter $(PIPELINE),hello l2switch elektra))
 ifeq ($(ARCH),aarch64)
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh
+	$(eval STRIP := )
+    ifeq ($(PIPELINE),$(filter $(PIPELINE),apollo artemis))
+	    $(eval STRIP := --no-strip)
+    endif
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py \
-        --pipeline $(PIPELINE) $(PKG_ARGS)
+		--pipeline $(PIPELINE) $(PKG_ARGS) $(STRIP)
 else
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh

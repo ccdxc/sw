@@ -202,9 +202,9 @@ private:
     session_info_cfg_params_t session_info_cfg_params;
     uint32_t session_info_nexthop_idx;
     uint32_t session_info_nexthop_start_idx;
-    uint32_t session_info_nexthop_end_idx;
-    uint32_t num_meter_idx_per_vpc;
+    uint32_t num_nexthop_idx_per_vpc;
     uint32_t meter_idx;
+    uint32_t num_meter_idx_per_vpc;
     bool with_hash;
 
 private:
@@ -456,16 +456,18 @@ public:
         }
     }
 
-    void generate_ep_pairs(uint32_t vpc, bool ipv6) {
-        auto lcount = ipv6 ? epdb[vpc].v6_lcount : epdb[vpc].v4_lcount;
-        auto rcount = ipv6 ? epdb[vpc].v6_rcount : epdb[vpc].v4_rcount;
+    void generate_ep_pairs(uint32_t vpc, bool dual_stack) {
+        if (dual_stack) {
+            assert(epdb[vpc].v6_lcount == epdb[vpc].v4_lcount);
+            assert(epdb[vpc].v6_rcount == epdb[vpc].v4_rcount);
+        }
         uint32_t pid = 0;
         memset(ep_pairs, 0, sizeof(ep_pairs));
         if (epdb[vpc].valid == 0) {
             return;
         }
-        for (uint32_t lid = 0; lid < lcount; lid++) {
-            for (uint32_t rid = 0; rid < rcount; rid++) {
+        for (uint32_t lid = 0; lid < epdb[vpc].v4_lcount; lid++) {
+            for (uint32_t rid = 0; rid < epdb[vpc].v4_rcount; rid++) {
                 ep_pairs[pid].vpc_id = vpc;
                 ep_pairs[pid].lip = epdb[vpc].lips[lid];
                 ep_pairs[pid].lip6 = epdb[vpc].lip6s[lid];
@@ -502,13 +504,18 @@ public:
         if (cur_vpc != vpc) {
             cur_vpc = vpc;
             meter_idx = (vpc-1) * num_meter_idx_per_vpc + 1;
+            session_info_nexthop_idx = session_info_nexthop_start_idx +
+                                       (vpc - 1) * num_nexthop_idx_per_vpc;
         }
         memset(&actiondata, 0, sizeof(session_actiondata_t));
         actiondata.action_id = SESSION_SESSION_INFO_ID;
         actiondata.action_u.session_session_info.nexthop_idx =
                                         session_info_nexthop_idx++;
-        if (session_info_nexthop_idx == session_info_nexthop_end_idx) {
-            session_info_nexthop_idx = session_info_nexthop_start_idx;
+        if (session_info_nexthop_idx ==
+                (session_info_nexthop_start_idx +
+                                (vpc * num_nexthop_idx_per_vpc))) {
+            session_info_nexthop_idx = session_info_nexthop_start_idx +
+                                       (vpc - 1) * num_nexthop_idx_per_vpc;
         }
         // do DMACi rewrite and encap in the Tx direction
         actiondata.action_u.session_session_info.tx_rewrite_flags = 0x21;
@@ -590,7 +597,7 @@ public:
         return SDK_RET_OK;
     }
 
-    sdk_ret_t create_flows_one_proto_(uint32_t count, uint8_t proto, bool ipv6) {
+    sdk_ret_t create_flows_one_proto_(uint32_t count, uint8_t proto, bool dual_stack) {
         uint16_t local_port = 0, remote_port = 0;
         uint32_t i = 0;
         uint16_t fwd_sport = 0, fwd_dport = 0;
@@ -599,7 +606,7 @@ public:
         sdk_ret_t ret;
 
         for (uint32_t vpc = 1; vpc <= MAX_VPCS; vpc++) {
-            generate_ep_pairs(vpc, ipv6);
+            generate_ep_pairs(vpc, dual_stack);
             for (i = 0; i < MAX_EP_PAIRS_PER_VPC ; i++) {
                 for (auto lp = cfg_params.sport_lo; lp <= cfg_params.sport_hi; lp++) {
                     for (auto rp = cfg_params.dport_lo; rp <= cfg_params.dport_hi; rp++) {
@@ -617,25 +624,35 @@ public:
                             fwd_dport = rev_sport = remote_port;
                         }
 
-                        if (ipv6) {
+                        // Create V4 Flows
+                        ret = create_session(vpc, ep_pairs[i].lip, ep_pairs[i].rip,
+                                                  proto, fwd_sport, fwd_dport);
+                        if (ret != SDK_RET_OK) {
+                            return ret;
+                        }
+                        // Create V4 session
+                        ret = create_session_info(vpc);
+                        if (ret != SDK_RET_OK) {
+                            return ret;
+                        }
+                        session_index++;
+
+                        if (dual_stack) {
+                            // Create V6 Flows
                             ret = create_session(vpc, ep_pairs[i].lip6,
                                                       ep_pairs[i].rip6, proto,
                                                       fwd_sport, fwd_dport);
                             if (ret != SDK_RET_OK) {
                                 return ret;
                             }
-                        } else {
-                            ret = create_session(vpc, ep_pairs[i].lip, ep_pairs[i].rip,
-                                                      proto, fwd_sport, fwd_dport);
+                            // Create V6 session
+                            ret = create_session_info(vpc);
                             if (ret != SDK_RET_OK) {
                                 return ret;
                             }
+                            session_index++;
                         }
-                        ret = create_session_info(vpc);
-                        if (ret != SDK_RET_OK) {
-                            return ret;
-                        }
-                        session_index++;
+
                         nflows+=2;
                         if (nflows >= count) {
                             return SDK_RET_OK;
@@ -701,23 +718,23 @@ public:
         return SDK_RET_OK;
     }
 
-    sdk_ret_t create_flows_all_protos_(bool ipv6) {
+    sdk_ret_t create_flows_all_protos_(bool dual_stack) {
         if (cfg_params.num_tcp) {
-            auto ret = create_flows_one_proto_(cfg_params.num_tcp, IP_PROTO_TCP, ipv6);
+            auto ret = create_flows_one_proto_(cfg_params.num_tcp, IP_PROTO_TCP, dual_stack);
             if (ret != SDK_RET_OK) {
                 return ret;
             }
         }
 
         if (cfg_params.num_udp) {
-            auto ret = create_flows_one_proto_(cfg_params.num_udp, IP_PROTO_UDP, ipv6);
+            auto ret = create_flows_one_proto_(cfg_params.num_udp, IP_PROTO_UDP, dual_stack);
             if (ret != SDK_RET_OK) {
                 return ret;
             }
         }
 
         if (cfg_params.num_icmp) {
-            auto ret = create_flows_one_proto_(cfg_params.num_icmp, IP_PROTO_ICMP, ipv6);
+            auto ret = create_flows_one_proto_(cfg_params.num_icmp, IP_PROTO_ICMP, dual_stack);
             if (ret != SDK_RET_OK) {
                 return ret;
             }
@@ -735,10 +752,9 @@ public:
         session_info_cfg_params.meter_scale = meter_scale;
         session_info_cfg_params.meter_pfx_per_rule = meter_pfx_per_rule;
         session_info_cfg_params.num_nh = num_nh;
-        session_info_nexthop_idx = session_info_nexthop_start_idx =
+        session_info_nexthop_start_idx =
                                 num_nh + (num_ip_per_vnic * num_vpcs * 2) + 1;
-        session_info_nexthop_end_idx = session_info_nexthop_start_idx +
-                                    (num_remote_mappings * num_vpcs * 2);
+        num_nexthop_idx_per_vpc = num_remote_mappings * 2;
         num_meter_idx_per_vpc = (meter_scale/meter_pfx_per_rule) +
                                 (meter_scale % meter_pfx_per_rule);
     }
@@ -763,18 +779,11 @@ public:
             parse_cfg_json_();
         }
 
-        // Create V4 Flows
-        auto ret = create_flows_all_protos_(false);
+        auto ret = create_flows_all_protos_(cfg_params.dual_stack);
         if (ret != SDK_RET_OK) {
             return ret;
         }
 
-        if (cfg_params.dual_stack) {
-            ret = create_flows_all_protos_(true);
-            if (ret != SDK_RET_OK) {
-                return ret;
-            }
-        }
         dump_flow_stats();
         return SDK_RET_OK;
     }
