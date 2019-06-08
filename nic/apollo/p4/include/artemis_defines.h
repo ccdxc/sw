@@ -30,16 +30,15 @@
 /*****************************************************************************/
 #define P4I_DROP_TEP1_RX_MISS           0
 #define P4I_DROP_TEP2_RX_MISS           1
-#define P4I_DROP_VNIC_MAPPING_MISS      2
-#define P4I_DROP_NACL                   3
+#define P4I_DROP_NACL                   2
 #define P4I_DROP_REASON_MIN             0
-#define P4I_DROP_REASON_MAX             0
+#define P4I_DROP_REASON_MAX             2
 
 #define P4E_DROP_INVALID_SESSION        0
 #define P4E_DROP_SESSION_HIT            1
 #define P4E_DROP_INVALID_NEXTHOP        2
 #define P4E_DROP_REASON_MIN             0
-#define P4E_DROP_REASON_MAX             0
+#define P4E_DROP_REASON_MAX             2
 
 /*****************************************************************************/
 /* flow role                                                                 */

@@ -14,9 +14,6 @@ nexthop_info:
     bcf             [c1], nexthop_error
     phvwr.c1        p.control_metadata_p4e_drop_reason[P4E_DROP_INVALID_NEXTHOP], 1
 
-    phvwr           p.txdma_to_p4e_valid, FALSE
-    phvwr           p.predicate_header_valid, FALSE
-    phvwr           p.p4e_i2e_valid, FALSE
     phvwr           p.capri_intrinsic_tm_oport, d.nexthop_info_d.port
     seq             c1, k.rewrite_metadata_flags[TX_REWRITE_DMAC_BITS], \
                         TX_REWRITE_DMAC_FROM_NEXTHOP
