@@ -120,7 +120,7 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 
 			if memUsedPercent > globals.MemHighThreshold {
 				recorder.Event(eventtypes.MEM_THRESHOLD_EXCEEDED,
-					fmt.Sprintf("Memory threshold exceeded %v percent, current usage: %v", globals.MemHighThreshold, memUsedPercent), nil)
+					fmt.Sprintf("%s, current usage: %v%%", globals.MemHighThresholdMessage, memUsedPercent), nil)
 			}
 
 			// cpu
@@ -135,7 +135,7 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 
 			if cpuUsedPercent > globals.CPUHighThreshold {
 				recorder.Event(eventtypes.CPU_THRESHOLD_EXCEEDED,
-					fmt.Sprintf("CPU threshold exceeded %v percent, current usage: %v", globals.CPUHighThreshold, cpuUsedPercent), nil)
+					fmt.Sprintf("%s, current usage: %v%%", globals.CPUHighThresholdMessage, cpuUsedPercent), nil)
 			}
 
 			// disk
@@ -169,7 +169,7 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 
 				if diskUsedPercent > globals.DiskHighThreshold {
 					recorder.Event(eventtypes.DISK_THRESHOLD_EXCEEDED,
-						fmt.Sprintf("Disk threshold exceeded %v percent, current usage: %v", globals.DiskHighThreshold, diskUsedPercent), nil)
+						fmt.Sprintf("%s, current usage: %v%%", globals.DiskHighThresholdMessage, diskUsedPercent), nil)
 				}
 			}
 

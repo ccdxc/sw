@@ -149,13 +149,22 @@ func TestGetAlerts(t *testing.T) {
 			},
 		}, nil))
 	mDb.AddObject(policygen.CreateAlertObj("infra", globals.DefaultNamespace, CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert1", nil, nil, nil))
+	mDb.AddObject(policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert2", nil,
+		&evtsapi.Event{
+			EventAttributes: evtsapi.EventAttributes{
+				ObjectRef: &api.ObjectRef{
+					Kind: "Node",
+					Name: "node2",
+				},
+			},
+		}, nil))
 	tests := []struct {
 		filters      []FilterFn
 		expNumAlerts int
 	}{
 		{
 			filters:      []FilterFn{},
-			expNumAlerts: 4,
+			expNumAlerts: 5,
 		},
 		{
 			filters:      []FilterFn{WithObjectRefFilter(nil)},
@@ -204,6 +213,10 @@ func TestGetAlerts(t *testing.T) {
 		},
 		{
 			filters:      []FilterFn{WithEventMessageFilter("test-alert1"), WithTenantFilter("infra")},
+			expNumAlerts: 1,
+		},
+		{
+			filters:      []FilterFn{WithEventMessageContainsFilter("alert2"), WithTenantFilter(globals.DefaultTenant)},
 			expNumAlerts: 1,
 		},
 	}

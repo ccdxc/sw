@@ -2,6 +2,7 @@ package memdb
 
 import (
 	"reflect"
+	"strings"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
@@ -117,6 +118,18 @@ func WithEventMessageFilter(eventMessage string) FilterFn {
 		switch obj.(type) {
 		case *monitoring.Alert:
 			return obj.(*monitoring.Alert).Status.GetMessage() == eventMessage
+		}
+		return false
+	}
+}
+
+// WithEventMessageContainsFilter returns a fn() which returns true if the alert message contains the given event message
+// * applicable only for alert object *
+func WithEventMessageContainsFilter(message string) FilterFn {
+	return func(obj runtime.Object) bool {
+		switch obj.(type) {
+		case *monitoring.Alert:
+			return strings.Contains(obj.(*monitoring.Alert).Status.GetMessage(), message)
 		}
 		return false
 	}

@@ -18,6 +18,7 @@ import (
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/events/generated/eventattrs"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/alertengine/exporter"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
 	"github.com/pensando/sw/venice/globals"
@@ -280,10 +281,18 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 				memdb.WithAlertPolicyIDFilter(alertPolicy.GetName()),
 				memdb.WithObjectRefFilter(evt.GetObjectRef()),
 			}
-			// check event message for events that are not threshold based.
-			// because, threshold based events will carry the current usage which will vary for each
-			// event though it is the same event.
-			if evt.GetCategory() != eventattrs.Category_Resource.String() {
+
+			// check event message
+			if evt.GetCategory() == eventattrs.Category_Resource.String() {
+				switch eventtypes.EventType(eventtypes.EventType_value[evt.GetType()]) {
+				case eventtypes.CPU_THRESHOLD_EXCEEDED:
+					filters = append(filters, memdb.WithEventMessageContainsFilter(globals.CPUHighThresholdMessage))
+				case eventtypes.MEM_THRESHOLD_EXCEEDED:
+					filters = append(filters, memdb.WithEventMessageContainsFilter(globals.MemHighThresholdMessage))
+				case eventtypes.DISK_THRESHOLD_EXCEEDED:
+					filters = append(filters, memdb.WithEventMessageContainsFilter(globals.DiskHighThresholdMessage))
+				}
+			} else {
 				filters = append(filters, memdb.WithEventMessageFilter(evt.GetMessage()))
 			}
 			outstandingAlerts = a.memDb.GetAlerts(filters...)
