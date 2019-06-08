@@ -307,7 +307,6 @@ var _ = Describe("fwlog tests", func() {
 		})
 
 		It("should log ICMP reject in fwlog", func() {
-			Skip("+++skip ")
 			if ts.tb.HasNaplesSim() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
@@ -355,7 +354,7 @@ var _ = Describe("fwlog tests", func() {
 				}
 
 				for _, ips := range workloadPairs.ListIPAddr() {
-					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
+					if tclient.CheckIPAddrInFwlog([]string{ips[1], ips[0]}, res.Results) != true {
 						err := fmt.Errorf("did not find %+v in fwlog", ips)
 						By(fmt.Sprintf("fwlog query failed, %v", err))
 						ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
