@@ -714,6 +714,13 @@ func (app *remoteWorkload) RunCommand(cmd []string, dir string, timeout uint32, 
 
 	var cmdInfo *Cmd.CommandInfo
 	runCmd := strings.Join(cmd, " ")
+	if app.sshHandle == nil {
+		if err := app.Reinit(); err != nil {
+			cmdInfo.Ctx.Stderr = "SSH connection failed"
+			cmdInfo.Ctx.ExitCode = 1
+			return cmdInfo.Ctx, "", nil
+		}
+	}
 	//Ignore diretory for remote workload for now
 	//Even though mount is suppoted, commenting out as on naples remote
 	//we don't to mount yet.
