@@ -329,6 +329,8 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk::lib::memrev(egr_vnic_info.egress_vnic_info_action.ca_mac,
                      spec->mac_addr, ETH_ADDR_LEN);
     egr_vnic_info.egress_vnic_info_action.port = TM_PORT_UPLINK_0;
+    egr_vnic_info.egress_vnic_info_action.local_vlan =
+        spec->vnic_encap.val.value;
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_EGRESS_VNIC_INFO,
                                        hw_id_, NULL, NULL,
                                        &egr_vnic_info);
