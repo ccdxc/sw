@@ -31,9 +31,14 @@ using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
-flow_test *g_flow_test_obj;
+
 std::string g_grpc_server_addr;
 #define GRPC_API_PORT    9999
+
+#ifdef PDS_FLOW_TEST
+test_params_t g_test_params = { 0 };
+flow_test *g_flow_test_obj;
+#endif
 
 static void
 svc_reg (void)
@@ -191,7 +196,27 @@ main (int argc, char **argv)
         fprintf(stderr, "Agent initialization failed, err %u", ret);
     }
 
+#ifdef PDS_FLOW_TEST
+    parse_test_cfg(&g_test_params, pipeline);
     g_flow_test_obj = new flow_test();
+    g_flow_test_obj->set_cfg_params(g_test_params.dual_stack,
+                                    g_test_params.num_tcp,
+                                    g_test_params.num_udp,
+                                    g_test_params.num_icmp,
+                                    g_test_params.sport_lo,
+                                    g_test_params.sport_hi,
+                                    g_test_params.dport_lo,
+                                    g_test_params.dport_hi);
+#if defined(ARTEMIS)
+    g_flow_test_obj->set_session_info_cfg_params(
+                                g_test_params.num_vpcs,
+                                g_test_params.num_ip_per_vnic,
+                                g_test_params.num_remote_mappings,
+                                g_test_params.meter_scale,
+                                TESTAPP_METER_NUM_PREFIXES,
+                                g_test_params.num_nh);
+#endif
+#endif
 
     // register for all gRPC services
     svc_reg();

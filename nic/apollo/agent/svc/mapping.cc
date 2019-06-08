@@ -9,7 +9,10 @@
 #include "nic/apollo/agent/svc/mapping.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/test/flow_test/flow_test.hpp"
+
+#ifdef PDS_FLOW_TEST
 extern flow_test *g_flow_test_obj;
+#endif
 
 Status
 MappingSvcImpl::MappingCreate(ServerContext *context,

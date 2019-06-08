@@ -17,6 +17,7 @@
 #include "boost/optional.hpp"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
+#include "nic/apollo/test/scale/test_common.hpp"
 #ifdef TEST_GRPC_APP
 #include "nic/apollo/agent/test/scale/app.hpp"
 #else
@@ -26,7 +27,6 @@
 #define VNID_BASE                      1000
 
 using std::string;
-namespace pt = boost::property_tree;
 
 extern char *g_input_cfg_file;
 extern std::string g_pipeline;
@@ -37,91 +37,6 @@ flow_test *g_flow_test_obj;
 
 static int g_epoch = 1;
 
-typedef struct test_params_s {
-    // device config
-    struct {
-        uint32_t device_ip;
-        uint64_t device_mac;
-        uint32_t device_gw_ip;
-        pds_encap_t fabric_encap;
-        bool dual_stack;
-    };
-    // TEP config
-    struct {
-        uint32_t num_teps;
-        ip_prefix_t tep_pfx;
-        ip_prefix_t svc_tep_pfx;
-    };
-    // route config
-    struct {
-        uint32_t num_routes;
-        ip_prefix_t route_pfx;
-        ip_prefix_t v6_route_pfx;
-    };
-    // policy config
-    struct {
-        uint32_t num_ipv4_rules;
-        uint32_t num_ipv6_rules;
-        bool stateful;
-    };
-    // vpc config
-    struct {
-        uint32_t num_vpcs;
-        ip_prefix_t vpc_pfx;
-        ip_prefix_t v6_vpc_pfx;
-        uint32_t num_subnets;
-    };
-    // vnic config
-    struct {
-        uint32_t num_vnics;
-        uint32_t vlan_start;
-    };
-    // mapping config
-    struct {
-        ip_prefix_t nat_pfx;
-        ip_prefix_t v6_nat_pfx;
-        ip_prefix_t provider_pfx;
-        ip_prefix_t v6_provider_pfx;
-        uint32_t num_ip_per_vnic;
-        uint32_t num_remote_mappings;
-    };
-    // flow config
-    struct {
-        uint32_t num_tcp;
-        uint32_t num_udp;
-        uint32_t num_icmp;
-        uint16_t sport_lo;
-        uint16_t sport_hi;
-        uint16_t dport_lo;
-        uint16_t dport_hi;
-    };
-    // mirror config
-    struct {
-        bool mirror_en;
-        uint32_t num_rspan;
-        uint32_t num_erspan;
-        uint8_t rspan_bmap;
-        uint8_t erspan_bmap;
-    };
-    // metering config
-    struct {
-        uint32_t num_meter;
-        uint32_t meter_scale;
-        pds_meter_type_t meter_type;
-        uint64_t pps_bps;
-        uint64_t burst;
-    };
-    // tags config
-    struct {
-        uint32_t num_tag_trees;
-        uint32_t tags_v4_scale;
-        uint32_t tags_v6_scale;
-    };
-    // nexthop config
-    struct {
-        uint32_t num_nh;
-    };
-} test_params_t;
 test_params_t g_test_params = { 0 };
 
 #define CONVERT_TO_V4_MAPPED_V6_ADDRESS(_v6pfx, _v4addr) {         \
@@ -144,21 +59,6 @@ inline bool
 artemis (void)
 {
     return g_pipeline == "artemis";
-}
-
-static void
-meter_str_to_type (std::string meter_type_str,
-                   pds_meter_type_t *meter_type)
-{
-    if (meter_type_str == "pps") {
-        *meter_type = PDS_METER_TYPE_PPS_POLICER;
-    } else if (meter_type_str == "bps") {
-        *meter_type = PDS_METER_TYPE_BPS_POLICER;
-    } else if (meter_type_str == "account") {
-        *meter_type = PDS_METER_TYPE_ACCOUNTING;
-    } else {
-        *meter_type = PDS_METER_TYPE_NONE;
-    }
 }
 
 static inline void
@@ -986,7 +886,6 @@ populate_meter_api_rule_spec (uint32_t id, pds_meter_rule_t *api_rule_spec,
     }
 }
 
-#define TESTAPP_METER_NUM_PREFIXES 16
 #define TESTAPP_METER_PRIORITY_STEP 4
 sdk_ret_t
 create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
@@ -1444,165 +1343,16 @@ create_rspan_mirror_sessions (uint32_t num_sessions)
 sdk_ret_t
 create_objects (void)
 {
-    pt::ptree json_pt;
-    string pfxstr;
     sdk_ret_t ret;
-    uint32_t i;
-    char *tep_encap_env;
+
+    ret = parse_test_cfg(g_input_cfg_file, &g_test_params);
+    if (ret != SDK_RET_OK) {
+        exit(1);
+    }
 
 #ifndef TEST_GRPC_APP
     g_flow_test_obj = new flow_test();
 #endif
-
-    // parse the config and create objects
-    std::ifstream json_cfg(g_input_cfg_file);
-    read_json(json_cfg, json_pt);
-    try {
-        BOOST_FOREACH (pt::ptree::value_type &obj,
-                       json_pt.get_child("objects")) {
-            std::string kind = obj.second.get<std::string>("kind");
-            if (kind == "device") {
-                struct in_addr ipaddr, gwip;
-
-                g_test_params.device_mac =
-                    std::stoull(obj.second.get<std::string>("mac-addr"), 0, 0);
-
-                inet_aton(obj.second.get<std::string>("ip-addr").c_str(),
-                          &ipaddr);
-                g_test_params.device_ip = ntohl(ipaddr.s_addr);
-
-                inet_aton(obj.second.get<std::string>("gw-ip-addr").c_str(),
-                          &gwip);
-                g_test_params.device_gw_ip = ntohl(gwip.s_addr);
-
-                if (!obj.second.get<std::string>("encap").compare("vxlan")) {
-                    g_test_params.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-                } else {
-                    g_test_params.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-                }
-
-                g_test_params.dual_stack = false;
-                if (!obj.second.get<std::string>("dual-stack").compare("true")) {
-                    g_test_params.dual_stack = true;
-                }
-
-                // If env var is set, it overrides the json value
-                if (getenv("APOLLO_TEST_TEP_ENCAP")) {
-                    tep_encap_env = getenv("APOLLO_TEST_TEP_ENCAP");
-                    if (!strcmp(tep_encap_env, "vxlan")) {
-                        g_test_params.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-                    } else {
-                        g_test_params.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-                    }
-                    printf("TEP encap env var: %s, encap: %d\n",
-                            tep_encap_env, g_test_params.fabric_encap.type);
-                }
-            } else if (kind == "tep") {
-                g_test_params.num_teps = std::stol(obj.second.get<std::string>("count"));
-                if (g_test_params.num_teps <= 2) {
-                    printf("No. of TEPs must be greater than 2\n");
-                    exit(1);
-                }
-                // reduce num_teps by 2, (MyTEP and GW-TEP)
-                g_test_params.num_teps -= 2;
-                pfxstr = obj.second.get<std::string>("prefix");
-                assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.tep_pfx) == 0);
-                pfxstr = obj.second.get<std::string>("svc-prefix", "");
-                if (pfxstr.empty() == false) {
-                    assert(str2ipv6pfx((char *)pfxstr.c_str(),
-                                       &g_test_params.svc_tep_pfx) == 0);
-                }
-            } else if (kind == "route-table") {
-                g_test_params.num_routes = std::stol(obj.second.get<std::string>("count"));
-                pfxstr = obj.second.get<std::string>("prefix-start");
-                assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.route_pfx) == 0);
-                pfxstr = obj.second.get<std::string>("v6-prefix-start");
-                assert(str2ipv6pfx((char *)pfxstr.c_str(), &g_test_params.v6_route_pfx) == 0);
-            } else if (kind == "security-policy") {
-                g_test_params.num_ipv4_rules = std::stol(obj.second.get<std::string>("v4-count"));
-                if (g_test_params.num_ipv4_rules < 4) {
-                    printf("Number of IPv4 rules in the policy table must be >= 4\n");
-                }
-                g_test_params.num_ipv6_rules = std::stol(obj.second.get<std::string>("v6-count"));
-                if (g_test_params.num_ipv6_rules < 4) {
-                    printf("Number of IPv6 rules in the policy table must be >= 4\n");
-                }
-                if (!obj.second.get<std::string>("stateful").compare("true")) {
-                    g_test_params.stateful = true;
-                } else {
-                    g_test_params.stateful = false;
-                }
-            } else if (kind == "vpc") {
-                g_test_params.num_vpcs = std::stol(obj.second.get<std::string>("count"));
-                pfxstr = obj.second.get<std::string>("prefix");
-                assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.vpc_pfx) == 0);
-                pfxstr = obj.second.get<std::string>("v6-prefix");
-                assert(str2ipv6pfx((char *)pfxstr.c_str(), &g_test_params.v6_vpc_pfx) == 0);
-                g_test_params.num_subnets = std::stol(obj.second.get<std::string>("subnets"));
-            } else if (kind == "vnic") {
-                g_test_params.num_vnics = std::stol(obj.second.get<std::string>("count"));
-                g_test_params.vlan_start =
-                    std::stol(obj.second.get<std::string>("vlan-start"));
-            } else if (kind == "mappings") {
-                pfxstr = obj.second.get<std::string>("nat-prefix");
-                assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.nat_pfx) == 0);
-                pfxstr = obj.second.get<std::string>("v6-nat-prefix");
-                assert(str2ipv6pfx((char *)pfxstr.c_str(), &g_test_params.v6_nat_pfx) == 0);
-                g_test_params.num_remote_mappings =
-                    std::stol(obj.second.get<std::string>("remotes"));
-                g_test_params.num_ip_per_vnic =
-                    std::stol(obj.second.get<std::string>("locals"));
-                pfxstr = obj.second.get<std::string>("provider-prefix");
-                assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.provider_pfx) == 0);
-                pfxstr = obj.second.get<std::string>("v6-provider-prefix");
-                assert(str2ipv6pfx((char *)pfxstr.c_str(), &g_test_params.v6_provider_pfx) == 0);
-            } else if (kind == "flows") {
-                g_test_params.num_tcp = std::stol(obj.second.get<std::string>("num_tcp"));
-                g_test_params.num_udp = std::stol(obj.second.get<std::string>("num_udp"));
-                g_test_params.num_icmp = std::stol(obj.second.get<std::string>("num_icmp"));
-                g_test_params.sport_lo = std::stol(obj.second.get<std::string>("sport_lo"));
-                g_test_params.sport_hi = std::stol(obj.second.get<std::string>("sport_hi"));
-                g_test_params.dport_lo = std::stol(obj.second.get<std::string>("dport_lo"));
-                g_test_params.dport_hi = std::stol(obj.second.get<std::string>("dport_hi"));
-            } else if (kind == "mirror") {
-                if (!obj.second.get<std::string>("enable").compare("true")) {
-                    g_test_params.mirror_en = true;
-                    g_test_params.num_rspan = std::stol(obj.second.get<std::string>("rspan"));
-                    g_test_params.num_erspan = std::stol(obj.second.get<std::string>("erspan"));
-                    if ((g_test_params.num_rspan + g_test_params.num_erspan) >
-                            PDS_MAX_MIRROR_SESSION) {
-                        printf("Total no. of mirror sessions can't exceed %u",
-                               PDS_MAX_MIRROR_SESSION);
-                    }
-                    for (i = 0; i < g_test_params.num_rspan; i++) {
-                        g_test_params.rspan_bmap |= (1 << i);
-                    }
-                    for (; i < g_test_params.num_rspan + g_test_params.num_erspan; i++) {
-                        //g_test_params.erspan_bmap |= (1 << i);
-                    }
-                }
-            } else if (kind == "metering") {
-                g_test_params.num_meter = std::stol(obj.second.get<std::string>("count"));
-                g_test_params.meter_scale = std::stol(obj.second.get<std::string>("scale"));
-                meter_str_to_type(obj.second.get<std::string>("type"), &g_test_params.meter_type);
-                g_test_params.pps_bps = std::stol(obj.second.get<std::string>("pps_bps"));
-                g_test_params.burst = std::stol(obj.second.get<std::string>("burst"));
-            } else if (kind == "tags") {
-                g_test_params.num_tag_trees = std::stol(obj.second.get<std::string>("count"));
-                g_test_params.tags_v4_scale = std::stol(obj.second.get<std::string>("v4_scale"));
-                g_test_params.tags_v6_scale = std::stol(obj.second.get<std::string>("v6_scale"));
-            } else if (kind == "nexthop") {
-                g_test_params.num_nh = std::stol(obj.second.get<std::string>("count"));
-                // 1st IP in the TEP prefix is gateway IP, 2nd is MyTEP IP,
-                // so skip the first 2 IPs
-                g_test_params.num_nh -= 2;
-            }
-        }
-    } catch (std::exception const &e) {
-        std::cerr << e.what() << std::endl;
-        exit(1);
-    }
-
 
 #ifdef TEST_GRPC_APP
     /* BATCH START */

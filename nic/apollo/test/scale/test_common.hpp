@@ -1,0 +1,319 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//------------------------------------------------------------------------------
+#ifndef __APOLLO_SCALE_TEST_COMMON_HPP__
+#define __APOLLO_SCALE_TEST_COMMON_HPP__
+
+#include "boost/foreach.hpp"
+#include "boost/optional.hpp"
+#include "boost/property_tree/ptree.hpp"
+#include "boost/property_tree/json_parser.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/apollo/api/include/pds.hpp"
+#include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/api/include/pds_meter.hpp"
+#include "nic/apollo/api/include/pds_mirror.hpp"
+#include "nic/apollo/api/include/pds_init.hpp"
+
+#define TESTAPP_METER_NUM_PREFIXES 16
+
+namespace pt = boost::property_tree;
+
+typedef struct test_params_s {
+    // device config
+    struct {
+        uint32_t device_ip;
+        uint64_t device_mac;
+        uint32_t device_gw_ip;
+        pds_encap_t fabric_encap;
+        bool dual_stack;
+    };
+    // TEP config
+    struct {
+        uint32_t num_teps;
+        ip_prefix_t tep_pfx;
+        ip_prefix_t svc_tep_pfx;
+    };
+    // route config
+    struct {
+        uint32_t num_routes;
+        ip_prefix_t route_pfx;
+        ip_prefix_t v6_route_pfx;
+    };
+    // policy config
+    struct {
+        uint32_t num_ipv4_rules;
+        uint32_t num_ipv6_rules;
+        bool stateful;
+    };
+    // vpc config
+    struct {
+        uint32_t num_vpcs;
+        ip_prefix_t vpc_pfx;
+        ip_prefix_t v6_vpc_pfx;
+        uint32_t num_subnets;
+    };
+    // vnic config
+    struct {
+        uint32_t num_vnics;
+        uint32_t vlan_start;
+    };
+    // mapping config
+    struct {
+        ip_prefix_t nat_pfx;
+        ip_prefix_t v6_nat_pfx;
+        ip_prefix_t provider_pfx;
+        ip_prefix_t v6_provider_pfx;
+        uint32_t num_ip_per_vnic;
+        uint32_t num_remote_mappings;
+    };
+    // flow config
+    struct {
+        uint32_t num_tcp;
+        uint32_t num_udp;
+        uint32_t num_icmp;
+        uint16_t sport_lo;
+        uint16_t sport_hi;
+        uint16_t dport_lo;
+        uint16_t dport_hi;
+    };
+    // mirror config
+    struct {
+        bool mirror_en;
+        uint32_t num_rspan;
+        uint32_t num_erspan;
+        uint8_t rspan_bmap;
+        uint8_t erspan_bmap;
+    };
+    // metering config
+    struct {
+        uint32_t num_meter;
+        uint32_t meter_scale;
+        pds_meter_type_t meter_type;
+        uint64_t pps_bps;
+        uint64_t burst;
+    };
+    // tags config
+    struct {
+        uint32_t num_tag_trees;
+        uint32_t tags_v4_scale;
+        uint32_t tags_v6_scale;
+    };
+    // nexthop config
+    struct {
+        uint32_t num_nh;
+    };
+} test_params_t;
+
+static void
+meter_str_to_type (std::string meter_type_str,
+                   pds_meter_type_t *meter_type)
+{
+    if (meter_type_str == "pps") {
+        *meter_type = PDS_METER_TYPE_PPS_POLICER;
+    } else if (meter_type_str == "bps") {
+        *meter_type = PDS_METER_TYPE_BPS_POLICER;
+    } else if (meter_type_str == "account") {
+        *meter_type = PDS_METER_TYPE_ACCOUNTING;
+    } else {
+        *meter_type = PDS_METER_TYPE_NONE;
+    }
+}
+
+inline sdk_ret_t
+parse_test_cfg (char *cfg_file, test_params_t *test_params)
+{
+    pt::ptree json_pt;
+    string pfxstr;
+    uint32_t i;
+    char *tep_encap_env;
+
+    // parse the config and create objects
+    std::ifstream json_cfg(cfg_file);
+    read_json(json_cfg, json_pt);
+    try {
+        BOOST_FOREACH (pt::ptree::value_type &obj,
+                       json_pt.get_child("objects")) {
+            std::string kind = obj.second.get<std::string>("kind");
+            if (kind == "device") {
+                struct in_addr ipaddr, gwip;
+
+                test_params->device_mac =
+                    std::stoull(obj.second.get<std::string>("mac-addr"), 0, 0);
+
+                inet_aton(obj.second.get<std::string>("ip-addr").c_str(),
+                          &ipaddr);
+                test_params->device_ip = ntohl(ipaddr.s_addr);
+
+                inet_aton(obj.second.get<std::string>("gw-ip-addr").c_str(),
+                          &gwip);
+                test_params->device_gw_ip = ntohl(gwip.s_addr);
+
+                if (!obj.second.get<std::string>("encap").compare("vxlan")) {
+                    test_params->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+                } else {
+                    test_params->fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+                }
+
+                test_params->dual_stack = false;
+                if (!obj.second.get<std::string>("dual-stack").compare("true")) {
+                    test_params->dual_stack = true;
+                }
+
+                // If env var is set, it overrides the json value
+                if (getenv("APOLLO_TEST_TEP_ENCAP")) {
+                    tep_encap_env = getenv("APOLLO_TEST_TEP_ENCAP");
+                    if (!strcmp(tep_encap_env, "vxlan")) {
+                        test_params->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+                    } else {
+                        test_params->fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+                    }
+                    printf("TEP encap env var: %s, encap: %d\n",
+                            tep_encap_env, test_params->fabric_encap.type);
+                }
+            } else if (kind == "tep") {
+                test_params->num_teps = std::stol(obj.second.get<std::string>("count"));
+                if (test_params->num_teps <= 2) {
+                    printf("No. of TEPs must be greater than 2\n");
+                    exit(1);
+                }
+                // reduce num_teps by 2, (MyTEP and GW-TEP)
+                test_params->num_teps -= 2;
+                pfxstr = obj.second.get<std::string>("prefix");
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &test_params->tep_pfx) == 0);
+                pfxstr = obj.second.get<std::string>("svc-prefix", "");
+                if (pfxstr.empty() == false) {
+                    assert(str2ipv6pfx((char *)pfxstr.c_str(),
+                                       &test_params->svc_tep_pfx) == 0);
+                }
+            } else if (kind == "route-table") {
+                test_params->num_routes = std::stol(obj.second.get<std::string>("count"));
+                pfxstr = obj.second.get<std::string>("prefix-start");
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &test_params->route_pfx) == 0);
+                pfxstr = obj.second.get<std::string>("v6-prefix-start");
+                assert(str2ipv6pfx((char *)pfxstr.c_str(), &test_params->v6_route_pfx) == 0);
+            } else if (kind == "security-policy") {
+                test_params->num_ipv4_rules = std::stol(obj.second.get<std::string>("v4-count"));
+                if (test_params->num_ipv4_rules < 4) {
+                    printf("Number of IPv4 rules in the policy table must be >= 4\n");
+                }
+                test_params->num_ipv6_rules = std::stol(obj.second.get<std::string>("v6-count"));
+                if (test_params->num_ipv6_rules < 4) {
+                    printf("Number of IPv6 rules in the policy table must be >= 4\n");
+                }
+                if (!obj.second.get<std::string>("stateful").compare("true")) {
+                    test_params->stateful = true;
+                } else {
+                    test_params->stateful = false;
+                }
+            } else if (kind == "vpc") {
+                test_params->num_vpcs = std::stol(obj.second.get<std::string>("count"));
+                pfxstr = obj.second.get<std::string>("prefix");
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &test_params->vpc_pfx) == 0);
+                pfxstr = obj.second.get<std::string>("v6-prefix");
+                assert(str2ipv6pfx((char *)pfxstr.c_str(), &test_params->v6_vpc_pfx) == 0);
+                test_params->num_subnets = std::stol(obj.second.get<std::string>("subnets"));
+            } else if (kind == "vnic") {
+                test_params->num_vnics = std::stol(obj.second.get<std::string>("count"));
+                test_params->vlan_start =
+                    std::stol(obj.second.get<std::string>("vlan-start"));
+            } else if (kind == "mappings") {
+                pfxstr = obj.second.get<std::string>("nat-prefix");
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &test_params->nat_pfx) == 0);
+                pfxstr = obj.second.get<std::string>("v6-nat-prefix");
+                assert(str2ipv6pfx((char *)pfxstr.c_str(), &test_params->v6_nat_pfx) == 0);
+                test_params->num_remote_mappings =
+                    std::stol(obj.second.get<std::string>("remotes"));
+                test_params->num_ip_per_vnic =
+                    std::stol(obj.second.get<std::string>("locals"));
+                pfxstr = obj.second.get<std::string>("provider-prefix");
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &test_params->provider_pfx) == 0);
+                pfxstr = obj.second.get<std::string>("v6-provider-prefix");
+                assert(str2ipv6pfx((char *)pfxstr.c_str(), &test_params->v6_provider_pfx) == 0);
+            } else if (kind == "flows") {
+                test_params->num_tcp = std::stol(obj.second.get<std::string>("num_tcp"));
+                test_params->num_udp = std::stol(obj.second.get<std::string>("num_udp"));
+                test_params->num_icmp = std::stol(obj.second.get<std::string>("num_icmp"));
+                test_params->sport_lo = std::stol(obj.second.get<std::string>("sport_lo"));
+                test_params->sport_hi = std::stol(obj.second.get<std::string>("sport_hi"));
+                test_params->dport_lo = std::stol(obj.second.get<std::string>("dport_lo"));
+                test_params->dport_hi = std::stol(obj.second.get<std::string>("dport_hi"));
+            } else if (kind == "mirror") {
+                if (!obj.second.get<std::string>("enable").compare("true")) {
+                    test_params->mirror_en = true;
+                    test_params->num_rspan = std::stol(obj.second.get<std::string>("rspan"));
+                    test_params->num_erspan = std::stol(obj.second.get<std::string>("erspan"));
+                    if ((test_params->num_rspan + test_params->num_erspan) >
+                            PDS_MAX_MIRROR_SESSION) {
+                        printf("Total no. of mirror sessions can't exceed %u",
+                               PDS_MAX_MIRROR_SESSION);
+                    }
+                    for (i = 0; i < test_params->num_rspan; i++) {
+                        test_params->rspan_bmap |= (1 << i);
+                    }
+                    for (; i < test_params->num_rspan + test_params->num_erspan; i++) {
+                        //test_params->erspan_bmap |= (1 << i);
+                    }
+                }
+            } else if (kind == "metering") {
+                test_params->num_meter = std::stol(obj.second.get<std::string>("count"));
+                test_params->meter_scale = std::stol(obj.second.get<std::string>("scale"));
+                meter_str_to_type(obj.second.get<std::string>("type"), &test_params->meter_type);
+                test_params->pps_bps = std::stol(obj.second.get<std::string>("pps_bps"));
+                test_params->burst = std::stol(obj.second.get<std::string>("burst"));
+            } else if (kind == "tags") {
+                test_params->num_tag_trees = std::stol(obj.second.get<std::string>("count"));
+                test_params->tags_v4_scale = std::stol(obj.second.get<std::string>("v4_scale"));
+                test_params->tags_v6_scale = std::stol(obj.second.get<std::string>("v6_scale"));
+            } else if (kind == "nexthop") {
+                test_params->num_nh = std::stol(obj.second.get<std::string>("count"));
+                // 1st IP in the TEP prefix is gateway IP, 2nd is MyTEP IP,
+                // so skip the first 2 IPs
+                test_params->num_nh -= 2;
+            }
+        }
+    } catch (std::exception const &e) {
+        std::cerr << e.what() << std::endl;
+        exit(1);
+        return SDK_RET_ERR;
+    }
+    return SDK_RET_OK;
+}
+
+#ifdef PDS_FLOW_TEST
+inline const char *
+get_cfg_json (void) {
+    const char *test_cfg = getenv("TEST_CFG");
+    if (test_cfg != NULL) {
+        return test_cfg;
+    }
+    auto p = api::g_pds_state.scale_profile();
+    if (p == PDS_SCALE_PROFILE_DEFAULT) {
+        return "scale_cfg.json";
+    } else if (p == PDS_SCALE_PROFILE_P1) {
+        return "scale_cfg_p1.json";
+    } else if (p == PDS_SCALE_PROFILE_P2) {
+        return "scale_cfg_p2.json";
+    } else {
+        assert(0);
+    }
+}
+
+inline sdk_ret_t
+parse_test_cfg (test_params_t *test_params, string pipeline)
+{
+    char cfgfile[256];
+    assert(getenv("CONFIG_PATH"));
+#ifdef SIM
+    snprintf(cfgfile, 256, "%s/../apollo/test/scale/%s/%s",
+             getenv("CONFIG_PATH"),
+             pipeline.c_str(),
+             get_cfg_json());
+#else
+    snprintf(cfgfile, 256, "%s/%s", getenv("CONFIG_PATH"), get_cfg_json());
+#endif
+    return parse_test_cfg(cfgfile, test_params);
+}
+#endif
+
+#endif // __APOLLO_SCALE_TEST_COMMON_HPP__
