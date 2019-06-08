@@ -1,7 +1,8 @@
 /*****************************************************************************/
 /* Remote 4to6 mapping                                                       */
 /*****************************************************************************/
-action remote_46_info(ipv6_tx_da) {
+action remote_46_info(ipv6_tx_da, nh_id) {
+    modify_field(txdma_control.nexthop_group_index, nh_id);
     modify_field(txdma_control.ipv6_tx_da, ipv6_tx_da);
 }
 

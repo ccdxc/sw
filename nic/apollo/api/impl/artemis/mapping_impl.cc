@@ -422,6 +422,7 @@ mapping_impl::release_resources(api_base *api_obj) {
     return release_remote_mapping_resources_(api_obj);
 }
 
+#define nexthop_info    action_u.nexthop_nexthop_info
 sdk_ret_t
 mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
                                           pds_mapping_spec_t *spec) {
@@ -449,11 +450,11 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
 
     nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     if (is_local_) {
-        nh_data.action_u.nexthop_nexthop_info.port = TM_PORT_UPLINK_0;
+        nh_data.nexthop_info.port = TM_PORT_UPLINK_0;
     } else {
-        nh_data.action_u.nexthop_nexthop_info.port = TM_PORT_UPLINK_1;
+        nh_data.nexthop_info.port = TM_PORT_UPLINK_1;
     }
-    nh_data.action_u.nexthop_nexthop_info.vni = vpc->fabric_encap().val.vnid;
+    nh_data.nexthop_info.vni = vpc->fabric_encap().val.vnid;
     tep = tep_db()->find(&spec->tep);
     if (spec->provider_ip_valid) {
         dipo = &spec->provider_ip;
@@ -461,17 +462,17 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
         dipo = &spec->tep.ip_addr;
     }
     if (dipo->af == IP_AF_IPV6) {
-        nh_data.action_u.nexthop_nexthop_info.ip_type = IPTYPE_IPV6;
-        sdk::lib::memrev(nh_data.action_u.nexthop_nexthop_info.dipo,
+        nh_data.nexthop_info.ip_type = IPTYPE_IPV6;
+        sdk::lib::memrev(nh_data.nexthop_info.dipo,
                          dipo->addr.v6_addr.addr8, IP6_ADDR8_LEN);
     } else {
-        nh_data.action_u.nexthop_nexthop_info.ip_type = IPTYPE_IPV4;
-        memcpy(nh_data.action_u.nexthop_nexthop_info.dipo,
+        nh_data.nexthop_info.ip_type = IPTYPE_IPV4;
+        memcpy(nh_data.nexthop_info.dipo,
                &dipo->addr.v4_addr, IP4_ADDR8_LEN);
     }
-    sdk::lib::memrev(nh_data.action_u.nexthop_nexthop_info.dmaco,
+    sdk::lib::memrev(nh_data.nexthop_info.dmaco,
                      tep->mac(), ETH_ADDR_LEN);
-    sdk::lib::memrev(nh_data.action_u.nexthop_nexthop_info.dmaci,
+    sdk::lib::memrev(nh_data.nexthop_info.dmaci,
                      spec->overlay_mac, ETH_ADDR_LEN);
     ret = nexthop_impl_db()->nh_tbl()->insert_atid(&nh_data, nh_idx_);
     if (ret != SDK_RET_OK) {

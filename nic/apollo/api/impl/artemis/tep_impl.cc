@@ -85,6 +85,14 @@ tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
         goto error;
     }
     tep1_rx_handle_ = api_params.handle;
+
+    // reserve an entry in NEXTHOP table
+    ret = nexthop_impl_db()->nh_tbl()->reserve(&nh_idx_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve entry in NH table for svc TEP %s, "
+                      "err %u", orig_obj->key2str().c_str(), ret);
+        return ret;
+    }
     return SDK_RET_OK;
 
 error:
@@ -102,6 +110,9 @@ tep_impl::release_resources(api_base *api_obj) {
         api_params.handle = tep1_rx_handle_;
         tep_impl_db()->tep1_rx_tbl()->release(&api_params);
     }
+    if (nh_idx_ != 0xFFFFFFFF) {
+        nexthop_impl_db()->nh_tbl()->release(nh_idx_);
+    }
     return SDK_RET_OK;
 }
 
@@ -116,10 +127,15 @@ tep_impl::nuke_resources(api_base *api_obj) {
         api_params.handle = tep1_rx_handle_;
         tep_impl_db()->tep1_rx_tbl()->remove(&api_params);
     }
+    if (nh_idx_ != 0xFFFFFFFF) {
+        nexthop_impl_db()->nh_tbl()->remove(nh_idx_);
+    }
     return SDK_RET_OK;
 }
 
-#define tep1_rx_info    action_u.tep1_rx_tep1_rx_info
+#define tep1_rx_info      action_u.tep1_rx_tep1_rx_info
+#define remote_46_info    action_u.remote_46_mapping_remote_46_info
+#define nexthop_info      action_u.nexthop_nexthop_info
 sdk_ret_t
 tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
@@ -128,6 +144,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     pds_tep_spec_t *spec;
     sdk_table_api_params_t api_params;
     tep1_rx_swkey_t tep1_rx_key = { 0 };
+    nexthop_actiondata_t nh_data = { 0 };
     tep1_rx_swkey_mask_t tep1_rx_mask = { 0 };
     tep1_rx_actiondata_t tep1_rx_data = { 0 };
     remote_46_mapping_actiondata_t remote_46_mapping_data = { 0 };
@@ -136,17 +153,31 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     tep = (tep_entry *)api_obj;
     switch (spec->type) {
     case PDS_TEP_TYPE_SERVICE:
+        // program NEXTHOP table entry
+        nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
+        nh_data.nexthop_info.vni = spec->encap.val.value;
+        ret = nexthop_impl_db()->nh_tbl()->insert_atid(&nh_data, nh_idx_);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to program NEXTHOP table at %u for "
+                          "service TEP %s, err %u", nh_idx_,
+                          api_obj->key2str().c_str(), ret);
+            return ret;
+        }
+
         // program REMOTE_46_MAPPING table entry
         remote_46_mapping_data.action_id = REMOTE_46_MAPPING_REMOTE_46_INFO_ID;
-        sdk::lib::memrev(remote_46_mapping_data.action_u.remote_46_mapping_remote_46_info.ipv6_tx_da,
+        sdk::lib::memrev(remote_46_mapping_data.remote_46_info.ipv6_tx_da,
                          spec->ip_addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
-        p4pd_ret = p4pd_global_entry_write(P4_ARTEMIS_TXDMA_TBL_ID_REMOTE_46_MAPPING,
-                                           remote46_hw_id_, NULL, NULL,
-                                           &remote_46_mapping_data);
+        remote_46_mapping_data.remote_46_info.nh_id = nh_idx_;
+        p4pd_ret =
+            p4pd_global_entry_write(P4_ARTEMIS_TXDMA_TBL_ID_REMOTE_46_MAPPING,
+                                    remote46_hw_id_, NULL, NULL,
+                                    &remote_46_mapping_data);
 
         if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
             PDS_TRACE_ERR("TEP table programming failed for TEP %s, "
-                          "TEP hw id %u", api_obj->key2str().c_str(), remote46_hw_id_);
+                          "TEP hw id %u", api_obj->key2str().c_str(),
+                          remote46_hw_id_);
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         }
 
@@ -171,6 +202,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             return ret;
         }
         break;
+
     default:
         ret = SDK_RET_INVALID_ARG;
         break;

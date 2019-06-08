@@ -166,7 +166,8 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                 goto cleanup;
             }
             rtable->routes[i].nhid =
-                PDS_IMPL_NH_TYPE_SVC_TUNNEL_MASK | ((tep_impl *)(tep->impl()))->hw_id();
+                PDS_IMPL_NH_TYPE_SVC_TUNNEL_MASK |
+                ((tep_impl *)(tep->impl()))->remote46_hw_id();
             break;
         case PDS_NH_TYPE_IP:
             nh  = nexthop_db()->find(&spec->routes[i].nh);

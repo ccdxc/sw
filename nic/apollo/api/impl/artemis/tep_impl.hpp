@@ -94,12 +94,14 @@ public:
 
     /// \brief  return h/w index for this TEP
     /// \return h/w table index for this TEP
-    uint16_t hw_id(void) const { return remote46_hw_id_; }
+    uint16_t remote46_hw_id(void) const { return remote46_hw_id_; }
 
 private:
     /// \brief constructor
     tep_impl() {
         remote46_hw_id_ = 0xFFFF;
+        tep1_rx_handle_ = handle_t::null();
+        nh_idx_ = 0xFFFFFFFF;
     }
 
     /// \brief destructor
@@ -119,6 +121,7 @@ private:
     // P4 datapath specific state
     uint16_t    remote46_hw_id_;    ///< hardware id for this tep
     handle_t    tep1_rx_handle_;    ///< TEP1_RX table handle
+    uint32_t    nh_idx_;            ///< nexthop table index
 };
 
 /// \@}
