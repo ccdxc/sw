@@ -55,9 +55,9 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     sdk_table_api_params_t api_params = { 0 };
-    pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
     vnic_mapping_swkey vnic_mapping_key = { 0 };
     vnic_mapping_swkey_mask_t vnic_mapping_mask = { 0 };
+    pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
 
     // allocate hw id for this vnic
     if (vnic_impl_db()->vnic_idxr()->alloc(&idx) !=
@@ -71,14 +71,19 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     //       EGRESS_VNIC_INFO, as we use hw_id_ as index into those tables
 
     // reserve an entry in VNIC_MAPPING table
-    if ((spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) &&
-        spec->vnic_encap.val.vlan_tag) {
+    if (spec->switch_vnic) {
         vnic_mapping_key.ctag_1_vid = spec->vnic_encap.val.vlan_tag;
         vnic_mapping_mask.ctag_1_vid_mask = ~0;
+    } else {
+        if ((spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) &&
+            spec->vnic_encap.val.vlan_tag) {
+            vnic_mapping_key.ctag_1_vid = spec->vnic_encap.val.vlan_tag;
+            vnic_mapping_mask.ctag_1_vid_mask = ~0;
+        }
+        sdk::lib::memrev(vnic_mapping_key.ethernet_1_srcAddr, spec->mac_addr,
+                         ETH_ADDR_LEN);
+        memset(vnic_mapping_mask.ethernet_1_srcAddr_mask, 0xFF, ETH_ADDR_LEN);
     }
-    sdk::lib::memrev(vnic_mapping_key.ethernet_1_srcAddr, spec->mac_addr,
-                     ETH_ADDR_LEN);
-    memset(vnic_mapping_mask.ethernet_1_srcAddr_mask, 0xFF, ETH_ADDR_LEN);
     api_params.key = &vnic_mapping_key;
     api_params.mask = &vnic_mapping_mask;
     api_params.handle = sdk::table::handle_t::null();

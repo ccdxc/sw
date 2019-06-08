@@ -69,6 +69,7 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     this->v6_meter_ = spec->v6_meter;
     this->vnic_encap_ = spec->vnic_encap;
     this->fabric_encap_ = spec->fabric_encap;
+    this->switch_vnic_ = spec->switch_vnic;
     return SDK_RET_OK;
 }
 
@@ -79,18 +80,19 @@ vnic_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    pds_vnic_spec_t    *spec = &obj_ctxt->api_params->vnic_spec;
+    pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
 
     PDS_TRACE_DEBUG("Programming vnic %u, vpc %u, subnet %u, v4 meter id %u, "
                     "v6 meter id %u, mac %s, vnic encap %s, fabric encap %s, "
-                    "rxmirror bitmap %x, tx mirror bitmap %x",
+                    "rxmirror bitmap %x, tx mirror bitmap %x, switch vnic %u",
                     key_.id, spec->vpc.id, spec->subnet.id,
                     spec->v4_meter.id, spec->v6_meter.id,
                     macaddr2str(spec->mac_addr),
                     pdsencap2str(spec->vnic_encap),
                     pdsencap2str(spec->fabric_encap),
                     spec->rx_mirror_session_bmap,
-                    spec->tx_mirror_session_bmap);
+                    spec->tx_mirror_session_bmap,
+                    spec->switch_vnic);
     return impl_->program_hw(this, obj_ctxt);
 }
 

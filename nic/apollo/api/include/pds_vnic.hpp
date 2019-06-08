@@ -30,13 +30,14 @@ typedef struct pds_vnic_spec_s {
     pds_encap_t fabric_encap;          ///< fabric encap for this vnic
     mac_addr_t mac_addr;               ///< vnic's overlay mac address
     pds_rsc_pool_id_t rsc_pool_id;     ///< resource pool
-    bool src_dst_check;                ///< tRUE if src/dst check is enabled
+    bool src_dst_check;                ///< TRUE if src/dst check is enabled
     uint8_t tx_mirror_session_bmap;    ///< Tx mirror sessions, if any
     uint8_t rx_mirror_session_bmap;    ///< Rx mirror sessions, if any
     pds_meter_key_t v4_meter;          ///< IPv4 Metering policy to apply on
                                        ///< Tx and Rx traffic
     pds_meter_key_t v6_meter;          ///< IPv6 Metering policy to apply on
                                        ///< Tx and Rx traffic
+    bool switch_vnic;                  ///< TRUE if vnic is a switch/bridge vnic
 } __PACK__ pds_vnic_spec_t;
 
 /// \brief VNIC status

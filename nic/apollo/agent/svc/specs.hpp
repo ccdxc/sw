@@ -265,6 +265,7 @@ vnic_api_spec_to_proto_spec (pds::VnicSpec *proto_spec,
             }
         }
     }
+    proto_spec->set_switchvnic(api_spec->switch_vnic);
 }
 
 // Populate VPCPeer protobuf spec from VPCPeer API spec
@@ -1040,7 +1041,7 @@ subnet_proto_spec_to_api_spec (pds_subnet_spec_t *api_spec,
     api_spec->v4_vr_ip = proto_spec.ipv4virtualrouterip();
     api_spec->v6_vr_ip.af = IP_AF_IPV6;
     memcpy(api_spec->v6_vr_ip.addr.v6_addr.addr8,
-           proto_spec.ipv6virtualrouterip().c_str(), IP6_ADDR8_LEN);  
+           proto_spec.ipv6virtualrouterip().c_str(), IP6_ADDR8_LEN);
     MAC_UINT64_TO_ADDR(api_spec->vr_mac, proto_spec.virtualroutermac());
     api_spec->v4_route_table.id = proto_spec.v4routetableid();
     api_spec->v6_route_table.id = proto_spec.v6routetableid();
@@ -1396,6 +1397,7 @@ pds_vnic_proto_spec_to_api_spec (pds_vnic_spec_t *api_spec,
     }
     api_spec->v4_meter.id = proto_spec.v4meterid();
     api_spec->v6_meter.id = proto_spec.v6meterid();
+    api_spec->switch_vnic = proto_spec.switchvnic();
     return SDK_RET_OK;
 }
 

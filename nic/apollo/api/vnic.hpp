@@ -206,6 +206,10 @@ public:
     /// \return    fabric encap type and value
     pds_encap_t fabric_encap(void) { return fabric_encap_; }
 
+    /// \brief     return true if vnic is switch vnic or else return false
+    /// \return    true if vnic is switch vnic, else false
+    bool switch_vnic(void) { return switch_vnic_; }
+
 private:
     /// \brief    constructor
     vnic_entry();
@@ -225,6 +229,7 @@ private:
     pds_meter_key_t   v6_meter_;         ///< IPv6 metering policy
     pds_encap_t       vnic_encap_;       ///< vnic's vlan encap
     pds_encap_t       fabric_encap_;     ///< fabric encap information
+    bool              switch_vnic_;      ///< TRUE if this is switch vnic
     ht_ctxt_t         ht_ctxt_;          ///< hash table context
     impl_base         *impl_;            ///< impl object instance
 
