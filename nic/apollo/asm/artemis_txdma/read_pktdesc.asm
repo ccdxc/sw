@@ -10,20 +10,22 @@ struct phv_             p;
 
 read_pktdesc:
     phvwr.e.f       p.{rx_to_tx_hdr_remote_ip, \
-                        rx_to_tx_hdr_sacl_base_addr, \
-                        rx_to_tx_hdr_route_base_addr, \
-                        rx_to_tx_hdr_sip_classid, \
-                        rx_to_tx_hdr_dip_classid, \
-                        rx_to_tx_hdr_tag_classid, \
-                        rx_to_tx_hdr_meter_result, \
-                        rx_to_tx_hdr_dport_classid, \
-                        rx_to_tx_hdr_sport_classid, \
-                        rx_to_tx_hdr_tag2_classid, \
-                        rx_to_tx_hdr_vnic_id, \
-                        rx_to_tx_hdr_vcn_id}, \
-                        d[511:(512-(offsetof(p,rx_to_tx_hdr_remote_ip) + \
+                       rx_to_tx_hdr_sacl_base_addr, \
+                       rx_to_tx_hdr_route_base_addr, \
+                       rx_to_tx_hdr_meter_result, \
+                       rx_to_tx_hdr_sip_classid, \
+                       rx_to_tx_hdr_dip_classid, \
+                       rx_to_tx_hdr_stag_classid, \
+                       rx_to_tx_hdr_dtag_classid, \
+                       rx_to_tx_hdr_sport_classid, \
+                       rx_to_tx_hdr_dport_classid, \
+                       rx_to_tx_hdr_vpc_id, \
+                       rx_to_tx_hdr_vnic_id, \
+                       rx_to_tx_hdr_iptype, \
+                       rx_to_tx_hdr_pad0}, \
+                       d[511:(512-(offsetof(p,rx_to_tx_hdr_remote_ip) + \
                             sizeof(p.rx_to_tx_hdr_remote_ip) - \
-                            offsetof(p,rx_to_tx_hdr_tag2_classid)))]
+                            offsetof(p, rx_to_tx_hdr_pad0)))]
     nop
 
 /*****************************************************************************/

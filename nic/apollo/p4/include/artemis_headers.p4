@@ -13,7 +13,7 @@ header_type artemis_p4_to_rxdma_header_t {
         vnic_id         : 8;
         tag_root        : 40;
 
-        vcn_id          : 8;
+        vpc_id          : 8;
         pad1            : 16;
 
         flow_src        : 128;
@@ -34,24 +34,24 @@ header_type artemis_p4_to_rxdma_header2_t {
     }
 }
 
-
 // When added new fields, please make sure to update
 // DMA command in ASM file to include this new field:
 // apollo/asm/artemis_rxdma/txdma_enqueue.asm
+// And in txdma files where it is DMA'd back
 header_type artemis_rx_to_tx_header_t {
     fields {
         remote_ip       : 128;// Bytes 0 to 15
         sacl_base_addr  : 40; // Bytes 16 to 20
         route_base_addr : 40; // Bytes 21 to 25
-        sip_classid     : 10; // Bytes 26 and 27
-        dip_classid     : 10; // Bytes 27 and 28
-        tag_classid     : 10; // Bytes 28 and 29
-        meter_result    : 10; // Bytes 29 and 30
-        dport_classid   : 8;  // Byte 31
+        meter_result    : 10; // Bytes 26 and 27
+        sip_classid     : 10; // Bytes 27 and 28
+        dip_classid     : 10; // Bytes 28 and 29
+        stag_classid    : 10; // Bytes 29 and 30
+        dtag_classid    : 8;  // Byte 31
         sport_classid   : 8;  // Byte 32
-        tag2_classid    : 8;  // Byte 33
-        vnic_id         : 8;  // Byte 34
-        vcn_id          : 8;  // Byte 35
+        dport_classid   : 8;  // Byte 33
+        vpc_id          : 8;  // Byte 34
+        vnic_id         : 8;  // Byte 35
         iptype          : 1;  // Byte 36 - 1b
         pad0            : 7;  // Byte 36 - 7b
         // Please check the above comment when adding new fields

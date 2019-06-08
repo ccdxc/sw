@@ -376,7 +376,7 @@ action rfc_action_p1_1(pad, id50,
         // P2 table base
         modify_field(scratch_metadata.field40, SACL_P2_4_TABLE_OFFSET);
         // P2 table index
-        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.tag_classid << 8)|
+        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.dtag_classid << 8)|
                                                 rx_to_tx_hdr.dport_classid);
     }
 

@@ -26,8 +26,8 @@ rfc_p1_1:
     add.c1     r2, k.rx_to_tx_hdr_dport_classid, k.rx_to_tx_hdr_sport_classid, 8
     /* Else, add SACL_P2_4_TABLE_OFFSET to sacl base address. */
     addi.!c1   r1, r1, SACL_P2_4_TABLE_OFFSET
-    /* P2 table index = ((tag_classid << 8) | proto_dport_classid). */
-    add.!c1    r2, k.rx_to_tx_hdr_dport_classid, k.rx_to_tx_hdr_tag_classid, 8
+    /* P2 table index = ((dtag_classid << 8) | proto_dport_classid). */
+    add.!c1    r2, k.rx_to_tx_hdr_dport_classid, k.rx_to_tx_hdr_dtag_classid, 8
     /* Write P2 table index to PHV */
     phvwr      p.txdma_control_rfc_index, r2
     /* Compute the byte offset for P2 table index */

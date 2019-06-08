@@ -10,8 +10,13 @@ action rxlpm1_res_handler()
         if (capri_p4_intr.recirc_count == 2)
         {
             // Write the derived TAG class id to PHV
-            modify_field(rx_to_tx_hdr.tag_classid,
-                         scratch_metadata.field10);
+            if (p4_to_rxdma.direction == TX_FROM_HOST) {
+                modify_field(rx_to_tx_hdr.dtag_classid,
+                             p4_to_rxdma.service_tag);
+            } else {
+                modify_field(rx_to_tx_hdr.stag_classid,
+                             p4_to_rxdma.service_tag);
+            }
         }
     }
 }

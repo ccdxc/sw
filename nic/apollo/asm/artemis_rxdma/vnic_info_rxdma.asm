@@ -2,10 +2,11 @@
 #include "artemis_rxdma.h"
 #include "INGRESS_p.h"
 #include "ingress.h"
+#include "INGRESS_vnic_info_rxdma_k.h"
 
-struct vnic_info_rxdma_k  k;
+struct vnic_info_rxdma_k_ k;
 struct vnic_info_rxdma_d  d;
-struct phv_             p;
+struct phv_               p;
 
 %%
 
@@ -29,18 +30,19 @@ vnic_info_rxdma:
     add.!c1      r1, r1, d.vnic_info_rxdma_d.lpm_base2
     phvwr        p.lpm_metadata_lpm2_base_addr, r1
 
-    // Copy the vnic id and vcn id so it goes to txdma
+    // Copy the data that need to go to txdma
+    phvwr        p.rx_to_tx_hdr_vpc_id, k.p4_to_rxdma_vpc_id
     phvwr        p.rx_to_tx_hdr_vnic_id, k.p4_to_rxdma_vnic_id
-    phvwr        p.rx_to_tx_hdr_vcn_id, k.p4_to_rxdma_vcn_id
 
-    // Always fill the remote_ip from p4 keys based on the direction
+    // Fill the remote_ip and tag classid based on the direction
     seq          c1, k.p4_to_rxdma_direction, TX_FROM_HOST
-    phvwr.c1     p.rx_to_tx_hdr_remote_ip[127:64], k.p4_to_rxdma_flow_dst_sbit0_ebit87[87:24]
-    phvwr.c1     p.rx_to_tx_hdr_remote_ip[63:40], k.p4_to_rxdma_flow_dst_sbit0_ebit87[23:0]
-    phvwr.c1     p.rx_to_tx_hdr_remote_ip[39:0], k.p4_to_rxdma_flow_dst_sbit88_ebit127
-    phvwr.!c1    p.rx_to_tx_hdr_remote_ip[127:120], k.p4_to_rxdma_flow_src_sbit0_ebit7
-    phvwr.!c1    p.rx_to_tx_hdr_remote_ip[119:64], k.p4_to_rxdma_flow_src_sbit8_ebit127[119:64]
-    phvwr.!c1    p.rx_to_tx_hdr_remote_ip[63:0], k.p4_to_rxdma_flow_src_sbit8_ebit127[63:0]
+    phvwr.c1     p.rx_to_tx_hdr_stag_classid, k.p4_to_rxdma_service_tag
+    phvwr.c1     p.rx_to_tx_hdr_remote_ip[127:96], k.p4_to_rxdma_flow_dst_s0_e31
+    phvwr.c1     p.rx_to_tx_hdr_remote_ip[95:64], k.p4_to_rxdma_flow_dst_s32_e127[95:64]
+    phvwr.c1     p.rx_to_tx_hdr_remote_ip[63:0], k.p4_to_rxdma_flow_dst_s32_e127[63:0]
+    phvwr.!c1    p.rx_to_tx_hdr_dtag_classid, k.p4_to_rxdma_service_tag
+    phvwr.!c1    p.rx_to_tx_hdr_remote_ip[127:64], k.p4_to_rxdma_flow_src[127:64]
+    phvwr.!c1    p.rx_to_tx_hdr_remote_ip[63:0], k.p4_to_rxdma_flow_src[63:0]
 
     // Setup key for DPORT lookup
     phvwr        p.lpm_metadata_lpm2_key[23:16], k.p4_to_rxdma_flow_proto

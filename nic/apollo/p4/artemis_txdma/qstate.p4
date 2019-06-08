@@ -39,29 +39,33 @@ table read_qstate {
 action read_pktdesc(remote_ip,
                     sacl_base_addr,
                     route_base_addr,
+                    meter_result,
                     sip_classid,
                     dip_classid,
-                    tag_classid,
-                    meter_result,
-                    dport_classid,
+                    stag_classid,
+                    dtag_classid,
                     sport_classid,
-                    tag2_classid,
+                    dport_classid,
+                    vpc_id,
                     vnic_id,
-                    vcn_id
+                    iptype,
+                    pad0
                    )
 {
     modify_field(scratch_metadata.field128, remote_ip);
     modify_field(scratch_metadata.field40, sacl_base_addr);
     modify_field(scratch_metadata.field40, route_base_addr);
+    modify_field(scratch_metadata.field10, meter_result);
     modify_field(scratch_metadata.field10, sip_classid);
     modify_field(scratch_metadata.field10, dip_classid);
-    modify_field(scratch_metadata.field10, tag_classid);
-    modify_field(scratch_metadata.field10, meter_result);
-    modify_field(scratch_metadata.field8, dport_classid);
+    modify_field(scratch_metadata.field10, stag_classid);
+    modify_field(scratch_metadata.field10, dtag_classid);
     modify_field(scratch_metadata.field8, sport_classid);
-    modify_field(scratch_metadata.field8, tag2_classid);
+    modify_field(scratch_metadata.field8, dport_classid);
+    modify_field(scratch_metadata.field8, vpc_id);
     modify_field(scratch_metadata.field8, vnic_id);
-    modify_field(scratch_metadata.field8, vcn_id);
+    modify_field(scratch_metadata.field1, iptype);
+    modify_field(scratch_metadata.field7, pad0);
 }
 
 @pragma stage 1

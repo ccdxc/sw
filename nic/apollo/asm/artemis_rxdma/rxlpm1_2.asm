@@ -41,13 +41,17 @@ struct rxlpm1_2_d          d;
 
 rxlpm1_res_handler:
     /* Is this the second pass? */
-    seq              c1, k.capri_p4_intr_recirc_count, 1
+    seq          c1, k.capri_p4_intr_recirc_count, 1
     /* If so, write SIP classid result, and Stop */
-    phvwr.c1.e       p.rx_to_tx_hdr_sip_classid, res_reg
+    phvwr.c1.e   p.rx_to_tx_hdr_sip_classid, res_reg
     /* Is this the third pass? */
-    seq              c1, k.capri_p4_intr_recirc_count, 2
-    /* If so, write TAG classid result, and Stop */
-    phvwr.c1         p.rx_to_tx_hdr_tag_classid, res_reg
-    /* Else, Stop anyway */
+    seq          c1, k.capri_p4_intr_recirc_count, 2
+    /* If not, go to end */
+    bcf          [!c1], exit
+    /* Third pass. Write TAG classid result, and Stop */
+    seq          c1, k.p4_to_rxdma_direction, TX_FROM_HOST
+    phvwr.c1     p.rx_to_tx_hdr_dtag_classid, k.p4_to_rxdma_service_tag
+    phvwr.!c1    p.rx_to_tx_hdr_stag_classid, k.p4_to_rxdma_service_tag
+exit:
     nop.e
     nop
