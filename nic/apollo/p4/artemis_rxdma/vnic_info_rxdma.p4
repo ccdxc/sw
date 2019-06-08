@@ -6,6 +6,9 @@ action vnic_info_rxdma(lpm_base1, lpm_base2, lpm_base3, lpm_base4,
     // Disable lookup for further passes
     modify_field(p4_to_rxdma.vnic_info_en, FALSE);
 
+    // Pass iptype (address family) to txdma
+    modify_field(rx_to_tx_hdr.iptype, p4_to_rxdma.iptype);
+
     // Copy the LPM roots to PHV based on AF
     if (p4_to_rxdma.iptype == IPTYPE_IPV4) {
         modify_field(rx_to_tx_hdr.sacl_base_addr, lpm_base1);

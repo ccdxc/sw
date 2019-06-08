@@ -34,6 +34,10 @@ header_type artemis_p4_to_rxdma_header2_t {
     }
 }
 
+
+// When added new fields, please make sure to update
+// DMA command in ASM file to include this new field:
+// apollo/asm/artemis_rxdma/txdma_enqueue.asm
 header_type artemis_rx_to_tx_header_t {
     fields {
         remote_ip       : 128;// Bytes 0 to 15
@@ -48,5 +52,8 @@ header_type artemis_rx_to_tx_header_t {
         tag2_classid    : 8;  // Byte 33
         vnic_id         : 8;  // Byte 34
         vcn_id          : 8;  // Byte 35
+        iptype          : 1;  // Byte 36 - 1b
+        pad0            : 7;  // Byte 36 - 7b
+        // Please check the above comment when adding new fields
     }
 }

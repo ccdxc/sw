@@ -23,7 +23,7 @@ header_type txdma_control_metadata_t {
         payload_addr        : 40;
         cindex              : 16;
 
-        remote_vnic_mapping_tx_ohash_lkp : 1; //TODO-KSM: Replace with P4 to P4+ header
+        mapping_ohash_lkp   : 1;
         sacl_result         : 1;
         rfc_p1_classid      : 10;
         rule_priority       : 10;
@@ -31,7 +31,7 @@ header_type txdma_control_metadata_t {
 
         vpc_id              : 8;
         nexthop_group_index : 16;
-        remote_vnic_mapping_tx_ohash : 32; //TODO-KSM: Replace with P4 to P4+ header
+        mapping_ohash       : 32;
 
         pad0                : 4;
         rfc_index           : 20;
@@ -57,18 +57,11 @@ header_type scratch_metadata_t {
         qid             : 24;
         lif             : 11;
         // TMP: Fileds added temporarily
-        nexthop_group_index : 10;
-        remote_vnic_mapping_tx_done : 1;
-        dst_slot_id_valid   : 1;
         pad0                : 4;
-        dst_slot_id         : 24;
         flag                : 1;
         hint_valid          : 1;
-        vnic_mapping_hash   : 11;
-        remote_vnic_mapping_tx_ohash_lkp    : 1;
-        vnic_mapping_hint   : 18;
-        remote_vnic_mapping_tx_ohash : 32;
-        vpc_peer_base       : 40;
+        mapping_hash        : 11;
+        mapping_hint        : 18;
     }
 }
 

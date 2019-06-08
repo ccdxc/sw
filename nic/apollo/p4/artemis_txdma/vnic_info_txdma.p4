@@ -1,14 +1,11 @@
-// VNIC Info Table in TXDMA direction: Get base address for vpc peer routes
-action vnic_info_txdma(entry_valid, lpm_base1, lpm_base2) {
-    // Fill the keys only in second pass
-    if (capri_p4_intr.recirc_count == 1) {
-        if (entry_valid == TRUE) {
-            //TODO-KSM: Fill the base with either v4 or v6 base based on packet type
-            modify_field(scratch_metadata.vpc_peer_base, lpm_base1);
-            modify_field(scratch_metadata.vpc_peer_base, lpm_base2);
-        }
+// VNIC Info Table in TXDMA direction
+action vnic_info_txdma(lpm_base1, lpm_base2) {
+    // Copy the LPM roots to PHV based on AF
+    if (rx_to_tx_hdr.iptype == IPTYPE_IPV4) {
+        modify_field(txdma_control.lpm1_base_addr, lpm_base1);
+    } else {
+        modify_field(txdma_control.lpm1_base_addr, lpm_base2);
     }
-    modify_field(scratch_metadata.flag, entry_valid);
 }
 
 @pragma stage 0

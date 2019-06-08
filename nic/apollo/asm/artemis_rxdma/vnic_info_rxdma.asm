@@ -13,6 +13,9 @@ vnic_info_rxdma:
     // Disable this lookup for further passes
     phvwr        p.p4_to_rxdma_vnic_info_en, FALSE
 
+    // Pass iptype (address family) to txdma
+    phvwr        p.rx_to_tx_hdr_iptype, k.p4_to_rxdma_iptype
+
     // Copy the LPM roots to PHV based on AF
     addi         r1, r0, SACL_PROTO_DPORT_TABLE_OFFSET
     seq          c1, k.p4_to_rxdma_iptype, IPTYPE_IPV4

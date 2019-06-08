@@ -140,7 +140,6 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
 
     // prepare VNIC_INFO_TXDMA entry
     txdma_vnic_info_data.action_id = VNIC_INFO_TXDMA_VNIC_INFO_TXDMA_ID;
-    txdma_vnic_info_data.txdma_vnic_info.entry_valid = TRUE;
 
     // egress v4 & v6 policy roots are programmed in RX direction entry
     policy_key = subnet->egr_v4_policy();
