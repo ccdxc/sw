@@ -156,7 +156,7 @@ private:
     sdk_ret_t activate_vpc_delete_(pds_epoch_t epoch, vpc_entry *vpc);
 
 private:
-    handle_t    tep1_rx_handle_;    // TEP1_RX table handle
+    handle_t    tep1_rx_handle_;    ///< TEP1_RX table handle
 };
 
 /// @}

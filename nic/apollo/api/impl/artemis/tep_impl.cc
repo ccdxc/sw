@@ -15,6 +15,7 @@
 #include "nic/apollo/api/tep.hpp"
 #include "nic/apollo/api/impl/artemis/tep_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
+#include "gen/p4gen/artemis/include/p4pd.h"
 
 namespace api {
 namespace impl {
@@ -49,11 +50,14 @@ sdk_ret_t
 tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     uint32_t idx;
-    pds_tep_spec_t *tep_spec;
+    pds_tep_spec_t *spec;
+    tep1_rx_swkey_t tep1_rx_key = { 0 };
+    tep1_rx_swkey_mask_t tep1_rx_mask = { 0 };
+    sdk_table_api_params_t api_params;
 
-    tep_spec = &obj_ctxt->api_params->tep_spec;
-    if (tep_spec->type != PDS_TEP_TYPE_SERVICE) {
-        PDS_TRACE_ERR("Unsupported TEP type %u", tep_spec->type);
+    spec = &obj_ctxt->api_params->tep_spec;
+    if (spec->type != PDS_TEP_TYPE_SERVICE) {
+        PDS_TRACE_ERR("Unsupported TEP type %u", spec->type);
         return SDK_RET_INVALID_ARG;
     }
 
@@ -61,62 +65,118 @@ tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     if (tep_impl_db()->remote_46_tep_idxr()->alloc(&idx) !=
             sdk::lib::indexer::SUCCESS) {
         PDS_TRACE_ERR("Failed to allocate hw id for TEP %s",
-                      ipaddr2str(&tep_spec->key.ip_addr));
+                      ipaddr2str(&spec->key.ip_addr));
         return sdk::SDK_RET_NO_RESOURCE;
     }
-    hw_id_ = idx & 0xFFFF;
+    remote46_hw_id_ = idx & 0xFFFF;
+
+    // reserve an entry in the TEP1_RX table
+    tep1_rx_key.vxlan_1_vni = spec->encap.val.value;
+    tep1_rx_mask.vxlan_1_vni_mask = 0xFFFFFFFF;
+    memset(&api_params, 0, sizeof(api_params));
+    api_params.key = &tep1_rx_key;
+    api_params.mask = &tep1_rx_mask;
+    api_params.handle = sdk::table::handle_t::null();
+    ret = tep_impl_db()->tep1_rx_tbl()->reserve(&api_params);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve entry in TEP1_RX "
+                      "table for svc TEP %s, err %u",
+                      orig_obj->key2str().c_str(), ret);
+        goto error;
+    }
+    tep1_rx_handle_ = api_params.handle;
     return SDK_RET_OK;
+
+error:
+    return ret;
 }
 
 sdk_ret_t
 tep_impl::release_resources(api_base *api_obj) {
-    if (hw_id_ != 0xFFFF) {
-        tep_impl_db()->remote_46_tep_idxr()->free(hw_id_);
+    sdk_table_api_params_t api_params = { 0 };
+
+    if (remote46_hw_id_ != 0xFFFF) {
+        tep_impl_db()->remote_46_tep_idxr()->free(remote46_hw_id_);
+    }
+    if (tep1_rx_handle_.valid()) {
+        api_params.handle = tep1_rx_handle_;
+        tep_impl_db()->tep1_rx_tbl()->release(&api_params);
     }
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 tep_impl::nuke_resources(api_base *api_obj) {
-    if (hw_id_ != 0xFFFF) {
-        tep_impl_db()->remote_46_tep_idxr()->free(hw_id_);
+    sdk_table_api_params_t api_params = { 0 };
+
+    if (remote46_hw_id_ != 0xFFFF) {
+        tep_impl_db()->remote_46_tep_idxr()->free(remote46_hw_id_);
+    }
+    if (tep1_rx_handle_.valid()) {
+        api_params.handle = tep1_rx_handle_;
+        tep_impl_db()->tep1_rx_tbl()->remove(&api_params);
     }
     return SDK_RET_OK;
 }
 
+#define tep1_rx_info    action_u.tep1_rx_tep1_rx_info
 sdk_ret_t
 tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     tep_entry *tep;
     p4pd_error_t p4pd_ret;
-    pds_tep_spec_t *tep_spec;
+    pds_tep_spec_t *spec;
+    sdk_table_api_params_t api_params;
+    tep1_rx_swkey_t tep1_rx_key = { 0 };
+    tep1_rx_swkey_mask_t tep1_rx_mask = { 0 };
+    tep1_rx_actiondata_t tep1_rx_data = { 0 };
     remote_46_mapping_actiondata_t remote_46_mapping_data = { 0 };
 
-    tep_spec = &obj_ctxt->api_params->tep_spec;
+    spec = &obj_ctxt->api_params->tep_spec;
     tep = (tep_entry *)api_obj;
-    switch (tep_spec->type) {
+    switch (spec->type) {
     case PDS_TEP_TYPE_SERVICE:
         // program REMOTE_46_MAPPING table entry
         remote_46_mapping_data.action_id = REMOTE_46_MAPPING_REMOTE_46_INFO_ID;
         sdk::lib::memrev(remote_46_mapping_data.action_u.remote_46_mapping_remote_46_info.ipv6_tx_da,
-                         tep_spec->ip_addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
+                         spec->ip_addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
         p4pd_ret = p4pd_global_entry_write(P4_ARTEMIS_TXDMA_TBL_ID_REMOTE_46_MAPPING,
-                                           hw_id_, NULL, NULL,
+                                           remote46_hw_id_, NULL, NULL,
                                            &remote_46_mapping_data);
 
         if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
             PDS_TRACE_ERR("TEP table programming failed for TEP %s, "
-                          "TEP hw id %u", api_obj->key2str().c_str(), hw_id_);
+                          "TEP hw id %u", api_obj->key2str().c_str(), remote46_hw_id_);
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         }
-        ret = SDK_RET_OK;
+
+        // program TEP1_RX table entry
+        tep1_rx_key.vxlan_1_vni = spec->encap.val.value;
+        tep1_rx_mask.vxlan_1_vni_mask = 0xFFFFFFFF;
+        tep1_rx_data.tep1_rx_info.decap_next = 0;
+        // @pirabhu let us discuss what the vpc id should be here
+        // if needed we may have to make vpc id in pds_tep_spec_t for service
+        // tunnel mandatory
+        //tep1_rx_data.tep1_rx_info.src_vpc_id = ;
+        memset(&api_params, 0, sizeof(api_params));
+        api_params.key = &tep1_rx_key;
+        api_params.mask = &tep1_rx_mask;
+        api_params.appdata = &tep1_rx_data;
+        api_params.action_id = TEP1_RX_TEP1_RX_INFO_ID;
+        api_params.handle = tep1_rx_handle_;
+        ret = tep_impl_db()->tep1_rx_tbl()->insert(&api_params);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Programming of TEP1_RX table failed for svc TEP %s, err %u",
+                          api_obj->key2str().c_str(), ret);
+            return ret;
+        }
         break;
     default:
         ret = SDK_RET_INVALID_ARG;
         break;
     }
     PDS_TRACE_DEBUG("Programmed TEP %s, hw id %u",
-                    ipaddr2str(&tep_spec->key.ip_addr), hw_id_);
+                    ipaddr2str(&spec->key.ip_addr), remote46_hw_id_);
     return ret;
 }
 
@@ -133,7 +193,7 @@ tep_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
 
 void
 tep_impl::fill_status_(pds_tep_status_t *status) {
-    status->hw_id = hw_id_;
+    status->hw_id = remote46_hw_id_;
 }
 
 void
@@ -153,12 +213,12 @@ tep_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     pds_tep_info_t *tep_info = (pds_tep_info_t *)info;
 
     p4pdret = p4pd_global_entry_read(P4_ARTEMIS_TXDMA_TBL_ID_REMOTE_46_MAPPING,
-                                     hw_id_, NULL, NULL,
+                                     remote46_hw_id_, NULL, NULL,
                                      &remote_46_mapping_data);
     if (unlikely(p4pdret != P4PD_SUCCESS)) {
         PDS_TRACE_ERR("Failed to read REMOTE_46_MAPPING table for TEP %s at "
                       "hw id %u, ret %d", api_obj->key2str().c_str(),
-                      hw_id_, p4pdret);
+                      remote46_hw_id_, p4pdret);
         return sdk::SDK_RET_HW_READ_ERR;
     }
     fill_spec_(&remote_46_mapping_data, &tep_info->spec);

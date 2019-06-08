@@ -1041,11 +1041,17 @@ create_service_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
 {
     sdk_ret_t      rv;
     pds_tep_spec_t pds_tep;
+    uint32_t tep_vnid = g_test_params.svc_tep_vnid_base;
 
+    if (!num_teps) {
+        return SDK_RET_OK;
+    }
     for (uint32_t i = 1; i <= num_teps; i++) {
         memset(&pds_tep, 0, sizeof(pds_tep));
         compute_ipv6_addr(&pds_tep.key.ip_addr, ip_pfx, i, 120);
         pds_tep.type = PDS_TEP_TYPE_SERVICE;
+        pds_tep.encap.type = PDS_ENCAP_TYPE_VXLAN;
+        pds_tep.encap.val.vnid = tep_vnid++;
 #ifdef TEST_GRPC_APP
         rv = create_tunnel_grpc(g_test_params.num_teps + i + 1, &pds_tep);
         if (rv != SDK_RET_OK) {
@@ -1419,7 +1425,8 @@ create_objects (void)
 
     if (artemis()) {
         // create service TEPs
-        ret = create_service_teps(g_test_params.num_teps + 2,
+        ret = create_service_teps(0,    // TODO: revisit this once TEP1_RX table size is adjusted in p4
+                                  //g_test_params.num_teps + 2,
                                   &g_test_params.svc_tep_pfx);
         if (ret != SDK_RET_OK) {
             return ret;

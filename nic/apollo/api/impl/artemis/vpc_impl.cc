@@ -55,7 +55,7 @@ vpc_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     api_params.key = &tep1_rx_key;
     api_params.mask = &tep1_rx_mask;
     api_params.handle = sdk::table::handle_t::null();
-    ret = vpc_impl_db()->tep1_rx_tbl()->reserve(&api_params);
+    ret = tep_impl_db()->tep1_rx_tbl()->reserve(&api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in TEP1_RX "
                       "table for vpc %u, err %u", spec->key.id, ret);
@@ -71,7 +71,7 @@ vpc_impl::release_resources(api_base *api_obj) {
 
     if (tep1_rx_handle_.valid()) {
         api_params.handle = tep1_rx_handle_;
-        vpc_impl_db()->tep1_rx_tbl()->release(&api_params);
+        tep_impl_db()->tep1_rx_tbl()->release(&api_params);
     }
     return SDK_RET_OK;
 }
@@ -82,7 +82,7 @@ vpc_impl::nuke_resources(api_base *api_obj) {
 
     if (tep1_rx_handle_.valid()) {
         api_params.handle = tep1_rx_handle_;
-        vpc_impl_db()->tep1_rx_tbl()->remove(&api_params);
+        tep_impl_db()->tep1_rx_tbl()->remove(&api_params);
     }
     return SDK_RET_OK;
 }
@@ -96,7 +96,7 @@ vpc_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
 
 sdk_ret_t
 vpc_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
-                     obj_ctxt_t *obj_ctxt) {
+                    obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
@@ -120,7 +120,7 @@ vpc_impl::activate_vpc_create_(pds_epoch_t epoch, vpc_entry *vpc,
     api_params.appdata = &tep1_rx_data;
     api_params.action_id = TEP1_RX_TEP1_RX_INFO_ID;
     api_params.handle = tep1_rx_handle_;
-    ret = vpc_impl_db()->tep1_rx_tbl()->insert(&api_params);
+    ret = tep_impl_db()->tep1_rx_tbl()->insert(&api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Programming of TEP1_RX table failed for vpc %u, err %u",
                       spec->key.id, ret);

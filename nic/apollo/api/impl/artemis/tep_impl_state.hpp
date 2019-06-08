@@ -12,6 +12,7 @@
 #define __TEP_IMPL_STATE_HPP__
 
 #include "nic/sdk/lib/indexer/indexer.hpp"
+#include "nic/sdk/lib/table/sltcam/sltcam.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -48,10 +49,13 @@ public:
 
 private:
     indexer *remote_46_tep_idxr(void) { return remote_46_tep_idxr_; }
-    friend class tep_impl;         ///< tep_impl, friend of tep_impl_state
+    sltcam *tep1_rx_tbl(void) { return tep1_rx_tbl_; }
+    friend class vpc_impl;   ///< vpc_impl class is friend of vpc_impl_state
+    friend class tep_impl;   ///< tep_impl, friend of tep_impl_state
 
 private:
-    indexer *remote_46_tep_idxr_;    ///< indexer to allocate hw id for TEPs
+    indexer   *remote_46_tep_idxr_;    ///< indexer to allocate hw id for TEPs
+    sltcam    *tep1_rx_tbl_;           ///< tcam table for TEP1_RX
 };
 
 ///   \@}

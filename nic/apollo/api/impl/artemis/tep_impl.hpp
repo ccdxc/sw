@@ -18,6 +18,8 @@
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
 
+using sdk::table::handle_t;
+
 namespace api {
 namespace impl {
 
@@ -92,12 +94,12 @@ public:
 
     /// \brief  return h/w index for this TEP
     /// \return h/w table index for this TEP
-    uint16_t hw_id(void) const { return hw_id_; }
+    uint16_t hw_id(void) const { return remote46_hw_id_; }
 
 private:
     /// \brief constructor
     tep_impl() {
-        hw_id_ = 0xFFFF;
+        remote46_hw_id_ = 0xFFFF;
     }
 
     /// \brief destructor
@@ -115,8 +117,9 @@ private:
 
 private:
     // P4 datapath specific state
-    uint16_t   hw_id_;    ///< hardware id for this tep
-} __PACK__;
+    uint16_t    remote46_hw_id_;    ///< hardware id for this tep
+    handle_t    tep1_rx_handle_;    ///< TEP1_RX table handle
+};
 
 /// \@}
 

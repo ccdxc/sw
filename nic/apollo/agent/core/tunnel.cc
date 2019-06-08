@@ -2,16 +2,33 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // -----------------------------------------------------------------------------
 
+#include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/tunnel.hpp"
 
 namespace core {
 
+static inline sdk_ret_t
+tep_create_validate (pds_tep_spec_t *spec)
+{
+    if (spec->type == PDS_TEP_TYPE_SERVICE) {
+        // service TEPs must have vxlan encap
+        if ((spec->encap.type != PDS_ENCAP_TYPE_VXLAN) ||
+            (spec->encap.val.vnid == 0)) {
+            PDS_TRACE_ERR("Service TEP %s has invalid vxlan encap (%u, %u)",
+                          ipaddr2str(&spec->key.ip_addr),
+                          spec->encap.type, spec->encap.val.vnid);
+            return sdk::SDK_RET_INVALID_ARG;
+        }
+    }
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 tep_create (uint32_t key, pds_tep_spec_t *spec)
 {
     sdk_ret_t ret;
-    
+
     if (agent_state::state()->find_in_tep_db(key) != NULL) {
         return sdk::SDK_RET_ENTRY_EXISTS;
     }
@@ -30,7 +47,7 @@ sdk_ret_t
 tep_update (uint32_t key, pds_tep_spec_t *spec)
 {
     sdk_ret_t ret;
-    
+
     if (agent_state::state()->find_in_tep_db(key) == NULL) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }

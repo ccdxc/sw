@@ -33,6 +33,7 @@ typedef struct test_params_s {
         uint32_t num_teps;
         ip_prefix_t tep_pfx;
         ip_prefix_t svc_tep_pfx;
+        uint32_t svc_tep_vnid_base;
     };
     // route config
     struct {
@@ -277,6 +278,7 @@ parse_test_cfg (char *cfg_file, test_params_t *test_params)
         exit(1);
         return SDK_RET_ERR;
     }
+    test_params->svc_tep_vnid_base = 10000;
     return SDK_RET_OK;
 }
 
