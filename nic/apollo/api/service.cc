@@ -22,6 +22,7 @@ namespace api {
 
 svc_mapping::svc_mapping() {
     stateless_ = true;
+    impl_ = NULL;
 }
 
 svc_mapping *

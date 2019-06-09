@@ -71,6 +71,7 @@ svc_mapping_impl::factory(pds_svc_mapping_spec_t *mapping) {
     if (unlikely(impl == NULL)) {
         return NULL;
     }
+    new (impl) svc_mapping_impl();
     return impl;
 }
 

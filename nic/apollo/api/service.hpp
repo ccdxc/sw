@@ -179,7 +179,7 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    impl_base                *impl_;            ///< impl object instance
+    impl_base    *impl_;            ///< impl object instance
 } __PACK__;
 
 /// @}     // end of PDS_SVC_MAPPING

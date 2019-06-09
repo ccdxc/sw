@@ -217,6 +217,9 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
     pds_svc_mapping_spec_t svc_mapping;
     pds_svc_mapping_spec_t svc_v6_mapping;
 
+    // TODO: remove
+    return SDK_RET_OK;
+
     // create local vnic IP mappings first
     for (uint32_t i = 1; i <= num_vpcs; i++) {
         for (uint32_t j = 1; j <= num_subnets; j++) {
@@ -1569,6 +1572,18 @@ create_objects (void)
                           g_test_params.num_remote_mappings,
                           &g_test_params.provider_pfx,
                           &g_test_params.v6_provider_pfx);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    // create service mappings
+    ret = create_svc_mappings(g_test_params.num_vpcs, g_test_params.num_subnets,
+                              g_test_params.num_vnics,
+                              g_test_params.num_ip_per_vnic,
+                              &g_test_params.v4_vip_pfx,
+                              &g_test_params.v6_vip_pfx,
+                              &g_test_params.provider_pfx,
+                              &g_test_params.v6_provider_pfx);
     if (ret != SDK_RET_OK) {
         return ret;
     }
