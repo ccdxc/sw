@@ -16,6 +16,7 @@
 #include "nic/apollo/api/include/pds_mirror.hpp"
 #include "nic/apollo/api/include/pds_meter.hpp"
 #include "nic/apollo/api/include/pds_tag.hpp"
+#include "nic/apollo/api/include/pds_service.hpp"
 
 sdk_ret_t create_route_table_grpc(pds_route_table_spec_t *spec);
 sdk_ret_t create_policy_grpc(pds_policy_spec_t *spec);
@@ -28,12 +29,14 @@ sdk_ret_t create_vpc_peer_grpc(pds_vpc_peer_spec_t *spec);
 sdk_ret_t create_tunnel_grpc(uint32_t tep_id, pds_tep_spec_t *spec);
 sdk_ret_t create_device_grpc(pds_device_spec_t *spec);
 sdk_ret_t create_mirror_session_grpc(pds_mirror_session_spec_t *spec);
-sdk_ret_t batch_start_grpc(int epoch);
-sdk_ret_t batch_commit_grpc(void);
-void test_app_init(void);
-sdk_ret_t test_app_push_configs(void);
 sdk_ret_t create_meter_grpc(pds_meter_spec_t *spec);
 sdk_ret_t create_tag_grpc(pds_tag_spec_t *spec);
 sdk_ret_t create_nexthop_grpc(pds_nexthop_spec_t *spec);
+sdk_ret_t create_svc_mapping_grpc(pds_svc_mapping_spec_t *spec);
+
+sdk_ret_t batch_start_grpc(int epoch);
+sdk_ret_t batch_commit_grpc(void);
+sdk_ret_t test_app_push_configs(void);
+void test_app_init(void);
 
 #endif

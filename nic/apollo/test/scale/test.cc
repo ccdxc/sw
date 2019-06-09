@@ -205,6 +205,98 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
     return rv;
 }
 
+sdk_ret_t
+create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
+                     uint32_t num_vnics, uint32_t num_ip_per_vnic,
+                     ip_prefix_t *v4_vip_pfx, ip_prefix_t *v6_vip_pfx,
+                     ip_prefix_t *v4_provider_pfx,
+                     ip_prefix_t *v6_provider_pfx)
+{
+    sdk_ret_t rv;
+    uint32_t ip_offset = 0;
+    pds_svc_mapping_spec_t svc_mapping;
+    pds_svc_mapping_spec_t svc_v6_mapping;
+
+    // create local vnic IP mappings first
+    for (uint32_t i = 1; i <= num_vpcs; i++) {
+        for (uint32_t j = 1; j <= num_subnets; j++) {
+            for (uint32_t k = 1; k <= num_vnics; k++) {
+                for (uint32_t l = 1; l <= num_ip_per_vnic; l++) {
+                    svc_mapping.key.vpc.id = i;
+                    svc_mapping.key.vip.af = IP_AF_IPV4;
+                    svc_mapping.key.vip.addr.v4_addr =
+                        (v4_vip_pfx->addr.addr.v4_addr | ((j - 1) << 14)) |
+                            (((k - 1) * num_ip_per_vnic) + l);
+                    svc_mapping.key.svc_port = 32;
+                    svc_mapping.vpc.id = i;
+                    svc_mapping.backend_ip.af = IP_AF_IPV4;
+                    svc_mapping.backend_ip.addr.v4_addr =
+                        (g_test_params.vpc_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
+                            (((k - 1) * num_ip_per_vnic) + l);
+                    svc_mapping.svc_port = 64;
+                    svc_mapping.backend_provider_ip.af = IP_AF_IPV4;
+                    svc_mapping.backend_provider_ip.addr.v4_addr =
+                        v4_provider_pfx->addr.addr.v4_addr + ip_offset;
+                    ip_offset++;
+#ifdef TEST_GRPC_APP
+                    rv = create_svc_mapping_grpc(&svc_mapping);
+                    if (rv != SDK_RET_OK) {
+                        SDK_ASSERT(0);
+                        return rv;
+                    }
+#else
+                    rv = pds_svc_mapping_create(&svc_mapping);
+                    if (rv != SDK_RET_OK) {
+                        SDK_ASSERT(0);
+                        return rv;
+                    }
+#endif
+                    if (g_test_params.dual_stack) {
+                        svc_v6_mapping = svc_mapping;
+                        svc_v6_mapping.key.vip.af = IP_AF_IPV6;
+                        svc_v6_mapping.key.vip.addr.v6_addr =
+                            v6_vip_pfx->addr.addr.v6_addr;
+                        CONVERT_TO_V4_MAPPED_V6_ADDRESS(svc_v6_mapping.key.vip.addr.v6_addr,
+                                                       svc_mapping.key.vip.addr.v4_addr);
+                        svc_v6_mapping.backend_ip.af = IP_AF_IPV4;
+                        svc_v6_mapping.backend_ip.addr.v6_addr =
+                            g_test_params.v6_vpc_pfx.addr.addr.v6_addr;
+                        CONVERT_TO_V4_MAPPED_V6_ADDRESS(svc_v6_mapping.backend_ip.addr.v6_addr,
+                                                        svc_mapping.backend_ip.addr.v4_addr);
+                        svc_v6_mapping.backend_provider_ip.af = IP_AF_IPV6;
+                        svc_v6_mapping.backend_provider_ip.addr.v6_addr =
+                            v6_provider_pfx->addr.addr.v6_addr;
+                        CONVERT_TO_V4_MAPPED_V6_ADDRESS(svc_v6_mapping.backend_provider_ip.addr.v6_addr,
+                                                        svc_mapping.backend_provider_ip.addr.v4_addr);
+#ifdef TEST_GRPC_APP
+                        rv = create_svc_mapping_grpc(&svc_v6_mapping);
+                        if (rv != SDK_RET_OK) {
+                            SDK_ASSERT(0);
+                            return rv;
+                        }
+#else
+                        rv = pds_svc_mapping_create(&svc_v6_mapping);
+                        if (rv != SDK_RET_OK) {
+                            SDK_ASSERT(0);
+                            return rv;
+                        }
+#endif
+                    }
+                }
+            }
+        }
+    }
+#ifdef TEST_GRPC_APP
+    // push leftover objects
+    rv = create_svc_mapping_grpc(NULL);
+    if (rv != SDK_RET_OK) {
+        SDK_ASSERT(0);
+        return rv;
+    }
+#endif
+    return rv;
+}
+
 //----------------------------------------------------------------------------
 // 1. create 1 primary + 32 secondary IP for each of 1K local vnics
 // 2. create 1023 remote mappings per VPC
@@ -261,10 +353,12 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     pds_local_mapping.vnic.id = vnic_key;
                     if (natpfx) {
                         pds_local_mapping.public_ip_valid = true;
+                        pds_local_mapping.public_ip.af = IP_AF_IPV4;
                         pds_local_mapping.public_ip.addr.v4_addr =
                             natpfx->addr.addr.v4_addr + ip_offset;
                     }
                     pds_local_mapping.provider_ip_valid = true;
+                    pds_local_mapping.provider_ip.af = IP_AF_IPV4;
                     pds_local_mapping.provider_ip.addr.v4_addr =
                                     provider_pfx->addr.addr.v4_addr + ip_offset;
                     pds_local_mapping.svc_tag = svc_tag++;
@@ -296,11 +390,13 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                         // no need of v6 to v6 NAT
                         pds_local_v6_mapping.public_ip_valid = false;
                         if (natpfx) {
+                            pds_local_v6_mapping.public_ip.af = IP_AF_IPV6;
                             pds_local_v6_mapping.public_ip.addr.v6_addr = v6_natpfx->addr.addr.v6_addr;
                             CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_local_v6_mapping.public_ip.addr.v6_addr,
                                                             pds_local_mapping.public_ip.addr.v4_addr);
                         }
                         pds_local_v6_mapping.provider_ip_valid = false;
+                        pds_local_v6_mapping.provider_ip.af = IP_AF_IPV6;
                         pds_local_v6_mapping.provider_ip.addr.v6_addr = v6_provider_pfx->addr.addr.v6_addr;
                         CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_local_v6_mapping.provider_ip.addr.v6_addr,
                                                         pds_local_mapping.provider_ip.addr.v4_addr);
@@ -523,7 +619,6 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
         return rv;
     }
 #endif
-
     return rv;
 }
 

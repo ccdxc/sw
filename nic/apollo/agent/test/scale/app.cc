@@ -39,6 +39,7 @@ std::unique_ptr<pds::MirrorSvc::Stub>            g_mirror_stub_;
 std::unique_ptr<pds::MeterSvc::Stub>             g_meter_stub_;
 std::unique_ptr<pds::TagSvc::Stub>               g_tag_stub_;
 std::unique_ptr<pds::NhSvc::Stub>                g_nexthop_stub_;
+std::unique_ptr<pds::Svc::Stub>                  g_svc_mapping_stub_;
 
 RouteTableRequest        g_route_table_req;
 SecurityPolicyRequest    g_policy_req;
@@ -52,6 +53,7 @@ MirrorSessionRequest     g_mirror_session_req;
 MeterRequest             g_meter_req;
 TagRequest               g_tag_req;
 NexthopRequest           g_nexthop_req;
+SvcMappingRequest        g_svc_mapping_req;
 
 #define APP_GRPC_BATCH_COUNT    5000
 
@@ -351,6 +353,28 @@ create_mirror_session_grpc (pds_mirror_session_spec_t *spec)
             return SDK_RET_ERR;
         }
         g_mirror_session_req.clear_request();
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+create_svc_mapping_grpc (pds_svc_mapping_spec_t *spec)
+{
+    ClientContext         context;
+    SvcMappingResponse    response;
+    Status                status;
+
+    populate_svc_mapping_request(&g_svc_mapping_req, spec);
+    if ((g_svc_mapping_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
+        status = g_svc_mapping_stub_->SvcMappingCreate(&context,
+                                                       g_svc_mapping_req,
+                                                       &response);
+        if (!status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+            printf("%s failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        g_svc_mapping_req.clear_request();
     }
 
     return SDK_RET_OK;

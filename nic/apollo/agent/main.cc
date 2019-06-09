@@ -22,6 +22,7 @@
 #include "nic/apollo/agent/svc/meter.hpp"
 #include "nic/apollo/agent/svc/tag.hpp"
 #include "nic/apollo/agent/svc/nh.hpp"
+#include "nic/apollo/agent/svc/service.hpp"
 #include "nic/apollo/agent/init.hpp"
 #include "nic/apollo/agent/trace.hpp"
 
@@ -62,6 +63,7 @@ svc_reg (void)
     MeterSvcImpl          meter_svc;
     TagSvcImpl            tag_svc;
     NhSvcImpl             nh_svc;
+    SvcImpl               svc;
 
     // do gRPC initialization
     grpc_init();
@@ -89,6 +91,7 @@ svc_reg (void)
     server_builder->RegisterService(&meter_svc);
     server_builder->RegisterService(&tag_svc);
     server_builder->RegisterService(&nh_svc);
+    server_builder->RegisterService(&svc);
 
     PDS_TRACE_INFO("gRPC server listening on ... {}",
                    g_grpc_server_addr.c_str());

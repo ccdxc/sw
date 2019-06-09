@@ -105,6 +105,11 @@ typedef struct test_params_s {
     struct {
         uint32_t num_nh;
     };
+    // service mapping
+    struct {
+        ip_prefix_t v4_vip_pfx;
+        ip_prefix_t v6_vip_pfx;
+    };
 
     bool apollo(void) {
         return pipeline == "apollo";
@@ -308,6 +313,13 @@ parse_test_cfg (char *cfg_file, test_params_t *test_params)
                 // 1st IP in the TEP prefix is gateway IP, 2nd is MyTEP IP,
                 // so skip the first 2 IPs
                 test_params->num_nh -= 2;
+            } else if (kind == "svc-mappings") {
+                pfxstr = obj.second.get<std::string>("v4-vip-prefix");
+                assert(str2ipv4pfx((char *)pfxstr.c_str(),
+                                   &test_params->v4_vip_pfx) == 0);
+                pfxstr = obj.second.get<std::string>("v6-vip-prefix");
+                assert(str2ipv6pfx((char *)pfxstr.c_str(),
+                                   &test_params->v6_vip_pfx) == 0);
             }
         }
     } catch (std::exception const &e) {

@@ -309,6 +309,29 @@ populate_mirror_session_request (MirrorSessionRequest *req,
 }
 
 static void
+populate_svc_mapping_request (SvcMappingRequest *req,
+                              pds_svc_mapping_spec_t *svc_mapping)
+{
+    SvcMappingSpec *spec;
+
+    if (!req || !svc_mapping) {
+        return;
+    }
+    spec = req->add_request();
+    spec->mutable_key()->set_vpcid(svc_mapping->key.vpc.id);
+    ip_addr_to_spec(spec->mutable_key()->mutable_ipaddr(),
+                    &svc_mapping->key.vip);
+    spec->mutable_key()->set_svcport(svc_mapping->key.svc_port);
+    spec->set_vpcid(svc_mapping->vpc.id);
+    ip_addr_to_spec(spec->mutable_privateip(), &svc_mapping->backend_ip);
+    spec->set_port(svc_mapping->svc_port);
+    ip_addr_to_spec(spec->mutable_providerip(),
+                    &svc_mapping->backend_provider_ip);
+
+    return;
+}
+
+static void
 populate_batch_spec (BatchSpec *spec, pds_batch_params_t *batch)
 {
     if (!batch || !spec) {
