@@ -656,7 +656,12 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     });
     retStrs = retStrs.map( (str) => {
       const items = str.split(' ');
-      return str.substr(0, str.length - 1) + ' '.repeat(maxLength - str.length + defaultSpacing) + items[items.length - 1];
+      const count =  items[items.length - 1];
+      let title = '';
+      for (let index = 0; index < items.length - 1; index++) {
+        title += items[index];
+      }
+      return title + ' '.repeat(maxLength - str.length + defaultSpacing) + count;
     });
     return retStrs.join('\n');
   }

@@ -109,6 +109,12 @@
           </ng-container>
         </ng-container>
 
+        <ng-container *ngSwitchCase="'LabelSelector'">
+          <ng-container
+                        *ngTemplateOutlet="LabelSelectorView; context:{transform: t}">
+          </ng-container>
+        </ng-container>
+
       </ng-container>
     </div>
     <div fxFlex="auto"></div>
@@ -230,7 +236,8 @@
 
 <!-- Field Selector -->
 <ng-template #FieldSelectorEdit let-transform="transform">
-  <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start">
+  <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start"
+       class="telemetry-field-selector-edit">
     <div fxFlex="nogrow" class="telemetry-field-selector-title">Filter by fields: </div>
     <div fxFlex="5px"></div>
     <app-repeater fxFlex="auto"
@@ -253,13 +260,13 @@
 
 <!-- Label Selector -->
 <ng-template #LabelSelectorEdit let-transform="transform">
-  <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center">
+  <div *ngIf="transform.labelData.length > 0" fxFlex="nogrow" fxLayout="row"
+       fxLayoutAlign="start center">
     <div fxFlex="nogrow">Filter by labels: </div>
     <div fxFlex="5px"></div>
     <app-repeater
                   [data]="transform.labelData"
-                  [formArray]="transform.formArray"
-                  [buildValuePlaceholder]="transform.buildFieldValuePlaceholder">
+                  [formArray]="transform.formArray">
     </app-repeater>
   </div>
 </ng-template>
@@ -267,7 +274,7 @@
 <ng-template #LabelSelectorView let-transform="transform">
   <div *ngIf="transform.stringForm.length > 0" fxFlex="nogrow" fxLayout="row" fxLayoutGap="5px"
        fxLayoutAlign="start center">
-    <div fxFlex="nogrow">Filter by labels:</div>
+    <div fxFlex="nogrow">Labels:</div>
     <div fxFlex="nogrow">{{ transform.stringForm }} </div>
   </div>
 </ng-template>

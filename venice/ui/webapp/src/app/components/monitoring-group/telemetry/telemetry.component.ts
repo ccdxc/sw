@@ -17,9 +17,10 @@ import { UIChartComponent } from '@app/components/shared/primeng-chart/chart';
 import { FieldSelectorTransform } from './transforms/fieldselector.transform';
 import { FieldValueTransform, ValueMap, QueryMap } from './transforms/fieldvalue.transform';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+import { ClusterSmartNIC, ClusterNode } from '@sdk/v1/models/generated/cluster';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { ITelemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
+import { LabelSelectorTransform } from './transforms/labelselector.transform';
 
 /**
  * A data source allows a user to select a single measurement,
@@ -87,10 +88,22 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
   selectedTimeRange: TimeRange;
 
   naples: ReadonlyArray<ClusterSmartNIC> = [];
+  nodes: ReadonlyArray<ClusterNode> = [];
   // Used for processing the stream events
   naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
+  nodeEventUtility: HttpEventUtility<ClusterNode>;
+
   macAddrToName: { [key: string]: string; } = {};
   nameToMacAddr: { [key: string]: string; } = {};
+
+  // Map from object kind to map from key to map of values to object names
+  // that have that label
+  labelMap:
+    { [kind: string]:
+      { [labelKey: string]:
+        { [labelValue: string]: string[] }
+      }
+    } = {};
 
 
   fieldQueryMap: QueryMap = {
@@ -142,6 +155,7 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
 
   ngOnInit() {
     this.getNaples();
+    this.getNodes();
     this.controllerService.setToolbarData({
       buttons: [],
       breadcrumb: [{ label: 'Telemetry', url: Utility.getBaseUIUrl() + 'monitoring/telemetry' }]
@@ -163,12 +177,27 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
     }
   }
 
+
+
+  getNodes() {
+    this.nodeEventUtility = new HttpEventUtility<ClusterNode>(ClusterNode);
+    this.nodes = this.nodeEventUtility.array;
+    const subscription = this.clusterService.WatchNode().subscribe(
+      response => {
+        this.nodeEventUtility.processEvents(response);
+        this.labelMap['Node'] = Utility.getLabels(this.nodes as any[]);
+      },
+    );
+    this.subscriptions.push(subscription);
+  }
+
   getNaples() {
     this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
     this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
     const subscription = this.clusterService.WatchSmartNIC().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
+        this.labelMap['SmartNIC'] = Utility.getLabels(this.naples as any[]);
         // mac-address to name map
         this.macAddrToName = {};
         this.nameToMacAddr = {};
@@ -266,6 +295,7 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
       new ColorTransform(),
       new GroupByTransform(),
       new FieldSelectorTransform(),
+      new LabelSelectorTransform(this.labelMap),
       new FieldValueTransform(this.fieldQueryMap, this.fieldValueMap), // This needs to be last to transform the query properly
     ]);
     this.dataSources.push(source);

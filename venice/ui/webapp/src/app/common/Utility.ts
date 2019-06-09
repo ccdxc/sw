@@ -3,7 +3,7 @@ import { AbstractControl, FormArray, FormGroup, ValidatorFn, ValidationErrors } 
 import { SearchExpression } from '@app/components/search/index.ts';
 import { AUTH_BODY, AUTH_KEY } from '@app/core/auth/auth.reducer';
 import { CategoryMapping } from '@sdk/v1/models/generated/category-mapping.model';
-import { FieldsRequirement_operator, IFieldsSelector } from '@sdk/v1/models/generated/monitoring';
+import { FieldsRequirement_operator, IFieldsSelector, IApiObjectMeta } from '@sdk/v1/models/generated/monitoring';
 import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
@@ -15,8 +15,6 @@ import { RepeaterComponent } from 'web-app-framework';
 import { Eventtypes } from '../enum/eventtypes.enum';
 import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
-import { FieldsSelector } from '@sdk/v1/models/generated/search';
-
 
 
 
@@ -38,13 +36,45 @@ export class Utility {
   public static DELETE_SUCCESS_SUMMARY = 'Delete Successful';
   public static VENICE_CONNECT_FAILURE_SUMMARY = 'Failed to connect to Venice';
   public static ROLLOUT_IMGAGE_NAMESPACE = 'images';
-  // In RBAC, when kind is ['AuditEvent', 'Fwlog', 'Event'] , there is no group
+  // In RBAC, when kind is ['AuditEvent', 'FwlogsQuery', 'Event'] , there is no group
   public static KINDS_WITHOUT_GROUP = ['AuditEvent', 'FwlogsQuery', 'Event'];
 
   myControllerService: ControllerService;
   myLogService: LogService;
 
   private constructor() { }
+
+   /**
+   * Takes in a list of objects, and reads their labels to build a map
+   * Mapping is from label key to a map of label values which maps
+   * to object names that have that label.
+   */
+  public static getLabels(objList: any[]): { [labelKey: string]:
+      { [labelValue: string]: string[] }
+    } {
+    const labels = {};
+    objList.forEach( (obj) => {
+      if (obj == null || obj.meta == null || obj.meta.labels == null) {
+        return;
+      }
+      Object.keys(obj.meta.labels).forEach( (key) => {
+        const value = obj.meta.labels[key];
+        let currVals = labels[key];
+        if (currVals == null) {
+          currVals = {};
+          labels[key] = currVals;
+        }
+        let objNames = currVals[value];
+        if (objNames == null) {
+          objNames = [];
+          currVals[value] = objNames;
+        }
+        objNames.push(obj.meta.name);
+      });
+    });
+    return labels;
+  }
+
   /**
    * If the user hasn't specified a value, we don't add
    * it into the values we return to the consumer.
@@ -63,10 +93,14 @@ export class Utility {
       if (item[valueFormName] instanceof Array) {
         let arr = [];
         item[valueFormName].forEach(ele => {
-          const arrVal = ele.split(',');
-          arr = arr.concat(arrVal.map(val => {
-            return val.trim();
-          }));
+          if (typeof ele === 'string' || ele instanceof String) {
+            const arrVal = ele.split(',');
+            arr = arr.concat(arrVal.map(val => {
+              return val.trim();
+            }));
+          } else {
+            arr.push(ele);
+          }
         });
         item[valueFormName] = arr;
       } else {

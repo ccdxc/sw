@@ -65,11 +65,11 @@
         <tr class="global-rowexpand tableviewedit-rowexpand-tr">
           <td [attr.colspan]="actionTemplate != null ? columns.length + 1 : columns.length">
             <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete.emit($event)"
-                 *ngIf="showRowExpand" class="tableviewedit-rowexpand">
+                 *ngIf="showRowExpand" class="tableviewedit-rowexpand" fxLayout="column">
               <ng-container
                             *ngTemplateOutlet="expandTemplate; context: {$implicit: rowData, columns: columns}">
               </ng-container>
-              j<div fxFlex="0px" class="tableviewedit-creation-border"></div>
+              <div fxFlex="0px" class="tableviewedit-creation-border"></div>
             </div>
           </td>
         </tr>

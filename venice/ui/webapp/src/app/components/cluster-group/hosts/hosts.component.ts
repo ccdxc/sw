@@ -35,6 +35,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     matIcon: 'computer'
   };
   nameToMacMap: { [key: string]: string; } = {};
+  macToNameMap: { [key: string]: string; } = {};
   hostsEventUtility: HttpEventUtility<ClusterHost>;
   subscriptions: Subscription[] = [];
   dataObjects: ReadonlyArray<ClusterHost>;
@@ -81,8 +82,12 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
         this.naplesEventUtility.processEvents(response);
         // name to mac-address map
         this.nameToMacMap = {};
+        this.macToNameMap = {};
         for (const smartnic of this.naples) {
-          this.nameToMacMap[smartnic.spec.id] = smartnic.meta.name;
+          if (smartnic.spec.id != null && smartnic.spec.id !== '') {
+            this.nameToMacMap[smartnic.spec.id] = smartnic.meta.name;
+            this.macToNameMap[smartnic.meta.name] = smartnic.spec.id;
+          }
         }
       },
       this.controllerService.restErrorHandler('Failed to get NAPLES info')
@@ -127,8 +132,12 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
           admitted: this.isAdmitted(value, statusValue)
         };
       } else if (v.hasOwnProperty('mac-address') && v['mac-address']) {
+        let text = this.macToNameMap[v['mac-address']];
+        if (text == null) {
+          text = v['mac-address'];
+        }
         return {
-          text: v['mac-address'],
+          text: text,
           mac: v['mac-address'],
           admitted: this.isAdmitted(value, statusValue)
         };
