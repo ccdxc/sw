@@ -169,7 +169,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
   }
 
   deleteRecord(object: RolloutRollout): Observable<{ body: IRolloutRollout | IApiStatus | Error, statusCode: number }> {
-    return this.rolloutService.DeleteRollout(object.meta.name);
+     return this.rolloutService.RemoveRollout(object);
   }
 
   postDeleteRecord () {

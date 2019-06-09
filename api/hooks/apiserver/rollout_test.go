@@ -49,7 +49,7 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 			UpgradeType:                 "Disruptive",
 		},
 		Status: rollout.RolloutActionStatus{
-			OperationalState: "SUCCESS",
+			OperationalState: "PROGRESSING",
 		},
 	}
 	req := rollout.Rollout{
@@ -119,16 +119,14 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 			UpgradeType:                 "Disruptive",
 		},
 	}
-
 	ret, skip, err = hooks.doRolloutAction(context.TODO(), kvs, txn, "", apiintf.CreateOper, false, req2)
 
-	if ret == nil || err != nil {
+	if ret == nil || err == nil {
 		t.Fatalf("failed exec commitAction [%v](%s)", ret, err)
 	}
-	if skip == false {
+	if skip != false {
 		t.Fatalf("kvwrite enabled on commit")
 	}
-
 	ret, skip, err = hooks.stopRolloutAction(context.TODO(), kvs, txn, key2, apiintf.CreateOper, false, req)
 
 	if ret == nil || err != nil {
@@ -161,5 +159,9 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 	if ret == nil || err != nil {
 		t.Fatalf("failed exec commitAction [%v](%s)", ret, err)
 	}
+	ret, skip, err = hooks.deleteRolloutAction(context.TODO(), kvs, txn, key2, apiintf.DeleteOper, false, req4)
 
+	if ret == nil || err == nil {
+		t.Fatalf("failed exec commitAction [%v](%s)", ret, err)
+	}
 }

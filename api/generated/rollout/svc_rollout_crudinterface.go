@@ -28,6 +28,7 @@ type RolloutV1RolloutInterface interface {
 	CreateRollout(ctx context.Context, in *Rollout) (*Rollout, error)
 	UpdateRollout(ctx context.Context, in *Rollout) (*Rollout, error)
 	StopRollout(ctx context.Context, in *Rollout) (*Rollout, error)
+	RemoveRollout(ctx context.Context, in *Rollout) (*Rollout, error)
 }
 
 // RolloutV1RolloutActionInterface exposes the CRUD methods for RolloutAction

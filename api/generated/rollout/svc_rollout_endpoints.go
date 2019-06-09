@@ -54,6 +54,7 @@ type EndpointsRolloutV1Client struct {
 	AutoUpdateRolloutEndpoint       endpoint.Endpoint
 	AutoUpdateRolloutActionEndpoint endpoint.Endpoint
 	CreateRolloutEndpoint           endpoint.Endpoint
+	RemoveRolloutEndpoint           endpoint.Endpoint
 	StopRolloutEndpoint             endpoint.Endpoint
 	UpdateRolloutEndpoint           endpoint.Endpoint
 }
@@ -79,6 +80,7 @@ type EndpointsRolloutV1RestClient struct {
 	AutoWatchRolloutActionEndpoint  endpoint.Endpoint
 	AutoWatchSvcRolloutV1Endpoint   endpoint.Endpoint
 	CreateRolloutEndpoint           endpoint.Endpoint
+	RemoveRolloutEndpoint           endpoint.Endpoint
 	StopRolloutEndpoint             endpoint.Endpoint
 	UpdateRolloutEndpoint           endpoint.Endpoint
 }
@@ -101,6 +103,7 @@ type EndpointsRolloutV1Server struct {
 	AutoUpdateRolloutEndpoint       endpoint.Endpoint
 	AutoUpdateRolloutActionEndpoint endpoint.Endpoint
 	CreateRolloutEndpoint           endpoint.Endpoint
+	RemoveRolloutEndpoint           endpoint.Endpoint
 	StopRolloutEndpoint             endpoint.Endpoint
 	UpdateRolloutEndpoint           endpoint.Endpoint
 
@@ -258,6 +261,20 @@ func (e EndpointsRolloutV1Client) CreateRollout(ctx context.Context, in *Rollout
 }
 
 type respRolloutV1CreateRollout struct {
+	V   Rollout
+	Err error
+}
+
+// RemoveRollout is endpoint for RemoveRollout
+func (e EndpointsRolloutV1Client) RemoveRollout(ctx context.Context, in *Rollout) (*Rollout, error) {
+	resp, err := e.RemoveRolloutEndpoint(ctx, in)
+	if err != nil {
+		return &Rollout{}, err
+	}
+	return resp.(*Rollout), nil
+}
+
+type respRolloutV1RemoveRollout struct {
 	V   Rollout
 	Err error
 }
@@ -546,6 +563,28 @@ func MakeRolloutV1CreateRolloutEndpoint(s ServiceRolloutV1Server, logger log.Log
 	return trace.ServerEndpoint("RolloutV1:CreateRollout")(f)
 }
 
+// RemoveRollout implementation on server Endpoint
+func (e EndpointsRolloutV1Server) RemoveRollout(ctx context.Context, in Rollout) (Rollout, error) {
+	resp, err := e.RemoveRolloutEndpoint(ctx, in)
+	if err != nil {
+		return Rollout{}, err
+	}
+	return *resp.(*Rollout), nil
+}
+
+// MakeRolloutV1RemoveRolloutEndpoint creates  RemoveRollout endpoints for the service
+func MakeRolloutV1RemoveRolloutEndpoint(s ServiceRolloutV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Rollout)
+		v, err := s.RemoveRollout(ctx, *req)
+		return respRolloutV1RemoveRollout{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("RolloutV1:RemoveRollout")(f)
+}
+
 // StopRollout implementation on server Endpoint
 func (e EndpointsRolloutV1Server) StopRollout(ctx context.Context, in Rollout) (Rollout, error) {
 	resp, err := e.StopRolloutEndpoint(ctx, in)
@@ -644,6 +683,7 @@ func MakeRolloutV1ServerEndpoints(s ServiceRolloutV1Server, logger log.Logger) E
 		AutoUpdateRolloutEndpoint:       MakeRolloutV1AutoUpdateRolloutEndpoint(s, logger),
 		AutoUpdateRolloutActionEndpoint: MakeRolloutV1AutoUpdateRolloutActionEndpoint(s, logger),
 		CreateRolloutEndpoint:           MakeRolloutV1CreateRolloutEndpoint(s, logger),
+		RemoveRolloutEndpoint:           MakeRolloutV1RemoveRolloutEndpoint(s, logger),
 		StopRolloutEndpoint:             MakeRolloutV1StopRolloutEndpoint(s, logger),
 		UpdateRolloutEndpoint:           MakeRolloutV1UpdateRolloutEndpoint(s, logger),
 
@@ -823,6 +863,19 @@ func (m loggingRolloutV1MiddlewareClient) CreateRollout(ctx context.Context, in 
 		m.logger.Audit(ctx, "service", "RolloutV1", "method", "CreateRollout", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.CreateRollout(ctx, in)
+	return
+}
+func (m loggingRolloutV1MiddlewareClient) RemoveRollout(ctx context.Context, in *Rollout) (resp *Rollout, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "RolloutV1", "method", "RemoveRollout", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.RemoveRollout(ctx, in)
 	return
 }
 func (m loggingRolloutV1MiddlewareClient) StopRollout(ctx context.Context, in *Rollout) (resp *Rollout, err error) {
@@ -1036,6 +1089,19 @@ func (m loggingRolloutV1MiddlewareServer) CreateRollout(ctx context.Context, in 
 	resp, err = m.next.CreateRollout(ctx, in)
 	return
 }
+func (m loggingRolloutV1MiddlewareServer) RemoveRollout(ctx context.Context, in Rollout) (resp Rollout, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "RolloutV1", "method", "RemoveRollout", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.RemoveRollout(ctx, in)
+	return
+}
 func (m loggingRolloutV1MiddlewareServer) StopRollout(ctx context.Context, in Rollout) (resp Rollout, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1141,7 +1207,8 @@ func makeURIRolloutV1AutoAddRolloutActionCreateOper(in *RolloutAction) string {
 
 //
 func makeURIRolloutV1AutoDeleteRolloutDeleteOper(in *Rollout) string {
-	return fmt.Sprint("/configs/rollout/v1", "/rollout/", in.Name)
+	return ""
+
 }
 
 //
@@ -1207,6 +1274,11 @@ func makeURIRolloutV1CreateRolloutCreateOper(in *Rollout) string {
 }
 
 //
+func makeURIRolloutV1RemoveRolloutCreateOper(in *Rollout) string {
+	return fmt.Sprint("/configs/rollout/v1", "/rollout/RemoveRollout")
+}
+
+//
 func makeURIRolloutV1StopRolloutCreateOper(in *Rollout) string {
 	return fmt.Sprint("/configs/rollout/v1", "/rollout/StopRollout")
 }
@@ -1250,24 +1322,7 @@ func (r *EndpointsRolloutV1RestClient) AutoGetRollout(ctx context.Context, in *R
 
 // AutoDeleteRollout CRUD method for Rollout
 func (r *EndpointsRolloutV1RestClient) AutoDeleteRollout(ctx context.Context, in *Rollout) (*Rollout, error) {
-	path := makeURIRolloutV1AutoDeleteRolloutDeleteOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespRolloutV1AutoDeleteRollout(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Rollout), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoListRollout CRUD method for Rollout
@@ -1397,6 +1452,27 @@ func (r *EndpointsRolloutV1RestClient) StopRolloutRollout(ctx context.Context, i
 	}
 	defer resp.Body.Close()
 	ret, err := decodeHTTPrespRolloutV1StopRollout(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Rollout), err
+}
+
+func (r *EndpointsRolloutV1RestClient) RemoveRolloutRollout(ctx context.Context, in *Rollout) (*Rollout, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
+	path := makeURIRolloutV1RemoveRolloutCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespRolloutV1RemoveRollout(ctx, resp)
 	if err != nil {
 		return nil, err
 	}

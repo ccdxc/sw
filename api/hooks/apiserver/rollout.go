@@ -50,7 +50,7 @@ func updateRolloutObj(ctx context.Context, kv kvstore.Interface, key string, cur
 		rObj.Spec.Strategy = cur.Spec.Strategy
 		rObj.Spec.UpgradeType = cur.Spec.UpgradeType
 		if suspendFlag || cur.Spec.Suspend {
-			rObj.Status.OperationalState = rollout.RolloutStatus_SUSPENDED.String()
+			rObj.Status.OperationalState = rollout.RolloutStatus_SUSPEND_IN_PROGRESS.String()
 		}
 		return rObj, nil
 	})
@@ -78,7 +78,7 @@ func updateRolloutActionObj(rolloutActionObj *rollout.RolloutAction, buf *rollou
 	}
 	rolloutActionObj.ModTime = api.Timestamp{Timestamp: *ts}
 	if buf.Spec.Suspend || suspendFlag {
-		rolloutActionObj.Status.OperationalState = rollout.RolloutStatus_SUSPENDED.String()
+		rolloutActionObj.Status.OperationalState = rollout.RolloutStatus_SUSPEND_IN_PROGRESS.String()
 	} else {
 		rolloutActionObj.Status.OperationalState = rollout.RolloutStatus_PROGRESSING.String()
 	}
@@ -119,6 +119,47 @@ func checkRolloutInProgress(rolloutActionObj rollout.RolloutAction) bool {
 	return false
 }
 
+func (h *rolloutHooks) deleteRolloutAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	h.l.InfoLog("msg", "received commitAction preCommit Hook for deleteRolloutAction  key %s", key)
+	var err error
+
+	buf, ok := i.(rollout.Rollout)
+	if !ok {
+		h.l.Error("Invalid object for rolloutAction")
+		return nil, false, errors.New("invalid object")
+	}
+
+	if kv == nil || txn == nil {
+		h.l.Error("Invalid kvstore and txn objects for rolloutAction")
+		return nil, false, errors.New("invalid kvstore and txn objects")
+	}
+
+	rolloutObj := rollout.Rollout{}
+	rolloutObjKey := buf.MakeKey(string(apiclient.GroupRollout))
+
+	rolloutActionObj := &rollout.RolloutAction{}
+	rolloutActionObjKey := rolloutActionObj.MakeKey(string(apiclient.GroupRollout))
+
+	if err = kv.Get(ctx, rolloutActionObjKey, rolloutActionObj); err != nil {
+		return buf, false, errors.New("RolloutAction object not present")
+	}
+	if rolloutActionObj.Name == buf.Name && checkRolloutInProgress(*rolloutActionObj) {
+		return buf, false, errors.New("Rollout is in progress. Cannot delete")
+	}
+
+	if err = kv.Get(ctx, rolloutObjKey, &rolloutObj); err != nil {
+		return buf, false, errors.New("RolloutObject not present")
+	}
+
+	err = txn.Delete(rolloutObjKey)
+	if err != nil {
+		h.l.InfoLog("msg", "Delete Rollout Failed err(%+v) %v", err, rolloutObjKey)
+		return nil, false, err
+	}
+	h.l.InfoLog("msg", "Delete Rollout Completed %v", rolloutActionObj)
+	return buf, false, nil
+}
+
 func performRolloutUpdate(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, i interface{}, h *rolloutHooks, stop bool) (interface{}, bool, error) {
 	h.l.InfoLog("msg", "performRolloutUpdate  key", key)
 	var err error
@@ -148,23 +189,26 @@ func performRolloutUpdate(ctx context.Context, kv kvstore.Interface, txn kvstore
 	if err = kv.Get(ctx, rolloutActionObjKey, rolloutActionObj); err != nil {
 		return buf, false, errors.New("RolloutAction object not present")
 	}
-
-	h.l.InfoLog("msg", "Updating RolloutAction & Updating Rollout")
-
-	if _, err := updateRolloutActionObj(rolloutActionObj, &buf, txn, stop); err != nil {
-		h.l.InfoLog("msg", "Update RolloutActionObject Failed %s", err)
-		return buf, false, err
-	}
-
 	if err = kv.Get(ctx, rolloutObjKey, &rolloutObj); err != nil {
 		return buf, false, errors.New("RolloutObject not present")
 	}
-	if err := updateRolloutObj(ctx, kv, key, &buf, stop); err != nil {
-		h.l.Errorf("Error updating rollout: %v", err)
-		return nil, false, err
+
+	h.l.InfoLog("msg", "Updating RolloutAction & Updating Rollout")
+
+	//Update only if it's latest/in-progress
+	if buf.Name == rolloutActionObj.Name && rolloutActionObj.Status.OperationalState == rollout.RolloutStatus_PROGRESSING.String() {
+		if _, err := updateRolloutActionObj(rolloutActionObj, &buf, txn, stop); err != nil {
+			h.l.InfoLog("msg", "Update RolloutActionObject Failed %s", err)
+			return buf, false, err
+		}
+		if err := updateRolloutObj(ctx, kv, key, &buf, stop); err != nil {
+			h.l.Errorf("Error updating rollout: %v", err)
+			return nil, false, err
+		}
+		return buf, false, nil
 	}
-	h.l.InfoLog("msg", "Modify RolloutAction Completed %v", rolloutActionObj)
-	return buf, false, nil
+	h.l.InfoLog("msg", "Specified rollout is not in-progress %v", rolloutActionObj)
+	return buf, false, errors.New("Specified rollout is not in-progress")
 }
 
 func (h *rolloutHooks) modifyRolloutAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
@@ -223,7 +267,7 @@ func (h *rolloutHooks) doRolloutAction(ctx context.Context, kv kvstore.Interface
 		//update rolloutAction && create rollout
 		h.l.InfoLog("msg", "Updating RolloutAction & Create Rollout")
 		if inProgress := checkRolloutInProgress(*rolloutActionObj); inProgress {
-			errmsg := fmt.Sprintf("Rollout in progress %#v", rolloutActionObj.Status)
+			errmsg := fmt.Sprintf("Rollout in progress %+v", rolloutActionObj.Status)
 			h.l.InfoLog("msg", errmsg)
 			return buf, false, errors.New(errmsg)
 		}
@@ -267,6 +311,7 @@ func registerRolloutHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetMethod("CreateRollout").WithPreCommitHook(h.doRolloutAction)
 	svc.GetMethod("StopRollout").WithPreCommitHook(h.stopRolloutAction)
 	svc.GetMethod("UpdateRollout").WithPreCommitHook(h.modifyRolloutAction)
+	svc.GetMethod("RemoveRollout").WithPreCommitHook(h.deleteRolloutAction)
 
 	svc.GetMethod("CreateRollout").WithResponseWriter(h.getRolloutObject)
 	svc.GetMethod("UpdateRollout").WithResponseWriter(h.getRolloutObject)

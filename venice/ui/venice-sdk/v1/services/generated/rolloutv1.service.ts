@@ -52,6 +52,23 @@ export class Rolloutv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}>;
   }
   
+  public RemoveRollout(body: IRolloutRollout, stagingID: string = "", trimObject: boolean = true):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/rollout/v1/rollout/RemoveRollout';
+    const opts = {
+      eventID: 'RemoveRollout',
+      objType: 'RolloutRollout',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new RolloutRollout(body))
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}>;
+  }
+  
   public StopRollout(body: IRolloutRollout, stagingID: string = "", trimObject: boolean = true):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/rollout/v1/rollout/StopRollout';
     const opts = {
@@ -100,22 +117,6 @@ export class Rolloutv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Delete Rollout object */
-  public DeleteRollout(O_Name, stagingID: string = ""):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/rollout/v1/rollout/{O.Name}';
-    url = url.replace('{O.Name}', O_Name);
-    const opts = {
-      eventID: 'DeleteRollout',
-      objType: 'RolloutRollout',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Rollout objects. Supports WebSockets or HTTP long poll */

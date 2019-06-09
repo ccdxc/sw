@@ -30,6 +30,7 @@ type ServiceRolloutV1Client interface {
 	AutoUpdateRollout(ctx context.Context, t *Rollout) (*Rollout, error)
 	AutoUpdateRolloutAction(ctx context.Context, t *RolloutAction) (*RolloutAction, error)
 	CreateRollout(ctx context.Context, t *Rollout) (*Rollout, error)
+	RemoveRollout(ctx context.Context, t *Rollout) (*Rollout, error)
 	StopRollout(ctx context.Context, t *Rollout) (*Rollout, error)
 	UpdateRollout(ctx context.Context, t *Rollout) (*Rollout, error)
 
@@ -52,6 +53,7 @@ type ServiceRolloutV1Server interface {
 	AutoUpdateRollout(ctx context.Context, t Rollout) (Rollout, error)
 	AutoUpdateRolloutAction(ctx context.Context, t RolloutAction) (RolloutAction, error)
 	CreateRollout(ctx context.Context, t Rollout) (Rollout, error)
+	RemoveRollout(ctx context.Context, t Rollout) (Rollout, error)
 	StopRollout(ctx context.Context, t Rollout) (Rollout, error)
 	UpdateRollout(ctx context.Context, t Rollout) (Rollout, error)
 

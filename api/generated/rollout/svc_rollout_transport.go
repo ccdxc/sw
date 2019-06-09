@@ -36,6 +36,7 @@ type grpcServerRolloutV1 struct {
 	AutoUpdateRolloutHdlr       grpctransport.Handler
 	AutoUpdateRolloutActionHdlr grpctransport.Handler
 	CreateRolloutHdlr           grpctransport.Handler
+	RemoveRolloutHdlr           grpctransport.Handler
 	StopRolloutHdlr             grpctransport.Handler
 	UpdateRolloutHdlr           grpctransport.Handler
 }
@@ -123,6 +124,13 @@ func MakeGRPCServerRolloutV1(ctx context.Context, endpoints EndpointsRolloutV1Se
 			DecodeGrpcReqRollout,
 			EncodeGrpcRespRollout,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("CreateRollout", logger)))...,
+		),
+
+		RemoveRolloutHdlr: grpctransport.NewServer(
+			endpoints.RemoveRolloutEndpoint,
+			DecodeGrpcReqRollout,
+			EncodeGrpcRespRollout,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("RemoveRollout", logger)))...,
 		),
 
 		StopRolloutHdlr: grpctransport.NewServer(
@@ -331,6 +339,24 @@ func (s *grpcServerRolloutV1) CreateRollout(ctx oldcontext.Context, req *Rollout
 }
 
 func decodeHTTPrespRolloutV1CreateRollout(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Rollout
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerRolloutV1) RemoveRollout(ctx oldcontext.Context, req *Rollout) (*Rollout, error) {
+	_, resp, err := s.RemoveRolloutHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respRolloutV1RemoveRollout).V
+	return &r, resp.(respRolloutV1RemoveRollout).Err
+}
+
+func decodeHTTPrespRolloutV1RemoveRollout(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}

@@ -79,6 +79,17 @@ func (sm *Statemgr) updateRolloutState(ro *roproto.Rollout) error {
 	return nil
 }
 
+// isTerminalState check the status of rollout
+func isTerminalState(ro *roproto.Rollout) bool {
+	opState := ro.Status.GetOperationalState()
+	if opState == roproto.RolloutStatus_FAILURE.String() ||
+		opState == roproto.RolloutStatus_SUCCESS.String() ||
+		opState == roproto.RolloutStatus_SUSPENDED.String() {
+		return true
+	}
+	return false
+}
+
 // createRolloutState to create a Rollout Object in statemgr
 func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 	// All parameters are validated (using apiserver hooks) by the time we get here
@@ -87,7 +98,12 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 		log.Errorf("Rollout {+%v} exists", ro)
 		return fmt.Errorf("Rollout already exists")
 	}
-
+	//On process restart we get create events for rollouts
+	//For the historical rollout obejcts we do nothing
+	if isTerminalState(ro) {
+		log.Infof("Rollout {+%v} in terminal state. Nothing more to do.", ro)
+		return nil
+	}
 	ros := RolloutState{
 		Rollout:   ro,
 		Statemgr:  sm,
@@ -148,11 +164,12 @@ func (ros *RolloutState) start() {
 }
 
 func (ros *RolloutState) stop() {
+	if ros.stopped {
+		return
+	}
 	ros.stopped = true
 	close(ros.stopChan)
 	ros.Wait()
-	ros.currentState = fsmstInvalid
-
 }
 
 // === Status updaters ===

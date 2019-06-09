@@ -183,6 +183,20 @@ func NewRolloutV1(conn *grpc.ClientConn, logger log.Logger) rollout.ServiceRollo
 		).Endpoint()
 		lCreateRolloutEndpoint = trace.ClientEndPoint("RolloutV1:CreateRollout")(lCreateRolloutEndpoint)
 	}
+	var lRemoveRolloutEndpoint endpoint.Endpoint
+	{
+		lRemoveRolloutEndpoint = grpctransport.NewClient(
+			conn,
+			"rollout.RolloutV1",
+			"RemoveRollout",
+			rollout.EncodeGrpcReqRollout,
+			rollout.DecodeGrpcRespRollout,
+			&rollout.Rollout{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lRemoveRolloutEndpoint = trace.ClientEndPoint("RolloutV1:RemoveRollout")(lRemoveRolloutEndpoint)
+	}
 	var lStopRolloutEndpoint endpoint.Endpoint
 	{
 		lStopRolloutEndpoint = grpctransport.NewClient(
@@ -225,6 +239,7 @@ func NewRolloutV1(conn *grpc.ClientConn, logger log.Logger) rollout.ServiceRollo
 		AutoUpdateRolloutEndpoint:       lAutoUpdateRolloutEndpoint,
 		AutoUpdateRolloutActionEndpoint: lAutoUpdateRolloutActionEndpoint,
 		CreateRolloutEndpoint:           lCreateRolloutEndpoint,
+		RemoveRolloutEndpoint:           lRemoveRolloutEndpoint,
 		StopRolloutEndpoint:             lStopRolloutEndpoint,
 		UpdateRolloutEndpoint:           lUpdateRolloutEndpoint,
 	}
@@ -370,6 +385,15 @@ func (a *grpcObjRolloutV1Rollout) StopRollout(ctx context.Context, in *rollout.R
 	return a.client.StopRollout(nctx, in)
 }
 
+func (a *grpcObjRolloutV1Rollout) RemoveRollout(ctx context.Context, in *rollout.Rollout) (*rollout.Rollout, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{RemoveRollout Rollout Rollout}", "oper", "RemoveRollout")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.RemoveRollout(nctx, in)
+}
+
 func (a *grpcObjRolloutV1Rollout) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
@@ -443,7 +467,7 @@ func (a *restObjRolloutV1Rollout) Allowed(oper apiintf.APIOperType) bool {
 	case apiintf.GetOper:
 		return true
 	case apiintf.DeleteOper:
-		return true
+		return false
 	case apiintf.ListOper:
 		return true
 	case apiintf.WatchOper:
@@ -470,6 +494,12 @@ func (a *restObjRolloutV1Rollout) StopRollout(ctx context.Context, in *rollout.R
 		return nil, errors.New("invalid input")
 	}
 	return a.endpoints.StopRolloutRollout(ctx, in)
+}
+func (a *restObjRolloutV1Rollout) RemoveRollout(ctx context.Context, in *rollout.Rollout) (*rollout.Rollout, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.RemoveRolloutRollout(ctx, in)
 }
 
 type grpcObjRolloutV1RolloutAction struct {

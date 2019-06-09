@@ -541,14 +541,14 @@
             ],
             "RestMethods": [
               "get",
-              "delete",
               "list",
               "watch"
             ],
             "Actions": [
               "CreateRollout",
               "UpdateRollout",
-              "StopRollout"
+              "StopRollout",
+              "RemoveRollout"
             ]
           },
           "RolloutAction": {

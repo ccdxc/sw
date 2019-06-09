@@ -211,7 +211,7 @@ export const CategoryMapping: CatMap  = {
     "Rollout" : {
       instance: new RolloutRollout(),
       scopes: [ 'cluster', ] ,
-      actions:  [ 'CreateRollout',  'UpdateRollout',  'StopRollout', ] ,
+      actions:  [ 'CreateRollout',  'UpdateRollout',  'StopRollout',  'RemoveRollout', ] ,
     },
     "RolloutAction" : {
       instance: new RolloutRolloutAction(),
