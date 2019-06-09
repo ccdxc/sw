@@ -20,6 +20,7 @@
 namespace pt = boost::property_tree;
 
 typedef struct test_params_s {
+    std::string pipeline;
     // device config
     struct {
         uint32_t device_ip;
@@ -104,7 +105,43 @@ typedef struct test_params_s {
     struct {
         uint32_t num_nh;
     };
+
+    bool apollo(void) {
+        return pipeline == "apollo";
+    }
+
+    bool artemis(void) {
+        return pipeline == "artemis";
+    }
 } test_params_t;
+
+#define CONVERT_TO_V4_MAPPED_V6_ADDRESS(_v6pfx, _v4addr) {         \
+    _v6pfx.addr8[12] = (_v4addr >> 24) & 0xFF;                     \
+    _v6pfx.addr8[13] = (_v4addr >> 16) & 0xFF;                     \
+    _v6pfx.addr8[14] = (_v4addr >> 8) & 0xFF;                      \
+    _v6pfx.addr8[15] = (_v4addr) & 0xFF;                           \
+}
+
+static inline void
+compute_ipv6_addr (ip_addr_t *addr, ip_prefix_t *initial_pfx,
+                   uint32_t shift_val, uint32_t len)
+{
+    *addr = initial_pfx->addr;
+    addr->addr.v6_addr.addr32[IP6_ADDR32_LEN-2] = htonl(0xF1D0D1D0);
+    addr->addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
+        htonl((0xC << 28) | (shift_val << 8));
+}
+
+static inline void
+compute_ipv6_prefix (ip_prefix_t *pfx, ip_prefix_t *initial_pfx,
+                     uint32_t shift_val, uint32_t len)
+{
+    *pfx = *initial_pfx;
+    pfx->addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-2] = htonl(0xF1D0D1D0);
+    pfx->addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
+                                    htonl((0xC << 28) | (shift_val << 8));
+    pfx->len = len;
+}
 
 static void
 meter_str_to_type (std::string meter_type_str,
@@ -282,7 +319,7 @@ parse_test_cfg (char *cfg_file, test_params_t *test_params)
     return SDK_RET_OK;
 }
 
-#ifdef PDS_FLOW_TEST
+//#ifdef PDS_FLOW_TEST
 inline const char *
 get_cfg_json (void) {
     const char *test_cfg = getenv("TEST_CFG");
@@ -313,9 +350,9 @@ parse_test_cfg (test_params_t *test_params, string pipeline)
              get_cfg_json());
 #else
     snprintf(cfgfile, 256, "%s/%s", getenv("CONFIG_PATH"), get_cfg_json());
-#endif
+#endif    // SIM
     return parse_test_cfg(cfgfile, test_params);
 }
-#endif
+//#endif    // PDS_FLOW_TEST
 
 #endif // __APOLLO_SCALE_TEST_COMMON_HPP__

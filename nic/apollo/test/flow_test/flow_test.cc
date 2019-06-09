@@ -24,6 +24,7 @@
 #include "nic/sdk/lib/utils/crc_fast.hpp"
 #include "nic/sdk/lib/utils/time_profile.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
+#include "nic/apollo/test/scale/test_common.hpp"
 #include "flow_test.hpp"
 
 using std::string;
@@ -34,6 +35,7 @@ char                *g_cfg_file = NULL;
 string              g_pipeline("");
 bool                g_daemon_mode = false;
 flow_test           *g_flow_test_obj;
+test_params_t g_test_params = { 0 };
 
 class flow_gtest : public pds_test_base {
 protected:
@@ -57,7 +59,8 @@ protected:
 #define PERF_TEST_SCALE 10*1024
 
 TEST_F(flow_gtest, flows_create) {
-    g_flow_test_obj = new flow_test(true);
+    parse_test_cfg(&g_test_params, std::string("apollo"));
+    g_flow_test_obj = new flow_test(&g_test_params, true);
     g_flow_test_obj->generate_dummy_epdb();
     g_flow_test_obj->set_cfg_params(true, 0, PERF_TEST_SCALE, 0,
                                     100, 100, 1024, 2047);
@@ -187,7 +190,7 @@ flow_test_time_profile_print() {
     printf("%-42s = %012ld\n", "P4PD_HWKEY_HWMASK_BUILD",
            time_profile_total(sdk::utils::time_profile::P4PD_HWKEY_HWMASK_BUILD));
     printf("%-42s = %012ld\n", "P4PD_ENTRY_READ",
-           time_profile_total(sdk::utils::time_profile::P4PD_ENTRY_READ) - 
+           time_profile_total(sdk::utils::time_profile::P4PD_ENTRY_READ) -
            time_profile_total(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_READ));
     printf("%-42s = %012ld\n", "- ASICPD_HBM_TABLE_ENTRY_READ",
            time_profile_total(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_READ) -
@@ -198,7 +201,7 @@ flow_test_time_profile_print() {
     printf("%-42s = %012ld\n", "   - PAL_MEM_RD",
            time_profile_total(sdk::utils::time_profile::PAL_MEM_RD));
     printf("%-42s = %012ld\n", "P4PD_ENTRY_INSTALL",
-           time_profile_total(sdk::utils::time_profile::P4PD_ENTRY_INSTALL) - 
+           time_profile_total(sdk::utils::time_profile::P4PD_ENTRY_INSTALL) -
            time_profile_total(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_WRITE));
     printf("%-42s = %012ld\n", "- ASICPD_HBM_TABLE_ENTRY_WRITE",
            time_profile_total(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_WRITE) -

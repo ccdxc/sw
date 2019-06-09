@@ -24,7 +24,10 @@
 #include "nic/apollo/agent/svc/nh.hpp"
 #include "nic/apollo/agent/init.hpp"
 #include "nic/apollo/agent/trace.hpp"
+
+#ifdef PDS_FLOW_TEST
 #include "nic/apollo/test/flow_test/flow_test.hpp"
+#endif
 
 using std::string;
 using grpc::Server;
@@ -36,7 +39,7 @@ std::string g_grpc_server_addr;
 #define GRPC_API_PORT    9999
 
 #ifdef PDS_FLOW_TEST
-test_params_t g_test_params = { 0 };
+test_params_t g_test_params;
 flow_test *g_flow_test_obj;
 #endif
 
@@ -198,7 +201,8 @@ main (int argc, char **argv)
 
 #ifdef PDS_FLOW_TEST
     parse_test_cfg(&g_test_params, pipeline);
-    g_flow_test_obj = new flow_test();
+    g_test_params.pipeline = pipeline;
+    g_flow_test_obj = new flow_test(&g_test_params);
     g_flow_test_obj->set_cfg_params(g_test_params.dual_stack,
                                     g_test_params.num_tcp,
                                     g_test_params.num_udp,

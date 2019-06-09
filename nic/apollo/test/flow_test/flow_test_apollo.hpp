@@ -340,7 +340,7 @@ private:
 
 
 public:
-    flow_test(bool w = false) {
+    flow_test(test_params_t *test_params, bool w = false) {
         memset(&factory_params, 0, sizeof(factory_params));
         factory_params.table_id = P4TBL_ID_FLOW;
         factory_params.num_hints = 4;
@@ -460,7 +460,7 @@ public:
             epdb[vpc].vpc_id = vpc;
             for (uint32_t lid = 0; lid < MAX_LOCAL_EPS; lid++) {
                 add_local_ep_(vpc, 0x0a000001 + lid);
-                
+
                 sip6.addr32[0] = 0x22;
                 sip6.addr32[3] = lid;
                 add_local_ep_(vpc, sip6);

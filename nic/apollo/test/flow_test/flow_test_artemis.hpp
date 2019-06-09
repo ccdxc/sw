@@ -22,6 +22,7 @@
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
+#include "nic/apollo/test/scale/test_common.hpp"
 
 #if defined(APOLLO)
 #include "gen/p4gen/apollo/include/p4pd.h"
@@ -76,61 +77,54 @@ flow_appdata2str(void *appdata) {
 static void
 dump_flow_entry(ftlv6_entry_t *entry, ipv6_addr_t v6_addr_sip,
                 ipv6_addr_t v6_addr_dip) {
-    return;
+//#ifdef SIM
     static FILE *d_fp = fopen("/tmp/flow_log.log", "a+");
     char *src_ip_str = ipv6addr2str(v6_addr_sip);
     char *dst_ip_str = ipv6addr2str(v6_addr_dip);
     if (d_fp) {
-        fprintf(d_fp, "proto %d, session_index %d, sip %s, dip %s, sport %d, dport %d, "
-                "epoch %d,  flow_role %d, ktype %d, vpc_id %d\n",
-                entry->proto,
-                entry->session_index,
-                src_ip_str,
-                dst_ip_str,
-                entry->sport,
-                entry->dport,
-                entry->epoch,
-                entry->flow_role,
-                entry->ktype,
-                entry->vpc_id);
+        fprintf(d_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
+                "sport %u, dport %u, epoch %u, flow %u, ktype %u\n",
+                entry->vpc_id, entry->proto, entry->session_index,
+                src_ip_str, dst_ip_str, entry->sport, entry->dport,
+                entry->epoch, entry->flow_role, entry->ktype);
         fflush(d_fp);
     }
+//#endif
 }
 
 static void
 dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip,
                 ipv4_addr_t v4_addr_dip) {
-    return;
+//#ifdef SIM
     static FILE *d_fp = fopen("/tmp/flow_log.log", "a+");
     char *src_ip_str = ipv4addr2str(v4_addr_sip);
     char *dst_ip_str = ipv4addr2str(v4_addr_dip);
     if (d_fp) {
-        fprintf(d_fp, "proto %d, session_index %d, sip %s, dip %s, sport %d, dport %d, "
-                "epoch %d, flow_role %d, vpc_id %d\n",
-                entry->proto,
-                entry->session_index,
-                src_ip_str,
-                dst_ip_str,
-                entry->sport,
-                entry->dport,
-                entry->epoch,
-                entry->flow_role,
-                entry->vpc_id);
+        fprintf(d_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
+                "sport %u, dport %u, epoch %u, role %u\n",
+                entry->vpc_id, entry->proto, entry->session_index,
+                src_ip_str, dst_ip_str, entry->sport, entry->dport,
+                entry->epoch, entry->flow_role);
         fflush(d_fp);
     }
+//#endif
 }
 
 static void
 dump_session_info(uint32_t vpc, session_actiondata_t *actiondata)
 {
-    return;
+//#ifdef SIM
     static FILE *d_fp = fopen("/tmp/flow_log.log", "a+");
     if (d_fp) {
-        fprintf(d_fp, "vpc %u, meter_idx %u, nh_idx %u\n",
-                vpc, actiondata->action_u.session_session_info.meter_idx,
-                actiondata->action_u.session_session_info.nexthop_idx);
+        fprintf(d_fp, "vpc %u, meter_idx %u, nh_idx %u, tx rewrite flags 0x%x, "
+                "rx rewrite flags 0x%x\n", vpc - 1,
+                actiondata->action_u.session_session_info.meter_idx,
+                actiondata->action_u.session_session_info.nexthop_idx,
+                actiondata->action_u.session_session_info.tx_rewrite_flags,
+                actiondata->action_u.session_session_info.rx_rewrite_flags);
         fflush(d_fp);
     }
+//#endif
 }
 
 #define MAX_VPCS        64
@@ -206,6 +200,7 @@ private:
     uint32_t meter_idx;
     uint32_t num_meter_idx_per_vpc;
     bool with_hash;
+    test_params_t *test_params;
 
 private:
 
@@ -366,7 +361,8 @@ private:
 
 
 public:
-    flow_test(bool w = false) {
+    flow_test(test_params_t *test_params, bool w = false) {
+        this->test_params = test_params;
         memset(&factory_params, 0, sizeof(factory_params));
         factory_params.table_id = P4TBL_ID_FLOW;
         factory_params.num_hints = 4;
@@ -499,28 +495,64 @@ public:
         p4pd_error_t p4pd_ret;
         uint32_t tableid = P4TBL_ID_SESSION;
         static uint32_t cur_vpc = 0;
+        static uint32_t inh_idx = 1;
 
         // reset meter_idx to corresponding start value for the VPC
         if (cur_vpc != vpc) {
             cur_vpc = vpc;
-            meter_idx = (vpc-1) * num_meter_idx_per_vpc + 1;
+            meter_idx = (vpc - 1) * num_meter_idx_per_vpc + 1;
             session_info_nexthop_idx = session_info_nexthop_start_idx +
                                        (vpc - 1) * num_nexthop_idx_per_vpc;
         }
         memset(&actiondata, 0, sizeof(session_actiondata_t));
         actiondata.action_id = SESSION_SESSION_INFO_ID;
-        actiondata.action_u.session_session_info.nexthop_idx =
-                                        session_info_nexthop_idx++;
-        if (session_info_nexthop_idx ==
-                (session_info_nexthop_start_idx +
-                                (vpc * num_nexthop_idx_per_vpc))) {
-            session_info_nexthop_idx = session_info_nexthop_start_idx +
-                                       (vpc - 1) * num_nexthop_idx_per_vpc;
+
+        if (vpc == 64) {
+            // VPC 64 is used for scenario2-Internet in/out traffic
+            // Tx path:
+            //     SMAC is rewritten with VR_MAC (EGRESS_VNIC_INFO table)
+            //     - TBD: ToR expected to do this
+            //     DMAC is rewritten with IGW MAC (NEXTHOP table)
+            //     SIP is xlated from CA IPv4/IPv6 to floating public IPv4/IPv6
+            //     DIP is untouched
+            //     L4 ports untouched
+            //     No Vxlan encap is added on the way out
+            //     Packet goes out with Internet vlan (i.e. bridge vnic's encap)
+            // Rx path:
+            //     Packet received is non-vxlan packet in Internet vlan (i.e.
+            //     bridge vnic's encap)
+            //     SMAC is rewritten with VR_MAC (EGRESS_VNIC_INFO table)
+            //     DMAC is rewritten with LOCAL IP mapping's MAC (MAPPING table)
+            //     - TBD: ToR expected to do this
+            //     SIP is untouched
+            //     DIP is xlated from floating public IPv4/IPv6 to CA IPv4/IPv6
+            //     (LOCAL_IP_MAPPING table)
+            //     L4 ports untouched
+            //     No Vxlan encap is added on the way out
+            //     Packet goes out with vnic' vlan (EGRESS_VNIC_INFO table)
+            // NH indices in this case should be between 1-1022 (NH_TYPE_IP)
+            actiondata.action_u.session_session_info.nexthop_idx = inh_idx++;
+            if (inh_idx > this->test_params->num_nh) {
+                inh_idx = 1;
+            }
+            // do DMACi rewrite and encap in the Tx direction
+            actiondata.action_u.session_session_info.tx_rewrite_flags = 0x3;
+            // do SMACi rewrite with VR MAC and go with CA-IP always
+            actiondata.action_u.session_session_info.rx_rewrite_flags = 0x11;
+        } else {
+            actiondata.action_u.session_session_info.nexthop_idx =
+                                            session_info_nexthop_idx++;
+            if (session_info_nexthop_idx ==
+                    (session_info_nexthop_start_idx +
+                                    (vpc * num_nexthop_idx_per_vpc))) {
+                session_info_nexthop_idx = session_info_nexthop_start_idx +
+                                           (vpc - 1) * num_nexthop_idx_per_vpc;
+            }
+            // do DMACi rewrite and encap in the Tx direction
+            actiondata.action_u.session_session_info.tx_rewrite_flags = 0x21;
+            // do SMACi rewrite with VR MAC and go with CA-IP always
+            actiondata.action_u.session_session_info.rx_rewrite_flags = 0x11;
         }
-        // do DMACi rewrite and encap in the Tx direction
-        actiondata.action_u.session_session_info.tx_rewrite_flags = 0x21;
-        // do SMACi rewrite with VR MAC and go with CA-IP always
-        actiondata.action_u.session_session_info.rx_rewrite_flags = 0x11;
         actiondata.action_u.session_session_info.meter_idx = meter_idx++;
         if (meter_idx == vpc * num_meter_idx_per_vpc) {
             meter_idx = (vpc-1) * num_meter_idx_per_vpc + 1;
@@ -604,6 +636,7 @@ public:
         uint16_t rev_sport = 0, rev_dport = 0;
         uint32_t nflows = 0;
         sdk_ret_t ret;
+        ip_addr_t ip_addr;
 
         for (uint32_t vpc = 1; vpc <= MAX_VPCS; vpc++) {
             generate_ep_pairs(vpc, dual_stack);
@@ -615,7 +648,6 @@ public:
                         if (ep_pairs[i].valid == 0) {
                             break;
                         }
-
                         if (proto == IP_PROTO_ICMP) {
                             fwd_sport = rev_sport = local_port;
                             fwd_dport = rev_dport = remote_port;
@@ -624,13 +656,26 @@ public:
                             fwd_dport = rev_sport = remote_port;
                         }
 
-                        // Create V4 Flows
-                        ret = create_session(vpc, ep_pairs[i].lip, ep_pairs[i].rip,
-                                                  proto, fwd_sport, fwd_dport);
+                        memset(&ip_addr, 0, sizeof(ip_addr));
+                        // create V4 Flows
+                        if (vpc == 64) {
+                            // this VPC is for Internet IN/OUT with floating
+                            // IP flows
+                            ip_addr.addr.v4_addr = (0xC << 28) | i;
+                            ret = create_session(vpc, ep_pairs[i].lip,
+                                                 ip_addr.addr.v4_addr,
+                                                 proto, fwd_sport,
+                                                 fwd_dport);
+                        } else {
+                            // vnet in/out with vxlan encap
+                            ret = create_session(vpc, ep_pairs[i].lip,
+                                                 ep_pairs[i].rip, proto,
+                                                 fwd_sport, fwd_dport);
+                        }
                         if (ret != SDK_RET_OK) {
                             return ret;
                         }
-                        // Create V4 session
+                        // create V4 session
                         ret = create_session_info(vpc);
                         if (ret != SDK_RET_OK) {
                             return ret;
@@ -638,14 +683,31 @@ public:
                         session_index++;
 
                         if (dual_stack) {
-                            // Create V6 Flows
-                            ret = create_session(vpc, ep_pairs[i].lip6,
-                                                      ep_pairs[i].rip6, proto,
-                                                      fwd_sport, fwd_dport);
+                            memset(&ip_addr, 0, sizeof(ip_addr));
+                            // create V6 Flows
+                            if (vpc == 64) {
+                                // this VPC is for Internet IN/OUT with
+                                // floating IP address
+                                ip_addr = test_params->v6_route_pfx.addr;
+                                ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-2]
+                                    = htonl(0xF1D0D1D0);
+                                ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
+                                    htonl((0xC << 28) | i);
+                                ret = create_session(vpc, ep_pairs[i].lip6,
+                                                     ip_addr.addr.v6_addr,
+                                                     proto, fwd_sport,
+                                                     fwd_dport);
+                            } else {
+                                // vnet in/out with vxlan encap
+                                ret = create_session(vpc, ep_pairs[i].lip6,
+                                                     ep_pairs[i].rip6,
+                                                     proto, fwd_sport,
+                                                     fwd_dport);
+                            }
                             if (ret != SDK_RET_OK) {
                                 return ret;
                             }
-                            // Create V6 session
+                            // create V6 session
                             ret = create_session_info(vpc);
                             if (ret != SDK_RET_OK) {
                                 return ret;

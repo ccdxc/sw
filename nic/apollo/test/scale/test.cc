@@ -31,56 +31,14 @@ using std::string;
 extern char *g_input_cfg_file;
 extern std::string g_pipeline;
 pds_device_spec_t g_device = {0};
+static int g_epoch = 1;
+test_params_t g_test_params;
 #ifndef TEST_GRPC_APP
 flow_test *g_flow_test_obj;
 #endif
 
-static int g_epoch = 1;
-
-test_params_t g_test_params = { 0 };
-
-#define CONVERT_TO_V4_MAPPED_V6_ADDRESS(_v6pfx, _v4addr) {         \
-    _v6pfx.addr8[12] = (_v4addr >> 24) & 0xFF;                     \
-    _v6pfx.addr8[13] = (_v4addr >> 16) & 0xFF;                     \
-    _v6pfx.addr8[14] = (_v4addr >> 8) & 0xFF;                      \
-    _v6pfx.addr8[15] = (_v4addr) & 0xFF;                           \
-}
-
 #define PDS_SUBNET_ID(vpc_num, num_subnets_per_vpc, subnet_num)    \
             (((vpc_num) * (num_subnets_per_vpc)) + subnet_num)
-
-inline bool
-apollo (void)
-{
-    return g_pipeline == "apollo";
-}
-
-inline bool
-artemis (void)
-{
-    return g_pipeline == "artemis";
-}
-
-static inline void
-compute_ipv6_addr (ip_addr_t *addr, ip_prefix_t *initial_pfx,
-                   uint32_t shift_val, uint32_t len)
-{
-    *addr = initial_pfx->addr;
-    addr->addr.v6_addr.addr32[IP6_ADDR32_LEN-2] = htonl(0xF1D0D1D0);
-    addr->addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
-        htonl((0xC << 28) | (shift_val << 8));
-}
-
-static inline void
-compute_ipv6_prefix (ip_prefix_t *pfx, ip_prefix_t *initial_pfx,
-                     uint32_t shift_val, uint32_t len)
-{
-    *pfx = *initial_pfx;
-    pfx->addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-2] = htonl(0xF1D0D1D0);
-    pfx->addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
-                                    htonl((0xC << 28) | (shift_val << 8));
-    pfx->len = len;
-}
 
 //----------------------------------------------------------------------------
 // create route tables
@@ -110,7 +68,7 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
         for (uint32_t j = 0; j < num_routes; j++) {
             compute_ipv6_prefix(&v6route_table.routes[j].prefix, v6_route_pfx,
                                 v6rtnum++, 120);
-            if (apollo()) {
+            if (g_test_params.apollo()) {
                 v6route_table.routes[j].nh_ip.af = IP_AF_IPV4;
                 v6route_table.routes[j].nh_ip.addr.v4_addr =
                         tep_pfx->addr.addr.v4_addr + tep_offset++;
@@ -121,7 +79,7 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
                     tep_offset += 3;
                 }
                 v6route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
-            } else if (artemis()) {
+            } else if (g_test_params.artemis()) {
                 v6route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
                 v6route_table.routes[j].nh = nh_id++;
                 if (nh_id > num_nh) {
@@ -194,7 +152,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
             route_table.routes[j].prefix.addr.af = IP_AF_IPV4;
             route_table.routes[j].prefix.addr.addr.v4_addr =
                 ((0xC << 28) | (rtnum++ << 8));
-            if (apollo()) {
+            if (g_test_params.apollo()) {
                 route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
                 route_table.routes[j].nh_ip.af = IP_AF_IPV4;
                 route_table.routes[j].nh_ip.addr.v4_addr =
@@ -204,7 +162,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     // skip MyTEP and gateway IPs
                     tep_offset += 3;
                 }
-            } else if (artemis()) {
+            } else if (g_test_params.artemis()) {
                 route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
                 route_table.routes[j].nh = nh_id++;
                 if (nh_id > num_nh) {
@@ -1351,13 +1309,14 @@ create_objects (void)
 {
     sdk_ret_t ret;
 
+    g_test_params.pipeline = g_pipeline;
     ret = parse_test_cfg(g_input_cfg_file, &g_test_params);
     if (ret != SDK_RET_OK) {
         exit(1);
     }
 
 #ifndef TEST_GRPC_APP
-    g_flow_test_obj = new flow_test();
+    g_flow_test_obj = new flow_test(&g_test_params);
 #endif
 
 #ifdef TEST_GRPC_APP
@@ -1376,7 +1335,7 @@ create_objects (void)
         return ret;
     }
 
-    if (artemis()) {
+    if (g_test_params.artemis()) {
         // create v4 tags
         ret = create_tags(g_test_params.num_tag_trees/2, g_test_params.tags_v4_scale,
                           IP_AF_IPV4, &g_test_params.v6_route_pfx);
@@ -1423,7 +1382,7 @@ create_objects (void)
         return ret;
     }
 
-    if (artemis()) {
+    if (g_test_params.artemis()) {
         // create service TEPs
         ret = create_service_teps(0,    // TODO: revisit this once TEP1_RX table size is adjusted in p4
                                   //g_test_params.num_teps + 2,
@@ -1481,7 +1440,7 @@ create_objects (void)
         return ret;
     }
 
-    if (artemis()) {
+    if (g_test_params.artemis()) {
         // create vpc peers
         ret = create_vpc_peers(g_test_params.num_vpcs);
         if (ret != SDK_RET_OK) {
@@ -1489,7 +1448,7 @@ create_objects (void)
         }
     }
 
-    if (apollo()) {
+    if (g_test_params.apollo()) {
         // create RSPAN mirror sessions
         if (g_test_params.mirror_en && (g_test_params.num_rspan > 0)) {
             ret = create_rspan_mirror_sessions(g_test_params.num_rspan);
@@ -1544,6 +1503,7 @@ create_objects (void)
                                 g_test_params.meter_scale,
                                 TESTAPP_METER_NUM_PREFIXES,
                                 g_test_params.num_nh);
+
 #endif
     ret = g_flow_test_obj->create_flows();
     if (ret != SDK_RET_OK) {
