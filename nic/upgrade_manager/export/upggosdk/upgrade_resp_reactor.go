@@ -80,4 +80,15 @@ func upgRespInit(client clientApi.Client, hdlrs AgentHandlers) {
 	}
 	upgrade.UpgRespMount(client, delphi.MountMode_ReadMode)
 	upgrade.UpgRespWatch(client, ctx)
+	client.WatchMount(ctx)
+}
+
+func (ctx *upgrespctx) OnMountComplete() {
+	log.Infof("OnMountComplete got called to restore UpgResp")
+	upgresp := upgrade.GetUpgResp(ctx.sdkClient)
+	if upgresp == nil {
+		log.Infof("OnMountComplete could not find UpgResp")
+		return
+	}
+	ctx.OnUpgRespCreate(upgresp)
 }

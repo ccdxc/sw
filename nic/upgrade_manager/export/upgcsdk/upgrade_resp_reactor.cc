@@ -87,4 +87,12 @@ delphi::objects::UpgRespPtr UpgRespReact::FindUpgRespSpec(void) {
     return delphi::objects::UpgResp::FindObject(sdk_);
 }
 
+void UpgRespReact::OnMountComplete(void) {
+    delphi::objects::UpgRespPtr resp = delphi::objects::UpgResp::FindObject(sdk_);
+    if (resp == NULL) {
+        return;
+    }
+    OnUpgRespCreate(resp);
+}
+
 };

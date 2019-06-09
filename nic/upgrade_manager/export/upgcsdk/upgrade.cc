@@ -261,6 +261,7 @@ UpgSdk::UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleA
         }
         delphi::objects::UpgResp::Mount(sdk_, delphi::ReadMode);
         delphi::objects::UpgResp::Watch(sdk_, upgMgrAgentRespPtr_);
+        sdk_->WatchMountComplete(upgMgrAgentRespPtr_);
         upgAppRespReactPtr_ = make_shared<UpgAppRespReact>(uah);
         delphi::objects::UpgAppResp::Watch(sdk_, upgAppRespReactPtr_);
     }

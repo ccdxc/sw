@@ -96,7 +96,8 @@ func (ctx *upgstatereqctx) OnUpgStateReqCreate(obj *upgrade.UpgStateReq) {
 		log.Infof("getUpgCtxFromMeta failed")
 		return
 	}
-	if canInvokeHandler(ctx.sdkClient, ctx.appName, obj.GetUpgReqState()) {
+	if obj.GetUpgReqState() != upgrade.UpgReqStateType_UpgStateTerminal &&
+		canInvokeHandler(ctx.sdkClient, ctx.appName, obj.GetUpgReqState()) {
 		createUpgAppResp(ctx.sdkClient, ctx.appName)
 		var hdlrResp HdlrResp
 		ctx.invokeAppHdlr(obj.GetUpgReqState(), &hdlrResp)

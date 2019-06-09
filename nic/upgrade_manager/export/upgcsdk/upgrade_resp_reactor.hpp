@@ -35,6 +35,8 @@ public:
 
     //FindUpgRespSpec returns UpgResp Object
     delphi::objects::UpgRespPtr FindUpgRespSpec(void);
+
+    virtual void OnMountComplete(void);
 };
 typedef std::shared_ptr<UpgRespReact> UpgRespReactPtr;
 

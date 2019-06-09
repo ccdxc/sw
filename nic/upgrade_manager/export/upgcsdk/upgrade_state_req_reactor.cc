@@ -112,7 +112,7 @@ delphi::error UpgStateReqReact::OnUpgStateReqCreate(delphi::objects::UpgStateReq
         return delphi::error("GetUpgCtxFromMeta failed");
     }
     //UPG_LOG_DEBUG("OnUpgStateReqCreate upgType {}", ctx.upgType);
-    if (upgHdlrPtr_ && upgAppRespPtr_->CanInvokeHandler(req->upgreqstate(), ctx.upgType)) {
+    if (upgHdlrPtr_ && (req->upgreqstate() != UpgStateTerminal) && upgAppRespPtr_->CanInvokeHandler(req->upgreqstate(), ctx.upgType)) {
         upgAppRespPtr_->CreateUpgAppResp();
         HdlrResp hdlrResp;
         InvokeAppHdlr(req->upgreqstate(), hdlrResp);
