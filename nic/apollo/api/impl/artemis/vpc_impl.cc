@@ -29,6 +29,12 @@ vpc_impl *
 vpc_impl::factory(pds_vpc_spec_t *spec) {
     vpc_impl *impl;
 
+    if (spec->type == PDS_VPC_TYPE_SUBSTRATE) {
+        // substrte traffic doesn't come encapped, so no need to
+        // program TEP1_RX table
+        return NULL;
+    }
+
     // TODO: move to slab later
     impl = (vpc_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_VPC_IMPL,
                                    sizeof(vpc_impl));

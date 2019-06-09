@@ -57,7 +57,7 @@ sdk_ret_t
 vpc_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_vpc_spec_t *spec = &api_ctxt->api_params->vpc_spec;
 
-    PDS_TRACE_DEBUG("Intializing vpc %u, type %u, v4 pfx %s, v6 pfx %s",
+    PDS_TRACE_DEBUG("Initializing vpc %u, type %u, v4 pfx %s, v6 pfx %s",
                     spec->key.id, spec->type, ipv4pfx2str(&spec->v4_pfx),
                     ippfx2str(&spec->v6_pfx));
     memcpy(&key_, &spec->key, sizeof(pds_vpc_key_t));
