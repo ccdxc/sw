@@ -80,6 +80,7 @@ nexthop_impl::nuke_resources(api_base *api_obj) {
     return SDK_RET_OK;
 }
 
+#define nexthop_info    action_u.nexthop_nexthop_info
 sdk_ret_t
 nexthop_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
@@ -97,6 +98,7 @@ nexthop_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     case PDS_NH_TYPE_IP:
         // DIPo, DMACo are no-op for this native IP type nexthop
         nh_data.action_u.nexthop_nexthop_info.vni = spec->vlan;
+        nh_data.nexthop_info.port = TM_PORT_UPLINK_1;
         if (is_mac_set(spec->mac)) {
             sdk::lib::memrev(nh_data.action_u.nexthop_nexthop_info.dmaci,
                              spec->mac, ETH_ADDR_LEN);
