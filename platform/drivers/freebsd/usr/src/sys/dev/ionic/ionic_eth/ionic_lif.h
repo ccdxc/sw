@@ -386,7 +386,7 @@ struct lif {
 #define IONIC_Q_FULL(q)		((((q)->head_index + 1) % (q)->num_descs) == (q)->tail_index)
 #define IONIC_Q_EMPTY(q)	((((q)->tail_index + 1) % (q)->num_descs) == (q)->head_index)
 
-int ionic_stop(struct net_device *netdev);
+int ionic_stop(struct ifnet *ifp);
 void ionic_open_or_stop(struct lif *lif);
 
 int ionic_lif_identify(struct ionic *ionic);
@@ -404,7 +404,7 @@ int ionic_notifyq_clean(struct notifyq* notifyq);
 int ionic_dev_intr_reserve(struct lif *lif, struct intr *intr);
 void ionic_dev_intr_unreserve(struct lif *lif, struct intr *intr);
 
-struct lif *ionic_netdev_lif(struct net_device *netdev);
+struct lif *ionic_netdev_lif(struct ifnet *ifp);
 
 int ionic_set_hw_features(struct lif *lif, uint32_t features);
 
@@ -419,12 +419,12 @@ void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *buf,
 void ionic_tx_ring_doorbell(struct txque *txq, int index);
 int ionic_tx_clean(struct txque* txq, int tx_limit);
 
-int ionic_change_mtu(struct net_device *netdev, int new_mtu);
-void ionic_set_rx_mode(struct net_device *netdev);
+int ionic_change_mtu(struct ifnet *ifp, int new_mtu);
+void ionic_set_rx_mode(struct ifnet *ifp);
 
 int ionic_set_multi(struct lif* lif);
 
-int ionic_set_mac(struct net_device *netdev);
+int ionic_set_mac(struct ifnet *ifp);
 extern int ionic_lif_reinit(struct lif *lif);
 
 int ionic_firmware_update(struct lif *lif, const void *const fw_data, size_t fw_sz);

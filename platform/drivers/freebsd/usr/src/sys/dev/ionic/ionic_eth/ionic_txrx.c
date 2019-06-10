@@ -533,8 +533,8 @@ ionic_rx_mbuf_free(struct rxque *rxq, struct ionic_rx_buf *rxbuf)
 static irqreturn_t
 ionic_queue_isr(int irq, void *data)
 {
-	struct rxque* rxq = data;
-	struct txque* txq = rxq->lif->txqs[rxq->index];
+	struct rxque *rxq = data;
+	struct txque *txq = rxq->lif->txqs[rxq->index];
 	struct ionic_dev *idev = &rxq->lif->ionic->idev;
 	struct rx_stats* rxstats = &rxq->stats;
 	int work_done, tx_work;
@@ -575,8 +575,8 @@ ionic_queue_isr(int irq, void *data)
 static void
 ionic_queue_task_handler(void *arg, int pendindg)
 {
-	struct rxque* rxq = arg;
-	struct txque* txq = rxq->lif->txqs[rxq->index];
+	struct rxque *rxq = arg;
+	struct txque *txq = rxq->lif->txqs[rxq->index];
 	struct ionic_dev *idev = &rxq->lif->ionic->idev;
 	int work_done, tx_work;
 
@@ -613,7 +613,7 @@ ionic_queue_task_handler(void *arg, int pendindg)
  * Setup queue interrupt handler.
  */
 int
-ionic_setup_rx_intr(struct rxque* rxq)
+ionic_setup_rx_intr(struct rxque *rxq)
 {
 	int err, bind_cpu;
 	struct lif *lif = rxq->lif;
@@ -1184,7 +1184,7 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 
 
 static int
-ionic_xmit(struct ifnet* ifp, struct txque* txq, struct mbuf **m)
+ionic_xmit(struct ifnet *ifp, struct txque *txq, struct mbuf **m)
 {
 	struct tx_stats *stats;
 	int err;
@@ -1210,7 +1210,7 @@ ionic_xmit(struct ifnet* ifp, struct txque* txq, struct mbuf **m)
 }
 
 int
-ionic_start_xmit_locked(struct ifnet* ifp, struct txque* txq)
+ionic_start_xmit_locked(struct ifnet *ifp, struct txque *txq)
 {
 	struct mbuf *m;
 	struct lif *lif = ifp->if_softc;
@@ -1241,12 +1241,11 @@ ionic_start_xmit_locked(struct ifnet* ifp, struct txque* txq)
 }
 
 int
-ionic_start_xmit(struct net_device *netdev, struct mbuf *m)
+ionic_start_xmit(struct ifnet *ifp, struct mbuf *m)
 {
-	struct lif *lif = netdev_priv(netdev);
-	struct ifnet* ifp = lif->netdev;
-	struct txque* txq;
-	struct rxque* rxq;
+	struct lif *lif = if_getsoftc(ifp);
+	struct txque *txq;
+	struct rxque *rxq;
 	int  err, qid = 0;
 #ifdef RSS
 	int bucket;
@@ -1284,7 +1283,7 @@ ionic_start_xmit(struct net_device *netdev, struct mbuf *m)
 static uint64_t
 ionic_get_counter(struct ifnet *ifp, ift_counter cnt)
 {
-	struct lif* lif = if_getsoftc(ifp);
+	struct lif *lif = if_getsoftc(ifp);
 	struct lif_stats *hwstat = &lif->info->stats;
 
 	switch (cnt) {
@@ -1376,7 +1375,7 @@ ionic_if_init(void *arg)
 int
 ionic_lif_netdev_alloc(struct lif *lif, int ndescs)
 {
-	struct ifnet* ifp;
+	struct ifnet *ifp;
 
 	KASSERT(lif->ionic, ("lif: %s ionic == NULL", lif->name));
 
@@ -1419,7 +1418,7 @@ ionic_lif_netdev_alloc(struct lif *lif, int ndescs)
 static int
 ionic_intr_coal_handler(SYSCTL_HANDLER_ARGS)
 {
-	struct lif* lif = oidp->oid_arg1;
+	struct lif *lif = oidp->oid_arg1;
 	struct ionic_dev *idev = &lif->ionic->idev;
 	struct identity *ident = &lif->ionic->ident;
 	struct rxque *rxq;
@@ -1603,8 +1602,8 @@ static int
 ionic_flow_ctrl_sysctl(SYSCTL_HANDLER_ARGS)
 {
 	struct lif *lif = oidp->oid_arg1;
-	struct ionic* ionic = lif->ionic;
-	struct ionic_dev* idev = &ionic->idev;
+	struct ionic *ionic = lif->ionic;
+	struct ionic_dev *idev = &ionic->idev;
 	u8 pause_type = idev->port_info->config.pause_type & 0xf0;
 	int err, fc;
 
@@ -1651,7 +1650,7 @@ ionic_flow_ctrl_sysctl(SYSCTL_HANDLER_ARGS)
 static int
 ionic_media_status_sysctl(SYSCTL_HANDLER_ARGS)
 {
-	struct lif* lif;
+	struct lif *lif;
 	struct lif_status *lif_status;
 	struct port_status *port_status;
 	union port_config *port_config;
@@ -1659,8 +1658,8 @@ ionic_media_status_sysctl(SYSCTL_HANDLER_ARGS)
 	struct qsfp_sprom_data *qsfp;
 	struct sfp_sprom_data *sfp;
 	struct sbuf *sb;
-	struct ionic* ionic;
-	struct ionic_dev* idev;
+	struct ionic *ionic;
+	struct ionic_dev *idev;
 	int err;
 
 	lif = oidp->oid_arg1;
@@ -2609,7 +2608,7 @@ ionic_setup_sysctls(struct lif *lif)
  * Set netdev capabilities
  */
 int
-ionic_set_os_features(struct ifnet* ifp, uint32_t hw_features)
+ionic_set_os_features(struct ifnet *ifp, uint32_t hw_features)
 {
 	if_setcapabilitiesbit(ifp, (IFCAP_VLAN_MTU | IFCAP_JUMBO_MTU |
 		IFCAP_HWSTATS | IFCAP_LRO), 0);
@@ -2655,7 +2654,7 @@ ionic_set_os_features(struct ifnet* ifp, uint32_t hw_features)
 }
 
 void
-ionic_lif_netdev_free(struct lif* lif)
+ionic_lif_netdev_free(struct lif *lif)
 {
 
  	if(lif->sysctl_ifnet)
@@ -2670,7 +2669,7 @@ ionic_lif_netdev_free(struct lif* lif)
 static int
 ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 {
-	struct lif* lif = if_getsoftc(ifp);
+	struct lif *lif = if_getsoftc(ifp);
 	struct ifreq *ifr = (struct ifreq *) data;
 	int error = 0;
 	int mask;
