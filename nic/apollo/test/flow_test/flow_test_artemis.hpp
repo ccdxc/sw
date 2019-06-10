@@ -522,8 +522,36 @@ public:
         }
         memset(&actiondata, 0, sizeof(session_actiondata_t));
         actiondata.action_id = SESSION_SESSION_INFO_ID;
-
-        if (vpc == 64) {
+        if (vpc == 63) {
+            // VPC 63 is used for scenario2-Internet in/out traffic
+            // Tx path:
+            //     SMAC is rewritten with VR_MAC (EGRESS_VNIC_INFO table)
+            //     - TBD: ToR expected to do this
+            //     DMAC is rewritten with IGW MAC (NEXTHOP table)
+            //     (CA-SIP, sport) is xlated from CA IPv4/IPv6 to
+            //         (VIP, svc-port) IPv4/IPv6 (SERVICE_MAPPING table)
+            //     DIP, dport are untouched
+            //     No Vxlan encap is added on the way out
+            //     Packet goes out with Internet vlan (i.e. bridge vnic's encap)
+            // Rx path:
+            //     Packet received is non-vxlan packet with Internet vlan (i.e.
+            //     bridge vnic's encap)
+            //     SMAC is rewritten with VR_MAC (EGRESS_VNIC_INFO table)
+            //     DMAC is rewritten with LOCAL IP mapping's MAC (MAPPING table)
+            //     - TBD: ToR expected to do this ?
+            //     (SIP, sport) are untouched
+            //     (DIP, dport) are xlated from from (VIP, svc-port) to
+            //         (CA-IP, DIP-port) (SERVICE_MAPPING table)
+            //     No Vxlan encap is added on the way out
+            //     Packet goes out with vnic' vlan (EGRESS_VNIC_INFO table)
+            // NH indices in this case should be between 1-1022 (NH_TYPE_IP)
+            actiondata.action_u.session_session_info.nexthop_idx = inh_idx++;
+            if (inh_idx > this->test_params->num_nh) {
+                inh_idx = 1;
+            }
+            actiondata.action_u.session_session_info.tx_rewrite_flags = 0x5;
+            actiondata.action_u.session_session_info.rx_rewrite_flags = 0x21;
+        } else if (vpc == 64) {
             // VPC 64 is used for scenario2-Internet in/out traffic
             // Tx path:
             //     SMAC is rewritten with VR_MAC (EGRESS_VNIC_INFO table)
