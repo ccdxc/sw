@@ -185,7 +185,8 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                     "provider IP %s) -> (vpc %u, dip %s, port %u)",
                     spec->key.vpc.id, ipaddr2str(&spec->key.vip),
                     spec->key.svc_port, ipaddr2str(&spec->backend_provider_ip),
-                    spec->vpc.id, &spec->backend_ip, spec->svc_port);
+                    spec->vpc.id, ipaddr2str(&spec->backend_ip),
+                    spec->svc_port);
 
     // add an entry in SERVICE_MAPPING with (VIP, provider-ip, port) as key
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
