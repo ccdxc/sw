@@ -11,6 +11,7 @@
 #include "osal_atomic.h"
 #include "osal_thread.h"
 #include "osal_time.h"
+#include "osal_random.h"
 //#include <time.h>
 
 #include "pnso_test.h"
@@ -27,7 +28,6 @@ extern void pnso_set_log_level(int level);
 
 static osal_atomic_int_t g_shutdown;
 static osal_atomic_int_t g_shutdown_complete;
-static osal_atomic_int_t g_testcase_gen_id;
 
 static osal_atomic_int_t g_testcase_active_refcnt; /* ref count for below */
 static struct testcase_context *g_active_test_ctx;
@@ -1062,12 +1062,9 @@ static inline struct batch_context *cb_ctx_to_batch_ctx(void *cb_ctx)
 	struct batch_context *ret = NULL;
 
 	ctx.val = (uint64_t) cb_ctx;
-	if (ctx.s.gen_id != osal_atomic_read(&g_testcase_gen_id))
-		return NULL;
 
 	test_ctx = g_active_test_ctx;
-	if (test_ctx &&
-	    test_ctx->gen_id == ctx.s.gen_id &&
+	if (test_ctx && ctx.s.batch_id &&
 	    ctx.s.batch_id <= test_ctx->batch_ctx_count) {
 		ret = test_ctx->batch_ctxs[ctx.s.batch_id - 1];
 		if (ret && ret->cb_ctx.val != ctx.val)
@@ -1080,7 +1077,8 @@ static inline struct batch_context *cb_ctx_to_batch_ctx(void *cb_ctx)
 static inline void batch_ctx_set_cb_ctx(struct batch_context *batch_ctx, uint32_t alloc_id)
 {
 	batch_ctx->cb_ctx.s.batch_id = alloc_id;
-	batch_ctx->cb_ctx.s.gen_id = batch_ctx->test_ctx->gen_id;
+	batch_ctx->cb_ctx.s.gen_id = (uint16_t) osal_rand();
+	batch_ctx->cb_ctx.s.test_id = batch_ctx->desc->node.idx;
 }
 
 static struct worker_context *batch_get_worker_ctx(struct batch_context *batch_ctx)
@@ -1091,18 +1089,21 @@ static struct worker_context *batch_get_worker_ctx(struct batch_context *batch_c
 	return batch_ctx->test_ctx->worker_ctxs[batch_ctx->worker_id];
 }
 
-static void batch_completion_common(struct batch_context *batch_ctx, uint64_t cur_ts)
+static bool batch_completion_common(struct batch_context *batch_ctx, uint64_t cur_ts)
 {
 	int count;
+
+	count = osal_atomic_fetch_add(&batch_ctx->cb_count, 1);
+	if (count != 0) {
+		PNSO_LOG_ERROR("Unexpected batch cb_count %d\n", count);
+		return false;
+	}
 
 	if (batch_ctx->req_rc == PNSO_OK)
 		batch_ctx->stats.agg_stats.total_latency =
 			cur_ts - batch_ctx->start_time;
 
-	count = osal_atomic_fetch_add(&batch_ctx->cb_count, 1);
-	if (count != 0) {
-		PNSO_LOG_ERROR("Unexpected batch cb_count %d\n", count);
-	}
+	return true;
 }
 
 static void batch_completion_safe_cb(void *cb_ctx, struct pnso_service_result *svc_res)
@@ -1124,9 +1125,11 @@ static void batch_completion_safe_cb(void *cb_ctx, struct pnso_service_result *s
 		PNSO_LOG_WARN("Batch completion stale context");
 		goto done;
 	}
+	batch_ctx->cb_ctx.s.gen_id++;
 
 	cur_ts = osal_get_clock_nsec();
-	batch_completion_common(batch_ctx, cur_ts);
+	if (!batch_completion_common(batch_ctx, cur_ts))
+		goto done;
 
 	worker_ctx = batch_get_worker_ctx(batch_ctx);
 	if (!worker_ctx || !worker_queue_enqueue_safe(worker_ctx->complete_q, batch_ctx)) {
@@ -1156,11 +1159,13 @@ static void batch_completion_cb(void *cb_ctx, struct pnso_service_result *svc_re
 		PNSO_LOG_WARN("Batch completion stale context");
 		goto done;
 	}
+	batch_ctx->cb_ctx.s.gen_id++;
 
-	batch_completion_common(batch_ctx, osal_get_clock_nsec());
+	if (!batch_completion_common(batch_ctx, osal_get_clock_nsec()))
+		goto done;
 
 	worker_ctx = batch_get_worker_ctx(batch_ctx);
-	if (!worker_ctx || !worker_queue_enqueue(worker_ctx->complete_q, batch_ctx))
+	if (!worker_ctx || !worker_queue_enqueue_safe(worker_ctx->complete_q, batch_ctx))
 		PNSO_LOG_ERROR("Failed to enqueue batch_ctx to complete_q!\n");	
 done:
 	osal_atomic_fetch_sub(&g_testcase_active_refcnt, 1);
@@ -2349,6 +2354,7 @@ static void init_batch_context(struct batch_context *ctx,
 {
 	OSAL_ASSERT(req_count && req_count <= ctx->max_req_count);
 	osal_atomic_set(&ctx->cb_count, 0);
+	ctx->cb_ctx.s.gen_id++;
 	ctx->worker_id = work_ctx->worker_id;
 	ctx->batch_id = batch_id;
 	ctx->first_req_id = req_id;
@@ -2406,7 +2412,7 @@ static int worker_loop(void *param)
 		}
 
 		/* Process next work item */
-		batch_ctx = worker_queue_dequeue(ctx->submit_q);
+		batch_ctx = worker_queue_dequeue_safe(ctx->submit_q);
 		if (batch_ctx) {
 #ifdef __KERNEL__
 			int core_id = osal_get_coreid();
@@ -2449,13 +2455,16 @@ static void free_worker_queue(struct worker_queue *q, bool free_entries)
 
 static struct worker_queue *alloc_worker_queue(uint32_t max_entries)
 {
+	uint32_t idx_count;
 	struct worker_queue *q;
 
-	q = TEST_ALLOC(sizeof(*q) + (max_entries * sizeof(struct batch_context *)));
+	idx_count = (max_entries < 2) ? 2 : roundup_pow2(max_entries + 1);
+	q = TEST_ALLOC(sizeof(*q) + (idx_count * sizeof(struct batch_context *)));
 	if (q) {
 		memset(q, 0, sizeof(*q));
 		osal_spin_lock_init(&q->lock);
 		osal_atomic_init(&q->atomic_count, 0);
+		q->idx_mask = idx_count - 1;
 		q->head = 0;
 		q->tail = 0;
 		q->max_count = max_entries;
@@ -2723,7 +2732,6 @@ static struct testcase_context *alloc_testcase_context(const struct test_desc *d
 	memset(test_ctx, 0, sizeof(*test_ctx));
 	test_ctx->desc = desc;
 	test_ctx->testcase = testcase;
-	test_ctx->gen_id = osal_atomic_read(&g_testcase_gen_id);
 	osal_atomic_init(&test_ctx->stats_lock, 0);
 	test_ctx->output_file_tbl = test_get_output_file_table();
 
@@ -2883,8 +2891,8 @@ static void print_worker_queue(struct worker_queue *q, const char *name, bool ve
 			       (unsigned long long) q->dequeue_count,
 			       (unsigned long long) q->dequeue_full_count,
 			       (unsigned long long) q->dequeue_empty_count);
-		OSAL_LOG_ERROR("    head %u, tail %u, depth %u\n",
-			       q->head, q->tail, q->max_count);
+		OSAL_LOG_ERROR("    head %u, tail %u, depth %u, idx_mask %u\n",
+			       q->head, q->tail, q->max_count, q->idx_mask);
 	}
 }
 
@@ -2964,7 +2972,6 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 	PNSO_LOG_DEBUG("enter pnso_test_run_testcase(%u) ...\n",
 		       testcase ? testcase->node.idx : 0);
 
-	osal_atomic_fetch_add(&g_testcase_gen_id, 1);
 	ctx = alloc_testcase_context(desc, testcase);
 	if (!ctx) {
 		PNSO_LOG_ERROR("Cannot allocate context for testcase %u\n",
@@ -3006,7 +3013,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 
 		/* Batch completion */
 		if (worker_ctx->pending_batch_count &&
-		    (batch_ctx = worker_queue_dequeue(worker_ctx->complete_q))) {
+		    (batch_ctx = worker_queue_dequeue_safe(worker_ctx->complete_q))) {
 			PNSO_LOG_DEBUG("DEBUG: batch completed, batch_count %llu\n",
 				(unsigned long long) batch_completion_count+1);
 			last_active_ts = cur_ts;
@@ -3025,7 +3032,8 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 				PNSO_LOG_WARN("Leak timed out batch_ctx for testcase %u.",
 					      testcase->node.idx);
 			} else {
-				_worker_queue_enqueue(ctx->batch_ctx_freelist, batch_ctx);
+				batch_ctx->cb_ctx.s.gen_id++;
+				worker_queue_enqueue(ctx->batch_ctx_freelist, batch_ctx);
 			}
 			worker_ctx->pending_batch_count--;
 		} else {
@@ -3057,15 +3065,18 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 				init_batch_context(batch_ctx, worker_ctx, batch_submit_count,
 						   req_submit_count, cur_batch_depth);
 
-				if (worker_queue_enqueue(worker_ctx->submit_q, batch_ctx)) {
+				if (worker_queue_enqueue_safe(worker_ctx->submit_q, batch_ctx)) {
 					batch_submit_count++;
 					req_submit_count += cur_batch_depth;
 					last_active_ts = cur_ts;
 					is_busy = true;
 					worker_ctx->pending_batch_count++;
 				} else {
-					PNSO_LOG_ERROR("Fail batch submission, worker %u, batch_count %llu\n",
-						worker_id, (unsigned long long) batch_submit_count+1);
+					PNSO_LOG_ERROR("Fail batch submission, worker %u, batch_count %llu, pending_batch_count %llu\n",
+						worker_id,
+						(unsigned long long) batch_submit_count+1,
+						(unsigned long long) worker_ctx->pending_batch_count);
+					print_worker_queue(worker_ctx->submit_q, "submit_q", true);
 					fail_count++;
 					worker_queue_enqueue(ctx->batch_ctx_freelist, batch_ctx);
 				}
@@ -3144,7 +3155,6 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 	}
 	g_active_test_ctx = NULL;
 
-	osal_atomic_fetch_add(&g_testcase_gen_id, 1);
 	PNSO_LOG_DEBUG("DEBUG: exiting testcase while loop\n");
 
 	if (err == ETIMEDOUT) {

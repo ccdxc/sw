@@ -130,11 +130,8 @@ sonic_intr_db_fired_chk(volatile struct sonic_db_data *db_data,
 static inline bool
 sonic_intr_db_expired_chk(volatile struct sonic_db_data *db_data, uint64_t cur_ts)
 {
-	if (sonic_lif_reset_ctl_pending(sonic_get_lif()))
-		return true;
-
-	if (cur_ts) {
-		return (osal_clock_delta(cur_ts, db_data->timestamp) > SONIC_EV_WORK_EXPIRED_TIMEOUT);
+	if (cur_ts && db_data->db_timestamp) {
+		return (osal_clock_delta(cur_ts, db_data->db_timestamp) > SONIC_EV_WORK_EXPIRED_TIMEOUT);
 	}
 
 	return false;
@@ -208,7 +205,8 @@ sonic_poll_ev_list(struct sonic_event_list *evl, int budget,
 				}
 				found++;
 				work->found_work = true;
-			} else if (sonic_intr_db_expired_chk(db_data, cur_ts)) {
+			} else if (READ_ONCE(evl->flushing) ||
+				   sonic_intr_db_expired_chk(db_data, cur_ts)) {
 				work->ev_data[found].evid = id;
 				work->ev_data[found].data = usr_data;
 				work->ev_data[found].expired = true;
@@ -324,27 +322,19 @@ static void sonic_ev_work_handler(struct work_struct *work)
 			continue;
 
 		/* poll status */
-#if 0
-		if (!evd->expired) {
-#endif
-			err = pnso_request_poller((void *) evd->data);
-			if (err != EBUSY) {
-				evd->data = 0;
-				sonic_intr_ev_clr(evl, evd->evid);
-				complete_count++;
-				if (err != ETIMEDOUT)
-					swd->reinit_ts = cur_ts;
-			} else {
-				incomplete_count++;
-			}
-#if 0
-		} else {
-			pnso_request_poll_timeout((void *) evd->data);
+		err = pnso_request_poller((void *) evd->data);
+		if (err == EBUSY && evd->expired) {
+			err = pnso_request_poll_timeout((void *) evd->data);
+		}
+		if (err != EBUSY) {
 			evd->data = 0;
 			sonic_intr_ev_clr(evl, evd->evid);
 			complete_count++;
+			if (err != ETIMEDOUT)
+				swd->reinit_ts = cur_ts;
+		} else {
+			incomplete_count++;
 		}
-#endif
 	}
 
 	//if (complete_count == 0 || incomplete_count > 0 ||
@@ -483,13 +473,14 @@ irqreturn_t sonic_async_ev_isr(int irq, void *evlptr)
 	return IRQ_HANDLED;
 }
 
-uint64_t sonic_intr_get_db_addr(struct per_core_resource *pc_res,
-		uint64_t usr_data)
+uint16_t sonic_intr_get_ev_id(struct per_core_resource *pc_res,
+			      uint64_t usr_data, uint64_t *paddr)
 {
 	struct sonic_event_list *evl = pc_res->evl;
 	volatile struct sonic_db_data *db_data;
 	uint32_t evid;
 
+	*paddr = 0;
 	if (sonic_lif_reset_ctl_pending(pc_res->lif))
 		return 0;
 
@@ -506,25 +497,42 @@ uint64_t sonic_intr_get_db_addr(struct per_core_resource *pc_res,
 	OSAL_LOG_DEBUG("Successfully allocated evid %u", evid);
 
 	db_data = evid_to_db_va(evl, evid);
-	db_data->timestamp = osal_get_clock_nsec();
+	db_data->db_timestamp = 0; /* set in sonic_intr_touch_db_addr */
 	db_data->usr_data = usr_data;
 	db_data->primed = sonic_intr_get_fire_data32();
-	return sonic_hostpa_to_devpa((uint64_t) evid_to_db_pa(evl, evid) +
+	*paddr = sonic_hostpa_to_devpa((uint64_t) evid_to_db_pa(evl, evid) +
 				     offsetof(struct sonic_db_data, fired));
+	return (uint16_t) (evid + 1); /* convert 0-based to 1-based */
 }
 
-void sonic_intr_put_db_addr(struct per_core_resource *pc_res, uint64_t addr)
+void sonic_intr_put_ev_id(struct per_core_resource *pc_res, uint16_t id)
 {
 	struct sonic_event_list *evl = pc_res->evl;
 	uint32_t evid;
 
-	if (!evl || !evl->db_base)
+	if (!evl || !evl->db_base || !id)
 		return;
+	evid = (uint32_t) id - 1; /* change from 1-based to 0-based */
 
-	addr -= offsetof(struct sonic_db_data, fired);
-	evid = db_pa_to_evid(evl, sonic_devpa_to_hostpa(addr));
 	if (evid < evl->size_ev_bmp) {
 		sonic_intr_ev_clr(evl, evid);
+	}
+}
+
+/* Update timestamp of db_data */
+void sonic_intr_touch_ev_id(struct per_core_resource *pc_res, uint16_t id)
+{
+	volatile struct sonic_db_data *db_data;
+	struct sonic_event_list *evl = pc_res->evl;
+	uint32_t evid;
+
+	if (!evl || !evl->db_base || !id)
+		return;
+	evid = (uint32_t) id - 1; /* convert from 1-based to 0-based */
+
+	if (evid < evl->size_ev_bmp) {
+		db_data = evid_to_db_va(evl, evid);
+		db_data->db_timestamp = osal_get_clock_nsec();
 	}
 }
 
@@ -541,6 +549,8 @@ void sonic_flush_ev_list(struct per_core_resource *pc_res)
 		return;
 	}
 
+	WRITE_ONCE(pc_res->evl->flushing, true);
+
 	if (sonic_get_evid_count(pc_res->evl) > 0) {
 		OSAL_LOG_NOTICE("Flushing async event list");
 
@@ -555,6 +565,8 @@ void sonic_flush_ev_list(struct per_core_resource *pc_res)
 			msleep(10);
 		}
 	}
+
+	WRITE_ONCE(pc_res->evl->flushing, false);
 }
 
 void sonic_disable_ev_list(struct per_core_resource *pc_res)

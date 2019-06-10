@@ -763,7 +763,7 @@ bat_add_to_batch(struct per_core_resource *pcr,
 		req_svc_type = svc_req->svc[0].svc_type;
 		if (batch_info->bi_svc_type != req_svc_type) {
 			err = EINVAL;
-			OSAL_LOG_DEBUG("batch service type mismatch! batch_svc_type: %d req_svc_type: %d err: %d",
+			OSAL_LOG_WARN("batch service type mismatch! batch_svc_type: %d req_svc_type: %d err: %d",
 					batch_info->bi_svc_type,
 					req_svc_type, err);
 			goto out_batch;
@@ -863,15 +863,25 @@ clear_batch_page_cflag(struct batch_page *bp, uint16_t cflag)
 }
 
 static pnso_error_t
-execute_batch(struct batch_info *batch_info, bool is_sync_mode)
+execute_batch(struct batch_info *batch_info)
 {
 	pnso_error_t err = EINVAL;
+	struct per_core_resource *pcr;
 	struct service_chain *first_chain, *last_chain;
 	struct chain_entry *first_ce, *last_ce;
 	uint32_t idx;
 	uint32_t num_entries;
+	uint16_t async_evid;
+	bool is_sync_mode = (batch_info->bi_flags & BATCH_BFLAG_MODE_SYNC) != 0;
+
+	pcr = batch_info->bi_pcr;
 
 	OSAL_LOG_DEBUG("enter ...");
+
+	/* get last chain's last service of the batch */
+	last_chain = chn_get_last_service_chain(batch_info);
+	last_ce = chn_get_last_centry(last_chain);
+	async_evid = last_chain->sc_async_evid;
 
 	num_entries = batch_info->bi_num_entries;
 	for (idx = 0; idx < num_entries; idx += MAX_PAGE_ENTRIES) {
@@ -896,12 +906,10 @@ execute_batch(struct batch_info *batch_info, bool is_sync_mode)
 
 	if (!is_sync_mode) {
 		OSAL_LOG_DEBUG("in non-sync mode ...");
+		if (async_evid)
+			sonic_intr_touch_ev_id(pcr, async_evid);
 		goto done;
 	}
-
-	/* get last chain's last service of the batch */
-	last_chain = chn_get_last_service_chain(batch_info);
-	last_ce = chn_get_last_centry(last_chain);
 
 	/* poll on last chain's last service of the batch */
 	err = last_ce->ce_svc_info.si_ops.poll(&last_ce->ce_svc_info);
@@ -962,7 +970,7 @@ bat_flush_batch(struct request_params *req_params)
 	}
 
 	is_sync_mode = (batch_info->bi_flags & BATCH_BFLAG_MODE_SYNC) != 0;
-	err = execute_batch(batch_info, is_sync_mode);
+	err = execute_batch(batch_info);
 	if (err) {
 		OSAL_LOG_DEBUG("batch/execute failed! err: %d", err);
 		goto out;

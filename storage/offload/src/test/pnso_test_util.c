@@ -10,6 +10,9 @@
 #else
 #include <kcompat.h>
 #endif
+#ifdef __KERNEL__
+#include <linux/log2.h>
+#endif
 #include "osal_stdtypes.h"
 #include "osal_random.h"
 #include "osal_assert.h"
@@ -32,6 +35,26 @@ uint32_t roundup_len(uint32_t len, uint32_t block_size)
 {
 	return roundup_block_count(len, block_size) * block_size;
 }
+
+#ifdef __KERNEL__
+uint32_t roundup_pow2(uint32_t len)
+{
+	return roundup_pow_of_two(len);
+}
+#else
+static bool is_pow2(uint32_t len)
+{
+	return (len > 0) && ((len & (len - 1)) == 0);
+}
+
+uint32_t roundup_pow2(uint32_t len)
+{
+	while (!is_pow2(len))
+		len++;
+
+	return len;
+}
+#endif
 
 /* fill buflist with a repeat of the given data */
 void test_fill_buflist(struct pnso_buffer_list *buflist,

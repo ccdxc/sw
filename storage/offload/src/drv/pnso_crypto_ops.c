@@ -431,6 +431,9 @@ crypto_enable_interrupt(struct service_info *svc_info,
 	struct crypto_chain_params	*crypto_chain;
 	struct per_core_resource	*pcr;
 	pnso_error_t			err = PNSO_OK;
+	struct service_chain		*chain;
+
+	chain = svc_info->si_centry->ce_chain_head;
 
 	/*
 	 * HW lacks ability to signal per-descriptor interrupt so P4+ chainer
@@ -444,11 +447,12 @@ crypto_enable_interrupt(struct service_info *svc_info,
 		OSAL_LOG_DEBUG("pcr: 0x"PRIx64" poll_ctx: 0x"PRIx64,
 			       (uint64_t)pcr, (uint64_t)poll_ctx);
 
-		crypto_chain->ccp_next_db_spec.nds_addr =
-			sonic_intr_get_db_addr(pcr, (uint64_t)poll_ctx);
-		if (!crypto_chain->ccp_next_db_spec.nds_addr) {
+		chain->sc_async_evid = sonic_intr_get_ev_id(pcr,
+				(uint64_t)poll_ctx,
+				&crypto_chain->ccp_next_db_spec.nds_addr);
+		if (!chain->sc_async_evid) {
 			err = EINVAL;
-			OSAL_LOG_DEBUG("crypto failed sonic_intr_get_db_addr err: %d",
+			OSAL_LOG_DEBUG("crypto failed sonic_intr_get_ev_id err: %d",
 				       err);
 			goto out;
 		}
@@ -472,31 +476,6 @@ crypto_enable_interrupt(struct service_info *svc_info,
 	}
 out:
 	return  err;
-}
-
-static void
-crypto_disable_interrupt(struct service_info *svc_info)
-{
-	struct crypto_chain_params	*crypto_chain;
-	struct per_core_resource	*pcr;
-
-	/*
-	 * HW lacks ability to signal per-descriptor interrupt so P4+ chainer
-	 * will be used for that purpose. Also note that when a chain successor
-	 * is present, that service will take care of setting up the interrupt.
-	 */
-	OSAL_ASSERT(chn_service_is_mode_async(svc_info));
-	if (!chn_service_has_sub_chain(svc_info)) {
-		crypto_chain = &svc_info->si_crypto_chain;
-		pcr = svc_info->si_pcr;
-		OSAL_LOG_DEBUG("pcr: 0x"PRIx64,
-			       (uint64_t)pcr);
-		if (crypto_chain->ccp_next_db_spec.nds_addr &&
-		    crypto_chain->ccp_cmd.ccpc_intr_en) {
-			sonic_intr_put_db_addr(pcr,
-				crypto_chain->ccp_next_db_spec.nds_addr);
-		}
-	}
 }
 
 static pnso_error_t
@@ -591,6 +570,7 @@ crypto_write_result(struct service_info *svc_info)
 
 	svc_status = svc_info->si_svc_status;
 	if (svc_status->svc_type != svc_info->si_type) {
+		svc_status->err = err;
 		OSAL_LOG_ERROR("service type mismatch! svc_type: %d si_type: %d err: %d",
 			svc_status->svc_type, svc_info->si_type, err);
 		goto out;
@@ -673,7 +653,6 @@ struct service_ops encrypt_ops = {
 	.sub_chain_from_cpdc = crypto_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = crypto_sub_chain_from_crypto,
 	.enable_interrupt = crypto_enable_interrupt,
-	.disable_interrupt = crypto_disable_interrupt,
 	.ring_db = crypto_ring_db,
 	.poll = crypto_poll,
 	.write_result = crypto_write_result,
@@ -686,7 +665,6 @@ struct service_ops decrypt_ops = {
 	.sub_chain_from_cpdc = crypto_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = crypto_sub_chain_from_crypto,
 	.enable_interrupt = crypto_enable_interrupt,
-	.disable_interrupt = crypto_disable_interrupt,
 	.ring_db = crypto_ring_db,
 	.poll = crypto_poll,
 	.write_result = crypto_write_result,

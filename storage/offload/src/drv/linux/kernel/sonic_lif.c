@@ -1293,6 +1293,11 @@ static void sonic_lif_per_core_resource_pre_reset(struct per_core_resource *res)
 	if (!res)
 		return;
 
+	/* Reserve exclusive briefly to clear out all submitters */
+	sonic_reserve_exclusive_per_core_res(res);
+	sonic_unreserve_exclusive_per_core_res(res);
+
+	/* Must not reserve exclusive here */
 	sonic_flush_ev_list(res);
 }
 

@@ -253,12 +253,6 @@ decompress_enable_interrupt(struct service_info *svc_info, void *poll_ctx)
 	return cpdc_setup_interrupt_params(svc_info, poll_ctx);
 }
 
-static void
-decompress_disable_interrupt(struct service_info *svc_info)
-{
-	return cpdc_cleanup_interrupt_params(svc_info);
-}
-
 static pnso_error_t
 decompress_ring_db(struct service_info *svc_info)
 {
@@ -303,6 +297,7 @@ decompress_write_result(struct service_info *svc_info)
 
 	svc_status = svc_info->si_svc_status;
 	if (svc_status->svc_type != svc_info->si_type) {
+		svc_status->err = err;
 		OSAL_LOG_ERROR("service type mismatch! svc_type: %d si_type: %d err: %d",
 			svc_status->svc_type,  svc_info->si_type, err);
 		goto out;
@@ -386,7 +381,6 @@ struct service_ops dc_ops = {
 	.sub_chain_from_cpdc = decompress_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = decompress_sub_chain_from_crypto,
 	.enable_interrupt = decompress_enable_interrupt,
-	.disable_interrupt = decompress_disable_interrupt,
 	.ring_db = decompress_ring_db,
 	.poll = decompress_poll,
 	.write_result = decompress_write_result,

@@ -992,6 +992,10 @@ cpdc_setup_interrupt_params(struct service_info *svc_info, void *poll_ctx)
 	pnso_error_t err = PNSO_OK;
 	struct cpdc_desc *cp_desc;
 	struct per_core_resource *pcr;
+	struct service_chain *chain;
+	uint64_t db_addr;
+
+	chain = svc_info->si_centry->ce_chain_head;
 
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
 	pcr = svc_info->si_pcr;
@@ -1012,14 +1016,16 @@ cpdc_setup_interrupt_params(struct service_info *svc_info, void *poll_ctx)
 	cp_desc->u.cd_bits.cc_otag_on = 1;
 
 	if (chn_service_is_cp_padding_applic(svc_info)) {
-		cp_desc->cd_otag_addr =
-			sonic_intr_get_db_addr(pcr, (uint64_t) poll_ctx);
-		if (!cp_desc->cd_otag_addr) {
+		chain->sc_async_evid = sonic_intr_get_ev_id(pcr,
+							(uint64_t) poll_ctx,
+							&db_addr);
+		if (!chain->sc_async_evid) {
 			err = EINVAL;
-			OSAL_LOG_DEBUG("cp/pad failed to get db addr err: %d",
+			OSAL_LOG_DEBUG("cp/pad failed to get async event err: %d",
 					err);
 			goto out;
 		}
+		cp_desc->cd_otag_addr = db_addr;
 		cp_desc->cd_otag_data = sonic_intr_get_fire_data32();
 
 		cpdc_chain = &svc_info->si_cpdc_chain;
@@ -1032,14 +1038,16 @@ cpdc_setup_interrupt_params(struct service_info *svc_info, void *poll_ctx)
 			OSAL_LOG_ERROR("failed setup chain status desc: err %d",
 					err);
 	} else {
-		cp_desc->cd_db_addr = (uint64_t) sonic_intr_get_db_addr(pcr,
-				(uint64_t) poll_ctx);
-		if (!cp_desc->cd_db_addr) {
+		chain->sc_async_evid = sonic_intr_get_ev_id(pcr,
+						(uint64_t) poll_ctx,
+						&db_addr);
+		if (!chain->sc_async_evid) {
 			err = EINVAL;
 			OSAL_LOG_DEBUG("failed to get db addr err: %d", err);
 			goto out;
 		}
 
+		cp_desc->cd_db_addr = db_addr;
 		cp_desc->u.cd_bits.cc_db_on = 1;
 		cp_desc->cd_db_data = sonic_intr_get_fire_data64();
 
@@ -1050,35 +1058,6 @@ cpdc_setup_interrupt_params(struct service_info *svc_info, void *poll_ctx)
 
 out:
 	return  err;
-}
-
-void
-cpdc_cleanup_interrupt_params(struct service_info *svc_info)
-{
-	struct cpdc_desc *cp_desc;
-	struct per_core_resource *pcr;
-
-	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
-	if (!cp_desc)
-		return;
-	pcr = svc_info->si_pcr;
-
-	OSAL_LOG_DEBUG("cp_desc: 0x" PRIx64 " pcr: 0x" PRIx64,
-			(uint64_t) cp_desc, (uint64_t) pcr);
-
-	if (!cp_desc->u.cd_bits.cc_otag_on)
-		return;
-
-	if ((svc_info->si_type == PNSO_SVC_TYPE_COMPRESS) &&
-		(svc_info->si_desc_flags & PNSO_CP_DFLAG_ZERO_PAD)) {
-		if (cp_desc->cd_otag_addr) {
-			sonic_intr_put_db_addr(pcr, cp_desc->cd_otag_addr);
-		}
-	} else {
-		if (cp_desc->cd_db_addr && cp_desc->u.cd_bits.cc_db_on) {
-			sonic_intr_put_db_addr(pcr, cp_desc->cd_db_addr);
-		}
-	}
 }
 
 void

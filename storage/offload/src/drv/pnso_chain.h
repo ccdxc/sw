@@ -139,7 +139,6 @@ struct service_ops {
 	/* configure the service for async/interrupt handling */
 	pnso_error_t (*enable_interrupt)(struct service_info *svc_info,
 			void *poll_ctx);
-	void (*disable_interrupt)(struct service_info *svc_info);
 
 	/* a NULL-op for all services except the first within the chain */
 	pnso_error_t (*ring_db)(struct service_info *svc_info);
@@ -295,6 +294,7 @@ struct service_chain {
 	uint16_t sc_flags;		/* chain flags (CFLAGS) */
 	uint16_t sc_gen_id;		/* generation id */
 	uint16_t sc_num_services;	/* number of services in the chain */
+	uint16_t sc_async_evid;		/* async interrupt based event id, or 0 */
 	uint32_t sc_req_id;		/* unique request id */
 	uint64_t sc_poll_ts;		/* first poll timestamp */
 

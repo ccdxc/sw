@@ -87,6 +87,7 @@ int test_compare_file_data(const char *path, uint32_t offset, uint32_t len,
 /* Functions in pnso_test_util.c */
 uint32_t roundup_block_count(uint32_t len, uint32_t block_size);
 uint32_t roundup_len(uint32_t len, uint32_t block_size);
+uint32_t roundup_pow2(uint32_t len);
 uint32_t safe_itoa(char *dst, uint32_t dst_len, uint64_t val);
 uint32_t safe_strcpy_tolower(char *dst, const char *src, uint32_t max_len);
 uint32_t safe_strcpy(char *dst, const char *src, uint32_t max_len);

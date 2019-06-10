@@ -212,12 +212,6 @@ out:
 	return err;
 }
 
-static void
-hash_disable_interrupt(struct service_info *svc_info)
-{
-	return cpdc_cleanup_interrupt_params(svc_info);
-}
-
 static pnso_error_t
 hash_ring_db(struct service_info *svc_info)
 {
@@ -287,6 +281,7 @@ hash_write_result(struct service_info *svc_info)
 	obj_size = cpdc_get_status_desc_size();
 	svc_status = svc_info->si_svc_status;
 	if (svc_status->svc_type != svc_info->si_type) {
+		svc_status->err = err;
 		OSAL_LOG_ERROR("service type mismatch! svc_type: %d si_type: %d err: %d",
 			svc_status->svc_type, svc_info->si_type, err);
 		goto out;
@@ -384,7 +379,6 @@ struct service_ops hash_ops = {
 	.sub_chain_from_cpdc = hash_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = hash_sub_chain_from_crypto,
 	.enable_interrupt = hash_enable_interrupt,
-	.disable_interrupt = hash_disable_interrupt,
 	.ring_db = hash_ring_db,
 	.poll = hash_poll,
 	.write_result = hash_write_result,

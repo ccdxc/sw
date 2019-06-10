@@ -190,7 +190,8 @@ struct testcase_stats {
 union callback_context {
 	uint64_t val;
 	struct {
-		uint32_t gen_id;
+		uint16_t gen_id;
+		uint16_t test_id;
 		uint32_t batch_id;
 	} s;
 };
@@ -228,6 +229,7 @@ struct worker_queue {
 	uint32_t head;
 	uint32_t tail;
 	uint32_t max_count;
+	uint32_t idx_mask;
 	uint64_t enqueue_count;
 	uint64_t enqueue_full_count;
 	uint64_t enqueue_empty_count;
@@ -259,7 +261,7 @@ static inline struct batch_context *_worker_queue_dequeue(struct worker_queue *q
 {
 	struct batch_context *batch;
 
-	batch = q->batch_ctxs[q->tail % q->max_count];
+	batch = q->batch_ctxs[q->tail & q->idx_mask];
 	q->tail++;
 	osal_atomic_fetch_sub(&q->atomic_count, 1);
 	q->dequeue_count++;
@@ -294,7 +296,7 @@ static inline struct batch_context *worker_queue_dequeue_safe(struct worker_queu
 static inline void _worker_queue_enqueue(struct worker_queue *q,
 					 struct batch_context *batch)
 {
-	q->batch_ctxs[q->head % q->max_count] = batch;
+	q->batch_ctxs[q->head & q->idx_mask] = batch;
 	q->head++;
 	osal_atomic_fetch_add(&q->atomic_count, 1);
 	q->enqueue_count++;
@@ -360,7 +362,6 @@ struct testcase_context {
 	uint32_t chain_lb_table_count;
 	uint32_t *chain_lb_table;
 
-	uint32_t gen_id;
 	uint32_t worker_count;
 	struct worker_context *worker_ctxs[TEST_MAX_CORE_COUNT];
 

@@ -121,6 +121,7 @@ pnso_error_t cpdc_setup_interrupt_params(struct service_info *svc_info,
 void cpdc_update_bof_interrupt_params(struct service_info *svc_info);
 
 void cpdc_cleanup_interrupt_params(struct service_info *svc_info);
+void cpdc_update_interrupt_params(struct service_info *svc_info);
 
 void cpdc_update_batch_tags(struct service_info *svc_info,
 		uint32_t num_tags);

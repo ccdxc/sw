@@ -102,8 +102,10 @@ int sonic_accel_ring_give(struct sonic_accel_ring *ring, uint32_t count);
 int sonic_accel_rings_sanity_check(void);
 
 bool sonic_pnso_async_poll(uint64_t data);
-uint64_t sonic_intr_get_db_addr(struct per_core_resource *pc_res, uint64_t usr_data);
-void sonic_intr_put_db_addr(struct per_core_resource *pc_res, uint64_t addr);
+uint16_t sonic_intr_get_ev_id(struct per_core_resource *pc_res,
+			      uint64_t usr_data, uint64_t *paddr);
+void sonic_intr_put_ev_id(struct per_core_resource *pc_res, uint16_t id);
+void sonic_intr_touch_ev_id(struct per_core_resource *pc_res, uint16_t id);
 uint64_t sonic_get_per_core_intr_assert_addr(struct per_core_resource *pc_res);
 
 static inline uint32_t

@@ -30,7 +30,7 @@ struct sonic_event_data {
 
 
 struct sonic_db_data {
-	uint64_t timestamp;
+	uint64_t db_timestamp;
 	uint64_t usr_data;
 	uint32_t fired;		/* 'fired' must immediately */
 	uint32_t primed;	/* precede 'primed' */
@@ -51,6 +51,7 @@ struct sonic_event_list {
 	struct per_core_resource *pc_res;
 	bool			enable;
 	bool			armed;
+	bool			flushing;
 	int			idle_count;
 
 	int			irq;

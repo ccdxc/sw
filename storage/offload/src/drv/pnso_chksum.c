@@ -249,12 +249,6 @@ out:
 	return err;
 }
 
-static void
-chksum_disable_interrupt(struct service_info *svc_info)
-{
-	return cpdc_cleanup_interrupt_params(svc_info);
-}
-
 static pnso_error_t
 chksum_ring_db(struct service_info *svc_info)
 {
@@ -324,6 +318,7 @@ chksum_write_result(struct service_info *svc_info)
 	obj_size = cpdc_get_status_desc_size();
 	svc_status = svc_info->si_svc_status;
 	if (svc_status->svc_type != svc_info->si_type) {
+		svc_status->err = err;
 		OSAL_LOG_ERROR("service type mismatch! svc_type: %d si_type: %d err: %d",
 			svc_status->svc_type, svc_info->si_type, err);
 		goto out;
@@ -424,7 +419,6 @@ struct service_ops chksum_ops = {
 	.sub_chain_from_cpdc = chksum_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = chksum_sub_chain_from_crypto,
 	.enable_interrupt = chksum_enable_interrupt,
-	.disable_interrupt = chksum_disable_interrupt,
 	.ring_db = chksum_ring_db,
 	.poll = chksum_poll,
 	.write_result = chksum_write_result,

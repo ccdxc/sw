@@ -254,6 +254,12 @@ chn_poll_all_services(struct service_chain *chain)
 	OSAL_ASSERT(chain);
 	OSAL_ASSERT(chain->sc_entry);
 
+	if ((chain->sc_flags & CHAIN_CFLAG_RANG_DB) == 0) {
+		/* This race can happen during async timeout */
+		err = EBUSY;
+		goto out;
+	}
+
 	if (chain->sc_num_services != chain->sc_res->num_services) {
 		OSAL_LOG_ERROR("service count mismatch! chain_num_svcs: %d res_num_svcs: %d err %d",
 			       chain->sc_num_services,
@@ -719,7 +725,6 @@ chn_destroy_chain(struct service_chain *chain)
 	struct mem_pool *svc_chain_entry_mpool;
 	struct chain_entry *sc_entry;
 	struct chain_entry *sc_next;
-	struct chain_entry *sc_last;
 	struct service_info *svc_info;
 	uint32_t i;
 
@@ -740,13 +745,10 @@ chn_destroy_chain(struct service_chain *chain)
 	OSAL_ASSERT(svc_chain_entry_mpool);
 
 	if (!(chain->sc_flags & CHAIN_CFLAG_RANG_DB) &&
-	    (chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC)) {
+	    chain->sc_async_evid) {
 		/* cleanup for async mode submission failure */
-		sc_last = chn_get_last_centry(chain);
-		if (sc_last) {
-			svc_info = &sc_last->ce_svc_info;
-			svc_info->si_ops.disable_interrupt(svc_info);
-		}
+		sonic_intr_put_ev_id(pcr, chain->sc_async_evid);
+		chain->sc_async_evid = 0;
 	}
 
 	i = 0;
@@ -1040,6 +1042,7 @@ chn_execute_chain(struct service_chain *chain)
 	pnso_error_t err = EINVAL;
 	struct per_core_resource *pcr = chain->sc_pcr;
 	struct chain_entry *ce_first, *ce_last;
+	uint16_t async_evid;
 	bool is_sync_mode = (chain->sc_flags & CHAIN_CFLAG_MODE_SYNC) != 0;
 
 	PAS_DECL_HW_PERF();
@@ -1051,6 +1054,8 @@ chn_execute_chain(struct service_chain *chain)
 	ce_first = chain->sc_entry;
 	if (!ce_first)
 		goto out;
+	ce_last = chain->sc_last_entry;
+	async_evid = chain->sc_async_evid;
 
 	/* ring 'first' service door bell */
 	chain->sc_flags |= CHAIN_CFLAG_RANG_DB;
@@ -1067,12 +1072,13 @@ chn_execute_chain(struct service_chain *chain)
 	if (!is_sync_mode) {
 		OSAL_LOG_DEBUG("in non-sync mode ... sc_flags: %d",
 				chain->sc_flags);
+		if (async_evid)
+			sonic_intr_touch_ev_id(pcr, async_evid);
 		PAS_END_HW_PERF(pcr);
 		goto out;
 	}
 
 	/* wait for 'last' service completion */
-	ce_last = chain->sc_last_entry;
 	err = ce_last->ce_svc_info.si_ops.poll(&ce_last->ce_svc_info);
 	PAS_END_HW_PERF(pcr);
 	if (err) {
