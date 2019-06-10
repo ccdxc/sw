@@ -13,13 +13,13 @@ namespace sdk {
 namespace table {
 
 #define SLHASH_API_BEGIN(_name) {\
-        SLHASH_TRACE_DEBUG("%s slhash begin: %s %s",\
-                            "--", _name, "--");\
+        SLHASH_TRACE_DEBUG("%s slhash begin: %s: %s %s",\
+                            "--", __FUNCTION__, _name, "--");\
 }
 
 #define SLHASH_API_END(_name, _status) {\
-        SLHASH_TRACE_DEBUG("%s slhash end: %s (r:%d) %s",\
-                            "--", _name, _status, "--");\
+        SLHASH_TRACE_DEBUG("%s slhash end: %s %s (r:%d) %s",\
+                            "--", __FUNCTION__, _name, _status, "--");\
 }
 
 #define SLHASH_API_BEGIN_() {\
@@ -162,6 +162,7 @@ __label__ done, outhandle;
 outhandle:
     // Save the handle
     params->handle = ctx_.outhandle();
+    SLHASH_TRACE_DEBUG("Handle: %s", params->handle.tostr());
 
 done:
     SLHASH_API_END_(ret);
@@ -400,6 +401,7 @@ __label__ done, outhandle;
 outhandle:
     // Save the handle
     params->handle = ctx_.outhandle();
+    SLHASH_TRACE_DEBUG("Handle: %s", params->handle.tostr());
 
 done:
     SLHASH_API_END_(ret);

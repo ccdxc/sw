@@ -13,7 +13,7 @@ fi
 
 set -e
 # PI gtests
-export PATH=${PATH}:${NICDIR}/build/x86_64/apollo/bin
+export PATH=${PATH}:${NICDIR}/build/x86_64/artemis/bin
 echo "Starting " `which ftl_test`
 sleep 1
 $ARGS ftl_test $*

@@ -188,13 +188,13 @@ slhctx::print_sw() {
 void
 slhctx::print_params() {
     if (params) {
-        SLHASH_TRACE_VERBOSE("Input Params");
+        SLHASH_TRACE_DEBUG("Input Params");
         printbytes("Key", props->key2str, params->key, props->swkey_len);
         printbytes("Mask", props->key2str, params->mask, props->swkey_len);
         printbytes("Data", props->data2str, params->appdata, props->swdata_len);
-        SLHASH_TRACE_VERBOSE("Handle: %s", params->handle.tostr());
+        SLHASH_TRACE_DEBUG("Handle: %s", params->handle.tostr());
         if (params->hash_valid) {
-            SLHASH_TRACE_VERBOSE("Hash32b:%#x", params->hash_32b);
+            SLHASH_TRACE_DEBUG("Hash32b:%#x", params->hash_32b);
         }
     }
 }
