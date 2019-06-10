@@ -32,9 +32,9 @@ $GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json
 echo "Running device test"
 $GDB device_test -c hal.json -f apollo --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_device_test.xml" > apollo_device_test.log.txt
 [[ $? -ne 0 ]] && echo "apollo_device_test failed!" && exit 1
-echo "Running vpc test"
-$GDB apollo_vpc_test -c hal.json -f apollo --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_vpc_test.xml" > apollo_vpc_test.log.txt
-[[ $? -ne 0 ]] && echo "apollo_vpc_test failed!" && exit 1
+#echo "Running vpc test"
+#$GDB apollo_vpc_test -c hal.json -f apollo --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_vpc_test.xml" > apollo_vpc_test.log.txt
+#[[ $? -ne 0 ]] && echo "apollo_vpc_test failed!" && exit 1
 echo "Running subnet test"
 $GDB apollo_subnet_test -c hal.json -f apollo --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_subnet_test.xml" > apollo_subnet_test.log.txt
 [[ $? -ne 0 ]] && echo "apollo_subnet_test failed!" && exit 1

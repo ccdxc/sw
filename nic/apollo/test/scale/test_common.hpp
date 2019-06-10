@@ -15,7 +15,8 @@
 #include "nic/apollo/api/include/pds_mirror.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 
-#define TESTAPP_METER_NUM_PREFIXES 16
+#define TESTAPP_METER_NUM_PREFIXES        16
+#define TESTAPP_SWITCH_VNIC_VLAN          128
 
 namespace pt = boost::property_tree;
 

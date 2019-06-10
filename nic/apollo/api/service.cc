@@ -120,7 +120,7 @@ svc_mapping::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 svc_mapping::activate_config(pds_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_INVALID_OP;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

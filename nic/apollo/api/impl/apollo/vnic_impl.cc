@@ -64,9 +64,12 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     hw_id_ = idx;
 
     // reserve an entry in LOCAL_VNIC_BY_VLAN_TX table
-    SDK_ASSERT(spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q);
-    local_vnic_by_vlan_tx_key.ctag_1_vid = spec->vnic_encap.val.vlan_tag;
-    local_vnic_by_vlan_tx_mask.ctag_1_vid_mask = ~0;
+    if (spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) {
+        local_vnic_by_vlan_tx_key.ctag_1_vid = spec->vnic_encap.val.vlan_tag;
+        local_vnic_by_vlan_tx_mask.ctag_1_vid_mask = ~0;
+    } else {
+        // switch vnic, vlan is don't care
+    }
     tparams.key = &local_vnic_by_vlan_tx_key;
     tparams.mask = &local_vnic_by_vlan_tx_mask;
     tparams.handle = sdk::table::handle_t::null();
@@ -155,46 +158,48 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_INVALID_ARG;
     }
 
-    // initialize tx stats tables for this vnic
-    vnic_tx_stats_data.action_id = VNIC_TX_STATS_VNIC_TX_STATS_ID;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VNIC_TX_STATS,
-                                       hw_id_, NULL, NULL,
-                                       &vnic_tx_stats_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        return sdk::SDK_RET_HW_PROGRAM_ERR;
-    }
+    if (!spec->switch_vnic) {
+        // initialize tx stats tables for this vnic
+        vnic_tx_stats_data.action_id = VNIC_TX_STATS_VNIC_TX_STATS_ID;
+        p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VNIC_TX_STATS,
+                                           hw_id_, NULL, NULL,
+                                           &vnic_tx_stats_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            return sdk::SDK_RET_HW_PROGRAM_ERR;
+        }
 
-    // initialize egress_local_vnic_info_table entry
-    egress_vnic_data.action_id =
-        EGRESS_LOCAL_VNIC_INFO_EGRESS_LOCAL_VNIC_INFO_ID;
-    sdk::lib::memrev(egress_vnic_data.egress_local_vnic_info_action.vr_mac,
-                     subnet->vr_mac(), ETH_ADDR_LEN);
-    sdk::lib::memrev(egress_vnic_data.egress_local_vnic_info_action.overlay_mac,
-                     spec->mac_addr, ETH_ADDR_LEN);
+        // initialize egress_local_vnic_info_table entry
+        egress_vnic_data.action_id =
+            EGRESS_LOCAL_VNIC_INFO_EGRESS_LOCAL_VNIC_INFO_ID;
+        sdk::lib::memrev(egress_vnic_data.egress_local_vnic_info_action.vr_mac,
+                         subnet->vr_mac(), ETH_ADDR_LEN);
+        sdk::lib::memrev(egress_vnic_data.egress_local_vnic_info_action.overlay_mac,
+                         spec->mac_addr, ETH_ADDR_LEN);
 
-    // assert to support only dot1q encap for now
-    SDK_ASSERT(spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q);
-    egress_vnic_data.egress_local_vnic_info_action.overlay_vlan_id =
-        spec->vnic_encap.val.vlan_tag;
+        // assert to support only dot1q encap for now
+        SDK_ASSERT(spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q);
+        egress_vnic_data.egress_local_vnic_info_action.overlay_vlan_id =
+            spec->vnic_encap.val.vlan_tag;
 
-    egress_vnic_data.egress_local_vnic_info_action.subnet_id =
-        subnet->hw_id();
-    if (spec->fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
-        egress_vnic_data.egress_local_vnic_info_action.src_slot_id =
-            spec->fabric_encap.val.mpls_tag;
-    } else if (spec->fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
-        egress_vnic_data.egress_local_vnic_info_action.src_slot_id =
-            spec->fabric_encap.val.vnid;
-    }
-    if (spec->rx_mirror_session_bmap) {
-        egress_vnic_data.egress_local_vnic_info_action.mirror_en = TRUE;
-        egress_vnic_data.egress_local_vnic_info_action.mirror_session =
-            spec->rx_mirror_session_bmap;
-    }
-    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->insert_atid(&egress_vnic_data,
-                                                                    hw_id_);
-    if (ret != SDK_RET_OK) {
-        return ret;
+        egress_vnic_data.egress_local_vnic_info_action.subnet_id =
+            subnet->hw_id();
+        if (spec->fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
+            egress_vnic_data.egress_local_vnic_info_action.src_slot_id =
+                spec->fabric_encap.val.mpls_tag;
+        } else if (spec->fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
+            egress_vnic_data.egress_local_vnic_info_action.src_slot_id =
+                spec->fabric_encap.val.vnid;
+        }
+        if (spec->rx_mirror_session_bmap) {
+            egress_vnic_data.egress_local_vnic_info_action.mirror_en = TRUE;
+            egress_vnic_data.egress_local_vnic_info_action.mirror_session =
+                spec->rx_mirror_session_bmap;
+        }
+        ret = vnic_impl_db()->egress_local_vnic_info_tbl()->insert_atid(&egress_vnic_data,
+                                                                        hw_id_);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
     }
 
     // initialize rx stats tables for this vnic
@@ -336,9 +341,12 @@ vnic_impl::activate_vnic_by_vlan_tx_table_create_(pds_epoch_t epoch,
     }
 
     // assert to support only dot1q encap for host
-    SDK_ASSERT(spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q);
-    vnic_by_vlan_key.ctag_1_vid = spec->vnic_encap.val.vlan_tag;
-    vnic_by_vlan_mask.ctag_1_vid_mask = ~0;
+    if (spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) {
+        vnic_by_vlan_key.ctag_1_vid = spec->vnic_encap.val.vlan_tag;
+        vnic_by_vlan_mask.ctag_1_vid_mask = ~0;
+    } else {
+        // switch vnic, vlan is don't care
+    }
     api_params.key = &vnic_by_vlan_key;
     api_params.mask = &vnic_by_vlan_mask;
     api_params.appdata = &vnic_by_vlan_data;

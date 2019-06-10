@@ -573,7 +573,6 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                 MAC_UINT64_TO_ADDR(pds_vnic.mac_addr,
                                    (((((uint64_t)i & 0x7FF) << 22) |
                                      ((j & 0x7FF) << 11) | (k & 0x7FF))));
-
 #if 0
                 // Provider MAC ADDR bits based as below
                 // vnic:   bits  0 - 10
@@ -614,6 +613,34 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
             }
         }
     }
+
+    if (g_test_params.artemis()) {
+        // create a bridge vnic in the infra/provider/public vrf
+        memset(&pds_vnic, 0, sizeof(pds_vnic));
+        pds_vnic.vpc.id = num_vpcs + 1;
+        pds_vnic.subnet.id = PDS_SUBNET_ID(((num_vpcs + 1) - 1), 1, 1);
+        pds_vnic.key.id = vnic_key;
+        pds_vnic.vnic_encap.type = PDS_ENCAP_TYPE_NONE;
+        pds_vnic.vnic_encap.val.value = 0;
+        pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_DOT1Q;
+        pds_vnic.fabric_encap.val.value = TESTAPP_SWITCH_VNIC_VLAN;
+        MAC_UINT64_TO_ADDR(pds_vnic.mac_addr,
+                           (((((uint64_t)pds_vnic.vpc.id & 0x7FF) << 22) |
+                             ((1 & 0x7FF) << 11) | (1 & 0x7FF))));
+        pds_vnic.switch_vnic = true;
+#ifdef TEST_GRPC_APP
+        rv = create_vnic_grpc(&pds_vnic);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+#else
+        rv = pds_vnic_create(&pds_vnic);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+#endif
+    }
+
 #ifdef TEST_GRPC_APP
     // Batching: push leftover objects
     rv = create_vnic_grpc(NULL);
@@ -1448,7 +1475,6 @@ create_objects (void)
     if (ret != SDK_RET_OK) {
         exit(1);
     }
-
 #ifndef TEST_GRPC_APP
     g_flow_test_obj = new flow_test(&g_test_params);
 #endif
