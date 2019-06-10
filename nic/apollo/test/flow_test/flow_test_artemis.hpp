@@ -527,7 +527,52 @@ public:
         }
         memset(&actiondata, 0, sizeof(session_actiondata_t));
         actiondata.action_id = SESSION_SESSION_INFO_ID;
-        if (vpc == 63) {
+        if (vpc == 61) {
+            // VPC 61 is used for Scenario1-SLB in/out traffic (DSR case)
+            // Tx path:
+            //     SMAC is rewritten with host MAC (table constant)
+            //     DMAC is from NH (from routing table)
+            //     (CA) SIP is xlated to VIP
+            //     DIP is unchanged
+            //     sport is xlated svc port
+            //     dport are unchanged
+            //     no vxlan encap is added
+            // Rx path:
+            //     Packet received is vxlan encapped
+            //     remove the vxlan encap
+            //     SMACi rewritten with VR MAC
+            //     DMACi rewritten with VNIC's MAC
+            //     SIPi untouched
+            //     DIPi rewritten with CA IP of vnic
+            //     sport is untouched
+            //     dport is rewritten with xlated port from service mapping
+            //     packet sent to vnic with appropriate vlan tag
+            actiondata.action_u.session_session_info.nexthop_idx = inh_idx++;
+            if (inh_idx > this->test_params->num_nh) {
+                inh_idx = 1;
+            }
+            actiondata.action_u.session_session_info.tx_rewrite_flags = 0x45;
+            actiondata.action_u.session_session_info.rx_rewrite_flags = 0x61;
+#if 0
+        } if (vpc == 62) {
+            // VPC 62 is used for scenario1-ILB in/out traffic
+            // Tx path:
+            //     SMACi is rewritten with VR_MAC (EGRESS_VNIC_INFO table)
+            //     - TBD: ToR expected to do this
+            //     DMACi is rewritten with IGW/LPM MAC (NEXTHOP table)
+            //     SIPi, DIPi, L4 ports are unchanged
+            //     Vxlan encap is added on the way out
+            //     Packet goes out untagged
+            // Rx path:
+            //     Packet received is vxlan packet with no outer vlan
+            //     Vxlan is stripped out
+            //     Inner packet is untouched
+            //     - TBD: what about DMACi ? Do we assume otherside put
+            //            the right DMACi in this case ?
+            //     Packet goes out with vnic' vlan (EGRESS_VNIC_INFO table)
+            // NH indices in this case should be between 1-1022 (NH_TYPE_IP)
+#endif
+        } else if (vpc == 63) {
             // VPC 63 is used for scenario2-Internet in/out traffic
             // Tx path:
             //     SMAC is rewritten with VR_MAC (EGRESS_VNIC_INFO table)
