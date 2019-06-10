@@ -7,7 +7,7 @@ import { LDAPCheckResponse, LDAPCheckType } from '@app/components/settings-group
 import { AuthPolicyUtil } from '@app/components/settings-group/authpolicy/AuthPolicyUtil';
 import { ControllerService } from '@app/services/controller.service';
 import { AuthService } from '@app/services/generated/auth.service';
-import { AuthAuthenticationPolicy, AuthLdap, IApiStatus, IAuthAuthenticationPolicy, AuthAuthenticators_authenticator_order, AuthRadius } from '@sdk/v1/models/generated/auth';
+import { AuthAuthenticationPolicy, AuthLdap, IApiStatus, IAuthAuthenticationPolicy, AuthAuthenticators_authenticator_order, AuthRadius, IAuthTokenSecretRequest, AuthTokenSecretRequest } from '@sdk/v1/models/generated/auth';
 import { Observable } from 'rxjs';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 
@@ -72,7 +72,15 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
         callback: () => {
           this.getAuthenticationPolicy();
         }
+      },
+      {
+        cssClass: 'global-button-primary authpolicy-toolbar-button',
+        text: 'New Authorization Token',
+        callback: () => {
+          this.onGenerate();
+        }
       }
+
     ];
     if (rankChanged === true) {
       const saveRankChange = {
@@ -98,6 +106,32 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
         this.authPolicy = new AuthAuthenticationPolicy(body);
       },
       this._controllerService.restErrorHandler('Failed to get Authentication Policy')
+    );
+  }
+
+  onGenerate() {
+    this._controllerService.invokeConfirm({
+      header: 'Please confirm that you want to generate a new authorization token',
+      message: 'System will log out all users after the token is generated',
+      acceptLabel: 'Yes',
+      accept: () => {
+        this.generateToken();
+      }
+    });
+  }
+  generateToken() {
+    const tokenrequest: IAuthTokenSecretRequest = new AuthTokenSecretRequest();
+    const processor = this._authService.TokenSecretGenerate(tokenrequest);
+    processor.subscribe(
+      (response) => {
+        this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, 'Generated new token successfully. All users will be logged out in 3 seconds');
+        this.setupToolbarItems();
+        const setTime1 = window.setTimeout(() => {
+          this._controllerService.publish(Eventtypes.LOGOUT, { 'reason': 'Authentication Policy Update.' });
+          window.clearTimeout(setTime1);
+        }, 3000);
+      },
+      this._controllerService.restErrorHandler('Error occured: token could not be generated')
     );
   }
 
