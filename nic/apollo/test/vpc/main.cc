@@ -26,7 +26,7 @@ namespace api_test {
 // Globals
 static const char *g_cfg_file = NULL;
 static std::string g_pipeline("");
-static constexpr uint32_t k_max_vpc = PDS_MAX_VPC;
+static constexpr uint32_t k_max_vpc = PDS_MAX_VPC + 1;
 
 //----------------------------------------------------------------------------
 // VPC test class

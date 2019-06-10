@@ -27,7 +27,7 @@ namespace api_test {
 // Globals
 static const char *g_cfg_file = NULL;
 static std::string g_pipeline("");
-static constexpr uint32_t k_max_subnet = PDS_MAX_SUBNET;
+static constexpr uint32_t k_max_subnet = PDS_MAX_SUBNET + 1;
 static constexpr pds_vpc_key_t k_vpc_key = {.id = 1};
 static const vpc_util k_vpc_obj(k_vpc_key.id, "10.0.0.0/8");
 
