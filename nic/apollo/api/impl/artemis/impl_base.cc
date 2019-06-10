@@ -152,9 +152,11 @@ impl_base::soft_delete(impl_obj_id_t obj_id, impl_base *impl) {
 
     case IMPL_OBJ_ID_SVC_MAPPING:
         svc_mapping_impl::soft_delete((svc_mapping_impl *)impl);
+        break;
 
     case IMPL_OBJ_ID_VPC_PEER:
         vpc_peer_impl::soft_delete((vpc_peer_impl *)impl);
+        break;
 
     default:
         PDS_TRACE_ERR("Non-statless obj %u can't be soft deleted\n", obj_id);

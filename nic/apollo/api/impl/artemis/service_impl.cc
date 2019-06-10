@@ -212,7 +212,7 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return ret;
     }
 
-    // reserve an entry in SERVICE_MAPPING with (DIP/overlay_ip, port) as key
+    // add an entry in SERVICE_MAPPING with (DIP/overlay_ip, port) as key
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
                                     dip_vpc->hw_id(), &spec->backend_ip,
                                     spec->svc_port, (ip_addr_t *)NULL);
@@ -223,7 +223,7 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                                    &svc_mapping_data,
                                    SERVICE_MAPPING_SERVICE_MAPPING_INFO_ID,
                                    dip_to_vip_handle_);
-    ret = svc_mapping_impl_db()->svc_mapping_tbl()->reserve(&api_params);
+    ret = svc_mapping_impl_db()->svc_mapping_tbl()->insert(&api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add svc mapping (vpc %u, backend-ip %s, "
                       "port %u) --> (vpc %u, vip %s, port %u), err %u",
@@ -249,7 +249,7 @@ svc_mapping_impl::update_hw(api_base *curr_obj, api_base *prev_obj,
 sdk_ret_t
 svc_mapping_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                               api_op_t api_op, obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_INVALID_OP;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

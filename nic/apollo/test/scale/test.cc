@@ -217,9 +217,6 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
     pds_svc_mapping_spec_t svc_mapping;
     pds_svc_mapping_spec_t svc_v6_mapping;
 
-    // TODO: remove
-    return SDK_RET_OK;
-
     // create local vnic IP mappings first
     for (uint32_t i = 1; i <= num_vpcs; i++) {
         for (uint32_t j = 1; j <= num_subnets; j++) {
@@ -1126,8 +1123,8 @@ create_nexthops (uint32_t num_nh, ip_prefix_t *ip_pfx, uint32_t num_vpcs)
         if (vpc_id > num_vpcs) {
             vpc_id = 1;
         }
-        pds_nh.vlan = vlan_id++;
 #endif
+        pds_nh.vlan = TESTAPP_SWITCH_VNIC_VLAN;
         MAC_UINT64_TO_ADDR(pds_nh.mac,
                            (((((uint64_t)vpc_id & 0x7FF) << 22) |
                              ((1 & 0x7FF) << 11) | (id & 0x7FF))));
@@ -1639,15 +1636,18 @@ create_objects (void)
     }
 
     // create service mappings
-    ret = create_svc_mappings(g_test_params.num_vpcs, g_test_params.num_subnets,
-                              g_test_params.num_vnics,
-                              g_test_params.num_ip_per_vnic,
-                              &g_test_params.v4_vip_pfx,
-                              &g_test_params.v6_vip_pfx,
-                              &g_test_params.provider_pfx,
-                              &g_test_params.v6_provider_pfx);
-    if (ret != SDK_RET_OK) {
-        return ret;
+    if (g_test_params.artemis()) {
+        ret = create_svc_mappings(g_test_params.num_vpcs,
+                                  g_test_params.num_subnets,
+                                  g_test_params.num_vnics,
+                                  g_test_params.num_ip_per_vnic,
+                                  &g_test_params.v4_vip_pfx,
+                                  &g_test_params.v6_vip_pfx,
+                                  &g_test_params.provider_pfx,
+                                  &g_test_params.v6_provider_pfx);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
     }
 
 #ifdef TEST_GRPC_APP

@@ -361,6 +361,8 @@ create_mirror_session_grpc (pds_mirror_session_spec_t *spec)
 sdk_ret_t
 create_svc_mapping_grpc (pds_svc_mapping_spec_t *spec)
 {
+    // avinash/srikanth .. please check this path
+#if 0
     ClientContext         context;
     SvcMappingResponse    response;
     Status                status;
@@ -376,6 +378,7 @@ create_svc_mapping_grpc (pds_svc_mapping_spec_t *spec)
         }
         g_svc_mapping_req.clear_request();
     }
+#endif
 
     return SDK_RET_OK;
 }

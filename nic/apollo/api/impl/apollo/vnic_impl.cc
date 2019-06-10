@@ -201,7 +201,6 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             return ret;
         }
     }
-
     // initialize rx stats tables for this vnic
     vnic_rx_stats_data.action_id = VNIC_RX_STATS_VNIC_RX_STATS_ID;
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VNIC_RX_STATS,
@@ -210,7 +209,6 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     if (p4pd_ret != P4PD_SUCCESS) {
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
-
     return SDK_RET_OK;
 }
 
