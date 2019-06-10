@@ -19,6 +19,7 @@
 #include "nic/utils/ftl/ftlv4.hpp"
 #include "nic/utils/ftl/ftlv6.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/apollo/agent/svc/mapping.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
@@ -278,67 +279,6 @@ private:
         return v6table->remove(&params);
     }
 
-    void add_local_ep_(uint32_t vpc_id, uint32_t ipaddr) {
-        assert(vpc_id);
-        if (vpc_id > MAX_VPCS) {
-            return;
-        }
-        if (epdb[vpc_id].v4_lcount >= MAX_LOCAL_EPS) {
-            return;
-        }
-        epdb[vpc_id].valid = 1;
-        epdb[vpc_id].vpc_id = vpc_id;
-        epdb[vpc_id].lips[epdb[vpc_id].v4_lcount] = ipaddr;
-        epdb[vpc_id].v4_lcount++;
-        //printf("Adding Local EP: Vcn=%d IP=%#x\n", vpc_id, ipaddr);
-    }
-
-    void add_local_ep_(uint32_t vpc_id, ipv6_addr_t ip6addr) {
-        assert(vpc_id);
-        if (vpc_id > MAX_VPCS) {
-            return;
-        }
-        if (epdb[vpc_id].v6_lcount >= MAX_LOCAL_EPS) {
-            return;
-        }
-        epdb[vpc_id].valid = 1;
-        epdb[vpc_id].vpc_id = vpc_id;
-        epdb[vpc_id].lip6s[epdb[vpc_id].v6_lcount] = ip6addr;
-        epdb[vpc_id].v6_lcount++;
-        //printf("Adding Local EP: Vcn=%d IP=%#x\n", vpc_id, ipaddr);
-    }
-
-    void add_remote_ep_(uint32_t vpc_id, uint32_t ipaddr) {
-        assert(vpc_id);
-        if (vpc_id > MAX_VPCS) {
-            return;
-        }
-        if (epdb[vpc_id].v4_rcount >= MAX_REMOTE_EPS) {
-            return;
-        }
-        epdb[vpc_id].valid = 1;
-        epdb[vpc_id].vpc_id = vpc_id;
-        epdb[vpc_id].rips[epdb[vpc_id].v4_rcount] = ipaddr;
-        epdb[vpc_id].v4_rcount++;
-        //printf("Adding Remote EP: Vcn=%d IP=%#x\n", vpc_id, ipaddr);
-    }
-
-    void add_remote_ep_(uint32_t vpc_id, ipv6_addr_t ip6addr) {
-        assert(vpc_id);
-        if (vpc_id > MAX_VPCS) {
-            return;
-        }
-        if (epdb[vpc_id].v6_rcount >= MAX_REMOTE_EPS) {
-            return;
-        }
-        epdb[vpc_id].valid = 1;
-        epdb[vpc_id].vpc_id = vpc_id;
-        epdb[vpc_id].rip6s[epdb[vpc_id].v6_rcount] = ip6addr;
-        epdb[vpc_id].v6_rcount++;
-        //printf("Adding Remote EP: Vcn=%d IP=%#x\n", vpc_id, ipaddr);
-    }
-
-
 public:
     flow_test(test_params_t *test_params, bool w = false) {
         memset(&factory_params, 0, sizeof(factory_params));
@@ -414,20 +354,58 @@ public:
         ftlv4::destroy(v4table);
     }
 
-    void add_local_ep(uint32_t vpc_id, ip_addr_t ipaddr) {
-        if (ipaddr.af == IP_AF_IPV4) {
-            return add_local_ep_(vpc_id, ipaddr.addr.v4_addr);
-        } else {
-            return add_local_ep_(vpc_id, ipaddr.addr.v6_addr);
+    void add_local_ep(pds_local_mapping_spec_t *local_spec) {
+        uint32_t vpc_id = local_spec->key.vpc.id;
+        ip_addr_t ip_addr = local_spec->key.ip_addr;
+
+        assert(vpc_id);
+        if (vpc_id > MAX_VPCS) {
+            return;
         }
+        epdb[vpc_id].vpc_id = vpc_id;
+        if (ip_addr.af == IP_AF_IPV4) {
+            if (epdb[vpc_id].v4_lcount >= MAX_LOCAL_EPS) {
+                return;
+            }
+            epdb[vpc_id].valid = 1;
+            epdb[vpc_id].lips[epdb[vpc_id].v4_lcount] = ip_addr.addr.v4_addr;
+            epdb[vpc_id].v4_lcount++;
+        } else {
+            if (epdb[vpc_id].v6_lcount >= MAX_LOCAL_EPS) {
+                return;
+            }
+            epdb[vpc_id].valid = 1;
+            epdb[vpc_id].lip6s[epdb[vpc_id].v6_lcount] = ip_addr.addr.v6_addr;
+            epdb[vpc_id].v6_lcount++;
+        }
+        //printf("Adding Local EP: Vcn=%d IP=%#x\n", vpc_id, ip_addr);
     }
 
-    void add_remote_ep(uint32_t vpc_id, ip_addr_t ipaddr) {
-        if (ipaddr.af == IP_AF_IPV4) {
-            return add_remote_ep_(vpc_id, ipaddr.addr.v4_addr);
-        } else {
-            return add_remote_ep_(vpc_id, ipaddr.addr.v6_addr);
+    void add_remote_ep(pds_remote_mapping_spec_t *remote_spec) {
+        uint32_t vpc_id = remote_spec->key.vpc.id;
+        ip_addr_t ip_addr = remote_spec->key.ip_addr;
+
+        assert(vpc_id);
+        if (vpc_id > MAX_VPCS) {
+            return;
         }
+        epdb[vpc_id].vpc_id = vpc_id;
+        if (ip_addr.af == IP_AF_IPV4) {
+            if (epdb[vpc_id].v4_rcount >= MAX_REMOTE_EPS) {
+                return;
+            }
+            epdb[vpc_id].valid = 1;
+            epdb[vpc_id].rips[epdb[vpc_id].v4_rcount] = ip_addr.addr.v4_addr;
+            epdb[vpc_id].v4_rcount++;
+        } else {
+            if (epdb[vpc_id].v6_rcount >= MAX_REMOTE_EPS) {
+                return;
+            }
+            epdb[vpc_id].valid = 1;
+            epdb[vpc_id].rip6s[epdb[vpc_id].v6_rcount] = ip_addr.addr.v6_addr;
+            epdb[vpc_id].v6_rcount++;
+        }
+        //printf("Adding Remote EP: Vcn=%d IP=%#x\n", vpc_id, ip_addr);
     }
 
     void generate_ep_pairs(uint32_t vpc, bool ipv6) {
@@ -456,20 +434,32 @@ public:
     void generate_dummy_epdb() {
         ipv6_addr_t sip6 = {0};
         ipv6_addr_t dip6 = {0};
+        pds_local_mapping_spec_t local_spec = { 0 };
+        pds_remote_mapping_spec_t remote_spec = { 0 };
         for (uint32_t vpc = 1; vpc < MAX_VPCS; vpc++) {
             epdb[vpc].vpc_id = vpc;
+            local_spec.key.vpc.id = vpc;
+            remote_spec.key.vpc.id = vpc;
             for (uint32_t lid = 0; lid < MAX_LOCAL_EPS; lid++) {
-                add_local_ep_(vpc, 0x0a000001 + lid);
+                local_spec.key.ip_addr.af = IP_AF_IPV4;
+                local_spec.key.ip_addr.addr.v4_addr = 0x0a000001 + lid;
+                add_local_ep(&local_spec);
 
                 sip6.addr32[0] = 0x22;
                 sip6.addr32[3] = lid;
-                add_local_ep_(vpc, sip6);
+                local_spec.key.ip_addr.af = IP_AF_IPV6;
+                local_spec.key.ip_addr.addr.v6_addr = sip6;
+                add_local_ep(&local_spec);
 
                 for (uint32_t rid = 0; rid < MAX_REMOTE_EPS; rid++) {
-                    add_remote_ep_(vpc, 0x1400001 + rid);
+                    remote_spec.key.ip_addr.af = IP_AF_IPV4;
+                    remote_spec.key.ip_addr.addr.v4_addr = 0x1400001 + rid;
+                    add_remote_ep(&remote_spec);
                     dip6.addr32[0] = 0x33;
                     dip6.addr32[3] = rid;
-                    add_remote_ep_(vpc, dip6);
+                    remote_spec.key.ip_addr.af = IP_AF_IPV6;
+                    remote_spec.key.ip_addr.addr.v6_addr = dip6;
+                    add_remote_ep(&remote_spec);
                 }
             }
         }

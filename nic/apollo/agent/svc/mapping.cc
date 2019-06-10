@@ -27,15 +27,13 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
                 pds_agent_local_mapping_api_spec_fill(&local_spec,
                                                       proto_req->request(i));
 #ifdef PDS_FLOW_TEST
-                g_flow_test_obj->add_local_ep(local_spec.key.vpc.id,
-                                              local_spec.key.ip_addr);
+                g_flow_test_obj->add_local_ep(&local_spec);
 #endif
             } else {
                 pds_agent_remote_mapping_api_spec_fill(&remote_spec,
                                                        proto_req->request(i));
 #ifdef PDS_FLOW_TEST
-                g_flow_test_obj->add_remote_ep(remote_spec.key.vpc.id,
-                                               remote_spec.key.ip_addr);
+                g_flow_test_obj->add_remote_ep(&remote_spec);
 #endif
             }
 

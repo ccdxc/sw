@@ -376,8 +376,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                         SDK_ASSERT(0);
                         return rv;
                     }
-                    g_flow_test_obj->add_local_ep(pds_local_mapping.key.vpc.id,
-                                                  pds_local_mapping.key.ip_addr);
+                    g_flow_test_obj->add_local_ep(&pds_local_mapping);
 #endif
                     if (g_test_params.dual_stack) {
                         // V6 mapping
@@ -412,8 +411,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                             SDK_ASSERT(0);
                             return rv;
                         }
-                        g_flow_test_obj->add_local_ep(pds_local_mapping.key.vpc.id,
-                                                      pds_local_v6_mapping.key.ip_addr);
+                        g_flow_test_obj->add_local_ep(&pds_local_v6_mapping);
 #endif
                     }
                 }
@@ -479,8 +477,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 if (rv != SDK_RET_OK) {
                     return rv;
                 }
-                g_flow_test_obj->add_remote_ep(pds_remote_mapping.key.vpc.id,
-                                               pds_remote_mapping.key.ip_addr);
+                g_flow_test_obj->add_remote_ep(&pds_remote_mapping);
 #endif
                 if (g_test_params.dual_stack) {
                     // V6 mapping
@@ -507,8 +504,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     if (rv != SDK_RET_OK) {
                         return rv;
                     }
-                    g_flow_test_obj->add_remote_ep(pds_remote_mapping.key.vpc.id,
-                                                   pds_remote_v6_mapping.key.ip_addr);
+                    g_flow_test_obj->add_remote_ep(&pds_remote_v6_mapping);
 #endif
                 }
 
