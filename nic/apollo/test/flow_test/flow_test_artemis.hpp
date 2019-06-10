@@ -704,7 +704,20 @@ public:
 
                         memset(&ip_addr, 0, sizeof(ip_addr));
                         // create V4 Flows
-                        if (vpc == 64) {
+                        if (vpc == 63) {
+                            // this VPC is for Internet IN/OUT with VIP & svc
+                            // port IP flows
+                            ip_addr.addr.v4_addr = (0xC << 28) | i;
+                            ret = create_session(vpc, proto,
+                                                 ep_pairs[i].lip,
+                                                 ip_addr.addr.v4_addr,
+                                                 TEST_APP_DIP_PORT,
+                                                 fwd_dport,
+                                                 ip_addr.addr.v4_addr,
+                                                 ep_pairs[i].lip, // TODO: must be service IP
+                                                 fwd_dport,
+                                                 TEST_APP_VIP_PORT);
+                        } else if (vpc == 64) {
                             // this VPC is for Internet IN/OUT with floating
                             // IP flows
                             ip_addr.addr.v4_addr = (0xC << 28) | i;
@@ -713,7 +726,7 @@ public:
                                                  ip_addr.addr.v4_addr,
                                                  fwd_sport, fwd_dport,
                                                  ip_addr.addr.v4_addr,
-                                                 ep_pairs[i].lip, /* must be public IP */
+                                                 ep_pairs[i].lip, // TODO: must be public IP
                                                  fwd_dport, fwd_sport);
                         } else {
                             // vnet in/out with vxlan encap

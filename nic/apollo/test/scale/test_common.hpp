@@ -17,6 +17,8 @@
 
 #define TESTAPP_METER_NUM_PREFIXES        16
 #define TESTAPP_SWITCH_VNIC_VLAN          128
+#define TEST_APP_VIP_PORT                 32
+#define TEST_APP_DIP_PORT                 64
 
 namespace pt = boost::property_tree;
 

@@ -227,13 +227,13 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
                     svc_mapping.key.vip.addr.v4_addr =
                         (v4_vip_pfx->addr.addr.v4_addr | ((j - 1) << 14)) |
                             (((k - 1) * num_ip_per_vnic) + l);
-                    svc_mapping.key.svc_port = 32;
+                    svc_mapping.key.svc_port = TEST_APP_VIP_PORT;
                     svc_mapping.vpc.id = i;
                     svc_mapping.backend_ip.af = IP_AF_IPV4;
                     svc_mapping.backend_ip.addr.v4_addr =
                         (g_test_params.vpc_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                             (((k - 1) * num_ip_per_vnic) + l);
-                    svc_mapping.svc_port = 64;
+                    svc_mapping.svc_port = TEST_APP_DIP_PORT;
                     svc_mapping.backend_provider_ip.af = IP_AF_IPV4;
                     svc_mapping.backend_provider_ip.addr.v4_addr =
                         v4_provider_pfx->addr.addr.v4_addr + ip_offset;
