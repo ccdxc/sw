@@ -119,6 +119,7 @@ func (h *Host) Close() error {
 	return nil
 }
 
+// GetAllVms gets all vms on this host
 func (h *Host) GetAllVms() ([]*VM, error) {
 	finder, _, err := h.client.finder()
 	if err != nil {
@@ -362,6 +363,7 @@ func (h *Host) boot(name string, ncpus uint, memory uint, finder *find.Finder) (
 	return &VMInfo{Name: name, IP: ip}, nil // first arg is string, second is net.IP.
 }
 
+// BootVM botts up a new vm
 func (h *Host) BootVM(name string) (*VMInfo, error) {
 	ds, err := h.Datastore("datastore1")
 
@@ -397,6 +399,7 @@ func (h *Host) BootVM(name string) (*VMInfo, error) {
 	return &VMInfo{Name: name, IP: ip}, nil // first arg is string, second is net.IP.
 }
 
+// PowerOffVM powers off a vm
 func (h *Host) PowerOffVM(name string) error {
 	ds, err := h.Datastore("datastore1")
 
@@ -426,6 +429,7 @@ func (h *Host) PowerOffVM(name string) error {
 	return nil
 }
 
+// GetVMIP gets VM's ip address
 func (h *Host) GetVMIP(name string) (string, error) {
 
 	finder, _, err := h.client.finder()
@@ -591,14 +595,16 @@ func (h *Host) wipeOut(name string) error {
 		return err
 	}
 
-	if err := vm.Destroy(); err != nil {
+	err = vm.Destroy()
+	if err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (h *Host) RemoveVm(name string) error {
+// RemoveVM removes a vm
+func (h *Host) RemoveVM(name string) error {
 	return h.wipeOut(name)
 }
 
@@ -613,8 +619,8 @@ func (h *Host) reconfigureVM(vm *object.VirtualMachine, ncpus uint, memory uint)
 
 	task, err = vm.Reconfigure(h.context.context, types.VirtualMachineConfigSpec{
 		MemoryReservationLockedToMax: &t,
-		NumCPUs:  int32(ncpus),
-		MemoryMB: bigMemory,
+		NumCPUs:                      int32(ncpus),
+		MemoryMB:                     bigMemory,
 	})
 	if err != nil {
 		return err
@@ -679,6 +685,7 @@ func (h *Host) importVapp(dir string, spec *types.OvfCreateImportSpecResult, fin
 	return nil
 }
 
+// DeployVMOnDataStore deploys a VM on a datastore
 func (h *Host) DeployVMOnDataStore(ds *Datastore, name string, ncpus uint, memory uint, networks []string, ovfDir string) (*VMInfo, error) {
 
 	finder, _, err := ds.client.finder()
@@ -703,6 +710,7 @@ func (h *Host) DeployVMOnDataStore(ds *Datastore, name string, ncpus uint, memor
 	return h.boot(name, ncpus, memory, finder)
 }
 
+// DeployVM deploys a vm
 func (h *Host) DeployVM(name string, ncpus uint, memory uint, networks []string, ovfDir string) (*VMInfo, error) {
 	ds, err := h.Datastore("datastore1")
 
@@ -713,6 +721,7 @@ func (h *Host) DeployVM(name string, ncpus uint, memory uint, networks []string,
 	return h.DeployVMOnDataStore(ds, name, ncpus, memory, networks, ovfDir)
 }
 
+// VMExists returns true if VM by the name exists
 func (h *Host) VMExists(name string) bool {
 
 	finder, _, err := h.client.finder()
@@ -725,6 +734,7 @@ func (h *Host) VMExists(name string) bool {
 	return err == nil
 }
 
+// DestoryVM destroys the vm
 func (h *Host) DestoryVM(name string) error {
-	return h.RemoveVm(name)
+	return h.RemoveVM(name)
 }

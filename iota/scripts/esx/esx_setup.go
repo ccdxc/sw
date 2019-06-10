@@ -34,6 +34,7 @@ var (
 	esxOutFile                               string
 )
 
+// EsxSetup contains info about a setup
 type EsxSetup struct {
 	CtrlVMIP       string `json:"ctrlVMIP"`
 	CtrlVMUsername string `json:"ctrlVMUsername"`
@@ -87,7 +88,7 @@ func waitForNodeUp(ip string, timeout time.Duration) error {
 	for {
 		conn, _ := net.DialTimeout("tcp", net.JoinHostPort(ip, "22"), 2*time.Second)
 		if conn != nil {
-			log.Printf("Connected to host : ", ip)
+			log.Printf("Connected to host : %s", ip)
 			conn.Close()
 			break
 		}
@@ -172,7 +173,7 @@ func initEsxCtrlVM() (string, error) {
 		return "", err
 	}
 
-	log.Println("Init ESX node complete with IP : %s", vmInfo.IP)
+	log.Printf("Init ESX node complete with IP : %v", vmInfo.IP)
 
 	if err := waitForNodeUp(vmInfo.IP, restartTimeout); err != nil {
 		return "", err

@@ -964,7 +964,8 @@ func (tb *TestBed) setupTestBed() error {
 		skipInstall := os.Getenv("SKIP_INSTALL")
 		if skipInstall == "" && tb.hasNaplesHW {
 			log.Infof("Installing images on testbed. This may take 10s of minutes...")
-			ctx, _ := context.WithTimeout(context.Background(), time.Duration(time.Hour))
+			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Hour))
+			defer cancel()
 			instResp, err := client.InstallImage(ctx, testBedMsg)
 			if err != nil {
 				nerr := fmt.Errorf("Error during installing image: %v", err)

@@ -22,7 +22,8 @@ type iterContext struct {
 	macs  map[string]ipMacCtx
 }
 
-func NewIterContext() *iterContext {
+// newIterContext returns a new iterator
+func newIterContext() *iterContext {
 	return &iterContext{
 		iters: make(map[string]uint64),
 		vars:  make(map[string]string),

@@ -103,6 +103,7 @@ func StartIOTAAgent(stubMode *bool) {
 	agentSvc.Start()
 }
 
+// StopIOTAAgent stops the agent
 func StopIOTAAgent() {
 	agentService.Stop()
 }

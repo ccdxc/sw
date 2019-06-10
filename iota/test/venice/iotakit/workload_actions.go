@@ -20,7 +20,7 @@ import (
 // number of times to retry netcat client command
 const maxNetcatRetries = 3
 
-// Capture packets runs tcpdump and gets the output on the workload
+// PingAndCapturePackets packets runs tcpdump and gets the output on the workload
 func (act *ActionCtx) PingAndCapturePackets(wpc *WorkloadPairCollection, wc *WorkloadCollection, wlnum int) error {
 	if wpc.HasError() {
 		return wpc.Error()
@@ -76,7 +76,7 @@ func (act *ActionCtx) PingAndCapturePackets(wpc *WorkloadPairCollection, wc *Wor
 	trig := act.model.tb.NewTrigger()
 	stopResp, err := trig.StopCommands(triggerResp.Commands)
 	if err != nil {
-		log.Errorf("Error stopping ping and tcpdump cmds. Err: %v. trig: %+v, resp: %+v", err, stopResp)
+		log.Errorf("Error stopping ping and tcpdump cmds. Err: %v, resp: %+v", err, stopResp)
 		return fmt.Errorf("Error stopping ping and tcpdump cmds. Err: %v", err)
 	}
 
@@ -541,7 +541,7 @@ func (act *ActionCtx) FTPGetFails(wpc *WorkloadPairCollection) error {
 	return nil
 }
 
-// Establish large number (numConns) of connections from client workload to server workload
+// FuzIt Establish large number (numConns) of connections from client workload to server workload
 func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, port string) error {
 	// no need to perform connection scale in sim run
 	if act.model.tb.HasNaplesSim() {
@@ -559,9 +559,9 @@ func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, po
 		serverInput[wfName] = fuze.Input{Connections: []*fuze.Connection{{ServerIPPort: ":" + port, Proto: proto}}}
 
 		conns := clientInput[wfName].Connections
-		destIpAddr := strings.Split(pair.second.iotaWorkload.IpPrefix, "/")[0]
+		destIPAddr := strings.Split(pair.second.iotaWorkload.IpPrefix, "/")[0]
 		for ii := 0; ii < numConns; ii++ {
-			conns = append(conns, &fuze.Connection{ServerIPPort: destIpAddr + ":" + port, Proto: proto})
+			conns = append(conns, &fuze.Connection{ServerIPPort: destIPAddr + ":" + port, Proto: proto})
 		}
 		clientInput[wfName] = fuze.Input{Connections: conns}
 	}

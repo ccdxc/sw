@@ -13,31 +13,44 @@ import (
 	"github.com/pensando/sw/api/generated/workload"
 )
 
+// UserParams contains user params
 type UserParams struct {
 	NumUsers        int // number of users configured
 	NumRolesPerUser int //number of roles per user
 	UserTemplate    *auth.User
 }
+
+// RoleParams contains role params
 type RoleParams struct {
 	NumRoles            int // number of roles configured
 	RoleTemplate        auth.Role
 	RoleBindingTemplate *auth.RoleBinding // for now, we create one role-binding per role
 }
+
+// NetworkParams network attributes
 type NetworkParams struct {
 	NumNetworks     int // specifies number of networks to be created
 	NetworkTemplate *network.Network
 }
+
+// HostParams host attributes
 type HostParams struct {
 	HostTemplate *cluster.Host
 }
+
+// WorkloadParams workload attributes
 type WorkloadParams struct {
 	WorkloadsPerHost int // specifies number of workloads to be created per host
 	WorkloadTemplate *workload.Workload
 }
+
+// WPair workload pairs
 type WPair struct {
 	From *workload.Workload
 	To   *workload.Workload
 }
+
+// SGPolicyParams sg policy params
 type SGPolicyParams struct {
 	NumPolicies        int    // specifies number of policies
 	NumRulesPerPolicy  int    // specifies number of rules per policy
@@ -45,32 +58,45 @@ type SGPolicyParams struct {
 	SGPolicyTemplate   *security.SGPolicy
 	SGRuleTemplate     *security.SGRule
 }
+
+// FirewallProfileParams firewall profile params
 type FirewallProfileParams struct {
 	FirewallProfileTemplate *security.FirewallProfile
 }
+
+// AppParams app object params
 type AppParams struct {
 	NumApps        int // specifies number of app objects; app objects are sequentially added to sgpolicies
-	NumDnsAlgs     int // specifies number of dns alg app objects; app objects are sequentially added to sgpolicies
+	NumDNSAlgs     int // specifies number of dns alg app objects; app objects are sequentially added to sgpolicies
 	AppTemplate    *security.App
-	DnsAlgTemplate *security.App
+	DNSAlgTemplate *security.App
 }
+
+// SecurityGroupsParams security group params
 type SecurityGroupsParams struct {
 	NumSGs                int // specifies number of security-groups
 	SecurityGroupTemplate security.SecurityGroup
 }
+
+// MirrorSessionParams mirror session params
 type MirrorSessionParams struct {
 	NumSessionMirrors     int                      // number of mirror sessions to be configured within the system
 	MirrorSessionTemplate monitoring.MirrorSession // will match random set of workloads (those can be queried)
 }
+
+// FwLogPolicyParams firewall log params
 type FwLogPolicyParams struct {
 	NumFwLogPolicies    int
 	FwLogPolicyTemplate monitoring.FwlogPolicy
 }
+
+// FlowExportPolicyParams flow export params
 type FlowExportPolicyParams struct {
 	NumFlowExportPolicies    int
 	FlowExportPolicyTemplate monitoring.FlowExportPolicy
 }
 
+// CfgItems items to configure
 type CfgItems struct {
 	Networks   []*network.Network   `json:"Networks"`
 	Hosts      []*cluster.Host      `json:"Hosts"`
@@ -78,6 +104,8 @@ type CfgItems struct {
 	SGPolicies []*security.SGPolicy `json:"SGPolicies"`
 	Apps       []*security.App      `json:"Apps"`
 }
+
+// Cfgen config gen params
 type Cfgen struct {
 	UserParams
 	RoleParams
@@ -102,6 +130,7 @@ type Cfgen struct {
 	Fwprofile *security.FirewallProfile
 }
 
+// Do does
 func (cfgen *Cfgen) Do() {
 	// make sure we only have as many hosts are SmartNICs provided to us
 	if len(cfgen.Smartnics) == 0 {
@@ -120,7 +149,7 @@ func (cfgen *Cfgen) genNetworks() []*network.Network {
 	networks := []*network.Network{}
 
 	n := cfgen.NetworkParams.NetworkTemplate
-	netCtx := NewIterContext()
+	netCtx := newIterContext()
 	for ii := 0; ii < cfgen.NetworkParams.NumNetworks; ii++ {
 		tNetwork := netCtx.transform(n).(*network.Network)
 
@@ -134,7 +163,7 @@ func (cfgen *Cfgen) genHosts() []*cluster.Host {
 
 	h := cfgen.HostParams.HostTemplate
 	h.ObjectMeta.Name = fmt.Sprintf("host-{{iter:1-%d}}", len(cfgen.Smartnics))
-	hostCtx := NewIterContext()
+	hostCtx := newIterContext()
 	for ii := 0; ii < len(cfgen.Smartnics); ii++ {
 		tHost := hostCtx.transform(h).(*cluster.Host)
 		tHost.Spec.SmartNICs[0].MACAddress = cfgen.Smartnics[ii].Status.PrimaryMAC
@@ -152,11 +181,11 @@ func (cfgen *Cfgen) genWorkloads() []*workload.Workload {
 	for netIdx, n := range cfgen.ConfigItems.Networks {
 		subnet := strings.Split(n.Spec.IPv4Subnet, "/")[0]
 		subnets[netIdx] = "ipv4:" + strings.Replace(subnet, ".0", ".x", -1)
-		nIters[netIdx] = NewIterContext()
+		nIters[netIdx] = newIterContext()
 	}
 
 	w := cfgen.WorkloadParams.WorkloadTemplate
-	wCtx := NewIterContext()
+	wCtx := newIterContext()
 	for ii := 0; ii < len(cfgen.Smartnics); ii++ {
 		h := cfgen.ConfigItems.Hosts[ii]
 		w.Spec.HostName = h.ObjectMeta.Name
@@ -183,20 +212,20 @@ func (cfgen *Cfgen) genSGPolicies() []*security.SGPolicy {
 
 	sgp := cfgen.SGPolicyParams.SGPolicyTemplate
 
-	sgpCtx := NewIterContext()
+	sgpCtx := newIterContext()
 	for ii := 0; ii < cfgen.SGPolicyParams.NumPolicies; ii++ {
 		rule := cfgen.SGPolicyParams.SGRuleTemplate
 		tSgp := sgpCtx.transform(sgp).(*security.SGPolicy)
 
 		rules := []security.SGRule{}
-		ruleCtx := NewIterContext()
+		ruleCtx := newIterContext()
 		for jj := 0; jj < cfgen.SGPolicyParams.NumRulesPerPolicy; jj++ {
 			tRule := ruleCtx.transform(rule).(*security.SGRule)
 
-			fromIpIdx := rand.Intn(len(cfgen.ConfigItems.Workloads))
-			toIpIdx := rand.Intn(len(cfgen.ConfigItems.Workloads))
-			fromW := cfgen.ConfigItems.Workloads[fromIpIdx]
-			toW := cfgen.ConfigItems.Workloads[toIpIdx]
+			fromIPIdx := rand.Intn(len(cfgen.ConfigItems.Workloads))
+			toIPIdx := rand.Intn(len(cfgen.ConfigItems.Workloads))
+			fromW := cfgen.ConfigItems.Workloads[fromIPIdx]
+			toW := cfgen.ConfigItems.Workloads[toIPIdx]
 			tRule.FromIPAddresses = []string{fromW.Spec.Interfaces[0].IpAddresses[0]}
 			tRule.ToIPAddresses = []string{toW.Spec.Interfaces[0].IpAddresses[0]}
 			tRule.ProtoPorts = []security.ProtoPort{security.ProtoPort{Protocol: "tcp", Ports: "1000-65000"}}
@@ -213,10 +242,10 @@ func (cfgen *Cfgen) genSGPolicies() []*security.SGPolicy {
 
 func (cfgen *Cfgen) genApps() []*security.App {
 	apps := []*security.App{}
-	ctx := NewIterContext()
+	ctx := newIterContext()
 
-	for ii := 0; ii < cfgen.AppParams.NumDnsAlgs; ii++ {
-		app := cfgen.AppParams.DnsAlgTemplate
+	for ii := 0; ii < cfgen.AppParams.NumDNSAlgs; ii++ {
+		app := cfgen.AppParams.DNSAlgTemplate
 		tApp := ctx.transform(app).(*security.App)
 		apps = append(apps, tApp)
 	}
@@ -237,7 +266,7 @@ func (cfgen *Cfgen) genFirewallProfile() *security.FirewallProfile {
 	}
 
 	fw := cfgen.FirewallProfileParams.FirewallProfileTemplate
-	iter := NewIterContext()
+	iter := newIterContext()
 	fw = iter.transform(fw).(*security.FirewallProfile)
 	return fw
 }

@@ -12,7 +12,7 @@ mac2str (mac_addr_t mac)
              mac.ether_addr_octet[2], mac.ether_addr_octet[3],
              mac.ether_addr_octet[4], mac.ether_addr_octet[5]);
     return macstr;
-}
+} 
 
 int
 print_help ()

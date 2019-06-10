@@ -16,7 +16,7 @@ func TestCfgenPolicyGen(t *testing.T) {
 	cfg.SGPolicyParams.NumRulesPerPolicy = 50000
 	cfg.WorkloadParams.WorkloadsPerHost = 200
 	cfg.AppParams.NumApps = 10000
-	cfg.NumDnsAlgs = 10
+	cfg.NumDNSAlgs = 10
 
 	// create smartnic macs from a template
 	smartnics := []*cluster.SmartNIC{}
@@ -36,7 +36,7 @@ func TestCfgenPolicyGen(t *testing.T) {
 		}
 	} else {
 		smnic := smartNicTemplate
-		smnicCtx := NewIterContext()
+		smnicCtx := newIterContext()
 		for ii := 0; ii < 128; ii++ {
 			tSmartNIC := smnicCtx.transform(smnic).(*cluster.SmartNIC)
 			smartnics = append(smartnics, tSmartNIC)

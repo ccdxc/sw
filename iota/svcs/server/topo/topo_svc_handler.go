@@ -463,21 +463,22 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 			SSHCfg: ts.SSHConfig,
 		}
 
-		if agentURL, err := tbNode.GetAgentURL(); err != nil {
+		agentURL, err := tbNode.GetAgentURL()
+		if err != nil {
 			log.Errorf("TOPO SVC | AddNodes | AddNodes call failed to establish GRPC Connection to Agent running on Node: %v. Err: %v", n.Name, err)
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
 			req.ApiResponse.ErrorMsg = fmt.Sprintf("Could not get agent URL. Err: %v", err)
 			return req, nil
-		} else {
-			c, err := common.CreateNewGRPCClient(svcName, agentURL, common.GrpcMaxMsgSize)
-			if err != nil {
-				log.Errorf("TOPO SVC | AddNodes | AddNodes call failed to establish GRPC Connection to Agent running on Node: %v. Err: %v", n.Name, err)
-				req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
-				req.ApiResponse.ErrorMsg = fmt.Sprintf("Could not create GRPC Connection to IOTA Agent. Err: %v", err)
-				return req, nil
-			}
-			tbNode.AgentClient = iota.NewIotaAgentApiClient(c.Client)
 		}
+
+		c, err := common.CreateNewGRPCClient(svcName, agentURL, common.GrpcMaxMsgSize)
+		if err != nil {
+			log.Errorf("TOPO SVC | AddNodes | AddNodes call failed to establish GRPC Connection to Agent running on Node: %v. Err: %v", n.Name, err)
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("Could not create GRPC Connection to IOTA Agent. Err: %v", err)
+			return req, nil
+		}
+		tbNode.AgentClient = iota.NewIotaAgentApiClient(c.Client)
 
 		if _, ok := ts.ProvisionedNodes[n.Name]; ok {
 			log.Errorf("TOPO SVC | AddNodes | AddNodes call failed as node already provisoned : %v", n.Name)
@@ -554,7 +555,7 @@ func (ts *TopologyService) SaveNode(ctx context.Context, req *iota.NodeMsg) (*io
 	return resp, nil
 }
 
-// ReloadNode saves and loads node personality
+// ReloadNodes saves and loads node personality
 func (ts *TopologyService) ReloadNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | ReloadNodes. Received Request Msg: %v", req)
 	defer log.Infof("TOPO SVC | DEBUG | ReloadNodes Returned: %v", req)
@@ -562,13 +563,14 @@ func (ts *TopologyService) ReloadNodes(ctx context.Context, req *iota.NodeMsg) (
 	rNodes := []*testbed.TestNode{}
 
 	for _, node := range req.Nodes {
-		if n, ok := ts.ProvisionedNodes[node.Name]; !ok {
+		n, ok := ts.ProvisionedNodes[node.Name]
+		if !ok {
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
 			req.ApiResponse.ErrorMsg = fmt.Sprintf("Reload on unprovisioned node : %v", node.GetName())
 			return req, nil
-		} else {
-			rNodes = append(rNodes, n)
 		}
+		rNodes = append(rNodes, n)
+
 	}
 
 	reloadNodes := func(ctx context.Context) error {
@@ -668,9 +670,8 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 		req.ApiResponse.ErrorMsg = fmt.Sprintf("TOPO SVC | AddWorkloads |AddWorkloads Call Failed. %v", err)
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
 		return req, nil
-	} else {
-		req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	}
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 
 	//Assoicate response
 	for _, node := range workloadNodes {
@@ -847,7 +848,8 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 		for _, node := range triggerNodes {
 			node := node
 			pool.Go(func() error {
-				if err := node.TriggerWithContext(ctx3); err != nil {
+				err := node.TriggerWithContext(ctx3)
+				if err != nil {
 					return err
 				}
 				return nil
@@ -967,7 +969,7 @@ func (ts *TopologyService) CheckClusterHealth(ctx context.Context, req *iota.Nod
 	return resp, nil
 }
 
-// WorkloadCopy does copy of items to/from entity.
+// EntityCopy does copy of items to/from entity.
 func (ts *TopologyService) EntityCopy(ctx context.Context, req *iota.EntityCopyMsg) (*iota.EntityCopyMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | EntityCopy. Received Request Msg: %v", req)
 	defer log.Infof("TOPO SVC | DEBUG | EntityCopy Returned: %v", req)

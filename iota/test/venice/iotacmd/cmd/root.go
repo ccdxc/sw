@@ -18,6 +18,7 @@ var rootCmd = &cobra.Command{
 	Short: "commandline to interact with iota based venice setup",
 }
 
+// Execute executes a command
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -54,6 +55,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&dryRun, "dry", false, "dry run commands")
 }
 
+// Config contains testbed and topology info
 type Config struct {
 	Topology string `yaml:"topology"`
 	Testbed  string `yaml:"testbed"`
@@ -73,11 +75,11 @@ func initialize() {
 		if err == nil {
 			err = yaml.Unmarshal(yfile, &config)
 			if err != nil {
-				fmt.Printf("failed to read config file at [%d](%s)\n", configFile, err)
+				fmt.Printf("failed to read config file at [%s](%s)\n", configFile, err)
 				os.Exit(1)
 			}
 		} else if configFile != "" {
-			fmt.Printf("failed to open config file at [%d](%s)\n", configFile, err)
+			fmt.Printf("failed to open config file at [%s](%s)\n", configFile, err)
 			os.Exit(1)
 		}
 	}

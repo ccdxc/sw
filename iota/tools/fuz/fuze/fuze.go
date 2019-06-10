@@ -6,15 +6,18 @@ import (
 	"time"
 )
 
+// Input is connection lists
 type Input struct {
 	Connections []*Connection `json:"connections"`
 }
 
+// Connection is connection instance
 type Connection struct {
 	ServerIPPort string `json:"ServerIPPort"`
 	Proto        string `json:"proto"`
 }
 
+// ConnectionData has info about conn
 type ConnectionData struct {
 	ServerIPPort string        `json:"ServerIPPort"`
 	ClientIPPort string        `json:"ClientIPPort"`
@@ -28,6 +31,7 @@ type ConnectionData struct {
 	Failed       int32         `json:"failed"`
 }
 
+// Output is output!
 type Output struct {
 	ErrorMsg           string            `json:"error"`
 	SuccessConnections int32             `json:"successConnections"`
@@ -35,6 +39,7 @@ type Output struct {
 	Connections        []*ConnectionData `json:"connections"`
 }
 
+// NewConnData returns a new connection data
 func NewConnData(serverIP, proto string, timeDuration time.Duration, isserver bool) *ConnectionData {
 	return &ConnectionData{ServerIPPort: serverIP, Proto: proto, ConnDurtion: timeDuration,
 		IsServer: isserver}

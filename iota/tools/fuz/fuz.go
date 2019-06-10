@@ -20,8 +20,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pensando/sw/iota/tools/fuz/fuze"
 	"github.com/pkg/errors"
+
+	"github.com/pensando/sw/iota/tools/fuz/fuze"
 )
 
 const (
@@ -283,7 +284,7 @@ func runServer(proto string, connDatas []*fuze.ConnectionData,
 		l, err := net.Listen(connData.Proto, connData.ServerIPPort)
 		if err != nil {
 			printMsg(err.Error())
-			waitCh <- fmt.Errorf("error listening %s, protocol %s, '%s'\n", connData.ServerIPPort, connData.Proto, err)
+			waitCh <- fmt.Errorf("error listening %s, protocol %s, '%s' ", connData.ServerIPPort, connData.Proto, err)
 			return
 		}
 		listeners = append(listeners, l)
@@ -303,7 +304,7 @@ func runServer(proto string, connDatas []*fuze.ConnectionData,
 				jobs <- c
 			} else {
 				printMsg(err.Error())
-				waitCh <- fmt.Errorf("error listening %s , '%s'\n", l.Addr(), err)
+				waitCh <- fmt.Errorf("error listening %s , '%s' ", l.Addr(), err)
 			}
 		}
 		//time.Sleep(20 * time.Millisecond)
@@ -367,7 +368,7 @@ func runClient(proto string, connDatas []*fuze.ConnectionData, conns, rate, cps,
 				}
 				printMsg(fmt.Sprintf("Initiating connection to : %s\n", connData.ServerIPPort))
 				if err != nil {
-					msg = fmt.Errorf("error dialing %s, protocol %s, '%s'\n", connData.ServerIPPort, connData.Proto, err)
+					msg = fmt.Errorf("error dialing %s, protocol %s, '%s' ", connData.ServerIPPort, connData.Proto, err)
 					updateStats()
 					return
 				}
@@ -440,6 +441,7 @@ func runClient(proto string, connDatas []*fuze.ConnectionData, conns, rate, cps,
 	err <- nil
 }
 
+// RandomBytes returns a random byte stream of specified length
 func RandomBytes(n int) string {
 	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 

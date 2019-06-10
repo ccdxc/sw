@@ -10,8 +10,9 @@ import "C"
 import (
 	"errors"
 	"fmt"
-	"github.com/pensando/sw/venice/utils/tsdb/metrics"
 	"unsafe"
+
+	"github.com/pensando/sw/venice/utils/tsdb/metrics"
 )
 
 // delphiMetricsIterator keeps internal state of the metrics iterator

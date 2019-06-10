@@ -429,7 +429,7 @@ func GetIntfsMatchingDevicePrefixLinux(devicePrefix string) ([]string, error) {
 	return hostIntfs, nil
 }
 
-// GetIntfsMatchingDevicePrefix get intfs matching device prefix
+// GetIntfsMatchingDevicePrefixFreeBSD get intfs matching device prefix
 func GetIntfsMatchingDevicePrefixFreeBSD(devicePrefix string) ([]string, error) {
 	hostIntfs := []string{}
 	cmd := []string{"ifconfig", "-l"}
@@ -452,9 +452,9 @@ func GetIntfsMatchingDevicePrefixFreeBSD(devicePrefix string) ([]string, error) 
 func GetIntfsMatchingDevicePrefix(devicePrefix string) ([]string, error) {
 	if runtime.GOOS == "freebsd" {
 		return GetIntfsMatchingDevicePrefixFreeBSD(devicePrefix)
-	} else {
-		return GetIntfsMatchingDevicePrefixLinux(devicePrefix)
 	}
+
+	return GetIntfsMatchingDevicePrefixLinux(devicePrefix)
 }
 
 //RestHelper is a wrapper for rest

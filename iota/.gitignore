@@ -1,5 +1,5 @@
 __pycache__
-protos/*gogen*
+protos/.gogen
 protos/*pygen*
 bin/
 test_data/

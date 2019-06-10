@@ -147,7 +147,7 @@ func (msc *MirrorSessionCollection) AddRulesForWorkloadPairs(wpc *WorkloadPairCo
 	return msc
 }
 
-// Deletes all sessions in the collection
+// Delete deletes all sessions in the collection
 func (msc *MirrorSessionCollection) Delete() error {
 	if msc.err != nil {
 		return msc.err

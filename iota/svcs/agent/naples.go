@@ -392,16 +392,16 @@ func (dnode *dataNode) configureWorkload(wload Workload.Workload, in *iota.Workl
 
 	var intf string
 
-	if attachedIntf, err := wload.AddInterface(in.GetParentInterface(), in.GetInterface(), in.GetMacAddress(), in.GetIpPrefix(), in.GetIpv6Prefix(), int(in.GetEncapVlan())); err != nil {
+	attachedIntf, err := wload.AddInterface(in.GetParentInterface(), in.GetInterface(), in.GetMacAddress(), in.GetIpPrefix(), in.GetIpv6Prefix(), int(in.GetEncapVlan()))
+	if err != nil {
 		msg := fmt.Sprintf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())
 		dnode.logger.Error(msg)
 		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
 		return resp, err
-	} else {
-		intf = attachedIntf
 	}
+	intf = attachedIntf
 
-	var err = wload.AddSecondaryIpv4Addresses(intf, in.GetSecIpPrefix())
+	err = wload.AddSecondaryIpv4Addresses(intf, in.GetSecIpPrefix())
 	if err != nil {
 		msg := fmt.Sprintf("Error Adding Secondary IPv4 addresses %s : %s", in.GetWorkloadName(), err.Error())
 		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
@@ -669,7 +669,7 @@ func (dnode *dataNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 	runCommand := func(cmd *iota.Command) error {
 		var err error
 		var cmdKey string
-		var cmdResp *Cmd.CommandCtx
+		var cmdResp *Cmd.CmdCtx
 		wloadKey := cmd.GetEntityName()
 
 		item, _ := dnode.entityMap.Load(wloadKey)
@@ -1303,7 +1303,7 @@ func (node *commandNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) 
 
 		var err error
 		var cmdKey string
-		var cmdResp *Cmd.CommandCtx
+		var cmdResp *Cmd.CmdCtx
 
 		if in.TriggerOp == iota.TriggerOp_EXEC_CMDS {
 			cmdResp, cmdKey, err = node.RunCommand(strings.Split(cmd.GetCommand(), " "),
@@ -1405,7 +1405,7 @@ func (node *commandNode) GetWorkloadMsgs() []*iota.Workload {
 }
 
 // RunCommand runs a command on node nodes
-func (node *commandNode) RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CommandCtx, string, error) {
+func (node *commandNode) RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CmdCtx, string, error) {
 	handleKey := ""
 
 	runDir := Common.DstIotaEntitiesDir + "/" + node.name
@@ -1430,13 +1430,13 @@ func (node *commandNode) RunCommand(cmd []string, dir string, timeout uint32, ba
 }
 
 // StopCommand stops a running command
-func (node *commandNode) StopCommand(commandHandle string) (*Cmd.CommandCtx, error) {
+func (node *commandNode) StopCommand(commandHandle string) (*Cmd.CmdCtx, error) {
 	item, ok := node.bgCmds.Load(commandHandle)
 	if !ok {
-		return &Cmd.CommandCtx{ExitCode: -1, Stdout: "", Stderr: "", Done: true}, nil
+		return &Cmd.CmdCtx{ExitCode: -1, Stdout: "", Stderr: "", Done: true}, nil
 	}
 
-	cmdInfo := item.(*Cmd.CommandInfo)
+	cmdInfo := item.(*Cmd.CmdInfo)
 
 	node.logger.Printf("Stopping bare metal Running cmd %v %v\n", cmdInfo.Ctx.Stdout, cmdInfo.Handle)
 
@@ -1449,7 +1449,7 @@ func (node *commandNode) StopCommand(commandHandle string) (*Cmd.CommandCtx, err
 func incrementMacAddress(mac string, offset int) (string, error) {
 	macAddr, err := net.ParseMAC(mac)
 	if err != nil {
-		return "", errors.New("Mac Address Parse error!")
+		return "", errors.New("Mac Address Parse error")
 	}
 	for i := len(macAddr) - 1; i > 1; i-- {
 		if ((int)(macAddr[i]))+offset < 255 {

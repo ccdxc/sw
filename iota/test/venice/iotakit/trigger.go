@@ -280,7 +280,7 @@ func (tb *TestBed) CopyToWorkload(nodeName, workloadName string, files []string,
 	return tb.CopyToFromWorkload(iota.CopyDirection_DIR_IN, nodeName, workloadName, files, destDir)
 }
 
-// this is a common routine to copy in/out from workload
+// CopyToFromWorkload is a common routine to copy in/out from workload
 func (tb *TestBed) CopyToFromWorkload(direction iota.CopyDirection, nodeName, workloadName string, files []string, destDir string) error {
 	// copy message
 	copyMsg := iota.EntityCopyMsg{

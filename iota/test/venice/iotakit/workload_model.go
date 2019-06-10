@@ -298,7 +298,7 @@ func (wpc *WorkloadPairCollection) WithinNetwork() *WorkloadPairCollection {
 	return &newCollection
 }
 
-// ExcludeWorkload excludes a workload from collection
+// ExcludeWorkloads excludes some workloads from collection
 func (wpc *WorkloadPairCollection) ExcludeWorkloads(wc *WorkloadCollection) *WorkloadPairCollection {
 	if wpc.err != nil {
 		return wpc

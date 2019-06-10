@@ -20,7 +20,8 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-func (actx *ActionCtx) PerformImageUpload() error {
+// PerformImageUpload triggers image upgrade
+func (act *ActionCtx) PerformImageUpload() error {
 
 	fileBuf, err := ioutil.ReadFile("/go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar")
 	if err != nil {
@@ -29,11 +30,11 @@ func (actx *ActionCtx) PerformImageUpload() error {
 	}
 	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancelFunc()
-	ctx, err := actx.model.tb.VeniceLoggedInCtx(bkCtx)
+	ctx, err := act.model.tb.VeniceLoggedInCtx(bkCtx)
 	if err != nil {
 		return err
 	}
-	_, err = actx.UploadBundle(ctx, "bundle.tar", fileBuf)
+	_, err = act.UploadBundle(ctx, "bundle.tar", fileBuf)
 	if err != nil {
 		return err
 	}
@@ -42,7 +43,7 @@ func (actx *ActionCtx) PerformImageUpload() error {
 }
 
 // UploadBundle performs a rollout in the cluster
-func (actx *ActionCtx) UploadBundle(ctx context.Context, filename string, content []byte) (int, error) {
+func (act *ActionCtx) UploadBundle(ctx context.Context, filename string, content []byte) (int, error) {
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
@@ -59,7 +60,7 @@ func (actx *ActionCtx) UploadBundle(ctx context.Context, filename string, conten
 	if err != nil {
 		return 0, fmt.Errorf("closing writer %v", err)
 	}
-	uri := fmt.Sprintf("https://%s/objstore/v1/uploads/images/", actx.model.tb.GetVeniceURL()[0])
+	uri := fmt.Sprintf("https://%s/objstore/v1/uploads/images/", act.model.tb.GetVeniceURL()[0])
 	req, err := http.NewRequest("POST", uri, body)
 	if err != nil {
 		return 0, fmt.Errorf("http.newRequest failed %v", err)
@@ -236,7 +237,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 		break
 	}
 	if numRetries != 0 {
-		return fmt.Errorf("rollout controller node failed.")
+		return fmt.Errorf("rollout controller node failed")
 	}
 
 	// Verify rollout service status
@@ -271,7 +272,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 	for numRetries = 0; numRetries < 60; numRetries++ {
 		restcls, err := act.model.tb.VeniceRestClient()
 		if err != nil {
-			log.Infof("ts:%s Failed to get restclient err %+v", time.Now().String(),err)
+			log.Infof("ts:%s Failed to get restclient err %+v", time.Now().String(), err)
 			time.Sleep(time.Second * 5)
 			continue
 		}
@@ -307,7 +308,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 		break
 	}
 	if numRetries != 0 {
-		return fmt.Errorf("rollout smartNIC node failed.")
+		return fmt.Errorf("rollout smartNIC node failed")
 	}
 
 	// Verify rollout overall status
@@ -321,7 +322,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 		}
 		opState := rollout.Status.OperationalState
 
-		if opState == "PROGRESSING"  || opState == "SUSPEND_IN_PROGRESS"{
+		if opState == "PROGRESSING" || opState == "SUSPEND_IN_PROGRESS" {
 			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), rollout.Status.OperationalState)
 			time.Sleep(time.Second * 5)
 			continue
@@ -329,7 +330,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 
 		if opState == "FAILURE" || opState == "DEADLINE_EXCEEDED" {
 			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), rollout.Status.OperationalState)
-			return fmt.Errorf("rollout smartNIC node failed.")
+			return fmt.Errorf("rollout smartNIC node failed")
 		}
 
 		if opState == "SUCCESS" || opState == "SUSPENDED" {
@@ -376,22 +377,22 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 	return nil
 }
 
-// performRollout performs a rollout in the cluster
-func (actx *ActionCtx) PerformRollout(rollout *rollout.Rollout) error {
+// PerformRollout performs a rollout in the cluster
+func (act *ActionCtx) PerformRollout(rollout *rollout.Rollout) error {
 	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 15*time.Minute)
 	defer cancelFunc()
-	ctx, err := actx.model.tb.VeniceLoggedInCtx(bkCtx)
+	ctx, err := act.model.tb.VeniceLoggedInCtx(bkCtx)
 	if err != nil {
 		return err
 	}
 
-	restcls, err := actx.model.tb.VeniceRestClient()
+	restcls, err := act.model.tb.VeniceRestClient()
 	if err != nil {
 		return err
 	}
 	//cleanup the existing rollout object with the same name
 	//fetch the image and upload
-	err = actx.PerformImageUpload()
+	err = act.PerformImageUpload()
 	if err != nil {
 		log.Infof("Errored PerformImageUpload")
 		return err

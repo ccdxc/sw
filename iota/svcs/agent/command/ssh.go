@@ -11,8 +11,9 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+// constants
 const (
-	SSH_CREATION_FAILED_EXIT_CODE = 127
+	SSHCreationFailedExitCode = 127
 )
 
 //SudoCmd sudo cmd constructor
@@ -50,11 +51,11 @@ func createSSHSession(SSHHandle *ssh.Client) (*ssh.Session, io.Reader, io.Reader
 }
 
 //RunSSHCommand run command over SSH
-func RunSSHCommand(SSHHandle *ssh.Client, cmd string, TimedOut uint32, sudo bool, bg bool, logger *log.Logger) (*CommandInfo, error) {
+func RunSSHCommand(SSHHandle *ssh.Client, cmd string, TimedOut uint32, sudo bool, bg bool, logger *log.Logger) (*CmdInfo, error) {
 	logger.Println("Running cmd " + cmd)
 	var stdoutBuf, stderrBuf bytes.Buffer
 
-	cmdInfo := &CommandInfo{Ctx: &CommandCtx{}}
+	cmdInfo := &CmdInfo{Ctx: &CmdCtx{}}
 
 	sshSession, sshOut, sshErr, err := createSSHSession(SSHHandle)
 	if err != nil {
@@ -137,9 +138,9 @@ func RunSSHCommand(SSHHandle *ssh.Client, cmd string, TimedOut uint32, sudo bool
 }
 
 //StartSSHBgCommand start bg ssh Command
-func StartSSHBgCommand(SSHHandle *ssh.Client, cmd string, sudo bool) (*CommandInfo, error) {
+func StartSSHBgCommand(SSHHandle *ssh.Client, cmd string, sudo bool) (*CmdInfo, error) {
 	var stdoutBuf, stderrBuf bytes.Buffer
-	cmdInfo := &CommandInfo{Ctx: &CommandCtx{}}
+	cmdInfo := &CmdInfo{Ctx: &CmdCtx{}}
 
 	sshSession, sshOut, sshErr, err := createSSHSession(SSHHandle)
 	if err != nil {
@@ -148,7 +149,7 @@ func StartSSHBgCommand(SSHHandle *ssh.Client, cmd string, sudo bool) (*CommandIn
 	shout := io.MultiWriter(&stdoutBuf)
 	ssherr := io.MultiWriter(&stderrBuf)
 
-	go func(ctx *CommandCtx) {
+	go func(ctx *CmdCtx) {
 		go func() {
 			io.Copy(shout, sshOut)
 		}()
@@ -188,7 +189,7 @@ func StartSSHBgCommand(SSHHandle *ssh.Client, cmd string, sudo bool) (*CommandIn
 }
 
 //StopSSHCmd Stop bg process running
-func StopSSHCmd(cmdInfo *CommandInfo) error {
+func StopSSHCmd(cmdInfo *CmdInfo) error {
 	session := cmdInfo.Handle.(*ssh.Session)
 	if session != nil {
 		session.Close()

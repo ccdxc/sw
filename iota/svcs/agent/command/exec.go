@@ -31,13 +31,13 @@ func getOutFiles() (string, string) {
 
 //ExecCmd run shell command
 func execCmd(cmdArgs []string, runDir string, TimedOut int, background bool, shell bool,
-	env []string) (*CommandInfo, error) {
+	env []string) (*CmdInfo, error) {
 
 	var process *exec.Cmd
 	var stdoutBuf, stderrBuf bytes.Buffer
 	var shellStdout, shellStderr string
 
-	cmdInfo := &CommandInfo{Ctx: &CommandCtx{}}
+	cmdInfo := &CmdInfo{Ctx: &CmdCtx{}}
 	if shell {
 		shellStdout, shellStderr = getOutFiles()
 		fullCmd := strings.Join(cmdArgs, " ")
@@ -114,7 +114,7 @@ func execCmd(cmdArgs []string, runDir string, TimedOut int, background bool, she
 			return cmdInfo, err
 		}
 		cmdInfo.Handle = process
-		go func(cmdInfo *CommandInfo) {
+		go func(cmdInfo *CmdInfo) {
 			process.Wait()
 			fmt.Println("Process exited :", strings.Join(cmdArgs, " "))
 			cmdInfo.Ctx.Done = true
@@ -125,7 +125,7 @@ func execCmd(cmdArgs []string, runDir string, TimedOut int, background bool, she
 		return cmdInfo, nil
 	}
 
-	go func(cmdInfo *CommandInfo) {
+	go func(cmdInfo *CmdInfo) {
 		process.Start()
 		cmdErr := process.Wait()
 		if cmdErr != nil {
@@ -191,7 +191,7 @@ func getChildPids(ppid int) []int {
 }
 
 //StopExecCmd Stop bg process running
-func StopExecCmd(cmdInfo *CommandInfo) error {
+func StopExecCmd(cmdInfo *CmdInfo) error {
 
 	if cmdInfo.Handle == nil {
 
@@ -242,6 +242,7 @@ func StopExecCmd(cmdInfo *CommandInfo) error {
 	return nil
 }
 
+// SetOutputDirectory sets the output directory
 func SetOutputDirectory(outDirectory string) {
 	execOutputDir = outDirectory
 }

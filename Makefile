@@ -9,7 +9,8 @@ CACHEMOUNT :=
 endif
 
 # Lists excluded patterns to "go list"
-EXCLUDE_PATTERNS := "apollo|generated|halproto|proto|model_sim|labels|vendor|bazel|e2etests|iota|gometrics|vchub|buildroot"
+EXCLUDE_PATTERNS := "apollo|generated|halproto|proto|model_sim|labels|vendor|bazel|e2etests|gometrics|buildroot"
+UTEST_EXCLUDE_PATTERNS := "apollo|generated|halproto|proto|model_sim|labels|vendor|bazel|e2etests|iota|gometrics|vchub|buildroot"
 
 # Lists targets to be prebuilt before generation
 TO_PREGEN := venice/utils/apigen/annotations
@@ -137,6 +138,7 @@ gopkgsinstall:
 	@$(shell cd ${GOPATH}/src/github.com/pensando/sw && CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ./vendor/github.com/haya14busa/gopkgs/cmd/gopkgs)
 gopkglist: gopkgsinstall
 	@$(eval GO_PKG := $(shell ${GOPATH}/bin/gopkgs -short 2>/dev/null | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS}))
+	$(eval GO_PKG_UTEST := $(shell ${GOPATH}/bin/gopkgs -short 2>/dev/null | grep github.com/pensando/sw | egrep -v ${UTEST_EXCLUDE_PATTERNS}))
 
 # build installs all go binaries. Use VENICE_CCOMPILE_FORCE=1 to force a rebuild of all packages
 build: gopkglist
@@ -155,15 +157,15 @@ build: gopkglist
 # this will return a non 0 error when coverage for a package is < 75.0%
 unit-test-cover: gopkglist
 	$(info +++ running go tests)
-	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go run scripts/report/report.go ${GO_PKG}
+	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go run scripts/report/report.go ${GO_PKG_UTEST}
 
 unit-race-test: gopkglist
 	$(info +++ running go tests with race detector)
-	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go test -race ${GO_PKG}
+	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go test -race ${GO_PKG_UTEST}
 
 unit-test-verbose: gopkglist
 	$(info +++ running go tests verbose)
-	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" $(GOCMD) test -v -p 1 ${GO_PKG}; \
+	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" $(GOCMD) test -v -p 1 ${GO_PKG_UTEST}; \
 
 c-start:
 	@tools/scripts/create-container.sh startCluster

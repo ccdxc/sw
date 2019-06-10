@@ -1,7 +1,7 @@
 package command
 
-//CommandCtx has all information associated to return of command
-type CommandCtx struct {
+// CmdCtx has all information associated to return of command
+type CmdCtx struct {
 	Done     bool
 	Stdout   string
 	TimedOut bool
@@ -10,8 +10,8 @@ type CommandCtx struct {
 	status   chan error
 }
 
-//CommandInfo has all information and handle to cancel later
-type CommandInfo struct {
-	Ctx    *CommandCtx
+// CmdInfo has all information and handle to cancel later
+type CmdInfo struct {
+	Ctx    *CmdCtx
 	Handle interface{}
 }

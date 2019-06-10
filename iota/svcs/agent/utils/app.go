@@ -39,6 +39,7 @@ type Interface struct {
 	_VlanIntfs map[int]*Interface
 }
 
+// CommandHandle is the handle
 type CommandHandle string
 
 //CommandResp returns command response context

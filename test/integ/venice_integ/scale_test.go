@@ -42,7 +42,7 @@ func (it *veniceIntegSuite) TestScale(c *C) {
 	cfg.SGPolicyParams.NumPolicies = 1
 	cfg.SGPolicyParams.NumRulesPerPolicy = 1000
 	cfg.AppParams.NumApps = 1000
-	cfg.NumDnsAlgs = 0
+	cfg.NumDNSAlgs = 0
 	cfg.Smartnics = snicList
 	cfg.Do()
 

@@ -12,7 +12,7 @@ import (
 type StubTopologyService struct {
 }
 
-// NewTopologyServiceHandler Topo service handle
+// NewStubTopologyService Topo service handle
 func NewStubTopologyService() *StubTopologyService {
 	var topoServer StubTopologyService
 	return &topoServer
@@ -59,7 +59,7 @@ func (ts *StubTopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) 
 	return req, nil
 }
 
-// ReloadNode saves and loads node personality
+// ReloadNodes saves and loads node personality
 func (*StubTopologyService) ReloadNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
 	resp := &iota.NodeMsg{}
 	return resp, nil
@@ -116,7 +116,7 @@ func (ts *StubTopologyService) CheckClusterHealth(ctx context.Context, req *iota
 	return resp, nil
 }
 
-// WorkloadCopy does copy of items to/from entity.
+// EntityCopy does copy of items to/from entity.
 func (ts *StubTopologyService) EntityCopy(ctx context.Context, req *iota.EntityCopyMsg) (*iota.EntityCopyMsg, error) {
 
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK

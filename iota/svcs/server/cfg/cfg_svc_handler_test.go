@@ -25,7 +25,7 @@ func startCfgService() {
 
 	cfgServerURL = testListener.ListenURL.String()
 
-	cfgSvc, err := common.CreateNewGRPCServer("IOTA Server", cfgServerURL)
+	cfgSvc, err := common.CreateNewGRPCServer("IOTA Server", cfgServerURL, common.GrpcMaxMsgSize)
 	if err != nil {
 		fmt.Printf("Could not start Config Service. Err: %v\n", err)
 		os.Exit(1)
@@ -46,7 +46,7 @@ func TestMain(m *testing.M) {
 	// Ensure the service is up
 	time.Sleep(time.Second * 2)
 
-	c, err := common.CreateNewGRPCClient("cfg-test-client", cfgServerURL)
+	c, err := common.CreateNewGRPCClient("cfg-test-client", cfgServerURL, common.GrpcMaxMsgSize)
 	if err != nil {
 		fmt.Println("Could not create a GRPC Client to the IOTA Server")
 		os.Exit(1)

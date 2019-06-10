@@ -12,6 +12,8 @@ import (
 func (n *TestNode) Trigger() error {
 	return n.TriggerWithContext(context.Background())
 }
+
+// TriggerWithContext runs a trigger on workload
 func (n *TestNode) TriggerWithContext(ctx context.Context) error {
 	resp, err := n.AgentClient.Trigger(ctx, n.TriggerInfo)
 	log.Infof("TOPO SVC | DEBUG | Trigger Agent . Received Response Msg: %v", resp)

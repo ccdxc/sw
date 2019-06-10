@@ -15,11 +15,13 @@ type VM struct {
 	vm   *object.VirtualMachine
 }
 
+// VMInfo contains info about a vm
 type VMInfo struct {
 	Name string
 	IP   string
 }
 
+// Name returns name of the vm
 func (vm VM) Name() string {
 	return vm.name
 }

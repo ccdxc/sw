@@ -28,7 +28,7 @@ func TestStringSub(t *testing.T) {
 		{input: "{{mac-primary}}", expected: "00ae.dd00.0002"},
 		{input: "{{mac-newoui:00.44.55}}", expected: "0044.5500.0001"},
 	}
-	iterCtx := NewIterContext()
+	iterCtx := newIterContext()
 	for idx, testSample := range testSamples {
 		tString := iterCtx.transformString(testSample.input)
 		if !strings.Contains(tString, testSample.expected) {
@@ -52,7 +52,7 @@ func TestIntSub(t *testing.T) {
 		{input: 8, expMin: 3, expMax: 3},
 	}
 
-	iterCtx := NewIterContext()
+	iterCtx := newIterContext()
 
 	for idx, testSample := range testSamples {
 		tInt := iterCtx.transformUint(testSample.input)

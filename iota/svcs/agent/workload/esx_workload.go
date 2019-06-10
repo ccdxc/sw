@@ -191,7 +191,7 @@ func (vm *vmESXWorkload) BringUp(args ...string) error {
 	return vm.startVMAgent()
 }
 
-func (vm *vmESXWorkload) AddInterface(name string, workload_interface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
+func (vm *vmESXWorkload) AddInterface(name string, workloadInterface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
 
 	vsname := constants.EsxIotaDataSwitch
 	vsspec := vmware.VswitchSpec{Name: vsname}
@@ -253,7 +253,7 @@ func (vm *vmESXWorkload) MoveInterface(name string) error {
 	return errors.New("move interface not supported for esx workloads")
 }
 
-func (vm *vmESXWorkload) RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CommandCtx, string, error) {
+func (vm *vmESXWorkload) RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CmdCtx, string, error) {
 
 	var runCmd string
 	if dir != "" {
@@ -269,7 +269,7 @@ func (vm *vmESXWorkload) RunCommand(cmd []string, dir string, timeout uint32, ba
 
 	cmdInfo, err := Cmd.StartSSHBgCommand(vm.sshHandle, runCmd, true)
 	if err != nil {
-		return &Cmd.CommandCtx{ExitCode: 1, Stderr: err.Error()}, "", nil
+		return &Cmd.CmdCtx{ExitCode: 1, Stderr: err.Error()}, "", nil
 	}
 	handleKey := vm.genBgCmdHandle()
 	vm.bgCmds.Store(handleKey, cmdInfo)

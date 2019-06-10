@@ -229,7 +229,7 @@ func (agent *Service) DeleteNode(ctx context.Context, in *iota.Node) (*iota.Node
 
 }
 
-// AddWorkload brings up a workload type on a given node
+// AddWorkloads brings up a workload type on a given node
 func (agent *Service) AddWorkloads(ctx context.Context, in *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
 
 	/* Check if the node running an instance to add a workload */

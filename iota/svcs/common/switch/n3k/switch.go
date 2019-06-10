@@ -215,10 +215,10 @@ func CheckInterfaceConigured(n3k *ConnectCtx, port, mode, status, speed string, 
 
 	//try twice
 	for i := 0; i < 5; i++ {
-	    err = interfaceConfigured(exp, buf, port, mode, status, speed, timeout)
-	    if err == nil {
-		    break
-	    }
+		err = interfaceConfigured(exp, buf, port, mode, status, speed, timeout)
+		if err == nil {
+			break
+		}
 	}
 
 	return buf.String(), err

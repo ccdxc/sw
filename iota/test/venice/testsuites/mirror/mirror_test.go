@@ -24,37 +24,37 @@ var _ = Describe("mirror tests", func() {
 			}
 
 			// add permit rules for workload pairs
-                        collector := ts.model.Workloads().Any(2)
+			collector := ts.model.Workloads().Any(2)
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().ExcludeWorkloads(collector).Any(1)
 			msc := ts.model.NewMirrorSession("test-mirror").AddRulesForWorkloadPairs(workloadPairs, "icmp/0/0")
 			msc.AddCollector(collector, "udp/4545", 0)
-                        Expect(msc.Commit()).Should(Succeed())
+			Expect(msc.Commit()).Should(Succeed())
 
 			Eventually(func() error {
-    			        aerr := ts.model.Action().PingAndCapturePackets(workloadPairs, collector, 0)
-    			        if aerr != nil {
-    				        return aerr
-    			        }
-                                return nil
+				aerr := ts.model.Action().PingAndCapturePackets(workloadPairs, collector, 0)
+				if aerr != nil {
+					return aerr
+				}
+				return nil
 			}).Should(Succeed())
 
-                        // Clear collectors
+			// Clear collectors
 			msc.ClearCollectors()
 
-                        // Update the collector
+			// Update the collector
 			msc.AddCollector(collector, "udp/4545", 1)
-                        Expect(msc.Commit()).Should(Succeed())
+			Expect(msc.Commit()).Should(Succeed())
 
 			Eventually(func() error {
-    			        aerr := ts.model.Action().PingAndCapturePackets(workloadPairs, collector, 1)
-			        if aerr != nil {
-				    return aerr
-			        }
-                                return nil
+				aerr := ts.model.Action().PingAndCapturePackets(workloadPairs, collector, 1)
+				if aerr != nil {
+					return aerr
+				}
+				return nil
 			}).Should(Succeed())
 
-                        // Delete the Mirror session
-                        Expect(msc.Delete()).Should(Succeed())
+			// Delete the Mirror session
+			Expect(msc.Delete()).Should(Succeed())
 
 		})
 	})

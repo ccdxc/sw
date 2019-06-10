@@ -28,7 +28,7 @@ func TestSGPolicyGen(t *testing.T) {
 		panic(err)
 	}
 
-	sgpIterCtx := NewIterContext()
+	sgpIterCtx := newIterContext()
 	for ii := 0; ii < 10; ii++ {
 		fromIPAddressTmpl := fmt.Sprintf("{{ipv4:%d.x.x.x}}", ii+10)
 		toIPAddressTmpl := fmt.Sprintf("{{ipv4:%d.x.x.x}}", ii+100)
@@ -42,7 +42,7 @@ func TestSGPolicyGen(t *testing.T) {
 		tSgp := sgpIterCtx.transform(sgp).(*security.SGPolicy)
 
 		rules := []security.SGRule{}
-		ruleIterCtx := NewIterContext()
+		ruleIterCtx := newIterContext()
 		for ii := 0; ii < 15; ii++ {
 			tRule := ruleIterCtx.transform(rule)
 			rules = append(rules, tRule.(security.SGRule))

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
+
 	"github.com/pensando/sw/api/generated/rollout"
 
 	"github.com/pensando/sw/api"
@@ -16,7 +17,7 @@ import (
 )
 
 const (
-	rolloutName        = "e2e_rollout"
+	rolloutName = "e2e_rollout"
 )
 
 func processMetadataFile(metadata string) map[string]map[string]string {
@@ -51,7 +52,7 @@ func GetCmdGitVersion() string {
 	return ""
 }
 
-// CreateRollout creates a new rollout instance
+// GetRolloutObject gets rollout instance
 func (sm *SysModel) GetRolloutObject() (*rollout.Rollout, error) {
 
 	seconds := time.Now().Unix()
@@ -62,7 +63,7 @@ func (sm *SysModel) GetRolloutObject() (*rollout.Rollout, error) {
 	}
 	/*jsonUrl := []string{"http://pxe.pensando.io/kickstart/veniceImageForRollout/metadata.json", "--output", "/tmp/metadata.json"}
 
-	out, err := exec.Command("curl", jsonUrl...).CombinedOutput()
+	out, err := exec.Command("curl", jsonURL...).CombinedOutput()
 	outStr := strings.TrimSpace(string(out))
 	fmt.Println(fmt.Sprintf("curl output: %s, err: %v\n", outStr, err))
 	if err != nil {
@@ -78,7 +79,7 @@ func (sm *SysModel) GetRolloutObject() (*rollout.Rollout, error) {
 		return nil, err
 
 	}*/
-    //TODO hardcoding it for now to make asset-pull work
+	//TODO hardcoding it for now to make asset-pull work
 
 	version := "0.10.0-256"
 
@@ -90,17 +91,17 @@ func (sm *SysModel) GetRolloutObject() (*rollout.Rollout, error) {
 			Name: rolloutName,
 		},
 		Spec: rollout.RolloutSpec{
-			Version:                     version,
-			ScheduledStartTime:          scheduledStartTime,
-			Duration:                    "",
-			Strategy:                    "LINEAR",
-			MaxParallel:                 1,
-			MaxNICFailuresBeforeAbort:   0,
-			OrderConstraints:            nil,
-			Suspend:                     false,
-			SmartNICsOnly:               false,
+			Version:                   version,
+			ScheduledStartTime:        scheduledStartTime,
+			Duration:                  "",
+			Strategy:                  "LINEAR",
+			MaxParallel:               1,
+			MaxNICFailuresBeforeAbort: 0,
+			OrderConstraints:          nil,
+			Suspend:                   false,
+			SmartNICsOnly:             false,
 			//SmartNICMustMatchConstraint: true, // hence venice upgrade only
-			UpgradeType:                 "Disruptive",
+			UpgradeType: "Disruptive",
 		},
 	}, nil
 }

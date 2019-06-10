@@ -8,7 +8,9 @@ import (
 	"github.com/pensando/sw/api/generated/workload"
 )
 
+// DefaultCfgenParams contains default config gen params
 var DefaultCfgenParams = scaleCfgenParams
+
 var scaleCfgenParams = &Cfgen{
 	UserParams: UserParams{},
 	RoleParams: RoleParams{},
@@ -125,8 +127,8 @@ var scaleCfgenParams = &Cfgen{
 				ProtoPorts: []security.ProtoPort{{Protocol: "{{rand:tcp|udp}}", Ports: "{{rand:10000-50000}}"}},
 			},
 		},
-		NumDnsAlgs: 100,
-		DnsAlgTemplate: &security.App{
+		NumDNSAlgs: 100,
+		DNSAlgTemplate: &security.App{
 			TypeMeta: api.TypeMeta{Kind: "App"},
 			ObjectMeta: api.ObjectMeta{
 				Tenant:    "default",

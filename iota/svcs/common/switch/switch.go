@@ -9,12 +9,13 @@ import (
 	"github.com/pensando/sw/iota/svcs/common/switch/n3k"
 )
 
-const (
-	N3KSwitchType = "n3k"
-)
+// N3KSwitchType represents n3k switch type
+const N3KSwitchType = "n3k"
 
+// PortMode is port mode
 type PortMode int
 
+// constants
 const (
 	Access PortMode = iota
 	Trunk
@@ -24,8 +25,10 @@ func (s PortMode) String() string {
 	return [...]string{"access", "trunk"}[s]
 }
 
+// PortStatus is port status
 type PortStatus int
 
+// enums
 const (
 	Up PortStatus = iota
 	Down
@@ -35,8 +38,10 @@ func (s PortStatus) String() string {
 	return [...]string{"up", "down"}[s]
 }
 
+// PortSpeed is port speed
 type PortSpeed int
 
+// enums
 const (
 	Speed100g PortSpeed = iota
 	Speed10g
