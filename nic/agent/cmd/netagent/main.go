@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"path/filepath"
+	"runtime/debug"
 	"time"
 
 	"github.com/pensando/sw/nic/agent/netagent"
@@ -20,6 +21,17 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 )
+
+// periodicFreeMemory forces garbage collection every minute and frees OS memory
+func periodicFreeMemory() {
+	for {
+		select {
+		case <-time.After(time.Minute):
+			// force GC and free OS memory
+			debug.FreeOSMemory()
+		}
+	}
+}
 
 // Main function
 func main() {
@@ -63,6 +75,10 @@ func main() {
 
 	// create a dummy channel to wait forver
 	waitCh := make(chan bool)
+
+	// set Garbage collection ratio and periodically free OS memory
+	debug.SetGCPercent(20)
+	go periodicFreeMemory()
 
 	// ToDo Remove this prior to fcs.
 	if len(*hostIf) > 0 {
