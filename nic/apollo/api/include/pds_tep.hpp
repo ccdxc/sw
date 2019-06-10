@@ -37,6 +37,7 @@ typedef struct pds_tep_spec_s {
                                ///< (unused currently)
     mac_addr_t     mac;        ///< MAC address of this TEP
     pds_tep_type_t type;       ///< type/role of the TEP
+    pds_vpc_key_t  vpc;        ///< VPC this tunnel belongs to
     ///< encap to be used, if specified
     ///< for PDS_TEP_TYPE_WORKLOAD type TEP, encap value itself comes from the
     ///< mapping configuration so need not be specified here, however for the

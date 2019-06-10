@@ -151,6 +151,10 @@ public:
     /// \return    key of the TEP
     pds_tep_key_t key(void) const { return key_; }
 
+    /// \brief    return TEP's type
+    /// \return    type of the TEP
+    pds_tep_type_t type(void) const { return type_; }
+
     /// \brief    return TEP IPv4 address
     /// \return    IPv4 address of the TEP
     ip_addr_t& ip(void) { return key_.ip_addr; }
@@ -179,11 +183,12 @@ private:
     /// \NOTE: the mac address for this TEP will be learnt in the datapath from
     ///        ARP traffic in the substrate, but we don't need to store it in
     ///        s/w, we will directly refresh the TEP_TX table
-    pds_tep_key_t key_;        ///< TEP key
-    mac_addr_t    mac_;        ///< (learnt/configured) MAC address of this TEP
-    ht_ctxt_t     ht_ctxt_;    ///< hash table context
-    impl_base     *impl_;      ///< impl object instance
-    friend class  tep_state;   ///< tep_state is friend of tep_entry
+    pds_tep_key_t  key_;        ///< TEP key
+    pds_tep_type_t type_;       ///< TEP type
+    mac_addr_t     mac_;        ///< (learnt/configured) MAC address of this TEP
+    ht_ctxt_t      ht_ctxt_;    ///< hash table context
+    impl_base      *impl_;      ///< impl object instance
+    friend class   tep_state;   ///< tep_state is friend of tep_entry
 } __PACK__;
 
 /// \@}

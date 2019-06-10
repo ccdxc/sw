@@ -15,7 +15,14 @@
 #include "nic/apollo/api/tep.hpp"
 #include "nic/apollo/api/impl/artemis/tep_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
+#include "nic/apollo/p4/include/artemis_defines.h"
 #include "gen/p4gen/artemis/include/p4pd.h"
+
+// TODO: this MAC needs to be resolved by VPP or some app, until then we use
+//       this hack
+//       other approach is to have route->NH (of type ILB) and NH will have
+//       Tunnel and DMAC of ILB
+uint64_t g_ilb_mac = 0x000202020202;
 
 namespace api {
 namespace impl {
@@ -56,35 +63,32 @@ tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     sdk_table_api_params_t api_params;
 
     spec = &obj_ctxt->api_params->tep_spec;
-    if (spec->type != PDS_TEP_TYPE_SERVICE) {
-        PDS_TRACE_ERR("Unsupported TEP type %u", spec->type);
-        return SDK_RET_INVALID_ARG;
-    }
+    if (spec->type == PDS_TEP_TYPE_SERVICE) {
+        // reserve an entry in REMOTE_46_TEP table for service type TEPs
+        if (tep_impl_db()->remote_46_tep_idxr()->alloc(&idx) !=
+                sdk::lib::indexer::SUCCESS) {
+            PDS_TRACE_ERR("Failed to allocate hw id for TEP %s",
+                          ipaddr2str(&spec->key.ip_addr));
+            return sdk::SDK_RET_NO_RESOURCE;
+        }
+        remote46_hw_id_ = idx & 0xFFFF;
 
-    // reserve an entry in TEP_table
-    if (tep_impl_db()->remote_46_tep_idxr()->alloc(&idx) !=
-            sdk::lib::indexer::SUCCESS) {
-        PDS_TRACE_ERR("Failed to allocate hw id for TEP %s",
-                      ipaddr2str(&spec->key.ip_addr));
-        return sdk::SDK_RET_NO_RESOURCE;
+        // reserve an entry in the TEP1_RX table
+        tep1_rx_key.vxlan_1_vni = spec->encap.val.value;
+        tep1_rx_mask.vxlan_1_vni_mask = 0xFFFFFFFF;
+        memset(&api_params, 0, sizeof(api_params));
+        api_params.key = &tep1_rx_key;
+        api_params.mask = &tep1_rx_mask;
+        api_params.handle = sdk::table::handle_t::null();
+        ret = tep_impl_db()->tep1_rx_tbl()->reserve(&api_params);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to reserve entry in TEP1_RX "
+                          "table for svc TEP %s, err %u",
+                          orig_obj->key2str().c_str(), ret);
+            goto error;
+        }
+        tep1_rx_handle_ = api_params.handle;
     }
-    remote46_hw_id_ = idx & 0xFFFF;
-
-    // reserve an entry in the TEP1_RX table
-    tep1_rx_key.vxlan_1_vni = spec->encap.val.value;
-    tep1_rx_mask.vxlan_1_vni_mask = 0xFFFFFFFF;
-    memset(&api_params, 0, sizeof(api_params));
-    api_params.key = &tep1_rx_key;
-    api_params.mask = &tep1_rx_mask;
-    api_params.handle = sdk::table::handle_t::null();
-    ret = tep_impl_db()->tep1_rx_tbl()->reserve(&api_params);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to reserve entry in TEP1_RX "
-                      "table for svc TEP %s, err %u",
-                      orig_obj->key2str().c_str(), ret);
-        goto error;
-    }
-    tep1_rx_handle_ = api_params.handle;
 
     // reserve an entry in NEXTHOP table
     ret = nexthop_impl_db()->nh_tbl()->reserve(&nh_idx_);
@@ -197,7 +201,34 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         api_params.handle = tep1_rx_handle_;
         ret = tep_impl_db()->tep1_rx_tbl()->insert(&api_params);
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Programming of TEP1_RX table failed for svc TEP %s, err %u",
+            PDS_TRACE_ERR("Programming of TEP1_RX table failed for svc TEP %s, "
+                          "err %u", api_obj->key2str().c_str(), ret);
+            return ret;
+        }
+        break;
+
+    case PDS_TEP_TYPE_WORKLOAD:
+        // program NEXTHOP table entry
+        nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
+        nh_data.nexthop_info.port = TM_PORT_UPLINK_1;
+        nh_data.nexthop_info.vni = spec->encap.val.value;
+        if (spec->key.ip_addr.af == IP_AF_IPV6) {
+            nh_data.nexthop_info.ip_type = IPTYPE_IPV6;
+            sdk::lib::memrev(nh_data.nexthop_info.dipo,
+                             spec->key.ip_addr.addr.v6_addr.addr8,
+                             IP6_ADDR8_LEN);
+        } else {
+            nh_data.nexthop_info.ip_type = IPTYPE_IPV4;
+            memcpy(nh_data.nexthop_info.dipo, &spec->key.ip_addr.addr.v4_addr,
+                   IP4_ADDR8_LEN);
+        }
+        sdk::lib::memrev(nh_data.nexthop_info.dmaco, spec->mac, ETH_ADDR_LEN);
+        sdk::lib::memrev(nh_data.nexthop_info.dmaci,
+                         (uint8_t *)&g_ilb_mac, ETH_ADDR_LEN);
+        ret = nexthop_impl_db()->nh_tbl()->insert_atid(&nh_data, nh_idx_);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to program NEXTHOP table at %u for "
+                          "service TEP %s, err %u", nh_idx_,
                           api_obj->key2str().c_str(), ret);
             return ret;
         }

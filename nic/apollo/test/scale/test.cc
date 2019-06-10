@@ -1241,6 +1241,7 @@ sdk_ret_t
 create_device_cfg (ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip)
 {
     sdk_ret_t            rv;
+
     memset(&g_device, 0, sizeof(g_device));
     g_device.device_ip_addr = ipaddr;
     MAC_UINT64_TO_ADDR(g_device.device_mac_addr, macaddr);
@@ -1313,8 +1314,10 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                     if (idx < (num_rules - 3)) {
                         if (policy.af == IP_AF_IPV4) {
                             if (ingress) {
-                                rule->match.l3_match.src_ip_pfx.addr.af = policy.af;
-                                rule->match.l3_match.src_ip_pfx = g_test_params.vpc_pfx;
+                                rule->match.l3_match.src_ip_pfx.addr.af =
+                                    policy.af;
+                                rule->match.l3_match.src_ip_pfx =
+                                    g_test_params.vpc_pfx;
                                 rule->match.l3_match.src_ip_pfx.addr.addr.v4_addr =
                                         rule->match.l3_match.src_ip_pfx.addr.addr.v4_addr |
                                         ((j - 1) << 14) | ((k + 2) << 4);

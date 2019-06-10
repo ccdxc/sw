@@ -96,6 +96,10 @@ public:
     /// \return h/w table index for this TEP
     uint16_t remote46_hw_id(void) const { return remote46_hw_id_; }
 
+    /// \brief  return nexthop index of this TEP
+    /// \return h/w nexthop index of this TEP
+    uint16_t nh_id(void) const { return nh_idx_; }
+
 private:
     /// \brief constructor
     tep_impl() {
