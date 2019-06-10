@@ -71,7 +71,7 @@ pd_system_clear_drop_stats (uint8_t idx)
     if (!key.entry_inactive_drop_stats) {
         memset(data.action_u.drop_stats_drop_stats.drop_pkts,
                0, sizeof(data.action_u.drop_stats_drop_stats.drop_pkts));
-        
+
         ret = pd_system_drop_stats_set(idx, &data);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Unable to reset drop stats at idx : {}, err : {}",
@@ -297,7 +297,7 @@ pd_system_clear_egress_drop_stats (uint8_t idx)
     // Reset drop_pkts field in data
     memset(data.action_u.egress_drop_stats_egress_drop_stats.drop_pkts,
            0, sizeof(data.action_u.egress_drop_stats_egress_drop_stats.drop_pkts));
-        
+
     ret = pd_system_egress_drop_stats_set(idx, &data);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to reset egress drop stats at idx : {}, err : {}",
@@ -669,7 +669,7 @@ pd_clock_detail_get (pd_func_args_t *pd_func_args)
     pd_clock_detail_get_args_t         *args = pd_func_args->pd_clock_detail_get;
     pd_conv_hw_clock_to_sw_clock_args_t conv_args = {0};
     pd_func_args_t                      conv_func_args;
- 
+
     // Read hw time
     capri_tm_get_clock_tick(&hw_ns);
     HAL_TRACE_DEBUG("Hardware tick:{}", hw_ns);
@@ -681,7 +681,7 @@ pd_clock_detail_get (pd_func_args_t *pd_func_args)
     conv_args.sw_ns = &args->sw_clock;
     conv_func_args.pd_conv_hw_clock_to_sw_clock = &conv_args;
     ret = pd_conv_hw_clock_to_sw_clock(&conv_func_args);
-    
+
     HAL_TRACE_DEBUG("Hardware ns: {} sw ns: {}", args->hw_clock, args->sw_clock);
     return ret;
 }
@@ -715,7 +715,7 @@ clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
                                       clock_delta_comp_cb, false);
         }
     }
- 
+
     if (sw_ns == hw_ns) {
         // Do nothing. We are in sync in hw!
         return;
@@ -746,7 +746,7 @@ pd_clock_delta_comp (pd_func_args_t *pd_func_args)
         pthread_yield();
     }
 
-    g_clock_adjustment = ((double)(((double)1)/CLOCK_FREQ))*TIME_NSECS_PER_SEC; 
+    g_clock_adjustment = ((double)(((double)1)/CLOCK_FREQ))*TIME_NSECS_PER_SEC;
     printf("Freq: %d Adjustment: %lf\n", CLOCK_FREQ, g_clock_adjustment);
     clock_delta_comp_cb(NULL, HAL_TIMER_ID_CLOCK_SYNC, NULL);
     t_clock_delta_timer =
@@ -822,7 +822,7 @@ pd_pb_stats_get (pd_func_args_t *pd_func_args)
         port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->add_entry()->set_type(sys::OflowFifoDropType::CONTROL_FIFO_FULL_DROP);
         port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->mutable_entry(5)->set_count(debug_stats.oflow_fifo_stats.drop_counts.control_fifo_full_drop_count);
 
-        ret = qos_class_pd_get_queue_stats(port, 
+        ret = qos_class_pd_get_queue_stats(port,
                                            port_stats->mutable_qos_queue_stats());
         if (first_err_ret == HAL_RET_OK) {
             first_err_ret = ret;
@@ -912,6 +912,21 @@ pd_span_threshold_update (pd_func_args_t *pd_func_args)
         return HAL_RET_ERR;
     }
     return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_system_upgrade_table_reset(pd_func_args_t *pd_func_args)
+{
+    tcam *inp_prop_mac_vlan_tbl = NULL;
+    sdk_hash *inp_prop_tbl = NULL;
+    inp_prop_mac_vlan_tbl = g_hal_state_pd->
+        tcam_table(P4TBL_ID_INPUT_PROPERTIES_MAC_VLAN);
+    HAL_TRACE_DEBUG("De-programming input_properties_mac_vlan entries ...");
+    inp_prop_mac_vlan_tbl->deprogram_entries();
+    inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
+    HAL_TRACE_DEBUG("De-programming input_properties entries ...");
+    inp_prop_tbl->deprogram_entries();
+
 }
 
 }    // namespace pd

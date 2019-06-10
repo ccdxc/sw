@@ -68,6 +68,7 @@ void
 hash::destroy(hash *hash)
 {
     if (hash) {
+        hash->deprogram_entries();
         hash->~hash();
         SDK_FREE(SDK_MEM_ALLOC_ID_HASH, hash);
     }
@@ -827,6 +828,17 @@ end:
     SDK_FREE(SDK_MEM_ALLOC_HASH_HW_KEY_DEPGM, hwkey);
 
     return (pd_err != P4PD_SUCCESS) ? SDK_RET_HW_PROGRAM_ERR : SDK_RET_OK;
+}
+
+sdk_ret_t
+hash::deprogram_entries(void)
+{
+    hash_entry_t he;
+    for (uint32_t i = 0; i < dleft_capacity_; i++) {
+        he.index = i;
+        deprogram_table_(&he);
+    }
+    return SDK_RET_OK;
 }
 
 // ----------------------------------------------------------------------------

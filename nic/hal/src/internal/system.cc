@@ -617,4 +617,20 @@ end:
     return ret;
 }
 
+hal_ret_t
+upgrade_table_reset (void)
+{
+    hal_ret_t          ret = HAL_RET_OK;
+    pd::pd_func_args_t pd_func_args = {0};
+
+    HAL_TRACE_DEBUG("Clearing Table entries:");
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_UPG_TABLE_RESET, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to clear pd stats, err : {}", ret);
+        goto end;
+    }
+end:
+    return ret;
+}
+
 }    // namespace hal

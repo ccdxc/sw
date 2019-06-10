@@ -66,6 +66,7 @@ void
 tcam::destroy(tcam *te)
 {
     if (te) {
+        te->deprogram_entries();
         te->~tcam();
         SDK_FREE(SDK_MEM_ALLOC_ID_TCAM, te);
     }
@@ -635,6 +636,17 @@ end:
     }
 
     return (pd_err != P4PD_SUCCESS) ? SDK_RET_HW_PROGRAM_ERR : SDK_RET_OK;
+}
+
+sdk_ret_t
+tcam::deprogram_entries()
+{
+	tcam_entry_t te;
+    for (uint32_t i = 0; i < capacity_; i++) {
+        te.index = i;
+        deprogram_table_(&te);
+    }
+    return SDK_RET_OK;
 }
 
 //----------------------------------------------------------------------------

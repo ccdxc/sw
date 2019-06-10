@@ -165,6 +165,7 @@ public:
     uint32_t num_update_errors(void) const;
     uint32_t num_deletes(void);
     uint32_t num_delete_errors(void);
+    sdk_ret_t deprogram_entries(void);
 
     sdk_ret_t insert(void *key, void *data, uint32_t *index,
                      void *key_mask = NULL, bool direct_to_otcam = FALSE);

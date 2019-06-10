@@ -3012,6 +3012,9 @@ typedef struct pd_span_threshold_update_args_s {
     uint32_t span_threshold;
 } __PACK__ pd_span_threshold_update_args_t;
 
+typedef struct pd_system_upgrade_table_reset_args_s {
+} __PACK__ pd_system_upgrade_table_reset_args_t;
+
 // slab
 typedef struct pd_get_slab_args_s {
     hal_slab_t slab_id;
@@ -3485,7 +3488,8 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_NVME_CQ_DELETE,           323, "PD_FUNC_ID_NVME_CQ_DELETE")\
     ENTRY(PD_FUNC_ID_NVME_CQ_UPDATE,           324, "PD_FUNC_ID_NVME_CQ_UPDATE")\
     ENTRY(PD_FUNC_ID_NVME_CQ_GET,              325, "PD_FUNC_ID_NVME_CQ_GET")\
-    ENTRY(PD_FUNC_ID_MAX,                      326, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_UPG_TABLE_RESET,          326, "PD_FUNC_ID_UPG_TABLE_RESET")\
+    ENTRY(PD_FUNC_ID_MAX,                      327, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3738,7 +3742,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_if_get_hw_lif_id);
         PD_UNION_ARGS_FIELD(pd_if_get_lport_id);
         PD_UNION_ARGS_FIELD(pd_if_get_tm_oport);
-   
+
         // rw entry
         PD_UNION_ARGS_FIELD(pd_rw_entry_find_or_alloc);
 
@@ -3950,6 +3954,8 @@ typedef struct pd_func_args_s {
         //PD_UNION_ARGS_FIELD(pd_nvme_cq_delete);
         //PD_UNION_ARGS_FIELD(pd_nvme_cq_get);
 
+        // upgrade calls
+        PD_UNION_ARGS_FIELD(pd_system_upgrade_table_reset);
 
     };
 } pd_func_args_t;
@@ -4439,6 +4445,8 @@ PD_FUNCP_TYPEDEF(pd_nvme_cq_create);
 //PD_FUNCP_TYPEDEF(pd_nvme_cq_delete);
 //PD_FUNCP_TYPEDEF(pd_nvme_cq_get);
 
+// upgrade calls
+PD_FUNCP_TYPEDEF(pd_system_upgrade_table_reset);
 
 hal_ret_t hal_pd_call(pd_func_id_t pd_func_id, pd_func_args_t *args);
 

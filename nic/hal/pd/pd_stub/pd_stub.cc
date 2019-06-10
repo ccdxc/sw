@@ -432,6 +432,8 @@ PD_FUNC_STUB(pd_fte_span_update);
 PD_FUNC_STUB(pd_fte_span_mem_free);
 PD_FUNC_STUB(pd_fte_span_make_clone);
 PD_FUNC_STUB(pd_fte_span_get);
+
+PD_FUNC_STUB(pd_system_upgrade_table_reset);
 }   // namespace pd
 }   // namespace hal
 

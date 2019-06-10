@@ -8,6 +8,7 @@
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
+#include "nic/hal/src/internal/system.hpp"
 
 namespace hal {
 namespace upgrade {
@@ -91,6 +92,13 @@ upgrade_handler::PostHostDownHandler(UpgCtx& upgCtx)
     }
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_QUIESCE_STOP, NULL);
     if (ret != HAL_RET_OK) {
+        return HdlrResp(::upgrade::FAIL, HAL_RET_ENTRIES_str(ret));
+    }
+
+    // Reset tables
+    ret = upgrade_table_reset();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to reset tables. err: {}", ret);
         return HdlrResp(::upgrade::FAIL, HAL_RET_ENTRIES_str(ret));
     }
 
