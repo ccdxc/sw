@@ -737,38 +737,40 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_pfx,
         }
     }
 
-    // create infra/substrate/provider VPC
-    memset(&pds_vpc, 0, sizeof(pds_vpc));
-    pds_vpc.type = PDS_VPC_TYPE_SUBSTRATE;
-    pds_vpc.key.id = num_vpcs + 1;
+    if (g_test_params.artemis()) {
+        // create infra/substrate/provider VPC
+        memset(&pds_vpc, 0, sizeof(pds_vpc));
+        pds_vpc.type = PDS_VPC_TYPE_SUBSTRATE;
+        pds_vpc.key.id = num_vpcs + 1;
 #ifdef TEST_GRPC_APP
-    rv = create_vpc_grpc(&pds_vpc);
-    if (rv != SDK_RET_OK) {
-        return rv;
-    }
+        rv = create_vpc_grpc(&pds_vpc);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
 #else
-    rv = pds_vpc_create(&pds_vpc);
-    if (rv != SDK_RET_OK) {
-        return rv;
-    }
+        rv = pds_vpc_create(&pds_vpc);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
 #endif
-    // create a subnet under infra/substrate/provider VPC
-    memset(&pds_subnet, 0, sizeof(pds_subnet));
-    pds_subnet.key.id = PDS_SUBNET_ID(((num_vpcs + 1)- 1), 1, 1);
-    pds_subnet.v4_vr_ip = g_test_params.device_ip;
-    pds_subnet.vpc.id = num_vpcs + 1;
-    MAC_UINT64_TO_ADDR(pds_subnet.vr_mac, substrate_vr_mac);
+        // create a subnet under infra/substrate/provider VPC
+        memset(&pds_subnet, 0, sizeof(pds_subnet));
+        pds_subnet.key.id = PDS_SUBNET_ID(((num_vpcs + 1)- 1), 1, 1);
+        pds_subnet.v4_vr_ip = g_test_params.device_ip;
+        pds_subnet.vpc.id = num_vpcs + 1;
+        MAC_UINT64_TO_ADDR(pds_subnet.vr_mac, substrate_vr_mac);
 #ifdef TEST_GRPC_APP
-    rv = create_subnet_grpc(&pds_subnet);
-    if (rv != SDK_RET_OK) {
-        return rv;
-    }
+        rv = create_subnet_grpc(&pds_subnet);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
 #else
-    rv = pds_subnet_create(&pds_subnet);
-    if (rv != SDK_RET_OK) {
-        return rv;
-    }
+        rv = pds_subnet_create(&pds_subnet);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
 #endif
+    }
 
 #ifdef TEST_GRPC_APP
     // Batching: push leftover vpc and subnet objects
