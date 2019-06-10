@@ -17,6 +17,7 @@
 namespace api_test {
 
 extern const uint64_t k_seed_mac;
+extern const uint32_t k_max_vnic;
 
 #define VNIC_SEED_INIT vnic_util::stepper_seed_init
 
@@ -128,7 +129,7 @@ public:
     /// \param[in] fabric_encap_type fabric encap type
     /// \param[in] src_dst_check source & destination check
     static void stepper_seed_init(vnic_stepper_seed_t *seed,
-        uint32_t seed_base=1, uint32_t num_vnics=PDS_MAX_VNIC,
+        uint32_t seed_base=1, uint32_t num_vnics=k_max_vnic,
         uint64_t seed_mac=k_seed_mac,
         pds_encap_type_t vnic_encap_type=PDS_ENCAP_TYPE_DOT1Q,
         pds_encap_type_t fabric_encap_type=PDS_ENCAP_TYPE_MPLSoUDP,
