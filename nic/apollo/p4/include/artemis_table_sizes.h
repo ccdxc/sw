@@ -1,8 +1,8 @@
 #define KEY_MAPPING_TABLE_SIZE                              64
 #define VNIC_MAPPING_TABLE_SIZE                             256
 #define VNIC_INFO_TABLE_SIZE                                256
-#define TEP1_RX_TABLE_SIZE                                  64
-#define TEP2_RX_TABLE_SIZE                                  64
+#define TEP1_RX_TABLE_SIZE                                  256
+#define TEP2_RX_TABLE_SIZE                                  256
 #define LOCAL_IP_MAPPING_HASH_TABLE_SIZE                    4096        // 4K
 #define SERVICE_MAPPING_HASH_TABLE_SIZE                     4096        // 4K
 #define LOCAL_IP_MAPPING_OTCAM_TABLE_SIZE                   1024        // 1K

@@ -90,6 +90,23 @@ action nexthop_info(port, vni, ip_type, dipo, dmaco, dmaci) {
     if (TX_REWRITE(rewrite_metadata.flags, DMAC, FROM_NEXTHOP)) {
         modify_field(ethernet_1.dstAddr, dmaci);
     }
+    if (TX_REWRITE(rewrite_metadata.flags, ENCAP, NONE)) {
+        if (vni == 0) {
+            if (ctag_1.valid == TRUE) {
+                modify_field(ethernet_1.etherType, ctag_1.etherType);
+                remove_header(ctag_1);
+            }
+        } else {
+            if (ctag_1.valid == FALSE) {
+                add_header(ctag_1);
+                modify_field(ctag_1.etherType, ethernet_1.etherType);
+                modify_field(ethernet_1.etherType, ETHERTYPE_VLAN);
+            }
+            modify_field(ctag_1.pcp, 0);
+            modify_field(ctag_1.dei, 0);
+            modify_field(ctag_1.vid, vni);
+        }
+    }
     if (TX_REWRITE(rewrite_metadata.flags, ENCAP, VXLAN)) {
         modify_field(scratch_metadata.flag, ip_type);
         if (ip_type == IPTYPE_IPV4) {
