@@ -111,7 +111,6 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 				continue
 			}
 			memUsedPercent := math.Floor(vmstat.UsedPercent*100) / 100
-			w.logger.Infof("system stats: %v", vmstat)
 			w.metricObj.MemAvailable.Set(float64(vmstat.Available >> 20))
 			w.metricObj.MemFree.Set(float64(vmstat.Free >> 20))
 			w.metricObj.MemUsed.Set(float64(vmstat.Used >> 20))
