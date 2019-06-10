@@ -47,7 +47,14 @@ message DeviceStatus {
 }
 
 // stats of the device, if any
+message DeviceStatsEntry {
+    string Name = 1;
+    uint64 Count = 2;
+}
+
 message DeviceStats {
+    repeated DeviceStatsEntry Ingress = 1;
+    repeated DeviceStatsEntry Egress = 2;
 }
 
 // device object

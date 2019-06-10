@@ -19,7 +19,8 @@ modules:
         spec    : local2remote_vlan_invalid.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
-
+              drop_stats : True
+              drop_reasons : [ drop_vnic_tx_miss ]
 
      # Below test is failing , ignore for now
     - module:

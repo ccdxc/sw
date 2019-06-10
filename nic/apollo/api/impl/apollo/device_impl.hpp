@@ -105,7 +105,13 @@ private:
 
     /// \brief      populate ingress drop stats with hardware information
     /// \param[out] ing_drop_stats Ingress drop statistics
-    void fill_ing_drop_stats_(pds_device_ing_drop_stats_t *ing_drop_stats);
+    /// \return     Number of stats entries
+    uint32_t fill_ing_drop_stats_(pds_device_drop_stats_t *ing_drop_stats);
+
+    /// \brief      populate egress drop stats with hardware information
+    /// \param[out] egr_drop_stats Egress drop statistics
+    /// \return     Number of stats entries
+    uint32_t fill_egr_drop_stats_(pds_device_drop_stats_t *egr_drop_stats);
 };
 
 /// \@}

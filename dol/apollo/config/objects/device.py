@@ -63,6 +63,13 @@ class DeviceObject(base.ConfigObjectBase):
         logger.info("- %s" % repr(self))
         return
 
+    def GetDropStats(self):
+        grpcmsg = types_pb2.Empty()
+        resp = api.client.Get(api.ObjectTypes.SWITCH, [ grpcmsg ])
+        if resp != None:
+            return resp[0]
+        return None
+
 class DeviceObjectClient:
     def __init__(self):
         self.__objs = []

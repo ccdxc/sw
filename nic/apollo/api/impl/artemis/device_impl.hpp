@@ -104,7 +104,7 @@ private:
 
      /// \brief      populate ingress drop stats with hardware information
      /// \param[out] ing_drop_stats Ingress drop statistics
-    void fill_ing_drop_stats_(pds_device_ing_drop_stats_t *ing_drop_stats);
+    void fill_ing_drop_stats_(pds_device_drop_stats_t *ing_drop_stats);
 };
 
 /// @}

@@ -50,7 +50,7 @@ device_impl::fill_spec_(pds_device_spec_t *spec) {
 }
 
 void
-device_impl::fill_ing_drop_stats_(pds_device_ing_drop_stats_t *ing_drop_stats) {
+device_impl::fill_ing_drop_stats_(pds_device_drop_stats_t *ing_drop_stats) {
 #if 1
     p4pd_error_t pd_err = P4PD_SUCCESS;
     uint64_t pkts = 0;
@@ -64,7 +64,8 @@ device_impl::fill_ing_drop_stats_(pds_device_ing_drop_stats_t *ing_drop_stats) {
             memcpy(&pkts,
                    data.action_u.p4i_drop_stats_p4i_drop_stats.drop_stats_pkts,
                    sizeof(data.action_u.p4i_drop_stats_p4i_drop_stats.drop_stats_pkts));
-            ing_drop_stats->drop_stats_pkts[i] = pkts;
+            ing_drop_stats[i].count = pkts;
+            // TODO Fill name for the stats
         }
     }
 #endif
@@ -78,7 +79,7 @@ device_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     (void)key;
 
     fill_spec_(&dinfo->spec);
-    fill_ing_drop_stats_(&dinfo->stats.ing_drop_stats);
+    fill_ing_drop_stats_(&dinfo->stats.ing_drop_stats[0]);
     return sdk::SDK_RET_OK;
 }
 

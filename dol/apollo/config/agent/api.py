@@ -27,7 +27,7 @@ class ApiOps(enum.IntEnum):
     CREATE = 1
     DELETE = 2
     UPDATE = 3
-    RETRIEVE = 4
+    GET = 4
     START = 5
     COMMIT = 6
     ABORT = 7
@@ -64,7 +64,7 @@ class ClientStub:
         self.__set_one_rpc(ApiOps.CREATE, "%sCreate"%p)
         self.__set_one_rpc(ApiOps.DELETE, "%sDelete"%p)
         self.__set_one_rpc(ApiOps.UPDATE, "%sUpdate"%p)
-        self.__set_one_rpc(ApiOps.RETRIEVE, "%sRetrieve"%p)
+        self.__set_one_rpc(ApiOps.GET, "%sGet"%p)
         self.__set_one_rpc(ApiOps.START, "%sStart"%p)
         self.__set_one_rpc(ApiOps.COMMIT, "%sCommit"%p)
         self.__set_one_rpc(ApiOps.ABORT, "%sAbort"%p)
@@ -150,9 +150,9 @@ class ApolloAgentClient:
         if GlobalOptions.dryrun: return
         return self.__stubs[objtype].Rpc(ApiOps.UPDATE, objs)
 
-    def Retrieve(self, objtype, objs):
+    def Get(self, objtype, objs):
         if GlobalOptions.dryrun: return
-        return self.__stubs[objtype].Rpc(ApiOps.RETRIEVE, objs)
+        return self.__stubs[objtype].Rpc(ApiOps.GET, objs)
 
     def Start(self, objtype, obj):
         if GlobalOptions.dryrun: return

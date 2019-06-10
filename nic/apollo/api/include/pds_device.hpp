@@ -16,6 +16,7 @@
 #include "nic/apollo/api/include/pds.hpp"
 
 #define PDS_DROP_REASON_MAX        64
+#define PDS_MAX_DROP_NAME_LEN      32
 
 /// \defgroup PDS_DEVICE Device API
 /// \@{
@@ -32,20 +33,18 @@ typedef struct pds_device_status_s {
     // TODO
 } __PACK__ pds_device_status_t;
 
-/// \brief ingress drop statistics
-typedef struct pds_device_ing_drop_stats_s {
-    uint64_t drop_stats_pkts[PDS_DROP_REASON_MAX];
-} __PACK__ pds_device_ing_drop_stats_t;
-
-/// \brief device egress drop statistics
-typedef struct pds_device_egr_drop_stats_s {
-    uint64_t drop_stats_pkts[0];
-} __PACK__ pds_device_egr_drop_stats_t;
+/// \brief Drop statistics
+typedef struct pds_device_drop_stats_s {
+    char     name[PDS_MAX_DROP_NAME_LEN];
+    uint64_t count;
+} __PACK__ pds_device_drop_stats_t;
 
 /// \brief device statistics
 typedef struct pds_device_stats_s {
-    pds_device_ing_drop_stats_t ing_drop_stats;    ///<< ingress drop statistics
-    pds_device_egr_drop_stats_t egr_drop_stats;    ///<< egress drop statistics
+    uint32_t ing_drop_stats_count;    ///<< Number of entries in the ingress drop statistics
+    uint32_t egr_drop_stats_count;    ///<< Number of entries in the egress drop statistics
+    pds_device_drop_stats_t ing_drop_stats[PDS_DROP_REASON_MAX];    ///<< Ingress drop statistics
+    pds_device_drop_stats_t egr_drop_stats[PDS_DROP_REASON_MAX];    ///<< Egress drop statistics
 } __PACK__ pds_device_stats_t;
 
 /// \brief device information

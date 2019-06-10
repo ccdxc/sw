@@ -49,13 +49,21 @@ device_impl::fill_spec_(pds_device_spec_t *spec) {
     MAC_UINT64_TO_ADDR(spec->device_mac_addr, val);
 }
 
-void
-device_impl::fill_ing_drop_stats_(pds_device_ing_drop_stats_t *ing_drop_stats) {
+uint32_t
+device_impl::fill_ing_drop_stats_(pds_device_drop_stats_t *ing_drop_stats) {
     p4pd_error_t pd_err = P4PD_SUCCESS;
     uint64_t pkts = 0;
     p4i_drop_stats_swkey_t key = { 0 };
     p4i_drop_stats_swkey_mask_t key_mask = { 0 };
     p4i_drop_stats_actiondata_t data = { 0 };
+    const char idrop[][PDS_MAX_DROP_NAME_LEN] = {
+        "drop_src_mac_zero",           "drop_src_mac_mismatch",
+        "drop_vnic_tx_miss",           "drop_vnic_rx_miss",
+        "drop_src_dst_check_fail",     "drop_flow_hit",
+        "drop_tep_rx_dst_ip_mismatch", "drop_rvpath_src_ip_mismatch",
+        "drop_rvpath_vpc_mismatch",    "drop_nacl"};
+
+    SDK_ASSERT(sizeof(idrop)/sizeof(idrop[0]) == (P4I_DROP_REASON_MAX + 1));
 
     for (uint32_t i = P4I_DROP_REASON_MIN; i <= P4I_DROP_REASON_MAX; ++i) {
         if (p4pd_global_entry_read(P4TBL_ID_P4I_DROP_STATS, i,
@@ -63,11 +71,38 @@ device_impl::fill_ing_drop_stats_(pds_device_ing_drop_stats_t *ing_drop_stats) {
             memcpy(&pkts,
                    data.action_u.p4i_drop_stats_p4i_drop_stats.drop_stats_pkts,
                    sizeof(data.action_u.p4i_drop_stats_p4i_drop_stats.drop_stats_pkts));
-            ing_drop_stats->drop_stats_pkts[i] = pkts;
+            ing_drop_stats[i].count = pkts;
+            strcpy(ing_drop_stats[i].name, idrop[i]);
         }
     }
-    return;
+    return P4I_DROP_REASON_MAX + 1;
 }
+
+uint32_t
+device_impl::fill_egr_drop_stats_(pds_device_drop_stats_t *egr_drop_stats) {
+    p4pd_error_t pd_err = P4PD_SUCCESS;
+    uint64_t pkts = 0;
+    p4e_drop_stats_swkey_t key = { 0 };
+    p4e_drop_stats_swkey_mask_t key_mask = { 0 };
+    p4e_drop_stats_actiondata_t data = { 0 };
+    const char edrop[][PDS_MAX_DROP_NAME_LEN] = {"drop_nexthop_invalid"};
+
+    SDK_ASSERT(sizeof(edrop)/sizeof(edrop[0]) == (P4E_DROP_REASON_MAX + 1));
+
+    for (uint32_t i = P4E_DROP_REASON_MIN; i <= P4E_DROP_REASON_MAX; ++i) {
+        if (p4pd_global_entry_read(P4TBL_ID_P4E_DROP_STATS, i,
+                                   &key, &key_mask, &data) == P4PD_SUCCESS) {
+            memcpy(&pkts,
+                   data.action_u.p4e_drop_stats_p4e_drop_stats.drop_stats_pkts,
+                   sizeof(data.action_u.p4e_drop_stats_p4e_drop_stats.drop_stats_pkts));
+            egr_drop_stats[i].count = pkts;
+            strcpy(egr_drop_stats[i].name, edrop[i]);
+        }
+    }
+    return P4E_DROP_REASON_MAX + 1;
+}
+
+
 
 sdk_ret_t
 device_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
@@ -76,7 +111,10 @@ device_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     (void)key;
 
     fill_spec_(&dinfo->spec);
-    fill_ing_drop_stats_(&dinfo->stats.ing_drop_stats);
+    dinfo->stats.ing_drop_stats_count =
+        fill_ing_drop_stats_(&dinfo->stats.ing_drop_stats[0]);
+    dinfo->stats.egr_drop_stats_count =
+        fill_egr_drop_stats_(&dinfo->stats.egr_drop_stats[0]);
     return sdk::SDK_RET_OK;
 }
 

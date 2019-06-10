@@ -957,6 +957,20 @@ static inline void
 device_api_stats_to_proto_stats (pds::DeviceStats *proto_stats,
                                  const pds_device_stats_t *api_stats)
 {
+    uint32_t i;
+    pds::DeviceStatsEntry *entry;
+
+    for (i = 0; i < api_stats->ing_drop_stats_count; i++) {
+        entry = proto_stats->add_ingress();
+        entry->set_name(api_stats->ing_drop_stats[i].name);
+        entry->set_count(api_stats->ing_drop_stats[i].count);
+    }
+
+    for (i = 0; i < api_stats->egr_drop_stats_count; i++) {
+        entry = proto_stats->add_egress();
+        entry->set_name(api_stats->egr_drop_stats[i].name);
+        entry->set_count(api_stats->egr_drop_stats[i].count);
+    }
 }
 
 static inline void
