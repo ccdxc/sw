@@ -53,7 +53,8 @@ export class TelemetryqueryService extends Telemetry_queryv1Service {
   protected invokeAJAX(method: string, url: string, payload: any, opts: MethodOpts, forceReal: boolean = false): Observable<VeniceResponse> {
 
     const key = this.convertEventID(opts);
-    if (!this.uiconfigsService.isAuthorized(key)) {
+    const isMetrics = opts.eventID.includes('Metrics');
+    if (!isMetrics && !this.uiconfigsService.isAuthorized(key)) {
       return NEVER;
     }
     const isOnline = !this.isToMockData() || forceReal;
@@ -64,8 +65,6 @@ export class TelemetryqueryService extends Telemetry_queryv1Service {
     let key: string;
     if (opts.eventID.includes('Fwlogs')) {
       key = 'fwlogsquery' + '_' + 'read';
-    } else if (opts.eventID.includes('Metrics')) {
-      key = 'metricsquery' + '_' + 'read';
     }
     return UIRolePermissions[key];
   }
