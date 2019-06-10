@@ -206,6 +206,27 @@ func (m *ModuleStatus) Defaults(ver string) bool {
 	return ret
 }
 
+// Clone clones the object into into or creates one of into is nil
+func (m *ServicePort) Clone(into interface{}) (interface{}, error) {
+	var out *ServicePort
+	var ok bool
+	if into == nil {
+		out = &ServicePort{}
+	} else {
+		out, ok = into.(*ServicePort)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*ServicePort))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *ServicePort) Defaults(ver string) bool {
+	return false
+}
+
 // Validators and Requirements
 
 func (m *DiagnosticsRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -362,6 +383,19 @@ func (m *ModuleStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec 
 func (m *ModuleStatus) Normalize() {
 
 	m.Category = ModuleStatus_CategoryType_normal[strings.ToLower(m.Category)]
+
+}
+
+func (m *ServicePort) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *ServicePort) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *ServicePort) Normalize() {
 
 }
 

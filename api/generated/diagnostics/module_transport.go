@@ -186,3 +186,37 @@ func EncodeGrpcRespModuleStatus(ctx context.Context, response interface{}) (inte
 func DecodeGrpcRespModuleStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
+
+func encodeHTTPServicePort(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPServicePort(_ context.Context, r *http.Request) (interface{}, error) {
+	var req ServicePort
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqServicePort encodes GRPC request
+func EncodeGrpcReqServicePort(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ServicePort)
+	return req, nil
+}
+
+// DecodeGrpcReqServicePort decodes GRPC request
+func DecodeGrpcReqServicePort(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ServicePort)
+	return req, nil
+}
+
+// EncodeGrpcRespServicePort encodes GRC response
+func EncodeGrpcRespServicePort(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespServicePort decodes GRPC response
+func DecodeGrpcRespServicePort(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}

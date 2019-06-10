@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/influxdata/influxdb/models"
-	context "golang.org/x/net/context"
+	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
 	tec "github.com/pensando/sw/venice/citadel/collector"

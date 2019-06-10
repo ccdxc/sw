@@ -52,28 +52,37 @@ message ModuleStatus {
     }
 
     // Node on which this process is running
-    string Node              = 1 [(gogoproto.jsontag) = "node,omitempty"];
+    string Node                       = 1 [(gogoproto.jsontag) = "node,omitempty"];
 
     // Module is the name of the process/container
-    string Module            = 2 [(gogoproto.jsontag) = "module,omitempty"];
+    string Module                     = 2 [(gogoproto.jsontag) = "module,omitempty"];
 
     // Category specifies whether process is part of Venice(controller) or Naples(io) subsystem
-    string Category          = 3 [(venice.check) = "StrEnum(ModuleStatus.CategoryType)", (gogoproto.jsontag) = "category,omitempty"];
+    string Category                   = 3 [(venice.check) = "StrEnum(ModuleStatus.CategoryType)", (gogoproto.jsontag) = "category,omitempty"];
 
     // Last start time
-    api.Timestamp LastStart  = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-start,omitempty"];
+    api.Timestamp LastStart           = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-start,omitempty"];
 
     // Number of times process got restarted. zero if never restarted
-    int32 RestartCount       = 5 [(gogoproto.jsontag) = "restart-count,omitempty"];
+    int32 RestartCount                = 5 [(gogoproto.jsontag) = "restart-count,omitempty"];
 
     // Arbitrary string, json, backtrace, etc. offering clues for restart
-    string LastRestartReason = 6 [(gogoproto.jsontag) = "last-restart-reason,omitempty"];
+    string LastRestartReason          = 6 [(gogoproto.jsontag) = "last-restart-reason,omitempty"];
 
     // Service is the name of the service/pod this process is part of
-    string Service           = 7 [(gogoproto.jsontag) = "service,omitempty"];
+    string Service                    = 7 [(gogoproto.jsontag) = "service,omitempty"];
 
     // Ports on which this process is listening
-    repeated int32 Ports     = 8 [(gogoproto.jsontag) = "ports,omitempty"];
+    repeated ServicePort ServicePorts = 8 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "service-ports,omitempty"];
+}
+
+// ServicePort is to qualify diagnostics request for a specific port in case service is listening on multiple ports
+message ServicePort {
+    // Name is the name of the port
+    string Name = 1 [(gogoproto.jsontag) = "name,omitempty"];
+
+    // Port is port number
+    int32 Port  = 2 [(gogoproto.jsontag) = "port,omitempty"];
 }
 
 // DiagnosticsRequest sends a diagnostics request to the service
@@ -90,10 +99,13 @@ message DiagnosticsRequest {
     api.ObjectMeta O               = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
     // Query is type of diagnostic information requested like Profile, Log. This string is service specific and meaning is assigned by the service
-    string Query                   = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "query,omitempty"];
+    string Query                   = 3 [(gogoproto.jsontag) = "query,omitempty"];
+
+    // ServicePort is to qualify diagnostics request for a specific port in case service is listening on multiple ports
+    ServicePort ServicePort        = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "service-port,omitempty"];
 
     // Parameters to be passed for a diagnostic query
-    map<string, string> Parameters = 4 [(gogoproto.jsontag) = "parameters,omitempty"];
+    map<string, string> Parameters = 5[(gogoproto.jsontag) = "parameters,omitempty"];
 
     option (venice.objectPrefix) = {Collection: "modules", Path: "/{O.Tenant}"};
 }

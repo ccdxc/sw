@@ -14,6 +14,7 @@ var supportedModules = map[string]bool{
 	globals.Spyglass: true,
 	globals.Npm:      true,
 	globals.APIGw:    true,
+	globals.Citadel:  true,
 }
 
 // GetLogFilter maps log level in module object to log filter

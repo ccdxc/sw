@@ -517,6 +517,7 @@ func (s *sdiagnosticsModuleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sc
 
 		"diagnostics.ModuleSpec":   apisrvpkg.NewMessage("diagnostics.ModuleSpec"),
 		"diagnostics.ModuleStatus": apisrvpkg.NewMessage("diagnostics.ModuleStatus"),
+		"diagnostics.ServicePort":  apisrvpkg.NewMessage("diagnostics.ServicePort"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

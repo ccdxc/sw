@@ -32,47 +32,25 @@ func (d *diagnosticsHooks) DebugPreCallHook(ctx context.Context, in interface{})
 	if !ok {
 		return ctx, nil, true, errors.New("invalid input type")
 	}
-	modObj, err := d.moduleGetter.GetModule(obj.Name)
-	if err != nil {
-		d.logger.ErrorLog("method", "DebugPreCallHook", "msg", fmt.Sprintf("failed to get module object [%s]", obj.Name), "error", err)
-		return ctx, nil, true, err
-	}
-	// find service instance URL to route for Venice grpc services TODO: Abstract out routing
-	var svcURL string
-	if diagnostics.IsSupported(modObj) {
-		svcInstanceList := d.rslvr.Lookup(modObj.Status.Module)
-		if svcInstanceList != nil {
-			for _, svcInstance := range svcInstanceList.Items {
-				if svcInstance.Node == modObj.Status.Node {
-					svcURL = svcInstance.URL
-					break
-				}
-			}
-		}
-	} else {
-		return ctx, nil, true, fmt.Errorf("diagnostics not supported for module [%s]", modObj.Name)
-	}
-	if svcURL == "" {
-		d.logger.ErrorLog("method", "DebugPreCallHook", "msg", fmt.Sprintf("unable to locate service instance for module [%s]", modObj.Name))
-		return ctx, nil, true, fmt.Errorf("unable to locate service instance for module [%s]", modObj.Name)
-	}
+	var err error
 	clGetter := d.clientGetter
 	if clGetter == nil { // will be not nil for unit testing. will set a mock
-		clGetter = diagnostics.GetClientGetter(globals.APIGw, svcURL, modObj.Status.Module, d.diagSvc)
+		clGetter, err = diagnostics.NewClientGetter(globals.APIGw, obj, diagnostics.NewRouter(d.rslvr, d.moduleGetter), d.diagSvc)
+		if err != nil {
+			d.logger.ErrorLog("method", "DebugPreCallHook", "msg", fmt.Sprintf("unable to instantiate ClientGetter to process diagnostics request [%#v]", *obj), "error", err)
+			return ctx, nil, true, err
+
+		}
 	}
 	diagCl, err := clGetter.GetClient()
 	if err != nil {
-		d.logger.ErrorLog("method", "DebugPreCallHook", "msg", fmt.Sprintf("failed to get diagnostics client for service URL [%s]", svcURL), "error", err)
+		d.logger.ErrorLog("method", "DebugPreCallHook", "msg", "failed to get diagnostics client", "error", err)
 		return ctx, nil, true, err
 	}
 	defer diagCl.Close()
-	resp, err := diagCl.Debug(ctx, &diagapi.DiagnosticsRequest{
-		ObjectMeta: modObj.ObjectMeta,
-		Query:      obj.Query,
-		Parameters: obj.Parameters,
-	})
+	resp, err := diagCl.Debug(ctx, obj)
 	if err != nil {
-		d.logger.ErrorLog("method", "DebugPreCallHook", "msg", fmt.Sprintf("rpc call Debug failed to service instance [%s] for module obj [%s]", svcURL, modObj.Name), "error", err)
+		d.logger.ErrorLog("method", "DebugPreCallHook", "msg", fmt.Sprintf("rpc call Debug failed for diagnostics request [%#v] for module obj [%s]", *obj, obj.Name), "error", err)
 		return ctx, nil, true, err
 	}
 	return ctx, resp, true, nil

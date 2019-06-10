@@ -14,6 +14,7 @@ import (
 	_ "github.com/influxdata/influxdb/tsdb/engine"
 	_ "github.com/influxdata/influxdb/tsdb/index"
 
+	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/citadel/broker"
 	"github.com/pensando/sw/venice/citadel/collector"
@@ -23,7 +24,11 @@ import (
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/query"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/debug"
+	"github.com/pensando/sw/venice/utils/diagnostics"
+	"github.com/pensando/sw/venice/utils/diagnostics/module"
+	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -66,8 +71,7 @@ func main() {
 	}
 
 	// Initialize logger config
-	log.SetConfig(logConfig)
-	logger := log.GetNewLogger(logConfig)
+	logger := log.SetConfig(logConfig)
 
 	log.Infof("=== %s is starting", globals.Citadel)
 
@@ -143,7 +147,17 @@ func main() {
 	}
 	log.Infof("HTTP server is listening on %s", hsrv.GetAddr())
 
-	qsrv, err := query.NewQueryService(*queryURL, br)
+	// start module watcher
+	moduleChangeCb := func(diagmod *diagapi.Module) {
+		logger.ResetFilter(diagnostics.GetLogFilter(diagmod.Spec.LogLevel))
+		logger.InfoLog("method", "moduleChangeCb", "msg", "setting log level", "moduleLogLevel", diagmod.Spec.LogLevel)
+	}
+	watcherOption := query.WithModuleWatcher(module.GetWatcher(fmt.Sprintf("%s-%s", utils.GetHostname(), globals.Citadel), globals.APIServer, cfg.ResolverClient, logger, moduleChangeCb))
+
+	// add diagnostics service
+	diagOption := query.WithDiagnosticsService(diagsvc.GetDiagnosticsServiceWithDefaults(globals.Citadel, utils.GetHostname(), diagapi.ModuleStatus_Venice, cfg.ResolverClient, logger))
+
+	qsrv, err := query.NewQueryService(*queryURL, br, diagOption, watcherOption)
 
 	log.Infof("query server is listening on %+v", qsrv)
 

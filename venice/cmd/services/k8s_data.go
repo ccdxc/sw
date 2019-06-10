@@ -568,6 +568,7 @@ var k8sModules = map[string]protos.Module{
 				citadelDbVolume,
 				logVolume,
 				eventsVolume,
+				elasticClientCredsVolume,
 			},
 		},
 	},

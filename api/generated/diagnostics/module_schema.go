@@ -22,7 +22,9 @@ var typesMapModule = map[string]*api.Struct{
 
 			"ObjectMeta": api.Field{Name: "ObjectMeta", CLITag: api.CLIInfo{ID: "meta", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Query": api.Field{Name: "Query", CLITag: api.CLIInfo{ID: "query", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "query", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Query": api.Field{Name: "Query", CLITag: api.CLIInfo{ID: "query", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "query", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"ServicePort": api.Field{Name: "ServicePort", CLITag: api.CLIInfo{ID: "service-port", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "service-port", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "diagnostics.ServicePort"},
 
 			"Parameters": api.Field{Name: "Parameters", CLITag: api.CLIInfo{ID: "parameters", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "parameters", Pointer: true, Slice: false, Mutable: true, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "TYPE_STRING"},
 
@@ -114,7 +116,7 @@ var typesMapModule = map[string]*api.Struct{
 			"name":                api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":           api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
 			"node":                api.CLIInfo{Path: "Status.Node", Skip: false, Insert: "", Help: ""},
-			"ports":               api.CLIInfo{Path: "Status.Ports", Skip: false, Insert: "", Help: ""},
+			"port":                api.CLIInfo{Path: "Status.ServicePorts[].Port", Skip: false, Insert: "", Help: ""},
 			"resource-version":    api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"restart-count":       api.CLIInfo{Path: "Status.RestartCount", Skip: false, Insert: "", Help: ""},
 			"self-link":           api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
@@ -150,7 +152,15 @@ var typesMapModule = map[string]*api.Struct{
 
 			"Service": api.Field{Name: "Service", CLITag: api.CLIInfo{ID: "service", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "service", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Ports": api.Field{Name: "Ports", CLITag: api.CLIInfo{ID: "ports", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ports", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+			"ServicePorts": api.Field{Name: "ServicePorts", CLITag: api.CLIInfo{ID: "service-ports", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "service-ports", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "diagnostics.ServicePort"},
+		},
+	},
+	"diagnostics.ServicePort": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(ServicePort{}) },
+		Fields: map[string]api.Field{
+			"Name": api.Field{Name: "Name", CLITag: api.CLIInfo{ID: "name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "name", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Port": api.Field{Name: "Port", CLITag: api.CLIInfo{ID: "port", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "port", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
 		},
 	},
 }

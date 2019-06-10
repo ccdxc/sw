@@ -385,17 +385,6 @@
             "in": "query",
             "required": false,
             "type": "string"
-          },
-          {
-            "name": "status.ports",
-            "description": "Ports on which this process is listening.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
           }
         ],
         "tags": [
@@ -1058,6 +1047,10 @@
           "type": "string",
           "title": "Query is type of diagnostic information requested like Profile, Log. This string is service specific and meaning is assigned by the service"
         },
+        "service-port": {
+          "$ref": "#/definitions/diagnosticsServicePort",
+          "title": "ServicePort is to qualify diagnostics request for a specific port in case service is listening on multiple ports"
+        },
         "parameters": {
           "type": "object",
           "additionalProperties": {
@@ -1193,16 +1186,30 @@
           "type": "string",
           "title": "Service is the name of the service/pod this process is part of"
         },
-        "ports": {
+        "service-ports": {
           "type": "array",
           "items": {
-            "type": "integer",
-            "format": "int32"
+            "$ref": "#/definitions/diagnosticsServicePort"
           },
           "title": "Ports on which this process is listening"
         }
       },
       "title": "ModuleStatus contains collected diagnostics of a process"
+    },
+    "diagnosticsServicePort": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name is the name of the port"
+        },
+        "port": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Port is port number"
+        }
+      },
+      "title": "ServicePort is to qualify diagnostics request for a specific port in case service is listening on multiple ports"
     },
     "googleprotobufAny": {
       "type": "object",

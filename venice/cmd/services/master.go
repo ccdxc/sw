@@ -304,6 +304,10 @@ func (m *masterService) startLeaderServices() error {
 			diagmod.Status.Module = container.Name
 			diagmod.Status.Category = diagapi.ModuleStatus_Venice.String()
 			diagmod.Status.Node = e.Pod.Spec.NodeName
+			for _, port := range container.Ports {
+				servicePort := diagapi.ServicePort{Name: port.Name, Port: port.ContainerPort}
+				diagmod.Status.ServicePorts = append(diagmod.Status.ServicePorts, servicePort)
+			}
 			diagModules = append(diagModules, diagmod)
 			log.Debugf("pod: %v, node: %v", e.Pod.Name, e.Pod.Spec.NodeName)
 			log.Debugf("pod: %v, HostIP from status : %v", e.Pod.Name, e.Pod.Status.HostIP)

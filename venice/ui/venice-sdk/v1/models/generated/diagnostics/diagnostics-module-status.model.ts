@@ -8,6 +8,7 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { DiagnosticsModuleStatus_category,  } from './enums';
+import { DiagnosticsServicePort, IDiagnosticsServicePort } from './diagnostics-service-port.model';
 
 export interface IDiagnosticsModuleStatus {
     'node'?: string;
@@ -17,7 +18,7 @@ export interface IDiagnosticsModuleStatus {
     'restart-count'?: number;
     'last-restart-reason'?: string;
     'service'?: string;
-    'ports'?: Array<number>;
+    'service-ports'?: Array<IDiagnosticsServicePort>;
 }
 
 
@@ -29,7 +30,7 @@ export class DiagnosticsModuleStatus extends BaseModel implements IDiagnosticsMo
     'restart-count': number = null;
     'last-restart-reason': string = null;
     'service': string = null;
-    'ports': Array<number> = null;
+    'service-ports': Array<DiagnosticsServicePort> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'node': {
             required: false,
@@ -61,9 +62,9 @@ export class DiagnosticsModuleStatus extends BaseModel implements IDiagnosticsMo
             required: false,
             type: 'string'
         },
-        'ports': {
+        'service-ports': {
             required: false,
-            type: 'Array<number>'
+            type: 'object'
         },
     }
 
@@ -89,7 +90,7 @@ export class DiagnosticsModuleStatus extends BaseModel implements IDiagnosticsMo
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this['ports'] = new Array<number>();
+        this['service-ports'] = new Array<DiagnosticsServicePort>();
         this.setValues(values, setDefaults);
     }
 
@@ -147,12 +148,10 @@ export class DiagnosticsModuleStatus extends BaseModel implements IDiagnosticsMo
         } else {
             this['service'] = null
         }
-        if (values && values['ports'] != null) {
-            this['ports'] = values['ports'];
-        } else if (fillDefaults && DiagnosticsModuleStatus.hasDefaultValue('ports')) {
-            this['ports'] = [ DiagnosticsModuleStatus.propInfo['ports'].default];
+        if (values) {
+            this.fillModelArray<DiagnosticsServicePort>(this, 'service-ports', values['service-ports'], DiagnosticsServicePort);
         } else {
-            this['ports'] = [];
+            this['service-ports'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -168,7 +167,14 @@ export class DiagnosticsModuleStatus extends BaseModel implements IDiagnosticsMo
                 'restart-count': CustomFormControl(new FormControl(this['restart-count']), DiagnosticsModuleStatus.propInfo['restart-count']),
                 'last-restart-reason': CustomFormControl(new FormControl(this['last-restart-reason']), DiagnosticsModuleStatus.propInfo['last-restart-reason']),
                 'service': CustomFormControl(new FormControl(this['service']), DiagnosticsModuleStatus.propInfo['service']),
-                'ports': CustomFormControl(new FormControl(this['ports']), DiagnosticsModuleStatus.propInfo['ports']),
+                'service-ports': new FormArray([]),
+            });
+            // generate FormArray control elements
+            this.fillFormArray<DiagnosticsServicePort>('service-ports', this['service-ports'], DiagnosticsServicePort);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('service-ports') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('service-ports').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;
@@ -187,7 +193,7 @@ export class DiagnosticsModuleStatus extends BaseModel implements IDiagnosticsMo
             this._formGroup.controls['restart-count'].setValue(this['restart-count']);
             this._formGroup.controls['last-restart-reason'].setValue(this['last-restart-reason']);
             this._formGroup.controls['service'].setValue(this['service']);
-            this._formGroup.controls['ports'].setValue(this['ports']);
+            this.fillModelArray<DiagnosticsServicePort>(this, 'service-ports', this['service-ports'], DiagnosticsServicePort);
         }
     }
 }

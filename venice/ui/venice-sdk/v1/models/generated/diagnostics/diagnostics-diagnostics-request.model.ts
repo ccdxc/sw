@@ -8,12 +8,14 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
+import { DiagnosticsServicePort, IDiagnosticsServicePort } from './diagnostics-service-port.model';
 
 export interface IDiagnosticsDiagnosticsRequest {
     'kind'?: string;
     'api-version'?: string;
     'meta'?: IApiObjectMeta;
     'query'?: string;
+    'service-port'?: IDiagnosticsServicePort;
     'parameters'?: object;
 }
 
@@ -23,6 +25,7 @@ export class DiagnosticsDiagnosticsRequest extends BaseModel implements IDiagnos
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
     'query': string = null;
+    'service-port': DiagnosticsServicePort = null;
     'parameters': object = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
@@ -40,6 +43,10 @@ export class DiagnosticsDiagnosticsRequest extends BaseModel implements IDiagnos
         'query': {
             required: false,
             type: 'string'
+        },
+        'service-port': {
+            required: false,
+            type: 'object'
         },
         'parameters': {
             required: false,
@@ -70,6 +77,7 @@ export class DiagnosticsDiagnosticsRequest extends BaseModel implements IDiagnos
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['meta'] = new ApiObjectMeta();
+        this['service-port'] = new DiagnosticsServicePort();
         this.setValues(values, setDefaults);
     }
 
@@ -104,6 +112,11 @@ export class DiagnosticsDiagnosticsRequest extends BaseModel implements IDiagnos
         } else {
             this['query'] = null
         }
+        if (values) {
+            this['service-port'].setValues(values['service-port'], fillDefaults);
+        } else {
+            this['service-port'].setValues(null, fillDefaults);
+        }
         if (values && values['parameters'] != null) {
             this['parameters'] = values['parameters'];
         } else if (fillDefaults && DiagnosticsDiagnosticsRequest.hasDefaultValue('parameters')) {
@@ -122,11 +135,17 @@ export class DiagnosticsDiagnosticsRequest extends BaseModel implements IDiagnos
                 'api-version': CustomFormControl(new FormControl(this['api-version']), DiagnosticsDiagnosticsRequest.propInfo['api-version']),
                 'meta': CustomFormGroup(this['meta'].$formGroup, DiagnosticsDiagnosticsRequest.propInfo['meta'].required),
                 'query': CustomFormControl(new FormControl(this['query']), DiagnosticsDiagnosticsRequest.propInfo['query']),
+                'service-port': CustomFormGroup(this['service-port'].$formGroup, DiagnosticsDiagnosticsRequest.propInfo['service-port'].required),
                 'parameters': CustomFormControl(new FormControl(this['parameters']), DiagnosticsDiagnosticsRequest.propInfo['parameters']),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('meta').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('service-port') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('service-port').get(field);
                 control.updateValueAndValidity();
             });
         }
@@ -143,6 +162,7 @@ export class DiagnosticsDiagnosticsRequest extends BaseModel implements IDiagnos
             this._formGroup.controls['api-version'].setValue(this['api-version']);
             this['meta'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['query'].setValue(this['query']);
+            this['service-port'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['parameters'].setValue(this['parameters']);
         }
     }

@@ -62,3 +62,9 @@ type Client interface {
 	// Close closes the client
 	Close()
 }
+
+// Router interface abstracts out determining routing coordinates of diagnostics request
+type Router interface {
+	// GetRoute returns service URL and remote service name
+	GetRoute(*diagapi.DiagnosticsRequest) (string, string, error)
+}

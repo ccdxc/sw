@@ -24,4 +24,5 @@ export * from './diagnostics-module.model';
 export * from './diagnostics-module-list.model';
 export * from './diagnostics-module-spec.model';
 export * from './diagnostics-module-status.model';
+export * from './diagnostics-service-port.model';
 export * from './googleprotobuf-any.model';

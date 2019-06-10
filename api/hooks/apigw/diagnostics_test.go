@@ -27,6 +27,7 @@ func TestDebugPreCallHook(t *testing.T) {
 		svcInstance  *cmdprotos.ServiceInstance
 		clientGetter diagnostics.ClientGetter
 		moduleGetter module.Getter
+		router       diagnostics.Router
 		out          interface{}
 		skipCall     bool
 		err          error
@@ -74,10 +75,9 @@ func TestDebugPreCallHook(t *testing.T) {
 			},
 			moduleGetter: mock.GetModuleGetter(
 				&diagapi.Module{}, true),
-			clientGetter: mock.GetClientGetter(false, false),
-			out:          nil,
-			skipCall:     true,
-			err:          errors.New("simulated module error"),
+			out:      nil,
+			skipCall: true,
+			err:      errors.New("simulated module error"),
 		},
 		{
 			name: "no service instance",
@@ -94,12 +94,17 @@ func TestDebugPreCallHook(t *testing.T) {
 					Status: diagapi.ModuleStatus{
 						Module: globals.Spyglass,
 						Node:   "node2",
+						ServicePorts: []diagapi.ServicePort{
+							{
+								Name: globals.Spyglass,
+								Port: 9011,
+							},
+						},
 					},
 				}, false),
-			clientGetter: mock.GetClientGetter(false, false),
-			out:          nil,
-			skipCall:     true,
-			err:          fmt.Errorf("unable to locate service instance for module [%s]", "node2-pen-spyglass"),
+			out:      nil,
+			skipCall: true,
+			err:      fmt.Errorf("unable to locate service instance for module [%s]", "node2-pen-spyglass"),
 		},
 		{
 			name: "unsupported module",
@@ -121,12 +126,17 @@ func TestDebugPreCallHook(t *testing.T) {
 					Status: diagapi.ModuleStatus{
 						Module: "unsupported",
 						Node:   "node1",
+						ServicePorts: []diagapi.ServicePort{
+							{
+								Name: "unsupported",
+								Port: 786,
+							},
+						},
 					},
 				}, false),
-			clientGetter: mock.GetClientGetter(false, false),
-			out:          nil,
-			skipCall:     true,
-			err:          fmt.Errorf("diagnostics not supported for module [%s]", "node1-unsupported"),
+			out:      nil,
+			skipCall: true,
+			err:      fmt.Errorf("diagnostics not supported for module [%s]", "node1-unsupported"),
 		},
 		{
 			name: "error in Debug rpc",
@@ -182,6 +192,46 @@ func TestDebugPreCallHook(t *testing.T) {
 			out:          &diagapi.DiagnosticsResponse{Object: &api.Any{}},
 			skipCall:     true,
 			err:          nil,
+		},
+		{
+			name: "invalid service name",
+			in: &diagapi.DiagnosticsRequest{
+				ObjectMeta: api.ObjectMeta{
+					Name: "node1-pen-citadel",
+				},
+				Query: diagapi.DiagnosticsRequest_Log.String(),
+				ServicePort: diagapi.ServicePort{
+					Name: "invalid",
+				},
+			},
+			svcInstance: &cmdprotos.ServiceInstance{
+				Node:    "node1",
+				Service: globals.Citadel,
+				URL:     "192.168.10.11:7087",
+			},
+			moduleGetter: mock.GetModuleGetter(
+				&diagapi.Module{
+					ObjectMeta: api.ObjectMeta{
+						Name: "node1-pen-citadel",
+					},
+					Status: diagapi.ModuleStatus{
+						Module: globals.Citadel,
+						Node:   "node1",
+						ServicePorts: []diagapi.ServicePort{
+							{
+								Name: "pen-citadel",
+								Port: 7087,
+							},
+							{
+								Name: "pen-collector",
+								Port: 10777,
+							},
+						},
+					},
+				}, false),
+			out:      nil,
+			skipCall: true,
+			err:      fmt.Errorf("invalid service name [%s]", "invalid"),
 		},
 	}
 	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")

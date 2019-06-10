@@ -14,6 +14,7 @@ import (
 type client struct {
 	rpcClient         *rpckit.RPCClient
 	diagnosticsClient protos.DiagnosticsClient
+	router            Router
 }
 
 func (c *client) Debug(ctx context.Context, in *diagapi.DiagnosticsRequest, opts ...grpc.CallOption) (*diagapi.DiagnosticsResponse, error) {
@@ -35,9 +36,13 @@ func (ac *apigwClient) Debug(ctx context.Context, in *diagapi.DiagnosticsRequest
 
 func (ac *apigwClient) Close() {}
 
-// GetClientGetter returns an implementation of ClientGetter
-func GetClientGetter(name, svcURL, remoteServer string, diagSvc Service) ClientGetter {
+// NewClientGetter returns an implementation of ClientGetter
+func NewClientGetter(name string, diagRequest *diagapi.DiagnosticsRequest, router Router, diagSvc Service) (ClientGetter, error) {
 	var clgetter ClientGetterFunc
+	svcURL, remoteServer, err := router.GetRoute(diagRequest)
+	if err != nil {
+		return nil, err
+	}
 	switch remoteServer {
 	case globals.APIGw:
 		clgetter = func() (Client, error) {
@@ -55,5 +60,5 @@ func GetClientGetter(name, svcURL, remoteServer string, diagSvc Service) ClientG
 			}, nil
 		}
 	}
-	return clgetter
+	return clgetter, nil
 }

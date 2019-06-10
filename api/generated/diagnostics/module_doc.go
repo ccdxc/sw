@@ -12,6 +12,7 @@ The following Messages are defined.
   Module
   ModuleSpec
   ModuleStatus
+  ServicePort
 
 The following Services and Methods are defined.
 
