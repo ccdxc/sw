@@ -12,7 +12,6 @@ ifeq (,$(filter $(PIPELINE),hello l2switch elektra))
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target host
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target test-utils
 ifeq ($(ARCH),aarch64)
-	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh
 	$(eval STRIP := )
     ifeq ($(PIPELINE),$(filter $(PIPELINE),apollo artemis))
@@ -21,7 +20,6 @@ ifeq ($(ARCH),aarch64)
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py \
 		--pipeline $(PIPELINE) $(PKG_ARGS) $(STRIP)
 else
-	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py \
 		--pipeline $(PIPELINE) --target sim --no-strip
@@ -48,12 +46,10 @@ ifneq ($(ARCH),aarch64)
 endif
 
 package-arm-dev: package-clean ${PKG_PREREQS}
-	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target arm-dev --no-strip
 
 package-haps-dbg: package-clean ${PKG_PREREQS}
-	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target haps-dbg
 
