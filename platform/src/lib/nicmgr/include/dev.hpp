@@ -94,7 +94,6 @@ public:
     int HandleUpgradeEvent(UpgradeEvent event);
     std::map<uint32_t, uplink_t*> GetUplinks() { return uplinks; };
     void SetFwStatus(uint8_t fw_status);
-
 private:
     static DeviceManager *instance;
 
@@ -116,6 +115,7 @@ private:
     bool IsDataPathQuiesced();
     bool CheckAllDevsDisabled();
     int SendFWDownEvent();
+    static void HeartbeatEventHandler(void* obj);
 };
 
 #endif /* __DEV_HPP__ */

@@ -217,6 +217,9 @@ Eth::Eth(devapi *dev_api,
     evutil_add_check(EV_A_ &devcmd_check, Eth::DevcmdPoll, this);
     evutil_timer_start(EV_A_ &devcmd_timer, Eth::DevcmdPoll, this, 0.0, 0.001);
 
+    //initialize heartbeat as 0 when device got created.
+    regs->info.fw_heartbeat = 0;
+
     //reset the active_lif_ref_cnt to 0
     active_lif_ref_cnt = 0;
 
@@ -1659,6 +1662,15 @@ void
 Eth::SetFwStatus(uint8_t fw_status)
 {
     regs->info.fw_status = fw_status;
+#ifndef __aarch64__
+    WRITE_MEM(regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
+#endif
+}
+
+void
+Eth::HeartbeatEventHandler()
+{
+    regs->info.fw_heartbeat = regs->info.fw_heartbeat + 1;
 #ifndef __aarch64__
     WRITE_MEM(regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
 #endif

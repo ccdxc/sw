@@ -34,6 +34,7 @@ using namespace std;
 
 namespace pt = boost::property_tree;
 
+evutil_timer heartbeat_timer;
 DeviceManager *DeviceManager::instance;
 
 #define CASE(type) case type: return #type
@@ -297,6 +298,7 @@ DeviceManager::LoadConfig(string path)
 
 #endif //IRIS
 
+    evutil_timer_start(EV_A_ &heartbeat_timer, DeviceManager::HeartbeatEventHandler, this, 0.0, 1);
     upg_state = DEVICES_ACTIVE_STATE;
 
     return 0;
@@ -531,6 +533,20 @@ DeviceManager::XcvrEventHandler(port_status_t *evd)
         if (dev->GetType() == ETH || dev->GetType() == MNIC) {
             Eth *eth_dev = (Eth *) dev;
             eth_dev->XcvrEventHandler(evd);
+        }
+    }
+}
+
+void
+DeviceManager::HeartbeatEventHandler(void *obj)
+{
+    DeviceManager *devmgr = (DeviceManager *)obj;
+
+    for (auto it = devmgr->devices.begin(); it != devmgr->devices.end(); it++) {
+        Device *dev = it->second;
+        if (dev->GetType() == ETH || dev->GetType() == MNIC) {
+            Eth *eth_dev = (Eth *) dev;
+            eth_dev->HeartbeatEventHandler();
         }
     }
 }

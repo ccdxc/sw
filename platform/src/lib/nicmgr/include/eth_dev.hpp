@@ -123,6 +123,7 @@ public:
     int GenerateQstateInfoJson(pt::ptree &lifs);
     bool CreateHostDevice();
     void SetFwStatus(uint8_t fw_status);
+    void HeartbeatEventHandler();
 
     bool IsDevQuiesced();
     bool IsDevReset();
