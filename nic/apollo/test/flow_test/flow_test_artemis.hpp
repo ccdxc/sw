@@ -132,6 +132,12 @@ dump_session_info(uint32_t vpc, session_actiondata_t *actiondata)
 #define MAX_REMOTE_EPS  512
 #define MAX_EP_PAIRS_PER_VPC (MAX_LOCAL_EPS*MAX_REMOTE_EPS)
 
+typedef struct mapping_s {
+    ip_addr_t local_ip;
+    ip_addr_t public_ip;
+    ip_addr_t provider_ip;
+} mapping_t;
+
 typedef struct vpc_epdb_s {
     uint32_t vpc_id;
     uint32_t valid;
@@ -139,10 +145,20 @@ typedef struct vpc_epdb_s {
     uint32_t v6_lcount;
     uint32_t v4_rcount;
     uint32_t v6_rcount;
-    uint32_t lips[MAX_LOCAL_EPS];
-    ipv6_addr_t lip6s[MAX_LOCAL_EPS];
-    uint32_t rips[MAX_REMOTE_EPS];
-    ipv6_addr_t rip6s[MAX_REMOTE_EPS];
+    union {
+        struct {
+            mapping_t v4_locals[MAX_LOCAL_EPS];
+            mapping_t v6_locals[MAX_LOCAL_EPS];
+            mapping_t v4_remotes[MAX_REMOTE_EPS];
+            mapping_t v6_remotes[MAX_REMOTE_EPS];
+        };
+        struct {
+            uint32_t lips[MAX_LOCAL_EPS];
+            ipv6_addr_t lip6s[MAX_LOCAL_EPS];
+            uint32_t rips[MAX_REMOTE_EPS];
+            ipv6_addr_t rip6s[MAX_REMOTE_EPS];
+        };
+    };
 } vpc_epdb_t;
 
 typedef struct vpc_ep_pair_s {
@@ -599,9 +615,11 @@ public:
         return SDK_RET_OK;
     }
 
-    sdk_ret_t create_session(uint32_t vpc, ipv4_addr_t iflow_sip,
-                             ipv4_addr_t iflow_dip, uint8_t proto,
-                             uint16_t iflow_sport, uint16_t iflow_dport) {
+    sdk_ret_t create_session(uint32_t vpc, uint8_t proto,
+                             ipv4_addr_t iflow_sip, ipv4_addr_t iflow_dip,
+                             uint16_t iflow_sport, uint16_t iflow_dport,
+                             ipv4_addr_t rflow_sip, ipv4_addr_t rflow_dip,
+                             uint16_t rflow_sport, uint16_t rflow_dport) {
         memset(&v4entry, 0, sizeof(ftlv4_entry_t));
         // Common DATA fields
         v4entry.session_index = session_index;
@@ -618,10 +636,10 @@ public:
         SDK_ASSERT(ret == SDK_RET_OK);
         dump_flow_entry(&v4entry, iflow_sip, iflow_dip);
         // Create RFLOW
-        v4entry.sport = iflow_dport;
-        v4entry.dport = iflow_sport;
-        v4entry.src = iflow_dip;
-        v4entry.dst = iflow_sip;
+        v4entry.sport = rflow_sport;
+        v4entry.dport = rflow_dport;
+        v4entry.src = rflow_sip;
+        v4entry.dst = rflow_dip;
         ret = insert_(&v4entry);
         SDK_ASSERT(ret == SDK_RET_OK);
         dump_flow_entry(&v4entry, iflow_dip, iflow_sip);
@@ -662,15 +680,22 @@ public:
                             // this VPC is for Internet IN/OUT with floating
                             // IP flows
                             ip_addr.addr.v4_addr = (0xC << 28) | i;
-                            ret = create_session(vpc, ep_pairs[i].lip,
+                            ret = create_session(vpc, proto,
+                                                 ep_pairs[i].lip,
                                                  ip_addr.addr.v4_addr,
-                                                 proto, fwd_sport,
-                                                 fwd_dport);
+                                                 fwd_sport, fwd_dport,
+                                                 ip_addr.addr.v4_addr,
+                                                 ep_pairs[i].lip, /* must be public IP */
+                                                 fwd_dport, fwd_sport);
                         } else {
                             // vnet in/out with vxlan encap
-                            ret = create_session(vpc, ep_pairs[i].lip,
-                                                 ep_pairs[i].rip, proto,
-                                                 fwd_sport, fwd_dport);
+                            ret = create_session(vpc, proto,
+                                                 ep_pairs[i].lip,
+                                                 ep_pairs[i].rip,
+                                                 fwd_sport, fwd_dport,
+                                                 ep_pairs[i].rip,
+                                                 ep_pairs[i].lip,
+                                                 fwd_dport, fwd_sport);
                         }
                         if (ret != SDK_RET_OK) {
                             return ret;

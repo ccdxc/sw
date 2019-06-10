@@ -334,6 +334,7 @@ lif_impl::program_internal_mgmt_nacl(lif_info_t *lif_params) {
         PDS_TRACE_ERR("Failed NACL entry for mnic_int_mgmt -> host_mgmt"
                       "err %u", ret);
     }
+    return ret;
 }
 
 /// \@}
