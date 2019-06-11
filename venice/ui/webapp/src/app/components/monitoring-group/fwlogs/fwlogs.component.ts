@@ -5,7 +5,7 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ITelemetry_queryFwlogsQueryResponse, ITelemetry_queryFwlogsQueryList, Telemetry_queryFwlogsQuerySpec, Telemetry_queryFwlog, Telemetry_queryFwlogsQuerySpec_sort_order, ITelemetry_queryFwlog } from '@sdk/v1/models/generated/telemetry_query';
 import { TelemetryqueryService } from '@app/services/generated/telemetryquery.service';
 import { IPUtility } from '@app/common/IPUtility';
-import { LazyLoadEvent } from 'primeng/primeng';
+import { LazyLoadEvent, OverlayPanel } from 'primeng/primeng';
 import { TableviewAbstract, TablevieweditHTMLComponent } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
@@ -16,6 +16,9 @@ import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { TableUtility } from '@app/components/shared/tableviewedit/tableutility';
 import { SearchUtil } from '@app/components/search/SearchUtil';
+import { SecurityService } from '@app/services/generated/security.service';
+import { SecuritySGPolicy } from '@sdk/v1/models/generated/security';
+import { PolicyRuleTuple } from './';
 
 @Component({
   selector: 'app-fwlogs',
@@ -25,6 +28,7 @@ import { SearchUtil } from '@app/components/search/SearchUtil';
 })
 export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Telemetry_queryFwlog> {
   @ViewChild(TablevieweditHTMLComponent) tableWrapper: TablevieweditHTMLComponent;
+  @ViewChild('ruleDetailsOverlay') overlay: OverlayPanel;
 
   dataObjects: ReadonlyArray<Telemetry_queryFwlog> = [];
 
@@ -44,6 +48,16 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
   naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
   macAddrToName: { [key: string]: string; } = {};
 
+  // Used for rule details shows on hover
+  currentRule = '';
+  policyName = '';
+  currentRuleObject = {};
+  ruleMap = new Map<string, PolicyRuleTuple>();
+
+  // Holds all policy objects
+  sgPolicies: ReadonlyArray<SecuritySGPolicy> = [];
+  sgPoliciesEventUtility: HttpEventUtility<SecuritySGPolicy>;
+
   lastUpdateTime: string = '';
 
   bodyIcon: any = {
@@ -62,19 +76,21 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     matIcon: 'grid_on'
   };
 
+  inOverlay: boolean = false;
+
   // Only time is supported as sortable by the backend
   cols: TableCol[] = [
-    { field: 'time', header: 'Time', class: 'fwlogs-column', sortable: true, width: 12 },
-    { field: 'source', header: 'Source', class: 'fwlogs-column-ip', sortable: false, width: 11 },
-    { field: 'destination', header: 'Destination', class: 'fwlogs-column-ip', sortable: false, width: 11 },
-    { field: 'protocol', header: 'Protocol', class: 'fwlogs-column-port', sortable: false, width: 10 },
-    { field: 'source-port', header: 'Src Port', class: 'fwlogs-column-port', sortable: false, width: 8 },
-    { field: 'destination-port', header: 'Dest Port', class: 'fwlogs-column-port', sortable: false, width: 8 },
-    { field: 'action', header: 'Action', class: 'fwlogs-column', sortable: false, width: 7 },
-    { field: 'reporter-id', header: 'Reporter', class: 'fwlogs-column', sortable: false, width: 9 },
-    { field: 'direction', header: 'Direction', class: 'fwlogs-column', sortable: false, width: 8 },
-    { field: 'rule-id', header: 'Rule ID', class: 'fwlogs-column', sortable: false, width: 8 },
-    { field: 'session-id', header: 'Session ID', class: 'fwlogs-column', sortable: false, width: 8 },
+    { field: 'time', header: 'Time', class: 'fwlogs-column', sortable: true, width: 18 },
+    { field: 'source', header: 'Source', class: 'fwlogs-column-ip', sortable: true, width: 11 },
+    { field: 'destination', header: 'Destination', class: 'fwlogs-column-ip', sortable: true, width: 11 },
+    { field: 'protocol', header: 'Protocol', class: 'fwlogs-column-port', sortable: true, width: 10 },
+    { field: 'source-port', header: 'Src Port', class: 'fwlogs-column-port', sortable: true, width: 7 },
+    { field: 'destination-port', header: 'Dest Port', class: 'fwlogs-column-port', sortable: true, width: 7 },
+    { field: 'action', header: 'Action', class: 'fwlogs-column', sortable: true, width: 7 },
+    { field: 'reporter-id', header: 'Reporter', class: 'fwlogs-column', sortable: true, width: 7 },
+    { field: 'direction', header: 'Direction', class: 'fwlogs-column', sortable: true, width: 7 },
+    { field: 'session-id', header: 'Session ID', class: 'fwlogs-column', sortable: true},
+    { field: 'policy', header: 'Policy Name', class: 'fwlogs-column', sortable: true, width: 7, roleGuard: 'securitysgpolicy_read' },
   ];
 
   constructor(
@@ -83,6 +99,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     private clusterService: ClusterService,
     protected cdr: ChangeDetectorRef,
     protected telemetryService: TelemetryqueryService,
+    protected securityService: SecurityService,
   ) {
     super(controllerService, cdr);
   }
@@ -111,6 +128,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     this.query.$formGroup.get('source-ips').setValidators(IPUtility.isValidIPValidator);
     this.query.$formGroup.get('dest-ips').setValidators(IPUtility.isValidIPValidator);
     this.getFwlogs(this.startingSortOrder);
+    this.getSGPolicies();
   }
 
   displayColumn(data, col): any {
@@ -123,7 +141,11 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     }
   }
 
-  getNaplesNameFromReporterID(data: Telemetry_queryFwlog) {
+  displayPolicyName(data): string {
+    return this.ruleMap.get(data['rule-id']) ? this.ruleMap.get(data['rule-id']).policy.meta.name : null;
+  }
+
+  getNaplesNameFromReporterID(data: Telemetry_queryFwlog): string {
     if (data == null || data['reporter-id'] == null) {
       return '';
     }
@@ -174,6 +196,66 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
       },
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
+  }
+
+  handleRuleClick() {
+    this.controllerService.navigate(['/security', 'sgpolicies', this.policyName]);
+  }
+
+  handleOverlayEnter(event) {
+    this.inOverlay = true;
+  }
+
+  // The icon and overlay generated dont perfectly overlap.
+  // This delay allows the user to enter the overlay if they need to copy or select the text
+  rowLeave() {
+    setTimeout(() => {
+      if (!this.inOverlay) {
+        this.overlay.hide();
+      }
+    }, 100);
+  }
+
+  handleOverlayLeave(event) {
+    this.overlay.hide();
+    this.inOverlay = false;
+  }
+
+  handleHover(data) {
+    this.currentRule = data['rule-id'];
+    const mapValue: PolicyRuleTuple = this.ruleMap.get(this.currentRule);
+    if (mapValue != null) {
+      this.policyName = mapValue.policy.meta.name;
+      this.currentRuleObject = mapValue.rule;
+    } else {
+      this.policyName = null;
+      this.currentRuleObject = null;
+    }
+  }
+
+  getSGPolicies() {
+    this.sgPoliciesEventUtility = new HttpEventUtility<SecuritySGPolicy>(SecuritySGPolicy);
+    this.sgPolicies = this.sgPoliciesEventUtility.array;
+    const subscription = this.securityService.WatchSGPolicy().subscribe(
+      response => {
+        this.sgPoliciesEventUtility.processEvents(response);
+        for (const policy of this.sgPolicies) {
+          if (policy.spec != null && policy.spec.rules != null) {
+            const rulesLength = policy.spec.rules.length;
+            for (let i = 0 ; i < rulesLength ; i++) {
+              if (policy.spec.rules[i] != null) {
+                const newTuple: PolicyRuleTuple = {
+                  policy : policy,
+                  rule: policy.spec.rules[i]
+                };
+                this.ruleMap.set(policy.status['rule-status'][i]['rule-hash'], newTuple);
+              }
+            }
+          }
+        }
+      },
+    );
+    this.subscriptions.push(subscription);
   }
 
   getFwlogs(order = this.tableWrapper.table.sortOrder) {

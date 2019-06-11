@@ -58,3 +58,11 @@ $vertical-gutter: 5px;
   margin: $vertical-gutter $horizontal-gutter;
   @include primary-font();
 }
+
+.fwlogs-ruletext {
+  @include primary-font();
+}
+
+.fwlogs-sgpolicyredirect {
+  cursor: pointer;
+}

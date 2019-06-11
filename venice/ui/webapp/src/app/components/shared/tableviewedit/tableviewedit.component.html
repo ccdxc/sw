@@ -29,14 +29,18 @@
       </ng-template>
 
       <ng-template pTemplate="header" let-columns>
-        <tr>
-          <th *ngFor="let col of cols; let last = last"
-              [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class"
-              [style.width]="col.width + '%'"
-              [colSpan]="last && actionTemplate != null ? 2 : 1">
-            <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
-            </app-sorticon>
-          </th>
+        <tr fxLayout="row">
+          <ng-container *ngFor="let col of cols; let last = last">
+            <ng-container *roleGuard="col.roleGuard ? col.roleGuard : '' ">
+              <th
+                  [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class"
+                  [fxFlex]="col.width"
+                  [colSpan]="last && actionTemplate != null ? 2 : 1">
+                <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
+                </app-sorticon>
+              </th>
+            </ng-container>
+          </ng-container>
         </tr>
       </ng-template>
 
@@ -44,9 +48,10 @@
         <tr [ngClass]="expandedRowData ?checkIfSelected(rowData) : ''" [pSelectableRow]="rowData"
             class="tableviewedit-tr tableviewedit-tr_{{rowData?.meta?.name}}"
             [style.min-height]="virtualRowHeight + 'px'"
+            fxLayout="row"
             (click)="rowClick.emit({event: $event, rowData: rowData})">
           <td *ngFor="let col of cols; let last = last" [ngSwitch]="col.field" [class]="col.class"
-              [style.width]="last && actionTemplate != null ? col.width - actionWidth + '%' : col.width + '%'">
+              [fxFlex]="last && actionTemplate != null ? col.width - actionWidth : col.width">
             <ng-container *ngTemplateOutlet="bodyTemplate; context: {col: col, $implicit: rowData}">
             </ng-container>
           </td>

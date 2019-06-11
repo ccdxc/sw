@@ -12,6 +12,7 @@
                      [expandedRowData]="expandedRowData"
                      [captionTemplate]="captionTemplate"
                      [bodyTemplate]="bodyTemplate"
+                     [actionTemplate]="actionTemplate"
                      [isToFetchDataOnSort]="true"
                      (lazyLoadEvent)="onTableSort($event)"
                      (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
@@ -38,17 +39,78 @@
 <ng-template #bodyTemplate let-rowData let-col="col">
   <ng-container [ngSwitch]="col.field">
     <ng-container *ngSwitchCase="'time'">
-      {{rowData.time | PrettyDate:'ns' }}
+      {{rowData.time | PrettyDate:"ns" }}
     </ng-container>
     <ng-container *ngSwitchCase="'reporter-id'">
       <a
          routerLink="/cluster/naples/{{ rowData['reporter-id'] }}">{{ getNaplesNameFromReporterID(rowData) }}</a>
     </ng-container>
+    <ng-container *ngSwitchCase="'policy'">
+      <div class="fwlogs-sgpolicyredirect">
+        <a
+           routerLink="/security/sgpolicies/{{displayPolicyName(rowData)}}">{{displayPolicyName(rowData)}}</a>
+      </div>
+    </ng-container>
     <ng-container *ngSwitchDefault>
-      {{displayColumn(rowData, col)}}
+      <ng-container *roleGuard="col.roleGuard">
+        {{displayColumn(rowData, col)}}
+      </ng-container>
     </ng-container>
   </ng-container>
 </ng-template>
+
+<ng-template #actionTemplate let-rowData>
+  <div *roleGuard="'securitysgpolicy_read'" class="global-column-action-icon-container"
+       fxLayout="row" fxLayoutGap="5px">
+    <mat-icon svgIcon="security-policy" class="global-table-action-svg-icon"
+              (mouseenter)="ruleDetailsOverlay.toggle($event); handleHover(rowData);"
+              (mouseleave)="rowLeave()" (click)="handleRuleClick()" fxLayoutAlign="center center">
+    </mat-icon>
+  </div>
+</ng-template>
+
+<p-overlayPanel #ruleDetailsOverlay [dismissable]="true" appendTo='body'
+                [showTransitionOptions]="'0ms'"
+                [hideTransitionOptions]="'200ms'">
+  <div fxLayout="column" class="fwlogs-ruletext"
+       (mouseenter)="handleOverlayEnter($event);" (mouseleave)="handleOverlayLeave($event);">
+    <div fxLayout="row wrap" *ngIf="policyName">
+      <b>Policy Name :</b>
+      <div>&nbsp;</div>
+      <div class="fwlogs-sgpolicyredirect" (click)="handleRuleClick()">{{policyName}}</div>
+    </div>
+    <div fxLayout="row wrap">
+      <b>Rule Hash :</b>
+      <div>&nbsp;</div>
+      <div>{{currentRule}}</div>
+    </div>
+    <ng-container
+                  *ngIf="currentRuleObject && currentRuleObject['proto-ports'] && currentRuleObject['proto-ports'].length>0">
+      <div fxLayout="row wrap">
+        <b>Proto/Ports :</b>
+        <div>&nbsp;</div>
+        <div>
+          {{currentRuleObject["proto-ports"][0]['protocol']}}/{{currentRuleObject["proto-ports"][0]['ports']}}
+        </div>
+      </div>
+    </ng-container>
+    <ng-container
+                  *ngIf="currentRuleObject && currentRuleObject['proto-ports'] && currentRuleObject['from-ip-addresses'].length>0">
+      <div fxLayout="row wrap">
+        <b>From I/Ps :</b>
+        <div>&nbsp;</div>
+        <div>{{currentRuleObject["from-ip-addresses"].join(', ')}}</div>
+      </div>
+    </ng-container>
+    <ng-container
+                  *ngIf="currentRuleObject && currentRuleObject['proto-ports'] && currentRuleObject['to-ip-addresses'].length>0">
+      <div fxLayout="row wrap"><b>To I/Ps:</b>
+        &nbsp;
+        <div>{{currentRuleObject["to-ip-addresses"].join(", ")}}</div>
+      </div>
+    </ng-container>
+  </div>
+</p-overlayPanel>
 
 <ng-template #search>
   <div fxFlex="10px"></div>

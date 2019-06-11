@@ -4,10 +4,11 @@ export interface TableCol {
   header: string;
   sortable?: boolean;
   class?: string;
-  width: number;
+  width?: number;
   exportable?: boolean;
   disableSearch?: boolean;
   kind?: string;
+  roleGuard?: string;
 }
 
 export interface CustomExportFunctionOpts {

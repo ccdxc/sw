@@ -164,6 +164,20 @@
     }
   }
 
+  .global-table-action-svg-icon {
+    font-size: 25px;
+    height: 36px;
+    width: 36px;
+    padding: 8px 7px 7px 9px;
+    cursor: pointer;
+
+    &:hover {
+      color: black;
+      background-color: rgba(black, 0.12);
+      border-radius: 50%;
+    }
+  }
+
   /*********  Prime NG overrides  *********/
   %primeng-table {
     .ui-table {
@@ -201,7 +215,13 @@
           opacity: 1;
         }
 
+        .global-table-action-svg-icon {
+          opacity: 0;
+        }
 
+        &:hover .global-table-action-svg-icon {
+          opacity: 1;
+        }
 
         >td {
           border-left: none;

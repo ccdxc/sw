@@ -20,6 +20,11 @@ import { LazyrenderComponent } from '../lazyrender/lazyrender.component';
 import { SorticonComponent } from '../sorticon/sorticon.component';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { TableCol } from '.';
+import { RoleGuardDirective } from '../directives/roleGuard.directive';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
+import { AuthService } from '@app/services/auth.service';
+import { FlexLayoutModule } from '@angular/flex-layout';
 
 export class TestTablevieweditRBAC {
   fixture: ComponentFixture<any>;
@@ -271,23 +276,28 @@ describe('TablevieweditComponent', () => {
         DummyComponent,
         TablevieweditHTMLComponent,
         LazyrenderComponent,
-        SorticonComponent
+        SorticonComponent,
+        RoleGuardDirective
       ],
       imports: [
         NoopAnimationsModule,
         PrimengModule,
         MaterialdesignModule,
         RouterTestingModule,
-        HttpClientTestingModule
+        HttpClientTestingModule,
+        FlexLayoutModule
       ],
       providers: [
         ControllerService,
         ConfirmationService,
         LogService,
+        AuthService,
+        AuthServiceGen,
         LogPublishersService,
         MatIconRegistry,
         MessageService,
-        ChangeDetectorRef
+        ChangeDetectorRef,
+        UIConfigsService
       ]
     });
       });

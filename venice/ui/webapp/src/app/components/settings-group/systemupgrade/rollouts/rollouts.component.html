@@ -77,10 +77,7 @@
     <mat-icon matTooltip="Edit rollout" class="global-table-action-icon"
               (click)="expandRowRequest($event, rowData)">edit
     </mat-icon>
-    <mat-icon matTooltip="Delete rollout" class="global-table-action-icon"
-              (click)="onDeleteRecord($event, rowData)">
-      delete
-    </mat-icon>
+    <!-- For VS-388 no delete on pending rollout -->
   </div>
 </ng-template>
 

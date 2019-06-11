@@ -37,13 +37,32 @@ import { DebugElement } from '@angular/core';
 import { RouterLinkStubDirective } from '@app/common/RouterLinkStub.directive.spec';
 import { BehaviorSubject } from 'rxjs';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
+import { SecurityService } from '@app/services/generated/security.service';
+import { SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 
 
 describe('fwlogsComponent', () => {
   let component: FwlogsComponent;
   let fixture: ComponentFixture<FwlogsComponent>;
+  let securityService;
+  let sgPolicyObserver;
 
   const fwlog: ITelemetry_queryFwlogsQueryResponse = { 'tenant': 'default', 'results': [{ 'statement_id': 0, 'logs': [{ 'source': '130.121.45.86', 'destination': '187.173.108.78', 'source-port': 3981, 'destination-port': 137, 'protocol': 'ICMP', 'action': Telemetry_queryFwlog_action.deny, 'direction': Telemetry_queryFwlog_direction.from_uplink, 'rule-id': '3779', 'session-id': '807', 'reporter-id': '00ae.cd00.1142', 'time': '2019-05-14T18:23:31.03798656Z' as any }] }] };
+
+  const policy1 = new SecuritySGPolicy({
+    meta: {
+      name: 'policy1',
+      'mod-time': '2018-08-23T17:35:08.534909931Z',
+      'creation-time': '2018-08-23T17:30:08.534909931Z'
+    },
+    spec: {
+      rules: [ {} ]
+    },
+    status: {
+      'rule-status': [ {'rule-hash': '3779'} ]
+    }
+
+  });
 
   const naple1 = {
     'kind': 'SmartNIC',
@@ -142,7 +161,8 @@ describe('fwlogsComponent', () => {
         MonitoringService,
         MatIconRegistry,
         MessageService,
-        ClusterService
+        ClusterService,
+        SecurityService
       ]
     })
       .compileComponents();
@@ -151,6 +171,43 @@ describe('fwlogsComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(FwlogsComponent);
     component = fixture.componentInstance;
+    securityService = TestBed.get(SecurityService);
+  });
+
+  it('check if sgicon onhover details are displayed correctly', () => {
+    TestingUtility.setAllPermissions();
+
+    sgPolicyObserver = new BehaviorSubject({
+      events: [
+        {
+          type: 'Created',
+          object: policy1
+        }
+      ]
+    });
+    spyOn(securityService, 'WatchSGPolicy').and.returnValue(
+      sgPolicyObserver
+    );
+    const telemetryService = TestBed.get(TelemetryqueryService);
+    spyOn(telemetryService, 'PostFwlogs').and.returnValue(
+      new BehaviorSubject({body: fwlog})
+    );
+
+    fixture.detectChanges();
+    expect(component).toBeTruthy();
+
+    const row = fixture.debugElement.query(By.css('tr'));
+    row.triggerEventHandler('mouseenter', null);
+    fixture.detectChanges();
+
+    const icon = fixture.debugElement.query(By.css('mat-icon.global-table-action-svg-icon'));
+    icon.triggerEventHandler('mouseenter', icon);
+    fixture.detectChanges();
+
+    const overlay = fixture.debugElement.query(By.css('.fwlogs-ruletext'));
+    const rulehashdiv = overlay.children[1].childNodes[2];
+    expect(rulehashdiv.nativeNode.textContent).toBe(fwlog.results[0].logs[0]['rule-id']);
+
   });
 
   it('should map reporter from mac address to host name', () => {
@@ -164,6 +221,17 @@ describe('fwlogsComponent', () => {
       TestingUtility.createWatchEvents([
         naple1
       ])
+    );
+    sgPolicyObserver = new BehaviorSubject({
+      events: [
+        {
+          type: 'Created',
+          object: policy1
+        }
+      ]
+    });
+    spyOn(securityService, 'WatchSGPolicy').and.returnValue(
+      sgPolicyObserver
     );
     fixture.detectChanges();
     expect(component).toBeTruthy();
@@ -189,6 +257,11 @@ describe('fwlogsComponent', () => {
          new PrettyDatePipe('en-US').transform(rowData.time, 'ns')
         );
       },
+      'policy': (fieldElem: DebugElement, rowData: any, rowIndex: number) => {
+        expect(fieldElem.nativeElement.textContent).toContain(
+          policy1.meta.name
+        );
+      },
     });
 
     const linkDes = fixture.debugElement
@@ -196,7 +269,7 @@ describe('fwlogsComponent', () => {
     // get attached link directive instances
     // using each DebugElement's injector
     const routerLinks = linkDes.map(de => de.injector.get(RouterLinkStubDirective));
-    expect(routerLinks.length).toBe(1, 'Should have 1 routerLinks');
+    expect(routerLinks.length).toBe(2, 'Should have 2 routerLinks');
     expect(routerLinks[0].linkParams).toBe('/cluster/naples/00ae.cd00.1142');
   });
 
@@ -226,6 +299,42 @@ describe('fwlogsComponent', () => {
     it('no access', () => {
       fixture.detectChanges();
       expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
+    });
+
+    it('sgpolicy info should not be available to user without permission', () => {
+
+      TestingUtility.addPermissions([UIRolePermissions['fwlogsquery_read']]);
+
+      sgPolicyObserver = new BehaviorSubject({
+        events: [
+          {
+            type: 'Created',
+            object: policy1
+          }
+        ]
+      });
+
+      spyOn(securityService, 'WatchSGPolicy').and.returnValue(
+        sgPolicyObserver
+      );
+      const telemetryService = TestBed.get(TelemetryqueryService);
+      spyOn(telemetryService, 'PostFwlogs').and.returnValue(
+        new BehaviorSubject({body: fwlog})
+      );
+
+      fixture.detectChanges();
+      expect(component).toBeTruthy();
+
+      const row = fixture.debugElement.query(By.css('tr'));
+      row.triggerEventHandler('mouseenter', null);
+      fixture.detectChanges();
+
+      const icon = fixture.debugElement.query(By.css('mat-icon.global-table-action-svg-icon'));
+      expect(icon).toBeFalsy();
+
+      const headers = fixture.debugElement.queryAll(By.css('th'));
+      expect(headers.length).toBe(10);
+
     });
   });
 });

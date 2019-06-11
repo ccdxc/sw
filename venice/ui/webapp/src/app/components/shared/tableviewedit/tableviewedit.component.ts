@@ -88,15 +88,6 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
   displayedItemCount: number = null;
 
   ngOnInit() {
-    // All the col widths need to add up to 100
-    // Action buttons take up 5% by default
-    let total = 0;
-    this.cols.forEach((c) => {
-      total += c.width;
-    });
-    if (total !== 100) {
-      console.error('Table columns don\'t add up to 100, added up to ' + total);
-    }
   }
 
   dataUpdated() {

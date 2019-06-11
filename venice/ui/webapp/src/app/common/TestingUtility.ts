@@ -79,7 +79,7 @@ export class TestingUtility {
       {
         [key: string]:
         (fieldElem: DebugElement, rowData: any, rowIndex: number) => void
-      } = {}, actionColContent = null) {
+      } = {}, actionColContent = '') {
 
     const rows = tableElem.queryAll(By.css('tr'));
     expect(rows.length).toBe(data.length, 'Data did not match number of entries in the table');
@@ -88,7 +88,7 @@ export class TestingUtility {
       row.children.forEach((field, fieldIndex) => {
         if (fieldIndex === columns.length) {
           // Action col
-          expect(field.nativeElement.textContent).toBe(actionColContent);
+          expect(field.nativeElement.textContent).toBe(actionColContent, 'action column did not match');
           return;
         }
         const colData = columns[fieldIndex];
