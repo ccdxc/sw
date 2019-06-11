@@ -154,6 +154,8 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
       });
       // in case user uploads a dummy tar file (not bundle.tar), we will show it. So that user can delete it. // 2019-05-17 // TODO: clean it up once back-end is ok.
       this.dataObjects = (entries.length > 0) ? entries : allentries;
+    } else {
+      this.dataObjects = []; // it possible that server has no rolloutImage.
     }
   }
 
@@ -258,7 +260,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   }
 
   generateDeleteConfirmMsg(object: IObjstoreObject) {
-    return 'Are you sure you want to delete image: ' + object.meta.name;
+    return 'Are you sure you want to delete image: ' + this.getBundlerTarVersion(object);
   }
 
   displayColumn(record, col): any {
