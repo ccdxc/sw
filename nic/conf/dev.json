@@ -104,6 +104,14 @@
         "if2":           "enp98s0"
     },
     {
+        "host":          "tb47-host1",
+        "console":       "chamber-ts7",
+        "port":          "8",
+        "if0":           "enp96s0",
+        "if1":           "enp97s0",
+        "if2":           "enp98s0"
+    },
+    {
         "host":          "tb74-host2",
         "console":       "chamber-ts8",
         "port":          "10",

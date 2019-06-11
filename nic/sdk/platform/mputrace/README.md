@@ -290,3 +290,13 @@ Following is a sample config.json file for reference -
             sdk/platform/mputrace/captrace.py decode captrace.bin --fltr phv_timestamp_capture=0x1c07a80c --load=mpu_prog_info.json --sym=captrace.syms > pkt1c07.log
         To dump info about the packet
             grep -e pipeline -e stage -e PROGRAM -e BRANCH -e table_hit pkt1c07.log
+
+5. captrace_collect.py
+    captrace_collect.py is a simple tool that automates the above steps to collect and decode.
+    It can connect to NAPLES either via oob_mnic0 or through the host,
+    enable the trace options provided, collect the logs, decode and filter them.
+    The decoded output is collected in nic/ dir.
+    Usage:
+        - sdk/platform/mputrace/captrace_collect.py --mgmt <naples mgmt ip> --rxdma
+        or
+        - sdk/platform/mputrace/captrace_collect.py --host <host ip> --rxdma
