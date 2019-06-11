@@ -27,5 +27,5 @@ testcases:
         testcase: testcases.filters.multicast_mac_filter
         stress  : True
         disable : False
-        ignore  : True
+        ignore  : False
 
