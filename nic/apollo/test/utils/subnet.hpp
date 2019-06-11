@@ -36,7 +36,7 @@ public:
 
     // Constructor
     subnet_feeder() { };
-    subnet_feeder(const subnet_feeder &feeder) {
+    subnet_feeder(const subnet_feeder& feeder) {
         init(feeder.key, feeder.vpc, feeder.cidr_str, feeder.num_obj);
     }
 

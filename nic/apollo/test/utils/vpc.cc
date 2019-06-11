@@ -13,8 +13,6 @@
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
 
-using namespace std;
-
 namespace api_test {
 
 //----------------------------------------------------------------------------
@@ -41,12 +39,11 @@ vpc_feeder::iter_next(int width) {
     cur_iter_pos++;
 }
 
-ostream& operator << (ostream& os, vpc_feeder& obj)
-{
+std::ostream& operator << (std::ostream& os, vpc_feeder& obj) {
     os << "VPC feeder =>"
         << " id: " << obj.key.id
         << " cidr_str: " << obj.cidr_str
-        << endl;
+        << std::endl;
     return os;
 }
 
@@ -88,12 +85,12 @@ sdk::sdk_ret_t
 vpc_feeder::info_compare(pds_vpc_info_t *info) {
 
     if (!this->key_compare(&info->spec.key)) {
-        cout << "key compare failed " <<  this;
+        std::cout << "key compare failed " <<  this;
         return sdk::SDK_RET_ERR;
     }
 
     if (!this->spec_compare(&info->spec)) {
-        cout << "spec compare failed " <<  this;
+        std::cout << "spec compare failed " <<  this;
         return sdk::SDK_RET_ERR;
     }
 
@@ -101,7 +98,7 @@ vpc_feeder::info_compare(pds_vpc_info_t *info) {
 }
 
 //----------------------------------------------------------------------------
-// VPC test class routines
+// VPC test crud routines
 //----------------------------------------------------------------------------
 
 sdk::sdk_ret_t

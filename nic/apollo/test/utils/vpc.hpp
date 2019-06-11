@@ -27,7 +27,7 @@ public:
 
     // Constructor
     vpc_feeder() { };
-    vpc_feeder(const vpc_feeder &feeder) {
+    vpc_feeder(const vpc_feeder& feeder) {
         init(feeder.key, feeder.type, feeder.cidr_str, feeder.num_obj);
     }
 

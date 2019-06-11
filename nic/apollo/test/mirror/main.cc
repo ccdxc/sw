@@ -30,8 +30,6 @@ static constexpr uint32_t k_base_ms = 1;
 static const char * const k_tep_ip1 = "10.1.1.1";
 static const char * const k_tep_ip2 = "10.1.2.1";
 static const char * const k_tep_ip3 = "10.1.3.1";
-static const device_util k_device_obj("91.0.0.1", "00:00:01:02:0a:0b",
-                                      "90.0.0.2");
 static const tep_util k_tep1(k_tep_ip1), k_tep2(k_tep_ip2), k_tep3(k_tep_ip3);
 
 //----------------------------------------------------------------------------
@@ -57,7 +55,7 @@ protected:
         TEP_CREATE(k_tep1);
         TEP_CREATE(k_tep2);
         TEP_CREATE(k_tep3);
-        ASSERT_TRUE(k_device_obj.create() == sdk::SDK_RET_OK);
+        sample_device_setup();
         batch_commit();
     }
     static void TearDownTestCase() {
@@ -67,7 +65,7 @@ protected:
         TEP_DELETE(k_tep3);
         sample_subnet_teardown();
         sample_vpc_teardown(PDS_VPC_TYPE_SUBSTRATE);
-        ASSERT_TRUE(k_device_obj.del() == sdk::SDK_RET_OK);
+        sample_device_teardown();
         batch_commit();
         pds_test_base::TearDownTestCase();
     }

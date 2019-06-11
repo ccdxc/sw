@@ -14,8 +14,6 @@
 #include "nic/apollo/test/utils/vpc.hpp"
 #include "nic/apollo/test/utils/subnet.hpp"
 
-using namespace std;
-
 namespace api_test {
 
 //----------------------------------------------------------------------------
@@ -55,8 +53,7 @@ subnet_feeder::iter_next(int width) {
     cur_iter_pos++;
 }
 
-ostream& operator << (ostream& os, subnet_feeder& obj)
-{
+std::ostream& operator << (std::ostream& os, subnet_feeder& obj) {
     os << "Subnet feeder =>"
         << " id: " << obj.key.id
         << " vpc: " << obj.vpc.id
@@ -69,7 +66,7 @@ ostream& operator << (ostream& os, subnet_feeder& obj)
         << " v6_in_pol: " << obj.ing_v6_policy.id
         << " v4_eg_pol: " << obj.egr_v4_policy.id
         << " v6_eg_pol: " << obj.egr_v6_policy.id
-        << endl;
+        << std::endl;
     return os;
 }
 
@@ -151,12 +148,12 @@ sdk::sdk_ret_t
 subnet_feeder::info_compare(pds_subnet_info_t *info) {
 
     if (!this->key_compare(&info->spec.key)) {
-        cout << "key compare failed " <<  this;
+        std::cout << "key compare failed " <<  this;
         return sdk::SDK_RET_ERR;
     }
 
     if (!this->spec_compare(&info->spec)) {
-        cout << "spec compare failed " <<  this;
+        std::cout << "spec compare failed " <<  this;
         return sdk::SDK_RET_ERR;
     }
 
@@ -164,7 +161,7 @@ subnet_feeder::info_compare(pds_subnet_info_t *info) {
 }
 
 //----------------------------------------------------------------------------
-// Subnet test class routines
+// Subnet test crud routines
 //----------------------------------------------------------------------------
 
 sdk::sdk_ret_t

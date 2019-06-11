@@ -55,11 +55,6 @@ std::string tep_test_ip = "1.0.0.1";
 std::string remote_test_ip = "5.5.0.10";
 uint64_t g_remote_vnic_mac = 0x000000030b020a02;
 
-// Constants
-const std::string g_device_ip("91.0.0.1");
-const std::string g_gateway_ip("90.0.0.2");
-const std::string g_device_macaddr("00:00:01:02:0a:0b");
-
 //----------------------------------------------------------------------------
 // Mapping test class
 //----------------------------------------------------------------------------
@@ -86,7 +81,6 @@ protected:
         pds_vpc_key_t vpc_key = {0};
         pds_subnet_key_t subnet_key = {0};
         pds_vnic_info_t vnic_info = {0};
-        pds_device_info_t dev_info = {0};
         pds_vpc_info_t vpc_info = {0};
         pds_subnet_info_t sub_info = {0};
         pds_tep_info_t tep_info = {0};
@@ -96,7 +90,6 @@ protected:
         std::string nr_cidr = "100.0.0.1/16";
         ip_prefix_t ip_pfx, rt_pfx, nr_pfx;
         ip_addr_t ipaddr, rt_addr, nr_addr;
-        device_stepper_seed_t device_seed;
         tep_stepper_seed_t tep_seed = {};
 
         vpc_key.id = api_test::g_vpc_id;
@@ -106,11 +99,10 @@ protected:
         extract_ip_pfx((char *)nr_cidr.c_str(), &nr_pfx);
 
         rt_addr = rt_pfx.addr;
-        tep_util tep_obj(api_test::g_device_ip);
+        tep_util tep_obj(k_device_ip);
 
         BATCH_START();
-        DEVICE_SEED_INIT(&device_seed, g_device_ip, g_device_macaddr, g_gateway_ip);
-        DEVICE_CREATE(&device_seed);
+        sample_device_setup();
 
         vpc_feeder vpc_feeder;
         vpc_feeder.init(vpc_key, PDS_VPC_TYPE_TENANT, g_vpc_cidr_v4,
@@ -160,7 +152,7 @@ protected:
             vpc_key.id += 1;
         }
 
-        DEVICE_READ(&device_seed, sdk::SDK_RET_OK);
+        sample_device_setup_validate();
         TEP_READ(tep_obj, &tep_info);
         TEP_MANY_READ(&tep_seed);
         VNIC_MANY_READ(&vnic_seed, sdk::SDK_RET_OK);
