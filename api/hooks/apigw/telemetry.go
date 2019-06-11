@@ -66,6 +66,7 @@ func metricOperations(ctx context.Context, req *telemetry_query.MetricsQueryList
 		auth.Permission_MetricsQuery.String(),
 		"",
 		"")
+	resource.SetOwner(user) // MetricsQuery permission is implicitly granted if user has read permission on the object
 	// append requested operation
 	operations = append(operations, authz.NewOperation(resource, auth.Permission_Read.String()))
 

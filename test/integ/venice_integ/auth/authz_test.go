@@ -811,112 +811,118 @@ func TestValidatePerms(t *testing.T) {
 	AssertOk(t, err, "error creating logged in context")
 	tests := []struct {
 		name   string
-		perm   auth.Permission
+		perms  []auth.Permission
 		valid  bool
 		tenant string
 		errmsg string
 	}{
 		{
 			name:   "empty kind, tenant and group",
-			perm:   login.NewPermission("", "", "", "", "", auth.Permission_AllActions.String()),
+			perms:  []auth.Permission{login.NewPermission("", "", "", "", "", auth.Permission_AllActions.String())},
 			valid:  false,
 			tenant: adminCred.Tenant,
 			errmsg: "invalid API group [\"\"]",
 		},
 		{
 			name:   "empty kind, tenant and invalid group",
-			perm:   login.NewPermission("", "zzz", "", "", "", auth.Permission_AllActions.String()),
+			perms:  []auth.Permission{login.NewPermission("", "zzz", "", "", "", auth.Permission_AllActions.String())},
 			valid:  false,
 			tenant: adminCred.Tenant,
 			errmsg: "invalid API group [\"zzz\"]",
 		},
 		{
 			name:   "empty kind, tenant and valid group",
-			perm:   login.NewPermission("", string(apiclient.GroupAuth), "", "", "", auth.Permission_AllActions.String()),
+			perms:  []auth.Permission{login.NewPermission("", string(apiclient.GroupAuth), "", "", "", auth.Permission_AllActions.String())},
 			valid:  true,
 			tenant: adminCred.Tenant,
 			errmsg: "",
 		},
 		{
 			name:   "non matching kind and group",
-			perm:   login.NewPermission(globals.DefaultTenant, string(apiclient.GroupAuth), string(network.KindNetwork), "", "", auth.Permission_AllActions.String()),
+			perms:  []auth.Permission{login.NewPermission(globals.DefaultTenant, string(apiclient.GroupAuth), string(network.KindNetwork), "", "", auth.Permission_AllActions.String())},
 			valid:  false,
 			tenant: adminCred.Tenant,
 			errmsg: fmt.Sprintf("invalid resource kind [%q] and API group [%q]", string(network.KindNetwork), string(apiclient.GroupAuth)),
 		},
 		{
 			name:   "empty tenant and tenant scoped kind",
-			perm:   login.NewPermission("", string(apiclient.GroupAuth), string(auth.KindRole), "", "", auth.Permission_AllActions.String()),
+			perms:  []auth.Permission{login.NewPermission("", string(apiclient.GroupAuth), string(auth.KindRole), "", "", auth.Permission_AllActions.String())},
 			valid:  true,
 			tenant: adminCred.Tenant,
 			errmsg: "",
 		},
 		{
 			name:   "default tenant and cluster scoped kind",
-			perm:   login.NewPermission(globals.DefaultTenant, string(apiclient.GroupAuth), string(auth.KindAuthenticationPolicy), "", "", auth.Permission_AllActions.String()),
+			perms:  []auth.Permission{login.NewPermission(globals.DefaultTenant, string(apiclient.GroupAuth), string(auth.KindAuthenticationPolicy), "", "", auth.Permission_AllActions.String())},
 			valid:  true,
 			tenant: adminCred.Tenant,
 			errmsg: "",
 		},
 		{
 			name:   "non default tenant and cluster scoped kind",
-			perm:   login.NewPermission(testTenant, string(apiclient.GroupAuth), string(auth.KindAuthenticationPolicy), "", "", auth.Permission_AllActions.String()),
+			perms:  []auth.Permission{login.NewPermission(testTenant, string(apiclient.GroupAuth), string(auth.KindAuthenticationPolicy), "", "", auth.Permission_AllActions.String())},
 			valid:  false,
 			tenant: adminCred.Tenant,
 			errmsg: fmt.Sprintf("tenant should be empty or [%q] for cluster scoped resource kind [%q]", globals.DefaultTenant, string(auth.KindAuthenticationPolicy)),
 		},
 		{
 			name:   "empty kind, and all API groups giving permissions to cluster and tenant scoped objects",
-			perm:   login.NewPermission("", authz.ResourceGroupAll, "", "", "", auth.Permission_AllActions.String()),
+			perms:  []auth.Permission{login.NewPermission("", authz.ResourceGroupAll, "", "", "", auth.Permission_AllActions.String())},
 			valid:  true,
 			tenant: adminCred.Tenant,
 			errmsg: "",
 		},
 		{
 			name:   "all kinds, and all API groups giving permissions to cluster and tenant scoped objects",
-			perm:   login.NewPermission("", authz.ResourceGroupAll, authz.ResourceKindAll, "", "", auth.Permission_AllActions.String()),
+			perms:  []auth.Permission{login.NewPermission("", authz.ResourceGroupAll, authz.ResourceKindAll, "", "", auth.Permission_AllActions.String())},
 			valid:  true,
 			tenant: adminCred.Tenant,
 			errmsg: "",
 		},
 		{
 			name:   "all kinds, and all API groups giving permissions to tenant scoped objects",
-			perm:   login.NewPermission(testTenant, authz.ResourceGroupAll, authz.ResourceKindAll, "", "", auth.Permission_AllActions.String()),
+			perms:  []auth.Permission{login.NewPermission(testTenant, authz.ResourceGroupAll, authz.ResourceKindAll, "", "", auth.Permission_AllActions.String())},
 			valid:  true,
 			tenant: testTenant,
 			errmsg: "",
 		},
 		{
 			name:   "non existent tenant",
-			perm:   login.NewPermission("All", authz.ResourceGroupAll, authz.ResourceKindAll, "", "", auth.Permission_AllActions.String()),
+			perms:  []auth.Permission{login.NewPermission("All", authz.ResourceGroupAll, authz.ResourceKindAll, "", "", auth.Permission_AllActions.String())},
 			valid:  false,
 			tenant: "All",
 			errmsg: "Commit to backend failed: KVError: Key not found, key: /venice/config/cluster/tenants/All, version: 0",
 		},
 		{
 			name:   "all tenants",
-			perm:   login.NewPermission(authz.ResourceTenantAll, authz.ResourceGroupAll, authz.ResourceKindAll, "", "", auth.Permission_AllActions.String()),
+			perms:  []auth.Permission{login.NewPermission(authz.ResourceTenantAll, authz.ResourceGroupAll, authz.ResourceKindAll, "", "", auth.Permission_AllActions.String())},
 			valid:  true,
 			tenant: authz.ResourceTenantAll,
 			errmsg: "",
 		},
 		{
 			name:   "all tenants for a specific tenant scoped kind",
-			perm:   login.NewPermission(authz.ResourceTenantAll, string(apiclient.GroupAuth), string(auth.KindRole), "", "", auth.Permission_AllActions.String()),
+			perms:  []auth.Permission{login.NewPermission(authz.ResourceTenantAll, string(apiclient.GroupAuth), string(auth.KindRole), "", "", auth.Permission_AllActions.String())},
 			valid:  true,
 			tenant: authz.ResourceTenantAll,
 			errmsg: "",
 		},
 		{
 			name:   "all tenants for a specific cluster scoped kind",
-			perm:   login.NewPermission(authz.ResourceTenantAll, string(apiclient.GroupAuth), string(auth.KindAuthenticationPolicy), "", "", auth.Permission_AllActions.String()),
+			perms:  []auth.Permission{login.NewPermission(authz.ResourceTenantAll, string(apiclient.GroupAuth), string(auth.KindAuthenticationPolicy), "", "", auth.Permission_AllActions.String())},
 			valid:  false,
 			tenant: authz.ResourceTenantAll,
 			errmsg: fmt.Sprintf("tenant should be empty or [%q] for cluster scoped resource kind [%q]", globals.DefaultTenant, string(auth.KindAuthenticationPolicy)),
 		},
+		{
+			name:   "role with nil permissions",
+			valid:  false,
+			tenant: "",
+			errmsg: "role should contain at least one permission",
+		},
 	}
 	for i, test := range tests {
-		role, err := tinfo.restcl.AuthV1().Role().Create(ctx, login.NewRole(fmt.Sprintf("testrole_%d", i), globals.DefaultTenant, test.perm))
+		role, err := tinfo.restcl.AuthV1().Role().Create(ctx, login.NewRole(fmt.Sprintf("testrole_%d", i), globals.DefaultTenant, test.perms...))
 		if role != nil {
 			for _, perm := range role.Spec.Permissions {
 				Assert(t, perm.ResourceTenant == test.tenant, fmt.Sprintf("[%s] test failed, expected resource tenant [%s], got [%s]", test.name, test.tenant, perm.ResourceTenant))

@@ -232,7 +232,6 @@ func (it *veniceIntegSuite) TestMetricsAuthz(c *C) {
 	Assert(c, err != nil && strings.Contains(err.Error(), "403"), "expected authorization error while querying metrics")
 
 	MustCreateRole(it.apisrvClient, "MetricsPerms", globals.DefaultTenant,
-		login.NewPermission(globals.DefaultTenant, "", auth.Permission_MetricsQuery.String(), authz.ResourceNamespaceAll, "", auth.Permission_Read.String()),
 		login.NewPermission(globals.DefaultTenant, "", "LifMetrics", authz.ResourceNamespaceAll, "", auth.Permission_Read.String()),
 	)
 	defer MustDeleteRole(it.apisrvClient, "MetricsPerms", globals.DefaultTenant)

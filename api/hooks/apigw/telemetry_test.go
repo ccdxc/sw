@@ -21,6 +21,19 @@ import (
 )
 
 func TestTelemetryOperationsHook(t *testing.T) {
+	testuser := &auth.User{
+		TypeMeta: api.TypeMeta{Kind: "User"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "testTenant",
+			Name:   "testUser",
+		},
+		Spec: auth.UserSpec{
+			Fullname: "Test User",
+			Password: "password",
+			Email:    "testuser@pensandio.io",
+			Type:     auth.UserSpec_Local.String(),
+		},
+	}
 	tests := []struct {
 		name               string
 		user               *auth.User
@@ -31,24 +44,12 @@ func TestTelemetryOperationsHook(t *testing.T) {
 	}{
 		{
 			name: "metrics query operations hook test with no tenant",
-			user: &auth.User{
-				TypeMeta: api.TypeMeta{Kind: "User"},
-				ObjectMeta: api.ObjectMeta{
-					Tenant: "testTenant",
-					Name:   "testUser",
-				},
-				Spec: auth.UserSpec{
-					Fullname: "Test User",
-					Password: "password",
-					Email:    "testuser@pensandio.io",
-					Type:     auth.UserSpec_Local.String(),
-				},
-			},
-			in: &telemetry_query.MetricsQueryList{},
+			user: testuser,
+			in:   &telemetry_query.MetricsQueryList{},
 			expectedOperations: []authz.Operation{
-				authz.NewOperation(authz.NewResource("testTenant",
+				authz.NewOperation(authz.NewResourceWithOwner("testTenant",
 					"", auth.Permission_MetricsQuery.String(),
-					"", ""),
+					"", "", testuser),
 					auth.Permission_Read.String()),
 			},
 			out: &telemetry_query.MetricsQueryList{Tenant: "testTenant"},
@@ -56,20 +57,8 @@ func TestTelemetryOperationsHook(t *testing.T) {
 		},
 		{
 			name: "fwlogs query operations hook test with no tenant",
-			user: &auth.User{
-				TypeMeta: api.TypeMeta{Kind: "User"},
-				ObjectMeta: api.ObjectMeta{
-					Tenant: "testTenant",
-					Name:   "testUser",
-				},
-				Spec: auth.UserSpec{
-					Fullname: "Test User",
-					Password: "password",
-					Email:    "testuser@pensandio.io",
-					Type:     auth.UserSpec_Local.String(),
-				},
-			},
-			in: &telemetry_query.FwlogsQueryList{},
+			user: testuser,
+			in:   &telemetry_query.FwlogsQueryList{},
 			expectedOperations: []authz.Operation{
 				authz.NewOperation(authz.NewResource("testTenant",
 					"", auth.Permission_FwlogsQuery.String(),
@@ -81,24 +70,12 @@ func TestTelemetryOperationsHook(t *testing.T) {
 		},
 		{
 			name: "metrics query operations hook test with different tenant than user's",
-			user: &auth.User{
-				TypeMeta: api.TypeMeta{Kind: "User"},
-				ObjectMeta: api.ObjectMeta{
-					Tenant: "testTenant",
-					Name:   "testUser",
-				},
-				Spec: auth.UserSpec{
-					Fullname: "Test User",
-					Password: "password",
-					Email:    "testuser@pensandio.io",
-					Type:     auth.UserSpec_Local.String(),
-				},
-			},
-			in: &telemetry_query.MetricsQueryList{Tenant: "differentTenant"},
+			user: testuser,
+			in:   &telemetry_query.MetricsQueryList{Tenant: "differentTenant"},
 			expectedOperations: []authz.Operation{
-				authz.NewOperation(authz.NewResource("differentTenant",
+				authz.NewOperation(authz.NewResourceWithOwner("differentTenant",
 					"", auth.Permission_MetricsQuery.String(),
-					"", ""),
+					"", "", testuser),
 					auth.Permission_Read.String()),
 			},
 			out: &telemetry_query.MetricsQueryList{Tenant: "differentTenant"},
@@ -106,20 +83,8 @@ func TestTelemetryOperationsHook(t *testing.T) {
 		},
 		{
 			name: "fwlogs query operations hook test with different tenant than user's",
-			user: &auth.User{
-				TypeMeta: api.TypeMeta{Kind: "User"},
-				ObjectMeta: api.ObjectMeta{
-					Tenant: "testTenant",
-					Name:   "testUser",
-				},
-				Spec: auth.UserSpec{
-					Fullname: "Test User",
-					Password: "password",
-					Email:    "testuser@pensandio.io",
-					Type:     auth.UserSpec_Local.String(),
-				},
-			},
-			in: &telemetry_query.FwlogsQueryList{Tenant: "differentTenant"},
+			user: testuser,
+			in:   &telemetry_query.FwlogsQueryList{Tenant: "differentTenant"},
 			expectedOperations: []authz.Operation{
 				authz.NewOperation(authz.NewResource("differentTenant",
 					"", auth.Permission_FwlogsQuery.String(),
@@ -131,19 +96,7 @@ func TestTelemetryOperationsHook(t *testing.T) {
 		},
 		{
 			name: "metrics query operations hook test with kinds in query list",
-			user: &auth.User{
-				TypeMeta: api.TypeMeta{Kind: "User"},
-				ObjectMeta: api.ObjectMeta{
-					Tenant: "testTenant",
-					Name:   "testUser",
-				},
-				Spec: auth.UserSpec{
-					Fullname: "Test User",
-					Password: "password",
-					Email:    "testuser@pensandio.io",
-					Type:     auth.UserSpec_Local.String(),
-				},
-			},
+			user: testuser,
 			in: &telemetry_query.MetricsQueryList{
 				Queries: []*telemetry_query.MetricsQuerySpec{
 					{
@@ -158,9 +111,9 @@ func TestTelemetryOperationsHook(t *testing.T) {
 					string(apiclient.GroupCluster), string(cluster.KindNode),
 					"", ""),
 					auth.Permission_Read.String()),
-				authz.NewOperation(authz.NewResource("testTenant",
+				authz.NewOperation(authz.NewResourceWithOwner("testTenant",
 					"", auth.Permission_MetricsQuery.String(),
-					"", ""),
+					"", "", testuser),
 					auth.Permission_Read.String()),
 			},
 			out: &telemetry_query.MetricsQueryList{

@@ -201,6 +201,9 @@ func ValidateResource(tenant, group, kind, name string) error {
 
 // ValidateAction validates if an action is valid for a kind
 func ValidateAction(group, kind, action string) error {
+	if action == "" {
+		return fmt.Errorf("action cannot be empty")
+	}
 	switch kind {
 	case string(staging.KindBuffer):
 	case auth.Permission_AuditEvent.String(), auth.Permission_MetricsQuery.String(), auth.Permission_FwlogsQuery.String(), auth.Permission_Event.String(), auth.Permission_Search.String():

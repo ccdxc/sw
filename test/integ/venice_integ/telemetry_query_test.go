@@ -116,7 +116,6 @@ func (it *veniceIntegSuite) TestMetricsQueryAuth(c *C) {
 
 	username := "metricsUser"
 	roleName := "metricsRole"
-	resKind := "MetricsQuery"
 
 	adminCtx, err := it.loggedInCtx()
 	AssertOk(c, err, "Failed to get logged in context")
@@ -153,8 +152,15 @@ func (it *veniceIntegSuite) TestMetricsQueryAuth(c *C) {
 		Spec: auth.RoleSpec{
 			Permissions: []auth.Permission{
 				{
-					ResourceTenant: globals.DefaultTenant,
-					ResourceKind:   resKind,
+					ResourceGroup: string(apiclient.GroupCluster),
+					ResourceKind:  string(cluster.KindNode),
+					Actions: []string{
+						"Read",
+					},
+				},
+				{
+					ResourceGroup: string(apiclient.GroupAuth),
+					ResourceKind:  string(auth.KindUser),
 					Actions: []string{
 						"Read",
 					},
@@ -183,24 +189,6 @@ func (it *veniceIntegSuite) TestMetricsQueryAuth(c *C) {
 	AssertOk(c, err, "Failed to create rolebinding")
 	defer it.restClient.AuthV1().RoleBinding().Delete(adminCtx, &roleBinding.ObjectMeta)
 
-	// Query should fail since the user needs permissions for the Node kind
-	newUserCtx, err = it.loggedInCtxWithCred(globals.DefaultTenant, username, password)
-	AssertOk(c, err, "Failed to get logged in context")
-
-	_, err = tc.Metrics(newUserCtx, query)
-	Assert(c, strings.HasPrefix(err.Error(), "Status:(403)"), "Unauthorized query didn't return 403")
-
-	role.Spec.Permissions = append(role.Spec.Permissions, auth.Permission{
-		ResourceGroup: string(apiclient.GroupCluster),
-		ResourceKind:  string(cluster.KindNode),
-		Actions: []string{
-			"Read",
-		},
-	})
-
-	_, err = it.restClient.AuthV1().Role().Update(adminCtx, role)
-	AssertOk(c, err, "Failed to update role")
-
 	// Query should succeed
 	newUserCtx, err = it.loggedInCtxWithCred(globals.DefaultTenant, username, password)
 	AssertOk(c, err, "Failed to get logged in context")
@@ -208,28 +196,9 @@ func (it *veniceIntegSuite) TestMetricsQueryAuth(c *C) {
 	_, err = tc.Metrics(newUserCtx, query)
 	AssertOk(c, err, "Metrics query should have succeeded")
 
-	role.Spec.Permissions = []auth.Permission{
-		{
-			ResourceGroup: string(apiclient.GroupCluster),
-			ResourceKind:  string(cluster.KindNode),
-			Actions: []string{
-				"Read",
-			},
-		},
-	}
-
-	_, err = it.restClient.AuthV1().Role().Update(adminCtx, role)
-	AssertOk(c, err, "Failed to update role")
-
-	// Query should fail since it doesn't have metrics permission
-	newUserCtx, err = it.loggedInCtxWithCred(globals.DefaultTenant, username, password)
-	AssertOk(c, err, "Failed to get logged in context")
-
-	_, err = tc.Metrics(newUserCtx, query)
-	Assert(c, strings.HasPrefix(err.Error(), "Status:(403)"), "Unauthorized query didn't return 403")
-
 	// Querying for a different tenant should fail
 	query.Tenant = "randomTenant"
+	query.Queries[0].Kind = string(auth.KindUser)
 	_, err = tc.Metrics(newUserCtx, query)
 	Assert(c, strings.HasPrefix(err.Error(), "Status:(403)"), "Unauthorized query didn't return 403")
 }

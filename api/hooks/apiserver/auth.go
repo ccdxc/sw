@@ -54,6 +54,8 @@ var (
 	errAdminRoleBindingDeleteNotAllowed = fmt.Errorf("%s delete is not allowed", globals.AdminRoleBinding)
 	// errAdminRoleBindingRoleUpdateNotAllowed is returned when AdminRoleBinding role is updated to something other than AdminRole
 	errAdminRoleBindingRoleUpdateNotAllowed = fmt.Errorf("%s can bind to only %s", globals.AdminRoleBinding, globals.AdminRole)
+	// errEmptyRole is returned when role doesn't contain any permissions
+	errEmptyRole = fmt.Errorf("role should contain at least one permission")
 )
 
 type authHooks struct {
@@ -459,6 +461,10 @@ func (s *authHooks) validateRolePerms(i interface{}, ver string, ignStatus, igno
 	r, ok := i.(auth.Role)
 	if !ok {
 		return []error{errInvalidInputType}
+	}
+
+	if len(r.Spec.Permissions) == 0 {
+		return []error{errEmptyRole}
 	}
 
 	var errs []error

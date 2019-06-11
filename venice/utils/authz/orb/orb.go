@@ -25,11 +25,17 @@ func NewORBAuthorizer(name, apiServer string, rslver resolver.Interface) authz.A
 }
 
 func (a *authorizer) IsAuthorized(user *auth.User, operations ...authz.Operation) (bool, error) {
-	ok, err := a.owner.IsAuthorized(user, operations...)
-	if ok {
-		return ok, err
+	var unauthorizedOps []authz.Operation
+	for _, op := range operations {
+		ok, _ := a.owner.IsAuthorized(user, op)
+		if !ok {
+			unauthorizedOps = append(unauthorizedOps, op)
+		}
 	}
-	return a.rbac.IsAuthorized(user, operations...)
+	if len(unauthorizedOps) == 0 {
+		return true, nil
+	}
+	return a.rbac.IsAuthorized(user, unauthorizedOps...)
 }
 
 func (a *authorizer) Stop() {
