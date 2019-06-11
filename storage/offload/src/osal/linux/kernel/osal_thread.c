@@ -23,6 +23,7 @@ static int  osal_thread_fn_wrapper(void *arg)
 #ifdef _KERNEL
 	if (ot->core_id >= 0) {
 		thread_lock(curthread);
+		sched_prio(curthread, PRI_MIN_REALTIME);
 		sched_bind(curthread, ot->core_id);
 		thread_unlock(curthread);
 		osal_yield();
