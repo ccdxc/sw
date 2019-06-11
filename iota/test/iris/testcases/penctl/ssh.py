@@ -37,7 +37,7 @@ def Verify(tc):
             if "disable-sshd" in tc.iterators.option:
                 req = api.Trigger_CreateExecuteCommandsRequest()
                 for n in tc.Nodes:
-                    common.AddPenctlCommand(req, n, "%s" % (tc.iterators.option))
+                    common.AddPenctlCommand(req, n, "system enable-sshd")
                 tc.resp = api.Trigger(req)
                 continue
             if "enable-sshd" in tc.iterators.option:
