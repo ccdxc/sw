@@ -29,8 +29,8 @@ egress_vnic_insert_vlan:
     phvwr           p.ctag_1_valid, TRUE
     phvwr           p.ethernet_1_etherType, ETHERTYPE_VLAN
     phvwr           p.capri_p4_intrinsic_packet_len, r1
-    phvwr           p.{ctag_1_pcp,ctag_1_dei,ctag_1_vid}, \
-                        d.egress_vnic_info_d.local_vlan
+    add             r1, k.ethernet_1_etherType, d.egress_vnic_info_d.local_vlan, 16
+    phvwr           p.{ctag_1_pcp,ctag_1_dei,ctag_1_vid,ctag_1_etherType}, r1
 egress_vnic_port_check:
     seq             c1, d.egress_vnic_info_d.port, TM_PORT_DMA
     nop.!c1.e
