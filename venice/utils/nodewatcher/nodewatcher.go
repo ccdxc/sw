@@ -111,10 +111,10 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 				continue
 			}
 			memUsedPercent := math.Floor(vmstat.UsedPercent*100) / 100
-			w.metricObj.MemAvailable.Set(float64(vmstat.Available >> 20))
-			w.metricObj.MemFree.Set(float64(vmstat.Free >> 20))
-			w.metricObj.MemUsed.Set(float64(vmstat.Used >> 20))
-			w.metricObj.MemTotal.Set(float64(vmstat.Total >> 20))
+			w.metricObj.MemAvailable.Set(float64(vmstat.Available))
+			w.metricObj.MemFree.Set(float64(vmstat.Free))
+			w.metricObj.MemUsed.Set(float64(vmstat.Used))
+			w.metricObj.MemTotal.Set(float64(vmstat.Total))
 			w.metricObj.MemUsedPercent.Set(memUsedPercent)
 
 			if memUsedPercent > globals.MemHighThreshold {
@@ -159,9 +159,9 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 				diskUsed += usage.Used
 				diskTotal += usage.Total
 			}
-			w.metricObj.DiskFree.Set(math.Floor(float64(diskFree >> 20)))
-			w.metricObj.DiskUsed.Set(math.Ceil(float64(diskUsed >> 20)))
-			w.metricObj.DiskTotal.Set(math.Floor(float64(diskTotal >> 20)))
+			w.metricObj.DiskFree.Set(float64(diskFree))
+			w.metricObj.DiskUsed.Set(float64(diskUsed))
+			w.metricObj.DiskTotal.Set(float64(diskTotal))
 			if diskTotal > 0 {
 				diskUsedPercent := math.Ceil(float64(diskUsed*10000)/float64(diskTotal)) / 100
 				w.metricObj.DiskUsedPercent.Set(diskUsedPercent)
