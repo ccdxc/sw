@@ -597,6 +597,10 @@
           "type": "string",
           "title": "Session ID"
         },
+        "session-state": {
+          "type": "string",
+          "title": "Session state"
+        },
         "policy-name": {
           "type": "string",
           "title": "policy name"

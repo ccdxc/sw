@@ -111,12 +111,14 @@ message Fwlog {
     string RuleID      = 9 [(gogoproto.jsontag) = "rule-id,omitempty"];
     // Session ID
     string SessionID   = 10 [(gogoproto.jsontag) = "session-id,omitempty"];
+    // Session state
+    string SessionState= 11 [(gogoproto.jsontag) = "session-state,omitempty"];
     //policy name
-    string PolicyName  = 11 [(gogoproto.jsontag) = "policy-name,omitempty"];
+    string PolicyName  = 12 [(gogoproto.jsontag) = "policy-name,omitempty"];
     // Reporter ID
-    string ReporterID  = 12 [(gogoproto.jsontag) = "reporter-id,omitempty"];
+    string ReporterID  = 13 [(gogoproto.jsontag) = "reporter-id,omitempty"];
     // Time the log was created
-    api.Timestamp Time = 13 [(gogoproto.jsontag) = "time,omitempty"];
+    api.Timestamp Time = 14 [(gogoproto.jsontag) = "time,omitempty"];
 }
 
 // FwlogsQuerySpec allows selecting logs by all attributes
