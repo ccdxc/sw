@@ -126,7 +126,16 @@ func (h *httpHandler) uploadHandler(w http.ResponseWriter, req *http.Request) {
 			h.writeError(w, http.StatusInternalServerError, fmt.Sprintf("error writing object (%s)", err))
 			return
 		}
-		errs = h.instance.RunPlugins(context.TODO(), "images", vos.PostOp, vos.Upload, nil, h.client)
+		in := objstore.Object{
+			TypeMeta:   api.TypeMeta{Kind: "Object"},
+			ObjectMeta: api.ObjectMeta{Name: header.Filename, Namespace: "images"},
+			Spec:       objstore.ObjectSpec{ContentType: contentType},
+			Status: objstore.ObjectStatus{
+				Size_:  sz,
+				Digest: stat.ETag,
+			},
+		}
+		errs = h.instance.RunPlugins(context.TODO(), "images", vos.PostOp, vos.Upload, &in, h.client)
 		if errs != nil {
 			h.writeError(w, http.StatusInternalServerError, errs)
 			return
@@ -139,7 +148,7 @@ func (h *httpHandler) uploadHandler(w http.ResponseWriter, req *http.Request) {
 		}
 		ret := objstore.Object{
 			TypeMeta:   api.TypeMeta{Kind: "Object"},
-			ObjectMeta: api.ObjectMeta{Name: header.Filename},
+			ObjectMeta: api.ObjectMeta{Name: header.Filename, Namespace: "images"},
 			Spec:       objstore.ObjectSpec{ContentType: contentType},
 			Status: objstore.ObjectStatus{
 				Size_:  sz,

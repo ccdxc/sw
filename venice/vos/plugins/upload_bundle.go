@@ -27,7 +27,33 @@ const (
 	metaReleaseDate   = "ReleaseData"
 	metaVersion       = "Version"
 	metaName          = "Name"
+	veniceImageName   = "venice.tgz"
+	naplesImageName   = "naples_fw.tar"
+	veniceOSImageName = "venice_appl_os.tgz"
 )
+
+//ValidateImageBundle sanitize the uploaded image
+func ValidateImageBundle() error {
+
+	if _, err := os.Stat(installerTmpDir + "/" + imageMetaFileName); err != nil {
+		log.Errorf("[%s] is missing in the bundle.tar %#v", imageMetaFileName, err)
+		return fmt.Errorf("[%s] is missing in the bundle.tar %#v", imageMetaFileName, err)
+	}
+	if _, err := os.Stat(installerTmpDir + "/" + veniceImageName); err != nil {
+		log.Errorf("[%s] is missing in the bundle.tar %#v", veniceImageName, err)
+		return fmt.Errorf("[%s] is missing in the bundle.tar %#v", veniceImageName, err)
+	}
+	if _, err := os.Stat(installerTmpDir + "/" + naplesImageName); err != nil {
+		log.Errorf("[%s] is missing in the bundle.tar %#v", naplesImageName, err)
+		return fmt.Errorf("[%s] is missing in the bundle.tar %#v", naplesImageName, err)
+	}
+	if _, err := os.Stat(installerTmpDir + "/" + veniceOSImageName); err != nil {
+		log.Errorf("[%s] is missing in the bundle.tar %#v", veniceOSImageName, err)
+		return fmt.Errorf("[%s] is missing in the bundle.tar %#v", veniceOSImageName, err)
+	}
+
+	return nil
+}
 
 // ExtractImage takes a locally downloaded image and extracts the contents
 func ExtractImage(filename string) error {
@@ -58,19 +84,20 @@ func getUploadBundleCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc 
 	return func(ctx context.Context, oper vos.ObjectOper, in *objstore.Object, client vos.BackendClient) error {
 		log.InfoLog("bucket", bucket, "Stage", stage, "oper", oper, "msg", "logger plugin")
 
-		//TODO object name to be taken from objectstore.Object. in object is currently null
-		fr, err := client.GetObjectWithContext(ctx, "default.images", bundleImage, minio.GetObjectOptions{})
+		if in.Name != bundleImage {
+			log.Errorf("Image upload failed. Invalid image name %s. Returning", in.Name)
+			err := client.RemoveObject("default."+bucket, in.Name)
+			if err != nil {
+				return fmt.Errorf("Invalid Image(Name %+v): Error while removing(%+v)", in.Name, err)
+			}
+			return fmt.Errorf("Image Upload Failed: Invalid Name (%s)", in.Name)
+		}
+
+		fr, err := client.GetStoreObject(ctx, "default."+bucket, bundleImage, minio.GetObjectOptions{})
 		if err != nil {
-			log.Errorf("Could not get object (%s)", err)
-			return fmt.Errorf("Could not get object (%s)", err)
+			log.Errorf("Failed to get object [%v]", bundleImage)
+			return err
 		}
-
-		objInfo, err := fr.Stat()
-		if objInfo.Key != bundleImage {
-			log.Infof("Got upload call back for object %s. Returning", objInfo.Key)
-			return nil
-		}
-
 		of, err := os.Create(tarfileDir + "/" + bundleImage)
 		if err != nil {
 			log.Errorf("Could not create output file [%s](%s)", bundleImage, err)
@@ -98,7 +125,10 @@ func getUploadBundleCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc 
 
 		err = ExtractImage(tarfileDir + "/" + bundleImage)
 		if err != nil {
-			return fmt.Errorf("ExtractImage %s  returned %v", tarfileDir+"/"+bundleImage, err)
+			if rerr := client.RemoveObject("default."+bucket, in.Name); rerr != nil {
+				return fmt.Errorf("Failed to extract bundle (%+v). Error while removing bundle (%+v)", err, rerr)
+			}
+			return fmt.Errorf("Upload Failed: ExtractImage %s  returned %v", tarfileDir+"/"+bundleImage, err)
 		}
 
 		err = os.Remove(tarfileDir + "/" + bundleImage)
@@ -106,8 +136,23 @@ func getUploadBundleCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc 
 			log.Errorf("removal of /tmp/bundle.tar returned %v", err)
 		}
 
+		if err = ValidateImageBundle(); err != nil {
+			if rerr := client.RemoveObject("default."+bucket, in.Name); rerr != nil {
+				return fmt.Errorf("Image Validation Failed (%+v): Error while removing(%+v)", err, rerr)
+			}
+			if cerr := os.RemoveAll(installerTmpDir); cerr != nil {
+				return fmt.Errorf("Image Validation Failed (%+v). Error %s during removeAll of %s", err, cerr, installerTmpDir)
+			}
+			return fmt.Errorf("Image Validation Failed (%s). %+v", in.Name, err)
+		}
 		versionMap := processMetadataFile(installerTmpDir + imageMetaFileName)
 		if versionMap == nil {
+			if rerr := client.RemoveObject("default."+bucket, in.Name); rerr != nil {
+				return fmt.Errorf("Invalid Image. Failed to process metafile. Error while removing(%+v)", rerr)
+			}
+			if cerr := os.RemoveAll(installerTmpDir); cerr != nil {
+				return fmt.Errorf("Invalid Image. Failed to process metafile. Error %s during removeAll of %s", cerr, installerTmpDir)
+			}
 			return fmt.Errorf("Failed to process metafile %s missing version info", installerTmpDir+"/"+imageMetaFileName)
 		}
 
@@ -122,11 +167,16 @@ func getUploadBundleCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc 
 		for key := range versionMap {
 			if err := uploadFileToObjStore(client, bucket, installerTmpDir, key, versionMap); err != nil {
 				log.Errorf("Failed to upload %s. Error %+v", versionMap[key][metaName], err)
+				if rerr := client.RemoveObject("default."+bucket, in.Name); rerr != nil {
+					return fmt.Errorf("Failed to upload(%+v). Error while removing(%+v)", versionMap[key][metaName], rerr)
+				}
+				if cerr := os.RemoveAll(installerTmpDir); cerr != nil {
+					return fmt.Errorf("Failed to upload(%+v). Error %s during removeAll of %s", versionMap[key][metaName], cerr, installerTmpDir)
+				}
 				return err
 			}
 			log.Infof("uploaded %s in bucket[%s]", versionMap[key][metaName], "default."+bucket)
 		}
-
 		if err := os.RemoveAll(installerTmpDir); err != nil {
 			return fmt.Errorf("Error %s during removeAll of %s", err, installerTmpDir)
 		}
@@ -164,7 +214,6 @@ func processMetadataFile(metadata string) map[string]map[string]string {
 	versionMap := make(map[string]map[string]string)
 
 	if _, err := os.Stat(metadata); err != nil {
-		// Stat error is treated as not part of cluster.
 		log.Errorf("unable to find confFile %s error: %v", metadata, err)
 		return nil
 	}

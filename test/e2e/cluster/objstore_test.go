@@ -40,6 +40,7 @@ func createBundle() (int, error) {
 	naplesfile := "naples_fw.tar"
 	metafile := "metadata.json"
 	bundlefile := "bundle.tar"
+	veniceOSfile := "venice_appl_os.tgz"
 
 	buf := createBuffer(100 * 1024)
 
@@ -53,17 +54,24 @@ func createBundle() (int, error) {
 		return 0, errors.Wrap(err, "writing naples file")
 	}
 
+	err = ioutil.WriteFile(veniceOSfile, buf, 0644)
+	if err != nil {
+		return 0, errors.Wrap(err, "writing veniceOS file")
+	}
+
 	meta := map[string]map[string]string{
 		"Bundle": {"Version": "1.0.0",
 			"Description": "Meta File",
 			"ReleaseDate": "May2019",
 			"Name":        "metadata.json"},
-
 		"Venice": {"Version": "3.2.0",
 			"Description": "Venice Image",
 			"ReleaseDate": "May2019",
 			"Name":        "venice.tgz"},
-
+		"veniceOS": {"Version": "3.2.0",
+			"Description": "Venice Image",
+			"ReleaseDate": "May2019",
+			"Name":        "venice_appl_os.tgz"},
 		"Naples": {"Version": "4.5.1",
 			"Description": "Naples Image",
 			"ReleaseDate": "May2019",
@@ -82,7 +90,7 @@ func createBundle() (int, error) {
 		log.Errorf("LookPath failed during extract err %v", err)
 		return 0, errors.Wrap(err, "tar utility is not found")
 	}
-	cmd := exec.Command("tar", "-cvf", "/tmp/"+bundlefile, metafile, venicefile, naplesfile)
+	cmd := exec.Command("tar", "-cvf", "/tmp/"+bundlefile, metafile, venicefile, naplesfile, veniceOSfile)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Errorf("Failed to create bundle Image %s with output:%s errcode %v", bundlefile, string(output), err)
@@ -97,6 +105,9 @@ func createBundle() (int, error) {
 	}
 	if err := os.Remove(naplesfile); err != nil {
 		log.Errorf("[%s] remove failed %s", naplesfile, err)
+	}
+	if err := os.Remove(veniceOSfile); err != nil {
+		log.Errorf("[%s] remove failed %s", veniceOSfile, err)
 	}
 
 	return 0, nil
@@ -201,17 +212,30 @@ func statFile(ctx context.Context, filename string) (*objstore.Object, error) {
 
 func testObjCUDOps() func() {
 	return func() {
-		filename := "e2etest.file"
+		filename := "bundle.tar"
 		metadata := map[string]string{
 			"Version":     "v1.3.2",
 			"Environment": "production",
 			"Description": "E2E test Image upload",
 			"Releasedate": "May2018",
 		}
-		buf := createBuffer(100 * 1024)
+
+		_, err := createBundle()
+		if err != nil {
+			log.Infof("Error (%+v) creating file /tmp/bundle.tar", err)
+			Fail(fmt.Sprintf("Failed to create /tmp/bundle.tar"))
+		}
+
+		fileBuf, err := ioutil.ReadFile("/tmp/" + filename)
+		if err != nil {
+			log.Infof("Error (%+v) reading file /tmp/bundle.tar", err)
+			Fail(fmt.Sprintf("Failed to read /tmp/bundle.tar"))
+		}
+
 		h := md5.New()
-		h.Write(buf)
+		h.Write(fileBuf)
 		hash := h.Sum(nil)
+
 		ctx := ts.tu.NewLoggedInContext(context.Background())
 		apigwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 		restClient, err := apiclient.NewRestAPIClient(apigwAddr)
@@ -221,7 +245,7 @@ func testObjCUDOps() func() {
 		// Use of Eventually is needed for all operations here because success of one objstore operation does not
 		//  gaurantee the next one will succeed, because the call may end up on a node that is rebooting.
 		Eventually(func() error {
-			wr, err = uploadFile(ctx, filename, metadata, buf)
+			wr, err = uploadFile(ctx, filename, metadata, fileBuf)
 			return err
 		}, 90, 1).Should(BeNil(), fmt.Sprintf("failed to upload file (%s)", err))
 
@@ -247,7 +271,7 @@ func testObjCUDOps() func() {
 			}
 		}
 		objMeta := api.ObjectMeta{
-			Name:      "e2etest.file",
+			Name:      "bundle.tar",
 			Tenant:    "default",
 			Namespace: "images",
 		}
@@ -339,29 +363,6 @@ var _ = Describe("Objstore Write and read test", func() {
 			testObjCUDOps()()
 			nodeid++
 		}
-	})
-
-	It("Exercise Bundle Upload/Download", func() {
-		filename := "bundle.tar"
-		metadata := map[string]string{
-			"Version":     "v1.3.2",
-			"Environment": "production",
-			"Description": "E2E bundle Image upload",
-			"Releasedate": "May2018",
-		}
-		_, err := createBundle()
-		if err != nil {
-			log.Infof("Error (%+v) creating file /tmp/bundle.tar", err)
-			Fail(fmt.Sprintf("Failed to create /tmp/bundle.tar"))
-		}
-		fileBuf, err := ioutil.ReadFile("/tmp/" + filename)
-		if err != nil {
-			log.Infof("Error (%+v) reading file /tmp/bundle.tar", err)
-			Fail(fmt.Sprintf("Failed to read /tmp/bundle.tar"))
-		}
-		ctx := ts.tu.NewLoggedInContext(context.Background())
-		_, err = uploadFile(ctx, filename, metadata, fileBuf)
-		Expect(err).Should(BeNil(), "Failed to upload file")
 	})
 
 })

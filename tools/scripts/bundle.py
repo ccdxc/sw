@@ -30,7 +30,7 @@ osInfo['Version']=args.version
 osInfo['Description']='Venice Appliance OS Image'
 osInfo['ReleaseDate']=args.date
 osInfo['Name']='venice_appl_os.tgz'
-osInfo['hash']=hashes['nic/naples_fw.tar']
+osInfo['hash']=hashes['bin/venice-install/venice_appl_os.tgz']
 osInfo['algo']='sha256sum'
 
 veniceInfo={}
