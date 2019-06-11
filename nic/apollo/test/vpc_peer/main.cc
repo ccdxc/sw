@@ -52,7 +52,8 @@ protected:
         pds_test_base::SetUpTestCase(params);
 
         batch_start();
-        vpc_feeder.init(vpc_key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", k_max_vpc);
+        vpc_feeder.init(vpc_key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16",
+                        k_max_vpc);
         many_create(vpc_feeder);
         batch_commit();
         many_read(vpc_feeder);

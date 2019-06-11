@@ -427,12 +427,11 @@ main (int argc, char **argv)
 {
     int oc;
     struct option longopts[] = {{"config", required_argument, NULL, 'c'},
-                                {"feature", required_argument, NULL, 'f'},
                                 {"help", no_argument, NULL, 'h'},
                                 {0, 0, 0, 0}};
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, "hc:f:", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, "hc:", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
             api_test::g_cfg_file = optarg;
@@ -443,21 +442,12 @@ main (int argc, char **argv)
             }
             break;
 
-        case 'f':
-            api_test::g_pipeline = std::string(optarg);
-            if (api_test::g_pipeline != "apollo" &&
-                api_test::g_pipeline != "artemis") {
-                fprintf(stderr, "Pipeline specified is invalid\n");
-                print_usage(argv);
-                exit(1);
-            }
-            break;
-
         default:
             // ignore all other options
             break;
         }
     }
+    api_test::g_pipeline = api_test::pipeline_get();
 
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

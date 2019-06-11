@@ -250,10 +250,24 @@ TEST_F(vnic_test, vnic_workflow_neg_8) {
 // Entry point
 //----------------------------------------------------------------------------
 
-static inline void
-vnic_test_usage_print (char **argv)
+static void
+vnic_test_options_parse (int argc, char **argv)
 {
-    cout << "Usage : " << argv[0] << " -c <hal.json> -f <apollo|artemis>" << endl;
+    int oc = -1;
+    struct option longopts[] = {{"config", required_argument, NULL, 'c'},
+                                {"help", no_argument, NULL, 'h'},
+                                {0, 0, 0, 0}};
+
+    // parse CLI options
+    while ((oc = getopt_long(argc, argv, ":hc:", longopts, NULL)) != -1) {
+        switch (oc) {
+        case 'c':
+            api_test::g_cfg_file = optarg;
+            break;
+        default:    // ignore all other options
+            break;
+        }
+    }
     return;
 }
 
@@ -264,6 +278,7 @@ vnic_test_options_validate (void)
         cerr << "HAL config file is not specified" << endl;
         return sdk::SDK_RET_ERR;
     }
+    api_test::g_pipeline = api_test::pipeline_get();
     if (!IS_APOLLO() && !IS_ARTEMIS()) {
         cerr << "Pipeline specified is invalid" << endl;
         return sdk::SDK_RET_ERR;
@@ -271,27 +286,10 @@ vnic_test_options_validate (void)
     return sdk::SDK_RET_OK;
 }
 
-static void
-vnic_test_options_parse (int argc, char **argv)
+static inline void
+vnic_test_usage_print (char **argv)
 {
-    int oc = -1;
-    struct option longopts[] = {{"config", required_argument, NULL, 'c'},
-                                {"feature", required_argument, NULL, 'f'},
-                                {"help", no_argument, NULL, 'h'},
-                                {0, 0, 0, 0}};
-
-    while ((oc = getopt_long(argc, argv, ":hc:f:", longopts, NULL)) != -1) {
-        switch (oc) {
-        case 'c':
-            api_test::g_cfg_file = optarg;
-            break;
-        case 'f':
-            api_test::g_pipeline = std::string(optarg);
-            break;
-        default:    // ignore all other options
-            break;
-        }
-    }
+    cout << "Usage : " << argv[0] << " -c <hal.json> -f <apollo|artemis>" << endl;
     return;
 }
 

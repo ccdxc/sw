@@ -14,7 +14,8 @@
 namespace api_test {
 
 static inline void
-batch_start(void) {
+batch_start (void)
+{
     static pds_epoch_t epoch = 1;
     pds_batch_params_t batch_params = { .epoch = ++epoch };
 
@@ -22,18 +23,34 @@ batch_start(void) {
 }
 
 static inline void
-batch_commit(void) {
+batch_commit (void)
+{
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
 static inline void
-batch_commit_fail(void) {
+batch_commit_fail (void)
+{
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
 }
 
 static inline void
-batch_abort(void) {
+batch_abort (void)
+{
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+}
+
+static inline std::string
+pipeline_get ()
+{
+#ifdef APOLLO
+    return "apollo";
+#elif ARTEMIS
+    return "artemis";
+#else
+    cerr << (stderr, "Error: PIPELINE should either be apollo or artemis\n");
+    return NULL;
+#endif
 }
 
 }    // end namespace

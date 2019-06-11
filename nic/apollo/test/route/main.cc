@@ -10,6 +10,7 @@
 #include <getopt.h>
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
+#include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/batch.hpp"
 #include "nic/apollo/test/utils/route.hpp"
 #include "nic/apollo/test/utils/tep.hpp"
@@ -554,8 +555,8 @@ route_test_options_validate (void)
         cerr << "HAL config file is not specified" << endl;
         return sdk::SDK_RET_ERR;
     }
-    if (api_test::g_pipeline != "apollo" &&
-        api_test::g_pipeline != "artemis") {
+    api_test::g_pipeline = api_test::pipeline_get();
+    if (!IS_APOLLO() && !IS_ARTEMIS()) {
         cerr << "Pipeline specified is invalid" << endl;
         return SDK_RET_ERR;
     }
@@ -567,17 +568,13 @@ route_test_options_parse (int argc, char **argv)
 {
     int oc = -1;
     struct option longopts[] = {{"config", required_argument, NULL, 'c'},
-                                {"feature", required_argument, NULL, 'f'},
                                 {"help", no_argument, NULL, 'h'},
                                 {0, 0, 0, 0}};
 
-    while ((oc = getopt_long(argc, argv, ":hc:f:", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":hc:", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
             api_test::g_cfg_file = optarg;
-            break;
-        case 'f':
-            api_test::g_pipeline = std::string(optarg);
             break;
         default:    // ignore all other options
             break;
