@@ -15,6 +15,7 @@ export interface MetricMeasurement {
   description: string,
   displayName: string,
   objectKind?: string,
+  scope?: string,
   fields: MetricField[],
 }
 
@@ -241,6 +242,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     }
   ],
+  "scope": "PerASIC",
   "objectKind": "SmartNIC"
 },
   EgressDropMetrics: {
@@ -297,6 +299,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     }
   ],
+  "scope": "PerASIC",
   "objectKind": "SmartNIC"
 },
   FteCPSMetrics: {
@@ -321,6 +324,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     }
   ],
+  "scope": "PerFTE",
   "objectKind": "SmartNIC"
 },
   FteLifQMetrics: {
@@ -401,11 +405,12 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     }
   ],
+  "scope": "PerFTE",
   "objectKind": "SmartNIC"
 },
   SessionSummaryMetrics: {
   "name": "SessionSummaryMetrics",
-  "description": "Key index - Global",
+  "description": "Key index - FTE ID",
   "displayName": "Global Session Summary Statistics",
   "fields": [
     {
@@ -497,6 +502,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     }
   ],
+  "scope": "PerFTE",
   "objectKind": "SmartNIC"
 },
   AccelHwRingMetrics: {
@@ -545,6 +551,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     }
   ],
+  "scope": "PerRingPerSubRing",
   "objectKind": "SmartNIC"
 },
   AccelPfInfo: {
@@ -601,6 +608,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     }
   ],
+  "scope": "PerLIF",
   "objectKind": "SmartNIC"
 },
   AccelSeqQueueInfoMetrics: {
@@ -633,6 +641,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     }
   ],
+  "scope": "PerLIFPerQ",
   "objectKind": "SmartNIC"
 },
   AccelSeqQueueMetrics: {
@@ -793,6 +802,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     }
   ],
+  "scope": "PerLIFPerQ",
   "objectKind": "SmartNIC"
 },
   RuleMetrics: {
@@ -849,6 +859,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     }
   ],
+  "scope": "PerFwRule",
   "objectKind": "SmartNIC"
 },
   Node: {

@@ -43,7 +43,8 @@
           "Units": "Count",
           "BaseType": "Counter"
         }
-      ]
+      ],
+      "Scope": "PerRingPerSubRing"
     },
     {
       "Name": "AccelPfInfo",
@@ -92,7 +93,8 @@
           "Units": "Count",
           "BaseType": "uint32"
         }
-      ]
+      ],
+      "Scope": "PerLIF"
     },
     {
       "Name": "AccelSeqQueueInfoMetrics",
@@ -120,7 +122,8 @@
           "Units": "Count",
           "BaseType": "Counter"
         }
-      ]
+      ],
+      "Scope": "PerLIFPerQ"
     },
     {
       "Name": "AccelSeqQueueMetrics",
@@ -260,7 +263,8 @@
           "Units": "Count",
           "BaseType": "Counter"
         }
-      ]
+      ],
+      "Scope": "PerLIFPerQ"
     }
   ]
 }

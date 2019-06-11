@@ -22,7 +22,8 @@ message AccelPfInfo {
     };
     option (venice.metricInfo) = {
         DisplayName: "Device information",
-        Description: "Key index - logical interface ID"
+        Description: "Key index - logical interface ID",
+        Scope: PerLIF
     };
     delphi.ObjectMeta   Meta                 = 1;
     string              Key                  = 2;
@@ -57,7 +58,8 @@ message AccelSeqQueueInfoMetrics {
     };
     option (venice.metricInfo) = {
         DisplayName: "Sequencer queues information",
-        Description: "Key indices are - LifID and QId"
+        Description: "Key indices are - LifID and QId",
+        Scope: PerLIFPerQ
     };
     option (delphi.datapath_metrics) = true;
     AccelSeqQueueKey    Key                  = 1;
@@ -82,7 +84,8 @@ message AccelSeqQueueMetrics {
     option (delphi.datapath_metrics) = true;
     option (venice.metricInfo) = {
         DisplayName: "Metrics for sequencer queues",
-        Description: "Key indices are - LifID and QId"
+        Description: "Key indices are - LifID and QId",
+        Scope: PerLIFPerQ
     };
     AccelSeqQueueKey    Key                  = 1;
 
@@ -137,7 +140,8 @@ message AccelHwRingMetrics {
     option (delphi.datapath_metrics) = true;
     option (venice.metricInfo) = {
         DisplayName: "Metrics for hardware rings",
-        Description: "Key indices - RId: ring ID, SubRId: sub-ring ID"
+        Description: "Key indices - RId: ring ID, SubRId: sub-ring ID",
+        Scope: PerRingPerSubRing
     };
     AccelHwRingKey      Key                  = 1;
 

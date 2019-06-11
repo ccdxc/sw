@@ -22,7 +22,8 @@
           "Units": "Count",
           "BaseType": "Counter"
         }
-      ]
+      ],
+      "Scope": "PerFTE"
     },
     {
       "Name": "FteLifQMetrics",
@@ -92,11 +93,12 @@
           "Units": "Count",
           "BaseType": "Counter"
         }
-      ]
+      ],
+      "Scope": "PerFTE"
     },
     {
       "Name": "SessionSummaryMetrics",
-      "Description": "Key index - Global",
+      "Description": "Key index - FTE ID",
       "DisplayName": "Global Session Summary Statistics",
       "Fields": [
         {
@@ -176,7 +178,8 @@
           "Units": "Count",
           "BaseType": "Counter"
         }
-      ]
+      ],
+      "Scope": "PerFTE"
     }
   ]
 }

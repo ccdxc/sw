@@ -2339,55 +2339,55 @@ func TestDefaulterManifest(t *testing.T) {
 	expected := fileDefaults{
 		Fmap: true,
 		Map: map[string]msgDefaults{
-			"msg1": msgDefaults{
+			"msg1": {
 				Fields: map[string]common.Defaults{
-					"field1": common.Defaults{
+					"field1": {
 						Repeated: false,
 						Pointer:  false,
 						Nested:   false,
 						Map:      map[string]string{"v1": "\"default1\""},
 					},
-					"repeated_field": common.Defaults{
+					"repeated_field": {
 						Repeated: true,
 						Pointer:  false,
 						Nested:   false,
 						Map:      map[string]string{"v2": "\"repeatedV2\"", "all": "\"repeated\""},
 					},
-					"pointerMsg": common.Defaults{
+					"pointerMsg": {
 						Repeated: true,
 						Pointer:  true,
 						Nested:   true,
 					},
-					"msg2": common.Defaults{
+					"msg2": {
 						Repeated: false,
 						Pointer:  false,
 						Nested:   true,
 					},
-					"pointerMsg2": common.Defaults{
+					"pointerMsg2": {
 						Repeated: false,
 						Pointer:  true,
 						Nested:   true,
 					},
 				},
 				Versions: map[string]map[string]VerDefaults{
-					"all": map[string]VerDefaults{
-						"repeated_field": VerDefaults{
+					"all": {
+						"repeated_field": {
 							Repeated: true,
 							Pointer:  false,
 							Nested:   false,
 							Val:      "\"repeated\"",
 						},
 					},
-					"v1": map[string]VerDefaults{
-						"field1": VerDefaults{
+					"v1": {
+						"field1": {
 							Repeated: false,
 							Pointer:  false,
 							Nested:   false,
 							Val:      "\"default1\"",
 						},
 					},
-					"v2": map[string]VerDefaults{
-						"repeated_field": VerDefaults{
+					"v2": {
+						"repeated_field": {
 							Repeated: true,
 							Pointer:  false,
 							Nested:   false,
@@ -2396,9 +2396,9 @@ func TestDefaulterManifest(t *testing.T) {
 					},
 				},
 			},
-			"msg2": msgDefaults{
+			"msg2": {
 				Fields: map[string]common.Defaults{
-					"field1": common.Defaults{
+					"field1": {
 						Repeated: false,
 						Pointer:  false,
 						Nested:   false,
@@ -2406,8 +2406,8 @@ func TestDefaulterManifest(t *testing.T) {
 					},
 				},
 				Versions: map[string]map[string]VerDefaults{
-					"all": map[string]VerDefaults{
-						"field1": VerDefaults{
+					"all": {
+						"field1": {
 							Repeated: false,
 							Pointer:  false,
 							Nested:   false,
@@ -2416,9 +2416,9 @@ func TestDefaulterManifest(t *testing.T) {
 					},
 				},
 			},
-			"msg3": msgDefaults{
+			"msg3": {
 				Fields: map[string]common.Defaults{
-					"pointerMsg": common.Defaults{
+					"pointerMsg": {
 						Repeated: true,
 						Pointer:  true,
 						Nested:   true,
@@ -2448,7 +2448,6 @@ func TestParseStorageTransformers(t *testing.T) {
 
 	cases := []struct {
 		str string
-		res bool
 		ret *storageTransformerField
 	}{
 		{str: "OneStr(arg1)", ret: &storageTransformerField{Fn: "OneStr", Args: []string{"arg1"}}},
@@ -2992,7 +2991,7 @@ func TestGetMsgMap(t *testing.T) {
 	}
 
 	exp := map[string]Struct{
-		"example.Struct1": Struct{
+		"example.Struct1": {
 			Fields: map[string]Field{
 				"field1":            {Name: "field1", CLITag: cliInfo{tag: "jsonfield1"}, JSONTag: "jsonfield1", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
 				"repeated_scalar":   {Name: "repeated_scalar", CLITag: cliInfo{tag: "repeated_scalar"}, JSONTag: "", Pointer: false, Slice: true, Map: false, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
@@ -3004,7 +3003,7 @@ func TestGetMsgMap(t *testing.T) {
 				"map_string_enum":   {Name: "map_string_enum", CLITag: cliInfo{tag: "map_string_enum"}, JSONTag: "", Pointer: true, Slice: false, Map: true, Mutable: true, KeyType: "TYPE_STRING", Type: "TYPE_ENUM"},
 			},
 		},
-		"example.Struct2": Struct{
+		"example.Struct2": {
 			Fields: map[string]Field{
 				"Struct2Spec": {Name: "Struct2Spec", CLITag: cliInfo{tag: "inline-field", ins: "inline"}, JSONTag: "inline-field", Pointer: true, Slice: false, Map: false, Inline: true, Embed: true, Mutable: true, KeyType: "", Type: "example.Struct2Spec"},
 				"field2":      {Name: "field2", CLITag: cliInfo{tag: "field2"}, JSONTag: "", Pointer: false, Slice: false, Map: false, FromInline: true, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
@@ -3013,31 +3012,31 @@ func TestGetMsgMap(t *testing.T) {
 				"Status":      {Name: "Status", CLITag: cliInfo{tag: "status", ins: "status"}, JSONTag: "status", Pointer: true, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "example.Struct2Status"},
 			},
 		},
-		"example.Struct2Spec": Struct{
+		"example.Struct2Spec": {
 			Fields: map[string]Field{
 				"field1": {Name: "field1", CLITag: cliInfo{tag: "field1", skip: true, ins: "test", help: "Test string"}, JSONTag: "", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
 				"field2": {Name: "field2", CLITag: cliInfo{tag: "TestKey", ins: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, KeyType: "", Mutable: true, Type: "TYPE_STRING"},
 			},
 		},
-		"example.Struct2Status": Struct{
+		"example.Struct2Status": {
 			Fields: map[string]Field{
 				"field1": {Name: "field1", CLITag: cliInfo{tag: "field1", ins: "test", help: "Test Status string"}, JSONTag: "", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
 				"field2": {Name: "field2", CLITag: cliInfo{tag: "TestKey2", ins: "test1"}, JSONTag: "", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
 			},
 		},
-		"example.MapMessageStringString": Struct{
+		"example.MapMessageStringString": {
 			Fields: map[string]Field{
 				"key":   {Name: "key", CLITag: cliInfo{tag: "key"}, JSONTag: "", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
 				"value": {Name: "value", CLITag: cliInfo{tag: "value"}, JSONTag: "", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
 			},
 		},
-		"example.MapMessageStringStruct": Struct{
+		"example.MapMessageStringStruct": {
 			Fields: map[string]Field{
 				"key":   {Name: "key", CLITag: cliInfo{tag: "key"}, JSONTag: "", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
 				"value": {Name: "value", CLITag: cliInfo{tag: "value"}, JSONTag: "", Pointer: true, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "example.Struct2"},
 			},
 		},
-		"example.MapMessageStringEnum": Struct{
+		"example.MapMessageStringEnum": {
 			Fields: map[string]Field{
 				"key":   {Name: "key", CLITag: cliInfo{tag: "key"}, JSONTag: "", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
 				"value": {Name: "value", CLITag: cliInfo{tag: "value"}, JSONTag: "", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_ENUM"},
@@ -3726,7 +3725,7 @@ func TestGetMetricsJSON(t *testing.T) {
 			syntax: 'proto3'
 			message_type <
 				name: 'msg1'
-				options:<[venice.metricInfo]: {DisplayName: "TestMetricsJSON" Description:"Msg1Metrics is a test metric"}>
+				options:<[venice.metricInfo]: {DisplayName: "TestMetricsJSON" Description:"Msg1Metrics is a test metric" Scope: PerASIC}>
 				field <
 					name: 'field1'
 					label: LABEL_OPTIONAL
@@ -3839,6 +3838,7 @@ func TestGetMetricsJSON(t *testing.T) {
 				Name:        "msg1",
 				Description: "Msg1Metrics is a test metric",
 				DisplayName: "TestMetricsJSON",
+				Scope:       "PerASIC",
 				Fields: []fieldMetricOptions{
 					{
 						Name:        "field1",

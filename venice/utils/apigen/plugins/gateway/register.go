@@ -28,7 +28,7 @@ import (
 	"github.com/pensando/sw/events/generated/eventtypes"
 	cgen "github.com/pensando/sw/venice/cli/gen"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/apigen/annotations"
+	venice "github.com/pensando/sw/venice/utils/apigen/annotations"
 	mutator "github.com/pensando/sw/venice/utils/apigen/autogrpc"
 	"github.com/pensando/sw/venice/utils/apigen/plugins/common"
 )
@@ -484,6 +484,7 @@ type fieldMetricOptions struct {
 	ScaleMax      int32    `json:",omitempty"`
 	BaseType      string   `json:",omitempty"`
 	AllowedValues []string `json:",omitempty"`
+	Tags          []string `json:",omitempty"`
 }
 
 type msgMetricOptions struct {
@@ -491,6 +492,8 @@ type msgMetricOptions struct {
 	Description string               `json:",omitempty"`
 	DisplayName string               `json:",omitempty"`
 	Fields      []fieldMetricOptions `json:",omitempty"`
+	Tags        []string             `json:",omitempty"`
+	Scope       string               `json:",omitempty"`
 }
 
 func mapScalarTypes(in gogoproto.FieldDescriptorProto_Type) string {
@@ -527,6 +530,9 @@ func getFieldMetricOptions(f *descriptor.Field) (fieldMetricOptions, bool) {
 		ret.Units = o.Units.String()
 		ret.ScaleMax = o.ScaleMax
 		ret.ScaleMin = o.ScaleMin
+		for _, t := range o.Tags {
+			ret.Tags = append(ret.Tags, t.String())
+		}
 		if isScalarType(f.Type.String()) {
 			ret.BaseType = mapScalarTypes(*f.Type)
 			switch *f.Type {
@@ -570,6 +576,11 @@ func getMsgMetricOptions(m *descriptor.Message) (msgMetricOptions, bool) {
 		ret.Name = *m.Name
 		ret.Description = om.Description
 		ret.DisplayName = om.DisplayName
+		ret.Scope = om.Scope.String()
+		for _, t := range om.Tags {
+			ret.Tags = append(ret.Tags, t.String())
+		}
+
 		for _, f := range m.Fields {
 			fopts, ok := getFieldMetricOptions(f)
 			if ok {
@@ -579,6 +590,13 @@ func getMsgMetricOptions(m *descriptor.Message) (msgMetricOptions, bool) {
 		return ret, true
 	}
 	return ret, false
+}
+func getMsgMetricOptionsHdlr(m *descriptor.Message) (msgMetricOptions, error) {
+	ret, ok := getMsgMetricOptions(m)
+	if !ok {
+		return msgMetricOptions{}, errors.New("failed to get metric options")
+	}
+	return ret, nil
 }
 
 func getFileMetricsOptions(f *descriptor.File) (fileMetricOptions, bool) {
@@ -1459,7 +1477,6 @@ func getStorageTransformersManifest(file *descriptor.File) (*storageTransformers
 						if r, err := reg.GetExtension("gogoproto.nullable", fld); err == nil {
 							glog.Infof("setting pointer found nullable [%v] for %s]", r, msgname+"/"+*fld.Name)
 							pointer = r.(bool)
-						} else {
 						}
 						glog.Infof("setting pointer to [%v] for {%s]", pointer, msgname+"/"+*fld.Name)
 						// if it is a embedded field, do not use field name rather use type
@@ -2751,7 +2768,7 @@ func getEventTypes(file *descriptor.File) ([]*EventType, error) {
 	return ets, nil
 }
 
-// genEventTypesJSON retuns the JSON string of event types grouped by category
+// genEventTypesJSON returns the JSON string of event types grouped by category
 func genEventTypesJSON() (string, error) {
 	evtsByCategory := eventtypes.GetEventsByCategory()
 	if len(evtsByCategory) > 0 {
@@ -3139,6 +3156,7 @@ func init() {
 	reg.RegisterFunc("getGenParamsPrefix", getGenParamsPrefix)
 	reg.RegisterFunc("getGenParamsPath", getGenParamsPath)
 	reg.RegisterFunc("genMetricsManifest", genMetricsManifest)
+	reg.RegisterFunc("getMsgMetricOptionsHdlr", getMsgMetricOptionsHdlr)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

@@ -197,7 +197,8 @@
           "Units": "Count",
           "BaseType": "Counter"
         }
-      ]
+      ],
+      "Scope": "PerASIC"
     },
     {
       "Name": "EgressDropMetrics",
@@ -246,7 +247,8 @@
           "Units": "Count",
           "BaseType": "Counter"
         }
-      ]
+      ],
+      "Scope": "PerASIC"
     }
   ]
 }

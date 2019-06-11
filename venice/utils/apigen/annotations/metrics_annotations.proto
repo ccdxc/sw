@@ -11,19 +11,39 @@ enum MetricUnitType {
     ID          = 3;
 }
 
+// defines as a hint of type of metric
+enum MetricScope {
+    UnknownScope        = 0; // default
+    PerNode             = 1; // On a system with multiple Naples like Turin, this is still 1 counter
+    PerASIC             = 2; // per each Naples
+    PerFTE              = 3; // per each FTE in naples
+    PerPort             = 4; // per each  mac instance (front-panel port). In case of breakout, for each broken-out port
+    PerLIF              = 5; // per LIF
+    PerLIFPerQ          = 6; // per each Q of LIF
+    PerRingPerSubRing   = 7; // incase of DMA, per each subring of a ring
+    PerFwRule           = 8; // Per Firewall Rule
+}
+
+enum MetricTags {
+  Verbose   = 0 ;   // will add more tags and definitions later
+}
+
 message MetricInfo {
-    string DisplayName  = 1;
-    string Description  = 2;
+    string DisplayName          = 1;
+    string Description          = 2;
     // defines what fields in the message are used to identify the metric measurement.
-    string KeyFields    = 3;
+    string KeyFields            = 3;
+    MetricScope Scope           = 4;
+    repeated MetricTags Tags    = 5;
 }
 
 message MetricFieldInfo {
-    string DisplayName      = 1;
-    string Description      = 2;
-    MetricUnitType Units    = 3;
-    int32 ScaleMin          = 4;
-    int32 ScaleMax          = 5;
+    string DisplayName          = 1;
+    string Description          = 2;
+    MetricUnitType Units        = 3;
+    int32 ScaleMin              = 4;
+    int32 ScaleMax              = 5;
+    repeated MetricTags Tags    = 6;
 }
 
 extend google.protobuf.MessageOptions {

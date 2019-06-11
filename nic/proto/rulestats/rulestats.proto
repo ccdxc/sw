@@ -8,7 +8,8 @@ message RuleMetrics {
     option (delphi.datapath_metrics) = true;
     option (venice.metricInfo) = {
         DisplayName: "per-Rule Statistics",
-        Description: "Key index - Rule ID"
+        Description: "Key index - Rule ID",
+        Scope: PerFwRule
     };
     fixed64        Key          = 1;     // Rule Key
 

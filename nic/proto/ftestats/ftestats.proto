@@ -9,7 +9,8 @@ message FteCPSMetrics {
     option (delphi.datapath_metrics) = true;
     option (venice.metricInfo) = {
         DisplayName: "per-FTE CPS Statistics",
-        Description: "Key index - FTE ID"
+        Description: "Key index - FTE ID",
+        Scope: PerFTE
     };
     fixed64        Key                        = 1;     // FTE ID
 
@@ -22,7 +23,8 @@ message FteLifQMetrics {
     option (delphi.datapath_metrics) = true;
     option (venice.metricInfo) = {
         DisplayName: "per-FTE Queue Statistics",
-        Description: "Key index - FTE ID"
+        Description: "Key index - FTE ID",
+        Scope: PerFTE
     };
     fixed64        Key                        = 1;     // FTE ID
 
@@ -41,9 +43,10 @@ message SessionSummaryMetrics {
     option (delphi.datapath_metrics) = true;
     option (venice.metricInfo) = {
         DisplayName: "Global Session Summary Statistics",
-        Description: "Key index - Global"
+        Description: "Key index - FTE ID",
+        Scope: PerFTE
     };
-    fixed64        Key                       = 1;  // Stats per FTE
+    fixed64        Key                       = 1;
    
     delphi.Counter total_active_sessions         = 2  [(venice.metricsField) = {DisplayName: "Total Active Sessions" Description: "Total Number of active sessions"}];
     delphi.Counter num_l2_sessions               = 3  [(venice.metricsField) = {DisplayName: "L2 Sessions" Description: "Total Number of L2 Sessions"}];
