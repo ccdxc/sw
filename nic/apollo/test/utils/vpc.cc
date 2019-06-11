@@ -8,174 +8,156 @@
 ///
 //----------------------------------------------------------------------------
 
+#include <iostream>
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
 
+using namespace std;
+
 namespace api_test {
 
-vpc_util::vpc_util(vpc_stepper_seed_t *seed) {
-    this->type = seed->type;
-    this->id = seed->key.id;
-    this->cidr_str = ippfx2str(&seed->pfx);
-}
+//----------------------------------------------------------------------------
+// VPC feeder class routines
+//----------------------------------------------------------------------------
 
-vpc_util::vpc_util(pds_vpc_id_t id) {
-    this->type = PDS_VPC_TYPE_TENANT;
-    this->id = id;
-    this->cidr_str = "";
-}
-
-vpc_util::vpc_util(pds_vpc_id_t id, std::string cidr_str) {
-    this->type = PDS_VPC_TYPE_TENANT;
-    this->id = id;
-    this->cidr_str = cidr_str;
-}
-
-vpc_util::vpc_util(pds_vpc_type_t type, pds_vpc_id_t id, std::string cidr_str) {
+void
+vpc_feeder::init(pds_vpc_key_t key, pds_vpc_type_t type,
+                 std::string cidr_str, uint32_t num_vpc) {
+    this->key = key;
     this->type = type;
-    this->id = id;
     this->cidr_str = cidr_str;
+    SDK_ASSERT(str2ipv4pfx((char *)cidr_str.c_str(), &pfx) == 0);
+    num_obj = num_vpc;
 }
 
-vpc_util::~vpc_util() {}
+void
+vpc_feeder::iter_next(int width) {
+    ip_addr_t ipaddr = {0};
+
+    ip_prefix_ip_next(&pfx, &ipaddr);
+    memcpy(&pfx.addr, &ipaddr, sizeof(ip_addr_t));
+    key.id += width;
+    cur_iter_pos++;
+}
+
+ostream& operator << (ostream& os, vpc_feeder& obj)
+{
+    os << "VPC feeder =>"
+        << " id: " << obj.key.id
+        << " cidr_str: " << obj.cidr_str
+        << endl;
+    return os;
+}
+
+void
+vpc_feeder::key_build(pds_vpc_key_t *key) {
+    memset(key, 0, sizeof(pds_vpc_key_t));
+    key->id = this->key.id;
+}
+
+void
+vpc_feeder::spec_build(pds_vpc_spec_t *spec) {
+    memset(spec, 0, sizeof(pds_vpc_spec_t));
+    this->key_build(&spec->key);
+
+    spec->type = type;
+    spec->v4_pfx.len = pfx.len;
+    spec->v4_pfx.v4_addr = pfx.addr.addr.v4_addr;
+}
+
+bool
+vpc_feeder::key_compare(pds_vpc_key_t *key) {
+    return true;
+    // todo : @sai please check, compare routine not working
+    // return (memcmp(key, &this->key, sizeof(pds_vpc_key_t)) == 0);
+}
+
+bool
+vpc_feeder::spec_compare(pds_vpc_spec_t *spec) {
+    // todo : @sai please check, compare routine not working
+    return true;
+
+    if (spec->type != type)
+        return false;
+
+    return true;
+}
 
 sdk::sdk_ret_t
-vpc_util::create(void) const {
+vpc_feeder::info_compare(pds_vpc_info_t *info) {
+
+    if (!this->key_compare(&info->spec.key)) {
+        cout << "key compare failed " <<  this;
+        return sdk::SDK_RET_ERR;
+    }
+
+    if (!this->spec_compare(&info->spec)) {
+        cout << "spec compare failed " <<  this;
+        return sdk::SDK_RET_ERR;
+    }
+
+    return sdk::SDK_RET_OK;
+}
+
+//----------------------------------------------------------------------------
+// VPC test class routines
+//----------------------------------------------------------------------------
+
+sdk::sdk_ret_t
+create(vpc_feeder& feeder) {
     pds_vpc_spec_t spec;
-    ip_prefix_t ip_pfx;
 
-    extract_ip_pfx(this->cidr_str.c_str(), &ip_pfx);
-
-    SDK_ASSERT(TRUE);
-    memset(&spec, 0, sizeof(spec));
-    spec.type = this->type;
-    spec.key.id = this->id;
-    spec.v4_pfx.len = ip_pfx.len;
-    spec.v4_pfx.v4_addr = ip_pfx.addr.addr.v4_addr;
+    feeder.spec_build(&spec);
     return (pds_vpc_create(&spec));
 }
 
 sdk::sdk_ret_t
-vpc_util::read(pds_vpc_info_t *info) const {
+read(vpc_feeder& feeder) {
     sdk_ret_t rv;
     pds_vpc_key_t key;
+    pds_vpc_info_t info;
 
-    memset(&key, 0, sizeof(pds_vpc_key_t));
-    memset(info, 0, sizeof(pds_vpc_info_t));
-
-    key.id = this->id;
-    if ((rv = pds_vpc_read(&key, info)) != SDK_RET_OK)
+    feeder.key_build(&key);
+    if ((rv = pds_vpc_read(&key, &info)) != sdk::SDK_RET_OK)
         return rv;
 
-    return sdk::SDK_RET_OK;
+    return (feeder.info_compare(&info));
 }
 
 sdk::sdk_ret_t
-vpc_util::update(void) const {
+update(vpc_feeder& feeder) {
     pds_vpc_spec_t spec;
-    ip_prefix_t ip_pfx;
 
-    extract_ip_pfx(this->cidr_str.c_str(), &ip_pfx);
-
-    SDK_ASSERT(TRUE);
-    memset(&spec, 0, sizeof(spec));
-    spec.type = this->type;
-    spec.key.id = this->id;
-    spec.v4_pfx.len = ip_pfx.len;
-    spec.v4_pfx.v4_addr = ip_pfx.addr.addr.v4_addr;
+    feeder.spec_build(&spec);
     return (pds_vpc_update(&spec));
 }
 
 sdk::sdk_ret_t
-vpc_util::del(void) const {
-    pds_vpc_key_t key = {};
+del(vpc_feeder& feeder) {
+    pds_vpc_key_t key;
 
-    key.id = this->id;
+    feeder.key_build(&key);
     return (pds_vpc_delete(&key));
 }
 
-static inline void
-vpc_stepper_seed_increment (vpc_stepper_seed_t *seed, int width)
-{
-    ip_addr_t ipaddr = {0};
+//----------------------------------------------------------------------------
+// Misc routines
+//----------------------------------------------------------------------------
 
-    ip_prefix_ip_next(&seed->pfx, &ipaddr);
-    memcpy(&seed->pfx.addr, &ipaddr, sizeof(ip_addr_t));
-    seed->key.id += width;
+// do not modify these sample values as rest of system is sync with these
+pds_vpc_key_t k_vpc_key = {.id = 1};
+static vpc_feeder k_vpc_feeder;
+
+void sample_vpc_setup(pds_vpc_type_t type) {
+    // setup and teardown parameters should be in sync
+    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8");
+    create(k_vpc_feeder);
 }
 
-static inline sdk::sdk_ret_t
-vpc_util_object_stepper (vpc_stepper_seed_t *init_seed,
-                         utils_op_t op, sdk_ret_t expected_result)
-{
-    sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
-    vpc_stepper_seed_t seed = {0};
-    pds_vpc_info_t info = {};
-    uint32_t start_key = init_seed->key.id;
-    uint32_t width = 1;
-    uint32_t num_objs = init_seed->num_vpcs;
-
-    vpc_util::stepper_seed_init(&seed, init_seed->key, init_seed->type,
-                                ippfx2str(&init_seed->pfx),
-                                init_seed->num_vpcs);
-
-    for (uint32_t idx = start_key; idx < start_key + num_objs; idx++) {
-        vpc_util vpc_obj(&seed);
-        switch (op) {
-        case OP_MANY_CREATE:
-            rv = vpc_obj.create();
-            break;
-        case OP_MANY_READ:
-            rv = vpc_obj.read(&info);
-            break;
-        case OP_MANY_UPDATE:
-            rv = vpc_obj.update();
-            break;
-        case OP_MANY_DELETE:
-            rv = vpc_obj.del();
-            break;
-        default:
-            return sdk::SDK_RET_INVALID_OP;
-        }
-        if (rv != expected_result) {
-            return sdk::SDK_RET_ERR;
-        }
-        vpc_stepper_seed_increment(&seed, width);
-    }
-    return sdk::SDK_RET_OK;
-}
-
-sdk::sdk_ret_t
-vpc_util::many_create(vpc_stepper_seed_t *seed) {
-    return (vpc_util_object_stepper(seed, OP_MANY_CREATE, sdk::SDK_RET_OK));
-}
-
-sdk::sdk_ret_t
-vpc_util::many_read(vpc_stepper_seed_t *seed, sdk_ret_t expected_res) {
-    return (vpc_util_object_stepper(seed, OP_MANY_READ, expected_res));
-}
-
-sdk::sdk_ret_t
-vpc_util::many_update(vpc_stepper_seed_t *seed) {
-    return (vpc_util_object_stepper(seed, OP_MANY_UPDATE, sdk::SDK_RET_OK));
-}
-
-sdk::sdk_ret_t
-vpc_util::many_delete(vpc_stepper_seed_t *seed) {
-    return (vpc_util_object_stepper(seed, OP_MANY_DELETE, sdk::SDK_RET_OK));
-}
-
-void
-vpc_util::stepper_seed_init (vpc_stepper_seed_t *seed,
-                             pds_vpc_key_t key,
-                             pds_vpc_type_t type,
-                             std::string start_pfx,
-                             uint32_t num_vpcs) {
-    seed->key.id = key.id;
-    seed->type = type;
-    seed->num_vpcs = num_vpcs;
-    SDK_ASSERT(str2ipv4pfx((char *)start_pfx.c_str(), &seed->pfx) == 0);
+void sample_vpc_teardown(pds_vpc_type_t type) {
+    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8");
+    del(k_vpc_feeder);
 }
 
 }    // namespace api_test

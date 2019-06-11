@@ -28,7 +28,6 @@ namespace api_test {
 static const char *g_cfg_file = NULL;
 static std::string g_pipeline("");
 static uint16_t g_num_policy = PDS_MAX_SECURITY_POLICY; // can overwrite using cmd line
-static const vpc_util k_vpc_obj(1, "10.0.0.0/8");
 
 //----------------------------------------------------------------------------
 // Policy test class
@@ -49,13 +48,13 @@ protected:
         pds_test_base::SetUpTestCase(params);
         g_trace_level = sdk::lib::SDK_TRACE_LEVEL_INFO;
         batch_start();
-        VPC_CREATE(k_vpc_obj);
+        sample_vpc_setup(PDS_VPC_TYPE_TENANT);
         batch_commit();
     }
     static void TearDownTestCase() {
         g_trace_level = sdk::lib::SDK_TRACE_LEVEL_DEBUG;
         batch_start();
-        VPC_DELETE(k_vpc_obj);
+        sample_vpc_teardown(PDS_VPC_TYPE_TENANT);
         batch_commit();
         pds_test_base::TearDownTestCase();
     }

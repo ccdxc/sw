@@ -34,7 +34,6 @@ static constexpr pds_vpc_id_t k_vpc_id = 2;
 static const char * const k_base_nh_ip = "30.30.30.1";
 static const char * const k_base_v4_pfx = "100.100.100.1/21";
 static const char * const k_base_v6_pfx = "100:100:100:1:1::1/65";
-static const vpc_util k_vpc_obj(k_vpc_id, "10.0.0.0/8");
 
 //----------------------------------------------------------------------------
 // Route table test class
@@ -56,8 +55,7 @@ protected:
         pds_test_base::SetUpTestCase(params);
         TEP_SEED_INIT(&tep_seed, k_base_nh_ip);
         batch_start();
-        // create vpc which can be used for vpc peering routes
-        VPC_CREATE(k_vpc_obj);
+        sample_vpc_setup(PDS_VPC_TYPE_TENANT);
         // create max TEPs which can be used as NHs for routes
         TEP_MANY_CREATE(&tep_seed);
         batch_commit();
@@ -68,7 +66,7 @@ protected:
         TEP_SEED_INIT(&tep_seed, k_base_nh_ip);
         batch_start();
         TEP_MANY_DELETE(&tep_seed);
-        VPC_DELETE(k_vpc_obj);
+        sample_vpc_teardown(PDS_VPC_TYPE_TENANT);
         batch_commit();
         pds_test_base::TearDownTestCase();
     }

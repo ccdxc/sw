@@ -25,8 +25,6 @@ namespace api_test {
 
 static const char *g_cfg_file = "hal.json";
 static std::string g_pipeline("apollo");
-static const vpc_util k_vpc_obj(1, "10.0.0.0/8");
-static const subnet_util k_subnet_obj(1, 1, "10.1.0.0/16");
 
 //----------------------------------------------------------------------------
 // VNIC test class
@@ -46,14 +44,14 @@ protected:
         params.enable_fte = FALSE;
         pds_test_base::SetUpTestCase(params);
         batch_start();
-        VPC_CREATE(k_vpc_obj);
-        SUBNET_CREATE(k_subnet_obj);
+        sample_vpc_setup(PDS_VPC_TYPE_TENANT);
+        sample_subnet_setup();
         batch_commit();
     }
     static void TearDownTestCase() {
         batch_start();
-        VPC_DELETE(k_vpc_obj);
-        SUBNET_DELETE(k_subnet_obj);
+        sample_subnet_teardown();
+        sample_vpc_teardown(PDS_VPC_TYPE_TENANT);
         batch_commit();
         pds_test_base::TearDownTestCase();
     }

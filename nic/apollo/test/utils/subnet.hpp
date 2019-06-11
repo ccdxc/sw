@@ -17,149 +17,62 @@
 
 namespace api_test {
 
-#define SUBNET_CREATE(obj)                                              \
-    ASSERT_TRUE(obj.create() == sdk::SDK_RET_OK)
-
-#define SUBNET_DELETE(obj)                                              \
-    ASSERT_TRUE(obj.del() == sdk::SDK_RET_OK)
-
-#define SUBNET_MANY_CREATE(seed)                                        \
-    ASSERT_TRUE(subnet_util::many_create(seed) == sdk::SDK_RET_OK)
-
-#define SUBNET_MANY_READ(seed, expected_res)                            \
-    ASSERT_TRUE(subnet_util::many_read(                                 \
-        seed, expected_res) == sdk::SDK_RET_OK)
-
-#define SUBNET_MANY_UPDATE(seed)                                        \
-    ASSERT_TRUE(subnet_util::many_update(seed) == sdk::SDK_RET_OK)
-
-#define SUBNET_MANY_DELETE(seed)                                        \
-    ASSERT_TRUE(subnet_util::many_delete(seed) == sdk::SDK_RET_OK)
-
-#define SUBNET_SEED_INIT subnet_util::stepper_seed_init
-
-typedef struct subnet_stepper_seed_s {
+// Subnet test feeder class
+class subnet_feeder {
+public:
     pds_subnet_key_t key;
     pds_vpc_key_t vpc;
     std::string cidr_str;
     ip_prefix_t pfx;
     std::string vr_ip;
     std::string vr_mac;
-    pds_route_table_key_t v4_route_table;    /// Route table id
-    pds_route_table_key_t v6_route_table;    /// Route table id
+    pds_route_table_key_t v4_route_table;
+    pds_route_table_key_t v6_route_table;
     pds_policy_key_t ing_v4_policy;
     pds_policy_key_t ing_v6_policy;
     pds_policy_key_t egr_v4_policy;
     pds_policy_key_t egr_v6_policy;
-    uint32_t num_subnets;
-} subnet_stepper_seed_t;
+    uint32_t num_obj;
 
-/// Subnet test utility class
-class subnet_util {
-public:
-    /// \brief constructor
-    subnet_util(pds_subnet_id_t id);
-    subnet_util(pds_vpc_id_t vpc_id, pds_subnet_id_t id, std::string cidr_str);
-    subnet_util(pds_vpc_id_t vpc_id, pds_subnet_id_t id, std::string cidr_str,
-                uint32_t, uint32_t, uint32_t ing_v4_policy = 0, uint32_t ing_v6_policy = 0,
-                uint32_t egr_v4_policy = 0, uint32_t egr_v6_policy = 0);
-    subnet_util(subnet_stepper_seed_t *seed);
+    // Constructor
+    subnet_feeder() { };
+    subnet_feeder(const subnet_feeder &feeder) {
+        init(feeder.key, feeder.vpc, feeder.cidr_str, feeder.num_obj);
+    }
 
-    /// \brief destructor
-    ~subnet_util();
+    // Initialize feeder with the base set of values
+    void init(pds_subnet_key_t key, pds_vpc_key_t vpc_key,
+              std::string cidr_str, int num_subnet = 1);
 
-    /// Test params
-    pds_subnet_id_t id;
-    pds_vpc_key_t vpc;
-    std::string cidr_str;
-    ip_prefix_t pfx;
-    std::string vr_ip;
-    std::string vr_mac;
-    pds_route_table_key_t v4_route_table;    /// Route table id
-    pds_route_table_key_t v6_route_table;    /// Route table id
-    pds_policy_key_t ing_v4_policy;
-    pds_policy_key_t ing_v6_policy;
-    pds_policy_key_t egr_v4_policy;
-    pds_policy_key_t egr_v6_policy;
+    // Iterate helper routines
+    void iter_init() { cur_iter_pos = 0; }
+    bool iter_more() { return (cur_iter_pos < num_obj); }
+    void iter_next(int width = 1);
 
-    /// \brief Create subnet
-    ///
-    /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t create(void) const;
+    // Build routines
+    void key_build(pds_subnet_key_t *key);
+    void spec_build(pds_subnet_spec_t *spec);
 
-    /// \brief Read subnet
-    ///
-    /// \param[in] compare_spec validation to be done or not
-    /// \param[out] info subnet information
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_subnet_info_t *info) const;
-
-    /// \brief Update the subnet
-    ///
-    /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update(void) const;
-
-    /// \brief Delete subnet
-    ///
-    /// \param[in] vpc_id VPC id
-    /// \param[in] subnet_id subnet id
-    /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t del(void) const;
-
-    /// \brief Create many subnets
-    ///
-    /// \param[in] seed subnet seed
-    /// \param[in] num_subnet number of subnets to create
-    /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_create(subnet_stepper_seed_t *seed);
-
-    /// \brief Read many subnets
-    ///
-    /// \param[in] seed subnet seed
-    /// \param[in] num_subnet number of subnets to read
-    /// \param[in] expected_res expected result after read operation
-    /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_read(subnet_stepper_seed_t *seed,
-                               sdk::sdk_ret_t expected_res = sdk::SDK_RET_OK);
-
-    /// \brief Update multiple subnets
-    /// Update "num_subnets" subnets starting from id
-    ///
-    /// \param[in] seed subnet seed
-    /// \param[in] num_subnet number of subnets to update
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_update(subnet_stepper_seed_t *seed);
-
-    /// \brief Delete multiple subnets
-    /// Delete "num_subnets" subnets starting from id
-    ///
-    /// \param[in] seed subnet seed
-    /// \param[in] num_subnet number of subnets to delete
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_delete(subnet_stepper_seed_t *seed);
-
-    /// \brief Initialize the seed for subnet
-    ///
-    /// \param[out] seed subnet seed
-    /// \param[in] key subnet key
-    /// \param[in] vpc_key vpc key of subnet
-    /// \param[in] subnet_start_addr base address of subnet
-    /// \param[in] num_subnets number of subnets
-    static sdk_ret_t stepper_seed_init(subnet_stepper_seed_t *seed,
-                                       pds_subnet_key_t key,
-                                       pds_vpc_key_t vpc_key,
-                                       std::string subnet_start_addr,
-                                       int num_subnets);
-
-    /// \brief Indicates whether subnet is stateful
-    ///
-    /// \returns TRUE for subnet which is stateful
-    static bool is_stateful(void) { return TRUE; }
+    // Compare routines
+    bool key_compare(pds_subnet_key_t *key);
+    bool spec_compare(pds_subnet_spec_t *spec);
+    sdk::sdk_ret_t info_compare(pds_subnet_info_t *info);
 
 private:
-    void __init();
-
+    uint32_t cur_iter_pos;
 };
+
+// Export variables
+extern pds_subnet_key_t k_subnet_key;
+
+// Function prototypes
+sdk::sdk_ret_t create(subnet_feeder& feeder);
+sdk::sdk_ret_t read(subnet_feeder& feeder);
+sdk::sdk_ret_t update(subnet_feeder& feeder);
+sdk::sdk_ret_t del(subnet_feeder& feeder);
+
+void sample_subnet_setup();
+void sample_subnet_teardown();
 
 }    // namespace api_test
 

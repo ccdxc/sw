@@ -16,120 +16,54 @@
 
 namespace api_test {
 
-#define VPC_CREATE(obj)                                              \
-    ASSERT_TRUE(obj.create() == sdk::SDK_RET_OK)
-
-#define VPC_READ(obj, info)                                          \
-    ASSERT_TRUE(obj.read(info) == sdk::SDK_RET_OK)
-
-#define VPC_UPDATE(obj)                                              \
-    ASSERT_TRUE(obj.update() == sdk::SDK_RET_OK)
-
-#define VPC_DELETE(obj)                                              \
-    ASSERT_TRUE(obj.del() == sdk::SDK_RET_OK)
-
-#define VPC_MANY_CREATE(seed)                                        \
-    ASSERT_TRUE(vpc_util::many_create(seed) == sdk::SDK_RET_OK)
-
-#define VPC_MANY_READ(seed, expected_res)                            \
-    ASSERT_TRUE(vpc_util::many_read(                                 \
-                             seed,expected_res) == sdk::SDK_RET_OK)
-
-#define VPC_MANY_UPDATE(seed)                                        \
-    ASSERT_TRUE(vpc_util::many_update(seed) == sdk::SDK_RET_OK)
-
-#define VPC_MANY_DELETE(seed)                                        \
-    ASSERT_TRUE(vpc_util::many_delete(seed) == sdk::SDK_RET_OK)
-
-#define VPC_SEED_INIT vpc_util::stepper_seed_init
-
-typedef struct vpc_stepper_seed_s {
+// VPC test feeder class
+class vpc_feeder {
+public:
     pds_vpc_key_t key;
     pds_vpc_type_t type;
+    std::string cidr_str;
     ip_prefix_t pfx;
-    uint32_t num_vpcs;
-} vpc_stepper_seed_t;
+    uint32_t num_obj;
 
-/// VPC test utility class
-class vpc_util {
-public:
-    /// \brief constructor
-    vpc_util(vpc_stepper_seed_t *seed);
-    vpc_util(pds_vpc_type_t type, pds_vpc_id_t id, std::string cidr_str);
-    vpc_util(pds_vpc_id_t id, std::string cidr_str);
-    vpc_util(pds_vpc_id_t id);
+    // Constructor
+    vpc_feeder() { };
+    vpc_feeder(const vpc_feeder &feeder) {
+        init(feeder.key, feeder.type, feeder.cidr_str, feeder.num_obj);
+    }
 
-    /// \brief destructor
-    ~vpc_util();
+    // Initialize feeder with the base set of values
+    void init(pds_vpc_key_t key, pds_vpc_type_t type, std::string cidr_str,
+              uint32_t num_vpc = 1);
 
-    // Test parameters
-    pds_vpc_id_t id;         ///  VPC ID
-    std::string cidr_str;    // VPC CIDR
-    pds_vpc_type_t type;     /// VPC type
+    // Iterate helper routines
+    void iter_init() { cur_iter_pos = 0; }
+    bool iter_more() { return (cur_iter_pos < num_obj); }
+    void iter_next(int width = 1);
 
-    /// \brief Create a VPC from VPC object
-    ///
-    /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t create(void) const;
+    // Build routines
+    void key_build(pds_vpc_key_t *key);
+    void spec_build(pds_vpc_spec_t *spec);
 
-    /// \brief Read VPC
-    ///
-    /// \param[in] compare_spec validation to be done or not
-    /// \param[out] info vpc information
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_vpc_info_t *info) const;
+    // Compare routines
+    bool key_compare(pds_vpc_key_t *key);
+    bool spec_compare(pds_vpc_spec_t *spec);
+    sdk::sdk_ret_t info_compare(pds_vpc_info_t *info);
 
-    /// \brief Update the VPC
-    ///
-    /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update(void) const;
-
-    /// \brief Delete a VPC given its key
-    ///
-    /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t del(void) const;
-
-    /// \brief Create many VPCs
-    ///
-    /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_create(vpc_stepper_seed_t *seed);
-
-    /// \brief Read many VPCs
-    ///
-    /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_read(vpc_stepper_seed_t *seed,
-                               sdk::sdk_ret_t expected_res = sdk::SDK_RET_OK);
-
-    /// \brief Update many VPCs
-    ///
-    /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_update(vpc_stepper_seed_t *seed);
-
-    /// \brief Delete multiple VPCs
-    ///
-    /// Delete "num_vpcs" VPCs of type "vpc_type" starting from id
-    ///
-    /// \param[in] seed seed for the vpc
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_delete(vpc_stepper_seed_t *seed);
-
-    /// \brief Initialize the seed for vpc
-    ///
-    /// \param[out] seed vpc seed
-    /// \param[in] key vpc key
-    /// \param[in] type vpc type
-    /// \param[in] start_pfx base prefix to be used
-    /// \param[in] num_vpcs number of vpcs
-    static void stepper_seed_init(vpc_stepper_seed_t *seed, pds_vpc_key_t key,
-                                  pds_vpc_type_t type, std::string start_pfx,
-                                  uint32_t num_vpcs);
-
-    /// \brief Indicates whether VPC is stateful
-    ///
-    /// \returns TRUE for VPC which is stateful
-    static bool is_stateful(void) { return TRUE; }
-
+private:
+    uint32_t cur_iter_pos;
 };
+
+// Export variables
+extern pds_vpc_key_t k_vpc_key;
+
+// Function prototypes
+sdk::sdk_ret_t create(vpc_feeder& feeder);
+sdk::sdk_ret_t read(vpc_feeder& feeder);
+sdk::sdk_ret_t update(vpc_feeder& feeder);
+sdk::sdk_ret_t del(vpc_feeder& feeder);
+
+void sample_vpc_setup(pds_vpc_type_t type);
+void sample_vpc_teardown(pds_vpc_type_t type);
 
 }    // namespace api_test
 

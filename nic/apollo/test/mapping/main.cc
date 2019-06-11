@@ -18,6 +18,7 @@
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/test/utils/base.hpp"
+#include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/workflow.hpp"
 #include "nic/apollo/test/utils/batch.hpp"
 #include "nic/apollo/test/utils/vnic.hpp"
@@ -96,8 +97,6 @@ protected:
         ip_prefix_t ip_pfx, rt_pfx, nr_pfx;
         ip_addr_t ipaddr, rt_addr, nr_addr;
         device_stepper_seed_t device_seed;
-        vpc_stepper_seed_t vpc_seed;
-        subnet_stepper_seed_t subnet_seed;
         tep_stepper_seed_t tep_seed = {};
 
         vpc_key.id = api_test::g_vpc_id;
@@ -112,9 +111,12 @@ protected:
         BATCH_START();
         DEVICE_SEED_INIT(&device_seed, g_device_ip, g_device_macaddr, g_gateway_ip);
         DEVICE_CREATE(&device_seed);
-        VPC_SEED_INIT(&vpc_seed, vpc_key, PDS_VPC_TYPE_TENANT,
-                      api_test::g_vpc_cidr_v4, PDS_MAX_VPC);
-        VPC_MANY_CREATE(&vpc_seed);
+
+        vpc_feeder vpc_feeder;
+        vpc_feeder.init(vpc_key, PDS_VPC_TYPE_TENANT, g_vpc_cidr_v4,
+                        PDS_MAX_VPC);
+        many_create(vpc_feeder);
+
         TEP_CREATE(tep_obj);
         TEP_SEED_INIT(&tep_seed, api_test::g_tep_cidr_v4, num_teps);
         TEP_MANY_CREATE(&tep_seed);
@@ -129,12 +131,12 @@ protected:
             ROUTE_TABLE_CREATE(rt_obj);
         }
 
+        subnet_feeder subnet_feeder;
         subnet_key.id = api_test::g_subnet_id;
         vpc_key.id = api_test::g_vpc_id;
         for (uint16_t idx = 0; idx < PDS_MAX_VPC; idx++) {
-            SUBNET_SEED_INIT(
-                &subnet_seed, subnet_key, vpc_key, subnet_cidr, 1);
-            SUBNET_MANY_CREATE(&subnet_seed);
+            subnet_feeder.init(subnet_key, vpc_key, subnet_cidr, 1);
+            many_create(subnet_feeder);
             subnet_key.id += 1;
             vpc_key.id += 1;
             ip_prefix_ip_next(&ip_pfx, &ipaddr);
@@ -145,16 +147,19 @@ protected:
         VNIC_MANY_CREATE(&vnic_seed);
         BATCH_COMMIT();
 
-        subnet_key.id = api_test::g_subnet_id;
         vpc_key.id = api_test::g_vpc_id;
-        VPC_MANY_READ(&vpc_seed, sdk::SDK_RET_OK);
+        vpc_feeder.init(vpc_key, PDS_VPC_TYPE_TENANT, g_vpc_cidr_v4,
+                        PDS_MAX_VPC);
+        many_read(vpc_feeder);
+
+        subnet_key.id = api_test::g_subnet_id;
         for (uint16_t idx = 0; idx < PDS_MAX_VPC; idx++) {
-            SUBNET_SEED_INIT(
-                &subnet_seed, subnet_key, vpc_key, subnet_cidr, 1);
-            SUBNET_MANY_READ(&subnet_seed, sdk::SDK_RET_OK);
+            subnet_feeder.init(subnet_key, vpc_key, subnet_cidr, 1);
+            many_read(subnet_feeder);
             subnet_key.id += 1;
             vpc_key.id += 1;
         }
+
         DEVICE_READ(&device_seed, sdk::SDK_RET_OK);
         TEP_READ(tep_obj, &tep_info);
         TEP_MANY_READ(&tep_seed);
