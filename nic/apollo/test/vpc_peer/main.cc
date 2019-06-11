@@ -14,6 +14,7 @@
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/batch.hpp"
+#include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/workflow.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
 #include "nic/apollo/test/utils/vpc_peer.hpp"
@@ -42,7 +43,7 @@ protected:
     virtual void TearDown() {}
     static void SetUpTestCase() {
         test_case_params_t params;
-        vpc_stepper_seed_t vpc_seed = {0};
+        vpc_feeder vpc_feeder;
         pds_vpc_key_t vpc_key = {.id = 1};
 
         params.cfg_file = api_test::g_cfg_file;
@@ -51,11 +52,10 @@ protected:
         pds_test_base::SetUpTestCase(params);
 
         batch_start();
-        VPC_SEED_INIT(&vpc_seed, vpc_key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16",
-                      k_max_vpc);
-        ASSERT_TRUE(vpc_util::many_create(&vpc_seed) == sdk::SDK_RET_OK);
+        vpc_feeder.init(vpc_key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", k_max_vpc);
+        many_create(vpc_feeder);
         batch_commit();
-        ASSERT_TRUE(vpc_util::many_read(&vpc_seed) == sdk::SDK_RET_OK);
+        many_read(vpc_feeder);
     }
 
     static void TearDownTestCase() {
