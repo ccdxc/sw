@@ -24,10 +24,6 @@
 
 #include "pciemgrd_impl.hpp"
 
-#ifdef IRIS
-#include "platform/src/app/pciemgrd/src/delphic.h"
-#endif
-
 static pciemgrenv_t pciemgrenv;
 
 pciemgrenv_t *
@@ -54,8 +50,8 @@ port_evhandler(pcieport_event_t *ev, void *arg)
                         ev->port, ev->hostup.gen, ev->hostup.width);
         pciehw_event_hostup(ev->port, ev->hostup.gen, ev->hostup.width);
 #ifdef IRIS
-        delphi_update_pcie_port_status(ev->port, pciemgr::Up,
-                                       ev->hostup.gen, ev->hostup.width);
+        update_pcie_port_status(ev->port, PCIEMGR_UP,
+                                ev->hostup.gen, ev->hostup.width);
 #endif
         break;
     }
@@ -66,7 +62,7 @@ port_evhandler(pcieport_event_t *ev, void *arg)
         pciesys_loginfo("port%d: hostdn\n", ev->port);
         pciehw_event_hostdn(ev->port);
 #ifdef IRIS
-        delphi_update_pcie_port_status(ev->port, pciemgr::Down);
+        update_pcie_port_status(ev->port, PCIEMGR_DOWN);
 #endif
         break;
     }
@@ -79,8 +75,8 @@ port_evhandler(pcieport_event_t *ev, void *arg)
     case PCIEPORT_EVENT_FAULT: {
         pciesys_logerror("port%d: fault %s\n", ev->port, ev->fault.reason);
 #ifdef IRIS
-        delphi_update_pcie_port_status(ev->port,
-                                       pciemgr::Fault, 0, 0, ev->fault.reason);
+        update_pcie_port_status(ev->port,
+                                PCIEMGR_FAULT, 0, 0, ev->fault.reason);
 #endif
         break;
     }
@@ -114,7 +110,7 @@ open_hostports(void)
             }
 #ifdef IRIS
             /* initialize delphi port status object */
-            delphi_update_pcie_port_status(port, pciemgr::Down);
+            update_pcie_port_status(port, PCIEMGR_DOWN);
 #endif
         }
     }

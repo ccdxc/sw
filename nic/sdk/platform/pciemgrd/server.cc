@@ -21,10 +21,6 @@
 #include "platform/pciemgrd/pciemgrd_impl.hpp"
 #include "platform/pciemgr_if/include/pmserver.h"
 
-#ifdef IRIS
-#include "platform/src/app/pciemgrd/src/delphic.h"
-#endif
-
 static void
 do_open(pmmsg_t *m)
 {
@@ -188,7 +184,7 @@ update_stats(void *arg)
 
     for (int port = 0; port < PCIEPORT_NPORTS; port++) {
         if (pme->enabled_ports & (1 << port)) {
-            delphi_update_pcie_metrics(port);
+            update_pcie_metrics(port);
         }
     }
 }

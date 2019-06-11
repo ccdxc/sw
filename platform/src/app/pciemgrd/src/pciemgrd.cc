@@ -23,7 +23,6 @@
 #include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
 #include "pciemgrd_impl.hpp"
-#include "delphic.h"
 
 static void
 usage(void)
@@ -174,12 +173,19 @@ main(int argc, char *argv[])
         }
     }
 
+#ifdef PCIEMGRD_GOLD
+    {
+        int gold_loop(pciemgrenv_t *pme);
+        r = gold_loop(pme);
+    }
+#else
     if (pme->interactive) {
         r = cli_loop(pme);
     } else {
         logger_init();
         r = server_loop(pme);
     }
+#endif
 
     exit(r < 0 ? 1 : 0);
 }

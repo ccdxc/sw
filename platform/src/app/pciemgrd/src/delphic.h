@@ -48,13 +48,4 @@ public:
 
 #define SERVICE_NAME "pciemgrd"
 
-int delphi_client_start();
-void
-delphi_update_pcie_port_status(const int port,
-                               const enum pciemgr::PciePortOperStatus status,
-                               const int gen = 0,
-                               const int width = 0,
-                               const char *faultstr = "");
-void delphi_update_pcie_metrics(const int port);
-
 #endif /* __DELPHIC_H__ */

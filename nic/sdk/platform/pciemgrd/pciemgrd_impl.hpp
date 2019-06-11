@@ -28,4 +28,20 @@ int upgrade_state_save(void);
 int upgrade_state_restore(void);
 int upgrade_in_progress(void);
 
+int delphi_client_start();
+
+typedef enum pciemgr_port_status_e {
+    PCIEMGR_UP,
+    PCIEMGR_DOWN,
+    PCIEMGR_FAULT,
+} pciemgr_port_status_t;
+
+void
+update_pcie_port_status(const int port,
+                        const pciemgr_port_status_t status,
+                        const int gen = 0,
+                        const int width = 0,
+                        const char *faultstr = "");
+void update_pcie_metrics(const int port);
+
 #endif /* __LIB_PCIEMGRD_IMPL_H__ */

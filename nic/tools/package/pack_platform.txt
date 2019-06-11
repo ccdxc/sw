@@ -10,6 +10,7 @@ nic/build/aarch64/iris/bin/memtun                                               
 nic/build/aarch64/iris/bin/eth_dbgtool                                          /platform/bin/
 nic/build/aarch64/iris/bin/palmacros                                            /platform/bin/
 nic/build/aarch64/iris/bin/pciemgrd                                             /platform/bin/
+nic/build/aarch64/iris/bin/pciemgrd-gold                                        /platform/bin/
 nic/build/aarch64/iris/bin/nicmgrd                                              /platform/bin/
 nic/build/aarch64/iris/bin/pcieutil                                             /platform/bin/
 nic/build/aarch64/iris/bin/palapp                                               /platform/bin/

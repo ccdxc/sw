@@ -11,6 +11,7 @@
 
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
+#include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
 #include "delphic.h"
 
 static shared_ptr<PciemgrService> delphic;
@@ -23,15 +24,25 @@ int delphi_client_start (void)
     return 0;
 }
 
-void delphi_update_pcie_port_status(
+void update_pcie_port_status(
     const int port,
-    const enum pciemgr::PciePortOperStatus status,
+    const pciemgr_port_status_t status,
     const int gen,
     const int width,
     const char *faultstr)
 {
+    enum pciemgr::PciePortOperStatus dstatus;
+
+    // map pciemgr status to delphi status type
+    switch (status) {
+    case PCIEMGR_UP:    dstatus = pciemgr::Up; break;
+    case PCIEMGR_DOWN:  dstatus = pciemgr::Down; break;
+    case PCIEMGR_FAULT: dstatus = pciemgr::Fault; break;
+    default:            dstatus = pciemgr::Fault; break;
+    }
+
     if (delphic) {
-        delphic->UpdatePciePortStatus(port, status, gen, width, faultstr);
+        delphic->UpdatePciePortStatus(port, dstatus, gen, width, faultstr);
     }
 }
 
@@ -65,7 +76,7 @@ static void delphi_update_pcie_port_metrics(const int port)
     delphi::objects::PciePortMetrics::Publish(port, &m);
 }
 
-void delphi_update_pcie_metrics(const int port)
+void update_pcie_metrics(const int port)
 {
     static int created[PCIEPORT_NPORTS];
 
