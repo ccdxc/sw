@@ -362,7 +362,6 @@ sdk_ret_t
 create_svc_mapping_grpc (pds_svc_mapping_spec_t *spec)
 {
     // avinash/srikanth .. please check this path
-#if 0
     ClientContext         context;
     SvcMappingResponse    response;
     Status                status;
@@ -378,7 +377,6 @@ create_svc_mapping_grpc (pds_svc_mapping_spec_t *spec)
         }
         g_svc_mapping_req.clear_request();
     }
-#endif
 
     return SDK_RET_OK;
 }
@@ -454,6 +452,7 @@ test_app_init (void)
     g_meter_stub_ = pds::MeterSvc::NewStub(channel);
     g_tag_stub_ = pds::TagSvc::NewStub(channel);
     g_nexthop_stub_ = pds::NhSvc::NewStub(channel);
+    g_svc_mapping_stub_ = pds::Svc::NewStub(channel);
 
     return;
 }
