@@ -752,7 +752,7 @@ public:
         v4entry.dst = rflow_dip;
         ret = insert_(&v4entry);
         SDK_ASSERT(ret == SDK_RET_OK);
-        dump_flow_entry(&v4entry, iflow_dip, iflow_sip);
+        dump_flow_entry(&v4entry, rflow_sip, rflow_dip);
 
         return SDK_RET_OK;
     }
