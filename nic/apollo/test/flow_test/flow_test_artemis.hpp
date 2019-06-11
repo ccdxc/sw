@@ -85,7 +85,7 @@ dump_flow_entry(ftlv6_entry_t *entry, ipv6_addr_t v6_addr_sip,
     if (d_fp) {
         fprintf(d_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
                 "sport %u, dport %u, epoch %u, flow %u, ktype %u\n",
-                entry->vpc_id, entry->proto, entry->session_index,
+                entry->vpc_id + 1, entry->proto, entry->session_index,
                 src_ip_str, dst_ip_str, entry->sport, entry->dport,
                 entry->epoch, entry->flow_role, entry->ktype);
         fflush(d_fp);
@@ -103,7 +103,7 @@ dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip,
     if (d_fp) {
         fprintf(d_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
                 "sport %u, dport %u, epoch %u, role %u\n",
-                entry->vpc_id, entry->proto, entry->session_index,
+                entry->vpc_id + 1, entry->proto, entry->session_index,
                 src_ip_str, dst_ip_str, entry->sport, entry->dport,
                 entry->epoch, entry->flow_role);
         fflush(d_fp);
@@ -118,7 +118,7 @@ dump_session_info(uint32_t vpc, session_actiondata_t *actiondata)
     static FILE *d_fp = fopen("/tmp/flow_log.log", "a+");
     if (d_fp) {
         fprintf(d_fp, "vpc %u, meter_idx %u, nh_idx %u, tx rewrite flags 0x%x, "
-                "rx rewrite flags 0x%x\n", vpc - 1,
+                "rx rewrite flags 0x%x\n", vpc,
                 actiondata->action_u.session_session_info.meter_idx,
                 actiondata->action_u.session_session_info.nexthop_idx,
                 actiondata->action_u.session_session_info.tx_rewrite_flags,
