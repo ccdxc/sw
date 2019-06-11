@@ -131,7 +131,8 @@ header_type nvme_sesspostdgst_tx_to_stage_writeback_info_t {
 
 header_type nvme_sesspostdgst_tx_to_stage_tso_info_t {
     fields {
-        pad                              :  128;
+        total_pages                      :  8;
+        pad                              :  120;
     }
 }
 
@@ -285,8 +286,15 @@ metadata nvme_sesspostdgst_tx_writeback_to_tso_t t1_s2s_writeback_to_tso_info_sc
 // ASM code is expected to populate one or more of these descriptors, possibly
 // using phvwrp 
 // TODO: can we change it to any array format ?
-@pragma pa_align 512
 @pragma dont_trim
+metadata data32_t hdgst;
+@pragma dont_trim
+metadata data32_t ddgst;
+@pragma dont_trim
+// tcp_wqe0 should be at the start of a flit, so that
+// 8 tcp_wqes will be completely accomodated in one flit
+// and program can iterate without going across flits
+@pragma pa_align 512
 metadata hbm_al_ring_entry_t tcp_wqe0;
 @pragma dont_trim
 metadata hbm_al_ring_entry_t tcp_wqe1;
@@ -324,16 +332,20 @@ metadata data64_t tcp_db;
 metadata index16_t sessdgst_q_cindex;
 
 @pragma pa_align 128
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t hdgst_dma;               // dma cmd 0
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t ddgst_dma;               // dma cmd 1
 //though 'n' tcp wqes are populated on PHV, assumption is that at the max 
 //two DMA instructions are sufficient to download these to tcp transmit q
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t tcp_wqe_dma0;            //dma cmd 0
+metadata dma_cmd_phv2mem_t tcp_wqe_dma0;            //dma cmd 2
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t tcp_wqe_dma1;            //dma cmd 1
+metadata dma_cmd_phv2mem_t tcp_wqe_dma1;            //dma cmd 3
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t tcp_db_dma;              //dma cmd 2
+metadata dma_cmd_phv2mem_t tcp_db_dma;              //dma cmd 4
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t sessdgst_q_cindex_dma;   //dma cmd 3
+metadata dma_cmd_phv2mem_t sessdgst_q_cindex_dma;   //dma cmd 5
 
 /*
  * Stage 0 table 0 action
@@ -431,6 +443,7 @@ action cb_tso_process_t0 (PAGE_LIST_PARAMS) {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s6_info_scr.total_pages, to_s6_info.total_pages);
     modify_field(to_s6_info_scr.pad, to_s6_info.pad);
     
     // stage to stage
@@ -447,6 +460,7 @@ action cb_tso_process_t1 (PAGE_LIST_PARAMS) {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s6_info_scr.total_pages, to_s6_info.total_pages);
     modify_field(to_s6_info_scr.pad, to_s6_info.pad);
 
     // stage to stage

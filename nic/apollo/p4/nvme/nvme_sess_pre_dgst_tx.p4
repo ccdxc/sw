@@ -250,6 +250,10 @@ metadata nvme_sesspredgst_tx_writeback_to_ddgst_t t1_s2s_writeback_to_ddgst_info
 
 /**** PHV Layout ****/
 @pragma dont_trim
+metadata pdu_hdr_ch_t pdu_ch;
+@pragma dont_trim
+metadata pdu_hdr_cmdcap_psh_t pdu_psh;
+@pragma dont_trim
 metadata dgst_desc_t ddgst_desc;
 @pragma dont_trim
 metadata dgst_desc_t hdgst_desc;
@@ -258,11 +262,13 @@ metadata index32_t dgst_db;
 
 @pragma pa_align 128
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t ddgst_desc_dma;      //dma cmd 0
+metadata dma_cmd_phv2mem_t pdu_hdr_dma;         //dma cmd 0
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t hdgst_desc_dma;      //dma cmd 1
+metadata dma_cmd_phv2mem_t ddgst_desc_dma;      //dma cmd 1
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dgst_db_dma;         //dma cmd 2
+metadata dma_cmd_phv2mem_t hdgst_desc_dma;      //dma cmd 2
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dgst_db_dma;         //dma cmd 3
 
 /*
  * Stage 0 table 0 action

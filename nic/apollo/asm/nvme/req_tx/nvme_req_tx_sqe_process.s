@@ -42,7 +42,7 @@ nvme_req_tx_sqe_process:
                 p.cmd_ctxt_prp2, d.prp2
 
     phvwrpair   p.pdu_ctxt0_cmd_opc, d.opc, \
-                p.pdu_ctxt0_pdu_opc, NVME_O_TCP_PDU_TYPE_CAPSULECMD
+                p.pdu_ctxt0_pdu_opc, NVME_O_TCP_CH_PDU_TYPE_CAPSULECMD
     phvwrpair   p.pdu_ctxt0_slba, SLBA, \
                 p.pdu_ctxt0_nlb, NLB
     

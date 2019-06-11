@@ -711,7 +711,9 @@ header_type pdu_context0_t {
 
     log_lba_size        :   5;
     log_host_page_size  :   5;
-    rsvd0               :   6;
+    hdgst_en            :   1;
+    ddgst_en            :   1;
+    rsvd0               :   4;
 
     num_prps            :   8;
     num_pages           :   8;
@@ -728,8 +730,9 @@ header_type pdu_context0_t {
 }
 
 #define PDU_CTXT0_PARAMS \
-cmd_opc, pdu_opc, cid, nsid, slba, nlb, log_lba_size, log_host_page_size, rsvd0, \
-num_prps, num_pages, prp1_offset, key_index, sec_key_index, session_id, pad
+cmd_opc, pdu_opc, cid, nsid, slba, nlb, log_lba_size, log_host_page_size, hdgst_en, \
+ddgst_en, rsvd0, num_prps, num_pages, prp1_offset, key_index, sec_key_index, \
+session_id, pad
 
 #define GENERATE_PDU_CTXT0_D \
     modify_field(pdu_ctxt0_d.cmd_opc, cmd_opc);\
@@ -740,6 +743,8 @@ num_prps, num_pages, prp1_offset, key_index, sec_key_index, session_id, pad
     modify_field(pdu_ctxt0_d.nlb, nlb);\
     modify_field(pdu_ctxt0_d.log_lba_size, log_lba_size);\
     modify_field(pdu_ctxt0_d.log_host_page_size, log_host_page_size);\
+    modify_field(pdu_ctxt0_d.hdgst_en, hdgst_en);\
+    modify_field(pdu_ctxt0_d.ddgst_en, ddgst_en);\
     modify_field(pdu_ctxt0_d.rsvd0, rsvd0);\
     modify_field(pdu_ctxt0_d.num_prps, num_prps);\
     modify_field(pdu_ctxt0_d.num_pages, num_pages);\
@@ -1008,6 +1013,12 @@ header_type index32_t {
   }
 }
 
+header_type data32_t {
+    fields {
+        data: 32;
+    }
+}
+
 header_type data64_t {
     fields {
         data: 64;
@@ -1228,3 +1239,63 @@ ch, psh, hdgst, pad
     modify_field(pdu_hdr_d.hdgst, hdgst);                           \
     modify_field(pdu_hdr_d.pad, pad);                               \
 
+header_type pdu_hdr_ch_t {
+    fields {
+        pdu_type                         :  8;
+        flags                            :  8;
+        hlen                             :  8;
+        pdo                              :  8;
+        plen                             :  32;
+    }
+}
+
+// psh for cmd capsule pdu in little endian format
+header_type pdu_hdr_cmdcap_psh_t {
+    fields {
+      // NVME command Dword 0
+      cid         : 16;   // Command identifier
+      psdt        : 2;    // PRP or SGL
+      rsvd0       : 4;
+      fuse        : 2;    // Fusing 2 simple commands
+      opc         : 8;    // Opcode
+
+      // NVME command Dword 1
+      nsid        : 32;   // Namespace identifier
+
+      // NVME command Dword 2
+      rsvd2       : 32;
+
+      // NVME command Dword 3
+      rsvd3       : 32;
+
+      // NVME command Dwords 4 and 5
+      mptr        : 64;   // Metadata pointer
+
+      // NVME command Dwords 6,7,8 & 9 form the data pointer (PRP or SGL)
+      sgl1_addr     : 64;
+      sgl1_len      : 32;
+      sgl1_rsvd     : 24;
+      sgl1_type     :  4;
+      sgl1_sub_type :  4;
+
+      // NVME command Dwords 10 and 11
+      slba        : 64;   // Starting LBA (for Read/Write) commands
+
+      // NVME command Dword 12
+      lr          : 1;    // Limited retry
+      fua         : 1;    // Force unit access
+      prinfo      : 4;    // Protection information field
+      rsvd12      : 10;
+      nlb         : 16;   // Number of logical blocks
+
+      // NVME command Dword 13
+      rsvd13      : 24;
+      dsm         : 8;    // Dataset management
+
+      // NVME command Dword 14
+      dw14        : 32;
+
+      // NVME command Dword 15
+      dw15        : 32;
+    }
+}

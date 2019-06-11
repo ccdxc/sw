@@ -3,6 +3,21 @@
 
 #include "capri.h"
 
+// SQE related defines
+#define SQE_DATA_XFER_TYPE_PRP           0
+#define SQE_DATA_XFER_TYPE_DATA_SGL      1
+#define SQE_DATA_XFER_TYPE_DATA_META_SGL 2
+
+#define SGL_TYPE_DATA_BLOCK_DESC         0
+#define SGL_TYPE_BIT_BUCKET_DESC         1
+#define SGL_TYPE_SEGMENT_DESC            2
+#define SGL_TYPE_LAST_SEGMENT_DESC       3
+#define SGL_TYPE_KEYED_DATA_BLOCK_DESC   4
+
+#define SGL_SUBTYPE_INCAPSULE_DATA       1
+#define SGL_SUBTYPE_OUTOFCAPSULE_DATA    10
+
+
 #define LOG_NUM_PRP_BYTES       3   //2^3 = 8
 #define LOG_NUM_PAGE_PTR_BYTES  3   //2^3 = 8
 
@@ -115,8 +130,8 @@
 #define NVME_REQ_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(cmd_ctxt_dma_dma_cmd_type)/16)
 #define NVME_SESSPREXTSTX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(pkt_desc_dma_dma_cmd_type)/16)
 #define NVME_SESSPOSTXTSTX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(last_ddgst_aol_desc_dma_dma_cmd_type)/16)
-#define NVME_SESS_POST_DGST_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(tcp_wqe_dma0_dma_cmd_type)/16)
-#define NVME_SESS_PRE_DGST_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(ddgst_desc_dma_dma_cmd_type)/16)
+#define NVME_SESS_POST_DGST_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(hdgst_dma_dma_cmd_type)/16)
+#define NVME_SESS_PRE_DGST_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(pdu_hdr_dma_dma_cmd_type)/16)
 
 //Digest related defines
 #define HW_DGST_STATUS_SIZE                  8
@@ -217,21 +232,38 @@ struct hbm_al_ring_entry_t {
 #define NVME_O_TCP_CH_SIZE                  8
 #define NVME_O_TCP_PSH_CMD_CAPSULE_SIZE     64
 #define NVME_O_TCP_HDGST_SIZE               4
-#define NVME_O_TCP_CMD_CAPSULE_HEADER_SIZE  \
+#define NVME_O_TCP_CMD_CAPSULE_DGST_EN_HDR_SIZE  \
     (NVME_O_TCP_CH_SIZE + NVME_O_TCP_PSH_CMD_CAPSULE_SIZE + NVME_O_TCP_HDGST_SIZE)
 #define NVME_O_TCP_CMD_CAPSULE_CH_PSH_SIZE (NVME_O_TCP_CH_SIZE + NVME_O_TCP_PSH_CMD_CAPSULE_SIZE)
 #define NVME_O_TCP_DDGST_SIZE               4
-#define TCP_PAGE_NVME_O_TCP_CH_OFFSET       128
 
+// PDU CH related defines
 //PDU types
-#define NVME_O_TCP_PDU_TYPE_ICREQ           0
-#define NVME_O_TCP_PDU_TYPE_ICRESP          1
-#define NVME_O_TCP_PDU_TYPE_H2CTERMREQ      2
-#define NVME_O_TCP_PDU_TYPE_C2HTERMREQ      3
-#define NVME_O_TCP_PDU_TYPE_CAPSULECMD      4
-#define NVME_O_TCP_PDU_TYPE_CAPSULERESP     5
-#define NVME_O_TCP_PDU_TYPE_H2CDATA         6
-#define NVME_O_TCP_PDU_TYPE_C2HDATA         7
-#define NVME_O_TCP_PDU_TYPE_R2T             9
+#define NVME_O_TCP_CH_PDU_TYPE_ICREQ            0
+#define NVME_O_TCP_CH_PDU_TYPE_ICRESP           1
+#define NVME_O_TCP_CH_PDU_TYPE_H2CTERMREQ       2
+#define NVME_O_TCP_CH_PDU_TYPE_C2HTERMREQ       3
+#define NVME_O_TCP_CH_PDU_TYPE_CAPSULECMD       4
+#define NVME_O_TCP_CH_PDU_TYPE_CAPSULERESP      5
+#define NVME_O_TCP_CH_PDU_TYPE_H2CDATA          6
+#define NVME_O_TCP_CH_PDU_TYPE_C2HDATA          7
+#define NVME_O_TCP_CH_PDU_TYPE_R2T              9
+
+#define NVME_O_TCP_CH_HDGST_EN_F                (1<<0)
+#define NVME_O_TCP_CH_DDGST_EN_F                (1<<1)
+#define NVME_O_TCP_CH_DGST_EN_FLAGS             (NVME_O_TCP_CH_HDGST_EN_F | NVME_O_TCP_CH_DDGST_EN_F)
+
+#define NVME_O_TCP_CH_PDU_TYPE_SHIFT            24
+#define NVME_O_TCP_CH_FLAGS_SHIFT               16
+#define NVME_O_TCP_CH_HLEN_SHIFT                 8
+#define NVME_O_TCP_CH_PDO_SHIFT                  0
+#define NVME_O_TCP_CH_CMD_CAPSULE_DGST_EN_WORD0 ((NVME_O_TCP_CH_PDU_TYPE_CAPSULECMD << NVME_O_TCP_CH_PDU_TYPE_SHIFT) | \
+                                                 (NVME_O_TCP_CH_DGST_EN_FLAGS << NVME_O_TCP_CH_FLAGS_SHIFT) | \
+                                                 (NVME_O_TCP_CMD_CAPSULE_CH_PSH_SIZE << NVME_O_TCP_CH_HLEN_SHIFT) | \
+                                                 (NVME_O_TCP_CMD_CAPSULE_DGST_EN_HDR_SIZE << NVME_O_TCP_CH_PDO_SHIFT))
+
+// PDU PSH related defines
+#define NVME_O_TCP_PSH_CMD_CAPSULE_SGL_TYPE_SUBTYPE (SGL_TYPE_DATA_BLOCK_DESC << 4 | SGL_SUBTYPE_INCAPSULE_DATA)
+
 
 #endif //__NVME_COMMON_H

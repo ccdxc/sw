@@ -21,6 +21,7 @@ nvme_sesspostdgst_tx_pdu_ctxt0_process:
     // pages to post to TCP
     phvwr          p.to_s4_info_num_pages, d.num_pages
     phvwr          p.to_s5_info_num_pages, d.num_pages
+    phvwr          p.to_s6_info_total_pages, d.num_pages
 
     addui          SESSPRODCB_P, r0, hiword(nvme_txsessprodcb_base)
     addi           SESSPRODCB_P, SESSPRODCB_P, loword(nvme_txsessprodcb_base)

@@ -148,7 +148,7 @@ post_tbl_updates:
     sll         r5, r5, K_LOG_LBA_SIZE
     add         r5, K_PAGE_PTR, r5
     add         r5, r5, PKT_DESC_OVERHEAD
-    add.F_FIRST_PAGE r5, r5, NVME_O_TCP_CMD_CAPSULE_HEADER_SIZE
+    add.F_FIRST_PAGE r5, r5, NVME_O_TCP_CMD_CAPSULE_DGST_EN_HDR_SIZE
 
     //populate output desc
     //due to PHV being initialized to 0, O0 value is anyway 0 and doesn't 
@@ -171,10 +171,10 @@ post_tbl_updates:
 
     phvwr               p.dgst_one_aol_L0, r5.wx
     add                 r6, K_PAGE_PTR, PKT_DESC_OVERHEAD
-    add.F_FIRST_PAGE    r6, r6, NVME_O_TCP_CMD_CAPSULE_HEADER_SIZE
+    add.F_FIRST_PAGE    r6, r6, NVME_O_TCP_CMD_CAPSULE_DGST_EN_HDR_SIZE
     phvwr               p.dgst_one_aol_A0, r6.dx
 
-    add.F_FIRST_PAGE    r5, r5, NVME_O_TCP_CMD_CAPSULE_HEADER_SIZE
+    add.F_FIRST_PAGE    r5, r5, NVME_O_TCP_CMD_CAPSULE_DGST_EN_HDR_SIZE
     add.c5              r5, r5, NVME_O_TCP_DDGST_SIZE
 
     add                 r6, r5, PKT_DESC_OVERHEAD
