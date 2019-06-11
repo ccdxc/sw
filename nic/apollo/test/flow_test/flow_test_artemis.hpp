@@ -138,6 +138,7 @@ typedef struct mapping_s {
         struct {
             ip_addr_t local_ip;
             ip_addr_t public_ip;
+            ip_addr_t service_ip;
         };
         struct {
             ip_addr_t remote_ip;
@@ -215,6 +216,7 @@ private:
     uint32_t num_meter_idx_per_vpc;
     bool with_hash;
     test_params_t *test_params;
+    uint32_t ip_offset;
 
 private:
 
@@ -342,7 +344,7 @@ public:
         epoch = 1;
         hash = 0;
         with_hash = w;
-
+        ip_offset = 0;
     }
 
     void set_port_bases(uint16_t spbase, uint16_t dpbase) {
@@ -412,6 +414,12 @@ public:
                 epdb[vpc_id].v4_locals[epdb[vpc_id].v4_lcount].provider_ip =
                                                         local_spec->provider_ip;
             }
+            ip_addr_t service_ip;
+            service_ip.af = IP_AF_IPV4;
+            service_ip.addr.v4_addr =
+                test_params->v4_vip_pfx.addr.addr.v4_addr | ip_offset;
+            ip_offset++;
+            epdb[vpc_id].v4_locals[epdb[vpc_id].v4_lcount].service_ip = service_ip;
             epdb[vpc_id].v4_lcount++;
         } else {
             if (epdb[vpc_id].v6_lcount >= MAX_LOCAL_EPS) {
@@ -764,7 +772,7 @@ public:
                                                  TEST_APP_DIP_PORT,
                                                  fwd_dport,
                                                  ip_addr.addr.v4_addr,
-                                                 ep_pairs[i].v4_local.local_ip.addr.v4_addr, // TODO: must be service IP
+                                                 ep_pairs[i].v4_local.service_ip.addr.v4_addr, // must be service IP
                                                  fwd_dport,
                                                  TEST_APP_VIP_PORT);
                         } else if (vpc == 64) {
