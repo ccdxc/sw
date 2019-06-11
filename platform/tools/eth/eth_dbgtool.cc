@@ -50,9 +50,22 @@
 #include "gen/p4gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h"
 #endif
 
+#define ENTRY_TRACE_EN                      true
+
+// Maximum number of queue per LIF
+#define ETH_RSS_MAX_QUEUES                  (128)
+// Number of entries in a LIF's indirection table
+#define ETH_RSS_LIF_INDIR_TBL_LEN           ETH_RSS_MAX_QUEUES
+// Size of each LIF indirection table entry
+#define ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ      (sizeof(eth_rx_rss_indir_eth_rx_rss_indir_t))
+// Size of a LIF's indirection table
+#define ETH_RSS_LIF_INDIR_TBL_SZ            (ETH_RSS_LIF_INDIR_TBL_LEN * ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ)
 // Max number of LIFs supported
 #define MAX_LIFS                            (2048)
-#define ENTRY_TRACE_EN          true
+// Size of the entire LIF indirection table
+#define ETH_RSS_INDIR_TBL_SZ                (MAX_LIFS * ETH_RSS_LIF_INDIR_TBL_SZ)
+// Memory bar should be multiple of 8 MB
+#define MEM_BARMAP_SIZE_SHIFT               (23)
 
 directmap    **p4plus_rxdma_dm_tables_;
 directmap    **p4plus_txdma_dm_tables_;
@@ -970,6 +983,19 @@ eth_stats(uint16_t lif)
 }
 
 void
+eth_stats_reset(uint16_t lif)
+{
+    std::string mpart_json = mpart_cfg_path();
+    sdk::platform::utils::mpartition *mp_ = mpartition::factory(mpart_json.c_str());
+    assert(mp_);
+
+    uint64_t addr = mp_->start_addr(MEM_REGION_LIF_STATS_NAME) + (lif << 10);
+
+    printf("\naddr: 0x%lx\n\n", addr);
+    sdk::lib::pal_mem_set(addr, 0, sizeof(struct lif_stats), 0);
+}
+
+void
 port_config(uint64_t addr)
 {
     uint8_t *buf = (uint8_t *)calloc(1, sizeof(union port_config));
@@ -1254,6 +1280,8 @@ p4pd_common_p4plus_rxdma_rss_params_table_entry_get(uint32_t hw_lif_id,
 
     assert(hw_lif_id < MAX_LIFS);
 
+    pd_init();
+
     pd_err = p4pd_global_entry_read(P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_PARAMS,
                                     hw_lif_id, NULL, NULL, data);
     if (pd_err != P4PD_SUCCESS) {
@@ -1273,15 +1301,15 @@ p4pd_common_p4plus_rxdma_rss_params_table_entry_show(uint32_t hw_lif_id)
     memrev((uint8_t *)&data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key,
            sizeof(data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key));
 
-    printf("type %x\n", data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_type);
-    printf("key ");
+    printf("type:  %x\n", data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_type);
+    printf("key:   ");
     for (uint16_t i = 0; i < sizeof(data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key); i++) {
         if (i != 0)
             printf(":");
         printf("%02x", data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key[i]);
     }
     printf("\n");
-    printf("debug %x\n", data.action_u.eth_rx_rss_params_eth_rx_rss_params.debug);
+    printf("debug: %x\n", data.action_u.eth_rx_rss_params_eth_rx_rss_params.debug);
 }
 
 int
@@ -1303,7 +1331,42 @@ p4pd_common_p4plus_rxdma_rss_params_table_entry_add(uint32_t hw_lif_id,
         assert(0);
     }
 
-    p4pd_common_p4plus_rxdma_rss_params_table_entry_show(hw_lif_id);
+    return 0;
+}
+
+int
+p4pd_common_p4plus_rxdma_rss_indir_table_entry_show(uint32_t hw_lif_id)
+{
+    uint64_t tbl_base;
+    uint64_t tbl_index;
+    uint64_t addr;
+    uint8_t index;
+    eth_rx_rss_indir_actiondata_t data;
+
+    std::string mpart_json = mpart_cfg_path();
+    sdk::platform::utils::mpartition *mp_ = mpartition::factory(mpart_json.c_str());
+    assert(mp_);
+
+    if (hw_lif_id >= MAX_LIFS) {
+        printf("Invalid lif %d\n", hw_lif_id);
+        return -1;
+    };
+
+    tbl_base = mp_->start_addr(MEM_REGION_RSS_INDIR_TABLE_NAME);
+    tbl_base = (tbl_base + ETH_RSS_INDIR_TBL_SZ) & ~(ETH_RSS_INDIR_TBL_SZ - 1);
+    tbl_base += (hw_lif_id * ETH_RSS_LIF_INDIR_TBL_SZ);
+
+    printf("ind_table: 0x%lx\n\t", tbl_base);
+    for (index = 0; index < ETH_RSS_MAX_QUEUES; index++) {
+        tbl_index = (index * ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ);
+        addr = tbl_base + tbl_index;
+        sdk::lib::pal_mem_read(addr, (uint8_t *)&data.action_u,
+                        sizeof(data.action_u), 0);
+        printf("[%3d] %3d ", index,
+            data.action_u.eth_rx_rss_indir_eth_rx_rss_indir.qid);
+        if ((index + 1) % 8 == 0)
+            printf("\n\t");
+    }
 
     return 0;
 }
@@ -1341,6 +1404,7 @@ usage()
     printf("   nvme_qstate    <lif> <qtype> <qid>\n");
     printf("   qpoll          <lif> <qtype>\n");
     printf("   stats          <lif>\n");
+    printf("   stats_reset    <lif>\n");
     printf("   memrd          <addr> <size_in_bytes>\n");
     printf("   memwr          <addr> <size_in_bytes> <bytes> ...\n");
     printf("   memdump        <addr> <size_in_bytes>\n");
@@ -1363,7 +1427,6 @@ main(int argc, char **argv)
     }
 
     sdk::lib::logger::init(&debug_logger);
-    pd_init();
 
 #ifdef __x86_64__
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) ==
@@ -1425,6 +1488,13 @@ main(int argc, char **argv)
             usage();
         }
         uint16_t lif = std::strtoul(argv[2], NULL, 0);
+        eth_stats(lif);
+    } else if (strcmp(argv[1], "stats_reset") == 0) {
+        if (argc != 3) {
+            usage();
+        }
+        uint16_t lif = std::strtoul(argv[2], NULL, 0);
+        eth_stats_reset(lif);
         eth_stats(lif);
     } else if (strcmp(argv[1], "memrd") == 0) {
         if (argc != 4) {
@@ -1541,7 +1611,10 @@ main(int argc, char **argv)
             usage();
         }
         uint16_t lif_id = strtoul(argv[2], NULL, 0);
+        printf("\n");
         p4pd_common_p4plus_rxdma_rss_params_table_entry_show(lif_id);
+        p4pd_common_p4plus_rxdma_rss_indir_table_entry_show(lif_id);
+        printf("\n");
     } else if (strcmp(argv[1], "rss_debug") == 0) {
         if (argc != 4) {
             usage();
@@ -1549,6 +1622,10 @@ main(int argc, char **argv)
         uint16_t lif_id = strtoul(argv[2], NULL, 0);
         uint8_t enable = std::strtoul(argv[3], NULL, 0);
         p4pd_common_p4plus_rxdma_rss_params_table_entry_add(lif_id, enable);
+        printf("\n");
+        p4pd_common_p4plus_rxdma_rss_params_table_entry_show(lif_id);
+        p4pd_common_p4plus_rxdma_rss_indir_table_entry_show(lif_id);
+        printf("\n");
     } else {
         usage();
     }

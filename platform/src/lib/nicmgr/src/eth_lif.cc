@@ -1995,10 +1995,24 @@ EthLif::RssConfig(void *req, void *req_data, void *resp, void *resp_data)
 
     READ_MEM(edma_buf_addr, rss_indir, RSS_IND_TBL_SIZE, 0);
 
-    NIC_LOG_DEBUG("{}: {}: type {:#x} key {} table {}",
+    auto to_hexstr = [](const uint8_t *ba, const int len, char *str){
+        int i = 0;
+        for (i = 0; i < len; i++) {
+            sprintf(str + i*3, "%02x ", ba[i]);
+        }
+        str[i*3] = 0;
+    };
+
+    char rss_key_str[RSS_HASH_KEY_SIZE * 3 + 1] = {0};
+    char rss_ind_str[RSS_IND_TBL_SIZE * 3 + 1] = {0};
+
+    to_hexstr(rss_key, RSS_HASH_KEY_SIZE, rss_key_str);
+    to_hexstr(rss_indir, RSS_IND_TBL_SIZE, rss_ind_str);
+
+    NIC_LOG_DEBUG("{}: {}: rss type {:#x} key {} table {}",
         hal_lif_info_.name,
         opcode_to_str((cmd_opcode_t)cmd->opcode),
-        rss_type, rss_key, rss_indir);
+        rss_type, rss_key_str, rss_ind_str);
 
     // Validate indirection table entries
     for (int i = 0; i < RSS_IND_TBL_SIZE; i++) {
