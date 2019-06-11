@@ -834,10 +834,12 @@ sdk_ret_t
 hash::deprogram_entries(void)
 {
     hash_entry_t he;
+    he.data = SDK_CALLOC(SDK_MEM_ALLOC_ID_HASH_ENTRY_DATA, swdata_len_);
     for (uint32_t i = 0; i < dleft_capacity_; i++) {
         he.index = i;
         deprogram_table_(&he);
     }
+    SDK_FREE(SDK_MEM_ALLOC_ID_HASH_ENTRY_DATA, he.data);
     return SDK_RET_OK;
 }
 

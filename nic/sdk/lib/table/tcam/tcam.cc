@@ -642,10 +642,12 @@ sdk_ret_t
 tcam::deprogram_entries()
 {
 	tcam_entry_t te;
+    te.data = SDK_MALLOC(SDK_MEM_ALLOC_ID_TCAM_ENTRY_DATA, swdata_len_);
     for (uint32_t i = 0; i < capacity_; i++) {
         te.index = i;
         deprogram_table_(&te);
     }
+    SDK_FREE(SDK_MEM_ALLOC_ID_TCAM_ENTRY_DATA, te.data);
     return SDK_RET_OK;
 }
 
