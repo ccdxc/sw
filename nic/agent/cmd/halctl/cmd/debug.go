@@ -305,12 +305,19 @@ func regShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Not yet supported\n")
 		return
 	} else if cmd.Flags().Changed("reg-addr") {
+		if cmd.Flags().Changed("instance") == false {
+			fmt.Printf("Instance needs to be specified with --instance flag\n")
+			return
+		}
 		req = &halproto.RegisterRequest{
 			IdNameOrAddr: &halproto.RegisterRequest_Addr{
 				Addr: regAddr,
 			},
 			Instance: regInstance,
 		}
+	} else {
+		fmt.Printf("Argument needs to be specified. Refer to help string\n")
+		return
 	}
 
 	reqMsg := &halproto.RegisterRequestMsg{
