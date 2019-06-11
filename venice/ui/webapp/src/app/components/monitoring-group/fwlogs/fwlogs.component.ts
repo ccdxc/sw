@@ -80,17 +80,18 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
 
   // Only time is supported as sortable by the backend
   cols: TableCol[] = [
-    { field: 'time', header: 'Time', class: 'fwlogs-column', sortable: true, width: 18 },
-    { field: 'source', header: 'Source', class: 'fwlogs-column-ip', sortable: true, width: 11 },
-    { field: 'destination', header: 'Destination', class: 'fwlogs-column-ip', sortable: true, width: 11 },
-    { field: 'protocol', header: 'Protocol', class: 'fwlogs-column-port', sortable: true, width: 10 },
-    { field: 'source-port', header: 'Src Port', class: 'fwlogs-column-port', sortable: true, width: 7 },
-    { field: 'destination-port', header: 'Dest Port', class: 'fwlogs-column-port', sortable: true, width: 7 },
-    { field: 'action', header: 'Action', class: 'fwlogs-column', sortable: true, width: 7 },
+    { field: 'time', header: 'Time', class: 'fwlogs-column', sortable: true, width: 16 },
+    { field: 'source', header: 'Source', class: 'fwlogs-column-ip', sortable: true, width: 10 },
+    { field: 'destination', header: 'Destination', class: 'fwlogs-column-ip', sortable: true, width: 10 },
+    { field: 'protocol', header: 'Protocol', class: 'fwlogs-column-port', sortable: true, width: 7 },
+    { field: 'source-port', header: 'Src Port', class: 'fwlogs-column-port', sortable: true, width: 5 },
+    { field: 'destination-port', header: 'Dest Port', class: 'fwlogs-column-port', sortable: true, width: 6 },
+    { field: 'action', header: 'Action', class: 'fwlogs-column', sortable: true, width: 5 },
     { field: 'reporter-id', header: 'Reporter', class: 'fwlogs-column', sortable: true, width: 7 },
     { field: 'direction', header: 'Direction', class: 'fwlogs-column', sortable: true, width: 7 },
     { field: 'session-id', header: 'Session ID', class: 'fwlogs-column', sortable: true},
-    { field: 'policy', header: 'Policy Name', class: 'fwlogs-column', sortable: true, width: 7, roleGuard: 'securitysgpolicy_read' },
+    { field: 'session-state', header: 'Session Action', class: 'fwlogs-column', sortable: true},
+    { field: 'policy', header: 'Policy Name', class: 'fwlogs-column', sortable: true, width: 8, roleGuard: 'securitysgpolicy_read' },
   ];
 
   constructor(

@@ -1,5 +1,6 @@
 import { PipeTransform, Pipe } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import * as moment from 'moment';
 
 @Pipe({
   name: 'PrettyDate'
@@ -21,23 +22,34 @@ export class PrettyDatePipe extends DatePipe implements PipeTransform {
       }
       // Assuming value is in RFC spec
       const ns = parseFloat(value.substring(value.indexOf('.'), value.length - 1)).toFixed(precision).toString();
-      if (super.transform(value, 'shortDate') === super.transform(Date.now(), 'shortDate')) {
+      if (super.transform(value, 'shortDate', 'UTC') === super.transform(Date.now(), 'shortDate', 'UTC')) {
         // If same day only show time
         return super.transform(value, 'H:mm:ss', 'UTC') + ns;
-      } else if (super.transform(value, 'yyyy') === super.transform(Date.now(), 'yyyy')) {
+      } else if (super.transform(value, 'yyyy', 'UTC') === super.transform(Date.now(), 'yyyy', 'UTC')) {
         // If same year only show time, month, day
         return super.transform(value, 'H:mm:ss', 'UTC') + ns + super.transform(value, ' - M/d', 'UTC');
       } else {
         // Else we show time, month, day, year
         return super.transform(value, 'H:mm:ss', 'UTC') + ns + super.transform(value, ' - M/d/yy', 'UTC');
       }
+    } else if (args === 'graph') {
+      if (super.transform(value, 'shortDate', 'UTC') >= super.transform(moment().subtract(1, 'days').valueOf(), 'shortDate', 'UTC')) {
+        // If same day only show time
+        return super.transform(value, 'H:mm', 'UTC');
+      } else if (super.transform(value, 'yyyy', 'UTC') === super.transform(Date.now(), 'yyyy', 'UTC')) {
+        // If same year only show time, month, day
+        return super.transform(value, 'H:mm -  M/d', 'UTC');
+      } else {
+        // Else we show time, month, day, year
+        return super.transform(value, 'H:mm -  M/d/yy', 'UTC');
+      }
     }
 
     // DEFAULT BEHAVIOUR
-    if (super.transform(value, 'shortDate') === super.transform(Date.now(), 'shortDate')) {
+    if (super.transform(value, 'shortDate', 'UTC') === super.transform(Date.now(), 'shortDate', 'UTC')) {
       // If same day only show time
       return super.transform(value, 'H:mm:ss', 'UTC');
-    } else if (super.transform(value, 'yyyy') === super.transform(Date.now(), 'yyyy')) {
+    } else if (super.transform(value, 'yyyy', 'UTC') === super.transform(Date.now(), 'yyyy', 'UTC')) {
       // If same year only show time, month, day
       return super.transform(value, 'H:mm:ss -  M/d', 'UTC');
     } else {

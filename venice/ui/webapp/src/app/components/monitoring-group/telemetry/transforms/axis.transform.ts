@@ -4,6 +4,7 @@ import { patternValidator } from '@sdk/v1/utils/validators';
 import { ChartYAxe, ChartOptions } from 'chart.js';
 import { getFieldData } from '../utility';
 import { Utility } from '@app/common/Utility';
+import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 
 interface CommonAxisFormInf {
   showAxis: boolean;
@@ -119,6 +120,9 @@ export class AxisTransform extends GraphTransform {
       return;
     }
 
+    opts.graphOptions.scales.xAxes[0].ticks.display = true;
+    opts.graphOptions.scales.yAxes[0].ticks.display = true;
+
     yAxisOptions.scaleLabel.display = axisValues.yAxis.showLabel;
     yAxisOptions.scaleLabel.labelString = axisValues.yAxis.label.trim();
 
@@ -166,6 +170,10 @@ export class AxisTransform extends GraphTransform {
     if (opts.graphOptions.tooltips.callbacks == null) {
       opts.graphOptions.tooltips.callbacks = {};
     }
+
+    opts.graphOptions.tooltips.callbacks.title = ((tooltipItems, data) => {
+      return new PrettyDatePipe('en-US').transform(tooltipItems[0].xLabel as string, 'graph');
+    });
 
     opts.graphOptions.tooltips.callbacks.label = ((tooltipItem, data) => {
       let label = data.datasets[tooltipItem.datasetIndex].label;

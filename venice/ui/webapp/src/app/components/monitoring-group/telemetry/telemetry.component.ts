@@ -21,6 +21,8 @@ import { ClusterSmartNIC, ClusterNode } from '@sdk/v1/models/generated/cluster';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { ITelemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
 import { LabelSelectorTransform } from './transforms/labelselector.transform';
+import * as moment from 'moment';
+import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 
 /**
  * A data source allows a user to select a single measurement,
@@ -236,6 +238,16 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
       scales: {
         xAxes: [{
           type: 'time',
+          time: {
+            parser: data => moment.utc(data),
+            tooltipFormat: 'YYYY-MM-DD HH:mm',
+            displayFormats: {
+                millisecond: 'HH:mm:ss.SSS',
+                second: 'HH:mm:ss',
+                minute: 'HH:mm',
+                hour: 'HH'
+            },
+          },
           display: true,
           gridLines: {
             display: true
@@ -244,7 +256,13 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
             display: true
           },
           ticks: {
-            display: true,
+            callback: function(value, index, values) {
+              if (!values[index]) {
+                return;
+              }
+              return new PrettyDatePipe('en-US').transform(values[index]['value'], 'graph');
+            },
+            display: false,
           },
         }],
         yAxes: [{
@@ -256,7 +274,7 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
             display: true
           },
           ticks: {
-            display: true,
+            display: false,
           }
         }]
       }
@@ -355,6 +373,7 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
 
   resetGraph() {
     this.lineData = { datasets: [] };
+    this.graphOptions = this.generateDefaultGraphOptions();
   }
 
   drawGraph() {

@@ -962,7 +962,7 @@ export class Utility {
   public static transformToChartjsTimeSeries(data, xFieldIndex, yFieldIndex): { t: Date, y: any }[] {
     const retData = [];
     data.forEach((item) => {
-      retData.push({ t: new Date(item[xFieldIndex]), y: item[yFieldIndex] });
+      retData.push({ t: item[xFieldIndex], y: item[yFieldIndex] });
     });
     return retData;
   }
@@ -1368,7 +1368,7 @@ export class Utility {
             } else {
               retValue = false;
             }
-          } else if (obj[key] != null && (obj.getPropInfo == null || obj[key] !== obj.getPropInfo(key).default)) {
+          } else if (obj[key] != null && (obj.getPropInfo == null || obj.getPropInfo(key) == null || obj[key] !== obj.getPropInfo(key).default)) {
             retValue = false;
           }
         }

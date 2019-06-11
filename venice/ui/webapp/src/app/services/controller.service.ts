@@ -524,11 +524,7 @@ export class ControllerService {
 
   invokeErrorToaster(summary: string, errorMsg: string, buttons: ToolbarButton[] = [], shouldSplitLines: boolean = true) {
     if (shouldSplitLines) {
-      const toAddPeriod  = errorMsg[errorMsg.length - 1] === '.';
-      errorMsg = errorMsg.split('.').filter(x => x.length > 0).join('.\n');
-      if (toAddPeriod) {
-        errorMsg += '.';
-      }
+      errorMsg = errorMsg.split('. ').filter(x => x.length > 0).join('.\n');
     }
     this.messageService.add({
       severity: 'error',
