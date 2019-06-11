@@ -1,8 +1,8 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = apollo_subnet_test.gtest
-MODULE_PIPELINE = apollo artemis
+MODULE_TARGET   = vpc_peer_test.gtest
+MODULE_PIPELINE = artemis
 MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl  pdstestutils \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_SDK_SOLIBS} ${NIC_HAL_PD_SOLIBS_${ARCH}} \

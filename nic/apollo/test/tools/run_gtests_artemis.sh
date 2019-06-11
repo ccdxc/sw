@@ -30,6 +30,10 @@ echo "Running device test"
 $GDB device_test -c hal.json -f artemis --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/artemis_device_test.xml" > artemis_device_test.log.txt
 [[ $? -ne 0 ]] && echo "artemis_device_test failed!" && exit 1
 
+echo "Running vpc peer test"
+$GDB vpc_peer_test -c hal.json -f artemis --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/artemis_vpc_peer_test.xml" > artemis_vpc_peer_test.log.txt
+[[ $? -ne 0 ]] && echo "artemis_vpc_peer_test failed!" && exit 1
+
 #echo "Running tep test"
 #$GDB tep_test -c hal.json -f artemis --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/artemis_tep_test.xml" > artemis_tep_test.log.txt
 #[[ $? -ne 0 ]] && echo "artemis_tep_test failed!" && exit 1
@@ -37,4 +41,5 @@ $GDB device_test -c hal.json -f artemis --gtest_output="xml:${GEN_TEST_RESULTS_D
 echo "Running nh test"
 $GDB artemis_nh_test -c hal.json -f artemis --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/artemis_nh_test.xml" > artemis_nh_test.log.txt
 [[ $? -ne 0 ]] && echo "artemis_nh_test failed!" && exit 1
+
 echo "Success"

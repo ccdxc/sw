@@ -448,6 +448,32 @@ inline void workflow_neg_8(seed_T *seed1, seed_T *seed2) {
     MANY_READ_FAIL(seed1);
 }
 
+// WF_11: [ Read SetMax ] - [ Create SetMax ] - Read - [ Create SetMax ]
+// For artemis, can be deleted once other workflows are enabled
+template <typename class_T, typename seed_T>
+inline void workflow_11(seed_T *seed) {
+    // trigger
+    //MANY_READ_FAIL(seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+
+    batch_start();
+    MANY_CREATE(seed);
+    batch_commit();
+
+    MANY_READ(seed);
+
+    batch_start();
+    MANY_CREATE(seed);
+    //batch_commit_fail();
+    batch_commit();
+
+    // cleanup
+    batch_start();
+    //MANY_DELETE(seed);
+    batch_commit();
+
+    //MANY_READ_FAIL(seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+}
+
 }    // end namespace
 
 #endif    // __TEST_UTILS_WORKFLOW_HPP__
