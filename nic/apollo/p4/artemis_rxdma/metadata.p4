@@ -16,6 +16,13 @@ header_type scratch_metadata_t {
         flag            :  1;
         pad0            :  7;
         remote_ip       : 128;
+
+        entry_valid      :  1;
+        pad1             :  7;
+        iflow_tcp_state  :  4;
+        rflow_tcp_state  :  4;
+        timestamp        : 48;
+        
     }
 }
 

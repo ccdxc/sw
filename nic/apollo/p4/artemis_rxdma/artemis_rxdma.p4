@@ -13,8 +13,8 @@
 #include "vnic_info_rxdma.p4"
 #include "packet_queue.p4"
 #include "common_rxdma.p4"
-#include "flow_aging.p4"
 #include "nat_rxdma.p4"
+#include "session_aging.p4"
 
 parser start {
     return ingress;
@@ -36,7 +36,7 @@ control ingress {
         recirc();
         pkt_enqueue();
         if (p4_to_rxdma.aging_enable == TRUE) {
-            flow_aging();
+            session_aging();
         }
     } else {
         common_p4plus_stage0();
