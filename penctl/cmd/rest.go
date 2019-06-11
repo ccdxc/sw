@@ -18,6 +18,8 @@ import (
 	"strings"
 
 	"github.com/ghodss/yaml"
+
+	"github.com/pensando/sw/nic/agent/nmd/state"
 )
 
 var penHTTPClient = &http.Client{}
@@ -163,8 +165,12 @@ func restPost(v interface{}, url string) error {
 	if postResp.StatusCode != 200 {
 		if verbose {
 			fmt.Println(postResp.Status + " " + url)
+			fmt.Println(postResp.Body)
 		}
-		return errors.New(url + " not found")
+		bodyBytes, _ := ioutil.ReadAll(postResp.Body)
+		jsonResp := state.NaplesConfigResp{}
+		json.Unmarshal(bodyBytes[:len(bodyBytes)-1], &jsonResp)
+		return errors.New(jsonResp.ErrorMsg)
 	}
 	if verbose {
 		fmt.Println("Successfully posted the request")

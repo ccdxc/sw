@@ -35,6 +35,10 @@ def Verify(tc):
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0:
             if "disable-sshd" in tc.iterators.option:
+                req = api.Trigger_CreateExecuteCommandsRequest()
+                for n in tc.Nodes:
+                    common.AddPenctlCommand(req, n, "%s" % (tc.iterators.option))
+                tc.resp = api.Trigger(req)
                 continue
             if "enable-sshd" in tc.iterators.option:
                 return api.types.status.FAILURE
