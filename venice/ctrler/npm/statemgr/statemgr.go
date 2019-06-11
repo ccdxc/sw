@@ -105,16 +105,22 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 		o(statemgr)
 	}
 
+	// newPeriodicUpdater creates a new go subroutines
+	// Given that objects returned by `NewStatemgr` should live for the duration
+	// of the process, we don't have to worry about leaked go subroutines
+	statemgr.periodicUpdaterQueue = newPeriodicUpdater()
+
 	// start all object watches
+	// there is a specific order we do these watches to meet dependency requirements
+	// 1. apps before sgpolicies
+	// 2. endpoints before workload
+	// 3. smartnics before hosts
+	// 4. security-groups before sgpolicies
 	err = ctrler.Module().Watch(statemgr)
 	if err != nil {
 		logger.Fatalf("Error watching module object")
 	}
 	err = ctrler.Tenant().Watch(statemgr)
-	if err != nil {
-		logger.Fatalf("Error watching sg policy")
-	}
-	err = ctrler.SGPolicy().Watch(statemgr)
 	if err != nil {
 		logger.Fatalf("Error watching sg policy")
 	}
@@ -142,16 +148,17 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 	if err != nil {
 		logger.Fatalf("Error watching host")
 	}
-	// FIXME: little hack here to get smart nics before workloads
-	// we need to make this timing independent..
-	time.Sleep(time.Second)
-	err = ctrler.Workload().Watch(statemgr)
-	if err != nil {
-		logger.Fatalf("Error watching workloads")
-	}
 	err = ctrler.Endpoint().Watch(statemgr)
 	if err != nil {
 		logger.Fatalf("Error watching endpoint")
+	}
+	err = ctrler.SGPolicy().Watch(statemgr)
+	if err != nil {
+		logger.Fatalf("Error watching sg policy")
+	}
+	err = ctrler.Workload().Watch(statemgr)
+	if err != nil {
+		logger.Fatalf("Error watching workloads")
 	}
 
 	// create all topics on the message bus
@@ -185,11 +192,6 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 		logger.Errorf("Error starting network RPC server")
 		return nil, err
 	}
-
-	// newPeriodicUpdater creates a new go subroutines
-	// Given that objects returned by `NewStatemgr` should live for the duration
-	// of the process, we don't have to worry about leaked go subroutines
-	statemgr.periodicUpdaterQueue = newPeriodicUpdater()
 
 	return statemgr, nil
 }

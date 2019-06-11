@@ -209,90 +209,100 @@ func (ct *ctrlerCtx) runNetworkWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	opts := api.ListWatchOptions{}
+	logger := ct.logger.WithContext("submodule", "NetworkWatcher")
+
+	// create a grpc client
+	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+	if err == nil {
+		ct.diffNetwork(apiclt)
+	}
 
 	// setup wait group
 	ct.waitGrp.Add(1)
-	defer ct.waitGrp.Done()
-	logger := ct.logger.WithContext("submodule", "NetworkWatcher")
 
-	ct.stats.Counter("Network_Watch").Inc()
-	defer ct.stats.Counter("Network_Watch").Dec()
+	// start a goroutine
+	go func() {
+		defer ct.waitGrp.Done()
+		ct.stats.Counter("Network_Watch").Inc()
+		defer ct.stats.Counter("Network_Watch").Dec()
 
-	// loop forever
-	for {
-		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-		if err != nil {
-			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
-			ct.stats.Counter("Network_ApiClientErr").Inc()
-		} else {
-			logger.Infof("API client connected {%+v}", apicl)
+		// loop forever
+		for {
+			// create a grpc client
+			apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+			if err != nil {
+				logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+				ct.stats.Counter("Network_ApiClientErr").Inc()
+			} else {
+				logger.Infof("API client connected {%+v}", apicl)
 
-			// Network object watcher
-			wt, werr := apicl.NetworkV1().Network().Watch(ctx, &opts)
-			if werr != nil {
-				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				// wait for a second and retry connecting to api server
-				apicl.Close()
-				time.Sleep(time.Second)
-				continue
-			}
-			ct.Lock()
-			ct.watchers[kind] = wt
-			ct.Unlock()
-
-			// perform a diff with API server and local cache
-			time.Sleep(time.Millisecond * 100)
-			ct.diffNetwork(apicl)
-
-			// handle api server watch events
-		innerLoop:
-			for {
-				// wait for events
-				select {
-				case evt, ok := <-wt.EventChan():
-					if !ok {
-						logger.Error("Error receiving from apisrv watcher")
-						ct.stats.Counter("Network_WatchErrors").Inc()
-						break innerLoop
-					}
-
-					// handle event
-					ct.handleNetworkEvent(evt)
+				// Network object watcher
+				wt, werr := apicl.NetworkV1().Network().Watch(ctx, &opts)
+				if werr != nil {
+					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+					// wait for a second and retry connecting to api server
+					apicl.Close()
+					time.Sleep(time.Second)
+					continue
 				}
+				ct.Lock()
+				ct.watchers[kind] = wt
+				ct.Unlock()
+
+				// perform a diff with API server and local cache
+				time.Sleep(time.Millisecond * 100)
+				ct.diffNetwork(apicl)
+
+				// handle api server watch events
+			innerLoop:
+				for {
+					// wait for events
+					select {
+					case evt, ok := <-wt.EventChan():
+						if !ok {
+							logger.Error("Error receiving from apisrv watcher")
+							ct.stats.Counter("Network_WatchErrors").Inc()
+							break innerLoop
+						}
+
+						// handle event
+						ct.handleNetworkEvent(evt)
+					}
+				}
+				apicl.Close()
 			}
-			apicl.Close()
-		}
 
-		// if stop flag is set, we are done
-		if ct.stoped {
-			logger.Infof("Exiting API server watcher")
-			return
-		}
+			// if stop flag is set, we are done
+			if ct.stoped {
+				logger.Infof("Exiting API server watcher")
+				return
+			}
 
-		// wait for a second and retry connecting to api server
-		time.Sleep(time.Second)
-	}
+			// wait for a second and retry connecting to api server
+			time.Sleep(time.Second)
+		}
+	}()
 }
 
 // WatchNetwork starts watch on Network object
 func (ct *ctrlerCtx) WatchNetwork(handler NetworkHandler) error {
 	kind := "Network"
 
-	ct.Lock()
-	defer ct.Unlock()
-
 	// see if we already have a watcher
+	ct.Lock()
 	_, ok := ct.watchers[kind]
+	ct.Unlock()
 	if ok {
 		return fmt.Errorf("Network watcher already exists")
 	}
 
 	// save handler
+	ct.Lock()
 	ct.handlers[kind] = handler
+	ct.Unlock()
 
 	// run Network watcher in a go routine
-	go ct.runNetworkWatcher()
+	ct.runNetworkWatcher()
 
 	return nil
 }
@@ -598,90 +608,100 @@ func (ct *ctrlerCtx) runServiceWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	opts := api.ListWatchOptions{}
+	logger := ct.logger.WithContext("submodule", "ServiceWatcher")
+
+	// create a grpc client
+	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+	if err == nil {
+		ct.diffService(apiclt)
+	}
 
 	// setup wait group
 	ct.waitGrp.Add(1)
-	defer ct.waitGrp.Done()
-	logger := ct.logger.WithContext("submodule", "ServiceWatcher")
 
-	ct.stats.Counter("Service_Watch").Inc()
-	defer ct.stats.Counter("Service_Watch").Dec()
+	// start a goroutine
+	go func() {
+		defer ct.waitGrp.Done()
+		ct.stats.Counter("Service_Watch").Inc()
+		defer ct.stats.Counter("Service_Watch").Dec()
 
-	// loop forever
-	for {
-		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-		if err != nil {
-			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
-			ct.stats.Counter("Service_ApiClientErr").Inc()
-		} else {
-			logger.Infof("API client connected {%+v}", apicl)
+		// loop forever
+		for {
+			// create a grpc client
+			apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+			if err != nil {
+				logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+				ct.stats.Counter("Service_ApiClientErr").Inc()
+			} else {
+				logger.Infof("API client connected {%+v}", apicl)
 
-			// Service object watcher
-			wt, werr := apicl.NetworkV1().Service().Watch(ctx, &opts)
-			if werr != nil {
-				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				// wait for a second and retry connecting to api server
-				apicl.Close()
-				time.Sleep(time.Second)
-				continue
-			}
-			ct.Lock()
-			ct.watchers[kind] = wt
-			ct.Unlock()
-
-			// perform a diff with API server and local cache
-			time.Sleep(time.Millisecond * 100)
-			ct.diffService(apicl)
-
-			// handle api server watch events
-		innerLoop:
-			for {
-				// wait for events
-				select {
-				case evt, ok := <-wt.EventChan():
-					if !ok {
-						logger.Error("Error receiving from apisrv watcher")
-						ct.stats.Counter("Service_WatchErrors").Inc()
-						break innerLoop
-					}
-
-					// handle event
-					ct.handleServiceEvent(evt)
+				// Service object watcher
+				wt, werr := apicl.NetworkV1().Service().Watch(ctx, &opts)
+				if werr != nil {
+					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+					// wait for a second and retry connecting to api server
+					apicl.Close()
+					time.Sleep(time.Second)
+					continue
 				}
+				ct.Lock()
+				ct.watchers[kind] = wt
+				ct.Unlock()
+
+				// perform a diff with API server and local cache
+				time.Sleep(time.Millisecond * 100)
+				ct.diffService(apicl)
+
+				// handle api server watch events
+			innerLoop:
+				for {
+					// wait for events
+					select {
+					case evt, ok := <-wt.EventChan():
+						if !ok {
+							logger.Error("Error receiving from apisrv watcher")
+							ct.stats.Counter("Service_WatchErrors").Inc()
+							break innerLoop
+						}
+
+						// handle event
+						ct.handleServiceEvent(evt)
+					}
+				}
+				apicl.Close()
 			}
-			apicl.Close()
-		}
 
-		// if stop flag is set, we are done
-		if ct.stoped {
-			logger.Infof("Exiting API server watcher")
-			return
-		}
+			// if stop flag is set, we are done
+			if ct.stoped {
+				logger.Infof("Exiting API server watcher")
+				return
+			}
 
-		// wait for a second and retry connecting to api server
-		time.Sleep(time.Second)
-	}
+			// wait for a second and retry connecting to api server
+			time.Sleep(time.Second)
+		}
+	}()
 }
 
 // WatchService starts watch on Service object
 func (ct *ctrlerCtx) WatchService(handler ServiceHandler) error {
 	kind := "Service"
 
-	ct.Lock()
-	defer ct.Unlock()
-
 	// see if we already have a watcher
+	ct.Lock()
 	_, ok := ct.watchers[kind]
+	ct.Unlock()
 	if ok {
 		return fmt.Errorf("Service watcher already exists")
 	}
 
 	// save handler
+	ct.Lock()
 	ct.handlers[kind] = handler
+	ct.Unlock()
 
 	// run Service watcher in a go routine
-	go ct.runServiceWatcher()
+	ct.runServiceWatcher()
 
 	return nil
 }
@@ -987,90 +1007,100 @@ func (ct *ctrlerCtx) runLbPolicyWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	opts := api.ListWatchOptions{}
+	logger := ct.logger.WithContext("submodule", "LbPolicyWatcher")
+
+	// create a grpc client
+	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+	if err == nil {
+		ct.diffLbPolicy(apiclt)
+	}
 
 	// setup wait group
 	ct.waitGrp.Add(1)
-	defer ct.waitGrp.Done()
-	logger := ct.logger.WithContext("submodule", "LbPolicyWatcher")
 
-	ct.stats.Counter("LbPolicy_Watch").Inc()
-	defer ct.stats.Counter("LbPolicy_Watch").Dec()
+	// start a goroutine
+	go func() {
+		defer ct.waitGrp.Done()
+		ct.stats.Counter("LbPolicy_Watch").Inc()
+		defer ct.stats.Counter("LbPolicy_Watch").Dec()
 
-	// loop forever
-	for {
-		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-		if err != nil {
-			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
-			ct.stats.Counter("LbPolicy_ApiClientErr").Inc()
-		} else {
-			logger.Infof("API client connected {%+v}", apicl)
+		// loop forever
+		for {
+			// create a grpc client
+			apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+			if err != nil {
+				logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+				ct.stats.Counter("LbPolicy_ApiClientErr").Inc()
+			} else {
+				logger.Infof("API client connected {%+v}", apicl)
 
-			// LbPolicy object watcher
-			wt, werr := apicl.NetworkV1().LbPolicy().Watch(ctx, &opts)
-			if werr != nil {
-				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				// wait for a second and retry connecting to api server
-				apicl.Close()
-				time.Sleep(time.Second)
-				continue
-			}
-			ct.Lock()
-			ct.watchers[kind] = wt
-			ct.Unlock()
-
-			// perform a diff with API server and local cache
-			time.Sleep(time.Millisecond * 100)
-			ct.diffLbPolicy(apicl)
-
-			// handle api server watch events
-		innerLoop:
-			for {
-				// wait for events
-				select {
-				case evt, ok := <-wt.EventChan():
-					if !ok {
-						logger.Error("Error receiving from apisrv watcher")
-						ct.stats.Counter("LbPolicy_WatchErrors").Inc()
-						break innerLoop
-					}
-
-					// handle event
-					ct.handleLbPolicyEvent(evt)
+				// LbPolicy object watcher
+				wt, werr := apicl.NetworkV1().LbPolicy().Watch(ctx, &opts)
+				if werr != nil {
+					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+					// wait for a second and retry connecting to api server
+					apicl.Close()
+					time.Sleep(time.Second)
+					continue
 				}
+				ct.Lock()
+				ct.watchers[kind] = wt
+				ct.Unlock()
+
+				// perform a diff with API server and local cache
+				time.Sleep(time.Millisecond * 100)
+				ct.diffLbPolicy(apicl)
+
+				// handle api server watch events
+			innerLoop:
+				for {
+					// wait for events
+					select {
+					case evt, ok := <-wt.EventChan():
+						if !ok {
+							logger.Error("Error receiving from apisrv watcher")
+							ct.stats.Counter("LbPolicy_WatchErrors").Inc()
+							break innerLoop
+						}
+
+						// handle event
+						ct.handleLbPolicyEvent(evt)
+					}
+				}
+				apicl.Close()
 			}
-			apicl.Close()
-		}
 
-		// if stop flag is set, we are done
-		if ct.stoped {
-			logger.Infof("Exiting API server watcher")
-			return
-		}
+			// if stop flag is set, we are done
+			if ct.stoped {
+				logger.Infof("Exiting API server watcher")
+				return
+			}
 
-		// wait for a second and retry connecting to api server
-		time.Sleep(time.Second)
-	}
+			// wait for a second and retry connecting to api server
+			time.Sleep(time.Second)
+		}
+	}()
 }
 
 // WatchLbPolicy starts watch on LbPolicy object
 func (ct *ctrlerCtx) WatchLbPolicy(handler LbPolicyHandler) error {
 	kind := "LbPolicy"
 
-	ct.Lock()
-	defer ct.Unlock()
-
 	// see if we already have a watcher
+	ct.Lock()
 	_, ok := ct.watchers[kind]
+	ct.Unlock()
 	if ok {
 		return fmt.Errorf("LbPolicy watcher already exists")
 	}
 
 	// save handler
+	ct.Lock()
 	ct.handlers[kind] = handler
+	ct.Unlock()
 
 	// run LbPolicy watcher in a go routine
-	go ct.runLbPolicyWatcher()
+	ct.runLbPolicyWatcher()
 
 	return nil
 }
@@ -1376,90 +1406,100 @@ func (ct *ctrlerCtx) runVirtualRouterWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	opts := api.ListWatchOptions{}
+	logger := ct.logger.WithContext("submodule", "VirtualRouterWatcher")
+
+	// create a grpc client
+	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+	if err == nil {
+		ct.diffVirtualRouter(apiclt)
+	}
 
 	// setup wait group
 	ct.waitGrp.Add(1)
-	defer ct.waitGrp.Done()
-	logger := ct.logger.WithContext("submodule", "VirtualRouterWatcher")
 
-	ct.stats.Counter("VirtualRouter_Watch").Inc()
-	defer ct.stats.Counter("VirtualRouter_Watch").Dec()
+	// start a goroutine
+	go func() {
+		defer ct.waitGrp.Done()
+		ct.stats.Counter("VirtualRouter_Watch").Inc()
+		defer ct.stats.Counter("VirtualRouter_Watch").Dec()
 
-	// loop forever
-	for {
-		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-		if err != nil {
-			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
-			ct.stats.Counter("VirtualRouter_ApiClientErr").Inc()
-		} else {
-			logger.Infof("API client connected {%+v}", apicl)
+		// loop forever
+		for {
+			// create a grpc client
+			apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+			if err != nil {
+				logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+				ct.stats.Counter("VirtualRouter_ApiClientErr").Inc()
+			} else {
+				logger.Infof("API client connected {%+v}", apicl)
 
-			// VirtualRouter object watcher
-			wt, werr := apicl.NetworkV1().VirtualRouter().Watch(ctx, &opts)
-			if werr != nil {
-				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				// wait for a second and retry connecting to api server
-				apicl.Close()
-				time.Sleep(time.Second)
-				continue
-			}
-			ct.Lock()
-			ct.watchers[kind] = wt
-			ct.Unlock()
-
-			// perform a diff with API server and local cache
-			time.Sleep(time.Millisecond * 100)
-			ct.diffVirtualRouter(apicl)
-
-			// handle api server watch events
-		innerLoop:
-			for {
-				// wait for events
-				select {
-				case evt, ok := <-wt.EventChan():
-					if !ok {
-						logger.Error("Error receiving from apisrv watcher")
-						ct.stats.Counter("VirtualRouter_WatchErrors").Inc()
-						break innerLoop
-					}
-
-					// handle event
-					ct.handleVirtualRouterEvent(evt)
+				// VirtualRouter object watcher
+				wt, werr := apicl.NetworkV1().VirtualRouter().Watch(ctx, &opts)
+				if werr != nil {
+					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+					// wait for a second and retry connecting to api server
+					apicl.Close()
+					time.Sleep(time.Second)
+					continue
 				}
+				ct.Lock()
+				ct.watchers[kind] = wt
+				ct.Unlock()
+
+				// perform a diff with API server and local cache
+				time.Sleep(time.Millisecond * 100)
+				ct.diffVirtualRouter(apicl)
+
+				// handle api server watch events
+			innerLoop:
+				for {
+					// wait for events
+					select {
+					case evt, ok := <-wt.EventChan():
+						if !ok {
+							logger.Error("Error receiving from apisrv watcher")
+							ct.stats.Counter("VirtualRouter_WatchErrors").Inc()
+							break innerLoop
+						}
+
+						// handle event
+						ct.handleVirtualRouterEvent(evt)
+					}
+				}
+				apicl.Close()
 			}
-			apicl.Close()
-		}
 
-		// if stop flag is set, we are done
-		if ct.stoped {
-			logger.Infof("Exiting API server watcher")
-			return
-		}
+			// if stop flag is set, we are done
+			if ct.stoped {
+				logger.Infof("Exiting API server watcher")
+				return
+			}
 
-		// wait for a second and retry connecting to api server
-		time.Sleep(time.Second)
-	}
+			// wait for a second and retry connecting to api server
+			time.Sleep(time.Second)
+		}
+	}()
 }
 
 // WatchVirtualRouter starts watch on VirtualRouter object
 func (ct *ctrlerCtx) WatchVirtualRouter(handler VirtualRouterHandler) error {
 	kind := "VirtualRouter"
 
-	ct.Lock()
-	defer ct.Unlock()
-
 	// see if we already have a watcher
+	ct.Lock()
 	_, ok := ct.watchers[kind]
+	ct.Unlock()
 	if ok {
 		return fmt.Errorf("VirtualRouter watcher already exists")
 	}
 
 	// save handler
+	ct.Lock()
 	ct.handlers[kind] = handler
+	ct.Unlock()
 
 	// run VirtualRouter watcher in a go routine
-	go ct.runVirtualRouterWatcher()
+	ct.runVirtualRouterWatcher()
 
 	return nil
 }

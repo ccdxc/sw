@@ -1000,6 +1000,13 @@ func TestWorkloadUpdate(t *testing.T) {
 	foundEp, err = stateMgr.FindEndpoint("default", "testWorkload-0002.0406.0800")
 	Assert(t, (err != nil), "found endpoint for deleted interface", foundEp)
 
+	// trigger a dummy and verify endpoint is not deleted
+	nwr.ObjectMeta.GenerationID = "2"
+	err = stateMgr.ctrler.Workload().Update(&nwr)
+	AssertOk(t, err, "Could not update the workload")
+	foundEp, err = stateMgr.FindEndpoint("default", "testWorkload-0001.0201.0203")
+	AssertOk(t, err, "Could not find the new endpoint")
+
 	// delete the workload
 	err = stateMgr.ctrler.Workload().Delete(&nwr)
 	AssertOk(t, err, "Error deleting the workload")

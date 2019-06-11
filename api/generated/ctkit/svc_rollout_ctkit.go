@@ -209,90 +209,100 @@ func (ct *ctrlerCtx) runRolloutWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	opts := api.ListWatchOptions{}
+	logger := ct.logger.WithContext("submodule", "RolloutWatcher")
+
+	// create a grpc client
+	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+	if err == nil {
+		ct.diffRollout(apiclt)
+	}
 
 	// setup wait group
 	ct.waitGrp.Add(1)
-	defer ct.waitGrp.Done()
-	logger := ct.logger.WithContext("submodule", "RolloutWatcher")
 
-	ct.stats.Counter("Rollout_Watch").Inc()
-	defer ct.stats.Counter("Rollout_Watch").Dec()
+	// start a goroutine
+	go func() {
+		defer ct.waitGrp.Done()
+		ct.stats.Counter("Rollout_Watch").Inc()
+		defer ct.stats.Counter("Rollout_Watch").Dec()
 
-	// loop forever
-	for {
-		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-		if err != nil {
-			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
-			ct.stats.Counter("Rollout_ApiClientErr").Inc()
-		} else {
-			logger.Infof("API client connected {%+v}", apicl)
+		// loop forever
+		for {
+			// create a grpc client
+			apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+			if err != nil {
+				logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+				ct.stats.Counter("Rollout_ApiClientErr").Inc()
+			} else {
+				logger.Infof("API client connected {%+v}", apicl)
 
-			// Rollout object watcher
-			wt, werr := apicl.RolloutV1().Rollout().Watch(ctx, &opts)
-			if werr != nil {
-				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				// wait for a second and retry connecting to api server
-				apicl.Close()
-				time.Sleep(time.Second)
-				continue
-			}
-			ct.Lock()
-			ct.watchers[kind] = wt
-			ct.Unlock()
-
-			// perform a diff with API server and local cache
-			time.Sleep(time.Millisecond * 100)
-			ct.diffRollout(apicl)
-
-			// handle api server watch events
-		innerLoop:
-			for {
-				// wait for events
-				select {
-				case evt, ok := <-wt.EventChan():
-					if !ok {
-						logger.Error("Error receiving from apisrv watcher")
-						ct.stats.Counter("Rollout_WatchErrors").Inc()
-						break innerLoop
-					}
-
-					// handle event
-					ct.handleRolloutEvent(evt)
+				// Rollout object watcher
+				wt, werr := apicl.RolloutV1().Rollout().Watch(ctx, &opts)
+				if werr != nil {
+					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+					// wait for a second and retry connecting to api server
+					apicl.Close()
+					time.Sleep(time.Second)
+					continue
 				}
+				ct.Lock()
+				ct.watchers[kind] = wt
+				ct.Unlock()
+
+				// perform a diff with API server and local cache
+				time.Sleep(time.Millisecond * 100)
+				ct.diffRollout(apicl)
+
+				// handle api server watch events
+			innerLoop:
+				for {
+					// wait for events
+					select {
+					case evt, ok := <-wt.EventChan():
+						if !ok {
+							logger.Error("Error receiving from apisrv watcher")
+							ct.stats.Counter("Rollout_WatchErrors").Inc()
+							break innerLoop
+						}
+
+						// handle event
+						ct.handleRolloutEvent(evt)
+					}
+				}
+				apicl.Close()
 			}
-			apicl.Close()
-		}
 
-		// if stop flag is set, we are done
-		if ct.stoped {
-			logger.Infof("Exiting API server watcher")
-			return
-		}
+			// if stop flag is set, we are done
+			if ct.stoped {
+				logger.Infof("Exiting API server watcher")
+				return
+			}
 
-		// wait for a second and retry connecting to api server
-		time.Sleep(time.Second)
-	}
+			// wait for a second and retry connecting to api server
+			time.Sleep(time.Second)
+		}
+	}()
 }
 
 // WatchRollout starts watch on Rollout object
 func (ct *ctrlerCtx) WatchRollout(handler RolloutHandler) error {
 	kind := "Rollout"
 
-	ct.Lock()
-	defer ct.Unlock()
-
 	// see if we already have a watcher
+	ct.Lock()
 	_, ok := ct.watchers[kind]
+	ct.Unlock()
 	if ok {
 		return fmt.Errorf("Rollout watcher already exists")
 	}
 
 	// save handler
+	ct.Lock()
 	ct.handlers[kind] = handler
+	ct.Unlock()
 
 	// run Rollout watcher in a go routine
-	go ct.runRolloutWatcher()
+	ct.runRolloutWatcher()
 
 	return nil
 }
@@ -598,90 +608,100 @@ func (ct *ctrlerCtx) runRolloutActionWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	opts := api.ListWatchOptions{}
+	logger := ct.logger.WithContext("submodule", "RolloutActionWatcher")
+
+	// create a grpc client
+	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+	if err == nil {
+		ct.diffRolloutAction(apiclt)
+	}
 
 	// setup wait group
 	ct.waitGrp.Add(1)
-	defer ct.waitGrp.Done()
-	logger := ct.logger.WithContext("submodule", "RolloutActionWatcher")
 
-	ct.stats.Counter("RolloutAction_Watch").Inc()
-	defer ct.stats.Counter("RolloutAction_Watch").Dec()
+	// start a goroutine
+	go func() {
+		defer ct.waitGrp.Done()
+		ct.stats.Counter("RolloutAction_Watch").Inc()
+		defer ct.stats.Counter("RolloutAction_Watch").Dec()
 
-	// loop forever
-	for {
-		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-		if err != nil {
-			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
-			ct.stats.Counter("RolloutAction_ApiClientErr").Inc()
-		} else {
-			logger.Infof("API client connected {%+v}", apicl)
+		// loop forever
+		for {
+			// create a grpc client
+			apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+			if err != nil {
+				logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+				ct.stats.Counter("RolloutAction_ApiClientErr").Inc()
+			} else {
+				logger.Infof("API client connected {%+v}", apicl)
 
-			// RolloutAction object watcher
-			wt, werr := apicl.RolloutV1().RolloutAction().Watch(ctx, &opts)
-			if werr != nil {
-				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				// wait for a second and retry connecting to api server
-				apicl.Close()
-				time.Sleep(time.Second)
-				continue
-			}
-			ct.Lock()
-			ct.watchers[kind] = wt
-			ct.Unlock()
-
-			// perform a diff with API server and local cache
-			time.Sleep(time.Millisecond * 100)
-			ct.diffRolloutAction(apicl)
-
-			// handle api server watch events
-		innerLoop:
-			for {
-				// wait for events
-				select {
-				case evt, ok := <-wt.EventChan():
-					if !ok {
-						logger.Error("Error receiving from apisrv watcher")
-						ct.stats.Counter("RolloutAction_WatchErrors").Inc()
-						break innerLoop
-					}
-
-					// handle event
-					ct.handleRolloutActionEvent(evt)
+				// RolloutAction object watcher
+				wt, werr := apicl.RolloutV1().RolloutAction().Watch(ctx, &opts)
+				if werr != nil {
+					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+					// wait for a second and retry connecting to api server
+					apicl.Close()
+					time.Sleep(time.Second)
+					continue
 				}
+				ct.Lock()
+				ct.watchers[kind] = wt
+				ct.Unlock()
+
+				// perform a diff with API server and local cache
+				time.Sleep(time.Millisecond * 100)
+				ct.diffRolloutAction(apicl)
+
+				// handle api server watch events
+			innerLoop:
+				for {
+					// wait for events
+					select {
+					case evt, ok := <-wt.EventChan():
+						if !ok {
+							logger.Error("Error receiving from apisrv watcher")
+							ct.stats.Counter("RolloutAction_WatchErrors").Inc()
+							break innerLoop
+						}
+
+						// handle event
+						ct.handleRolloutActionEvent(evt)
+					}
+				}
+				apicl.Close()
 			}
-			apicl.Close()
-		}
 
-		// if stop flag is set, we are done
-		if ct.stoped {
-			logger.Infof("Exiting API server watcher")
-			return
-		}
+			// if stop flag is set, we are done
+			if ct.stoped {
+				logger.Infof("Exiting API server watcher")
+				return
+			}
 
-		// wait for a second and retry connecting to api server
-		time.Sleep(time.Second)
-	}
+			// wait for a second and retry connecting to api server
+			time.Sleep(time.Second)
+		}
+	}()
 }
 
 // WatchRolloutAction starts watch on RolloutAction object
 func (ct *ctrlerCtx) WatchRolloutAction(handler RolloutActionHandler) error {
 	kind := "RolloutAction"
 
-	ct.Lock()
-	defer ct.Unlock()
-
 	// see if we already have a watcher
+	ct.Lock()
 	_, ok := ct.watchers[kind]
+	ct.Unlock()
 	if ok {
 		return fmt.Errorf("RolloutAction watcher already exists")
 	}
 
 	// save handler
+	ct.Lock()
 	ct.handlers[kind] = handler
+	ct.Unlock()
 
 	// run RolloutAction watcher in a go routine
-	go ct.runRolloutActionWatcher()
+	ct.runRolloutActionWatcher()
 
 	return nil
 }

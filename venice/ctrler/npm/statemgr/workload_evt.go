@@ -246,12 +246,6 @@ func (ws *WorkloadState) createEndpoints() error {
 		// check if we already have the endpoint for this workload
 		name, _ := strconv.ParseMacAddr(ws.Workload.Spec.Interfaces[ii].MACAddress)
 		epName := ws.Workload.Name + "-" + name
-		oldEP, err := ws.stateMgr.FindEndpoint(ws.Workload.Tenant, epName)
-		if err == nil {
-			// delete the old endpoint
-			ws.stateMgr.ctrler.Endpoint().Delete(&oldEP.Endpoint.Endpoint)
-		}
-
 		nodeUUID := ""
 		// find the smart nic by name or mac addr
 		for jj := range host.Host.Spec.SmartNICs {
@@ -314,10 +308,30 @@ func (ws *WorkloadState) createEndpoints() error {
 			epInfo.Status.IPv4Address = ws.Workload.Spec.Interfaces[ii].IpAddresses[0]
 		}
 
-		// create it in apiserver
-		err = ws.stateMgr.ctrler.Endpoint().Create(&epInfo)
-		if err != nil {
-			log.Errorf("Error creating endpoint. Err: %v", err)
+		// see if we need to delete old endpoint
+		oldEP, err := ws.stateMgr.FindEndpoint(ws.Workload.Tenant, epName)
+		if err == nil {
+			_, isSpecDifferent := ref.ObjDiff(oldEP.Endpoint.Spec, epInfo.Spec)
+			_, isStatusDifferent := ref.ObjDiff(oldEP.Endpoint.Status, epInfo.Status)
+
+			if isSpecDifferent || isStatusDifferent {
+				// delete the old endpoint
+				ws.stateMgr.ctrler.Endpoint().Delete(&oldEP.Endpoint.Endpoint)
+
+				// create new endpoint
+				err = ws.stateMgr.ctrler.Endpoint().Create(&epInfo)
+				if err != nil {
+					log.Errorf("Error creating endpoint. Err: %v", err)
+				}
+			} else {
+				log.Infof("Existing endpoint for workload is same as new one %+v ", epInfo)
+			}
+		} else {
+			// create new endpoint
+			err = ws.stateMgr.ctrler.Endpoint().Create(&epInfo)
+			if err != nil {
+				log.Errorf("Error creating endpoint. Err: %v", err)
+			}
 		}
 	}
 

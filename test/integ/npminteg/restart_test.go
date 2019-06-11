@@ -12,6 +12,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
 	"github.com/pensando/sw/venice/ctrler/npm"
 	"github.com/pensando/sw/venice/globals"
@@ -235,6 +236,152 @@ func (it *integTestSuite) TestNpmRestart(c *C) {
 	}
 }
 
+func (it *integTestSuite) TestNpmRestartWithSGPolicy(c *C) {
+	const numApps = 10
+	// if not present create the default tenant
+	it.CreateTenant("default")
+
+	// app
+	appNames := []string{}
+	for i := 0; i < numApps; i++ {
+		appName := fmt.Sprintf("ftpApp-%d", i)
+		appNames = append(appNames, appName)
+		ftpApp := security.App{
+			TypeMeta: api.TypeMeta{Kind: "App"},
+			ObjectMeta: api.ObjectMeta{
+				Name:      appName,
+				Namespace: "default",
+				Tenant:    "default",
+			},
+			Spec: security.AppSpec{
+				ProtoPorts: []security.ProtoPort{
+					{
+						Protocol: "tcp",
+						Ports:    "21",
+					},
+				},
+				Timeout: "5m",
+				ALG: &security.ALG{
+					Type: "FTP",
+					Ftp: &security.Ftp{
+						AllowMismatchIPAddress: true,
+					},
+				},
+			},
+		}
+		_, err := it.apisrvClient.SecurityV1().App().Create(context.Background(), &ftpApp)
+		AssertOk(c, err, "error creating app")
+	}
+
+	// create a policy using this alg
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:       "default",
+			Namespace:    "default",
+			Name:         "test-sgpolicy",
+			GenerationID: "1",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []security.SGRule{
+				{
+					FromIPAddresses: []string{"2.101.0.0/22"},
+					ToIPAddresses:   []string{"2.101.0.0/24"},
+					Apps:            appNames,
+					Action:          "PERMIT",
+				},
+			},
+		},
+	}
+	time.Sleep(time.Millisecond * 100)
+
+	// create sg policy
+	_, err := it.apisrvClient.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
+	AssertOk(c, err, "error creating sg policy")
+
+	// verify agent state has the policy
+	for _, ag := range it.agents {
+		AssertEventually(c, func() (bool, interface{}) {
+			_, gerr := ag.nagent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			if gerr != nil {
+				return false, fmt.Errorf("Error finding sgpolicy for %+v", sgp.ObjectMeta)
+			}
+			return true, nil
+		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListSGPolicy()), "10ms", it.pollTimeout())
+	}
+
+	// verify sgpolicy status reflects propagation status
+	AssertEventually(c, func() (bool, interface{}) {
+		tsgp, gerr := it.apisrvClient.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
+		if gerr != nil {
+			return false, gerr
+		}
+		if tsgp.Status.PropagationStatus.GenerationID != sgp.ObjectMeta.GenerationID {
+			return false, tsgp
+		}
+		if (tsgp.Status.PropagationStatus.Updated != int32(it.numAgents)) || (tsgp.Status.PropagationStatus.Pending != 0) {
+			return false, tsgp
+		}
+		return true, nil
+	}, "SgPolicy status was not updated after creating the policy", "100ms", it.pollTimeout())
+
+	log.Infof("==================== Restarting NPM =========================")
+
+	// stop NPM
+	err = it.ctrler.Stop()
+	AssertOk(c, err, "Error stopping NPM")
+
+	// verify agents are all disconnected
+	for _, ag := range it.agents {
+		AssertEventually(c, func() (bool, interface{}) {
+			return !ag.nagent.IsNpmClientConnected(), nil
+		}, "agents are not disconnected from NPM", "10ms", it.pollTimeout())
+	}
+
+	// restart the NPM
+	it.ctrler, err = npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, "", it.resolverClient, it.logger.WithContext("submodule", "pen-npm"))
+	c.Assert(err, IsNil)
+	time.Sleep(time.Millisecond * 100)
+
+	// verify NPM got the sgpolicy
+	AssertEventually(c, func() (bool, interface{}) {
+		_, nerr := it.ctrler.StateMgr.FindSgpolicy("default", "test-sgpolicy")
+		return (nerr == nil), nil
+	}, "SGPolicy not found on NPM", "10ms", it.pollTimeout())
+
+	// verify agents are all connected back
+	for _, ag := range it.agents {
+		AssertEventually(c, func() (bool, interface{}) {
+			return ag.nagent.IsNpmClientConnected(), nil
+		}, "agents are not connected to NPM", "10ms", it.pollTimeout())
+	}
+
+	// verify agents have the sgpolicy too
+	for _, ag := range it.agents {
+		AssertEventually(c, func() (bool, interface{}) {
+			_, gerr := ag.nagent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			if gerr != nil {
+				return false, fmt.Errorf("Error finding sgpolicy for %+v", sgp.ObjectMeta)
+			}
+			return true, nil
+		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListSGPolicy()), "10ms", it.pollTimeout())
+	}
+
+	// delete the policy
+	time.Sleep(time.Millisecond * 100)
+	err = it.DeleteSgpolicy("default", "default", "test-sgpolicy")
+	c.Assert(err, IsNil)
+
+	// verify policy is removed from all agents
+	for _, ag := range it.agents {
+		AssertEventually(c, func() (bool, interface{}) {
+			_, nerr := ag.nagent.NetworkAgent.FindSGPolicy(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "test-sgpolicy"})
+			return (nerr != nil), nil
+		}, "SGPolicy still found on agent", "100ms", it.pollTimeout())
+	}
+}
+
 func (it *integTestSuite) TestNpmRestartWithWorkload(c *C) {
 	const numWorkloadPerHost = 10
 	// if not present create the default tenant
@@ -261,6 +408,8 @@ func (it *integTestSuite) TestNpmRestartWithWorkload(c *C) {
 			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * numWorkloadPerHost), nil
 		}, "Endpoint count incorrect in agent", "100ms", it.pollTimeout())
 	}
+
+	log.Infof("==================== Restarting NPM =========================")
 
 	// stop NPM
 	err := it.ctrler.Stop()

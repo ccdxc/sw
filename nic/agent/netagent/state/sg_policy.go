@@ -23,6 +23,7 @@ var ErrSGPolicyNotFound = errors.New("sgpolicy not found")
 // CreateSGPolicy creates a security group policy
 func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	var securityGroups []*netproto.SecurityGroup
+	var ruleIDAppLUT sync.Map
 	err := na.validateMeta(sgp.Kind, sgp.ObjectMeta)
 	if err != nil {
 		return err
@@ -98,7 +99,7 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 
 			}
 
-			na.RuleIDAppLUT.Store(i, app)
+			ruleIDAppLUT.Store(i, app)
 		}
 	}
 
@@ -110,14 +111,11 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	// create it in datapath
-	err = na.Datapath.CreateSGPolicy(sgp, vrf.Status.VrfID, securityGroups, &na.RuleIDAppLUT)
+	err = na.Datapath.CreateSGPolicy(sgp, vrf.Status.VrfID, securityGroups, &ruleIDAppLUT)
 	if err != nil {
 		log.Errorf("Error creating security group policy in datapath. SGPolicy {%+v}. Err: %v", sgp, err)
 		return err
 	}
-
-	// Flush the look up table as it always reconstructed
-	na.RuleIDAppLUT = sync.Map{}
 
 	// Add the current sg policy as a dependency to the namespace.
 	err = na.Solver.Add(ns, sgp)
@@ -234,6 +232,7 @@ func (na *Nagent) ListSGPolicy() []*netproto.SGPolicy {
 
 // UpdateSGPolicy updates a security group policy
 func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
+	var ruleIDAppLUT sync.Map
 	// find the corresponding namespace
 	_, err := na.FindNamespace(sgp.ObjectMeta)
 	if err != nil {
@@ -250,6 +249,11 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 	if err != nil {
 		log.Errorf("Failed to find the vrf %v", existingSgp.Spec.VrfName)
 		return err
+	}
+
+	// check if policy contents are same
+	if proto.Equal(&existingSgp.Spec, &sgp.Spec) {
+		return nil
 	}
 
 	// Populate the ID from existing sg policy to ensure that HAL recognizes this.
@@ -276,18 +280,15 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 				return fmt.Errorf("could not find the corresponding app. %v", r.AppName)
 			}
 
-			na.RuleIDAppLUT.Store(i, app)
+			ruleIDAppLUT.Store(i, app)
 		}
 	}
 
-	err = na.Datapath.UpdateSGPolicy(sgp, vrf.Status.VrfID, &na.RuleIDAppLUT)
+	err = na.Datapath.UpdateSGPolicy(sgp, vrf.Status.VrfID, &ruleIDAppLUT)
 	if err != nil {
 		log.Errorf("Error updating the SG Policy {%+v} in datapath. Err: %v", existingSgp, err)
 		return err
 	}
-
-	// Flush the look up table as it always reconstructed
-	na.RuleIDAppLUT = sync.Map{}
 
 	err = na.saveSGPolicy(sgp)
 	return err

@@ -138,8 +138,7 @@ func (na *Nagent) UpdateSecurityProfile(profile *netproto.SecurityProfile) error
 		return err
 	}
 
-	if proto.Equal(profile, existingProfile) {
-		log.Infof("Nothing to update.")
+	if proto.Equal(&profile.Spec, &existingProfile.Spec) {
 		return nil
 	}
 

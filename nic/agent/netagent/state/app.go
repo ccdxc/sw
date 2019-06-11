@@ -264,8 +264,7 @@ func (na *Nagent) UpdateApp(app *netproto.App) error {
 		return err
 	}
 
-	if proto.Equal(app, existingApp) {
-		log.Infof("Nothing to update.")
+	if proto.Equal(&app.Spec, &existingApp.Spec) {
 		return nil
 	}
 

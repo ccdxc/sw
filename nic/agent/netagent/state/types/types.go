@@ -147,7 +147,6 @@ type NetAgent struct {
 	AppDB             map[string]*netproto.App            // App DB
 	VrfDB             map[string]*netproto.Vrf
 	SecurityProfileDB map[string]*netproto.SecurityProfile //Security Profile DB
-	RuleIDAppLUT      sync.Map                             // SGPolicy Rule ID to App Objects look up table.
 	ControllerIPs     []string                             // Controller IPs that NetAgent is using
 	Mode              string                               // Netagent Mode
 	NetAgentStartTime time.Time                            // Time when NetAgent was started

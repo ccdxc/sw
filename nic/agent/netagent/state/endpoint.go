@@ -280,9 +280,9 @@ func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 		return fmt.Errorf("endpoint not found")
 
 	}
+
 	// check if endpoint contents are same
 	if proto.Equal(&oldEp.Spec, &ep.Spec) {
-		log.Infof("Received duplicate endpoint create for ep {%+v}", ep)
 		return nil
 	}
 
