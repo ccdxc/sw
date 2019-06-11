@@ -9,10 +9,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/diagnostics"
+	"github.com/pensando/sw/venice/utils/diagnostics/module"
+	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -87,9 +91,19 @@ func main() {
 		Name:    globals.EvtsMgr,
 		Servers: strings.Split(*resolverURLs, ",")})
 
+	// start module watcher
+	moduleChangeCb := func(diagmod *diagapi.Module) {
+		logger.ResetFilter(diagnostics.GetLogFilter(diagmod.Spec.LogLevel))
+		logger.InfoLog("method", "moduleChangeCb", "msg", "setting log level", "moduleLogLevel", diagmod.Spec.LogLevel)
+	}
+	watcherOption := evtsmgr.WithModuleWatcher(module.GetWatcher(fmt.Sprintf("%s-%s", utils.GetHostname(), globals.EvtsMgr), globals.APIServer, resolverClient, logger, moduleChangeCb))
+
+	// add diagnostics service
+	diagOption := evtsmgr.WithDiagnosticsService(diagsvc.GetDiagnosticsServiceWithDefaults(globals.EvtsMgr, utils.GetHostname(), diagapi.ModuleStatus_Venice, resolverClient, logger))
+
 	// create the controller
 	emgr, err := evtsmgr.NewEventsManager(globals.EvtsMgr, *listenURL,
-		resolverClient, logger)
+		resolverClient, logger, watcherOption, diagOption)
 	if err != nil {
 		log.Fatalf("error creating events manager instance: %v", err)
 	}

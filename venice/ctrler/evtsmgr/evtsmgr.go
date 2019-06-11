@@ -21,6 +21,8 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/balancer"
+	"github.com/pensando/sw/venice/utils/diagnostics"
+	"github.com/pensando/sw/venice/utils/diagnostics/module"
 	"github.com/pensando/sw/venice/utils/elastic"
 	mapper "github.com/pensando/sw/venice/utils/elastic/mapper"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -62,12 +64,28 @@ type EventsManager struct {
 	alertEngine   alertengine.Interface // alert engine
 	ctxCancelFunc context.CancelFunc    // cancel func
 	wg            sync.WaitGroup        // wait group for API server watcher
+	diagSvc       diagnostics.Service
+	moduleWatcher module.Watcher
 }
 
 // WithElasticClient passes a custom client for Elastic
 func WithElasticClient(esClient elastic.ESClient) Option {
 	return func(em *EventsManager) {
 		em.esClient = esClient
+	}
+}
+
+// WithDiagnosticsService passes a custom diagnostics service
+func WithDiagnosticsService(diagSvc diagnostics.Service) Option {
+	return func(em *EventsManager) {
+		em.diagSvc = diagSvc
+	}
+}
+
+// WithModuleWatcher passes a module watcher
+func WithModuleWatcher(moduleWatcher module.Watcher) Option {
+	return func(em *EventsManager) {
+		em.moduleWatcher = moduleWatcher
 	}
 }
 
@@ -126,16 +144,23 @@ func NewEventsManager(serverName, serverURL string, resolverClient resolver.Inte
 	}
 
 	// create RPC server
-	em.RPCServer, err = rpcserver.NewRPCServer(serverName, serverURL, em.esClient, em.alertEngine, em.memDb, logger)
+	em.RPCServer, err = rpcserver.NewRPCServer(serverName, serverURL, em.esClient, em.alertEngine, em.memDb, logger, em.diagSvc)
 	if err != nil {
 		return nil, errors.Wrap(err, "error instantiating RPC server")
 	}
-
 	return em, nil
 }
 
 // Stop stops events manager
 func (em *EventsManager) Stop() {
+	if em.moduleWatcher != nil {
+		em.moduleWatcher.Stop()
+	}
+
+	if em.diagSvc != nil {
+		em.diagSvc.Stop()
+	}
+
 	if em.RPCServer != nil {
 		em.RPCServer.Stop()
 		em.RPCServer = nil

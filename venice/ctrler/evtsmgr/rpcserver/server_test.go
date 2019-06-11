@@ -82,7 +82,7 @@ func setup(t *testing.T) (*mock.ElasticServer, apiserver.Server, *RPCServer, *rp
 	AssertOk(t, err, "failed to create alert engine")
 
 	// create grpc server
-	evtsRPCServer, err := NewRPCServer(globals.EvtsMgr, testServerURL, esClient, alertEngine, memDb, tLogger)
+	evtsRPCServer, err := NewRPCServer(globals.EvtsMgr, testServerURL, esClient, alertEngine, memDb, tLogger, nil)
 	AssertOk(t, err, "failed to create rpc server")
 	testServerURL := evtsRPCServer.GetListenURL()
 
@@ -191,31 +191,31 @@ func TestEvtsMgrRPCServerInstantiation(t *testing.T) {
 	esClient := &elastic.Client{}
 
 	// empty listenURL name
-	_, err := NewRPCServer(t.Name(), "", esClient, nil, policyDb, tLogger)
+	_, err := NewRPCServer(t.Name(), "", esClient, nil, policyDb, tLogger, nil)
 	Assert(t, err != nil && strings.Contains(err.Error(), "all parameters are required"), "expected failure, RPCServer init succeeded")
 
 	// empty server name
-	_, err = NewRPCServer("", testServerURL, esClient, nil, policyDb, tLogger)
+	_, err = NewRPCServer("", testServerURL, esClient, nil, policyDb, tLogger, nil)
 	Assert(t, err != nil && strings.Contains(err.Error(), "all parameters are required"), "expected failure, RPCServer init succeeded")
 
 	// nil elastic client
-	_, err = NewRPCServer(t.Name(), testServerURL, nil, nil, policyDb, tLogger)
+	_, err = NewRPCServer(t.Name(), testServerURL, nil, nil, policyDb, tLogger, nil)
 	Assert(t, err != nil && strings.Contains(err.Error(), "all parameters are required"), "expected failure, RPCServer init succeeded")
 
 	// nil alert engine
-	_, err = NewRPCServer(t.Name(), testServerURL, esClient, nil, policyDb, tLogger)
+	_, err = NewRPCServer(t.Name(), testServerURL, esClient, nil, policyDb, tLogger, nil)
 	Assert(t, err != nil && strings.Contains(err.Error(), "all parameters are required"), "expected failure, RPCServer init succeeded")
 
 	// empty mem db
-	_, err = NewRPCServer(t.Name(), testServerURL, esClient, alertEngine, nil, tLogger)
+	_, err = NewRPCServer(t.Name(), testServerURL, esClient, alertEngine, nil, tLogger, nil)
 	Assert(t, err != nil && strings.Contains(err.Error(), "all parameters are required"), "expected failure, RPCServer init succeeded")
 
 	// invalid listen-url
-	_, err = NewRPCServer(t.Name(), "invalid-url", esClient, alertEngine, policyDb, tLogger)
+	_, err = NewRPCServer(t.Name(), "invalid-url", esClient, alertEngine, policyDb, tLogger, nil)
 	Assert(t, err != nil && strings.Contains(err.Error(), "error creating rpc server"), "expected failure, RPCServer init succeeded")
 
 	// nil logger
-	_, err = NewRPCServer(t.Name(), testServerURL, esClient, alertEngine, policyDb, nil)
+	_, err = NewRPCServer(t.Name(), testServerURL, esClient, alertEngine, policyDb, nil, nil)
 	Assert(t, err != nil && strings.Contains(err.Error(), "all parameters are required"), "expected failure, RPCServer init succeeded")
 }
 

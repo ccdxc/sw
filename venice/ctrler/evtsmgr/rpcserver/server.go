@@ -9,6 +9,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/alertengine"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
 	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/diagnostics"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -38,7 +39,7 @@ func (rs *RPCServer) GetListenURL() string {
 
 // NewRPCServer creates a new instance of events RPC server
 func NewRPCServer(serverName, listenURL string, esclient elastic.ESClient, alertEngine alertengine.Interface,
-	memdb *memdb.MemDb, logger log.Logger) (*RPCServer, error) {
+	memdb *memdb.MemDb, logger log.Logger, diagSvc diagnostics.Service) (*RPCServer, error) {
 	if utils.IsEmpty(serverName) || utils.IsEmpty(listenURL) || esclient == nil || alertEngine == nil || memdb == nil || logger == nil {
 		return nil, errors.New("all parameters are required")
 	}
@@ -63,6 +64,9 @@ func NewRPCServer(serverName, listenURL string, esclient elastic.ESClient, alert
 	// register the servers
 	emgrpc.RegisterEvtsMgrAPIServer(rpcServer.GrpcServer, evtsMgrHandler)
 	emgrpc.RegisterEventPolicyAPIServer(rpcServer.GrpcServer, evtsPolicyHandler)
+	if diagSvc != nil {
+		diagnostics.RegisterService(rpcServer.GrpcServer, diagSvc)
+	}
 	rpcServer.Start()
 
 	return &RPCServer{

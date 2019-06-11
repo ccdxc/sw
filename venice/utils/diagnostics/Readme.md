@@ -1,7 +1,7 @@
 ## Corvo Diagnostics Framework
 
 Corvo can be used to get diagnostics information from running process or container.  Each process or container is represented by a Module object. It is currently created in API server by CMD for venice containers.
-Currently, any Venice grpc server can include Corvo service. It includes an implementation for a handler to query logs. One can extend it to define new query and its handler to return custom diagnostics. Examples could be debug stats, profiling information etc.
+Currently, any Venice grpc server can include Corvo service. It includes an implementation for a handler to query logs and expvars. One can extend it to define new query and its handler to return custom diagnostics. Examples could be debug stats, profiling information etc.
 For an example integration you can look at Spyglass. One can set a log level in module object for Spyglass and query its logs using Debug action.
 
 
