@@ -299,16 +299,11 @@ func (it *veniceIntegSuite) launchCMDServer() {
 	grpc.RegisterSmartNICRegistrationServer(rpcServer.GrpcServer, it.smartNICServer)
 	rpcServer.Start()
 
-	// create node watcher
-	node := &cluster.Node{
-		TypeMeta: api.TypeMeta{
-			Kind: "Node",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: "venice",
-		},
+	cmdenv.MetricsService = cmdsvc.NewMetricsService("node", "cluster", cmdenv.ResolverClient)
+	err = cmdenv.MetricsService.Start()
+	if err != nil {
+		log.Fatalf("Failed to start metrics service with error: %v", err)
 	}
-	nodewatcher.NewNodeWatcher(it.ctx, node, it.resolverClient, 10, it.logger)
 
 	// Start CMD config watcher
 	cmdenv.Logger = it.logger
@@ -329,6 +324,7 @@ func (it *veniceIntegSuite) launchCMDServer() {
 	// start CMD auth server
 	go cmdauth.RunAuthServer(cmdAuthServer, nil)
 	go cmdauth.RunLeaderInstanceServer(cmdLeaderInstanceServer, nil)
+	go it.smartNICServer.MonitorHealth()
 }
 
 func (it *veniceIntegSuite) startNmd(c *check.C) {
@@ -759,8 +755,7 @@ func (it *veniceIntegSuite) startAgent() {
 		it.snics = append(it.snics, &snic)
 
 		if i == 0 { // start only 1 instance
-			// Init the TSDB
-			err = nodewatcher.NewNodeWatcher(it.ctx, node, it.resolverClient, 10, it.logger)
+			err = nodewatcher.NewNodeWatcher(it.ctx, node, 10*time.Second, it.logger)
 			if err != nil {
 				log.Fatalf("Error creating NodeWatcher. Err: %v", err)
 			}
@@ -800,7 +795,7 @@ func (it *veniceIntegSuite) startAgent() {
 			}
 			snic.tmAgent = res
 
-			go res.ReportMetrics(10)
+			go res.ReportMetrics(10 * time.Second)
 		}
 	}
 }
@@ -941,6 +936,9 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	if err != nil {
 		c.Fatalf("Error setting up TLS provider: %v", err)
 	}
+
+	// Override default CMD metrics send interval
+	cmdsvc.MetricsSendInterval = 10 * time.Second
 
 	// Create resolver. Resolver uses the CMD Auth server, so it will start when RunAuthServer is invoked()
 	it.createResolver()

@@ -53,4 +53,5 @@ var (
 	VeniceRolloutClient  types.VeniceRolloutClient
 	ServiceRolloutClient types.ServiceRolloutClient
 	Recorder             events.Recorder
+	MetricsService       types.MetricsService
 )

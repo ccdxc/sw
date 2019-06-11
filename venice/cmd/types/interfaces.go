@@ -6,6 +6,7 @@ import (
 	k8sclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	rolloutproto "github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
@@ -412,4 +413,25 @@ type RolloutMgr interface {
 	Start()
 	// Stop the Rollmgr
 	Stop()
+}
+
+// ClusterMetrics is the metrics type for the Cluster object.
+type ClusterMetrics struct {
+	AdmittedNICs       api.Counter
+	PendingNICs        api.Counter
+	RejectedNICs       api.Counter
+	DecommissionedNICs api.Counter
+	HealthyNICs        api.Counter
+	UnhealthyNICs      api.Counter
+	DisconnectedNICs   api.Counter
+}
+
+// MetricsService is responsible for reporting node-level and cluster-level metrics
+type MetricsService interface {
+	// Start the metrics service
+	Start() error
+	// Stop the metrics service
+	Stop()
+	// UpdateCounters updates counters that are part of cluster metrics
+	UpdateCounters(m map[string]int64)
 }

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cmd/apiclient"
 	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/credentials"
@@ -23,7 +22,6 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore/etcd"
 	kstore "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/nodewatcher"
 	"github.com/pensando/sw/venice/utils/quorum"
 	"github.com/pensando/sw/venice/utils/quorum/store"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -237,23 +235,18 @@ func StartQuorumServices(c utils.Cluster) {
 
 	env.ServiceTracker.Run(env.ResolverClient, env.NodeService)
 
+	env.MetricsService = services.NewMetricsService(c.NodeID, c.Name, env.ResolverClient)
+	err = env.MetricsService.Start()
+	if err != nil {
+		log.Errorf("Failed to start metrics service with error: %v", err)
+	}
 	if env.AuthRPCServer == nil {
 		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
 	}
-
-	node := &cluster.Node{
-		TypeMeta: api.TypeMeta{
-			Kind: "Node",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: c.NodeID,
-		},
-	}
-	nodewatcher.NewNodeWatcher(context.Background(), node, env.ResolverClient.(resolver.Interface), 30, env.Logger)
 }
 
 // StartNodeServices starts services running on non-quorum node
-func StartNodeServices(nodeID, VirtualIP string) {
+func StartNodeServices(nodeID, clusterID, VirtualIP string) {
 	log.Debugf("Starting node services on startup")
 	env.NtpService = services.NewNtpService(nil)
 	env.NtpService.NtpConfigFile([]string{VirtualIP})
@@ -278,19 +271,15 @@ func StartNodeServices(nodeID, VirtualIP string) {
 	env.ServiceTracker = services.NewServiceTracker(nil)
 	env.ServiceTracker.Run(env.ResolverClient, env.NodeService)
 
+	env.MetricsService = services.NewMetricsService(nodeID, clusterID, env.ResolverClient)
+	err := env.MetricsService.Start()
+	if err != nil {
+		log.Errorf("Failed to start metrics service with error: %v", err)
+	}
+
 	if env.AuthRPCServer == nil {
 		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
 	}
-
-	node := &cluster.Node{
-		TypeMeta: api.TypeMeta{
-			Kind: "Node",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: nodeID,
-		},
-	}
-	nodewatcher.NewNodeWatcher(context.Background(), node, env.ResolverClient.(resolver.Interface), 30, env.Logger)
 }
 
 // OnStart restore state and start services as applicable
@@ -331,7 +320,7 @@ func OnStart() {
 	env.QuorumNodes = cluster.QuorumNodes
 	quorumMember, _ := isQuorumMember(cluster)
 	if !quorumMember {
-		StartNodeServices(cluster.NodeID, cluster.VirtualIP)
+		StartNodeServices(cluster.NodeID, cluster.Name, cluster.VirtualIP)
 		return
 	}
 

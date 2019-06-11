@@ -10,8 +10,6 @@ import (
 
 	context "golang.org/x/net/context"
 
-	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/credentials"
 	"github.com/pensando/sw/venice/cmd/env"
@@ -29,7 +27,6 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore/etcd"
 	kstore "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/nodewatcher"
 	"github.com/pensando/sw/venice/utils/quorum"
 	"github.com/pensando/sw/venice/utils/quorum/store"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -314,6 +311,12 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 	env.VeniceRolloutClient = rolloutclient.NewVeniceRolloutClient(globals.Rollout, req.NodeId, env.ResolverClient, env.RolloutMgr)
 	env.VeniceRolloutClient.Start()
 
+	env.MetricsService = services.NewMetricsService(req.NodeId, req.Name, env.ResolverClient)
+	err := env.MetricsService.Start()
+	if err != nil {
+		log.Errorf("Failed to start metrics service with error: %v", err)
+	}
+
 	if req.QuorumConfig != nil {
 		env.ServiceRolloutClient = rolloutclient.NewServiceRolloutClient(globals.Rollout, req.NodeId, env.ResolverClient, env.RolloutMgr)
 		env.MasterService.Start()
@@ -330,16 +333,6 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 	if shouldStartAuthServer {
 		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
 	}
-
-	node := &cluster.Node{
-		TypeMeta: api.TypeMeta{
-			Kind: "Node",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: req.NodeId,
-		},
-	}
-	nodewatcher.NewNodeWatcher(context.Background(), node, env.ResolverClient.(resolver.Interface), 30, env.Logger)
 
 	return &grpc.ClusterJoinResp{}, nil
 }
@@ -386,6 +379,11 @@ func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoi
 	if env.SystemdService != nil {
 		env.SystemdService.Stop()
 		env.SystemdService = nil
+	}
+
+	if env.MetricsService != nil {
+		env.MetricsService.Stop()
+		env.MetricsService = nil
 	}
 
 	// Cleanup all credentials

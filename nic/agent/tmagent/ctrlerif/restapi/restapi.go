@@ -152,7 +152,7 @@ func (s *RestServer) getTagsFromMeta(meta *api.ObjectMeta) map[string]string {
 }
 
 // ReportMetrics sends metrics to tsdb
-func (s *RestServer) ReportMetrics(frequency int) {
+func (s *RestServer) ReportMetrics(frequency time.Duration) {
 	defer s.waitGrp.Done()
 
 	tsdbObj := map[string]tsdb.Obj{}
@@ -175,7 +175,7 @@ func (s *RestServer) ReportMetrics(frequency int) {
 
 	for {
 		select {
-		case <-time.After(time.Duration(frequency) * time.Second):
+		case <-time.After(frequency):
 			ts := time.Now()
 
 			for kind, obj := range tsdbObj {

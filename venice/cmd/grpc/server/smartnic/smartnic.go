@@ -50,7 +50,7 @@ var (
 	errAPIServerDown = fmt.Errorf("API Server not reachable or down")
 
 	// HealthWatchInterval is default health watch interval
-	HealthWatchInterval = 60 * time.Second
+	HealthWatchInterval = 30 * time.Second
 
 	// DeadInterval is default dead time interval, after
 	// which NIC health status is declared UNKNOWN by CMD
@@ -70,6 +70,35 @@ func getNICCondition(nic *cluster.SmartNIC, condType cluster.SmartNICCondition_C
 		}
 	}
 	return nil
+}
+
+func updateCounters(nic *cluster.SmartNIC, m map[string]int64) {
+	switch nic.Status.AdmissionPhase {
+	case cluster.SmartNICStatus_ADMITTED.String():
+		m["AdmittedNICs"]++
+	case cluster.SmartNICStatus_PENDING.String():
+		m["PendingNICs"]++
+	case cluster.SmartNICStatus_REJECTED.String():
+		m["RejectedNICs"]++
+	case cluster.SmartNICStatus_DECOMMISSIONED.String():
+		m["DecommissionedNICs"]++
+	default:
+		log.Errorf("Unexpected SmartNIC AdmissionPhase value: %+v", nic.Status.AdmissionPhase)
+	}
+
+	healthCond := getNICCondition(nic, cluster.SmartNICCondition_HEALTHY)
+	if healthCond != nil {
+		switch healthCond.Status {
+		case cluster.ConditionStatus_TRUE.String():
+			m["HealthyNICs"]++
+		case cluster.ConditionStatus_FALSE.String():
+			m["UnhealthyNICs"]++
+		case cluster.ConditionStatus_UNKNOWN.String():
+			m["DisconnectedNICs"]++
+		default:
+			log.Errorf("Unexpected SmartNIC HEALTHY condition value: %+v", healthCond)
+		}
+	}
 }
 
 // RPCServer implements SmartNIC gRPC service.
@@ -691,6 +720,18 @@ func (s *RPCServer) MonitorHealth() {
 			// condition.LastTransitionTime on ApiServer actually represents the last time
 			// there was a transition, not the last time the condition was reported.
 			// In the cache instead we set LastTransitionTime for each update.
+			// Also compute new cluster-level SmartNIC metrics
+
+			updCounters := map[string]int64{
+				"AdmittedNICs":       0,
+				"PendingNICs":        0,
+				"RejectedNICs":       0,
+				"DecommissionedNICs": 0,
+				"HealthyNICs":        0,
+				"UnhealthyNICs":      0,
+				"DisconnectedNICs":   0,
+			}
+
 			nicStates, err := s.stateMgr.ListSmartNICs()
 			if err != nil {
 				log.Errorf("Failed to getting a list of nics, err: %v", err)
@@ -735,7 +776,14 @@ func (s *RPCServer) MonitorHealth() {
 						}
 					}
 				}
+				updateCounters(nic, updCounters)
 				nicState.Unlock()
+			}
+			if env.MetricsService != nil {
+				env.MetricsService.UpdateCounters(updCounters)
+				log.Infof("Updated SmartNIC metrics, values: %+v", updCounters)
+			} else {
+				log.Errorf("Error updating SmartNIC metrics, service not available. Values: %+v", updCounters)
 			}
 		}
 	}

@@ -18,13 +18,12 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
-const (
-	minFrequency = 10 // minimum send interval in seconds
+var (
+	minFrequency = 10 * time.Second // minimum send interval
 )
 
 // Metrics reported for a Venice Node or NAPLES.
@@ -47,38 +46,18 @@ type nodeMetrics struct {
 
 // nodewatcher monitors system resources. It can run on Venice Nodes or on NAPLES.
 type nodewatcher struct {
-	frequency int
+	frequency time.Duration
 	table     tsdb.Obj
 	metricObj *nodeMetrics
 	logger    log.Logger
 }
 
 // NewNodeWatcher starts a watcher that monitors system resources.
-func NewNodeWatcher(ctx context.Context, obj runtime.Object, resolver resolver.Interface, frequency int, logger log.Logger) error {
-	meta, err := runtime.GetObjectMeta(obj)
-	if err != nil {
-		return err
-	}
-
-	if resolver == nil {
-		return fmt.Errorf("need a resolver")
-	}
-
+// TSDB must have been initialized with tsdb.Init() before calling this function
+func NewNodeWatcher(ctx context.Context, obj runtime.Object, frequency time.Duration, logger log.Logger) error {
 	if frequency < minFrequency {
-		return fmt.Errorf("minimum frequency is %v", minFrequency)
+		return fmt.Errorf("minimum frequency is %v, got %v", minFrequency, frequency)
 	}
-
-	opts := &tsdb.Opts{
-		ClientName:              meta.Name,
-		ResolverClient:          resolver,
-		Collector:               globals.Collector,
-		DBName:                  "default",
-		SendInterval:            time.Duration(frequency) * time.Second,
-		ConnectionRetryInterval: 100 * time.Millisecond,
-	}
-
-	// Init the TSDB
-	tsdb.Init(ctx, opts)
 
 	logger.Infof("Creating new table")
 	metricObj := &nodeMetrics{}
@@ -103,7 +82,7 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 		case <-ctx.Done():
 			w.logger.Info("Metrics watcher context cancelled, exiting")
 			return
-		case <-time.After(time.Duration(w.frequency) * time.Second):
+		case <-time.After(w.frequency):
 			// memory
 			vmstat, err := mem.VirtualMemory()
 			if err != nil || vmstat == nil {

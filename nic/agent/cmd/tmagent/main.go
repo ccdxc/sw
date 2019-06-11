@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"github.com/pensando/sw/nic/agent/tmagent/state"
 	"github.com/pensando/sw/nic/agent/tpa/ctrlerif"
@@ -26,7 +27,7 @@ import (
 )
 
 // reportInterval is how often(in seconds) tmagent sends metrics to TSDB
-const reportInterval = 30
+var reportInterval = 30 * time.Second
 
 // TelemetryAgent keeps the telementry agent state
 type TelemetryAgent struct {
@@ -130,7 +131,7 @@ func (ta *TelemetryAgent) reportMetrics(rc resolver.Interface) error {
 		},
 	}
 
-	if err := nodewatcher.NewNodeWatcher(ta.ctx, node, rc, reportInterval, log.WithContext("pkg", "nodewatcher")); err != nil {
+	if err := nodewatcher.NewNodeWatcher(ta.ctx, node, reportInterval, log.WithContext("pkg", "nodewatcher")); err != nil {
 		return err
 	}
 
