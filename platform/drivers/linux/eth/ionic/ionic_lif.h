@@ -4,7 +4,6 @@
 #ifndef _IONIC_LIF_H_
 #define _IONIC_LIF_H_
 
-
 #define IONIC_ADMINQ_LENGTH		16	/* must be a power of two */
 #define IONIC_NOTIFYQ_LENGTH	64	/* must be a power of two */
 
@@ -207,7 +206,7 @@ static inline bool ionic_is_mnic(struct ionic *ionic)
 {
 	return ionic->pfdev ||
 	       (ionic->pdev &&
-	        ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT);
+		ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT);
 }
 
 static inline bool ionic_is_pf(struct ionic *ionic)

@@ -6192,7 +6192,7 @@ static inline int _kc_macvlan_release_l2fw_offload(struct net_device *dev)
 #endif
 
 /*****************************************************************************/
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(5,1,0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5,2,0))
 #else
 #define HAVE_NETDEV_XMIT_MORE
 #endif

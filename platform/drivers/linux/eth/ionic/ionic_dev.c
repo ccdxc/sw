@@ -357,8 +357,8 @@ void ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 int ionic_cq_init(struct lif *lif, struct cq *cq, struct intr *intr,
 		  unsigned int num_descs, size_t desc_size)
 {
-	struct cq_info *cur;
 	unsigned int ring_size;
+	struct cq_info *cur;
 	unsigned int i;
 
 	if (desc_size == 0 || !is_power_of_2(num_descs))
@@ -438,8 +438,8 @@ int ionic_q_init(struct lif *lif, struct ionic_dev *idev, struct queue *q,
 		 unsigned int index, const char *name, unsigned int num_descs,
 		 size_t desc_size, size_t sg_desc_size, unsigned int pid)
 {
-	struct desc_info *cur;
 	unsigned int ring_size;
+	struct desc_info *cur;
 	unsigned int i;
 
 	if (desc_size == 0 || !is_power_of_2(num_descs))

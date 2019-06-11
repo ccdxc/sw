@@ -76,7 +76,9 @@ void ionic_bus_free_irq_vectors(struct ionic *ionic)
 struct net_device *ionic_alloc_netdev(struct ionic *ionic)
 {
 	struct lif *lif;
-	int nqueues = ionic->ntxqs_per_lif + ionic->nslaves;
+	int nqueues;
+
+	nqueues = ionic->ntxqs_per_lif + ionic->nslaves;
 
 	return alloc_etherdev_mqs(sizeof(*lif), nqueues, nqueues);
 }
@@ -85,10 +87,12 @@ static int ionic_map_bars(struct ionic *ionic)
 {
 	struct pci_dev *pdev = ionic->pdev;
 	struct device *dev = ionic->dev;
-	struct ionic_dev_bar *bars = ionic->bars;
+	struct ionic_dev_bar *bars;
 	unsigned int i, j;
 
+	bars = ionic->bars;
 	ionic->num_bars = 0;
+
 	for (i = 0, j = 0; i < IONIC_BARS_MAX; i++) {
 		if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
 			continue;
@@ -168,8 +172,8 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		return -ENOMEM;
 
 	ionic->pdev = pdev;
-	pci_set_drvdata(pdev, ionic);
 	ionic->dev = dev;
+	pci_set_drvdata(pdev, ionic);
 	mutex_init(&ionic->dev_cmd_lock);
 
 	ionic->is_mgmt_nic =
@@ -188,9 +192,7 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		goto err_out_clear_drvdata;
 	}
 
-	/* Setup PCI device
-	 */
-
+	/* Setup PCI device */
 	err = pci_enable_device_mem(pdev);
 	if (err) {
 		dev_err(dev, "Cannot enable PCI device: %d, aborting\n", err);

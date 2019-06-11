@@ -84,12 +84,13 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 	struct rxq_comp *comp = cq_info->cq_desc;
 	struct sk_buff *skb = cb_arg;
 	struct qcq *qcq = q_to_qcq(q);
-	struct rx_stats *stats = q_to_rx_stats(q);
 	struct net_device *netdev;
+	struct rx_stats *stats;
 #ifdef CSUM_DEBUG
 	__sum16 csum;
 #endif
 
+	stats = q_to_rx_stats(q);
 	netdev = q->lif->netdev;
 
 	if (comp->status) {
@@ -233,9 +234,10 @@ static struct sk_buff *ionic_rx_skb_alloc(struct queue *q, unsigned int len,
 	struct lif *lif = q->lif;
 	struct net_device *netdev = lif->netdev;
 	struct device *dev = lif->ionic->dev;
-	struct rx_stats *stats = q_to_rx_stats(q);
+	struct rx_stats *stats;
 	struct sk_buff *skb;
 
+	stats = q_to_rx_stats(q);
 	skb = netdev_alloc_skb_ip_align(netdev, len);
 	if (!skb) {
 		net_warn_ratelimited("%s: SKB alloc failed on %s!\n",
@@ -272,10 +274,12 @@ void ionic_rx_fill(struct queue *q)
 	struct net_device *netdev = q->lif->netdev;
 	struct rxq_desc *desc;
 	struct sk_buff *skb;
-	unsigned int len = netdev->mtu + ETH_HLEN;
-	unsigned int i;
 	dma_addr_t dma_addr;
 	bool ring_doorbell;
+	unsigned int len;
+	unsigned int i;
+
+	len = netdev->mtu + ETH_HLEN;
 
 	for (i = ionic_q_space_avail(q); i; i--) {
 		skb = ionic_rx_skb_alloc(q, len, &dma_addr);
@@ -330,8 +334,8 @@ int ionic_rx_napi(struct napi_struct *napi, int budget)
 
 static dma_addr_t ionic_tx_map_single(struct queue *q, void *data, size_t len)
 {
-	struct device *dev = q->lif->ionic->dev;
 	struct tx_stats *stats = q_to_tx_stats(q);
+	struct device *dev = q->lif->ionic->dev;
 	dma_addr_t dma_addr;
 
 	dma_addr = dma_map_single(dev, data, len, DMA_TO_DEVICE);
@@ -347,8 +351,8 @@ static dma_addr_t ionic_tx_map_single(struct queue *q, void *data, size_t len)
 static dma_addr_t ionic_tx_map_frag(struct queue *q, const skb_frag_t *frag,
 				    size_t offset, size_t len)
 {
-	struct device *dev = q->lif->ionic->dev;
 	struct tx_stats *stats = q_to_tx_stats(q);
+	struct device *dev = q->lif->ionic->dev;
 	dma_addr_t dma_addr;
 
 	dma_addr = skb_frag_dma_map(dev, frag, offset, len, DMA_TO_DEVICE);
@@ -364,11 +368,11 @@ static dma_addr_t ionic_tx_map_frag(struct queue *q, const skb_frag_t *frag,
 static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
 			   struct cq_info *cq_info, void *cb_arg)
 {
-	struct device *dev = q->lif->ionic->dev;
-	struct txq_desc *desc = desc_info->desc;
 	struct txq_sg_desc *sg_desc = desc_info->sg_desc;
 	struct txq_sg_elem *elem = sg_desc->elems;
 	struct tx_stats *stats = q_to_tx_stats(q);
+	struct txq_desc *desc = desc_info->desc;
+	struct device *dev = q->lif->ionic->dev;
 	struct sk_buff *skb = cb_arg;
 	u8 opcode, flags, nsge;
 	u16 queue_index;
@@ -472,8 +476,8 @@ static void ionic_tx_tso_post(struct queue *q, struct txq_desc *desc,
 static struct txq_desc *ionic_tx_tso_next(struct queue *q,
 					  struct txq_sg_elem **elem)
 {
-	struct txq_desc *desc = q->head->desc;
 	struct txq_sg_desc *sg_desc = q->head->sg_desc;
+	struct txq_desc *desc = q->head->desc;
 
 	*elem = sg_desc->elems;
 	return desc;
@@ -484,30 +488,37 @@ static int ionic_tx_tso(struct queue *q, struct sk_buff *skb)
 	struct tx_stats *stats = q_to_tx_stats(q);
 	struct desc_info *abort = q->head;
 	struct desc_info *rewind = abort;
-	struct txq_desc *desc;
+	unsigned int frag_left = 0;
 	struct txq_sg_elem *elem;
-	skb_frag_t *frag;
+	unsigned int offset = 0;
+	unsigned int len_left;
+	struct txq_desc *desc;
 	dma_addr_t desc_addr;
+	unsigned int hdrlen;
+	unsigned int nfrags;
+	unsigned int seglen;
+	u64 total_bytes = 0;
+	u64 total_pkts = 0;
+	unsigned int left;
+	unsigned int len;
+	unsigned int mss;
+	skb_frag_t *frag;
+	bool start, done;
+	bool outer_csum;
+	bool has_vlan;
 	u16 desc_len;
 	u8 desc_nsge;
-	unsigned int hdrlen;
-	unsigned int mss = skb_shinfo(skb)->gso_size;
-	unsigned int nfrags = skb_shinfo(skb)->nr_frags;
-	unsigned int len_left = skb->len - skb_headlen(skb);
-	unsigned int frag_left = 0;
-	unsigned int left;
-	unsigned int seglen;
-	unsigned int len;
-	unsigned int offset = 0;
-	bool encap = skb->encapsulation;
-	bool outer_csum =
-		(skb_shinfo(skb)->gso_type & SKB_GSO_GRE_CSUM) ||
-		(skb_shinfo(skb)->gso_type & SKB_GSO_UDP_TUNNEL_CSUM);
-	bool has_vlan = !!skb_vlan_tag_present(skb);
-	bool start, done;
-	u64 total_pkts = 0;
-	u64 total_bytes = 0;
-	u16 vlan_tci = skb_vlan_tag_get(skb);
+	u16 vlan_tci;
+	bool encap;
+
+	mss = skb_shinfo(skb)->gso_size;
+	nfrags = skb_shinfo(skb)->nr_frags;
+	len_left = skb->len - skb_headlen(skb);
+	outer_csum = (skb_shinfo(skb)->gso_type & SKB_GSO_GRE_CSUM) ||
+		     (skb_shinfo(skb)->gso_type & SKB_GSO_UDP_TUNNEL_CSUM);
+	has_vlan = !!skb_vlan_tag_present(skb);
+	vlan_tci = skb_vlan_tag_get(skb);
+	encap = skb->encapsulation;
 
 	/* Preload inner-most TCP csum field with IP pseudo hdr
 	 * calculated with IP length set to zero.  HW will later
@@ -639,13 +650,16 @@ err_out_abort:
 
 static int ionic_tx_calc_csum(struct queue *q, struct sk_buff *skb)
 {
-	struct txq_desc *desc = q->head->desc;
 	struct tx_stats *stats = q_to_tx_stats(q);
+	struct txq_desc *desc = q->head->desc;
 	dma_addr_t addr;
+	bool has_vlan;
 	u8 flags = 0;
-	bool encap = skb->encapsulation;
-	bool has_vlan = !!skb_vlan_tag_present(skb);
+	bool encap;
 	u64 cmd;
+
+	has_vlan = !!skb_vlan_tag_present(skb);
+	encap = skb->encapsulation;
 
 	addr = ionic_tx_map_single(q, skb->data, skb_headlen(skb));
 	if (!addr)
@@ -674,13 +688,16 @@ static int ionic_tx_calc_csum(struct queue *q, struct sk_buff *skb)
 
 static int ionic_tx_calc_no_csum(struct queue *q, struct sk_buff *skb)
 {
-	struct txq_desc *desc = q->head->desc;
 	struct tx_stats *stats = q_to_tx_stats(q);
+	struct txq_desc *desc = q->head->desc;
 	dma_addr_t addr;
+	bool has_vlan;
 	u8 flags = 0;
-	bool encap = skb->encapsulation;
-	bool has_vlan = !!skb_vlan_tag_present(skb);
+	bool encap;
 	u64 cmd;
+
+	has_vlan = !!skb_vlan_tag_present(skb);
+	encap = skb->encapsulation;
 
 	addr = ionic_tx_map_single(q, skb->data, skb_headlen(skb));
 	if (!addr)
@@ -702,10 +719,10 @@ static int ionic_tx_calc_no_csum(struct queue *q, struct sk_buff *skb)
 
 static int ionic_tx_skb_frags(struct queue *q, struct sk_buff *skb)
 {
-	struct tx_stats *stats = q_to_tx_stats(q);
 	unsigned int len_left = skb->len - skb_headlen(skb);
 	struct txq_sg_desc *sg_desc = q->head->sg_desc;
 	struct txq_sg_elem *elem = sg_desc->elems;
+	struct tx_stats *stats = q_to_tx_stats(q);
 	dma_addr_t dma_addr;
 	skb_frag_t *frag;
 	u16 len;

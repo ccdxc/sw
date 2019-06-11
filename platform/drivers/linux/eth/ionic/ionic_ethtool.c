@@ -310,8 +310,8 @@ static int ionic_set_link_ksettings(struct net_device *netdev,
 	struct ionic *ionic = lif->ionic;
 	struct ionic_dev *idev = &lif->ionic->idev;
 #ifdef ETHTOOL_LINK_MODE_FEC_NONE_BIT
-	u32 req_rs, req_b;
 	u8 fec_type = PORT_FEC_TYPE_NONE;
+	u32 req_rs, req_b;
 #endif
 	int err = 0;
 
@@ -438,10 +438,10 @@ static int ionic_set_coalesce(struct net_device *netdev,
 			      struct ethtool_coalesce *coalesce)
 {
 	struct lif *lif = netdev_priv(netdev);
-	struct ionic_dev *idev = &lif->ionic->idev;
 	struct identity *ident = &lif->ionic->ident;
-	struct qcq *qcq;
+	struct ionic_dev *idev = &lif->ionic->idev;
 	u32 tx_coal, rx_coal;
+	struct qcq *qcq;
 	unsigned int i;
 
 	if (coalesce->rx_max_coalesced_frames ||

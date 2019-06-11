@@ -1571,7 +1571,7 @@ typedef struct admin_comp rx_filter_del_comp;
  * struct qos_identify_cmd - QoS identify command
  * @opcode:    opcode
  * @ver:     Highest version of identify supported by driver
- * 
+ *
  */
 struct qos_identify_cmd {
 	u8 opcode;
@@ -1627,10 +1627,10 @@ enum qos_sched_type {
 /**
  * union qos_config - Qos configuration structure
  * @flags:		Configuration flags
- * 	IONIC_QOS_CONFIG_F_ENABLE		enable
- * 	IONIC_QOS_CONFIG_F_DROP			drop/nodrop
- * 	IONIC_QOS_CONFIG_F_RW_DOT1Q_PCP		enable dot1q pcp rewrite
- * 	IONIC_QOS_CONFIG_F_RW_IP_DSCP		enable ip dscp rewrite
+ *	IONIC_QOS_CONFIG_F_ENABLE		enable
+ *	IONIC_QOS_CONFIG_F_DROP			drop/nodrop
+ *	IONIC_QOS_CONFIG_F_RW_DOT1Q_PCP		enable dot1q pcp rewrite
+ *	IONIC_QOS_CONFIG_F_RW_IP_DSCP		enable ip dscp rewrite
  * @sched_type:		Qos class scheduling type (enum qos_sched_type)
  * @class_type:		Qos class type (enum qos_class_type)
  * @pause_type:		Qos pause type (enum qos_pause_type)
@@ -1744,7 +1744,7 @@ struct fw_download_cmd {
 typedef struct admin_comp fw_download_comp;
 
 enum fw_control_oper {
-	IONIC_FW_RESET		= 0,	/* Reset firmare */
+	IONIC_FW_RESET		= 0,	/* Reset firmware */
 	IONIC_FW_INSTALL	= 1,	/* Install firmware */
 	IONIC_FW_ACTIVATE	= 2,	/* Activate firmware */
 };

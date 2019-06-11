@@ -331,7 +331,7 @@ int ionic_set_dma_mask(struct ionic *ionic)
 	int err;
 
 	/* Query system for DMA addressing limitation for the device. */
-	err = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(52));
+	err = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(IONIC_ADDR_LEN));
 	if (err)
 		dev_err(dev, "Unable to obtain 64-bit DMA for consistent allocations, aborting.  err=%d\n",
 			err);
@@ -426,6 +426,7 @@ int ionic_port_identify(struct ionic *ionic)
 {
 	struct identity *ident = &ionic->ident;
 	struct ionic_dev *idev = &ionic->idev;
+	struct device *dev = ionic->dev;
 	size_t sz;
 	int err;
 
@@ -440,13 +441,13 @@ int ionic_port_identify(struct ionic *ionic)
 
 	mutex_unlock(&ionic->dev_cmd_lock);
 
-	dev_dbg(ionic->dev, "speed %d ", ident->port.config.speed);
-	dev_dbg(ionic->dev, "mtu %d ", ident->port.config.mtu);
-	dev_dbg(ionic->dev, "state %d ", ident->port.config.state);
-	dev_dbg(ionic->dev, "an_enable %d ", ident->port.config.an_enable);
-	dev_dbg(ionic->dev, "fec_type %d ", ident->port.config.fec_type);
-	dev_dbg(ionic->dev, "pause_type %d ", ident->port.config.pause_type);
-	dev_dbg(ionic->dev, "loopback_mode %d", ident->port.config.loopback_mode);
+	dev_dbg(dev, "speed %d\n", ident->port.config.speed);
+	dev_dbg(dev, "mtu %d\n", ident->port.config.mtu);
+	dev_dbg(dev, "state %d\n", ident->port.config.state);
+	dev_dbg(dev, "an_enable %d\n", ident->port.config.an_enable);
+	dev_dbg(dev, "fec_type %d\n", ident->port.config.fec_type);
+	dev_dbg(dev, "pause_type %d\n", ident->port.config.pause_type);
+	dev_dbg(dev, "loopback_mode %d\n", ident->port.config.loopback_mode);
 
 	return err;
 }

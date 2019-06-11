@@ -397,10 +397,10 @@ static void ionic_link_status_check(struct lif *lif)
 static bool ionic_notifyq_service(struct cq *cq, struct cq_info *cq_info)
 {
 	union notifyq_comp *comp = cq_info->cq_desc;
+	struct deferred_work *work;
 	struct net_device *netdev;
 	struct queue *q;
 	struct lif *lif;
-	struct deferred_work *work;
 	u64 eid;
 
 	q = cq->bound_q;
@@ -513,9 +513,10 @@ static struct rtnl_link_stats64 *ionic_get_stats64(struct net_device *netdev,
 #endif
 {
 	struct lif *lif = netdev_priv(netdev);
-	struct lif_stats *ls = &lif->info->stats;
+	struct lif_stats *ls;
 
 	memset(ns, 0, sizeof(*ns));
+	ls = &lif->info->stats;
 
 	ns->rx_packets = le64_to_cpu(ls->rx_ucast_packets) +
 			 le64_to_cpu(ls->rx_mcast_packets) +
@@ -827,8 +828,9 @@ static int ionic_set_features(struct net_device *netdev,
 static int ionic_set_mac_address(struct net_device *netdev, void *sa)
 {
 	struct sockaddr *addr = sa;
-	u8 *mac = (u8 *)addr->sa_data;
+	u8 *mac;
 
+	mac = (u8 *)addr->sa_data;
 	if (ether_addr_equal(netdev->dev_addr, mac))
 		return 0;
 
@@ -1240,7 +1242,6 @@ static irqreturn_t ionic_isr(int irq, void *data)
 int ionic_intr_alloc(struct lif *lif, struct intr *intr)
 {
 	struct ionic *ionic = lif->ionic;
-	struct ionic_dev *idev = &ionic->idev;
 	int index;
 
 	index = find_first_zero_bit(ionic->intrs, ionic->nintrs);
@@ -1251,7 +1252,7 @@ int ionic_intr_alloc(struct lif *lif, struct intr *intr)
 	}
 
 	set_bit(index, ionic->intrs);
-	ionic_intr_init(idev, intr, index);
+	ionic_intr_init(&ionic->idev, intr, index);
 
 	return 0;
 }
@@ -1294,11 +1295,13 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int type,
 			   unsigned int pid, struct qcq **qcq)
 {
 	struct ionic_dev *idev = &lif->ionic->idev;
-	struct device *dev = lif->ionic->dev;
-	struct qcq *new;
 	u32 q_size, cq_size, sg_size, total_size;
+	struct device *dev = lif->ionic->dev;
 	void *q_base, *cq_base, *sg_base;
-	dma_addr_t q_base_pa = 0, cq_base_pa = 0, sg_base_pa = 0;
+	dma_addr_t cq_base_pa = 0;
+	dma_addr_t sg_base_pa = 0;
+	dma_addr_t q_base_pa = 0;
+	struct qcq *new;
 	int err;
 
 	*qcq = NULL;
@@ -1644,10 +1647,8 @@ err_out_free_notifyqcq:
 		lif->notifyqcq = NULL;
 	}
 err_out_free_adminqcq:
-	if (lif->adminqcq) {
-		ionic_qcq_free(lif, lif->adminqcq);
-		lif->adminqcq = NULL;
-	}
+	ionic_qcq_free(lif, lif->adminqcq);
+	lif->adminqcq = NULL;
 
 	return err;
 }
@@ -1967,8 +1968,8 @@ static int ionic_lif_rss_deinit(struct lif *lif)
 
 static void ionic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq)
 {
-	struct device *dev = lif->ionic->dev;
 	struct ionic_dev *idev = &lif->ionic->idev;
+	struct device *dev = lif->ionic->dev;
 
 	if (!qcq)
 		return;
@@ -2025,7 +2026,6 @@ static int ionic_request_irq(struct lif *lif, struct qcq *qcq)
 	struct device *dev = lif->ionic->dev;
 	struct intr *intr = &qcq->intr;
 	struct queue *q = &qcq->q;
-	struct napi_struct *napi = &qcq->napi;
 	const char *name;
 
 	if (lif->registered)
@@ -2039,7 +2039,7 @@ static int ionic_request_irq(struct lif *lif, struct qcq *qcq)
 		 "%s-%s-%s", DRV_NAME, name, q->name);
 
 	return devm_request_irq(dev, intr->vector, ionic_isr,
-				0, intr->name, napi);
+				0, intr->name, &qcq->napi);
 }
 
 static int ionic_lif_adminq_init(struct lif *lif)
@@ -2048,7 +2048,6 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	struct ionic_dev *idev = &lif->ionic->idev;
 	struct qcq *qcq = lif->adminqcq;
 	struct queue *q = &qcq->q;
-	struct napi_struct *napi = &qcq->napi;
 	struct q_init_comp comp;
 	int err;
 
@@ -2069,17 +2068,17 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	dev_dbg(dev, "adminq->hw_type %d\n", q->hw_type);
 	dev_dbg(dev, "adminq->hw_index %d\n", q->hw_index);
 
-	netif_napi_add(lif->netdev, napi, ionic_adminq_napi,
+	netif_napi_add(lif->netdev, &qcq->napi, ionic_adminq_napi,
 		       NAPI_POLL_WEIGHT);
 
 	err = ionic_request_irq(lif, qcq);
 	if (err) {
 		netdev_warn(lif->netdev, "adminq irq request failed %d\n", err);
-		netif_napi_del(napi);
+		netif_napi_del(&qcq->napi);
 		return err;
 	}
 
-	napi_enable(napi);
+	napi_enable(&qcq->napi);
 
 	if (qcq->flags & QCQ_F_INTR)
 		ionic_intr_mask(idev->intr_ctrl, qcq->intr.index,
@@ -2202,10 +2201,10 @@ static int ionic_set_nic_features(struct lif *lif, netdev_features_t features)
 			.features = cpu_to_le64(features),
 		},
 	};
-	int err;
 	unsigned long vlan_flags = ETH_HW_VLAN_TX_TAG |
 				   ETH_HW_VLAN_RX_STRIP |
 				   ETH_HW_VLAN_RX_FILTER;
+	int err;
 
 	ctx.cmd.lif_setattr.features = ionic_netdev_features_to_nic(features);
 	err = ionic_adminq_post_wait(lif, &ctx);
@@ -2417,7 +2416,6 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 	struct device *dev = lif->ionic->dev;
 	struct queue *q = &qcq->q;
 	struct cq *cq = &qcq->cq;
-	struct napi_struct *napi = &qcq->napi;
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.q_init = {
@@ -2451,12 +2449,12 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 	dev_dbg(dev, "rxq->hw_type %d\n", q->hw_type);
 	dev_dbg(dev, "rxq->hw_index %d\n", q->hw_index);
 
-	netif_napi_add(lif->netdev, napi, ionic_rx_napi,
+	netif_napi_add(lif->netdev, &qcq->napi, ionic_rx_napi,
 		       NAPI_POLL_WEIGHT);
 
 	err = ionic_request_irq(lif, qcq);
 	if (err) {
-		netif_napi_del(napi);
+		netif_napi_del(&qcq->napi);
 		return err;
 	}
 
@@ -2744,8 +2742,8 @@ struct lif *ionic_netdev_lif(struct net_device *netdev)
 static int ionic_lif_notify(struct notifier_block *nb,
 			    unsigned long event, void *info)
 {
-	struct ionic *ionic = container_of(nb, struct ionic, nb);
 	struct net_device *ndev = netdev_notifier_info_to_dev(info);
+	struct ionic *ionic = container_of(nb, struct ionic, nb);
 	struct lif *lif = ionic_netdev_lif(ndev);
 
 	if (!lif || lif->ionic != ionic)

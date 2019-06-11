@@ -83,7 +83,6 @@ static void mnic_set_msi_msg(struct msi_desc *desc, struct msi_msg *msg)
 
 int ionic_bus_alloc_irq_vectors(struct ionic *ionic, unsigned int nintrs)
 {
-
 	int err = 0;
 
 	err = platform_msi_domain_alloc_irqs(ionic->dev, nintrs,
@@ -103,8 +102,9 @@ struct net_device *ionic_alloc_netdev(struct ionic *ionic)
 {
 	struct net_device *netdev = NULL;
 	struct lif *lif;
-	int nqueues = ionic->ntxqs_per_lif + ionic->nslaves;
+	int nqueues;
 
+	nqueues = ionic->ntxqs_per_lif + ionic->nslaves;
 	netdev = alloc_netdev_mqs(sizeof(struct lif), ionic->pfdev->name,
 				  NET_NAME_USER, ether_setup, nqueues, nqueues);
 	if (!netdev)
@@ -122,8 +122,8 @@ struct net_device *ionic_alloc_netdev(struct ionic *ionic)
 
 int ionic_mnic_dev_setup(struct ionic *ionic)
 {
-	struct ionic_dev *idev = &ionic->idev;
 	unsigned int num_bars = ionic->num_bars;
+	struct ionic_dev *idev = &ionic->idev;
 	u32 sig;
 
 	if (num_bars < NUM_OF_BAR)
@@ -153,8 +153,8 @@ int ionic_mnic_dev_setup(struct ionic *ionic)
 static int ionic_map_bars(struct ionic *ionic)
 {
 	struct platform_device *pfdev = ionic->pfdev;
-	struct device *dev = ionic->dev;
 	struct ionic_dev_bar *bars = ionic->bars;
+	struct device *dev = ionic->dev;
 	struct resource *res;
 	unsigned int i, j;
 	void *base;
@@ -181,8 +181,8 @@ static int ionic_map_bars(struct ionic *ionic)
 
 static void ionic_unmap_bars(struct ionic *ionic)
 {
-	struct device *dev = ionic->dev;
 	struct ionic_dev_bar *bars = ionic->bars;
+	struct device *dev = ionic->dev;
 	unsigned int i;
 
 	for (i = 0; i < IONIC_BARS_MAX; i++)

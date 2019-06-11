@@ -51,6 +51,7 @@ static ssize_t blob_write(struct file *filp, const char __user *buffer,
 
 	return count;
 }
+
 static const struct file_operations blob_fops = {
 	.owner = THIS_MODULE,
 	.open = blob_open,
@@ -160,8 +161,8 @@ static const struct debugfs_reg32 dev_cmd_regs[] = {
 
 int ionic_debugfs_add_dev_cmd(struct ionic *ionic)
 {
-	struct device *dev = ionic->dev;
 	struct debugfs_regset32 *dev_cmd_regset;
+	struct device *dev = ionic->dev;
 	struct dentry *dentry;
 
 	dev_cmd_regset = devm_kzalloc(dev, sizeof(*dev_cmd_regset),
@@ -191,8 +192,8 @@ static void identity_show_qtype(struct seq_file *seq, const char *name,
 static int identity_show(struct seq_file *seq, void *v)
 {
 	struct ionic *ionic = seq->private;
-	struct ionic_dev *idev = &ionic->idev;
 	struct identity *ident = &ionic->ident;
+	struct ionic_dev *idev = &ionic->idev;
 
 	seq_printf(seq, "asic_type:        0x%x\n", idev->dev_info.asic_type);
 	seq_printf(seq, "asic_rev:         0x%x\n", idev->dev_info.asic_rev);
@@ -290,15 +291,15 @@ static const struct debugfs_reg32 intr_ctrl_regs[] = {
 
 int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq)
 {
-	struct device *dev = lif->ionic->dev;
-	struct ionic_dev *idev = &lif->ionic->idev;
 	struct dentry *qcq_dentry, *q_dentry, *cq_dentry, *intr_dentry;
+	struct ionic_dev *idev = &lif->ionic->idev;
+	struct debugfs_regset32 *intr_ctrl_regset;
+	struct debugfs_blob_wrapper *desc_blob;
+	struct device *dev = lif->ionic->dev;
+	struct intr *intr = &qcq->intr;
 	struct dentry *stats_dentry;
 	struct queue *q = &qcq->q;
 	struct cq *cq = &qcq->cq;
-	struct intr *intr = &qcq->intr;
-	struct debugfs_regset32 *intr_ctrl_regset;
-	struct debugfs_blob_wrapper *desc_blob;
 
 	qcq_dentry = debugfs_create_dir(q->name, lif->dentry);
 	if (IS_ERR_OR_NULL(qcq_dentry))
