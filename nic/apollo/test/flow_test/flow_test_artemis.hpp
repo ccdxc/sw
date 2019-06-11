@@ -535,7 +535,31 @@ public:
         }
         memset(&actiondata, 0, sizeof(session_actiondata_t));
         actiondata.action_id = SESSION_SESSION_INFO_ID;
-        if (vpc == 61) {
+        if (vpc == 60) {
+            // VPC 60 is used for Scenario1-ST in/out traffic
+            // Tx path:
+            //     SMACi is unchnged
+            //     DMACi is unchanged
+            //     SIPi xlated to IPv6 (from LOCAL_46_TX table)
+            //     DIPi xlated to IPv6 (comes from REMOTE_46_MAPPING table,
+            //                          stored in the flow)
+            //     Vxlan encap is added (IPv4)
+            //     SMACo is local device mac (table constant of EGRESS_VNIC_INFO)
+            //     DMACo is from nexthop (comes from REMOTE_46_MAPPING table,
+            //                            stored in flow table)
+            //     SIPo is provider IP of SIPi (from NAT table)
+            //     DIPo is last 32 bits of IPv6 address from REMOTE_46_MAPPING
+            //     table
+            //     vnid corresponding to the service tunnel (from NEXTHOP table)
+            // Rx path:
+            //     Remove the vxlan encap after terminating based on received
+            //     vnid
+            //     IPv6 SIPi is xlated to IPv4 (last 32 bits of received IPv6
+            //     packet)
+            //     IPv6 DIPi is xlated to IPv4 (last 32 bits of received IPv6
+            //     packet)
+            //     vlan tag added from EGRESS_VNIC_INFO table
+        } else if (vpc == 61) {
             // VPC 61 is used for Scenario1-SLB in/out traffic (DSR case)
             // Tx path:
             //     SMAC is rewritten with host MAC (table constant)
