@@ -24,7 +24,7 @@ import * as _ from 'lodash';
             } else {
               retValue = false;
             }
-          } else if (obj[key] != null && (model.getPropInfo == null || obj[key] !== model.getPropInfo(key).default)) {
+          } else if (obj[key] != null && (model.getPropInfo == null || model.getPropInfo(key)== null || obj[key] !== model.getPropInfo(key).default)) {
             retValue = false;
           }
         }
