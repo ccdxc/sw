@@ -6,6 +6,7 @@
 #include "platform/capri/capri_txs_scheduler.hpp"
 #include "platform/capri/capri_qstate.hpp"
 #include "platform/capri/capri_mon.hpp"
+#include "platform/capri/capri_sw_phv.hpp"
 #include "asic/pd/pd.hpp"
 #include "lib/utils/time_profile.hpp"
 #include "platform/utils/mpartition.hpp"
@@ -749,6 +750,22 @@ sdk_ret_t asicpd_toeplitz_init(void)
      sdk::platform::capri::capri_toeplitz_init(tbl_ctx.stage, tbl_ctx.stage_tableid);
 #endif
      return SDK_RET_OK;
+}
+
+// asicpd_sw_phv_inject
+// Inject a software phv(maintenance PHV) into asic
+sdk_ret_t
+asicpd_sw_phv_inject (asicpd_swphv_type_t type, uint8_t prof_num,
+                      uint8_t start_idx, uint8_t num_flits, void *data) {
+    return (sdk_ret_t)capri_sw_phv_inject(type, prof_num, start_idx, num_flits, data);
+}
+
+// asicpd_sw_phv_get
+// get software PHV state from asic
+sdk_ret_t
+asicpd_sw_phv_get (asicpd_swphv_type_t type, uint8_t prof_num,
+                   asicpd_sw_phv_state_t *state) {
+    return (sdk_ret_t)capri_sw_phv_get(type, prof_num, state);
 }
 
 }    // namespace pd

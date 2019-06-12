@@ -1,3 +1,4 @@
+
 #include "artemis_rxdma.h"
 #include "INGRESS_p.h"
 #include "ingress.h"
@@ -8,7 +9,7 @@ struct phv_             p;
 
 %%
 session_aging:
-    nop.e
+    phvwr.e     p.capri_intr_drop, 1
     nop
     
     

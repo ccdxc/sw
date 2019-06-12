@@ -16,6 +16,7 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 // TODO: clean this up
 #include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
+#include "nic/sdk/platform/capri/capri_sw_phv.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
@@ -24,6 +25,7 @@
 #include "gen/p4gen/artemis/include/p4pd.h"
 #include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
 #include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
+#include "gen/p4gen/artemis_rxdma/include/ingress_phv.h"
 
 extern sdk_ret_t init_service_lif(const char *cfg_path);
 
@@ -36,6 +38,10 @@ extern sdk_ret_t init_service_lif(const char *cfg_path);
 namespace api {
 namespace impl {
 
+#define ARTEMIS_PHV_SIZE (4096 / 8)
+    
+uint8_t data[ARTEMIS_PHV_SIZE];
+    
 // helper class to sort p4/p4+ programs to maximize performance
 class sort_mpu_programs_compare {
 public:
@@ -813,6 +819,18 @@ artemis_impl::pipeline_init(void) {
     ret = stats_init_();
     SDK_ASSERT(ret == SDK_RET_OK);
 
+    ret = sdk::platform::capri::capri_sw_phv_init();
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    bzero(data, ARTEMIS_PHV_SIZE);
+
+    artemis_rxdma_ingress_phv_t *phv = (artemis_rxdma_ingress_phv_t *) data;
+
+    phv->p4_to_rxdma_aging_enable = 1;
+    phv->p4_to_rxdma_cps_path_en = 1;
+    ret = asicpd_sw_phv_inject(ASICPD_SWPHV_TYPE_RXDMA, 0, 0, 1, data);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    
     return SDK_RET_OK;
 }
 
@@ -945,3 +963,4 @@ artemis_impl::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
 
 }    // namespace impl
 }    // namespace api
+
