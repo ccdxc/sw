@@ -97,7 +97,7 @@ header_type session_info_hint_t {  // Total 272b = 34B
 
 header_type artemis_txdma_to_arm_session_info_header_t {
     fields {
-        action                  : 8; // add or delete
+        action_                 : 8; // add or delete
         packet_len              : 16;
         session_index           : 32;  // delete only
         session_info            : 512; // insert only
