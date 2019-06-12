@@ -442,14 +442,19 @@ vnic_impl::activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
         return sdk::SDK_RET_INVALID_ARG;
     }
 
-    if ((spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) &&
-        spec->vnic_encap.val.vlan_tag) {
+    if (spec->switch_vnic) {
         vnic_mapping_key.ctag_1_vid = spec->vnic_encap.val.vlan_tag;
         vnic_mapping_mask.ctag_1_vid_mask = ~0;
+    } else {
+        if ((spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) &&
+            spec->vnic_encap.val.vlan_tag) {
+            vnic_mapping_key.ctag_1_vid = spec->vnic_encap.val.vlan_tag;
+            vnic_mapping_mask.ctag_1_vid_mask = ~0;
+        }
+        sdk::lib::memrev(vnic_mapping_key.ethernet_1_srcAddr, spec->mac_addr,
+                         ETH_ADDR_LEN);
+        memset(vnic_mapping_mask.ethernet_1_srcAddr_mask, 0xFF, ETH_ADDR_LEN);
     }
-    sdk::lib::memrev(vnic_mapping_key.ethernet_1_srcAddr, spec->mac_addr,
-                     ETH_ADDR_LEN);
-    memset(vnic_mapping_mask.ethernet_1_srcAddr_mask, 0xFF, ETH_ADDR_LEN);
     vnic_mapping_data.action_id = VNIC_MAPPING_VNIC_MAPPING_INFO_ID;
     vnic_mapping_data.mapping_info_action.epoch = epoch;
     vnic_mapping_data.mapping_info_action.vnic_id = hw_id_;
