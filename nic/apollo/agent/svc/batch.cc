@@ -4,11 +4,7 @@
 
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/agent/svc/batch.hpp"
-#include "nic/apollo/test/flow_test/flow_test.hpp"
-
-#ifdef PDS_FLOW_TEST
-extern flow_test *g_flow_test_obj;
-#endif
+#include "nic/apollo/agent/hooks.hpp"
 
 Status
 BatchSvcImpl::BatchStart(ServerContext *context,
@@ -17,17 +13,11 @@ BatchSvcImpl::BatchStart(ServerContext *context,
     pds_batch_params_t api_batch_params = {0};
     api_batch_params.epoch = proto_spec->epoch();
 
-#ifdef PDS_FLOW_TEST
     // TODO: Adding this here since there is no proto defs for
     // flows. This needs to be cleaned up
-    sdk_ret_t ret;
-    if (api_batch_params.epoch == PDS_EPOCH_INVALID) {
-        ret = g_flow_test_obj->create_flows();
-        if (ret != sdk::SDK_RET_OK) {
-            return Status::CANCELLED;
-        }
+    if (hooks::batch_start(api_batch_params.epoch) != SDK_RET_OK) {
+        return Status::CANCELLED;
     }
-#endif
 
     if (api_batch_params.epoch != PDS_EPOCH_INVALID) {
         if (pds_batch_start(&api_batch_params) == sdk::SDK_RET_OK) {

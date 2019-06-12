@@ -80,6 +80,7 @@ copy_files() {
     if [ $agent == 0 ];then
         rm $DST/nic/apollo/tools/start-agent-sim.sh $DST/nic/apollo/tools/start-agent.sh
         rm -rf $DST/nic/apollo/agent
+        find $DST/nic/apollo -name module_agenthooks.mk | xargs rm
     fi
     cp nic/conf/catalog* $DST/nic/conf
     cp nic/conf/serdes* $DST/nic/conf

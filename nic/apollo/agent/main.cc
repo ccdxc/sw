@@ -25,10 +25,7 @@
 #include "nic/apollo/agent/svc/service.hpp"
 #include "nic/apollo/agent/init.hpp"
 #include "nic/apollo/agent/trace.hpp"
-
-#ifdef PDS_FLOW_TEST
-#include "nic/apollo/test/flow_test/flow_test.hpp"
-#endif
+#include "nic/apollo/agent/hooks.hpp"
 
 using std::string;
 using grpc::Server;
@@ -38,11 +35,9 @@ using grpc::Status;
 
 std::string g_grpc_server_addr;
 #define GRPC_API_PORT    9999
-
-#ifdef PDS_FLOW_TEST
-test_params_t g_test_params;
-flow_test *g_flow_test_obj;
-#endif
+namespace hooks {
+hooks_func_t hooks_func = NULL;
+}     // namespace hooks
 
 static void
 svc_reg (void)
@@ -202,28 +197,7 @@ main (int argc, char **argv)
         fprintf(stderr, "Agent initialization failed, err %u", ret);
     }
 
-#ifdef PDS_FLOW_TEST
-    parse_test_cfg(&g_test_params, pipeline);
-    g_test_params.pipeline = pipeline;
-    g_flow_test_obj = new flow_test(&g_test_params);
-    g_flow_test_obj->set_cfg_params(g_test_params.dual_stack,
-                                    g_test_params.num_tcp,
-                                    g_test_params.num_udp,
-                                    g_test_params.num_icmp,
-                                    g_test_params.sport_lo,
-                                    g_test_params.sport_hi,
-                                    g_test_params.dport_lo,
-                                    g_test_params.dport_hi);
-#if defined(ARTEMIS)
-    g_flow_test_obj->set_session_info_cfg_params(
-                                g_test_params.num_vpcs,
-                                g_test_params.num_ip_per_vnic,
-                                g_test_params.num_remote_mappings,
-                                g_test_params.meter_scale,
-                                TESTAPP_METER_NUM_PREFIXES,
-                                g_test_params.num_nh);
-#endif
-#endif
+    hooks::agent_init_done(pipeline.c_str());
 
     // register for all gRPC services
     svc_reg();

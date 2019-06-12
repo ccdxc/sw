@@ -199,9 +199,6 @@ export NIC_HAL_GTEST_WO_MAIN_LDLIBS :=
 export NIC_apollo_NICMGR_LIBS := nicmgr_apollo rdmamgr_apollo mnet evutils \
                                  pciemgr_if pciemgr pciemgrutils \
                                  pciehdevices pcietlp cfgspace intrutils misc
-ifdef PDS_FLOW_TEST
-export apollo_PDS_FLOW_TEST_FLAGS := -DPDS_FLOW_TEST
-endif
 
 # ==========================================================================
 #                        ARTEMIS specific defs
@@ -209,9 +206,6 @@ endif
 export NIC_artemis_NICMGR_LIBS := nicmgr_artemis mnet evutils \
                                   pciemgr_if pciemgr pciemgrutils \
                                   pciehdevices pcietlp cfgspace intrutils misc
-ifdef PDS_FLOW_TEST
-export artemis_PDS_FLOW_TEST_FLAGS := -DPDS_FLOW_TEST
-endif
 
 # ==========================================================================
 #                        Pipeline Specific Defs

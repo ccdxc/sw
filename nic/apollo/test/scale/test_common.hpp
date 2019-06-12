@@ -341,7 +341,6 @@ parse_test_cfg (char *cfg_file, test_params_t *test_params)
     return SDK_RET_OK;
 }
 
-//#ifdef PDS_FLOW_TEST
 inline const char *
 get_cfg_json (void) {
     const char *test_cfg = getenv("TEST_CFG");
@@ -375,6 +374,5 @@ parse_test_cfg (test_params_t *test_params, string pipeline)
 #endif    // SIM
     return parse_test_cfg(cfgfile, test_params);
 }
-//#endif    // PDS_FLOW_TEST
 
 #endif // __APOLLO_SCALE_TEST_COMMON_HPP__

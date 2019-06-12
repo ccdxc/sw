@@ -19,7 +19,6 @@
 #include "nic/utils/ftl/ftlv4.hpp"
 #include "nic/utils/ftl/ftlv6.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/apollo/agent/svc/mapping.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"

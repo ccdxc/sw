@@ -15,6 +15,7 @@ MODULE_LDLIBS   =  ${NIC_COMMON_LDLIBS} \
                    ${${PIPELINE}_GTEST_COMMON_LDLIBS} \
                    AAPL edit ncurses
 MODULE_INCS     = ${MODULE_GEN_DIR} ${NIC_CSR_INCS}
-MODULE_FLAGS    = ${NIC_CSR_FLAGS} ${${PIPELINE}_PDS_FLOW_TEST_FLAGS}
+MODULE_FLAGS    = ${NIC_CSR_FLAGS}
+MODULE_SRCS     = $(shell find ${MODULE_SRC_DIR} -type f -name '*.cc' ! -name 'agenthooks*')
 MODULE_DEFS     = -DCAPRI_SW ${NIC_CSR_DEFINES}
 include ${MKDEFS}/post.mk

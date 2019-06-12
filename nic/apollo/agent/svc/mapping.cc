@@ -8,11 +8,7 @@
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/mapping.hpp"
 #include "nic/apollo/agent/trace.hpp"
-#include "nic/apollo/test/flow_test/flow_test.hpp"
-
-#ifdef PDS_FLOW_TEST
-extern flow_test *g_flow_test_obj;
-#endif
+#include "nic/apollo/agent/hooks.hpp"
 
 Status
 MappingSvcImpl::MappingCreate(ServerContext *context,
@@ -26,15 +22,11 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
             if (proto_req->request(i).tunnelid() == 0) {
                 pds_agent_local_mapping_api_spec_fill(&local_spec,
                                                       proto_req->request(i));
-#ifdef PDS_FLOW_TEST
-                g_flow_test_obj->add_local_ep(&local_spec);
-#endif
+                hooks::local_mapping_create(&local_spec);
             } else {
                 pds_agent_remote_mapping_api_spec_fill(&remote_spec,
                                                        proto_req->request(i));
-#ifdef PDS_FLOW_TEST
-                g_flow_test_obj->add_remote_ep(&remote_spec);
-#endif
+                hooks::remote_mapping_create(&remote_spec);
             }
 
             if (!core::agent_state::state()->pds_mock_mode()) {

@@ -10,11 +10,6 @@
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/policy.hpp"
 
-#if 0
-#include "nic/apollo/test/flow_test/flow_test.hpp"
-extern flow_test *g_flow_test_obj;
-#endif
-
 Status
 SecurityPolicySvcImpl::SecurityPolicyCreate(ServerContext *context,
                                             const pds::SecurityPolicyRequest *proto_req,
