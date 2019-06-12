@@ -117,7 +117,7 @@ window_calc_done:
     sub         r3, r3, k.to_s5_rcv_nxt
 
     /* In case (rcv_wup + rcv_wnd - rcv_nxt) < 0 reset current
-    * window c3 to zero. 
+    * window c3 to zero.
     */
 
     sle.s       c3, r3, 0
@@ -127,19 +127,20 @@ window_calc_done:
     * current window to avoid shrinking the window when we
     * apply scale
     */
+
     sll.!c3     r2, 1, d.rcv_scale
     sub.!c3     r2, r2, 1
     add.!c3     r3, r3, r2
 
-    sle         c3, r4, r3
+    /* Now compare the calculated window and the previosly advertised
+    * window. In order to avoid silly window syndrome open the right
+    * edge only if we can move it at least by one MSS (receiver side
+    * SWS). */
+    add         r2, r3, d.rcv_mss
+    sle         c3, r4, r2
     add.c3      r4, r0, r3
-    sle.c3      c3, r4, d.rcv_mss
-    sne.c3      c3, r4, r0
-    add.c3      r4, r0, d.rcv_mss
 
-    /* Make sure the receive window calculated is greater than MSS */
-    slt         c3, r4, d.rcv_mss
-    add.c3      r4, r0, r0
+    /* r4 is the window we want to advertise */
     tblwr       d.rcv_wnd, r4
 
 flow_fc_process_done:
@@ -158,10 +159,12 @@ flow_fc_process_done:
     phvwr       p.rx2tx_extra_rcv_wnd, r4
     tblwr       d.rcv_wup, k.to_s5_rcv_nxt
 
-    /* We are advertizing zero window. Subscribe for application
+    /* If we are advertizing zero window, subscribe for application
     * read notification so that we can generate window update. Wait
     * for 5 descriptors to be freed for now. Need to tune this 
-    * further */
+    * further.
+    */
+
     add         r2, r0, d.read_notify_addr
     seq         c1, r0, r2
     memwr.h.!c1 r2, 0       // d.read_notify_addr invalid/not set?
