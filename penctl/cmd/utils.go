@@ -9,6 +9,17 @@ import (
 	"strings"
 )
 
+func naplesExecCmdNoPrint(v interface{}) error {
+	_, err := restGetWithBody(v, "cmd/v1/naples/")
+	if err != nil {
+		if verbose {
+			fmt.Println(err)
+		}
+		return err
+	}
+	return nil
+}
+
 func naplesExecCmd(v interface{}) error {
 	resp, err := restGetWithBody(v, "cmd/v1/naples/")
 	if err != nil {
