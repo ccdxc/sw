@@ -1161,7 +1161,7 @@ create_service_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
     }
     for (uint32_t i = 1; i <= num_teps; i++) {
         memset(&pds_tep, 0, sizeof(pds_tep));
-        compute_ipv6_addr(&pds_tep.key.ip_addr, ip_pfx, i, 120);
+        compute_local46_addr(&pds_tep.key.ip_addr, ip_pfx, i);
         pds_tep.type = PDS_TEP_TYPE_SERVICE;
         pds_tep.encap.type = PDS_ENCAP_TYPE_VXLAN;
         pds_tep.encap.val.vnid = tep_vnid++;
@@ -1541,7 +1541,8 @@ create_objects (void)
 
     if (g_test_params.artemis()) {
         // create service TEPs
-        ret = create_service_teps(64, &g_test_params.svc_tep_pfx);
+        ret = create_service_teps(TESTAPP_MAX_SERVICE_TEP,
+                                  &g_test_params.svc_tep_pfx);
         if (ret != SDK_RET_OK) {
             return ret;
         }

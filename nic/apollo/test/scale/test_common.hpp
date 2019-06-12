@@ -17,6 +17,7 @@
 
 #define TESTAPP_METER_NUM_PREFIXES        16
 #define TESTAPP_SWITCH_VNIC_VLAN          128
+#define TESTAPP_MAX_SERVICE_TEP           64
 #define TEST_APP_VIP_PORT                 32
 #define TEST_APP_DIP_PORT                 64
 
@@ -131,12 +132,12 @@ typedef struct test_params_s {
 }
 
 static inline void
-compute_ipv6_addr (ip_addr_t *addr, ip_prefix_t *initial_pfx,
-                   uint32_t shift_val, uint32_t len)
+compute_local46_addr (ip_addr_t *addr, ip_prefix_t *initial_pfx,
+                      uint32_t shift_val)
 {
     *addr = initial_pfx->addr;
-    addr->addr.v6_addr.addr32[IP6_ADDR32_LEN-2] = htonl(0xF1D0D1D0);
-    addr->addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
+    addr->addr.v6_addr.addr32[IP6_ADDR32_LEN-3] = htonl(0xF1D0D1D0);
+    addr->addr.v6_addr.addr32[IP6_ADDR32_LEN-2] =
         htonl((0xC << 28) | (shift_val << 8));
 }
 
