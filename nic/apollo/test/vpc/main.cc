@@ -27,7 +27,6 @@ namespace api_test {
 
 // Globals
 static const char *g_cfg_file = NULL;
-static std::string g_pipeline("");
 static constexpr uint32_t k_max_vpc = PDS_MAX_VPC + 1;
 
 //----------------------------------------------------------------------------
@@ -44,7 +43,6 @@ protected:
         test_case_params_t params;
 
         params.cfg_file = api_test::g_cfg_file;
-        params.pipeline = api_test::g_pipeline;
         params.enable_fte = FALSE;
         pds_test_base::SetUpTestCase(params);
     }
@@ -257,7 +255,7 @@ TEST_F(vpc, vpc_workflow_neg_8) {
 static inline void
 vpc_test_usage_print (char **argv)
 {
-    cout << "Usage : " << argv[0] << " -c <hal.json> -f <apollo|artemis>" << endl;
+    cout << "Usage : " << argv[0] << " -c <hal.json>" << endl;
 }
 
 static void
@@ -284,11 +282,6 @@ vpc_test_options_validate (void)
 {
     if (!api_test::g_cfg_file) {
         cerr << "HAL config file is not specified" << endl;
-        return SDK_RET_ERR;
-    }
-    api_test::g_pipeline = api_test::pipeline_get();
-    if (!IS_APOLLO() && !IS_ARTEMIS()) {
-        cerr << "Pipeline specified is invalid" << endl;
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;

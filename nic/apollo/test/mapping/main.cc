@@ -35,7 +35,6 @@ namespace api_test {
 
 // Globals
 char *g_cfg_file = NULL;
-std::string g_pipeline("");
 static pds_epoch_t g_batch_epoch = PDS_EPOCH_INVALID;
 
 // Config for VPC 1
@@ -68,7 +67,6 @@ protected:
     static void SetUpTestCase() {
         test_case_params_t params;
         params.cfg_file = api_test::g_cfg_file;
-        params.pipeline = api_test::g_pipeline;
         params.enable_fte = false;
         pds_test_base::SetUpTestCase(params);
         uint16_t vpc_id = api_test::g_vpc_id;
@@ -101,7 +99,7 @@ protected:
         rt_addr = rt_pfx.addr;
         tep_util tep_obj(k_device_ip);
 
-        BATCH_START();
+        batch_start();
         sample_device_setup();
 
         vpc_feeder vpc_feeder;
@@ -137,7 +135,7 @@ protected:
         }
         VNIC_SEED_INIT(&vnic_seed, vnic_stepper, num_vnics, vnic_stepper_mac);
         VNIC_MANY_CREATE(&vnic_seed);
-        BATCH_COMMIT();
+        batch_commit();
 
         vpc_key.id = api_test::g_vpc_id;
         vpc_feeder.init(vpc_key, PDS_VPC_TYPE_TENANT, g_vpc_cidr_v4,
@@ -1295,7 +1293,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_8) {
 static inline void
 mapping_test_usage_print (char **argv)
 {
-    cout << "Usage : " << argv[0] << " -c <hal.json> -f <apollo|artemis>" << endl;
+    cout << "Usage : " << argv[0] << " -c <hal.json>" << endl;
     return;
 }
 
@@ -1324,11 +1322,6 @@ mapping_test_options_validate (void)
 {
     if (!api_test::g_cfg_file) {
         cerr << "HAL config file is not specified" << endl;
-        return sdk::SDK_RET_ERR;
-    }
-    api_test::g_pipeline = api_test::pipeline_get();
-    if (!IS_APOLLO() && !IS_ARTEMIS()) {
-        cerr << "Pipeline specified is invalid" << endl;
         return sdk::SDK_RET_ERR;
     }
     return sdk::SDK_RET_OK;

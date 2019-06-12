@@ -11,6 +11,7 @@
 #include "iostream"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
+#include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/test/utils/remote_mapping.hpp"
 
@@ -121,7 +122,7 @@ remote_mapping_util::read(pds_remote_mapping_info_t *info) const {
     if ((rv = pds_remote_mapping_read(&key, info) )!= sdk::SDK_RET_OK)
         return rv;
 
-    if (capri_mock_mode())
+    if (::capri_mock_mode())
         return SDK_RET_OK;
 
     std::cout << "Mapping info:"

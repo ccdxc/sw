@@ -40,19 +40,6 @@ batch_abort (void)
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 }
 
-static inline std::string
-pipeline_get ()
-{
-#ifdef APOLLO
-    return "apollo";
-#elif ARTEMIS
-    return "artemis";
-#else
-    cerr << (stderr, "Error: PIPELINE should either be apollo or artemis\n");
-    return NULL;
-#endif
-}
-
 }    // end namespace
 
 #endif    // __TEST_UTILS_BATCH_HPP__

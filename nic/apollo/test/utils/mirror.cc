@@ -10,6 +10,7 @@
 
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
+#include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/mirror.hpp"
 
 namespace api_test {
@@ -59,7 +60,7 @@ mirror_session_util::read(pds_mirror_session_info_t *info) const {
     if ((rv = pds_mirror_session_read(&key, info)) != sdk::SDK_RET_OK)
         return rv;
 
-    if (capri_mock_mode())
+    if (::capri_mock_mode())
         return sdk::SDK_RET_OK;
 
     // validate mirror session type

@@ -31,12 +31,9 @@ g_agent_hooks_func (agent_op_t op, void *obj, void *arg)
                                       test_params.dport_hi);
 #if defined(ARTEMIS)
         flow_test_obj->set_session_info_cfg_params(
-                                test_params.num_vpcs,
-                                test_params.num_ip_per_vnic,
-                                test_params.num_remote_mappings,
-                                test_params.meter_scale,
-                                TESTAPP_METER_NUM_PREFIXES,
-                                test_params.num_nh);
+            test_params.num_vpcs, test_params.num_ip_per_vnic,
+            test_params.num_remote_mappings, test_params.meter_scale,
+            TESTAPP_METER_NUM_PREFIXES, test_params.num_nh);
 #endif
     } else if (op == BATCH_START) {
         pds_epoch_t *epoch = (pds_epoch_t *)obj;

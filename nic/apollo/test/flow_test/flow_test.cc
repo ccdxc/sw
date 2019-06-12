@@ -32,7 +32,6 @@ using sdk::utils::crcFast;
 namespace pt = boost::property_tree;
 
 char                *g_cfg_file = NULL;
-string              g_pipeline("");
 bool                g_daemon_mode = false;
 flow_test           *g_flow_test_obj;
 test_params_t g_test_params = { 0 };
@@ -50,7 +49,6 @@ protected:
         /**< call base class function */
         test_case_params_t params;
         params.cfg_file = g_cfg_file;
-        params.pipeline = g_pipeline;
         params.enable_fte = false;
         pds_test_base::SetUpTestCase(params);
     }
@@ -239,7 +237,6 @@ main (int argc, char **argv)
        { "config",    required_argument, NULL, 'c' },
        { "daemon",    required_argument, NULL, 'd' },
        { "help",      no_argument,       NULL, 'h' },
-       { "feature",   required_argument, NULL, 'f' },
        { 0,           0,                 0,     0 }
     };
 
@@ -250,16 +247,6 @@ main (int argc, char **argv)
             g_cfg_file = optarg;
             if (!g_cfg_file) {
                 fprintf(stderr, "HAL config file is not specified\n");
-                print_usage(argv);
-                exit(1);
-            }
-            break;
-
-        case 'f':
-            g_pipeline = (std::string)optarg;
-            if (g_pipeline != "apollo" &&
-                g_pipeline != "artemis") {
-                fprintf(stderr, "Pipeline specified is invalid\n");
                 print_usage(argv);
                 exit(1);
             }

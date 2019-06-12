@@ -11,16 +11,13 @@
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
+#include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/vnic.hpp"
 
 namespace api_test {
 
 const uint64_t k_seed_mac = 0xa010101000000000;
-#if defined APOLLO
-constexpr uint32_t k_max_vnic = 64;
-#else
-constexpr uint32_t k_max_vnic = PDS_MAX_VNIC;
-#endif
+const uint32_t k_max_vnic = ::apollo() ? 64 : PDS_MAX_VNIC;
 
 vnic_util::vnic_util(uint32_t vnic_id, pds_encap_t vnic_encap,
                      pds_encap_t fabric_encap, uint64_t mac_u64,

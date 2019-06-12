@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/api/utils.hpp"
+#include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/tep.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 
@@ -102,11 +103,7 @@ tep_util::read(pds_tep_info_t *info) const {
     sdk_ret_t rv;
     pds_tep_key_t key;
     ip_addr_t tep_ip = this->ip_addr, tep_dipi = this->dipi;
-#ifdef APOLLO
-    pds_encap_t tep_encap = this->encap;
-#else
-    pds_encap_t tep_encap = k_zero_encap;
-#endif
+    pds_encap_t tep_encap = ::apollo() ? this->encap : k_zero_encap;
 
     memset(info, 0, sizeof(pds_tep_info_t));
     memset(&key, 0, sizeof(pds_tep_key_t));

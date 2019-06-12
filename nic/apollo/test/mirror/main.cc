@@ -24,7 +24,6 @@
 namespace api_test {
 
 static const char *g_cfg_file = "hal.json";
-static std::string g_pipeline("apollo");
 static constexpr uint32_t k_max_mirror_sessions = PDS_MAX_MIRROR_SESSION;
 static constexpr uint32_t k_base_ms = 1;
 static const char * const k_tep_ip1 = "10.1.1.1";
@@ -46,7 +45,6 @@ protected:
         test_case_params_t params;
 
         params.cfg_file = api_test::g_cfg_file;
-        params.pipeline = api_test::g_pipeline;
         params.enable_fte = FALSE;
         pds_test_base::SetUpTestCase(params);
         batch_start();
@@ -419,7 +417,7 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_8) {
 static inline void
 print_usage (char **argv)
 {
-    fprintf(stdout, "Usage : %s -c <hal.json> -f <apollo|artemis>\n", argv[0]);
+    fprintf(stdout, "Usage : %s -c <hal.json>\n", argv[0]);
 }
 
 int
@@ -447,7 +445,6 @@ main (int argc, char **argv)
             break;
         }
     }
-    api_test::g_pipeline = api_test::pipeline_get();
 
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

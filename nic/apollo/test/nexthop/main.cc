@@ -23,7 +23,6 @@ namespace api_test {
 
 // Globals
 static const char *g_cfg_file = NULL;
-std::string g_pipeline("");
 static const std::string k_base_nh_ip = "50.50.1.1";
 static constexpr uint64_t k_base_mac = 0x0E0D0A0B0200;
 static constexpr uint32_t k_max_nh = PDS_MAX_NEXTHOP;
@@ -42,7 +41,6 @@ protected:
         test_case_params_t params;
 
         params.cfg_file = api_test::g_cfg_file;
-        params.pipeline = api_test::g_pipeline;
         params.enable_fte = FALSE;
         pds_test_base::SetUpTestCase(params);
     }
@@ -245,7 +243,7 @@ TEST_F(nh_test, nh_workflow_neg_8) {
 static inline void
 nh_test_usage_print (char **argv)
 {
-    cout << "Usage : " << argv[0] << " -c <hal.json> -f <artemis>" << endl;
+    cout << "Usage : " << argv[0] << " -c <hal.json>" << endl;
     return;
 }
 
@@ -256,10 +254,6 @@ nh_test_options_validate (void)
         cerr << "HAL config file is not specified" << endl;
         return sdk::SDK_RET_ERR;
     }
-    if (!IS_ARTEMIS()) {
-        cerr << "Pipeline specified is invalid" << endl;
-        return sdk::SDK_RET_ERR;
-    }
     return sdk::SDK_RET_OK;
 }
 
@@ -268,17 +262,13 @@ nh_test_options_parse (int argc, char **argv)
 {
     int oc = -1;
     struct option longopts[] = {{"config", required_argument, NULL, 'c'},
-                                {"feature", required_argument, NULL, 'f'},
                                 {"help", no_argument, NULL, 'h'},
                                 {0, 0, 0, 0}};
 
-    while ((oc = getopt_long(argc, argv, ":hc:f:", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":hc:", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
             api_test::g_cfg_file = optarg;
-            break;
-        case 'f':
-            api_test::g_pipeline = std::string(optarg);
             break;
         default:    // ignore all other options
             break;

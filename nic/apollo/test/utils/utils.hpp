@@ -12,13 +12,12 @@
 #define __TEST_UTILS_UTILS_HPP__
 
 #include <vector>
-#include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/platform/capri/capri_p4.hpp" //UPLINK_0/1
 
 namespace api_test {
 
-/// \brief utils operation
+// todo: @kalyanbade delete this once all references are gone
 typedef enum op_e {
     OP_NONE,            ///< None
     OP_MANY_CREATE,     ///< Create
@@ -98,40 +97,6 @@ extract_ip_pfx (const char *str, ip_prefix_t *ip_pfx)
     } else {
         SDK_ASSERT(0);
     }
-}
-
-#define IS_APOLLO()                                                    \
-    api_test::apollo(api_test::g_pipeline)
-
-#define IS_ARTEMIS()                                                   \
-    api_test::artemis(api_test::g_pipeline)
-
-inline bool
-apollo (const std::string pipeline_str)
-{
-    return pipeline_str == "apollo";
-}
-
-inline bool
-artemis (const std::string pipeline_str)
-{
-    return pipeline_str == "artemis";
-}
-
-// Returns true if mock_mode is enabled, otherwise false
-static inline bool
-capri_mock_mode (void)
-{
-    static bool input_check = FALSE;
-    static bool capri_mock_mode = TRUE;
-
-    if (!input_check) {
-        if (getenv("CAPRI_MOCK_MODE") == NULL)
-            capri_mock_mode = FALSE;
-        input_check = TRUE;
-    }
-
-    return capri_mock_mode;
 }
 
 /// \brief Packet send function

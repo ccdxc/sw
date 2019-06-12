@@ -115,14 +115,6 @@ typedef struct test_params_s {
         ip_prefix_t v4_vip_pfx;
         ip_prefix_t v6_vip_pfx;
     };
-
-    bool apollo(void) {
-        return pipeline == "apollo";
-    }
-
-    bool artemis(void) {
-        return pipeline == "artemis";
-    }
 } test_params_t;
 
 #define CONVERT_TO_V4_MAPPED_V6_ADDRESS(_v6pfx, _v4addr) {         \

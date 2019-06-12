@@ -9,9 +9,9 @@
 //----------------------------------------------------------------------------
 
 #include <stdarg.h>
-#include "base.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
+#include "nic/apollo/test/utils/base.hpp"
 
 
 /// Callback invoked for debug traces
@@ -21,6 +21,7 @@
 /// but with a simple header prepended that tells what level the
 /// trace is spwed at ... in reality, you call your favorite logger here
 static char logbuf[2048];
+sdk_trace_level_e g_trace_level = sdk::lib::SDK_TRACE_LEVEL_DEBUG;
 static int
 trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
 {
@@ -79,7 +80,7 @@ pds_test_base::SetUpTestCase(test_case_params_t &params)
     memset(&init_params, 0, sizeof(init_params));
     init_params.init_mode = PDS_INIT_MODE_COLD_START;
     init_params.trace_cb  = trace_cb;
-    init_params.pipeline  = params.pipeline;
+    init_params.pipeline  = ::pipeline_get();
     init_params.cfg_file  = std::string(params.cfg_file);
     init_params.scale_profile = PDS_SCALE_PROFILE_DEFAULT;
     if (!params.profile.empty()) {

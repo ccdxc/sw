@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include <iostream>
-#include "nic/apollo/test/utils/utils.hpp"
+#include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/device.hpp"
 
 namespace api_test {
@@ -81,7 +81,7 @@ device_feeder::spec_compare(pds_device_spec_t *spec) {
 
 sdk::sdk_ret_t
 device_feeder::info_compare(pds_device_info_t *info) {
-    if (capri_mock_mode())
+    if (::capri_mock_mode())
         return sdk::SDK_RET_OK;
 
     // todo: @amrita check if this works with agent

@@ -27,7 +27,6 @@ namespace api_test {
 
 // Globals
 static const char *g_cfg_file = NULL;
-static std::string g_pipeline("");
 static uint16_t g_num_policy = PDS_MAX_SECURITY_POLICY; // can overwrite using cmd line
 
 //----------------------------------------------------------------------------
@@ -44,7 +43,6 @@ protected:
         test_case_params_t params;
 
         params.cfg_file = api_test::g_cfg_file;
-        params.pipeline = api_test::g_pipeline;
         params.enable_fte = FALSE;
         pds_test_base::SetUpTestCase(params);
         g_trace_level = sdk::lib::SDK_TRACE_LEVEL_INFO;
@@ -469,8 +467,8 @@ TEST_F(policy, policy_workflow_neg_1) {
 
     batch_start();
     POLICY_MANY_CREATE(&seed);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
+    batch_commit_fail();
+    batch_abort();
 
     POLICY_MANY_READ(&seed, sdk::SDK_RET_OK);
 
@@ -500,8 +498,8 @@ TEST_F(policy, policy_workflow_neg_2) {
     // trigger
     batch_start();
     POLICY_MANY_CREATE(&seed);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
+    batch_commit_fail();
+    batch_abort();
 
     POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
@@ -520,8 +518,8 @@ TEST_F(policy, policy_workflow_neg_3) {
 
     batch_start();
     POLICY_MANY_DELETE(&seed);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
+    batch_commit_fail();
+    batch_abort();
 }
 
 /// \brief Invalid batch shouldn't affect entries of previous batch
@@ -550,8 +548,8 @@ TEST_F(policy, policy_workflow_neg_4) {
     batch_start();
     POLICY_MANY_DELETE(&seed1);
     POLICY_MANY_DELETE(&seed2);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
+    batch_commit_fail();
+    batch_abort();
     POLICY_MANY_READ(&seed1, sdk::SDK_RET_OK);
     POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
 
@@ -589,8 +587,8 @@ TEST_F(policy, DISABLED_policy_workflow_neg_5) {
     batch_start();
     POLICY_MANY_DELETE(&seed);
     POLICY_MANY_UPDATE(&seed1);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
+    batch_commit_fail();
+    batch_abort();
 
     POLICY_MANY_READ(&seed, sdk::SDK_RET_OK);
 
@@ -620,8 +618,8 @@ TEST_F(policy, policy_workflow_neg_6) {
     // trigger
     batch_start();
     POLICY_MANY_UPDATE(&seed);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
+    batch_commit_fail();
+    batch_abort();
 
     POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 
@@ -653,8 +651,8 @@ TEST_F(policy, DISABLED_policy_workflow_neg_7) {
 
     batch_start();
     POLICY_MANY_UPDATE(&seed1);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
+    batch_commit_fail();
+    batch_abort();
 
     POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 
@@ -696,8 +694,8 @@ TEST_F(policy, policy_workflow_neg_8) {
     batch_start();
     POLICY_MANY_UPDATE(&seed1_new);
     POLICY_MANY_UPDATE(&seed2);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
+    batch_commit_fail();
+    batch_abort();
     POLICY_MANY_READ(&seed1, sdk::SDK_RET_OK);
     POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
 
@@ -735,8 +733,8 @@ TEST_F(policy, policy_workflow_neg_9) {
     batch_start();
     POLICY_MANY_DELETE(&seed1);
     POLICY_MANY_UPDATE(&seed2);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
+    batch_commit_fail();
+    batch_abort();
     POLICY_MANY_READ(&seed1, sdk::SDK_RET_OK);
     POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
 
@@ -759,7 +757,7 @@ TEST_F(policy, policy_workflow_neg_9) {
 static inline void
 policy_test_usage_print (char **argv)
 {
-    cout << "Usage : " << argv[0] << " -c <hal.json> -f <apollo|artemis>" << endl;
+    cout << "Usage : " << argv[0] << " -c <hal.json>" << endl;
 }
 
 static void
@@ -789,11 +787,6 @@ policy_test_options_validate (void)
 {
     if (!api_test::g_cfg_file) {
         cerr << "HAL config file is not specified" << endl;
-        return SDK_RET_ERR;
-    }
-    api_test::g_pipeline = api_test::pipeline_get();
-    if (!IS_APOLLO() && !IS_ARTEMIS()) {
-        cerr << "Pipeline specified is invalid" << endl;
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;

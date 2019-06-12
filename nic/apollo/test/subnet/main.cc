@@ -28,7 +28,6 @@ namespace api_test {
 
 // Globals
 static const char *g_cfg_file = NULL;
-static std::string g_pipeline("");
 static constexpr uint32_t k_max_subnet = PDS_MAX_SUBNET + 1;
 
 //----------------------------------------------------------------------------
@@ -45,7 +44,6 @@ protected:
         test_case_params_t params;
 
         params.cfg_file = api_test::g_cfg_file;
-        params.pipeline = api_test::g_pipeline;
         params.enable_fte = FALSE;
         pds_test_base::SetUpTestCase(params);
         batch_start();
@@ -264,7 +262,7 @@ TEST_F(subnet, subnet_workflow_neg_8) {
 static inline void
 subnet_test_usage_print (char **argv)
 {
-    cout << "Usage : " << argv[0] << " -c <hal.json> -f <apollo|artemis>" << endl;
+    cout << "Usage : " << argv[0] << " -c <hal.json>" << endl;
 }
 
 static void
@@ -291,11 +289,6 @@ subnet_test_options_validate (void)
 {
     if (!api_test::g_cfg_file) {
         cerr << "HAL config file is not specified" << endl;
-        return SDK_RET_ERR;
-    }
-    api_test::g_pipeline = api_test::pipeline_get();
-    if (!IS_APOLLO() && !IS_ARTEMIS()) {
-        cerr << "Pipeline specified is invalid" << endl;
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;

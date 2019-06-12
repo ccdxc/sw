@@ -5,6 +5,7 @@
 #include <iostream>
 #include <math.h>
 #include "nic/apollo/test/scale/test.hpp"
+#include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
@@ -68,7 +69,7 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
         for (uint32_t j = 0; j < num_routes; j++) {
             compute_ipv6_prefix(&v6route_table.routes[j].prefix, v6_route_pfx,
                                 v6rtnum++, 120);
-            if (g_test_params.apollo()) {
+            if (apollo()) {
                 v6route_table.routes[j].nh_ip.af = IP_AF_IPV4;
                 v6route_table.routes[j].nh_ip.addr.v4_addr =
                         tep_pfx->addr.addr.v4_addr + tep_offset++;
@@ -79,7 +80,7 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
                     tep_offset += 3;
                 }
                 v6route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
-            } else if (g_test_params.artemis()) {
+            } else if (artemis()) {
                 v6route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
                 v6route_table.routes[j].nh = nh_id++;
                 if (nh_id > num_nh) {
@@ -152,7 +153,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
             route_table.routes[j].prefix.addr.af = IP_AF_IPV4;
             route_table.routes[j].prefix.addr.addr.v4_addr =
                 ((0xC << 28) | (rtnum++ << 8));
-            if (g_test_params.apollo()) {
+            if (apollo()) {
                 route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
                 route_table.routes[j].nh_ip.af = IP_AF_IPV4;
                 route_table.routes[j].nh_ip.addr.v4_addr =
@@ -162,7 +163,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     // skip MyTEP and gateway IPs
                     tep_offset += 3;
                 }
-            } else if (g_test_params.artemis()) {
+            } else if (artemis()) {
                 route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
                 route_table.routes[j].nh = nh_id++;
                 if (nh_id > num_nh) {
@@ -606,7 +607,7 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
         }
     }
 
-    if (g_test_params.artemis()) {
+    if (artemis()) {
         // create a bridge vnic in the infra/provider/public vrf
         memset(&pds_vnic, 0, sizeof(pds_vnic));
         pds_vnic.vpc.id = num_vpcs + 1;
@@ -734,7 +735,7 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_pfx,
         }
     }
 
-    if (g_test_params.artemis()) {
+    if (artemis()) {
         // create infra/substrate/provider VPC
         memset(&pds_vpc, 0, sizeof(pds_vpc));
         pds_vpc.type = PDS_VPC_TYPE_SUBSTRATE;
@@ -1469,7 +1470,6 @@ create_objects (void)
 {
     sdk_ret_t ret;
 
-    g_test_params.pipeline = g_pipeline;
     ret = parse_test_cfg(g_input_cfg_file, &g_test_params);
     if (ret != SDK_RET_OK) {
         exit(1);
@@ -1494,7 +1494,7 @@ create_objects (void)
         return ret;
     }
 
-    if (g_test_params.artemis()) {
+    if (artemis()) {
         // create v4 tags
         ret = create_tags(g_test_params.num_tag_trees/2, g_test_params.tags_v4_scale,
                           IP_AF_IPV4, &g_test_params.v6_route_pfx);
@@ -1541,7 +1541,7 @@ create_objects (void)
         return ret;
     }
 
-    if (g_test_params.artemis()) {
+    if (artemis()) {
         // create service TEPs
         ret = create_service_teps(TESTAPP_MAX_SERVICE_TEP,
                                   &g_test_params.svc_tep_pfx);
@@ -1599,7 +1599,7 @@ create_objects (void)
         return ret;
     }
 
-    if (g_test_params.artemis()) {
+    if (artemis()) {
         // create vpc peers
         ret = create_vpc_peers(g_test_params.num_vpcs);
         if (ret != SDK_RET_OK) {
@@ -1607,7 +1607,7 @@ create_objects (void)
         }
     }
 
-    if (g_test_params.apollo()) {
+    if (apollo()) {
         // create RSPAN mirror sessions
         if (g_test_params.mirror_en && (g_test_params.num_rspan > 0)) {
             ret = create_rspan_mirror_sessions(g_test_params.num_rspan);
@@ -1638,7 +1638,7 @@ create_objects (void)
     }
 
     // create service mappings
-    if (g_test_params.artemis()) {
+    if (artemis()) {
         ret = create_svc_mappings(g_test_params.num_vpcs,
                                   g_test_params.num_subnets,
                                   g_test_params.num_vnics,

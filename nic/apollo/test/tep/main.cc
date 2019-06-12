@@ -24,7 +24,6 @@ namespace api_test {
 
 // Globals
 static const char *g_cfg_file = NULL;
-static std::string g_pipeline("");
 static const char * const k_base_nh_ip = "50.50.1.1";
 static const std::string k_base_dipi = "50::50:1:1";
 static constexpr int k_max_tep = PDS_MAX_TEP;
@@ -46,7 +45,6 @@ protected:
         test_case_params_t params;
 
         params.cfg_file = api_test::g_cfg_file;
-        params.pipeline = api_test::g_pipeline;
         params.enable_fte = FALSE;
         pds_test_base::SetUpTestCase(params);
     }
@@ -66,7 +64,7 @@ protected:
 TEST_F(tep_test, tep_workflow1) {
     tep_stepper_seed_t seed = {};
 
-    if (IS_ARTEMIS())
+    if (artemis())
         TEP_SEED_INIT(&seed, k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
     else
@@ -78,7 +76,7 @@ TEST_F(tep_test, tep_workflow1) {
 TEST_F(tep_test, tep_workflow2) {
     tep_stepper_seed_t seed = {};
 
-    if (IS_ARTEMIS())
+    if (artemis())
         TEP_SEED_INIT(&seed, k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
     else
@@ -90,7 +88,7 @@ TEST_F(tep_test, tep_workflow2) {
 TEST_F(tep_test, tep_workflow3) {
     tep_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {};
 
-    if (IS_ARTEMIS()) {
+    if (artemis()) {
         TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
         TEP_SEED_INIT(&seed2, "20.20.1.1", 10, k_zero_encap,
@@ -109,7 +107,7 @@ TEST_F(tep_test, tep_workflow3) {
 TEST_F(tep_test, tep_workflow4) {
     tep_stepper_seed_t seed = {};
 
-    if (IS_ARTEMIS())
+    if (artemis())
         TEP_SEED_INIT(&seed, k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
     else
@@ -121,7 +119,7 @@ TEST_F(tep_test, tep_workflow4) {
 TEST_F(tep_test, tep_workflow5) {
     tep_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {};
 
-    if (IS_ARTEMIS()) {
+    if (artemis()) {
         TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
         TEP_SEED_INIT(&seed2, "20.20.1.1", 20, k_zero_encap,
@@ -140,7 +138,7 @@ TEST_F(tep_test, tep_workflow5) {
 TEST_F(tep_test, tep_workflow6) {
     tep_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
 
-    if (IS_ARTEMIS()) {
+    if (artemis()) {
         TEP_SEED_INIT(&seed1, k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
         // seed1A =  seed1 + different dipi
@@ -164,7 +162,7 @@ TEST_F(tep_test, tep_workflow6) {
 TEST_F(tep_test, tep_workflow7) {
     tep_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
 
-    if (IS_ARTEMIS()) {
+    if (artemis()) {
         TEP_SEED_INIT(&seed1, k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
         // seed1A =  seed1 + different dipi
@@ -188,7 +186,7 @@ TEST_F(tep_test, tep_workflow7) {
 TEST_F(tep_test, DISABLED_tep_workflow8) {
     tep_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
 
-    if (IS_ARTEMIS()) {
+    if (artemis()) {
         TEP_SEED_INIT(&seed1, k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
         // seed1A =  seed1 + different dipi
@@ -212,7 +210,7 @@ TEST_F(tep_test, DISABLED_tep_workflow8) {
 TEST_F(tep_test, tep_workflow9) {
     tep_stepper_seed_t seed1 = {}, seed1A = {};
 
-    if (IS_ARTEMIS()) {
+    if (artemis()) {
         TEP_SEED_INIT(&seed1, k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
         // seed1A =  seed1 + different dipi
@@ -232,7 +230,7 @@ TEST_F(tep_test, DISABLED_tep_workflow10) {
     tep_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {}, seed4 = {};
     tep_stepper_seed_t seed2A = {}, seed3A = {};
 
-    if (IS_ARTEMIS()) {
+    if (artemis()) {
         TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
         TEP_SEED_INIT(&seed2, "20.20.1.1", 20, k_zero_encap,
@@ -262,7 +260,7 @@ TEST_F(tep_test, DISABLED_tep_workflow10) {
 TEST_F(tep_test, tep_workflow_neg_1) {
     tep_stepper_seed_t seed = {};
 
-    if (IS_ARTEMIS())
+    if (artemis())
         TEP_SEED_INIT(&seed, k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
     else
@@ -274,7 +272,7 @@ TEST_F(tep_test, tep_workflow_neg_1) {
 TEST_F(tep_test, tep_workflow_neg_2) {
     tep_stepper_seed_t seed = {};
 
-    if (IS_ARTEMIS())
+    if (artemis())
         TEP_SEED_INIT(&seed, k_base_nh_ip, k_max_tep+2, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
     else
@@ -286,7 +284,7 @@ TEST_F(tep_test, tep_workflow_neg_2) {
 TEST_F(tep_test, tep_workflow_neg_3) {
     tep_stepper_seed_t seed = {};
 
-    if (IS_ARTEMIS())
+    if (artemis())
         TEP_SEED_INIT(&seed, "150.150.1.1", k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "150::150:1:1", 0);
     else
@@ -298,7 +296,7 @@ TEST_F(tep_test, tep_workflow_neg_3) {
 TEST_F(tep_test, tep_workflow_neg_4) {
     tep_stepper_seed_t seed1 = {}, seed2 = {};
 
-    if (IS_ARTEMIS()) {
+    if (artemis()) {
         TEP_SEED_INIT(&seed1, k_base_nh_ip, 10, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
         TEP_SEED_INIT(&seed2, "60.60.1.1", 10, k_zero_encap,
@@ -314,7 +312,7 @@ TEST_F(tep_test, tep_workflow_neg_4) {
 TEST_F(tep_test, DISABLED_tep_workflow_neg_5) {
     tep_stepper_seed_t seed1 = {}, seed1A = {};
 
-    if (IS_ARTEMIS()) {
+    if (artemis()) {
         TEP_SEED_INIT(&seed1, k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
         TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_zero_encap,
@@ -332,7 +330,7 @@ TEST_F(tep_test, DISABLED_tep_workflow_neg_5) {
 TEST_F(tep_test, tep_workflow_neg_6) {
     tep_stepper_seed_t seed1 = {}, seed1A = {};
 
-    if (IS_ARTEMIS()) {
+    if (artemis()) {
         TEP_SEED_INIT(&seed1, k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
         TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep+1, k_zero_encap,
@@ -350,7 +348,7 @@ TEST_F(tep_test, tep_workflow_neg_6) {
 TEST_F(tep_test, tep_workflow_neg_7) {
     tep_stepper_seed_t seed1 = {}, seed1A = {}, seed2 = {};
 
-    if (IS_ARTEMIS()) {
+    if (artemis()) {
         TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
         TEP_SEED_INIT(&seed1A, "10.10.1.1", 10, k_zero_encap,
@@ -370,7 +368,7 @@ TEST_F(tep_test, tep_workflow_neg_7) {
 TEST_F(tep_test, tep_workflow_neg_8) {
     tep_stepper_seed_t seed1 = {}, seed2 = {};
 
-    if (IS_ARTEMIS()) {
+    if (artemis()) {
         TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
         TEP_SEED_INIT(&seed2, "20.20.1.1", 20, k_zero_encap,
@@ -390,7 +388,7 @@ TEST_F(tep_test, tep_workflow_neg_8) {
 static inline void
 tep_test_usage_print (char **argv)
 {
-    cout << "Usage : " << argv[0] << " -c <hal.json> -f <apollo|artemis>" << endl;
+    cout << "Usage : " << argv[0] << " -c <hal.json>" << endl;
     return;
 }
 
@@ -419,11 +417,6 @@ tep_test_options_validate (void)
 {
     if (!api_test::g_cfg_file) {
         cerr << "HAL config file is not specified" << endl;
-        return sdk::SDK_RET_ERR;
-    }
-    api_test::g_pipeline = api_test::pipeline_get();
-    if (!IS_APOLLO() && !IS_ARTEMIS()) {
-        cerr << "Pipeline specified is invalid" << endl;
         return sdk::SDK_RET_ERR;
     }
     return sdk::SDK_RET_OK;

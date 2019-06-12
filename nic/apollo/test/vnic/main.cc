@@ -24,7 +24,6 @@
 namespace api_test {
 
 static const char *g_cfg_file = "hal.json";
-static std::string g_pipeline("apollo");
 
 //----------------------------------------------------------------------------
 // VNIC test class
@@ -40,7 +39,6 @@ protected:
         test_case_params_t params;
 
         params.cfg_file = api_test::g_cfg_file;
-        params.pipeline = api_test::g_pipeline;
         params.enable_fte = FALSE;
         pds_test_base::SetUpTestCase(params);
         batch_start();
@@ -278,18 +276,13 @@ vnic_test_options_validate (void)
         cerr << "HAL config file is not specified" << endl;
         return sdk::SDK_RET_ERR;
     }
-    api_test::g_pipeline = api_test::pipeline_get();
-    if (!IS_APOLLO() && !IS_ARTEMIS()) {
-        cerr << "Pipeline specified is invalid" << endl;
-        return sdk::SDK_RET_ERR;
-    }
     return sdk::SDK_RET_OK;
 }
 
 static inline void
 vnic_test_usage_print (char **argv)
 {
-    cout << "Usage : " << argv[0] << " -c <hal.json> -f <apollo|artemis>" << endl;
+    cout << "Usage : " << argv[0] << " -c <hal.json>" << endl;
     return;
 }
 

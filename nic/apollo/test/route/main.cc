@@ -27,7 +27,6 @@ namespace api_test {
 
 // Globals
 static char *g_cfg_file = NULL;
-static std::string g_pipeline("");
 
 static constexpr int k_max_v4_route_table = PDS_MAX_ROUTE_TABLE;
 static constexpr int k_max_v6_route_table = PDS_MAX_ROUTE_TABLE;
@@ -53,11 +52,10 @@ protected:
 
         params.cfg_file = api_test::g_cfg_file;
         params.enable_fte = false;
-        params.pipeline = g_pipeline;
         pds_test_base::SetUpTestCase(params);
         batch_start();
         sample_vpc_setup(PDS_VPC_TYPE_TENANT);
-        if (IS_APOLLO()) {
+        if (apollo()) {
             // create max TEPs which can be used as NHs for routes
             tep_stepper_seed_t tep_seed = {0};
 
@@ -74,7 +72,7 @@ protected:
     }
     static void TearDownTestCase() {
         batch_start();
-        if (IS_APOLLO()) {
+        if (apollo()) {
             tep_stepper_seed_t tep_seed = {0};
 
             TEP_SEED_INIT(&tep_seed, k_base_nh_ip);
@@ -562,7 +560,7 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_8) {
 static inline void
 route_test_usage_print (char **argv)
 {
-    cout << "Usage : " << argv[0] << " -c <hal.json> -f <apollo|artemis>" << endl;
+    cout << "Usage : " << argv[0] << " -c <hal.json>" << endl;
     return;
 }
 
@@ -572,11 +570,6 @@ route_test_options_validate (void)
     if (!api_test::g_cfg_file) {
         cerr << "HAL config file is not specified" << endl;
         return sdk::SDK_RET_ERR;
-    }
-    api_test::g_pipeline = api_test::pipeline_get();
-    if (!IS_APOLLO() && !IS_ARTEMIS()) {
-        cerr << "Pipeline specified is invalid" << endl;
-        return SDK_RET_ERR;
     }
     return sdk::SDK_RET_OK;
 }
@@ -605,9 +598,9 @@ static void
 route_test_init_parameters (void)
 {
     // init default global parameters
-    if (IS_APOLLO()) {
+    if (apollo()) {
         api_test::g_rt_def_nh_type = PDS_NH_TYPE_TEP;
-    } else if (IS_ARTEMIS()) {
+    } else if (artemis()) {
         api_test::g_rt_def_nh_type = PDS_NH_TYPE_IP;
     }
 }
