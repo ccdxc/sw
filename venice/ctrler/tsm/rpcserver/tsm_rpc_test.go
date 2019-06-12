@@ -180,6 +180,10 @@ func TestMirrorSessionRpc(t *testing.T) {
 	evtList, err := rxStream.Recv()
 	//Assert(t, (err == nil && (len(evtList.MirrorSessionEvents) == len(testMirrorSessions))), "All Mirror session not received by the client")
 	Assert(t, (err == nil && (len(evtList.MirrorSessionEvents) == 1)), "All Mirror session not received by the client")
+	pktFilters := evtList.MirrorSessionEvents[0].MirrorSession.Spec.PacketFilters
+	Assert(t, len(pktFilters) == 1, "invalid number of packet filters %v", len(pktFilters))
+	Assert(t, pktFilters[0] == ms.Spec.PacketFilters[0], "expected %v, got %v",
+		ms.Spec.PacketFilters[0], pktFilters[0])
 
 	ms = &testMirrorSessions[1]
 	Assert(t, (ms.Spec.StartConditions.ScheduleTime != nil), "Test case bug - must schedule session[1]")

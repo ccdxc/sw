@@ -33,6 +33,7 @@ func buildNICMirrorSession(mss *statemgr.MirrorSessionState) *tsproto.MirrorSess
 	tSpec.PacketDir = tsproto.MirrorDir_BOTH
 	tSpec.Enable = (mss.State == monitoring.MirrorSessionState_RUNNING)
 	tSpec.PacketSize = ms.Spec.PacketSize
+	tSpec.PacketFilters = ms.Spec.PacketFilters
 
 	for _, c := range ms.Spec.Collectors {
 		var export monitoring.MirrorExportConfig
