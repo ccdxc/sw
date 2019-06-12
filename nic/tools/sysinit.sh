@@ -24,6 +24,12 @@ echo "|/nic/bin/coremgr -P /data/core -p %p -e %e -m $CORE_MIN_DISK" > /proc/sys
 # Set the power voltage for the board
 /platform/bin/powerctl -set > /obfl/voltage.txt 2>&1
 
+#set GOGC variable to a smaller value since we are limited in memory in NAPLES
+# and current GOGC does not give back memory that easily to OS unless a memory span
+# is free for more than 5 minutes. Setting a smaller value for GOGC should make NAPLES
+# allocate memory a little bit conservatively
+export GOGC=50
+
 # POST
 if [[ -f /sysconfig/config0/post_disable ]]; then
     echo "Skipping Power On Self Test (POST)"
