@@ -35,5 +35,6 @@ COPY sg_config.yml /usr/share/elasticsearch/plugins/search-guard-6/sgconfig
 COPY sg_roles.yml /usr/share/elasticsearch/plugins/search-guard-6/sgconfig
 COPY sg_roles_mapping.yml /usr/share/elasticsearch/plugins/search-guard-6/sgconfig
 COPY log4j2.properties /usr/share/elasticsearch/config/log4j2.properties
+COPY jvm.options /usr/share/elasticsearch/config/jvm.options
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
