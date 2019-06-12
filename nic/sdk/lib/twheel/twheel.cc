@@ -255,7 +255,7 @@ twheel::get_timeout_remaining(void *timer)
     twentry = static_cast<twentry_t *>(timer);
 
     timeout = twentry->nspins_ * (nslices_ * slice_intvl_) +
-            (twentry->slice_ - curr_slice_ + nslices_) % nslices_;
+            ((twentry->slice_ - curr_slice_ + nslices_) % nslices_) * slice_intvl_;
 
     return timeout;
 }
