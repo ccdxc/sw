@@ -5,6 +5,7 @@ package pciemgr;
 
 import "delphi.proto";
 import "penctl.proto";
+import "metrics_annotations.proto";
 
 message PciemgrPenctlRootCmd {
     option (venice.penctlParentCmd) = {
@@ -33,6 +34,11 @@ message PciePortStatus {
 }
 
 message PciePortMetrics {
+    option (venice.metricInfo) = {
+        DisplayName: "PCIe port information",
+        Description: "Key index - pcie port",
+        Scope: PerPciePort
+    };
     option (venice.penctlCmd) = {
         Cmd:     "port",
         HelpStr: "Pcie Port Metrics information:\\n"
@@ -89,6 +95,11 @@ message PciePortMetrics {
 }
 
 message PcieMgrMetrics {
+    option (venice.metricInfo) = {
+        DisplayName: "PCIe Manager information",
+        Description: "Key index - pcie port",
+        Scope: PerPciePort
+    };
     option (venice.penctlCmd) = {
         Cmd:     "pciemgr",
         HelpStr: "Pcie Mgr Metrics information:\\n"

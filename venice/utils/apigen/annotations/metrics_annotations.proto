@@ -22,6 +22,7 @@ enum MetricScope {
     PerLIFPerQ          = 6; // per each Q of LIF
     PerRingPerSubRing   = 7; // incase of DMA, per each subring of a ring
     PerFwRule           = 8; // Per Firewall Rule
+    PerPciePort         = 9; // Per PCIe port
 }
 
 enum MetricTags {
