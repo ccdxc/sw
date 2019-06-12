@@ -7,11 +7,30 @@ route_result_handler:
     bcf             [c1], route_result_st
     nop
 route_result_nexthop_group:
-    phvwr.e         p.txdma_control_nexthop_group_index, res_reg[9:0]
+    //TODO-AJEER Pls construct 20b nhid, route table only gives 10b
+    phvwr           p.session_info_hint_nexthop_idx, res_reg[9:0]
+    // Set Tx:src_ip to 01 for NH_TYPE=IP
+    phvwr           p.session_info_hint_tx_rewrite_flags_src_ip, 01
+    // Set Rx:smac to 1 for NH_TYPE=IP
+    phvwr           p.session_info_hint_rx_rewrite_flags_smac, 1
+    // Set Rx:dst_ip to 01 for NH_TYPE=IP
+    phvwr.e         p.session_info_hint_tx_rewrite_flags_dst_ip, 01
     nop
 route_result_vpc:
+    // Set Tx: Encap for NH_TYPE=VNET
+    phvwr           p.session_info_hint_tx_rewrite_flags_encap, 1 
     phvwr.e         p.txdma_control_vpc_id, res_reg[9:0]
     nop
 route_result_st:
-    phvwr.e         p.txdma_control_svc_id, res_reg[9:0]
+    phvwr           p.txdma_control_svc_id, res_reg[9:0]
+    // Rewrite Tx: dip only for NH_TYPE=ST
+    phvwr           p.session_info_hint_tx_rewrite_flags_dst_ip, 1 
+    // Set Tx: Encap for NH_TYPE=ST
+    phvwr           p.session_info_hint_tx_rewrite_flags_encap, 1 
+    // For NH_TYPE=ST, set the Tx: src_ip flag to 11 (rewrite CA6)
+    phvwr           p.session_info_hint_tx_rewrite_flags_src_ip, 11
+    // Set Rx:src_ip to 10 (blind 64 mapping) for NH_TYPE=ST
+    phvwr           p.session_info_hint_rx_rewrite_flags_src_ip, 10
+    // For NH_TYPE=ST, set the Rx: dst_ip flag to 11 (64 mapping)
+    phvwr.e         p.session_info_hint_rx_rewrite_flags_dst_ip, 11
     nop

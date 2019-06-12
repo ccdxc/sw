@@ -24,18 +24,16 @@ header_type txdma_control_metadata_t {
         cindex              : 16;
 
         mapping_ohash_lkp   : 1;
-        sacl_result         : 1;
+        pad0                : 1;
         rfc_p1_classid      : 10;
         rule_priority       : 10;
         svc_id              : 10;
 
         vpc_id              : 8;
-        nexthop_group_index : 16;
         mapping_ohash       : 32;
 
-        pad0                : 4;
+        pad1                : 4;
         rfc_index           : 20;
-        ipv6_tx_da          : 128;
     }
 }
 
@@ -87,6 +85,9 @@ metadata qstate_info_t          scratch_qstate_info;
 
 @pragma dont_trim
 metadata txdma_control_metadata_t txdma_control;
+
+@pragma dont_trim
+metadata session_info_hint_t session_info_hint;
 
 @pragma pa_align 512
 @pragma dont_trim

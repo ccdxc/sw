@@ -57,3 +57,36 @@ header_type artemis_rx_to_tx_header_t {
         // Please check the above comment when adding new fields
     }
 }
+
+// Session Info hints that CPA path passes to the FTL Assist programs
+// Session Info is derived from the configured policies for the flow
+// being investigated
+header_type session_info_hint_t {  // Total 272b = 34B
+    fields {
+        tx_dst_ip        : 128;
+        tx_dst_l4port    : 16;  // No need to fill
+        nexthop_idx      : 20;
+
+        //tx_rewrite_flags : 8;
+        tx_rewrite_flags_unused : 2;
+        tx_rewrite_flags_encap  : 1;
+        tx_rewrite_flags_dst_ip : 1;
+        tx_rewrite_flags_dport  : 1; // Always set to zero
+        tx_rewrite_flags_src_ip : 2;
+        tx_rewrite_flags_dmac   : 1;  // Always set to rewrite dmac
+
+        //rx_rewrite_flags : 8;
+        rx_rewrite_flags_unused : 2;
+        rx_rewrite_flags_dst_ip : 2;
+        rx_rewrite_flags_sport  : 1; // Always set to zero
+        rx_rewrite_flags_src_ip : 2;
+        rx_rewrite_flags_smac   : 1;
+
+        tx_policer_idx   : 12;  // TODO-KSM: Not sure what to fill
+        rx_policer_idx   : 12;  // TODO-KSM: Not sure what to fill
+        meter_idx        : 16;
+        timestamp        : 48;  // No need to fill this but kept for easy copy/DMA
+        drop             : 1;
+        pad0             : 3;
+    }
+}

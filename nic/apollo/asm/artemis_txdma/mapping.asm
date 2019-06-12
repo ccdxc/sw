@@ -16,10 +16,7 @@ mapping_info:
 
     //hint1
     seq         c1, r1[31:21], d.mapping_info_d.hash1
-    //hint1 if formed into r2
-    or          r2, d.mapping_info_d.hint1_sbit4_ebit17, \
-                    d.mapping_info_d.hint1_sbit0_ebit3, 18
-    sne         c2, r2, r0
+    sne         c2, d.mapping_info_d.hint1, r0
     bcf         [c1&c2], mapping_hash_hit
     add         r7, r7, r2
     //hint2
@@ -67,8 +64,15 @@ mapping_miss:
     nop
 
 mapping_hit:
-    phvwr.e     p.txdma_control_nexthop_group_index, \
+    phvwr       p.session_info_hint_nexthop_idx, \
                 d.mapping_info_d.nexthop_group_index
+    // Tx: If found mapping table finds entry then set src_ip
+    // rewrite flag to 10 (rewrite using service mapping table index)
+    phvwr       p.session_info_hint_tx_rewrite_flags_src_ip, 10
+
+    // Rx: If found mapping table finds entry then set dst_ip
+    // rewrite flag to 10 (rewrite using service mapping table index)
+    phvwr.e     p.session_info_hint_rx_rewrite_flags_dst_ip, 10
     nop
 
 mapping_hash_hit:

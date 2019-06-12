@@ -21,7 +21,7 @@ rfc_p3:
     slt        c1, r1, k.txdma_control_rule_priority
     /* If so, update PHV with new priority and result */
     phvwr.c1   p.txdma_control_rule_priority, r1
-    phvwr.c1   p.txdma_control_sacl_result, r2
+    phvwr.c1   p.session_info_hint_drop, r2
     nop.e
     nop
 

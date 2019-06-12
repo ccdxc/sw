@@ -294,7 +294,7 @@ action rfc_action_p3(pad,pr45, res45, pr44, res44,
     if (txdma_control.rule_priority > scratch_metadata.field10) {
         // Then overwrite the result in the PHV with the current one
         modify_field(txdma_control.rule_priority, scratch_metadata.field10);
-        modify_field(txdma_control.sacl_result, scratch_metadata.field1);
+        modify_field(session_info_hint.drop, scratch_metadata.field1);
     }
 }
 
@@ -591,7 +591,7 @@ action rfc_action_p3_1(pad,pr45, res45, pr44, res44,
     if (txdma_control.rule_priority > scratch_metadata.field10) {
         // Then overwrite the result in the PHV with the current one
         modify_field(txdma_control.rule_priority, scratch_metadata.field10);
-        modify_field(txdma_control.sacl_result, scratch_metadata.field1);
+        modify_field(session_info_hint.drop, scratch_metadata.field1);
     }
 }
 
