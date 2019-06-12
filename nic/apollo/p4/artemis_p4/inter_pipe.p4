@@ -14,21 +14,27 @@ action ingress_to_egress() {
     modify_field(capri_intrinsic.tm_span_session,
                  control_metadata.mirror_session);
     modify_field(predicate_header.direction, control_metadata.direction);
-    if (vxlan_1.valid == TRUE) {
-        remove_header(ethernet_1);
-        remove_header(ctag_1);
-        remove_header(ipv4_1);
-        remove_header(ipv6_1);
-        remove_header(udp_1);
-        remove_header(vxlan_1);
-    }
-    if (vxlan_2.valid == TRUE) {
-        remove_header(ethernet_2);
-        remove_header(ctag_2);
-        remove_header(ipv4_2);
-        remove_header(ipv6_2);
-        remove_header(udp_2);
-        remove_header(vxlan_2);
+    if (control_metadata.direction == RX_FROM_SWITCH) {
+        if (ctag_1.valid == TRUE) {
+            remove_header(ctag_1);
+            modify_field(ethernet_1.etherType, ctag_1.etherType);
+        }
+        if (vxlan_1.valid == TRUE) {
+            remove_header(ethernet_1);
+            remove_header(ctag_1);
+            remove_header(ipv4_1);
+            remove_header(ipv6_1);
+            remove_header(udp_1);
+            remove_header(vxlan_1);
+        }
+        if (vxlan_2.valid == TRUE) {
+            remove_header(ethernet_2);
+            remove_header(ctag_2);
+            remove_header(ipv4_2);
+            remove_header(ipv6_2);
+            remove_header(udp_2);
+            remove_header(vxlan_2);
+        }
     }
 }
 
