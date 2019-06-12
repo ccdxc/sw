@@ -84,9 +84,11 @@ vpc_impl::release_resources(api_base *api_obj) {
 
 sdk_ret_t
 vpc_impl::nuke_resources(api_base *api_obj) {
+    tep1_rx_swkey_t tep1_rx_key = { 0 };
     sdk_table_api_params_t api_params = { 0 };
 
     if (tep1_rx_handle_.valid()) {
+        api_params.key = &tep1_rx_key;
         api_params.handle = tep1_rx_handle_;
         tep_impl_db()->tep1_rx_tbl()->remove(&api_params);
     }

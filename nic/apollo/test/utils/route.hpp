@@ -16,6 +16,8 @@
 
 namespace api_test {
 
+extern pds_nh_type_t g_rt_def_nh_type;
+
 #define ROUTE_TABLE_SEED_INIT route_table_util::route_table_stepper_seed_init
 
 #define ROUTE_TABLE_CREATE(obj)                                               \
@@ -40,6 +42,7 @@ typedef struct route_table_seed_s {
     uint32_t num_routes;
     pds_nh_type_t nh_type;
     pds_vpc_id_t peer_vpc_id;
+    pds_nexthop_id_t base_nh_id;
 } route_table_seed_t;
 
 typedef struct route_table_stepper_seed_s {
@@ -53,6 +56,7 @@ public:
     // Test parameters
     ip_prefix_t ip_pfx;          ///< route prefix
     ip_addr_t nh_ip;             ///< next hop IP
+    pds_nexthop_key_t nh;        ///< next hop ID
     pds_nh_type_t nh_type;       ///< nexthop type
     pds_vpc_id_t peer_vpc_id;    ///< peer vpc id
 
@@ -83,7 +87,8 @@ public:
                      ip_addr_t base_nh_ip, uint8_t af = IP_AF_IPV4,
                      uint32_t num_routes=1,
                      pds_nh_type_t nh_type=PDS_NH_TYPE_TEP,
-                     pds_vpc_id_t peer_vpc_id=PDS_VPC_ID_INVALID);
+                     pds_vpc_id_t peer_vpc_id=PDS_VPC_ID_INVALID,
+                     pds_nexthop_id_t base_nh_id=1);
 
     /// \brief Destructor
     ~route_table_util();
@@ -146,6 +151,7 @@ public:
     /// \param[in] num_routes number of routes per route table
     /// \param[in] nh_type type of next hop which routes are pointing to
     /// \param[in] peer_vpc_id peer VPC's id for VPC peering routes
+    /// \param[in] base_nh_id base next hop id for route's next hop
     static void route_table_stepper_seed_init(
         route_table_stepper_seed_t *seed,
         uint32_t num_route_tables,
@@ -154,8 +160,9 @@ public:
         std::string base_nh_ip_str,
         uint8_t af=IP_AF_IPV4,
         uint32_t num_routes=PDS_MAX_ROUTE_PER_TABLE,
-        pds_nh_type_t nh_type=PDS_NH_TYPE_TEP,
-        pds_vpc_id_t peer_vpc_id=PDS_VPC_ID_INVALID);
+        pds_nh_type_t nh_type=g_rt_def_nh_type,
+        pds_vpc_id_t peer_vpc_id=PDS_VPC_ID_INVALID,
+        pds_nexthop_id_t base_nh_id=1);
 
     /// \brief Indicates whether route table is stateful
     ///

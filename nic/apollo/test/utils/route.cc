@@ -14,6 +14,8 @@
 
 namespace api_test {
 
+pds_nh_type_t g_rt_def_nh_type = PDS_NH_TYPE_TEP;
+
 route_util::route_util() {
     this->nh_type = PDS_NH_TYPE_BLACKHOLE;
     this->peer_vpc_id = PDS_VPC_ID_INVALID;
@@ -32,8 +34,10 @@ route_table_util::route_table_util(pds_route_table_id_t id,
                                    ip_prefix_t base_route_pfx,
                                    ip_addr_t base_nh_ip, uint8_t af,
                                    uint32_t num_routes, pds_nh_type_t nh_type,
-                                   pds_vpc_id_t peer_vpc_id) {
+                                   pds_vpc_id_t peer_vpc_id,
+                                   pds_nexthop_id_t base_nh_id) {
     uint32_t nh_offset = 0, nh_offset_max = PDS_MAX_TEP - 1;
+    uint32_t nh_id_offset = 0, nh_id_offset_max = PDS_MAX_NEXTHOP - 1;
     ip_addr_t route_addr;
 
     memset(routes, 0, sizeof(route_util) * (PDS_MAX_ROUTE_PER_TABLE + 1));
@@ -46,6 +50,13 @@ route_table_util::route_table_util(pds_route_table_id_t id,
         this->routes[i].ip_pfx = base_route_pfx;
         this->routes[i].nh_type = nh_type;
         switch (nh_type) {
+        case PDS_NH_TYPE_IP:
+            this->routes[i].nh = base_nh_id + nh_id_offset;
+            nh_id_offset += 1;
+            if (nh_id_offset > nh_id_offset_max) {
+                nh_id_offset %= nh_id_offset_max;
+            }
+            break;
         case PDS_NH_TYPE_TEP:
             this->routes[i].nh_ip.addr.v4_addr =
                 base_nh_ip.addr.v4_addr + nh_offset;
@@ -81,6 +92,9 @@ route_table_util::create(void) const {
         spec.routes[i].prefix = this->routes[i].ip_pfx;
         spec.routes[i].nh_type = this->routes[i].nh_type;
         switch (this->routes[i].nh_type) {
+        case PDS_NH_TYPE_IP:
+            spec.routes[i].nh = this->routes[i].nh;
+            break;
         case PDS_NH_TYPE_TEP:
             spec.routes[i].nh_ip = this->routes[i].nh_ip;
             break;
@@ -113,7 +127,19 @@ route_table_util::update(void) const {
     for (uint32_t i = 0; i < this->num_routes; ++i) {
         spec.routes[i].prefix = this->routes[i].ip_pfx;
         spec.routes[i].nh_type = this->routes[i].nh_type;
-        spec.routes[i].nh_ip = this->routes[i].nh_ip;
+        switch (this->routes[i].nh_type) {
+        case PDS_NH_TYPE_IP:
+            spec.routes[i].nh = this->routes[i].nh;
+            break;
+        case PDS_NH_TYPE_TEP:
+            spec.routes[i].nh_ip = this->routes[i].nh_ip;
+            break;
+        case PDS_NH_TYPE_PEER_VPC:
+            spec.routes[i].vpc.id = this->routes[i].peer_vpc_id;
+            break;
+        default:
+            break;
+        }
     }
     return (pds_route_table_update(&spec));
 }
@@ -139,7 +165,9 @@ route_table_util_stepper (route_table_seed_t *seed,
 
     for (uint32_t idx = 0; idx < seed->num_route_tables; ++idx) {
         route_table_util rt_obj(idx + seed->base_route_table_id, route_pfx,
-                                seed->base_nh_ip, seed->af, seed->num_routes);
+                                seed->base_nh_ip, seed->af, seed->num_routes,
+                                seed->nh_type, seed->peer_vpc_id,
+                                seed->base_nh_id);
         switch (op) {
         case OP_MANY_CREATE:
             rv = rt_obj.create();
@@ -218,7 +246,8 @@ route_table_util::route_table_stepper_seed_init(
                                             std::string base_nh_ip_str,
                                             uint8_t af, uint32_t num_routes,
                                             pds_nh_type_t nh_type,
-                                            pds_vpc_id_t peer_vpc_id) {
+                                            pds_vpc_id_t peer_vpc_id,
+                                            pds_nexthop_id_t base_nh_id) {
     route_table_seed_t *rt_seed;
     if (af == IP_AF_IPV4) {
         rt_seed = &seed->v4_rt_seed;
@@ -233,6 +262,7 @@ route_table_util::route_table_stepper_seed_init(
     rt_seed->num_routes = num_routes;
     rt_seed->nh_type = nh_type;
     rt_seed->peer_vpc_id = peer_vpc_id;
+    rt_seed->base_nh_id = base_nh_id;
 }
 
 }    // namespace api_test

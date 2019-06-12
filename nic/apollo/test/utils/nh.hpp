@@ -17,6 +17,12 @@ namespace api_test {
 
 #define NH_SEED_INIT nh_util::stepper_seed_init
 
+#define NH_MANY_CREATE(seed)                                        \
+    ASSERT_TRUE(nh_util::many_create(seed) == sdk::SDK_RET_OK)
+
+#define NH_MANY_DELETE(seed)                                        \
+    ASSERT_TRUE(nh_util::many_delete(seed) == sdk::SDK_RET_OK)
+
 // NH object seed used as base seed in many_* operations
 typedef struct nh_stepper_seed_s {
     pds_nexthop_id_t id;

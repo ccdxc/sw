@@ -12,8 +12,10 @@
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/batch.hpp"
+#include "nic/apollo/test/utils/nh.hpp"
 #include "nic/apollo/test/utils/route.hpp"
 #include "nic/apollo/test/utils/tep.hpp"
+#include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
 #include "nic/apollo/test/utils/workflow.hpp"
 
@@ -30,7 +32,7 @@ static std::string g_pipeline("");
 static constexpr int k_max_v4_route_table = PDS_MAX_ROUTE_TABLE;
 static constexpr int k_max_v6_route_table = PDS_MAX_ROUTE_TABLE;
 static constexpr int k_max_route_per_tbl = PDS_MAX_ROUTE_PER_TABLE;
-static constexpr pds_vpc_id_t k_vpc_id = 2;
+static constexpr pds_vpc_id_t k_vpc_id = 1;
 
 static const char * const k_base_nh_ip = "30.30.30.1";
 static const char * const k_base_v4_pfx = "100.100.100.1/21";
@@ -48,25 +50,41 @@ protected:
     virtual void TearDown() {}
     static void SetUpTestCase() {
         test_case_params_t params;
-        tep_stepper_seed_t tep_seed = {};
 
         params.cfg_file = api_test::g_cfg_file;
         params.enable_fte = false;
         params.pipeline = g_pipeline;
         pds_test_base::SetUpTestCase(params);
-        TEP_SEED_INIT(&tep_seed, k_base_nh_ip);
         batch_start();
         sample_vpc_setup(PDS_VPC_TYPE_TENANT);
-        // create max TEPs which can be used as NHs for routes
-        TEP_MANY_CREATE(&tep_seed);
+        if (IS_APOLLO()) {
+            // create max TEPs which can be used as NHs for routes
+            tep_stepper_seed_t tep_seed = {0};
+
+            TEP_SEED_INIT(&tep_seed, k_base_nh_ip);
+            TEP_MANY_CREATE(&tep_seed);
+        } else {
+            // create max NHs which can be used as NHs for routes
+            nh_stepper_seed_t nh_seed = {0};
+
+            NH_SEED_INIT(&nh_seed, k_base_nh_ip);
+            NH_MANY_CREATE(&nh_seed);
+        }
         batch_commit();
     }
     static void TearDownTestCase() {
-        tep_stepper_seed_t tep_seed = {};
-
-        TEP_SEED_INIT(&tep_seed, k_base_nh_ip);
         batch_start();
-        TEP_MANY_DELETE(&tep_seed);
+        if (IS_APOLLO()) {
+            tep_stepper_seed_t tep_seed = {0};
+
+            TEP_SEED_INIT(&tep_seed, k_base_nh_ip);
+            TEP_MANY_DELETE(&tep_seed);
+        } else {
+            nh_stepper_seed_t nh_seed = {0};
+
+            NH_SEED_INIT(&nh_seed, k_base_nh_ip);
+            NH_MANY_DELETE(&nh_seed);
+        }
         sample_vpc_teardown(PDS_VPC_TYPE_TENANT);
         batch_commit();
         pds_test_base::TearDownTestCase();
@@ -583,6 +601,17 @@ route_test_options_parse (int argc, char **argv)
     return;
 }
 
+static void
+route_test_init_parameters (void)
+{
+    // init default global parameters
+    if (IS_APOLLO()) {
+        api_test::g_rt_def_nh_type = PDS_NH_TYPE_TEP;
+    } else if (IS_ARTEMIS()) {
+        api_test::g_rt_def_nh_type = PDS_NH_TYPE_IP;
+    }
+}
+
 int
 main (int argc, char **argv)
 {
@@ -592,6 +621,7 @@ main (int argc, char **argv)
         exit(1);
     }
 
+    route_test_init_parameters();
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
