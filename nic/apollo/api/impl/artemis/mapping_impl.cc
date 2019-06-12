@@ -80,21 +80,6 @@ namespace impl {
     (data)->nexthop_group_index = (nh_id);                                   \
 }
 
-#define nat_action action_u.nat_nat_rewrite
-#define PDS_IMPL_FILL_NAT_DATA(data, ip)                                     \
-{                                                                            \
-    memset((data), 0, sizeof(*(data)));                                      \
-    (data)->action_id = NAT_NAT_REWRITE_ID;                                  \
-    if ((ip)->af == IP_AF_IPV6) {                                            \
-        sdk::lib::memrev((data)->nat_action.nat_ip,                          \
-                         (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);           \
-    } else {                                                                 \
-        /* key is initialized to zero by the caller */                       \
-        memcpy((data)->nat_action.nat_ip, &(ip)->addr.v4_addr,               \
-               IP4_ADDR8_LEN);                                               \
-    }                                                                        \
-}
-
 mapping_impl *
 mapping_impl::factory(pds_mapping_spec_t *spec) {
     mapping_impl    *impl;

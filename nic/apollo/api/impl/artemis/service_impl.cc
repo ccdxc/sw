@@ -60,7 +60,7 @@ namespace impl {
     memset((data), 0, sizeof(*(data)));                                        \
     (data)->action_id = SERVICE_MAPPING_SERVICE_MAPPING_INFO_ID;               \
     (data)->svc_mapping_action.service_xlate_idx = xlate_idx;                  \
-    (data)->svc_mapping_action.service_xlate_port = xlate_idx;                 \
+    (data)->svc_mapping_action.service_xlate_port = xlate_port;                \
 }
 
 svc_mapping_impl *
@@ -175,6 +175,7 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     vpc_entry *vip_vpc, *dip_vpc;
     pds_svc_mapping_spec_t *spec;
     sdk_table_api_params_t api_params;
+    nat_actiondata_t nat_data;
     service_mapping_actiondata_t svc_mapping_data;
     service_mapping_swkey_t svc_mapping_key;
 
@@ -187,6 +188,20 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                     spec->key.svc_port, ipaddr2str(&spec->backend_provider_ip),
                     spec->vpc.id, ipaddr2str(&spec->backend_ip),
                     spec->svc_port);
+
+    // add NAT entry with DIP in the data
+    PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->backend_ip);
+    ret = artemis_impl_db()->nat_tbl()->insert_atid(&nat_data, to_dip_nat_hdl_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to add DIP NAT entry for mapping (vpc %u, vip %s,"
+                      " port %u, provider IP %s) -> (vpc %u, dip %s, port %u), "
+                      "err %u", spec->key.vpc.id, ipaddr2str(&spec->key.vip),
+                      spec->key.svc_port,
+                      ipaddr2str(&spec->backend_provider_ip),
+                      spec->vpc.id, ipaddr2str(&spec->backend_ip),
+                      spec->svc_port, ret);
+        return ret;
+    }
 
     // add an entry in SERVICE_MAPPING with (VIP, provider-ip, port) as key
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
@@ -213,6 +228,19 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return ret;
     }
 
+    // add NAT entry with VIP in the data
+    PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->key.vip);
+    ret = artemis_impl_db()->nat_tbl()->insert_atid(&nat_data, to_vip_nat_hdl_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to add VIP NAT entry for mapping (vpc %u, vip %s,"
+                      " port %u, provider IP %s) -> (vpc %u, dip %s, port %u), "
+                      "err %u", spec->key.vpc.id, ipaddr2str(&spec->key.vip),
+                      spec->key.svc_port,
+                      ipaddr2str(&spec->backend_provider_ip),
+                      spec->vpc.id, ipaddr2str(&spec->backend_ip),
+                      spec->svc_port, ret);
+        return ret;
+    }
     // add an entry in SERVICE_MAPPING with (DIP/overlay_ip, port) as key
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
                                     dip_vpc->hw_id(), &spec->backend_ip,
