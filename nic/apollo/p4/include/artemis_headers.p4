@@ -90,3 +90,32 @@ header_type session_info_hint_t {  // Total 272b = 34B
         pad0             : 3;
     }
 }
+
+// Packet to arm will contain artemis_txdma_to_arm_session_info_header_t + 
+// 2 * artemis_txdma_to_arm_flow_header_t (iflow and rflow)
+// In addition p4 adds p4_to_arm_header_t (even in the final approach?)
+
+header_type artemis_txdma_to_arm_session_info_header_t {
+    fields {
+        action                  : 8; // add or delete
+        packet_len              : 16;
+        session_index           : 32;  // delete only
+        session_info            : 512; // insert only
+    }
+}
+
+header_type artemis_txdma_to_arm_flow_header_t {
+    fields {
+        flow_hash               : 32;
+        ipaf                    : 1; // v4 or v6
+        parent_is_hint          : 1;
+        parent_hint_slot        : 3; // 0 is invalid
+                                     // 1-4 = hint slots
+                                     // 5 = more
+        nrecircs                : 3;
+        parent_index            : 32; // parent index if 'parent_is_hint'
+        leaf_index              : 32; // for delete
+        parent_flow_entry       : 512;
+        leaf_flow_entry         : 512;
+    }
+}
