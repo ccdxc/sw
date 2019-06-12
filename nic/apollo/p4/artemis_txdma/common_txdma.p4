@@ -1066,11 +1066,11 @@ control ingress {
             if (txdma_predicate.pass_two == 0) {
                 read_qstate();
             } else {
+                mapping();
                 vnic_info_txdma();
                 remote_46_mapping();
             }
 
-            mapping();
             route_lookup();
             rfc();
             dma();

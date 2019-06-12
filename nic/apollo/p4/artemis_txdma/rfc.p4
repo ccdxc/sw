@@ -296,6 +296,30 @@ action rfc_action_p3(pad,pr45, res45, pr44, res44,
         modify_field(txdma_control.rule_priority, scratch_metadata.field10);
         modify_field(session_info_hint.drop, scratch_metadata.field1);
     }
+
+    // Initialize the correct table base and index based on the recirc count
+    if (capri_p4_intr.recirc_count == 0) {
+        // P1 table base
+        modify_field(scratch_metadata.field40, SACL_P1_2_TABLE_OFFSET);
+        // P1 table index
+        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.stag_classid << 10)|
+                                                rx_to_tx_hdr.dip_classid);
+    } else {
+        // P1 table base
+        modify_field(scratch_metadata.field40, SACL_P1_4_TABLE_OFFSET);
+        // P1 table index
+        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.stag_classid << 7)|
+                                                rx_to_tx_hdr.sport_classid);
+    }
+
+    // Write P1 table index to PHV
+    modify_field(txdma_control.rfc_index, scratch_metadata.field20);
+
+    // Write P1 table lookup address to PHV
+    modify_field(txdma_control.rfc_table_addr,              // P1 Lookup Addr =
+                 rx_to_tx_hdr.sacl_base_addr +              // Region Base +
+                 scratch_metadata.field40 +                 // Table Base +
+                 (((scratch_metadata.field20) / 51) * 64)); // Index Bytes
 }
 
 action rfc_action_p1_1(pad, id50,
@@ -592,6 +616,20 @@ action rfc_action_p3_1(pad,pr45, res45, pr44, res44,
         // Then overwrite the result in the PHV with the current one
         modify_field(txdma_control.rule_priority, scratch_metadata.field10);
         modify_field(session_info_hint.drop, scratch_metadata.field1);
+    }
+
+    if (capri_p4_intr.recirc_count == 0) {
+        // P1 table index for the next recirc
+        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.sip_classid << 7)|
+                                                rx_to_tx_hdr.dtag_classid);
+        // Write P1 table index to PHV
+        modify_field(txdma_control.rfc_index, scratch_metadata.field20);
+
+        // Write P1 table lookup address to PHV
+        modify_field(txdma_control.rfc_table_addr,              // P1 Lookup Addr =
+                     rx_to_tx_hdr.sacl_base_addr +              // Region Base +
+                     SACL_P1_3_TABLE_OFFSET +                   // Table Base +
+                     (((scratch_metadata.field20) / 51) * 64)); // Index Bytes
     }
 }
 

@@ -1,3 +1,5 @@
+#include "../include/artemis_sacl_defines.h"
+
 action read_qstate_info(PKTQ_QSTATE) {
     // in txdma
     //          check sw_cindex0, pindex0
@@ -21,7 +23,6 @@ action read_qstate_info(PKTQ_QSTATE) {
         modify_field(txdma_control.rxdma_cindex_addr,
                      scratch_qstate_info.rxdma_cindex_addr);
     }
-
 }
 
 @pragma stage 0
@@ -66,6 +67,23 @@ action read_pktdesc(remote_ip,
     modify_field(scratch_metadata.field8, vnic_id);
     modify_field(scratch_metadata.field1, iptype);
     modify_field(scratch_metadata.field7, pad0);
+
+    // Initialize the first P1 table index
+    modify_field(scratch_metadata.field20, (sip_classid << 7)|
+                                            sport_classid);
+
+    // Write P1 table index to PHV
+    modify_field(txdma_control.rfc_index, scratch_metadata.field20);
+
+    // Write P1 table lookup address to PHV
+    modify_field(txdma_control.rfc_table_addr,              // P1 Lookup Addr =
+                 rx_to_tx_hdr.sacl_base_addr +              // Region Base +
+                 SACL_P1_1_TABLE_OFFSET +                   // Table Base +
+                 (((scratch_metadata.field20) / 51) * 64)); // Index Bytes
+
+    // Setup for route LPM lookup
+    modify_field(txdma_control.lpm1_key, remote_ip);
+    modify_field(txdma_control.lpm1_base_addr, route_base_addr);
 }
 
 @pragma stage 1

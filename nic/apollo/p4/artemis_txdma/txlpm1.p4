@@ -7,9 +7,9 @@
 /**    Global Definitions    **/
 /* Select key-widths and define table field names for them */
 #define key_field32b       scratch_metadata.field32
-#define dat_field32b       scratch_metadata.field16
+#define dat_field32b       scratch_metadata.field32
 #define key_field64b       scratch_metadata.field64
-#define dat_field64b       scratch_metadata.field16
+#define dat_field64b       scratch_metadata.field32
 
 /* Define key fields */
 #define key                txdma_control.lpm1_key
@@ -19,8 +19,8 @@
 #define next_addr          txdma_control.lpm1_next_addr
 
 // Define result field and handler function names
-#define lpm_result32b      scratch_metadata.field16
-#define lpm_result64b      scratch_metadata.field16
+#define lpm_result32b      scratch_metadata.field32
+#define lpm_result64b      scratch_metadata.field32
 #define result_handler32b  route_res_handler
 #define result_handler64b  route_res_handler
 

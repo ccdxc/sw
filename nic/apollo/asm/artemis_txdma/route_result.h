@@ -7,8 +7,7 @@ route_result_handler:
     bcf             [c1], route_result_st
     nop
 route_result_nexthop_group:
-    //TODO-AJEER Pls construct 20b nhid, route table only gives 10b
-    phvwr           p.session_info_hint_nexthop_idx, res_reg[9:0]
+    phvwr           p.session_info_hint_nexthop_idx, res_reg[19:0]
     // Set Tx:src_ip to 01 for NH_TYPE=IP
     phvwr           p.session_info_hint_tx_rewrite_flags_src_ip, 01
     // Set Rx:smac to 1 for NH_TYPE=IP
@@ -19,7 +18,7 @@ route_result_nexthop_group:
 route_result_vpc:
     // Set Tx: Encap for NH_TYPE=VNET
     phvwr           p.session_info_hint_tx_rewrite_flags_encap, 1 
-    phvwr.e         p.txdma_control_vpc_id, res_reg[9:0]
+    phvwr.e         p.txdma_control_vpc_id, res_reg[7:0]
     nop
 route_result_st:
     phvwr           p.txdma_control_svc_id, res_reg[9:0]
