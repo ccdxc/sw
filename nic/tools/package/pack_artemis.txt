@@ -134,7 +134,7 @@ nic/tools/fwupdate                                                /nic/tools/
 # platform modules
 nic/build/$ARCH/$PIPELINE/bin/capview                             /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/captrace                            /nic/bin/
-nic/build/$ARCH/$PIPELINE/bin/eth_dbgtool                         /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/eth_dbgtool_artemis                 /nic/bin/eth_dbgtool
 nic/build/$ARCH/$PIPELINE/bin/memtun                              /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/capmon                              /nic/bin/
 nic/build/$ARCH/$PIPELINE/out/capviewdb_submake/capviewdb.bin     /nic/etc/

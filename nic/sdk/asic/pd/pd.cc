@@ -12,6 +12,11 @@
 #include "platform/capri/capri_toeplitz.hpp"
 #ifdef APOLLO
 #include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
+#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
+#endif
+#ifdef ARTEMIS
+#include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
+#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
 #endif
 
 using namespace sdk::platform::capri;
@@ -733,8 +738,13 @@ sdk_ret_t asicpd_toeplitz_init(void)
 {
 #ifdef APOLLO
      p4pd_table_properties_t tbl_ctx;
-     // p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_INDIR,
      p4pd_global_table_properties_get(P4_APOLLO_RXDMA_TBL_ID_ETH_RX_RSS_INDIR,
+                                      &tbl_ctx);
+     sdk::platform::capri::capri_toeplitz_init(tbl_ctx.stage, tbl_ctx.stage_tableid);
+#endif
+#ifdef ARTEMIS
+     p4pd_table_properties_t tbl_ctx;
+     p4pd_global_table_properties_get(P4_ARTEMIS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR,
                                       &tbl_ctx);
      sdk::platform::capri::capri_toeplitz_init(tbl_ctx.stage, tbl_ctx.stage_tableid);
 #endif

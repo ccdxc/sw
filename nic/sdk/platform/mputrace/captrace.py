@@ -156,7 +156,7 @@ elif args.command == "decode":
                 pgm = pgm["name"]
                 label = label["name"]
                 print("\n>>> PROGRAM : pc 0x{:010x} program '{:}' label '{:}'\n".format(
-                    hdr.entry_pc, pgm, label))
+                    hdr.entry_pc << 6, pgm, label))
                 prev_time = hdr.timestamp
 
                 if key:
