@@ -367,6 +367,8 @@ hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
         expected_flow_t *entry = lookup_expected_flow(key, true);
         exp_flow  = (l4_alg_status_t *)entry;
         if (exp_flow && !exp_flow->entry.deleting) {
+            // Decrement the ref count for the expected flow
+            dec_ref_count(&exp_flow->entry);
             if (enable_timer) {
                 if (entry->timer) {
                     // If the timer is already there. Update it with new time

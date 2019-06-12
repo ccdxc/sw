@@ -219,6 +219,36 @@ TEST_F(rpc_test, sunrpc_exp_flow_timeout) {
     ASSERT_EQ(dllist_count(&app_sess->exp_flow_lhead), 0);
 }
 
+TEST_F(rpc_test, sunrpc_exp_flow_refcount) {
+    app_session_t   *app_sess = NULL;
+    l4_alg_status_t *exp_flow1 = NULL, *exp_flow2 = NULL, *l4_sess = NULL;
+    hal::flow_key_t  app_sess_key, exp_flow_key;
+
+    app_sess_key.proto = (types::IPProtocol)IP_PROTO_TCP;
+    app_sess_key.sip.v4_addr = 0x14000005;
+    app_sess_key.dip.v4_addr = 0x14000006;
+    app_sess_key.sport = 22246;
+    app_sess_key.dport = 111;
+
+    g_rpc_state->alloc_and_init_app_sess(app_sess_key, &app_sess);
+
+    g_rpc_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
+    l4_sess->isCtrl = true;
+    ASSERT_EQ(dllist_count(&app_sess->l4_sess_lhead), 1);
+
+    exp_flow_key = app_sess_key;
+    exp_flow_key.dport = 33345;
+    g_rpc_state->alloc_and_insert_exp_flow(app_sess, exp_flow_key,
+                                         &exp_flow1, false, 0, true);
+    EXPECT_EQ(exp_flow1->entry.ref_count.count, 1);
+    exp_flow_key.dport = 33345;
+    g_rpc_state->alloc_and_insert_exp_flow(app_sess, exp_flow_key,
+                                         &exp_flow2, false, 0, true);
+    EXPECT_EQ(exp_flow1, exp_flow2);
+    EXPECT_EQ(exp_flow2->entry.ref_count.count, 1);
+    EXPECT_EQ(exp_flow1->entry.ref_count.count, 1);
+}
+
 TEST_F(rpc_test, sunrpc_app_sess_force_delete) {
     SessionGetResponseMsg  resp;
     hal::session_t        *session = NULL;
