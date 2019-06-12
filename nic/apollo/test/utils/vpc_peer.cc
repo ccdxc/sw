@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include <iostream>
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/vpc_peer.hpp"
@@ -15,140 +16,129 @@
 
 namespace api_test {
 
-vpc_peer_util::vpc_peer_util(vpc_peer_stepper_seed_t *seed) {
-    this->key.id = seed->key.id;
-    this->vpc1.id = seed->vpc1.id;
-    this->vpc2.id = seed->vpc2.id;
+//----------------------------------------------------------------------------
+// VPC peer feeder class routines
+//----------------------------------------------------------------------------
+
+void
+vpc_peer_feeder::init(pds_vpc_peer_key_t key, pds_vpc_key_t vpc1,
+                      pds_vpc_key_t vpc2, uint32_t num_vpc_peer) {
+    this->key.id = key.id;
+    this->vpc1.id = vpc1.id;
+    this->vpc2.id = vpc2.id;
+    this->num_obj = num_vpc_peer;
 }
 
-vpc_peer_util::~vpc_peer_util() {}
+void
+vpc_peer_feeder::iter_next(int width) {
+    key.id += width;
+    vpc1.id = vpc2.id + width;
+    vpc2.id = vpc1.id + width;
+    cur_iter_pos++;
+}
+
+std::ostream& operator << (std::ostream& os, vpc_peer_feeder& obj) {
+    os << "VPC Peer feeder =>"
+        << " id: " << obj.key.id
+        << " vpc1 id: " << obj.vpc1.id
+        << " vpc2 id: " << obj.vpc2.id
+        << std::endl;
+    return os;
+}
+
+void
+vpc_peer_feeder::key_build(pds_vpc_peer_key_t *key) {
+    memset(key, 0, sizeof(pds_vpc_peer_key_t));
+    key->id = this->key.id;
+}
+
+void
+vpc_peer_feeder::spec_build(pds_vpc_peer_spec_t *spec) {
+    memset(spec, 0, sizeof(pds_vpc_peer_spec_t));
+    this->key_build(&spec->key);
+
+    spec->key.id = key.id;
+    spec->vpc1.id = vpc1.id;
+    spec->vpc2.id = vpc2.id;
+}
+
+bool
+vpc_peer_feeder::key_compare(pds_vpc_peer_key_t *key) {
+    return true;
+    // todo : @sai please check, compare routine not done
+    // return (memcmp(key, &this->key, sizeof(pds_vpc_peer_key_t)) == 0);
+}
+
+bool
+vpc_peer_feeder::spec_compare(pds_vpc_peer_spec_t *spec) {
+    // todo : @sai please check, compare routine not done 
+    return true;
+
+    if (spec->vpc1.id != vpc1.id)
+        return false;
+
+    if (spec->vpc2.id != vpc2.id)
+        return false;
+
+    return true;
+}
 
 sdk::sdk_ret_t
-vpc_peer_util::create(void) const {
+vpc_peer_feeder::info_compare(pds_vpc_peer_info_t *info) {
+    if (!this->key_compare(&info->spec.key)) {
+        std::cout << "key compare failed " <<  this;
+        return sdk::SDK_RET_ERR;
+    }
+
+    if (!this->spec_compare(&info->spec)) {
+        std::cout << "spec compare failed " <<  this;
+        return sdk::SDK_RET_ERR;
+    }
+
+    return sdk::SDK_RET_OK;
+}
+
+//----------------------------------------------------------------------------
+// VPC peer test CRUD routines
+//----------------------------------------------------------------------------
+
+sdk::sdk_ret_t
+create(vpc_peer_feeder& feeder) {
     pds_vpc_peer_spec_t spec;
 
-    memset(&spec, 0, sizeof(spec));
-    spec.key.id = this->key.id;
-    spec.vpc1.id = this->vpc1.id;
-    spec.vpc2.id = this->vpc2.id;
-
+    feeder.spec_build(&spec);
     return (pds_vpc_peer_create(&spec));
 }
 
 sdk::sdk_ret_t
-vpc_peer_util::read(pds_vpc_peer_info_t *info) const {
+read(vpc_peer_feeder& feeder) {
     sdk_ret_t rv;
     pds_vpc_peer_key_t key;
+    pds_vpc_peer_info_t info;
 
-    memset(&key, 0, sizeof(pds_vpc_peer_key_t));
-    memset(info, 0, sizeof(pds_vpc_peer_info_t));
-
-    key.id = this->key.id;
-    rv = pds_vpc_peer_read(&key, info);
-    if ((rv = pds_vpc_peer_read(&key, info)) != SDK_RET_OK) {
+    feeder.key_build(&key);
+    if ((rv = pds_vpc_peer_read(&key, &info)) != sdk::SDK_RET_OK)
         return rv;
-    }
 
-    return sdk::SDK_RET_OK;
+    return (feeder.info_compare(&info));
 }
 
 sdk::sdk_ret_t
-vpc_peer_util::update(void) const {
+update(vpc_peer_feeder& feeder) {
     pds_vpc_peer_spec_t spec;
 
-    memset(&spec, 0, sizeof(spec));
-    spec.key.id = this->key.id;
-    spec.vpc1.id = this->vpc1.id;
-    spec.vpc2.id = this->vpc2.id;
-    // return (pds_vpc_peer_update(&spec));
+    feeder.spec_build(&spec);
+    // todo: @sai no update support yet
+    //return (pds_vpc_peer_update(&spec));
     return sdk::SDK_RET_OK;
 }
 
 sdk::sdk_ret_t
-vpc_peer_util::del(void) const {
-    pds_vpc_peer_key_t key = {};
+del(vpc_peer_feeder& feeder) {
+    pds_vpc_peer_key_t key;
 
-    key.id = this->key.id;
+    feeder.key_build(&key);
     return (pds_vpc_peer_delete(&key));
-}
-
-static inline void
-vpc_peer_stepper_seed_increment (vpc_peer_stepper_seed_t *seed, int width)
-{
-    seed->key.id += width;
-    seed->vpc1.id = seed->vpc2.id + width;
-    seed->vpc2.id = seed->vpc1.id + width;
-}
-
-static inline sdk::sdk_ret_t
-vpc_peer_util_object_stepper (vpc_peer_stepper_seed_t *init_seed,
-                              utils_op_t op, sdk_ret_t expected_result)
-{
-    sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
-    vpc_peer_stepper_seed_t seed = {0};
-    pds_vpc_peer_info_t info = {};
-    uint32_t width = 1;
-    uint32_t num_objs = init_seed->num_vpc_peers;
-
-    vpc_peer_util::stepper_seed_init(&seed, init_seed->key, init_seed->vpc1,
-                                     init_seed->vpc2, init_seed->num_vpc_peers);
-
-    for (uint32_t idx = 0; idx < num_objs; idx++) {
-        vpc_peer_util vpc_peer_obj(&seed);
-        switch (op) {
-        case OP_MANY_CREATE:
-            rv = vpc_peer_obj.create();
-            break;
-        case OP_MANY_READ:
-            rv = vpc_peer_obj.read(&info);
-            break;
-        case OP_MANY_UPDATE:
-            rv = vpc_peer_obj.update();
-            break;
-        case OP_MANY_DELETE:
-            rv = vpc_peer_obj.del();
-            break;
-        default:
-            return sdk::SDK_RET_INVALID_OP;
-        }
-        if (rv != expected_result) {
-            return sdk::SDK_RET_ERR;
-        }
-        vpc_peer_stepper_seed_increment(&seed, width);
-    }
-    return sdk::SDK_RET_OK;
-}
-
-sdk::sdk_ret_t
-vpc_peer_util::many_create(vpc_peer_stepper_seed_t *seed) {
-    return (vpc_peer_util_object_stepper(seed, OP_MANY_CREATE, sdk::SDK_RET_OK));
-}
-
-sdk::sdk_ret_t
-vpc_peer_util::many_read(vpc_peer_stepper_seed_t *seed, sdk_ret_t expected_res) {
-    return (vpc_peer_util_object_stepper(seed, OP_MANY_READ, expected_res));
-}
-
-sdk::sdk_ret_t
-vpc_peer_util::many_update(vpc_peer_stepper_seed_t *seed) {
-    return (vpc_peer_util_object_stepper(seed, OP_MANY_UPDATE, sdk::SDK_RET_OK));
-}
-
-sdk::sdk_ret_t
-vpc_peer_util::many_delete(vpc_peer_stepper_seed_t *seed) {
-    return (vpc_peer_util_object_stepper(seed, OP_MANY_DELETE, sdk::SDK_RET_OK));
-}
-
-void
-vpc_peer_util::stepper_seed_init (vpc_peer_stepper_seed_t *seed,
-                                  pds_vpc_peer_key_t key,
-                                  pds_vpc_key_t vpc1,
-                                  pds_vpc_key_t vpc2,
-                                  uint32_t num_vpc_peers) {
-    seed->key.id = key.id;
-    seed->vpc1.id = vpc1.id;
-    seed->vpc2.id = vpc2.id;
-    seed->num_vpc_peers = num_vpc_peers;
 }
 
 }    // namespace api_test

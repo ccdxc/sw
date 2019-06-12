@@ -161,7 +161,7 @@ subnet_feeder::info_compare(pds_subnet_info_t *info) {
 }
 
 //----------------------------------------------------------------------------
-// Subnet test crud routines
+// Subnet test CRUD routines
 //----------------------------------------------------------------------------
 
 sdk::sdk_ret_t

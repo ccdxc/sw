@@ -98,7 +98,7 @@ vpc_feeder::info_compare(pds_vpc_info_t *info) {
 }
 
 //----------------------------------------------------------------------------
-// VPC test crud routines
+// VPC test CRUD routines
 //----------------------------------------------------------------------------
 
 sdk::sdk_ret_t
@@ -150,6 +150,11 @@ void sample_vpc_setup(pds_vpc_type_t type) {
     // setup and teardown parameters should be in sync
     k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8");
     create(k_vpc_feeder);
+}
+
+void sample_vpc_setup_validate(pds_vpc_type_t type) {
+    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8");
+    read(k_vpc_feeder);
 }
 
 void sample_vpc_teardown(pds_vpc_type_t type) {

@@ -15,7 +15,7 @@
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/batch.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
-#include "nic/apollo/test/utils/workflow.hpp"
+#include "nic/apollo/test/utils/workflow1.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
 #include "nic/apollo/test/utils/vpc_peer.hpp"
 
@@ -43,8 +43,6 @@ protected:
     virtual void TearDown() {}
     static void SetUpTestCase() {
         test_case_params_t params;
-        vpc_feeder vpc_feeder;
-        pds_vpc_key_t vpc_key = {.id = 1};
 
         params.cfg_file = api_test::g_cfg_file;
         params.pipeline = api_test::g_pipeline;
@@ -52,35 +50,28 @@ protected:
         pds_test_base::SetUpTestCase(params);
 
         batch_start();
-        vpc_feeder.init(vpc_key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16",
-                        k_max_vpc);
-        many_create(vpc_feeder);
+        sample_vpc_setup(PDS_VPC_TYPE_TENANT);
         batch_commit();
-        many_read(vpc_feeder);
+        sample_vpc_setup_validate(PDS_VPC_TYPE_TENANT);
     }
 
     static void TearDownTestCase() {
         pds_test_base::TearDownTestCase();
 #if 0
         // TODO - segfault in sdk::table::sltcam::txn_start in batch_commit
-        vpc_stepper_seed_t vpc_seed = {0};
+        vpc_stepper_feeder_t vpc_feeder = {0};
         pds_vpc_key_t vpc_key = {.id = 1};
 
-        VPC_SEED_INIT(&vpc_seed, vpc_key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16",
-                      k_max_vpc);
-        ASSERT_TRUE(vpc_util::many_read(&vpc_seed) == sdk::SDK_RET_OK);
         batch_start();
-        ASSERT_TRUE(vpc_util::many_delete(&vpc_seed) == sdk::SDK_RET_OK);
+        sample_vpc_teardown(PDS_VPC_TYPE_TENANT);
         batch_commit();
-        ASSERT_TRUE(vpc_util::many_read(&vpc_seed,
-                                        sdk::SDK_RET_ENTRY_NOT_FOUND)
-                                             == sdk::SDK_RET_OK);
+        sample_vpc_teardown_validate(PDS_VPC_TYPE_TENANT);
 #endif
     }
 };
 
 //----------------------------------------------------------------------------
-// VPC test cases implementation
+// VPC peer test cases implementation
 //----------------------------------------------------------------------------
 
 /// \defgroup VPC_TEST
@@ -88,31 +79,31 @@ protected:
 
 #if 0
 /// \brief VPC WF_1
-TEST_F(vpc_peer, vpc_workflow_1) {
+TEST_F(vpc_peer, vpc_peer_workflow_1) {
+    vpc_peer_feeder feeder;
     pds_vpc_peer_key_t key = {.id = 1};
-    vpc_peer_stepper_seed_t seed;
     pds_vpc_peer_key_t vpc1 = {.id = 1};
     pds_vpc_peer_key_t vpc2 = {.id = 2};
 
-    VPC_PEER_SEED_INIT(&seed, key, vpc1, vpc2, k_max_vpc_peer);
-    workflow_1<vpc_peer_util, vpc_peer_stepper_seed_t>(&seed);
+    vpc_peer_feeder.init(key, vpc1, vpc2, k_max_vpc_peer);
+    workflow_1<vpc_peer_feeder>(&feeder);
 }
 
 /// \brief VPC WF_2
-TEST_F(vpc_peer, vpc_workflow_2) {
+TEST_F(vpc_peer, vpc_peer_workflow_2) {
+    vpc_peer_feeder feeder;
     pds_vpc_peer_key_t key = {.id = 1};
-    vpc_peer_stepper_seed_t seed;
     pds_vpc_peer_key_t vpc1 = {.id = 1};
     pds_vpc_peer_key_t vpc2 = {.id = 2};
 
-    VPC_PEER_SEED_INIT(&seed, key, vpc1, vpc2, k_max_vpc_peer);
-    workflow_2<vpc_peer_util, vpc_peer_stepper_seed_t>(&seed);
+    vpc_peer_feeder.init(key, vpc1, vpc2, k_max_vpc_peer);
+    workflow_2<vpc_peer_feeder>(&feeder);
 }
 
 /// \brief VPC WF_3
-TEST_F(vpc_peer, vpc_workflow_3) {
+TEST_F(vpc_peer, vpc_peer_workflow_3) {
+    vpc_peer_feeder feeder1, feeder2, feeder3;
     pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 20}, key3 = {.id = 30};
-    vpc_peer_stepper_seed_t seed1, seed2, seed3;
     pds_vpc_peer_key_t vpc1 = {.id = 1};
     pds_vpc_peer_key_t vpc2 = {.id = 2};
     pds_vpc_peer_key_t vpc3 = {.id = 20};
@@ -120,27 +111,27 @@ TEST_F(vpc_peer, vpc_workflow_3) {
     pds_vpc_peer_key_t vpc5 = {.id = 40};
     pds_vpc_peer_key_t vpc6 = {.id = 41};
 
-    VPC_PEER_SEED_INIT(&seed1, key1, vpc1, vpc2, 10);
-    VPC_PEER_SEED_INIT(&seed2, key2, vpc3, vpc4, 10);
-    VPC_PEER_SEED_INIT(&seed3, key3, vpc5, vpc6, 10);
-    workflow_3<vpc_peer_util, vpc_peer_stepper_seed_t>(&seed1, &seed2, &seed3);
+    vpc_peer_feeder1.init(key1, vpc1, vpc2, 10);
+    vpc_peer_feeder2.init(key2, vpc3, vpc4, 10);
+    VPC_PEER_SEED_INIT(&feeder3, key3, vpc5, vpc6, 10);
+    workflow_3<vpc_peer_feeder>(&feeder1, &feeder2, &feeder3);
 }
 
 /// \brief VPC WF_4
-TEST_F(vpc_peer, vpc_workflow_4) {
+TEST_F(vpc_peer, vpc_peer_workflow_4) {
+    vpc_peer_feeder feeder;
     pds_vpc_peer_key_t key = {.id = 1};
-    vpc_peer_stepper_seed_t seed;
     pds_vpc_peer_key_t vpc1 = {.id = 1};
     pds_vpc_peer_key_t vpc2 = {.id = 2};
 
-    VPC_PEER_SEED_INIT(&seed, key, vpc1, vpc2, k_max_vpc_peer);
-    workflow_4<vpc_peer_util, vpc_peer_stepper_seed_t>(&seed);
+    vpc_peer_feeder.init(key, vpc1, vpc2, k_max_vpc_peer);
+    workflow_4<vpc_peer_feeder>(&feeder);
 }
 
 /// \brief VPC WF_5
-TEST_F(vpc_peer, vpc_workflow_5) {
+TEST_F(vpc_peer, vpc_peer_workflow_5) {
+    vpc_peer_feeder feeder1, feeder2, feeder3;
     pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 20}, key3 = {.id = 30};
-    vpc_peer_stepper_seed_t seed1, seed2, seed3;
     pds_vpc_peer_key_t vpc1 = {.id = 1};
     pds_vpc_peer_key_t vpc2 = {.id = 2};
     pds_vpc_peer_key_t vpc3 = {.id = 20};
@@ -148,195 +139,195 @@ TEST_F(vpc_peer, vpc_workflow_5) {
     pds_vpc_peer_key_t vpc5 = {.id = 40};
     pds_vpc_peer_key_t vpc6 = {.id = 41};
 
-    VPC_PEER_SEED_INIT(&seed1, key1, vpc1, vpc2, 10);
-    VPC_PEER_SEED_INIT(&seed2, key2, vpc1, vpc2, 10);
-    VPC_PEER_SEED_INIT(&seed3, key3, vpc1, vpc2, 10);
-    workflow_5<vpc_peer_util, vpc_peer_stepper_seed_t>(&seed1, &seed2, &seed3);
+    vpc_peer_feeder1.init(key1, vpc1, vpc2, 10);
+    vpc_peer_feeder2.init(key2, vpc1, vpc2, 10);
+    VPC_PEER_SEED_INIT(&feeder3, key3, vpc1, vpc2, 10);
+    workflow_5<vpc_peer_feeder>(&feeder1, &feeder2, &feeder3);
 }
 
 /// \brief VPC WF_6
-TEST_F(vpc_peer, vpc_workflow_6) {
+TEST_F(vpc_peer, vpc_peer_workflow_6) {
+    vpc_peer_feeder feeder1, feeder1A, feeder1B;
     pds_vpc_peer_key_t key = {.id = 1};
-    vpc_peer_stepper_seed_t seed1, seed1A, seed1B;
     pds_vpc_peer_key_t vpc1 = {.id = 1};
     pds_vpc_peer_key_t vpc2 = {.id = 2};
 
-    VPC_PEER_SEED_INIT(&seed1, key, vpc1, vpc2, k_max_vpc_peer);
-    VPC_PEER_SEED_INIT(&seed1A, key, vpc1, vpc2, k_max_vpc_peer);
-    VPC_PEER_SEED_INIT(&seed1B, key, vpc1, vpc2, k_max_vpc_peer);
-    workflow_6<vpc_peer_util, vpc_peer_stepper_seed_t>(&seed1, &seed1A, &seed1B);
+    vpc_peer_feeder1.init(key, vpc1, vpc2, k_max_vpc_peer);
+    vpc_peer_feeder1A.init(key, vpc1, vpc2, k_max_vpc_peer);
+    VPC_PEER_SEED_INIT(&feeder1B, key, vpc1, vpc2, k_max_vpc_peer);
+    workflow_6<vpc_peer_feeder>(&feeder1, &feeder1A, &feeder1B);
 }
 
 /// \brief VPC WF_7
-TEST_F(vpc_peer, vpc_workflow_7) {
+TEST_F(vpc_peer, vpc_peer_workflow_7) {
+    vpc_peer_feeder feeder1, feeder1A, feeder1B;
     pds_vpc_peer_key_t key = {.id = 1};
-    vpc_peer_stepper_seed_t seed1, seed1A, seed1B;
     pds_vpc_peer_key_t vpc1 = {.id = 1};
     pds_vpc_peer_key_t vpc2 = {.id = 2};
 
-    VPC_PEER_SEED_INIT(&seed1, key, vpc1, vpc2, k_max_vpc_peer);
-    VPC_PEER_SEED_INIT(&seed1A, key, vpc1, vpc2, k_max_vpc_peer);
-    VPC_PEER_SEED_INIT(&seed1B, key, vpc1, vpc2, k_max_vpc_peer);
-    workflow_7<vpc_peer_util, vpc_peer_stepper_seed_t>(&seed1, &seed1A, &seed1B);
+    vpc_peer_feeder1.init(key, vpc1, vpc2, k_max_vpc_peer);
+    vpc_peer_feeder1A.init(key, vpc1, vpc2, k_max_vpc_peer);
+    VPC_PEER_SEED_INIT(&feeder1B, key, vpc1, vpc2, k_max_vpc_peer);
+    workflow_7<vpc_peer_feeder>(&feeder1, &feeder1A, &feeder1B);
 }
 
 /// \brief VPC WF_8
-TEST_F(vpc_peer, DISABLED_vpc_workflow_8) {
+TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_8) {
+    vpc_peer_feeder feeder1, feeder1A, feeder1B;
     pds_vpc_peer_key_t key = {.id = 1};
-    vpc_peer_stepper_seed_t seed1, seed1A, seed1B;
     pds_vpc_peer_key_t vpc1 = {.id = 1};
     pds_vpc_peer_key_t vpc2 = {.id = 2};
 
-    VPC_PEER_SEED_INIT(&seed1, key, vpc1, vpc2, k_max_vpc_peer);
-    VPC_PEER_SEED_INIT(&seed1A, key, vpc1, vpc2, k_max_vpc_peer);
-    VPC_PEER_SEED_INIT(&seed1B, key, vpc1, vpc2, k_max_vpc_peer);
-    workflow_8<vpc_peer_util, vpc_peer_stepper_seed_t>(&seed1, &seed1A, &seed1B);
+    vpc_peer_feeder1.init(key, vpc1, vpc2, k_max_vpc_peer);
+    vpc_peer_feeder1A.init(key, vpc1, vpc2, k_max_vpc_peer);
+    VPC_PEER_SEED_INIT(&feeder1B, key, vpc1, vpc2, k_max_vpc_peer);
+    workflow_8<vpc_peer_feeder>(&feeder1, &feeder1A, &feeder1B);
 }
 
 /// \brief VPC WF_9
-TEST_F(vpc_peer, vpc_workflow_9) {
+TEST_F(vpc_peer, vpc_peer_workflow_9) {
+    vpc_peer_feeder feeder1, feeder1A;
     pds_vpc_peer_key_t key = {.id = 1};
-    vpc_peer_stepper_seed_t seed1, seed1A;
     pds_vpc_peer_key_t vpc1 = {.id = 1};
     pds_vpc_peer_key_t vpc2 = {.id = 2};
 
-    VPC_PEER_SEED_INIT(&seed1, key, vpc1, vpc2, k_max_vpc_peer);
-    VPC_PEER_SEED_INIT(&seed1A, key, vpc1, vpc2, k_max_vpc_peer);
-    workflow_9<vpc_peer_util, vpc_peer_stepper_seed_t>(&seed1, &seed1A);
+    vpc_peer_feeder1.init(key, vpc1, vpc2, k_max_vpc_peer);
+    vpc_peer_feeder1A.init(key, vpc1, vpc2, k_max_vpc_peer);
+    workflow_9<vpc_peer_feeder>(&feeder1, &feeder1A);
 }
 
 /// \brief VPC WF_10
-TEST_F(vpc_peer, DISABLED_vpc_workflow_10) {
+TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_10) {
+    vpc_peer_feeder feeder1, feeder2, feeder3, feeder4, feeder2A, feeder3A;
     pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70},
-                     key4 = {.id = 100};
-    vpc_peer_stepper_seed_t seed1, seed2, seed3, seed4, seed2A, seed3A;
+                       key4 = {.id = 100};
 
-    VPC_PEER_SEED_INIT(&seed1, key1, vpc1, vpc2, 10);
-    VPC_PEER_SEED_INIT(&seed2, key2, vpc1, vpc2, 10);
-    VPC_PEER_SEED_INIT(&seed2A, key2, vpc1, vpc2, 10);
-    VPC_PEER_SEED_INIT(&seed3, key3, vpc1, vpc2, 10);
-    VPC_PEER_SEED_INIT(&seed3A, key3, vpc1, vpc2, 10);
-    VPC_PEER_SEED_INIT(&seed4, key4, vpc1, vpc2, 10);
-    workflow_10<vpc_peer_util, vpc_peer_stepper_seed_t>(
-        &seed1, &seed2, &seed2A, &seed3, &seed3A, &seed4);
+    vpc_peer_feeder1.init(key1, vpc1, vpc2, 10);
+    vpc_peer_feeder2.init(key2, vpc1, vpc2, 10);
+    VPC_PEER_SEED_INIT(&feeder2A, key2, vpc1, vpc2, 10);
+    VPC_PEER_SEED_INIT(&feeder3, key3, vpc1, vpc2, 10);
+    VPC_PEER_SEED_INIT(&feeder3A, key3, vpc1, vpc2, 10);
+    VPC_PEER_SEED_INIT(&feeder4, key4, vpc1, vpc2, 10);
+    workflow_10<vpc_peer_feeder>(
+        &feeder1, &feeder2, &feeder2A, &feeder3, &feeder3A, &feeder4);
 }
 
 /// \brief VPC WF_N_1
-TEST_F(vpc_peer, vpc_workflow_neg_1) {
+TEST_F(vpc_peer, vpc_peer_workflow_neg_1) {
+    vpc_peer_feeder feeder;
     pds_vpc_peer_key_t key = {.id = 1};
-    vpc_peer_stepper_seed_t seed;
     pds_vpc_peer_key_t vpc1 = {.id = 1};
     pds_vpc_peer_key_t vpc2 = {.id = 2};
 
-    VPC_PEER_SEED_INIT(&seed, key, vpc1, vpc2, k_max_vpc_peer);
-    workflow_neg_1<vpc_peer_util, vpc_peer_stepper_seed_t>(&seed);
+    vpc_peer_feeder.init(key, vpc1, vpc2, k_max_vpc_peer);
+    workflow_neg_1<vpc_peer_feeder>(&feeder);
 }
 
 /// \brief VPC WF_N_2
-TEST_F(vpc_peer, vpc_workflow_neg_2) {
+TEST_F(vpc_peer, vpc_peer_workflow_neg_2) {
+    vpc_peer_feeder feeder;
     pds_vpc_peer_key_t key = {.id = 1};
-    vpc_peer_stepper_seed_t seed;
     pds_vpc_peer_key_t vpc1 = {.id = 1};
     pds_vpc_peer_key_t vpc2 = {.id = 2};
 
-    VPC_PEER_SEED_INIT(&seed, key, vpc1, vpc2, k_max_vpc_peer+1);
-    workflow_neg_2<vpc_peer_util, vpc_peer_stepper_seed_t>(&seed);
+    vpc_peer_feeder.init(key, vpc1, vpc2, k_max_vpc_peer+1);
+    workflow_neg_2<vpc_peer_feeder>(&feeder);
 }
 
 /// \brief VPC WF_N_3
-TEST_F(vpc_peer, vpc_workflow_neg_3) {
+TEST_F(vpc_peer, vpc_peer_workflow_neg_3) {
+    vpc_peer_feeder feeder;
     pds_vpc_peer_key_t key = {.id = 1};
-    vpc_peer_stepper_seed_t seed;
     pds_vpc_peer_key_t vpc1 = {.id = 1};
     pds_vpc_peer_key_t vpc2 = {.id = 2};
 
-    VPC_PEER_SEED_INIT(&seed, key, vpc1, vpc2, k_max_vpc_peer);
-    workflow_neg_3<vpc_peer_util, vpc_peer_stepper_seed_t>(&seed);
+    vpc_peer_feeder.init(key, vpc1, vpc2, k_max_vpc_peer);
+    workflow_neg_3<vpc_peer_feeder>(&feeder);
 }
 
 /// \brief VPC WF_N_4
-TEST_F(vpc_peer, vpc_workflow_neg_4) {
+TEST_F(vpc_peer, vpc_peer_workflow_neg_4) {
+    vpc_peer_feeder feeder1, feeder2;
     pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 40};
-    vpc_peer_stepper_seed_t seed1, seed2;
     pds_vpc_peer_key_t vpc1 = {.id = 1};
     pds_vpc_peer_key_t vpc2 = {.id = 2};
     pds_vpc_peer_key_t vpc3 = {.id = 41};
     pds_vpc_peer_key_t vpc4 = {.id = 42};
 
-    VPC_PEER_SEED_INIT(&seed1, key1, vpc1, vpc2, 10);
-    VPC_PEER_SEED_INIT(&seed2, key2, vpc3, vpc4, 10);
-    workflow_neg_4<vpc_peer_util, vpc_peer_stepper_seed_t>(&seed1, &seed2);
+    vpc_peer_feeder1.init(key1, vpc1, vpc2, 10);
+    vpc_peer_feeder2.init(key2, vpc3, vpc4, 10);
+    workflow_neg_4<vpc_peer_feeder>(&feeder1, &feeder2);
 }
 
 /// \brief VPC WF_N_5
-TEST_F(vpc_peer, DISABLED_vpc_workflow_neg_5) {
+TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_5) {
+    vpc_peer_feeder feeder1, feeder1A;
     pds_vpc_peer_key_t key = {.id = 1};
-    vpc_peer_stepper_seed_t seed1, seed1A;
     pds_vpc_peer_key_t vpc1 = {.id = 1};
     pds_vpc_peer_key_t vpc2 = {.id = 2};
     pds_vpc_peer_key_t vpc3 = {.id = 41};
     pds_vpc_peer_key_t vpc4 = {.id = 42};
 
-    VPC_PEER_SEED_INIT(&seed1, key, vpc1, vpc2, k_max_vpc_peer);
-    VPC_PEER_SEED_INIT(&seed1A, key, vpc3, vpc4, k_max_vpc_peer);
-    workflow_neg_5<vpc_peer_util, vpc_peer_stepper_seed_t>(&seed1, &seed1A);
+    vpc_peer_feeder1.init(key, vpc1, vpc2, k_max_vpc_peer);
+    vpc_peer_feeder1A.init(key, vpc3, vpc4, k_max_vpc_peer);
+    workflow_neg_5<vpc_peer_feeder>(&feeder1, &feeder1A);
 }
 
 /// \brief VPC WF_N_6
-TEST_F(vpc_peer, vpc_workflow_neg_6) {
+TEST_F(vpc_peer, vpc_peer_workflow_neg_6) {
+    vpc_peer_feeder feeder1, feeder1A;
     pds_vpc_peer_key_t key = {.id = 1};
-    vpc_peer_stepper_seed_t seed1, seed1A;
     pds_vpc_peer_key_t vpc1 = {.id = 1};
     pds_vpc_peer_key_t vpc2 = {.id = 2};
     pds_vpc_peer_key_t vpc3 = {.id = 41};
     pds_vpc_peer_key_t vpc4 = {.id = 42};
 
-    VPC_PEER_SEED_INIT(&seed1, key, vpc1, vpc2, k_max_vpc_peer);
-    VPC_PEER_SEED_INIT(&seed1A, key, vpc3, vpc4, k_max_vpc_peer + 1);
-    workflow_neg_6<vpc_peer_util, vpc_peer_stepper_seed_t>(&seed1, &seed1A);
+    vpc_peer_feeder1.init(key, vpc1, vpc2, k_max_vpc_peer);
+    vpc_peer_feeder1A.init(key, vpc3, vpc4, k_max_vpc_peer + 1);
+    workflow_neg_6<vpc_peer_feeder>(&feeder1, &feeder1A);
 }
 
 /// \brief VPC WF_N_7
-TEST_F(vpc_peer, vpc_workflow_neg_7) {
+TEST_F(vpc_peer, vpc_peer_workflow_neg_7) {
+    vpc_peer_feeder feeder1, feeder1A, feeder2;
     pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 40};
-    vpc_peer_stepper_seed_t seed1, seed1A, seed2;
     pds_vpc_peer_key_t vpc1 = {.id = 1};
     pds_vpc_peer_key_t vpc2 = {.id = 2};
     pds_vpc_peer_key_t vpc3 = {.id = 41};
     pds_vpc_peer_key_t vpc4 = {.id = 42};
 
-    VPC_PEER_SEED_INIT(&seed1, key1, vpc1, vpc2, 10);
-    VPC_PEER_SEED_INIT(&seed1A, key1, vpc1, vpc2, 10);
-    VPC_PEER_SEED_INIT(&seed2, key2, vpc3, vpc4, 10);
-    workflow_neg_7<vpc_peer_util, vpc_peer_stepper_seed_t>(&seed1, &seed1A, &seed2);
+    vpc_peer_feeder1.init(key1, vpc1, vpc2, 10);
+    vpc_peer_feeder1A.init(key1, vpc1, vpc2, 10);
+    vpc_peer_feeder2.init(key2, vpc3, vpc4, 10);
+    workflow_neg_7<vpc_peer_feeder>(&feeder1, &feeder1A, &feeder2);
 }
 
 /// \brief VPC WF_N_8
-TEST_F(vpc_peer, vpc_workflow_neg_8) {
+TEST_F(vpc_peer, vpc_peer_workflow_neg_8) {
+    vpc_peer_feeder feeder1, feeder2;
     pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 40};
-    vpc_peer_stepper_seed_t seed1, seed2;
     pds_vpc_peer_key_t vpc1 = {.id = 1};
     pds_vpc_peer_key_t vpc2 = {.id = 2};
     pds_vpc_peer_key_t vpc3 = {.id = 41};
     pds_vpc_peer_key_t vpc4 = {.id = 42};
 
-    VPC_PEER_SEED_INIT(&seed1, key1, vpc1, vpc2, 10);
-    VPC_PEER_SEED_INIT(&seed2, key2, vpc3, vpc4, 10);
-    workflow_neg_8<vpc_peer_util, vpc_peer_stepper_seed_t>(&seed1, &seed2);
+    vpc_peer_feeder1.init(key1, vpc1, vpc2, 10);
+    vpc_peer_feeder2.init(key2, vpc3, vpc4, 10);
+    workflow_neg_8<vpc_peer_feeder>(&feeder1, &feeder2);
 }
-#endif
 
 // ARTEMIS workflows
 /// \brief VPC WF_11
 TEST_F(vpc_peer, vpc_peer_workflow_11) {
+    vpc_peer_feeder feeder;
     pds_vpc_peer_key_t key = {.id = 1};
-    vpc_peer_stepper_seed_t seed;
     pds_vpc_key_t vpc1 = {.id = 1};
     pds_vpc_key_t vpc2 = {.id = 2};
 
-    vpc_peer_util::stepper_seed_init(&seed, key, vpc1, vpc2, 32);
-    workflow_11<vpc_peer_util, vpc_peer_stepper_seed_t>(&seed);
+    feeder.init(key, vpc1, vpc2, 32);
+    workflow_11<vpc_peer_feeder>(&feeder);
 }
+#endif
 
 /// @}
 

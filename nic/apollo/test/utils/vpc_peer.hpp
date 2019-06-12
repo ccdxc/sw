@@ -16,92 +16,47 @@
 
 namespace api_test {
 
-#define VPC_PEER_SEED_INIT vpc_peer_util::stepper_seed_init
-
-typedef struct vpc_peer_stepper_seed_s {
-    pds_vpc_peer_key_t key;
-    pds_vpc_key_t vpc1;
-    pds_vpc_key_t vpc2;
-    uint32_t num_vpc_peers;
-} vpc_peer_stepper_seed_t;
-
-/// VPC test utility class
-class vpc_peer_util {
-
+// VPC peer test feeder class
+class vpc_peer_feeder {
 public:
-    /// \brief constructor
-    vpc_peer_util(vpc_peer_stepper_seed_t *seed);
-
-    /// \brief destructor
-    ~vpc_peer_util();
-
-    // Test parameters
     pds_vpc_peer_key_t key;
     pds_vpc_key_t vpc1;
     pds_vpc_key_t vpc2;
+    uint32_t num_obj;
 
-    /// \brief Create a VPC peer from vpc_peer_util object
-    ///
-    /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t create(void) const;
+    // Constructor
+    vpc_peer_feeder() { };
+    vpc_peer_feeder(const vpc_peer_feeder& feeder) {
+        init(feeder.key, feeder.vpc1, feeder.vpc2, feeder.num_obj);
+    }
 
-    /// \brief Read VPC peer
-    ///
-    /// \param[in] compare_spec validation to be done or not
-    /// \param[out] info vpc information
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_vpc_peer_info_t *info) const;
+    // Initialize feeder with the base set of values
+    void init(pds_vpc_peer_key_t key, pds_vpc_key_t vpc1, pds_vpc_key_t vpc2,
+              uint32_t num_vpc_peer = 1);
 
-    /// \brief Update VPC peer
-    ///
-    /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update(void) const;
+    // Iterate helper routines
+    void iter_init() { cur_iter_pos = 0; }
+    bool iter_more() { return (cur_iter_pos < num_obj); }
+    void iter_next(int width = 1);
 
-    /// \brief Delete a VPC peer given its key
-    ///
-    /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t del(void) const;
+    // Build routines
+    void key_build(pds_vpc_peer_key_t *key);
+    void spec_build(pds_vpc_peer_spec_t *spec);
 
-    /// \brief Create many VPC peers
-    ///
-    /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_create(vpc_peer_stepper_seed_t *seed);
+    // Compare routines
+    bool key_compare(pds_vpc_peer_key_t *key);
+    bool spec_compare(pds_vpc_peer_spec_t *spec);
+    sdk::sdk_ret_t info_compare(pds_vpc_peer_info_t *info);
 
-    /// \brief Read many VPC peers
-    ///
-    /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_read(vpc_peer_stepper_seed_t *seed,
-                               sdk::sdk_ret_t expected_res = sdk::SDK_RET_OK);
-
-    /// \brief Update many VPC peers
-    ///
-    /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_update(vpc_peer_stepper_seed_t *seed);
-
-    /// \brief Delete multiple VPC peers
-    ///
-    /// Delete "num_vpc_peers" VPC peers starting from id
-    ///
-    /// \param[in] seed seed for the vpc
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_delete(vpc_peer_stepper_seed_t *seed);
-
-    /// \brief Initialize the seed for vpc
-    ///
-    /// \param[out] seed vpc peer seed
-    /// \param[in] key vpc key
-    /// \param[in] num_vpc_peers number of vpc peers
-    static void stepper_seed_init(vpc_peer_stepper_seed_t *seed,
-                                  pds_vpc_peer_key_t key,
-                                  pds_vpc_key_t vpc1,
-                                  pds_vpc_key_t vpc2,
-                                  uint32_t num_vpc_peers);
-
-    /// \brief Indicates whether VPC peer is stateful
-    ///
-    /// \returns TRUE for VPC peer which is stateful
-    static bool is_stateful(void) { return TRUE; }
+private:
+    uint32_t cur_iter_pos;
 };
+
+// Function prototypes
+sdk::sdk_ret_t create(vpc_peer_feeder& feeder);
+sdk::sdk_ret_t read(vpc_peer_feeder& feeder);
+sdk::sdk_ret_t update(vpc_peer_feeder& feeder);
+sdk::sdk_ret_t del(vpc_peer_feeder& feeder);
 
 }    // namespace api_test
 

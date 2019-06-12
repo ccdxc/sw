@@ -63,6 +63,7 @@ sdk::sdk_ret_t update(vpc_feeder& feeder);
 sdk::sdk_ret_t del(vpc_feeder& feeder);
 
 void sample_vpc_setup(pds_vpc_type_t type);
+void sample_vpc_setup_validate(pds_vpc_type_t type);
 void sample_vpc_teardown(pds_vpc_type_t type);
 
 }    // namespace api_test

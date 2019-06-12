@@ -30,7 +30,7 @@ device_feeder::init(std::string device_ip_str, std::string mac_addr_str,
 void
 device_feeder::iter_next(int width) {
     // nothing to do here as device object is a singleton. Increase the
-    // iterator position so that iterator will break the loop
+    // iterator position so that iterator can break the loop
     cur_iter_pos++;
 }
 
@@ -94,7 +94,7 @@ device_feeder::info_compare(pds_device_info_t *info) {
 }
 
 //----------------------------------------------------------------------------
-// Device test crud routines
+// Device test CRUD routines
 //----------------------------------------------------------------------------
 
 sdk::sdk_ret_t
