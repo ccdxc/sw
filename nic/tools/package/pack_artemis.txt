@@ -122,6 +122,7 @@ nic/build/$ARCH/$PIPELINE/lib/libpdstestutils.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/bin/pdsctl                              /nic/bin/
 nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest.so              /platform/lib/
 nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest_without_main.so /platform/lib/
+nic/build/$ARCH/$PIPELINE/bin/pciemgrd-gold                       /nic/bin/
 
 # system level tools and binaries
 nic/tools/sysupdate.sh                                            /nic/tools/
