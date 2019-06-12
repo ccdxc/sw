@@ -543,6 +543,7 @@ public:
             //     SIPi xlated to IPv6 (from LOCAL_46_TX table)
             //     DIPi xlated to IPv6 (comes from REMOTE_46_MAPPING table,
             //                          stored in the flow)
+            //     L4 ports remain unchanged
             //     Vxlan encap is added (IPv4)
             //     SMACo is local device mac (table constant of EGRESS_VNIC_INFO)
             //     DMACo is from nexthop (comes from REMOTE_46_MAPPING table,
@@ -559,6 +560,9 @@ public:
             //     IPv6 DIPi is xlated to IPv4 (last 32 bits of received IPv6
             //     packet)
             //     vlan tag added from EGRESS_VNIC_INFO table
+            //actiondata.action_u.session_session_info.nexthop_idx = ;
+            actiondata.action_u.session_session_info.tx_rewrite_flags = 0x16;
+            actiondata.action_u.session_session_info.rx_rewrite_flags = 0x34;
         } else if (vpc == 61) {
             // VPC 61 is used for Scenario1-SLB in/out traffic (DSR case)
             // Tx path:
