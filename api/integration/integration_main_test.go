@@ -194,6 +194,7 @@ func TestMain(m *testing.M) {
 		SkipBackends: []string{
 			"telemetry_query",
 			"objstore",
+			"tokenauth",
 		},
 		Auditor:            auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), l)),
 		ModuleWatcher:      diagmock.GetModuleWatcher(),

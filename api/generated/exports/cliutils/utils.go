@@ -36,6 +36,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/staging/cli"
 	// blank import to pull in telemetry_query service into cli utils
 	_ "github.com/pensando/sw/api/generated/telemetry_query/cli"
+	// blank import to pull in tokenauth service into cli utils
+	_ "github.com/pensando/sw/api/generated/tokenauth/cli"
 	// blank import to pull in workload service into cli utils
 	_ "github.com/pensando/sw/api/generated/workload/cli"
 )

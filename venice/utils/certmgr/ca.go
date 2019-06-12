@@ -148,10 +148,16 @@ func (l *CertificateAuthority) init(bootstrap bool) error {
 }
 
 // Sign validates and sign a certificate signing request (CSR)
-func (l *CertificateAuthority) Sign(csr *x509.CertificateRequest) (*x509.Certificate, error) {
-	cert, err := certs.SignCSRwithCA(csr, l.caCertificate, l.caKey,
+func (l *CertificateAuthority) Sign(csr *x509.CertificateRequest, opts ...certs.Option) (*x509.Certificate, error) {
+	defaultOptions := []certs.Option{
 		certs.WithNotBefore(certs.BeginningOfTime),
-		certs.WithNotAfter(certs.EndOfTime))
+		certs.WithNotAfter(certs.EndOfTime),
+	}
+	if opts == nil {
+		opts = defaultOptions
+	}
+
+	cert, err := certs.SignCSRwithCA(csr, l.caCertificate, l.caKey, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error signing CSR")
 	}

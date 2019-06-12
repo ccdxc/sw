@@ -98,7 +98,7 @@ func (tInfo *tInfo) setup() error {
 	// start API gateway
 	tInfo.apiGw, tInfo.apiGwAddr, err = testutils.StartAPIGateway(":0", false,
 		map[string]string{globals.APIServer: tInfo.apiServerAddr, globals.Spyglass: tInfo.fdrAddr},
-		[]string{"telemetry_query", "objstore"},
+		[]string{"telemetry_query", "objstore", "tokenauth"},
 		[]string{}, nil, tInfo.l)
 	if err != nil {
 		return err

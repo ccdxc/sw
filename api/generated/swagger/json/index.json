@@ -55,6 +55,10 @@
       "description": "Telemetry query API reference",
       "path": "/swagger/telemetry_query"
     },
+    "tokenauth": {
+      "description": "Tokenauth API reference",
+      "path": "/swagger/tokenauth"
+    },
     "workload": {
       "description": "Workload API reference",
       "path": "/swagger/workload"

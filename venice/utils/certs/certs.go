@@ -29,11 +29,18 @@ import (
 )
 
 const (
-	certificateRequestPemBlockType = "CERTIFICATE REQUEST"
-	ecParametersPemBlockType       = "EC PARAMETERS"
-	ecPrivateKeyPemBlockType       = "EC PRIVATE KEY"
-	rsaPrivateKeyPemBlockType      = "RSA PRIVATE KEY"
-	privateKeyPemBlockType         = "PRIVATE KEY"
+	// CertificateRequestPemBlockType is the PEM delimiter for CSRs
+	CertificateRequestPemBlockType = "CERTIFICATE REQUEST"
+	// CertificatePemBlockType is the PEM delimiter for certificates
+	CertificatePemBlockType = "CERTIFICATE"
+	// EcParametersPemBlockType is the PEM delimiter for elliptic curve parameters
+	EcParametersPemBlockType = "EC PARAMETERS"
+	// EcPrivateKeyPemBlockType is the PEM delimiter for elliptic curve private keys
+	EcPrivateKeyPemBlockType = "EC PRIVATE KEY"
+	// RsaPrivateKeyPemBlockType is the PEM delimiter for RSA private keys
+	RsaPrivateKeyPemBlockType = "RSA PRIVATE KEY"
+	// PrivateKeyPemBlockType is the PEM delimiter for PKCS#8 private keys
+	PrivateKeyPemBlockType = "PRIVATE KEY"
 )
 
 var (
@@ -44,9 +51,11 @@ var (
 )
 
 type options struct {
-	notBefore time.Time
-	notAfter  time.Time
-	days      int
+	notBefore   time.Time
+	notAfter    time.Time
+	days        int
+	keyUsage    *x509.KeyUsage
+	extKeyUsage []x509.ExtKeyUsage
 }
 
 // WithNotBefore specifies the time at which the certificate starts to be valid
@@ -68,6 +77,14 @@ func WithNotAfter(na time.Time) Option {
 func WithValidityDays(days int) Option {
 	return func(o *options) {
 		o.days = days
+	}
+}
+
+// WithKeyUsage allows overriding of the default values of the KeyUsage and ExtKeyUsage fields
+func WithKeyUsage(keyUsage x509.KeyUsage, extKeyUsage []x509.ExtKeyUsage) Option {
+	return func(o *options) {
+		o.keyUsage = &keyUsage
+		o.extKeyUsage = extKeyUsage
 	}
 }
 
@@ -113,6 +130,10 @@ func applyOptions(cert *x509.Certificate, opts ...Option) error {
 		return fmt.Errorf("NotAfter has to be later than NotBefore: %+v", t)
 	}
 
+	if t.keyUsage != nil {
+		cert.KeyUsage = *t.keyUsage
+		cert.ExtKeyUsage = t.extKeyUsage
+	}
 	return nil
 }
 
@@ -121,7 +142,7 @@ type Option func(opt *options)
 
 func saveRsaPrivateKey(pemfile io.Writer, privatekey *rsa.PrivateKey) error {
 	pemkey := &pem.Block{
-		Type:  rsaPrivateKeyPemBlockType,
+		Type:  RsaPrivateKeyPemBlockType,
 		Bytes: x509.MarshalPKCS1PrivateKey(privatekey)}
 	return pem.Encode(pemfile, pemkey)
 }
@@ -133,7 +154,7 @@ func saveEcPrivateKey(pemfile io.Writer, privatekey *ecdsa.PrivateKey) error {
 	}
 
 	pemkey := &pem.Block{
-		Type:  ecPrivateKeyPemBlockType,
+		Type:  EcPrivateKeyPemBlockType,
 		Bytes: outputKey}
 	return pem.Encode(pemfile, pemkey)
 }
@@ -151,7 +172,7 @@ func SavePkcs8PrivateKey(outFile string, key crypto.PrivateKey) error {
 	}
 
 	pemkey := &pem.Block{
-		Type:  privateKeyPemBlockType,
+		Type:  PrivateKeyPemBlockType,
 		Bytes: outputKey}
 	return pem.Encode(pemfile, pemkey)
 }
@@ -214,15 +235,15 @@ func ReadPrivateKey(caKeyFile string) (crypto.PrivateKey, error) {
 	}
 
 	switch block.Type {
-	case rsaPrivateKeyPemBlockType:
+	case RsaPrivateKeyPemBlockType:
 		return readRsaPrivateKey(block.Bytes)
 
-	case ecPrivateKeyPemBlockType:
+	case EcPrivateKeyPemBlockType:
 		return readEcPrivateKey(block.Bytes, nil)
 
-	case ecParametersPemBlockType:
+	case EcParametersPemBlockType:
 		keyBlock, _ := pem.Decode(rest)
-		if keyBlock == nil || keyBlock.Type != ecPrivateKeyPemBlockType {
+		if keyBlock == nil || keyBlock.Type != EcPrivateKeyPemBlockType {
 			return nil, errors.New("No EC PRIVATE KEY block found")
 		}
 		return readEcPrivateKey(keyBlock.Bytes, block.Bytes)
@@ -242,7 +263,7 @@ func SaveCertificates(certFile string, certs []*x509.Certificate) error {
 
 	for _, cert := range certs {
 		pemBlock := &pem.Block{
-			Type:  "CERTIFICATE",
+			Type:  CertificatePemBlockType,
 			Bytes: cert.Raw,
 		}
 		err := pem.Encode(pemFile, pemBlock)
@@ -304,7 +325,7 @@ func SaveCSR(certFile string, cert *x509.CertificateRequest) error {
 	pemfile, _ := os.Create(certFile)
 	defer pemfile.Close()
 	pemkey := &pem.Block{
-		Type:  certificateRequestPemBlockType,
+		Type:  CertificateRequestPemBlockType,
 		Bytes: cert.Raw}
 	return pem.Encode(pemfile, pemkey)
 }
@@ -319,7 +340,7 @@ func ReadCSR(csrFile string) (*x509.CertificateRequest, error) {
 	if block == nil {
 		return nil, errors.New("PEM block is nil while decoding CSR")
 	}
-	if block.Type != certificateRequestPemBlockType {
+	if block.Type != CertificateRequestPemBlockType {
 		return nil, errors.New("CERTIFICATE  REQUEST not found in PEM block")
 	}
 	csr, err := x509.ParseCertificateRequest(block.Bytes)
@@ -445,6 +466,7 @@ func SignCSRwithCA(csr *x509.CertificateRequest, caCert *x509.Certificate, priva
 		RawSubject:  csr.RawSubject,
 		DNSNames:    csr.DNSNames,
 		IPAddresses: csr.IPAddresses,
+		URIs:        csr.URIs,
 	}
 
 	err := applyOptions(template, opts...)

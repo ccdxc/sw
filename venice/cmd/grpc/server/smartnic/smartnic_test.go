@@ -272,6 +272,7 @@ func createNMD(t *testing.T, dbPath, priMac, restURL string) (*nmd.Agent, error)
 		restURL,
 		"", // no local certs endpoint
 		"", // no remote certs endpoint
+		"", // no revProxy endpoint
 		"host",
 		globals.NicRegIntvl*time.Second,
 		globals.NicUpdIntvl*time.Second,

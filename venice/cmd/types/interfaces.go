@@ -415,6 +415,12 @@ type RolloutMgr interface {
 	Stop()
 }
 
+// TokenAuthService issues authorization tokens that can be used to perform privileged operations on cluster components.
+// For example, it can issue tokens to authenticate with NAPLES agents when Venice is not reachable
+type TokenAuthService interface {
+	GenerateNodeToken(audience []string, validityStart, validityEnd *api.Timestamp) (string, error)
+}
+
 // ClusterMetrics is the metrics type for the Cluster object.
 type ClusterMetrics struct {
 	AdmittedNICs       api.Counter

@@ -5,7 +5,10 @@
 package cmd
 
 import (
+	"crypto/tls"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
 
@@ -63,6 +66,7 @@ var version bool
 var yamlFormat bool
 var jsonFormat bool
 var mockMode bool
+var authTokenFile string
 
 func init() {
 	// Fill logger config params
@@ -81,6 +85,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&yamlFormat, "yaml", "y", false, "display in yaml format")
 	rootCmd.PersistentFlags().BoolVarP(&jsonFormat, "json", "j", true, "display in json format")
 	rootCmd.PersistentFlags().BoolVarP(&mockMode, "localhost", "l", false, "run penctl in mock managedBy to localhost")
+	rootCmd.PersistentFlags().StringVarP(&authTokenFile, "authtoken", "a", "", "path to file containing authorization token")
 
 	rootCmd.PersistentFlags().MarkHidden("localhost")
 
@@ -165,6 +170,26 @@ func cliPreRunInit(cmd *cobra.Command, args []string) error {
 	//if err != nil {
 	//	return err
 	//}
+
+	if authTokenFile != "" {
+		pemBlocks, err := ioutil.ReadFile(authTokenFile)
+		if err != nil {
+			return fmt.Errorf("Error opening authorization token file %s: %v", authTokenFile, err)
+		}
+		cert, err := tls.X509KeyPair(pemBlocks, pemBlocks)
+		if err != nil {
+			return fmt.Errorf("Error parsing X509 key pair: %v", err)
+		}
+		penHTTPClient.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true, // do not check agent's certificate
+				Certificates:       []tls.Certificate{cert},
+			},
+			MaxIdleConnsPerHost: 5,
+		}
+		naplesURL = "https://" + strings.TrimPrefix(naplesURL, "http://")
+	}
+
 	return nil
 }
 

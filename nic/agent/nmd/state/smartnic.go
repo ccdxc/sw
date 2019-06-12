@@ -5,11 +5,13 @@ package state
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	nmd "github.com/pensando/sw/nic/agent/protos/nmd"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -111,6 +113,16 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 				}
 				n.Add(1)
 				defer n.Done()
+
+				// wipe out existing roots of trust
+				err = os.Remove(globals.NaplesTrustRootsFile)
+				if err != nil {
+					log.Errorf("Error removing trust roots: %v", err)
+				}
+
+				// restart rev proxy so that it can go back to HTTP and no client auth
+				n.StopReverseProxy()
+				n.StartReverseProxy()
 
 				if decommission {
 					// NIC has been decommissioned by user. Go back to classic mode.

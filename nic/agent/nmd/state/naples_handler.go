@@ -308,6 +308,10 @@ func (n *NMD) StartManagedMode() error {
 						n.SendNICUpdates()
 					}()
 
+					// restart rev proxy so that it can switch to HTTPS + client auth
+					n.StopReverseProxy()
+					n.StartReverseProxy()
+
 					return nil
 
 				case cmd.SmartNICStatus_UNKNOWN.String():

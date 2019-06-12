@@ -36,6 +36,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/staging/grpc/server"
 	// blank import to pull in telemetry_query service into api server
 	_ "github.com/pensando/sw/api/generated/telemetry_query/grpc/server"
+	// blank import to pull in tokenauth service into api server
+	_ "github.com/pensando/sw/api/generated/tokenauth/grpc/server"
 	// blank import to pull in workload service into api server
 	_ "github.com/pensando/sw/api/generated/workload/grpc/server"
 )

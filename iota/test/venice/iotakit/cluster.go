@@ -6,14 +6,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	iota "github.com/pensando/sw/iota/protos/gogen"
+	"github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/netutils"
 )
 
 // GetVeniceURL returns venice URL for the testbed
@@ -272,7 +274,7 @@ func (tb *TestBed) CheckNaplesHealth(node *Naples) error {
 	}
 
 	// get naples status from NMD
-	// Note: struct redefined here to aviod dependency on NMD packages
+	// Note: struct redefined here to avoid dependency on NMD packages
 	var naplesStatus struct {
 		api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
 		api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"meta,omitempty"`
@@ -293,9 +295,25 @@ func (tb *TestBed) CheckNaplesHealth(node *Naples) error {
 			NetworkMode     string   `protobuf:"bytes,6,opt,name=NetworkMode,proto3" json:"network-mode"`
 		}
 	}
-	err := netutils.HTTPGet("http://"+nodeIP+":8888/api/v1/naples/", &naplesStatus)
+
+	// NAPLES is supposed to be part of a Cluster, so we need auth token to talk to Agent
+	veniceCtx, err := tb.VeniceLoggedInCtx(context.Background())
 	if err != nil {
-		nerr := fmt.Errorf("Could not get naples status from NMD: %v", err)
+		nerr := fmt.Errorf("Could not get Venice logged in context: %v", err)
+		log.Errorf("%v", nerr)
+		return nerr
+	}
+	ctx, cancel := context.WithTimeout(veniceCtx, 5*time.Second)
+	defer cancel()
+	agentClient, err := utils.GetNodeAuthTokenHTTPClient(ctx, tb.GetVeniceURL()[0], []string{"*"})
+	if err != nil {
+		nerr := fmt.Errorf("Could not get naples authenticated client from Venice: %v", err)
+		log.Errorf("%v", nerr)
+		return nerr
+	}
+	status, err := agentClient.Req("GET", "https://"+nodeIP+":8888/api/v1/naples/", nil, &naplesStatus)
+	if err != nil || status != http.StatusOK {
+		nerr := fmt.Errorf("Could not get naples status from NMD. Status: %v, err: %v", status, err)
 		log.Errorf("%v", nerr)
 		return nerr
 	}
@@ -328,9 +346,9 @@ func (tb *TestBed) CheckNaplesHealth(node *Naples) error {
 		Mode                 string   `json:"naples-mode,omitempty"`
 		IsNpmClientConnected bool     `json:"is-npm-client-connected,omitempty"`
 	}
-	err = netutils.HTTPGet("http://"+nodeIP+":8888/api/system/info/", &naplesInfo)
-	if err != nil {
-		nerr := fmt.Errorf("Error checking netagent health. Err: %v", err)
+	status, err = agentClient.Req("GET", "https://"+nodeIP+":8888/api/system/info/", nil, &naplesInfo)
+	if err != nil || status != http.StatusOK {
+		nerr := fmt.Errorf("Error checking netagent health. Status: %v, err: %v", status, err)
 		log.Errorf("%v", nerr)
 		return nerr
 	}

@@ -30,12 +30,12 @@ type Agent struct {
 
 // NewAgent creates an agent instance
 func NewAgent(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI,
-	nmdDbPath, hostName, macAddr, cmdRegURL, nmdListenURL, certsListenURL, cmdAuthCertsURL, mode string,
+	nmdDbPath, hostName, macAddr, cmdRegURL, nmdListenURL, certsListenURL, cmdAuthCertsURL, revProxyURL, mode string,
 	regInterval, updInterval time.Duration,
 	resolverClient resolver.Interface) (*Agent, error) {
 
 	// create new NMD instance
-	nm, err := state.NewNMD(platform, upgmgr, resolverClient, nmdDbPath, hostName, macAddr, nmdListenURL, certsListenURL, cmdAuthCertsURL, cmdRegURL, mode, regInterval, updInterval)
+	nm, err := state.NewNMD(platform, upgmgr, resolverClient, nmdDbPath, hostName, macAddr, nmdListenURL, certsListenURL, cmdAuthCertsURL, cmdRegURL, revProxyURL, mode, regInterval, updInterval)
 	if err != nil {
 		log.Errorf("Error creating NMD. Err: %v", err)
 		return nil, err

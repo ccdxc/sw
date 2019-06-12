@@ -170,7 +170,7 @@ func (tInfo *testInfo) setup(t *testing.T) error {
 
 	// start API gateway
 	tInfo.apiGw, tInfo.apiGwAddr, err = testutils.StartAPIGateway(":0", false,
-		map[string]string{}, []string{"telemetry_query", "objstore"}, []string{}, tInfo.mockResolver, tInfo.l)
+		map[string]string{}, []string{"telemetry_query", "objstore", "tokenauth"}, []string{}, tInfo.mockResolver, tInfo.l)
 	if err != nil {
 		return err
 	}

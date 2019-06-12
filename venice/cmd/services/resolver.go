@@ -23,11 +23,12 @@ type resolverService struct {
 
 // NewResolverService returns a Resolver Service.
 func NewResolverService(k8sSvc types.K8sService) types.ResolverService {
-	return &resolverService{
+	r := &resolverService{
 		k8sSvc:    k8sSvc,
 		svcMap:    make(map[string]protos.Service),
 		observers: make([]types.ServiceInstanceObserver, 0),
 	}
+	return r
 }
 
 // Start starts the resolver service.
@@ -37,6 +38,7 @@ func (r *resolverService) Start() {
 	if r.running {
 		return
 	}
+	// Add CMD service and point it to local instance // FIMXE -- ok ? different ?
 	r.running = true
 	r.k8sSvc.Register(r)
 }

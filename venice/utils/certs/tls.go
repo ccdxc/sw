@@ -26,7 +26,7 @@ const (
 )
 
 // CSRSigner is a function that takes a CSR and returns a signed certificate
-type CSRSigner func(*x509.CertificateRequest) (*x509.Certificate, error)
+type CSRSigner func(*x509.CertificateRequest, ...Option) (*x509.Certificate, error)
 
 // GetTLSCredentialsPaths gets the file paths for a TLS config stored using StoreTLSCredentials()
 func GetTLSCredentialsPaths(dir string) (certPath, keyPath, caBundlePath string) {

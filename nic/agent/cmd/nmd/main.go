@@ -59,6 +59,7 @@ func main() {
 		cmdCertsURL        = flag.String("cmdcerts", ":"+globals.CMDAuthCertAPIPort, "CMD Certificates API URL(s)")
 		regInterval        = flag.Int64("reginterval", globals.NicRegIntvl, "NIC registration interval in seconds")
 		updInterval        = flag.Int64("updinterval", globals.NicUpdIntvl, "NIC update interval in seconds")
+		revProxyURL        = flag.String("rev-proxy-url", ":"+globals.AgentProxyPort, "specify Reverse Proxy Router REST URL")
 		res                = flag.String("resolver", ":"+globals.CMDResolverPort, "Resolver URL")
 		mode               = flag.String("mode", "host", "Naples mode, \"host\" or \"network\" ")
 		hostName           = flag.String("hostname", "", "Hostname of Naples Host")
@@ -184,6 +185,7 @@ func main() {
 		globals.Localhost+":"+globals.NmdRESTPort,
 		globals.Localhost+":"+globals.CMDUnauthCertAPIPort,
 		*cmdCertsURL,
+		*revProxyURL,
 		*mode,
 		time.Duration(*regInterval)*time.Second,
 		time.Duration(*updInterval)*time.Second,

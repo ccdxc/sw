@@ -59,12 +59,14 @@ var Permission_ResrcKind_normal = map[string]string{
 	"FwlogsQuery":  "FwlogsQuery",
 	"MetricsQuery": "MetricsQuery",
 	"Search":       "Search",
+	"TokenAuth":    "TokenAuth",
 	"apiendpoint":  "APIEndpoint",
 	"auditevent":   "AuditEvent",
 	"event":        "Event",
 	"fwlogsquery":  "FwlogsQuery",
 	"metricsquery": "MetricsQuery",
 	"search":       "Search",
+	"tokenauth":    "TokenAuth",
 }
 
 // Permission_ActionType_normal is a map of normalized values for the enum

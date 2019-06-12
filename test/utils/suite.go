@@ -103,7 +103,7 @@ type TestUtils struct {
 	resolver        resolver.Interface
 	APIGwAddr       string
 	CA              *certmgr.CertificateAuthority
-	tlsProvider     rpckit.TLSProvider
+	TLSProvider     rpckit.TLSProvider
 	APIClient       apiclient.Services
 	VOSClient       objstore.Client
 	Logger          log.Logger
@@ -289,7 +289,7 @@ func (tu *TestUtils) tlsProviderInit() {
 	if err != nil {
 		ginkgo.Fail(fmt.Sprintf("Error setting trust roots: %v", err))
 	}
-	tu.tlsProvider = tlsProvider
+	tu.TLSProvider = tlsProvider
 }
 
 // SetupAuth bootstraps default tenant, authentication policy, local user and super admin role
@@ -395,7 +395,7 @@ func (tu *TestUtils) Init() {
 		servers = append(servers, fmt.Sprintf("%s:%s", tu.NameToIPMap[jj], globals.CMDResolverPort))
 	}
 	ginkgo.By(fmt.Sprintf("Resolver servers: %+v ", servers))
-	tu.resolver = resolver.New(&resolver.Config{Name: clientName, Servers: servers, Options: []rpckit.Option{rpckit.WithTLSProvider(tu.tlsProvider)}})
+	tu.resolver = resolver.New(&resolver.Config{Name: clientName, Servers: servers, Options: []rpckit.Option{rpckit.WithTLSProvider(tu.TLSProvider)}})
 	if tu.resolver == nil {
 		ginkgo.Fail(fmt.Sprintf("resolver is nil"))
 	}
@@ -430,7 +430,7 @@ func (tu *TestUtils) Init() {
 	// create api server client
 	tu.Logger = log.GetNewLogger(log.GetDefaultConfig(clientName))
 
-	tu.APIClient, err = apiclient.NewGrpcAPIClient(clientName, globals.APIServer, tu.Logger, rpckit.WithBalancer(balancer.New(tu.resolver)), rpckit.WithTLSProvider(tu.tlsProvider))
+	tu.APIClient, err = apiclient.NewGrpcAPIClient(clientName, globals.APIServer, tu.Logger, rpckit.WithBalancer(balancer.New(tu.resolver)), rpckit.WithTLSProvider(tu.TLSProvider))
 	if err != nil {
 		ginkgo.Fail(fmt.Sprintf("cannot create client to apiServer, err: %v", err))
 	}

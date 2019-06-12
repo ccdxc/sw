@@ -131,6 +131,7 @@ func StartQuorumServices(c utils.Cluster) {
 		return
 	}
 
+	env.ClusterName = c.Name
 	env.QuorumNodes = make([]string, len(c.QuorumNodes))
 	copy(env.QuorumNodes, c.QuorumNodes)
 	env.Quorum = quorumIntf
@@ -317,6 +318,7 @@ func OnStart() {
 	// Now that CA has started, Recorderclients can talk RPC to eventsProxy
 	env.Recorder.StartExport()
 
+	env.ClusterName = cluster.Name
 	env.QuorumNodes = cluster.QuorumNodes
 	quorumMember, _ := isQuorumMember(cluster)
 	if !quorumMember {

@@ -35,6 +35,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/staging/gateway"
 	// blank import to pull in telemetry_query service into api gateway
 	_ "github.com/pensando/sw/api/generated/telemetry_query/gateway"
+	// blank import to pull in tokenauth service into api gateway
+	_ "github.com/pensando/sw/api/generated/tokenauth/gateway"
 	// blank import to pull in workload service into api gateway
 	_ "github.com/pensando/sw/api/generated/workload/gateway"
 )

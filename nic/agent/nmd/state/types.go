@@ -27,12 +27,12 @@ import (
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/revproxy"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 )
 
 const (
 	nicRegistrationWaitTime = time.Duration(time.Minute * 5)
-	clusterTrustRootsFile   = "/tmp/clusterTrustRoots.pem"
 )
 
 // NMD is the Naples management daemon instance object
@@ -81,6 +81,7 @@ type NMD struct {
 	opStatus     []roprotos.SmartNICOpStatus
 	objectMeta   api.ObjectMeta
 	profiles     []*nmd.NaplesProfile
+	revProxy     *revproxy.ReverseProxyRouter
 }
 
 // NaplesConfigResp is response to NaplesConfig request nmd.Naples

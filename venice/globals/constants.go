@@ -111,6 +111,7 @@ const (
 	CMDGRPCAuthPort             = "9009"
 	CMDResolverPort             = CMDGRPCAuthPort
 	CMDAuthCertAPIPort          = CMDGRPCAuthPort
+	CMDTokenAuthAPIPort         = CMDGRPCAuthPort
 	CMDGRPCLeaderInstancePort   = "9014"
 	CMDSmartNICUpdatesPort      = CMDGRPCLeaderInstancePort
 	CMDUnauthCertAPIPort        = "9018"

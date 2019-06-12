@@ -103,7 +103,7 @@ func TestCreateTLSCredentials(t *testing.T) {
 	trustBundleCert, err := SelfSign("ca2", caKey, WithValidityDays(2))
 	AssertOk(t, err, "Error generating self-signed cert")
 
-	csrSigner := func(csr *x509.CertificateRequest) (*x509.Certificate, error) {
+	csrSigner := func(csr *x509.CertificateRequest, opts ...Option) (*x509.Certificate, error) {
 		return SignCSRwithCA(csr, caCert, caKey, WithValidityDays(1))
 	}
 

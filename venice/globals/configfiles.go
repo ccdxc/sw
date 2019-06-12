@@ -48,3 +48,8 @@ const (
 	// NmdBackupDBPath is where nmd defaults to writing its db file. This needs to be in non tmpfs partition
 	NmdBackupDBPath = "/sysconfig/config1/nmd.db"
 )
+
+var (
+	// NaplesTrustRootsFile is the location of the file containing Venice trust roots on NAPLES
+	NaplesTrustRootsFile = "/sysconfig/config0/clusterTrustRoots.pem"
+)

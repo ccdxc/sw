@@ -37,9 +37,11 @@ func isJSONString(s string) bool {
 }
 
 const (
-	kiB = 1024 // kilobyte
+	kiB         = 1024 // kilobyte
+	twoKB int64 = 2 * kiB
+
+	httpsSignature = "\\x15\\x03\\x01\\x00\\x02\\x02"
 )
-const twoKB int64 = 2 * kiB
 
 func printHTTPReq(r *http.Request) {
 	if verbose {
@@ -202,6 +204,9 @@ func restGet(url string) ([]byte, error) {
 	getResp, err := penHTTPClient.Do(getReq)
 	if err != nil {
 		fmt.Println("Unable to get response from Naples.")
+		if strings.Contains(err.Error(), httpsSignature) {
+			err = fmt.Errorf("Naples is part of a cluster, authentication token required")
+		}
 		if verbose {
 			fmt.Println("Err: ", err.Error())
 		}
@@ -267,6 +272,9 @@ func restGetWithBody(v interface{}, url string) ([]byte, error) {
 	getResp, err := penHTTPClient.Do(getReq)
 	if err != nil {
 		fmt.Println("Unable to get response from Naples.")
+		if strings.Contains(err.Error(), httpsSignature) {
+			err = fmt.Errorf("Naples is part of a cluster, authentication token required")
+		}
 		if verbose {
 			fmt.Println("Err: ", err.Error())
 		}
@@ -330,6 +338,9 @@ func restGetResp(url string) (*http.Response, error) {
 	getResp, err := penHTTPClient.Do(getReq)
 	if err != nil {
 		fmt.Println("Unable to get response from Naples.")
+		if strings.Contains(err.Error(), httpsSignature) {
+			err = fmt.Errorf("Naples is part of a cluster, authentication token required")
+		}
 		if verbose {
 			fmt.Println("Err: ", err.Error())
 		}

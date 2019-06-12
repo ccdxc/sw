@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"os"
 	"strings"
 	"time"
 
@@ -21,6 +22,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/globals"
 )
 
@@ -29,6 +31,7 @@ var _ = Describe("fwlog policy tests", func() {
 		var fwlogClient monitoring.MonitoringV1FwlogPolicyInterface
 		var cancel context.CancelFunc
 		var localAddr net.IP
+		var apiGwAddr string
 		type testCollector struct {
 			proto  string
 			addr   string
@@ -100,7 +103,7 @@ var _ = Describe("fwlog policy tests", func() {
 				}
 			}
 
-			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
+			apiGwAddr = ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 			restSvc, err := apiclient.NewRestAPIClient(apiGwAddr)
 			Expect(err).ShouldNot(HaveOccurred())
 			fwlogClient = restSvc.MonitoringV1().FwlogPolicy()
@@ -136,6 +139,11 @@ var _ = Describe("fwlog policy tests", func() {
 				Expect(err).ShouldNot(HaveOccurred())
 			}
 
+			// use token api to get NAPLES access credentials
+			nodeAuthFile, err := utils.GetNodeAuthTokenTempFile(ctx, apiGwAddr, []string{"*"})
+			Expect(err).ShouldNot(HaveOccurred())
+			defer os.Remove(nodeAuthFile)
+
 			Eventually(func() error {
 				By("verify fwlog policy in Venice")
 				pl, err := fwlogClient.List(ctx, &api.ListWatchOptions{})
@@ -150,7 +158,7 @@ var _ = Describe("fwlog policy tests", func() {
 
 				for _, naples := range ts.tu.NaplesNodes {
 					By(fmt.Sprintf("verify fwlog policy in %v", naples))
-					st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:8888/api/telemetry/fwlog/"))
+					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/fwlog/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
 					var naplesPol []monitoring.FwlogPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 						By(fmt.Sprintf("received fwlog policy from naples: %v, %+v", naples, st))
@@ -196,7 +204,7 @@ var _ = Describe("fwlog policy tests", func() {
 
 				for _, naples := range ts.tu.NaplesNodes {
 					By(fmt.Sprintf("verify fwlog policy in %v", naples))
-					st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:8888/api/telemetry/fwlog/"))
+					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/fwlog/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
 					var naplesPol []monitoring.FwlogPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 						By(fmt.Sprintf("received fwlog policy from naples: %v, %+v", naples, st))
@@ -239,7 +247,7 @@ var _ = Describe("fwlog policy tests", func() {
 				for _, naples := range ts.tu.NaplesNodes {
 					By(fmt.Sprintf("verify fwlog policy in %v", naples))
 
-					st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:8888/api/telemetry/fwlog/"))
+					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/fwlog/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
 					var naplesPol []monitoring.FwlogPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 						By(fmt.Sprintf("received fwlog policy from naples:%v,  %+v", naples, st))
@@ -259,6 +267,11 @@ var _ = Describe("fwlog policy tests", func() {
 		It("Should receive syslog in Collector", func() {
 			Skip("skip to debug CI failures")
 			ctx := ts.tu.NewLoggedInContext(context.Background())
+
+			// use token api to get NAPLES access credentials
+			nodeAuthFile, err := utils.GetNodeAuthTokenTempFile(ctx, apiGwAddr, []string{"*"})
+			Expect(err).ShouldNot(HaveOccurred())
+			defer os.Remove(nodeAuthFile)
 
 			By(fmt.Sprintf("create %v fwlog Policy", len(testFwSpecList)))
 			for i := range testFwSpecList {
@@ -291,7 +304,7 @@ var _ = Describe("fwlog policy tests", func() {
 
 				for _, naples := range ts.tu.NaplesNodes {
 					By(fmt.Sprintf("verify fwlog policy in %v", naples))
-					st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:8888/api/telemetry/fwlog/"))
+					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/fwlog/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
 					var naplesPol []monitoring.FwlogPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 						By(fmt.Sprintf("received fwlog policy from naples: %v, %+v", naples, st))
@@ -311,7 +324,7 @@ var _ = Describe("fwlog policy tests", func() {
 			// wait to connect to collectors
 			time.Sleep(time.Second * 60)
 			for _, naples := range ts.tu.NaplesNodes {
-				st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:8888/api/vrfs/"))
+				st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/vrfs/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
 				var vrfs []netproto.Vrf
 				err := json.Unmarshal([]byte(st), &vrfs)
 				Expect(err).Should(BeNil())

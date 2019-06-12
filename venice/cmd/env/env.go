@@ -26,6 +26,7 @@ var (
 	RegistryURL          string
 	Scheme               *runtime.Scheme
 	KVStore              kvstore.Interface
+	ClusterName          string
 	QuorumNodes          []string
 	Quorum               quorum.Interface
 	KVServers            []string
@@ -53,5 +54,6 @@ var (
 	VeniceRolloutClient  types.VeniceRolloutClient
 	ServiceRolloutClient types.ServiceRolloutClient
 	Recorder             events.Recorder
+	TokenAuthService     types.TokenAuthService
 	MetricsService       types.MetricsService
 )

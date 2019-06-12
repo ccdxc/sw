@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -13,6 +14,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
+	"github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/ctrler/tpm"
 	"github.com/pensando/sw/venice/globals"
 )
@@ -20,6 +22,7 @@ import (
 var _ = Describe("flow export policy tests", func() {
 	Context("flow export policy CRUD tests", func() {
 		var flowExpClient monitoring.MonitoringV1FlowExportPolicyInterface
+		var apiGwAddr string
 
 		AfterEach(func() {
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
@@ -40,7 +43,7 @@ var _ = Describe("flow export policy tests", func() {
 			defer cancel()
 			ctx := ts.tu.NewLoggedInContext(pctx)
 
-			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
+			apiGwAddr = ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 			restSvc, err := apiclient.NewRestAPIClient(apiGwAddr)
 			Expect(err).ShouldNot(HaveOccurred())
 			flowExpClient = restSvc.MonitoringV1().FlowExportPolicy()
@@ -111,6 +114,11 @@ var _ = Describe("flow export policy tests", func() {
 				By(fmt.Sprintf("create flow export Policy %v", flowPolicy.Name))
 			}
 
+			// use token api to get NAPLES access credentials
+			nodeAuthFile, err := utils.GetNodeAuthTokenTempFile(ctx, apiGwAddr, []string{"*"})
+			Expect(err).ShouldNot(HaveOccurred())
+			defer os.Remove(nodeAuthFile)
+
 			Eventually(func() error {
 				By("verify flow export policy in Venice")
 				pl, err := flowExpClient.List(ctx, &api.ListWatchOptions{})
@@ -125,7 +133,7 @@ var _ = Describe("flow export policy tests", func() {
 
 				for _, naples := range ts.tu.NaplesNodes {
 					By(fmt.Sprintf("verify flow export policy in %v", naples))
-					st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:8888/api/telemetry/flowexports/"))
+					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
 					var naplesPol []tpmprotos.FlowExportPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 						By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))
@@ -172,7 +180,7 @@ var _ = Describe("flow export policy tests", func() {
 
 				for _, naples := range ts.tu.NaplesNodes {
 					By(fmt.Sprintf("verify flow export policy in %v", naples))
-					st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:8888/api/telemetry/flowexports/"))
+					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
 					var naplesPol []tpmprotos.FlowExportPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 						By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))
@@ -215,7 +223,7 @@ var _ = Describe("flow export policy tests", func() {
 				for _, naples := range ts.tu.NaplesNodes {
 					By(fmt.Sprintf("verify flow export policy in %v", naples))
 
-					st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:8888/api/telemetry/flowexports/"))
+					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
 					var naplesPol []tpmprotos.FlowExportPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 						By(fmt.Sprintf("received flow export policy from naples:%v,  %+v", naples, st))
@@ -269,6 +277,11 @@ var _ = Describe("flow export policy tests", func() {
 				}
 			}
 
+			// use token api to get NAPLES access credentials
+			nodeAuthFile, err := utils.GetNodeAuthTokenTempFile(ctx, apiGwAddr, []string{"*"})
+			Expect(err).ShouldNot(HaveOccurred())
+			defer os.Remove(nodeAuthFile)
+
 			for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
 				flowPolicy := &monitoring.FlowExportPolicy{
 					TypeMeta: api.TypeMeta{
@@ -300,7 +313,7 @@ var _ = Describe("flow export policy tests", func() {
 
 				for _, naples := range ts.tu.NaplesNodes {
 					By(fmt.Sprintf("verify flow export policy in %v", naples))
-					st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:8888/api/telemetry/flowexports/"))
+					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
 					var naplesPol []tpmprotos.FlowExportPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 						By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))
@@ -382,7 +395,7 @@ var _ = Describe("flow export policy tests", func() {
 				Eventually(func() error {
 					for _, naples := range ts.tu.NaplesNodes {
 						By(fmt.Sprintf("verify flow export policy in %v", naples))
-						st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:8888/api/telemetry/flowexports/"))
+						st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
 						var naplesPol []tpmprotos.FlowExportPolicy
 						if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 							By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))
@@ -491,7 +504,13 @@ var _ = Describe("flow export policy tests", func() {
 				By(fmt.Sprintf("create flow export Policy %v", flowPolicy.Name))
 			}
 
+			// use token api to get NAPLES access credentials
+			nodeAuthFile, err := utils.GetNodeAuthTokenTempFile(ctx, apiGwAddr, []string{"*"})
+			Expect(err).ShouldNot(HaveOccurred())
+			defer os.Remove(nodeAuthFile)
+
 			Eventually(func() error {
+
 				By("verify flow export policy in Venice")
 				pl, err := flowExpClient.List(ctx, &api.ListWatchOptions{})
 				if err != nil {
@@ -505,7 +524,7 @@ var _ = Describe("flow export policy tests", func() {
 
 				for _, naples := range ts.tu.NaplesNodes {
 					By(fmt.Sprintf("verify flow export policy in %v", naples))
-					st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:8888/api/telemetry/flowexports/"))
+					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
 					var naplesPol []tpmprotos.FlowExportPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 						By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))
@@ -589,7 +608,7 @@ var _ = Describe("flow export policy tests", func() {
 				Eventually(func() error {
 					for _, naples := range ts.tu.NaplesNodes {
 						By(fmt.Sprintf("verify flow export policy in %v", naples))
-						st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, "curl -s localhost:8888/api/telemetry/flowexports/"))
+						st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
 						var naplesPol []tpmprotos.FlowExportPolicy
 						if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 							By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))

@@ -245,9 +245,9 @@ func NewMasterService(options ...MasterOption) types.MasterService {
 	return &m
 }
 
-// Start starts the services that run on the leader node in the
-// cluster after running election. These include kubernetes master components and API Gateway, services
-// that have affinity to the Virtual IP.
+// Start starts the services that run on the leader node in the cluster after running election.
+// These include kubernetes master components and API Gateway, services that have affinity to the Virtual IP.
+// It also starts the resolver on quorum nodes and register a CMD instance pointing to the local auth API.
 // TODO: Spread out kubernetes master services also?
 func (m *masterService) Start() error {
 	var err error
@@ -265,6 +265,19 @@ func (m *masterService) Start() error {
 		m.updateCh <- true
 		err = m.startLeaderServices()
 	}
+
+	var localCMDSvcInstance = k8stypes.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "Service",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.Cmd,
+		},
+		Service: globals.Cmd,
+		Node:    globals.Localhost,
+		URL:     fmt.Sprintf("%s:%s", globals.Localhost, globals.CMDGRPCAuthPort),
+	}
+	m.resolverSvc.AddServiceInstance(&localCMDSvcInstance)
 	m.resolverSvc.Start()
 	return err
 }

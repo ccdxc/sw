@@ -4,11 +4,13 @@ package nicadmission
 
 import (
 	"context"
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
+	"reflect"
 	gorun "runtime"
 	"strings"
 	"testing"
@@ -24,6 +26,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	pencluster "github.com/pensando/sw/api/generated/cluster"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
+	"github.com/pensando/sw/api/generated/tokenauth"
 	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
 	nmdstate "github.com/pensando/sw/nic/agent/nmd/state"
@@ -37,9 +40,11 @@ import (
 	cmdenv "github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
+	tokenauthsrv "github.com/pensando/sw/venice/cmd/grpc/server/tokenauth"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	cmdsvc "github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/services/mock"
+	tokenauthsvc "github.com/pensando/sw/venice/cmd/services/tokenauth"
 	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certmgr"
@@ -57,6 +62,7 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	venicetestutils "github.com/pensando/sw/venice/utils/testutils"
+	tokenauthutils "github.com/pensando/sw/venice/utils/tokenauth"
 	ventrace "github.com/pensando/sw/venice/utils/trace"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
@@ -76,7 +82,7 @@ const (
 var (
 	numNaples   = flag.Int("num-naples", 100, fmt.Sprintf("Number of Naples instances [%d..%d]", minAgents, maxAgents))
 	cmdRegURL   = flag.String("cmd-reg-url", smartNICRegURL, "CMD Registration URL")
-	cmdUpdURL   = flag.String("cmd-upd-url", smartNICUpdURL, "CMD Updates URL")
+	cmdAuthURL  = flag.String("cmd-upd-url", smartNICUpdURL, "CMD Updates URL")
 	resolverURL = flag.String("resolver-url", resolverURLs, "Resolver URLs")
 	mode        = flag.String("mode", "host", "Naples mode, host or network")
 	rpcTrace    = flag.Bool("rpc-trace", false, "Enable gRPC tracing")
@@ -88,15 +94,15 @@ var (
 )
 
 type testInfo struct {
-	l              log.Logger
-	apiServerPort  string
-	apiServer      apiserver.Server
-	apiClient      apiclient.Services
-	regRPCServer   *rpckit.RPCServer
-	updRPCServer   *rpckit.RPCServer
-	smartNICServer *smartnic.RPCServer
-	resolverServer *rpckit.RPCServer
-	stateMgr       *cache.Statemgr
+	l                log.Logger
+	apiServerPort    string
+	apiServer        apiserver.Server
+	apiClient        apiclient.Services
+	regRPCServer     *rpckit.RPCServer
+	cmdAuthRPCServer *rpckit.RPCServer
+	smartNICServer   *smartnic.RPCServer
+	resolverServer   *rpckit.RPCServer
+	stateMgr         *cache.Statemgr
 }
 
 type nmdInfo struct {
@@ -136,6 +142,10 @@ func getHost(index int) *pencluster.Host {
 
 func getRESTUrl(index int) string {
 	return fmt.Sprintf(":%d", 20000+index)
+}
+
+func getProxyURL(index int) string {
+	return fmt.Sprintf(":%d", 21000+index)
 }
 
 func getDBPath(index int) string {
@@ -202,16 +212,21 @@ func launchCMDServices(m *testing.M, regURL, updURL string) (*rpckit.RPCServer, 
 	tInfo.resolverServer = resolverServer
 
 	// create separate provider running on auth port for health updates
-	updRPCServer, err := rpckit.NewRPCServer("smartNIC", updURL)
+	cmdAuthRPCServer, err := rpckit.NewRPCServer("smartNIC", updURL)
 	if err != nil {
 		fmt.Printf("Error creating NIC updates RPC-server: %v", err)
 		return nil, nil, err
 	}
-	tInfo.updRPCServer = updRPCServer
-	cmdenv.AuthRPCServer = updRPCServer
-	grpc.RegisterSmartNICUpdatesServer(updRPCServer.GrpcServer, tInfo.smartNICServer)
-	updRPCServer.Start()
-	*cmdUpdURL = updRPCServer.GetListenURL()
+	tInfo.cmdAuthRPCServer = cmdAuthRPCServer
+	cmdenv.AuthRPCServer = cmdAuthRPCServer
+	grpc.RegisterSmartNICUpdatesServer(cmdAuthRPCServer.GrpcServer, tInfo.smartNICServer)
+
+	cmdenv.TokenAuthService = tokenauthsvc.NewTokenAuthService("testCluster", cmdenv.CertMgr.Ca())
+	tokenAuthRPCHandler := tokenauthsrv.NewRPCHandler(cmdenv.TokenAuthService)
+	tokenauth.RegisterTokenAuthV1Server(cmdenv.AuthRPCServer.GrpcServer, tokenAuthRPCHandler)
+
+	cmdAuthRPCServer.Start()
+	*cmdAuthURL = cmdAuthRPCServer.GetListenURL()
 
 	// Start CMD config watcher
 	cmdenv.Logger = tInfo.l
@@ -230,13 +245,16 @@ func launchCMDServices(m *testing.M, regURL, updURL string) (*rpckit.RPCServer, 
 		cmdsvc.WithDiagModuleUpdaterSvcOption(diagmock.GetModuleUpdater()))
 	cw.Start()
 
-	return regRPCServer, updRPCServer, nil
+	return regRPCServer, cmdAuthRPCServer, nil
 }
 
 // Create NMD and Agent
-func createNMD(t *testing.T, dbPath, priMac, restURL, mgmtMode string) (*nmdInfo, error) {
+func createNMD(t *testing.T, dbPath, priMac, restURL, revProxyURL, mgmtMode string) (*nmdInfo, error) {
 
 	venicetestutils.CreateFruJSON(priMac)
+
+	// override location of trust roots for reverse proxy
+	globals.NaplesTrustRootsFile = "/tmp/clusterTrustRoots.pem"
 
 	// create a platform agent
 	pa, err := platform.NewNaplesPlatformAgent()
@@ -265,8 +283,9 @@ func createNMD(t *testing.T, dbPath, priMac, restURL, mgmtMode string) (*nmdInfo
 		priMac,
 		*cmdRegURL,
 		restURL,
-		"", // no local certs endpoint
-		"", // no remote certs endpoint
+		"",          // no local certs endpoint
+		"",          // no remote certs endpoint
+		revProxyURL, // no agent proxy endpoint
 		mgmtMode,
 		nicRegIntvl,
 		nicUpdIntvl,
@@ -300,7 +319,17 @@ func createNMD(t *testing.T, dbPath, priMac, restURL, mgmtMode string) (*nmdInfo
 	nmdHandle.SetNaplesConfig(cfg.Spec)
 	nmdHandle.IPClient.Update()
 
-	return ni, err
+	// set the NMD reverse proxy config to point to corresponding REST port
+	err = os.Remove(globals.NaplesTrustRootsFile)
+	Assert(t, err == nil || os.IsNotExist(err), "Error removing stale trust roots: %v", err)
+	proxyConfig := map[string]string{
+		"/api/v1/naples": "http://127.0.0.1" + restURL,
+	}
+	nmdHandle.StopReverseProxy()
+	nmdHandle.UpdateReverseProxyConfig(proxyConfig)
+	nmdHandle.StartReverseProxy()
+
+	return ni, nil
 }
 
 // stopAgent stops NMD server and deletes emDB file
@@ -340,6 +369,7 @@ func TestCreateNMDs(t *testing.T) {
 				priMac := getSmartNICMAC(i)
 				dbPath := getDBPath(i)
 				restURL := getRESTUrl(i)
+				revProxyURL := getProxyURL(i)
 
 				// Create Host
 				_, err := tInfo.apiClient.ClusterV1().Host().Create(context.Background(), host)
@@ -357,7 +387,7 @@ func TestCreateNMDs(t *testing.T) {
 					os.Remove(dbPath)
 
 					// create Agent and NMD
-					nmdInst, err := createNMD(t, dbPath, priMac, restURL, *mode)
+					nmdInst, err := createNMD(t, dbPath, priMac, restURL, revProxyURL, *mode)
 					defer stopNMD(t, nmdInst)
 					Assert(t, (err == nil && nmdInst.agent != nil), "Failed to create agent", err)
 
@@ -504,6 +534,28 @@ func TestCreateNMDs(t *testing.T) {
 	}
 }
 
+// getAgentRESTClient returns a http/https REST client for NAPLES agents
+func getAgentRESTClient(t *testing.T, auth bool) (*netutils.HTTPClient, error) {
+	client := netutils.NewHTTPClient()
+	if auth {
+		// proxy should be running HTTPs, client auth token required
+		token, err := cmdenv.TokenAuthService.GenerateNodeToken([]string{"*"}, nil, nil)
+		if err != nil {
+			return nil, fmt.Errorf("Error generating node auth token: %s", token)
+		}
+		tlsCert, err := tokenauthutils.ParseNodeToken(token)
+		if err != nil {
+			return nil, fmt.Errorf("Error parsing node auth token")
+		}
+		client.WithTLSConfig(
+			&tls.Config{
+				InsecureSkipVerify: true, // do not check agent's certificate
+				Certificates:       []tls.Certificate{tlsCert},
+			})
+	}
+	return client, nil
+}
+
 // setNICAdmitState sets the value for the SmartNIC.Spec.Admit field in ApiServer
 func setNICAdmitState(t *testing.T, meta *api.ObjectMeta, admit bool) {
 	nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), meta)
@@ -598,6 +650,45 @@ func checkHealthStatus(t *testing.T, meta *api.ObjectMeta, admPhase string) {
 	AssertEventually(t, f, "Failed to verify health updates", "500ms", "30s")
 }
 
+// checkReverseProxy checks that the reverse proxy hosted by NMD correctly switches
+// between HTTP (unauthenticated), when NAPLES is not part of a cluster and
+// HTTPs with client certificate, when it is
+func checkReverseProxy(t *testing.T, nmd *nmdstate.NMD, admPhase string) error {
+	revProxyURL := nmd.GetReverseProxyListenURL()
+	if revProxyURL == "" {
+		return fmt.Errorf("nmd.GetReverseProxyListenURL returned empty URL")
+	}
+	auth := (admPhase == pencluster.SmartNICStatus_ADMITTED.String())
+	client, err := getAgentRESTClient(t, auth)
+	if err != nil {
+		return fmt.Errorf("Error getting REST client: %v", err)
+	}
+	url := revProxyURL + "/api/v1/naples/"
+	if auth {
+		url = "https://" + url
+	} else {
+		url = "http://" + url
+	}
+	var naplesCfg proto.Naples
+	resp, err := client.Req("GET", url, nil, &naplesCfg)
+	if err != nil || resp != http.StatusOK {
+		return fmt.Errorf("Failed to get naples config via reverse proxy. AdmPhase: %v, Resp: %+v, err: %v", admPhase, resp, err)
+	}
+	if !reflect.DeepEqual(naplesCfg, nmd.GetNaplesConfig()) {
+		return fmt.Errorf("Unexpected NAPLES config response. Have: %+v, want: %+v", naplesCfg, nmd.GetNaplesConfig())
+	}
+	if auth {
+		// make a call without client cert and check that it is rejected
+		tlsConfig := &tls.Config{InsecureSkipVerify: true}
+		client.WithTLSConfig(tlsConfig)
+		resp, err := client.Req("GET", url, nil, &naplesCfg)
+		if err == nil || resp == http.StatusOK {
+			return fmt.Errorf("Proxy request did not fail without valid certificate, err: %v, resp: %v", err, resp)
+		}
+	}
+	return nil
+}
+
 func checkE2EState(t *testing.T, nmd *nmdstate.NMD, admPhase string) {
 	var expRegStatus, expUpdStatus, expUpdWatchStatus, expRoWatchStatus bool
 
@@ -653,6 +744,11 @@ func checkE2EState(t *testing.T, nmd *nmdstate.NMD, admPhase string) {
 			return false, nil
 		}
 
+		if err = checkReverseProxy(t, nmd, admPhase); err != nil {
+			log.Errorf("Reverse proxy check failed, err: %v", err)
+			return false, nil
+		}
+
 		return true, nil
 	}
 	AssertEventually(t, f, fmt.Sprintf("NMD did not reach expected state for phase %s, status: %+v", admPhase, nmd), "500ms", "30s")
@@ -670,6 +766,7 @@ func TestNICReadmit(t *testing.T) {
 	priMac := getSmartNICMAC(i)
 	dbPath := getDBPath(i)
 	restURL := getRESTUrl(i)
+	revProxyURL := getProxyURL(i)
 
 	meta := api.ObjectMeta{
 		Name: priMac,
@@ -684,7 +781,7 @@ func TestNICReadmit(t *testing.T) {
 	os.Remove(dbPath)
 
 	// create Agent and NMD
-	nmdInst, err := createNMD(t, dbPath, priMac, restURL, "network")
+	nmdInst, err := createNMD(t, dbPath, priMac, restURL, revProxyURL, "network")
 	defer stopNMD(t, nmdInst)
 	Assert(t, (err == nil && nmdInst.agent != nil), "Failed to create agent", err)
 
@@ -753,6 +850,7 @@ func TestNICDecommissionFlow(t *testing.T) {
 	priMac := getSmartNICMAC(i)
 	dbPath := getDBPath(i)
 	restURL := getRESTUrl(i)
+	revProxyURL := getProxyURL(i)
 
 	meta := api.ObjectMeta{
 		Name: priMac,
@@ -769,7 +867,7 @@ func TestNICDecommissionFlow(t *testing.T) {
 	os.Remove(dbPath)
 
 	// create Agent and NMD
-	nmdInst, err := createNMD(t, dbPath, priMac, restURL, "network")
+	nmdInst, err := createNMD(t, dbPath, priMac, restURL, revProxyURL, "network")
 	defer stopNMD(t, nmdInst)
 	Assert(t, (err == nil && nmdInst.agent != nil), "Failed to create agent", err)
 
@@ -904,7 +1002,7 @@ func Setup(m *testing.M) {
 	tInfo.apiClient = apiCl
 
 	// create gRPC server for smartNIC service
-	tInfo.regRPCServer, tInfo.updRPCServer, err = launchCMDServices(m, *cmdRegURL, *cmdUpdURL)
+	tInfo.regRPCServer, tInfo.cmdAuthRPCServer, err = launchCMDServices(m, *cmdRegURL, *cmdAuthURL)
 	if err != nil {
 		panic(fmt.Sprintf("Err creating rpc server: %v", err))
 	}
@@ -940,7 +1038,7 @@ func Teardown(m *testing.M) {
 	tInfo.regRPCServer.Stop()
 
 	// stop the CMD smartnic RPC server
-	tInfo.updRPCServer.Stop()
+	tInfo.cmdAuthRPCServer.Stop()
 
 	// close the apiClient
 	tInfo.apiClient.Close()

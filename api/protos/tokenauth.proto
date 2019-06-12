@@ -1,0 +1,29 @@
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+
+// Service name
+package tokenauth;
+
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// ----------------------------- NodeToken  -----------------------------
+
+// NodeTokenRequest is a message that allows user to retrieve an auth token
+// to connect to a cluster node and perform privileged operations
+message NodeTokenRequest {
+    // Audience represents a list of nodes the token is valid for. "*" indicates all nodes
+    repeated string Audience = 1 [(gogoproto.jsontag) = "audience,omitempty"];
+    // ValidityStart indicates the time at which the token becomes valid
+    api.Timestamp ValidityStart = 3 [(gogoproto.jsontag) = "validity-start,omitempty"];
+    // ValidityEnd indicates the time at which the token becomes invalid
+    api.Timestamp ValidityEnd = 4 [(gogoproto.jsontag) = "validity-end,omitempty"];
+}
+
+message NodeTokenResponse {
+    string Token = 1;
+}
+

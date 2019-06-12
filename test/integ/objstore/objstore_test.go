@@ -82,7 +82,7 @@ func (it *objstoreIntegSuite) SetUpSuite(c *C) {
 	c.Assert(err, IsNil)
 	it.authDir, err = ioutil.TempDir("/tmp", "objstore_test")
 	c.Assert(err, IsNil)
-	csrSigner := func(csr *x509.CertificateRequest) (*x509.Certificate, error) {
+	csrSigner := func(csr *x509.CertificateRequest, opts ...certs.Option) (*x509.Certificate, error) {
 		return certs.SignCSRwithCA(csr, caCert, caKey, certs.WithValidityDays(1))
 	}
 	err = credentials.GenVosHTTPSAuth("localhost", it.authDir, csrSigner, append([]*x509.Certificate{caCert}, trustRoots[0]), trustRoots)

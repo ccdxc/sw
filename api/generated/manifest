@@ -39,11 +39,13 @@ svc_search.proto search false
 svc_security.proto security true
 svc_staging.proto staging true
 svc_telemetry_query.proto telemetry_query false
+svc_tokenauth.proto tokenauth false
 svc_workload.proto workload true
 techsupport.proto monitoring true
 telemetry.proto monitoring true
 telemetry_query.proto telemetry_query true
 tenant.proto cluster true
+tokenauth.proto tokenauth true
 troubleshooting.proto monitoring true
 vrf.proto network true
 workload.proto workload true

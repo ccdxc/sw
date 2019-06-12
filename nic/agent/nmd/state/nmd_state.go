@@ -35,6 +35,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/revproxy"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
@@ -60,7 +61,7 @@ func WithRolloutAPI(ro nmdapi.RolloutCtrlAPI) NewNMDOption {
 
 // NewNMD returns a new NMD instance
 func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient resolver.Interface,
-	dbPath, nodeUUID, macAddr, listenURL, certsListenURL, remoteCertsURL, cmdRegURL, mode string,
+	dbPath, nodeUUID, macAddr, listenURL, certsListenURL, remoteCertsURL, cmdRegURL, revProxyURL, mode string,
 	regInterval, updInterval time.Duration, opts ...NewNMDOption) (*NMD, error) {
 	var emdb emstore.Emstore
 	var err error
@@ -75,6 +76,12 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 	default:
 		log.Errorf("Invalid mode, mode:%s", mode)
 		return nil, errors.New("Invalid mode")
+	}
+
+	// create reverse proxy for all NAPLES REST APIs
+	revProxy, err := revproxy.NewReverseProxyRouter(revProxyURL, revProxyConfig)
+	if err != nil {
+		return nil, fmt.Errorf("Could not start Reverse Proxy Router. Err: %v", err)
 	}
 
 	// open the embedded database
@@ -209,6 +216,7 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 		config:             config,
 		completedOps:       make(map[roprotos.SmartNICOpSpec]bool),
 		ro:                 ro,
+		revProxy:           revProxy,
 	}
 
 	err = nm.updateLocatTimeZone()
@@ -268,6 +276,9 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 	//	// Start in Managed Mode
 	//	go nm.StartManagedMode()
 	//}
+
+	// start reverse proxy for all NAPLES REST APIs
+	nm.StartReverseProxy()
 
 	return &nm, nil
 }
@@ -680,6 +691,11 @@ func (n *NMD) GetGetNMDUploadURL() string {
 	return "http://" + n.GetListenURL() + UpdateURL
 }
 
+// GetReverseProxyListenURL returns the URL of the reverse proxy
+func (n *NMD) GetReverseProxyListenURL() string {
+	return n.revProxy.GetListenURL()
+}
+
 func (n *NMD) initTLSProvider() error {
 	// Instantiate a KeyMgr to store the cluster certificate and a TLS provider
 	// to use it to connect to other cluster components.
@@ -734,9 +750,9 @@ func (n *NMD) setClusterCredentials(resp *grpc.NICAdmissionResponse) error {
 
 	// Persist trust roots so that we remember what is the last Venice cluster we connected to
 	// and we can authenticate offline credentials signed by Venice CA.
-	err = certs.SaveCertificates(clusterTrustRootsFile, trustRoots)
+	err = certs.SaveCertificates(globals.NaplesTrustRootsFile, trustRoots)
 	if err != nil {
-		return fmt.Errorf("Error storing cluster trust roots in %s: %v", clusterTrustRootsFile, err)
+		return fmt.Errorf("Error storing cluster trust roots in %s: %v", globals.NaplesTrustRootsFile, err)
 	}
 
 	return nil

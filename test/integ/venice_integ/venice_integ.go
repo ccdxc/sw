@@ -90,13 +90,14 @@ import (
 // integ test suite parameters
 const (
 	// service URLs
-	integTestNpmURL     = "localhost:9495"
-	integTestNpmRESTURL = "localhost:9496"
-	integTestApisrvURL  = "localhost:8082"
-	integTestTPMURL     = "localhost:9093"
-	vchTestURL          = "localhost:19003"
-	integTestCitadelURL = "localhost:9094"
-	integTestRolloutURL = "localhost:9095"
+	integTestNpmURL      = "localhost:9495"
+	integTestNpmRESTURL  = "localhost:9496"
+	integTestApisrvURL   = "localhost:8082"
+	integTestTPMURL      = "localhost:9093"
+	vchTestURL           = "localhost:19003"
+	integTestCitadelURL  = "localhost:9094"
+	integTestRolloutURL  = "localhost:9095"
+	integTestRevProxyURL = "localhost:" + globals.AgentProxyPort
 
 	smartNICServerURL       = "localhost:" + globals.CMDSmartNICRegistrationPort
 	cmdAuthServer           = "localhost:" + globals.CMDGRPCAuthPort
@@ -349,7 +350,7 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 		}
 
 		// Create the new NMD
-		nmdAg, err := nmd.NewAgent(pa, uc, dbPath, snic.snicName, snic.macAddr, smartNICServerURL, restURL, "", "", "network",
+		nmdAg, err := nmd.NewAgent(pa, uc, dbPath, snic.snicName, snic.macAddr, smartNICServerURL, restURL, "", "", integTestRevProxyURL, "network",
 			globals.NicRegIntvl*time.Second, globals.NicUpdIntvl*time.Second, it.resolverClient)
 		if err != nil {
 			log.Fatalf("Error creating NMD. Err: %v", err)
@@ -507,6 +508,19 @@ func (it *veniceIntegSuite) createResolver() {
 		URL:     cmdLeaderInstanceServer,
 	}
 	m.AddServiceInstance(&nicUpdatesSi)
+
+	cmdAuthSi := types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.Cmd,
+		},
+		Service: globals.Cmd,
+		Node:    "localhost",
+		URL:     cmdAuthServer,
+	}
+	m.AddServiceInstance(&cmdAuthSi)
 }
 
 func (it *veniceIntegSuite) updateResolver(serviceName, url string) {

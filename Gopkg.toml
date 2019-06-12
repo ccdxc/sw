@@ -96,7 +96,7 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
 
 [[override]]
   name = "github.com/gorilla/mux"
-  revision = "757bef944d0f21880861c2dd9c871ca543023cba"
+  version = "1.7.2"
 
 [[constraint]]
   branch = "master"

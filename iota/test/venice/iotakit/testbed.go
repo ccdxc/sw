@@ -24,6 +24,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/svcs/common"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -1253,6 +1254,7 @@ func (tb *TestBed) cleanUpNaplesConfig(nodes []*TestNode) error {
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
 			// cleaning up db is good for now.
 			trig.AddCommand(fmt.Sprintf("rm -rf /sysconfig/config0/*.db"), node.NodeName+"_naples", node.NodeName)
+			trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.NaplesTrustRootsFile), node.NodeName+"_naples", node.NodeName)
 			cmds++
 		}
 	}

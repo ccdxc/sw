@@ -14,4 +14,5 @@ true search search.proto svc_search.proto
 true security app.proto fwprofile.proto networkencryption.proto securitygroup.proto sgpolicy.proto svc_security.proto x509.proto 
 true staging staging.proto svc_staging.proto 
 false telemetry_query svc_telemetry_query.proto telemetry_query.proto 
+false tokenauth svc_tokenauth.proto tokenauth.proto 
 true workload endpoint.proto svc_workload.proto workload.proto 

@@ -99,7 +99,7 @@ func GetCAKit() (certs.CSRSigner, *x509.Certificate, []*x509.Certificate, error)
 		return nil, nil, nil, fmt.Errorf("Error generating self-signer cert: %v", err)
 	}
 
-	csrSigner := func(csr *x509.CertificateRequest) (*x509.Certificate, error) {
+	csrSigner := func(csr *x509.CertificateRequest, opts ...certs.Option) (*x509.Certificate, error) {
 		return certs.SignCSRwithCA(csr, caCert, caKey, certs.WithValidityDays(1))
 	}
 

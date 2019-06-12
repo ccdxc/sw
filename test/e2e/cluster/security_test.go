@@ -3,7 +3,9 @@
 package cluster
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -13,11 +15,15 @@ import (
 
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/labels"
+	"github.com/pensando/sw/test/utils"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/netutils"
 )
 
 // securityTestGroup for SG and SG policy tests
 type securityTestGroup struct {
-	suite *TestSuite
+	suite           *TestSuite
+	authAgentClient *netutils.HTTPClient
 }
 
 // instantiate test suite
@@ -26,10 +32,37 @@ var securityTg = &securityTestGroup{}
 // setupTest setup test suite
 func (stg *securityTestGroup) setupTest() {
 	stg.suite = ts
+	Eventually(func() error {
+		ctx, cancel := context.WithTimeout(ts.tu.NewLoggedInContext(context.Background()), 5*time.Second)
+		defer cancel()
+		var err error
+		stg.authAgentClient, err = utils.GetNodeAuthTokenHTTPClient(ctx, ts.tu.APIGwAddr, []string{"*"})
+		return err
+	}, 30, 5).Should(BeNil(), "Failed to get node auth token")
 }
 
 // teardownTest cleans up test suite
 func (stg *securityTestGroup) teardownTest() {
+}
+
+// getSGPolicies() returns the list of SG Policies as read from the agent REST interface
+func (stg *securityTestGroup) getSGPolicies(agent string) ([]security.SGPolicy, error) {
+	var sgplist []security.SGPolicy
+	status, err := stg.authAgentClient.Req("GET", "https://"+agent+":"+globals.AgentProxyPort+"/api/security/policies/", nil, &sgplist)
+	if err != nil || status != http.StatusOK {
+		return nil, fmt.Errorf("Error getting SG Policies list: %v", err)
+	}
+	return sgplist, nil
+}
+
+// getSecurityGroups() returns the list of security groups as read from the agent REST interface
+func (stg *securityTestGroup) getSecurityGroups(agent string) ([]security.SGPolicy, error) {
+	var sgplist []security.SGPolicy
+	status, err := stg.authAgentClient.Req("GET", "https://"+agent+":"+globals.AgentProxyPort+"/api/sgs/", nil, &sgplist)
+	if err != nil || status != http.StatusOK {
+		return nil, fmt.Errorf("Error getting SG Policies list: %v", err)
+	}
+	return sgplist, nil
 }
 
 // testSgCreateDelete tests security group create delete
@@ -71,8 +104,8 @@ func (stg *securityTestGroup) testSgpolicyCreateDelete() {
 
 	// verify agents have the policy
 	Eventually(func() bool {
-		for _, rclient := range stg.suite.netagentClients {
-			sgplist, err := rclient.SGPolicyList()
+		for _, naplesIP := range ts.tu.NaplesNodeIPs {
+			sgplist, err := stg.getSGPolicies(naplesIP)
 			if err != nil {
 				By(fmt.Sprintf("ts:%s security policy list failed, err: %+v policies: %+v", time.Now().String(), err, sgplist))
 				return false
@@ -91,8 +124,8 @@ func (stg *securityTestGroup) testSgpolicyCreateDelete() {
 
 	// verify policy is gone from the agents
 	Eventually(func() bool {
-		for _, rclient := range stg.suite.netagentClients {
-			sgplist, err := rclient.SGPolicyList()
+		for _, naplesIP := range ts.tu.NaplesNodeIPs {
+			sgplist, err := stg.getSGPolicies(naplesIP)
 			if err != nil {
 				By(fmt.Sprintf("ts:%s security policy list failed, err: %+v policies: %+v", time.Now().String(), err, sgplist))
 				return false
@@ -132,8 +165,8 @@ func (stg *securityTestGroup) testSecurityGroupCreateDelete() {
 
 	// verify agents have the policy
 	Eventually(func() bool {
-		for _, rclient := range stg.suite.netagentClients {
-			sglist, err := rclient.SecurityGroupList()
+		for _, naplesIP := range ts.tu.NaplesNodeIPs {
+			sglist, err := stg.getSecurityGroups(naplesIP)
 			if err != nil {
 				By(fmt.Sprintf("ts:%s security group list failed, err: %+v sgs: %+v", time.Now().String(), err, sglist))
 				return false
@@ -152,8 +185,8 @@ func (stg *securityTestGroup) testSecurityGroupCreateDelete() {
 
 	// verify policy is gone from the agents
 	Eventually(func() bool {
-		for _, rclient := range stg.suite.netagentClients {
-			sglist, err := rclient.SecurityGroupList()
+		for _, naplesIP := range ts.tu.NaplesNodeIPs {
+			sglist, err := stg.getSecurityGroups(naplesIP)
 			if err != nil {
 				By(fmt.Sprintf("ts:%s security group list failed, err: %+v sgs: %+v", time.Now().String(), err, sglist))
 				return false

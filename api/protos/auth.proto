@@ -232,6 +232,8 @@ message Permission {
         AuditEvent       = 4; // ui-hint: AuditEvent
         // Fwlogs
         FwlogsQuery      = 5; // ui-hint: FwlogsQuery
+        // TokenAuth
+        TokenAuth        = 6; // ui-hint: TokenAuth
     }
 
     // ActionType is an action on a resource that a permission allows

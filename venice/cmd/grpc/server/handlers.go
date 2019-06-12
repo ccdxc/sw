@@ -133,6 +133,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 			shouldStartAuthServer = true
 		}
 	}
+	env.ClusterName = req.Name
 	env.QuorumNodes = req.QuorumNodes
 
 	servers := make([]string, 0)
@@ -403,6 +404,8 @@ func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoi
 	if err != nil {
 		env.Logger.Errorf("Error removing Vos credentials: %v", cerr)
 	}
+
+	env.ClusterName = ""
 
 	return &grpc.ClusterDisjoinResp{}, err
 }

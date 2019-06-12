@@ -3,12 +3,15 @@
 package auth
 
 import (
+	"github.com/pensando/sw/api/generated/tokenauth"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
+	tokenauthsrv "github.com/pensando/sw/venice/cmd/grpc/server/tokenauth"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
+	tokenauthsvc "github.com/pensando/sw/venice/cmd/services/tokenauth"
 	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
@@ -47,6 +50,12 @@ func RunAuthServer(url string, stopChannel chan bool) {
 	// Certificates API endpoints.
 	certRPCHandler := certificates.NewRPCHandler(env.CertMgr)
 	certapi.RegisterCertificatesServer(env.AuthRPCServer.GrpcServer, certRPCHandler)
+
+	if env.TokenAuthService == nil {
+		env.TokenAuthService = tokenauthsvc.NewTokenAuthService(env.ClusterName, env.CertMgr.Ca())
+	}
+	tokenAuthRPCHandler := tokenauthsrv.NewRPCHandler(env.TokenAuthService)
+	tokenauth.RegisterTokenAuthV1Server(env.AuthRPCServer.GrpcServer, tokenAuthRPCHandler)
 
 	rpcServer.Start()
 
