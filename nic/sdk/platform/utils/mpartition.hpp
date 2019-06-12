@@ -31,6 +31,7 @@ namespace utils {
 #define MEM_REGION_DEVCMD_NAME          "devcmd"
 #define MEM_REGION_FWUPDATE_NAME        "fwupdate"
 #define MEM_REGION_RSS_INDIR_TABLE_NAME "rss_indir_table"
+#define MEM_REGION_QOS_DSCP_COS_MAP     "qos-dscp-cos-map"
 
 /**
  * @brief Memory mpartition region

@@ -1092,7 +1092,7 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
     qstate.pc_offset = off;
     qstate.cos_sel = 0;
     qstate.cosA = cosA;
-    qstate.cosB = cosB;
+    qstate.cosB = pd->get_iq(cmd->cos);
     qstate.host = 1;
     qstate.total = 1;
     qstate.pid = cmd->pid;
@@ -1224,7 +1224,7 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
     qstate.pc_offset = off;
     qstate.cos_sel = 0;
     qstate.cosA = cosA;
-    qstate.cosB = cosB;
+    qstate.cosB = pd->get_iq(cmd->cos);
     qstate.host = 1;
     qstate.total = 1;
     qstate.pid = cmd->pid;

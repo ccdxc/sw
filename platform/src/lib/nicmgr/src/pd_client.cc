@@ -373,7 +373,6 @@ void PdClient::init(fwd_mode_t fwd_mode)
 
     rdma_mgr_ = rdma_manager_init(mp_, lm_);
 
-    // rdma_manager_init();
     nicmgr_mem_init();
     devcmd_mem_init();
     intr_allocator = sdk::lib::indexer::factory(4096);
@@ -490,57 +489,6 @@ PdClient::lif_qstate_map_init(uint64_t hw_lif_id,
     return 0;
 }
 
-
-#if 0
-int
-PdClient::lif_qstate_map_init(uint64_t hw_lif_id,
-                              struct queue_info* queue_info,
-                              uint8_t coses)
-{
-    LIFQStateParams qs_params = { 0 };
-    int32_t         ret      = 0;
-    uint8_t         hint_cos = 0;
-
-    for (uint32_t i = 0; i < NUM_QUEUE_TYPES; i++) {
-        auto & qinfo = queue_info[i];
-        if (qinfo.size < 1) continue;
-
-        if (qinfo.size > 7 || qinfo.entries > 24) {
-            NIC_LOG_ERR("Invalid entry in LifSpec : size={} entries={}",
-                          qinfo.size, qinfo.entries);
-            return -1;
-        }
-
-        if (qinfo.purpose > intf::LifQPurpose_MAX) {
-            NIC_LOG_ERR("Invalid entry in LifSpec : purpose={}", qinfo.purpose);
-            return -1;
-        }
-
-        qs_params.type[qinfo.type_num].size    = qinfo.size;
-        qs_params.type[qinfo.type_num].entries = qinfo.entries;
-
-        // Set both cosA,cosB to admin_cos(cosA) value for admin-qtype.
-        if (qinfo.purpose != LIF_QUEUE_PURPOSE_ADMIN) {
-            qs_params.type[qinfo.type_num].cosA = (coses & 0x0f);
-            qs_params.type[qinfo.type_num].cosB = (coses & 0xf0) >> 4;
-        } else {
-            qs_params.type[qinfo.type_num].cosA = qs_params.type[qinfo.type_num].cosB = (coses & 0x0f);
-        }
-    }
-
-    // cosB (default cos) will be the hint_cos for the lif.
-    hint_cos = (coses & 0xf0) >> 4;
-    // make sure that when you are creating with hw_lif_id the lif is alloced
-    // already, otherwise this call may return an error
-    if ((ret = lm_->InitLIFQState(hw_lif_id, &qs_params, hint_cos)) < 0) {
-        NIC_LOG_ERR("Failed to initialize LIFQState: err_code : {}", ret);
-        return -1;
-    }
-
-    return 0;
-}
-#endif
-
 int
 PdClient::lif_qstate_init(uint64_t hw_lif_id, struct queue_info* queue_info)
 {
@@ -559,15 +507,6 @@ PdClient::lif_qstate_init(uint64_t hw_lif_id, struct queue_info* queue_info)
                 NIC_LOG_ERR("Failed to set LIFQState : {}", ret);
                 return -1;
             }
-
-#if 0
-            int ret = lm_->WriteQState(hw_lif_id, qtype, qid, bzero64,
-                sizeof(bzero64));
-            if (ret < 0) {
-                NIC_LOG_ERR("Failed to set LIFQState : {}", ret);
-                return -1;
-            }
-#endif
         }
     }
 
@@ -576,7 +515,8 @@ PdClient::lif_qstate_init(uint64_t hw_lif_id, struct queue_info* queue_info)
     return 0;
 }
 
-int PdClient::program_qstate(struct queue_info* queue_info,
+int
+PdClient::program_qstate(struct queue_info* queue_info,
                              lif_info_t *lif_info,
                              uint8_t coses)
 {
@@ -609,6 +549,32 @@ int PdClient::program_qstate(struct queue_info* queue_info,
     }
 
     return 0;
+}
+
+uint8_t
+PdClient::get_iq(uint8_t pcp_or_dscp)
+{
+#if !defined(APOLLO) && !defined(ARTEMIS)
+    typedef struct pd_qos_dscp_cos_map_s {
+        bool        is_dscp : 1 ;
+        uint8_t     no_drop : 1;
+        uint8_t     txdma_iq : 4;
+        uint8_t     rsvd: 2;
+    } __PACK__ pd_qos_dscp_cos_map_t;
+
+    pd_qos_dscp_cos_map_t qos_map[64] = {0};
+
+    if (pcp_or_dscp > 64) {
+        NIC_LOG_ERR("Invalid pcp_or_dscp value {}", pcp_or_dscp);
+        return 0;
+    }
+
+    uint64_t addr = mp_->start_addr(MEM_REGION_QOS_DSCP_COS_MAP);
+    sdk::asic::asic_mem_read(addr, (uint8_t *)qos_map, sizeof(qos_map));
+    return qos_map[pcp_or_dscp].txdma_iq;
+#else
+    return 0;
+#endif
 }
 
 int
@@ -796,177 +762,6 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
                                    mem_bar_addr, mem_bar_size);
     }
     return SDK_RET_ERR;
-
-#if 0
-    sram_lif_entry_t    sram_lif_entry;
-    uint32_t            pt_size, key_table_size, ah_table_size;
-    uint32_t            total_size;
-    uint64_t            base_addr;
-    uint64_t            size;
-    uint32_t            max_cqs;
-    uint64_t            cq_base_addr; //address in HBM memory
-    uint64_t            sq_base_addr; //address in HBM memory
-    uint64_t            rq_base_addr; //address in HBM memory
-    uint64_t            pad_size;
-    int                 rc;
-
-    NIC_FUNC_DEBUG("lif-{}: RDMA lif init", lif);
-
-    // TODO: We may not want to access the pointer from the library.
-    // LIFQState *qstate = lm_->GetLIFQState(lif);
-    lif_qstate_t *qstate = lm_->get_lif_qstate(lif);
-    if (qstate == nullptr) {
-        NIC_FUNC_ERR("lif-{}: GetLIFQState failed", lif);
-        return HAL_RET_ERR;
-    }
-
-    max_cqs  = qstate->type[Q_TYPE_RDMA_CQ].num_queues;
-
-    memset(&sram_lif_entry, 0, sizeof(sram_lif_entry_t));
-
-    // Fill the CQ info in sram_lif_entry
-    // cq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_CQ);
-    cq_base_addr = lm_->get_lif_qstate_base_addr(lif, Q_TYPE_RDMA_CQ);
-    NIC_FUNC_DEBUG("lif-{}: cq_base_addr: {:#x}, max_cqs: {} ",
-                  lif, cq_base_addr, roundup_to_pow_2(max_cqs));
-    SDK_ASSERT((cq_base_addr & ((1 << SQCB_SIZE_SHIFT) - 1)) == 0);
-    sram_lif_entry.cqcb_base_addr_hi = cq_base_addr >> CQCB_ADDR_HI_SHIFT;
-    sram_lif_entry.log_num_cq_entries = log2(roundup_to_pow_2(max_cqs));
-
-    // Fill the SQ info in sram_lif_entry
-    // sq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_SQ);
-    sq_base_addr = lm_->get_lif_qstate_base_addr(lif, Q_TYPE_RDMA_SQ);
-    NIC_FUNC_DEBUG("lif-{}: sq_base_addr: {:#x}",
-                    lif, sq_base_addr);
-    SDK_ASSERT((sq_base_addr & ((1 << SQCB_SIZE_SHIFT) - 1)) == 0);
-    sram_lif_entry.sqcb_base_addr_hi = sq_base_addr >> SQCB_ADDR_HI_SHIFT;
-
-    // Fill the RQ info in sram_lif_entry
-    // rq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_RQ);
-    rq_base_addr = lm_->get_lif_qstate_base_addr(lif, Q_TYPE_RDMA_RQ);
-    NIC_FUNC_DEBUG("lif-{}: rq_base_addr: {:#x}",
-                    lif, rq_base_addr);
-    SDK_ASSERT((rq_base_addr & ((1 << RQCB_SIZE_SHIFT) - 1)) == 0);
-    sram_lif_entry.rqcb_base_addr_hi = rq_base_addr >> RQCB_ADDR_HI_SHIFT;
-
-    // Setup page table and key table entries
-    max_ptes = roundup_to_pow_2(max_ptes);
-
-    pt_size = sizeof(uint64_t) * max_ptes;
-    //adjust to page boundary
-    if (pt_size & (HBM_PAGE_SIZE - 1)) {
-        pt_size = ((pt_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
-    }
-
-    max_keys = roundup_to_pow_2(max_keys);
-
-    key_table_size = sizeof(key_entry_t) * max_keys;
-    //adjust to page boundary
-    if (key_table_size & (HBM_PAGE_SIZE - 1)) {
-        key_table_size = ((key_table_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
-    }
-
-    max_ahs = roundup_to_pow_2(max_ahs);
-
-    // TODO: Resize ah table after dcqcn related structures are moved to separate table
-    pad_size = sizeof(ah_entry_t) + sizeof(dcqcn_cb_t);
-    if (pad_size & ((1 << HDR_TEMP_ADDR_SHIFT) - 1)) {
-        pad_size = ((pad_size >> HDR_TEMP_ADDR_SHIFT) + 1) << HDR_TEMP_ADDR_SHIFT;
-    }
-
-    ah_table_size = pad_size * max_ahs;
-    //adjust to page boundary
-    if (ah_table_size & (HBM_PAGE_SIZE - 1)) {
-        ah_table_size = ((ah_table_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
-    }
-
-    total_size = pt_size + key_table_size + ah_table_size + HBM_PAGE_SIZE;
-
-    base_addr = rdma_mem_alloc(total_size);
-
-    NIC_FUNC_DEBUG("lif-{}: pt_size: {}, key_table_size: {}, "
-                  "ah_table_size: {}, base_addr: {:#x}",
-                  lif,
-                  pt_size, key_table_size,
-                  ah_table_size, base_addr);
-
-    size = base_addr;
-    sram_lif_entry.pt_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
-    size += pt_size + key_table_size;
-    sram_lif_entry.ah_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
-    sram_lif_entry.log_num_pt_entries = log2(max_ptes);
-    size += ah_table_size;
-
-    // TODO: Fill prefetch data and add corresponding code
-
-    sram_lif_entry.rdma_en_qtype_mask =
-        ((1 << Q_TYPE_RDMA_SQ) | (1 << Q_TYPE_RDMA_RQ) | (1 << Q_TYPE_RDMA_CQ) | (1 << Q_TYPE_RDMA_EQ) | (1 << Q_TYPE_ADMINQ));
-    sram_lif_entry.sq_qtype = Q_TYPE_RDMA_SQ;
-    sram_lif_entry.rq_qtype = Q_TYPE_RDMA_RQ;
-    sram_lif_entry.aq_qtype = Q_TYPE_ADMINQ;
-
-    NIC_FUNC_DEBUG("lif-{}: pt_base_addr_page_id: {}, log_num_pt: {}, "
-                  "ah_base_addr_page_id: {}, rdma_en_qtype_mask: {} "
-                  "sq_qtype: {} rq_qtype: {} aq_qtype: {}",
-                    lif,
-                    sram_lif_entry.pt_base_addr_page_id,
-                    sram_lif_entry.log_num_pt_entries,
-                    sram_lif_entry.ah_base_addr_page_id,
-                    sram_lif_entry.rdma_en_qtype_mask,
-                    sram_lif_entry.sq_qtype,
-                    sram_lif_entry.rq_qtype,
-                    sram_lif_entry.aq_qtype);
-
-    //Controller Memory Buffer
-    //meant for SQ/RQ in HBM for good performance
-    //Allocated in units of 8MB
-    if (mem_bar_size != 0) {
-        sram_lif_entry.barmap_base_addr = mem_bar_addr >> MEM_BARMAP_SIZE_SHIFT;
-        sram_lif_entry.barmap_size = mem_bar_size >> MEM_BARMAP_SIZE_SHIFT;
-    } else {
-        sram_lif_entry.barmap_base_addr = 0;
-        sram_lif_entry.barmap_size = 0;
-    }
-
-    rc = p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add(
-                            lif,
-                            sram_lif_entry.rdma_en_qtype_mask,
-                            sram_lif_entry.pt_base_addr_page_id,
-                            sram_lif_entry.log_num_pt_entries,
-                            sram_lif_entry.cqcb_base_addr_hi,
-                            sram_lif_entry.sqcb_base_addr_hi,
-                            sram_lif_entry.rqcb_base_addr_hi,
-                            sram_lif_entry.log_num_cq_entries,
-                            sram_lif_entry.prefetch_pool_base_addr_page_id,
-                            sram_lif_entry.log_num_prefetch_pool_entries,
-                            sram_lif_entry.sq_qtype,
-                            sram_lif_entry.rq_qtype,
-                            sram_lif_entry.aq_qtype);
-    assert(rc == 0);
-
-    rc = p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add(
-                            lif,
-                            sram_lif_entry.rdma_en_qtype_mask,
-                            sram_lif_entry.pt_base_addr_page_id,
-                            sram_lif_entry.ah_base_addr_page_id,
-                            sram_lif_entry.log_num_pt_entries,
-                            sram_lif_entry.cqcb_base_addr_hi,
-                            sram_lif_entry.sqcb_base_addr_hi,
-                            sram_lif_entry.rqcb_base_addr_hi,
-                            sram_lif_entry.log_num_cq_entries,
-                            sram_lif_entry.prefetch_pool_base_addr_page_id,
-                            sram_lif_entry.log_num_prefetch_pool_entries,
-                            sram_lif_entry.sq_qtype,
-                            sram_lif_entry.rq_qtype,
-                            sram_lif_entry.aq_qtype,
-                            sram_lif_entry.barmap_base_addr,
-                            sram_lif_entry.barmap_size);
-    assert(rc == 0);
-
-    NIC_FUNC_DEBUG("lif-{}: rdma_params_table init successful", lif);
-
-    return HAL_RET_OK;
-#endif
 }
 
 void

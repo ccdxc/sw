@@ -124,6 +124,9 @@ public:
     int program_qstate(struct queue_info* queue_info,
                        lif_info_t *lif_info,
                        uint8_t coses);
+
+    uint8_t get_iq(uint8_t pcp_or_dscp);
+
     void set_program_info();
     int32_t get_pc_offset(const char *prog_name, const char *label,
                           uint8_t *offset, uint64_t *base);
