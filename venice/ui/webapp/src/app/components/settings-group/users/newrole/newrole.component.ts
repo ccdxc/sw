@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, OnDestroy, OnChanges, ViewEncapsulation, SimpleChanges } from '@angular/core';
-import { FormArray, Validators, FormGroup, AbstractControl, ValidatorFn, ValidationErrors, FormControl } from '@angular/forms';
+import { FormArray, Validators, FormGroup, AbstractControl, ValidatorFn, ValidationErrors, FormControl, FormControlName } from '@angular/forms';
 import { required } from '@sdk/v1/utils/validators';
 import { UsersComponent } from '../users.component';
 import { Animations } from '@app/animations';
@@ -8,7 +8,7 @@ import { map, switchMap, tap, catchError } from 'rxjs/operators';
 import { ControllerService } from '@app/services/controller.service';
 import { AuthService } from '@app/services/generated/auth.service';
 import { StagingService } from '@app/services/generated/staging.service';
-import { AuthPermission, AuthPermission_actions_uihint } from '@sdk/v1/models/generated/auth';
+import { AuthPermission, AuthPermission_actions_uihint, AuthPermission_actions } from '@sdk/v1/models/generated/auth';
 import { AuthRoleBinding, AuthUser, AuthRole } from '@sdk/v1/models/generated/auth';
 import { Utility } from '@app/common/Utility';
 import { StagingBuffer, IStagingBuffer } from '@sdk/v1/models/generated/staging';
@@ -74,6 +74,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
   ngOnInit() {
     // VS-209. add "ALL" option for group.
     this.groupOptions = this.addAllGroupOrKindItem(this.groupOptions);
+
   }
 
   setupData() {
@@ -87,7 +88,8 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
 
       const permissions = this.newAuthRole.$formGroup.get(['spec', 'permissions']) as FormArray;
       if (permissions.length === 0) {
-        this.addPermission();
+        this.addRolloutReadPermission();  // VS-405 all users to be able to rollout
+        this.addEmptyPermission();
       }
     }
   }
@@ -117,8 +119,10 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
    * Take selectedAuthRole JSON value and make a new AuthRole object.
    *  We have to convert permissions[i].actions and permissions[i]['resource-names'] to UI friendly data structure
    */
-  getRoleFromSelectedRole(): AuthRole {
-    const newRole = this.selectedAuthRole.getFormGroupValues();
+  getRoleFromSelectedRole(newRole: AuthRole = null): AuthRole {
+    if (newRole == null) {
+      newRole = this.selectedAuthRole.getFormGroupValues() as AuthRole;
+    }
     const permissions = newRole.spec.permissions;
     for (let i = 0; i < permissions.length; i++) {
       const actions = permissions[i].actions;
@@ -303,13 +307,29 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
   /**
    * Server HTML template
    */
-  addPermission() {
+  addEmptyPermission() {
     const permissionArray = this.newAuthRole.$formGroup.get(['spec', 'permissions']) as FormArray;
     const newPermission = new AuthPermission();
     newPermission['actions'] = []; // clear out action field's default value
     newPermission[NewroleComponent.KINDOPTIONS] = [];
     newPermission[NewroleComponent.ACTIONOPTIONS] = [];
-    permissionArray.insert(0, newPermission.$formGroup);
+    permissionArray.insert(1, newPermission.$formGroup);
+  }
+
+  addRolloutReadPermission() {
+    const jsonPermission  =  {
+      'resource-tenant': '',
+      'resource-group': 'rollout',
+      'resource-kind': 'Rollout',
+      'resource-namespace': '',
+      'actions': [
+        AuthPermission_actions.Read
+      ]
+    };
+    const rolloutPermission = new AuthPermission(jsonPermission);
+    const role = new AuthRole();
+    role.spec.permissions.push(rolloutPermission);
+    this.newAuthRole = this.getRoleFromSelectedRole(role);
   }
 
   /**

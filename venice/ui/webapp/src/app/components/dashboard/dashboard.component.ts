@@ -114,7 +114,7 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
         //   ]
         // }
       ],
-      breadcrumb: [{ label: 'Dashboard - Currently using mock data', url: Utility.getBaseUIUrl() + 'dashboard' }]
+      breadcrumb: [{ label: 'Dashboard', url: Utility.getBaseUIUrl() + 'dashboard' }]
     });
 
     this.pinnedGridsterOptions = Object.assign({}, this.gridsterOptions);

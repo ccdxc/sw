@@ -94,6 +94,7 @@
                                         appendTo="body"
                                         [options]="groupOptions" placeholder="group..."
                                         (onChange)="onGroupChange($event, permission, index)">
+
                             </p-dropdown>
                           </div>
                           <div fxFlex="30px" fxLayout="row" class="newrole-value">
@@ -141,7 +142,7 @@
               <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end end">
                 <!-- <div fxFlex="20"></div> -->
                 <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end end">
-                  <span fxFlex="nogrow" (click)="addPermission()" title="Add permission"
+                  <span fxFlex="nogrow" (click)="addEmptyPermission()" title="Add permission"
                         class="newrole-permission-button newrole-permission-button-add">+ AND</span>
                   <mat-icon fxFlex="nogrow" [style.color]="'#767676'"
                             *ngIf="controlAsFormArray(newAuthRole.$formGroup.get(['spec','permissions'])).length > 1"
