@@ -57,6 +57,7 @@ typedef struct test_params_s {
         uint32_t num_vpcs;
         ip_prefix_t vpc_pfx;
         ip_prefix_t v6_vpc_pfx;
+        ip_prefix_t nat46_vpc_pfx;
         uint32_t num_subnets;
     };
     // vnic config
@@ -260,6 +261,11 @@ parse_test_cfg (char *cfg_file, test_params_t *test_params)
                 pfxstr = obj.second.get<std::string>("v6-prefix");
                 assert(str2ipv6pfx((char *)pfxstr.c_str(), &test_params->v6_vpc_pfx) == 0);
                 test_params->num_subnets = std::stol(obj.second.get<std::string>("subnets"));
+                pfxstr = obj.second.get<std::string>("nat46-prefix", "");
+                if (pfxstr.empty() == false) {
+                    assert(str2ipv6pfx((char *)pfxstr.c_str(),
+                                       &test_params->nat46_vpc_pfx) == 0);
+                }
             } else if (kind == "vnic") {
                 test_params->num_vnics = std::stol(obj.second.get<std::string>("count"));
                 test_params->vlan_start =

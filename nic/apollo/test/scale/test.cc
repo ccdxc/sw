@@ -697,7 +697,8 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
 
 sdk_ret_t
 create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_pfx,
-             ip_prefix_t *ipv6_pfx, uint32_t num_subnets)
+             ip_prefix_t *ipv6_pfx, ip_prefix_t *nat46_pfx,
+             uint32_t num_subnets)
 {
     sdk_ret_t rv;
     pds_vpc_spec_t pds_vpc;
@@ -714,6 +715,7 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_pfx,
         pds_vpc.v6_pfx = *ipv6_pfx;
         pds_vpc.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
         pds_vpc.fabric_encap.val.vnid = i;
+        pds_vpc.nat46_prefix = *nat46_pfx;
 #ifdef TEST_GRPC_APP
         rv = create_vpc_grpc(&pds_vpc);
         if (rv != SDK_RET_OK) {
@@ -1591,7 +1593,8 @@ create_objects (void)
 
     // create vpcs and subnets
     ret = create_vpcs(g_test_params.num_vpcs, &g_test_params.vpc_pfx,
-                      &g_test_params.v6_vpc_pfx, g_test_params.num_subnets);
+                      &g_test_params.v6_vpc_pfx, &g_test_params.nat46_vpc_pfx,
+                      g_test_params.num_subnets);
     if (ret != SDK_RET_OK) {
         return ret;
     }
