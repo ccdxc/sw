@@ -1541,9 +1541,7 @@ create_objects (void)
 
     if (g_test_params.artemis()) {
         // create service TEPs
-        ret = create_service_teps(0,    // TODO: revisit this once TEP1_RX table size is adjusted in p4
-                                  //g_test_params.num_teps + 2,
-                                  &g_test_params.svc_tep_pfx);
+        ret = create_service_teps(64, &g_test_params.svc_tep_pfx);
         if (ret != SDK_RET_OK) {
             return ret;
         }
