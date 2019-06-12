@@ -375,6 +375,23 @@ union nvme_create_io_sq1 {
     } bits; 
 };
 
+union nvme_delete_io_sq0 {
+    uint32_t    raw;
+    struct {
+        uint16_t    qid;
+        uint16_t    rsvd0;   
+    } bits; 
+};
+
+union nvme_delete_io_cq0 {
+    uint32_t    raw;
+    struct {
+        uint16_t    cqid;
+        uint16_t    rsvd0;   
+    } bits; 
+};
+
+
 /**
  *  * Admin opcodes
  *   */

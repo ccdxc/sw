@@ -413,6 +413,26 @@ NvmeLif::CmdHandler(void *req,
 
             cpl.cdw0 = nvme_feat.raw;
         }
+    } else if (cmd_p->opc == NVME_OPC_DELETE_IO_SQ) {
+        // delete I/O SQ
+
+        union nvme_delete_io_sq0 sqw0;
+
+        sqw0.raw = cmd_p->cdw10;
+
+        NIC_LOG_DEBUG("NVME Delete IO SQ qid: {:#x} ",
+                       sqw0.bits.qid);
+
+    } else if (cmd_p->opc == NVME_OPC_DELETE_IO_CQ) {
+        // delete I/O CQ
+
+        union nvme_delete_io_cq0 cqw0;
+
+        cqw0.raw = cmd_p->cdw10;
+
+        NIC_LOG_DEBUG("NVME Delete IO CQ qid: {:#x} ",
+                       cqw0.bits.cqid);
+
     } else if (cmd_p->opc == NVME_OPC_CREATE_IO_CQ) {
         // create I/O CQ
 
@@ -849,7 +869,7 @@ NvmeLif::nvme_lif_adminq_init_action(nvme_lif_event_t event)
     qstate.ring_base = regs_p->asq.num64;
     qstate.ring_base |= NVME_PHYS_ADDR_LIF_SET(LifIdGet());
     qstate.ring_base |= NVME_PHYS_ADDR_HOST_SET(1);
-    qstate.ring_size = regs_p->aqa.asqs;
+    qstate.ring_size = log2(regs_p->aqa.asqs + 1);
 
     qstate.cq_ring_base = regs_p->acq.num64;
     qstate.cq_ring_base |= NVME_PHYS_ADDR_LIF_SET(LifIdGet());
