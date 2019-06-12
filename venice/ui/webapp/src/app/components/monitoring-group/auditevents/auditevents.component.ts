@@ -11,7 +11,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { SearchService } from '@app/services/generated/search.service';
 import {AuditService} from '@app/services/generated/audit.service';
 import {LRUMap} from 'lru_map';
-import {AuditEvent, IAuditEvent} from '@sdk/v1/models/generated/audit';
+import {AuditEvent, IAuditEvent, AuditEvent_outcome} from '@sdk/v1/models/generated/audit';
 import {SearchSearchQuery_kinds, SearchSearchRequest, SearchSearchRequest_sort_order, SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { LazyLoadEvent } from 'primeng/primeng';
 import {Observable, Subscription, zip} from 'rxjs';
@@ -210,6 +210,9 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
         const eleCopy = Utility.getLodash().cloneDeep(ele);
         const key = ele.meta.name;
           if (tmpMap.hasOwnProperty(key)) {
+            if (tmpMap[key].outcome === AuditEvent_outcome.Failure) {
+              eleCopy.outcome = AuditEvent_outcome.Failure;
+            }
             tmpMap[key] = Utility.getLodash().merge(tmpMap[key], eleCopy);
             tmpMap[key]['uuids'].push(eleCopy.meta.uuid);
           } else {
@@ -267,6 +270,9 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
     zip(...obs).subscribe(all => {
       this.auditEventDetail = {} as AuditEvent;
       all.forEach(ele => {
+        if (this.auditEventDetail.outcome === AuditEvent_outcome.Failure) {
+          ele.body.outcome = AuditEvent_outcome.Failure;
+        }
         this.auditEventDetail = Utility.getLodash().merge(this.auditEventDetail, (ele.body as AuditEvent));
       });
       this.cache.set(auditEvent.meta.name, this.auditEventDetail);

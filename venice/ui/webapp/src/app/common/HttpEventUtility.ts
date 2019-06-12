@@ -56,6 +56,9 @@ export class HttpEventUtility<T> {
   public processEvents(eventChunk): ReadonlyArray<T> {
     try {
       const events = eventChunk.events;
+      if (events == null) {
+        return;
+      }
       events.forEach(event => {
         let obj;
         if (this.objectConstructor != null) {

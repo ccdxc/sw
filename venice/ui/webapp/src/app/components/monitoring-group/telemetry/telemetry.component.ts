@@ -420,7 +420,7 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
       res.series.forEach( (s) => {
         source.fields.forEach( (field) => {
           const fieldIndex = s.columns.findIndex((f) => {
-            return f.includes(field);
+            return f.toLowerCase().includes(field.toLowerCase());
           });
           const data = Utility.transformToChartjsTimeSeries(s.values, 0, fieldIndex);
           const key = sourceFieldKey(source.id, source.measurement, field);
