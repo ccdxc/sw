@@ -223,7 +223,8 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
         for (uint32_t j = 1; j <= num_subnets; j++) {
             for (uint32_t k = 1; k <= num_vnics; k++) {
                 for (uint32_t l = 1; l <= num_ip_per_vnic; l++) {
-                    svc_mapping.key.vpc.id = i;
+                    // VIP is always in public/substrate/infra vpc
+                    svc_mapping.key.vpc.id = num_vpcs + 1;
                     svc_mapping.key.vip.af = IP_AF_IPV4;
                     svc_mapping.key.vip.addr.v4_addr =
                         v4_vip_pfx->addr.addr.v4_addr + ip_offset;
@@ -258,11 +259,12 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
                             v6_vip_pfx->addr.addr.v6_addr;
                         CONVERT_TO_V4_MAPPED_V6_ADDRESS(svc_v6_mapping.key.vip.addr.v6_addr,
                                                        svc_mapping.key.vip.addr.v4_addr);
-                        svc_v6_mapping.backend_ip.af = IP_AF_IPV4;
+                        svc_v6_mapping.backend_ip.af = IP_AF_IPV6;
                         svc_v6_mapping.backend_ip.addr.v6_addr =
                             g_test_params.v6_vpc_pfx.addr.addr.v6_addr;
                         CONVERT_TO_V4_MAPPED_V6_ADDRESS(svc_v6_mapping.backend_ip.addr.v6_addr,
                                                         svc_mapping.backend_ip.addr.v4_addr);
+                        // TODO: fix the provider to be IPv4, not v6
                         svc_v6_mapping.backend_provider_ip.af = IP_AF_IPV6;
                         svc_v6_mapping.backend_provider_ip.addr.v6_addr =
                             v6_provider_pfx->addr.addr.v6_addr;
@@ -740,6 +742,8 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_pfx,
         memset(&pds_vpc, 0, sizeof(pds_vpc));
         pds_vpc.type = PDS_VPC_TYPE_SUBSTRATE;
         pds_vpc.key.id = num_vpcs + 1;
+        pds_vpc.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+        pds_vpc.fabric_encap.val.vnid = TESTAPP_SUBSTRATE_VNID;
 #ifdef TEST_GRPC_APP
         rv = create_vpc_grpc(&pds_vpc);
         if (rv != SDK_RET_OK) {

@@ -30,7 +30,7 @@ vpc_impl::factory(pds_vpc_spec_t *spec) {
     vpc_impl *impl;
 
     if (spec->type == PDS_VPC_TYPE_SUBSTRATE) {
-        // substrte traffic doesn't come encapped, so no need to
+        // substrate traffic doesn't come encapped, so no need to
         // program TEP1_RX table
         return NULL;
     }
@@ -56,6 +56,7 @@ vpc_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     sdk_table_api_params_t api_params = { 0 };
     pds_vpc_spec_t *spec = &obj_ctxt->api_params->vpc_spec;
 
+    SDK_ASSERT(spec->fabric_encap.type == PDS_ENCAP_TYPE_VXLAN);
     tep1_rx_key.vxlan_1_vni = spec->fabric_encap.val.value;
     tep1_rx_mask.vxlan_1_vni_mask = 0xFFFFFFFF;
     api_params.key = &tep1_rx_key;
@@ -117,6 +118,10 @@ vpc_impl::activate_vpc_create_(pds_epoch_t epoch, vpc_entry *vpc,
     tep1_rx_swkey_mask_t tep1_rx_mask = { 0 };
     tep1_rx_actiondata_t tep1_rx_data = { 0 };
     sdk_table_api_params_t api_params = { 0 };
+
+    PDS_TRACE_DEBUG("Activating vpc %u, type %u, fabric encap (%u, %u)",
+                    spec->key.id, spec->type, spec->fabric_encap.type,
+                    spec->fabric_encap.val.vnid);
 
     tep1_rx_key.vxlan_1_vni = spec->fabric_encap.val.value;
     tep1_rx_mask.vxlan_1_vni_mask = 0xFFFFFFFF;
