@@ -15,11 +15,17 @@
 #include "nic/apollo/api/include/pds_mirror.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 
-#define TESTAPP_METER_NUM_PREFIXES        16
-#define TESTAPP_SWITCH_VNIC_VLAN          128
-#define TESTAPP_MAX_SERVICE_TEP           64
-#define TEST_APP_VIP_PORT                 32
-#define TEST_APP_DIP_PORT                 64
+#define TESTAPP_METER_NUM_PREFIXES                         16
+#define TESTAPP_SWITCH_VNIC_VLAN                           128
+#define TESTAPP_MAX_SERVICE_TEP                            64
+#define TEST_APP_VIP_PORT                                  32
+#define TEST_APP_DIP_PORT                                  64
+
+// reserved VPC ids
+#define TEST_APP_S1_SVC_TUNNEL_IN_OUT                      60
+#define TEST_APP_S1_SLB_IN_OUT                             61
+#define TEST_APP_S2_INTERNET_IN_OUT_VPC_VIP_VPC            63
+#define TEST_APP_S2_INTERNET_IN_OUT_FLOATING_IP_VPC        64
 
 namespace pt = boost::property_tree;
 

@@ -3,16 +3,15 @@
 //------------------------------------------------------------------------------
 #ifndef __FLOW_TEST_ARTEMIS_HPP__
 #define __FLOW_TEST_ARTEMIS_HPP__
+
 #include <iostream>
 #include <arpa/inet.h>
 #include <gtest/gtest.h>
 #include <stdio.h>
-
 #include "boost/foreach.hpp"
 #include "boost/optional.hpp"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
-
 #include "include/sdk/base.hpp"
 #include "include/sdk/ip.hpp"
 #include "include/sdk/table.hpp"
@@ -23,7 +22,6 @@
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/apollo/test/scale/test_common.hpp"
-
 #if defined(APOLLO)
 #include "gen/p4gen/apollo/include/p4pd.h"
 #else
@@ -534,7 +532,7 @@ public:
         }
         memset(&actiondata, 0, sizeof(session_actiondata_t));
         actiondata.action_id = SESSION_SESSION_INFO_ID;
-        if (vpc == 60) {
+        if (vpc == TEST_APP_S1_SVC_TUNNEL_IN_OUT) {
             // VPC 60 is used for Scenario1-ST in/out traffic
             // Tx path:
             //     SMACi is unchnged
@@ -562,7 +560,7 @@ public:
             //actiondata.action_u.session_session_info.nexthop_idx = ;
             actiondata.action_u.session_session_info.tx_rewrite_flags = 0x16;
             actiondata.action_u.session_session_info.rx_rewrite_flags = 0x34;
-        } else if (vpc == 61) {
+        } else if (vpc == TEST_APP_S1_SLB_IN_OUT) {
             // VPC 61 is used for Scenario1-SLB in/out traffic (DSR case)
             // Tx path:
             //     SMAC is rewritten with host MAC (table constant)
@@ -607,7 +605,7 @@ public:
             //     Packet goes out with vnic' vlan (EGRESS_VNIC_INFO table)
             // NH indices in this case should be between 1-1022 (NH_TYPE_IP)
 #endif
-        } else if (vpc == 63) {
+        } else if (vpc == TEST_APP_S2_INTERNET_IN_OUT_VPC_VIP_VPC) {
             // VPC 63 is used for scenario2-Internet in/out traffic
             // Tx path:
             //     SMAC is rewritten with VR_MAC (EGRESS_VNIC_INFO table)
@@ -636,7 +634,7 @@ public:
             }
             actiondata.action_u.session_session_info.tx_rewrite_flags = 0x5;
             actiondata.action_u.session_session_info.rx_rewrite_flags = 0x21;
-        } else if (vpc == 64) {
+        } else if (vpc == TEST_APP_S2_INTERNET_IN_OUT_FLOATING_IP_VPC) {
             // VPC 64 is used for scenario2-Internet in/out traffic
             // Tx path:
             //     SMAC is rewritten with VR_MAC (EGRESS_VNIC_INFO table)
@@ -789,7 +787,7 @@ public:
 
                         memset(&ip_addr, 0, sizeof(ip_addr));
                         // create V4 Flows
-                        if (vpc == 63) {
+                        if (vpc == TEST_APP_S2_INTERNET_IN_OUT_VPC_VIP_VPC) {
                             // this VPC is for Internet IN/OUT with VIP & svc
                             // port IP flows
                             ip_addr.addr.v4_addr = (0xC << 28) | i;
@@ -802,7 +800,7 @@ public:
                                                  ep_pairs[i].v4_local.service_ip.addr.v4_addr, // must be service IP
                                                  fwd_dport,
                                                  TEST_APP_VIP_PORT);
-                        } else if (vpc == 64) {
+                        } else if (vpc == TEST_APP_S2_INTERNET_IN_OUT_FLOATING_IP_VPC) {
                             // this VPC is for Internet IN/OUT with floating
                             // IP flows
                             ip_addr.addr.v4_addr = (0xC << 28) | i;
@@ -836,7 +834,7 @@ public:
                         if (dual_stack) {
                             memset(&ip_addr, 0, sizeof(ip_addr));
                             // create V6 Flows
-                            if (vpc == 64) {
+                            if (vpc == TEST_APP_S2_INTERNET_IN_OUT_FLOATING_IP_VPC) {
                                 // this VPC is for Internet IN/OUT with
                                 // floating IP address
                                 ip_addr = test_params->v6_route_pfx.addr;
