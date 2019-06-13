@@ -1222,7 +1222,7 @@ ionic_start_xmit_locked(struct ifnet *ifp, struct txque *txq)
 	stats = &txq->stats;
 	work_done = ionic_tx_clean(txq, txq->num_descs);
 	ionic_intr_credits(idev->intr_ctrl, intr->index,
-			   work_done, IONIC_INTR_CRED_REARM);
+			   work_done, 0);
 
 	while ((m = drbr_peek(ifp, txq->br)) != NULL) {
 		if ((err = ionic_xmit(ifp, txq, &m)) != 0) {
