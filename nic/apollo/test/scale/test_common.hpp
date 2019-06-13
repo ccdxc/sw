@@ -23,6 +23,7 @@
 #define TEST_APP_DIP_PORT                                  64
 
 // reserved VPC ids
+#define TEST_APP_S3_VNET_IN_OUT_V6_OUTER                   50
 #define TEST_APP_S1_SVC_TUNNEL_IN_OUT                      60
 #define TEST_APP_S1_SLB_IN_OUT                             61
 #define TEST_APP_S2_INTERNET_IN_OUT_VPC_VIP_VPC            63

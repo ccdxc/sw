@@ -359,13 +359,19 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                         pds_local_mapping.public_ip.addr.v4_addr =
                             natpfx->addr.addr.v4_addr + ip_offset;
                     }
-                    pds_local_mapping.provider_ip_valid = true;
-                    pds_local_mapping.provider_ip.af = IP_AF_IPV4;
-                    pds_local_mapping.provider_ip.addr.v4_addr =
-                                    provider_pfx->addr.addr.v4_addr + ip_offset;
-                    pds_local_mapping.svc_tag = svc_tag++;
+                    if (artemis() && i == TEST_APP_S3_VNET_IN_OUT_V6_OUTER) {
+                        pds_local_mapping.provider_ip_valid = true;
+                        pds_local_mapping.provider_ip = v6_provider_pfx->addr;
+                        CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_local_mapping.provider_ip.addr.v6_addr,
+                                                        provider_pfx->addr.addr.v4_addr + ip_offset);
+                    } else {
+                        pds_local_mapping.provider_ip_valid = true;
+                        pds_local_mapping.provider_ip.af = IP_AF_IPV4;
+                        pds_local_mapping.provider_ip.addr.v4_addr =
+                                        provider_pfx->addr.addr.v4_addr + ip_offset;
+                        pds_local_mapping.svc_tag = svc_tag++;
+                    }
                     ip_offset++;
-
 #ifdef TEST_GRPC_APP
                     rv = create_local_mapping_grpc(&pds_local_mapping);
                     if (rv != SDK_RET_OK) {
@@ -396,10 +402,17 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                             CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_local_v6_mapping.public_ip.addr.v6_addr,
                                                             pds_local_mapping.public_ip.addr.v4_addr);
                         }
-                        pds_local_v6_mapping.provider_ip_valid = true;
-                        pds_local_v6_mapping.provider_ip.af = IP_AF_IPV4;
-                        pds_local_v6_mapping.provider_ip.addr.v4_addr =
-                            provider_pfx->addr.addr.v4_addr + ip_offset;
+                        if (artemis() && i == TEST_APP_S3_VNET_IN_OUT_V6_OUTER) {
+                            pds_local_v6_mapping.provider_ip_valid = true;
+                            pds_local_v6_mapping.provider_ip = v6_provider_pfx->addr;
+                            CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_local_v6_mapping.provider_ip.addr.v6_addr,
+                                                            provider_pfx->addr.addr.v4_addr + ip_offset);
+                        } else {
+                            pds_local_v6_mapping.provider_ip_valid = true;
+                            pds_local_v6_mapping.provider_ip.af = IP_AF_IPV4;
+                            pds_local_v6_mapping.provider_ip.addr.v4_addr =
+                                provider_pfx->addr.addr.v4_addr + ip_offset;
+                        }
                         ip_offset++;
 #ifdef TEST_GRPC_APP
                         rv = create_local_mapping_grpc(&pds_local_v6_mapping);
@@ -464,10 +477,17 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     pds_remote_mapping.vnic_mac,
                     (((((uint64_t)i & 0x7FF) << 22) | ((j & 0x7FF) << 11) |
                       ((num_vnics + k) & 0x7FF))));
-                pds_remote_mapping.provider_ip_valid = true;
-                pds_remote_mapping.provider_ip.af = IP_AF_IPV4;
-                pds_remote_mapping.provider_ip.addr.v4_addr =
-                                provider_pfx->addr.addr.v4_addr + ip_offset;
+                if (artemis() && i == TEST_APP_S3_VNET_IN_OUT_V6_OUTER) {
+                    pds_remote_mapping.provider_ip_valid = true;
+                    pds_remote_mapping.provider_ip = v6_provider_pfx->addr;
+                    CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_remote_mapping.provider_ip.addr.v6_addr,
+                                                    provider_pfx->addr.addr.v4_addr + ip_offset);
+                } else {
+                    pds_remote_mapping.provider_ip_valid = true;
+                    pds_remote_mapping.provider_ip.af = IP_AF_IPV4;
+                    pds_remote_mapping.provider_ip.addr.v4_addr =
+                                    provider_pfx->addr.addr.v4_addr + ip_offset;
+                }
                 ip_offset++;
 
 #ifdef TEST_GRPC_APP
@@ -493,10 +513,17 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     pds_remote_v6_mapping.tep.ip_addr.af = IP_AF_IPV4;
                     pds_remote_v6_mapping.tep.ip_addr.addr.v4_addr =
                         teppfx->addr.addr.v4_addr + v6_tep_offset;
-                    pds_remote_v6_mapping.provider_ip_valid = true;
-                    pds_remote_v6_mapping.provider_ip.af = IP_AF_IPV4;
-                    pds_remote_v6_mapping.provider_ip.addr.v4_addr =
-                        provider_pfx->addr.addr.v4_addr + ip_offset;
+                    if (artemis() && i == TEST_APP_S3_VNET_IN_OUT_V6_OUTER) {
+                        pds_remote_v6_mapping.provider_ip_valid = true;
+                        pds_remote_v6_mapping.provider_ip = v6_provider_pfx->addr;
+                        CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_remote_v6_mapping.provider_ip.addr.v6_addr,
+                                                        provider_pfx->addr.addr.v4_addr + ip_offset);
+                    } else {
+                        pds_remote_v6_mapping.provider_ip_valid = true;
+                        pds_remote_v6_mapping.provider_ip.af = IP_AF_IPV4;
+                        pds_remote_v6_mapping.provider_ip.addr.v4_addr =
+                            provider_pfx->addr.addr.v4_addr + ip_offset;
+                    }
                     ip_offset++;
 #ifdef TEST_GRPC_APP
                     rv = create_remote_mapping_grpc(&pds_remote_v6_mapping);
