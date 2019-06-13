@@ -355,8 +355,10 @@ static inline std::ostream& operator<<(std::ostream& os, const ipv6_addr_t& ip)
 static inline bool
 ip_addr_is_zero (const ip_addr_t *addr)
 {
-    return (addr->af == IP_AF_IPV4) ? addr->addr.v4_addr == 0 :
-        (addr->addr.v6_addr.addr64[0] && addr->addr.v6_addr.addr64[1]) == 0;
+    return (addr->af == IP_AF_IPV4) ?
+        (addr->addr.v4_addr == 0) :
+        (((addr->addr.v6_addr.addr64[0] == 0) &&
+          (addr->addr.v6_addr.addr64[1] == 0)) ? true : false);
 }
 
 static inline bool
