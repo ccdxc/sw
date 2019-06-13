@@ -1,0 +1,6 @@
+meta:
+    id      : HDGST
+    scapy   : HDGST
+    size    : 4
+fields:
+    hdgst: const/0

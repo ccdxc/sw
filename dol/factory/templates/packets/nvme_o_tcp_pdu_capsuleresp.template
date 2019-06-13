@@ -1,0 +1,21 @@
+meta:
+    id: NVME_O_TCP_PDU_CAPSULERESP
+
+headers:
+    - header:
+        id      : ch
+        template: ref://store/headers/id=NVME_O_TCP_CH
+        fields:
+            pdu_type    : 0x5
+            hdgstf      : 0x1
+            hlen        : 0x18
+
+    - header:
+        id      : psh
+        template: ref://store/headers/id=NVME_O_TCP_PSH_CAPSULERESP
+        fields:
+
+    - header:
+        id      : hdgst
+        template: ref://store/headers/id=HDGST
+        fields:

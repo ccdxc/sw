@@ -75,6 +75,12 @@ class NvmeHwDgstTxcb(Packet):
         BitField("pad", 0, 400),
     ]
 
+class NvmeCmdContextRingEntry(Packet):
+    name = "NvmeCmdContextRingEntry"
+    fields_desc = [
+        ShortField("cid", 0),
+    ] 
+
 class NvmeGlobalObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
@@ -89,6 +95,8 @@ class NvmeGlobalObject(base.ConfigObjectBase):
         return
          
     def Show(self):
+        if GlobalOptions.dryrun:
+            return
         logger.info('Nvme Global')
         logger.info('   - max_cmd_context: %d max_ns: %d max_sess: %d \
                           tx_max_pdu_context: %d rx_max_pdu_context: %d' \
@@ -168,5 +176,19 @@ class NvmeGlobalObject(base.ConfigObjectBase):
         cb = NvmeHwDgstTxcb(model_wrap.read_mem(self.tx_hwdgstcb_addr, cb_size))
         logger.ShowScapyObject(cb)
         return cb
+
+    def CmdIdRead(self, index, debug=True):
+        entry_size = len(NvmeCmdContextRingEntry())
+        if (GlobalOptions.dryrun):
+            return NvmeCmdContextRingEntry(bytes(entry_size))
+
+        addr = self.cmd_context_ring_base + (index * entry_size)
+        
+        if debug is True:
+            logger.info("Read CmdContextRingEntry @0x%x index: %d size: %d" % (addr, index, entry_size))
+
+        entry = NvmeCmdContextRingEntry(model_wrap.read_mem(addr, entry_size))
+        logger.ShowScapyObject(entry)
+        return entry.cid
 
 #NvmeGlobalHelper = NvmeGlobalObject()

@@ -106,11 +106,11 @@ class NvmeCqDescriptor(Packet):
         IntField("rsvd1", 0), 
 
         #dword 2
-        ShortField("sqhd", 0),
-        ShortField("sqid", 0),
+        LEShortField("sqhd", 0),
+        LEShortField("sqid", 0),
 
         #dword 3
-        ShortField("cid", 0),
+        LEShortField("cid", 0),
         BitField("p", 0, 1),
         BitField("sc", 0, 8),
         BitField("sct", 0, 3),
@@ -152,7 +152,6 @@ class NvmeSqDescriptorObject(base.FactoryObjectBase):
         self.nvme_session = None
         self.prp1 = 0
         self.prp2 = 0
-        self.nlb = 0
 
     def Init(self, spec):
         super().Init(spec)
@@ -243,8 +242,6 @@ class NvmeSqDescriptorObject(base.FactoryObjectBase):
                                              resmgr.HostMemoryAllocator.v2p(prp2_slab.address + prp2_offset))
                resmgr.HostMemoryAllocator.write(mem_handle, bytes(data))
     
-        self.nlb = (int)(data_buffer.size / self.nvme_session.ns.lba_size)
-
         desc = NvmeSqDescriptorBase(opc=self.spec.fields.opc,
                                     cid=self.spec.fields.cid,
                                     nsid=self.spec.fields.nsid,
@@ -257,8 +254,9 @@ class NvmeSqDescriptorObject(base.FactoryObjectBase):
 
         if hasattr(self.spec.fields, 'write'):
             slba = self.spec.fields.write.slba if hasattr(self.spec.fields.write, 'slba') else 0
+            nlb = self.spec.fields.write.nlb if hasattr(self.spec.fields.write, 'nlb') else 0
             write = NvmeSqDescriptorWrite(slba=slba,
-                                          nlb=self.nlb)
+                                          nlb=nlb)
 
             self.desc = self.desc / write
 

@@ -1,0 +1,6 @@
+meta:
+    id      : NVME_O_TCP_PSH_R2T
+    scapy   : NVME_O_TCP_PSH_R2T
+    size    : 16
+
+fields:

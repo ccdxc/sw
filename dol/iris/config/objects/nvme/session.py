@@ -16,6 +16,9 @@ import iris.config.hal.defs          as haldefs
 from infra.common.glopts        import GlobalOptions
 
 from iris.config.objects.session     import SessionHelper
+from iris.config.objects.proxycb_service    import ProxyCbServiceHelper
+from iris.config.objects.tcp_proxy_cb        import TcpCbHelper
+
 
 import model_sim.src.model_wrap as model_wrap
 
@@ -105,11 +108,18 @@ class NvmeSessionObject(base.ConfigObjectBase):
         
         nvme_lif.NsSessionAttach(self.nsid, self)
         halapi.NvmeSessionCreate([self])
+
+        self.tcp_qid, self.tcp_other_qid = ProxyCbServiceHelper.GetSessionQids(self.session)
+        self.tcp_cbid = "TcpCb%04d" %self.tcp_qid
+        self.tcp_other_cbid = "TcpCb%04d" %self.tcp_other_qid
         return
          
     def Show(self):
+        if GlobalOptions.dryrun:
+            return
         logger.info('Nvme Session: %s' % self.GID())
         logger.info('- Session: %s' % self.session.GID())
+        logger.info('- tcp_cbid: %s tcp_other_cbid: %s' %(self.tcp_cbid, self.tcp_other_cbid))
         logger.info('- sess_id: %s ' % self.sess_id)
         logger.info('- nsid: %s ' % self.nsid)
         logger.info('- sqid: %s cqid: %s ' %(self.sqid, self.cqid))
@@ -199,7 +209,10 @@ class NvmeSessionObject(base.ConfigObjectBase):
             match = super().IsFilterMatch(selectors.nvmesession.session.filters)
             logger.debug("- IsIPV6 Filter Match =", match)
             if match == False: return  match
-        
+
+        match = super().IsFilterMatch(selectors.nvmesession.filters)
+        if match == False: return  match
+
         return True
 
     def SetupTestcaseConfig(self, obj):

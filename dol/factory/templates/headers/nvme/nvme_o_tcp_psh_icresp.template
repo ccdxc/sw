@@ -1,0 +1,10 @@
+meta:
+    id      : NVME_O_TCP_PSH_ICRESP
+    scapy   : NVME_O_TCP_PSH_ICRESP
+    size    : 120
+
+fields:
+    pfv             : 0
+    cpda            : 0
+    hdgst_enable    : 1
+    ddgst_enable    : 1    

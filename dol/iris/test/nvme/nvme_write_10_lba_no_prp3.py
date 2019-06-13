@@ -14,8 +14,19 @@ def Teardown(infra, module):
 
 def TestCaseSetup(tc):
     logger.info("NVME TestCaseSetup() Implementation.")
+    tc.pvtdata.slba = 100
     tc.pvtdata.nlb = 10
+    tc.pvtdata.opc = 1  #WRITE
+
+    #NVME over TCP settings
+    tc.pvtdata.cpda = 0 #H2C Pad requirement in 4-byte units
+    tc.pvtdata.hpda = 0 #C2H Pad requirement in 4-byte units
+    tc.pvtdata.hdgstf = 1
+    tc.pvtdata.ddgstf = 1
+
     PopulatePreQStates(tc)
+    PopulateData(tc)
+    PopulateWriteCapsuleCmdPDUWithData(tc)
     return
 
 def TestCaseTrigger(tc):

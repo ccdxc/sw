@@ -118,9 +118,9 @@ class NvmeNsObject(base.ConfigObjectBase):
     def IsFilterMatch(self, selectors):
 
         #TBD: add nvme specific filters here
-        print(str(selectors))
+        logger.info('selectors: %s' %(str(selectors)))
 
-        match = super().IsFilterMatch(selectors.nvmens)
+        match = super().IsFilterMatch(selectors.nvmens.filters)
         logger.info('Matching Nvme NS: %s match: %s' % (self.GID(), match))
         return match
 
@@ -142,24 +142,19 @@ class NsObjectHelper:
         for ns_id in range(1, max_ns+1):
             # size is ns_id * 128 number of LBAs
             size = ns_id * 128
+
             #lba_size is 512B for odd ns_id and 4096B for even ns_id
             #256 bit crypto key for odd ns_id and 128 bit for even ns_id
             if (ns_id%2 == 0):
                 lba_size = 4096
-
                 key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
                 key_size = 16
-                # For AES-XTS barco needs 2 keys; key 2 should be located at key1 + 32  and referred by a single
-                # key descriptor index
-                key = b'\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-
             else:
                 lba_size = 512
-
                 key_type = types_pb2.CRYPTO_KEY_TYPE_AES256
                 key_size = 32
-                key = b'\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22'
 
+            key = os.urandom(key_size)
             ns = NvmeNsObject(lif, ns_id, size, lba_size, key_type, key_size, key)
             self.ns_list.append(ns)
 

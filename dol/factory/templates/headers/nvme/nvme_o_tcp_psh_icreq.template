@@ -1,0 +1,11 @@
+meta:
+    id      : NVME_O_TCP_PSH_ICREQ
+    scapy   : NVME_O_TCP_PSH_ICREQ
+    size    : 120
+
+fields:
+    pfv             : 0
+    hpda            : 0
+    hdgst_enable    : 1
+    ddgst_enable    : 1    
+    maxr2t          : 0

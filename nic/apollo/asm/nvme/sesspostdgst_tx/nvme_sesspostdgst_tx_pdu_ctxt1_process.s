@@ -29,8 +29,8 @@ nvme_sesspostdgst_tx_pdu_ctxt1_process:
     // Since its already written in little endian format, which is the format to
     // be sent on the wire and its crc-32 dgst, just copy the upper 32 bits
     // to the tcp page without performing any swap.
-    phvwr          p.hdgst_data, d.hdgst[63:32]     // BD Slot
-    phvwr          p.ddgst_data, d.ddgst[63:32]
+    phvwr          p.hdgst_data, d.hdgst[63:32].wx     // BD Slot
+    phvwr          p.ddgst_data, d.ddgst[63:32].wx
 
     mfspr          PDU_CTXT0_P, spr_tbladdr  // BD Slot
     sub            PDU_CTXT0_P, PDU_CTXT0_P, NVME_PDU_CTXT1_SIZE

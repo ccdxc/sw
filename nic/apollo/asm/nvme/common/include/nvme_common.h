@@ -249,8 +249,8 @@ struct hbm_al_ring_entry_t {
 #define NVME_O_TCP_CH_PDU_TYPE_C2HDATA          7
 #define NVME_O_TCP_CH_PDU_TYPE_R2T              9
 
-#define NVME_O_TCP_CH_HDGST_EN_F                (1<<0)
-#define NVME_O_TCP_CH_DDGST_EN_F                (1<<1)
+#define NVME_O_TCP_CH_HDGST_EN_F                (1<<7)
+#define NVME_O_TCP_CH_DDGST_EN_F                (1<<6)
 #define NVME_O_TCP_CH_DGST_EN_FLAGS             (NVME_O_TCP_CH_HDGST_EN_F | NVME_O_TCP_CH_DDGST_EN_F)
 
 #define NVME_O_TCP_CH_PDU_TYPE_SHIFT            24
@@ -263,7 +263,7 @@ struct hbm_al_ring_entry_t {
                                                  (NVME_O_TCP_CMD_CAPSULE_DGST_EN_HDR_SIZE << NVME_O_TCP_CH_PDO_SHIFT))
 
 // PDU PSH related defines
-#define NVME_O_TCP_PSH_CMD_CAPSULE_SGL_TYPE_SUBTYPE (SGL_TYPE_DATA_BLOCK_DESC << 4 | SGL_SUBTYPE_INCAPSULE_DATA)
+#define NVME_O_TCP_PSH_CMD_CAPSULE_SGL_TYPE_SUBTYPE (SGL_SUBTYPE_INCAPSULE_DATA << 4 | SGL_TYPE_DATA_BLOCK_DESC)
 
 
 #endif //__NVME_COMMON_H

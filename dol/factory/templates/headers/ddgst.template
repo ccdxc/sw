@@ -1,0 +1,6 @@
+meta:
+    id      : DDGST
+    scapy   : DDGST
+    size    : 4
+fields:
+    ddgst: const/0

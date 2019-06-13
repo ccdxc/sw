@@ -1,0 +1,9 @@
+meta:
+    id      : NVME_O_TCP_CH
+    scapy   : NVME_O_TCP_CH
+    size    : 8
+
+fields:
+    hlen    : 0
+    pdo     : 0
+    plen    : 0

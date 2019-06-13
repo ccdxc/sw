@@ -819,6 +819,174 @@ bind_layers(MSRPC_CN_HDR, MSRPC_BIND_RSP, ptype=12)
 bind_layers(MSRPC_CN_HDR, MSRPC_BIND_REQ, ptype=14)
 bind_layers(MSRPC_CN_HDR, MSRPC_BIND_RSP, ptype=15)
 
+class NVME_O_TCP_CH(Packet):
+    name = "NVME_O_TCP_CH"
+    pdu_types = {0: 'ICReq',
+                 1: 'ICResp',
+                 2: 'H2CTermReq',
+                 3: 'C2HTermReq',
+                 4: 'CapsuleCmd',
+                 5: 'CapsuleResp',
+                 6: 'H2CData',
+                 7: 'C2HData',
+                 9: 'R2T'}
+    fields_desc = [
+        ByteEnumField("pdu_type", 0, pdu_types),
+        BitField("hdgstf", 0, 1),
+        BitField("ddgstf", 0, 1),
+        BitField("last_pdu", 0, 1),
+        BitField("success", 0, 1),
+        BitField("rsvd", 0, 4),
+        ByteField("hlen", 0),   #Header Length
+        ByteField("pdo", 0),    #PDU Data Offset
+        LEIntField("plen", 0),  #PDU Length
+    ]
+
+class NVME_O_TCP_PSH_ICREQ(Packet):
+    name = "NVME_O_TCP_PSH_ICREQ"
+    fields_desc = [
+        LEShortField("pfv", 0),         #PDU Format Version
+        ByteField("hpda", 0),           #Host PDU Data Alignment
+        BitField("hdgst_enable", 0, 1),
+        BitField("ddgst_enable", 0, 1),
+        BitField("rsvd_flags", 0, 6),
+        LEIntField("maxr2t", 0),
+        BitField("rsvd", 0, 896),
+    ]
+
+class NVME_O_TCP_PSH_ICRESP(Packet):
+    name = "NVME_O_TCP_PSH_ICRESP"
+    fields_desc = [
+        LEShortField("pfv", 0),         #PDU Format Version
+        ByteField("cpda", 0),           #Controller PDU Data Alignment
+        BitField("hdgst_enable", 0, 1),
+        BitField("ddgst_enable", 0, 1),
+        BitField("rsvd", 0, 6),
+        LEIntField("maxh2cdata", 0),
+        BitField("rsvd", 0, 896),
+    ]
+
+class NVME_O_TCP_PSH_H2CTERMREQ(Packet):
+    name = "NVME_O_TCP_PSH_H2CTERMREQ"
+    fields_desc = [
+        LEShortField("fes", 0),         #Fatal Error Status
+        LEIntField("fei", 0),           #Fatal Error Information
+        BitField("rsvd", 0, 80),
+    ]
+
+class NVME_O_TCP_PSH_C2HTERMREQ(Packet):
+    name = "NVME_O_TCP_PSH_C2HTERMREQ"
+    fields_desc = [
+        LEShortField("fes", 0),         #Fatal Error Status
+        LEIntField("fei", 0),           #Fatal Error Information
+        BitField("rsvd", 0, 80),
+    ]
+
+class NVME_O_TCP_PSH_CAPSULECMD(Packet):
+    name = "NVME_O_TCP_PSH_CAPSULECMD"
+    fields_desc = [
+        #dword 0
+        ByteField("opc", 0),
+        BitField("fuse", 0, 2),
+        BitField("rsvd0", 0, 4),
+        BitField("psdt", 0, 2),
+        XLEShortField("cid", 0),
+    
+        #dword 1
+        XLEIntField("nsid", 0),
+    
+        #dword 2-3
+        XLEIntField("rsvd2", 0),
+        XLEIntField("rsvd3", 0),
+
+        #dword 4-5
+        XLELongField("mptr", 0),
+
+        #dword 6-9
+        #XXX SGL
+        XLELongField("sgl_address", 0),
+        LEIntField("sgl_length", 0),
+        X3BytesField("sgl_rsvd", 0),
+        BitField("sgl_subtype", 0, 4),
+        BitField("sgl_type", 0, 4),
+        
+        #dword 10-11
+        XLELongField("slba", 0),
+
+        #dword 12
+        XLEShortField("nlb", 0),
+        BitField("rsvd12", 0, 16),
+
+        XLEIntField("cdw13", 0),
+        XLEIntField("cdw14", 0),
+        XLEIntField("cdw15", 0),
+    ]
+
+class NVME_O_TCP_PSH_CAPSULERESP(Packet):
+    name = "NVME_O_TCP_PSH_CAPSULERESP"
+    fields_desc = [
+        #dword 0
+        IntField("cdw0", 0),
+
+        #dword 1
+        IntField("rsvd1", 0), 
+
+        #dword 2
+        LEShortField("sqhd", 0),
+        LEShortField("sqid", 0),
+
+        #dword 3
+        LEShortField("cid", 0),
+        BitField("p", 0, 1),
+        BitField("sc", 0, 8),
+        BitField("sct", 0, 3),
+        BitField("rsvd2", 0, 2),
+        BitField("m", 0, 1),
+        BitField("dnr", 0, 1),
+    ]
+
+class NVME_O_TCP_PSH_H2CDATA(Packet):
+    name = "NVME_O_TCP_PSH_H2CDATA"
+    fields_desc = [
+        LEShortField("cccid", 0),   #Command Capsule CID
+        LEShortField("ttag", 0),    #Transfer Tag
+        LEIntField("datao", 0),     #Data Offset
+        LEIntField("datal", 0),     #Data Length
+        LEIntField("rsvd", 0),
+    ]
+
+class NVME_O_TCP_PSH_C2HDATA(Packet):
+    name = "NVME_O_TCP_PSH_C2HDATA"
+    fields_desc = [
+        LEShortField("cccid", 0),   #Command Capsule CID
+        LEIntField("rsvd0", 0),
+        LEIntField("datao", 0),     #Data Offset
+        LEIntField("datal", 0),     #Data Length
+        LEIntField("rsvd1", 0),
+    ]
+
+class NVME_O_TCP_PSH_R2T(Packet):
+    name = "NVME_O_TCP_PSH_R2T"
+    fields_desc = [
+        LEShortField("cccid", 0),   #Command Capsule CID
+        LEShortField("ttag", 0),    #Transfer Tag
+        LEIntField("r2to", 0),      #Requested Data Offset
+        LEIntField("r2tl", 0),      #Requested Data Length
+        LEIntField("rsvd", 0),
+    ]
+
+class HDGST(Packet):
+    name = "HDGST"
+    fields_desc = [
+        LEIntField("hdgst", 0),
+    ]
+
+class DDGST(Packet):
+    name = "DDGST"
+    fields_desc = [
+        LEIntField("ddgst", 0),
+    ]
+
 class RawPacketParser:
     def __init__(self):
         return

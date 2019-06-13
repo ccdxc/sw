@@ -13,8 +13,10 @@ from random import *
 import iris.config.resmgr            as resmgr
 
 def GetSeqNum (tc, pkt):
-    return (0)
+    return tc.pvtdata.tcb_pre_state.snd_nxt
 
 def GetAckNum (tc, pkt):
-    return (0)
+    return tc.pvtdata.tcb_pre_state.rcv_nxt
 
+def GetWindow (tc, pkt):
+    return tc.pvtdata.tcb_pre_state.rcv_wnd

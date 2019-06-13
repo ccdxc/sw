@@ -100,6 +100,8 @@ nvme_ns_create (uint32_t lif,
     nvme_ns->size = size;
     nvme_ns->lba_size = lba_size;
     nvme_ns->g_sess_start = g_sess_start;
+    nvme_ns->key_index = key_index;
+    nvme_ns->sec_key_index = sec_key_index;
 
     nvme_ns->hal_handle = hal_alloc_handle();
 

@@ -1253,11 +1253,11 @@ header_type pdu_hdr_ch_t {
 header_type pdu_hdr_cmdcap_psh_t {
     fields {
       // NVME command Dword 0
-      cid         : 16;   // Command identifier
-      psdt        : 2;    // PRP or SGL
-      rsvd0       : 4;
-      fuse        : 2;    // Fusing 2 simple commands
       opc         : 8;    // Opcode
+      fuse        : 2;    // Fusing 2 simple commands
+      rsvd0       : 4;
+      psdt        : 2;    // PRP or SGL
+      cid         : 16;   // Command identifier
 
       // NVME command Dword 1
       nsid        : 32;   // Namespace identifier
@@ -1275,22 +1275,22 @@ header_type pdu_hdr_cmdcap_psh_t {
       sgl1_addr     : 64;
       sgl1_len      : 32;
       sgl1_rsvd     : 24;
-      sgl1_type     :  4;
       sgl1_sub_type :  4;
+      sgl1_type     :  4;
 
       // NVME command Dwords 10 and 11
       slba        : 64;   // Starting LBA (for Read/Write) commands
 
       // NVME command Dword 12
-      lr          : 1;    // Limited retry
-      fua         : 1;    // Force unit access
-      prinfo      : 4;    // Protection information field
-      rsvd12      : 10;
       nlb         : 16;   // Number of logical blocks
+      rsvd12      : 10;
+      prinfo      : 4;    // Protection information field
+      fua         : 1;    // Force unit access
+      lr          : 1;    // Limited retry
 
       // NVME command Dword 13
-      rsvd13      : 24;
       dsm         : 8;    // Dataset management
+      rsvd13      : 24;
 
       // NVME command Dword 14
       dw14        : 32;

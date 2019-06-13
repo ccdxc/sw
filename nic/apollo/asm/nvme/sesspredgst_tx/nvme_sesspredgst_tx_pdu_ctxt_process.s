@@ -46,12 +46,12 @@ capsule_cmd_pdu_hdr_setup:
 
     // Setup PSH hdr with CCSQE
     phvwr         p.pdu_psh_cid, d.{cid}.hx
-    phvwrpair     p.pdu_psh_psdt, SQE_DATA_XFER_TYPE_DATA_SGL, p.pdu_psh_opc, d.cmd_opc
+    phvwrpair     p.pdu_psh_opc, d.cmd_opc, p.pdu_psh_psdt, SQE_DATA_XFER_TYPE_DATA_SGL
     phvwr         p.pdu_psh_nsid, d.{nsid}.wx
     phvwr         p.pdu_psh_slba, d.{slba}.dx
     phvwr         p.pdu_psh_nlb, d.{nlb}.hx
-    phvwrpair     p.pdu_psh_sgl1_len, DATA_LEN, \
-                  p.{pdu_psh_sgl1_type...pdu_psh_sgl1_sub_type}, NVME_O_TCP_PSH_CMD_CAPSULE_SGL_TYPE_SUBTYPE
+    phvwrpair     p.pdu_psh_sgl1_len, DATA_LEN.wx, \
+                  p.{pdu_psh_sgl1_sub_type...pdu_psh_sgl1_type}, NVME_O_TCP_PSH_CMD_CAPSULE_SGL_TYPE_SUBTYPE
 
 trigger_dgstcb:
     addui          TX_HWDGSTCB_P, r0, hiword(nvme_tx_hwdgstcb_addr)

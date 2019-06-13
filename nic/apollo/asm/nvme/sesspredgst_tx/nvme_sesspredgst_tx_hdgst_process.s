@@ -27,8 +27,8 @@ nvme_sesspredgst_tx_hdgst_process:
 
     // PDU hdr size without including hdgst size
     add            r1, NVME_O_TCP_CMD_CAPSULE_CH_PSH_SIZE, r0
-    or             r1, HW_CMD_HDGST, r1, 16
-    phvwr          p.hdgst_desc_cmd, r1.dx
+    or             r2, HW_CMD_HDGST, r1, 16
+    phvwr          p.hdgst_desc_cmd, r2.dx
 
     // Set SGL1 addr to start of command data buffer
     add            r1, r1, NVME_O_TCP_HDGST_SIZE
