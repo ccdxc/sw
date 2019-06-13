@@ -555,12 +555,12 @@ public:
             actiondata.action_u.session_session_info.nexthop_idx =
                                                         svc_tep_nexthop_idx++;
             if (svc_tep_nexthop_idx ==
-                            svc_tep_nexthop_idx_start + TESTAPP_MAX_SERVICE_TEP) {
+                    svc_tep_nexthop_idx_start + TESTAPP_MAX_SERVICE_TEP) {
                 svc_tep_nexthop_idx = svc_tep_nexthop_idx_start;
             }
             sdk::lib::memrev(actiondata.action_u.session_session_info.tx_dst_ip,
                              ip_addr.addr.v6_addr.addr8, sizeof(ipv6_addr_t));
-            actiondata.action_u.session_session_info.tx_rewrite_flags = 0x6;
+            actiondata.action_u.session_session_info.tx_rewrite_flags = 0x26;
             actiondata.action_u.session_session_info.rx_rewrite_flags = 0x4;
         } else if (vpc == TEST_APP_S1_SLB_IN_OUT) {
             // VPC 61 is used for Scenario1-SLB in/out traffic (DSR case)
