@@ -11,6 +11,8 @@
 #ifndef __TEST_UTILS_BATCH_HPP__
 #define __TEST_UTILS_BATCH_HPP__
 
+#include "nic/apollo/api/include/pds_batch.hpp"
+
 namespace api_test {
 
 static inline void

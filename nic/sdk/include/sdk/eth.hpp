@@ -87,6 +87,15 @@ macaddr2str (const mac_addr_t mac_addr)
     return buf;
 }
 
+static inline char *
+mac2str (uint64_t mac)
+{
+    mac_addr_t mac_addr;
+
+    MAC_UINT64_TO_ADDR(mac_addr, mac);
+    return macaddr2str(mac_addr);
+}
+
 // spdlog formatter for mac_addr_t
 inline std::ostream& operator<<(std::ostream& os, mac_addr_t mac) {
     return os << macaddr2str(mac);

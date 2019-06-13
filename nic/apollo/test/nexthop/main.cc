@@ -9,11 +9,10 @@
 //----------------------------------------------------------------------------
 
 #include <getopt.h>
-#include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/nh.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
-#include "nic/apollo/test/utils/workflow.hpp"
+#include "nic/apollo/test/utils/workflow1.hpp"
 
 using std::cerr;
 using std::cout;
@@ -31,7 +30,7 @@ static constexpr uint32_t k_max_nh = PDS_MAX_NEXTHOP;
 // NH test class
 //----------------------------------------------------------------------------
 
-class nh_test : public pds_test_base {
+class nh_test : public ::pds_test_base {
 protected:
     nh_test() {}
     virtual ~nh_test() {}
@@ -57,183 +56,182 @@ protected:
 /// @{
 
 /// \brief NH WF_1
-TEST_F(nh_test, nh_workflow1) {
-    nh_stepper_seed_t seed = {};
+TEST_F(nh_test, nh_workflow_1) {
+    nh_feeder feeder;
 
-    NH_SEED_INIT(&seed, k_base_nh_ip);
-    workflow_1<nh_util, nh_stepper_seed_t>(&seed);
+    feeder.init(k_base_nh_ip);
+    workflow_1<nh_feeder>(feeder);
 }
 
 /// \brief NH WF_2
-TEST_F(nh_test, nh_workflow2) {
-    nh_stepper_seed_t seed = {};
+TEST_F(nh_test, nh_workflow_2) {
+    nh_feeder feeder;
 
-    NH_SEED_INIT(&seed, k_base_nh_ip);
-    workflow_2<nh_util, nh_stepper_seed_t>(&seed);
+    feeder.init(k_base_nh_ip);
+    workflow_2<nh_feeder>(feeder);
 }
 
 /// \brief NH WF_3
-TEST_F(nh_test, nh_workflow3) {
-    nh_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {};
+TEST_F(nh_test, nh_workflow_3) {
+    nh_feeder feeder1, feeder2, feeder3;
 
-    NH_SEED_INIT(&seed1, "10.10.1.1", 0x0E010B0A1000, 10, 100);
-    NH_SEED_INIT(&seed2, "20.20.1.1", 0x0E010B0A2000, 20, 200);
-    NH_SEED_INIT(&seed3, "30.30.1.1", 0x0E010B0A3000, 30, 300);
-    workflow_3<nh_util, nh_stepper_seed_t>(&seed1, &seed2, &seed3);
+    feeder1.init("10.10.1.1", 0x0E010B0A1000, 10, 100);
+    feeder2.init("20.20.1.1", 0x0E010B0A2000, 20, 200);
+    feeder3.init("30.30.1.1", 0x0E010B0A3000, 30, 300);
+    workflow_3<nh_feeder>(feeder1, feeder2, feeder3);
 }
 
 /// \brief NH WF_4
-TEST_F(nh_test, nh_workflow4) {
-    nh_stepper_seed_t seed = {};
+TEST_F(nh_test, nh_workflow_4) {
+    nh_feeder feeder;
 
-    NH_SEED_INIT(&seed, k_base_nh_ip);
-    workflow_4<nh_util, nh_stepper_seed_t>(&seed);
+    feeder.init(k_base_nh_ip);
+    workflow_4<nh_feeder>(feeder);
 }
 
 /// \brief NH WF_5
-TEST_F(nh_test, nh_workflow5) {
-    nh_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {};
+TEST_F(nh_test, nh_workflow_5) {
+    nh_feeder feeder1, feeder2, feeder3;
 
-    NH_SEED_INIT(&seed1, "10.10.1.1", 0x0E010B0A1000, 10, 100);
-    NH_SEED_INIT(&seed2, "20.20.1.1", 0x0E010B0A2000, 20, 200);
-    NH_SEED_INIT(&seed3, "30.30.1.1", 0x0E010B0A3000, 30, 300);
-    workflow_5<nh_util, nh_stepper_seed_t>(&seed1, &seed2, &seed3);
+    feeder1.init("10.10.1.1", 0x0E010B0A1000, 10, 100);
+    feeder2.init("20.20.1.1", 0x0E010B0A2000, 20, 200);
+    feeder3.init("30.30.1.1", 0x0E010B0A3000, 30, 300);
+    workflow_5<nh_feeder>(feeder1, feeder2, feeder3);
 }
 
 /// \brief NH WF_6
-TEST_F(nh_test, nh_workflow6) {
-    nh_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
+TEST_F(nh_test, nh_workflow_6) {
+    nh_feeder feeder1, feeder1A, feeder1B;
 
-    NH_SEED_INIT(&seed1, k_base_nh_ip);
-    // seed1A =  seed1 + different mac
-    NH_SEED_INIT(&seed1A, k_base_nh_ip, 0x0E010B0A3000);
-    // seed1B =  seed1A + different mac & ip
-    NH_SEED_INIT(&seed1B, "30.30.1.1", 0x0E010B0A2000);
-    workflow_6<nh_util, nh_stepper_seed_t>(&seed1, &seed1A, &seed1B);
+    feeder1.init(k_base_nh_ip);
+    // feeder1A =  feeder1 + different mac
+    feeder1A.init(k_base_nh_ip, 0x0E010B0A3000);
+    // feeder1B =  feeder1A + different mac & ip
+    feeder1B.init("30.30.1.1", 0x0E010B0A2000);
+    workflow_6<nh_feeder>(feeder1, feeder1A, feeder1B);
 }
 
 /// \brief NH WF_7
-TEST_F(nh_test, nh_workflow7) {
-    nh_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
+TEST_F(nh_test, nh_workflow_7) {
+    nh_feeder feeder1, feeder1A, feeder1B;
 
-    NH_SEED_INIT(&seed1, k_base_nh_ip);
-    // seed1A =  seed1 + different mac
-    NH_SEED_INIT(&seed1A, k_base_nh_ip, 0x0E010B0A3000);
-    // seed1B =  seed1A + different mac & ip
-    NH_SEED_INIT(&seed1B, "30.30.1.1", 0x0E010B0A2000);
-    workflow_7<nh_util, nh_stepper_seed_t>(&seed1, &seed1A, &seed1B);
+    feeder1.init(k_base_nh_ip);
+    // feeder1A =  feeder1 + different mac
+    feeder1A.init(k_base_nh_ip, 0x0E010B0A3000);
+    // feeder1B =  feeder1A + different mac & ip
+    feeder1B.init("30.30.1.1", 0x0E010B0A2000);
+    workflow_7<nh_feeder>(feeder1, feeder1A, feeder1B);
 }
 
 /// \brief NH WF_8
-TEST_F(nh_test, DISABLED_nh_workflow8) {
-    nh_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
+TEST_F(nh_test, DISABLED_nh_workflow_8) {
+    nh_feeder feeder1, feeder1A, feeder1B;
 
-    NH_SEED_INIT(&seed1, k_base_nh_ip);
-    // seed1A =  seed1 + different mac
-    NH_SEED_INIT(&seed1A, k_base_nh_ip, 0x0E010B0A3000);
-    // seed1B =  seed1A + different mac & ip
-    NH_SEED_INIT(&seed1B, "30.30.1.1", 0x0E010B0A2000);
-    workflow_8<nh_util, nh_stepper_seed_t>(&seed1, &seed1A, &seed1B);
+    feeder1.init(k_base_nh_ip);
+    // feeder1A =  feeder1 + different mac
+    feeder1A.init(k_base_nh_ip, 0x0E010B0A3000);
+    // feeder1B =  feeder1A + different mac & ip
+    feeder1B.init("30.30.1.1", 0x0E010B0A2000);
+    workflow_8<nh_feeder>(feeder1, feeder1A, feeder1B);
 }
 
 /// \brief NH WF_9
-TEST_F(nh_test, nh_workflow9) {
-    nh_stepper_seed_t seed1 = {}, seed1A = {};
+TEST_F(nh_test, nh_workflow_9) {
+    nh_feeder feeder1, feeder1A;
 
-    NH_SEED_INIT(&seed1, k_base_nh_ip);
-    // seed1B =  seed1A + different mac & ip
-    NH_SEED_INIT(&seed1A, "30.30.1.1", 0x0E010B0A2000);
-    workflow_9<nh_util, nh_stepper_seed_t>(&seed1, &seed1A);
+    feeder1.init(k_base_nh_ip);
+    // feeder1A =  feeder1 + different mac & ip
+    feeder1A.init("30.30.1.1", 0x0E010B0A2000);
+    workflow_9<nh_feeder>(feeder1, feeder1A);
 }
 
 /// \brief NH WF_10
-TEST_F(nh_test, DISABLED_nh_workflow10) {
-    nh_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {}, seed4 = {};
-    nh_stepper_seed_t seed2A = {}, seed3A = {};
+TEST_F(nh_test, DISABLED_nh_workflow_10) {
+    nh_feeder feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4;
 
-    NH_SEED_INIT(&seed1, "10.10.1.1", 0x0E010B0A1000, 10, 100);
-    NH_SEED_INIT(&seed2, "20.200.1.1", 0x0E010B0A2000, 20, 200);
-    // seed2A =  seed2 + different mac & ip
-    NH_SEED_INIT(&seed2A, "20.20.1.1", 0x0E010B0A2222, 20, 200);
-    NH_SEED_INIT(&seed3, "30.300.1.1", 0x0E010B0A3000, 30, 300);
-    // seed3A =  seed3 + different mac & ip
-    NH_SEED_INIT(&seed3A, "30.30.1.1", 0x0E010B0A3333, 30, 300);
-    NH_SEED_INIT(&seed4, "40.40.1.1", 0x0E010B0A4000, 40, 400);
-    workflow_10<nh_util, nh_stepper_seed_t>(
-                &seed1, &seed2, &seed2A, &seed3, &seed3A, &seed4);
+    feeder1.init("10.10.1.1", 0x0E010B0A1000, 10, 100);
+    feeder2.init("20.200.1.1", 0x0E010B0A2000, 20, 200);
+    // feeder2A =  feeder2 + different mac & ip
+    feeder2A.init("20.20.1.1", 0x0E010B0A2222, 20, 200);
+    feeder3.init("30.300.1.1", 0x0E010B0A3000, 30, 300);
+    // feeder3A =  feeder3 + different mac & ip
+    feeder3A.init("30.30.1.1", 0x0E010B0A3333, 30, 300);
+    feeder4.init("40.40.1.1", 0x0E010B0A4000, 40, 400);
+    workflow_10<nh_feeder>(feeder1, feeder2, feeder2A,
+                           feeder3, feeder3A, feeder4);
 }
 
 /// \brief NH WF_N_1
 TEST_F(nh_test, nh_workflow_neg_1) {
-    nh_stepper_seed_t seed = {};
+    nh_feeder feeder;
 
-    NH_SEED_INIT(&seed, k_base_nh_ip);
-    workflow_neg_1<nh_util, nh_stepper_seed_t>(&seed);
+    feeder.init(k_base_nh_ip);
+    workflow_neg_1<nh_feeder>(feeder);
 }
 
 /// \brief NH WF_N_2
 TEST_F(nh_test, DISABLED_nh_workflow_neg_2) {
-    nh_stepper_seed_t seed = {};
+    nh_feeder feeder;
 
     // TODO: PDS_MAX_NEXTHOP must be 1048576
-    NH_SEED_INIT(&seed, k_base_nh_ip, k_base_mac, k_max_nh);
-    workflow_neg_2<nh_util, nh_stepper_seed_t>(&seed);
+    feeder.init(k_base_nh_ip, k_base_mac, k_max_nh);
+    workflow_neg_2<nh_feeder>(feeder);
 }
 
 /// \brief NH WF_N_3
 TEST_F(nh_test, nh_workflow_neg_3) {
-    nh_stepper_seed_t seed = {};
+    nh_feeder feeder;
 
-    NH_SEED_INIT(&seed, "150.150.1.1");
-    workflow_neg_3<nh_util, nh_stepper_seed_t>(&seed);
+    feeder.init("150.150.1.1");
+    workflow_neg_3<nh_feeder>(feeder);
 }
 
 /// \brief NH WF_N_4
 TEST_F(nh_test, nh_workflow_neg_4) {
-    nh_stepper_seed_t seed1 = {}, seed2 = {};
+    nh_feeder feeder1, feeder2;
 
-    NH_SEED_INIT(&seed1, k_base_nh_ip, k_base_mac, 10, 100);
-    NH_SEED_INIT(&seed2, "60.60.1.1",  0x0E010B0A2000, 10, 200);
-    workflow_neg_4<nh_util, nh_stepper_seed_t>(&seed1, &seed2);
+    feeder1.init(k_base_nh_ip, k_base_mac, 10, 100);
+    feeder2.init("60.60.1.1",  0x0E010B0A2000, 10, 200);
+    workflow_neg_4<nh_feeder>(feeder1, feeder2);
 }
 
 /// \brief NH WF_N_5
 TEST_F(nh_test, DISABLED_nh_workflow_neg_5) {
-    nh_stepper_seed_t seed1 = {}, seed1A = {};
+    nh_feeder feeder1, feeder1A;
 
-    NH_SEED_INIT(&seed1, k_base_nh_ip);
+    feeder1.init(k_base_nh_ip);
     // seed1A = seed1 + different IP & MAC
-    NH_SEED_INIT(&seed1A, "150.150.1.1", 0x0E010B0A2000);
-    workflow_neg_5<nh_util, nh_stepper_seed_t>(&seed1, &seed1A);
+    feeder1A.init("150.150.1.1", 0x0E010B0A2000);
+    workflow_neg_5<nh_feeder>(feeder1, feeder1A);
 }
 
 /// \brief NH WF_N_6
 TEST_F(nh_test, DISABLED_nh_workflow_neg_6) {
-    nh_stepper_seed_t seed1 = {}, seed1A = {};
+    nh_feeder feeder1, feeder1A;
 
-    NH_SEED_INIT(&seed1, k_base_nh_ip);
+    feeder1.init(k_base_nh_ip);
     // seed1A = seed1 + different IP & MAC
-    NH_SEED_INIT(&seed1A, "150.150.1.1", 0x0E010B0A2000, k_max_nh+1);
-    workflow_neg_6<nh_util, nh_stepper_seed_t>(&seed1, &seed1A);
+    feeder1A.init("150.150.1.1", 0x0E010B0A2000, k_max_nh+1);
+    workflow_neg_6<nh_feeder>(feeder1, feeder1A);
 }
 
 /// \brief NH WF_N_7
 TEST_F(nh_test, nh_workflow_neg_7) {
-    nh_stepper_seed_t seed1 = {}, seed1A = {}, seed2 = {};
+    nh_feeder feeder1, feeder1A, feeder2;
 
-    NH_SEED_INIT(&seed1, "10.10.1.1", 0x0E010B0A1000, 10, 100);
-    NH_SEED_INIT(&seed1A, "10.10.1.1", 0x0E010B0A1111, 10, 100);
-    NH_SEED_INIT(&seed2, "20.20.1.1", 0x0E010B0A2000, 20, 200);
-    workflow_neg_7<nh_util, nh_stepper_seed_t>(&seed1, &seed1A, &seed2);
+    feeder1.init("10.10.1.1", 0x0E010B0A1000, 10, 100);
+    feeder1A.init("10.10.1.1", 0x0E010B0A1111, 10, 100);
+    feeder2.init("20.20.1.1", 0x0E010B0A2000, 20, 200);
+    workflow_neg_7<nh_feeder>(feeder1, feeder1A, feeder2);
 }
 
 /// \brief NH WF_N_8
 TEST_F(nh_test, nh_workflow_neg_8) {
-    nh_stepper_seed_t seed1 = {}, seed2 = {};
+    nh_feeder feeder1, feeder2;
 
-    NH_SEED_INIT(&seed1, "10.10.1.1", 0x0E010B0A1000, 10, 100);
-    NH_SEED_INIT(&seed2, "20.20.1.1", 0x0E010B0A2000, 20, 200);
-    workflow_neg_8<nh_util, nh_stepper_seed_t>(&seed1, &seed2);
+    feeder1.init("10.10.1.1", 0x0E010B0A1000, 10, 100);
+    feeder2.init("20.20.1.1", 0x0E010B0A2000, 20, 200);
+    workflow_neg_8<nh_feeder>(feeder1, feeder2);
 }
 
 /// @}

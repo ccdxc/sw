@@ -63,10 +63,7 @@ protected:
             TEP_MANY_CREATE(&tep_seed);
         } else {
             // create max NHs which can be used as NHs for routes
-            nh_stepper_seed_t nh_seed = {0};
-
-            NH_SEED_INIT(&nh_seed, k_base_nh_ip);
-            NH_MANY_CREATE(&nh_seed);
+            sample_nh_setup();
         }
         batch_commit();
     }
@@ -78,10 +75,7 @@ protected:
             TEP_SEED_INIT(&tep_seed, k_base_nh_ip);
             TEP_MANY_DELETE(&tep_seed);
         } else {
-            nh_stepper_seed_t nh_seed = {0};
-
-            NH_SEED_INIT(&nh_seed, k_base_nh_ip);
-            NH_MANY_DELETE(&nh_seed);
+            sample_nh_teardown();
         }
         sample_vpc_teardown(PDS_VPC_TYPE_TENANT);
         batch_commit();
