@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	gorun "runtime"
-	"strings"
 	"testing"
 	"time"
 
@@ -24,8 +23,6 @@ import (
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	"github.com/pensando/sw/nic/agent/nmd"
-	"github.com/pensando/sw/nic/agent/nmd/platform"
-	"github.com/pensando/sw/nic/agent/nmd/upg"
 	proto "github.com/pensando/sw/nic/agent/protos/nmd"
 	"github.com/pensando/sw/venice/apiserver"
 	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
@@ -43,7 +40,6 @@ import (
 	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/resolver"
 	rmock "github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -171,34 +167,37 @@ func createCMD(m *testing.M) (*rpckit.RPCServer, error) {
 // Create NMD and Agent
 func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmd.Agent, error) {
 
-	// create a platform agent
-	pa, err := platform.NewNaplesPlatformAgent()
-	if err != nil {
-		log.Fatalf("Error creating platform agent. Err: %v", err)
-	}
-
-	// create a upgrade client with dummy interface to delphi
-	uc, err := upg.NewNaplesUpgradeClient(nil)
-	if err != nil {
-		log.Fatalf("Error creating Upgrade client . Err: %v", err)
-	}
-
-	r := resolver.New(&resolver.Config{Name: t.Name(), Servers: strings.Split(*resolverURL, ",")})
+	//// create a platform agent
+	//pa, err := platform.NewNaplesPlatformAgent()
+	//if err != nil {
+	//	log.Fatalf("Error creating platform agent. Err: %v", err)
+	//}
+	//
+	//// create a upgrade client with dummy interface to delphi
+	//uc, err := upg.NewNaplesUpgradeClient(nil)
+	//if err != nil {
+	//	log.Fatalf("Error creating Upgrade client . Err: %v", err)
+	//}
+	//
+	//r := resolver.New(&resolver.Config{Name: t.Name(), Servers: strings.Split(*resolverURL, ",")})
 	// create the new NMD
-	ag, err := nmd.NewAgent(pa,
-		uc,
+	ag, err := nmd.NewAgent(
+		nil,
+		//pa,
+		//uc,
 		dbPath,
-		hostID,
-		hostID,
-		*cmdURL,
+		//hostID,
+		//hostID,
+		//*cmdURL,
 		restURL,
-		"", // no local certs endpoint
-		"", // no remote certs endpoint
-		"", // no revProxy endpoint
-		"host",
+		"", // no revproxy endpoint
+		//"", // no local certs endpoint
+		//"", // no remote certs endpoint
+		//"host",
 		globals.NicRegIntvl*time.Second,
 		globals.NicUpdIntvl*time.Second,
-		r)
+	//r
+	)
 	if err != nil {
 		t.Errorf("Error creating NMD. Err: %v", err)
 	}
@@ -206,7 +205,7 @@ func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmd.Agent, error)
 	// Ensure the NMD's rest server is started
 	nmdHandle := ag.GetNMD()
 	nmdHandle.CreateMockIPClient(nil)
-	nmdHandle.UpdateMgmtIP()
+	nmdHandle.UpdateNaplesConfig(nmdHandle.GetNaplesConfig())
 
 	return ag, err
 }

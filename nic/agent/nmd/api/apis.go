@@ -54,6 +54,10 @@ type NmdAPI interface {
 	DeleteSmartNIC(nic *cluster.SmartNIC) error
 	GetPlatformCertificate(nic *cluster.SmartNIC) ([]byte, error)
 	GenChallengeResponse(nic *cluster.SmartNIC, challenge []byte) ([]byte, []byte, error)
+	GetIPConfig() *cluster.IPConfig
+	SetIPConfig(cfg *cluster.IPConfig)
+	SetVeniceIPs(veniceIPs []string)
+	GetVeniceIPs() []string
 }
 
 // PlatformAPI is the API provided by PlatformAgent to NMD

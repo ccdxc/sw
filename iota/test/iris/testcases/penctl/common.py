@@ -380,7 +380,7 @@ def SetNaplesModeOOB_Static(n, controllerip, mgmtip):
 
 def SetNaplesModeOOB_Dynamic(n):
     api.Logger.info("Setting Naples network mode to OOB Dynamic.")
-    cmd = "update naples --id IOTATEST_OOB --managed-by network --management-network inband"
+    cmd = "update naples --id IOTATEST_OOB --managed-by network --management-network inband --controllers 4.4.4.4"
     return RunPenctlOnHost(n, cmd)
 
 def SetNaplesModeHost(n):

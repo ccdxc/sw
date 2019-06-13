@@ -9,7 +9,6 @@ import (
 	"github.com/pensando/sw/nic/agent/nmd/state"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 // Agent is the wrapper object that contains NMD and Platform components
@@ -29,13 +28,15 @@ type Agent struct {
 }
 
 // NewAgent creates an agent instance
-func NewAgent(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI,
-	nmdDbPath, hostName, macAddr, cmdRegURL, nmdListenURL, certsListenURL, cmdAuthCertsURL, revProxyURL, mode string,
-	regInterval, updInterval time.Duration,
-	resolverClient resolver.Interface) (*Agent, error) {
+func NewAgent(delphiClient clientAPI.Client, nmdDbPath, nmdListenURL, revProxyURL string, regInterval, updInterval time.Duration) (*Agent, error) {
 
 	// create new NMD instance
-	nm, err := state.NewNMD(platform, upgmgr, resolverClient, nmdDbPath, hostName, macAddr, nmdListenURL, certsListenURL, cmdAuthCertsURL, cmdRegURL, revProxyURL, mode, regInterval, updInterval)
+	nm, err := state.NewNMD(
+		delphiClient,
+		nmdDbPath,
+		nmdListenURL,
+		revProxyURL,
+		regInterval, updInterval)
 	if err != nil {
 		log.Errorf("Error creating NMD. Err: %v", err)
 		return nil, err
@@ -45,18 +46,11 @@ func NewAgent(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI,
 	// create the agent instance
 	ag := Agent{
 		nmd:      nm,
-		platform: platform,
-		upgmgr:   upgmgr,
+		platform: nm.Platform,
+		upgmgr:   nm.Upgmgr,
 	}
 
 	return &ag, nil
-}
-
-// StandaloneStart starts or stops host/network management when
-func (ag *Agent) StandaloneStart() {
-	log.Infof("NMD start management")
-	ag.nmd.CreateMockIPClient(nil)
-	ag.nmd.GetIPClient().Start()
 }
 
 // DelphiService struct helps to convert NMD into a Delphi Service
@@ -73,9 +67,11 @@ func NewDelphiService() *DelphiService {
 // OnMountComplete is the function which is called by Delphi when the mounting of Service objects is completed.
 func (d *DelphiService) OnMountComplete() {
 	log.Infof("OnMountComplete() done for %s", d.Name())
+	if err := d.Agent.nmd.UpdateNaplesConfig(d.Agent.nmd.GetNaplesConfig()); err != nil {
+		log.Errorf("Failed to update naples during onMountComplete. Err: %v", err)
+	}
 	d.Agent.nmd.UpdateCurrentManagementMode()
 	d.Agent.nmd.CreateIPClient(d.DelphiClient)
-	d.Agent.nmd.GetIPClient().Start()
 }
 
 // Name returns the name of the delphi service.
@@ -86,8 +82,9 @@ func (d *DelphiService) Name() string {
 // Stop stops the agent
 func (ag *Agent) Stop() {
 	log.Infof("NMD Stop")
-
-	ag.nmd.Stop()
+	if ag.nmd != nil {
+		ag.nmd.Stop()
+	}
 	ag.nmd = nil
 }
 

@@ -57,7 +57,6 @@ func newRoClient(nmd nmdapi.RolloutAPI, resolverClient resolver.Interface) (*RoC
 	err := nmd.RegisterROCtrlClient(&client)
 	if err != nil {
 		log.Errorf("Error registering the Rollout controller interface. Err: %v", err)
-		return nil, err
 	}
 
 	client.Add(1)

@@ -9,11 +9,16 @@ import (
 	"crypto/rand"
 	"fmt"
 	mathrand "math/rand"
+	"net"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/vishvananda/netlink"
+
+	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
 
 	"google.golang.org/grpc/grpclog"
 
@@ -26,7 +31,6 @@ import (
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
-	"github.com/pensando/sw/nic/agent/nmd/upg"
 	proto "github.com/pensando/sw/nic/agent/protos/nmd"
 	"github.com/pensando/sw/venice/apiserver"
 	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
@@ -47,7 +51,6 @@ import (
 	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/resolver"
 	rmock "github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -250,33 +253,35 @@ func createRPCServerClient() (*rpckit.RPCServer, *rpckit.RPCClient) {
 func createNMD(t *testing.T, dbPath, priMac, restURL string) (*nmd.Agent, error) {
 	CreateFruJSON(priMac)
 
-	// create a platform agent
-	pa, err := platform.NewNaplesPlatformAgent()
-	if err != nil {
-		log.Fatalf("Error creating platform agent. Err: %v", err)
-	}
+	//// create a platform agent
+	//pa, err := platform.NewNaplesPlatformAgent()
+	//if err != nil {
+	//	log.Fatalf("Error creating platform agent. Err: %v", err)
+	//}
+	//
+	//uc, err := upg.NewNaplesUpgradeClient(nil)
+	//if err != nil {
+	//	log.Fatalf("Error creating Upgrade client . Err: %v", err)
+	//}
 
-	uc, err := upg.NewNaplesUpgradeClient(nil)
-	if err != nil {
-		log.Fatalf("Error creating Upgrade client . Err: %v", err)
-	}
-
-	r := resolver.New(&resolver.Config{Name: t.Name(), Servers: strings.Split(resolverURLs, ",")})
+	//r := resolver.New(&resolver.Config{Name: t.Name(), Servers: strings.Split(resolverURLs, ",")})
 	// create the new NMD
-	ag, err := nmd.NewAgent(pa,
-		uc,
+	ag, err := nmd.NewAgent(
+		nil,
+		//pa,
+		//uc,
 		dbPath,
-		priMac,
-		priMac,
-		smartNICServerURL,
+		//priMac,
+		//priMac,
+		//smartNICServerURL,
 		restURL,
-		"", // no local certs endpoint
-		"", // no remote certs endpoint
-		"", // no revProxy endpoint
-		"host",
+		"", //no revproxy endpoint
+		//"", // no local certs endpoint
+		//"", // no remote certs endpoint
+		//"host",
 		globals.NicRegIntvl*time.Second,
 		globals.NicUpdIntvl*time.Second,
-		r)
+	)
 	if err != nil {
 		t.Errorf("Error creating NMD. Err: %v", err)
 	}
@@ -292,14 +297,13 @@ func createNMD(t *testing.T, dbPath, priMac, restURL string) (*nmd.Agent, error)
 
 	cfg := nmdHandle.GetNaplesConfig()
 	cfg.Spec.Controllers = []string{"localhost"}
-	cfg.Spec.NetworkMode = proto.NetworkMode_INBAND.String()
+	cfg.Spec.NetworkMode = proto.NetworkMode_OOB.String()
 	cfg.Spec.IPConfig = ipConfig
 	cfg.Spec.MgmtVlan = 0
 	cfg.Spec.ID = priMac
 
 	nmdHandle.SetNaplesConfig(cfg.Spec)
-	nmdHandle.IPClient.Update()
-
+	nmdHandle.UpdateNaplesConfig(nmdHandle.GetNaplesConfig())
 	return ag, err
 }
 
@@ -1798,7 +1802,7 @@ func TestHostNICPairingConflicts(t *testing.T) {
 }
 
 func testSetup() {
-
+	createNaplesOOBInterface()
 	// Disable open trace
 	ventrace.DisableOpenTrace()
 	grpclog.SetLoggerV2(logger)
@@ -1899,6 +1903,39 @@ func testTeardown() {
 	if cmdenv.CertMgr != nil {
 		cmdenv.CertMgr.Close()
 	}
+	deleteNaplesOOBInterfaces()
+}
+
+func createNaplesOOBInterface() error {
+	oobMAC, _ := net.ParseMAC("42:42:42:42:42:42")
+	dhcpClientMock := &netlink.Veth{
+		LinkAttrs: netlink.LinkAttrs{
+			Name:         ipif.NaplesOOBInterface,
+			TxQLen:       1000,
+			HardwareAddr: oobMAC,
+		},
+		PeerName: "dhcp-peer",
+	}
+
+	// Create the veth pair
+	if err := netlink.LinkAdd(dhcpClientMock); err != nil {
+		return err
+	}
+	if err := netlink.LinkSetARPOn(dhcpClientMock); err != nil {
+		return err
+	}
+
+	return netlink.LinkSetUp(dhcpClientMock)
+}
+
+func deleteNaplesOOBInterfaces() error {
+	oobIntf, err := netlink.LinkByName(ipif.NaplesOOBInterface)
+	if err != nil {
+		log.Errorf("TearDown Failed to look up the interfaces. Err: %v", err)
+		return err
+	}
+
+	return netlink.LinkDel(oobIntf)
 }
 
 func TestMain(m *testing.M) {

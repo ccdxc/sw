@@ -4,6 +4,7 @@ package state
 
 import (
 	"crypto/x509"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,19 +14,26 @@ import (
 	"net/http/pprof"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	"github.com/vishvananda/netlink"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/httputils"
 	nmdapi "github.com/pensando/sw/nic/agent/nmd/api"
 	"github.com/pensando/sw/nic/agent/nmd/cmdif"
+	"github.com/pensando/sw/nic/agent/nmd/platform"
+	device "github.com/pensando/sw/nic/agent/nmd/protos/halproto"
+	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
+	"github.com/pensando/sw/nic/agent/nmd/upg"
 	"github.com/pensando/sw/nic/agent/protos/nmd"
+	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	roprotos "github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/globals"
@@ -60,22 +68,24 @@ func WithRolloutAPI(ro nmdapi.RolloutCtrlAPI) NewNMDOption {
 }
 
 // NewNMD returns a new NMD instance
-func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient resolver.Interface,
-	dbPath, nodeUUID, macAddr, listenURL, certsListenURL, remoteCertsURL, cmdRegURL, revProxyURL, mode string,
-	regInterval, updInterval time.Duration, opts ...NewNMDOption) (*NMD, error) {
+func NewNMD(delphiClient clientAPI.Client,
+	dbPath, listenURL, revProxyURL string,
+	regInterval, updInterval time.Duration,
+	opts ...NewNMDOption) (*NMD, error) {
 	var emdb emstore.Emstore
 	var err error
 
-	// Set mode and mac
-	var naplesMode string
-	switch mode {
-	case "host":
-		naplesMode = nmd.MgmtMode_HOST.String()
-	case "network":
-		naplesMode = nmd.MgmtMode_NETWORK.String()
-	default:
-		log.Errorf("Invalid mode, mode:%s", mode)
-		return nil, errors.New("Invalid mode")
+	// create a platform agent
+
+	pa, err := platform.NewNaplesPlatformAgent()
+	if err != nil {
+		return nil, fmt.Errorf("error creating platform agent. Err: %v", err)
+	}
+
+	//create a upgrade client
+	uc, err := upg.NewNaplesUpgradeClient(delphiClient)
+	if err != nil {
+		return nil, fmt.Errorf("error creating Upgrade client . Err: %v", err)
 	}
 
 	// create reverse proxy for all NAPLES REST APIs
@@ -100,13 +110,15 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 		Timestamp: *c,
 	}
 
+	fru := ReadFruFromJSON()
+
 	// TODO : Add more information into SmartNICRollout
 	ro := nmd.NaplesRollout{
 		TypeMeta: api.TypeMeta{
 			Kind: "NaplesRollout",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: macAddr,
+			Name: fru.MacStr,
 		},
 		Status: nmd.RolloutStatus{
 			InProgressOp: &roprotos.SmartNICOpSpec{
@@ -152,9 +164,9 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 			Kind: "Naples",
 		},
 		Spec: nmd.NaplesSpec{
-			Mode:          naplesMode,
-			PrimaryMAC:    macAddr,
-			ID:            nodeUUID,
+			Mode:          nmd.MgmtMode_HOST.String(),
+			PrimaryMAC:    fru.MacStr,
+			ID:            fru.MacStr,
 			NaplesProfile: "default",
 			IPConfig: &cluster.IPConfig{
 				IPAddress:  "",
@@ -163,8 +175,9 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 			},
 		},
 		Status: nmd.NaplesStatus{
-			Fru:      ReadFruFromJSON(),
-			TimeZone: "UTC",
+			Fru:          fru,
+			TimeZone:     "UTC",
+			SmartNicName: fru.MacStr,
 		},
 	}
 	// List available NaplesProfiles
@@ -173,7 +186,7 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 	cfgObj, err := emdb.Read(&config)
 
 	if cfgObj != nil && err == nil {
-		log.Info("Object found in NMD DB. Using persisted values.")
+		log.Info("Config object found in NMD DB. Using persisted values.")
 		// Use the persisted config moving forward
 		config = *cfgObj.(*nmd.Naples)
 
@@ -181,7 +194,7 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 		config.Status.Fru = ReadFruFromJSON()
 	} else {
 		// persist the default naples config
-		log.Info("Object not found in NMD DB. Persisting it in the DB.")
+		log.Info("Config object not found in NMD DB. Persisting it in the DB.")
 		config.CreationTime = ts
 		config.ModTime = ts
 		err = emdb.Write(&config)
@@ -195,12 +208,13 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 	// create NMD object
 	nm := NMD{
 		store:              emdb,
-		nodeUUID:           nodeUUID,
-		macAddr:            macAddr,
-		platform:           platform,
-		upgmgr:             upgmgr,
-		resolverClient:     resolverClient,
+		nodeUUID:           fru.MacStr,
+		macAddr:            fru.MacStr,
+		Platform:           pa,
+		Upgmgr:             uc,
+		DelphiClient:       delphiClient,
 		nic:                nil,
+		certsListenURL:     globals.Localhost + ":" + globals.CMDUnauthCertAPIPort,
 		nicRegInitInterval: regInterval,
 		nicRegInterval:     regInterval,
 		isRegOngoing:       false,
@@ -208,9 +222,6 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 		isUpdOngoing:       false,
 		isRestSrvRunning:   false,
 		listenURL:          listenURL,
-		certsListenURL:     certsListenURL,
-		remoteCertsURL:     remoteCertsURL,
-		cmdRegURL:          cmdRegURL,
 		stopNICReg:         make(chan bool, 1),
 		stopNICUpd:         make(chan bool, 1),
 		config:             config,
@@ -245,15 +256,15 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 	}
 
 	// register NMD with the platform agent
-	err = platform.RegisterNMD(&nm)
+	err = nm.Platform.RegisterNMD(&nm)
 	if err != nil {
 		// cleanup emstore and return
 		emdb.Close()
 		return nil, err
 	}
 
-	if upgmgr != nil {
-		err = upgmgr.RegisterNMD(&nm)
+	if nm.Upgmgr != nil {
+		err = nm.Upgmgr.RegisterNMD(&nm)
 		if err != nil {
 			log.Fatalf("Error Registering NMD with upgmgr, err: %+v", err)
 			// cleanup emstore and return
@@ -262,20 +273,10 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 		}
 	}
 
-	// Create the SmartNIC object if it does not exist, and populate it with appropriate information from NaplesConfig.
-	nm.UpdateNaplesInfoFromConfig()
-
-	//// Start the control loop based on configured Mode
-	//if nm.config.Spec.Mode == nmd.MgmtMode_HOST {
-	//	// Start in Classic Mode
-	//	err = nm.StartClassicMode()
-	//	if err != nil {
-	//		log.Fatalf("Error starting in classic mode, err: %+v", err)
-	//	}
-	//}else {
-	//	// Start in Managed Mode
-	//	go nm.StartManagedMode()
-	//}
+	if err := nm.StartNMDRestServer(); err != nil {
+		log.Infof("Failed to start NMD RestServer. Err: %v", err)
+		return nil, err
+	}
 
 	// start reverse proxy for all NAPLES REST APIs
 	nm.StartReverseProxy()
@@ -291,7 +292,6 @@ func (n *NMD) RegisterCMD(cmd nmdapi.CmdAPI) error {
 	// ensure two controller plugins dont register
 	if n.cmd != nil {
 		log.Errorf("Attempt to register multiple controllers with NMD.")
-		return errors.New("attempt to register multiple controllers with NMD")
 	}
 
 	// initialize cmd
@@ -970,4 +970,389 @@ func (n *NMD) updateLocatTimeZone() error {
 // NaplesVersionGetHandler is the REST handler for Naples Profiles GET
 func NaplesVersionGetHandler(r *http.Request) (interface{}, error) {
 	return GetNaplesSoftwareInfo()
+}
+
+// GetRegStatus returns the current status of NIC registration task
+func (n *NMD) GetRegStatus() bool {
+	n.Lock()
+	defer n.Unlock()
+	return n.isRegOngoing
+}
+
+func (n *NMD) setRegStatus(value bool) {
+	n.Lock()
+	defer n.Unlock()
+	n.isRegOngoing = value
+}
+
+// GetUpdStatus returns the current running status of NIC update task
+func (n *NMD) GetUpdStatus() bool {
+	n.Lock()
+	defer n.Unlock()
+	return n.isUpdOngoing
+}
+
+func (n *NMD) setUpdStatus(value bool) {
+	n.Lock()
+	defer n.Unlock()
+	n.isUpdOngoing = value
+}
+
+// GetRestServerStatus returns the current running status of REST server
+func (n *NMD) GetRestServerStatus() bool {
+	n.Lock()
+	defer n.Unlock()
+	return n.isRestSrvRunning
+}
+
+func (n *NMD) setRestServerStatus(value bool) {
+	n.Lock()
+	defer n.Unlock()
+	n.isRestSrvRunning = value
+}
+
+// GetConfigMode returns the configured Naples Mode
+func (n *NMD) GetConfigMode() string {
+	n.Lock()
+	defer n.Unlock()
+	return n.config.Spec.Mode
+}
+
+// SetNaplesConfig sets naples config and status
+func (n *NMD) SetNaplesConfig(cfgSpec nmd.NaplesSpec) {
+	n.Lock()
+	defer n.Unlock()
+	c, _ := types.TimestampProto(time.Now())
+
+	ts := api.Timestamp{
+		Timestamp: *c,
+	}
+	n.config.ModTime = ts
+	n.config.Spec = cfgSpec
+}
+
+// GetNaplesConfig returns the current naples config received via REST
+func (n *NMD) GetNaplesConfig() nmd.Naples {
+	n.Lock()
+	defer n.Unlock()
+
+	return n.config
+}
+
+// SetSmartNIC intializes the smartNIC object
+func (n *NMD) SetSmartNIC(nic *cluster.SmartNIC) error {
+	n.Lock()
+	defer n.Unlock()
+
+	n.nic = nic
+	return nil
+}
+
+// GetSmartNIC returns the smartNIC object
+func (n *NMD) GetSmartNIC() (*cluster.SmartNIC, error) {
+	n.Lock()
+	defer n.Unlock()
+
+	return n.nic, nil
+}
+
+// GetListenURL returns the listen URL of the http server
+func (n *NMD) GetListenURL() string {
+	n.Lock()
+	defer n.Unlock()
+
+	if n.listener != nil {
+		return n.listener.Addr().String()
+	}
+	return ""
+}
+
+// CreateIPClient creates IPClient to run DHCP
+func (n *NMD) CreateIPClient(delphiClient clientAPI.Client) {
+	n.Lock()
+	defer n.Unlock()
+	var ipClient *ipif.IPClient
+	var err error
+
+	if n.config.Spec.Mode == nmd.MgmtMode_HOST.String() {
+		n.IPClient = nil
+		return
+	}
+
+	if n.config.Spec.NetworkMode == nmd.NetworkMode_INBAND.String() {
+		ipClient, err = ipif.NewIPClient(n, ipif.NaplesInbandInterface)
+		if err != nil {
+			log.Errorf("Failed to instantiate ipclient on inband interface. Err: %v", err)
+		}
+	} else {
+		ipClient, err = ipif.NewIPClient(n, ipif.NaplesOOBInterface)
+		if err != nil {
+			log.Errorf("Failed to instantiate ipclient on oob interface. Err: %v", err)
+		}
+	}
+	n.IPClient = ipClient
+}
+
+// CreateMockIPClient creates IPClient in Mock mode to run in venice integ environment
+func (n *NMD) CreateMockIPClient(delphiClient clientAPI.Client) {
+	n.Lock()
+	defer n.Unlock()
+	ipClient, err := ipif.NewIPClient(n, ipif.NaplesMockInterface)
+	if err != nil {
+		log.Errorf("Failed to instantiate ipclient on mock interface. Err: %v", err)
+	}
+
+	n.IPClient = ipClient
+}
+
+// GetIPClient returns the handle to the ip client
+func (n *NMD) GetIPClient() *ipif.IPClient {
+	n.Lock()
+	defer n.Unlock()
+
+	return n.IPClient
+}
+
+//PersistHALConfiguration updates feature profile
+func (n *NMD) writeDeviceFiles() (err error) {
+	mgmtIfMAC := parseMgmtIfMAC(n.config.Spec.NetworkMode)
+	if n.config.Spec.Mode == nmd.MgmtMode_HOST.String() {
+		fwdMode := device.ForwardingMode_FORWARDING_MODE_CLASSIC.String()
+		var featureProfile device.FeatureProfile
+		var profile *nmd.NaplesProfile
+		var defaultPortAdmin string
+		var ok bool
+		log.Info("Updating feature profile.")
+		// Check if the profile exists.
+		for _, p := range n.profiles {
+			if p.Name == n.config.Spec.NaplesProfile {
+				profile = p
+				ok = true
+				break
+			}
+		}
+
+		if !ok {
+			log.Errorf("could not find profile %v in nmd state, profs: %+v", n.config.Spec.NaplesProfile, n.profiles)
+			err = fmt.Errorf("could not find profile %v in nmd state", n.config.Spec.NaplesProfile)
+			return
+		}
+
+		// Interpret 16 numLifs as scale profile. TODO Remove this when nicmgr can directly read numLifs from device.conf
+		if profile.Spec.NumLifs == 16 {
+			featureProfile = device.FeatureProfile_FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE
+		} else {
+			featureProfile = device.FeatureProfile_FEATURE_PROFILE_CLASSIC_DEFAULT
+		}
+
+		if profile.Spec.DefaultPortAdmin == nmd.PortAdminState_PORT_ADMIN_STATE_DISABLE.String() {
+			defaultPortAdmin = device.PortAdminState_PORT_ADMIN_STATE_DISABLE.String()
+		} else {
+			defaultPortAdmin = device.PortAdminState_PORT_ADMIN_STATE_ENABLE.String()
+		}
+
+		err = n.PersistDeviceSpec(fwdMode, featureProfile, defaultPortAdmin, mgmtIfMAC)
+		return
+	}
+
+	err = n.PersistDeviceSpec(device.ForwardingMode_FORWARDING_MODE_HOSTPIN.String(), device.FeatureProfile_FEATURE_PROFILE_NONE, device.PortAdminState_PORT_ADMIN_STATE_ENABLE.String(), mgmtIfMAC)
+	return
+}
+
+//// UpdateMgmtIP updates the management IP
+//func (n *NMD) UpdateMgmtIP() error {
+//	log.Info("Update Mgmt IP Called.")
+//	//n.Lock()
+//	//defer n.Unlock()
+//
+//
+//	return nil
+//	//log.Infof("NaplesConfig: %v", n.config)
+//	//return n.IPClient.Update()
+//}
+
+// GetCMDSmartNICWatcherStatus returns true if the NMD CMD interface has an active watch
+func (n *NMD) GetCMDSmartNICWatcherStatus() bool {
+	return n.cmd != nil && n.cmd.IsSmartNICWatcherRunning()
+}
+
+// GetRoSmartNICWatcherStatus returns true if the NMD rollout interface has an active watch
+func (n *NMD) GetRoSmartNICWatcherStatus() bool {
+	return n.rollout != nil && n.rollout.IsSmartNICWatcherRunning()
+}
+
+// UpdateCurrentManagementMode fixes the currently active Management mode
+func (n *NMD) UpdateCurrentManagementMode() {
+	appStartConfFilePath := fmt.Sprintf("%s/app-start.conf", path.Dir(globals.NaplesModeConfigFile))
+	if appStartSpec, err := ioutil.ReadFile(appStartConfFilePath); err != nil {
+		n.config.Status.Mode = nmd.MgmtMode_HOST.String()
+	} else {
+		if string(appStartSpec) == "classic" {
+			n.config.Status.Mode = nmd.MgmtMode_HOST.String()
+		} else {
+			n.config.Status.Mode = nmd.MgmtMode_NETWORK.String()
+		}
+	}
+}
+
+// PersistDeviceSpec accepts forwarding mode and feature profile and persists this in device.conf
+func (n *NMD) PersistDeviceSpec(fwdMode string, featureProfile device.FeatureProfile, defaultPortAdmin string, mgmtIfMAC uint64) (err error) {
+	log.Infof("Setting forwarding mode to : %v", fwdMode)
+	log.Infof("Setting default port admin to : %v", defaultPortAdmin)
+	deviceSpec := device.SystemSpec{
+		FwdMode:        fwdMode,
+		FeatureProfile: featureProfile,
+		PortAdminState: defaultPortAdmin,
+		MgmtIfMac:      mgmtIfMAC,
+	}
+
+	// Create the /sysconfig/config0 if it doesn't exist. Needed for non naples nmd test environments
+	if _, err := os.Stat(globals.NaplesModeConfigFile); os.IsNotExist(err) {
+		os.MkdirAll(path.Dir(globals.NaplesModeConfigFile), 0664)
+	}
+
+	data, err := json.MarshalIndent(deviceSpec, "", "  ")
+	if err != nil {
+		log.Errorf("Failed to marshal device spec. Err: %v", err)
+		return err
+	}
+	log.Infof("Marshalled JSON is : %v ", string(data))
+
+	if err = ioutil.WriteFile(globals.NaplesModeConfigFile, data, 0664); err != nil {
+		log.Errorf("Failed to write feature profile to %s. Err: %v", globals.NaplesModeConfigFile, err)
+	}
+
+	// Update app-start.conf file. TODO Remove this workaround when all the processes are migrated to read from device.conf
+	var appStartSpec []byte
+	switch fwdMode {
+	case device.ForwardingMode_FORWARDING_MODE_HOSTPIN.String():
+		appStartSpec = []byte("hostpin")
+	default:
+		appStartSpec = []byte("classic")
+	}
+
+	log.Infof("App Start Spec is : %v", appStartSpec)
+	appStartConfFilePath := fmt.Sprintf("%s/app-start.conf", path.Dir(globals.NaplesModeConfigFile))
+	if err := ioutil.WriteFile(appStartConfFilePath, appStartSpec, 0755); err != nil {
+		log.Errorf("Failed to write app start conf. Err: %v", err)
+	}
+
+	err = BackupDeviceConfig()
+	if err != nil {
+		log.Errorf("Failed to backup device config")
+	}
+	return
+}
+
+// BackupDeviceConfig backs up the device.conf from config0 to config1
+func BackupDeviceConfig() error {
+	return copyFiles(globals.NaplesModeConfigFile, globals.NaplesModeBackupConfigFile)
+}
+
+// BackupNMDDB backs up nmd.db from config0 to config1
+func BackupNMDDB() error {
+	return copyFiles(globals.NmdDBPath, globals.NmdBackupDBPath)
+}
+
+func copyFiles(src, dst string) error {
+	_, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	input, err := ioutil.ReadFile(src)
+	if err != nil {
+		log.Errorf("Failed to read from %v. Err : %v", src, err)
+		return err
+	}
+
+	err = ioutil.WriteFile(dst, input, 0644)
+	if err != nil {
+		log.Errorf("Failed to write to %v. Err : %v", dst, err)
+		return err
+	}
+
+	return nil
+}
+
+// SetTimeZone sets the timezone of Naples
+func (n *NMD) SetTimeZone(timeZone string) {
+	n.Lock()
+	defer n.Unlock()
+
+	n.config.Status.TimeZone = timeZone
+}
+
+// GetTimeZone gets the timezone of Naples
+func (n *NMD) GetTimeZone() string {
+	n.Lock()
+	defer n.Unlock()
+
+	return n.config.Status.TimeZone
+}
+
+// GetIPConfig gets the current IPConfig
+func (n *NMD) GetIPConfig() *cluster.IPConfig {
+	return n.config.Spec.IPConfig
+}
+
+// SetIPConfig sets the IPConfig
+func (n *NMD) SetIPConfig(cfg *cluster.IPConfig) {
+	n.config.Status.IPConfig = cfg
+}
+
+// GetVeniceIPs returns the venice co-ordinates
+func (n *NMD) GetVeniceIPs() []string {
+	return n.config.Status.Controllers
+}
+
+// SetVeniceIPs sets the venice co-ordinates
+func (n *NMD) SetVeniceIPs(veniceIPs []string) {
+	n.config.Status.Controllers = veniceIPs
+}
+
+func runCmd(cmdStr string) error {
+	log.Infof("Running : " + cmdStr)
+	cmd := exec.Command("bash", "-c", cmdStr)
+	_, err := cmd.Output()
+
+	if err != nil {
+		log.Errorf("Failed Running : " + cmdStr)
+	}
+
+	return err
+}
+
+func parseMgmtIfMAC(mgmtNetwork string) (mgmtIfMAC uint64) {
+	switch mgmtNetwork {
+	case nmd.NetworkMode_INBAND.String():
+		mgmtLink, err := netlink.LinkByName("bond0")
+		if err != nil {
+			log.Errorf("Could not find system mac on interface bond0. Err: %v", err)
+			return
+		}
+		mgmtIfMAC = macToUint64(mgmtLink.Attrs().HardwareAddr)
+		return
+	case nmd.NetworkMode_OOB.String():
+		mgmtLink, err := netlink.LinkByName("oob_mnic0")
+		if err != nil {
+			log.Errorf("Could not find system mac on interface oob_mnic0. Err: %v", err)
+			return
+		}
+		mgmtIfMAC = macToUint64(mgmtLink.Attrs().HardwareAddr)
+		return
+	default:
+		return
+	}
+}
+
+func macToUint64(macAddr net.HardwareAddr) (mac uint64) {
+	b := make([]byte, 8)
+	// oui-48 format
+	if len(macAddr) == 6 {
+		// fill 0 lsb
+		copy(b[2:], macAddr)
+	}
+	mac = binary.BigEndian.Uint64(b)
+	return
 }

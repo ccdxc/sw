@@ -117,6 +117,14 @@
   version = "v2"
 
 [[projects]]
+  branch = "master"
+  digest = "1:a4c4224926f7752fb433e3b89178e670c764595a9658a69ded77f3db201dad68"
+  name = "github.com/amahagaonkar/dhcp-client"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "85c65d972859074e39cffe7e8c5e5c4ce25eabf0"
+
+[[projects]]
   digest = "1:e64acfe8cda1955db545ede8e863c54d69f1ac6cd058df4349be4040320840fd"
   name = "github.com/apache/thrift"
   packages = ["lib/go/thrift"]
@@ -1356,6 +1364,17 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:9fd7fda663881246d86516871f3099ca699459671f21666efb5b24175db90ec9"
+  name = "github.com/krolaw/dhcp4"
+  packages = [
+    ".",
+    "conn",
+  ]
+  pruneopts = "NUT"
+  revision = "7b64900047ae5e5b295b42f7e26702b1b59326e6"
+
+[[projects]]
+  branch = "master"
   digest = "1:6415011db6d5f89961c38446f3552c74749462bef94904534c55e3dda1affeb9"
   name = "github.com/lib/pq"
   packages = [
@@ -1364,6 +1383,14 @@
   ]
   pruneopts = "NUT"
   revision = "90697d60dd844d5ef6ff15135d0203f65d2f53b8"
+
+[[projects]]
+  digest = "1:8520e78cbe9878f6bf0cfdcfaed5761cd575b3568c260a1c891ac1f5c5c6a726"
+  name = "github.com/looplab/fsm"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "84b5307469f859464403f80919467950a79de1b1"
+  version = "v0.1.0"
 
 [[projects]]
   branch = "master"
@@ -2750,6 +2777,7 @@
     "github.com/GeertJohan/go.rice/embedded",
     "github.com/GeertJohan/go.rice/rice",
     "github.com/RackSec/srslog",
+    "github.com/amahagaonkar/dhcp-client",
     "github.com/appc/cni/pkg/types",
     "github.com/appc/cni/pkg/version",
     "github.com/asaskevich/govalidator",
@@ -2838,6 +2866,9 @@
     "github.com/jeromer/syslogparser/rfc3164",
     "github.com/jeromer/syslogparser/rfc5424",
     "github.com/juju/ratelimit",
+    "github.com/krolaw/dhcp4",
+    "github.com/krolaw/dhcp4/conn",
+    "github.com/looplab/fsm",
     "github.com/mdlayher/arp",
     "github.com/miekg/pkcs11",
     "github.com/minio/minio-go",

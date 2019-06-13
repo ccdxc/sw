@@ -21,7 +21,7 @@ const (
 	inbandIntf           = "bond0"
 	oobIntf              = "oob_mnic0"
 	refreshDuration      = time.Duration(time.Minute * 1)
-	arpResolutionTimeout = time.Duration(time.Millisecond * 500)
+	arpResolutionTimeout = time.Duration(time.Second * 3)
 )
 
 // CreateLateralNetAgentObjects creates the backing objects to ensure that telemetry works.

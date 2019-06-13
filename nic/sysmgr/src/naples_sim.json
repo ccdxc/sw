@@ -32,7 +32,7 @@
     "timeout": 30.0
 }, {
     "name": "nmd",
-    "command": "/naples/nic/bin/nmd -hostif lo -standalone=false -mode host",
+    "command": "/naples/nic/bin/nmd",
     "dependencies": [
         {
             "kind": "service",

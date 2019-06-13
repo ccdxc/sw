@@ -7,8 +7,17 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"net"
 	"os"
+	"path"
 	"time"
+
+	"github.com/vishvananda/netlink"
+
+	nmdstate "github.com/pensando/sw/nic/agent/nmd/state"
+	"github.com/pensando/sw/venice/utils/netutils"
+
+	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
 
 	"golang.org/x/net/context"
 	"gopkg.in/check.v1"
@@ -26,8 +35,6 @@ import (
 	tmstate "github.com/pensando/sw/nic/agent/tmagent/state"
 
 	"github.com/pensando/sw/nic/agent/nmd"
-	"github.com/pensando/sw/nic/agent/nmd/platform"
-	"github.com/pensando/sw/nic/agent/nmd/upg"
 	nmdproto "github.com/pensando/sw/nic/agent/protos/nmd"
 	tmrestapi "github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi"
 
@@ -337,41 +344,50 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 
 		tutils.CreateFruJSON(it.getNaplesMac(i))
 
-		// create a platform agent
-		pa, err := platform.NewNaplesPlatformAgent()
-		if err != nil {
-			log.Fatalf("Error creating platform agent. Err: %v", err)
-		}
-
-		// create a upgrade client
-		uc, err := upg.NewNaplesUpgradeClient(nil)
-		if err != nil {
-			log.Fatalf("Error creating Upgrade client . Err: %v", err)
-		}
-
 		// Create the new NMD
-		nmdAg, err := nmd.NewAgent(pa, uc, dbPath, snic.snicName, snic.macAddr, smartNICServerURL, restURL, "", "", integTestRevProxyURL, "network",
-			globals.NicRegIntvl*time.Second, globals.NicUpdIntvl*time.Second, it.resolverClient)
+		nmdAg, err := nmd.NewAgent(nil,
+			dbPath,
+			restURL,
+			integTestRevProxyURL,
+			globals.NicRegIntvl*time.Second, globals.NicUpdIntvl*time.Second,
+		)
 		if err != nil {
 			log.Fatalf("Error creating NMD. Err: %v", err)
 		}
 		// start NMDs rest server and
 		n := nmdAg.GetNMD()
 
-		n.CreateMockIPClient(nil)
-		// Fake IPConfig
-		ipConfig := &cluster.IPConfig{
-			IPAddress: "1.2.3.4",
+		// Switch to Managed mode
+		naplesCfg := nmdproto.Naples{
+			ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
+			TypeMeta:   api.TypeMeta{Kind: "Naples"},
+			Spec: nmdproto.NaplesSpec{
+				Mode:        nmdproto.MgmtMode_NETWORK.String(),
+				NetworkMode: nmdproto.NetworkMode_OOB.String(),
+				Controllers: []string{"localhost"},
+				ID:          "4242.4242.4242",
+				IPConfig: &pencluster.IPConfig{
+					IPAddress: "42.42.42.42/16",
+				},
+				PrimaryMAC: "4242.4242.4242",
+			},
 		}
-		cfg := n.GetNaplesConfig()
-		cfg.Spec.Controllers = []string{"localhost"}
-		cfg.Spec.NetworkMode = nmdproto.NetworkMode_INBAND.String()
-		cfg.Spec.IPConfig = ipConfig
-		cfg.Spec.MgmtVlan = 0
-		cfg.Spec.ID = snic.snicName
 
-		n.SetNaplesConfig(cfg.Spec)
-		n.IPClient.Update()
+		log.Infof("Naples config: %+v", naplesCfg)
+
+		var resp nmdstate.NaplesConfigResp
+
+		// Post the mode change config
+		f3 := func() (bool, interface{}) {
+			err = netutils.HTTPPost(n.GetNMDUrl(), &naplesCfg, &resp)
+			if err != nil {
+				log.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
+				return false, nil
+			}
+			return true, nil
+		}
+		tutils.AssertEventually(c, f3, "Failed to post the naples config")
+		time.Sleep(time.Second * 3)
 		snic.nmd = nmdAg
 	}
 
@@ -379,7 +395,6 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 	for i := 0; i < it.config.NumHosts; i++ {
 		tutils.AssertEventually(c, func() (bool, interface{}) {
 			nm := it.snics[i].nmd.GetNMD()
-
 			// validate the mode is network
 			cfg := nm.GetNaplesConfig()
 			log.Infof("NaplesConfig: %v", cfg)
@@ -935,6 +950,8 @@ func (it *veniceIntegSuite) verifyNaplesConnected(c *check.C) {
 }
 
 func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
+	os.MkdirAll(path.Dir(globals.NmdBackupDBPath), 0664)
+	createNaplesOOBInterface()
 	it.ctx, it.cancel = context.WithCancel(context.Background())
 	// logger
 	it.logger = logger
@@ -1101,6 +1118,8 @@ func (it *veniceIntegSuite) TearDownTest(c *check.C) {
 func (it *veniceIntegSuite) TearDownSuite(c *check.C) {
 	log.Infof("============================= Tearing down Setup ==========================")
 
+	deleteNaplesOOBInterfaces()
+
 	tutils.DeleteFwupdateScript(fwDir)
 	os.Setenv("PATH", originalPath)
 
@@ -1116,7 +1135,10 @@ func (it *veniceIntegSuite) TearDownSuite(c *check.C) {
 	}
 	for i, sn := range it.snics {
 		// stop nmd
-		sn.nmd.Stop()
+		if sn != nil {
+			log.Info("Stopping NMD")
+			sn.nmd.Stop()
+		}
 		dbPath := fmt.Sprintf("/tmp/nmd-%d.db", i)
 		os.Remove(dbPath)
 	}
@@ -1172,4 +1194,36 @@ func (it *veniceIntegSuite) TearDownSuite(c *check.C) {
 
 	time.Sleep(time.Millisecond * 100) // allow goroutines to cleanup and terminate gracefully
 	log.Infof("============================= TearDownSuite completed ==========================")
+}
+
+func deleteNaplesOOBInterfaces() error {
+	oobIntf, err := netlink.LinkByName(ipif.NaplesOOBInterface)
+	if err != nil {
+		log.Errorf("TearDown Failed to look up the interfaces. Err: %v", err)
+		return err
+	}
+
+	return netlink.LinkDel(oobIntf)
+}
+
+func createNaplesOOBInterface() error {
+	oobMAC, _ := net.ParseMAC("42:42:42:42:42:42")
+	dhcpClientMock := &netlink.Veth{
+		LinkAttrs: netlink.LinkAttrs{
+			Name:         ipif.NaplesOOBInterface,
+			TxQLen:       1000,
+			HardwareAddr: oobMAC,
+		},
+		PeerName: "dhcp-peer",
+	}
+
+	// Create the veth pair
+	if err := netlink.LinkAdd(dhcpClientMock); err != nil {
+		return err
+	}
+	if err := netlink.LinkSetARPOn(dhcpClientMock); err != nil {
+		return err
+	}
+
+	return netlink.LinkSetUp(dhcpClientMock)
 }

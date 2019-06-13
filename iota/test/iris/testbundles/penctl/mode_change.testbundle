@@ -18,6 +18,7 @@ testcases:
         testcase: testcases.penctl.mode_oob_static_loop
 
     -   name    : MODE_UPDATE_INB_DYNAMIC_LOOP_STRESS
+        disable : true
         testcase: testcases.penctl.mode_inb_dynamic_loop_stress
 
     -   name    : MODE_UPDATE_OOB_DYNAMIC_LOOP_STRESS

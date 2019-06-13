@@ -3,31 +3,23 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
-	"net"
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/events/recorder"
+
 	"github.com/pensando/sw/nic/agent/nmd"
-	"github.com/pensando/sw/nic/agent/nmd/api"
-	"github.com/pensando/sw/nic/agent/nmd/platform"
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
-	"github.com/pensando/sw/nic/agent/nmd/upg"
 	"github.com/pensando/sw/nic/delphi/gosdk"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
 	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/netutils"
-	"github.com/pensando/sw/venice/utils/resolver"
-	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 type service struct {
@@ -52,21 +44,13 @@ func (s *service) Name() string {
 func main() {
 	// command line flags
 	var (
-		hostIf             = flag.String("hostif", "ntrunk0", "Host facing interface")
-		primaryMAC         = flag.String("primary-mac", "", "Primary MAC address")
-		nmdDbPath          = flag.String("nmddb", globals.NmdDBPath, "NMD Database file")
-		cmdRegistrationURL = flag.String("cmdregistration", ":"+globals.CMDSmartNICRegistrationPort, "NIC Registration API server URL(s)")
-		cmdCertsURL        = flag.String("cmdcerts", ":"+globals.CMDAuthCertAPIPort, "CMD Certificates API URL(s)")
-		regInterval        = flag.Int64("reginterval", globals.NicRegIntvl, "NIC registration interval in seconds")
-		updInterval        = flag.Int64("updinterval", globals.NicUpdIntvl, "NIC update interval in seconds")
-		revProxyURL        = flag.String("rev-proxy-url", ":"+globals.AgentProxyPort, "specify Reverse Proxy Router REST URL")
-		res                = flag.String("resolver", ":"+globals.CMDResolverPort, "Resolver URL")
-		mode               = flag.String("mode", "host", "Naples mode, \"host\" or \"network\" ")
-		hostName           = flag.String("hostname", "", "Hostname of Naples Host")
-		debugflag          = flag.Bool("debug", false, "Enable debug mode")
-		logToStdoutFlag    = flag.Bool("logtostdout", false, "enable logging to stdout")
-		logToFile          = flag.String("log-to-file", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Nmd)), "Path of the log file")
-		standalone         = flag.Bool("standalone", true, "Bypass interactions with Delphi, Sysmgr and Upgmgr")
+		nmdDbPath       = flag.String("nmddb", globals.NmdDBPath, "NMD Database file")
+		regInterval     = flag.Int64("reginterval", globals.NicRegIntvl, "NIC registration interval in seconds")
+		updInterval     = flag.Int64("updinterval", globals.NicUpdIntvl, "NIC update interval in seconds")
+		debugflag       = flag.Bool("debug", false, "Enable debug mode")
+		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
+		logToFile       = flag.String("log-to-file", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Nmd)), "Path of the log file")
+		revProxyURL     = flag.String("rev-proxy-url", ":"+globals.AgentProxyPort, "specify Reverse Proxy Router REST URL")
 	)
 	flag.Parse()
 
@@ -86,11 +70,12 @@ func main() {
 			MaxAge:     7,
 		},
 	}
+	log.SetConfig(logConfig)
 
 	// Initialize logger config
 	logger := log.SetConfig(logConfig)
 
-	// create events recorder
+	//create events recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
 		Component: globals.Nmd}, logger)
 	if err != nil {
@@ -98,98 +83,35 @@ func main() {
 	}
 	defer evtsRecorder.Close()
 
-	// create a dummy channel to wait forever
-	waitCh := make(chan bool)
-
-	var macAddr net.HardwareAddr
-
-	if *primaryMAC != "" {
-		mac, err := net.ParseMAC(*primaryMAC)
-		if err != nil {
-			log.Fatalf("Invalid MAC %v", *primaryMAC)
-		}
-		macAddr = mac
-	} else {
-		// read the mac address of the host interface
-		mac, err := netutils.GetIntfMac(*hostIf)
-		if err != nil {
-			log.Fatalf("Error getting host interface's mac addr. Err: %v", err)
-		}
-		macAddr = mac
-	}
-
 	// Create the /sysconfig/config0 if it doesn't exist. Needed for non naples nmd test environments
 	if _, err := os.Stat(globals.NmdDBPath); os.IsNotExist(err) {
 		os.MkdirAll(path.Dir(globals.NmdDBPath), 0664)
-	}
-
-	// init resolver client
-	resolverClient := resolver.New(&resolver.Config{Name: "NMD", Servers: strings.Split(*res, ",")})
-
-	// If host name is not configured, use the MAC-addr of the host interface
-	host := *hostName
-	if host == "" {
-		host = macAddr.String()
-	}
-
-	// initialize netagent's tsdb client
-	opts := &tsdb.Opts{
-		ClientName:              "nmd_" + host,
-		ResolverClient:          resolverClient,
-		Collector:               globals.Collector,
-		DBName:                  "default",
-		SendInterval:            time.Duration(30) * time.Second,
-		ConnectionRetryInterval: 100 * time.Millisecond,
-	}
-	ctx, cancel := context.WithCancel(context.Background())
-	tsdb.Init(ctx, opts)
-	defer cancel()
-
-	// create a platform agent
-	pa, err := platform.NewNaplesPlatformAgent()
-	if err != nil {
-		log.Fatalf("Error creating platform agent. Err: %v", err)
+		os.MkdirAll(path.Dir(globals.NmdBackupDBPath), 0664)
 	}
 
 	var delphiClient clientAPI.Client
-	var uc api.UpgMgrAPI
+	//var uc api.UpgMgrAPI
 	var dServ *nmd.DelphiService
-	if !*standalone {
-		dServ = nmd.NewDelphiService()
-		delphiClient, err = gosdk.NewClient(dServ)
-		if err != nil {
-			log.Fatalf("Error creating delphi client . Err: %v", err)
-		}
-		dServ.DelphiClient = delphiClient
-
-		//// mount objects
-		//delphiProto.NaplesStatusMount(delphiClient, delphi.MountMode_ReadWriteMode)
-		//log.Infof("Mounting naples status rw")
-
-		// create a upgrade client
-		uc, err = upg.NewNaplesUpgradeClient(delphiClient)
-		if err != nil {
-			log.Fatalf("Error creating Upgrade client . Err: %v", err)
-		}
-		srv.sysmgrClient = sysmgr.NewClient(delphiClient, srv.Name())
-
-	} else {
-		log.Infof("Cannot Set object, delphiclient is nil")
+	//if !*standalone {
+	dServ = nmd.NewDelphiService()
+	delphiClient, err = gosdk.NewClient(dServ)
+	if err != nil {
+		log.Fatalf("Error creating delphi client . Err: %v", err)
 	}
-	// create the new NMD
-	nm, err := nmd.NewAgent(pa, uc,
+	dServ.DelphiClient = delphiClient
+
+	// mount objects
+	delphiProto.NaplesStatusMount(delphiClient, delphi.MountMode_ReadWriteMode)
+	log.Infof("Mounting naples status rw")
+
+	srv.sysmgrClient = sysmgr.NewClient(delphiClient, srv.Name())
+	nm, err := nmd.NewAgent(delphiClient,
 		*nmdDbPath,
-		host,
-		macAddr.String(),
-		*cmdRegistrationURL,
 		globals.Localhost+":"+globals.NmdRESTPort,
-		globals.Localhost+":"+globals.CMDUnauthCertAPIPort,
-		*cmdCertsURL,
 		*revProxyURL,
-		*mode,
 		time.Duration(*regInterval)*time.Second,
 		time.Duration(*updInterval)*time.Second,
-		resolverClient)
+	)
 	if err != nil {
 		log.Fatalf("Error creating NMD. Err: %v", err)
 	}
@@ -202,12 +124,10 @@ func main() {
 		nm.DelphiClient = delphiClient
 		dServ.Agent = nm
 		go delphiClient.Run()
-	} else {
-		nm.StandaloneStart()
 	}
 
 	log.Infof("%s is running {%+v}", globals.Nmd, nm)
 
 	// wait forever
-	<-waitCh
+	select {}
 }

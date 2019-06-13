@@ -3,16 +3,20 @@
 package state
 
 import (
-	"errors"
+	"encoding/json"
 	"fmt"
+	"net"
 	"time"
+
+	"github.com/pensando/sw/events/generated/eventtypes"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 
 	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/nic/agent/nmd/cmdif"
-	"github.com/pensando/sw/nic/agent/nmd/rolloutif"
+	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
+	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
 	"github.com/pensando/sw/nic/agent/protos/nmd"
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/globals"
@@ -97,56 +101,255 @@ func (n *NMD) CreateNaplesProfile(profile nmd.NaplesProfile) error {
 
 // UpdateNaplesConfig updates a local Naples Config object
 func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
-	log.Infof("NAPLES Update: Old: %v  | New: %v ", n.config, cfg)
+	oldCfg, _ := json.Marshal(n.config)
+	newCfg, _ := json.Marshal(cfg)
+	log.Infof("NAPLES Update: Old: %s", string(oldCfg))
+	log.Infof("NAPLES Update: New: %s", string(newCfg))
 
-	// Remove this once we have a way to pick up the real mac address as hostname when
-	// hostname is not passed as a parameter for mode update.
-	if cfg.Spec.Mode == cmd.SmartNICSpec_NETWORK.String() && len(cfg.Spec.ID) == 0 {
-		log.Errorf("ID cannot be empty. Cannot update NaplesConfig.")
-		return errors.New("hostname cannot be empty")
+	// Perform Mode Validations
+	switch cfg.Spec.Mode {
+	case nmd.MgmtMode_HOST.String():
+		if err := isHostModeValid(cfg.Spec); err != nil {
+			return errBadRequest(err)
+		}
+
+		// Update Spec
+		n.SetNaplesConfig(cfg.Spec)
+		if err := n.handleHostModeTransition(); err != nil {
+			return errInternalServer(err)
+		}
+
+	case nmd.MgmtMode_NETWORK.String():
+		if err := isNetworkModeValid(cfg.Spec); err != nil {
+			return errBadRequest(err)
+		}
+
+		// Check if reboot is needed after the completion of the mode switch
+		if cfg.Spec.NetworkMode != n.config.Spec.NetworkMode {
+			log.Info("Setting reboot needed flag")
+			n.rebootNeeded = true
+		} else {
+			n.rebootNeeded = false
+		}
+
+		// Update Spec
+		n.SetNaplesConfig(cfg.Spec)
+
+		if err := n.handleNetworkModeTransition(); err != nil {
+			return errInternalServer(err)
+		}
+	default:
+		log.Errorf("Invalid mode %v specified.", cfg.Spec.Mode)
+		return errBadRequest(fmt.Errorf("invalid mode %v specified", cfg.Spec.Mode))
 	}
 
-	n.SetNaplesConfig(cfg.Spec)
-	if err := n.store.Write(&n.config); err != nil {
-		log.Errorf("Failed to persist naples config to bolt db. Err:  %v", err)
+	if err := n.persistState(); err != nil {
+		return errInternalServer(err)
 	}
 
-	return n.UpdateMgmtIP()
+	return nil
 }
 
-// StartManagedMode starts the tasks required for managed mode
-func (n *NMD) StartManagedMode() error {
+func (n *NMD) persistState() (err error) {
+	// Persist BoltDB
+	log.Info("Persisting state")
+	if err = n.store.Write(&n.config); err != nil {
+		err = fmt.Errorf("failed to persist naples config. Err: %v ", err)
+		return
+	}
+
+	// Persist device files
+	if err = n.writeDeviceFiles(); err != nil {
+		err = fmt.Errorf("failed to persist device config. Err: %v ", err)
+		return
+	}
+
+	n.config.Status.Mode = n.config.Spec.Mode
+	if n.DelphiClient != nil {
+		if err = n.writeDelphiObjects(); err != nil {
+			return err
+		}
+	}
+
+	return
+}
+
+func (n *NMD) writeDelphiObjects() (err error) {
+	var mgmtIP string
+
+	var transitionPhase delphiProto.NaplesStatus_Transition
+
+	switch n.config.Status.TransitionPhase {
+	case nmd.NaplesStatus_DHCP_SENT.String():
+		transitionPhase = delphiProto.NaplesStatus_DHCP_SENT
+	case nmd.NaplesStatus_DHCP_DONE.String():
+		transitionPhase = delphiProto.NaplesStatus_DHCP_DONE
+	case nmd.NaplesStatus_DHCP_TIMEDOUT.String():
+		transitionPhase = delphiProto.NaplesStatus_DHCP_TIMEDOUT
+	case nmd.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String():
+		transitionPhase = delphiProto.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES
+	case nmd.NaplesStatus_VENICE_REGISTRATION_SENT.String():
+		transitionPhase = delphiProto.NaplesStatus_VENICE_REGISTRATION_SENT
+	case nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String():
+		transitionPhase = delphiProto.NaplesStatus_VENICE_REGISTRATION_DONE
+	case nmd.NaplesStatus_VENICE_UNREACHABLE.String():
+		transitionPhase = delphiProto.NaplesStatus_VENICE_UNREACHABLE
+	case nmd.NaplesStatus_REBOOT_PENDING.String():
+		transitionPhase = delphiProto.NaplesStatus_REBOOT_PENDING
+	default:
+		transitionPhase = 0
+	}
+
+	// For static case write only the IP in mgmt IP and not the subnet
+	if ip, _, err := net.ParseCIDR(n.config.Status.IPConfig.IPAddress); err == nil {
+		mgmtIP = ip.String()
+	} else {
+		mgmtIP = n.config.Status.IPConfig.IPAddress
+	}
+
+	// Set up appropriate mode
+	var naplesMode delphiProto.NaplesStatus_Mode
+
+	switch n.config.Spec.NetworkMode {
+	case nmd.NetworkMode_INBAND.String():
+		naplesMode = delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND
+	case nmd.NetworkMode_OOB.String():
+		naplesMode = delphiProto.NaplesStatus_NETWORK_MANAGED_OOB
+	default:
+		naplesMode = delphiProto.NaplesStatus_HOST_MANAGED
+		naplesStatus := delphiProto.NaplesStatus{
+			NaplesMode:   naplesMode,
+			ID:           n.config.Spec.ID,
+			SmartNicName: n.config.Status.SmartNicName,
+			Fru: &delphiProto.NaplesFru{
+				ManufacturingDate: n.config.Status.Fru.ManufacturingDate,
+				Manufacturer:      n.config.Status.Fru.Manufacturer,
+				ProductName:       n.config.Status.Fru.ProductName,
+				SerialNum:         n.config.Status.Fru.SerialNum,
+				PartNum:           n.config.Status.Fru.PartNum,
+				BoardId:           n.config.Status.Fru.BoardId,
+				EngChangeLevel:    n.config.Status.Fru.EngChangeLevel,
+				NumMacAddr:        n.config.Status.Fru.NumMacAddr,
+				MacStr:            n.config.Status.Fru.MacStr,
+			},
+		}
+		if err := n.DelphiClient.SetObject(&naplesStatus); err != nil {
+			log.Errorf("Error writing the naples status object in host mode. Err: %v", err)
+			return err
+		}
+	}
+
+	naplesStatus := delphiProto.NaplesStatus{
+		Controllers:     n.config.Status.Controllers,
+		NaplesMode:      naplesMode,
+		TransitionPhase: transitionPhase,
+		MgmtIP:          mgmtIP,
+		ID:              n.config.Spec.ID,
+		SmartNicName:    n.config.Status.SmartNicName,
+		Fru: &delphiProto.NaplesFru{
+			ManufacturingDate: n.config.Status.Fru.ManufacturingDate,
+			Manufacturer:      n.config.Status.Fru.Manufacturer,
+			ProductName:       n.config.Status.Fru.ProductName,
+			SerialNum:         n.config.Status.Fru.SerialNum,
+			PartNum:           n.config.Status.Fru.PartNum,
+			BoardId:           n.config.Status.Fru.BoardId,
+			EngChangeLevel:    n.config.Status.Fru.EngChangeLevel,
+			NumMacAddr:        n.config.Status.Fru.NumMacAddr,
+			MacStr:            n.config.Status.Fru.MacStr,
+		},
+	}
+
+	if err := n.DelphiClient.SetObject(&naplesStatus); err != nil {
+		log.Errorf("Error writing the naples status object in network mode. Err: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (n *NMD) handleNetworkModeTransition() error {
+	log.Info("Handling network mode transition")
+	spec := n.config.Spec
+	n.stateMachine = NewNMDStateMachine()
+	if err := n.reconcileIPClient(); err != nil {
+		return err
+	}
+
+	if spec.IPConfig != nil && len(spec.IPConfig.IPAddress) != 0 {
+		// Static IP Config. Populate the status
+		n.config.Status.Controllers = n.config.Spec.Controllers
+		if err := n.stateMachine.FSM.Event("doStatic", n); err != nil {
+			log.Errorf("Static mode transition event failed. Err: %v", err)
+			return fmt.Errorf("static mode transition event failed. Err: %v", err)
+		}
+
+	} else {
+		// Use statically passed controllers if any
+		n.config.Status.Controllers = n.config.Spec.Controllers
+		if err := n.stateMachine.FSM.Event("doDynamic", n); err != nil {
+			log.Errorf("Dynamic mode transition event failed. Err: %v", err)
+			return fmt.Errorf("dynamic mode transition event failed. Err: %v", err)
+		}
+	}
+
+	if err := n.stateMachine.FSM.Event("doNTP", n); err != nil {
+		log.Errorf("NTP Sync mode transition event failed. Err: %v", err)
+		return fmt.Errorf("NTP Sync mode transition event failed. Err: %v", err)
+	}
+
+	err := n.stateMachine.FSM.Event("doAdmission", n)
+	if err != nil {
+		log.Errorf("Naples Admission mode transition event failed. Err: %v", err)
+		return fmt.Errorf("NAPLES Admission mode transition event failed. Err: %v", err)
+	}
+
+	return nil
+}
+
+func (n *NMD) handleHostModeTransition() error {
+	log.Info("Handling host mode transition")
+	err := n.StopManagedMode()
+	if err != nil {
+		log.Errorf("Failed to stop network mode control loop. Err: %v", err)
+		return err
+	}
+	log.Info("Clearing  nw mode naples status")
+	if !n.GetRegStatus() {
+		n.config.Status.IPConfig = &cmd.IPConfig{}
+		n.config.Status.Controllers = []string{}
+		n.config.Status.TransitionPhase = ""
+		return nil
+	}
+	log.Error("Failed to stop network mode control loop")
+	return nil
+}
+
+func (n *NMD) reconcileIPClient() error {
+	var mgmtIntf string
+
+	if n.config.Spec.NetworkMode == nmd.NetworkMode_INBAND.String() {
+		mgmtIntf = ipif.NaplesInbandInterface
+	} else {
+		mgmtIntf = ipif.NaplesOOBInterface
+	}
+
+	// Check if we need to reconcile
+	if n.IPClient == nil || n.IPClient.GetIPClientIntf() != mgmtIntf {
+		ipClient, err := ipif.NewIPClient(n, mgmtIntf)
+		if err != nil {
+			log.Errorf("Failed to reconcile IPClient. Err: %v", err)
+			return fmt.Errorf("failed to reconcile IPClient. Err: %v", err)
+		}
+		n.IPClient = ipClient
+	}
+	return nil
+}
+
+// AdmitNaples performs NAPLES admission
+func (n *NMD) AdmitNaples() {
 	log.Info("Starting Managed Mode")
 
 	n.modeChange.Lock()
-	if n.cmd == nil {
-		// create the CMD client
-		cmdClient, err := cmdif.NewCmdClient(n, n.cmdRegURL, n.resolverClient)
-		if err != nil {
-			log.Errorf("Error creating CMD client. Err: %v", err)
-			n.modeChange.Unlock()
-			return err
-		}
-		log.Infof("CMD client {%+v} is running", cmdClient)
-		// CMD client sets n.cmd when it's ready
-	}
-
-	if n.rollout == nil {
-		roClient, err := rolloutif.NewRoClient(n, n.resolverClient)
-		if err != nil {
-			log.Errorf("Error creating Rollout Controller client. Err: %v", err)
-			n.modeChange.Unlock()
-			return err
-		}
-		log.Infof("Rollout client {%+v} is running", roClient)
-		n.rollout = roClient
-	}
-
-	err := n.initTLSProvider()
-	if err != nil {
-		n.modeChange.Unlock()
-		return fmt.Errorf("error initializing TLS provider: %v", err)
-	}
 
 	// Set Registration in progress flag
 	log.Infof("NIC in managed mode, mac: %v", n.config.Status.Fru.MacStr)
@@ -165,7 +368,7 @@ func (n *NMD) StartManagedMode() error {
 
 			// Clear Registration in progress flag
 			n.setRegStatus(false)
-			return nil
+			return
 
 		// Register NIC
 		case <-time.After(n.nicRegInterval):
@@ -202,9 +405,11 @@ func (n *NMD) StartManagedMode() error {
 			//    NIC updates.
 			//
 			if err != nil {
-
 				// Rule #1 - continue retry at regular interval
 				log.Errorf("Error registering nic, mac: %s err: %+v", mac, err)
+				log.Infof("Setting the transition phase to venice unreachable.")
+				fmt.Println("TEST : ", msg)
+				n.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_UNREACHABLE.String()
 			} else {
 				resp := msg.AdmissionResponse
 				if resp == nil {
@@ -218,7 +423,7 @@ func (n *NMD) StartManagedMode() error {
 					// Rule #2 - abort retry, clear registration status flag
 					log.Errorf("Invalid NIC, Admission rejected, mac: %s reason: %s", mac, resp.Reason)
 					n.setRegStatus(false)
-					return err
+					return
 
 				case cmd.SmartNICStatus_PENDING.String():
 
@@ -314,8 +519,22 @@ func (n *NMD) StartManagedMode() error {
 					n.StopReverseProxy()
 					n.StartReverseProxy()
 
-					return nil
+					// Registration is complete here. Set the status to Registration done.
+					log.Infof("Setting the transition phase to registration done")
+					n.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String()
+					nic, _ := n.GetSmartNIC()
+					recorder.Event(eventtypes.NIC_ADMITTED, fmt.Sprintf("Smart NIC %s admitted to the cluster", nic.Name), nic)
+					// Transition to reboot pending only on successful admission only if reboot has not been done.
+					if n.rebootNeeded {
+						if err := n.stateMachine.FSM.Event("rebootPending", n); err != nil {
+							log.Errorf("Reboot pending mode transition event failed. Err: %v", err)
+						}
+					}
+					if err := n.UpdateNaplesInfoFromConfig(); err != nil {
+						log.Errorf("Failed to update naples config post updation")
+					}
 
+					return
 				case cmd.SmartNICStatus_UNKNOWN.String():
 					// Not an expected response
 					log.Errorf("Unknown response, nic: %+v phase: %v", nicObj, resp)
@@ -386,6 +605,10 @@ func (n *NMD) StopManagedMode() error {
 		n.certsProxy.Stop()
 		n.certsProxy = nil
 	}
+
+	if n.resolverClient != nil {
+		n.resolverClient.Stop()
+	}
 	n.Unlock()
 
 	// stop ongoing NIC registration, if any
@@ -396,6 +619,11 @@ func (n *NMD) StopManagedMode() error {
 	// stop ongoing NIC updates, if any
 	if n.GetUpdStatus() {
 		n.stopNICUpd <- true
+	}
+
+	// cancel tsdb connection
+	if n.tsdbCancel != nil {
+		n.tsdbCancel()
 	}
 
 	// Wait for goroutines launched in managed mode
@@ -423,8 +651,8 @@ func (n *NMD) StopManagedMode() error {
 	return nil
 }
 
-// StartClassicMode start the tasks required for classic mode
-func (n *NMD) StartClassicMode() error {
+// StartNMDRestServer start the tasks required for classic mode
+func (n *NMD) StartNMDRestServer() error {
 	log.Infof("Starting Classic Mode.")
 	if !n.GetRestServerStatus() {
 		// Start RestServer
@@ -444,12 +672,12 @@ func (n *NMD) StopClassicMode(shutdown bool) error {
 
 // GetPlatformCertificate returns the certificate containing the NIC identity and public key
 func (n *NMD) GetPlatformCertificate(nic *cmd.SmartNIC) ([]byte, error) {
-	return n.platform.GetPlatformCertificate(nic)
+	return n.Platform.GetPlatformCertificate(nic)
 }
 
 // GenChallengeResponse returns the response to a challenge issued by CMD to authenticate this NAPLES
 func (n *NMD) GenChallengeResponse(nic *cmd.SmartNIC, challenge []byte) ([]byte, []byte, error) {
-	signer, err := n.platform.GetPlatformSigner(nic)
+	signer, err := n.Platform.GetPlatformSigner(nic)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error getting platform signer: %v", err)
 	}

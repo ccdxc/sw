@@ -15,8 +15,9 @@ def Trigger(tc):
 
         for i in range(0, 50):
             ret = common.SetNaplesModeOOB_Static(n, "1.1.1.1", "2.2.2.2/24")
+            mode = common.PenctlGetTransitionPhaseStatus(n)
 
-            if ret == None:
+            if mode != "VENICE_UNREACHABLE":
                 return api.types.status.FAILURE
 
     return api.types.status.SUCCESS

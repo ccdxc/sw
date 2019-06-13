@@ -118,7 +118,7 @@ func (n *NMD) issueNextPendingOp() {
 	switch n.ro.Status.InProgressOp.Op {
 	case protos.SmartNICOp_SmartNICDisruptiveUpgrade:
 		//TODO set the right downloaded image name
-		err = n.upgmgr.StartDisruptiveUpgrade("naples_fw.tar")
+		err = n.Upgmgr.StartDisruptiveUpgrade("naples_fw.tar")
 
 		if err != nil {
 			log.Errorf("StartDisruptiveUpgrade returned %s", err)
@@ -126,7 +126,7 @@ func (n *NMD) issueNextPendingOp() {
 		}
 	case protos.SmartNICOp_SmartNICUpgOnNextHostReboot:
 		//TODO set the right downloaded image name
-		err = n.upgmgr.StartUpgOnNextHostReboot("naples_fw.tar")
+		err = n.Upgmgr.StartUpgOnNextHostReboot("naples_fw.tar")
 		if err != nil {
 			log.Errorf("StartDisruptiveUpgrade returned %s", err)
 			return
@@ -140,7 +140,7 @@ func (n *NMD) issueNextPendingOp() {
 		if err != nil {
 			log.Errorf("Failed to download naples image from objectstore %+v", err)
 		}
-		err = n.upgmgr.StartPreCheckDisruptive(n.ro.Status.InProgressOp.Version)
+		err = n.Upgmgr.StartPreCheckDisruptive(n.ro.Status.InProgressOp.Version)
 		if err != nil {
 			log.Errorf("Precheck returned %s", err)
 			return

@@ -111,7 +111,7 @@ var _ = BeforeSuite(func() {
 			// Switch to managed mode
 			naples.Spec.Mode = nmd.MgmtMode_NETWORK.String()
 			naples.Spec.Controllers = []string{ts.tu.ClusterVIP}
-			naples.Spec.NetworkMode = nmd.NetworkMode_INBAND.String()
+			naples.Spec.NetworkMode = nmd.NetworkMode_OOB.String()
 			// Ensure that a random static IP is given
 			naples.Spec.IPConfig = &cluster.IPConfig{
 				IPAddress: agIP.String() + "/32",

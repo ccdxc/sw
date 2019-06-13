@@ -36,6 +36,7 @@ def Main(step):
             #hack for now, need to set date
             api.Logger.info("Checking Tranisition phase for node : %s" % n)
             check_state_cmd = "show naples --json"
+            time.sleep(30)
             common.AddPenctlCommand(req, n, check_state_cmd)
             resp = api.Trigger(req)
             cmd = resp.commands[0]
@@ -47,7 +48,7 @@ def Main(step):
             except:
                 api.Logger.error("Penctl output not in Json format {}".format(cmd.stdout))
                 return api.types.status.FAILURE
-            if out["status"]["transition-phase"] == "REBOOT_PENDING":
+            if out["status"]["transition-phase"] == "VENICE_UNREACHABLE":
                 api.Logger.info("Reboot pending on node : %s" % n)
                 reboot_nodes.append(n)
                 nodes.remove(n)

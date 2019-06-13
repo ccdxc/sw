@@ -124,6 +124,22 @@ func (ag *mockAgent) GenChallengeResponse(nic *cmd.SmartNIC, challenge []byte) (
 	return nil, nil, nil
 }
 
+func (ag *mockAgent) GetIPConfig() *cmd.IPConfig {
+	return nil
+}
+
+func (ag *mockAgent) SetIPConfig(cfg *cmd.IPConfig) {
+	return
+}
+
+func (ag *mockAgent) GetVeniceIPs() []string {
+	return []string{"1.1.1.1"}
+}
+
+func (ag *mockAgent) SetVeniceIPs(veniceIPs []string) {
+	return
+}
+
 type mockRPCServer struct {
 	grpcServer *rpckit.RPCServer
 	nicdb      map[string]*cmd.SmartNIC

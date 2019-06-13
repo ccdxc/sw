@@ -3,17 +3,23 @@
 package state
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/events/generated/eventtypes"
+	"github.com/pensando/sw/nic/agent/nmd/cmdif"
+	"github.com/pensando/sw/nic/agent/nmd/rolloutif"
 	nmd "github.com/pensando/sw/nic/agent/protos/nmd"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // RegisterSmartNICReq registers a NIC with CMD
@@ -132,18 +138,70 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 					n.config.Status.Mode = nmd.MgmtMode_HOST.String()
 					n.config.Status.AdmissionPhase = cmd.SmartNICStatus_DECOMMISSIONED.String()
 					n.config.Status.AdmissionPhaseReason = "SmartNIC management mode changed to HOST"
-					err = n.StartClassicMode()
+					err = n.StartNMDRestServer()
 					if err != nil {
 						log.Errorf("Error starting NIC managed mode: %v", err)
+					}
+					if err := n.handleHostModeTransition(); err != nil {
+						log.Errorf("Failed to revert to host managed mode during decommissioning")
 					}
 				} else {
-					// NIC has been de-admitted by user. Cleanup and restart managed mode.
-					// This will stop health updates and start registration attempts.
+					// Re-init admission. TODO move this as native fsm state
 					log.Infof("SmartNIC %s has been de-admitted from cluster", nic.ObjectMeta.Name)
-					err = n.StartManagedMode()
-					if err != nil {
-						log.Errorf("Error starting NIC managed mode: %v", err)
+					// Update CMD Client with the new resolvers obtained statically
+					veniceIPs := n.config.Status.Controllers
+					if len(veniceIPs) == 0 {
+						log.Error("Missing venice co-ordinates")
 					}
+					var resolverURLs []string
+					registrationURL := fmt.Sprintf("%s:%s", veniceIPs[0], globals.CMDSmartNICRegistrationPort)
+					for _, v := range veniceIPs {
+						resolverURLs = append(resolverURLs, fmt.Sprintf("%s:%s", v, globals.CMDGRPCAuthPort))
+					}
+					// Update NMD's resolver client.
+					n.resolverClient = resolver.New(&resolver.Config{
+						Name:    fmt.Sprintf("%s-%s", globals.Nmd, n.GetAgentID()),
+						Servers: resolverURLs,
+					})
+
+					// Pick the first resolver URL for remote certs
+					n.remoteCertsURL = fmt.Sprintf("%s:%s", veniceIPs[0], globals.CMDAuthCertAPIPort)
+
+					// Init TSDB
+					// initialize netagent's tsdb client
+					opts := &tsdb.Opts{
+						ClientName:              "nmd_" + n.GetAgentID(),
+						ResolverClient:          n.resolverClient,
+						Collector:               globals.Collector,
+						DBName:                  "default",
+						SendInterval:            time.Duration(30) * time.Second,
+						ConnectionRetryInterval: 100 * time.Millisecond,
+					}
+					ctx, cancel := context.WithCancel(context.Background())
+					tsdb.Init(ctx, opts)
+					n.tsdbCancel = cancel
+					cmdAPI, err := cmdif.NewCmdClient(n, registrationURL, n.resolverClient)
+					if err != nil {
+						log.Errorf("Failed to instantiate CMD Client. Err: %v", err)
+					}
+					roClient, err := rolloutif.NewRoClient(n, n.resolverClient)
+					if err != nil {
+						log.Errorf("Failed to instantiate Rollout Client. Err: %v", err)
+					}
+
+					n.modeChange.Lock()
+
+					n.cmd = cmdAPI
+					n.rollout = roClient
+
+					err = n.initTLSProvider()
+					if err != nil {
+						log.Errorf("Error initializing TLS provider: %v", err)
+						return
+					}
+					n.modeChange.Unlock()
+
+					go n.AdmitNaples()
 				}
 			}()
 		}
