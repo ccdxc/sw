@@ -15,7 +15,10 @@ tx_from_host_4to6:
     seq             c1, k.rewrite_metadata_flags[TX_REWRITE_SRC_IP_BITS], \
                         TX_REWRITE_SRC_IP_FROM_46
     nop.!c1.e
-    phvwr.c1        p.ipv4_1_valid, FALSE
+    seq             c1, k.ctag_1_valid, TRUE
+    phvwr.c1        p.ctag_1_etherType, ETHERTYPE_IPV6
+    phvwr.!c1       p.ethernet_1_etherType, ETHERTYPE_IPV6
+    phvwr           p.ipv4_1_valid, FALSE
     phvwr           p.ipv6_1_valid, TRUE
     add             r1, 6, k.ipv4_1_diffserv, 4
     phvwr           p.{ipv6_1_version,ipv6_1_trafficClass}, r1
@@ -35,7 +38,10 @@ rx_from_switch_6to4:
     seq             c1, k.rewrite_metadata_flags[RX_REWRITE_SRC_IP_BITS], \
                         RX_REWRITE_SRC_IP_FROM_64
     nop.!c1.e
-    phvwr.c1        p.ipv6_1_valid, FALSE
+    seq             c1, k.ctag_1_valid, TRUE
+    phvwr.c1        p.ctag_1_etherType, ETHERTYPE_IPV4
+    phvwr.!c1       p.ethernet_1_etherType, ETHERTYPE_IPV4
+    phvwr           p.ipv6_1_valid, FALSE
     phvwr           p.ipv4_1_valid, TRUE
     phvwr           p.{ipv4_1_version,ipv4_1_ihl}, 0x45
     add             r1, k.ipv6_1_payloadLen, 20

@@ -117,7 +117,7 @@ action nexthop_info(port, vni, ip_type, dipo, dmaco, dmaci) {
     }
 }
 
-@pragma stage 2
+@pragma stage 3
 @pragma hbm_table
 @pragma index_table
 table nexthop {

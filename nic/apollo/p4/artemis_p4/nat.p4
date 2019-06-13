@@ -99,6 +99,11 @@ table nat {
 action local_46_info(prefix) {
     if (control_metadata.direction == TX_FROM_HOST) {
         if (TX_REWRITE(rewrite_metadata.flags, SRC_IP, FROM_46)) {
+            if (ctag_1.valid == TRUE) {
+                modify_field(ctag_1.etherType, ETHERTYPE_IPV6);
+            } else {
+                modify_field(ethernet_1.etherType, ETHERTYPE_IPV6);
+            }
             remove_header(ipv4_1);
             add_header(ipv6_1);
             modify_field(ipv6_1.version, 6);
@@ -111,6 +116,11 @@ action local_46_info(prefix) {
         }
     } else {
         if (RX_REWRITE(rewrite_metadata.flags, SRC_IP, FROM_64)) {
+            if (ctag_1.valid == TRUE) {
+                modify_field(ctag_1.etherType, ETHERTYPE_IPV4);
+            } else {
+                modify_field(ethernet_1.etherType, ETHERTYPE_IPV4);
+            }
             remove_header(ipv6_1);
             add_header(ipv4_1);
             modify_field(ipv4_1.version, 4);
@@ -125,7 +135,7 @@ action local_46_info(prefix) {
     }
 }
 
-@pragma stage 1
+@pragma stage 2
 @pragma_index_table
 table local_46_mapping {
     reads {
