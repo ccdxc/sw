@@ -83,6 +83,9 @@ struct lif *get_netdev_ionic_lif(struct net_device *netdev,
 /* (BSD) get linuxkpi device from lif instead of ifnet */
 struct device *ionic_api_get_device(struct lif *lif);
 
+/* (BSD) stay registered through vnet changes */
+bool ionic_api_stay_registered(struct lif *lif);
+
 /** ionic_api_get_debugfs - Get the debugfs dir (if any) for the lif.
  * @lif:		Handle to lif.
  *

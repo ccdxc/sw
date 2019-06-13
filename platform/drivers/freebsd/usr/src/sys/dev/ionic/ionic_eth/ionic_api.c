@@ -60,6 +60,12 @@ struct device *ionic_api_get_device(struct lif *lif)
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_device);
 
+bool ionic_api_stay_registered(struct lif *lif)
+{
+	return lif->stay_registered;
+}
+EXPORT_SYMBOL_GPL(ionic_api_stay_registered);
+
 struct sysctl_oid *ionic_api_get_debugfs(struct lif *lif)
 {
 	return lif->sysctl_ifnet;

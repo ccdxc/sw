@@ -320,6 +320,7 @@ struct lif {
 	unsigned long *dbid_inuse;
 	unsigned int dbid_count;
 
+	bool stay_registered;
 	void *api_private;	/* For RoCE */
 	void (*api_reset_cb)(void *api_private);
 

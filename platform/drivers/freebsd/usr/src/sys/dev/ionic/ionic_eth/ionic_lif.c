@@ -1933,6 +1933,7 @@ ionic_lif_free(struct lif *lif)
 	/* Cleanup from stack. */
 	ifmedia_removeall(&lif->media);
 
+	lif->stay_registered = false;
 	if (lif->netdev && if_getifaddr(lif->netdev))
 		ether_ifdetach(lif->netdev);
 	/* destroy deferred contexts */
@@ -3420,6 +3421,7 @@ ionic_lif_register(struct lif *lif)
 	/* Initializes ifnet */
 	ionic_lif_ifnet_init(lif);
 
+	lif->stay_registered = true;
 	ether_ifattach(ifp, lif->dev_addr);
 
 	ionic_lif_set_netdev_info(lif);

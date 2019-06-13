@@ -6960,6 +6960,9 @@ static void ionic_netdev_work(struct work_struct *ws)
 	case NETDEV_REGISTER:
 		if (dev) {
 			netdev_dbg(ndev, "already registered\n");
+			if (ndev != dev->ndev)
+				netdev_err(ndev, "already registered with different ndev: have %p event for %p\n",
+					   dev->ndev, ndev);
 			break;
 		}
 
@@ -6986,6 +6989,11 @@ static void ionic_netdev_work(struct work_struct *ws)
 	case NETDEV_UNREGISTER:
 		if (!dev) {
 			netdev_dbg(ndev, "not registered\n");
+			break;
+		}
+
+		if (ionic_api_stay_registered(work->lif)) {
+			netdev_dbg(ndev, "stay registered\n");
 			break;
 		}
 
@@ -7085,12 +7093,20 @@ static struct notifier_block ionic_netdev_notifier = {
 
 static void ionic_netdev_discover(void)
 {
+	VNET_ITERATOR_DECL(vnet);
 	struct net_device *ndev;
 
-	IFNET_RLOCK();
-	TAILQ_FOREACH(ndev, &ifnet, if_link)
-		ionic_netdev_event(&ionic_netdev_notifier, NETDEV_REGISTER, ndev);
-	IFNET_RUNLOCK();
+	VNET_LIST_RLOCK();
+	VNET_FOREACH(vnet) {
+		IFNET_RLOCK();
+		CURVNET_SET_QUIET(vnet);
+		TAILQ_FOREACH(ndev, &V_ifnet, if_link)
+			ionic_netdev_event(&ionic_netdev_notifier,
+					   NETDEV_REGISTER, ndev);
+		CURVNET_RESTORE();
+		IFNET_RUNLOCK();
+	}
+	VNET_LIST_RUNLOCK();
 }
 
 void ionic_ibdev_reset(struct ionic_ibdev *dev)
