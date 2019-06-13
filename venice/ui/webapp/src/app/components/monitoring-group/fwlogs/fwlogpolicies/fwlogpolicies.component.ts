@@ -20,7 +20,9 @@ import { TableCol } from '@app/components/shared/tableviewedit';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwlogPolicy, MonitoringFwlogPolicy> implements OnInit {
+export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwlogPolicy, MonitoringFwlogPolicy> implements OnInit, DoCheck {
+  public static MAX_TARGETS_PER_POLICY = 2;
+  public static MAX_TOTAL_TARGETS = 8;
   @ViewChild('policiesTable') policytable: Table;
   subscriptions = [];
 
@@ -28,6 +30,7 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
   disableTableWhenRowExpanded = true;
 
   dataObjects: ReadonlyArray<MonitoringFwlogPolicy> = [];
+  maxNewTargets: number = FwlogpoliciesComponent.MAX_TARGETS_PER_POLICY;
 
   fwlogPoliciesEventUtility: HttpEventUtility<MonitoringFwlogPolicy>;
 
@@ -52,6 +55,8 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
     { field: 'spec.filter', header: 'Exports', class: 'fwlogpolicies-column-filter', sortable: false, width: 35 },
     { field: 'spec.targets', header: 'Targets', class: 'fwlogpolicies-column-targets', sortable: false, width: 35 },
   ];
+  arrayDiffers: IterableDiffer<any>;
+
 
   exportFilename: string = 'Venice-fwlog-policies';
 
@@ -59,12 +64,23 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
     protected uiconfigsService: UIConfigsService,
     protected cdr: ChangeDetectorRef,
     protected monitoringService: MonitoringService,
+    protected _iterableDiffers: IterableDiffers
   ) {
     super(controllerService, cdr);
+    this.arrayDiffers = _iterableDiffers.find([]).create(HttpEventUtility.trackBy);
   }
 
   postNgInit() {
     this.getFwlogPolicies();
+    this.maxNewTargets = this.computeTargets();
+
+  }
+
+  ngDoCheck() {
+    const changes = this.arrayDiffers.diff(this.dataObjects);
+    if (changes) {
+      this.maxNewTargets = this.computeTargets();
+    }
   }
 
   getClassName(): string {
@@ -77,7 +93,8 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
       buttons = [{
         cssClass: 'global-button-primary fwlogpolicies-button fwlogpolicies-button-ADD',
         text: 'ADD FIREWALL LOG POLICY',
-        computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
+        genTooltip: () => this.getTooltip(),
+        computeClass: () => this.shouldEnableButtons && this.maxNewTargets > 0 ? '' : 'global-button-disabled',
         callback: () => { this.createNewObject(); }
       }];
     }
@@ -87,6 +104,9 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
       { label: 'Firewall Log Policies', url: Utility.getBaseUIUrl() + 'monitoring/fwlogs/fwlogpolicies' }
       ]
     });
+  }
+  getTooltip(): string {
+    return this.maxNewTargets === 0 ? 'Cannot exceed 8 total targets across firewall log policies' : '';
   }
 
   getFwlogPolicies() {
@@ -123,6 +143,17 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
 
   generateDeleteSuccessMsg(object: MonitoringFwlogPolicy) {
     return 'Deleted firewall log policy ' + object.meta.name;
+  }
+
+  computeTargets(): number {
+    let totaltargets: number = 0;
+    for (const policy of this.dataObjects) {
+      if (policy.spec.targets !== null) {
+        totaltargets += policy.spec.targets.length;
+      }
+    }
+    const remainder = FwlogpoliciesComponent.MAX_TOTAL_TARGETS - totaltargets;
+    return Math.min(remainder, FwlogpoliciesComponent.MAX_TARGETS_PER_POLICY);
   }
 
 }

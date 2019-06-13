@@ -21,7 +21,8 @@
 </ng-template>
 
 <ng-template #createTemplate>
-  <app-newfwlogpolicy [@slideInOut] (formClose)="creationFormClose()" fxFlex="none">
+  <app-newfwlogpolicy [@slideInOut] (formClose)="creationFormClose()" [maxTargets]="maxNewTargets"
+                      fxFlex="none">
   </app-newfwlogpolicy>
 </ng-template>
 

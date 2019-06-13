@@ -20,7 +20,7 @@
             <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start">
               <div fxFlex="55px" fxLayout="column" fxLayoutAlign="start end"
                    class="syslog-fieldtitle syslog-and">
-                <span fxFlex="nogrow" *ngIf="first && targets.length < maxTargets"
+                <span fxFlex="nogrow" *ngIf="first && maxTargets > targets.length"
                       (click)="addTarget()">+ ADD</span>
                 <mat-icon fxFlex="nogrow" [style.color]="'#767676'"
                           *ngIf="controlAsFormArray(syslogServerForm.get(['targets'])).length > 1"

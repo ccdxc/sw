@@ -30,6 +30,7 @@ export class NewfwlogpolicyComponent extends BaseComponent implements OnInit, Af
 
   @Input() isInline: boolean = false;
   @Input() policyData: IMonitoringFwlogPolicy;
+  @Input() maxTargets: number;
   @Output() formClose: EventEmitter<any> = new EventEmitter();
 
   filterOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringFwlogPolicySpec.propInfo['filter'].enum, [NewfwlogpolicyComponent.LOGOPTIONS_NONE]);
