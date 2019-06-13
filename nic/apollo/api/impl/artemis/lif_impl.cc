@@ -12,7 +12,8 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
-// #include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
+#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
+#include "nic/apollo/p4/include/artemis_defines.h"
 #include "gen/p4gen/artemis/include/p4pd.h"
 
 namespace api {
@@ -47,7 +48,6 @@ lif_impl::lif_impl(pds_lif_spec_t *spec) {
 #define lif_egress_rl_params       action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params
 sdk_ret_t
 lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
-#if 0
     sdk_ret_t ret;
     tx_table_s5_t4_lif_rate_limiter_table_actiondata_t rlimit_data = { 0 };
     uint64_t refresh_interval_us = SDK_DEFAULT_POLICER_REFRESH_INTERVAL;
@@ -81,7 +81,6 @@ lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
                       lif_id, ret);
         return ret;
     }
-#endif
     return SDK_RET_OK;
 }
 
@@ -89,7 +88,6 @@ lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
 sdk_ret_t
 lif_impl::program_filters(lif_info_t *lif_params) {
     sdk_ret_t ret = SDK_RET_OK;
-#if 0
     nacl_swkey_t key = { 0 };
     nacl_swkey_mask_t mask = { 0 };
     nacl_actiondata_t data =  { 0 };
@@ -99,10 +97,10 @@ lif_impl::program_filters(lif_info_t *lif_params) {
     key.capri_intrinsic_lif = key_;
     mask.capri_intrinsic_lif_mask = 0xFFFF;
     data.action_id = NACL_NACL_REDIRECT_ID;
-    data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
+    data.nacl_redirect_action.pipe_id = PIPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport =
         g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);;
-    ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
+    ret = artemis_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NACL entry for mnic lif %u -> "
                       "uplink 0x%x, err %u", key_, pinned_if_idx_, ret);
@@ -118,16 +116,15 @@ lif_impl::program_filters(lif_info_t *lif_params) {
         sdk::lib::catalog::ifindex_to_logical_port(pinned_if_idx_);
     mask.capri_intrinsic_lif_mask = 0xFFFF;
     data.action_id = NACL_NACL_REDIRECT_ID;
-    data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
+    data.nacl_redirect_action.pipe_id = PIPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport = TM_PORT_DMA;
     data.nacl_redirect_action.lif = key_;
     data.nacl_redirect_action.vlan_strip = lif_params->vlan_strip_en;
-    ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
+    ret = artemis_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NACL entry for uplink %u -> mnic "
                       "lif %u, err %u", pinned_if_idx_, key_, ret);
     }
-#endif
     return ret;
 }
 
