@@ -1083,6 +1083,9 @@ pds_agent_vpc_api_spec_fill (pds_vpc_spec_t *api_spec,
     ippfx_proto_spec_to_api_spec(&api_spec->v6_pfx, proto_spec.v6prefix());
     ippfx_proto_spec_to_api_spec(&api_spec->nat46_prefix, proto_spec.nat46prefix());
     api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
+    MAC_UINT64_TO_ADDR(api_spec->vr_mac, proto_spec.virtualroutermac());
+    api_spec->v4_route_table.id = proto_spec.v4routetableid();
+    api_spec->v6_route_table.id = proto_spec.v6routetableid();
 }
 
 // Populate proto buf spec from vpc API spec
@@ -1100,6 +1103,9 @@ vpc_api_spec_to_proto_spec (pds::VPCSpec *proto_spec,
     ippfx_api_spec_to_proto_spec(proto_spec->mutable_v6prefix(), &api_spec->v6_pfx);
     ippfx_api_spec_to_proto_spec(proto_spec->mutable_nat46prefix(), &api_spec->nat46_prefix);
     pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(), &api_spec->fabric_encap);
+    proto_spec->set_virtualroutermac(MAC_TO_UINT64(api_spec->vr_mac));
+    proto_spec->set_v4routetableid(api_spec->v4_route_table.id);
+    proto_spec->set_v6routetableid(api_spec->v6_route_table.id);
 }
 
 // Populate proto buf status from vpc API status

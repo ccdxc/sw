@@ -14,6 +14,7 @@ MODULE_FLAGS         = -DTEST_GRPC_APP
 MODULE_EXCLUDE_FLAGS = -O2
 MODULE_SRCS          = $(wildcard ${MODULE_SRC_DIR}/*.cc) \
                        ${TOPDIR}/nic/apollo/test/scale/test.cc \
+                       ${TOPDIR}/nic/apollo/test/scale/api_grpc.cc \
                        $(wildcard ${BLD_PROTOGEN_DIR}/*.cc) \
                        $(wildcard ${BLD_PROTOGEN_DIR}/meta/*.cc) \
                        $(wildcard ${BLD_PROTOGEN_DIR}/types/*.cc)

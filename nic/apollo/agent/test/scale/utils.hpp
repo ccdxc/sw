@@ -243,20 +243,8 @@ populate_vpc_request (VPCRequest *req, pds_vpc_spec_t *vpc)
     if (!vpc || !req) {
         return;
     }
-
     VPCSpec *spec = req->add_request();
-    ipv4_pfx_to_spec(spec->mutable_v4prefix(), &vpc->v4_pfx);
-    ip_pfx_to_spec(spec->mutable_v6prefix(), &vpc->v6_pfx);
-    spec->set_id(vpc->key.id);
-    pds_encap_to_proto_encap(spec->mutable_fabricencap(),
-                             &vpc->fabric_encap);
-    if (vpc->type == PDS_VPC_TYPE_TENANT) {
-        spec->set_type(pds::VPC_TYPE_TENANT);
-    } else if (vpc->type == PDS_VPC_TYPE_SUBSTRATE) {
-        spec->set_type(pds::VPC_TYPE_SUBSTRATE);
-    }
-    ip_pfx_to_spec(spec->mutable_nat46prefix(), &vpc->nat46_prefix);
-
+    vpc_api_spec_to_proto_spec(spec, vpc);
     return;
 }
 

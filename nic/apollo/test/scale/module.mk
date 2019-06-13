@@ -17,4 +17,7 @@ MODULE_LDLIBS   =  ${NIC_COMMON_LDLIBS} \
 MODULE_INCS     = ${MODULE_GEN_DIR} ${NIC_CSR_INCS}
 MODULE_FLAGS    = ${NIC_CSR_FLAGS}
 MODULE_DEFS     = -DCAPRI_SW ${NIC_CSR_DEFINES}
+MODULE_SRCS     = ${MODULE_SRC_DIR}/main.cc \
+                  ${MODULE_SRC_DIR}/test.cc \
+                  ${MODULE_SRC_DIR}/api_pds.cc
 include ${MKDEFS}/post.mk

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <math.h>
 #include "nic/apollo/test/scale/test.hpp"
+#include "nic/apollo/test/scale/api.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
@@ -19,11 +20,6 @@
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
 #include "nic/apollo/test/scale/test_common.hpp"
-#ifdef TEST_GRPC_APP
-#include "nic/apollo/agent/test/scale/app.hpp"
-#else
-#include "nic/apollo/test/flow_test/flow_test.hpp"
-#endif
 
 #define VNID_BASE                      1000
 
@@ -32,11 +28,7 @@ using std::string;
 extern char *g_input_cfg_file;
 extern std::string g_pipeline;
 pds_device_spec_t g_device = {0};
-static int g_epoch = 1;
 test_params_t g_test_params;
-#ifndef TEST_GRPC_APP
-flow_test *g_flow_test_obj;
-#endif
 
 #define PDS_SUBNET_ID(vpc_num, num_subnets_per_vpc, subnet_num)    \
             (((vpc_num) * (num_subnets_per_vpc)) + subnet_num)
@@ -89,40 +81,11 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
             }
         }
 
-#ifdef TEST_GRPC_APP
-        rv = create_route_table_grpc(&v6route_table);
+        rv = create_route_table(&v6route_table);
         if (rv != SDK_RET_OK) {
             return rv;
         }
-        // Batching: push leftover objects
-        rv = create_route_table_grpc(NULL);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
-        rv = batch_commit_grpc();
-        if (rv != SDK_RET_OK) {
-            printf("%s: Batch commit failed!\n", __FUNCTION__);
-            return SDK_RET_ERR;
-        }
-        rv = batch_start_grpc(g_epoch++);
-        if (rv != SDK_RET_OK) {
-            printf("%s: Batch start failed!\n", __FUNCTION__);
-            return SDK_RET_ERR;
-        }
-#else
-        rv = pds_route_table_create(&v6route_table);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
-#endif
     }
-#ifdef TEST_GRPC_APP
-    // Batching: push leftover objects
-    rv = create_route_table_grpc(NULL);
-    if (rv != SDK_RET_OK) {
-        return rv;
-    }
-#endif
 
     return rv;
 }
@@ -171,32 +134,10 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 }
             }
         }
-#ifdef TEST_GRPC_APP
-        rv = create_route_table_grpc(&route_table);
+        rv = create_route_table(&route_table);
         if (rv != SDK_RET_OK) {
             return rv;
         }
-        // Batching: push leftover objects
-        rv = create_route_table_grpc(NULL);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
-        rv = batch_commit_grpc();
-        if (rv != SDK_RET_OK) {
-            printf("%s: Batch commit failed!\n", __FUNCTION__);
-            return SDK_RET_ERR;
-        }
-        rv = batch_start_grpc(g_epoch++);
-        if (rv != SDK_RET_OK) {
-            printf("%s: Batch start failed!\n", __FUNCTION__);
-            return SDK_RET_ERR;
-        }
-#else
-        rv = pds_route_table_create(&route_table);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
-#endif
     }
 
     if (g_test_params.dual_stack) {
@@ -239,19 +180,11 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
                     svc_mapping.backend_provider_ip.addr.v4_addr =
                         v4_provider_pfx->addr.addr.v4_addr + ip_offset;
                     ip_offset++;
-#ifdef TEST_GRPC_APP
-                    rv = create_svc_mapping_grpc(&svc_mapping);
+                    rv = create_svc_mapping(&svc_mapping);
                     if (rv != SDK_RET_OK) {
                         SDK_ASSERT(0);
                         return rv;
                     }
-#else
-                    rv = pds_svc_mapping_create(&svc_mapping);
-                    if (rv != SDK_RET_OK) {
-                        SDK_ASSERT(0);
-                        return rv;
-                    }
-#endif
                     if (g_test_params.dual_stack) {
                         svc_v6_mapping = svc_mapping;
                         svc_v6_mapping.key.vip.af = IP_AF_IPV6;
@@ -270,32 +203,22 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
                             v6_provider_pfx->addr.addr.v6_addr;
                         CONVERT_TO_V4_MAPPED_V6_ADDRESS(svc_v6_mapping.backend_provider_ip.addr.v6_addr,
                                                         svc_mapping.backend_provider_ip.addr.v4_addr);
-#ifdef TEST_GRPC_APP
-                        rv = create_svc_mapping_grpc(&svc_v6_mapping);
+                        rv = create_svc_mapping(&svc_v6_mapping);
                         if (rv != SDK_RET_OK) {
                             SDK_ASSERT(0);
                             return rv;
                         }
-#else
-                        rv = pds_svc_mapping_create(&svc_v6_mapping);
-                        if (rv != SDK_RET_OK) {
-                            SDK_ASSERT(0);
-                            return rv;
-                        }
-#endif
                     }
                 }
             }
         }
     }
-#ifdef TEST_GRPC_APP
     // push leftover objects
-    rv = create_svc_mapping_grpc(NULL);
+    rv = create_svc_mapping(NULL);
     if (rv != SDK_RET_OK) {
         SDK_ASSERT(0);
         return rv;
     }
-#endif
     return rv;
 }
 
@@ -372,20 +295,13 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                         pds_local_mapping.svc_tag = svc_tag++;
                     }
                     ip_offset++;
-#ifdef TEST_GRPC_APP
-                    rv = create_local_mapping_grpc(&pds_local_mapping);
+
+                    rv = create_local_mapping(&pds_local_mapping);
                     if (rv != SDK_RET_OK) {
                         SDK_ASSERT(0);
                         return rv;
                     }
-#else
-                    rv = pds_local_mapping_create(&pds_local_mapping);
-                    if (rv != SDK_RET_OK) {
-                        SDK_ASSERT(0);
-                        return rv;
-                    }
-                    g_flow_test_obj->add_local_ep(&pds_local_mapping);
-#endif
+
                     if (g_test_params.dual_stack) {
                         // V6 mapping
                         pds_local_v6_mapping = pds_local_mapping;
@@ -414,34 +330,24 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                                 provider_pfx->addr.addr.v4_addr + ip_offset;
                         }
                         ip_offset++;
-#ifdef TEST_GRPC_APP
-                        rv = create_local_mapping_grpc(&pds_local_v6_mapping);
+
+                        rv = create_local_mapping(&pds_local_v6_mapping);
                         if (rv != SDK_RET_OK) {
                             SDK_ASSERT(0);
                             return rv;
                         }
-#else
-                        rv = pds_local_mapping_create(&pds_local_v6_mapping);
-                        if (rv != SDK_RET_OK) {
-                            SDK_ASSERT(0);
-                            return rv;
-                        }
-                        g_flow_test_obj->add_local_ep(&pds_local_v6_mapping);
-#endif
                     }
                 }
                 vnic_key++;
             }
         }
     }
-#ifdef TEST_GRPC_APP
     // Batching: push leftover objects
-    rv = create_local_mapping_grpc(NULL);
+    rv = create_local_mapping(NULL);
     if (rv != SDK_RET_OK) {
         SDK_ASSERT(0);
         return rv;
     }
-#endif
 
     // create remote mappings
     SDK_ASSERT(num_vpcs * num_remote_mappings <= (1 << 20));
@@ -490,18 +396,11 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 }
                 ip_offset++;
 
-#ifdef TEST_GRPC_APP
-                rv = create_remote_mapping_grpc(&pds_remote_mapping);
+                rv = create_remote_mapping(&pds_remote_mapping);
                 if (rv != SDK_RET_OK) {
                     return rv;
                 }
-#else
-                rv = pds_remote_mapping_create(&pds_remote_mapping);
-                if (rv != SDK_RET_OK) {
-                    return rv;
-                }
-                g_flow_test_obj->add_remote_ep(&pds_remote_mapping);
-#endif
+
                 if (g_test_params.dual_stack) {
                     // V6 mapping
                     pds_remote_v6_mapping = pds_remote_mapping;
@@ -525,18 +424,11 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                             provider_pfx->addr.addr.v4_addr + ip_offset;
                     }
                     ip_offset++;
-#ifdef TEST_GRPC_APP
-                    rv = create_remote_mapping_grpc(&pds_remote_v6_mapping);
+
+                    rv = create_remote_mapping(&pds_remote_v6_mapping);
                     if (rv != SDK_RET_OK) {
                         return rv;
                     }
-#else
-                    rv = pds_remote_mapping_create(&pds_remote_v6_mapping);
-                    if (rv != SDK_RET_OK) {
-                        return rv;
-                    }
-                    g_flow_test_obj->add_remote_ep(&pds_remote_v6_mapping);
-#endif
                 }
                 tep_offset++;
                 tep_offset %= num_teps;
@@ -547,14 +439,12 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
             }
         }
     }
-#ifdef TEST_GRPC_APP
     // Batching: push leftover objects
-    rv = create_remote_mapping_grpc(NULL);
+    rv = create_remote_mapping(NULL);
     if (rv != SDK_RET_OK) {
         SDK_ASSERT(0);
         return rv;
     }
-#endif
     return SDK_RET_OK;
 }
 
@@ -620,17 +510,10 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                 if (v6_meter_id > (2 * num_meter)) {
                     v6_meter_id = num_meter+1;
                 }
-#ifdef TEST_GRPC_APP
-                rv = create_vnic_grpc(&pds_vnic);
+                rv = create_vnic(&pds_vnic);
                 if (rv != SDK_RET_OK) {
                     return rv;
                 }
-#else
-                rv = pds_vnic_create(&pds_vnic);
-                if (rv != SDK_RET_OK) {
-                    return rv;
-                }
-#endif
                 vnic_key++;
             }
         }
@@ -650,27 +533,18 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                            (((((uint64_t)pds_vnic.vpc.id & 0x7FF) << 22) |
                              ((1 & 0x7FF) << 11) | (1 & 0x7FF))));
         pds_vnic.switch_vnic = true;
-#ifdef TEST_GRPC_APP
-        rv = create_vnic_grpc(&pds_vnic);
+        rv = create_vnic(&pds_vnic);
         if (rv != SDK_RET_OK) {
             return rv;
         }
-#else
-        rv = pds_vnic_create(&pds_vnic);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
-#endif
     }
 
-#ifdef TEST_GRPC_APP
     // Batching: push leftover objects
-    rv = create_vnic_grpc(NULL);
+    rv = create_vnic(NULL);
     if (rv != SDK_RET_OK) {
         SDK_ASSERT(0);
         return rv;
     }
-#endif
     return rv;
 }
 
@@ -710,17 +584,10 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
         pds_subnet.egr_v6_policy.id = policy_id + (num_subnets * num_vpcs) * 2;
         pds_subnet.ing_v6_policy.id = policy_id + (num_subnets * num_vpcs) * 3;
         policy_id++;
-#ifdef TEST_GRPC_APP
-        rv = create_subnet_grpc(&pds_subnet);
+        rv = create_subnet(&pds_subnet);
         if (rv != SDK_RET_OK) {
             return rv;
         }
-#else
-        rv = pds_subnet_create(&pds_subnet);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
-#endif
     }
     return SDK_RET_OK;
 }
@@ -746,17 +613,10 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_pfx,
         pds_vpc.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
         pds_vpc.fabric_encap.val.vnid = i;
         pds_vpc.nat46_prefix = *nat46_pfx;
-#ifdef TEST_GRPC_APP
-        rv = create_vpc_grpc(&pds_vpc);
+        rv = create_vpc(&pds_vpc);
         if (rv != SDK_RET_OK) {
             return rv;
         }
-#else
-        rv = pds_vpc_create(&pds_vpc);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
-#endif
         rv = create_subnets(i, num_vpcs, num_subnets, &pds_vpc.v4_pfx,
                             &pds_vpc.v6_pfx);
         if (rv != SDK_RET_OK) {
@@ -771,49 +631,33 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_pfx,
         pds_vpc.key.id = num_vpcs + 1;
         pds_vpc.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
         pds_vpc.fabric_encap.val.vnid = TESTAPP_SUBSTRATE_VNID;
-#ifdef TEST_GRPC_APP
-        rv = create_vpc_grpc(&pds_vpc);
+        rv = create_vpc(&pds_vpc);
         if (rv != SDK_RET_OK) {
             return rv;
         }
-#else
-        rv = pds_vpc_create(&pds_vpc);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
-#endif
         // create a subnet under infra/substrate/provider VPC
         memset(&pds_subnet, 0, sizeof(pds_subnet));
         pds_subnet.key.id = PDS_SUBNET_ID(((num_vpcs + 1)- 1), 1, 1);
         pds_subnet.v4_vr_ip = g_test_params.device_ip;
         pds_subnet.vpc.id = num_vpcs + 1;
         MAC_UINT64_TO_ADDR(pds_subnet.vr_mac, substrate_vr_mac);
-#ifdef TEST_GRPC_APP
-        rv = create_subnet_grpc(&pds_subnet);
+        rv = create_subnet(&pds_subnet);
         if (rv != SDK_RET_OK) {
             return rv;
         }
-#else
-        rv = pds_subnet_create(&pds_subnet);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
-#endif
     }
 
-#ifdef TEST_GRPC_APP
     // Batching: push leftover vpc and subnet objects
-    rv = create_vpc_grpc(NULL);
+    rv = create_vpc(NULL);
     if (rv != SDK_RET_OK) {
         SDK_ASSERT(0);
         return rv;
     }
-    rv = create_subnet_grpc(NULL);
+    rv = create_subnet(NULL);
     if (rv != SDK_RET_OK) {
         SDK_ASSERT(0);
         return rv;
     }
-#endif
     return SDK_RET_OK;
 }
 
@@ -837,26 +681,17 @@ create_vpc_peers (uint32_t num_vpcs)
         pds_vpc_peer.key.id = vpc_peer_id++;
         pds_vpc_peer.vpc1.id = i;
         pds_vpc_peer.vpc2.id = i+1;
-#ifdef TEST_GRPC_APP
-        rv = create_vpc_peer_grpc(&pds_vpc_peer);
+        rv = create_vpc_peer(&pds_vpc_peer);
         if (rv != SDK_RET_OK) {
             return rv;
         }
-#else
-        rv = pds_vpc_peer_create(&pds_vpc_peer);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
-#endif
     }
-#ifdef TEST_GRPC_APP
     // Batching: push leftover vpc and subnet objects
-    rv = create_vpc_peer_grpc(NULL);
+    rv = create_vpc_peer(NULL);
     if (rv != SDK_RET_OK) {
         SDK_ASSERT(0);
         return rv;
     }
-#endif
     return SDK_RET_OK;
 }
 
@@ -962,26 +797,17 @@ create_tags (uint32_t num_tag_trees, uint32_t scale,
                 step = TESTAPP_TAGS_PRIORITY_STEP;
             }
         }
-#ifdef TEST_GRPC_APP
-        ret = create_tag_grpc(&pds_tag);
+        ret = create_tag(&pds_tag);
         if (ret != SDK_RET_OK) {
             return ret;
         }
-#else
-        ret = pds_tag_create(&pds_tag);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
-#endif
     }
-#ifdef TEST_GRPC_APP
     // Batching: push leftover objects
-    ret = create_tag_grpc(NULL);
+    ret = create_tag(NULL);
     if (ret != SDK_RET_OK) {
         SDK_ASSERT(0);
         return ret;
     }
-#endif
     return SDK_RET_OK;
 }
 
@@ -1110,26 +936,17 @@ create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
                 step = TESTAPP_METER_PRIORITY_STEP;
             }
         }
-#ifdef TEST_GRPC_APP
-        ret = create_meter_grpc(&pds_meter);
+        ret = create_meter(&pds_meter);
         if (ret != SDK_RET_OK) {
             return ret;
         }
-#else
-        ret = pds_meter_create(&pds_meter);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
-#endif
     }
-#ifdef TEST_GRPC_APP
     // Batching: push leftover objects
-    ret = create_meter_grpc(NULL);
+    ret = create_meter(NULL);
     if (ret != SDK_RET_OK) {
         SDK_ASSERT(0);
         return ret;
     }
-#endif
     return SDK_RET_OK;
 }
 
@@ -1159,26 +976,17 @@ create_nexthops (uint32_t num_nh, ip_prefix_t *ip_pfx, uint32_t num_vpcs)
         MAC_UINT64_TO_ADDR(pds_nh.mac,
                            (((((uint64_t)vpc_id & 0x7FF) << 22) |
                              ((1 & 0x7FF) << 11) | (id & 0x7FF))));
-#ifdef TEST_GRPC_APP
-        ret = create_nexthop_grpc(&pds_nh);
+        ret = create_nexthop(&pds_nh);
         if (ret != SDK_RET_OK) {
             return ret;
         }
-#else
-        ret = pds_nexthop_create(&pds_nh);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
-#endif
     }
-#ifdef TEST_GRPC_APP
     // Batching: push leftover objects
-    ret = create_nexthop_grpc(NULL);
+    ret = create_nexthop(NULL);
     if (ret != SDK_RET_OK) {
         SDK_ASSERT(0);
         return ret;
     }
-#endif
     return SDK_RET_OK;
 }
 
@@ -1201,26 +1009,17 @@ create_service_teps (uint32_t num_teps, ip_prefix_t *svc_tep_pfx,
         pds_tep.type = PDS_TEP_TYPE_SERVICE;
         pds_tep.encap.type = PDS_ENCAP_TYPE_VXLAN;
         pds_tep.encap.val.vnid = tep_vnid++;
-#ifdef TEST_GRPC_APP
-        rv = create_tunnel_grpc(g_test_params.num_teps + i + 1, &pds_tep);
+        rv = create_tunnel(g_test_params.num_teps + i + 1, &pds_tep);
         if (rv != SDK_RET_OK) {
             return rv;
         }
-#else
-        rv = pds_tep_create(&pds_tep);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
-#endif
     }
-#ifdef TEST_GRPC_APP
     // push leftover objects
-    rv = create_tunnel_grpc(0, NULL);
+    rv = create_tunnel(0, NULL);
     if (rv != SDK_RET_OK) {
         SDK_ASSERT(0);
         return rv;
     }
-#endif
     return SDK_RET_OK;
 }
 
@@ -1245,26 +1044,17 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
             pds_tep.encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
             pds_tep.type = PDS_TEP_TYPE_WORKLOAD;
         }
-#ifdef TEST_GRPC_APP
-        rv = create_tunnel_grpc(i, &pds_tep);
+        rv = create_tunnel(i, &pds_tep);
         if (rv != SDK_RET_OK) {
             return rv;
         }
-#else
-        rv = pds_tep_create(&pds_tep);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
-#endif
     }
-#ifdef TEST_GRPC_APP
     // Batching: push leftover objects
-    rv = create_tunnel_grpc(0, NULL);
+    rv = create_tunnel(0, NULL);
     if (rv != SDK_RET_OK) {
         SDK_ASSERT(0);
         return rv;
     }
-#endif
     return SDK_RET_OK;
 }
 
@@ -1278,11 +1068,7 @@ create_device_cfg (ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip)
     MAC_UINT64_TO_ADDR(g_device.device_mac_addr, macaddr);
     g_device.gateway_ip_addr = gwip;
 
-#ifdef TEST_GRPC_APP
-    rv = create_device_grpc(&g_device);
-#else
-    rv = pds_device_create(&g_device);
-#endif
+    rv = create_device(&g_device);
 
     return rv;
 }
@@ -1434,26 +1220,12 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                     break;
                 }
             }
-#ifdef TEST_GRPC_APP
-            rv = create_policy_grpc(&policy);
+            rv = create_policy(&policy);
             if (rv != SDK_RET_OK) {
                 printf("Failed to create security policy, vpc %u, subnet %u, "
                        "err %u\n", i, j, rv);
                 return rv;
             }
-            // push leftover objects
-            rv = create_policy_grpc(NULL);
-            if (rv != SDK_RET_OK) {
-                return rv;
-            }
-#else
-            rv = pds_policy_create(&policy);
-            if (rv != SDK_RET_OK) {
-                printf("Failed to create security policy, vpc %u, subnet %u, "
-                       "err %u\n", i, j, rv);
-                return rv;
-            }
-#endif
         }
     }
     return SDK_RET_OK;
@@ -1474,26 +1246,12 @@ create_rspan_mirror_sessions (uint32_t num_sessions)
         ms.rspan_spec.interface = 0x11010001;  // eth 1/1
         ms.rspan_spec.encap.type = PDS_ENCAP_TYPE_DOT1Q;
         ms.rspan_spec.encap.val.vlan_tag = rspan_vlan_start--;
-#ifdef TEST_GRPC_APP
-        rv = create_mirror_session_grpc(&ms);
+        rv = create_mirror_session(&ms);
         if (rv != SDK_RET_OK) {
             printf("Failed to create mirror session %u, err %u\n",
                    ms.key.id, rv);
             return rv;
         }
-        // push leftover objects
-        rv = create_mirror_session_grpc(NULL);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
-#else
-        rv = pds_mirror_session_create(&ms);
-        if (rv != SDK_RET_OK) {
-            printf("Failed to create mirror session %u, err %u\n",
-                   ms.key.id, rv);
-            return rv;
-        }
-#endif
     }
     return SDK_RET_OK;
 }
@@ -1507,18 +1265,11 @@ create_objects (void)
     if (ret != SDK_RET_OK) {
         exit(1);
     }
-#ifndef TEST_GRPC_APP
-    g_flow_test_obj = new flow_test(&g_test_params);
-#endif
 
-#ifdef TEST_GRPC_APP
-    /* BATCH START */
-    ret = batch_start_grpc(g_epoch++);
+    ret = create_objects_init(&g_test_params);
     if (ret != SDK_RET_OK) {
-        printf("%s: Batch start failed!\n", __FUNCTION__);
-        return SDK_RET_ERR;
+        return ret;
     }
-#endif
 
     // create device config
     ret = create_device_cfg(g_test_params.device_ip, g_test_params.device_mac,
@@ -1686,46 +1437,10 @@ create_objects (void)
         }
     }
 
-#ifdef TEST_GRPC_APP
-    ret = batch_start_grpc(PDS_EPOCH_INVALID);
+    ret = create_objects_end();
     if (ret != SDK_RET_OK) {
-        printf("%s: Batch start failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
-#endif
 
-#ifndef TEST_GRPC_APP
-    g_flow_test_obj->set_cfg_params(g_test_params.dual_stack,
-                                    g_test_params.num_tcp,
-                                    g_test_params.num_udp,
-                                    g_test_params.num_icmp,
-                                    g_test_params.sport_lo,
-                                    g_test_params.sport_hi,
-                                    g_test_params.dport_lo,
-                                    g_test_params.dport_hi);
-#if defined(ARTEMIS)
-    g_flow_test_obj->set_session_info_cfg_params(
-                                g_test_params.num_vpcs,
-                                g_test_params.num_ip_per_vnic,
-                                g_test_params.num_remote_mappings,
-                                g_test_params.meter_scale,
-                                TESTAPP_METER_NUM_PREFIXES,
-                                g_test_params.num_nh);
-
-#endif
-    ret = g_flow_test_obj->create_flows();
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-#endif
-
-#ifdef TEST_GRPC_APP
-    /* BATCH COMMIT */
-    ret = batch_commit_grpc();
-    if (ret != SDK_RET_OK) {
-        printf("%s: Batch commit failed!\n", __FUNCTION__);
-        return SDK_RET_ERR;
-    }
-#endif
     return ret;
 }
