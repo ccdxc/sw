@@ -15,6 +15,7 @@
 #include "nic/apollo/api/tep.hpp"
 #include "nic/apollo/api/impl/artemis/tep_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 #include "nic/apollo/p4/include/artemis_defines.h"
 #include "gen/p4gen/artemis/include/p4pd.h"
 
@@ -167,6 +168,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         nh_data.nexthop_info.vni = spec->encap.val.value;
         memcpy(nh_data.nexthop_info.dipo,
                &spec->key.ip_addr.addr.v6_addr.addr32[3], IP4_ADDR8_LEN);
+        sdk::lib::memrev(nh_data.nexthop_info.dmaco, spec->mac, ETH_ADDR_LEN);
         ret = nexthop_impl_db()->nh_tbl()->insert_atid(&nh_data, nh_idx_);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to program NEXTHOP table at %u for "
@@ -196,10 +198,8 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         tep1_rx_key.vxlan_1_vni = spec->encap.val.value;
         tep1_rx_mask.vxlan_1_vni_mask = 0xFFFFFFFF;
         tep1_rx_data.tep1_rx_info.decap_next = 0;
-        // @pirabhu let us discuss what the vpc id should be here
-        // if needed we may have to make vpc id in pds_tep_spec_t for service
-        // tunnel mandatory
-        //tep1_rx_data.tep1_rx_info.src_vpc_id = ;
+        tep1_rx_data.tep1_rx_info.src_vpc_id =
+            PDS_IMPL_SERVICE_TUNNEL_VPC_HW_ID;
         memset(&api_params, 0, sizeof(api_params));
         api_params.key = &tep1_rx_key;
         api_params.mask = &tep1_rx_mask;

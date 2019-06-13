@@ -18,8 +18,13 @@
 #include "nic/apollo/p4/include/artemis_defines.h"
 
 #define PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID           0
+// vpc hw id for Internet traffic
 #define PDS_IMPL_PUBLIC_VPC_HW_ID                    0
-#define PDS_IMPL_PROVIDER_VPC_HW_ID                  PDS_IMPL_PUBLIC_VPC_HW_ID
+// vpc hw id for provider (infra/substrate) vpc
+#define PDS_IMPL_PROVIDER_VPC_HW_ID                  0
+// vpc hw id (unused) for remote 4to6 tunnel
+#define PDS_IMPL_SERVICE_TUNNEL_VPC_HW_ID            0
+
 // reserved tag id
 #define PDS_IMPL_RESERVED_TAG_ID                     0
 // reserved meter id

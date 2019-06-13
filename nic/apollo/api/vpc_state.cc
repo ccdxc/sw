@@ -25,8 +25,11 @@ vpc_state::vpc_state() {
                           vpc_entry::vpc_key_func_compare);
     SDK_ASSERT(vpc_ht_ != NULL);
     // we should accomodate one extra vpc of type provider/substrate/internet
-    vpc_idxr_ = indexer::factory(PDS_MAX_VPC + 1);
+    // and any other reserved vpcs (like service tunnel vpc etc.)
+    vpc_idxr_ = indexer::factory(PDS_MAX_VPC + 2);
     SDK_ASSERT(vpc_idxr_ != NULL);
+    // reserve one id for reserved (service tunnel vpc)
+    vpc_idxr_->alloc_withid(0);
     vpc_slab_ = slab::factory("vpc", PDS_SLAB_ID_VPC, sizeof(vpc_entry), 16,
                               true, true, NULL);
     SDK_ASSERT(vpc_slab_ != NULL);
