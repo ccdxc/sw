@@ -67,3 +67,8 @@ $vertical-gutter: 5px;
 .newfwlogpolicy-buttoncontainer {
   margin-top: 1.5 * $vertical-gutter;
 }
+
+.newfwlogpolicy-container .syslog-fieldtitle-prefix-label,
+.newfwlogpolicy-container .syslog-fieldtitle-prefix-value {
+  display: none !important;
+}
