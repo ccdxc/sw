@@ -63,6 +63,9 @@ action ingress_to_classic_nic() {
     add_header(p4_to_p4plus_classic_nic);
     add_header(p4_to_p4plus_classic_nic_ip);
     add_header(capri_rxdma_intrinsic);
+    remove_header(capri_txdma_intrinsic);
+    remove_header(p4plus_to_p4);
+    remove_header(p4plus_to_p4_vlan);
 
     if ((control_metadata.vlan_strip == TRUE) and (ctag_1.valid == TRUE)) {
         modify_field(ethernet_1.etherType, ctag_1.etherType);
@@ -182,6 +185,7 @@ table inter_pipe_ingress {
         ingress_to_egress;
         ingress_to_cps;
         ingress_to_classic_nic;
+        ingress_to_uplink;
         ingress_to_arm;
     }
     size : INTER_PIPE_TABLE_SIZE;

@@ -68,6 +68,7 @@
 #define PIPE_CLASSIC_NIC                2
 #define PIPE_ARM                        3
 #define PIPE_RECIRC                     4
+#define PIPE_UPLINK                     5
 
 /*****************************************************************************/
 /* Rewrite flags                                                             */
