@@ -1184,7 +1184,8 @@ create_nexthops (uint32_t num_nh, ip_prefix_t *ip_pfx, uint32_t num_vpcs)
 
 // NOTE: all service TEPs are remote TEPs
 sdk_ret_t
-create_service_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
+create_service_teps (uint32_t num_teps, ip_prefix_t *svc_tep_pfx,
+                     ip_prefix_t *tep_pfx)
 {
     sdk_ret_t      rv;
     pds_tep_spec_t pds_tep;
@@ -1195,7 +1196,8 @@ create_service_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
     }
     for (uint32_t i = 1; i <= num_teps; i++) {
         memset(&pds_tep, 0, sizeof(pds_tep));
-        compute_local46_addr(&pds_tep.key.ip_addr, ip_pfx, i);
+        compute_local46_addr(&pds_tep.key.ip_addr, svc_tep_pfx,
+                             tep_pfx->addr.addr.v4_addr + 2 + i, i);
         pds_tep.type = PDS_TEP_TYPE_SERVICE;
         pds_tep.encap.type = PDS_ENCAP_TYPE_VXLAN;
         pds_tep.encap.val.vnid = tep_vnid++;
@@ -1575,7 +1577,8 @@ create_objects (void)
     if (artemis()) {
         // create service TEPs
         ret = create_service_teps(TESTAPP_MAX_SERVICE_TEP,
-                                  &g_test_params.svc_tep_pfx);
+                                  &g_test_params.svc_tep_pfx,
+                                  &g_test_params.tep_pfx);
         if (ret != SDK_RET_OK) {
             return ret;
         }

@@ -157,10 +157,16 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     tep = (tep_entry *)api_obj;
     switch (spec->type) {
     case PDS_TEP_TYPE_SERVICE:
+        PDS_TRACE_DEBUG("Programming service TEP %s, DIPo %s, nh hw id %u, "
+                        "remote_46 hw id %u", api_obj->key2str().c_str(),
+                        ipv4addr2str(spec->key.ip_addr.addr.v6_addr.addr32[3]),
+                        nh_idx_, remote46_hw_id_);
         // program NEXTHOP table entry
         nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
         nh_data.nexthop_info.port = TM_PORT_UPLINK_1;
         nh_data.nexthop_info.vni = spec->encap.val.value;
+        memcpy(nh_data.nexthop_info.dipo,
+               &spec->key.ip_addr.addr.v6_addr.addr32[3], IP4_ADDR8_LEN);
         ret = nexthop_impl_db()->nh_tbl()->insert_atid(&nh_data, nh_idx_);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to program NEXTHOP table at %u for "
@@ -210,6 +216,8 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     case PDS_TEP_TYPE_WORKLOAD:
         // program NEXTHOP table entry
+        PDS_TRACE_DEBUG("Programming workload TEP %s, nh hw id %u\n",
+                        api_obj->key2str().c_str(), nh_idx_);
         nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
         nh_data.nexthop_info.port = TM_PORT_UPLINK_1;
         nh_data.nexthop_info.vni = spec->encap.val.value;

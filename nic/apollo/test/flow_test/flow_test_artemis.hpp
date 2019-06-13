@@ -813,11 +813,16 @@ public:
                                 return ret;
                             }
                             rewrite_ip = test_params->svc_tep_pfx.addr;
-                            compute_local46_addr(&rewrite_ip, &test_params->svc_tep_pfx,
-                                                 (i % TESTAPP_MAX_SERVICE_TEP) + 1);
-                            rewrite_ip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] = ip_addr.addr.v4_addr;
-                            ip_addr_t rflow_dip = test_params->nat46_vpc_pfx.addr;
-                            rflow_dip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] = ep_pairs[i].v4_local.local_ip.addr.v4_addr;
+                            compute_local46_addr(&rewrite_ip,
+                                &test_params->svc_tep_pfx,
+                                test_params->tep_pfx.addr.addr.v4_addr + 1 + (i % TESTAPP_MAX_SERVICE_TEP),
+                                (i % TESTAPP_MAX_SERVICE_TEP) + 1);
+                            rewrite_ip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
+                                ip_addr.addr.v4_addr;
+                            ip_addr_t rflow_dip =
+                                test_params->nat46_vpc_pfx.addr;
+                            rflow_dip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
+                                ep_pairs[i].v4_local.local_ip.addr.v4_addr;
 
                             // rflow v6 session
                             ret = create_flow(vpc, proto,
