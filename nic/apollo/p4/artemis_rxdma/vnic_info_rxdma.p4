@@ -3,6 +3,9 @@
 action vnic_info_rxdma(lpm_base1, lpm_base2, lpm_base3, lpm_base4,
                  lpm_base5, lpm_base6, lpm_base7, lpm_base8) {
 
+    // Pass payload_len from rxdma to txdma
+    modify_field(rx_to_tx_hdr.payload_len, capri_p4_intr.packet_len);
+
     // Disable lookup for further passes
     modify_field(p4_to_rxdma.vnic_info_en, FALSE);
 

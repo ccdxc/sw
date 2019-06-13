@@ -21,6 +21,43 @@ pkt_dma:
     /* Else disable Recirc */
     phvwr.!c1       p.capri_p4_intr_recirc, FALSE
 
+    // Setup Intrisic fields and DMA commands to generate packet to P4IG
+    //     sub         r1, k.{p4_to_txdma_header_payload_len_sbit0_ebit5, \
+    //                 p4_to_txdma_header_payload_len_sbit6_ebit13}, APOLLO_I2E_HDR_SZ
+    phvwr           p.capri_p4_intr_packet_len, k.rx_to_tx_hdr_payload_len
+    phvwr           p.capri_intr_tm_oport, TM_PORT_INGRESS
+
+    // DMA Commands
+    //   1) Intrisic P4 header, TXDMA Intr, Session/iFlow/rFlow Hints Info (phv2pkt)
+    //   2) Packet Payload (mem2pkt)
+    //   3) CI Update (consume the event) and DB Sched Eval
+    //   4) Update the rxdma copy of cindex once every 64 pkts
+
+    //  1) Intrisic P4 header, TXDMA Intr, Session/iFlow/rFlow Hints (phv2pkt)
+    CAPRI_DMA_CMD_PHV2PKT_SETUP3(intrinsic_dma_dma_cmd,
+                                 capri_intr_tm_iport, \
+                                 capri_intr_tm_instance_type, \
+                                 capri_txdma_intr_qid, \
+                                 capri_txdma_intr_txdma_rsv, \
+                                 session_info_hint___pad_to_512b, \
+                                 rflow_info_hint_pad)
+
+    // 2) DMA command for payload
+    // mem2pkt has an implicit fence. all subsequent dma is blocked
+    phvwr       p.payload_dma_dma_cmd_addr, k.txdma_control_payload_addr
+    phvwri      p.{payload_dma_dma_cmd_cache...payload_dma_dma_cmd_type}, \
+                    (1 << 4) | (1 << 6) | CAPRI_DMA_COMMAND_MEM_TO_PKT
+    phvwr       p.payload_dma_dma_cmd_size, k.rx_to_tx_hdr_payload_len
+
+    // 3) Update the rxdma copy of cindex once every 64 pkts
+    seq         c1, k.txdma_control_cindex[5:0], 0
+            // 2 phvwr
+    CAPRI_DMA_CMD_PHV2MEM_SETUP_COND(rxdma_ci_update_dma_cmd, \
+                                     k.txdma_control_rxdma_cindex_addr, \
+                                     txdma_control_cindex, \
+                                     txdma_control_cindex, c1)
+
+    // 4) DMA command setup for Doorbell Sched Eval
     CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, \
                              k.capri_intr_lif)
     CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP_END(doorbell_ci_update_dma_cmd, \

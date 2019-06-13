@@ -86,20 +86,33 @@ metadata qstate_info_t          scratch_qstate_info;
 @pragma dont_trim
 metadata txdma_control_metadata_t txdma_control;
 
+@pragma pa_align 512
 @pragma dont_trim
 metadata session_info_hint_t session_info_hint;
 
 @pragma pa_align 512
 @pragma dont_trim
+metadata iflow_info_hint_t iflow_info_hint;
+
+@pragma pa_align 512
+@pragma dont_trim
+metadata rflow_info_hint_t rflow_info_hint;
+
+@pragma pa_align 512
+@pragma dont_trim
 metadata artemis_rx_to_tx_header_t  rx_to_tx_hdr;
 
+// capri intr, txdma intr, session/iflow/rflow hints/info
 @pragma pa_align 128
 @pragma dont_trim
-metadata dma_cmd_phv2pkt_t intrinsic_dma;       // dma cmd 1
+metadata dma_cmd_phv2pkt_t intrinsic_dma;       // dma cmd 1 
+
 @pragma dont_trim
 metadata dma_cmd_mem2pkt_t payload_dma;         // dma cmd 2
+
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t rxdma_ci_update;     // dma cmd 3
+
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t doorbell_ci_update;  // dma cmd 4
 

@@ -52,8 +52,9 @@ header_type artemis_rx_to_tx_header_t {
         dport_classid   : 8;  // Byte 33
         vpc_id          : 8;  // Byte 34
         vnic_id         : 8;  // Byte 35
-        iptype          : 1;  // Byte 36 - 1b
-        pad0            : 7;  // Byte 36 - 7b
+        payload_len     : 14; // Byte 36 to 37-6b
+        iptype          : 1;  // Byte 37 - 1b
+        pad0            : 1;  // Byte 37 - 1b
         // Please check the above comment when adding new fields
     }
 }
@@ -61,8 +62,20 @@ header_type artemis_rx_to_tx_header_t {
 // Session Info hints that CPA path passes to the FTL Assist programs
 // Session Info is derived from the configured policies for the flow
 // being investigated
-header_type session_info_hint_t {  // Total 272b = 34B
+header_type session_info_hint_t {
     fields {
+        iflow_tcp_state : 4 ;
+        iflow_tcp_seq_num : 32 ;
+        iflow_tcp_ack_num : 32 ;
+        iflow_tcp_win_sz : 16 ;
+        iflow_tcp_win_scale : 4 ;
+        rflow_tcp_state : 4 ;
+        rflow_tcp_seq_num : 32 ;
+        rflow_tcp_ack_num : 32 ;
+        rflow_tcp_win_sz : 16 ;
+        rflow_tcp_win_scale : 4 ;
+
+        // Fields set by CPS
         tx_dst_ip        : 128;
         tx_dst_l4port    : 16;  // No need to fill
         nexthop_idx      : 20;
@@ -87,7 +100,22 @@ header_type session_info_hint_t {  // Total 272b = 34B
         meter_idx        : 16;
         timestamp        : 48;  // No need to fill this but kept for easy copy/DMA
         drop             : 1;
-        pad0             : 3;
+        __pad_to_512b    : 67;
+    }
+}
+
+
+// iFlow Info Hints - for now nothing, but later filled by FTL assist program
+header_type iflow_info_hint_t {
+    fields {
+         pad : 512;
+    }
+}
+
+// rFlow Info Hints - for now nothing, but later filled by FTL assist program
+header_type rflow_info_hint_t {
+    fields {
+         pad : 512;
     }
 }
 

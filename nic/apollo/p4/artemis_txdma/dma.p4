@@ -18,6 +18,12 @@ action pkt_dma() {
         modify_field(capri_p4_intr.recirc, TRUE);
     } else {
         modify_field(capri_p4_intr.recirc, FALSE);
+
+        // Setup Intrinsic fields and DMA commands to create packet and inject to P4IG
+        // Touching fields required for DMA commands in ASM code
+        modify_field(txdma_control.payload_addr, txdma_control.payload_addr);
+        modify_field(rx_to_tx_hdr.payload_len, rx_to_tx_hdr.payload_len);
+        modify_field(txdma_control.rxdma_cindex_addr, txdma_control.rxdma_cindex_addr);
     }
 }
 

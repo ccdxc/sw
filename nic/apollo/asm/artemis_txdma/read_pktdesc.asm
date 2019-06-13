@@ -44,6 +44,7 @@ read_pktdesc:
                        rx_to_tx_hdr_dport_classid, \
                        rx_to_tx_hdr_vpc_id, \
                        rx_to_tx_hdr_vnic_id, \
+                       rx_to_tx_hdr_payload_len, \
                        rx_to_tx_hdr_iptype, \
                        rx_to_tx_hdr_pad0}, \
                        d[511:(512-(offsetof(p,rx_to_tx_hdr_remote_ip) + \

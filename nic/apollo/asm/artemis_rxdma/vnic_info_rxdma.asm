@@ -11,6 +11,9 @@ struct phv_               p;
 %%
 
 vnic_info_rxdma:
+    // Pass payload_len from rxdma to txdma
+    phvwr        p.rx_to_tx_hdr_payload_len, k.capri_p4_intr_packet_len
+
     // Disable this lookup for further passes
     phvwr        p.p4_to_rxdma_vnic_info_en, FALSE
 
@@ -37,9 +40,9 @@ vnic_info_rxdma:
     // Fill the remote_ip and tag classid based on the direction
     seq          c1, k.p4_to_rxdma_direction, TX_FROM_HOST
     phvwr.c1     p.rx_to_tx_hdr_stag_classid, k.p4_to_rxdma_service_tag
-    phvwr.c1     p.rx_to_tx_hdr_remote_ip[127:96], k.p4_to_rxdma_flow_dst_s0_e31
-    phvwr.c1     p.rx_to_tx_hdr_remote_ip[95:64], k.p4_to_rxdma_flow_dst_s32_e127[95:64]
-    phvwr.c1     p.rx_to_tx_hdr_remote_ip[63:0], k.p4_to_rxdma_flow_dst_s32_e127[63:0]
+    phvwr.c1     p.rx_to_tx_hdr_remote_ip[127:104], k.p4_to_rxdma_flow_dst_s0_e23
+    phvwr.c1     p.rx_to_tx_hdr_remote_ip[103:64], k.p4_to_rxdma_flow_dst_s24_e127[103:64]
+    phvwr.c1     p.rx_to_tx_hdr_remote_ip[63:0], k.p4_to_rxdma_flow_dst_s24_e127[63:0]
     phvwr.!c1    p.rx_to_tx_hdr_dtag_classid, k.p4_to_rxdma_service_tag
     phvwr.!c1    p.rx_to_tx_hdr_remote_ip[127:64], k.p4_to_rxdma_flow_src[127:64]
     phvwr.!c1    p.rx_to_tx_hdr_remote_ip[63:0], k.p4_to_rxdma_flow_src[63:0]
