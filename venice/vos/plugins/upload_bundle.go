@@ -3,6 +3,8 @@ package plugins
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -32,27 +34,73 @@ const (
 	veniceOSImageName = "venice_appl_os.tgz"
 )
 
+//getSHA256Sum computes checksum for image
+func getSHA256Sum(fileName string) string {
+	f, err := os.Open(fileName)
+	if err != nil {
+		log.Errorf("Failed to open file %s", fileName)
+		return ""
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		log.Errorf("Failed to copy contents of file %s", fileName)
+		return ""
+	}
+
+	hash := hex.EncodeToString(h.Sum(nil))
+	return hash
+}
+
 //ValidateImageBundle sanitize the uploaded image
-func ValidateImageBundle() error {
+func ValidateImageBundle() (map[string]map[string]string, error) {
 
 	if _, err := os.Stat(installerTmpDir + "/" + imageMetaFileName); err != nil {
 		log.Errorf("[%s] is missing in the bundle.tar %#v", imageMetaFileName, err)
-		return fmt.Errorf("[%s] is missing in the bundle.tar %#v", imageMetaFileName, err)
+		return nil, fmt.Errorf("Missing metadata file in the bundle")
 	}
-	if _, err := os.Stat(installerTmpDir + "/" + veniceImageName); err != nil {
-		log.Errorf("[%s] is missing in the bundle.tar %#v", veniceImageName, err)
-		return fmt.Errorf("[%s] is missing in the bundle.tar %#v", veniceImageName, err)
-	}
-	if _, err := os.Stat(installerTmpDir + "/" + naplesImageName); err != nil {
-		log.Errorf("[%s] is missing in the bundle.tar %#v", naplesImageName, err)
-		return fmt.Errorf("[%s] is missing in the bundle.tar %#v", naplesImageName, err)
-	}
-	if _, err := os.Stat(installerTmpDir + "/" + veniceOSImageName); err != nil {
-		log.Errorf("[%s] is missing in the bundle.tar %#v", veniceOSImageName, err)
-		return fmt.Errorf("[%s] is missing in the bundle.tar %#v", veniceOSImageName, err)
+	versionMap := processMetadataFile(installerTmpDir + imageMetaFileName)
+	if versionMap == nil {
+		log.Errorf("Process MetadataFile Failed")
+		return nil, fmt.Errorf("Processing metadata file failed")
 	}
 
-	return nil
+	if _, err := os.Stat(installerTmpDir + "/" + veniceImageName); err != nil {
+		log.Errorf("[%s] is missing in the bundle.tar %#v", veniceImageName, err)
+		return nil, fmt.Errorf("Missing venice Image in the bundle")
+	}
+
+	shaSum := getSHA256Sum(installerTmpDir + "/" + veniceImageName)
+	log.Infof("shSum %v versionMap %v", string(shaSum), versionMap["Venice"]["hash"])
+	if string(shaSum) != versionMap["Venice"]["hash"] {
+		log.Errorf("Checksum mismatch for Venice Image")
+		return nil, fmt.Errorf("Checksum mismatch of venice image")
+	}
+
+	if _, err := os.Stat(installerTmpDir + "/" + naplesImageName); err != nil {
+		log.Errorf("[%s] is missing in the bundle.tar %#v", naplesImageName, err)
+		return nil, fmt.Errorf("Missing naples image in the bundle")
+	}
+	shaSum = getSHA256Sum(installerTmpDir + "/" + naplesImageName)
+	log.Infof("shSum %v versionMap %v", string(shaSum), versionMap["Naples"]["hash"])
+	if string(shaSum) != versionMap["Naples"]["hash"] {
+		log.Errorf("Checksum mismatch for Naples Image")
+		return nil, fmt.Errorf("Checksum mismatch of naples image")
+	}
+
+	if _, err := os.Stat(installerTmpDir + "/" + veniceOSImageName); err != nil {
+		log.Errorf("[%s] is missing in the bundle.tar %#v", veniceOSImageName, err)
+		return nil, fmt.Errorf("Missing veniceOS image in the bundle")
+	}
+
+	shaSum = getSHA256Sum(installerTmpDir + "/" + veniceOSImageName)
+	if string(shaSum) != versionMap["veniceOS"]["hash"] {
+		log.Errorf("Checksum mismatch for veniceOS Image")
+		return nil, fmt.Errorf("Checksum mismatch of veniceOS image")
+	}
+
+	return versionMap, nil
 }
 
 // ExtractImage takes a locally downloaded image and extracts the contents
@@ -136,24 +184,15 @@ func getUploadBundleCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc 
 			log.Errorf("removal of /tmp/bundle.tar returned %v", err)
 		}
 
-		if err = ValidateImageBundle(); err != nil {
-			if rerr := client.RemoveObject("default."+bucket, in.Name); rerr != nil {
-				return fmt.Errorf("Image Validation Failed (%+v): Error while removing(%+v)", err, rerr)
-			}
-			if cerr := os.RemoveAll(installerTmpDir); cerr != nil {
-				return fmt.Errorf("Image Validation Failed (%+v). Error %s during removeAll of %s", err, cerr, installerTmpDir)
-			}
-			return fmt.Errorf("Image Validation Failed (%s). %+v", in.Name, err)
-		}
-		versionMap := processMetadataFile(installerTmpDir + imageMetaFileName)
+		versionMap, err := ValidateImageBundle()
 		if versionMap == nil {
 			if rerr := client.RemoveObject("default."+bucket, in.Name); rerr != nil {
-				return fmt.Errorf("Invalid Image. Failed to process metafile. Error while removing(%+v)", rerr)
+				return fmt.Errorf("Invalid Image (%+v). Error while removing(%+v)", err, rerr)
 			}
 			if cerr := os.RemoveAll(installerTmpDir); cerr != nil {
-				return fmt.Errorf("Invalid Image. Failed to process metafile. Error %s during removeAll of %s", cerr, installerTmpDir)
+				return fmt.Errorf("Invalid Image (%+v). Error %s during removeAll of %s", err, cerr, installerTmpDir)
 			}
-			return fmt.Errorf("Failed to process metafile %s missing version info", installerTmpDir+"/"+imageMetaFileName)
+			return err
 		}
 
 		//create version object to enable deletion

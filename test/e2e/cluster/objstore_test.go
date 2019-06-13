@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
+	"crypto/sha256"
 	"crypto/tls"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -43,6 +45,9 @@ func createBundle() (int, error) {
 	veniceOSfile := "venice_appl_os.tgz"
 
 	buf := createBuffer(100 * 1024)
+	h := sha256.New()
+	h.Write(buf)
+	hash := hex.EncodeToString(h.Sum(nil))
 
 	err := ioutil.WriteFile(venicefile, buf, 0644)
 	if err != nil {
@@ -67,15 +72,18 @@ func createBundle() (int, error) {
 		"Venice": {"Version": "3.2.0",
 			"Description": "Venice Image",
 			"ReleaseDate": "May2019",
-			"Name":        "venice.tgz"},
+			"Name":        "venice.tgz",
+			"hash":        hash},
 		"veniceOS": {"Version": "3.2.0",
 			"Description": "Venice Image",
 			"ReleaseDate": "May2019",
-			"Name":        "venice_appl_os.tgz"},
+			"Name":        "venice_appl_os.tgz",
+			"hash":        hash},
 		"Naples": {"Version": "4.5.1",
 			"Description": "Naples Image",
 			"ReleaseDate": "May2019",
-			"Name":        "naples_fw.tar"}}
+			"Name":        "naples_fw.tar",
+			"hash":        hash}}
 
 	b, err := json.Marshal(meta)
 	if err != nil {
