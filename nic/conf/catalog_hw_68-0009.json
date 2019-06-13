@@ -1,17 +1,17 @@
 {
-    "card_id" : "680005",
-    "cpld_id" : "0x13",
+    "card_id" : "680009",
+    "cpld_id" : "0x12",
     "max_mpu_per_stage" : "4",
     "mpu_trace_size" : "2048",
     "cores_mask": "0xf",
-    "form_factor": "HHHL",
-    "emmc_size": "4",
+    "form_factor": "HH3/4L",
+    "emmc_size": "8",
     "memory_size": "4",
     "num_asics" : "1",
     "voltages" :
     {
         "startup_arm" : "",
-        "startup_vdd" : "700"
+        "startup_vdd" : ""
     },
     "halfclock_hbmtemp" : "105",
     "asics" :
@@ -38,15 +38,15 @@
     "pcie" : {
 	"hostport_mask" : "0x1",
 	"gen"           : "4",
-	"width"         : "8",
-	"subdeviceid"   : "4002"
+	"width"         : "16",
+	"subdeviceid"   : "4006"
     },
 
     "serdes" : {
         "fw"             : "serdes.0x1087_244D.rom",
         "build_id"       : "0x1087",
         "rev_id"         : "0x244D",
-        "serdes_file"    : "serdes_68-0005.json",
+        "serdes_file"    : "serdes_68-0003.json",
         "jtag_id"        : "0xA2BF8001",
         "num_sbus_rings" : "2",
         "aacs_server"    : "0",
@@ -56,11 +56,12 @@
         "sbm_clk_div"    : "6"
     },
 
-    "num_logical_oob_ports" : "2",
+    "num_logical_oob_ports" : "3",
     "logical_oob_ports" :
     [
         { "port_num" : "1", "phy_id" : "0xc", "hw_port" : "0x10", "speed" : "1G", "auto_neg_enable" : "false" },
-        { "port_num" : "2", "phy_id" : "0x3", "hw_port" : "0x12", "speed" : "1G", "auto_neg_enable" : "true"  }
+        { "port_num" : "2", "phy_id" : "0x3", "hw_port" : "0x12", "speed" : "1G", "auto_neg_enable" : "true"  },
+        { "port_num" : "3", "phy_id" : "0x4", "hw_port" : "0x13", "speed" : "1G", "auto_neg_enable" : "true"  }
     ],
 
     "num_fp_ports": "3",

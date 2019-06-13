@@ -1,12 +1,12 @@
 {
-    "card_id" : "680005",
+    "card_id" : "680008",
     "cpld_id" : "0x13",
     "max_mpu_per_stage" : "4",
     "mpu_trace_size" : "2048",
     "cores_mask": "0xf",
     "form_factor": "HHHL",
-    "emmc_size": "4",
-    "memory_size": "4",
+    "emmc_size": "8",
+    "memory_size": "8",
     "num_asics" : "1",
     "voltages" :
     {
@@ -39,7 +39,7 @@
 	"hostport_mask" : "0x1",
 	"gen"           : "4",
 	"width"         : "8",
-	"subdeviceid"   : "4002"
+	"subdeviceid"   : "4005"
     },
 
     "serdes" : {
