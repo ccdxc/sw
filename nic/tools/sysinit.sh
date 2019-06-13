@@ -148,5 +148,7 @@ fi
 # fi
 
 $NIC_DIR/tools/bringup_mgmt_ifs.sh &>/var/log/pensando/mgmt_if.log &
-
 echo "All processes brought up, please check ..."
+
+$NIC_DIR/tools/firewall.sh &>/var/log/pensando/firewall.log &
+echo "Configured firewall ..."
