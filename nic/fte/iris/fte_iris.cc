@@ -481,7 +481,7 @@ ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
         t_fwlg.set_sport(key.sport);
         t_fwlg.set_dport(key.dport);
     } else if (key.proto == IP_PROTO_ICMP) {
-         HAL_TRACE_VERBOSE("proto=ICMP/type={}/code={}", key.icmp_type,key.icmp_code);
+        HAL_TRACE_VERBOSE("proto=ICMP/type={}/code={}", key.icmp_type,key.icmp_code);
         t_fwlg.set_icmptype(key.icmp_type);
         t_fwlg.set_icmpcode(key.icmp_code);
         t_fwlg.set_icmpid(key.icmp_id);
@@ -646,7 +646,7 @@ ctx_t::update_flow_table()
         if (iflow->valid_sfw_info()) {
             session_cfg.skip_sfw_reval = (iflow->sfw_info().skip_sfw_reval&0x1);
             session_cfg.sfw_rule_id = iflow->sfw_info().sfw_rule_id;
-            session_cfg.sfw_action = (iflow->sfw_info().sfw_action&0x3);
+            session_cfg.sfw_action = (iflow->sfw_info().sfw_action&0x7);
         }
         if (existing_session() && iflow->valid_export_info()) {
             session_args.update_iflow = true;

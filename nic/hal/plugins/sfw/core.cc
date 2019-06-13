@@ -243,6 +243,7 @@ net_sfw_pol_check_sg_policy(ctx_t                  &ctx,
         if (ret == HAL_RET_FTE_RULE_NO_MATCH) {
             match_rslt->valid = 1;
             match_rslt->action = session::FLOW_ACTION_DROP;
+            match_rslt->sfw_action = nwsec::SECURITY_RULE_ACTION_IMPLICIT_DENY;
             return HAL_RET_OK;
         }
     }

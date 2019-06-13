@@ -46,9 +46,10 @@ var SortOrder_normal = map[string]string{
 
 // FwlogActions_normal is a map of normalized values for the enum
 var FwlogActions_normal = map[string]string{
-	"allow":  "allow",
-	"deny":   "deny",
-	"reject": "reject",
+	"allow":         "allow",
+	"deny":          "deny",
+	"implicit_deny": "implicit_deny",
+	"reject":        "reject",
 }
 
 // FwlogDirections_normal is a map of normalized values for the enum

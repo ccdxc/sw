@@ -345,7 +345,7 @@ typedef struct session_cfg_s {
     uint8_t             tcp_sack_perm_option:1;
     uint8_t             conn_track_en:1;          // enable connection tracking
     uint8_t             skip_sfw_reval:1;         // skip firewall reval
-    uint8_t             sfw_action:2;             // sfw action
+    uint8_t             sfw_action:3;             // sfw action
 
     session_id_t        session_id;               // unique session id
     uint32_t            idle_timeout;             // Session idle timeout
@@ -389,7 +389,7 @@ struct session_s {
     uint16_t            conn_track_en:1;          // enable connection tracking
     uint16_t            skip_sfw_reval:1;         // do not reeval session
     uint16_t            is_ipfix_flow:1;          // to track ipfix flows
-    uint16_t            sfw_action:2;             // sfw action to log
+    uint16_t            sfw_action:3;             // sfw action to log
     uint64_t            sfw_rule_id;              // sfw rule id
 
     flow_t              *iflow;                   // initiator flow

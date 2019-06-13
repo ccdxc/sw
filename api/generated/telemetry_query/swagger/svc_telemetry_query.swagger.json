@@ -566,12 +566,14 @@
           "enum": [
             "allow",
             "deny",
-            "reject"
+            "reject",
+            "implicit_deny"
           ],
           "default": "allow",
           "x-ui-hints": {
             "allow": "Allow",
             "deny": "Deny",
+            "implicit_deny": "Implicit-deny",
             "reject": "Reject"
           },
           "title": "Action"
@@ -738,12 +740,14 @@
           "enum": [
             "allow",
             "deny",
-            "reject"
+            "reject",
+            "implicit_deny"
           ],
           "default": "allow",
           "x-ui-hints": {
             "allow": "Allow",
             "deny": "Deny",
+            "implicit_deny": "Implicit-deny",
             "reject": "Reject"
           },
           "title": "OR of actions to be matched"

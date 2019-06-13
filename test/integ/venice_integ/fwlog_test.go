@@ -111,9 +111,10 @@ func (it *veniceIntegSuite) TestFwlog(c *C) {
 	AssertOk(c, err, "Error in logged in context")
 
 	action := map[string]bool{
-		"allow":  true,
-		"deny":   true,
-		"reject": true,
+		"allow":         true,
+		"deny":          true,
+		"reject":        true,
+		"implicit_deny": true,
 	}
 
 	direction := map[string]bool{
@@ -125,6 +126,7 @@ func (it *veniceIntegSuite) TestFwlog(c *C) {
 		{},
 		{"allow"},
 		{"deny"},
+		{"reject"},
 	}
 
 	for _, qact := range actionList {
