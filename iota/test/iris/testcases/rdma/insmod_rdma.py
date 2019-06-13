@@ -52,7 +52,7 @@ def Trigger(tc):
         if tc.os == 'linux':
             api.Trigger_AddHostCommand(req, n, "tar xmf %s" % tc.pkgname_linux,
                                    rundir = 'rdma-drivers')
-            api.Trigger_AddHostCommand(req, n, "cd drivers-linux && ./setup_apt.sh",
+            api.Trigger_AddHostCommand(req, n, "cd drivers-linux && ./setup_libs.sh",
                                        rundir = 'rdma-drivers')
             api.Trigger_AddHostCommand(req, n, "cd drivers-linux && ./build.sh",
                                    rundir = 'rdma-drivers',

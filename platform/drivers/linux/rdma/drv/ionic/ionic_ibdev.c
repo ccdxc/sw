@@ -1462,10 +1462,15 @@ static int ionic_modify_port(struct ib_device *ibdev, u8 port, int mask,
 	return 0;
 }
 
+#ifdef HAVE_IB_ALLOC_UCTX_OBJ
+static int ionic_alloc_ucontext(struct ib_ucontext *ibctx,
+				struct ib_udata *udata)
+#else
 static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 						struct ib_udata *udata)
+#endif
 {
-	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
+	struct ionic_ibdev *dev;
 	struct ionic_ctx *ctx;
 	struct ionic_ctx_req req;
 	struct ionic_ctx_resp resp = {0};
@@ -1479,11 +1484,17 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	if (rc)
 		goto err_ctx;
 
+#ifdef HAVE_IB_ALLOC_UCTX_OBJ
+	dev = to_ionic_ibdev(ibctx->device);
+	ctx = to_ionic_ctx(ibctx);
+#else
+	dev = to_ionic_ibdev(ibdev);
 	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
 	if (!ctx) {
 		rc = -ENOMEM;
 		goto err_ctx;
 	}
+#endif
 
 	/* maybe force fallback to kernel space */
 	ctx->fallback = req.fallback > 1;
@@ -1532,17 +1543,30 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	if (rc)
 		goto err_resp;
 
+#ifdef HAVE_IB_ALLOC_UCTX_OBJ
+	return 0;
+#else
 	return &ctx->ibctx;
+#endif
 
 err_resp:
 	ionic_api_put_dbid(dev->lif, ctx->dbid);
 err_dbid:
+#ifdef HAVE_IB_ALLOC_UCTX_OBJ
+err_ctx:
+	return rc;
+#else
 	kfree(ctx);
 err_ctx:
 	return ERR_PTR(rc);
+#endif
 }
 
+#ifdef HAVE_IB_DEALLOC_UCTX_VOID
+static void ionic_dealloc_ucontext(struct ib_ucontext *ibctx)
+#else
 static int ionic_dealloc_ucontext(struct ib_ucontext *ibctx)
+#endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibctx->device);
 	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
@@ -1553,9 +1577,13 @@ static int ionic_dealloc_ucontext(struct ib_ucontext *ibctx)
 		list_del(&ctx->mmap_list);
 
 	ionic_api_put_dbid(dev->lif, ctx->dbid);
+#ifndef HAVE_IB_ALLOC_UCTX_OBJ
 	kfree(ctx);
+#endif
 
+#ifndef HAVE_IB_DEALLOC_UCTX_VOID
 	return 0;
+#endif
 }
 
 static int ionic_mmap(struct ib_ucontext *ibctx, struct vm_area_struct *vma)
@@ -1608,41 +1636,69 @@ out:
 	return rc;
 }
 
+#ifdef HAVE_IB_ALLOC_PD_OBJ
+static int ionic_alloc_pd(struct ib_pd *ibpd,
+			  struct ib_ucontext *ibctx,
+			  struct ib_udata *udata)
+#else
 static struct ib_pd *ionic_alloc_pd(struct ib_device *ibdev,
 				    struct ib_ucontext *ibctx,
 				    struct ib_udata *udata)
+#endif
 {
-	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
+	struct ionic_ibdev *dev;
 	struct ionic_pd *pd;
 	int rc;
 
+#ifdef HAVE_IB_ALLOC_PD_OBJ
+	dev = to_ionic_ibdev(ibpd->device);
+	pd = to_ionic_pd(ibpd);
+#else
+	dev = to_ionic_ibdev(ibdev);
 	pd = kzalloc(sizeof(*pd), GFP_KERNEL);
 	if (!pd) {
 		rc = -ENOMEM;
 		goto err_pd;
 	}
+#endif
 
 	rc = ionic_get_pdid(dev, &pd->pdid);
 	if (rc)
 		goto err_pdid;
 
+#ifdef HAVE_IB_ALLOC_PD_OBJ
+	return 0;
+#else
 	return &pd->ibpd;
+#endif
 
 err_pdid:
+#ifdef HAVE_IB_ALLOC_PD_OBJ
+	return rc;
+#else
 	kfree(pd);
 err_pd:
 	return ERR_PTR(rc);
+#endif
 }
 
+#ifdef HAVE_IB_DEALLOC_PD_VOID
+static void ionic_dealloc_pd(struct ib_pd *ibpd)
+#else
 static int ionic_dealloc_pd(struct ib_pd *ibpd)
+#endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibpd->device);
 	struct ionic_pd *pd = to_ionic_pd(ibpd);
 
 	ionic_put_pdid(dev, pd->pdid);
+#ifndef HAVE_IB_ALLOC_PD_OBJ
 	kfree(pd);
+#endif
 
+#ifndef HAVE_IB_DEALLOC_PD_VOID
 	return 0;
+#endif
 }
 
 static int ionic_build_hdr(struct ionic_ibdev *dev,
@@ -2310,7 +2366,11 @@ static struct ib_mr *ionic_reg_user_mr(struct ib_pd *ibpd, u64 start,
 
 	mr->flags = IONIC_MRF_USER_MR | to_ionic_mr_flags(access);
 
+#ifdef HAVE_IB_UMEM_GET_UDATA
+	mr->umem = ib_umem_get(udata, start, length, access, 0);
+#else
 	mr->umem = ib_umem_get(ibpd->uobject->context, start, length, access, 0);
+#endif
 	if (IS_ERR(mr->umem)) {
 		rc = PTR_ERR(mr->umem);
 		goto err_umem;
@@ -2389,8 +2449,12 @@ static int ionic_rereg_user_mr(struct ib_mr *ibmr, int flags, u64 start,
 		mr->ibmr.iova = addr;
 		mr->ibmr.length = length;
 
+#ifdef HAVE_IB_UMEM_GET_UDATA
+		mr->umem = ib_umem_get(udata, start, length, access, 0);
+#else
 		mr->umem = ib_umem_get(ibpd->uobject->context, start,
 				       length, access, 0);
+#endif
 		if (IS_ERR(mr->umem)) {
 			rc = PTR_ERR(mr->umem);
 			goto err_umem;
@@ -2776,8 +2840,13 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 		if (rc)
 			goto err_q;
 
+#ifdef HAVE_IB_UMEM_GET_UDATA
+		cq->umem = ib_umem_get(udata, req.cq.addr, req.cq.size,
+				       IB_ACCESS_LOCAL_WRITE, 0);
+#else
 		cq->umem = ib_umem_get(&ctx->ibctx, req.cq.addr, req.cq.size,
 				       IB_ACCESS_LOCAL_WRITE, 0);
+#endif
 		if (IS_ERR(cq->umem)) {
 			rc = PTR_ERR(cq->umem);
 			goto err_q;
@@ -3929,7 +3998,7 @@ static void ionic_qp_sq_destroy_cmb(struct ionic_ibdev *dev,
 static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 			    struct ionic_qp *qp, struct ionic_qdesc *sq,
 			    struct ionic_tbl_buf *buf, int max_wr, int max_sge,
-			    int max_data, int sq_spec)
+			    int max_data, int sq_spec, struct ib_udata *udata)
 {
 	int rc = 0;
 	u32 wqe_size;
@@ -3982,8 +4051,13 @@ static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 		qp->sq_meta = NULL;
 		qp->sq_msn_idx = NULL;
 
+#ifdef HAVE_IB_UMEM_GET_UDATA
+		qp->sq_umem = ib_umem_get(udata, sq->addr,
+					  sq->size, 0, 0);
+#else
 		qp->sq_umem = ib_umem_get(&ctx->ibctx, sq->addr,
 					  sq->size, 0, 0);
+#endif
 		if (IS_ERR(qp->sq_umem)) {
 			rc = PTR_ERR(qp->sq_umem);
 			goto err_sq;
@@ -4142,7 +4216,7 @@ static void ionic_qp_rq_destroy_cmb(struct ionic_ibdev *dev,
 static int ionic_qp_rq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 			    struct ionic_qp *qp, struct ionic_qdesc *rq,
 			    struct ionic_tbl_buf *buf, int max_wr, int max_sge,
-			    int rq_spec)
+			    int rq_spec, struct ib_udata *udata)
 {
 	u32 wqe_size;
 	int rc = 0, i;
@@ -4187,8 +4261,12 @@ static int ionic_qp_rq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 
 		qp->rq_meta = NULL;
 
+#ifdef HAVE_IB_UMEM_GET_UDATA
+		qp->rq_umem = ib_umem_get(udata, rq->addr, rq->size, 0, 0);
+#else
 		qp->rq_umem = ib_umem_get(&ctx->ibctx, rq->addr,
 					  rq->size, 0, 0);
+#endif
 		if (IS_ERR(qp->rq_umem)) {
 			rc = PTR_ERR(qp->rq_umem);
 			goto err_rq;
@@ -4350,13 +4428,13 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 
 	rc = ionic_qp_sq_init(dev, ctx, qp, &req.sq, &sq_buf,
 			      attr->cap.max_send_wr, attr->cap.max_send_sge,
-			      attr->cap.max_inline_data, req.sq_spec);
+			      attr->cap.max_inline_data, req.sq_spec, udata);
 	if (rc)
 		goto err_sq;
 
 	rc = ionic_qp_rq_init(dev, ctx, qp, &req.rq, &rq_buf,
 			      attr->cap.max_recv_wr, attr->cap.max_recv_sge,
-			      req.rq_spec);
+			      req.rq_spec, udata);
 	if (rc)
 		goto err_rq;
 
@@ -5726,7 +5804,7 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 
 	rc = ionic_qp_rq_init(dev, ctx, qp, &req.rq, &rq_buf,
 			      attr->attr.max_wr, attr->attr.max_sge,
-			      req.rq_spec);
+			      req.rq_spec, udata);
 	if (rc)
 		goto err_rq;
 
@@ -6757,6 +6835,12 @@ static const struct ib_device_ops ionic_dev_ops = {
 #ifdef HAVE_GET_VECTOR_AFFINITY
 	.get_vector_affinity	= ionic_get_vector_affinity,
 #endif
+#ifdef HAVE_IB_ALLOC_UCTX_OBJ
+	INIT_RDMA_OBJ_SIZE(ib_ucontext, ionic_ctx, ibctx),
+#endif
+#ifdef HAVE_IB_ALLOC_PD_OBJ
+	INIT_RDMA_OBJ_SIZE(ib_pd, ionic_pd, ibpd),
+#endif
 };
 
 static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
@@ -6829,13 +6913,22 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 		goto err_dev;
 	}
 
+#ifdef HAVE_IB_ALLOC_DEV_CONTAINER
+	dev = ib_alloc_device(ionic_ibdev, ibdev);
+	if (!dev) {
+		rc = -ENOMEM;
+		goto err_dev;
+	}
+	ibdev = &dev->ibdev;
+#else
 	ibdev = ib_alloc_device(sizeof(*dev));
 	if (!ibdev) {
 		rc = -ENOMEM;
 		goto err_dev;
 	}
-
 	dev = to_ionic_ibdev(ibdev);
+#endif
+
 	dev->hwdev = hwdev;
 	dev->ndev = ndev;
 	dev->lif = lif;
@@ -7039,11 +7132,19 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	ibdev->dma_device = ibdev->dev.parent;
 #endif
 
+#ifdef HAVE_RDMA_DRIVER_ID
+	/* XXX Yuck. No way to add enum to kernel headers from here. */
+	ibdev->driver_id = RDMA_DRIVER_QIB + 1;
+#endif
 #ifdef HAVE_IB_REGISTER_DEVICE_NAME
+#ifdef HAVE_IB_REGISTER_DEVICE_NAME_ONLY
+	rc = ib_register_device(ibdev, "ionic_%d");
+#else
 	rc = ib_register_device(ibdev, "ionic_%d", NULL);
+#endif /* HAVE_IB_REGISTER_DEVICE_NAME_ONLY */
 #else
 	rc = ib_register_device(ibdev, NULL);
-#endif
+#endif /* HAVE_IB_REGISTER_DEVICE_NAME */
 	if (rc)
 		goto err_register;
 

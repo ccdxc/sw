@@ -60,9 +60,17 @@ is_ofa() {
 
 test_linux() {
     OFA_KSRC=
-    echo -e "\n$MARK\n$KSRC\n$MARK\n"
+    echo -e "\n$MARK\n$KSRC kernel\n$MARK\n"
     cd drivers
-    make clean && make -k || fail "$KSRC"
+    make clean && make -k || fail "$KSRC kernel"
+    cd ..
+}
+
+test_krping() {
+    OFA_KSRC=
+    echo -e "\n$MARK\n$KSRC krping\n$MARK\n"
+    cd krping
+    make clean && make || fail "$KSRC krping"
     cd ..
 }
 
@@ -83,7 +91,7 @@ test_rdmacore() {
 if [ $# -eq 0 ] ; then
     # build-test for each kernel version that has installed headers
     for KSRC in ${@:-$SRC/linux*/ $SRC/kernels/*/} ; do
-        is_linux && test_linux
+        is_linux && test_linux && test_krping
     done
 
     # build-test for each ofed rdma stack
@@ -107,6 +115,7 @@ else
         KSRC="$WHAT"
         if is_linux ; then
             test_linux
+            test_krping
             continue
         fi
 

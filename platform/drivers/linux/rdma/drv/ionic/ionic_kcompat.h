@@ -149,6 +149,8 @@ static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,17, /* RHEL */ 99,99, /* OFA */ 4_17)
 #define HAVE_IB_GID_DEV_PORT_INDEX
+#else /* 4.17.0 and later */
+#define HAVE_RDMA_DRIVER_ID
 #endif
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,19, /* RHEL */ 99,99, /* OFA */ 4_19a)
@@ -476,6 +478,17 @@ static inline void xa_destroy(struct xarray *xa)
 
 #else /* 4.20.0 and later */
 #define HAVE_XARRAY
+#endif
+
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,1, /* RHEL */ 99,99, /* OFA */ 5_0)
+#else /* 5.1 and later */
+#define HAVE_IB_REGISTER_DEVICE_NAME_ONLY
+#define HAVE_IB_ALLOC_DEV_CONTAINER
+#define HAVE_IB_ALLOC_UCTX_OBJ
+#define HAVE_IB_DEALLOC_UCTX_VOID
+#define HAVE_IB_ALLOC_PD_OBJ
+#define HAVE_IB_DEALLOC_PD_VOID
+#define HAVE_IB_UMEM_GET_UDATA
 #endif
 
 /* other compat for not yet upstream changes */

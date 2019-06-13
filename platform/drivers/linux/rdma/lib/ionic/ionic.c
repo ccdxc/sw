@@ -140,7 +140,7 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 	ionic_debug_file_init();
 
 	ctx = verbs_init_and_alloc_context(ibdev, cmd_fd, ctx, vctx,
-					   RDMA_DRIVER_UNKNOWN);
+					   RDMA_DRIVER_IONIC);
 	if (!ctx) {
 		rc = errno;
 		goto err_ctx;

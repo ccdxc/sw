@@ -16,7 +16,7 @@ scp platform/gen/drivers-linux.tar.xz root@lab-server:
 ssh root@lab-server
 rm -r drivers-linux	#purge old version
 tar xaf drivers-linux.tar.xz
-./setup_apt.sh		#only first time, for build dependencies
+./setup_libs.sh		#only first time, for build dependencies
 ./build.sh
 ./load.sh
 . env.sh		#source env.sh (script is not executable)

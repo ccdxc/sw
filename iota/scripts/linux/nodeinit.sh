@@ -55,7 +55,7 @@ else
     tar xf drivers-linux-eth.tar.xz
     cd drivers-linux-eth
     rmmod drivers/eth/ionic/ionic.ko 2> /dev/null || rc=$?
-    ./setup_apt.sh
+    ./setup_libs.sh
     ./build.sh
     insmod drivers/eth/ionic/ionic.ko
     sleep 2
