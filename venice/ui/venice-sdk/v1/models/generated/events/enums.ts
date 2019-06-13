@@ -51,9 +51,6 @@ export enum EventsEvent_type {
     'ROLLOUT_SUSPENDED' = "ROLLOUT_SUSPENDED",
     'LINK_DOWN' = "LINK_DOWN",
     'LINK_UP' = "LINK_UP",
-    'CPU_THRESHOLD_EXCEEDED' = "CPU_THRESHOLD_EXCEEDED",
-    'DISK_THRESHOLD_EXCEEDED' = "DISK_THRESHOLD_EXCEEDED",
-    'MEM_THRESHOLD_EXCEEDED' = "MEM_THRESHOLD_EXCEEDED",
     'NAPLES_SERVICE_STOPPED' = "NAPLES_SERVICE_STOPPED",
     'SERVICE_PENDING' = "SERVICE_PENDING",
     'SERVICE_RUNNING' = "SERVICE_RUNNING",
@@ -67,7 +64,6 @@ export enum EventsEvent_category {
     'Cluster' = "Cluster",
     'Network' = "Network",
     'System' = "System",
-    'Resource' = "Resource",
 }
 
 export enum EventsEventAttributes_severity {
@@ -81,7 +77,6 @@ export enum EventsEventAttributes_category {
     'Cluster' = "Cluster",
     'Network' = "Network",
     'System' = "System",
-    'Resource' = "Resource",
 }
 
 

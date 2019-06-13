@@ -10,8 +10,6 @@ enum Category {
     Network     = 1;
     // System related events (service events, system boot/reboot events, etc...)
     System      = 2;
-    // Resource related events (cpu, mem and disk usage)
-    Resource    = 3;
 }
 
 // Severity Level of an event

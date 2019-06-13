@@ -14,12 +14,10 @@ var Severity_normal = map[string]string{
 
 // Category_normal is a map of normalized values for the enum
 var Category_normal = map[string]string{
-	"Cluster":  "Cluster",
-	"System":   "System",
-	"Network":  "Network",
-	"Resource": "Resource",
-	"cluster":  "Cluster",
-	"system":   "System",
-	"network":  "Network",
-	"resource": "Resource",
+	"Cluster": "Cluster",
+	"System":  "System",
+	"Network": "Network",
+	"cluster": "Cluster",
+	"system":  "System",
+	"network": "Network",
 }

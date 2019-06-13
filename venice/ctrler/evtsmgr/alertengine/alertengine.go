@@ -17,8 +17,6 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/events/generated/eventattrs"
-	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/alertengine/exporter"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
 	"github.com/pensando/sw/venice/globals"
@@ -280,21 +278,9 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 				memdb.WithAlertStateFilter([]monitoring.AlertState{monitoring.AlertState_OPEN, monitoring.AlertState_ACKNOWLEDGED}),
 				memdb.WithAlertPolicyIDFilter(alertPolicy.GetName()),
 				memdb.WithObjectRefFilter(evt.GetObjectRef()),
+				memdb.WithEventMessageFilter(evt.GetMessage()),
 			}
 
-			// check event message
-			if evt.GetCategory() == eventattrs.Category_Resource.String() {
-				switch eventtypes.EventType(eventtypes.EventType_value[evt.GetType()]) {
-				case eventtypes.CPU_THRESHOLD_EXCEEDED:
-					filters = append(filters, memdb.WithEventMessageContainsFilter(globals.CPUHighThresholdMessage))
-				case eventtypes.MEM_THRESHOLD_EXCEEDED:
-					filters = append(filters, memdb.WithEventMessageContainsFilter(globals.MemHighThresholdMessage))
-				case eventtypes.DISK_THRESHOLD_EXCEEDED:
-					filters = append(filters, memdb.WithEventMessageContainsFilter(globals.DiskHighThresholdMessage))
-				}
-			} else {
-				filters = append(filters, memdb.WithEventMessageFilter(evt.GetMessage()))
-			}
 			outstandingAlerts = a.memDb.GetAlerts(filters...)
 			if len(outstandingAlerts) >= 1 { // there should be exactly one outstanding alert; not more than that
 				a.logger.Debug("1 or more outstanding alert found that matches the object ref. and policy")

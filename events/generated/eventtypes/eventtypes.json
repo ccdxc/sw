@@ -128,23 +128,6 @@
    "Desc": "Port is linked up"
   }
  ],
- "Resource": [
-  {
-   "Name": "CPU_THRESHOLD_EXCEEDED",
-   "Severity": "CRITICAL",
-   "Desc": "CPU threshold exceeded"
-  },
-  {
-   "Name": "DISK_THRESHOLD_EXCEEDED",
-   "Severity": "CRITICAL",
-   "Desc": "Disk threshold exceeded"
-  },
-  {
-   "Name": "MEM_THRESHOLD_EXCEEDED",
-   "Severity": "CRITICAL",
-   "Desc": "Memory threshold exceeded"
-  }
- ],
  "System": [
   {
    "Name": "NAPLES_SERVICE_STOPPED",

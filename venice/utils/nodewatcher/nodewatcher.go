@@ -14,9 +14,6 @@ import (
 	"github.com/shirou/gopsutil/net"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/events/generated/eventtypes"
-	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/tsdb"
@@ -96,11 +93,6 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 			w.metricObj.MemTotal.Set(float64(vmstat.Total))
 			w.metricObj.MemUsedPercent.Set(memUsedPercent)
 
-			if memUsedPercent > globals.MemHighThreshold {
-				recorder.Event(eventtypes.MEM_THRESHOLD_EXCEEDED,
-					fmt.Sprintf("%s, current usage: %v%%", globals.MemHighThresholdMessage, memUsedPercent), nil)
-			}
-
 			// cpu
 			cpuPercent, err := cpu.Percent(0, false)
 			if err != nil || len(cpuPercent) == 0 {
@@ -111,11 +103,6 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 			cpuUsedPercent := math.Ceil(cpuPercent[0]*100) / 100
 			w.metricObj.CPUUsedPercent.Set(cpuUsedPercent)
 			w.logger.Debugf("Node Watcher: recording new metrics, mem used %v%%, cpu used %v%%", vmstat.UsedPercent, cpuPercent[0])
-
-			if cpuUsedPercent > globals.CPUHighThreshold {
-				recorder.Event(eventtypes.CPU_THRESHOLD_EXCEEDED,
-					fmt.Sprintf("%s, current usage: %v%%", globals.CPUHighThresholdMessage, cpuUsedPercent), nil)
-			}
 
 			// disk
 			part, err := disk.PartitionsWithContext(ctx, false)
@@ -145,11 +132,6 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 			if diskTotal > 0 {
 				diskUsedPercent := math.Ceil(float64(diskUsed*10000)/float64(diskTotal)) / 100
 				w.metricObj.DiskUsedPercent.Set(diskUsedPercent)
-
-				if diskUsedPercent > globals.DiskHighThreshold {
-					recorder.Event(eventtypes.DISK_THRESHOLD_EXCEEDED,
-						fmt.Sprintf("%s, current usage: %v%%", globals.DiskHighThresholdMessage, diskUsedPercent), nil)
-				}
 			}
 
 			// network
