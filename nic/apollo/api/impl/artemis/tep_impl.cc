@@ -159,7 +159,9 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     case PDS_TEP_TYPE_SERVICE:
         // program NEXTHOP table entry
         nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
+        nh_data.nexthop_info.port = TM_PORT_UPLINK_1;
         nh_data.nexthop_info.vni = spec->encap.val.value;
+        nh_data.nexthop_info.ip_type = IPTYPE_IPV6;
         ret = nexthop_impl_db()->nh_tbl()->insert_atid(&nh_data, nh_idx_);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to program NEXTHOP table at %u for "
