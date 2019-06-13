@@ -4,18 +4,19 @@
 #define FTLV6_ARTEMIS_ENTRY_NUM_HINTS 4
 struct __attribute__((__packed__)) ftlv6_entry_t {
     // data after key
-    uint32_t __pad_to_512b : 26;
-    uint32_t more_hints: 22;
+    uint32_t __pad_to_512b : 13;
+    uint32_t entry_valid : 1;
+    uint32_t more_hints_pad : 8;
+    uint32_t more_hints: 23;
     uint32_t more_hashes : 1;
-    uint32_t hint4 : 22;
+    uint32_t hint4 : 23;
     uint32_t hash4 : 9;
-    uint32_t hint3 : 22;
+    uint32_t hint3 : 23;
     uint32_t hash3 : 9;
-    uint32_t hint2 : 22;
+    uint32_t hint2 : 23;
     uint32_t hash2 : 9;
-    uint32_t hint1 : 22;
+    uint32_t hint1 : 23;
     uint32_t hash1 : 9;
-    uint32_t flow_role : 1;
 
     // key
     uint32_t ktype : 2;
@@ -27,9 +28,9 @@ struct __attribute__((__packed__)) ftlv6_entry_t {
     uint32_t proto : 8;
 
     // data before key
-    uint32_t epoch : 8;
+    uint32_t flow_role : 1;
     uint32_t session_index : 23;
-    uint32_t entry_valid : 1;
+    uint32_t epoch : 8;
 
 public:
     void tostr(char *buff, uint32_t len) {

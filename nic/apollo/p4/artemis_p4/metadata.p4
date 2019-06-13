@@ -81,11 +81,13 @@ header_type scratch_metadata_t {
         flag                : 1;
         hint_valid          : 1;
         flow_hash           : 9;
-        flow_hint           : 22;
+        flow_hint           : 23;
         in_packets          : 64;
         in_bytes            : 64;
         epoch               : 8;
         cpu_flags           : 16;
+        flow_ohash_lkp      : 1;
+        flow_ohash          : 32;
         timestamp           : 48;
         ip_totallen         : 16;
         drop_stats_pad      : 88;
@@ -102,6 +104,9 @@ header_type scratch_metadata_t {
         tag_root_addr       : 40;
         meter_idx           : 16;
         packet_len          : 16;
+
+        more_hints_pad      : 8;
+        pad8                : 8;
     }
 }
 
