@@ -100,14 +100,14 @@ nh_feeder::spec_compare(const pds_nexthop_spec_t *spec) const {
 }
 
 inline std::ostream&
-operator<<(std::ostream& os, const nh_feeder *obj) {
+operator<<(std::ostream& os, const nh_feeder& obj) {
     os << "NH feeder =>"
-       << " id: " << obj->id
-       << " type: " << obj->type
-       << " ip: " << obj->ip
-       << " mac: " << mac2str(obj->mac)
-       << " vlan: " << obj->vlan
-       << " vpc: " << obj->vpc_id
+       << " id: " << obj.id
+       << " type: " << obj.type
+       << " ip: " << obj.ip
+       << " mac: " << mac2str(obj.mac)
+       << " vlan: " << obj.vlan
+       << " vpc: " << obj.vpc_id
        << std::endl;
     return os;
 }
@@ -115,12 +115,12 @@ operator<<(std::ostream& os, const nh_feeder *obj) {
 sdk::sdk_ret_t
 nh_feeder::info_compare(const pds_nexthop_info_t *info) const {
     if (!this->key_compare(&info->spec.key)) {
-        std::cout << "key compare failed " << (nh_feeder *)this << info;
+        std::cout << "key compare failed " << *this << info;
         return sdk::SDK_RET_ERR;
     }
 
     if (!this->spec_compare(&info->spec)) {
-        std::cout << "spec compare failed " << (nh_feeder *)this << info;
+        std::cout << "spec compare failed " << *this << info;
         return sdk::SDK_RET_ERR;
     }
 

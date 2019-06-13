@@ -23,7 +23,7 @@ operator<<(std::ostream& os, const pds_nexthop_key_t *key) {
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_nexthop_spec_t *spec) {
-    os << (pds_nexthop_key_t *)&spec->key
+    os << &spec->key
        << " type: " << spec->type
        << " ip: " << spec->ip
        << " mac: " << macaddr2str(spec->mac)
@@ -41,8 +41,8 @@ operator<<(std::ostream& os, const pds_nexthop_status_t *status) {
 inline std::ostream&
 operator<<(std::ostream& os, const pds_nexthop_info_t *obj) {
     os << "NH info => "
-       << (pds_nexthop_spec_t *)&obj->spec
-       << (pds_nexthop_status_t *)&obj->status
+       << &obj->spec
+       << &obj->status
        << std::endl;
     return os;
 }

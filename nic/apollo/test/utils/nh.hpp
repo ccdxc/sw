@@ -11,11 +11,12 @@
 #define __TEST_UTILS_NH_HPP__
 
 #include "nic/apollo/api/include/pds_nexthop.hpp"
+#include "nic/apollo/test/utils/feeder.hpp"
 
 namespace api_test {
 
 // NH test feeder class
-class nh_feeder {
+class nh_feeder : public feeder {
 public:
     pds_nexthop_id_t id;
     pds_nh_type_t type;
@@ -23,7 +24,6 @@ public:
     uint64_t mac;
     uint16_t vlan;
     pds_vpc_id_t vpc_id;
-    uint32_t num_obj;
 
     // Constructor
     nh_feeder() { };
@@ -41,8 +41,6 @@ public:
               uint16_t vlan=1, pds_vpc_id_t vpc_id=1);
 
     // Iterate helper routines
-    void iter_init() { cur_iter_pos = 0; }
-    bool iter_more() const { return (cur_iter_pos < num_obj); }
     void iter_next(int width = 1);
 
     // Build routines
@@ -53,9 +51,6 @@ public:
     bool key_compare(const pds_nexthop_key_t *key) const;
     bool spec_compare(const pds_nexthop_spec_t *spec) const;
     sdk::sdk_ret_t info_compare(const pds_nexthop_info_t *info) const;
-
-private:
-    uint32_t cur_iter_pos;
 };
 
 // Function prototypes

@@ -53,13 +53,14 @@ subnet_feeder::iter_next(int width) {
     cur_iter_pos++;
 }
 
-std::ostream& operator << (std::ostream& os, subnet_feeder& obj) {
+inline std::ostream&
+operator<<(std::ostream& os, const subnet_feeder& obj) {
     os << "Subnet feeder =>"
         << " id: " << obj.key.id
         << " vpc: " << obj.vpc.id
         << " cidr_str: " << obj.cidr_str
-        << " vr_ip: " << obj.vr_ip.c_str()
-        << " vr_mac: " << obj.vr_mac.c_str()
+        << " vr_ip: " << obj.vr_ip
+        << " vr_mac: " << obj.vr_mac
         << " v4_rt: " << obj.v4_route_table.id
         << " v6_rt: " << obj.v6_route_table.id
         << " v4_in_pol: " << obj.ing_v4_policy.id
@@ -71,13 +72,13 @@ std::ostream& operator << (std::ostream& os, subnet_feeder& obj) {
 }
 
 void
-subnet_feeder::key_build(pds_subnet_key_t *key) {
+subnet_feeder::key_build(pds_subnet_key_t *key) const {
     memset(key, 0, sizeof(pds_subnet_key_t));
     key->id = this->key.id;
 }
 
 void
-subnet_feeder::spec_build(pds_subnet_spec_t *spec) {
+subnet_feeder::spec_build(pds_subnet_spec_t *spec) const {
     memset(spec, 0, sizeof(pds_subnet_spec_t));
     this->key_build(&spec->key);
 
@@ -105,14 +106,14 @@ subnet_feeder::spec_build(pds_subnet_spec_t *spec) {
 }
 
 bool
-subnet_feeder::key_compare(pds_subnet_key_t *key) {
+subnet_feeder::key_compare(const pds_subnet_key_t *key) const {
     // todo : @sai, please check; compare key not working
     return true;
     return (memcmp(key, &this->key, sizeof(pds_subnet_key_t)) == 0);
 }
 
 bool
-subnet_feeder::spec_compare(pds_subnet_spec_t *spec) {
+subnet_feeder::spec_compare(const pds_subnet_spec_t *spec) const {
     if (spec->vpc.id != vpc.id)
         return false;
 
@@ -134,7 +135,7 @@ subnet_feeder::spec_compare(pds_subnet_spec_t *spec) {
     if (spec->egr_v6_policy.id != egr_v6_policy.id)
         return false;
 
-    if (strcmp(vr_mac.c_str(), "") != 0) {
+    if (!vr_mac.empty()) {
         mac_addr_t vrmac;
         mac_str_to_addr((char *)vr_mac.c_str(), vrmac);
         if (memcmp(&spec->vr_mac, vrmac, sizeof(mac_addr_t)))
@@ -145,15 +146,15 @@ subnet_feeder::spec_compare(pds_subnet_spec_t *spec) {
 }
 
 sdk::sdk_ret_t
-subnet_feeder::info_compare(pds_subnet_info_t *info) {
+subnet_feeder::info_compare(const pds_subnet_info_t *info) const {
 
     if (!this->key_compare(&info->spec.key)) {
-        std::cout << "key compare failed " <<  this;
+        std::cout << "key compare failed " << *this;
         return sdk::SDK_RET_ERR;
     }
 
     if (!this->spec_compare(&info->spec)) {
-        std::cout << "spec compare failed " <<  this;
+        std::cout << "spec compare failed " << *this;
         return sdk::SDK_RET_ERR;
     }
 
@@ -179,6 +180,7 @@ read(subnet_feeder& feeder) {
     pds_subnet_info_t info;
 
     feeder.key_build(&key);
+    memset(&info, 0, sizeof(pds_subnet_info_t));
     if ((rv = pds_subnet_read(&key, &info)) != sdk::SDK_RET_OK)
         return rv;
 

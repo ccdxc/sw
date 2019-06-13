@@ -37,7 +37,8 @@ vpc_peer_feeder::iter_next(int width) {
     cur_iter_pos++;
 }
 
-std::ostream& operator << (std::ostream& os, vpc_peer_feeder& obj) {
+inline std::ostream&
+operator<<(std::ostream& os, const vpc_peer_feeder& obj) {
     os << "VPC Peer feeder =>"
         << " id: " << obj.key.id
         << " vpc1 id: " << obj.vpc1.id
@@ -47,13 +48,13 @@ std::ostream& operator << (std::ostream& os, vpc_peer_feeder& obj) {
 }
 
 void
-vpc_peer_feeder::key_build(pds_vpc_peer_key_t *key) {
+vpc_peer_feeder::key_build(pds_vpc_peer_key_t *key) const {
     memset(key, 0, sizeof(pds_vpc_peer_key_t));
     key->id = this->key.id;
 }
 
 void
-vpc_peer_feeder::spec_build(pds_vpc_peer_spec_t *spec) {
+vpc_peer_feeder::spec_build(pds_vpc_peer_spec_t *spec) const {
     memset(spec, 0, sizeof(pds_vpc_peer_spec_t));
     this->key_build(&spec->key);
 
@@ -63,14 +64,14 @@ vpc_peer_feeder::spec_build(pds_vpc_peer_spec_t *spec) {
 }
 
 bool
-vpc_peer_feeder::key_compare(pds_vpc_peer_key_t *key) {
+vpc_peer_feeder::key_compare(const pds_vpc_peer_key_t *key) const {
     return true;
     // todo : @sai please check, compare routine not done
     // return (memcmp(key, &this->key, sizeof(pds_vpc_peer_key_t)) == 0);
 }
 
 bool
-vpc_peer_feeder::spec_compare(pds_vpc_peer_spec_t *spec) {
+vpc_peer_feeder::spec_compare(const pds_vpc_peer_spec_t *spec) const {
     // todo : @sai please check, compare routine not done 
     return true;
 
@@ -84,14 +85,14 @@ vpc_peer_feeder::spec_compare(pds_vpc_peer_spec_t *spec) {
 }
 
 sdk::sdk_ret_t
-vpc_peer_feeder::info_compare(pds_vpc_peer_info_t *info) {
+vpc_peer_feeder::info_compare(const pds_vpc_peer_info_t *info) const {
     if (!this->key_compare(&info->spec.key)) {
-        std::cout << "key compare failed " <<  this;
+        std::cout << "key compare failed " << *this;
         return sdk::SDK_RET_ERR;
     }
 
     if (!this->spec_compare(&info->spec)) {
-        std::cout << "spec compare failed " <<  this;
+        std::cout << "spec compare failed " << *this;
         return sdk::SDK_RET_ERR;
     }
 

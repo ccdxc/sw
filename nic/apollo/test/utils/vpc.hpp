@@ -40,13 +40,13 @@ public:
     void iter_next(int width = 1);
 
     // Build routines
-    void key_build(pds_vpc_key_t *key);
-    void spec_build(pds_vpc_spec_t *spec);
+    void key_build(pds_vpc_key_t *key) const;
+    void spec_build(pds_vpc_spec_t *spec) const;
 
     // Compare routines
-    bool key_compare(pds_vpc_key_t *key);
-    bool spec_compare(pds_vpc_spec_t *spec);
-    sdk::sdk_ret_t info_compare(pds_vpc_info_t *info);
+    bool key_compare(const pds_vpc_key_t *key) const;
+    bool spec_compare(const pds_vpc_spec_t *spec) const;
+    sdk::sdk_ret_t info_compare(const pds_vpc_info_t *info) const;
 };
 
 // Export variables

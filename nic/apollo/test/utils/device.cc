@@ -34,7 +34,8 @@ device_feeder::iter_next(int width) {
     cur_iter_pos++;
 }
 
-std::ostream& operator << (std::ostream& os, device_feeder& obj) {
+inline std::ostream&
+operator<<(std::ostream& os, const device_feeder& obj) {
     os << "Device feeder =>"
         << " device IP: " << obj.device_ip_str
         << " mac addr: " << obj.mac_addr_str
@@ -44,7 +45,7 @@ std::ostream& operator << (std::ostream& os, device_feeder& obj) {
 }
 
 void
-device_feeder::spec_build(pds_device_spec_t *spec) {
+device_feeder::spec_build(pds_device_spec_t *spec) const {
     ip_prefix_t device_ip_pfx, gw_ip_pfx;
 
     memset(spec, 0, sizeof(pds_device_spec_t));
@@ -58,7 +59,7 @@ device_feeder::spec_build(pds_device_spec_t *spec) {
 }
 
 bool
-device_feeder::spec_compare(pds_device_spec_t *spec) {
+device_feeder::spec_compare(const pds_device_spec_t *spec) const {
     if (device_ip_str.compare(ipv4addr2str(spec->device_ip_addr)) != 0)
         return false;
 
@@ -80,13 +81,13 @@ device_feeder::spec_compare(pds_device_spec_t *spec) {
 #endif
 
 sdk::sdk_ret_t
-device_feeder::info_compare(pds_device_info_t *info) {
+device_feeder::info_compare(const pds_device_info_t *info) const {
     if (::capri_mock_mode())
         return sdk::SDK_RET_OK;
 
     // todo: @amrita check if this works with agent
     if (!this->spec_compare(&info->spec)) {
-        std::cout << "spec compare failed " <<  this;
+        std::cout << "spec compare failed " << *this;
         return sdk::SDK_RET_ERR;
     }
 
@@ -110,6 +111,7 @@ read(device_feeder& feeder) {
     sdk_ret_t rv;
     pds_device_info_t info;
 
+    memset(&info, 0, sizeof(pds_device_info_t));
     if ((rv = pds_device_read(&info)) != sdk::SDK_RET_OK)
         return rv;
 

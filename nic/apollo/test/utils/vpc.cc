@@ -41,22 +41,23 @@ vpc_feeder::iter_next(int width) {
     cur_iter_pos++;
 }
 
-std::ostream& operator << (std::ostream& os, vpc_feeder& obj) {
+inline std::ostream&
+operator<<(std::ostream& os, const vpc_feeder& obj) {
     os << "VPC feeder =>"
-        << " id: " << obj.key.id
-        << " cidr_str: " << obj.cidr_str
-        << std::endl;
+       << " id: " << obj.key.id
+       << " cidr_str: " << obj.cidr_str
+       << std::endl;
     return os;
 }
 
 void
-vpc_feeder::key_build(pds_vpc_key_t *key) {
+vpc_feeder::key_build(pds_vpc_key_t *key) const {
     memset(key, 0, sizeof(pds_vpc_key_t));
     key->id = this->key.id;
 }
 
 void
-vpc_feeder::spec_build(pds_vpc_spec_t *spec) {
+vpc_feeder::spec_build(pds_vpc_spec_t *spec) const {
     memset(spec, 0, sizeof(pds_vpc_spec_t));
     this->key_build(&spec->key);
 
@@ -67,14 +68,14 @@ vpc_feeder::spec_build(pds_vpc_spec_t *spec) {
 }
 
 bool
-vpc_feeder::key_compare(pds_vpc_key_t *key) {
+vpc_feeder::key_compare(const pds_vpc_key_t *key) const {
     return true;
     // todo : @sai please check, compare routine not working
     // return (memcmp(key, &this->key, sizeof(pds_vpc_key_t)) == 0);
 }
 
 bool
-vpc_feeder::spec_compare(pds_vpc_spec_t *spec) {
+vpc_feeder::spec_compare(const pds_vpc_spec_t *spec) const {
     // todo : @sai please check, compare routine not working
     return true;
 
@@ -85,15 +86,15 @@ vpc_feeder::spec_compare(pds_vpc_spec_t *spec) {
 }
 
 sdk::sdk_ret_t
-vpc_feeder::info_compare(pds_vpc_info_t *info) {
+vpc_feeder::info_compare(const pds_vpc_info_t *info) const {
 
     if (!this->key_compare(&info->spec.key)) {
-        std::cout << "key compare failed " <<  this;
+        std::cout << "key compare failed " << *this;
         return sdk::SDK_RET_ERR;
     }
 
     if (!this->spec_compare(&info->spec)) {
-        std::cout << "spec compare failed " <<  this;
+        std::cout << "spec compare failed " << *this;
         return sdk::SDK_RET_ERR;
     }
 
@@ -119,6 +120,7 @@ read(vpc_feeder& feeder) {
     pds_vpc_info_t info;
 
     feeder.key_build(&key);
+    memset(&info, 0, sizeof(pds_vpc_info_t));
     if ((rv = pds_vpc_read(&key, &info)) != sdk::SDK_RET_OK)
         return rv;
 

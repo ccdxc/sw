@@ -21,8 +21,8 @@ public:
     uint32_t num_obj;
 
     // Iterate helper routines
-    void iter_init() { cur_iter_pos = 0; }
-    bool iter_more() { return (cur_iter_pos < num_obj); }
+    void iter_init(void) { cur_iter_pos = 0; }
+    bool iter_more(void) const { return (cur_iter_pos < num_obj); }
 
 protected:
     uint32_t cur_iter_pos;

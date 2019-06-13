@@ -27,6 +27,6 @@ export PATH=${PATH}:${BUILD_DIR}/bin
 
 # gtests
 echo "Running policy test"
-$GDB apollo_policy_test -c hal.json -f apollo -n 1024 --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_policy_test.xml" > apollo_policy_test.log.txt
+$GDB apollo_policy_test -c hal.json -n 1024 --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_policy_test.xml" > apollo_policy_test.log.txt
 [[ $? -ne 0 ]] && echo "apollo_policy_test failed!" && exit 1
 echo "Success"

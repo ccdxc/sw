@@ -39,11 +39,11 @@ public:
     void iter_next(int width = 1);
 
     // Build routines
-    void spec_build(pds_device_spec_t *spec);
+    void spec_build(pds_device_spec_t *spec) const;
 
     // Compare routines
-    bool spec_compare(pds_device_spec_t *spec);
-    sdk::sdk_ret_t info_compare(pds_device_info_t *info);
+    bool spec_compare(const pds_device_spec_t *spec) const;
+    sdk::sdk_ret_t info_compare(const pds_device_info_t *info) const;
 };
 
 // Export variables
