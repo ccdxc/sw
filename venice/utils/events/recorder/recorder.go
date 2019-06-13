@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/connectivity"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	evtsproxygrpc "github.com/pensando/sw/venice/evtsproxy/rpcserver/evtsproxyproto"
@@ -259,8 +260,15 @@ func (r *recorderImpl) Event(eventType eventtypes.EventType, message string, obj
 			Tenant:    objRefMeta.GetTenant(),
 			Namespace: objRefMeta.GetNamespace(),
 			Kind:      objRefKind,
-			Name:      objRefMeta.GetName(),
 			URI:       objRefMeta.GetSelfLink(),
+			Name:      objRefMeta.GetName(),
+		}
+
+		// update the user friendly name of nic in object-ref
+		if r.isNicKind(objRefKind) {
+			if nic, ok := objRef.(*cluster.SmartNIC); ok {
+				event.ObjectRef.Name = nic.Spec.ID
+			}
 		}
 	}
 
@@ -445,4 +453,11 @@ func (r *recorderImpl) forwardEvents(evts []*evtsapi.Event) error {
 			return nil // events are sent successfully
 		}
 	}
+}
+
+// isNicKind returns true if the given kind matches the smart nic kind
+func (r *recorderImpl) isNicKind(kind string) bool {
+	nic := &cluster.SmartNIC{}
+	nic.Defaults("all")
+	return nic.GetKind() == kind
 }

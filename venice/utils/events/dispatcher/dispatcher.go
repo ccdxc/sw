@@ -14,7 +14,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/utils"
 	memcache "github.com/pensando/sw/venice/utils/cache"
@@ -48,6 +47,9 @@ type dispatcherImpl struct {
 	// any operation on exporters (events distribution, registration, un-registration) should not stall the events pipeline
 	exporters *eventExporters // event exporters
 
+	// default object ref to be included in the event that do not carry object-ref
+	defaultObjectRef *api.ObjectRef
+
 	start sync.Once // used for starting the dispatcher
 
 	stop     sync.Once      // used for shutting down the dispatcher
@@ -71,7 +73,8 @@ type evtsExporter struct {
 }
 
 // NewDispatcher creates a new dispatcher instance with the given send interval.
-func NewDispatcher(nodeName string, dedupInterval, sendInterval time.Duration, storeConfig *events.StoreConfig, logger log.Logger) (events.Dispatcher, error) {
+func NewDispatcher(nodeName string, dedupInterval, sendInterval time.Duration, storeConfig *events.StoreConfig,
+	defaultObjectRef *api.ObjectRef, logger log.Logger) (events.Dispatcher, error) {
 	if utils.IsEmpty(nodeName) {
 		return nil, fmt.Errorf("empty node name")
 	}
@@ -96,15 +99,16 @@ func NewDispatcher(nodeName string, dedupInterval, sendInterval time.Duration, s
 	}
 
 	dispatcher := &dispatcherImpl{
-		nodeName:      nodeName,
-		dedupInterval: dedupInterval,
-		sendInterval:  sendInterval,
-		logger:        logger.WithContext("submodule", "events_dispatcher"),
-		dedupCache:    newDedupCache(dedupInterval),
-		eventsBatcher: newEventsBatcher(logger),
-		eventsStore:   eventsStore,
-		exporters:     &eventExporters{list: map[string]*evtsExporter{}},
-		shutdown:      make(chan struct{}),
+		nodeName:         nodeName,
+		dedupInterval:    dedupInterval,
+		sendInterval:     sendInterval,
+		defaultObjectRef: defaultObjectRef,
+		logger:           logger.WithContext("submodule", "events_dispatcher"),
+		dedupCache:       newDedupCache(dedupInterval),
+		eventsBatcher:    newEventsBatcher(logger),
+		eventsStore:      eventsStore,
+		exporters:        &eventExporters{list: map[string]*evtsExporter{}},
+		shutdown:         make(chan struct{}),
 	}
 
 	return dispatcher, nil
@@ -146,16 +150,7 @@ func (d *dispatcherImpl) addEvent(event *evtsapi.Event) error {
 
 	// populate object ref
 	if event.ObjectRef == nil {
-		node := &cluster.Node{}
-		node.Defaults("all")
-		node.Name = d.nodeName
-		event.ObjectRef = &api.ObjectRef{
-			Kind:      node.GetKind(),
-			Name:      node.GetName(),
-			Tenant:    node.GetTenant(),
-			Namespace: node.GetNamespace(),
-			URI:       node.GetSelfLink(),
-		}
+		event.ObjectRef = d.defaultObjectRef
 	}
 
 	if err := events.ValidateEvent(event); err != nil {

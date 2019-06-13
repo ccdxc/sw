@@ -967,8 +967,9 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	l := log.GetNewLogger(log.GetDefaultConfig("evts-prxy"))
 
 	it.epsDir = tmpDir
-	eps, err := evtsproxy.NewEventsProxy(c.TestName(), "venice_integ_evtsprxy", fmt.Sprintf(":%s", globals.EvtsProxyRPCPort), it.resolverClient,
+	eps, err := evtsproxy.NewEventsProxy("venice_integ_test", "venice_integ_evtsprxy", fmt.Sprintf(":%s", globals.EvtsProxyRPCPort), it.resolverClient,
 		5*time.Second, time.Second, &events.StoreConfig{Dir: it.epsDir}, l)
+	c.Assert(err, check.IsNil)
 	eps.StartDispatch()
 	c.Assert(err, check.IsNil)
 	it.eps = eps

@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nevtsproxy/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/nevtsproxy/reader"
 	"github.com/pensando/sw/nic/agent/nevtsproxy/shm"
@@ -320,7 +322,8 @@ func (e *evtServices) start(mode string) {
 
 	// create events proxy
 	if e.eps, err = evtsproxy.NewEventsProxy(e.nodeName, globals.EvtsProxy, e.config.grpcListenURL, e.resolverClient,
-		e.config.dedupInterval, e.config.batchInterval, &events.StoreConfig{Dir: e.config.evtsStoreDir}, e.logger); err != nil {
+		e.config.dedupInterval, e.config.batchInterval, &events.StoreConfig{Dir: e.config.evtsStoreDir}, e.logger,
+		evtsproxy.WithDefaultObjectRef(getDefaultObjectRef(e.nodeName))); err != nil {
 		e.logger.Fatalf("error creating events proxy instance: %v", err)
 	}
 
@@ -402,4 +405,17 @@ func (e *evtServices) stop() {
 		e.agentStore = nil
 	}
 	e.running = false
+}
+
+// returns the default object ref for events
+func getDefaultObjectRef(nodeName string) *api.ObjectRef {
+	nic := &cluster.SmartNIC{}
+	nic.Defaults("all")
+	return &api.ObjectRef{
+		Kind:      nic.GetKind(),
+		Name:      nodeName,
+		Tenant:    nic.GetTenant(),
+		Namespace: nic.GetNamespace(),
+		URI:       nic.GetSelfLink(),
+	}
 }

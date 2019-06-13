@@ -10,6 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/evtsproxy/rpcserver"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events"
@@ -50,19 +51,36 @@ type EventsProxy struct {
 	logger log.Logger // logger
 }
 
+// EventsProxyOptions represents the custom options for events proxy
+type EventsProxyOptions struct {
+	// default object ref to be included in the event that do not carry object-ref
+	defaultObjectRef *api.ObjectRef
+}
+
+// Option fills the optional params for events proxy
+type Option func(epo *EventsProxyOptions)
+
+// WithDefaultObjectRef passes a custom object ref for events going through this proxy
+func WithDefaultObjectRef(objRef *api.ObjectRef) Option {
+	return func(epo *EventsProxyOptions) {
+		epo.defaultObjectRef = objRef
+	}
+}
+
 // NewEventsProxy creates and returns a events proxy instance
 func NewEventsProxy(nodeName, serverName, serverURL string, resolverClient resolver.Interface, dedupInterval, batchInterval time.Duration,
-	storeConfig *events.StoreConfig, logger log.Logger) (*EventsProxy, error) {
-	if utils.IsEmpty(serverName) || utils.IsEmpty(serverURL) || logger == nil {
-		return nil, errors.New("serverName, serverURL and logger is required")
+	storeConfig *events.StoreConfig, logger log.Logger, opts ...Option) (*EventsProxy, error) {
+	if utils.IsEmpty(serverName) || utils.IsEmpty(serverURL) || utils.IsEmpty(nodeName) || logger == nil {
+		return nil, errors.New("serverName, serverURL, nodeName and logger is required")
 	}
 
-	if utils.IsEmpty(nodeName) {
-		nodeName = utils.GetHostname()
+	epo := &EventsProxyOptions{}
+	for _, opt := range opts {
+		opt(epo)
 	}
 
 	// create the events dispatcher
-	evtsDispatcher, err := dispatcher.NewDispatcher(nodeName, dedupInterval, batchInterval, storeConfig, logger)
+	evtsDispatcher, err := dispatcher.NewDispatcher(nodeName, dedupInterval, batchInterval, storeConfig, epo.defaultObjectRef, logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "error instantiating events proxy RPC server")
 	}

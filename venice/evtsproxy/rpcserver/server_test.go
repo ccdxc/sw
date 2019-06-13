@@ -61,7 +61,7 @@ func setup(t *testing.T, eventsStorePath string, dedupInterval, batchInterval ti
 	*rpckit.RPCClient, *exporters.MockExporter, epgrpc.EventsProxyAPIClient) {
 	tLogger := logger.WithContext("t_name", t.Name())
 	// create dispatcher
-	evtsDispatcher, err := dispatcher.NewDispatcher(t.Name(), dedupInterval, batchInterval, &events.StoreConfig{Dir: eventsStorePath}, tLogger)
+	evtsDispatcher, err := dispatcher.NewDispatcher(t.Name(), dedupInterval, batchInterval, &events.StoreConfig{Dir: eventsStorePath}, nil, tLogger)
 	AssertOk(t, err, "failed to create dispatcher")
 	evtsDispatcher.Start()
 
@@ -252,7 +252,7 @@ func TestEventsProxyRPCServerInstantiation(t *testing.T) {
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
-	dispatcher, err := dispatcher.NewDispatcher(t.Name(), time.Second, 10*time.Millisecond, &events.StoreConfig{Dir: eventsStorePath}, tLogger)
+	dispatcher, err := dispatcher.NewDispatcher(t.Name(), time.Second, 10*time.Millisecond, &events.StoreConfig{Dir: eventsStorePath}, nil, tLogger)
 	AssertOk(t, err, "failed to create dispatcher")
 
 	// no listenURL name

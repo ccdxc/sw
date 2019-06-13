@@ -156,7 +156,8 @@ func TestEventsReaderWithDispatcher(t *testing.T) {
 	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
 
 	// create dispatcher
-	evtsD, err := dispatcher.NewDispatcher(t.Name(), 60*time.Second, 100*time.Millisecond, &events.StoreConfig{Dir: dir}, logger)
+	evtsD, err := dispatcher.NewDispatcher(t.Name(), 60*time.Second, 100*time.Millisecond, &events.StoreConfig{Dir: dir},
+		nil, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	evtsD.Start()
 	defer evtsD.Shutdown()

@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/events"
@@ -95,8 +97,10 @@ func createEvtsProxy(listenURL string, resolverClient resolver.Interface, dedupI
 	*evtsproxy.EventsProxy, *policy.Manager, *policy.Watcher) {
 
 	// create events proxy
-	eps, err := evtsproxy.NewEventsProxy(k8s.GetNodeName(), globals.EvtsProxy, listenURL, resolverClient, dedupInterval,
-		batchInterval, &events.StoreConfig{Dir: evtsStoreDir}, logger)
+	nodeName := k8s.GetNodeName()
+	eps, err := evtsproxy.NewEventsProxy(nodeName, globals.EvtsProxy, listenURL, resolverClient, dedupInterval,
+		batchInterval, &events.StoreConfig{Dir: evtsStoreDir}, logger,
+		evtsproxy.WithDefaultObjectRef(getDefaultObjectRef(nodeName)))
 	if err != nil {
 		logger.Fatalf("error creating events proxy instance: %v", err)
 	}
@@ -120,4 +124,18 @@ func createEvtsProxy(listenURL string, resolverClient resolver.Interface, dedupI
 	eps.StartDispatch()
 
 	return eps, policyMgr, policyWatcher
+}
+
+// returns the default object ref for events
+func getDefaultObjectRef(nodeName string) *api.ObjectRef {
+	node := &cluster.Node{}
+	node.Defaults("all")
+	node.Name = nodeName
+	return &api.ObjectRef{
+		Kind:      node.GetKind(),
+		Name:      node.GetName(),
+		Tenant:    node.GetTenant(),
+		Namespace: node.GetNamespace(),
+		URI:       node.GetSelfLink(),
+	}
 }
