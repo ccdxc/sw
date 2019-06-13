@@ -1,12 +1,21 @@
+#include <stdio.h>
+#include <iostream>
+
 #include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
 namespace upgrade {
+
+inline bool exists(const std::string& name) {
+  struct stat buffer;
+  return (stat (name.c_str(), &buffer) == 0);
+
+}
 
 ::utils::log *upgrade_obfl_trace_logger;
 
 void initializeLogger() {
     static bool initDone = false;
-    if (!initDone) {
+    if (!initDone && exists("/nic/tools/fwupdate")) {
         upgrade_obfl_trace_logger = ::utils::log::factory("upgrade_obfl", 0x0,
                                         ::utils::log_mode_sync, false,
                                         OBFL_LOG_FILENAME, OBFL_LOG_MAX_FILESIZE,
