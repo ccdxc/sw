@@ -20,7 +20,7 @@ tx_from_host_4to6:
     phvwr.!c1       p.ethernet_1_etherType, ETHERTYPE_IPV6
     phvwr           p.ipv4_1_valid, FALSE
     phvwr           p.ipv6_1_valid, TRUE
-    add             r1, 6, k.ipv4_1_diffserv, 4
+    or              r1, k.ipv4_1_diffserv, 0x6, 8
     phvwr           p.{ipv6_1_version,ipv6_1_trafficClass}, r1
     add             r1, k.ipv4_1_ttl, k.ipv4_1_protocol, 8
     sub             r2, k.ipv4_1_totalLen, 20
