@@ -103,10 +103,11 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 
 			// cpu
 			cpuPercent, err := cpu.Percent(0, false)
-			if err != nil {
-				w.logger.Errorf("Node Watcher: failed to read cpu percent, error: %v", err)
+			if err != nil || len(cpuPercent) == 0 {
+				w.logger.Errorf("Node Watcher: failed to read cpu percent, num-results: %d, error: %v", len(cpuPercent), err)
 				continue
 			}
+
 			cpuUsedPercent := math.Ceil(cpuPercent[0]*100) / 100
 			w.metricObj.CPUUsedPercent.Set(cpuUsedPercent)
 			w.logger.Debugf("Node Watcher: recording new metrics, mem used %v%%, cpu used %v%%", vmstat.UsedPercent, cpuPercent[0])
