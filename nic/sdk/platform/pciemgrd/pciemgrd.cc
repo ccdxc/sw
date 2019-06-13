@@ -262,6 +262,14 @@ pciemgrd_params(pciemgrenv_t *pme)
             pciesys_logerror("restore failed, forcing full init\n");
             pme->params.initmode = FORCE_INIT;
         }
+        /*
+         * If this upgrade restart was due to a rollback
+         * we have consumed the state we saved for the rollback.
+         * Mark this complete (removes any saved rollback state).
+         */
+        if (upgrade_rollback_in_progress()) {
+            upgrade_rollback_complete();
+        }
     }
 }
 

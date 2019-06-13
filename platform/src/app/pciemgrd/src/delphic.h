@@ -44,6 +44,8 @@ class PciemgrSvcHandler : public UpgHandler {
 public:
     HdlrResp CompatCheckHandler(UpgCtx& upgCtx);
     HdlrResp SaveStateHandler(UpgCtx& upgCtx);
+    void SuccessHandler(UpgCtx& upgCtx);
+    HdlrResp FailedHandler(UpgCtx& upgCtx);
 };
 
 #define SERVICE_NAME "pciemgrd"

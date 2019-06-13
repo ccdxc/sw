@@ -210,10 +210,13 @@ server_loop(pciemgrenv_t *pme)
 
     pciesys_loginfo("---------------- config ----------------\n");
     pciesys_loginfo("enabled_ports 0x%x\n", pme->enabled_ports);
-    pciesys_loginfo("gen%dx%d\n", pme->params.cap_gen, pme->params.cap_width);
+    pciesys_loginfo("port capabilities: gen%dx%d\n",
+                    pme->params.cap_gen, pme->params.cap_width);
     pciesys_loginfo("vendorid: %04x\n", pme->params.vendorid);
     pciesys_loginfo("subvendorid: %04x\n", pme->params.subvendorid);
     pciesys_loginfo("subdeviceid: %04x\n", pme->params.subdeviceid);
+    pciesys_loginfo("initmode: %d\n", pme->params.initmode);
+    pciesys_loginfo("restart: %d\n", pme->params.restart);
     pciesys_loginfo("---------------- config ----------------\n");
 
     if ((r = open_hostports()) < 0) {

@@ -27,6 +27,11 @@ void logger_init(void);
 int upgrade_state_save(void);
 int upgrade_state_restore(void);
 int upgrade_in_progress(void);
+int upgrade_complete(void);
+int upgrade_failed(void);
+int upgrade_rollback_begin(void);
+int upgrade_rollback_in_progress(void);
+int upgrade_rollback_complete(void);
 
 int delphi_client_start();
 
