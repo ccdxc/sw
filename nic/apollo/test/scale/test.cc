@@ -363,7 +363,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                         pds_local_mapping.provider_ip_valid = true;
                         pds_local_mapping.provider_ip = v6_provider_pfx->addr;
                         CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_local_mapping.provider_ip.addr.v6_addr,
-                                                        provider_pfx->addr.addr.v4_addr + ip_offset);
+                                                        (provider_pfx->addr.addr.v4_addr + ip_offset));
                     } else {
                         pds_local_mapping.provider_ip_valid = true;
                         pds_local_mapping.provider_ip.af = IP_AF_IPV4;
@@ -406,7 +406,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                             pds_local_v6_mapping.provider_ip_valid = true;
                             pds_local_v6_mapping.provider_ip = v6_provider_pfx->addr;
                             CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_local_v6_mapping.provider_ip.addr.v6_addr,
-                                                            provider_pfx->addr.addr.v4_addr + ip_offset);
+                                                            (provider_pfx->addr.addr.v4_addr + ip_offset));
                         } else {
                             pds_local_v6_mapping.provider_ip_valid = true;
                             pds_local_v6_mapping.provider_ip.af = IP_AF_IPV4;
@@ -481,7 +481,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     pds_remote_mapping.provider_ip_valid = true;
                     pds_remote_mapping.provider_ip = v6_provider_pfx->addr;
                     CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_remote_mapping.provider_ip.addr.v6_addr,
-                                                    provider_pfx->addr.addr.v4_addr + ip_offset);
+                                                    (provider_pfx->addr.addr.v4_addr + ip_offset));
                 } else {
                     pds_remote_mapping.provider_ip_valid = true;
                     pds_remote_mapping.provider_ip.af = IP_AF_IPV4;
@@ -517,7 +517,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                         pds_remote_v6_mapping.provider_ip_valid = true;
                         pds_remote_v6_mapping.provider_ip = v6_provider_pfx->addr;
                         CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_remote_v6_mapping.provider_ip.addr.v6_addr,
-                                                        provider_pfx->addr.addr.v4_addr + ip_offset);
+                                                        (provider_pfx->addr.addr.v4_addr + ip_offset));
                     } else {
                         pds_remote_v6_mapping.provider_ip_valid = true;
                         pds_remote_v6_mapping.provider_ip.af = IP_AF_IPV4;
