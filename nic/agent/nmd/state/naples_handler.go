@@ -35,6 +35,8 @@ const (
 	CmdEXECUrl = "/cmd/v1/naples/"
 	// UpdateURL is the URL to help with file upload
 	UpdateURL = "/update/"
+	// DataURL is the URL to help with copying out any files from /data
+	DataURL = "/data/"
 
 	// ProfileURL is the URL to create naples profiles
 	ProfileURL = "/api/v1/naples/profiles/"

@@ -622,6 +622,7 @@ func (n *NMD) StartRestServer() error {
 	router.PathPrefix(MonitoringURL + "events/").Handler(http.StripPrefix(MonitoringURL+"events/", http.FileServer(http.Dir(globals.EventsDir))))
 	router.PathPrefix(CoresURL).Handler(http.StripPrefix(CoresURL, http.FileServer(http.Dir(globals.CoresDir))))
 	router.PathPrefix(UpdateURL).Handler(http.StripPrefix(UpdateURL, http.FileServer(http.Dir(globals.UpdateDir))))
+	router.PathPrefix(DataURL).Handler(http.StripPrefix(DataURL, http.FileServer(http.Dir(globals.DataDir))))
 
 	router.HandleFunc("/api/v1/naples/profiles/{ProfileName}", httputils.MakeHTTPHandler(n.NaplesProfileDeleteHandler))
 

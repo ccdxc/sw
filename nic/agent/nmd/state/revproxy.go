@@ -25,6 +25,7 @@ var revProxyConfig = map[string]string{
 	"/cores/":        "http://127.0.0.1:" + globals.NmdRESTPort,
 	"/cmd/":          "http://127.0.0.1:" + globals.NmdRESTPort,
 	"/update/":       "http://127.0.0.1:" + globals.NmdRESTPort,
+	"/data/":         "http://127.0.0.1:" + globals.NmdRESTPort,
 
 	// TM-AGENT
 	"/telemetry/":           "http://127.0.0.1:" + globals.TmAGENTRestPort,

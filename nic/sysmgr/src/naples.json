@@ -87,6 +87,18 @@
             },
             {
                 "kind": "service",
+                "service-name": "upgrade"
+            },
+            {
+                "kind": "service",
+                "service-name": "nicmgr"
+            },
+            {
+                "kind": "service",
+                "service-name": "pciemgrd"
+            },
+            {
+                "kind": "service",
                 "service-name": "hal"
             }
         ],
@@ -151,7 +163,7 @@
                 "service-name": "hal"
             }
         ],
-        "flags": [],
+        "flags": ["restartable", "save_stdout_on_crash"],
         "timeout": 30.0
     },
     {

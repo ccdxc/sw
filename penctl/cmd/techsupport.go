@@ -43,9 +43,6 @@ Cmds:
  -
    cmd: /nic/tools/fwupdate -l
    outputfile: fw_version.out
- -
-   cmd: halctl show techsupport
-   outputfile: hal-cmds.txt
 `
 
 // NaplesCmds is the format of the yaml file used to run commands on Naples for tech-support
@@ -145,12 +142,12 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 		os.MkdirAll(destDir, os.ModePerm)
 	}
 
-	fmt.Printf("Fetching cores\n")
-	//Copy out core files from /data/core
-	coreDestDir := destDir + "/cores/"
-	createDestDir(coreDestDir)
-	resp, err := restGetResp("cores/v1/naples/")
-	if err != nil && !strings.Contains(err.Error(), "not found") {
+	fmt.Printf("Fetching upgrade logs")
+	//Copy out upgrade logs
+	upgDestDir := destDir + "/upgrade_logs/"
+	createDestDir(upgDestDir)
+	resp, err := restGetResp("data/")
+	if err != nil {
 		return err
 	}
 	retS, err := parseFiles(resp)
@@ -158,13 +155,34 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	for _, file := range retS {
+		if strings.Contains(file, "upgrade-logs.tar") {
+			fmt.Printf(".")
+			copyFileToDest(upgDestDir, "data/", file)
+		}
+	}
+	fmt.Printf("\nUpgrade logs fetched\n")
+	retSlice = nil
+
+	fmt.Printf("Fetching cores")
+	//Copy out core files from /data/core
+	coreDestDir := destDir + "/cores/"
+	createDestDir(coreDestDir)
+	resp, err = restGetResp("cores/v1/naples/")
+	if err != nil && !strings.Contains(err.Error(), "not found") {
+		return err
+	}
+	retS, err = parseFiles(resp)
+	if err != nil {
+		return err
+	}
+	for _, file := range retS {
 		fmt.Printf(".")
 		copyFileToDest(coreDestDir, "cores/v1/naples/", file)
 	}
-	fmt.Printf("Cores fetched\n")
+	fmt.Printf("\nCores fetched\n")
 	retSlice = nil
 
-	fmt.Printf("Fetching events\n")
+	fmt.Printf("Fetching events ")
 	//Copy out all event files from /var/lib/pensando/events/ dir
 	eventsDestDir := destDir + "/events/"
 	createDestDir(eventsDestDir)
@@ -186,7 +204,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Events fetched\n")
 	retSlice = nil
 
-	fmt.Printf("Fetching logs\n")
+	fmt.Printf("Fetching logs")
 	err = getLogs("logs", "monitoring/v1/naples/logs/")
 	if err != nil {
 		return err
@@ -195,9 +213,9 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Logs fetched\n")
+	fmt.Printf("\nLogs fetched\n")
 
-	fmt.Printf("Executing commands\n")
+	fmt.Printf("Executing commands:\n")
 	//Execute cmds pointed to by YML file
 	cmdDestDir := destDir + "/cmd_out/"
 	createDestDir(cmdDestDir)
@@ -224,7 +242,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 			fmt.Println(err)
 		}
 		if len(resp) > 3 {
-			fmt.Printf(".")
+			fmt.Println(naplesCmd.Cmd)
 			s := strings.Replace(string(resp), `\n`, "\n", -1)
 			s = strings.Replace(s, "\\", "", -1)
 			file = cmdDestDir + "/" + naplesCmd.Outputfile

@@ -57,6 +57,19 @@ delphi::error UpgAppRespReact::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr
             if (exists("/nic/tools/fwupdate")) {
                 ctx.sysMgr->restart_system();
             }
+        } else {
+            if (exists("/nic/tools/fwupdate")) {
+                int ret = 0;
+                string cmd = "rm -rf /data/post-upgrade-logs.tar";
+                UPG_LOG_INFO("Image is: {}", ctx.firmwarePkgName);
+                if ((ret = system (cmd.c_str())) != 0) {
+                    UPG_LOG_INFO("Unable to delete old logs post-upgrade");
+                }
+                cmd = "tar -cvf /data/post-upgrade-logs.tar /var/log/";
+                if ((ret = system (cmd.c_str())) != 0) {
+                    UPG_LOG_INFO("Unable to save logs post-upgrade");
+                }
+            }
         }
     }
 

@@ -93,6 +93,9 @@ const (
 	// Update directory
 	UpdateDir = "/update"
 
+	// Data directory
+	DataDir = "/data"
+
 	// Runtime directory
 	RuntimeDir = "/var/run/pensando"
 

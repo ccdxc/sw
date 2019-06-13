@@ -75,8 +75,8 @@ else
     exit 1
 fi
 
-rm -rf /data/pre-upgrade-logs.tar.gz
-tar -cvf /data/pre-upgrade-logs.tar.gz /var/log/
+rm -rf /data/pre-upgrade-logs.tar
+tar -cvf /data/pre-upgrade-logs.tar /var/log/
 
 echo "Switching filesystem from $cur_image to $new_image"
 
