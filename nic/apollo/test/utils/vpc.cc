@@ -25,6 +25,8 @@ vpc_feeder::init(pds_vpc_key_t key, pds_vpc_type_t type,
     this->key = key;
     this->type = type;
     this->cidr_str = cidr_str;
+    this->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+    this->fabric_encap.val.vnid = 9999;
     SDK_ASSERT(str2ipv4pfx((char *)cidr_str.c_str(), &pfx) == 0);
     num_obj = num_vpc;
 }
@@ -61,6 +63,7 @@ vpc_feeder::spec_build(pds_vpc_spec_t *spec) {
     spec->type = type;
     spec->v4_pfx.len = pfx.len;
     spec->v4_pfx.v4_addr = pfx.addr.addr.v4_addr;
+    spec->fabric_encap = fabric_encap;
 }
 
 bool

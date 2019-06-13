@@ -1081,6 +1081,8 @@ pds_agent_vpc_api_spec_fill (pds_vpc_spec_t *api_spec,
     }
     ipv4pfx_proto_spec_to_api_spec(&api_spec->v4_pfx, proto_spec.v4prefix());
     ippfx_proto_spec_to_api_spec(&api_spec->v6_pfx, proto_spec.v6prefix());
+    ippfx_proto_spec_to_api_spec(&api_spec->nat46_prefix, proto_spec.nat46prefix());
+    api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
 }
 
 // Populate proto buf spec from vpc API spec
@@ -1096,6 +1098,8 @@ vpc_api_spec_to_proto_spec (pds::VPCSpec *proto_spec,
     }
     ipv4pfx_api_spec_to_proto_spec(proto_spec->mutable_v4prefix(), &api_spec->v4_pfx);
     ippfx_api_spec_to_proto_spec(proto_spec->mutable_v6prefix(), &api_spec->v6_pfx);
+    ippfx_api_spec_to_proto_spec(proto_spec->mutable_nat46prefix(), &api_spec->nat46_prefix);
+    pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(), &api_spec->fabric_encap);
 }
 
 // Populate proto buf status from vpc API status

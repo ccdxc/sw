@@ -21,6 +21,7 @@ class vpc_feeder {
 public:
     pds_vpc_key_t key;
     pds_vpc_type_t type;
+    pds_encap_t fabric_encap;
     std::string cidr_str;
     ip_prefix_t pfx;
     uint32_t num_obj;

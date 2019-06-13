@@ -156,6 +156,8 @@ populate_route_table_request (RouteTableRequest *req,
             route->set_vpcid(rt->routes[i].vpc.id);
         } else if (rt->routes[i].nh_type == PDS_NH_TYPE_TEP) {
             ip_addr_to_spec(route->mutable_nexthop(), &rt->routes[i].nh_ip);
+        } else if (rt->routes[i].nh_type == PDS_NH_TYPE_IP) {
+            route->set_nexthopid(rt->routes[i].nh);
         }
     }
 
@@ -253,6 +255,7 @@ populate_vpc_request (VPCRequest *req, pds_vpc_spec_t *vpc)
     } else if (vpc->type == PDS_VPC_TYPE_SUBSTRATE) {
         spec->set_type(pds::VPC_TYPE_SUBSTRATE);
     }
+    ip_pfx_to_spec(spec->mutable_nat46prefix(), &vpc->nat46_prefix);
 
     return;
 }

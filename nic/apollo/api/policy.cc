@@ -167,7 +167,6 @@ policy::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 policy::activate_config(pds_epoch_t epoch, api_op_t api_op,
                             obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Activating security policy %u config", key_.id);
     return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
 }
 

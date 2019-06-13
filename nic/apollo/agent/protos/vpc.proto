@@ -55,7 +55,7 @@ message VPCSpec {
   // IPv6 prefix/IP to be used to NAT the IPv4 traffic destined to reach a
   // service in IPv6 only network/service (all VNICs in this VPC will use this
   // prefix to get their IPv4 traffic (S)NAT-ed in the outbound direction)
-  types.IPPrefix Nat46Preifx      = 9;
+  types.IPPrefix Nat46Prefix      = 9;
 }
 
 // operational status of a VPC, if any
