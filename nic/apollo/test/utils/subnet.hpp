@@ -14,11 +14,12 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
+#include "nic/apollo/test/utils/feeder.hpp"
 
 namespace api_test {
 
 // Subnet test feeder class
-class subnet_feeder {
+class subnet_feeder : public feeder {
 public:
     pds_subnet_key_t key;
     pds_vpc_key_t vpc;
@@ -32,7 +33,6 @@ public:
     pds_policy_key_t ing_v6_policy;
     pds_policy_key_t egr_v4_policy;
     pds_policy_key_t egr_v6_policy;
-    uint32_t num_obj;
 
     // Constructor
     subnet_feeder() { };
@@ -45,8 +45,6 @@ public:
               std::string cidr_str, int num_subnet = 1);
 
     // Iterate helper routines
-    void iter_init() { cur_iter_pos = 0; }
-    bool iter_more() { return (cur_iter_pos < num_obj); }
     void iter_next(int width = 1);
 
     // Build routines
@@ -57,9 +55,6 @@ public:
     bool key_compare(pds_subnet_key_t *key);
     bool spec_compare(pds_subnet_spec_t *spec);
     sdk::sdk_ret_t info_compare(pds_subnet_info_t *info);
-
-private:
-    uint32_t cur_iter_pos;
 };
 
 // Export variables

@@ -13,16 +13,16 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
+#include "nic/apollo/test/utils/feeder.hpp"
 
 namespace api_test {
 
 // VPC peer test feeder class
-class vpc_peer_feeder {
+class vpc_peer_feeder : public feeder {
 public:
     pds_vpc_peer_key_t key;
     pds_vpc_key_t vpc1;
     pds_vpc_key_t vpc2;
-    uint32_t num_obj;
 
     // Constructor
     vpc_peer_feeder() { };
@@ -35,8 +35,6 @@ public:
               uint32_t num_vpc_peer = 1);
 
     // Iterate helper routines
-    void iter_init() { cur_iter_pos = 0; }
-    bool iter_more() { return (cur_iter_pos < num_obj); }
     void iter_next(int width = 1);
 
     // Build routines
@@ -47,9 +45,6 @@ public:
     bool key_compare(pds_vpc_peer_key_t *key);
     bool spec_compare(pds_vpc_peer_spec_t *spec);
     sdk::sdk_ret_t info_compare(pds_vpc_peer_info_t *info);
-
-private:
-    uint32_t cur_iter_pos;
 };
 
 // Function prototypes

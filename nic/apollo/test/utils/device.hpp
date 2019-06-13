@@ -13,16 +13,16 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
+#include "nic/apollo/test/utils/feeder.hpp"
 
 namespace api_test {
 
 // Device test feeder class
-class device_feeder {
+class device_feeder : public feeder {
 public:
     std::string device_ip_str;    // Device IP
     std::string mac_addr_str;     // Device MAC Address
     std::string gw_ip_str;        // Gateway IP
-    uint32_t num_obj;
 
     // Constructor
     device_feeder() { };
@@ -36,8 +36,6 @@ public:
               std::string gw_ip_str, int num_device = 1);
 
     // Iterate helper routines
-    void iter_init() { cur_iter_pos = 0; }
-    bool iter_more() { return (cur_iter_pos < num_obj); }
     void iter_next(int width = 1);
 
     // Build routines
@@ -46,9 +44,6 @@ public:
     // Compare routines
     bool spec_compare(pds_device_spec_t *spec);
     sdk::sdk_ret_t info_compare(pds_device_info_t *info);
-
-private:
-    uint32_t cur_iter_pos;
 };
 
 // Export variables
