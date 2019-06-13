@@ -66,7 +66,7 @@ void UpgradeService::OnMountComplete() {
     if (upgStateReq == NULL) {
         UPG_LOG_DEBUG("Reconciling outstanding upgrade request with key: {}", upgReq->GetKey());
         upgMgr_->OnUpgReqCreate(upgReq);
-    } else {
+    } else if (upgStateReq->upgreqstate() != UpgStateTerminal) {
         UPG_LOG_DEBUG("Update request in progress. Check if State Machine can be moved.");
         upgMgr_->SetStateMachine(upgReq);
         if (upgMgr_->CanMoveStateMachine()) {
