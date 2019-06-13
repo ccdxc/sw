@@ -48,7 +48,7 @@ then
     cd /tmp/install
     curl -SL ${pen_install_script} -o ./venice-cleaninstall.sh
     chmod +x ./venice-cleaninstall.sh
-    ./venice-cleaninstall.sh
+    ./venice-cleaninstall.sh 2>&1 | tee -a /dev/console
 fi
 
 
