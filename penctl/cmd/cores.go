@@ -45,6 +45,9 @@ func init() {
 var retSlice []string
 
 func parseFiles(resp *http.Response) ([]string, error) {
+	if resp == nil || resp.Body == nil {
+		return nil, fmt.Errorf("Invalid HTTP response")
+	}
 	defer resp.Body.Close()
 	doc, err := html.Parse(resp.Body)
 	if err != nil {

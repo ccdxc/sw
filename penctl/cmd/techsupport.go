@@ -88,7 +88,10 @@ func createDestDir(destDir string) {
 
 func getLogs(subDir string, url string) error {
 	//Copy out log files from /var/log recursively
-	resp, _ := restGetResp(url)
+	resp, err := restGetResp(url)
+	if err != nil {
+		return err
+	}
 	retS, err := parseFiles(resp)
 	if err != nil {
 		return err
@@ -100,7 +103,10 @@ func getLogs(subDir string, url string) error {
 			napDir := file
 			logSubDestDir := logDestDir + napDir
 			createDestDir(logSubDestDir)
-			resp, _ = restGetResp(url + napDir)
+			resp, err = restGetResp(url + napDir)
+			if err != nil {
+				return err
+			}
 			retSlice = nil
 			retS, err = parseFiles(resp)
 			if err != nil {
@@ -139,11 +145,14 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 		os.MkdirAll(destDir, os.ModePerm)
 	}
 
-	fmt.Printf("Fetching cores")
+	fmt.Printf("Fetching cores\n")
 	//Copy out core files from /data/core
 	coreDestDir := destDir + "/cores/"
 	createDestDir(coreDestDir)
-	resp, _ := restGetResp("cores/v1/naples/")
+	resp, err := restGetResp("cores/v1/naples/")
+	if err != nil {
+		return err
+	}
 	retS, err := parseFiles(resp)
 	if err != nil {
 		return err
@@ -152,14 +161,17 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 		fmt.Printf(".")
 		copyFileToDest(coreDestDir, "cores/v1/naples/", file)
 	}
-	fmt.Printf("\nCores fetched\n")
+	fmt.Printf("Cores fetched\n")
 	retSlice = nil
 
-	fmt.Printf("Fetching events")
+	fmt.Printf("Fetching events\n")
 	//Copy out all event files from /var/lib/pensando/events/ dir
 	eventsDestDir := destDir + "/events/"
 	createDestDir(eventsDestDir)
-	evresp, _ := restGetResp("monitoring/v1/naples/events/")
+	evresp, err := restGetResp("monitoring/v1/naples/events/")
+	if err != nil {
+		return err
+	}
 	retS, err = parseFiles(evresp)
 	if err != nil {
 		return err
@@ -171,10 +183,10 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 		}
 		copyFileToDest(eventsDestDir, "monitoring/v1/naples/events/", file)
 	}
-	fmt.Printf("\nEvents fetched\n")
+	fmt.Printf("Events fetched\n")
 	retSlice = nil
 
-	fmt.Printf("Fetching logs")
+	fmt.Printf("Fetching logs\n")
 	err = getLogs("logs", "monitoring/v1/naples/logs/")
 	if err != nil {
 		return err
@@ -183,9 +195,9 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("\nLogs fetched\n")
+	fmt.Printf("Logs fetched\n")
 
-	fmt.Printf("Executing commands")
+	fmt.Printf("Executing commands\n")
 	//Execute cmds pointed to by YML file
 	cmdDestDir := destDir + "/cmd_out/"
 	createDestDir(cmdDestDir)
@@ -226,7 +238,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 			w.Flush()
 		}
 	}
-	fmt.Printf("\nCommands executed\n")
+	fmt.Printf("Commands executed\n")
 
 	file = destDir + "/penctl.ver"
 	out, err := os.Create(file)

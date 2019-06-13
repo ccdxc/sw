@@ -6,6 +6,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -24,6 +25,9 @@ func init() {
 func eventsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	resp, err := restGet("monitoring/v1/naples/events/events")
 	if err != nil {
+		if strings.Contains(err.Error(), "authentication") {
+			return err
+		}
 		fmt.Println("No events found")
 		return nil
 	}

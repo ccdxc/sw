@@ -138,7 +138,7 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 				fmt.Println("success")
 			}
 		} else {
-			fmt.Println("Unable to update naples.")
+			fmt.Printf("Unable to update naples, error: %v\n", err)
 		}
 		return err
 	}
@@ -361,6 +361,9 @@ func checkProfileExists(profileName string) error {
 
 	resp, err := http.Get(url)
 	if err != nil {
+		if strings.Contains(err.Error(), httpsSignature) {
+			err = fmt.Errorf("Naples is part of a cluster, authentication token required")
+		}
 		fmt.Println("Failed to get existing profiles. Err: ", err)
 		return fmt.Errorf("Failed to get existing profiles. Err: %v", err)
 	}
@@ -390,6 +393,9 @@ func checkAttachedProfile(profileName string) error {
 
 	resp, err := http.Get(url)
 	if err != nil {
+		if strings.Contains(err.Error(), httpsSignature) {
+			err = fmt.Errorf("Naples is part of a cluster, authentication token required")
+		}
 		fmt.Println("Failed to get existing profiles. Err: ", err)
 		return fmt.Errorf("failed to get existing profiles. Err: %v", err)
 	}

@@ -115,6 +115,9 @@ func restPostForm(url string, values map[string]io.Reader) ([]byte, error) {
 	printHTTPReq(req)
 	res, err := penHTTPClient.Do(req)
 	if err != nil {
+		if strings.Contains(err.Error(), httpsSignature) {
+			err = fmt.Errorf("Naples is part of a cluster, authentication token required")
+		}
 		return nil, err
 	}
 	defer res.Body.Close()
@@ -381,6 +384,9 @@ func restDelete(url string) ([]byte, error) {
 	printHTTPReq(getReq)
 	getResp, err := penHTTPClient.Do(getReq)
 	if err != nil {
+		if strings.Contains(err.Error(), httpsSignature) {
+			err = fmt.Errorf("Naples is part of a cluster, authentication token required")
+		}
 		return nil, err
 	}
 	defer getResp.Body.Close()
