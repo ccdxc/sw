@@ -24,12 +24,14 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/svcs/common"
+	"github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 const defaultIotaServerURL = "localhost:60000"
 const maxTestbedInitRetry = 3
+const agentAuthTokenFile = "/tmp/auth_token"
 
 // DataNetworkParams contains switch port info for each port
 type DataNetworkParams struct {
@@ -1166,6 +1168,9 @@ func (tb *TestBed) setupNaplesMode(nodes []*TestNode) error {
 			cmd = fmt.Sprintf("tar -xvf %s", filepath.Base(penctlPkgName))
 			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
 
+			// clean up roots of trust, if any
+			trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.NaplesTrustRootsFile), node.NodeName+"_naples", node.NodeName)
+
 			// trigger mode switch
 			cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s update naples --managed-by network --management-network oob --controllers %s --id %s --primary-mac %s", penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, veniceIPs, node.NodeName, node.iotaNode.NodeUuid)
 			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
@@ -1435,12 +1440,30 @@ func (tb *TestBed) CollectLogs() error {
 		return nil
 	}
 
+	// get token ao authenticate to agent
+	veniceCtx, err := tb.VeniceLoggedInCtx(context.Background())
+	if err != nil {
+		nerr := fmt.Errorf("Could not get Venice logged in context: %v", err)
+		log.Errorf("%v", nerr)
+		return nerr
+	}
+	ctx, cancel := context.WithTimeout(veniceCtx, 5*time.Second)
+	defer cancel()
+	token, err := utils.GetNodeAuthToken(ctx, tb.GetVeniceURL()[0], []string{"*"})
+	if err != nil {
+		nerr := fmt.Errorf("Could not get naples authentication token from Venice: %v", err)
+		log.Errorf("%v", nerr)
+		return nerr
+	}
+
 	// collect tech-support on naples
 	trig := tb.NewTrigger()
 	for _, node := range tb.Nodes {
 		switch node.Personality {
 		case iota.PersonalityType_PERSONALITY_NAPLES:
-			cmd := fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s system tech-support -b %s-tech-support", penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, node.NodeName)
+			cmd := fmt.Sprintf("echo \"%s\" > %s", token, agentAuthTokenFile)
+			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+			cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s system tech-support -a %s -b %s-tech-support", penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, agentAuthTokenFile, node.NodeName)
 			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
 			trig.AddCommand(fmt.Sprintf("tar -cvf /pensando/iota/entities/%s_host/%s_host.tar /pensando/iota/*.log", node.NodeName, node.NodeName), node.NodeName+"_host", node.NodeName)
 		case iota.PersonalityType_PERSONALITY_NAPLES_SIM:

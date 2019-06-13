@@ -89,7 +89,7 @@ func createDestDir(destDir string) {
 func getLogs(subDir string, url string) error {
 	//Copy out log files from /var/log recursively
 	resp, err := restGetResp(url)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found") {
 		return err
 	}
 	retS, err := parseFiles(resp)
@@ -150,7 +150,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	coreDestDir := destDir + "/cores/"
 	createDestDir(coreDestDir)
 	resp, err := restGetResp("cores/v1/naples/")
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found") {
 		return err
 	}
 	retS, err := parseFiles(resp)
@@ -169,7 +169,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	eventsDestDir := destDir + "/events/"
 	createDestDir(eventsDestDir)
 	evresp, err := restGetResp("monitoring/v1/naples/events/")
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found") {
 		return err
 	}
 	retS, err = parseFiles(evresp)

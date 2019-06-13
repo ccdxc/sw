@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"golang.org/x/net/html"
 
@@ -75,7 +76,7 @@ func parseFiles(resp *http.Response) ([]string, error) {
 
 func coreShowCmdHandler(cmd *cobra.Command, args []string) error {
 	resp, err := restGetResp("cores/v1/naples/")
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found") {
 		return err
 	}
 
