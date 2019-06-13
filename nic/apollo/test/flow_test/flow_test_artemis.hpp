@@ -73,17 +73,14 @@ flow_appdata2str(void *appdata) {
 }
 
 static void
-dump_flow_entry(ftlv6_entry_t *entry, ipv6_addr_t v6_addr_sip,
-                ipv6_addr_t v6_addr_dip) {
+dump_flow_entry(ftlv6_entry_t *entry, ip_addr_t sip, ip_addr_t dip) {
 //#ifdef SIM
     static FILE *d_fp = fopen("/tmp/flow_log.log", "a+");
-    char *src_ip_str = ipv6addr2str(v6_addr_sip);
-    char *dst_ip_str = ipv6addr2str(v6_addr_dip);
     if (d_fp) {
         fprintf(d_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
                 "sport %u, dport %u, epoch %u, flow %u, ktype %u\n",
                 entry->vpc_id + 1, entry->proto, entry->session_index,
-                src_ip_str, dst_ip_str, entry->sport, entry->dport,
+                ipaddr2str(&sip), ipaddr2str(&dip), entry->sport, entry->dport,
                 entry->epoch, entry->flow_role, entry->ktype);
         fflush(d_fp);
     }
@@ -91,17 +88,14 @@ dump_flow_entry(ftlv6_entry_t *entry, ipv6_addr_t v6_addr_sip,
 }
 
 static void
-dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip,
-                ipv4_addr_t v4_addr_dip) {
+dump_flow_entry(ftlv4_entry_t *entry, ip_addr_t sip, ip_addr_t dip) {
 //#ifdef SIM
     static FILE *d_fp = fopen("/tmp/flow_log.log", "a+");
-    char *src_ip_str = ipv4addr2str(v4_addr_sip);
-    char *dst_ip_str = ipv4addr2str(v4_addr_dip);
     if (d_fp) {
         fprintf(d_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
                 "sport %u, dport %u, epoch %u, role %u\n",
                 entry->vpc_id + 1, entry->proto, entry->session_index,
-                src_ip_str, dst_ip_str, entry->sport, entry->dport,
+                ipaddr2str(&sip), ipaddr2str(&dip), entry->sport, entry->dport,
                 entry->epoch, entry->flow_role);
         fflush(d_fp);
     }
@@ -109,17 +103,19 @@ dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip,
 }
 
 static void
-dump_session_info(uint32_t vpc, session_actiondata_t *actiondata)
+dump_session_info(uint32_t vpc, ip_addr_t ip_addr,
+                  session_actiondata_t *actiondata)
 {
 //#ifdef SIM
     static FILE *d_fp = fopen("/tmp/flow_log.log", "a+");
     if (d_fp) {
         fprintf(d_fp, "vpc %u, meter_idx %u, nh_idx %u, tx rewrite flags 0x%x, "
-                "rx rewrite flags 0x%x\n", vpc,
+                "rx rewrite flags 0x%x, tx_dst_ip %s\n", vpc,
                 actiondata->action_u.session_session_info.meter_idx,
                 actiondata->action_u.session_session_info.nexthop_idx,
                 actiondata->action_u.session_session_info.tx_rewrite_flags,
-                actiondata->action_u.session_session_info.rx_rewrite_flags);
+                actiondata->action_u.session_session_info.rx_rewrite_flags,
+                ipaddr2str(&ip_addr));
         fflush(d_fp);
     }
 //#endif
@@ -515,7 +511,7 @@ public:
         return;
     }
 
-    sdk_ret_t create_session_info(uint32_t vpc) {
+    sdk_ret_t create_session_info(uint32_t vpc, ip_addr_t ip_addr) {
         session_actiondata_t actiondata;
         p4pd_error_t p4pd_ret;
         uint32_t tableid = P4TBL_ID_SESSION;
@@ -562,6 +558,8 @@ public:
                             svc_tep_nexthop_idx_start + TESTAPP_MAX_SERVICE_TEP) {
                 svc_tep_nexthop_idx = svc_tep_nexthop_idx_start;
             }
+            sdk::lib::memrev(actiondata.action_u.session_session_info.tx_dst_ip,
+                             ip_addr.addr.v6_addr.addr8, sizeof(ipv6_addr_t));
             actiondata.action_u.session_session_info.tx_rewrite_flags = 0x16;
             actiondata.action_u.session_session_info.rx_rewrite_flags = 0x34;
         } else if (vpc == TEST_APP_S1_SLB_IN_OUT) {
@@ -687,7 +685,7 @@ public:
         if (meter_idx == vpc * num_meter_idx_per_vpc) {
             meter_idx = (vpc-1) * num_meter_idx_per_vpc + 1;
         }
-        dump_session_info(vpc, &actiondata);
+        dump_session_info(vpc, ip_addr, &actiondata);
         p4pd_ret = p4pd_global_entry_write(
                             tableid, session_index, NULL, NULL, &actiondata);
         if (p4pd_ret != P4PD_SUCCESS) {
@@ -698,52 +696,51 @@ public:
         return SDK_RET_OK;
     }
 
-    sdk_ret_t create_session(uint32_t vpc, uint8_t proto,
-                             ipv4_addr_t flow_sip, ipv4_addr_t flow_dip,
-                             uint16_t flow_sport, uint16_t flow_dport) {
-        memset(&v4entry, 0, sizeof(ftlv4_entry_t));
-        // Common DATA fields
-        v4entry.session_index = session_index;
-        v4entry.epoch = 0xFF;
-        // Common KEY fields
-        v4entry.vpc_id = vpc - 1;
-        v4entry.proto = proto;
-        // Create IFLOW
-        v4entry.sport = flow_sport;
-        v4entry.dport = flow_dport;
-        v4entry.src = flow_sip;
-        v4entry.dst = flow_dip;
-        auto ret = insert_(&v4entry);
-        SDK_ASSERT(ret == SDK_RET_OK);
-        dump_flow_entry(&v4entry, flow_sip, flow_dip);
+    sdk_ret_t create_flow(uint32_t vpc, uint8_t proto,
+                          ip_addr_t flow_sip, ip_addr_t flow_dip,
+                          uint16_t flow_sport, uint16_t flow_dport) {
+        if (flow_sip.af == IP_AF_IPV4) {
+            memset(&v4entry, 0, sizeof(ftlv4_entry_t));
+            // Common DATA fields
+            v4entry.session_index = session_index;
+            v4entry.epoch = 0xFF;
+            // Common KEY fields
+            v4entry.vpc_id = vpc - 1;
+            v4entry.proto = proto;
+            // Create IFLOW
+            v4entry.sport = flow_sport;
+            v4entry.dport = flow_dport;
+            v4entry.src = flow_sip.addr.v4_addr;
+            v4entry.dst = flow_dip.addr.v4_addr;
+            auto ret = insert_(&v4entry);
+            SDK_ASSERT(ret == SDK_RET_OK);
+            dump_flow_entry(&v4entry, flow_sip, flow_dip);
+        } else if (flow_sip.af == IP_AF_IPV6) {
+            memset(&v6entry, 0, sizeof(ftlv6_entry_t));
+            // Common DATA fields
+            v6entry.session_index = session_index;
+            v6entry.epoch = 0xFF;
+            // Common KEY fields
+            v6entry.ktype = 2;
+            v6entry.vpc_id = vpc - 1;
+            v6entry.proto = proto;
+            v6entry.sport = flow_sport;
+            v6entry.dport = flow_dport;
+            sdk::lib::memrev(v6entry.src, flow_sip.addr.v6_addr.addr8,
+                             sizeof(ipv6_addr_t));
+            sdk::lib::memrev(v6entry.dst, flow_dip.addr.v6_addr.addr8,
+                             sizeof(ipv6_addr_t));
+            auto ret = insert_(&v6entry);
+            SDK_ASSERT(ret == SDK_RET_OK);
+            dump_flow_entry(&v6entry, flow_sip, flow_dip);
+        }
         return SDK_RET_OK;
     }
 
     sdk_ret_t create_session(uint32_t vpc, uint8_t proto,
-                             ipv6_addr_t flow_sip, ipv6_addr_t flow_dip,
-                             uint16_t flow_sport, uint16_t flow_dport) {
-        memset(&v6entry, 0, sizeof(ftlv6_entry_t));
-        // Common DATA fields
-        v6entry.session_index = session_index;
-        v6entry.epoch = 0xFF;
-        // Common KEY fields
-        v6entry.ktype = 2;
-        v6entry.vpc_id = vpc - 1;
-        v6entry.proto = proto;
-        v6entry.sport = flow_sport;
-        v6entry.dport = flow_dport;
-        sdk::lib::memrev(v6entry.src, flow_sip.addr8, sizeof(ipv6_addr_t));
-        sdk::lib::memrev(v6entry.dst, flow_dip.addr8, sizeof(ipv6_addr_t));
-        auto ret = insert_(&v6entry);
-        SDK_ASSERT(ret == SDK_RET_OK);
-        dump_flow_entry(&v6entry, flow_sip, flow_dip);
-        return SDK_RET_OK;
-    }
-
-    sdk_ret_t create_session(uint32_t vpc, uint8_t proto,
-                             ipv4_addr_t iflow_sip, ipv4_addr_t iflow_dip,
+                             ip_addr_t iflow_sip, ip_addr_t iflow_dip,
                              uint16_t iflow_sport, uint16_t iflow_dport,
-                             ipv4_addr_t rflow_sip, ipv4_addr_t rflow_dip,
+                             ip_addr_t rflow_sip, ip_addr_t rflow_dip,
                              uint16_t rflow_sport, uint16_t rflow_dport) {
         memset(&v4entry, 0, sizeof(ftlv4_entry_t));
         // Common DATA fields
@@ -755,16 +752,16 @@ public:
         // Create IFLOW
         v4entry.sport = iflow_sport;
         v4entry.dport = iflow_dport;
-        v4entry.src = iflow_sip;
-        v4entry.dst = iflow_dip;
+        v4entry.src = iflow_sip.addr.v4_addr;
+        v4entry.dst = iflow_dip.addr.v4_addr;
         auto ret = insert_(&v4entry);
         SDK_ASSERT(ret == SDK_RET_OK);
         dump_flow_entry(&v4entry, iflow_sip, iflow_dip);
         // Create RFLOW
         v4entry.sport = rflow_sport;
         v4entry.dport = rflow_dport;
-        v4entry.src = rflow_sip;
-        v4entry.dst = rflow_dip;
+        v4entry.src = rflow_sip.addr.v4_addr;
+        v4entry.dst = rflow_dip.addr.v4_addr;
         ret = insert_(&v4entry);
         SDK_ASSERT(ret == SDK_RET_OK);
         dump_flow_entry(&v4entry, rflow_sip, rflow_dip);
@@ -780,6 +777,7 @@ public:
         uint32_t nflows = 0;
         sdk_ret_t ret;
         ip_addr_t ip_addr;
+        ip_addr_t rewrite_ip;
 
         for (uint32_t vpc = 1; vpc <= MAX_VPCS; vpc++) {
             generate_ep_pairs(vpc, dual_stack);
@@ -806,37 +804,37 @@ public:
                             ip_addr.addr.v4_addr = (0xC << 28) | i;
 
                             // iflow v4 session
-                            ret = create_session(vpc, proto,
-                                                 ep_pairs[i].v4_local.local_ip.addr.v4_addr,
-                                                 ip_addr.addr.v4_addr,
-                                                 fwd_sport,
-                                                 fwd_dport);
+                            ret = create_flow(vpc, proto,
+                                              ep_pairs[i].v4_local.local_ip,
+                                              ip_addr,
+                                              fwd_sport,
+                                              fwd_dport);
                             if (ret != SDK_RET_OK) {
                                 return ret;
                             }
-                            ip_addr_t sip = test_params->svc_tep_pfx.addr;
-                            compute_local46_addr(&sip, &test_params->svc_tep_pfx,
+                            rewrite_ip = test_params->svc_tep_pfx.addr;
+                            compute_local46_addr(&rewrite_ip, &test_params->svc_tep_pfx,
                                                  (i % TESTAPP_MAX_SERVICE_TEP) + 1);
-                            sip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] = ip_addr.addr.v4_addr;
-                            ip_addr_t dip = test_params->nat46_vpc_pfx.addr;
-                            dip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] = ep_pairs[i].v4_local.local_ip.addr.v4_addr;
+                            rewrite_ip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] = ip_addr.addr.v4_addr;
+                            ip_addr_t rflow_dip = test_params->nat46_vpc_pfx.addr;
+                            rflow_dip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] = ep_pairs[i].v4_local.local_ip.addr.v4_addr;
 
                             // rflow v6 session
-                            ret = create_session(vpc, proto,
-                                                 sip.addr.v6_addr,
-                                                 dip.addr.v6_addr,
-                                                 fwd_dport,
-                                                 TEST_APP_VIP_PORT);
+                            ret = create_flow(vpc, proto,
+                                              rewrite_ip,
+                                              rflow_dip,
+                                              fwd_dport,
+                                              TEST_APP_VIP_PORT);
                         } else if (vpc == TEST_APP_S1_SLB_IN_OUT) {
                             // VPC 61 is used for Scenario1-SLB in/out traffic (DSR case)
                             ip_addr.addr.v4_addr = (0xC << 28) | i;
                             ret = create_session(vpc, proto,
-                                                 ep_pairs[i].v4_local.local_ip.addr.v4_addr,
-                                                 ip_addr.addr.v4_addr,
+                                                 ep_pairs[i].v4_local.local_ip,
+                                                 ip_addr,
                                                  TEST_APP_DIP_PORT,
                                                  fwd_dport,
-                                                 ip_addr.addr.v4_addr,
-                                                 ep_pairs[i].v4_local.service_ip.addr.v4_addr,
+                                                 ip_addr,
+                                                 ep_pairs[i].v4_local.service_ip,
                                                  fwd_dport,
                                                  TEST_APP_VIP_PORT);
                         } else if (vpc == TEST_APP_S2_INTERNET_IN_OUT_VPC_VIP_VPC) {
@@ -844,12 +842,12 @@ public:
                             // port IP flows
                             ip_addr.addr.v4_addr = (0xC << 28) | i;
                             ret = create_session(vpc, proto,
-                                                 ep_pairs[i].v4_local.local_ip.addr.v4_addr,
-                                                 ip_addr.addr.v4_addr,
+                                                 ep_pairs[i].v4_local.local_ip,
+                                                 ip_addr,
                                                  TEST_APP_DIP_PORT,
                                                  fwd_dport,
-                                                 ip_addr.addr.v4_addr,
-                                                 ep_pairs[i].v4_local.service_ip.addr.v4_addr, // must be service IP
+                                                 ip_addr,
+                                                 ep_pairs[i].v4_local.service_ip, // must be service IP
                                                  fwd_dport,
                                                  TEST_APP_VIP_PORT);
                         } else if (vpc == TEST_APP_S2_INTERNET_IN_OUT_FLOATING_IP_VPC) {
@@ -857,27 +855,27 @@ public:
                             // IP flows
                             ip_addr.addr.v4_addr = (0xC << 28) | i;
                             ret = create_session(vpc, proto,
-                                                 ep_pairs[i].v4_local.local_ip.addr.v4_addr,
-                                                 ip_addr.addr.v4_addr,
+                                                 ep_pairs[i].v4_local.local_ip,
+                                                 ip_addr,
                                                  fwd_sport, fwd_dport,
-                                                 ip_addr.addr.v4_addr,
-                                                 ep_pairs[i].v4_local.public_ip.addr.v4_addr, /* must be public IP */
+                                                 ip_addr,
+                                                 ep_pairs[i].v4_local.public_ip, /* must be public IP */
                                                  fwd_dport, fwd_sport);
                         } else {
                             // vnet in/out with vxlan encap
                             ret = create_session(vpc, proto,
-                                                 ep_pairs[i].v4_local.local_ip.addr.v4_addr,
-                                                 ep_pairs[i].v4_remote.remote_ip.addr.v4_addr,
+                                                 ep_pairs[i].v4_local.local_ip,
+                                                 ep_pairs[i].v4_remote.remote_ip,
                                                  fwd_sport, fwd_dport,
-                                                 ep_pairs[i].v4_remote.remote_ip.addr.v4_addr,
-                                                 ep_pairs[i].v4_local.local_ip.addr.v4_addr,
+                                                 ep_pairs[i].v4_remote.remote_ip,
+                                                 ep_pairs[i].v4_local.local_ip,
                                                  fwd_dport, fwd_sport);
                         }
                         if (ret != SDK_RET_OK) {
                             return ret;
                         }
                         // create V4 session
-                        ret = create_session_info(vpc);
+                        ret = create_session_info(vpc, rewrite_ip);
                         if (ret != SDK_RET_OK) {
                             return ret;
                         }
@@ -894,22 +892,22 @@ public:
                                     = htonl(0xF1D0D1D0);
                                 ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
                                     htonl((0xC << 28) | i);
-                                ret = create_session(vpc, proto,
-                                                     ep_pairs[i].v6_local.local_ip.addr.v6_addr,
-                                                     ip_addr.addr.v6_addr,
-                                                     fwd_sport, fwd_dport);
+                                ret = create_flow(vpc, proto,
+                                                  ep_pairs[i].v6_local.local_ip,
+                                                  ip_addr,
+                                                  fwd_sport, fwd_dport);
                             } else {
                                 // vnet in/out with vxlan encap
-                                ret = create_session(vpc, proto,
-                                                     ep_pairs[i].v6_local.local_ip.addr.v6_addr,
-                                                     ep_pairs[i].v6_remote.remote_ip.addr.v6_addr,
-                                                     fwd_sport, fwd_dport);
+                                ret = create_flow(vpc, proto,
+                                                  ep_pairs[i].v6_local.local_ip,
+                                                  ep_pairs[i].v6_remote.remote_ip,
+                                                  fwd_sport, fwd_dport);
                             }
                             if (ret != SDK_RET_OK) {
                                 return ret;
                             }
                             // create V6 session
-                            ret = create_session_info(vpc);
+                            ret = create_session_info(vpc, rewrite_ip);
                             if (ret != SDK_RET_OK) {
                                 return ret;
                             }
