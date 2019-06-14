@@ -17,7 +17,7 @@ void
 logger::init(sdk::lib::logger::trace_cb_t trace_cb, sdk::lib::logger::trace_cb_t obfl_trace_cb)
 {
     trace_cb_ = trace_cb;
-    obfl_trace_cb = obfl_trace_cb;
+    obfl_trace_cb_ = obfl_trace_cb;
 }
 
 }    // namespace lib
