@@ -50,7 +50,7 @@ message AsicPowerMetrics {
 message AsicFrequencyMetrics {
     option (venice.penctlCmd) = {
         Cmd:     "frequency",
-        HelpStr: "System power information:\\n"
+        HelpStr: "System frequency information:\\n"
                  "\\n\\nValue Description:\\n\\n"
                  "frequency: Frequency of the system.\\n"
                  "The frequency is MHz\\n",

@@ -14,11 +14,11 @@ import (
 
 //cmd - frequency
 //rootCmd = system
-//helpStr = System power information:\n\n\nValue Description:\n\nfrequency: Frequency of the system.\nThe frequency is MHz\n
+//helpStr = System frequency information:\n\n\nValue Description:\n\nfrequency: Frequency of the system.\nThe frequency is MHz\n
 var frequencysystemShowCmd = &cobra.Command{
 	Use:   "frequency",
-	Short: "System power information:\n\n\nValue Description:\n\nfrequency: Frequency of the system.\nThe frequency is MHz\n",
-	Long:  "\n---------------------------------\n System power information:\n\n\nValue Description:\n\nfrequency: Frequency of the system.\nThe frequency is MHz\n\n---------------------------------\n",
+	Short: "System frequency information:\n\n\nValue Description:\n\nfrequency: Frequency of the system.\nThe frequency is MHz\n",
+	Long:  "\n---------------------------------\n System frequency information:\n\n\nValue Description:\n\nfrequency: Frequency of the system.\nThe frequency is MHz\n\n---------------------------------\n",
 	RunE:  frequencysystemShowCmdHandler,
 }
 
