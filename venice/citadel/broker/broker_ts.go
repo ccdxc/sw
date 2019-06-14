@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/imdario/mergo"
-
 	"github.com/influxdata/influxdb/models"
 	"github.com/influxdata/influxdb/query"
 	influxmeta "github.com/influxdata/influxdb/services/meta"
@@ -23,6 +22,9 @@ import (
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
 )
+
+// DefaultQueryLimit is the default number of points returned from the query
+const DefaultQueryLimit = 50000 // limited by GRPC limit
 
 // createDatabaseInReplica creates the database in replica
 func (br *Broker) createDatabaseInReplica(ctx context.Context, database string, retention uint64, repl *meta.Replica) error {
@@ -486,6 +488,9 @@ func (br *Broker) ExecuteAggQuery(ctx context.Context, database string, qry stri
 				return nil, errors.New("Shard map is empty")
 			}
 
+			if selStmt.Limit == 0 || selStmt.Limit > DefaultQueryLimit {
+				selStmt.Limit = DefaultQueryLimit
+			}
 			// get a random shard
 			shard := cl.ShardMap.Shards[rand.Int63n(int64(len(cl.ShardMap.Shards)))]
 
