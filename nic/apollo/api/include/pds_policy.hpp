@@ -29,11 +29,29 @@ typedef enum rule_dir_e {
     RULE_DIR_EGRESS  = 1,    ///< Egress direction
 } rule_dir_t;
 
+/// \brief type of the IP field used in rule match
+typedef enum ip_match_type_s {
+    IP_MATCH_NONE   = 0,    ///< wildcard
+    IP_MATCH_PREFIX = 1,    ///< match based on the prefix
+    IP_MATCH_RANGE  = 2,    ///< match based on the range
+    IP_MATCH_TAG    = 3,    ///< match based on the tag
+} ip_match_type_t;
+
 /// \brief    rule L3 match criteria
 typedef struct rule_l3_match_s {
-    uint8_t        ip_proto;    ///< IP protocol
-    ip_prefix_t    src_ip_pfx;  ///< Src IP prefix
-    ip_prefix_t    dst_ip_pfx;  ///< Dst IP prefix
+    uint8_t         ip_proto;        ///< IP protocol
+    ip_match_type_t src_match_type;  ///< src match condition type
+    ip_match_type_t dst_match_type;  ///< dst match condition type
+    union {
+        ip_prefix_t src_ip_pfx;      ///< Src IP prefix
+        ip_range_t  src_ip_range;    ///< Src IP range
+        uint32_t    src_tag;         /// Src tag value
+    };
+    union {
+        ip_prefix_t dst_ip_pfx;      ///< Dst IP prefix
+        ip_range_t  dst_ip_range;    ///< Src IP range
+        uint32_t    dst_tag;         /// Src tag value
+    };
 } __PACK__ rule_l3_match_t;
 
 /// \brief    rule L4 match criteria
