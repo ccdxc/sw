@@ -46,7 +46,7 @@ action ingress_to_cps() {
     remove_header(capri_txdma_intrinsic);
     remove_header(p4plus_to_p4);
     remove_header(p4plus_to_p4_vlan);
-    remove_header(predicate_header);
+    add_header(predicate_header);
     remove_header(service_header);
     modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
     modify_field(capri_intrinsic.lif, ARTEMIS_SERVICE_LIF);
@@ -56,6 +56,7 @@ action ingress_to_cps() {
     modify_field(p4_to_rxdma.cps_path_en, TRUE);
     modify_field(p4_to_rxdma.vnic_info_en, TRUE);
     modify_field(p4_to_rxdma.direction, control_metadata.direction);
+    modify_field(predicate_header.direction, control_metadata.direction);
 }
 
 action ingress_to_classic_nic() {

@@ -160,11 +160,12 @@
 /*****************************************************************************/
 /* Header sizes                                                              */
 /*****************************************************************************/
-#define ARTEMIS_PREDICATE_HDR_SZ        0
-#define ARTEMIS_P4_TO_RXDMA_HDR_SZ      58
-#define ARTEMIS_P4_TO_ARM_HDR_SZ        0
+#define ARTEMIS_PREDICATE_HDR_SZ        1
+#define ARTEMIS_P4_TO_RXDMA_HDR_SZ      64
 #define ARTEMIS_I2E_HDR_SZ              0
+#define ARTEMIS_TXDMA_TO_P4I_HDR_SZ     192
 #define ARTEMIS_TXDMA_TO_P4E_HDR_SZ     0
+#define ARTEMIS_P4_TO_ARM_HDR_SZ        (17 + ARTEMIS_TXDMA_TO_P4I_HDR_SZ)
 
 #define ARTEMIS_INGRESS_MIRROR_BLOB_SZ  (CAPRI_P4_INTRINSIC_HDR_SZ + \
                                          ARTEMIS_PREDICATE_HDR_SZ + \

@@ -22,9 +22,6 @@ pkt_dma:
     phvwr.!c1       p.capri_p4_intr_recirc, FALSE
 
     // Setup Intrisic fields and DMA commands to generate packet to P4IG
-    //     sub         r1, k.{p4_to_txdma_header_payload_len_sbit0_ebit5, \
-    //                 p4_to_txdma_header_payload_len_sbit6_ebit13}, APOLLO_I2E_HDR_SZ
-    phvwr           p.capri_p4_intr_packet_len, k.rx_to_tx_hdr_payload_len
     phvwr           p.capri_intr_tm_oport, TM_PORT_INGRESS
 
     // DMA Commands
@@ -39,19 +36,19 @@ pkt_dma:
                                  capri_intr_tm_instance_type, \
                                  capri_txdma_intr_qid, \
                                  capri_txdma_intr_txdma_rsv, \
-                                 session_info_hint___pad_to_512b, \
+                                 session_info_hint_iflow_tcp_state, \
                                  rflow_info_hint_pad)
 
     // 2) DMA command for payload
     // mem2pkt has an implicit fence. all subsequent dma is blocked
-    phvwr       p.payload_dma_dma_cmd_addr, k.txdma_control_payload_addr
-    phvwri      p.{payload_dma_dma_cmd_cache...payload_dma_dma_cmd_type}, \
-                    (1 << 4) | (1 << 6) | CAPRI_DMA_COMMAND_MEM_TO_PKT
-    phvwr       p.payload_dma_dma_cmd_size, k.rx_to_tx_hdr_payload_len
+    phvwr           p.payload_dma_dma_cmd_addr, k.txdma_control_payload_addr
+    phvwri          p.{payload_dma_dma_cmd_cache...payload_dma_dma_cmd_type}, \
+                        (1 << 4) | (1 << 6) | CAPRI_DMA_COMMAND_MEM_TO_PKT
+    add             r1, k.rx_to_tx_hdr_payload_len, 1
+    phvwr           p.payload_dma_dma_cmd_size, r1
 
     // 3) Update the rxdma copy of cindex once every 64 pkts
-    seq         c1, k.txdma_control_cindex[5:0], 0
-            // 2 phvwr
+    seq             c1, k.txdma_control_cindex[5:0], 0
     CAPRI_DMA_CMD_PHV2MEM_SETUP_COND(rxdma_ci_update_dma_cmd, \
                                      k.txdma_control_rxdma_cindex_addr, \
                                      txdma_control_cindex, \

@@ -184,29 +184,25 @@ lif_impl::program_inband_filters(lif_info_t *lif_params) {
 sdk_ret_t
 lif_impl::program_flow_miss_nacl(lif_info_t *lif_params) {
     sdk_ret_t ret = SDK_RET_OK;
-#if 0
     nacl_swkey_t key = { 0 };
     nacl_swkey_mask_t mask = { 0 };
     nacl_actiondata_t data =  { 0 };
     uint32_t idx;
 
     // Flow Miss -> CPU
-    key.predicate_header_redirect_to_arm = 1;
-    mask.predicate_header_redirect_to_arm_mask = 1;
+    key.cps_blob_valid = 1;
+    mask.cps_blob_valid_mask = 1;
     data.action_id = NACL_NACL_REDIRECT_ID;
-    data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CPU;
+    data.nacl_redirect_action.pipe_id = P4PLUS_APPTYPE_CPU;
     data.action_u.nacl_nacl_redirect.oport = TM_PORT_DMA;
     data.action_u.nacl_nacl_redirect.lif = key_;
     data.action_u.nacl_nacl_redirect.qtype = 0;
     data.action_u.nacl_nacl_redirect.qid = 0;
     data.action_u.nacl_nacl_redirect.vlan_strip = 0;
-    ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
+    ret = artemis_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NACL entry for mnic lif %u -> "
-                      "uplink 0x%x, err %u", key_, pinned_if_idx_, ret);
-    } else {
-        PDS_TRACE_ERR("Success -  program NACL entry for mnic %s lif %u -> "
-                      "uplink 0x%x, err %u", lif_params->name, key_, pinned_if_idx_, ret);
+        PDS_TRACE_ERR("Failed to program NACL entry for redirect to arm, "
+                      "err %u", key_, pinned_if_idx_, ret);
     }
 
 #if 0
@@ -249,7 +245,6 @@ lif_impl::program_flow_miss_nacl(lif_info_t *lif_params) {
         PDS_TRACE_ERR("Sucess program NACL entry for %s uplink %u -> mnic "
                       "lif %u, err %u", lif_params->name, pinned_if_idx_, key_, ret);
     }
-#endif
 #endif
     return ret;
 }

@@ -1,3 +1,10 @@
+header_type artemis_predicate_header_t {
+    fields {
+        pad0            : 7;
+        direction       : 1;
+    }
+}
+
 header_type artemis_p4_to_rxdma_header_t {
     fields {
         p4plus_app_id   : 4;
@@ -146,4 +153,13 @@ header_type artemis_txdma_to_arm_flow_header_t {
         parent_flow_entry       : 512;
         leaf_flow_entry         : 512;
     }
+}
+
+header_type cps_blob_t {
+    fields {
+        hdr_len         : 8;
+        data            : *;
+    }
+    length : hdr_len;
+    max_length : 65535;
 }

@@ -25,7 +25,7 @@ ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 opkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
         IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
-        UDP(sport=0xCEB8, dport=4789, chksum=0) / VXLAN(vni=0xABCDEF) / \
+        UDP(sport=0xEA63, dport=4789, chksum=0) / VXLAN(vni=0xABCDEF) / \
         Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         IP(dst='10.10.1.1', src='11.11.1.1') / \
         TCP(sport=0x1234, dport=0x5678) / payload

@@ -20,7 +20,10 @@ header egress_service_header_t egress_service_header;
 header mirror_blob_t mirror_blob;
 
 // Inter-pipeline headers
-header predicate_header_t predicate_header;
+header artemis_predicate_header_t predicate_header;
+
+@pragma hdr_len parser_metadata.cps_blob_len
+header cps_blob_t cps_blob;
 
 @pragma synthetic_header
 @pragma pa_field_union ingress p4_to_rxdma.flow_src                 key_metadata.src
@@ -120,6 +123,7 @@ metadata parser_ohi_t ohi;
 header_type parser_metadata_t {
     fields {
         mirror_blob_len : 8;
+        cps_blob_len    : 16;
     }
 }
 @pragma pa_parser_local
@@ -166,9 +170,23 @@ parser parse_egress_to_ingress {
 parser parse_txdma_to_ingress {
     extract(capri_txdma_intrinsic);
     return select(current(72, 4)) {
-        0 : parse_ingress_pass2;
+        0 : parse_txdma_cps;
         default : parse_txdma_app;
     }
+}
+
+@pragma xgress ingress
+parser parse_txdma_cps {
+    set_metadata(parser_metadata.cps_blob_len, ARTEMIS_TXDMA_TO_P4I_HDR_SZ);
+    return parse_txdma_cps_blob;
+}
+
+@pragma xgress ingress
+parser parse_txdma_cps_blob {
+    set_metadata(parser_metadata.cps_blob_len,
+                 parser_metadata.cps_blob_len + 0);
+    extract(cps_blob);
+    return parse_ingress_pass2;
 }
 
 @pragma xgress ingress
@@ -408,15 +426,16 @@ parser deparse_ingress {
     extract(capri_p4_intrinsic);
     extract(capri_rxdma_intrinsic);
 
+    extract(p4_to_p4plus_classic_nic);
+    extract(p4_to_p4plus_classic_nic_ip);
+    // splitter offset here for arm path
+    extract(p4_to_arm);
+    extract(cps_blob);
+
     extract(p4_to_rxdma);
     extract(p4_to_rxdma2);
     extract(predicate_header);
-    // splitter offset here for pipeline extension
-
-    extract(p4_to_p4plus_classic_nic);
-    extract(p4_to_p4plus_classic_nic_ip);
-    // splitter offset here for classic nic app
-    extract(p4_to_arm);
+    // splitter offset here for cps path
 
     extract(txdma_to_p4e);
     extract(p4i_i2e);

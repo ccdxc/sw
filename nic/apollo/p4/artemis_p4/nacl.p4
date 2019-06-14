@@ -34,7 +34,7 @@ table nacl {
         capri_intrinsic.lif                 : ternary;
         ctag_1.valid                        : ternary;
         ctag_1.vid                          : ternary;
-        predicate_header.redirect_to_arm    : ternary;
+        cps_blob.valid                      : ternary;
     }
     actions {
         nacl_permit;
