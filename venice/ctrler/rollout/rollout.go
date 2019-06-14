@@ -7,6 +7,8 @@ import (
 	"github.com/pensando/sw/venice/ctrler/rollout/statemgr"
 	"github.com/pensando/sw/venice/ctrler/rollout/watcher"
 	"github.com/pensando/sw/venice/ctrler/rollout/writer"
+	"github.com/pensando/sw/venice/utils/diagnostics"
+	"github.com/pensando/sw/venice/utils/diagnostics/module"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -14,14 +16,33 @@ import (
 
 // Ctrler - Rollout controller object
 type Ctrler struct {
-	StateMgr  *statemgr.Statemgr // state manager
-	Watchr    *watcher.Watcher
-	RPCServer *rpcserver.RPCServer // grpc server for agents
-	writer    writer.Writer
+	StateMgr      *statemgr.Statemgr // state manager
+	Watchr        *watcher.Watcher
+	RPCServer     *rpcserver.RPCServer // grpc server for agents
+	writer        writer.Writer
+	diagSvc       diagnostics.Service
+	moduleWatcher module.Watcher
+}
+
+// Option fills the optional params for Rollout controller
+type Option func(*Ctrler)
+
+// WithDiagnosticsService passes a custom diagnostics service
+func WithDiagnosticsService(diagSvc diagnostics.Service) Option {
+	return func(c *Ctrler) {
+		c.diagSvc = diagSvc
+	}
+}
+
+// WithModuleWatcher passes a module watcher
+func WithModuleWatcher(moduleWatcher module.Watcher) Option {
+	return func(c *Ctrler) {
+		c.moduleWatcher = moduleWatcher
+	}
 }
 
 // NewCtrler returns a controller instance
-func NewCtrler(serverURL, apisrvURL string, resolver resolver.Interface, evtsRecorder events.Recorder) (*Ctrler, error) {
+func NewCtrler(serverURL, apisrvURL string, resolver resolver.Interface, evtsRecorder events.Recorder, opts ...Option) (*Ctrler, error) {
 
 	// create writer
 	wr, err := writer.NewAPISrvWriter(apisrvURL, resolver)
@@ -45,29 +66,37 @@ func NewCtrler(serverURL, apisrvURL string, resolver resolver.Interface, evtsRec
 	}
 
 	log.Infof("API server watcher is running")
-
+	// create the controller instance
+	ctrler := Ctrler{
+		StateMgr: stateMgr,
+		Watchr:   watcher,
+		writer:   wr,
+	}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&ctrler)
+		}
+	}
 	// create RPC server for communication with Agents
-	rpcServer, err := rpcserver.NewRPCServer(serverURL, stateMgr)
+	rpcServer, err := rpcserver.NewRPCServer(serverURL, stateMgr, ctrler.diagSvc)
 	if err != nil {
 		log.Errorf("Error creating RPC server. Err: %v", err)
 		return nil, err
 	}
-
+	ctrler.RPCServer = rpcServer
 	log.Infof("RPC server is running at %v", serverURL)
-
-	// create the controller instance
-	ctrler := Ctrler{
-		StateMgr:  stateMgr,
-		Watchr:    watcher,
-		RPCServer: rpcServer,
-		writer:    wr,
-	}
 
 	return &ctrler, err
 }
 
 // Stop rollout controller and release resources
 func (c *Ctrler) Stop() error {
+	if c.moduleWatcher != nil {
+		c.moduleWatcher.Stop()
+	}
+	if c.diagSvc != nil {
+		c.diagSvc.Stop()
+	}
 	if c.Watchr != nil {
 		c.Watchr.Stop()
 		c.Watchr = nil

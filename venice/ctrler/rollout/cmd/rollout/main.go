@@ -4,12 +4,17 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"strings"
 
-	"github.com/pensando/sw/venice/utils/events/recorder"
-
+	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/venice/ctrler/rollout"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/diagnostics"
+	"github.com/pensando/sw/venice/utils/diagnostics/module"
+	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
+	"github.com/pensando/sw/venice/utils/events/recorder"
+	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -59,8 +64,18 @@ func main() {
 	}
 	defer evtsRecorder.Close()
 
+	// start module watcher
+	moduleChangeCb := func(diagmod *diagapi.Module) {
+		logger.ResetFilter(diagnostics.GetLogFilter(diagmod.Spec.LogLevel))
+		logger.InfoLog("method", "moduleChangeCb", "msg", "setting log level", "moduleLogLevel", diagmod.Spec.LogLevel)
+	}
+	watcherOption := rollout.WithModuleWatcher(module.GetWatcher(fmt.Sprintf("%s-%s", k8s.GetNodeName(), globals.Rollout), globals.APIServer, r, logger, moduleChangeCb))
+
+	// add diagnostics service
+	diagOption := rollout.WithDiagnosticsService(diagsvc.GetDiagnosticsServiceWithDefaults(globals.Rollout, k8s.GetNodeName(), diagapi.ModuleStatus_Venice, r, logger))
+
 	// create the controller
-	_, err = rollout.NewCtrler(*listenURL, globals.APIServer, r, evtsRecorder)
+	_, err = rollout.NewCtrler(*listenURL, globals.APIServer, r, evtsRecorder, watcherOption, diagOption)
 	if err != nil {
 		log.Fatalf("Error creating controller instance: %v", err)
 	}

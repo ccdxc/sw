@@ -445,4 +445,75 @@ var _ = Describe("diagnostics tests", func() {
 			}, 30, 1).Should(BeNil())
 		})
 	})
+	Context("rollout", func() {
+		var modObj *diagnostics.Module
+		BeforeEach(func() {
+			var err error
+			var node string
+			Eventually(func() error {
+				node = ts.tu.GetNodeForService(globals.Rollout)
+				modObj, err = ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.Rollout)})
+				return err
+			}, 10, 1).Should(BeNil())
+		})
+		It("check log query", func() {
+			modObj.Spec.LogLevel = diagnostics.ModuleSpec_Debug.String()
+			var updatedModObj *diagnostics.Module
+			var err error
+			Eventually(func() error {
+				updatedModObj, err = ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, modObj)
+				return err
+			}, 10, 1).Should(BeNil())
+			Expect(modObj.Spec.LogLevel).Should(Equal(diagnostics.ModuleSpec_Debug.String()))
+			// query logs through Debug action
+			Eventually(func() error {
+				type debugResponse struct {
+					Diagnostics map[string]interface{} `json:"diagnostics"`
+				}
+				resp := debugResponse{}
+				var respStr string
+				if respStr, err = ts.tu.Debug(ts.loggedInCtx, &diagnostics.DiagnosticsRequest{
+					ObjectMeta: api.ObjectMeta{Name: updatedModObj.Name},
+					Query:      diagnostics.DiagnosticsRequest_Log.String(),
+				}, &resp); err != nil {
+					return err
+				}
+				if !strings.Contains(respStr, "\"level\":\"debug\"") &&
+					!strings.Contains(respStr, "\"level\":\"info\"") &&
+					!strings.Contains(respStr, "\"level\":\"error\"") {
+					return fmt.Errorf("no logs returned: {%v}", respStr)
+				}
+				return nil
+			}, 30, 1).Should(BeNil())
+			// restore info log level
+			Eventually(func() error {
+				updatedModObj.Spec.LogLevel = diagnostics.ModuleSpec_Info.String()
+				modObj, err = ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, updatedModObj)
+				return err
+			}, 10, 1).Should(BeNil())
+		})
+		It("check stats query", func() {
+			var err error
+			// query stats through Debug action
+			Eventually(func() error {
+				type debugResponse struct {
+					Diagnostics map[string]interface{} `json:"diagnostics"`
+				}
+				resp := debugResponse{}
+				var respStr string
+				if respStr, err = ts.tu.Debug(ts.loggedInCtx, &diagnostics.DiagnosticsRequest{
+					ObjectMeta: api.ObjectMeta{Name: modObj.Name},
+					Query:      diagnostics.DiagnosticsRequest_Stats.String(),
+				}, &resp); err != nil {
+					return err
+				}
+				if !strings.Contains(respStr, "\"cmdline\":") ||
+					!strings.Contains(respStr, "\"cpustats\":") ||
+					!strings.Contains(respStr, "\"memstats\":") {
+					return fmt.Errorf("no stats returned: {%v}", respStr)
+				}
+				return nil
+			}, 30, 1).Should(BeNil())
+		})
+	})
 })

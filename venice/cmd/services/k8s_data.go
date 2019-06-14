@@ -598,6 +598,7 @@ var k8sModules = map[string]protos.Module{
 			},
 			Volumes: []protos.ModuleSpec_Volume{
 				logVolume,
+				elasticClientCredsVolume,
 			},
 		},
 	},

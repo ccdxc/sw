@@ -6,6 +6,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/ctrler/rollout/statemgr"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/diagnostics"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -26,7 +27,7 @@ func (rs *RPCServer) Stop() error {
 }
 
 // NewRPCServer creates a new instance of
-func NewRPCServer(listenURL string, stateMgr *statemgr.Statemgr) (*RPCServer, error) {
+func NewRPCServer(listenURL string, stateMgr *statemgr.Statemgr, diagSvc diagnostics.Service) (*RPCServer, error) {
 	// create an RPC server
 	grpcServer, err := rpckit.NewRPCServer(globals.Rollout, listenURL)
 	if err != nil {
@@ -50,6 +51,9 @@ func NewRPCServer(listenURL string, stateMgr *statemgr.Statemgr) (*RPCServer, er
 	protos.RegisterSmartNICRolloutApiServer(grpcServer.GrpcServer, smartNICRolloutServer)
 	protos.RegisterVeniceRolloutApiServer(grpcServer.GrpcServer, veniceRolloutServer)
 	protos.RegisterServiceRolloutApiServer(grpcServer.GrpcServer, serviceRolloutServer)
+	if diagSvc != nil {
+		diagnostics.RegisterService(grpcServer.GrpcServer, diagSvc)
+	}
 	grpcServer.Start()
 
 	// create rpc server object
