@@ -82,9 +82,9 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
         }
 
         rv = create_route_table(&v6route_table);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
+        SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                "create route table %u failed, ret %u",
+                                v6route_table.key.id, rv);
     }
 
     return rv;
@@ -135,9 +135,9 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
             }
         }
         rv = create_route_table(&route_table);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
+        SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                "create route table %u failed, ret %u",
+                                route_table.key.id, rv);
     }
 
     if (g_test_params.dual_stack) {
@@ -181,10 +181,9 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
                         v4_provider_pfx->addr.addr.v4_addr + ip_offset;
                     ip_offset++;
                     rv = create_svc_mapping(&svc_mapping);
-                    if (rv != SDK_RET_OK) {
-                        SDK_ASSERT(0);
-                        return rv;
-                    }
+                    SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                            "create v4 svc mapping failed, vpc %u, rv %u",
+                                            i, rv);
                     if (g_test_params.dual_stack) {
                         svc_v6_mapping = svc_mapping;
                         svc_v6_mapping.key.vip.af = IP_AF_IPV6;
@@ -204,10 +203,9 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
                         CONVERT_TO_V4_MAPPED_V6_ADDRESS(svc_v6_mapping.backend_provider_ip.addr.v6_addr,
                                                         svc_mapping.backend_provider_ip.addr.v4_addr);
                         rv = create_svc_mapping(&svc_v6_mapping);
-                        if (rv != SDK_RET_OK) {
-                            SDK_ASSERT(0);
-                            return rv;
-                        }
+                        SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                                "create v6 svc mapping failed, vpc %u, rv %u",
+                                                i, rv);
                     }
                 }
             }
@@ -215,10 +213,8 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
     }
     // push leftover objects
     rv = create_svc_mapping(NULL);
-    if (rv != SDK_RET_OK) {
-        SDK_ASSERT(0);
-        return rv;
-    }
+    SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                            "create svc mapping failed, rv %u", rv);
     return rv;
 }
 
@@ -297,10 +293,9 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     ip_offset++;
 
                     rv = create_local_mapping(&pds_local_mapping);
-                    if (rv != SDK_RET_OK) {
-                        SDK_ASSERT(0);
-                        return rv;
-                    }
+                    SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                            "create v4 local mapping failed, vpc %u, ret %u",
+                                            i, rv);
 
                     if (g_test_params.dual_stack) {
                         // V6 mapping
@@ -332,10 +327,9 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                         ip_offset++;
 
                         rv = create_local_mapping(&pds_local_v6_mapping);
-                        if (rv != SDK_RET_OK) {
-                            SDK_ASSERT(0);
-                            return rv;
-                        }
+                        SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                                "create v4 local mapping failed, vpc %u, ret %u",
+                                                i, rv);
                     }
                 }
                 vnic_key++;
@@ -344,10 +338,8 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
     }
     // Batching: push leftover objects
     rv = create_local_mapping(NULL);
-    if (rv != SDK_RET_OK) {
-        SDK_ASSERT(0);
-        return rv;
-    }
+    SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                            "create v4 local mapping failed, ret %u", rv);
 
     // create remote mappings
     SDK_ASSERT(num_vpcs * num_remote_mappings <= (1 << 20));
@@ -397,9 +389,9 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 ip_offset++;
 
                 rv = create_remote_mapping(&pds_remote_mapping);
-                if (rv != SDK_RET_OK) {
-                    return rv;
-                }
+                SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                        "create v4 remote mapping failed, vpc %u, ret %u",
+                                        i, rv);
 
                 if (g_test_params.dual_stack) {
                     // V6 mapping
@@ -426,9 +418,9 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     ip_offset++;
 
                     rv = create_remote_mapping(&pds_remote_v6_mapping);
-                    if (rv != SDK_RET_OK) {
-                        return rv;
-                    }
+                    SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                            "create v6 remote mapping failed, vpc %u, ret %u",
+                                            i, rv);
                 }
                 tep_offset++;
                 tep_offset %= num_teps;
@@ -441,10 +433,8 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
     }
     // Batching: push leftover objects
     rv = create_remote_mapping(NULL);
-    if (rv != SDK_RET_OK) {
-        SDK_ASSERT(0);
-        return rv;
-    }
+    SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                            "create v6 remote mapping failed, ret %u", rv);
     return SDK_RET_OK;
 }
 
@@ -511,9 +501,9 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                     v6_meter_id = num_meter+1;
                 }
                 rv = create_vnic(&pds_vnic);
-                if (rv != SDK_RET_OK) {
-                    return rv;
-                }
+                SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                        "create vnic failed, vpc %u, ret %u",
+                                        i, rv);
                 vnic_key++;
             }
         }
@@ -534,17 +524,15 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                              ((1 & 0x7FF) << 11) | (1 & 0x7FF))));
         pds_vnic.switch_vnic = true;
         rv = create_vnic(&pds_vnic);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
+        SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                "create vnic failed, vpc %u, ret %u",
+                                num_vpcs + 1, rv);
     }
 
     // Batching: push leftover objects
     rv = create_vnic(NULL);
-    if (rv != SDK_RET_OK) {
-        SDK_ASSERT(0);
-        return rv;
-    }
+    SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                            "create vnic failed, ret %u", rv);
     return rv;
 }
 
@@ -585,9 +573,8 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
         pds_subnet.ing_v6_policy.id = policy_id + (num_subnets * num_vpcs) * 3;
         policy_id++;
         rv = create_subnet(&pds_subnet);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
+        SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                "create subnet %u failed, ret %u", i, rv);
     }
     return SDK_RET_OK;
 }
@@ -614,9 +601,8 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_pfx,
         pds_vpc.fabric_encap.val.vnid = i;
         pds_vpc.nat46_prefix = *nat46_pfx;
         rv = create_vpc(&pds_vpc);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
+        SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                "create vpc %u failed, rv %u", i, rv);
         rv = create_subnets(i, num_vpcs, num_subnets, &pds_vpc.v4_pfx,
                             &pds_vpc.v6_pfx);
         if (rv != SDK_RET_OK) {
@@ -632,9 +618,8 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_pfx,
         pds_vpc.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
         pds_vpc.fabric_encap.val.vnid = TESTAPP_SUBSTRATE_VNID;
         rv = create_vpc(&pds_vpc);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
+        SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                "create vpc %u failed, rv %u", num_vpcs + 1, rv);
         // create a subnet under infra/substrate/provider VPC
         memset(&pds_subnet, 0, sizeof(pds_subnet));
         pds_subnet.key.id = PDS_SUBNET_ID(((num_vpcs + 1)- 1), 1, 1);
@@ -642,22 +627,18 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_pfx,
         pds_subnet.vpc.id = num_vpcs + 1;
         MAC_UINT64_TO_ADDR(pds_subnet.vr_mac, substrate_vr_mac);
         rv = create_subnet(&pds_subnet);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
+        SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                "create subnet %u failed, ret %u",
+                                pds_subnet.key.id, rv);
     }
 
     // Batching: push leftover vpc and subnet objects
     rv = create_vpc(NULL);
-    if (rv != SDK_RET_OK) {
-        SDK_ASSERT(0);
-        return rv;
-    }
+    SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                            "create vpc failed, rv %u", rv);
     rv = create_subnet(NULL);
-    if (rv != SDK_RET_OK) {
-        SDK_ASSERT(0);
-        return rv;
-    }
+    SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                            "create subnet failed, ret %u", rv);
     return SDK_RET_OK;
 }
 
@@ -682,16 +663,14 @@ create_vpc_peers (uint32_t num_vpcs)
         pds_vpc_peer.vpc1.id = i;
         pds_vpc_peer.vpc2.id = i+1;
         rv = create_vpc_peer(&pds_vpc_peer);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
+        SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                "create vpc peer %u failed, ret %u",
+                                vpc_peer_id - 1, rv);
     }
     // Batching: push leftover vpc and subnet objects
     rv = create_vpc_peer(NULL);
-    if (rv != SDK_RET_OK) {
-        SDK_ASSERT(0);
-        return rv;
-    }
+    SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                            "create vpc peer failed, ret %u", rv);
     return SDK_RET_OK;
 }
 
@@ -798,16 +777,14 @@ create_tags (uint32_t num_tag_trees, uint32_t scale,
             }
         }
         ret = create_tag(&pds_tag);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
+        SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                                "create tag %u failed, ret %u",
+                                pds_tag.key.id, ret);
     }
     // Batching: push leftover objects
     ret = create_tag(NULL);
-    if (ret != SDK_RET_OK) {
-        SDK_ASSERT(0);
-        return ret;
-    }
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "create tag failed, ret %u", ret);
     return SDK_RET_OK;
 }
 
@@ -937,16 +914,14 @@ create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
             }
         }
         ret = create_meter(&pds_meter);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
+        SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                                "create meter %u failed, ret %u",
+                                pds_meter.key.id, ret);
     }
     // Batching: push leftover objects
     ret = create_meter(NULL);
-    if (ret != SDK_RET_OK) {
-        SDK_ASSERT(0);
-        return ret;
-    }
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "create meter failed, ret %u", ret);
     return SDK_RET_OK;
 }
 

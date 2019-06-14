@@ -12,29 +12,22 @@ static int g_epoch = 1;
 sdk_ret_t
 create_route_table (pds_route_table_spec_t *route_table)
 {
-    sdk_ret_t rv;
+    sdk_ret_t ret;
 
-    rv = create_route_table_grpc(route_table);
-    if (rv != SDK_RET_OK) {
-        return rv;
-    }
+    ret = create_route_table_grpc(route_table);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "create route table failed!, ret %u", ret);
     // Batching: push leftover objects
-    rv = create_route_table_grpc(NULL);
-    if (rv != SDK_RET_OK) {
-        return rv;
-    }
-    rv = batch_commit_grpc();
-    if (rv != SDK_RET_OK) {
-        printf("%s: Batch commit failed!\n", __FUNCTION__);
-        return SDK_RET_ERR;
-    }
-    rv = batch_start_grpc(g_epoch++);
-    if (rv != SDK_RET_OK) {
-        printf("%s: Batch start failed!\n", __FUNCTION__);
-        return SDK_RET_ERR;
-    }
-
-    return rv;
+    ret = create_route_table_grpc(NULL);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "create route table failed!, ret %u", ret);
+    ret = batch_commit_grpc();
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Batch commit failed!, ret %u", ret);
+    ret = batch_start_grpc(g_epoch++);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Batch start failed!, ret %u", ret);
+    return ret;
 }
 
 sdk_ret_t
@@ -112,26 +105,28 @@ create_device (pds_device_spec_t *device)
 sdk_ret_t
 create_policy (pds_policy_spec_t *policy)
 {
-    sdk_ret_t rv;
-    rv = create_policy_grpc(policy);
-    if (rv != SDK_RET_OK) {
-        return rv;
-    }
-    rv = create_policy_grpc(NULL);
-    return rv;
+    sdk_ret_t ret;
+    ret = create_policy_grpc(policy);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "create policy failed!, ret %u", ret);
+    ret = create_policy_grpc(NULL);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "create policy failed!, ret %u", ret);
+    return ret;
 }
 
 sdk_ret_t
 create_mirror_session (pds_mirror_session_spec_t *ms)
 {
-    sdk_ret_t rv;
-    rv = create_mirror_session_grpc(ms);
-    if (rv != SDK_RET_OK) {
-        return rv;
-    }
+    sdk_ret_t ret;
+    ret = create_mirror_session_grpc(ms);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "create mirror failed!, ret %u", ret);
     // push leftover objects
-    rv = create_mirror_session_grpc(NULL);
-    return rv;
+    ret = create_mirror_session_grpc(NULL);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "create mirror failed!, ret %u", ret);
+    return ret;
 }
 
 sdk_ret_t
@@ -141,11 +136,8 @@ create_objects_init (test_params_t *test_params)
 
     /* BATCH START */
     ret = batch_start_grpc(g_epoch++);
-    if (ret != SDK_RET_OK) {
-        printf("%s: Batch start failed!\n", __FUNCTION__);
-        return SDK_RET_ERR;
-    }
-
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Batch start failed!, ret %u", ret);
     return ret;
 }
 
@@ -155,17 +147,11 @@ create_objects_end ()
     sdk_ret_t ret;
 
     ret = batch_start_grpc(PDS_EPOCH_INVALID);
-    if (ret != SDK_RET_OK) {
-        printf("%s: Batch start failed!\n", __FUNCTION__);
-        return SDK_RET_ERR;
-    }
-
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Batch start failed!, ret %u", ret);
     /* BATCH COMMIT */
     ret = batch_commit_grpc();
-    if (ret != SDK_RET_OK) {
-        printf("%s: Batch commit failed!\n", __FUNCTION__);
-        return SDK_RET_ERR;
-    }
-
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Batch commit failed!, ret %u", ret);
     return ret;
 }
