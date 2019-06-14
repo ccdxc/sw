@@ -72,6 +72,7 @@
           <app-syslog #syslogComponent
                       [syslogExport]="syslogConfig"
                       [formatOptions]="formatOptions"
+                      targetTransport="UDP/<port>"
                       [showSyslogOptions]="false"
                       [maxTargets]="maxTargets"
                       fxFlex="nogrow" fxLayout="column"></app-syslog>

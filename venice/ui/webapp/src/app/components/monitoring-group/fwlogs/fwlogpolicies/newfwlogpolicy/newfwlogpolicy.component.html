@@ -49,6 +49,7 @@
         <div fxFlex="noshrink" fxLayout="row">
           <app-syslog #syslogComponent
                       [syslogExport]="newPolicy.$formGroup.get(['spec']).value"
+                      targetTransport="<TCP/UDP>/<port>"
                       [maxTargets]="maxTargets"
                       fxFlex="nogrow" fxLayout="column"></app-syslog>
         </div>

@@ -17,8 +17,9 @@ import { ControllerService } from '@app/services/controller.service';
 export class SyslogComponent extends BaseComponent implements OnInit {
   @Input() syslogExport: IMonitoringSyslogExport;
   @Input() showSyslogOptions: boolean = true;
+  @Input() targetTransport: String = '<protocol>/<port>';
   @Input() formatOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringSyslogExport.propInfo['format'].enum);
-  @Input() maxTargets: number;
+  @Input() maxTargets: number = 2;
   syslogServerForm: FormGroup;
 
   syslogOverrideOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringSyslogExportConfig.propInfo['facility-override'].enum);

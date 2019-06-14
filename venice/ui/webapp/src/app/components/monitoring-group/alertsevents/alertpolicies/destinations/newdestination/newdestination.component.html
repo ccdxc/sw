@@ -64,6 +64,7 @@
 <ng-template #syslog>
   <app-syslog #syslogComponent
               [syslogExport]="newDestination.$formGroup.get(['spec', 'syslog-export']).value"
+              targetTransport="<TCP/UDP>/<port>"
               fxFlex="nogrow" fxLayout="column"></app-syslog>
 </ng-template>
 

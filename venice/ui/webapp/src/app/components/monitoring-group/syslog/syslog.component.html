@@ -107,7 +107,7 @@
       <div fxFlex="30px" fxLayout="row" class="syslog-value">
         <input formControlName="transport" appErrorTooltip fxFlex="nogrow" class="syslog-input"
                spellcheck="false" type="text" pInputText
-               placeholder="<protocol>/<port>...">
+               [placeholder]="targetTransport">
       </div>
     </div>
   </div>
