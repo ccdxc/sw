@@ -33,6 +33,7 @@ export enum Telemetry_queryFwlog_action {
     'allow' = "allow",
     'deny' = "deny",
     'reject' = "reject",
+    'implicit_deny' = "implicit_deny",
 }
 
 export enum Telemetry_queryFwlog_direction {
@@ -44,6 +45,7 @@ export enum Telemetry_queryFwlogsQuerySpec_actions {
     'allow' = "allow",
     'deny' = "deny",
     'reject' = "reject",
+    'implicit_deny' = "implicit_deny",
 }
 
 export enum Telemetry_queryFwlogsQuerySpec_directions {
@@ -92,6 +94,7 @@ export enum FieldsRequirement_operator_uihint {
 export enum Telemetry_queryFwlog_action_uihint {
     'allow' = "Allow",
     'deny' = "Deny",
+    'implicit_deny' = "Implicit-deny",
     'reject' = "Reject",
 }
 
@@ -103,6 +106,7 @@ export enum Telemetry_queryFwlog_direction_uihint {
 export enum Telemetry_queryFwlogsQuerySpec_actions_uihint {
     'allow' = "Allow",
     'deny' = "Deny",
+    'implicit_deny' = "Implicit-deny",
     'reject' = "Reject",
 }
 
