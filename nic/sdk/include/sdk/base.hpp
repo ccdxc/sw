@@ -200,7 +200,8 @@ do {                                                       \
     ENTRY(SDK_RET_TXN_EXISTS,                 17,   "transaction exists")      \
     ENTRY(SDK_RET_TXN_INCOMPLETE,             18,   "transaction incomplete")  \
     ENTRY(SDK_RET_COMM_FAIL,                  19,   "communication failure")   \
-    ENTRY(SDK_RET_MAX,                        20,   "max return value")        \
+    ENTRY(SDK_RET_HW_SW_OO_SYNC,              20,   "HW and SW out of sync")   \
+    ENTRY(SDK_RET_MAX,                        21,   "max return value")        \
     ENTRY(SDK_RET_ERR,                        255,  "catch all generic error")
 
 SDK_DEFINE_ENUM(sdk_ret_t, SDK_RET_ENTRIES)

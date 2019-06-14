@@ -1,0 +1,43 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//------------------------------------------------------------------------------
+#include <arpa/inet.h>
+#include <stdio.h>
+#include "include/sdk/base.hpp"
+#include "nic/utils/ftlite/ftlite.hpp"
+#include "nic/utils/ftlite/test/p4pd_mock/ftlite_p4pd_mock.hpp"
+
+#include "base.hpp"
+
+void run_basic_tests();
+
+#if 0
+static int
+ftl_debug_logger (sdk_trace_level_e trace_level, const char *format, ...)
+{
+    char logbuf[1024];
+    va_list args;
+    static FILE *logfp = NULL;
+
+    if (logfp == NULL) {
+        logfp = fopen("run.log", "w");
+        assert(logfp);
+    }
+
+    if (trace_level <= sdk::lib::SDK_TRACE_LEVEL_VERBOSE) {
+        va_start(args, format);
+        vsnprintf(logbuf, sizeof(logbuf), format, args);
+        fprintf(logfp, "%s\n", logbuf);
+        va_end(args);
+    }
+    return 0;
+}
+#endif
+
+int 
+main(int argc, char **argv)
+{
+    //sdk::lib::logger::init(ftl_debug_logger);
+    run_basic_tests();
+    return 0;
+}
