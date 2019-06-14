@@ -40,17 +40,22 @@ export class TableUtility {
         if (column.exportable !== false && column.field) {
           let cellData = Utility.getLodash().get(record, column.field);
 
-          if (cellData != null) {
-            const customExportFunc = customExportMap[column.field];
-            if (customExportFunc) {
-              cellData = customExportFunc({
-                data: record,
-                field: column.field
-              });
-            } else {
+          // Priority 1) check for custom export settings
+          const customExportFunc = customExportMap[column.field];
+          if (customExportFunc) {
+            cellData = customExportFunc({
+              data: record,
+              field: column.field
+            });
+          } else {
+            // Priority 2) keep value from table data
+            if (!!cellData) {
+              // Priority 3) fetch value from ui hint
               cellData = TableUtility.displayColumn(record, column, hasUiHintMap);
             }
-          } else {
+          }
+          if (cellData == null) {
+            // Priority 4) if nothing else, set value to empty string
             cellData = '';
           }
           cellData = String(cellData).replace(/"/g, '""');

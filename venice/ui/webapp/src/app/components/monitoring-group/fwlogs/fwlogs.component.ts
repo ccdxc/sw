@@ -170,6 +170,10 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
       const time = dataObj.time as any;
       return new PrettyDatePipe('en-US').transform(time, 'ns');
     };
+    exportMap['policy'] = (opts) => {
+      const dataObj = opts.data as ITelemetry_queryFwlog;
+      return this.displayPolicyName(dataObj);
+    };
     TableUtility.exportTable(this.cols, this.dataObjects, this.exportFilename, exportMap);
     this.controllerService.invokeInfoToaster('File Exported', this.exportFilename + '.csv');
   }
