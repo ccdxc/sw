@@ -27,8 +27,8 @@ fi
 /nic/bin/memtun &
 
 # bring up oob
-#echo "Bringing up OOB ..."
-#$NIC_DIR/tools/bringup_mgmt_ifs.sh >/var/log/pensando/mgmt_if.log
+echo "Bringing up OOB/Inband/Internal-Management IFs ..."
+$NIC_DIR/tools/bringup_mgmt_ifs.sh &> /var/log/pensando/mgmt_if.log
 
 # start vpp
 #echo "Bringing up vpp ..."

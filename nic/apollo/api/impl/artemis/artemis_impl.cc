@@ -39,9 +39,9 @@ namespace api {
 namespace impl {
 
 #define ARTEMIS_PHV_SIZE (4096 / 8)
-    
+
 uint8_t data[ARTEMIS_PHV_SIZE];
-    
+
 // helper class to sort p4/p4+ programs to maximize performance
 class sort_mpu_programs_compare {
 public:
@@ -636,6 +636,22 @@ artemis_impl::inter_pipe_init_(void) {
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
+    data.action_id = INTER_PIPE_INGRESS_INGRESS_TO_CLASSIC_NIC_ID;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INTER_PIPE_INGRESS,
+                                       PIPE_CLASSIC_NIC,
+                                       NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    data.action_id = INTER_PIPE_INGRESS_INGRESS_TO_UPLINK_ID;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INTER_PIPE_INGRESS,
+                                       PIPE_UPLINK,
+                                       NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
     return SDK_RET_OK;
 }
 
@@ -838,7 +854,7 @@ artemis_impl::pipeline_init(void) {
     phv->p4_to_rxdma_cps_path_en = 1;
     ret = asicpd_sw_phv_inject(ASICPD_SWPHV_TYPE_RXDMA, 0, 0, 1, data);
     SDK_ASSERT(ret == SDK_RET_OK);
-    
+
     return SDK_RET_OK;
 }
 

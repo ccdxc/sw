@@ -382,7 +382,7 @@ capri_p4plus_table_init (p4plus_prog_t *prog,
         capri_program_p4plus_table_mpu_pc_args(prog->stage_tableid, te_csr,
                                                capri_action_p4plus_asm_base,
                                                CAPRI_P4PLUS_STAGE0_QSTATE_OFFSET_0);
-#ifndef APOLLO
+#ifdef IRIS
         // Program app-header offset 64 table config @(stage, stage_tableid) with the same PC as above
         capri_program_p4plus_table_mpu_pc_args(prog->stage_tableid_off, te_csr,
                                                capri_action_p4plus_asm_base,
@@ -437,14 +437,14 @@ capri_p4plus_table_init (platform_type_t platform_type,
             stage_tableid_apphdr, te_csr,
             capri_action_p4plus_asm_base,
             CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_0);
-#ifndef APOLLO
+#ifdef IRIS
     // Program app-header offset 64 table config @(stage, stage_tableid) with the same PC as above
     capri_program_p4plus_table_mpu_pc_args(
             stage_tableid_apphdr_off, te_csr,
             capri_action_p4plus_asm_base,
             CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_64);
 #endif
-#ifndef APOLLO
+#ifdef IRIS
     // Resolve the p4plus rxdma stage 0 "ext" program to its action pc
     if (sdk::p4::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_RXDMA_EXT_PROG,

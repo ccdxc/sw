@@ -55,6 +55,10 @@ ingress_to_cps:
     phvwr           p.capri_p4_intrinsic_valid, TRUE
     bitmap          001 1100 0010 1000
     */
+#ifdef HW
+    phvwr.e         p.capri_intrinsic_drop, 1
+    nop
+#endif
     phvwr           p.{p4i_i2e_valid, \
                         txdma_to_p4e_valid, \
                         predicate_header_valid, \

@@ -97,7 +97,7 @@ lif_impl::program_filters(lif_info_t *lif_params) {
     key.capri_intrinsic_lif = key_;
     mask.capri_intrinsic_lif_mask = 0xFFFF;
     data.action_id = NACL_NACL_REDIRECT_ID;
-    data.nacl_redirect_action.pipe_id = PIPE_CLASSIC_NIC;
+    data.nacl_redirect_action.pipe_id = PIPE_UPLINK;
     data.nacl_redirect_action.oport =
         g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);;
     ret = artemis_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
@@ -125,6 +125,7 @@ lif_impl::program_filters(lif_info_t *lif_params) {
         PDS_TRACE_ERR("Failed to program NACL entry for uplink %u -> mnic "
                       "lif %u, err %u", pinned_if_idx_, key_, ret);
     }
+
     return ret;
 }
 
