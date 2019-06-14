@@ -170,7 +170,6 @@ struct sequencer_info {
 	uint32_t sqi_dst_data_len;
 
 	uint32_t sqi_hw_dflt_takes;
-	uint32_t sqi_hw_total_takes;
 	uint32_t sqi_seq_total_takes;
 	uint32_t sqi_status_total_takes;
 };
@@ -290,6 +289,11 @@ struct chain_entry {
 	struct service_info ce_svc_info;	/* service within the chain */
 };
 
+struct ring_tracker {
+	uint8_t rt_max_dflt_takes;	/* for per-ring default accounting */
+	uint8_t rt_max_total_takes;	/* for per-ring total accounting */
+} __attribute__((packed));
+
 struct service_chain {
 	uint16_t sc_flags;		/* chain flags (CFLAGS) */
 	uint16_t sc_gen_id;		/* generation id */
@@ -297,6 +301,8 @@ struct service_chain {
 	uint16_t sc_async_evid;		/* async interrupt based event id, or 0 */
 	uint32_t sc_req_id;		/* unique request id */
 	uint64_t sc_poll_ts;		/* first poll timestamp */
+
+	struct ring_tracker sc_ring_tracker[ACCEL_RING_ID_MAX];
 
 	struct chain_entry *sc_entry;	/* list of services */
 	struct chain_entry *sc_last_entry;	/* last service in chain */
@@ -349,10 +355,6 @@ void chn_poll_timeout_all(struct per_core_resource *pcr);
 pnso_error_t pnso_chain_poller(void *poll_ctx);
 
 void chn_pprint_chain(const struct service_chain *chain);
-
-pnso_error_t chn_service_hw_ring_take(struct service_info *svc_info);
-
-pnso_error_t chn_service_hw_ring_give(struct service_info *svc_info);
 
 static inline bool
 chn_service_is_in_chain(const struct service_info *svc_info)

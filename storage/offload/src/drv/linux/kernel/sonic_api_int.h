@@ -90,6 +90,7 @@ uint32_t sonic_get_crypto_key_idx(uint32_t user_key_idx);
 uint64_t sonic_get_intr_assert_addr(uint32_t intr_idx);
 uint32_t sonic_get_intr_assert_data(void);
 struct sonic_accel_ring *sonic_get_accel_ring(uint32_t accel_ring_id);
+accel_ring_id_t sonic_get_accel_ring_id(struct sonic_accel_ring *ring);
 const char *sonic_accel_ring_name_get(uint32_t accel_ring_id);
 void sonic_accel_rings_reinit(struct sonic_dev *idev);
 int sonic_accounting_atomic_take(osal_atomic_int_t *atomic_c,

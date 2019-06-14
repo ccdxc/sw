@@ -717,6 +717,138 @@ init_service_info(enum pnso_service_type svc_type,
 	return PNSO_OK;
 }
 
+static struct ring_tracker *
+get_ring_tracker(struct service_chain *chain, accel_ring_id_t ring_id)
+{
+	return ring_id >= ARRAY_SIZE(chain->sc_ring_tracker) ?
+		NULL : &chain->sc_ring_tracker[ring_id];
+}
+
+static inline pnso_error_t
+_hw_ring_take(accel_ring_id_t ring_id, struct service_chain *chain)
+{
+	pnso_error_t err;
+	struct ring_tracker *ring_tracker;
+
+	ring_tracker = get_ring_tracker(chain, ring_id);
+	if (!ring_tracker)
+		return EINVAL;
+
+	if (ring_tracker->rt_max_dflt_takes) {
+		err = sonic_accel_ring_take(sonic_get_accel_ring(ring_id),
+				ring_tracker->rt_max_dflt_takes);
+		if (err == PNSO_OK){
+			ring_tracker->rt_max_total_takes +=
+				ring_tracker->rt_max_dflt_takes;
+
+			ring_tracker->rt_max_dflt_takes =  0;
+		}
+			
+		OSAL_LOG_DEBUG("ring: %s total: %u default: %u err: %d",
+				sonic_accel_ring_name_get(ring_id),
+				ring_tracker->rt_max_total_takes,
+				ring_tracker->rt_max_dflt_takes, err);
+
+		return err;
+	}
+
+	return	PNSO_OK;
+}
+
+static inline pnso_error_t
+hw_ring_take(struct service_chain *chain)
+{
+	pnso_error_t err;
+	accel_ring_id_t ring_id;
+
+	ring_id = ACCEL_RING_CP;
+	err = _hw_ring_take(ring_id, chain);
+	if (err)
+		goto out;
+
+	ring_id = ACCEL_RING_CP_HOT;
+	err = _hw_ring_take(ring_id, chain);
+	if (err)
+		goto out;
+
+	ring_id = ACCEL_RING_DC;
+	err = _hw_ring_take(ring_id, chain);
+	if (err)
+		goto out;
+
+	ring_id = ACCEL_RING_DC_HOT;
+	err = _hw_ring_take(ring_id, chain);
+	if (err)
+		goto out;
+
+	ring_id = ACCEL_RING_XTS0;
+	err = _hw_ring_take(ring_id, chain);
+	if (err)
+		goto out;
+
+	ring_id = ACCEL_RING_XTS1;
+	err = _hw_ring_take(ring_id, chain);
+	if (err)
+		goto out;
+
+	return PNSO_OK;
+
+out:
+	OSAL_LOG_ERROR("HW ring %s potential overflow! err: %d",
+			sonic_accel_ring_name_get(ring_id), err);
+	return err;
+}
+
+static void
+hw_ring_evaluate_take(struct service_info *svc_info)
+{
+	struct service_chain *chain = svc_info->si_centry->ce_chain_head;
+	struct ring_tracker *ring_tracker;
+	accel_ring_id_t ring_id;
+
+	ring_id = sonic_get_accel_ring_id(svc_info->si_seq_info.sqi_ring);
+	ring_tracker = get_ring_tracker(chain, ring_id);
+	if (!ring_tracker) {
+		OSAL_LOG_ERROR("invalid ring tracker for ring %s",
+				svc_info->si_seq_info.sqi_ring->name);
+		return;
+	}
+
+	ring_tracker->rt_max_dflt_takes = max(ring_tracker->rt_max_dflt_takes,
+				svc_info->si_seq_info.sqi_hw_dflt_takes);
+
+	svc_info->si_seq_info.sqi_hw_dflt_takes = 0;
+}
+
+static pnso_error_t
+hw_ring_give(struct service_info *svc_info)
+{
+	pnso_error_t err = EINVAL;
+	struct service_chain *chain = svc_info->si_centry->ce_chain_head;
+	struct ring_tracker *ring_tracker;
+	accel_ring_id_t ring_id;
+
+	ring_id = sonic_get_accel_ring_id(svc_info->si_seq_info.sqi_ring);
+	ring_tracker = get_ring_tracker(chain, ring_id);
+	if (!ring_tracker) {
+		OSAL_LOG_ERROR("invalid ring tracker for ring %s! err: %d",
+				svc_info->si_seq_info.sqi_ring->name, err);
+		return err;
+	}
+
+	err = sonic_accel_ring_give(svc_info->si_seq_info.sqi_ring,
+			ring_tracker->rt_max_total_takes);
+	
+	if (err != PNSO_OK)
+		OSAL_LOG_ERROR("HW ring %s potential underflow! total: %u err: %d",
+			       svc_info->si_seq_info.sqi_ring->name,
+			       ring_tracker->rt_max_total_takes, err);
+
+	ring_tracker->rt_max_total_takes = 0;
+
+	return err;
+}
+
 void
 chn_destroy_chain(struct service_chain *chain)
 {
@@ -759,7 +891,7 @@ chn_destroy_chain(struct service_chain *chain)
 		svc_info = &sc_entry->ce_svc_info;
 		svc_info->si_ops.teardown(svc_info);
 
-		chn_service_hw_ring_give(svc_info);
+		hw_ring_give(svc_info);
 		sc_next = sc_entry->ce_next;
 
 		mpool_put_object(svc_chain_entry_mpool, sc_entry);
@@ -945,9 +1077,7 @@ chn_create_chain(struct request_params *req_params,
 		if (err)
 			goto out_chain;
 
-		err = chn_service_hw_ring_take(svc_info);
-		if (err)
-			goto out_chain;
+		hw_ring_evaluate_take(svc_info);
 
 		PPRINT_SERVICE_INFO(svc_info);
 
@@ -981,6 +1111,10 @@ chn_create_chain(struct request_params *req_params,
 		if (err)
 			goto out_chain;
 	}
+
+	err = hw_ring_take(chain);
+	if (err)
+		goto out_chain;
 
 	*ret_chain = chain;
 	err = PNSO_OK;
@@ -1096,39 +1230,6 @@ chn_execute_chain(struct service_chain *chain)
 
 out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
-	return err;
-}
-
-pnso_error_t
-chn_service_hw_ring_take(struct service_info *svc_info)
-{
-	pnso_error_t err;
-
-	err = sonic_accel_ring_take(svc_info->si_seq_info.sqi_ring,
-				    svc_info->si_seq_info.sqi_hw_dflt_takes);
-	if (err == PNSO_OK) {
-		svc_info->si_seq_info.sqi_hw_total_takes +=
-			svc_info->si_seq_info.sqi_hw_dflt_takes;
-		svc_info->si_seq_info.sqi_hw_dflt_takes = 0;
-	} else
-		OSAL_LOG_ERROR("HW ring %s potential overflow",
-			       svc_info->si_seq_info.sqi_ring->name);
-
-	return err;
-}
-
-pnso_error_t
-chn_service_hw_ring_give(struct service_info *svc_info)
-{
-	pnso_error_t err;
-
-	err = sonic_accel_ring_give(svc_info->si_seq_info.sqi_ring,
-				    svc_info->si_seq_info.sqi_hw_total_takes);
-	svc_info->si_seq_info.sqi_hw_total_takes = 0;
-	if (err != PNSO_OK)
-		OSAL_LOG_ERROR("HW ring %s potential underflow",
-			       svc_info->si_seq_info.sqi_ring->name);
-
 	return err;
 }
 

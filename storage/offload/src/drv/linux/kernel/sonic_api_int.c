@@ -301,6 +301,12 @@ struct sonic_accel_ring *sonic_get_accel_ring(uint32_t accel_ring_id)
 	return &idev->ring_tbl[accel_ring_id];
 }
 
+accel_ring_id_t
+sonic_get_accel_ring_id(struct sonic_accel_ring *ring)
+{
+	return ring->accel_ring.ring_id;
+}
+
 const char *sonic_accel_ring_name_get(uint32_t accel_ring_id)
 {
 	if ((accel_ring_id < ARRAY_SIZE(accel_ring_name_tbl)) &&
