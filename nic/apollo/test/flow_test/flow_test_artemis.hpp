@@ -699,6 +699,7 @@ public:
     sdk_ret_t create_flow(uint32_t vpc, uint8_t proto,
                           ip_addr_t flow_sip, ip_addr_t flow_dip,
                           uint16_t flow_sport, uint16_t flow_dport) {
+        sdk_ret_t ret;
         if (flow_sip.af == IP_AF_IPV4) {
             memset(&v4entry, 0, sizeof(ftlv4_entry_t));
             // Common DATA fields
@@ -712,7 +713,7 @@ public:
             v4entry.dport = flow_dport;
             v4entry.src = flow_sip.addr.v4_addr;
             v4entry.dst = flow_dip.addr.v4_addr;
-            auto ret = insert_(&v4entry);
+            ret = insert_(&v4entry);
             SDK_ASSERT(ret == SDK_RET_OK);
             dump_flow_entry(&v4entry, flow_sip, flow_dip);
         } else if (flow_sip.af == IP_AF_IPV6) {
@@ -730,7 +731,7 @@ public:
                              sizeof(ipv6_addr_t));
             sdk::lib::memrev(v6entry.dst, flow_dip.addr.v6_addr.addr8,
                              sizeof(ipv6_addr_t));
-            auto ret = insert_(&v6entry);
+            ret = insert_(&v6entry);
             SDK_ASSERT(ret == SDK_RET_OK);
             dump_flow_entry(&v6entry, flow_sip, flow_dip);
         }
@@ -742,30 +743,69 @@ public:
                              uint16_t iflow_sport, uint16_t iflow_dport,
                              ip_addr_t rflow_sip, ip_addr_t rflow_dip,
                              uint16_t rflow_sport, uint16_t rflow_dport) {
-        memset(&v4entry, 0, sizeof(ftlv4_entry_t));
-        // Common DATA fields
-        v4entry.session_index = session_index;
-        v4entry.epoch = 0xFF;
-        // Common KEY fields
-        v4entry.vpc_id = vpc - 1;
-        v4entry.proto = proto;
-        // Create IFLOW
-        v4entry.sport = iflow_sport;
-        v4entry.dport = iflow_dport;
-        v4entry.src = iflow_sip.addr.v4_addr;
-        v4entry.dst = iflow_dip.addr.v4_addr;
-        auto ret = insert_(&v4entry);
-        SDK_ASSERT(ret == SDK_RET_OK);
-        dump_flow_entry(&v4entry, iflow_sip, iflow_dip);
-        // Create RFLOW
-        v4entry.sport = rflow_sport;
-        v4entry.dport = rflow_dport;
-        v4entry.src = rflow_sip.addr.v4_addr;
-        v4entry.dst = rflow_dip.addr.v4_addr;
-        ret = insert_(&v4entry);
-        SDK_ASSERT(ret == SDK_RET_OK);
-        dump_flow_entry(&v4entry, rflow_sip, rflow_dip);
+        sdk_ret_t ret;
+        if (iflow_sip.af == IP_AF_IPV4) {
+            memset(&v4entry, 0, sizeof(ftlv4_entry_t));
 
+            // Common DATA fields
+            v4entry.session_index = session_index;
+            v4entry.epoch = 0xFF;
+
+            // Common KEY fields
+            v4entry.vpc_id = vpc - 1;
+            v4entry.proto = proto;
+
+            // Create IFLOW
+            v4entry.sport = iflow_sport;
+            v4entry.dport = iflow_dport;
+            v4entry.src = iflow_sip.addr.v4_addr;
+            v4entry.dst = iflow_dip.addr.v4_addr;
+            ret = insert_(&v4entry);
+            SDK_ASSERT(ret == SDK_RET_OK);
+            dump_flow_entry(&v4entry, iflow_sip, iflow_dip);
+
+            // Create RFLOW
+            v4entry.sport = rflow_sport;
+            v4entry.dport = rflow_dport;
+            v4entry.src = rflow_sip.addr.v4_addr;
+            v4entry.dst = rflow_dip.addr.v4_addr;
+            ret = insert_(&v4entry);
+            SDK_ASSERT(ret == SDK_RET_OK);
+            dump_flow_entry(&v4entry, rflow_sip, rflow_dip);
+        } else {
+            memset(&v6entry, 0, sizeof(ftlv6_entry_t));
+
+            // Common DATA fields
+            v6entry.session_index = session_index;
+            v6entry.epoch = 0xFF;
+
+            // Common KEY fields
+            v6entry.ktype = 2;
+            v6entry.vpc_id = vpc - 1;
+            v6entry.proto = proto;
+
+            // create IFLOW
+            v6entry.sport = iflow_sport;
+            v6entry.dport = iflow_dport;
+            sdk::lib::memrev(v6entry.src, iflow_sip.addr.v6_addr.addr8,
+                             sizeof(ipv6_addr_t));
+            sdk::lib::memrev(v6entry.dst, iflow_dip.addr.v6_addr.addr8,
+                             sizeof(ipv6_addr_t));
+            ret = insert_(&v6entry);
+            SDK_ASSERT(ret == SDK_RET_OK);
+            dump_flow_entry(&v6entry, iflow_sip, iflow_dip);
+
+            // create RFLOW
+            v6entry.sport = rflow_sport;
+            v6entry.dport = rflow_dport;
+            sdk::lib::memrev(v6entry.src, rflow_sip.addr.v6_addr.addr8,
+                             sizeof(ipv6_addr_t));
+            sdk::lib::memrev(v6entry.dst, rflow_dip.addr.v6_addr.addr8,
+                             sizeof(ipv6_addr_t));
+            ret = insert_(&v6entry);
+            SDK_ASSERT(ret == SDK_RET_OK);
+            dump_flow_entry(&v6entry, rflow_sip, rflow_dip);
+        }
         return SDK_RET_OK;
     }
 
@@ -897,16 +937,22 @@ public:
                                     = htonl(0xF1D0D1D0);
                                 ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
                                     htonl((0xC << 28) | i);
-                                ret = create_flow(vpc, proto,
-                                                  ep_pairs[i].v6_local.local_ip,
-                                                  ip_addr,
-                                                  fwd_sport, fwd_dport);
+                                ret = create_session(vpc, proto,
+                                                     ep_pairs[i].v6_local.local_ip,
+                                                     ip_addr,
+                                                     fwd_sport, fwd_dport,
+                                                     ip_addr,
+                                                     ep_pairs[i].v6_local.local_ip,
+                                                     fwd_dport, fwd_sport);
                             } else {
                                 // vnet in/out with vxlan encap
-                                ret = create_flow(vpc, proto,
-                                                  ep_pairs[i].v6_local.local_ip,
-                                                  ep_pairs[i].v6_remote.remote_ip,
-                                                  fwd_sport, fwd_dport);
+                                ret = create_session(vpc, proto,
+                                                     ep_pairs[i].v6_local.local_ip,
+                                                     ep_pairs[i].v6_remote.remote_ip,
+                                                     fwd_sport, fwd_dport,
+                                                     ep_pairs[i].v6_remote.remote_ip,
+                                                     ep_pairs[i].v6_local.local_ip,
+                                                     fwd_dport, fwd_sport);
                             }
                             if (ret != SDK_RET_OK) {
                                 return ret;
