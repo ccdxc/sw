@@ -457,8 +457,14 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                 pds_vnic.vpc.id = i;
                 pds_vnic.subnet.id = PDS_SUBNET_ID((i - 1), num_subnets, j);
                 pds_vnic.key.id = vnic_key;
-                pds_vnic.vnic_encap.type = PDS_ENCAP_TYPE_DOT1Q;
-                pds_vnic.vnic_encap.val.vlan_tag = vlan_start + vnic_key - 1;
+                if (g_test_params.tag_vnics) {
+                    pds_vnic.vnic_encap.type = PDS_ENCAP_TYPE_DOT1Q;
+                    pds_vnic.vnic_encap.val.vlan_tag =
+                        vlan_start + vnic_key - 1;
+                } else {
+                    pds_vnic.vnic_encap.type = PDS_ENCAP_TYPE_NONE;
+                    pds_vnic.vnic_encap.val.value = 0;
+                }
                 if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
                     pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
                     //pds_vnic.fabric_encap.val.vnid =

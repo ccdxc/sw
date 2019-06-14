@@ -43,7 +43,8 @@
             "_comment_" : "per vpc, per subnet vnic scale",
             "kind" : "vnic",
             "count" : "1",
-            "vlan-start" : "1"
+            "vlan-start" : "1",
+            "tagged": "true"
         },
         {
             "kind" : "mappings",

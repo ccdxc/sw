@@ -72,6 +72,7 @@ typedef struct test_params_s {
     struct {
         uint32_t num_vnics;
         uint32_t vlan_start;
+        bool tag_vnics;
     };
     // mapping config
     struct {
@@ -215,13 +216,15 @@ parse_test_cfg (char *cfg_file, test_params_t *test_params)
                     if (!strcmp(tep_encap_env, "vxlan")) {
                         test_params->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
                     } else {
-                        test_params->fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+                        test_params->fabric_encap.type =
+                            PDS_ENCAP_TYPE_MPLSoUDP;
                     }
-                    printf("TEP encap env var: %s, encap: %d\n",
-                            tep_encap_env, test_params->fabric_encap.type);
+                    printf("TEP encap env var %s, encap %u\n",
+                           tep_encap_env, test_params->fabric_encap.type);
                 }
             } else if (kind == "tep") {
-                test_params->num_teps = std::stol(obj.second.get<std::string>("count"));
+                test_params->num_teps =
+                    std::stol(obj.second.get<std::string>("count"));
                 if (test_params->num_teps <= 2) {
                     printf("No. of TEPs must be greater than 2\n");
                     exit(1);
@@ -229,7 +232,8 @@ parse_test_cfg (char *cfg_file, test_params_t *test_params)
                 // reduce num_teps by 2, (MyTEP and GW-TEP)
                 test_params->num_teps -= 2;
                 pfxstr = obj.second.get<std::string>("prefix");
-                assert(str2ipv4pfx((char *)pfxstr.c_str(), &test_params->tep_pfx) == 0);
+                assert(str2ipv4pfx((char *)pfxstr.c_str(),
+                                   &test_params->tep_pfx) == 0);
                 pfxstr = obj.second.get<std::string>("svc-prefix", "");
                 if (pfxstr.empty() == false) {
                     assert(str2ipv6pfx((char *)pfxstr.c_str(),
@@ -268,9 +272,20 @@ parse_test_cfg (char *cfg_file, test_params_t *test_params)
                                        &test_params->nat46_vpc_pfx) == 0);
                 }
             } else if (kind == "vnic") {
+                string tag;
                 test_params->num_vnics = std::stol(obj.second.get<std::string>("count"));
                 test_params->vlan_start =
                     std::stol(obj.second.get<std::string>("vlan-start"));
+                tag = obj.second.get<std::string>("tagged", "");
+                if (tag.empty() || !tag.compare("true")) {
+                    test_params->tag_vnics = true;
+                } else if (!tag.compare("false")) {
+                    test_params->tag_vnics = false;
+                } else {
+                    printf("Unknown value %s for atrribute tagged under vnics, "
+                           "value must be true | false", tag.c_str());
+                    exit(1);
+                }
             } else if (kind == "mappings") {
                 pfxstr = obj.second.get<std::string>("nat-prefix");
                 assert(str2ipv4pfx((char *)pfxstr.c_str(), &test_params->nat_pfx) == 0);
