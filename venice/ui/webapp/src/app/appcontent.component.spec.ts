@@ -54,7 +54,7 @@ import { ClusterService } from './services/generated/cluster.service';
 import { MessageService } from './services/message.service';
 import { HelpoverlayComponent } from './widgets/helpcontent/helpoverlay.component';
 import { PortalModule } from '@angular/cdk/portal';
-
+import { BgfileuploadComponent } from '@app/widgets/bgfileupload/bgfileupload.component';
 
 describe('AppcontentComponent', () => {
     configureTestSuite(() => {
@@ -68,7 +68,8 @@ describe('AppcontentComponent', () => {
         GuidesearchComponent,
         ToasterComponent,
         ToasterItemComponent,
-        HelpoverlayComponent
+        HelpoverlayComponent,
+        BgfileuploadComponent
       ],
       imports: [
         // Other modules...

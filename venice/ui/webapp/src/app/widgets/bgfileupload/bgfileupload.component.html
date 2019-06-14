@@ -1,0 +1,23 @@
+<div *ngIf="showWidget" fxFlex="none" fxLayout="row" [ngClass]="styleClass"
+     xfLayoutAlign="center center">
+  <div fxFlex="5px"></div>
+  <div fxFlex="none" fxLayout="column" xfLayoutAlign="center center" (click)=redirectOnClick()>
+    <div fxFlex="5px"></div>
+    <div class="bgfileupload-text" xfLayoutAlign="center center">Uploading {{filename}}
+      [{{fileUploadProgress}}%]</div>
+    <div>
+      <p-progressBar [style]="{height: '8px'}" [value]="fileUploadProgress" [showValue]="showValue">
+      </p-progressBar>
+    </div>
+    <div fxFlex="5px"></div>
+  </div>
+  <div fxFlex="5px"></div>
+  <div fxFlex="none" fxLayout="column" fxLayoutGap="0px" xfLayoutAlign="center center">
+    <div fxFlex="5px"></div>
+    <mat-icon [ngStyle]="{'color':'#676763'}" class="bgfileupload-stopbutton"
+              fxLayoutAlign="center center" title="close"
+              (click)="onClickCancel()">block</mat-icon>
+    <div fxFlex="5px"></div>
+  </div>
+  <div fxFlex="5px"></div>
+</div>

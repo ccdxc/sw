@@ -299,6 +299,12 @@ $sidenavWidth: 200px;
   font-family: "Fira Sans Condensed" !important;
 }
 
+.app-shell-footer-widget-thinborder {
+  border: 1px;
+  border-style: solid;
+  border-color: #dddddd;
+}
+
 .app-shell-sideNav-right-Settings {
   display: flex;
   flex-direction: column;

@@ -1,0 +1,10 @@
+@import 'src/global-mixins';
+
+.bgfileupload-text {
+  @include primary-font();
+  line-height: 14px;
+}
+
+.bgfileupload-stopbutton {
+  cursor: pointer;
+}

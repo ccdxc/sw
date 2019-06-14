@@ -1,18 +1,26 @@
 <app-pagebody [icon]="bodyIcon" header="Rollout Images" class="systemupgrade">
-  <mat-expansion-panel fxFlex="none" class="global-mat-expansion-panel" [expanded]="false">
+  <mat-expansion-panel fxFlex="none" class="global-mat-expansion-panel"
+                       [expanded]="isThereBackgroudFileUpload()">
     <mat-expansion-panel-header class="imageupload-expansionpanel-header">
       <mat-panel-title class="imageupload-summary-panel-header">
         Upload Image File
       </mat-panel-title>
     </mat-expansion-panel-header>
+
     <div class="imageupload-summary-panel-content">
-      <div class="imageupload-fileupload-info-div">File type is *.tar and maximum file size is 10G.
+      <div class="imageupload-fileupload-info-div">
+        <span *ngIf="!isThereBackgroudFileUpload()">File type is *.tar and maximum file size is 10G.
+        </span>
         <span class="imageupload-fileupload-progress-span" *ngIf="fileUploadProgress">
-          {{fileUploadProgress >0 ? this.fileUploadProgress + '% uploaded.  DO NOT MOVE AWAY FROM THIS PAGE. ': ''}}
+          {{fileUploadProgress >0 ? this.fileUploadProgress + '% uploaded.  Uploading file takes some time. ': ''}}
           {{fileUploadProgress >=100 ? ' Saving file': ''}}
         </span>
+        <mat-icon matTooltip="Cancel File Upload" class="global-table-action-icon"
+                  *ngIf="isThereBackgroudFileUpload()"
+                  (click)="onCancelUpload()">delete</mat-icon>
       </div>
       <p-fileUpload name="file" url="/objstore/v1/uploads/images/" (onUpload)="onUpload($event)"
+                    *ngIf="!isThereBackgroudFileUpload()"
                     (onError)="onError($event)" (onBeforeSend)="onBeforeSend($event)" accept=".tar"
                     maxFileSize="1000000000000" (onClear)="onCancelUpload()"
                     (onRemove)="onFileRemove($event)" (onSelect)="onFileSelect($event)"

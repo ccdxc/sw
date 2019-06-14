@@ -8,16 +8,28 @@ import { ObjstoreService } from '@app/services/generated/objstore.service';
 import { IApiStatus, IObjstoreObject, ObjstoreObject, IObjstoreObjectList, ObjstoreObjectList } from '@sdk/v1/models/generated/objstore';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { Utility } from '@app/common/Utility';
+import { BackgroundProcessManager } from '@app/common/BackgroundProcessManager';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { AUTH_KEY } from '@app/core';
 import { RolloutUtil } from '@app/components/settings-group/systemupgrade/rollouts/RolloutUtil';
 import { RolloutImageLabel } from '@app/components/settings-group/systemupgrade/rollouts/';
 import { TableCol } from '@app/components/shared/tableviewedit';
+import { Eventtypes } from '@app/enum/eventtypes.enum';
 
 /**
  * This component let user upload Venice rollout images and manage existing images.
+ *
+ * Uploading image file takes time.  Thus, we enable file uploading running in background.  User can visit other page when file upload is initiated.
+ * ImageuploadComponent.ngDestroy() invokes BackgroundProcessManager.getInstance().registerVeniceImageFileUpload() which will manage uploading process and publish status event.
+ * When user comes back to ImageuploadComponent page, ImageuploadComponent.subcribeToBackgroundFileUploadEvents() will listens to events published by BackgroundProcessManager.registerVeniceImageFileUpload()
+ * ImageuploadComponent.html will handle the UI display accordingly.
+ *
+ * ImageuploadComponent.processRolloutImages() is a key API that handles how to display images.  (how UI works with backend)
+ *
  * Note:
  *   imageupload.component.html use <p-fileUpload> widget which not using Angular http-clinet. We have to use p-fileUpload.onBeforeSend() hook to add security-token.
  *   We change UI according to file upload progress. User can cancel upload. If user move away from current page. We will cancel file upload.
+ *
  *
  *   As well, this component lists rollout images and let user delete images.
  *
@@ -39,11 +51,12 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   loading: boolean = false;
 
   uploadedFiles: any[] = [];
+  uploadingFiles: string[] = [];
   fileUploadProgress: number = 0;
 
   _uploadCancelled: boolean = false;
   showUploadButton: boolean = true;
-
+  uploadInForeground: boolean = false;
   _xhr: XMLHttpRequest = null;
 
   bodyIcon: Icon = {
@@ -94,7 +107,46 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   }
 
   postNgInit() {
-    this.getRolloutImages();
+      this.controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'ImageuploadComponent', 'state': Eventtypes.COMPONENT_INIT });
+      this.getRolloutImages();
+      this.subcribeToBackgroundFileUploadEvents();
+  }
+
+  subcribeToBackgroundFileUploadEvents() {
+    const subSuccess = this.controllerService.subscribe(Eventtypes.BACKGROUND_FILEUPLOAD_SUCCESS,  (payload) => {
+      this.onBackgroudUploadSuccess(payload);
+    });
+    this.subscriptions.push(subSuccess);
+    const subFailure = this.controllerService.subscribe(Eventtypes.BACKGROUND_FILEUPLOAD_FAILURE,  (payload) => {
+      this.onBackgroudUploadFailure(payload);
+    });
+    this.subscriptions.push(subFailure);
+    const subProgress = this.controllerService.subscribe(Eventtypes.BACKGROUND_FILEUPLOAD_PROGRESS,  (payload) => {
+      this.onBackgroudUploadProgress(payload);
+    });
+    this.subscriptions.push(subProgress);
+    const subCancel = this.controllerService.subscribe(Eventtypes.BACKGROUND_FILEUPLOAD_CANCEL,  (payload) => {
+      this.onBackgroudUploadCancel(payload);
+    });
+    this.subscriptions.push(subCancel);
+  }
+  private onBackgroudUploadCancel(payload: any) {
+    this.refreshImages();
+    this.resetProgressStatus();
+  }
+
+  private onBackgroudUploadSuccess(payload: any) {
+    this.refreshImages();
+    this.resetProgressStatus();
+  }
+
+  private onBackgroudUploadFailure(payload: any) {
+    this.resetProgressStatus();
+  }
+
+  private onBackgroudUploadProgress(payload: any) {
+    const progress = (payload.progress) ? payload.progress : 0;
+    this.fileUploadProgress = (progress > this.fileUploadProgress) ? progress : this.fileUploadProgress;
   }
 
 
@@ -139,6 +191,11 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
    * @param response
    */
   processRolloutImages(response) {
+  /**
+   * 2019-05-xx implementation logic
+   * once bundle.tar is uploaded, backend will un-tar it to multiple files. objstoreService.listXXX()/Watch() will bring back multiple files, including bundle.tar and metadat.json
+   * We get labels information from metadata.json,  attach metadata.labels to bundle.tar. We display bundle.tar in table only. If user delete bundle.tar, backend will handle deleting the un-tar files.
+   */
     let metaImage: ObjstoreObject = null;
     let rolloutImages: IObjstoreObjectList = null;
     rolloutImages = (response) ? response.body as IObjstoreObjectList : rolloutImages;
@@ -160,6 +217,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   }
 
  onBeforeSend($event) {
+    this.uploadInForeground = true;
     const xhr = $event.xhr;
     this._xhr = xhr;
     const headerName = AUTH_KEY;
@@ -167,7 +225,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     xhr.setRequestHeader(headerName, token);
     this._uploadCancelled = false;
     this.showUploadButton = false;
-    this.controllerService.invokeInfoToaster('Upload', 'Please do not move away from this page until upload is completed');
+    this.controllerService.invokeInfoToaster('Upload', 'File upload started.  Please do not leave Venice site');
   }
   /**
    * This API serves html template
@@ -223,9 +281,14 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     }
     this.resetProgressStatus();
     this.controllerService.invokeInfoToaster('Upload', 'Upload operation was cancelled');
+    this.controllerService.publish(Eventtypes.BACKGROUND_FILEUPLOAD_CANCEL, { status: 'cancel' });
   }
 
   onFileSelect($event) {
+    // Just uploading one file.
+    if ($event.files.length > 0) {
+      this.uploadingFiles.push($event.files[0]['name']);
+    }
     this.fileUploadProgress = 0;
   }
 
@@ -236,6 +299,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     this.fileUploadProgress = 0;
     this.showUploadButton = true;
     this._xhr = null;
+    BackgroundProcessManager.getInstance().unRegisterVeniceImageFileUpload();
   }
 
   getFilesNames(files: any[]): string[] {
@@ -281,18 +345,27 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
 
   onUploadProgress($event) {
     if (!this._uploadCancelled) {
-      this.fileUploadProgress = $event.progress;
+      const progress = $event.progress;
+      this.fileUploadProgress = (progress > this.fileUploadProgress) ? progress : this.fileUploadProgress;
     }
   }
 
   ngOnDestroy() {
-    if (this.isFileUploadInProgress()) {
-      this.cancelUpload();
+    this.controllerService.publish(Eventtypes.COMPONENT_DESTROY, { 'component': 'ImageuploadComponent', 'state': Eventtypes.COMPONENT_DESTROY });
+    if (this.isFileUploadInProgress() && this.uploadInForeground) {
+     //  When user leaves upload image page, we don't cancel upload (//this.cancelUpload()), instead we put upload process in background.
+     BackgroundProcessManager.getInstance().registerVeniceImageFileUpload(this._xhr, this.uploadingFiles);
+     this.controllerService.invokeInfoToaster('Upload', 'File upload will be running in background.  Please do not leave Venice site');
     }
     super.ngOnDestroy();
   }
 
   private isFileUploadInProgress(): boolean {
     return (this._xhr !== null) || (this.fileUploadProgress > 0);
+  }
+
+  isThereBackgroudFileUpload(): boolean {
+    const backgroundFileUpload = BackgroundProcessManager.getInstance().getBackgroundVeniceImageFileUpload();
+    return !!(backgroundFileUpload);
   }
 }

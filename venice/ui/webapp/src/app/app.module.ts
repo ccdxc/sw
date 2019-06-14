@@ -75,6 +75,7 @@ import {AuditService} from '@app/services/generated/audit.service';
 import { HelpoverlayComponent } from './widgets/helpcontent/helpoverlay.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { PortalModule } from '@angular/cdk/portal';
+import { BgfileuploadComponent } from './widgets/bgfileupload/bgfileupload.component';
 
 /**
  * This is pensando UI web-app module. It imports all required libraries.
@@ -101,7 +102,8 @@ import { PortalModule } from '@angular/cdk/portal';
     ToasterItemComponent,
     ToasterComponent,
     MissingpageComponent,
-    HelpoverlayComponent
+    HelpoverlayComponent,
+    BgfileuploadComponent
   ],
   entryComponents: [
     BaseComponent,

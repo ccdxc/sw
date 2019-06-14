@@ -129,11 +129,19 @@
       </mat-sidenav-container>
 
       <mat-toolbar class="app-shell-footer">
-        <div fxFlexFill fxLayout="row">
-          <div fxLayout="column" fxLayoutAlign="center start">Pensando Systems</div>
-          <div fxFlex fxLayout="column"></div>
-          <div fxLayout="column" fxLayoutAlign="center end" (click)="versionOp.toggle($event)"
-               style="cursor: pointer;">{{version?.status["build-version"]}}</div>
+        <div fxFlex fxLayout="column">
+          <div fxFlex fxLayout="row">
+            <div fxLayout="column" fxLayoutAlign="center start">Pensando Systems</div>
+            <div fxLayout="column" fxFlex="10px"></div>
+            <div fxLayout="column" fxLayoutAlign="center start">
+              <app-bgfileupload [showValue]="false"
+                                [styleClass]="'app-shell-footer-widget-thinborder'">
+              </app-bgfileupload>
+            </div>
+            <div fxFlex fxLayout="column"></div>
+            <div fxLayout="column" fxLayoutAlign="center end" (click)="versionOp.toggle($event)"
+                 style="cursor: pointer;">{{version?.status["build-version"]}}</div>
+          </div>
         </div>
       </mat-toolbar>
     </ng-container>
