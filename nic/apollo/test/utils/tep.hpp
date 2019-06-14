@@ -7,161 +7,66 @@
 /// This file contains the tep test utility routines
 ///
 //----------------------------------------------------------------------------
-
 #ifndef __TEST_UTILS_TEP_HPP__
 #define __TEST_UTILS_TEP_HPP__
 
-#include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
+#include "nic/apollo/test/utils/feeder.hpp"
 
 namespace api_test {
 
 extern const pds_encap_t k_default_tep_encap;
 extern const pds_tep_type_t k_default_tep_type;
 extern const pds_encap_t k_zero_encap;
-extern const ip_addr_t k_zero_ip;
 
-#define TEP_SEED_INIT tep_util::stepper_seed_init
-
-#define TEP_CREATE(obj)                                              \
-    ASSERT_TRUE(obj.create() == sdk::SDK_RET_OK)
-
-#define TEP_READ(obj, info)                                          \
-    ASSERT_TRUE(obj.read(info) == sdk::SDK_RET_OK)
-
-#define TEP_READ_FAIL(obj, info, exp_result)                         \
-    ASSERT_TRUE(obj.read(info,                                       \
-                         exp_result) == sdk::SDK_RET_OK)
-
-#define TEP_UPDATE(obj)                                              \
-    ASSERT_TRUE(obj.update() == sdk::SDK_RET_OK)
-
-#define TEP_DELETE(obj)                                              \
-    ASSERT_TRUE(obj.del() == sdk::SDK_RET_OK)
-
-#define TEP_MANY_CREATE(seed)                                        \
-    ASSERT_TRUE(tep_util::many_create(seed) == sdk::SDK_RET_OK)
-
-#define TEP_MANY_READ(seed)                                          \
-    ASSERT_TRUE(tep_util::many_read(seed) == sdk::SDK_RET_OK)
-
-#define TEP_MANY_READ_FAIL(seed, exp_result)                         \
-    ASSERT_TRUE(tep_util::many_read(seed,                            \
-                                    exp_result) == sdk::SDK_RET_OK)
-
-#define TEP_MANY_UPDATE(seed)                                        \
-    ASSERT_TRUE(tep_util::many_update(seed) == sdk::SDK_RET_OK)
-
-#define TEP_MANY_DELETE(seed)                                        \
-    ASSERT_TRUE(tep_util::many_delete(seed) == sdk::SDK_RET_OK)
-
-// TEP object seed used as base seed in many_* operations
-typedef struct tep_stepper_seed_s {
-    ip_addr_t ip_addr;
+// NH test feeder class
+class tep_feeder : public feeder {
+public:
+    ip_addr_t ip;
     ip_addr_t dipi;
     uint64_t dmac;
     pds_tep_type_t type;
     pds_encap_t encap;
     bool nat;
-    uint32_t num_tep;
-} tep_stepper_seed_t;
 
-/// TEP test utility class
-class tep_util {
-public:
-    // Test parameters
-    ip_addr_t ip_addr;            ///< TEP IP
-    ip_addr_t dipi;               ///< Inner destination IP
-    uint64_t dmac;                ///< MAC address of this TEP
-    pds_tep_type_t type;          ///< TEP type
-    pds_encap_t encap;            ///< TEP encap
-    bool nat;                     ///< NAT state
+    // Constructor
+    tep_feeder() { };
+    tep_feeder(const tep_feeder& feeder) {
+        init(ipaddr2str(&feeder.ip), feeder.num_obj, feeder.encap, feeder.nat,
+             feeder.type, ipaddr2str(&feeder.dipi), feeder.dmac);
+    }
 
-    /// \brief parameterized constructor
-    tep_util(std::string ip_str, pds_tep_type_t type=PDS_TEP_TYPE_WORKLOAD,
-             pds_encap_t encap=k_default_tep_encap, bool nat=FALSE);
+    // Initialize feeder with the base set of values
+    void init(std::string ip_str, uint32_t num_tep=PDS_MAX_TEP,
+              pds_encap_t encap=k_default_tep_encap, bool nat=FALSE,
+              pds_tep_type_t type=k_default_tep_type,
+              std::string dipi_str="0.0.0.0", uint64_t dmac=0);
 
-    /// \brief parameterized constructor
-    tep_util(ip_addr_t ip_addr, pds_tep_type_t type=PDS_TEP_TYPE_WORKLOAD,
-             pds_encap_t encap=k_default_tep_encap, bool nat=FALSE,
-             ip_addr_t dipi=k_zero_ip, uint64_t dmac=0);
+    // Iterate helper routines
+    void iter_next(int width = 1);
 
-    /// \brief destructor
-    ~tep_util();
+    // Build routines
+    void key_build(pds_tep_key_t *key) const;
+    void spec_build(pds_tep_spec_t *spec) const;
 
-    /// \brief Create TEP
-    ///
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t create(void) const;
-
-    /// \brief Read TEP
-    ///
-    /// \param[in] compare_spec validation to be done or not
-    /// \param[out] info tep information
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_tep_info_t *info) const;
-
-    /// \brief Update TEP
-    ///
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update(void) const;
-
-    /// \brief Delete TEP
-    ///
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t del(void) const;
-
-    /// \brief Create multiple TEPs
-    ///
-    /// \param[in] seed TEP seed
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_create(tep_stepper_seed_t *seed);
-
-    /// \brief Read & validate multiple TEPs
-    ///
-    /// \param[in] seed TEP seed
-    /// \param[in] exp_result expected result on read & validate
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_read(tep_stepper_seed_t *seed,
-                               sdk::sdk_ret_t exp_result = sdk::SDK_RET_OK);
-
-    /// \brief Update multiple TEPs
-    ///
-    /// \param[in] seed TEP seed
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_update(tep_stepper_seed_t *seed);
-
-    /// \brief Delete multiple TEPs
-    /// Delete "num_tep" TEPs of type "tep_type" with IPs in range
-    /// ip_str...ip_str+num_tep
-    ///
-    /// \param[in] seed TEP seed
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_delete(tep_stepper_seed_t *seed);
-
-    /// \brief Initialize the seed for TEP
-    ///
-    /// \param[out] seed TEP seed
-    /// \param[in] ip_str starting IP address
-    /// \param[in] num_tep number of TEPs to be operated
-    /// \param[in] encap TEP encap
-    /// \param[in] nat NAT state
-    /// \param[in] type TEP type
-    /// \param[in] dipi_str base outer source IP address
-    /// \param[in] dmac base mac address
-    static void stepper_seed_init(tep_stepper_seed_t *seed, std::string ip_str,
-                                  uint32_t num_tep=PDS_MAX_TEP,
-                                  pds_encap_t encap=k_default_tep_encap,
-                                  bool nat=FALSE,
-                                  pds_tep_type_t type=k_default_tep_type,
-                                  std::string dipi_str="0.0.0.0",
-                                  uint64_t dmac=0);
-
-    /// \brief Indicates whether TEP is stateful
-    ///
-    /// \returns TRUE for TEP which is stateful
-    static bool is_stateful(void) { return TRUE; }
+    // Compare routines
+    bool key_compare(const pds_tep_key_t *key) const;
+    bool spec_compare(const pds_tep_spec_t *spec) const;
+    sdk::sdk_ret_t info_compare(const pds_tep_info_t *info) const;
 };
+
+// Function prototypes
+sdk::sdk_ret_t create(tep_feeder& feeder);
+sdk::sdk_ret_t read(tep_feeder& feeder);
+sdk::sdk_ret_t update(tep_feeder& feeder);
+sdk::sdk_ret_t del(tep_feeder& feeder);
+
+void sample_tep_setup(std::string ip_str="30.30.30.1",
+                      uint32_t num_tep=PDS_MAX_TEP);
+void sample_tep_validate(std::string ip_str="30.30.30.1",
+                         uint32_t num_tep=PDS_MAX_TEP);
+void sample_tep_teardown(std::string ip_str="30.30.30.1",
+                         uint32_t num_tep=PDS_MAX_TEP);
 
 }    // namespace api_test
 

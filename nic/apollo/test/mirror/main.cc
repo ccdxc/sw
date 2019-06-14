@@ -11,6 +11,7 @@
 #include <getopt.h>
 #include <gtest/gtest.h>
 #include "nic/apollo/api/include/pds_batch.hpp"
+#include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/batch.hpp"
 #include "nic/apollo/test/utils/device.hpp"
@@ -29,7 +30,6 @@ static constexpr uint32_t k_base_ms = 1;
 static const char * const k_tep_ip1 = "10.1.1.1";
 static const char * const k_tep_ip2 = "10.1.2.1";
 static const char * const k_tep_ip3 = "10.1.3.1";
-static const tep_util k_tep1(k_tep_ip1), k_tep2(k_tep_ip2), k_tep3(k_tep_ip3);
 
 //----------------------------------------------------------------------------
 // Mirror session test class
@@ -50,17 +50,17 @@ protected:
         batch_start();
         sample_vpc_setup(PDS_VPC_TYPE_SUBSTRATE);
         sample_subnet_setup();
-        TEP_CREATE(k_tep1);
-        TEP_CREATE(k_tep2);
-        TEP_CREATE(k_tep3);
+        sample_tep_setup(k_tep_ip1, 1);
+        sample_tep_setup(k_tep_ip2, 1);
+        sample_tep_setup(k_tep_ip3, 1);
         sample_device_setup();
         batch_commit();
     }
     static void TearDownTestCase() {
         batch_start();
-        TEP_DELETE(k_tep1);
-        TEP_DELETE(k_tep2);
-        TEP_DELETE(k_tep3);
+        sample_tep_teardown(k_tep_ip1, 1);
+        sample_tep_teardown(k_tep_ip2, 1);
+        sample_tep_teardown(k_tep_ip3, 1);
         sample_subnet_teardown();
         sample_vpc_teardown(PDS_VPC_TYPE_SUBSTRATE);
         sample_device_teardown();

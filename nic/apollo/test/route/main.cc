@@ -57,10 +57,7 @@ protected:
         sample_vpc_setup(PDS_VPC_TYPE_TENANT);
         if (apollo()) {
             // create max TEPs which can be used as NHs for routes
-            tep_stepper_seed_t tep_seed = {0};
-
-            TEP_SEED_INIT(&tep_seed, k_base_nh_ip);
-            TEP_MANY_CREATE(&tep_seed);
+            sample_tep_setup();
         } else {
             // create max NHs which can be used as NHs for routes
             sample_nh_setup();
@@ -70,10 +67,7 @@ protected:
     static void TearDownTestCase() {
         batch_start();
         if (apollo()) {
-            tep_stepper_seed_t tep_seed = {0};
-
-            TEP_SEED_INIT(&tep_seed, k_base_nh_ip);
-            TEP_MANY_DELETE(&tep_seed);
+            sample_tep_teardown();
         } else {
             sample_nh_teardown();
         }

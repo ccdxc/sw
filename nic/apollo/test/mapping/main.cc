@@ -81,14 +81,12 @@ protected:
         pds_vnic_info_t vnic_info = {0};
         pds_vpc_info_t vpc_info = {0};
         pds_subnet_info_t sub_info = {0};
-        pds_tep_info_t tep_info = {0};
         vnic_stepper_seed_t vnic_seed = {};
         pds_batch_params_t batch_params = {0};
         std::string subnet_cidr = api_test::g_subnet_cidr_v4;
         std::string nr_cidr = "100.0.0.1/16";
         ip_prefix_t ip_pfx, rt_pfx, nr_pfx;
         ip_addr_t ipaddr, rt_addr, nr_addr;
-        tep_stepper_seed_t tep_seed = {};
 
         vpc_key.id = api_test::g_vpc_id;
         subnet_key.id = api_test::g_subnet_id;
@@ -97,7 +95,6 @@ protected:
         extract_ip_pfx((char *)nr_cidr.c_str(), &nr_pfx);
 
         rt_addr = rt_pfx.addr;
-        tep_util tep_obj(k_device_ip);
 
         batch_start();
         sample_device_setup();
@@ -107,9 +104,8 @@ protected:
                         PDS_MAX_VPC);
         many_create(vpc_feeder);
 
-        TEP_CREATE(tep_obj);
-        TEP_SEED_INIT(&tep_seed, api_test::g_tep_cidr_v4, num_teps);
-        TEP_MANY_CREATE(&tep_seed);
+        sample_tep_setup(k_device_ip, 1);
+        sample_tep_setup(api_test::g_tep_cidr_v4, num_teps);
         for (uint16_t idx = 0; idx < num_teps; idx++) {
             route_table_util rt_obj(rt_id_v4 + idx, nr_pfx, rt_addr);
             ip_prefix_ip_next(&rt_pfx, &rt_addr);
@@ -151,8 +147,8 @@ protected:
         }
 
         sample_device_setup_validate();
-        TEP_READ(tep_obj, &tep_info);
-        TEP_MANY_READ(&tep_seed);
+        sample_tep_validate(k_device_ip, 1);
+        sample_tep_validate(api_test::g_tep_cidr_v4, num_teps);
         VNIC_MANY_READ(&vnic_seed, sdk::SDK_RET_OK);
     }
     static void TearDownTestCase() {

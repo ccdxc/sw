@@ -9,12 +9,10 @@
 //----------------------------------------------------------------------------
 
 #include <getopt.h>
-#include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
-#include "nic/apollo/test/utils/batch.hpp"
-#include "nic/apollo/test/utils/workflow.hpp"
 #include "nic/apollo/test/utils/tep.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
+#include "nic/apollo/test/utils/workflow1.hpp"
 
 using std::cerr;
 using std::cout;
@@ -35,7 +33,7 @@ static constexpr bool k_nat = FALSE;
 // TEP test class
 //----------------------------------------------------------------------------
 
-class tep_test : public pds_test_base {
+class tep_test : public ::pds_test_base {
 protected:
     tep_test() {}
     virtual ~tep_test() {}
@@ -61,324 +59,323 @@ protected:
 /// @{
 
 /// \brief TEP WF_1
-TEST_F(tep_test, tep_workflow1) {
-    tep_stepper_seed_t seed = {};
+TEST_F(tep_test, tep_workflow_1) {
+    tep_feeder feeder;
 
     if (artemis())
-        TEP_SEED_INIT(&seed, k_base_nh_ip, k_max_tep, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+        feeder.init(k_base_nh_ip, k_max_tep, k_zero_encap,
+                    k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
     else
-        TEP_SEED_INIT(&seed, k_base_nh_ip);
-    workflow_1<tep_util, tep_stepper_seed_t>(&seed);
+        feeder.init(k_base_nh_ip);
+    workflow_1<tep_feeder>(feeder);
 }
 
 /// \brief TEP WF_2
-TEST_F(tep_test, tep_workflow2) {
-    tep_stepper_seed_t seed = {};
+TEST_F(tep_test, tep_workflow_2) {
+    tep_feeder feeder;
 
     if (artemis())
-        TEP_SEED_INIT(&seed, k_base_nh_ip, k_max_tep, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+        feeder.init(k_base_nh_ip, k_max_tep, k_zero_encap,
+                    k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
     else
-        TEP_SEED_INIT(&seed, k_base_nh_ip);
-    workflow_2<tep_util, tep_stepper_seed_t>(&seed);
+        feeder.init(k_base_nh_ip);
+    workflow_2<tep_feeder>(feeder);
 }
 
 /// \brief TEP WF_3
-TEST_F(tep_test, tep_workflow3) {
-    tep_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {};
+TEST_F(tep_test, tep_workflow_3) {
+    tep_feeder feeder1, feeder2, feeder3;
 
     if (artemis()) {
-        TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
-        TEP_SEED_INIT(&seed2, "20.20.1.1", 10, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
-        TEP_SEED_INIT(&seed3, "30.30.1.1", 10, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
+        feeder1.init("10.10.1.1", 10, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
+        feeder2.init("20.20.1.1", 10, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
+        feeder3.init("30.30.1.1", 10, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
     } else {
-        TEP_SEED_INIT(&seed1, "10.10.1.1", 10);
-        TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
-        TEP_SEED_INIT(&seed3, "30.30.1.1", 30);
+        feeder1.init("10.10.1.1", 10);
+        feeder2.init("20.20.1.1", 20);
+        feeder3.init("30.30.1.1", 30);
     }
-    workflow_3<tep_util, tep_stepper_seed_t>(&seed1, &seed2, &seed3);
+    workflow_3<tep_feeder>(feeder1, feeder2, feeder3);
 }
 
 /// \brief TEP WF_4
-TEST_F(tep_test, tep_workflow4) {
-    tep_stepper_seed_t seed = {};
+TEST_F(tep_test, tep_workflow_4) {
+    tep_feeder feeder;
 
     if (artemis())
-        TEP_SEED_INIT(&seed, k_base_nh_ip, k_max_tep, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+        feeder.init(k_base_nh_ip, k_max_tep, k_zero_encap,
+                    k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
     else
-        TEP_SEED_INIT(&seed, k_base_nh_ip);
-    workflow_4<tep_util, tep_stepper_seed_t>(&seed);
+        feeder.init(k_base_nh_ip);
+    workflow_4<tep_feeder>(feeder);
 }
 
 /// \brief TEP WF_5
-TEST_F(tep_test, tep_workflow5) {
-    tep_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {};
+TEST_F(tep_test, tep_workflow_5) {
+    tep_feeder feeder1, feeder2, feeder3;
 
     if (artemis()) {
-        TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
-        TEP_SEED_INIT(&seed2, "20.20.1.1", 20, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
-        TEP_SEED_INIT(&seed3, "30.30.1.1", 30, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
+        feeder1.init("10.10.1.1", 10, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
+        feeder2.init("20.20.1.1", 20, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
+        feeder3.init("30.30.1.1", 30, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
     } else {
-        TEP_SEED_INIT(&seed1, "10.10.1.1", 10);
-        TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
-        TEP_SEED_INIT(&seed3, "30.30.1.1", 30);
+        feeder1.init("10.10.1.1", 10);
+        feeder2.init("20.20.1.1", 20);
+        feeder3.init("30.30.1.1", 30);
     }
-    workflow_5<tep_util, tep_stepper_seed_t>(&seed1, &seed2, &seed3);
+    workflow_5<tep_feeder>(feeder1, feeder2, feeder3);
 }
 
 /// \brief TEP WF_6
-TEST_F(tep_test, tep_workflow6) {
-    tep_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
+TEST_F(tep_test, tep_workflow_6) {
+    tep_feeder feeder1, feeder1A, feeder1B;
 
     if (artemis()) {
-        TEP_SEED_INIT(&seed1, k_base_nh_ip, k_max_tep, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
-        // seed1A =  seed1 + different dipi
-        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_zero_encap,
+        feeder1.init(k_base_nh_ip, k_max_tep, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+        // feeder1A =  feeder1 + different dipi
+        feeder1A.init(k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
-        // seed1B =  seed1A + different dipi
-        TEP_SEED_INIT(&seed1B, k_base_nh_ip, k_max_tep, k_zero_encap,
+        // feeder1B =  feeder1A + different dipi
+        feeder1B.init(k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
     } else {
-        TEP_SEED_INIT(&seed1, k_base_nh_ip);
-        // seed1A =  seed1 + different encap
-        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_vxlan_encap);
-        // seed1B =  seed1A + different tunnel type, encap, nat
-        TEP_SEED_INIT(&seed1B, k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
+        feeder1.init(k_base_nh_ip);
+        // feeder1A =  feeder1 + different encap
+        feeder1A.init(k_base_nh_ip, k_max_tep, k_vxlan_encap);
+        // feeder1B =  feeder1A + different tunnel type, encap, nat
+        feeder1B.init(k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
                       k_nat, PDS_TEP_TYPE_IGW);
     }
-    workflow_6<tep_util, tep_stepper_seed_t>(&seed1, &seed1A, &seed1B);
+    workflow_6<tep_feeder>(feeder1, feeder1A, feeder1B);
 }
 
 /// \brief TEP WF_7
 TEST_F(tep_test, tep_workflow7) {
-    tep_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
+    tep_feeder feeder1, feeder1A, feeder1B;
 
     if (artemis()) {
-        TEP_SEED_INIT(&seed1, k_base_nh_ip, k_max_tep, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
-        // seed1A =  seed1 + different dipi
-        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_zero_encap,
+        feeder1.init(k_base_nh_ip, k_max_tep, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+        // feeder1A =  feeder1 + different dipi
+        feeder1A.init(k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
-        // seed1B =  seed1A + different dipi
-        TEP_SEED_INIT(&seed1B, k_base_nh_ip, k_max_tep, k_zero_encap,
+        // feeder1B =  feeder1A + different dipi
+        feeder1B.init(k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
     } else {
-        TEP_SEED_INIT(&seed1, k_base_nh_ip);
-        // seed1A =  seed1 + different encap
-        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_vxlan_encap);
-        // seed1B =  seed1A + different tunnel type, encap, nat
-        TEP_SEED_INIT(&seed1B, k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
+        feeder1.init(k_base_nh_ip);
+        // feeder1A =  feeder1 + different encap
+        feeder1A.init(k_base_nh_ip, k_max_tep, k_vxlan_encap);
+        // feeder1B =  feeder1A + different tunnel type, encap, nat
+        feeder1B.init(k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
                       k_nat, PDS_TEP_TYPE_IGW);
     }
-    workflow_7<tep_util, tep_stepper_seed_t>(&seed1, &seed1A, &seed1B);
+    workflow_7<tep_feeder>(feeder1, feeder1A, feeder1B);
 }
 
 /// \brief TEP WF_8
 TEST_F(tep_test, DISABLED_tep_workflow8) {
-    tep_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
+    tep_feeder feeder1, feeder1A, feeder1B;
 
     if (artemis()) {
-        TEP_SEED_INIT(&seed1, k_base_nh_ip, k_max_tep, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
-        // seed1A =  seed1 + different dipi
-        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_zero_encap,
+        feeder1.init(k_base_nh_ip, k_max_tep, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+        // feeder1A =  feeder1 + different dipi
+        feeder1A.init(k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
-        // seed1B =  seed1A + different dipi
-        TEP_SEED_INIT(&seed1B, k_base_nh_ip, k_max_tep, k_zero_encap,
+        // feeder1B =  feeder1A + different dipi
+        feeder1B.init(k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
     } else {
-        TEP_SEED_INIT(&seed1, k_base_nh_ip);
-        // seed1A =  seed1 + different encap
-        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_vxlan_encap);
-        // seed1B =  seed1A + different tunnel type, encap, nat
-        TEP_SEED_INIT(&seed1B, k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
+        feeder1.init(k_base_nh_ip);
+        // feeder1A =  feeder1 + different encap
+        feeder1A.init(k_base_nh_ip, k_max_tep, k_vxlan_encap);
+        // feeder1B =  feeder1A + different tunnel type, encap, nat
+        feeder1B.init(k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
                       k_nat, PDS_TEP_TYPE_IGW);
     }
-    workflow_8<tep_util, tep_stepper_seed_t>(&seed1, &seed1A, &seed1B);
+    workflow_8<tep_feeder>(feeder1, feeder1A, feeder1B);
 }
 
 /// \brief TEP WF_9
 TEST_F(tep_test, tep_workflow9) {
-    tep_stepper_seed_t seed1 = {}, seed1A = {};
+    tep_feeder feeder1, feeder1A;
 
     if (artemis()) {
-        TEP_SEED_INIT(&seed1, k_base_nh_ip, k_max_tep, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
-        // seed1A =  seed1 + different dipi
-        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_zero_encap,
+        feeder1.init(k_base_nh_ip, k_max_tep, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+        // feeder1A =  feeder1 + different dipi
+        feeder1A.init(k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
     } else {
-        TEP_SEED_INIT(&seed1, k_base_nh_ip);
-        // seed1A =  seed1 + different tunnel type, encap, nat
-        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_vxlan_encap,
+        feeder1.init(k_base_nh_ip);
+        // feeder1A =  feeder1 + different tunnel type, encap, nat
+        feeder1A.init(k_base_nh_ip, k_max_tep, k_vxlan_encap,
                       k_nat, PDS_TEP_TYPE_IGW);
     }
-    workflow_9<tep_util, tep_stepper_seed_t>(&seed1, &seed1A);
+    workflow_9<tep_feeder>(feeder1, feeder1A);
 }
 
 /// \brief TEP WF_10
 TEST_F(tep_test, DISABLED_tep_workflow10) {
-    tep_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {}, seed4 = {};
-    tep_stepper_seed_t seed2A = {}, seed3A = {};
+    tep_feeder feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4;
 
     if (artemis()) {
-        TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
-        TEP_SEED_INIT(&seed2, "20.20.1.1", 20, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
-        TEP_SEED_INIT(&seed2A, "20.20.1.1", 20, k_zero_encap,
+        feeder1.init("10.10.1.1", 10, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
+        feeder2.init("20.20.1.1", 20, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
+        feeder2A.init("20.20.1.1", 20, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "20::20:20:21", 0);
-        TEP_SEED_INIT(&seed3, "30.30.1.1", 30, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
-        TEP_SEED_INIT(&seed3A, "30.30.1.1", 30, k_zero_encap,
+        feeder3.init("30.30.1.1", 30, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
+        feeder3A.init("30.30.1.1", 30, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "30::30:30:31", 0);
-        TEP_SEED_INIT(&seed4, "40.40.1.1", 40, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, "40::40:1:1", 0);
+        feeder4.init("40.40.1.1", 40, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, "40::40:1:1", 0);
     } else {
-        TEP_SEED_INIT(&seed1, "10.10.1.1", 10);
-        TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
-        TEP_SEED_INIT(&seed2A, "20.20.1.1", 20, k_mplsoudp_encap,
+        feeder1.init("10.10.1.1", 10);
+        feeder2.init("20.20.1.1", 20);
+        feeder2A.init("20.20.1.1", 20, k_mplsoudp_encap,
                       k_nat, PDS_TEP_TYPE_IGW);
-        TEP_SEED_INIT(&seed3, "30.30.1.1", 30);
-        TEP_SEED_INIT(&seed3A, "30.30.1.1", 30, k_mplsoudp_encap, k_nat);
-        TEP_SEED_INIT(&seed4, "40.40.1.1", 40);
+        feeder3.init("30.30.1.1", 30);
+        feeder3A.init("30.30.1.1", 30, k_mplsoudp_encap, k_nat);
+        feeder4.init("40.40.1.1", 40);
     }
-    workflow_10<tep_util, tep_stepper_seed_t>(
-                &seed1, &seed2, &seed2A, &seed3, &seed3A, &seed4);
+    workflow_10<tep_feeder>(feeder1, feeder2, feeder2A,
+                            feeder3, feeder3A, feeder4);
 }
 
 /// \brief TEP WF_N_1
 TEST_F(tep_test, tep_workflow_neg_1) {
-    tep_stepper_seed_t seed = {};
+    tep_feeder feeder;
 
     if (artemis())
-        TEP_SEED_INIT(&seed, k_base_nh_ip, k_max_tep, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+        feeder.init(k_base_nh_ip, k_max_tep, k_zero_encap,
+                    k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
     else
-        TEP_SEED_INIT(&seed, k_base_nh_ip);
-    workflow_neg_1<tep_util, tep_stepper_seed_t>(&seed);
+        feeder.init(k_base_nh_ip);
+    workflow_neg_1<tep_feeder>(feeder);
 }
 
 /// \brief TEP WF_N_2
 TEST_F(tep_test, tep_workflow_neg_2) {
-    tep_stepper_seed_t seed = {};
+    tep_feeder feeder;
 
     if (artemis())
-        TEP_SEED_INIT(&seed, k_base_nh_ip, k_max_tep+2, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+        feeder.init(k_base_nh_ip, k_max_tep+2, k_zero_encap,
+                    k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
     else
-        TEP_SEED_INIT(&seed, k_base_nh_ip, k_max_tep+2);
-    workflow_neg_2<tep_util, tep_stepper_seed_t>(&seed);
+        feeder.init(k_base_nh_ip, k_max_tep+2);
+    workflow_neg_2<tep_feeder>(feeder);
 }
 
 /// \brief TEP WF_N_3
 TEST_F(tep_test, tep_workflow_neg_3) {
-    tep_stepper_seed_t seed = {};
+    tep_feeder feeder;
 
     if (artemis())
-        TEP_SEED_INIT(&seed, "150.150.1.1", k_max_tep, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, "150::150:1:1", 0);
+        feeder.init("150.150.1.1", k_max_tep, k_zero_encap,
+                    k_nat, PDS_TEP_TYPE_SERVICE, "150::150:1:1", 0);
     else
-        TEP_SEED_INIT(&seed, "150.150.1.1");
-    workflow_neg_3<tep_util, tep_stepper_seed_t>(&seed);
+        feeder.init("150.150.1.1");
+    workflow_neg_3<tep_feeder>(feeder);
 }
 
 /// \brief TEP WF_N_4
 TEST_F(tep_test, tep_workflow_neg_4) {
-    tep_stepper_seed_t seed1 = {}, seed2 = {};
+    tep_feeder feeder1, feeder2;
 
     if (artemis()) {
-        TEP_SEED_INIT(&seed1, k_base_nh_ip, 10, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
-        TEP_SEED_INIT(&seed2, "60.60.1.1", 10, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, "60::60:1:1", 0);
+        feeder1.init(k_base_nh_ip, 10, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+        feeder2.init("60.60.1.1", 10, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, "60::60:1:1", 0);
     } else {
-        TEP_SEED_INIT(&seed1, k_base_nh_ip, 10);
-        TEP_SEED_INIT(&seed2, "60.60.1.1", 10);
+        feeder1.init(k_base_nh_ip, 10);
+        feeder2.init("60.60.1.1", 10);
     }
-    workflow_neg_4<tep_util, tep_stepper_seed_t>(&seed1, &seed2);
+    workflow_neg_4<tep_feeder>(feeder1, feeder2);
 }
 
 /// \brief TEP WF_N_5
 TEST_F(tep_test, DISABLED_tep_workflow_neg_5) {
-    tep_stepper_seed_t seed1 = {}, seed1A = {};
+    tep_feeder feeder1, feeder1A;
 
     if (artemis()) {
-        TEP_SEED_INIT(&seed1, k_base_nh_ip, k_max_tep, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
-        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_zero_encap,
+        feeder1.init(k_base_nh_ip, k_max_tep, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+        feeder1A.init(k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "60::60:1:1", 0);
     } else {
-        TEP_SEED_INIT(&seed1, k_base_nh_ip);
-        // seed1A = seed + different tunnel type, nat
-        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
+        feeder1.init(k_base_nh_ip);
+        // feeder1A = feeder + different tunnel type, nat
+        feeder1A.init(k_base_nh_ip, k_max_tep, k_mplsoudp_encap,
                       k_nat, PDS_TEP_TYPE_IGW);
     }
-    workflow_neg_5<tep_util, tep_stepper_seed_t>(&seed1, &seed1A);
+    workflow_neg_5<tep_feeder>(feeder1, feeder1A);
 }
 
 /// \brief TEP WF_N_6
 TEST_F(tep_test, tep_workflow_neg_6) {
-    tep_stepper_seed_t seed1 = {}, seed1A = {};
+    tep_feeder feeder1, feeder1A;
 
     if (artemis()) {
-        TEP_SEED_INIT(&seed1, k_base_nh_ip, k_max_tep, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
-        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep+1, k_zero_encap,
+        feeder1.init(k_base_nh_ip, k_max_tep, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+        feeder1A.init(k_base_nh_ip, k_max_tep+1, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "60::60:1:1", 0);
     } else {
-        TEP_SEED_INIT(&seed1, k_base_nh_ip);
-        // seed1A = seed1 + different tunnel type, nat
-        TEP_SEED_INIT(&seed1A, k_base_nh_ip, k_max_tep+1, k_mplsoudp_encap,
+        feeder1.init(k_base_nh_ip);
+        // feeder1A = feeder1 + different tunnel type, nat
+        feeder1A.init(k_base_nh_ip, k_max_tep+1, k_mplsoudp_encap,
                       k_nat, PDS_TEP_TYPE_IGW);
     }
-    workflow_neg_6<tep_util, tep_stepper_seed_t>(&seed1, &seed1A);
+    workflow_neg_6<tep_feeder>(feeder1, feeder1A);
 }
 
 /// \brief TEP WF_N_7
 TEST_F(tep_test, tep_workflow_neg_7) {
-    tep_stepper_seed_t seed1 = {}, seed1A = {}, seed2 = {};
+    tep_feeder feeder1, feeder1A, feeder2;
 
     if (artemis()) {
-        TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
-        TEP_SEED_INIT(&seed1A, "10.10.1.1", 10, k_zero_encap,
+        feeder1.init("10.10.1.1", 10, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
+        feeder1A.init("10.10.1.1", 10, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "60::60:1:1", 0);
-        TEP_SEED_INIT(&seed2, "20.20.1.1", 20, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
+        feeder2.init("20.20.1.1", 20, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
     } else {
-        TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_mplsoudp_encap,
-                      k_nat, PDS_TEP_TYPE_IGW);
-        TEP_SEED_INIT(&seed1A, "10.10.1.1", 10);
-        TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
+        feeder1.init("10.10.1.1", 10, k_mplsoudp_encap,
+                     k_nat, PDS_TEP_TYPE_IGW);
+        feeder1A.init("10.10.1.1", 10);
+        feeder2.init("20.20.1.1", 20);
     }
-    workflow_neg_7<tep_util, tep_stepper_seed_t>(&seed1, &seed1A, &seed2);
+    workflow_neg_7<tep_feeder>(feeder1, feeder1A, feeder2);
 }
 
 /// \brief TEP WF_N_8
 TEST_F(tep_test, tep_workflow_neg_8) {
-    tep_stepper_seed_t seed1 = {}, seed2 = {};
+    tep_feeder feeder1, feeder2;
 
     if (artemis()) {
-        TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
-        TEP_SEED_INIT(&seed2, "20.20.1.1", 20, k_zero_encap,
-                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
+        feeder1.init("10.10.1.1", 10, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
+        feeder2.init("20.20.1.1", 20, k_zero_encap,
+                     k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
     } else {
-        TEP_SEED_INIT(&seed1, "10.10.1.1", 10, k_mplsoudp_encap,
-                      k_nat, PDS_TEP_TYPE_IGW);
-        TEP_SEED_INIT(&seed2, "20.20.1.1", 20);
+        feeder1.init("10.10.1.1", 10, k_mplsoudp_encap,
+                     k_nat, PDS_TEP_TYPE_IGW);
+        feeder2.init("20.20.1.1", 20);
     }
-    workflow_neg_8<tep_util, tep_stepper_seed_t>(&seed1, &seed2);
+    workflow_neg_8<tep_feeder>(feeder1, feeder2);
 }
 
 /// @}
