@@ -1,5 +1,12 @@
-#include "common_rxdma_dummy.p4"
 #include "../include/common_headers.p4"
+
+#include "../../../p4/include/intrinsic.p4"
+
+#include "../include/defines.h"
+#include "../include/table_sizes.h"
+#include "../include/headers.p4"
+
+#include "./common_metadata.p4"
 
 @pragma scratch_metadata
 metadata common_scratch_metadata_t common_scratch_metadata0;
@@ -84,6 +91,9 @@ action rx_table_dummy_action(data0, data1, data2, data3, data4, data5,
                              data6, data7)
 {
     SCRATCH_METADATA_INIT_7(common_scratch_metadata1)
+}
+
+control rx_dummy_control {
 }
 
 action common_p4plus_stage0_app_header_table_action_dummy_default() {
@@ -1173,6 +1183,46 @@ control common_p4plus_stage0 {
                     apply(eth_rx_rss_indir);
                 }
             }
+        }
+    }
+}
+
+parser start {
+    return ingress;
+}
+
+control ingress {
+    if (app_header.table3_valid == 1) {
+        sacl();
+        pkt_enqueue();
+    } else {
+        common_p4plus_stage0();
+        if (app_header.table0_valid == 1) {
+            apply(rx_table_s1_t0);
+            apply(rx_table_s2_t0);
+            apply(rx_table_s3_t0);
+            apply(rx_table_s4_t0);
+            apply(rx_table_s5_t0);
+            apply(rx_table_s6_t0);
+            apply(rx_table_s7_t0);
+        }
+        if (app_header.table1_valid == 1) {
+            apply(rx_table_s1_t1);
+            apply(rx_table_s2_t1);
+            apply(rx_table_s3_t1);
+            apply(rx_table_s4_t1);
+            apply(rx_table_s5_t1);
+            apply(rx_table_s6_t1);
+            apply(rx_table_s7_t1);
+        }
+        if (app_header.table2_valid == 1) {
+            apply(rx_table_s1_t2);
+            apply(rx_table_s2_t2);
+            apply(rx_table_s3_t2);
+            apply(rx_table_s4_t2);
+            apply(rx_table_s5_t2);
+            apply(rx_table_s6_t2);
+            apply(rx_table_s7_t2);
         }
     }
 }

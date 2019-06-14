@@ -233,21 +233,21 @@ metadata data64_t session_db;
 
 @pragma pa_align 128
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t last_ddgst_aol_desc_dma;
+metadata dma_cmd_phv2mem_t last_ddgst_aol_desc_dma; // dma cmd 0
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t aol0_next_ptr_dma;
+metadata dma_cmd_phv2mem_t aol0_next_ptr_dma;       // dma cmd 1
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t aol1_next_ptr_dma;
+metadata dma_cmd_phv2mem_t aol1_next_ptr_dma;       // dma cmd 2
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t aol2_next_ptr_dma;
+metadata dma_cmd_phv2mem_t aol2_next_ptr_dma;       // dma cmd 3
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t aol3_next_ptr_dma;
+metadata dma_cmd_phv2mem_t aol3_next_ptr_dma;       // dma cmd 4
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t aol4_next_ptr_dma;
+metadata dma_cmd_phv2mem_t aol4_next_ptr_dma;       // dma cmd 5
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t session_wqe_dma;         //dma cmd 0
+metadata dma_cmd_phv2mem_t session_wqe_dma;         //dma cmd 6
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t session_db_dma;          //dma cmd 1
+metadata dma_cmd_phv2mem_t session_db_dma;          //dma cmd 7
 
 /*
  * Stage 0 table 0 action

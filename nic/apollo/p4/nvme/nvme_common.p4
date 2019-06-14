@@ -1299,3 +1299,215 @@ header_type pdu_hdr_cmdcap_psh_t {
       dw15        : 32;
     }
 }
+
+// session dgst rx cb
+// 64B
+header_type sessdgstrxcb_t {
+    fields {
+        //16B
+        pc                             : 8;
+        // 7 Bytes intrinsic header
+        CAPRI_QSTATE_HEADER_COMMON
+        // 4 Bytes Ring 0
+        CAPRI_QSTATE_HEADER_RING(0)
+        // 4 Bytes Ring 1
+        CAPRI_QSTATE_HEADER_RING(1)
+
+        //8B
+        rx_q_base_addr                  : 34;
+        rx_q_log_num_entries            : 5;
+        rsvd5                           : 25;
+
+        //6B
+        base_addr                       : 34;
+        log_num_entries                 : 5;
+        ring_empty_sched_eval_done      : 1;
+        rsvd0                           : 8;
+
+        //R0 stage0 flags
+        //1B
+        r0_busy                         : 1;
+        rsvd1                           : 7;
+
+        //R0 writeback stage flags
+        //1B
+        wb_r0_busy                      : 1;
+        rsvd2                           : 7;
+
+        //R1 stage0 flags
+        //1B
+        r1_busy                         : 1;
+        rsvd3                           : 7;
+
+        //R1 writeback stage flags
+        //1B
+        wb_r1_busy                      : 1;
+        rsvd4                           : 7;
+
+        //2B
+        session_id                      : 16;
+
+        //28B
+        pad                             : 224;
+    }
+}
+
+#define SESSDGSTRXCB_PARAMS                                                      \
+rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, \
+rx_q_base_addr, rx_q_log_num_entries, rsvd5, \
+base_addr, log_num_entries, ring_empty_sched_eval_done, rsvd0, r0_busy, rsvd1, \
+wb_r0_busy, rsvd2, r1_busy, rsvd3, wb_r1_busy, rsvd4, session_id, pad
+
+#define GENERATE_SESSDGSTRXCB_D  \
+    modify_field(sessdgstrxcb_d.rsvd, rsvd);                              \
+    modify_field(sessdgstrxcb_d.cosA, cosA);                              \
+    modify_field(sessdgstrxcb_d.cosB, cosB);                              \
+    modify_field(sessdgstrxcb_d.cos_sel, cos_sel);                        \
+    modify_field(sessdgstrxcb_d.eval_last, eval_last);                    \
+    modify_field(sessdgstrxcb_d.host, host);                              \
+    modify_field(sessdgstrxcb_d.total, total);                            \
+    modify_field(sessdgstrxcb_d.pid, pid);                                \
+    modify_field(sessdgstrxcb_d.pi_0, pi_0);                              \
+    modify_field(sessdgstrxcb_d.ci_0, ci_0);                              \
+    modify_field(sessdgstrxcb_d.pi_1, pi_1);                              \
+    modify_field(sessdgstrxcb_d.ci_1, ci_1);                              \
+    modify_field(sessdgstrxcb_d.rx_q_base_addr, rx_q_base_addr);  \
+    modify_field(sessdgstrxcb_d.rx_q_log_num_entries, rx_q_log_num_entries);  \
+    modify_field(sessdgstrxcb_d.rsvd5, rsvd5);  \
+    modify_field(sessdgstrxcb_d.base_addr, base_addr);  \
+    modify_field(sessdgstrxcb_d.log_num_entries, log_num_entries);  \
+    modify_field(sessdgstrxcb_d.ring_empty_sched_eval_done, ring_empty_sched_eval_done);  \
+    modify_field(sessdgstrxcb_d.rsvd0, rsvd0);  \
+    modify_field(sessdgstrxcb_d.r0_busy, r0_busy);  \
+    modify_field(sessdgstrxcb_d.rsvd1, rsvd1);  \
+    modify_field(sessdgstrxcb_d.wb_r0_busy, wb_r0_busy);  \
+    modify_field(sessdgstrxcb_d.rsvd2, rsvd2);  \
+    modify_field(sessdgstrxcb_d.r1_busy, r1_busy);  \
+    modify_field(sessdgstrxcb_d.rsvd3, rsvd3);  \
+    modify_field(sessdgstrxcb_d.wb_r1_busy, wb_r1_busy);  \
+    modify_field(sessdgstrxcb_d.rsvd4, rsvd4);  \
+    modify_field(sessdgstrxcb_d.session_id, session_id);  \
+    modify_field(sessdgstrxcb_d.pad, pad);  \
+
+#define SESSDGSTRXCB_PARAMS_NON_STG0 \
+    pc, SESSDGSTRXCB_PARAMS
+
+#define GENERATE_SESSDGSTRXCB_D_NON_STG0                       \
+    modify_field(sessdgstrxcb_d.pc, pc);                       \
+    GENERATE_SESSDGSTRXCB_D
+
+// session xts rx cb
+// 64B
+header_type sessxtsrxcb_t {
+    fields {
+        //16B
+        pc                             : 8;
+        // 7 Bytes intrinsic header
+        CAPRI_QSTATE_HEADER_COMMON
+        // 4 Bytes Ring 0
+        CAPRI_QSTATE_HEADER_RING(0)
+        // 4 Bytes Ring 1
+        CAPRI_QSTATE_HEADER_RING(1)
+
+        //6B
+        base_addr                       : 34;
+        log_num_entries                 : 5;
+        ring_empty_sched_eval_done      : 1;
+        rsvd0                           : 8;
+
+        //R0 stage0 flags
+        //1B
+        r0_busy                         : 1;
+        rsvd1                           : 7;
+
+        //R0 writeback stage flags
+        //1B
+        wb_r0_busy                      : 1;
+        rsvd2                           : 7;
+
+        //2B
+        nxt_lba_offset                  : 16;
+
+        //R1 stage0 flags
+        //1B
+        r1_busy                         : 1;
+        rsvd3                           : 7;
+
+        //R1 writeback stage flags
+        //1B
+        wb_r1_busy                      : 1;
+        rsvd4                           : 7;
+
+        //8B
+        page_ptr                        : 64;
+
+        //2B
+        session_id                      : 16;
+
+        //26B
+        pad                             : 208;
+    }
+}
+
+#define SESSXTSRXCB_PARAMS                                                      \
+rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, \
+base_addr, log_num_entries, ring_empty_sched_eval_done, \
+rsvd0, r0_busy, rsvd1, \
+wb_r0_busy, rsvd2, nxt_lba_offset, \
+r1_busy, rsvd3, wb_r1_busy, rsvd4,  \
+page_ptr, session_id, pad
+
+#define GENERATE_SESSXTSRXCB_D  \
+    modify_field(sessxtsrxcb_d.rsvd, rsvd);                              \
+    modify_field(sessxtsrxcb_d.cosA, cosA);                              \
+    modify_field(sessxtsrxcb_d.cosB, cosB);                              \
+    modify_field(sessxtsrxcb_d.cos_sel, cos_sel);                        \
+    modify_field(sessxtsrxcb_d.eval_last, eval_last);                    \
+    modify_field(sessxtsrxcb_d.host, host);                              \
+    modify_field(sessxtsrxcb_d.total, total);                            \
+    modify_field(sessxtsrxcb_d.pid, pid);                                \
+    modify_field(sessxtsrxcb_d.pi_0, pi_0);                              \
+    modify_field(sessxtsrxcb_d.ci_0, ci_0);                              \
+    modify_field(sessxtsrxcb_d.pi_1, pi_1);                              \
+    modify_field(sessxtsrxcb_d.ci_1, ci_1);                              \
+    modify_field(sessxtsrxcb_d.base_addr, base_addr);  \
+    modify_field(sessxtsrxcb_d.log_num_entries, log_num_entries);  \
+    modify_field(sessxtsrxcb_d.ring_empty_sched_eval_done, ring_empty_sched_eval_done);  \
+    modify_field(sessxtsrxcb_d.rsvd0, rsvd0);  \
+    modify_field(sessxtsrxcb_d.r0_busy, r0_busy);  \
+    modify_field(sessxtsrxcb_d.rsvd1, rsvd1);  \
+    modify_field(sessxtsrxcb_d.wb_r0_busy, wb_r0_busy);  \
+    modify_field(sessxtsrxcb_d.rsvd2, rsvd2);  \
+    modify_field(sessxtsrxcb_d.nxt_lba_offset, nxt_lba_offset);  \
+    modify_field(sessxtsrxcb_d.r1_busy, r1_busy);  \
+    modify_field(sessxtsrxcb_d.rsvd3, rsvd3);  \
+    modify_field(sessxtsrxcb_d.wb_r1_busy, wb_r1_busy);  \
+    modify_field(sessxtsrxcb_d.rsvd4, rsvd4);  \
+    modify_field(sessxtsrxcb_d.page_ptr, page_ptr);  \
+    modify_field(sessxtsrxcb_d.session_id, session_id);  \
+    modify_field(sessxtsrxcb_d.pad, pad);  \
+
+#define SESSXTSRXCB_PARAMS_NON_STG0 \
+    pc, SESSXTSRXCB_PARAMS
+
+#define GENERATE_SESSXTSRXCB_D_NON_STG0                                \
+    modify_field(sessxtsrxcb_d.pc, pc);                                \
+    GENERATE_SESSXTSRXCB_D
+
+// cqe that gets posted into sesscq queue
+header_type sess_cqe_t {
+    fields {
+        sqid     : 16;
+        sq_head  : 16;
+        status   : 16;
+        cmdid    : 16;
+    }
+}
+#define SESS_CQE_PARAMS  \
+sqid, sq_head, status, cid
+
+#define GENERATE_SESS_CQE_D \
+    modify_field(sess_cqe_d.sqid, sqid); \
+    modify_field(sess_cqe_d.sq_head, sq_head); \
+    modify_field(sess_cqe_d.status, status); \
+    modify_field(sess_cqe_d.cmdid, cmdid);
