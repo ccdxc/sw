@@ -30,15 +30,17 @@ private:
     string name;
     bool no_heartbeat;
     bool reboot;
+    bool respawn;
     sysmgr::ClientPtr sysmgr;
 
 public:
     ExampleService(delphi::SdkPtr delphi, string name, bool no_heartbeat,
-	bool reboot) {
+        bool reboot, bool respawn) {
         this->delphi = delphi;
         this->name = name;
         this->no_heartbeat = no_heartbeat;
-	this->reboot = reboot;
+        this->reboot = reboot;
+        this->respawn = respawn;
         this->sysmgr = sysmgr::CreateClient(delphi, name);
     }
 
@@ -50,7 +52,7 @@ public:
         this->sysmgr->register_service_reactor(
             "TestCompleteService",
             shared_from_this());
-	
+        
         delphi::objects::SysmgrProcessStatus::Mount(this->delphi,
             delphi::ReadMode);
         delphi::objects::SysmgrSystemStatus::Mount(this->delphi,
@@ -64,10 +66,15 @@ public:
 
     virtual void OnMountComplete() {
         this->sysmgr->init_done();
-	if (this->reboot)
-	{
-	    this->sysmgr->restart_system();
-	}
+        if (this->reboot)
+        {
+            this->sysmgr->restart_system();
+        }
+        else if (this->respawn)
+        {
+            logger->info("Requesting respawn\n");
+            this->sysmgr->respawn_processes();
+        }
     }
 
     virtual bool SkipHeartbeat() {
@@ -114,7 +121,8 @@ int main(int argc, char *argv[]) {
         desc.add_options()
             ("name", value<string>()->default_value("example"), "Name")
             ("exit", value<int>(), "Exit code")
-	    ("reboot", "Reboot")
+            ("reboot", "Reboot")
+            ("respawn", "Respawn")
             ("no-heartbeat", "No heartbeat");
         store(parse_command_line(argc, argv, desc), vm);
     }
@@ -132,7 +140,7 @@ int main(int argc, char *argv[]) {
     
     shared_ptr<ExampleService> svc = make_shared<ExampleService>(sdk,
         vm["name"].as<string>(), vm.count("no-heartbeat") > 0,
-	vm.count("reboot") > 0);
+        vm.count("reboot") > 0, vm.count("respawn") > 0);
     svc->register_mounts();
     sdk->RegisterService(svc);
     

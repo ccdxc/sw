@@ -99,6 +99,8 @@ void ServiceFactory::on_config_add(ServiceSpecPtr spec)
 {
     logger->critical("Config for {} added!", spec->name);
     this->services[spec->name] = Service::create(spec);
+    ServiceLoop::getInstance()->register_event_reactor(SERVICE_EVENT_STOP,
+        spec->name, instance);
 }
 
 void ServiceFactory::load_config(std::string path)
@@ -133,4 +135,29 @@ void ServiceFactory::on_signal(int sig)
     logger->info("Got signal {}. Exiting", sig);
     kill(-mypid, SIGTERM);
     loop.break_loop(ev::ALL);
+}
+
+void ServiceFactory::respawn_all()
+{
+    for (auto s: services)
+    {
+        s.second->stop();
+    }
+    for (auto s: services)
+    {
+        s.second->start();
+    }
+}
+
+void ServiceFactory::on_service_start(std::string name)
+{
+}
+
+void ServiceFactory::on_service_stop(std::string name)
+{
+    logger->info("Service {} stopped", name);
+}
+
+void ServiceFactory::on_service_heartbeat(std::string name)
+{
 }

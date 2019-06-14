@@ -39,7 +39,8 @@ void Client::register_mounts()
     mountKey<delphi::objects::SysmgrServiceStatus>(this->delphi, name);
     mountKey<delphi::objects::SysmgrShutdownStatus>(this->delphi, name);
     mountKey<delphi::objects::SysmgrShutdownReq>(this->delphi, name);
-  
+    mountKey<delphi::objects::SysmgrRespawnReq>(this->delphi, name);
+    
     delphi::objects::SysmgrServiceStatus::Mount(this->delphi, delphi::ReadMode);
     delphi::objects::SysmgrServiceStatus::Watch(this->delphi, shared_from_this());
 
@@ -96,6 +97,15 @@ void Client::service_up(std::string name)
 void Client::restart_system()
 {
     auto obj = make_shared<delphi::objects::SysmgrShutdownReq>();
+
+    obj->set_key(this->name);
+    this->delphi->QueueUpdate(obj);
+}
+
+
+void Client::respawn_processes()
+{
+    auto obj = make_shared<delphi::objects::SysmgrRespawnReq>();
 
     obj->set_key(this->name);
     this->delphi->QueueUpdate(obj);

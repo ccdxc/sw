@@ -18,9 +18,10 @@ private:
     ev::child       child;
     ChildReactorPtr reactor;
     void child_callback();
+    pid_t           pid;
 public:
     static std::shared_ptr<ChildWatcher> create(pid_t pid,
-	ChildReactorPtr reactor);
+        ChildReactorPtr reactor);
     ChildWatcher(pid_t pid, ChildReactorPtr reactor);
     ~ChildWatcher();
     void stop();

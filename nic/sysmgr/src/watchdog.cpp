@@ -64,10 +64,12 @@ void SimulationWatchdog::kick()
 
 void SimulationWatchdog::on_timer()
 {
+    ev::default_loop loop;
+
     logger->critical("Simulation Watchdog Expired");
     // Kill all children
     kill(-getpid(), SIGTERM);
-    throw std::runtime_error("SimulationWatchdog expired");
+    loop.break_loop(ev::ALL);
 }
 
 WatchdogPtr Watchdog::create()

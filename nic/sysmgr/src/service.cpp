@@ -45,6 +45,11 @@ void Service::launch()
     logger->info("Launched {}({}) using {}", this->spec->name, this->pid,
         this->spec->command);
 
+    if (this->child_watcher != nullptr)
+    {
+        this->child_watcher->stop();
+        this->child_watcher = nullptr;
+    }
     this->child_watcher = ChildWatcher::create(this->pid, shared_from_this());
     this->start_heartbeat();
 }
@@ -96,10 +101,11 @@ ServicePtr Service::create(ServiceSpecPtr spec)
     }
 
     svc->spec = spec;
-    svc->check_dep_and_launch();
     svc->child_watcher = nullptr;
     svc->timer_watcher = nullptr;
     svc->restart_count = 0;
+    svc->config_state = SERVICE_CONFIG_STATE_ON;
+    svc->check_dep_and_launch();
     ServiceLoop::getInstance()->register_event_reactor(SERVICE_EVENT_START,
         spec->name, svc);
     ServiceLoop::getInstance()->register_event_reactor(SERVICE_EVENT_HEARTBEAT,
@@ -141,7 +147,10 @@ void Service::on_service_stop(std::string name)
 void Service::on_service_heartbeat(std::string name)
 {
     logger->debug("{} got hearbeat!", this->spec->name);
-    this->timer_watcher->repeat();
+    if (this->timer_watcher)
+    {
+        this->timer_watcher->repeat();
+    }
 }
 
 void Service::on_child(pid_t pid)
@@ -171,6 +180,9 @@ void Service::on_child(pid_t pid)
 
     delphi_sdk->QueueUpdate(obj);
 
+    ServiceLoop::getInstance()->queue_event(
+        ServiceEvent::create(this->spec->name, SERVICE_EVENT_STOP));
+
     if (this->spec->flags & PANIC_ON_FAILURE) {
         FaultLoop::getInstance()->set_fault("Process died");
     }
@@ -188,4 +200,29 @@ void Service::on_timer()
     auto obj = std::make_shared<delphi::objects::SysmgrSystemStatus>();
     obj->set_state(::sysmgr::Fault);
     delphi_sdk->QueueUpdate(obj);
+}
+
+void Service::reset_dependencies()
+{
+    for (auto dep: this->dependencies)
+    {
+        dep->isMet = false;
+    }
+}
+
+void Service::stop()
+{
+    this->config_state = SERVICE_CONFIG_STATE_OFF;
+    this->timer_watcher->stop();
+    this->timer_watcher = nullptr;
+    this->restart_count = 0;
+    this->reset_dependencies();
+    logger->info("Killing {}({})", this->spec->name, this->pid);
+    kill(this->pid, SIGKILL);
+}
+
+void Service::start()
+{
+    this->config_state = SERVICE_CONFIG_STATE_ON;
+    this->check_dep_and_launch();
 }

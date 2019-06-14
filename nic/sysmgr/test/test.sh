@@ -36,7 +36,8 @@ runtest () {
     shift
     lines=("$@")
     rm -rf *.log core.* /tmp/delphi*
-    timeout $tm ${BUILD_DIR}/bin/sysmgr $json .
+    echo Running $json test
+    timeout -k $tm $tm ${BUILD_DIR}/bin/sysmgr $json .
     cat *.log
     for ln in "${lines[@]}"
     do grep -c "$ln" *.log
@@ -50,6 +51,8 @@ runtest () {
     done
 }
 
+#runtest 10s test-respawn.json "Service example1 started"
+
 runtest 10s test.json "Service example2 started"
 
 runtest 10s test-exit-code.json "Service example2 Exited normally with code: 12" \
@@ -57,3 +60,4 @@ runtest 10s test-exit-code.json "Service example2 Exited normally with code: 12"
 
 runtest 120s test-critical-watchdog.json "Service example2 timed out" \
         "System in fault mode" "Simulation Watchdog Expired"
+

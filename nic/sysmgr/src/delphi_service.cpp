@@ -9,6 +9,7 @@
 #include "gen/proto/eventtypes.pb.h"
 
 #include "eventlogger.hpp"
+#include "service_factory.hpp"
 #include "service_watcher.hpp"
 #include "switchroot_watcher.hpp"
 #include "utils.hpp"
@@ -24,10 +25,12 @@ DelphiServicePtr DelphiService::create(delphi::SdkPtr sdk)
     delphi::objects::SysmgrServiceStatus::Mount(svc->sdk, delphi::ReadMode);
     delphi::objects::DelphiClientStatus::Mount(svc->sdk, delphi::ReadMode);
     delphi::objects::SysmgrShutdownReq::Mount(svc->sdk, delphi::ReadMode);
+    delphi::objects::SysmgrRespawnReq::Mount(svc->sdk, delphi::ReadMode);
 
     delphi::objects::SysmgrServiceStatus::Watch(svc->sdk, svc);
     delphi::objects::DelphiClientStatus::Watch(svc->sdk, svc);
     delphi::objects::SysmgrShutdownReq::Watch(svc->sdk, svc);
+    delphi::objects::SysmgrRespawnReq::Watch(svc->sdk, svc);
 
     return svc;
 }
@@ -115,5 +118,27 @@ delphi::error DelphiService::OnSysmgrShutdownReqUpdate(
     logger->info("Switching root");
     switch_root();
     SwitchrootLoop::getInstance()->set_switchroot();
+    return delphi::error::OK();
+}
+
+delphi::error DelphiService::OnSysmgrRespawnReqCreate(
+    delphi::objects::SysmgrRespawnReqPtr obj)
+{
+    logger->info("Respawning processes");
+    ServiceFactory::getInstance()->respawn_all();
+    return delphi::error::OK();
+}
+
+delphi::error DelphiService::OnSysmgrRespawnReqDelete(
+    delphi::objects::SysmgrRespawnReqPtr obj)
+{
+    return delphi::error::OK();
+}
+
+delphi::error DelphiService::OnSysmgrRespawnReqUpdate(
+    delphi::objects::SysmgrRespawnReqPtr obj)
+{
+    logger->info("Respawning processes");
+    ServiceFactory::getInstance()->respawn_all();
     return delphi::error::OK();
 }

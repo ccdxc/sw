@@ -9,9 +9,10 @@
 #include "gen/proto/sysmgr.delphi.hpp"
 
 class DelphiService : public delphi::Service,
-		      public delphi::objects::SysmgrServiceStatusReactor,
-		      public delphi::objects::DelphiClientStatusReactor,
-		      public delphi::objects::SysmgrShutdownReqReactor
+                      public delphi::objects::SysmgrServiceStatusReactor,
+                      public delphi::objects::DelphiClientStatusReactor,
+                      public delphi::objects::SysmgrShutdownReqReactor,
+                      public delphi::objects::SysmgrRespawnReqReactor
 {
   private:
     delphi::SdkPtr sdk;
@@ -33,14 +34,21 @@ class DelphiService : public delphi::Service,
     virtual delphi::error OnDelphiClientStatusDelete(
         delphi::objects::DelphiClientStatusPtr obj);
     virtual delphi::error OnDelphiClientStatusUpdate(
-	delphi::objects::DelphiClientStatusPtr obj);
+        delphi::objects::DelphiClientStatusPtr obj);
     // SysmgrShutdownReqReactor
     virtual delphi::error OnSysmgrShutdownReqCreate(
-	delphi::objects::SysmgrShutdownReqPtr obj);
+        delphi::objects::SysmgrShutdownReqPtr obj);
     virtual delphi::error OnSysmgrShutdownReqDelete(
-	delphi::objects::SysmgrShutdownReqPtr obj);
+        delphi::objects::SysmgrShutdownReqPtr obj);
     virtual delphi::error OnSysmgrShutdownReqUpdate(
-	delphi::objects::SysmgrShutdownReqPtr obj);
+        delphi::objects::SysmgrShutdownReqPtr obj);
+    // SysmgrRespawnReqReactor
+    virtual delphi::error OnSysmgrRespawnReqCreate(
+        delphi::objects::SysmgrRespawnReqPtr obj);
+    virtual delphi::error OnSysmgrRespawnReqDelete(
+        delphi::objects::SysmgrRespawnReqPtr obj);
+    virtual delphi::error OnSysmgrRespawnReqUpdate(
+        delphi::objects::SysmgrRespawnReqPtr obj);
 };
 typedef std::shared_ptr<DelphiService> DelphiServicePtr;
 

@@ -1,0 +1,33 @@
+[{
+    "name": "delphi",
+    "command": "/sw/nic/build/x86_64/iris/bin/delphi_hub /tmp/delphi.dat",
+    "dependencies": [],
+    "flags": [],
+    "timeout": 30.0
+},{
+    "name": "example1",
+    "command": "/sw/nic/build/x86_64/iris/bin/sysmgr_example --name example1",
+    "dependencies": [
+        {
+            "kind": "service",
+            "service-name": "delphi"
+        }
+    ],
+    "flags": [],
+    "timeout": 30.0
+},{
+    "name": "example2",
+    "command": "/sw/nic/build/x86_64/iris/bin/sysmgr_example --name example2 --respawn",
+    "dependencies": [
+        {
+            "kind": "service",
+            "service-name": "delphi"
+        },
+        {
+            "kind": "service",
+            "service-name": "example1"
+        }
+    ],
+    "flags": [],
+    "timeout": 30.0
+}]
