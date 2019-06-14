@@ -3,5 +3,5 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libftlitep4pd_mock.so
 MODULE_FLAGS    = -fno-permissive
 MODULE_FLAGS    = -O3
-MODULE_PIPELINE = apollo iris
+MODULE_PIPELINE = apollo iris artemis
 include ${MKDEFS}/post.mk

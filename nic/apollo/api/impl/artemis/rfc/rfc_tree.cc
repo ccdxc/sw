@@ -15,20 +15,59 @@ namespace rfc {
 void
 itable_add_address_inodes (uint32_t rule, inode_t *addr_inode, ip_prefix_t *pfx)
 {
-    /**< fill the itree node corresponding to start of the IP prefix */
+    // fill the itree node corresponding to start of the IP prefix
     ip_prefix_ip_low(pfx, &addr_inode->ipaddr);
-    addr_inode->rfc.class_id = 0;    /**< class id will be computed later on */
+    addr_inode->rfc.class_id = 0;    // class id will be computed later on
     addr_inode->rfc.rule_no = rule;
     addr_inode->rfc.start = TRUE;
     addr_inode->rfc.pad = 0;
 
-    /**< fill the itree node corresponding to end of the IP prefix */
+    // fill the itree node corresponding to end of the IP prefix
     addr_inode++;
     ip_prefix_ip_next(pfx, &addr_inode->ipaddr);
-    addr_inode->rfc.class_id = 0;    /**< class id will be computed later on */
+    addr_inode->rfc.class_id = 0;    // class id will be computed later on
     addr_inode->rfc.rule_no = rule;
     addr_inode->rfc.start = FALSE;
     addr_inode->rfc.pad = 0;
+}
+
+void
+itable_add_address_range_inodes (uint32_t rule, inode_t *addr_inode,
+                                 ipvx_range_t *range)
+{
+    // fill the itree node corresponding to start of the IP prefix
+    addr_inode->ipaddr.af = range->af;
+    addr_inode->ipaddr.addr = range->ip_lo;
+    addr_inode->rfc.class_id = 0;    // class id will be computed later on
+    addr_inode->rfc.rule_no = rule;
+    addr_inode->rfc.start = TRUE;
+    addr_inode->rfc.pad = 0;
+
+    // fill the itree node corresponding to end of the IP prefix
+    addr_inode++;
+    addr_inode->ipaddr.af = range->af;
+    addr_inode->ipaddr.addr = range->ip_hi;
+    addr_inode->rfc.class_id = 0;    // class id will be computed later on
+    addr_inode->rfc.rule_no = rule;
+    addr_inode->rfc.start = FALSE;
+    addr_inode->rfc.pad = 0;
+}
+
+void
+itable_add_tag_inodes (uint32_t rule, inode_t *tag_inode, uint32_t tag)
+{
+    tag_inode->key32 = tag;
+    tag_inode->rfc.class_id = 0;
+    tag_inode->rfc.rule_no = rule;
+    tag_inode->rfc.start = TRUE;
+    tag_inode->rfc.pad = 0;
+
+    tag_inode++;
+    tag_inode->key32 = tag;
+    tag_inode->rfc.class_id = 0;    // class id will be computed later on
+    tag_inode->rfc.rule_no = rule;
+    tag_inode->rfc.start = FALSE;
+    tag_inode->rfc.pad = 0;
 }
 
 void
@@ -107,7 +146,8 @@ rfc_ctxt_destroy (rfc_ctxt_t *rfc_ctxt)
     rfc_tree_destroy(&rfc_ctxt->dip_tree);
     rfc_tree_destroy(&rfc_ctxt->port_tree);
     rfc_tree_destroy(&rfc_ctxt->proto_port_tree);
-    //rfc_tree_destroy(&rfc_ctxt->tag_tree);
+    rfc_tree_destroy(&rfc_ctxt->stag_tree);
+    rfc_tree_destroy(&rfc_ctxt->dtag_tree);
     rfc_table_destroy(&rfc_ctxt->p1_table);
     rfc_table_destroy(&rfc_ctxt->p2_table);
     if (rfc_ctxt->cbm) {
@@ -127,7 +167,7 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
 
     // setup memory for SIP LPM tree
     rfc_ctxt->sip_tree.itable.nodes =
-            (inode_t *)malloc(sizeof(inode_t) * num_nodes);
+        (inode_t *)malloc(sizeof(inode_t) * num_nodes);
     if (rfc_ctxt->sip_tree.itable.nodes == NULL) {
         return sdk::SDK_RET_OOM;
     }
@@ -167,25 +207,33 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
     rfc_ctxt->proto_port_tree.rfc_table.max_classes =
         SACL_PROTO_DPORT_TREE_MAX_CLASSES;
 
-#if 0
-    rfc_ctxt->tag_tree.itable.nodes =
-            (inode_t *)malloc(sizeof(inode_t) * num_nodes);
-    if (rfc_ctxt->tag_tree.itable.nodes == NULL) {
+    // setup memory for stag "tree"
+    rfc_ctxt->stag_tree.itable.nodes =
+        (inode_t *)malloc(sizeof(inode_t) * num_nodes);
+    if (rfc_ctxt->stag_tree.itable.nodes == NULL) {
         return sdk::SDK_RET_OOM;
     }
-    new (&rfc_ctxt->tag_tree.rfc_table.cbm_map) cbm_map_t();
-    rfc_ctxt->tag_tree.rfc_table.max_classes =
-            (policy->af == IP_AF_IPV4) ?
-            SACL_IPV4_TREE_MAX_CLASSES:
-            SACL_IPV6_TREE_MAX_CLASSES;
-#endif
+    new (&rfc_ctxt->stag_tree.rfc_table.cbm_map) cbm_map_t();
+    rfc_ctxt->stag_tree.rfc_table.max_classes = SACL_TAG_TREE_MAX_CLASSES;
 
+    // setup memory for dtag "tree"
+    rfc_ctxt->dtag_tree.itable.nodes =
+        (inode_t *)malloc(sizeof(inode_t) * num_nodes);
+    if (rfc_ctxt->dtag_tree.itable.nodes == NULL) {
+        return sdk::SDK_RET_OOM;
+    }
+    new (&rfc_ctxt->dtag_tree.rfc_table.cbm_map) cbm_map_t();
+    rfc_ctxt->dtag_tree.rfc_table.max_classes = SACL_TAG_TREE_MAX_CLASSES;
+
+    // setup P1 table
     new (&rfc_ctxt->p1_table.cbm_map) cbm_map_t();
     rfc_ctxt->p1_table.max_classes = SACL_P1_MAX_CLASSES;
 
+    // setup P2 table
     new (&rfc_ctxt->p2_table.cbm_map) cbm_map_t();
     rfc_ctxt->p2_table.max_classes = SACL_P2_MAX_CLASSES;
 
+    // setup the scratch pad memory
     rfc_ctxt->cbm_size =
         RTE_CACHE_LINE_ROUNDUP(rte_bitmap_get_memory_footprint(policy->max_rules));
     posix_memalign((void **)&bits, CACHE_LINE_SIZE, rfc_ctxt->cbm_size);

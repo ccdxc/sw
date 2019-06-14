@@ -75,6 +75,7 @@
                                                     // +(256*3)+(1024*1)
 #define SACL_IPV4_SIP_TREE_MAX_CLASSES    1024
 #define SACL_IPV6_SIP_TREE_MAX_CLASSES    1024
+#define SACL_TAG_TREE_MAX_CLASSES         128
 
 #define SACL_SPORT_TABLE_OFFSET         0
 #define SACL_PROTO_DPORT_TABLE_OFFSET   (SACL_SPORT_TABLE_SIZE)

@@ -89,6 +89,9 @@ sdk_ret_t rfc_ctxt_init(rfc_ctxt_t *rfc_ctxt, policy_t *policy,
                         mem_addr_t base_addr, uint32_t mem_size);
 void itable_add_address_inodes(uint32_t rule, inode_t *addr_inode,
                                ip_prefix_t *pfx);
+void itable_add_address_range_inodes(uint32_t rule, inode_t *addr_inode,
+                                     ipvx_range_t *range);
+void itable_add_tag_inodes(uint32_t rule, inode_t *tag_inode, uint32_t tag);
 void itable_add_port_inodes(uint32_t rule, inode_t *port_inode,
                             port_range_t *port_range);
 void itable_add_proto_port_inodes(uint32_t rule, inode_t *proto_port_inode,

@@ -31,26 +31,25 @@ typedef enum rule_dir_e {
 
 /// \brief type of the IP field used in rule match
 typedef enum ip_match_type_s {
-    IP_MATCH_NONE   = 0,    ///< wildcard
-    IP_MATCH_PREFIX = 1,    ///< match based on the prefix
-    IP_MATCH_RANGE  = 2,    ///< match based on the range
-    IP_MATCH_TAG    = 3,    ///< match based on the tag
+    IP_MATCH_PREFIX = 0,    ///< match based on the prefix
+    IP_MATCH_RANGE  = 1,    ///< match based on the range
+    IP_MATCH_TAG    = 2,    ///< match based on the tag
 } ip_match_type_t;
 
 /// \brief    rule L3 match criteria
 typedef struct rule_l3_match_s {
-    uint8_t         ip_proto;        ///< IP protocol
-    ip_match_type_t src_match_type;  ///< src match condition type
-    ip_match_type_t dst_match_type;  ///< dst match condition type
+    uint8_t          ip_proto;        ///< IP protocol
+    ip_match_type_t  src_match_type;  ///< src match condition type
+    ip_match_type_t  dst_match_type;  ///< dst match condition type
     union {
-        ip_prefix_t src_ip_pfx;      ///< Src IP prefix
-        ip_range_t  src_ip_range;    ///< Src IP range
-        uint32_t    src_tag;         /// Src tag value
+        ip_prefix_t  src_ip_pfx;      ///< src IP prefix
+        ipvx_range_t src_ip_range;    ///< src IP range
+        uint32_t     src_tag;         ///< src tag value
     };
     union {
-        ip_prefix_t dst_ip_pfx;      ///< Dst IP prefix
-        ip_range_t  dst_ip_range;    ///< Src IP range
-        uint32_t    dst_tag;         /// Src tag value
+        ip_prefix_t  dst_ip_pfx;      ///< dst IP prefix
+        ipvx_range_t dst_ip_range;    ///< drc IP range
+        uint32_t     dst_tag;         ///< drc tag value
     };
 } __PACK__ rule_l3_match_t;
 
@@ -77,6 +76,7 @@ typedef struct rule_match_s {
 /// \brief    security rule action
 typedef enum fw_action_e {
     SECURITY_RULE_ACTION_ALLOW = 0,    ///< Allow the packet
+    SECURITY_RULE_ACTION_DENY  = 1,    ///< Drop the packet silently
 } fw_action_t;
 
 /// \brief    security rule specific action data

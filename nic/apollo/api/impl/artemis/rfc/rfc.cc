@@ -40,9 +40,9 @@ rfc_policy_rule_dump (policy_t *policy, uint32_t rule_num)
         rule_str += "egr, ";
     }
     if (policy->af == IP_AF_IPV4) {
-        rule_str += "IPv4, ";
+        rule_str += "v4, ";
     } else {
-        rule_str += "IPv6, ";
+        rule_str += "v6, ";
     }
     if (rule->stateful) {
         rule_str += "stateful : ";
@@ -50,32 +50,35 @@ rfc_policy_rule_dump (policy_t *policy, uint32_t rule_num)
         rule_str += "stateless : ";
     }
     rule_str += "match = (proto " +
-                std::to_string(rule->match.l3_match.ip_proto) + ", ";
+        std::to_string(rule->match.l3_match.ip_proto) + ", ";
     rule_str+=
-            "Src IP pfx " + string(ippfx2str(&rule->match.l3_match.src_ip_pfx)) + ", ";
+        "src " + string(ippfx2str(&rule->match.l3_match.src_ip_pfx)) + ", ";
     rule_str+=
-            "Dst IP pfx " + string(ippfx2str(&rule->match.l3_match.dst_ip_pfx)) + ", ";
+        "dst " + string(ippfx2str(&rule->match.l3_match.dst_ip_pfx)) + ", ";
     if (rule->match.l3_match.ip_proto == IP_PROTO_ICMP) {
         rule_str += "ICMP type/code " +
-                    std::to_string(rule->match.l4_match.icmp_type) +
-                    std::to_string(rule->match.l4_match.icmp_code) + ", ";
+            std::to_string(rule->match.l4_match.icmp_type) +
+            std::to_string(rule->match.l4_match.icmp_code) + ", ";
     } else if ((rule->match.l3_match.ip_proto == IP_PROTO_UDP) ||
                (rule->match.l3_match.ip_proto == IP_PROTO_TCP)) {
         rule_str +=
-                "sport range " +
-                std::to_string(rule->match.l4_match.sport_range.port_lo) + "-" +
-                std::to_string(rule->match.l4_match.sport_range.port_hi) + ", ";
+            "sport [" +
+            std::to_string(rule->match.l4_match.sport_range.port_lo) + "-" +
+            std::to_string(rule->match.l4_match.sport_range.port_hi) + "], ";
         rule_str +=
-                "dport range " +
-                std::to_string(rule->match.l4_match.dport_range.port_lo) + "-" +
-                std::to_string(rule->match.l4_match.dport_range.port_hi) + ") ";
+            "dport [" +
+            std::to_string(rule->match.l4_match.dport_range.port_lo) + "-" +
+            std::to_string(rule->match.l4_match.dport_range.port_hi) + "]) ";
     }
     if (policy->policy_type == POLICY_TYPE_FIREWALL) {
         rule_str += "action = ";
         if (rule->action_data.fw_action.action == SECURITY_RULE_ACTION_ALLOW) {
-            rule_str += "allow";
+            rule_str += "A";
+        } else if (rule->action_data.fw_action.action ==
+                       SECURITY_RULE_ACTION_DENY) {
+            rule_str += "D";
         } else {
-            rule_str += "unknown";
+            rule_str += "U";
         }
     }
     rule_str += ", prio = " + std::to_string(rule->priority);
@@ -99,32 +102,68 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
     itable_t    *dip_itable = &rfc_ctxt->dip_tree.itable;
     itable_t    *port_itable = &rfc_ctxt->port_tree.itable;
     itable_t    *proto_port_itable = &rfc_ctxt->proto_port_tree.itable;
+    itable_t    *stag_itable = &rfc_ctxt->stag_tree.itable;
+    itable_t    *dtag_itable = &rfc_ctxt->dtag_tree.itable;
     inode_t     *sip_inode, *dip_inode, *port_inode, *proto_port_inode;
+    inode_t     *stag_inode, *dtag_inode;
 
     /** walk the policy and start building tables */
     sip_inode = &sip_itable->nodes[0];
+    stag_inode = &stag_itable->nodes[0];
     dip_inode = &dip_itable->nodes[0];
+    dtag_inode = &dtag_itable->nodes[0];
     port_inode = &port_itable->nodes[0];
     proto_port_inode = &proto_port_itable->nodes[0];
     for (rule_num = 0; rule_num < policy->num_rules; rule_num++) {
         rule = &policy->rules[rule_num];
         rfc_policy_rule_dump(policy, rule_num);
-        itable_add_address_inodes(rule_num, sip_inode,
-                                  &rule->match.l3_match.src_ip_pfx);
-        itable_add_address_inodes(rule_num, dip_inode,
-                                  &rule->match.l3_match.dst_ip_pfx);
+
+        // handle source IP match condition
+        if (rule->match.l3_match.src_match_type == IP_MATCH_PREFIX) {
+            itable_add_address_inodes(rule_num, sip_inode,
+                                      &rule->match.l3_match.src_ip_pfx);
+            sip_inode += 2;
+        } else if (rule->match.l3_match.src_match_type == IP_MATCH_RANGE) {
+            itable_add_address_range_inodes(rule_num, sip_inode,
+                                            &rule->match.l3_match.src_ip_range);
+            sip_inode += 2;
+        } else if (rule->match.l3_match.src_match_type == IP_MATCH_TAG) {
+            itable_add_tag_inodes(rule_num, stag_inode,
+                                  rule->match.l3_match.src_tag);
+            stag_inode += 2;
+        }
+
+        // handle destination IP match condition
+        if (rule->match.l3_match.dst_match_type == IP_MATCH_PREFIX) {
+            itable_add_address_inodes(rule_num, dip_inode,
+                                      &rule->match.l3_match.dst_ip_pfx);
+            dip_inode += 2;
+        } else if (rule->match.l3_match.dst_match_type == IP_MATCH_RANGE) {
+            itable_add_address_range_inodes(rule_num, dip_inode,
+                                            &rule->match.l3_match.dst_ip_range);
+            dip_inode += 2;
+        } else if (rule->match.l3_match.dst_match_type == IP_MATCH_TAG) {
+            itable_add_tag_inodes(rule_num, dtag_inode,
+                                  rule->match.l3_match.dst_tag);
+            dtag_inode += 2;
+        }
+
+        // handle source port match condition
         itable_add_port_inodes(rule_num, port_inode,
                                &rule->match.l4_match.sport_range);
+        port_inode += 2;
+
+        // handle protocol and destination port match condition
         itable_add_proto_port_inodes(rule_num, proto_port_inode,
                                      rule->match.l3_match.ip_proto,
                                      &rule->match.l4_match.dport_range);
-        sip_inode += 2;
-        dip_inode += 2;
-        port_inode += 2;
         proto_port_inode += 2;
     }
-    sip_itable->num_nodes = dip_itable->num_nodes =
-        port_itable->num_nodes = proto_port_itable->num_nodes = rule_num << 1;
+    sip_itable->num_nodes = sip_inode - &sip_itable->nodes[0];
+    stag_itable->num_nodes = stag_inode - &stag_itable->nodes[0];
+    dip_itable->num_nodes = dip_inode - &dip_itable->nodes[0];
+    dtag_itable->num_nodes = dtag_inode - &dtag_itable->nodes[0];
+    port_itable->num_nodes = proto_port_itable->num_nodes = rule_num << 1;
     return SDK_RET_OK;
 }
 
@@ -349,38 +388,36 @@ rfc_policy_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
         return sdk::SDK_RET_NO_RESOURCE;
     }
 
-    /**< allocate memory for all the RFC itree tables */
+    ///< allocate memory for all the RFC itree tables
     ret = rfc_ctxt_init(&rfc_ctxt, policy, rfc_tree_root_addr, mem_size);
     if (ret != SDK_RET_OK) {
-        return ret;
+        goto cleanup;
     }
 
-    /**< build all the interval trees with the given policy */
+    ///< build all the interval trees with the given policy
     rfc_build_itables(&rfc_ctxt);
 
-    /**< sort intervals in all the trees */
+    ///< sort intervals in all the trees
     rfc_sort_itables(&rfc_ctxt);
 
-    /**< compute equivalence classes for the intervals in the interval trees */
+    ///< compute equivalence classes for the intervals in the interval trees
     rfc_compute_p0_classes(&rfc_ctxt);
     rfc_p0_eq_class_tables_dump(&rfc_ctxt);
 
-    /**< build LPM trees for phase 0 of RFC */
+    ///< build LPM trees for phase 0 of RFC
     ret = rfc_build_lpm_trees(&rfc_ctxt, rfc_tree_root_addr, mem_size);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to build RFC LPM trees, err %u", ret);
         goto cleanup;
     }
 
-    /**
-     * build equivalence class index tables and result tables for subsequent
-     * phases of RFC
-     */
+    // build equivalence class index tables and result tables for subsequent
+    // phases of RFC
     rfc_build_eqtables(&rfc_ctxt);
 
-    cleanup:
+cleanup:
 
-    /**< free all the temporary state */
+    ///< free all the temporary state
     rfc_ctxt_destroy(&rfc_ctxt);
 
     return ret;

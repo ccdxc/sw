@@ -5,5 +5,5 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET   = ftlite_test.bin
 MODULE_SOLIBS   = ftlite ftlitep4pd_mock logger
 MODULE_FLAGS    = -O3
-MODULE_PIPELINE = apollo
+MODULE_PIPELINE = artemis
 include ${MKDEFS}/post.mk

@@ -21,7 +21,7 @@ namespace rfc {
  * @return  -1 or 1 based on the comparison result
  * NOTE: when keys are same, return -1
  */
-static int
+static inline int
 inode_compare_cb (const void *n1, const void *n2, void *ctxt)
 {
     inode_t         *inode1 = (inode_t *)n1;
@@ -45,6 +45,18 @@ inode_compare_cb (const void *n1, const void *n2, void *ctxt)
         }
         return -1;
     }
+}
+
+static inline int
+inode_compare_tag_cb (const void *n1, const void *n2, void *ctxt)
+{
+    inode_t    *inode1 = (inode_t *)n1;
+    inode_t    *inode2 = (inode_t *)n2;
+
+    if (inode1->key32 > inode2->key32) {
+        return 1;
+    }
+    return -1;
 }
 
 /**
@@ -76,6 +88,12 @@ rfc_sort_itables (rfc_ctxt_t *rfc_ctxt)
                 sizeof(inode_t), inode_compare_cb,
                 (void *)ITREE_TYPE_IPV6);
     }
+    qsort_r(rfc_ctxt->stag_tree.itable.nodes,
+            rfc_ctxt->stag_tree.itable.num_nodes,
+            sizeof(inode_t), inode_compare_tag_cb, NULL);
+    qsort_r(rfc_ctxt->dtag_tree.itable.nodes,
+            rfc_ctxt->dtag_tree.itable.num_nodes,
+            sizeof(inode_t), inode_compare_tag_cb, NULL);
     qsort_r(rfc_ctxt->port_tree.itable.nodes,
             rfc_ctxt->port_tree.itable.num_nodes,
             sizeof(inode_t), inode_compare_cb,
