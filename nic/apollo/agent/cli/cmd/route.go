@@ -92,10 +92,10 @@ func routeShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printRouteHeader() {
-	hdrLine := strings.Repeat("-", 48)
+	hdrLine := strings.Repeat("-", 60)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-6s%-20s%-16s\n",
-		"ID", "IPAF", "Prefix", "NextHop/VPC")
+	fmt.Printf("%-6s%-6s%-20s%-12s%-16s\n",
+		"ID", "IPAF", "Prefix", "NextHopType", "NextHopValue")
 	fmt.Println(hdrLine)
 }
 
@@ -113,19 +113,28 @@ func printRoute(rt *pds.RouteTable) {
 		}
 		switch route.GetNh().(type) {
 		case *pds.Route_NextHop:
-			fmt.Printf("%-20s%-16s\n",
+			fmt.Printf("%-20s%-12s%-16s\n",
 				utils.IPPrefixToStr(route.GetPrefix()),
+				"IP",
 				utils.IPAddrToStr(route.GetNextHop()))
 			first = false
 		case *pds.Route_NexthopId:
-			fmt.Printf("%-20s%-16d\n",
+			fmt.Printf("%-20s%-12s%-16d\n",
 				utils.IPPrefixToStr(route.GetPrefix()),
+				"ID",
 				route.GetNexthopId)
 			first = false
 		case *pds.Route_VPCId:
-			fmt.Printf("%-20s%-16d\n",
+			fmt.Printf("%-20s%-12s%-16d\n",
 				utils.IPPrefixToStr(route.GetPrefix()),
+				"VPC",
 				route.GetVPCId())
+			first = false
+		case *pds.Route_TunnelId:
+			fmt.Printf("%-20s%-12s%-16d\n",
+				utils.IPPrefixToStr(route.GetPrefix()),
+				"TEP",
+				route.GetTunnelId())
 			first = false
 		default:
 		}

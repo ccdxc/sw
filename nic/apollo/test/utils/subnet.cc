@@ -83,8 +83,8 @@ subnet_feeder::spec_build(pds_subnet_spec_t *spec) const {
     this->key_build(&spec->key);
 
     spec->vpc.id = vpc.id;
-    spec->v4_pfx.len = pfx.len;
-    spec->v4_pfx.v4_addr = pfx.addr.addr.v4_addr;
+    spec->v4_prefix.len = pfx.len;
+    spec->v4_prefix.v4_addr = pfx.addr.addr.v4_addr;
 
     // Set the subnets IP (virtual router interface IP)
     if (!this->vr_ip.empty())

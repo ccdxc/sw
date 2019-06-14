@@ -220,8 +220,8 @@ populate_subnet_request (SubnetRequest *req, pds_subnet_spec_t *subnet)
     }
 
     SubnetSpec *spec = req->add_request();
-    ipv4_pfx_to_spec(spec->mutable_v4prefix(), &subnet->v4_pfx);
-    ip_pfx_to_spec(spec->mutable_v6prefix(), &subnet->v6_pfx);
+    ipv4_prefix_to_spec(spec->mutable_v4prefix(), &subnet->v4_prefix);
+    ip_pfx_to_spec(spec->mutable_v6prefix(), &subnet->v6_prefix);
     spec->set_ipv4virtualrouterip(subnet->v4_vr_ip);
     spec->set_ipv6virtualrouterip(subnet->v6_vr_ip.addr.v6_addr.addr8, IP6_ADDR8_LEN);
     spec->set_id(subnet->key.id);

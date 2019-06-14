@@ -106,20 +106,22 @@ func mappingShowCmdHandler(cmd *cobra.Command, args []string) {
 func printMappingHeader() {
 	hdrLine := strings.Repeat("-", 97)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-16s%-9s%-9s%-20s%-14s%-7s%-16s\n",
+	fmt.Printf("%-6s%-16s%-9s%-9s%-20s%-14s%-7s%-16s%-16s%-6s\n",
 		"VpcID", "PrivateIP", "SubnetID", "TunnelID", "MAC",
-		"Encap", "VnicID", "PublicIP")
+		"Encap", "VnicID", "PublicIP", "ProviderIP", "SvcTag")
 	fmt.Println(hdrLine)
 }
 
 func printMapping(mapping *pds.Mapping) {
 	spec := mapping.GetSpec()
 	encapStr := utils.EncapToString(spec.GetEncap())
-	fmt.Printf("%-6s%-16s%-9s%-9s%-20s%-14s%-7d%-16s\n",
+	fmt.Printf("%-6s%-16s%-9s%-9s%-20s%-14s%-7d%-16s%-16s%-6d\n",
 		spec.GetId().GetVPCId(),
 		utils.IPAddrToStr(spec.GetId().GetIPAddr()),
 		spec.GetSubnetId(), spec.GetTunnelId(),
 		utils.MactoStr(spec.GetMACAddr()),
 		encapStr, spec.GetVnicId(),
-		utils.IPAddrToStr(spec.GetPublicIP()))
+		utils.IPAddrToStr(spec.GetPublicIP()),
+		utils.IPAddrToStr(spec.GetProviderIp()),
+		spec.GetServiceTag())
 }

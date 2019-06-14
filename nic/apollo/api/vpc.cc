@@ -59,7 +59,7 @@ vpc_entry::init_config(api_ctxt_t *api_ctxt) {
 
     PDS_TRACE_DEBUG("Initializing vpc %u, type %u, v4 pfx %s, v6 pfx %s, "
                     "nat46 prefix %s", spec->key.id, spec->type,
-                    ipv4pfx2str(&spec->v4_pfx), ippfx2str(&spec->v6_pfx),
+                    ipv4pfx2str(&spec->v4_prefix), ippfx2str(&spec->v6_prefix),
                     ippfx2str(&spec->nat46_prefix));
     memcpy(&key_, &spec->key, sizeof(pds_vpc_key_t));
     type_ = spec->type;

@@ -32,8 +32,8 @@ typedef enum pds_vpc_type_e {
 typedef struct pds_vpc_spec_s {
     pds_vpc_key_t         key;               ///< key
     pds_vpc_type_t        type;              ///< type
-    ipv4_prefix_t         v4_pfx;            ///< IPv4 CIDR block
-    ip_prefix_t           v6_pfx;            ///< IPv6 CIDR block
+    ipv4_prefix_t         v4_prefix;         ///< IPv4 CIDR block
+    ip_prefix_t           v6_prefix;         ///< IPv6 CIDR block
     ///< traffic routed in this VPC will carry SMAC as vr_mac, if
     ///< there are no subnets configured (or else the vr_mac configured
     ///< in the subnet will stamped as SMAC in the routed packet),

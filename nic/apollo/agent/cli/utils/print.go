@@ -50,6 +50,13 @@ func Uint32IPAddrtoStr(addr uint32) string {
 	return ip.String()
 }
 
+// ByteIPv6AddrtoStr converts byte array IPv6 to string
+func ByteIPv6AddrtoStr(addr []byte) string {
+	ip := make(net.IP, 16)
+	copy(ip, addr)
+	return ip.String()
+}
+
 // IPPrefixToStr converts prefix to string
 func IPPrefixToStr(pfx *pds.IPPrefix) string {
 	return fmt.Sprintf("%s/%d", IPAddrToStr(pfx.GetAddr()), pfx.GetLen())

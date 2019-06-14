@@ -558,16 +558,16 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
         memset(&pds_subnet, 0, sizeof(pds_subnet));
         pds_subnet.key.id = PDS_SUBNET_ID((vpc_id - 1), num_subnets, i);
         pds_subnet.vpc.id = vpc_id;
-        pds_subnet.v4_pfx = *vpc_pfx;
-        pds_subnet.v4_pfx.v4_addr =
-            (pds_subnet.v4_pfx.v4_addr) | ((i - 1) << 14);
-        pds_subnet.v4_pfx.len = 18;
-        pds_subnet.v4_vr_ip = pds_subnet.v4_pfx.v4_addr;
-        pds_subnet.v6_pfx = *v6_vpc_pfx;
-        pds_subnet.v6_pfx.addr.addr.v6_addr.addr32[3] =
-            (pds_subnet.v6_pfx.addr.addr.v6_addr.addr32[3]) | ((i - 1) << 14);
-        pds_subnet.v6_pfx.len = 96;
-        pds_subnet.v6_vr_ip = pds_subnet.v6_pfx.addr;
+        pds_subnet.v4_prefix = *vpc_pfx;
+        pds_subnet.v4_prefix.v4_addr =
+            (pds_subnet.v4_prefix.v4_addr) | ((i - 1) << 14);
+        pds_subnet.v4_prefix.len = 18;
+        pds_subnet.v4_vr_ip = pds_subnet.v4_prefix.v4_addr;
+        pds_subnet.v6_prefix = *v6_vpc_pfx;
+        pds_subnet.v6_prefix.addr.addr.v6_addr.addr32[3] =
+            (pds_subnet.v6_prefix.addr.addr.v6_addr.addr32[3]) | ((i - 1) << 14);
+        pds_subnet.v6_prefix.len = 96;
+        pds_subnet.v6_vr_ip = pds_subnet.v6_prefix.addr;
         MAC_UINT64_TO_ADDR(pds_subnet.vr_mac,
                            (uint64_t)pds_subnet.v4_vr_ip);
         pds_subnet.v6_route_table.id =
@@ -586,8 +586,8 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
 }
 
 sdk_ret_t
-create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_pfx,
-             ip_prefix_t *ipv6_pfx, ip_prefix_t *nat46_pfx,
+create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_prefix,
+             ip_prefix_t *ipv6_prefix, ip_prefix_t *nat46_pfx,
              uint32_t num_subnets)
 {
     sdk_ret_t rv;
@@ -600,17 +600,17 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_pfx,
         memset(&pds_vpc, 0, sizeof(pds_vpc));
         pds_vpc.type = PDS_VPC_TYPE_TENANT;
         pds_vpc.key.id = i;
-        pds_vpc.v4_pfx.v4_addr = ipv4_pfx->addr.addr.v4_addr & 0xFF000000;
-        pds_vpc.v4_pfx.len = 8; // fix this to /8
-        pds_vpc.v6_pfx = *ipv6_pfx;
+        pds_vpc.v4_prefix.v4_addr = ipv4_prefix->addr.addr.v4_addr & 0xFF000000;
+        pds_vpc.v4_prefix.len = 8; // fix this to /8
+        pds_vpc.v6_prefix = *ipv6_prefix;
         pds_vpc.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
         pds_vpc.fabric_encap.val.vnid = i;
         pds_vpc.nat46_prefix = *nat46_pfx;
         rv = create_vpc(&pds_vpc);
         SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                                 "create vpc %u failed, rv %u", i, rv);
-        rv = create_subnets(i, num_vpcs, num_subnets, &pds_vpc.v4_pfx,
-                            &pds_vpc.v6_pfx);
+        rv = create_subnets(i, num_vpcs, num_subnets, &pds_vpc.v4_prefix,
+                            &pds_vpc.v6_prefix);
         if (rv != SDK_RET_OK) {
             return rv;
         }

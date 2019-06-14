@@ -78,7 +78,7 @@ ipv4_addr_to_spec (types::IPAddress *ip_addr_spec,
 // convert IPv4 prefix to IPPrefix proto spec
 //----------------------------------------------------------------------------
 static inline void
-ipv4_pfx_to_spec (types::IPPrefix *ip_pfx_spec,
+ipv4_prefix_to_spec (types::IPPrefix *ip_pfx_spec,
                 ipv4_prefix_t *ip_pfx)
 {
     ip_pfx_spec->set_len(ip_pfx->len);
@@ -999,9 +999,9 @@ subnet_api_spec_to_proto_spec (pds::SubnetSpec *proto_spec,
     proto_spec->set_id(api_spec->key.id);
     proto_spec->set_vpcid(api_spec->vpc.id);
     ipv4pfx_api_spec_to_proto_spec(
-                    proto_spec->mutable_v4prefix(), &api_spec->v4_pfx);
+                    proto_spec->mutable_v4prefix(), &api_spec->v4_prefix);
     ippfx_api_spec_to_proto_spec(
-                    proto_spec->mutable_v6prefix(), &api_spec->v6_pfx);
+                    proto_spec->mutable_v6prefix(), &api_spec->v6_prefix);
     proto_spec->set_ipv4virtualrouterip(api_spec->v4_vr_ip);
     proto_spec->set_ipv6virtualrouterip(&api_spec->v6_vr_ip.addr.v6_addr.addr8,
                                         IP6_ADDR8_LEN);
@@ -1050,8 +1050,8 @@ subnet_proto_spec_to_api_spec (pds_subnet_spec_t *api_spec,
 {
     api_spec->key.id = proto_spec.id();
     api_spec->vpc.id = proto_spec.vpcid();
-    ipv4pfx_proto_spec_to_api_spec(&api_spec->v4_pfx, proto_spec.v4prefix());
-    ippfx_proto_spec_to_api_spec(&api_spec->v6_pfx, proto_spec.v6prefix());
+    ipv4pfx_proto_spec_to_api_spec(&api_spec->v4_prefix, proto_spec.v4prefix());
+    ippfx_proto_spec_to_api_spec(&api_spec->v6_prefix, proto_spec.v6prefix());
     api_spec->v4_vr_ip = proto_spec.ipv4virtualrouterip();
     api_spec->v6_vr_ip.af = IP_AF_IPV6;
     memcpy(api_spec->v6_vr_ip.addr.v6_addr.addr8,
@@ -1079,8 +1079,8 @@ pds_agent_vpc_api_spec_fill (pds_vpc_spec_t *api_spec,
     } else if (type == pds::VPC_TYPE_SUBSTRATE) {
         api_spec->type = PDS_VPC_TYPE_SUBSTRATE;
     }
-    ipv4pfx_proto_spec_to_api_spec(&api_spec->v4_pfx, proto_spec.v4prefix());
-    ippfx_proto_spec_to_api_spec(&api_spec->v6_pfx, proto_spec.v6prefix());
+    ipv4pfx_proto_spec_to_api_spec(&api_spec->v4_prefix, proto_spec.v4prefix());
+    ippfx_proto_spec_to_api_spec(&api_spec->v6_prefix, proto_spec.v6prefix());
     ippfx_proto_spec_to_api_spec(&api_spec->nat46_prefix, proto_spec.nat46prefix());
     api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
     MAC_UINT64_TO_ADDR(api_spec->vr_mac, proto_spec.virtualroutermac());
@@ -1099,8 +1099,8 @@ vpc_api_spec_to_proto_spec (pds::VPCSpec *proto_spec,
     } else if (api_spec->type == PDS_VPC_TYPE_SUBSTRATE) {
         proto_spec->set_type(pds::VPC_TYPE_SUBSTRATE);
     }
-    ipv4pfx_api_spec_to_proto_spec(proto_spec->mutable_v4prefix(), &api_spec->v4_pfx);
-    ippfx_api_spec_to_proto_spec(proto_spec->mutable_v6prefix(), &api_spec->v6_pfx);
+    ipv4pfx_api_spec_to_proto_spec(proto_spec->mutable_v4prefix(), &api_spec->v4_prefix);
+    ippfx_api_spec_to_proto_spec(proto_spec->mutable_v6prefix(), &api_spec->v6_prefix);
     ippfx_api_spec_to_proto_spec(proto_spec->mutable_nat46prefix(), &api_spec->nat46_prefix);
     pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(), &api_spec->fabric_encap);
     proto_spec->set_virtualroutermac(MAC_TO_UINT64(api_spec->vr_mac));
@@ -1280,6 +1280,14 @@ pds_agent_remote_mapping_api_spec_fill (pds_remote_mapping_spec_t *remote_spec,
     remote_spec->tep.ip_addr.addr.v4_addr = proto_spec.tunnelid();
     remote_spec->subnet.id = proto_spec.subnetid();
     remote_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.encap());
+    if (proto_spec.has_providerip()) {
+        if (proto_spec.providerip().af() == types::IP_AF_INET ||
+            proto_spec.providerip().af() == types::IP_AF_INET6) {
+            remote_spec->provider_ip_valid = true;
+            ipaddr_proto_spec_to_api_spec(&remote_spec->provider_ip,
+                                          proto_spec.providerip());
+        }
+    }
 }
 
 static inline void

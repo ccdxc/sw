@@ -21,12 +21,12 @@ subnet_create_validate (pds_subnet_spec_t *spec)
         return SDK_RET_INVALID_ARG;
     }
     // IPv4 prefix for subnet must be within VPC prefix
-    if (!ipv4_prefix_within_prefix(&spec->v4_pfx, &vpc_spec->v4_pfx)) {
+    if (!ipv4_prefix_within_prefix(&spec->v4_prefix, &vpc_spec->v4_prefix)) {
         PDS_TRACE_ERR("Failed to create subnet {}, IPv4 prefix invalid", spec->key.id);
         return SDK_RET_INVALID_ARG;
     }
     // IPv6 prefix for subnet must be within VPC prefix
-    if (!ip_prefix_within_prefix(&spec->v6_pfx, &vpc_spec->v6_pfx)) {
+    if (!ip_prefix_within_prefix(&spec->v6_prefix, &vpc_spec->v6_prefix)) {
         PDS_TRACE_ERR("Failed to create subnet {}, IPv6 prefix invalid", spec->key.id);
         return SDK_RET_INVALID_ARG;
     }
@@ -82,12 +82,12 @@ subnet_update_validate (pds_subnet_spec_t *spec)
         return SDK_RET_INVALID_ARG;
     }
     // IPv4 prefix for subnet must be within VPC prefix
-    if (!ipv4_prefix_within_prefix(&spec->v4_pfx, &vpc_spec->v4_pfx)) {
+    if (!ipv4_prefix_within_prefix(&spec->v4_prefix, &vpc_spec->v4_prefix)) {
         PDS_TRACE_ERR("Failed to create subnet {}, IPv4 prefix invalid", spec->key.id);
         return SDK_RET_INVALID_ARG;
     }
     // IPv6 prefix for subnet must be within VPC prefix
-    if (!ip_prefix_within_prefix(&spec->v6_pfx, &vpc_spec->v6_pfx)) {
+    if (!ip_prefix_within_prefix(&spec->v6_prefix, &vpc_spec->v6_prefix)) {
         PDS_TRACE_ERR("Failed to create subnet {}, IPv6 prefix invalid", spec->key.id);
         return SDK_RET_INVALID_ARG;
     }

@@ -27,8 +27,8 @@
 typedef struct pds_subnet_spec_s {
     pds_subnet_key_t key;                    ///< key
     pds_vpc_key_t vpc;                       ///< VPC key
-    ipv4_prefix_t v4_pfx;                    ///< IPv4 CIDR block
-    ip_prefix_t v6_pfx;                      ///< IPv6 CIDR block
+    ipv4_prefix_t v4_prefix;                 ///< IPv4 CIDR block
+    ip_prefix_t v6_prefix;                   ///< IPv6 CIDR block
     ipv4_addr_t v4_vr_ip;                    ///< IPv4 virtual router IP
     ip_addr_t v6_vr_ip;                      ///< IPv6 virtual router IP
     mac_addr_t vr_mac;                       ///< virtual router mac
