@@ -188,7 +188,7 @@ var _ = Describe("Elastic cluster test", func() {
 		eventsIndex := elastic.GetIndex(globals.Events, globals.DefaultTenant)
 		si := &shardsInfo{}
 
-		// get index stats; retrive the shards count
+		// get index stats; retrieve the shards count
 		Eventually(func() error {
 			stats, err := esClient.GetIndicesStats(ctx, []string{eventsIndex})
 			if err != nil {

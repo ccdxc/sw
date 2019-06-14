@@ -181,6 +181,9 @@ message NICAdmissionResponse {
   // Registration response may also contain a smartnic version to rollout to if non-empty.
   string RolloutVersion       = 6 [(gogoproto.jsontag) = "rolloutVersion,omitempty"];
 
+	// List of controller quorum nodes
+	repeated string Controllers = 7 [(gogoproto.jsontag) = "controllers,omitempty"];
+
 }
 
 // NIC Registration request (CMD --> NMD)

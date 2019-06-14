@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

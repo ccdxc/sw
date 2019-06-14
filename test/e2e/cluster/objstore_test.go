@@ -167,7 +167,7 @@ func uploadFile(ctx context.Context, filename string, metadata map[string]string
 	return written, nil
 }
 
-// downloadFile dowloads file from the objstore and returns the md5 hash and total size of the downloaded content
+// downloadFile downloads file from the objstore and returns the md5 hash and total size of the downloaded content
 func downloadFile(filename string) ([]byte, int, error) {
 	h := md5.New()
 	ctx := context.Background()
@@ -251,7 +251,7 @@ func testObjCUDOps() func() {
 		var wr, rd int
 		var rhash []byte
 		// Use of Eventually is needed for all operations here because success of one objstore operation does not
-		//  gaurantee the next one will succeed, because the call may end up on a node that is rebooting.
+		//  guarantee the next one will succeed, because the call may end up on a node that is rebooting.
 		Eventually(func() error {
 			wr, err = uploadFile(ctx, filename, metadata, fileBuf)
 			return err

@@ -319,7 +319,7 @@ func (wtg *workloadTestGroup) testWorkloadHostname() {
 		return false
 	}, 30, 1).Should(BeTrue(), fmt.Sprintf("Object update expected to fail, but succeeded for obj:%s host:%s", wkld3Name, wkld3.Spec.HostName))
 
-	// Verify update for workload-3 object suceeds for valid hostname
+	// Verify update for workload-3 object succeeds for valid hostname
 	wkld3.Spec.HostName = "naples31-host.local"
 	Eventually(func() bool {
 		w3, err := wtg.wkldIf.Update(wtg.suite.loggedInCtx, &wkld3)

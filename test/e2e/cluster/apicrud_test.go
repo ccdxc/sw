@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/errors"
+	apierrors "github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"

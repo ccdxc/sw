@@ -140,7 +140,7 @@ func testQueryingFwlogs() {
 				StartTime: startTime,
 			},
 			// Get all logs that were just created but in reverse order
-			&telemetry_query.FwlogsQuerySpec{
+			{
 				StartTime: startTime,
 				SortOrder: telemetry_query.SortOrder_Ascending.String(),
 			},

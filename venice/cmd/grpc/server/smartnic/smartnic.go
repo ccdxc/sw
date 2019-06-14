@@ -524,7 +524,8 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 		// ADMITTED or PENDING
 		okResp := &grpc.RegisterNICResponse{
 			AdmissionResponse: &grpc.NICAdmissionResponse{
-				Phase: nicObj.Status.AdmissionPhase,
+				Phase:       nicObj.Status.AdmissionPhase,
+				Controllers: env.QuorumNodes,
 			},
 		}
 
