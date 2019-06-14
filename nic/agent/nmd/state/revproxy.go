@@ -7,6 +7,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/tls"
+	"encoding/pem"
 	"fmt"
 
 	"github.com/pensando/sw/venice/globals"
@@ -80,6 +81,14 @@ func getRevProxyTLSConfig(trustRootsPath string) (*tls.Config, error) {
 			return nil, fmt.Errorf("Error generating self-signed certificate. Err: %v", err)
 		}
 		log.Infof("Loaded %d trust roots from %s", len(trustRoots), trustRootsPath)
+		for _, c := range trustRoots {
+			pemBlock := &pem.Block{
+				Type:  certs.CertificatePemBlockType,
+				Bytes: c.Raw,
+			}
+			cb := pem.EncodeToMemory(pemBlock)
+			log.Infof("\n%s\n", string(cb))
+		}
 		return &tls.Config{
 			MinVersion:             minTLSVersion,
 			SessionTicketsDisabled: true,

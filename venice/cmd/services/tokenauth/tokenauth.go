@@ -8,11 +8,8 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/certmgr"
+	"github.com/pensando/sw/venice/utils/certs"
 	tokenauthutils "github.com/pensando/sw/venice/utils/tokenauth"
-)
-
-var (
-	defaultCertValidity = 12 * time.Hour
 )
 
 // TokenAuth represents an instance of the TokenAuth service
@@ -45,7 +42,7 @@ func (n *TokenAuth) GenerateNodeToken(audience []string, validityStart, validity
 			return "", fmt.Errorf("Invalid validityStart time: %v", validityStart)
 		}
 	} else {
-		notBefore = time.Now()
+		notBefore = certs.BeginningOfTime
 	}
 	if validityEnd != nil {
 		notAfter, err = validityEnd.Time()
@@ -53,7 +50,7 @@ func (n *TokenAuth) GenerateNodeToken(audience []string, validityStart, validity
 			return "", fmt.Errorf("Invalid validityEnd time: %v", validityEnd)
 		}
 	} else {
-		notAfter = notBefore.Add(defaultCertValidity)
+		notAfter = certs.EndOfTime
 	}
 
 	return tokenauthutils.MakeNodeToken(n.ca, n.clusterName, audience, notBefore, notAfter)

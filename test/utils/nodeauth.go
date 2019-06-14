@@ -12,6 +12,7 @@ import (
 
 	"github.com/pensando/sw/api/generated/tokenauth"
 	loginctx "github.com/pensando/sw/api/login/context"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	tokenauthutils "github.com/pensando/sw/venice/utils/tokenauth"
 )
@@ -60,6 +61,7 @@ func GetNodeAuthToken(ctx context.Context, endpointURL string, audience []string
 	if err != nil {
 		return "", fmt.Errorf("Error unmarshaling response body resp: %s: %v", string(respBody), err)
 	}
+	log.Infof("Returning token:\n%s\n", tokenResp.Token)
 	return tokenResp.Token, nil
 }
 
