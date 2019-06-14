@@ -25,6 +25,7 @@
 #include "pd_client.hpp"
 
 #include "device.hpp"
+#include "eth_dev.hpp"
 
 using std::string;
 
@@ -53,6 +54,12 @@ enum UpgradeEvent {
     UPG_EVENT_DEVICE_RESET
 };
 
+enum UpgradeMode {
+    FW_MODE_NORMAL_BOOT,
+    FW_MODE_UPGRADE,
+    FW_MODE_ROLLBACK
+};
+
 const char *oprom_type_to_str(OpromType_s);
 
 typedef struct uplink_s {
@@ -73,6 +80,7 @@ public:
                   platform_t platform, EV_P = NULL);
 
     int LoadConfig(std::string path);
+    void CreateUplinks(uint32_t id, uint32_t port, bool is_oob);
     static DeviceManager *GetInstance() { return instance; }
 
     Device *GetDevice(std::string name);
@@ -89,11 +97,14 @@ public:
     int GenerateQstateInfoJson(std::string qstate_info_file);
     static string ParseDeviceConf(string input_arg);
     PdClient *GetPdClient(void) { return pd; }
-    void SetUpgradeMode(bool upg_mode) { upgrade_mode = upg_mode; };
+    void SetUpgradeMode(UpgradeMode upg_mode) { upgrade_mode = upg_mode; };
     UpgradeState GetUpgradeState();
     int HandleUpgradeEvent(UpgradeEvent event);
     std::map<uint32_t, uplink_t*> GetUplinks() { return uplinks; };
     void SetFwStatus(uint8_t fw_status);
+    std::vector <struct EthDevInfo *> GetEthDevStateInfo();
+    void RestoreDevicesState(std::vector <struct EthDevInfo *> eth_dev_info_list);
+    bool UpgradeCompatCheck();
 private:
     static DeviceManager *instance;
 
@@ -106,10 +117,11 @@ private:
     std::map<uint32_t, uplink_t*> uplinks;
 
     bool init_done;
-    bool upgrade_mode;
+    UpgradeMode upgrade_mode;
     std::string config_file;
     fwd_mode_t fwd_mode;
     UpgradeState upg_state;
+    std::vector <struct EthDevInfo *> eth_dev_info_list; 
 
     Device *AddDevice(enum DeviceType type, void *dev_spec);
     bool IsDataPathQuiesced();

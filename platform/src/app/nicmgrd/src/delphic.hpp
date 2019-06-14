@@ -79,7 +79,6 @@ private:
     delphi::SdkPtr    sdk_;
 };
 typedef std::shared_ptr<hal_status_handler> hal_status_handler_ptr_t;
-
 // init_hal_status_handler creates a reactor for HAL status
 Status init_hal_status_handler(delphi::SdkPtr sdk);
 

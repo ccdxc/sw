@@ -1,6 +1,6 @@
 /*
-* Copyright (c) 2018, Pensando Systems Inc.
-*/
+ * Copyright (c) 2018, Pensando Systems Inc.
+ */
 
 #include <cstdio>
 #include <cstring>
@@ -69,18 +69,18 @@ oprom_type_to_str(OpromType type)
 }
 
 DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
-                             platform_t platform, EV_P)
+                            platform_t platform, EV_P)
 {
     NIC_HEADER_TRACE("Initializing DeviceManager");
     init_done = false;
     instance = this;
 #ifdef __x86_64__
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) ==
-               sdk::lib::PAL_RET_OK);
+                sdk::lib::PAL_RET_OK);
 #elif __aarch64__
 #if !defined(APOLLO) && !defined(ARTEMIS)
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HAPS) ==
-               sdk::lib::PAL_RET_OK);
+                sdk::lib::PAL_RET_OK);
 #endif
 #endif
     if (loop == NULL) {
@@ -156,6 +156,20 @@ DeviceManager::ParseDeviceConf(string filename)
     return string("");
 }
 
+void
+DeviceManager::CreateUplinks(uint32_t id, uint32_t port, bool is_oob)
+{
+    uplink_t *up = NULL;
+    NIC_LOG_DEBUG("Creating uplink: id: {} port: {}, oob: {}", id, port, is_oob);
+
+    up = new uplink_t();
+    up->id = id;
+    up->port = port;
+    up->is_oob = is_oob;
+    uplinks[up->id] = up;
+
+}
+
 int
 DeviceManager::LoadConfig(string path)
 {
@@ -174,7 +188,6 @@ DeviceManager::LoadConfig(string path)
     uint32_t num_macs = 24;
     string mac_str;
     string num_macs_str;
-    uplink_t *up = NULL;
 #ifdef __aarch64__
     if (sdk::platform::readFruKey(MACADDRESS_KEY, mac_str) == 0) {
         mac_from_str(&fru_mac, mac_str.c_str());
@@ -225,15 +238,8 @@ DeviceManager::LoadConfig(string path)
         if (spec.get_child_optional("network.uplink")) {
             for (const auto &node : spec.get_child("network.uplink")) {
                 auto val = node.second;
-                NIC_LOG_DEBUG("Creating uplink: {}, oob: {}",
-                             val.get<uint64_t>("id"),
-                             val.get<bool>("oob", false));
 
-                up = new uplink_t();
-                up->id = val.get<uint64_t>("id");
-                up->port = val.get<uint64_t>("port");
-                up->is_oob = val.get<bool>("oob", false);
-                uplinks[up->id] = up;
+                CreateUplinks(val.get<uint64_t>("id"), val.get<uint64_t>("port"), val.get<bool>("oob", false));
             }
         }
     }
@@ -313,59 +319,74 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 #endif //IRIS
 
     switch (type) {
-    case MNIC:
-        {
-            //For mnic upgrade_mode is always false
-            std::vector<Eth*> eth_devices = Eth::factory(type, dev_api, dev_spec, pd, EV_A_ false);
-            for (std::size_t idx = 0; idx < eth_devices.size(); ++idx)
-                devices[eth_devices[idx]->GetName()] = eth_devices[idx];
-            return (Device *)eth_devices[0];
-        }
-    case DEBUG:
-        NIC_LOG_ERR("Unsupported Device Type DEBUG");
-        return NULL;
-    case ETH:
-        {
-            std::vector<Eth*> eth_devices = Eth::factory(type, dev_api, dev_spec, pd, EV_A_ upgrade_mode);
-            for (std::size_t idx = 0; idx < eth_devices.size(); ++idx) {
-                //Create PCIe device for only PF
-                if (!idx) {
-                    // Create the device
-                    if (eth_devices[idx]->GetType() == ETH_HOST_MGMT || eth_devices[idx]->GetType() == ETH_HOST) {
-                        if (!eth_devices[idx]->CreateHostDevice()) {
-                            NIC_LOG_ERR("CreateHostDevice() failed for {}", eth_devices[idx]->GetName());
-                            return NULL;
+        case MNIC:
+            {
+                std::vector<Eth*> eth_devices = Eth::factory(type, dev_api, dev_spec, pd, EV_A);
+                for (std::size_t idx = 0; idx < eth_devices.size(); ++idx)
+                    devices[eth_devices[idx]->GetName()] = eth_devices[idx];
+                return (Device *)eth_devices[0];
+            }
+        case DEBUG:
+            NIC_LOG_ERR("Unsupported Device Type DEBUG");
+            return NULL;
+        case ETH:
+            {
+                std::vector<Eth*> eth_devices = Eth::factory(type, dev_api, dev_spec, pd, EV_A);
+
+                if (upgrade_mode == FW_MODE_NORMAL_BOOT) {
+                    for (std::size_t idx = 0; idx < eth_devices.size(); ++idx) {
+                        devices[eth_devices[idx]->GetName()] = eth_devices[idx];
+                        //Create PCIe device for only PF
+                        if (!idx) {
+                            // Create the device
+                            if (eth_devices[idx]->GetType() == ETH_HOST_MGMT || eth_devices[idx]->GetType() == ETH_HOST) {
+                                if (!eth_devices[idx]->CreateHostDevice()) {
+                                    NIC_LOG_ERR("{}: CreateHostDevice() failed", eth_devices[idx]->GetName());
+                                    return NULL;
+                                }
+                            }
+                            else {
+                                NIC_LOG_DEBUG("{}: Skipped creating host device", eth_devices[idx]->GetName());
+                            }
                         }
                     }
-                    else {
-                        NIC_LOG_DEBUG("{}: Skipped creating host device", eth_devices[idx]->GetName());
-                    }
                 }
-                NIC_LOG_DEBUG("{}: Adding device to dev manager", eth_devices[idx]->GetName());
-                devices[eth_devices[idx]->GetName()] = eth_devices[idx];
+                return (Device *)eth_devices[0];
             }
-            return (Device *)eth_devices[0];
-        }
 #ifdef IRIS
-    case ACCEL:
-        accel_dev = new AccelDev(dev_api, dev_spec, pd, EV_A);
-        accel_dev->SetType(type);
-        devices[accel_dev->GetName()] = accel_dev;
-        return (Device *)accel_dev;
-    case NVME:
-        nvme_dev = new NvmeDev(dev_api, dev_spec, pd, EV_A);
-        nvme_dev->SetType(type);
-        devices[nvme_dev->GetName()] = nvme_dev;
-        return (Device *)nvme_dev;
+        case ACCEL:
+            accel_dev = new AccelDev(dev_api, dev_spec, pd, EV_A);
+            accel_dev->SetType(type);
+            devices[accel_dev->GetName()] = accel_dev;
+            return (Device *)accel_dev;
+        case NVME:
+            nvme_dev = new NvmeDev(dev_api, dev_spec, pd, EV_A);
+            nvme_dev->SetType(type);
+            devices[nvme_dev->GetName()] = nvme_dev;
+            return (Device *)nvme_dev;
 #endif //IRIS
-    case VIRTIO:
-        NIC_LOG_ERR("Unsupported Device Type VIRTIO");
-        return NULL;
-    default:
-        return NULL;
+        case VIRTIO:
+            NIC_LOG_ERR("Unsupported Device Type VIRTIO");
+            return NULL;
+        default:
+            return NULL;
     }
 
     return NULL;
+}
+
+void
+DeviceManager::RestoreDevicesState(std::vector <struct EthDevInfo *> eth_dev_list)
+{
+
+    NIC_LOG_DEBUG("Restoring total {} ETH devices after upgrade", eth_dev_list.size());
+    for (uint32_t idx = 0; idx < eth_dev_list.size(); idx++) {
+        Eth *eth_dev = new Eth(dev_api, eth_dev_list[idx], pd, EV_A);
+        eth_dev->SetType(ETH);
+        devices[eth_dev->GetName()] = eth_dev;
+    }
+
+    upg_state = DEVICES_ACTIVE_STATE;
 }
 
 Device *
@@ -497,7 +518,7 @@ DeviceManager::IsDataPathQuiesced()
 bool
 DeviceManager::CheckAllDevsDisabled()
 {
-     for (auto it = devices.begin(); it != devices.end(); it++) {
+    for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
         if (dev->GetType() == ETH || dev->GetType() == MNIC) {
             Eth *eth_dev = (Eth *) dev;
@@ -512,7 +533,7 @@ DeviceManager::CheckAllDevsDisabled()
 int
 DeviceManager::SendFWDownEvent()
 {
-     for (auto it = devices.begin(); it != devices.end(); it++) {
+    for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
         if (dev->GetType() == ETH || dev->GetType() == MNIC) {
             Eth *eth_dev = (Eth *) dev;
@@ -605,7 +626,7 @@ DeviceManager::HandleUpgradeEvent(UpgradeEvent event)
 
             break;
         default:
-            NIC_LOG_DEBUG("Event {} not implemented", event);
+            NIC_LOG_DEBUG("Upgrade Event {} not implemented", event);
     }
 
     return 0;
@@ -630,8 +651,61 @@ DeviceManager::GetUpgradeState()
 
             break;
         default:
-            NIC_LOG_DEBUG("Unsupported state {}", upg_state);
+            NIC_LOG_DEBUG("Unsupported upgrade state {}", upg_state);
     }
 
     return upg_state;
 }
+
+std::vector <struct EthDevInfo *>
+DeviceManager::GetEthDevStateInfo()
+{
+    std::vector <struct EthDevInfo *> eth_dev_info_list;
+
+    for (auto it = devices.begin(); it != devices.end(); it++) {
+        Device *dev = it->second;
+        if (dev->GetType() == ETH) {
+            Eth *eth_dev = (Eth *) dev;
+            struct EthDevInfo *info = new EthDevInfo();
+
+            eth_dev->GetEthDevInfo(info);
+            NIC_LOG_DEBUG("adding {} to save list", info->eth_spec->name);
+            eth_dev_info_list.push_back(info);
+        }
+    }
+
+    return eth_dev_info_list;
+}
+
+bool
+DeviceManager::UpgradeCompatCheck()
+{
+    for (auto it = devices.begin(); it != devices.end(); it++) {
+        Device *dev = it->second;
+        // Upgrade is not possible for non-ETH devices
+        if (dev->GetType() != ETH) {
+            NIC_LOG_DEBUG("Upgrade is not possible with non-ETH device {}. "
+                    "compat check failed for Upgrade", it->first);
+            return false;
+        }
+        else {
+            // If RDMA is enabled in ETH device then also upgrade is not feasible
+            Eth *eth_dev = (Eth *) dev;
+            struct EthDevInfo *info = new EthDevInfo();
+
+            eth_dev->GetEthDevInfo(info);
+            if (info->eth_spec->enable_rdma) {
+                NIC_LOG_WARN("RDMA enabled ETH device {} will not function "
+                        "after upgrade", it->first);
+                /*
+                 * TODO: as of now we need to ignore RDMA check since 
+                 * smart-nic profile has RDMA default enabled
+                 */
+                //return false;
+            }
+        }
+    }
+
+    return true;
+}
+

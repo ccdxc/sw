@@ -16,6 +16,7 @@ using namespace nicmgr;
 
 extern DeviceManager *devmgr;
 extern char* nicmgr_upgrade_state_file;
+extern char* nicmgr_rollback_state_file;
 
 evutil_timer dev_reset_timer;
 evutil_timer dev_quiesce_timer;
@@ -44,7 +45,6 @@ writefile(const char *file, const void *buf, const size_t bufsz)
     return -1;
 }
 
-
 // Constructor method
 nicmgr_upg_hndlr::nicmgr_upg_hndlr()
 {
@@ -55,6 +55,10 @@ HdlrResp
 nicmgr_upg_hndlr::CompatCheckHandler(UpgCtx& upgCtx)
 {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+
+    if (!devmgr->UpgradeCompatCheck())
+        resp.resp=FAIL;
+
     return resp;
 }
 
@@ -108,7 +112,6 @@ nicmgr_upg_hndlr::PostRestartHandler(UpgCtx& upgCtx)
 {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
 
-    //TODO: Restore state from Delphi
     return resp;
 }
 
@@ -125,6 +128,15 @@ nicmgr_upg_hndlr::LinkUpHandler(UpgCtx& upgCtx)
 void
 nicmgr_upg_hndlr::SuccessHandler(UpgCtx& upgCtx)
 {
+    NIC_FUNC_DEBUG("Deleting all objects of EthDevInfo from Delphi");
+    // walk all objects and delete them
+    vector<delphi::objects::EthDeviceInfoPtr> objlist = delphi::objects::EthDeviceInfo::List(g_nicmgr_svc->sdk());
+    for (vector<delphi::objects::EthDeviceInfoPtr>::iterator obj=objlist.begin(); obj !=objlist.end(); ++obj) {
+        g_nicmgr_svc->sdk()->DeleteObject(*obj);
+    }
+    
+    unlink(nicmgr_upgrade_state_file);
+    unlink(nicmgr_rollback_state_file);
 }
 
 // Handle upgrade failure
@@ -132,6 +144,20 @@ HdlrResp
 nicmgr_upg_hndlr::FailedHandler(UpgCtx& upgCtx)
 {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+
+    // walk all objects and delete them
+    NIC_FUNC_DEBUG("Deleting all objects of EthDevInfo from Delphi");
+    vector<delphi::objects::EthDeviceInfoPtr> objlist = delphi::objects::EthDeviceInfo::List(g_nicmgr_svc->sdk());
+    for (vector<delphi::objects::EthDeviceInfoPtr>::iterator obj=objlist.begin(); obj !=objlist.end(); ++obj) {
+        g_nicmgr_svc->sdk()->DeleteObject(*obj);
+    }
+    unlink(nicmgr_upgrade_state_file); 
+
+    // If fw upgrade failed after compat_check then we will rollback to running fw
+    if (UpgCtxApi::UpgCtxGetUpgState(upgCtx)!= CompatCheck) {
+        writefile(nicmgr_rollback_state_file, "in progress", 12);
+    }
+
     return resp;
 }
 
@@ -141,16 +167,94 @@ nicmgr_upg_hndlr::AbortHandler(UpgCtx& upgCtx)
 {
 }
 
+void SaveUplinkInfo(uplink_t *up, delphi::objects::UplinkInfoPtr proto_obj)
+{
+    proto_obj->set_key(up->id);
+    proto_obj->set_id(up->id);
+    proto_obj->set_port(up->port);
+    proto_obj->set_is_oob(up->is_oob);
+
+    g_nicmgr_svc->sdk()->SetObject(proto_obj);
+}
+
+void
+SaveEthDevInfo(struct EthDevInfo *eth_dev_info, delphi::objects::EthDeviceInfoPtr proto_obj)
+{
+    //device name is the key
+    proto_obj->set_key(eth_dev_info->eth_spec->name);
+
+    //save eth_dev resources
+    proto_obj->mutable_eth_dev_res()->set_lif_base(eth_dev_info->eth_res->lif_base);
+    proto_obj->mutable_eth_dev_res()->set_intr_base(eth_dev_info->eth_res->intr_base);
+    proto_obj->mutable_eth_dev_res()->set_regs_mem_addr(eth_dev_info->eth_res->regs_mem_addr);
+    proto_obj->mutable_eth_dev_res()->set_port_info_addr(eth_dev_info->eth_res->port_info_addr);
+    proto_obj->mutable_eth_dev_res()->set_cmb_mem_addr(eth_dev_info->eth_res->cmb_mem_addr);
+    proto_obj->mutable_eth_dev_res()->set_cmb_mem_size(eth_dev_info->eth_res->cmb_mem_size);
+    proto_obj->mutable_eth_dev_res()->set_rom_mem_addr(eth_dev_info->eth_res->rom_mem_addr);
+    proto_obj->mutable_eth_dev_res()->set_rom_mem_size(eth_dev_info->eth_res->rom_mem_size);
+
+    //save eth_dev specs 
+    proto_obj->mutable_eth_dev_spec()->set_dev_uuid(eth_dev_info->eth_spec->dev_uuid);
+    proto_obj->mutable_eth_dev_spec()->set_eth_type(eth_dev_info->eth_spec->eth_type);
+    proto_obj->mutable_eth_dev_spec()->set_name(eth_dev_info->eth_spec->name);
+    proto_obj->mutable_eth_dev_spec()->set_oprom(eth_dev_info->eth_spec->oprom);
+    proto_obj->mutable_eth_dev_spec()->set_pcie_port(eth_dev_info->eth_spec->pcie_port);
+    proto_obj->mutable_eth_dev_spec()->set_pcie_total_vfs(eth_dev_info->eth_spec->pcie_total_vfs);
+    proto_obj->mutable_eth_dev_spec()->set_host_dev(eth_dev_info->eth_spec->host_dev);
+    proto_obj->mutable_eth_dev_spec()->set_uplink_port_num(eth_dev_info->eth_spec->uplink_port_num);
+    proto_obj->mutable_eth_dev_spec()->set_qos_group(eth_dev_info->eth_spec->qos_group);
+    proto_obj->mutable_eth_dev_spec()->set_lif_count(eth_dev_info->eth_spec->lif_count);
+    proto_obj->mutable_eth_dev_spec()->set_rxq_count(eth_dev_info->eth_spec->rxq_count);
+    proto_obj->mutable_eth_dev_spec()->set_txq_count(eth_dev_info->eth_spec->txq_count);
+    proto_obj->mutable_eth_dev_spec()->set_eq_count(eth_dev_info->eth_spec->eq_count);
+    proto_obj->mutable_eth_dev_spec()->set_adminq_count(eth_dev_info->eth_spec->adminq_count);
+    proto_obj->mutable_eth_dev_spec()->set_intr_count(eth_dev_info->eth_spec->intr_count);
+    proto_obj->mutable_eth_dev_spec()->set_mac_addr(eth_dev_info->eth_spec->mac_addr);
+    proto_obj->mutable_eth_dev_spec()->set_enable_rdma(eth_dev_info->eth_spec->enable_rdma);
+    proto_obj->mutable_eth_dev_spec()->set_pte_count(eth_dev_info->eth_spec->pte_count);
+    proto_obj->mutable_eth_dev_spec()->set_key_count(eth_dev_info->eth_spec->key_count);
+    proto_obj->mutable_eth_dev_spec()->set_ah_count(eth_dev_info->eth_spec->ah_count);
+    proto_obj->mutable_eth_dev_spec()->set_rdma_sq_count(eth_dev_info->eth_spec->rdma_sq_count);
+    proto_obj->mutable_eth_dev_spec()->set_rdma_rq_count(eth_dev_info->eth_spec->rdma_rq_count);
+    proto_obj->mutable_eth_dev_spec()->set_rdma_cq_count(eth_dev_info->eth_spec->rdma_eq_count);
+    proto_obj->mutable_eth_dev_spec()->set_rdma_eq_count(eth_dev_info->eth_spec->rdma_eq_count);
+    proto_obj->mutable_eth_dev_spec()->set_rdma_aq_count(eth_dev_info->eth_spec->rdma_aq_count);
+    proto_obj->mutable_eth_dev_spec()->set_rdma_pid_count(eth_dev_info->eth_spec->rdma_pid_count);
+    proto_obj->mutable_eth_dev_spec()->set_barmap_size(eth_dev_info->eth_spec->barmap_size);
+
+    g_nicmgr_svc->sdk()->SetObject(proto_obj);
+    return;
+}
+
 HdlrResp
 nicmgr_upg_hndlr::SaveStateHandler(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
 
-    //TODO: Save state to Delphi
+    std::vector <struct EthDevInfo*> dev_info;
+    std::map<uint32_t, uplink_t*> up_links = devmgr->GetUplinks();
 
+    dev_info = devmgr->GetEthDevStateInfo();
+    NIC_FUNC_DEBUG("Saving {} objects of EthDevInfo to delphi", dev_info.size());
+    //for each element in dev_info convert it to protobuf and then setobject to delphi
+    for (uint32_t eth_dev_idx = 0; eth_dev_idx < dev_info.size(); eth_dev_idx++) {
+        delphi::objects::EthDeviceInfoPtr eth_dev_info = make_shared<delphi::objects::EthDeviceInfo>();
+        NIC_FUNC_DEBUG("Saving EthDevInfo for eth_dev_idx {}", eth_dev_idx);
+        SaveEthDevInfo(dev_info[eth_dev_idx], eth_dev_info);
+    }
+
+    NIC_FUNC_DEBUG("Saving {} objects of UplinkInfo to delphi", up_links.size());
+    for (auto it = up_links.begin(); it != up_links.end(); it++) {
+        uplink_t *up = it->second;
+        delphi::objects::UplinkInfoPtr uplink_info = make_shared<delphi::objects::UplinkInfo>();
+        NIC_FUNC_DEBUG("Saving Uplink info for uplink id: {}", up->id);
+        SaveUplinkInfo(up, uplink_info);
+    }
+    std::vector <delphi::objects::UplinkInfoPtr> UplinkProtoObjs = delphi::objects::UplinkInfo::List(g_nicmgr_svc->sdk());
+    NIC_FUNC_DEBUG("Retrieved {} UplinkProto objects from Delphi", UplinkProtoObjs.size());
     return resp;
 }
 
-HdlrResp
+HdlrResp 
 nicmgr_upg_hndlr::PostLinkUpHandler(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
 

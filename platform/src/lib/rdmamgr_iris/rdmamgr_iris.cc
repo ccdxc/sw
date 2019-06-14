@@ -315,6 +315,29 @@ rdmamgr_iris::rdma_mem_bar_alloc(uint32_t size)
     return rdma_hbm_bar_base_ + alloc_offset;
 }
 
+int
+rdmamgr_iris::rdma_mem_bar_reserve(uint64_t addr, uint32_t size)
+{
+    uint32_t alloc_units;
+    int32_t alloc_offset, reserved_offset = 0;
+
+    alloc_offset = ((addr - rdma_hbm_bar_base_)/kRdmaBarAllocUnit);
+    alloc_units = (size + kRdmaBarAllocUnit - 1) & ~(kRdmaBarAllocUnit-1);
+    alloc_units /= kRdmaBarAllocUnit;
+    reserved_offset = rdma_hbm_bar_allocator_->CheckAndReserve(alloc_offset, alloc_units);
+
+    if ((reserved_offset < 0) || (reserved_offset != alloc_offset)) {
+        NIC_FUNC_ERR("Cannot reserve addr: {} size: {}", addr, size);
+        return -1;
+    }
+
+    rdma_bar_allocation_sizes_[reserved_offset] = alloc_units;
+    NIC_FUNC_DEBUG("reserved_size: {} reserved_offset: {} reserved_hbm_addr: {:#x}",
+                    size, reserved_offset, addr);
+    return 0;
+}
+
+
 sdk_ret_t
 rdmamgr_iris::
 p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add_(

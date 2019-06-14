@@ -118,6 +118,8 @@ nicmgr_init()
     }
     EXPECT_TRUE(devmgr != NULL);
 
+    devmgr->SetUpgradeMode(FW_MODE_NORMAL_BOOT);
+
     // load config
     if (g_fwd_mode == sdk::platform::FWD_MODE_CLASSIC) {
         devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/eth.json");

@@ -194,6 +194,12 @@ uint64_t PdClient::rdma_mem_bar_alloc (uint32_t size)
     return rdma_mgr_->rdma_mem_bar_alloc(size);
 }
 
+int PdClient::rdma_mem_bar_reserve (uint64_t addr, uint32_t size)
+{
+    return rdma_mgr_->rdma_mem_bar_reserve(addr, size);
+}
+
+
 void PdClient::nicmgr_mem_init (void)
 {
     uint64_t hbm_addr = mp_->start_addr(kNicmgrHBMLabel);
@@ -289,6 +295,34 @@ uint64_t PdClient::devcmd_mem_alloc(uint32_t size)
     return addr;
 }
 
+int
+PdClient::devcmd_mem_reserve(uint64_t addr, uint32_t size)
+{
+    uint32_t alloc_units;
+    int alloc_offset, reserved_offset = 0;
+
+    // devcmd allocations should be page aligned
+    assert((addr & 0xFFF) == 0);
+
+    alloc_offset = ((addr - devcmd_hbm_base_)/kDevcmdAllocUnit);
+
+    alloc_units = (size + kDevcmdAllocUnit - 1) & ~(kDevcmdAllocUnit - 1);
+    alloc_units /= kDevcmdAllocUnit;
+    reserved_offset = devcmd_hbm_allocator_->CheckAndReserve(alloc_offset, alloc_units);
+
+    if ((reserved_offset < 0) || (reserved_offset != alloc_offset)) {
+        NIC_FUNC_ERR("Failed to reserve devcmd mem at addr {}", addr);
+        return -1;
+    }
+
+    devcmd_allocation_sizes_[alloc_offset] = alloc_units;
+    NIC_FUNC_DEBUG("reserved: size: {} reserved_offset: {} addr: {:#x}",
+                    size, reserved_offset, addr);
+
+    return 0;
+}
+
+
 int32_t PdClient::intr_alloc(uint32_t count)
 {
     uint32_t intr_base;
@@ -302,6 +336,20 @@ int32_t PdClient::intr_alloc(uint32_t count)
     NIC_FUNC_DEBUG("base {} count {}", intr_base, count);
 
     return intr_base;
+}
+
+int
+PdClient::intr_reserve(uint32_t intr_base, uint32_t count)
+{
+    auto ret = intr_allocator->alloc_withid(intr_base, count);
+    if (ret != sdk::lib::indexer::SUCCESS) {
+        NIC_FUNC_ERR("Failed to reserve interrupts");
+        return -1;
+    }
+
+    NIC_FUNC_DEBUG("reserved: base {} count {}", intr_base, count);
+
+    return 0;
 }
 
 int

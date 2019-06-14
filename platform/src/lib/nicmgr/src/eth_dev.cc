@@ -47,6 +47,15 @@
 
 extern class pciemgr *pciemgr;
 
+
+
+void
+Eth::GetEthDevInfo(struct EthDevInfo *dev_info)
+{
+    dev_info->eth_res = &dev_resources;
+    dev_info->eth_spec = const_cast<struct eth_devspec *>(spec);
+}
+
 EthDevType
 Eth::eth_dev_type_str_to_type(std::string const& s)
 {
@@ -69,52 +78,55 @@ Eth::eth_dev_type_str_to_type(std::string const& s)
 }
 
 Eth::Eth(devapi *dev_api,
-         void *dev_spec,
+         struct EthDevInfo *dev_info,
          PdClient *pd_client,
-         EV_P_
-         bool upg_mode)
+         EV_P)
 {
-    sdk_ret_t ret = SDK_RET_OK;
+    sdk_ret_t ret;
+    int err = 0;
     Eth::dev_api = dev_api;
-    Eth::spec = (struct eth_devspec *)dev_spec;
+    Eth::spec = dev_info->eth_spec;
     Eth::pd = pd_client;
+    dev_resources = *(dev_info->eth_res);
 
     this->loop = loop;
+    NIC_LOG_DEBUG("{}: Restoring eth device in Upgrade mode", spec->name);
 
-    // Allocate lifs
-    ret = pd->lm_->alloc_id(&lif_base, spec->lif_count);
+    // Reserve lifs
+    ret = pd->lm_->reserve_id(dev_resources.lif_base, spec->lif_count);
     if (ret != SDK_RET_OK) {
-        NIC_LOG_ERR("{}: Failed to allocate lifs. ret: {}", spec->name, ret);
+        NIC_LOG_ERR("{}: Failed to reserve lifs. ret: {}", spec->name, ret);
         throw;
     }
     NIC_LOG_DEBUG("{}: lif_base {} lif_count {}", spec->name,
-        lif_base, spec->lif_count);
+        dev_resources.lif_base, spec->lif_count);
 
-    // Allocate interrupts
-    intr_base = pd->intr_alloc(spec->intr_count);
-    if (intr_base < 0) {
-        NIC_LOG_ERR("{}: Failed to allocate interrupts", spec->name);
+    // Reserve interrupts
+    err = pd->intr_reserve(dev_resources.intr_base, spec->intr_count);
+    if (err) {
+        NIC_LOG_ERR("{}: Failed to reserve interrupt with error: {}", spec->name, err);
         throw;
     }
     NIC_LOG_DEBUG("{}: intr_base {} intr_count {}", spec->name,
-        intr_base, spec->intr_count);
+        dev_resources.intr_base, spec->intr_count);
 
-    // Allocate & Init Device registers
-    regs_mem_addr = pd->devcmd_mem_alloc(sizeof(union dev_regs));
-    if (regs_mem_addr == 0) {
-        NIC_LOG_ERR("{}: Failed to allocate registers", spec->name);
+    // Reserve Device registers
+    err = pd->devcmd_mem_reserve(dev_resources.regs_mem_addr, sizeof(union dev_regs));
+    if (err) {
+        NIC_LOG_ERR("{}: Failed to reserve registers mem with error {}", spec->name, err);
         throw;
     }
-    devcmd_mem_addr = regs_mem_addr + offsetof(union dev_regs, devcmd);
+    devcmd_mem_addr = dev_resources.regs_mem_addr + offsetof(union dev_regs, devcmd);
 
     NIC_LOG_DEBUG("{}: regs_mem_addr {:#x} devcmd_mem_addr {:#x}",
-        spec->name, regs_mem_addr, devcmd_mem_addr);
+        spec->name, dev_resources.regs_mem_addr, devcmd_mem_addr);
 
-    regs = (union dev_regs *)MEM_MAP(regs_mem_addr, sizeof(union dev_regs), 0);;
+    regs = (union dev_regs *)MEM_MAP(dev_resources.regs_mem_addr, sizeof(union dev_regs), 0);;
     if (regs == NULL) {
         NIC_LOG_ERR("{}: Failed to map register region", spec->name);
         throw;
     }
+
     devcmd = &regs->devcmd;
 
     // Init Device registers
@@ -136,35 +148,186 @@ Eth::Eth(devapi *dev_api,
         sizeof(regs->info.fw_version));
 #endif
 #ifndef __aarch64__
-    WRITE_MEM(regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
+    WRITE_MEM(dev_resources.regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
 #endif
 
     // Allocate CMB region
     if (spec->enable_rdma && spec->barmap_size) {
-        cmb_mem_size = (spec->barmap_size << MEM_BARMAP_SIZE_SHIFT);
-        assert (cmb_mem_size <= (8 * 1024 * 1024));
+        dev_resources.cmb_mem_size = (spec->barmap_size << MEM_BARMAP_SIZE_SHIFT);
+        assert (dev_resources.cmb_mem_size <= (8 * 1024 * 1024));
 
-        cmb_mem_addr = pd->rdma_mem_bar_alloc(cmb_mem_size);
-        assert (cmb_mem_addr != 0);
-        // bar address must be aligned to bar size
-        assert ((cmb_mem_size % cmb_mem_size) == 0);
-
+        err = pd->rdma_mem_bar_reserve(dev_resources.cmb_mem_addr, dev_resources.cmb_mem_size);
+        if (err) {
+            NIC_LOG_ERR("{}: Failed to reserve cmb mem with error: {}", spec->name, err);
+            throw;
+        }
         NIC_LOG_DEBUG("{}: cmb_mem_addr {:#x}, cmb_mem_size: {}",
-                      spec->name, cmb_mem_addr, cmb_mem_size);
+                      spec->name, dev_resources.cmb_mem_addr, dev_resources.cmb_mem_size);
     } else {
-        cmb_mem_addr = 0;
-        cmb_mem_size = 0;
+        dev_resources.cmb_mem_addr = 0;
+        dev_resources.cmb_mem_size = 0;
     }
 
     // Create all LIFs
     for (uint32_t lif_index = 0; lif_index < spec->lif_count; lif_index++) {
         eth_lif_res_t *lif_res = new eth_lif_res_t();
-        uint64_t lif_id = lif_base + lif_index;
+        uint64_t lif_id = dev_resources.lif_base + lif_index;
 
         lif_res->lif_id = lif_id;
-        lif_res->intr_base = intr_base;
-        lif_res->cmb_mem_addr = cmb_mem_addr;
-        lif_res->cmb_mem_size = cmb_mem_size;
+        lif_res->intr_base = dev_resources.intr_base;
+        lif_res->cmb_mem_addr = dev_resources.cmb_mem_addr;
+        lif_res->cmb_mem_size = dev_resources.cmb_mem_size;
+
+        EthLif *eth_lif = new EthLif(dev_api,
+            dev_info->eth_spec, pd_client, lif_res, loop);
+        lif_map[lif_id] = eth_lif;
+    }
+
+    // Port Config
+    port_config_addr = pd->nicmgr_mem_alloc(sizeof(union port_config));
+    host_port_config_addr = 0;
+    port_config = (union port_config *)MEM_MAP(port_config_addr,
+                                        sizeof(union port_config), 0);
+    if (port_config == NULL) {
+        NIC_LOG_ERR("{}: Failed to map lif config!", spec->name);
+        throw;
+    }
+    memset(port_config, 0, sizeof(union port_config));
+
+    NIC_LOG_INFO("{}: port_config_addr {:#x}", spec->name,
+        port_config_addr);
+
+    // Port Status
+    port_status_addr = pd->nicmgr_mem_alloc(sizeof(struct port_status));
+    host_port_status_addr = 0;
+    port_status = (struct port_status *)MEM_MAP(port_status_addr,
+                                        sizeof(struct port_status), 0);
+    if (port_status == NULL) {
+        NIC_LOG_ERR("{}: Failed to map lif status!", spec->name);
+        throw;
+    }
+    memset(port_status, 0, sizeof(struct port_status));
+
+    NIC_LOG_INFO("{}: port_status_addr {:#x}", spec->name,
+        port_status_addr);
+
+    // TODO: Add cap_mx_c_hdr.h & cap_bx_c_hdr.h to sw tree then remove these
+    // hardcoded values
+    if (spec->uplink_port_num >= 1 and spec->uplink_port_num <= 4) {
+        port_stats_addr = 0x01d81000;
+    } else if (spec->uplink_port_num >= 5 and spec->uplink_port_num <= 8) {
+        port_stats_addr = 0x01e81000;
+    } else if (spec->uplink_port_num == 9) {
+        port_stats_addr = 0x01000100;
+    }
+
+    // Enable Devcmd Handling
+    evutil_add_prepare(EV_A_ &devcmd_prepare, Eth::DevcmdPoll, this);
+    evutil_add_check(EV_A_ &devcmd_check, Eth::DevcmdPoll, this);
+    evutil_timer_start(EV_A_ &devcmd_timer, Eth::DevcmdPoll, this, 0.0, 0.001);
+
+    //reset the active_lif_ref_cnt to 0
+    active_lif_ref_cnt = 0;
+
+}
+
+Eth::Eth(devapi *dev_api,
+         void *dev_spec,
+         PdClient *pd_client,
+         EV_P)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    Eth::dev_api = dev_api;
+    Eth::spec = (struct eth_devspec *)dev_spec;
+    Eth::pd = pd_client;
+
+    this->loop = loop;
+
+    // Allocate lifs
+    ret = pd->lm_->alloc_id(&dev_resources.lif_base, spec->lif_count);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: Failed to allocate lifs. ret: {}", spec->name, ret);
+        throw;
+    }
+    NIC_LOG_DEBUG("{}: lif_base {} lif_count {}", spec->name, 
+            dev_resources.lif_base, spec->lif_count);
+
+    // Allocate interrupts
+    dev_resources.intr_base = pd->intr_alloc(spec->intr_count);
+    if (dev_resources.intr_base < 0) {
+        NIC_LOG_ERR("{}: Failed to allocate interrupts", spec->name);
+        throw;
+    }
+    NIC_LOG_DEBUG("{}: intr_base {} intr_count {}", spec->name,
+        dev_resources.intr_base, spec->intr_count);
+
+    // Allocate & Init Device registers
+    dev_resources.regs_mem_addr = pd->devcmd_mem_alloc(sizeof(union dev_regs));
+    if (dev_resources.regs_mem_addr == 0) {
+        NIC_LOG_ERR("{}: Failed to allocate registers", spec->name);
+        throw;
+    }
+    devcmd_mem_addr = dev_resources.regs_mem_addr + offsetof(union dev_regs, devcmd);
+
+    NIC_LOG_DEBUG("{}: regs_mem_addr {:#x} devcmd_mem_addr {:#x}",
+        spec->name, dev_resources.regs_mem_addr, devcmd_mem_addr);
+
+    regs = (union dev_regs *)MEM_MAP(dev_resources.regs_mem_addr, sizeof(union dev_regs), 0);;
+    if (regs == NULL) {
+        NIC_LOG_ERR("{}: Failed to map register region", spec->name);
+        throw;
+    }
+
+    devcmd = &regs->devcmd;
+
+    // Init Device registers
+    regs->info.signature = IONIC_DEV_INFO_SIGNATURE;
+    regs->info.version = 0x1;
+
+    const uint32_t sta_ver = READ_REG32(CAP_ADDR_BASE_MS_MS_OFFSET +
+                                        CAP_MS_CSR_STA_VER_BYTE_ADDRESS);
+    regs->info.asic_type = sta_ver & 0xf;
+    regs->info.asic_rev  = (sta_ver >> 4) & 0xfff;
+#ifdef __aarch64__
+    std::string sn;
+    sdk::platform::readFruKey(SERIALNUMBER_KEY, sn);
+    strncpy0(regs->info.serial_num, sn.c_str(), sizeof(regs->info.serial_num));
+
+    boost::property_tree::ptree ver;
+    boost::property_tree::read_json(VERSION_FILE, ver);
+    strncpy0(regs->info.fw_version, ver.get<std::string>("sw.version").c_str(),
+        sizeof(regs->info.fw_version));
+#endif
+#ifndef __aarch64__
+    WRITE_MEM(dev_resources.regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
+#endif
+
+    // Allocate CMB region
+    if (spec->enable_rdma && spec->barmap_size) {
+        dev_resources.cmb_mem_size = (spec->barmap_size << MEM_BARMAP_SIZE_SHIFT);
+        assert (dev_resources.cmb_mem_size <= (8 * 1024 * 1024));
+
+        dev_resources.cmb_mem_addr = pd->rdma_mem_bar_alloc(dev_resources.cmb_mem_size);
+        assert (dev_resources.cmb_mem_addr != 0);
+        // bar address must be aligned to bar size
+        assert ((dev_resources.cmb_mem_size % dev_resources.cmb_mem_size) == 0);
+
+        NIC_LOG_DEBUG("{}: cmb_mem_addr {:#x}, cmb_mem_size: {}",
+                      spec->name, dev_resources.cmb_mem_addr, dev_resources.cmb_mem_size);
+    } else {
+        dev_resources.cmb_mem_addr = 0;
+        dev_resources.cmb_mem_size = 0;
+    }
+
+    // Create all LIFs
+    for (uint32_t lif_index = 0; lif_index < spec->lif_count; lif_index++) {
+        eth_lif_res_t *lif_res = new eth_lif_res_t();
+        uint64_t lif_id = dev_resources.lif_base + lif_index;
+
+        lif_res->lif_id = lif_id;
+        lif_res->intr_base = dev_resources.intr_base;
+        lif_res->cmb_mem_addr = dev_resources.cmb_mem_addr;
+        lif_res->cmb_mem_size = dev_resources.cmb_mem_size;
 
         EthLif *eth_lif = new EthLif(dev_api,
             dev_spec, pd_client, lif_res, loop);
@@ -229,15 +392,14 @@ std::vector<Eth*>
 Eth::factory(enum DeviceType type, devapi *dev_api,
          void *dev_spec,
          PdClient *pd_client,
-         EV_P_
-         bool upg_mode)
+         EV_P)
 {
     std::vector<Eth*> eth_devs;
     Eth *dev_obj;
     struct eth_devspec *spec = (struct eth_devspec *)dev_spec;
 
     // Create object for PF
-    dev_obj = new Eth(dev_api, spec, pd_client, EV_A_ upg_mode);
+    dev_obj = new Eth(dev_api, spec, pd_client, EV_A);
     dev_obj->SetType(type);
     eth_devs.push_back(dev_obj);
 
@@ -360,10 +522,10 @@ Eth::CreateLocalDevice()
         return false;
     }
 
-    mnet_req->regs_pa = regs_mem_addr;
-    mnet_req->drvcfg_pa = intr_drvcfg_addr(intr_base);
-    mnet_req->msixcfg_pa = intr_msixcfg_addr(intr_base);
-    mnet_req->doorbell_pa = DOORBELL_ADDR(lif_base);
+    mnet_req->regs_pa = dev_resources.regs_mem_addr;
+    mnet_req->drvcfg_pa = intr_drvcfg_addr(dev_resources.intr_base);
+    mnet_req->msixcfg_pa = intr_msixcfg_addr(dev_resources.intr_base);
+    mnet_req->doorbell_pa = DOORBELL_ADDR(dev_resources.lif_base);
     strcpy(mnet_req->iface_name, spec->name.c_str());
 
     NIC_LOG_DEBUG("{}: regs_pa: {:#x}, "
@@ -375,14 +537,14 @@ Eth::CreateLocalDevice()
                   mnet_req->doorbell_pa);
 
     // pba is unused by mnic, but config anyway
-    intr_pba_cfg(lif_base, intr_base, spec->intr_count);
+    intr_pba_cfg(dev_resources.lif_base, dev_resources.intr_base, spec->intr_count);
     for (uint32_t intr = 0; intr < spec->intr_count; intr++) {
         // lif,port params will be unusued in local mode
-        intr_fwcfg_msi(intr_base + intr, 0, 0);
-        intr_fwcfg_local(intr_base + intr, 1);
+        intr_fwcfg_msi(dev_resources.intr_base + intr, 0, 0);
+        intr_fwcfg_local(dev_resources.intr_base + intr, 1);
     }
     // reset device registers to defaults
-    intr_reset_dev(intr_base, spec->intr_count, 1);
+    intr_reset_dev(dev_resources.intr_base, spec->intr_count, 1);
 
 #define NICMGRD_THREAD_ID_MNET 0
     sdk::lib::thread *mnet_thread = NULL;
@@ -412,8 +574,8 @@ Eth::LoadOprom()
     std::string rom_file_path;
     uint64_t rom_file_size, rom_bar_size;
 
-    rom_mem_addr = 0;
-    rom_mem_size = 0;
+    dev_resources.rom_mem_addr = 0;
+    dev_resources.rom_mem_size = 0;
 
     // FIXME: Get the filepaths from catalog
 #ifdef __aarch64__
@@ -451,24 +613,24 @@ Eth::LoadOprom()
     rewind(rom_file);
 
     // FIXME: Create a new memory region and allocator for OPROMs.
-    rom_mem_size = roundup_power2(rom_file_size);
+    dev_resources.rom_mem_size = roundup_power2(rom_file_size);
     rom_bar_size = roundup_power2(rom_file_size);
-    rom_mem_addr = roundup(pd->nicmgr_mem_alloc(2*rom_bar_size), rom_bar_size);
+    dev_resources.rom_mem_addr = roundup(pd->nicmgr_mem_alloc(2*rom_bar_size), rom_bar_size);
     NIC_LOG_INFO("{}: rom_mem_addr {:#x} rom_mem_size {}"
                 " rom_file_size {} rom_bar_size {}",
-                spec->name, rom_mem_addr, rom_mem_size,
+                spec->name, dev_resources.rom_mem_addr, dev_resources.rom_mem_size,
                 rom_file_size, rom_bar_size);
     // Must be naturally aligned
-    if ((rom_mem_addr % rom_bar_size) != 0) {
+    if ((dev_resources.rom_mem_addr % rom_bar_size) != 0) {
         NIC_LOG_ERR("{}: rom_mem_addr is not naturally aligned", spec->name);
         fclose(rom_file);
-        rom_mem_addr = 0;
-        rom_mem_size = 0;
+        dev_resources.rom_mem_addr = 0;
+        dev_resources.rom_mem_size = 0;
         return false;
     }
 
     NIC_LOG_INFO("{}: Writing oprom", spec->name);
-    uint64_t rom_addr = rom_mem_addr;
+    uint64_t rom_addr = dev_resources.rom_mem_addr;
     uint8_t buf[4096] = {0};
     uint32_t bytes_read = 0;
     while (!feof(rom_file)) {
@@ -477,7 +639,7 @@ Eth::LoadOprom()
         rom_addr += bytes_read;
     }
     // zero-out rest of the bar
-    MEM_SET(rom_addr, 0, rom_mem_size - rom_file_size, 0);
+    MEM_SET(rom_addr, 0, dev_resources.rom_mem_size - rom_file_size, 0);
     NIC_LOG_INFO("{}: Finished writing oprom", spec->name);
 
     fclose(rom_file);
@@ -499,18 +661,18 @@ Eth::CreateHostDevice()
     memset(&pres, 0, sizeof(pres));
     strncpy0(pres.pfres.name, spec->name.c_str(), sizeof(pres.pfres.name));
     pres.pfres.port = spec->pcie_port;
-    pres.pfres.lifb = lif_base;
+    pres.pfres.lifb = dev_resources.lif_base;
     pres.pfres.lifc = spec->lif_count;
-    pres.pfres.intrb = intr_base;
+    pres.pfres.intrb = dev_resources.intr_base;
     pres.pfres.intrc = spec->intr_count;
     pres.pfres.intrdmask = 1;
     pres.pfres.npids = spec->rdma_pid_count;
-    pres.pfres.cmbpa = cmb_mem_addr;
-    pres.pfres.cmbsz = cmb_mem_size;
-    pres.pfres.rompa = rom_mem_addr;
-    pres.pfres.romsz = rom_mem_size;
+    pres.pfres.cmbpa = dev_resources.cmb_mem_addr;
+    pres.pfres.cmbsz = dev_resources.cmb_mem_size;
+    pres.pfres.rompa = dev_resources.rom_mem_addr;
+    pres.pfres.romsz = dev_resources.rom_mem_size;
     pres.pfres.totalvfs = spec->pcie_total_vfs;
-    pres.pfres.eth.devregspa = regs_mem_addr;
+    pres.pfres.eth.devregspa = dev_resources.regs_mem_addr;
     pres.pfres.eth.devregssz = sizeof(union dev_regs);
 
     if (pres.pfres.totalvfs > 0) {
@@ -805,7 +967,7 @@ Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
 
-    intr_reset_dev(intr_base, spec->intr_count, 1);
+    intr_reset_dev(dev_resources.intr_base, spec->intr_count, 1);
 
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
         eth_lif = it->second;
@@ -1288,14 +1450,14 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
     if (spec->enable_rdma && cmd->index > 0) {
         NIC_LOG_INFO("{}: Multi-lif not supported on RDMA enabled device",
             spec->name);
-        lif_id = lif_base;
+        lif_id = dev_resources.lif_base;
         comp->hw_index = 0;
     } else {
         if (cmd->index >= spec->lif_count) {
             NIC_LOG_ERR("{}: bad lif index {}", spec->name, cmd->index);
             return (IONIC_RC_ERROR);
         }
-        lif_id = lif_base + cmd->index;
+        lif_id = dev_resources.lif_base + cmd->index;
         comp->hw_index = cmd->index;
     }
 
@@ -1379,13 +1541,13 @@ Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
     if (spec->enable_rdma && cmd->index > 0) {
         NIC_LOG_INFO("{}: Multi-lif not supported on RDMA enabled device",
             spec->name);
-        lif_id = lif_base;
+        lif_id = dev_resources.lif_base;
     } else {
         if (cmd->index >= spec->lif_count) {
             NIC_LOG_ERR("{}: bad lif index {}", spec->name, cmd->index);
             return (IONIC_RC_ERROR);
         }
-        lif_id = lif_base + cmd->index;
+        lif_id = dev_resources.lif_base + cmd->index;
     }
 
     auto it = lif_map.find(lif_id);
@@ -1415,7 +1577,7 @@ status_code_t
 Eth::_CmdProxyHandler(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct admin_cmd *cmd = (struct admin_cmd *)req;
-    uint64_t lif_id = lif_base + cmd->lif_index;
+    uint64_t lif_id = dev_resources.lif_base + cmd->lif_index;
     EthLif *eth_lif = NULL;
 
     NIC_LOG_DEBUG("{}: PROXY_CMD: lif_index {}", spec->name, cmd->lif_index);
@@ -1445,9 +1607,9 @@ Eth::StatsUpdate(void *obj)
     Eth *eth = (Eth *)obj;
     EthLif *eth_lif = NULL;
 
-    auto it = eth->lif_map.find(eth->lif_base);
+    auto it = eth->lif_map.find(eth->dev_resources.lif_base);
     if (it == eth->lif_map.cend()) {
-        NIC_FUNC_ERR("{}: Unable to find lif {}", eth->spec->name, eth->lif_base);
+        NIC_FUNC_ERR("{}: Unable to find lif {}", eth->spec->name, eth->dev_resources.lif_base);
         return;
     }
     eth_lif = it->second;
@@ -1497,9 +1659,9 @@ Eth::PortConfigUpdate(void *obj)
     Eth *eth = (Eth *)obj;
     EthLif *eth_lif = NULL;
 
-    auto it = eth->lif_map.find(eth->lif_base);
+    auto it = eth->lif_map.find(eth->dev_resources.lif_base);
     if (it == eth->lif_map.cend()) {
-        NIC_FUNC_ERR("{}: Unable to find lif {}", eth->spec->name, eth->lif_base);
+        NIC_FUNC_ERR("{}: Unable to find lif {}", eth->spec->name, eth->dev_resources.lif_base);
         return;
     }
     eth_lif = it->second;
@@ -1521,9 +1683,9 @@ Eth::PortStatusUpdate(void *obj)
     Eth *eth = (Eth *)obj;
     EthLif *eth_lif = NULL;
 
-    auto it = eth->lif_map.find(eth->lif_base);
+    auto it = eth->lif_map.find(eth->dev_resources.lif_base);
     if (it == eth->lif_map.cend()) {
-        NIC_FUNC_ERR("{}: Unable to find lif {}", eth->spec->name, eth->lif_base);
+        NIC_FUNC_ERR("{}: Unable to find lif {}", eth->spec->name, eth->dev_resources.lif_base);
         return;
     }
     eth_lif = it->second;
@@ -1663,7 +1825,7 @@ Eth::SetFwStatus(uint8_t fw_status)
 {
     regs->info.fw_status = fw_status;
 #ifndef __aarch64__
-    WRITE_MEM(regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
+    WRITE_MEM(dev_resources.regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
 #endif
 }
 
@@ -1672,7 +1834,7 @@ Eth::HeartbeatEventHandler()
 {
     regs->info.fw_heartbeat = regs->info.fw_heartbeat + 1;
 #ifndef __aarch64__
-    WRITE_MEM(regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
+    WRITE_MEM(dev_resources.regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
 #endif
 }
 

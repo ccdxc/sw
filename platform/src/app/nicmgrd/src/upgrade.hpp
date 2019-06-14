@@ -6,6 +6,7 @@
 #define __NICMGR_UPG_HPP__
 
 #include "nic/upgrade_manager/export/upgcsdk/upgrade.hpp"
+#include "nic/upgrade_manager/export/upgcsdk/upgrade_ctx_api.hpp"
 #include "nic/upgrade_manager/export/upgcsdk/upgrade_handler.hpp"
 
 using namespace upgrade;
@@ -35,7 +36,7 @@ public:
     void AbortHandler(UpgCtx& upgCtx);
     static void check_device_reset(void *obj);
     static void check_device_quiesced(void *obj);
+private:
 };
-
 } // namespace nicmgr
 #endif    // __NICMGR_UPG_HPP__

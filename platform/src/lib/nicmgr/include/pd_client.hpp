@@ -156,14 +156,17 @@ public:
                             uint64_t mem_bar_addr, uint32_t mem_bar_size);
 
     uint64_t rdma_mem_bar_alloc(uint32_t size);
+    int rdma_mem_bar_reserve (uint64_t addr, uint32_t size);
 
     void nicmgr_mem_init(void);
     uint64_t nicmgr_mem_alloc(uint32_t size);
 
     void devcmd_mem_init(void);
     uint64_t devcmd_mem_alloc(uint32_t size);
+    int devcmd_mem_reserve(uint64_t addr, uint32_t size);
 
     int32_t intr_alloc(uint32_t count);
+    int intr_reserve(uint32_t intr_base, uint32_t count);
 
     uint64_t rdma_get_pt_base_addr(uint32_t lif);
     uint64_t rdma_get_kt_base_addr(uint32_t lif);

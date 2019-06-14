@@ -31,6 +31,7 @@ fwd_mode_t fwd_mode = sdk::platform::FWD_MODE_CLASSIC;
 platform_t platform = PLATFORM_NONE;
 bool g_hal_up = false;
 extern void nicmgr_do_client_registration(void);
+extern bool devices_restored;
 
 static void
 log_flush(void *arg)
@@ -73,6 +74,7 @@ atexit_handler (void)
 }
 
 const char* nicmgr_upgrade_state_file = "/update/nicmgr_upgstate";
+const char* nicmgr_rollback_state_file = "/update/nicmgr_rollback_state";
 
 static bool
 upgrade_in_progress()
@@ -80,34 +82,44 @@ upgrade_in_progress()
     return (access(nicmgr_upgrade_state_file, R_OK) == 0);
 }
 
+static bool
+rollback_in_progress()
+{
+    return (access(nicmgr_rollback_state_file, R_OK) == 0);
+}
+
 static void
 loop(void)
 {
     evutil_check log_check;
-    bool upg_mode;
+    std::vector <struct EthDevInfo *> eth_info;
+    UpgradeMode fw_mode;
 
-    upg_mode = upgrade_in_progress();
+    if (rollback_in_progress()) {
+        fw_mode = FW_MODE_ROLLBACK;
+        unlink(nicmgr_rollback_state_file);
+    }
+    else if (upgrade_in_progress())
+        fw_mode = FW_MODE_UPGRADE;
+    else
+        fw_mode = FW_MODE_NORMAL_BOOT;
 
-    NIC_LOG_INFO("upg_mode: {}", upg_mode);
+    NIC_LOG_INFO("fw_mode: {}", fw_mode);
 
-    if (platform_is_hw(platform)) {
+    if (platform_is_hw(platform))
         pciemgr = new class pciemgr("nicmgrd", EV_DEFAULT);
 
-        if (!upg_mode)
-            pciemgr->initialize();
-    }
-
     devmgr = new DeviceManager(config_file, fwd_mode, platform);
-
-    devmgr->SetUpgradeMode(upg_mode);
-    devmgr->LoadConfig(config_file);
+    devmgr->SetUpgradeMode(fw_mode);
 
     if (pciemgr) {
-        pciemgr->finalize();
+        if (fw_mode == FW_MODE_NORMAL_BOOT)
+            pciemgr->initialize();
+        if (fw_mode != FW_MODE_UPGRADE)
+            devmgr->LoadConfig(config_file);
+        if (fw_mode == FW_MODE_NORMAL_BOOT)
+            pciemgr->finalize();
     }
-
-    //All nicmgr objects are restored now so we can delete the file
-    unlink(nicmgr_upgrade_state_file);
 
     evutil_add_check(EV_DEFAULT_ &log_check, &log_flush, NULL);
 

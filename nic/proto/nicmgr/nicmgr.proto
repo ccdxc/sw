@@ -26,16 +26,64 @@ message MacAddrVlans {
     uint64 mac_addr = 2;
 }
 
-
-message EthDeviceInfo {
+message UplinkInfo {
+    option (delphi.persist) = true;
     delphi.ObjectMeta          Meta = 1;
-    uint64                     Key = 2; //uuid from json ??
-    LifInfo                    lif = 3;
-    uint32                     rss_type = 4;
-    bytes                      rss_key = 5;
-    bytes                      rss_indir = 6;
-    repeated    MacAddrs       mac_addrs = 7;
-    repeated    Vlans          vlans = 8;
-    repeated    MacAddrVlans   mac_addr_vlans = 9;
+    uint32                     Key = 2; //id
+    uint32 id = 3;
+    uint32 port = 4;
+    bool is_oob = 5;
 }
 
+message EthDevSpec {
+    // Delphi
+    uint64 dev_uuid = 1;
+
+    // Device
+    uint32 eth_type = 2;
+    string name = 3;
+    uint32 oprom = 4;
+    uint32 pcie_port = 5;
+    uint32 pcie_total_vfs = 6;
+    bool host_dev = 7;
+    // Network
+    uint32 uplink_port_num = 8;
+    string qos_group = 9;
+    // RES
+    uint32 lif_count = 10;
+    uint32 rxq_count = 11;
+    uint32 txq_count = 12;
+    uint32 eq_count = 13;
+    uint32 adminq_count = 14;
+    uint32 intr_count = 15;
+    uint64 mac_addr = 16;
+    // RDMA
+    bool enable_rdma = 17;
+    uint32 pte_count = 18;
+    uint32 key_count = 19;
+    uint32 ah_count = 20;
+    uint32 rdma_sq_count = 21;
+    uint32 rdma_rq_count = 22;
+    uint32 rdma_cq_count = 23;
+    uint32 rdma_eq_count = 24;
+    uint32 rdma_aq_count = 25;
+    uint32 rdma_pid_count = 26;
+    uint32 barmap_size = 27;
+}
+message EthDevResource {
+    uint32                     lif_base = 1;
+    uint32                     intr_base = 2;
+    uint64                     regs_mem_addr = 3;
+    uint64                     port_info_addr = 4;
+    uint64                     cmb_mem_addr = 5;
+    uint64                     cmb_mem_size = 6;
+    uint64                     rom_mem_addr = 7;
+    uint64                     rom_mem_size = 8;
+}
+message EthDeviceInfo {
+    option (delphi.persist)         = true;
+    delphi.ObjectMeta          Meta = 1;
+    string                     Key = 2; //eth interface name
+    EthDevResource             eth_dev_res = 3;
+    EthDevSpec                 eth_dev_spec = 4;
+}

@@ -50,6 +50,20 @@ typedef enum EthDevType_s {
 
 const char *eth_dev_type_to_str(EthDevType type);
 
+struct eth_dev_res {
+    uint32_t lif_base;
+    uint32_t intr_base;
+    // DEVCMD
+    uint64_t regs_mem_addr;
+    uint64_t port_info_addr;
+    // CMB
+    uint64_t cmb_mem_addr;
+    uint32_t cmb_mem_size;
+    // ROM
+    uint64_t rom_mem_addr;
+    uint32_t rom_mem_size;
+};
+
 /**
  * Eth Device Spec
  */
@@ -88,21 +102,28 @@ struct eth_devspec {
     uint32_t barmap_size;    // in 8MB units
 };
 
+struct EthDevInfo {
+    eth_dev_res *eth_res;
+    eth_devspec *eth_spec;
+};
+
 /**
  * ETH PF Device
  */
 class Eth : public Device {
 public:
     Eth(devapi *dev_api,
-        void *dev_spec,
+         void *dev_spec,
+         PdClient *pd_client,
+         EV_P);
+    Eth(devapi *dev_api,
+        struct EthDevInfo *dev_info,
         PdClient *pd_client,
-        EV_P_
-        bool upg_mode = false);
+        EV_P);
     static std::vector<Eth*> factory(enum DeviceType type, devapi *dev_api,
          void *dev_spec,
          PdClient *pd_client,
-         EV_P_
-         bool upg_mode);
+         EV_P);
 
     std::string GetName() { return spec->name; }
     EthDevType GetType() { return spec->eth_type; }
@@ -128,6 +149,7 @@ public:
     bool IsDevQuiesced();
     bool IsDevReset();
     int SendFWDownEvent();
+    void GetEthDevInfo(struct EthDevInfo *dev_info);
 
 private:
     // Device Spec
@@ -141,19 +163,11 @@ private:
     bool hal_status;
     // Resources
     std::map<uint64_t, EthLif *> lif_map;
-    uint32_t lif_base;
-    uint32_t intr_base;
+    struct eth_dev_res dev_resources;
     // Devcmd
-    uint64_t regs_mem_addr;
     uint64_t devcmd_mem_addr;
     union dev_regs *regs;
     union dev_cmd_regs *devcmd;
-    // CMB
-    uint64_t cmb_mem_addr;
-    uint32_t cmb_mem_size;
-    // ROM
-    uint64_t rom_mem_addr;
-    uint32_t rom_mem_size;
     // PCIe info
     pciehdev_t *pdev;
     // Port Info
