@@ -967,6 +967,7 @@ rfc_compute_p1_tables (rfc_ctxt_t *rfc_ctxt,
 {
     rfc_p1_actiondata_t action_data = { 0 };
 
+    rfc_ctxt->p1_table.num_classes = 0;
     rfc_compute_eq_class_tables(rfc_ctxt,
                                 table1,
                                 table2,
@@ -998,6 +999,7 @@ rfc_compute_p2_tables (rfc_ctxt_t *rfc_ctxt,
 {
     rfc_p2_actiondata_t     action_data = { 0 };
 
+    rfc_ctxt->p2_table.num_classes = 0;
     rfc_compute_eq_class_tables(rfc_ctxt,
                                 table3,
                                 table4,
@@ -1059,7 +1061,6 @@ rfc_build_eqtables (rfc_ctxt_t *rfc_ctxt)
     rfc_p2_eq_class_tables_dump(rfc_ctxt);
     rfc_compute_p3_tables(rfc_ctxt, SACL_P3_1_TABLE_OFFSET);
 
-#if 0
     // combination 2
     rfc_compute_p1_tables(rfc_ctxt,
                           &rfc_ctxt->stag_tree.rfc_table,
@@ -1098,7 +1099,6 @@ rfc_build_eqtables (rfc_ctxt_t *rfc_ctxt)
                           SACL_P2_4_TABLE_OFFSET);
     rfc_p2_eq_class_tables_dump(rfc_ctxt);
     rfc_compute_p3_tables(rfc_ctxt, SACL_P3_4_TABLE_OFFSET);
-#endif
 
     return SDK_RET_OK;
 }
