@@ -12,7 +12,10 @@ struct phv_ p;
 
 session_info:
     seq             c1, k.p4e_i2e_session_index, r0
+    // r4 : packet length
+    sub             r4, k.capri_p4_intrinsic_frame_size, k.offset_metadata_l2_1
     bcf             [c1],session_info_error
+    phvwr           p.capri_p4_intrinsic_packet_len, r4
 
     // update timestamp (flush/unlock if packet is not TCP or dropped)
     seq             c1, k.tcp_valid, 0
@@ -33,7 +36,7 @@ session_tcp_responder:
 
 session_info_common:
     phvwr           p.rewrite_metadata_nexthop_idx, d.session_info_d.nexthop_idx
-    add             r1, k.capri_p4_intrinsic_packet_len, d.session_info_d.meter_idx, 16
+    add             r1, r4, d.session_info_d.meter_idx, 16
     phvwr           p.{rewrite_metadata_meter_idx,rewrite_metadata_meter_len}, r1
     phvwr           p.rewrite_metadata_ip, d.session_info_d.tx_dst_ip
     bbeq            k.control_metadata_direction, TX_FROM_HOST, session_tx
@@ -67,7 +70,7 @@ session_stats:
     add             r5, r5, k.p4e_i2e_session_index, 5
     seq             c1, k.p4e_i2e_flow_role, TCP_FLOW_RESPONDER
     add.c1          r5, r5, 16
-    add             r7, r0, k.capri_p4_intrinsic_packet_len
+    add             r7, r0, r4
     addi            r1, r0, 0x1000001
     or              r7, r7, r1, 32
     addi            r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START

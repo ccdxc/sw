@@ -21,6 +21,7 @@ nexthop_info:
     seq             c1, k.rewrite_metadata_flags[TX_REWRITE_ENCAP_BITS], \
                         TX_REWRITE_ENCAP_VXLAN
     bcf             [c1], vxlan_encap
+    // r1 : packet length
     add             r1, r0, k.capri_p4_intrinsic_packet_len
     seq             c1, k.rewrite_metadata_flags[TX_REWRITE_ENCAP_BITS], \
                         TX_REWRITE_ENCAP_NONE
@@ -29,15 +30,21 @@ nexthop_info:
     bcf             [c1], nexthop_untagged
 nexthop_tagged:
     seq             c1, k.ctag_1_valid, FALSE
-    phvwr.c1        p.ctag_1_valid, TRUE
-    phvwr.c1        p.ctag_1_etherType, k.ethernet_1_etherType
-    phvwr.e         p.{ctag_1_pcp,ctag_1_dei,ctag_1_vid}, d.nexthop_info_d.vni
-    phvwr.c1        p.ethernet_1_etherType, ETHERTYPE_VLAN
+    nop.!c1.e
+    phvwr           p.{ctag_1_pcp,ctag_1_dei,ctag_1_vid}, d.nexthop_info_d.vni
+    phvwr           p.ctag_1_valid, TRUE
+    phvwr           p.ctag_1_etherType, k.ethernet_1_etherType
+    phvwr           p.{ctag_1_pcp,ctag_1_dei,ctag_1_vid}, d.nexthop_info_d.vni
+    phvwr           p.ethernet_1_etherType, ETHERTYPE_VLAN
+    add.e           r1, r1, 4
+    phvwr.f         p.capri_p4_intrinsic_packet_len, r1
 
 nexthop_untagged:
     nop.c1.e
-    phvwr.!c1.e     p.ethernet_1_etherType, k.ctag_1_etherType
-    phvwr.!c1       p.ctag_1_valid, FALSE
+    phvwr.!c1       p.ethernet_1_etherType, k.ctag_1_etherType
+    phvwr           p.ctag_1_valid, FALSE
+    sub.e           r1, r1, 4
+    phvwr.f         p.capri_p4_intrinsic_packet_len, r1
 
 vxlan_encap:
     seq             c1, k.ctag_1_valid, TRUE
@@ -80,8 +87,10 @@ ipv4_vxlan_encap:
     sub             r1, r1, 20
     or              r7, k.p4e_i2e_entropy_hash, 0xC000
     or              r7, UDP_PORT_VXLAN, r7, 16
-    phvwr.e         p.{udp_0_srcPort,udp_0_dstPort}, r7
-    phvwr.f         p.udp_0_len, r1
+    phvwr           p.{udp_0_srcPort,udp_0_dstPort}, r7
+    phvwr           p.udp_0_len, r1
+    add.e           r1, r1, (20+14)
+    phvwr.f         p.capri_p4_intrinsic_packet_len, r1
 ipv6_vxlan_encap:
     /*
     phvwr           p.vxlan_0_valid, 1
@@ -110,8 +119,10 @@ ipv6_vxlan_encap:
     phvwr           p.ipv6_0_payloadLen, r1
     or              r7, k.p4e_i2e_entropy_hash, 0xC000
     or              r7, UDP_PORT_VXLAN, r7, 16
-    phvwr.e         p.{udp_0_srcPort,udp_0_dstPort}, r7
-    phvwr.f         p.udp_0_len, r1
+    phvwr           p.{udp_0_srcPort,udp_0_dstPort}, r7
+    phvwr           p.udp_0_len, r1
+    add.e           r1, r1, (40+14)
+    phvwr.f         p.capri_p4_intrinsic_packet_len, r1
 
 /*****************************************************************************/
 /* error function                                                            */

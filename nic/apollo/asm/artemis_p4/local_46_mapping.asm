@@ -30,9 +30,11 @@ tx_from_host_4to6:
     or              r1, d.local_46_info_d.prefix[63:0], k.ipv4_1_srcAddr
     phvwrpair       p.ipv6_1_srcAddr[127:64], d.local_46_info_d.prefix[127:64],\
                         p.ipv6_1_srcAddr[63:0], r1
-    or.e            r1, k.rewrite_metadata_ip[63:0], k.ipv4_1_dstAddr
+    or              r1, k.rewrite_metadata_ip[63:0], k.ipv4_1_dstAddr
     phvwrpair       p.ipv6_1_dstAddr[127:64], k.rewrite_metadata_ip[127:64],\
                         p.ipv6_1_dstAddr[63:0], r1
+    add.e           r1, k.capri_p4_intrinsic_packet_len, 20
+    phvwr.f         p.capri_p4_intrinsic_packet_len, r1
 
 rx_from_switch_6to4:
     seq             c1, k.rewrite_metadata_flags[RX_REWRITE_SRC_IP_BITS], \
@@ -51,9 +53,11 @@ rx_from_switch_6to4:
     add             r1, r1, k.ipv6_1_dstAddr_s0_e111[15:0], 16
     phvwrpair       p.ipv4_1_srcAddr, k.ipv6_1_srcAddr[31:0], \
                         p.ipv4_1_dstAddr, r1
-    add.e           r1, k.ipv6_1_nextHdr, k.ipv6_1_hopLimit, 8
-    phvwr.f         p.{ipv4_1_identification,ipv4_1_flags,ipv4_1_fragOffset, \
+    add             r1, k.ipv6_1_nextHdr, k.ipv6_1_hopLimit, 8
+    phvwr           p.{ipv4_1_identification,ipv4_1_flags,ipv4_1_fragOffset, \
                         ipv4_1_ttl,ipv4_1_protocol}, r1
+    sub.e           r1, k.capri_p4_intrinsic_packet_len, 20
+    phvwr.f         p.capri_p4_intrinsic_packet_len, r1
 
 /*****************************************************************************/
 /* error function                                                            */

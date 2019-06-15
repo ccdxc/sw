@@ -113,6 +113,7 @@ action local_46_info(prefix) {
             modify_field(ipv6_1.hopLimit, ipv4_1.ttl);
             modify_field(ipv6_1.srcAddr, prefix | ipv4_1.srcAddr);
             modify_field(ipv6_1.dstAddr, rewrite_metadata.ip | ipv4_1.dstAddr);
+            add(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, 20);
         }
     } else {
         if (RX_REWRITE(rewrite_metadata.flags, SRC_IP, FROM_64)) {
@@ -131,6 +132,7 @@ action local_46_info(prefix) {
             modify_field(ipv4_1.protocol, ipv6_1.nextHdr);
             modify_field(ipv4_1.srcAddr, ipv6_1.srcAddr);
             modify_field(ipv4_1.dstAddr, ipv6_1.dstAddr);
+            subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, 20);
         }
     }
 }
