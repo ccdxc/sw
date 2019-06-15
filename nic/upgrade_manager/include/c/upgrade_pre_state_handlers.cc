@@ -40,6 +40,7 @@ bool UpgPreStateHandler::ImageCompatCheck(UpgCtx &ctx) {
 }
 
 bool UpgPreStateHandler::PreCompatCheckHandler(UpgCtx &ctx) {
+    ctx.upgPostCompatCheck = false;
     UPG_LOG_DEBUG("UpgPreStateHandler PrePre returning");
     return ImageCompatCheck(ctx);
 }
@@ -55,6 +56,7 @@ bool UpgPreStateHandler::PreProcessQuiesceHandler(UpgCtx &ctx) {
 }
 
 bool UpgPreStateHandler::PreLinkDownHandler(UpgCtx &ctx) {
+    ctx.upgPostCompatCheck = true;
     if (exists("/nic/tools/fwupdate")) {
         string cmd = "/nic/tools/fwupdate -p /update/" + ctx.firmwarePkgName + " -i all";
         if (system (cmd.c_str()) != 0) {

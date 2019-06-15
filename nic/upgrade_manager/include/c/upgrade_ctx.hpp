@@ -28,6 +28,7 @@ typedef struct UpgCtx_ {
     string                     firmwarePkgName;
     bool                       postRestart;
     bool                       upgFailed;
+    bool                       upgPostCompatCheck;
     UpgReqStateType            prevExecState;
 } UpgCtx;
 

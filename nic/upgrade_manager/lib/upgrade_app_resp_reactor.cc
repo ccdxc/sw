@@ -52,22 +52,34 @@ delphi::error UpgAppRespReact::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr
     if (upgAppResplist.empty()) {
         UPG_LOG_DEBUG("All UpgAppResp objects got deleted");
         upgMgr_->DeleteUpgMgrResp();
-        if (ctx.postRestart && ctx.upgFailed) {
-            UPG_LOG_DEBUG("Upgrade failed last time. So going to switch back to old code.");
-            if (exists("/nic/tools/fwupdate")) {
-                ctx.sysMgr->restart_system();
+        if (exists("/nic/tools/fwupdate")) {
+            int ret = 0;
+            string cmd = "rm -rf /data/post-upgrade-logs.tar";
+            UPG_LOG_INFO("Image is: {}", ctx.firmwarePkgName);
+            if ((ret = system (cmd.c_str())) != 0) {
+                UPG_LOG_INFO("Unable to delete old logs post-upgrade");
             }
-        } else {
-            if (exists("/nic/tools/fwupdate")) {
-                int ret = 0;
-                string cmd = "rm -rf /data/post-upgrade-logs.tar";
-                UPG_LOG_INFO("Image is: {}", ctx.firmwarePkgName);
-                if ((ret = system (cmd.c_str())) != 0) {
-                    UPG_LOG_INFO("Unable to delete old logs post-upgrade");
-                }
-                cmd = "tar -cvf /data/post-upgrade-logs.tar /var/log/";
-                if ((ret = system (cmd.c_str())) != 0) {
-                    UPG_LOG_INFO("Unable to save logs post-upgrade");
+            cmd = "tar -cvf /data/post-upgrade-logs.tar /var/log/";
+            if ((ret = system (cmd.c_str())) != 0) {
+                UPG_LOG_INFO("Unable to save logs post-upgrade");
+            }
+        }
+        if (ctx.upgFailed) {
+            //TODO: Move to OnUpgRespDelete once we have go APIs from sysmgr
+            UPG_LOG_DEBUG("UpgFailed. Sleeping for 5s for system to cleanup state");
+            UPG_OBFL_TRACE("UpgFailed. Sleeping for 5s for system to cleanup state");
+            sleep(5);
+            if (ctx.postRestart) {
+                UPG_LOG_DEBUG("Upgrade failed last time. So going to switch back to old code.");
+                UPG_OBFL_TRACE("Upgrade failed last time. So going to switch back to old code.");
+                if (exists("/nic/tools/fwupdate")) {
+                    ctx.sysMgr->restart_system();
+                } 
+            } else if (ctx.upgPostCompatCheck) {
+                UPG_LOG_DEBUG("Upgrade failed last time. So going to switch back to old code.");
+                UPG_OBFL_TRACE("Upgrade failed last time. So going to switch back to old code.");
+                if (exists("/nic/tools/fwupdate")) {
+                    ctx.sysMgr->respawn_processes();
                 }
             }
         }
