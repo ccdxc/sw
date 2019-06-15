@@ -122,8 +122,8 @@ func (n *nClient) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 	n.evtServices.Lock()
 	defer n.evtServices.Unlock()
 
-	n.evtServices.nodeName = obj.GetID()
 	if obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND || obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_OOB {
+		n.evtServices.nodeName = obj.GetID()
 		var controllers []string
 
 		for _, ip := range obj.Controllers {
@@ -138,6 +138,7 @@ func (n *nClient) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		}
 		n.evtServices.start(networkMode)
 	} else {
+		n.evtServices.nodeName = obj.GetSmartNicName() // use smart nic name for reporting events in host mode
 		if n.evtServices.running {
 			n.logger.Infof("changing mode to {%s}", hostMode)
 			n.evtServices.stopNetworkModeServices()
