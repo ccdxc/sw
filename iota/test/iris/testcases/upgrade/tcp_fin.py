@@ -63,6 +63,9 @@ def Trigger(tc):
         api.Trigger_AddCommand(req, client.node_name, client.workload_name,
                        "nc {} {} -p {}".format(server.ip_address, server_port, client_port), background=True)
         tc.cmd_cookies.append("start client")
+
+        api.Trigger_AddCommand(req, server.node_name, server.workload_name, "ping {}".format(server.ip_address), background=True)
+        tc.cmd_cookies.append("Start ping") 
         idx = idx + 1
 
     for node in naples_list:

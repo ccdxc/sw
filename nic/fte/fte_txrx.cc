@@ -59,6 +59,8 @@ public:
     void update_rx_stats(cpu_rxhdr_t *rxhdr, size_t pkt_len);
     void update_rx_stats_batch(uint16_t pktcount);
     void update_tx_stats(uint16_t pktcount);
+    void set_bypass_fte(bool bypass_fte) { bypass_fte_ = bypass_fte; }
+
 private:
     uint8_t                 id_;
     hal::pd::cpupkt_ctxt_t *arm_ctx_;
@@ -997,6 +999,28 @@ fte_txrx_stats_get (uint8_t fte_id, bool clear_on_read)
 
 done:
     return fn_ctx.fte_stats;
+}
+
+//------------------------------------------------------------------------------
+// API to set bypass FTE for upgrade
+//------------------------------------------------------------------------------
+void
+set_bypass_fte (uint8_t fte_id, bool bypass_fte)
+{
+    struct fn_ctx_t {
+        bool  bypass_fte;
+    } fn_ctx;
+
+    if (fte_disabled_)
+        goto done;
+
+    fte_execute(fte_id, [](void *data) {
+            fn_ctx_t *fn_ctx = (fn_ctx_t *) data;
+            t_inst->set_bypass_fte(fn_ctx->bypass_fte);
+        }, &fn_ctx);
+
+done:
+    return;
 }
 
 

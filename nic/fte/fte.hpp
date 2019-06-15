@@ -102,4 +102,7 @@ fte_stats_t fte_stats_get (uint8_t fte_id, bool clear_on_read=false);
 // API to fetch per-instance FTE txrxstats
 fte_txrx_stats_t fte_txrx_stats_get (uint8_t fte_id, bool clear_on_read=false);
 
+// API to bypass packet processing in FTE
+void set_bypass_fte (uint8_t fte_id, bool bypass_fte=false);
+
 } // namespace fte
