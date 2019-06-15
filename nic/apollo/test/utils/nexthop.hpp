@@ -12,11 +12,12 @@
 
 #include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
+#include "nic/apollo/test/utils/api_base.hpp"
 
 namespace api_test {
 
 // NH test feeder class
-class nh_feeder : public feeder {
+class nexthop_feeder : public feeder {
 public:
     pds_nexthop_id_t id;
     pds_nh_type_t type;
@@ -26,8 +27,8 @@ public:
     pds_vpc_id_t vpc_id;
 
     // Constructor
-    nh_feeder() { };
-    nh_feeder(const nh_feeder& feeder) {
+    nexthop_feeder() { };
+    nexthop_feeder(const nexthop_feeder& feeder) {
         init(ipaddr2str(&feeder.ip), feeder.mac, feeder.num_obj,
              feeder.id, feeder.type, feeder.vlan, feeder.vpc_id);
     }
@@ -53,11 +54,12 @@ public:
     sdk::sdk_ret_t info_compare(const pds_nexthop_info_t *info) const;
 };
 
-// Function prototypes
-sdk::sdk_ret_t create(nh_feeder& feeder);
-sdk::sdk_ret_t read(nh_feeder& feeder);
-sdk::sdk_ret_t update(nh_feeder& feeder);
-sdk::sdk_ret_t del(nh_feeder& feeder);
+// NH test CRUD routines
+
+API_CREATE(nexthop);
+API_READ(nexthop);
+API_UPDATE(nexthop);
+API_DELETE(nexthop);
 
 void sample_nh_setup(void);
 void sample_nh_teardown(void);

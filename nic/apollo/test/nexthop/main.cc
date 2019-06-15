@@ -10,7 +10,7 @@
 
 #include <getopt.h>
 #include "nic/apollo/test/utils/base.hpp"
-#include "nic/apollo/test/utils/nh.hpp"
+#include "nic/apollo/test/utils/nexthop.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/workflow1.hpp"
 
@@ -57,97 +57,97 @@ protected:
 
 /// \brief NH WF_1
 TEST_F(nh_test, nh_workflow_1) {
-    nh_feeder feeder;
+    nexthop_feeder feeder;
 
     feeder.init(k_base_nh_ip);
-    workflow_1<nh_feeder>(feeder);
+    workflow_1<nexthop_feeder>(feeder);
 }
 
 /// \brief NH WF_2
 TEST_F(nh_test, nh_workflow_2) {
-    nh_feeder feeder;
+    nexthop_feeder feeder;
 
     feeder.init(k_base_nh_ip);
-    workflow_2<nh_feeder>(feeder);
+    workflow_2<nexthop_feeder>(feeder);
 }
 
 /// \brief NH WF_3
 TEST_F(nh_test, nh_workflow_3) {
-    nh_feeder feeder1, feeder2, feeder3;
+    nexthop_feeder feeder1, feeder2, feeder3;
 
     feeder1.init("10.10.1.1", 0x0E010B0A1000, 10, 100);
     feeder2.init("20.20.1.1", 0x0E010B0A2000, 20, 200);
     feeder3.init("30.30.1.1", 0x0E010B0A3000, 30, 300);
-    workflow_3<nh_feeder>(feeder1, feeder2, feeder3);
+    workflow_3<nexthop_feeder>(feeder1, feeder2, feeder3);
 }
 
 /// \brief NH WF_4
 TEST_F(nh_test, nh_workflow_4) {
-    nh_feeder feeder;
+    nexthop_feeder feeder;
 
     feeder.init(k_base_nh_ip);
-    workflow_4<nh_feeder>(feeder);
+    workflow_4<nexthop_feeder>(feeder);
 }
 
 /// \brief NH WF_5
 TEST_F(nh_test, nh_workflow_5) {
-    nh_feeder feeder1, feeder2, feeder3;
+    nexthop_feeder feeder1, feeder2, feeder3;
 
     feeder1.init("10.10.1.1", 0x0E010B0A1000, 10, 100);
     feeder2.init("20.20.1.1", 0x0E010B0A2000, 20, 200);
     feeder3.init("30.30.1.1", 0x0E010B0A3000, 30, 300);
-    workflow_5<nh_feeder>(feeder1, feeder2, feeder3);
+    workflow_5<nexthop_feeder>(feeder1, feeder2, feeder3);
 }
 
 /// \brief NH WF_6
 TEST_F(nh_test, nh_workflow_6) {
-    nh_feeder feeder1, feeder1A, feeder1B;
+    nexthop_feeder feeder1, feeder1A, feeder1B;
 
     feeder1.init(k_base_nh_ip);
     // feeder1A =  feeder1 + different mac
     feeder1A.init(k_base_nh_ip, 0x0E010B0A3000);
     // feeder1B =  feeder1A + different mac & ip
     feeder1B.init("30.30.1.1", 0x0E010B0A2000);
-    workflow_6<nh_feeder>(feeder1, feeder1A, feeder1B);
+    workflow_6<nexthop_feeder>(feeder1, feeder1A, feeder1B);
 }
 
 /// \brief NH WF_7
 TEST_F(nh_test, nh_workflow_7) {
-    nh_feeder feeder1, feeder1A, feeder1B;
+    nexthop_feeder feeder1, feeder1A, feeder1B;
 
     feeder1.init(k_base_nh_ip);
     // feeder1A =  feeder1 + different mac
     feeder1A.init(k_base_nh_ip, 0x0E010B0A3000);
     // feeder1B =  feeder1A + different mac & ip
     feeder1B.init("30.30.1.1", 0x0E010B0A2000);
-    workflow_7<nh_feeder>(feeder1, feeder1A, feeder1B);
+    workflow_7<nexthop_feeder>(feeder1, feeder1A, feeder1B);
 }
 
 /// \brief NH WF_8
 TEST_F(nh_test, DISABLED_nh_workflow_8) {
-    nh_feeder feeder1, feeder1A, feeder1B;
+    nexthop_feeder feeder1, feeder1A, feeder1B;
 
     feeder1.init(k_base_nh_ip);
     // feeder1A =  feeder1 + different mac
     feeder1A.init(k_base_nh_ip, 0x0E010B0A3000);
     // feeder1B =  feeder1A + different mac & ip
     feeder1B.init("30.30.1.1", 0x0E010B0A2000);
-    workflow_8<nh_feeder>(feeder1, feeder1A, feeder1B);
+    workflow_8<nexthop_feeder>(feeder1, feeder1A, feeder1B);
 }
 
 /// \brief NH WF_9
 TEST_F(nh_test, nh_workflow_9) {
-    nh_feeder feeder1, feeder1A;
+    nexthop_feeder feeder1, feeder1A;
 
     feeder1.init(k_base_nh_ip);
     // feeder1A =  feeder1 + different mac & ip
     feeder1A.init("30.30.1.1", 0x0E010B0A2000);
-    workflow_9<nh_feeder>(feeder1, feeder1A);
+    workflow_9<nexthop_feeder>(feeder1, feeder1A);
 }
 
 /// \brief NH WF_10
 TEST_F(nh_test, DISABLED_nh_workflow_10) {
-    nh_feeder feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4;
+    nexthop_feeder feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4;
 
     feeder1.init("10.10.1.1", 0x0E010B0A1000, 10, 100);
     feeder2.init("20.200.1.1", 0x0E010B0A2000, 20, 200);
@@ -157,81 +157,81 @@ TEST_F(nh_test, DISABLED_nh_workflow_10) {
     // feeder3A =  feeder3 + different mac & ip
     feeder3A.init("30.30.1.1", 0x0E010B0A3333, 30, 300);
     feeder4.init("40.40.1.1", 0x0E010B0A4000, 40, 400);
-    workflow_10<nh_feeder>(feeder1, feeder2, feeder2A,
+    workflow_10<nexthop_feeder>(feeder1, feeder2, feeder2A,
                            feeder3, feeder3A, feeder4);
 }
 
 /// \brief NH WF_N_1
 TEST_F(nh_test, nh_workflow_neg_1) {
-    nh_feeder feeder;
+    nexthop_feeder feeder;
 
     feeder.init(k_base_nh_ip);
-    workflow_neg_1<nh_feeder>(feeder);
+    workflow_neg_1<nexthop_feeder>(feeder);
 }
 
 /// \brief NH WF_N_2
 TEST_F(nh_test, DISABLED_nh_workflow_neg_2) {
-    nh_feeder feeder;
+    nexthop_feeder feeder;
 
     // TODO: PDS_MAX_NEXTHOP must be 1048576
     feeder.init(k_base_nh_ip, k_base_mac, k_max_nh);
-    workflow_neg_2<nh_feeder>(feeder);
+    workflow_neg_2<nexthop_feeder>(feeder);
 }
 
 /// \brief NH WF_N_3
 TEST_F(nh_test, nh_workflow_neg_3) {
-    nh_feeder feeder;
+    nexthop_feeder feeder;
 
     feeder.init("150.150.1.1");
-    workflow_neg_3<nh_feeder>(feeder);
+    workflow_neg_3<nexthop_feeder>(feeder);
 }
 
 /// \brief NH WF_N_4
 TEST_F(nh_test, nh_workflow_neg_4) {
-    nh_feeder feeder1, feeder2;
+    nexthop_feeder feeder1, feeder2;
 
     feeder1.init(k_base_nh_ip, k_base_mac, 10, 100);
     feeder2.init("60.60.1.1",  0x0E010B0A2000, 10, 200);
-    workflow_neg_4<nh_feeder>(feeder1, feeder2);
+    workflow_neg_4<nexthop_feeder>(feeder1, feeder2);
 }
 
 /// \brief NH WF_N_5
 TEST_F(nh_test, DISABLED_nh_workflow_neg_5) {
-    nh_feeder feeder1, feeder1A;
+    nexthop_feeder feeder1, feeder1A;
 
     feeder1.init(k_base_nh_ip);
     // seed1A = seed1 + different IP & MAC
     feeder1A.init("150.150.1.1", 0x0E010B0A2000);
-    workflow_neg_5<nh_feeder>(feeder1, feeder1A);
+    workflow_neg_5<nexthop_feeder>(feeder1, feeder1A);
 }
 
 /// \brief NH WF_N_6
 TEST_F(nh_test, DISABLED_nh_workflow_neg_6) {
-    nh_feeder feeder1, feeder1A;
+    nexthop_feeder feeder1, feeder1A;
 
     feeder1.init(k_base_nh_ip);
     // seed1A = seed1 + different IP & MAC
     feeder1A.init("150.150.1.1", 0x0E010B0A2000, k_max_nh+1);
-    workflow_neg_6<nh_feeder>(feeder1, feeder1A);
+    workflow_neg_6<nexthop_feeder>(feeder1, feeder1A);
 }
 
 /// \brief NH WF_N_7
 TEST_F(nh_test, nh_workflow_neg_7) {
-    nh_feeder feeder1, feeder1A, feeder2;
+    nexthop_feeder feeder1, feeder1A, feeder2;
 
     feeder1.init("10.10.1.1", 0x0E010B0A1000, 10, 100);
     feeder1A.init("10.10.1.1", 0x0E010B0A1111, 10, 100);
     feeder2.init("20.20.1.1", 0x0E010B0A2000, 20, 200);
-    workflow_neg_7<nh_feeder>(feeder1, feeder1A, feeder2);
+    workflow_neg_7<nexthop_feeder>(feeder1, feeder1A, feeder2);
 }
 
 /// \brief NH WF_N_8
 TEST_F(nh_test, nh_workflow_neg_8) {
-    nh_feeder feeder1, feeder2;
+    nexthop_feeder feeder1, feeder2;
 
     feeder1.init("10.10.1.1", 0x0E010B0A1000, 10, 100);
     feeder2.init("20.20.1.1", 0x0E010B0A2000, 20, 200);
-    workflow_neg_8<nh_feeder>(feeder1, feeder2);
+    workflow_neg_8<nexthop_feeder>(feeder1, feeder2);
 }
 
 /// @}

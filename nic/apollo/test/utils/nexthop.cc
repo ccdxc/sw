@@ -12,7 +12,7 @@
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/apollo/api/nexthop_api.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
-#include "nic/apollo/test/utils/nh.hpp"
+#include "nic/apollo/test/utils/nexthop.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 
 namespace api_test {
@@ -22,9 +22,9 @@ namespace api_test {
 //----------------------------------------------------------------------------
 
 void
-nh_feeder::init(std::string ip_str, uint64_t mac, uint32_t num_obj,
-                pds_nexthop_id_t id, pds_nh_type_t type, uint16_t vlan,
-                pds_vpc_id_t vpc_id) {
+nexthop_feeder::init(std::string ip_str, uint64_t mac, uint32_t num_obj,
+                     pds_nexthop_id_t id, pds_nh_type_t type, uint16_t vlan,
+                     pds_vpc_id_t vpc_id) {
     this->id = id;
     this->type = type;
     extract_ip_addr(ip_str.c_str(), &this->ip);
@@ -35,7 +35,7 @@ nh_feeder::init(std::string ip_str, uint64_t mac, uint32_t num_obj,
 }
 
 void
-nh_feeder::iter_next(int width) {
+nexthop_feeder::iter_next(int width) {
     ip.addr.v4_addr += width;
     mac += width;
     vlan += width;
@@ -44,13 +44,13 @@ nh_feeder::iter_next(int width) {
 }
 
 void
-nh_feeder::key_build(pds_nexthop_key_t *key) const {
+nexthop_feeder::key_build(pds_nexthop_key_t *key) const {
     memset(key, 0, sizeof(pds_nexthop_key_t));
     *key = this->id;
 }
 
 void
-nh_feeder::spec_build(pds_nexthop_spec_t *spec) const {
+nexthop_feeder::spec_build(pds_nexthop_spec_t *spec) const {
     memset(spec, 0, sizeof(pds_nexthop_spec_t));
     this->key_build(&spec->key);
 
@@ -62,12 +62,12 @@ nh_feeder::spec_build(pds_nexthop_spec_t *spec) const {
 }
 
 bool
-nh_feeder::key_compare(const pds_nexthop_key_t *key) const {
+nexthop_feeder::key_compare(const pds_nexthop_key_t *key) const {
     return (this->id == *key);
 }
 
 bool
-nh_feeder::spec_compare(const pds_nexthop_spec_t *spec) const {
+nexthop_feeder::spec_compare(const pds_nexthop_spec_t *spec) const {
     ip_addr_t nh_ip = this->ip, spec_nh_ip = spec->ip;
 
     // validate NH type
@@ -100,7 +100,7 @@ nh_feeder::spec_compare(const pds_nexthop_spec_t *spec) const {
 }
 
 inline std::ostream&
-operator<<(std::ostream& os, const nh_feeder& obj) {
+operator<<(std::ostream& os, const nexthop_feeder& obj) {
     os << "NH feeder =>"
        << " id: " << obj.id
        << " type: " << obj.type
@@ -113,7 +113,7 @@ operator<<(std::ostream& os, const nh_feeder& obj) {
 }
 
 sdk::sdk_ret_t
-nh_feeder::info_compare(const pds_nexthop_info_t *info) const {
+nexthop_feeder::info_compare(const pds_nexthop_info_t *info) const {
     if (!this->key_compare(&info->spec.key)) {
         std::cout << "key compare failed " << *this << info;
         return sdk::SDK_RET_ERR;
@@ -128,63 +128,21 @@ nh_feeder::info_compare(const pds_nexthop_info_t *info) const {
 }
 
 //----------------------------------------------------------------------------
-// NH test CRUD routines
-//----------------------------------------------------------------------------
-
-sdk::sdk_ret_t
-create(nh_feeder& feeder) {
-    pds_nexthop_spec_t spec;
-
-    feeder.spec_build(&spec);
-    return (pds_nexthop_create(&spec));
-}
-
-sdk::sdk_ret_t
-read(nh_feeder& feeder) {
-    sdk_ret_t rv;
-    pds_nexthop_key_t key;
-    pds_nexthop_info_t info;
-
-    feeder.key_build(&key);
-    memset(&info, 0, sizeof(pds_nexthop_info_t));
-    if ((rv = pds_nexthop_read(&key, &info)) != sdk::SDK_RET_OK)
-        return rv;
-
-    return (feeder.info_compare(&info));
-}
-
-sdk::sdk_ret_t
-update(nh_feeder& feeder) {
-    pds_nexthop_spec_t spec;
-
-    feeder.spec_build(&spec);
-    return (pds_nexthop_update(&spec));
-}
-
-sdk::sdk_ret_t
-del(nh_feeder& feeder) {
-    pds_nexthop_key_t key;
-
-    feeder.key_build(&key);
-    return (pds_nexthop_delete(&key));
-}
-
-//----------------------------------------------------------------------------
 // Misc routines
 //----------------------------------------------------------------------------
 
 // do not modify these sample values as rest of system is sync with these
-static nh_feeder k_nh_feeder;
+static nexthop_feeder k_nexthop_feeder;
 
 void sample_nh_setup(void) {
     // setup and teardown parameters should be in sync
-    k_nh_feeder.init("30.30.30.1");
-    many_create(k_nh_feeder);
+    k_nexthop_feeder.init("30.30.30.1");
+    many_create(k_nexthop_feeder);
 }
 
 void sample_nh_teardown(void) {
-    k_nh_feeder.init("30.30.30.1");
-    many_delete(k_nh_feeder);
+    k_nexthop_feeder.init("30.30.30.1");
+    many_delete(k_nexthop_feeder);
 }
 
 }    // namespace api_test
