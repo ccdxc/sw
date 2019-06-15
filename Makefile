@@ -96,7 +96,7 @@ ws-tools: pregen
 	@CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ${TO_INSTALL}
 
 # checks ensure that the go code meets standards
-checks: goimports-src golint-src govet-src
+checks: goimports-src golint-src govet-src ginkgo-src
 
 # gen does all the autogeneration. viz venice cli, proto sources. Ensure that any new autogen target is added to TO_GEN above
 gen:
@@ -132,7 +132,11 @@ govet-src: gopkglist
 	$(info +++ govet sources)
 	@go vet -source ${GO_PKG}
 
-.PHONY: build gopkglist gopkgsinstall
+ginkgo-src: 
+	$(info +++ ginkgo dryrun)
+	@go test github.com/pensando/sw/test/e2e/cluster/... -ginkgo.v -ginkgo.dryRun
+
+.PHONY: build gopkglist gopkgsinstall ginkgo-src 
 
 gopkgsinstall:
 	@$(shell cd ${GOPATH}/src/github.com/pensando/sw && CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ./vendor/github.com/haya14busa/gopkgs/cmd/gopkgs)
