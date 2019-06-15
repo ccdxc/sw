@@ -6,5 +6,6 @@
 #include "route.p4"
 #include "rfc.p4"
 #include "dma.p4"
+#include "iflow.p4"
 #include "common_txdma.p4"
 #include "metadata.p4"

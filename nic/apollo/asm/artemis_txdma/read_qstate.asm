@@ -19,7 +19,7 @@ read_qstate_info:
     // Compute pktdesc offset based on current cindex
     mul         r2, d.read_qstate_info_d.sw_cindex0, PKTQ_PAGE_SIZE
     add         r3, d.{read_qstate_info_d.ring1_base}.dx, \
-                    d.read_qstate_info_d.sw_cindex0, 6
+                    d.read_qstate_info_d.sw_cindex0, ARTEMIS_PKT_DESC_SHIFT
 
     // update sw_cindex0, unlock
     tblmincri.f d.read_qstate_info_d.sw_cindex0, \

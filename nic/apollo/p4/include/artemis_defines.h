@@ -161,7 +161,7 @@
 /* Header sizes                                                              */
 /*****************************************************************************/
 #define ARTEMIS_PREDICATE_HDR_SZ        1
-#define ARTEMIS_P4_TO_RXDMA_HDR_SZ      64
+#define ARTEMIS_P4_TO_RXDMA_HDR_SZ      80
 #define ARTEMIS_I2E_HDR_SZ              0
 #define ARTEMIS_TXDMA_TO_P4I_HDR_SZ     192
 #define ARTEMIS_TXDMA_TO_P4E_HDR_SZ     0
@@ -199,3 +199,9 @@
     modify_field(_scratch_qstate_txdma_q.ring1_base, ring1_base);              \
     modify_field(_scratch_qstate_txdma_q.ring_size, ring_size);                \
     modify_field(_scratch_qstate_txdma_q.rxdma_cindex_addr, rxdma_cindex_addr)
+
+/*****************************************************************************/
+/* Artemis Pkt memory                                                        */
+/*****************************************************************************/
+#define ARTEMIS_PKT_DESC_SHIFT              7
+#define ARTEMIS_PKT_DESC_SIZE               (1 << ARTEMIS_PKT_DESC_SHIFT)

@@ -81,6 +81,11 @@ metadata artemis_p4_to_rxdma_header2_t p4_to_rxdma2;
 
 @pragma dont_trim
 metadata p4plus_common_to_stage_t to_stage_0;
+
+@pragma dont_trim
+@pragma pa_header_union ingress to_stage_0
+metadata artemis_p4_to_rxdma_header3_t p4_to_rxdma3;
+
 @pragma dont_trim
 metadata p4plus_common_to_stage_t to_stage_1;
 @pragma dont_trim
@@ -154,6 +159,9 @@ metadata artemis_rx_to_tx_header_t rx_to_tx_hdr;
 @pragma pa_align 128
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t      pktdesc_phv2mem;
+
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t      pktdesc2_phv2mem;
 
 @pragma dont_trim
 metadata dma_cmd_pkt2mem_t      pktbuf_pkt2mem;

@@ -41,6 +41,19 @@ header_type artemis_p4_to_rxdma_header2_t {
     }
 }
 
+header_type artemis_p4_to_rxdma_header3_t {
+    fields {
+        flow_hash           : 32;
+        parent_hint_index   : 22;
+        flow_nrecircs       : 3;
+        parent_hint_slot    : 3;
+        parent_is_hint      : 1;
+        ipaf                : 1;
+        pad0                : 2;
+        pad1                : 64;
+    }
+}
+
 // When added new fields, please make sure to update
 // DMA command in ASM file to include this new field:
 // apollo/asm/artemis_rxdma/txdma_enqueue.asm

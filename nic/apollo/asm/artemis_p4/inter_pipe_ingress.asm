@@ -15,11 +15,12 @@ ingress_to_egress:
     phvwr           p.txdma_to_p4e_valid, TRUE
     phvwr           p.predicate_header_valid, TRUE
     phvwr           p.capri_p4_intrinsic_valid, TRUE
-    bitmap          111 0000 0000 1000
+    bitmap          1110 0000 0000 1000
     */
     phvwr           p.{p4i_i2e_valid, \
                         txdma_to_p4e_valid, \
                         predicate_header_valid, \
+                        p4_to_rxdma3_valid, \
                         p4_to_rxdma2_valid, \
                         p4_to_rxdma_valid, \
                         cps_blob_valid, \
@@ -31,7 +32,7 @@ ingress_to_egress:
                         capri_p4_intrinsic_valid, \
                         p4plus_to_p4_vlan_valid, \
                         p4plus_to_p4_valid, \
-                        capri_txdma_intrinsic_valid}, 0x7008
+                        capri_txdma_intrinsic_valid}, 0xE008
     phvwr           p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
     seq             c1, k.control_metadata_direction, RX_FROM_SWITCH
     nop.!c1.e
@@ -53,7 +54,7 @@ ingress_to_cps:
     phvwr           p.p4_to_rxdma_valid, TRUE
     phvwr           p.capri_rxdma_intrinsic_valid, TRUE
     phvwr           p.capri_p4_intrinsic_valid, TRUE
-    bitmap          001 1100 0010 1000
+    bitmap          0011 1100 0010 1000
     */
 #ifdef HW
     phvwr.e         p.capri_intrinsic_drop, 1
@@ -62,6 +63,7 @@ ingress_to_cps:
     phvwr           p.{p4i_i2e_valid, \
                         txdma_to_p4e_valid, \
                         predicate_header_valid, \
+                        p4_to_rxdma3_valid, \
                         p4_to_rxdma2_valid, \
                         p4_to_rxdma_valid, \
                         cps_blob_valid, \
@@ -73,7 +75,7 @@ ingress_to_cps:
                         capri_p4_intrinsic_valid, \
                         p4plus_to_p4_vlan_valid, \
                         p4plus_to_p4_valid, \
-                        capri_txdma_intrinsic_valid}, 0x1C28
+                        capri_txdma_intrinsic_valid}, 0x3C28
     phvwr           p.capri_intrinsic_tm_oport, TM_PORT_DMA
     phvwr           p.capri_intrinsic_lif, ARTEMIS_SERVICE_LIF
     phvwr           p.capri_rxdma_intrinsic_rx_splitter_offset, \
@@ -157,11 +159,12 @@ ingress_to_arm:
     phvwr           p4_to_p4plus_classic_nic_valid, TRUE
     phvwr           capri_rxdma_intrinsic_valid,TRUE
     phvwr           p.capri_p4_intrinsic_valid, TRUE
-    bitmap          000 0011 1110 1000
+    bitmap          0000 0011 1110 1000
     */
     phvwr           p.{p4i_i2e_valid, \
                         txdma_to_p4e_valid, \
                         predicate_header_valid, \
+                        p4_to_rxdma3_valid, \
                         p4_to_rxdma2_valid, \
                         p4_to_rxdma_valid, \
                         cps_blob_valid, \

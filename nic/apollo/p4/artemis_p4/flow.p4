@@ -3,8 +3,8 @@
 /*****************************************************************************/
 @pragma capi appdatafields session_index epoch flow_role
 @pragma capi hwfields_access_api
-action flow_hash(epoch, session_index, flow_role, hash1, hint1,
-                 hash2, hint2, hash3, hint3,
+action flow_hash(epoch, session_index, flow_role, pad8,
+                 hash1, hint1, hash2, hint2, hash3, hint3,
                  hash4, hint4,  more_hashes,
                  more_hints, more_hints_pad, entry_valid) {
     if (entry_valid == TRUE) {
@@ -73,6 +73,10 @@ action flow_hash(epoch, session_index, flow_role, hash1, hint1,
     modify_field(scratch_metadata.flow_hash, hash3);
     modify_field(scratch_metadata.flow_hash, hash4);
 
+    modify_field(scratch_metadata.flow_ohash_lkp, control_metadata.flow_ohash_lkp);
+    modify_field(scratch_metadata.flow_ohash, service_header.flow_ohash);
+
+    modify_field(scratch_metadata.pad8, pad8);
     modify_field(scratch_metadata.more_hints_pad, more_hints_pad);
 }
 

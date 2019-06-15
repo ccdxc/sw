@@ -41,11 +41,13 @@ header_type scratch_metadata_t {
     fields {
         field1          :  1;
         field2          :  2;
+        field3          :  3;
         field7          :  7;
         field8          :  8;
         field10         : 10;
         field16         : 16;
         field20         : 20;
+        field22         : 22;
         field32         : 32;
         field40         : 40;
         field64         : 64;

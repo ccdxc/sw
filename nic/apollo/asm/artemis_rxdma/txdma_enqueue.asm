@@ -21,7 +21,7 @@ pkt_enqueue:
     bcf         [c2], txdma_q_full
     // compute entry offset for current p_index
     mul         r2, d.pkt_enqueue_d.sw_pindex0, PKTQ_PAGE_SIZE
-    add         r3, d.{pkt_enqueue_d.ring1_base}.dx, d.pkt_enqueue_d.sw_pindex0, 6
+    add         r3, d.{pkt_enqueue_d.ring1_base}.dx, d.pkt_enqueue_d.sw_pindex0, ARTEMIS_PKT_DESC_SHIFT
     // update sw_pindex0, unlock the table
     tblwr.f     d.pkt_enqueue_d.sw_pindex0, r1
 
@@ -33,6 +33,13 @@ pkt_enqueue:
                                 rx_to_tx_hdr_remote_ip, \
                                 rx_to_tx_hdr_pad0)
     phvwr       p.pktdesc_phv2mem_dma_cmd_round, 1
+
+    // dma pkt desc2
+    add         r3, r3, 64
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(pktdesc2_phv2mem_dma_cmd, r3, \
+                                p4_to_rxdma3_flow_hash, \
+                                p4_to_rxdma3_pad0)
+    phvwr       p.pktdesc2_phv2mem_dma_cmd_round, 1
 
     // use Qid1 to ring door-bell. Qid0 is used as a completionQ between txdma
     // and rxdma this avoids contention on the same qstate0 addr from rxdma,

@@ -1075,6 +1075,10 @@ control ingress {
             rfc();
             dma();
         }
+        // hack to use mapping_en bit - fix this later
+        if (txdma_predicate.mapping_en == 1) {
+            iflow();
+        }
     } else {
         if (app_header.table0_valid == 1) {
             apply(tx_table_s1_t0);

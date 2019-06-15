@@ -39,6 +39,9 @@ header artemis_p4_to_rxdma_header_t p4_to_rxdma;
 @pragma pa_field_union ingress p4_to_rxdma2.pa_or_ca_xlate_idx      p4i_i2e.pa_or_ca_xlate_idx
 @pragma pa_field_union ingress p4_to_rxdma2.public_xlate_idx        p4i_i2e.public_xlate_idx
 header artemis_p4_to_rxdma_header2_t p4_to_rxdma2;
+@pragma synthetic_header
+@pragma pa_field_union ingress p4_to_rxdma3.flow_hash               p4i_i2e.entropy_hash
+header artemis_p4_to_rxdma_header3_t p4_to_rxdma3;
 
 @pragma synthetic_header
 header p4_to_p4plus_classic_nic_header_t p4_to_p4plus_classic_nic;
@@ -434,6 +437,7 @@ parser deparse_ingress {
 
     extract(p4_to_rxdma);
     extract(p4_to_rxdma2);
+    extract(p4_to_rxdma3);
     extract(predicate_header);
     // splitter offset here for cps path
 

@@ -32,8 +32,19 @@ extern sdk_ret_t init_service_lif(const char *cfg_path);
 #define MEM_REGION_RXDMA_PROGRAM_NAME        "rxdma_program"
 #define MEM_REGION_TXDMA_PROGRAM_NAME        "txdma_program"
 #define MEM_REGION_LIF_STATS_BASE            "lif_stats_base"
+
+#define MEM_REGION_FLOW_BASE                 "flow"
+#define MEM_REGION_FLOW_OHASH_BASE           "flow_ohash"
+#define MEM_REGION_IPV4_FLOW_BASE            "ipv4_flow"
+#define MEM_REGION_IPV4_FLOW_OHASH_BASE      "ipv4_flow_ohash"
+
+#define MEM_REGION_FLOW_NAME                 "flow"
+#define MEM_REGION_FLOW_OHASH_NAME           "flow_ohash"
+#define MEM_REGION_IPV4_FLOW_NAME            "ipv4_flow"
+#define MEM_REGION_IPV4_FLOW_OHASH_NAME      "ipv4_flow_ohash"
+
 #define RXDMA_SYMBOLS_MAX                    1
-#define TXDMA_SYMBOLS_MAX                    1
+#define TXDMA_SYMBOLS_MAX                    5
 
 namespace api {
 namespace impl {
@@ -125,6 +136,27 @@ artemis_impl::txdma_symbols_init_(void **p4plus_symbols,
     symbols[i].val = api::g_pds_state.mempartition()->start_addr(MEM_REGION_LIF_STATS_NAME);
     SDK_ASSERT(symbols[i].val != INVALID_MEM_ADDRESS);
     i++;
+
+    symbols[i].name = MEM_REGION_FLOW_BASE;
+    symbols[i].val = api::g_pds_state.mempartition()->start_addr(MEM_REGION_FLOW_NAME);
+    SDK_ASSERT(symbols[i].val != INVALID_MEM_ADDRESS);
+    i++;
+
+    symbols[i].name = MEM_REGION_FLOW_OHASH_BASE;
+    symbols[i].val = api::g_pds_state.mempartition()->start_addr(MEM_REGION_FLOW_OHASH_NAME);
+    SDK_ASSERT(symbols[i].val != INVALID_MEM_ADDRESS);
+    i++;
+
+    symbols[i].name = MEM_REGION_IPV4_FLOW_BASE;
+    symbols[i].val = api::g_pds_state.mempartition()->start_addr(MEM_REGION_IPV4_FLOW_BASE);
+    SDK_ASSERT(symbols[i].val != INVALID_MEM_ADDRESS);
+    i++;
+
+    symbols[i].name = MEM_REGION_IPV4_FLOW_OHASH_BASE;
+    symbols[i].val = api::g_pds_state.mempartition()->start_addr(MEM_REGION_IPV4_FLOW_OHASH_NAME);
+    SDK_ASSERT(symbols[i].val != INVALID_MEM_ADDRESS);
+    i++;
+
     SDK_ASSERT(i <= TXDMA_SYMBOLS_MAX);
 
     return i;
