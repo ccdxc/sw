@@ -707,7 +707,7 @@ artemis_impl::stats_init_(void) {
 #define nacl_redirect_action    action_u.nacl_nacl_redirect
 sdk_ret_t
 artemis_impl::nacl_init_(void) {
-    sdk_ret_t ret;
+    sdk_ret_t ret = SDK_RET_OK;
     nacl_swkey_t key = { 0 };
     nacl_swkey_mask_t mask = { 0 };
     nacl_actiondata_t data =  { 0 };
