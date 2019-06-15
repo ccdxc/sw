@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"path/filepath"
+	"runtime/debug"
 	"time"
 
 	"github.com/pensando/sw/nic/agent/tmagent/state"
@@ -140,6 +141,17 @@ func (ta *TelemetryAgent) reportMetrics(rc resolver.Interface) error {
 	return nil
 }
 
+// periodicFreeMemory forces garbage collection every minute and frees OS memory
+func periodicFreeMemory() {
+	for {
+		select {
+		case <-time.After(time.Minute):
+			// force GC and free OS memory
+			debug.FreeOSMemory()
+		}
+	}
+}
+
 func main() {
 
 	var (
@@ -217,6 +229,10 @@ func main() {
 
 	// run delphi thread in background
 	go delphiClient.Run()
+
+	// set Garbage collection ratio and periodically free OS memory
+	debug.SetGCPercent(20)
+	go periodicFreeMemory()
 
 	// wait forever
 	select {}
