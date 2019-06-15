@@ -39,6 +39,19 @@ read(_api_str##_feeder& feeder) {                                      \
     return (feeder.info_compare(&info));                               \
 }
 
+#define API_READ_SINGLETON(_api_str)                                   \
+inline sdk::sdk_ret_t                                                  \
+read(_api_str##_feeder& feeder) {                                      \
+    sdk_ret_t rv;                                                      \
+    pds_##_api_str##_info_t info;                                      \
+                                                                       \
+    memset(&info, 0, sizeof(pds_##_api_str##_info_t));                 \
+    if ((rv = pds_##_api_str##_read(&info)) != sdk::SDK_RET_OK)        \
+        return rv;                                                     \
+                                                                       \
+    return (feeder.info_compare(&info));                               \
+}
+
 #define API_UPDATE(_api_str)                                           \
 inline sdk::sdk_ret_t                                                  \
 update(_api_str##_feeder& feeder) {                                    \
@@ -55,6 +68,12 @@ del(_api_str##_feeder& feeder) {                                       \
                                                                        \
     feeder.key_build(&key);                                            \
     return (pds_##_api_str##_delete(&key));                            \
+}
+
+#define API_DELETE_SINGLETON(_api_str)                                 \
+inline sdk::sdk_ret_t                                                  \
+del(_api_str##_feeder& feeder) {                                       \
+    return (pds_##_api_str##_delete());                                \
 }
 
 template <typename feeder_T>

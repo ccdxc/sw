@@ -50,25 +50,9 @@ public:
 // Device test CRUD routines
 
 API_CREATE(device);
-
-inline sdk::sdk_ret_t
-read(device_feeder& feeder) {
-    sdk_ret_t rv;
-    pds_device_info_t info;
-
-    memset(&info, 0, sizeof(pds_device_info_t));
-    if ((rv = pds_device_read(&info)) != sdk::SDK_RET_OK)
-        return rv;
-
-    return (feeder.info_compare(&info));
-}
-
+API_READ_SINGLETON(device);
 API_UPDATE(device);
-
-inline sdk::sdk_ret_t
-del(device_feeder& feeder) {
-    return (pds_device_delete());
-}
+API_DELETE_SINGLETON(device);
 
 // Export variables
 extern std::string k_device_ip;
