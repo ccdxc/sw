@@ -21,7 +21,12 @@ using std::string;
 
 namespace rfc {
 
-typedef bool (rfc_p0_tree_inode_eq_cb_t)(inode_t *inode1, inode_t *inode2);
+typedef bool (*rfc_p0_tree_inode_eq_cb_t)(inode_t *inode1, inode_t *inode2);
+typedef uint16_t (*rfc_compute_class_id_cb_t)(rfc_ctxt_t *rfc_ctxt,
+                                              rfc_table_t *rfc_table,
+                                              rte_bitmap *cbm,
+                                              uint32_t cbm_size,
+                                              void *cb_ctxt);
 
 /**
 * @brief    dump a given policy rule
@@ -191,15 +196,25 @@ rfc_p0_proto_port_tree_inode_eq_cb (inode_t *inode1, inode_t *inode2) {
     return false;
 }
 
+static inline bool
+rfc_p0_tag_tree_inode_eq_cb (inode_t *inode1, inode_t *inode2) {
+    if (inode1->key32 == inode2->key32) {
+        return true;
+    }
+    return false;
+}
+
 static inline sdk_ret_t
 rfc_compute_p0_itree_classes (rfc_ctxt_t *rfc_ctxt, rfc_tree_t *rfc_tree,
                               rfc_p0_tree_inode_eq_cb_t inode_eq_cb,
+                              rfc_compute_class_id_cb_t rfc_compute_class_id_cb,
                               uint32_t max_tree_nodes)
 {
-    uint32_t       num_intervals = 0;
-    itable_t       *itable = &rfc_tree->itable;
-    rfc_table_t    *rfc_table = &rfc_tree->rfc_table;
-    inode_t        *inode;
+    inode_t *inode;
+    class_id_cb_ctxt_t cb_ctxt;
+    uint32_t num_intervals = 0;
+    itable_t *itable = &rfc_tree->itable;
+    rfc_table_t *rfc_table = &rfc_tree->rfc_table;
 
     /**
      * walk over the interval table, compute class id and class bitmap for each
@@ -219,9 +234,11 @@ rfc_compute_p0_itree_classes (rfc_ctxt_t *rfc_ctxt, rfc_tree_t *rfc_tree,
             inode_eq_cb(inode, &itable->nodes[i+1])) {
             continue;
         }
+        cb_ctxt.tree = rfc_tree;
+        cb_ctxt.inode = inode;
         inode->rfc.class_id =
-                rfc_compute_class_id(rfc_ctxt, rfc_table,
-                                     rfc_ctxt->cbm, rfc_ctxt->cbm_size);
+            rfc_compute_class_id_cb(rfc_ctxt, rfc_table, rfc_ctxt->cbm,
+                                    rfc_ctxt->cbm_size, &cb_ctxt);
         itable->nodes[num_intervals++] = *inode;
     }
     rfc_tree->num_intervals = num_intervals;
@@ -285,7 +302,7 @@ rfc_compute_p0_classes (rfc_ctxt_t *rfc_ctxt)
     sdk_ret_t   ret;
 
     ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->sip_tree,
-              rfc_p0_pfx_tree_inode_eq_cb,
+              rfc_p0_pfx_tree_inode_eq_cb, rfc_compute_class_id_cb,
               (rfc_ctxt->policy->af == IP_AF_IPV4) ?
                   SACL_IPV4_SIP_TREE_MAX_NODES : SACL_IPV6_SIP_TREE_MAX_NODES);
     if (ret != SDK_RET_OK) {
@@ -293,15 +310,30 @@ rfc_compute_p0_classes (rfc_ctxt_t *rfc_ctxt)
     }
 
     ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->dip_tree,
-              rfc_p0_pfx_tree_inode_eq_cb,
+              rfc_p0_pfx_tree_inode_eq_cb, rfc_compute_class_id_cb,
               (rfc_ctxt->policy->af == IP_AF_IPV4) ?
                   SACL_IPV4_DIP_TREE_MAX_NODES : SACL_IPV6_DIP_TREE_MAX_NODES);
     if (ret != SDK_RET_OK) {
         return ret;
     }
 
+    ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->stag_tree,
+              rfc_p0_tag_tree_inode_eq_cb, rfc_compute_tag_class_id_cb,
+              SACL_TAG_TREE_MAX_CLASSES);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->dtag_tree,
+              rfc_p0_tag_tree_inode_eq_cb, rfc_compute_tag_class_id_cb,
+              SACL_TAG_TREE_MAX_CLASSES);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
     ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->port_tree,
                                        rfc_p0_port_tree_inode_eq_cb,
+                                       rfc_compute_class_id_cb,
                                        SACL_SPORT_TREE_MAX_NODES);
     if (ret != SDK_RET_OK) {
         return ret;
@@ -309,6 +341,7 @@ rfc_compute_p0_classes (rfc_ctxt_t *rfc_ctxt)
 
     ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->proto_port_tree,
                                        rfc_p0_proto_port_tree_inode_eq_cb,
+                                       rfc_compute_class_id_cb,
                                        SACL_PROTO_DPORT_TREE_MAX_NODES);
     if (ret != SDK_RET_OK) {
         return ret;

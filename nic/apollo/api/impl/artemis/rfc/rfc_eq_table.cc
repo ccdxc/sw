@@ -43,7 +43,8 @@ typedef sdk_ret_t (*rfc_table_entry_pack_cb_t)(uint32_t running_id,
                                                uint16_t entry_val);
 typedef uint16_t rfc_compute_entry_val_cb_t(rfc_ctxt_t *rfc_ctxt,
                                             rfc_table_t *rfc_table,
-                                            rte_bitmap *cbm, uint32_t cbm_size);
+                                            rte_bitmap *cbm, uint32_t cbm_size,
+                                            void *ctxt);
 /**
  * @brief    given a classid & entry id, fill the corresponding portion of the
  *           RFC phase 1 table entry action data
@@ -803,7 +804,7 @@ rfc_compute_p3_next_cl_addr_entry_num (mem_addr_t base_address,
  */
 uint16_t
 rfc_compute_p3_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
-                       rte_bitmap *cbm, uint32_t cbm_size)
+                       rte_bitmap *cbm, uint32_t cbm_size, void *ctxt)
 {
     int         rv;
     uint16_t    result = 0, priority = 0;
@@ -824,7 +825,8 @@ rfc_compute_p3_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
         do {
             posn = RTE_BITMAP_START_SLAB_SCAN_POS;
             while (rte_bitmap_slab_scan(slab, posn, &new_posn) != 0) {
-                ruleidx = rte_bitmap_get_global_bit_pos(cbm->index2-1, new_posn);
+                ruleidx =
+                    rte_bitmap_get_global_bit_pos(cbm->index2-1, new_posn);
                 PDS_TRACE_DEBUG("ruleidx = %u", ruleidx);
 
                 if (priority > rfc_ctxt->policy->rules[ruleidx].priority) {
@@ -840,7 +842,6 @@ rfc_compute_p3_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
                     if (RFC_RESULT_BOTH_BITS_SET(result)) {
                         PDS_TRACE_DEBUG("Both SF and SL are set");
                     }
-
                     RFC_RESULT_SET_PRIORITY_BITS(result, priority);
                 } else {
                     PDS_TRACE_DEBUG("rules[%u].priority (%u) < current (%u). Skip",
@@ -927,7 +928,8 @@ rfc_compute_eq_class_tables (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table1,
             rte_bitmap_and(rfc_table1->cbm_table[i], rfc_table2->cbm_table[j],
                            rfc_ctxt->cbm);
             entry_val = compute_entry_val_cb(rfc_ctxt, result_table,
-                                             rfc_ctxt->cbm, rfc_ctxt->cbm_size);
+                                             rfc_ctxt->cbm,
+                                             rfc_ctxt->cbm_size, NULL);
             entry_pack_cb(running_id, action_data, entry_num, entry_val);
             running_id++;
             entry_num++;
@@ -971,7 +973,8 @@ rfc_compute_p1_tables (rfc_ctxt_t *rfc_ctxt,
                                 rfc_ctxt->base_addr + addr_offset,
                                 &action_data, SACL_P1_ENTRIES_PER_CACHE_LINE,
                                 rfc_compute_p1_next_cl_addr_entry_num,
-                                rfc_compute_class_id, rfc_p1_table_entry_pack,
+                                rfc_compute_class_id_cb,
+                                rfc_p1_table_entry_pack,
                                 rfc_p1_action_data_flush);
     return SDK_RET_OK;
 }
@@ -1001,7 +1004,8 @@ rfc_compute_p2_tables (rfc_ctxt_t *rfc_ctxt,
                                 rfc_ctxt->base_addr + addr_offset,
                                 &action_data, SACL_P2_ENTRIES_PER_CACHE_LINE,
                                 rfc_compute_p2_next_cl_addr_entry_num,
-                                rfc_compute_class_id, rfc_p2_table_entry_pack,
+                                rfc_compute_class_id_cb,
+                                rfc_p2_table_entry_pack,
                                 rfc_p2_action_data_flush);
     return SDK_RET_OK;
 }

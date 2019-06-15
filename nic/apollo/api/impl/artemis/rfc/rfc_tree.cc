@@ -166,6 +166,7 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
     rfc_ctxt->policy = policy;
 
     // setup memory for SIP LPM tree
+    rfc_ctxt->sip_tree.type = RFC_TREE_TYPE_SIP;
     rfc_ctxt->sip_tree.itable.nodes =
         (inode_t *)malloc(sizeof(inode_t) * num_nodes);
     if (rfc_ctxt->sip_tree.itable.nodes == NULL) {
@@ -177,6 +178,7 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
                                      SACL_IPV6_SIP_TREE_MAX_CLASSES;
 
     // setup memory for DIP LPM tree
+    rfc_ctxt->sip_tree.type = RFC_TREE_TYPE_DIP;
     rfc_ctxt->dip_tree.itable.nodes =
         (inode_t *)malloc(sizeof(inode_t) * num_nodes);
     if (rfc_ctxt->dip_tree.itable.nodes == NULL) {
@@ -187,7 +189,28 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
             (policy->af == IP_AF_IPV4) ? SACL_IPV4_DIP_TREE_MAX_CLASSES :
                                          SACL_IPV6_DIP_TREE_MAX_CLASSES;
 
+    // setup memory for stag "tree"
+    rfc_ctxt->sip_tree.type = RFC_TREE_TYPE_STAG;
+    rfc_ctxt->stag_tree.itable.nodes =
+        (inode_t *)malloc(sizeof(inode_t) * num_nodes);
+    if (rfc_ctxt->stag_tree.itable.nodes == NULL) {
+        return sdk::SDK_RET_OOM;
+    }
+    new (&rfc_ctxt->stag_tree.rfc_table.cbm_map) cbm_map_t();
+    rfc_ctxt->stag_tree.rfc_table.max_classes = SACL_TAG_TREE_MAX_CLASSES;
+
+    // setup memory for dtag "tree"
+    rfc_ctxt->sip_tree.type = RFC_TREE_TYPE_DTAG;
+    rfc_ctxt->dtag_tree.itable.nodes =
+        (inode_t *)malloc(sizeof(inode_t) * num_nodes);
+    if (rfc_ctxt->dtag_tree.itable.nodes == NULL) {
+        return sdk::SDK_RET_OOM;
+    }
+    new (&rfc_ctxt->dtag_tree.rfc_table.cbm_map) cbm_map_t();
+    rfc_ctxt->dtag_tree.rfc_table.max_classes = SACL_TAG_TREE_MAX_CLASSES;
+
     // setup memory for sport LPM tree
+    rfc_ctxt->sip_tree.type = RFC_TREE_TYPE_PORT;
     rfc_ctxt->port_tree.itable.nodes =
         (inode_t *)malloc(sizeof(inode_t) * num_nodes);
     if (rfc_ctxt->port_tree.itable.nodes == NULL) {
@@ -198,6 +221,7 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
         SACL_SPORT_TREE_MAX_CLASSES;
 
     // setup memory for protocol + dport LPM tree
+    rfc_ctxt->sip_tree.type = RFC_TREE_TYPE_PROTO_PORT;
     rfc_ctxt->proto_port_tree.itable.nodes =
         (inode_t *)malloc(sizeof(inode_t) * num_nodes);
     if (rfc_ctxt->proto_port_tree.itable.nodes == NULL) {
@@ -206,24 +230,6 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
     new (&rfc_ctxt->proto_port_tree.rfc_table.cbm_map) cbm_map_t();
     rfc_ctxt->proto_port_tree.rfc_table.max_classes =
         SACL_PROTO_DPORT_TREE_MAX_CLASSES;
-
-    // setup memory for stag "tree"
-    rfc_ctxt->stag_tree.itable.nodes =
-        (inode_t *)malloc(sizeof(inode_t) * num_nodes);
-    if (rfc_ctxt->stag_tree.itable.nodes == NULL) {
-        return sdk::SDK_RET_OOM;
-    }
-    new (&rfc_ctxt->stag_tree.rfc_table.cbm_map) cbm_map_t();
-    rfc_ctxt->stag_tree.rfc_table.max_classes = SACL_TAG_TREE_MAX_CLASSES;
-
-    // setup memory for dtag "tree"
-    rfc_ctxt->dtag_tree.itable.nodes =
-        (inode_t *)malloc(sizeof(inode_t) * num_nodes);
-    if (rfc_ctxt->dtag_tree.itable.nodes == NULL) {
-        return sdk::SDK_RET_OOM;
-    }
-    new (&rfc_ctxt->dtag_tree.rfc_table.cbm_map) cbm_map_t();
-    rfc_ctxt->dtag_tree.rfc_table.max_classes = SACL_TAG_TREE_MAX_CLASSES;
 
     // setup P1 table
     new (&rfc_ctxt->p1_table.cbm_map) cbm_map_t();

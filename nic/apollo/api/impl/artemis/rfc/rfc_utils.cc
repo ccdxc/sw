@@ -8,6 +8,7 @@
 
 #include "nic/apollo/lpm/lpm.hpp"
 #include "nic/apollo/rfc/rfc.hpp"
+#include "nic/apollo/api/impl/artemis/rfc/rfc_utils.hpp"
 #include "nic/apollo/api/impl/artemis/rfc/rfc_tree.hpp"
 
 namespace rfc {
@@ -105,20 +106,9 @@ rfc_sort_itables (rfc_ctxt_t *rfc_ctxt)
     return SDK_RET_OK;
 }
 
-/**
- * @brief    given a class bitmap (cbm), check if that exists in the RFC table
- *           already and if not assign new class-id, if it exists already,
- *           use the current class id for that class bitmap
- * @param[in]    rfc_ctxt  RFC context carrying all the intermediate state for
- *                         this policy
- * @param[in]    rfc_table RFC table to add the class id to
- * @param[in]    cbm       class bitmap that needs class id to be computed for
- * @param[in]    cbm_size  class bitmap size
- * @return    SDK_RET_OK on success, failure status code on error
- */
 uint16_t
-rfc_compute_class_id (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
-                      rte_bitmap *cbm, uint32_t cbm_size)
+rfc_compute_class_id_cb (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
+                         rte_bitmap *cbm, uint32_t cbm_size, void *ctxt)
 {
     uint8_t       *bits;
     uint16_t      class_id;
@@ -137,6 +127,35 @@ rfc_compute_class_id (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
     rfc_table->cbm_table[class_id] = cbm_new;
     rfc_table->cbm_map[cbm_new] = class_id;
 
+    return class_id;
+}
+
+uint16_t
+rfc_compute_tag_class_id_cb (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
+                             rte_bitmap *cbm, uint32_t cbm_size, void *ctxt)
+{
+    uint8_t *bits;
+    uint16_t class_id;
+    rte_bitmap *cbm_new;
+    class_id_cb_ctxt_t *cb_ctxt = (class_id_cb_ctxt_t *)ctxt;
+    inode_t *inode = cb_ctxt->inode;
+
+    if (cb_ctxt->tree->type == RFC_TREE_TYPE_STAG) {
+        class_id =
+            rfc_ctxt->policy->rules[inode->rfc.rule_no].match.l3_match.src_tag;
+    } else if (cb_ctxt->tree->type == RFC_TREE_TYPE_DTAG) {
+        class_id =
+            rfc_ctxt->policy->rules[inode->rfc.rule_no].match.l3_match.dst_tag;
+    } else {
+        // unsupported tree type
+        SDK_ASSERT(0);
+    }
+    rfc_table->num_classes++;
+    posix_memalign((void **)&bits, CACHE_LINE_SIZE, cbm_size);
+    cbm_new = rte_bitmap_init(rfc_ctxt->policy->max_rules, bits, cbm_size);
+    rte_bitmap_or(cbm, cbm_new, cbm_new);
+    rfc_table->cbm_table[class_id] = cbm_new;
+    rfc_table->cbm_map[cbm_new] = class_id;
     return class_id;
 }
 

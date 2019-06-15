@@ -707,11 +707,11 @@ artemis_impl::stats_init_(void) {
 #define nacl_redirect_action    action_u.nacl_nacl_redirect
 sdk_ret_t
 artemis_impl::nacl_init_(void) {
-    sdk_ret_t ret = SDK_RET_OK;
+    uint32_t idx;
+    sdk_ret_t ret;
     nacl_swkey_t key = { 0 };
     nacl_swkey_mask_t mask = { 0 };
     nacl_actiondata_t data =  { 0 };
-    uint32_t idx;
 
     if (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_SIM) {
         // flow miss packet coming back from txdma -> CPU (but in SIM mode
@@ -729,9 +729,10 @@ artemis_impl::nacl_init_(void) {
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to program NACL entry for uplink redirect, "
                           "err %u", ret);
+            return ret;
         }
     }
-    return ret;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

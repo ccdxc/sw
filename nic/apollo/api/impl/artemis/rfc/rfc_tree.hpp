@@ -59,11 +59,22 @@ typedef struct rfc_table_s {
     rte_bitmap    *cbm_table[RFC_MAX_EQ_CLASSES];
 } rfc_table_t;
 
+typedef enum rfc_tree_type_e {
+    RFC_TREE_TYPE_NONE       = 0,
+    RFC_TREE_TYPE_SIP        = 1,
+    RFC_TREE_TYPE_DIP        = 2,
+    RFC_TREE_TYPE_STAG       = 3,
+    RFC_TREE_TYPE_DTAG       = 4,
+    RFC_TREE_TYPE_PORT       = 5,
+    RFC_TREE_TYPE_PROTO_PORT = 6,
+} rfc_tree_type_t;
+
 ///< RFC tree table thats used in all phases
 typedef struct rfc_tree_s {
-    itable_t       itable;
-    uint32_t       num_intervals;
-    rfc_table_t    rfc_table;
+    rfc_tree_type_t    type;
+    itable_t           itable;
+    uint32_t           num_intervals;
+    rfc_table_t        rfc_table;
 } rfc_tree_t;
 
 typedef struct rfc_ctxt_s {
@@ -71,10 +82,10 @@ typedef struct rfc_ctxt_s {
     ///< phase 0 information
     rfc_tree_t    sip_tree;       ///< RFC tree for SIP
     rfc_tree_t    dip_tree;       ///< RFC tree for prefix
-    rfc_tree_t    port_tree;      ///< RFC tree for port
-    rfc_tree_t    proto_port_tree;///< RFC tree for protocol-port
     rfc_tree_t    stag_tree;      ///< RFC tree for source tags used in the policy
     rfc_tree_t    dtag_tree;      ///< RFC tree for source tags used in the policy
+    rfc_tree_t    port_tree;      ///< RFC tree for port
+    rfc_tree_t    proto_port_tree;///< RFC tree for protocol-port
     ///< phase 1 information
     rfc_table_t   p1_table;       ///< phase 1 RFC table
     rfc_table_t   p2_table;       ///< phase 2 RFC table
