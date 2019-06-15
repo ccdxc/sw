@@ -10,6 +10,7 @@ export LOG_DIR=/var/log/pensando/
 export LIBRARY_PATH=$NIC_DIR/lib:$NIC_DIR/../platform/lib:/usr/local/lib:/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
 export HAL_PBC_INIT_CONFIG="2x100_hbm"
 export COVFILE=$NIC_DIR/coverage/sim_bullseye_hal.cov
+export AGENT_TEST_HOOKS_LIB=libflowtestagenthooks.so
 
 # remove logs
 rm -f $LOG_DIR/pen-agent.log*
