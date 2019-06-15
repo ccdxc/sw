@@ -171,28 +171,11 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 	if len(d.VeniceIPs) == 0 {
 		log.Infof("Found Vendor Class Options: %s", string(classOpts))
 		vendorOptions := opts[dhcp4.OptionVendorSpecificInformation]
+
 		if len(vendorOptions) == 0 {
 			d.CurState = missingVendorAttributes.String()
 		} else {
-
-			log.Infof("Found Vendor Specified Attributes: %s", string(vendorOptions))
-
-			// Split as Comma Separated Venice IPs or FQDNS. TODO. If FQDN add better error handling in case of invalid options
-			veniceIPs := strings.Split(string(vendorOptions), ",")
-			// TODO add support for FQDNs.
-			for _, v := range veniceIPs {
-				IP := net.ParseIP(v)
-				if len(IP) == 0 {
-					// Ignore and continue
-					log.Errorf("Found invalid VENICE IP: %v", v)
-					continue
-				}
-				d.VeniceIPs[IP.String()] = true
-			}
-			if len(d.VeniceIPs) == 0 {
-				log.Errorf("Could not find any valid venice IP from parsed vendor attrs: %v", string(vendorOptions))
-				d.CurState = missingVendorAttributes.String()
-			}
+			d.parseVeniceIPs(vendorOptions)
 		}
 	} else {
 		log.Info("Venice co-ordinates provided via spec. Ignoring vendor options")
@@ -259,4 +242,47 @@ func (c *IPClient) DoNTPSync() error {
 // GetIPClientIntf returns the current interface for the instantiated IPClient
 func (c *IPClient) GetIPClientIntf() string {
 	return c.intf.Attrs().Name
+}
+
+func (d *DHCPState) parseVeniceIPs(vendorOpts []byte) {
+	log.Info("Found Raw Vendor Specified Attributes: ", vendorOpts)
+	// Check for code 241 if not parse the entire vendor attrs as string
+	if vendorOpts[0] == 241 {
+		var veniceIPs [][]byte
+		// parse code 241 and a series of 4-Octet IP Addresses
+		option241IPAddresses := vendorOpts[2:]
+		log.Infof("Found vendor opts for option code 241. %v", option241IPAddresses)
+
+		for IPv4OctetSize <= len(option241IPAddresses) {
+			option241IPAddresses, veniceIPs = option241IPAddresses[IPv4OctetSize:], append(veniceIPs, option241IPAddresses[0:IPv4OctetSize:IPv4OctetSize])
+		}
+		log.Infof("Parsed 241 options. %v", veniceIPs)
+
+		for _, v := range veniceIPs {
+			IP := net.IP{v[0], v[1], v[2], v[3]}
+			d.VeniceIPs[IP.String()] = true
+		}
+		if len(d.VeniceIPs) == 0 {
+			log.Errorf("Could not find any valid venice IP from parsed vendor attrs: %v", string(vendorOpts))
+			d.CurState = missingVendorAttributes.String()
+		}
+
+		return
+	}
+	// Split as Comma Separated Venice IPs or FQDNS. TODO. If FQDN add better error handling in case of invalid options
+	controllers := strings.Split(string(vendorOpts), ",")
+	// TODO add support for FQDNs.
+	for _, c := range controllers {
+		IP := net.ParseIP(c)
+		if len(IP) == 0 {
+			// Ignore and continue
+			log.Errorf("Found invalid VENICE IP: %v", c)
+			continue
+		}
+		d.VeniceIPs[IP.String()] = true
+	}
+	if len(d.VeniceIPs) == 0 {
+		log.Errorf("Could not find any valid venice IP from parsed vendor attrs: %v", string(vendorOpts))
+		d.CurState = missingVendorAttributes.String()
+	}
 }

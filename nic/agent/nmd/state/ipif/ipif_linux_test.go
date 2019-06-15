@@ -32,6 +32,8 @@ const (
 	configureValidVendorAttrs
 	configureMalformedVendorAttrs
 	configureMalformedVendorAttrsMismatchOption43And60
+	configureValidVendorAttrs241
+	configureValidVendorAttrs241Multiple
 )
 
 var (
@@ -39,8 +41,10 @@ var (
 		IPAddress: "172.16.10.10/28",
 		DefaultGW: "172.16.10.1",
 	}
-	_, allocSubnet, _ = net.ParseCIDR(testSubnet)
-	veniceIPs         = "42.42.42.42,84.84.84.84"
+	_, allocSubnet, _          = net.ParseCIDR(testSubnet)
+	veniceIPs                  = "42.42.42.42,84.84.84.84"
+	option241VeniceIPs         = "1.1.1.1"
+	option241VeniceIPsMultiple = "2.2.2.2,3.3.3.3"
 )
 
 type dhcpSrv struct {
@@ -90,6 +94,88 @@ func TestDHCPSpecControllers(t *testing.T) {
 
 	// Ensure that there are no VeniceIPs
 	AssertEquals(t, true, ipClient.dhcpState.VeniceIPs["1.1.1.1"], " dhcp venice IPs must match static controllers")
+
+	// Ensure the IP Assigned on the interface is indeed the YIADDR
+	ipAddr, err := netlink.AddrList(ipClient.intf, netlink.FAMILY_V4)
+	AssertOk(t, err, "Must be able to look up IP Address for mock interface")
+	var found bool
+	for _, a := range ipAddr {
+		if a.IP.Equal(ipClient.dhcpState.IPNet.IP) {
+			found = true
+			break
+		}
+	}
+	AssertEquals(t, true, found, "The interface IP Address should match YIADDR")
+}
+
+func TestDHCPValidVendorAttributes241Code(t *testing.T) {
+	var d dhcpSrv
+	err := d.setup(configureValidVendorAttrs241)
+	AssertOk(t, err, "Setup Failed")
+	defer d.tearDown()
+	AssertOk(t, err, "Failed to start DHCP Server for testing")
+	mockNMD := mock.CreateMockNMD(t.Name())
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface)
+	AssertOk(t, err, "IPClient creates must succeed")
+
+	// Clear spec controllers
+	mockNMD.Naples.Spec.Controllers = []string{}
+	err = ipClient.DoDHCPConfig()
+	// Check DHCP Config should succeed
+	AssertOk(t, err, "Failed to perform DHCP")
+
+	// Ensure obtained IP Addr is in the allocated subnet
+	AssertEquals(t, true, allocSubnet.Contains(ipClient.dhcpState.IPNet.IP), "Obtained a YIADDR is not in the expected subnet")
+
+	// Ensure dhcp state is missing vendor attributes
+	AssertEquals(t, dhcpDone.String(), ipClient.dhcpState.CurState, "DHCP State must reflect DHCP Done")
+
+	// Ensure that there are expected Venice IPs
+	veniceIPs := strings.Split(option241VeniceIPs, ",")
+	for _, v := range veniceIPs {
+		AssertEquals(t, true, ipClient.dhcpState.VeniceIPs[v], "Failed to find a Venice IP. %v", v)
+	}
+
+	// Ensure the IP Assigned on the interface is indeed the YIADDR
+	ipAddr, err := netlink.AddrList(ipClient.intf, netlink.FAMILY_V4)
+	AssertOk(t, err, "Must be able to look up IP Address for mock interface")
+	var found bool
+	for _, a := range ipAddr {
+		if a.IP.Equal(ipClient.dhcpState.IPNet.IP) {
+			found = true
+			break
+		}
+	}
+	AssertEquals(t, true, found, "The interface IP Address should match YIADDR")
+}
+
+func TestDHCPValidVendorAttributes241CodeMultiple(t *testing.T) {
+	var d dhcpSrv
+	err := d.setup(configureValidVendorAttrs241Multiple)
+	AssertOk(t, err, "Setup Failed")
+	defer d.tearDown()
+	AssertOk(t, err, "Failed to start DHCP Server for testing")
+	mockNMD := mock.CreateMockNMD(t.Name())
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface)
+	AssertOk(t, err, "IPClient creates must succeed")
+
+	// Clear spec controllers
+	mockNMD.Naples.Spec.Controllers = []string{}
+	err = ipClient.DoDHCPConfig()
+	// Check DHCP Config should succeed
+	AssertOk(t, err, "Failed to perform DHCP")
+
+	// Ensure obtained IP Addr is in the allocated subnet
+	AssertEquals(t, true, allocSubnet.Contains(ipClient.dhcpState.IPNet.IP), "Obtained a YIADDR is not in the expected subnet")
+
+	// Ensure dhcp state is missing vendor attributes
+	AssertEquals(t, dhcpDone.String(), ipClient.dhcpState.CurState, "DHCP State must reflect DHCP Done")
+
+	// Ensure that there are expected Venice IPs
+	veniceIPs := strings.Split(option241VeniceIPsMultiple, ",")
+	for _, v := range veniceIPs {
+		AssertEquals(t, true, ipClient.dhcpState.VeniceIPs[v], "Failed to find a Venice IP. %v", v)
+	}
 
 	// Ensure the IP Assigned on the interface is indeed the YIADDR
 	ipAddr, err := netlink.AddrList(ipClient.intf, netlink.FAMILY_V4)
@@ -565,6 +651,22 @@ func (d *dhcpSrv) startDHCPServer(configureVendorAttrs int) error {
 			dhcp.OptionDomainNameServer:          []byte(serverIP), // Presuming Server is also your DNS server
 			dhcp.OptionVendorClassIdentifier:     PensandoDHCPRequestOption.Value,
 			dhcp.OptionVendorSpecificInformation: []byte(veniceIPs),
+		}
+	case configureValidVendorAttrs241:
+		opts = dhcp.Options{
+			dhcp.OptionSubnetMask:                []byte{255, 255, 255, 240},
+			dhcp.OptionRouter:                    []byte(serverIP), // Presuming Server is also your router
+			dhcp.OptionDomainNameServer:          []byte(serverIP), // Presuming Server is also your DNS server
+			dhcp.OptionVendorClassIdentifier:     PensandoDHCPRequestOption.Value,
+			dhcp.OptionVendorSpecificInformation: []byte{241, 4, 1, 1, 1, 1},
+		}
+	case configureValidVendorAttrs241Multiple:
+		opts = dhcp.Options{
+			dhcp.OptionSubnetMask:                []byte{255, 255, 255, 240},
+			dhcp.OptionRouter:                    []byte(serverIP), // Presuming Server is also your router
+			dhcp.OptionDomainNameServer:          []byte(serverIP), // Presuming Server is also your DNS server
+			dhcp.OptionVendorClassIdentifier:     PensandoDHCPRequestOption.Value,
+			dhcp.OptionVendorSpecificInformation: []byte{241, 8, 2, 2, 2, 2, 3, 3, 3, 3},
 		}
 	}
 

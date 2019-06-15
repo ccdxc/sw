@@ -17,6 +17,9 @@ const (
 
 	// FRUFilePath captures the location of the fru.json
 	FRUFilePath = "/tmp/fru.json"
+
+	// IPv4OctetSize parses 4 bytes form vendor specific options as IP Addresses
+	IPv4OctetSize = 4
 )
 
 var (
