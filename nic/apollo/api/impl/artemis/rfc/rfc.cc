@@ -123,7 +123,7 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
         rule = &policy->rules[rule_num];
         rfc_policy_rule_dump(policy, rule_num);
 
-        // handle source IP match condition
+        // handle source IP match conditions
         if (rule->match.l3_match.src_match_type == IP_MATCH_PREFIX) {
             itable_add_address_inodes(rule_num, sip_inode,
                                       &rule->match.l3_match.src_ip_pfx);
@@ -138,7 +138,7 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
             stag_inode += 2;
         }
 
-        // handle destination IP match condition
+        // handle destination IP match conditions
         if (rule->match.l3_match.dst_match_type == IP_MATCH_PREFIX) {
             itable_add_address_inodes(rule_num, dip_inode,
                                       &rule->match.l3_match.dst_ip_pfx);
@@ -309,17 +309,17 @@ rfc_compute_p0_classes (rfc_ctxt_t *rfc_ctxt)
         return ret;
     }
 
-    ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->dip_tree,
-              rfc_p0_pfx_tree_inode_eq_cb, rfc_compute_class_id_cb,
-              (rfc_ctxt->policy->af == IP_AF_IPV4) ?
-                  SACL_IPV4_DIP_TREE_MAX_NODES : SACL_IPV6_DIP_TREE_MAX_NODES);
+    ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->stag_tree,
+              rfc_p0_tag_tree_inode_eq_cb, rfc_compute_tag_class_id_cb,
+              SACL_TAG_TREE_MAX_CLASSES);
     if (ret != SDK_RET_OK) {
         return ret;
     }
 
-    ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->stag_tree,
-              rfc_p0_tag_tree_inode_eq_cb, rfc_compute_tag_class_id_cb,
-              SACL_TAG_TREE_MAX_CLASSES);
+    ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->dip_tree,
+              rfc_p0_pfx_tree_inode_eq_cb, rfc_compute_class_id_cb,
+              (rfc_ctxt->policy->af == IP_AF_IPV4) ?
+                  SACL_IPV4_DIP_TREE_MAX_NODES : SACL_IPV6_DIP_TREE_MAX_NODES);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -362,8 +362,9 @@ rfc_eq_class_table_dump (rfc_table_t *rfc_table)
 
     PDS_TRACE_DEBUG("Number of equivalence classes %u", rfc_table->num_classes);
     for (uint32_t i = 0; i < rfc_table->num_classes; i++) {
-        rte_bitmap2str(rfc_table->cbm_table[i], a1ss, a2ss);
-        PDS_TRACE_DEBUG("class id %u, a1ss %s\na2ss %s", i,
+        rte_bitmap2str(rfc_table->cbm_table[i].cbm, a1ss, a2ss);
+        PDS_TRACE_DEBUG("class id %u, a1ss %s\na2ss %s",
+                        rfc_table->cbm_table[i].class_id,
                         a1ss.str().c_str(), a2ss.str().c_str());
         a1ss.clear();
         a1ss.str("");
@@ -377,17 +378,27 @@ rfc_p0_eq_class_tables_dump (rfc_ctxt_t *rfc_ctxt)
 {
     PDS_TRACE_DEBUG("RFC P0 SIP prefix interval tree dump :");
     rfc_itree_dump(&rfc_ctxt->sip_tree,
-                   (rfc_ctxt->policy->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4_SIP_ACL :
-                                                          ITREE_TYPE_IPV6_SIP_ACL);
+                   (rfc_ctxt->policy->af == IP_AF_IPV4) ?
+                       ITREE_TYPE_IPV4_SIP_ACL : ITREE_TYPE_IPV6_SIP_ACL);
     PDS_TRACE_DEBUG("RFC P0 SIP prefix tree equivalence class table dump :");
     rfc_eq_class_table_dump(&rfc_ctxt->sip_tree.rfc_table);
 
+    PDS_TRACE_DEBUG("RFC P0 STAG interval tree dump :");
+    rfc_itree_dump(&rfc_ctxt->stag_tree, ITREE_TYPE_STAG);
+    PDS_TRACE_DEBUG("RFC P0 STAG equivalence class table dump :");
+    rfc_eq_class_table_dump(&rfc_ctxt->stag_tree.rfc_table);
+
     PDS_TRACE_DEBUG("RFC P0 DIP prefix interval tree dump :");
     rfc_itree_dump(&rfc_ctxt->dip_tree,
-                   (rfc_ctxt->policy->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4_DIP_ACL :
-                                                          ITREE_TYPE_IPV6_DIP_ACL);
+                   (rfc_ctxt->policy->af == IP_AF_IPV4) ?
+                       ITREE_TYPE_IPV4_DIP_ACL : ITREE_TYPE_IPV6_DIP_ACL);
     PDS_TRACE_DEBUG("RFC P0 DIP prefix tree equivalence class table dump :");
     rfc_eq_class_table_dump(&rfc_ctxt->dip_tree.rfc_table);
+
+    PDS_TRACE_DEBUG("RFC P0 DTAG interval tree dump :");
+    rfc_itree_dump(&rfc_ctxt->dtag_tree, ITREE_TYPE_DTAG);
+    PDS_TRACE_DEBUG("RFC P0 DTAG equivalence class table dump :");
+    rfc_eq_class_table_dump(&rfc_ctxt->dtag_tree.rfc_table);
 
     PDS_TRACE_DEBUG("RFC P0 port interval tree dump :");
     rfc_itree_dump(&rfc_ctxt->port_tree, ITREE_TYPE_PORT);

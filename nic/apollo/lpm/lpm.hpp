@@ -32,6 +32,8 @@ typedef enum itree_type_e {
     ITREE_TYPE_IPV6_SIP_ACL,    /**< IPv6 SIP ACL interval tree */
     ITREE_TYPE_IPV4_PEER_ROUTE, /**< IPv4 Peer VNET interval tree */
     ITREE_TYPE_IPV6_PEER_ROUTE, /**< IPv6 Peer VNET interval tree */
+    ITREE_TYPE_STAG,            /**< source tag interval tree */
+    ITREE_TYPE_DTAG,            /**< destination tag interval tree */
 } itree_type_t;
 
 typedef struct route_s {

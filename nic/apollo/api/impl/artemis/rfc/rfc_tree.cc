@@ -63,7 +63,7 @@ itable_add_tag_inodes (uint32_t rule, inode_t *tag_inode, uint32_t tag)
     tag_inode->rfc.pad = 0;
 
     tag_inode++;
-    tag_inode->key32 = tag;
+    tag_inode->key32 = tag + 1;
     tag_inode->rfc.class_id = 0;    // class id will be computed later on
     tag_inode->rfc.rule_no = rule;
     tag_inode->rfc.start = FALSE;
@@ -126,7 +126,7 @@ rfc_table_destroy (rfc_table_t *rfc_table)
 {
     rfc_table->cbm_map.clear();
     for (uint32_t i = 0; i < rfc_table->num_classes; i++) {
-        free(rfc_table->cbm_table[i]);
+        free(rfc_table->cbm_table[i].cbm);
     }
 }
 

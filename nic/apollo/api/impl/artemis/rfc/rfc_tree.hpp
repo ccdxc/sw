@@ -51,12 +51,18 @@ typedef unordered_map<rte_bitmap *, uint16_t,
                       rte_bitmap_hasher,
                       rte_bitmap_equal_to>    cbm_map_t;
 
+///< class bitmap (cbm) table entry
+typedef struct cbm_te_s {
+    uint16_t class_id;
+    rte_bitmap *cbm;
+} cbm_te_t;
+
 ///< generic RFC table thats used in all phases
 typedef struct rfc_table_s {
-    uint16_t      num_classes;
-    uint16_t      max_classes;
-    cbm_map_t     cbm_map;
-    rte_bitmap    *cbm_table[RFC_MAX_EQ_CLASSES];
+    uint16_t  num_classes;
+    uint16_t  max_classes;
+    cbm_map_t cbm_map;
+    cbm_te_t  cbm_table[RFC_MAX_EQ_CLASSES];
 } rfc_table_t;
 
 typedef enum rfc_tree_type_e {

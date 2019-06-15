@@ -925,7 +925,8 @@ rfc_compute_eq_class_tables (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table1,
 
         for (uint32_t j = 0; j < rfc_table2->num_classes; j++) {
             rte_bitmap_reset(rfc_ctxt->cbm);
-            rte_bitmap_and(rfc_table1->cbm_table[i], rfc_table2->cbm_table[j],
+            rte_bitmap_and(rfc_table1->cbm_table[i].cbm,
+                           rfc_table2->cbm_table[j].cbm,
                            rfc_ctxt->cbm);
             entry_val = compute_entry_val_cb(rfc_ctxt, result_table,
                                              rfc_ctxt->cbm,
@@ -1045,7 +1046,7 @@ rfc_compute_p3_tables (rfc_ctxt_t *rfc_ctxt, uint64_t addr_offset)
 sdk_ret_t
 rfc_build_eqtables (rfc_ctxt_t *rfc_ctxt)
 {
-    /* Combination 1 */
+    // combination 1
     rfc_compute_p1_tables(rfc_ctxt,
                           &rfc_ctxt->sip_tree.rfc_table,
                           &rfc_ctxt->port_tree.rfc_table,
@@ -1056,13 +1057,12 @@ rfc_build_eqtables (rfc_ctxt_t *rfc_ctxt)
                           &rfc_ctxt->proto_port_tree.rfc_table,
                           SACL_P2_1_TABLE_OFFSET);
     rfc_p2_eq_class_tables_dump(rfc_ctxt);
-    rfc_compute_p3_tables(rfc_ctxt,
-                          SACL_P3_1_TABLE_OFFSET);
+    rfc_compute_p3_tables(rfc_ctxt, SACL_P3_1_TABLE_OFFSET);
 
 #if 0
-    /* Combination 2 */
+    // combination 2
     rfc_compute_p1_tables(rfc_ctxt,
-                          &rfc_ctxt->tag_tree.rfc_table,
+                          &rfc_ctxt->stag_tree.rfc_table,
                           &rfc_ctxt->dip_tree.rfc_table,
                           SACL_P1_2_TABLE_OFFSET);
     rfc_p1_eq_class_tables_dump(rfc_ctxt);
@@ -1071,13 +1071,12 @@ rfc_build_eqtables (rfc_ctxt_t *rfc_ctxt)
                           &rfc_ctxt->proto_port_tree.rfc_table,
                           SACL_P2_2_TABLE_OFFSET);
     rfc_p2_eq_class_tables_dump(rfc_ctxt);
-    rfc_compute_p3_tables(rfc_ctxt,
-                          SACL_P3_2_TABLE_OFFSET);
+    rfc_compute_p3_tables(rfc_ctxt, SACL_P3_2_TABLE_OFFSET);
 
-    /* Combination 3 */
+    // combination 3
     rfc_compute_p1_tables(rfc_ctxt,
-                          &rfc_ctxt->tag_tree.rfc_table,
                           &rfc_ctxt->sip_tree.rfc_table,
+                          &rfc_ctxt->dtag_tree.rfc_table,
                           SACL_P1_3_TABLE_OFFSET);
     rfc_p1_eq_class_tables_dump(rfc_ctxt);
     rfc_compute_p2_tables(rfc_ctxt,
@@ -1085,22 +1084,20 @@ rfc_build_eqtables (rfc_ctxt_t *rfc_ctxt)
                           &rfc_ctxt->proto_port_tree.rfc_table,
                           SACL_P2_3_TABLE_OFFSET);
     rfc_p2_eq_class_tables_dump(rfc_ctxt);
-    rfc_compute_p3_tables(rfc_ctxt,
-                          SACL_P3_3_TABLE_OFFSET);
+    rfc_compute_p3_tables(rfc_ctxt, SACL_P3_3_TABLE_OFFSET);
 
-    /* Combination 4 */
+    // combination 4
     rfc_compute_p1_tables(rfc_ctxt,
-                          &rfc_ctxt->tag_tree.rfc_table,
+                          &rfc_ctxt->stag_tree.rfc_table,
                           &rfc_ctxt->port_tree.rfc_table,
                           SACL_P1_4_TABLE_OFFSET);
     rfc_p1_eq_class_tables_dump(rfc_ctxt);
     rfc_compute_p2_tables(rfc_ctxt,
-                          &rfc_ctxt->tag_tree.rfc_table, // Is this correct?!
+                          &rfc_ctxt->dtag_tree.rfc_table,
                           &rfc_ctxt->proto_port_tree.rfc_table,
                           SACL_P2_4_TABLE_OFFSET);
     rfc_p2_eq_class_tables_dump(rfc_ctxt);
-    rfc_compute_p3_tables(rfc_ctxt,
-                          SACL_P3_4_TABLE_OFFSET);
+    rfc_compute_p3_tables(rfc_ctxt, SACL_P3_4_TABLE_OFFSET);
 #endif
 
     return SDK_RET_OK;
