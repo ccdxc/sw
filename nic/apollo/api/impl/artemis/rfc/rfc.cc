@@ -286,16 +286,16 @@ rfc_compute_p0_classes (rfc_ctxt_t *rfc_ctxt)
 
     ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->sip_tree,
               rfc_p0_pfx_tree_inode_eq_cb,
-              (rfc_ctxt->policy->af == IP_AF_IPV4) ? SACL_IPV4_SIP_TREE_MAX_NODES :
-                                                     SACL_IPV6_SIP_TREE_MAX_NODES);
+              (rfc_ctxt->policy->af == IP_AF_IPV4) ?
+                  SACL_IPV4_SIP_TREE_MAX_NODES : SACL_IPV6_SIP_TREE_MAX_NODES);
     if (ret != SDK_RET_OK) {
         return ret;
     }
 
     ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->dip_tree,
               rfc_p0_pfx_tree_inode_eq_cb,
-              (rfc_ctxt->policy->af == IP_AF_IPV4) ? SACL_IPV4_DIP_TREE_MAX_NODES :
-                                                     SACL_IPV6_DIP_TREE_MAX_NODES);
+              (rfc_ctxt->policy->af == IP_AF_IPV4) ?
+                  SACL_IPV4_DIP_TREE_MAX_NODES : SACL_IPV6_DIP_TREE_MAX_NODES);
     if (ret != SDK_RET_OK) {
         return ret;
     }

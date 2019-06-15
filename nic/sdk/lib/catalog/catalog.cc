@@ -664,7 +664,8 @@ catalog::init(std::string &catalog_file)
 // factory method for this class
 //------------------------------------------------------------------------------
 catalog *
-catalog::factory(std::string catalog_file_path, std::string catalog_file_name, platform_type_t platform) {
+catalog::factory(std::string catalog_file_path, std::string catalog_file_name,
+                 platform_type_t platform) {
     sdk_ret_t  ret;
     void       *mem;
     catalog    *new_catalog = NULL;

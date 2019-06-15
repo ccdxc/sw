@@ -190,7 +190,7 @@ lif_impl::program_flow_miss_nacl(lif_info_t *lif_params) {
     nacl_actiondata_t data =  { 0 };
     uint32_t idx;
 
-    // Flow Miss -> CPU
+    // flow miss packet coming back from txdma -> CPU
     key.cps_blob_valid = 1;
     mask.cps_blob_valid_mask = 1;
     data.action_id = NACL_NACL_REDIRECT_ID;
@@ -203,7 +203,7 @@ lif_impl::program_flow_miss_nacl(lif_info_t *lif_params) {
     ret = artemis_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NACL entry for redirect to arm, "
-                      "err %u", key_, pinned_if_idx_, ret);
+                      "lif %u, err %u", key_, ret);
     }
 
 #if 0

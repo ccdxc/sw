@@ -189,6 +189,10 @@ private:
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t stats_init_(void);
 
+    /// \brief  initialize any global ACLs during init time
+    /// \return #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t nacl_init_(void);
+
     /// \brief  program all p4/p4+ tables that require one time initialization
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_init_(void);

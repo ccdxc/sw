@@ -704,6 +704,36 @@ artemis_impl::stats_init_(void) {
     return SDK_RET_OK;
 }
 
+#define nacl_redirect_action    action_u.nacl_nacl_redirect
+sdk_ret_t
+artemis_impl::nacl_init_(void) {
+    sdk_ret_t ret;
+    nacl_swkey_t key = { 0 };
+    nacl_swkey_mask_t mask = { 0 };
+    nacl_actiondata_t data =  { 0 };
+    uint32_t idx;
+
+    if (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_SIM) {
+        // flow miss packet coming back from txdma -> CPU (but in SIM mode
+        // we redirect it uplink for validation purposes)
+        key.cps_blob_valid = 1;
+        mask.cps_blob_valid_mask = 1;
+        data.action_id = NACL_NACL_REDIRECT_ID;
+        data.nacl_redirect_action.pipe_id = PIPE_ARM;
+        data.action_u.nacl_nacl_redirect.oport = TM_PORT_UPLINK_1;
+        data.action_u.nacl_nacl_redirect.lif = 0;
+        data.action_u.nacl_nacl_redirect.qtype = 0;
+        data.action_u.nacl_nacl_redirect.qid = 0;
+        data.action_u.nacl_nacl_redirect.vlan_strip = 0;
+        ret = artemis_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to program NACL entry for uplink redirect, "
+                          "err %u", ret);
+        }
+    }
+    return ret;
+}
+
 sdk_ret_t
 artemis_impl::table_init_(void) {
     sdk_ret_t     ret;
@@ -841,6 +871,8 @@ artemis_impl::pipeline_init(void) {
     ret = table_init_();
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = stats_init_();
+    SDK_ASSERT(ret == SDK_RET_OK);
+    ret = nacl_init_();
     SDK_ASSERT(ret == SDK_RET_OK);
 
     ret = sdk::platform::capri::capri_sw_phv_init();

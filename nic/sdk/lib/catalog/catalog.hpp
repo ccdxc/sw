@@ -126,7 +126,6 @@ typedef struct catalog_s {
     uint32_t                   num_logical_ports;                     // number of logical port in the board
     uint32_t                   num_logical_oob_ports;                 // number of logical oob port in the board
     uint32_t                   num_fp_ports;                          // number of front panel ports in the board
-    platform_type_t            platform_type;                         // platform type
     bool                       access_mock_mode;                      // do not access HW, dump only reads/writes
     catalog_asic_t             asics[MAX_ASICS];                      // per asic information
     catalog_logical_port_t     logical_ports[MAX_LOGICAL_PORTS];      // per port information
@@ -158,7 +157,9 @@ typedef struct catalog_s {
 
 class catalog {
 public:
-    static catalog *factory(std::string catalog_file_path="", std::string catalog_file_name="", platform_type_t platform = platform_type_t::PLATFORM_TYPE_NONE);
+    static catalog *factory(std::string catalog_file_path="",
+                            std::string catalog_file_name="",
+                            platform_type_t platform = platform_type_t::PLATFORM_TYPE_NONE);
 
     static void destroy(catalog *clog);
     static sdk_ret_t get_ptree_(std::string& catalog_file, ptree& prop_tree);
@@ -183,9 +184,6 @@ public:
     catalog_t *catalog_db(void) { return &catalog_db_; }
     uint64_t cores_mask (void) const { return catalog_db_.cores_mask; }
     card_id_t card_id(void) { return catalog_db_.card_id; }
-    platform_type_t platform_type(void) const {
-        return catalog_db_.platform_type;
-    }
     uint32_t cpld_id() { return catalog_db_.cpld_id; }
     bool access_mock_mode(void) { return catalog_db_.access_mock_mode; }
     uint32_t max_mpu_per_stage(void) const {

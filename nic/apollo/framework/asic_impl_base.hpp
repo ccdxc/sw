@@ -85,7 +85,7 @@ public:
 
     /// \brief      PB Stats Get
     /// \param[in]   cb      Callback
-    ///              ctxt    Opaque context to be passed to callback    
+    ///              ctxt    Opaque context to be passed to callback
     /// \return      SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t pb_stats(debug::pb_stats_get_cb_t cb, void *ctxt) {
         return SDK_RET_ERR;
