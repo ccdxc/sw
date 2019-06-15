@@ -74,8 +74,8 @@ flow_appdata2str(void *appdata) {
 
 static void
 dump_flow_entry(ftlv6_entry_t *entry, ip_addr_t sip, ip_addr_t dip) {
-//#ifdef SIM
-    static FILE *d_fp = fopen("/tmp/flow_log.log", "a+");
+#ifdef SIM
+    static FILE *d_fp = fopen("/sw/nic/flow_log.log", "a+");
     if (d_fp) {
         fprintf(d_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
                 "sport %u, dport %u, epoch %u, flow %u, ktype %u\n",
@@ -84,13 +84,13 @@ dump_flow_entry(ftlv6_entry_t *entry, ip_addr_t sip, ip_addr_t dip) {
                 entry->epoch, entry->flow_role, entry->ktype);
         fflush(d_fp);
     }
-//#endif
+#endif
 }
 
 static void
 dump_flow_entry(ftlv4_entry_t *entry, ip_addr_t sip, ip_addr_t dip) {
-//#ifdef SIM
-    static FILE *d_fp = fopen("/tmp/flow_log.log", "a+");
+#ifdef SIM
+    static FILE *d_fp = fopen("/sw/nic/flow_log.log", "a+");
     if (d_fp) {
         fprintf(d_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
                 "sport %u, dport %u, epoch %u, role %u\n",
@@ -99,15 +99,15 @@ dump_flow_entry(ftlv4_entry_t *entry, ip_addr_t sip, ip_addr_t dip) {
                 entry->epoch, entry->flow_role);
         fflush(d_fp);
     }
-//#endif
+#endif
 }
 
 static void
 dump_session_info(uint32_t vpc, ip_addr_t ip_addr,
                   session_actiondata_t *actiondata)
 {
-//#ifdef SIM
-    static FILE *d_fp = fopen("/tmp/flow_log.log", "a+");
+#ifdef SIM
+    static FILE *d_fp = fopen("/sw/nic/flow_log.log", "a+");
     if (d_fp) {
         fprintf(d_fp, "vpc %u, meter_idx %u, nh_idx %u, tx rewrite flags 0x%x, "
                 "rx rewrite flags 0x%x, tx_dst_ip %s\n", vpc,
@@ -118,7 +118,7 @@ dump_session_info(uint32_t vpc, ip_addr_t ip_addr,
                 ipaddr2str(&ip_addr));
         fflush(d_fp);
     }
-//#endif
+#endif
 }
 
 #define MAX_VPCS        64
@@ -869,7 +869,7 @@ public:
                                               rewrite_ip,
                                               rflow_dip,
                                               fwd_dport,
-                                              TEST_APP_VIP_PORT);
+                                              fwd_sport);
                         } else if (vpc == TEST_APP_S1_SLB_IN_OUT) {
                             // VPC 61 is used for Scenario1-SLB in/out traffic (DSR case)
                             ip_addr.addr.v4_addr = (0xC << 28) | i;
@@ -966,7 +966,7 @@ public:
                         }
 
                         nflows+=2;
-                        if (nflows >= count) {
+                        if (nflows >= count-1) {
                             return SDK_RET_OK;
                         }
                     }
@@ -988,14 +988,13 @@ public:
 
     void print_flow_stats(sdk_table_api_stats_t *api_stats,
                           sdk_table_stats_t *table_stats) {
-        SDK_TRACE_DEBUG(
-                "insert %u, insert_duplicate %u, insert_fail %u, "
+        printf("insert %u, insert_duplicate %u, insert_fail %u, "
                 "remove %u, remove_not_found %u, remove_fail %u, "
                 "update %u, update_fail %u, "
                 "get %u, get_fail %u, "
                 "reserve %u, reserver_fail %u, "
                 "release %u, release_fail %u, "
-                "entries %u, collisions %u",
+                "entries %u, collisions %u\n",
                 api_stats->insert,
                 api_stats->insert_duplicate,
                 api_stats->insert_fail,
