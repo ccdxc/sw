@@ -124,7 +124,9 @@
 
                 </div>
                 <!-- Action column. Top do not add row below-->
-                <div fxLayout="column" fxLayoutAlign="start none" class="newrole-group">
+                <!-- Action heading and listbox will not render unless user selects group and kind-->
+                <div *ngIf="displayActions(permission)"
+                     fxLayout="column" fxLayoutAlign="start none" class="newrole-group">
                   <div class="newrolw-fieldtitle">
                     Actions:
                   </div>

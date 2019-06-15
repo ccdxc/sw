@@ -313,7 +313,11 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     newPermission['actions'] = []; // clear out action field's default value
     newPermission[NewroleComponent.KINDOPTIONS] = [];
     newPermission[NewroleComponent.ACTIONOPTIONS] = [];
-    permissionArray.insert(1, newPermission.$formGroup);
+    newPermission['resource-kind'] = '';
+    newPermission['resource-group'] = '';
+    permissionArray.insert(permissionArray.length , newPermission.$formGroup);
+
+
   }
 
   addRolloutReadPermission() {
@@ -358,9 +362,10 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     } else {
       permission[NewroleComponent.KINDOPTIONS] = this.getKindOptions(permission);
     }
-    // Resetting action options
-    permission[NewroleComponent.ACTIONOPTIONS] = [];
-    permission.get('actions').setValue([]);
+    // Resetting action and kind values
+      permission.get('actions').setValue([]);
+      permission.get('resource-kind').setValue('');
+      this.displayActions(permission);
     // comment out permission.resource-tenant per VS-241 (GS-release)
     // this.setPermissionInputOnGroupChange($event.value, permission);
   }
@@ -444,30 +449,33 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
 
   onActionChange(event: any, permission: any, actionListboxWidget: any, permissionIndex: number) {
     const values = event.value;
+    const index = this.getAllActionIndex(values);
     if (Utility.KINDS_WITHOUT_GROUP.includes(permission.get('resource-kind').value)) {
       return;
     }
     if (values.length > 1) {
-      const index = this.getAllActionIndex(values);
-      if (index !== -1) {
-        values.splice(index, 1);
-        actionListboxWidget.value = values;
-        permission[NewroleComponent.ACTIONOPTIONS] = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint, [NewroleComponent.ACTIONOPTIONS_ALL]);
+      if (index !== -1 && values.length - 1 === index) {
+          values[0] = values[index];
+          values.splice(1);
+      } else if (index !== -1 && values.length - 1 !== index) {
+         values.splice(index, 1);
       }
-    } else if (values.length === 1) {  // there is only one option selected
-      const index = this.getAllActionIndex(values);
-      if (index === -1) {
-        // NewroleComponent.ACTIONOTIONT_ALL is NOT the only selected option. we take out
-        permission[NewroleComponent.ACTIONOPTIONS]  = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint, [NewroleComponent.ACTIONOPTIONS_ALL]);
-      }
-    } else {
+      actionListboxWidget.value = values;
       permission[NewroleComponent.ACTIONOPTIONS] = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint);
+    } else {  // there is only one option selected or zero
+     permission[NewroleComponent.ACTIONOPTIONS] = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint);
     }
-
   }
 
 
   getAllActionIndex(values: any): number {
     return values.findIndex((value: SelectItem) => value.value === NewroleComponent.ACTIONOPTIONS_ALL);
+  }
+
+  displayActions(permission): boolean {
+   if (permission.get('resource-kind').value !== '' && permission.get('resource-group').value !== '') {
+     return true;
+   }
+   return false;
   }
 }

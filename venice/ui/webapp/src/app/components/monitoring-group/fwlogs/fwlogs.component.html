@@ -183,11 +183,13 @@
                placeholder="TCP, UDP">
       </div>
       <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
-        <p-multiSelect class="fwlogs-multiselect"
+        <p-multiSelect #logOptions class="fwlogs-multiselect"
                        formControlName="actions" appendTo="body" styleClass="fwlogs-font"
                        [filter]="false"
                        defaultLabel="All"
-                       [options]="actionOptions"></p-multiSelect>
+                       [options]="actionOptions"
+                       (onChange)="onActionChange($event)">
+        </p-multiSelect>
       </div>
     </div>
     <div fxFlex="40px"></div>

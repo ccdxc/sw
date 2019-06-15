@@ -19,6 +19,7 @@ import { SearchUtil } from '@app/components/search/SearchUtil';
 import { SecurityService } from '@app/services/generated/security.service';
 import { SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { PolicyRuleTuple } from './';
+import { SelectItem, MultiSelect } from 'primeng/primeng';
 
 @Component({
   selector: 'app-fwlogs',
@@ -27,8 +28,10 @@ import { PolicyRuleTuple } from './';
   encapsulation: ViewEncapsulation.None
 })
 export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Telemetry_queryFwlog> {
+  public static ALLOPTION = 'All';
   @ViewChild(TablevieweditHTMLComponent) tableWrapper: TablevieweditHTMLComponent;
   @ViewChild('ruleDetailsOverlay') overlay: OverlayPanel;
+  @ViewChild('logOptions') logOptionsMultiSelect: MultiSelect ;
 
   dataObjects: ReadonlyArray<Telemetry_queryFwlog> = [];
 
@@ -109,6 +112,13 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     return this.constructor.name;
   }
 
+  addAllOption(options: SelectItem[]) {
+    let newSelectItems: SelectItem[] = [];
+    newSelectItems.push({ label: 'All', value: 'All'});
+    newSelectItems = newSelectItems.concat(options);
+    return newSelectItems;
+  }
+
   setDefaultToolbar() {
       const buttons = [];
       if (this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringfwlogpolicy_read)) {
@@ -124,13 +134,36 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     });
   }
 
+  onActionChange(event: any) {
+    const values = this.logOptionsMultiSelect.value;
+    const index = this.getAllActionIndex(values);  // to check if 'All' is one of the selected actions
+    if (values != null && values.length > 1) {
+      if (index !== -1 && event.itemValue === FwlogsComponent.ALLOPTION) { // if 'All' is the most recent selected, un-select others
+        values[0] = values[index];
+        values.splice(1);
+      } else if (index !== -1 && event.itemValue !== FwlogsComponent.ALLOPTION) { // if another option selected after 'All', un-select 'All'
+        values.splice(index, 1);
+      }
+    }
+  }
+
+  getAllActionIndex(values: any): number {
+    return values.findIndex((value: String) => value === FwlogsComponent.ALLOPTION);
+  }
+
   postNgInit() {
     this.getNaples();
     this.query.$formGroup.get('source-ips').setValidators(IPUtility.isValidIPValidator);
     this.query.$formGroup.get('dest-ips').setValidators(IPUtility.isValidIPValidator);
     this.getFwlogs(this.startingSortOrder);
     this.getSGPolicies();
+    this.setDefaultToolbar();
+    this.actionOptions = this.addAllOption(this.actionOptions);
+    this.query.$formGroup.value.actions.push(FwlogsComponent.ALLOPTION);
   }
+
+
+
 
   displayColumn(data, col): any {
     const fields = col.field.split('.');
@@ -279,6 +312,9 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
 
     const query = new Telemetry_queryFwlogsQuerySpec(null, false);
     const queryVal: any = this.query.getFormGroupValues();
+    if (queryVal.actions.includes(FwlogsComponent.ALLOPTION)) {
+      queryVal.actions = null;
+    }
     const fields = [
       'source-ips',
       'dest-ips',
@@ -334,6 +370,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
       ],
     };
     // Get request
+
     const subscription = this.telemetryService.PostFwlogs(queryList).subscribe(
       (resp) => {
         this.controllerService.removeToaster('Fwlog Search Failed');

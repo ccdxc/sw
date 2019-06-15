@@ -210,7 +210,7 @@ describe('fwlogsComponent', () => {
 
   });
 
-  it('should map reporter from mac address to host name', () => {
+ it('should map reporter from mac address to host name', () => {
     TestingUtility.setAllPermissions();
     const clusterService = TestBed.get(ClusterService);
     const telemetryService = TestBed.get(TelemetryqueryService);
