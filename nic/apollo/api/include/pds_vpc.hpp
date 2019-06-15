@@ -131,7 +131,7 @@ sdk_ret_t pds_vpc_peer_create(pds_vpc_peer_spec_t *spec);
 /// \param[in] spec specification
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid VPC specification should be passed
-// sdk_ret_t pds_vpc_peer_update(pds_vpc_peer_spec_t *spec);
+sdk_ret_t pds_vpc_peer_update(pds_vpc_peer_spec_t *spec);
 
 /// \brief      read VPC peering related information
 /// \param[in]  key  key

@@ -15,6 +15,48 @@
 
 namespace api_test {
 
+#define API_CREATE(_api_str)                                           \
+inline sdk::sdk_ret_t                                                  \
+create(_api_str##_feeder& feeder) {                                    \
+    pds_##_api_str##_spec_t spec;                                      \
+                                                                       \
+    feeder.spec_build(&spec);                                          \
+    return (pds_##_api_str##_create(&spec));                           \
+}
+
+#define API_READ(_api_str)                                             \
+inline sdk::sdk_ret_t                                                  \
+read(_api_str##_feeder& feeder) {                                      \
+    sdk_ret_t rv;                                                      \
+    pds_##_api_str##_key_t key;                                        \
+    pds_##_api_str##_info_t info;                                      \
+                                                                       \
+    feeder.key_build(&key);                                            \
+    memset(&info, 0, sizeof(pds_##_api_str##_info_t));                 \
+    if ((rv = pds_##_api_str##_read(&key, &info)) != sdk::SDK_RET_OK)  \
+        return rv;                                                     \
+                                                                       \
+    return (feeder.info_compare(&info));                               \
+}
+
+#define API_UPDATE(_api_str)                                           \
+inline sdk::sdk_ret_t                                                  \
+update(_api_str##_feeder& feeder) {                                    \
+    pds_##_api_str##_spec_t spec;                                      \
+                                                                       \
+    feeder.spec_build(&spec);                                          \
+    return (pds_##_api_str##_update(&spec));                           \
+}
+
+#define API_DELETE(_api_str)                                           \
+inline sdk::sdk_ret_t                                                  \
+del(_api_str##_feeder& feeder) {                                       \
+    pds_##_api_str##_key_t key;                                        \
+                                                                       \
+    feeder.key_build(&key);                                            \
+    return (pds_##_api_str##_delete(&key));                            \
+}
+
 template <typename feeder_T>
 void many_create(feeder_T& feeder) {
     feeder_T tmp = feeder;

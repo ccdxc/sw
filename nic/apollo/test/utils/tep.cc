@@ -127,48 +127,6 @@ tep_feeder::info_compare(const pds_tep_info_t *info) const {
 }
 
 //----------------------------------------------------------------------------
-// TEP test CRUD routines
-//----------------------------------------------------------------------------
-
-sdk::sdk_ret_t
-create(tep_feeder& feeder) {
-    pds_tep_spec_t spec;
-
-    feeder.spec_build(&spec);
-    return (pds_tep_create(&spec));
-}
-
-sdk::sdk_ret_t
-read(tep_feeder& feeder) {
-    sdk_ret_t rv;
-    pds_tep_key_t key;
-    pds_tep_info_t info;
-
-    feeder.key_build(&key);
-    memset(&info, 0, sizeof(pds_tep_info_t));
-    if ((rv = pds_tep_read(&key, &info)) != sdk::SDK_RET_OK)
-        return rv;
-
-    return (feeder.info_compare(&info));
-}
-
-sdk::sdk_ret_t
-update(tep_feeder& feeder) {
-    pds_tep_spec_t spec;
-
-    feeder.spec_build(&spec);
-    return (pds_tep_update(&spec));
-}
-
-sdk::sdk_ret_t
-del(tep_feeder& feeder) {
-    pds_tep_key_t key;
-
-    feeder.key_build(&key);
-    return (pds_tep_delete(&key));
-}
-
-//----------------------------------------------------------------------------
 // Misc routines
 //----------------------------------------------------------------------------
 

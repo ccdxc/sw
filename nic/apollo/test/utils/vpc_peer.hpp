@@ -14,6 +14,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
+#include "nic/apollo/test/utils/api_base.hpp"
 
 namespace api_test {
 
@@ -47,11 +48,12 @@ public:
     sdk::sdk_ret_t info_compare(const pds_vpc_peer_info_t *info) const;
 };
 
-// Function prototypes
-sdk::sdk_ret_t create(vpc_peer_feeder& feeder);
-sdk::sdk_ret_t read(vpc_peer_feeder& feeder);
-sdk::sdk_ret_t update(vpc_peer_feeder& feeder);
-sdk::sdk_ret_t del(vpc_peer_feeder& feeder);
+// VPC peer test CRUD routines
+
+API_CREATE(vpc_peer);
+API_READ(vpc_peer);
+API_UPDATE(vpc_peer);
+API_DELETE(vpc_peer);
 
 }    // namespace api_test
 

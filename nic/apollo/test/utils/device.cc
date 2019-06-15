@@ -95,43 +95,6 @@ device_feeder::info_compare(const pds_device_info_t *info) const {
 }
 
 //----------------------------------------------------------------------------
-// Device test CRUD routines
-//----------------------------------------------------------------------------
-
-sdk::sdk_ret_t
-create(device_feeder& feeder) {
-    pds_device_spec_t spec;
-
-    feeder.spec_build(&spec);
-    return (pds_device_create(&spec));
-}
-
-sdk::sdk_ret_t
-read(device_feeder& feeder) {
-    sdk_ret_t rv;
-    pds_device_info_t info;
-
-    memset(&info, 0, sizeof(pds_device_info_t));
-    if ((rv = pds_device_read(&info)) != sdk::SDK_RET_OK)
-        return rv;
-
-    return (feeder.info_compare(&info));
-}
-
-sdk::sdk_ret_t
-update(device_feeder& feeder) {
-    pds_device_spec_t spec;
-
-    feeder.spec_build(&spec);
-    return (pds_device_update(&spec));
-}
-
-sdk::sdk_ret_t
-del(device_feeder& feeder) {
-    return (pds_device_delete());
-}
-
-//----------------------------------------------------------------------------
 // Misc routines
 //----------------------------------------------------------------------------
 

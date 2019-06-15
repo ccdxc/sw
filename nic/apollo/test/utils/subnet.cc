@@ -162,48 +162,6 @@ subnet_feeder::info_compare(const pds_subnet_info_t *info) const {
 }
 
 //----------------------------------------------------------------------------
-// Subnet test CRUD routines
-//----------------------------------------------------------------------------
-
-sdk::sdk_ret_t
-create(subnet_feeder& feeder) {
-    pds_subnet_spec_t spec;
-
-    feeder.spec_build(&spec);
-    return (pds_subnet_create(&spec));
-}
-
-sdk::sdk_ret_t
-read(subnet_feeder& feeder) {
-    sdk_ret_t rv;
-    pds_subnet_key_t key;
-    pds_subnet_info_t info;
-
-    feeder.key_build(&key);
-    memset(&info, 0, sizeof(pds_subnet_info_t));
-    if ((rv = pds_subnet_read(&key, &info)) != sdk::SDK_RET_OK)
-        return rv;
-
-    return (feeder.info_compare(&info));
-}
-
-sdk::sdk_ret_t
-update(subnet_feeder& feeder) {
-    pds_subnet_spec_t spec;
-
-    feeder.spec_build(&spec);
-    return (pds_subnet_update(&spec));
-}
-
-sdk::sdk_ret_t
-del(subnet_feeder& feeder) {
-    pds_subnet_key_t key;
-
-    feeder.key_build(&key);
-    return (pds_subnet_delete(&key));
-}
-
-//----------------------------------------------------------------------------
 // Misc routines
 //----------------------------------------------------------------------------
 

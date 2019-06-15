@@ -12,6 +12,7 @@
 
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
+#include "nic/apollo/test/utils/api_base.hpp"
 
 namespace api_test {
 
@@ -55,11 +56,12 @@ public:
     sdk::sdk_ret_t info_compare(const pds_tep_info_t *info) const;
 };
 
-// Function prototypes
-sdk::sdk_ret_t create(tep_feeder& feeder);
-sdk::sdk_ret_t read(tep_feeder& feeder);
-sdk::sdk_ret_t update(tep_feeder& feeder);
-sdk::sdk_ret_t del(tep_feeder& feeder);
+// TEP test CRUD routines
+
+API_CREATE(tep);
+API_READ(tep);
+API_UPDATE(tep);
+API_DELETE(tep);
 
 void sample_tep_setup(std::string ip_str="30.30.30.1",
                       uint32_t num_tep=PDS_MAX_TEP);

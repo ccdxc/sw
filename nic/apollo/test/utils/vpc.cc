@@ -102,48 +102,6 @@ vpc_feeder::info_compare(const pds_vpc_info_t *info) const {
 }
 
 //----------------------------------------------------------------------------
-// VPC test CRUD routines
-//----------------------------------------------------------------------------
-
-sdk::sdk_ret_t
-create(vpc_feeder& feeder) {
-    pds_vpc_spec_t spec;
-
-    feeder.spec_build(&spec);
-    return (pds_vpc_create(&spec));
-}
-
-sdk::sdk_ret_t
-read(vpc_feeder& feeder) {
-    sdk_ret_t rv;
-    pds_vpc_key_t key;
-    pds_vpc_info_t info;
-
-    feeder.key_build(&key);
-    memset(&info, 0, sizeof(pds_vpc_info_t));
-    if ((rv = pds_vpc_read(&key, &info)) != sdk::SDK_RET_OK)
-        return rv;
-
-    return (feeder.info_compare(&info));
-}
-
-sdk::sdk_ret_t
-update(vpc_feeder& feeder) {
-    pds_vpc_spec_t spec;
-
-    feeder.spec_build(&spec);
-    return (pds_vpc_update(&spec));
-}
-
-sdk::sdk_ret_t
-del(vpc_feeder& feeder) {
-    pds_vpc_key_t key;
-
-    feeder.key_build(&key);
-    return (pds_vpc_delete(&key));
-}
-
-//----------------------------------------------------------------------------
 // Misc routines
 //----------------------------------------------------------------------------
 

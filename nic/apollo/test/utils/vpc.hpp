@@ -14,6 +14,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
+#include "nic/apollo/test/utils/api_base.hpp"
 
 namespace api_test {
 
@@ -49,15 +50,17 @@ public:
     sdk::sdk_ret_t info_compare(const pds_vpc_info_t *info) const;
 };
 
+// VPC test CRUD routines
+
+API_CREATE(vpc);
+API_READ(vpc);
+API_UPDATE(vpc);
+API_DELETE(vpc);
+
 // Export variables
 extern pds_vpc_key_t k_vpc_key;
 
 // Function prototypes
-sdk::sdk_ret_t create(vpc_feeder& feeder);
-sdk::sdk_ret_t read(vpc_feeder& feeder);
-sdk::sdk_ret_t update(vpc_feeder& feeder);
-sdk::sdk_ret_t del(vpc_feeder& feeder);
-
 void sample_vpc_setup(pds_vpc_type_t type);
 void sample_vpc_setup_validate(pds_vpc_type_t type);
 void sample_vpc_teardown(pds_vpc_type_t type);

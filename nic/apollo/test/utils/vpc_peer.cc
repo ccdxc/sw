@@ -99,47 +99,4 @@ vpc_peer_feeder::info_compare(const pds_vpc_peer_info_t *info) const {
     return sdk::SDK_RET_OK;
 }
 
-//----------------------------------------------------------------------------
-// VPC peer test CRUD routines
-//----------------------------------------------------------------------------
-
-sdk::sdk_ret_t
-create(vpc_peer_feeder& feeder) {
-    pds_vpc_peer_spec_t spec;
-
-    feeder.spec_build(&spec);
-    return (pds_vpc_peer_create(&spec));
-}
-
-sdk::sdk_ret_t
-read(vpc_peer_feeder& feeder) {
-    sdk_ret_t rv;
-    pds_vpc_peer_key_t key;
-    pds_vpc_peer_info_t info;
-
-    feeder.key_build(&key);
-    if ((rv = pds_vpc_peer_read(&key, &info)) != sdk::SDK_RET_OK)
-        return rv;
-
-    return (feeder.info_compare(&info));
-}
-
-sdk::sdk_ret_t
-update(vpc_peer_feeder& feeder) {
-    pds_vpc_peer_spec_t spec;
-
-    feeder.spec_build(&spec);
-    // todo: @sai no update support yet
-    //return (pds_vpc_peer_update(&spec));
-    return sdk::SDK_RET_OK;
-}
-
-sdk::sdk_ret_t
-del(vpc_peer_feeder& feeder) {
-    pds_vpc_peer_key_t key;
-
-    feeder.key_build(&key);
-    return (pds_vpc_peer_delete(&key));
-}
-
 }    // namespace api_test

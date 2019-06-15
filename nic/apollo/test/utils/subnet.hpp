@@ -57,15 +57,17 @@ public:
     sdk::sdk_ret_t info_compare(const pds_subnet_info_t *info) const;
 };
 
+// Subnet test CRUD routines
+
+API_CREATE(subnet);
+API_READ(subnet);
+API_UPDATE(subnet);
+API_DELETE(subnet);
+
 // Export variables
 extern pds_subnet_key_t k_subnet_key;
 
 // Function prototypes
-sdk::sdk_ret_t create(subnet_feeder& feeder);
-sdk::sdk_ret_t read(subnet_feeder& feeder);
-sdk::sdk_ret_t update(subnet_feeder& feeder);
-sdk::sdk_ret_t del(subnet_feeder& feeder);
-
 void sample_subnet_setup();
 void sample_subnet_teardown();
 
