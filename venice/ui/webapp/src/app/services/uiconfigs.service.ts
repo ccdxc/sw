@@ -161,7 +161,7 @@ export class UIConfigsService {
             this.uiPermissions[key] = permission.allowed;
           });
         } else {
-          const key = _.toLower(kind) + '_' + _.toLower(action);
+          const key = _.toLower(cat) + _.toLower(kind) + '_' + _.toLower(action);
           this.uiPermissions[key] = permission.allowed;
         }
       }
