@@ -68,6 +68,11 @@ action read_pktdesc(remote_ip,
     modify_field(scratch_metadata.field1, iptype);
     modify_field(scratch_metadata.field7, pad0);
 
+    // Fill meter_idx into session info
+    modify_field(session_info_hint.meter_idx, rx_to_tx_hdr.meter_result);
+    // Tx: always rewrite dmac
+    modify_field(session_info_hint.tx_rewrite_flags_dmac, 1);
+
     // Initialize the first P1 table index
     modify_field(scratch_metadata.field20, (sip_classid << 7)|
                                             sport_classid);
@@ -82,8 +87,11 @@ action read_pktdesc(remote_ip,
                  (((scratch_metadata.field20) / 51) * 64)); // Index Bytes
 
     // Setup for route LPM lookup
-    modify_field(txdma_control.lpm1_key, remote_ip);
-    modify_field(txdma_control.lpm1_base_addr, route_base_addr);
+    if (route_base_addr != 0) {
+        modify_field(txdma_control.lpm1_key, remote_ip);
+        modify_field(txdma_control.lpm1_base_addr, route_base_addr);
+        modify_field(txdma_predicate.lpm1_enable, TRUE);
+    }
 }
 
 @pragma stage 1

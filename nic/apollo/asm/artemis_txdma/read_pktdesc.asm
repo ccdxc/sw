@@ -30,9 +30,16 @@ read_pktdesc:
     phvwr      p.txdma_control_rfc_table_addr, r1
 
     /* Setup for route LPM lookup */
-    phvwr      p.txdma_control_lpm1_key[63:0], d.read_pktdesc_d.remote_ip[63:0]
-    phvwr      p.txdma_control_lpm1_key[127:64], d.read_pktdesc_d.remote_ip[127:64]
-    phvwr      p.txdma_control_lpm1_base_addr, d.read_pktdesc_d.route_base_addr
+    sne        c1, d.read_pktdesc_d.route_base_addr, 0
+    phvwr.c1   p.txdma_control_lpm1_key[127:64], d.read_pktdesc_d.remote_ip[127:64]
+    phvwr.c1   p.txdma_control_lpm1_key[63:0], d.read_pktdesc_d.remote_ip[63:0]
+    phvwr.c1   p.txdma_control_lpm1_base_addr, d.read_pktdesc_d.route_base_addr
+    phvwr.c1   p.txdma_predicate_lpm1_enable, TRUE
+
+    // Fill meter_idx into session info
+    phvwr      p.session_info_hint_meter_idx, d.read_pktdesc_d.meter_result
+    // Tx: always rewrite dmac
+    phvwr      p.session_info_hint_tx_rewrite_flags_dmac, 1
 
     /* Initialize rx_to_tx_hdr */
     phvwr.e.f       p.{rx_to_tx_hdr_remote_ip, \

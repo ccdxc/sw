@@ -28,6 +28,12 @@ action route_res_handler() {
 
             // For NH_TYPE=ST, set the Rx: dst_ip flag to 11 (64 mapping)
             modify_field(session_info_hint.rx_rewrite_flags_dst_ip, 11);
+
+            // Enable 4-6 lookup
+            modify_field(txdma_predicate.st_enable, TRUE);
+
+            // Disable Peer VNET Route lookup
+            modify_field(txdma_predicate.lpm1_enable, FALSE);
         } else {
             // Set NHID in PHV from LPM result
             modify_field(session_info_hint.nexthop_idx, scratch_metadata.field16);
@@ -44,6 +50,9 @@ action route_res_handler() {
             // from local-ip mapping table index)and if mapping table finds entry then 
             // dst_ip rewrite flag to 10 (CA from service mapping table index)
             modify_field(session_info_hint.rx_rewrite_flags_dst_ip, 01);
+
+            // Disable Peer VNET Route lookup
+            modify_field(txdma_predicate.lpm1_enable, FALSE);
         }
     }
 }

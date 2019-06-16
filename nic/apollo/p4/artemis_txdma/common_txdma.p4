@@ -1058,27 +1058,31 @@ parser start {
 control ingress {
     common_tx_p4plus_stage0();
     if (txdma_predicate.cps_path_en == 1) {
-        if (txdma_predicate.pass_skip == 0) {
-            // LPM Tables does set the mapping_en predicate bit in pass 1 as follows:
-            //   = 0 for NH_TYPE= VNET or WORKLOAD  (then launch Mapping table based on vnet/vpc id)
-            //   = 1 for NH_TYPE= ST or WORKLOAD  (then launch Remote_46_Mapping table based on svc id)
-            // TODO-KSM: Both Action routines would reset this mapping_en bit
-            if (txdma_predicate.pass_two == 0) {
-                read_qstate();
-            } else {
-                mapping();
+        if (txdma_predicate.pass_two == 0) {
+            read_qstate();
+        } else {
+            mapping();
+            if (txdma_predicate.lpm1_enable == TRUE) {
                 vnic_info_txdma();
-                remote_46_mapping();
             }
 
-            route_lookup();
-            rfc();
-            dma();
+            if (txdma_predicate.st_enable == TRUE) {
+                remote_46_mapping();
+            }
         }
-        // hack to use mapping_en bit - fix this later
-        if (txdma_predicate.mapping_en == 1) {
+
+        if (txdma_predicate.lpm1_enable == TRUE) {
+            route_lookup();
+        }
+
+        // Hack! want a predicate bit thats not true for now.
+        // Revisit this when figuring out the final predicate bits
+        if (txdma_predicate.st_enable == TRUE) {
             iflow();
         }
+
+        rfc();
+        dma();
     } else {
         if (app_header.table0_valid == 1) {
             apply(tx_table_s1_t0);

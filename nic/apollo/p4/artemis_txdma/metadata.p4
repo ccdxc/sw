@@ -4,9 +4,9 @@
 header_type txdma_predicate_metadata_t {
     fields {
         p4plus_app_id       : 4;
-        mapping_en          : 1;
+        st_enable           : 1;
         pass_two            : 1;
-        pass_skip           : 1;
+        lpm1_enable         : 1;
         cps_path_en         : 1;
     }
 }

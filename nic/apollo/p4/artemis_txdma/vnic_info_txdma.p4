@@ -6,11 +6,6 @@ action vnic_info_txdma(lpm_base1, lpm_base2) {
     } else {
         modify_field(txdma_control.lpm1_base_addr, lpm_base2);
     }
-    // Fill meter_idx into session info
-    modify_field(session_info_hint.meter_idx, rx_to_tx_hdr.meter_result);
-    // Tx: always rewrite dmac
-    modify_field(session_info_hint.tx_rewrite_flags_dmac, 1);
-
 }
 
 @pragma stage 0

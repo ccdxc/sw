@@ -29,7 +29,7 @@ vnic_info_rxdma:
     add.c1       r1, r1, d.vnic_info_rxdma_d.lpm_base1
     phvwr.!c1    p.rx_to_tx_hdr_sacl_base_addr, d.vnic_info_rxdma_d.lpm_base2
     phvwr.!c1    p.lpm_metadata_meter_base_addr, d.vnic_info_rxdma_d.lpm_base4
-    phvwr.c1     p.rx_to_tx_hdr_route_base_addr, d.vnic_info_rxdma_d.lpm_base6
+    phvwr.!c1    p.rx_to_tx_hdr_route_base_addr, d.vnic_info_rxdma_d.lpm_base6
     add.!c1      r1, r1, d.vnic_info_rxdma_d.lpm_base2
     phvwr        p.lpm_metadata_lpm2_base_addr, r1
 

@@ -33,7 +33,7 @@ read_qstate_info:
     phvwr.f     p.txdma_control_payload_addr, r2
 
 txdma_q_empty:
-    phvwr.e     p.txdma_predicate_pass_skip, TRUE
+    nop.e
     phvwr.f     p.capri_intr_drop, 1
 
 /*****************************************************************************/
