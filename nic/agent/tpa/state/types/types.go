@@ -36,6 +36,8 @@ type CollectorKey struct {
 	VrfID uint64
 	// Interval in seconds
 	Interval uint32
+	// TemplateInterval in seconds
+	TemplateInterval uint32
 	// Format is the export format, IPFIX only now
 	Format halproto.ExportFormat
 	// Destination is the collector address
@@ -48,18 +50,36 @@ type CollectorKey struct {
 
 // String function converts key to string
 func (c *CollectorKey) String() string {
-	return fmt.Sprintf("%d:%d:%d:%s:%d:%d", c.VrfID, c.Interval, c.Format, c.Destination, c.Protocol, c.Port)
+	return fmt.Sprintf("%d:%d:%d:%d:%s:%d:%d", c.VrfID, c.Interval, c.TemplateInterval, c.Format, c.Destination, c.Protocol, c.Port)
 }
 
 // ParseCollectorKey parses string to collector key, used for debug
 func ParseCollectorKey(buff string) CollectorKey {
 	var c CollectorKey
-	fmt.Sscanf(buff, "%d:%d:%d:%s:%d:%d", &c.VrfID, &c.Interval, &c.Format, &c.Destination, &c.Protocol, &c.Port)
+
+	atoi := func(s string) int {
+		if v, err := strconv.Atoi(s); err == nil {
+			return v
+		}
+		return 0
+	}
+	s := strings.Split(buff, ":")
+	if len(s) == 7 {
+		c.VrfID = uint64(atoi(s[0]))
+		c.Interval = uint32(atoi(s[1]))
+		c.TemplateInterval = uint32(atoi(s[2]))
+		c.Format = halproto.ExportFormat(atoi(s[3]))
+		c.Destination = s[4]
+		c.Protocol = halproto.IPProtocol(atoi(s[5]))
+		c.Port = uint32(atoi(s[6]))
+	}
 	return c
 }
 
 // CollectorData is the data stored in collector hash table
 type CollectorData struct {
+	// Key contsains collector parameters
+	Key CollectorKey
 	// CollectorID is the key to hal apis
 	CollectorID uint64
 	// PolicyNames are policies referring to this collector

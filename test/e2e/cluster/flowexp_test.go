@@ -4,8 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
+	"strings"
 	"time"
+
+	"github.com/calmh/ipfix"
+
+	"github.com/pensando/sw/venice/utils/ipfix/server"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -71,7 +77,7 @@ var _ = Describe("flow export policy tests", func() {
 					VrfName:  globals.DefaultVrf,
 					Interval: "10s",
 					Format:   monitoring.FlowExportPolicySpec_Ipfix.String(),
-					MatchRules: []monitoring.MatchRule{
+					MatchRules: []*monitoring.MatchRule{
 						{
 							Src: &monitoring.MatchSelector{
 								IPAddresses: []string{"any"},
@@ -86,7 +92,6 @@ var _ = Describe("flow export policy tests", func() {
 					},
 					Exports: []monitoring.ExportConfig{
 						{
-							// todo: configure only 1 collector for now till agent is fixed
 							Destination: fmt.Sprintf("192.168.100.%d", i+1),
 							Transport:   "UDP/5545",
 						},
@@ -253,7 +258,7 @@ var _ = Describe("flow export policy tests", func() {
 					VrfName:  globals.DefaultVrf,
 					Interval: "10s",
 					Format:   monitoring.FlowExportPolicySpec_Ipfix.String(),
-					MatchRules: []monitoring.MatchRule{
+					MatchRules: []*monitoring.MatchRule{
 						{
 							Src: &monitoring.MatchSelector{
 								IPAddresses: []string{fmt.Sprintf("192.168.100.%d", i+1)},
@@ -468,7 +473,7 @@ var _ = Describe("flow export policy tests", func() {
 					VrfName:  globals.DefaultVrf,
 					Interval: "10s",
 					Format:   monitoring.FlowExportPolicySpec_Ipfix.String(),
-					MatchRules: []monitoring.MatchRule{
+					MatchRules: []*monitoring.MatchRule{
 						{
 							Src: &monitoring.MatchSelector{
 								IPAddresses: []string{fmt.Sprintf("192.168.20.%d", i+1)},
@@ -670,6 +675,114 @@ var _ = Describe("flow export policy tests", func() {
 
 		})
 
+		It("Should receive ipfix templates in collector", func() {
+			Skip("+++to debug CI failure")
+			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			defer cancel()
+			ctx := ts.tu.NewLoggedInContext(pctx)
+			testFwSpecList := make([]monitoring.FlowExportPolicySpec, tpm.MaxCollectorPerPolicy)
+			collectors := make([]struct {
+				addr string
+				port string
+				ch   chan ipfix.Message
+			}, tpm.MaxCollectorPerPolicy)
+
+			conn, err := net.Dial("udp", "8.8.8.8:80")
+			Expect(err).ShouldNot(HaveOccurred())
+			defer conn.Close()
+			localAddr := conn.LocalAddr().(*net.UDPAddr)
+
+			for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
+				addr, ch, err := server.NewServer(pctx, localAddr.IP.String()+":0")
+				Expect(err).ShouldNot(HaveOccurred())
+				s := strings.Split(addr, ":")
+				Expect(s).Should(HaveLen(2), "invalid addr/port")
+				collectors[i].addr = s[0]
+				collectors[i].port = s[1]
+				collectors[i].ch = ch
+			}
+
+			for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
+				testFwSpecList[i] = monitoring.FlowExportPolicySpec{
+					VrfName:          globals.DefaultVrf,
+					Interval:         "10s",
+					TemplateInterval: "5m",
+					Format:           monitoring.FlowExportPolicySpec_Ipfix.String(),
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: collectors[i].addr,
+							Transport:   fmt.Sprintf("UDP/%v", collectors[i].port),
+						},
+					},
+				}
+
+				flowPolicy := &monitoring.FlowExportPolicy{
+					TypeMeta: api.TypeMeta{
+						Kind: "FlowExportPolicy",
+					},
+					ObjectMeta: api.ObjectMeta{
+						Name:      fmt.Sprintf("flowexp-%d", i),
+						Tenant:    globals.DefaultTenant,
+						Namespace: globals.DefaultNamespace,
+					},
+					Spec: testFwSpecList[i],
+				}
+				_, err := flowExpClient.Create(ctx, flowPolicy)
+				Expect(err).ShouldNot(HaveOccurred())
+				By(fmt.Sprintf("create flow export Policy %v", flowPolicy.Name))
+			}
+
+			nodeAuthFile, err := utils.GetNodeAuthTokenTempFile(ctx, apiGwAddr, []string{"*"})
+			Expect(err).ShouldNot(HaveOccurred())
+			defer os.Remove(nodeAuthFile)
+
+			Eventually(func() error {
+				By("verify flow export policy in Venice")
+				pl, err := flowExpClient.List(ctx, &api.ListWatchOptions{})
+				if err != nil {
+					return err
+				}
+
+				if len(pl) != len(testFwSpecList) {
+					By(fmt.Sprintf("received flow export policy from venice %+v", pl))
+					return fmt.Errorf("invalid number of policy in Venice, got %v expected %+v", len(pl), len(testFwSpecList))
+				}
+
+				for _, naples := range ts.tu.NaplesNodes {
+					By(fmt.Sprintf("verify flow export policy in %v", naples))
+					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
+					var naplesPol []tpmprotos.FlowExportPolicy
+					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
+						By(fmt.Sprintf("failed to unmarshal %v, %v", string(st), err))
+						return err
+					}
+
+					if len(naplesPol) != len(testFwSpecList) {
+						By(fmt.Sprintf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList)))
+						return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
+					}
+
+				}
+				return nil
+			}, 120, 2).Should(BeNil(), "failed to find flow export policy")
+
+			for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
+				select {
+				case m, ok := <-collectors[i].ch:
+					hdr := m.Header
+					Expect(ok).Should(BeTrue())
+					Expect(m.TemplateRecords).Should(HaveLen(3), "expected 3 templates, got %v", len(m.TemplateRecords))
+					Expect(int(hdr.Version)).Should(Equal(0x0a), "invalid version %v", hdr.Version)
+					Expect(int(hdr.SequenceNumber)).Should(Equal(0), "invalid sequence number %v", hdr.SequenceNumber)
+					Expect(int(hdr.DomainID)).Should(Equal(0), "invalid domain id %v", hdr.DomainID)
+					Expect(int(hdr.Length)).Should(Equal(500), "invalid length %v", hdr.Length)
+				case <-time.After(time.Second * 5):
+					Expect(false).Should(BeTrue(), "timed-out to receive template")
+				}
+			}
+
+		})
+
 		It("validate flow export policy", func() {
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
@@ -694,7 +807,7 @@ var _ = Describe("flow export policy tests", func() {
 						},
 
 						Spec: monitoring.FlowExportPolicySpec{
-							MatchRules: []monitoring.MatchRule{
+							MatchRules: []*monitoring.MatchRule{
 								{
 									Src: &monitoring.MatchSelector{
 										IPAddresses: []string{"1.1.1.1"},
@@ -742,7 +855,7 @@ var _ = Describe("flow export policy tests", func() {
 						},
 
 						Spec: monitoring.FlowExportPolicySpec{
-							MatchRules: []monitoring.MatchRule{
+							MatchRules: []*monitoring.MatchRule{
 								{
 									Src: &monitoring.MatchSelector{
 										IPAddresses: []string{"1.1.1.1"},
@@ -795,7 +908,7 @@ var _ = Describe("flow export policy tests", func() {
 						},
 
 						Spec: monitoring.FlowExportPolicySpec{
-							MatchRules: []monitoring.MatchRule{
+							MatchRules: []*monitoring.MatchRule{
 								{
 									Src: &monitoring.MatchSelector{
 										IPAddresses: []string{"1.1.1.1"},
@@ -849,7 +962,7 @@ var _ = Describe("flow export policy tests", func() {
 						},
 
 						Spec: monitoring.FlowExportPolicySpec{
-							MatchRules: []monitoring.MatchRule{
+							MatchRules: []*monitoring.MatchRule{
 								{
 									Src: &monitoring.MatchSelector{
 										IPAddresses: []string{"1.1.1.1"},
@@ -902,7 +1015,7 @@ var _ = Describe("flow export policy tests", func() {
 						},
 
 						Spec: monitoring.FlowExportPolicySpec{
-							MatchRules: []monitoring.MatchRule{
+							MatchRules: []*monitoring.MatchRule{
 								{
 									Src: &monitoring.MatchSelector{
 										IPAddresses: []string{"1.1.1.1"},
@@ -931,6 +1044,59 @@ var _ = Describe("flow export policy tests", func() {
 
 							Interval: "10s",
 							Format:   "NETFLOW",
+							Exports: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.1",
+									Transport:   "TCP/5055",
+								},
+							},
+						},
+					},
+				},
+				{
+					name: "invalid template interval",
+					fail: true,
+					policy: monitoring.FlowExportPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "flowExportPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+
+						Spec: monitoring.FlowExportPolicySpec{
+							Interval:         "10s",
+							TemplateInterval: "1h",
+							Format:           "IPFIX",
+							Exports: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.1",
+									Transport:   "TCP/5055",
+								},
+							},
+						},
+					},
+				},
+
+				{
+					name: "invalid template interval",
+					fail: true,
+					policy: monitoring.FlowExportPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "flowExportPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+
+						Spec: monitoring.FlowExportPolicySpec{
+							Interval:         "10s",
+							TemplateInterval: "1s",
+							Format:           "IPFIX",
 							Exports: []monitoring.ExportConfig{
 								{
 									Destination: "192.168.100.1",

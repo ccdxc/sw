@@ -21,6 +21,7 @@ flowmonpolicy_template = {
     },
     "spec": {
         "interval": "1s",
+        "template-interval": "5m",
         "format": "IPFIX",
         "exports": [
           {

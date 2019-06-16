@@ -3,6 +3,7 @@ package state
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 	"reflect"
 	"testing"
@@ -29,6 +30,7 @@ import (
 const emDbPath = "/tmp/naples-tpagent.db"
 
 func cleanup(t *testing.T, ag *PolicyState) {
+
 	l, err := ag.store.List(&types.FlowExportPolicyTable{
 		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
 			TypeMeta: api.TypeMeta{Kind: "FlowExportPolicy"},
@@ -41,6 +43,7 @@ func cleanup(t *testing.T, ag *PolicyState) {
 			tu.AssertOk(t, err, fmt.Sprintf("failed to delete export policy %+v", i))
 		}
 	}
+
 	ag.Close()
 	os.Remove(emDbPath)
 }
@@ -54,7 +57,14 @@ func createDataStore() (emstore.Emstore, error) {
 }
 
 func mockGetMgmtIPAddr() string {
-	return "192.168.1.199"
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		return "192.168.1.199"
+	}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+	return localAddr.IP.String()
 }
 
 func TestValidateMeta(t *testing.T) {
@@ -230,16 +240,17 @@ func TestFindNumExports(t *testing.T) {
 						},
 					},
 				},
-				Interval: "15s",
-				Format:   "IPFIX",
+				Interval:         "15s",
+				TemplateInterval: "5m",
+				Format:           "IPFIX",
 				Exports: []monitoring.ExportConfig{
 					{
 						Destination: fmt.Sprintf("192.168.3.%d", i+1),
-						Transport:   "TCP/1234",
+						Transport:   "udp/5555",
 					},
 					{
 						Destination: fmt.Sprintf("192.168.4.%d", i+1),
-						Transport:   "TCP/1234",
+						Transport:   "udp/6666",
 					},
 				},
 			},
@@ -254,10 +265,10 @@ func TestFindNumExports(t *testing.T) {
 			tu.Assert(t, err != nil, fmt.Sprintf("didn't fail for max collectors"))
 		}
 
-		pctx := policyDb{
+		pctx := &policyDb{
 			state: s,
 		}
-		pctx.collectorTable, _ = pctx.readCollectorTable()
+		pctx.readCollectorTable()
 		num := pctx.findNumCollectors()
 
 		if i <= 8 {
@@ -363,9 +374,10 @@ func TestValidatePolicy(t *testing.T) {
 					},
 				},
 			},
-			Interval: "15s",
-			Format:   "IPFIX",
-			Exports:  []monitoring.ExportConfig{},
+			Interval:         "15s",
+			TemplateInterval: "6m",
+			Format:           "IPFIX",
+			Exports:          []monitoring.ExportConfig{},
 		}}
 
 	_, err = ag.validatePolicy(pol)
@@ -375,8 +387,9 @@ func TestValidatePolicy(t *testing.T) {
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default"},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			Interval: "15s",
-			Format:   "IPFIX",
+			Interval:         "15s",
+			TemplateInterval: "5m",
+			Format:           "IPFIX",
 			Exports: []monitoring.ExportConfig{
 				{Transport: "TCP/1234"},
 			},
@@ -390,8 +403,9 @@ func TestValidatePolicy(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default"},
 		Spec: tpmprotos.FlowExportPolicySpec{
 
-			Interval: "15s",
-			Format:   "IPFIX",
+			Interval:         "15s",
+			TemplateInterval: "5m",
+			Format:           "IPFIX",
 			Exports: []monitoring.ExportConfig{
 				{
 					Destination: destAddr,
@@ -430,8 +444,9 @@ func TestValidatePolicy(t *testing.T) {
 					},
 				},
 			},
-			Interval: "15s",
-			Format:   "IPFIX",
+			Interval:         "15s",
+			TemplateInterval: "5m",
+			Format:           "IPFIX",
 			Exports: []monitoring.ExportConfig{
 				{
 					Destination: destAddr,
@@ -473,7 +488,8 @@ func TestValidatePolicy(t *testing.T) {
 					},
 				},
 			},
-			Format: "IPFIX",
+			Format:           "IPFIX",
+			TemplateInterval: "5m",
 			Exports: []monitoring.ExportConfig{
 				{
 					Destination: destAddr,
@@ -486,11 +502,8 @@ func TestValidatePolicy(t *testing.T) {
 		interval string
 		pass     bool
 	}{
-		{interval: "15ns", pass: false},
-		{interval: "15us", pass: false},
-		{interval: "15µs", pass: false},
-		{interval: "999ms", pass: false},
-		{interval: "25h", pass: false},
+
+		{interval: "25h", pass: true},
 		{interval: "1s", pass: true},
 	}
 
@@ -649,8 +662,9 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 						},
 					},
 				},
-				Interval: "15s",
-				Format:   "IPFIX",
+				Interval:         "15s",
+				TemplateInterval: "5m",
+				Format:           "IPFIX",
 				Exports: []monitoring.ExportConfig{
 					{
 						Destination: fmt.Sprintf("192.168.3.%d", 10+l),
@@ -692,8 +706,9 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 						},
 					},
 				},
-				Interval: "15s",
-				Format:   "IPFIX",
+				Interval:         "15s",
+				TemplateInterval: "5m",
+				Format:           "IPFIX",
 				Exports: []monitoring.ExportConfig{
 					{
 						Destination: fmt.Sprintf("192.168.3.%d", 10+l),
@@ -841,8 +856,9 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: policyPrefix, Tenant: "default", Namespace: "default"},
 
 		Spec: tpmprotos.FlowExportPolicySpec{
-			Interval: "15s",
-			Format:   "IPFIX",
+			Interval:         "15s",
+			TemplateInterval: "5m",
+			Format:           "IPFIX",
 			MatchRules: []tsproto.MatchRule{
 				{
 					Src: &tsproto.MatchSelector{
@@ -942,8 +958,9 @@ func TestNetagentInfo(t *testing.T) {
 					},
 				},
 			},
-			Interval: "15s",
-			Format:   "IPFIX",
+			Interval:         "15s",
+			TemplateInterval: "5m",
+			Format:           "IPFIX",
 			Exports: []monitoring.ExportConfig{
 				{
 					Destination: "10.10.10.1",
@@ -1098,8 +1115,9 @@ func TestTpaDebug(t *testing.T) {
 					},
 				},
 			},
-			Interval: "15s",
-			Format:   "IPFIX",
+			Interval:         "15s",
+			TemplateInterval: "5m",
+			Format:           "IPFIX",
 			Exports: []monitoring.ExportConfig{
 				{
 					Destination: "10.10.10.1",
@@ -1317,8 +1335,9 @@ func TestPolicyOps(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: "matchrule-1", Tenant: "default", Namespace: "default"},
 
 		Spec: tpmprotos.FlowExportPolicySpec{
-			Interval: "15s",
-			Format:   "IPFIX",
+			Interval:         "15s",
+			TemplateInterval: "5m",
+			Format:           "IPFIX",
 			MatchRules: []tsproto.MatchRule{
 				{
 					Src: &tsproto.MatchSelector{
@@ -1393,8 +1412,9 @@ func TestPolicyOps(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: "matchrule-overlap", Tenant: "default", Namespace: "default"},
 
 		Spec: tpmprotos.FlowExportPolicySpec{
-			Interval: "15s",
-			Format:   "IPFIX",
+			Interval:         "15s",
+			TemplateInterval: "5m",
+			Format:           "IPFIX",
 			MatchRules: []tsproto.MatchRule{
 				{
 					Src: &tsproto.MatchSelector{
@@ -1440,8 +1460,9 @@ func TestPolicyOps(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: "matchrule-overlap", Tenant: "default", Namespace: "default"},
 
 		Spec: tpmprotos.FlowExportPolicySpec{
-			Interval: "15s",
-			Format:   "IPFIX",
+			Interval:         "15s",
+			TemplateInterval: "5m",
+			Format:           "IPFIX",
 			MatchRules: []tsproto.MatchRule{
 				{
 					Src: &tsproto.MatchSelector{
@@ -1599,6 +1620,7 @@ func TestMatchRule(t *testing.T) {
         ],
         "format": "IPFIX",
         "interval": "1s",
+		"template-interval": "5m",
         "match-rules": [
             {
                 "app-protocol-selectors": {
@@ -2194,7 +2216,7 @@ func TestMatchRule(t *testing.T) {
 	halMock.EXPECT().FlowMonitorRuleCreate(gomock.Any(), gomock.Any()).Return(flowResp, nil).Times(32)
 
 	err = s.CreateFlowExportPolicy(context.Background(), pol)
-	tu.AssertOk(t, err, fmt.Sprintf("failed to create export policy %+v", pol))
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create export policy"))
 
 	data, err := s.Debug(nil)
 	tu.AssertOk(t, err, "failed to read debug")
@@ -2263,7 +2285,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 				},
 
 				Spec: monitoring.FlowExportPolicySpec{
-					MatchRules: []monitoring.MatchRule{
+					MatchRules: []*monitoring.MatchRule{
 						{
 							Src: &monitoring.MatchSelector{
 								IPAddresses: []string{"1.1.1.1"},
@@ -2290,8 +2312,9 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 						},
 					},
 
-					Interval: "15s",
-					Format:   "IPFIX",
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
 					Exports: []monitoring.ExportConfig{
 						{
 							Destination: "10.1.1.100",
@@ -2316,7 +2339,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 				},
 
 				Spec: monitoring.FlowExportPolicySpec{
-					MatchRules: []monitoring.MatchRule{
+					MatchRules: []*monitoring.MatchRule{
 						{
 							Src: &monitoring.MatchSelector{
 								IPAddresses: []string{"1.1.1.1"},
@@ -2343,8 +2366,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 						},
 					},
 
-					Interval: "155",
-					Format:   "IPFIX",
+					Format: "IPFIX",
 					Exports: []monitoring.ExportConfig{
 						{
 							Destination: "10.1.1.100",
@@ -2369,7 +2391,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 				},
 
 				Spec: monitoring.FlowExportPolicySpec{
-					MatchRules: []monitoring.MatchRule{
+					MatchRules: []*monitoring.MatchRule{
 						{
 							Src: &monitoring.MatchSelector{
 								IPAddresses: []string{"1.1.1.1"},
@@ -2396,8 +2418,9 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 						},
 					},
 
-					Interval: "15s",
-					Format:   "NETFLOW",
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "NETFLOW",
 					Exports: []monitoring.ExportConfig{
 						{
 							Destination: "10.1.1.100",
@@ -2408,8 +2431,8 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 			},
 		},
 		{
-			name: "invalid match rule",
-			fail: true,
+			name: "no match rule",
+			fail: false,
 			policy: monitoring.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{
 					Kind: "flowExportPolicy",
@@ -2421,8 +2444,9 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 				},
 
 				Spec: monitoring.FlowExportPolicySpec{
-					Interval: "15s",
-					Format:   "IPFIX",
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
 					Exports: []monitoring.ExportConfig{
 						{
 							Destination: "10.1.1.100",
@@ -2447,7 +2471,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 				},
 
 				Spec: monitoring.FlowExportPolicySpec{
-					MatchRules: []monitoring.MatchRule{
+					MatchRules: []*monitoring.MatchRule{
 						{
 							Src: &monitoring.MatchSelector{
 								IPAddresses: []string{"1.1.1.1"},
@@ -2474,8 +2498,9 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 						},
 					},
 
-					Interval: "15s",
-					Format:   "IPFIX",
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
 				},
 			},
 		},
@@ -2494,7 +2519,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 				},
 
 				Spec: monitoring.FlowExportPolicySpec{
-					MatchRules: []monitoring.MatchRule{
+					MatchRules: []*monitoring.MatchRule{
 						{
 							Src: &monitoring.MatchSelector{
 								IPAddresses: []string{"1.1.1.1"},
@@ -2521,8 +2546,9 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 						},
 					},
 
-					Interval: "15s",
-					Format:   "IPFIX",
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
 					Exports: []monitoring.ExportConfig{
 						{
 							Destination: "10.1.1.100",

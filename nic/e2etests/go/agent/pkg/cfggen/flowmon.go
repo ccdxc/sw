@@ -76,7 +76,7 @@ func (c *CfgGen) GenerateFlowMonitorRules() error {
 	return nil
 }
 
-func (c *CfgGen) generateFlowMonRules(namespace string, count int) (rules []monitoring.MatchRule) {
+func (c *CfgGen) generateFlowMonRules(namespace string, count int) (rules []*monitoring.MatchRule) {
 	sgpRules := c.generatePolicyRules(namespace, count)
 
 	for _, s := range sgpRules {
@@ -97,7 +97,7 @@ func (c *CfgGen) generateFlowMonRules(namespace string, count int) (rules []moni
 		} else {
 			protoPorts = convertProtoPort(s.Dst.AppConfigs[0])
 		}
-		r := monitoring.MatchRule{
+		r := &monitoring.MatchRule{
 			Src: &monitoring.MatchSelector{
 				IPAddresses: s.Src.Addresses,
 			},

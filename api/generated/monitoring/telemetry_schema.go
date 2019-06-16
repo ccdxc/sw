@@ -62,7 +62,7 @@ var typesMapTelemetry = map[string]*api.Struct{
 			"namespace":         api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
 			"resource-version":  api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":         api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
-			"template_interval": api.CLIInfo{Path: "Spec.TemplateInterval", Skip: false, Insert: "", Help: ""},
+			"template-interval": api.CLIInfo{Path: "Spec.TemplateInterval", Skip: false, Insert: "", Help: ""},
 			"tenant":            api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
 			"uuid":              api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 			"vrf-name":          api.CLIInfo{Path: "Spec.VrfName", Skip: false, Insert: "", Help: ""},
@@ -75,11 +75,11 @@ var typesMapTelemetry = map[string]*api.Struct{
 
 			"Interval": api.Field{Name: "Interval", CLITag: api.CLIInfo{ID: "interval", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interval", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"TemplateInterval": api.Field{Name: "TemplateInterval", CLITag: api.CLIInfo{ID: "template_interval", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "template_interval", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"TemplateInterval": api.Field{Name: "TemplateInterval", CLITag: api.CLIInfo{ID: "template-interval", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "template-interval", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Format": api.Field{Name: "Format", CLITag: api.CLIInfo{ID: "format", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "format", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"MatchRules": api.Field{Name: "MatchRules", CLITag: api.CLIInfo{ID: "match-rules", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "match-rules", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.MatchRule"},
+			"MatchRules": api.Field{Name: "MatchRules", CLITag: api.CLIInfo{ID: "match-rules", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "match-rules", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.MatchRule"},
 
 			"Exports": api.Field{Name: "Exports", CLITag: api.CLIInfo{ID: "exports", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "exports", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.ExportConfig"},
 		},

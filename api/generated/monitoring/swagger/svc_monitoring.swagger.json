@@ -3577,8 +3577,8 @@
             "type": "string"
           },
           {
-            "name": "spec.template_interval",
-            "description": "TemplateInterval defines how often to send ipfix templates to an external collector\nThe value is specified as a string format, '3m', '10m'. should be a valid time duration between 3m0s and 24h0m0s",
+            "name": "spec.template-interval",
+            "description": "TemplateInterval defines how often to send ipfix templates to an external collector\nThe value is specified as a string format, '1m', '10m'. should be a valid time duration between 1m0s and 30m0s",
             "in": "query",
             "required": false,
             "type": "string"
@@ -8725,8 +8725,8 @@
             "type": "string"
           },
           {
-            "name": "spec.template_interval",
-            "description": "TemplateInterval defines how often to send ipfix templates to an external collector\nThe value is specified as a string format, '3m', '10m'. should be a valid time duration between 3m0s and 24h0m0s",
+            "name": "spec.template-interval",
+            "description": "TemplateInterval defines how often to send ipfix templates to an external collector\nThe value is specified as a string format, '1m', '10m'. should be a valid time duration between 1m0s and 30m0s",
             "in": "query",
             "required": false,
             "type": "string"
@@ -13921,7 +13921,7 @@
       "type": "object",
       "required": [
         "interval",
-        "template_interval",
+        "template-interval",
         "format"
       ],
       "properties": {
@@ -13936,12 +13936,12 @@
           "description": "should be a valid time duration between 1s and 24h0m0s",
           "title": "Interval defines how often to push the records to an external collector\nThe value is specified as a string format, '10s', '20m'"
         },
-        "template_interval": {
+        "template-interval": {
           "type": "string",
-          "default": "3m",
+          "default": "5m",
           "example": "2h",
-          "description": "should be a valid time duration between 3m0s and 24h0m0s",
-          "title": "TemplateInterval defines how often to send ipfix templates to an external collector\nThe value is specified as a string format, '3m', '10m'"
+          "description": "should be a valid time duration between 1m0s and 30m0s",
+          "title": "TemplateInterval defines how often to send ipfix templates to an external collector\nThe value is specified as a string format, '1m', '10m'"
         },
         "format": {
           "type": "string",

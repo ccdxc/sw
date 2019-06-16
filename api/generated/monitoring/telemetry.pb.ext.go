@@ -133,7 +133,7 @@ func (m *FlowExportPolicySpec) Defaults(ver string) bool {
 	default:
 		m.Format = "Ipfix"
 		m.Interval = "10s"
-		m.TemplateInterval = "3m"
+		m.TemplateInterval = "5m"
 	}
 	return ret
 }
@@ -447,8 +447,9 @@ func (m *FlowExportPolicySpec) Normalize() {
 	m.Format = FlowExportPolicySpec_Formats_normal[strings.ToLower(m.Format)]
 
 	for _, v := range m.MatchRules {
-		v.Normalize()
-
+		if v != nil {
+			v.Normalize()
+		}
 	}
 
 }
@@ -779,8 +780,8 @@ func init() {
 	validatorMapTelemetry["FlowExportPolicySpec"]["all"] = append(validatorMapTelemetry["FlowExportPolicySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FlowExportPolicySpec)
 		args := make([]string, 0)
-		args = append(args, "3m")
-		args = append(args, "24h")
+		args = append(args, "1m")
+		args = append(args, "30m")
 
 		if err := validators.Duration(m.TemplateInterval, args); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"TemplateInterval", err.Error())

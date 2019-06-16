@@ -12,6 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/venice/utils"
+
 	"github.com/pensando/sw/venice/ctrler/tpm"
 
 	"github.com/pensando/sw/nic/agent/ipc"
@@ -19,7 +21,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
-	tpmprotos "github.com/pensando/sw/nic/agent/protos/tpmprotos"
+	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -85,6 +87,8 @@ func NewTpAgent(pctx context.Context, agentPort string) (*PolicyState, error) {
 		emstore:         s,
 		netAgentURL:     "http://127.0.0.1:" + agentPort,
 		fwLogCollectors: sync.Map{},
+		hostName:        utils.GetHostname(),
+		appName:         globals.Tmagent,
 	}
 
 	state.connectSyslog()
@@ -209,7 +213,7 @@ func (s *PolicyState) newSyslog(c *fwlogCollector) error {
 
 	switch c.format {
 	case monitoring.MonitoringExportFormat_SYSLOG_BSD.String():
-		fd, err := syslog.NewBsd(strings.ToLower(c.proto), fmt.Sprintf("%s:%s", c.destination, c.port), facility|priority, "mytag")
+		fd, err := syslog.NewBsd(strings.ToLower(c.proto), fmt.Sprintf("%s:%s", c.destination, c.port), facility|priority, s.hostName)
 		if err != nil {
 			return err
 		}
@@ -635,7 +639,7 @@ func (s *PolicyState) sendFwLog(c *fwlogCollector, data map[string]string) {
 		if err := c.syslogFd.Info(&syslog.Message{
 			MsgID: data["rule-id"], // set rule-id
 			StructuredData: syslog.StrData{
-				"firewall@Pensando": data,
+				"firewall-log": data,
 			},
 		}); err != nil {
 			c.txErr++

@@ -10,7 +10,13 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
+	"syscall"
 	"time"
+
+	"golang.org/x/sys/unix"
+
+	"github.com/pensando/sw/venice/utils/ipfix"
 
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/ctrler/tpm"
@@ -33,6 +39,7 @@ import (
 const (
 	flowExportPolicyID      = "flowExportPolicyId"
 	maxFlowExportCollectors = 16
+	ipfixSrcPort            = 32007 // src port used by datapath
 )
 
 // PolicyState keeps the agent state
@@ -43,6 +50,18 @@ type PolicyState struct {
 	getMgmtIPAddr func() string
 	store         emstore.Emstore
 	hal           halproto.TelemetryClient
+	// ipfix template context to store timer info
+	ipfixCtx *sync.Map
+}
+
+// ipfixTemplateContext is the context for ipfix  templates
+type ipfixTemplateContext struct {
+	cancel context.CancelFunc
+	tick   *time.Ticker
+	// txMsg num.of template messages sent
+	txMsg uint64
+	// txErr num. failures to send template
+	txErr uint64
 }
 
 // internal state from db
@@ -74,6 +93,15 @@ func NewTpAgent(netAgent *agstate.Nagent, getMgmtIPAddr func() string, halTm hal
 		netAgent:      netAgent,
 		getMgmtIPAddr: getMgmtIPAddr,
 		hal:           halTm,
+		ipfixCtx:      &sync.Map{},
+	}
+
+	// restart? check if there are collectors configured in hal
+	pctx := &policyDb{state: state}
+	pctx.readCollectorTable()
+	for _, cdata := range pctx.collectorTable.Collector {
+		ckey := &cdata.Key
+		state.SendTemplates(context.Background(), ckey)
 	}
 
 	return state, nil
@@ -162,6 +190,24 @@ func validateFlowExportInterval(s string) (time.Duration, error) {
 	return interval, nil
 }
 
+func validateTemplateInterval(s string) (time.Duration, error) {
+
+	interval, err := time.ParseDuration(s)
+	if err != nil {
+		return interval, fmt.Errorf("invalid template interval %s", s)
+	}
+
+	if interval < time.Minute {
+		return interval, fmt.Errorf("too small template interval %s", s)
+	}
+
+	if interval > 30*time.Minute {
+		return interval, fmt.Errorf("too large template interval %s", s)
+	}
+
+	return interval, nil
+}
+
 func validateFlowExportFormat(s string) error {
 	if halproto.ExportFormat_name[int32(halproto.ExportFormat_IPFIX)] != strings.ToUpper(s) {
 		return fmt.Errorf("invalid format %s", s)
@@ -177,27 +223,29 @@ func ValidateFlowExportPolicy(p *monitoring.FlowExportPolicy) error {
 		return err
 	}
 
+	if _, err := validateTemplateInterval(spec.TemplateInterval); err != nil {
+		return err
+	}
+
 	if err := validateFlowExportFormat(spec.Format); err != nil {
 		return err
 	}
 
-	if len(spec.MatchRules) == 0 {
-		return fmt.Errorf("no matchrules specified ")
-	}
+	if len(spec.MatchRules) != 0 {
+		data, err := json.Marshal(spec.MatchRules)
+		if err != nil {
+			return fmt.Errorf("failed to marshal, %v", err)
+		}
 
-	data, err := json.Marshal(spec.MatchRules)
-	if err != nil {
-		return fmt.Errorf("failed to marshal, %v", err)
-	}
+		matchrules := []tsproto.MatchRule{}
+		if err := json.Unmarshal(data, &matchrules); err != nil {
+			return fmt.Errorf("failed to unmarshal, %v", err)
+		}
 
-	matchrules := []tsproto.MatchRule{}
-	if err := json.Unmarshal(data, &matchrules); err != nil {
-		return fmt.Errorf("failed to unmarshal, %v", err)
-	}
-
-	if err := utils.ValidateMatchRules(p.ObjectMeta, matchrules,
-		func(meta api.ObjectMeta) (*netproto.Endpoint, error) { return nil, nil }); err != nil {
-		return fmt.Errorf("error in match-rule, %v", err)
+		if err := utils.ValidateMatchRules(p.ObjectMeta, matchrules,
+			func(meta api.ObjectMeta) (*netproto.Endpoint, error) { return nil, nil }); err != nil {
+			return fmt.Errorf("error in match-rule, %v", err)
+		}
 	}
 
 	if len(spec.Exports) == 0 {
@@ -245,18 +293,23 @@ func (s *PolicyState) validatePolicy(p *tpmprotos.FlowExportPolicy) (map[types.C
 
 	interval, err := validateFlowExportInterval(spec.Interval)
 	if err != nil {
-		return nil, err
+		interval = 10 * time.Second
 	}
+
+	templInterval, err := validateTemplateInterval(spec.TemplateInterval)
+	if err != nil {
+		templInterval = 5 * time.Minute
+	}
+
 	if err := validateFlowExportFormat(spec.Format); err != nil {
 		return nil, err
 	}
 
-	if len(spec.MatchRules) == 0 {
-		return nil, fmt.Errorf("no matchrule specified")
-	}
+	if len(spec.MatchRules) != 0 {
 
-	if err := utils.ValidateMatchRules(p.ObjectMeta, spec.MatchRules, s.netAgent.FindEndpoint); err != nil {
-		return nil, fmt.Errorf("error in match-rule, %v", err)
+		if err := utils.ValidateMatchRules(p.ObjectMeta, spec.MatchRules, s.netAgent.FindEndpoint); err != nil {
+			return nil, fmt.Errorf("error in match-rule, %v", err)
+		}
 	}
 
 	if len(spec.Exports) == 0 {
@@ -302,12 +355,13 @@ func (s *PolicyState) validatePolicy(p *tpmprotos.FlowExportPolicy) (map[types.C
 		}
 
 		newKey := types.CollectorKey{
-			Interval:    uint32(interval.Seconds()),
-			Format:      halproto.ExportFormat_IPFIX,
-			Protocol:    proto,
-			Destination: dest,
-			Port:        port,
-			VrfID:       vrf,
+			Interval:         uint32(interval.Seconds()),
+			TemplateInterval: uint32(templInterval.Seconds()),
+			Format:           halproto.ExportFormat_IPFIX,
+			Protocol:         proto,
+			Destination:      dest,
+			Port:             port,
+			VrfID:            vrf,
 		}
 		collKeys[newKey] = true
 	}
@@ -390,6 +444,11 @@ func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
 			log.Infof("cleaning up collectors")
 			for ckey := range p.collectorKeys {
 				if cdata, ok := p.collectorTable.Collector[ckey.String()]; ok {
+					if val, ok := p.state.ipfixCtx.Load(ckey.String()); ok {
+						if tick, ok := val.(*time.Ticker); ok {
+							tick.Stop()
+						}
+					}
 					delete(cdata.PolicyNames, getObjMetaKey(&p.objMeta))
 					if len(cdata.PolicyNames) == 0 { // no one is using it
 						log.Infof("removing collector {%+v}", ckey)
@@ -400,6 +459,7 @@ func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
 			}
 		}
 	}()
+
 	srcIPAddr := p.state.getMgmtIPAddr()
 	if srcIPAddr == "" {
 		// get local endpoint
@@ -423,7 +483,8 @@ func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
 		return fmt.Errorf("invalid source address %s, %s", srcIPAddr, err)
 	}
 
-	for ckey := range p.collectorKeys {
+	for k := range p.collectorKeys {
+		ckey := k
 		// check if collector already exists
 		if cdata, ok := p.collectorTable.Collector[ckey.String()]; ok {
 			log.Infof("collector %s exists", ckey.Destination)
@@ -447,6 +508,10 @@ func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
 		}
 
 		log.Infof("create new collector %v(policy %v), id %d", destAddr, p.objMeta.Name, collectorID)
+
+		if err := p.state.SendTemplates(ctx, &ckey); err != nil {
+			return fmt.Errorf("failed to send template %v", err)
+		}
 
 		var req []*halproto.CollectorSpec
 		req = append(req, &halproto.CollectorSpec{
@@ -496,6 +561,7 @@ func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
 
 		// save table in db
 		p.collectorTable.Collector[ckey.String()] = &types.CollectorData{
+			Key:         ckey,
 			CollectorID: collectorID,
 			PolicyNames: map[string]bool{
 				getObjMetaKey(&p.objMeta): true,
@@ -677,7 +743,6 @@ func (p *policyDb) createHalFlowMonitorRule(ctx context.Context, ruleKey types.F
 
 		Match: &halproto.RuleMatch{
 			Protocol: halproto.IPProtocol(appPortObj.Ipproto),
-			AppMatch: appMatchObj,
 		},
 		CollectorKeyHandle: collectorKeys,
 
@@ -686,12 +751,16 @@ func (p *policyDb) createHalFlowMonitorRule(ctx context.Context, ruleKey types.F
 		},
 	}
 
-	if srcAddrObj != nil {
+	if ruleKey.SourceIP != "any" {
 		flowRuleSpec.Match.SrcAddress = []*halproto.IPAddressObj{srcAddrObj}
 	}
 
-	if destAddrObj != nil {
+	if ruleKey.DestIP != "any" {
 		flowRuleSpec.Match.DstAddress = []*halproto.IPAddressObj{destAddrObj}
+	}
+
+	if ruleKey.DestL4Port != 0 || ruleKey.Protocol != 0 {
+		flowRuleSpec.Match.AppMatch = appMatchObj
 	}
 
 	// add valid mac address
@@ -744,6 +813,8 @@ func (p *policyDb) createIPFlowMonitorRule(ctx context.Context, ipFmRuleList []*
 			VrfID:        p.vrf,
 		}
 
+		log.Infof("ip flow rule %+v", ruleKey)
+
 		if err := p.createHalFlowMonitorRule(ctx, ruleKey, true); err != nil {
 			log.Errorf("failed to create ip rule %+v in hal, %s", ruleKey, err)
 			return err
@@ -766,6 +837,7 @@ func (p *policyDb) createMacFlowMonitorRule(ctx context.Context, macFmRuleList [
 			DestL4Port:   uint32(macRule.AppPortObj.L4port),
 			VrfID:        p.vrf,
 		}
+		log.Infof("mac flow rule %+v", ruleKey)
 
 		if err := p.createHalFlowMonitorRule(ctx, ruleKey, true); err != nil {
 			log.Errorf("failed to create ip rule %+v in hal, %s", ruleKey, err)
@@ -792,15 +864,19 @@ func (p *policyDb) createFlowMonitorRule(ctx context.Context) (err error) {
 	}()
 
 	p.flowRuleKeys = map[types.FlowMonitorRuleKey]bool{}
+
+	log.Debugf("num rules %d, %+v", len(p.matchRules), p.matchRules)
 	// process match-rule
 	for _, rule := range p.matchRules {
 		srcIPs, destIPs, srcMACs, destMACs, appPorts, srcIPStrings, destIPStrings := utils.ExpandCompositeMatchRule(p.collectorTable.ObjectMeta, &rule, p.state.netAgent.FindEndpoint)
 		// Create protobuf requestMsgs on cross product of
 		//  - srcIPs, destIPs, Apps
 		//  - srcMACs, destMACs, Apps
+
 		ipFmRuleList, _ := utils.CreateIPAddrCrossProductRuleList(srcIPs, destIPs, appPorts, srcIPStrings, destIPStrings)
 		macFmRuleList, _ := utils.CreateMACAddrCrossProductRuleList(srcMACs, destMACs, appPorts)
 
+		log.Debugf("num ip-rules %v, mac-rules %v", len(ipFmRuleList), len(macFmRuleList))
 		//TODO: Fold in ether-type in monitor rule
 		if len(ipFmRuleList) == 0 && len(macFmRuleList) == 0 {
 			log.Errorf("Match Rules specified with only AppPort Selector without IP/MAC")
@@ -827,6 +903,8 @@ func (p *policyDb) readFlowMonitorTable() *types.FlowMonitorTable {
 		FlowRules: map[string]*types.FlowMonitorData{},
 	}
 
+	p.flowMonitorTable = fmObj
+
 	obj, err := p.state.store.Read(fmObj)
 	if err != nil {
 		log.Warnf("failed to read FlowMonitor table, %s", err)
@@ -839,6 +917,8 @@ func (p *policyDb) readFlowMonitorTable() *types.FlowMonitorTable {
 		return fmObj
 	}
 
+	p.flowMonitorTable = dbObj
+
 	return dbObj
 }
 
@@ -849,24 +929,28 @@ func (p *policyDb) writeFlowMonitorTable() (err error) {
 	return nil
 }
 
-func (p *policyDb) readCollectorTable() (*types.CollectorTable, error) {
+func (p *policyDb) readCollectorTable() error {
 	collObj := &types.CollectorTable{
 		TypeMeta:  api.TypeMeta{Kind: "tpacollectorTable"},
 		Collector: map[string]*types.CollectorData{},
 	}
 
+	p.collectorTable = collObj
+
 	obj, err := p.state.store.Read(collObj)
 	if err != nil {
 		log.Warnf("failed to read collector table, %s", err)
-		return collObj, nil
+		return nil
 	}
 
 	dbObj, ok := obj.(*types.CollectorTable)
 	if !ok {
 		log.Errorf("invalid collector object in db for %+v", collObj.ObjectMeta)
-		return collObj, nil
+		return nil
 	}
-	return dbObj, nil
+
+	p.collectorTable = dbObj
+	return nil
 }
 
 func (p *policyDb) writeCollectorTable() (err error) {
@@ -926,7 +1010,37 @@ func (s *PolicyState) createPolicyContext(p *tpmprotos.FlowExportPolicy) (*polic
 		state:         s,
 		flowRuleKeys:  map[types.FlowMonitorRuleKey]bool{},
 		collectorKeys: map[types.CollectorKey]bool{},
-		matchRules:    p.Spec.MatchRules,
+	}
+
+	// todo: check no match-rule ? match all for ipfix
+	if p.Spec.MatchRules == nil {
+		policyCtx.matchRules = []tsproto.MatchRule{
+			{
+				Src:         &tsproto.MatchSelector{IPAddresses: []string{"any"}},
+				Dst:         &tsproto.MatchSelector{IPAddresses: []string{"any"}},
+				AppProtoSel: &tsproto.AppProtoSelector{Ports: []string{"any"}},
+			},
+		}
+
+	} else {
+		for _, r := range p.Spec.MatchRules {
+			rule := tsproto.MatchRule{
+				Src:         &tsproto.MatchSelector{IPAddresses: []string{"any"}},
+				Dst:         &tsproto.MatchSelector{IPAddresses: []string{"any"}},
+				AppProtoSel: &tsproto.AppProtoSelector{Ports: []string{"any"}},
+			}
+
+			if r.Src != nil {
+				rule.Src = r.Src
+			}
+			if r.Dst != nil {
+				rule.Dst = r.Dst
+			}
+			if r.AppProtoSel != nil {
+				rule.AppProtoSel = r.AppProtoSel
+			}
+			policyCtx.matchRules = append(policyCtx.matchRules, rule)
+		}
 	}
 
 	polObj, err := policyCtx.readFlowExportPolicyTable(p)
@@ -935,10 +1049,10 @@ func (s *PolicyState) createPolicyContext(p *tpmprotos.FlowExportPolicy) (*polic
 	}
 
 	// read collector object
-	policyCtx.collectorTable, _ = policyCtx.readCollectorTable()
+	policyCtx.readCollectorTable()
 
 	// read flowmonitor object
-	policyCtx.flowMonitorTable = policyCtx.readFlowMonitorTable()
+	policyCtx.readFlowMonitorTable()
 
 	// get vrf
 	vrf, err := s.getVrfID(p.Tenant, p.Namespace, p.Spec.VrfName)
@@ -1054,6 +1168,12 @@ func (p *policyDb) cleanupTables(ctx context.Context, del bool) {
 			delete(cdata.PolicyNames, getObjMetaKey(&p.objMeta))
 			if len(cdata.PolicyNames) == 0 {
 				log.Infof("delete collector %+v", ckey)
+				if val, ok := p.state.ipfixCtx.Load(ckey); ok {
+					if c, ok := val.(*ipfixTemplateContext); ok {
+						c.tick.Stop()
+						c.cancel()
+					}
+				}
 				p.deleteCollectorPolicy(ctx, cdata.CollectorID)
 				delete(p.collectorTable.Collector, ckey)
 			}
@@ -1072,13 +1192,6 @@ func (s *PolicyState) DeleteFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 	s.Lock()
 	defer s.Unlock()
 
-	for _, c := range p.Spec.Exports {
-		mgmtIP := s.getMgmtIPAddr()
-		if err := s.netAgent.DeleteLateralNetAgentObjects(mgmtIP, c.Destination, false); err != nil {
-			log.Errorf("Failed to delete lateral objects in netagent. Err: %v", err)
-		}
-	}
-
 	polCtx, err := s.createPolicyContext(p)
 	if err != nil {
 		return fmt.Errorf("failed to create context, %s", err)
@@ -1086,6 +1199,13 @@ func (s *PolicyState) DeleteFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 
 	if polCtx.tpmPolicy == nil {
 		return fmt.Errorf("policy %s doesn't exist", p.Name)
+	}
+
+	for _, c := range polCtx.tpmPolicy.Spec.Exports {
+		mgmtIP := s.getMgmtIPAddr()
+		if err := s.netAgent.DeleteLateralNetAgentObjects(mgmtIP, c.Destination, false); err != nil {
+			log.Errorf("Failed to delete lateral objects in netagent. Err: %v", err)
+		}
 	}
 
 	polCtx.cleanupTables(ctx, true)
@@ -1111,6 +1231,9 @@ type debugCollector struct {
 	CollectorKey types.CollectorKey
 	CollectorID  uint64
 	PolicyNames  []string
+	TxMsg        uint64
+	TxErr        uint64
+	Timer        bool
 }
 
 type debugFlowRules struct {
@@ -1181,8 +1304,20 @@ func (s *PolicyState) Debug(r *http.Request) (interface{}, error) {
 		if cobj, ok := readObj.(*types.CollectorTable); ok {
 			for k, v := range cobj.Collector {
 				names := []string{}
+				var txErr uint64
+				var txMsg uint64
+				var timerState bool
+
 				for f := range v.PolicyNames {
 					names = append(names, f)
+				}
+
+				if v, ok := s.ipfixCtx.Load(k); ok {
+					if tv, ok := v.(*ipfixTemplateContext); ok {
+						txErr = tv.txErr
+						txMsg = tv.txMsg
+						timerState = tv.tick != nil
+					}
 				}
 
 				dbgInfo.CollectorTable = append(dbgInfo.CollectorTable, debugCollector{
@@ -1190,9 +1325,11 @@ func (s *PolicyState) Debug(r *http.Request) (interface{}, error) {
 					CollectorID:  v.CollectorID,
 					StrKey:       k,
 					PolicyNames:  names,
+					TxMsg:        txMsg,
+					TxErr:        txErr,
+					Timer:        timerState,
 				})
 			}
-
 		}
 	}
 
@@ -1333,5 +1470,73 @@ func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 
 // DeleteFwlogPolicy is the DEL entry points
 func (s *PolicyState) DeleteFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
+	return nil
+}
+
+// SendTemplates sends ipfix templates periodically
+func (s *PolicyState) SendTemplates(ctx context.Context, ckey *types.CollectorKey) error {
+	dest := ckey.Destination
+	dport := int(ckey.Port)
+	interval := time.Duration(ckey.TemplateInterval) * time.Second
+
+	tick := time.NewTicker(interval)
+
+	tmplt, err := ipfix.CreateTemplateMsg()
+	if err != nil {
+		log.Errorf("failed to generate template, %v", err)
+		return err
+	}
+
+	nc := net.ListenConfig{Control: func(network, address string, c syscall.RawConn) error {
+		var sockErr error
+		if err := c.Control(func(fd uintptr) {
+			sockErr = unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_REUSEPORT, 1)
+		}); err != nil {
+			return err
+		}
+		return sockErr
+	},
+	}
+
+	conn, err := nc.ListenPacket(ctx, "udp", fmt.Sprintf("%v:%v", s.getMgmtIPAddr(), ipfixSrcPort))
+	if err != nil {
+		log.Errorf("failed to bind %v, %v", fmt.Sprintf("%v:%v", s.getMgmtIPAddr(), ipfixSrcPort), err)
+		return err
+	}
+
+	tctx, cancel := context.WithCancel(context.Background())
+	templateCtx := &ipfixTemplateContext{
+		cancel: cancel,
+		tick:   tick,
+	}
+
+	s.ipfixCtx.Store(ckey.String(), templateCtx)
+
+	go func() {
+		defer conn.Close()
+		// send first template as soon as we start
+		if _, err := conn.WriteTo(tmplt, &net.UDPAddr{IP: net.ParseIP(dest), Port: dport}); err != nil {
+			log.Errorf("failed to send to %v:%v, %v", dest, dport, err)
+			atomic.AddUint64(&templateCtx.txErr, 1)
+		} else {
+			atomic.AddUint64(&templateCtx.txMsg, 1)
+		}
+
+		for {
+			select {
+			case <-tick.C:
+				if _, err := conn.WriteTo(tmplt, &net.UDPAddr{IP: net.ParseIP(dest), Port: dport}); err != nil {
+					log.Errorf("failed to send to %v", err)
+					atomic.AddUint64(&templateCtx.txErr, 1)
+				} else {
+					atomic.AddUint64(&templateCtx.txMsg, 1)
+				}
+			case <-tctx.Done():
+				log.Infof("timer stopped, stopping templates to %v:%v", dest, dport)
+				return
+			}
+		}
+	}()
+
 	return nil
 }

@@ -66,7 +66,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 				},
 
 				Spec: monitoring.FlowExportPolicySpec{
-					MatchRules: []monitoring.MatchRule{
+					MatchRules: []*monitoring.MatchRule{
 						{
 							Src: &monitoring.MatchSelector{
 								IPAddresses: []string{"1.1.1.1"},
@@ -119,7 +119,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 				},
 
 				Spec: monitoring.FlowExportPolicySpec{
-					MatchRules: []monitoring.MatchRule{
+					MatchRules: []*monitoring.MatchRule{
 						{
 							Src: &monitoring.MatchSelector{
 								IPAddresses: []string{"1.1.1.1"},
@@ -146,8 +146,9 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 						},
 					},
 
-					Interval: "15s",
-					Format:   "IPFIX",
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
 					Exports: []monitoring.ExportConfig{
 						{
 							Destination: "10.1.1.100",
@@ -171,4 +172,42 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 			testutils.Assert(t, ok == true, "test [%v] returned %v", testFlowExpSpecList[i].name, err)
 		}
 	}
+}
+
+func TestInvalidType(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+	defer cancel()
+
+	logConfig := &log.Config{
+		Module:      "Mirror-hooks",
+		Format:      log.LogFmt,
+		Filter:      log.AllowAllFilter,
+		Debug:       false,
+		CtxSelector: log.ContextAll,
+		LogToStdout: true,
+		LogToFile:   false,
+	}
+
+	// Initialize logger config
+	l := log.SetConfig(logConfig)
+	s := &flowExpHooks{
+		logger: l,
+	}
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+	txn := kvs.NewTxn()
+
+	_, ok, err := s.validateFlowExportPolicy(ctx, kvs, txn, "", apiintf.CreateOper, false,
+		"test")
+	testutils.Assert(t, ok == false, "didnt fail for invalid type")
+	testutils.Assert(t, err != nil, "didnt fail for invalid type")
+
 }

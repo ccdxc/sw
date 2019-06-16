@@ -29,7 +29,7 @@ var CreateFlowExportPolicyFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
-		ID:     "template_interval",
+		ID:     "template-interval",
 		Type:   "String",
 		Help:   "",
 		Skip:   false,
