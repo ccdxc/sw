@@ -15,6 +15,9 @@ export interface PollingInstance {
   pollingHandlerSubscription: Subscription;
   handler: BehaviorSubject<any>;
   body: any;
+  // If the caller needs to store subscriptions during the pollingFetchData
+  // they can store it here
+  pollSub: Subscription[];
   // Used to determine whether the results from the query should
   // be appended to, or if they should wipe the current set
   // Needed for when a consumer makes a request with a new body
@@ -93,6 +96,7 @@ export class PollUtility {
         pollingTimerSubscription: pollingTimerSubscription,
         pollingHandlerSubscription: sub,
         handler:  handler,
+        pollSub: [],
         body: body,
         isFirstPoll: true
       };
@@ -126,6 +130,10 @@ export class PollUtility {
       poll.pollingTimerSource = null;
       poll.pollingTimerSubscription = null;
       poll.body = null;
+      poll.pollSub.forEach( s => {
+        s.unsubscribe();
+      });
+      poll.pollSub = [];
       poll.isFirstPoll = true;
       if (terminateHandler) {
         poll.pollingHandlerSubscription.unsubscribe();

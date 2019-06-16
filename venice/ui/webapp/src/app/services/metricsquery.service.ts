@@ -67,6 +67,12 @@ export class MetricsqueryService extends TelemetryqueryServiceGen {
    * Called when the timer ticks to fetch data
    */
   protected pollingFetchData(key, body: TelemetryPollingMetricQueries, useRealData): void {
+    // remove previous poll if its there
+    this.pollingUtility.pollingHandlerMap[key].pollSub.forEach( s => {
+      s.unsubscribe();
+    });
+    this.pollingUtility.pollingHandlerMap[key].pollSub = [];
+
     const _ = Utility.getLodash();
 
     const queries: Telemetry_queryMetricsQuerySpec[] = [];
@@ -78,7 +84,8 @@ export class MetricsqueryService extends TelemetryqueryServiceGen {
     });
     const queryList = new Telemetry_queryMetricsQueryList();
     queryList.queries = queries.map((q) => q.getModelValues());
-    this.PostMetrics(queryList).subscribe(
+
+    const sub = this.PostMetrics(queryList).subscribe(
       (resp) => {
         const respBody = new Telemetry_queryMetricsQueryResponse(resp.body as any);
         const poll = this.pollingUtility.pollingHandlerMap[key];
@@ -130,6 +137,7 @@ export class MetricsqueryService extends TelemetryqueryServiceGen {
         poll.handler.error(error);
       }
     );
+    this.pollingUtility.pollingHandlerMap[key].pollSub.push(sub);
   }
 
   // If a query requests data for a slice of time where there are

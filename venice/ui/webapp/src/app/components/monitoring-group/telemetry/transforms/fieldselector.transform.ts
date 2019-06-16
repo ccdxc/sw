@@ -6,7 +6,7 @@ import { Utility } from '@app/common/Utility';
 import { FormArray } from '@angular/forms';
 import { debounceTime } from 'rxjs/operators';
 import { IFieldsRequirement } from '@sdk/v1/models/generated/telemetry_query';
-import { Subscription } from 'rxjs';
+import { Subject } from 'rxjs';
 
 
 /**
@@ -27,38 +27,50 @@ export class FieldSelectorTransform extends MetricTransform {
   currValue: any[] = [];
   formArray = new FormArray([]);
   stringForm: string = '';
-  sub: Subscription;
+  valueChangeObserver: Subject<any> = new Subject();
+
+  constructor() {
+    super();
+    this.valueChangeObserver.pipe(debounceTime(500)).subscribe(
+      (value) => {
+        this.handleValueChange(value);
+      }
+    );
+  }
 
   onMeasurementChange() {
     // Reset the form array
     this.currValue = [];
     this.formArray = new FormArray([]);
-    if (this.sub) {
-      this.sub.unsubscribe();
-    }
-    this.sub = this.formArray.valueChanges.pipe(debounceTime(500)).subscribe(formValues => {
-      let values = Utility.formatRepeaterData(formValues);
-      if (!Utility.getLodash().isEqual(values, this.currValue)) {
-        this.currValue = values;
-        // Replace key values with the displayName
-        const fields = MetricsMetadata[this.measurement].fields;
-        values = values.map( (req) => {
-          const keyField = req.keyFormControl;
-          const match = fields.find( (f) => {
-            return f.name === keyField;
-          });
-          return {
-            keyFormControl: match.displayName,
-            operatorFormControl: req.operatorFormControl,
-            valueFormControl: req.valueFormControl
-          };
-        });
-        this.stringForm = Utility.stringifyRepeaterData(values).join('    ');
-        this.requestMetrics();
-      }
-    });
     this.updateRepeaterOptions();
   }
+
+  valueChange(event) {
+    this.valueChangeObserver.next(event);
+  }
+
+  handleValueChange(event) {
+    let values = Utility.formatRepeaterData(event);
+    if (!Utility.getLodash().isEqual(values, this.currValue)) {
+      this.currValue = values;
+      // Replace key values with the displayName
+      const fields = MetricsMetadata[this.measurement].fields;
+      values = values.map( (req) => {
+        const keyField = req.keyFormControl;
+        const match = fields.find( (f) => {
+          return f.name === keyField;
+        });
+        return {
+          keyFormControl: match.displayName,
+          operatorFormControl: req.operatorFormControl,
+          valueFormControl: req.valueFormControl
+        };
+      });
+      this.stringForm = Utility.stringifyRepeaterData(values).join('    ');
+      this.requestMetrics();
+    }
+  }
+
 
   updateRepeaterOptions() {
     const fields = MetricsMetadata[this.measurement].fields;

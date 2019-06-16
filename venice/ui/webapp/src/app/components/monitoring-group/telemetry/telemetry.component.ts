@@ -23,6 +23,7 @@ import { ITelemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telem
 import { LabelSelectorTransform } from './transforms/labelselector.transform';
 import * as moment from 'moment';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
+import { RepeaterComponent } from 'web-app-framework';
 
 /**
  * A data source allows a user to select a single measurement,

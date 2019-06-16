@@ -46,8 +46,14 @@ export class EventsService extends EventGenService {
    * @param useRealData
    */
   protected pollingFetchData(key, body, useRealData): void {
+    // remove previous poll if its there
+    this.pollingUtility.pollingHandlerMap[key].pollSub.forEach( s => {
+      s.unsubscribe();
+    });
+    this.pollingUtility.pollingHandlerMap[key].pollSub = [];
+
     const bodyObj = new ApiListWatchOptions(body);
-    this.PostGetEvents(bodyObj).subscribe(
+    const sub = this.PostGetEvents(bodyObj).subscribe(
       (resp) => {
         const respBody = resp.body as IEventsEventList;
         let items = respBody.items;
@@ -100,6 +106,8 @@ export class EventsService extends EventGenService {
         poll.handler.error(error);
       }
     );
+
+    this.pollingUtility.pollingHandlerMap[key].pollSub.push(sub);
   }
 
   /**

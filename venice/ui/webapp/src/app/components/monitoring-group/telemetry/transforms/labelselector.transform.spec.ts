@@ -56,6 +56,7 @@ describe('Label Selector transform', () => {
     }];
 
     transform.formArray.push(new FormControl(newValue[0]));
+    transform.valueChange(transform.formArray.value);
     tick(1000);
 
     // Metrics should be requested
@@ -106,6 +107,7 @@ describe('Label Selector transform', () => {
     transform.formArray.push(new FormControl(newValue[0]));
     transform.formArray.push(new FormControl(newValue[1]));
     transform.formArray.push(new FormControl(newValue[2]));
+    transform.valueChange(transform.formArray.value);
     tick(1000);
 
     // Metrics should be requested

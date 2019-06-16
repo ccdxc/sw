@@ -6,7 +6,7 @@ import { Utility } from '@app/common/Utility';
 import { FormArray } from '@angular/forms';
 import { debounceTime } from 'rxjs/operators';
 import { IFieldsRequirement } from '@sdk/v1/models/generated/telemetry_query';
-import { Subscription } from 'rxjs';
+import { Subject } from 'rxjs';
 
 
 /**
@@ -26,7 +26,7 @@ export class LabelSelectorTransform extends MetricTransform {
   currValue: any[] = [];
   formArray = new FormArray([]);
   stringForm: string = '';
-  sub: Subscription;
+  valueChangeObserver: Subject<any> = new Subject();
 
   constructor(public labelKindMap: { [kind: string]:
     { [labelKey: string]:
@@ -34,24 +34,31 @@ export class LabelSelectorTransform extends MetricTransform {
     }
   } ) {
     super();
+    this.valueChangeObserver.pipe(debounceTime(500)).subscribe(
+      (value) => {
+        this.handleValueChange(value);
+      }
+    );
   }
 
   onMeasurementChange() {
     // Reset the form array
     this.currValue = [];
     this.formArray = new FormArray([]);
-    if (this.sub) {
-      this.sub.unsubscribe();
-    }
-    this.sub = this.formArray.valueChanges.pipe(debounceTime(500)).subscribe(formValues => {
-      const reqs = Utility.formatRepeaterData(formValues);
-      if (!Utility.getLodash().isEqual(reqs, this.currValue)) {
-        this.currValue = reqs;
-        this.stringForm = Utility.stringifyRepeaterData(reqs).join('    ');
-        this.requestMetrics();
-      }
-    });
     this.updateRepeaterOptions();
+  }
+
+  valueChange(event) {
+    this.valueChangeObserver.next(event);
+  }
+
+  handleValueChange(event) {
+    const reqs = Utility.formatRepeaterData(event);
+    if (!Utility.getLodash().isEqual(reqs, this.currValue)) {
+      this.currValue = reqs;
+      this.stringForm = Utility.stringifyRepeaterData(reqs).join('    ');
+      this.requestMetrics();
+    }
   }
 
   updateRepeaterOptions() {

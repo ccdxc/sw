@@ -182,11 +182,11 @@ export class NodedetailComponent extends BaseComponent implements OnInit, OnDest
           this.startMetricPolls();
           this.alertseventsSelector = {
             eventSelector: {
-              selector: 'source.node-name=' + this.selectedId,
+              selector: 'object-ref.name=' + this.selectedId + ',object-ref.kind=Node',
               name: this.selectedId
             },
             alertSelector: {
-              selector: 'status.source.node-name=' + this.selectedId,
+              selector: 'status.object-ref.name=' + this.selectedId + ',status.object-ref.kind=Node',
               name: this.selectedId
             }
           };

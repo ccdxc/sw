@@ -244,6 +244,7 @@
                   [data]="transform.fieldData"
                   [formArray]="transform.formArray"
                   [keyDropdownFilter]="true"
+                  (repeaterValues)="transform.valueChange($event)"
                   [buildValuePlaceholder]="transform.buildFieldValuePlaceholder">
     </app-repeater>
   </div>
@@ -266,6 +267,7 @@
     <div fxFlex="5px"></div>
     <app-repeater
                   [data]="transform.labelData"
+                  (repeaterValues)="transform.valueChange($event)"
                   [formArray]="transform.formArray">
     </app-repeater>
   </div>
