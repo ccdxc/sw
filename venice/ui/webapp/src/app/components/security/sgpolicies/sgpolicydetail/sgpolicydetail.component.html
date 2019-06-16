@@ -104,7 +104,7 @@
                 <input fxflex="nogrow" class="sgpolicydetail-inputip" spellcheck="false"
                        [formControl]="portFormControl" type="text" pInputText
                        (keyup)="keyUpInput($event)" appErrorTooltip
-                       placeholder="<Protocol>/<Port> or App" maxlength="15" autocomplete="off">
+                       placeholder="<Protocol>/<Port> or App" maxlength="100" autocomplete="off">
               </div>
               <mat-icon fxFlex="none" class="sgpolicy-search-button"
                         (click)="invokePolicySearch()"

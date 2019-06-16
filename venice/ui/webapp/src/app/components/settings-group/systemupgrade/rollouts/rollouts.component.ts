@@ -138,7 +138,8 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
         {
           cssClass: 'global-button-primary rollouts-button',
           text: 'CREATE ROLLOUT',
-          computeClass: () => this.shouldEnableButtons && this.tabIndex < 1  ? '' : 'global-button-disabled',
+          // We show 'create button' in 'pending tab'
+          computeClass: () =>  this.tabIndex < 1 ? (this.shouldEnableButtons ? '' : 'global-button-disabled') : 'global-button-hide',
           callback: () => {
             this.createNewObject();
           }
