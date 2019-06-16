@@ -14,6 +14,7 @@
 #include "nic/apollo/api/include/pds_meter.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
+#include "nic/apollo/test/utils/base.hpp"
 
 #define TESTAPP_METER_NUM_PREFIXES                         16
 #define TESTAPP_SWITCH_VNIC_VLAN                           128
@@ -254,10 +255,14 @@ parse_test_cfg (char *cfg_file, test_params_t *test_params)
                 if (test_params->num_ipv6_rules < 4) {
                     printf("Number of IPv6 rules in the policy table must be >= 4\n");
                 }
-                if (!obj.second.get<std::string>("stateful").compare("true")) {
-                    test_params->stateful = true;
+                if (!artemis()) {
+                    if (!obj.second.get<std::string>("stateful").compare("true")) {
+                        test_params->stateful = true;
+                    } else {
+                        test_params->stateful = false;
+                    }
                 } else {
-                    test_params->stateful = false;
+                    test_params->stateful = true;
                 }
             } else if (kind == "vpc") {
                 test_params->num_vpcs = std::stol(obj.second.get<std::string>("count"));

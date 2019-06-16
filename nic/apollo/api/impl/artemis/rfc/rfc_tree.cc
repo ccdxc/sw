@@ -125,8 +125,10 @@ static inline void
 rfc_table_destroy (rfc_table_t *rfc_table)
 {
     rfc_table->cbm_map.clear();
-    for (uint32_t i = 0; i < rfc_table->num_classes; i++) {
-        free(rfc_table->cbm_table[i].cbm);
+    for (uint32_t i = 0; i < RFC_MAX_EQ_CLASSES; i++) {
+        if (rfc_table->cbm_table[i].cbm) {
+            free(rfc_table->cbm_table[i].cbm);
+        }
     }
 }
 

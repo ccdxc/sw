@@ -121,7 +121,11 @@ rfc_compute_class_id_cb (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
     }
     class_id = rfc_table->num_classes++;
     SDK_ASSERT(class_id < RFC_MAX_EQ_CLASSES);
-    posix_memalign((void **)&bits, CACHE_LINE_SIZE, cbm_size);
+    if (rfc_table->cbm_table[class_id].cbm) {
+        bits = (uint8_t *)rfc_table->cbm_table[class_id].cbm;
+    } else {
+        posix_memalign((void **)&bits, CACHE_LINE_SIZE, cbm_size);
+    }
     cbm_new = rte_bitmap_init(rfc_ctxt->policy->max_rules, bits, cbm_size);
     rte_bitmap_or(cbm, cbm_new, cbm_new);
     rfc_table->cbm_table[class_id].class_id = class_id;

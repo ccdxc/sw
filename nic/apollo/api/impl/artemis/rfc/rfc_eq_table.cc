@@ -17,16 +17,11 @@
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
 
-#define RFC_RESULT_STATELESS_BIT_MASK           0x1
-#define RFC_RESULT_STATEFUL_BIT_MASK            0x2
-#define RFC_RESULT_BITS_MASK                    0x3
-#define RFC_RESULT_SET_STATEFUL_BIT(val)        ((val) |= RFC_RESULT_STATEFUL_BIT_MASK)
-#define RFC_RESULT_SET_STATELESS_BIT(val)       ((val) |= RFC_RESULT_STATELESS_BIT_MASK)
-#define RFC_RESULT_IS_STATEFUL_BIT_SET(val)     ((val) & RFC_RESULT_STATEFUL_BIT_MASK)
-#define RFC_RESULT_IS_STATELESS_BIT_SET(val)    ((val) & RFC_RESULT_STATELESS_BIT_MASK)
-#define RFC_RESULT_BOTH_BITS_SET(val)           (((val) & RFC_RESULT_BITS_MASK) == RFC_RESULT_BITS_MASK)
-#define RFC_RESULT_BITS_PRIORITY_MASK           0x7FE
-#define RFC_RESULT_SET_PRIORITY_BITS(val, prio) ((val) |= ((prio<<1) & RFC_RESULT_BITS_PRIORITY_MASK))
+#define RFC_RESULT_RULE_ACTION_ALLOW               0
+#define RFC_RESULT_RULE_ACTION_DENY                1
+#define RFC_RESULT_SET_ACTION_BIT(val, action)     ((val) |= action)
+#define RFC_RESULT_BITS_PRIORITY_MASK              0x7FE
+#define RFC_RESULT_SET_PRIORITY_BITS(val, prio)    ((val) |= ((prio<<1) & RFC_RESULT_BITS_PRIORITY_MASK))
 
 namespace rfc {
 
@@ -791,6 +786,7 @@ rfc_compute_p3_next_cl_addr_entry_num (mem_addr_t base_address,
     *next_entry_num = num_classes%SACL_P3_ENTRIES_PER_CACHE_LINE;
 }
 
+#define fw_act    action_data.fw_action.action
 /**
  * @brief    given two equivalence class tables, compute the new equivalence
  *           class table or the result table by doing cross product of class
@@ -827,29 +823,22 @@ rfc_compute_p3_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
             while (rte_bitmap_slab_scan(slab, posn, &new_posn) != 0) {
                 ruleidx =
                     rte_bitmap_get_global_bit_pos(cbm->index2-1, new_posn);
-                PDS_TRACE_DEBUG("ruleidx = %u", ruleidx);
-
                 if (priority > rfc_ctxt->policy->rules[ruleidx].priority) {
                     priority = rfc_ctxt->policy->rules[ruleidx].priority;
+                    PDS_TRACE_DEBUG("Picked high priority rule %u", ruleidx);
                     result = 0;
-                    if (rfc_ctxt->policy->rules[ruleidx].stateful) {
-                        PDS_TRACE_DEBUG("rule %u is SF", ruleidx);
-                        //RFC_RESULT_SET_STATEFUL_BIT(result);
+                    if (rfc_ctxt->policy->rules[ruleidx].fw_act ==
+                            SECURITY_RULE_ACTION_ALLOW) {
+                        RFC_RESULT_SET_ACTION_BIT(result, RFC_RESULT_RULE_ACTION_ALLOW);
                     } else {
-                        PDS_TRACE_DEBUG("rule %u is SL", ruleidx);
-                        RFC_RESULT_SET_STATELESS_BIT(result);
-                    }
-                    if (RFC_RESULT_BOTH_BITS_SET(result)) {
-                        PDS_TRACE_DEBUG("Both SF and SL are set");
+                        RFC_RESULT_SET_ACTION_BIT(result, RFC_RESULT_RULE_ACTION_DENY);
                     }
                     RFC_RESULT_SET_PRIORITY_BITS(result, priority);
                 } else {
-                    PDS_TRACE_DEBUG("rules[%u].priority (%u) < current (%u). Skip",
-                                    ruleidx,
-                                    rfc_ctxt->policy->rules[ruleidx].priority,
+                    PDS_TRACE_DEBUG("rule %u priority %u < current %u, skipping",
+                                    ruleidx, rfc_ctxt->policy->rules[ruleidx].priority,
                                     priority);
                 }
-
                 posn = new_posn;
             }
             rte_bitmap_scan(cbm, &posn, &slab);
