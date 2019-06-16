@@ -181,13 +181,13 @@ func (ros *RolloutState) raiseRolloutEvent(status roproto.RolloutStatus_RolloutO
 	}
 	switch status {
 	case roproto.RolloutStatus_SUCCESS:
-		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_SUCCESS, "Rollout completed sucessfully", nil)
+		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_SUCCESS, "Rollout completed sucessfully", ros.Rollout)
 	case roproto.RolloutStatus_SUSPENDED:
-		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_SUSPENDED, "Rollout suspended", nil)
+		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_SUSPENDED, "Rollout suspended", ros.Rollout)
 	case roproto.RolloutStatus_FAILURE:
-		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_FAILED, "Rollout Failed", nil)
+		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_FAILED, "Rollout failed", ros.Rollout)
 	case roproto.RolloutStatus_PROGRESSING:
-		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_STARTED, "Rollout started", nil)
+		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_STARTED, "Rollout started", ros.Rollout)
 	}
 }
 func (ros *RolloutState) saveStatus() {

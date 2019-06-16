@@ -234,6 +234,7 @@ func (m *RolloutSpec) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
+		m.MaxParallel = 2
 		m.Strategy = "LINEAR"
 		m.UpgradeType = "Disruptive"
 	}

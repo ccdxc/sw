@@ -67,6 +67,7 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
             type: 'string'
         },
         'max-parallel': {
+            default: parseInt('2'),
             description:  'MaxParallel is the maximum number of nodes getting updated at any time This setting is applicable only to SmartNICs. Controller nodes are always upgraded one after another.',
             required: false,
             type: 'number'

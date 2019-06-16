@@ -21,6 +21,7 @@ type Writer interface {
 	WriteRollout(ro *rollout.Rollout) error
 	WriteRolloutAction(ro *rollout.Rollout) error
 	Close() error
+	GetClusterVersion() string
 }
 
 // APISrvWriter is the writer instance
@@ -60,6 +61,29 @@ func (wr *APISrvWriter) getAPIClient() (apiclient.Services, error) {
 	return apicl, err
 }
 
+// GetClusterVersion returns running venice version
+func (wr *APISrvWriter) GetClusterVersion() string {
+
+	// get the api client
+	apicl, err := wr.getAPIClient()
+	if err != nil {
+		log.Infof("Updating Rollout Failed to connect get APIClient %v", err)
+		return ""
+	}
+
+	obj := api.ObjectMeta{
+		Name: "version",
+	}
+
+	vobj, err := apicl.ClusterV1().Version().Get(context.Background(), &obj)
+	if err != nil {
+		log.Errorf("Failed to get cluster object (%+v)", err)
+		return ""
+	}
+	log.Debugf("Version Object %+v", vobj)
+	return vobj.Status.BuildVersion
+}
+
 // WriteRollout updates Rollout object
 func (wr *APISrvWriter) WriteRollout(ro *rollout.Rollout) error {
 	// if we have no URL, we are done
@@ -84,7 +108,7 @@ func (wr *APISrvWriter) WriteRollout(ro *rollout.Rollout) error {
 	for ii := 0; ii < 30; ii++ {
 		k, err := apicl.RolloutV1().Rollout().Update(context.Background(), ro)
 		if err != nil {
-			log.Infof("Rollout Update errored %v", err)
+			log.Debugf("Rollout Update errored %v", err)
 			time.Sleep(time.Second)
 			continue
 		}

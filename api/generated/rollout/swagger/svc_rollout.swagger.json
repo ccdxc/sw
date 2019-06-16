@@ -1468,6 +1468,7 @@
         "max-parallel": {
           "type": "integer",
           "format": "int64",
+          "default": "2",
           "description": "MaxParallel is the maximum number of nodes getting updated at any time\nThis setting is applicable only to SmartNICs.\nController nodes are always upgraded one after another."
         },
         "max-nic-failures-before-abort": {

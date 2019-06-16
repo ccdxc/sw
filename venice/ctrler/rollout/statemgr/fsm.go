@@ -207,8 +207,7 @@ func (ros *RolloutState) runFSM() {
 
 func fsmAcCreated(ros *RolloutState) {
 	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_PROGRESSING)]
-	//TODO Set the rollout Object Previous version to that of bundle version
-	ros.setPreviousVersion("TODO_PREV_VERSION")
+	ros.setPreviousVersion(ros.writer.GetClusterVersion())
 	if ros.Spec.GetSuspend() {
 		log.Infof("Rollout object created with state SUSPENDED.")
 		ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUSPENDED)]
