@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#set -x
+set -x
 set -e
 
 #RM="echo rm"
@@ -9,6 +9,7 @@ RM=/bin/rm
 MV=/bin/mv
 
 GRUBFILE=/run/initramfs/live/boot/grub2/grub.cfg
+echo "venice_appl_GrubEntry.sh called with args $*"
 
 while getopts ":oAdv:g:p:u:" arg; do
   case ${arg} in
@@ -24,7 +25,7 @@ while getopts ":oAdv:g:p:u:" arg; do
   esac
 done
 
-if [[ ! -w "$GRUBFILE" || ! -f ${GRUBFILE} ]]
+if [[ ! -w "${GRUBFILE}" || ! -f ${GRUBFILE} ]]
 then
     echo ${GRUBFILE} is not writable
     exit 1
@@ -145,7 +146,7 @@ function doDelImage() {
     local GRUBFILE=$2
 
     # lets operate on a temp file first
-    TMPFILE=`mktemp /tmp/veniceGrubTool.XXXXXX` || exit 10
+    TMPFILE=`mktemp /tmp/veniceGrubTool.XXXXXX` || exit 20
     cp ${GRUBFILE} ${TMPFILE}
 
     curBootVersion=$(getCurBootVersion ${GRUBFILE})
