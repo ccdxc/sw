@@ -1,5 +1,5 @@
-import { Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
-import { OnChanges } from '@angular/core/src/metadata/lifecycle_hooks';
+import { Component, Input, OnInit, ViewEncapsulation, ViewChild } from '@angular/core';
+import { OnChanges, AfterViewInit, OnDestroy } from '@angular/core/src/metadata/lifecycle_hooks';
 import { Router } from '@angular/router';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
@@ -8,6 +8,10 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ChartOptions } from 'chart.js';
 import { StatArrowDirection, CardStates, Stat } from '@app/components/shared/basecard/basecard.component';
 import { FlipState, FlipComponent } from '@app/components/shared/flip/flip.component';
+import { TelemetryPollingMetricQueries, MetricsPollingQuery, MetricsqueryService, MetricsPollingOptions } from '@app/services/metricsquery.service';
+import { MetricsUtility } from '@app/common/MetricsUtility';
+import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
+import { Telemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
 
 @Component({
   selector: 'app-dsbdpolicyhealth',
@@ -16,7 +20,8 @@ import { FlipState, FlipComponent } from '@app/components/shared/flip/flip.compo
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class PolicyhealthComponent implements OnInit, OnChanges {
+export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
+  @ViewChild('lineGraph') lineGraphComponent: LinegraphComponent;
   hasHover: boolean = false;
   cardStates = CardStates;
 
@@ -50,13 +55,13 @@ export class PolicyhealthComponent implements OnInit, OnChanges {
     graphId: 'dsbdpolicyhealth-activeFlows',
     defaultValue: 10,
     defaultDescription: 'Avg',
-    hoverDescription: '',
+    hoverDescription: 'Flows',
     isPercentage: false,
-    valueFormatter: LinegraphComponent.percentFormatter
+    scaleMin: 0,
   };
 
-  deniedFlows: LineGraphStat = {
-    title: 'DENIED FLOWS',
+  totalConnections: LineGraphStat = {
+    title: 'TOTAL CONNECTIONS PER SECOND',
     data: [],
     statColor: '#97b8df',
     gradientStart: 'rgba(151, 184, 223, 1)',
@@ -64,29 +69,14 @@ export class PolicyhealthComponent implements OnInit, OnChanges {
     graphId: 'dsbdpolicyhealth-deniedFlows',
     defaultValue: 10,
     defaultDescription: 'Avg',
-    hoverDescription: '',
+    hoverDescription: 'CPS',
     isPercentage: false,
-    valueFormatter: LinegraphComponent.percentFormatter
-  };
-
-  rejectedFlows: LineGraphStat = {
-    title: 'REJECTED FLOWS',
-    data: [],
-    statColor: '#97b8df',
-    gradientStart: 'rgba(151, 184, 223, 1)',
-    gradientStop: 'rgba(151, 184, 223, 0)',
-    graphId: 'dsbdpolicyhealth-rejectedFlows',
-    defaultValue: 10,
-    defaultDescription: 'Avg',
-    hoverDescription: '',
-    isPercentage: false,
-    valueFormatter: LinegraphComponent.percentFormatter
+    scaleMin: 0,
   };
 
   linegraphStats: LineGraphStat[] = [
     this.activeFlows,
-    this.deniedFlows,
-    this.rejectedFlows
+    this.totalConnections,
   ];
 
   themeColor: string = '#61b3a0';
@@ -104,21 +94,22 @@ export class PolicyhealthComponent implements OnInit, OnChanges {
   @Input() lastUpdateTime: string;
   @Input() timeRange: string;
   // When set to true, card contents will fade into view
-  @Input() cardState: CardStates = CardStates.READY;
+  cardState: CardStates = CardStates.LOADING;
 
   flipState: FlipState = FlipState.front;
 
 
   menuItems = [
-    {
-      text: 'Flip card', onClick: () => {
-        this.toggleFlip();
-      }
-    },
+    // {
+    //   text: 'Flip card', onClick: () => {
+    //     this.toggleFlip();
+    //   }
+    // },
   ];
 
 
-  showGraph: boolean = false;
+  graphDrawn: boolean = false;
+  viewInitialized: boolean = false;
 
 
   dataset = [];
@@ -177,25 +168,132 @@ export class PolicyhealthComponent implements OnInit, OnChanges {
       duration: 0,
     }
   };
+  subscriptions = [];
 
-  constructor(private router: Router) { }
+  sessionData: ITelemetry_queryMetricsQueryResult;
+  cpsData: ITelemetry_queryMetricsQueryResult;
+  sessionAvg: ITelemetry_queryMetricsQueryResult;
+  cpsAvg: ITelemetry_queryMetricsQueryResult;
+
+  constructor(private router: Router,
+              protected metricsqueryService: MetricsqueryService) { }
 
   toggleFlip() {
-    this.flipState = FlipComponent.toggleState(this.flipState);
+    // this.flipState = FlipComponent.toggleState(this.flipState);
   }
 
   ngOnChanges(changes) {
   }
 
   ngOnInit() {
-    const chartData = [this.activeFlows, this.rejectedFlows, this.deniedFlows];
-    chartData.forEach((chart) => {
-      const data = [];
-      const oneDayAgo = new Date(new Date().getTime() - (24 * 60 * 60 * 1000));
-      for (let index = 0; index < 48; index++) {
-        data.push({ t: new Date(oneDayAgo.getTime() + (index * 30 * 60 * 1000)), y: Utility.getRandomInt(0, 20) });
+    this.getMetrics();
+  }
+
+  ngAfterViewInit() {
+    this.viewInitialized = true;
+    this.tryGenMetrics();
+  }
+
+  tryGenMetrics() {
+    if (this.viewInitialized && this.cardState === CardStates.READY) {
+      this.setupCard();
+    }
+  }
+
+  getMetrics() {
+    const queryList: TelemetryPollingMetricQueries = {
+      queries: [],
+      tenant: Utility.getInstance().getTenant()
+    };
+    queryList.queries.push(this.sessionTimeSeriesQuery());
+    queryList.queries.push(this.cpsTimeSeriesQuery());
+    queryList.queries.push(this.sessionAvgQuery());
+    queryList.queries.push(this.cpsAvgQuery());
+
+    const sub = this.metricsqueryService.pollMetrics('policyHealthCards', queryList).subscribe(
+      (data: ITelemetry_queryMetricsQueryResponse) => {
+        if (data && data.results && data.results.length === queryList.queries.length) {
+          if (MetricsUtility.resultHasData(data.results[0])) {
+            this.sessionData = data.results[0];
+            this.cpsData = data.results[1];
+            this.sessionAvg = data.results[2];
+            this.cpsAvg = data.results[3];
+            this.lastUpdateTime = new Date().toISOString();
+            this.cardState = CardStates.READY;
+            this.tryGenMetrics();
+          } else {
+            this.cardState = CardStates.NO_DATA;
+          }
+        }
+      },
+      (err) => {
+        this.cardState = CardStates.FAILED;
       }
-      chart.data = data;
+    );
+    this.subscriptions.push(sub);
+  }
+
+  setupCard() {
+    if (MetricsUtility.resultHasData(this.sessionData)) {
+      const data = MetricsUtility.transformToChartjsTimeSeries(this.sessionData.series[0], 'totalActiveSessions');
+      this.activeFlows.data = data;
+    }
+    if (MetricsUtility.resultHasData(this.cpsData)) {
+      const data = MetricsUtility.transformToChartjsTimeSeries(this.cpsData.series[0], 'connectionsPerSecond');
+      this.totalConnections.data = data;
+    }
+    if (MetricsUtility.resultHasData(this.sessionAvg)) {
+      const index = MetricsUtility.findFieldIndex(this.sessionAvg.series[0].columns, 'totalActiveSessions');
+      this.activeFlows.defaultValue = Math.round(this.sessionAvg.series[0].values[0][index]);
+    }
+    if (MetricsUtility.resultHasData(this.cpsAvg)) {
+      const index = MetricsUtility.findFieldIndex(this.cpsAvg.series[0].columns, 'connectionsPerSecond');
+      this.totalConnections.defaultValue = Math.round(this.cpsAvg.series[0].values[0][index]);
+    }
+    this.cardState = CardStates.READY;
+    if (this.graphDrawn) {
+      // Manually calling setup charts to redraw as default
+      // change detection will not trigger when the data changes
+      this.lineGraphComponent.setupCharts();
+    } else {
+      this.graphDrawn = true;
+      // In case we just switched from loading state to ready state,
+      // we need to wait for dom to render the canvas
+      setTimeout(() => {
+        // change detection will not trigger when the data changes
+        this.lineGraphComponent.setupCharts();
+      }, 0);
+    }
+  }
+
+  sessionTimeSeriesQuery(): MetricsPollingQuery {
+    return MetricsUtility.timeSeriesQueryPolling('SessionSummaryMetrics');
+  }
+
+  sessionAvgQuery(): MetricsPollingQuery {
+    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastDayAverageQuery('SessionSummaryMetrics');
+    const pollOptions: MetricsPollingOptions = {
+      timeUpdater: MetricsUtility.pastDayAverageQueryUpdate,
+    };
+    return { query: query, pollingOptions: pollOptions };
+
+  }
+
+  cpsTimeSeriesQuery(): MetricsPollingQuery {
+    return MetricsUtility.timeSeriesQueryPolling('FteCPSMetrics');
+  }
+
+  cpsAvgQuery(): MetricsPollingQuery {
+    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastDayAverageQuery('FteCPSMetrics');
+    const pollOptions: MetricsPollingOptions = {
+      timeUpdater: MetricsUtility.pastDayAverageQueryUpdate,
+    };
+    return { query: query, pollingOptions: pollOptions };
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(subscription => {
+      subscription.unsubscribe();
     });
   }
 

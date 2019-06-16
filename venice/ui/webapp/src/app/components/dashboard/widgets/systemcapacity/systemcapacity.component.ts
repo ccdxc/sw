@@ -310,8 +310,7 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
 
         // TimeSeries data
         if (MetricsUtility.resultHasData(this.timeSeriesData)) {
-          const index = this.timeSeriesData.series[0].columns.indexOf(fieldName);
-          const data = Utility.transformToChartjsTimeSeries(this.timeSeriesData.series[0].values, 0, index);
+          const data = MetricsUtility.transformToChartjsTimeSeries(this.timeSeriesData.series[0], fieldName);
           lineGraph.data = data;
         }
 
@@ -341,10 +340,8 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
       const fieldName1 = this.networkGraphStat.fieldNames[0];
       const fieldName2 = this.networkGraphStat.fieldNames[1];
       if (MetricsUtility.resultHasData(this.timeSeriesData)) {
-        const index1 = this.timeSeriesData.series[0].columns.indexOf(fieldName1);
-        const data1 = Utility.transformToChartjsTimeSeries(this.timeSeriesData.series[0].values, 0, index1);
-        const index2 = this.timeSeriesData.series[0].columns.indexOf(fieldName2);
-        const data2 = Utility.transformToChartjsTimeSeries(this.timeSeriesData.series[0].values, 0, index2);
+        const data1 = MetricsUtility.transformToChartjsTimeSeries(this.timeSeriesData.series[0], fieldName1);
+        const data2 = MetricsUtility.transformToChartjsTimeSeries(this.timeSeriesData.series[0], fieldName2);
 
         for (let index = 0; index < data1.length; index++) {
           data1[index].y = data1[index].y + data2[index].y;

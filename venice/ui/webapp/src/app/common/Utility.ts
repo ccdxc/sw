@@ -15,6 +15,7 @@ import { RepeaterComponent } from 'web-app-framework';
 import { Eventtypes } from '../enum/eventtypes.enum';
 import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
+import { ClusterSmartNIC, ClusterSmartNICCondition, ClusterSmartNICCondition_type, ClusterSmartNICCondition_status } from '@sdk/v1/models/generated/cluster';
 
 
 
@@ -959,14 +960,6 @@ export class Utility {
     return { x: x, y: y };
   }
 
-  public static transformToChartjsTimeSeries(data, xFieldIndex, yFieldIndex): { t: Date, y: any }[] {
-    const retData = [];
-    data.forEach((item) => {
-      retData.push({ t: item[xFieldIndex], y: item[yFieldIndex] });
-    });
-    return retData;
-  }
-
 
   public static scaleBytes(bytes: number, decimals = 2, unit: string = '') {
     const k = 1024;
@@ -1514,6 +1507,17 @@ export class Utility {
       });
     });
     return ret;
+  }
+
+  public static isNaplesNICHealthy(naples: ClusterSmartNIC): boolean {
+    if (naples && naples.status.conditions !== null && naples.status.conditions.length > 0) {
+      const badNics  = naples.status.conditions.find( (condition: ClusterSmartNICCondition) => {
+        return (condition) && (condition.type !== ClusterSmartNICCondition_type.HEALTHY || condition.status !== ClusterSmartNICCondition_status.TRUE);
+      });
+      return !badNics;
+    } else {
+      return true;
+    }
   }
 
 

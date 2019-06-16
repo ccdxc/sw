@@ -32,6 +32,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { AuthService } from '@app/services/auth.service';
+import { WorkloadService } from '@app/services/generated/workload.service';
 
 @Component({
   template: ''
@@ -78,7 +79,8 @@ describe('DashboardComponent', () => {
         LogPublishersService,
         MessageService,
         MetricsqueryService,
-        ClusterService
+        ClusterService,
+        WorkloadService
       ]
     });
       });

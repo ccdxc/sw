@@ -420,10 +420,8 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
       const singleResultDatasets: TransformDatasets = [];
       res.series.forEach( (s) => {
         source.fields.forEach( (field) => {
-          const fieldIndex = s.columns.findIndex((f) => {
-            return f.toLowerCase().includes(field.toLowerCase());
-          });
-          const data = Utility.transformToChartjsTimeSeries(s.values, 0, fieldIndex);
+          const fieldIndex = MetricsUtility.findFieldIndex(s, field);
+          const data = MetricsUtility.transformToChartjsTimeSeries(s, field);
           const key = sourceFieldKey(source.id, source.measurement, field);
           const dataset: ChartDataSets = {
             data: data,

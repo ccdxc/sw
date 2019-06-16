@@ -1096,4 +1096,75 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     }
   ]
 },
+  Cluster: {
+  "name": "Cluster",
+  "objectKind": "Cluster",
+  "displayName": "Cluster",
+  "description": "Contains metrics related to the cluster",
+  "fields": [
+    {
+      "name": "AdmittedNICs",
+      "displayName": "Admitted NICs",
+      "description": "Number of admitted NICs",
+      "units": "count",
+      "baseType": "number",
+      "jsType": "number",
+      "scaleMin": 0
+    },
+    {
+      "name": "DecommissionedNICs",
+      "displayName": "Decomissioned NICs",
+      "description": "Number of decommissioned NICs",
+      "units": "count",
+      "baseType": "number",
+      "jsType": "number",
+      "scaleMin": 0
+    },
+    {
+      "name": "DisconnectedNICs",
+      "displayName": "Disconnected NICs",
+      "description": "Number of disconnected NICs",
+      "units": "count",
+      "baseType": "number",
+      "jsType": "number",
+      "scaleMin": 0
+    },
+    {
+      "name": "HealthyNICs",
+      "displayName": "Healthy NICs",
+      "description": "Number of healthy NICs",
+      "units": "count",
+      "baseType": "number",
+      "jsType": "number",
+      "scaleMin": 0
+    },
+    {
+      "name": "PendingNICs",
+      "displayName": "Pending NICs",
+      "description": "Number of pending NICs",
+      "units": "count",
+      "baseType": "number",
+      "jsType": "number",
+      "scaleMin": 0
+    },
+    {
+      "name": "RejectedNICs",
+      "displayName": "Rejected NICs",
+      "description": "Number of rejected NICs",
+      "units": "count",
+      "baseType": "number",
+      "jsType": "number",
+      "scaleMin": 0
+    },
+    {
+      "name": "UnhealthyNICs",
+      "displayName": "Unhealthy NICs",
+      "description": "Number of unhealthy NICs",
+      "units": "count",
+      "baseType": "number",
+      "jsType": "number",
+      "scaleMin": 0
+    }
+  ]
+},
 }

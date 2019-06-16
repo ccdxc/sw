@@ -1,5 +1,5 @@
 import { Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
-import { OnChanges } from '@angular/core/src/metadata/lifecycle_hooks';
+import { OnChanges, OnDestroy } from '@angular/core/src/metadata/lifecycle_hooks';
 import { Router } from '@angular/router';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
@@ -7,6 +7,12 @@ import { LineGraphStat } from '@app/components/shared/linegraph/linegraph.compon
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { StatArrowDirection, CardStates, Stat } from '@app/components/shared/basecard/basecard.component';
 import { FlipState, FlipComponent } from '@app/components/shared/flip/flip.component';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
+import { WorkloadService } from '@app/services/generated/workload.service';
+import { Subscription } from 'rxjs';
+import { ClusterHost } from '@sdk/v1/models/generated/cluster';
+import { ClusterService } from '@app/services/generated/cluster.service';
 
 @Component({
   selector: 'app-dsbdworkloads',
@@ -15,20 +21,20 @@ import { FlipState, FlipComponent } from '@app/components/shared/flip/flip.compo
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class WorkloadsComponent implements OnInit, OnChanges {
+export class WorkloadsComponent implements OnInit, OnChanges, OnDestroy {
   hasHover: boolean = false;
   cardStates = CardStates;
 
   title: string = 'Workloads';
   firstStat: Stat = {
-    value: '1,244',
+    value: '0',
     description: 'TOTAL WORKLOADS',
     arrowDirection: StatArrowDirection.UP,
     statColor: '#8c94ff'
   };
   secondStat: Stat = {
-    value: '30 KB',
-    description: 'AVG TRAFFIC PER WORKLOAD',
+    value: '0',
+    description: 'TOTAL HOSTS',
     arrowDirection: StatArrowDirection.UP,
     statColor: '#8c94ff'
   };
@@ -76,27 +82,42 @@ export class WorkloadsComponent implements OnInit, OnChanges {
     svgIcon: 'workloads'
   };
 
+  // Used for processing watch events
+  workloadEventUtility: HttpEventUtility<WorkloadWorkload>;
+  workloads: ReadonlyArray<WorkloadWorkload>;
+  getWorkloadsFailed: boolean = false;
+  hostsEventUtility: HttpEventUtility<ClusterHost>;
+  hosts: ReadonlyArray<ClusterHost>;
+  getHostsFailed: boolean = false;
+
+  avgWorkloadPerHost: number = 0;
+
   @Input() lastUpdateTime: string;
   @Input() timeRange: string;
   // When set to true, card contents will fade into view
-  @Input() cardState: CardStates = CardStates.READY;
+  @Input() cardState: CardStates = CardStates.LOADING;
 
   flipState: FlipState = FlipState.front;
 
+  subscriptions: Subscription[] = [];
+
   menuItems = [
-    {
-      text: 'Flip card', onClick: () => {
-        this.toggleFlip();
-      }
-    },
+    // {
+    //   text: 'Flip card', onClick: () => {
+    //     this.toggleFlip();
+    //   }
+    // },
   ];
 
   showGraph: boolean = false;
 
-  constructor(private router: Router) { }
+  constructor(private router: Router,
+              protected workloadService: WorkloadService,
+              protected clusterService: ClusterService) { }
 
   toggleFlip() {
-    this.flipState = FlipComponent.toggleState(this.flipState);
+    // Card is currently not allowed to be flipped
+    // this.flipState = FlipComponent.toggleState(this.flipState);
   }
 
   ngOnChanges(changes) {
@@ -112,6 +133,66 @@ export class WorkloadsComponent implements OnInit, OnChanges {
       }
       chart.data = data;
     });
+    this.getWorkloads();
+    this.getHosts();
+  }
+
+  getWorkloads() {
+    this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
+    this.workloads = this.workloadEventUtility.array;
+    const subscription = this.workloadService.WatchWorkload().subscribe(
+      (response) => {
+        this.workloadEventUtility.processEvents(response);
+        this.firstStat.value = this.workloads.length.toString();
+        this.cardState = CardStates.READY;
+        this.computeAvg();
+      },
+      (err) => {
+        this.getWorkloadsFailed = true;
+        this.checkFailureState();
+      }
+    );
+    this.subscriptions.push(subscription);
+  }
+
+  getHosts() {
+    this.hostsEventUtility = new HttpEventUtility<ClusterHost>(ClusterHost, true);
+    this.hosts = this.hostsEventUtility.array as ReadonlyArray<ClusterHost>;
+    const subscription = this.clusterService.WatchHost().subscribe(
+      response => {
+        this.hostsEventUtility.processEvents(response);
+        this.secondStat.value = this.hosts.length.toString();
+        this.cardState = CardStates.READY;
+        this.computeAvg();
+      },
+      (err) => {
+        this.getHostsFailed = true;
+        this.checkFailureState();
+      }
+    );
+    this.subscriptions.push(subscription);
+  }
+
+  checkFailureState() {
+    if (this.getWorkloadsFailed && this.getHostsFailed) {
+      this.cardState = CardStates.FAILED;
+    }
+  }
+
+  computeAvg() {
+    if (this.hosts.length === 0) {
+      this.avgWorkloadPerHost = 0;
+    } else {
+      this.avgWorkloadPerHost = Math.round(this.workloads.length / this.hosts.length);
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.subscriptions != null) {
+      this.subscriptions.forEach(subscription => {
+        subscription.unsubscribe();
+      });
+    }
   }
 
 }

@@ -16,6 +16,7 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { AuthService } from '@app/services/auth.service';
+import { MetricsqueryService } from '@app/services/metricsquery.service';
 
 describe('NaplesComponent', () => {
   let component: NaplesComponent;
@@ -40,7 +41,8 @@ describe('NaplesComponent', () => {
         ClusterService,
         LogService,
         LogPublishersService,
-        MessageService
+        MessageService,
+        MetricsqueryService
       ]
     });
       });

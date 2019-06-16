@@ -9,12 +9,14 @@ export interface LineGraphStat {
   gradientStart: string;
   gradientStop: string;
   graphId: string;
-  defaultValue: number;
+  defaultValue?: number;
   defaultDescription: string;
   // Called to format the value to display to the right of the graph
   valueFormatter?: (val: number) => string;
   hoverDescription: string;
   isPercentage: boolean;
+  scaleMin?: number;
+  scaleMax?: number;
 }
 
 @Component({
@@ -204,7 +206,7 @@ export class LinegraphComponent implements OnInit, AfterViewInit {
     return new Chart(canvas, {
       type: 'line',
       data: dataLinegraph,
-      options: this.generateOptions(id + 'Tooltip', stat.isPercentage),
+      options: this.generateOptions(id + 'Tooltip', stat),
     });
   }
 
@@ -216,7 +218,7 @@ export class LinegraphComponent implements OnInit, AfterViewInit {
    *                     Used to determine whether to auto scale
    *                     or to use 0-100 scale.
    */
-  generateOptions(chartTooltipId, isPercentage): ChartOptions {
+  generateOptions(chartTooltipId, stat: LineGraphStat): ChartOptions {
     const ret: ChartOptions = {
       maintainAspectRatio: false,
       layout: {
@@ -285,9 +287,15 @@ export class LinegraphComponent implements OnInit, AfterViewInit {
         },
       }
     };
-    if (isPercentage) {
+    if (stat.isPercentage) {
       ret.scales.yAxes[0].ticks.min = 0;
       ret.scales.yAxes[0].ticks.max = 100;
+    }
+    if (stat.scaleMax != null) {
+      ret.scales.yAxes[0].ticks.max = stat.scaleMax;
+    }
+    if (stat.scaleMin != null) {
+      ret.scales.yAxes[0].ticks.min = stat.scaleMin;
     }
     return ret;
   }

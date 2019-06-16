@@ -11,11 +11,11 @@
                 [themeColor]="themeColor"
                 [icon]="icon"
                 [timeRange]="'Past 24 hours'"
-                [cardState]="cardState"
+                [cardState]="frontCardState"
                 [menuItems]="menuItems"
                 (click)="toggleFlip()">
     <div fxFlex="100%" fxLayout="row">
-      <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="50%" fxLayout="row"
+      <div [@fade] *ngIf="frontCardState === cardStates.READY" fxFlex="50%" fxLayout="row"
            fxLayoutAlign="space-between stretch">
         <div fxFlex="nogrow" fxLayout="column" class="dsbdnaples-stat-left">
           <ng-container *ngTemplateOutlet="stat; context: {statData: firstStat}"></ng-container>
@@ -26,7 +26,7 @@
           <ng-container *ngTemplateOutlet="stat; context: {statData: fourthStat}"></ng-container>
         </div>
       </div>
-      <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="50%" fxLayout="row"
+      <div [@fade] *ngIf="frontCardState === cardStates.READY" fxFlex="50%" fxLayout="row"
            fxLayoutAlign="start start" class="dsbdnaples-card-right">
         <ng-container *ngTemplateOutlet="piechart"></ng-container>
       </div>
@@ -57,12 +57,14 @@
 </ng-template>
 
 <ng-template #piechart>
-  <div class="dsbdnaples-label-canvas" fxLayout="column" fxLayoutAlign="center center">
-    <div fxFlex="none" class="dsbdnaples-percent">10%</div>
-    <div fxFlex="none">UNHEALTHY</div>
-  </div>
-  <p-chart type="doughnut" [data]="dataDoughnut" width="224px" class="dsbdnaples-doughnut"
-           height="173px" [options]="options"></p-chart>
+  <ng-container *ngIf="dataDoughnut != null">
+    <div class="dsbdnaples-label-canvas" fxLayout="column" fxLayoutAlign="center center">
+      <div fxFlex="none" class="dsbdnaples-percent">{{ pieChartPercent }}</div>
+      <div fxFlex="none">{{ pieChartText }}</div>
+    </div>
+    <p-chart type="doughnut" [data]="dataDoughnut" width="224px" class="dsbdnaples-doughnut"
+             height="173px" [options]="options"></p-chart>
+  </ng-container>
 </ng-template>
 
 <ng-template #cardBack>
@@ -71,10 +73,11 @@
                 [themeColor]="themeColor"
                 [icon]="icon"
                 [timeRange]="'Past 24 hours'"
-                [cardState]="cardState"
+                [cardState]="backCardState"
                 [menuItems]="menuItems"
                 (click)="toggleFlip()">
-    <app-linegraph [@fade] *ngIf="cardState === cardStates.READY" fxFlex="100%" fxLayout="row"
+    <app-linegraph [@fade] #lineGraph *ngIf="backCardState === cardStates.READY" fxFlex="100%"
+                   fxLayout="row"
                    class="dsbdnaples-card-back" [stats]="linegraphStats"></app-linegraph>
   </app-basecard>
 </ng-template>

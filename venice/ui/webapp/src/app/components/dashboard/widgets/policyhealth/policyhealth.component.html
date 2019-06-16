@@ -5,7 +5,7 @@
   </app-flip>
 </div>
 
-<ng-template #cardFront>
+<ng-template #cardBack>
   <app-basecard [title]="title"
                 [backgroundIcon]="backgroundIcon"
                 [themeColor]="themeColor"
@@ -65,7 +65,7 @@
   </div>
 </ng-template>
 
-<ng-template #cardBack>
+<ng-template #cardFront>
   <app-basecard [title]="title"
                 [backgroundIcon]="backgroundIcon"
                 [themeColor]="themeColor"
@@ -74,7 +74,8 @@
                 [cardState]="cardState"
                 [menuItems]="menuItems"
                 (click)="toggleFlip()">
-    <app-linegraph [@fade] *ngIf="cardState === cardStates.READY" fxFlex="100%" fxLayout="row"
+    <app-linegraph [@fade] #lineGraph *ngIf="cardState === cardStates.READY" fxFlex="100%"
+                   fxLayout="row"
                    class="dsbdpolicyhealth-card-back" [stats]="linegraphStats"></app-linegraph>
   </app-basecard>
 

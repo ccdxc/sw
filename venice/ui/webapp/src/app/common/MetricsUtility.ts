@@ -1,6 +1,6 @@
 import { ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function, Telemetry_queryMetricsQuerySpec, FieldsRequirement_operator, IFieldsSelector, Telemetry_queryMetricsQuerySpec_sort_order } from '@sdk/v1/models/generated/telemetry_query';
 import { Utility } from './Utility';
-import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
+import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult, ITelemetry_queryMetricsResultSeries } from '@sdk/v1/models/telemetry_query';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
 import { CardStates, StatArrowDirection } from '@app/components/shared/basecard/basecard.component';
@@ -573,6 +573,24 @@ export class MetricsUtility {
   public static setCardStatesNoData(cards: HeroCardOptions[]) {
     cards.forEach((c) => {
       c.cardState = CardStates.NO_DATA;
+    });
+  }
+
+  public static transformToChartjsTimeSeries(data: ITelemetry_queryMetricsResultSeries, fieldName): { t: Date, y: any }[] {
+    const retData = [];
+    const yFieldIndex = MetricsUtility.findFieldIndex(data.columns, fieldName);
+    if (yFieldIndex < 0) {
+      console.error('MetricsUtility transformToChartjsTimeSeries: given column name ' + fieldName + ' was not found');
+    }
+    data.values.forEach((item) => {
+      retData.push({ t: item[0], y: item[yFieldIndex] });
+    });
+    return retData;
+  }
+
+  public static findFieldIndex(cols, field) {
+    return cols.findIndex((f) => {
+      return f.toLowerCase().includes(field.toLowerCase());
     });
   }
 
