@@ -11,6 +11,7 @@ export BUILD_DIR=${NICDIR}/build/x86_64/artemis/
 export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 export HAL_CONFIG_PATH=${NICDIR}/conf
 #export GDB='gdb --args'
+export APOLLO_TEST_TEP_ENCAP=vxlan
 
 cfgfile=artemis/scale_cfg.json
 if [[ "$1" ==  --cfg ]]; then
