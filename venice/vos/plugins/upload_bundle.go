@@ -173,6 +173,10 @@ func getUploadBundleCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc 
 
 		err = ExtractImage(tarfileDir + "/" + bundleImage)
 		if err != nil {
+			terr := os.Remove(tarfileDir + "/" + bundleImage)
+			if terr != nil {
+				log.Errorf("removal of /tmp/bundle.tar returned %v", terr)
+			}
 			if rerr := client.RemoveObject("default."+bucket, in.Name); rerr != nil {
 				return fmt.Errorf("Failed to extract bundle (%+v). Error while removing bundle (%+v)", err, rerr)
 			}
@@ -341,6 +345,21 @@ func getDeleteCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc {
 
 		if err := os.RemoveAll(installerTmpDir); err != nil {
 			return fmt.Errorf("Error %s during removeAll of %s", err, installerTmpDir)
+		}
+
+		br, err := client.GetObjectWithContext(ctx, "default.images", bundleImage, minio.GetObjectOptions{})
+		if err != nil {
+			log.Infof("%s not not present (%s)", bundleImage, err)
+			return nil
+		}
+
+		objInfo, err = br.Stat()
+		if objInfo.Key == bundleImage {
+			if err := client.RemoveObject("default.images", bundleImage); err != nil {
+				log.Errorf("Failed to remove %s. Error %+v", bundleImage, err)
+				return err
+			}
+			log.Infof("Removed %s in bucket[%s]", bundleImage, "default."+bucket)
 		}
 
 		return nil
