@@ -121,12 +121,17 @@ enum RuleDir {
 
 // L3 rule match criteria
 message RuleL3Match {
-  // IP protocol
-  uint32         Protocol  = 1 [(gogoproto.moretags) = "meta:range:0-255"];
-  // source IP prefix 
-  types.IPPrefix SrcPrefix = 2;
-  // dest IP prefix 
-  types.IPPrefix DstPrefix = 3;
+  uint32               Protocol  = 1 [(gogoproto.moretags) = "meta:range:0-255"]; // IP Protocol
+  oneof SrcMatch {
+    types.IPPrefix     SrcPrefix = 2; // Src IP Prefix
+    types.AddressRange SrcRange  = 3; // Src IP Range
+    uint32             SrcTag    = 4; // Src Tag
+  }
+  oneof DstMatch {
+    types.IPPrefix     DstPrefix = 5; // Dst IP Prefix
+    types.AddressRange DstRange  = 6; // Dst IP Range
+    uint32             DstTag    = 7; // Dst Tag
+  }
 }
 
 // TCP/UDP rule match criteria

@@ -47,55 +47,6 @@
 #include "nic/apollo/agent/svc/policy.hpp"
 #include "gen/proto/types.pb.h"
 
-//----------------------------------------------------------------------------
-// convert HAL IP address to spec
-//----------------------------------------------------------------------------
-static inline void
-ip_addr_to_spec (types::IPAddress *ip_addr_spec,
-                 ip_addr_t *ip_addr)
-{
-    if (ip_addr->af == IP_AF_IPV4) {
-        ip_addr_spec->set_af(types::IP_AF_INET);
-        ip_addr_spec->set_v4addr(ip_addr->addr.v4_addr);
-    } else if (ip_addr->af == IP_AF_IPV6) {
-        ip_addr_spec->set_af(types::IP_AF_INET6);
-        ip_addr_spec->set_v6addr(ip_addr->addr.v6_addr.addr8, IP6_ADDR8_LEN);
-    }
-}
-
-//----------------------------------------------------------------------------
-// convert HAL IPv4 address to spec
-//----------------------------------------------------------------------------
-static inline void
-ipv4_addr_to_spec (types::IPAddress *ip_addr_spec,
-                   ipv4_addr_t *ipv4_addr)
-{
-    ip_addr_spec->set_af(types::IP_AF_INET);
-    ip_addr_spec->set_v4addr(*ipv4_addr);
-}
-
-//----------------------------------------------------------------------------
-// convert IPv4 prefix to IPPrefix proto spec
-//----------------------------------------------------------------------------
-static inline void
-ipv4_prefix_to_spec (types::IPPrefix *ip_pfx_spec,
-                ipv4_prefix_t *ip_pfx)
-{
-    ip_pfx_spec->set_len(ip_pfx->len);
-    ipv4_addr_to_spec(ip_pfx_spec->mutable_addr(), &ip_pfx->v4_addr);
-}
-
-//----------------------------------------------------------------------------
-// convert IP prefix to IPPrefix proto spec
-//----------------------------------------------------------------------------
-static inline void
-ip_pfx_to_spec (types::IPPrefix *ip_pfx_spec,
-                ip_prefix_t *ip_pfx)
-{
-    ip_pfx_spec->set_len(ip_pfx->len);
-    ip_addr_to_spec(ip_pfx_spec->mutable_addr(), &ip_pfx->addr);
-}
-
 // Populate proto buf spec from meter API spec
 static inline void
 meter_api_spec_to_proto_spec (pds::MeterSpec *proto_spec,
@@ -137,7 +88,7 @@ meter_api_spec_to_proto_spec (pds::MeterSpec *proto_spec,
         proto_rule_spec->set_priority(api_rule_spec->priority);
         for (uint32_t pfx = 0;
                   pfx < api_rule_spec->num_prefixes; pfx++) {
-            ip_pfx_to_spec(proto_rule_spec->add_prefix(),
+            ippfx_api_spec_to_proto_spec(proto_rule_spec->add_prefix(),
                            &api_rule_spec->prefixes[pfx]);
         }
     }
@@ -480,12 +431,45 @@ policy_api_spec_to_proto_spec (pds::SecurityPolicySpec *proto_spec,
             proto_rule->mutable_match()->mutable_l3match()->set_protocol(
                                             api_rule->match.l3_match.ip_proto);
         }
-        ip_pfx_to_spec(
-            proto_rule->mutable_match()->mutable_l3match()->mutable_srcprefix(),
-            &api_rule->match.l3_match.src_ip_pfx);
-        ip_pfx_to_spec(
-            proto_rule->mutable_match()->mutable_l3match()->mutable_dstprefix(),
-            &api_rule->match.l3_match.dst_ip_pfx);
+
+        switch (api_rule->match.l3_match.src_match_type) {
+        case IP_MATCH_PREFIX:
+            ippfx_api_spec_to_proto_spec(
+                proto_rule->mutable_match()->mutable_l3match()->mutable_srcprefix(),
+                &api_rule->match.l3_match.src_ip_pfx);
+            break;
+        case IP_MATCH_RANGE:
+            iprange_api_spec_to_proto_spec(
+                proto_rule->mutable_match()->mutable_l3match()->mutable_srcrange(),
+                &api_rule->match.l3_match.src_ip_range);
+            break;
+        case IP_MATCH_TAG:
+            proto_rule->mutable_match()->mutable_l3match()->set_srctag(
+                api_rule->match.l3_match.src_tag);
+            break;
+        default:
+            break;
+        }
+
+        switch (api_rule->match.l3_match.dst_match_type) {
+        case IP_MATCH_PREFIX:
+            ippfx_api_spec_to_proto_spec(
+                proto_rule->mutable_match()->mutable_l3match()->mutable_dstprefix(),
+                &api_rule->match.l3_match.dst_ip_pfx);
+            break;
+        case IP_MATCH_RANGE:
+            iprange_api_spec_to_proto_spec(
+                proto_rule->mutable_match()->mutable_l3match()->mutable_dstrange(),
+                &api_rule->match.l3_match.dst_ip_range);
+            break;
+        case IP_MATCH_TAG:
+            proto_rule->mutable_match()->mutable_l3match()->set_dsttag(
+                api_rule->match.l3_match.dst_tag);
+            break;
+        default:
+            break;
+        }
+
         proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_srcportrange()->set_portlow(api_rule->match.l4_match.sport_range.port_lo);
         proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_srcportrange()->set_porthigh(api_rule->match.l4_match.sport_range.port_hi);
         proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_dstportrange()->set_portlow(api_rule->match.l4_match.dport_range.port_lo);
@@ -1588,6 +1572,11 @@ pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
     if (proto_l3_match.has_srcprefix()) {
         ippfx_proto_spec_to_api_spec(&match->l3_match.src_ip_pfx,
                                      proto_l3_match.srcprefix());
+    } else if (proto_l3_match.has_srcrange()) {
+        iprange_proto_spec_to_api_spec(&match->l3_match.src_ip_range,
+                                       proto_l3_match.srcrange());
+    } else if (proto_l3_match.srctag()) {
+        match->l3_match.src_tag = proto_l3_match.srctag();
     } else {
         // since the memory is zero-ed out, this is 0.0.0.0/0 or 0::0/0
         // TODO: should we set the IP_AF_XXX ?
@@ -1595,6 +1584,11 @@ pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
     if (proto_l3_match.has_dstprefix()) {
         ippfx_proto_spec_to_api_spec(&match->l3_match.dst_ip_pfx,
                                      proto_l3_match.dstprefix());
+    } else if (proto_l3_match.has_dstrange()) {
+        iprange_proto_spec_to_api_spec(&match->l3_match.dst_ip_range,
+                                       proto_l3_match.dstrange());
+    } else if (proto_l3_match.dsttag()) {
+        match->l3_match.src_tag = proto_l3_match.dsttag();
     } else {
         // since the memory is zero-ed out, this is 0.0.0.0/0 or 0::0/0
         // TODO: should we set the IP_AF_XXX ?

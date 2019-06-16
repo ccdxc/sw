@@ -64,6 +64,27 @@ ipv4pfx_proto_spec_to_api_spec (ipv4_prefix_t *ip_pfx,
     return sdk::SDK_RET_OK;
 }
 
+static inline sdk_ret_t
+iprange_proto_spec_to_api_spec (ipvx_range_t *ip_range,
+                                const types::AddressRange& in_iprange)
+{
+    if (in_iprange.has_ipv4range()) {
+        ip_range->af = IP_AF_IPV4;
+        ip_range->ip_lo.v4_addr = in_iprange.ipv4range().low().v4addr();
+        ip_range->ip_hi.v4_addr = in_iprange.ipv4range().high().v4addr();
+    } else if (in_iprange.has_ipv6range()) {
+        ip_range->af = IP_AF_IPV6;
+        memcpy(ip_range->ip_lo.v6_addr.addr8,
+               in_iprange.ipv6range().low().v6addr().c_str(),
+               IP6_ADDR8_LEN);
+        memcpy(ip_range->ip_hi.v6_addr.addr8,
+               in_iprange.ipv6range().high().v6addr().c_str(),
+               IP6_ADDR8_LEN);
+    } else {
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+    return sdk::SDK_RET_OK;
+}
 //----------------------------------------------------------------------------
 // convert ip_addr_t to IP address proto spec
 //----------------------------------------------------------------------------
@@ -83,6 +104,23 @@ ipaddr_api_spec_to_proto_spec (types::IPAddress *out_ipaddr,
     return;
 }
 
+static inline void
+ipv4addr_api_spec_to_proto_spec (types::IPAddress *out_ipaddr,
+                                 const ipv4_addr_t *in_ipaddr)
+{
+    out_ipaddr->set_af(types::IP_AF_INET);
+    out_ipaddr->set_v4addr(*in_ipaddr);
+}
+
+static inline void
+ipv6addr_api_spec_to_proto_spec (types::IPAddress *out_ipaddr,
+                                 const ipv6_addr_t *in_ipaddr)
+{
+    out_ipaddr->set_af(types::IP_AF_INET6);
+    out_ipaddr->set_v6addr((const char *)&(in_ipaddr->addr8),
+                           IP6_ADDR8_LEN);
+}
+
 static inline sdk_ret_t
 ippfx_api_spec_to_proto_spec (types::IPPrefix *out_ippfx,
                               const ip_prefix_t *in_ippfx)
@@ -100,6 +138,35 @@ ipv4pfx_api_spec_to_proto_spec (types::IPPrefix *out_ippfx,
     out_ippfx->set_len(in_ippfx->len);
     out_addr->set_af(types::IP_AF_INET);
     out_addr->set_v4addr(in_ippfx->v4_addr);
+    return sdk::SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+iprange_api_spec_to_proto_spec (types::AddressRange *out_iprange,
+                                const ipvx_range_t *in_iprange)
+{
+    switch (in_iprange->af) {
+    case IP_AF_IPV4:
+        {
+            auto out_range = out_iprange->mutable_ipv4range();
+            ipv4addr_api_spec_to_proto_spec(out_range->mutable_low(),
+                                            &in_iprange->ip_lo.v4_addr);
+            ipv4addr_api_spec_to_proto_spec(out_range->mutable_high(),
+                                            &in_iprange->ip_hi.v4_addr);
+        }
+        break;
+    case IP_AF_IPV6:
+        {
+            auto out_range = out_iprange->mutable_ipv4range();
+            ipv6addr_api_spec_to_proto_spec(out_range->mutable_low(),
+                                            &in_iprange->ip_lo.v6_addr);
+            ipv6addr_api_spec_to_proto_spec(out_range->mutable_high(),
+                                            &in_iprange->ip_hi.v6_addr);
+        }
+        break;
+    default:
+        return SDK_RET_INVALID_ARG;
+    }
     return sdk::SDK_RET_OK;
 }
 
