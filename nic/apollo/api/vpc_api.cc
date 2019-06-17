@@ -55,7 +55,10 @@ pds_vpc_status_fill (vpc_entry *entry, pds_vpc_status_t *status)
 static inline sdk_ret_t
 pds_vpc_spec_fill (vpc_entry *entry, pds_vpc_spec_t *spec)
 {
-    // Nothing to fill for vpc
+    spec->type = entry->type();
+    spec->fabric_encap = entry->fabric_encap();
+    if (entry->nat46_prefix_valid())
+        memcpy(&spec->nat46_prefix, &entry->nat46_prefix(), sizeof(ip_prefix_t));
     return SDK_RET_OK;
 }
 
@@ -92,6 +95,7 @@ pds_vpc_read (pds_vpc_key_t *key, pds_vpc_info_t *info)
     if ((rv = pds_vpc_spec_fill(entry, &info->spec)) != SDK_RET_OK) {
         return rv;
     }
+    info->spec.key = *key;
 
     if ((rv = pds_vpc_status_fill(entry, &info->status)) != SDK_RET_OK) {
         return rv;
@@ -201,6 +205,7 @@ pds_vpc_peer_read (pds_vpc_peer_key_t *key, pds_vpc_peer_info_t *info)
     if ((rv = pds_vpc_peer_spec_fill(entry, &info->spec)) != SDK_RET_OK) {
         return rv;
     }
+    info->spec.key = *key;
 
     if ((rv = pds_vpc_peer_status_fill(entry, &info->status)) != SDK_RET_OK) {
         return rv;

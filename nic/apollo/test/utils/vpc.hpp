@@ -71,6 +71,9 @@ extern pds_vpc_key_t k_vpc_key;
 void sample_vpc_setup(pds_vpc_type_t type);
 void sample_vpc_setup_validate(pds_vpc_type_t type);
 void sample_vpc_teardown(pds_vpc_type_t type);
+void sample1_vpc_setup(pds_vpc_type_t type);
+void sample1_vpc_setup_validate(pds_vpc_type_t type);
+void sample1_vpc_teardown(pds_vpc_type_t type);
 
 }    // namespace api_test
 

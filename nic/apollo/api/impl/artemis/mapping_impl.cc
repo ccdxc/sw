@@ -9,7 +9,6 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/lib/utils/utils.hpp"
-#include "nic/sdk/lib/table/memhash/mem_hash.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/api_engine.hpp"

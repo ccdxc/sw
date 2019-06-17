@@ -48,23 +48,17 @@ protected:
         pds_test_base::SetUpTestCase(params);
 
         batch_start();
-        sample_vpc_setup(PDS_VPC_TYPE_TENANT);
+        sample1_vpc_setup(PDS_VPC_TYPE_TENANT);
         batch_commit();
-        sample_vpc_setup_validate(PDS_VPC_TYPE_TENANT);
+        sample1_vpc_setup_validate(PDS_VPC_TYPE_TENANT);
     }
 
     static void TearDownTestCase() {
         pds_test_base::TearDownTestCase();
-#if 0
-        // TODO - segfault in sdk::table::sltcam::txn_start in batch_commit
-        vpc_stepper_feeder_t vpc_feeder = {0};
-        pds_vpc_key_t vpc_key = {.id = 1};
 
         batch_start();
-        sample_vpc_teardown(PDS_VPC_TYPE_TENANT);
+        sample1_vpc_teardown(PDS_VPC_TYPE_TENANT);
         batch_commit();
-        sample_vpc_teardown_validate(PDS_VPC_TYPE_TENANT);
-#endif
     }
 };
 
@@ -75,123 +69,136 @@ protected:
 /// \defgroup VPC_TEST
 /// @{
 
-#if 0
 /// \brief VPC WF_1
-TEST_F(vpc_peer, vpc_peer_workflow_1) {
+TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_1) {
     vpc_peer_feeder feeder;
     pds_vpc_peer_key_t key = {.id = 1};
-    pds_vpc_peer_key_t vpc1 = {.id = 1};
-    pds_vpc_peer_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc1 = {.id = 1};
+    pds_vpc_key_t vpc2 = {.id = 2};
 
-    vpc_peer_feeder.init(key, vpc1, vpc2, k_max_vpc_peer);
-    workflow_1<vpc_peer_feeder>(&feeder);
+    feeder.init(key, vpc1, vpc2, k_max_vpc_peer);
+    workflow_1<vpc_peer_feeder>(feeder);
 }
 
 /// \brief VPC WF_2
-TEST_F(vpc_peer, vpc_peer_workflow_2) {
+TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_2) {
     vpc_peer_feeder feeder;
     pds_vpc_peer_key_t key = {.id = 1};
-    pds_vpc_peer_key_t vpc1 = {.id = 1};
-    pds_vpc_peer_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc1 = {.id = 1};
+    pds_vpc_key_t vpc2 = {.id = 2};
 
-    vpc_peer_feeder.init(key, vpc1, vpc2, k_max_vpc_peer);
-    workflow_2<vpc_peer_feeder>(&feeder);
+    feeder.init(key, vpc1, vpc2, k_max_vpc_peer);
+    workflow_2<vpc_peer_feeder>(feeder);
 }
 
 /// \brief VPC WF_3
-TEST_F(vpc_peer, vpc_peer_workflow_3) {
+TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_3) {
     vpc_peer_feeder feeder1, feeder2, feeder3;
-    pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 20}, key3 = {.id = 30};
-    pds_vpc_peer_key_t vpc1 = {.id = 1};
-    pds_vpc_peer_key_t vpc2 = {.id = 2};
-    pds_vpc_peer_key_t vpc3 = {.id = 20};
-    pds_vpc_peer_key_t vpc4 = {.id = 21};
-    pds_vpc_peer_key_t vpc5 = {.id = 40};
-    pds_vpc_peer_key_t vpc6 = {.id = 41};
+    pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 30}, key3 = {.id = 50};
+    pds_vpc_key_t vpc1 = {.id = 1};
+    pds_vpc_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc3 = {.id = 1};
+    pds_vpc_key_t vpc4 = {.id = 20};
+    pds_vpc_key_t vpc5 = {.id = 1};
+    pds_vpc_key_t vpc6 = {.id = 40};
 
-    vpc_peer_feeder1.init(key1, vpc1, vpc2, 10);
-    vpc_peer_feeder2.init(key2, vpc3, vpc4, 10);
-    VPC_PEER_SEED_INIT(&feeder3, key3, vpc5, vpc6, 10);
-    workflow_3<vpc_peer_feeder>(&feeder1, &feeder2, &feeder3);
+    feeder1.init(key1, vpc1, vpc2, 10);
+    feeder2.init(key2, vpc3, vpc4, 10);
+    feeder3.init(key3, vpc5, vpc6, 10);
+    workflow_3<vpc_peer_feeder>(feeder1, feeder2, feeder3);
 }
 
 /// \brief VPC WF_4
-TEST_F(vpc_peer, vpc_peer_workflow_4) {
+TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_4) {
     vpc_peer_feeder feeder;
     pds_vpc_peer_key_t key = {.id = 1};
-    pds_vpc_peer_key_t vpc1 = {.id = 1};
-    pds_vpc_peer_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc1 = {.id = 1};
+    pds_vpc_key_t vpc2 = {.id = 2};
 
-    vpc_peer_feeder.init(key, vpc1, vpc2, k_max_vpc_peer);
-    workflow_4<vpc_peer_feeder>(&feeder);
+    feeder.init(key, vpc1, vpc2, k_max_vpc_peer);
+    workflow_4<vpc_peer_feeder>(feeder);
 }
 
 /// \brief VPC WF_5
-TEST_F(vpc_peer, vpc_peer_workflow_5) {
+TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_5) {
     vpc_peer_feeder feeder1, feeder2, feeder3;
-    pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 20}, key3 = {.id = 30};
-    pds_vpc_peer_key_t vpc1 = {.id = 1};
-    pds_vpc_peer_key_t vpc2 = {.id = 2};
-    pds_vpc_peer_key_t vpc3 = {.id = 20};
-    pds_vpc_peer_key_t vpc4 = {.id = 21};
-    pds_vpc_peer_key_t vpc5 = {.id = 40};
-    pds_vpc_peer_key_t vpc6 = {.id = 41};
+    pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 30}, key3 = {.id = 50};
+    pds_vpc_key_t vpc1 = {.id = 1};
+    pds_vpc_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc3 = {.id = 1};
+    pds_vpc_key_t vpc4 = {.id = 20};
+    pds_vpc_key_t vpc5 = {.id = 1};
+    pds_vpc_key_t vpc6 = {.id = 40};
 
-    vpc_peer_feeder1.init(key1, vpc1, vpc2, 10);
-    vpc_peer_feeder2.init(key2, vpc1, vpc2, 10);
-    VPC_PEER_SEED_INIT(&feeder3, key3, vpc1, vpc2, 10);
-    workflow_5<vpc_peer_feeder>(&feeder1, &feeder2, &feeder3);
+    feeder1.init(key1, vpc1, vpc2, 10);
+    feeder2.init(key2, vpc1, vpc2, 10);
+    feeder3.init(key3, vpc1, vpc2, 10);
+    workflow_5<vpc_peer_feeder>(feeder1, feeder2, feeder3);
 }
 
 /// \brief VPC WF_6
-TEST_F(vpc_peer, vpc_peer_workflow_6) {
+TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_6) {
     vpc_peer_feeder feeder1, feeder1A, feeder1B;
     pds_vpc_peer_key_t key = {.id = 1};
-    pds_vpc_peer_key_t vpc1 = {.id = 1};
-    pds_vpc_peer_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc1 = {.id = 1};
+    pds_vpc_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc3 = {.id = 1};
+    pds_vpc_key_t vpc4 = {.id = 20};
+    pds_vpc_key_t vpc5 = {.id = 1};
+    pds_vpc_key_t vpc6 = {.id = 40};
 
-    vpc_peer_feeder1.init(key, vpc1, vpc2, k_max_vpc_peer);
-    vpc_peer_feeder1A.init(key, vpc1, vpc2, k_max_vpc_peer);
-    VPC_PEER_SEED_INIT(&feeder1B, key, vpc1, vpc2, k_max_vpc_peer);
-    workflow_6<vpc_peer_feeder>(&feeder1, &feeder1A, &feeder1B);
+    feeder1.init(key, vpc1, vpc2, k_max_vpc_peer);
+    feeder1A.init(key, vpc3, vpc4, k_max_vpc_peer);
+    feeder1B.init(key, vpc5, vpc6, k_max_vpc_peer);
+    workflow_6<vpc_peer_feeder>(feeder1, feeder1A, feeder1B);
 }
 
 /// \brief VPC WF_7
-TEST_F(vpc_peer, vpc_peer_workflow_7) {
+TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_7) {
     vpc_peer_feeder feeder1, feeder1A, feeder1B;
     pds_vpc_peer_key_t key = {.id = 1};
-    pds_vpc_peer_key_t vpc1 = {.id = 1};
-    pds_vpc_peer_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc1 = {.id = 1};
+    pds_vpc_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc3 = {.id = 1};
+    pds_vpc_key_t vpc4 = {.id = 20};
+    pds_vpc_key_t vpc5 = {.id = 1};
+    pds_vpc_key_t vpc6 = {.id = 40};
 
-    vpc_peer_feeder1.init(key, vpc1, vpc2, k_max_vpc_peer);
-    vpc_peer_feeder1A.init(key, vpc1, vpc2, k_max_vpc_peer);
-    VPC_PEER_SEED_INIT(&feeder1B, key, vpc1, vpc2, k_max_vpc_peer);
-    workflow_7<vpc_peer_feeder>(&feeder1, &feeder1A, &feeder1B);
+    feeder1.init(key, vpc1, vpc2, k_max_vpc_peer);
+    feeder1A.init(key, vpc3, vpc4, k_max_vpc_peer);
+    feeder1B.init(key, vpc5, vpc6, k_max_vpc_peer);
+    workflow_7<vpc_peer_feeder>(feeder1, feeder1A, feeder1B);
 }
 
 /// \brief VPC WF_8
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_8) {
     vpc_peer_feeder feeder1, feeder1A, feeder1B;
     pds_vpc_peer_key_t key = {.id = 1};
-    pds_vpc_peer_key_t vpc1 = {.id = 1};
-    pds_vpc_peer_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc1 = {.id = 1};
+    pds_vpc_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc3 = {.id = 1};
+    pds_vpc_key_t vpc4 = {.id = 20};
+    pds_vpc_key_t vpc5 = {.id = 1};
+    pds_vpc_key_t vpc6 = {.id = 40};
 
-    vpc_peer_feeder1.init(key, vpc1, vpc2, k_max_vpc_peer);
-    vpc_peer_feeder1A.init(key, vpc1, vpc2, k_max_vpc_peer);
-    VPC_PEER_SEED_INIT(&feeder1B, key, vpc1, vpc2, k_max_vpc_peer);
-    workflow_8<vpc_peer_feeder>(&feeder1, &feeder1A, &feeder1B);
+    feeder1.init(key, vpc1, vpc2, k_max_vpc_peer);
+    feeder1A.init(key, vpc3, vpc4, k_max_vpc_peer);
+    feeder1B.init(key, vpc5, vpc6, k_max_vpc_peer);
+    workflow_8<vpc_peer_feeder>(feeder1, feeder1A, feeder1B);
 }
 
 /// \brief VPC WF_9
-TEST_F(vpc_peer, vpc_peer_workflow_9) {
+TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_9) {
     vpc_peer_feeder feeder1, feeder1A;
     pds_vpc_peer_key_t key = {.id = 1};
-    pds_vpc_peer_key_t vpc1 = {.id = 1};
-    pds_vpc_peer_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc1 = {.id = 1};
+    pds_vpc_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc3 = {.id = 1};
+    pds_vpc_key_t vpc4 = {.id = 20};
 
-    vpc_peer_feeder1.init(key, vpc1, vpc2, k_max_vpc_peer);
-    vpc_peer_feeder1A.init(key, vpc1, vpc2, k_max_vpc_peer);
-    workflow_9<vpc_peer_feeder>(&feeder1, &feeder1A);
+    feeder1.init(key, vpc1, vpc2, k_max_vpc_peer);
+    feeder1A.init(key, vpc3, vpc4, k_max_vpc_peer);
+    workflow_9<vpc_peer_feeder>(feeder1, feeder1A);
 }
 
 /// \brief VPC WF_10
@@ -199,133 +206,134 @@ TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_10) {
     vpc_peer_feeder feeder1, feeder2, feeder3, feeder4, feeder2A, feeder3A;
     pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70},
                        key4 = {.id = 100};
+    pds_vpc_key_t vpc1 = {.id = 1};
+    pds_vpc_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc3 = {.id = 1};
+    pds_vpc_key_t vpc4 = {.id = 20};
+    pds_vpc_key_t vpc5 = {.id = 1};
+    pds_vpc_key_t vpc6 = {.id = 21};
+    pds_vpc_key_t vpc7 = {.id = 1};
+    pds_vpc_key_t vpc8 = {.id = 40};
+    pds_vpc_key_t vpc9 = {.id = 1};
+    pds_vpc_key_t vpc10 = {.id = 41};
+    pds_vpc_key_t vpc11 = {.id = 1};
+    pds_vpc_key_t vpc12 = {.id = 60};
 
-    vpc_peer_feeder1.init(key1, vpc1, vpc2, 10);
-    vpc_peer_feeder2.init(key2, vpc1, vpc2, 10);
-    VPC_PEER_SEED_INIT(&feeder2A, key2, vpc1, vpc2, 10);
-    VPC_PEER_SEED_INIT(&feeder3, key3, vpc1, vpc2, 10);
-    VPC_PEER_SEED_INIT(&feeder3A, key3, vpc1, vpc2, 10);
-    VPC_PEER_SEED_INIT(&feeder4, key4, vpc1, vpc2, 10);
+    feeder1.init(key1, vpc1, vpc2, 10);
+    feeder2.init(key2, vpc3, vpc4, 10);
+    feeder2A.init(key2, vpc5, vpc6, 10);
+    feeder3.init(key3, vpc7, vpc8, 10);
+    feeder3A.init(key3, vpc9, vpc10, 10);
+    feeder4.init(key4, vpc11, vpc12, 10);
     workflow_10<vpc_peer_feeder>(
-        &feeder1, &feeder2, &feeder2A, &feeder3, &feeder3A, &feeder4);
+        feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4);
 }
 
 /// \brief VPC WF_N_1
-TEST_F(vpc_peer, vpc_peer_workflow_neg_1) {
+TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_1) {
     vpc_peer_feeder feeder;
     pds_vpc_peer_key_t key = {.id = 1};
-    pds_vpc_peer_key_t vpc1 = {.id = 1};
-    pds_vpc_peer_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc1 = {.id = 1};
+    pds_vpc_key_t vpc2 = {.id = 2};
 
-    vpc_peer_feeder.init(key, vpc1, vpc2, k_max_vpc_peer);
-    workflow_neg_1<vpc_peer_feeder>(&feeder);
+    feeder.init(key, vpc1, vpc2, k_max_vpc_peer);
+    workflow_neg_1<vpc_peer_feeder>(feeder);
 }
 
 /// \brief VPC WF_N_2
-TEST_F(vpc_peer, vpc_peer_workflow_neg_2) {
+TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_2) {
     vpc_peer_feeder feeder;
     pds_vpc_peer_key_t key = {.id = 1};
-    pds_vpc_peer_key_t vpc1 = {.id = 1};
-    pds_vpc_peer_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc1 = {.id = 1};
+    pds_vpc_key_t vpc2 = {.id = 2};
 
-    vpc_peer_feeder.init(key, vpc1, vpc2, k_max_vpc_peer+1);
-    workflow_neg_2<vpc_peer_feeder>(&feeder);
+    feeder.init(key, vpc1, vpc2, k_max_vpc_peer+1);
+    workflow_neg_2<vpc_peer_feeder>(feeder);
 }
 
 /// \brief VPC WF_N_3
-TEST_F(vpc_peer, vpc_peer_workflow_neg_3) {
+TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_3) {
     vpc_peer_feeder feeder;
     pds_vpc_peer_key_t key = {.id = 1};
-    pds_vpc_peer_key_t vpc1 = {.id = 1};
-    pds_vpc_peer_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc1 = {.id = 1};
+    pds_vpc_key_t vpc2 = {.id = 2};
 
-    vpc_peer_feeder.init(key, vpc1, vpc2, k_max_vpc_peer);
-    workflow_neg_3<vpc_peer_feeder>(&feeder);
+    feeder.init(key, vpc1, vpc2, k_max_vpc_peer);
+    workflow_neg_3<vpc_peer_feeder>(feeder);
 }
 
 /// \brief VPC WF_N_4
-TEST_F(vpc_peer, vpc_peer_workflow_neg_4) {
+TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_4) {
     vpc_peer_feeder feeder1, feeder2;
-    pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 40};
-    pds_vpc_peer_key_t vpc1 = {.id = 1};
-    pds_vpc_peer_key_t vpc2 = {.id = 2};
-    pds_vpc_peer_key_t vpc3 = {.id = 41};
-    pds_vpc_peer_key_t vpc4 = {.id = 42};
+    pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 30};
+    pds_vpc_key_t vpc1 = {.id = 1};
+    pds_vpc_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc3 = {.id = 1};
+    pds_vpc_key_t vpc4 = {.id = 20};
 
-    vpc_peer_feeder1.init(key1, vpc1, vpc2, 10);
-    vpc_peer_feeder2.init(key2, vpc3, vpc4, 10);
-    workflow_neg_4<vpc_peer_feeder>(&feeder1, &feeder2);
+    feeder1.init(key1, vpc1, vpc2, 10);
+    feeder2.init(key2, vpc3, vpc4, 10);
+    workflow_neg_4<vpc_peer_feeder>(feeder1, feeder2);
 }
 
 /// \brief VPC WF_N_5
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_5) {
     vpc_peer_feeder feeder1, feeder1A;
     pds_vpc_peer_key_t key = {.id = 1};
-    pds_vpc_peer_key_t vpc1 = {.id = 1};
-    pds_vpc_peer_key_t vpc2 = {.id = 2};
-    pds_vpc_peer_key_t vpc3 = {.id = 41};
-    pds_vpc_peer_key_t vpc4 = {.id = 42};
+    pds_vpc_key_t vpc1 = {.id = 1};
+    pds_vpc_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc3 = {.id = 1};
+    pds_vpc_key_t vpc4 = {.id = 20};
 
-    vpc_peer_feeder1.init(key, vpc1, vpc2, k_max_vpc_peer);
-    vpc_peer_feeder1A.init(key, vpc3, vpc4, k_max_vpc_peer);
-    workflow_neg_5<vpc_peer_feeder>(&feeder1, &feeder1A);
+    feeder1.init(key, vpc1, vpc2, k_max_vpc_peer);
+    feeder1A.init(key, vpc3, vpc4, k_max_vpc_peer);
+    workflow_neg_5<vpc_peer_feeder>(feeder1, feeder1A);
 }
 
 /// \brief VPC WF_N_6
-TEST_F(vpc_peer, vpc_peer_workflow_neg_6) {
+TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_6) {
     vpc_peer_feeder feeder1, feeder1A;
-    pds_vpc_peer_key_t key = {.id = 1};
-    pds_vpc_peer_key_t vpc1 = {.id = 1};
-    pds_vpc_peer_key_t vpc2 = {.id = 2};
-    pds_vpc_peer_key_t vpc3 = {.id = 41};
-    pds_vpc_peer_key_t vpc4 = {.id = 42};
-
-    vpc_peer_feeder1.init(key, vpc1, vpc2, k_max_vpc_peer);
-    vpc_peer_feeder1A.init(key, vpc3, vpc4, k_max_vpc_peer + 1);
-    workflow_neg_6<vpc_peer_feeder>(&feeder1, &feeder1A);
-}
-
-/// \brief VPC WF_N_7
-TEST_F(vpc_peer, vpc_peer_workflow_neg_7) {
-    vpc_peer_feeder feeder1, feeder1A, feeder2;
-    pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 40};
-    pds_vpc_peer_key_t vpc1 = {.id = 1};
-    pds_vpc_peer_key_t vpc2 = {.id = 2};
-    pds_vpc_peer_key_t vpc3 = {.id = 41};
-    pds_vpc_peer_key_t vpc4 = {.id = 42};
-
-    vpc_peer_feeder1.init(key1, vpc1, vpc2, 10);
-    vpc_peer_feeder1A.init(key1, vpc1, vpc2, 10);
-    vpc_peer_feeder2.init(key2, vpc3, vpc4, 10);
-    workflow_neg_7<vpc_peer_feeder>(&feeder1, &feeder1A, &feeder2);
-}
-
-/// \brief VPC WF_N_8
-TEST_F(vpc_peer, vpc_peer_workflow_neg_8) {
-    vpc_peer_feeder feeder1, feeder2;
-    pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 40};
-    pds_vpc_peer_key_t vpc1 = {.id = 1};
-    pds_vpc_peer_key_t vpc2 = {.id = 2};
-    pds_vpc_peer_key_t vpc3 = {.id = 41};
-    pds_vpc_peer_key_t vpc4 = {.id = 42};
-
-    vpc_peer_feeder1.init(key1, vpc1, vpc2, 10);
-    vpc_peer_feeder2.init(key2, vpc3, vpc4, 10);
-    workflow_neg_8<vpc_peer_feeder>(&feeder1, &feeder2);
-}
-
-// ARTEMIS workflows
-/// \brief VPC WF_11
-TEST_F(vpc_peer, vpc_peer_workflow_11) {
-    vpc_peer_feeder feeder;
     pds_vpc_peer_key_t key = {.id = 1};
     pds_vpc_key_t vpc1 = {.id = 1};
     pds_vpc_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc3 = {.id = 1};
+    pds_vpc_key_t vpc4 = {.id = 20};
 
-    feeder.init(key, vpc1, vpc2, 32);
-    workflow_11<vpc_peer_feeder>(&feeder);
+    feeder1.init(key, vpc1, vpc2, k_max_vpc_peer);
+    feeder1A.init(key, vpc3, vpc4, k_max_vpc_peer + 1);
+    workflow_neg_6<vpc_peer_feeder>(feeder1, feeder1A);
 }
-#endif
+
+/// \brief VPC WF_N_7
+TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_7) {
+    vpc_peer_feeder feeder1, feeder1A, feeder2;
+    pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 30};
+    pds_vpc_key_t vpc1 = {.id = 1};
+    pds_vpc_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc3 = {.id = 1};
+    pds_vpc_key_t vpc4 = {.id = 3};
+    pds_vpc_key_t vpc5 = {.id = 1};
+    pds_vpc_key_t vpc6 = {.id = 40};
+
+    feeder1.init(key1, vpc1, vpc2, 10);
+    feeder1A.init(key1, vpc3, vpc4, 10);
+    feeder2.init(key2, vpc5, vpc6, 10);
+    workflow_neg_7<vpc_peer_feeder>(feeder1, feeder1A, feeder2);
+}
+
+/// \brief VPC WF_N_8
+TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_8) {
+    vpc_peer_feeder feeder1, feeder2;
+    pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 30};
+    pds_vpc_key_t vpc1 = {.id = 1};
+    pds_vpc_key_t vpc2 = {.id = 2};
+    pds_vpc_key_t vpc3 = {.id = 1};
+    pds_vpc_key_t vpc4 = {.id = 20};
+
+    feeder1.init(key1, vpc1, vpc2, 10);
+    feeder2.init(key2, vpc3, vpc4, 10);
+    workflow_neg_8<vpc_peer_feeder>(feeder1, feeder2);
+}
 
 /// @}
 

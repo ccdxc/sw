@@ -99,6 +99,7 @@ pds_subnet_read (pds_subnet_key_t *key, pds_subnet_info_t *info)
 
     if ((rv = pds_subnet_spec_fill(entry, &info->spec)) != sdk::SDK_RET_OK)
         return rv;
+    info->spec.key = *key;
 
     if ((rv = pds_subnet_status_fill(entry, &info->status)) != sdk::SDK_RET_OK)
         return rv;

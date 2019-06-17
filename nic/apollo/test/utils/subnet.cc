@@ -89,8 +89,6 @@ subnet_feeder::spec_build(pds_subnet_spec_t *spec) const {
 
 bool
 subnet_feeder::key_compare(const pds_subnet_key_t *key) const {
-    // todo : @sai, please check; compare key not working
-    return true;
     return (memcmp(key, &this->key, sizeof(pds_subnet_key_t)) == 0);
 }
 

@@ -11,6 +11,7 @@
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
+#include "nic/apollo/test/utils/api_base.hpp"
 
 namespace api_test {
 
@@ -59,16 +60,11 @@ vpc_feeder::spec_build(pds_vpc_spec_t *spec) const {
 
 bool
 vpc_feeder::key_compare(const pds_vpc_key_t *key) const {
-    return true;
-    // todo : @sai please check, compare routine not working
-    // return (memcmp(key, &this->key, sizeof(pds_vpc_key_t)) == 0);
+    return (memcmp(key, &this->key, sizeof(pds_vpc_key_t)) == 0);
 }
 
 bool
 vpc_feeder::spec_compare(const pds_vpc_spec_t *spec) const {
-    // todo : @sai please check, compare routine not working
-    return true;
-
     if (spec->type != type)
         return false;
 
@@ -97,6 +93,22 @@ void sample_vpc_setup_validate(pds_vpc_type_t type) {
 void sample_vpc_teardown(pds_vpc_type_t type) {
     k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8");
     del(k_vpc_feeder);
+}
+
+void sample1_vpc_setup(pds_vpc_type_t type) {
+    // setup and teardown parameters should be in sync
+    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8", PDS_MAX_VPC);
+    many_create(k_vpc_feeder);
+}
+
+void sample1_vpc_setup_validate(pds_vpc_type_t type) {
+    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8", PDS_MAX_VPC);
+    many_read(k_vpc_feeder);
+}
+
+void sample1_vpc_teardown(pds_vpc_type_t type) {
+    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8", PDS_MAX_VPC);
+    many_delete(k_vpc_feeder);
 }
 
 }    // namespace api_test

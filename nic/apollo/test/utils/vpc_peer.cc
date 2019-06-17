@@ -32,8 +32,7 @@ vpc_peer_feeder::init(pds_vpc_peer_key_t key, pds_vpc_key_t vpc1,
 void
 vpc_peer_feeder::iter_next(int width) {
     key.id += width;
-    vpc1.id = vpc2.id + width;
-    vpc2.id = vpc1.id + width;
+    vpc2.id += width;
     cur_iter_pos++;
 }
 
@@ -55,22 +54,12 @@ vpc_peer_feeder::spec_build(pds_vpc_peer_spec_t *spec) const {
 
 bool
 vpc_peer_feeder::key_compare(const pds_vpc_peer_key_t *key) const {
-    return true;
-    // todo : @sai please check, compare routine not done
-    // return (memcmp(key, &this->key, sizeof(pds_vpc_peer_key_t)) == 0);
+    return (memcmp(key, &this->key, sizeof(pds_vpc_peer_key_t)) == 0);
 }
 
 bool
 vpc_peer_feeder::spec_compare(const pds_vpc_peer_spec_t *spec) const {
-    // todo : @sai please check, compare routine not done 
-    return true;
-
-    if (spec->vpc1.id != vpc1.id)
-        return false;
-
-    if (spec->vpc2.id != vpc2.id)
-        return false;
-
+    // todo spec data is not maintained
     return true;
 }
 

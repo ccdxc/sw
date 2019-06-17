@@ -17,7 +17,6 @@
 #include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 #include "nic/apollo/api/impl/artemis/service_impl.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
-#include "nic/sdk/lib/table/memhash/mem_hash.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "gen/p4gen/artemis/include/p4pd.h"
