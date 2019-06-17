@@ -33,6 +33,9 @@ docker/jenkins-coverage: docker/build-runtime-image
 docker/firmware: docker/build-runtime-image
 	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -w /sw/nic pensando/nic su -l $(CUR_USER) -c 'cd /usr/src/github.com/pensando/sw/nic && make JOB_ID=1 PIPELINE=${PIPELINE} BUILD_SW_VERSION=${UPSTREAM_BUILD_TAG} BUILD_BR_VERSION=${UPSTREAM_BUILD_TAG} jobd/firmware'
 
+docker/naples-sim: docker/build-runtime-image
+	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -w /sw/nic pensando/nic su -l $(CUR_USER) -c 'cd /usr/src/github.com/pensando/sw/nic && make JOB_ID=1 PIPELINE=${PIPELINE} BUILD_SW_VERSION=${UPSTREAM_BUILD_TAG} BUILD_BR_VERSION=${UPSTREAM_BUILD_TAG} jobd/e2e/naples-sim'
+
 docker/coverage-shell: docker/build-runtime-image
 	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -v /home/asic/tools:/home/asic/tools -w /sw/nic pensando/nic  su -l $(CUR_USER)
 
