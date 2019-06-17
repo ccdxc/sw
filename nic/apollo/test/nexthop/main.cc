@@ -8,20 +8,14 @@
 ///
 //----------------------------------------------------------------------------
 
-#include <getopt.h>
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/nexthop.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/workflow1.hpp"
 
-using std::cerr;
-using std::cout;
-using std::endl;
-
 namespace api_test {
 
 // Globals
-static const char *g_cfg_file = NULL;
 static const std::string k_base_nh_ip = "50.50.1.1";
 static constexpr uint64_t k_base_mac = 0x0E0D0A0B0200;
 static constexpr uint32_t k_max_nh = PDS_MAX_NEXTHOP;
@@ -37,11 +31,7 @@ protected:
     virtual void SetUp() {}
     virtual void TearDown() {}
     static void SetUpTestCase() {
-        test_case_params_t params;
-
-        params.cfg_file = api_test::g_cfg_file;
-        params.enable_fte = FALSE;
-        pds_test_base::SetUpTestCase(params);
+        pds_test_base::SetUpTestCase(g_tc_params);
     }
     static void TearDownTestCase() {
         pds_test_base::TearDownTestCase();
@@ -238,55 +228,12 @@ TEST_F(nh_test, nh_workflow_neg_8) {
 
 }    // namespace api_test
 
-static inline void
-nh_test_usage_print (char **argv)
-{
-    cout << "Usage : " << argv[0] << " -c <hal.json>" << endl;
-    return;
-}
-
-static inline sdk_ret_t
-nh_test_options_validate (void)
-{
-    if (!api_test::g_cfg_file) {
-        cerr << "HAL config file is not specified" << endl;
-        return sdk::SDK_RET_ERR;
-    }
-    return sdk::SDK_RET_OK;
-}
-
-static void
-nh_test_options_parse (int argc, char **argv)
-{
-    int oc = -1;
-    struct option longopts[] = {{"config", required_argument, NULL, 'c'},
-                                {"help", no_argument, NULL, 'h'},
-                                {0, 0, 0, 0}};
-
-    while ((oc = getopt_long(argc, argv, ":hc:", longopts, NULL)) != -1) {
-        switch (oc) {
-        case 'c':
-            api_test::g_cfg_file = optarg;
-            break;
-        default:    // ignore all other options
-            break;
-        }
-    }
-    return;
-}
-
 //----------------------------------------------------------------------------
-//// Entry point
-////----------------------------------------------------------------------------
+// Entry point
+//----------------------------------------------------------------------------
+
 int
 main (int argc, char **argv)
 {
-    nh_test_options_parse(argc, argv);
-    if (nh_test_options_validate() != sdk::SDK_RET_OK) {
-        nh_test_usage_print(argv);
-        exit(1);
-    }
-
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    api_test_program_run(argc, argv);
 }

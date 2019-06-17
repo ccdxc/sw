@@ -11,10 +11,11 @@
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/test/utils/route.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
+#include "nic/apollo/test/utils/base.hpp"
 
 namespace api_test {
 
-pds_nh_type_t g_rt_def_nh_type = PDS_NH_TYPE_TEP;
+pds_nh_type_t g_rt_def_nh_type = apollo() ? PDS_NH_TYPE_TEP : PDS_NH_TYPE_IP;
 
 route_util::route_util() {
     this->nh_type = PDS_NH_TYPE_BLACKHOLE;

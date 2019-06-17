@@ -7,9 +7,7 @@
 /// This file contains the all mirror session test cases
 ///
 //----------------------------------------------------------------------------
-#include <stdio.h>
-#include <getopt.h>
-#include <gtest/gtest.h>
+
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/base.hpp"
@@ -24,7 +22,6 @@
 
 namespace api_test {
 
-static const char *g_cfg_file = "hal.json";
 static constexpr uint32_t k_max_mirror_sessions = PDS_MAX_MIRROR_SESSION;
 static constexpr uint32_t k_base_ms = 1;
 static const char * const k_tep_ip1 = "10.1.1.1";
@@ -42,11 +39,7 @@ protected:
     virtual void SetUp() {}
     virtual void TearDown() {}
     static void SetUpTestCase() {
-        test_case_params_t params;
-
-        params.cfg_file = api_test::g_cfg_file;
-        params.enable_fte = FALSE;
-        pds_test_base::SetUpTestCase(params);
+        pds_test_base::SetUpTestCase(g_tc_params);
         batch_start();
         sample_vpc_setup(PDS_VPC_TYPE_SUBSTRATE);
         sample_subnet_setup();
@@ -414,38 +407,8 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_8) {
 // Entry point
 //----------------------------------------------------------------------------
 
-static inline void
-print_usage (char **argv)
-{
-    fprintf(stdout, "Usage : %s -c <hal.json>\n", argv[0]);
-}
-
 int
 main (int argc, char **argv)
 {
-    int oc;
-    struct option longopts[] = {{"config", required_argument, NULL, 'c'},
-                                {"help", no_argument, NULL, 'h'},
-                                {0, 0, 0, 0}};
-
-    // parse CLI options
-    while ((oc = getopt_long(argc, argv, "hc:", longopts, NULL)) != -1) {
-        switch (oc) {
-        case 'c':
-            api_test::g_cfg_file = optarg;
-            if (!api_test::g_cfg_file) {
-                fprintf(stderr, "HAL config file is not specified\n");
-                print_usage(argv);
-                exit(1);
-            }
-            break;
-
-        default:
-            // ignore all other options
-            break;
-        }
-    }
-
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    api_test_program_run(argc, argv);
 }

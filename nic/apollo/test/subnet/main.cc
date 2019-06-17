@@ -8,9 +8,6 @@
 ///
 //----------------------------------------------------------------------------
 
-#include <stdio.h>
-#include <getopt.h>
-#include <gtest/gtest.h>
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/base.hpp"
@@ -20,14 +17,9 @@
 #include "nic/apollo/test/utils/subnet.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
 
-using std::cerr;
-using std::cout;
-using std::endl;
-
 namespace api_test {
 
 // Globals
-static const char *g_cfg_file = NULL;
 static constexpr uint32_t k_max_subnet = PDS_MAX_SUBNET + 1;
 
 //----------------------------------------------------------------------------
@@ -41,11 +33,8 @@ protected:
     virtual void SetUp() {}
     virtual void TearDown() {}
     static void SetUpTestCase() {
-        test_case_params_t params;
+        pds_test_base::SetUpTestCase(g_tc_params);
 
-        params.cfg_file = api_test::g_cfg_file;
-        params.enable_fte = FALSE;
-        pds_test_base::SetUpTestCase(params);
         batch_start();
         sample_vpc_setup(PDS_VPC_TYPE_TENANT);
         batch_commit();
@@ -259,50 +248,8 @@ TEST_F(subnet, subnet_workflow_neg_8) {
 // Entry point
 //----------------------------------------------------------------------------
 
-static inline void
-subnet_test_usage_print (char **argv)
-{
-    cout << "Usage : " << argv[0] << " -c <hal.json>" << endl;
-}
-
-static void
-subnet_test_options_parse (int argc, char **argv)
-{
-    int oc;
-    struct option longopts[] = {{"config", required_argument, NULL, 'c'},
-                                {"help", no_argument, NULL, 'h'},
-                                {0, 0, 0, 0}};
-
-    while ((oc = getopt_long(argc, argv, ":hc:", longopts, NULL)) != -1) {
-        switch (oc) {
-        case 'c':
-            api_test::g_cfg_file = optarg;
-            break;
-        default:    // ignore all other options
-            break;
-        }
-    }
-}
-
-static inline sdk_ret_t
-subnet_test_options_validate (void)
-{
-    if (!api_test::g_cfg_file) {
-        cerr << "HAL config file is not specified" << endl;
-        return SDK_RET_ERR;
-    }
-    return SDK_RET_OK;
-}
-
 int
 main (int argc, char **argv)
 {
-    subnet_test_options_parse(argc, argv);
-    if (subnet_test_options_validate() != SDK_RET_OK) {
-        subnet_test_usage_print(argv);
-        exit(1);
-    }
-
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    api_test_program_run(argc, argv);
 }

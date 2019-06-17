@@ -8,9 +8,6 @@
 ///
 //----------------------------------------------------------------------------
 
-#include <stdio.h>
-#include <getopt.h>
-#include <gtest/gtest.h>
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/model_sim/include/lib_model_client.h"
@@ -34,7 +31,6 @@
 namespace api_test {
 
 // Globals
-char *g_cfg_file = NULL;
 static pds_epoch_t g_batch_epoch = PDS_EPOCH_INVALID;
 
 // Config for VPC 1
@@ -65,10 +61,7 @@ protected:
     virtual void SetUp() {}
     virtual void TearDown() {}
     static void SetUpTestCase() {
-        test_case_params_t params;
-        params.cfg_file = api_test::g_cfg_file;
-        params.enable_fte = false;
-        pds_test_base::SetUpTestCase(params);
+        pds_test_base::SetUpTestCase(g_tc_params);
         uint16_t vpc_id = api_test::g_vpc_id;
         uint16_t vnic_stepper = api_test::g_vpc_id;
         uint32_t num_vnics = k_max_vnic;
@@ -1286,52 +1279,8 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_8) {
 // Entry point
 //----------------------------------------------------------------------------
 
-static inline void
-mapping_test_usage_print (char **argv)
-{
-    cout << "Usage : " << argv[0] << " -c <hal.json>" << endl;
-    return;
-}
-
-static void
-mapping_test_options_parse (int argc, char **argv)
-{
-    int oc = -1;
-    struct option longopts[] = {{"config", required_argument, NULL, 'c'},
-                                {"help", no_argument, NULL, 'h'},
-                                {0, 0, 0, 0}};
-
-    while ((oc = getopt_long(argc, argv, ":hc:", longopts, NULL)) != -1) {
-        switch (oc) {
-        case 'c':
-            api_test::g_cfg_file = optarg;
-            break;
-        default:    // ignore all other options
-            break;
-        }
-    }
-    return;
-}
-
-static inline sdk_ret_t
-mapping_test_options_validate (void)
-{
-    if (!api_test::g_cfg_file) {
-        cerr << "HAL config file is not specified" << endl;
-        return sdk::SDK_RET_ERR;
-    }
-    return sdk::SDK_RET_OK;
-}
-
 int
 main (int argc, char **argv)
 {
-    mapping_test_options_parse(argc, argv);
-    if (mapping_test_options_validate() != sdk::SDK_RET_OK) {
-        mapping_test_usage_print(argv);
-        exit(1);
-    }
-
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    api_test_program_run(argc, argv);
 }

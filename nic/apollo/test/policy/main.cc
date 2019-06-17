@@ -8,10 +8,6 @@
 ///
 //----------------------------------------------------------------------------
 
-#include <getopt.h>
-#include <gtest/gtest.h>
-#include <stdio.h>
-#include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/base.hpp"
@@ -19,15 +15,10 @@
 #include "nic/apollo/test/utils/vpc.hpp"
 #include "nic/apollo/test/utils/policy.hpp"
 
-using std::cerr;
-using std::cout;
-using std::endl;
-
 namespace api_test {
 
 // Globals
-static const char *g_cfg_file = NULL;
-static uint16_t g_num_policy = PDS_MAX_SECURITY_POLICY; // can overwrite using cmd line
+static constexpr uint16_t g_num_policy = PDS_MAX_SECURITY_POLICY;
 
 //----------------------------------------------------------------------------
 // Policy test class
@@ -40,11 +31,7 @@ protected:
     virtual void SetUp() {}
     virtual void TearDown() {}
     static void SetUpTestCase() {
-        test_case_params_t params;
-
-        params.cfg_file = api_test::g_cfg_file;
-        params.enable_fte = FALSE;
-        pds_test_base::SetUpTestCase(params);
+        pds_test_base::SetUpTestCase(g_tc_params);
         g_trace_level = sdk::lib::SDK_TRACE_LEVEL_INFO;
         batch_start();
         sample_vpc_setup(PDS_VPC_TYPE_TENANT);
@@ -754,53 +741,8 @@ TEST_F(policy, policy_workflow_neg_9) {
 // Entry point
 //----------------------------------------------------------------------------
 
-static inline void
-policy_test_usage_print (char **argv)
-{
-    cout << "Usage : " << argv[0] << " -c <hal.json>" << endl;
-}
-
-static void
-policy_test_options_parse (int argc, char **argv)
-{
-    int oc;
-    struct option longopts[] = {{"config", required_argument, NULL, 'c'},
-                                {"help", no_argument, NULL, 'h'},
-                                {"num_policy", required_argument, NULL, 'n'},
-                                {0, 0, 0, 0}};
-
-    while ((oc = getopt_long(argc, argv, ":hc:n:", longopts, NULL)) != -1) {
-        switch (oc) {
-        case 'c':
-            api_test::g_cfg_file = optarg;
-            break;
-        case 'n':
-            api_test::g_num_policy = atoi(optarg);
-        default:    // ignore all other options
-            break;
-        }
-    }
-}
-
-static inline sdk_ret_t
-policy_test_options_validate (void)
-{
-    if (!api_test::g_cfg_file) {
-        cerr << "HAL config file is not specified" << endl;
-        return SDK_RET_ERR;
-    }
-    return SDK_RET_OK;
-}
-
 int
 main (int argc, char **argv)
 {
-    policy_test_options_parse(argc, argv);
-    if (policy_test_options_validate() != SDK_RET_OK) {
-        policy_test_usage_print(argv);
-        exit(1);
-    }
-
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    api_test_program_run(argc, argv);
 }

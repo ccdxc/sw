@@ -7,10 +7,10 @@
 /// This file contains the all route table test cases
 ///
 //----------------------------------------------------------------------------
-#include <getopt.h>
+
 #include "nic/apollo/api/include/pds_batch.hpp"
-#include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
+#include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/batch.hpp"
 #include "nic/apollo/test/utils/nexthop.hpp"
 #include "nic/apollo/test/utils/route.hpp"
@@ -19,14 +19,7 @@
 #include "nic/apollo/test/utils/vpc.hpp"
 #include "nic/apollo/test/utils/workflow.hpp"
 
-using std::cerr;
-using std::cout;
-using std::endl;
-
 namespace api_test {
-
-// Globals
-static char *g_cfg_file = NULL;
 
 static constexpr int k_max_v4_route_table = PDS_MAX_ROUTE_TABLE;
 static constexpr int k_max_v6_route_table = PDS_MAX_ROUTE_TABLE;
@@ -48,11 +41,7 @@ protected:
     virtual void SetUp() {}
     virtual void TearDown() {}
     static void SetUpTestCase() {
-        test_case_params_t params;
-
-        params.cfg_file = api_test::g_cfg_file;
-        params.enable_fte = false;
-        pds_test_base::SetUpTestCase(params);
+        pds_test_base::SetUpTestCase(g_tc_params);
         batch_start();
         sample_vpc_setup(PDS_VPC_TYPE_TENANT);
         if (apollo()) {
@@ -545,64 +534,8 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_8) {
 // Entry point
 //----------------------------------------------------------------------------
 
-static inline void
-route_test_usage_print (char **argv)
-{
-    cout << "Usage : " << argv[0] << " -c <hal.json>" << endl;
-    return;
-}
-
-static inline sdk_ret_t
-route_test_options_validate (void)
-{
-    if (!api_test::g_cfg_file) {
-        cerr << "HAL config file is not specified" << endl;
-        return sdk::SDK_RET_ERR;
-    }
-    return sdk::SDK_RET_OK;
-}
-
-static void
-route_test_options_parse (int argc, char **argv)
-{
-    int oc = -1;
-    struct option longopts[] = {{"config", required_argument, NULL, 'c'},
-                                {"help", no_argument, NULL, 'h'},
-                                {0, 0, 0, 0}};
-
-    while ((oc = getopt_long(argc, argv, ":hc:", longopts, NULL)) != -1) {
-        switch (oc) {
-        case 'c':
-            api_test::g_cfg_file = optarg;
-            break;
-        default:    // ignore all other options
-            break;
-        }
-    }
-    return;
-}
-
-static void
-route_test_init_parameters (void)
-{
-    // init default global parameters
-    if (apollo()) {
-        api_test::g_rt_def_nh_type = PDS_NH_TYPE_TEP;
-    } else if (artemis()) {
-        api_test::g_rt_def_nh_type = PDS_NH_TYPE_IP;
-    }
-}
-
 int
 main (int argc, char **argv)
 {
-    route_test_options_parse(argc, argv);
-    if (route_test_options_validate() != sdk::SDK_RET_OK) {
-        route_test_usage_print(argv);
-        exit(1);
-    }
-
-    route_test_init_parameters();
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    api_test_program_run(argc, argv);
 }

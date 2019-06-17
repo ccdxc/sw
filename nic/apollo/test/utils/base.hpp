@@ -81,7 +81,7 @@ protected:
     virtual void TearDown(void) {}
 
     // called at the beginning of all test cases in this class
-    static void SetUpTestCase(test_case_params_t &params);
+    static void SetUpTestCase(test_case_params_t& params);
 
     // called at the end of all test cases in this class
     static void TearDownTestCase(void);
@@ -89,5 +89,9 @@ protected:
 
 // Export variables
 extern sdk_trace_level_e g_trace_level;
+extern test_case_params_t g_tc_params;
+
+// Function prototypes
+int api_test_program_run (int argc, char **argv);
 
 #endif  // __TEST_UTILS_BASE_HPP__
