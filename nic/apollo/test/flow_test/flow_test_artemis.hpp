@@ -549,7 +549,13 @@ public:
             //     IPv6 DIPi is xlated to IPv4 (last 32 bits of received IPv6
             //     packet)
             //     vlan tag added from EGRESS_VNIC_INFO table
-            actiondata.action_u.session_session_info.nexthop_idx = svc_tep_nexthop_idx;
+            // Objects to configure (vpc, subnet, vnic, tep are common)
+            // 1. vpc should be configured with nat46 prefix
+            // 2. local IP mapping (will inherit the nat46 prefix from vpc)
+            // 3. tunnel of type SERVICE_TEP
+            // 4. route pointing to NH of type service TEPs
+            actiondata.action_u.session_session_info.nexthop_idx =
+                svc_tep_nexthop_idx;
             sdk::lib::memrev(actiondata.action_u.session_session_info.tx_dst_ip,
                              ip_addr.addr.v6_addr.addr8, sizeof(ipv6_addr_t));
             actiondata.action_u.session_session_info.tx_rewrite_flags = 0x26;
@@ -574,28 +580,12 @@ public:
             //     sport is untouched
             //     dport is rewritten with xlated port from service mapping
             //     packet sent to vnic with appropriate vlan tag
+            // Objects to configure (vpc, subnet, vnic, tep are common)
+            // 1. local mapping with service mapping (IP, port)
+            // 2. route pointing to NH of type IP
             actiondata.action_u.session_session_info.nexthop_idx = inh_idx;
             actiondata.action_u.session_session_info.tx_rewrite_flags = 0x45;
             actiondata.action_u.session_session_info.rx_rewrite_flags = 0x61;
-#if 0
-        } if (vpc == 62) {
-            // VPC 62 is used for scenario1-ILB in/out traffic
-            // Tx path:
-            //     SMACi is rewritten with VR_MAC (EGRESS_VNIC_INFO table)
-            //     - TBD: ToR expected to do this
-            //     DMACi is rewritten with IGW/LPM MAC (NEXTHOP table)
-            //     SIPi, DIPi, L4 ports are unchanged
-            //     Vxlan encap is added on the way out
-            //     Packet goes out untagged
-            // Rx path:
-            //     Packet received is vxlan packet with no outer vlan
-            //     Vxlan is stripped out
-            //     Inner packet is untouched
-            //     - TBD: what about DMACi ? Do we assume otherside put
-            //            the right DMACi in this case ?
-            //     Packet goes out with vnic' vlan (EGRESS_VNIC_INFO table)
-            // NH indices in this case should be between 1-1022 (NH_TYPE_IP)
-#endif
         } else if (vpc == TEST_APP_S2_INTERNET_IN_OUT_VPC_VIP_VPC) {
             // VPC 63 is used for scenario2-Internet in/out traffic
             // Tx path:
@@ -619,6 +609,9 @@ public:
             //     No Vxlan encap is added on the way out
             //     Packet goes out with vnic' vlan (EGRESS_VNIC_INFO table)
             // NH indices in this case should be between 1-1022 (NH_TYPE_IP)
+            // Objects to configure (vpc, subnet, vnic, tep are common)
+            // 1. local mapping with service mapping (IP, port)
+            // 2. route pointing to NH of type IP
             actiondata.action_u.session_session_info.nexthop_idx = inh_idx;
             actiondata.action_u.session_session_info.tx_rewrite_flags = 0x5;
             actiondata.action_u.session_session_info.rx_rewrite_flags = 0x21;
@@ -646,17 +639,33 @@ public:
             //     No Vxlan encap is added on the way out
             //     Packet goes out with vnic' vlan (EGRESS_VNIC_INFO table)
             // NH indices in this case should be between 1-1022 (NH_TYPE_IP)
+            // Objects to configure (vpc, subnet, vnic, tep are common)
+            // 1. local mapping with public IP
+            // 2. route pointing to NH of type IP
             actiondata.action_u.session_session_info.nexthop_idx = inh_idx;
             // do DMACi rewrite and encap in the Tx direction
             actiondata.action_u.session_session_info.tx_rewrite_flags = 0x3;
             // do SMACi rewrite with VR MAC and go with CA-IP always
             actiondata.action_u.session_session_info.rx_rewrite_flags = 0x11;
         } else {
+            // VNET in/out case
+            // Tx path:
+            //     DMAC rewritten with remote IP mapping's MAC
+            //     Encap the packet with vxlan
+            // Rx path:
+            //     Decap the packet
+            //     put right vlan (if applicable)
+            // Objects to configure (vpc, subnet, vnic, tep are common)
+            // 1. local mapping
+            // 2. remote mapping
+            // NOTE: TEST_APP_S3_VNET_IN_OUT_V6_OUTER also will fall in this
+            //       case (in this case local & remote mappings should be
+            //       created with IPv6 provider IP)
             actiondata.action_u.session_session_info.nexthop_idx = nexthop_idx;
             // do DMACi rewrite and encap in the Tx direction
             actiondata.action_u.session_session_info.tx_rewrite_flags = 0x21;
-            // do SMACi rewrite with VR MAC and go with CA-IP always
-            actiondata.action_u.session_session_info.rx_rewrite_flags = 0x11;
+            // just decap in the Rx direction, no rewrites
+            actiondata.action_u.session_session_info.rx_rewrite_flags = 0x00;
         }
         actiondata.action_u.session_session_info.meter_idx = meter_idx++;
         if (meter_idx == vpc * num_meter_idx_per_vpc) {
