@@ -6,6 +6,7 @@ import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.objects.lmapping as lmapping
+import apollo.config.objects.nexthop as nexthop
 import route_pb2 as route_pb2
 import types_pb2 as types_pb2
 import ipaddress
@@ -20,9 +21,11 @@ class RouteObject(base.ConfigObjectBase):
         if af == utils.IP_VERSION_6:
             self.RouteTblId = next(resmgr.V6RouteTableIdAllocator)
             self.AddrFamily = 'IPV6'
+            self.NexthopId = nexthop.client.GetV6NexthopId(parent.VPCId)
         else:
             self.RouteTblId = next(resmgr.V4RouteTableIdAllocator)
             self.AddrFamily = 'IPV4'
+            self.NexthopId = nexthop.client.GetV4NexthopId(parent.VPCId)
         self.GID('RouteTbl%d'%self.RouteTblId)
         self.routes = routes
         self.Tunnel = tunobj
@@ -48,7 +51,10 @@ class RouteObject(base.ConfigObjectBase):
         elif self.VPCPeeringEnabled:
             self.NextHopType = "vpcpeer"
         else:
-            self.NextHopType = "tep"
+            if utils.IsPipelineArtemis():
+                self.NextHopType = "nh"
+            else:
+                self.NextHopType = "tep"
         return
 
     def __repr__(self):
@@ -71,6 +77,8 @@ class RouteObject(base.ConfigObjectBase):
             elif self.NextHopType == "tep":
                 rtspec.NextHop.Af = types_pb2.IP_AF_INET
                 rtspec.NextHop.V4Addr = int(self.TunIPAddr)
+            elif self.NextHopType == "nh":
+                rtspec.NexthopId = self.NexthopId
         return grpcmsg
 
     def Show(self):

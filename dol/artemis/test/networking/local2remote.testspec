@@ -1,0 +1,66 @@
+# Test Spec
+selectors:
+    root: ref://store/templates/id=FLOW
+    maxlimits: 4
+    flow: filter://any
+
+packets:
+    - packet:
+        id          : FROM_HOST_PKT # Input packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=UDP
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                # Random dst mac, will be edited with remote mapping mac
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : 00:00:00:00:00:02
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                prio    : 0
+            ipv4:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : ref://testcase/config/remotemapping/IP
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : ref://testcase/config/remotemapping/IP
+                hlim    : 64
+            udp:
+                sport   : 100
+                dport   : 200
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : TO_SWITCH_PKT # Expected packet
+        clone       : ref://testcase/packets/id=FROM_HOST_PKT
+        encaps      : callback://networking/packets/GetPacketEncapFromMapping
+        headers     :
+            outereth:
+                src     : ref://testcase/config/devicecfg/MACAddr
+                dst     : ref://testcase/config/remotemapping/TUNNEL/MACAddr
+            outeripv4:
+                src     : ref://testcase/config/localmapping/ProviderIP
+                dst     : ref://testcase/config/remotemapping/ProviderIP
+                ttl     : 64
+                tos     : 0
+                id      : 0
+            vxlan:
+                vni     : ref://testcase/config/remotemapping/SUBNET/VPC/Vnid
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : ref://testcase/config/remotemapping/MACAddr
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=FROM_HOST_PKT
+            port    : ref://testcase/config/hostport
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=TO_SWITCH_PKT
+            port    : ref://testcase/config/switchport

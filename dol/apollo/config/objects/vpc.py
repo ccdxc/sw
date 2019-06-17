@@ -7,6 +7,8 @@ import apollo.config.agent.api as api
 import apollo.config.objects.policy as policy
 import apollo.config.objects.route as route
 import apollo.config.objects.subnet as subnet
+import apollo.config.objects.nexthop as nexthop
+import artemis.config.objects.cfgjson as cfgjson
 import apollo.config.utils as utils
 
 import vpc_pb2 as vpc_pb2
@@ -38,7 +40,9 @@ class VpcObject(base.ConfigObjectBase):
             self.PfxSel = 1
         else:
             self.PfxSel = 0
-
+        self.Vnid = 0
+        if utils.IsPipelineArtemis() and Store.IsDeviceEncapTypeVXLAN() :
+            self.Vnid = next(resmgr.VpcVxlanIdAllocator)
         ################# PRIVATE ATTRIBUTES OF VPC OBJECT #####################
         self.__ip_subnet_prefix_pool = {}
         self.__ip_subnet_prefix_pool[0] = {}
@@ -51,6 +55,9 @@ class VpcObject(base.ConfigObjectBase):
             return
 
         ############### CHILDREN OBJECT GENERATION
+        # Generate NextHop configuration
+        nexthop.client.GenerateObjects(self, spec)
+
         # Generate Policy configuration.
         policy.client.GenerateObjects(self, spec)
 
@@ -82,6 +89,8 @@ class VpcObject(base.ConfigObjectBase):
         spec.Type = self.Type
         utils.GetRpcIPPrefix(self.IPPrefix[1], spec.V4Prefix)
         utils.GetRpcIPPrefix(self.IPPrefix[0], spec.V6Prefix)
+        if self.Vnid:
+            utils.GetRpcEncap(self.Vnid, self.Vnid, spec.FabricEncap)
         return grpcmsg
 
     def Show(self):
@@ -113,16 +122,28 @@ class VpcObjectClient:
     def GetVpcObject(self, vpcid):
         return self.__objs.get(vpcid, None)
 
+    def __write_cfg(self, vpc_count):
+        nh = nexthop.client.GetNumNextHopPerVPC()
+        cfgjson.CfgJsonHelper.SetNumNexthopPerVPC(nh)
+        cfgjson.CfgJsonHelper.SetVPCCount(vpc_count)
+        cfgjson.CfgJsonHelper.WriteConfig()
+
     def GenerateObjects(self, topospec):
         for p in topospec.vpc:
             for c in range(p.count):
                 obj = VpcObject(p, c)
                 self.__objs.update({obj.VPCId: obj})
+        # Write the flow and nexthop config to agent hook file
+        if utils.IsPipelineArtemis():
+            self.__write_cfg(p.count)
         return
 
     def CreateObjects(self):
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
         api.client.Create(api.ObjectTypes.VPC, msgs)
+
+        # Create Nexthop object
+        nexthop.client.CreateObjects()
 
         # Create Policy object.
         policy.client.CreateObjects()

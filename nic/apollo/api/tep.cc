@@ -66,7 +66,7 @@ tep_entry::init_config(api_ctxt_t *api_ctxt) {
     memcpy(&this->key_, &spec->key, sizeof(pds_tep_key_t));
     this->type_ = spec->type;
     if (is_mac_set(spec->mac)) {
-        memcpy(mac_, spec->mac, sizeof(ETH_ADDR_LEN));
+        memcpy(mac_, spec->mac, ETH_ADDR_LEN);
     }
     return SDK_RET_OK;
 }

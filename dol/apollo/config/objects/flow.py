@@ -148,7 +148,7 @@ class FlowMapObjectHelper:
                 rmappingobjs = filter(lambda x: self.__is_rmapping_match(routetblobj, x), rmappings)
                 for robj in rmappingobjs:
                     for lobj in lmappingobjs:
-                        obj = FlowMapObject(lobj, robj, fwdmode, routetblobj, robj.TunObj)
+                        obj = FlowMapObject(lobj, robj, fwdmode, routetblobj, robj.TUNNEL)
                         objs.append(obj)
         elif fwdmode == 'IGW':
             for lobj in lmapping.GetMatchingObjects(mapsel):
@@ -232,7 +232,7 @@ class FlowMapObjectHelper:
                     else:
                         if lobj.VNIC.SUBNET.SubnetId == robj.SUBNET.SubnetId:
                             continue
-                    obj = FlowMapObject(lobj, robj, fwdmode, None, robj.TunObj)
+                    obj = FlowMapObject(lobj, robj, fwdmode, None, robj.TUNNEL)
                     objs.append(obj)
         return utils.GetFilteredObjects(objs, selectors.maxlimits)
 

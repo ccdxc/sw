@@ -8,6 +8,7 @@ import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
 from infra.common.logging import logger
 from apollo.config.store import Store
+from infra.common.glopts import GlobalOptions
 
 IP_VERSION_6 = 6
 IP_VERSION_4 = 4
@@ -157,3 +158,8 @@ def GetRpcEncap(mplsslot, vxlanid, encap):
 
 def GetPortIDfromInterface(interfaceid):
     return INTF2PORT_TBL.get(interfaceid, PortTypes.NONE)
+
+def IsPipelineArtemis():
+    if GlobalOptions.pipeline == 'artemis':
+        return True
+    return False

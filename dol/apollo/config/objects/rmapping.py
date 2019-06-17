@@ -25,18 +25,21 @@ class RemoteMappingObject(base.ConfigObjectBase):
         self.TunIPAddr = tunobj.RemoteIPAddr
         self.MplsSlot =  next(tunobj.RemoteVnicMplsSlotIdAllocator)
         self.Vnid = next(tunobj.RemoteVnicVxlanIdAllocator)
-        self.TunObj = tunobj
+        self.TUNNEL = tunobj
         if ipversion == utils.IP_VERSION_6:
             self.IPAddr = parent.AllocIPv6Address();
             self.AddrFamily = 'IPV6'
             self.HasDefaultRoute = self.SUBNET.V6RouteTable.HasDefaultRoute # For testspec
+            self.ProviderIPAddr = next(resmgr.RemoteProviderIpV6AddressAllocator)
         else:
             self.IPAddr = parent.AllocIPv4Address();
             self.AddrFamily = 'IPV4'
             self.HasDefaultRoute = self.SUBNET.V4RouteTable.HasDefaultRoute # For testspec
+            self.ProviderIPAddr = next(resmgr.RemoteProviderIpV4AddressAllocator)
         self.Label = 'NETWORKING'
         self.FlType = "MAPPING"
         self.IP = str(self.IPAddr) # For testspec
+        self.ProviderIP = str(self.ProviderIPAddr) # For testspec
         self.TunIP = str(self.TunIPAddr) # For testspec
 
         ################# PRIVATE ATTRIBUTES OF MAPPING OBJECT #####################
@@ -59,14 +62,16 @@ class RemoteMappingObject(base.ConfigObjectBase):
         spec.TunnelId = int(self.TunIPAddr)
         spec.MACAddr = self.MACAddr.getnum()
         utils.GetRpcEncap(self.MplsSlot, self.Vnid, spec.Encap)
+        if utils.IsPipelineArtemis():
+            utils.GetRpcIPAddr(self.ProviderIPAddr, spec.ProviderIp)
         return grpcmsg
 
     def Show(self):
         logger.info("RemoteMapping object:", self)
         logger.info("- %s" % repr(self))
-        logger.info("- IPAddr:%s|TunIPAddr:%s|MAC:%s|Mpls:%d|Vxlan:%d" %\
+        logger.info("- IPAddr:%s|TunIPAddr:%s|MAC:%s|Mpls:%d|Vxlan:%d|PIP:%s" %\
                 (str(self.IPAddr), str(self.TunIPAddr), self.MACAddr,
-                self.MplsSlot, self.Vnid))
+                self.MplsSlot, self.Vnid, self.ProviderIPAddr))
         return
 
     def SetupTestcaseConfig(self, obj):

@@ -208,6 +208,10 @@ jobd/artemis/pds_scale_test_mock: ${JOBD_PREREQS}
 	${NICDIR}/apollo/test/scale/artemis/run_scale_test_mock.sh --cfg artemis/scale_cfg_1vpc.json
 	${NICDIR}/apollo/tools/artemis/runtestapp.sh
 
+.PHONY: jobd/dol/artemis/vxlan
+jobd/dol/artemis/vxlan: ${JOBD_PREREQS}
+	${NICDIR}/apollo/tools/rundol.sh --pipeline artemis --topo vxlan --feature networking
+
 .PHONY: jobd/mbt/base
 jobd/mbt/base: ${JOBD_PREREQS}
 	DISABLE_AGING=1 ${NICDIR}/run.py ${COVERAGE_OPTS} --mbt --mbtrandomseed 6003702

@@ -28,15 +28,18 @@ class LocalMappingObject(base.ConfigObjectBase):
             if (hasattr(spec, 'public')):
                 self.PublicIPAddr = next(resmgr.PublicIpv6AddressAllocator)
             self.HasDefaultRoute = parent.SUBNET.V6RouteTable.HasDefaultRoute # For testspec
+            self.ProviderIPAddr = next(resmgr.LocalProviderIpV6AddressAllocator)
         else:
             self.AddrFamily = 'IPV4'
             self.IPAddr = parent.SUBNET.AllocIPv4Address();
             if (hasattr(spec, 'public')):
                 self.PublicIPAddr = next(resmgr.PublicIpAddressAllocator)
             self.HasDefaultRoute = parent.SUBNET.V4RouteTable.HasDefaultRoute # For testspec
+            self.ProviderIPAddr = next(resmgr.LocalProviderIpV4AddressAllocator)
         self.Label = 'NETWORKING'
         self.FlType = "MAPPING"
         self.IP = str(self.IPAddr) # for testspec
+        self.ProviderIP = str(self.ProviderIPAddr) # for testspec
         if self.PublicIPAddr is not None:
             self.PublicIP = str(self.PublicIPAddr) # for testspec
         ################# PRIVATE ATTRIBUTES OF MAPPING OBJECT #####################
@@ -63,14 +66,14 @@ class LocalMappingObject(base.ConfigObjectBase):
         spec.PublicIP.Af = types_pb2.IP_AF_NONE
         if self.PublicIPAddr is not None:
             utils.GetRpcIPAddr(self.PublicIPAddr, spec.PublicIP)
+        if utils.IsPipelineArtemis():
+            utils.GetRpcIPAddr(self.ProviderIPAddr, spec.ProviderIp)
         return grpcmsg
 
     def Show(self):
         logger.info("LocalMapping Object:", self)
         logger.info("- %s" % repr(self))
-        logger.info("- IPAddr:%s" % str(self.IPAddr))
-        if self.PublicIPAddr is not None:
-            logger.info("- Public IPAddr:%s" % str(self.PublicIPAddr))
+        logger.info("- IPAddr:%s|PublicIP:%s|PIP:%s" %(str(self.IPAddr), str(self.PublicIPAddr), str(self.ProviderIPAddr)))
         return
 
     def SetupTestcaseConfig(self, obj):

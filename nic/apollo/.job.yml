@@ -148,6 +148,16 @@ targets:
     build-dependencies:
     - build-artemis-x86
 
+  artemis/dol/vxlan:
+    commands: ["make", "PIPELINE=artemis", "jobd/dol/artemis/vxlan"]
+    owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-artemis-x86
+
+
 cache:
   name: "sw"
   mount_dir: "/root/.cache"

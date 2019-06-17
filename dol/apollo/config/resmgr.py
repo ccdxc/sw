@@ -39,6 +39,24 @@ VxlanIdAllocator = iter(irange(80001, 81024))
 InvalidVxlanIdAllocator = iter(irange(10001,12000))
 MirrorSessionIdAllocator = iter(irange(1, 8))
 
+# ---------------------------------------------------------------------------------
+# Artemis specific configs
+# Nexthop IP allocator. Curently unique IP (globally)
+# TODO : Can have same IP across VPCs.
+NexthopIdAllocator = iter(irange(1,1*1024*1024))
+NexthopIpV4AddressAllocator = ipaddress.IPv4Network('210.0.0.0/16').hosts()
+NexthopIpV6AddressAllocator = ipaddress.IPv6Network('eeee:eeee:0:0::/64').hosts()
+NexthopMacAllocator = objects.TemplateFieldObject("macstep/0055.0000.0001/0000.0000.0001")
+NexthopVxlanIdAllocator = iter(irange(90001, 91024))
+# Provider IP for local and remote. One to One mapping now. Many to one can be done later
+LocalProviderIpV4AddressAllocator = ipaddress.IPv4Network('220.0.0.0/16').hosts()
+RemoteProviderIpV4AddressAllocator = ipaddress.IPv4Network('221.0.0.0/16').hosts()
+LocalProviderIpV6AddressAllocator = ipaddress.IPv6Network('eeee:eeee:eee0:0::/64').hosts()
+RemoteProviderIpV6AddressAllocator = ipaddress.IPv6Network('eeee:eeee:eee1:0::/64').hosts()
+VpcVxlanIdAllocator = iter(irange(50000, 51024))
+TepMacAllocator = objects.TemplateFieldObject("macstep/0065.0000.0001/0000.0000.0001")
+# -------------------------------------------------------------------
+
 #TODO: read from PDS header files & init
 MAX_DEVICE = 1
 MAX_TUNNEL = 1023

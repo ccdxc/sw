@@ -41,15 +41,16 @@ class TunnelObject(base.ConfigObjectBase):
                     self.EncapValue = next(resmgr.IGWMplsSlotIdAllocator)
                 else:
                     self.EncapValue = next(resmgr.IGWVxlanIdAllocator)
-
+        self.MACAddr = resmgr.TepMacAllocator.get()
         ################# PRIVATE ATTRIBUTES OF TUNNEL OBJECT #####################
 
         self.Show()
         return
 
     def __repr__(self):
-        return "Tunnel%d|LocalIPAddr:%s|RemoteIPAddr:%s|TunnelType:%s|EncapValue:%d|Nat:%s" %\
-               (self.Id,self.LocalIPAddr, self.RemoteIPAddr, utils.GetTunnelTypeString(self.Type), self.EncapValue, self.Nat)
+        return "Tunnel%d|LocalIPAddr:%s|RemoteIPAddr:%s|TunnelType:%s|EncapValue:%d|Nat:%s|Mac:%s" %\
+               (self.Id,self.LocalIPAddr, self.RemoteIPAddr,
+               utils.GetTunnelTypeString(self.Type), self.EncapValue, self.Nat, self.MACAddr)
 
     def GetGrpcCreateMessage(self):
         grpcmsg = tunnel_pb2.TunnelRequest()
@@ -63,6 +64,8 @@ class TunnelObject(base.ConfigObjectBase):
         spec.RemoteIP.Af = types_pb2.IP_AF_INET
         spec.RemoteIP.V4Addr = int(self.RemoteIPAddr)
         spec.Nat = self.Nat
+        if utils.IsPipelineArtemis():
+            spec.MACAddress = self.MACAddr.getnum()
         return grpcmsg
 
     def IsWorkload(self):

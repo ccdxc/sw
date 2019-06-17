@@ -55,6 +55,8 @@ vpc:
           v6prefixlen : 96
           rmap:
             - count : 2
+      nexthop:
+        - count : 10
       routetbl:
              - type: base
                routetype: adjacent

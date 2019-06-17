@@ -3,6 +3,7 @@ import enum
 import pdb
 import infra.config.base as base
 import apollo.config.resmgr as resmgr
+import apollo.config.utils as utils
 import apollo.config.agent.api as api
 import batch_pb2 as batch_pb2
 import types_pb2 as types_pb2
@@ -25,6 +26,11 @@ class BatchObject(base.ConfigObjectBase):
         batchspec.epoch = self.epoch
         return batchspec
 
+    def GetInvalidBatchSpec(self):
+        batchspec = batch_pb2.BatchSpec()
+        batchspec.epoch = 0
+        return batchspec
+
     def SetNextEpoch(self):
         self.epoch += 1
         return
@@ -37,6 +43,12 @@ class BatchObject(base.ConfigObjectBase):
 class BatchObjectClient:
     def __init__(self):
         self.__obj = None
+        # Temporary fix for artemis to generate flows and sessions for the
+        # created mappings
+        if utils.IsPipelineArtemis():
+            self.__commit_for_flows = True
+        else:
+            self.__commit_for_flows = False
         return
 
     def Objects(self):
@@ -53,6 +65,9 @@ class BatchObjectClient:
         return
 
     def Commit(self):
+        if self.__commit_for_flows:
+            api.client.Start(api.ObjectTypes.BATCH, self.__obj.GetInvalidBatchSpec())
+            self.__commit_for_flows = False
         api.client.Commit(api.ObjectTypes.BATCH, self.__obj.GetBatchSpec())
         return
 
