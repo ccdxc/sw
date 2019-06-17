@@ -296,10 +296,13 @@ jobd/dol/e2e/alg: ${JOBD_PREREQS}
 jobd/dol/e2e/l7: ${JOBD_PREREQS}
 	${SUDO_OPT} ${NICDIR}/run.py ${COVERAGE_OPTS} --topo proxy --feature proxy --config-only --e2e-l7-dol
 
-.PHONY: jobd/e2e/naples-sim
-jobd/e2e/naples-sim: ${JOBD_PREREQS}
+.PHONY: jobd/e2e/naples-sim-image
+jobd/e2e/naples-sim-image: ${JOBD_PREREQS}
 	cd ${NICDIR}/.. && python2 nic/tools/package/package.py --pipeline iris --target sim --no-strip
 	${NICDIR}/tools/release.sh
+
+.PHONY: jobd/e2e/naples-sim
+jobd/e2e/naples-sim: ${JOBD_PREREQS} jobd/e2e/naples-sim-image
 	${SUDO_OPT} ${NICDIR}/tools/validate-naples-docker.sh
 
 .PHONY: jobd/make/sdk
