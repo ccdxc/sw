@@ -245,6 +245,7 @@ jobd/apollo/gtest_2: ${JOBD_PREREQS}
 
 .PHONY: jobd/artemis/gtest
 jobd/artemis/gtest: ${JOBD_PREREQS}
+	${NICDIR}/run.py ${COVERAGE_OPTS} --artemis_gtest
 	${NICDIR}/apollo/test/tools/run_gtests_artemis.sh ${COVERAGE_OPTS}
 
 .PHONY: jobd/storage
