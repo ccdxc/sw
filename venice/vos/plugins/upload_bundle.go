@@ -24,6 +24,7 @@ import (
 const (
 	tarfileDir        = "/var/log/pensando"
 	installerTmpDir   = globals.RuntimeDir + "/upload/"
+	bundleImage       = "bundle.tar"
 	imageMetaFileName = "metadata.json"
 	metaReleaseDate   = "ReleaseData"
 	metaVersion       = "Version"
@@ -131,15 +132,24 @@ func getUploadBundleCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc 
 	return func(ctx context.Context, oper vos.ObjectOper, in *objstore.Object, client vos.BackendClient) error {
 		log.InfoLog("bucket", bucket, "Stage", stage, "oper", oper, "msg", "logger plugin")
 
-		fr, err := client.GetStoreObject(ctx, "default."+bucket, in.Name, minio.GetObjectOptions{})
+		if in.Name != bundleImage {
+			log.Errorf("Image upload failed. Invalid image name %s. Returning", in.Name)
+			err := client.RemoveObject("default."+bucket, in.Name)
+			if err != nil {
+				return fmt.Errorf("Invalid Image(Name %+v): Error while removing(%+v)", in.Name, err)
+			}
+			return fmt.Errorf("Image Upload Failed: Invalid Name (%s)", in.Name)
+		}
+
+		fr, err := client.GetStoreObject(ctx, "default."+bucket, bundleImage, minio.GetObjectOptions{})
 		if err != nil {
-			log.Errorf("Failed to get object [%v]", in.Name)
+			log.Errorf("Failed to get object [%v]", bundleImage)
 			return err
 		}
-		of, err := os.Create(tarfileDir + "/" + in.Name)
+		of, err := os.Create(tarfileDir + "/" + bundleImage)
 		if err != nil {
-			log.Errorf("Could not create output file [%s](%s)", in.Name, err)
-			return fmt.Errorf("Could not create output file [%s](%s)", in.Name, err)
+			log.Errorf("Could not create output file [%s](%s)", bundleImage, err)
+			return fmt.Errorf("Could not create output file [%s](%s)", bundleImage, err)
 		}
 		defer of.Close()
 		buf := make([]byte, 1024)
@@ -159,28 +169,23 @@ func getUploadBundleCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc 
 				return fmt.Errorf("Error writing to output file (%s)", err)
 			}
 		}
-		log.Infof("Got image [%s] of size [%d]", in.Name, totsize)
+		log.Infof("Got image [bundle.tar] of size [%d]", totsize)
 
-		if err := client.RemoveObject("default.images", in.Name); err != nil {
-			log.Errorf("Failed to remove %s. Error %+v", in.Name, err)
-			return err
-		}
-
-		err = ExtractImage(tarfileDir + "/" + in.Name)
+		err = ExtractImage(tarfileDir + "/" + bundleImage)
 		if err != nil {
-			terr := os.Remove(tarfileDir + "/" + in.Name)
+			terr := os.Remove(tarfileDir + "/" + bundleImage)
 			if terr != nil {
-				log.Errorf("removal of %s/%s returned %v", tarfileDir, in.Name, terr)
+				log.Errorf("removal of /tmp/bundle.tar returned %v", terr)
 			}
 			if rerr := client.RemoveObject("default."+bucket, in.Name); rerr != nil {
 				return fmt.Errorf("Failed to extract bundle (%+v). Error while removing bundle (%+v)", err, rerr)
 			}
-			return fmt.Errorf("Upload Failed: ExtractImage %s/%s  returned %v", tarfileDir, in.Name, err)
+			return fmt.Errorf("Upload Failed: ExtractImage %s  returned %v", tarfileDir+"/"+bundleImage, err)
 		}
 
-		err = os.Remove(tarfileDir + "/" + in.Name)
+		err = os.Remove(tarfileDir + "/" + bundleImage)
 		if err != nil {
-			log.Errorf("removal of %s/%s  returned %v", tarfileDir, in.Name, err)
+			log.Errorf("removal of /tmp/bundle.tar returned %v", err)
 		}
 
 		versionMap, err := ValidateImageBundle()
@@ -340,6 +345,21 @@ func getDeleteCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc {
 
 		if err := os.RemoveAll(installerTmpDir); err != nil {
 			return fmt.Errorf("Error %s during removeAll of %s", err, installerTmpDir)
+		}
+
+		br, err := client.GetObjectWithContext(ctx, "default.images", bundleImage, minio.GetObjectOptions{})
+		if err != nil {
+			log.Infof("%s not not present (%s)", bundleImage, err)
+			return nil
+		}
+
+		objInfo, err = br.Stat()
+		if objInfo.Key == bundleImage {
+			if err := client.RemoveObject("default.images", bundleImage); err != nil {
+				log.Errorf("Failed to remove %s. Error %+v", bundleImage, err)
+				return err
+			}
+			log.Infof("Removed %s in bucket[%s]", bundleImage, "default."+bucket)
 		}
 
 		return nil
