@@ -50,6 +50,8 @@ ingress_to_egress:
 .align
 ingress_to_cps:
     /*
+    phvwr           p.predicate_header_valid, TRUE
+    phvwr           p.p4_to_rxdma3_valid, TRUE
     phvwr           p.p4_to_rxdma2_valid, TRUE
     phvwr           p.p4_to_rxdma_valid, TRUE
     phvwr           p.capri_rxdma_intrinsic_valid, TRUE

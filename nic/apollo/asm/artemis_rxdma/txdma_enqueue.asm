@@ -21,7 +21,8 @@ pkt_enqueue:
     bcf         [c2], txdma_q_full
     // compute entry offset for current p_index
     mul         r2, d.pkt_enqueue_d.sw_pindex0, PKTQ_PAGE_SIZE
-    add         r3, d.{pkt_enqueue_d.ring1_base}.dx, d.pkt_enqueue_d.sw_pindex0, ARTEMIS_PKT_DESC_SHIFT
+    add         r3, d.{pkt_enqueue_d.ring1_base}.dx, \
+                    d.pkt_enqueue_d.sw_pindex0, ARTEMIS_PKT_DESC_SHIFT
     // update sw_pindex0, unlock the table
     tblwr.f     d.pkt_enqueue_d.sw_pindex0, r1
 
@@ -49,7 +50,7 @@ pkt_enqueue:
         d.pkt_enqueue_d.sw_pindex0, doorbell_data_pid, doorbell_data_index)
 
     // dma pkt
-    add         r1, r0, k.capri_p4_intr_packet_len
+    add         r1, k.capri_p4_intr_packet_len, ARTEMIS_PREDICATE_HDR_SZ
     add         r2, r2, d.{pkt_enqueue_d.ring0_base}.dx
     phvwr       p.pktbuf_pkt2mem_dma_cmd_size, r1
     phvwr.e     p.pktbuf_pkt2mem_dma_cmd_addr, r2
