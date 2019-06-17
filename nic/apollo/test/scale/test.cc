@@ -682,11 +682,11 @@ create_vpc_peers (uint32_t num_vpcs)
 
 static sdk_ret_t
 populate_tags_api_rule_spec (uint32_t id, pds_tag_rule_t *api_rule_spec,
-                             uint32_t *tag_value, uint32_t num_prefixes,
+                             uint32_t tag_value, uint32_t num_prefixes,
                              uint32_t *tag_pfx_count, uint8_t ip_af,
                              ip_prefix_t *v6_route_pfx, uint32_t priority)
 {
-    api_rule_spec->tag = *tag_value++;
+    api_rule_spec->tag = tag_value++;
     api_rule_spec->priority = priority;
     ip_prefix_t *prefixes =
             (ip_prefix_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_METER,
@@ -758,9 +758,10 @@ create_tags (uint32_t num_tag_trees, uint32_t scale,
             if (step == TESTAPP_TAGS_PRIORITY_STEP) {
                 priority = rule + (step - 1);
             }
-            populate_tags_api_rule_spec(id ,api_rule_spec, &tag_value,
+            populate_tags_api_rule_spec(id, api_rule_spec, tag_value,
                                         num_prefixes, &tag_pfx_count, ip_af,
                                         v6_route_pfx, priority);
+            tag_value = (tag_value + 1) % 128;
             priority--;
             step--;
             if (step == 0) {
@@ -774,8 +775,10 @@ create_tags (uint32_t num_tag_trees, uint32_t scale,
                 priority = rule + (step - 1);
             }
             populate_tags_api_rule_spec(
-                    id, api_rule_spec, &tag_value, 1, &tag_pfx_count,
+                    id, api_rule_spec, tag_value, 1, &tag_pfx_count,
                     ip_af, v6_route_pfx, priority);
+            tag_value = (tag_value + 1) % 128;
+            priority--;
             priority--;
             step--;
             if (step == 0) {
@@ -1261,14 +1264,16 @@ create_objects (void)
 
     if (artemis()) {
         // create v4 tags
-        ret = create_tags(g_test_params.num_tag_trees/2, g_test_params.tags_v4_scale,
-                          IP_AF_IPV4, &g_test_params.v6_route_pfx);
+        ret = create_tags(g_test_params.num_tag_trees/2,
+                          g_test_params.tags_v4_scale, IP_AF_IPV4,
+                          &g_test_params.v6_route_pfx);
         if (ret != SDK_RET_OK) {
             return ret;
         }
         // create v6 tags
-        ret = create_tags(g_test_params.num_tag_trees/2, g_test_params.tags_v6_scale,
-                          IP_AF_IPV6, &g_test_params.v6_route_pfx);
+        ret = create_tags(g_test_params.num_tag_trees/2,
+                          g_test_params.tags_v6_scale, IP_AF_IPV6,
+                          &g_test_params.v6_route_pfx);
         if (ret != SDK_RET_OK) {
             return ret;
         }
