@@ -135,17 +135,18 @@ func (h *httpHandler) uploadHandler(w http.ResponseWriter, req *http.Request) {
 				Digest: stat.ETag,
 			},
 		}
+		stat, err = h.client.StatObject("default.images", header.Filename, minio.StatObjectOptions{})
+		if err != nil {
+			h.writeError(w, http.StatusInternalServerError, fmt.Sprintf("error verifying image write (%s)", err))
+			return
+		}
 		errs = h.instance.RunPlugins(context.TODO(), "images", vos.PostOp, vos.Upload, &in, h.client)
 		if errs != nil {
 			h.writeError(w, http.StatusInternalServerError, errs)
 			return
 		}
 		log.Infof("Wrote object [%v] of size [%v]", header.Filename, sz)
-		stat, err = h.client.StatObject("default.images", header.Filename, minio.StatObjectOptions{})
-		if err != nil {
-			h.writeError(w, http.StatusInternalServerError, fmt.Sprintf("error verifying image write (%s)", err))
-			return
-		}
+
 		ret := objstore.Object{
 			TypeMeta:   api.TypeMeta{Kind: "Object"},
 			ObjectMeta: api.ObjectMeta{Name: header.Filename, Namespace: "images"},

@@ -68,21 +68,25 @@ func createBundle() (int, error) {
 		"Bundle": {"Version": "1.0.0",
 			"Description": "Meta File",
 			"ReleaseDate": "May2019",
+			"Environment": "Production",
 			"Name":        "metadata.json"},
 		"Venice": {"Version": "3.2.0",
 			"Description": "Venice Image",
 			"ReleaseDate": "May2019",
 			"Name":        "venice.tgz",
+			"Environment": "Production",
 			"hash":        hash},
 		"veniceOS": {"Version": "3.2.0",
 			"Description": "Venice Image",
 			"ReleaseDate": "May2019",
 			"Name":        "venice_appl_os.tgz",
+			"Environment": "Production",
 			"hash":        hash},
 		"Naples": {"Version": "4.5.1",
 			"Description": "Naples Image",
 			"ReleaseDate": "May2019",
 			"Name":        "naples_fw.tar",
+			"Environment": "Production",
 			"hash":        hash}}
 
 	b, err := json.Marshal(meta)
@@ -142,6 +146,7 @@ func uploadFile(ctx context.Context, filename string, metadata map[string]string
 		return 0, errors.Wrap(err, "closing writer")
 	}
 	uri := fmt.Sprintf("https://%s/objstore/v1/uploads/images/", ts.tu.APIGwAddr)
+	By(fmt.Sprintf("upload URI [%v]", uri))
 	req, err := http.NewRequest("POST", uri, body)
 	if err != nil {
 		return 0, errors.Wrap(err, "http.newRequest failed")
@@ -221,8 +226,9 @@ func statFile(ctx context.Context, filename string) (*objstore.Object, error) {
 func testObjCUDOps() func() {
 	return func() {
 		filename := "bundle.tar"
+		version := "1.0.0"
 		metadata := map[string]string{
-			"Version":     "v1.3.2",
+			"Version":     version,
 			"Environment": "production",
 			"Description": "E2E test Image upload",
 			"Releasedate": "May2018",
@@ -242,61 +248,38 @@ func testObjCUDOps() func() {
 
 		h := md5.New()
 		h.Write(fileBuf)
-		hash := h.Sum(nil)
 
 		ctx := ts.tu.NewLoggedInContext(context.Background())
 		apigwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 		restClient, err := apiclient.NewRestAPIClient(apigwAddr)
 		Expect(err).To(BeNil())
-		var wr, rd int
-		var rhash []byte
+
 		// Use of Eventually is needed for all operations here because success of one objstore operation does not
 		//  guarantee the next one will succeed, because the call may end up on a node that is rebooting.
 		Eventually(func() error {
-			wr, err = uploadFile(ctx, filename, metadata, fileBuf)
+			_, err = uploadFile(ctx, filename, metadata, fileBuf)
 			return err
 		}, 90, 1).Should(BeNil(), fmt.Sprintf("failed to upload file (%s)", err))
 
 		Eventually(func() error {
-			rhash, rd, err = downloadFile(filename)
+			_, _, err = downloadFile(version)
 			return err
 		}, 90, 1).Should(BeNil(), fmt.Sprintf("failed to download file (%s)", err))
-		Expect(hash).Should(Equal(rhash), "uploaded and downloaded hashes do not match")
-		Expect(rd).Should(Equal(wr), "size written does not match size read")
-		var resp, obj *objstore.Object
 		Eventually(func() error {
-			resp, err = statFile(ctx, filename)
+			_, err = statFile(ctx, version)
 			return err
 		}, 90, 1).Should(BeNil(), fmt.Sprintf("failed to stat file(%s)", err))
 
-		for k, v := range metadata {
-			if v1, ok := resp.Labels[k]; !ok {
-				Fail(fmt.Sprintf("did not find [%v] in labels [%+v]", k, resp))
-			} else {
-				if v1 != v {
-					Fail(fmt.Sprintf("did not match [%v] got[%v] want[%v] in labels", k, v1, v))
-				}
-			}
-		}
 		objMeta := api.ObjectMeta{
-			Name:      "bundle.tar",
+			Name:      version,
 			Tenant:    "default",
 			Namespace: "images",
 		}
 		Eventually(func() error {
-			obj, err = restClient.ObjstoreV1().Object().Get(ctx, &objMeta)
+			_, err = restClient.ObjstoreV1().Object().Get(ctx, &objMeta)
 			return err
 		}, 90, 1).Should(BeNil(), fmt.Sprintf("failed to Get object (%s)", err))
 
-		for k, v := range metadata {
-			if v1, ok := obj.Labels[k]; !ok {
-				Fail(fmt.Sprintf("did not find [%v] in labels [%+v]", k, resp))
-			} else {
-				if v1 != v {
-					Fail(fmt.Sprintf("did not match [%v] got[%v] want[%v] in labels", k, v1, v))
-				}
-			}
-		}
 		Eventually(func() error {
 			_, err = restClient.ObjstoreV1().Object().Delete(ctx, &objMeta)
 			return err
