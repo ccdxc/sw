@@ -44,13 +44,21 @@ public:
 
     // Compare routines
     bool spec_compare(const pds_device_spec_t *spec) const;
-    sdk::sdk_ret_t info_compare(const pds_device_info_t *info) const;
 };
 
-// Device test CRUD routines
+// Dump prototypes
+inline std::ostream&
+operator<<(std::ostream& os, const device_feeder& obj) {
+    os << "Device feeder =>"
+        << " device IP: " << obj.device_ip_str
+        << " mac addr: " << obj.mac_addr_str
+        << " gw IP: " << obj.gw_ip_str << " ";
+    return os;
+}
 
+// CRUD prototypes
 API_CREATE(device);
-API_READ_SINGLETON(device);
+API_READ_SINGLETON(device, true);
 API_UPDATE(device);
 API_DELETE_SINGLETON(device);
 

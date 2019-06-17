@@ -45,11 +45,19 @@ public:
     // Compare routines
     bool key_compare(const pds_vpc_peer_key_t *key) const;
     bool spec_compare(const pds_vpc_peer_spec_t *spec) const;
-    sdk::sdk_ret_t info_compare(const pds_vpc_peer_info_t *info) const;
 };
 
-// VPC peer test CRUD routines
+// Dump prototypes
+inline std::ostream&
+operator<<(std::ostream& os, const vpc_peer_feeder& obj) {
+    os << "VPC Peer feeder =>"
+        << " id: " << obj.key.id
+        << " vpc1 id: " << obj.vpc1.id
+        << " vpc2 id: " << obj.vpc2.id;
+    return os;
+}
 
+// CRUD prototypes
 API_CREATE(vpc_peer);
 API_READ(vpc_peer);
 API_UPDATE(vpc_peer);

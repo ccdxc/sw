@@ -15,6 +15,7 @@
 #include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
+#include "nic/apollo/test/utils/api_base.hpp"
 
 namespace api_test {
 
@@ -54,11 +55,27 @@ public:
     // Compare routines
     bool key_compare(const pds_subnet_key_t *key) const;
     bool spec_compare(const pds_subnet_spec_t *spec) const;
-    sdk::sdk_ret_t info_compare(const pds_subnet_info_t *info) const;
 };
 
-// Subnet test CRUD routines
+// Dump prototypes
+inline std::ostream&
+operator<<(std::ostream& os, const subnet_feeder& obj) {
+    os << "Subnet feeder =>"
+        << " id: " << obj.key.id
+        << " vpc: " << obj.vpc.id
+        << " cidr_str: " << obj.cidr_str
+        << " vr_ip: " << obj.vr_ip
+        << " vr_mac: " << obj.vr_mac
+        << " v4_rt: " << obj.v4_route_table.id
+        << " v6_rt: " << obj.v6_route_table.id
+        << " v4_in_pol: " << obj.ing_v4_policy.id
+        << " v6_in_pol: " << obj.ing_v6_policy.id
+        << " v4_eg_pol: " << obj.egr_v4_policy.id
+        << " v6_eg_pol: " << obj.egr_v6_policy.id;
+    return os;
+}
 
+// CRUD prototypes
 API_CREATE(subnet);
 API_READ(subnet);
 API_UPDATE(subnet);
@@ -67,7 +84,7 @@ API_DELETE(subnet);
 // Export variables
 extern pds_subnet_key_t k_subnet_key;
 
-// Function prototypes
+// Misc function prototypes
 void sample_subnet_setup();
 void sample_subnet_teardown();
 

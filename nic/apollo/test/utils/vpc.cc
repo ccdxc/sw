@@ -8,7 +8,6 @@
 ///
 //----------------------------------------------------------------------------
 
-#include <iostream>
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
@@ -39,15 +38,6 @@ vpc_feeder::iter_next(int width) {
     memcpy(&pfx.addr, &ipaddr, sizeof(ip_addr_t));
     key.id += width;
     cur_iter_pos++;
-}
-
-inline std::ostream&
-operator<<(std::ostream& os, const vpc_feeder& obj) {
-    os << "VPC feeder =>"
-       << " id: " << obj.key.id
-       << " cidr_str: " << obj.cidr_str
-       << std::endl;
-    return os;
 }
 
 void
@@ -83,22 +73,6 @@ vpc_feeder::spec_compare(const pds_vpc_spec_t *spec) const {
         return false;
 
     return true;
-}
-
-sdk::sdk_ret_t
-vpc_feeder::info_compare(const pds_vpc_info_t *info) const {
-
-    if (!this->key_compare(&info->spec.key)) {
-        std::cout << "key compare failed " << *this;
-        return sdk::SDK_RET_ERR;
-    }
-
-    if (!this->spec_compare(&info->spec)) {
-        std::cout << "spec compare failed " << *this;
-        return sdk::SDK_RET_ERR;
-    }
-
-    return sdk::SDK_RET_OK;
 }
 
 //----------------------------------------------------------------------------

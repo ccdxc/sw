@@ -8,8 +8,8 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/test/utils/route.hpp"
-#include "nic/apollo/test/utils/tep.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 
 namespace api_test {

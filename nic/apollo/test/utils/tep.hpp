@@ -53,16 +53,28 @@ public:
     // Compare routines
     bool key_compare(const pds_tep_key_t *key) const;
     bool spec_compare(const pds_tep_spec_t *spec) const;
-    sdk::sdk_ret_t info_compare(const pds_tep_info_t *info) const;
 };
 
-// TEP test CRUD routines
+// Dump prototypes
+inline std::ostream&
+operator<<(std::ostream& os, const tep_feeder& obj) {
+    os << "TEP feeder =>"
+       << " IP: " << obj.ip
+       << " type: " << obj.type
+       << " DIPi: " << obj.dipi
+       << " dmac: " << mac2str(obj.dmac)
+       << " nat: " << obj.nat
+       << " encap: " << pdsencap2str(obj.encap);
+    return os;
+}
 
+// CRUD prototypes
 API_CREATE(tep);
 API_READ(tep);
 API_UPDATE(tep);
 API_DELETE(tep);
 
+// Misc function prototypes
 void sample_tep_setup(std::string ip_str="30.30.30.1",
                       uint32_t num_tep=PDS_MAX_TEP);
 void sample_tep_validate(std::string ip_str="30.30.30.1",

@@ -47,11 +47,18 @@ public:
     // Compare routines
     bool key_compare(const pds_vpc_key_t *key) const;
     bool spec_compare(const pds_vpc_spec_t *spec) const;
-    sdk::sdk_ret_t info_compare(const pds_vpc_info_t *info) const;
 };
 
-// VPC test CRUD routines
+// Dump prototypes
+inline std::ostream&
+operator<<(std::ostream& os, const vpc_feeder& obj) {
+    os << "VPC feeder =>"
+       << " id: " << obj.key.id
+       << " cidr_str: " << obj.cidr_str;
+    return os;
+}
 
+// CRUD prototypes
 API_CREATE(vpc);
 API_READ(vpc);
 API_UPDATE(vpc);
@@ -60,7 +67,7 @@ API_DELETE(vpc);
 // Export variables
 extern pds_vpc_key_t k_vpc_key;
 
-// Function prototypes
+// Misc function prototypes
 void sample_vpc_setup(pds_vpc_type_t type);
 void sample_vpc_setup_validate(pds_vpc_type_t type);
 void sample_vpc_teardown(pds_vpc_type_t type);

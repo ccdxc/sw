@@ -51,16 +51,28 @@ public:
     // Compare routines
     bool key_compare(const pds_nexthop_key_t *key) const;
     bool spec_compare(const pds_nexthop_spec_t *spec) const;
-    sdk::sdk_ret_t info_compare(const pds_nexthop_info_t *info) const;
 };
 
-// NH test CRUD routines
+// Dump prototypes
+inline std::ostream&
+operator<<(std::ostream& os, const nexthop_feeder& obj) {
+    os << "NH feeder =>"
+       << " id: " << obj.id
+       << " type: " << obj.type
+       << " ip: " << obj.ip
+       << " mac: " << mac2str(obj.mac)
+       << " vlan: " << obj.vlan
+       << " vpc: " << obj.vpc_id;
+    return os;
+}
 
+// CRUD prototypes
 API_CREATE(nexthop);
 API_READ(nexthop);
 API_UPDATE(nexthop);
 API_DELETE(nexthop);
 
+// Misc function prototypes
 void sample_nh_setup(void);
 void sample_nh_teardown(void);
 

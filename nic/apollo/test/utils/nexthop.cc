@@ -8,7 +8,6 @@
 ///
 //----------------------------------------------------------------------------
 
-#include<iostream>
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/apollo/api/nexthop_api.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
@@ -97,34 +96,6 @@ nexthop_feeder::spec_compare(const pds_nexthop_spec_t *spec) const {
     }
 
     return true;
-}
-
-inline std::ostream&
-operator<<(std::ostream& os, const nexthop_feeder& obj) {
-    os << "NH feeder =>"
-       << " id: " << obj.id
-       << " type: " << obj.type
-       << " ip: " << obj.ip
-       << " mac: " << mac2str(obj.mac)
-       << " vlan: " << obj.vlan
-       << " vpc: " << obj.vpc_id
-       << std::endl;
-    return os;
-}
-
-sdk::sdk_ret_t
-nexthop_feeder::info_compare(const pds_nexthop_info_t *info) const {
-    if (!this->key_compare(&info->spec.key)) {
-        std::cout << "key compare failed " << *this << info;
-        return sdk::SDK_RET_ERR;
-    }
-
-    if (!this->spec_compare(&info->spec)) {
-        std::cout << "spec compare failed " << *this << info;
-        return sdk::SDK_RET_ERR;
-    }
-
-    return sdk::SDK_RET_OK;
 }
 
 //----------------------------------------------------------------------------

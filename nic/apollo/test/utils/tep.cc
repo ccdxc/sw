@@ -8,7 +8,6 @@
 ///
 //----------------------------------------------------------------------------
 
-#include<iostream>
 #include "nic/apollo/api/tep_api.hpp"
 #include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
@@ -96,34 +95,6 @@ tep_feeder::spec_compare(const pds_tep_spec_t *spec) const {
         return false;
 
     return true;
-}
-
-inline std::ostream&
-operator<<(std::ostream& os, const tep_feeder& obj) {
-    os << "TEP feeder =>"
-       << " IP: " << obj.ip
-       << " type: " << obj.type
-       << " DIPi: " << obj.dipi
-       << " dmac: " << mac2str(obj.dmac)
-       << " nat: " << obj.nat
-       << " encap: " << pdsencap2str(obj.encap)
-       << std::endl;
-    return os;
-}
-
-sdk::sdk_ret_t
-tep_feeder::info_compare(const pds_tep_info_t *info) const {
-    if (!this->key_compare(&info->spec.key)) {
-        std::cout << "key compare failed " << *this << info;
-        return sdk::SDK_RET_ERR;
-    }
-
-    if (!this->spec_compare(&info->spec)) {
-        std::cout << "spec compare failed " << *this << info;
-        return sdk::SDK_RET_ERR;
-    }
-
-    return sdk::SDK_RET_OK;
 }
 
 //----------------------------------------------------------------------------

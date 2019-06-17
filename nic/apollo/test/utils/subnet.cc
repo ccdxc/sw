@@ -53,24 +53,6 @@ subnet_feeder::iter_next(int width) {
     cur_iter_pos++;
 }
 
-inline std::ostream&
-operator<<(std::ostream& os, const subnet_feeder& obj) {
-    os << "Subnet feeder =>"
-        << " id: " << obj.key.id
-        << " vpc: " << obj.vpc.id
-        << " cidr_str: " << obj.cidr_str
-        << " vr_ip: " << obj.vr_ip
-        << " vr_mac: " << obj.vr_mac
-        << " v4_rt: " << obj.v4_route_table.id
-        << " v6_rt: " << obj.v6_route_table.id
-        << " v4_in_pol: " << obj.ing_v4_policy.id
-        << " v6_in_pol: " << obj.ing_v6_policy.id
-        << " v4_eg_pol: " << obj.egr_v4_policy.id
-        << " v6_eg_pol: " << obj.egr_v6_policy.id
-        << std::endl;
-    return os;
-}
-
 void
 subnet_feeder::key_build(pds_subnet_key_t *key) const {
     memset(key, 0, sizeof(pds_subnet_key_t));
@@ -143,22 +125,6 @@ subnet_feeder::spec_compare(const pds_subnet_spec_t *spec) const {
     }
 
     return true;
-}
-
-sdk::sdk_ret_t
-subnet_feeder::info_compare(const pds_subnet_info_t *info) const {
-
-    if (!this->key_compare(&info->spec.key)) {
-        std::cout << "key compare failed " << *this;
-        return sdk::SDK_RET_ERR;
-    }
-
-    if (!this->spec_compare(&info->spec)) {
-        std::cout << "spec compare failed " << *this;
-        return sdk::SDK_RET_ERR;
-    }
-
-    return sdk::SDK_RET_OK;
 }
 
 //----------------------------------------------------------------------------

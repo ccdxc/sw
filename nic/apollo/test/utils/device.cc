@@ -8,8 +8,6 @@
 ///
 //----------------------------------------------------------------------------
 
-#include <iostream>
-#include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/device.hpp"
 
 namespace api_test {
@@ -32,16 +30,6 @@ device_feeder::iter_next(int width) {
     // nothing to do here as device object is a singleton. Increase the
     // iterator position so that iterator can break the loop
     cur_iter_pos++;
-}
-
-inline std::ostream&
-operator<<(std::ostream& os, const device_feeder& obj) {
-    os << "Device feeder =>"
-        << " device IP: " << obj.device_ip_str
-        << " mac addr: " << obj.mac_addr_str
-        << " gw IP: " << obj.gw_ip_str
-        << std::endl;
-    return os;
 }
 
 void
@@ -79,20 +67,6 @@ device_feeder::spec_compare(const pds_device_spec_t *spec) const {
               << " Gateway IP : " << ipv4addr2str(info->spec.gateway_ip_addr)
               << std::endl;
 #endif
-
-sdk::sdk_ret_t
-device_feeder::info_compare(const pds_device_info_t *info) const {
-    if (::capri_mock_mode())
-        return sdk::SDK_RET_OK;
-
-    // todo: @amrita check if this works with agent
-    if (!this->spec_compare(&info->spec)) {
-        std::cout << "spec compare failed " << *this;
-        return sdk::SDK_RET_ERR;
-    }
-
-    return sdk::SDK_RET_OK;
-}
 
 //----------------------------------------------------------------------------
 // Misc routines
