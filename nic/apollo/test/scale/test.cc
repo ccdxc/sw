@@ -112,11 +112,11 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
         rtnum = 0;
         route_table.key.id = i;
         for (uint32_t j = 0; j < num_routes; j++) {
-            route_table.routes[j].prefix.len = 24;
             route_table.routes[j].prefix.addr.af = IP_AF_IPV4;
-            route_table.routes[j].prefix.addr.addr.v4_addr =
-                ((0xC << 28) | (rtnum++ << 8));
             if (apollo()) {
+                route_table.routes[j].prefix.len = 24;
+                route_table.routes[j].prefix.addr.addr.v4_addr =
+                        ((0xC << 28) | (rtnum++ << 8));
                 route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
                 route_table.routes[j].nh_ip.af = IP_AF_IPV4;
                 route_table.routes[j].nh_ip.addr.v4_addr =
@@ -127,6 +127,10 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     tep_offset += 3;
                 }
             } else if (artemis()) {
+                route_table.routes[j].prefix.len = TESTAPP_V4ROUTE_PREFIX_LEN;
+                route_table.routes[j].prefix.addr.addr.v4_addr =
+                                    TESTAPP_V4ROUTE_PREFIX_VAL(rtnum);
+                rtnum++;
                 route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
                 route_table.routes[j].nh = nh_id++;
                 if (nh_id > num_nh) {

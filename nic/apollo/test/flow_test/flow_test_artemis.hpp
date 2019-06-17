@@ -79,7 +79,7 @@ dump_flow_entry(ftlv6_entry_t *entry, ip_addr_t sip, ip_addr_t dip) {
     if (d_fp) {
         fprintf(d_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
                 "sport %u, dport %u, epoch %u, flow %u, ktype %u\n",
-                entry->vpc_id + 1, entry->proto, entry->session_index,
+                entry->vpc_id, entry->proto, entry->session_index,
                 ipaddr2str(&sip), ipaddr2str(&dip), entry->sport, entry->dport,
                 entry->epoch, entry->flow_role, entry->ktype);
         fflush(d_fp);
@@ -94,7 +94,7 @@ dump_flow_entry(ftlv4_entry_t *entry, ip_addr_t sip, ip_addr_t dip) {
     if (d_fp) {
         fprintf(d_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
                 "sport %u, dport %u, epoch %u, role %u\n",
-                entry->vpc_id + 1, entry->proto, entry->session_index,
+                entry->vpc_id, entry->proto, entry->session_index,
                 ipaddr2str(&sip), ipaddr2str(&dip), entry->sport, entry->dport,
                 entry->epoch, entry->flow_role);
         fflush(d_fp);
@@ -192,10 +192,8 @@ private:
     ftlv4_entry_t v4entry;
     vpc_ep_pair_t ep_pairs[MAX_EP_PAIRS_PER_VPC];
     cfg_params_t cfg_params;
-    uint32_t nexthop_idx;
     uint32_t nexthop_idx_start;
     uint32_t num_nexthop_idx_per_vpc;
-    uint32_t svc_tep_nexthop_idx;
     uint32_t svc_tep_nexthop_idx_start;
     uint32_t meter_idx;
     uint32_t num_meter_idx_per_vpc;
@@ -511,19 +509,18 @@ public:
         return;
     }
 
-    sdk_ret_t create_session_info(uint32_t vpc, ip_addr_t ip_addr) {
+    sdk_ret_t create_session_info(uint32_t vpc, ip_addr_t ip_addr,
+                                  uint32_t nexthop_idx, uint32_t inh_idx,
+                                  uint32_t svc_tep_nexthop_idx) {
         session_actiondata_t actiondata;
         p4pd_error_t p4pd_ret;
         uint32_t tableid = P4TBL_ID_SESSION;
         static uint32_t cur_vpc = 0;
-        static uint32_t inh_idx = 1;
 
         // reset meter_idx to corresponding start value for the VPC
         if (cur_vpc != vpc) {
             cur_vpc = vpc;
             meter_idx = (vpc - 1) * num_meter_idx_per_vpc + 1;
-            nexthop_idx = nexthop_idx_start +
-                                       (vpc - 1) * num_nexthop_idx_per_vpc;
         }
         memset(&actiondata, 0, sizeof(session_actiondata_t));
         actiondata.action_id = SESSION_SESSION_INFO_ID;
@@ -552,12 +549,7 @@ public:
             //     IPv6 DIPi is xlated to IPv4 (last 32 bits of received IPv6
             //     packet)
             //     vlan tag added from EGRESS_VNIC_INFO table
-            actiondata.action_u.session_session_info.nexthop_idx =
-                                                        svc_tep_nexthop_idx++;
-            if (svc_tep_nexthop_idx ==
-                    svc_tep_nexthop_idx_start + TESTAPP_MAX_SERVICE_TEP) {
-                svc_tep_nexthop_idx = svc_tep_nexthop_idx_start;
-            }
+            actiondata.action_u.session_session_info.nexthop_idx = svc_tep_nexthop_idx;
             sdk::lib::memrev(actiondata.action_u.session_session_info.tx_dst_ip,
                              ip_addr.addr.v6_addr.addr8, sizeof(ipv6_addr_t));
             actiondata.action_u.session_session_info.tx_rewrite_flags = 0x26;
@@ -582,10 +574,7 @@ public:
             //     sport is untouched
             //     dport is rewritten with xlated port from service mapping
             //     packet sent to vnic with appropriate vlan tag
-            actiondata.action_u.session_session_info.nexthop_idx = inh_idx++;
-            if (inh_idx > this->test_params->num_nh) {
-                inh_idx = 1;
-            }
+            actiondata.action_u.session_session_info.nexthop_idx = inh_idx;
             actiondata.action_u.session_session_info.tx_rewrite_flags = 0x45;
             actiondata.action_u.session_session_info.rx_rewrite_flags = 0x61;
 #if 0
@@ -630,10 +619,7 @@ public:
             //     No Vxlan encap is added on the way out
             //     Packet goes out with vnic' vlan (EGRESS_VNIC_INFO table)
             // NH indices in this case should be between 1-1022 (NH_TYPE_IP)
-            actiondata.action_u.session_session_info.nexthop_idx = inh_idx++;
-            if (inh_idx > this->test_params->num_nh) {
-                inh_idx = 1;
-            }
+            actiondata.action_u.session_session_info.nexthop_idx = inh_idx;
             actiondata.action_u.session_session_info.tx_rewrite_flags = 0x5;
             actiondata.action_u.session_session_info.rx_rewrite_flags = 0x21;
         } else if (vpc == TEST_APP_S2_INTERNET_IN_OUT_FLOATING_IP_VPC) {
@@ -660,22 +646,13 @@ public:
             //     No Vxlan encap is added on the way out
             //     Packet goes out with vnic' vlan (EGRESS_VNIC_INFO table)
             // NH indices in this case should be between 1-1022 (NH_TYPE_IP)
-            actiondata.action_u.session_session_info.nexthop_idx = inh_idx++;
-            if (inh_idx > this->test_params->num_nh) {
-                inh_idx = 1;
-            }
+            actiondata.action_u.session_session_info.nexthop_idx = inh_idx;
             // do DMACi rewrite and encap in the Tx direction
             actiondata.action_u.session_session_info.tx_rewrite_flags = 0x3;
             // do SMACi rewrite with VR MAC and go with CA-IP always
             actiondata.action_u.session_session_info.rx_rewrite_flags = 0x11;
         } else {
-            actiondata.action_u.session_session_info.nexthop_idx =
-                                            nexthop_idx++;
-            if (nexthop_idx ==
-                    (nexthop_idx_start + (vpc * num_nexthop_idx_per_vpc))) {
-                nexthop_idx = nexthop_idx_start +
-                                           (vpc - 1) * num_nexthop_idx_per_vpc;
-            }
+            actiondata.action_u.session_session_info.nexthop_idx = nexthop_idx;
             // do DMACi rewrite and encap in the Tx direction
             actiondata.action_u.session_session_info.tx_rewrite_flags = 0x21;
             // do SMACi rewrite with VR MAC and go with CA-IP always
@@ -706,7 +683,7 @@ public:
             v4entry.session_index = session_index;
             v4entry.epoch = 0xFF;
             // Common KEY fields
-            v4entry.vpc_id = vpc - 1;
+            v4entry.vpc_id = vpc;
             v4entry.proto = proto;
             // Create IFLOW
             v4entry.sport = flow_sport;
@@ -723,7 +700,7 @@ public:
             v6entry.epoch = 0xFF;
             // Common KEY fields
             v6entry.ktype = 2;
-            v6entry.vpc_id = vpc - 1;
+            v6entry.vpc_id = vpc;
             v6entry.proto = proto;
             v6entry.sport = flow_sport;
             v6entry.dport = flow_dport;
@@ -752,7 +729,7 @@ public:
             v4entry.epoch = 0xFF;
 
             // Common KEY fields
-            v4entry.vpc_id = vpc - 1;
+            v4entry.vpc_id = vpc;
             v4entry.proto = proto;
 
             // Create IFLOW
@@ -781,7 +758,7 @@ public:
 
             // Common KEY fields
             v6entry.ktype = 2;
-            v6entry.vpc_id = vpc - 1;
+            v6entry.vpc_id = vpc;
             v6entry.proto = proto;
 
             // create IFLOW
@@ -818,9 +795,15 @@ public:
         sdk_ret_t ret;
         ip_addr_t ip_addr;
         ip_addr_t rewrite_ip;
+        uint32_t nexthop_idx = nexthop_idx_start;
+        uint32_t inh_idx = 1;
+        uint32_t svc_tep_nexthop_idx = svc_tep_nexthop_idx_start;
+        int rtnum = -1;
 
         for (uint32_t vpc = 1; vpc <= MAX_VPCS; vpc++) {
             generate_ep_pairs(vpc, dual_stack);
+            nexthop_idx = nexthop_idx_start +
+                                       (vpc - 1) * num_nexthop_idx_per_vpc;
             for (i = 0; i < MAX_EP_PAIRS_PER_VPC ; i++) {
                 for (auto lp = cfg_params.sport_lo; lp <= cfg_params.sport_hi; lp++) {
                     for (auto rp = cfg_params.dport_lo; rp <= cfg_params.dport_hi; rp++) {
@@ -841,7 +824,10 @@ public:
                         // create V4 Flows
                         if (vpc == TEST_APP_S1_SVC_TUNNEL_IN_OUT) {
                             // VPC 60 is used for Scenario1-ST in/out traffic
-                            ip_addr.addr.v4_addr = (0xC << 28) | i;
+                            if (i % (0x1 << (32 - TESTAPP_V4ROUTE_PREFIX_LEN)) == 0) {
+                                rtnum++;
+                            }
+                            ip_addr.addr.v4_addr = TESTAPP_V4ROUTE_VAL(i);
 
                             // iflow v4 session
                             ret = create_flow(vpc, proto,
@@ -872,7 +858,10 @@ public:
                                               fwd_sport);
                         } else if (vpc == TEST_APP_S1_SLB_IN_OUT) {
                             // VPC 61 is used for Scenario1-SLB in/out traffic (DSR case)
-                            ip_addr.addr.v4_addr = (0xC << 28) | i;
+                            if (i % (0x1 << (32 - TESTAPP_V4ROUTE_PREFIX_LEN)) == 0) {
+                                rtnum++;
+                            }
+                            ip_addr.addr.v4_addr = TESTAPP_V4ROUTE_VAL(i);
                             ret = create_session(vpc, proto,
                                                  ep_pairs[i].v4_local.local_ip,
                                                  ip_addr,
@@ -885,7 +874,10 @@ public:
                         } else if (vpc == TEST_APP_S2_INTERNET_IN_OUT_VPC_VIP_VPC) {
                             // this VPC is for Internet IN/OUT with VIP & svc
                             // port IP flows
-                            ip_addr.addr.v4_addr = (0xC << 28) | i;
+                            if (i % (0x1 << (32 - TESTAPP_V4ROUTE_PREFIX_LEN)) == 0) {
+                                rtnum++;
+                            }
+                            ip_addr.addr.v4_addr = TESTAPP_V4ROUTE_VAL(i);
                             ret = create_session(vpc, proto,
                                                  ep_pairs[i].v4_local.local_ip,
                                                  ip_addr,
@@ -898,7 +890,10 @@ public:
                         } else if (vpc == TEST_APP_S2_INTERNET_IN_OUT_FLOATING_IP_VPC) {
                             // this VPC is for Internet IN/OUT with floating
                             // IP flows
-                            ip_addr.addr.v4_addr = (0xC << 28) | i;
+                            if (i % (0x1 << (32 - TESTAPP_V4ROUTE_PREFIX_LEN)) == 0) {
+                                rtnum++;
+                            }
+                            ip_addr.addr.v4_addr = TESTAPP_V4ROUTE_VAL(i);
                             ret = create_session(vpc, proto,
                                                  ep_pairs[i].v4_local.local_ip,
                                                  ip_addr,
@@ -920,7 +915,7 @@ public:
                             return ret;
                         }
                         // create V4 session
-                        ret = create_session_info(vpc, rewrite_ip);
+                        ret = create_session_info(vpc, rewrite_ip, nexthop_idx, inh_idx, svc_tep_nexthop_idx);
                         if (ret != SDK_RET_OK) {
                             return ret;
                         }
@@ -932,11 +927,14 @@ public:
                             if (vpc == TEST_APP_S2_INTERNET_IN_OUT_FLOATING_IP_VPC) {
                                 // this VPC is for Internet IN/OUT with
                                 // floating IP address
+                                if (i % (0x1 << (32 - TESTAPP_V4ROUTE_PREFIX_LEN)) == 0) {
+                                    rtnum++;
+                                }
                                 ip_addr = test_params->v6_route_pfx.addr;
                                 ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-2]
                                     = htonl(0xF1D0D1D0);
                                 ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
-                                    htonl((0xC << 28) | i);
+                                            htonl(TESTAPP_V4ROUTE_VAL(i));
                                 ret = create_session(vpc, proto,
                                                      ep_pairs[i].v6_local.local_ip,
                                                      ip_addr,
@@ -958,7 +956,7 @@ public:
                                 return ret;
                             }
                             // create V6 session
-                            ret = create_session_info(vpc, rewrite_ip);
+                            ret = create_session_info(vpc, rewrite_ip, nexthop_idx, inh_idx, svc_tep_nexthop_idx);
                             if (ret != SDK_RET_OK) {
                                 return ret;
                             }
@@ -970,6 +968,32 @@ public:
                             return SDK_RET_OK;
                         }
                     }
+                }
+                // update nexthop_idx only when dst changes
+                switch (vpc) {
+                    case TEST_APP_S1_SLB_IN_OUT:
+                    case TEST_APP_S2_INTERNET_IN_OUT_VPC_VIP_VPC:
+                    case TEST_APP_S2_INTERNET_IN_OUT_FLOATING_IP_VPC:
+                        inh_idx++;
+                        if (inh_idx > this->test_params->num_nh) {
+                            inh_idx = 1;
+                        }
+                        break;
+                    case TEST_APP_S1_SVC_TUNNEL_IN_OUT:
+                        svc_tep_nexthop_idx++;
+                        if (svc_tep_nexthop_idx ==
+                                svc_tep_nexthop_idx_start + TESTAPP_MAX_SERVICE_TEP) {
+                            svc_tep_nexthop_idx = svc_tep_nexthop_idx_start;
+                        }
+                        break;
+                    default:
+                        nexthop_idx++;
+                        if (nexthop_idx ==
+                                (nexthop_idx_start + (vpc * num_nexthop_idx_per_vpc))) {
+                            nexthop_idx = nexthop_idx_start +
+                                                       (vpc - 1) * num_nexthop_idx_per_vpc;
+                        }
+                        break;
                 }
             }
         }
@@ -1062,7 +1086,7 @@ public:
         num_nexthop_idx_per_vpc = num_remote_mappings * 2;
         num_meter_idx_per_vpc = (meter_scale/meter_pfx_per_rule) +
                                 (meter_scale % meter_pfx_per_rule);
-        svc_tep_nexthop_idx = svc_tep_nexthop_idx_start = num_nh + 1;
+        svc_tep_nexthop_idx_start = num_nh + 1;
     }
 
     void set_cfg_params(bool dual_stack, uint32_t num_tcp,

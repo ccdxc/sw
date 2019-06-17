@@ -30,6 +30,14 @@
 #define TEST_APP_S2_INTERNET_IN_OUT_VPC_VIP_VPC            63
 #define TEST_APP_S2_INTERNET_IN_OUT_FLOATING_IP_VPC        64
 
+#define TESTAPP_V4ROUTE_PREFIX_LEN                         28
+#define TESTAPP_V4ROUTE_PREFIX_VAL(rtnum) { \
+    ((0xC << TESTAPP_V4ROUTE_PREFIX_LEN) | (rtnum << (32 - TESTAPP_V4ROUTE_PREFIX_LEN))) \
+}
+#define TESTAPP_V4ROUTE_VAL(rtnum) { \
+    ((0xC << TESTAPP_V4ROUTE_PREFIX_LEN) | (uint32_t)rtnum) \
+}
+
 namespace pt = boost::property_tree;
 
 typedef struct test_params_s {
