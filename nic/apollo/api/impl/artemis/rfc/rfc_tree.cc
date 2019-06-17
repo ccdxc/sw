@@ -180,7 +180,7 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
                                      SACL_IPV6_SIP_TREE_MAX_CLASSES;
 
     // setup memory for DIP LPM tree
-    rfc_ctxt->sip_tree.type = RFC_TREE_TYPE_DIP;
+    rfc_ctxt->dip_tree.type = RFC_TREE_TYPE_DIP;
     rfc_ctxt->dip_tree.itable.nodes =
         (inode_t *)calloc(1, sizeof(inode_t) * num_nodes);
     if (rfc_ctxt->dip_tree.itable.nodes == NULL) {
@@ -192,7 +192,7 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
                                          SACL_IPV6_DIP_TREE_MAX_CLASSES;
 
     // setup memory for stag "tree"
-    rfc_ctxt->sip_tree.type = RFC_TREE_TYPE_STAG;
+    rfc_ctxt->stag_tree.type = RFC_TREE_TYPE_STAG;
     rfc_ctxt->stag_tree.itable.nodes =
         (inode_t *)calloc(1, sizeof(inode_t) * num_nodes);
     if (rfc_ctxt->stag_tree.itable.nodes == NULL) {
@@ -202,7 +202,7 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
     rfc_ctxt->stag_tree.rfc_table.max_classes = SACL_TAG_TREE_MAX_CLASSES;
 
     // setup memory for dtag "tree"
-    rfc_ctxt->sip_tree.type = RFC_TREE_TYPE_DTAG;
+    rfc_ctxt->dtag_tree.type = RFC_TREE_TYPE_DTAG;
     rfc_ctxt->dtag_tree.itable.nodes =
         (inode_t *)calloc(1, sizeof(inode_t) * num_nodes);
     if (rfc_ctxt->dtag_tree.itable.nodes == NULL) {
@@ -212,7 +212,7 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
     rfc_ctxt->dtag_tree.rfc_table.max_classes = SACL_TAG_TREE_MAX_CLASSES;
 
     // setup memory for sport LPM tree
-    rfc_ctxt->sip_tree.type = RFC_TREE_TYPE_PORT;
+    rfc_ctxt->port_tree.type = RFC_TREE_TYPE_PORT;
     rfc_ctxt->port_tree.itable.nodes =
         (inode_t *)calloc(1, sizeof(inode_t) * num_nodes);
     if (rfc_ctxt->port_tree.itable.nodes == NULL) {
@@ -223,7 +223,7 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
         SACL_SPORT_TREE_MAX_CLASSES;
 
     // setup memory for protocol + dport LPM tree
-    rfc_ctxt->sip_tree.type = RFC_TREE_TYPE_PROTO_PORT;
+    rfc_ctxt->proto_port_tree.type = RFC_TREE_TYPE_PROTO_PORT;
     rfc_ctxt->proto_port_tree.itable.nodes =
         (inode_t *)calloc(1, sizeof(inode_t) * num_nodes);
     if (rfc_ctxt->proto_port_tree.itable.nodes == NULL) {
