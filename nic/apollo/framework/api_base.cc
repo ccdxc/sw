@@ -183,6 +183,12 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
         }
         return nexthop_db()->find(&api_ctxt->api_params->nexthop_spec.key);
 
+    case OBJ_ID_TAG:
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return tag_db()->find(&api_ctxt->api_params->tag_key);
+        }
+        return tag_db()->find(&api_ctxt->api_params->tag_spec.key);
+
 #if 0
     case OBJ_ID_NEXTHOP_GROUP:
         if (api_ctxt->api_op == API_OP_DELETE) {

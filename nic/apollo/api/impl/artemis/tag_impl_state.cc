@@ -49,8 +49,10 @@ tag_impl_state::alloc(uint8_t af, uint32_t *lpm_block_idx) {
     }
     if (((*lpm_bmap) & 0x1) == 0x0) {
         *lpm_bmap |= 0x1;
+        *lpm_block_idx = 0x0;
     } else {
         *lpm_bmap |= 0x2;
+        *lpm_block_idx = 0x1;
     }
     return SDK_RET_OK;
 }
