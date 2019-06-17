@@ -799,14 +799,30 @@ public:
         uint32_t inh_idx = 1;
         uint32_t svc_tep_nexthop_idx = svc_tep_nexthop_idx_start;
         int rtnum = -1;
+        uint32_t dport_hi = cfg_params.dport_hi;
+        uint32_t sport_hi = cfg_params.sport_hi;
 
         for (uint32_t vpc = 1; vpc <= MAX_VPCS; vpc++) {
+            if (vpc > 24 && vpc < 59) {
+                continue;
+            }
             generate_ep_pairs(vpc, dual_stack);
             nexthop_idx = nexthop_idx_start +
                                        (vpc - 1) * num_nexthop_idx_per_vpc;
             for (i = 0; i < MAX_EP_PAIRS_PER_VPC ; i++) {
-                for (auto lp = cfg_params.sport_lo; lp <= cfg_params.sport_hi; lp++) {
-                    for (auto rp = cfg_params.dport_lo; rp <= cfg_params.dport_hi; rp++) {
+                switch (vpc) {
+                case TEST_APP_S1_SLB_IN_OUT:
+                case TEST_APP_S2_INTERNET_IN_OUT_VPC_VIP_VPC:
+                    dport_hi = cfg_params.dport_lo + (cfg_params.sport_hi - cfg_params.sport_lo + 1) * (cfg_params.dport_hi - cfg_params.dport_lo + 1) - 1;
+                    sport_hi = cfg_params.sport_lo;
+                    break;
+                default:
+                    dport_hi = cfg_params.dport_hi;
+                    sport_hi = cfg_params.sport_hi;
+                    break;
+                }
+                for (auto lp = cfg_params.sport_lo; lp <= sport_hi; lp++) {
+                    for (auto rp = cfg_params.dport_lo; rp <= dport_hi; rp++) {
                         local_port = lp;
                         remote_port = rp;
                         if (ep_pairs[i].valid == 0) {
@@ -824,9 +840,6 @@ public:
                         // create V4 Flows
                         if (vpc == TEST_APP_S1_SVC_TUNNEL_IN_OUT) {
                             // VPC 60 is used for Scenario1-ST in/out traffic
-                            if (i % (0x1 << (32 - TESTAPP_V4ROUTE_PREFIX_LEN)) == 0) {
-                                rtnum++;
-                            }
                             ip_addr.addr.v4_addr = TESTAPP_V4ROUTE_VAL(i);
 
                             // iflow v4 session
@@ -858,9 +871,6 @@ public:
                                               fwd_sport);
                         } else if (vpc == TEST_APP_S1_SLB_IN_OUT) {
                             // VPC 61 is used for Scenario1-SLB in/out traffic (DSR case)
-                            if (i % (0x1 << (32 - TESTAPP_V4ROUTE_PREFIX_LEN)) == 0) {
-                                rtnum++;
-                            }
                             ip_addr.addr.v4_addr = TESTAPP_V4ROUTE_VAL(i);
                             ret = create_session(vpc, proto,
                                                  ep_pairs[i].v4_local.local_ip,
@@ -874,9 +884,6 @@ public:
                         } else if (vpc == TEST_APP_S2_INTERNET_IN_OUT_VPC_VIP_VPC) {
                             // this VPC is for Internet IN/OUT with VIP & svc
                             // port IP flows
-                            if (i % (0x1 << (32 - TESTAPP_V4ROUTE_PREFIX_LEN)) == 0) {
-                                rtnum++;
-                            }
                             ip_addr.addr.v4_addr = TESTAPP_V4ROUTE_VAL(i);
                             ret = create_session(vpc, proto,
                                                  ep_pairs[i].v4_local.local_ip,
@@ -890,9 +897,6 @@ public:
                         } else if (vpc == TEST_APP_S2_INTERNET_IN_OUT_FLOATING_IP_VPC) {
                             // this VPC is for Internet IN/OUT with floating
                             // IP flows
-                            if (i % (0x1 << (32 - TESTAPP_V4ROUTE_PREFIX_LEN)) == 0) {
-                                rtnum++;
-                            }
                             ip_addr.addr.v4_addr = TESTAPP_V4ROUTE_VAL(i);
                             ret = create_session(vpc, proto,
                                                  ep_pairs[i].v4_local.local_ip,
@@ -927,9 +931,6 @@ public:
                             if (vpc == TEST_APP_S2_INTERNET_IN_OUT_FLOATING_IP_VPC) {
                                 // this VPC is for Internet IN/OUT with
                                 // floating IP address
-                                if (i % (0x1 << (32 - TESTAPP_V4ROUTE_PREFIX_LEN)) == 0) {
-                                    rtnum++;
-                                }
                                 ip_addr = test_params->v6_route_pfx.addr;
                                 ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-2]
                                     = htonl(0xF1D0D1D0);
@@ -974,9 +975,11 @@ public:
                     case TEST_APP_S1_SLB_IN_OUT:
                     case TEST_APP_S2_INTERNET_IN_OUT_VPC_VIP_VPC:
                     case TEST_APP_S2_INTERNET_IN_OUT_FLOATING_IP_VPC:
-                        inh_idx++;
-                        if (inh_idx > this->test_params->num_nh) {
-                            inh_idx = 1;
+                        if (i % (0x1 << (32 - TESTAPP_V4ROUTE_PREFIX_LEN)) == 0) {
+                            inh_idx++;
+                            if (inh_idx > this->test_params->num_nh) {
+                                inh_idx = 1;
+                            }
                         }
                         break;
                     case TEST_APP_S1_SVC_TUNNEL_IN_OUT:
