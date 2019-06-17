@@ -399,6 +399,19 @@ proto_port_spec_to_port_args (port_args_t *port_args,
     port_args->fec_type = proto_port_fec_type_to_sdk_fec_type(spec.fectype());
 }
 
+static inline pds::SecurityRuleAction
+pds_rule_action_to_proto_action (rule_action_data_t *action_data)
+{
+    switch (action_data->fw_action.action) {
+    case SECURITY_RULE_ACTION_ALLOW:
+        return pds::SECURITY_RULE_ACTION_ALLOW;
+    case SECURITY_RULE_ACTION_DENY:
+        return pds::SECURITY_RULE_ACTION_DENY;
+    default:
+        return pds::SECURITY_RULE_ACTION_NONE;
+    }
+}
+
 // Populate proto buf spec from policy API spec
 inline void
 policy_api_spec_to_proto_spec (pds::SecurityPolicySpec *proto_spec,
@@ -424,6 +437,7 @@ policy_api_spec_to_proto_spec (pds::SecurityPolicySpec *proto_spec,
         pds::SecurityRule *proto_rule = proto_spec->add_rules();
         rule_t *api_rule = &api_spec->rules[i];
         proto_rule->set_priority(api_rule->priority);
+        proto_rule->set_action(pds_rule_action_to_proto_action(&api_rule->action_data));
         if (api_rule->stateful) {
             proto_rule->set_stateful(true);
         }
@@ -1570,25 +1584,31 @@ pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
         return SDK_RET_INVALID_ARG;
     }
     if (proto_l3_match.has_srcprefix()) {
+        match->l3_match.src_match_type = IP_MATCH_PREFIX;
         ippfx_proto_spec_to_api_spec(&match->l3_match.src_ip_pfx,
                                      proto_l3_match.srcprefix());
     } else if (proto_l3_match.has_srcrange()) {
+        match->l3_match.src_match_type = IP_MATCH_RANGE;
         iprange_proto_spec_to_api_spec(&match->l3_match.src_ip_range,
                                        proto_l3_match.srcrange());
     } else if (proto_l3_match.srctag()) {
+        match->l3_match.src_match_type = IP_MATCH_TAG;
         match->l3_match.src_tag = proto_l3_match.srctag();
     } else {
         // since the memory is zero-ed out, this is 0.0.0.0/0 or 0::0/0
         // TODO: should we set the IP_AF_XXX ?
     }
     if (proto_l3_match.has_dstprefix()) {
+        match->l3_match.dst_match_type = IP_MATCH_PREFIX;
         ippfx_proto_spec_to_api_spec(&match->l3_match.dst_ip_pfx,
                                      proto_l3_match.dstprefix());
     } else if (proto_l3_match.has_dstrange()) {
+        match->l3_match.dst_match_type = IP_MATCH_RANGE;
         iprange_proto_spec_to_api_spec(&match->l3_match.dst_ip_range,
                                        proto_l3_match.dstrange());
     } else if (proto_l3_match.dsttag()) {
-        match->l3_match.src_tag = proto_l3_match.dsttag();
+        match->l3_match.dst_match_type = IP_MATCH_TAG;
+        match->l3_match.dst_tag = proto_l3_match.dsttag();
     } else {
         // since the memory is zero-ed out, this is 0.0.0.0/0 or 0::0/0
         // TODO: should we set the IP_AF_XXX ?
@@ -1662,6 +1682,19 @@ pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
     return SDK_RET_OK;
 }
 
+static inline fw_action_t
+pds_proto_action_to_rule_action (pds::SecurityRuleAction action)
+{
+    switch (action) {
+    case pds::SECURITY_RULE_ACTION_ALLOW:
+        return SECURITY_RULE_ACTION_ALLOW;
+    case pds::SECURITY_RULE_ACTION_DENY:
+        return SECURITY_RULE_ACTION_DENY;
+    default:
+        return SECURITY_RULE_ACTION_DENY;
+    }
+}
+
 // build policy API spec from protobuf spec
 static inline sdk_ret_t
 pds_policy_proto_to_api_spec (pds_policy_spec_t *api_spec,
@@ -1694,7 +1727,7 @@ pds_policy_proto_to_api_spec (pds_policy_spec_t *api_spec,
         api_spec->rules[i].priority = proto_rule.priority();
         api_spec->rules[i].stateful = proto_rule.stateful();
         api_spec->rules[i].action_data.fw_action.action =
-                                                 SECURITY_RULE_ACTION_ALLOW;
+                                      pds_proto_action_to_rule_action(proto_rule.action());
         ret = pds_policy_rule_match_proto_to_api_spec(api_spec->key.id,
                                                       i+ 1,
                                                       &api_spec->rules[i].match,
