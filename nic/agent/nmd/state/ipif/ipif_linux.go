@@ -59,18 +59,18 @@ func (c *IPClient) DoStaticConfig() (string, error) {
 		log.Errorf("Failed to assign ip address %v to interface %v. Err: %v", ipConfig.IPAddress, c.intf, err)
 		return "", err
 	}
-	//// Assign default gw TODO: Verify if the route added by AddrAdd is good enough
-	//if len(ipConfig.DefaultGW) != 0 {
-	//	defaultRoute := &netlink.Route{
-	//		LinkIndex: intf.Attrs().Index,
-	//		Gw:        net.ParseIP(ipConfig.DefaultGW),
-	//	}
-	//	err := netlink.RouteAdd(defaultRoute)
-	//	if err != nil {
-	//		log.Errorf("Failed to add default gw %v for the interface %v. Err: %v", ipConfig.DefaultGW, c.intf, err)
-	//		return "", err
-	//	}
-	//}
+	// Assign default gw TODO: Verify if the route added by AddrAdd is good enough
+	if len(ipConfig.DefaultGW) != 0 {
+		defaultRoute := &netlink.Route{
+			LinkIndex: c.intf.Attrs().Index,
+			Gw:        net.ParseIP(ipConfig.DefaultGW),
+		}
+		err := netlink.RouteAdd(defaultRoute)
+		if err != nil {
+			log.Errorf("Failed to add default gw %v for the interface %v. Err: %v", ipConfig.DefaultGW, c.intf, err)
+			return "", err
+		}
+	}
 
 	return addr.String(), nil
 }

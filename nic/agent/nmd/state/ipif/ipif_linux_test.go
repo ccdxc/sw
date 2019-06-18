@@ -39,7 +39,6 @@ const (
 var (
 	staticIPConfig = cluster.IPConfig{
 		IPAddress: "172.16.10.10/28",
-		DefaultGW: "172.16.10.1",
 	}
 	_, allocSubnet, _          = net.ParseCIDR(testSubnet)
 	veniceIPs                  = "42.42.42.42,84.84.84.84"
