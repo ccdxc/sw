@@ -267,6 +267,7 @@ struct test_testcase {
 	char name[TEST_MAX_NAME_LEN];
 	bool turbo;
 	uint64_t repeat;
+	uint32_t retry_timeout;
 	uint16_t batch_depth;
 	uint16_t batch_concurrency;
 	uint16_t sync_mode;

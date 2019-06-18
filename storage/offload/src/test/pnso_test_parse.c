@@ -920,6 +920,7 @@ FUNC_SET_INT(test_set_testcase_repeat, ((struct test_testcase *)parent)->repeat,
 FUNC_SET_INT(test_set_testcase_turbo, ((struct test_testcase *)parent)->turbo, 0, 1)
 FUNC_SET_INT(test_set_testcase_batch_depth, ((struct test_testcase *)parent)->batch_depth, 0, TEST_MAX_BATCH_DEPTH)
 FUNC_SET_INT(test_set_testcase_batch_concurrency, ((struct test_testcase *)parent)->batch_concurrency, 0, TEST_MAX_BATCH_CONCURRENCY)
+FUNC_SET_INT(test_set_testcase_retry_timeout, ((struct test_testcase *)parent)->retry_timeout, 0, UINT_MAX)
 FUNC_SET_PARAM(test_set_testcase_sync_mode, ((struct test_testcase *)parent)->sync_mode,
 	       g_sync_mode_map, 0, 0, SYNC_MODE_MAX-1)
 FUNC_SET_STRING(test_set_testcase_name, ((struct test_testcase *)parent)->name,
@@ -1817,6 +1818,7 @@ CHILD_NODE_DESC(tests_test, turbo,       NULL, test_set_testcase_turbo, NULL) \
 CHILD_NODE_DESC(tests_test, repeat,      NULL, test_set_testcase_repeat, NULL) \
 CHILD_NODE_DESC(tests_test, batch_depth, NULL, test_set_testcase_batch_depth, NULL) \
 CHILD_NODE_DESC(tests_test, batch_concurrency, NULL, test_set_testcase_batch_concurrency, NULL) \
+CHILD_NODE_DESC(tests_test, retry_timeout, NULL, test_set_testcase_retry_timeout, NULL) \
 CHILD_NODE_DESC(tests_test, svc_chains,  NULL, test_set_testcase_svc_chains, NULL) \
 CHILD_NODE_DESC(tests_test, validations, NULL, NULL, NULL) \
 \

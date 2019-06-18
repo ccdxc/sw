@@ -1344,10 +1344,10 @@ static pnso_error_t init_input_context(struct buffer_context *input,
 	return PNSO_OK;
 }
 
-static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
-					   const struct test_testcase *testcase,
-					   uint32_t batch_iter,
-					   uint32_t batch_count)
+static pnso_error_t setup_request(struct request_context *req_ctx,
+				  const struct test_testcase *testcase,
+				  uint32_t batch_iter,
+				  uint32_t batch_count)
 {
 	pnso_error_t err = PNSO_OK;
 	struct batch_context *batch_ctx = req_ctx->batch_ctx;
@@ -1461,13 +1461,23 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 	}
 	batch_ctx->stats.io_stats[0].bytes += pbuf_get_buffer_list_len(req_ctx->svc_req.sgl);
 
+	return err;
+}
+
+static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
+					   const struct test_testcase *testcase,
+					   uint32_t batch_iter,
+					   uint32_t batch_count)
+{
+	pnso_error_t err;
+
 	/* Execute */
+	req_ctx->req_rc = 0;
 	err = test_submit_request(req_ctx, testcase->sync_mode,
 				  (batch_count > 1),
 				  (batch_iter == batch_count - 1));
-	req_ctx->req_rc = err;
 	if (err)
-		batch_ctx->req_rc = err;
+		req_ctx->req_rc = err;
 
 	return err;
 }
@@ -1493,12 +1503,14 @@ static const char *testcase_stats_names[TESTCASE_STATS_COUNT] = {
 	"in_batch_count",
 	"in_byte_count",
 	"in_failures",
+	"in_retries",
 
 	"out_svc_count",
 	"out_req_count",
 	"out_batch_count",
 	"out_byte_count",
 	"out_failures",
+	"out_retries",
 };
 
 static uint64_t calculate_bytes_per_sec(uint64_t bytes, uint64_t ns)
@@ -1600,6 +1612,7 @@ static void aggregate_testcase_stats(struct testcase_stats *ts1,
 		ts1->io_stats[i].batches += ts2->io_stats[i].batches;
 		ts1->io_stats[i].bytes += ts2->io_stats[i].bytes;
 		ts1->io_stats[i].failures += ts2->io_stats[i].failures;
+		ts1->io_stats[i].retries += ts2->io_stats[i].retries;
 	}
 
 	/* calculate latency and throughput */
@@ -2178,27 +2191,19 @@ static void init_req_context(struct request_context *req_ctx,
 	req_ctx->vars[TEST_VAR_CHAIN] = svc_chain->node.idx;
 }
 
-static pnso_error_t run_testcase_batch(struct batch_context *batch_ctx)
+static pnso_error_t setup_batch(struct batch_context *batch_ctx)
 {
 	pnso_error_t err = PNSO_OK;
 	const struct test_svc_chain *svc_chain;
 	struct chain_context *chain_ctx;
 	struct request_context *req_ctx = NULL;
-	struct worker_context *worker_ctx = batch_get_worker_ctx(batch_ctx);
 	struct testcase_context *test_ctx = batch_ctx->test_ctx;
 	const struct test_testcase *testcase = test_ctx->testcase;
 	uint32_t i, chain_i, lb_idx;
 
-	PNSO_LOG_DEBUG("enter run_testcase_batch ...\n");
-
-	if (!worker_ctx) {
-		err = EINVAL;
-		goto error;
-	}
-
 	batch_ctx->vars[TEST_VAR_ID] = testcase->node.idx;
 
-	/* Run each request, alternating svc_chain */
+	/* init each request, alternating svc_chain */
 	lb_idx = batch_ctx->first_req_id % test_ctx->chain_lb_table_count;
 	for (i = 0; i < batch_ctx->req_count; i++, lb_idx++) {
 		/* get svc_chain */
@@ -2224,6 +2229,44 @@ static pnso_error_t run_testcase_batch(struct batch_context *batch_ctx)
 		init_req_context(req_ctx, batch_ctx, svc_chain,
 				 &chain_ctx->inputs[i % chain_ctx->input_count],
 				 batch_ctx->first_req_id + i);
+		err = setup_request(req_ctx, testcase, i, batch_ctx->req_count);
+		if (err != PNSO_OK) {
+			goto error;
+		}
+	}
+
+error:
+	return err;
+}
+
+static pnso_error_t run_testcase_batch(struct batch_context *batch_ctx)
+{
+	pnso_error_t err = PNSO_OK;
+	struct request_context *req_ctx = NULL;
+	struct worker_context *worker_ctx = batch_get_worker_ctx(batch_ctx);
+	struct testcase_context *test_ctx = batch_ctx->test_ctx;
+	const struct test_testcase *testcase = test_ctx->testcase;
+	uint32_t i;
+
+	PNSO_LOG_DEBUG("enter run_testcase_batch ...\n");
+
+	if (!worker_ctx) {
+		err = EINVAL;
+		goto error;
+	}
+
+	/* Setup run state */
+	if (!batch_ctx->initialized) {
+		err = setup_batch(batch_ctx);
+		if (err)
+			goto error;
+		batch_ctx->initialized = true;
+	}
+
+	/* Run each request */
+	batch_ctx->req_rc = PNSO_OK;
+	for (i = 0; i < batch_ctx->req_count; i++) {
+		req_ctx = batch_ctx->req_ctxs[i];
 		err = run_testcase_svc_chain(req_ctx, testcase,
 					     i, batch_ctx->req_count);
 		if (err != PNSO_OK) {
@@ -2252,6 +2295,20 @@ static pnso_error_t run_testcase_batch(struct batch_context *batch_ctx)
 	return PNSO_OK;
 
 error:
+	batch_ctx->req_rc = err;
+	if (err == EAGAIN) {
+		/* check whether we should retry */
+		if (testcase->retry_timeout &&
+		    (osal_get_clock_nsec() - batch_ctx->start_time) <=
+		    (testcase->retry_timeout * OSAL_NSEC_PER_MSEC)) {
+			/* retry */
+			goto done;
+		} else {
+			/* don't retry */
+			err = ETIMEDOUT;
+		}
+	}
+
 	/* Return the batch_ctx to the testcase thread, for stats aggregation */
 	batch_ctx->stats.io_stats[0].failures++;
 	batch_ctx->poll_fn = NULL; /* prevent polling on error */
@@ -2264,6 +2321,7 @@ error:
 			req_ctx ? &req_ctx->svc_res : NULL);
 	}
 
+done:
 	PNSO_LOG_DEBUG("... exit run_testcase_batch with err %d\n", err);
 
 	return err;
@@ -2355,6 +2413,7 @@ static void init_batch_context(struct batch_context *ctx,
 	OSAL_ASSERT(req_count && req_count <= ctx->max_req_count);
 	osal_atomic_set(&ctx->cb_count, 0);
 	ctx->cb_ctx.s.gen_id++;
+	ctx->initialized = false;
 	ctx->worker_id = work_ctx->worker_id;
 	ctx->batch_id = batch_id;
 	ctx->first_req_id = req_id;
@@ -2377,6 +2436,7 @@ static int worker_loop(void *param)
 {
 	struct worker_context *ctx = (struct worker_context *) param;
 	struct batch_context *batch_ctx;
+	struct batch_context *submit_batch_ctx = NULL;
 	int poll_err;
 	bool is_busy;
 	uint64_t cur_ts;
@@ -2395,6 +2455,7 @@ static int worker_loop(void *param)
 			poll_err = batch_ctx->poll_fn(batch_ctx->poll_ctx);
 			if (poll_err == EBUSY) {
 				/* Not ready yet, re-enqueue */
+				batch_ctx->stats.io_stats[1].retries++;
 				_worker_queue_enqueue(ctx->poll_q, batch_ctx);
 				batch_ctx = NULL;
 			} else if (poll_err == PNSO_OK) {
@@ -2411,10 +2472,14 @@ static int worker_loop(void *param)
 			}
 		}
 
-		/* Process next work item */
-		batch_ctx = worker_queue_dequeue_safe(ctx->submit_q);
-		if (batch_ctx) {
-#ifdef __KERNEL__
+		/* Process next work item, or retry previous */
+		if (!submit_batch_ctx) {
+			submit_batch_ctx = worker_queue_dequeue_safe(ctx->submit_q);
+		} else {
+			submit_batch_ctx->stats.io_stats[0].retries++;
+		}
+		if (submit_batch_ctx) {
+#if 0
 			int core_id = osal_get_coreid();
 
 			if (core_id != ctx->worker_thread.core_id) {
@@ -2425,8 +2490,9 @@ static int worker_loop(void *param)
 #endif
 			cur_ts = osal_get_clock_nsec();
 			ctx->last_active_ts = cur_ts;
-			run_testcase_batch(batch_ctx);
 			is_busy = true;
+			if (run_testcase_batch(submit_batch_ctx) != EAGAIN)
+				submit_batch_ctx = NULL; /* done */
 		}
 
 		/* Be a good citizen */

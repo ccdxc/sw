@@ -2474,7 +2474,7 @@ int
 sonic_get_seq_statusq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 		struct queue **ret_q_hint)
 {
-	int err = -EAGAIN;
+	int err = EAGAIN;
 	struct per_core_resource *pc_res;
 
 	pc_res = sonic_get_per_core_res(lif);

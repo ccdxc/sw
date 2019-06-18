@@ -158,6 +158,7 @@ struct testcase_io_stats {
 	uint64_t batches;
 	uint64_t bytes;
 	uint64_t failures;
+	uint64_t retries;
 };
 
 struct testcase_aggregate_stats {
@@ -199,6 +200,7 @@ union callback_context {
 struct batch_context {
 	const struct test_desc *desc;
 	struct testcase_context *test_ctx;
+	bool initialized;
 	uint64_t first_req_id;
 	uint32_t batch_id;
 	uint32_t worker_id;
