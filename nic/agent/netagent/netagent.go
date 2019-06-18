@@ -10,6 +10,7 @@ import (
 
 	"github.com/pensando/sw/nic/agent/tpa"
 	"github.com/pensando/sw/nic/agent/troubleshooting"
+	"github.com/pensando/sw/venice/utils/tsdb"
 
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
@@ -25,7 +26,6 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
-	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 /* Rough Architecture for Pensando Agent
@@ -71,6 +71,7 @@ type Agent struct {
 	Tmagent        *tpa.PolicyAgent
 	mountComplete  bool
 	TroubleShoot   *troubleshooting.Agent
+	StopTSDB       context.CancelFunc
 }
 
 // NewAgent creates an agent instance
@@ -214,19 +215,27 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		ag.NetworkAgent.NodeUUID = obj.SmartNicName
 		ag.mgmtIPAddr = obj.MgmtIP
 
-		// initialize netagent's tsdb client
-		opts := &tsdb.Opts{
-			ClientName:              globals.Netagent + ag.NetworkAgent.NodeUUID,
-			ResolverClient:          ag.ResolverClient,
-			Collector:               globals.Collector,
-			DBName:                  "default",
-			SendInterval:            time.Duration(30) * time.Second,
-			ConnectionRetryInterval: 100 * time.Millisecond,
-		}
-		tsdb.Init(context.Background(), opts)
 		if isNewResolver {
 			// Lock netagent state
 			ag.NetworkAgent.Lock()
+
+			// Stop previous tsdb instance
+			if ag.StopTSDB != nil {
+				ag.StopTSDB()
+			}
+
+			// initialize netagent's tsdb client
+			opts := &tsdb.Opts{
+				ClientName:              globals.Netagent + ag.NetworkAgent.NodeUUID,
+				ResolverClient:          ag.ResolverClient,
+				Collector:               globals.Collector,
+				DBName:                  "default",
+				SendInterval:            time.Duration(30) * time.Second,
+				ConnectionRetryInterval: 100 * time.Millisecond,
+			}
+			ctx, cancel := context.WithCancel(context.Background())
+			ag.StopTSDB = cancel
+			tsdb.Init(ctx, opts)
 
 			// Stop the existing npm client
 			if ag.NpmClient != nil {
