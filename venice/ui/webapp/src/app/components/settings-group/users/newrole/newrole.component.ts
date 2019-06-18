@@ -81,16 +81,11 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     if (this.isEditMode()) {
       this.newAuthRole = this.getRoleFromSelectedRole();
     } else {
-      this.newAuthRole = new AuthRole();
+      this.addRolloutReadPermission();  // VS-405 all users to be able to rollout
+      this.addEmptyPermission();
       this.newAuthRole.$formGroup.get(['meta', 'name']).setValidators([
         this.newAuthRole.$formGroup.get(['meta', 'name']).validator,
         this.isRolenameValid(this.veniceRoles)]);
-
-      const permissions = this.newAuthRole.$formGroup.get(['spec', 'permissions']) as FormArray;
-      if (permissions.length === 0) {
-        this.addRolloutReadPermission();  // VS-405 all users to be able to rollout
-        this.addEmptyPermission();
-      }
     }
   }
 
@@ -108,9 +103,13 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     };
   }
 
-  getPermissionActionItem(element: string): any {
+  getPermissionActionItem(element: any): any {
+    let value = element;
+    if (element.value) {    // VS- 465
+      value = element.value;
+    }
     const items = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint).filter(item => {
-      return (item.value === element);
+      return (item.value === value);
     });
     return items[0];
   }
@@ -130,7 +129,8 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
       // actions is like ["create" "update"], we want to change to [{label:value, value=create}, {label:update, value=update}]
       if (actions) {
         const actionsValues = [];
-        actions.forEach(element => {
+        actions.forEach( (element) => {
+
           const item = this.getPermissionActionItem(element);
           if (item) {
             actionsValues.push(item);
