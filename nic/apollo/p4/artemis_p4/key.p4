@@ -208,8 +208,13 @@ action process_ingress_recirc() {
 
 action init_config() {
     process_ingress_recirc();
-    subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,
-             offset_metadata.l2_1);
+    if (cps_blob.valid == TRUE) {
+        subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,
+                 (offset_metadata.l2_1 + 0x100));
+    } else {
+        subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,
+                 offset_metadata.l2_1);
+    }
     if (capri_intrinsic.tm_oq != TM_P4_RECIRC_QUEUE) {
         modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
     }

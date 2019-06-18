@@ -84,10 +84,7 @@ metadata doorbell_data_t    doorbell_data;
 // Flit 2 : iflow_parent_entry
 // Flit 3 : iflow_leaf_entry
 // Flit 4 : rflow_parent_entry
-
 // Flit 5 : rflow_leaf_entry
-@pragma dont_trim
-metadata txdma_to_arm_flow_t rflow_leaf_entry;
 
 // Flit 6 : session_info
 @pragma pa_align 512

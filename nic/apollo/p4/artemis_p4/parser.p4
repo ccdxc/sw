@@ -170,6 +170,7 @@ parser parse_egress_to_ingress {
 
 @pragma xgress ingress
 parser parse_txdma_to_ingress {
+    set_metadata(parser_metadata.cps_blob_len, 0xFF);
     extract(capri_txdma_intrinsic);
     return select(current(72, 4)) {
         0 : parse_txdma_cps;
@@ -179,7 +180,9 @@ parser parse_txdma_to_ingress {
 
 @pragma xgress ingress
 parser parse_txdma_cps {
-    set_metadata(parser_metadata.cps_blob_len, ARTEMIS_TXDMA_TO_P4I_HDR_SZ);
+    set_metadata(parser_metadata.cps_blob_len,
+                 (parser_metadata.cps_blob_len +
+                  (ARTEMIS_TXDMA_TO_P4I_HDR_SZ - 0xFF)));
     return parse_txdma_cps_blob;
 }
 
