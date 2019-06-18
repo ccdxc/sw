@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/events/recorder"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -494,6 +495,9 @@ func (nl *NodeList) HasNode(nodeUUID string) bool {
 
 // GetClusterState reads the current cluster state from kvstore
 func GetClusterState(cfg *ClusterConfig, clusterType string) (*TscaleCluster, error) {
+	var kvs kvstore.Interface
+	var err error
+
 	// connect to kvstore
 	config := store.Config{
 		Type:        cfg.MetastoreType,
@@ -501,21 +505,23 @@ func GetClusterState(cfg *ClusterConfig, clusterType string) (*TscaleCluster, er
 		Credentials: cfg.MetaStoreTLSConfig,
 		Codec:       runtime.NewJSONCodec(runtime.NewScheme()),
 	}
-	kvs, err := store.New(config)
-	if err != nil {
-		return nil, err
-	}
-	defer kvs.Close()
 
-	// read cluster state
-	var cluster TscaleCluster
-	err = kvs.Get(context.Background(), ClusterMetastoreURL+clusterType, &cluster)
-	if err != nil {
-		log.Errorf("Error reading cluster state. Err: %v", err)
-		return nil, err
+	for i := 0; i < cfg.MetaStoreRetry; i++ {
+		kvs, err = store.New(config)
+		if err == nil {
+			defer kvs.Close()
+			// read cluster state
+			var cluster TscaleCluster
+			err = kvs.Get(context.Background(), ClusterMetastoreURL+clusterType, &cluster)
+			if err == nil {
+				return &cluster, nil
+			}
+
+			log.Errorf("Error reading cluster state. Err: %v", err)
+		}
 	}
 
-	return &cluster, nil
+	return nil, err
 }
 
 // DestroyClusterState destroys the cluster state in kvstore

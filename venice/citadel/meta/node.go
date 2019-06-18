@@ -133,7 +133,7 @@ func (l *Node) runElection(ctx context.Context) {
 	log.Infof("Registering node: %+v at Path %s", node, kvstorePath)
 
 	// register the node
-	_, err = kvs.Lease(context.Background(), kvstorePath, &node, l.clusterCfg.NodeTTL)
+	leaseCh, err := kvs.Lease(context.Background(), kvstorePath, &node, l.clusterCfg.NodeTTL)
 	if err != nil && !kvstore.IsKeyExistsError(err) {
 		log.Errorf("Error registering node %s. Err: %v", l.nodeUUID, err)
 		return
@@ -152,6 +152,15 @@ func (l *Node) runElection(ctx context.Context) {
 		case <-ctx.Done():
 			log.Infof("%s Stopping election loop", l.nodeUUID)
 			return
+		case leaseEvt, ok := <-leaseCh:
+			if !ok {
+				leaseCh, err = kvs.Lease(context.Background(), kvstorePath, &node, l.clusterCfg.NodeTTL)
+				if err != nil && !kvstore.IsKeyExistsError(err) {
+					log.Errorf("Error registering node %s. Err: %v", l.nodeUUID, err)
+					return
+				}
+			}
+			log.Infof("Got lease event: %+v", leaseEvt)
 		case evt, ok := <-elec.EventChan():
 			if !ok {
 				log.Errorf("Error reading from event channel.")
