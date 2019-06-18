@@ -86,6 +86,12 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     this.LDAPObject.$formGroup.get(['base-dn']).setValidators(required);
     this.LDAPObject.$formGroup.get(['bind-password']).setValidators(required);
 
+    const attribute_mapping: AbstractControl = this.LDAPObject.$formGroup.get('attribute-mapping') as AbstractControl;
+    attribute_mapping.get('user-object-class').setValidators(required);
+    attribute_mapping.get('user').setValidators(required);
+    attribute_mapping.get('group-object-class').setValidators(required);
+    attribute_mapping.get('group').setValidators(required);
+
     const servers: FormArray = this.LDAPObject.$formGroup.get('servers') as FormArray;
     if (servers.length > 0) {
       const controls = servers.controls;

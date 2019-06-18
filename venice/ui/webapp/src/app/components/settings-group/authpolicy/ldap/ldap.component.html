@@ -166,10 +166,10 @@
               <span>* Base DN:</span>
             </div>
             <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-              <span>User Object Class:</span>
+              <span>* User Object Class:</span>
             </div>
             <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-              <span>Group Object Class:</span>
+              <span>* Group Object Class:</span>
             </div>
           </div>
           <!-- Field Values - edit mode -->
@@ -181,11 +181,11 @@
             <ng-container formGroupName="attribute-mapping">
               <div fxFlex="30px" fxLayout="row" class="ldap-value">
                 <input fxFlex="nogrow" class="ldap-input" formControlName="user-object-class"
-                       spellcheck="false" type="text" pInputText placeholder="">
+                       appErrorTooltip spellcheck="false" type="text" pInputText placeholder="">
               </div>
               <div fxFlex="30px" fxLayout="row" class="ldap-value">
                 <input fxFlex="nogrow" class="ldap-input" formControlName="group-object-class"
-                       spellcheck="false" type="text" pInputText placeholder="">
+                       appErrorTooltip spellcheck="false" type="text" pInputText placeholder="">
               </div>
             </ng-container>
           </div>
@@ -218,10 +218,10 @@
           <!-- Field Title -->
           <div fxFlex="nogrow" fxLayout="column">
             <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-              <span>User:</span>
+              <span>* User:</span>
             </div>
             <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-              <span>Group:</span>
+              <span>* Group:</span>
             </div>
             <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
               <span>Tenant:</span>
@@ -231,11 +231,11 @@
           <div fxFlex fxLayout="column" *ngIf="LDAPEditMode">
             <div fxFlex="30px" fxLayout="row" class="ldap-value">
               <input fxFlex="nogrow" class="ldap-input" formControlName="user" spellcheck="false"
-                     type="text" pInputText placeholder="">
+                     appErrorTooltip type="text" pInputText placeholder="">
             </div>
             <div fxFlex="30px" fxLayout="row" class="ldap-value">
               <input fxFlex="nogrow" class="ldap-input" formControlName="group" spellcheck="false"
-                     type="text" pInputText placeholder="">
+                     appErrorTooltip type="text" pInputText placeholder="">
             </div>
             <div fxFlex="30px" fxLayout="row" class="ldap-value">
               <input fxFlex="nogrow" class="ldap-input" formControlName="tenant" spellcheck="false"
@@ -351,7 +351,7 @@
           <!-- Field Title -->
           <div fxFlex="nogrow" fxLayout="column">
             <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-              <span>Server:Port</span>
+              <span>* Server:Port</span>
             </div>
             <!-- <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
                 <span>ServerName:</span>
