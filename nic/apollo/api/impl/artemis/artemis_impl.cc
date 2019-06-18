@@ -810,6 +810,11 @@ artemis_impl::table_init_(void) {
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_FLOW, addr);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_FLOW_OHASH, addr);
 
+    // program meter stats' region base address as table constant
+    addr = api::g_pds_state.mempartition()->start_addr("meter_stats");
+    SDK_ASSERT(addr != INVALID_MEM_ADDRESS);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_METER_STATS, addr);
+
     return SDK_RET_OK;
 }
 
