@@ -749,7 +749,7 @@ artemis_impl::nacl_init_(void) {
         // flow miss packet coming back from txdma -> CPU (but in SIM mode
         // we redirect it uplink for validation purposes)
         key.cps_blob_valid = 1;
-        mask.cps_blob_valid_mask = 1;
+        mask.cps_blob_valid_mask = 0xFF;
         data.action_id = NACL_NACL_REDIRECT_ID;
         data.nacl_redirect_action.pipe_id = PIPE_ARM;
         data.action_u.nacl_nacl_redirect.oport = TM_PORT_UPLINK_1;

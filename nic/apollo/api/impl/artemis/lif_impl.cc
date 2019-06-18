@@ -192,9 +192,9 @@ lif_impl::program_flow_miss_nacl(lif_info_t *lif_params) {
 
     // flow miss packet coming back from txdma -> CPU
     key.cps_blob_valid = 1;
-    mask.cps_blob_valid_mask = 1;
+    mask.cps_blob_valid_mask = 0xFF;
     data.action_id = NACL_NACL_REDIRECT_ID;
-    data.nacl_redirect_action.pipe_id = P4PLUS_APPTYPE_CPU;
+    data.nacl_redirect_action.pipe_id = PIPE_ARM;
     data.action_u.nacl_nacl_redirect.oport = TM_PORT_DMA;
     data.action_u.nacl_nacl_redirect.lif = key_;
     data.action_u.nacl_nacl_redirect.qtype = 0;
