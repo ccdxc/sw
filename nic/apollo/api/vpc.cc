@@ -84,6 +84,7 @@ vpc_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     case API_OP_CREATE:
         if (vpc_db()->vpc_idxr()->alloc((uint32_t *)&idx) !=
                 sdk::lib::indexer::SUCCESS) {
+            PDS_TRACE_ERR("Failed to allocate index for vpc idx %u", idx);
             return sdk::SDK_RET_NO_RESOURCE;
         }
         hw_id_ = idx & 0xFFFF;
@@ -122,7 +123,7 @@ vpc_entry::reprogram_config(api_op_t api_op) {
 sdk_ret_t
 vpc_entry::release_resources(void) {
     if (impl_) {
-        return impl_->release_resources(this);
+        impl_->release_resources(this);
     }
     if (hw_id_ != 0xFFFF) {
         vpc_db()->vpc_idxr()->free(hw_id_);
