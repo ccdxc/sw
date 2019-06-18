@@ -10,6 +10,8 @@ struct phv_                 p;
 %%
 
 iflow:
+    add             r1, 0, TXDMA_IFLOW_PARENT_FLIT * 512
+    phvwrp          r1, 0, 512, d.iflow_entry_d.flow
     phvwr           p.txdma_predicate_cps_path_en, FALSE
     phvwr.e         p.txdma_predicate_flow_enable, FALSE
     phvwr           p.capri_p4_intr_recirc, FALSE
