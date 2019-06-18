@@ -177,6 +177,7 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
                         v4_vip_pfx->addr.addr.v4_addr + ip_offset;
                     svc_mapping.key.svc_port = TEST_APP_VIP_PORT;
                     svc_mapping.vpc.id = i;
+                    // backend IP is one of the local IP mappings
                     svc_mapping.backend_ip.af = IP_AF_IPV4;
                     svc_mapping.backend_ip.addr.v4_addr =
                         (g_test_params.vpc_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
@@ -202,12 +203,17 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
                             g_test_params.v6_vpc_pfx.addr.addr.v6_addr;
                         CONVERT_TO_V4_MAPPED_V6_ADDRESS(svc_v6_mapping.backend_ip.addr.v6_addr,
                                                         svc_mapping.backend_ip.addr.v4_addr);
-                        // TODO: fix the provider to be IPv4, not v6
-                        svc_v6_mapping.backend_provider_ip.af = IP_AF_IPV6;
-                        svc_v6_mapping.backend_provider_ip.addr.v6_addr =
-                            v6_provider_pfx->addr.addr.v6_addr;
-                        CONVERT_TO_V4_MAPPED_V6_ADDRESS(svc_v6_mapping.backend_provider_ip.addr.v6_addr,
-                                                        svc_mapping.backend_provider_ip.addr.v4_addr);
+                        if (false && (i == TEST_APP_S1_SLB_IN_OUT)) {
+                            svc_v6_mapping.backend_provider_ip.af = IP_AF_IPV6;
+                            svc_v6_mapping.backend_provider_ip.addr.v6_addr =
+                                v6_provider_pfx->addr.addr.v6_addr;
+                            CONVERT_TO_V4_MAPPED_V6_ADDRESS(svc_v6_mapping.backend_provider_ip.addr.v6_addr,
+                                                            svc_mapping.backend_provider_ip.addr.v4_addr);
+                        } else {
+                            svc_v6_mapping.backend_provider_ip.af = IP_AF_IPV4;
+                            svc_v6_mapping.backend_provider_ip.addr.v4_addr =
+                                svc_mapping.backend_provider_ip.addr.v4_addr;
+                        }
                         rv = create_svc_mapping(&svc_v6_mapping);
                         SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                                                 "create v6 svc mapping failed, vpc %u, rv %u",
