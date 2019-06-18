@@ -4,6 +4,13 @@
 #include "ftl_includes.hpp"
 
 thread_local uint8_t FTL_MAKE_AFTYPE(hint_table)::nctx_ = 0;
+#define PDS_FLOW_HINT_POOL_COUNT_MAX    256
+#define PDS_FLOW_HINT_POOLS_MAX 8
+typedef struct ftl_flow_hint_id_thr_local_pool_s {
+    int16_t         pool_count;
+    uint32_t        hint_ids[PDS_FLOW_HINT_POOL_COUNT_MAX];
+} ftl_flow_hint_id_thr_local_pool_t;
+ftl_flow_hint_id_thr_local_pool_t FTL_MAKE_AFTYPE(thr_local_pools)[PDS_FLOW_HINT_POOLS_MAX];
 
 FTL_MAKE_AFTYPE(hint_table) *
 FTL_MAKE_AFTYPE(hint_table)::factory(sdk::table::properties_t *props) {
@@ -23,6 +30,10 @@ FTL_MAKE_AFTYPE(hint_table)::factory(sdk::table::properties_t *props) {
     if (ret != SDK_RET_OK) {
         table->~FTL_MAKE_AFTYPE(hint_table)();
         SDK_FREE(SDK_MEM_ALLOC_FTL_HINT_TABLE, mem);
+    }
+
+    for (auto i = 0; i < PDS_FLOW_HINT_POOLS_MAX; i++) {
+        FTL_MAKE_AFTYPE(thr_local_pools)[i].pool_count = -1;
     }
 
     return table;
@@ -71,10 +82,41 @@ FTL_MAKE_AFTYPE(hint_table)::ctxnew_(FTL_MAKE_AFTYPE(apictx) *src) {
 
 sdk_ret_t
 FTL_MAKE_AFTYPE(hint_table)::alloc_(FTL_MAKE_AFTYPE(apictx) *ctx) {
-    spin_lock_();
+
+    sdk_ret_t ret = SDK_RET_OK;
+    uint16_t refill_count;
     uint32_t hint = 0;
-    auto ret = indexer_.alloc(hint);
-    spin_unlock_();
+    auto tid = ctx->thread_id;
+
+    if (FTL_MAKE_AFTYPE(thr_local_pools)[tid].pool_count >= 0) {
+        hint = FTL_MAKE_AFTYPE(thr_local_pools)[tid].hint_ids[FTL_MAKE_AFTYPE(thr_local_pools)[tid].pool_count];
+        FTL_MAKE_AFTYPE(thr_local_pools)[tid].pool_count--;
+    }
+    else {
+        /* refill pool */
+        refill_count = PDS_FLOW_HINT_POOL_COUNT_MAX;
+        spin_lock_();
+        while (refill_count) {
+            FTL_MAKE_AFTYPE(thr_local_pools)[tid].pool_count++;
+            ret = indexer_.alloc(hint);
+            if (ret != SDK_RET_OK) {
+                FTL_MAKE_AFTYPE(thr_local_pools)[tid].pool_count--;
+                break;
+            }
+            FTL_MAKE_AFTYPE(thr_local_pools)[tid].hint_ids[FTL_MAKE_AFTYPE(thr_local_pools)[tid].pool_count] = hint;
+            refill_count--;
+        }
+        spin_unlock_();
+        if (FTL_MAKE_AFTYPE(thr_local_pools)[tid].pool_count >= 0) {
+            hint = FTL_MAKE_AFTYPE(thr_local_pools)[tid].hint_ids[FTL_MAKE_AFTYPE(thr_local_pools)[tid].pool_count];
+            FTL_MAKE_AFTYPE(thr_local_pools)[tid].pool_count--;
+            ret = SDK_RET_OK;
+        }
+        else {
+            ret = SDK_RET_NO_RESOURCE;
+        }
+    }
+
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -90,13 +132,9 @@ FTL_MAKE_AFTYPE(hint_table)::alloc_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 sdk_ret_t
 FTL_MAKE_AFTYPE(hint_table)::dealloc_(FTL_MAKE_AFTYPE(apictx) *ctx) {
     spin_lock_();
-    indexer_.free(ctx->hint);
+    indexer_.free(ctx->table_index);
     spin_unlock_();
-    FTL_TRACE_VERBOSE("HintTable: Freed index:%d", ctx->hint);
-
-    // Clear the hint and set write pending
-    HINT_SET_INVALID(ctx->hint);
-    ctx->write_pending = true;
+    FTL_TRACE_VERBOSE("HintTable: Freed index:%d", ctx->table_index);
     return SDK_RET_OK;
 }
 
@@ -195,7 +233,7 @@ FTL_MAKE_AFTYPE(hint_table)::tail_(FTL_MAKE_AFTYPE(apictx) *ctx,
         // tail context after the processing is done.
     } else if (ret == SDK_RET_ENTRY_NOT_FOUND) {
         // No valid hint in this bucket, this itself is the tail
-        *retctx = tctx;
+        *retctx = ctx;
         ret = SDK_RET_OK;
     } else {
         *retctx = NULL;
@@ -243,6 +281,8 @@ FTL_MAKE_AFTYPE(hint_table)::defragment_(FTL_MAKE_AFTYPE(apictx) *ectx) {
 
     ret = ectx->bucket->defragment_(ectx, tctx);
     SDK_ASSERT(ret == SDK_RET_OK);
+
+    dealloc_(tctx);
 
     SDK_ASSERT(tctx);
     return SDK_RET_OK;
@@ -301,4 +341,38 @@ __label__ done;
     SDK_ASSERT(*match_ctx != hctx);
 done:
     return ret;
+}
+
+//---------------------------------------------------------------------------
+// ftl_hint_table iterate_: Iterate entries from hint table
+//---------------------------------------------------------------------------
+sdk_ret_t
+FTL_MAKE_AFTYPE(hint_table)::iterate_(FTL_MAKE_AFTYPE(apictx) *ctx, bool force_hwread) {
+    // Initialize the context
+    auto hctx = ctxnew_(ctx);
+    auto ret = FTL_MAKE_AFTYPE(base_table)::iterate_(hctx, force_hwread);
+    FTL_RET_CHECK_AND_GOTO(ret, done, "hint table iterate r:%d", ret);
+done:
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+FTL_MAKE_AFTYPE(hint_table)::clear_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+    sdk_ret_t ret = SDK_RET_OK;
+
+    if (ctx->clear_global_state) {
+        ret = FTL_MAKE_AFTYPE(base_table)::clear_(ctx);
+        FTL_RET_CHECK_AND_GOTO(ret, done, "hint table clear r:%d", ret);
+        memclr(ctx->props->stable_base_mem_va,
+                           ctx->props->stable_base_mem_pa,
+                           ctx->props->stable_size);
+        indexer_.clear(); 
+
+        for (auto i = 0; i < PDS_FLOW_HINT_POOLS_MAX; i++) {
+            FTL_MAKE_AFTYPE(thr_local_pools)[i].pool_count = -1;
+            memset(FTL_MAKE_AFTYPE(thr_local_pools)[i].hint_ids, 0, sizeof(FTL_MAKE_AFTYPE(thr_local_pools)[i].hint_ids));
+        }
+    }   
+done:
+    return SDK_RET_OK;
 }

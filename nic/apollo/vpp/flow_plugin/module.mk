@@ -2,10 +2,10 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = flow_plugin.so
-MODULE_PIPELINE = none
+MODULE_PIPELINE = apollo artemis
 MODULE_ARCH     = aarch64
 #MODULE_PREREQS  = vpp_build.export
-MODULE_SOLIBS   = ftl ftlv4 logger sdkpal sdkcapri                          \
+MODULE_SOLIBS   = ftlv6 ftlv4 logger sdkpal sdkcapri                        \
                   sdkp4 sdkp4utils sdkasicpd bm_allocator                   \
                   ${NIC_SDK_SOLIBS} ${NIC_${PIPELINE}_P4PD_SOLIBS}          \
                   ${NIC_SDK_SOLIBS} ${NIC_HAL_PD_SOLIBS_${ARCH}}

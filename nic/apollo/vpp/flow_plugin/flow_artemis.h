@@ -2,10 +2,11 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 
-#ifndef __VPP_FLOW_PLUGIN_FLOW_APOLLO_H__
-#define __VPP_FLOW_PLUGIN_FLOW_APOLLO_H__
+#ifndef __VPP_FLOW_PLUGIN_FLOW_ARTEMIS_H__
+#define __VPP_FLOW_PLUGIN_FLOW_ARTEMIS_H__
 
-#include <gen/p4gen/apollo/include/p4pd.h>
+#include <gen/p4gen/artemis/include/p4pd.h>
+#include <stddef.h>
 
 #if 0
 always_inline void
@@ -21,14 +22,22 @@ always_inline void
 pds_session_prog_x2 (vlib_buffer_t **b, u32 session_id0,
                      u32 session_id1, u16 *next, u32 *counter)
 {
-    return;
+    void *ses_info0 = vlib_buffer_get_current(b[0]);
+    void *ses_info1 = vlib_buffer_get_current(b[1]);
+
+    session_insert(session_id0, ses_info0);
+    session_insert(session_id1, ses_info1);
+    next[0] = next[1] = SESSION_PROG_NEXT_FWD_FLOW;
 }
 
 always_inline void
 pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
                      u16 *next, u32 *counter)
 {
-    return;
+    void *ses_info = vlib_buffer_get_current(b);
+
+    session_insert(session_id, ses_info);
+    *next = SESSION_PROG_NEXT_FWD_FLOW;
 }
 
 always_inline void
@@ -43,8 +52,9 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
     u32                 *ip4_local0, *ip4_remote0;
 
     *size = *size + 2;
-    *offset = -(APOLLO_PREDICATE_HDR_SZ +
-               (vnet_buffer(p0)->l3_hdr_offset - vnet_buffer(p0)->l2_hdr_offset));
+    *offset = -(ARTEMIS_P4_TO_ARM_HDR_SZ - offsetof(p4_rx_cpu_hdr_t, ses_info) +
+                   (vnet_buffer(p0)->l3_hdr_offset - vnet_buffer(p0)->l2_hdr_offset));
+    vnet_buffer(p0)->pds_data.ses_id = session_id;
 
     if (is_ip4) {
         ip4_header_t *ip40;
@@ -64,8 +74,8 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
             clib_net_to_host_u32(ip40->dst_address.as_u32);
         local_params0->entry4.proto =
             remote_params0->entry4.proto = ip40->protocol;
-        local_params0->entry4.local_vnic_tag =
-                remote_params0->entry4.local_vnic_tag =
+        local_params0->entry4.vpc_id =
+                remote_params0->entry4.vpc_id =
                 vnet_buffer (p0)->sw_if_index[VLIB_TX];
 
         if (PREDICT_TRUE(((ip40->protocol == IP_PROTOCOL_TCP)
@@ -104,8 +114,8 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                      ip60->dst_address.as_u8, sizeof(ip6_address_t));
         local_params0->entry6.proto =
                      remote_params0->entry6.proto = ip60->protocol;
-        local_params0->entry6.local_vnic_tag =
-                remote_params0->entry6.local_vnic_tag =
+        local_params0->entry6.vpc_id =
+                remote_params0->entry6.vpc_id =
                 vnet_buffer (p0)->sw_if_index[VLIB_TX];
 
         if (PREDICT_TRUE(((ip60->protocol == IP_PROTOCOL_TCP)
@@ -145,7 +155,7 @@ pds_flow_program_hw_ip4 (pds_flow_params_t *key,
         if (PREDICT_TRUE(key[i].entry4.session_index > 0) &&
                 PREDICT_TRUE(0 == ftlv4_insert(table, &key[i].entry4, key[i].hash))) {
             counter[FLOW_PROG_COUNTER_FLOW_SUCCESS]++;
-            next[i/2] = FLOW_PROG_NEXT_FWD_FLOW;
+            next[i/2] = FLOW_PROG_NEXT_SESSION_PROG;
         } else {
             counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
             next[i/2] = FLOW_PROG_NEXT_DROP;
@@ -186,7 +196,7 @@ pds_flow_program_hw_ip6 (pds_flow_params_t *key,
         if (PREDICT_TRUE(key[i].entry6.session_index > 0) &&
                 PREDICT_TRUE(0 == ftlv6_insert(table, &key[i].entry6, key[i].hash))) {
             counter[FLOW_PROG_COUNTER_FLOW_SUCCESS]++;
-            next[i/2] = FLOW_PROG_NEXT_FWD_FLOW;
+            next[i/2] = FLOW_PROG_NEXT_SESSION_PROG;
         } else {
             counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
             next[i/2] = FLOW_PROG_NEXT_DROP;
@@ -224,10 +234,10 @@ pds_flow4_key2str (void *key)
 
     inet_ntop(AF_INET, k->key_metadata_src, srcstr, INET_ADDRSTRLEN);
     inet_ntop(AF_INET, k->key_metadata_dst, dststr, INET_ADDRSTRLEN);
-    sprintf(str, "Src:%s Dst:%s Dport:%u Sport:%u Proto:%u VNIC:%u",
+    sprintf(str, "Src:%s Dst:%s Dport:%u Sport:%u Proto:%u VPC:%u",
             srcstr, dststr,
             k->key_metadata_dport, k->key_metadata_sport,
-            k->key_metadata_proto, k->vnic_metadata_local_vnic_tag);
+            k->key_metadata_proto, k->vnic_metadata_vpc_id);
     return str;
 }
 
@@ -241,10 +251,10 @@ pds_flow6_key2str (void *key)
 
     inet_ntop(AF_INET6, k->key_metadata_src, srcstr, INET6_ADDRSTRLEN);
     inet_ntop(AF_INET6, k->key_metadata_dst, dststr, INET6_ADDRSTRLEN);
-    sprintf(str, "Src:%s Dst:%s Dport:%u Sport:%u Proto:%u VNIC:%u",
+    sprintf(str, "Src:%s Dst:%s Dport:%u Sport:%u Proto:%u VPC:%u",
             srcstr, dststr,
             k->key_metadata_dport, k->key_metadata_sport,
-            k->key_metadata_proto, k->vnic_metadata_local_vnic_tag);
+            k->key_metadata_proto, k->vnic_metadata_vpc_id);
     return str;
 }
 
@@ -257,4 +267,4 @@ pds_flow_appdata2str (void *appdata)
             d->session_index, d->flow_role);
     return str;
 }
-#endif    // __VPP_FLOW_PLUGIN_FLOW_APOLLO_H__
+#endif    // __VPP_FLOW_PLUGIN_FLOW_ARTEMIS_H__

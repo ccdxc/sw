@@ -4,6 +4,7 @@
 #ifndef __FTL_STRUCTS_HPP__
 #define __FTL_STRUCTS_HPP__
 
+#include <arpa/inet.h>
 #ifdef APOLLO
 #include "ftlv6_structs_apollo.hpp"
 #include "ftlv4_structs_apollo.hpp"

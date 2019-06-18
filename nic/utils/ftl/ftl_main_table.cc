@@ -229,12 +229,32 @@ done:
 // FTL_MAKE_AFTYPE(main_table) iterate_: Iterate entries from main table
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_MAKE_AFTYPE(main_table)::iterate_(FTL_MAKE_AFTYPE(apictx) *ctx) {
-    auto ret = FTL_MAKE_AFTYPE(base_table)::iterate_(ctx);
+FTL_MAKE_AFTYPE(main_table)::iterate_(FTL_MAKE_AFTYPE(apictx) *ctx, bool force_hwread) {
+    auto ret = FTL_MAKE_AFTYPE(base_table)::iterate_(ctx, force_hwread);
     FTL_RET_CHECK_AND_GOTO(ret, done, "main table iterate r:%d", ret);
 
-    ret = hint_table_->iterate_(ctx);
+    ret = hint_table_->iterate_(ctx, force_hwread);
     FTL_RET_CHECK_AND_GOTO(ret, done, "hint table iterate r:%d", ret);
+done:
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+FTL_MAKE_AFTYPE(main_table)::clear_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+    sdk_ret_t ret = SDK_RET_OK;
+
+    if (ctx->clear_global_state) {
+        ret = FTL_MAKE_AFTYPE(base_table)::clear_(ctx);
+        FTL_RET_CHECK_AND_GOTO(ret, done, "main table clear r:%d", ret);
+
+        memclr(ctx->props->ptable_base_mem_va,
+               ctx->props->ptable_base_mem_pa,
+               ctx->props->ptable_size);
+    }
+
+    ret = hint_table_->clear_(ctx);
+    FTL_RET_CHECK_AND_GOTO(ret, done, "hint table iterate r:%d", ret);
+
 done:
     return SDK_RET_OK;
 }

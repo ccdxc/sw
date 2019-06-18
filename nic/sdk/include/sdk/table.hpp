@@ -16,6 +16,7 @@
         (((_s)*8) <= 512) ? (_s) : (((_s)%64) ? ((_s)+(64-((_s)%64))) : (_s))
 
 #define SDK_TABLE_HANDLE_INVALID    0
+#define SDK_TABLE_MAX_RECIRC        8
 
 using namespace std;
 
@@ -101,6 +102,7 @@ typedef enum sdk_table_api_op_ {
     SDK_TABLE_API_RESERVE,
     SDK_TABLE_API_RELEASE,
     SDK_TABLE_API_ITERATE,
+    SDK_TABLE_API_CLEAR,
 } sdk_table_api_op_t;
 
 #define SDK_TABLE_API_OP_IS_CRUD(_op) \
@@ -143,6 +145,7 @@ typedef struct sdk_table_factory_params_ {
     //table_health_state_t health_state_; // health state
     // Health monitoring callback
     //table_health_monitor_func_t health_monitor_func;
+    uint32_t thread_id;
 } sdk_table_factory_params_t;
 
 typedef struct sdk_table_api_params_ {
@@ -179,6 +182,7 @@ typedef struct sdk_table_api_stats_ {
     uint32_t insert;
     uint32_t insert_duplicate;
     uint32_t insert_fail;
+    uint32_t insert_recirc_fail;
     uint32_t remove;
     uint32_t remove_not_found;
     uint32_t remove_fail;
@@ -195,6 +199,12 @@ typedef struct sdk_table_api_stats_ {
 typedef struct sdk_table_stats_ {
     uint32_t entries;
     uint32_t collisions;
+    uint32_t insert;
+    uint32_t remove;
+    uint32_t read;
+    uint32_t write;
+    uint32_t insert_lvl[SDK_TABLE_MAX_RECIRC];
+    uint32_t remove_lvl[SDK_TABLE_MAX_RECIRC];
 } sdk_table_stats_t;
 
 typedef struct properties_ {

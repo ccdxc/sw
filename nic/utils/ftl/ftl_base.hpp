@@ -19,6 +19,7 @@ private:
     apistats api_stats_;
     tablestats tstats_;
     FTL_MAKE_AFTYPE(apictx) apictx_[FTL_MAX_API_CONTEXTS + 1];
+    uint32_t thread_id_;
 
 private:
     sdk_ret_t init_(sdk_table_factory_params_t *params);
@@ -40,8 +41,12 @@ public:
     sdk_ret_t remove(sdk_table_api_params_t *params);
     sdk_ret_t get(sdk_table_api_params_t *params);
     sdk_ret_t stats_get(sdk_table_api_stats_t *api_stats,
-                        sdk_table_stats_t *table_stats);
-    sdk_ret_t iterate(sdk_table_api_params_t *params);
+                        sdk_table_stats_t *table_stats,
+                        bool force_hwread=FALSE);
+    sdk_ret_t iterate(sdk_table_api_params_t *params, bool force_hwread=FALSE);
+    sdk_ret_t clear(bool clear_global_state, bool clear_thread_local_state);
+    void stats_dump(void);
+    int hwentries_dump(char *fname);
 };
 
 }   // namespace table

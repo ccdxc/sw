@@ -7,5 +7,6 @@
 #undef FTL_ADDRESS_PREFIX
 #define FTL_ADDRESS_PREFIX ftlv4
 #include "ftl_base.hpp"
+#undef FTL_ADDRESS_PREFIX
 
 #endif // __FTLV4_HPP__

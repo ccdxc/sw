@@ -32,6 +32,7 @@ struct __attribute__((__packed__)) ftlv6_entry_t {
     uint32_t session_index : 23;
     uint32_t epoch : 8;
 
+#ifdef __cplusplus
 public:
     void tostr(char *buff, uint32_t len) {
         snprintf(buff, len,
@@ -52,6 +53,15 @@ public:
                  dst[12], dst[13], dst[14], dst[15],
                  sport, dport,
                  flow_role, session_index, epoch, entry_valid);
+    }
+
+    void tofile(FILE *fp, int count) {
+        char srcstr[INET6_ADDRSTRLEN], dststr[INET6_ADDRSTRLEN];
+        inet_ntop(AF_INET6, src, srcstr, INET6_ADDRSTRLEN);
+        inet_ntop(AF_INET6, dst, dststr, INET6_ADDRSTRLEN);
+        fprintf(fp, "%8d\t%16s\t%16s\t%5u\t%5u\t%3u\t%4u\n", count,
+                srcstr, dststr, sport, dport,
+                proto, vpc_id);
     }
 
     void clear_hints() {
@@ -199,4 +209,5 @@ public:
         }
         return 0;
     }
+#endif
 };

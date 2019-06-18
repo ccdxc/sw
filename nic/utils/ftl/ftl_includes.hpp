@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <arpa/inet.h>
 
 #include "include/sdk/base.hpp"
 #include "include/sdk/lock.hpp"
@@ -15,9 +16,14 @@
 #include "lib/p4/p4_api.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
+#include "nic/sdk/platform/pal/include/pal_mem.h"
 #include "nic/sdk/include/sdk/platform.hpp"
 #include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/lib/utils/time_profile.hpp"
+
+#ifdef USE_ARM64_SIMD
+#include <arm_neon.h>
+#endif
 
 #ifndef __FTL_INCLUDES_HPP__
 #define __FTL_INCLUDES_HPP__

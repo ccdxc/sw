@@ -12,26 +12,50 @@ extern "C" {
 
 #include <nic/utils/ftl/ftl_structs.hpp>
 
-typedef struct ftl ftl;
-typedef struct ftl_entry_s ftentry_t;
+typedef struct ftlv4 ftlv4;
+typedef struct ftlv6 ftlv6;
+typedef struct ftlv4_entry_t ftlv4_entry_t;
+typedef struct ftlv6_entry_t ftlv6_entry_t;
 
 // Prototypes
 
 int initialize_pds(void);
 
-ftl* ftl_create(uint32_t table_id,
-                uint32_t num_hints,
-                uint32_t max_recircs,
-                void *key2str,
-                void *appdata2str);
+void session_insert(uint32_t ses_id, void *ses_info);
 
-int ftl_insert(ftl *obj, ftentry_t *entry, uint32_t hash);
+ftlv4 * ftlv4_create(void *key2str,
+                     void *appdata2str,
+                     uint32_t thread_id);
 
-int ftl_remove(ftl *obj, ftentry_t *entry, uint32_t hash);
+int ftlv4_insert(ftlv4 *obj, ftlv4_entry_t *entry, uint32_t hash);
 
-void ftl_delete(ftl *obj);
+int ftlv4_remove(ftlv4 *obj, ftlv4_entry_t *entry, uint32_t hash);
 
-void ftl_dump_stats(ftl *obj, char *buf, int max_len);
+void ftlv4_delete(ftlv4 *obj);
+
+int ftlv4_dump_hw_entries(ftlv4 *obj, char *logfile);
+
+void ftlv4_dump_stats(ftlv4 *obj, char *buf, int max_len, bool force_hwread);
+
+int ftlv4_clear(ftlv4 *obj, bool clear_global_state,
+                bool clear_thread_local_state);
+
+ftlv6 * ftlv6_create(void *key2str,
+                     void *appdata2str,
+                     uint32_t thread_id);
+
+int ftlv6_insert(ftlv6 *obj, ftlv6_entry_t *entry, uint32_t hash);
+
+int ftlv6_remove(ftlv6 *obj, ftlv6_entry_t *entry, uint32_t hash);
+
+void ftlv6_delete(ftlv6 *obj);
+
+int ftlv6_dump_hw_entries(ftlv6 *obj, char *logfile);
+
+void ftlv6_dump_stats(ftlv6 *obj, char *buf, int max_len, bool force_hwread);
+
+int ftlv6_clear(ftlv6 *obj, bool clear_global_state,
+                bool clear_thread_local_state);
 
 #ifdef __cplusplus
 }

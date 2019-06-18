@@ -7,6 +7,7 @@ namespace FTL_MAKE_AFTYPE(internal) {
 
 sdk_ret_t memrd(FTL_MAKE_AFTYPE(apictx) *ctx);
 sdk_ret_t memwr(FTL_MAKE_AFTYPE(apictx) *ctx);
+sdk_ret_t memclr(uint64_t memva, uint64_t mempa, uint32_t num_entries);
 
 #ifdef USE_ARM64_SIMD
 #define SWAP_PAIR_8B(input, offset_a, offset_b, scratch_a, scratch_b)       \

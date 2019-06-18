@@ -15,14 +15,15 @@ namespace ftlint {
 class indexer {
 private:
     uint64_t *pool;
+    uint32_t pool_size;
     uint32_t num_words;
     uint32_t last_alloc;
     uint32_t last_free;
 
 public:
     sdk_ret_t init(uint32_t num_entries) {
-        pool = (uint64_t *)SDK_CALLOC(SDK_MEM_ALLOC_INDEX_POOL,
-                                      num_entries / 8);
+        pool_size = num_entries / 8;
+        pool = (uint64_t *)SDK_CALLOC(SDK_MEM_ALLOC_INDEX_POOL, pool_size);
         if (pool == NULL) {
             return SDK_RET_OOM;
         }
@@ -58,6 +59,15 @@ public:
         auto i = index % WORDSIZE;
         pool[w] &= ~((uint64_t)1<<(i-1));
         last_free = index;
+    }
+
+    void clear() {
+        uint32_t dummy = 0;
+        memset(pool, 0, pool_size);
+        last_alloc = 0;
+        last_free = 0;
+        // Index 0 is reserved
+        SDK_ASSERT(alloc(dummy) == SDK_RET_OK);
     }
 };
 

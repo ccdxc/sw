@@ -54,6 +54,21 @@ memwr(FTL_MAKE_AFTYPE(apictx) *ctx) {
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+memclr(uint64_t memva, uint64_t mempa, uint32_t num_entries) {
+    memset((void*)memva, 0, sizeof(FTL_MAKE_AFTYPE(entry_t))*num_entries);
+
+    PAL_barrier();
+
+    for (uint32_t i = 0; i < num_entries; i++) {
+        capri_hbm_table_entry_cache_invalidate(P4_TBL_CACHE_INGRESS,
+                                               (i * sizeof(FTL_MAKE_AFTYPE(entry_t))),
+                                               1, mempa);
+    }
+
+    return SDK_RET_OK;
+}
+
 } // namespace FTL_MAKE_AFTYPE(internal)
 } // namespace table
 } // namespace sdk

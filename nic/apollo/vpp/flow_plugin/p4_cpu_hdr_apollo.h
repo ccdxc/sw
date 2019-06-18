@@ -3,8 +3,8 @@
 //
 // This file contains p4 header interface for rx and tx packets
 
-#ifndef __VPP_FLOW_PLUGIN_P4_CPU_HDR_H__
-#define __VPP_FLOW_PLUGIN_P4_CPU_HDR_H__
+#ifndef __VPP_FLOW_PLUGIN_P4_CPU_HDR_APOLLO_H__
+#define __VPP_FLOW_PLUGIN_P4_CPU_HDR_APOLLO_H__
 
 #include <nic/apollo/p4/include/defines.h>
 
@@ -46,5 +46,5 @@ typedef struct p4_tx_cpu_hdr_s {
     };
 } __attribute__ ((__packed__)) p4_tx_cpu_hdr_t;
 
-#endif     // __VPP_FLOW_PLUGIN_P4_HDR_H__
+#endif     // __VPP_FLOW_PLUGIN_P4_CPU_HDR_APOLLO_H__
 

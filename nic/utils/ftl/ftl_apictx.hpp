@@ -68,9 +68,11 @@ public:
     // 32 Bits
     uint32_t table_index;
     uint32_t op;
-    
+    uint32_t clear_global_state:1;
+    uint32_t clear_thread_local_state:1;
     // 32 Bits
     uint32_t hint;
+    uint32_t thread_id:6;
     FTL_MAKE_AFTYPE(bucket) *bucket;
     
     // Properties of this table
@@ -92,17 +94,17 @@ public:
     // Debug string
     char* metastr() {
         static char str[256];
-        snprintf(str, sizeof(str), "%p: tid:%d,idx:%d,slt:%d,hnt:%d,"
-                 "more:%d,pndg:%d,hmsb:%#x,mat:%d exmat:%d", this, table_id,
-                 table_index, hint_slot, hint, more_hashs,
-                 write_pending, hash_msbits, match, exmatch);
+        FTL_SNPRINTF(str, sizeof(str), "%p: tid:%d,idx:%d,slt:%d,hnt:%d,"
+                     "more:%d,pndg:%d,hmsb:%#x,mat:%d exmat:%d", this, table_id,
+                     table_index, hint_slot, hint, more_hashs,
+                     write_pending, hash_msbits, match, exmatch);
         return str;
     }
 
     const char* idstr() {
         static char str[32];
-        snprintf(str, sizeof(str), "%s%d-L%d", level ? "H" : "M",
-                 table_index, level);
+        FTL_SNPRINTF(str, sizeof(str), "%s%d-L%d", level ? "H" : "M",
+                     table_index, level);
         return str;
     }
 
@@ -141,12 +143,14 @@ public:
 #endif
 
     void init(sdk_table_api_op_t op, sdk_table_api_params_t *params,
-              sdk::table::properties_t *props, tablestats *tstats) {
+              sdk::table::properties_t *props, tablestats *tstats,
+              uint32_t thread_id) {
         memset(this, 0, sizeof(FTL_MAKE_AFTYPE(apictx)));
         this->op = op;
         this->props = props;
         this->params = params;
         this->tstats = tstats;
+        this->thread_id = thread_id;
         if (params->entry) {
             trace(true);
         }
@@ -161,6 +165,7 @@ public:
          this->params = p->params;
          this->tstats = p->tstats;
          this->pctx = p;
+		 this->thread_id = p->thread_id;
     }
 };
 

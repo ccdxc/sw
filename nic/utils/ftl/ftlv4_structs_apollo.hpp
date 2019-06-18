@@ -26,6 +26,7 @@ struct __attribute__((__packed__)) ftlv4_entry_t {
     uint32_t session_index : 24;
     uint32_t entry_valid : 1;
 
+#ifdef __cplusplus
 public:
     void set_nhgroup_index(uint32_t index) {
         nexthop_group_index_sbit0_ebit6 = index & 0x7f;
@@ -41,6 +42,19 @@ public:
             dport, src, dst, local_vnic_tag, proto, flow_role, session_index,
             (nexthop_group_index_sbit0_ebit6 | (nexthop_group_index_sbit7_ebit9 << 7)),
             entry_valid);
+    }
+
+    void tofile(FILE *fp, int count) {
+        char srcstr[INET6_ADDRSTRLEN], dststr[INET6_ADDRSTRLEN];
+        uint32_t sip, dip;
+
+        sip = htonl(src);
+        dip = htonl(dst);
+        inet_ntop(AF_INET, &sip, srcstr, INET_ADDRSTRLEN);
+        inet_ntop(AF_INET, &dip, dststr, INET_ADDRSTRLEN);
+        fprintf(fp, "%8d\t%16s\t%16s\t%5u\t%5u\t%3u\t%4u\n", count,
+                srcstr, dststr, sport, dport,
+                proto, local_vnic_tag);
     }
 
     void clear_hints() {
@@ -171,4 +185,5 @@ public:
         }
         return 0;
     }
+#endif
 };

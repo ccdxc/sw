@@ -7,26 +7,27 @@
 #define FOREACH_HINT_REVERSE(_n) for (uint32_t i = (_n); i > 0; i--)
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(bucket)::read_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+FTL_MAKE_AFTYPE(bucket)::read_(FTL_MAKE_AFTYPE(apictx) *ctx, bool force_hwread) {
     SDK_ASSERT(ctx->table_id);
     if (!ctx->is_main()) {
         SDK_ASSERT(ctx->table_index);
     }
 
-    auto p4pdret = memrd(ctx);
-    SDK_ASSERT_RETURN(p4pdret == P4PD_SUCCESS, SDK_RET_HW_READ_ERR);
-
-    FTL_TRACE_VERBOSE("%s: TID:%d I:%d V:%d",
-                      ctx->idstr(), ctx->table_id, ctx->table_index,
-                      ctx->entry.entry_valid);
+    if (valid_ || force_hwread) {
+        auto p4pdret = memrd(ctx);
+        SDK_ASSERT_RETURN(p4pdret == P4PD_SUCCESS, SDK_RET_HW_READ_ERR);
+    }
     if (ctx->entry.entry_valid) {
+        FTL_TRACE_VERBOSE("%s: TID:%d I:%d V:%d",
+                          ctx->idstr(), ctx->table_id, ctx->table_index,
+                          ctx->entry.entry_valid);
         ctx->trace();
         if (valid_ != ctx->entry.entry_valid) {
             FTL_TRACE_ERR("SW and HW data are out of sync !!");
             SDK_ASSERT_RETURN(0, SDK_RET_HW_READ_ERR);
         }
     }
-
+    ctx->tstats->read(ctx->level);
     return SDK_RET_OK;
 }
 
@@ -60,6 +61,7 @@ FTL_MAKE_AFTYPE(bucket)::write_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 
     ctx->write_pending = false;
 
+    ctx->tstats->write(ctx->level);
     return SDK_RET_OK;
 }
 
@@ -437,19 +439,20 @@ FTL_MAKE_AFTYPE(bucket)::defragment_(FTL_MAKE_AFTYPE(apictx) *ectx, FTL_MAKE_AFT
     PRINT_API_CTX("TCTX", tctx);
 
     // STEP 2: Move tctx key+data to ectx key+data
-    if (ectx != tctx) {
-        // Need to check because, we can be deleting a tail node itself
-        // in that case ectx == tctx, so nothing to move.
-        ret = move_(ectx, tctx);
+    // Need to check because, we can be deleting a tail node itself
+    // if ectx == tctx, so nothing to move, but using this to 
+    // clear the entry.
+    ret = move_(ectx, tctx);
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    // STEP 3: Write ectx to HW
+    if (ectx != pctx) {
+        ret = ectx->bucket->write_(ectx);
         SDK_ASSERT(ret == SDK_RET_OK);
     }
 
-    // STEP 3: Delink parent node
+    // STEP 4: Delink parent node
     ret = pctx->bucket->delink_(pctx);
-    SDK_ASSERT(ret == SDK_RET_OK);
-
-    // STEP 4: Write ectx to HW
-    ret = ectx->bucket->write_(ectx);
     SDK_ASSERT(ret == SDK_RET_OK);
 
     // STEP 5: Write pctx to HW
@@ -474,10 +477,10 @@ FTL_MAKE_AFTYPE(bucket)::defragment_(FTL_MAKE_AFTYPE(apictx) *ectx, FTL_MAKE_AFT
 }
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(bucket)::iterate_(FTL_MAKE_AFTYPE(apictx) *ctx) {
-    if (valid_) {
+FTL_MAKE_AFTYPE(bucket)::iterate_(FTL_MAKE_AFTYPE(apictx) *ctx, bool force_hwread) {
+    if (valid_ || force_hwread) {
         sdk_table_api_params_t params = { 0 };
-        read_(ctx);
+        read_(ctx, force_hwread);
         // Set the Handle
         if (ctx->is_main()) {
             params.handle.pindex(ctx->table_index);
