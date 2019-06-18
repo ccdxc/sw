@@ -8,6 +8,7 @@
 
 #include "nic/sdk/include/sdk/mem.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
+#include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/platform/sensor/sensor.hpp"
 #include "nic/sdk/third-party/asic/capri/verif/apis/cap_freq_api.h"
@@ -16,6 +17,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/impl/capri/capri_impl.hpp"
+#include "nic/apollo/p4/include/artemis_table_sizes.h"
 #include "nic/apollo/core/trace.hpp"
 
 namespace api {
@@ -271,6 +273,50 @@ capri_impl::pb_stats(debug::pb_stats_get_cb_t cb, void *ctxt) {
         pb_stats.port = tm_port;
         cb(&pb_stats, ctxt);
     }
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief      Meter Stats Get
+ * @param[in]   cb      Callback
+ *              idx     Index for stats to be read
+ *              ctxt    Opaque context to be passed to callback
+ * @return      SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+capri_impl::meter_stats(debug::meter_stats_get_cb_t cb, uint32_t idx, void *ctxt) {
+    sdk_ret_t ret;
+    pds_meter_debug_stats_t stats = {0};
+    uint64_t tx_offset = 0, rx_offset = 0;
+    uint64_t start_addr = 0;
+
+    if (idx > METER_STATS_TABLE_SIZE) {
+        PDS_TRACE_ERR("Read Meter Stats failed. Invalid index {} specified", idx);
+        return SDK_RET_ERR;
+    }
+
+    start_addr = api::g_pds_state.mempartition()->start_addr("meter_stats");
+    tx_offset = idx * 8; // Each statistics is 8B
+    rx_offset = tx_offset + (METER_STATS_TABLE_SIZE * 8);
+
+    ret = sdk::asic::asic_mem_read(start_addr + tx_offset,
+                                   (uint8_t *)&stats.tx_bytes,
+                                   8);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Read Meter TX Stats for index {} failed with err %u", idx, ret);
+        return ret;
+    }
+
+    ret = sdk::asic::asic_mem_read(start_addr + rx_offset,
+                                   (uint8_t *)&stats.rx_bytes,
+                                   8);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Read Meter RX Stats for index {} failed with err %u", idx, ret);
+        return ret;
+    }
+
+    cb (&stats, ctxt);
+
     return SDK_RET_OK;
 }
 

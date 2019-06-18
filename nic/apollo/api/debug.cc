@@ -258,4 +258,10 @@ pds_pb_stats_get (debug::pb_stats_get_cb_t cb, void *ctxt)
     return impl_base::asic_impl()->pb_stats(cb, ctxt);
 }
 
+sdk_ret_t
+pds_meter_stats_get (debug::meter_stats_get_cb_t cb, uint32_t idx, void *ctxt)
+{
+    return impl_base::asic_impl()->meter_stats(cb, idx, ctxt);
+}
+
 }    // namespace debug

@@ -227,3 +227,15 @@ DebugSvcImpl::HeapGet(ServerContext *context, const Empty *req,
 
     return Status::OK;
 }
+
+Status
+DebugSvcImpl::MeterStatsGet(ServerContext *context, const pds::MeterStatsGetRequest *req,
+                            pds::MeterStatsGetResponse *rsp) {
+    sdk_ret_t ret;
+
+    if ((ret = debug::pds_meter_stats_get(pds_meter_debug_stats_fill, req->statsindex(), rsp)) != SDK_RET_OK) {
+        rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    }
+
+    return Status::OK;
+}

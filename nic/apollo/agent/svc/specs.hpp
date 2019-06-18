@@ -766,6 +766,15 @@ pds_pb_stats_port_fill (pds::PacketBufferPort *buf_port, uint32_t port)
 }
 
 static inline void
+pds_meter_debug_stats_fill (pds_meter_debug_stats_t *stats, void *ctxt)
+{
+    pds::MeterStatsGetResponse *rsp = (pds::MeterStatsGetResponse *)ctxt;
+
+    rsp->set_rxbytes(stats->rx_bytes);
+    rsp->set_txbytes(stats->tx_bytes);
+}
+
+static inline void
 pds_pb_stats_entry_fill (pds_pb_debug_stats_t *pds_stats, void *ctxt)
 {
     sdk::platform::capri::tm_pb_debug_stats_t *stats = &pds_stats->stats;

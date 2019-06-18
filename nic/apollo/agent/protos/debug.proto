@@ -25,6 +25,7 @@ service DebugSvc {
   rpc MemTrackGet(MemTrackGetRequest) returns (MemTrackGetResponse) {}
   rpc SlabGet(SlabGetRequest) returns (SlabGetResponse) {}
   rpc HeapGet(types.Empty) returns (HeapGetResponse) {}
+  rpc MeterStatsGet (MeterStatsGetRequest) returns (MeterStatsGetResponse) {}
 }
 
 enum TraceLevel {
@@ -322,5 +323,16 @@ message HeapStats {
 
 message HeapGetResponse {
   types.ApiStatus ApiStatus = 1;
-  HeapStats       Stats     = 2;    
+  HeapStats       Stats     = 2;
 }
+
+message MeterStatsGetRequest {
+  uint32 StatsIndex = 1;
+}
+
+message MeterStatsGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  uint64          TxBytes   = 2;
+  uint64          RxBytes   = 3;
+}
+

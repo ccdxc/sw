@@ -92,6 +92,15 @@ public:
     virtual sdk_ret_t pb_stats(debug::pb_stats_get_cb_t cb, void *ctxt) override;
 
     /**
+     * @brief      Meter Stats Get
+     * @param[in]   cb      Callback
+     *              idx     Index for stats to be read
+     *              ctxt    Opaque context to be passed to callback
+     * @return      SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t meter_stats(debug::meter_stats_get_cb_t cb, uint32_t idx, void *ctxt) override;
+
+    /**
      * @brief    dump all the debug information to given file
      * @param[in] fp    file handle
      */
