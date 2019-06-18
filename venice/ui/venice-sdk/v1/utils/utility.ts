@@ -13,6 +13,8 @@ import * as _ from 'lodash';
       let retValue = true;
       for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
+          // for debug: console.log(key, obj, model);
+          
           // We want to send the timestamp as a string
           // to the backend, not as a js date object.
           if (obj[key] instanceof Date) {
@@ -24,7 +26,7 @@ import * as _ from 'lodash';
             } else {
               retValue = false;
             }
-          } else if (obj[key] != null && (model.getPropInfo == null || model.getPropInfo(key)== null || obj[key] !== model.getPropInfo(key).default)) {
+          } else if (obj[key] != null && (model == null || model.getPropInfo == null || model.getPropInfo(key)== null || obj[key] !== model.getPropInfo(key).default)) {
             retValue = false;
           }
         }
