@@ -24,7 +24,7 @@ func (na *Nagent) CreateTunnel(tun *netproto.Tunnel) error {
 	oldTun, err := na.FindTunnel(tun.ObjectMeta)
 	if err == nil {
 		// check if tunnel contents are same
-		if !proto.Equal(oldTun, tun) {
+		if !proto.Equal(&oldTun.Spec, &tun.Spec) {
 			log.Errorf("Tunnel %+v already exists", oldTun)
 			return errors.New("tunnel already exists")
 		}
