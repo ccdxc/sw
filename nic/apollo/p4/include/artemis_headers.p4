@@ -206,3 +206,12 @@ header_type cps_blob_t {
     length : hdr_len;
     max_length : 65535;
 }
+
+header_type artemis_ingress_recirc_header_t {
+    fields {
+        flow_ohash : 32;
+        epoch : 32;
+        pad1 : 7;
+        flow_done : 1;
+    }
+}

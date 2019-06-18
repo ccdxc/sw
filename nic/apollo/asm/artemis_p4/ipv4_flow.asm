@@ -40,25 +40,27 @@ label_2nd_level_flow_miss:
 
     seq         c1, k.control_metadata_flow_ohash_lkp, 1
     phvwr.c1    p.p4_to_rxdma3_parent_is_hint, 1
-    phvwr.c1    p.p4_to_rxdma3_parent_hint_index, k.service_header_flow_ohash[21:0].wx
+    phvwr.c1    p.p4_to_rxdma3_parent_hint_index, \
+                    k.ingress_recirc_flow_ohash[21:0].wx
     phvwr       p.p4_to_rxdma3_parent_valid, 1
 label_flow_miss:
-    phvwrpair   p.p4_to_rxdma3_flow_hash, r1, \
-                    p.p4_to_rxdma3_ipaf, 0
+    phvwrpair   p.p4_to_rxdma3_flow_hash, r1, p.p4_to_rxdma3_ipaf, 0
     phvwr       p.p4_to_rxdma_tag_root, r5
     phvwr.e     p.control_metadata_pipe_id, PIPE_CPS
-    phvwr.f     p.service_header_flow_done, TRUE
+    phvwr.f     p.ingress_recirc_flow_done, TRUE
 
 label_flow_hit:
     slt         c1, d.ipv4_flow_hash_d.epoch, k.control_metadata_epoch
     bcf         [c1], label_flow_miss
-    phvwr.!c1.e p.p4i_i2e_session_index, d.ipv4_flow_hash_d.session_index
+    phvwr.!c1   p.p4i_i2e_session_index, d.ipv4_flow_hash_d.session_index
+    phvwr.e     p.control_metadata_pipe_id, PIPE_EGRESS
     phvwr.f     p.p4i_i2e_flow_role, d.ipv4_flow_hash_d.flow_role
 
 label_flow_hash_hit:
     // Set bit 31 for overflow hash lookup to work
     ori         r2, r2, 0x80000000
-    phvwr.e     p.service_header_flow_ohash, r2
+    phvwr       p.ingress_recirc_flow_ohash, r2
+    phvwr.e     p.control_metadata_pipe_id, PIPE_INGRESS
     phvwr.f     p.control_metadata_flow_ohash_lkp, TRUE
 
 /*****************************************************************************/

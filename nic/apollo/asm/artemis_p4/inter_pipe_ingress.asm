@@ -28,7 +28,7 @@ ingress_to_egress:
                         p4_to_p4plus_classic_nic_ip_valid, \
                         p4_to_p4plus_classic_nic_valid, \
                         capri_rxdma_intrinsic_valid, \
-                        service_header_valid, \
+                        ingress_recirc_valid, \
                         capri_p4_intrinsic_valid, \
                         p4plus_to_p4_vlan_valid, \
                         p4plus_to_p4_valid, \
@@ -73,7 +73,7 @@ ingress_to_cps:
                         p4_to_p4plus_classic_nic_ip_valid, \
                         p4_to_p4plus_classic_nic_valid, \
                         capri_rxdma_intrinsic_valid, \
-                        service_header_valid, \
+                        ingress_recirc_valid, \
                         capri_p4_intrinsic_valid, \
                         p4plus_to_p4_vlan_valid, \
                         p4plus_to_p4_valid, \
@@ -174,7 +174,7 @@ ingress_to_arm:
                         p4_to_p4plus_classic_nic_ip_valid, \
                         p4_to_p4plus_classic_nic_valid, \
                         capri_rxdma_intrinsic_valid, \
-                        service_header_valid, \
+                        ingress_recirc_valid, \
                         capri_p4_intrinsic_valid, \
                         p4plus_to_p4_vlan_valid, \
                         p4plus_to_p4_valid, \
@@ -197,6 +197,33 @@ ingress_to_arm:
     phvwr           p.p4_to_arm_payload_offset, k.offset_metadata_payload_offset
     b               ingress_to_classic_nic_common
     add             r1, k.capri_p4_intrinsic_packet_len, ARTEMIS_P4_TO_ARM_HDR_SZ
+
+.align
+ingress_to_ingress:
+    /*
+    phvwr           p.predicate_header_valid, TRUE
+    phvwr           p.ingress_recirc_valid, TRUE
+    phvwr           p.capri_p4_intrinsic_valid, TRUE
+    bitmap          0010 0000 0001 1000
+    */
+    phvwr           p.{p4i_i2e_valid, \
+                        txdma_to_p4e_valid, \
+                        predicate_header_valid, \
+                        p4_to_rxdma3_valid, \
+                        p4_to_rxdma2_valid, \
+                        p4_to_rxdma_valid, \
+                        cps_blob_valid, \
+                        p4_to_arm_valid, \
+                        p4_to_p4plus_classic_nic_ip_valid, \
+                        p4_to_p4plus_classic_nic_valid, \
+                        capri_rxdma_intrinsic_valid, \
+                        ingress_recirc_valid, \
+                        capri_p4_intrinsic_valid, \
+                        p4plus_to_p4_vlan_valid, \
+                        p4plus_to_p4_valid, \
+                        capri_txdma_intrinsic_valid}, 0x2018
+    phvwr.e         p.capri_intrinsic_tm_oport, TM_PORT_INGRESS
+    phvwr.f         p.predicate_header_direction, k.control_metadata_direction
 
 /*****************************************************************************/
 /* error function                                                            */

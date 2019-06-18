@@ -9,11 +9,12 @@ struct phv_ p;
 %%
 
 init_config:
-    bbne            k.service_header_valid, TRUE, service_header_done
-    xor             r1, k.service_header_flow_done, 0x1
+    bbne            k.ingress_recirc_valid, TRUE, ingress_recirc_done
+    xor             r1, k.ingress_recirc_flow_done, 0x1
     phvwr           p.control_metadata_flow_ohash_lkp, r1
+    phvwr           p.capri_p4_intrinsic_recirc, FALSE
 
-service_header_done:
+ingress_recirc_done:
     sub             r1, k.capri_p4_intrinsic_frame_size, \
                         k.offset_metadata_l2_1
     phvwr           p.capri_p4_intrinsic_packet_len, r1

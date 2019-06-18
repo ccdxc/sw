@@ -684,6 +684,14 @@ artemis_impl::inter_pipe_init_(void) {
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
+    data.action_id = INTER_PIPE_INGRESS_INGRESS_TO_INGRESS_ID;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INTER_PIPE_INGRESS,
+                                       PIPE_INGRESS,
+                                       NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
     return SDK_RET_OK;
 }
 

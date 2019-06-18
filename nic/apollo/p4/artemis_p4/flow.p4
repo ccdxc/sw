@@ -7,18 +7,20 @@ action flow_hash(epoch, session_index, flow_role, pad8,
                  hash1, hint1, hash2, hint2, hash3, hint3,
                  hash4, hint4,  more_hashes,
                  more_hints, more_hints_pad, entry_valid) {
+    modify_field(p4i_i2e.entropy_hash, scratch_metadata.flow_hash);
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
-        modify_field(service_header.flow_done, TRUE);
-        modify_field(p4i_i2e.session_index, session_index);
-        modify_field(p4i_i2e.flow_role, flow_role);
-        modify_field(p4i_i2e.entropy_hash, scratch_metadata.flow_hash);
         modify_field(scratch_metadata.epoch, epoch);
         if (scratch_metadata.epoch < control_metadata.epoch) {
             // entry is old
-            modify_field(service_header.flow_done, TRUE);
+            modify_field(ingress_recirc.flow_done, TRUE);
             modify_field(control_metadata.pipe_id, PIPE_CPS);
             modify_field(p4_to_rxdma.tag_root, scratch_metadata.tag_root_addr);
+        } else {
+            modify_field(ingress_recirc.flow_done, TRUE);
+            modify_field(p4i_i2e.session_index, session_index);
+            modify_field(p4i_i2e.flow_role, flow_role);
+            modify_field(control_metadata.pipe_id, PIPE_EGRESS);
         }
 
         // if hardware register indicates miss, compare hashes with r1
@@ -55,14 +57,15 @@ action flow_hash(epoch, session_index, flow_role, pad8,
 
         if (scratch_metadata.hint_valid == TRUE) {
             modify_field(control_metadata.flow_ohash_lkp, TRUE);
-            modify_field(service_header.flow_ohash, scratch_metadata.flow_hint);
+            modify_field(ingress_recirc.flow_ohash, scratch_metadata.flow_hint);
+            modify_field(control_metadata.pipe_id, PIPE_INGRESS);
         } else {
-            modify_field(service_header.flow_done, TRUE);
+            modify_field(ingress_recirc.flow_done, TRUE);
             modify_field(control_metadata.pipe_id, PIPE_CPS);
             modify_field(p4_to_rxdma.tag_root, scratch_metadata.tag_root_addr);
         }
     } else {
-        modify_field(service_header.flow_done, TRUE);
+        modify_field(ingress_recirc.flow_done, TRUE);
         modify_field(control_metadata.pipe_id, PIPE_CPS);
         modify_field(p4_to_rxdma.tag_root, scratch_metadata.tag_root_addr);
     }
@@ -74,7 +77,7 @@ action flow_hash(epoch, session_index, flow_role, pad8,
     modify_field(scratch_metadata.flow_hash, hash4);
 
     modify_field(scratch_metadata.flow_ohash_lkp, control_metadata.flow_ohash_lkp);
-    modify_field(scratch_metadata.flow_ohash, service_header.flow_ohash);
+    modify_field(scratch_metadata.flow_ohash, ingress_recirc.flow_ohash);
 
     modify_field(scratch_metadata.pad8, pad8);
     modify_field(scratch_metadata.more_hints_pad, more_hints_pad);
@@ -103,7 +106,7 @@ table flow {
 @pragma overflow_table flow
 table flow_ohash {
     reads {
-        service_header.flow_ohash   : exact;
+        ingress_recirc.flow_ohash   : exact;
     }
     actions {
         flow_hash;
@@ -119,18 +122,20 @@ table flow_ohash {
 action ipv4_flow_hash(epoch, session_index, flow_role, pad8,
                       hash1, hint1, hash2, hint2,
                       more_hashes, more_hints, more_hints_pad, entry_valid) {
+    modify_field(p4i_i2e.entropy_hash, scratch_metadata.flow_hash);
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
-        modify_field(service_header.flow_done, TRUE);
-        modify_field(p4i_i2e.session_index, session_index);
-        modify_field(p4i_i2e.flow_role, flow_role);
-        modify_field(p4i_i2e.entropy_hash, scratch_metadata.flow_hash);
         modify_field(scratch_metadata.epoch, epoch);
         if (scratch_metadata.epoch < control_metadata.epoch) {
             // entry is old
-            modify_field(service_header.flow_done, TRUE);
+            modify_field(ingress_recirc.flow_done, TRUE);
             modify_field(control_metadata.pipe_id, PIPE_CPS);
             modify_field(p4_to_rxdma.tag_root, scratch_metadata.tag_root_addr);
+        } else {
+            modify_field(ingress_recirc.flow_done, TRUE);
+            modify_field(p4i_i2e.session_index, session_index);
+            modify_field(p4i_i2e.flow_role, flow_role);
+            modify_field(control_metadata.pipe_id, PIPE_EGRESS);
         }
 
         // if hardware register indicates miss, compare hashes with r1
@@ -157,14 +162,15 @@ action ipv4_flow_hash(epoch, session_index, flow_role, pad8,
 
         if (scratch_metadata.hint_valid == TRUE) {
             modify_field(control_metadata.flow_ohash_lkp, TRUE);
-            modify_field(service_header.flow_ohash, scratch_metadata.flow_hint);
+            modify_field(ingress_recirc.flow_ohash, scratch_metadata.flow_hint);
+            modify_field(control_metadata.pipe_id, PIPE_INGRESS);
         } else {
-            modify_field(service_header.flow_done, TRUE);
+            modify_field(ingress_recirc.flow_done, TRUE);
             modify_field(control_metadata.pipe_id, PIPE_CPS);
             modify_field(p4_to_rxdma.tag_root, scratch_metadata.tag_root_addr);
         }
     } else {
-        modify_field(service_header.flow_done, TRUE);
+        modify_field(ingress_recirc.flow_done, TRUE);
         modify_field(control_metadata.pipe_id, PIPE_CPS);
         modify_field(p4_to_rxdma.tag_root, scratch_metadata.tag_root_addr);
     }
@@ -174,7 +180,7 @@ action ipv4_flow_hash(epoch, session_index, flow_role, pad8,
     modify_field(scratch_metadata.flow_hash, hash2);
 
     modify_field(scratch_metadata.flow_ohash_lkp, control_metadata.flow_ohash_lkp);
-    modify_field(scratch_metadata.flow_ohash, service_header.flow_ohash);
+    modify_field(scratch_metadata.flow_ohash, ingress_recirc.flow_ohash);
 
     modify_field(scratch_metadata.pad8, pad8);
     modify_field(scratch_metadata.more_hints_pad, more_hints_pad);
@@ -202,7 +208,7 @@ table ipv4_flow {
 @pragma overflow_table ipv4_flow
 table ipv4_flow_ohash {
     reads {
-        service_header.flow_ohash   : exact;
+        ingress_recirc.flow_ohash   : exact;
     }
     actions {
         ipv4_flow_hash;
@@ -211,7 +217,7 @@ table ipv4_flow_ohash {
 }
 
 control flow_lookup {
-    if (service_header.valid == FALSE) {
+    if (ingress_recirc.valid == FALSE) {
         if (control_metadata.skip_flow_lkp == FALSE) {
             if (key_metadata.ktype == KEY_TYPE_IPV4) {
                 apply(ipv4_flow);

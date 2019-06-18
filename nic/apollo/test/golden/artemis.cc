@@ -601,6 +601,11 @@ inter_pipe_init (void)
     data.action_id = INTER_PIPE_INGRESS_INGRESS_TO_CPS_ID;
     entry_write(tbl_id, PIPE_CPS, NULL, NULL, &data, false,
                 INTER_PIPE_TABLE_SIZE);
+
+    memset(&data, 0, sizeof(data));
+    data.action_id = INTER_PIPE_INGRESS_INGRESS_TO_INGRESS_ID;
+    entry_write(tbl_id, PIPE_INGRESS, NULL, NULL, &data, false,
+                INTER_PIPE_TABLE_SIZE);
 }
 
 class artemis_test : public ::testing::Test {

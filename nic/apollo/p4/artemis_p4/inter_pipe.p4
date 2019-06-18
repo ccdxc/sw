@@ -9,7 +9,7 @@ action ingress_to_egress() {
     remove_header(capri_txdma_intrinsic);
     remove_header(p4plus_to_p4);
     remove_header(p4plus_to_p4_vlan);
-    remove_header(service_header);
+    remove_header(ingress_recirc);
     modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
     modify_field(capri_intrinsic.tm_span_session,
                  control_metadata.mirror_session);
@@ -48,7 +48,7 @@ action ingress_to_cps() {
     remove_header(p4plus_to_p4);
     remove_header(p4plus_to_p4_vlan);
     add_header(predicate_header);
-    remove_header(service_header);
+    remove_header(ingress_recirc);
     modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
     modify_field(capri_intrinsic.lif, ARTEMIS_SERVICE_LIF);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
@@ -177,6 +177,17 @@ action ingress_to_arm() {
                  capri_p4_intrinsic.packet_len + ARTEMIS_P4_TO_ARM_HDR_SZ);
 }
 
+action ingress_to_ingress() {
+    add_header(capri_p4_intrinsic);
+    remove_header(capri_txdma_intrinsic);
+    remove_header(p4plus_to_p4);
+    remove_header(p4plus_to_p4_vlan);
+    add_header(predicate_header);
+    modify_field(predicate_header.direction, control_metadata.direction);
+    add_header(ingress_recirc);
+    modify_field(capri_intrinsic.tm_oport, TM_PORT_INGRESS);
+}
+
 @pragma stage 5
 @pragma index_table
 table inter_pipe_ingress {
@@ -189,6 +200,7 @@ table inter_pipe_ingress {
         ingress_to_classic_nic;
         ingress_to_uplink;
         ingress_to_arm;
+        ingress_to_ingress;
     }
     size : INTER_PIPE_TABLE_SIZE;
 }

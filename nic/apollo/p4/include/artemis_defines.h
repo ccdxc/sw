@@ -64,10 +64,10 @@
 /* Next pipe id                                                              */
 /*****************************************************************************/
 #define PIPE_EGRESS                     0
-#define PIPE_CPS                        1
-#define PIPE_CLASSIC_NIC                2
-#define PIPE_ARM                        3
-#define PIPE_RECIRC                     4
+#define PIPE_INGRESS                    1
+#define PIPE_CPS                        2
+#define PIPE_CLASSIC_NIC                3
+#define PIPE_ARM                        4
 #define PIPE_UPLINK                     5
 
 /*****************************************************************************/

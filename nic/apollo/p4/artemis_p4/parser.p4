@@ -14,8 +14,7 @@ header cap_phv_intr_txdma_t capri_txdma_intrinsic;
 header artemis_i2e_metadata_t p4i_i2e;
 header artemis_i2e_metadata_t p4e_i2e;
 
-header service_header_t service_header;
-header egress_service_header_t egress_service_header;
+header artemis_ingress_recirc_header_t ingress_recirc;
 @pragma hdr_len parser_metadata.mirror_blob_len
 header mirror_blob_t mirror_blob;
 
@@ -138,7 +137,7 @@ metadata parser_metadata_t parser_metadata;
 parser start {
     extract(capri_intrinsic);
     return select(capri_intrinsic.tm_iport) {
-        TM_PORT_INGRESS : parse_service_header;
+        TM_PORT_INGRESS : parse_ingress_recirc_header;
         TM_PORT_DMA : parse_txdma_to_ingress;
         TM_PORT_EGRESS : parse_egress_to_ingress;
         default : parse_uplink;
@@ -157,10 +156,10 @@ parser parse_uplink {
 }
 
 @pragma xgress ingress
-parser parse_service_header {
+parser parse_ingress_recirc_header {
     extract(capri_p4_intrinsic);
-    extract(service_header);
-    return parse_ingress_packet;
+    extract(ingress_recirc);
+    return parse_ingress_pass2;
 }
 
 @pragma xgress ingress
@@ -427,6 +426,7 @@ parser deparse_ingress {
     // intrinsic headers
     extract(capri_intrinsic);
     extract(capri_p4_intrinsic);
+    extract(ingress_recirc);
     extract(capri_rxdma_intrinsic);
 
     extract(p4_to_p4plus_classic_nic);
@@ -465,14 +465,8 @@ parser egress_start {
 parser parse_egress_to_egress {
     return select(capri_intrinsic.tm_instance_type) {
         TM_INSTANCE_TYPE_SPAN : parse_egress_span_copy;
-        default : parse_egress_service_header;
+        default : parse_egress;
     }
-}
-
-@pragma xgress egress
-parser parse_egress_service_header {
-    extract(egress_service_header);
-    return parse_egress;
 }
 
 @pragma xgress egress
@@ -633,7 +627,6 @@ parser deparse_egress {
     extract(capri_rxdma_intrinsic);
 
     // Below are headers used in case of egress-to-egress recirc
-    extract(egress_service_header);
     extract(predicate_header);
     extract(txdma_to_p4e);
     extract(p4e_i2e);
