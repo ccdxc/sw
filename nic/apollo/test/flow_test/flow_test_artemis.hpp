@@ -814,12 +814,6 @@ public:
         uint32_t num_flows_per_local;
 
         for (uint32_t vpc = 1; vpc <= MAX_VPCS; vpc++) {
-#if 0
-            // TODO remove once all VPCs work
-            if (vpc > 24 && vpc < 59) {
-                continue;
-            }
-#endif
             generate_ep_pairs(vpc, dual_stack);
             nexthop_idx = nexthop_idx_start +
                              (vpc - 1) * num_nexthop_idx_per_vpc;
@@ -964,7 +958,25 @@ public:
                         if (dual_stack && vpc != TEST_APP_S1_SVC_TUNNEL_IN_OUT) {
                             memset(&ip_addr, 0, sizeof(ip_addr));
                             // create V6 Flows
-                            if (vpc == TEST_APP_S2_INTERNET_IN_OUT_FLOATING_IP_VPC) {
+                            switch (vpc) {
+                            case TEST_APP_S2_INTERNET_IN_OUT_VPC_VIP_VPC:
+                                ip_addr = test_params->v6_route_pfx.addr;
+                                ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-2]
+                                    = htonl(0xF1D0D1D0);
+                                ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
+                                            htonl(TESTAPP_V4ROUTE_VAL(i));
+                                ret = create_session(vpc, proto,
+                                                     ep_pairs[i].v6_local.local_ip,
+                                                     ip_addr,
+                                                     TEST_APP_DIP_PORT,
+                                                     fwd_dport,
+                                                     ip_addr,
+                                                     ep_pairs[i].v6_local.service_ip,
+                                                     fwd_dport,
+                                                     TEST_APP_VIP_PORT);
+                                break;
+
+                            case TEST_APP_S2_INTERNET_IN_OUT_FLOATING_IP_VPC:
                                 // this VPC is for Internet IN/OUT with
                                 // floating IP address
                                 ip_addr = test_params->v6_route_pfx.addr;
@@ -979,7 +991,9 @@ public:
                                                      ip_addr,
                                                      ep_pairs[i].v6_local.public_ip,
                                                      fwd_dport, fwd_sport);
-                            } else {
+                                break;
+
+                            default:
                                 // vnet in/out with vxlan encap
                                 ret = create_session(vpc, proto,
                                                      ep_pairs[i].v6_local.local_ip,
@@ -988,6 +1002,7 @@ public:
                                                      ep_pairs[i].v6_remote.remote_ip,
                                                      ep_pairs[i].v6_local.local_ip,
                                                      fwd_dport, fwd_sport);
+                                break;
                             }
                             if (ret != SDK_RET_OK) {
                                 return ret;
