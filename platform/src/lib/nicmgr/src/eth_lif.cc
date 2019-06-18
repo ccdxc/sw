@@ -2016,7 +2016,7 @@ EthLif::RssConfig(void *req, void *req_data, void *resp, void *resp_data)
 
     // Validate indirection table entries
     for (int i = 0; i < RSS_IND_TBL_SIZE; i++) {
-        if (rss_indir[i] > spec->rxq_count) {
+        if (rss_indir[i] >= spec->rxq_count) {
             NIC_LOG_ERR("{}: Invalid indirection table entry index {} qid {}",
                 hal_lif_info_.name, i, rss_indir[i]);
             return (IONIC_RC_ERROR);
