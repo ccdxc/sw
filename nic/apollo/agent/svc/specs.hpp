@@ -1208,6 +1208,9 @@ tep_proto_spec_to_api_spec (pds_tep_spec_t *api_spec,
     case pds::TUNNEL_TYPE_WORKLOAD:
         api_spec->type = PDS_TEP_TYPE_WORKLOAD;
         break;
+    case  pds::TUNNEL_TYPE_SERVICE:
+        api_spec->type = PDS_TEP_TYPE_SERVICE;
+        break;
     default:
         api_spec->type = PDS_TEP_TYPE_NONE;
         break;

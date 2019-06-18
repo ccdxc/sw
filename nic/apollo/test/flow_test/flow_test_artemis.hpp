@@ -814,10 +814,12 @@ public:
         uint32_t num_flows_per_local;
 
         for (uint32_t vpc = 1; vpc <= MAX_VPCS; vpc++) {
+#if 0
             // TODO remove once all VPCs work
             if (vpc > 24 && vpc < 59) {
                 continue;
             }
+#endif
             generate_ep_pairs(vpc, dual_stack);
             nexthop_idx = nexthop_idx_start +
                              (vpc - 1) * num_nexthop_idx_per_vpc;
