@@ -807,25 +807,50 @@ public:
         uint32_t nexthop_idx = nexthop_idx_start;
         uint32_t inh_idx = 1;
         uint32_t svc_tep_nexthop_idx = svc_tep_nexthop_idx_start;
-        int rtnum = -1;
         uint32_t dport_hi = cfg_params.dport_hi;
         uint32_t sport_hi = cfg_params.sport_hi;
+        uint32_t num_sport;
+        uint32_t num_dport;
+        uint32_t num_flows_per_local;
 
         for (uint32_t vpc = 1; vpc <= MAX_VPCS; vpc++) {
+            // TODO remove once all VPCs work
             if (vpc > 24 && vpc < 59) {
                 continue;
             }
             generate_ep_pairs(vpc, dual_stack);
             nexthop_idx = nexthop_idx_start +
-                                       (vpc - 1) * num_nexthop_idx_per_vpc;
+                             (vpc - 1) * num_nexthop_idx_per_vpc;
             for (i = 0; i < MAX_EP_PAIRS_PER_VPC ; i++) {
+                num_sport = cfg_params.sport_hi - cfg_params.sport_lo + 1;
+                num_dport = cfg_params.dport_hi - cfg_params.dport_lo + 1;
                 switch (vpc) {
+                case TEST_APP_S1_SVC_TUNNEL_IN_OUT:
+                    // only TESTAPP_MAX_SERVICE_TEP remotes are installed.
+                    // adjust dport range so that total flows per local =
+                    // num_remotes * num_sport * num_dport
+                    //
+                    // locals * remotes * sport * dport
+                    // 8      * 64      * 2     * 64
+                    num_flows_per_local = test_params->num_remote_mappings *
+                                          num_sport * num_dport;
+                    dport_hi = cfg_params.dport_lo +
+                               num_flows_per_local/(TESTAPP_MAX_SERVICE_TEP * num_sport) - 1;
+                    sport_hi = cfg_params.sport_hi;
+                    break;
                 case TEST_APP_S1_SLB_IN_OUT:
                 case TEST_APP_S2_INTERNET_IN_OUT_VPC_VIP_VPC:
-                    dport_hi = cfg_params.dport_lo + (cfg_params.sport_hi - cfg_params.sport_lo + 1) * (cfg_params.dport_hi - cfg_params.dport_lo + 1) - 1;
+                    // since sport is rewritten, adjust dport range so that total
+                    // flows are maintained
+                    //
+                    // locals * remotes * sport * dport
+                    // 8      * 512      * 1    * 16
+                    dport_hi = cfg_params.dport_lo + num_sport * num_dport - 1;
                     sport_hi = cfg_params.sport_lo;
                     break;
                 default:
+                    // locals * remotes * sport * dport
+                    // 8      * 512      * 2    * 8
                     dport_hi = cfg_params.dport_hi;
                     sport_hi = cfg_params.sport_hi;
                     break;

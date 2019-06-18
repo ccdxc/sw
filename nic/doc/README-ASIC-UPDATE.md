@@ -11,7 +11,7 @@ README for updating capri asic pointer and asic files
         b) If corresponding ASIC changes are required, then copy the asic diff to
            /var/lib/jenkins/diffs/ASIC_SW_COMBINED_SANITY/asic
 
-    3) Trigger the asic-sw-combined-sanity using the below link. Specify the required ASIC SHA in the link.
+    3) Trigger the asic-sw-combined-sanity using the below link. Specify the required ASIC_BRANCH and ASSET_LABEL (ASIC SHA) in the link.
        http://srv13:8080/view/CombinedSanity/job/ASIC_SW_COMBINED_SANITY/
 
     4) The ASIC_SW_COMBINED_SANITY uses /var/lib/jenkins/scripts/asic_sw_combined_sanity.sh to:
@@ -27,10 +27,10 @@ README for updating capri asic pointer and asic files
         g) Build x86_64 and aarch64 NIC targets
         h) Push assets based on the ASIC SHA
         i) Increment third-party version and push it to the assets
-        j) Push the changes to branch - vikasbd:asic_label_update_master
+        j) Push the changes to branch - vikasbd:asic_label_update_<ASIC_BRANCH>
 
     6) If any change in /var/lib/jenkins/scripts/asic_sw_combined_sanity.sh, also update in SW repo
        nic/tools/asic_sw_combined_sanity/asic_sw_combined_sanity.sh
 
     7) Use the below link to raise PR for the changes:
-       https://github.com/pensando/sw/compare/master...vikasbd:asic_label_update_master
+       https://github.com/pensando/sw/compare/master...vikasbd:asic_label_update_<ASIC_BRANCH>
