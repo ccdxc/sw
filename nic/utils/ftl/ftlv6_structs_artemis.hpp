@@ -144,7 +144,7 @@ public:
         case 2: hint2 = hint; hash2 = hash; break;
         case 3: hint3 = hint; hash3 = hash; break;
         case 4: hint4 = hint; hash4 = hash; break;
-        default: more_hashes = hash; more_hints = hint; break;
+        default: more_hashes = 1; more_hints = hint; break;
         } 
     }
 

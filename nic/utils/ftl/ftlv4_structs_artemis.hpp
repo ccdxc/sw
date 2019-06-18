@@ -117,7 +117,7 @@ public:
         switch (slot) { 
         case 1: hint1 = hint; hash1 = hash; break;
         case 2: hint2 = hint; hash2 = hash; break;
-        default: more_hashes = hash; more_hints = hint; break;
+        default: more_hashes = 1; more_hints = hint; break;
         } 
     }
 
