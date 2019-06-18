@@ -172,6 +172,7 @@ var roFSM = [][]fsmNode{
 		fsmEvOneVeniceUpgSuccess: {nextSt: fsmstRollingOutVenice, actFn: fsmAcIssueNextVeniceRollout},
 		fsmEvAllVeniceUpgOK:      {nextSt: fsmstRollingOutService, actFn: fsmAcIssueServiceRollout},
 		fsmEvVeniceBypass:        {nextSt: fsmstRollingoutOutSmartNIC, actFn: fsmAcRolloutSmartNICs},
+		fsmEvOneVeniceUpgFail:    {nextSt: fsmstRolloutFail, actFn: fsmAcRolloutFail},
 		fsmEvSuspend:             {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
 	},
 	fsmstRollingOutService: {

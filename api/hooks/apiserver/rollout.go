@@ -267,7 +267,7 @@ func (h *rolloutHooks) doRolloutAction(ctx context.Context, kv kvstore.Interface
 		//update rolloutAction && create rollout
 		h.l.InfoLog("msg", "Updating RolloutAction & Create Rollout")
 		if inProgress := checkRolloutInProgress(*rolloutActionObj); inProgress {
-			errmsg := fmt.Sprintf("Rollout in progress %+v", rolloutActionObj.Status)
+			errmsg := fmt.Sprintf("Rollout %v in progress", rolloutActionObj.Name)
 			h.l.InfoLog("msg", errmsg)
 			return buf, false, errors.New(errmsg)
 		}
