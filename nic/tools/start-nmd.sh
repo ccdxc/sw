@@ -22,12 +22,8 @@ do
         echo "OOB up"
         oob_mnic_up=1
     elif [ -d "/sys/class/net/inb_mnic0" ] && [ $inb_mnic0_up -eq 0 ] ; then
-        echo "adding inb_mnic0 (inband mgmt0) interface to bond0"
-        ifenslave bond0 inb_mnic0
         inb_mnic0_up=1
     elif [ -d "/sys/class/net/inb_mnic1" ] && [ $inb_mnic1_up -eq 0 ] ; then
-        echo "adding inb_mnic1 (inband mgmt1) interface to bond0"
-        ifenslave bond0 inb_mnic1
         inb_mnic1_up=1
     else
         sleep 1
@@ -56,12 +52,14 @@ fi
 
 if [ $inb_mnic0_up -eq 1 ]; then
     echo "adding inb_mnic0 (inband mgmt0) interface to bond0"
+    ifenslave bond0 inb_mnic0
 else
     echo "inb_mnic0 interface didn't show up!!!"
 fi
 
 if [ $inb_mnic1_up -eq 1 ]; then
     echo "inb_mnic1 (inband mgmt1) interface added to bond0"
+    ifenslave bond0 inb_mnic1
 else
     echo "inb_mnic1 interface didn't show up!!!"
 fi
