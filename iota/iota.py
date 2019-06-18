@@ -64,7 +64,7 @@ def __find_free_port():
 def __start_server():
     global gl_srv_process
     glopts.GlobalOptions.svcport = __find_free_port()
-    srv_binary = "%s/iota/bin/server/iota_server" % topdir
+    srv_binary = "VENICE_DEV=1 %s/iota/bin/server/iota_server" % topdir
     srv_logfile = "%s/server.log" % glopts.GlobalOptions.logdir
     srv_args = "--port %d" % glopts.GlobalOptions.svcport
     if glopts.GlobalOptions.dryrun:

@@ -987,8 +987,8 @@ func (ts *TopologyService) EntityCopy(ctx context.Context, req *iota.EntityCopyM
 
 		dstDir := common.DstIotaEntitiesDir + "/" + req.GetEntityName() + "/" + req.GetDestDir() + "/"
 		if err := node.CopyTo(ts.SSHConfig, dstDir, req.GetFiles()); err != nil {
-			log.Errorf("TOPO SVC | EntityCopy | Failed to copy files to entity:  %v on node : %v",
-				req.GetEntityName(), node.Node.Name)
+			log.Errorf("TOPO SVC | EntityCopy | Failed to copy files to entity:  %v on node : %v (%v)",
+				req.GetEntityName(), node.Node.Name, err.Error())
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
 			req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to copy files to entity:  %v on node : %v",
 				req.GetEntityName(), node.Node.Name)
@@ -1001,8 +1001,8 @@ func (ts *TopologyService) EntityCopy(ctx context.Context, req *iota.EntityCopyM
 		}
 
 		if err := node.CopyFrom(ts.SSHConfig, req.GetDestDir(), files); err != nil {
-			log.Errorf("TOPO SVC | EntityCopy | Failed to copy files from entity:  %v on node : %v",
-				req.GetEntityName(), node.Node.Name)
+			log.Errorf("TOPO SVC | EntityCopy | Failed to copy files from entity:  %v on node : %v (%v)",
+				req.GetEntityName(), node.Node.Name, err.Error())
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
 		}
 
