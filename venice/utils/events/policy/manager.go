@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/monitoring"
 	evtsmgrprotos "github.com/pensando/sw/nic/agent/protos/evtprotos"
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/utils/emstore"
@@ -101,6 +102,7 @@ func (m *Manager) Create(policy *evtsmgrprotos.EventPolicy) error {
 // returns nil if the store is not configured/provided.
 func (m *Manager) Get(policy *evtsmgrprotos.EventPolicy) (*evtsmgrprotos.EventPolicy, error) {
 	m.logger.Infof("get policy {%s:%s}", policy.GetKind(), policy.GetName())
+	policy.Spec = monitoring.EventPolicySpec{}
 	if m.store != nil {
 		obj, err := m.store.Read(policy)
 		if err != nil {

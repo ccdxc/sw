@@ -2,7 +2,12 @@ package impl
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"net"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -165,8 +170,85 @@ func (a *alertHooks) updateStatus(ctx context.Context, kv kvstore.Interface, txn
 	return *curAlertObj, false, nil
 }
 
+func validateAlertDestinationSpec(ad *monitoring.AlertDestinationSpec) error {
+
+	if _, ok := monitoring.MonitoringExportFormat_value[ad.SyslogExport.Format]; !ok {
+		return fmt.Errorf("invalid format %v", ad.SyslogExport.Format)
+	}
+
+	if len(ad.SyslogExport.Targets) == 0 {
+		return fmt.Errorf("no targets configured")
+	}
+
+	adTargets := map[string]bool{}
+	for _, c := range ad.SyslogExport.Targets {
+		if key, err := json.Marshal(c); err == nil {
+			ks := string(key)
+			if _, ok := adTargets[ks]; ok {
+				return fmt.Errorf("found duplicate target %v %v", c.Destination, c.Transport)
+			}
+			adTargets[ks] = true
+
+		}
+
+		if c.Destination == "" {
+			return fmt.Errorf("cannot configure empty destination")
+		}
+
+		adNetIP, _, err := net.ParseCIDR(c.Destination)
+		if err != nil {
+			adNetIP = net.ParseIP(c.Destination)
+		}
+
+		if adNetIP == nil {
+			// treat it as hostname and resolve
+			if _, err := net.LookupHost(c.Destination); err != nil {
+				return fmt.Errorf("failed to resolve name %s, error: %v", c.Destination, err)
+			}
+		}
+
+		tr := strings.Split(c.Transport, "/")
+		if len(tr) != 2 {
+			return fmt.Errorf("transport should be in protocol/port format")
+		}
+
+		if _, ok := map[string]bool{
+			"tcp": true,
+			"udp": true,
+		}[strings.ToLower(tr[0])]; !ok {
+			return fmt.Errorf("invalid protocol %v\n Accepted protocols: TCP, UDP", tr[0])
+		}
+
+		adPort, err := strconv.Atoi(tr[1])
+		if err != nil {
+			return fmt.Errorf("invalid port %v", tr[1])
+		}
+
+		if uint(adPort) > uint(^uint16(0)) {
+			return fmt.Errorf("invalid port %v (> %d)", adPort, ^uint16(0))
+		}
+	}
+	return nil
+}
+
+func (a *alertHooks) validateAlertDestination(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string,
+	oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	a.logger.DebugLog("msg", "validateAlertDestination hook called")
+	alertdest, ok := i.(monitoring.AlertDestination)
+	if !ok {
+		return i, false, fmt.Errorf("invalid object %T instead of AlertDestination", i)
+	}
+	if err := validateAlertDestinationSpec(&alertdest.Spec); err != nil {
+		return i, false, err
+	}
+	return i, true, nil
+}
+
 func registerAlertHooks(svc apiserver.Service, l log.Logger) {
 	l.Log("msg", "registering Hooks")
 	ah := alertHooks{logger: l.WithContext("Service", "Alert")}
+	adh := alertHooks{logger: l.WithContext("Service", "AlertDestination")}
 	svc.GetCrudService("Alert", apiintf.UpdateOper).WithPreCommitHook(ah.updateStatus)
+	svc.GetCrudService("AlertDestination", apiintf.CreateOper).WithPreCommitHook(adh.validateAlertDestination)
+	svc.GetCrudService("AlertDestination", apiintf.UpdateOper).WithPreCommitHook(adh.validateAlertDestination)
 }

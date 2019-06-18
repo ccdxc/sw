@@ -8,6 +8,7 @@ import (
 
 func registerMonitoringHooks(svc apiserver.Service, l log.Logger) {
 	registerAlertHooks(svc, l)
+	registerEventHooks(svc, l)
 	registerMirrorSessionHooks(svc, l)
 	registerFwlogPolicyHooks(svc, l)
 	registerFlowExpPolicyHooks(svc, l)

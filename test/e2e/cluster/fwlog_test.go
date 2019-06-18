@@ -411,7 +411,7 @@ var _ = Describe("fwlog policy tests", func() {
 						},
 						ObjectMeta: api.ObjectMeta{
 							Namespace: globals.DefaultNamespace,
-							Name:      globals.DefaultTenant,
+							Name:      "invalid-dns",
 							Tenant:    globals.DefaultTenant,
 						},
 						Spec: monitoring.FwlogPolicySpec{
@@ -434,7 +434,7 @@ var _ = Describe("fwlog policy tests", func() {
 					},
 				},
 				{
-					name: "too many collectors",
+					name: "too many targets",
 					fail: true,
 					policy: &monitoring.FwlogPolicy{
 						TypeMeta: api.TypeMeta{
@@ -442,7 +442,7 @@ var _ = Describe("fwlog policy tests", func() {
 						},
 						ObjectMeta: api.ObjectMeta{
 							Namespace: globals.DefaultNamespace,
-							Name:      globals.DefaultTenant,
+							Name:      "too-many-targets",
 							Tenant:    globals.DefaultTenant,
 						},
 						Spec: monitoring.FwlogPolicySpec{
@@ -478,7 +478,7 @@ var _ = Describe("fwlog policy tests", func() {
 				},
 
 				{
-					name: "duplicate collectors",
+					name: "duplicate targets",
 					fail: true,
 					policy: &monitoring.FwlogPolicy{
 						TypeMeta: api.TypeMeta{
@@ -486,7 +486,7 @@ var _ = Describe("fwlog policy tests", func() {
 						},
 						ObjectMeta: api.ObjectMeta{
 							Namespace: globals.DefaultNamespace,
-							Name:      globals.DefaultTenant,
+							Name:      "duplicate-targets",
 							Tenant:    globals.DefaultTenant,
 						},
 						Spec: monitoring.FwlogPolicySpec{
@@ -516,7 +516,7 @@ var _ = Describe("fwlog policy tests", func() {
 							Kind: "fwLogPolicy",
 						},
 						ObjectMeta: api.ObjectMeta{
-							Name:   "fwlog-invalid-dest",
+							Name:   "invalid-destination",
 							Tenant: globals.DefaultTenant,
 						},
 						Spec: monitoring.FwlogPolicySpec{
@@ -548,6 +548,7 @@ var _ = Describe("fwlog policy tests", func() {
 						ObjectMeta: api.ObjectMeta{
 							Namespace: globals.DefaultNamespace,
 							Tenant:    globals.DefaultTenant,
+							Name:      "invalid-target",
 						},
 						Spec: monitoring.FwlogPolicySpec{
 							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
@@ -560,7 +561,7 @@ var _ = Describe("fwlog policy tests", func() {
 				},
 
 				{
-					name: "no port in collector",
+					name: "no port in transport",
 					fail: true,
 					policy: &monitoring.FwlogPolicy{
 						TypeMeta: api.TypeMeta{
@@ -568,7 +569,7 @@ var _ = Describe("fwlog policy tests", func() {
 						},
 						ObjectMeta: api.ObjectMeta{
 							Namespace: globals.DefaultNamespace,
-							Name:      globals.DefaultTenant,
+							Name:      "no-port-in-transport",
 							Tenant:    globals.DefaultTenant,
 						},
 						Spec: monitoring.FwlogPolicySpec{
@@ -600,7 +601,7 @@ var _ = Describe("fwlog policy tests", func() {
 						},
 						ObjectMeta: api.ObjectMeta{
 							Namespace: globals.DefaultNamespace,
-							Name:      globals.DefaultTenant,
+							Name:      "invalid-proto",
 							Tenant:    globals.DefaultTenant,
 						},
 						Spec: monitoring.FwlogPolicySpec{
@@ -632,7 +633,7 @@ var _ = Describe("fwlog policy tests", func() {
 						},
 						ObjectMeta: api.ObjectMeta{
 							Namespace: globals.DefaultNamespace,
-							Name:      globals.DefaultTenant,
+							Name:      "invalid-port-abcd",
 							Tenant:    globals.DefaultTenant,
 						},
 						Spec: monitoring.FwlogPolicySpec{
@@ -664,7 +665,7 @@ var _ = Describe("fwlog policy tests", func() {
 						},
 						ObjectMeta: api.ObjectMeta{
 							Namespace: globals.DefaultNamespace,
-							Name:      globals.DefaultTenant,
+							Name:      "invalid-port-65536",
 							Tenant:    globals.DefaultTenant,
 						},
 						Spec: monitoring.FwlogPolicySpec{
@@ -687,7 +688,7 @@ var _ = Describe("fwlog policy tests", func() {
 					},
 				},
 				{
-					name: "duplicate collector",
+					name: "duplicate targets",
 					fail: true,
 					policy: &monitoring.FwlogPolicy{
 						TypeMeta: api.TypeMeta{
@@ -695,7 +696,7 @@ var _ = Describe("fwlog policy tests", func() {
 						},
 						ObjectMeta: api.ObjectMeta{
 							Namespace: globals.DefaultNamespace,
-							Name:      globals.DefaultTenant,
+							Name:      "duplicate-targets",
 							Tenant:    globals.DefaultTenant,
 						},
 						Spec: monitoring.FwlogPolicySpec{
@@ -718,7 +719,7 @@ var _ = Describe("fwlog policy tests", func() {
 					},
 				},
 				{
-					name: "no collectors",
+					name: "no targets",
 					fail: true,
 					policy: &monitoring.FwlogPolicy{
 						TypeMeta: api.TypeMeta{
@@ -726,7 +727,7 @@ var _ = Describe("fwlog policy tests", func() {
 						},
 						ObjectMeta: api.ObjectMeta{
 							Namespace: globals.DefaultNamespace,
-							Name:      globals.DefaultTenant,
+							Name:      "no-targets",
 							Tenant:    globals.DefaultTenant,
 						},
 						Spec: monitoring.FwlogPolicySpec{
@@ -747,7 +748,7 @@ var _ = Describe("fwlog policy tests", func() {
 						},
 						ObjectMeta: api.ObjectMeta{
 							Namespace: globals.DefaultNamespace,
-							Name:      globals.DefaultTenant,
+							Name:      "invalid-override",
 							Tenant:    globals.DefaultTenant,
 						},
 						Spec: monitoring.FwlogPolicySpec{
@@ -766,7 +767,7 @@ var _ = Describe("fwlog policy tests", func() {
 					},
 				},
 				{
-					name: "create policy",
+					name: "create policy (good)",
 					fail: false,
 					policy: &monitoring.FwlogPolicy{
 						TypeMeta: api.TypeMeta{
@@ -774,7 +775,7 @@ var _ = Describe("fwlog policy tests", func() {
 						},
 						ObjectMeta: api.ObjectMeta{
 							Namespace: globals.DefaultNamespace,
-							Name:      "fwlog" + globals.DefaultTenant,
+							Name:      "create-good-policy",
 							Tenant:    globals.DefaultTenant,
 						},
 						Spec: monitoring.FwlogPolicySpec{

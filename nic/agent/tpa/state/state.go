@@ -144,7 +144,7 @@ func (p *policyDb) findNumCollectors() int {
 func parsePortProto(src string) (halproto.IPProtocol, uint32, error) {
 	s := strings.Split(src, "/")
 	if len(s) != 2 {
-		return halproto.IPProtocol_IPPROTO_NONE, 0, fmt.Errorf("invalid protocol/port in %s", src)
+		return halproto.IPProtocol_IPPROTO_NONE, 0, fmt.Errorf("transport should be in protocol/port format")
 	}
 
 	p, ok := halproto.IPProtocol_value["IPPROTO_"+strings.ToUpper(s[0])]
@@ -155,10 +155,9 @@ func parsePortProto(src string) (halproto.IPProtocol, uint32, error) {
 
 	switch proto {
 	case halproto.IPProtocol_IPPROTO_UDP:
-	case halproto.IPProtocol_IPPROTO_TCP:
 
 	default:
-		return halproto.IPProtocol_IPPROTO_NONE, 0, fmt.Errorf("invalid protocol in %s", src)
+		return halproto.IPProtocol_IPPROTO_NONE, 0, fmt.Errorf("invalid protocol in %s\n Only UDP is accepted", src)
 	}
 
 	port, err := strconv.Atoi(s[1])
@@ -218,7 +217,6 @@ func validateFlowExportFormat(s string) error {
 // ValidateFlowExportPolicy validates policy, called from api-server
 func ValidateFlowExportPolicy(p *monitoring.FlowExportPolicy) error {
 	spec := p.Spec
-
 	if _, err := validateFlowExportInterval(spec.Interval); err != nil {
 		return err
 	}
@@ -249,14 +247,23 @@ func ValidateFlowExportPolicy(p *monitoring.FlowExportPolicy) error {
 	}
 
 	if len(spec.Exports) == 0 {
-		return fmt.Errorf("no collectors configured")
+		return fmt.Errorf("no targets configured")
 	}
 
 	if len(spec.Exports) > tpm.MaxCollectorPerPolicy {
-		return fmt.Errorf("cannot configure more than %d collectors", tpm.MaxCollectorPerPolicy)
+		return fmt.Errorf("cannot configure more than %d targets", tpm.MaxCollectorPerPolicy)
 	}
 
+	feTargets := map[string]bool{}
 	for _, export := range spec.Exports {
+		if key, err := json.Marshal(export); err == nil {
+			ks := string(key)
+			if _, ok := feTargets[ks]; ok {
+				return fmt.Errorf("found duplicate target %v %v", export.Destination, export.Transport)
+			}
+			feTargets[ks] = true
+		}
+
 		dest := export.Destination
 		if dest == "" {
 			return fmt.Errorf("destination is empty")
@@ -313,11 +320,11 @@ func (s *PolicyState) validatePolicy(p *tpmprotos.FlowExportPolicy) (map[types.C
 	}
 
 	if len(spec.Exports) == 0 {
-		return nil, fmt.Errorf("no collectors configured")
+		return nil, fmt.Errorf("no targets configured")
 	}
 
 	if len(spec.Exports) > tpm.MaxCollectorPerPolicy {
-		return nil, fmt.Errorf("cannot configure more than %d collectors", tpm.MaxCollectorPerPolicy)
+		return nil, fmt.Errorf("cannot configure more than %d targets", tpm.MaxCollectorPerPolicy)
 	}
 
 	// get vrf

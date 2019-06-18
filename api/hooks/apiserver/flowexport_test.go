@@ -53,7 +53,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 		fail   bool
 	}{
 		{
-			name: "invalid protocol",
+			name: "invalid interval (empty)",
 			fail: true,
 			policy: monitoring.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{
@@ -61,7 +61,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Name:      "empty-interval",
 					Tenant:    globals.DefaultTenant,
 				},
 
@@ -93,12 +93,12 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 						},
 					},
 
-					Interval: "15s",
+					Interval: "",
 					Format:   "IPFIX",
 					Exports: []monitoring.ExportConfig{
 						{
 							Destination: "10.1.1.100",
-							Transport:   "IP/1234",
+							Transport:   "UDP/1234",
 						},
 					},
 				},
@@ -106,15 +106,123 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 		},
 
 		{
-			name: "valid policy",
-			fail: false,
+			name: "invalid interval",
+			fail: true,
 			policy: monitoring.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{
 					Kind: "flowExportPolicy",
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Name:      "invalid-interval-155",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []*monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval:         "155",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "UDP/1234",
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid DNS",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "invalid-DNS",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []*monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "test.pensando.iox",
+							Transport:   "UDP/1234",
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "duplicate targets",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "duplicate-targets",
 					Tenant:    globals.DefaultTenant,
 				},
 
@@ -152,7 +260,491 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Exports: []monitoring.ExportConfig{
 						{
 							Destination: "10.1.1.100",
-							Transport:   "TCP/1234",
+							Transport:   "UDP/1234",
+						},
+						{
+							Destination: "10.1.1.100",
+							Transport:   "UDP/1234",
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid destination (empty)",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "empty-destination",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []*monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "",
+							Transport:   "UDP/1234",
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid transport (empty)",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "empty-transport",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []*monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "",
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid targets (empty)",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "empty-targets",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []*monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
+				},
+			},
+		},
+
+		{
+			name: "invalid Transport, missing port",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "invalid-Transport-missing-port",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []*monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "UDP",
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid Transport, missing protocol",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "invalid-Transport-missing-protocol",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []*monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "1234",
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid protocol, should be UDP",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "invalid-protocol-should-be-UDP",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []*monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "IP/1234",
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid port",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "invalid-port-aaaa",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []*monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "UDP/aaaa",
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid port",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "invalid-port-65536",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []*monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "UDP/65536",
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "valid policy",
+			fail: false,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "valid-policy",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []*monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "UDP/1234",
 						},
 					},
 				},

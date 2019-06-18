@@ -300,14 +300,14 @@ func ValidateFwLogPolicy(s *monitoring.FwlogPolicySpec) error {
 
 		tr := strings.Split(c.Transport, "/")
 		if len(tr) != 2 {
-			return fmt.Errorf("invalid protocol/port in %s", c.Transport)
+			return fmt.Errorf("transport should be in protocol/port format")
 		}
 
 		if _, ok := map[string]bool{
 			"tcp": true,
 			"udp": true,
 		}[strings.ToLower(tr[0])]; !ok {
-			return fmt.Errorf("invalid protocol %v", tr[0])
+			return fmt.Errorf("invalid protocol %v\n Accepted protocols: TCP, UDP", tr[0])
 		}
 
 		port, err := strconv.Atoi(tr[1])

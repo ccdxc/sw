@@ -391,7 +391,7 @@ func TestValidatePolicy(t *testing.T) {
 			TemplateInterval: "5m",
 			Format:           "IPFIX",
 			Exports: []monitoring.ExportConfig{
-				{Transport: "TCP/1234"},
+				{Transport: "UDP/1234"},
 			},
 		}}
 
@@ -450,7 +450,7 @@ func TestValidatePolicy(t *testing.T) {
 			Exports: []monitoring.ExportConfig{
 				{
 					Destination: destAddr,
-					Transport:   "TCP/1234",
+					Transport:   "UDP/1234",
 				},
 			},
 		}}
@@ -493,7 +493,7 @@ func TestValidatePolicy(t *testing.T) {
 			Exports: []monitoring.ExportConfig{
 				{
 					Destination: destAddr,
-					Transport:   "TCP/1234",
+					Transport:   "UDP/1234",
 				},
 			},
 		}}
@@ -668,7 +668,7 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 				Exports: []monitoring.ExportConfig{
 					{
 						Destination: fmt.Sprintf("192.168.3.%d", 10+l),
-						Transport:   "TCP/1234",
+						Transport:   "UDP/1234",
 					},
 				},
 			},
@@ -712,7 +712,7 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 				Exports: []monitoring.ExportConfig{
 					{
 						Destination: fmt.Sprintf("192.168.3.%d", 10+l),
-						Transport:   "TCP/1234",
+						Transport:   "UDP/1234",
 					},
 				},
 			},
@@ -2272,7 +2272,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 		fail   bool
 	}{
 		{
-			name: "invalid protocol",
+			name: "invalid protocol, should be UDP",
 			fail: true,
 			policy: monitoring.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{
@@ -2280,7 +2280,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Name:      "invalid-protocol",
 					Tenant:    globals.DefaultTenant,
 				},
 
@@ -2318,7 +2318,173 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Exports: []monitoring.ExportConfig{
 						{
 							Destination: "10.1.1.100",
-							Transport:   "IP/1234",
+							Transport:   "TCP/1234",
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "empty transport",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "empty-transport",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []*monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "",
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "empty destination",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "empty-destination",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []*monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval:         "15s",
+					Format:           "IPFIX",
+					TemplateInterval: "5m",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "",
+							Transport:   "UDP/1234",
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "duplicate targets",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "duplicate-targets",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []*monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval:         "15s",
+					Format:           "IPFIX",
+					TemplateInterval: "5m",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "UDP/1234",
+						},
+						{
+							Destination: "10.1.1.100",
+							Transport:   "UDP/1234",
 						},
 					},
 				},
@@ -2334,7 +2500,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Name:      "invalid-interval",
 					Tenant:    globals.DefaultTenant,
 				},
 
@@ -2370,7 +2536,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Exports: []monitoring.ExportConfig{
 						{
 							Destination: "10.1.1.100",
-							Transport:   "TCP/1234",
+							Transport:   "UDP/1234",
 						},
 					},
 				},
@@ -2386,7 +2552,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Name:      "invalid-format",
 					Tenant:    globals.DefaultTenant,
 				},
 
@@ -2424,33 +2590,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Exports: []monitoring.ExportConfig{
 						{
 							Destination: "10.1.1.100",
-							Transport:   "TCP/1234",
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "no match rule",
-			fail: false,
-			policy: monitoring.FlowExportPolicy{
-				TypeMeta: api.TypeMeta{
-					Kind: "flowExportPolicy",
-				},
-				ObjectMeta: api.ObjectMeta{
-					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
-					Tenant:    globals.DefaultTenant,
-				},
-
-				Spec: monitoring.FlowExportPolicySpec{
-					Interval:         "15s",
-					TemplateInterval: "5m",
-					Format:           "IPFIX",
-					Exports: []monitoring.ExportConfig{
-						{
-							Destination: "10.1.1.100",
-							Transport:   "TCP/1234",
+							Transport:   "UDP/1234",
 						},
 					},
 				},
@@ -2458,7 +2598,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 		},
 
 		{
-			name: "invalid collector",
+			name: "invalid transport, missing port",
 			fail: true,
 			policy: monitoring.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{
@@ -2466,7 +2606,169 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Name:      "transport-missing-port",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []*monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "UDP",
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid transport, missing protocol",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "transport-missing-protocol",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []*monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "1234",
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid port (aaaa)",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "invalid-port",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []*monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "UDP/aaaa",
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "empty targets",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "empty-targets",
 					Tenant:    globals.DefaultTenant,
 				},
 
@@ -2514,7 +2816,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Name:      "valid-policy",
 					Tenant:    globals.DefaultTenant,
 				},
 
@@ -2552,7 +2854,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Exports: []monitoring.ExportConfig{
 						{
 							Destination: "10.1.1.100",
-							Transport:   "TCP/1234",
+							Transport:   "UDP/1234",
 						},
 					},
 				},

@@ -274,7 +274,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Name:      "invalid-dns",
 				},
 				Spec: monitoring.FwlogPolicySpec{
 					Targets: []monitoring.ExportConfig{
@@ -296,7 +296,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 			},
 		},
 		{
-			name: "too many collectors",
+			name: "too many targets",
 			fail: true,
 			policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
@@ -304,7 +304,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Name:      "too-many-targets",
 				},
 				Spec: monitoring.FwlogPolicySpec{
 					Targets: []monitoring.ExportConfig{
@@ -339,7 +339,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 		},
 
 		{
-			name: "duplicate collectors",
+			name: "duplicate targets",
 			fail: true,
 			policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
@@ -347,7 +347,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Name:      "duplicate-targets",
 				},
 				Spec: monitoring.FwlogPolicySpec{
 					Targets: []monitoring.ExportConfig{
@@ -416,7 +416,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 		},
 
 		{
-			name: "no port in collector",
+			name: "no port in target",
 			fail: true,
 			policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
@@ -424,7 +424,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Name:      "no-port-in-target",
 				},
 				Spec: monitoring.FwlogPolicySpec{
 					Targets: []monitoring.ExportConfig{
@@ -447,7 +447,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 		},
 
 		{
-			name: "invalid proto",
+			name: "invalid protocol, should be TCP/UDP",
 			fail: true,
 			policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
@@ -455,7 +455,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Name:      "invalid-protocol",
 				},
 				Spec: monitoring.FwlogPolicySpec{
 					Targets: []monitoring.ExportConfig{
@@ -478,7 +478,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 		},
 
 		{
-			name: "invalid port",
+			name: "invalid port (abcd)",
 			fail: true,
 			policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
@@ -486,7 +486,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Name:      "invalid-port",
 				},
 				Spec: monitoring.FwlogPolicySpec{
 					Targets: []monitoring.ExportConfig{
@@ -509,7 +509,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 		},
 
 		{
-			name: "invalid port",
+			name: "invalid port (65536)",
 			fail: true,
 			policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
@@ -517,7 +517,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Name:      "invalid-port",
 				},
 				Spec: monitoring.FwlogPolicySpec{
 					Targets: []monitoring.ExportConfig{
@@ -538,8 +538,9 @@ func TestValidateFwlogPolicy(t *testing.T) {
 				},
 			},
 		},
+
 		{
-			name: "duplicate collector",
+			name: "no targets",
 			fail: true,
 			policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
@@ -547,37 +548,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
-				},
-				Spec: monitoring.FwlogPolicySpec{
-					Targets: []monitoring.ExportConfig{
-						{
-							Destination: "192.168.100.12",
-							Transport:   "tcp/10001",
-						},
-						{
-							Destination: "192.168.100.12",
-							Transport:   "tcp/10001",
-						},
-					},
-					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-					Config: &monitoring.SyslogExportConfig{
-						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
-					},
-				},
-			},
-		},
-		{
-			name: "no collectors",
-			fail: true,
-			policy: &tpmprotos.FwlogPolicy{
-				TypeMeta: api.TypeMeta{
-					Kind: "FwlogPolicy",
-				},
-				ObjectMeta: api.ObjectMeta{
-					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Name:      "no-targets",
 				},
 				Spec: monitoring.FwlogPolicySpec{
 					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
@@ -597,7 +568,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Name:      "invalid-override",
 				},
 				Spec: monitoring.FwlogPolicySpec{
 					Targets: []monitoring.ExportConfig{
@@ -615,7 +586,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 			},
 		},
 		{
-			name: "create policy",
+			name: "create good policy",
 			fail: false,
 			policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
@@ -623,7 +594,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Name:      "create-good-policy",
 				},
 				Spec: monitoring.FwlogPolicySpec{
 					Targets: []monitoring.ExportConfig{

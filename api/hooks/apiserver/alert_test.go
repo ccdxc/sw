@@ -3,8 +3,10 @@ package impl
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"google.golang.org/grpc/metadata"
 
@@ -16,10 +18,390 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/memkv"
+	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
+
+func TestValidateAlertDestination(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+	defer cancel()
+
+	logConfig := &log.Config{
+		Module:      "TestValidateAlertDestination",
+		Format:      log.LogFmt,
+		Filter:      log.AllowAllFilter,
+		Debug:       false,
+		CtxSelector: log.ContextAll,
+		LogToStdout: true,
+		LogToFile:   false,
+	}
+
+	// Initialize logger config
+	l := log.SetConfig(logConfig)
+	s := &alertHooks{
+		logger: l,
+	}
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+	txn := kvs.NewTxn()
+
+	testAlertDestList := []struct {
+		name   string
+		policy monitoring.AlertDestination
+		fail   bool
+	}{
+		{
+			name: "invalid DNS",
+			fail: true,
+			policy: monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "invalid-DNS",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{
+								Destination: "test.pensando.iox",
+								Transport:   "TCP/1234",
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "duplicate targets",
+			fail: true,
+			policy: monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "duplicate-targets",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{
+								Destination: "10.1.1.100",
+								Transport:   "TCP/1234",
+							},
+							{
+								Destination: "10.1.1.100",
+								Transport:   "TCP/1234",
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid destination (empty)",
+			fail: true,
+			policy: monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "empty-destination",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{
+								Destination: "",
+								Transport:   "TCP/1234",
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid transport (empty)",
+			fail: true,
+			policy: monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "empty-transport",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{
+								Destination: "10.1.1.100",
+								Transport:   "",
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid targets (empty)",
+			fail: true,
+			policy: monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "empty-targets",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid Transport, missing port",
+			fail: true,
+			policy: monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "invalid-Transport-missing-port",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{
+								Destination: "10.1.1.100",
+								Transport:   "TCP",
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid Transport, missing protocol",
+			fail: true,
+			policy: monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "invalid-Transport-missing-protocol",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{
+								Destination: "10.1.1.100",
+								Transport:   "1234",
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid protocol, only TCP/UDP is supported",
+			fail: true,
+			policy: monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "invalid-protocol",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{
+								Destination: "10.1.1.100",
+								Transport:   "ICMP/1234",
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid port (aaaa)",
+			fail: true,
+			policy: monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "invalid-port-aaaa",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{
+								Destination: "10.1.1.100",
+								Transport:   "TCP/aaaa",
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid port (65536)",
+			fail: true,
+			policy: monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "invalid-port-65536",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{
+								Destination: "10.1.1.100",
+								Transport:   "TCP/65536",
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "valid policy",
+			fail: false,
+			policy: monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "valid-policy",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{
+								Destination: "10.1.1.100",
+								Transport:   "TCP/1234",
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for i := range testAlertDestList {
+		_, ok, err := s.validateAlertDestination(ctx, kvs, txn, "", apiintf.CreateOper, false,
+			testAlertDestList[i].policy)
+
+		if testAlertDestList[i].fail == true {
+			t.Logf(fmt.Sprintf("test [%v] returned %v", testAlertDestList[i].name, err))
+			Assert(t, ok == false, "test [%v] returned %v", testAlertDestList[i].name, err)
+		} else {
+			t.Log(fmt.Sprintf("test [%v] returned %v", testAlertDestList[i].name, err))
+			Assert(t, ok == true, "test [%v] returned %v", testAlertDestList[i].name, err)
+		}
+	}
+}
 
 // tests the behavior of different alert state changes
 func TestAlertHooks(t *testing.T) {

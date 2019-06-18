@@ -103,7 +103,7 @@ func TestValidateEventPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      "p1",
+					Name:      "no-targets-in-config",
 				},
 				Spec: monitoring.EventPolicySpec{
 					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
@@ -122,7 +122,7 @@ func TestValidateEventPolicy(t *testing.T) {
 					Kind: "EventPolicy",
 				},
 				ObjectMeta: api.ObjectMeta{
-					Name: "p1",
+					Name: "no-destination-in-target",
 				},
 				Spec: monitoring.EventPolicySpec{
 					Targets: []*monitoring.ExportConfig{
@@ -152,7 +152,8 @@ func TestValidateEventPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Tenant:    globals.DefaultTenant,
+					Name:      "invalid-destination-no-DNS",
 				},
 				Spec: monitoring.EventPolicySpec{
 					Targets: []*monitoring.ExportConfig{
@@ -182,7 +183,8 @@ func TestValidateEventPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Tenant:    globals.DefaultTenant,
+					Name:      "missing-port",
 				},
 				Spec: monitoring.EventPolicySpec{
 					Targets: []*monitoring.ExportConfig{
@@ -203,7 +205,7 @@ func TestValidateEventPolicy(t *testing.T) {
 			},
 		},
 		{
-			name:   "invalid protocol",
+			name:   "invalid protocol, should be TCP/UDP",
 			fail:   true,
 			errStr: "invalid protocol",
 			policy: &evtsmgrprotos.EventPolicy{
@@ -212,7 +214,8 @@ func TestValidateEventPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Tenant:    globals.DefaultTenant,
+					Name:      "invalid-protocol",
 				},
 				Spec: monitoring.EventPolicySpec{
 					Targets: []*monitoring.ExportConfig{
@@ -233,7 +236,7 @@ func TestValidateEventPolicy(t *testing.T) {
 			},
 		},
 		{
-			name:   "invalid port",
+			name:   "invalid port (abcd)",
 			fail:   true,
 			errStr: "invalid port",
 			policy: &evtsmgrprotos.EventPolicy{
@@ -242,7 +245,8 @@ func TestValidateEventPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Tenant:    globals.DefaultTenant,
+					Name:      "invalid-port",
 				},
 				Spec: monitoring.EventPolicySpec{
 					Targets: []*monitoring.ExportConfig{
@@ -263,7 +267,7 @@ func TestValidateEventPolicy(t *testing.T) {
 			},
 		},
 		{
-			name:   "invalid port",
+			name:   "invalid port (65536)",
 			fail:   true,
 			errStr: "invalid port",
 			policy: &evtsmgrprotos.EventPolicy{
@@ -272,7 +276,8 @@ func TestValidateEventPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Tenant:    globals.DefaultTenant,
+					Name:      "invalid-port",
 				},
 				Spec: monitoring.EventPolicySpec{
 					Targets: []*monitoring.ExportConfig{
@@ -301,7 +306,8 @@ func TestValidateEventPolicy(t *testing.T) {
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
+					Tenant:    globals.DefaultTenant,
+					Name:      "good-config",
 				},
 				Spec: monitoring.EventPolicySpec{
 					Targets: []*monitoring.ExportConfig{
