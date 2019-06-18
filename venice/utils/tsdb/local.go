@@ -159,7 +159,7 @@ func fetchLms(tableName, attributeName string, mps []*metric.MetricPoint, lms *[
 	for _, mp := range mps {
 		lm := LocalMetric{
 			Name:       tableName,
-			Time:       time.Unix(int64(mp.When.Seconds), int64(mp.When.Nanos)).String(),
+			Time:       time.Unix(mp.When.Seconds, int64(mp.When.Nanos)).String(),
 			Attributes: map[string]string{}}
 		for key, mf := range mp.Fields {
 			if attributeName == "" || attributeName == key {
@@ -190,5 +190,5 @@ func getString(mf *metric.Field) string {
 		c := v.(*metric.Field_Bool)
 		return fmt.Sprintf("%v", c.Bool)
 	}
-	return "unkonwn type"
+	return "unknown type"
 }

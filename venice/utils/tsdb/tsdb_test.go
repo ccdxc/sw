@@ -1053,7 +1053,7 @@ func httpGet(t *testing.T, url string, toIf interface{}) {
 	resp, err := http.Get(url)
 	AssertOk(t, err, fmt.Sprintf("unable to fetch url %s", url))
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, _ := ioutil.ReadAll(resp.Body)
 	err = json.Unmarshal(body, toIf)
 	AssertOk(t, err, "unable to unmarshal http response")
 }

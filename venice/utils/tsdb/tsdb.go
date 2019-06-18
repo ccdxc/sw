@@ -312,7 +312,7 @@ type iGauge struct {
 	value float64
 }
 
-// Set registers a value of a guage
+// Set registers a value of a gauge
 func (g *iGauge) Set(val float64) {
 	obj := g.obj
 
@@ -343,7 +343,7 @@ type iPrecisionGauge struct {
 	value float64
 }
 
-// Set registers a value of a guage
+// Set registers a value of a gauge
 func (g *iPrecisionGauge) Set(val float64, ts time.Time) {
 	obj := g.obj
 
@@ -512,7 +512,7 @@ func (obj *iObj) Histogram(name string) api.Histogram {
 		ranges := make([]int64, defaultRanges)
 		h = &iHistogram{name: name, obj: obj}
 		for i := 0; i < defaultRanges; i++ {
-			ranges[i] = (int64)(math.Exp2((float64)(2 * (i + 1))))
+			ranges[i] = int64(math.Exp2((float64)(2 * (i + 1))))
 		}
 		obj.fields[name] = h
 		h.setHistogramRange(ranges)

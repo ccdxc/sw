@@ -17,7 +17,7 @@ import (
 )
 
 // establishConn connects to citadel instances over grpc and load balancer
-// it would forever keep trying to connect to citadel unless parent context is cancelled
+// it would forever keep trying to connect to citadel unless parent context is canceled
 func establishConn() bool {
 	for {
 		var err error
@@ -28,6 +28,10 @@ func establishConn() bool {
 		rpckitOpts = append(rpckitOpts, rpckit.WithLoggerEnabled(false))
 
 		if global.opts.Collector != "" {
+			if global.rpcClient != nil {
+				global.rpcClient.Close()
+				global.rpcClient = nil
+			}
 			global.rpcClient, err = rpckit.NewRPCClient(global.opts.ClientName, global.opts.Collector, rpckitOpts...)
 			if err == nil {
 				break
