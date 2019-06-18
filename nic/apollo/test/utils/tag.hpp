@@ -18,9 +18,10 @@
 
 namespace api_test {
 
+// todo: can this come from pds_api* files
 #define MAX_NUM_RULES 1024
 
-/// Tag test utility class
+// Tag test rule feeder class
 class tag_rule {
 public:
     // Test parameter
@@ -33,7 +34,7 @@ public:
     ~tag_rule() { };
 };
 
-/// Tag tbl test utility class
+// Tag table test feeder class
 class tag_feeder : public feeder {
 public:
     // Test parameters
@@ -72,8 +73,10 @@ public:
     void spec_build(pds_tag_spec_t *spec);
 
     // Compare routines
-    bool key_compare(pds_tag_key_t *key);
-    bool spec_compare(pds_tag_spec_t *spec);
+    // There is no state maintained in hardware in the same form as input,
+    // so comparision won't be possible
+    bool key_compare(pds_tag_key_t *key) { return true; }
+    bool spec_compare(pds_tag_spec_t *spec) { return true; }
 };
 
 // Dump prototypes
@@ -85,10 +88,7 @@ operator<<(std::ostream& os, const tag_feeder& obj) {
     return os;
 }
 
-// Export variables
-extern pds_tag_key_t k_tag_key;
-
-// Tag test CRUD routines
+// CRUD prototypes
 API_CREATE(tag);
 API_READ(tag);
 API_UPDATE(tag);

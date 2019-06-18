@@ -7,23 +7,16 @@
 /// This file contains the all tag table test cases
 ///
 //----------------------------------------------------------------------------
-#include <getopt.h>
+
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/batch.hpp"
 #include "nic/apollo/test/utils/tag.hpp"
 #include "nic/apollo/test/utils/workflow1.hpp"
 
-using std::cerr;
-using std::cout;
-using std::endl;
-
 namespace api_test {
 
 // Globals
-static char *g_cfg_file = NULL;
-static std::string g_pipeline("");
-
 static constexpr int k_max_tag_table = 4;
 static constexpr int k_max_prefixes_per_tbl = PDS_MAX_PREFIX_PER_TAG;
 
@@ -41,11 +34,7 @@ protected:
     virtual void SetUp() {}
     virtual void TearDown() {}
     static void SetUpTestCase() {
-        test_case_params_t params;
-
-        params.cfg_file = api_test::g_cfg_file;
-        params.enable_fte = false;
-        pds_test_base::SetUpTestCase(params);
+        pds_test_base::SetUpTestCase(g_tc_params);
     }
     static void TearDownTestCase() {
         pds_test_base::TearDownTestCase();
@@ -355,52 +344,8 @@ TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_neg_8) {
 // Entry point
 //----------------------------------------------------------------------------
 
-static inline void
-tag_test_usage_print (char **argv)
-{
-    cout << "Usage : " << argv[0] << " -c <hal.json>" << endl;
-    return;
-}
-
-static inline sdk_ret_t
-tag_test_options_validate (void)
-{
-    if (!api_test::g_cfg_file) {
-        cerr << "HAL config file is not specified" << endl;
-        return sdk::SDK_RET_ERR;
-    }
-    return sdk::SDK_RET_OK;
-}
-
-static void
-tag_test_options_parse (int argc, char **argv)
-{
-    int oc = -1;
-    struct option longopts[] = {{"config", required_argument, NULL, 'c'},
-                                {"help", no_argument, NULL, 'h'},
-                                {0, 0, 0, 0}};
-
-    while ((oc = getopt_long(argc, argv, ":hc:f:", longopts, NULL)) != -1) {
-        switch (oc) {
-        case 'c':
-            api_test::g_cfg_file = optarg;
-            break;
-        default:    // ignore all other options
-            break;
-        }
-    }
-    return;
-}
-
 int
 main (int argc, char **argv)
 {
-    tag_test_options_parse(argc, argv);
-    if (tag_test_options_validate() != sdk::SDK_RET_OK) {
-        tag_test_usage_print(argv);
-        exit(1);
-    }
-
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    api_test_program_run(argc, argv);
 }
