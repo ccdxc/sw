@@ -2242,7 +2242,7 @@ class capri_table:
                     self.end_key_off = (km1.combined_profile.bit_loc*8) + lk_bit_idx + 1 + max_km_width
                     lk_end_byte = km1.combined_profile.bit_loc
                 else:
-                    self.end_key_off = (km1.combined_profile.bit_loc1*8) + (lk_bit_idx%8) + max_km_width
+                    self.end_key_off = (km1.combined_profile.bit_loc1*8) + (lk_bit_idx % 8) + 1 + max_km_width
                     lk_end_byte = km1.combined_profile.bit_loc1
 
             if lk_byte in _km1.combined_profile.byte_sel and \

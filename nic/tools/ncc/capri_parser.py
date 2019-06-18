@@ -2026,16 +2026,11 @@ class capri_parser:
 
                 new_path_hdrs = []
                 for h in path_hdrs:
-                    if h in new_path_hdrs:
-                        self.logger.warning("Multiple extractions of header %s on path %s" % \
-                            (h.name, new_path_hdrs))
-                    else:
+                    if h not in new_path_hdrs:
                         new_path_hdrs.append(h)
+
                 for h in extracted_hdrs:
-                    if h in new_path_hdrs:
-                        self.logger.warning("Multiple extractions of header %s on path %s" % \
-                            (h.name, new_path_hdrs))
-                    else:
+                    if h not in new_path_hdrs:
                         new_path_hdrs.append(h)
                 #paths.append(path_hdrs+extracted_hdrs)
                 paths.append(new_path_hdrs)

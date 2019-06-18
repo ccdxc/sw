@@ -1086,9 +1086,13 @@ class capri_gress_pa:
 
     def find_hf_idx_in_hfgs(self, hf):
         for i, hfg_list in enumerate(self.topo_sorted_hfgroups):
+            if not isinstance(hfg_list, list):
+                # deparse only and synthetic headers are added to hfg_list, skip those
+                continue
             for hfg in hfg_list:
                 if hf in hfg.hfs:
                     return i
+        return len(self.topo_sorted_hfgroups)
                 
     def add_hfgroup(self, hfgroup):
         # self.logger.debug('%s:Add group %s' % (self.d.name, hfgroup))
