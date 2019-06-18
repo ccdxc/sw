@@ -708,13 +708,26 @@ populate_tags_api_rule_spec (uint32_t id, pds_tag_rule_t *api_rule_spec,
     for (uint32_t pfx = 0;
                   pfx < api_rule_spec->num_prefixes; pfx++) {
         prefixes[pfx].addr.af = ip_af;
-        if (ip_af == IP_AF_IPV4) {
-            prefixes[pfx].len = 24;
-            prefixes[pfx].addr.addr.v4_addr =
-                          ((0xC << 28) | ((*tag_pfx_count)++ << 8));
+        if (artemis()) {
+            if (ip_af == IP_AF_IPV4) {
+                prefixes[pfx].len = TESTAPP_V4ROUTE_PREFIX_LEN;
+                prefixes[pfx].addr.af = IP_AF_IPV4;
+                prefixes[pfx].addr.addr.v4_addr =
+                                TESTAPP_V4ROUTE_PREFIX_VAL(*tag_pfx_count);
+                (*tag_pfx_count)++;
+            } else {
+                compute_ipv6_prefix(&prefixes[pfx], v6_route_pfx,
+                                    (*tag_pfx_count)++, 124);
+            }
         } else {
-            compute_ipv6_prefix(&prefixes[pfx], v6_route_pfx,
-                                (*tag_pfx_count)++, 120);
+            if (ip_af == IP_AF_IPV4) {
+                prefixes[pfx].len = 24;
+                prefixes[pfx].addr.addr.v4_addr =
+                              ((0xC << 28) | ((*tag_pfx_count)++ << 8));
+            } else {
+                compute_ipv6_prefix(&prefixes[pfx], v6_route_pfx,
+                                    (*tag_pfx_count)++, 120);
+            }
         }
     }
     return SDK_RET_OK;
@@ -844,14 +857,27 @@ populate_meter_api_rule_spec (uint32_t id, pds_meter_rule_t *api_rule_spec,
     api_rule_spec->prefixes = prefixes;
     for (uint32_t pfx = 0;
             pfx < api_rule_spec->num_prefixes; pfx++) {
-        if (ip_af == IP_AF_IPV4) {
-            prefixes[pfx].len = 24;
-            prefixes[pfx].addr.af = IP_AF_IPV4;
-            prefixes[pfx].addr.addr.v4_addr =
-                          ((0xC << 28) | ((*meter_pfx_count)++ << 8));
+        if (artemis()) {
+            if (ip_af == IP_AF_IPV4) {
+                prefixes[pfx].len = TESTAPP_V4ROUTE_PREFIX_LEN;
+                prefixes[pfx].addr.af = IP_AF_IPV4;
+                prefixes[pfx].addr.addr.v4_addr =
+                                TESTAPP_V4ROUTE_PREFIX_VAL(*meter_pfx_count);
+                (*meter_pfx_count)++;
+            } else {
+                compute_ipv6_prefix(&prefixes[pfx], v6_route_pfx,
+                                    (*meter_pfx_count)++, 124);
+            }
         } else {
-            compute_ipv6_prefix(&prefixes[pfx], v6_route_pfx,
-                                (*meter_pfx_count)++, 120);
+            if (ip_af == IP_AF_IPV4) {
+                prefixes[pfx].len = 24;
+                prefixes[pfx].addr.af = IP_AF_IPV4;
+                prefixes[pfx].addr.addr.v4_addr =
+                              ((0xC << 28) | ((*meter_pfx_count)++ << 8));
+            } else {
+                compute_ipv6_prefix(&prefixes[pfx], v6_route_pfx,
+                                    (*meter_pfx_count)++, 120);
+            }
         }
     }
 }
