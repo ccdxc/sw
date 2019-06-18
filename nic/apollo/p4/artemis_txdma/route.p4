@@ -30,7 +30,7 @@ action route_res_handler() {
             modify_field(session_info_hint.rx_rewrite_flags_dst_ip, 11);
 
             // Enable 4-6 lookup
-            modify_field(txdma_predicate.st_enable, TRUE);
+            //modify_field(txdma_predicate.st_enable, TRUE);
 
             // Disable Peer VNET Route lookup
             modify_field(txdma_predicate.lpm1_enable, FALSE);

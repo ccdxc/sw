@@ -41,6 +41,7 @@ header_type artemis_p4_to_rxdma_header2_t {
     }
 }
 
+// ARTEMIS_P4_TO_RXDMA_HDR3_SZ
 header_type artemis_p4_to_rxdma_header3_t {
     fields {
         flow_hash           : 32;
@@ -49,7 +50,8 @@ header_type artemis_p4_to_rxdma_header3_t {
         parent_hint_slot    : 3;
         parent_is_hint      : 1;
         ipaf                : 1;
-        pad0                : 2;
+        parent_valid        : 1;
+        pad0                : 1;
         pad1                : 64;
     }
 }
@@ -76,6 +78,33 @@ header_type artemis_rx_to_tx_header_t {
         iptype          : 1;  // Byte 37 - 1b
         pad0            : 1;  // Byte 37 - 1b
         // Please check the above comment when adding new fields
+    }
+}
+
+// NOTE: keep in sync with artemis_p4_to_rxdma_header3_t and 
+// artemis_p4_to_rxdma_header_t
+header_type artemis_rx_to_tx_header2_t {
+    fields {
+        // from artemis_p4_to_rxdma_header3_t
+        flow_hash           : 32;
+        parent_hint_index   : 22;
+        flow_nrecircs       : 3;
+        parent_hint_slot    : 3;
+        parent_is_hint      : 1;
+        ipaf                : 1;
+        parent_valid        : 1;
+        pad0                : 1;
+
+        // from artemis_p4_to_rxdma_header_t
+        vpc_id          : 8;
+        pad1            : 16;
+
+        flow_src        : 128;
+        flow_sport      : 16;
+        flow_dport      : 16;
+        flow_proto      : 8;
+        flow_dst        : 128;
+        service_tag     : 32;
     }
 }
 
@@ -125,46 +154,47 @@ header_type session_info_hint_t {
 }
 
 
-// iFlow Info Hints - for now nothing, but later filled by FTL assist program
-header_type iflow_info_hint_t {
+// Packet to arm will contain artemis_txdma_to_arm_entry_header_t + 
+// artemis_txdma_to_arm_meta_header_t
+// ARTEMIS_TXDMA_TO_ARM_ENTRY_HDR_SZ
+header_type artemis_txdma_to_arm_entry_header_t {
     fields {
-         pad : 512;
+        iflow_parent_entry      : 512;
+        iflow_leaf_entry        : 512;
+        rflow_parent_entry      : 512;
+        rflow_leaf_entry        : 512;
+        session_info            : 512;
     }
 }
 
-// rFlow Info Hints - for now nothing, but later filled by FTL assist program
-header_type rflow_info_hint_t {
-    fields {
-         pad : 512;
-    }
-}
-
-// Packet to arm will contain artemis_txdma_to_arm_session_info_header_t + 
-// 2 * artemis_txdma_to_arm_flow_header_t (iflow and rflow)
-// In addition p4 adds p4_to_arm_header_t (even in the final approach?)
-
-header_type artemis_txdma_to_arm_session_info_header_t {
+// ARTEMIS_TXDMA_TO_ARM_META_SZ
+header_type artemis_txdma_to_arm_meta_header_t {
     fields {
         action_                 : 8; // add or delete
         packet_len              : 16;
-        session_index           : 32;  // delete only
-        session_info            : 512; // insert only
-    }
-}
+        session_index           : 32; // delete only
 
-header_type artemis_txdma_to_arm_flow_header_t {
-    fields {
-        flow_hash               : 32;
-        ipaf                    : 1; // v4 or v6
-        parent_is_hint          : 1;
-        parent_hint_slot        : 3; // 0 is invalid
+        // iflow metadata
+        iflow_hash              : 32;
+        iflow_ipaf              : 1; // v4 or v6
+        iflow_parent_is_hint    : 1;
+        iflow_parent_hint_slot  : 3; // 0 is invalid
                                      // 1-4 = hint slots
                                      // 5 = more
-        nrecircs                : 3;
-        parent_index            : 32; // parent index if 'parent_is_hint'
-        leaf_index              : 32; // for delete
-        parent_flow_entry       : 512;
-        leaf_flow_entry         : 512;
+        iflow_nrecircs          : 3;
+        iflow_parent_index      : 32; // parent index if 'parent_is_hint'
+        iflow_leaf_index        : 32; // for delete
+
+        // rflow metadata
+        rflow_hash              : 32;
+        rflow_ipaf              : 1; // v4 or v6
+        rflow_parent_is_hint    : 1;
+        rflow_parent_hint_slot  : 3; // 0 is invalid
+                                     // 1-4 = hint slots
+                                     // 5 = more
+        rflow_nrecircs          : 3;
+        rflow_parent_index      : 32; // parent index if 'parent_is_hint'
+        rflow_leaf_index        : 32; // for delete
     }
 }
 

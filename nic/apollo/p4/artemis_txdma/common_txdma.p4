@@ -1058,31 +1058,27 @@ parser start {
 control ingress {
     common_tx_p4plus_stage0();
     if (txdma_predicate.cps_path_en == 1) {
-        if (txdma_predicate.pass_two == 0) {
-            read_qstate();
+        if (txdma_predicate.flow_enable == TRUE) {
+            iflow();
         } else {
-            mapping();
-            if (txdma_predicate.lpm1_enable == TRUE) {
-                vnic_info_txdma();
-            }
+            if (txdma_predicate.pass_two == 0) {
+                read_qstate();
+            } else {
+                mapping();
+                if (txdma_predicate.lpm1_enable == TRUE) {
+                    vnic_info_txdma();
+                }
 
-            if (txdma_predicate.st_enable == TRUE) {
                 remote_46_mapping();
             }
-        }
 
-        if (txdma_predicate.lpm1_enable == TRUE) {
-            route_lookup();
-        }
+            if (txdma_predicate.lpm1_enable == TRUE) {
+                route_lookup();
+            }
 
-        // Hack! want a predicate bit thats not true for now.
-        // Revisit this when figuring out the final predicate bits
-        if (txdma_predicate.st_enable == TRUE) {
-            iflow();
+            rfc();
+            dma();
         }
-
-        rfc();
-        dma();
     } else {
         if (app_header.table0_valid == 1) {
             apply(tx_table_s1_t0);

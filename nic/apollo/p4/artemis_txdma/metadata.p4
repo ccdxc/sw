@@ -4,7 +4,7 @@
 header_type txdma_predicate_metadata_t {
     fields {
         p4plus_app_id       : 4;
-        st_enable           : 1;
+        flow_enable         : 1;
         pass_two            : 1;
         lpm1_enable         : 1;
         cps_path_en         : 1;
@@ -66,6 +66,12 @@ header_type scratch_metadata_t {
     }
 }
 
+header_type txdma_to_arm_flow_t {
+    fields {
+        entry           : 512;
+    }
+}
+
 // PHV instantiation
 @pragma dont_trim
 @pragma pa_header_union ingress app_header
@@ -75,30 +81,26 @@ metadata txdma_predicate_metadata_t txdma_predicate;
 @pragma pa_header_union ingress to_stage_1
 metadata doorbell_data_t    doorbell_data;
 
-// Scratch metadata
-@pragma scratch_metadata
-metadata scratch_metadata_t     scratch_metadata;
+// Flit 2 : iflow_parent_entry
+// Flit 3 : iflow_leaf_entry
+// Flit 4 : rflow_parent_entry
 
-@pragma scratch_metadata
-metadata qstate_hdr_t           scratch_qstate_hdr;
-
-@pragma scratch_metadata
-metadata qstate_info_t          scratch_qstate_info;
-
+// Flit 5 : rflow_leaf_entry
 @pragma dont_trim
-metadata txdma_control_metadata_t txdma_control;
+metadata txdma_to_arm_flow_t rflow_leaf_entry;
 
+// Flit 6 : session_info
 @pragma pa_align 512
 @pragma dont_trim
 metadata session_info_hint_t session_info_hint;
 
-@pragma pa_align 512
+// Flit 7 : artemis_txdma_to_arm_meta_header_t
 @pragma dont_trim
-metadata iflow_info_hint_t iflow_info_hint;
+metadata artemis_txdma_to_arm_meta_header_t txdma_to_arm_meta;
 
-@pragma pa_align 512
+
 @pragma dont_trim
-metadata rflow_info_hint_t rflow_info_hint;
+metadata txdma_control_metadata_t txdma_control;
 
 @pragma pa_align 512
 @pragma dont_trim
@@ -117,4 +119,14 @@ metadata dma_cmd_phv2mem_t rxdma_ci_update;     // dma cmd 3
 
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t doorbell_ci_update;  // dma cmd 4
+
+// Scratch metadata
+@pragma scratch_metadata
+metadata scratch_metadata_t     scratch_metadata;
+
+@pragma scratch_metadata
+metadata qstate_hdr_t           scratch_qstate_hdr;
+
+@pragma scratch_metadata
+metadata qstate_info_t          scratch_qstate_info;
 

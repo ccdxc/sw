@@ -37,10 +37,14 @@ pkt_enqueue:
 
     // dma pkt desc2
     add         r3, r3, 64
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(pktdesc2_phv2mem_dma_cmd, r3, \
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(pktdesc2_part1_phv2mem_dma_cmd, r3, \
                                 p4_to_rxdma3_flow_hash, \
                                 p4_to_rxdma3_pad0)
-    phvwr       p.pktdesc2_phv2mem_dma_cmd_round, 1
+    // dma pkt 2nd part of desc2
+    add         r3, r3, ARTEMIS_P4_TO_RXDMA_HDR3_SZ
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(pktdesc2_part2_phv2mem_dma_cmd, r3, \
+                                p4_to_rxdma_vpc_id, \
+                                p4_to_rxdma_service_tag)
 
     // use Qid1 to ring door-bell. Qid0 is used as a completionQ between txdma
     // and rxdma this avoids contention on the same qstate0 addr from rxdma,

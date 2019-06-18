@@ -10,8 +10,8 @@ struct phv_                 p;
 %%
 
 iflow:
-    //phvwr.e         p.txdma_predicate_pass_three, FALSE
-    nop.e
+    phvwr           p.txdma_predicate_cps_path_en, FALSE
+    phvwr.e         p.txdma_predicate_flow_enable, FALSE
     phvwr           p.capri_p4_intr_recirc, FALSE
 
 /*****************************************************************************/

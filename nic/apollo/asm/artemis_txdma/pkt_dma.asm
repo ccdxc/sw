@@ -19,7 +19,8 @@ pkt_dma:
     phvwr           p.txdma_predicate_pass_two, TRUE
 
     /* Else disable Recirc */
-    phvwr.!c1       p.capri_p4_intr_recirc, FALSE
+    phvwr           p.txdma_predicate_pass_two, FALSE
+    phvwr           p.txdma_predicate_flow_enable, TRUE
 
     // Setup Intrisic fields and DMA commands to generate packet to P4IG
     phvwr           p.capri_intr_tm_oport, TM_PORT_INGRESS
@@ -36,8 +37,8 @@ pkt_dma:
                                  capri_intr_tm_instance_type, \
                                  capri_txdma_intr_qid, \
                                  capri_txdma_intr_txdma_rsv, \
-                                 session_info_hint_iflow_tcp_state, \
-                                 rflow_info_hint_pad)
+                                 to_stage_4_to_stage_data, \
+                                 txdma_to_arm_meta_rflow_leaf_index)
 
     // 2) DMA command for payload
     // mem2pkt has an implicit fence. all subsequent dma is blocked

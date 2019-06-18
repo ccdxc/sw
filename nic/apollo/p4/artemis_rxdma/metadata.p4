@@ -161,7 +161,10 @@ metadata artemis_rx_to_tx_header_t rx_to_tx_hdr;
 metadata dma_cmd_phv2mem_t      pktdesc_phv2mem;
 
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t      pktdesc2_phv2mem;
+metadata dma_cmd_phv2mem_t      pktdesc2_part1_phv2mem;
+
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t      pktdesc2_part2_phv2mem;
 
 @pragma dont_trim
 metadata dma_cmd_pkt2mem_t      pktbuf_pkt2mem;

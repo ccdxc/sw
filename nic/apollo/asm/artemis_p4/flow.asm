@@ -56,6 +56,7 @@ label_2nd_level_flow_miss:
     seq         c1, k.control_metadata_flow_ohash_lkp, 1
     phvwr.c1    p.p4_to_rxdma3_parent_is_hint, 1
     phvwr.c1    p.p4_to_rxdma3_parent_hint_index, k.service_header_flow_ohash[21:0].wx
+    phvwr       p.p4_to_rxdma3_parent_valid, 1
 label_flow_miss:
     phvwrpair   p.p4_to_rxdma3_flow_hash, r1, \
                     p.p4_to_rxdma3_ipaf, 1

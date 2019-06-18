@@ -1,9 +1,19 @@
+// d-vector should match artemis_rx_to_tx2_header_t
 action iflow_rx2tx(flow_hash,
              parent_hint_index,
              flow_nrecircs,
              parent_hint_slot,
              parent_is_hint,
-             ipaf) {
+             ipaf,
+             parent_valid, pad0,
+             vpc_id,
+             pad1,
+             flow_src,
+             flow_sport,
+             flow_dport,
+             flow_proto,
+             flow_dst,
+             service_tag) {
     modify_field(capri_p4_intr.recirc, FALSE);
     //modify_field(txdma_predicate.pass_three, FALSE);
 
@@ -13,6 +23,17 @@ action iflow_rx2tx(flow_hash,
     modify_field(scratch_metadata.field3, parent_hint_slot);
     modify_field(scratch_metadata.field1, parent_is_hint);
     modify_field(scratch_metadata.field1, ipaf);
+    modify_field(scratch_metadata.field1, parent_valid);
+    modify_field(scratch_metadata.field1, pad0);
+
+    modify_field(scratch_metadata.field8, vpc_id);
+    modify_field(scratch_metadata.field16, pad1);
+    modify_field(scratch_metadata.field128, flow_src);
+    modify_field(scratch_metadata.field16, flow_sport);
+    modify_field(scratch_metadata.field16, flow_dport);
+    modify_field(scratch_metadata.field8, flow_proto);
+    modify_field(scratch_metadata.field128, flow_dst);
+    modify_field(scratch_metadata.field32, service_tag);
 }
 
 @pragma stage 0
