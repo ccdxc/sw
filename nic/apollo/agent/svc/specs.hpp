@@ -1207,9 +1207,14 @@ static inline void
 tep_proto_spec_to_api_spec (pds_tep_spec_t *api_spec,
                             const pds::TunnelSpec &proto_spec)
 {
-    types::IPAddress remoteip = proto_spec.remoteip();
-
     memset(api_spec, 0, sizeof(pds_tep_spec_t));
+    ipaddr_proto_spec_to_api_spec(&api_spec->key.ip_addr,
+                                  proto_spec.remoteip());
+    ipaddr_proto_spec_to_api_spec(&api_spec->ip_addr,
+                                  proto_spec.localip());
+    MAC_UINT64_TO_ADDR(api_spec->mac, proto_spec.macaddress());
+    api_spec->vpc.id = proto_spec.vpcid();
+
     switch (proto_spec.type()) {
     case pds::TUNNEL_TYPE_IGW:
         api_spec->type = PDS_TEP_TYPE_IGW;
@@ -1224,22 +1229,13 @@ tep_proto_spec_to_api_spec (pds_tep_spec_t *api_spec,
         api_spec->type = PDS_TEP_TYPE_NONE;
         break;
     }
-    switch (proto_spec.encap().type()) {
-    case types::ENCAP_TYPE_VXLAN:
-        api_spec->encap.type = PDS_ENCAP_TYPE_VXLAN;
-        api_spec->encap.val.vnid = proto_spec.encap().value().vnid();
-        break;
-    case types::ENCAP_TYPE_MPLSoUDP:
-        api_spec->encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-        api_spec->encap.val.mpls_tag = proto_spec.encap().value().mplstag();
-        break;
-    default:
-        break;
-    }
-
-    ipaddr_proto_spec_to_api_spec(&api_spec->key.ip_addr, remoteip);
-    MAC_UINT64_TO_ADDR(api_spec->mac, proto_spec.macaddress());
+    api_spec->encap = proto_encap_to_pds_encap(proto_spec.encap());
     api_spec->nat = proto_spec.nat();
+    api_spec->remote_svc = proto_spec.remoteservice();
+    if (api_spec->remote_svc) {
+        api_spec->remote_svc_encap =
+            proto_encap_to_pds_encap(proto_spec.remoteserviceencap());
+    }
 }
 
 // Build VPC API spec from protobuf spec

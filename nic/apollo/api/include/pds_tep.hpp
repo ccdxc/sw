@@ -33,11 +33,11 @@ typedef enum pds_tep_type_e {
 /// \brief TEP specification
 typedef struct pds_tep_spec_s {
     pds_tep_key_t  key;        ///< key
+    pds_vpc_key_t  vpc;        ///< VPC this tunnel belongs to
     ip_addr_t      ip_addr;    ///< outer source IP to be used
                                ///< (unused currently)
     mac_addr_t     mac;        ///< MAC address of this TEP
     pds_tep_type_t type;       ///< type/role of the TEP
-    pds_vpc_key_t  vpc;        ///< VPC this tunnel belongs to
     ///< encap to be used, if specified
     ///< for PDS_TEP_TYPE_WORKLOAD type TEP, encap value itself comes from the
     ///< mapping configuration so need not be specified here, however for the
@@ -45,11 +45,15 @@ typedef struct pds_tep_spec_s {
     ///< the encap value, if specified here, always so agent needs to set this
     ///< appropriately
     pds_encap_t    encap;
-    bool           nat;        ///< perform SNAT for traffic going to this TEP
-                               ///< and DNAT for traffic coming from this TEP,
-                               ///< if this is set to true (note that mappings
-                               ///< need to have public IP configured for this
-                               ///< to take effect)
+    ///< perform SNAT for traffic going to this TEP and DNAT for traffic coming
+    ///< from this TEP, if this is set to true (note that mappings need to have
+    ///< public IP configured for this to take effect)
+    bool           nat;
+    ///< true, if tunnel is of type PDS_TEP_TYPE_SERVICE and service is in
+    ///< remote data center/pod
+    bool           remote_svc;
+    ///< fabric encap for remote service
+    pds_encap_t    remote_svc_encap;
 } __PACK__ pds_tep_spec_t;
 
 /// \brief TEP status
