@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	testSendInterval = 500 * time.Millisecond
+	testSendInterval = 300 * time.Millisecond
 )
 
 func TestMetricsService(t *testing.T) {
@@ -38,7 +38,9 @@ func TestMetricsService(t *testing.T) {
 	AssertOk(t, err, "Error starting metrics service")
 	Assert(t, ms.IsRunning(), "MS should be running after Start() is called")
 
-	time.Sleep(3 * testSendInterval)
+	// ValidateSendInterval requires at least 2 successful writes to report meaningful results.
+	// This may actually take more than 2 send intervals if the machine is busy.
+	time.Sleep(5 * testSendInterval)
 	Assert(t, collector.ValidateSendInterval(testSendInterval), "Error validating send interval")
 
 	clusterCounters := map[string]int64{
@@ -51,14 +53,14 @@ func TestMetricsService(t *testing.T) {
 		"DisconnectedNICs":   6,
 	}
 	ms.UpdateCounters(clusterCounters)
-	time.Sleep(testSendInterval)
+	time.Sleep(2 * testSendInterval)
 
 	clusterTags := map[string]string{"Tenant": "default", "Namespace": "default", "Kind": "Cluster", "Name": "testCluster"}
 	ok := collector.ValidateCount("test", clusterTags, 1, len(clusterCounters), 0, 0, 0)
 	Assert(t, ok, "Cluster metrics validation failed")
 
 	// we need to sleep because collector's Validate* functions do a ClearMetrics() at the end
-	time.Sleep(testSendInterval)
+	time.Sleep(2 * testSendInterval)
 
 	nodeTags := map[string]string{"Tenant": "default", "Namespace": "default", "Kind": "Node", "Name": "testNode"}
 	// these numbers must match the nodeMetrics definition in sw/venice/utils/nodewatcher/nodewatcher.go
@@ -77,15 +79,15 @@ func TestMetricsService(t *testing.T) {
 	Assert(t, ms.IsRunning(), "MS should be running after Start() is called")
 
 	// After restart everything should work as before
-	time.Sleep(3 * testSendInterval)
+	time.Sleep(5 * testSendInterval)
 	Assert(t, collector.ValidateSendInterval(testSendInterval), "Error validating send interval")
 
 	ms.UpdateCounters(clusterCounters)
-	time.Sleep(testSendInterval)
+	time.Sleep(2 * testSendInterval)
 	ok = collector.ValidateCount("test", clusterTags, 1, len(clusterCounters), 0, 0, 0)
 	Assert(t, ok, "Cluster metrics validation failed")
 
-	time.Sleep(testSendInterval)
+	time.Sleep(2 * testSendInterval)
 	ok = collector.ValidateCount("test", nodeTags, 1, numInts, numFloats, numBools, numStrings)
 	Assert(t, ok, "Node metrics validation failed")
 }
