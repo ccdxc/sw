@@ -76,11 +76,6 @@ func TestADIncorrectUserAuthentication(t *testing.T) {
 	testIncorrectUserAuthentication(t, config)
 }
 
-func TestADMissingLdapAttributeMapping(t *testing.T) {
-	config := getADConfig()
-	testMissingLdapAttributeMapping(t, config)
-}
-
 func TestADIncorrectLdapAttributeMapping(t *testing.T) {
 	config := getADConfig()
 	testIncorrectLdapAttributeMapping(t, config)

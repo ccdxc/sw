@@ -21,7 +21,9 @@ import (
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn"
+	"github.com/pensando/sw/venice/utils/authn/ldap"
 	"github.com/pensando/sw/venice/utils/authn/password"
+	"github.com/pensando/sw/venice/utils/authn/radius"
 	"github.com/pensando/sw/venice/utils/authz"
 	authzgrpc "github.com/pensando/sw/venice/utils/authz/grpc"
 	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
@@ -289,13 +291,9 @@ func (s *authHooks) validateAuthenticatorConfig(i interface{}, ver string, ignSt
 				ret = append(ret, errors.New("local authenticator config not defined"))
 			}
 		case auth.Authenticators_LDAP.String():
-			if r.Spec.Authenticators.GetLdap() == nil {
-				ret = append(ret, errors.New("ldap authenticator config not defined"))
-			}
+			ret = append(ret, ldap.ValidateLdapConfig(r.Spec.Authenticators.GetLdap())...)
 		case auth.Authenticators_RADIUS.String():
-			if r.Spec.Authenticators.GetRadius() == nil {
-				ret = append(ret, errors.New("radius authenticator config not defined"))
-			}
+			ret = append(ret, radius.ValidateRadiusConfig(r.Spec.Authenticators.GetRadius())...)
 		default:
 			ret = append(ret, fmt.Errorf("unknown authenticator type: %v", authenticatorType))
 		}

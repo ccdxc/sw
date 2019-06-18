@@ -12,9 +12,6 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
-
-	_ "github.com/pensando/sw/api/generated/exports/apiserver"
-	_ "github.com/pensando/sw/api/hooks/apiserver"
 )
 
 // getDefaultAuthenticationPolicy gets an authentication policy with LDAP with TLS enabled

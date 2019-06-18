@@ -45,6 +45,7 @@ var _ = Describe("auth tests", func() {
 						AuthMethod: auth.Radius_PAP.String(),
 					},
 				},
+				NasID: ts.tu.Radius.NasID,
 			}
 			authPolicy.Spec.Authenticators.AuthenticatorOrder = []string{"LOCAL", "RADIUS"}
 			Eventually(func() error {

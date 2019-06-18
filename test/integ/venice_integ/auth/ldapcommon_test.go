@@ -177,40 +177,6 @@ func testIncorrectUserAuthentication(t *testing.T, config *LdapConfig) {
 	Assert(t, err == ldap.ErrNoneOrMultipleUserEntries, "Incorrect error type returned")
 }
 
-func testMissingLdapAttributeMapping(t *testing.T, config *LdapConfig) {
-	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
-		Enabled: true,
-		Servers: []*auth.LdapServer{
-			{
-				Url: tinfo.ldapAddr,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: false,
-					ServerName:                 config.ServerName,
-					TrustedCerts:               config.TrustedCerts,
-				},
-			},
-		},
-		BaseDN:       config.BaseDN,
-		BindDN:       config.BindDN,
-		BindPassword: config.BindPassword,
-	})
-	if err != nil {
-		t.Errorf("err %s in CreateAuthenticationPolicy", err)
-		return
-	}
-	defer DeleteAuthenticationPolicy(tinfo.apicl)
-
-	// create ldap authenticator
-	authenticator := ldap.NewLdapAuthenticator(policy.Spec.Authenticators.GetLdap())
-
-	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: config.LdapUser, Password: config.LdapUserPassword})
-	Assert(t, !ok, "Successful ldap user authentication")
-	Assert(t, autheduser == nil, "User returned with misconfigured authentication policy: Missing LDAP Attribute Mapping")
-	Assert(t, err != nil, "No error returned while authenticating with misconfigured authentication policy: Missing LDAP Attribute Mapping")
-}
-
 func testIncorrectLdapAttributeMapping(t *testing.T, config *LdapConfig) {
 	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,

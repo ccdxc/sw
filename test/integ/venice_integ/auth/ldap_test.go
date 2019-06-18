@@ -128,12 +128,6 @@ func TestIncorrectUserAuthentication(t *testing.T) {
 	testIncorrectUserAuthentication(t, config)
 }
 
-func TestMissingLdapAttributeMapping(t *testing.T) {
-	t.Skip()
-	config := getOpenLdapConfig()
-	testMissingLdapAttributeMapping(t, config)
-}
-
 func TestIncorrectLdapAttributeMapping(t *testing.T) {
 	t.Skip()
 	config := getOpenLdapConfig()

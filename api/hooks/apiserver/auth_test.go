@@ -278,10 +278,7 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 				},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
-						Ldap: &auth.Ldap{
-							Enabled: true,
-						},
-						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String()},
 					},
 					TokenExpiry: "24h",
 				},
@@ -297,18 +294,94 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 				},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
-						Ldap: &auth.Ldap{
-							Enabled: true,
-						},
 						Local: &auth.Local{
 							Enabled: true,
 						},
-						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
+						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_RADIUS.String()},
 					},
 					TokenExpiry: "24h",
 				},
 			},
 			errs: []error{errors.New("radius authenticator config not defined")},
+		},
+		{
+			name: "Invalid Radius config",
+			in: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "InvalidRadiusAuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						Radius: &auth.Radius{
+							Enabled: true,
+							Servers: []*auth.RadiusServer{
+								{
+									Url: "",
+								},
+							},
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_RADIUS.String()},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			errs: []error{errors.New("NAS ID cannot be empty or longer than 253 bytes"),
+				errors.New("radius <address:port> not defined")},
+		},
+		{
+			name: "Missing Radius server",
+			in: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "MissingRadiusServerAuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						Radius: &auth.Radius{
+							Enabled: true,
+							NasID:   "Venice",
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_RADIUS.String()},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			errs: []error{errors.New("radius server not defined")},
+		},
+		{
+			name: "Valid Radius config",
+			in: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "ValidRadiusServerAuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						Radius: &auth.Radius{
+							Enabled: true,
+							NasID:   "Venice",
+							Servers: []*auth.RadiusServer{
+								{
+									Url: "localhost:1812",
+								},
+							},
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_RADIUS.String()},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			errs: []error{},
 		},
 		{
 			name: "Missing AuthenticatorOrder",

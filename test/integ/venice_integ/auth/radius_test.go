@@ -154,21 +154,6 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 			expected: false,
 		},
 		{
-			name:     "NAS ID > 253",
-			user:     config.User,
-			password: config.Password,
-			policy: &auth.Radius{
-				Enabled: true,
-				Servers: []*auth.RadiusServer{{
-					Url:        config.URL,
-					Secret:     config.NasSecret,
-					AuthMethod: auth.Radius_PAP.String(),
-				}},
-				NasID: CreateAlphabetString(254),
-			},
-			expected: false,
-		},
-		{
 			name:     "multiple radius servers",
 			user:     config.User,
 			password: config.Password,
