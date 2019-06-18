@@ -238,7 +238,7 @@ function doDeleteOldDockerImages() {
         # label found. Now check if this is in one of the allowed lists by looking in the map
         if [[ ! -z ${lab}  && -z ${verMap[$lab]:+_} ]]
         then
-            docker rmi ${imageId}
+            docker rmi ${imageId} || :
         else
             :    #echo skip ${imageId} as ${lab} is needed
         fi
