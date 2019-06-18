@@ -227,7 +227,7 @@ func (n *TestNode) CopyTo(cfg *ssh.ClientConfig, dstDir string, files []string) 
 	if n.SSHClient == nil {
 		copyHandle = copier.NewCopier(cfg)
 	} else {
-		copyHandle = copier.NewCopierWithSSHClient(n.SSHClient)
+		copyHandle = copier.NewCopierWithSSHClient(n.SSHClient, cfg)
 	}
 	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
 
@@ -248,7 +248,7 @@ func (n *TestNode) CopyFrom(cfg *ssh.ClientConfig, dstDir string, files []string
 	if n.SSHClient == nil {
 		copyHandle = copier.NewCopier(cfg)
 	} else {
-		copyHandle = copier.NewCopierWithSSHClient(n.SSHClient)
+		copyHandle = copier.NewCopierWithSSHClient(n.SSHClient, cfg)
 	}
 
 	if ip, err = n.GetNodeIP(); err != nil {

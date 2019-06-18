@@ -461,12 +461,7 @@ class NaplesManagement(EntityManagement):
                 print(msg)
                 raise Exception(msg)
 
-    @_exceptionWrapper(_errCodes.NAPLES_INIT_FOR_UPGRADE_FAILED, "Init for upgrade failed")
-    def InitForUpgrade(self, goldfw = True, mode = True, uuid = True):
-
-        if goldfw:
-            self.SendlineExpect("fwupdate -s goldfw", "#")
-
+    def CleanUpOldFiles(self):
         #clean up db that was setup by previous
         self.SendlineExpect("rm -rf /sysconfig/config0/*.db", "#")
         self.SendlineExpect("rm -rf /sysconfig/config0/*.conf", "#")
@@ -477,7 +472,15 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("rm -rf /data/log && sync", "#")
         self.SendlineExpect("rm -rf /data/core/* && sync", "#")
         self.SendlineExpect("rm -rf /data/*.dat && sync", "#")
-        return
+
+
+    @_exceptionWrapper(_errCodes.NAPLES_INIT_FOR_UPGRADE_FAILED, "Init for upgrade failed")
+    def InitForUpgrade(self, goldfw = True, mode = True, uuid = True):
+
+        if goldfw:
+            self.SendlineExpect("fwupdate -s goldfw", "#")
+
+        self.CleanUpOldFiles()
 
     def Close(self):
         if self.hdl:
@@ -921,6 +924,8 @@ def Main():
             if not IsNaplesGoldFWLatest():
                 naples.InstallGoldFirmware()
             naples.Reboot()
+            #Clean up old files as we are starting fresh.
+            naples.CleanUpOldFiles()
         else:
             host.InitForUpgrade()
             host.Reboot()
@@ -955,6 +960,7 @@ def Main():
     else:
         # Update MainFwB also to same image - TEMP CHANGE
         host.InstallMainFirmware(mount_data = False, copy_fw = False)
+
 
 if __name__ == '__main__':
     start_time = time.time()

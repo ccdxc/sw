@@ -28,39 +28,62 @@ func NewCopier(c *ssh.ClientConfig) *Copier {
 }
 
 // NewCopierWithSSHClient returns a new copier instance
-func NewCopierWithSSHClient(c *ssh.Client) *Copier {
+func NewCopierWithSSHClient(c *ssh.Client, cfg *ssh.ClientConfig) *Copier {
 	copier := &Copier{
-		SSHClient: c,
+		SSHClient:       c,
+		SSHClientConfig: cfg,
 	}
 	return copier
 }
 
+func (c *Copier) getSftp(ipPort string) (*sftp.Client, error) {
+
+	var err error
+	var sftpClient *sftp.Client
+
+	connect := func() (*ssh.Client, error) {
+		sshclient, err := ssh.Dial("tcp", ipPort, c.SSHClientConfig)
+		if sshclient == nil || err != nil {
+			log.Errorf("Copier | CopyFrom node %v failed, Err: %v", ipPort, err)
+			return nil, err
+		}
+		return sshclient, nil
+	}
+
+	for i := 0; i < 3; i++ {
+
+		if c.SSHClient == nil {
+			c.SSHClient, err = connect()
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		sftpClient, err = sftp.NewClient(c.SSHClient)
+		if sftpClient == nil || err != nil {
+			log.Errorf("Copier | CopyFrom node %v failed, Err: %v", ipPort, err)
+			c.SSHClient = nil
+			log.Printf("Retrying connection to %v", ipPort)
+			continue
+		}
+		return sftpClient, nil
+	}
+
+	return nil, err
+}
+
 // CopyTo copies the source files to the remote destination
 func (c *Copier) CopyTo(ipPort, dstDir string, files []string) error {
-	//fmt.Println("ANCALAGON: ", files)
-	var client *ssh.Client
+	var err error
+	var sftpClient *sftp.Client
 
-	if c.SSHClient == nil {
-		sshClient, err := ssh.Dial("tcp", ipPort, c.SSHClientConfig)
-		if sshClient == nil || err != nil {
-			log.Errorf("Copier | CopyTo node111 %v failed, Err: %v", ipPort, err)
-			return err
-		}
-		defer sshClient.Close()
-		client = sshClient
-	} else {
-		client = c.SSHClient
-	}
-
-	sftp, err := sftp.NewClient(client)
-	if sftp == nil || err != nil {
-		log.Errorf("Copier | CopyTo node %v failed, Err: %v", ipPort, err)
+	if sftpClient, err = c.getSftp(ipPort); err != nil {
 		return err
 	}
-	defer sftp.Close()
+
 	// check if dst dir exists
-	if _, err := sftp.Lstat(dstDir); err != nil {
-		err = sftp.Mkdir(dstDir)
+	if _, err := sftpClient.Lstat(dstDir); err != nil {
+		err = sftpClient.Mkdir(dstDir)
 		if err != nil {
 			log.Errorf("Copier | CopyTo failed to creating remote directory. | Dir: %v, Node: %v, Err: %v", dstDir, ipPort, err)
 		}
@@ -88,7 +111,7 @@ func (c *Copier) CopyTo(ipPort, dstDir string, files []string) error {
 			return err
 		}
 
-		f, err := sftp.Create(absDstFile)
+		f, err := sftpClient.Create(absDstFile)
 		if err != nil {
 			log.Errorf("Copier | CopyTo failed to create remote file. | File: %v, Node: %v, Err: %v", absDstFile, ipPort, err)
 			return err
@@ -109,26 +132,12 @@ func (c *Copier) CopyTo(ipPort, dstDir string, files []string) error {
 // CopyFrom copies the remote source files to the local destination
 func (c *Copier) CopyFrom(ipPort, dstDir string, files []string) error {
 
-	var client *ssh.Client
+	var err error
+	var sftpClient *sftp.Client
 
-	if c.SSHClient == nil {
-		sshclient, err := ssh.Dial("tcp", ipPort, c.SSHClientConfig)
-		if sshclient == nil || err != nil {
-			log.Errorf("Copier | CopyFrom node %v failed, Err: %v", ipPort, err)
-			return err
-		}
-		defer sshclient.Close()
-		client = sshclient
-	} else {
-		client = c.SSHClient
-	}
-
-	sftp, err := sftp.NewClient(client)
-	if sftp == nil || err != nil {
-		log.Errorf("Copier | CopyFrom node %v failed, Err: %v", ipPort, err)
+	if sftpClient, err = c.getSftp(ipPort); err != nil {
 		return err
 	}
-	defer sftp.Close()
 
 	// check if dst dir exists
 	if _, err := os.Lstat(dstDir); err != nil {
@@ -140,7 +149,7 @@ func (c *Copier) CopyFrom(ipPort, dstDir string, files []string) error {
 	}
 	for _, srcFile := range files {
 
-		absSrcFile, err := sftp.Open(srcFile)
+		absSrcFile, err := sftpClient.Open(srcFile)
 		if err != nil {
 			log.Errorf("Copier | CopyFrom failed to open remote file . | file: %v,  Err: %v", srcFile, err)
 			return err
