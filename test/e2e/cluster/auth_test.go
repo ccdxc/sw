@@ -17,6 +17,7 @@ import (
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/api/generated/staging"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	testutils "github.com/pensando/sw/test/utils"
@@ -130,7 +131,7 @@ var _ = Describe("auth tests", func() {
 								{
 									Key:      "action",
 									Operator: "equals",
-									Values:   []string{auth.Permission_Update.String()},
+									Values:   []string{strings.Title(string(apiintf.UpdateOper))},
 								},
 								{
 									Key:      "outcome",

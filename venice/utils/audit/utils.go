@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httputil"
+	"strings"
 
 	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 )
 
@@ -100,7 +102,7 @@ func (p *policyChecker) PopulateEvent(event *audit.Event, populators ...EventPop
 	default:
 		switch event.Action {
 		// do not log reads
-		case auth.Permission_Read.String(), "get":
+		case strings.Title(string(apiintf.GetOper)), strings.Title(string(apiintf.ListOper)), strings.Title(string(apiintf.WatchOper)), auth.Permission_Read.String(), "get":
 			return false, nil
 		}
 		event.ServiceName = globals.APIServer

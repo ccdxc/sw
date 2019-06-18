@@ -66,12 +66,15 @@ func getActionFromOper(in apiintf.APIOperType) string {
 }
 
 // NewAPIServerOperation returns an instance of Operation given the APIServer Oper type
-func NewAPIServerOperation(resource Resource, action apiintf.APIOperType) Operation {
+func NewAPIServerOperation(resource Resource, action apiintf.APIOperType, auditAction string) Operation {
 	pAction := getActionFromOper(action)
+	if auditAction == "" {
+		auditAction = string(action)
+	}
 	return &operation{
 		resource:    resource,
 		action:      pAction,
-		auditAction: pAction,
+		auditAction: auditAction,
 	}
 }
 

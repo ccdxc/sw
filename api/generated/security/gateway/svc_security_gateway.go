@@ -9,6 +9,7 @@ package securityGwService
 import (
 	"context"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -58,9 +59,9 @@ func (a adapterSecurityV1) AutoAddApp(oldctx oldcontext.Context, t *security.App
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "App", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "App", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -81,9 +82,9 @@ func (a adapterSecurityV1) AutoAddCertificate(oldctx oldcontext.Context, t *secu
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Certificate", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Certificate", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -104,9 +105,9 @@ func (a adapterSecurityV1) AutoAddFirewallProfile(oldctx oldcontext.Context, t *
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "FirewallProfile", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "FirewallProfile", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -127,9 +128,9 @@ func (a adapterSecurityV1) AutoAddSGPolicy(oldctx oldcontext.Context, t *securit
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "SGPolicy", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "SGPolicy", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -150,9 +151,9 @@ func (a adapterSecurityV1) AutoAddSecurityGroup(oldctx oldcontext.Context, t *se
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "SecurityGroup", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "SecurityGroup", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -173,9 +174,9 @@ func (a adapterSecurityV1) AutoAddTrafficEncryptionPolicy(oldctx oldcontext.Cont
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -196,9 +197,9 @@ func (a adapterSecurityV1) AutoDeleteApp(oldctx oldcontext.Context, t *security.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "App", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "App", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -219,9 +220,9 @@ func (a adapterSecurityV1) AutoDeleteCertificate(oldctx oldcontext.Context, t *s
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Certificate", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "Certificate", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -242,9 +243,9 @@ func (a adapterSecurityV1) AutoDeleteFirewallProfile(oldctx oldcontext.Context, 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "FirewallProfile", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "FirewallProfile", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -265,9 +266,9 @@ func (a adapterSecurityV1) AutoDeleteSGPolicy(oldctx oldcontext.Context, t *secu
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "SGPolicy", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "SGPolicy", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -288,9 +289,9 @@ func (a adapterSecurityV1) AutoDeleteSecurityGroup(oldctx oldcontext.Context, t 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "SecurityGroup", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "SecurityGroup", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -311,9 +312,9 @@ func (a adapterSecurityV1) AutoDeleteTrafficEncryptionPolicy(oldctx oldcontext.C
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -334,9 +335,9 @@ func (a adapterSecurityV1) AutoGetApp(oldctx oldcontext.Context, t *security.App
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "App", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "App", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -357,9 +358,9 @@ func (a adapterSecurityV1) AutoGetCertificate(oldctx oldcontext.Context, t *secu
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Certificate", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "Certificate", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -380,9 +381,9 @@ func (a adapterSecurityV1) AutoGetFirewallProfile(oldctx oldcontext.Context, t *
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "FirewallProfile", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "FirewallProfile", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -403,9 +404,9 @@ func (a adapterSecurityV1) AutoGetSGPolicy(oldctx oldcontext.Context, t *securit
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "SGPolicy", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "SGPolicy", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -426,9 +427,9 @@ func (a adapterSecurityV1) AutoGetSecurityGroup(oldctx oldcontext.Context, t *se
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "SecurityGroup", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "SecurityGroup", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -449,9 +450,9 @@ func (a adapterSecurityV1) AutoGetTrafficEncryptionPolicy(oldctx oldcontext.Cont
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -477,9 +478,9 @@ func (a adapterSecurityV1) AutoListApp(oldctx oldcontext.Context, t *api.ListWat
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "App", t.Tenant, t.Namespace, "security", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "App", t.Tenant, t.Namespace, "security", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -505,9 +506,9 @@ func (a adapterSecurityV1) AutoListCertificate(oldctx oldcontext.Context, t *api
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Certificate", t.Tenant, t.Namespace, "security", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "Certificate", t.Tenant, t.Namespace, "security", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -533,9 +534,9 @@ func (a adapterSecurityV1) AutoListFirewallProfile(oldctx oldcontext.Context, t 
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "FirewallProfile", t.Tenant, t.Namespace, "security", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "FirewallProfile", t.Tenant, t.Namespace, "security", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -561,9 +562,9 @@ func (a adapterSecurityV1) AutoListSGPolicy(oldctx oldcontext.Context, t *api.Li
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "SGPolicy", t.Tenant, t.Namespace, "security", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "SGPolicy", t.Tenant, t.Namespace, "security", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -589,9 +590,9 @@ func (a adapterSecurityV1) AutoListSecurityGroup(oldctx oldcontext.Context, t *a
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "SecurityGroup", t.Tenant, t.Namespace, "security", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "SecurityGroup", t.Tenant, t.Namespace, "security", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -617,9 +618,9 @@ func (a adapterSecurityV1) AutoListTrafficEncryptionPolicy(oldctx oldcontext.Con
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -640,9 +641,9 @@ func (a adapterSecurityV1) AutoUpdateApp(oldctx oldcontext.Context, t *security.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "App", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "App", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -663,9 +664,9 @@ func (a adapterSecurityV1) AutoUpdateCertificate(oldctx oldcontext.Context, t *s
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Certificate", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "Certificate", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -686,9 +687,9 @@ func (a adapterSecurityV1) AutoUpdateFirewallProfile(oldctx oldcontext.Context, 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "FirewallProfile", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "FirewallProfile", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -709,9 +710,9 @@ func (a adapterSecurityV1) AutoUpdateSGPolicy(oldctx oldcontext.Context, t *secu
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "SGPolicy", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "SGPolicy", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -732,9 +733,9 @@ func (a adapterSecurityV1) AutoUpdateSecurityGroup(oldctx oldcontext.Context, t 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "SecurityGroup", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "SecurityGroup", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -755,9 +756,9 @@ func (a adapterSecurityV1) AutoUpdateTrafficEncryptionPolicy(oldctx oldcontext.C
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -778,7 +779,7 @@ func (a adapterSecurityV1) AutoWatchSvcSecurityV1(oldctx oldcontext.Context, in 
 		return nil, errors.New("unknown service profile")
 	}
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "", in.Tenant, in.Namespace, "security"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -837,7 +838,7 @@ func (a adapterSecurityV1) AutoWatchSecurityGroup(oldctx oldcontext.Context, in 
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "SecurityGroup", in.Tenant, in.Namespace, "security"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -896,7 +897,7 @@ func (a adapterSecurityV1) AutoWatchSGPolicy(oldctx oldcontext.Context, in *api.
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "SGPolicy", in.Tenant, in.Namespace, "security"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -955,7 +956,7 @@ func (a adapterSecurityV1) AutoWatchApp(oldctx oldcontext.Context, in *api.ListW
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "App", in.Tenant, in.Namespace, "security"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -1014,7 +1015,7 @@ func (a adapterSecurityV1) AutoWatchFirewallProfile(oldctx oldcontext.Context, i
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "FirewallProfile", in.Tenant, in.Namespace, "security"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -1073,7 +1074,7 @@ func (a adapterSecurityV1) AutoWatchCertificate(oldctx oldcontext.Context, in *a
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Certificate", in.Tenant, in.Namespace, "security"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -1132,7 +1133,7 @@ func (a adapterSecurityV1) AutoWatchTrafficEncryptionPolicy(oldctx oldcontext.Co
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "TrafficEncryptionPolicy", in.Tenant, in.Namespace, "security"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)

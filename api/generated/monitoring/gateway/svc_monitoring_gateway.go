@@ -9,6 +9,7 @@ package monitoringGwService
 import (
 	"context"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -58,9 +59,9 @@ func (a adapterMonitoringV1) AutoAddAlert(oldctx oldcontext.Context, t *monitori
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Alert", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Alert", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -81,9 +82,9 @@ func (a adapterMonitoringV1) AutoAddAlertDestination(oldctx oldcontext.Context, 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "AlertDestination", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "AlertDestination", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -104,9 +105,9 @@ func (a adapterMonitoringV1) AutoAddAlertPolicy(oldctx oldcontext.Context, t *mo
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "AlertPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "AlertPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -127,9 +128,9 @@ func (a adapterMonitoringV1) AutoAddEventPolicy(oldctx oldcontext.Context, t *mo
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "EventPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "EventPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -150,9 +151,9 @@ func (a adapterMonitoringV1) AutoAddFlowExportPolicy(oldctx oldcontext.Context, 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "FlowExportPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "FlowExportPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -173,9 +174,9 @@ func (a adapterMonitoringV1) AutoAddFwlogPolicy(oldctx oldcontext.Context, t *mo
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "FwlogPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "FwlogPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -196,9 +197,9 @@ func (a adapterMonitoringV1) AutoAddMirrorSession(oldctx oldcontext.Context, t *
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "MirrorSession", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "MirrorSession", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -219,9 +220,9 @@ func (a adapterMonitoringV1) AutoAddStatsPolicy(oldctx oldcontext.Context, t *mo
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "StatsPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "StatsPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -242,9 +243,9 @@ func (a adapterMonitoringV1) AutoAddTechSupportRequest(oldctx oldcontext.Context
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "TechSupportRequest", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "TechSupportRequest", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -265,9 +266,9 @@ func (a adapterMonitoringV1) AutoAddTroubleshootingSession(oldctx oldcontext.Con
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -288,9 +289,9 @@ func (a adapterMonitoringV1) AutoDeleteAlert(oldctx oldcontext.Context, t *monit
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Alert", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "Alert", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -311,9 +312,9 @@ func (a adapterMonitoringV1) AutoDeleteAlertDestination(oldctx oldcontext.Contex
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "AlertDestination", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "AlertDestination", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -334,9 +335,9 @@ func (a adapterMonitoringV1) AutoDeleteAlertPolicy(oldctx oldcontext.Context, t 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "AlertPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "AlertPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -357,9 +358,9 @@ func (a adapterMonitoringV1) AutoDeleteEventPolicy(oldctx oldcontext.Context, t 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "EventPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "EventPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -380,9 +381,9 @@ func (a adapterMonitoringV1) AutoDeleteFlowExportPolicy(oldctx oldcontext.Contex
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "FlowExportPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "FlowExportPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -403,9 +404,9 @@ func (a adapterMonitoringV1) AutoDeleteFwlogPolicy(oldctx oldcontext.Context, t 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "FwlogPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "FwlogPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -426,9 +427,9 @@ func (a adapterMonitoringV1) AutoDeleteMirrorSession(oldctx oldcontext.Context, 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "MirrorSession", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "MirrorSession", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -449,9 +450,9 @@ func (a adapterMonitoringV1) AutoDeleteStatsPolicy(oldctx oldcontext.Context, t 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "StatsPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "StatsPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -472,9 +473,9 @@ func (a adapterMonitoringV1) AutoDeleteTechSupportRequest(oldctx oldcontext.Cont
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "TechSupportRequest", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "TechSupportRequest", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -495,9 +496,9 @@ func (a adapterMonitoringV1) AutoDeleteTroubleshootingSession(oldctx oldcontext.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -518,9 +519,9 @@ func (a adapterMonitoringV1) AutoGetAlert(oldctx oldcontext.Context, t *monitori
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Alert", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "Alert", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -541,9 +542,9 @@ func (a adapterMonitoringV1) AutoGetAlertDestination(oldctx oldcontext.Context, 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "AlertDestination", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "AlertDestination", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -564,9 +565,9 @@ func (a adapterMonitoringV1) AutoGetAlertPolicy(oldctx oldcontext.Context, t *mo
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "AlertPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "AlertPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -587,9 +588,9 @@ func (a adapterMonitoringV1) AutoGetEventPolicy(oldctx oldcontext.Context, t *mo
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "EventPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "EventPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -610,9 +611,9 @@ func (a adapterMonitoringV1) AutoGetFlowExportPolicy(oldctx oldcontext.Context, 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "FlowExportPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "FlowExportPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -633,9 +634,9 @@ func (a adapterMonitoringV1) AutoGetFwlogPolicy(oldctx oldcontext.Context, t *mo
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "FwlogPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "FwlogPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -656,9 +657,9 @@ func (a adapterMonitoringV1) AutoGetMirrorSession(oldctx oldcontext.Context, t *
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "MirrorSession", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "MirrorSession", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -679,9 +680,9 @@ func (a adapterMonitoringV1) AutoGetStatsPolicy(oldctx oldcontext.Context, t *mo
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "StatsPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "StatsPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -702,9 +703,9 @@ func (a adapterMonitoringV1) AutoGetTechSupportRequest(oldctx oldcontext.Context
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "TechSupportRequest", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "TechSupportRequest", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -725,9 +726,9 @@ func (a adapterMonitoringV1) AutoGetTroubleshootingSession(oldctx oldcontext.Con
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -753,9 +754,9 @@ func (a adapterMonitoringV1) AutoListAlert(oldctx oldcontext.Context, t *api.Lis
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Alert", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "Alert", t.Tenant, t.Namespace, "monitoring", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -781,9 +782,9 @@ func (a adapterMonitoringV1) AutoListAlertDestination(oldctx oldcontext.Context,
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "AlertDestination", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "AlertDestination", t.Tenant, t.Namespace, "monitoring", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -809,9 +810,9 @@ func (a adapterMonitoringV1) AutoListAlertPolicy(oldctx oldcontext.Context, t *a
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "AlertPolicy", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "AlertPolicy", t.Tenant, t.Namespace, "monitoring", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -837,9 +838,9 @@ func (a adapterMonitoringV1) AutoListEventPolicy(oldctx oldcontext.Context, t *a
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "EventPolicy", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "EventPolicy", t.Tenant, t.Namespace, "monitoring", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -865,9 +866,9 @@ func (a adapterMonitoringV1) AutoListFlowExportPolicy(oldctx oldcontext.Context,
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "FlowExportPolicy", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "FlowExportPolicy", t.Tenant, t.Namespace, "monitoring", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -893,9 +894,9 @@ func (a adapterMonitoringV1) AutoListFwlogPolicy(oldctx oldcontext.Context, t *a
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "FwlogPolicy", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "FwlogPolicy", t.Tenant, t.Namespace, "monitoring", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -921,9 +922,9 @@ func (a adapterMonitoringV1) AutoListMirrorSession(oldctx oldcontext.Context, t 
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "MirrorSession", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "MirrorSession", t.Tenant, t.Namespace, "monitoring", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -949,9 +950,9 @@ func (a adapterMonitoringV1) AutoListStatsPolicy(oldctx oldcontext.Context, t *a
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "StatsPolicy", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "StatsPolicy", t.Tenant, t.Namespace, "monitoring", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -975,9 +976,9 @@ func (a adapterMonitoringV1) AutoListTechSupportRequest(oldctx oldcontext.Contex
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "TechSupportRequest", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "TechSupportRequest", t.Tenant, t.Namespace, "monitoring", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -1003,9 +1004,9 @@ func (a adapterMonitoringV1) AutoListTroubleshootingSession(oldctx oldcontext.Co
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -1026,9 +1027,9 @@ func (a adapterMonitoringV1) AutoUpdateAlert(oldctx oldcontext.Context, t *monit
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Alert", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "Alert", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -1049,9 +1050,9 @@ func (a adapterMonitoringV1) AutoUpdateAlertDestination(oldctx oldcontext.Contex
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "AlertDestination", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "AlertDestination", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -1072,9 +1073,9 @@ func (a adapterMonitoringV1) AutoUpdateAlertPolicy(oldctx oldcontext.Context, t 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "AlertPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "AlertPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -1095,9 +1096,9 @@ func (a adapterMonitoringV1) AutoUpdateEventPolicy(oldctx oldcontext.Context, t 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "EventPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "EventPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -1118,9 +1119,9 @@ func (a adapterMonitoringV1) AutoUpdateFlowExportPolicy(oldctx oldcontext.Contex
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "FlowExportPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "FlowExportPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -1141,9 +1142,9 @@ func (a adapterMonitoringV1) AutoUpdateFwlogPolicy(oldctx oldcontext.Context, t 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "FwlogPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "FwlogPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -1164,9 +1165,9 @@ func (a adapterMonitoringV1) AutoUpdateMirrorSession(oldctx oldcontext.Context, 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "MirrorSession", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "MirrorSession", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -1187,9 +1188,9 @@ func (a adapterMonitoringV1) AutoUpdateStatsPolicy(oldctx oldcontext.Context, t 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "StatsPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "StatsPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -1210,9 +1211,9 @@ func (a adapterMonitoringV1) AutoUpdateTechSupportRequest(oldctx oldcontext.Cont
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "TechSupportRequest", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "TechSupportRequest", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -1233,9 +1234,9 @@ func (a adapterMonitoringV1) AutoUpdateTroubleshootingSession(oldctx oldcontext.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -1256,7 +1257,7 @@ func (a adapterMonitoringV1) AutoWatchSvcMonitoringV1(oldctx oldcontext.Context,
 		return nil, errors.New("unknown service profile")
 	}
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "", in.Tenant, in.Namespace, "monitoring"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -1315,7 +1316,7 @@ func (a adapterMonitoringV1) AutoWatchEventPolicy(oldctx oldcontext.Context, in 
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "EventPolicy", in.Tenant, in.Namespace, "monitoring"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -1374,7 +1375,7 @@ func (a adapterMonitoringV1) AutoWatchStatsPolicy(oldctx oldcontext.Context, in 
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "StatsPolicy", in.Tenant, in.Namespace, "monitoring"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -1433,7 +1434,7 @@ func (a adapterMonitoringV1) AutoWatchFwlogPolicy(oldctx oldcontext.Context, in 
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "FwlogPolicy", in.Tenant, in.Namespace, "monitoring"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -1492,7 +1493,7 @@ func (a adapterMonitoringV1) AutoWatchFlowExportPolicy(oldctx oldcontext.Context
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "FlowExportPolicy", in.Tenant, in.Namespace, "monitoring"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -1551,7 +1552,7 @@ func (a adapterMonitoringV1) AutoWatchAlert(oldctx oldcontext.Context, in *api.L
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Alert", in.Tenant, in.Namespace, "monitoring"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -1610,7 +1611,7 @@ func (a adapterMonitoringV1) AutoWatchAlertPolicy(oldctx oldcontext.Context, in 
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "AlertPolicy", in.Tenant, in.Namespace, "monitoring"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -1669,7 +1670,7 @@ func (a adapterMonitoringV1) AutoWatchAlertDestination(oldctx oldcontext.Context
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "AlertDestination", in.Tenant, in.Namespace, "monitoring"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -1728,7 +1729,7 @@ func (a adapterMonitoringV1) AutoWatchMirrorSession(oldctx oldcontext.Context, i
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "MirrorSession", in.Tenant, in.Namespace, "monitoring"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -1787,7 +1788,7 @@ func (a adapterMonitoringV1) AutoWatchTroubleshootingSession(oldctx oldcontext.C
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "TroubleshootingSession", in.Tenant, in.Namespace, "monitoring"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -1844,7 +1845,7 @@ func (a adapterMonitoringV1) AutoWatchTechSupportRequest(oldctx oldcontext.Conte
 	in.Tenant = ""
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "TechSupportRequest", in.Tenant, in.Namespace, "monitoring"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)

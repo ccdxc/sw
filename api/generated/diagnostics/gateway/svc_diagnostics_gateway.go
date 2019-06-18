@@ -9,6 +9,7 @@ package diagnosticsGwService
 import (
 	"context"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -58,9 +59,9 @@ func (a adapterDiagnosticsV1) AutoAddModule(oldctx oldcontext.Context, t *diagno
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Module", t.Tenant, t.Namespace, "diagnostics", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Module", t.Tenant, t.Namespace, "diagnostics", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -81,9 +82,9 @@ func (a adapterDiagnosticsV1) AutoDeleteModule(oldctx oldcontext.Context, t *dia
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Module", t.Tenant, t.Namespace, "diagnostics", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "Module", t.Tenant, t.Namespace, "diagnostics", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -104,9 +105,9 @@ func (a adapterDiagnosticsV1) AutoGetModule(oldctx oldcontext.Context, t *diagno
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Module", t.Tenant, t.Namespace, "diagnostics", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "Module", t.Tenant, t.Namespace, "diagnostics", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -130,9 +131,9 @@ func (a adapterDiagnosticsV1) AutoListModule(oldctx oldcontext.Context, t *api.L
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Module", t.Tenant, t.Namespace, "diagnostics", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "Module", t.Tenant, t.Namespace, "diagnostics", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -153,9 +154,9 @@ func (a adapterDiagnosticsV1) AutoUpdateModule(oldctx oldcontext.Context, t *dia
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Module", t.Tenant, t.Namespace, "diagnostics", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "Module", t.Tenant, t.Namespace, "diagnostics", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -176,9 +177,9 @@ func (a adapterDiagnosticsV1) Debug(oldctx oldcontext.Context, t *diagnostics.Di
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Module", t.Tenant, t.Namespace, "diagnostics", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Module", t.Tenant, t.Namespace, "diagnostics", t.Name, "Debug"
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -199,7 +200,7 @@ func (a adapterDiagnosticsV1) AutoWatchSvcDiagnosticsV1(oldctx oldcontext.Contex
 		return nil, errors.New("unknown service profile")
 	}
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "", in.Tenant, in.Namespace, "diagnostics"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -256,7 +257,7 @@ func (a adapterDiagnosticsV1) AutoWatchModule(oldctx oldcontext.Context, in *api
 	in.Tenant = ""
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Module", in.Tenant, in.Namespace, "diagnostics"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)

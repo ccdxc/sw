@@ -10,6 +10,7 @@ import (
 	"context"
 	"net/http"
 	"sync"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -67,13 +68,13 @@ func (a adapter{{$svcname}}) {{.Name}} (oldctx oldcontext.Context, t *{{getInput
 	}{{else}}
 	t.Tenant = ""{{end}}{{if isNamespaced (getListTypeMsg .ResponseType)}}{{else}}
     t.Namespace = ""{{end}}
-	oper, kind, tenant, namespace, group, name:= apiintf.ListOper, "{{getListType .ResponseType false}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "{{getListType .ResponseType false}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", "", strings.Title(string(apiintf.ListOper))
 	{{else}}{{if isActionMethod .}}
-	oper, kind, tenant, namespace, group, name := apiintf.{{$params.Oper}}, "{{getActionTarget .}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.{{$params.Oper}}, "{{getActionTarget .}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", t.Name, "{{.Name}}"
 	{{else}}
-	oper, kind, tenant, namespace, group, name := apiintf.{{$params.Oper}}, "{{getInputType $pkgname . false}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.{{$params.Oper}}, "{{getInputType $pkgname . false}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", t.Name, strings.Title(string(apiintf.{{$params.Oper}}))
 	{{end}}{{end}}{{/*<isAutoList>*/}}
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	{{end}}{{/*<isAutoGenMethod>*/}}
 
@@ -96,7 +97,7 @@ func (a adapter{{$svcname}}) AutoWatchSvc{{$svcname}}(oldctx oldcontext.Context,
 		return nil, errors.New("unknown service profile")
 	}
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "", in.Tenant, in.Namespace, "{{$svcparams.Prefix}}"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -156,7 +157,7 @@ func (a adapter{{$svcname}}) AutoWatch{{.}}(oldctx oldcontext.Context, in *api.L
 	in.Tenant = ""{{end}}{{if isObjNamespaced $svc.File . }}{{else}}
 		in.Namespace = "" {{end}}
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "{{.}}", in.Tenant, in.Namespace, "{{$svcparams.Prefix}}"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)

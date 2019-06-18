@@ -9,6 +9,7 @@ package workloadGwService
 import (
 	"context"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -58,9 +59,9 @@ func (a adapterWorkloadV1) AutoAddEndpoint(oldctx oldcontext.Context, t *workloa
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -81,9 +82,9 @@ func (a adapterWorkloadV1) AutoAddWorkload(oldctx oldcontext.Context, t *workloa
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -104,9 +105,9 @@ func (a adapterWorkloadV1) AutoDeleteEndpoint(oldctx oldcontext.Context, t *work
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -127,9 +128,9 @@ func (a adapterWorkloadV1) AutoDeleteWorkload(oldctx oldcontext.Context, t *work
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -150,9 +151,9 @@ func (a adapterWorkloadV1) AutoGetEndpoint(oldctx oldcontext.Context, t *workloa
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -173,9 +174,9 @@ func (a adapterWorkloadV1) AutoGetWorkload(oldctx oldcontext.Context, t *workloa
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -201,9 +202,9 @@ func (a adapterWorkloadV1) AutoListEndpoint(oldctx oldcontext.Context, t *api.Li
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Endpoint", t.Tenant, t.Namespace, "workload", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "Endpoint", t.Tenant, t.Namespace, "workload", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -229,9 +230,9 @@ func (a adapterWorkloadV1) AutoListWorkload(oldctx oldcontext.Context, t *api.Li
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Workload", t.Tenant, t.Namespace, "workload", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "Workload", t.Tenant, t.Namespace, "workload", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -252,9 +253,9 @@ func (a adapterWorkloadV1) AutoUpdateEndpoint(oldctx oldcontext.Context, t *work
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -275,9 +276,9 @@ func (a adapterWorkloadV1) AutoUpdateWorkload(oldctx oldcontext.Context, t *work
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -298,7 +299,7 @@ func (a adapterWorkloadV1) AutoWatchSvcWorkloadV1(oldctx oldcontext.Context, in 
 		return nil, errors.New("unknown service profile")
 	}
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "", in.Tenant, in.Namespace, "workload"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -357,7 +358,7 @@ func (a adapterWorkloadV1) AutoWatchEndpoint(oldctx oldcontext.Context, in *api.
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Endpoint", in.Tenant, in.Namespace, "workload"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -416,7 +417,7 @@ func (a adapterWorkloadV1) AutoWatchWorkload(oldctx oldcontext.Context, in *api.
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Workload", in.Tenant, in.Namespace, "workload"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)

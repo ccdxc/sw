@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	es "github.com/olivere/elastic"
@@ -18,6 +19,7 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/api/generated/security"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
 	loginctx "github.com/pensando/sw/api/login/context"
 	. "github.com/pensando/sw/test/utils"
@@ -260,7 +262,7 @@ func TestAuditLogs(t *testing.T) {
 	defer DeleteTenant(ti.apicl, testTenant)
 	AssertEventually(t, func() (bool, interface{}) {
 		query := es.NewBoolQuery().Must(es.NewTermQuery("resource.kind.keyword", string(cluster.KindTenant)),
-			es.NewTermQuery("action.keyword", auth.Permission_Create.String()))
+			es.NewTermQuery("action.keyword", strings.Title(string(apiintf.CreateOper))))
 		resp, err := ti.esClient.Search(context.Background(),
 			elastic.GetIndex(globals.AuditLogs, globals.DefaultTenant), elastic.GetDocType(globals.AuditLogs), query, nil, 0, 10000, "", true)
 		if err != nil {
@@ -277,7 +279,7 @@ func TestAuditLogs(t *testing.T) {
 	Assert(t, err != nil, "admin role shouldn't be deleted")
 	AssertEventually(t, func() (bool, interface{}) {
 		query := es.NewBoolQuery().Must(es.NewTermQuery("resource.kind.keyword", string(auth.KindRole)),
-			es.NewTermQuery("action.keyword", auth.Permission_Delete.String()),
+			es.NewTermQuery("action.keyword", strings.Title(string(apiintf.DeleteOper))),
 			es.NewTermQuery("outcome.keyword", auditapi.Outcome_Failure.String()),
 			es.NewTermQuery("stage.keyword", auditapi.Stage_RequestProcessing.String()))
 		resp, err := ti.esClient.Search(context.Background(),
@@ -305,7 +307,7 @@ func TestAuditLogs(t *testing.T) {
 	Assert(t, err != nil, "user should be unauthorized to create tenant")
 	AssertEventually(t, func() (bool, interface{}) {
 		query := es.NewBoolQuery().Must(es.NewTermQuery("resource.kind.keyword", string(cluster.KindTenant)),
-			es.NewTermQuery("action.keyword", auth.Permission_Create.String()),
+			es.NewTermQuery("action.keyword", strings.Title(string(apiintf.CreateOper))),
 			es.NewTermQuery("outcome.keyword", auditapi.Outcome_Failure.String()),
 			es.NewTermQuery("stage.keyword", auditapi.Stage_RequestAuthorization.String()))
 		resp, err := ti.esClient.Search(context.Background(),
@@ -326,7 +328,7 @@ func TestAuditLogs(t *testing.T) {
 	Assert(t, err != nil, "call to create duplicate tenant should fail")
 	AssertEventually(t, func() (bool, interface{}) {
 		query := es.NewBoolQuery().Must(es.NewTermQuery("resource.kind.keyword", string(cluster.KindTenant)),
-			es.NewTermQuery("action.keyword", auth.Permission_Create.String()),
+			es.NewTermQuery("action.keyword", strings.Title(string(apiintf.CreateOper))),
 			es.NewTermQuery("outcome.keyword", auditapi.Outcome_Failure.String()),
 			es.NewTermQuery("stage.keyword", auditapi.Stage_RequestProcessing.String()))
 		resp, err := ti.esClient.Search(context.Background(),

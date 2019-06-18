@@ -9,6 +9,7 @@ package bookstoreGwService
 import (
 	"context"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -58,9 +59,9 @@ func (a adapterBookstoreV1) AddOutage(oldctx oldcontext.Context, t *bookstore.Ou
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Store", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Store", t.Tenant, t.Namespace, "bookstore", t.Name, "AddOutage"
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -81,9 +82,9 @@ func (a adapterBookstoreV1) Applydiscount(oldctx oldcontext.Context, t *bookstor
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name, "Applydiscount"
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -104,9 +105,9 @@ func (a adapterBookstoreV1) AutoAddBook(oldctx oldcontext.Context, t *bookstore.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Book", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Book", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -127,9 +128,9 @@ func (a adapterBookstoreV1) AutoAddCoupon(oldctx oldcontext.Context, t *bookstor
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Coupon", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Coupon", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -150,9 +151,9 @@ func (a adapterBookstoreV1) AutoAddCustomer(oldctx oldcontext.Context, t *bookst
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Customer", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Customer", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -173,9 +174,9 @@ func (a adapterBookstoreV1) AutoAddOrder(oldctx oldcontext.Context, t *bookstore
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -196,9 +197,9 @@ func (a adapterBookstoreV1) AutoAddPublisher(oldctx oldcontext.Context, t *books
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Publisher", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Publisher", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -219,9 +220,9 @@ func (a adapterBookstoreV1) AutoAddStore(oldctx oldcontext.Context, t *bookstore
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Store", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Store", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -242,9 +243,9 @@ func (a adapterBookstoreV1) AutoDeleteBook(oldctx oldcontext.Context, t *booksto
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Book", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "Book", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -265,9 +266,9 @@ func (a adapterBookstoreV1) AutoDeleteCoupon(oldctx oldcontext.Context, t *books
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Coupon", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "Coupon", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -288,9 +289,9 @@ func (a adapterBookstoreV1) AutoDeleteCustomer(oldctx oldcontext.Context, t *boo
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Customer", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "Customer", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -311,9 +312,9 @@ func (a adapterBookstoreV1) AutoDeleteOrder(oldctx oldcontext.Context, t *bookst
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -334,9 +335,9 @@ func (a adapterBookstoreV1) AutoDeletePublisher(oldctx oldcontext.Context, t *bo
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Publisher", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "Publisher", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -357,9 +358,9 @@ func (a adapterBookstoreV1) AutoDeleteStore(oldctx oldcontext.Context, t *bookst
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Store", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "Store", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -380,9 +381,9 @@ func (a adapterBookstoreV1) AutoGetBook(oldctx oldcontext.Context, t *bookstore.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Book", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "Book", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -403,9 +404,9 @@ func (a adapterBookstoreV1) AutoGetCoupon(oldctx oldcontext.Context, t *bookstor
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Coupon", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "Coupon", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -426,9 +427,9 @@ func (a adapterBookstoreV1) AutoGetCustomer(oldctx oldcontext.Context, t *bookst
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Customer", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "Customer", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -449,9 +450,9 @@ func (a adapterBookstoreV1) AutoGetOrder(oldctx oldcontext.Context, t *bookstore
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -472,9 +473,9 @@ func (a adapterBookstoreV1) AutoGetPublisher(oldctx oldcontext.Context, t *books
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Publisher", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "Publisher", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -495,9 +496,9 @@ func (a adapterBookstoreV1) AutoGetStore(oldctx oldcontext.Context, t *bookstore
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Store", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "Store", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -521,9 +522,9 @@ func (a adapterBookstoreV1) AutoListBook(oldctx oldcontext.Context, t *api.ListW
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Book", t.Tenant, t.Namespace, "bookstore", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "Book", t.Tenant, t.Namespace, "bookstore", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -547,9 +548,9 @@ func (a adapterBookstoreV1) AutoListCoupon(oldctx oldcontext.Context, t *api.Lis
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Coupon", t.Tenant, t.Namespace, "bookstore", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "Coupon", t.Tenant, t.Namespace, "bookstore", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -573,9 +574,9 @@ func (a adapterBookstoreV1) AutoListCustomer(oldctx oldcontext.Context, t *api.L
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Customer", t.Tenant, t.Namespace, "bookstore", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "Customer", t.Tenant, t.Namespace, "bookstore", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -599,9 +600,9 @@ func (a adapterBookstoreV1) AutoListOrder(oldctx oldcontext.Context, t *api.List
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Order", t.Tenant, t.Namespace, "bookstore", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "Order", t.Tenant, t.Namespace, "bookstore", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -625,9 +626,9 @@ func (a adapterBookstoreV1) AutoListPublisher(oldctx oldcontext.Context, t *api.
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Publisher", t.Tenant, t.Namespace, "bookstore", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "Publisher", t.Tenant, t.Namespace, "bookstore", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -651,9 +652,9 @@ func (a adapterBookstoreV1) AutoListStore(oldctx oldcontext.Context, t *api.List
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Store", t.Tenant, t.Namespace, "bookstore", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "Store", t.Tenant, t.Namespace, "bookstore", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -674,9 +675,9 @@ func (a adapterBookstoreV1) AutoUpdateBook(oldctx oldcontext.Context, t *booksto
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Book", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "Book", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -697,9 +698,9 @@ func (a adapterBookstoreV1) AutoUpdateCoupon(oldctx oldcontext.Context, t *books
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Coupon", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "Coupon", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -720,9 +721,9 @@ func (a adapterBookstoreV1) AutoUpdateCustomer(oldctx oldcontext.Context, t *boo
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Customer", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "Customer", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -743,9 +744,9 @@ func (a adapterBookstoreV1) AutoUpdateOrder(oldctx oldcontext.Context, t *bookst
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -766,9 +767,9 @@ func (a adapterBookstoreV1) AutoUpdatePublisher(oldctx oldcontext.Context, t *bo
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Publisher", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "Publisher", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -789,9 +790,9 @@ func (a adapterBookstoreV1) AutoUpdateStore(oldctx oldcontext.Context, t *bookst
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Store", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "Store", t.Tenant, t.Namespace, "bookstore", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -812,9 +813,9 @@ func (a adapterBookstoreV1) Cleardiscount(oldctx oldcontext.Context, t *bookstor
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name, "Cleardiscount"
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -835,9 +836,9 @@ func (a adapterBookstoreV1) Restock(oldctx oldcontext.Context, t *bookstore.Rest
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Book", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Book", t.Tenant, t.Namespace, "bookstore", t.Name, "Restock"
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -858,7 +859,7 @@ func (a adapterBookstoreV1) AutoWatchSvcBookstoreV1(oldctx oldcontext.Context, i
 		return nil, errors.New("unknown service profile")
 	}
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "", in.Tenant, in.Namespace, "bookstore"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -915,7 +916,7 @@ func (a adapterBookstoreV1) AutoWatchOrder(oldctx oldcontext.Context, in *api.Li
 	in.Tenant = ""
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Order", in.Tenant, in.Namespace, "bookstore"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -972,7 +973,7 @@ func (a adapterBookstoreV1) AutoWatchBook(oldctx oldcontext.Context, in *api.Lis
 	in.Tenant = ""
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Book", in.Tenant, in.Namespace, "bookstore"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -1029,7 +1030,7 @@ func (a adapterBookstoreV1) AutoWatchPublisher(oldctx oldcontext.Context, in *ap
 	in.Tenant = ""
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Publisher", in.Tenant, in.Namespace, "bookstore"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -1086,7 +1087,7 @@ func (a adapterBookstoreV1) AutoWatchStore(oldctx oldcontext.Context, in *api.Li
 	in.Tenant = ""
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Store", in.Tenant, in.Namespace, "bookstore"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -1143,7 +1144,7 @@ func (a adapterBookstoreV1) AutoWatchCoupon(oldctx oldcontext.Context, in *api.L
 	in.Tenant = ""
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Coupon", in.Tenant, in.Namespace, "bookstore"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -1200,7 +1201,7 @@ func (a adapterBookstoreV1) AutoWatchCustomer(oldctx oldcontext.Context, in *api
 	in.Tenant = ""
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Customer", in.Tenant, in.Namespace, "bookstore"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)

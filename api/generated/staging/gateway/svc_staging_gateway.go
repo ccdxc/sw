@@ -9,6 +9,7 @@ package stagingGwService
 import (
 	"context"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -58,9 +59,9 @@ func (a adapterStagingV1) AutoAddBuffer(oldctx oldcontext.Context, t *staging.Bu
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -81,9 +82,9 @@ func (a adapterStagingV1) AutoDeleteBuffer(oldctx oldcontext.Context, t *staging
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -104,9 +105,9 @@ func (a adapterStagingV1) AutoGetBuffer(oldctx oldcontext.Context, t *staging.Bu
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -132,9 +133,9 @@ func (a adapterStagingV1) AutoListBuffer(oldctx oldcontext.Context, t *api.ListW
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Buffer", t.Tenant, t.Namespace, "staging", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "Buffer", t.Tenant, t.Namespace, "staging", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -155,9 +156,9 @@ func (a adapterStagingV1) AutoUpdateBuffer(oldctx oldcontext.Context, t *staging
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -178,9 +179,9 @@ func (a adapterStagingV1) Clear(oldctx oldcontext.Context, t *staging.ClearActio
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name, "Clear"
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -201,9 +202,9 @@ func (a adapterStagingV1) Commit(oldctx oldcontext.Context, t *staging.CommitAct
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name, "Commit"
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -224,7 +225,7 @@ func (a adapterStagingV1) AutoWatchSvcStagingV1(oldctx oldcontext.Context, in *a
 		return nil, errors.New("unknown service profile")
 	}
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "", in.Tenant, in.Namespace, "staging"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -283,7 +284,7 @@ func (a adapterStagingV1) AutoWatchBuffer(oldctx oldcontext.Context, in *api.Lis
 	}
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Buffer", in.Tenant, in.Namespace, "staging"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)

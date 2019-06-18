@@ -9,6 +9,7 @@ package rolloutGwService
 import (
 	"context"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -58,9 +59,9 @@ func (a adapterRolloutV1) AutoAddRollout(oldctx oldcontext.Context, t *rollout.R
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Rollout", t.Tenant, t.Namespace, "rollout", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Rollout", t.Tenant, t.Namespace, "rollout", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -81,9 +82,9 @@ func (a adapterRolloutV1) AutoAddRolloutAction(oldctx oldcontext.Context, t *rol
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "RolloutAction", t.Tenant, t.Namespace, "rollout", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "RolloutAction", t.Tenant, t.Namespace, "rollout", t.Name, strings.Title(string(apiintf.CreateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -104,9 +105,9 @@ func (a adapterRolloutV1) AutoDeleteRollout(oldctx oldcontext.Context, t *rollou
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Rollout", t.Tenant, t.Namespace, "rollout", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "Rollout", t.Tenant, t.Namespace, "rollout", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -127,9 +128,9 @@ func (a adapterRolloutV1) AutoDeleteRolloutAction(oldctx oldcontext.Context, t *
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "RolloutAction", t.Tenant, t.Namespace, "rollout", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "RolloutAction", t.Tenant, t.Namespace, "rollout", t.Name, strings.Title(string(apiintf.DeleteOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -150,9 +151,9 @@ func (a adapterRolloutV1) AutoGetRollout(oldctx oldcontext.Context, t *rollout.R
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Rollout", t.Tenant, t.Namespace, "rollout", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "Rollout", t.Tenant, t.Namespace, "rollout", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -173,9 +174,9 @@ func (a adapterRolloutV1) AutoGetRolloutAction(oldctx oldcontext.Context, t *rol
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "RolloutAction", t.Tenant, t.Namespace, "rollout", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "RolloutAction", t.Tenant, t.Namespace, "rollout", t.Name, strings.Title(string(apiintf.GetOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -199,9 +200,9 @@ func (a adapterRolloutV1) AutoListRollout(oldctx oldcontext.Context, t *api.List
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Rollout", t.Tenant, t.Namespace, "rollout", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "Rollout", t.Tenant, t.Namespace, "rollout", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -225,9 +226,9 @@ func (a adapterRolloutV1) AutoListRolloutAction(oldctx oldcontext.Context, t *ap
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "RolloutAction", t.Tenant, t.Namespace, "rollout", ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "RolloutAction", t.Tenant, t.Namespace, "rollout", "", strings.Title(string(apiintf.ListOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -248,9 +249,9 @@ func (a adapterRolloutV1) AutoUpdateRollout(oldctx oldcontext.Context, t *rollou
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Rollout", t.Tenant, t.Namespace, "rollout", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "Rollout", t.Tenant, t.Namespace, "rollout", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -271,9 +272,9 @@ func (a adapterRolloutV1) AutoUpdateRolloutAction(oldctx oldcontext.Context, t *
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "RolloutAction", t.Tenant, t.Namespace, "rollout", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "RolloutAction", t.Tenant, t.Namespace, "rollout", t.Name, strings.Title(string(apiintf.UpdateOper))
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -294,9 +295,9 @@ func (a adapterRolloutV1) CreateRollout(oldctx oldcontext.Context, t *rollout.Ro
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Rollout", t.Tenant, t.Namespace, "rollout", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Rollout", t.Tenant, t.Namespace, "rollout", t.Name, "CreateRollout"
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -317,9 +318,9 @@ func (a adapterRolloutV1) RemoveRollout(oldctx oldcontext.Context, t *rollout.Ro
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Rollout", t.Tenant, t.Namespace, "rollout", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Rollout", t.Tenant, t.Namespace, "rollout", t.Name, "RemoveRollout"
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -340,9 +341,9 @@ func (a adapterRolloutV1) StopRollout(oldctx oldcontext.Context, t *rollout.Roll
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Rollout", t.Tenant, t.Namespace, "rollout", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Rollout", t.Tenant, t.Namespace, "rollout", t.Name, "StopRollout"
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -363,9 +364,9 @@ func (a adapterRolloutV1) UpdateRollout(oldctx oldcontext.Context, t *rollout.Ro
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Rollout", t.Tenant, t.Namespace, "rollout", t.Name
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Rollout", t.Tenant, t.Namespace, "rollout", t.Name, "UpdateRollout"
 
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -386,7 +387,7 @@ func (a adapterRolloutV1) AutoWatchSvcRolloutV1(oldctx oldcontext.Context, in *a
 		return nil, errors.New("unknown service profile")
 	}
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "", in.Tenant, in.Namespace, "rollout"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -443,7 +444,7 @@ func (a adapterRolloutV1) AutoWatchRollout(oldctx oldcontext.Context, in *api.Li
 	in.Tenant = ""
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Rollout", in.Tenant, in.Namespace, "rollout"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -500,7 +501,7 @@ func (a adapterRolloutV1) AutoWatchRolloutAction(oldctx oldcontext.Context, in *
 	in.Tenant = ""
 	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiintf.WatchOper, "RolloutAction", in.Tenant, in.Namespace, "rollout"
-	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)

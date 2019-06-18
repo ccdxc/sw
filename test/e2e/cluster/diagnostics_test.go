@@ -121,6 +121,58 @@ var _ = Describe("diagnostics tests", func() {
 				}
 				return nil
 			}, 30, 1).Should(BeNil())
+			// check audit logs for Debug action
+			query = &search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{auth.Permission_AuditEvent.String()},
+					Fields: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							{
+								Key:      "action",
+								Operator: "equals",
+								Values:   []string{"Debug"},
+							},
+							{
+								Key:      "outcome",
+								Operator: "equals",
+								Values:   []string{audit.Outcome_Success.String()},
+							},
+							{
+								Key:      "resource.kind",
+								Operator: "equals",
+								Values:   []string{string(diagnostics.KindModule)},
+							},
+							{
+								Key:      "resource.name",
+								Operator: "equals",
+								Values:   []string{updatedModObj.Name},
+							},
+						},
+					},
+				},
+				From:       0,
+				MaxResults: 50,
+			}
+			Eventually(func() error {
+				resp := testutils.AuditSearchResponse{}
+				err := ts.tu.Search(ts.loggedInCtx, query, &resp)
+				if err != nil {
+					return err
+				}
+				if resp.ActualHits == 0 {
+					return fmt.Errorf("no audit logs for [%s] Debug action", updatedModObj.Name)
+				}
+				events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[search.Category_Monitoring.String()].Kinds[auth.Permission_AuditEvent.String()].Entries
+				for _, event := range events {
+					if (event.Object.Action == "Debug") &&
+						(event.Object.Outcome == audit.Outcome_Success.String()) &&
+						(event.Object.User.Name == ts.tu.User) &&
+						(event.Object.User.Tenant == globals.DefaultTenant) {
+						return nil
+					}
+				}
+				return fmt.Errorf("no audit logs for [%s] Debug action", updatedModObj.Name)
+			}, 30, 1).Should(BeNil())
 			// restore info log level
 			Eventually(func() error {
 				updatedModObj.Spec.LogLevel = diagnostics.ModuleSpec_Info.String()
