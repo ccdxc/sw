@@ -302,7 +302,6 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                                             "create v4 local mapping failed, vpc %u, ret %u",
                                             i, rv);
-
                     if (g_test_params.dual_stack) {
                         // V6 mapping
                         pds_local_v6_mapping = pds_local_mapping;
@@ -312,7 +311,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                         CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_local_v6_mapping.key.ip_addr.addr.v6_addr,
                                                         pds_local_mapping.key.ip_addr.addr.v4_addr);
                         // no need of v6 to v6 NAT
-                        pds_local_v6_mapping.public_ip_valid = false;
+                        pds_local_v6_mapping.public_ip_valid = true;
                         if (natpfx) {
                             pds_local_v6_mapping.public_ip.af = IP_AF_IPV6;
                             pds_local_v6_mapping.public_ip.addr.v6_addr = v6_natpfx->addr.addr.v6_addr;
@@ -425,8 +424,8 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
 
                     rv = create_remote_mapping(&pds_remote_v6_mapping);
                     SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
-                                            "create v6 remote mapping failed, vpc %u, ret %u",
-                                            i, rv);
+                        "create v6 remote mapping failed, vpc %u, ret %u",
+                        i, rv);
                 }
                 tep_offset++;
                 tep_offset %= num_teps;

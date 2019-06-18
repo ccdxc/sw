@@ -624,8 +624,10 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                         ipaddr2str(&spec->tep.ip_addr),
                         macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
                         spec->fabric_encap.val.value,
-                        ipaddr2str(&spec->public_ip),
-                        ipaddr2str(&spec->provider_ip));
+                        spec->public_ip_valid ?
+                            ipaddr2str(&spec->public_ip) : "None",
+                        spec->provider_ip_valid ?
+                            ipaddr2str(&spec->provider_ip) : "");
     } else {
         PDS_TRACE_DEBUG("Programming remote mapping (vpc %u, ip %s), vnic %u, "
                         "subnet %u, tep %s, overlay mac %s, "
@@ -635,7 +637,8 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                         ipaddr2str(&spec->tep.ip_addr),
                         macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
                         spec->fabric_encap.val.value,
-                        ipaddr2str(&spec->provider_ip));
+                        spec->provider_ip_valid ?
+                            ipaddr2str(&spec->provider_ip) : "None");
     }
     if (is_local_) {
         // allocate NAT table entries
