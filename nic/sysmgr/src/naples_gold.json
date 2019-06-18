@@ -4,7 +4,7 @@
         "command": "/nic/bin/delphi_hub",
         "dependencies": [],
         "flags": [],
-        "timeout": 30.0
+        "timeout": 0.0
     },
     {
         "name": "pciemgrd",

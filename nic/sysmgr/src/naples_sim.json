@@ -3,7 +3,7 @@
     "command": "/naples/nic/bin/delphi_hub /tmp/delphi.dat",
     "dependencies": [],
     "flags": [],
-    "timeout": 30.0
+    "timeout": 0.0
 }, {
     "name": "hal",
     "command": "/naples/nic/bin/hal -c hal.json",
