@@ -13,9 +13,10 @@ struct phv_ p;
 meter_stats:
     seq             c1, r5, r0
     nop.c1.e
-    add             r1, k.rewrite_metadata_meter_idx, METER_STATS_TABLE_SIZE, 3
+    add             r1, r0, k.rewrite_metadata_meter_idx
     seq             c1, k.control_metadata_direction, TX_FROM_HOST
-    add.!c1         r5, r5, r1
+    add.!c1         r1, r1, METER_STATS_TABLE_SIZE
+    add             r5, r5, r1, 3
     add             r7, r0, k.rewrite_metadata_meter_len
     or              r7, r7, r5[32:27], 58
     addi            r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
