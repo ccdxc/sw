@@ -160,7 +160,7 @@ compute_ipv6_prefix (ip_prefix_t *pfx, ip_prefix_t *initial_pfx,
     *pfx = *initial_pfx;
     pfx->addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-2] = htonl(0xF1D0D1D0);
     pfx->addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
-                                    htonl((0xC << 28) | (shift_val << 8));
+                                    htonl((0xC << 28) | (shift_val << (128 - len)));
     pfx->len = len;
 }
 

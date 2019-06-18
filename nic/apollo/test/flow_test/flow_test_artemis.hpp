@@ -977,7 +977,7 @@ public:
                                                      ip_addr,
                                                      fwd_sport, fwd_dport,
                                                      ip_addr,
-                                                     ep_pairs[i].v6_local.local_ip,
+                                                     ep_pairs[i].v6_local.public_ip,
                                                      fwd_dport, fwd_sport);
                             } else {
                                 // vnet in/out with vxlan encap

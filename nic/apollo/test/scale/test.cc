@@ -59,9 +59,9 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
         v6rtnum = 0;
         v6route_table.key.id = ntables + i;
         for (uint32_t j = 0; j < num_routes; j++) {
-            compute_ipv6_prefix(&v6route_table.routes[j].prefix, v6_route_pfx,
-                                v6rtnum++, 120);
             if (apollo()) {
+                compute_ipv6_prefix(&v6route_table.routes[j].prefix, v6_route_pfx,
+                                    v6rtnum++, 120);
                 v6route_table.routes[j].nh_ip.af = IP_AF_IPV4;
                 v6route_table.routes[j].nh_ip.addr.v4_addr =
                         tep_pfx->addr.addr.v4_addr + tep_offset++;
@@ -73,6 +73,8 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
                 }
                 v6route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
             } else if (artemis()) {
+                compute_ipv6_prefix(&v6route_table.routes[j].prefix, v6_route_pfx,
+                                    v6rtnum++, 124);
                 v6route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
                 v6route_table.routes[j].nh = nh_id++;
                 if (nh_id > num_nh) {
