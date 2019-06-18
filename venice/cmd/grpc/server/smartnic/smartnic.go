@@ -23,6 +23,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
 	cmdcertutils "github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
+	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/ctxutils"
@@ -723,16 +724,7 @@ func (s *RPCServer) MonitorHealth() {
 			// In the cache instead we set LastTransitionTime for each update.
 			// Also compute new cluster-level SmartNIC metrics
 
-			updCounters := map[string]int64{
-				"AdmittedNICs":       0,
-				"PendingNICs":        0,
-				"RejectedNICs":       0,
-				"DecommissionedNICs": 0,
-				"HealthyNICs":        0,
-				"UnhealthyNICs":      0,
-				"DisconnectedNICs":   0,
-			}
-
+			updCounters := types.GetSmartNICMetricsZeroMap()
 			nicStates, err := s.stateMgr.ListSmartNICs()
 			if err != nil {
 				log.Errorf("Failed to getting a list of nics, err: %v", err)

@@ -52,9 +52,6 @@ func NewMetricsService(nodeID, clusterID string, rc resolver.Interface) types.Me
 		clusterID: clusterID,
 		tsdbOpts:  opts,
 	}
-	ms.ctx, ms.cancelFn = context.WithCancel(context.Background())
-	tsdb.Init(ms.ctx, ms.tsdbOpts)
-
 	return ms
 }
 
@@ -62,6 +59,10 @@ func NewMetricsService(nodeID, clusterID string, rc resolver.Interface) types.Me
 func (ms *metricsService) Start() error {
 	ms.Lock()
 	defer ms.Unlock()
+
+	ms.ctx, ms.cancelFn = context.WithCancel(context.Background())
+	tsdb.Init(ms.ctx, ms.tsdbOpts)
+	log.Infof("TSDB initialized, options: %+v", ms.tsdbOpts)
 
 	clusterMeta := &cluster.Cluster{}
 	clusterMeta.Defaults("all")
@@ -93,7 +94,9 @@ func (ms *metricsService) Stop() {
 	defer ms.Unlock()
 	ms.running = false
 	log.Infof("Stopping metrics service")
-	ms.cancelFn()
+	if ms.cancelFn != nil {
+		ms.cancelFn()
+	}
 	tsdb.Cleanup()
 }
 
@@ -109,4 +112,11 @@ func (ms *metricsService) UpdateCounters(m map[string]int64) {
 		ms.table.Counter(k).Set(v)
 	}
 	ms.table.AtomicEnd()
+}
+
+// IsRunning returns true if the service is running
+func (ms *metricsService) IsRunning() bool {
+	ms.Lock()
+	defer ms.Unlock()
+	return ms.running
 }

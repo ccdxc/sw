@@ -13,12 +13,14 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/server"
 	"github.com/pensando/sw/venice/cmd/server/options"
+	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/startup"
 	"github.com/pensando/sw/venice/cmd/systemd-configs"
 	cmdutils "github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/nodewatcher"
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/systemd"
 )
@@ -103,6 +105,19 @@ func main() {
 			smartnic.HealthWatchInterval = hwi
 		} else {
 			log.Errorf("Invalid HealthWatchInterval: %v", hwiOpt)
+		}
+	}
+
+	if cmsiOpt := cmdutils.GetConfigProperty("ClusterMetricsSendInterval"); cmsiOpt != "" {
+		cmsi, err := time.ParseDuration(cmsiOpt)
+		if err == nil {
+			log.Infof("Overriding default Cluster Metrics Send Interval. New value: %v", cmsi)
+			services.MetricsSendInterval = cmsi
+			if cmsi < nodewatcher.GetMinimumFrequency() {
+				nodewatcher.SetMinimumFrequency(cmsi)
+			}
+		} else {
+			log.Errorf("Invalid ClusterMetricsSendInterval: %v", cmsiOpt)
 		}
 	}
 

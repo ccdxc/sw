@@ -71,10 +71,10 @@ func Init(ctx context.Context, opts *Opts) {
 	global = &globalInfo{}
 	global.opts = *opts
 	if opts.SendInterval == 0 {
-		opts.SendInterval = defaultSendInterval
+		global.opts.SendInterval = defaultSendInterval
 	}
 	if opts.ConnectionRetryInterval == 0 {
-		opts.ConnectionRetryInterval = defaultConnectionRetryInterval
+		global.opts.ConnectionRetryInterval = defaultConnectionRetryInterval
 	}
 
 	global.objs = make(map[string]*iObj)

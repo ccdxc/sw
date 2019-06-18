@@ -13,6 +13,8 @@ import (
 
 const (
 	delim = "_"
+	// DbName is the database name for mock collector database
+	DbName = "objMetrics"
 )
 
 // Collector is a fake collector saving all received metric bundles
@@ -76,8 +78,8 @@ func (f *Collector) Validate(measurementName string, ts time.Time, tags []map[st
 		return false
 	}
 
-	if f.mb.DbName != "objMetrics" {
-		log.Errorf("unexpected dbName, got '%s' expected '%s'", f.mb.DbName, "objMetrics")
+	if f.mb.DbName != DbName {
+		log.Errorf("unexpected dbName, got '%s' expected '%s'", f.mb.DbName, DbName)
 		return false
 	}
 
@@ -172,8 +174,8 @@ func (f *Collector) ValidateCount(measurementName string, tags map[string]string
 		return false
 	}
 
-	if f.mb.DbName != "objMetrics" {
-		log.Errorf("unexpected dbName, got '%s' expected '%s'", f.mb.DbName, "objMetrics")
+	if f.mb.DbName != DbName {
+		log.Errorf("unexpected dbName, got '%s' expected '%s'", f.mb.DbName, DbName)
 		return false
 	}
 

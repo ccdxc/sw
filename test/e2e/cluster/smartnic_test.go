@@ -3,6 +3,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	es "github.com/olivere/elastic"
@@ -11,11 +12,14 @@ import (
 
 	api "github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/telemetry_query"
 	"github.com/pensando/sw/events/generated/eventtypes"
+	cmdtypes "github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
+	"github.com/pensando/sw/venice/utils/telemetryclient"
 )
 
 func validateNICHealth(ctx context.Context, snIf cmd.ClusterV1SmartNICInterface, expectedNumNICS int, status cmd.ConditionStatus) {
@@ -74,6 +78,103 @@ func validateNICHealthEvents(ctx context.Context, esClient elastic.ESClient, evt
 	}, 60, 1).Should(BeNil(), fmt.Sprintf("failed to validate %d SmartNIC Health events of type %s, err: %v", numExpectedHits, evtType, err))
 }
 
+func validateNICMetrics(ctx context.Context, snIf cmd.ClusterV1SmartNICInterface, totalNumNICs int64) {
+	// Create telemetry client
+	apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
+	tc, err := telemetryclient.NewTelemetryClient(apiGwAddr)
+	Expect(err).Should(BeNil())
+
+	var refMetrics, actualMetrics map[string]int64
+	Eventually(func() bool {
+		snics, err := snIf.List(ctx, &api.ListWatchOptions{})
+		if err != nil {
+			By(fmt.Sprintf("Error getting list of NICs: %v", err))
+			return false
+		}
+		refMetrics := cmdtypes.GetSmartNICMetricsZeroMap()
+		for _, snic := range snics {
+			switch snic.Status.AdmissionPhase {
+			case cmd.SmartNICStatus_ADMITTED.String():
+				refMetrics["AdmittedNICs"]++
+			case cmd.SmartNICStatus_PENDING.String():
+				refMetrics["PendingNICs"]++
+			case cmd.SmartNICStatus_REJECTED.String():
+				refMetrics["RejectedNICs"]++
+			case cmd.SmartNICStatus_DECOMMISSIONED.String():
+				refMetrics["DecommissionedNICs"]++
+			default:
+				panic(fmt.Sprintf("Unknown SmartNIC AdmissionPhase value: %+v", snic.Status.AdmissionPhase))
+			}
+			if snic.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String() {
+				for _, cond := range snic.Status.Conditions {
+					if cond.Type == cmd.SmartNICCondition_HEALTHY.String() {
+						switch cond.Status {
+						case cmd.ConditionStatus_TRUE.String():
+							refMetrics["HealthyNICs"]++
+						case cmd.ConditionStatus_FALSE.String():
+							refMetrics["UnhealthyNICs"]++
+						case cmd.ConditionStatus_UNKNOWN.String():
+							refMetrics["DisconnectedNICs"]++
+						default:
+							panic(fmt.Sprintf("Unknown SmartNIC condition value: %+v", cond.Status))
+						}
+					}
+					break
+				}
+			}
+		}
+		totalNumNICsByAdmissionPhase := refMetrics["AdmittedNICs"] + refMetrics["PendingNICs"] + refMetrics["RejectedNICs"] + refMetrics["DecommissionedNICs"]
+		if totalNumNICsByAdmissionPhase != totalNumNICs {
+			By(fmt.Sprintf("Total number of NICs by AdmissionPhase does not match expected value. Have: %v, want: %v, counts: %v",
+				totalNumNICsByAdmissionPhase, totalNumNICs, refMetrics))
+			return false
+		}
+
+		totalNumNICsByHealthCondition := refMetrics["HealthyNICs"] + refMetrics["UnhealthyNICs"] + refMetrics["DisconnectedNICs"]
+		if totalNumNICsByHealthCondition != refMetrics["AdmittedNICs"] {
+			By(fmt.Sprintf("Total number of NICs by HealthCondition does not match expected value. Have: %v, want: %v, counts: %+v",
+				totalNumNICsByHealthCondition, refMetrics["AdmittedNICs"], refMetrics))
+			return false
+		}
+		query := &telemetry_query.MetricsQueryList{
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+			Queries: []*telemetry_query.MetricsQuerySpec{
+				{
+					TypeMeta: api.TypeMeta{
+						Kind: "Cluster",
+					},
+				},
+			},
+		}
+		ctx := ts.tu.NewLoggedInContext(ctx)
+		res, err := tc.Metrics(ctx, query)
+		if err != nil {
+			By(fmt.Sprintf("Query for Cluster metrics returned err: %s", err))
+			return false
+		}
+		if len(res.Results) == 0 || len(res.Results[0].Series) == 0 {
+			By(fmt.Sprintf("Query for Cluster metrics returned empty data"))
+			return false
+		}
+		series := res.Results[0].Series[0]
+		Expect(len(series.Columns)).ShouldNot(BeZero(), "Query response had no column entries")
+		Expect(len(series.Values)).ShouldNot(BeZero(), "Query response had no value entries in its series")
+		mostRecentIndex := len(res.Results[0].Series[0].Values) - 1
+		values := series.Values[mostRecentIndex]
+		actualMetrics = make(map[string]int64)
+		// Counters get converted to float as they are read back form TSDB, so we need to convert back to int.
+		// Fields that are not float are either string or timestamp and we can ignore them.
+		for i, c := range series.Columns {
+			v, ok := values[i].(float64)
+			if ok {
+				actualMetrics[c] = int64(v)
+			}
+		}
+		return reflect.DeepEqual(refMetrics, actualMetrics)
+	}, 90, 10).Should(BeTrue(), fmt.Sprintf("SmartNIC metrics do not match cluster state. Have: %+v, want: %+v", actualMetrics, refMetrics))
+}
+
 var _ = Describe("SmartNIC tests", func() {
 
 	Context("SmartNIC object creation & nic-admission validation test", func() {
@@ -116,9 +217,9 @@ var _ = Describe("SmartNIC tests", func() {
 				By(fmt.Sprintf("ts:%s SmartNIC admission validated for [%d] nics", time.Now().String(), numAdmittedNICs))
 				return true
 			}, 90, 1).Should(BeTrue(), "SmartNIC nic-admission check failed")
+			validateNICMetrics(ctx, snIf, int64(ts.tu.NumNaplesHosts))
 
 			// Validate MAC Addresses. Each NIC should have a valid, unique Pensando MAC address
-
 			nicMACMap := make(map[string]string)
 			for _, snic := range snics {
 				mac := snic.Status.PrimaryMAC
@@ -152,6 +253,7 @@ var _ = Describe("SmartNIC tests", func() {
 						}
 						return true
 					}, 60, 3).Should(BeTrue(), fmt.Sprintf("SmartNIC de-admission and re-admission check failed: %+v", snics))
+					validateNICMetrics(ctx, snIf, int64(ts.tu.NumNaplesHosts))
 				}
 			}
 		})
@@ -179,6 +281,7 @@ var _ = Describe("SmartNIC tests", func() {
 			ctx := context.Background()
 			// Validate nic is healthy
 			validateNICHealth(ctx, snIf, ts.tu.NumNaplesHosts, cmd.ConditionStatus_TRUE)
+			validateNICMetrics(ctx, snIf, int64(ts.tu.NumNaplesHosts))
 
 			// Pause the NIC containers, verify that CMD marks health as "unknown"
 			for _, nicContainer := range ts.tu.NaplesNodes {
@@ -188,6 +291,7 @@ var _ = Describe("SmartNIC tests", func() {
 
 			// Validate nic health gets updated
 			validateNICHealth(ctx, snIf, ts.tu.NumNaplesHosts, cmd.ConditionStatus_UNKNOWN)
+			validateNICMetrics(ctx, snIf, int64(ts.tu.NumNaplesHosts))
 
 			// CMD should update health of NIC after it comes back
 			wakeTime := time.Now()
@@ -202,6 +306,7 @@ var _ = Describe("SmartNIC tests", func() {
 				ts.tu.LocalCommandOutput(fmt.Sprintf("docker unpause %s", nicContainer))
 			}
 			validateNICHealth(ctx, snIf, ts.tu.NumNaplesHosts, cmd.ConditionStatus_TRUE)
+			validateNICMetrics(ctx, snIf, int64(ts.tu.NumNaplesHosts))
 
 			// Check that LastTransitionTime has been updated
 			Eventually(func() bool {
@@ -225,6 +330,7 @@ var _ = Describe("SmartNIC tests", func() {
 				}
 				return true
 			}, 30, 1).Should(BeTrue(), "SmartNIC condition condition.LastTransitionTime check failed")
+			validateNICMetrics(ctx, snIf, int64(ts.tu.NumNaplesHosts))
 
 			// check that events were generated
 			validateNICHealthEvents(ctx, esClient, eventtypes.NIC_HEALTH_UNKNOWN, ts.tu.NumNaplesHosts)
