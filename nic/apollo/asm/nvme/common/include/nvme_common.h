@@ -24,17 +24,23 @@
 //ring pindex/cindex
 #define SQ_P_INDEX              d.{pi_0}.hx
 #define SQ_C_INDEX              d.{ci_0}.hx
-#define CMDID_RING_PROXY_CI     d.{cmdid_ring_proxy_ci}.hx
-#define CMDID_RING_PROXY_CI_LE  d.{cmdid_ring_proxy_ci}
+#define CMDID_RING_PROXY_PI     d.{cmdid_ring_proxy_pi}
+#define CMDID_RING_PROXY_PI_LE  d.{cmdid_ring_proxy_pi}.hx
+#define CMDID_RING_PROXY_CI     d.{cmdid_ring_proxy_ci}
+#define CMDID_RING_PROXY_CI_LE  d.{cmdid_ring_proxy_ci}.hx
 #define CMDID_RING_PI           d.{cmdid_ring_pi}.hx
 #define CMDID_RING_CI           d.{cmdid_ring_ci}.hx
 #define CMDID                   d.{cmdid}
-#define TX_PDUID_RING_PROXY_CI     d.{tx_pduid_ring_proxy_ci}.hx
-#define TX_PDUID_RING_PROXY_CI_LE  d.{tx_pduid_ring_proxy_ci}
+#define TX_PDUID_RING_PROXY_PI     d.{tx_pduid_ring_proxy_pi}
+#define TX_PDUID_RING_PROXY_PI_LE  d.{tx_pduid_ring_proxy_pi}.hx
+#define TX_PDUID_RING_PROXY_CI     d.{tx_pduid_ring_proxy_ci}
+#define TX_PDUID_RING_PROXY_CI_LE  d.{tx_pduid_ring_proxy_ci}.hx
 #define TX_PDUID_RING_PI           d.{tx_pduid_ring_pi}.hx
 #define TX_PDUID_RING_CI           d.{tx_pduid_ring_ci}.hx
-#define RX_PDUID_RING_PROXY_CI     d.{rx_pduid_ring_proxy_ci}.hx
-#define RX_PDUID_RING_PROXY_CI_LE  d.{rx_pduid_ring_proxy_ci}
+#define RX_PDUID_RING_PROXY_PI     d.{rx_pduid_ring_proxy_pi}
+#define RX_PDUID_RING_PROXY_PI_LE  d.{rx_pduid_ring_proxy_pi}.hx
+#define RX_PDUID_RING_PROXY_CI     d.{rx_pduid_ring_proxy_ci}
+#define RX_PDUID_RING_PROXY_CI_LE  d.{rx_pduid_ring_proxy_ci}.hx
 #define RX_PDUID_RING_PI           d.{rx_pduid_ring_pi}.hx
 #define RX_PDUID_RING_CI           d.{rx_pduid_ring_ci}.hx
 #define PDUID                   d.{pduid}
@@ -130,7 +136,7 @@
 #define NVME_REQ_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(cmd_ctxt_dma_dma_cmd_type)/16)
 #define NVME_SESSPREXTSTX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(pkt_desc_dma_dma_cmd_type)/16)
 #define NVME_SESSPOSTXTSTX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(last_ddgst_aol_desc_dma_dma_cmd_type)/16)
-#define NVME_SESS_POST_DGST_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(hdgst_dma_dma_cmd_type)/16)
+#define NVME_SESS_POST_DGST_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(pduid_dma_dma_cmd_type)/16)
 #define NVME_SESS_PRE_DGST_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(pdu_hdr_dma_dma_cmd_type)/16)
 
 //Digest related defines

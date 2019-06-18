@@ -505,6 +505,7 @@ header_type resourcecb_t {
     fields {
         // ring of free rx pduids
         rx_pduid_ring_pi                : 16;
+        rx_pduid_ring_proxy_pi          : 16;
         rx_pduid_ring_proxy_ci          : 16;
         rx_pduid_ring_ci                : 16;
         rx_pduid_ring_log_sz            :  5;
@@ -513,6 +514,7 @@ header_type resourcecb_t {
 
         // ring of free tx pduids 
         tx_pduid_ring_pi                : 16;
+        tx_pduid_ring_proxy_pi          : 16;
         tx_pduid_ring_proxy_ci          : 16;
         tx_pduid_ring_ci                : 16;
         tx_pduid_ring_log_sz            :  5;
@@ -521,6 +523,7 @@ header_type resourcecb_t {
 
         // ring of free cmdids
         cmdid_ring_pi                   : 16;
+        cmdid_ring_proxy_pi             : 16;
         cmdid_ring_proxy_ci             : 16;
         cmdid_ring_ci                   : 16;
         cmdid_ring_log_sz               :  5;
@@ -528,34 +531,36 @@ header_type resourcecb_t {
         cmdid_ring_choke_counter        :  8;
 
         //40 Bytes
-        pad                             : 320;
+        pad                             : 272;
     }
 }
 
 #define RESOURCECB_PARAMS                                                      \
-rx_pduid_ring_pi, rx_pduid_ring_proxy_ci, rx_pduid_ring_ci, rx_pduid_ring_log_sz, \
-rx_pduid_ring_rsvd, rx_pduid_ring_choke_counter, \
-tx_pduid_ring_pi, tx_pduid_ring_proxy_ci, tx_pduid_ring_ci, tx_pduid_ring_log_sz, \
-tx_pduid_ring_rsvd, tx_pduid_ring_choke_counter, \
-cmdid_ring_pi, cmdid_ring_proxy_ci, cmdid_ring_ci, cmdid_ring_log_sz, \
-cmdid_ring_rsvd, cmdid_ring_choke_counter, \
-pad
+rx_pduid_ring_pi, rx_pduid_ring_proxy_pi, rx_pduid_ring_proxy_ci, rx_pduid_ring_ci, \
+rx_pduid_ring_log_sz, rx_pduid_ring_rsvd, rx_pduid_ring_choke_counter, \
+tx_pduid_ring_pi, tx_pduid_ring_proxy_pi, tx_pduid_ring_proxy_ci, tx_pduid_ring_ci, \
+tx_pduid_ring_log_sz, tx_pduid_ring_rsvd, tx_pduid_ring_choke_counter, \
+cmdid_ring_pi, cmdid_ring_proxy_pi, cmdid_ring_proxy_ci, cmdid_ring_ci, \
+cmdid_ring_log_sz, cmdid_ring_rsvd, cmdid_ring_choke_counter, pad
 
 
 #define GENERATE_RESOURCECB_D                                                   \
     modify_field(resourcecb_d.rx_pduid_ring_pi, rx_pduid_ring_pi);                    \
+    modify_field(resourcecb_d.rx_pduid_ring_proxy_pi, rx_pduid_ring_proxy_pi);        \
     modify_field(resourcecb_d.rx_pduid_ring_proxy_ci, rx_pduid_ring_proxy_ci);        \
     modify_field(resourcecb_d.rx_pduid_ring_ci, rx_pduid_ring_ci);                    \
     modify_field(resourcecb_d.rx_pduid_ring_log_sz, rx_pduid_ring_log_sz);            \
     modify_field(resourcecb_d.rx_pduid_ring_rsvd, rx_pduid_ring_rsvd);                \
     modify_field(resourcecb_d.rx_pduid_ring_choke_counter, rx_pduid_ring_choke_counter);\
     modify_field(resourcecb_d.tx_pduid_ring_pi, tx_pduid_ring_pi);                    \
+    modify_field(resourcecb_d.tx_pduid_ring_proxy_pi, tx_pduid_ring_proxy_pi);        \
     modify_field(resourcecb_d.tx_pduid_ring_proxy_ci, tx_pduid_ring_proxy_ci);        \
     modify_field(resourcecb_d.tx_pduid_ring_ci, tx_pduid_ring_ci);                    \
     modify_field(resourcecb_d.tx_pduid_ring_log_sz, tx_pduid_ring_log_sz);            \
     modify_field(resourcecb_d.tx_pduid_ring_rsvd, tx_pduid_ring_rsvd);                \
     modify_field(resourcecb_d.tx_pduid_ring_choke_counter, tx_pduid_ring_choke_counter);\
     modify_field(resourcecb_d.cmdid_ring_pi, cmdid_ring_pi);                    \
+    modify_field(resourcecb_d.cmdid_ring_proxy_pi, cmdid_ring_proxy_pi);        \
     modify_field(resourcecb_d.cmdid_ring_proxy_ci, cmdid_ring_proxy_ci);        \
     modify_field(resourcecb_d.cmdid_ring_ci, cmdid_ring_ci);                    \
     modify_field(resourcecb_d.cmdid_ring_log_sz, cmdid_ring_log_sz);            \

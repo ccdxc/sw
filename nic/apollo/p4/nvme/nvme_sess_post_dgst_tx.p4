@@ -70,6 +70,7 @@
 //prepares tcp tso descriptors
 #define tx_table_s6_t0_action cb_tso_process_t0
 #define tx_table_s6_t1_action cb_tso_process_t1
+#define tx_table_s6_t2_action resourcecb_process
 
 #include "common_txdma.p4"
 #include "nvme_common.p4"
@@ -129,10 +130,11 @@ header_type nvme_sesspostdgst_tx_to_stage_writeback_info_t {
     }
 }
 
-header_type nvme_sesspostdgst_tx_to_stage_tso_info_t {
+header_type nvme_sesspostdgst_tx_to_stage_tso_resourcecb_info_t {
     fields {
         total_pages                      :  8;
-        pad                              :  120;
+        pduid                            :  16;
+        pad                              :  104;
     }
 }
 
@@ -175,6 +177,12 @@ header_type nvme_sesspostdgst_tx_writeback_to_tso_t {
     }
 }
 
+header_type nvme_sesspostdgst_tx_writeback_to_resourcecb_t {
+    fields {
+        pad                 : 160;
+    }
+}
+
 /**** scratch for D-vectors ****/
 
 @pragma scratch_metadata
@@ -194,6 +202,9 @@ metadata sessprodcb_t sessprodcb_d;
 
 @pragma scratch_metadata
 metadata page_list_t page_list_d;
+
+@pragma scratch_metadata
+metadata resourcecb_t resourcecb_d;
 
 /**** global header unions ****/
 
@@ -238,9 +249,9 @@ metadata nvme_sesspostdgst_tx_to_stage_writeback_info_t to_s5_info_scr;
 
 //To-Stage-6
 @pragma pa_header_union ingress to_stage_6
-metadata nvme_sesspostdgst_tx_to_stage_tso_info_t to_s6_info;
+metadata nvme_sesspostdgst_tx_to_stage_tso_resourcecb_info_t to_s6_info;
 @pragma scratch_metadata
-metadata nvme_sesspostdgst_tx_to_stage_tso_info_t to_s6_info_scr;
+metadata nvme_sesspostdgst_tx_to_stage_tso_resourcecb_info_t to_s6_info_scr;
 
 /**** stage to stage header unions ****/
 
@@ -280,12 +291,22 @@ metadata nvme_sesspostdgst_tx_writeback_to_tso_t t1_s2s_writeback_to_tso_info_sc
 
 
 //Table-2
+@pragma pa_header_union ingress common_t2_s2s t2_s2s_writeback_to_resourcecb_info
+
+metadata nvme_sesspostdgst_tx_writeback_to_resourcecb_t t2_s2s_writeback_to_resourcecb_info;
+@pragma scratch_metadata
+metadata nvme_sesspostdgst_tx_writeback_to_resourcecb_t t2_s2s_writeback_to_resourcecb_info_scr;
+
 
 /**** PHV Layout ****/
 // PHV space for upto 16 TCP descriptors is reserved
 // ASM code is expected to populate one or more of these descriptors, possibly
 // using phvwrp 
 // TODO: can we change it to any array format ?
+@pragma dont_trim
+metadata index16_t pduid;
+@pragma dont_trim
+metadata index16_t pduid_pindex;
 @pragma dont_trim
 metadata data32_t hdgst;
 @pragma dont_trim
@@ -328,24 +349,28 @@ metadata hbm_al_ring_entry_t tcp_wqe14;
 metadata hbm_al_ring_entry_t tcp_wqe15;
 @pragma dont_trim
 metadata data64_t tcp_db;
-@pragma dont_trim
-metadata index16_t sessdgst_q_cindex;
+//@pragma dont_trim
+//metadata index16_t sessdgst_q_cindex;
 
 @pragma pa_align 128
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t hdgst_dma;               // dma cmd 0
+metadata dma_cmd_phv2mem_t pduid_dma;               // dma cmd 0
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t ddgst_dma;               // dma cmd 1
+metadata dma_cmd_phv2mem_t pduid_pindex_dma;        // dma cmd 1
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t hdgst_dma;               // dma cmd 2
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t ddgst_dma;               // dma cmd 3
 //though 'n' tcp wqes are populated on PHV, assumption is that at the max 
 //two DMA instructions are sufficient to download these to tcp transmit q
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t tcp_wqe_dma0;            //dma cmd 2
+metadata dma_cmd_phv2mem_t tcp_wqe_dma0;            //dma cmd 4
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t tcp_wqe_dma1;            //dma cmd 3
+metadata dma_cmd_phv2mem_t tcp_wqe_dma1;            //dma cmd 5
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t tcp_db_dma;              //dma cmd 4
-@pragma dont_trim
-metadata dma_cmd_phv2mem_t sessdgst_q_cindex_dma;   //dma cmd 5
+metadata dma_cmd_phv2mem_t tcp_db_dma;              //dma cmd 6
+//@pragma dont_trim
+//metadata dma_cmd_phv2mem_t sessdgst_q_cindex_dma;   //dma cmd 7
 
 /*
  * Stage 0 table 0 action
@@ -470,4 +495,18 @@ action cb_tso_process_t1 (PAGE_LIST_PARAMS) {
     modify_field(t1_s2s_writeback_to_tso_info_scr.pad, t1_s2s_writeback_to_tso_info.pad);
 
     GENERATE_PAGE_LIST_D
+}
+
+action resourcecb_process (RESOURCECB_PARAMS) {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s6_info_scr.pduid, to_s6_info.pduid);
+    modify_field(to_s6_info_scr.pad, to_s6_info.pad);
+
+    // stage to stage
+    modify_field(t2_s2s_writeback_to_resourcecb_info_scr.pad, t2_s2s_writeback_to_resourcecb_info.pad);
+
+    GENERATE_RESOURCECB_D
 }

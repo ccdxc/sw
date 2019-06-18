@@ -16,12 +16,24 @@ struct s5_t0_nvme_sesspostdgst_tx_cb_writeback_process_d d;
 
 %%
     .param nvme_tx_pdu_context_base
+    .param nvme_resourcecb_addr
     .param nvme_sesspostdgst_tx_cb_tso_process
+    .param nvme_sesspostdgst_tx_resourcecb_process
 
 .align
 nvme_sesspostdgst_tx_cb_writeback_process:
     tblmincri      SESSPOSTDGSTTX_C_INDEX, d.log_num_entries, 1
     tblmincri.f    d.wb_r1_busy, 1, 1
+
+    // Load resourcecb to fetch pindex to free pdu_id
+    addui   r1, r0, hiword(nvme_resourcecb_addr)
+    addi    r1, r1, loword(nvme_resourcecb_addr)
+
+    // Pin resourcecb process to stage 6 for freeing pduid.
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN,
+                              CAPRI_TABLE_SIZE_512_BITS,
+                              nvme_sesspostdgst_tx_resourcecb_process,
+                              r1)
 
     addui          T0_PDU_CTXT_P, r0, hiword(nvme_tx_pdu_context_base)
     addi           T0_PDU_CTXT_P, T0_PDU_CTXT_P, loword(nvme_tx_pdu_context_base)

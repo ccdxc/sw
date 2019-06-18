@@ -45,7 +45,7 @@ nvme_req_tx_resourcecb_process:
     addi            r6, r6, loword(nvme_cmd_context_ring_base)
     add             r6, r6, r1, LOG_CMDID_RING_ENTRY_SIZE
      
-    phvwr           p.cmdid_cindex_index, CMDID_RING_PROXY_CI_LE
+    phvwr           p.cmdid_cindex_index, CMDID_RING_PROXY_CI
     mfspr           r3, spr_tbladdr 
     add             r3, r3, CMDID_RING_CI_OFFSET
 
@@ -61,7 +61,7 @@ nvme_req_tx_resourcecb_process:
     addi            r6, r6, loword(nvme_tx_pdu_context_ring_base)
     add             r6, r6, r2, TX_LOG_PDUID_RING_ENTRY_SIZE
      
-    phvwr           p.pduid_cindex_index, TX_PDUID_RING_PROXY_CI_LE
+    phvwr           p.pduid_cindex_index, TX_PDUID_RING_PROXY_CI
     mfspr           r3, spr_tbladdr 
     add             r3, r3, TX_PDUID_RING_CI_OFFSET
 

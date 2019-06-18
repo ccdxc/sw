@@ -319,6 +319,15 @@ def ValidateWriteTxChecks(tc):
                              tc.pvtdata.hwdgsttxcb_post_state, "ci"):
         return False
 
+    #check if Tx PDU context is checkedin
+    if not VerifyFieldMincrModify(tc, tc.pvtdata.resourcecb_pre_state,
+                                  tc.pvtdata.resourcecb_post_state,
+                                  "tx_pduid_ring_proxy_pi", "tx_pduid_ring_log_sz", 1):
+        return False
+    if not VerifyFieldMincrModify(tc, tc.pvtdata.resourcecb_pre_state,
+                                  tc.pvtdata.resourcecb_post_state,
+                                  "tx_pduid_ring_pi", "tx_pduid_ring_log_sz", 1):
+        return False
 
     return True
 

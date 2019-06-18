@@ -31,17 +31,20 @@ setup_resourcecb (uint64_t data_addr,
 
     data.cmdid_ring_log_sz = log2(max_cmd_context);
     data.cmdid_ring_ci = 0;
-    data.cmdid_ring_pi = 0;
+    data.cmdid_ring_pi = max_cmd_context-1;
+    data.cmdid_ring_proxy_pi = max_cmd_context-1;
     data.cmdid_ring_proxy_ci = 0;
 
     data.tx_pduid_ring_log_sz = log2(tx_max_pdu_context);
     data.tx_pduid_ring_ci = 0;
-    data.tx_pduid_ring_pi = 0;
+    data.tx_pduid_ring_pi = tx_max_pdu_context-1;
+    data.tx_pduid_ring_proxy_pi = tx_max_pdu_context-1;
     data.tx_pduid_ring_proxy_ci = 0;
 
     data.rx_pduid_ring_log_sz = log2(rx_max_pdu_context);
     data.rx_pduid_ring_ci = 0;
-    data.rx_pduid_ring_pi = 0;
+    data.rx_pduid_ring_pi = rx_max_pdu_context-1;
+    data.rx_pduid_ring_proxy_pi = rx_max_pdu_context-1;
     data.rx_pduid_ring_proxy_ci = 0;
 
     memrev((uint8_t*)&data, sizeof(data));
@@ -401,19 +404,19 @@ create_nvme_global_state (pd_nvme_global_t *nvme_global_pd)
     }
 
     //Fill the ring with cmd context page addresses
-    for (index = 0; index < max_cmd_context; index++) {
+    for (index = 0; index < max_cmd_context-1; index++) {
         nvme_cmd_context_ring_entry_prepare(nvme_global_pd, temp, index, index);
     }
     nvme_cmd_context_ring_hbm_write(nvme_global_pd->cmd_context_ring_base, temp);
 
     //Fill the ring with tx pdu context page addresses
-    for (index = 0; index < tx_max_pdu_context; index++) {
+    for (index = 0; index < tx_max_pdu_context-1; index++) {
         nvme_tx_pdu_context_ring_entry_prepare(nvme_global_pd, temp, index, index);
     }
     nvme_tx_pdu_context_ring_hbm_write(nvme_global_pd->tx_pdu_context_ring_base, temp);
 
     //Fill the ring with tx pdu context page addresses
-    for (index = 0; index < rx_max_pdu_context; index++) {
+    for (index = 0; index < rx_max_pdu_context-1; index++) {
         nvme_rx_pdu_context_ring_entry_prepare(nvme_global_pd, temp, index, index);
     }
     nvme_rx_pdu_context_ring_hbm_write(nvme_global_pd->rx_pdu_context_ring_base, temp);

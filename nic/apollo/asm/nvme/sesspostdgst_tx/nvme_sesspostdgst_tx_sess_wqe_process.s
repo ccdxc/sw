@@ -27,6 +27,7 @@ nvme_sesspostdgst_tx_sess_wqe_process:
     // Pass cid to sessdgsttx_cb_writeback to load tso_process
     // starting from first tcp_page
     phvwr          p.to_s5_info_pduid, d.pduid
+    phvwr          p.to_s6_info_pduid, d.pduid
 
     // load cmd_ctx process to get nlb, number of pages
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS,

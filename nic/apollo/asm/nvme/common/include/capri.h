@@ -1095,6 +1095,9 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
 #define DMA_SET_WR_FENCE(_cmd_t, _base_r) \
     phvwrp     _base_r, offsetof(_cmd_t, wr_fence), sizeof(_cmd_t.wr_fence), 1
 
+#define DMA_SET_WR_FENCE_E(_cmd_t, _base_r) \
+    phvwrp.e   _base_r, offsetof(_cmd_t, wr_fence), sizeof(_cmd_t.wr_fence), 1
+
 #define DMA_SET_WR_FENCE_FENCE(_cmd_t, _base_r) \
     phvwrp     _base_r, offsetof(_cmd_t, wr_fence_fence), sizeof(_cmd_t.wr_fence_fence), 1
 
