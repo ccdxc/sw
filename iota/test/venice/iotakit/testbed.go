@@ -1571,7 +1571,7 @@ func InitSuite(topoName, paramsFile string, scale, scaleData bool) (*TestBed, *S
 	}
 
 	// setup default config for the sysmodel
-	err = model.SetupDefaultConfig(scale, scaleData)
+	err = model.SetupDefaultConfig(ctx, scale, scaleData)
 	if err != nil {
 		tb.CollectLogs()
 		return nil, nil, err

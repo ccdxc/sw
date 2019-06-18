@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	context2 "context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -129,7 +130,7 @@ func initialize() {
 	if err != nil || setupModel == nil {
 		errorExit("failed to setup model", err)
 	}
-	err = setupModel.SetupDefaultConfig(false, false)
+	err = setupModel.SetupDefaultConfig(context2.TODO(), false, false)
 	if err != nil {
 		errorExit("error setting up default config", err)
 	}

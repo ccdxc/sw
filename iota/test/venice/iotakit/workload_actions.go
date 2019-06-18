@@ -198,8 +198,8 @@ func (act *ActionCtx) PingFails(wpc *WorkloadPairCollection) error {
 	// verify ping failed on each pair
 	for _, cmdResp := range triggerResp.Commands {
 		if cmdResp.ExitCode == 0 {
-			log.Errorf("Ping suceeded while expecting to fail. Resp: %#v", cmdResp)
-			return fmt.Errorf("PingFails: ping suceeded while expecting to fail on %s. code %v, Out: %v, StdErr: %v", cmdResp.EntityName, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+			log.Errorf("Ping succeeded while expecting to fail. Resp: %#v", cmdResp)
+			return fmt.Errorf("PingFails: ping succeeded while expecting to fail on %s. code %v, Out: %v, StdErr: %v", cmdResp.EntityName, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
 		}
 	}
 
@@ -269,8 +269,8 @@ func (act *ActionCtx) netcatTrigger(wpc *WorkloadPairCollection, serverOpt, clie
 			for _, cmdResp := range clientResp {
 				if expFail {
 					if expClientExitCode != 0 && cmdResp.ExitCode != expClientExitCode { // check non-zero exit codes on failure
-						log.Errorf("Netcat client command suceeded while expecting to fail. %+v", cmdResp)
-						clientErr = fmt.Errorf("Netcat client command suceeded while expecting failure on %s. exit code %v, Out: %v, StdErr: %v", cmdResp.EntityName, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+						log.Errorf("Netcat client command succeeded while expecting to fail. %+v", cmdResp)
+						clientErr = fmt.Errorf("Netcat client command succeeded while expecting failure on %s. exit code %v, Out: %v, StdErr: %v", cmdResp.EntityName, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
 					}
 					if expOutput != "" && strings.Contains(cmdResp.Stdout, expOutput) {
 						log.Errorf("Not Expecting netcat output %s. %+v", expOutput, cmdResp)
@@ -535,7 +535,7 @@ func (act *ActionCtx) FTPGetFails(wpc *WorkloadPairCollection) error {
 	// run ftp get
 	err = act.runFTPClient(wpc, 21, 1, "get /tmp/test.txt")
 	if err != nil {
-		return fmt.Errorf("FTP Get suceeded while expecting to fail. Err: %v", err)
+		return fmt.Errorf("FTP Get succeeded while expecting to fail. Err: %v", err)
 	}
 
 	return nil
@@ -573,7 +573,7 @@ func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, po
 		// copy server configuration
 		filename := fmt.Sprintf("/tmp/%s_fuz_server.json", wsName)
 		if jdata, err := json.Marshal(serverInput[wsName]); err != nil {
-			retErr = fmt.Errorf("error marshalling json data: %s", err)
+			retErr = fmt.Errorf("error marshaling json data: %s", err)
 			break
 		} else if err := ioutil.WriteFile(filename, jdata, 0644); err != nil {
 			retErr = fmt.Errorf("unable to write to file: %s", err)
@@ -587,7 +587,7 @@ func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, po
 		// copy the client configuration
 		filename = fmt.Sprintf("/tmp/%s_fuz_client.json", wsName)
 		if jdata, err := json.Marshal(clientInput[wsName]); err != nil {
-			retErr = fmt.Errorf("error marshalling json data: %s", err)
+			retErr = fmt.Errorf("error marshaling json data: %s", err)
 			break
 		} else if err := ioutil.WriteFile(filename, jdata, 0644); err != nil {
 			retErr = fmt.Errorf("unable to write to file: %s", err)

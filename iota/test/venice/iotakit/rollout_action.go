@@ -67,7 +67,7 @@ func (act *ActionCtx) UploadBundle(ctx context.Context, filename string, content
 	}
 	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
 	if !ok {
-		return 0, fmt.Errorf("no authorizaton header in context")
+		return 0, fmt.Errorf("no authorization header in context")
 	}
 	req.Header.Set("Authorization", authzHeader)
 	req.Header.Set("Content-Type", writer.FormDataContentType())

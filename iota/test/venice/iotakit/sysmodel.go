@@ -167,7 +167,7 @@ func (sm *SysModel) CleanupAllConfig() error {
 }
 
 // SetupDefaultConfig sets up a default config for the system
-func (sm *SysModel) SetupDefaultConfig(scale, scaleData bool) error {
+func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData bool) error {
 	var wc WorkloadCollection
 
 	log.Infof("Setting up default config...")
@@ -181,7 +181,7 @@ func (sm *SysModel) SetupDefaultConfig(scale, scaleData bool) error {
 	}
 
 	// generate scale configuration if required
-	err := sm.populateConfig(sm.tb.GetBaseVlan(), scale)
+	err := sm.populateConfig(ctx, sm.tb.GetBaseVlan(), scale)
 	if err != nil {
 		return fmt.Errorf("Error generating scale config: %s", err)
 	}
@@ -243,7 +243,7 @@ func (sm *SysModel) SetupDefaultConfig(scale, scaleData bool) error {
 					//This network is done.
 					continue
 				}
-				nwMap[nw] = nwMap[nw] + 1
+				nwMap[nw]++
 				wloadsToCreate = append(wloadsToCreate, wload)
 				log.Infof("Adding workload %v (host:%v NodeUUID:(%v) iotaNode:%v nw:%v) to create list", wload.GetName(), h.veniceHost.GetName(), h.iotaNode.GetNodeUuid(), h.iotaNode.Name, nw)
 
@@ -361,7 +361,7 @@ func timeTrack(start time.Time, name string) {
 
 // populateConfig creates scale configuration based on some predetermined parameters
 // TBD: we can enhance this to take the scale parameters fromt he user
-func (sm *SysModel) populateConfig(vlanBase uint32, scale bool) error {
+func (sm *SysModel) populateConfig(ctx context.Context, vlanBase uint32, scale bool) error {
 	cfg := cfgen.DefaultCfgenParams
 	cfg.SGPolicyParams.NumPolicies = 1
 
@@ -516,7 +516,7 @@ func (sm *SysModel) populateConfig(vlanBase uint32, scale bool) error {
 		policyPushCheck := func() error {
 			defer timeTrack(time.Now(), "Sg Policy Push")
 			iter := 1
-			for ; iter <= 2000; iter++ {
+			for ; iter <= 2000 && ctx.Err() == nil; iter++ {
 				time.Sleep(time.Second * time.Duration(iter))
 				if retSgp, err := sm.tb.GetSGPolicy(&o.ObjectMeta); err != nil {
 					return fmt.Errorf("error getting back policy %s %v", o.ObjectMeta.Name, err.Error())
@@ -525,8 +525,8 @@ func (sm *SysModel) populateConfig(vlanBase uint32, scale bool) error {
 					return nil
 				}
 			}
-			return fmt.Errorf("unable to update policy '%s' on all naples %+v",
-				o.ObjectMeta.Name, o.Status.PropagationStatus)
+			return fmt.Errorf("unable to update policy '%s' on all naples %+v ctx.Err() is %v",
+				o.ObjectMeta.Name, o.Status.PropagationStatus, ctx.Err())
 		}
 
 		if err := policyPushCheck(); err != nil {
