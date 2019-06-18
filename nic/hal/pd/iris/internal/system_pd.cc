@@ -927,6 +927,7 @@ pd_system_upgrade_table_reset(pd_func_args_t *pd_func_args)
     HAL_TRACE_DEBUG("De-programming input_properties entries ...");
     inp_prop_tbl->deprogram_entries();
 
+    return HAL_RET_OK;
 }
 
 }    // namespace pd

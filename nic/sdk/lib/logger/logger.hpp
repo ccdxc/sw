@@ -60,42 +60,42 @@ using sdk_logger = sdk::lib::logger;
 
 #define SDK_TRACE_ERR(fmt, ...)   sdk::lib::logger::trace_cb()(                \
                                       sdk::lib::SDK_TRACE_LEVEL_ERR, "[%s:%d] "\
-                                      fmt, __FILENAME__, __LINE__, ##__VA_ARGS__)
+                                      fmt, __FNAME__, __LINE__, ##__VA_ARGS__)
 
 #define SDK_TRACE_WARN(fmt, ...)  sdk::lib::logger::trace_cb()(                \
                                       sdk::lib::SDK_TRACE_LEVEL_WARN,          \
-                                      "[%s:%d] " fmt, __FILENAME__,                \
+                                      "[%s:%d] " fmt, __FNAME__,                \
                                       __LINE__, ##__VA_ARGS__)
 
 #define SDK_TRACE_INFO(fmt, ...)  sdk::lib::logger::trace_cb()(                \
                                       sdk::lib::SDK_TRACE_LEVEL_INFO,          \
-                                      "[%s:%d] " fmt, __FILENAME__,                \
+                                      "[%s:%d] " fmt, __FNAME__,                \
                                       __LINE__, ##__VA_ARGS__)
 
 #define SDK_TRACE_DEBUG(fmt, ...) sdk::lib::logger::trace_cb()(                \
                                       sdk::lib::SDK_TRACE_LEVEL_DEBUG,         \
-                                      "[%s:%d] " fmt, __FILENAME__,                \
+                                      "[%s:%d] " fmt, __FNAME__,                \
                                       __LINE__, ##__VA_ARGS__)
 
 #define SDK_TRACE_VERBOSE(fmt, ...) sdk::lib::logger::trace_cb()(              \
                                         sdk::lib::SDK_TRACE_LEVEL_VERBOSE,     \
-                                        "[%s:%d] " fmt, __FILENAME__, __LINE__,    \
+                                        "[%s:%d] " fmt, __FNAME__, __LINE__,    \
                                         ##__VA_ARGS__)
 
 #define SDK_TRACE_PRINT             SDK_TRACE_DEBUG
 
 #define SDK_OBFL_TRACE_ERR(fmt, ...)   sdk::lib::logger::obfl_trace_cb()(      \
                                       sdk::lib::SDK_TRACE_LEVEL_ERR, "[%s:%d] "\
-                                      fmt, __FILENAME__, __LINE__, ##__VA_ARGS__)
+                                      fmt, __FNAME__, __LINE__, ##__VA_ARGS__)
 
 #define SDK_OBFL_TRACE_WARN(fmt, ...)  sdk::lib::logger::obfl_trace_cb()(      \
                                       sdk::lib::SDK_TRACE_LEVEL_WARN,          \
-                                      "[%s:%d] " fmt, __FILENAME__,                \
+                                      "[%s:%d] " fmt, __FNAME__,                \
                                       __LINE__, ##__VA_ARGS__)
 
 #define SDK_OBFL_TRACE_INFO(fmt, ...)  sdk::lib::logger::obfl_trace_cb()(      \
                                       sdk::lib::SDK_TRACE_LEVEL_INFO,          \
-                                      "[%s:%d] " fmt, __FILENAME__,                \
+                                      "[%s:%d] " fmt, __FNAME__,                \
                                       __LINE__, ##__VA_ARGS__)
 
 #endif    // __SDK_LOGGER_HPP__

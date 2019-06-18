@@ -1314,7 +1314,6 @@ hal_ret_t
 pd_lif_pgm_host_mgmt (pd_lif_t *pd_lif)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    lif_t               *pi_lif = (lif_t *)pd_lif->pi_lif;
     nacl_swkey_t        key;
     nacl_swkey_mask_t   mask;
     nacl_actiondata_t   data;

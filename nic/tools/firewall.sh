@@ -36,13 +36,15 @@ $IPT -X
 # Create user chains to reduce the number of rules each packet
 # must traverse.
 $IPT -N udp_inbound
+$IPT -N icmp_inbound
 
 ###############################################################################
 #
 # Populate User Chains
 #
 
-# udp_inbound
+# udp_inbound chain
+# -----------------
 # This chain is for inbound udp packets only.
 # Block traceroute on OOB and inband:
 # - traceroute has different implementations in linux vs windows.
@@ -57,6 +59,16 @@ $IPT -A udp_inbound -p UDP --dport 33434:33474 -j DROP
 # Not matched, so return for logging
 $IPT -A udp_inbound -p UDP -j RETURN
 
+# icmp_inbound chain
+# ------------------
+# This chain is to drop certail icmp requests.
+# - timestamp request
+# - address mask request
+$IPT -A icmp_inbound -p ICMP --icmp-type timestamp-request -j DROP
+$IPT -A icmp_inbound -p ICMP --icmp-type address-mask-request -j DROP
+
+
+
 ###############################################################################
 #
 # INPUT Chain
@@ -67,4 +79,5 @@ echo "Process INPUT chain ..."
 # Route to appropriate user chain
 $IPT -A INPUT -p UDP -j udp_inbound
 #$IPT -A INPUT -p UDP -i $OOB_IFACE -j udp_inbound
+$IPT -A INPUT -p ICMP -j icmp_inbound
 
