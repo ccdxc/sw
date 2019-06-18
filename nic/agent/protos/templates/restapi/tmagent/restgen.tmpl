@@ -90,6 +90,20 @@ import (
 			     continue
 			}
 
+
+            {{if (hasExtension "venice.metricInfo" .) }}
+                    {{$param := (getMsgMetricOptionsHdlr .)}}
+                    {{$scope := $param.Scope}}
+                    {{if strEq $scope "PerFTE"}}
+                    // Venice has no concept of FTE. Aggregate all per-fte stats to per-asic
+                    // since Iris pipeline has only one FTE, ignoring other FTE has same effect
+                    if m.GetKey() != 0 {
+                        continue
+                    }
+                    {{end}}
+            {{end}}
+
+
 			// translate key to meta
 			objMeta := s.GetObjectMeta("{{.GetName}}Key", m.GetKey())
 			if objMeta == nil {

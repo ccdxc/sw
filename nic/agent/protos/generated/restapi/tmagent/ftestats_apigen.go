@@ -85,6 +85,12 @@ func (s *RestServer) getFteCPSMetricsPoints() ([]*tsdb.Point, error) {
 			continue
 		}
 
+		// Venice has no concept of FTE. Aggregate all per-fte stats to per-asic
+		// since Iris pipeline has only one FTE, ignoring other FTE has same effect
+		if m.GetKey() != 0 {
+			continue
+		}
+
 		// translate key to meta
 		objMeta := s.GetObjectMeta("FteCPSMetricsKey", m.GetKey())
 		if objMeta == nil {
@@ -175,6 +181,12 @@ func (s *RestServer) getFteLifQMetricsPoints() ([]*tsdb.Point, error) {
 			continue
 		}
 
+		// Venice has no concept of FTE. Aggregate all per-fte stats to per-asic
+		// since Iris pipeline has only one FTE, ignoring other FTE has same effect
+		if m.GetKey() != 0 {
+			continue
+		}
+
 		// translate key to meta
 		objMeta := s.GetObjectMeta("FteLifQMetricsKey", m.GetKey())
 		if objMeta == nil {
@@ -262,6 +274,12 @@ func (s *RestServer) getSessionSummaryMetricsPoints() ([]*tsdb.Point, error) {
 	for iter.HasNext() {
 		m := iter.Next()
 		if m == nil {
+			continue
+		}
+
+		// Venice has no concept of FTE. Aggregate all per-fte stats to per-asic
+		// since Iris pipeline has only one FTE, ignoring other FTE has same effect
+		if m.GetKey() != 0 {
 			continue
 		}
 
