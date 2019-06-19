@@ -252,6 +252,14 @@ tep_api_spec_to_proto_spec (pds::TunnelSpec *proto_spec,
 {
     ipaddr_api_spec_to_proto_spec(proto_spec->mutable_remoteip(),
                                   &api_spec->key.ip_addr);
+    ipaddr_api_spec_to_proto_spec(proto_spec->mutable_localip(),
+                                  &api_spec->ip_addr);
+    proto_spec->set_macaddress(MAC_TO_UINT64(api_spec->mac));
+    pds_encap_to_proto_encap(proto_spec->mutable_encap(),
+                             &api_spec->encap);
+    proto_spec->set_nat(api_spec->nat);
+    proto_spec->set_vpcid(api_spec->vpc.id);
+
     switch (api_spec->type) {
     case PDS_TEP_TYPE_WORKLOAD:
         proto_spec->set_type(pds::TUNNEL_TYPE_WORKLOAD);
@@ -267,12 +275,12 @@ tep_api_spec_to_proto_spec (pds::TunnelSpec *proto_spec,
         proto_spec->set_type(pds::TUNNEL_TYPE_NONE);
         break;
     }
-    ipaddr_api_spec_to_proto_spec(proto_spec->mutable_localip(),
-                                  &api_spec->ip_addr);
-    proto_spec->set_macaddress(MAC_TO_UINT64(api_spec->mac));
-    pds_encap_to_proto_encap(proto_spec->mutable_encap(),
-                             &api_spec->encap);
-    proto_spec->set_nat(api_spec->nat);
+
+    proto_spec->set_remoteservice(api_spec->remote_svc);
+    if (api_spec->remote_svc) {
+        pds_encap_to_proto_encap(proto_spec->mutable_remoteserviceencap(),
+                                 &api_spec->remote_svc_encap);
+    }
 }
 
 // Populate proto buf spec from service API spec
