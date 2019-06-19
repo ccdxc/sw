@@ -117,7 +117,7 @@ func getSystemStatusCmdCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 func getSystemQueueStatsCmdHandler(cmd *cobra.Command, args []string) {
-	halctlStr := "/nic/bin/halctl show system queue-statistics "
+	halctlStr := "halctl show system queue-statistics "
 
 	execCmd := strings.Fields(halctlStr)
 	v := &nmd.NaplesCmdExecute{

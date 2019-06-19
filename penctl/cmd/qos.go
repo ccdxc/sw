@@ -91,7 +91,7 @@ func init() {
 }
 
 func qosClassShowCmdHandler(cmd *cobra.Command, args []string) {
-	halctlStr := "/nic/bin/halctl show qos-class "
+	halctlStr := "halctl show qos-class "
 	if cmd.Flags().Changed("qosgroup") {
 		halctlStr += ("--qosgroup " + qosGroup)
 	}
@@ -117,7 +117,7 @@ func qosClassDeleteCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	halctlStr := "/nic/bin/halctl debug delete qos-class --qosgroup " + qosGroup
+	halctlStr := "halctl debug delete qos-class --qosgroup " + qosGroup
 
 	execCmd := strings.Fields(halctlStr)
 	v := &nmd.NaplesCmdExecute{
@@ -135,7 +135,7 @@ func handleQosClassCreateUpdate(cmd *cobra.Command, args []string, update bool) 
 		return
 	}
 
-	halctlStr := "/nic/bin/halctl debug "
+	halctlStr := "halctl debug "
 
 	if update == true {
 		halctlStr += "update qos-class "

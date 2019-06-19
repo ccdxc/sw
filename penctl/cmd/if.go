@@ -108,11 +108,11 @@ func init() {
 func handleIfShowCmd(intf bool, tunnel bool, mpls bool) {
 	halctlStr := ""
 	if intf == true {
-		halctlStr = "/nic/bin/halctl show interface"
+		halctlStr = "halctl show interface"
 	} else if tunnel == true {
-		halctlStr = "/nic/bin/halctl show interface tunnel"
+		halctlStr = "halctl show interface tunnel"
 	} else if mpls == true {
-		halctlStr = "/nic/bin/halctl show interface tunnel mplsoudp"
+		halctlStr = "halctl show interface tunnel mplsoudp"
 	}
 
 	execCmd := strings.Fields(halctlStr)
@@ -137,7 +137,7 @@ func mplsoudpShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func ifDeleteCmdHandler(cmd *cobra.Command, args []string) error {
-	halctlStr := "/nic/bin/halctl debug delete interface --encap " + ifEncap + " --name " + ifName
+	halctlStr := "halctl debug delete interface --encap " + ifEncap + " --name " + ifName
 
 	execCmd := strings.Fields(halctlStr)
 	v := &nmd.NaplesCmdExecute{
@@ -166,7 +166,7 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("Invalid egress BW. Valid range is 0-12500000 KBytes/sec")
 	}
 
-	halctlStr := "/nic/bin/halctl debug update interface --encap " + ifEncap + " --substrate-ip " + ifSubIP + " --overlay-ip " + ifOverlayIP + " --mpls-in " + ifMplsIn + " --mpls-out " + fmt.Sprint(ifMplsOut) + " --tunnel-dest-ip " + ifTunnelDestIP + " --source-gw " + ifSourceGw + " --gw-mac " + ifGwMac + " --ingress-bw " + fmt.Sprint(ifIngressBw) + " --egress-bw " + fmt.Sprint(ifEgressBw) + " --name " + ifName
+	halctlStr := "halctl debug update interface --encap " + ifEncap + " --substrate-ip " + ifSubIP + " --overlay-ip " + ifOverlayIP + " --mpls-in " + ifMplsIn + " --mpls-out " + fmt.Sprint(ifMplsOut) + " --tunnel-dest-ip " + ifTunnelDestIP + " --source-gw " + ifSourceGw + " --gw-mac " + ifGwMac + " --ingress-bw " + fmt.Sprint(ifIngressBw) + " --egress-bw " + fmt.Sprint(ifEgressBw) + " --name " + ifName
 
 	if cmd.Flags().Changed("overlay-mac") {
 		halctlStr += " --overlay-mac " + ifOverlayMac

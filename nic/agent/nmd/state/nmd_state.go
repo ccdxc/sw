@@ -230,7 +230,7 @@ func NewNMD(delphiClient clientAPI.Client,
 		revProxy:           revProxy,
 	}
 
-	err = nm.updateLocatTimeZone()
+	err = nm.updateLocalTimeZone()
 	if err != nil {
 		log.Errorf("Could not set timezone to %v. Err : %v", config.Status.TimeZone, err)
 	}
@@ -277,6 +277,9 @@ func NewNMD(delphiClient clientAPI.Client,
 		log.Infof("Failed to start NMD RestServer. Err: %v", err)
 		return nil, err
 	}
+
+	// init whitelist for exec endpoint
+	initAllowedCommands()
 
 	// start reverse proxy for all NAPLES REST APIs
 	nm.StartReverseProxy()
@@ -811,6 +814,38 @@ func appendAuthorizedKeyFile(sshPubKeyFile string) error {
 	return nil
 }
 
+var allowedCommands map[string]int
+
+func initAllowedCommands() {
+	allowedCommands = make(map[string]int)
+	allowedCommands["fwupdate"] = 1
+	allowedCommands["halctl"] = 2
+	allowedCommands["ls"] = 3
+	allowedCommands["penrmfirmware"] = 4
+	allowedCommands["free"] = 5
+	allowedCommands["cat"] = 6
+	allowedCommands["pensettimezone"] = 7
+	allowedCommands["ln"] = 8
+	allowedCommands["hwclock"] = 9
+	allowedCommands["date"] = 10
+	allowedCommands["setsshauthkey"] = 11
+	allowedCommands["clear_nic_config.sh"] = 12
+	allowedCommands["mkdir"] = 13
+	allowedCommands["touch"] = 14
+	allowedCommands["penrmauthkeys"] = 15
+	allowedCommands["killall"] = 16
+	allowedCommands["penrmsshdfiles"] = 17
+	allowedCommands["ssh-keygen"] = 18
+	allowedCommands["/usr/sbin/sshd"] = 19
+	allowedCommands["penrmpubkey"] = 20
+	allowedCommands["/nic/bin/halctl"] = 21
+}
+
+func isCmdAllowed(cmd string) bool {
+	_, ok := allowedCommands[cmd]
+	return ok
+}
+
 func executeCmd(req *nmd.NaplesCmdExecute, parts []string) (string, error) {
 	cmd := exec.Command(req.Executable, parts...)
 	cmd.Env = os.Environ()
@@ -825,8 +860,11 @@ func executeCmd(req *nmd.NaplesCmdExecute, parts []string) (string, error) {
 }
 
 func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
+	if !isCmdAllowed(req.Executable) {
+		return "Unknown executable " + req.Executable, errors.New("Unknown executable " + req.Executable)
+	}
 	parts := strings.Fields(req.Opts)
-	if req.Executable == "/bin/date" && req.Opts != "" {
+	if req.Executable == "date" && req.Opts != "" {
 		parts = strings.SplitN(req.Opts, " ", 2)
 	} else if req.Executable == "pensettimezone" {
 		err := ioutil.WriteFile("/etc/timezone", []byte(req.Opts), 0644)
@@ -835,18 +873,34 @@ func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
 		}
 		return "", nil
 	} else if req.Executable == "setsshauthkey" {
-		err := appendAuthorizedKeyFile(req.Opts)
+		err := appendAuthorizedKeyFile("/update/" + req.Opts)
 		if err != nil {
 			return err.Error(), err
 		}
 		return "", nil
+	} else if req.Executable == "penrmpubkey" {
+		req.Executable = "rm"
+		req.Opts = "-rf /update/" + req.Opts
+		parts = strings.Fields(req.Opts)
+	} else if req.Executable == "penrmsshdfiles" {
+		req.Executable = "rm"
+		req.Opts = "-f /var/lock/sshd /root/.ssh/authorized_keys"
+		parts = strings.Fields(req.Opts)
+	} else if req.Executable == "penrmfirmware" {
+		req.Executable = "rm"
+		req.Opts = "-rf /update/" + req.Opts
+		parts = strings.Fields(req.Opts)
+	} else if req.Executable == "penrmauthkeys" {
+		req.Executable = "rm"
+		req.Opts = "/root/.ssh/authorized_keys"
+		parts = strings.Fields(req.Opts)
 	}
 	return executeCmd(req, parts)
 }
 
 func naplesPkgVerify(pkgName string) (string, error) {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "/nic/tools/fwupdate",
+		Executable: "fwupdate",
 		Opts:       strings.Join([]string{"-p ", "/update/" + pkgName, " -v"}, ""),
 	}
 	return naplesExecCmd(v)
@@ -854,7 +908,7 @@ func naplesPkgVerify(pkgName string) (string, error) {
 
 func naplesPkgInstall(pkgName string) (string, error) {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "/nic/tools/fwupdate",
+		Executable: "fwupdate",
 		Opts:       strings.Join([]string{"-p ", "/update/" + pkgName, " -i all"}, ""),
 	}
 	return naplesExecCmd(v)
@@ -862,7 +916,7 @@ func naplesPkgInstall(pkgName string) (string, error) {
 
 func naplesSetBootImg() (string, error) {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "/nic/tools/fwupdate",
+		Executable: "fwupdate",
 		Opts:       strings.Join([]string{"-s ", "altfw"}, ""),
 	}
 	return naplesExecCmd(v)
@@ -870,8 +924,8 @@ func naplesSetBootImg() (string, error) {
 
 func naplesDelBootImg(pkgName string) (string, error) {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "rm",
-		Opts:       strings.Join([]string{"-rf ", "/update/" + pkgName}, ""),
+		Executable: "penrmfirmware",
+		Opts:       strings.Join([]string{pkgName}, ""),
 	}
 	return naplesExecCmd(v)
 }
@@ -920,7 +974,7 @@ func (n *NMD) NaplesCmdExecHandler(w http.ResponseWriter, r *http.Request) {
 		timeZone := req.Opts[:len(req.Opts)-1]
 		n.SetTimeZone(timeZone)
 
-		err := n.updateLocatTimeZone()
+		err := n.updateLocalTimeZone()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
@@ -938,7 +992,7 @@ func (n *NMD) NaplesInfoGetHandler(r *http.Request) (interface{}, error) {
 	return info, nil
 }
 
-func (n *NMD) updateLocatTimeZone() error {
+func (n *NMD) updateLocalTimeZone() error {
 	timeZone := n.GetTimeZone()
 
 	v := &nmd.NaplesCmdExecute{

@@ -41,7 +41,7 @@ func init() {
 var cmdToExecute = `
 Cmds:
  -
-   cmd: /nic/tools/fwupdate -l
+   cmd: fwupdate -l
    outputfile: fw_version.out
 `
 

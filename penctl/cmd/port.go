@@ -70,7 +70,7 @@ func init() {
 }
 
 func portStatsShowCmdHandler(cmd *cobra.Command, args []string) {
-	halctlStr := "/nic/bin/halctl show port statistics"
+	halctlStr := "halctl show port statistics"
 	if cmd.Flags().Changed("port") {
 		halctlStr += ("--port " + fmt.Sprint(portNum))
 	}
@@ -87,7 +87,7 @@ func portStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func portShowCmdHandler(cmd *cobra.Command, args []string) {
-	halctlStr := "/nic/bin/halctl show port "
+	halctlStr := "halctl show port "
 	if cmd.Flags().Changed("port") {
 		halctlStr += ("--port " + fmt.Sprint(portNum))
 	}
@@ -104,7 +104,7 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func portStatusShowCmdHandler(cmd *cobra.Command, args []string) {
-	halctlStr := "/nic/bin/halctl show port status "
+	halctlStr := "halctl show port status "
 	if cmd.Flags().Changed("port") {
 		halctlStr += ("--port " + fmt.Sprint(portNum))
 	}
@@ -128,7 +128,7 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	halctlStr := "/nic/bin/halctl debug port "
+	halctlStr := "halctl debug port "
 	if cmd.Flags().Changed("port") {
 		halctlStr += ("--port " + fmt.Sprint(portNum) + " ")
 	}

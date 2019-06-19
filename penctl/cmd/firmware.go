@@ -106,7 +106,7 @@ func showFirmwareDetailCmdHandler(cmd *cobra.Command, args []string) error {
 
 func showRunningFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "/nic/tools/fwupdate",
+		Executable: "fwupdate",
 		Opts:       strings.Join([]string{"-r"}, ""),
 	}
 
@@ -128,7 +128,7 @@ func showRunningFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 
 func showStartupFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "/nic/tools/fwupdate",
+		Executable: "fwupdate",
 		Opts:       strings.Join([]string{"-S"}, ""),
 	}
 	return naplesExecCmd(v)
@@ -136,7 +136,7 @@ func showStartupFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 
 func setStartupFirmwareMainfwaCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "/nic/tools/fwupdate",
+		Executable: "fwupdate",
 		Opts:       strings.Join([]string{"-s ", "mainfwa"}, ""),
 	}
 	return naplesExecCmd(v)
@@ -144,7 +144,7 @@ func setStartupFirmwareMainfwaCmdHandler(cmd *cobra.Command, args []string) erro
 
 func setStartupFirmwareMainfwbCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "/nic/tools/fwupdate",
+		Executable: "fwupdate",
 		Opts:       strings.Join([]string{"-s ", "mainfwb"}, ""),
 	}
 	return naplesExecCmd(v)
@@ -190,15 +190,15 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		fw = "goldfw"
 	}
 	v := &nmd.NaplesCmdExecute{
-		Executable: "/nic/tools/fwupdate",
+		Executable: "fwupdate",
 		Opts:       strings.Join([]string{"-p ", "/update/" + firmware, " -i " + fw}, ""),
 	}
 
 	if err = naplesExecCmd(v); err != nil {
 		fmt.Println(err)
 		v = &nmd.NaplesCmdExecute{
-			Executable: "rm",
-			Opts:       strings.Join([]string{"-rf ", "/update/" + firmware}, ""),
+			Executable: "penrmfirmware",
+			Opts:       strings.Join([]string{firmware}, ""),
 		}
 		if err := naplesExecCmd(v); err != nil {
 			return err
@@ -207,8 +207,8 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	v = &nmd.NaplesCmdExecute{
-		Executable: "rm",
-		Opts:       strings.Join([]string{"-rf ", "/update/" + firmware}, ""),
+		Executable: "penrmfirmware",
+		Opts:       strings.Join([]string{firmware}, ""),
 	}
 	if err := naplesExecCmd(v); err != nil {
 		return err
@@ -216,7 +216,7 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 
 	if goldfw == false {
 		v = &nmd.NaplesCmdExecute{
-			Executable: "/nic/tools/fwupdate",
+			Executable: "fwupdate",
 			Opts:       strings.Join([]string{"-s ", "altfw"}, ""),
 		}
 		if err := naplesExecCmd(v); err != nil {

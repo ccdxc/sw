@@ -1151,7 +1151,7 @@ func TestNaplesCmdExec(t *testing.T) {
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 
 	v := &nmd.NaplesCmdExecute{
-		Executable: "/bin/ls",
+		Executable: "ls",
 		Opts:       "-al /",
 	}
 

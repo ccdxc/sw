@@ -58,21 +58,21 @@ func init() {
 
 func delSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "/bin/rm",
-		Opts:       strings.Join([]string{"/root/.ssh/authorized_keys"}, ""),
+		Executable: "penrmauthkeys",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 	return naplesExecCmd(v)
 }
 
 func setSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "/bin/mkdir",
+		Executable: "mkdir",
 		Opts:       strings.Join([]string{"/root/.ssh/"}, ""),
 	}
 	naplesExecCmd(v)
 
 	v = &nmd.NaplesCmdExecute{
-		Executable: "/bin/touch",
+		Executable: "touch",
 		Opts:       strings.Join([]string{"/root/.ssh/authorized_keys"}, ""),
 	}
 	if err := naplesExecCmd(v); err != nil {
@@ -97,14 +97,14 @@ func setSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 
 	v = &nmd.NaplesCmdExecute{
 		Executable: "setsshauthkey",
-		Opts:       strings.Join([]string{"/update/" + pubKeyFile}, ""),
+		Opts:       strings.Join([]string{pubKeyFile}, ""),
 	}
 
 	if err = naplesExecCmd(v); err != nil {
 		fmt.Println(err)
 		v = &nmd.NaplesCmdExecute{
-			Executable: "rm",
-			Opts:       strings.Join([]string{"-rf ", "/update/" + pubKeyFile}, ""),
+			Executable: "penrmpubkey",
+			Opts:       strings.Join([]string{pubKeyFile}, ""),
 		}
 		if err := naplesExecCmd(v); err != nil {
 			return err
@@ -113,8 +113,8 @@ func setSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	v = &nmd.NaplesCmdExecute{
-		Executable: "rm",
-		Opts:       strings.Join([]string{"-rf ", "/update/" + pubKeyFile}, ""),
+		Executable: "penrmpubkey",
+		Opts:       strings.Join([]string{pubKeyFile}, ""),
 	}
 	return naplesExecCmd(v)
 }
@@ -129,15 +129,15 @@ func disableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("Unable to killall sshd")
 	}
 	v = &nmd.NaplesCmdExecute{
-		Executable: "rm",
-		Opts:       strings.Join([]string{"-f ", "/var/lock/sshd /root/.ssh/authorized_keys"}, ""),
+		Executable: "penrmsshdfiles",
+		Opts:       strings.Join([]string{""}, ""),
 	}
 	return naplesExecCmd(v)
 }
 
 func enableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "/usr/bin/ssh-keygen",
+		Executable: "ssh-keygen",
 		Opts:       strings.Join([]string{"-A"}, ""),
 	}
 	if err := naplesExecCmd(v); err != nil {
