@@ -1289,10 +1289,9 @@ pds_agent_remote_mapping_api_spec_fill (pds_remote_mapping_spec_t *remote_spec,
     remote_spec->key.vpc.id = key.vpcid();
     ipaddr_proto_spec_to_api_spec(&remote_spec->key.ip_addr, key.ipaddr());
     remote_spec->subnet.id = proto_spec.subnetid();
-    MAC_UINT64_TO_ADDR(remote_spec->vnic_mac, proto_spec.macaddr());
     remote_spec->tep.ip_addr.af = IP_AF_IPV4;
     remote_spec->tep.ip_addr.addr.v4_addr = proto_spec.tunnelid();
-    remote_spec->subnet.id = proto_spec.subnetid();
+    MAC_UINT64_TO_ADDR(remote_spec->vnic_mac, proto_spec.macaddr());
     remote_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.encap());
     if (proto_spec.has_providerip()) {
         if (proto_spec.providerip().af() == types::IP_AF_INET ||

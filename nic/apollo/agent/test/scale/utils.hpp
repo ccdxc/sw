@@ -209,6 +209,10 @@ populate_remote_mapping_request (MappingRequest *req,
     spec->set_tunnelid(remote_spec->tep.ip_addr.addr.v4_addr);
     spec->set_macaddr(MAC_TO_UINT64(remote_spec->vnic_mac));
     pds_encap_to_proto_encap(spec->mutable_encap(), &remote_spec->fabric_encap);
+    if (remote_spec->provider_ip_valid == true) {
+        ipaddr_api_spec_to_proto_spec(spec->mutable_providerip(),
+                                      &remote_spec->provider_ip);
+    }
     return;
 }
 
