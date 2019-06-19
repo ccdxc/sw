@@ -90,10 +90,6 @@ upgrade_handler::PostHostDownHandler(UpgCtx& upgCtx)
     if (ret != HAL_RET_OK) {
         return HdlrResp(::upgrade::FAIL, HAL_RET_ENTRIES_str(ret));
     }
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QUIESCE_STOP, NULL);
-    if (ret != HAL_RET_OK) {
-        return HdlrResp(::upgrade::FAIL, HAL_RET_ENTRIES_str(ret));
-    }
 
     // Reset tables
     ret = upgrade_table_reset();
