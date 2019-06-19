@@ -432,20 +432,21 @@ message RuleMatch {
 
 // FTE Span Match Selectors
 enum FTESpanMatchSelector {
-  SRC_LPORT             = 0;
-  DST_LPORT             = 1;
-  DROP_REASON           = 2;
-  FLOW_LKUP_DIR         = 3;
-  FLOW_LKUP_TYPE        = 4;
-  FLOW_LKUP_VRF         = 5;
-  FLOW_LKUP_SRC         = 6;
-  FLOW_LKUP_DST         = 7;
-  FLOW_LKUP_PROTO       = 8;
-  FLOW_LKUP_SPORT       = 9;
-  FLOW_LKUP_DPORT       = 10;
-  ETH_DMAC              = 11;
-  FROM_CPU              = 12;
-  MATCH_ANY             = 13;
+  SRC_LIF               = 0;
+  SRC_LPORT             = 1;
+  DST_LPORT             = 2;
+  DROP_REASON           = 3;
+  FLOW_LKUP_DIR         = 4;
+  FLOW_LKUP_TYPE        = 5;
+  FLOW_LKUP_VRF         = 6;
+  FLOW_LKUP_SRC         = 7;
+  FLOW_LKUP_DST         = 8;
+  FLOW_LKUP_PROTO       = 9;
+  FLOW_LKUP_SPORT       = 10;
+  FLOW_LKUP_DPORT       = 11;
+  ETH_DMAC              = 12;
+  FROM_CPU              = 13;
+  MATCH_ANY             = 14;
 }
 
 // flow direction

@@ -19,6 +19,7 @@ import (
 )
 
 var (
+	srcLif          uint32
 	srcLport        uint32
 	dstLport        uint32
 	spanLport       uint32
@@ -64,6 +65,7 @@ func init() {
 	showCmd.AddCommand(fteSpanShowCmd)
 	fteSpanDebugCmd.AddCommand(fteSpanDebugDisableCmd)
 
+	fteSpanDebugCmd.Flags().Uint32Var(&srcLif, "slif", 0, "Specify src_lif")
 	fteSpanDebugCmd.Flags().Uint32Var(&srcLport, "slport", 0, "Specify src_lport")
 	fteSpanDebugCmd.Flags().Uint32Var(&dstLport, "dlport", 0, "Specify dst_lport")
 	fteSpanDebugCmd.Flags().Uint32Var(&spanLport, "span-dlport", 0, "Specify span destination lport. Default: CPU")
@@ -161,6 +163,9 @@ func fteSpanDebugCmdHandler(cmd *cobra.Command, args []string) {
 	client := halproto.NewDebugClient(c)
 
 	var sel uint32
+	if cmd.Flags().Changed("slif") {
+		sel |= (1 << (uint)(halproto.FTESpanMatchSelector_SRC_LIF))
+	}
 	if cmd.Flags().Changed("slport") {
 		sel |= (1 << (uint)(halproto.FTESpanMatchSelector_SRC_LPORT))
 	}
@@ -236,6 +241,7 @@ func fteSpanDebugCmdHandler(cmd *cobra.Command, args []string) {
 
 	req := &halproto.FteSpanRequest{
 		Selector:      sel,
+		SrcLif:        srcLif,
 		SrcLport:      srcLport,
 		DstLport:      dstLport,
 		SpanLport:     spanLport,

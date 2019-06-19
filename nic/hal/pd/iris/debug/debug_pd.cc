@@ -225,6 +225,12 @@ fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
 
         // If MATCH_ANY, dont set anything in the mask
         if (!(fte_span->sel & (1 << types::MATCH_ANY))) {
+            if (fte_span->sel & (1 << types::SRC_LIF)) {
+                key.capri_intrinsic_lif = fte_span->src_lif;
+                mask.capri_intrinsic_lif_mask =
+                    ~(mask.capri_intrinsic_lif_mask & 0);
+            }
+
             if (fte_span->sel & (1 << types::SRC_LPORT)) {
                 key.control_metadata_src_lport = fte_span->src_lport;
                 mask.control_metadata_src_lport_mask =

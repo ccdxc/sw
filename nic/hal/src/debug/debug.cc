@@ -157,7 +157,7 @@ slab_get_from_req (debug::SlabGetRequest& req, debug::SlabGetResponseMsg *rsp)
         HAL_TRACE_ERR("Unexpected slab id {}", slab_id);
         ret = HAL_RET_INVALID_ARG;
     }
-    
+
 
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get slab for slab id {}", i ? i : slab_id);
@@ -482,6 +482,7 @@ fte_span_init_from_spec (fte_span_t *fte_span, FteSpanRequest* req)
 {
     fte_span->sel = req->selector();
     fte_span->src_lport = req->src_lport();
+    fte_span->src_lif = req->src_lif();
     fte_span->dst_lport = req->dst_lport();
     fte_span->drop_reason = req->drop_reason();
     fte_span->flow_lkup_dir = req->flow_lkup_dir();
@@ -505,6 +506,7 @@ static hal_ret_t
 fte_span_to_spec (FteSpanRequest* req, fte_span_t *fte_span)
 {
     req->set_selector(fte_span->sel);
+    req->set_src_lif(fte_span->src_lif);
     req->set_src_lport(fte_span->src_lport);
     req->set_dst_lport(fte_span->dst_lport);
     req->set_span_lport(fte_span->span_lport);

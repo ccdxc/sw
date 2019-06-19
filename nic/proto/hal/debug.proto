@@ -66,22 +66,23 @@ service Debug {
 // FTE Span
 message FteSpanRequest {
   uint32                        selector         = 1;    // FTE Span Selectors. Each bit of type types.FTESpanMatchSelector
-  uint32                        src_lport        = 2;    // Source Lport
-  uint32                        dst_lport        = 3;    // Destination Lport
-  uint32                        drop_reason      = 4;    // Drop Reason
-  uint32                        flow_lkup_dir    = 5;    // Flow lookup Direction. 0: From Host, 1: From Uplink
-  uint32                        flow_lkup_type   = 6;    // Flow lookup Type.
-  uint32                        flow_lkup_vrf    = 7;    // Flow lookup Vrf
-  types.IPAddress               flow_lkup_src    = 8;    // Flow lookup Src. IP/Mac
-  types.IPAddress               flow_lkup_dst    = 9;    // Flow lookup Dst. IP/Mac
-  uint32                        flow_lkup_proto  = 10;   // Flow lookup Proto
-  uint32                        flow_lkup_sport  = 11;   // Flow lookup Sport
-  uint32                        flow_lkup_dport  = 12;   // Flow lookup Dport
-  uint64                        eth_dmac         = 13;   // Ethernet dmac
-  bool                          from_cpu         = 14;   // From CPU
-  bool                          is_egress        = 15;   // Enable egress span
-  kh.InterfaceKeyHandle         egress_if        = 16;   // Egress span on this interface
-  uint32                        span_lport       = 17;   // Span Destination Lport
+  uint32                        src_lif          = 2;    // Source Lport
+  uint32                        src_lport        = 3;    // Source Lport
+  uint32                        dst_lport        = 4;    // Destination Lport
+  uint32                        drop_reason      = 5;    // Drop Reason
+  uint32                        flow_lkup_dir    = 6;    // Flow lookup Direction. 0: From Host, 1: From Uplink
+  uint32                        flow_lkup_type   = 7;    // Flow lookup Type.
+  uint32                        flow_lkup_vrf    = 8;    // Flow lookup Vrf
+  types.IPAddress               flow_lkup_src    = 9;    // Flow lookup Src. IP/Mac
+  types.IPAddress               flow_lkup_dst    = 10;    // Flow lookup Dst. IP/Mac
+  uint32                        flow_lkup_proto  = 11;   // Flow lookup Proto
+  uint32                        flow_lkup_sport  = 12;   // Flow lookup Sport
+  uint32                        flow_lkup_dport  = 13;   // Flow lookup Dport
+  uint64                        eth_dmac         = 14;   // Ethernet dmac
+  bool                          from_cpu         = 15;   // From CPU
+  bool                          is_egress        = 16;   // Enable egress span
+  kh.InterfaceKeyHandle         egress_if        = 17;   // Egress span on this interface
+  uint32                        span_lport       = 18;   // Span Destination Lport
 }
 
 message FteSpanRequestMsg {

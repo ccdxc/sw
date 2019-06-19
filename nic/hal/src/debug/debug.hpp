@@ -47,6 +47,7 @@ typedef struct fte_span_s {
     // types::FTESpanMatchSelector sel;
     uint32_t                    sel;
     types::IPAddressFamily      ip_family;
+    uint32_t                    src_lif;
     uint32_t                    src_lport;
     uint32_t                    dst_lport;
     uint32_t                    drop_reason;
