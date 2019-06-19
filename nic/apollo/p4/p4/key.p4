@@ -106,6 +106,7 @@ action service_header_info() {
                      ~service_header.remote_vnic_mapping_rx_done);
         modify_field(control_metadata.flow_ohash_lkp,
                      ~service_header.flow_done);
+        modify_field(capri_p4_intrinsic.recirc, FALSE);
     }
 }
 

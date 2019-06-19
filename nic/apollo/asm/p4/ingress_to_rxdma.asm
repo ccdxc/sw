@@ -96,15 +96,16 @@ ingress_to_egress:
     phvwr           p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
 
 recirc_packet:
-    phvwr.e         p.{predicate_header_valid, \
+    phvwr           p.{predicate_header_valid, \
                        p4_to_rxdma_header_valid, \
                        p4plus_to_p4_vlan_valid, \
                        p4plus_to_p4_valid, \
                        capri_txdma_intrinsic_valid, \
                        capri_rxdma_intrinsic_valid, \
                        service_header_valid, \
-                       capri_p4_intrinsic_valid}, 0x3
-    phvwr           p.capri_intrinsic_tm_oport, TM_PORT_INGRESS
+                       capri_p4_intrinsic_valid}, 0x83
+    phvwr.e         p.capri_intrinsic_tm_oport, TM_PORT_INGRESS
+    phvwr           p.predicate_header_direction, k.control_metadata_direction
 
 .align
 classic_nic_app:

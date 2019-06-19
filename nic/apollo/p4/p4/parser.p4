@@ -151,7 +151,7 @@ parser parse_uplink {
 parser parse_service_header {
     extract(capri_p4_intrinsic);
     extract(service_header);
-    return parse_packet;
+    return parse_ingress_pass2;
 }
 
 @pragma xgress ingress
@@ -534,6 +534,7 @@ parser deparse_ingress {
     // intrinsic headers
     extract(capri_intrinsic);
     extract(capri_p4_intrinsic);
+    extract(service_header);
     extract(capri_rxdma_intrinsic);
     extract(capri_txdma_intrinsic);
 

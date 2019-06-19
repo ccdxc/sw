@@ -16,6 +16,7 @@ init_config:
     phvwr           p.control_metadata_remote_vnic_mapping_rx_ohash_lkp, r1
     xor             r1, k.service_header_flow_done, 0x1
     phvwr           p.control_metadata_flow_ohash_lkp, r1
+    phvwr           p.capri_p4_intrinsic_recirc, FALSE
 
 service_header_done:
     seq             c1, k.key_metadata_ktype, KEY_TYPE_IPV6
