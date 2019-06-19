@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"strings"
 
 	"github.com/pensando/sw/api/generated/cluster"
@@ -359,7 +358,7 @@ func checkProfileExists(profileName string) error {
 	baseURL, _ := getNaplesURL()
 	url := fmt.Sprintf("%s/api/v1/naples/profiles/", baseURL)
 
-	resp, err := http.Get(url)
+	resp, err := penHTTPClient.Get(url)
 	if err != nil {
 		if strings.Contains(err.Error(), httpsSignature) {
 			err = fmt.Errorf("Naples is part of a cluster, authentication token required")
@@ -391,7 +390,7 @@ func checkAttachedProfile(profileName string) error {
 	baseURL, _ := getNaplesURL()
 	url := fmt.Sprintf("%s/api/v1/naples/", baseURL)
 
-	resp, err := http.Get(url)
+	resp, err := penHTTPClient.Get(url)
 	if err != nil {
 		if strings.Contains(err.Error(), httpsSignature) {
 			err = fmt.Errorf("Naples is part of a cluster, authentication token required")
