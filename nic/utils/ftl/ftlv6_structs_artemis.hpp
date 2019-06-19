@@ -4,7 +4,7 @@
 #define FTLV6_ARTEMIS_ENTRY_NUM_HINTS 4
 struct __attribute__((__packed__)) ftlv6_entry_t {
     // data after key
-    uint32_t __pad_to_512b : 13;
+    uint32_t __pad_to_512b : 5;
     uint32_t entry_valid : 1;
     uint32_t more_hints_pad : 8;
     uint32_t more_hints: 23;
@@ -28,6 +28,7 @@ struct __attribute__((__packed__)) ftlv6_entry_t {
     uint32_t proto : 8;
 
     // data before key
+    uint32_t pad8 : 8;
     uint32_t flow_role : 1;
     uint32_t session_index : 23;
     uint32_t epoch : 8;
