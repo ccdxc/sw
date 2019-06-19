@@ -676,7 +676,7 @@ protected:
     std::size_t capacity_;
 
     Buffer(T *ptr = 0, std::size_t capacity = 0)
-        : ptr_(ptr), size_(0), capacity_(capacity) {}
+        : ptr_(ptr), size_(0), capacity_(capacity) { if (ptr_) bzero(ptr_, capacity_); }
 
     /**
       \rst

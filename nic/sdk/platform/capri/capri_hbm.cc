@@ -19,8 +19,6 @@
 #include "third-party/asic/capri/model/cap_pcie/cap_pxb_csr.h"
 #include "lib/pal/pal.hpp"
 
-#define PAGE_SZ 4096
-
 namespace sdk {
 namespace platform {
 namespace capri {
@@ -105,44 +103,14 @@ reset_hbm_regions (capri_cfg_t *capri_cfg)
     //uint8_t             tmp[1024], zeros[1024] = {0};
     //uint64_t            addr = 0;
 
-    if (capri_cfg &&
-        (capri_cfg->platform == platform_type_t::PLATFORM_TYPE_HW)) {
-        // Reset Flow hash regions especially for upgrade cases
-        sdk::types::mem_addr_t vaddr;
-        sdk::types::mem_addr_t start_addr = get_mem_addr("flow_hash");
-        if (start_addr != INVALID_MEM_ADDRESS) {
-            SDK_TRACE_DEBUG("Initing HBM flow_hash region %p", vaddr);
-            uint64_t mem_sz = get_mem_size_kb("flow_hash")*1024;
-            for (uint32_t idx=0; idx < (mem_sz/PAGE_SZ); idx++) {
-                 sdk::lib::pal_ret_t ret =
-                     sdk::lib::pal_physical_addr_to_virtual_addr(
-                                   (start_addr+(idx*PAGE_SZ)), &vaddr);
-                 SDK_ASSERT(ret == sdk::lib::PAL_RET_OK);
-                 memset((void *)vaddr, 0, PAGE_SZ);
-            }
-            start_addr = get_mem_addr("flow_hash_overflow");
-            if (start_addr != INVALID_MEM_ADDRESS) {
-                SDK_TRACE_DEBUG("Initing HBM flow_hash_overflow region %p",
-                                vaddr);
-                mem_sz = get_mem_size_kb("flow_hash_overflow")*1024;
-                for (uint32_t idx=0; idx < (mem_sz/PAGE_SZ); idx++) {
-                     sdk::lib::pal_ret_t ret =
-                         sdk::lib::pal_physical_addr_to_virtual_addr(
-                                       (start_addr+(idx*PAGE_SZ)), &vaddr);
-                     SDK_ASSERT(ret == sdk::lib::PAL_RET_OK);
-                     memset((void *)vaddr, 0, PAGE_SZ);
-                }
-            }
-        }
-    } else if (capri_cfg && (capri_cfg->platform == platform_type_t::PLATFORM_TYPE_HW)) {
+    if (capri_cfg && (capri_cfg->platform == platform_type_t::PLATFORM_TYPE_HAPS)) {
         for (int i = 0; i < g_capri_state_pd->mempartition()->num_regions(); i++) {
             reg = g_capri_state_pd->mempartition()->region(i);
             if (reg->reset) {
-                if (capri_cfg->platform == platform_type_t::PLATFORM_TYPE_HAPS) {
-                    // Reset only for haps
-                    SDK_TRACE_DEBUG("Resetting %s hbm region", reg->mem_reg_name);
-                    sdk::asic::asic_mem_write(g_capri_state_pd->mempartition()->addr(reg->start_offset),
-                                              NULL, reg->size);
+                // Reset only for haps
+                SDK_TRACE_DEBUG("Resetting %s hbm region", reg->mem_reg_name);
+                sdk::asic::asic_mem_write(g_capri_state_pd->mempartition()->addr(reg->start_offset),
+                                          NULL, reg->size);
 #if 0
                     /*
                      * comparing for all "reset" regions is delaying HAL UP.
@@ -163,8 +131,7 @@ reset_hbm_regions (capri_cfg_t *capri_cfg)
                         }
                     }
 #endif
-                }
-            }
+           }
         }
     }
 }

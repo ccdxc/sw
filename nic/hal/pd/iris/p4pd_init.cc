@@ -20,6 +20,9 @@
 #include "gen/proto/types.pb.h"
 #include "nic/hal/pd/iris/aclqos/acl_pd.hpp"
 #include "nic/hal/pd/hal_pd.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
+
+#define PAGE_SZ 4096
 
 using sdk::table::tcam;
 using hal::pd::utils::acl_tcam_entry_handle_t;
@@ -1506,6 +1509,27 @@ p4pd_forwarding_mode_init (p4pd_def_cfg_t *p4pd_def_cfg)
         HAL_TRACE_DEBUG("setting flow_info table constant, tid = {}, constant = {}",
                         tid, i);
     }
+ 
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// Flow hash table Initialization
+//-----------------------------------------------------------------------------
+static hal_ret_t
+p4pd_flow_hash_init (p4pd_def_cfg_t *p4pd_def_cfg)
+{
+    p4pd_table_properties_t       tbl_ctx;
+
+    p4pd_table_properties_get(P4TBL_ID_FLOW_HASH, &tbl_ctx);
+    HAL_TRACE_DEBUG("Flow Hash Table depth: {} Base virtual memory: {} Base Physical Memory: {}",
+            tbl_ctx.tabledepth, tbl_ctx.base_mem_va, tbl_ctx.base_mem_pa);
+    sdk::lib::pal_mem_set(tbl_ctx.base_mem_pa, 0, tbl_ctx.tabledepth);
+    p4pd_table_properties_get(tbl_ctx.oflow_table_id, &tbl_ctx);
+    HAL_TRACE_DEBUG("Flow Hash overflow Table depth: {} Base virtual memory: {} Base Physical Memory: {}",
+          tbl_ctx.tabledepth, tbl_ctx.base_mem_va, tbl_ctx.base_mem_pa);
+    sdk::lib::pal_mem_set(tbl_ctx.base_mem_pa, 0, tbl_ctx.tabledepth);
+
     return HAL_RET_OK;
 }
 
@@ -1547,6 +1571,10 @@ p4pd_table_defaults_init (p4pd_def_cfg_t *p4pd_def_cfg)
 
     // Setting NIC's forwarding mode
     SDK_ASSERT(p4pd_forwarding_mode_init(p4pd_def_cfg) == HAL_RET_OK);
+    if (p4pd_def_cfg->hal_cfg->device_cfg.forwarding_mode == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
+        SDK_ASSERT(p4pd_flow_hash_init(p4pd_def_cfg) == HAL_RET_OK);
+    }
+
     return HAL_RET_OK;
 }
 

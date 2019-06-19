@@ -330,7 +330,9 @@ ht::remove_entry(void *entry, ht_ctxt_t *ht_ctxt)
             ht_bucket->ht_ctxt->prev = NULL;
         }
     } else if (ht_ctxt->next == NULL) {
-        ht_ctxt->prev->next = NULL;
+        if (ht_ctxt->prev) {
+            ht_ctxt->prev->next = NULL;
+        }
     } else {
         ht_ctxt->prev->next = ht_ctxt->next;
         ht_ctxt->next->prev = ht_ctxt->prev;

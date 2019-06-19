@@ -445,7 +445,7 @@ typedef struct session_get_stream_filter_ {
 #define HAL_MAX_SESSIONS                             524288
 #define HAL_MAX_FLOWS                                (HAL_MAX_SESSIONS << 1)
 
-#define SESSION_AGE_DEBUG                  0
+#define SESSION_AGE_DEBUG                  1
 
 session_t *find_session_by_handle(hal_handle_t handle);
 //session_t *find_session_by_id(session_id_t session_id);
