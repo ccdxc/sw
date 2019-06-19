@@ -643,6 +643,9 @@ parser deparse_egress {
     extract(gre_0);
     extract(erspan);
 
+    // workaround
+    extract(cps_blob);
+
     return parse_egress_packet;
 }
 
