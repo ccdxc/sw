@@ -19,6 +19,7 @@ export class GroupByTimeTransform extends MetricTransform<{}> {
     let numPoints = duration.asMinutes() * 2;
 
     if (numPoints < this.maxPoints) {
+      opts.query['group-by-time'] = '30s';
       return;
     }
 

@@ -20,6 +20,7 @@ import { SecurityService } from '@app/services/generated/security.service';
 import { SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { PolicyRuleTuple } from './';
 import { SelectItem, MultiSelect } from 'primeng/primeng';
+import { TimeRange } from '@app/components/shared/timerange/utility';
 
 @Component({
   selector: 'app-fwlogs',
@@ -80,6 +81,8 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
   };
 
   inOverlay: boolean = false;
+
+  selectedTimeRange: TimeRange;
 
   // Only time is supported as sortable by the backend
   cols: TableCol[] = [
@@ -163,6 +166,13 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
   }
 
 
+  setTimeRange(timeRange: TimeRange) {
+    // Pushing into next event loop
+    setTimeout(() => {
+      this.selectedTimeRange = timeRange;
+      this.getFwlogs();
+    }, 0);
+  }
 
 
   displayColumn(data, col): any {
@@ -312,7 +322,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
 
     const query = new Telemetry_queryFwlogsQuerySpec(null, false);
     const queryVal: any = this.query.getFormGroupValues();
-    if (queryVal.actions.includes(FwlogsComponent.ALLOPTION)) {
+    if (queryVal.actions != null && queryVal.actions.includes(FwlogsComponent.ALLOPTION)) {
       queryVal.actions = null;
     }
     const fields = [
@@ -362,6 +372,11 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
 
     query.pagination.count = this.maxRecords;
     query['sort-order'] = sortOrder;
+
+    if (this.selectedTimeRange != null) {
+      query['start-time'] = this.selectedTimeRange.getTime().startTime.toISOString() as any;
+      query['end-time'] = this.selectedTimeRange.getTime().endTime.toISOString() as any;
+    }
 
     const queryList: ITelemetry_queryFwlogsQueryList = {
       tenant: Utility.getInstance().getTenant(),

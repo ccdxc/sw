@@ -31,6 +31,9 @@
                        [tableMenuItems]="tableMenuItems"
                        [lastUpdateTime]="lastUpdateTime" [showRefreshIcon]="true"
                        (refreshIconClick)="getFwlogs()">
+        <div fxFlex></div>
+        <app-timerange fxFlex="nogrow" [selectedTimeRange]="selectedTimeRange"
+                       (timeRange)="setTimeRange($event)"></app-timerange>
       </app-tableheader>
     </div>
   </div>

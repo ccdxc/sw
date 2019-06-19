@@ -576,14 +576,18 @@ export class MetricsUtility {
     });
   }
 
-  public static transformToChartjsTimeSeries(data: ITelemetry_queryMetricsResultSeries, fieldName): { t: Date, y: any }[] {
+  public static transformToChartjsTimeSeries(data: ITelemetry_queryMetricsResultSeries, fieldName, toRound: boolean = false): { t: Date, y: any }[] {
     const retData = [];
     const yFieldIndex = MetricsUtility.findFieldIndex(data.columns, fieldName);
     if (yFieldIndex < 0) {
       console.error('MetricsUtility transformToChartjsTimeSeries: given column name ' + fieldName + ' was not found');
     }
     data.values.forEach((item) => {
-      retData.push({ t: item[0], y: item[yFieldIndex] });
+      let val = item[yFieldIndex];
+      if (toRound) {
+        val = Math.round(val);
+      }
+      retData.push({ t: item[0], y:  val });
     });
     return retData;
   }
