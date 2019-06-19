@@ -17,6 +17,7 @@ import (
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/protos/nmd"
+	sysmgrProto "github.com/pensando/sw/nic/sysmgr/proto/sysmgr"
 	"github.com/pensando/sw/venice/utils/log"
 	conv "github.com/pensando/sw/venice/utils/strconv"
 )
@@ -352,14 +353,25 @@ func updateStorageInfo() *cmd.StorageInfo {
 }
 
 // UpdateNaplesHealth - queries sysmanager and gets the current health of Naples
-func UpdateNaplesHealth() []cmd.SmartNICCondition {
+func (n *NMD) UpdateNaplesHealth() []cmd.SmartNICCondition {
 	log.Info("updating Health Info in SmartNIC object")
+	health := cmd.SmartNICCondition_HEALTHY.String()
+	status := cmd.ConditionStatus_TRUE.String()
+	reason := ""
 
-	// TODO : Get status from platform and fill nic Status
+	if n.DelphiClient != nil {
+		sysmgrSysStatus := sysmgrProto.GetSysmgrSystemStatus(n.DelphiClient)
+		if sysmgrSysStatus != nil && sysmgrSysStatus.State == sysmgrProto.SystemState_Fault {
+			health = cmd.SmartNICCondition_UNHEALTHY.String()
+			reason = sysmgrSysStatus.Reason
+		}
+	}
+
 	Conditions := []cmd.SmartNICCondition{
 		{
-			Type:               cmd.SmartNICCondition_HEALTHY.String(),
-			Status:             cmd.ConditionStatus_TRUE.String(),
+			Type:               health,
+			Status:             status,
+			Reason:             reason,
 			LastTransitionTime: time.Now().UTC().Format(time.RFC3339),
 		},
 	}
@@ -462,7 +474,7 @@ func (n *NMD) UpdateNaplesInfoFromConfig() error {
 		nic.Status.SystemInfo.BiosInfo = updateBiosInfo(naplesVersion)
 	}
 
-	nic.Status.Conditions = UpdateNaplesHealth()
+	nic.Status.Conditions = n.UpdateNaplesHealth()
 	n.SetSmartNIC(nic)
 	return nil
 }

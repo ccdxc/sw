@@ -4685,11 +4685,13 @@
           "type": "string",
           "enum": [
             "HEALTHY",
+            "UNHEALTHY",
             "UNREACHABLE"
           ],
           "default": "HEALTHY",
           "x-ui-hints": {
             "HEALTHY": "Healthy",
+            "UNHEALTHY": "Unhealthy",
             "UNREACHABLE": "Not Reachable"
           },
           "title": "Type indicates a certain NIC condition"
