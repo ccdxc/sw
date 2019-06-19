@@ -36,6 +36,19 @@ type Naples struct {
 	sm       *SysModel // pointer back to the model
 }
 
+// Switch represents a data-switch
+
+type Switch struct {
+	dataSwitch *iota.DataSwitch
+}
+
+// SwitchPort represents a port in a data switch
+
+type SwitchPort struct {
+	sw   *Switch
+	port string
+}
+
 // VeniceNode represents a venice node
 type VeniceNode struct {
 	iotaNode *iota.Node
@@ -46,6 +59,12 @@ type VeniceNode struct {
 type HostCollection struct {
 	err   error
 	hosts []*Host
+}
+
+// SwitchPortCollection ports
+type SwitchPortCollection struct {
+	err   error
+	ports []*SwitchPort
 }
 
 // VeniceNodeCollection is collection of venice nodes
@@ -74,6 +93,20 @@ const (
 	penctlLinuxBinary   = "penctl.linux"
 	penctlFreebsdBinary = "penctl.freebsd"
 )
+
+// createHost creates a new host instance
+func (sm *SysModel) createSwitch(sw *iota.DataSwitch) (*Switch, error) {
+
+	smSw := &Switch{dataSwitch: sw}
+
+	for _, p := range sw.GetPorts() {
+		swPort := &SwitchPort{port: p, sw: smSw}
+		sm.switchPorts = append(sm.switchPorts, swPort)
+	}
+	sm.switches[sw.GetIp()] = smSw
+
+	return smSw, nil
+}
 
 // createHost creates a new host instance
 func (sm *SysModel) createHost(n *TestNode) (*Host, error) {
@@ -139,6 +172,16 @@ func (sm *SysModel) Hosts() *HostCollection {
 	}
 
 	return &hc
+}
+
+// SwitchPorts returns list of all switch ports
+func (sm *SysModel) SwitchPorts() *SwitchPortCollection {
+	var swPc SwitchPortCollection
+	for _, port := range sm.switchPorts {
+		swPc.ports = append(swPc.ports, port)
+	}
+
+	return &swPc
 }
 
 // ForEachHost calls a function for each host
@@ -376,6 +419,30 @@ func parseSelectorString(str string) (selectParams, error) {
 	return ret, nil
 }
 
+// SelectByPercentage returns a collection with the specified venice nodes based on percentage.
+func (vnc *VeniceNodeCollection) SelectByPercentage(percent int) (*VeniceNodeCollection, error) {
+	if percent > 100 {
+		return nil, fmt.Errorf("Invalid percentage input %v", percent)
+	}
+
+	if vnc.err != nil {
+		return nil, fmt.Errorf("venice collection error (%s)", vnc.err)
+	}
+
+	ret := &VeniceNodeCollection{sm: vnc.sm}
+	for i, node := range vnc.nodes {
+		ret.nodes = append(ret.nodes, node)
+		if i > len(vnc.nodes)*percent/100 {
+			break
+		}
+	}
+
+	if len(ret.nodes) == 0 {
+		return nil, fmt.Errorf("Did not find hosts matching percentage (%v)", percent)
+	}
+	return ret, nil
+}
+
 // Select returns a collection with the specified venice nodes, error if any of the specified nodes is not found
 func (vnc *VeniceNodeCollection) Select(sel string) (*VeniceNodeCollection, error) {
 	if vnc.err != nil {
@@ -476,7 +543,8 @@ func (sm *SysModel) AssociateHosts() error {
 		for _, obj := range objs {
 			objMac := strings.Replace(obj.GetSpec().SmartNICs[0].MACAddress, ".", "", -1)
 			if objMac == nodeMac {
-				log.Infof("Associting host %v with %v\n", obj.GetName(), n.iotaNode.Name)
+				log.Infof("Associating host %v(ip:%v) with %v(ip:%v)\n", obj.GetName(),
+					n.iotaNode.GetIpAddress(), n.iotaNode.Name, n.iotaNode.GetNaplesConfig().GetNaplesIpAddress())
 				bs := bitset.New(uint(4096))
 				bs.Set(0).Set(1).Set(4095)
 				h := Host{
@@ -513,4 +581,52 @@ func (sm *SysModel) ListWorkloadsOnHost(h *cluster.Host) (objs []*workload.Workl
 	}
 
 	return objs[:i], nil
+}
+
+// SelectByPercentage returns a collection with the specified hosts based on percentage.
+func (hc *HostCollection) SelectByPercentage(percent int) (*HostCollection, error) {
+	if percent > 100 {
+		return nil, fmt.Errorf("Invalid percentage input %v", percent)
+	}
+
+	if hc.err != nil {
+		return nil, fmt.Errorf("host collection error (%s)", hc.err)
+	}
+
+	ret := &HostCollection{}
+	for i, host := range hc.hosts {
+		ret.hosts = append(ret.hosts, host)
+		if i > len(hc.hosts)*percent/100 {
+			break
+		}
+	}
+
+	if len(ret.hosts) == 0 {
+		return nil, fmt.Errorf("Did not find hosts matching percentage (%v)", percent)
+	}
+	return ret, nil
+}
+
+// SelectByPercentage returns a collection on switch ports based on percentage.
+func (pc *SwitchPortCollection) SelectByPercentage(percent int) (*SwitchPortCollection, error) {
+	if percent > 100 {
+		return nil, fmt.Errorf("Invalid percentage input %v", percent)
+	}
+
+	if pc.err != nil {
+		return nil, fmt.Errorf("switch port collection error (%s)", pc.err)
+	}
+
+	ret := &SwitchPortCollection{}
+	for i, port := range pc.ports {
+		ret.ports = append(ret.ports, port)
+		if i > len(pc.ports)*percent/100 {
+			break
+		}
+	}
+
+	if len(ret.ports) == 0 {
+		return nil, fmt.Errorf("Did not find ports matching percentage (%v)", percent)
+	}
+	return ret, nil
 }

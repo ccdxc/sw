@@ -10,22 +10,22 @@ All Venice Iota E2E tests are written in Golang using [Ginkgo](http://onsi.githu
 
 Venice Iota E2E tests are written using iotakit library. This library provides an abstract model of the system under test. Tests can configure venice or perform actions on the cluster by manipulating this abstract model called "SysModel". Test cases are meant to be handfull of operations on sysmodel and most of the details of configuring Venice, triggering actions on Naples or workload is handled by Iota or Sysmodel.
 
-Pensando CI infrastructre(Jobd/Warmd) schedules Venice VMs and Naples nodes from a pool of testbeds. CI infrastructure runs the Venice E2E tests in a Rund container. Warmd provides the topology of the testbed to Rund container in a file called `warmd.json`. Iotakit library uses this file and the test suite's topology file to build a model of the testbed. 
+Pensando CI infrastructre(Jobd/Warmd) schedules Venice VMs and Naples nodes from a pool of testbeds. CI infrastructure runs the Venice E2E tests in a Rund container. Warmd provides the topology of the testbed to Rund container in a file called `warmd.json`. Iotakit library uses this file and the test suite's topology file to build a model of the testbed.
 
 Iotakit library passes this information to Iota infrastructure along with the pointers to Venice and Naples images. Iota infra takes care of copying the image to the nodes in testbed, installing the images and bringing up the entire cluster in a clean and predictable manner. Iota infra consists of Iota server that runs in the Rund container and Iota agents that run on each tesbed node. Iota can perform triggers on these test nodes by running any command on it. Iota also takes care of running workloads on hosts, plumbing the vswitches to send the traffic to Naples etc. Iota can perform datapath traffic tests between workloads by running ping, netcat, iperf and other tools.
 
 ## Test suite organization
 
-Venice tests are organized into test suites and each test suite has many test cases. See [Ginkgo](http://onsi.github.io/ginkgo/) framework documentation on how to write test cases. 
+Venice tests are organized into test suites and each test suite has many test cases. See [Ginkgo](http://onsi.github.io/ginkgo/) framework documentation on how to write test cases.
 
-Each test suite inits the testbed by wiping out all old configs and starting everything fresh. This makes sure failure in one test suite does not affect other test suite. Note that test cases within a test suite run sequentially. Since all test cases share the same Venice cluster, its important to make sure that each test case leave the system back in its original state. 
+Each test suite inits the testbed by wiping out all old configs and starting everything fresh. This makes sure failure in one test suite does not affect other test suite. Note that test cases within a test suite run sequentially. Since all test cases share the same Venice cluster, its important to make sure that each test case leave the system back in its original state.
 
 After initializing the testbed, we create the `SysModel` that represents the entire test system including venice, naples, workloads and any third party tools we might use(like DHCP servers, LDAP servers etc). Typically we would init the sysmodel with a default config that creates certain basic objects like hosts, workloads, default policies etc that are required by most of the tests. But, certain tests like cluster tests, auth tests may not want to have this default configuration. In those cases, test suite can skip this step.
 
 Today we have four test suites:
 1. cluster: All venice only test cases go into this suite. This includes venice cluster tests, auth, api, search and other tests that dont require a naples.
 2. smartnic: All smartnic related tests go into this suite. Nic admission, heartbeat and upgrade tests are in this suite
-3. firewall: All firewall and networking feature related tests are in this suite. 
+3. firewall: All firewall and networking feature related tests are in this suite.
 4. monitor: All monitoriing features like events, metrics, logging, techsupport related tests go in this suite.
 
 Developers are encouraged to add more test suites as required. Since each test suite can potentially run parallely in different testbeds, more test suites will run faster.
@@ -133,13 +133,14 @@ docker exec -it <pensando-user-id>_rund bash
 once you are in the rund container, you can rebuild venice or naples images and run the IOTA venice tests in `iota/test/venice/testsuites/` directory using standard `go test` command. Both `iota/test/venice/iotadev` and `iota/test/venice/hwtest/hwtestdev` have a convinient `make test` target to run all tests on NaplesSim setup of NaplesHW setup.
 
 If you want to login to the testbed, rund container contains the test topology file called `/warmd.json`. you can do `
-`cat /warmd.json | python -mjson.tool` to look at the contents of it. The "NodeMgmtIP" field in each node contains the ip address of the VM. 
+`cat /warmd.json | python -mjson.tool` to look at the contents of it. The "NodeMgmtIP" field in each node contains the ip address of the VM.
 
 **Some Useful env variables**
 
 1. `SKIP_INSTALL=1` : this option will skip installing naples images. This is useful for re-running tests on a setup that already has correct images
 2. `SKIP_SETUP=1` : this option is useful for rerunning tests on an already working setup. This will not cleanup configuration from previous run and just rerun the tests.
 3. `STOP_ON_ERROR=1` : this option will stop the tests on first failure.
+4. `REBOOT_ONLY=1` : this option will only reboot nodes. Useful if host or naples in bad state. Will be ignored if SKIP_INSTALL is set.
 
 ## Mocking test environment during development
 
@@ -149,6 +150,6 @@ Iota tests take relatively longer time to build the image, setup the testbed etc
 JOB_ID=1 MOCK_IOTA=1 go test ./iota/test/venice/testsuites/firewall/ -testbed ./iota/test/venice/example/warmd.json -p 1 -v -ginkgo.v
 ```
 
-This command will bringup a palazzo simulator on localhost. It'll create a mock testbed, mock iota server and make the SysModel think palazzo is the Venice cluster. This allows us to quickly check the behaviour of the test cases. One thing to remember is, since there is no real venice cluster, most of the actions like traffic tests, kubectl command etc dont work. This is meant to test the Venice API only. 
+This command will bringup a palazzo simulator on localhost. It'll create a mock testbed, mock iota server and make the SysModel think palazzo is the Venice cluster. This allows us to quickly check the behaviour of the test cases. One thing to remember is, since there is no real venice cluster, most of the actions like traffic tests, kubectl command etc dont work. This is meant to test the Venice API only.
 
 Note that iota e2e tests are meant to be run in jobd environments. So, they need JOB_ID environement varibale to be set, else they simply skip the tests. Also remember to build the palazzo binary before running the tests using `make palazzo` command.

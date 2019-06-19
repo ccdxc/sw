@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os/exec"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/ssh"
@@ -82,10 +84,13 @@ func (n *TestNode) waitForNodeUp(timeout time.Duration) error {
 			time.Sleep(100 * time.Millisecond)
 		}
 	}
+
 	//ESX node will take a little longer
 	if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+		log.Infof("Waiting for little longer for ESX node to come up..")
 		time.Sleep(60 * time.Second)
 	}
+
 	return nil
 }
 
@@ -141,27 +146,43 @@ func (n *TestNode) RestartNode() error {
 	var sshCfg *ssh.ClientConfig
 	var nrunner *runner.Runner
 
-	log.Infof("Restarting node: %#v", n.Node)
+	log.Infof("Restarting node: %v", n.Node)
 
-	if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
-		//First shutdown control node
-		nrunner = runner.NewRunner(n.SSHCfg)
-		ip, _ = n.GetNodeIP()
-		addr = fmt.Sprintf("%s:%d", ip, constants.SSHPort)
-		command = fmt.Sprintf("sudo sync && sudo shutdown -h now")
-		nrunner.Run(addr, command, constants.RunCommandForeground)
-		addr = fmt.Sprintf("%s:%d", n.Node.EsxConfig.GetIpAddress(), constants.SSHPort)
-		command = fmt.Sprintf("reboot && sleep 30")
-		sshCfg = InitSSHConfig(n.Node.EsxConfig.GetUsername(), n.Node.EsxConfig.GetPassword())
-		nrunner = runner.NewRunner(sshCfg)
+	if err = n.waitForNodeUp(1); err != nil && n.CimcIP != "" {
+		//Node not up, do a cimc reset
+		cmd := fmt.Sprintf("ipmitool -I lanplus -H %s -U %s -P %s power cycle",
+			n.CimcIP, n.CimcUserName, n.CimcPassword)
+
+		splitCmd := strings.Split(cmd, " ")
+		if stdout, err := exec.Command(splitCmd[0], splitCmd[1:]...).CombinedOutput(); err != nil {
+			log.Errorf("TOPO SVC | Reset Node Failed %v", stdout)
+		} else {
+			log.Errorf("TOPO SVC | Reset Node Success")
+		}
+
 	} else {
-		addr = fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
-		command = fmt.Sprintf("sudo sync && sudo shutdown -r now")
-		nrunner = runner.NewRunner(n.SSHCfg)
+
+		if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+			//First shutdown control node
+			nrunner = runner.NewRunner(n.SSHCfg)
+			ip, _ = n.GetNodeIP()
+			addr = fmt.Sprintf("%s:%d", ip, constants.SSHPort)
+			command = fmt.Sprintf("sudo sync && sudo shutdown -h now")
+			nrunner.Run(addr, command, constants.RunCommandForeground)
+			addr = fmt.Sprintf("%s:%d", n.Node.EsxConfig.GetIpAddress(), constants.SSHPort)
+			command = fmt.Sprintf("reboot && sleep 30")
+			sshCfg = InitSSHConfig(n.Node.EsxConfig.GetUsername(), n.Node.EsxConfig.GetPassword())
+			nrunner = runner.NewRunner(sshCfg)
+		} else {
+			addr = fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
+			command = fmt.Sprintf("sudo sync && sudo shutdown -r now")
+			nrunner = runner.NewRunner(n.SSHCfg)
+
+		}
+
+		nrunner.Run(addr, command, constants.RunCommandForeground)
 
 	}
-
-	nrunner.Run(addr, command, constants.RunCommandForeground)
 
 	time.Sleep(3 * time.Second)
 

@@ -248,6 +248,7 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 						Username:  node.EsxUsername,
 						Password:  node.EsxPassword,
 					},
+					Os: node.Os,
 				},
 				Os:     node.Os,
 				SSHCfg: ts.SSHConfig,
@@ -262,7 +263,7 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 
 			pool.Go(func() error {
 				n := n
-				return n.InitNode(ts.SSHConfig, common.DstIotaAgentDir, commonCopyArtifacts)
+				return n.InitNode(req.RebootNodes, ts.SSHConfig, common.DstIotaAgentDir, commonCopyArtifacts)
 			})
 		}
 		err = pool.Wait()
@@ -287,7 +288,7 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	return ts.TestBedInfo, nil
 }
 
-func (ts *TopologyService) initTestNodes(ctx context.Context, cfg *ssh.ClientConfig, nodes []*iota.TestBedNode) error {
+func (ts *TopologyService) initTestNodes(ctx context.Context, cfg *ssh.ClientConfig, reboot bool, nodes []*iota.TestBedNode) error {
 	pool, ctx := errgroup.WithContext(ctx)
 
 	for _, node := range nodes {
@@ -300,8 +301,11 @@ func (ts *TopologyService) initTestNodes(ctx context.Context, cfg *ssh.ClientCon
 					Password:  node.EsxPassword,
 				},
 			},
-			Os:     node.GetOs(),
-			SSHCfg: ts.SSHConfig,
+			Os:           node.GetOs(),
+			SSHCfg:       ts.SSHConfig,
+			CimcIP:       node.CimcIpAddress,
+			CimcPassword: node.CimcPassword,
+			CimcUserName: node.CimcUsername,
 		}
 
 		ts.Nodes = append(ts.Nodes, &n)
@@ -312,7 +316,7 @@ func (ts *TopologyService) initTestNodes(ctx context.Context, cfg *ssh.ClientCon
 
 		pool.Go(func() error {
 			n := n
-			return n.InitNode(ts.SSHConfig, common.DstIotaAgentDir, commonCopyArtifacts)
+			return n.InitNode(reboot, ts.SSHConfig, common.DstIotaAgentDir, commonCopyArtifacts)
 		})
 	}
 	if err := pool.Wait(); err != nil {
@@ -328,8 +332,8 @@ func (ts *TopologyService) initTestNodes(ctx context.Context, cfg *ssh.ClientCon
 }
 
 func (ts *TopologyService) cleanUpTestNodes(ctx context.Context, cfg *ssh.ClientConfig, nodes []*iota.TestBedNode) error {
-	pool, ctx := errgroup.WithContext(ctx)
 
+	pool, ctx := errgroup.WithContext(ctx)
 	for _, node := range nodes {
 		n := testbed.TestNode{
 			Node: &iota.Node{
@@ -349,6 +353,20 @@ func (ts *TopologyService) cleanUpTestNodes(ctx context.Context, cfg *ssh.Client
 		})
 	}
 	return pool.Wait()
+}
+
+// DoSwitchOperation do switch operation
+func (ts *TopologyService) DoSwitchOperation(ctx context.Context, req *iota.SwitchMsg) (*iota.SwitchMsg, error) {
+	log.Infof("TOPO SVC | DEBUG | SwitchMsg. Received Request Msg: %v", req)
+	defer log.Infof("TOPO SVC | DEBUG | SwitchMsg Returned: %v", req)
+
+	if err := testbed.DoSwitchOperation(req.DataSwitches, req.GetOp()); err != nil {
+		msg := fmt.Sprintf("TOPO SVC | SwitchMsg | Could not initialize switch Err: %v", err)
+		req.ApiResponse.ErrorMsg = msg
+		return req, nil
+	}
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
 }
 
 // CleanUpTestBed cleans up a testbed
@@ -391,7 +409,7 @@ func (ts *TopologyService) InitNodes(ctx context.Context, req *iota.TestNodesMsg
 
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 
-	err = ts.initTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.GetNodes())
+	err = ts.initTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.RebootNodes, req.GetNodes())
 	if err != nil {
 		log.Errorf("TOPO SVC | InitNodes | initnode Call Failed. %v", err)
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR

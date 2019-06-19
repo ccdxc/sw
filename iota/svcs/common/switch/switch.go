@@ -68,6 +68,7 @@ func (s portSpeedValue) String() string {
 type Switch interface {
 	SetNativeVlan(port string, vlan int) error
 	UnsetNativeVlan(port string) error
+	LinkOp(port string, shutdown bool) error
 	SetSpeed(port string, speed PortSpeed) error
 	SetTrunkVlanRange(port string, vlanRange string) error
 	UnsetTrunkVlanRange(port string, vlanRange string) error
@@ -164,6 +165,19 @@ func (sw *nexus3k) SetSpeed(port string, speed PortSpeed) error {
 	}
 
 	return err
+}
+
+func (sw *nexus3k) LinkOp(port string, shutdown bool) error {
+	var cmds []string
+
+	if shutdown {
+		cmds = []string{"shutdown"}
+
+	} else {
+		cmds = []string{"no shutdown"}
+	}
+
+	return sw.runConfigIFCommands(port, cmds)
 }
 
 func (sw *nexus3k) UnsetNativeVlan(port string) error {

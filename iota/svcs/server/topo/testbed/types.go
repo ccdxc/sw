@@ -20,4 +20,7 @@ type TestNode struct {
 	WorkloadInfo *iota.WorkloadMsg
 	WorkloadResp *iota.WorkloadMsg
 	Os           iota.TestBedNodeOs
+	CimcUserName string
+	CimcPassword string
+	CimcIP       string
 }

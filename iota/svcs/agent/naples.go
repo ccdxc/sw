@@ -39,7 +39,7 @@ const (
 	bareMetalWorkloadName   = "bareMetalWorkload"
 	intelPciDevicePrefix    = "Ethernet"
 	maxStdoutSize           = 1024 * 1024 * 2
-	naplesStatusURL         = "http://localhost:8888/api/v1/naples/"
+	naplesStatusURL         = "http://localhost:9008/api/v1/naples/"
 )
 
 var (

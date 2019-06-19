@@ -109,6 +109,7 @@ type TestBed struct {
 	testResult           map[string]bool            // test result
 	taskResult           map[string]error           // sub task result
 	caseResult           map[string]*TestCaseResult // test case result counts
+	DataSwitches         []*iota.DataSwitch         // data switches associated to this testbed
 
 	// cached message responses from iota server
 	iotaClient      *common.GRPCClient   // iota grpc client
@@ -960,6 +961,7 @@ func (tb *TestBed) setupTestBed() error {
 	}
 	for _, ds := range dsmap {
 		testBedMsg.DataSwitches = append(testBedMsg.DataSwitches, ds)
+		tb.DataSwitches = append(tb.DataSwitches, ds)
 	}
 
 	if !tb.skipSetup {
@@ -979,6 +981,8 @@ func (tb *TestBed) setupTestBed() error {
 				log.Errorf("Error during InitTestBed(). ApiResponse: %+v Err: %v", instResp.ApiResponse, err)
 				return fmt.Errorf("Error during install image: %v", instResp.ApiResponse)
 			}
+			//Image installted, no need to resinstall on retry
+			os.Setenv("SKIP_INSTALL", "1")
 		}
 
 		// first cleanup testbed
@@ -986,7 +990,14 @@ func (tb *TestBed) setupTestBed() error {
 
 		// then, init testbed
 		log.Debugf("Initializing testbed with params: %+v", testBedMsg)
-		log.Infof("Initializing testbed...")
+		testBedMsg.RebootNodes = (os.Getenv("REBOOT_ONLY") != "")
+		if testBedMsg.RebootNodes {
+			log.Infof("Initializing testbed with reboot...")
+		} else {
+
+			log.Infof("Initializing testbed without reboot...")
+
+		}
 		resp, err := client.InitTestBed(context.Background(), testBedMsg)
 		if err != nil {
 			log.Errorf("Error during InitTestBed(). Err: %v", err)
@@ -1141,8 +1152,13 @@ func (tb *TestBed) setupTestBed() error {
 
 // setupNaplesMode changes naples to managed mode
 func (tb *TestBed) setupNaplesMode(nodes []*TestNode) error {
-	log.Infof("Setting up Naples in network managed mode")
 
+	if os.Getenv("REBOOT_ONLY") != "" {
+		log.Infof("Skipping naples setup as it is just reboot")
+		return nil
+	}
+
+	log.Infof("Setting up Naples in network managed mode")
 	// copy penctl to host if required
 	for _, node := range nodes {
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {

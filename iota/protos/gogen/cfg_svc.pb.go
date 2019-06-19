@@ -42,6 +42,7 @@
 		DataSwitch
 		TestBedMsg
 		TestNodesMsg
+		SwitchMsg
 		TestBedNode
 		EntityCopyMsg
 */

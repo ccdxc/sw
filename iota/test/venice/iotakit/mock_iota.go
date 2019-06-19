@@ -188,6 +188,14 @@ func (ms *mockIotaServer) CheckClusterHealth(ctx context.Context, req *iota.Node
 	return &resp, nil
 }
 
+// DoSwitchOperation do switch operation
+func (ts *mockIotaServer) DoSwitchOperation(ctx context.Context, req *iota.SwitchMsg) (*iota.SwitchMsg, error) {
+	log.Infof("TOPO SVC | DEBUG | SwitchMsg. Received Request Msg: %v", req)
+
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
+}
+
 func (ms *mockIotaServer) EntityCopy(ctx context.Context, req *iota.EntityCopyMsg) (*iota.EntityCopyMsg, error) {
 	log.Debugf("EntityCopy(): Received Request Msg: %v", req)
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK

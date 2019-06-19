@@ -1,0 +1,27 @@
+meta:
+    name: FW_TRIGGERS
+    description: Run triggers against firewall testsuites
+
+config:
+    #Run a particular testcase
+    focus: ""
+    #Number of iterations
+    iterations: 2
+    #Run lineraly or randomize suites
+    run-type: linear
+    stop-on-failure: True
+
+testsuites:
+    - firewall
+    - fwlog
+
+triggers:
+    - trigger: FlapDataPorts
+      percent: 50
+      skip-setup: True
+    - trigger: HostReboot
+      percent: 50
+      skip-setup: True
+    - trigger: VeniceReboot
+      percent: 50
+      skip-setup: True

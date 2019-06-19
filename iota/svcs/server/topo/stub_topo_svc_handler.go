@@ -133,3 +133,11 @@ func (ts *StubTopologyService) Trigger(ctx context.Context, req *iota.TriggerMsg
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	return req, nil
 }
+
+// DoSwitchOperation do switch operation
+func (ts *StubTopologyService) DoSwitchOperation(ctx context.Context, req *iota.SwitchMsg) (*iota.SwitchMsg, error) {
+	log.Infof("TOPO SVC | DEBUG | SwitchMsg. Received Request Msg: %v", req)
+
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
+}

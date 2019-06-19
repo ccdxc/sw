@@ -32,6 +32,8 @@ const defaultNumNetworks = 2
 // SysModel represents a model of the system under test
 type SysModel struct {
 	hosts          map[string]*Host          // hosts
+	switches       map[string]*Switch     // switches in test
+	switchPorts    []*SwitchPort          // switches in test
 	naples         map[string]*Naples        // Naples instances
 	workloads      map[string]*Workload      // workloads
 	subnets        []*Network                // subnets
@@ -55,6 +57,7 @@ func NewSysModel(tb *TestBed) (*SysModel, error) {
 	sm := SysModel{
 		tb:             tb,
 		hosts:          make(map[string]*Host),
+		switches:       make(map[string]*Switch),
 		naples:         make(map[string]*Naples),
 		veniceNodes:    make(map[string]*VeniceNode),
 		workloads:      make(map[string]*Workload),
@@ -213,6 +216,14 @@ func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData boo
 		return errors.New(msg)
 	}
 
+	for _, sw := range sm.tb.DataSwitches {
+		_, err := sm.createSwitch(sw)
+		if err != nil {
+			log.Errorf("Error creating switch: %#v. Err: %v", sw, err)
+			return err
+		}
+
+	}
 	nwMap := make(map[uint32]uint32)
 
 	for _, h := range hosts {

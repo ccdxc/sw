@@ -33,6 +33,16 @@ var veniceServicesCmd = &cobra.Command{
 	Run:   veniceServicesAction,
 }
 
+func rebootVeniceNodes(percent int) error {
+
+	vnc, err := setupModel.VeniceNodes().SelectByPercentage(percent)
+
+	if err != nil {
+		return err
+	}
+	return setupModel.Action().ReloadVeniceNodes(vnc)
+}
+
 func veniceRebootAction(cmd *cobra.Command, args []string) {
 	all := false
 	for _, v := range args {

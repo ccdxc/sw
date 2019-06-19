@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/venice/globals"
@@ -352,5 +353,57 @@ func (act *ActionCtx) VeniceNodeGetCluster(vnc *VeniceNodeCollection) error {
 		log.Errorf("error getting cluster obj from node (%s): %v", nodeURL, err)
 		return fmt.Errorf("error getting cluster obj from node (%s): %v", nodeURL, err)
 	}
+	return nil
+}
+
+// FlapDataSwitchPorts flaps data ports
+func (act *ActionCtx) FlapDataSwitchPorts(ports *SwitchPortCollection, downTime time.Duration) error {
+	switchMsg := &iota.SwitchMsg{
+		ApiResponse:  &iota.IotaAPIResponse{},
+		DataSwitches: []*iota.DataSwitch{},
+	}
+
+	for _, port := range ports.ports {
+		log.Infof("Flapping port %v(%v)", port.port, port.sw.dataSwitch.GetIp())
+
+		added := false
+		for _, sw := range switchMsg.DataSwitches {
+			if sw.GetIp() == port.sw.dataSwitch.GetIp() {
+				added = true
+				sw.Ports = append(sw.Ports, port.port)
+			}
+		}
+		if !added {
+			switchMsg.DataSwitches = append(switchMsg.DataSwitches, &iota.DataSwitch{Ip: port.sw.dataSwitch.GetIp(),
+				Password: port.sw.dataSwitch.GetPassword(), Username: port.sw.dataSwitch.GetUsername(), Ports: []string{port.port}})
+		}
+	}
+
+	switchMsg.Op = iota.SwitchOp_SHUT_PORTS
+
+	topoClient := iota.NewTopologyApiClient(act.model.tb.iotaClient.Client)
+	switchResp, err := topoClient.DoSwitchOperation(context.Background(), switchMsg)
+	if err != nil {
+		return fmt.Errorf("Failed to shut ports | Err: %v", err)
+	} else if switchResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		return fmt.Errorf("Failed to shut ports  API Status: %+v | Err: %v", switchResp.ApiResponse, err)
+	}
+
+	log.Debugf("Got switch port shut resp: %+v", switchResp)
+
+	time.Sleep(downTime * time.Second)
+
+	switchMsg.Op = iota.SwitchOp_NO_SHUT_PORTS
+
+	topoClient = iota.NewTopologyApiClient(act.model.tb.iotaClient.Client)
+	switchResp, err = topoClient.DoSwitchOperation(context.Background(), switchMsg)
+	if err != nil {
+		return fmt.Errorf("Failed to shut ports | Err: %v", err)
+	} else if switchResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		return fmt.Errorf("Failed to shut ports  API Status: %+v | Err: %v", switchResp.ApiResponse, err)
+	}
+
+	log.Debugf("Got switch port not shut resp: %+v", switchResp)
+
 	return nil
 }

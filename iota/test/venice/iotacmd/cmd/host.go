@@ -26,6 +26,16 @@ var hostRebootCmd = &cobra.Command{
 	Run:   hostRebootAction,
 }
 
+func rebootHosts(percent int) error {
+
+	hc, err := setupModel.Hosts().SelectByPercentage(percent)
+
+	if err != nil {
+		return err
+	}
+	return setupModel.Action().ReloadHosts(hc)
+}
+
 func hostRebootAction(cmd *cobra.Command, args []string) {
 	all := false
 	for _, v := range args {

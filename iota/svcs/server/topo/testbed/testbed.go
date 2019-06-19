@@ -134,10 +134,15 @@ func (n *TestNode) initEsxNode() error {
 }
 
 // InitNode initializes an iota test node. It copies over IOTA Agent binary and starts it on the remote node
-func (n *TestNode) InitNode(c *ssh.ClientConfig, dstDir string, commonArtifacts []string) error {
+func (n *TestNode) InitNode(reboot bool, c *ssh.ClientConfig, dstDir string, commonArtifacts []string) error {
 	var agentBinary string
 
-	if n.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+	if reboot {
+		if err := n.RestartNode(); err != nil {
+			log.Errorf("Restart node %v failed. Err: %v", n.Node.Name, err)
+			return err
+		}
+	} else if n.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
 		if err := n.cleanupEsxNode(); err != nil {
 			log.Errorf("TOPO SVC | InitTestBed | Clean up ESX node failed :  %v", err.Error())
 			return err
@@ -320,6 +325,16 @@ func setSwitchPortConfig(dataSwitch dataswitch.Switch, ports []string, nativeVla
 	return nil
 }
 
+func portLinkOp(dataSwitch dataswitch.Switch, ports []string, shutdown bool) error {
+	for _, port := range ports {
+		if err := dataSwitch.LinkOp(port, shutdown); err != nil {
+			return errors.Wrap(err, "Setting switch trunk mode failed")
+		}
+	}
+
+	return nil
+}
+
 func checkSwitchConfig(dataSwitch dataswitch.Switch, ports []string, speed dataswitch.PortSpeed) error {
 	for _, port := range ports {
 		if buf, err := dataSwitch.CheckSwitchConfiguration(port, dataswitch.Trunk, dataswitch.Up, speed); err != nil {
@@ -329,6 +344,31 @@ func checkSwitchConfig(dataSwitch dataswitch.Switch, ports []string, speed datas
 				log.Printf("%v", m)
 			}
 			return errors.Wrapf(err, "Checking switch config failed for port %s", port)
+		}
+	}
+
+	return nil
+}
+
+// DoSwitchOperation allocates vlans based on the switch port ID
+func DoSwitchOperation(dsSwitches []*iota.DataSwitch, op iota.SwitchOp) (err error) {
+
+	for _, ds := range dsSwitches {
+		n3k := dataswitch.NewSwitch(dataswitch.N3KSwitchType, ds.GetIp(), ds.GetUsername(), ds.GetPassword())
+		if n3k == nil {
+			log.Errorf("TOPO SVC | InitTestBed | Switch not found %s", dataswitch.N3KSwitchType)
+			return errors.New("Switch not found")
+		}
+
+		switch op {
+		case iota.SwitchOp_SHUT_PORTS:
+			if err := portLinkOp(n3k, ds.GetPorts(), true); err != nil {
+				errors.Wrap(err, "Port shutdown operation failed")
+			}
+		case iota.SwitchOp_NO_SHUT_PORTS:
+			if err := portLinkOp(n3k, ds.GetPorts(), false); err != nil {
+				errors.Wrap(err, "Port up operation failed")
+			}
 		}
 	}
 

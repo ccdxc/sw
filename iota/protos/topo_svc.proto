@@ -31,6 +31,9 @@ service TopologyApi {
     // CleanNodes removes the nodes from the topology on the fly
     rpc CleanNodes (TestNodesMsg) returns (TestNodesMsg) {};
 
+    // DoSwitchOperation do switch operation
+    rpc DoSwitchOperation (SwitchMsg) returns (SwitchMsg) {};
+
     // AddNodes brings up the nodes with their corresponding personalities
     rpc AddNodes (NodeMsg) returns (NodeMsg) {};
 
@@ -529,6 +532,9 @@ message TestBedMsg {
 
     // DataSwitch
     repeated DataSwitch data_switches   = 11;
+
+    // Reboot Nodes
+    bool reboot_nodes                   = 12;
 }
 
 message TestNodesMsg {
@@ -543,8 +549,28 @@ message TestNodesMsg {
 
     // Node password
     string password                     = 4;
+
+    // Reboot Nodes
+    bool reboot_nodes                   = 5;
 }
 
+
+
+enum SwitchOp {
+    OP_NONE             = 0;
+    SHUT_PORTS          = 1;
+    NO_SHUT_PORTS       = 2;
+}
+
+message SwitchMsg {
+    // API Response
+    IotaAPIResponse api_response        = 1;
+
+    SwitchOp            op              = 2;
+    // DataSwitch
+    repeated DataSwitch data_switches   = 3;
+
+}
 
 enum TestBedNodeType {
     TESTBED_NODE_TYPE_NONE       = 0;
