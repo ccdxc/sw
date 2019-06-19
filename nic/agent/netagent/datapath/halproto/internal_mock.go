@@ -418,6 +418,64 @@ func (mr *MockisCryptoAsymApiRespSetupPrivateKey_KeyInfoMockRecorder) Size() *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisCryptoAsymApiRespSetupPrivateKey_KeyInfo)(nil).Size))
 }
 
+// MockisCryptoAsymApiReqSetupPrivateKeyEx_Key is a mock of isCryptoAsymApiReqSetupPrivateKeyEx_Key interface
+type MockisCryptoAsymApiReqSetupPrivateKeyEx_Key struct {
+	ctrl     *gomock.Controller
+	recorder *MockisCryptoAsymApiReqSetupPrivateKeyEx_KeyMockRecorder
+}
+
+// MockisCryptoAsymApiReqSetupPrivateKeyEx_KeyMockRecorder is the mock recorder for MockisCryptoAsymApiReqSetupPrivateKeyEx_Key
+type MockisCryptoAsymApiReqSetupPrivateKeyEx_KeyMockRecorder struct {
+	mock *MockisCryptoAsymApiReqSetupPrivateKeyEx_Key
+}
+
+// NewMockisCryptoAsymApiReqSetupPrivateKeyEx_Key creates a new mock instance
+func NewMockisCryptoAsymApiReqSetupPrivateKeyEx_Key(ctrl *gomock.Controller) *MockisCryptoAsymApiReqSetupPrivateKeyEx_Key {
+	mock := &MockisCryptoAsymApiReqSetupPrivateKeyEx_Key{ctrl: ctrl}
+	mock.recorder = &MockisCryptoAsymApiReqSetupPrivateKeyEx_KeyMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockisCryptoAsymApiReqSetupPrivateKeyEx_Key) EXPECT() *MockisCryptoAsymApiReqSetupPrivateKeyEx_KeyMockRecorder {
+	return m.recorder
+}
+
+// isCryptoAsymApiReqSetupPrivateKeyEx_Key mocks base method
+func (m *MockisCryptoAsymApiReqSetupPrivateKeyEx_Key) isCryptoAsymApiReqSetupPrivateKeyEx_Key() {
+	m.ctrl.Call(m, "isCryptoAsymApiReqSetupPrivateKeyEx_Key")
+}
+
+// isCryptoAsymApiReqSetupPrivateKeyEx_Key indicates an expected call of isCryptoAsymApiReqSetupPrivateKeyEx_Key
+func (mr *MockisCryptoAsymApiReqSetupPrivateKeyEx_KeyMockRecorder) isCryptoAsymApiReqSetupPrivateKeyEx_Key() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isCryptoAsymApiReqSetupPrivateKeyEx_Key", reflect.TypeOf((*MockisCryptoAsymApiReqSetupPrivateKeyEx_Key)(nil).isCryptoAsymApiReqSetupPrivateKeyEx_Key))
+}
+
+// MarshalTo mocks base method
+func (m *MockisCryptoAsymApiReqSetupPrivateKeyEx_Key) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisCryptoAsymApiReqSetupPrivateKeyEx_KeyMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisCryptoAsymApiReqSetupPrivateKeyEx_Key)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisCryptoAsymApiReqSetupPrivateKeyEx_Key) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisCryptoAsymApiReqSetupPrivateKeyEx_KeyMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisCryptoAsymApiReqSetupPrivateKeyEx_Key)(nil).Size))
+}
+
 // MockisCryptoApiRequest_CryptoApiReq is a mock of isCryptoApiRequest_CryptoApiReq interface
 type MockisCryptoApiRequest_CryptoApiReq struct {
 	ctrl     *gomock.Controller

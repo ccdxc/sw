@@ -19,7 +19,7 @@ namespace hal {
 
 
 #define ECC_MAX_KEY_SIZE 32
-#define RSA_MAX_KEY_SIZE 256
+#define RSA_MAX_KEY_SIZE 512
 
 #define CRYPTO_MAX_HASH_DIGEST_LEN 64
 

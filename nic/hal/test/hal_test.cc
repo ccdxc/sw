@@ -29,6 +29,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <google/protobuf/util/json_util.h>
+#include "nic/hal/test/fips_rsa_testvec_parser.h"
+#include <sys/stat.h>
 
 
 using grpc::Channel;
@@ -2507,6 +2509,203 @@ public:
         std::cout << buf << std::endl;
     }
 
+
+    int rsa_setup_key(uint16_t modulus_len, char *n, char *e, char *d, int *key_idx)
+    {
+        CryptoApiRequestMsg     req_msg;
+        CryptoApiRequest        *req;
+        CryptoApiResponseMsg    rsp_msg;
+        ClientContext           context;
+        Status                  status;
+
+        req = req_msg.add_request();
+        req->set_api_type(internal::ASYMAPI_SETUP_PRIV_KEY_EX);
+        req->mutable_setup_priv_key_ex()->set_key_type(types::CRYPTO_ASYM_KEY_TYPE_RSA);
+        req->mutable_setup_priv_key_ex()->mutable_rsa_key()->set_key_size(modulus_len/8); // in bytes
+        req->mutable_setup_priv_key_ex()->mutable_rsa_key()->mutable_n()->assign(n, modulus_len/8);
+        req->mutable_setup_priv_key_ex()->mutable_rsa_key()->mutable_e()->assign(e, modulus_len/8);
+        req->mutable_setup_priv_key_ex()->mutable_rsa_key()->mutable_d()->assign(d, modulus_len/8);
+        status = crypto_apis_stub_->CryptoApiInvoke(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            *key_idx = rsp_msg.response(0).setup_priv_key_ex().key_idx();
+            std::cout << "Setup RSA key successful, key:" << *key_idx << std::endl;
+        }
+        else {
+            std::cout << "Setup RSA key failed" << std::endl;
+            *key_idx = -1;
+            return -1;
+        }
+        return 0;
+    }
+
+    int fips_rsa_sigver15_testvec(uint16_t key_size, char *n, char *e,
+            char *msg, uint16_t msg_len, char *s,
+            types::HashType hash_type)
+    {
+        CryptoApiRequestMsg     req_msg;
+        CryptoApiRequest        *req;
+        CryptoApiResponseMsg    rsp_msg;
+        ClientContext           context;
+        Status                  status;
+
+        req = req_msg.add_request();
+        req->set_api_type(internal::ASYMAPI_FIPS_RSA_SIG_VERIFY);
+        req->mutable_fips_rsa_sig_verify()->mutable_mod_n()->assign(n, key_size);
+        req->mutable_fips_rsa_sig_verify()->mutable_e()->assign(e, key_size);
+        req->mutable_fips_rsa_sig_verify()->mutable_msg()->assign(msg, msg_len);
+        req->mutable_fips_rsa_sig_verify()->mutable_s()->assign(s, key_size);
+        req->mutable_fips_rsa_sig_verify()->set_hash_type(hash_type);
+        req->mutable_fips_rsa_sig_verify()->set_sig_scheme(types::RSASSA_PKCS1_v1_5);
+
+        status = crypto_apis_stub_->CryptoApiInvoke(&context, req_msg, &rsp_msg);
+        if (status.ok() && (rsp_msg.response(0).api_status() == types::API_STATUS_OK)) {
+            std::cout << "RSA SigVer15 successful:" << std::endl;
+        }
+        else {
+            std::cout << "RSA SigVer15 failed" << std::endl;
+            return -1;
+        }
+        return 0;
+    }
+
+    int fips_rsa_siggen15_testvec(uint16_t key_size, int32_t key_idx, char *n, char *e,
+            char *msg, uint16_t msg_len,
+            types::HashType hash_type, char *s)
+    {
+        CryptoApiRequestMsg     req_msg;
+        CryptoApiRequest        *req;
+        CryptoApiResponseMsg    rsp_msg;
+        ClientContext           context;
+        Status                  status;
+
+        req = req_msg.add_request();
+        req->set_api_type(internal::ASYMAPI_FIPS_RSA_SIG_GEN);
+        req->mutable_fips_rsa_sig_gen()->set_key_idx(key_idx);
+        req->mutable_fips_rsa_sig_gen()->mutable_mod_n()->assign(n, key_size);
+        req->mutable_fips_rsa_sig_gen()->mutable_e()->assign(e, key_size);
+        req->mutable_fips_rsa_sig_gen()->mutable_msg()->assign(msg, msg_len);
+        req->mutable_fips_rsa_sig_gen()->set_hash_type(hash_type);
+        req->mutable_fips_rsa_sig_gen()->set_sig_scheme(types::RSASSA_PKCS1_v1_5);
+
+        status = crypto_apis_stub_->CryptoApiInvoke(&context, req_msg, &rsp_msg);
+        if (status.ok() && (rsp_msg.response(0).api_status() == types::API_STATUS_OK)) {
+            memcpy(s, rsp_msg.response(0).fips_rsa_sig_gen().s().c_str(), key_size);
+            std::cout << "RSA SigGen15 successful:" << std::endl;
+#if 0
+            fips_rsa_sigver15_testvec(key_size, n, e, msg, msg_len, s, hash_type);
+#endif
+        }
+        else {
+            std::cout << "RSA SigGen15 failed" << std::endl;
+            return -1;
+        }
+        return 0;
+    }
+
+    int fips_testvec_hex_output(FILE *f, const char *label, char *buf, uint16_t len)
+    {
+        int         idx = 0;
+
+        fprintf(f, "%s = ", label);
+
+        for (idx = 0; idx < len; idx++) {
+            fprintf(f, "%02hhx", buf[idx]);
+        }
+        fprintf(f, "\n");
+        return 0;
+    }
+
+    int fips_testvec_rsa_modulus_output(FILE *f, uint16_t modulus_len)
+    {
+        fprintf(f, "[mod = %d]\n", modulus_len);
+        return 0;
+    }
+
+    int fips_testvec_sha_alg(FILE *f, char *sha_alg)
+    {
+        fprintf(f, "SHAAlg = %s\n", sha_alg);
+        return 0;
+    }
+
+    int fips_rsa_siggen15(char *fips_testvec_filename)
+    {
+        std::vector<fips_rsa_siggen15_group_t> groups;
+        struct stat st;
+        types::HashType     hash_type;
+        int                 entry_idx = 0; 
+        char                s[512];
+        char                outfile[128];
+        FILE                *ofile = NULL;
+
+        if (stat(fips_testvec_filename, &st)) {
+            std::cout << "File:" << fips_testvec_filename << "Not found" << std::endl;
+            return -1;
+        }
+
+        fips_rsa_siggen15_testvec_parser rsa_testvec_parser(fips_testvec_filename);
+        groups = rsa_testvec_parser.fips_rsa_siggen15_groups_get();
+
+        snprintf(outfile, 128, "%s.rsp", fips_testvec_filename);
+        ofile = fopen(outfile, "w");
+        if (!ofile) {
+            std::cout << "Failed to open " << outfile << " for output" << std::endl;
+            return -1;
+        }
+
+        for (std::vector<fips_rsa_siggen15_group_t>::iterator it = groups.begin(); it != groups.end(); it++) {
+            int         key_idx;
+            //rsa_testvec_parser.print_group(*it);
+            std::cout << "Modulus Len:" << (*it).modulus_len << std::endl;
+            if (rsa_setup_key((*it).modulus_len, (*it).n, (*it).e, (*it).d, &key_idx)) {
+                return -1;
+            }
+            fips_testvec_rsa_modulus_output(ofile, (*it).modulus_len);
+            fprintf(ofile, "\n");
+            fips_testvec_hex_output(ofile, "n", (*it).n, (*it).modulus_len/8);
+            fprintf(ofile, "\n");
+            fips_testvec_hex_output(ofile, "e", (*it).e, (*it).modulus_len/8);
+            fprintf(ofile, "\n");
+
+            for (entry_idx = 0; entry_idx < (*it).entry_count; entry_idx++) {
+
+                if (!strcmp((*it).entries[entry_idx].sha_algo, "SHA1")) {
+                    hash_type = types::SHA1;
+                }
+                else if (!strcmp((*it).entries[entry_idx].sha_algo, "SHA224")) {
+                    hash_type = types::SHA224;
+                }
+                else if (!strcmp((*it).entries[entry_idx].sha_algo, "SHA256")) {
+                    hash_type = types::SHA256;
+                }
+                else if (!strcmp((*it).entries[entry_idx].sha_algo, "SHA384")) {
+                    hash_type = types::SHA384;
+                }
+                else if (!strcmp((*it).entries[entry_idx].sha_algo, "SHA512")) {
+                    hash_type = types::SHA512;
+                }
+                else {
+                    std::cout << "Skipping unsupported SHA Alg:" 
+                        << (*it).entries[entry_idx].sha_algo << std::endl;
+                    continue;
+                }
+                fips_testvec_sha_alg(ofile, (*it).entries[entry_idx].sha_algo);
+
+                if (fips_rsa_siggen15_testvec(((*it).modulus_len)/8, key_idx, (*it).n, (*it).e,
+                            (*it).entries[entry_idx].msg, (*it).entries[entry_idx].msg_len,
+                            hash_type, s)) {
+                    std::cout << "RSA SigGen15 failed for entry: "  << entry_idx
+                        << std::endl;
+                }
+                else {
+                    fips_testvec_hex_output(ofile, "Msg", (*it).entries[entry_idx].msg, (*it).entries[entry_idx].msg_len);
+                    fips_testvec_hex_output(ofile, "S", s, (*it).modulus_len/8);
+                    fprintf(ofile, "\n");
+                }
+            }
+        }
+        return 0;
+    }
+
 private:
     std::unique_ptr<Vrf::Stub> vrf_stub_;
     std::unique_ptr<L2Segment::Stub> l2seg_stub_;
@@ -3113,6 +3312,7 @@ main (int argc, char** argv)
     uint32_t rate_or_dwrr = 0;
 
     bool qos_class_get = false;
+    bool fips_tests = false;
 
     sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_MOCK);
 
@@ -3267,6 +3467,14 @@ main (int argc, char** argv)
             {
                 return -1;
             }
+        }
+        else if (!strcmp(argv[1], "fips-rsa-siggen15")) {
+            if (argc != 3) {
+                std::cout << "Usage: hal_test fips-rsa-siggen15 <fips-testvector-file>"
+                          << std::endl;
+                return -1;
+            }
+            fips_tests = true;
         }
     } else {
         std::cout << "Usage: <pgm> config" << std::endl;
@@ -3496,6 +3704,11 @@ main (int argc, char** argv)
     } else if (qos_class_get) {
         hclient.qos_class_get(qos_group);
         return 0;
+    } else if (fips_tests == true) {
+        if (!strcmp(argv[1], "fips-rsa-siggen15")) {
+            hclient.fips_rsa_siggen15(argv[2]);
+            return 0;
+        }
     } else if (config == false) {
         std::cout << "Usage: <pgm> config" << std::endl;
         return 0;

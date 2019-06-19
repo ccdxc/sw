@@ -455,3 +455,16 @@ enum FlowDirection {
   FLOW_DIRECTION_FROM_HOST   = 1;
   FLOW_DIRECTION_FROM_UPLINK = 2;
 }
+
+enum HashType {
+    SHA1        = 0;
+    SHA224      = 1;
+    SHA256      = 2;
+    SHA384      = 3;
+    SHA512      = 4;
+}
+
+enum RSASignatureScheme {
+    RSASSA_PSS          = 0;
+    RSASSA_PKCS1_v1_5   = 1;
+}

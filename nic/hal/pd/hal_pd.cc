@@ -427,12 +427,16 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_GEN, pd_capri_barco_asym_ecdsa_p256_sig_gen);
     PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_VER, pd_capri_barco_asym_ecdsa_p256_sig_verify);
     PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT, pd_capri_barco_asym_rsa2k_encrypt);
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA_ENCRYPT, pd_capri_barco_asym_rsa_encrypt);
     PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_DECRYPT, pd_capri_barco_asym_rsa2k_decrypt);
     PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_CRT_DECRYPT, pd_capri_barco_asym_rsa2k_crt_decrypt);
     PD_FUNC_LOAD(PD_FUNC_ID_ASYM_RSA2K_SETUP_SIG_GEN_PRIV_KEY, pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key);
+    PD_FUNC_LOAD(PD_FUNC_ID_ASYM_RSA_SETUP_PRIV_KEY, pd_capri_barco_asym_rsa_setup_priv_key);
     PD_FUNC_LOAD(PD_FUNC_ID_ASYM_RSA2K_CRT_SETUP_DECRYPT_PRIV_KEY, pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key);
 
-    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN, pd_capri_barco_asym_rsa2k_sig_gen);
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA_SIG_GEN, pd_capri_barco_asym_rsa_sig_gen);
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_FIPS_RSA_SIG_GEN, pd_capri_barco_asym_fips_rsa_sig_gen);
+    PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_FIPS_RSA_SIG_VERIFY, pd_capri_barco_asym_fips_rsa_sig_verify);
     PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_VERIFY, pd_capri_barco_asym_rsa2k_sig_verify);
     PD_FUNC_LOAD(PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ, pd_capri_barco_sym_hash_process_request)
     PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_ADD_PEND_REQ, pd_capri_barco_asym_add_pend_req);
@@ -808,13 +812,37 @@ pd_tls_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e, uint8_t *m,  uint8_t *c,
 }
 
 extern "C" int
-pd_tls_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d,
+pd_tls_asym_rsa_encrypt(uint16_t key_size, uint8_t *n, uint8_t *e, uint8_t *m,  uint8_t *c,
+                          bool async, const uint8_t *unique_key)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd_capri_barco_asym_rsa_encrypt_args_t args = {0};
+    pd_func_args_t pd_func_args = {0};
+    args.key_size = key_size;
+    args.n = n;
+    args.e = e;
+    args.m = m;
+    args.c = c;
+    args.async_args.async_en = async;
+    args.async_args.unique_key = unique_key;
+
+    pd_func_args.pd_capri_barco_asym_rsa_encrypt = &args;
+    ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_RSA_ENCRYPT, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        return -1;
+    }
+    return 1;
+}
+
+extern "C" int
+pd_tls_asym_rsa_sig_gen(uint16_t key_size, int32_t key_idx, uint8_t *n, uint8_t *d,
                           uint8_t *h,  uint8_t *s,
                           bool async, const uint8_t *unique_key)
 {
     hal_ret_t ret = HAL_RET_OK;
-    pd_capri_barco_asym_rsa2k_sig_gen_args_t args = {0};
+    pd_capri_barco_asym_rsa_sig_gen_args_t args = {0};
     pd_func_args_t pd_func_args = {0};
+    args.key_size = key_size;
     args.key_idx = key_idx;
     args.n = n;
     args.d = d;
@@ -823,8 +851,8 @@ pd_tls_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d,
     args.async_args.async_en = async;
     args.async_args.unique_key = unique_key;
 
-    pd_func_args.pd_capri_barco_asym_rsa2k_sig_gen = &args;
-    ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN, &pd_func_args);
+    pd_func_args.pd_capri_barco_asym_rsa_sig_gen = &args;
+    ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_RSA_SIG_GEN, &pd_func_args);
     if (ret != HAL_RET_OK) {
         return -1;
     }

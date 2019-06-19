@@ -590,27 +590,94 @@ end:
     return ret;
 }
 
+static hal_ret_t
+crypto_asym_api_setup_rsa_priv_key_ex(internal::CryptoApiRequest &req,
+                                   internal::CryptoApiResponse *resp)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    uint32_t                    key_size;
+    int32_t                     key_idx;
+    pd::pd_capri_barco_asym_rsa_setup_priv_key_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
+
+    key_size = req.setup_priv_key_ex().rsa_key().key_size();
+
+    if ((req.setup_priv_key_ex().rsa_key().n().length() != key_size) ||
+            (req.setup_priv_key_ex().rsa_key().e().length() != key_size) ||
+            (req.setup_priv_key_ex().rsa_key().d().length() != key_size)) {
+
+        HAL_TRACE_ERR("Length mismatch in the input key");
+        ret = HAL_RET_ERR;
+        goto end;
+    }
+
+    args.key_size = key_size;
+    args.n = (uint8_t *)req.setup_priv_key_ex().rsa_key().n().c_str();
+    args.d = (uint8_t *)req.setup_priv_key_ex().rsa_key().d().c_str();
+    args.key_idx = &key_idx;
+    pd_func_args.pd_capri_barco_asym_rsa_setup_priv_key = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ASYM_RSA_SETUP_PRIV_KEY, &pd_func_args);
+
+end:
+    if (ret == HAL_RET_OK) {
+        resp->mutable_setup_priv_key_ex()->set_key_type(types::CRYPTO_ASYM_KEY_TYPE_RSA);
+        resp->mutable_setup_priv_key_ex()->set_key_idx(key_idx);
+        resp->set_api_status(types::API_STATUS_OK);
+    }
+    else {
+        resp->set_api_status(types::API_STATUS_ERR);
+    }
+    return ret;
+}
+
+hal_ret_t crypto_asym_api_setup_priv_key_ex(internal::CryptoApiRequest &req,
+					 internal::CryptoApiResponse *resp)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    uint32_t            key_type = 0;
+
+    switch (req.setup_priv_key_ex().key_type()) {
+        case types::CRYPTO_ASYM_KEY_TYPE_ECDSA:
+#if 0
+            ret = crypto_asym_api_setup_ec_priv_key(pkey, resp->mutable_setup_priv_key());
+#endif
+            break;
+        case types::CRYPTO_ASYM_KEY_TYPE_RSA:
+            ret = crypto_asym_api_setup_rsa_priv_key_ex(req, resp);
+            break;
+        default:
+            HAL_TRACE_ERR("Unsupported key type: {}", key_type);
+            ret = HAL_RET_INVALID_ARG;
+            break;
+    }
+    return ret;
+}
+
 hal_ret_t crypto_asym_api_rsa_sig_gen(internal::CryptoApiRequest &req,
         internal::CryptoApiResponse *resp)
 {
     hal_ret_t           ret = HAL_RET_OK;
     uint32_t            key_size;
     uint8_t             s[RSA_MAX_KEY_SIZE];
-    pd::pd_capri_barco_asym_rsa2k_sig_gen_args_t args;
+    pd::pd_capri_barco_asym_rsa_sig_gen_args_t args;
     pd::pd_func_args_t          pd_func_args = {0};
 
     key_size = req.rsa_sig_gen().keysize();
 
     switch (key_size) {
-        case 256:
+        case 128:   // 1K
+        case 256:   // 2K
+        case 384:   // 3K
+        case 512:   // 4K
+            args.key_size = key_size;
             args.key_idx = req.rsa_sig_gen().key_idx();
             args.n = (uint8_t *)req.rsa_sig_gen().mod_n().data();
             args.d = (uint8_t *)req.rsa_sig_gen().d().data();
             args.h = (uint8_t *)req.rsa_sig_gen().h().data();
             args.s = s;
             args.async_args.async_en = req.rsa_sig_gen().async_en();
-            pd_func_args.pd_capri_barco_asym_rsa2k_sig_gen = &args;
-            ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN, &pd_func_args);
+            pd_func_args.pd_capri_barco_asym_rsa_sig_gen = &args;
+            ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_RSA_SIG_GEN, &pd_func_args);
             break;
         default:
             HAL_TRACE_ERR("Unsupported key size: {}", key_size);
@@ -895,6 +962,96 @@ hal_ret_t crypto_symm_api_hash_request(internal::CryptoApiRequest &req,
     return ret;
 }
 
+hal_ret_t crypto_asym_api_fips_rsa_sig_gen(internal::CryptoApiRequest &req,
+        internal::CryptoApiResponse *resp)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    uint32_t            key_size;
+    uint8_t             s[RSA_MAX_KEY_SIZE];
+    pd::pd_capri_barco_asym_fips_rsa_sig_gen_args_t args;
+    pd::pd_func_args_t          pd_func_args = {0};
+
+    key_size = req.fips_rsa_sig_gen().mod_n().size();
+
+    switch (key_size) {
+        case 128:   // 1K
+        case 192:   // 1.5K
+        case 256:   // 2K
+        case 384:   // 3K
+        case 512:   // 4K
+            args.key_size = key_size;
+            args.key_idx = req.fips_rsa_sig_gen().key_idx();
+            args.n = (uint8_t *)req.fips_rsa_sig_gen().mod_n().data();
+            args.e = (uint8_t *)req.fips_rsa_sig_gen().e().data();
+            args.msg = (uint8_t *)req.fips_rsa_sig_gen().msg().data();
+            args.msg_len = req.fips_rsa_sig_gen().msg().size();
+            args.s = s;
+            args.hash_type = req.fips_rsa_sig_gen().hash_type();
+            args.sig_scheme = req.fips_rsa_sig_gen().sig_scheme();
+
+            args.async_args.async_en = false;
+            pd_func_args.pd_capri_barco_asym_fips_rsa_sig_gen = &args;
+            ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_FIPS_RSA_SIG_GEN, &pd_func_args);
+            break;
+        default:
+            HAL_TRACE_ERR("Unsupported key size: {}", key_size);
+            ret = HAL_RET_INVALID_ARG;
+            break;
+    }
+    if (ret == HAL_RET_OK) {
+        resp->mutable_fips_rsa_sig_gen()->mutable_s()->assign(
+                (const char*)s, (size_t) key_size);
+        resp->set_api_status(types::API_STATUS_OK);
+    }
+    else {
+        resp->set_api_status(types::API_STATUS_ERR);
+    }
+    return ret;
+}
+
+hal_ret_t crypto_asym_api_fips_rsa_sig_verify(internal::CryptoApiRequest &req,
+        internal::CryptoApiResponse *resp)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    uint32_t            key_size;
+    pd::pd_capri_barco_asym_fips_rsa_sig_verify_args_t args;
+    pd::pd_func_args_t          pd_func_args = {0};
+
+    key_size = req.fips_rsa_sig_verify().mod_n().size();
+
+    switch (key_size) {
+        case 128:   // 1K
+        case 192:   // 1.5K
+        case 256:   // 2K
+        case 384:   // 3K
+        case 512:   // 4K
+            args.key_size = key_size;
+            args.n = (uint8_t *)req.fips_rsa_sig_verify().mod_n().data();
+            args.e = (uint8_t *)req.fips_rsa_sig_verify().e().data();
+            args.msg = (uint8_t *)req.fips_rsa_sig_verify().msg().data();
+            args.msg_len = req.fips_rsa_sig_verify().msg().size();
+            args.s = (uint8_t *)req.fips_rsa_sig_verify().s().data();;
+            args.hash_type = req.fips_rsa_sig_verify().hash_type();
+            args.sig_scheme = req.fips_rsa_sig_verify().sig_scheme();
+
+            args.async_args.async_en = false;
+            pd_func_args.pd_capri_barco_asym_fips_rsa_sig_verify = &args;
+            ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_FIPS_RSA_SIG_VERIFY, &pd_func_args);
+            break;
+        default:
+            HAL_TRACE_ERR("Unsupported key size: {}", key_size);
+            ret = HAL_RET_INVALID_ARG;
+            break;
+    }
+    if (ret == HAL_RET_OK) {
+        resp->set_api_status(types::API_STATUS_OK);
+    }
+    else {
+        resp->set_api_status(types::API_STATUS_ERR);
+    }
+    return ret;
+}
+
 hal_ret_t cryptoapi_invoke(internal::CryptoApiRequest &req,
         internal::CryptoApiResponse *resp)
 {
@@ -921,10 +1078,10 @@ hal_ret_t cryptoapi_invoke(internal::CryptoApiRequest &req,
             ret = crypto_asym_api_rsa_crt_decrypt(req, resp);
             break;
         case internal::SYMMAPI_HASH_GENERATE:
-	  ret = crypto_symm_api_hash_request(req, resp, true);
+            ret = crypto_symm_api_hash_request(req, resp, true);
             break;
         case internal::SYMMAPI_HASH_VERIFY:
-	  ret = crypto_symm_api_hash_request(req, resp, false);
+            ret = crypto_symm_api_hash_request(req, resp, false);
             break;
         case internal::ASYMAPI_RSA_SIG_GEN:
             ret = crypto_asym_api_rsa_sig_gen(req, resp);
@@ -937,6 +1094,15 @@ hal_ret_t cryptoapi_invoke(internal::CryptoApiRequest &req,
             break;
         case internal::ASYMAPI_SETUP_CERT:
             ret = crypto_asym_api_setup_cert(req, resp);
+            break;
+        case internal::ASYMAPI_SETUP_PRIV_KEY_EX:
+            ret = crypto_asym_api_setup_priv_key_ex(req, resp);
+            break;
+        case internal::ASYMAPI_FIPS_RSA_SIG_GEN:
+            ret = crypto_asym_api_fips_rsa_sig_gen(req, resp);
+            break;
+        case internal::ASYMAPI_FIPS_RSA_SIG_VERIFY:
+            ret = crypto_asym_api_fips_rsa_sig_verify(req, resp);
             break;
         default:
             HAL_TRACE_ERR("Invalid API: {}", req.api_type());

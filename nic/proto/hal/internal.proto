@@ -1010,6 +1010,9 @@ enum CryptoApiType {
   ASYMAPI_RSA_SIG_VERIFY                = 9;
   ASYMAPI_SETUP_PRIV_KEY                = 10;
   ASYMAPI_SETUP_CERT                    = 11;
+  ASYMAPI_SETUP_PRIV_KEY_EX             = 13;
+  ASYMAPI_FIPS_RSA_SIG_GEN              = 14;
+  ASYMAPI_FIPS_RSA_SIG_VERIFY           = 15;
 }
 
 enum UpdateType {
@@ -1144,6 +1147,25 @@ message CryptoAsymApiReqSetupCert {
 message CryptoAsymApiRespSetupCert {
 }
 
+// Asymmetric Private Key Setup - key elements
+message CryptoAsymRsaKey    {
+    uint32                          key_size            = 1;    // modulus size in bytes
+    bytes                           n                   = 2;
+    bytes                           e                   = 3;
+    bytes                           d                   = 4;
+}
+message CryptoAsymApiReqSetupPrivateKeyEx {
+    types.CryptoAsymKeyType         key_type            = 1;
+    oneof   Key {
+        CryptoAsymRsaKey            rsa_key             = 2;
+    }
+}
+
+message CryptoAsymApiRespSetupPrivateKeyEx {
+    types.CryptoAsymKeyType             key_type        = 1;
+    int32                               key_idx         = 2;
+}
+
 // RSA Signature Generation
 message CryptoAsymApiReqRSASignatureGen {
   uint32                            KeySize             = 1;
@@ -1192,6 +1214,32 @@ message CryptoSymmApiReqHashVerify {
   int32                            digest_len          = 7;
 }
 
+
+// FIPS RSA Signature Generation
+message CryptoAsymApiReqFIPSRSASignatureGen {
+  int32                             key_idx             = 1;
+  bytes                             mod_n               = 2;
+  bytes                             e                   = 3;
+  bytes                             msg                 = 4;
+  types.HashType                    hash_type           = 5;
+  types.RSASignatureScheme          sig_scheme          = 6;
+}
+
+message CryptoAsymApiRespFIPSRSASignatureGen {
+  bytes                             s                   = 1;
+}
+
+// FIPS RSA Signature Verification
+message CryptoAsymApiReqFIPSRSASignatureVerify {
+  bytes                             mod_n               = 1;
+  bytes                             e                   = 2;
+  bytes                             msg                 = 3;
+  bytes                             s                   = 4;
+  types.HashType                    hash_type           = 5;
+  types.RSASignatureScheme          sig_scheme          = 6;
+}
+// CryptoAsymApiReqFIPSRSASignatureVerify Response in api_status
+
 //message CryptoSymmApiRespHashVerify {
 //  bytes                            digest              = 1;
 //}
@@ -1213,6 +1261,9 @@ message CryptoApiRequest {
     CryptoAsymApiReqRSASignatureVerify  rsa_sig_verify  = 11;
     CryptoAsymApiReqSetupPrivateKey setup_priv_key      = 12;
     CryptoAsymApiReqSetupCert       setup_cert          = 13;
+    CryptoAsymApiReqSetupPrivateKeyEx setup_priv_key_ex = 14;
+    CryptoAsymApiReqFIPSRSASignatureGen     fips_rsa_sig_gen    = 15;
+    CryptoAsymApiReqFIPSRSASignatureVerify  fips_rsa_sig_verify = 16;
   }
 }
 
@@ -1228,6 +1279,8 @@ message CryptoApiResponse {
     CryptoAsymApiRespRSASignatureGen    rsa_sig_gen     = 8;
     CryptoAsymApiRespSetupPrivateKey setup_priv_key     = 9;
     CryptoAsymApiRespSetupCert       setup_cert         = 10;
+    CryptoAsymApiRespSetupPrivateKeyEx setup_priv_key_ex = 11;
+    CryptoAsymApiRespFIPSRSASignatureGen fips_rsa_sig_gen = 12;
   }
 }
 

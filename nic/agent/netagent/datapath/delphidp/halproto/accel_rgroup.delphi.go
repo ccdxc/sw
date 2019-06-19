@@ -557,12 +557,18 @@ It has these top-level messages:
 	CryptoAsymApiRespSetupPrivateKey
 	CryptoAsymApiReqSetupCert
 	CryptoAsymApiRespSetupCert
+	CryptoAsymRsaKey
+	CryptoAsymApiReqSetupPrivateKeyEx
+	CryptoAsymApiRespSetupPrivateKeyEx
 	CryptoAsymApiReqRSASignatureGen
 	CryptoAsymApiRespRSASignatureGen
 	CryptoAsymApiReqRSASignatureVerify
 	CryptoSymmApiReqHashGenerate
 	CryptoSymmApiRespHashGenerate
 	CryptoSymmApiReqHashVerify
+	CryptoAsymApiReqFIPSRSASignatureGen
+	CryptoAsymApiRespFIPSRSASignatureGen
+	CryptoAsymApiReqFIPSRSASignatureVerify
 	CryptoApiRequest
 	CryptoApiResponse
 	CryptoApiRequestMsg

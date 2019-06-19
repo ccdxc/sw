@@ -20,7 +20,10 @@ int pd_tls_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
 int pd_tls_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e, uint8_t *m,  uint8_t *c,
                               bool async, const uint8_t *unique_key);
 
-int pd_tls_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d,
+int pd_tls_asym_rsa_encrypt(uint16_t key_size, uint8_t *n, uint8_t *e, uint8_t *m,  uint8_t *c,
+                          bool async, const uint8_t *unique_key);
+
+int pd_tls_asym_rsa_sig_gen(uint16_t key_size, int32_t key_idx, uint8_t *n, uint8_t *d,
                               uint8_t *h, uint8_t *s,
                               bool async, const uint8_t *unique_key);
 

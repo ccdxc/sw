@@ -190,9 +190,72 @@ cleanup:
 int pse_rsa_pub_dec(int flen, const unsigned char *from,
                     unsigned char *to, RSA *rsa, int padding)
 {
+    BN_CTX *ctx = NULL;
+    int r = 0, rsa_len = 0;
+    const BIGNUM *n = NULL, *e = NULL;
+    pse_buffer_t bn, be;
+    unsigned char* buf = NULL;
+
     INFO("Inside");
-    return 1;
-    
+
+    rsa_len = RSA_size(rsa);
+
+    if ((ctx = BN_CTX_new()) == NULL) {
+        WARN("Failed to allocate BN ctx");
+        goto cleanup;
+    }
+
+    buf = PSE_MALLOC(rsa_len);
+    if(!buf) {
+        WARN("Failed to allocate output buffer");
+        goto cleanup;
+    }
+
+    BN_CTX_start(ctx);
+    n = BN_CTX_get(ctx);
+    e = BN_CTX_get(ctx);
+     
+    RSA_get0_key(rsa, &n, &e, NULL);
+    pse_BN_to_buffer_pad(n, &bn, rsa_len);
+    pse_BN_to_buffer_pad(e, &be, rsa_len);
+    LOG_BUFFER("bn", bn);
+    LOG_BUFFER("be", be);
+
+
+    r = pd_tls_asym_rsa_encrypt(rsa_len, bn.data, be.data, (uint8_t *)from, buf,
+                          true, (const uint8_t *)engine_pse_id);
+    if (r != 1) {
+        WARN("Failed to perform public key encrypt");
+        goto cleanup;
+    }
+
+    switch (padding) {
+        case RSA_PKCS1_PADDING:
+            r = RSA_padding_check_PKCS1_type_1(to, rsa_len, buf, rsa_len, rsa_len);
+            break;
+        case RSA_X931_PADDING:
+            r = RSA_padding_check_X931(to, rsa_len, buf, rsa_len, rsa_len);
+            break;
+        case RSA_NO_PADDING:
+            memcpy(to, buf, (r = rsa_len));
+            break;
+        default:
+            RSAerr(RSA_F_RSA_OSSL_PUBLIC_DECRYPT, RSA_R_UNKNOWN_PADDING_TYPE);
+            goto cleanup;
+    }
+    if (r < 0)
+        RSAerr(RSA_F_RSA_OSSL_PUBLIC_DECRYPT, RSA_R_PADDING_CHECK_FAILED);
+
+
+cleanup:
+    pse_free_buffer(&bn);
+    pse_free_buffer(&be);
+    if(ctx) {
+        BN_CTX_end(ctx);
+        BN_CTX_free(ctx);
+    }
+    PSE_FREE(buf);
+    return r;
 }
 
 /*
@@ -267,7 +330,8 @@ int pse_rsa_priv_enc(int flen, const unsigned char *from,
     LOG_BUFFER("bn", bn);
  
 #ifndef NO_PEN_HW_OFFLOAD
-    ret = pd_tls_asym_rsa2k_sig_gen(ex_data->sig_gen_key_id,
+    ret = pd_tls_asym_rsa_sig_gen(rsa_len,
+                                    ex_data->sig_gen_key_id,
                                     bn.data,
                                     NULL,
                                     buf,

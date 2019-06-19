@@ -247,6 +247,18 @@ pd_capri_barco_asym_rsa2k_encrypt (pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
+pd_capri_barco_asym_rsa_encrypt (pd_func_args_t *pd_func_args)
+{
+    pd_capri_barco_asym_rsa_encrypt_args_t *args = pd_func_args->pd_capri_barco_asym_rsa_encrypt;
+    return capri_barco_asym_rsa_encrypt(args->key_size,
+                                          args->n,
+                                          args->e,
+                                          args->m,
+                                          args->c,
+                                          &args->async_args);
+}
+
+hal_ret_t
 pd_capri_barco_asym_rsa2k_decrypt (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_rsa2k_decrypt_args_t *args = pd_func_args->pd_capri_barco_asym_rsa2k_decrypt;
@@ -293,6 +305,16 @@ pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(pd_func_args_t *pd_func_arg
 }
 
 hal_ret_t
+pd_capri_barco_asym_rsa_setup_priv_key(pd_func_args_t *pd_func_args)
+{
+    pd_capri_barco_asym_rsa_setup_priv_key_args_t *args = pd_func_args->pd_capri_barco_asym_rsa_setup_priv_key;
+    return capri_barco_asym_rsa_setup_priv_key(args->key_size,
+                                                args->n,
+                                                args->d,
+                                                args->key_idx);
+}
+
+hal_ret_t
 pd_capri_barco_asym_rsa2k_sig_gen (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_rsa2k_sig_gen_args_t *args = pd_func_args->pd_capri_barco_asym_rsa2k_sig_gen;
@@ -301,6 +323,50 @@ pd_capri_barco_asym_rsa2k_sig_gen (pd_func_args_t *pd_func_args)
                                           args->d,
                                           args->h,
                                           args->s,
+                                          &args->async_args);
+}
+
+hal_ret_t
+pd_capri_barco_asym_rsa_sig_gen (pd_func_args_t *pd_func_args)
+{
+    pd_capri_barco_asym_rsa_sig_gen_args_t *args = pd_func_args->pd_capri_barco_asym_rsa_sig_gen;
+    return capri_barco_asym_rsa_sig_gen(args->key_size,
+                                          args->key_idx,
+                                          args->n,
+                                          args->d,
+                                          args->h,
+                                          args->s,
+                                          &args->async_args);
+}
+
+hal_ret_t
+pd_capri_barco_asym_fips_rsa_sig_gen (pd_func_args_t *pd_func_args)
+{
+    pd_capri_barco_asym_fips_rsa_sig_gen_args_t *args = pd_func_args->pd_capri_barco_asym_fips_rsa_sig_gen;
+    return capri_barco_asym_fips_rsa_sig_gen(args->key_size,
+                                          args->key_idx,
+                                          args->n,
+                                          args->e,
+                                          args->msg,
+                                          args->msg_len,
+                                          args->s,
+                                          args->hash_type,
+                                          args->sig_scheme,
+                                          &args->async_args);
+}
+
+hal_ret_t
+pd_capri_barco_asym_fips_rsa_sig_verify (pd_func_args_t *pd_func_args)
+{
+    pd_capri_barco_asym_fips_rsa_sig_verify_args_t *args = pd_func_args->pd_capri_barco_asym_fips_rsa_sig_verify;
+    return capri_barco_asym_fips_rsa_sig_verify(args->key_size,
+                                          args->n,
+                                          args->e,
+                                          args->msg,
+                                          args->msg_len,
+                                          args->s,
+                                          args->hash_type,
+                                          args->sig_scheme,
                                           &args->async_args);
 }
 

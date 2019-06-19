@@ -5,13 +5,13 @@ namespace hal {
 namespace pd {
 
 
-//#define _API_PARAM_DEBUG_
+#define _API_PARAM_DEBUG_
 
 #ifdef _API_PARAM_DEBUG_
 
 
 #define MAX_LINE_SZ 128
-static inline void capri_hex_dump_trace(char *label, char *buf, uint16_t len)
+static inline void capri_hex_dump_trace(const char *label, char *buf, uint16_t len)
 {
     char            line[MAX_LINE_SZ];
     char            *lineptr;
@@ -67,7 +67,14 @@ hal_ret_t capri_barco_asym_rsa2k_setup_sig_gen_priv_key(uint8_t *n, uint8_t *d,
 hal_ret_t capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q, uint8_t *dp,
                                                             uint8_t *dq, uint8_t *qinv, int32_t* key_idx);
 
+hal_ret_t capri_barco_asym_rsa_setup_priv_key(uint16_t key_size, uint8_t *n, uint8_t *d,
+                                                            int32_t* key_idx);
+
 hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
+                                         uint8_t *m,  uint8_t *c,
+                                         pd_capri_barco_asym_async_args_t *async_args);
+
+hal_ret_t capri_barco_asym_rsa_encrypt(uint16_t key_size, uint8_t *n, uint8_t *e,
                                          uint8_t *m,  uint8_t *c,
                                          pd_capri_barco_asym_async_args_t *async_args);
 
@@ -81,6 +88,20 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_
 hal_ret_t capri_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d,
                                          uint8_t *h, uint8_t *s,
                                          pd_capri_barco_asym_async_args_t *async_args);
+
+hal_ret_t capri_barco_asym_rsa_sig_gen(uint16_t key_size, int32_t key_idx, uint8_t *n, uint8_t *d,
+                                         uint8_t *h, uint8_t *s,
+                                         pd_capri_barco_asym_async_args_t *async_args);
+
+hal_ret_t capri_barco_asym_fips_rsa_sig_gen(uint16_t key_size, int32_t key_idx,
+        uint8_t *n, uint8_t *e, uint8_t *msg, uint16_t msg_len, uint8_t *s,
+        types::HashType hash_type, types::RSASignatureScheme sig_scheme, 
+        pd_capri_barco_asym_async_args_t *async_args);
+
+hal_ret_t capri_barco_asym_fips_rsa_sig_verify(uint16_t key_size,
+        uint8_t *n, uint8_t *e, uint8_t *msg, uint16_t msg_len, uint8_t *s,
+        types::HashType hash_type, types::RSASignatureScheme sig_scheme, 
+        pd_capri_barco_asym_async_args_t *async_args);
 
 hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
         uint8_t *h, uint8_t *s);
