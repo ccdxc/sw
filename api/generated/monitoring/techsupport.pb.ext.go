@@ -34,10 +34,12 @@ var TechSupportJobStatus_normal = map[string]string{
 	"Failed":    "Failed",
 	"Running":   "Running",
 	"Scheduled": "Scheduled",
+	"TimeOut":   "TimeOut",
 	"completed": "Completed",
 	"failed":    "Failed",
 	"running":   "Running",
 	"scheduled": "Scheduled",
+	"timeout":   "TimeOut",
 }
 
 var _ validators.DummyVar

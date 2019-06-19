@@ -3,8 +3,10 @@
 package statemgr
 
 import (
+	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	uuid "github.com/satori/go.uuid"
 
@@ -70,6 +72,8 @@ type TechSupportObjectState interface {
 type TechSupportRequestState struct {
 	*sync.Mutex
 	*monitoring.TechSupportRequest
+	Context    context.Context
+	CancelFunc context.CancelFunc
 }
 
 // ControllerNodeState is the internal state for a tech-support request
@@ -88,9 +92,12 @@ type SmartNICNodeState struct {
 func (sm *Statemgr) newTechSupportObjectState(obj TechSupportObject) TechSupportObjectState {
 	switch kind := obj.GetObjectKind(); kind {
 	case KindTechSupportRequest:
+		ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Minute)
 		return &TechSupportRequestState{
 			Mutex:              &sync.Mutex{},
 			TechSupportRequest: obj.(*monitoring.TechSupportRequest),
+			Context:            ctx,
+			CancelFunc:         cancel,
 		}
 	case KindControllerNode:
 		return &ControllerNodeState{
@@ -133,6 +140,7 @@ func (sm *Statemgr) deleteTechSupportObjectState(obj TechSupportObject) error {
 	}
 
 	if obj.GetObjectKind() == KindTechSupportRequest && sm.objstoreClient != nil {
+		state.(*TechSupportRequestState).CancelFunc()
 		tsr := obj.(*monitoring.TechSupportRequest)
 		log.Infof("Removing objects with prefix : %v", tsr.ObjectMeta.Name)
 		err = sm.objstoreClient.RemoveObjects(tsr.ObjectMeta.Name)
@@ -145,6 +153,45 @@ func (sm *Statemgr) deleteTechSupportObjectState(obj TechSupportObject) error {
 }
 
 func initTechSupportRequestStatus(tsr *monitoring.TechSupportRequest) {
+}
+
+func (sm *Statemgr) startTechsupportTimer(obj TechSupportObject) {
+	tsr, _ := obj.(*monitoring.TechSupportRequest)
+	state, err := sm.GetTechSupportObjectState(obj)
+
+	if err != nil {
+		log.Errorf("Failed to find the obj [%v] in memdb. Cannot start the timer.", obj)
+		return
+	}
+
+	select {
+	case <-state.(*TechSupportRequestState).Context.Done():
+		// Recheck in memdb to ensure the object is still there
+		if _, err := sm.GetTechSupportObjectState(obj); err != nil {
+			return
+		}
+
+		isTimeout := func(results map[string]*monitoring.TechSupportNodeResult) bool {
+			isTo := false
+			for _, s := range results {
+				if s.Status != monitoring.TechSupportJobStatus_Completed.String() {
+					s.Status = monitoring.TechSupportJobStatus_TimeOut.String()
+					isTo = true
+				}
+			}
+
+			return isTo
+		}
+
+		state.Lock()
+		if isTimeout(tsr.Status.ControllerNodeResults) || isTimeout(tsr.Status.SmartNICNodeResults) {
+			tsr.Status.Status = monitoring.TechSupportJobStatus_TimeOut.String()
+			sm.writer.WriteTechSupportRequest(tsr)
+		}
+		state.Unlock()
+		return
+	}
+
 }
 
 // handleTechSupportEvent is the handler invoked by stateMgr when it receives TechSupport object
@@ -183,6 +230,9 @@ func (sm *Statemgr) handleTechSupportEvent(evt *kvstore.WatchEvent) {
 			state.Lock()
 			defer state.Unlock()
 			err = sm.memDB.AddObject(state)
+			if obj.GetObjectKind() == KindTechSupportRequest {
+				go sm.startTechsupportTimer(obj)
+			}
 		}
 
 		if err == nil && update {

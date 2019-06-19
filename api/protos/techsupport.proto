@@ -15,6 +15,7 @@ enum TechSupportJobStatus {
     Running   = 1;
     Completed = 2;
     Failed    = 3;
+    TimeOut   = 4;
 }
 
 message TechSupportNodeResult {

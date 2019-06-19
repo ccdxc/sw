@@ -161,6 +161,7 @@ export enum MonitoringTechSupportNodeResult_status {
     'Running' = "Running",
     'Completed' = "Completed",
     'Failed' = "Failed",
+    'TimeOut' = "TimeOut",
 }
 
 export enum MonitoringTechSupportRequestStatus_status {
@@ -168,6 +169,7 @@ export enum MonitoringTechSupportRequestStatus_status {
     'Running' = "Running",
     'Completed' = "Completed",
     'Failed' = "Failed",
+    'TimeOut' = "TimeOut",
 }
 
 export enum MonitoringTroubleshootingSessionStatus_state {

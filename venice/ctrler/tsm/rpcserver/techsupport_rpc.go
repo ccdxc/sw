@@ -173,9 +173,32 @@ func (r *TechSupportRPCServer) updateTechSupportNodeResult(tsr *monitoring.TechS
 		}
 		return true
 	}
-	if isComplete(tsr.Status.SmartNICNodeResults) && isComplete(tsr.Status.ControllerNodeResults) {
-		tsr.Status.Status = monitoring.TechSupportJobStatus_Completed.String()
+
+	state, err := r.stateMgr.GetTechSupportObjectState(tsr)
+	if err != nil {
+		log.Infof("No state found for object %s, cannot close context.", tsr.GetObjectMeta().Name)
 	}
+
+	if isComplete(tsr.Status.SmartNICNodeResults) && isComplete(tsr.Status.ControllerNodeResults) {
+		for _, key := range tsr.Spec.NodeSelector.Names {
+			_, okSN := tsr.Status.SmartNICNodeResults[key]
+			_, okCN := tsr.Status.ControllerNodeResults[key]
+
+			if !okSN && !okCN {
+				tsr.Status.Status = monitoring.TechSupportJobStatus_Failed.String()
+				goto exit
+			}
+		}
+		tsr.Status.Status = monitoring.TechSupportJobStatus_Completed.String()
+		if err != nil {
+			log.Infof("No state found for object %s, cannot close context.", tsr.GetObjectMeta().Name)
+		}
+
+		// If we are executing these lines, tsr is guaranteed to be of techsupport kind.
+		state.(*statemgr.TechSupportRequestState).CancelFunc()
+	}
+
+exit:
 	return r.stateMgr.UpdateTechSupportObject(tsr)
 }
 
@@ -315,5 +338,6 @@ func (r *TechSupportRPCServer) UpdateTechSupportResult(ctx context.Context, para
 		log.Errorf("Error updating status for request %+v: %+v", nodeTSR, err)
 		return nil, fmt.Errorf("Error updating status for request %s", nodeName)
 	}
+
 	return &tsproto.UpdateTechSupportResultResponse{Status: "ok"}, nil
 }

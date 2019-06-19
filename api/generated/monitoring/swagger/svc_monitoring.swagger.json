@@ -14586,7 +14586,8 @@
             "Scheduled",
             "Running",
             "Completed",
-            "Failed"
+            "Failed",
+            "TimeOut"
           ],
           "default": "Scheduled"
         },
@@ -14673,7 +14674,8 @@
             "Scheduled",
             "Running",
             "Completed",
-            "Failed"
+            "Failed",
+            "TimeOut"
           ],
           "default": "Scheduled"
         },
