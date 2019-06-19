@@ -77,7 +77,6 @@ mputrace_cfg_inst_init (mputrace_cfg_inst_t *cfg_inst)
     cfg_inst->ctrl.watch_pc = 0;
     cfg_inst->capture.table_key = false;
     cfg_inst->capture.instructions = false;
-    cfg_inst->settings.reset = true;
     cfg_inst->settings.wrap = false;
     cfg_inst->settings.trace_addr = 0;
     cfg_inst->settings.trace_size = 4096;
