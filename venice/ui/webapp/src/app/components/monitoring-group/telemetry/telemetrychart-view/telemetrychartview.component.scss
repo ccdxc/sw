@@ -1,0 +1,29 @@
+@import 'src/global-mixins';
+
+.telemetrychartview-card {
+  position: relative;
+  margin: 10px;
+  width: 550px;
+  height: 340px;
+
+  .telemetrychartview-action-icon {
+    display: none;
+  }
+
+  &:hover .telemetrychartview-action-icon {
+    display: inline-block;
+  }
+}
+
+.telemetrychartview-action-icon {
+  font-size: 25px;
+  height: 36px;
+  width: 36px;
+  padding-left: 6px;
+  padding-top: 5px;
+
+  &:hover {
+    color: black;
+    cursor: pointer;
+  }
+}

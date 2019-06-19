@@ -1,8 +1,15 @@
-import { MetricTransform, TransformDataset, TransformDatasets } from './types';
+import { MetricTransform, TransformDataset, TransformDatasets, TransformNames } from './types';
 import { Utility } from '@app/common/Utility';
 import { sourceFieldKey } from '../utility';
 
-export class ColorTransform extends MetricTransform {
+interface ColorTransformConfig {
+  // This variable is shared by all color transforms
+  globalColorUseMap: { [color: string]: number };
+  // Maps from measurement-field to color used for that dataset
+  colors: { [key: string]: string};
+}
+
+export class ColorTransform extends MetricTransform<ColorTransformConfig> {
   public static allColors = [
     '#97b8df',
     '#61b3a0',
@@ -99,10 +106,10 @@ export class ColorTransform extends MetricTransform {
     // "#ffff00"
   ];
 
-  public static globalColorUseMap = {};
+  public static globalColorUseMap: { [color: string]: number } = {};
   // Maps from measurement-field to color used for that dataset
   colors: { [key: string]: string} = {};
-  transformName = 'ColorTransform';
+  transformName = TransformNames.ColorTransform;
 
   public static getColor() {
     let color = this.allColors.find( (c) => {
@@ -179,6 +186,20 @@ export class ColorTransform extends MetricTransform {
     }
     this.colors = newColorsMap;
 
+  }
+
+  load(config: ColorTransformConfig) {
+    if (config  != null) {
+      ColorTransform.globalColorUseMap = config.globalColorUseMap;
+      this.colors = config.colors;
+    }
+  }
+
+  save(): ColorTransformConfig {
+    return {
+      globalColorUseMap: ColorTransform.globalColorUseMap,
+      colors: this.colors
+    };
   }
 
 }

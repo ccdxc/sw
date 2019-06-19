@@ -24,6 +24,7 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @Input() startTime: string = 'now - 24h';
   @Input() endTime: string = 'now';
+  @Input() selectedTimeRange: TimeRange;
   @Output() timeRange: EventEmitter<TimeRange> = new EventEmitter<TimeRange>();
 
   timeFormGroup: FormGroup;
@@ -79,12 +80,18 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy {
   endTimeCalendar: Date;
 
   ngOnInit() {
+    let startTime = this.startTime;
+    let endTime = this.endTime;
+    if (this.selectedTimeRange != null) {
+      startTime = this.selectedTimeRange.startTime.getString();
+      endTime = this.selectedTimeRange.endTime.getString();
+    }
     this.timeFormGroup = new FormGroup(
       {
-        startTime: new FormControl(this.startTime, [
+        startTime: new FormControl(startTime, [
           this.timeRangeInputValidator(KeywordUtility.getStartKeywords())]
         ),
-        endTime: new FormControl(this.endTime, [
+        endTime: new FormControl(endTime, [
           this.timeRangeInputValidator(KeywordUtility.getEndKeywords())]
         ),
       },

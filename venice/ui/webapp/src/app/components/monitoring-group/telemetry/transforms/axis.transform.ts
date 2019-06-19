@@ -1,4 +1,4 @@
-import { TransformGraphOptions, GraphTransform, TransformDataset } from './types';
+import { TransformGraphOptions, GraphTransform, TransformDataset, TransformNames } from './types';
 import { FormGroup, FormControl } from '@angular/forms';
 import { patternValidator } from '@sdk/v1/utils/validators';
 import { ChartYAxe, ChartOptions } from 'chart.js';
@@ -23,8 +23,8 @@ interface AxisFormInf {
 /**
  * Transforms the X and Y axis labels.
  */
-export class AxisTransform extends GraphTransform {
-  transformName = 'AxisTransform';
+export class AxisTransform extends GraphTransform<{}> {
+  transformName = TransformNames.AxisTransform;
 
   axisFormGroup: FormGroup = new FormGroup({
     xAxis: AxisTransform.CreateCommonAxisFormGroup(),
@@ -210,6 +210,13 @@ export class AxisTransform extends GraphTransform {
     } else if (previousUnit === 'Percent') {
       yAxisOptions.ticks.suggestedMax = 100;
     }
+  }
+
+  load(config: {}) {
+  }
+
+  save(): {} {
+    return {};
   }
 
 }

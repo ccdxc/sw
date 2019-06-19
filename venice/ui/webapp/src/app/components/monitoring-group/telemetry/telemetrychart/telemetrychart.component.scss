@@ -1,0 +1,14 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.telemetrychart-graph-option {
+  margin: 0px 10px 10px 10px;
+  cursor: pointer;
+}
+
+.telemetrychart-container {
+  height: 100%;
+  width: 100%;
+}

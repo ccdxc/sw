@@ -23,6 +23,8 @@
        class="dsbd-widgetheader-update-text" (click)="$event.stopPropagation();">
     {{ timeRange}}
   </div>
+  <ng-content select="[widget-options]"></ng-content>
+
   <div fxFlex="36px" class="dsbd-widgetheader-info" *ngIf="menuItems.length>0"
        (click)="$event.stopPropagation();">
     <mat-icon class="dsbd-widgetheader-morevert" [matMenuTriggerFor]="menu"

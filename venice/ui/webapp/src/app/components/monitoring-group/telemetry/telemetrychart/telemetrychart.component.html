@@ -1,0 +1,6 @@
+  <div fxFlex="100" fxLayout="column" class="telemetrychart-container">
+    <div fxFlex="auto" fxLayout="row">
+      <app-chart #pChart fxFlex="100" type="line" [options]="graphOptions" [data]="lineData"
+                 width="100%" height="100%" [responsive]="true"></app-chart>
+    </div>
+  </div>

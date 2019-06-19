@@ -588,7 +588,7 @@ export class MetricsUtility {
     return retData;
   }
 
-  public static findFieldIndex(cols, field) {
+  public static findFieldIndex(cols: string[], field: string) {
     return cols.findIndex((f) => {
       return f.toLowerCase().includes(field.toLowerCase());
     });

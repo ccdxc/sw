@@ -100,6 +100,7 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
     defaultDescription: 'Avg',
     hoverDescription: '',
     isPercentage: true,
+    scaleMin: 0,
     valueFormatter: LinegraphComponent.percentFormatter
   };
   memLineGraphStat: LineGraphStat = {
@@ -113,6 +114,7 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
     defaultDescription: 'Avg',
     hoverDescription: '',
     isPercentage: true,
+    scaleMin: 0,
     valueFormatter: LinegraphComponent.percentFormatter
   };
   storageLineGraphStat: LineGraphStat = {
@@ -126,6 +128,7 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
     defaultDescription: 'Avg',
     hoverDescription: '',
     isPercentage: true,
+    scaleMin: 0,
     valueFormatter: LinegraphComponent.percentFormatter
   };
   networkLineGraphStat: LineGraphStat = {
@@ -139,6 +142,7 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
     defaultDescription: 'Avg',
     hoverDescription: '',
     isPercentage: false,
+    scaleMin: 0,
     valueFormatter: (val) => {
       if (val) {
         return Utility.formatBytes(val, 2, 3);
@@ -316,16 +320,16 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
 
         // day average data
         if (MetricsUtility.resultHasData(this.avgDayData)) {
-          const index = this.avgDayData.series[0].columns.indexOf(fieldName);
+          const index = MetricsUtility.findFieldIndex(this.avgDayData.series[0].columns, fieldName) 
           lineGraph.defaultValue = Math.round(this.avgDayData.series[0].values[0][index]);
         }
 
         // currentData
         if (MetricsUtility.resultHasData(this.currentData)) {
-          let index = this.currentData.series[0].columns.indexOf(fieldName);
+          let index = MetricsUtility.findFieldIndex(this.currentData.series[0].columns, fieldName) 
           barGraph.percent = this.currentData.series[0].values[0][index];
           if (MetricsUtility.resultHasData(this.prevData)) {
-            index = this.prevData.series[0].columns.indexOf(fieldName);
+            index = MetricsUtility.findFieldIndex(this.prevData.series[0].columns, fieldName) 
             const prev = this.prevData.series[0].values[0][index];
             barGraph.arrowDirection = MetricsUtility.getStatArrowDirection(prev, barGraph.percent);
           } else {
@@ -364,8 +368,8 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
 
       // day average data
       if (MetricsUtility.resultHasData(this.avgDayData)) {
-        const index1 = this.avgDayData.series[0].columns.indexOf(fieldName1);
-        const index2 = this.avgDayData.series[0].columns.indexOf(fieldName2);
+        const index1 = MetricsUtility.findFieldIndex(this.avgDayData.series[0].columns, fieldName1) 
+        const index2 = MetricsUtility.findFieldIndex(this.avgDayData.series[0].columns, fieldName2) 
 
         const data1 = Math.round(this.avgDayData.series[0].values[0][index1]);
         const data2 = Math.round(this.avgDayData.series[0].values[0][index2]);

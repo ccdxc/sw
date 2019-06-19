@@ -3,7 +3,20 @@ import { ITelemetry_queryMetricsResultSeries, ITelemetry_queryMetricsQueryResult
 import { ChartData as ChartJSData, ChartDataSets as ChartJSDataSets, ChartOptions } from 'chart.js';
 import { Observer } from 'rxjs';
 import { Utility } from '@app/common/Utility';
-import { MetricsMetadata, MetricField } from '@sdk/metrics/generated/metadata';
+import { MetricsMetadata } from '@sdk/metrics/generated/metadata';
+import { DataTransformConfig  } from '@app/models/frontend/shared/userpreference.interface';
+
+export enum TransformNames {
+  GroupByTime = 'GroupByTime',
+  AxisTransform = 'AxisTransform',
+  ColorTransform = 'ColorTransform',
+  DisplayLabelTransform = 'DisplayLabel',
+  FieldSelector = 'FieldSelector',
+  FieldValue = 'FieldValue',
+  GraphTitle = 'GraphTitle',
+  GroupBy = 'GroupBy',
+  LabelSelector = 'LabelSelector',
+}
 
 export interface ChartDataSets extends ChartJSDataSets {
   sourceID: string;
@@ -40,14 +53,18 @@ export interface TransformGraphOptions {
 
 export interface TransformDatasets extends Array<TransformDataset> {}
 
-export abstract class MetricTransform {
-  abstract transformName: string;
+export abstract class MetricTransform<T> {
+  abstract transformName: TransformNames;
 
   // Fields that will be populated by MetricSource
-  getTransform: (transformName: string) => MetricTransform;
-  reqMetrics: Observer<any>;
+  private reqMetrics: Observer<any>;
   measurement;
   fields;
+  getTransform: (transformName: string) => MetricTransform<any>;
+
+
+  abstract load(config: T);
+  abstract save(): T;
 
   // Hooks to be overridden
   onMeasurementChange() {}
@@ -71,8 +88,16 @@ export abstract class MetricTransform {
   }
 }
 
-export abstract class GraphTransform {
+export abstract class GraphTransform<T> {
   abstract transformName: string;
+
+  // Fields that will be populated by MetricSource
+  private reqRedraw: Observer<any>;
+
+
+  abstract load(config: T);
+  abstract save(): T;
+
 
   // Hooks to be overridden
   // Hook to set graph options after all datasets have been created for all results
@@ -81,6 +106,9 @@ export abstract class GraphTransform {
   // Utility functions
   getFieldData(measurement, field) {
     return MetricsMetadata[measurement].fields.find(x => x.name === field);
+  }
+  requestRedraw() {
+    this.reqRedraw.next(true);
   }
 }
 
@@ -105,10 +133,10 @@ export class DataSource {
   id: string = Utility.s4();
 
   // List of transforms registered
-  transforms: MetricTransform[] = [];
+  transforms: MetricTransform<any>[] = [];
 
   // Map from transform name to the instance
-  transformMap: { [transformName: string]: MetricTransform };
+  transformMap: { [transformName: string]: MetricTransform<any> };
 
   // Observer that will be taken in during construction. Will emit
   // whenever it detects we need to execute a new metric request or change the rendering options.
@@ -147,23 +175,44 @@ export class DataSource {
     this.reqMetrics.next(true);
   }
 
-  getTransform(transformName: string): MetricTransform {
+  getTransform(transformName: string): MetricTransform<any> {
     return this.transformMap[transformName];
   }
 
-  constructor(reqMetrics: Observer<any>, transforms: MetricTransform[] = []) {
+  constructor(reqMetrics: Observer<any>, transforms: MetricTransform<any>[] = []) {
     this.transforms = transforms;
     this.reqMetrics = reqMetrics;
     this.transformMap = {};
     // For each transform we populate fields so that transforms can see
     // the state of other transforms, and can request metrics.
     transforms.forEach( (t) => {
-      t.reqMetrics = reqMetrics;
+      // Casting to any so we can set private variables
+      (<any>t).reqMetrics = reqMetrics;
       this.transformMap[t.transformName] = t;
       t.getTransform = (name: string) => {
         return this.getTransform(name);
       };
     });
+  }
+
+  load(config: DataTransformConfig) {
+    this.measurement = config.measurement;
+    this.fields = config.fields;
+    this.transforms.forEach( (t) => {
+      t.load(config.transforms[t.transformName]);
+    });
+  }
+
+  save(): DataTransformConfig {
+    const ret = {};
+    this.transforms.forEach( (t) => {
+      ret[t.transformName] = t.save();
+    });
+    return {
+      transforms: ret,
+      measurement: this.measurement,
+      fields: this.fields,
+     };
   }
 
   transformQuery(opts: TransformQuery) {

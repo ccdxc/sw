@@ -1,0 +1,163 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.telemetrychartedit-graph-option {
+  margin: 0px 10px 10px 10px;
+  cursor: pointer;
+
+  .telemetrychartedit-graph-option-chart {
+    opacity: 0.6;
+  }
+
+  &:hover .telemetrychartedit-graph-option-chart {
+    opacity: 1;
+  }
+}
+
+.telemetrychartedit-graph-option-text {
+  text-align: center;
+}
+
+.telemetrychartedit-graph-option-chart {
+  margin: 10px 50px;
+}
+
+.telemetrychartedit-radio-buttons {
+  @include global-mat-radio(12px);
+}
+
+.telemetrychartedit-input {
+  margin-left: 5px;
+  margin-top: 10px;
+}
+
+.telemetrychartedit-explore-bottom {
+  border-top: 1px solid #dddddd
+}
+
+.telemetrychartedit-container {
+  height: 100%;
+  margin: 0px 10px 10px 10px;
+}
+
+.telemetrychartedit-checkbox-container {
+  margin-bottom: 10px;
+}
+
+.telemetrychartedit-checkbox {
+  font-weight: 400;
+  margin-bottom: 0px;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  outline: none;
+
+  .ui-chkbox-box {
+    outline: none;
+    box-shadow: none;
+
+    &.ui-state-active {
+      border: 1px solid #86a8d7 !important;
+      background: #86a8d7 !important;
+      color: #FFFFFF;
+    }
+  }
+}
+
+.telemetrychartedit-page {
+  @include primary-font(16px);
+}
+
+.telemetrychartedit-header {
+  @include primary-font(18px);
+}
+
+.telemetrychartedit-data-sources {
+  margin: 10px;
+  overflow: hidden;
+}
+
+.telemetrychartedit-data-border-top {
+  border-top: 1px solid #dddddd;
+}
+
+.telemetrychartedit-data-border-bottom {
+  border-bottom: 1px solid #dddddd;
+}
+
+.telemetrychartedit-data-source {
+  border-radius: 10px;
+  border: solid 1px #97b8df;
+  padding: 0px 10px;
+  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.3);
+}
+
+.telemetrychartedit-data-source-view {
+  .telemetrychartedit-source-action-buttons {
+    display: none !important;
+
+    mat-icon {
+      color: #676763;
+    }
+  }
+
+  &:hover {
+    // background: #f0f0f0;
+    background: rgba(244, 249, 255, 1);
+    cursor: pointer;
+    z-index: 10;
+
+    .telemetrychartedit-source-action-buttons {
+      display: inherit !important;
+    }
+  }
+}
+
+.telemetrychartedit-source-colors {
+  margin: 0px 15px 0px 20px;
+  min-width: 10px;
+}
+
+.telemetrychartedit-color-icon {
+  height: 10px;
+  width: 10px;
+  border-radius: 50%;
+}
+
+.telemetrychartedit-field-selector-title {
+  margin-top: 9px;
+}
+
+.telemetrychartedit-view-transforms {
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.telemetrychartedit-field-transforms {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.telemetrychartedit-field-selector-edit {
+  margin-right: 20px;
+}
+
+.telemetrychartedit-name {
+  margin: $vertical-gutter $horizontal-gutter;
+  height: 30px !important;
+}
+
+.telemetrychartedit-graph-title {
+  font-size: 20px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.telemetrychartedit-graph-transforms-container {
+  margin: 10px 20px;
+}

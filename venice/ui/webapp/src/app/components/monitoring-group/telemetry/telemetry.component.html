@@ -1,282 +1,49 @@
-<app-pagebody>
-  <div fxFlex="auto" fxLayout="column" class="telemetry-page">
-    <div fxFlex="50%" [style.min-height]="'300px'" fxLayout="row" class="telemetry-explore-top">
-      <ng-container *ngTemplateOutlet="graph"></ng-container>
-    </div>
-    <div fxFlex="auto" fxLayout="column" class="telemetry-explore-bottom">
-      <mat-tab-group fxFlex="auto" [disableRipple]="true" [(selectedIndex)]="activeTabNumber"
-                     dynamicHeight>
-        <mat-tab label="DATA SOURCES">
-          <div fxFlex [style.height]="'100%'">
-            <!-- Using ngIf here to force a redraw of this tabs contents
-                  Otherwise, all elements that have an animation on them render with no height -->
-            <ng-container *ngIf="activeTabNumber === 0">
-              <ng-container *ngTemplateOutlet="dataSource"></ng-container>
-            </ng-container>
-          </div>
-        </mat-tab>
-        <!-- If we can add a source, then there is at least one
-              data source selected so we allow changing graph options -->
-        <!-- Currently none of the graph options are configuarble, commenting out for now -->
-        <!-- <mat-tab label="GRAPH OPTIONS" [disabled]="!canChangeGraphOptions()">
-          <div fxFlex [style.height]="'100%'">
-            <ng-container *ngTemplateOutlet="GraphOptionsTab"></ng-container>
-          </div>
-        </mat-tab> -->
-      </mat-tab-group>
+<app-pagebody [icon]="bodyIcon" header="Telemetry">
+  <div fxFlex fxLayout="row" fxLayoutAlign="center center" pagebody-options>
+    <div fxFlex></div>
+    <app-timerange fxFlex="nogrow" [selectedTimeRange]="selectedTimeRange"
+                   (timeRange)="setTimeRange($event)"></app-timerange>
+  </div>
+
+
+  <div *ngIf="!inEditMode; else editView" class="telemetry-container">
+    <div [@loaded] *ngIf="preferenceLoaded" fxFlex fxLayout="row wrap" fxLayoutGap="20px">
+      <ng-container *ngFor="let item of telemetryPref.items">
+        <app-telemetrychartview *ngIf="item.type === 'chart'" class="telemetry-chart-item"
+                                fxFlex="nogrow"
+                                [selectedTimeRange]="selectedTimeRange"
+                                [chartConfig]="telemetryPref.configuredGraphs[item.graphID]"
+                                (editReq)="editChart(item.graphID)"
+                                (deleteReq)="deleteChart(item.graphID)">
+        </app-telemetrychartview>
+      </ng-container>
     </div>
   </div>
 </app-pagebody>
 
-<ng-template #graph>
-  <div fxFlex="100" fxLayout="column">
-    <div fxFlex="auto" fxLayout="row">
-      <app-chart #pChart fxFlex="100" type="line" [options]="graphOptions" [data]="lineData"
-                 width="100%" height="100%" [responsive]="true"></app-chart>
-    </div>
-    <div fxFlex="50px" class="telemetry-graph-options" fxLayout="row"
-         fxLayoutAlign="stretch center">
-      <!-- <div style="margin: 0px 10px" fxFlex="none">Graph Type:</div>
-      <p-dropdown fxFlex="none" [options]="graphTypeOptions" [(ngModel)]="selectedGraphType"
-                  (onChange)="graphTypeChange()"></p-dropdown> -->
-      <div fxFlex></div>
-      <!-- <div style="margin: 0px 10px" fxFlex="none">Past 24hrs</div> -->
-      <div style="margin: 0px 10px" fxFlex="none">
-        <app-timerange (timeRange)="setTimeRange($event)"></app-timerange>
+
+
+<ng-template #editView>
+  <app-telemetrychartedit [chartConfig]="telemetryPref.configuredGraphs[editGraphID]"
+                          [selectedTimeRange]="selectedTimeRange"
+                          (saveChartReq)="onChartSave($event)"
+                          (cancelEdit)="onEditCancel()">
+  </app-telemetrychartedit>
+</ng-template>
+
+<ng-template #missingGraphs>
+  <div fxLayout="row"
+       fxLayoutAlign="center stretch">
+    <div fxFlex="50%" fxLayout="column" class="sgpolicy-overlay-content">
+      <div fxFlex='20%'></div>
+      <div fxFlex="none" class="sgpolicy-overlay-text">
+        You don't have any charts yet.
+      </div>
+      <div fxFlex="5%"></div>
+      <div fxFlex="none" fxLayout="row" fxLayoutAlign="center stretch" fxLayoutGap="40px">
+        <button fxFlex="none" class="global-button-primary sgpolicy-overlay-button"
+                (click)="editChart()">CREATE CHART</button>
       </div>
     </div>
-  </div>
-</ng-template>
-
-<ng-template #dataSource>
-  <div fxFlex="100" fxLayout="column" class="telemetry-data-sources">
-    <div fxFlex="none" fxLayout="row">
-      <div class="global-button-primary telemetry-button"
-           [ngClass]="canAddDataSource() ? '' : 'global-button-disabled'"
-           (click)="addDataSourceClick()">
-        ADD SOURCE
-      </div>
-    </div>
-    <div fxFlex="10px"></div>
-    <div fxFlex="auto" fxLayout="column" fxLayoutGap="10px" style="margin-left:10px">
-      <div fxFlex="auto" fxLayout="column" *ngFor="let source of dataSources; let index = index"
-           [@slideInOut] class="telemetry-data-source"
-           (click)="index !== selectedDataSourceIndex ? viewSourceClick(index) : ''"
-           [ngClass]="index === selectedDataSourceIndex ? 'telemetry-data-source-edit' : 'telemetry-data-source-view'">
-        <div fxFlex='10px'></div>
-        <div fxFlex="auto" fxLayout="column" [@slideInOut]
-             *ngIf="index === selectedDataSourceIndex">
-          <ng-container
-                        *ngTemplateOutlet="EditSource; context: { $implicit: source, index: index }">
-          </ng-container>
-        </div>
-        <div fxFlex="auto" fxLayout="column" [@slideInOut]
-             *ngIf="index !== selectedDataSourceIndex">
-          <ng-container
-                        *ngTemplateOutlet="ViewSource; context: { $implicit: source, index: index }">
-          </ng-container>
-        </div>
-        <div fxFlex='10px'></div>
-      </div>
-    </div>
-  </div>
-</ng-template>
-
-<ng-template #ViewSource let-source let-index="index">
-  <div fxFlex="auto" fxLayout="row">
-    <div fxFlex="none" fxLayout="row" fxLayoutGap="5px">
-      <div fxFlex="none" [matTooltip]="getMeasurementMetadata(source.measurement).description">
-        {{ getMeasurementMetadata(source.measurement).displayName }} </div>
-      <div fxFlex="none"> - </div>
-      <div fxFlex="none" *ngFor="let field of source.fields; let last = last;"
-           [matTooltip]="getFieldMetadata(source.measurement, field).description">
-        {{ !last && source.fields.length > 0 ? getFieldMetadata(source.measurement, field).displayName + ',' : getFieldMetadata(source.measurement, field).displayName }}
-      </div>
-    </div>
-    <div fxFlex="15px"></div>
-    <div fxFlex="nogrow" fxLayout="row" fxLayoutGap="10px" class="telemetry-view-transforms">
-      <ng-container *ngFor="let t of source.transforms" [ngSwitch]="t.transformName">
-
-        <ng-container *ngSwitchCase="'GroupBy'">
-          <ng-container
-                        *ngTemplateOutlet="GroupByView; context:{transform: t}">
-          </ng-container>
-        </ng-container>
-
-        <ng-container *ngSwitchCase="'FieldSelector'">
-          <ng-container
-                        *ngTemplateOutlet="FieldSelectorView; context:{transform: t}">
-          </ng-container>
-        </ng-container>
-
-        <ng-container *ngSwitchCase="'LabelSelector'">
-          <ng-container
-                        *ngTemplateOutlet="LabelSelectorView; context:{transform: t}">
-          </ng-container>
-        </ng-container>
-
-      </ng-container>
-    </div>
-    <div fxFlex="auto"></div>
-
-    <!-- COLOR TRANSFORM -->
-    <div fxFlex="none" fxLayout="row" fxLayoutGap="5px" fxLayoutAlign="center center"
-         class="telemetry-source-colors">
-      <div fxFlex="none"
-           *ngFor="let key of getObjectKeys(source.getTransform('ColorTransform').colors)"
-           class="telemetry-color-icon"
-           [style.background-color]="source.getTransform('ColorTransform').colors[key]"></div>
-    </div>
-
-    <div fxFlex="none" fxLayoutGap="10px" class="telemetry-source-action-buttons">
-      <mat-icon [matTooltip]="'Edit Source'" class="telemetry-edit-icon"
-                fxFlex="nogrow" (click)="viewSourceClick(index)">
-        edit
-      </mat-icon>
-      <mat-icon [matTooltip]="'Delete Source'" class="telemetry-edit-icon"
-                fxFlex="nogrow" (click)="deleteSourceClick($event, index)">
-        delete
-      </mat-icon>
-    </div>
-  </div>
-</ng-template>
-
-
-<ng-template #EditSource let-source>
-  <div fxFlex="none">Measurement:</div>
-  <mat-radio-group fxFlex="none" fxLayout="row wrap" fxLayoutAlign="start center"
-                   fxLayoutGap="20px" class="telemetry-input telemetry-radio-buttons"
-
-                   [(ngModel)]="source.measurement">
-    <mat-radio-button fxFlex="250px" color="primary" [disableRipple]="true" class=""
-                      *ngFor="let option of measurements"
-                      [appErrorTooltip]="option.description"
-                      [value]="option.name">
-      {{option.displayName}}
-    </mat-radio-button>
-  </mat-radio-group>
-  <div fxFlex="none" fxLayout="column" [@fastSlideInOut] *ngIf="source.measurement != null">
-    <div fxFlex="none">Fields:</div>
-    <div fxFlex="none" fxLayout="row wrap" fxLayoutAlign="start center" fxLayoutGap="20px"
-         class="telemetry-input">
-      <ng-container *ngFor="let option of metricsMetadata[source.measurement].fields">
-        <p-checkbox fxFlex="200px" class="telemetry-checkbox-container"
-                    *ngIf="option.baseType !== 'string'"
-                    styleClass="telemetry-checkbox" labelStyleClass="telemetry-checkbox"
-                    name="fieldSelection" [value]="option.name" [label]="option.displayName"
-                    [appErrorTooltip]="option.description"
-                    [(ngModel)]="source.fields"></p-checkbox>
-
-      </ng-container>
-    </div>
-    <div [@fastSlideInOut] *ngIf="source.fields.length != 0" fxFlex="none" fxLayout="column">
-      <div fxFlex="10px"></div>
-
-      <div fxFlex="none" fxLayout="row wrap" fxLayoutAlign="start center">
-        <!-- Field selector and label selector are always on their own row -->
-        <ng-container *ngFor="let t of source.transforms" [ngSwitch]="t.transformName">
-
-          <ng-container *ngSwitchCase="'FieldSelector'">
-            <ng-container *ngTemplateOutlet="FieldSelectorEdit; context:{transform: t}">
-            </ng-container>
-          </ng-container>
-
-          <ng-container *ngSwitchCase="'LabelSelector'">
-            <ng-container *ngTemplateOutlet="LabelSelectorEdit; context:{transform: t}">
-            </ng-container>
-          </ng-container>
-
-        </ng-container>
-      </div>
-
-      <div fxFlex="5px"></div>
-
-      <div fxFlex="none" fxLayout="row wrap" fxLayoutAlign="start center">
-        <!-- Rest of the transforms -->
-        <ng-container *ngFor="let t of source.transforms" [ngSwitch]="t.transformName">
-
-          <ng-container *ngSwitchCase="'GroupBy'">
-            <ng-container *ngTemplateOutlet="GroupByEdit; context:{transform: t}">
-            </ng-container>
-          </ng-container>
-
-        </ng-container>
-      </div>
-
-      <div fxFlex="10px"></div>
-    </div>
-  </div>
-</ng-template>
-
-<ng-template #GraphOptionsTab>
-
-</ng-template>
-
-
-<!-- -------------- TRANSFORMS -------------- -->
-<!-- Group By -->
-<ng-template #GroupByEdit let-transform="transform">
-  <div *ngIf="transform.groupByOptions != null && transform.groupByOptions.length > 1"
-       fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center">
-    <div fxFlex="nogrow">Group by: </div>
-    <div fxFlex="50px"></div>
-    <p-dropdown appendTo="body" fxFlex="290px" [options]="transform.groupByOptions"
-                [(ngModel)]="transform.groupBy"></p-dropdown>
-  </div>
-</ng-template>
-
-<ng-template #GroupByView let-transform="transform">
-  <div *ngIf="transform.groupBy != null" fxFlex="none" fxLayout="row" fxLayoutGap="5px"
-       fxLayoutAlign="start center">
-    <div fxFlex="none">Group by:</div>
-    <div fxFlex="none" class="telemetry-wrap">{{ transform.groupBy }} </div>
-  </div>
-</ng-template>
-
-
-<!-- Field Selector -->
-<ng-template #FieldSelectorEdit let-transform="transform">
-  <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start"
-       class="telemetry-field-selector-edit">
-    <div fxFlex="nogrow" class="telemetry-field-selector-title">Filter by fields: </div>
-    <div fxFlex="5px"></div>
-    <app-repeater fxFlex="auto"
-                  [data]="transform.fieldData"
-                  [formArray]="transform.formArray"
-                  [keyDropdownFilter]="true"
-                  (repeaterValues)="transform.valueChange($event)"
-                  [buildValuePlaceholder]="transform.buildFieldValuePlaceholder">
-    </app-repeater>
-  </div>
-</ng-template>
-
-<ng-template #FieldSelectorView let-transform="transform">
-  <div *ngIf="transform.stringForm.length > 0" fxFlex="none" fxLayout="row" fxLayoutGap="5px"
-       fxLayoutAlign="start center">
-    <div fxFlex="none">Filter:</div>
-    <div class="telemetry-field-transforms" fxFlex="none" class="telemetry-wrap">
-      {{ transform.stringForm }} </div>
-  </div>
-</ng-template>
-
-<!-- Label Selector -->
-<ng-template #LabelSelectorEdit let-transform="transform">
-  <div *ngIf="transform.labelData.length > 0" fxFlex="nogrow" fxLayout="row"
-       fxLayoutAlign="start center">
-    <div fxFlex="nogrow">Filter by labels: </div>
-    <div fxFlex="5px"></div>
-    <app-repeater
-                  [data]="transform.labelData"
-                  (repeaterValues)="transform.valueChange($event)"
-                  [formArray]="transform.formArray">
-    </app-repeater>
-  </div>
-</ng-template>
-
-<ng-template #LabelSelectorView let-transform="transform">
-  <div *ngIf="transform.stringForm.length > 0" fxFlex="nogrow" fxLayout="row" fxLayoutGap="5px"
-       fxLayoutAlign="start center">
-    <div fxFlex="nogrow">Labels:</div>
-    <div fxFlex="nogrow">{{ transform.stringForm }} </div>
   </div>
 </ng-template>

@@ -1,0 +1,25 @@
+<div>
+  <div class="telemetrychartview-card">
+    <app-basecard [title]="title"
+                  [themeColor]="themeColor"
+                  cardState="READY"
+                  [menuItems]="menuItems"
+                  class="">
+      <div header-options>
+        <mat-icon matTooltip="Edit chart"
+                  class="telemetrychartview-action-icon "
+                  (click)="editClick()">edit</mat-icon>
+
+        <mat-icon matTooltip="Delete chart"
+                  class="telemetrychartview-action-icon "
+                  (click)="deleteClick()">delete</mat-icon>
+      </div>
+      <div [@fade] fxFlex="100%" fxLayout="row" [style.margin-right]="'5px'">
+        <app-telemetrychart fxFlex #chart
+                            [chartConfig]="chartConfig"
+                            [inEditMode]="inEditMode"
+                            [selectedTimeRange]="selectedTimeRange"></app-telemetrychart>
+      </div>
+    </app-basecard>
+  </div>
+</div>

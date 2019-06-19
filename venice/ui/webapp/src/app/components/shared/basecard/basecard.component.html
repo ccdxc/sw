@@ -17,7 +17,12 @@
     <!-- Icon bar -->
     <app-dsbdwidgetheader fxFlex="45px" fxLayout="row" [title]="title" [iconFillColor]="themeColor"
                           [lastUpdateTime]="lastUpdateTime" [timeRange]='timeRange' [icon]="icon"
-                          [menuItems]="menuItems"></app-dsbdwidgetheader>
+                          [menuItems]="menuItems">
+
+      <div widget-options>
+        <ng-content select="[header-options]"></ng-content>
+      </div>
+    </app-dsbdwidgetheader>
     <div class="basecard-foreground-content" fxFlex="auto" fxLayout="row">
       <ng-content fxFlex="100%"></ng-content>
     </div>

@@ -1,13 +1,16 @@
-import { MetricTransform, TransformQuery } from './types';
+import { MetricTransform, TransformQuery, TransformNames } from './types';
 import { RepeaterData, ValueType } from 'web-app-framework';
 import { MetricsMetadata } from '@sdk/metrics/generated/metadata';
 import { SearchUtil } from '@app/components/search/SearchUtil';
 import { Utility } from '@app/common/Utility';
-import { FormArray } from '@angular/forms';
+import { FormArray, FormControl } from '@angular/forms';
 import { debounceTime } from 'rxjs/operators';
 import { IFieldsRequirement } from '@sdk/v1/models/generated/telemetry_query';
 import { Subject } from 'rxjs';
 
+interface LabelSelectorTransformConfig {
+  selectedValues: any[];
+}
 
 /**
  * Modifies the telemetry query to include selector requirements
@@ -19,8 +22,8 @@ import { Subject } from 'rxjs';
  * During transform query, we expand these label requirements
  * into name, operator, objName requirements.
  */
-export class LabelSelectorTransform extends MetricTransform {
-  transformName = 'LabelSelector';
+export class LabelSelectorTransform extends MetricTransform<LabelSelectorTransformConfig> {
+  transformName = TransformNames.LabelSelector;
 
   labelData: RepeaterData[] = [];
   currValue: any[] = [];
@@ -120,6 +123,27 @@ export class LabelSelectorTransform extends MetricTransform {
       };
     });
     opts.query.selector.requirements.push(...reqs);
+  }
+
+  load(config: LabelSelectorTransformConfig) {
+    if (config == null) {
+      return;
+    }
+    const values = config.selectedValues;
+    // Remove all old controls
+    while (this.formArray.length !== 0) {
+      this.formArray.removeAt(0);
+    }
+    values.forEach( (val) => {
+      this.formArray.push(new FormControl(val));
+    });
+    // Form array subscription should run and update the rest of the variables
+  }
+
+  save(): LabelSelectorTransformConfig {
+    return {
+      selectedValues: this.currValue,
+    };
   }
 }
 

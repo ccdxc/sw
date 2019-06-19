@@ -1,4 +1,4 @@
-import { MetricTransform, TransformDataset, TransformMetricData, TransformQuery } from './types';
+import { MetricTransform, TransformDataset, TransformMetricData, TransformQuery, TransformNames } from './types';
 import { ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { ITelemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
 
@@ -12,12 +12,13 @@ export interface QueryMap {
   [key: string]: (res: ITelemetry_queryMetricsQuerySpec) => void;
 }
 
+
 /**
  * Modifies the dataset so that they use the displayName from the
  * field metadata instead of name for the label.
  */
-export class FieldValueTransform extends MetricTransform {
-  transformName = 'FieldValue';
+export class FieldValueTransform extends MetricTransform<{}> {
+  transformName = TransformNames.FieldValue;
 
   constructor(protected queryTransformMap: QueryMap, protected valueTransformMap: ValueMap) {
     super();
@@ -37,6 +38,11 @@ export class FieldValueTransform extends MetricTransform {
     if (funcTransform != null) {
       funcTransform(opts.result);
     }
+  }
+
+  load(config: {}) {}
+  save(): {} {
+    return null;
   }
 }
 

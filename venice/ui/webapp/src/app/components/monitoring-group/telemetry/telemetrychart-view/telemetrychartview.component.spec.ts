@@ -13,7 +13,7 @@ import { SharedModule } from '@components/shared/shared.module';
 import { PrimengModule } from '@lib/primeng.module';
 import { ConfirmationService } from 'primeng/primeng';
 import { WidgetsModule } from 'web-app-framework';
-import { TelemetryComponent } from './telemetry.component';
+import { TelemetrychartviewComponent } from './telemetrychartview.component';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { ControllerService } from '@app/services/controller.service';
 import { configureTestSuite } from 'ng-bullet';
@@ -21,9 +21,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { AuthService } from '@app/services/auth.service';
 import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
-import { TelemetrycharteditComponent } from './telemetrychart-edit/telemetrychartedit.component';
-import { TelemetrychartComponent } from './telemetrychart/telemetrychart.component';
-import { TelemetrychartviewComponent } from './telemetrychart-view/telemetrychartview.component';
+import { TelemetrychartComponent } from '../telemetrychart/telemetrychart.component';
 
 
 @Component({
@@ -31,15 +29,13 @@ import { TelemetrychartviewComponent } from './telemetrychart-view/telemetrychar
 })
 class DummyComponent { }
 
-describe('TelemetryComponent', () => {
-  let component: TelemetryComponent;
-  let fixture: ComponentFixture<TelemetryComponent>;
+describe('TelemetrychartviewComponent', () => {
+  let component: TelemetrychartviewComponent;
+  let fixture: ComponentFixture<TelemetrychartviewComponent>;
 
   configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [
-        TelemetryComponent,
-        TelemetrycharteditComponent,
         TelemetrychartComponent,
         TelemetrychartviewComponent,
         DummyComponent,
@@ -74,7 +70,7 @@ describe('TelemetryComponent', () => {
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(TelemetryComponent);
+    fixture = TestBed.createComponent(TelemetrychartviewComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
