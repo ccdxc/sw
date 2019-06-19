@@ -11,7 +11,7 @@ struct phv_ p;
 
 vnic_tx_stats:
     tbladd.e        d.vnic_tx_stats_d.out_packets, 1
-    tbladd.f        d.vnic_tx_stats_d.out_packets, k.capri_p4_intrinsic_packet_len
+    tbladd.f        d.vnic_tx_stats_d.out_bytes, k.capri_p4_intrinsic_packet_len
 
 /*****************************************************************************/
 /* error function                                                            */

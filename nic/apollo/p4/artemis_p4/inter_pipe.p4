@@ -126,6 +126,7 @@ action ingress_to_uplink() {
 
 action add_p4_to_arm_header() {
     add_header(p4_to_arm);
+    modify_field(p4_to_arm.local_vnic_tag, vnic_metadata.vpc_id);
     modify_field(p4_to_arm.packet_len, capri_p4_intrinsic.packet_len);
     modify_field(p4_to_arm.flow_hash, p4i_i2e.entropy_hash);
     modify_field(offset_metadata.l2_1, offset_metadata.l2_1);

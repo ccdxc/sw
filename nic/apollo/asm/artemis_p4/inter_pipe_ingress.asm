@@ -193,6 +193,7 @@ ingress_to_arm:
                         ARTEMIS_CPU_FLAGS_DIRECTION_BIT_POS
     phvwr           p.p4_to_arm_flags, r1
     phvwr           p.p4_to_arm_packet_len, k.capri_p4_intrinsic_packet_len
+    phvwr           p.p4_to_arm_local_vnic_tag, k.vnic_metadata_vpc_id
     phvwr           p.p4_to_arm_flow_hash, k.p4i_i2e_entropy_hash
     phvwr           p.p4_to_arm_payload_offset, k.offset_metadata_payload_offset
     b               ingress_to_classic_nic_common

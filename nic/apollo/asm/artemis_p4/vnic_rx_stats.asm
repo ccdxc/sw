@@ -11,7 +11,7 @@ struct phv_ p;
 
 vnic_rx_stats:
     tbladd.e        d.vnic_rx_stats_d.in_packets, 1
-    tbladd.f        d.vnic_rx_stats_d.in_packets, k.capri_p4_intrinsic_packet_len
+    tbladd.f        d.vnic_rx_stats_d.in_bytes, k.capri_p4_intrinsic_packet_len
 
 /*****************************************************************************/
 /* error function                                                            */
