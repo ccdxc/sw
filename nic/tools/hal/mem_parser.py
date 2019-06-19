@@ -95,6 +95,15 @@ def check_max_usage(sz):
         if pipeline == "iris":
             if sz > (2 << 30): # 2 Gigabyte
                 return -1
+        elif pipeline == "apollo":
+            if sz > (6 << 30): # 6 Gigabyte
+                return -1
+        elif pipeline == "artemis":
+            if sz > (6 << 30): # 6 Gigabyte
+                return -1
+        else:
+            print "Unknown pipeline. Not enforcing size check"
+
     return 0
 
 def convert_size(sz):
@@ -122,7 +131,10 @@ def parse_file():
             mf = long(1)
             mv = long(0)
             mem_type = e['size']
-            s = size_str_to_bytes(mem_type)
+            if e.get('base_region') is not None:
+                s = 0
+            else:
+                s = size_str_to_bytes(mem_type)
             if s == -1:
                 print('Invalid size specified for region %s', n)
                 return -1
