@@ -35,6 +35,16 @@ func (m *LbPolicyList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *NetworkInterfaceList) MakeKey(prefix string) string {
+	obj := NetworkInterface{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *NetworkInterfaceList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *NetworkList) MakeKey(prefix string) string {
 	obj := Network{}
 	return obj.MakeKey(prefix)
@@ -67,6 +77,12 @@ func (m *VirtualRouterList) MakeURI(ver, prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgLbPolicyWatchHelper) MakeKey(prefix string) string {
 	obj := LbPolicy{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgNetworkInterfaceWatchHelper) MakeKey(prefix string) string {
+	obj := NetworkInterface{}
 	return obj.MakeKey(prefix)
 }
 
@@ -127,6 +143,48 @@ func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) Clone(into interface{}) (interfa
 
 // Default sets up the defaults for the object
 func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgNetworkInterfaceWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgNetworkInterfaceWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgNetworkInterfaceWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgNetworkInterfaceWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgNetworkInterfaceWatchHelper))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgNetworkInterfaceWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgNetworkInterfaceWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgNetworkInterfaceWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgNetworkInterfaceWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgNetworkInterfaceWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgNetworkInterfaceWatchHelper_WatchEvent))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgNetworkInterfaceWatchHelper_WatchEvent) Defaults(ver string) bool {
 	return false
 }
 
@@ -278,6 +336,27 @@ func (m *LbPolicyList) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *NetworkInterfaceList) Clone(into interface{}) (interface{}, error) {
+	var out *NetworkInterfaceList
+	var ok bool
+	if into == nil {
+		out = &NetworkInterfaceList{}
+	} else {
+		out, ok = into.(*NetworkInterfaceList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*NetworkInterfaceList))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *NetworkInterfaceList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *NetworkList) Clone(into interface{}) (interface{}, error) {
 	var out *NetworkList
 	var ok bool
@@ -394,6 +473,65 @@ func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignor
 }
 
 func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
+func (m *AutoMsgNetworkInterfaceWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgNetworkInterfaceWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgNetworkInterfaceWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
+func (m *AutoMsgNetworkInterfaceWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgNetworkInterfaceWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	if m.Object != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgNetworkInterfaceWatchHelper_WatchEvent) Normalize() {
 
 	if m.Object != nil {
 		m.Object.Normalize()
@@ -598,6 +736,35 @@ func (m *LbPolicyList) Validate(ver, path string, ignoreStatus bool, ignoreSpec 
 }
 
 func (m *LbPolicyList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
+func (m *NetworkInterfaceList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *NetworkInterfaceList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *NetworkInterfaceList) Normalize() {
 
 	for _, v := range m.Items {
 		if v != nil {

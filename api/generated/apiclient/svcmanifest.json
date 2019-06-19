@@ -456,7 +456,8 @@
           "Network",
           "Service",
           "LbPolicy",
-          "VirtualRouter"
+          "VirtualRouter",
+          "NetworkInterface"
         ],
         "Properties": {
           "LbPolicy": {
@@ -467,6 +468,16 @@
           "Network": {
             "Scopes": [
               "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "list",
+              "watch"
+            ]
+          },
+          "NetworkInterface": {
+            "Scopes": [
+              "cluster"
             ],
             "RestMethods": [
               "get",

@@ -201,6 +201,7 @@ type CtrlerIntf interface {
 	UpdateInterface(intf *netproto.Interface) error                             // updates an interface
 	DeleteInterface(tn, ns, name string) error                                  // deletes an interface
 	ListInterface() []*netproto.Interface                                       // lists all interfaces
+	ListHwInterface() []*netproto.Interface                                     // lists all hw interfaces
 	CreateNatPool(np *netproto.NatPool) error                                   // creates nat pool
 	FindNatPool(meta api.ObjectMeta) (*netproto.NatPool, error)                 // finds a nat pool
 	ListNatPool() []*netproto.NatPool                                           // lists nat pools

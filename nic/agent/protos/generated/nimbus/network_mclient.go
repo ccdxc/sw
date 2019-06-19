@@ -19,11 +19,11 @@ import (
 )
 
 type NetworkReactor interface {
-	CreateNetwork(network *netproto.Network) error              // creates an Network
+	CreateNetwork(networkObj *netproto.Network) error           // creates an Network
 	FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) // finds an Network
 	ListNetwork() []*netproto.Network                           // lists all Networks
-	UpdateNetwork(network *netproto.Network) error              // updates an Network
-	DeleteNetwork(network, ns, name string) error               // deletes an Network
+	UpdateNetwork(networkObj *netproto.Network) error           // updates an Network
+	DeleteNetwork(networkObj, ns, name string) error            // deletes an Network
 }
 
 // WatchNetworks runs Network watcher loop

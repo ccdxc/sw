@@ -124,6 +124,20 @@ func (na *Nagent) ListInterface() []*netproto.Interface {
 	return intfList
 }
 
+// ListHwInterface returns the list of interfaces
+func (na *Nagent) ListHwInterface() []*netproto.Interface {
+	var intfList []*netproto.Interface
+	// lock the db
+	na.Lock()
+	defer na.Unlock()
+
+	for _, intf := range na.HwIfDB {
+		intfList = append(intfList, intf)
+	}
+
+	return intfList
+}
+
 // UpdateInterface updates an interface
 func (na *Nagent) UpdateInterface(intf *netproto.Interface) error {
 	// find the corresponding namespace

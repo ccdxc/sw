@@ -4,13 +4,13 @@ RestClientDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/generated
 
 # all the sources for which .pb.go is generated
 SRC := app.proto endpoint.proto copp.proto interface.proto ipsec.proto match.proto namespace.proto nat.proto network.proto port.proto qos.proto route.proto security.proto service.proto sgpolicy.proto secprofile.proto tenant.proto tunnel.proto tcp_proxy.proto vrf.proto
-NIMBUS_SRC := app.proto endpoint.proto namespace.proto  network.proto  security.proto sgpolicy.proto secprofile.proto tenant.proto
+NIMBUS_SRC := app.proto endpoint.proto namespace.proto  network.proto  security.proto sgpolicy.proto secprofile.proto tenant.proto interface.proto
 
 #these wont have _api.go generated
 FILTER_OUT_API := match.proto service.proto qos.proto copp.proto
 
 #additionally these wont have swagger spec generated
-FILTER_OUT_SWAGGER := interface.proto qos.proto copp.proto
+FILTER_OUT_SWAGGER := qos.proto copp.proto
 
 SRC1 :=  $(filter-out ${FILTER_OUT_API}, ${SRC})
 SRC2 :=  $(filter-out ${FILTER_OUT_SWAGGER}, ${SRC1})
@@ -45,7 +45,6 @@ ${RestClientDir}/%_client.go : %.proto
 	--grpc-gateway_out=templates=${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/templates/restclient/restclient.yml,log_dir=${RestClientDir}/tmp,logtostderr=false,v=7:${RestClientDir} $^
 	cd ${RestClientDir} && goimports -local "github.com/pensando/sw" -l -w $*_client.go
 
-# Generating documentation for interface.proto is ignnored, Currently we don't intened to expose enic and uplink creates directly to the user
 ${RestClientDir}/docs/swagger/%.swagger.json : %.proto
 	protoc -I. -I../../../../vendor -I${GOPATH}/src -I../../../../vendor/github.com/pensando/grpc-gateway/third_party -I../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 	-I../../../../vendor/github.com/gogo/protobuf/protobuf \

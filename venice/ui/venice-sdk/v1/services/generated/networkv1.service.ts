@@ -4,7 +4,7 @@ import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
 
-import { INetworkNetworkList,NetworkNetworkList,IApiStatus,ApiStatus,INetworkNetwork,NetworkNetwork,INetworkAutoMsgNetworkWatchHelper,NetworkAutoMsgNetworkWatchHelper } from '../../models/generated/network';
+import { INetworkNetworkList,NetworkNetworkList,IApiStatus,ApiStatus,INetworkNetwork,NetworkNetwork,INetworkNetworkInterfaceList,NetworkNetworkInterfaceList,INetworkNetworkInterface,NetworkNetworkInterface,INetworkAutoMsgNetworkWatchHelper,NetworkAutoMsgNetworkWatchHelper,INetworkAutoMsgNetworkInterfaceWatchHelper,NetworkAutoMsgNetworkInterfaceWatchHelper } from '../../models/generated/network';
 
 @Injectable()
 export class Networkv1Service extends AbstractService {
@@ -49,6 +49,37 @@ export class Networkv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** List NetworkInterface objects */
+  public ListNetworkInterface(queryParam: any = null, stagingID: string = ""):Observable<{body: INetworkNetworkInterfaceList | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/network/v1/smartnics';
+    const opts = {
+      eventID: 'ListNetworkInterface',
+      objType: 'NetworkNetworkInterfaceList',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: INetworkNetworkInterfaceList | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get NetworkInterface object */
+  public GetNetworkInterface(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: INetworkNetworkInterface | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/network/v1/smartnics/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'GetNetworkInterface',
+      objType: 'NetworkNetworkInterface',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: INetworkNetworkInterface | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Network objects */
@@ -97,6 +128,21 @@ export class Networkv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: INetworkAutoMsgNetworkWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Watch NetworkInterface objects. Supports WebSockets or HTTP long poll */
+  public WatchNetworkInterface(queryParam: any = null, stagingID: string = ""):Observable<{body: INetworkAutoMsgNetworkInterfaceWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/network/v1/watch/smartnics';
+    const opts = {
+      eventID: 'WatchNetworkInterface',
+      objType: 'NetworkAutoMsgNetworkInterfaceWatchHelper',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: INetworkAutoMsgNetworkInterfaceWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Network objects. Supports WebSockets or HTTP long poll */

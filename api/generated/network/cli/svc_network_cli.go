@@ -106,6 +106,47 @@ func restPutVirtualRouter(hostname, token string, obj interface{}) error {
 	return fmt.Errorf("put operation not supported for VirtualRouter object")
 }
 
+func restGetNetworkInterface(hostname, tenant, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*network.NetworkInterface); ok {
+		nv, err := restcl.NetworkV1().NetworkInterface().Get(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+
+	if v, ok := obj.(*network.NetworkInterfaceList); ok {
+		opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}}
+		nv, err := restcl.NetworkV1().NetworkInterface().List(loginCtx, &opts)
+		if err != nil {
+			return err
+		}
+		v.Items = nv
+	}
+	return nil
+
+}
+
+func restDeleteNetworkInterface(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("delete operation not supported for NetworkInterface object")
+}
+
+func restPostNetworkInterface(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("create operation not supported for NetworkInterface object")
+}
+
+func restPutNetworkInterface(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("put operation not supported for NetworkInterface object")
+}
+
 func init() {
 	cl := gen.GetInfo()
 	if cl == nil {
@@ -113,5 +154,7 @@ func init() {
 	}
 
 	cl.AddRestGetFunc("network.Network", "v1", restGetNetwork)
+
+	cl.AddRestGetFunc("network.NetworkInterface", "v1", restGetNetworkInterface)
 
 }

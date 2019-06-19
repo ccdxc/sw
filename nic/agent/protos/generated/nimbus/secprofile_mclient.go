@@ -19,11 +19,11 @@ import (
 )
 
 type SecurityProfileReactor interface {
-	CreateSecurityProfile(securityprofile *netproto.SecurityProfile) error      // creates an SecurityProfile
+	CreateSecurityProfile(securityprofileObj *netproto.SecurityProfile) error   // creates an SecurityProfile
 	FindSecurityProfile(meta api.ObjectMeta) (*netproto.SecurityProfile, error) // finds an SecurityProfile
 	ListSecurityProfile() []*netproto.SecurityProfile                           // lists all SecurityProfiles
-	UpdateSecurityProfile(securityprofile *netproto.SecurityProfile) error      // updates an SecurityProfile
-	DeleteSecurityProfile(securityprofile, ns, name string) error               // deletes an SecurityProfile
+	UpdateSecurityProfile(securityprofileObj *netproto.SecurityProfile) error   // updates an SecurityProfile
+	DeleteSecurityProfile(securityprofileObj, ns, name string) error            // deletes an SecurityProfile
 }
 
 // WatchSecurityProfiles runs SecurityProfile watcher loop

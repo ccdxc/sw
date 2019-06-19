@@ -15,6 +15,7 @@ import "network.proto";
 import "lb.proto";
 import "service.proto";
 import "vrf.proto";
+import "networkinterface.proto";
 
 // Network REST API
 service NetworkV1 {
@@ -27,9 +28,15 @@ service NetworkV1 {
     option (venice.apiGrpcCrudService) = "Service";
     option (venice.apiGrpcCrudService) = "LbPolicy";
     option (venice.apiGrpcCrudService) = "VirtualRouter";
+    option (venice.apiGrpcCrudService) = "NetworkInterface";
 
     option (venice.apiRestService) = {
          Object: "Network"
          Method: [ "get", "list", "watch" ]
-     };
+    };
+
+    option (venice.apiRestService) = {
+         Object: "NetworkInterface"
+         Method: [ "get", "list", "watch" ]
+    };
 }

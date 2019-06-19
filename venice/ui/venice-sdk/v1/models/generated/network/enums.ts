@@ -18,6 +18,18 @@ export enum ApiListWatchOptions_sort_order {
     'ByModTimeReverse' = "ByModTimeReverse",
 }
 
+export enum NetworkNetworkInterfaceStatus_type {
+    'NONE' = "NONE",
+    'HOST_PF' = "HOST_PF",
+    'UPLINK_ETH' = "UPLINK_ETH",
+    'UPLINK_MGMT' = "UPLINK_MGMT",
+}
+
+export enum NetworkNetworkInterfaceStatus_oper_status {
+    'UP' = "UP",
+    'DOWN' = "DOWN",
+}
+
 export enum NetworkTLSServerPolicySpec_client_authentication {
     'Mandatory' = "Mandatory",
     'Optional' = "Optional",
@@ -69,6 +81,8 @@ export class AllEnums {
     }
 
     ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
+    NetworkNetworkInterfaceStatus_type = NetworkNetworkInterfaceStatus_type;
+    NetworkNetworkInterfaceStatus_oper_status = NetworkNetworkInterfaceStatus_oper_status;
     NetworkTLSServerPolicySpec_client_authentication = NetworkTLSServerPolicySpec_client_authentication;
 
     ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;

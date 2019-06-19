@@ -19,11 +19,11 @@ import (
 )
 
 type AppReactor interface {
-	CreateApp(app *netproto.App) error                  // creates an App
+	CreateApp(appObj *netproto.App) error               // creates an App
 	FindApp(meta api.ObjectMeta) (*netproto.App, error) // finds an App
 	ListApp() []*netproto.App                           // lists all Apps
-	UpdateApp(app *netproto.App) error                  // updates an App
-	DeleteApp(app, ns, name string) error               // deletes an App
+	UpdateApp(appObj *netproto.App) error               // updates an App
+	DeleteApp(appObj, ns, name string) error            // deletes an App
 }
 
 // WatchApps runs App watcher loop

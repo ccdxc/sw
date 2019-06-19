@@ -189,7 +189,7 @@ func (ms *mockIotaServer) CheckClusterHealth(ctx context.Context, req *iota.Node
 }
 
 // DoSwitchOperation do switch operation
-func (ts *mockIotaServer) DoSwitchOperation(ctx context.Context, req *iota.SwitchMsg) (*iota.SwitchMsg, error) {
+func (ms *mockIotaServer) DoSwitchOperation(ctx context.Context, req *iota.SwitchMsg) (*iota.SwitchMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | SwitchMsg. Received Request Msg: %v", req)
 
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK

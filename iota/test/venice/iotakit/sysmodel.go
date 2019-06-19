@@ -32,8 +32,8 @@ const defaultNumNetworks = 2
 // SysModel represents a model of the system under test
 type SysModel struct {
 	hosts          map[string]*Host          // hosts
-	switches       map[string]*Switch     // switches in test
-	switchPorts    []*SwitchPort          // switches in test
+	switches       map[string]*Switch        // switches in test
+	switchPorts    []*SwitchPort             // switches in test
 	naples         map[string]*Naples        // Naples instances
 	workloads      map[string]*Workload      // workloads
 	subnets        []*Network                // subnets

@@ -37,13 +37,11 @@ type Naples struct {
 }
 
 // Switch represents a data-switch
-
 type Switch struct {
 	dataSwitch *iota.DataSwitch
 }
 
 // SwitchPort represents a port in a data switch
-
 type SwitchPort struct {
 	sw   *Switch
 	port string

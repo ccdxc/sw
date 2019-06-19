@@ -286,6 +286,11 @@ func (ag *fakeAgent) ListInterface() []*netproto.Interface {
 	return nil
 }
 
+// ListHwInterface lists interfaces. Stubbed out to satisfy the ctrlerIf interface
+func (ag *fakeAgent) ListHwInterface() []*netproto.Interface {
+	return nil
+}
+
 // UpdateInterface updates an interface. Stubbed out to satisfy the ctrlerIf interface
 func (ag *fakeAgent) UpdateInterface(intf *netproto.Interface) error {
 	return nil

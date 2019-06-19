@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/ref"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/tsdb"
@@ -1207,6 +1208,64 @@ func TestSmartNicCreateDelete(t *testing.T) {
 	// verify endpoint is gone from the database
 	_, err = stateMgr.FindSmartNIC("default", "testSmartNIC")
 	Assert(t, (err != nil), "Deleted smartNic still found in db")
+}
+
+func TestNetworkInterfaceConvert(t *testing.T) {
+	agentNetif := &netproto.Interface{
+		TypeMeta: api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "00ae.cd00.1638-uplink130",
+		},
+		Spec: netproto.InterfaceSpec{
+			Type: "UPLINK_ETH",
+		},
+		Status: netproto.InterfaceStatus{
+			OperStatus: "UP",
+		},
+	}
+
+	cNetif := convertNetifObj("testNode", agentNetif)
+	if cNetif == nil {
+		t.Fatalf("Unable to convert netif object")
+	}
+	if cNetif.Status.SmartNIC != "testNode" {
+		t.Fatalf("smartnic not set correctly %+v", cNetif)
+	}
+}
+
+// Test CRUD operations on NetworkInterface object; there is no backend
+// code for these objects, so we don't check on other return details
+func TestNetworkInterfaceCRUD(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	netifName := "00ae.cd00.1638-uplink130"
+	netif := network.NetworkInterface{
+		TypeMeta: api.TypeMeta{Kind: "NetworkInterface"},
+		ObjectMeta: api.ObjectMeta{
+			Name: netifName,
+		},
+		Status: network.NetworkInterfaceStatus{
+			OperStatus: "UP",
+			Type:       "UPLINK_ETH",
+		},
+	}
+
+	// create the netif
+	err = stateMgr.ctrler.NetworkInterface().Create(&netif)
+	AssertOk(t, err, "Could not create the smartNic")
+
+	// delete the smartNic
+	err = stateMgr.ctrler.NetworkInterface().Update(&netif)
+	AssertOk(t, err, "Error deleting the smartNic")
+
+	// delete the smartNic
+	err = stateMgr.ctrler.NetworkInterface().Delete(&netif)
+	AssertOk(t, err, "Error deleting the smartNic")
 }
 
 func TestMain(m *testing.M) {

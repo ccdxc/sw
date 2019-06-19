@@ -13,6 +13,7 @@ It is generated from these files:
 	delphi/sgpolicy.proto
 	delphi/secprofile.proto
 	delphi/tenant.proto
+	delphi/interface.proto
 
 It has these top-level messages:
 	App
@@ -23,6 +24,7 @@ It has these top-level messages:
 	SGPolicy
 	SecurityProfile
 	Tenant
+	Interface
 */
 package dnetproto
 

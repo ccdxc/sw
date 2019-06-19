@@ -19,11 +19,11 @@ import (
 )
 
 type TenantReactor interface {
-	CreateTenant(tenant *netproto.Tenant) error               // creates an Tenant
+	CreateTenant(tenantObj *netproto.Tenant) error            // creates an Tenant
 	FindTenant(meta api.ObjectMeta) (*netproto.Tenant, error) // finds an Tenant
 	ListTenant() []*netproto.Tenant                           // lists all Tenants
-	UpdateTenant(tenant *netproto.Tenant) error               // updates an Tenant
-	DeleteTenant(tenant, ns, name string) error               // deletes an Tenant
+	UpdateTenant(tenantObj *netproto.Tenant) error            // updates an Tenant
+	DeleteTenant(tenantObj, ns, name string) error            // deletes an Tenant
 }
 
 // WatchTenants runs Tenant watcher loop

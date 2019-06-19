@@ -25,6 +25,7 @@ import { NetworkNetwork } from './network';
 import { NetworkService } from './network';
 import { NetworkLbPolicy } from './network';
 import { NetworkVirtualRouter } from './network';
+import { NetworkNetworkInterface } from './network';
 import { ObjstoreBucket } from './objstore';
 import { ObjstoreObject } from './objstore';
 import { RolloutRollout } from './rollout';
@@ -192,6 +193,11 @@ export const CategoryMapping: CatMap  = {
     "VirtualRouter" : {
       instance: new NetworkVirtualRouter(),
       scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "NetworkInterface" : {
+      instance: new NetworkNetworkInterface(),
+      scopes: [ 'cluster', ] ,
       actions:  [] ,
     },
   },

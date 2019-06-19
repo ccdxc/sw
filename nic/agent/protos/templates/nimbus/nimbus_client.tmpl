@@ -31,11 +31,11 @@ import (
 
 
 type {{$crudObject}}Reactor interface {
-	Create{{$crudObject}}({{lower $crudObject}} *netproto.{{$crudObject}}) error                  // creates an {{$crudObject}}
+	Create{{$crudObject}}({{lower $crudObject}}Obj *netproto.{{$crudObject}}) error                  // creates an {{$crudObject}}
 	Find{{$crudObject}}(meta api.ObjectMeta) (*netproto.{{$crudObject}}, error) // finds an {{$crudObject}}
 	List{{$crudObject}}() []*netproto.{{$crudObject}}                           // lists all {{$crudObject}}s
-	Update{{$crudObject}}({{lower $crudObject}} *netproto.{{$crudObject}}) error                  // updates an {{$crudObject}}
-	Delete{{$crudObject}}({{lower $crudObject}}, ns, name string) error               // deletes an {{$crudObject}}
+	Update{{$crudObject}}({{lower $crudObject}}Obj *netproto.{{$crudObject}}) error                  // updates an {{$crudObject}}
+	Delete{{$crudObject}}({{lower $crudObject}}Obj, ns, name string) error               // deletes an {{$crudObject}}
 }
 
 // Watch{{$crudObject}}s runs {{$crudObject}} watcher loop

@@ -43,26 +43,31 @@ type EndpointsNetworkV1Client struct {
 	Client                        NetworkV1Client
 	AutoWatchSvcNetworkV1Endpoint endpoint.Endpoint
 
-	AutoAddLbPolicyEndpoint         endpoint.Endpoint
-	AutoAddNetworkEndpoint          endpoint.Endpoint
-	AutoAddServiceEndpoint          endpoint.Endpoint
-	AutoAddVirtualRouterEndpoint    endpoint.Endpoint
-	AutoDeleteLbPolicyEndpoint      endpoint.Endpoint
-	AutoDeleteNetworkEndpoint       endpoint.Endpoint
-	AutoDeleteServiceEndpoint       endpoint.Endpoint
-	AutoDeleteVirtualRouterEndpoint endpoint.Endpoint
-	AutoGetLbPolicyEndpoint         endpoint.Endpoint
-	AutoGetNetworkEndpoint          endpoint.Endpoint
-	AutoGetServiceEndpoint          endpoint.Endpoint
-	AutoGetVirtualRouterEndpoint    endpoint.Endpoint
-	AutoListLbPolicyEndpoint        endpoint.Endpoint
-	AutoListNetworkEndpoint         endpoint.Endpoint
-	AutoListServiceEndpoint         endpoint.Endpoint
-	AutoListVirtualRouterEndpoint   endpoint.Endpoint
-	AutoUpdateLbPolicyEndpoint      endpoint.Endpoint
-	AutoUpdateNetworkEndpoint       endpoint.Endpoint
-	AutoUpdateServiceEndpoint       endpoint.Endpoint
-	AutoUpdateVirtualRouterEndpoint endpoint.Endpoint
+	AutoAddLbPolicyEndpoint            endpoint.Endpoint
+	AutoAddNetworkEndpoint             endpoint.Endpoint
+	AutoAddNetworkInterfaceEndpoint    endpoint.Endpoint
+	AutoAddServiceEndpoint             endpoint.Endpoint
+	AutoAddVirtualRouterEndpoint       endpoint.Endpoint
+	AutoDeleteLbPolicyEndpoint         endpoint.Endpoint
+	AutoDeleteNetworkEndpoint          endpoint.Endpoint
+	AutoDeleteNetworkInterfaceEndpoint endpoint.Endpoint
+	AutoDeleteServiceEndpoint          endpoint.Endpoint
+	AutoDeleteVirtualRouterEndpoint    endpoint.Endpoint
+	AutoGetLbPolicyEndpoint            endpoint.Endpoint
+	AutoGetNetworkEndpoint             endpoint.Endpoint
+	AutoGetNetworkInterfaceEndpoint    endpoint.Endpoint
+	AutoGetServiceEndpoint             endpoint.Endpoint
+	AutoGetVirtualRouterEndpoint       endpoint.Endpoint
+	AutoListLbPolicyEndpoint           endpoint.Endpoint
+	AutoListNetworkEndpoint            endpoint.Endpoint
+	AutoListNetworkInterfaceEndpoint   endpoint.Endpoint
+	AutoListServiceEndpoint            endpoint.Endpoint
+	AutoListVirtualRouterEndpoint      endpoint.Endpoint
+	AutoUpdateLbPolicyEndpoint         endpoint.Endpoint
+	AutoUpdateNetworkEndpoint          endpoint.Endpoint
+	AutoUpdateNetworkInterfaceEndpoint endpoint.Endpoint
+	AutoUpdateServiceEndpoint          endpoint.Endpoint
+	AutoUpdateVirtualRouterEndpoint    endpoint.Endpoint
 }
 
 // EndpointsNetworkV1RestClient is the REST client
@@ -72,31 +77,37 @@ type EndpointsNetworkV1RestClient struct {
 	instance string
 	bufferId string
 
-	AutoAddLbPolicyEndpoint         endpoint.Endpoint
-	AutoAddNetworkEndpoint          endpoint.Endpoint
-	AutoAddServiceEndpoint          endpoint.Endpoint
-	AutoAddVirtualRouterEndpoint    endpoint.Endpoint
-	AutoDeleteLbPolicyEndpoint      endpoint.Endpoint
-	AutoDeleteNetworkEndpoint       endpoint.Endpoint
-	AutoDeleteServiceEndpoint       endpoint.Endpoint
-	AutoDeleteVirtualRouterEndpoint endpoint.Endpoint
-	AutoGetLbPolicyEndpoint         endpoint.Endpoint
-	AutoGetNetworkEndpoint          endpoint.Endpoint
-	AutoGetServiceEndpoint          endpoint.Endpoint
-	AutoGetVirtualRouterEndpoint    endpoint.Endpoint
-	AutoListLbPolicyEndpoint        endpoint.Endpoint
-	AutoListNetworkEndpoint         endpoint.Endpoint
-	AutoListServiceEndpoint         endpoint.Endpoint
-	AutoListVirtualRouterEndpoint   endpoint.Endpoint
-	AutoUpdateLbPolicyEndpoint      endpoint.Endpoint
-	AutoUpdateNetworkEndpoint       endpoint.Endpoint
-	AutoUpdateServiceEndpoint       endpoint.Endpoint
-	AutoUpdateVirtualRouterEndpoint endpoint.Endpoint
-	AutoWatchLbPolicyEndpoint       endpoint.Endpoint
-	AutoWatchNetworkEndpoint        endpoint.Endpoint
-	AutoWatchServiceEndpoint        endpoint.Endpoint
-	AutoWatchSvcNetworkV1Endpoint   endpoint.Endpoint
-	AutoWatchVirtualRouterEndpoint  endpoint.Endpoint
+	AutoAddLbPolicyEndpoint            endpoint.Endpoint
+	AutoAddNetworkEndpoint             endpoint.Endpoint
+	AutoAddNetworkInterfaceEndpoint    endpoint.Endpoint
+	AutoAddServiceEndpoint             endpoint.Endpoint
+	AutoAddVirtualRouterEndpoint       endpoint.Endpoint
+	AutoDeleteLbPolicyEndpoint         endpoint.Endpoint
+	AutoDeleteNetworkEndpoint          endpoint.Endpoint
+	AutoDeleteNetworkInterfaceEndpoint endpoint.Endpoint
+	AutoDeleteServiceEndpoint          endpoint.Endpoint
+	AutoDeleteVirtualRouterEndpoint    endpoint.Endpoint
+	AutoGetLbPolicyEndpoint            endpoint.Endpoint
+	AutoGetNetworkEndpoint             endpoint.Endpoint
+	AutoGetNetworkInterfaceEndpoint    endpoint.Endpoint
+	AutoGetServiceEndpoint             endpoint.Endpoint
+	AutoGetVirtualRouterEndpoint       endpoint.Endpoint
+	AutoListLbPolicyEndpoint           endpoint.Endpoint
+	AutoListNetworkEndpoint            endpoint.Endpoint
+	AutoListNetworkInterfaceEndpoint   endpoint.Endpoint
+	AutoListServiceEndpoint            endpoint.Endpoint
+	AutoListVirtualRouterEndpoint      endpoint.Endpoint
+	AutoUpdateLbPolicyEndpoint         endpoint.Endpoint
+	AutoUpdateNetworkEndpoint          endpoint.Endpoint
+	AutoUpdateNetworkInterfaceEndpoint endpoint.Endpoint
+	AutoUpdateServiceEndpoint          endpoint.Endpoint
+	AutoUpdateVirtualRouterEndpoint    endpoint.Endpoint
+	AutoWatchLbPolicyEndpoint          endpoint.Endpoint
+	AutoWatchNetworkEndpoint           endpoint.Endpoint
+	AutoWatchNetworkInterfaceEndpoint  endpoint.Endpoint
+	AutoWatchServiceEndpoint           endpoint.Endpoint
+	AutoWatchSvcNetworkV1Endpoint      endpoint.Endpoint
+	AutoWatchVirtualRouterEndpoint     endpoint.Endpoint
 }
 
 // MiddlewareNetworkV1Server adds middle ware to the server
@@ -106,31 +117,37 @@ type MiddlewareNetworkV1Server func(ServiceNetworkV1Server) ServiceNetworkV1Serv
 type EndpointsNetworkV1Server struct {
 	svcWatchHandlerNetworkV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 
-	AutoAddLbPolicyEndpoint         endpoint.Endpoint
-	AutoAddNetworkEndpoint          endpoint.Endpoint
-	AutoAddServiceEndpoint          endpoint.Endpoint
-	AutoAddVirtualRouterEndpoint    endpoint.Endpoint
-	AutoDeleteLbPolicyEndpoint      endpoint.Endpoint
-	AutoDeleteNetworkEndpoint       endpoint.Endpoint
-	AutoDeleteServiceEndpoint       endpoint.Endpoint
-	AutoDeleteVirtualRouterEndpoint endpoint.Endpoint
-	AutoGetLbPolicyEndpoint         endpoint.Endpoint
-	AutoGetNetworkEndpoint          endpoint.Endpoint
-	AutoGetServiceEndpoint          endpoint.Endpoint
-	AutoGetVirtualRouterEndpoint    endpoint.Endpoint
-	AutoListLbPolicyEndpoint        endpoint.Endpoint
-	AutoListNetworkEndpoint         endpoint.Endpoint
-	AutoListServiceEndpoint         endpoint.Endpoint
-	AutoListVirtualRouterEndpoint   endpoint.Endpoint
-	AutoUpdateLbPolicyEndpoint      endpoint.Endpoint
-	AutoUpdateNetworkEndpoint       endpoint.Endpoint
-	AutoUpdateServiceEndpoint       endpoint.Endpoint
-	AutoUpdateVirtualRouterEndpoint endpoint.Endpoint
+	AutoAddLbPolicyEndpoint            endpoint.Endpoint
+	AutoAddNetworkEndpoint             endpoint.Endpoint
+	AutoAddNetworkInterfaceEndpoint    endpoint.Endpoint
+	AutoAddServiceEndpoint             endpoint.Endpoint
+	AutoAddVirtualRouterEndpoint       endpoint.Endpoint
+	AutoDeleteLbPolicyEndpoint         endpoint.Endpoint
+	AutoDeleteNetworkEndpoint          endpoint.Endpoint
+	AutoDeleteNetworkInterfaceEndpoint endpoint.Endpoint
+	AutoDeleteServiceEndpoint          endpoint.Endpoint
+	AutoDeleteVirtualRouterEndpoint    endpoint.Endpoint
+	AutoGetLbPolicyEndpoint            endpoint.Endpoint
+	AutoGetNetworkEndpoint             endpoint.Endpoint
+	AutoGetNetworkInterfaceEndpoint    endpoint.Endpoint
+	AutoGetServiceEndpoint             endpoint.Endpoint
+	AutoGetVirtualRouterEndpoint       endpoint.Endpoint
+	AutoListLbPolicyEndpoint           endpoint.Endpoint
+	AutoListNetworkEndpoint            endpoint.Endpoint
+	AutoListNetworkInterfaceEndpoint   endpoint.Endpoint
+	AutoListServiceEndpoint            endpoint.Endpoint
+	AutoListVirtualRouterEndpoint      endpoint.Endpoint
+	AutoUpdateLbPolicyEndpoint         endpoint.Endpoint
+	AutoUpdateNetworkEndpoint          endpoint.Endpoint
+	AutoUpdateNetworkInterfaceEndpoint endpoint.Endpoint
+	AutoUpdateServiceEndpoint          endpoint.Endpoint
+	AutoUpdateVirtualRouterEndpoint    endpoint.Endpoint
 
-	watchHandlerNetwork       func(options *api.ListWatchOptions, stream grpc.ServerStream) error
-	watchHandlerService       func(options *api.ListWatchOptions, stream grpc.ServerStream) error
-	watchHandlerLbPolicy      func(options *api.ListWatchOptions, stream grpc.ServerStream) error
-	watchHandlerVirtualRouter func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerNetwork          func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerService          func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerLbPolicy         func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerVirtualRouter    func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerNetworkInterface func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
 
 // AutoAddLbPolicy is endpoint for AutoAddLbPolicy
@@ -158,6 +175,20 @@ func (e EndpointsNetworkV1Client) AutoAddNetwork(ctx context.Context, in *Networ
 
 type respNetworkV1AutoAddNetwork struct {
 	V   Network
+	Err error
+}
+
+// AutoAddNetworkInterface is endpoint for AutoAddNetworkInterface
+func (e EndpointsNetworkV1Client) AutoAddNetworkInterface(ctx context.Context, in *NetworkInterface) (*NetworkInterface, error) {
+	resp, err := e.AutoAddNetworkInterfaceEndpoint(ctx, in)
+	if err != nil {
+		return &NetworkInterface{}, err
+	}
+	return resp.(*NetworkInterface), nil
+}
+
+type respNetworkV1AutoAddNetworkInterface struct {
+	V   NetworkInterface
 	Err error
 }
 
@@ -217,6 +248,20 @@ type respNetworkV1AutoDeleteNetwork struct {
 	Err error
 }
 
+// AutoDeleteNetworkInterface is endpoint for AutoDeleteNetworkInterface
+func (e EndpointsNetworkV1Client) AutoDeleteNetworkInterface(ctx context.Context, in *NetworkInterface) (*NetworkInterface, error) {
+	resp, err := e.AutoDeleteNetworkInterfaceEndpoint(ctx, in)
+	if err != nil {
+		return &NetworkInterface{}, err
+	}
+	return resp.(*NetworkInterface), nil
+}
+
+type respNetworkV1AutoDeleteNetworkInterface struct {
+	V   NetworkInterface
+	Err error
+}
+
 // AutoDeleteService is endpoint for AutoDeleteService
 func (e EndpointsNetworkV1Client) AutoDeleteService(ctx context.Context, in *Service) (*Service, error) {
 	resp, err := e.AutoDeleteServiceEndpoint(ctx, in)
@@ -270,6 +315,20 @@ func (e EndpointsNetworkV1Client) AutoGetNetwork(ctx context.Context, in *Networ
 
 type respNetworkV1AutoGetNetwork struct {
 	V   Network
+	Err error
+}
+
+// AutoGetNetworkInterface is endpoint for AutoGetNetworkInterface
+func (e EndpointsNetworkV1Client) AutoGetNetworkInterface(ctx context.Context, in *NetworkInterface) (*NetworkInterface, error) {
+	resp, err := e.AutoGetNetworkInterfaceEndpoint(ctx, in)
+	if err != nil {
+		return &NetworkInterface{}, err
+	}
+	return resp.(*NetworkInterface), nil
+}
+
+type respNetworkV1AutoGetNetworkInterface struct {
+	V   NetworkInterface
 	Err error
 }
 
@@ -329,6 +388,20 @@ type respNetworkV1AutoListNetwork struct {
 	Err error
 }
 
+// AutoListNetworkInterface is endpoint for AutoListNetworkInterface
+func (e EndpointsNetworkV1Client) AutoListNetworkInterface(ctx context.Context, in *api.ListWatchOptions) (*NetworkInterfaceList, error) {
+	resp, err := e.AutoListNetworkInterfaceEndpoint(ctx, in)
+	if err != nil {
+		return &NetworkInterfaceList{}, err
+	}
+	return resp.(*NetworkInterfaceList), nil
+}
+
+type respNetworkV1AutoListNetworkInterface struct {
+	V   NetworkInterfaceList
+	Err error
+}
+
 // AutoListService is endpoint for AutoListService
 func (e EndpointsNetworkV1Client) AutoListService(ctx context.Context, in *api.ListWatchOptions) (*ServiceList, error) {
 	resp, err := e.AutoListServiceEndpoint(ctx, in)
@@ -385,6 +458,20 @@ type respNetworkV1AutoUpdateNetwork struct {
 	Err error
 }
 
+// AutoUpdateNetworkInterface is endpoint for AutoUpdateNetworkInterface
+func (e EndpointsNetworkV1Client) AutoUpdateNetworkInterface(ctx context.Context, in *NetworkInterface) (*NetworkInterface, error) {
+	resp, err := e.AutoUpdateNetworkInterfaceEndpoint(ctx, in)
+	if err != nil {
+		return &NetworkInterface{}, err
+	}
+	return resp.(*NetworkInterface), nil
+}
+
+type respNetworkV1AutoUpdateNetworkInterface struct {
+	V   NetworkInterface
+	Err error
+}
+
 // AutoUpdateService is endpoint for AutoUpdateService
 func (e EndpointsNetworkV1Client) AutoUpdateService(ctx context.Context, in *Service) (*Service, error) {
 	resp, err := e.AutoUpdateServiceEndpoint(ctx, in)
@@ -437,6 +524,11 @@ func (e EndpointsNetworkV1Client) AutoWatchVirtualRouter(ctx context.Context, in
 	return e.Client.AutoWatchVirtualRouter(ctx, in)
 }
 
+// AutoWatchNetworkInterface performs Watch for NetworkInterface
+func (e EndpointsNetworkV1Client) AutoWatchNetworkInterface(ctx context.Context, in *api.ListWatchOptions) (NetworkV1_AutoWatchNetworkInterfaceClient, error) {
+	return e.Client.AutoWatchNetworkInterface(ctx, in)
+}
+
 // AutoAddLbPolicy implementation on server Endpoint
 func (e EndpointsNetworkV1Server) AutoAddLbPolicy(ctx context.Context, in LbPolicy) (LbPolicy, error) {
 	resp, err := e.AutoAddLbPolicyEndpoint(ctx, in)
@@ -479,6 +571,28 @@ func MakeNetworkV1AutoAddNetworkEndpoint(s ServiceNetworkV1Server, logger log.Lo
 		}, nil
 	}
 	return trace.ServerEndpoint("NetworkV1:AutoAddNetwork")(f)
+}
+
+// AutoAddNetworkInterface implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoAddNetworkInterface(ctx context.Context, in NetworkInterface) (NetworkInterface, error) {
+	resp, err := e.AutoAddNetworkInterfaceEndpoint(ctx, in)
+	if err != nil {
+		return NetworkInterface{}, err
+	}
+	return *resp.(*NetworkInterface), nil
+}
+
+// MakeNetworkV1AutoAddNetworkInterfaceEndpoint creates  AutoAddNetworkInterface endpoints for the service
+func MakeNetworkV1AutoAddNetworkInterfaceEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*NetworkInterface)
+		v, err := s.AutoAddNetworkInterface(ctx, *req)
+		return respNetworkV1AutoAddNetworkInterface{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoAddNetworkInterface")(f)
 }
 
 // AutoAddService implementation on server Endpoint
@@ -569,6 +683,28 @@ func MakeNetworkV1AutoDeleteNetworkEndpoint(s ServiceNetworkV1Server, logger log
 	return trace.ServerEndpoint("NetworkV1:AutoDeleteNetwork")(f)
 }
 
+// AutoDeleteNetworkInterface implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoDeleteNetworkInterface(ctx context.Context, in NetworkInterface) (NetworkInterface, error) {
+	resp, err := e.AutoDeleteNetworkInterfaceEndpoint(ctx, in)
+	if err != nil {
+		return NetworkInterface{}, err
+	}
+	return *resp.(*NetworkInterface), nil
+}
+
+// MakeNetworkV1AutoDeleteNetworkInterfaceEndpoint creates  AutoDeleteNetworkInterface endpoints for the service
+func MakeNetworkV1AutoDeleteNetworkInterfaceEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*NetworkInterface)
+		v, err := s.AutoDeleteNetworkInterface(ctx, *req)
+		return respNetworkV1AutoDeleteNetworkInterface{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoDeleteNetworkInterface")(f)
+}
+
 // AutoDeleteService implementation on server Endpoint
 func (e EndpointsNetworkV1Server) AutoDeleteService(ctx context.Context, in Service) (Service, error) {
 	resp, err := e.AutoDeleteServiceEndpoint(ctx, in)
@@ -655,6 +791,28 @@ func MakeNetworkV1AutoGetNetworkEndpoint(s ServiceNetworkV1Server, logger log.Lo
 		}, nil
 	}
 	return trace.ServerEndpoint("NetworkV1:AutoGetNetwork")(f)
+}
+
+// AutoGetNetworkInterface implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoGetNetworkInterface(ctx context.Context, in NetworkInterface) (NetworkInterface, error) {
+	resp, err := e.AutoGetNetworkInterfaceEndpoint(ctx, in)
+	if err != nil {
+		return NetworkInterface{}, err
+	}
+	return *resp.(*NetworkInterface), nil
+}
+
+// MakeNetworkV1AutoGetNetworkInterfaceEndpoint creates  AutoGetNetworkInterface endpoints for the service
+func MakeNetworkV1AutoGetNetworkInterfaceEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*NetworkInterface)
+		v, err := s.AutoGetNetworkInterface(ctx, *req)
+		return respNetworkV1AutoGetNetworkInterface{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoGetNetworkInterface")(f)
 }
 
 // AutoGetService implementation on server Endpoint
@@ -745,6 +903,28 @@ func MakeNetworkV1AutoListNetworkEndpoint(s ServiceNetworkV1Server, logger log.L
 	return trace.ServerEndpoint("NetworkV1:AutoListNetwork")(f)
 }
 
+// AutoListNetworkInterface implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoListNetworkInterface(ctx context.Context, in api.ListWatchOptions) (NetworkInterfaceList, error) {
+	resp, err := e.AutoListNetworkInterfaceEndpoint(ctx, in)
+	if err != nil {
+		return NetworkInterfaceList{}, err
+	}
+	return *resp.(*NetworkInterfaceList), nil
+}
+
+// MakeNetworkV1AutoListNetworkInterfaceEndpoint creates  AutoListNetworkInterface endpoints for the service
+func MakeNetworkV1AutoListNetworkInterfaceEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListNetworkInterface(ctx, *req)
+		return respNetworkV1AutoListNetworkInterface{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoListNetworkInterface")(f)
+}
+
 // AutoListService implementation on server Endpoint
 func (e EndpointsNetworkV1Server) AutoListService(ctx context.Context, in api.ListWatchOptions) (ServiceList, error) {
 	resp, err := e.AutoListServiceEndpoint(ctx, in)
@@ -831,6 +1011,28 @@ func MakeNetworkV1AutoUpdateNetworkEndpoint(s ServiceNetworkV1Server, logger log
 		}, nil
 	}
 	return trace.ServerEndpoint("NetworkV1:AutoUpdateNetwork")(f)
+}
+
+// AutoUpdateNetworkInterface implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoUpdateNetworkInterface(ctx context.Context, in NetworkInterface) (NetworkInterface, error) {
+	resp, err := e.AutoUpdateNetworkInterfaceEndpoint(ctx, in)
+	if err != nil {
+		return NetworkInterface{}, err
+	}
+	return *resp.(*NetworkInterface), nil
+}
+
+// MakeNetworkV1AutoUpdateNetworkInterfaceEndpoint creates  AutoUpdateNetworkInterface endpoints for the service
+func MakeNetworkV1AutoUpdateNetworkInterfaceEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*NetworkInterface)
+		v, err := s.AutoUpdateNetworkInterface(ctx, *req)
+		return respNetworkV1AutoUpdateNetworkInterface{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoUpdateNetworkInterface")(f)
 }
 
 // AutoUpdateService implementation on server Endpoint
@@ -941,36 +1143,55 @@ func MakeAutoWatchVirtualRouterEndpoint(s ServiceNetworkV1Server, logger log.Log
 	}
 }
 
+// AutoWatchNetworkInterface is the watch handler for NetworkInterface on the server side.
+func (e EndpointsNetworkV1Server) AutoWatchNetworkInterface(in *api.ListWatchOptions, stream NetworkV1_AutoWatchNetworkInterfaceServer) error {
+	return e.watchHandlerNetworkInterface(in, stream)
+}
+
+// MakeAutoWatchNetworkInterfaceEndpoint creates the Watch endpoint
+func MakeAutoWatchNetworkInterfaceEndpoint(s ServiceNetworkV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(NetworkV1_AutoWatchNetworkInterfaceServer)
+		return s.AutoWatchNetworkInterface(options, wstream)
+	}
+}
+
 // MakeNetworkV1ServerEndpoints creates server endpoints
 func MakeNetworkV1ServerEndpoints(s ServiceNetworkV1Server, logger log.Logger) EndpointsNetworkV1Server {
 	return EndpointsNetworkV1Server{
 		svcWatchHandlerNetworkV1: MakeAutoWatchSvcNetworkV1Endpoint(s, logger),
 
-		AutoAddLbPolicyEndpoint:         MakeNetworkV1AutoAddLbPolicyEndpoint(s, logger),
-		AutoAddNetworkEndpoint:          MakeNetworkV1AutoAddNetworkEndpoint(s, logger),
-		AutoAddServiceEndpoint:          MakeNetworkV1AutoAddServiceEndpoint(s, logger),
-		AutoAddVirtualRouterEndpoint:    MakeNetworkV1AutoAddVirtualRouterEndpoint(s, logger),
-		AutoDeleteLbPolicyEndpoint:      MakeNetworkV1AutoDeleteLbPolicyEndpoint(s, logger),
-		AutoDeleteNetworkEndpoint:       MakeNetworkV1AutoDeleteNetworkEndpoint(s, logger),
-		AutoDeleteServiceEndpoint:       MakeNetworkV1AutoDeleteServiceEndpoint(s, logger),
-		AutoDeleteVirtualRouterEndpoint: MakeNetworkV1AutoDeleteVirtualRouterEndpoint(s, logger),
-		AutoGetLbPolicyEndpoint:         MakeNetworkV1AutoGetLbPolicyEndpoint(s, logger),
-		AutoGetNetworkEndpoint:          MakeNetworkV1AutoGetNetworkEndpoint(s, logger),
-		AutoGetServiceEndpoint:          MakeNetworkV1AutoGetServiceEndpoint(s, logger),
-		AutoGetVirtualRouterEndpoint:    MakeNetworkV1AutoGetVirtualRouterEndpoint(s, logger),
-		AutoListLbPolicyEndpoint:        MakeNetworkV1AutoListLbPolicyEndpoint(s, logger),
-		AutoListNetworkEndpoint:         MakeNetworkV1AutoListNetworkEndpoint(s, logger),
-		AutoListServiceEndpoint:         MakeNetworkV1AutoListServiceEndpoint(s, logger),
-		AutoListVirtualRouterEndpoint:   MakeNetworkV1AutoListVirtualRouterEndpoint(s, logger),
-		AutoUpdateLbPolicyEndpoint:      MakeNetworkV1AutoUpdateLbPolicyEndpoint(s, logger),
-		AutoUpdateNetworkEndpoint:       MakeNetworkV1AutoUpdateNetworkEndpoint(s, logger),
-		AutoUpdateServiceEndpoint:       MakeNetworkV1AutoUpdateServiceEndpoint(s, logger),
-		AutoUpdateVirtualRouterEndpoint: MakeNetworkV1AutoUpdateVirtualRouterEndpoint(s, logger),
+		AutoAddLbPolicyEndpoint:            MakeNetworkV1AutoAddLbPolicyEndpoint(s, logger),
+		AutoAddNetworkEndpoint:             MakeNetworkV1AutoAddNetworkEndpoint(s, logger),
+		AutoAddNetworkInterfaceEndpoint:    MakeNetworkV1AutoAddNetworkInterfaceEndpoint(s, logger),
+		AutoAddServiceEndpoint:             MakeNetworkV1AutoAddServiceEndpoint(s, logger),
+		AutoAddVirtualRouterEndpoint:       MakeNetworkV1AutoAddVirtualRouterEndpoint(s, logger),
+		AutoDeleteLbPolicyEndpoint:         MakeNetworkV1AutoDeleteLbPolicyEndpoint(s, logger),
+		AutoDeleteNetworkEndpoint:          MakeNetworkV1AutoDeleteNetworkEndpoint(s, logger),
+		AutoDeleteNetworkInterfaceEndpoint: MakeNetworkV1AutoDeleteNetworkInterfaceEndpoint(s, logger),
+		AutoDeleteServiceEndpoint:          MakeNetworkV1AutoDeleteServiceEndpoint(s, logger),
+		AutoDeleteVirtualRouterEndpoint:    MakeNetworkV1AutoDeleteVirtualRouterEndpoint(s, logger),
+		AutoGetLbPolicyEndpoint:            MakeNetworkV1AutoGetLbPolicyEndpoint(s, logger),
+		AutoGetNetworkEndpoint:             MakeNetworkV1AutoGetNetworkEndpoint(s, logger),
+		AutoGetNetworkInterfaceEndpoint:    MakeNetworkV1AutoGetNetworkInterfaceEndpoint(s, logger),
+		AutoGetServiceEndpoint:             MakeNetworkV1AutoGetServiceEndpoint(s, logger),
+		AutoGetVirtualRouterEndpoint:       MakeNetworkV1AutoGetVirtualRouterEndpoint(s, logger),
+		AutoListLbPolicyEndpoint:           MakeNetworkV1AutoListLbPolicyEndpoint(s, logger),
+		AutoListNetworkEndpoint:            MakeNetworkV1AutoListNetworkEndpoint(s, logger),
+		AutoListNetworkInterfaceEndpoint:   MakeNetworkV1AutoListNetworkInterfaceEndpoint(s, logger),
+		AutoListServiceEndpoint:            MakeNetworkV1AutoListServiceEndpoint(s, logger),
+		AutoListVirtualRouterEndpoint:      MakeNetworkV1AutoListVirtualRouterEndpoint(s, logger),
+		AutoUpdateLbPolicyEndpoint:         MakeNetworkV1AutoUpdateLbPolicyEndpoint(s, logger),
+		AutoUpdateNetworkEndpoint:          MakeNetworkV1AutoUpdateNetworkEndpoint(s, logger),
+		AutoUpdateNetworkInterfaceEndpoint: MakeNetworkV1AutoUpdateNetworkInterfaceEndpoint(s, logger),
+		AutoUpdateServiceEndpoint:          MakeNetworkV1AutoUpdateServiceEndpoint(s, logger),
+		AutoUpdateVirtualRouterEndpoint:    MakeNetworkV1AutoUpdateVirtualRouterEndpoint(s, logger),
 
-		watchHandlerNetwork:       MakeAutoWatchNetworkEndpoint(s, logger),
-		watchHandlerService:       MakeAutoWatchServiceEndpoint(s, logger),
-		watchHandlerLbPolicy:      MakeAutoWatchLbPolicyEndpoint(s, logger),
-		watchHandlerVirtualRouter: MakeAutoWatchVirtualRouterEndpoint(s, logger),
+		watchHandlerNetwork:          MakeAutoWatchNetworkEndpoint(s, logger),
+		watchHandlerService:          MakeAutoWatchServiceEndpoint(s, logger),
+		watchHandlerLbPolicy:         MakeAutoWatchLbPolicyEndpoint(s, logger),
+		watchHandlerVirtualRouter:    MakeAutoWatchVirtualRouterEndpoint(s, logger),
+		watchHandlerNetworkInterface: MakeAutoWatchNetworkInterfaceEndpoint(s, logger),
 	}
 }
 
@@ -1030,6 +1251,19 @@ func (m loggingNetworkV1MiddlewareClient) AutoAddNetwork(ctx context.Context, in
 	resp, err = m.next.AutoAddNetwork(ctx, in)
 	return
 }
+func (m loggingNetworkV1MiddlewareClient) AutoAddNetworkInterface(ctx context.Context, in *NetworkInterface) (resp *NetworkInterface, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoAddNetworkInterface", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoAddNetworkInterface(ctx, in)
+	return
+}
 func (m loggingNetworkV1MiddlewareClient) AutoAddService(ctx context.Context, in *Service) (resp *Service, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1080,6 +1314,19 @@ func (m loggingNetworkV1MiddlewareClient) AutoDeleteNetwork(ctx context.Context,
 		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteNetwork", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteNetwork(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoDeleteNetworkInterface(ctx context.Context, in *NetworkInterface) (resp *NetworkInterface, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteNetworkInterface", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoDeleteNetworkInterface(ctx, in)
 	return
 }
 func (m loggingNetworkV1MiddlewareClient) AutoDeleteService(ctx context.Context, in *Service) (resp *Service, err error) {
@@ -1134,6 +1381,19 @@ func (m loggingNetworkV1MiddlewareClient) AutoGetNetwork(ctx context.Context, in
 	resp, err = m.next.AutoGetNetwork(ctx, in)
 	return
 }
+func (m loggingNetworkV1MiddlewareClient) AutoGetNetworkInterface(ctx context.Context, in *NetworkInterface) (resp *NetworkInterface, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoGetNetworkInterface", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoGetNetworkInterface(ctx, in)
+	return
+}
 func (m loggingNetworkV1MiddlewareClient) AutoGetService(ctx context.Context, in *Service) (resp *Service, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1186,6 +1446,19 @@ func (m loggingNetworkV1MiddlewareClient) AutoListNetwork(ctx context.Context, i
 	resp, err = m.next.AutoListNetwork(ctx, in)
 	return
 }
+func (m loggingNetworkV1MiddlewareClient) AutoListNetworkInterface(ctx context.Context, in *api.ListWatchOptions) (resp *NetworkInterfaceList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoListNetworkInterface", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoListNetworkInterface(ctx, in)
+	return
+}
 func (m loggingNetworkV1MiddlewareClient) AutoListService(ctx context.Context, in *api.ListWatchOptions) (resp *ServiceList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1236,6 +1509,19 @@ func (m loggingNetworkV1MiddlewareClient) AutoUpdateNetwork(ctx context.Context,
 		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateNetwork", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateNetwork(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoUpdateNetworkInterface(ctx context.Context, in *NetworkInterface) (resp *NetworkInterface, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateNetworkInterface", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoUpdateNetworkInterface(ctx, in)
 	return
 }
 func (m loggingNetworkV1MiddlewareClient) AutoUpdateService(ctx context.Context, in *Service) (resp *Service, err error) {
@@ -1331,6 +1617,19 @@ func (m loggingNetworkV1MiddlewareClient) AutoWatchVirtualRouter(ctx context.Con
 	resp, err = m.next.AutoWatchVirtualRouter(ctx, in)
 	return
 }
+func (m loggingNetworkV1MiddlewareClient) AutoWatchNetworkInterface(ctx context.Context, in *api.ListWatchOptions) (resp NetworkV1_AutoWatchNetworkInterfaceClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoWatchNetworkInterface", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoWatchNetworkInterface(ctx, in)
+	return
+}
 
 func (m loggingNetworkV1MiddlewareServer) AutoAddLbPolicy(ctx context.Context, in LbPolicy) (resp LbPolicy, err error) {
 	defer func(begin time.Time) {
@@ -1356,6 +1655,19 @@ func (m loggingNetworkV1MiddlewareServer) AutoAddNetwork(ctx context.Context, in
 		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoAddNetwork", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoAddNetwork(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoAddNetworkInterface(ctx context.Context, in NetworkInterface) (resp NetworkInterface, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoAddNetworkInterface", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddNetworkInterface(ctx, in)
 	return
 }
 func (m loggingNetworkV1MiddlewareServer) AutoAddService(ctx context.Context, in Service) (resp Service, err error) {
@@ -1410,6 +1722,19 @@ func (m loggingNetworkV1MiddlewareServer) AutoDeleteNetwork(ctx context.Context,
 	resp, err = m.next.AutoDeleteNetwork(ctx, in)
 	return
 }
+func (m loggingNetworkV1MiddlewareServer) AutoDeleteNetworkInterface(ctx context.Context, in NetworkInterface) (resp NetworkInterface, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteNetworkInterface", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteNetworkInterface(ctx, in)
+	return
+}
 func (m loggingNetworkV1MiddlewareServer) AutoDeleteService(ctx context.Context, in Service) (resp Service, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1460,6 +1785,19 @@ func (m loggingNetworkV1MiddlewareServer) AutoGetNetwork(ctx context.Context, in
 		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoGetNetwork", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoGetNetwork(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoGetNetworkInterface(ctx context.Context, in NetworkInterface) (resp NetworkInterface, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoGetNetworkInterface", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetNetworkInterface(ctx, in)
 	return
 }
 func (m loggingNetworkV1MiddlewareServer) AutoGetService(ctx context.Context, in Service) (resp Service, err error) {
@@ -1514,6 +1852,19 @@ func (m loggingNetworkV1MiddlewareServer) AutoListNetwork(ctx context.Context, i
 	resp, err = m.next.AutoListNetwork(ctx, in)
 	return
 }
+func (m loggingNetworkV1MiddlewareServer) AutoListNetworkInterface(ctx context.Context, in api.ListWatchOptions) (resp NetworkInterfaceList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoListNetworkInterface", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListNetworkInterface(ctx, in)
+	return
+}
 func (m loggingNetworkV1MiddlewareServer) AutoListService(ctx context.Context, in api.ListWatchOptions) (resp ServiceList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1564,6 +1915,19 @@ func (m loggingNetworkV1MiddlewareServer) AutoUpdateNetwork(ctx context.Context,
 		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateNetwork", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateNetwork(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoUpdateNetworkInterface(ctx context.Context, in NetworkInterface) (resp NetworkInterface, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateNetworkInterface", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateNetworkInterface(ctx, in)
 	return
 }
 func (m loggingNetworkV1MiddlewareServer) AutoUpdateService(ctx context.Context, in Service) (resp Service, err error) {
@@ -1659,6 +2023,19 @@ func (m loggingNetworkV1MiddlewareServer) AutoWatchVirtualRouter(in *api.ListWat
 	err = m.next.AutoWatchVirtualRouter(in, stream)
 	return
 }
+func (m loggingNetworkV1MiddlewareServer) AutoWatchNetworkInterface(in *api.ListWatchOptions, stream NetworkV1_AutoWatchNetworkInterfaceServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "NetworkV1", "method", "AutoWatchNetworkInterface", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchNetworkInterface(in, stream)
+	return
+}
 
 func (r *EndpointsNetworkV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
 	val, ok := loginctx.AuthzHeaderFromContext(ctx)
@@ -1696,6 +2073,12 @@ func makeURINetworkV1AutoAddNetworkCreateOper(in *Network) string {
 }
 
 //
+func makeURINetworkV1AutoAddNetworkInterfaceCreateOper(in *NetworkInterface) string {
+	return ""
+
+}
+
+//
 func makeURINetworkV1AutoAddServiceCreateOper(in *Service) string {
 	return ""
 
@@ -1715,6 +2098,12 @@ func makeURINetworkV1AutoDeleteLbPolicyDeleteOper(in *LbPolicy) string {
 
 //
 func makeURINetworkV1AutoDeleteNetworkDeleteOper(in *Network) string {
+	return ""
+
+}
+
+//
+func makeURINetworkV1AutoDeleteNetworkInterfaceDeleteOper(in *NetworkInterface) string {
 	return ""
 
 }
@@ -1743,6 +2132,11 @@ func makeURINetworkV1AutoGetNetworkGetOper(in *Network) string {
 }
 
 //
+func makeURINetworkV1AutoGetNetworkInterfaceGetOper(in *NetworkInterface) string {
+	return fmt.Sprint("/configs/network/v1", "/smartnics/", in.Name)
+}
+
+//
 func makeURINetworkV1AutoGetServiceGetOper(in *Service) string {
 	return ""
 
@@ -1763,6 +2157,11 @@ func makeURINetworkV1AutoListLbPolicyListOper(in *api.ListWatchOptions) string {
 //
 func makeURINetworkV1AutoListNetworkListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/networks")
+}
+
+//
+func makeURINetworkV1AutoListNetworkInterfaceListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/network/v1", "/smartnics")
 }
 
 //
@@ -1790,6 +2189,12 @@ func makeURINetworkV1AutoUpdateNetworkUpdateOper(in *Network) string {
 }
 
 //
+func makeURINetworkV1AutoUpdateNetworkInterfaceUpdateOper(in *NetworkInterface) string {
+	return ""
+
+}
+
+//
 func makeURINetworkV1AutoUpdateServiceUpdateOper(in *Service) string {
 	return ""
 
@@ -1810,6 +2215,11 @@ func makeURINetworkV1AutoWatchLbPolicyWatchOper(in *api.ListWatchOptions) string
 //
 func makeURINetworkV1AutoWatchNetworkWatchOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/network/v1", "/watch/tenant/", in.Tenant, "/networks")
+}
+
+//
+func makeURINetworkV1AutoWatchNetworkInterfaceWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/network/v1", "/watch/smartnics")
 }
 
 //
@@ -2128,6 +2538,113 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchVirtualRouter(ctx context.Contex
 	bridgefn := func(lw *listerwatcher.WatcherClient) {
 		for {
 			in := &AutoMsgVirtualRouterWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
+	return lw, nil
+}
+
+// AutoAddNetworkInterface CRUD method for NetworkInterface
+func (r *EndpointsNetworkV1RestClient) AutoAddNetworkInterface(ctx context.Context, in *NetworkInterface) (*NetworkInterface, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoUpdateNetworkInterface CRUD method for NetworkInterface
+func (r *EndpointsNetworkV1RestClient) AutoUpdateNetworkInterface(ctx context.Context, in *NetworkInterface) (*NetworkInterface, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoGetNetworkInterface CRUD method for NetworkInterface
+func (r *EndpointsNetworkV1RestClient) AutoGetNetworkInterface(ctx context.Context, in *NetworkInterface) (*NetworkInterface, error) {
+	path := makeURINetworkV1AutoGetNetworkInterfaceGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoGetNetworkInterface(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*NetworkInterface), err
+}
+
+// AutoDeleteNetworkInterface CRUD method for NetworkInterface
+func (r *EndpointsNetworkV1RestClient) AutoDeleteNetworkInterface(ctx context.Context, in *NetworkInterface) (*NetworkInterface, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoListNetworkInterface CRUD method for NetworkInterface
+func (r *EndpointsNetworkV1RestClient) AutoListNetworkInterface(ctx context.Context, options *api.ListWatchOptions) (*NetworkInterfaceList, error) {
+	path := makeURINetworkV1AutoListNetworkInterfaceListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoListNetworkInterface(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*NetworkInterfaceList), err
+}
+
+// AutoWatchNetworkInterface CRUD method for NetworkInterface
+func (r *EndpointsNetworkV1RestClient) AutoWatchNetworkInterface(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURINetworkV1AutoWatchNetworkInterfaceWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgNetworkInterfaceWatchHelper{}
 			err := conn.ReadJSON(in)
 			if err != nil {
 				return

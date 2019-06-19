@@ -19,11 +19,11 @@ import (
 )
 
 type EndpointReactor interface {
-	CreateEndpoint(endpoint *netproto.Endpoint) error             // creates an Endpoint
+	CreateEndpoint(endpointObj *netproto.Endpoint) error          // creates an Endpoint
 	FindEndpoint(meta api.ObjectMeta) (*netproto.Endpoint, error) // finds an Endpoint
 	ListEndpoint() []*netproto.Endpoint                           // lists all Endpoints
-	UpdateEndpoint(endpoint *netproto.Endpoint) error             // updates an Endpoint
-	DeleteEndpoint(endpoint, ns, name string) error               // deletes an Endpoint
+	UpdateEndpoint(endpointObj *netproto.Endpoint) error          // updates an Endpoint
+	DeleteEndpoint(endpointObj, ns, name string) error            // deletes an Endpoint
 }
 
 // WatchEndpoints runs Endpoint watcher loop

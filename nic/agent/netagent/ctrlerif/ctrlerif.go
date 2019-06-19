@@ -124,6 +124,9 @@ func (client *NpmClient) runWatchLoop(ctx context.Context) {
 		go nimbusClient.WatchSecurityProfiles(client.watchCtx, client.agent)
 		go nimbusClient.WatchApps(client.watchCtx, client.agent)
 
+		// spawn worker thread to update network interface status to npm and watch for updates
+		go client.netifWorker()
+
 		// wait for all watchers to exit
 		time.Sleep(time.Millisecond * 100) // wait a little before above go routines can increment wait group counters
 		nimbusClient.Wait()
@@ -238,4 +241,24 @@ func (client *NpmClient) EndpointDeleteReq(epinfo *netproto.Endpoint) (*netproto
 	client.Unlock()
 
 	return ep, err
+}
+
+// createNpmNetIfs creates network-interface object in npm to reflect the interface status to the user
+func (client *NpmClient) netifWorker() {
+
+	netIfRPCClient := netproto.NewInterfaceApiClient(client.rpcClient.ClientConn)
+	idPrefix := client.agent.GetAgentID()
+
+	// fetch interfaes discovered by hw and populate them in npm
+	netifs := client.agent.ListHwInterface()
+	for _, n := range netifs {
+		netif := *n
+		netif.ObjectMeta.Name = idPrefix + "-" + netif.ObjectMeta.Name
+		if _, err := netIfRPCClient.CreateInterface(context.Background(), &netif); err != nil {
+			log.Errorf("Error resp from netctrler for netif create {%+v}. Err: %v", netif, err)
+			continue
+		}
+	}
+
+	// TODO: pull a loop here that watches delphi for link status updates, etc. from HAL
 }

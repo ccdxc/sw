@@ -8,7 +8,6 @@
 
 	It is generated from these files:
 		cluster.proto
-		networkinterface.proto
 		smartnic.proto
 		svc_cluster.proto
 		tenant.proto
@@ -39,11 +38,6 @@
 		Version
 		VersionSpec
 		VersionStatus
-		NetworkInterface
-		NetworkInterfaceHostStatus
-		NetworkInterfaceSpec
-		NetworkInterfaceStatus
-		NetworkInterfaceUplinkStatus
 		BiosInfo
 		IPConfig
 		MacRange

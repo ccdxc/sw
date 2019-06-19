@@ -98,6 +98,29 @@ func (a adapterNetworkV1) AutoAddNetwork(oldctx oldcontext.Context, t *network.N
 	return ret.(*network.Network), err
 }
 
+func (a adapterNetworkV1) AutoAddNetworkInterface(oldctx oldcontext.Context, t *network.NetworkInterface, options ...grpc.CallOption) (*network.NetworkInterface, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddNetworkInterface")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "NetworkInterface", t.Tenant, t.Namespace, "network", t.Name, strings.Title(string(apiintf.CreateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.NetworkInterface)
+		return a.service.AutoAddNetworkInterface(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.NetworkInterface), err
+}
+
 func (a adapterNetworkV1) AutoAddService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -190,6 +213,29 @@ func (a adapterNetworkV1) AutoDeleteNetwork(oldctx oldcontext.Context, t *networ
 	return ret.(*network.Network), err
 }
 
+func (a adapterNetworkV1) AutoDeleteNetworkInterface(oldctx oldcontext.Context, t *network.NetworkInterface, options ...grpc.CallOption) (*network.NetworkInterface, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteNetworkInterface")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "NetworkInterface", t.Tenant, t.Namespace, "network", t.Name, strings.Title(string(apiintf.DeleteOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.NetworkInterface)
+		return a.service.AutoDeleteNetworkInterface(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.NetworkInterface), err
+}
+
 func (a adapterNetworkV1) AutoDeleteService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -280,6 +326,29 @@ func (a adapterNetworkV1) AutoGetNetwork(oldctx oldcontext.Context, t *network.N
 		return nil, err
 	}
 	return ret.(*network.Network), err
+}
+
+func (a adapterNetworkV1) AutoGetNetworkInterface(oldctx oldcontext.Context, t *network.NetworkInterface, options ...grpc.CallOption) (*network.NetworkInterface, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetNetworkInterface")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "NetworkInterface", t.Tenant, t.Namespace, "network", t.Name, strings.Title(string(apiintf.GetOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.NetworkInterface)
+		return a.service.AutoGetNetworkInterface(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.NetworkInterface), err
 }
 
 func (a adapterNetworkV1) AutoGetService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
@@ -384,6 +453,32 @@ func (a adapterNetworkV1) AutoListNetwork(oldctx oldcontext.Context, t *api.List
 	return ret.(*network.NetworkList), err
 }
 
+func (a adapterNetworkV1) AutoListNetworkInterface(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.NetworkInterfaceList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListNetworkInterface")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	t.Tenant = ""
+	t.Namespace = ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "NetworkInterface", t.Tenant, t.Namespace, "network", "", strings.Title(string(apiintf.ListOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListNetworkInterface(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.NetworkInterfaceList), err
+}
+
 func (a adapterNetworkV1) AutoListService(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.ServiceList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -484,6 +579,29 @@ func (a adapterNetworkV1) AutoUpdateNetwork(oldctx oldcontext.Context, t *networ
 		return nil, err
 	}
 	return ret.(*network.Network), err
+}
+
+func (a adapterNetworkV1) AutoUpdateNetworkInterface(oldctx oldcontext.Context, t *network.NetworkInterface, options ...grpc.CallOption) (*network.NetworkInterface, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateNetworkInterface")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "NetworkInterface", t.Tenant, t.Namespace, "network", t.Name, strings.Title(string(apiintf.UpdateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.NetworkInterface)
+		return a.service.AutoUpdateNetworkInterface(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.NetworkInterface), err
 }
 
 func (a adapterNetworkV1) AutoUpdateService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
@@ -822,6 +940,63 @@ func (a adapterNetworkV1) AutoWatchVirtualRouter(oldctx oldcontext.Context, in *
 	return ret.(network.NetworkV1_AutoWatchVirtualRouterClient), err
 }
 
+func (a adapterNetworkV1) AutoWatchNetworkInterface(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.NetworkV1_AutoWatchNetworkInterfaceClient, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchNetworkInterface")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	in.Tenant = ""
+	in.Namespace = ""
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "NetworkInterface", in.Tenant, in.Namespace, "network"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
+		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
+			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
+			if !ok {
+				return nil, errors.New("unable to retrieve request")
+			}
+			iw, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPWriter)
+			if !ok {
+				return nil, errors.New("unable to retrieve writer")
+			}
+			conn, err := wsUpgrader.Upgrade(iw.(http.ResponseWriter), ir.(*http.Request), nil)
+			if err != nil {
+				log.Errorf("WebSocket Upgrade failed (%s)", err)
+				return nil, err
+			}
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchNetworkInterface] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
+		}
+		return a.service.AutoWatchNetworkInterface(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(network.NetworkV1_AutoWatchNetworkInterfaceClient), err
+}
+
 func (e *sNetworkV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "network", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
@@ -829,9 +1004,15 @@ func (e *sNetworkV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoGetNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Network", "network", apiintf.GetOper)
 
+	e.svcProf["AutoGetNetworkInterface"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NetworkInterface", "network", apiintf.GetOper)
+
 	e.svcProf["AutoListNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NetworkList", "network", apiintf.ListOper)
 
+	e.svcProf["AutoListNetworkInterface"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NetworkInterfaceList", "network", apiintf.ListOper)
+
 	e.svcProf["AutoWatchNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgNetworkWatchHelper", "network", apiintf.WatchOper)
+
+	e.svcProf["AutoWatchNetworkInterface"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgNetworkInterfaceWatchHelper", "network", apiintf.WatchOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service

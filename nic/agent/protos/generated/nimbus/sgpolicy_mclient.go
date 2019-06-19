@@ -19,11 +19,11 @@ import (
 )
 
 type SGPolicyReactor interface {
-	CreateSGPolicy(sgpolicy *netproto.SGPolicy) error             // creates an SGPolicy
+	CreateSGPolicy(sgpolicyObj *netproto.SGPolicy) error          // creates an SGPolicy
 	FindSGPolicy(meta api.ObjectMeta) (*netproto.SGPolicy, error) // finds an SGPolicy
 	ListSGPolicy() []*netproto.SGPolicy                           // lists all SGPolicys
-	UpdateSGPolicy(sgpolicy *netproto.SGPolicy) error             // updates an SGPolicy
-	DeleteSGPolicy(sgpolicy, ns, name string) error               // deletes an SGPolicy
+	UpdateSGPolicy(sgpolicyObj *netproto.SGPolicy) error          // updates an SGPolicy
+	DeleteSGPolicy(sgpolicyObj, ns, name string) error            // deletes an SGPolicy
 }
 
 // WatchSGPolicys runs SGPolicy watcher loop

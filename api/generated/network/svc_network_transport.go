@@ -25,26 +25,31 @@ var _ api.ObjectMeta
 type grpcServerNetworkV1 struct {
 	Endpoints EndpointsNetworkV1Server
 
-	AutoAddLbPolicyHdlr         grpctransport.Handler
-	AutoAddNetworkHdlr          grpctransport.Handler
-	AutoAddServiceHdlr          grpctransport.Handler
-	AutoAddVirtualRouterHdlr    grpctransport.Handler
-	AutoDeleteLbPolicyHdlr      grpctransport.Handler
-	AutoDeleteNetworkHdlr       grpctransport.Handler
-	AutoDeleteServiceHdlr       grpctransport.Handler
-	AutoDeleteVirtualRouterHdlr grpctransport.Handler
-	AutoGetLbPolicyHdlr         grpctransport.Handler
-	AutoGetNetworkHdlr          grpctransport.Handler
-	AutoGetServiceHdlr          grpctransport.Handler
-	AutoGetVirtualRouterHdlr    grpctransport.Handler
-	AutoListLbPolicyHdlr        grpctransport.Handler
-	AutoListNetworkHdlr         grpctransport.Handler
-	AutoListServiceHdlr         grpctransport.Handler
-	AutoListVirtualRouterHdlr   grpctransport.Handler
-	AutoUpdateLbPolicyHdlr      grpctransport.Handler
-	AutoUpdateNetworkHdlr       grpctransport.Handler
-	AutoUpdateServiceHdlr       grpctransport.Handler
-	AutoUpdateVirtualRouterHdlr grpctransport.Handler
+	AutoAddLbPolicyHdlr            grpctransport.Handler
+	AutoAddNetworkHdlr             grpctransport.Handler
+	AutoAddNetworkInterfaceHdlr    grpctransport.Handler
+	AutoAddServiceHdlr             grpctransport.Handler
+	AutoAddVirtualRouterHdlr       grpctransport.Handler
+	AutoDeleteLbPolicyHdlr         grpctransport.Handler
+	AutoDeleteNetworkHdlr          grpctransport.Handler
+	AutoDeleteNetworkInterfaceHdlr grpctransport.Handler
+	AutoDeleteServiceHdlr          grpctransport.Handler
+	AutoDeleteVirtualRouterHdlr    grpctransport.Handler
+	AutoGetLbPolicyHdlr            grpctransport.Handler
+	AutoGetNetworkHdlr             grpctransport.Handler
+	AutoGetNetworkInterfaceHdlr    grpctransport.Handler
+	AutoGetServiceHdlr             grpctransport.Handler
+	AutoGetVirtualRouterHdlr       grpctransport.Handler
+	AutoListLbPolicyHdlr           grpctransport.Handler
+	AutoListNetworkHdlr            grpctransport.Handler
+	AutoListNetworkInterfaceHdlr   grpctransport.Handler
+	AutoListServiceHdlr            grpctransport.Handler
+	AutoListVirtualRouterHdlr      grpctransport.Handler
+	AutoUpdateLbPolicyHdlr         grpctransport.Handler
+	AutoUpdateNetworkHdlr          grpctransport.Handler
+	AutoUpdateNetworkInterfaceHdlr grpctransport.Handler
+	AutoUpdateServiceHdlr          grpctransport.Handler
+	AutoUpdateVirtualRouterHdlr    grpctransport.Handler
 }
 
 // MakeGRPCServerNetworkV1 creates a GRPC server for NetworkV1 service
@@ -67,6 +72,13 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			DecodeGrpcReqNetwork,
 			EncodeGrpcRespNetwork,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddNetwork", logger)))...,
+		),
+
+		AutoAddNetworkInterfaceHdlr: grpctransport.NewServer(
+			endpoints.AutoAddNetworkInterfaceEndpoint,
+			DecodeGrpcReqNetworkInterface,
+			EncodeGrpcRespNetworkInterface,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddNetworkInterface", logger)))...,
 		),
 
 		AutoAddServiceHdlr: grpctransport.NewServer(
@@ -97,6 +109,13 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteNetwork", logger)))...,
 		),
 
+		AutoDeleteNetworkInterfaceHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteNetworkInterfaceEndpoint,
+			DecodeGrpcReqNetworkInterface,
+			EncodeGrpcRespNetworkInterface,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteNetworkInterface", logger)))...,
+		),
+
 		AutoDeleteServiceHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteServiceEndpoint,
 			DecodeGrpcReqService,
@@ -123,6 +142,13 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			DecodeGrpcReqNetwork,
 			EncodeGrpcRespNetwork,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetNetwork", logger)))...,
+		),
+
+		AutoGetNetworkInterfaceHdlr: grpctransport.NewServer(
+			endpoints.AutoGetNetworkInterfaceEndpoint,
+			DecodeGrpcReqNetworkInterface,
+			EncodeGrpcRespNetworkInterface,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetNetworkInterface", logger)))...,
 		),
 
 		AutoGetServiceHdlr: grpctransport.NewServer(
@@ -153,6 +179,13 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListNetwork", logger)))...,
 		),
 
+		AutoListNetworkInterfaceHdlr: grpctransport.NewServer(
+			endpoints.AutoListNetworkInterfaceEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespNetworkInterfaceList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListNetworkInterface", logger)))...,
+		),
+
 		AutoListServiceHdlr: grpctransport.NewServer(
 			endpoints.AutoListServiceEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -179,6 +212,13 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			DecodeGrpcReqNetwork,
 			EncodeGrpcRespNetwork,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateNetwork", logger)))...,
+		),
+
+		AutoUpdateNetworkInterfaceHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateNetworkInterfaceEndpoint,
+			DecodeGrpcReqNetworkInterface,
+			EncodeGrpcRespNetworkInterface,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateNetworkInterface", logger)))...,
 		),
 
 		AutoUpdateServiceHdlr: grpctransport.NewServer(
@@ -229,6 +269,24 @@ func decodeHTTPrespNetworkV1AutoAddNetwork(_ context.Context, r *http.Response) 
 		return nil, errorDecoder(r)
 	}
 	var resp Network
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoAddNetworkInterface(ctx oldcontext.Context, req *NetworkInterface) (*NetworkInterface, error) {
+	_, resp, err := s.AutoAddNetworkInterfaceHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoAddNetworkInterface).V
+	return &r, resp.(respNetworkV1AutoAddNetworkInterface).Err
+}
+
+func decodeHTTPrespNetworkV1AutoAddNetworkInterface(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp NetworkInterface
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -305,6 +363,24 @@ func decodeHTTPrespNetworkV1AutoDeleteNetwork(_ context.Context, r *http.Respons
 	return &resp, err
 }
 
+func (s *grpcServerNetworkV1) AutoDeleteNetworkInterface(ctx oldcontext.Context, req *NetworkInterface) (*NetworkInterface, error) {
+	_, resp, err := s.AutoDeleteNetworkInterfaceHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoDeleteNetworkInterface).V
+	return &r, resp.(respNetworkV1AutoDeleteNetworkInterface).Err
+}
+
+func decodeHTTPrespNetworkV1AutoDeleteNetworkInterface(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp NetworkInterface
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerNetworkV1) AutoDeleteService(ctx oldcontext.Context, req *Service) (*Service, error) {
 	_, resp, err := s.AutoDeleteServiceHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -373,6 +449,24 @@ func decodeHTTPrespNetworkV1AutoGetNetwork(_ context.Context, r *http.Response) 
 		return nil, errorDecoder(r)
 	}
 	var resp Network
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoGetNetworkInterface(ctx oldcontext.Context, req *NetworkInterface) (*NetworkInterface, error) {
+	_, resp, err := s.AutoGetNetworkInterfaceHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoGetNetworkInterface).V
+	return &r, resp.(respNetworkV1AutoGetNetworkInterface).Err
+}
+
+func decodeHTTPrespNetworkV1AutoGetNetworkInterface(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp NetworkInterface
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -449,6 +543,24 @@ func decodeHTTPrespNetworkV1AutoListNetwork(_ context.Context, r *http.Response)
 	return &resp, err
 }
 
+func (s *grpcServerNetworkV1) AutoListNetworkInterface(ctx oldcontext.Context, req *api.ListWatchOptions) (*NetworkInterfaceList, error) {
+	_, resp, err := s.AutoListNetworkInterfaceHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoListNetworkInterface).V
+	return &r, resp.(respNetworkV1AutoListNetworkInterface).Err
+}
+
+func decodeHTTPrespNetworkV1AutoListNetworkInterface(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp NetworkInterfaceList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerNetworkV1) AutoListService(ctx oldcontext.Context, req *api.ListWatchOptions) (*ServiceList, error) {
 	_, resp, err := s.AutoListServiceHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -521,6 +633,24 @@ func decodeHTTPrespNetworkV1AutoUpdateNetwork(_ context.Context, r *http.Respons
 	return &resp, err
 }
 
+func (s *grpcServerNetworkV1) AutoUpdateNetworkInterface(ctx oldcontext.Context, req *NetworkInterface) (*NetworkInterface, error) {
+	_, resp, err := s.AutoUpdateNetworkInterfaceHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoUpdateNetworkInterface).V
+	return &r, resp.(respNetworkV1AutoUpdateNetworkInterface).Err
+}
+
+func decodeHTTPrespNetworkV1AutoUpdateNetworkInterface(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp NetworkInterface
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerNetworkV1) AutoUpdateService(ctx oldcontext.Context, req *Service) (*Service, error) {
 	_, resp, err := s.AutoUpdateServiceHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -577,6 +707,10 @@ func (s *grpcServerNetworkV1) AutoWatchVirtualRouter(in *api.ListWatchOptions, s
 	return s.Endpoints.AutoWatchVirtualRouter(in, stream)
 }
 
+func (s *grpcServerNetworkV1) AutoWatchNetworkInterface(in *api.ListWatchOptions, stream NetworkV1_AutoWatchNetworkInterfaceServer) error {
+	return s.Endpoints.AutoWatchNetworkInterface(in, stream)
+}
+
 func encodeHTTPLbPolicyList(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -608,6 +742,40 @@ func EncodeGrpcRespLbPolicyList(ctx context.Context, response interface{}) (inte
 
 // DecodeGrpcRespLbPolicyList decodes the GRPC response
 func DecodeGrpcRespLbPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPNetworkInterfaceList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPNetworkInterfaceList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req NetworkInterfaceList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqNetworkInterfaceList encodes GRPC request
+func EncodeGrpcReqNetworkInterfaceList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*NetworkInterfaceList)
+	return req, nil
+}
+
+// DecodeGrpcReqNetworkInterfaceList decodes GRPC request
+func DecodeGrpcReqNetworkInterfaceList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*NetworkInterfaceList)
+	return req, nil
+}
+
+// EncodeGrpcRespNetworkInterfaceList endodes the GRPC response
+func EncodeGrpcRespNetworkInterfaceList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespNetworkInterfaceList decodes the GRPC response
+func DecodeGrpcRespNetworkInterfaceList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

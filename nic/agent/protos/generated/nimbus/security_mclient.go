@@ -19,11 +19,11 @@ import (
 )
 
 type SecurityGroupReactor interface {
-	CreateSecurityGroup(securitygroup *netproto.SecurityGroup) error        // creates an SecurityGroup
+	CreateSecurityGroup(securitygroupObj *netproto.SecurityGroup) error     // creates an SecurityGroup
 	FindSecurityGroup(meta api.ObjectMeta) (*netproto.SecurityGroup, error) // finds an SecurityGroup
 	ListSecurityGroup() []*netproto.SecurityGroup                           // lists all SecurityGroups
-	UpdateSecurityGroup(securitygroup *netproto.SecurityGroup) error        // updates an SecurityGroup
-	DeleteSecurityGroup(securitygroup, ns, name string) error               // deletes an SecurityGroup
+	UpdateSecurityGroup(securitygroupObj *netproto.SecurityGroup) error     // updates an SecurityGroup
+	DeleteSecurityGroup(securitygroupObj, ns, name string) error            // deletes an SecurityGroup
 }
 
 // WatchSecurityGroups runs SecurityGroup watcher loop

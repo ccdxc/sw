@@ -1618,3 +1618,402 @@ func (api *virtualrouterAPI) Watch(handler VirtualRouterHandler) error {
 func (ct *ctrlerCtx) VirtualRouter() VirtualRouterAPI {
 	return &virtualrouterAPI{ct: ct}
 }
+
+// NetworkInterface is a wrapper object that implements additional functionality
+type NetworkInterface struct {
+	sync.Mutex
+	network.NetworkInterface
+	HandlerCtx interface{} // additional state handlers can store
+	ctrler     *ctrlerCtx  // reference back to the controller instance
+}
+
+func (obj *NetworkInterface) Write() error {
+	// if there is no API server to connect to, we are done
+	if (obj.ctrler == nil) || (obj.ctrler.resolver == nil) || obj.ctrler.apisrvURL == "" {
+		return nil
+	}
+
+	apicl, err := obj.ctrler.apiClient()
+	if err != nil {
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
+		return err
+	}
+
+	obj.ctrler.stats.Counter("NetworkInterface_Writes").Inc()
+
+	// write to api server
+	if obj.ObjectMeta.ResourceVersion != "" {
+		// update it
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.NetworkV1().NetworkInterface().UpdateStatus(context.Background(), &obj.NetworkInterface)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
+	} else {
+		//  create
+		_, err = apicl.NetworkV1().NetworkInterface().Create(context.Background(), &obj.NetworkInterface)
+	}
+
+	return nil
+}
+
+// NetworkInterfaceHandler is the event handler for NetworkInterface object
+type NetworkInterfaceHandler interface {
+	OnNetworkInterfaceCreate(obj *NetworkInterface) error
+	OnNetworkInterfaceUpdate(oldObj *NetworkInterface, newObj *network.NetworkInterface) error
+	OnNetworkInterfaceDelete(obj *NetworkInterface) error
+}
+
+// handleNetworkInterfaceEvent handles NetworkInterface events from watcher
+func (ct *ctrlerCtx) handleNetworkInterfaceEvent(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *network.NetworkInterface:
+		eobj := evt.Object.(*network.NetworkInterface)
+		kind := "NetworkInterface"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		networkinterfaceHandler := handler.(NetworkInterfaceHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &NetworkInterface{
+					NetworkInterface: *eobj,
+					HandlerCtx:       nil,
+					ctrler:           ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("NetworkInterface_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				err = networkinterfaceHandler.OnNetworkInterfaceCreate(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.delObject(kind, eobj.GetKey())
+					return err
+				}
+			} else {
+				obj := fobj.(*NetworkInterface)
+
+				ct.stats.Counter("NetworkInterface_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				err = networkinterfaceHandler.OnNetworkInterfaceUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
+				}
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*NetworkInterface)
+
+			ct.stats.Counter("NetworkInterface_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			err = networkinterfaceHandler.OnNetworkInterfaceDelete(obj)
+			obj.Unlock()
+			if err != nil {
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+			}
+
+			ct.delObject(kind, eobj.GetKey())
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on NetworkInterface watch channel", tp)
+	}
+
+	return nil
+}
+
+// diffNetworkInterface does a diff of NetworkInterface objects between local cache and API server
+func (ct *ctrlerCtx) diffNetworkInterface(apicl apiclient.Services) {
+	opts := api.ListWatchOptions{}
+
+	// get a list of all objects from API server
+	objlist, err := apicl.NetworkV1().NetworkInterface().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
+		return
+	}
+
+	ct.logger.Infof("diffNetworkInterface(): NetworkInterfaceList returned %d objects", len(objlist))
+
+	// build an object map
+	objmap := make(map[string]*network.NetworkInterface)
+	for _, obj := range objlist {
+		objmap[obj.GetKey()] = obj
+	}
+
+	// if an object is in our local cache and not in API server, trigger delete for it
+	for _, obj := range ct.NetworkInterface().List() {
+		_, ok := objmap[obj.GetKey()]
+		if !ok {
+			ct.logger.Infof("diffNetworkInterface(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
+			evt := kvstore.WatchEvent{
+				Type:   kvstore.Deleted,
+				Key:    obj.GetKey(),
+				Object: &obj.NetworkInterface,
+			}
+			ct.handleNetworkInterfaceEvent(&evt)
+		}
+	}
+
+	// trigger create event for all others
+	for _, obj := range objlist {
+		ct.logger.Infof("diffNetworkInterface(): Adding object %#v", obj.GetKey())
+		evt := kvstore.WatchEvent{
+			Type:   kvstore.Created,
+			Key:    obj.GetKey(),
+			Object: obj,
+		}
+		ct.handleNetworkInterfaceEvent(&evt)
+	}
+}
+
+func (ct *ctrlerCtx) runNetworkInterfaceWatcher() {
+	kind := "NetworkInterface"
+
+	// if there is no API server to connect to, we are done
+	if (ct.resolver == nil) || ct.apisrvURL == "" {
+		return
+	}
+
+	// create context
+	ctx, cancel := context.WithCancel(context.Background())
+	ct.Lock()
+	ct.watchCancel[kind] = cancel
+	ct.Unlock()
+	opts := api.ListWatchOptions{}
+	logger := ct.logger.WithContext("submodule", "NetworkInterfaceWatcher")
+
+	// create a grpc client
+	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+	if err == nil {
+		ct.diffNetworkInterface(apiclt)
+	}
+
+	// setup wait group
+	ct.waitGrp.Add(1)
+
+	// start a goroutine
+	go func() {
+		defer ct.waitGrp.Done()
+		ct.stats.Counter("NetworkInterface_Watch").Inc()
+		defer ct.stats.Counter("NetworkInterface_Watch").Dec()
+
+		// loop forever
+		for {
+			// create a grpc client
+			apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+			if err != nil {
+				logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+				ct.stats.Counter("NetworkInterface_ApiClientErr").Inc()
+			} else {
+				logger.Infof("API client connected {%+v}", apicl)
+
+				// NetworkInterface object watcher
+				wt, werr := apicl.NetworkV1().NetworkInterface().Watch(ctx, &opts)
+				if werr != nil {
+					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+					// wait for a second and retry connecting to api server
+					apicl.Close()
+					time.Sleep(time.Second)
+					continue
+				}
+				ct.Lock()
+				ct.watchers[kind] = wt
+				ct.Unlock()
+
+				// perform a diff with API server and local cache
+				time.Sleep(time.Millisecond * 100)
+				ct.diffNetworkInterface(apicl)
+
+				// handle api server watch events
+			innerLoop:
+				for {
+					// wait for events
+					select {
+					case evt, ok := <-wt.EventChan():
+						if !ok {
+							logger.Error("Error receiving from apisrv watcher")
+							ct.stats.Counter("NetworkInterface_WatchErrors").Inc()
+							break innerLoop
+						}
+
+						// handle event
+						ct.handleNetworkInterfaceEvent(evt)
+					}
+				}
+				apicl.Close()
+			}
+
+			// if stop flag is set, we are done
+			if ct.stoped {
+				logger.Infof("Exiting API server watcher")
+				return
+			}
+
+			// wait for a second and retry connecting to api server
+			time.Sleep(time.Second)
+		}
+	}()
+}
+
+// WatchNetworkInterface starts watch on NetworkInterface object
+func (ct *ctrlerCtx) WatchNetworkInterface(handler NetworkInterfaceHandler) error {
+	kind := "NetworkInterface"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if ok {
+		return fmt.Errorf("NetworkInterface watcher already exists")
+	}
+
+	// save handler
+	ct.Lock()
+	ct.handlers[kind] = handler
+	ct.Unlock()
+
+	// run NetworkInterface watcher in a go routine
+	ct.runNetworkInterfaceWatcher()
+
+	return nil
+}
+
+// NetworkInterfaceAPI returns
+type NetworkInterfaceAPI interface {
+	Create(obj *network.NetworkInterface) error
+	Update(obj *network.NetworkInterface) error
+	Delete(obj *network.NetworkInterface) error
+	Find(meta *api.ObjectMeta) (*NetworkInterface, error)
+	List() []*NetworkInterface
+	Watch(handler NetworkInterfaceHandler) error
+}
+
+// dummy struct that implements NetworkInterfaceAPI
+type networkinterfaceAPI struct {
+	ct *ctrlerCtx
+}
+
+// Create creates NetworkInterface object
+func (api *networkinterfaceAPI) Create(obj *network.NetworkInterface) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.NetworkV1().NetworkInterface().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.NetworkV1().NetworkInterface().Update(context.Background(), obj)
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// Update triggers update on NetworkInterface object
+func (api *networkinterfaceAPI) Update(obj *network.NetworkInterface) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.NetworkV1().NetworkInterface().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
+	return api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+}
+
+// Delete deletes NetworkInterface object
+func (api *networkinterfaceAPI) Delete(obj *network.NetworkInterface) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		apicl.NetworkV1().NetworkInterface().Delete(context.Background(), &obj.ObjectMeta)
+	}
+
+	return api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+}
+
+// Find returns an object by meta
+func (api *networkinterfaceAPI) Find(meta *api.ObjectMeta) (*NetworkInterface, error) {
+	// find the object
+	obj, err := api.ct.FindObject("NetworkInterface", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *NetworkInterface:
+		hobj := obj.(*NetworkInterface)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
+// List returns a list of all NetworkInterface objects
+func (api *networkinterfaceAPI) List() []*NetworkInterface {
+	var objlist []*NetworkInterface
+
+	objs := api.ct.ListObjects("NetworkInterface")
+	for _, obj := range objs {
+		switch tp := obj.(type) {
+		case *NetworkInterface:
+			eobj := obj.(*NetworkInterface)
+			objlist = append(objlist, eobj)
+		default:
+			log.Fatalf("Got invalid object type %v while looking for NetworkInterface", tp)
+		}
+	}
+
+	return objlist
+}
+
+// Watch sets up a event handlers for NetworkInterface object
+func (api *networkinterfaceAPI) Watch(handler NetworkInterfaceHandler) error {
+	return api.ct.WatchNetworkInterface(handler)
+}
+
+// NetworkInterface returns NetworkInterfaceAPI
+func (ct *ctrlerCtx) NetworkInterface() NetworkInterfaceAPI {
+	return &networkinterfaceAPI{ct: ct}
+}

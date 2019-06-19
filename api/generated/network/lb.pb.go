@@ -9,6 +9,7 @@
 	It is generated from these files:
 		lb.proto
 		network.proto
+		networkinterface.proto
 		service.proto
 		svc_network.proto
 		vrf.proto
@@ -21,16 +22,23 @@
 		Network
 		NetworkSpec
 		NetworkStatus
+		NetworkInterface
+		NetworkInterfaceHostStatus
+		NetworkInterfaceSpec
+		NetworkInterfaceStatus
+		NetworkInterfaceUplinkStatus
 		Service
 		ServiceSpec
 		ServiceStatus
 		TLSClientPolicySpec
 		TLSServerPolicySpec
 		AutoMsgLbPolicyWatchHelper
+		AutoMsgNetworkInterfaceWatchHelper
 		AutoMsgNetworkWatchHelper
 		AutoMsgServiceWatchHelper
 		AutoMsgVirtualRouterWatchHelper
 		LbPolicyList
+		NetworkInterfaceList
 		NetworkList
 		ServiceList
 		VirtualRouterList

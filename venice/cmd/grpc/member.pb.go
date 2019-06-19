@@ -34,7 +34,7 @@ import fmt "fmt"
 import math "math"
 import _ "google.golang.org/genproto/googleapis/api/annotations"
 import _ "github.com/gogo/protobuf/gogoproto"
-import cluster2 "github.com/pensando/sw/api/generated/cluster"
+import cluster1 "github.com/pensando/sw/api/generated/cluster"
 import api "github.com/pensando/sw/api"
 import certapi "github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
 
@@ -331,7 +331,7 @@ func (*ClusterDisjoinResp) Descriptor() ([]byte, []int) { return fileDescriptorM
 
 // NMD --> CMD
 type NICAdmissionRequest struct {
-	Nic cluster2.SmartNIC `protobuf:"bytes,1,opt,name=Nic" json:"nic,omitempty"`
+	Nic cluster1.SmartNIC `protobuf:"bytes,1,opt,name=Nic" json:"nic,omitempty"`
 	// Factory Certificate
 	Cert []byte `protobuf:"bytes,2,opt,name=Cert,proto3" json:"cert,omitempty"`
 	// Cluster Certificate Signing Request
@@ -343,11 +343,11 @@ func (m *NICAdmissionRequest) String() string            { return proto.CompactT
 func (*NICAdmissionRequest) ProtoMessage()               {}
 func (*NICAdmissionRequest) Descriptor() ([]byte, []int) { return fileDescriptorMember, []int{9} }
 
-func (m *NICAdmissionRequest) GetNic() cluster2.SmartNIC {
+func (m *NICAdmissionRequest) GetNic() cluster1.SmartNIC {
 	if m != nil {
 		return m.Nic
 	}
-	return cluster2.SmartNIC{}
+	return cluster1.SmartNIC{}
 }
 
 func (m *NICAdmissionRequest) GetCert() []byte {
@@ -541,7 +541,7 @@ func (m *RegisterNICResponse) GetAdmissionResponse() *NICAdmissionResponse {
 // Update NIC request
 type UpdateNICRequest struct {
 	// SmartNIC object
-	Nic cluster2.SmartNIC `protobuf:"bytes,1,opt,name=Nic" json:"nic,omitempty"`
+	Nic cluster1.SmartNIC `protobuf:"bytes,1,opt,name=Nic" json:"nic,omitempty"`
 }
 
 func (m *UpdateNICRequest) Reset()                    { *m = UpdateNICRequest{} }
@@ -549,11 +549,11 @@ func (m *UpdateNICRequest) String() string            { return proto.CompactText
 func (*UpdateNICRequest) ProtoMessage()               {}
 func (*UpdateNICRequest) Descriptor() ([]byte, []int) { return fileDescriptorMember, []int{15} }
 
-func (m *UpdateNICRequest) GetNic() cluster2.SmartNIC {
+func (m *UpdateNICRequest) GetNic() cluster1.SmartNIC {
 	if m != nil {
 		return m.Nic
 	}
-	return cluster2.SmartNIC{}
+	return cluster1.SmartNIC{}
 }
 
 // Update NIC response
@@ -568,7 +568,7 @@ func (*UpdateNICResponse) Descriptor() ([]byte, []int) { return fileDescriptorMe
 // SmartNIC watch event
 type SmartNICEvent struct {
 	EventType api.EventType     `protobuf:"varint,1,opt,name=EventType,proto3,enum=api.EventType" json:"eventType,omitempty"`
-	Nic       cluster2.SmartNIC `protobuf:"bytes,2,opt,name=Nic" json:"nic,omitempty"`
+	Nic       cluster1.SmartNIC `protobuf:"bytes,2,opt,name=Nic" json:"nic,omitempty"`
 }
 
 func (m *SmartNICEvent) Reset()                    { *m = SmartNICEvent{} }
@@ -583,11 +583,11 @@ func (m *SmartNICEvent) GetEventType() api.EventType {
 	return api.EventType_CreateEvent
 }
 
-func (m *SmartNICEvent) GetNic() cluster2.SmartNIC {
+func (m *SmartNICEvent) GetNic() cluster1.SmartNIC {
 	if m != nil {
 		return m.Nic
 	}
-	return cluster2.SmartNIC{}
+	return cluster1.SmartNIC{}
 }
 
 func init() {

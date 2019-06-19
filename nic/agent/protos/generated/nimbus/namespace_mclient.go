@@ -19,11 +19,11 @@ import (
 )
 
 type NamespaceReactor interface {
-	CreateNamespace(namespace *netproto.Namespace) error            // creates an Namespace
+	CreateNamespace(namespaceObj *netproto.Namespace) error         // creates an Namespace
 	FindNamespace(meta api.ObjectMeta) (*netproto.Namespace, error) // finds an Namespace
 	ListNamespace() []*netproto.Namespace                           // lists all Namespaces
-	UpdateNamespace(namespace *netproto.Namespace) error            // updates an Namespace
-	DeleteNamespace(namespace, ns, name string) error               // deletes an Namespace
+	UpdateNamespace(namespaceObj *netproto.Namespace) error         // updates an Namespace
+	DeleteNamespace(namespaceObj, ns, name string) error            // deletes an Namespace
 }
 
 // WatchNamespaces runs Namespace watcher loop

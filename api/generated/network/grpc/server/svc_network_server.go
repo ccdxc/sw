@@ -50,41 +50,48 @@ type eNetworkV1Endpoints struct {
 	Svc                     snetworkSvc_networkBackend
 	fnAutoWatchSvcNetworkV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
-	fnAutoAddLbPolicy         func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoAddNetwork          func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoAddService          func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoAddVirtualRouter    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteLbPolicy      func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteNetwork       func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteService       func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteVirtualRouter func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetLbPolicy         func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetNetwork          func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetService          func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetVirtualRouter    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListLbPolicy        func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListNetwork         func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListService         func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListVirtualRouter   func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateLbPolicy      func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateNetwork       func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateService       func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateVirtualRouter func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddLbPolicy            func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddNetwork             func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddNetworkInterface    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddService             func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddVirtualRouter       func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteLbPolicy         func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteNetwork          func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteNetworkInterface func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteService          func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteVirtualRouter    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetLbPolicy            func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetNetwork             func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetNetworkInterface    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetService             func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetVirtualRouter       func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListLbPolicy           func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListNetwork            func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListNetworkInterface   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListService            func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListVirtualRouter      func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateLbPolicy         func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateNetwork          func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateNetworkInterface func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateService          func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateVirtualRouter    func(ctx context.Context, t interface{}) (interface{}, error)
 
-	fnAutoWatchNetwork       func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
-	fnAutoWatchService       func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
-	fnAutoWatchLbPolicy      func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
-	fnAutoWatchVirtualRouter func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchNetwork          func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchService          func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchLbPolicy         func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchVirtualRouter    func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchNetworkInterface func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 
 func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 	l.Infof("registering message for snetworkSvc_networkBackend")
 	s.Messages = map[string]apiserver.Message{
 
-		"network.AutoMsgLbPolicyWatchHelper":      apisrvpkg.NewMessage("network.AutoMsgLbPolicyWatchHelper"),
-		"network.AutoMsgNetworkWatchHelper":       apisrvpkg.NewMessage("network.AutoMsgNetworkWatchHelper"),
-		"network.AutoMsgServiceWatchHelper":       apisrvpkg.NewMessage("network.AutoMsgServiceWatchHelper"),
-		"network.AutoMsgVirtualRouterWatchHelper": apisrvpkg.NewMessage("network.AutoMsgVirtualRouterWatchHelper"),
+		"network.AutoMsgLbPolicyWatchHelper":         apisrvpkg.NewMessage("network.AutoMsgLbPolicyWatchHelper"),
+		"network.AutoMsgNetworkInterfaceWatchHelper": apisrvpkg.NewMessage("network.AutoMsgNetworkInterfaceWatchHelper"),
+		"network.AutoMsgNetworkWatchHelper":          apisrvpkg.NewMessage("network.AutoMsgNetworkWatchHelper"),
+		"network.AutoMsgServiceWatchHelper":          apisrvpkg.NewMessage("network.AutoMsgServiceWatchHelper"),
+		"network.AutoMsgVirtualRouterWatchHelper":    apisrvpkg.NewMessage("network.AutoMsgVirtualRouterWatchHelper"),
 		"network.LbPolicyList": apisrvpkg.NewMessage("network.LbPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := network.LbPolicyList{}
@@ -115,6 +122,32 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			return r, nil
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(network.LbPolicyList)
+			return &r
+		}),
+		"network.NetworkInterfaceList": apisrvpkg.NewMessage("network.NetworkInterfaceList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := network.NetworkInterfaceList{}
+			into.Kind = "NetworkInterfaceList"
+			r := network.NetworkInterface{}
+			r.ObjectMeta = options.ObjectMeta
+			key := r.MakeKey(prefix)
+
+			ctx = apiutils.SetVar(ctx, "ObjKind", "network.NetworkInterface")
+			err := kvs.ListFiltered(ctx, key, &into, *options)
+			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
+				return nil, err
+			}
+			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(network.NetworkInterfaceList)
+			r.APIVersion = ver
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
+			}
+			return r, nil
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(network.NetworkInterfaceList)
 			return &r
 		}),
 		"network.NetworkList": apisrvpkg.NewMessage("network.NetworkList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -243,6 +276,11 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
+		s.endpointsNetworkV1.fnAutoAddNetworkInterface = srv.AddMethod("AutoAddNetworkInterface",
+			apisrvpkg.NewMethod(srv, pkgMessages["network.NetworkInterface"], pkgMessages["network.NetworkInterface"], "network", "AutoAddNetworkInterface")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
 		s.endpointsNetworkV1.fnAutoAddService = srv.AddMethod("AutoAddService",
 			apisrvpkg.NewMethod(srv, pkgMessages["network.Service"], pkgMessages["network.Service"], "network", "AutoAddService")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
@@ -260,6 +298,11 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsNetworkV1.fnAutoDeleteNetwork = srv.AddMethod("AutoDeleteNetwork",
 			apisrvpkg.NewMethod(srv, pkgMessages["network.Network"], pkgMessages["network.Network"], "network", "AutoDeleteNetwork")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
+		s.endpointsNetworkV1.fnAutoDeleteNetworkInterface = srv.AddMethod("AutoDeleteNetworkInterface",
+			apisrvpkg.NewMethod(srv, pkgMessages["network.NetworkInterface"], pkgMessages["network.NetworkInterface"], "network", "AutoDeleteNetworkInterface")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
@@ -287,6 +330,15 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/networks/", in.Name), nil
 		}).HandleInvocation
 
+		s.endpointsNetworkV1.fnAutoGetNetworkInterface = srv.AddMethod("AutoGetNetworkInterface",
+			apisrvpkg.NewMethod(srv, pkgMessages["network.NetworkInterface"], pkgMessages["network.NetworkInterface"], "network", "AutoGetNetworkInterface")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(network.NetworkInterface)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/smartnics/", in.Name), nil
+		}).HandleInvocation
+
 		s.endpointsNetworkV1.fnAutoGetService = srv.AddMethod("AutoGetService",
 			apisrvpkg.NewMethod(srv, pkgMessages["network.Service"], pkgMessages["network.Service"], "network", "AutoGetService")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
@@ -311,6 +363,15 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/networks/", in.Name), nil
 		}).HandleInvocation
 
+		s.endpointsNetworkV1.fnAutoListNetworkInterface = srv.AddMethod("AutoListNetworkInterface",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["network.NetworkInterfaceList"], "network", "AutoListNetworkInterface")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(api.ListWatchOptions)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/smartnics/", in.Name), nil
+		}).HandleInvocation
+
 		s.endpointsNetworkV1.fnAutoListService = srv.AddMethod("AutoListService",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["network.ServiceList"], "network", "AutoListService")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
@@ -328,6 +389,11 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsNetworkV1.fnAutoUpdateNetwork = srv.AddMethod("AutoUpdateNetwork",
 			apisrvpkg.NewMethod(srv, pkgMessages["network.Network"], pkgMessages["network.Network"], "network", "AutoUpdateNetwork")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
+		s.endpointsNetworkV1.fnAutoUpdateNetworkInterface = srv.AddMethod("AutoUpdateNetworkInterface",
+			apisrvpkg.NewMethod(srv, pkgMessages["network.NetworkInterface"], pkgMessages["network.NetworkInterface"], "network", "AutoUpdateNetworkInterface")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
@@ -349,6 +415,8 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsNetworkV1.fnAutoWatchVirtualRouter = pkgMessages["network.VirtualRouter"].WatchFromKv
 
+		s.endpointsNetworkV1.fnAutoWatchNetworkInterface = pkgMessages["network.NetworkInterface"].WatchFromKv
+
 		s.Services = map[string]apiserver.Service{
 			"network.NetworkV1": srv,
 		}
@@ -356,7 +424,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		endpoints := network.MakeNetworkV1ServerEndpoints(s.endpointsNetworkV1, logger)
 		server := network.MakeGRPCServerNetworkV1(ctx, endpoints, logger)
 		network.RegisterNetworkV1Server(grpcserver.GrpcServer, server)
-		svcObjs := []string{"Network", "Service", "LbPolicy", "VirtualRouter"}
+		svcObjs := []string{"Network", "Service", "LbPolicy", "VirtualRouter", "NetworkInterface"}
 		fieldhooks.RegisterImmutableFieldsServiceHooks("network", "NetworkV1", svcObjs)
 	}
 }
@@ -783,6 +851,106 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			}
 		})
 
+		pkgMessages["network.NetworkInterface"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+			o := network.NetworkInterface{}
+			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
+			wstream := stream.(network.NetworkV1_AutoWatchNetworkInterfaceServer)
+			nctx, cancel := context.WithCancel(wstream.Context())
+			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
+			nctx = apiutils.SetVar(nctx, "ObjKind", "network.NetworkInterface")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "network.NetworkInterface")
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
+			if err != nil {
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "network.NetworkInterface")
+				return err
+			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &network.AutoMsgNetworkInterfaceWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "network.NetworkInterface")
+					return err
+				}
+				events = &network.AutoMsgNetworkInterfaceWatchHelper{}
+				return nil
+			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "network.NetworkInterface")
+			for {
+				select {
+				case ev, ok := <-watcher.EventChan():
+					if !ok {
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "network.NetworkInterface")
+						return nil
+					}
+					evin, ok := ev.Object.(*network.NetworkInterface)
+					if !ok {
+						status, ok := ev.Object.(*api.Status)
+						if !ok {
+							return errors.New("unknown error")
+						}
+						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
+					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*network.NetworkInterface)
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "network")
+
+					strEvent := &network.AutoMsgNetworkInterfaceWatchHelper_WatchEvent{
+						Type:   string(ev.Type),
+						Object: in,
+					}
+					l.DebugLog("msg", "received NetworkInterface watch event from KV", "type", ev.Type)
+					if version != in.APIVersion {
+						i, err := txfn(in.APIVersion, version, in)
+						if err != nil {
+							l.ErrorLog("msg", "Failed to transform message", "type", "NetworkInterface", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "network.NetworkInterface")
+							break
+						}
+						strEvent.Object = i.(*network.NetworkInterface)
+					}
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
+						return err
+					}
+				case <-nctx.Done():
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "network.NetworkInterface")
+					return wstream.Context().Err()
+				}
+			}
+		})
+
 	}
 
 }
@@ -818,6 +986,14 @@ func (e *eNetworkV1Endpoints) AutoAddNetwork(ctx context.Context, t network.Netw
 	return network.Network{}, err
 
 }
+func (e *eNetworkV1Endpoints) AutoAddNetworkInterface(ctx context.Context, t network.NetworkInterface) (network.NetworkInterface, error) {
+	r, err := e.fnAutoAddNetworkInterface(ctx, t)
+	if err == nil {
+		return r.(network.NetworkInterface), err
+	}
+	return network.NetworkInterface{}, err
+
+}
 func (e *eNetworkV1Endpoints) AutoAddService(ctx context.Context, t network.Service) (network.Service, error) {
 	r, err := e.fnAutoAddService(ctx, t)
 	if err == nil {
@@ -848,6 +1024,14 @@ func (e *eNetworkV1Endpoints) AutoDeleteNetwork(ctx context.Context, t network.N
 		return r.(network.Network), err
 	}
 	return network.Network{}, err
+
+}
+func (e *eNetworkV1Endpoints) AutoDeleteNetworkInterface(ctx context.Context, t network.NetworkInterface) (network.NetworkInterface, error) {
+	r, err := e.fnAutoDeleteNetworkInterface(ctx, t)
+	if err == nil {
+		return r.(network.NetworkInterface), err
+	}
+	return network.NetworkInterface{}, err
 
 }
 func (e *eNetworkV1Endpoints) AutoDeleteService(ctx context.Context, t network.Service) (network.Service, error) {
@@ -882,6 +1066,14 @@ func (e *eNetworkV1Endpoints) AutoGetNetwork(ctx context.Context, t network.Netw
 	return network.Network{}, err
 
 }
+func (e *eNetworkV1Endpoints) AutoGetNetworkInterface(ctx context.Context, t network.NetworkInterface) (network.NetworkInterface, error) {
+	r, err := e.fnAutoGetNetworkInterface(ctx, t)
+	if err == nil {
+		return r.(network.NetworkInterface), err
+	}
+	return network.NetworkInterface{}, err
+
+}
 func (e *eNetworkV1Endpoints) AutoGetService(ctx context.Context, t network.Service) (network.Service, error) {
 	r, err := e.fnAutoGetService(ctx, t)
 	if err == nil {
@@ -912,6 +1104,14 @@ func (e *eNetworkV1Endpoints) AutoListNetwork(ctx context.Context, t api.ListWat
 		return r.(network.NetworkList), err
 	}
 	return network.NetworkList{}, err
+
+}
+func (e *eNetworkV1Endpoints) AutoListNetworkInterface(ctx context.Context, t api.ListWatchOptions) (network.NetworkInterfaceList, error) {
+	r, err := e.fnAutoListNetworkInterface(ctx, t)
+	if err == nil {
+		return r.(network.NetworkInterfaceList), err
+	}
+	return network.NetworkInterfaceList{}, err
 
 }
 func (e *eNetworkV1Endpoints) AutoListService(ctx context.Context, t api.ListWatchOptions) (network.ServiceList, error) {
@@ -946,6 +1146,14 @@ func (e *eNetworkV1Endpoints) AutoUpdateNetwork(ctx context.Context, t network.N
 	return network.Network{}, err
 
 }
+func (e *eNetworkV1Endpoints) AutoUpdateNetworkInterface(ctx context.Context, t network.NetworkInterface) (network.NetworkInterface, error) {
+	r, err := e.fnAutoUpdateNetworkInterface(ctx, t)
+	if err == nil {
+		return r.(network.NetworkInterface), err
+	}
+	return network.NetworkInterface{}, err
+
+}
 func (e *eNetworkV1Endpoints) AutoUpdateService(ctx context.Context, t network.Service) (network.Service, error) {
 	r, err := e.fnAutoUpdateService(ctx, t)
 	if err == nil {
@@ -974,6 +1182,9 @@ func (e *eNetworkV1Endpoints) AutoWatchLbPolicy(in *api.ListWatchOptions, stream
 }
 func (e *eNetworkV1Endpoints) AutoWatchVirtualRouter(in *api.ListWatchOptions, stream network.NetworkV1_AutoWatchVirtualRouterServer) error {
 	return e.fnAutoWatchVirtualRouter(in, stream, "network")
+}
+func (e *eNetworkV1Endpoints) AutoWatchNetworkInterface(in *api.ListWatchOptions, stream network.NetworkV1_AutoWatchNetworkInterfaceServer) error {
+	return e.fnAutoWatchNetworkInterface(in, stream, "network")
 }
 func (e *eNetworkV1Endpoints) AutoWatchSvcNetworkV1(in *api.ListWatchOptions, stream network.NetworkV1_AutoWatchSvcNetworkV1Server) error {
 	return e.fnAutoWatchSvcNetworkV1(in, stream, "")
