@@ -446,9 +446,7 @@ policy_api_spec_to_proto_spec (pds::SecurityPolicySpec *proto_spec,
         rule_t *api_rule = &api_spec->rules[i];
         proto_rule->set_priority(api_rule->priority);
         proto_rule->set_action(pds_rule_action_to_proto_action(&api_rule->action_data));
-        if (api_rule->stateful) {
-            proto_rule->set_stateful(true);
-        }
+        proto_rule->set_stateful(api_rule->stateful);
         if (api_rule->match.l3_match.ip_proto) {
             proto_rule->mutable_match()->mutable_l3match()->set_protocol(
                                             api_rule->match.l3_match.ip_proto);
@@ -848,7 +846,6 @@ mirror_session_api_to_proto_spec (pds::MirrorSessionSpec *proto_spec,
     case PDS_MIRROR_SESSION_TYPE_ERSPAN:
         {
             pds::ERSpanSpec *proto_erspan = proto_spec->mutable_erspanspec();
-            proto_erspan->mutable_dstip()->set_af(types::IP_AF_INET);
             ipaddr_api_spec_to_proto_spec(proto_erspan->mutable_dstip(),
                                           &api_spec->erspan_spec.dst_ip);
             ipaddr_api_spec_to_proto_spec(proto_erspan->mutable_srcip(),
