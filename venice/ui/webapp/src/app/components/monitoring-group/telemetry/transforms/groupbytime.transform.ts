@@ -11,8 +11,8 @@ export class GroupByTimeTransform extends MetricTransform<{}> {
 
 
   transformQuery(opts: TransformQuery) {
-    const start = moment(opts.query["start-time"]);
-    const end = moment(opts.query["end-time"])
+    const start = moment(opts.query['start-time']);
+    const end = moment(opts.query['end-time']);
     const duration = moment.duration(end.diff(start));
 
     // metrics are reported every 30 seconds
@@ -30,7 +30,7 @@ export class GroupByTimeTransform extends MetricTransform<{}> {
     while (Math.floor(numPoints / groupByMin) > this.maxPoints) {
       groupByMin += 1;
     }
-    
+
     opts.query['group-by-time'] = groupByMin + 'm';
   }
 

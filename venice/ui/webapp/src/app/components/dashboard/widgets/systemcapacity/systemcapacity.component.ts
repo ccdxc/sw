@@ -320,16 +320,16 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
 
         // day average data
         if (MetricsUtility.resultHasData(this.avgDayData)) {
-          const index = MetricsUtility.findFieldIndex(this.avgDayData.series[0].columns, fieldName) 
+          const index = MetricsUtility.findFieldIndex(this.avgDayData.series[0].columns, fieldName);
           lineGraph.defaultValue = Math.round(this.avgDayData.series[0].values[0][index]);
         }
 
         // currentData
         if (MetricsUtility.resultHasData(this.currentData)) {
-          let index = MetricsUtility.findFieldIndex(this.currentData.series[0].columns, fieldName) 
+          let index = MetricsUtility.findFieldIndex(this.currentData.series[0].columns, fieldName);
           barGraph.percent = this.currentData.series[0].values[0][index];
           if (MetricsUtility.resultHasData(this.prevData)) {
-            index = MetricsUtility.findFieldIndex(this.prevData.series[0].columns, fieldName) 
+            index = MetricsUtility.findFieldIndex(this.prevData.series[0].columns, fieldName);
             const prev = this.prevData.series[0].values[0][index];
             barGraph.arrowDirection = MetricsUtility.getStatArrowDirection(prev, barGraph.percent);
           } else {
@@ -368,8 +368,8 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
 
       // day average data
       if (MetricsUtility.resultHasData(this.avgDayData)) {
-        const index1 = MetricsUtility.findFieldIndex(this.avgDayData.series[0].columns, fieldName1) 
-        const index2 = MetricsUtility.findFieldIndex(this.avgDayData.series[0].columns, fieldName2) 
+        const index1 = MetricsUtility.findFieldIndex(this.avgDayData.series[0].columns, fieldName1);
+        const index2 = MetricsUtility.findFieldIndex(this.avgDayData.series[0].columns, fieldName2);
 
         const data1 = Math.round(this.avgDayData.series[0].values[0][index1]);
         const data2 = Math.round(this.avgDayData.series[0].values[0][index2]);

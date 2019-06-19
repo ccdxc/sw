@@ -414,7 +414,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       if (source.fields != null && source.fields.length !== 0) {
         const query = MetricsUtility.timeSeriesQueryPolling(source.measurement);
         // Remvoing default group by time
-        query.query["group-by-time"] = null;
+        query.query['group-by-time'] = null;
         // Set timerange
         if (this.selectedTimeRange != null) {
           query.query['start-time'] = this.selectedTimeRange.getTime().startTime.toISOString() as any;
