@@ -101,7 +101,8 @@ void UpgStateReqReact::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp) {
 bool UpgStateReqReact::GetUpgCtx(delphi::objects::UpgStateReqPtr req) {
     ctx.upgType = req->upgreqtype(); 
     ctx.firmwarePkgName = req->upgpkgname();
-    return GetUpgCtxFromMeta(ctx);
+    GetUpgCtxFromMeta(ctx);
+    return true;
 }
 
 // OnUpgStateReqCreate gets called when UpgStateReq object is created
