@@ -198,6 +198,17 @@ pds_clock_frequency_update (pds_clock_freq_t freq)
 }
 
 /**
+ * @brief        set arm clock frequency
+ * @param[in]    freq clock frequency to be set
+ * @return       #SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+pds_arm_clock_frequency_update (pds_clock_freq_t freq)
+{
+    return impl_base::asic_impl()->set_arm_frequency(freq);
+}
+
+/**
  * @brief        get system temperature
  * @param[out]   Temperate to be read
  * @return       #SDK_RET_OK on success, failure status code on error

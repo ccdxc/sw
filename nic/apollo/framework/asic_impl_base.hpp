@@ -55,6 +55,13 @@ public:
         return SDK_RET_ERR;
     }
 
+    /// \brief    set the arm core frequency with the given value
+    /// \param[in] freq    clock frequency to set
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t set_arm_frequency(pds_clock_freq_t freq) {
+        return SDK_RET_ERR;
+    }
+
     /// \brief    get the system temperature
     /// \param[out] temp    system temperature to be read
     /// \return    SDK_RET_OK on success, failure status code on error

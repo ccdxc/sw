@@ -16,9 +16,10 @@ import (
 )
 
 var (
-	clockFreq  uint32
-	traceLevel string
-	llcTypeStr string
+	clockFreq    uint32
+	armClockFreq uint32
+	traceLevel   string
+	llcTypeStr   string
 )
 
 var systemDebugCmd = &cobra.Command{
@@ -73,7 +74,7 @@ var tableShowCmd = &cobra.Command{
 func init() {
 	debugCmd.AddCommand(systemDebugCmd)
 	systemDebugCmd.Flags().Uint32VarP(&clockFreq, "clock-frequency", "c", 0, "Specify clock-frequency (Allowed: 833, 900, 957, 1033, 1100)")
-	systemDebugCmd.MarkFlagRequired("clock-frequency")
+	systemDebugCmd.Flags().Uint32VarP(&armClockFreq, "arm-clock-frequency", "a", 0, "Specify arm-clock-frequency (Allowed: 1667, 2200)")
 
 	showCmd.AddCommand(systemShowCmd)
 	systemShowCmd.Flags().Bool("power", false, "Show system power information")
@@ -776,11 +777,16 @@ func systemDebugCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("clock-frequency") {
 		systemClockFrequencySet(client)
 	}
+
+	if cmd.Flags().Changed("arm-clock-frequency") {
+		systemArmClockFrequencySet(client)
+	}
 }
 
 func systemClockFrequencySet(client pds.DebugSvcClient) {
 	req := &pds.ClockFrequencyRequest{
-		ClockFrequency: clockFreq,
+		ClockFrequency:    clockFreq,
+		ArmClockFrequency: 0,
 	}
 
 	// PDS call
@@ -796,4 +802,25 @@ func systemClockFrequencySet(client pds.DebugSvcClient) {
 	}
 
 	fmt.Printf("Clock-frequency set to %d\n", clockFreq)
+}
+
+func systemArmClockFrequencySet(client pds.DebugSvcClient) {
+	req := &pds.ClockFrequencyRequest{
+		ClockFrequency:    0,
+		ArmClockFrequency: armClockFreq,
+	}
+
+	// PDS call
+	resp, err := client.ClockFrequencyUpdate(context.Background(), req)
+	if err != nil {
+		fmt.Printf("ARM Clock-frequency update failed. %v\n", err)
+		return
+	}
+
+	if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+		return
+	}
+
+	fmt.Printf("ARM Clock-frequency set to %dMhz. Please reboot for changes to take effect\n", armClockFreq)
 }

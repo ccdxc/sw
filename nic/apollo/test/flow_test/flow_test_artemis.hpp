@@ -1198,6 +1198,12 @@ public:
         dump_flow_stats();
         return SDK_RET_OK;
     }
+
+    sdk_ret_t clear_flows() {
+       v4table->clear(true, true);
+       v6table->clear(true, true);
+       return SDK_RET_OK;
+    }
 };
 
 #endif // __APOLLO_SCALE_FLOW_TEST_HPP__

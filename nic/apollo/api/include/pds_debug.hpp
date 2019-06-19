@@ -26,6 +26,8 @@ typedef enum pds_clock_freq_e {
     PDS_CLOCK_FREQUENCY_957  = 2,
     PDS_CLOCK_FREQUENCY_1033 = 3,
     PDS_CLOCK_FREQUENCY_1100 = 4,
+    PDS_CLOCK_FREQUENCY_1666 = 5,
+    PDS_CLOCK_FREQUENCY_2200 = 6,
 } pds_clock_freq_t;
 
 typedef struct pds_system_temperature_e {
@@ -62,6 +64,7 @@ typedef void (*table_stats_get_cb_t)(pds_table_stats_t *stats, void *ctxt);
 typedef void (*pb_stats_get_cb_t) (pds_pb_debug_stats_t *stats, void *ctxt);
 typedef void (*meter_stats_get_cb_t) (pds_meter_debug_stats_t *stats, void *ctxt);
 sdk_ret_t pds_clock_frequency_update(pds_clock_freq_t freq);
+sdk_ret_t pds_arm_clock_frequency_update(pds_clock_freq_t freq);
 sdk_ret_t pds_get_system_temperature(pds_system_temperature_t *temp);
 sdk_ret_t pds_get_system_power(pds_system_power_t *pow);
 sdk_ret_t pds_table_stats_get(table_stats_get_cb_t cb, void *ctxt);

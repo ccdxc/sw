@@ -27,29 +27,48 @@ DebugSvcImpl::ClockFrequencyUpdate(ServerContext *context,
     }
 
     freq = proto_req->clockfrequency();
-    switch (freq) {
-    case 833:
-        clock_freq = PDS_CLOCK_FREQUENCY_833;
-        break;
-    case 900:
-        clock_freq = PDS_CLOCK_FREQUENCY_900;
-        break;
-    case 957:
-        clock_freq = PDS_CLOCK_FREQUENCY_957;
-        break;
-    case 1033:
-        clock_freq = PDS_CLOCK_FREQUENCY_1033;
-        break;
-    case 1100:
-        clock_freq = PDS_CLOCK_FREQUENCY_1100;
-        break;
-    default:
-        PDS_TRACE_ERR("Clock-frequency update failed, accepted frequencies are 833, 900, 957, 1033 and 1100");
-        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::OK;
+    if (freq) {
+        switch (freq) {
+        case 833:
+            clock_freq = PDS_CLOCK_FREQUENCY_833;
+            break;
+        case 900:
+            clock_freq = PDS_CLOCK_FREQUENCY_900;
+            break;
+        case 957:
+            clock_freq = PDS_CLOCK_FREQUENCY_957;
+            break;
+        case 1033:
+            clock_freq = PDS_CLOCK_FREQUENCY_1033;
+            break;
+        case 1100:
+            clock_freq = PDS_CLOCK_FREQUENCY_1100;
+            break;
+        default:
+            PDS_TRACE_ERR("Clock-frequency update failed, accepted frequencies are 833, 900, 957, 1033 and 1100");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+            return Status::OK;
+        }
+        ret = debug::pds_clock_frequency_update(clock_freq);
     }
 
-    ret = debug::pds_clock_frequency_update(clock_freq);
+    freq = proto_req->armclockfrequency();
+    if (freq) {
+        switch (freq) {
+        case 1667:
+            clock_freq = PDS_CLOCK_FREQUENCY_1666;
+            break;
+        case 2200:
+            clock_freq = PDS_CLOCK_FREQUENCY_2200;
+            break;
+        default:
+            PDS_TRACE_ERR("Clock-frequency update failed, accepted frequencies are 1667 and 2200");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+            return Status::OK;
+        }
+        ret = debug::pds_arm_clock_frequency_update(clock_freq);
+    }
+
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 }

@@ -15,7 +15,7 @@ do
         # Hack: Till CSUM Offload is supported
         ethtool -K oob_mnic0 rx off tx off
         ifconfig oob_mnic0 up
-        dhclient oob_mnic0 &
+        dhclient oob_mnic0 > /dev/null 2>&1 &
         oob_mnic_up=1
     fi
 

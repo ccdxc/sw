@@ -70,7 +70,7 @@
             "txq_count" : 4,
             "eq_count" : 1,
             "adminq_count" : 1,
-            "intr_count" : 4
+            "intr_count" : 16
         }
     ],
     "eth_dev" : [

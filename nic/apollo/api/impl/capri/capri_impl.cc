@@ -19,6 +19,7 @@
 #include "nic/apollo/api/impl/capri/capri_impl.hpp"
 #include "nic/apollo/p4/include/artemis_table_sizes.h"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/sdk/third-party/asic/capri/verif/apis/cap_platform_api.h"
 
 namespace api {
 namespace impl {
@@ -184,6 +185,25 @@ capri_impl::set_frequency (pds_clock_freq_t freq) {
     if (ret != PEN_PERF_SUCCESS) {
         PDS_TRACE_ERR("Clock frequency set failure, err %u", ret);
         return SDK_RET_ERR;
+    }
+
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief    set arm clock frequency
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+capri_impl::set_arm_frequency (pds_clock_freq_t freq) {
+    if (freq == PDS_CLOCK_FREQUENCY_2200) {
+        PDS_TRACE_DEBUG("Setting ARM CPU freq to 2.2Ghz");
+        cap_set_margin_by_value("arm", 950);
+        cap_top_sbus_cpu_2200(0,0);
+    } else if (freq == PDS_CLOCK_FREQUENCY_1666) {
+        PDS_TRACE_DEBUG("Setting ARM CPU freq to 1.67Ghz");
+        cap_set_margin_by_value("arm", 800);
+        cap_top_sbus_cpu_1666(0,0);
     }
     return SDK_RET_OK;
 }

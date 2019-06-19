@@ -63,7 +63,11 @@ TEST_F(flow_gtest, flows_create) {
     g_flow_test_obj->set_cfg_params(true, 0, PERF_TEST_SCALE, 0,
                                     100, 100, 1024, 2047);
     g_flow_test_obj->create_flows();
-    delete g_flow_test_obj;
+}
+
+TEST_F(flow_gtest, flows_clear) {
+    ASSERT_TRUE(g_flow_test_obj != NULL);
+    g_flow_test_obj->clear_flows();
 }
 
 TEST_F(flow_gtest, DISABLED_p4pd_entry_read) {

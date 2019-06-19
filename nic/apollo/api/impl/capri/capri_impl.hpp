@@ -60,6 +60,12 @@ public:
     virtual sdk_ret_t set_frequency(pds_clock_freq_t freq) override;
 
     /**
+     * @brief    set the arm core frequency with the given value
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t set_arm_frequency(pds_clock_freq_t freq) override;
+
+    /**
      * @brief    get the system temperature
      * @return    SDK_RET_OK on success, failure status code on error
      */
