@@ -106,6 +106,9 @@ static void
 dump_session_info(uint32_t vpc, ip_addr_t ip_addr,
                   session_actiondata_t *actiondata)
 {
+    //if (vpc != TEST_APP_S3_VNET_IN_OUT_V6_OUTER) {
+        //return;
+    //}
 #ifdef SIM
     static FILE *d_fp = fopen("/sw/nic/flow_log.log", "a+");
     if (d_fp) {
@@ -470,7 +473,8 @@ public:
             return;
         }
         // only TESTAPP_MAX_SERVICE_TEP remote service teps are valid
-        if (vpc == TEST_APP_S1_SVC_TUNNEL_IN_OUT) {
+        if ((vpc == TEST_APP_S1_SVC_TUNNEL_IN_OUT) ||
+            (vpc == TEST_APP_S1_REMOTE_SVC_TUNNEL_IN_OUT)) {
             rcount = TESTAPP_MAX_SERVICE_TEP;
         } else {
             rcount = epdb[vpc].v4_rcount;
@@ -524,8 +528,9 @@ public:
         }
         memset(&actiondata, 0, sizeof(session_actiondata_t));
         actiondata.action_id = SESSION_SESSION_INFO_ID;
-        if (vpc == TEST_APP_S1_SVC_TUNNEL_IN_OUT) {
-            // VPC 60 is used for Scenario1-ST in/out traffic
+        if ((vpc == TEST_APP_S1_SVC_TUNNEL_IN_OUT) ||
+            (vpc == TEST_APP_S1_REMOTE_SVC_TUNNEL_IN_OUT)) {
+            // VPC 59 & 60 are used for (Remote) Scenario1-ST in/out traffic
             // Tx path:
             //     SMACi is unchnged
             //     DMACi is unchanged
@@ -701,7 +706,9 @@ public:
             v4entry.dst = flow_dip.addr.v4_addr;
             ret = insert_(&v4entry);
             SDK_ASSERT(ret == SDK_RET_OK);
-            dump_flow_entry(&v4entry, flow_sip, flow_dip);
+            //if (vpc == TEST_APP_S3_VNET_IN_OUT_V6_OUTER) {
+                dump_flow_entry(&v4entry, flow_sip, flow_dip);
+            //}
         } else if (flow_sip.af == IP_AF_IPV6) {
             memset(&v6entry, 0, sizeof(ftlv6_entry_t));
             // Common DATA fields
@@ -719,7 +726,9 @@ public:
                              sizeof(ipv6_addr_t));
             ret = insert_(&v6entry);
             SDK_ASSERT(ret == SDK_RET_OK);
-            dump_flow_entry(&v6entry, flow_sip, flow_dip);
+            //if (vpc == TEST_APP_S3_VNET_IN_OUT_V6_OUTER) {
+                dump_flow_entry(&v6entry, flow_sip, flow_dip);
+            //}
         }
         return SDK_RET_OK;
     }
@@ -748,7 +757,9 @@ public:
             v4entry.dst = iflow_dip.addr.v4_addr;
             ret = insert_(&v4entry);
             SDK_ASSERT(ret == SDK_RET_OK);
-            dump_flow_entry(&v4entry, iflow_sip, iflow_dip);
+            //if (vpc == TEST_APP_S3_VNET_IN_OUT_V6_OUTER) {
+                dump_flow_entry(&v4entry, iflow_sip, iflow_dip);
+            //}
 
             // Create RFLOW
             v4entry.sport = rflow_sport;
@@ -757,7 +768,9 @@ public:
             v4entry.dst = rflow_dip.addr.v4_addr;
             ret = insert_(&v4entry);
             SDK_ASSERT(ret == SDK_RET_OK);
-            dump_flow_entry(&v4entry, rflow_sip, rflow_dip);
+            //if (vpc == TEST_APP_S3_VNET_IN_OUT_V6_OUTER) {
+                dump_flow_entry(&v4entry, rflow_sip, rflow_dip);
+            //}
         } else {
             memset(&v6entry, 0, sizeof(ftlv6_entry_t));
 
@@ -779,7 +792,9 @@ public:
                              sizeof(ipv6_addr_t));
             ret = insert_(&v6entry);
             SDK_ASSERT(ret == SDK_RET_OK);
-            dump_flow_entry(&v6entry, iflow_sip, iflow_dip);
+            //if (vpc == TEST_APP_S3_VNET_IN_OUT_V6_OUTER) {
+                dump_flow_entry(&v6entry, iflow_sip, iflow_dip);
+            //}
 
             // create RFLOW
             v6entry.sport = rflow_sport;
@@ -790,12 +805,15 @@ public:
                              sizeof(ipv6_addr_t));
             ret = insert_(&v6entry);
             SDK_ASSERT(ret == SDK_RET_OK);
-            dump_flow_entry(&v6entry, rflow_sip, rflow_dip);
+            //if (vpc == TEST_APP_S3_VNET_IN_OUT_V6_OUTER) {
+                dump_flow_entry(&v6entry, rflow_sip, rflow_dip);
+            //}
         }
         return SDK_RET_OK;
     }
 
-    sdk_ret_t create_flows_one_proto_(uint32_t count, uint8_t proto, bool dual_stack) {
+    sdk_ret_t create_flows_one_proto_(uint32_t count,
+                                      uint8_t proto, bool dual_stack) {
         uint16_t local_port = 0, remote_port = 0;
         uint32_t i = 0;
         uint16_t fwd_sport = 0, fwd_dport = 0;
@@ -822,6 +840,7 @@ public:
                 num_dport = cfg_params.dport_hi - cfg_params.dport_lo + 1;
                 switch (vpc) {
                 case TEST_APP_S1_SVC_TUNNEL_IN_OUT:
+                case TEST_APP_S1_REMOTE_SVC_TUNNEL_IN_OUT:
                     // only TESTAPP_MAX_SERVICE_TEP remotes are installed.
                     // adjust dport range so that total flows per local =
                     // num_remotes * num_sport * num_dport
@@ -868,7 +887,8 @@ public:
 
                         memset(&ip_addr, 0, sizeof(ip_addr));
                         // create V4 Flows
-                        if (vpc == TEST_APP_S1_SVC_TUNNEL_IN_OUT) {
+                        if ((vpc == TEST_APP_S1_SVC_TUNNEL_IN_OUT) ||
+                            (vpc == TEST_APP_S1_REMOTE_SVC_TUNNEL_IN_OUT)) {
                             // VPC 60 is used for Scenario1-ST in/out traffic
                             ip_addr.addr.v4_addr = TESTAPP_V4ROUTE_VAL(i);
 
@@ -949,13 +969,16 @@ public:
                             return ret;
                         }
                         // create V4 session
-                        ret = create_session_info(vpc, rewrite_ip, nexthop_idx, inh_idx, svc_tep_nexthop_idx);
+                        ret = create_session_info(vpc, rewrite_ip, nexthop_idx,
+                                                  inh_idx, svc_tep_nexthop_idx);
                         if (ret != SDK_RET_OK) {
                             return ret;
                         }
                         session_index++;
 
-                        if (dual_stack && vpc != TEST_APP_S1_SVC_TUNNEL_IN_OUT) {
+                        if (dual_stack &&
+                            ((vpc != TEST_APP_S1_SVC_TUNNEL_IN_OUT) &&
+                             (vpc != TEST_APP_S1_REMOTE_SVC_TUNNEL_IN_OUT))) {
                             memset(&ip_addr, 0, sizeof(ip_addr));
                             // create V6 Flows
                             switch (vpc) {
@@ -967,14 +990,14 @@ public:
                                 ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
                                             htonl(TESTAPP_V4ROUTE_VAL(i));
                                 ret = create_session(vpc, proto,
-                                                     ep_pairs[i].v6_local.local_ip,
-                                                     ip_addr,
-                                                     TEST_APP_DIP_PORT,
-                                                     fwd_dport,
-                                                     ip_addr,
-                                                     ep_pairs[i].v6_local.service_ip,
-                                                     fwd_dport,
-                                                     TEST_APP_VIP_PORT);
+                                          ep_pairs[i].v6_local.local_ip,
+                                          ip_addr,
+                                          TEST_APP_DIP_PORT,
+                                          fwd_dport,
+                                          ip_addr,
+                                          ep_pairs[i].v6_local.service_ip,
+                                          fwd_dport,
+                                          TEST_APP_VIP_PORT);
                                 break;
 
                             case TEST_APP_S2_INTERNET_IN_OUT_FLOATING_IP_VPC:
@@ -986,12 +1009,12 @@ public:
                                 ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
                                             htonl(TESTAPP_V4ROUTE_VAL(i));
                                 ret = create_session(vpc, proto,
-                                                     ep_pairs[i].v6_local.local_ip,
-                                                     ip_addr,
-                                                     fwd_sport, fwd_dport,
-                                                     ip_addr,
-                                                     ep_pairs[i].v6_local.public_ip,
-                                                     fwd_dport, fwd_sport);
+                                          ep_pairs[i].v6_local.local_ip,
+                                          ip_addr,
+                                          fwd_sport, fwd_dport,
+                                          ip_addr,
+                                          ep_pairs[i].v6_local.public_ip,
+                                          fwd_dport, fwd_sport);
                                 break;
 
                             default:
@@ -1009,7 +1032,9 @@ public:
                                 return ret;
                             }
                             // create V6 session
-                            ret = create_session_info(vpc, rewrite_ip, nexthop_idx, inh_idx, svc_tep_nexthop_idx);
+                            ret = create_session_info(vpc, rewrite_ip,
+                                                      nexthop_idx, inh_idx,
+                                                      svc_tep_nexthop_idx);
                             if (ret != SDK_RET_OK) {
                                 return ret;
                             }
@@ -1035,6 +1060,7 @@ public:
                         }
                         break;
                     case TEST_APP_S1_SVC_TUNNEL_IN_OUT:
+                    case TEST_APP_S1_REMOTE_SVC_TUNNEL_IN_OUT:
                         svc_tep_nexthop_idx++;
                         if (svc_tep_nexthop_idx ==
                                 svc_tep_nexthop_idx_start + TESTAPP_MAX_SERVICE_TEP) {
