@@ -156,7 +156,771 @@ func TestAttachGroupsWithFromAddresses(t *testing.T) {
 	Assert(t, len(errs) == 0, "SG Policy attaching to the sgs with From Addresses must pass. Error: %v", errs)
 }
 
+func TestSGPolicyV4SrcAnyDst(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"any"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) == 0, "failed to create sg policy. Error: %v", errs)
+}
+
+func TestSGPolicyV4DstAnySrc(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"any"},
+			ToIPAddresses:   []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) == 0, "failed to create sg policy. Error: %v", errs)
+}
+
+func TestSGPolicyV6SrcAnyDst(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"1001:1::1", "1001:1::2", "1001:1::3"},
+			ToIPAddresses:   []string{"any"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) == 0, "failed to create sg policy. Error: %v", errs)
+}
+
+func TestSGPolicyV6DstAnySrc(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"1001:1::1", "1001:1::2", "1001:1::3"},
+			ToIPAddresses:   []string{"any"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) == 0, "failed to create sg policy. Error: %v", errs)
+}
+
 // #################### Corner Case Tests ####################
+func TestBadSGPolicyV4V6EndIPSrcMixed(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action: "PERMIT",
+			// this unholy combination must be error out
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2-1001:1::1"},
+			ToIPAddresses:   []string{"any"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
+}
+
+func TestBadSGPolicyV4V6StartIPSrcMixed(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action: "PERMIT",
+			// this unholy combination must be error out
+			FromIPAddresses: []string{"172.0.0.1", "1001:1::1-172.0.0.2"},
+			ToIPAddresses:   []string{"any"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
+}
+
+func TestBadSGPolicyV4V6EndIPDstMixed(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action: "PERMIT",
+			// this unholy combination must be error out
+			FromIPAddresses: []string{"any"},
+			ToIPAddresses:   []string{"172.0.0.1", "172.0.0.2-1001:1::1"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
+}
+
+func TestBadSGPolicyV4V6StartIPDstMixed(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action: "PERMIT",
+			// this unholy combination must be error out
+			FromIPAddresses: []string{"any"},
+			ToIPAddresses:   []string{"172.0.0.1", "1001:1::1-172.0.0.2"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
+}
+
+func TestBadSGPolicyV4CIDRV6EndIPSrcMixed(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action: "PERMIT",
+			// this unholy combination must be error out
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2/16-1001:1::1"},
+			ToIPAddresses:   []string{"any"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
+}
+
+func TestBadSGPolicyV4CIDRV6StartIPSrcMixed(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action: "PERMIT",
+			// this unholy combination must be error out
+			FromIPAddresses: []string{"172.0.0.1", "1001:1::1-172.0.0.2/16"},
+			ToIPAddresses:   []string{"any"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
+}
+
+func TestBadSGPolicyV4CIDRV6EndIPDstMixed(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action: "PERMIT",
+			// this unholy combination must be error out
+			FromIPAddresses: []string{"any"},
+			ToIPAddresses:   []string{"172.0.0.1", "172.0.0.2/16-1001:1::1"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
+}
+
+func TestBadSGPolicyV4CIDRV6StartIPDstMixed(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action: "PERMIT",
+			// this unholy combination must be error out
+			FromIPAddresses: []string{"any"},
+			ToIPAddresses:   []string{"172.0.0.1", "1001:1::1-172.0.0.2/16"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
+}
+
+func TestBadSGPolicyV4SrcV6Dst(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2"},
+			ToIPAddresses:   []string{"1001:1::1"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
+}
+
+func TestBadSGPolicyV4CIDRSrcV6Dst(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"1001:1::1"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
+}
+
+func TestBadSGPolicyV4RangeSrcV6Dst(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "10.0.0.1-10.0.0.10"},
+			ToIPAddresses:   []string{"1001:1::1"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
+}
+
+func TestBadSGPolicyV6SrcV4Dst(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"1001:1::1"},
+			ToIPAddresses:   []string{"172.0.0.1", "172.0.0.2"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
+}
+
+func TestBadSGPolicyV6SrcV4DstCIDR(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"1001:1::1"},
+			ToIPAddresses:   []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
+}
+
+func TestBadSGPolicyV6SrcV4DstRange(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"1001:1::1"},
+			ToIPAddresses:   []string{"172.0.0.1", "10.0.0.1-10.0.0.10"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
+}
+
 func TestBothAttachmentPoints(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())

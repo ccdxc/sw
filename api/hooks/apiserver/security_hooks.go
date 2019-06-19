@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"strconv"
@@ -20,6 +21,12 @@ type securityHooks struct {
 	svc    apiserver.Service
 	logger log.Logger
 }
+
+const (
+	ipNone = iota
+	ipV4
+	ipV6
+)
 
 // Following checks are enforced:
 // Cannot specify both `AttachTenant` and `AttachGroups`
@@ -61,23 +68,32 @@ func (s *securityHooks) validateSGPolicy(i interface{}, ver string, ignoreStatus
 			if len(r.ToIPAddresses) == 0 && len(r.ToSecurityGroups) == 0 {
 				ret = append(ret, fmt.Errorf("must specify either to-ip-addresses or to-security-groups when attaching the policy at the tenant level. %v", r))
 			}
-			err := s.validateIPAddresses(r.FromIPAddresses)
+
+			toIPFamily, err := s.validateIPAddresses(r.FromIPAddresses)
 			if err != nil {
 				ret = append(ret, fmt.Errorf("could not validate one or more ip address in %v. Error: %v", r.FromIPAddresses, err))
 			}
 
-			err = s.validateIPAddresses(r.ToIPAddresses)
+			fromIPFamily, err := s.validateIPAddresses(r.ToIPAddresses)
 			if err != nil {
 				ret = append(ret, fmt.Errorf("could not validate one or more ip addresses in %v. Error: %v", r.ToIPAddresses, err))
 			}
+			// ignore ipNone as to allow any to mean both v4 any or v6 any
+			if toIPFamily != ipNone && fromIPFamily != ipNone && toIPFamily != fromIPFamily {
+				ret = append(ret, fmt.Errorf("from and to ip addresses must belong the the same family. Error: %v", err))
+			}
 		} else {
-			err := s.validateIPAddresses(r.ToIPAddresses)
+			toIPFamily, err := s.validateIPAddresses(r.ToIPAddresses)
 			if err != nil {
 				ret = append(ret, fmt.Errorf("could not validate one or more ip addresses in to-ip-addresses %v. Error: %v", r.ToIPAddresses, err))
 			}
-			err = s.validateIPAddresses(r.FromIPAddresses)
+			fromIPFamily, err := s.validateIPAddresses(r.FromIPAddresses)
 			if err != nil {
 				ret = append(ret, fmt.Errorf("could not validate one or more ip addresses in from-ip-addresses %v. Error: %v", r.FromIPAddresses, err))
+			}
+
+			if toIPFamily != ipNone && fromIPFamily != ipNone && fromIPFamily != toIPFamily {
+				ret = append(ret, fmt.Errorf("from and to ip addresses must belong the the same family. Error: %v", err))
 			}
 		}
 	}
@@ -157,7 +173,8 @@ func (s *securityHooks) validateProtoPort(rules []security.SGRule) error {
 }
 
 // validates the IP Addresses in SG rules. Each IP Address must either be a standard octet, ipmask, hyphen separated ip range, or must use any as a keyword
-func (s *securityHooks) validateIPAddresses(addresses []string) error {
+func (s *securityHooks) validateIPAddresses(addresses []string) (int, error) {
+	var ipAddresses []*net.IP
 	for _, a := range addresses {
 		// special keyword to denote match all on ip addresses
 		if a == "any" {
@@ -167,39 +184,62 @@ func (s *securityHooks) validateIPAddresses(addresses []string) error {
 			// Try Parsing as a range
 			ipRange := strings.Split(a, "-")
 			if len(ipRange) != 2 {
-				return fmt.Errorf("ip range doesn't doesn't contain begin and end ip addresses, specified %v", a)
+				return ipNone, fmt.Errorf("ip range doesn't doesn't contain begin and end ip addresses, specified %v", a)
 			}
 
 			startIP := net.ParseIP(strings.TrimSpace(ipRange[0]))
 			endIP := net.ParseIP(strings.TrimSpace(ipRange[1]))
 			if len(startIP) > 0 && len(endIP) > 0 {
+				ipAddresses = append(ipAddresses, &startIP, &endIP)
 				continue
 			} else {
-				return fmt.Errorf("could not parse IP from %v", a)
+				return ipNone, fmt.Errorf("could not parse IP from %v", a)
 			}
 		} else if strings.Contains(a, "/") {
 			// try parsing as a CIDR block
-			_, _, err := net.ParseCIDR(strings.TrimSpace(a))
+			ip, _, err := net.ParseCIDR(strings.TrimSpace(a))
 			if err == nil {
 				// found a valid cidr block
+				ipAddresses = append(ipAddresses, &ip)
 				continue
 			} else {
-				return fmt.Errorf("could not parse IP CIDR block from %v", a)
+				return ipNone, fmt.Errorf("could not parse IP CIDR block from %v", a)
 			}
 		} else {
 			// try parsing as an IP
 			ipAddress := net.ParseIP(strings.TrimSpace(a))
 			if len(ipAddress) > 0 {
 				// found valid ip address in octet form
+				ipAddresses = append(ipAddresses, &ipAddress)
 				continue
 			} else {
-				return fmt.Errorf("could not parse IP Address from %v", a)
+				return ipNone, fmt.Errorf("could not parse IP Address from %v", a)
 			}
-
 		}
 	}
 
-	return nil
+	return s.validateIPAddressFamily(ipAddresses)
+}
+
+// validates that the IP Addresses are in the same family
+func (s *securityHooks) validateIPAddressFamily(ipAddresses []*net.IP) (ipFamily int, err error) {
+	// First IP Address determines the family
+	for _, ip := range ipAddresses {
+		var ipType int
+		if ip.To4() != nil {
+			ipType = ipV4
+		} else if ip.To16() != nil {
+			ipType = ipV6
+		}
+
+		if ipType != ipFamily && ipFamily != ipNone {
+			// fail
+			err = errors.New("ip addresses must be homogeneous. Cannot specify both v4 and v6 addresses")
+			return
+		}
+		ipFamily = ipType
+	}
+	return
 }
 
 // validateApp validates contents of app
