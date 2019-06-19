@@ -41,22 +41,32 @@ tep_impl_state::tep_impl_state(pds_state *state) {
     table_params.entry_trace_en = true;
     tep1_rx_tbl_ = sltcam::factory(&table_params);
     SDK_ASSERT(tep1_rx_tbl_ != NULL);
+
+    // TEP2_RX tcam table
+    memset(&table_params, 0, sizeof(table_params));
+    table_params.table_id = P4TBL_ID_TEP2_RX;
+    table_params.entry_trace_en = true;
+    tep2_rx_tbl_ = sltcam::factory(&table_params);
+    SDK_ASSERT(tep2_rx_tbl_ != NULL);
 }
 
 tep_impl_state::~tep_impl_state() {
     indexer::destroy(remote_46_tep_idxr_);
     sltcam::destroy(tep1_rx_tbl_);
+    sltcam::destroy(tep2_rx_tbl_);
 }
 
 sdk_ret_t
 tep_impl_state::table_transaction_begin(void) {
     tep1_rx_tbl_->txn_start();
+    tep2_rx_tbl_->txn_start();
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 tep_impl_state::table_transaction_end(void) {
     tep1_rx_tbl_->txn_end();
+    tep2_rx_tbl_->txn_end();
     return SDK_RET_OK;
 }
 

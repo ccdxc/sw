@@ -50,12 +50,14 @@ public:
 private:
     indexer *remote_46_tep_idxr(void) { return remote_46_tep_idxr_; }
     sltcam *tep1_rx_tbl(void) { return tep1_rx_tbl_; }
+    sltcam *tep2_rx_tbl(void) { return tep2_rx_tbl_; }
     friend class vpc_impl;   ///< vpc_impl class is friend of vpc_impl_state
     friend class tep_impl;   ///< tep_impl, friend of tep_impl_state
 
 private:
     indexer   *remote_46_tep_idxr_;    ///< indexer to allocate hw id for TEPs
     sltcam    *tep1_rx_tbl_;           ///< tcam table for TEP1_RX
+    sltcam    *tep2_rx_tbl_;           ///< tcam table for TEP2_RX
 };
 
 ///   \@}
