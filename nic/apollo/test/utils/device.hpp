@@ -39,6 +39,8 @@ public:
     // Iterate helper routines
     void iter_next(int width = 1);
 
+    bool read_unsupported(void) const;
+
     // Build routines
     void spec_build(pds_device_spec_t *spec) const;
 
@@ -58,7 +60,7 @@ operator<<(std::ostream& os, const device_feeder& obj) {
 
 // CRUD prototypes
 API_CREATE(device);
-API_READ_SINGLETON(device, true);
+API_READ_SINGLETON(device);
 API_UPDATE(device);
 API_DELETE_SINGLETON(device);
 

@@ -34,9 +34,7 @@ sdk::sdk_ret_t api_info_compare(feeder_T& feeder, info_T *info) {
 
 template <typename feeder_T, typename info_T>
 sdk::sdk_ret_t api_info_compare_singleton(
-    feeder_T& feeder, info_T *info, bool read_unsupp_in_mock_mode = false) {
-    if (read_unsupp_in_mock_mode && ::capri_mock_mode())
-        return sdk::SDK_RET_OK;
+    feeder_T& feeder, info_T *info) {
 
     if (!feeder.spec_compare(&info->spec)) {
         std::cout << "spec compare failed; " << feeder << info << std::endl;
@@ -55,6 +53,12 @@ create(_api_str##_feeder& feeder) {                                          \
     return (pds_##_api_str##_create(&spec));                                 \
 }
 
+#define API_NO_READ(_api_str)                                                \
+inline sdk::sdk_ret_t                                                        \
+read(_api_str##_feeder& feeder) {                                            \
+    return sdk::SDK_RET_OK;                                                  \
+}
+
 #define API_READ(_api_str)                                                   \
 inline sdk::sdk_ret_t                                                        \
 read(_api_str##_feeder& feeder) {                                            \
@@ -71,7 +75,7 @@ read(_api_str##_feeder& feeder) {                                            \
                 feeder, &info));                                             \
 }
 
-#define API_READ_SINGLETON(_api_str, _read_unsupp_in_mock_mode)              \
+#define API_READ_SINGLETON(_api_str)                                         \
 inline sdk::sdk_ret_t                                                        \
 read(_api_str##_feeder& feeder) {                                            \
     sdk_ret_t rv;                                                            \
@@ -82,8 +86,7 @@ read(_api_str##_feeder& feeder) {                                            \
         return rv;                                                           \
                                                                              \
     return (api_info_compare_singleton<_api_str##_feeder,                    \
-            pds_##_api_str##_info_t>(feeder, &info,                          \
-                                     _read_unsupp_in_mock_mode));            \
+            pds_##_api_str##_info_t>(feeder, &info));                        \
 }
 
 #define API_UPDATE(_api_str)                                                 \
@@ -121,6 +124,9 @@ void many_create(feeder_T& feeder) {
 template <typename feeder_T>
 void many_read(feeder_T& feeder,
                sdk::sdk_ret_t expected_result = sdk::SDK_RET_OK) {
+    if (feeder.read_unsupported())
+        return;
+
     feeder_T tmp = feeder;
     for (tmp.iter_init(); tmp.iter_more(); tmp.iter_next()) {
         SDK_ASSERT(read(tmp) == expected_result);

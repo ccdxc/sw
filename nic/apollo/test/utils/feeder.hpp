@@ -24,6 +24,8 @@ public:
     void iter_init(void) { cur_iter_pos = 0; }
     bool iter_more(void) const { return (cur_iter_pos < num_obj); }
 
+    bool read_unsupported(void) const { return false; }
+
 protected:
     uint32_t cur_iter_pos;
 };

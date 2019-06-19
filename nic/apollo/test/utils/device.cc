@@ -32,6 +32,15 @@ device_feeder::iter_next(int width) {
     cur_iter_pos++;
 }
 
+bool
+device_feeder::read_unsupported(void) const {
+    if (::capri_mock_mode()) {
+        return true;
+    }
+
+    return false;
+}
+
 void
 device_feeder::spec_build(pds_device_spec_t *spec) const {
     ip_prefix_t device_ip_pfx, gw_ip_pfx;

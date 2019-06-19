@@ -100,14 +100,13 @@ protected:
         sample_tep_setup(k_device_ip, 1);
         sample_tep_setup(api_test::g_tep_cidr_v4, num_teps);
         for (uint16_t idx = 0; idx < num_teps; idx++) {
-            route_table_util rt_obj(rt_id_v4 + idx, nr_pfx, rt_addr);
+            sample_route_table_setup(nr_pfx, rt_addr, IP_AF_IPV4,
+                                     PDS_MAX_ROUTE_PER_TABLE, 1, rt_id_v4+idx);
             ip_prefix_ip_next(&rt_pfx, &rt_addr);
             rt_pfx.addr = rt_addr;
 
             ip_prefix_ip_next(&nr_pfx, &nr_addr);
             nr_pfx.addr = nr_addr;
-
-            ROUTE_TABLE_CREATE(rt_obj);
         }
 
         subnet_feeder subnet_feeder;

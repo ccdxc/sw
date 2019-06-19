@@ -8,168 +8,93 @@
 ///
 //----------------------------------------------------------------------------
 
-#ifndef __TEST_UTILS_ROUTE_HPP__
-#define __TEST_UTILS_ROUTE_HPP__
+#ifndef __TEST_UTILS_ROUTE_TABLE_HPP__
+#define __TEST_UTILS_ROUTE_TABLE_HPP__
 
-#include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
+#include "nic/apollo/test/utils/api_base.hpp"
+#include "nic/apollo/test/utils/feeder.hpp"
 
 namespace api_test {
 
 extern pds_nh_type_t g_rt_def_nh_type;
 
-#define ROUTE_TABLE_SEED_INIT route_table_util::route_table_stepper_seed_init
-
-#define ROUTE_TABLE_CREATE(obj)                                               \
-    ASSERT_TRUE(obj.create() == sdk::SDK_RET_OK)
-
-#define ROUTE_TABLE_READ(obj, info)                                           \
-    ASSERT_TRUE(obj.read(info) == sdk::SDK_RET_OK)
-
-#define ROUTE_TABLE_UPDATE(obj)                                               \
-    ASSERT_TRUE(obj.update() == sdk::SDK_RET_OK)
-
-#define ROUTE_TABLE_DELETE(obj)                                               \
-    ASSERT_TRUE(obj.del() == sdk::SDK_RET_OK)
-
-// Route object seed used as base seed in many_* operations
-typedef struct route_table_seed_s {
-    uint32_t num_route_tables;
-    uint32_t base_route_table_id;
-    ip_prefix_t base_route_pfx;
-    ip_addr_t base_nh_ip;
-    uint8_t af;
-    uint32_t num_routes;
-    pds_nh_type_t nh_type;
-    pds_vpc_id_t peer_vpc_id;
-    pds_nexthop_id_t base_nh_id;
-} route_table_seed_t;
-
-typedef struct route_table_stepper_seed_s {
-    route_table_seed_t v4_rt_seed;
-    route_table_seed_t v6_rt_seed;
-} route_table_stepper_seed_t;
-
 /// Route test utility class
 class route_util {
 public:
-    // Test parameters
-    ip_prefix_t ip_pfx;          ///< route prefix
-    ip_addr_t nh_ip;             ///< next hop IP
-    pds_nexthop_key_t nh;        ///< next hop ID
-    pds_nh_type_t nh_type;       ///< nexthop type
-    pds_vpc_id_t peer_vpc_id;    ///< peer vpc id
+    ip_prefix_t ip_pfx;
+    ip_addr_t nh_ip;
+    pds_nexthop_key_t nh;
+    pds_nh_type_t nh_type;
+    pds_vpc_id_t peer_vpc_id;
 
-    /// \brief Constructor
-    route_util();
-
-    /// \brief Destructor
-    ~route_util();
+    route_util() {};
+    ~route_util() {};
 };
 
-/// Route tbl test utility class
-class route_table_util {
+// Route table test feeder class
+class route_table_feeder : public feeder {
 public:
-    // Test parameters
     pds_route_table_id_t id;
     uint8_t af;
     uint32_t num_routes;
     ip_prefix_t base_route_pfx;
     ip_addr_t base_nh_ip;
-    // PDS_MAX_ROUTE_PER_TABLE + 1 for testing max + 1 routes
+    pds_nh_type_t nh_type;
+    pds_vpc_id_t peer_vpc_id;
+    pds_nexthop_id_t base_nh_id;
     route_util routes[PDS_MAX_ROUTE_PER_TABLE + 1];
 
-    /// \brief Constructor
-    route_table_util();
+    route_table_feeder() {};
+    route_table_feeder(const route_table_feeder& feeder) {
+        init(ippfx2str(&feeder.base_route_pfx), ipaddr2str(&feeder.base_nh_ip),
+             feeder.af, feeder.num_routes, feeder.num_obj, feeder.id,
+             feeder.nh_type, feeder.peer_vpc_id, feeder.base_nh_id);
+    }
+    ~route_table_feeder() {};
 
-    /// \brief Parameterized constructor
-    route_table_util(pds_route_table_id_t id, ip_prefix_t base_route_pfx,
-                     ip_addr_t base_nh_ip, uint8_t af = IP_AF_IPV4,
-                     uint32_t num_routes=1,
-                     pds_nh_type_t nh_type=PDS_NH_TYPE_TEP,
-                     pds_vpc_id_t peer_vpc_id=PDS_VPC_ID_INVALID,
-                     pds_nexthop_id_t base_nh_id=1);
+    // Initialize feeder with the base set of values
+    void init(std::string base_route_pfx_str,
+              std::string base_nh_ip_str, uint8_t af=IP_AF_IPV4,
+              uint32_t num_routes=PDS_MAX_ROUTE_PER_TABLE,
+              uint32_t num_route_tables=PDS_MAX_ROUTE_TABLE,
+              uint32_t id=1, pds_nh_type_t nh_type=g_rt_def_nh_type,
+              pds_vpc_id_t peer_vpc_id=PDS_VPC_ID_INVALID,
+              pds_nexthop_id_t base_nh_id=1);
 
-    /// \brief Destructor
-    ~route_table_util();
+    // Iterate helper routines
+    void iter_next(int width = 1);
 
-    /// \brief Create route table
-    ///
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t create(void) const;
+    bool read_unsupported(void) const { return true; }
 
-    /// \brief Read route table
-    ///
-    /// \param[out] info route information
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_route_table_info_t *info) const;
-
-    /// \brief Update route table
-    ///
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update(void) const;
-
-    /// \brief Delete route table
-    ///
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t del(void) const;
-
-    /// \brief Create many route tables
-    ///
-    /// \param[in] seed route table seed
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_create(route_table_stepper_seed_t *seed);
-
-    /// \brief Read many route tables
-    ///
-    /// \param[in] seed route table seed
-    /// \param[in] exp_result expected result for read operation
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_read(route_table_stepper_seed_t *seed,
-                               sdk::sdk_ret_t exp_result = sdk::SDK_RET_OK);
-
-    /// \brief Update many route tables
-    ///
-    /// \param[in] seed route table seed
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_update(route_table_stepper_seed_t *seed);
-
-    /// \brief Delete many route tables
-    ///
-    /// \param[in] seed route table seed
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_delete(route_table_stepper_seed_t *seed);
-
-    /// \brief Initialize the seed for route table
-    ///
-    /// \param[out] seed route table seed
-    /// \param[in] num_route_tables number of route tables
-    /// \param[in] base_route_table_id route table id base
-    /// \param[in] base_route_pfx_str route table starting prefix
-    /// \param[in] base_nh_ip_str base next hop ip for route
-    /// \param[in] af route table address family
-    /// \param[in] num_routes number of routes per route table
-    /// \param[in] nh_type type of next hop which routes are pointing to
-    /// \param[in] peer_vpc_id peer VPC's id for VPC peering routes
-    /// \param[in] base_nh_id base next hop id for route's next hop
-    static void route_table_stepper_seed_init(
-        route_table_stepper_seed_t *seed,
-        uint32_t num_route_tables,
-        uint32_t base_route_table_id,
-        std::string base_route_pfx_str,
-        std::string base_nh_ip_str,
-        uint8_t af=IP_AF_IPV4,
-        uint32_t num_routes=PDS_MAX_ROUTE_PER_TABLE,
-        pds_nh_type_t nh_type=g_rt_def_nh_type,
-        pds_vpc_id_t peer_vpc_id=PDS_VPC_ID_INVALID,
-        pds_nexthop_id_t base_nh_id=1);
-
-    /// \brief Indicates whether route table is stateful
-    ///
-    /// \returns FALSE for route table which is stateless
-    static bool is_stateful(void) { return FALSE; }
+    // Build routines
+    void key_build(pds_route_table_key_t *key) const;
+    void spec_build(pds_route_table_spec_t *spec) const;
 };
+
+// Dump prototypes
+inline std::ostream&
+operator<<(std::ostream& os, const route_table_feeder& obj) {
+    os << "Route table feeder => "
+       << "id: " << obj.id;
+    return os;
+}
+
+// CRUD prototypes
+API_CREATE(route_table);
+API_NO_READ(route_table);
+API_UPDATE(route_table);
+API_DELETE(route_table);
+
+// Misc function prototypes
+void sample_route_table_setup(ip_prefix_t base_route_pfx, ip_addr_t base_nh_ip,
+                              uint8_t af=IP_AF_IPV4,
+                              uint32_t num_routes=PDS_MAX_ROUTE_PER_TABLE,
+                              uint32_t num_route_tables=PDS_MAX_ROUTE_TABLE,
+                              uint32_t id=1);
+void sample_route_table_teardown(uint32_t id=1,
+                                 uint32_t num_route_tables=PDS_MAX_ROUTE_TABLE);
 
 }    // namespace api_test
 
-#endif    // __TEST_UTILS_ROUTE_HPP__
+#endif    // __TEST_UTILS_ROUTE_TABLE_HPP__
