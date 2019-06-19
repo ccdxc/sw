@@ -702,6 +702,13 @@ func (c *CfgWatcherService) SetSmartNICEventHandler(types.SmartNICEventHandler) 
 // SetHostEventHandler sets the handler to handle events related to Host object
 func (c *CfgWatcherService) SetHostEventHandler(types.HostEventHandler) {}
 
+// SetNodeService sets the node service to update 3rd party services (e.g. elastic) on node updates
+func (c *CfgWatcherService) SetNodeService(types.NodeService) {}
+
+// SetClusterQuorumNodes sets the initial list of quorum nodes to be updated on 3rd party
+// services (e.g. elastic discovery file)
+func (c *CfgWatcherService) SetClusterQuorumNodes([]string) {}
+
 // APIClient returns a valid interface once the APIServer is good and
 // accepting requests
 func (c *CfgWatcherService) APIClient() cmd.ClusterV1Interface { return &c.DummyAPIClient }
@@ -753,4 +760,8 @@ func (n *NodeService) ElasticMgmtConfig() error {
 // OnNotifySystemdEvent is dummy
 func (n *NodeService) OnNotifySystemdEvent(e types.SystemdEvent) error {
 	return nil
+}
+
+// InitConfigFiles is dummy
+func (n *NodeService) InitConfigFiles() {
 }

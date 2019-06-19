@@ -326,6 +326,9 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 	}
 
 	// Start node services. Currently we are running Node services on Quorum nodes also
+	env.NodeService.InitConfigFiles()
+	env.CfgWatcherService.SetNodeService(env.NodeService)
+	env.CfgWatcherService.SetClusterQuorumNodes(env.QuorumNodes)
 	if err := env.NodeService.Start(); err != nil {
 		log.Errorf("Failed to start node services with error: %v", err)
 	}

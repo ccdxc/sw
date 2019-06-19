@@ -18,6 +18,7 @@ mkdir -p /host/etc/pensando/configs/pen-influx
 mkdir -p /host/etc/pensando/configs/pen-apiserver
 mkdir -p /host/etc/pensando/configs/pen-cmd
 mkdir -p /host/etc/pensando/configs/pen-elastic
+mkdir -p /host/etc/pensando/configs/pen-elastic/elastic-discovery
 mkdir -p /host/etc/pensando/configs/pen-filebeat
 mkdir -p /host/etc/pensando/configs/pen-etcd
 mkdir -p /host/etc/pensando/configs/kubernetes

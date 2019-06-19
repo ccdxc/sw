@@ -8,15 +8,13 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/intstr"
-
 	pkgErrors "github.com/pkg/errors"
-
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
 	k8sclient "k8s.io/client-go/kubernetes"
-	v1 "k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/api/v1"
 	clientTypes "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	rbac "k8s.io/client-go/pkg/apis/rbac/v1beta1"
 
@@ -400,19 +398,24 @@ func makeContainers(module *protos.Module, volumeMounts []v1.VolumeMount) []v1.C
 
 		if sm.ReadinessProbe != nil {
 			container.ReadinessProbe = &v1.Probe{
-				Handler: v1.Handler{
-					HTTPGet: &v1.HTTPGetAction{
-						// host mode
-						Host: "127.0.0.1",
-						Path: sm.ReadinessProbe.Path,
-						Port: intstr.IntOrString{
-							IntVal: sm.ReadinessProbe.Port,
-						},
-						Scheme: v1.URIScheme(strings.ToUpper(sm.ReadinessProbe.Scheme)),
-					},
-				},
+				Handler:             v1.Handler{},
 				InitialDelaySeconds: sm.ReadinessProbe.InitialDelaySeconds,
 				PeriodSeconds:       sm.ReadinessProbe.PeriodSeconds,
+			}
+			if sm.ReadinessProbe.Handler.HTTPGet != nil {
+				container.ReadinessProbe.Handler.HTTPGet = &v1.HTTPGetAction{
+					// host mode
+					Host: "127.0.0.1",
+					Path: sm.ReadinessProbe.Handler.HTTPGet.Path,
+					Port: intstr.IntOrString{
+						IntVal: sm.ReadinessProbe.Handler.HTTPGet.Port,
+					},
+					Scheme: v1.URIScheme(strings.ToUpper(sm.ReadinessProbe.Handler.HTTPGet.Scheme)),
+				}
+			} else if sm.ReadinessProbe.Handler.Exec != nil {
+				container.ReadinessProbe.Handler.Exec = &v1.ExecAction{
+					Command: sm.ReadinessProbe.Handler.Exec.Command,
+				}
 			}
 		}
 		containers = append(containers, container)

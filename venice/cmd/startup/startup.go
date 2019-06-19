@@ -229,11 +229,9 @@ func StartQuorumServices(c utils.Cluster) {
 
 	go waitForAPIAndStartServices(c.NodeID)
 
-	env.NodeService = services.NewNodeService(c.NodeID)
 	if err := env.NodeService.Start(); err != nil {
 		log.Errorf("Failed to start node services with error: %v", err)
 	}
-
 	env.ServiceTracker.Run(env.ResolverClient, env.NodeService)
 
 	env.MetricsService = services.NewMetricsService(c.NodeID, c.Name, env.ResolverClient)
@@ -254,7 +252,6 @@ func StartNodeServices(nodeID, clusterID, VirtualIP string) {
 	env.SystemdService = services.NewSystemdService()
 	env.SystemdService.Start()
 
-	env.NodeService = services.NewNodeService(nodeID)
 	if err := env.NodeService.Start(); err != nil {
 		log.Errorf("Failed to start node services with error: %v", err)
 	}
@@ -315,11 +312,20 @@ func OnStart() {
 		log.Errorf("Node is part of cluster %+v but failed to start CA with err: %v", cluster, err)
 		return
 	}
-	// Now that CA has started, Recorderclients can talk RPC to eventsProxy
+	// Now that CA has started, Recorder clients can talk RPC to eventsProxy
 	env.Recorder.StartExport()
 
 	env.ClusterName = cluster.Name
 	env.QuorumNodes = cluster.QuorumNodes
+
+	// start node service
+	env.NodeService = services.NewNodeService(cluster.NodeID)
+	env.NodeService.InitConfigFiles()
+
+	// update config watcher with node service and quorum nodes
+	env.CfgWatcherService.SetNodeService(env.NodeService)
+	env.CfgWatcherService.SetClusterQuorumNodes(env.QuorumNodes)
+
 	quorumMember, _ := isQuorumMember(cluster)
 	if !quorumMember {
 		StartNodeServices(cluster.NodeID, cluster.Name, cluster.VirtualIP)

@@ -6,11 +6,10 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/pensando/sw/venice/globals"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/types"
 	protos "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -235,9 +234,6 @@ func (m *ServiceTracker) setAPIAddress(service string, addrs []string) {
 	case globals.ElasticSearch:
 		if err := m.nodeService.FileBeatConfig(addrs); err != nil {
 			log.Errorf("Failed to update filebeat config, err: %v", err)
-		}
-		if err := m.nodeService.ElasticDiscoveryConfig(addrs); err != nil {
-			log.Errorf("Failed to update elastic-discovery config, err: %v", err)
 		}
 	}
 }

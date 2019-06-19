@@ -86,6 +86,10 @@ type VIPService interface {
 // NodeService is the interface for starting/stopping/configuring services running on all controller nodes
 type NodeService interface {
 	SystemdEventObserver
+
+	// InitConfigFiles initializes the config files (elastic, filebeat, etc.)
+	InitConfigFiles()
+
 	// Start starts the services that run on all controller nodes
 	// in the cluster.
 	Start() error
@@ -310,6 +314,13 @@ type CfgWatcherService interface {
 
 	// SetHostventHandler sets the handler to handle events related to Host object
 	SetHostEventHandler(HostEventHandler)
+
+	// SetNodeService sets the node service to update 3rd party services (e.g. elastic) on node updates
+	SetNodeService(NodeService)
+
+	// SetClusterQuorumNodes sets the initial list of quorum nodes to be updated on 3rd party
+	// services (e.g. elastic discovery file)
+	SetClusterQuorumNodes([]string)
 
 	// APIClient returns a valid interface once the APIServer is good and
 	// accepting requests

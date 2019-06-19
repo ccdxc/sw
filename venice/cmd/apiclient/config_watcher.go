@@ -22,7 +22,6 @@ import (
 
 const (
 	apiServerWaitTime = time.Second
-	watcherQueueLen   = 1000
 )
 
 // CfgWatcherService watches for changes in Spec in kvstore and takes appropriate actions
@@ -41,6 +40,12 @@ type CfgWatcherService struct {
 	// API client & API server related attributes
 	apiServerAddr string // apiserver address, in service name or IP:port format
 	svcsClient    svcsclient.Services
+
+	// contains the list of all the cluster nodes; it will be used to update the elasticsearch discovery file
+	clusterNodes map[string]struct{}
+
+	// node service to perform node operations (e.g. update elastic discovery file) on  node updates
+	nodeService types.NodeService
 
 	// Object watchers
 	clusterWatcher  kvstore.Watcher // Cluster object watcher
@@ -75,6 +80,33 @@ func (k *CfgWatcherService) SetHostEventHandler(hostHandler types.HostEventHandl
 	k.hostEventHandler = hostHandler
 }
 
+// SetNodeService sets the node service to update 3rd party services (e.g. elastic) on node updates
+func (k *CfgWatcherService) SetNodeService(nodeSvc types.NodeService) {
+	k.nodeService = nodeSvc
+}
+
+// SetClusterQuorumNodes sets the initial list of quorum nodes to be updated on 3rd party
+// services (e.g. elastic discovery file)
+func (k *CfgWatcherService) SetClusterQuorumNodes(nodeNames []string) {
+	for _, nodeName := range nodeNames {
+		k.clusterNodes[nodeName] = struct{}{}
+	}
+
+	k.updateElasticDiscoveryConfig()
+}
+
+func (k *CfgWatcherService) updateElasticDiscoveryConfig() {
+	if k.nodeService != nil {
+		var nodeAddrs []string
+		for nodeAddr := range k.clusterNodes {
+			nodeAddrs = append(nodeAddrs, nodeAddr)
+		}
+		if err := k.nodeService.ElasticDiscoveryConfig(nodeAddrs); err != nil {
+			log.Errorf("Failed to update elastic-discovery config, err: %v", err)
+		}
+	}
+}
+
 // apiClient creates a client to API server
 func (k *CfgWatcherService) apiClient() (svcsclient.Services, error) {
 	var client svcsclient.Services
@@ -101,6 +133,7 @@ func NewCfgWatcherService(logger log.Logger, apiServerAddr string) *CfgWatcherSe
 	return &CfgWatcherService{
 		logger:        logger.WithContext("submodule", "cfgWatcher"),
 		apiServerAddr: apiServerAddr,
+		clusterNodes:  make(map[string]struct{}),
 	}
 }
 
@@ -196,6 +229,28 @@ func (k *CfgWatcherService) stopWatchers() {
 	k.nodeWatcher.Stop()
 	k.smartNICWatcher.Stop()
 	k.hostWatcher.Stop()
+}
+
+// updateClusterNodes updates the cluster nodes list and elastic discovery file
+func (k *CfgWatcherService) updateClusterNodes(et kvstore.WatchEventType, node *cmd.Node) {
+	switch et {
+	case kvstore.Created, kvstore.Updated:
+		if _, ok := k.clusterNodes[node.Name]; ok {
+			if node.Status.Phase == cmd.NodeStatus_JOINED.String() {
+				return
+			}
+			// phase has changed (FAILED, UNKNOWN, etc.); remove the existing entry
+			delete(k.clusterNodes, node.Name)
+		} else {
+			if node.Status.Phase == cmd.NodeStatus_JOINED.String() {
+				k.clusterNodes[node.Name] = struct{}{}
+			}
+		}
+	case kvstore.Deleted:
+		delete(k.clusterNodes, node.Name)
+	}
+
+	k.updateElasticDiscoveryConfig()
 }
 
 // runUntilCancel implements the config Watcher service.
@@ -320,6 +375,9 @@ func (k *CfgWatcherService) runUntilCancel() {
 				k.logger.Infof("Node Watcher failed to get Node Object")
 				break
 			}
+
+			k.updateClusterNodes(event.Type, node)
+
 			if k.nodeEventHandler != nil {
 				k.nodeEventHandler(event.Type, node)
 			}

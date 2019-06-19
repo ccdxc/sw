@@ -1,14 +1,14 @@
 package services
 
 import (
+	"fmt"
 	"path"
 	"strconv"
-
-	"github.com/pensando/sw/venice/utils/log"
 
 	"github.com/pensando/sw/api"
 	protos "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -259,6 +259,20 @@ var k8sModules = map[string]protos.Module{
 							Port: runtime.MustUint32(globals.ElasticsearchRESTPort),
 						},
 					},
+					ReadinessProbe: &protos.ModuleSpec_Submodule_Probe{
+						Handler: &protos.ModuleSpec_Submodule_Handler{
+							Exec: &protos.ModuleSpec_Submodule_ExecAction{
+								Command: []string{"/bin/sh", "-c",
+									fmt.Sprintf("wget -O- --private-key=%s --certificate=%s --ca-certificate=%s %s",
+										fmt.Sprintf("%s/key.pem", globals.ElasticClientAuthDir),
+										fmt.Sprintf("%s/cert.pem", globals.ElasticClientAuthDir),
+										fmt.Sprintf("%s/ca-bundle.pem", globals.ElasticClientAuthDir),
+										fmt.Sprintf("https://$KUBERNETES_POD_IP:%s", globals.ElasticsearchRESTPort))},
+							},
+						},
+						InitialDelaySeconds: 5,
+						PeriodSeconds:       10,
+					},
 				},
 			},
 			Volumes: []protos.ModuleSpec_Volume{
@@ -291,6 +305,12 @@ var k8sModules = map[string]protos.Module{
 					Name:      "https",
 					HostPath:  globals.ElasticHTTPSAuthDir,
 					MountPath: "/usr/share/elasticsearch/config/auth-https",
+				},
+				// Volume definition for Elastic client authentication
+				{
+					Name:      "elastic-client-credentials",
+					HostPath:  globals.ElasticClientAuthDir,
+					MountPath: globals.ElasticClientAuthDir,
 				},
 				logVolume,
 			},
@@ -549,16 +569,20 @@ var k8sModules = map[string]protos.Module{
 						},
 					},
 					ReadinessProbe: &protos.ModuleSpec_Submodule_Probe{
-						Path: "/healthz",
-						Port: func() int32 {
-							p, err := strconv.Atoi(globals.CitadelHTTPPort)
-							if err != nil {
-								log.Fatalf("failed to parse %v port %v", globals.Citadel, globals.CitadelHTTPPort)
-							}
-							return int32(p)
-						}(),
+						Handler: &protos.ModuleSpec_Submodule_Handler{
+							HTTPGet: &protos.ModuleSpec_Submodule_HTTPGetAction{
+								Path: "/healthz",
+								Port: func() int32 {
+									p, err := strconv.Atoi(globals.CitadelHTTPPort)
+									if err != nil {
+										log.Fatalf("failed to parse %v port %v", globals.Citadel, globals.CitadelHTTPPort)
+									}
+									return int32(p)
+								}(),
+								Scheme: "HTTP",
+							},
+						},
 						InitialDelaySeconds: 5,
-						Scheme:              "HTTP",
 						PeriodSeconds:       10,
 					},
 				},

@@ -29,14 +29,14 @@ type nodeService struct {
 // NodeOption fills the optional params
 type NodeOption func(service *nodeService)
 
-// WithConfigsNodeOption to pass a specifc types.SystemdService implementation
+// WithConfigsNodeOption to pass a specific types.SystemdService implementation
 func WithConfigsNodeOption(configs configs.Interface) NodeOption {
 	return func(o *nodeService) {
 		o.configs = configs
 	}
 }
 
-// WithSystemdSvcNodeOption to pass a specifc types.SystemdService implementation
+// WithSystemdSvcNodeOption to pass a specific types.SystemdService implementation
 func WithSystemdSvcNodeOption(sysSvc types.SystemdService) NodeOption {
 	return func(o *nodeService) {
 		o.sysSvc = sysSvc
@@ -57,23 +57,28 @@ func NewNodeService(nodeID string, options ...NodeOption) types.NodeService {
 		}
 	}
 
-	s.sysSvc.Register(&s)
+	if s.sysSvc != nil {
+		s.sysSvc.Register(&s)
+	}
+
 	return &s
 }
 
 // Start starts the services that run on all controller nodes in
 // the cluster.
 func (s *nodeService) Start() error {
+	if s.sysSvc == nil {
+		s.sysSvc = env.SystemdService
+		s.sysSvc.Register(s)
+	}
+
 	s.sysSvc.Start()
 
 	s.Lock()
 	defer s.Unlock()
-	s.enabled = true
-
-	s.configs.GenerateFilebeatConfig([]string{})
-	s.configs.GenerateElasticAuthConfig(s.nodeID)
-	s.configs.GenerateElasticDiscoveryConfig([]string{})
-	s.configs.GenerateElasticMgmtConfig("", len(env.QuorumNodes))
+	if !s.enabled {
+		s.enabled = true
+	}
 
 	for ii := range nodeServices {
 		if err := s.sysSvc.StartUnit(fmt.Sprintf("%s.service", nodeServices[ii])); err != nil {
@@ -81,6 +86,20 @@ func (s *nodeService) Start() error {
 		}
 	}
 	return nil
+}
+
+// InitConfigFiles initializes the config files with default values.
+func (s *nodeService) InitConfigFiles() {
+	s.Lock()
+	defer s.Unlock()
+	if !s.enabled {
+		s.enabled = true
+	}
+
+	s.configs.GenerateFilebeatConfig([]string{})
+	s.configs.GenerateElasticAuthConfig(s.nodeID)
+	s.configs.GenerateElasticDiscoveryConfig([]string{})
+	s.configs.GenerateElasticMgmtConfig("", len(env.QuorumNodes))
 }
 
 // Stop stops the services that run on all controller nodes in the
