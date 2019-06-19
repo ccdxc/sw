@@ -9,7 +9,7 @@ ncc_tools ed6c542ea21569243fa800a5ee4db95fc403deef
 pbc_config ed6c542ea21569243fa800a5ee4db95fc403deef
 upgrade 1.0.14
 iota 1.0.2
-host_tools 1.0.20
+host_tools 1.0.21
 delphi_lib 1.0.8
 pensando_firmware 1.0.12
 buildroot 94ff399ebd405a509c82180220f30edcd7ca96d4

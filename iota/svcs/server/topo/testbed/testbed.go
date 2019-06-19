@@ -224,18 +224,23 @@ func (n *TestNode) CopyTo(cfg *ssh.ClientConfig, dstDir string, files []string) 
 		log.Errorf("TOPO SVC | CopyTo node failed to get node IP")
 		return fmt.Errorf("TOPO SVC | CopyTo node failed to get node IP")
 	}
+	addr := fmt.Sprintf("%s:%d", ip, constants.SSHPort)
+
 	if n.SSHClient == nil {
 		copyHandle = copier.NewCopier(cfg)
 	} else {
 		copyHandle = copier.NewCopierWithSSHClient(n.SSHClient, cfg)
 	}
-	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
 
 	if err := copyHandle.CopyTo(addr, dstDir, files); err != nil {
 		log.Errorf("TOPO SVC | CopyTo node %v failed, IPAddress: %v , Err: %v", n.Node.Name, ip, err)
 		return fmt.Errorf("CopyTo node failed, TestNode: %v, IPAddress: %v , Err: %v", n.Node.Name, ip, err)
 	}
 
+	//Update SSH client for future
+	if n.SSHClient != nil {
+		n.SSHClient = copyHandle.SSHClient
+	}
 	return nil
 }
 
@@ -256,11 +261,16 @@ func (n *TestNode) CopyFrom(cfg *ssh.ClientConfig, dstDir string, files []string
 		return fmt.Errorf("TOPO SVC | CopyTo node failed to get node IP")
 	}
 
-	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
+	addr := fmt.Sprintf("%s:%d", ip, constants.SSHPort)
 
 	if err := copyHandle.CopyFrom(addr, dstDir, files); err != nil {
 		log.Errorf("TOPO SVC | InitTestBed | CopyFrom node %v failed, IPAddress: %v , Err: %v", n.Node.Name, ip, err)
 		return fmt.Errorf("CopyFrom node failed, TestNode: %v, IPAddress: %v , Err: %v", n.Node.Name, ip, err)
+	}
+
+	//Update SSH client for future
+	if n.SSHClient != nil {
+		n.SSHClient = copyHandle.SSHClient
 	}
 
 	return nil
