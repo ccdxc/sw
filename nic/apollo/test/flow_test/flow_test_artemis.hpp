@@ -959,6 +959,7 @@ public:
                             memset(&ip_addr, 0, sizeof(ip_addr));
                             // create V6 Flows
                             switch (vpc) {
+                            case TEST_APP_S1_SLB_IN_OUT:
                             case TEST_APP_S2_INTERNET_IN_OUT_VPC_VIP_VPC:
                                 ip_addr = test_params->v6_route_pfx.addr;
                                 ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-2]
