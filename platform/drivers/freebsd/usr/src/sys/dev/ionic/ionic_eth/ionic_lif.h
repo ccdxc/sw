@@ -34,7 +34,6 @@
 #include "ionic_rx_filter.h"
 
 #define LIF_NAME_MAX_SZ			8
-#define QUEUE_NAME_MAX_SZ		8
 #define MAX_VLAN_TAG 			4095
 
 struct adminq_stats {
@@ -356,12 +355,13 @@ struct lif {
 	u64 	num_dev_cmds;
 };
 
+
 /* lif lock. */
 #define IONIC_LIF_LOCK_INIT(x)		sx_init(&(x)->sx, (x)->sx_name)
 #define IONIC_LIF_LOCK_DESTROY(x)	sx_destroy(&(x)->sx)
 #define IONIC_LIF_LOCK(x)		sx_xlock(&(x)->sx)
 #define IONIC_LIF_UNLOCK(x)		sx_xunlock(&(x)->sx)
-#define IONIC_LIF_LOCK_OWNED(x)	sx_xlocked(&(x)->sx)
+#define IONIC_LIF_LOCK_OWNED(x)		sx_xlocked(&(x)->sx)
 
 #define IONIC_ADMIN_LOCK_INIT(x) 	mtx_init(&(x)->mtx, (x)->mtx_name, NULL, MTX_DEF)
 #define IONIC_ADMIN_LOCK_DESTROY(x)	mtx_destroy(&(x)->mtx)

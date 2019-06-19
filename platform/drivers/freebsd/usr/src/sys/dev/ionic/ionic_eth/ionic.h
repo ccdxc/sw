@@ -35,7 +35,7 @@
 #define DRV_DESCRIPTION		"Pensando Ethernet NIC Driver"
 #define DRV_VERSION			"0.8.0"
 
-#define SIZE_1K				1024
+#define SIZE_1K			1024
 #define IONIX_TX_MIN_DESC	64
 #define IONIX_TX_MAX_DESC	(16 * SIZE_1K)
 #define IONIX_RX_MIN_DESC	64
@@ -46,8 +46,9 @@
 /* TSO DMA related definitions. */
 #define IONIC_MAX_TSO_SG_ENTRIES 	(IONIC_TX_MAX_SG_ELEMS)
 #define IONIC_MAX_TSO_SG_SIZE 		(64 * SIZE_1K)
-#define IONIC_MAX_TSO_SIZE 			(64 * SIZE_1K)
+#define IONIC_MAX_TSO_SIZE 		(64 * SIZE_1K)
 
+#define QUEUE_NAME_MAX_SZ		8
 MALLOC_DECLARE(M_IONIC);
 
 /* Init time debug. */
@@ -154,6 +155,9 @@ struct ionic {
 	struct identity ident;
 	struct list_head lifs;
 	bool is_mgmt_nic;
+
+	struct sx sx;
+	char sx_name[QUEUE_NAME_MAX_SZ];
 	unsigned int nnqs_per_lif;
 	unsigned int neqs_per_lif;
 	unsigned int ntxqs_per_lif;
@@ -165,6 +169,12 @@ struct ionic {
 
 	DECLARE_BITMAP(intrs, INTR_CTRL_REGS_MAX);
 };
+
+#define IONIC_DEV_LOCK_INIT(x)		sx_init(&(x)->sx, (x)->sx_name)
+#define IONIC_DEV_LOCK_DESTROY(x)	sx_destroy(&(x)->sx)
+#define IONIC_DEV_LOCK(x)		sx_xlock(&(x)->sx)
+#define IONIC_DEV_UNLOCK(x)		sx_xunlock(&(x)->sx)
+#define IONIC_DEV_LOCK_OWNED(x)		sx_xlocked(&(x)->sx)
 
 int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx, bool);
 int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx);

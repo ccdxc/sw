@@ -1677,6 +1677,7 @@ ionic_qcqs_free(struct lif *lif)
 	if (lif->adminq)
 		ionic_adminq_free(lif, lif->adminq);
 
+	IONIC_LIF_LOCK_DESTROY(lif);
 	free(lif->rxqs, M_IONIC);
 	free(lif->txqs, M_IONIC);
 }
@@ -2161,11 +2162,13 @@ ionic_lif_reset(struct lif *lif)
 	struct ionic_dev *idev = &lif->ionic->idev;
 	int err;
 
+	IONIC_DEV_LOCK(lif->ionic);
 	ionic_dev_cmd_lif_reset(idev, lif->index);
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	if (err) {
 		IONIC_NETDEV_ERROR(lif->netdev, "failed to reset lif, error = %d\n", err);
 	}
+	IONIC_DEV_UNLOCK(lif->ionic);
 }
 
 static void
@@ -2224,9 +2227,11 @@ ionic_lif_adminq_init(struct lif *lif)
 	adminq->done_color = 1;
 
 	bzero(adminq->cmd_ring, adminq->total_ring_size);
+	IONIC_DEV_LOCK(lif->ionic);
 	ionic_dev_cmd_go(idev, &cmd);
 
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
+	IONIC_DEV_UNLOCK(lif->ionic);
 	if (err)
 		return err;
 
@@ -2900,26 +2905,32 @@ ionic_media_change(struct ifnet *ifp)
 	if (ifm->ifm_media & IFM_ETH_TXPAUSE)
 		pause_type |= IONIC_PAUSE_F_TX;
 
+	IONIC_DEV_LOCK(ionic);
 	ionic_dev_cmd_port_autoneg(idev, an_enable);
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	if (err) {
-		IONIC_NETDEV_ERROR(lif->netdev, "failed to set autoneg, error = %d\n", err);
+		IONIC_DEV_UNLOCK(ionic);
+		IONIC_NETDEV_ERROR(ifp, "failed to set autoneg, error = %d\n", err);
 		return err;
 	}
 
 	ionic_dev_cmd_port_speed(idev, speed);
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	if (err) {
-		IONIC_NETDEV_ERROR(lif->netdev, "failed to set speed, error = %d\n", err);
+		IONIC_DEV_UNLOCK(ionic);
+		IONIC_NETDEV_ERROR(ifp, "failed to set speed, error = %d\n", err);
 		return err;
 	}
 
 	ionic_dev_cmd_port_pause(idev, pause_type);
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	if (err) {
-		IONIC_NETDEV_ERROR(lif->netdev, "failed to set pause, error = %d\n", err);
+		IONIC_DEV_UNLOCK(ionic);
+		IONIC_NETDEV_ERROR(ifp, "failed to set pause, error = %d\n", err);
 		return err;
 	}
+
+	IONIC_DEV_UNLOCK(ionic);
 
 	return 0;
 }
@@ -3150,13 +3161,16 @@ err_out_free_buf:
 static int
 ionic_lif_init(struct lif *lif)
 {
-	struct ionic_dev *idev = &lif->ionic->idev;
+	struct ionic *ionic = lif->ionic;
+	struct ionic_dev *idev = &ionic->idev;
 	struct q_init_comp comp;
 	int err;
 
+	IONIC_DEV_LOCK(ionic);
 	ionic_dev_cmd_lif_init(idev, lif->index, lif->info_pa);
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	ionic_dev_cmd_comp(idev, &comp);
+	IONIC_DEV_UNLOCK(ionic);
 	if (err) {
 		IONIC_NETDEV_ERROR(lif->netdev, "lif init failed, error = %d\n", err);
 		return err;
@@ -3481,15 +3495,19 @@ ionic_lif_identify(struct ionic *ionic)
 	int i, err;
 	unsigned int nwords;
 
+	IONIC_DEV_LOCK(ionic);
 	ionic_dev_cmd_lif_identify(idev, IONIC_LIF_TYPE_CLASSIC,
 		IONIC_IDENTITY_VERSION_1);
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
-	if (err)
+	if (err) {
+		IONIC_DEV_UNLOCK(ionic);
 		return (err);
+	}
 
 	nwords = min(ARRAY_SIZE(ident->lif.words), ARRAY_SIZE(idev->dev_cmd_regs->data));
 	for (i = 0; i < nwords; i++)
 		ident->lif.words[i] = ioread32(&idev->dev_cmd_regs->data[i]);
+	IONIC_DEV_UNLOCK(ionic);
 
 	IONIC_DEV_INFO(ionic->dev, "capabilities 0x%lx\n",
 		ident->lif.capabilities);
