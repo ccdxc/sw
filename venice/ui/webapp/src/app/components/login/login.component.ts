@@ -60,9 +60,12 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
 
     // setting up subscription
     this.subscriptions[Eventtypes.LOGIN_FAILURE] = this._controllerService.subscribe(Eventtypes.LOGIN_FAILURE, (payload) => {
+      // in auth.effect.ts (VS-302), there is a timer ticking after user clicks
+      if (Utility.LOGIN_IDLE_SETTIME_HANDLE) { clearTimeout(Utility.LOGIN_IDLE_SETTIME_HANDLE); }
       this.onLoginFailure(payload);
     });
     this.subscriptions[Eventtypes.LOGIN_SUCCESS] = this._controllerService.subscribe(Eventtypes.LOGIN_SUCCESS, (payload) => {
+      if (Utility.LOGIN_IDLE_SETTIME_HANDLE) { clearTimeout(Utility.LOGIN_IDLE_SETTIME_HANDLE); }
       this.onLoginSuccess(payload);
     });
   }
@@ -138,10 +141,13 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
     } else if (errPayload.message && errPayload.message.status === 401) {
       // handle status =401 authentication failure.
       return msgFailtoLogin + ' Incorrect credentials';
+    } else if (errPayload.message && errPayload.message.status === 409) {
+      // handle status =409 VS-483 enternal user and local user conflict
+      return msgFailtoLogin + (errPayload.message.error && errPayload.message.error.message) ? errPayload.message.error.message : errPayload.message.status + ' ' + errPayload.message.statusText;
     } else if (! Utility.isEmpty(errPayload.message) && typeof errPayload.message === 'string') {
       return msgFailtoLogin + ' ' + errPayload.message;
     } else if (! Utility.isEmpty(errPayload.message)) {
-      return msgFailtoLogin + ' ' + errPayload.message.error;
+      return msgFailtoLogin + ' ' +  JSON.stringify(errPayload.message.error);
     }
     // Stringifying the object may be ugly. We console the error, and display a generic Server error message
     console.error('Login component received error: ' + errPayload);

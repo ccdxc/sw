@@ -26,6 +26,9 @@ export class Utility {
   // Determines wheter to use on-line or off-line REST API
   public static isOffLine = true;
   public static XSRF_NAME = 'Grpc-Metadata-Csrf-Token';
+
+  // Define a  // VS-302
+  public static LOGIN_IDLE_SETTIME_HANDLE: any = null;
   // Key for the observable obtained from localStorage.getUserdataObservable
   public static USER_DATA_OBSERVABLE = 'UserDataObservable';
   public static WEBSOCKET_403 = 'Please check your authorization settings and contact system administrator.';  // see VS=157

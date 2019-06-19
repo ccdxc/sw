@@ -10,6 +10,7 @@ import { UIAction } from '../core.interfaces';
 import { LocalStorageService, LocalStorageEvents } from '../local-storage/local-storage.service';
 import * as authReducer from './auth.reducer';
 import { AUTH_KEY, AUTH_BODY, AUTH_LOGIN, AUTH_LOGOUT } from './auth.reducer';
+import { Utility } from '@app/common/Utility';
 
 
 
@@ -57,18 +58,18 @@ export class AuthEffects {
           }
         );
         // VS-302.  In case Login request is sent and no server response return.
-        const timeoutHandle = setTimeout(() => {
+        Utility.LOGIN_IDLE_SETTIME_HANDLE = setTimeout(() => {
                 try {
                   if (!this._controllerService.isUserLogin()) {
                     if (sub) { sub.unsubscribe(); }
-                    this.onLoginFailure('Request Timeout. Failed to login after 60 seconds');
+                    this.onLoginFailure('Idle in login page for 60 seconds. Please login or check system availability');
                   } else {
-                    clearTimeout(timeoutHandle);
+                    if (Utility.LOGIN_IDLE_SETTIME_HANDLE) { clearTimeout(Utility.LOGIN_IDLE_SETTIME_HANDLE); }
                   }
                 } catch (error) {
                   console.error('auth.effects.ts login() timeout wait too long ', error);
                   if (sub) { sub.unsubscribe(); }
-                  if (timeoutHandle) { clearTimeout(timeoutHandle); }
+                  if (Utility.LOGIN_IDLE_SETTIME_HANDLE) { clearTimeout(Utility.LOGIN_IDLE_SETTIME_HANDLE); }
                 }
               }, 60000);
             })
