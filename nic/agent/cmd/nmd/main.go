@@ -18,6 +18,7 @@ import (
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
 	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
+	sysmgrProto "github.com/pensando/sw/nic/sysmgr/proto/sysmgr"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -120,6 +121,9 @@ func main() {
 		// mount objects
 		delphiProto.NaplesStatusMount(delphiClient, delphi.MountMode_ReadWriteMode)
 		log.Infof("Mounting naples status rw")
+
+		sysmgrProto.SysmgrSystemStatusMount(delphiClient, delphi.MountMode_ReadMode)
+		log.Infof("Mounting SysmgrSystemStatus")
 
 		nm.DelphiClient = delphiClient
 		dServ.Agent = nm

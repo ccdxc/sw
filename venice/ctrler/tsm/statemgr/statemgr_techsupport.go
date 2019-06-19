@@ -92,7 +92,7 @@ type SmartNICNodeState struct {
 func (sm *Statemgr) newTechSupportObjectState(obj TechSupportObject) TechSupportObjectState {
 	switch kind := obj.GetObjectKind(); kind {
 	case KindTechSupportRequest:
-		ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Minute)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		return &TechSupportRequestState{
 			Mutex:              &sync.Mutex{},
 			TechSupportRequest: obj.(*monitoring.TechSupportRequest),
