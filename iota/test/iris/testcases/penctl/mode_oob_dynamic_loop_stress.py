@@ -13,7 +13,7 @@ def Trigger(tc):
     if len(tc.Nodes) > 0:
         n = tc.Nodes[0]
 
-        for i in range(0, 50):
+        for i in range(0, 10):
             common.SetNaplesModeOOB_Dynamic(n)
 
     return api.types.status.SUCCESS

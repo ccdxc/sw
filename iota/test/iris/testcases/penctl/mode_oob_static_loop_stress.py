@@ -13,7 +13,7 @@ def Trigger(tc):
     if len(tc.Nodes) > 0:
         n = tc.Nodes[0]
 
-        for i in range(0, 50):
+        for i in range(0, 10):
             ret = common.SetNaplesModeOOB_Static(n, "1.1.1.1", "2.2.2.2/24")
             mode = common.PenctlGetTransitionPhaseStatus(n)
 

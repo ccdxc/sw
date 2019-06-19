@@ -13,16 +13,12 @@ def Trigger(tc):
     if len(tc.Nodes) > 0:
         n = tc.Nodes[0]
 
-        for i in range(0, 5):
-            common.SetNaplesModeHost(n)
+        for i in range(0, 3):
             common.SetNaplesModeOOB_Static(n, "1.1.1.1", "2.2.2.2/24")
-            common.SetNaplesModeHost(n)
             common.SetNaplesModeOOB_Dynamic(n)
-            common.SetNaplesModeHost(n)
             common.SetNaplesModeInband_Static(n, "1.1.1.1", "2.2.2.2/24")
             common.SetNaplesModeHost(n)
             common.SetNaplesModeInband_Dynamic(n)
-            common.SetNaplesModeHost(n)
 
     return api.types.status.SUCCESS
 
