@@ -4,6 +4,14 @@
 #define __TEST_H__
 
 #include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <error.h>
+#include <signal.h>
+#include <unistd.h>
+#include <syslog.h>
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/upgrade_manager/export/upgcsdk/upgrade.hpp"
@@ -35,6 +43,17 @@ extern bool SaveStatePause;
 extern bool HostUpPause;
 extern bool LinkUpPause;
 extern bool PostLinkUpPause;
+
+extern bool CompatCheckProcessKill;
+extern bool PostRestartProcessKill;
+extern bool ProcessQuiesceProcessKill;
+extern bool LinkDownProcessKill;
+extern bool HostDownProcessKill;
+extern bool PostHostDownProcessKill;
+extern bool SaveStateProcessKill;
+extern bool HostUpProcessKill;
+extern bool LinkUpProcessKill;
+extern bool PostLinkUpProcessKill;
 
 extern bool UnRegisterWithUpgrade;
 
@@ -77,6 +96,15 @@ public:
         if (CompatCheckPause) {
             resp = {.resp=INPROGRESS, .errStr=""};
         }
+        if (CompatCheckProcessKill) {
+            FILE *getPIDS;
+            char line[130];
+            getPIDS = popen("pidof upgrade","r");
+            while (fgets(line,sizeof line,getPIDS)) {
+                int i = atoi(line);
+                kill(i,SIGKILL);
+            }
+        }
         return resp;
     }
 
@@ -87,6 +115,15 @@ public:
         }
         if (PostRestartPause) {
             resp = {.resp=INPROGRESS, .errStr=""};
+        }
+        if (PostRestartProcessKill) {
+            FILE *getPIDS;
+            char line[130];
+            getPIDS = popen("pidof upgrade","r");
+            while (fgets(line,sizeof line,getPIDS)) {
+                int i = atoi(line);
+                kill(i,SIGKILL);
+            }
         }
         return resp;
     }
@@ -99,6 +136,15 @@ public:
         if (ProcessQuiescePause) {
             resp = {.resp=FAIL, .errStr=retStr};
         }
+        if (ProcessQuiesceProcessKill) {
+            FILE *getPIDS;
+            char line[130];
+            getPIDS = popen("pidof upgrade","r");
+            while (fgets(line,sizeof line,getPIDS)) {
+                int i = atoi(line);
+                kill(i,SIGKILL);
+            }
+        }
         return resp;
     }
 
@@ -109,6 +155,15 @@ public:
         }
         if (LinkDownPause) {
             resp = {.resp=INPROGRESS, .errStr=""};
+        }
+        if (LinkDownProcessKill) {
+            FILE *getPIDS;
+            char line[130];
+            getPIDS = popen("pidof upgrade","r");
+            while (fgets(line,sizeof line,getPIDS)) {
+                int i = atoi(line);
+                kill(i,SIGKILL);
+            }
         }
         return resp;
     }
@@ -121,6 +176,15 @@ public:
         if (HostDownPause) {
             resp = {.resp=INPROGRESS, .errStr=""};
         }
+        if (HostDownProcessKill) {
+            FILE *getPIDS;
+            char line[130];
+            getPIDS = popen("pidof upgrade","r");
+            while (fgets(line,sizeof line,getPIDS)) {
+                int i = atoi(line);
+                kill(i,SIGKILL);
+            }
+        }
         return resp;
     }
 
@@ -131,6 +195,15 @@ public:
         }
         if (PostHostDownPause) {
             resp = {.resp=INPROGRESS, .errStr=""};
+        }
+        if (PostHostDownProcessKill) {
+            FILE *getPIDS;
+            char line[130];
+            getPIDS = popen("pidof upgrade","r");
+            while (fgets(line,sizeof line,getPIDS)) {
+                int i = atoi(line);
+                kill(i,SIGKILL);
+            }
         }
         return resp;
     }
@@ -143,6 +216,15 @@ public:
         if (SaveStatePause) {
             resp = {.resp=INPROGRESS, .errStr=""};
         }
+        if (SaveStateProcessKill) {
+            FILE *getPIDS;
+            char line[130];
+            getPIDS = popen("pidof upgrade","r");
+            while (fgets(line,sizeof line,getPIDS)) {
+                int i = atoi(line);
+                kill(i,SIGKILL);
+            }
+        }
         return resp;
     }
 
@@ -153,6 +235,15 @@ public:
         }
         if (HostUpPause) {
             resp = {.resp=INPROGRESS, .errStr=""};
+        }
+        if (HostUpProcessKill) {
+            FILE *getPIDS;
+            char line[130];
+            getPIDS = popen("pidof upgrade","r");
+            while (fgets(line,sizeof line,getPIDS)) {
+                int i = atoi(line);
+                kill(i,SIGKILL);
+            }
         }
         return resp;
     }
@@ -165,6 +256,15 @@ public:
         if (LinkUpPause) {
             resp = {.resp=INPROGRESS, .errStr=""};
         }
+        if (LinkUpProcessKill) {
+            FILE *getPIDS;
+            char line[130];
+            getPIDS = popen("pidof upgrade","r");
+            while (fgets(line,sizeof line,getPIDS)) {
+                int i = atoi(line);
+                kill(i,SIGKILL);
+            }
+        }
         return resp;
     }
 
@@ -175,6 +275,15 @@ public:
         }
         if (PostLinkUpPause) {
             resp = {.resp=INPROGRESS, .errStr=""};
+        }
+        if (PostLinkUpProcessKill) {
+            FILE *getPIDS;
+            char line[130];
+            getPIDS = popen("pidof upgrade","r");
+            while (fgets(line,sizeof line,getPIDS)) {
+                int i = atoi(line);
+                kill(i,SIGKILL);
+            }
         }
         return resp;
     }

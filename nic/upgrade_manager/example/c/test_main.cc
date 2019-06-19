@@ -31,6 +31,17 @@ bool test::HostUpPause;
 bool test::LinkUpPause;
 bool test::PostLinkUpPause;
 
+bool test::CompatCheckProcessKill;
+bool test::PostRestartProcessKill;
+bool test::ProcessQuiesceProcessKill;
+bool test::LinkDownProcessKill;
+bool test::HostDownProcessKill;
+bool test::PostHostDownProcessKill;
+bool test::SaveStateProcessKill;
+bool test::HostUpProcessKill;
+bool test::LinkUpProcessKill;
+bool test::PostLinkUpProcessKill;
+
 bool test::UnRegisterWithUpgrade;
 
 string test::retStr;
@@ -87,6 +98,26 @@ int main(int argc, char **argv) {
             test::LinkUpPause = true;
         } else if (strcmp(argv[1], "postlinkuppause") == 0) {
             test::PostLinkUpPause = true;
+        } else if (strcmp(argv[1], "compatcheckkill") == 0) {
+            test::CompatCheckProcessKill = true;
+        } else if (strcmp(argv[1], "postrestartkill") == 0) {
+            test::PostRestartProcessKill = true;
+        } else if (strcmp(argv[1], "processquiescekill") == 0) {
+            test::ProcessQuiesceProcessKill = true;
+        } else if (strcmp(argv[1], "linkdownkill") == 0) {
+            test::LinkDownProcessKill = true;
+        } else if (strcmp(argv[1], "hostdownkill") == 0) {
+            test::HostDownProcessKill = true;
+        } else if (strcmp(argv[1], "posthostdownkill") == 0) {
+            test::PostHostDownProcessKill = true;
+        } else if (strcmp(argv[1], "savestatekill") == 0) {
+            test::SaveStateProcessKill = true;
+        } else if (strcmp(argv[1], "hostupkill") == 0) {
+            test::HostUpProcessKill = true;
+        } else if (strcmp(argv[1], "linkupkill") == 0) {
+            test::LinkUpProcessKill = true;
+        } else if (strcmp(argv[1], "postlinkupkill") == 0) {
+            test::PostLinkUpProcessKill = true;
         } else if (strcmp(argv[1], "unregupgapp") == 0) {
             test::UnRegisterWithUpgrade = true;
         } else {
