@@ -328,12 +328,18 @@ message HeapGetResponse {
 }
 
 message MeterStatsGetRequest {
+  uint32 StatsIndexLow  = 1;
+  uint32 StatsIndexHigh = 2;
+}
+
+message MeterStatistics {
   uint32 StatsIndex = 1;
+  uint64 TxBytes    = 2;
+  uint64 RxBytes    = 3;
 }
 
 message MeterStatsGetResponse {
-  types.ApiStatus ApiStatus = 1;
-  uint64          TxBytes   = 2;
-  uint64          RxBytes   = 3;
+  types.ApiStatus          ApiStatus = 1;
+  repeated MeterStatistics Stats     = 2;
 }
 

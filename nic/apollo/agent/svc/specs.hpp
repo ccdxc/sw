@@ -775,9 +775,11 @@ static inline void
 pds_meter_debug_stats_fill (pds_meter_debug_stats_t *stats, void *ctxt)
 {
     pds::MeterStatsGetResponse *rsp = (pds::MeterStatsGetResponse *)ctxt;
+    auto proto_stats = rsp->add_stats();
 
-    rsp->set_rxbytes(stats->rx_bytes);
-    rsp->set_txbytes(stats->tx_bytes);
+    proto_stats->set_statsindex(stats->idx);
+    proto_stats->set_rxbytes(stats->rx_bytes);
+    proto_stats->set_txbytes(stats->tx_bytes);
 }
 
 static inline void

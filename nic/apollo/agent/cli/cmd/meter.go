@@ -19,7 +19,7 @@ import (
 
 var (
 	meterID uint32
-	statsID uint32
+	statsID string
 )
 
 var meterShowCmd = &cobra.Command{
@@ -42,7 +42,7 @@ func init() {
 	meterShowCmd.Flags().Uint32VarP(&meterID, "id", "i", 0, "Specify meter policy ID")
 
 	meterShowCmd.AddCommand(meterStatsShowCmd)
-	meterStatsShowCmd.Flags().Uint32VarP(&statsID, "meter-stats-index", "i", 0, "Specify meter stats index")
+	meterStatsShowCmd.Flags().StringVarP(&statsID, "meter-stats-index", "i", "", "Specify meter stats index. Ex: 1-20 or 10")
 	meterStatsShowCmd.MarkFlagRequired("meter-stats-index")
 }
 
@@ -62,8 +62,27 @@ func meterShowStatsCmdHandler(cmd *cobra.Command, args []string) {
 
 	client := pds.NewDebugSvcClient(c)
 
+	var statsIDLow uint32
+	var statsIDHigh uint32
+
+	n, _ := fmt.Sscanf(statsID, "%d-%d", &statsIDLow, &statsIDHigh)
+	if n != 2 {
+		n, _ = fmt.Sscanf(statsID, "", &statsIDLow)
+		if n != 1 {
+			fmt.Printf("Invalid meter statistics index provided. Refer to help string\n")
+			return
+		}
+		statsIDHigh = statsIDLow
+	}
+
+	if statsIDLow > statsIDHigh {
+		fmt.Printf("Invalid meter statistics index provided. Refer to help string")
+		return
+	}
+
 	req := &pds.MeterStatsGetRequest{
-		StatsIndex: statsID,
+		StatsIndexLow:  statsIDLow,
+		StatsIndexHigh: statsIDHigh,
 	}
 
 	// PDS call
@@ -91,8 +110,10 @@ func meterStatsPrintHeader() {
 }
 
 func meterStatsPrintEntry(resp *pds.MeterStatsGetResponse) {
-	fmt.Printf("%-6d%-12d%-12d\n", statsID,
-		resp.GetTxBytes(), resp.GetRxBytes())
+	for _, stats := range resp.GetStats() {
+		fmt.Printf("%-6d%-12d%-12d\n", stats.GetStatsIndex(),
+			stats.GetTxBytes(), stats.GetRxBytes())
+	}
 }
 
 func meterShowCmdHandler(cmd *cobra.Command, args []string) {

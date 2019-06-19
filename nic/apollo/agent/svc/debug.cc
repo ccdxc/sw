@@ -252,7 +252,7 @@ DebugSvcImpl::MeterStatsGet(ServerContext *context, const pds::MeterStatsGetRequ
                             pds::MeterStatsGetResponse *rsp) {
     sdk_ret_t ret;
 
-    if ((ret = debug::pds_meter_stats_get(pds_meter_debug_stats_fill, req->statsindex(), rsp)) != SDK_RET_OK) {
+    if ((ret = debug::pds_meter_stats_get(pds_meter_debug_stats_fill, req->statsindexlow(), req->statsindexhigh(), rsp)) != SDK_RET_OK) {
         rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
 

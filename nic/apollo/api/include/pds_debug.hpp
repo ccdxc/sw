@@ -54,6 +54,7 @@ typedef struct pds_pb_debug_stats_e {
 } pds_pb_debug_stats_t;
 
 typedef struct pds_meter_debug_stats_e {
+    uint32_t idx;
     uint64_t rx_bytes;
     uint64_t tx_bytes;
 } pds_meter_debug_stats_t;
@@ -71,7 +72,7 @@ sdk_ret_t pds_table_stats_get(table_stats_get_cb_t cb, void *ctxt);
 sdk_ret_t pds_llc_setup(sdk::asic::pd::llc_counters_t *llc_args);
 sdk_ret_t pds_llc_get(sdk::asic::pd::llc_counters_t *llc_args);
 sdk_ret_t pds_pb_stats_get(debug::pb_stats_get_cb_t cb, void *ctxt);
-sdk_ret_t pds_meter_stats_get(debug::meter_stats_get_cb_t cb, uint32_t idx, void *ctxt);
+sdk_ret_t pds_meter_stats_get(debug::meter_stats_get_cb_t cb, uint32_t lowidx, uint32_t highidx, void *ctxt);
 
 }    // namespace debug
 

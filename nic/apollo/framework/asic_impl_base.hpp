@@ -100,10 +100,11 @@ public:
 
     /// \brief      Meter Stats Get
     /// \param[in]   cb      Callback
-    ///              idx     Index for stats to be read
+    ///              lowidx  Low Index for stats to be read
+    ///              highidx High Index for stats to be read
     ///              ctxt    Opaque context to be passed to callback
     /// \return      SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t meter_stats(debug::meter_stats_get_cb_t cb, uint32_t idx, void *ctxt) {
+    virtual sdk_ret_t meter_stats(debug::meter_stats_get_cb_t cb, uint32_t lowidx, uint32_t highidx, void *ctxt) {
         return SDK_RET_ERR;
     }
 
