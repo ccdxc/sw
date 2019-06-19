@@ -56,6 +56,7 @@ import (
 	vErrors "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/gzipserver"
+	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -442,10 +443,10 @@ Loop:
 	a.logger.Infof("cleaned up DoneCh")
 
 	if a.moduleWatcher == nil {
-		a.moduleWatcher = module.GetWatcher(fmt.Sprintf("%s-%s", utils.GetHostname(), globals.APIGw), grpcaddr, a.rslver, a.logger, a.moduleChangeCb)
+		a.moduleWatcher = module.GetWatcher(fmt.Sprintf("%s-%s", k8s.GetNodeName(), globals.APIGw), grpcaddr, a.rslver, a.logger, a.moduleChangeCb)
 	}
 	if a.diagSvc == nil {
-		a.diagSvc = diagsvc.GetDiagnosticsServiceWithDefaults(globals.APIGw, utils.GetHostname(), diagapi.ModuleStatus_Venice, a.rslver, a.logger)
+		a.diagSvc = diagsvc.GetDiagnosticsServiceWithDefaults(globals.APIGw, k8s.GetNodeName(), diagapi.ModuleStatus_Venice, a.rslver, a.logger)
 	}
 	a.authGetter = authnmgr.GetAuthGetter(globals.APIGw, grpcaddr, a.rslver, a.logger)
 	a.permGetter = rbac.GetPermissionGetter(globals.APIGw, grpcaddr, a.rslver)

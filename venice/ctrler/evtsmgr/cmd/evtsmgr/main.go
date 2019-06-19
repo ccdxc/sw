@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/venice/utils/diagnostics/module"
 	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
 	"github.com/pensando/sw/venice/utils/events/recorder"
+	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -96,10 +97,10 @@ func main() {
 		logger.ResetFilter(diagnostics.GetLogFilter(diagmod.Spec.LogLevel))
 		logger.InfoLog("method", "moduleChangeCb", "msg", "setting log level", "moduleLogLevel", diagmod.Spec.LogLevel)
 	}
-	watcherOption := evtsmgr.WithModuleWatcher(module.GetWatcher(fmt.Sprintf("%s-%s", utils.GetHostname(), globals.EvtsMgr), globals.APIServer, resolverClient, logger, moduleChangeCb))
+	watcherOption := evtsmgr.WithModuleWatcher(module.GetWatcher(fmt.Sprintf("%s-%s", k8s.GetNodeName(), globals.EvtsMgr), globals.APIServer, resolverClient, logger, moduleChangeCb))
 
 	// add diagnostics service
-	diagOption := evtsmgr.WithDiagnosticsService(diagsvc.GetDiagnosticsServiceWithDefaults(globals.EvtsMgr, utils.GetHostname(), diagapi.ModuleStatus_Venice, resolverClient, logger))
+	diagOption := evtsmgr.WithDiagnosticsService(diagsvc.GetDiagnosticsServiceWithDefaults(globals.EvtsMgr, k8s.GetNodeName(), diagapi.ModuleStatus_Venice, resolverClient, logger))
 
 	// create the controller
 	emgr, err := evtsmgr.NewEventsManager(globals.EvtsMgr, *listenURL,

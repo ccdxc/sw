@@ -17,6 +17,7 @@ var supportedModules = map[string]bool{
 	globals.Citadel:  true,
 	globals.EvtsMgr:  true,
 	globals.Rollout:  true,
+	globals.Tpm:      true,
 }
 
 // GetLogFilter maps log level in module object to log filter

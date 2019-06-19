@@ -66,7 +66,7 @@ func TestWatchFwlogPolicy(t *testing.T) {
 		AssertOk(t, err, fmt.Sprintf("failed to add fwlog object %+v", p))
 	}
 
-	f, err := rpcserver.NewRPCServer(listenURL, policyDb, defaultCollectInterval)
+	f, err := rpcserver.NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
 	AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
@@ -156,7 +156,7 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 		AssertOk(t, err, fmt.Sprintf("failed to add fwlog object %+v", p))
 	}
 
-	f, err := rpcserver.NewRPCServer(listenURL, policyDb, defaultCollectInterval)
+	f, err := rpcserver.NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
 	AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
@@ -245,7 +245,7 @@ func TestRpcServer(t *testing.T) {
 		AssertOk(t, err, fmt.Sprintf("failed to add fwlog object %+v", p))
 	}
 
-	f, err := rpcserver.NewRPCServer(listenURL, policyDb, defaultCollectInterval)
+	f, err := rpcserver.NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
 	AssertOk(t, err, "failed to create rpc server")
 	serverAddr := f.GetListenURL()
 	f.Stop()
@@ -262,7 +262,7 @@ func TestRpcServer(t *testing.T) {
 	defer client.Stop()
 
 	// start rpc server
-	f, err = rpcserver.NewRPCServer(serverAddr, policyDb, defaultCollectInterval)
+	f, err = rpcserver.NewRPCServer(serverAddr, policyDb, defaultCollectInterval, nil)
 	AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 

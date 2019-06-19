@@ -39,6 +39,7 @@ import (
 	"github.com/pensando/sw/venice/utils/diagnostics/module"
 	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
 	"github.com/pensando/sw/venice/utils/elastic"
+	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -142,7 +143,7 @@ func (fdr *Finder) Start() error {
 
 	if fdr.moduleWatcher == nil {
 		// start module watcher
-		fdr.moduleWatcher = module.GetWatcher(fmt.Sprintf("%s-%s", utils.GetHostname(), globals.Spyglass), globals.APIServer, fdr.rsr, fdr.logger, fdr.moduleChangeCb)
+		fdr.moduleWatcher = module.GetWatcher(fmt.Sprintf("%s-%s", k8s.GetNodeName(), globals.Spyglass), globals.APIServer, fdr.rsr, fdr.logger, fdr.moduleChangeCb)
 	}
 
 	return nil
@@ -1006,7 +1007,7 @@ func (fdr *Finder) startRPCServer(serverName, listenURL string) error {
 
 	// Register diagnostics handler
 	if fdr.diagSvc == nil {
-		fdr.diagSvc = diagsvc.GetDiagnosticsServiceWithDefaults(globals.Spyglass, utils.GetHostname(), diagapi.ModuleStatus_Venice, fdr.rsr, fdr.logger)
+		fdr.diagSvc = diagsvc.GetDiagnosticsServiceWithDefaults(globals.Spyglass, k8s.GetNodeName(), diagapi.ModuleStatus_Venice, fdr.rsr, fdr.logger)
 	}
 	diagnostics.RegisterService(rpcServer.GrpcServer, fdr.diagSvc)
 

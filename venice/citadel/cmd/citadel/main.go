@@ -24,7 +24,6 @@ import (
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/query"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/diagnostics"
 	"github.com/pensando/sw/venice/utils/diagnostics/module"
@@ -152,10 +151,10 @@ func main() {
 		logger.ResetFilter(diagnostics.GetLogFilter(diagmod.Spec.LogLevel))
 		logger.InfoLog("method", "moduleChangeCb", "msg", "setting log level", "moduleLogLevel", diagmod.Spec.LogLevel)
 	}
-	watcherOption := query.WithModuleWatcher(module.GetWatcher(fmt.Sprintf("%s-%s", utils.GetHostname(), globals.Citadel), globals.APIServer, cfg.ResolverClient, logger, moduleChangeCb))
+	watcherOption := query.WithModuleWatcher(module.GetWatcher(fmt.Sprintf("%s-%s", k8s.GetNodeName(), globals.Citadel), globals.APIServer, cfg.ResolverClient, logger, moduleChangeCb))
 
 	// add diagnostics service
-	diagOption := query.WithDiagnosticsService(diagsvc.GetDiagnosticsServiceWithDefaults(globals.Citadel, utils.GetHostname(), diagapi.ModuleStatus_Venice, cfg.ResolverClient, logger))
+	diagOption := query.WithDiagnosticsService(diagsvc.GetDiagnosticsServiceWithDefaults(globals.Citadel, k8s.GetNodeName(), diagapi.ModuleStatus_Venice, cfg.ResolverClient, logger))
 
 	qsrv, err := query.NewQueryService(*queryURL, br, diagOption, watcherOption)
 

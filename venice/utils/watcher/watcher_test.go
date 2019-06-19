@@ -24,7 +24,6 @@ import (
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
-	_ "github.com/pensando/sw/api/hooks/apiserver"
 )
 
 const (

@@ -12,6 +12,7 @@ import (
 	tpmProtos "github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/ctxutils"
+	"github.com/pensando/sw/venice/utils/diagnostics"
 	vlog "github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -341,7 +342,7 @@ func (s *PolicyRPCServer) Debug() map[string]map[string]string {
 }
 
 // NewRPCServer starts a new instance of rpc server
-func NewRPCServer(listenURL string, policyDb *memdb.Memdb, collectionInterval string) (*PolicyRPCServer, error) {
+func NewRPCServer(listenURL string, policyDb *memdb.Memdb, collectionInterval string, diagSvc diagnostics.Service) (*PolicyRPCServer, error) {
 	// create RPC server
 	server, err := rpckit.NewRPCServer(globals.Tpm, listenURL, rpckit.WithLoggerEnabled(false))
 	if err != nil {
@@ -377,6 +378,9 @@ func NewRPCServer(listenURL string, policyDb *memdb.Memdb, collectionInterval st
 	tpmProtos.RegisterStatsPolicyApiServer(server.GrpcServer, stats)
 	tpmProtos.RegisterFwlogPolicyApiServer(server.GrpcServer, fwlog)
 	tpmProtos.RegisterFlowExportPolicyApiServer(server.GrpcServer, flowexp)
+	if diagSvc != nil {
+		diagnostics.RegisterService(server.GrpcServer, diagSvc)
+	}
 	server.Start()
 
 	return rpcServer, nil

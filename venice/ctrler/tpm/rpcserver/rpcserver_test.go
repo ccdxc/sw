@@ -29,10 +29,10 @@ func TestMain(m *testing.M) {
 }
 
 func TestNewRPCServer(t *testing.T) {
-	_, err := NewRPCServer("", nil, defaultCollectInterval)
+	_, err := NewRPCServer("", nil, defaultCollectInterval, nil)
 	tu.Assert(t, err != nil, "didn't fail for invalid URL")
 
-	f, err := NewRPCServer(listenURL, nil, defaultCollectInterval)
+	f, err := NewRPCServer(listenURL, nil, defaultCollectInterval, nil)
 	tu.AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
@@ -40,7 +40,7 @@ func TestNewRPCServer(t *testing.T) {
 
 func TestSetCollectionInterval(t *testing.T) {
 	policyDb := memdb.NewMemdb()
-	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval)
+	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
 	tu.AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
@@ -55,7 +55,7 @@ func TestSetCollectionInterval(t *testing.T) {
 func TestWatchStatsPolicyError(t *testing.T) {
 
 	policyDb := memdb.NewMemdb()
-	f, err := NewRPCServer(listenURL, policyDb, "100s")
+	f, err := NewRPCServer(listenURL, policyDb, "100s", nil)
 	tu.AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
@@ -87,7 +87,7 @@ func TestWatchStatsError(t *testing.T) {
 		err := policyDb.AddObject(p)
 		tu.AssertOk(t, err, fmt.Sprintf("failed to add stats object %+v", p))
 	}
-	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval)
+	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
 	tu.AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
@@ -127,7 +127,7 @@ func TestWatchStatsPolicy(t *testing.T) {
 		err := policyDb.AddObject(p)
 		tu.AssertOk(t, err, fmt.Sprintf("failed to add stats object %+v", p))
 	}
-	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval)
+	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
 	tu.AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
@@ -224,7 +224,7 @@ func TestWatchFwlogPolicy(t *testing.T) {
 		tu.AssertOk(t, err, fmt.Sprintf("failed to add fwlog object %+v", p))
 	}
 
-	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval)
+	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
 	tu.AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
@@ -295,7 +295,7 @@ func TestFwlogError(t *testing.T) {
 		err := policyDb.AddObject(p)
 		tu.AssertOk(t, err, fmt.Sprintf("failed to add fwlog object %+v", p))
 	}
-	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval)
+	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
 	tu.AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
@@ -355,7 +355,7 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 		tu.AssertOk(t, err, fmt.Sprintf("failed to add flow export object %+v", p))
 	}
 
-	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval)
+	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
 	tu.AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
@@ -419,7 +419,7 @@ func TestRpcError(t *testing.T) {
 		err := policyDb.AddObject(p)
 		tu.AssertOk(t, err, fmt.Sprintf("failed to add fwlog object %+v", p))
 	}
-	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval)
+	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
 	tu.AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 

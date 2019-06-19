@@ -9,24 +9,28 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/pensando/sw/events/generated/eventtypes"
-	"github.com/pensando/sw/venice/utils/events/recorder"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
 	telemetry "github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
 	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/debug/stats"
+	"github.com/pensando/sw/venice/utils/diagnostics"
+	"github.com/pensando/sw/venice/utils/diagnostics/module"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	vLog "github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
+
+// Option fills the optional params for PolicyManager
+type Option func(*PolicyManager)
 
 // PolicyManager policy manager global info
 type PolicyManager struct {
@@ -43,7 +47,23 @@ type PolicyManager struct {
 	// policyDB
 	policyDb *memdb.Memdb
 	// tpm rpc server
-	rpcServer *rpcserver.PolicyRPCServer
+	rpcServer     *rpcserver.PolicyRPCServer
+	diagSvc       diagnostics.Service
+	moduleWatcher module.Watcher
+}
+
+// WithDiagnosticsService passes a custom diagnostics service
+func WithDiagnosticsService(diagSvc diagnostics.Service) Option {
+	return func(pm *PolicyManager) {
+		pm.diagSvc = diagSvc
+	}
+}
+
+// WithModuleWatcher passes a module watcher
+func WithModuleWatcher(moduleWatcher module.Watcher) Option {
+	return func(pm *PolicyManager) {
+		pm.moduleWatcher = moduleWatcher
+	}
 }
 
 const pkgName = "tpm"
@@ -55,14 +75,19 @@ const statsCollectionInterval = "30s"
 var pmLog vLog.Logger
 
 // NewPolicyManager creates a policy manager instance
-func NewPolicyManager(listenURL string, nsClient resolver.Interface) (*PolicyManager, error) {
+func NewPolicyManager(listenURL string, nsClient resolver.Interface, opts ...Option) (*PolicyManager, error) {
 
 	pmLog = vLog.WithContext("pkg", pkgName)
 	pm := &PolicyManager{nsClient: nsClient,
 		policyDb: memdb.NewMemdb()}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(pm)
+		}
+	}
 
 	go pm.HandleEvents()
-	server, err := rpcserver.NewRPCServer(listenURL, pm.policyDb, statsCollectionInterval)
+	server, err := rpcserver.NewRPCServer(listenURL, pm.policyDb, statsCollectionInterval, pm.diagSvc)
 	if err != nil {
 		pmLog.Fatalf("failed to create rpc server, %s", err)
 	}
@@ -73,6 +98,13 @@ func NewPolicyManager(listenURL string, nsClient resolver.Interface) (*PolicyMan
 
 // Stop shutdown policy watch
 func (pm *PolicyManager) Stop() {
+	if pm.moduleWatcher != nil {
+		pm.moduleWatcher.Stop()
+	}
+
+	if pm.diagSvc != nil {
+		pm.diagSvc.Stop()
+	}
 	if pm.rpcServer != nil {
 		pm.rpcServer.Stop()
 	}

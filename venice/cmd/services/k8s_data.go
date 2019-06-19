@@ -344,6 +344,7 @@ var k8sModules = map[string]protos.Module{
 				logVolume,
 				runVolume,
 				eventsVolume,
+				elasticClientCredsVolume,
 			},
 		},
 	},

@@ -9,12 +9,17 @@ import (
 	"path/filepath"
 	"strings"
 
+	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/tpm"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/debug"
+	"github.com/pensando/sw/venice/utils/diagnostics"
+	"github.com/pensando/sw/venice/utils/diagnostics/module"
+	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
 	"github.com/pensando/sw/venice/utils/events/recorder"
+	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -67,8 +72,18 @@ func main() {
 	log.Infof("starting telemetry controller with args : {%+v}", os.Args)
 	nsClient := resolver.New(&resolver.Config{Name: pkgName, Servers: strings.Split(*nsURLs, ",")})
 
+	// start module watcher
+	moduleChangeCb := func(diagmod *diagapi.Module) {
+		logger.ResetFilter(diagnostics.GetLogFilter(diagmod.Spec.LogLevel))
+		logger.InfoLog("method", "moduleChangeCb", "msg", "setting log level", "moduleLogLevel", diagmod.Spec.LogLevel)
+	}
+	watcherOption := tpm.WithModuleWatcher(module.GetWatcher(fmt.Sprintf("%s-%s", k8s.GetNodeName(), globals.Tpm), globals.APIServer, nsClient, logger, moduleChangeCb))
+
+	// add diagnostics service
+	diagOption := tpm.WithDiagnosticsService(diagsvc.GetDiagnosticsServiceWithDefaults(globals.Tpm, k8s.GetNodeName(), diagapi.ModuleStatus_Venice, nsClient, logger))
+
 	// init policy manager
-	pm, err := tpm.NewPolicyManager(*listenURL, nsClient)
+	pm, err := tpm.NewPolicyManager(*listenURL, nsClient, watcherOption, diagOption)
 	if err != nil {
 		// let the scheduler restart tpm
 		log.Fatalf("failed to init policy agent, %s", err)
