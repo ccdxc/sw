@@ -572,7 +572,7 @@ putil_put_interm_buf_list(struct service_info *svc_info)
 	}
 }
 
-#define POLL_LOOP_BASE_TIMEOUT (200 * OSAL_NSEC_PER_MSEC)
+#define POLL_LOOP_BASE_TIMEOUT (4 * OSAL_NSEC_PER_SEC)
 
 uint64_t
 svc_poll_expiry_start(const struct service_info *svc_info, uint64_t cur_ts)
@@ -591,27 +591,17 @@ svc_poll_expiry_start(const struct service_info *svc_info, uint64_t cur_ts)
 }
 
 bool
-svc_poll_expiry_check(const struct service_info *svc_info,
-		      uint64_t start_ts,
-		      uint64_t cur_ts,
-		      uint64_t per_svc_timeout)
+svc_poll_expiry_check(uint64_t start_ts, uint64_t cur_ts)
 {
-	const struct batch_info *batch_info =
-		svc_info->si_centry->ce_chain_head->sc_batch_info;
-	uint64_t timeout = per_svc_timeout;
 	uint64_t delta;
 
-	if (batch_info)
-		timeout *= max(batch_info->bi_num_entries, (uint32_t)1);
-	timeout += POLL_LOOP_BASE_TIMEOUT;
-
 	delta = cur_ts - start_ts;
-
-	if (delta >= timeout) {
+	if (delta >= POLL_LOOP_BASE_TIMEOUT) {
 		OSAL_LOG_WARN("Delta " PRIu64 " larger than allowed timeout " PRIu64,
-			      delta, timeout);
+			      delta, (uint64_t) POLL_LOOP_BASE_TIMEOUT);
 		return true;
 	}
+
 	return false;
 }
 

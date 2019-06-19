@@ -25,7 +25,7 @@
 #define db_va_to_evid(evl, addr) (((void *)(addr) - evl->db_base) / sizeof(struct sonic_db_data))
 
 #define SONIC_ISR_MAX_IDLE_COUNT 10000
-#define SONIC_EV_WORK_POLLER_TIMEOUT (100 * OSAL_NSEC_PER_MSEC)
+#define SONIC_EV_WORK_POLLER_TIMEOUT (500 * OSAL_NSEC_PER_MSEC)
 #define SONIC_EV_IDLE_WORK_JIFFIES 1
 #define SONIC_EV_EXPIRED_WORK_MSEC 2000
 #define SONIC_EV_EXPIRED_WORK_JIFFIES (msecs_to_jiffies(SONIC_EV_EXPIRED_WORK_MSEC))

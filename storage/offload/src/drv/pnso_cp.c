@@ -393,8 +393,7 @@ compress_poll(struct service_info *svc_info)
 			break;
 		}
 
-		if (svc_poll_expiry_check(svc_info, start_ts, cur_ts,
-					  CPDC_POLL_LOOP_TIMEOUT)) {
+		if (svc_poll_expiry_check(start_ts, cur_ts)) {
 			err = ETIMEDOUT;
 			OSAL_LOG_ERROR("cp/pad poll-time limit reached! service: %s status_desc: 0x" PRIx64 " err: %d",
 					svc_get_type_str(svc_info->si_type),

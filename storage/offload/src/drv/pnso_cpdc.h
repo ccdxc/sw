@@ -39,8 +39,6 @@ extern "C" {
 #define MAX_CPDC_SRC_BUF_LEN	(1 << 16)
 #define MAX_CPDC_DST_BUF_LEN	MAX_CPDC_SRC_BUF_LEN
 
-#define CPDC_POLL_LOOP_TIMEOUT (1500 * OSAL_NSEC_PER_USEC)
-
 /**
  * struct cpdc_sgl - represents scatter-gather list (sgl) of buffers for
  * compression, dedupe hash, pad and decompression operations. Note: address

@@ -32,8 +32,6 @@ static enum crypto_algo_cmd_lo crypto_algo_cmd_lo_tbl[PNSO_CRYPTO_TYPE_MAX] = {
 	[PNSO_CRYPTO_TYPE_GCM] = CRYPTO_ALGO_CMD_LO_AES_GCM,
 };
 
-#define CRYPTO_POLL_LOOP_TIMEOUT (1500 * OSAL_NSEC_PER_USEC)
-
 static pnso_error_t
 crypto_validate_input(struct service_info *svc_info,
 		      const struct service_params *svc_params)
@@ -532,8 +530,7 @@ crypto_poll(struct service_info *svc_info)
 		if (!err)
 			break;
 
-		if (svc_poll_expiry_check(svc_info, start_ts, cur_ts,
-					  CRYPTO_POLL_LOOP_TIMEOUT)) {
+		if (svc_poll_expiry_check(start_ts, cur_ts)) {
 			err = ETIMEDOUT;
 			OSAL_LOG_ERROR("poll-time limit reached! service: %s status_desc: 0x" PRIx64 "err: %d",
 					svc_get_type_str(svc_info->si_type),

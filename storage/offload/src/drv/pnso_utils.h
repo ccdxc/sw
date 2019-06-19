@@ -98,11 +98,7 @@ uint64_t
 svc_poll_expiry_start(const struct service_info *svc_info,
 		      uint64_t cur_ts);
 
-bool
-svc_poll_expiry_check(const struct service_info *svc_info,
-		      uint64_t start_ts,
-		      uint64_t cur_ts,
-		      uint64_t per_svc_timeout);
+bool svc_poll_expiry_check(uint64_t start_ts, uint64_t cur_ts);
 
 pnso_error_t
 svc_batch_seq_desc_setup(struct service_info *svc_info,
