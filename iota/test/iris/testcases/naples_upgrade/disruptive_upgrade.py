@@ -23,6 +23,7 @@ def Setup(tc):
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pcieport_upgdata")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pciemgr_upgdata")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pciemgr_upgrollback")
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/nicmgr_upgstate")
     resp = api.Trigger(req)
     for cmd_resp in resp.commands:
         api.PrintCommandResults(cmd_resp)
@@ -103,6 +104,7 @@ def Teardown(tc):
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pcieport_upgdata")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pciemgr_upgdata")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pciemgr_upgrollback")
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/nicmgr_upgstate")
     resp = api.Trigger(req)
     for cmd_resp in resp.commands:
         api.PrintCommandResults(cmd_resp)
