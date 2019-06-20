@@ -1,10 +1,11 @@
 package state
 
 import (
+	"fmt"
 	"testing"
-	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -201,7 +202,7 @@ func TestAppUpdate(t *testing.T) {
 
 func TestAppUpdateLinkedSGPolicyUpdate(t *testing.T) {
 	// create netagent
-	ag, _, _ := createNetAgent(t)
+	ag, _, dp := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
@@ -284,6 +285,13 @@ func TestAppUpdateLinkedSGPolicyUpdate(t *testing.T) {
 	actualSGPolicy, err := ag.FindSGPolicy(sgPolicy.ObjectMeta)
 	AssertOk(t, err, "Failed to find find sg policy")
 
+	// find the sgpolicy in datapath
+	dpsgp, ok := dp.DB.SgPolicyDB[fmt.Sprintf("%s|%s", actualSGPolicy.ObjectMeta.Tenant, actualSGPolicy.ObjectMeta.Name)]
+	Assert(t, ok, "Failed to find sgpolicy in datapath")
+	Assert(t, len(dpsgp.Request[0].Rule) == 1, "sgpolicy in datapath is incorrect")
+	Assert(t, dpsgp.Request[0].Rule[0].Action.AppData.Alg == halproto.ALGName_APP_SVC_DNS, "sgpolicy in datapath is incorrect")
+	Assert(t, dpsgp.Request[0].Rule[0].Action.AppData.GetDnsOptionInfo().QueryResponseTimeout == 30, "sgpolicy in datapath is incorrect")
+
 	err = ag.UpdateApp(&updApp)
 	AssertOk(t, err, "Error updating app")
 	// Ensure the updated app has correct fields.
@@ -291,12 +299,19 @@ func TestAppUpdateLinkedSGPolicyUpdate(t *testing.T) {
 	AssertOk(t, err, "Failed to find the update app")
 	Assert(t, actualApp.Spec.ALG.DNS.QueryResponseTimeout == updApp.Spec.ALG.DNS.QueryResponseTimeout, "Updated app didn't have expected fields updated")
 
-	time.Sleep(time.Second * 3)
+	Assert(t, actualApp.Spec.ALG.DNS.QueryResponseTimeout == updApp.Spec.ALG.DNS.QueryResponseTimeout, "Updated app didn't have expected fields updated")
+
 	updateSGPolicy, err := ag.FindSGPolicy(sgPolicy.ObjectMeta)
 	AssertOk(t, err, "Failed to find find sg policy")
 
 	// Ensure the rule ids have changed
 	Assert(t, updateSGPolicy.Spec.Rules[0].ID == actualSGPolicy.Spec.Rules[0].ID, "Rule IDs must change on an update")
+
+	// find the sgpolicy in datapath
+	dpsgp, ok = dp.DB.SgPolicyDB[fmt.Sprintf("%s|%s", actualSGPolicy.ObjectMeta.Tenant, actualSGPolicy.ObjectMeta.Name)]
+	Assert(t, ok, "Failed to find sgpolicy in datapath")
+	Assert(t, len(dpsgp.Request[0].Rule) == 1, "sgpolicy in datapath is incorrect")
+	Assert(t, dpsgp.Request[0].Rule[0].Action.AppData.GetDnsOptionInfo().QueryResponseTimeout == 60, "sgpolicy in datapath is incorrect")
 }
 
 //--------------------- Corner Case Tests ---------------------//

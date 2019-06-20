@@ -123,14 +123,20 @@ func (client *NimbusClient) diffSecurityGroups(objList *netproto.SecurityGroupLi
 	// see if we need to delete any locally found object
 	localObjs := reactor.ListSecurityGroup()
 	for _, lobj := range localObjs {
-		key := lobj.ObjectMeta.GetKey()
-		if _, ok := objmap[key]; !ok {
-			evt := netproto.SecurityGroupEvent{
-				EventType:     api.EventType_DeleteEvent,
-				SecurityGroup: *lobj,
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.SecurityGroupEvent{
+					EventType:     api.EventType_DeleteEvent,
+					SecurityGroup: *lobj,
+				}
+				log.Infof("diffSecurityGroups(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.SecurityGroup.GetObjectKind(), evt.SecurityGroup.ObjectMeta)
+				client.processSecurityGroupEvent(evt, reactor)
 			}
-			client.lockObject(evt.SecurityGroup.GetObjectKind(), evt.SecurityGroup.ObjectMeta)
-			client.processSecurityGroupEvent(evt, reactor)
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 		}
 	}
 
@@ -150,6 +156,10 @@ func (client *NimbusClient) processSecurityGroupEvent(evt netproto.SecurityGroup
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
+
+	// add venice label to the object
+	evt.SecurityGroup.ObjectMeta.Labels = make(map[string]string)
+	evt.SecurityGroup.ObjectMeta.Labels["CreatedBy"] = "Venice"
 
 	// unlock the object once we are done
 	defer client.unlockObject(evt.SecurityGroup.GetObjectKind(), evt.SecurityGroup.ObjectMeta)

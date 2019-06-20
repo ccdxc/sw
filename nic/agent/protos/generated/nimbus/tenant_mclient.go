@@ -123,14 +123,20 @@ func (client *NimbusClient) diffTenants(objList *netproto.TenantList, reactor Te
 	// see if we need to delete any locally found object
 	localObjs := reactor.ListTenant()
 	for _, lobj := range localObjs {
-		key := lobj.ObjectMeta.GetKey()
-		if _, ok := objmap[key]; !ok {
-			evt := netproto.TenantEvent{
-				EventType: api.EventType_DeleteEvent,
-				Tenant:    *lobj,
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.TenantEvent{
+					EventType: api.EventType_DeleteEvent,
+					Tenant:    *lobj,
+				}
+				log.Infof("diffTenants(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.Tenant.GetObjectKind(), evt.Tenant.ObjectMeta)
+				client.processTenantEvent(evt, reactor)
 			}
-			client.lockObject(evt.Tenant.GetObjectKind(), evt.Tenant.ObjectMeta)
-			client.processTenantEvent(evt, reactor)
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 		}
 	}
 
@@ -150,6 +156,10 @@ func (client *NimbusClient) processTenantEvent(evt netproto.TenantEvent, reactor
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
+
+	// add venice label to the object
+	evt.Tenant.ObjectMeta.Labels = make(map[string]string)
+	evt.Tenant.ObjectMeta.Labels["CreatedBy"] = "Venice"
 
 	// unlock the object once we are done
 	defer client.unlockObject(evt.Tenant.GetObjectKind(), evt.Tenant.ObjectMeta)

@@ -11,14 +11,14 @@ chown -R 1000:1000 /var/log/pensando/elastic
 mem_avail=$(awk '/MemAvailable/ {print $2}' /proc/meminfo)
 mem_avail_in_gb=$(( mem_avail / (1024 * 1024) ))
 heap_opts="-Xms1g -Xmx1g"
-if (( mem_avail_in_gb < 32 ))
+if (( mem_avail_in_gb < 64 ))
 then
-    heap_size=$(( mem_avail_in_gb / 8))
+    heap_size=$(( mem_avail_in_gb / 3))
     if (( heap_size != 0 )); then
         heap_opts=$(echo "-Xms${heap_size}g -Xmx${heap_size}g")
     fi
 else
-    heap_opts="-Xms10g -Xmx10g"
+    heap_opts="-Xms32g -Xmx32g"
 fi
 
 # set heap size options

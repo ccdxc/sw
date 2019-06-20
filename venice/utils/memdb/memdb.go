@@ -30,7 +30,7 @@ const (
 )
 
 // WatchLen is size of the watch channel buffer
-const WatchLen = 1000
+const WatchLen = 100000
 
 // ErrObjectNotFound is returned when an object is not found
 var ErrObjectNotFound = errors.New("object not found")

@@ -137,14 +137,20 @@ func (client *NimbusClient) diff{{$crudObject}}s(objList *netproto.{{$crudObject
 	// see if we need to delete any locally found object
 	localObjs := reactor.List{{$crudObject}}()
 	for _, lobj := range localObjs {
-		key := lobj.ObjectMeta.GetKey()
-		if _, ok := objmap[key]; !ok {
-			evt := netproto.{{$crudObject}}Event{
-				EventType: api.EventType_DeleteEvent,
-				{{$crudObject}}:  *lobj,
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.{{$crudObject}}Event{
+					EventType: api.EventType_DeleteEvent,
+					{{$crudObject}}:  *lobj,
+				}
+				log.Infof("diff{{$crudObject}}s(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.{{$crudObject}}.GetObjectKind(), evt.{{$crudObject}}.ObjectMeta)
+				client.process{{$crudObject}}Event(evt, reactor)
 			}
-			client.lockObject(evt.{{$crudObject}}.GetObjectKind(), evt.{{$crudObject}}.ObjectMeta)
-			client.process{{$crudObject}}Event(evt, reactor)
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 		}
 	}
 
@@ -164,6 +170,10 @@ func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObje
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
+
+	// add venice label to the object
+	evt.{{$crudObject}}.ObjectMeta.Labels = make(map[string]string)
+	evt.{{$crudObject}}.ObjectMeta.Labels["CreatedBy"] = "Venice"
 
 	// unlock the object once we are done
 	defer client.unlockObject(evt.{{$crudObject}}.GetObjectKind(), evt.{{$crudObject}}.ObjectMeta)

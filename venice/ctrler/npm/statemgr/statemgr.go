@@ -247,9 +247,10 @@ func (sm *Statemgr) PeriodicUpdaterPush(obj updatable) {
 // agentObjectMeta converts venice object meta to agent object meta
 func agentObjectMeta(vmeta api.ObjectMeta) api.ObjectMeta {
 	return api.ObjectMeta{
-		Tenant:       vmeta.Tenant,
-		Namespace:    vmeta.Namespace,
-		Name:         vmeta.Name,
-		GenerationID: vmeta.GenerationID,
+		Tenant:          vmeta.Tenant,
+		Namespace:       vmeta.Namespace,
+		Name:            vmeta.Name,
+		GenerationID:    vmeta.GenerationID,
+		ResourceVersion: vmeta.ResourceVersion,
 	}
 }

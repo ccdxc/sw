@@ -721,6 +721,7 @@ func (it *integTestSuite) TestAgentDisconnectConnect(c *C) {
 			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * numWorkloadPerHost), ag.nagent.NetworkAgent.ListEndpoint()
 		}, "Deleted endpoint still found in agent", "100ms", it.pollTimeout())
 	}
+	time.Sleep(time.Second * 2)
 
 	// delete workloads
 	for i := range it.agents {

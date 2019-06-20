@@ -123,14 +123,20 @@ func (client *NimbusClient) diffSGPolicys(objList *netproto.SGPolicyList, reacto
 	// see if we need to delete any locally found object
 	localObjs := reactor.ListSGPolicy()
 	for _, lobj := range localObjs {
-		key := lobj.ObjectMeta.GetKey()
-		if _, ok := objmap[key]; !ok {
-			evt := netproto.SGPolicyEvent{
-				EventType: api.EventType_DeleteEvent,
-				SGPolicy:  *lobj,
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.SGPolicyEvent{
+					EventType: api.EventType_DeleteEvent,
+					SGPolicy:  *lobj,
+				}
+				log.Infof("diffSGPolicys(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.SGPolicy.GetObjectKind(), evt.SGPolicy.ObjectMeta)
+				client.processSGPolicyEvent(evt, reactor)
 			}
-			client.lockObject(evt.SGPolicy.GetObjectKind(), evt.SGPolicy.ObjectMeta)
-			client.processSGPolicyEvent(evt, reactor)
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 		}
 	}
 
@@ -150,6 +156,10 @@ func (client *NimbusClient) processSGPolicyEvent(evt netproto.SGPolicyEvent, rea
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
+
+	// add venice label to the object
+	evt.SGPolicy.ObjectMeta.Labels = make(map[string]string)
+	evt.SGPolicy.ObjectMeta.Labels["CreatedBy"] = "Venice"
 
 	// unlock the object once we are done
 	defer client.unlockObject(evt.SGPolicy.GetObjectKind(), evt.SGPolicy.ObjectMeta)

@@ -186,6 +186,7 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 	handler.EXPECT().UpdateFlowExportPolicy(gomock.Any(), gomock.Any()).Times(1).Return(nil)
 	err = policyDb.UpdateObject(&appObj)
 	AssertOk(t, err, fmt.Sprintf("failed to update FlowExportPolicy object %+v", appObj))
+	time.Sleep(time.Second)
 	AssertEventually(t, func() (bool, interface{}) {
 		p := policyDb.ListObjects("FlowExportPolicy")
 		return len(p) == 3, p

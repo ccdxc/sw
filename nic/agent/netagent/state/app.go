@@ -391,7 +391,7 @@ func (na *Nagent) UpdateApp(app *netproto.App) error {
 	}
 
 	for _, sgp := range linkedSGPolicies {
-		if err := na.UpdateSGPolicy(sgp); err != nil {
+		if err := na.performSGPolicyUpdate(sgp); err != nil {
 			log.Errorf("Failed to update the corresponding SG Policy. Err: %v", err)
 			return err
 		}

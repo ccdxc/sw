@@ -232,7 +232,6 @@ func (na *Nagent) ListSGPolicy() []*netproto.SGPolicy {
 
 // UpdateSGPolicy updates a security group policy
 func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
-	var ruleIDAppLUT sync.Map
 	// find the corresponding namespace
 	_, err := na.FindNamespace(sgp.ObjectMeta)
 	if err != nil {
@@ -244,13 +243,6 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 		return err
 	}
 
-	// find the corresponding vrf for the sg policy
-	vrf, err := na.ValidateVrf(existingSgp.Tenant, existingSgp.Namespace, existingSgp.Spec.VrfName)
-	if err != nil {
-		log.Errorf("Failed to find the vrf %v", existingSgp.Spec.VrfName)
-		return err
-	}
-
 	// check if policy contents are same
 	if proto.Equal(&existingSgp.Spec, &sgp.Spec) {
 		return nil
@@ -259,6 +251,19 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 	// Populate the ID from existing sg policy to ensure that HAL recognizes this.
 	sgp.Status.SGPolicyID = existingSgp.Status.SGPolicyID
 
+	return na.performSGPolicyUpdate(sgp)
+}
+
+// performSGPolicyUpdate
+func (na *Nagent) performSGPolicyUpdate(sgp *netproto.SGPolicy) error {
+	var ruleIDAppLUT sync.Map
+
+	// find the corresponding vrf for the sg policy
+	vrf, err := na.ValidateVrf(sgp.Tenant, sgp.Namespace, sgp.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", sgp.Spec.VrfName)
+		return err
+	}
 	// Recompute hash
 	for i, r := range sgp.Spec.Rules {
 		ruleHash := sgp.Spec.Rules[i].ID
@@ -286,7 +291,7 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 
 	err = na.Datapath.UpdateSGPolicy(sgp, vrf.Status.VrfID, &ruleIDAppLUT)
 	if err != nil {
-		log.Errorf("Error updating the SG Policy {%+v} in datapath. Err: %v", existingSgp, err)
+		log.Errorf("Error updating the SG Policy {%+v} in datapath. Err: %v", sgp, err)
 		return err
 	}
 

@@ -1235,6 +1235,99 @@ func TestNpmClientWatch(t *testing.T) {
 	restSrv.Stop()
 }
 
+func TestEndpointDiff(t *testing.T) {
+
+	// Init tsdb
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &mock.ResolverClient{}})
+	defer cancel()
+
+	// create a fake rpc server
+	srv := createRPCServer(t)
+	Assert(t, (srv != nil), "Error creating rpc server", srv)
+
+	// create an endpoint
+	veniceEp := netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "testVeniceEndpoint",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+		},
+		Status: netproto.EndpointStatus{},
+	}
+	srv.epdb["testVeniceEndpoint"] = &veniceEp
+
+	// create a fake agent
+	ag := createFakeAgent(t.Name())
+
+	epinfo := netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "testLocalEndpoint",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+		},
+		Status: netproto.EndpointStatus{},
+	}
+
+	err := ag.CreateEndpoint(&epinfo)
+	AssertOk(t, err, "Error creating endpoint")
+
+	delEp := netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "tobeDeletedEndpoint",
+			Labels: map[string]string{"CreatedBy": "Venice"},
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+		},
+		Status: netproto.EndpointStatus{},
+	}
+
+	err = ag.CreateEndpoint(&delEp)
+	AssertOk(t, err, "Error creating endpoint")
+	Assert(t, len(ag.epAdded) == 2, "Invalid number of endpoints in agent")
+
+	// create npm client
+	cl, err := NewNpmClient(ag, srv.grpcServer.GetListenURL(), nil)
+	AssertOk(t, err, "Error creating npm client")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		return (len(ag.epAdded) == 3), ag.epAdded
+	}, "Endpoint count incorrect in agent")
+
+	// verify Venice endpoint got created
+	AssertEventually(t, func() (bool, interface{}) {
+		ep, ok := ag.epAdded[objectKey(veniceEp.ObjectMeta)]
+		return (ok && ep.Name == veniceEp.Name), nil
+	}, "Venice Endpoint not found in agent")
+
+	// verify local endpoint is not deleted by Venice
+	AssertEventually(t, func() (bool, interface{}) {
+		ep, ok := ag.epAdded[objectKey(epinfo.ObjectMeta)]
+		return (ok && ep.Name == epinfo.Name), nil
+	}, "Local Endpoint not found in agent")
+
+	// verify tobe deleted endpoint is deleted by Venice
+	AssertEventually(t, func() (bool, interface{}) {
+		isdel, ok := ag.epDeleted[objectKey(delEp.ObjectMeta)]
+		return (ok && isdel), ag.epDeleted
+	}, "Local Endpoint not found in agent")
+
+	// stop the server
+	srv.grpcServer.Stop()
+
+	// stop the client
+	cl.Stop()
+	time.Sleep(time.Second)
+}
 func TestSecurityGroupWatch(t *testing.T) {
 	// Init tsdb
 	ctx, cancel := context.WithCancel(context.Background())
