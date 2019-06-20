@@ -12,17 +12,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pensando/sw/venice/utils"
-
-	"github.com/pensando/sw/venice/ctrler/tpm"
-
-	"github.com/pensando/sw/nic/agent/ipc"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/nic/agent/ipc"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
+	"github.com/pensando/sw/venice/ctrler/tpm"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -464,6 +461,13 @@ func (s *PolicyState) CreateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 
 	log.Infof("created %+v", p)
 	return nil
+}
+
+// UpdateHostName updates hostname; all the syslog message will carry this updated hostname in the syslog message.
+func (s *PolicyState) UpdateHostName(hostname string) {
+	if s.hostName != hostname {
+		s.hostName = hostname
+	}
 }
 
 // UpdateFwlogPolicy is the PUT entry point

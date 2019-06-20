@@ -86,6 +86,7 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		var controllers []string
 		var err error
 
+		s.tmagent.tpState.UpdateHostName(obj.GetID())
 		for _, ip := range obj.Controllers {
 			controllers = append(controllers, fmt.Sprintf("%s:%s", ip, globals.CMDResolverPort))
 		}
@@ -118,6 +119,8 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		if err := s.tmagent.reportMetrics(s.tmagent.resolverClient); err != nil {
 			log.Fatal(err)
 		}
+	} else {
+		s.tmagent.tpState.UpdateHostName(obj.GetSmartNicName())
 	}
 }
 
