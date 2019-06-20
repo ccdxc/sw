@@ -43,7 +43,7 @@ operator<<(std::ostream& os, const pds_tep_status_t *status) {
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_tep_info_t *obj) {
-    os << "TEP info => "
+    os << "TEP info =>"
        << &obj->spec
        << &obj->status
        << std::endl;

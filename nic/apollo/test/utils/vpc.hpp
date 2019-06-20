@@ -57,7 +57,7 @@ inline std::ostream&
 operator<<(std::ostream& os, const vpc_feeder& obj) {
     os << "VPC feeder =>"
        << " id: " << obj.key.id
-       << " cidr_str: " << obj.cidr_str;
+       << " cidr_str: " << obj.cidr_str << " ";
     return os;
 }
 

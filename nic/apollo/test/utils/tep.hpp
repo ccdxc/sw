@@ -65,7 +65,7 @@ operator<<(std::ostream& os, const tep_feeder& obj) {
        << " DIPi: " << obj.dipi
        << " dmac: " << mac2str(obj.dmac)
        << " nat: " << obj.nat
-       << " encap: " << pds_encap2str(obj.encap);
+       << " encap: " << pds_encap2str(obj.encap) << " ";
     return os;
 }
 
