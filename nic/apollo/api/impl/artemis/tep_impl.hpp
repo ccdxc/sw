@@ -105,6 +105,7 @@ private:
     tep_impl() {
         remote46_hw_id_ = 0xFFFF;
         tep1_rx_handle_ = handle_t::null();
+        tep2_rx_handle_ = handle_t::null();
         nh_idx_ = 0xFFFFFFFF;
     }
 
@@ -125,6 +126,7 @@ private:
     // P4 datapath specific state
     uint16_t    remote46_hw_id_;    ///< hardware id for this tep
     handle_t    tep1_rx_handle_;    ///< TEP1_RX table handle
+    handle_t    tep2_rx_handle_;    ///< TEP2_RX table handle
     uint32_t    nh_idx_;            ///< nexthop table index
 };
 

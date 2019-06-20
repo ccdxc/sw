@@ -60,7 +60,9 @@ tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     pds_tep_spec_t *spec;
     tep1_rx_swkey_t tep1_rx_key = { 0 };
+    tep2_rx_swkey_t tep2_rx_key = { 0 };
     tep1_rx_swkey_mask_t tep1_rx_mask = { 0 };
+    tep2_rx_swkey_mask_t tep2_rx_mask = { 0 };
     sdk_table_api_params_t api_params;
 
     spec = &obj_ctxt->api_params->tep_spec;
@@ -75,8 +77,12 @@ tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
         remote46_hw_id_ = idx & 0xFFFF;
 
         // reserve an entry in the TEP1_RX table
-        tep1_rx_key.vxlan_1_vni = spec->encap.val.value;
-        tep1_rx_mask.vxlan_1_vni_mask = 0xFFFFFFFF;
+        if (spec->remote_svc) {
+            tep1_rx_key.vxlan_1_vni = spec->remote_svc_encap.val.value;
+        } else {
+            tep1_rx_key.vxlan_1_vni = spec->encap.val.value;
+        }
+        tep1_rx_mask.vxlan_1_vni_mask = ~0;
         memset(&api_params, 0, sizeof(api_params));
         api_params.key = &tep1_rx_key;
         api_params.mask = &tep1_rx_mask;
@@ -89,6 +95,28 @@ tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
             goto error;
         }
         tep1_rx_handle_ = api_params.handle;
+
+        // reserve an entry in the TEP2_RX table for remote services
+        if (spec->remote_svc) {
+            tep2_rx_key.vxlan_2_vni = spec->encap.val.value;
+            tep2_rx_mask.vxlan_2_vni_mask = ~0;
+            memcpy(tep2_rx_key.tunnel_metadata_tep2_dst,
+                   &spec->key.ip_addr.addr.v6_addr.addr32[3], IP4_ADDR8_LEN);
+            memset(tep2_rx_mask.tunnel_metadata_tep2_dst_mask, 0xFF,
+                   sizeof(tep2_rx_mask.tunnel_metadata_tep2_dst_mask));
+            memset(&api_params, 0, sizeof(api_params));
+            api_params.key = &tep2_rx_key;
+            api_params.mask = &tep2_rx_mask;
+            api_params.handle = sdk::table::handle_t::null();
+            ret = tep_impl_db()->tep2_rx_tbl()->reserve(&api_params);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to reserve entry in TEP2_RX "
+                              "table for svc TEP %s, err %u",
+                              orig_obj->key2str().c_str(), ret);
+                goto error;
+            }
+            tep2_rx_handle_ = api_params.handle;
+        }
     }
 
     // reserve an entry in NEXTHOP table
@@ -115,6 +143,10 @@ tep_impl::release_resources(api_base *api_obj) {
         api_params.handle = tep1_rx_handle_;
         tep_impl_db()->tep1_rx_tbl()->release(&api_params);
     }
+    if (tep2_rx_handle_.valid()) {
+        api_params.handle = tep2_rx_handle_;
+        tep_impl_db()->tep2_rx_tbl()->release(&api_params);
+    }
     if (nh_idx_ != 0xFFFFFFFF) {
         nexthop_impl_db()->nh_tbl()->release(nh_idx_);
     }
@@ -132,6 +164,10 @@ tep_impl::nuke_resources(api_base *api_obj) {
         api_params.handle = tep1_rx_handle_;
         tep_impl_db()->tep1_rx_tbl()->remove(&api_params);
     }
+    if (tep2_rx_handle_.valid()) {
+        api_params.handle = tep2_rx_handle_;
+        tep_impl_db()->tep2_rx_tbl()->remove(&api_params);
+    }
     if (nh_idx_ != 0xFFFFFFFF) {
         nexthop_impl_db()->nh_tbl()->remove(nh_idx_);
     }
@@ -139,6 +175,7 @@ tep_impl::nuke_resources(api_base *api_obj) {
 }
 
 #define tep1_rx_info      action_u.tep1_rx_tep1_rx_info
+#define tep2_rx_info      action_u.tep2_rx_tep2_rx_info
 #define remote_46_info    action_u.remote_46_mapping_remote_46_info
 #define nexthop_info      action_u.nexthop_nexthop_info
 sdk_ret_t
@@ -149,19 +186,24 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     pds_tep_spec_t *spec;
     sdk_table_api_params_t api_params;
     tep1_rx_swkey_t tep1_rx_key = { 0 };
+    tep2_rx_swkey_t tep2_rx_key = { 0 };
     nexthop_actiondata_t nh_data = { 0 };
     tep1_rx_swkey_mask_t tep1_rx_mask = { 0 };
+    tep2_rx_swkey_mask_t tep2_rx_mask = { 0 };
     tep1_rx_actiondata_t tep1_rx_data = { 0 };
+    tep2_rx_actiondata_t tep2_rx_data = { 0 };
     remote_46_mapping_actiondata_t remote_46_mapping_data = { 0 };
 
     spec = &obj_ctxt->api_params->tep_spec;
     tep = (tep_entry *)api_obj;
     switch (spec->type) {
     case PDS_TEP_TYPE_SERVICE:
-        PDS_TRACE_DEBUG("Programming service TEP %s, DIPo %s, nh hw id %u, "
-                        "remote_46 hw id %u", api_obj->key2str().c_str(),
+        PDS_TRACE_DEBUG("Programming service TEP %s, DIPo %s, remote %s, "
+                        "nh hw id %u, remote_46 hw id %u",
+                        api_obj->key2str().c_str(),
                         ipv4addr2str(spec->key.ip_addr.addr.v6_addr.addr32[3]),
-                        nh_idx_, remote46_hw_id_);
+                        spec->remote_svc ? "true" : "false", nh_idx_,
+                        remote46_hw_id_);
         // program NEXTHOP table entry
         nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
         nh_data.nexthop_info.port = TM_PORT_UPLINK_1;
@@ -194,10 +236,17 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         }
 
-        // program TEP1_RX table entry
-        tep1_rx_key.vxlan_1_vni = spec->encap.val.value;
-        tep1_rx_mask.vxlan_1_vni_mask = 0xFFFFFFFF;
-        tep1_rx_data.tep1_rx_info.decap_next = 0;
+        tep1_rx_data.action_id = TEP1_RX_TEP1_RX_INFO_ID;
+        if (spec->remote_svc) {
+            // program TEP1_RX table entry with remote service TEP's encap
+            tep1_rx_key.vxlan_1_vni = spec->remote_svc_encap.val.value;
+            tep1_rx_data.tep1_rx_info.decap_next = 1;
+        } else {
+            // program TEP1_RX table entry
+            tep1_rx_key.vxlan_1_vni = spec->encap.val.value;
+            tep1_rx_data.tep1_rx_info.decap_next = 0;
+        }
+        tep1_rx_mask.vxlan_1_vni_mask = ~0;
         tep1_rx_data.tep1_rx_info.src_vpc_id =
             PDS_IMPL_SERVICE_TUNNEL_VPC_HW_ID;
         memset(&api_params, 0, sizeof(api_params));
@@ -211,6 +260,32 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             PDS_TRACE_ERR("Programming of TEP1_RX table failed for svc TEP %s, "
                           "err %u", api_obj->key2str().c_str(), ret);
             return ret;
+        }
+
+        // in case of remote service TEP, we need to program TEP2 table as well
+        if (spec->remote_svc) {
+            tep2_rx_key.vxlan_2_vni = spec->encap.val.value;
+            tep2_rx_mask.vxlan_2_vni_mask = ~0;
+            memcpy(tep2_rx_key.tunnel_metadata_tep2_dst,
+                   &spec->key.ip_addr.addr.v6_addr.addr32[3], IP4_ADDR8_LEN);
+            memset(tep2_rx_mask.tunnel_metadata_tep2_dst_mask, 0xFF,
+                   sizeof(tep2_rx_mask.tunnel_metadata_tep2_dst_mask));
+            tep2_rx_data.action_id = TEP2_RX_TEP2_RX_INFO_ID;
+            tep2_rx_data.tep2_rx_info.src_vpc_id =
+                PDS_IMPL_SERVICE_TUNNEL_VPC_HW_ID;
+            memset(&api_params, 0, sizeof(api_params));
+            api_params.key = &tep2_rx_key;
+            api_params.mask = &tep2_rx_mask;
+            api_params.appdata = &tep2_rx_data;
+            api_params.action_id = TEP2_RX_TEP2_RX_INFO_ID;
+            api_params.handle = tep2_rx_handle_;
+            ret = tep_impl_db()->tep2_rx_tbl()->insert(&api_params);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Programming of TEP2_RX table failed for remote "
+                              "svc TEP %s, err %u",
+                              api_obj->key2str().c_str(), ret);
+                return ret;
+            }
         }
         break;
 
