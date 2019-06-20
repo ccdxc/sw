@@ -76,7 +76,6 @@ upgrade_handler::PostHostDownHandler(UpgCtx& upgCtx)
     hal_ret_t ret = HAL_RET_OK;
 
     HAL_TRACE_DEBUG("[upgrade] Handling post host down msg ...");
-    return HdlrResp(::upgrade::SUCCESS, empty_str);
 
     // disable TX scheduler for all LIFs
     ret = lif_disable_tx_scheduler();

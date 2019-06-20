@@ -320,7 +320,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_IF_GET_LPORT_ID, pd_if_get_lport_id);
     PD_FUNC_LOAD(PD_FUNC_ID_IF_GET_TM_OPORT, pd_if_get_tm_oport);
 
-    //Rwentry 
+    //Rwentry
     PD_FUNC_LOAD(PD_FUNC_ID_RWENTRY_FIND_OR_ALLOC, pd_rw_entry_find_or_alloc);
 
     // twice nat
@@ -470,6 +470,7 @@ hal_pd_load_symbols (void)
     // quiesce
     PD_FUNC_LOAD(PD_FUNC_ID_QUIESCE_START, pd_quiesce_start);
     PD_FUNC_LOAD(PD_FUNC_ID_QUIESCE_STOP, pd_quiesce_stop);
+    PD_FUNC_LOAD(PD_FUNC_ID_UPG_TABLE_RESET, pd_system_upgrade_table_reset);
 
     // pb
     PD_FUNC_LOAD(PD_FUNC_ID_PB_STATS_GET, pd_pb_stats_get);
@@ -516,7 +517,7 @@ hal_pd_load_symbols (void)
     // nvme global pd calls
     PD_FUNC_LOAD(PD_FUNC_ID_NVME_GLOBAL_CREATE, pd_nvme_global_create);
     //PD_FUNC_LOAD(PD_FUNC_ID_NVME_GLOBAL_GET, pd_nvme_global_get);
-    
+
     // nvme ns pd calls
     PD_FUNC_LOAD(PD_FUNC_ID_NVME_NS_CREATE, pd_nvme_ns_create);
     //PD_FUNC_LOAD(PD_FUNC_ID_NVME_NS_DELETE, pd_nvme_ns_delete);
