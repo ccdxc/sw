@@ -295,7 +295,9 @@ mputrace_reset_buffer_erase (cap_mpu_csr_trace_t trace)
     if (mputrace_util_is_enabled(trace)) {
         trace_addr = mputrace_util_base_addr_get(trace);
         trace_size = mputrace_util_size_get(trace);
-        sdk::lib::pal_mem_set(trace_addr, 0, trace_size);
+        trace_addr = (mem_addr_t)sdk::lib::pal_mem_map(trace_addr, trace_size);
+        memset((void*)trace_addr, 0, trace_size);
+        sdk::lib::pal_mem_unmap((void*)trace_addr);
     }
 }
 
@@ -319,6 +321,7 @@ mputrace_reset_all_pipelines (cap_top_csr_t &cap0)
     mputrace_cfg_inst_t cfg_inst;
 
     memset(&cfg_inst, 0, sizeof(cfg_inst));
+    cfg_inst.settings.reset = true;
     MPUTRACE_FOR_EACH_PIPELINE(cap0.sgi, mputrace_reset_pipeline, &cfg_inst);
     MPUTRACE_FOR_EACH_PIPELINE(cap0.sge, mputrace_reset_pipeline, &cfg_inst);
     MPUTRACE_FOR_EACH_PIPELINE(cap0.pct, mputrace_reset_pipeline, &cfg_inst);
