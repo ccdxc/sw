@@ -151,7 +151,7 @@ public:
         this->params = params;
         this->tstats = tstats;
         this->thread_id = thread_id;
-        if (params->entry) {
+        if (params && params->entry) {
             trace(true);
         }
     }

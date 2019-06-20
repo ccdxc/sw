@@ -16,10 +16,10 @@ struct __attribute__((__packed__)) ftlv4_entry_t {
 
     uint32_t sport : 16;
     uint32_t dport : 16;
-    uint32_t dst;
-    uint32_t src;
     uint32_t local_vnic_tag : 16;
     uint32_t proto : 8;
+    uint32_t dst;
+    uint32_t src;
 
     // data before key
     uint32_t nexthop_group_index_sbit0_ebit6 : 7;
