@@ -240,13 +240,13 @@ int ionic_debugfs_add_ident(struct ionic *ionic)
 int ionic_debugfs_add_sizes(struct ionic *ionic)
 {
 	debugfs_create_u32("nlifs", 0400, ionic->dentry,
-			   &ionic->ident.dev.nlifs);
+			   (u32 *)&ionic->ident.dev.nlifs);
 	debugfs_create_u32("nintrs", 0400, ionic->dentry, &ionic->nintrs);
 
 	debugfs_create_u32("ntxqs_per_lif", 0400, ionic->dentry,
-			   &ionic->ident.lif.eth.config.queue_count[IONIC_QTYPE_TXQ]);
+			   (u32 *)&ionic->ident.lif.eth.config.queue_count[IONIC_QTYPE_TXQ]);
 	debugfs_create_u32("nrxqs_per_lif", 0400, ionic->dentry,
-			   &ionic->ident.lif.eth.config.queue_count[IONIC_QTYPE_RXQ]);
+			   (u32 *)&ionic->ident.lif.eth.config.queue_count[IONIC_QTYPE_RXQ]);
 
 	return 0;
 }
@@ -445,13 +445,13 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq)
 			return PTR_ERR(stats_dentry);
 
 		debugfs_create_u64("eid", 0400, stats_dentry,
-				   &lif->info->status.eid);
+				   (u64 *)&lif->info->status.eid);
 		debugfs_create_u16("link_status", 0400, stats_dentry,
-				   &lif->info->status.link_status);
+				   (u16 *)&lif->info->status.link_status);
 		debugfs_create_u32("link_speed", 0400, stats_dentry,
-				   &lif->info->status.link_speed);
+				   (u32 *)&lif->info->status.link_speed);
 		debugfs_create_u16("link_down_count", 0400, stats_dentry,
-				   &lif->info->status.link_down_count);
+				   (u16 *)&lif->info->status.link_down_count);
 	}
 
 	return 0;

@@ -275,6 +275,8 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		goto err_out_deinit_lifs;
 	}
 
+	dev_info(ionic->dev, "attached\n");
+
 	return 0;
 
 err_out_deinit_lifs:

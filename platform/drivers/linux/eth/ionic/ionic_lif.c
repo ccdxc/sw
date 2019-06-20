@@ -246,39 +246,18 @@ static int ionic_lif_stop(struct lif *lif)
 	synchronize_rcu();
 
 	for (i = 0; i < lif->nxqs; i++) {
-		if (lif->rxqcqs[i].qcq) {
-			err = ionic_qcq_disable(lif->rxqcqs[i].qcq);
-			if (err)
-				break;
-		}
-		if (lif->txqcqs[i].qcq) {
-			err = ionic_qcq_disable(lif->txqcqs[i].qcq);
-			if (err)
-				break;
-		}
-	}
+		(void)ionic_qcq_disable(lif->txqcqs[i].qcq);
+		ionic_tx_flush(&lif->txqcqs[i].qcq->cq);
+		ionic_lif_qcq_deinit(lif, lif->txqcqs[i].qcq);
+		ionic_qcq_free(lif, lif->txqcqs[i].qcq);
+		lif->txqcqs[i].qcq = NULL;
 
-	for (i = 0; i < lif->nxqs; i++) {
-		if (lif->txqcqs[i].qcq) {
-			ionic_tx_flush(&lif->txqcqs[i].qcq->cq);
-			ionic_lif_qcq_deinit(lif, lif->txqcqs[i].qcq);
-		}
-		if (lif->rxqcqs[i].qcq) {
-			ionic_rx_flush(&lif->rxqcqs[i].qcq->cq);
-			ionic_lif_qcq_deinit(lif, lif->rxqcqs[i].qcq);
-		}
-	}
-
-	for (i = 0; i < lif->nxqs; i++) {
-		if (lif->txqcqs[i].qcq) {
-			ionic_qcq_free(lif, lif->txqcqs[i].qcq);
-			lif->txqcqs[i].qcq = NULL;
-		}
-		if (lif->rxqcqs[i].qcq) {
-			ionic_rx_empty(&lif->rxqcqs[i].qcq->q);
-			ionic_qcq_free(lif, lif->rxqcqs[i].qcq);
-			lif->rxqcqs[i].qcq = NULL;
-		}
+		(void)ionic_qcq_disable(lif->rxqcqs[i].qcq);
+		ionic_rx_flush(&lif->rxqcqs[i].qcq->cq);
+		ionic_lif_qcq_deinit(lif, lif->rxqcqs[i].qcq);
+		ionic_rx_empty(&lif->rxqcqs[i].qcq->q);
+		ionic_qcq_free(lif, lif->rxqcqs[i].qcq);
+		lif->rxqcqs[i].qcq = NULL;
 	}
 
 	return err;
@@ -602,8 +581,8 @@ static int ionic_lif_addr_add(struct lif *lif, const u8 *addr)
 		}
 	}
 
-	netdev_info(lif->netdev, "rx_filter add ADDR %pM (id %d)\n", addr,
-		    ctx.comp.rx_filter_add.filter_id);
+	netdev_dbg(lif->netdev, "rx_filter add ADDR %pM (id %d)\n", addr,
+		   ctx.comp.rx_filter_add.filter_id);
 
 	memcpy(ctx.cmd.rx_filter_add.mac.addr, addr, ETH_ALEN);
 	err = ionic_adminq_post_wait(lif, &ctx);
@@ -640,8 +619,8 @@ static int ionic_lif_addr_del(struct lif *lif, const u8 *addr)
 	if (err)
 		return err;
 
-	netdev_info(lif->netdev, "rx_filter del ADDR %pM (id %d)\n", addr,
-		    ctx.cmd.rx_filter_del.filter_id);
+	netdev_dbg(lif->netdev, "rx_filter del ADDR %pM (id %d)\n", addr,
+		   ctx.cmd.rx_filter_del.filter_id);
 
 	return 0;
 }
@@ -849,12 +828,6 @@ static int ionic_set_mac_address(struct net_device *netdev, void *sa)
 	return ionic_addr_add(netdev, mac);
 }
 
-static int ionic_mnic_change_mtu(struct net_device *netdev, int new_mtu)
-{
-	netdev_err(netdev, "MTU change not allowed on mnic device\n");
-	return -EOPNOTSUPP;
-}
-
 static int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 {
 	struct lif *lif = netdev_priv(netdev);
@@ -872,6 +845,11 @@ static int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 	if (new_mtu < IONIC_MIN_MTU || new_mtu > IONIC_MAX_MTU) {
 		netdev_err(netdev, "Invalid MTU %d\n", new_mtu);
 		return -EINVAL;
+	}
+
+	if (ionic_is_mnic(lif->ionic)) {
+		netdev_err(netdev, "MTU change not allowed on mnic device\n");
+		return -EOPNOTSUPP;
 	}
 
 	err = ionic_adminq_post_wait(lif, &ctx);
@@ -918,8 +896,8 @@ static int ionic_vlan_rx_add_vid(struct net_device *netdev, __be16 proto,
 	if (err)
 		return err;
 
-	netdev_info(netdev, "rx_filter add VLAN %d (id %d)\n", vid,
-		    ctx.comp.rx_filter_add.filter_id);
+	netdev_dbg(netdev, "rx_filter add VLAN %d (id %d)\n", vid,
+		   ctx.comp.rx_filter_add.filter_id);
 
 	return ionic_rx_filter_save(lif, 0, RXQ_INDEX_ANY, 0, &ctx);
 }
@@ -946,8 +924,8 @@ static int ionic_vlan_rx_kill_vid(struct net_device *netdev, __be16 proto,
 		return -ENOENT;
 	}
 
-	netdev_info(netdev, "rx_filter del VLAN %d (id %d)\n", vid,
-		    le32_to_cpu(ctx.cmd.rx_filter_del.filter_id));
+	netdev_dbg(netdev, "rx_filter del VLAN %d (id %d)\n", vid,
+		   le32_to_cpu(ctx.cmd.rx_filter_del.filter_id));
 
 	ctx.cmd.rx_filter_del.filter_id = cpu_to_le32(f->filter_id);
 	ionic_rx_filter_free(lif, f);
@@ -1215,9 +1193,9 @@ static const struct net_device_ops ionic_mnic_netdev_ops = {
 	.ndo_vlan_rx_add_vid    = ionic_vlan_rx_add_vid,
 	.ndo_vlan_rx_kill_vid   = ionic_vlan_rx_kill_vid,
 #ifdef HAVE_RHEL7_EXTENDED_MIN_MAX_MTU
-	.extended.ndo_change_mtu = ionic_mnic_change_mtu,
+	.extended.ndo_change_mtu = ionic_change_mtu,
 #else
-	.ndo_change_mtu         = ionic_mnic_change_mtu,
+	.ndo_change_mtu         = ionic_change_mtu,
 #endif
 
 #ifdef HAVE_RHEL7_NET_DEVICE_OPS_EXT
@@ -2198,12 +2176,11 @@ static int ionic_set_nic_features(struct lif *lif, netdev_features_t features)
 			.opcode = CMD_OPCODE_LIF_SETATTR,
 			.index = cpu_to_le16(lif->index),
 			.attr = IONIC_LIF_ATTR_FEATURES,
-			.features = cpu_to_le64(features),
 		},
 	};
-	unsigned long vlan_flags = ETH_HW_VLAN_TX_TAG |
-				   ETH_HW_VLAN_RX_STRIP |
-				   ETH_HW_VLAN_RX_FILTER;
+	u64 vlan_flags = ETH_HW_VLAN_TX_TAG |
+			 ETH_HW_VLAN_RX_STRIP |
+			 ETH_HW_VLAN_RX_FILTER;
 	int err;
 
 	ctx.cmd.lif_setattr.features = ionic_netdev_features_to_nic(features);
@@ -2638,23 +2615,6 @@ int ionic_lifs_init(struct ionic *ionic)
 	return 0;
 }
 
-static int ionic_lif_register(struct lif *lif)
-{
-	struct device *dev = lif->ionic->dev;
-	int err;
-
-	err = register_netdev(lif->netdev);
-	if (err) {
-		dev_err(dev, "Cannot register net device, aborting\n");
-		return err;
-	}
-
-	ionic_link_status_check(lif);
-	lif->registered = true;
-
-	return 0;
-}
-
 static void ionic_lif_notify_work(struct work_struct *ws)
 {
 }
@@ -2776,6 +2736,7 @@ static int ionic_lif_notify(struct notifier_block *nb,
 
 int ionic_lifs_register(struct ionic *ionic)
 {
+	struct device *dev = ionic->dev;
 	int err;
 
 	INIT_WORK(&ionic->nb_work, ionic_lif_notify_work);
@@ -2786,7 +2747,16 @@ int ionic_lifs_register(struct ionic *ionic)
 	if (err)
 		ionic->nb.notifier_call = NULL;
 
-	return ionic_lif_register(ionic->master_lif);
+	err = register_netdev(ionic->master_lif->netdev);
+	if (err) {
+		dev_err(dev, "Cannot register net device, aborting\n");
+		return err;
+	}
+
+	ionic_link_status_check(ionic->master_lif);
+	ionic->master_lif->registered = true;
+
+	return 0;
 }
 
 void ionic_lifs_unregister(struct ionic *ionic)

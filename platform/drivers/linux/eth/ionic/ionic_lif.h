@@ -161,7 +161,7 @@ struct lif {
 	unsigned int nrxq_descs;
 	u32 rx_copybreak;
 	unsigned int rx_mode;
-	u32 hw_features;
+	u64 hw_features;
 	bool mc_overflow;
 	unsigned int nmcast;
 	bool uc_overflow;

@@ -63,10 +63,11 @@ int ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
 			 u32 hash, struct ionic_admin_ctx *ctx)
 {
 	struct device *dev = lif->ionic->dev;
-	struct rx_filter *f = devm_kzalloc(dev, sizeof(*f), GFP_KERNEL);
 	struct hlist_head *head;
+	struct rx_filter *f;
 	unsigned int key;
 
+	f = devm_kzalloc(dev, sizeof(*f), GFP_KERNEL);
 	if (!f)
 		return -ENOMEM;
 

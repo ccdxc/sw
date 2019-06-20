@@ -188,7 +188,7 @@ static void ionic_adminq_flush(struct lif *lif)
 	spin_lock(&lif->adminq_lock);
 
 	while (adminq->tail != adminq->head) {
-		memset(adminq->tail->desc, 0, sizeof(*adminq->tail->desc));
+		memset(adminq->tail->desc, 0, sizeof(union adminq_cmd));
 		adminq->tail->cb = NULL;
 		adminq->tail->cb_arg = NULL;
 		adminq->tail = adminq->tail->next;
