@@ -162,7 +162,7 @@
 /*****************************************************************************/
 #define ARTEMIS_PREDICATE_HDR_SZ        1
 #define ARTEMIS_P4_TO_RXDMA_HDR_SZ      80
-#define ARTEMIS_P4_TO_RXDMA_HDR3_SZ     8
+#define ARTEMIS_P4_TO_RXDMA_HDR3_SZ     9
 #define ARTEMIS_I2E_HDR_SZ              0
 #define ARTEMIS_TXDMA_TO_ARM_ENTRY_SZ   (5 * 64)
 #define ARTEMIS_TXDMA_TO_ARM_META_SZ    33

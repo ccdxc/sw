@@ -1,5 +1,6 @@
 // d-vector should match artemis_rx_to_tx2_header_t
 action iflow_rx2tx(flow_hash,
+             epoch,
              parent_hint_index,
              flow_nrecircs,
              parent_hint_slot,
@@ -18,6 +19,7 @@ action iflow_rx2tx(flow_hash,
     //modify_field(txdma_predicate.pass_three, FALSE);
 
     modify_field(scratch_metadata.field32, flow_hash);
+    modify_field(scratch_metadata.field8, epoch);
     modify_field(scratch_metadata.field22, parent_hint_index);
     modify_field(scratch_metadata.field3, flow_nrecircs);
     modify_field(scratch_metadata.field3, parent_hint_slot);

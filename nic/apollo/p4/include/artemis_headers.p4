@@ -45,6 +45,7 @@ header_type artemis_p4_to_rxdma_header2_t {
 header_type artemis_p4_to_rxdma_header3_t {
     fields {
         flow_hash           : 32;
+        epoch               : 8;
         parent_hint_index   : 22;
         flow_nrecircs       : 3;
         parent_hint_slot    : 3;
@@ -52,7 +53,7 @@ header_type artemis_p4_to_rxdma_header3_t {
         ipaf                : 1;
         parent_valid        : 1;
         pad0                : 1;
-        pad1                : 64;
+        pad1                : 56;
     }
 }
 

@@ -59,6 +59,7 @@ label_2nd_level_flow_miss:
                     k.ingress_recirc_flow_ohash[21:0].wx
     phvwr       p.p4_to_rxdma3_parent_valid, 1
 label_flow_miss:
+    phvwr       p.p4_to_rxdma3_epoch, k.control_metadata_epoch
     phvwrpair   p.p4_to_rxdma3_flow_hash, r1, p.p4_to_rxdma3_ipaf, 1
     phvwr       p.p4_to_rxdma_tag_root, r5
     phvwr.e     p.control_metadata_pipe_id, PIPE_CPS
