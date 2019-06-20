@@ -130,7 +130,7 @@ echo "Checking for NAPLES Sim Container Health End: `date +%x_%H:%M:%S:%N`"
 
 
 cd /sw/nic/obj/images
-tar xvzf naples-release-v1.tgz
+tar xzf naples-release-v1.tgz
 bash /sw/nic/sim/naples/start-naples-docker.sh
 NAPLES_CID=$(docker inspect -f'{{.ID}}' naples-v1)
 NAPLES_AGENT_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$NAPLES_CID")

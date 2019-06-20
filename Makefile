@@ -298,7 +298,7 @@ fixtures:
 		if [ ! -z ${UI_FRAMEWORK} ]; then \
 			docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make ui-framework; \
 		else \
-			cd venice/ui/web-app-framework && tar xvf web-app-framework.tgz && cd ../../..; \
+			cd venice/ui/web-app-framework && tar xf web-app-framework.tgz && cd ../../..; \
 		fi; \
 	    echo "+++ building ui sources" ; \
 		echo docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ; \
@@ -548,7 +548,7 @@ venice-image:
 	$(MAKE) install
 	printf "\n+++++++++++++++++ start tar $$(date) +++++++++++++++++\n"
 	#todo compress later in the release cycle with better compression level. As of now compression takes too much time for development
-	cd bin && tar -cvf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.tgz
+	cd bin && tar -cf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.tgz
 	printf "\n+++++++++++++++++ complete venice-image $$(date) +++++++++++++++++\n"
 
 # this creates the OS image - like buildroot for venice from centos DVD image
@@ -565,14 +565,14 @@ venice-iso:
 	$(MAKE) -C tools/docker-files/vinstall venice-iso
 
 bundle-image:
-	cd bin/venice-install && tar -cvf - initrd0.img  squashfs.img  vmlinuz0  | gzip -1 -c > venice_appl_os.tgz
+	cd bin/venice-install && tar -cf - initrd0.img  squashfs.img  vmlinuz0  | gzip -1 -c > venice_appl_os.tgz
 	mkdir -p bin/bundle
 	@ #bundle.py creates metadata.json for the bundle image
 	@tools/scripts/bundle.py -v ${BUNDLE_VERSION}  -d ${BUILD_DATE}
 	ln -f bin/venice.tgz bin/bundle/venice.tgz
 	ln -f nic/naples_fw_.tar bin/bundle/naples_fw.tar
 	ln -f bin/venice-install/venice_appl_os.tgz bin/bundle/venice_appl_os.tgz
-	cd bin/bundle && tar -cvf bundle.tar venice.tgz  naples_fw.tar venice_appl_os.tgz metadata.json
+	cd bin/bundle && tar -cf bundle.tar venice.tgz  naples_fw.tar venice_appl_os.tgz metadata.json
 
 VENICE_RELEASE_TAG := v0.3
 gs-venice-release: venice-image
@@ -580,7 +580,7 @@ gs-venice-release: venice-image
 	docker save -o bin/pen-dind.tar ${REGISTRY_URL}/${DIND_CONTAINER}
 	docker pull ${REGISTRY_URL}/${E2E_CONTAINER}
 	docker save -o bin/pen-e2e.tar ${REGISTRY_URL}/${E2E_CONTAINER}
-	cd nic/sim/naples && tar -cvf venice-sim.tar venice-bootstrap.sh  -C ../../../test/e2e dind -C ../../bin venice.tgz pen-dind.tar pen-e2e.tar
+	cd nic/sim/naples && tar -cf venice-sim.tar venice-bootstrap.sh  -C ../../../test/e2e dind -C ../../bin venice.tgz pen-dind.tar pen-e2e.tar
 	ln -f nic/sim/naples/venice-sim.tar tools/docker-files/venice/venice-sim.tar
 	cp test/topos/gs/venice-conf.json nic/sim/naples/venice-conf.json
 	cd tools/docker-files/venice/ && docker build -t pensando/venice:${VENICE_RELEASE_TAG} .
