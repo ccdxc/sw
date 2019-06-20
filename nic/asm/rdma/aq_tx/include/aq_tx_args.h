@@ -18,7 +18,9 @@ struct aq_tx_to_stage_wqe2_info_t {
     ah_base_addr_page_id             :   22;
     sqcb_base_addr_hi                :   24;
     rqcb_base_addr_hi                :   24;
-    pad                              :   58;
+    log_num_dcqcn_profiles           :    4;
+    log_num_kt_entries               :    5;
+    pad                              :   49;
 };
 
 struct aq_tx_to_stage_sqcb_info_t {

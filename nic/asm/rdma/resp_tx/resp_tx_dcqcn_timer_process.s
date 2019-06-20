@@ -8,11 +8,16 @@ struct resp_tx_phv_t p;
 struct dcqcn_cb_t d;
 struct resp_tx_s4_t0_k k;
 
+#define IN_P t0_s2s_cfg_to_dcqcn_info
+
+#define K_G_VAL	CAPRI_KEY_FIELD(IN_P, g_val)
+#define K_TIMER_EXP_THR CAPRI_KEY_FIELD(IN_P, timer_exp_thr)
+#define K_ALPHA_TIMER_INTERVAL CAPRI_KEY_RANGE(IN_P, alpha_timer_interval_sbit0_ebit7, alpha_timer_interval_sbit24_ebit31)
+
 // Note: Below values are constants related to g.
 // TODO: Hardcoding it for now. Check if they have to be fed from HAL.
 #define     G_MAX                   65536
 #define     LOG_G_MAX               16
-#define     ALPHA_TIMER_INTERVAL    55
 
 %%
 resp_tx_dcqcn_timer_process:
@@ -25,14 +30,14 @@ resp_tx_dcqcn_timer_process:
 
     // Update alpha value.
     // int_alpha =  (((g_max - int_g) * int_alpha) >> log_g_max)
-    sub         r1, G_MAX, d.g_val
+    sub         r1, G_MAX, K_G_VAL
     mul         r2, d.alpha_value, r1
     srl         r2, r2, LOG_G_MAX
     tblwr       d.alpha_value, r2
    
     // Check if timer T expired. 
     tblmincri   d.num_alpha_exp_cnt, 16, 1
-    slt         c1, d.num_alpha_exp_cnt, d.timer_exp_thr
+    slt         c1, d.num_alpha_exp_cnt, K_TIMER_EXP_THR
     bcf         [c1], restart_timer
     nop 
     
@@ -47,7 +52,7 @@ restart_timer:
     bbeq        d.max_rate_reached, 1, skip_timer_restart
     nop
     // Restart alpha timer. Alpha timer runs for 55us by default.
-    CAPRI_START_SLOW_TIMER(r1, r6, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, DCQCN_TIMER_RING_ID, ALPHA_TIMER_INTERVAL)
+    CAPRI_START_SLOW_TIMER(r1, r6, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, DCQCN_TIMER_RING_ID, K_ALPHA_TIMER_INTERVAL)
 
 skip_timer_restart:
     CAPRI_SET_TABLE_0_VALID(0)

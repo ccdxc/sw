@@ -203,6 +203,7 @@ def ModifyQp(lif, qps):
     RingDoorbell(lif.aq.aq, 'AQ')
     for qp in qps:
         ConsumeAdminCqe(lif.aq, cqe)
+        qp.ProcessModAdminResponse(cqe)
     RingDoorbell(lif.aq.cq, 'CQ')
 
     return

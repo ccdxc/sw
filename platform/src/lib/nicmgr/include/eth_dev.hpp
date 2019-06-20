@@ -98,6 +98,7 @@ struct eth_devspec {
     uint32_t rdma_cq_count;
     uint32_t rdma_eq_count;
     uint32_t rdma_aq_count;
+    uint32_t rdma_num_dcqcn_profiles;
     uint32_t rdma_pid_count;
     uint32_t barmap_size;    // in 8MB units
 };

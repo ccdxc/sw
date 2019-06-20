@@ -1,12 +1,13 @@
 #! /usr/bin/python3
 
 from iris.test.rdma.utils import *
+from iris.config.objects.rdma.dcqcn_profile_table import *
 import pdb
 import copy
 import random
 from infra.common.glopts import GlobalOptions
 from infra.common.logging import logger as logger
-import rdma_pb2				as rdma_pb2
+import rdma_pb2	as rdma_pb2
 
 def Setup(infra, module):
     return
@@ -26,12 +27,15 @@ def TestCaseSetup(tc):
 
     # Set attr_mask for mod_qp
     tc.pvtdata.attr_mask = 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_RQ_PSN
+    tc.pvtdata.attr_mask |= 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_AV
 
     # Setup values to send down to mod_qp
     if tc.pvtdata.rq_pre_qstate.e_psn != 0:
         tc.pvtdata.rq_psn = random.randint(0, tc.pvtdata.rq_pre_qstate.e_psn + 1)
     else:
         tc.pvtdata.rq_psn = 10  # random
+    tc.pvtdata.ah_id_len = rs.lqp.ah_handle | len(rs.lqp.HdrTemplate) << 24
+    tc.pvtdata.dma_addr = rs.lqp.hdr_slab.phy_address[0]
 
     # Assuming SQ, RQ share CQ
     rs.lqp.sq_cq.qstate.Read()
@@ -40,6 +44,9 @@ def TestCaseSetup(tc):
     tc.pvtdata.lif = rs.lqp.pd.ep.intf.lif
     tc.pvtdata.aq = tc.pvtdata.lif.aq
     PopulateAdminPreQStates(tc)
+
+    tc.pvtdata.dcqcn_profile = RdmaDcqcnProfileObject(tc.pvtdata.lif, 0).data
+    tc.pvtdata.pre_dcqcn_data = copy.deepcopy(rs.lqp.dcqcn_data)
 
     return
 
@@ -59,6 +66,7 @@ def TestCaseStepVerify(tc, step):
     tc.pvtdata.aq.aq.qstate.Read()
     rs.lqp.sq.qstate.Read()
     rs.lqp.rq.qstate.Read()
+    rs.lqp.ReadDcqcnCb()
     ring0_mask = (tc.pvtdata.aq.num_aq_wqes - 1)
     tc.pvtdata.aq_post_qstate = tc.pvtdata.aq.aq.qstate.data
     if step.step_id == 1:
@@ -81,6 +89,28 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, rs.lqp.rq.qstate.data, 'e_psn', tc.pvtdata.rq_psn):
             return False
 
+        # verify that dcqcn cb values are sane
+        if not VerifyFieldAbsolute(tc, rs.lqp.dcqcn_data, 'rate_enforced', 100000):
+            return False
+
+        if not VerifyFieldAbsolute(tc, rs.lqp.dcqcn_data, 'target_rate', 100000):
+            return False
+
+        if not VerifyFieldAbsolute(tc, rs.lqp.dcqcn_data, 'token_bucket_size', 150000):
+            return False
+
+        if not VerifyFieldAbsolute(tc, rs.lqp.dcqcn_data, 'cur_avail_tokens', 150000):
+            return False
+
+        if not VerifyFieldsEqual(tc, rs.lqp.dcqcn_data, 'byte_counter_thr', tc.pvtdata.dcqcn_profile, 'rp_byte_reset'):
+            return False
+
+        if not VerifyFieldsEqual(tc, rs.lqp.dcqcn_data, 'alpha_value', tc.pvtdata.dcqcn_profile, 'rp_initial_alpha_value'):
+            return False
+
+        if not VerifyFieldAbsolute(tc, rs.lqp.dcqcn_data, 'log_sq_size', rs.lqp.log_sq_size):
+            return False
+
     elif step.step_id == 2:
 
         if not ValidatePostSyncAdminCQChecks(tc):
@@ -95,5 +125,7 @@ def TestCaseTeardown(tc):
     rs.lqp.sq.qstate.WriteWithDelay()
     rs.lqp.rq.qstate.data = copy.deepcopy(tc.pvtdata.rq_pre_qstate)
     rs.lqp.rq.qstate.WriteWithDelay()
+    rs.lqp.dcqcn_data = copy.deepcopy(tc.pvtdata.pre_dcqcn_data)
+    rs.lqp.WriteDcqcnCb()
 
     return

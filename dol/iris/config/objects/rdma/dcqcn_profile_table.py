@@ -22,7 +22,7 @@ class RdmaDcqcnProfile(Packet):
         IntField("rp_rate_to_set_on_first_cnp", 0),
         IntField("rp_min_rate", 0),
         ByteField("rp_gd", 0),
-        ByteField("rp_dec_fac", 0),
+        ByteField("rp_min_dec_fac", 0),
         BitField("rp_clamp_flags", 0, 8),
         ByteField("rp_threshold", 0),
         IntField("rp_time_reset", 0),
@@ -37,6 +37,35 @@ class RdmaDcqcnProfileObject(object):
         self.size = len(RdmaDcqcnProfile())
         self.addr = lif.rdma_dcqcn_profile_base_addr + key * self.size
         self.Read()
+
+    def Init(self, spec):
+        self.np_incp_802p_prio = spec.np_incp_802p_prio if hasattr(spec, "np_incp_802p_prio") else 0
+        self.np_cnp_dscp = spec.np_cnp_dscp if hasattr(spec, "np_cnp_dscp") else 0
+        self.rp_initial_alpha_value  = spec.rp_initial_alpha_value if hasattr(spec, "rp_initial_alpha_value") else 0
+        self.rp_dce_tcp_g = spec.rp_dce_tcp_g if hasattr(spec, "rp_dce_tcp_g") else 0
+        self.rp_dce_tcp_rtt = spec.rp_dce_tcp_rtt if hasattr(spec, "rp_dce_tcp_rtt") else 0
+        self.rp_rate_reduce_monitor_period = spec.rp_rate_reduce_monitor_period if hasattr(spec, "rp_rate_reduce_monitor_period") else 0
+        self.rp_rate_to_set_on_first_cnp = spec.rp_rate_to_set_on_first_cnp if hasattr(spec, "rp_rate_to_set_on_first_cnp") else 0
+        self.rp_min_rate = spec.rp_min_rate if hasattr(spec, "rp_min_rate") else 0
+        self.rp_gd = spec.rp_gd if hasattr(spec, "rp_gd") else 0
+        self.rp_min_dec_fac = spec.rp_min_dec_fac if hasattr(spec, "rp_min_dec_fac") else 0
+        self.rp_clamp_flags = spec.rp_clamp_flags if hasattr(spec, "rp_clamp_flags") else 0
+        self.rp_threshold = spec.rp_threshold if hasattr(spec, "rp_threshold") else 0
+        self.rp_time_reset = spec.rp_time_reset if hasattr(spec, "rp_time_reset") else 0
+        self.rp_byte_reset = spec.rp_byte_reset if hasattr(spec, "rp_byte_reset") else 0
+        self.rp_ai_rate = spec.rp_ai_rate if hasattr(spec, "rp_ai_rate") else 0
+        self.rp_hai_rate = spec.rp_hai_rate if hasattr(spec, "rp_hai_rate") else 0
+
+        self.data = RdmaDcqcnProfile(np_incp_802p_prio = self.np_incp_802p_prio,
+                        np_cnp_dscp = self.np_cnp_dscp, rp_initial_alpha_value = self.rp_initial_alpha_value,
+                        rp_dce_tcp_g = self.rp_dce_tcp_g, rp_dce_tcp_rtt = self.rp_dce_tcp_rtt,
+                        rp_rate_reduce_monitor_period = self.rp_rate_reduce_monitor_period,
+                        rp_rate_to_set_on_first_cnp = self.rp_rate_to_set_on_first_cnp,
+                        rp_min_rate = self.rp_min_rate, rp_gd = self.rp_gd,
+                        rp_min_dec_fac = self.rp_min_dec_fac, rp_clamp_flags = self.rp_clamp_flags,
+                        rp_threshold = self.rp_threshold, rp_time_reset = self.rp_time_reset,
+                        rp_byte_reset = self.rp_byte_reset, rp_ai_rate = self.rp_ai_rate,
+                        rp_hai_rate = self.rp_hai_rate)
 
     def Write(self):
         if (GlobalOptions.dryrun): return
@@ -76,4 +105,24 @@ class RdmaDcqcnProfileObject(object):
         logger.ShowScapyObject(self.data)
 
     def Show(self, lgh = logger):
-        lgh.ShowScapyObject(self.data) 
+        lgh.ShowScapyObject(self.data)
+
+class RdmaDcqcnProfileObjectHelper:
+    def __init__(self):
+        self.dcqcn_objects = []
+
+    def Generate(self, lif, spec):
+        self.lif = lif
+        dcqcn_spec = spec.default_profile
+        dcqcn = RdmaDcqcnProfileObject(lif, dcqcn_spec.id)
+        dcqcn.Init(dcqcn_spec)
+        self.dcqcn_objects.append(dcqcn)
+
+    def Configure(self):
+        logger.info("Configuring %d dcqcn configs. " % (len(self.dcqcn_objects)))
+
+        if (GlobalOptions.dryrun): return
+
+        # Avoid using adminAPI as that path is already tested in a test
+        for dcqcn in self.dcqcn_objects:
+            dcqcn.Write()

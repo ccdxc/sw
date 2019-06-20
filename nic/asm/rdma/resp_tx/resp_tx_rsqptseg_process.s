@@ -37,7 +37,7 @@ resp_tx_rsqptseg_process:
     mincr       PAGE_OFFSET, CAPRI_KEY_FIELD(IN_P, log_page_size), r0
     
     add         DMA_CMD_INDEX, r0, CAPRI_KEY_FIELD(IN_P, dma_cmd_start_index)
-    add         TRANSFER_BYTES, r0, CAPRI_KEY_FIELD(IN_P, pt_seg_bytes)
+    add         TRANSFER_BYTES, r0, CAPRI_KEY_RANGE(IN_P, pt_seg_bytes_sbit0_ebit15, pt_seg_bytes_sbit16_ebit31)
 
     // first_pass = TRUE
     setcf       F_FIRST_PASS, [c0]

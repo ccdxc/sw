@@ -23,6 +23,7 @@ import iris.config.objects.aq   as aqs
 import iris.config.objects.cq   as cqs
 import iris.config.objects.eq   as eq
 import iris.config.objects.slab   as slab
+import iris.config.objects.rdma.dcqcn_profile_table   as dcqcn
 import pdb
 
 from bitstring import BitArray
@@ -144,6 +145,8 @@ class LifObject(base.ConfigObjectBase):
             logger.info("Creating 1 Aqs. for LIF:%s" % (self.GID()))
             aq_id = self.GetAqid()
             self.aq = aqs.AqObject(self, aq_id, spec.rdma.max_aqe, spec.rdma.hostmem_pg_size)
+
+            self.dcqcn_config_spec = spec.rdma.dcqcn_config.Get(Store)
 
         if hasattr(spec, 'rss'):
             self.rss_type = (haldefs.interface.LifRssType.Value("RSS_TYPE_IPV4") |
@@ -283,6 +286,11 @@ class LifObject(base.ConfigObjectBase):
                 self.obj_helper_eq.Configure()
             halapi.ConfigureCqs([self.cq])
             halapi.ConfigureAqs([self.aq])
+
+            logger.info("Configuring DCQCN Configs for LIF:%s" % (self.GID()))
+            self.dcqcn_config_helper = dcqcn.RdmaDcqcnProfileObjectHelper()
+            self.dcqcn_config_helper.Generate(self, self.dcqcn_config_spec)
+            self.dcqcn_config_helper.Configure()
         return 0
 
     def Show(self):

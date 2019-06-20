@@ -17,6 +17,9 @@ descriptors:
             modify_qp   :
                   attr_mask     : ref://testcase/pvtdata/attr_mask
                   rq_psn        : ref://testcase/pvtdata/rq_psn
+                  dcqcn_profile : 1     # Configure default profile for QP
+                  ah_id_len     : ref://testcase/pvtdata/ah_id_len
+                  dma_addr      : ref://testcase/pvtdata/dma_addr
 
     - descriptor:
         id      : EXP_CQ_DESC

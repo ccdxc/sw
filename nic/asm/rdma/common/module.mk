@@ -10,6 +10,7 @@ MODULE_INCS     = ${BLD_P4GEN_DIR}/rdma_rxdma/asm_out \
                   ${MODULE_DIR}/../req_rx/include \
                   ${MODULE_DIR}/../resp_rx/include \
                   ${MODULE_DIR}/../req_tx/include \
+                  ${MODULE_DIR}/../resp_tx/include \
                   ${MODULE_DIR}/../aq_tx/include \
                   ${MODULE_DIR}/../aq_rx/include \
                   ${TOPDIR}/nic/asm/common-p4+/include \

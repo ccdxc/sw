@@ -15,6 +15,8 @@ struct aq_tx_s5_t1_k k;
 
 #define K_Q_KEY_TM_IQ CAPRI_KEY_RANGE(IN_TO_S_P, q_key_or_tm_iq_sbit0_ebit1, q_key_or_tm_iq_sbit26_ebit31)
 #define K_DST_QP  CAPRI_KEY_RANGE(IN_TO_S_P, dst_qp_sbit0_ebit5, dst_qp_sbit22_ebit23)
+#define K_DCQCN_PROFILE CAPRI_KEY_FIELD(IN_P, dcqcn_profile)
+#define K_CONGESTION_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, congestion_mgmt_enable)
 
 %%
 
@@ -30,12 +32,13 @@ rdma_aq_tx_rqcb0_process:
 
 hdr_update:
     bbne        CAPRI_KEY_FIELD(IN_P, av_valid), 1, dst_qp
-    nop
+    seq         c1, K_CONGESTION_ENABLE, 1  // BD Slot
     
     tblwr     d.header_template_addr, CAPRI_KEY_FIELD(IN_P, ah_addr)
     tblwr     d.header_template_size, CAPRI_KEY_FIELD(IN_P, ah_len)
     // Update cos(tm_iq) in qstate.
     tblwr       d.intrinsic.cosB, K_Q_KEY_TM_IQ
+    tblwr.c1    d.dcqcn_cfg_id, K_DCQCN_PROFILE
 
 
 dst_qp:

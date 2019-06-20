@@ -86,6 +86,11 @@
 #define AQ_TX_CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi)  \
     CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi);
 
+#define AQ_TX_DCQCN_CONFIG_BASE_ADDR_GET2(_r, _tmp_r)   \
+    KT_BASE_ADDR_GET2(_r, _tmp_r);                      \
+    sllv   _tmp_r, 1, K_LOG_NUM_KT_ENTRIES;             \
+    add    _r, _r, _tmp_r, LOG_SIZEOF_KEY_ENTRY_T
+
 #define RDMA_UPDATE_QP_OPER_SET_STATE 0
 #define RDMA_UPDATE_QP_OPER_SET_CUR_STATE 1
 #define RDMA_UPDATE_QP_OPER_SET_EN_SQD_ASYNC_NOTIFY 2

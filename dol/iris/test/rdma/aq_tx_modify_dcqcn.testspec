@@ -15,7 +15,7 @@ descriptors:
             op          : 15  # AQ_OP_TYPE_MODIFY_DCQCN
             type_state  : 0
             dbid_flags  : 0
-            id_ver      : 1
+            id_ver      : 2   # id 1 points to default_spec
             modify_dcqcn:
                 np_incp_802p_prio               : 6
                 np_cnp_dscp                     : 48
@@ -41,7 +41,7 @@ descriptors:
             op          : 15  # AQ_OP_TYPE_MODIFY_DCQCN
             type_state  : 0
             dbid_flags  : 0
-            id_ver      : 1
+            id_ver      : 2
             modify_dcqcn:
                 np_incp_802p_prio               : 6
                 np_cnp_dscp                     : 48

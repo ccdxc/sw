@@ -313,7 +313,8 @@ class RdmaAqDescriptorQP(Packet):
 class RdmaAqDescriptorModQP(Packet):
     fields_desc = [
         IntField("attr_mask", 0),
-        ShortField("rsvd2", 0),
+        ByteField("dcqcn_profile", 0),
+        ByteField("rsvd2", 0),
         ShortField("access_flags", 0),
         LEIntField("rq_psn", 0),
         LEIntField("sq_psn", 0),
@@ -1009,12 +1010,12 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
         self.__create_desc()
 
         logger.info("Reading Admin QP Modify")
-        mod_qp = RdmaAqDescriptorModQP(attr_mask = wqe.attr_mask, access_flags = wqe.access_flags,
-                                rq_psn = wqe.rq_psn, sq_psn = wqe.sq_psn, qkey_dest_qpn = wqe.qkey_dest_qpn,
-                                rate_limit_kbps = wqe.rate_limit_kbps, pmtu = wqe.pmtu, retry = wqe.retry,
-                                rnr_timer = wqe.rnr_timer, retry_timeout = wqe.retry_timeout,
-                                rsq_depth = wqe.rsq_depth, rrq_depth = wqe.rrq_depth, pkey_id = wqe.pkey_id,
-                                ah_id_len = wqe.ah_id_len, rrq_index = wqe.rrq_index,
+        mod_qp = RdmaAqDescriptorModQP(attr_mask = wqe.attr_mask, dcqcn_profile = wqe.dcqcn_profile,
+                                access_flags = wqe.access_flags, rq_psn = wqe.rq_psn, sq_psn = wqe.sq_psn,
+                                qkey_dest_qpn = wqe.qkey_dest_qpn, rate_limit_kbps = wqe.rate_limit_kbps,
+                                pmtu = wqe.pmtu, retry = wqe.retry, rnr_timer = wqe.rnr_timer,
+                                retry_timeout = wqe.retry_timeout, rsq_depth = wqe.rsq_depth, rrq_depth = wqe.rrq_depth,
+                                pkey_id = wqe.pkey_id, ah_id_len = wqe.ah_id_len, rrq_index = wqe.rrq_index,
                                 rsq_index = wqe.rsq_index, dma_addr = wqe.dma_addr)
         desc = self.desc/mod_qp
         self.__set_desc(desc)
@@ -1091,6 +1092,7 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
             logger.info("Reading Admin Modify QP")
             # TODO: Read values from spec as and when relevant adminQ ModQP tests are added.
             attr_mask = self.spec.fields.modify_qp.attr_mask if hasattr(self.spec.fields.modify_qp, 'attr_mask') else 0
+            dcqcn_profile = self.spec.fields.modify_qp.dcqcn_profile if hasattr(self.spec.fields.modify_qp, 'dcqcn_profile') else 0
             access_flags = self.spec.fields.modify_qp.access_flags if hasattr(self.spec.fields.modify_qp, 'access_flags') else 0
             rq_psn = self.spec.fields.modify_qp.rq_psn if hasattr(self.spec.fields.modify_qp, 'rq_psn') else 0
             sq_psn = self.spec.fields.modify_qp.sq_psn if hasattr(self.spec.fields.modify_qp, 'sq_psn') else 0
@@ -1103,16 +1105,16 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
             rsq_depth = 0
             rrq_depth = 0
             pkey_id = 0
-            ah_id_len = 0
+            ah_id_len = self.spec.fields.modify_qp.ah_id_len if hasattr(self.spec.fields.modify_qp, 'ah_id_len') else 0
             rrq_index = 0
             rsq_index = 0
-            dma_addr = 0
-            mod_qp = RdmaAqDescriptorModQP(attr_mask = attr_mask, access_flags = access_flags,
-                                rq_psn = rq_psn, sq_psn = sq_psn, qkey_dest_qpn = qkey_dest_qpn,
-                                rate_limit_kbps = rate_limit_kbps, pmtu = pmtu, retry = retry,
-                                rnr_timer = rnr_timer, retry_timeout = retry_timeout,
-                                rsq_depth = rsq_depth, rrq_depth = rrq_depth, pkey_id = pkey_id,
-                                ah_id_len = ah_id_len, rrq_index = rrq_index,
+            dma_addr = self.spec.fields.modify_qp.dma_addr if hasattr(self.spec.fields.modify_qp, 'dma_addr') else 0
+            mod_qp = RdmaAqDescriptorModQP(attr_mask = attr_mask, dcqcn_profile = dcqcn_profile,
+                                access_flags = access_flags, rq_psn = rq_psn, sq_psn = sq_psn,
+                                qkey_dest_qpn = qkey_dest_qpn, rate_limit_kbps = rate_limit_kbps,
+                                pmtu = pmtu, retry = retry, rnr_timer = rnr_timer,
+                                retry_timeout = retry_timeout, rsq_depth = rsq_depth, rrq_depth = rrq_depth,
+                                pkey_id = pkey_id, ah_id_len = ah_id_len, rrq_index = rrq_index,
                                 rsq_index = rsq_index, dma_addr = dma_addr)
             desc = self.desc/mod_qp
             self.__set_desc(desc)

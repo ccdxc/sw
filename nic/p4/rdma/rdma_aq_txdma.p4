@@ -59,14 +59,18 @@
 #define tx_table_s4_t0_action aq_tx_feedback_process_s4
 #define tx_table_s4_t1_action aq_tx_rqcb0_process_s4
 #define tx_table_s4_t2_action aq_tx_sqcb2_process_s4
+#define tx_table_s4_t3_action aq_tx_dcqcn_config_process_s4
 
 #define tx_table_s5_t0_action aq_tx_feedback_process_s5
 #define tx_table_s5_t1_action aq_tx_rqcb0_process
 #define tx_table_s5_t2_action aq_tx_sqcb2_process
+#define tx_table_s5_t2_action1 aq_tx_query_sqcb2_process
+#define tx_table_s5_t3_action aq_tx_dcqcn_config_process_s5
 
 #define tx_table_s6_t0_action aq_tx_feedback_process_s6
 #define tx_table_s6_t1_action aq_tx_rqcb2_process
 #define tx_table_s6_t2_action aq_tx_sqcb0_process
+#define tx_table_s6_t3_action aq_tx_dcqcn_cb_process
 
 #define tx_table_s7_t0_action aq_tx_feedback_process
 #define tx_table_s7_t3_action aq_tx_stats_process
@@ -119,7 +123,18 @@ header_type aq_tx_to_stage_wqe2_info_t {
         ah_base_addr_page_id             :   22;
         sqcb_base_addr_hi                :   24;
         rqcb_base_addr_hi                :   24;
-        pad                              :   58;
+        log_num_dcqcn_profiles           :    4;
+        log_num_kt_entries               :    5;
+        pad                              :   49;
+    }
+}
+
+header_type aq_tx_dcqcn_config_to_cb_info_t {
+    fields {
+        byte_cntr_thr                    :   32;
+        alpha_val                        :   16;
+        log_sq_size                      :    5;
+        pad                              :  107;
     }
 }
 
@@ -136,7 +151,7 @@ header_type aq_tx_to_stage_sqcb_info_t {
         err_retry_count_valid            :    1;
         q_key_or_tm_iq                   :   32;
         q_key_valid                      :    1;
-        pad                              :    1;
+        congestion_mgmt_enable           :    1;
     }
 }
 
@@ -201,7 +216,8 @@ header_type aq_tx_aqcb_to_rqcb_t {
         rsq_valid           :  1;
         rnr_min_timer       :  5;
         rnr_timer_valid     :  1;
-        pad                 : 69;
+        dcqcn_profile       :  4;
+        pad                 : 65;
     }
 }
 
@@ -309,9 +325,15 @@ metadata aq_tx_aqcb_to_sqcb_t t2_s2s_sqcb2_to_sqcb0_info;
 metadata aq_tx_aqcb_to_sqcb_t t2_s2s_sqcb2_to_sqcb0_info_scr;
 
 //Table-3
+@pragma pa_header_union ingress common_t3_s2s t3_s2s_stats_info t3_s2s_dcqcn_config_to_cb_info
+
 metadata aq_tx_stats_info_t t3_s2s_stats_info;
 @pragma scratch_metadata
 metadata aq_tx_stats_info_t t3_s2s_stats_info_scr;
+
+metadata aq_tx_dcqcn_config_to_cb_info_t t3_s2s_dcqcn_config_to_cb_info;
+@pragma scratch_metadata
+metadata aq_tx_dcqcn_config_to_cb_info_t t3_s2s_dcqcn_config_to_cb_info_scr;
 
 /*
  * Stage 0 table 0 action
@@ -354,6 +376,8 @@ action aq_tx_modify_qp_2_process () {
     modify_field(to_s2_info_scr.ah_base_addr_page_id, to_s2_info.ah_base_addr_page_id);
     modify_field(to_s2_info_scr.sqcb_base_addr_hi, to_s2_info.sqcb_base_addr_hi);
     modify_field(to_s2_info_scr.rqcb_base_addr_hi, to_s2_info.rqcb_base_addr_hi);
+    modify_field(to_s2_info_scr.log_num_dcqcn_profiles, to_s2_info.log_num_dcqcn_profiles);
+    modify_field(to_s2_info_scr.log_num_kt_entries, to_s2_info.log_num_kt_entries);
     modify_field(to_s2_info_scr.pad, to_s2_info.pad);
     
     // stage to stage
@@ -364,8 +388,10 @@ action aq_tx_dscp_cos_map_process () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s3_info_scr.cb_addr, to_s3_info.cb_addr);
     modify_field(to_s3_info_scr.local_ack_timeout_or_dscp, to_s3_info.local_ack_timeout_or_dscp);
     modify_field(to_s3_info_scr.err_retry_count_or_pcp, to_s3_info.err_retry_count_or_pcp);
+    modify_field(to_s3_info_scr.congestion_mgmt_enable, to_s3_info.congestion_mgmt_enable);
 
     // stage to stage
 }
@@ -380,12 +406,21 @@ action aq_tx_sqcb2_process_s4 () {
     GENERATE_GLOBAL_K
 }
 
+action aq_tx_query_sqcb2_process () {
+	// from ki global
+	GENERATE_GLOBAL_K
+
+	// to stage
+	modify_field(to_s5_info_scr.cb_addr, to_s5_info.cb_addr);
+
+	// stage to stage
+}
+
 action aq_tx_sqcb2_process () {
     // from ki global
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s5_info_scr.cb_addr, to_s5_info.cb_addr);
     modify_field(to_s5_info_scr.dst_qp, to_s5_info.dst_qp);
     modify_field(to_s5_info_scr.dst_qp_valid, to_s5_info.dst_qp_valid);
     modify_field(to_s5_info_scr.tx_psn, to_s5_info.tx_psn);
@@ -396,8 +431,8 @@ action aq_tx_sqcb2_process () {
     modify_field(to_s5_info_scr.err_retry_count_valid, to_s5_info.err_retry_count_valid);
     modify_field(to_s5_info_scr.q_key_or_tm_iq, to_s5_info.q_key_or_tm_iq);
     modify_field(to_s5_info_scr.q_key_valid, to_s5_info.q_key_valid);
-    modify_field(to_s5_info_scr.pad, to_s5_info.pad);
-    
+    modify_field(to_s5_info_scr.congestion_mgmt_enable, to_s5_info.congestion_mgmt_enable);
+
     // stage to stage
     modify_field(t2_s2s_wqe2_to_sqcb2_info_scr.pmtu_log2, t2_s2s_wqe2_to_sqcb2_info.pmtu_log2);
     modify_field(t2_s2s_wqe2_to_sqcb2_info_scr.ah_len, t2_s2s_wqe2_to_sqcb2_info.ah_len);
@@ -417,6 +452,34 @@ action aq_tx_sqcb2_process () {
     modify_field(t2_s2s_wqe2_to_sqcb2_info_scr.pad, t2_s2s_wqe2_to_sqcb2_info.pad);
 }
 
+action aq_tx_dcqcn_config_process_s4 () {
+    // from ki global
+    GENERATE_GLOBAL_K
+}
+
+action aq_tx_dcqcn_config_process_s5 () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s5_info_scr.cb_addr, to_s5_info.cb_addr);
+
+    // stage to stage
+}
+
+action aq_tx_dcqcn_cb_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+
+    // stage to stage
+    modify_field(t3_s2s_dcqcn_config_to_cb_info_scr.byte_cntr_thr, t3_s2s_dcqcn_config_to_cb_info.byte_cntr_thr);
+    modify_field(t3_s2s_dcqcn_config_to_cb_info_scr.alpha_val, t3_s2s_dcqcn_config_to_cb_info.alpha_val);
+    modify_field(t3_s2s_dcqcn_config_to_cb_info_scr.log_sq_size, t3_s2s_dcqcn_config_to_cb_info.log_sq_size);
+    modify_field(t3_s2s_dcqcn_config_to_cb_info_scr.pad, t3_s2s_dcqcn_config_to_cb_info.pad);
+}
+
 action aq_tx_sqcb0_process () {
     // from ki global
     GENERATE_GLOBAL_K
@@ -430,8 +493,8 @@ action aq_tx_sqcb0_process () {
     modify_field(to_s6_info_scr.local_ack_timeout_or_dscp, to_s6_info.local_ack_timeout_or_dscp);
     modify_field(to_s6_info_scr.q_key_or_tm_iq, to_s6_info.q_key_or_tm_iq);
     modify_field(to_s6_info_scr.q_key_valid, to_s6_info.q_key_valid);
-    modify_field(to_s6_info_scr.pad, to_s6_info.pad);
-    
+    modify_field(to_s6_info_scr.congestion_mgmt_enable, to_s6_info.congestion_mgmt_enable);
+
     // stage to stage
     modify_field(t2_s2s_sqcb2_to_sqcb0_info_scr.pmtu_log2, t2_s2s_sqcb2_to_sqcb0_info.pmtu_log2);
     modify_field(t2_s2s_sqcb2_to_sqcb0_info_scr.pmtu_valid, t2_s2s_sqcb2_to_sqcb0_info.pmtu_valid);
@@ -463,7 +526,7 @@ action aq_tx_rqcb0_process () {
     modify_field(to_s5_info_scr.dst_qp_valid, to_s5_info.dst_qp_valid);
     modify_field(to_s5_info_scr.q_key_or_tm_iq, to_s5_info.q_key_or_tm_iq);
     modify_field(to_s5_info_scr.q_key_valid, to_s5_info.q_key_valid);
-    modify_field(to_s5_info_scr.pad, to_s5_info.pad);
+    modify_field(to_s5_info_scr.congestion_mgmt_enable, to_s5_info.congestion_mgmt_enable);
     
     // stage to stage
     modify_field(t1_s2s_wqe2_to_rqcb0_info_scr.pmtu_log2, t1_s2s_wqe2_to_rqcb0_info.pmtu_log2);
@@ -474,6 +537,7 @@ action aq_tx_rqcb0_process () {
     modify_field(t1_s2s_wqe2_to_rqcb0_info_scr.pmtu_valid, t1_s2s_wqe2_to_rqcb0_info.pmtu_valid);
     modify_field(t1_s2s_wqe2_to_rqcb0_info_scr.av_valid, t1_s2s_wqe2_to_rqcb0_info.av_valid);
     modify_field(t1_s2s_wqe2_to_rqcb0_info_scr.rsq_valid, t1_s2s_wqe2_to_rqcb0_info.rsq_valid);
+    modify_field(t1_s2s_wqe2_to_rqcb0_info_scr.dcqcn_profile, t1_s2s_wqe2_to_rqcb0_info.dcqcn_profile);
     modify_field(t1_s2s_wqe2_to_rqcb0_info_scr.pad, t1_s2s_wqe2_to_rqcb0_info.pad);
 }
 
@@ -558,5 +622,5 @@ action aq_tx_stats_process () {
     modify_field(to_s7_fb_stats_info_scr.stats_dump, to_s7_fb_stats_info.stats_dump);
 
     // stage to stage
-    //modify_field(t3_s2s_stats_info_scr.pad, t3_s2s_stats_info.pad);
+    modify_field(t3_s2s_stats_info_scr.pad, t3_s2s_stats_info.pad);
 }

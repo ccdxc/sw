@@ -139,7 +139,8 @@ class RdmaRQstate(Packet):
         ByteField("header_template_size", 0),
 
         BitField("ring_empty_sched_eval_done", 0, 1),
-        BitField("rqcb0_rsvd1", 0, 7),
+        BitField("dcqcn_cfg_id", 0, 4),
+        BitField("rqcb0_rsvd1", 0, 3),
         ShortField("bt_rsq_cindex", 0),
 
         BitField("serv_type", 0, 3),
@@ -746,7 +747,7 @@ class RdmaQstateObject(object):
         self.data = qt_params[self.queue_type]['state'](model_wrap.read_mem(self.addr, self.size))
         if debug is True:
             logger.info("Read Qstate @0x%x Type: %s size: %d" % (self.addr, self.queue_type, self.size))
-    
+
     def incr_pindex(self, ring, ring_size):
         assert(ring < 7)
         prev_value = self.get_pindex(ring)

@@ -26,6 +26,7 @@ rdma:
     max_pd: 256
     hostmem_pg_size: 4096
     slab    : ref://store/specs/id=SLAB_RDMA
+    dcqcn_config    : ref://store/specs/id=DCQCN_CONFIG_RDMA
 
 queue_types:
     - queue_type:

@@ -101,7 +101,8 @@ struct rqcb0_t {
 
     header_template_size: 8;    //Ronly
     ring_empty_sched_eval_done: 1;  //rw in S0
-    rsvd1: 7;
+    dcqcn_cfg_id: 4;            //Ronly
+    rsvd1: 3;
 
     // store the current backtrack progress
     bt_rsq_cindex: 16;          //Read by S0, write by Sx

@@ -28,7 +28,7 @@ struct resp_tx_s2_t0_k k;
 #define K_SEARCH_PSN        CAPRI_KEY_RANGE(RSQ_BT_K_P, psn_sbit0_ebit7, psn_sbit16_ebit23)
 #define K_OP_TYPE           CAPRI_KEY_FIELD(RSQ_BT_K_P, read_or_atomic)
 #define K_R_KEY             CAPRI_KEY_RANGE(RSQ_BT_K_P, r_key_sbit0_ebit23, r_key_sbit24_ebit31)
-#define K_VA                CAPRI_KEY_RANGE(RSQ_BT_K_P, va_sbit0_ebit31, va_sbit56_ebit63)
+#define K_VA                CAPRI_KEY_RANGE(RSQ_BT_K_P, va_sbit0_ebit15, va_sbit56_ebit63)
 #define K_LEN               CAPRI_KEY_RANGE(RSQ_BT_K_P, len_sbit0_ebit7, len_sbit24_ebit31)
 #define K_LOG_RSQ_SIZE      CAPRI_KEY_FIELD(RSQ_BT_TO_S_K_P, log_rsq_size)
 #define K_LOG_PMTU          CAPRI_KEY_RANGE(RSQ_BT_TO_S_K_P, log_pmtu_sbit0_ebit2, log_pmtu_sbit3_ebit4)

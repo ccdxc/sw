@@ -32,7 +32,7 @@ resp_tx_rqcb2_process:
     CAPRI_SET_FIELD2(TO_S_RKEY_P, pd, d.pd)
 
     // load 256 bits (i.e,32 bytes) which is the size of rsqwqe
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_tx_rsqwqe_process, CAPRI_KEY_RANGE(IN_P, rsqwqe_addr_sbit0_ebit7, rsqwqe_addr_sbit32_ebit63))
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_tx_rsqwqe_process, CAPRI_KEY_RANGE(IN_P, rsqwqe_addr_sbit0_ebit7, rsqwqe_addr_sbit48_ebit63))
 
 exit:
     nop.e

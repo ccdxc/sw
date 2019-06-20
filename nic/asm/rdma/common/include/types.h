@@ -24,6 +24,7 @@
 //actual pt_base_addr.
 #define PT_BASE_ADDR_SHIFT 3
 #define HDR_TEMP_ADDR_SHIFT 3
+#define DCQCN_CFG_ADDR_SHIFT 3
 #define RRQ_BASE_ADDR_SHIFT 3
 #define RSQ_BASE_ADDR_SHIFT 3
 #define HBM_SQ_BASE_ADDR_SHIFT 3
@@ -1355,17 +1356,21 @@ struct aq_p4_to_p4plus_roce_header_t {
 //Common DCQCN CB for configurable params.
 struct dcqcn_config_cb_t {
             pad:64;
+            // NP
             np_incp_802p_prio:8;
             np_cnp_dscp:8;
             np_rsvd:48;
+            // RP Alpha update
             rp_initial_alpha_value:16;
             rp_dce_tcp_g:16;
             rp_dce_tcp_rtt:32;
+            // RP Rate Decrease
             rp_rate_reduce_monitor_period:32;
             rp_rate_to_set_on_first_cnp:32;
             rp_min_rate:32;
             rp_gd:8;
             rp_min_dec_fac:8;
+            // RP Rate increase
             rp_clamp_flags:8;
             rp_threshold:8;
             rp_time_reset:32;
@@ -1384,8 +1389,7 @@ struct dcqcn_cb_t {
 
     // Configurable params.
     byte_counter_thr:       32; // byte-counter-threshold in Bytes. (Bc)
-    timer_exp_thr:          16; // Timer T threshold in terms of alpha-timer.
-    g_val:                  16; // constant g.
+    rsvd1:                  32;
     // Algorithm computed params.
     rate_enforced:          32; // Enforced rate in Mbps. (Rc)
     target_rate:            32; // Target rate in Mbps. (Rt)
@@ -1732,7 +1736,8 @@ struct aqwqe_t {
         } qp;
         struct {
             attr_mask:32;
-            rsvd2:16;
+            dcqcn_profile:8;
+            rsvd2:8;
             access_flags:16;
             rq_psn:32;
             sq_psn:32;

@@ -3673,6 +3673,7 @@ static int ionic_v1_modify_qp_cmd(struct ionic_ibdev *dev,
 		wr.wqe.mod_qp.ah_id_len = cpu_to_le32(qp->ahid | (hdr_len << 24));
 		wr.wqe.mod_qp.dma_addr = cpu_to_le64(hdr_dma);
 
+		wr.wqe.mod_qp.dcqcn_profile = qp->dcqcn_profile;
 		wr.wqe.mod_qp.en_pcp = attr->ah_attr.sl;
 		wr.wqe.mod_qp.ip_dscp =
 			rdma_ah_read_grh(&attr->ah_attr)->traffic_class >> 2;

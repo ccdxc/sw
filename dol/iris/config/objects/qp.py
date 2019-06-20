@@ -95,10 +95,12 @@ class QpObject(base.ConfigObjectBase):
         self.num_sq_sges = sges
         self.num_sq_wqes = self.__roundup_to_pow_2(spec.num_sq_wqes)
         self.num_rrq_wqes = self.__roundup_to_pow_2(spec.num_rrq_wqes)
+        self.log_sq_size = self.__get_log_size(self.num_sq_wqes)
 
         self.num_rq_sges = sges
         self.num_rq_wqes = self.__roundup_to_pow_2(spec.num_rq_wqes)
         self.num_rsq_wqes = self.__roundup_to_pow_2(spec.num_rsq_wqes)
+        self.log_rq_size = self.__get_log_size(self.num_rq_wqes)
 
         self.sqwqe_size = self.__get_sqwqe_size()
         self.rqwqe_size = self.__get_rqwqe_size()
@@ -329,6 +331,7 @@ class QpObject(base.ConfigObjectBase):
         req_spec.dbid_flags = self.lif.hw_lif_id
         req_spec.id_ver = self.id
         req_spec.attr_mask = self.modify_qp_oper
+        req_spec.dcqcn_profile = 1  # Attaching default dcqcn_profile.
         req_spec.access_flags = self.flags
         req_spec.pmtu = self.__get_log_size(self.pmtu)
         req_spec.rsq_depth = self.__get_log_size(self.num_rsq_wqes)
@@ -342,6 +345,28 @@ class QpObject(base.ConfigObjectBase):
         if self.HdrTemplate is not None:
             req_spec.ah_id_len = (self.ah_handle | len(self.HdrTemplate) << 24)
             req_spec.dma_addr = self.hdr_slab.phy_address[0]
+
+    def ProcessModAdminResponse(self, cqe):
+        if (GlobalOptions.dryrun): return
+        # Congestion management will be enabled by the tests that need it
+        self.sq.qstate.Read()
+        self.sq.qstate.congestion_mgmt_enable = 0
+        self.sq.qstate.WriteWithDelay()
+
+        self.rq.qstate.Read()
+        self.rq.qstate.congestion_mgmt_enable = 0
+        self.rq.qstate.WriteWithDelay()
+
+        if not self.svc == 3 and not self.remote:
+            # Configure Dcqcn CB
+            self.ReadDcqcnCb()
+            self.dcqcn_data.log_sq_size = self.__get_log_size(self.num_sq_wqes)
+            self.dcqcn_data.rate_enforced = 4000
+            self.dcqcn_data.token_bucket_size = 32768
+            self.dcqcn_data.target_rate = 4000
+            self.dcqcn_data.alpha_value = 65535
+            self.dcqcn_data.byte_counter_thr = 4194304
+            self.WriteDcqcnCb()
 
     def PrepareHALRequestSpec(self, req_spec):
         self.sq_tbl_pos = self.pd.ep.intf.lif.GetRdmaTblPos(len(self.sq_slab.phy_address))
@@ -538,21 +563,9 @@ class QpObject(base.ConfigObjectBase):
 
         if (GlobalOptions.dryrun): return
 
-        # Configure Dcqcn CB
-        self.ReadDcqcnCb()
-        self.dcqcn_data.log_sq_size = self.__get_log_size(self.num_sq_wqes) 
-        self.dcqcn_data.rate_enforced = 4000
-        self.dcqcn_data.token_bucket_size = 32768
-        self.dcqcn_data.target_rate = 4000
-        self.dcqcn_data.alpha_value = 65535
-        self.dcqcn_data.g_val  = 65535
-        self.dcqcn_data.byte_counter_thr = 4194304
-        self.WriteDcqcnCb()
-
         resmgr.HostMemoryAllocator.write(self.hdr_slab.mem_handle, bytes(self.HdrTemplate))
         #adminapi.ModifyQps(self.lif, [self])
         #self.modify_qp_oper = 0
-
         return
 
     # Routines to read and write to dcqcn_cb    
@@ -605,8 +618,7 @@ class RdmaDCQCNstate(scapy.Packet):
         scapy.BitField("last_cnp_timestamp", 0, 48),
 
         scapy.IntField("byte_counter_thr",0),
-        scapy.BitField("timer_exp_thr", 0, 16),
-        scapy.BitField("g_val", 0, 16),
+        scapy.IntField("rsvd1",0),
 
         scapy.IntField("rate_enforced", 0),
         scapy.IntField("target_rate",0),

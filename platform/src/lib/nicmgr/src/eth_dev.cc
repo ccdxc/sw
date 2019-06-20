@@ -469,6 +469,7 @@ Eth::ParseConfig(boost::property_tree::ptree::value_type node)
         eth_spec->rdma_cq_count = val.get<uint64_t>("rdma.cq_count");
         eth_spec->rdma_eq_count = val.get<uint64_t>("rdma.eq_count");
         eth_spec->rdma_aq_count = val.get<uint64_t>("rdma.adminq_count");
+        eth_spec->rdma_num_dcqcn_profiles = val.get<uint64_t>("rdma.num_dcqcn_profiles");
         eth_spec->rdma_pid_count = val.get<uint64_t>("rdma.pid_count");
         eth_spec->key_count = val.get<uint64_t>("rdma.key_count");
         eth_spec->pte_count = val.get<uint64_t>("rdma.pte_count");
@@ -1421,7 +1422,7 @@ Eth::_CmdLifIdentify(void *req, void *req_data, void *resp, void *resp_data)
         ident->rdma.eq_qtype.qid_count = spec->rdma_eq_count;
         ident->rdma.eq_qtype.qid_base = spec->eq_count;
 
-        ident->rdma.dcqcn_profiles = 1;
+        ident->rdma.dcqcn_profiles = spec->rdma_num_dcqcn_profiles;
     }
 
     comp->ver = IONIC_IDENTITY_VERSION_1;

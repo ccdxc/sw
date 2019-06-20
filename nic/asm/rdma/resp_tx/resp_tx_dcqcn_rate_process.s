@@ -13,6 +13,12 @@ struct resp_tx_s4_t0_k k;
 #define  F              r5
 #define  Ri             r6
 
+#define IN_P t0_s2s_cfg_to_dcqcn_info
+
+#define K_G_VAL	CAPRI_KEY_FIELD(IN_P, g_val)
+#define K_TIMER_EXP_THR CAPRI_KEY_FIELD(IN_P, timer_exp_thr)
+#define K_ALPHA_TIMER_INTERVAL CAPRI_KEY_RANGE(IN_P, alpha_timer_interval_sbit0_ebit7, alpha_timer_interval_sbit24_ebit31)
+
 // Note: Below values are constants related to g and alpha.
 // TODO: Hardcoding it for now. Check if they have to be fed from HAL.
 #define G_MAX                   65536
@@ -146,10 +152,10 @@ cnp_recv_process:
 
     // Update alpha value.                         
     // int_alpha =  (((g_max - int_g) * int_alpha) >> log_g_max) + int_g
-    sub     r1, G_MAX, d.g_val
+    sub     r1, G_MAX, K_G_VAL
     mul     r2, d.alpha_value, r1
     srl     r2, r2, LOG_G_MAX
-    add     r2, r2, d.g_val
+    add     r2, r2, K_G_VAL
     tblwr   d.alpha_value, r2
 
     // Update num-cnp-processed.
@@ -165,7 +171,7 @@ cnp_recv_process:
      * timer T runs as a multiplicative factor to alpha-timer. So not restarting alpha timer here 
      * should have minimal impact on timer T and subsequent dcqcn rate-increase.
      */
-    CAPRI_START_SLOW_TIMER(r1, r6, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, DCQCN_TIMER_RING_ID, ALPHA_TIMER_INTERVAL)
+    CAPRI_START_SLOW_TIMER(r1, r6, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, DCQCN_TIMER_RING_ID, K_ALPHA_TIMER_INTERVAL)
     nop.e
     nop
 

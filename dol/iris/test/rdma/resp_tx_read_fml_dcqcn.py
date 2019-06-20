@@ -29,6 +29,7 @@ def TestCaseSetup(tc):
     rs.lqp.dcqcn_data.cur_timestamp = 0x7D0000 # 8192k ticks
     rs.lqp.dcqcn_data.rate_enforced = 1  # 1 Mbps (rate_enforced is in Mbps)
     rs.lqp.dcqcn_data.cur_avail_tokens = 0
+    rs.lqp.dcqcn_data.cur_byte_counter = 0
     rs.lqp.dcqcn_data.num_sched_drop = 0
     rs.lqp.dcqcn_data.token_bucket_size = 150000 #150kb
     rs.lqp.dcqcn_data.byte_counter_thr = 3072

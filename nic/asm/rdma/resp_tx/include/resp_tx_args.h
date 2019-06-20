@@ -1,6 +1,12 @@
 #ifndef __RESP_TX_ARGS_H
 #define __RESP_TX_ARGS_H
 
+struct resp_tx_rqcb_to_dcqcn_config_t {
+    dcqcn_config_base             : 34;
+    dcqcn_config_id               :  4;
+    pad                           :122;
+};
+
 #if 0
 #include "capri.h"
 #include "common_phv.h"

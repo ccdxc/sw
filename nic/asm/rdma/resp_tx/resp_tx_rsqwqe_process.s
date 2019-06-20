@@ -60,7 +60,7 @@ process_atomic:
 
     // header template
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_HDR_TEMPLATE)
-    sll         r5, CAPRI_KEY_FIELD(IN_P, header_template_addr), HDR_TEMP_ADDR_SHIFT
+    sll         r5, CAPRI_KEY_RANGE(IN_P, header_template_addr_sbit0_ebit15, header_template_addr_sbit16_ebit31), HDR_TEMP_ADDR_SHIFT
     DMA_HBM_MEM2PKT_SETUP(DMA_CMD_BASE, CAPRI_KEY_FIELD(IN_P, header_template_size), r5)
 
     // bth
@@ -200,7 +200,7 @@ next:
     phvwrpair   CAPRI_PHV_FIELD(RKEY_INFO_P, transfer_va), \
                 XFER_VA, \
                 CAPRI_PHV_FIELD(RKEY_INFO_P, header_template_addr), \
-                CAPRI_KEY_FIELD(IN_P, header_template_addr) 
+                CAPRI_KEY_RANGE(IN_P, header_template_addr_sbit0_ebit15, header_template_addr_sbit16_ebit31)
 
     phvwrpair   CAPRI_PHV_FIELD(RKEY_INFO_P, curr_read_rsp_psn), K_SPEC_PSN, \
                 CAPRI_PHV_FIELD(RKEY_INFO_P, log_pmtu), CAPRI_KEY_FIELD(IN_P, log_pmtu)

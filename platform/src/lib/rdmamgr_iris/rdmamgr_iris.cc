@@ -108,7 +108,7 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
     uint64_t            size;
     uint32_t            max_cqs, max_sqs, max_rqs;
     // TODO: num dcqcn profiles param from json
-    uint32_t            num_dcqcn_profiles = 1;
+    uint32_t            num_dcqcn_profiles = 8;
     uint64_t            cq_base_addr; //address in HBM memory
     uint64_t            sq_base_addr; //address in HBM memory
     uint64_t            rq_base_addr; //address in HBM memory

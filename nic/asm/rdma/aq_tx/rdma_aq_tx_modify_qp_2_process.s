@@ -25,6 +25,8 @@ struct aq_tx_s2_t1_k k;
 #define K_AH_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, ah_base_addr_page_id_sbit0_ebit15, ah_base_addr_page_id_sbit16_ebit21)
 #define K_SQCB_BASE_ADDR_HI CAPRI_KEY_RANGE(IN_TO_S_P, sqcb_base_addr_hi_sbit0_ebit1, sqcb_base_addr_hi_sbit18_ebit23)
 #define K_RQCB_BASE_ADDR_HI CAPRI_KEY_RANGE(IN_TO_S_P, rqcb_base_addr_hi_sbit0_ebit1, rqcb_base_addr_hi_sbit18_ebit23)
+#define K_LOG_NUM_DCQCN_PROFILES CAPRI_KEY_RANGE(IN_TO_S_P, log_num_dcqcn_profiles_sbit0_ebit1, log_num_dcqcn_profiles_sbit2_ebit3)
+#define K_LOG_NUM_KT_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_kt_entries)
 
 %%
 
@@ -43,6 +45,7 @@ rdma_aq_tx_modify_qp_2_process:
 
     CAPRI_RESET_TABLE_1_ARG()
     CAPRI_RESET_TABLE_2_ARG()
+    CAPRI_RESET_TABLE_3_ARG()
     
 hdr_update:
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_AV], 1, rrq_base
@@ -78,13 +81,30 @@ hdr_update:
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MOD_QP_AH_DST)
     DMA_HBM_MEM2MEM_DST_SETUP(DMA_CMD_BASE, r4, r5)
 
+    sub         r4, d.mod_qp.dcqcn_profile, 1
+    sll         r7, 1, K_LOG_NUM_DCQCN_PROFILES
+    ble         r7, r4, pcp_dscp
+
+    phvwr       CAPRI_PHV_FIELD(WQE2_TO_RQCB0_P, dcqcn_profile), r4     // BD Slot
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, congestion_mgmt_enable), 1
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB0_INFO_P, congestion_mgmt_enable), 1
+
+    // r5 holds ah_addr
+    add         r5, r5, AH_ENTRY_T_SIZE_BYTES
+    // get addr of dcqcn config cb for profile (id - 1)
+    AQ_TX_DCQCN_CONFIG_BASE_ADDR_GET2(r6, r7)
+    add         r6, r6, r4, LOG_SIZEOF_DCQCN_CONFIG_T
+    // r5 - dcqcn_config_addr, r6 - dcqcn_cb_addr
+    phvwrpair   CAPRI_PHV_FIELD(TO_S3_INFO, cb_addr), r6, CAPRI_PHV_FIELD(TO_S3_INFO, congestion_mgmt_enable), 1
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, cb_addr), r5
+
+pcp_dscp:
     // fetch tm-iq (cosB) for QP looking up dscp-pcp-tm-iq map table
     phvwr       CAPRI_PHV_FIELD(TO_S3_INFO, err_retry_count_or_pcp), d.mod_qp.en_pcp
     phvwr       CAPRI_PHV_FIELD(TO_S3_INFO, local_ack_timeout_or_dscp), d.mod_qp.ip_dscp
     addui       r7, r0, hiword(qos_dscp_cos_map_addr)
     addi        r7, r7, loword(qos_dscp_cos_map_addr)
 
-    CAPRI_RESET_TABLE_3_ARG()
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_tx_fetch_tx_iq_process, r7)
  
 rrq_base:

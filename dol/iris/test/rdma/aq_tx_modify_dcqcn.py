@@ -32,7 +32,7 @@ def TestCaseVerify(tc):
     logger.info("RDMA TestCaseVerify() Implementation.")
 
     # verify that dcqcn profile matches expected values
-    dcqcn_profile = RdmaDcqcnProfileObject(tc.pvtdata.lif, 0).data
+    dcqcn_profile = RdmaDcqcnProfileObject(tc.pvtdata.lif, 1).data
     modify_dcqcn = tc.descriptors.Get('EXP_AQ_DESC').spec.fields.modify_dcqcn
     for field in dcqcn_profile.fields_desc:
         if not hasattr(modify_dcqcn, field.name):

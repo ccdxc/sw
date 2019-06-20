@@ -708,7 +708,8 @@ struct ionic_v1_admin_wqe {
 		} qp;
 		struct {
 			__be32		attr_mask;
-			__u8		rsvd1[2];
+			__u8		dcqcn_profile;
+			__u8		rsvd1;
 			__be16		access_flags;
 			__le32		rq_psn;
 			__le32		sq_psn;

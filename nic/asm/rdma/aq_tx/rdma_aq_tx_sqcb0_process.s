@@ -18,6 +18,7 @@ struct aq_tx_s6_t2_k k;
 #define K_Q_KEY_VALID CAPRI_KEY_FIELD(IN_TO_S_P, q_key_valid)
 #define K_Q_KEY_TM_IQ CAPRI_KEY_RANGE(IN_TO_S_P, q_key_or_tm_iq_sbit0_ebit1, q_key_or_tm_iq_sbit26_ebit31)
 #define K_TX_PSN CAPRI_KEY_RANGE(IN_TO_S_P, tx_psn_sbit0_ebit3, tx_psn_sbit20_ebit23)
+#define K_CONGESTION_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, congestion_mgmt_enable)
 
 %%
 
@@ -32,6 +33,7 @@ rdma_aq_tx_sqcb0_process:
     tblwr       d.header_template_addr, CAPRI_KEY_FIELD(IN_P, ah_addr)
     // Update cos(tm_iq) in qstate.
     tblwr       d.intrinsic.cosB, K_Q_KEY_TM_IQ
+    tblwr       d.congestion_mgmt_enable, K_CONGESTION_ENABLE
     
 timeout:
     bbne        K_LOCAL_ACK_TIMEOUT_VALID, 1, pmtu
