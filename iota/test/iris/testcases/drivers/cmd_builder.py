@@ -204,7 +204,7 @@ def bsd_ethtool_tso_offload(node, intf,op):
     return " ".join(["ifconfig", intf,"tso" if op == "on" else "-tso"])
 
 def bsd_ethtool_intr_coal(node, intf, size):
-    return "".join(["sysctl dev.ionic.0.coal_usecs=", str(size)])
+    return "".join(["sysctl dev.ionic.0.intr_coal=", str(size)])
 
 def bsd_ethtool_gro_offload(node, intf,op):
     return ethtool_feature_cmd(node, intf,"gro", op)

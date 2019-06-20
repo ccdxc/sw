@@ -136,15 +136,10 @@ TUNABLE_INT("hw.ionic.rx_clean_limit", &ionic_rx_clean_limit);
 SYSCTL_INT(_hw_ionic, OID_AUTO, rx_clean_limit, CTLFLAG_RWTUN,
     &ionic_rx_clean_limit, 0, "Rx can process maximum number of descriptors.");
 
-int ionic_tx_coalesce_usecs = 64;
-TUNABLE_INT("hw.ionic.tx_coalesce_usecs", &ionic_tx_coalesce_usecs);
-SYSCTL_INT(_hw_ionic, OID_AUTO, tx_coalesce_usecs, CTLFLAG_RWTUN,
-    &ionic_tx_coalesce_usecs, 0, "Tx coal in usescs.");
-
-int ionic_rx_coalesce_usecs = 64;
-TUNABLE_INT("hw.ionic.rx_coalesce_usecs", &ionic_rx_coalesce_usecs);
-SYSCTL_INT(_hw_ionic, OID_AUTO, rx_coalesce_usecs, CTLFLAG_RWTUN,
-    &ionic_rx_coalesce_usecs, 0, "Rx coal in usescs.");
+int ionic_intr_coalesce = 64;
+TUNABLE_INT("hw.ionic.intr_coalesce", &ionic_intr_coalesce);
+SYSCTL_INT(_hw_ionic, OID_AUTO, intr_coalesce, CTLFLAG_RWTUN,
+    &ionic_intr_coalesce, 0, "Initial interrupt coal value.");
 
 /* Size of Rx scatter gather buffers, disabled by default. */
 int ionic_rx_sg_size = 0;
@@ -1419,45 +1414,13 @@ static int
 ionic_intr_coal_handler(SYSCTL_HANDLER_ARGS)
 {
 	struct lif *lif = oidp->oid_arg1;
-	struct ionic_dev *idev = &lif->ionic->idev;
-	struct identity *ident = &lif->ionic->ident;
-	struct rxque *rxq;
-	u32 rx_coal, coalesce_usecs;
-	unsigned int i;
-	int error;
+	int coal, error;
 
-	coalesce_usecs = lif->rx_coalesce_usecs;
-
-	IONIC_NETDEV_INFO(lif->netdev, "Enter Intr coal: %d\n", coalesce_usecs);
-
-	error = sysctl_handle_int(oidp, &coalesce_usecs, 0, req);
+	error = sysctl_handle_int(oidp, &coal, 0, req);
 	if (error || !req->newptr)
 		return (EINVAL);
 
-	if (ident->dev.intr_coal_div <= 0) {
-		IONIC_NETDEV_ERROR(lif->netdev, "Can't change, divisor is: %d\n",
-			ident->dev.intr_coal_div);
-		return (EINVAL);
-	}
-
-	rx_coal = coalesce_usecs * ident->dev.intr_coal_mult /
-		  ident->dev.intr_coal_div;
-
-	if (rx_coal > INTR_CTRL_COAL_MAX)
-		return (ERANGE);
-
-	if (coalesce_usecs != lif->rx_coalesce_usecs) {
-		lif->rx_coalesce_usecs = coalesce_usecs;
-		for (i = 0; i < lif->nrxqs; i++) {
-			rxq = lif->rxqs[i];
-			ionic_intr_coal_init(idev->intr_ctrl, rxq->intr.index,
-					     rx_coal);
-		}
-	}
-
-	IONIC_NETDEV_INFO(lif->netdev, "Exit Intr coal: %d\n", coalesce_usecs);
-
-	return (0);
+	return (ionic_setup_intr_coal(lif, coal));
 }
 
 /*
@@ -1768,6 +1731,9 @@ ionic_lif_reset_sysctl(SYSCTL_HANDLER_ARGS)
 	error = sysctl_handle_int(oidp, &reset, 0, req);
 	if ((error) || (req->newptr == NULL))
 		return (error);
+
+	if (reset == 0)
+		return (EINVAL);
 
 	return ionic_lif_reinit(lif);
 }
@@ -2523,8 +2489,10 @@ ionic_setup_device_stats(struct lif *lif)
 			&lif->num_mc_addrs, 0, "Number of MAC filters");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "rx_mbuf_sz", CTLFLAG_RD,
 			&lif->rx_mbuf_size, 0, "Size of receive buffers");
-	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "coal_usecs", CTLTYPE_UINT | CTLFLAG_RW, lif, 0,
-			ionic_intr_coal_handler, "IU", "Interrupt coalescing timeout in usecs");
+	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "curr_coal", CTLFLAG_RD,
+			&lif->intr_coalesce, 0, "Get current interrupt coalescing value");
+	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "intr_coal", CTLTYPE_UINT | CTLFLAG_RW, lif, 0,
+			ionic_intr_coal_handler, "IU", "Set interrupt coalescing value");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "filters",
 			CTLTYPE_STRING | CTLFLAG_RD | CTLFLAG_SKIP, lif, 0,
 			ionic_filter_sysctl, "A", "Print MAC filter list");

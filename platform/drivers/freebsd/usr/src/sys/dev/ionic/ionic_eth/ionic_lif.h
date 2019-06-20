@@ -312,8 +312,7 @@ struct lif {
 	struct ionic_dma_info rss_dma;
 	u32 rss_ind_tbl_sz;
 
-	u32 tx_coalesce_usecs;
-	u32 rx_coalesce_usecs;
+	int intr_coalesce;		/* Interrupt coalescing value programmed. */
 
 	struct mutex dbid_inuse_lock;
 	unsigned long *dbid_inuse;
@@ -428,6 +427,7 @@ int ionic_set_multi(struct lif* lif);
 int ionic_set_mac(struct ifnet *ifp);
 extern int ionic_lif_reinit(struct lif *lif);
 
+int ionic_setup_intr_coal(struct lif *lif, int coal);
 int ionic_firmware_update(struct lif *lif, const void *const fw_data, size_t fw_sz);
 
 extern int ionic_devcmd_timeout;
@@ -440,6 +440,5 @@ extern int adminq_descs;
 extern int ionic_notifyq_descs;
 extern int ionic_rx_fill_threshold;
 extern int ionic_rx_process_limit;
-extern int ionic_tx_coalesce_usecs;
-extern int ionic_rx_coalesce_usecs;
+extern int ionic_intr_coalesce;
 #endif /* _IONIC_LIF_H_ */

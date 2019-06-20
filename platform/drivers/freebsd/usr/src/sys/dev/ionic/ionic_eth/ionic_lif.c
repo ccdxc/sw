@@ -282,12 +282,14 @@ ionic_stop(struct ifnet *ifp)
 	}
 
 	for (i = 0; i < lif->nrxqs; i++) {
+		rxq = lif->rxqs[i];
 		IONIC_RX_LOCK(rxq);
 		ionic_rx_clean(rxq, rxq->num_descs);
 		IONIC_RX_UNLOCK(rxq);
 	}
 
 	for (i = 0; i < lif->ntxqs; i++) {
+		txq = lif->txqs[i];
 		IONIC_TX_LOCK(txq);
 		ionic_tx_clean(txq, txq->num_descs);
 		IONIC_TX_UNLOCK(txq);
@@ -1682,34 +1684,40 @@ ionic_qcqs_free(struct lif *lif)
 	free(lif->txqs, M_IONIC);
 }
 
-static void
-ionic_setup_intr_coal(struct lif *lif)
+int
+ionic_setup_intr_coal(struct lif *lif, int coal)
 {
 	struct ionic_dev *idev = &lif->ionic->idev;
 	struct identity *ident = &lif->ionic->ident;
 	struct rxque *rxq;
-	u32 rx_coal;
-	u32 tx_coal;
-	unsigned int i;
+	struct ifnet *ifp = lif->netdev;
+	u32 intr_coal;
+	int i;
 
 	if (ident->dev.intr_coal_div == 0)
-		return;
-
-	tx_coal = lif->tx_coalesce_usecs * ident->dev.intr_coal_mult /
+		return (ENXIO);
+	
+	intr_coal = coal * ident->dev.intr_coal_mult /
 		  ident->dev.intr_coal_div;
-	rx_coal = lif->rx_coalesce_usecs * ident->dev.intr_coal_mult /
-		  ident->dev.intr_coal_div;
+	
+	if (intr_coal == lif->intr_coalesce)
+		return (0);	
 
-	if (tx_coal > INTR_CTRL_COAL_MAX || rx_coal > INTR_CTRL_COAL_MAX) {
-		IONIC_NETDEV_ERROR(lif->netdev, "Coalescing value out of range\n");
-		return;
+	if (intr_coal > INTR_CTRL_COAL_MAX) {
+		IONIC_NETDEV_ERROR(ifp, "Coalescing value %d out of range, max: %d\n", coal,
+				INTR_CTRL_COAL_MAX * ident->dev.intr_coal_div / ident->dev.intr_coal_mult);
+		return (ERANGE);
 	}
 
+	IONIC_NETDEV_INFO(ifp, "New intr coal: %d\n", intr_coal);
+	lif->intr_coalesce = intr_coal;
 	for (i = 0; i < lif->nrxqs; i++) {
 		rxq = lif->rxqs[i];
 		ionic_intr_coal_init(idev->intr_ctrl, rxq->intr.index,
-				     rx_coal);
+				     intr_coal);
 	}
+
+	return (0);
 }
 
 static inline void
@@ -1861,12 +1869,9 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 		goto err_out_unmap_dbell;
 
 	/* Setup tunables. */
-	lif->tx_coalesce_usecs = ionic_tx_coalesce_usecs;
-	lif->rx_coalesce_usecs = ionic_rx_coalesce_usecs;
+	ionic_setup_intr_coal(lif, ionic_intr_coalesce);
 
-	ionic_setup_intr_coal(lif);
-
-	/* All queues are initialised, setup legacy interrupts now. */
+	/* All queues are initialized, setup legacy interrupts now. */
 	if (ionic_enable_msix == 0) {
 		err = ionic_setup_legacy_intr(lif);
 		if (err) {
