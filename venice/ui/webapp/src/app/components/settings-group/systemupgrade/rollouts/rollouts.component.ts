@@ -12,6 +12,8 @@ import {Router} from '@angular/router';
 import {HttpEventUtility} from '@common/HttpEventUtility';
 import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
 import { TableCol } from '@app/components/shared/tableviewedit';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 /**
  * This component let user manage Venice Rollouts.
@@ -71,7 +73,8 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
               protected cdr: ChangeDetectorRef,
               protected rolloutService: RolloutService,
               protected objstoreService: ObjstoreService,
-              protected router: Router) {
+              protected router: Router,
+              protected uiconfigsService: UIConfigsService) {
     super(controllerService, cdr);
   }
 
@@ -133,7 +136,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
       breadcrumb: [{label: 'System Upgrade', url: Utility.getBaseUIUrl() + 'settings/upgrade'}],
       buttons: []
     };
-    if (this.isToBuildCreateButton()) {
+    if (this.isToBuildCreateButton() && this.uiconfigsService.isAuthorized(UIRolePermissions.rolloutrollout_create)) {
       toolbarData.buttons.push(
         {
           cssClass: 'global-button-primary rollouts-button',

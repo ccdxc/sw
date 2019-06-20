@@ -8,7 +8,8 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Utility } from '../../common/Utility';
 import { GenServiceUtility } from './GenUtility';
-
+import { UIConfigsService } from '../uiconfigs.service';
+import { NEVER } from 'rxjs';
 
 @Injectable()
 export class ObjstoreService extends Objstorev1Service {
@@ -19,7 +20,8 @@ export class ObjstoreService extends Objstorev1Service {
   protected serviceUtility: GenServiceUtility;
 
   constructor(protected _http: HttpClient,
-              protected _controllerService: ControllerService) {
+              protected _controllerService: ControllerService,
+              protected uiconfigsService: UIConfigsService) {
       super(_http);
       this.serviceUtility = new GenServiceUtility(
         _http,
@@ -44,6 +46,10 @@ export class ObjstoreService extends Objstorev1Service {
   }
 
   protected invokeAJAX(method: string, url: string, payload: any, eventPayloadID: any, forceReal: boolean = false): Observable<VeniceResponse> {
+    const key = this.serviceUtility.convertEventID(eventPayloadID);
+    if (!this.uiconfigsService.isAuthorized(key)) {
+      return NEVER;
+    }
     const isOnline = !this.isToMockData() || forceReal;
     return this.serviceUtility.invokeAJAX(method, url, payload, eventPayloadID, isOnline);
   }

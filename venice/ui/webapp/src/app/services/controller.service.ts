@@ -482,6 +482,7 @@ export class ControllerService {
     }
 
     // Don't know what the error is, websockets can come to here.
+    console.error('controller.service.invokeRESTErrorToaster() \n' + JSON.stringify(error)); // VS-478 display error.
     this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, 'Your credentials are expired/insufficient or Venice is temporarily unavailable. Please sign in again or contact system administrator.', buttons);
   }
 
