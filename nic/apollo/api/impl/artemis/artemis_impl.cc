@@ -821,6 +821,8 @@ artemis_impl::table_init_(void) {
     // program meter stats' region base address as table constant
     addr = api::g_pds_state.mempartition()->start_addr("meter_stats");
     SDK_ASSERT(addr != INVALID_MEM_ADDRESS);
+    // reset bit 31 (saves one ASM instruction)
+    addr &= ~((uint64_t)1 << 31);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_METER_STATS, addr);
 
     return SDK_RET_OK;
