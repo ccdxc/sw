@@ -27,7 +27,6 @@ def Setup(tc):
         api.PrintCommandResults(cmd_resp)
         if cmd_resp.exit_code != 0:
             api.Logger.error("Setup failed %s", cmd_resp.command)
-            return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
 

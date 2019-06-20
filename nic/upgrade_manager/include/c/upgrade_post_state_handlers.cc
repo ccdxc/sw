@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <fstream>
 
 #include "upgrade_post_state_handlers.hpp"
 #include "nic/delphi/sdk/delphi_sdk.hpp"
@@ -65,6 +66,9 @@ bool UpgPostStateHandler::PostDataplaneDowntimePhase4Handler(UpgCtx &ctx) {
 bool UpgPostStateHandler::PostSuccessHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostSuccess returning");
     UPG_OBFL_TRACE("Upgrade successful");
+    if (exists("/nic/tools/fwupdate") && exists("/data/upgrade_halt_state_machine")) {
+        remove("/data/upgrade_halt_state_machine");
+    }
     return true;
     if (exists("/nic/tools/fwupdate")) {
 	int ret = 0;
@@ -74,6 +78,7 @@ bool UpgPostStateHandler::PostSuccessHandler(UpgCtx &ctx) {
             UPG_LOG_INFO("Unable to remove firmware: /update/{} Ret: {}", ctx.firmwarePkgName, ret);
             //return false;
         }
+        remove("/data/upgrade_halt_state_machine");
     }
     return true;
 }
@@ -81,6 +86,9 @@ bool UpgPostStateHandler::PostSuccessHandler(UpgCtx &ctx) {
 bool UpgPostStateHandler::PostFailedHandler(UpgCtx &ctx) {
     UPG_OBFL_TRACE("Upgrade failed");
     UPG_LOG_DEBUG("UpgPostStateHandler PostFailed returning");
+    if (exists("/nic/tools/fwupdate") && exists("/data/upgrade_halt_state_machine")) {
+        remove("/data/upgrade_halt_state_machine");
+    }
     return true;
 }
 
@@ -112,7 +120,18 @@ bool UpgPostStateHandler::PostPostLinkUpHandler(UpgCtx &ctx) {
 bool UpgPostStateHandler::PostSaveStateHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostSaveState returning");
     UPG_OBFL_TRACE("Going to restart system");
-    if (exists("/nic/tools/fwupdate")) {
+    if (exists("/nic/tools/fwupdate") && !exists("/data/upgrade_halt_state_machine")) {
+        UPG_LOG_DEBUG("File created");
+        ofstream file;
+        file.open("/data/upgrade_halt_state_machine");
+        file << "going to halt state machine for switchroot\n";
+        file.close();
+        int ret = 0;
+        string cmd = "sync";
+        if ((ret = system (cmd.c_str())) != 0) {
+            UPG_LOG_INFO("Unable to sync");
+        }
+        ctx.haltStateMachine = true;
         ctx.sysMgr->restart_system();
     }
     return true;

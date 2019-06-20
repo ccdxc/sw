@@ -16,6 +16,19 @@ def Setup(tc):
     if ping.TestPing(tc, 'local_only', 'ipv4', 64) != api.types.status.SUCCESS or ping.TestPing(tc, 'remote_only', 'ipv4', 64) != api.types.status.SUCCESS:
         api.Logger.info("ping test failed")
         return api.types.status.FAILURE
+    req = api.Trigger_CreateExecuteCommandsRequest()
+
+    for node in tc.Nodes:
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/upgrade_halt_state_machine")
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pcieport_upgdata")
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pciemgr_upgdata")
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pciemgr_upgrollback")
+    resp = api.Trigger(req)
+    for cmd_resp in resp.commands:
+        api.PrintCommandResults(cmd_resp)
+        if cmd_resp.exit_code != 0:
+            api.Logger.error("Setup failed %s", cmd_resp.command)
+
     if not tc.iterators.option:
         return api.types.status.SUCCESS
     for n in tc.Nodes:
@@ -83,6 +96,19 @@ def Teardown(tc):
             common.stopTestUpgApp(n, False)
         else:
             common.stopTestUpgApp(n, True)
+
+    req = api.Trigger_CreateExecuteCommandsRequest()
+    for node in tc.Nodes:
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/upgrade_halt_state_machine")
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pcieport_upgdata")
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pciemgr_upgdata")
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pciemgr_upgrollback")
+    resp = api.Trigger(req)
+    for cmd_resp in resp.commands:
+        api.PrintCommandResults(cmd_resp)
+        if cmd_resp.exit_code != 0:
+            api.Logger.error("Setup failed %s", cmd_resp.command)
+
     cmd = 'curl -X DELETE 169.254.0.1:8888/api/v1/naples/rollout/'
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:

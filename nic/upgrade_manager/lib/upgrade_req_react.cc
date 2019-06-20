@@ -23,6 +23,7 @@ void UpgReqReact::SetStateMachine(delphi::objects::UpgReqPtr req) {
     ctx.postRestart = false;
     ctx.upgFailed = false;
     ctx.sysMgr = sysMgr_;
+    ctx.haltStateMachine = false;
     if (GetState() == UpgStatePostRestart) {
         ctx.postRestart = true;
     }
@@ -227,6 +228,11 @@ delphi::error UpgReqReact::DeleteUpgMgrResp (void) {
     return upgMgrResp_->DeleteUpgMgrResp();
 }
 delphi::error UpgReqReact::MoveStateMachine(UpgReqStateType type) {
+    if (ctx.haltStateMachine) {
+        UPG_LOG_DEBUG("Moving state machine pending switchroot");
+        UPG_OBFL_TRACE("Moving state machine pending switchroot");
+        return delphi::error::OK();
+    }
     //Find UpgStateReq object
     UPG_LOG_DEBUG("UpgReqReact::MoveStateMachine {}", type);
     auto reqStatus = findUpgStateReq();
@@ -280,6 +286,7 @@ delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     ctx.postRestart = false;
     ctx.upgFailed = false;
     ctx.sysMgr = sysMgr_;
+    ctx.haltStateMachine = false;
     if (!GetUpgCtxFromMeta(ctx)) {
         return delphi::error("GetUpgCtxFromMeta failed");
     }
@@ -391,6 +398,7 @@ delphi::error UpgReqReact::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
     ctx.postRestart = false;
     ctx.upgFailed = false;
     ctx.sysMgr = sysMgr_;
+    ctx.haltStateMachine = false;
     // start or abort?
     if (!GetUpgCtxFromMeta(ctx)) {
         return delphi::error("GetUpgCtxFromMeta failed");
