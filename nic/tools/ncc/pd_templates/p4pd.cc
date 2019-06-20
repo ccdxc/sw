@@ -2069,6 +2069,7 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
 //::                for fields in pddict['tables'][table]['hdrunion_keys']:
 //::                    ustr=''
 //::                    ustr_mask=''
+//::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                    if len(key_byte_format):
 //::                        for kmbyte, _kbit, width, containerstart in key_byte_format:
 //::                            tablebyte = kmbyte

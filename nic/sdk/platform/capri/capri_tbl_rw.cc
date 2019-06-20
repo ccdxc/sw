@@ -1444,7 +1444,8 @@ capri_tcam_table_entry_read (uint32_t tableid,
                  + ((tbl_col * tbl_info.entry_width) /
                      CAPRI_TCAM_WORDS_PER_BLOCK);
     int block = blk;
-    int copy_bits = tbl_info.entry_width_bits;
+    int pad = (tbl_info.entry_width_bits % 16) ? (16 - (tbl_info.entry_width_bits % 16)) : 0;
+    int copy_bits = tbl_info.entry_width_bits + pad;
     int start_word = entry_start_word;
     uint16_t *_trit_x = (uint16_t*)trit_x;
     uint16_t *_trit_y = (uint16_t*)trit_y;
