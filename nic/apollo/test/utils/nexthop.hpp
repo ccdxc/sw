@@ -11,6 +11,7 @@
 #define __TEST_UTILS_NH_HPP__
 
 #include "nic/apollo/api/include/pds_nexthop.hpp"
+#include "nic/apollo/api/nexthop_utils.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 

@@ -51,4 +51,34 @@ operator<<(std::ostream& os, const pds_vpc_info_t *obj) {
     return os;
 }
 
+inline std::ostream&
+operator<<(std::ostream& os, const pds_vpc_peer_key_t *key) {
+    os << " id: " << key->id;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_vpc_peer_spec_t *spec) {
+    os << &spec->key
+       << " vpc1: " << spec->vpc1.id
+       << " vpc1: " << spec->vpc2.id;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_vpc_peer_status_t *status) {
+    os << " HW id1: " << status->hw_id1
+       << " HW id2: " << status->hw_id2;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_vpc_peer_info_t *obj) {
+    os << "VPC Peer info =>"
+       << &obj->spec
+       << &obj->status
+       << std::endl;
+    return os;
+}
+
 #endif    // __API_VPC_API_HPP__

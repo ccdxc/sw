@@ -13,6 +13,7 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
+#include "nic/apollo/api/vpc_utils.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 
@@ -53,7 +54,7 @@ operator<<(std::ostream& os, const vpc_peer_feeder& obj) {
     os << "VPC Peer feeder =>"
         << " id: " << obj.key.id
         << " vpc1 id: " << obj.vpc1.id
-        << " vpc2 id: " << obj.vpc2.id;
+        << " vpc2 id: " << obj.vpc2.id << " ";
     return os;
 }
 

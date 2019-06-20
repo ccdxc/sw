@@ -12,6 +12,7 @@
 
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/encap_utils.hpp"
+#include "nic/apollo/api/tep_utils.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 

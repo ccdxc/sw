@@ -11,7 +11,6 @@
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/model_sim/include/lib_model_client.h"
-#include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/test/utils/base.hpp"
