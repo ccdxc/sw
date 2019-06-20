@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/apollo/api/device_api.hpp"
 #include "nic/apollo/test/utils/device.hpp"
 
 namespace api_test {
@@ -23,22 +24,6 @@ device_feeder::init(std::string device_ip_str, std::string mac_addr_str,
     this->mac_addr_str = mac_addr_str;
     this->gw_ip_str = gw_ip_str;
     num_obj = num_device;
-}
-
-void
-device_feeder::iter_next(int width) {
-    // nothing to do here as device object is a singleton. Increase the
-    // iterator position so that iterator can break the loop
-    cur_iter_pos++;
-}
-
-bool
-device_feeder::read_unsupported(void) const {
-    if (::capri_mock_mode()) {
-        return true;
-    }
-
-    return false;
 }
 
 void
@@ -69,14 +54,6 @@ device_feeder::spec_compare(const pds_device_spec_t *spec) const {
     return true;
 }
 
-#if 0
-    // todo @kalyanbade make it a stream operator based dump
-    std::cout << "Device IP : " << ipv4addr2str(info->spec.device_ip_addr)
-              << " Device MAC : " << macaddr2str(info->spec.device_mac_addr)
-              << " Gateway IP : " << ipv4addr2str(info->spec.gateway_ip_addr)
-              << std::endl;
-#endif
-
 //----------------------------------------------------------------------------
 // Misc routines
 //----------------------------------------------------------------------------
@@ -88,18 +65,18 @@ static device_feeder k_device_feeder;
 void sample_device_setup() {
     // setup and teardown parameters should be in sync
     k_device_feeder.init(k_device_ip, "00:00:01:02:0a:0b", "90.0.0.2");
-    create(k_device_feeder);
+    many_create(k_device_feeder);
 }
 
 void sample_device_setup_validate() {
     k_device_feeder.init(k_device_ip, "00:00:01:02:0a:0b", "90.0.0.2");
-    read(k_device_feeder);
+    many_read(k_device_feeder);
 }
 
 void sample_device_teardown() {
     // this feeder base values doesn't matter in case of deletes
     k_device_feeder.init(k_device_ip, "00:00:01:02:0a:0b", "90.0.0.2");
-    del(k_device_feeder);
+    many_delete(k_device_feeder);
 }
 
 }    // namespace api_test

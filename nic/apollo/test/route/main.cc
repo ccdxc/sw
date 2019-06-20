@@ -45,7 +45,7 @@ protected:
             sample_tep_setup();
         } else {
             // create max NHs which can be used as NHs for routes
-            sample_nh_setup();
+            sample_nexthop_setup();
         }
         batch_commit();
     }
@@ -54,7 +54,7 @@ protected:
         if (apollo()) {
             sample_tep_teardown();
         } else {
-            sample_nh_teardown();
+            sample_nexthop_teardown();
         }
         sample_vpc_teardown(PDS_VPC_TYPE_TENANT);
         batch_commit();

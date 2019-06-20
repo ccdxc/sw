@@ -37,9 +37,11 @@ public:
               std::string gw_ip_str, int num_device = 1);
 
     // Iterate helper routines
-    void iter_next(int width = 1);
+    void iter_next(int width = 1) { cur_iter_pos++; }
 
-    bool read_unsupported(void) const;
+    bool read_unsupported(void) const {
+        return (::capri_mock_mode() ? true : false);
+    }
 
     // Build routines
     void spec_build(pds_device_spec_t *spec) const;

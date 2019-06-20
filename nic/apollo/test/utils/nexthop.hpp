@@ -73,8 +73,8 @@ API_UPDATE(nexthop);
 API_DELETE(nexthop);
 
 // Misc function prototypes
-void sample_nh_setup(void);
-void sample_nh_teardown(void);
+void sample_nexthop_setup(void);
+void sample_nexthop_teardown(void);
 
 }    // namespace api_test
 

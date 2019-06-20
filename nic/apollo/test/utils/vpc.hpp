@@ -18,6 +18,9 @@
 
 namespace api_test {
 
+// Export variables
+extern pds_vpc_key_t k_vpc_key;
+
 // VPC test feeder class
 class vpc_feeder : public feeder {
 public:
@@ -63,9 +66,6 @@ API_CREATE(vpc);
 API_READ(vpc);
 API_UPDATE(vpc);
 API_DELETE(vpc);
-
-// Export variables
-extern pds_vpc_key_t k_vpc_key;
 
 // Misc function prototypes
 void sample_vpc_setup(pds_vpc_type_t type);
