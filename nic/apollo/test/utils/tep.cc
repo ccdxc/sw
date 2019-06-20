@@ -8,8 +8,8 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/api/tep_api.hpp"
 #include "nic/apollo/api/utils.hpp"
+#include "nic/apollo/api/tep_utils.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/tep.hpp"

@@ -13,6 +13,7 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/api/encap_utils.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 
@@ -88,8 +89,8 @@ vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
                     key_.id, spec->vpc.id, spec->subnet.id,
                     spec->v4_meter.id, spec->v6_meter.id,
                     macaddr2str(spec->mac_addr),
-                    pdsencap2str(spec->vnic_encap),
-                    pdsencap2str(spec->fabric_encap),
+                    pds_encap2str(spec->vnic_encap),
+                    pds_encap2str(spec->fabric_encap),
                     spec->rx_mirror_session_bmap,
                     spec->tx_mirror_session_bmap,
                     spec->switch_vnic);
@@ -99,7 +100,7 @@ vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 vnic_entry::reprogram_config(api_op_t api_op) {
     PDS_TRACE_DEBUG("Reprogramming vnic %u, subnet %u, fabric encap %s, ",
-                    key_.id, subnet_.id, pdsencap2str(fabric_encap_));
+                    key_.id, subnet_.id, pds_encap2str(fabric_encap_));
     return impl_->reprogram_hw(this, api_op);
 }
 
@@ -134,7 +135,7 @@ vnic_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
 sdk_ret_t
 vnic_entry::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
     PDS_TRACE_DEBUG("Reactivating vnic %u, subnet %u, fabric encap %s, ",
-                    key_.id, subnet_.id, pdsencap2str(fabric_encap_));
+                    key_.id, subnet_.id, pds_encap2str(fabric_encap_));
     return impl_->reactivate_hw(this, epoch, api_op);
 }
 

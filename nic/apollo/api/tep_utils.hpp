@@ -8,12 +8,13 @@
 ///
 //----------------------------------------------------------------------------
 
-#ifndef __API_TEP_API_HPP__
-#define __API_TEP_API_HPP__
+#ifndef __API_TEP_UTILS_HPP__
+#define __API_TEP_UTILS_HPP__
 
-#include<iostream>
+#include <iostream>
 #include "nic/sdk/include/sdk/eth.hpp"
-#include "nic/apollo/api/tep.hpp"
+#include "nic/apollo/api/include/pds_tep.hpp"
+#include "nic/apollo/api/encap_utils.hpp"
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_tep_key_t *key) {
@@ -28,7 +29,7 @@ operator<<(std::ostream& os, const pds_tep_spec_t *spec) {
        << " DIPi: " << spec->ip_addr
        << " dmac: " << macaddr2str(spec->mac)
        << " nat: " << spec->nat
-       << " encap: " << pdsencap2str(spec->encap);
+       << " encap: " << pds_encap2str(spec->encap);
     return os;
 }
 
@@ -49,4 +50,4 @@ operator<<(std::ostream& os, const pds_tep_info_t *obj) {
     return os;
 }
 
-#endif    // __API_TEP_API_HPP__
+#endif    // __API_TEP_UTILS_HPP__

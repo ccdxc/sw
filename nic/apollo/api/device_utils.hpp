@@ -8,8 +8,8 @@
 ///
 //----------------------------------------------------------------------------
 
-#ifndef __API_DEVICE_API_HPP__
-#define __API_DEVICE_API_HPP__
+#ifndef __API_DEVICE_UTILS_HPP__
+#define __API_DEVICE_UTILS_HPP__
 
 #include <iostream>
 #include "nic/sdk/include/sdk/eth.hpp"
@@ -31,4 +31,4 @@ operator<<(std::ostream& os, const pds_device_info_t *obj) {
     return os;
 }
 
-#endif    // __API_DEVICE_API_HPP__
+#endif    // __API_DEVICE_UTILS_HPP__

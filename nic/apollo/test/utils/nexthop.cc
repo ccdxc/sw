@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/eth.hpp"
-#include "nic/apollo/api/nexthop_api.hpp"
+#include "nic/apollo/api/encap_utils.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/nexthop.hpp"
 #include "nic/apollo/test/utils/utils.hpp"

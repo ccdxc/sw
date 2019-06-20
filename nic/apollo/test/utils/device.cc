@@ -8,7 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/api/device_api.hpp"
+#include "nic/apollo/api/device_utils.hpp"
 #include "nic/apollo/test/utils/device.hpp"
 
 namespace api_test {

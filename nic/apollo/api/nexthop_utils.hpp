@@ -8,8 +8,8 @@
 ///
 //----------------------------------------------------------------------------
 
-#ifndef __API_NEXTHOP_API_HPP__
-#define __API_NEXTHOP_API_HPP__
+#ifndef __API_NEXTHOP_UTILS_HPP__
+#define __API_NEXTHOP_UTILS_HPP__
 
 #include<iostream>
 #include "nic/sdk/include/sdk/eth.hpp"
@@ -34,17 +34,18 @@ operator<<(std::ostream& os, const pds_nexthop_spec_t *spec) {
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_nexthop_status_t *status) {
-    os << " HW id " << status->hw_id;
+    os << " HW id: " << status->hw_id;
     return os;
 }
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_nexthop_info_t *obj) {
-    os << "NH info => "
+    os << "NH info =>"
        << &obj->spec
        << &obj->status
+       << &obj->stats
        << std::endl;
     return os;
 }
 
-#endif    // __API_NEXTHOP_API_HPP__
+#endif    // __API_NEXTHOP_UTILS_HPP__

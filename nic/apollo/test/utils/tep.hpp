@@ -11,6 +11,7 @@
 #define __TEST_UTILS_TEP_HPP__
 
 #include "nic/apollo/api/include/pds_tep.hpp"
+#include "nic/apollo/api/encap_utils.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 
@@ -64,7 +65,7 @@ operator<<(std::ostream& os, const tep_feeder& obj) {
        << " DIPi: " << obj.dipi
        << " dmac: " << mac2str(obj.dmac)
        << " nat: " << obj.nat
-       << " encap: " << pdsencap2str(obj.encap);
+       << " encap: " << pds_encap2str(obj.encap);
     return os;
 }
 
