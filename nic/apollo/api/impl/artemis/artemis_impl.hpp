@@ -24,6 +24,8 @@
 #define PDS_IMPL_PROVIDER_VPC_HW_ID                  0
 // vpc hw id (unused) for remote 4to6 tunnel
 #define PDS_IMPL_SERVICE_TUNNEL_VPC_HW_ID            0
+// reserve vnic hw id
+#define PDS_IMPL_RSVD_VNIC_HW_ID                     0
 
 // reserved tag id
 #define PDS_IMPL_RESERVED_TAG_ID                     0

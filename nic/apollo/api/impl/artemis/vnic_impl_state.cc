@@ -10,6 +10,7 @@
 
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
+#include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 #include "nic/apollo/api/impl/artemis/vnic_impl_state.hpp"
 #include "gen/p4gen/artemis/include/p4pd.h"
 #include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
@@ -31,6 +32,7 @@ vnic_impl_state::vnic_impl_state(pds_state *state) {
     // allocate indexer for vnic hw id allocation
     vnic_idxr_ = indexer::factory(PDS_MAX_VNIC);
     SDK_ASSERT(vnic_idxr_ != NULL);
+    vnic_idxr_->alloc_withid(PDS_IMPL_RSVD_VNIC_HW_ID);
 
     // VNIC_MAPPING tcam table
     memset(&table_params, 0, sizeof(table_params));
