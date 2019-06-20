@@ -59,7 +59,7 @@ type TSMClient struct {
 }
 
 // NewTSMClient creates a new techsupport agent
-func NewTSMClient(name string, mac string, kind string, configPath string, controllers []string, port string) *TSMClient {
+func NewTSMClient(name string, mac string, kind string, configPath string, controllers []string, listenURL string) *TSMClient {
 	log.Infof("Name : %v MAC : %v Controllers : %v", name, mac, controllers)
 	var resolverClient resolver.Interface
 	if len(controllers) != 0 {
@@ -87,9 +87,9 @@ func NewTSMClient(name string, mac string, kind string, configPath string, contr
 		cfg:            res,
 	}
 
-	if port != "" {
-		log.Infof("Setting port number to : %v", port)
-		res.RESTUri = port
+	if listenURL != "" {
+		log.Infof("Setting listenURL number to : %v", listenURL)
+		res.RESTUri = listenURL
 	}
 
 	if res.RESTUri != "" {

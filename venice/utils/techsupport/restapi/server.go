@@ -19,12 +19,11 @@ type RestServer struct {
 }
 
 // NewRestServer creates a new techsupport server
-func NewRestServer(port string, tsCh chan<- tsproto.TechSupportRequest) *RestServer {
-	if port == "" {
-		log.Errorf("Cannot create Server. Port is empty.")
+func NewRestServer(listenURL string, tsCh chan<- tsproto.TechSupportRequest) *RestServer {
+	if listenURL == "" {
+		log.Errorf("Cannot create Server. listenURL is empty.")
 		return nil
 	}
-	listenURL := ":" + port
 
 	return &RestServer{
 		listenURL: listenURL,
