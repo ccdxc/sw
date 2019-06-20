@@ -71,6 +71,14 @@
                         [inline]="true"
                         class="global-alert-info-icon naples-row-icon">notifications</mat-icon>
             </div>
+            <div *ngSwitchCase="'status.conditions'"
+                 [matTooltip]="!isNICHealthy(rowData) ? displayReasons(rowData) : ''">
+              {{displayCondition(rowData)}}
+              <mat-icon *ngIf="!isNICHealthy(rowData)" fxFlex="nogrow"
+                        [inline]="true"
+                        class="global-alert-critical-icon naples-bad-indicator-icon ">error
+              </mat-icon>
+            </div>
             <ng-container *ngSwitchDefault>
               {{displayColumn(rowData, col)}}
             </ng-container>

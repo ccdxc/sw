@@ -78,6 +78,10 @@
                 </div>
                 <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
                      fxLayoutAlign="start center">
+                  <div>Condition</div>
+                </div>
+                <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                     fxLayoutAlign="start center">
                   <div>Smart Nic Version:</div>
                 </div>
                 <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
@@ -127,6 +131,18 @@
                             fxFlex="nogrow"
                             [inline]="true"
                             class="global-alert-info-icon naplesdetail-phase-icon">notifications
+                  </mat-icon>
+                </div>
+              </div>
+              <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                   class="naplesdetail-node-value">
+                <div class="naplesdetail-details-panel-ntp-servers"
+                     [matTooltip]="!isNICHealthy(selectedObj) ? helpDisplayReasons(selectedObj) : ''">
+                  {{helpDisplayCondition(selectedObj)}}
+                  <mat-icon *ngIf=" !isNICHealthy(selectedObj)"
+                            fxFlex="nogrow"
+                            [inline]="true"
+                            class="global-alert-critical-icon naples-bad-indicator-icon">error
                   </mat-icon>
                 </div>
               </div>

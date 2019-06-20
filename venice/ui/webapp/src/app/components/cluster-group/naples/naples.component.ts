@@ -14,6 +14,7 @@ import { Table } from 'primeng/table';
 import { Subscription } from 'rxjs';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/basecard.component';
+import { NaplesConditionValues } from '.';
 
 @Component({
   selector: 'app-naples',
@@ -21,6 +22,7 @@ import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/
   templateUrl: './naples.component.html',
   styleUrls: ['./naples.component.scss']
 })
+
 export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy {
   @ViewChild('naplesTable') naplesTurboTable: Table;
 
@@ -34,6 +36,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     { field: 'status.smartNicVersion', header: 'Version', class: 'naples-column-version', sortable: true },
     { field: 'status.ip-config.ip-address', header: 'Management IP Address', class: 'naples-column-mgmt-cidr', sortable: false },
     { field: 'status.admission-phase', header: 'Phase', class: 'naples-column-phase', sortable: false },
+    { field: 'status.conditions', header: 'Condition', class: 'naples-column-condition', sortable: true},
     { field: 'meta.mod-time', header: 'Modification Time', class: 'naples-column-date', sortable: true },
     { field: 'meta.creation-time', header: 'Creation Time', class: 'naples-column-date', sortable: true },
   ];
@@ -93,6 +96,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     super(controllerService);
   }
 
+
   ngOnInit() {
     this.getNaples();
     this.getMetrics();
@@ -122,6 +126,22 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
       default:
         return Array.isArray(value) ? JSON.stringify(value, null, 2) : value;
     }
+  }
+
+
+  displayCondition(data: ClusterSmartNIC): NaplesConditionValues {
+    return Utility.getNaplesCondition(data);
+  }
+
+  isNICHealthy(data: ClusterSmartNIC): boolean {
+    if (Utility.isNaplesNICHealthy(data)) {
+      return true;
+    }
+    return false;
+  }
+
+  displayReasons(data: ClusterSmartNIC): any {
+    return Utility.displayReasons(data);
   }
 
   /**

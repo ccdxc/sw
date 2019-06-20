@@ -11,11 +11,11 @@
 }
 
 .naples-column-phase {
-  width: 15%;
+  width: 10%;
 }
 
 .naples-column-version {
-  width: 10%;
+  width: 5%;
 }
 
 .naples-card-container {
@@ -26,6 +26,15 @@
   min-height: 600px;
 }
 
+
+.naples-column-condition {
+  width: 10%;
+}
+
 .naples-row-icon {
   margin-left: 10px;
+}
+
+.naples-bad-indicator-icon {
+  margin-left: 5px;
 }

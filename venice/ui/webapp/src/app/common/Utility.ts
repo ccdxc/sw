@@ -15,7 +15,10 @@ import { RepeaterComponent } from 'web-app-framework';
 import { Eventtypes } from '../enum/eventtypes.enum';
 import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
-import { ClusterSmartNIC, ClusterSmartNICCondition, ClusterSmartNICCondition_type, ClusterSmartNICCondition_status } from '@sdk/v1/models/generated/cluster';
+import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
+import { FieldsSelector } from '@sdk/v1/models/generated/search';
+import { ClusterSmartNIC, ClusterSmartNICCondition, ClusterSmartNICCondition_status, ClusterSmartNICCondition_type } from '@sdk/v1/models/generated/cluster';
+import { NaplesCondition, NaplesConditionValues} from '@app/components/cluster-group/naples/index.ts';
 
 
 
@@ -1512,19 +1515,66 @@ export class Utility {
     return ret;
   }
 
-  public static isNaplesNICHealthy(naples: ClusterSmartNIC): boolean {
-    if (naples && naples.status.conditions !== null && naples.status.conditions.length > 0) {
-      const badNics  = naples.status.conditions.find( (condition: ClusterSmartNICCondition) => {
-        return (condition) && (condition.type !== ClusterSmartNICCondition_type.HEALTHY || condition.status !== ClusterSmartNICCondition_status.TRUE);
-      });
-      return !badNics;
+  public static getNaplesConditionObject(naples: ClusterSmartNIC): NaplesCondition {
+    if (!naples || naples.status.conditions == null || naples.status.conditions.length === 0) {
+      return {isHealthy: true, condition : NaplesConditionValues.HEALTHY};
     } else {
-      return true;
+      for (const cond of naples.status.conditions) {
+        if ((cond) && (cond.type === ClusterSmartNICCondition_type.HEALTHY) && (cond.status === ClusterSmartNICCondition_status.FALSE)) {
+          return {isHealthy: false, condition : NaplesConditionValues.UNHEALTHY};
+        }
+        if ((cond) && (cond.type === ClusterSmartNICCondition_type.HEALTHY) && (cond.status === ClusterSmartNICCondition_status.TRUE)) {
+          return {isHealthy: true, condition : NaplesConditionValues.HEALTHY};
+        }
+        return {isHealthy: false, condition : NaplesConditionValues.UNKNOWN};
+      }
     }
   }
 
+  public static isNaplesNICHealthy(naples: ClusterSmartNIC): boolean {
+    return this.getNaplesConditionObject(naples).isHealthy;
+  }
 
-  // instance API.  Usage: Utility.getInstance().apiName(xxx)  e.g Utility.getInstance.getControllerService()
+  public static getNaplesCondition(naples: ClusterSmartNIC): NaplesConditionValues {
+    return this.getNaplesConditionObject(naples).condition;
+  }
+
+
+
+  public static displayReasons(naples: ClusterSmartNIC): string {
+    const reasonarray: string[] = [];
+    for (let i = 0; i < naples.status['conditions'].length; i ++) {
+      if (!this.isNaplesNICHealthy(naples)) {
+        if (naples.status.conditions[i].reason != null) {
+          const cond = naples.status.conditions[i];
+          const reason = this.formatDateWithinString(cond);
+          reasonarray.push(reason);
+        }
+      }
+    }
+    if (reasonarray.length > 0) {
+      return reasonarray.join('\n');
+    } else {
+      return '';
+    }
+  }
+
+  public static formatDateWithinString(cond: ClusterSmartNICCondition): string {
+    const words: any[] = cond.reason.split(' ');
+    for (let j = 0; j < words.length; j ++) {    // parsing reason string to check for and format date/time events
+      const w = words[j];
+      const regex = /\d{4}-\d{2}-\d{2}.*/ ;
+      if (w.match(regex) != null) {
+        const date = new PrettyDatePipe('en-US').transform(w);
+        words.splice(words.indexOf(w), 1, date);
+      }
+    }
+    let reason = '';
+    for (let k = 0; k < words.length; k ++) {   // reconstructing new string
+      reason = reason.concat(words[k], ' ');
+    }
+    return reason;
+  }
 
   setControllerService(controllerService: ControllerService) {
     this.myControllerService = controllerService;

@@ -62,7 +62,7 @@ describe('NaplesdetailComponent', () => {
 
   function verifyMeta(naples: IClusterSmartNIC) {
     const fields = fixture.debugElement.queryAll(By.css('.naplesdetail-node-value'));
-    expect(fields.length).toBe(6);
+    expect(fields.length).toBe(7);
     if (naples.status['primary-mac'] != null) {
       expect(fields[0].nativeElement.textContent).toContain(naples.status['primary-mac']);
     } else {
@@ -95,9 +95,9 @@ describe('NaplesdetailComponent', () => {
       expect(fields[3].nativeElement.textContent.trim()).toBe('');
     }
     if (naples.status['serial-num'] != null) {
-      expect(fields[4].nativeElement.textContent).toContain(naples.status['smartNicVersion']);
+      expect(fields[5].nativeElement.textContent).toContain(naples.status['smartNicVersion']);
     } else {
-      expect(fields[4].nativeElement.textContent.trim()).toBe('');
+      expect(fields[5].nativeElement.textContent.trim()).toBe('');
     }
   }
 

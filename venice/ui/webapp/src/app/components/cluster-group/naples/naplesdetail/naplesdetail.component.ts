@@ -19,6 +19,7 @@ import { AlertsEventsSelector } from '@app/components/shared/alertsevents/alerts
 import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/basecard.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import {LabelEditorMetadataModel} from '@components/shared/labeleditor';
+import { NaplesConditionValues } from '..';
 
 @Component({
   selector: 'app-naplesdetail',
@@ -418,5 +419,20 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
 
   toggleDetailsCard() {
     this.showExpandedDetailsCard = !this.showExpandedDetailsCard;
+  }
+
+  helpDisplayCondition(data: ClusterSmartNIC): NaplesConditionValues {
+    return Utility.getNaplesCondition(data);
+  }
+
+  helpDisplayReasons(data: ClusterSmartNIC): any {
+    return Utility.displayReasons(data);
+  }
+
+  isNICHealthy(data: ClusterSmartNIC): boolean {
+  if (Utility.isNaplesNICHealthy(data)) {
+      return true;
+    }
+    return false;
   }
 }
