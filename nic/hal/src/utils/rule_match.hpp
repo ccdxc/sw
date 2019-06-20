@@ -103,7 +103,7 @@ typedef hal_ret_t (*rule_ctr_cb_t)(rule_ctr_t *ctr, bool add);
 
 typedef struct rule_lib_cb_s {
     rule_ctr_cb_t     rule_ctr_cb;
-} rule_lib_cb_t;
+} __PACK__ rule_lib_cb_t;
 
 typedef struct rule_cfg_s {
     char                name[64];
@@ -112,7 +112,7 @@ typedef struct rule_cfg_s {
     ht_ctxt_t           ht_ctxt;
     ht                 *rule_ctr_ht; // Hash table for counters keyed by: rule key
     rule_ctr_cb_t       rule_ctr_cb;
-} rule_cfg_t;
+} __PACK__ rule_cfg_t;
 
 typedef struct rule_data_s {
     void       *user_data;
@@ -127,7 +127,7 @@ typedef struct rule_ctr_data_s {
     uint64_t    esp_hits;
     uint64_t    other_hits;
     uint64_t    total_hits;
-} rule_ctr_data_t;
+} __PACK__ rule_ctr_data_t;
 
 struct rule_ctr_t {
     rule_ctr_data_t *rule_stats; 

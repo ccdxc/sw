@@ -1278,6 +1278,7 @@ security_policy_add_to_ruledb( nwsec_policy_t *policy, const acl_ctx_t **acl_ctx
             nwsec_rulelist_t *rulelist = (nwsec_rulelist_t *)data;
             if (rulelist == NULL) {
                 fn_ctx->ret = HAL_RET_ERR;
+                HAL_TRACE_ERR("NULL rulelist");
                 return true;
             }
             HAL_TRACE_VERBOSE("rule id is {}", rulelist->rule_id);
@@ -1285,6 +1286,7 @@ security_policy_add_to_ruledb( nwsec_policy_t *policy, const acl_ctx_t **acl_ctx
                 nwsec_rule_t *rule = dllist_entry(curr, nwsec_rule_t, dlentry);
                 fn_ctx->ret = rule_match_rule_add(fn_ctx->acl_ctx, &rule->fw_rule_match, rule->rule_id, rule->priority, &rule->ref_count);
                 if (fn_ctx->ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("rule rule add failed : {}", fn_ctx->ret);
                     return true;
                 }
             }
@@ -1465,7 +1467,7 @@ extract_policy_from_spec(nwsec::SecurityPolicySpec&     spec,
         nwsec_rule->priority = i;
         ret = add_nwsec_rule_to_db(policy, nwsec_rule, nwsec_rule->rule_id);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR(" unable to add to rule to policy db");
+            HAL_TRACE_ERR("Unable to add to rule to policy db");
             return ret;
         }
     }

@@ -229,12 +229,12 @@ twheel::del_timer(void *timer)
                       "twentry: %p", twentry->timer_id_, twentry->timeout_,
                       twentry->periodic_, twentry);
 #endif
-    TWHEEL_LOCK_SLICE(slice = twentry->slice_);
     if (twentry->valid_ == TRUE) {
+        TWHEEL_LOCK_SLICE(slice = twentry->slice_);
         remove_timer_(twentry);
+        TWHEEL_UNLOCK_SLICE(slice);
         delay_delete_(twentry);
     }
-    TWHEEL_UNLOCK_SLICE(slice);
     //delay_delete_(twentry);
 
     return ctxt;

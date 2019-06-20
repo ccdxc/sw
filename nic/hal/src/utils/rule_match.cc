@@ -372,8 +372,10 @@ rule_match_spec_extract (const types::RuleMatch& spec, rule_match_t *match)
         goto end;
 
 end:
-    if (ret != HAL_RET_OK)
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("rule match spec extract failed");
         rule_match_cleanup(match);
+    }
 
     return ret;
 }
@@ -449,11 +451,13 @@ alloc_init_rule_ctr(rule_cfg_t *cfg, rule_key_t rule_key)
 
     ctr = (rule_ctr_t *) g_hal_state->rule_ctr_slab()->alloc();
     if (ctr == NULL) {
+        HAL_TRACE_ERR("unable to allocate ctr");
         return NULL;
     }
 
     ret = init_rule_ctr(cfg, ctr, rule_key);
     if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("rule ctr init failed");
         g_hal_state->rule_ctr_slab()->free(ctr);
         return NULL;
     }
@@ -892,6 +896,7 @@ rule_match_rule_add (const acl_ctx_t  **acl_ctx,
 
     rule_cfg = (rule_cfg_t *)g_rule_cfg_ht->lookup((void *) (*acl_ctx)->name());
     if (rule_cfg == NULL) {
+        HAL_TRACE_ERR("failed to find rule cfg");
         return HAL_RET_ERR;
     }
     rule_ctr = alloc_init_rule_ctr(rule_cfg, rule_key);
@@ -957,14 +962,17 @@ rule_match_rule_del (const acl_ctx_t   **acl_ctx,
 
     rule_cfg = (rule_cfg_t *)g_rule_cfg_ht->lookup((void *) (*acl_ctx)->name());
     if (rule_cfg == NULL) {
+        HAL_TRACE_ERR("lookup of rule_cfg:{} failed", (*acl_ctx)->name());
         return HAL_RET_ERR;
     }
     ctr = (rule_ctr_t *) rule_cfg->rule_ctr_ht->remove(&rule_key);
     if (!ctr) {
+        HAL_TRACE_ERR("ctr not found");
         return HAL_RET_ERR;
     }
     rule_data = ctr->rule_data;
     if (!rule_data) {
+        HAL_TRACE_ERR("rule_data NULL");
         return HAL_RET_ERR;
     }
     /* Add dummy node at the head of each list if the list is empty. If the
@@ -1008,10 +1016,12 @@ rule_classify(const acl_ctx_t *ctx, const uint8_t *key,
 {
     hal_ret_t ret = acl_classify(ctx, key, rules, categories);
     if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("acl classify failed: {}", ret);
         return NULL;
     }
 
     if (*rules == NULL) {
+        HAL_TRACE_ERR("Null rules");
         return NULL;
     }
     return NULL;
