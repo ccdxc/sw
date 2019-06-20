@@ -36,6 +36,6 @@ route_result_st:
     // For NH_TYPE=ST, set the Rx: dst_ip flag to 11 (64 mapping)
     phvwr.e         p.session_info_hint_rx_rewrite_flags_dst_ip, 11
     // Enable 4-6 lookup
-    //phvwr.e         p.txdma_predicate_st_enable, TRUE
+    phvwr.e         p.txdma_control_st_enable, TRUE
     // Disable Peer VNET Route lookup
     phvwr           p.txdma_predicate_lpm1_enable, FALSE

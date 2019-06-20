@@ -24,7 +24,7 @@ header_type txdma_control_metadata_t {
         cindex              : 16;
 
         mapping_ohash_lkp   : 1;
-        pad0                : 1;
+        st_enable           : 1;
         rfc_p1_classid      : 10;
         rule_priority       : 10;
         svc_id              : 10;
