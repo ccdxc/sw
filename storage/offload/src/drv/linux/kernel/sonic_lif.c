@@ -693,20 +693,22 @@ static int sonic_qcq_alloc(struct lif *lif, unsigned int index,
 
 	err = sonic_q_alloc(lif, &new->q, num_descs, desc_size, false);
 	if (err)
-		return err;
+		goto out_free;
 
 	err = sonic_q_init(lif, idev, &new->q, index, base, num_descs,
 			   desc_size, pid);
 	if (err)
-		return err;
+		goto out_free_q;
 
 	if (flags & QCQ_F_INTR) {
 		err = sonic_intr_alloc(lif, &new->intr);
 		if (err)
-			return err;
+			goto out_free_q;
+
 		err = sonic_bus_get_irq(lif->sonic, new->intr.index);
 		if (err < 0)
-			goto err_out_free_intr;
+			goto out_free_intr;
+
 		new->intr.vector = err;
 		sonic_intr_mask_on_assertion(&new->intr);
 	} else {
@@ -715,19 +717,21 @@ static int sonic_qcq_alloc(struct lif *lif, unsigned int index,
 
 	new->cq.info = devm_kzalloc(dev, sizeof(*new->cq.info) * num_descs,
 			GFP_KERNEL);
-	if (!new->cq.info)
-		return -ENOMEM;
+	if (!new->cq.info) {
+		err = -ENOMEM;
+		goto out_free_intr;
+	}
 
 	err = sonic_cq_init(lif, &new->cq, &new->intr,
 		num_descs, cq_desc_size);
 	if (err)
-		goto err_out_free_intr;
+		goto out_free_cq_info;
 
 	new->q.base = dma_zalloc_coherent(dev, total_size, &new->q.base_pa,
 					  GFP_KERNEL);
 	if (!new->q.base) {
 		err = -ENOMEM;
-		goto err_out_free_intr;
+		goto out_free_cq_info;
 	}
 
 	new->q.total_size = total_size;
@@ -746,9 +750,14 @@ static int sonic_qcq_alloc(struct lif *lif, unsigned int index,
 
 	return 0;
 
-err_out_free_intr:
+out_free_cq_info:
+	devm_kfree(dev, new->cq.info);
+out_free_intr:
 	sonic_intr_free(lif, &new->intr);
-
+out_free_q:
+	sonic_q_free(lif, &new->q);
+out_free:
+	devm_kfree(dev, new);
 	return err;
 }
 
