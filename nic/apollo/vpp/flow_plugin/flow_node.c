@@ -292,7 +292,8 @@ format_pds_session_prog_trace (u8 * s, va_list * args)
     CLIB_UNUSED (vlib_node_t * node) = va_arg (*args, vlib_node_t *);
     session_prog_trace_t *t = va_arg (*args, session_prog_trace_t *);
 
-    s = format (s, "Session ID %u", t->session_id);
+    s = format (s, "Session ID %u,\nData: %U", t->session_id,
+                format_hex_bytes, t->data, sizeof(t->data));
     return s;
 }
 
@@ -327,11 +328,17 @@ pds_session_prog_trace_add (vlib_main_t * vm,
         {
             t0 = vlib_add_trace (vm, node, b0, sizeof (t0[0]));
             t0->session_id = vnet_buffer (b0)->pds_data.ses_id;
+            clib_memcpy(t0->data,
+                        (vlib_buffer_get_current(b0) - pds_session_get_advance_offset()),
+                        sizeof(t0->data));
         }
         if (b1->flags & VLIB_BUFFER_IS_TRACED)
         {
             t1 = vlib_add_trace (vm, node, b1, sizeof (t1[0]));
             t1->session_id = vnet_buffer (b1)->pds_data.ses_id;
+            clib_memcpy(t1->data,
+                        (vlib_buffer_get_current(b1) - pds_session_get_advance_offset()),
+                        sizeof(t0->data));
         }
         from += 2;
         n_left -= 2;
@@ -351,6 +358,9 @@ pds_session_prog_trace_add (vlib_main_t * vm,
         {
             t0 = vlib_add_trace (vm, node, b0, sizeof (t0[0]));
             t0->session_id = vnet_buffer (b0)->pds_data.ses_id;
+            clib_memcpy(t0->data,
+                        (vlib_buffer_get_current(b0) - pds_session_get_advance_offset()),
+                        sizeof(t0->data));
         }
         from += 1;
         n_left -= 1;
@@ -484,6 +494,7 @@ pds_flow_prog_trace_add (vlib_main_t * vm,
         vlib_buffer_t *b0, *b1;
         flow_prog_trace_t *t0, *t1;
         udp_header_t *udp0, *udp1;
+        int offset0, offset1;
 
         /* Prefetch next iteration. */
         vlib_prefetch_buffer_with_index (vm, from[2], LOAD);
@@ -495,6 +506,9 @@ pds_flow_prog_trace_add (vlib_main_t * vm,
         b0 = vlib_get_buffer (vm, bi0);
         b1 = vlib_get_buffer (vm, bi1);
 
+        offset0 = pds_flow_prog_get_next_offset(b0);
+        offset1 = pds_flow_prog_get_next_offset(b1);
+
         if (b0->flags & VLIB_BUFFER_IS_TRACED)
         {
             t0 = vlib_add_trace (vm, node, b0, sizeof (t0[0]));
@@ -503,8 +517,7 @@ pds_flow_prog_trace_add (vlib_main_t * vm,
 
                 ip40 = vlib_buffer_get_current(b0);
                 ip40 = (ip4_header_t *) (((u8 *)vlib_buffer_get_current(b0)) +
-                        (VPP_PREDICATE_HDR_SZ +
-                        (vnet_buffer (b0)->l3_hdr_offset - vnet_buffer (b0)->l2_hdr_offset)));
+                        offset0);
                 ip46_address_set_ip4(&t0->src, &ip40->src_address);
                 ip46_address_set_ip4(&t0->dst, &ip40->dst_address);
                 t0->protocol = ip40->protocol;
@@ -521,8 +534,7 @@ pds_flow_prog_trace_add (vlib_main_t * vm,
                 ip6_header_t *ip60;
 
                 ip60 = (ip6_header_t *) (((u8 *)vlib_buffer_get_current(b0)) +
-                        (VPP_PREDICATE_HDR_SZ +
-                        (vnet_buffer (b0)->l3_hdr_offset - vnet_buffer (b0)->l2_hdr_offset)));
+                        offset0);
                 ip46_address_set_ip6(&t0->src, &ip60->src_address);
                 ip46_address_set_ip6(&t0->dst, &ip60->dst_address);
                 t0->protocol = ip60->protocol;
@@ -543,8 +555,7 @@ pds_flow_prog_trace_add (vlib_main_t * vm,
                 ip4_header_t *ip41;
 
                 ip41 = (ip4_header_t *) (((u8 *)vlib_buffer_get_current(b1)) +
-                        (VPP_PREDICATE_HDR_SZ +
-                        (vnet_buffer (b1)->l3_hdr_offset - vnet_buffer (b1)->l2_hdr_offset)));
+                        offset1);
                 ip46_address_set_ip4(&t1->src, &ip41->src_address);
                 ip46_address_set_ip4(&t1->dst, &ip41->dst_address);
                 t1->protocol = ip41->protocol;
@@ -560,8 +571,7 @@ pds_flow_prog_trace_add (vlib_main_t * vm,
                 ip6_header_t *ip61;
 
                 ip61 = (ip6_header_t *) (((u8 *)vlib_buffer_get_current(b1)) +
-                        (VPP_PREDICATE_HDR_SZ +
-                        (vnet_buffer (b1)->l3_hdr_offset - vnet_buffer (b1)->l2_hdr_offset)));
+                        offset1);
                 ip46_address_set_ip6(&t1->src, &ip61->src_address);
                 ip46_address_set_ip6(&t1->dst, &ip61->dst_address);
                 t1->protocol = ip61->protocol;
@@ -585,10 +595,12 @@ pds_flow_prog_trace_add (vlib_main_t * vm,
         vlib_buffer_t *b0;
         flow_prog_trace_t *t0;
         udp_header_t *udp0;
+        int offset0;
 
         bi0 = from[0];
 
         b0 = vlib_get_buffer (vm, bi0);
+        offset0 = pds_flow_prog_get_next_offset(b0);
 
         if (b0->flags & VLIB_BUFFER_IS_TRACED)
         {
@@ -597,8 +609,7 @@ pds_flow_prog_trace_add (vlib_main_t * vm,
                 ip4_header_t *ip40;
 
                 ip40 = (ip4_header_t *) (((u8 *)vlib_buffer_get_current(b0)) +
-                        (VPP_PREDICATE_HDR_SZ +
-                        (vnet_buffer (b0)->l3_hdr_offset - vnet_buffer (b0)->l2_hdr_offset)));
+                        offset0);
                 ip46_address_set_ip4(&t0->src, &ip40->src_address);
                 ip46_address_set_ip4(&t0->dst, &ip40->dst_address);
                 t0->protocol = ip40->protocol;
@@ -614,8 +625,7 @@ pds_flow_prog_trace_add (vlib_main_t * vm,
                 ip6_header_t *ip60;
 
                 ip60 = (ip6_header_t *) (((u8 *)vlib_buffer_get_current(b0)) +
-                        (VPP_PREDICATE_HDR_SZ +
-                        (vnet_buffer (b0)->l3_hdr_offset - vnet_buffer (b0)->l2_hdr_offset)));
+                        offset0);
                 ip46_address_set_ip6(&t0->src, &ip60->src_address);
                 ip46_address_set_ip6(&t0->dst, &ip60->dst_address);
                 t0->protocol = ip60->protocol;
@@ -676,11 +686,12 @@ pds_flow_prog (vlib_main_t * vm,
             }
 
             pds_session_id_alloc2(&session_id0, &session_id1);
-            pds_flow_extract_prog_args_x1(b[0], params, &size, session_id0, &offset0, is_ip4);
-            pds_flow_extract_prog_args_x1(b[1], params, &size, session_id1, &offset1, is_ip4);
-
-            vlib_buffer_advance(b[0], offset0);
-            vlib_buffer_advance(b[1], offset1);
+            pds_flow_extract_prog_args_x1(b[0], params, &size, session_id0, is_ip4);
+            pds_flow_extract_prog_args_x1(b[1], params, &size, session_id1, is_ip4);
+            offset0 = pds_flow_prog_get_next_offset(b[0]);
+            offset1 = pds_flow_prog_get_next_offset(b[1]);
+            vlib_buffer_advance(b[0], (-offset0));
+            vlib_buffer_advance(b[1], (-offset1));
 
             b += 2;
             n_left_from -= 2;
@@ -691,9 +702,9 @@ pds_flow_prog (vlib_main_t * vm,
             int offset0;
 
             session_id0 = pds_session_id_alloc();
-            pds_flow_extract_prog_args_x1(b[0], params, &size, session_id0, &offset0, is_ip4);
-
-            vlib_buffer_advance(b[0], offset0);
+            pds_flow_extract_prog_args_x1(b[0], params, &size, session_id0, is_ip4);
+            offset0 = pds_flow_prog_get_next_offset(b[0]);
+            vlib_buffer_advance(b[0], (-offset0));
 
             b += 1;
             n_left_from -= 1;

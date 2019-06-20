@@ -140,6 +140,7 @@ typedef struct p4cpu_hdr_lookup_trace_s {
 
 typedef struct session_prog_trace_s {
     u32 session_id;
+    u8  data[64];
 } session_prog_trace_t;
 
 typedef struct pds_flow_params_s {

@@ -126,6 +126,15 @@ session_insert(uint32_t ses_id, void *ses_info)
                                                   g_session_tbl_ctx.base_mem_pa);
 }
 
+void
+session_get_addr(uint32_t ses_id, uint8_t **ses_addr, uint32_t *entry_size)
+{
+    *entry_size = g_session_tbl_ctx.hbm_layout.entry_width;
+    *ses_addr = (uint8_t *) (g_session_tbl_ctx.base_mem_va +
+                (ses_id * (*entry_size)));
+    return;
+}
+
 static void
 ftl_print_stats(sdk_table_api_stats_t *api_stats,
                 sdk_table_stats_t *table_stats,
@@ -233,10 +242,76 @@ ftlv4_delete(ftlv4 *obj)
     ftlv4::destroy(obj);
 }
 
-int
-ftlv4_dump_hw_entries(ftlv4 *obj, char *logfile)
+uint32_t ftlv4_entry_count;
+
+static void
+ftlv4_dump_hw_entry_iter_cb(sdk_table_api_params_t *params)
 {
-    return obj->hwentries_dump(logfile);
+    ftlv4_entry_t *hwentry =  (ftlv4_entry_t *) params->entry;
+    FILE *fp = (FILE *)params->cbdata;
+
+    if (hwentry->entry_valid) {
+        ftlv4_entry_count++;
+        hwentry->tofile(fp, ftlv4_entry_count);
+    }
+}
+
+static void
+ftlv4_dump_hw_entry_detail_iter_cb(sdk_table_api_params_t *params)
+{
+    ftlv4_entry_t *hwentry =  (ftlv4_entry_t *) params->entry;
+    FILE *fp = (FILE *)params->cbdata;
+    uint8_t *entry;
+    uint32_t size;
+
+    if (hwentry->entry_valid) {
+        ftlv4_dump_hw_entry_iter_cb(params);
+        session_get_addr(hwentry->session_index, &entry, &size);
+        fprintf(fp, "Session Id - %u\nSession data:\n", hwentry->session_index);
+        for (uint32_t i = 0; i < size; i++) {
+            fprintf(fp, "%x", entry[i]);
+        }
+        fprintf(fp, "\n");
+    }
+}
+
+int
+ftlv4_dump_hw_entries(ftlv4 *obj, char *logfile, uint8_t detail)
+{
+    if (!detail) {
+        return obj->hwentries_dump(logfile);
+    }
+    sdk_ret_t ret;
+    sdk_table_api_params_t params = {0};
+    FILE *logfp = fopen(logfile, "a");
+    int retcode = -1;
+
+    if (logfp == NULL) {
+        goto end;
+    }
+    params.itercb = ftlv4_dump_hw_entry_detail_iter_cb;
+    params.cbdata = logfp;
+    ftlv4_entry_count = 0;
+
+    fprintf(logfp, "*******FTLv4 Table:*******\n");
+    fprintf(logfp, "%8s\t%16s\t%16s\t%5s\t%5s\t%3s\t%4s\n",
+            "Entry", "SrcIP", "DstIP", "SrcPort", "DstPort", "Proto", "Vnic");
+    fprintf(logfp, "%8s\t%16s\t%16s\t%5s\t%5s\t%3s\t%4s\n",
+            "-----", "-----", "-----", "-------", "-------", "-----", "----");
+    ret = obj->iterate(&params, TRUE);
+    if (ret != SDK_RET_OK) {
+        retcode = -1;
+    } else {
+        retcode = ftlv4_entry_count;
+    }
+    fprintf(logfp, "%8s\t%16s\t%16s\t%5s\t%5s\t%3s\t%4s\n",
+            "Entry", "SrcIP", "DstIP", "SrcPort", "DstPort", "Proto", "Vnic");
+    fprintf(logfp, "%8s\t%16s\t%16s\t%5s\t%5s\t%3s\t%4s\n",
+            "-----", "-----", "-----", "-------", "-------", "-----", "----");
+    fclose(logfp);
+
+end:
+    return retcode;
 }
 
 void
@@ -315,10 +390,76 @@ ftlv6_delete(ftlv6 *obj)
     ftlv6::destroy(obj);
 }
 
-int
-ftlv6_dump_hw_entries(ftlv6 *obj, char *logfile)
+uint32_t ftlv6_entry_count;
+
+static void
+ftlv6_dump_hw_entry_iter_cb(sdk_table_api_params_t *params)
 {
-    return obj->hwentries_dump(logfile);
+    ftlv6_entry_t *hwentry =  (ftlv6_entry_t *) params->entry;
+    FILE *fp = (FILE *)params->cbdata;
+
+    if (hwentry->entry_valid) {
+        ftlv6_entry_count++;
+        hwentry->tofile(fp, ftlv6_entry_count);
+    }
+}
+
+static void
+ftlv6_dump_hw_entry_detail_iter_cb(sdk_table_api_params_t *params)
+{
+    ftlv6_entry_t *hwentry =  (ftlv6_entry_t *) params->entry;
+    FILE *fp = (FILE *)params->cbdata;
+    uint8_t *entry;
+    uint32_t size;
+
+    if (hwentry->entry_valid) {
+        ftlv6_dump_hw_entry_iter_cb(params);
+        session_get_addr(hwentry->session_index, &entry, &size);
+        fprintf(fp, "Session Id - %u\nSession data:\n", hwentry->session_index);
+        for (uint32_t i = 0; i < size; i++) {
+            fprintf(fp, "%x", entry[i]);
+        }
+        fprintf(fp, "\n");
+    }
+}
+
+int
+ftlv6_dump_hw_entries(ftlv6 *obj, char *logfile, uint8_t detail)
+{
+    if (!detail) {
+        return obj->hwentries_dump(logfile);
+    }
+    sdk_ret_t ret;
+    sdk_table_api_params_t params = {0};
+    FILE *logfp = fopen(logfile, "a");
+    int retcode = -1;
+
+    if (logfp == NULL) {
+        goto end;
+    }
+    params.itercb = ftlv6_dump_hw_entry_detail_iter_cb;
+    params.cbdata = logfp;
+    ftlv6_entry_count = 0;
+
+    fprintf(logfp, "*******FTLv6 Table:*******\n");
+    fprintf(logfp, "%8s\t%16s\t%16s\t%5s\t%5s\t%3s\t%4s\n",
+            "Entry", "SrcIP", "DstIP", "SrcPort", "DstPort", "Proto", "Vnic");
+    fprintf(logfp, "%8s\t%16s\t%16s\t%5s\t%5s\t%3s\t%4s\n",
+            "-----", "-----", "-----", "-------", "-------", "-----", "----");
+    ret = obj->iterate(&params, TRUE);
+    if (ret != SDK_RET_OK) {
+        retcode = -1;
+    } else {
+        retcode = ftlv6_entry_count;
+    }
+    fprintf(logfp, "%8s\t%16s\t%16s\t%5s\t%5s\t%3s\t%4s\n",
+            "Entry", "SrcIP", "DstIP", "SrcPort", "DstPort", "Proto", "Vnic");
+    fprintf(logfp, "%8s\t%16s\t%16s\t%5s\t%5s\t%3s\t%4s\n",
+            "-----", "-----", "-----", "-------", "-------", "-----", "----");
+    fclose(logfp);
+
+end:
+    return retcode;
 }
 
 void

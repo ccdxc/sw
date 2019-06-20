@@ -18,6 +18,13 @@ clib_memrev2 (u8 *dst1, u8* dst2, u8 *src, int size)
 }
 #endif
 
+always_inline int
+pds_session_get_advance_offset (void)
+{
+    return (ARTEMIS_P4_TO_ARM_HDR_SZ
+            - offsetof(p4_rx_cpu_hdr_t, ses_info) - ARTEMIS_PREDICATE_HDR_SZ);
+}
+
 always_inline void
 pds_session_prog_x2 (vlib_buffer_t **b, u32 session_id0,
                      u32 session_id1, u16 *next, u32 *counter)
@@ -28,6 +35,9 @@ pds_session_prog_x2 (vlib_buffer_t **b, u32 session_id0,
     session_insert(session_id0, ses_info0);
     session_insert(session_id1, ses_info1);
     next[0] = next[1] = SESSION_PROG_NEXT_FWD_FLOW;
+
+    vlib_buffer_advance(b[0], pds_session_get_advance_offset());
+    vlib_buffer_advance(b[1], pds_session_get_advance_offset());
 }
 
 always_inline void
@@ -38,13 +48,21 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
 
     session_insert(session_id, ses_info);
     *next = SESSION_PROG_NEXT_FWD_FLOW;
+    vlib_buffer_advance(b, pds_session_get_advance_offset());
+}
+
+always_inline int
+pds_flow_prog_get_next_offset(vlib_buffer_t *p0)
+{
+    return (ARTEMIS_P4_TO_ARM_HDR_SZ - offsetof(p4_rx_cpu_hdr_t, ses_info) +
+               (vnet_buffer(p0)->l3_hdr_offset - vnet_buffer(p0)->l2_hdr_offset));
 }
 
 always_inline void
 pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                                pds_flow_params_t *params_arr,
                                int *size, u32 session_id,
-                               int *offset, u8 is_ip4)
+                               u8 is_ip4)
 {
     pds_flow_params_t   *local_params0 = params_arr + (*size),
                         *remote_params0 = local_params0 + 1;
@@ -52,8 +70,6 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
     u32                 *ip4_local0, *ip4_remote0;
 
     *size = *size + 2;
-    *offset = -(ARTEMIS_P4_TO_ARM_HDR_SZ - offsetof(p4_rx_cpu_hdr_t, ses_info) +
-                   (vnet_buffer(p0)->l3_hdr_offset - vnet_buffer(p0)->l2_hdr_offset));
     vnet_buffer(p0)->pds_data.ses_id = session_id;
 
     if (is_ip4) {
@@ -61,6 +77,8 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
 
         local_params0->entry4.session_index =
             remote_params0->entry4.session_index = session_id;
+        local_params0->entry4.epoch =
+            remote_params0->entry4.epoch = 0xff;
 
         ip40 = vlib_buffer_get_current(p0);
 
@@ -76,7 +94,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
             remote_params0->entry4.proto = ip40->protocol;
         local_params0->entry4.vpc_id =
                 remote_params0->entry4.vpc_id =
-                vnet_buffer (p0)->sw_if_index[VLIB_TX];
+                (u8)vnet_buffer (p0)->sw_if_index[VLIB_TX];
 
         if (PREDICT_TRUE(((ip40->protocol == IP_PROTOCOL_TCP)
                 || (ip40->protocol == IP_PROTOCOL_UDP)))) {
@@ -101,6 +119,8 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
 
         local_params0->entry6.session_index =
             remote_params0->entry6.session_index = session_id;
+        local_params0->entry6.epoch =
+            remote_params0->entry6.epoch = 0xff;
  
         ip60 = vlib_buffer_get_current(p0);
 

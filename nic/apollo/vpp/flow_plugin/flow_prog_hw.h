@@ -23,6 +23,9 @@ int initialize_pds(void);
 
 void session_insert(uint32_t ses_id, void *ses_info);
 
+void session_get_addr(uint32_t ses_id, uint8_t **ses_addr,
+                      uint32_t *entry_size);
+
 ftlv4 * ftlv4_create(void *key2str,
                      void *appdata2str,
                      uint32_t thread_id);
@@ -33,7 +36,7 @@ int ftlv4_remove(ftlv4 *obj, ftlv4_entry_t *entry, uint32_t hash);
 
 void ftlv4_delete(ftlv4 *obj);
 
-int ftlv4_dump_hw_entries(ftlv4 *obj, char *logfile);
+int ftlv4_dump_hw_entries(ftlv4 *obj, char *logfile, uint8_t detail);
 
 void ftlv4_dump_stats(ftlv4 *obj, char *buf, int max_len, bool force_hwread);
 
@@ -50,7 +53,7 @@ int ftlv6_remove(ftlv6 *obj, ftlv6_entry_t *entry, uint32_t hash);
 
 void ftlv6_delete(ftlv6 *obj);
 
-int ftlv6_dump_hw_entries(ftlv6 *obj, char *logfile);
+int ftlv6_dump_hw_entries(ftlv6 *obj, char *logfile, uint8_t detail);
 
 void ftlv6_dump_stats(ftlv6 *obj, char *buf, int max_len, bool force_hwread);
 

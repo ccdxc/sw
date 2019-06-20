@@ -17,6 +17,12 @@ clib_memrev2 (u8 *dst1, u8* dst2, u8 *src, int size)
 }
 #endif
 
+always_inline int
+pds_session_get_advance_offset (void)
+{
+    return 0;
+}
+
 always_inline void
 pds_session_prog_x2 (vlib_buffer_t **b, u32 session_id0,
                      u32 session_id1, u16 *next, u32 *counter)
@@ -31,11 +37,18 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
     return;
 }
 
+always_inline int
+pds_flow_prog_get_next_offset(vlib_buffer_t *p0)
+{
+    return (APOLLO_PREDICATE_HDR_SZ +
+            (vnet_buffer(p0)->l3_hdr_offset - vnet_buffer(p0)->l2_hdr_offset));
+}
+
 always_inline void
 pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                                pds_flow_params_t *params_arr,
                                int *size, u32 session_id,
-                               int *offset, u8 is_ip4)
+                               u8 is_ip4)
 {
     pds_flow_params_t   *local_params0 = params_arr + (*size),
                         *remote_params0 = local_params0 + 1;
@@ -43,8 +56,6 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
     u32                 *ip4_local0, *ip4_remote0;
 
     *size = *size + 2;
-    *offset = -(APOLLO_PREDICATE_HDR_SZ +
-               (vnet_buffer(p0)->l3_hdr_offset - vnet_buffer(p0)->l2_hdr_offset));
 
     if (is_ip4) {
         ip4_header_t *ip40;
