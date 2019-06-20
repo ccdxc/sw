@@ -74,6 +74,18 @@ public:
         num_data_cores_ = num_cores;
     }
     uint16_t num_data_cores(void) const { return num_data_cores_; }
+    string mem_scale(void) const {
+        uint32_t mem_sz;
+
+        mem_sz = catalog_->memory_capacity();
+        if (mem_sz == 8) {
+            return "8g";
+        } else if (mem_sz == 4) {
+            return "4g";
+        }
+        // 8G by default (e.g. sim environment)
+        return "8g";
+    }
     device_state *device_db(void) { return &device_db_; }
     tep_state *tep_db(void) { return &tep_db_; }
     vpc_state *vpc_db(void) { return &vpc_db_; }

@@ -217,3 +217,7 @@ artemis_DEFS    := -DARTEMIS
 l2switch_DEFS   := -DL2SWITCH
 elektra_DEFS    := -DELEKTRA
 hello_DEFS      := -DHELLO
+
+export PIPLINES_8G := apollo artemis
+export PIPELINES_ALL := iris gft apollo artemis l2switch elektra hello
+

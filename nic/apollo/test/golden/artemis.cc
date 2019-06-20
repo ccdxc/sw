@@ -643,7 +643,7 @@ TEST_F(artemis_test, test1)
                                  .cfg_path = std::getenv("HAL_CONFIG_PATH")};
 
     cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
-    std::string mpart_json = cfg.cfg_path + "/artemis/hbm_mem.json";
+    std::string mpart_json = cfg.cfg_path + "/artemis/8g/hbm_mem.json";
 
     platform_type_t platform = platform_type_t::PLATFORM_TYPE_SIM;
     printf("Parsing sim catalog ...\n");

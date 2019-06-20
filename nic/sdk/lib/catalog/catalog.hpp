@@ -195,6 +195,7 @@ public:
     uint32_t startup_vdd (void) const { return catalog_db_.voltages.startup_vdd; }
     uint32_t startup_arm (void) const { return catalog_db_.voltages.startup_arm; }
     uint32_t hbmtemperature_threshold (void) const { return catalog_db_.halfclock_hbmtemp; }
+    uint32_t memory_capacity(void) const { return catalog_db_.memory_size; }
 
     // lookups based on tm_port
     uint32_t tm_port_to_ifindex(uint32_t tm_port);
