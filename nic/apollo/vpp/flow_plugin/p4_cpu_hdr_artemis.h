@@ -61,6 +61,9 @@ typedef CLIB_PACKED(struct p4_rx_cpu_hdr_s {
     uint8_t  l3_inner_offset;
     uint8_t  l4_inner_offset;
     uint8_t  payload_offset;
+
+    uint8_t  assist_info[256];
+
     session_info_hint_t ses_info;
 }) p4_rx_cpu_hdr_t;
 

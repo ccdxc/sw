@@ -126,8 +126,8 @@ pds_fwd_flow (vlib_main_t * vm,
                 vlib_prefetch_buffer_header (p2, WRITE);
                 vlib_prefetch_buffer_header (p3, WRITE);
 
-                CLIB_PREFETCH (p2->data, VPP_PREDICATE_HDR_SZ, WRITE);
-                CLIB_PREFETCH (p3->data, VPP_PREDICATE_HDR_SZ, WRITE);
+                vlib_prefetch_buffer_data(p2, WRITE);
+                vlib_prefetch_buffer_data(p3, WRITE);
             }
 
             pi0 = from[0];
@@ -1113,8 +1113,8 @@ pds_p4cpu_hdr_lookup (vlib_main_t * vm,
                 vlib_prefetch_buffer_header (p2, WRITE);
                 vlib_prefetch_buffer_header (p3, WRITE);
 
-                CLIB_PREFETCH (p2->data, sizeof(p4_rx_cpu_hdr_t), LOAD);
-                CLIB_PREFETCH (p3->data, sizeof(p4_rx_cpu_hdr_t), LOAD);
+                vlib_prefetch_buffer_data(p2, LOAD);
+                vlib_prefetch_buffer_data(p3, LOAD);
             }
 
             pi0 = to_next[0] = from[0];
