@@ -123,14 +123,20 @@ func (client *NimbusClient) diffInterfaces(objList *netproto.InterfaceList, reac
 	// see if we need to delete any locally found object
 	localObjs := reactor.ListInterface()
 	for _, lobj := range localObjs {
-		key := lobj.ObjectMeta.GetKey()
-		if _, ok := objmap[key]; !ok {
-			evt := netproto.InterfaceEvent{
-				EventType: api.EventType_DeleteEvent,
-				Interface: *lobj,
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.InterfaceEvent{
+					EventType: api.EventType_DeleteEvent,
+					Interface: *lobj,
+				}
+				log.Infof("diffInterfaces(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
+				client.processInterfaceEvent(evt, reactor)
 			}
-			client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
-			client.processInterfaceEvent(evt, reactor)
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 		}
 	}
 
@@ -150,6 +156,10 @@ func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, r
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
+
+	// add venice label to the object
+	evt.Interface.ObjectMeta.Labels = make(map[string]string)
+	evt.Interface.ObjectMeta.Labels["CreatedBy"] = "Venice"
 
 	// unlock the object once we are done
 	defer client.unlockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
