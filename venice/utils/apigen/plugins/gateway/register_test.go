@@ -3724,7 +3724,7 @@ func TestGetMetricsJSON(t *testing.T) {
 			package: 'example'
 			syntax: 'proto3'
 			message_type <
-				name: 'msg1'
+				name: 'msg_1'
 				options:<[venice.metricInfo]: {DisplayName: "TestMetricsJSON" Description:"Msg1Metrics is a test metric" Scope: PerASIC}>
 				field <
 					name: 'field1'
@@ -3775,13 +3775,13 @@ func TestGetMetricsJSON(t *testing.T) {
 					label: LABEL_OPTIONAL
 					type: TYPE_STRING
 					number: 7
-					options:<[venice.check]: "StrEnum(msg1.Enum1)" [venice.metricsField]: {DisplayName: "Field7stringEnum" Description:"Field7 is a string Enum"}>
+					options:<[venice.check]: "StrEnum(msg_1.Enum1)" [venice.metricsField]: {DisplayName: "Field7stringEnum" Description:"Field7 is a string Enum"}>
 				>
 				field <
 					name: 'field8'
 					label: LABEL_OPTIONAL
 					type: TYPE_ENUM
-					type_name: '.example.msg1.Enum1'
+					type_name: '.example.msg_1.Enum1'
 					number: 8
 					options:<[venice.metricsField]: {DisplayName: "Field8stringEnum" Description:"Field8 is a string Enum"}>
 				>
@@ -3835,13 +3835,13 @@ func TestGetMetricsJSON(t *testing.T) {
 		Prefix:   "testfile",
 		Messages: []msgMetricOptions{
 			{
-				Name:        "msg1",
+				Name:        "Msg_1",
 				Description: "Msg1Metrics is a test metric",
 				DisplayName: "TestMetricsJSON",
 				Scope:       "PerASIC",
 				Fields: []fieldMetricOptions{
 					{
-						Name:        "field1",
+						Name:        "Field1",
 						DisplayName: "Field1Counter",
 						Description: "Field1 is a counter",
 						Units:       "Count",
@@ -3850,7 +3850,7 @@ func TestGetMetricsJSON(t *testing.T) {
 						BaseType:    "Counter",
 					},
 					{
-						Name:        "field2",
+						Name:        "Field2",
 						DisplayName: "Field2Gauge",
 						Description: "Field2 is a gauge",
 						Units:       "Bytes",
@@ -3859,7 +3859,7 @@ func TestGetMetricsJSON(t *testing.T) {
 						BaseType:    "Gauge",
 					},
 					{
-						Name:        "field3",
+						Name:        "Field3",
 						DisplayName: "Field3string",
 						Description: "Field3 is a string",
 						Units:       "Count",
@@ -3868,7 +3868,7 @@ func TestGetMetricsJSON(t *testing.T) {
 						BaseType:    "string",
 					},
 					{
-						Name:        "field4",
+						Name:        "Field4",
 						DisplayName: "Field4int32",
 						Description: "Field4 is a int32",
 						Units:       "Count",
@@ -3877,7 +3877,7 @@ func TestGetMetricsJSON(t *testing.T) {
 						BaseType:    "int32",
 					},
 					{
-						Name:        "field5",
+						Name:        "Field5",
 						DisplayName: "Field5int64",
 						Description: "Field5 is a int64",
 						Units:       "Count",
@@ -3886,7 +3886,7 @@ func TestGetMetricsJSON(t *testing.T) {
 						BaseType:    "int64",
 					},
 					{
-						Name:        "field6",
+						Name:        "Field6",
 						DisplayName: "Field6bool",
 						Description: "Field6 is a bool",
 						Units:       "Count",
@@ -3895,7 +3895,7 @@ func TestGetMetricsJSON(t *testing.T) {
 						BaseType:    "bool",
 					},
 					{
-						Name:        "field7",
+						Name:        "Field7",
 						DisplayName: "Field7stringEnum",
 						Description: "Field7 is a string Enum",
 						Units:       "Count",
@@ -3908,7 +3908,7 @@ func TestGetMetricsJSON(t *testing.T) {
 						},
 					},
 					{
-						Name:        "field8",
+						Name:        "Field8",
 						DisplayName: "Field8stringEnum",
 						Description: "Field8 is a string Enum",
 						Units:       "Count",

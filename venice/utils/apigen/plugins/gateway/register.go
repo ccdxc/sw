@@ -524,7 +524,7 @@ func getFieldMetricOptions(f *descriptor.Field) (fieldMetricOptions, bool) {
 	i, err := reg.GetExtension("venice.metricsField", f)
 	if err == nil {
 		o := i.(*venice.MetricFieldInfo)
-		ret.Name = *f.Name
+		ret.Name = gogen.CamelCase(*f.Name)
 		ret.DisplayName = o.DisplayName
 		ret.Description = o.Description
 		ret.Units = o.Units.String()
@@ -573,7 +573,7 @@ func getMsgMetricOptions(m *descriptor.Message) (msgMetricOptions, bool) {
 	i, err := reg.GetExtension("venice.metricInfo", m)
 	if err == nil {
 		om := i.(*venice.MetricInfo)
-		ret.Name = *m.Name
+		ret.Name = gogen.CamelCase(*m.Name)
 		ret.Description = om.Description
 		ret.DisplayName = om.DisplayName
 		ret.Scope = om.Scope.String()

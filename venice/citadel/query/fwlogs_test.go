@@ -483,11 +483,7 @@ func TestFwlogs(t *testing.T) {
 	}{
 		{
 			queryList: &telemetry_query.FwlogsQueryList{
-				Queries: []*telemetry_query.FwlogsQuerySpec{
-					&telemetry_query.FwlogsQuerySpec{
-						SortOrder: telemetry_query.SortOrder_Descending.String(),
-					},
-				},
+				Queries: []*telemetry_query.FwlogsQuerySpec{},
 			},
 			brokerQuery:          "",
 			errMsg:               "tenant required",
@@ -511,6 +507,59 @@ func TestFwlogs(t *testing.T) {
 			},
 			executeQueryResponse: nil,
 			queryResponse:        nil,
+		},
+		{
+			queryList: &telemetry_query.FwlogsQueryList{
+				Tenant: "test",
+				// Using all filter options
+				Queries: []*telemetry_query.FwlogsQuerySpec{},
+			},
+			brokerQuery: `SELECT * FROM Fwlogs ORDER BY time DESC`,
+			errMsg:      "",
+			clusterCheckResponse: &ClusterCheckResponse{
+				err: nil,
+			},
+			executeQueryResponse: &ExecuteQueryResponse{
+				qr: []*query.Result{
+					&query.Result{
+						// Statement ID should be preserved in results
+						StatementID: 0,
+						Series: models.Rows{
+							&models.Row{
+								Columns: []string{"time", "source", "destination", "source-port", "destination-port", "protocol", "action", "direction", "rule-id", "reporterID"},
+								Values: [][]interface{}{
+									[]interface{}{
+										"2018-11-09T23:20:17Z", "10.1.1.1", "10.1.1.2", 8000, 9000, "TCP", "deny", "from_host", "1234", "naples1",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			queryResponse: &telemetry_query.FwlogsQueryResponse{
+				Tenant: "test",
+				Results: []*telemetry_query.FwlogsQueryResult{
+
+					&telemetry_query.FwlogsQueryResult{
+						StatementID: 0,
+						Logs: []*telemetry_query.Fwlog{
+							&telemetry_query.Fwlog{
+								Src:        "10.1.1.1",
+								Dest:       "10.1.1.2",
+								SrcPort:    8000,
+								DestPort:   9000,
+								Protocol:   "TCP",
+								Action:     "deny",
+								Direction:  "from_host",
+								RuleID:     "1234",
+								ReporterID: "naples1",
+								Time:       endTime,
+							},
+						},
+					},
+				},
+			},
 		},
 		{
 			queryList: &telemetry_query.FwlogsQueryList{

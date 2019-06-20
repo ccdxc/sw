@@ -239,6 +239,11 @@ func (q *Server) executeFwlogsQuery(c context.Context, tenant string, qs string)
 
 // Fwlogs implements the metrics query method
 func (q *Server) Fwlogs(c context.Context, ql *telemetry_query.FwlogsQueryList) (*telemetry_query.FwlogsQueryResponse, error) {
+	if len(ql.Queries) == 0 {
+		query := &telemetry_query.FwlogsQuerySpec{}
+		query.Defaults("all")
+		ql.Queries = append(ql.Queries, query)
+	}
 	if err := q.validateFwlogsQueryList(ql); err != nil {
 		return nil, err
 	}

@@ -26,7 +26,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "displayName": "Global Drop Statistics",
   "fields": [
     {
-      "name": "drop_malformed_pkt",
+      "name": "DropMalformedPkt",
       "displayName": "Malformed Packet Drops",
       "description": " malformed pkt drop",
       "units": "Count",
@@ -34,7 +34,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_parser_icrc_error",
+      "name": "DropParserIcrcError",
       "displayName": "RDMA ICRC Errors",
       "description": "number of packets dropped due to RDMA ICRC Errors",
       "units": "Count",
@@ -42,7 +42,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_parse_len_error",
+      "name": "DropParseLenError",
       "displayName": "Packet Length Errors",
       "description": "number of packets dropped due to parse length errors",
       "units": "Count",
@@ -50,7 +50,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_hardware_error",
+      "name": "DropHardwareError",
       "displayName": "Hardware Errors",
       "description": "number of packets dropped due to hardware errors seen",
       "units": "Count",
@@ -58,7 +58,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_input_mapping",
+      "name": "DropInputMapping",
       "displayName": "Input Mapping Table Drops",
       "description": "number of packets dropped due to missing lookup in input mapping table",
       "units": "Count",
@@ -66,7 +66,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_input_mapping_dejavu",
+      "name": "DropInputMappingDejavu",
       "displayName": "Input Mapping Deja-vu Drops",
       "description": "number of packets dropped due to dejavu in input mapping table",
       "units": "Count",
@@ -74,7 +74,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_multi_dest_not_pinned_uplink",
+      "name": "DropMultiDestNotPinnedUplink",
       "displayName": "Multi-dest-not-pinned-uplink Drops",
       "description": "number of multi-destination (multicast) packets dropped because they were not seen on right pinned uplink",
       "units": "Count",
@@ -82,7 +82,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_flow_hit",
+      "name": "DropFlowHit",
       "displayName": "Drop-flow-hit Drops",
       "description": "number of packets dropped due to hitting drop flows",
       "units": "Count",
@@ -90,7 +90,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_flow_miss",
+      "name": "DropFlowMiss",
       "displayName": "Flow-miss Drops",
       "description": "number of packets dropped due to missing a flow-hit",
       "units": "Count",
@@ -98,7 +98,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_nacl",
+      "name": "DropNacl",
       "displayName": "Drop-NACL-hit Drops",
       "description": "number of packets dropped due to drop-nacl hit",
       "units": "Count",
@@ -106,7 +106,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_ipsg",
+      "name": "DropIpsg",
       "displayName": "Drop-IPSG Drops",
       "description": "number of packets dropped due to drop-ipsg hit",
       "units": "Count",
@@ -114,7 +114,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_ip_normalization",
+      "name": "DropIpNormalization",
       "displayName": "IP-Normalization Drops",
       "description": "number of packets dropped due to IP packet normalization",
       "units": "Count",
@@ -122,7 +122,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_tcp_normalization",
+      "name": "DropTcpNormalization",
       "displayName": "TCP-Normalization Drops",
       "description": "number of TCP packets dropped due to TCP normalization",
       "units": "Count",
@@ -130,7 +130,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_tcp_rst_with_invalid_ack_num",
+      "name": "DropTcpRstWithInvalidAckNum",
       "displayName": "TCP-RST-Invalid-ACK Drops",
       "description": "number of TCP RST packets dropped due to invalid ACK number",
       "units": "Count",
@@ -138,7 +138,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_tcp_non_syn_first_pkt",
+      "name": "DropTcpNonSynFirstPkt",
       "displayName": "TCP-RST-Invalid-ACK Drops",
       "description": "number of TCP non-SYN first packets dropped",
       "units": "Count",
@@ -146,7 +146,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_icmp_normalization",
+      "name": "DropIcmpNormalization",
       "displayName": "ICMP-Normalization Drops",
       "description": "number of packets dropped due to ICMP packet normalization",
       "units": "Count",
@@ -154,7 +154,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_input_properties_miss",
+      "name": "DropInputPropertiesMiss",
       "displayName": "Input-properties-miss Drops",
       "description": "number of packets dropped due to input properties miss",
       "units": "Count",
@@ -162,7 +162,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_tcp_out_of_window",
+      "name": "DropTcpOutOfWindow",
       "displayName": "TCP-out-of-window Drops",
       "description": "number of TCP packets dropped due to out-of-window",
       "units": "Count",
@@ -170,7 +170,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_tcp_split_handshake",
+      "name": "DropTcpSplitHandshake",
       "displayName": "TCP-split-handshake Drops",
       "description": "number of TCP packets dropped due to split handshake",
       "units": "Count",
@@ -178,7 +178,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_tcp_win_zero_drop",
+      "name": "DropTcpWinZeroDrop",
       "displayName": "TCP-zero-window Drops",
       "description": "number of TCP packets dropped due to window size being zero",
       "units": "Count",
@@ -186,7 +186,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_tcp_data_after_fin",
+      "name": "DropTcpDataAfterFin",
       "displayName": "TCP-data-after-FIN Drops",
       "description": "number of TCP packets dropped due to data received after FIN was seen",
       "units": "Count",
@@ -194,7 +194,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_tcp_non_rst_pkt_after_rst",
+      "name": "DropTcpNonRstPktAfterRst",
       "displayName": "TCP-non-RST-after-RST Drops",
       "description": "number of TCP packets dropped due to non-RST seen after RST",
       "units": "Count",
@@ -202,7 +202,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_tcp_invalid_responder_first_pkt",
+      "name": "DropTcpInvalidResponderFirstPkt",
       "displayName": "TCP-responder-first-packet Drops",
       "description": "number of TCP packets dropped due to invalid first packet seen from responder",
       "units": "Count",
@@ -210,7 +210,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_tcp_unexpected_pkt",
+      "name": "DropTcpUnexpectedPkt",
       "displayName": "TCP-unexpected-packet Drops",
       "description": "number of TCP packets dropped due to unexpected packet seen",
       "units": "Count",
@@ -218,7 +218,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_src_lif_mismatch",
+      "name": "DropSrcLifMismatch",
       "displayName": "Source-LIF-mismatch Drops",
       "description": "number of packets dropped due to packets received on unexpected source LIF",
       "units": "Count",
@@ -226,7 +226,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_vf_ip_label_mismatch",
+      "name": "DropVfIpLabelMismatch",
       "displayName": "VF-IP-Label-mismatch Drops",
       "description": "number of packets dropped due to packets VF IP Label mismatch",
       "units": "Count",
@@ -234,7 +234,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_vf_bad_rr_dst_ip",
+      "name": "DropVfBadRrDstIp",
       "displayName": "VF-Bad-RR-Destination-IP Drops",
       "description": "number of packets dropped due to packets VF bad RR destination IP",
       "units": "Count",
@@ -251,7 +251,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "displayName": "Global Egress Drop Statistics",
   "fields": [
     {
-      "name": "drop_output_mapping",
+      "name": "DropOutputMapping",
       "displayName": "Output-mapping-miss Drops",
       "description": "number of packets dropped due to output mapping miss",
       "units": "Count",
@@ -259,7 +259,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_prune_src_port",
+      "name": "DropPruneSrcPort",
       "displayName": "Source-port-prune Drops",
       "description": "number of packets dropped due to source port pruning",
       "units": "Count",
@@ -267,7 +267,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_mirror",
+      "name": "DropMirror",
       "displayName": "Mirror-hit Drops",
       "description": "number of packets dropped due to mirror hit",
       "units": "Count",
@@ -275,7 +275,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_policer",
+      "name": "DropPolicer",
       "displayName": "Policer Drops",
       "description": "number of packets dropped due to policer",
       "units": "Count",
@@ -283,7 +283,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_copp",
+      "name": "DropCopp",
       "displayName": "COPP Drops",
       "description": "number of packets dropped due to COPP",
       "units": "Count",
@@ -291,7 +291,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "drop_checksum_err",
+      "name": "DropChecksumErr",
       "displayName": "Checksum-error Drops",
       "description": "number of packets dropped due to checksum errors",
       "units": "Count",
@@ -308,7 +308,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "displayName": "per-FTE CPS Statistics",
   "fields": [
     {
-      "name": "connections_per_second",
+      "name": "ConnectionsPerSecond",
       "displayName": "CPS",
       "description": "Connections per second",
       "units": "Count",
@@ -316,7 +316,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "max_connections_per_second",
+      "name": "MaxConnectionsPerSecond",
       "displayName": "Max-CPS",
       "description": "Max Connections per second",
       "units": "Count",
@@ -333,7 +333,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "displayName": "per-FTE Queue Statistics",
   "fields": [
     {
-      "name": "flow_miss_packets",
+      "name": "FlowMissPackets",
       "displayName": "Flow-miss Packets",
       "description": "Number of flow miss packets processed by this FTE",
       "units": "Count",
@@ -341,7 +341,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "flow_retransmit_packets",
+      "name": "FlowRetransmitPackets",
       "displayName": "Flow-retransmit Packets",
       "description": "Number of flow retransmits seen",
       "units": "Count",
@@ -349,7 +349,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "l4_redirect_packets",
+      "name": "L4RedirectPackets",
       "displayName": "L4-redirect Packets",
       "description": "Number of packets that hit the L4 redirect queue",
       "units": "Count",
@@ -357,7 +357,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "alg_control_flow_packets",
+      "name": "AlgControlFlowPackets",
       "displayName": "ALG-control-flow Packets",
       "description": "Number of packets that hit the ALG control flow queue",
       "units": "Count",
@@ -365,7 +365,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "tcp_close_packets",
+      "name": "TcpClosePackets",
       "displayName": "TCP-Close Packets",
       "description": "Number of packets that hit the TCP close queue",
       "units": "Count",
@@ -373,7 +373,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "tls_proxy_packets",
+      "name": "TlsProxyPackets",
       "displayName": "TLS-proxy Packets",
       "description": "Number of packets that hit the TLS Proxy queue",
       "units": "Count",
@@ -381,7 +381,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "fte_span_packets",
+      "name": "FteSpanPackets",
       "displayName": "FTE-Span Packets",
       "description": "Number of packets that hit the FTE SPAN queue",
       "units": "Count",
@@ -389,7 +389,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "software_queue_packets",
+      "name": "SoftwareQueuePackets",
       "displayName": "Software-config-Q Requests",
       "description": "Number of packets that hit the FTE config path",
       "units": "Count",
@@ -397,7 +397,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "queued_tx_packets",
+      "name": "QueuedTxPackets",
       "displayName": "Queued-Tx Packets",
       "description": "Number of packets enqueue in the FTE TX queue",
       "units": "Count",
@@ -414,7 +414,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "displayName": "Global Session Summary Statistics",
   "fields": [
     {
-      "name": "total_active_sessions",
+      "name": "TotalActiveSessions",
       "displayName": "Total Active Sessions",
       "description": "Total Number of active sessions",
       "units": "Count",
@@ -422,7 +422,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "num_l2_sessions",
+      "name": "NumL2Sessions",
       "displayName": "L2 Sessions",
       "description": "Total Number of L2 Sessions",
       "units": "Count",
@@ -430,7 +430,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "num_tcp_sessions",
+      "name": "NumTcpSessions",
       "displayName": "TCP Sessions",
       "description": "Total Number of TCP sessions",
       "units": "Count",
@@ -438,7 +438,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "num_udp_sessions",
+      "name": "NumUdpSessions",
       "displayName": "UDP Sessions",
       "description": "Total Number of UDP sessions",
       "units": "Count",
@@ -446,7 +446,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "num_icmp_sessions",
+      "name": "NumIcmpSessions",
       "displayName": "ICMP Sessions",
       "description": "Total Number of ICMP sessions",
       "units": "Count",
@@ -454,7 +454,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "num_drop_sessions",
+      "name": "NumDropSessions",
       "displayName": "Drop Sessions",
       "description": "Total Number of Drop sessions",
       "units": "Count",
@@ -462,7 +462,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "num_aged_sessions",
+      "name": "NumAgedSessions",
       "displayName": "Aged Sessions",
       "description": "Total Number of Aged sessions",
       "units": "Count",
@@ -470,7 +470,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "num_tcp_resets",
+      "name": "NumTcpResets",
       "displayName": "TCP RST Sent",
       "description": "Total Number of TCP Resets sent as a result of SFW Reject",
       "units": "Count",
@@ -478,7 +478,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "num_icmp_errors",
+      "name": "NumIcmpErrors",
       "displayName": "ICMP Error Sent",
       "description": "Total Number of ICMP Errors sent as a result of SFW Reject",
       "units": "Count",
@@ -486,7 +486,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "num_tcp_cxnsetup_timeouts",
+      "name": "NumTcpCxnsetupTimeouts",
       "displayName": "Connection-timeout Sessions",
       "description": "Total Number of sessions that timed out at connection setup",
       "units": "Count",
@@ -494,7 +494,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "num_session_create_errors",
+      "name": "NumSessionCreateErrors",
       "displayName": "Session Create Errors",
       "description": "Total Number of sessions that errored out during creation",
       "units": "Count",
@@ -811,7 +811,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "displayName": "per-Rule Statistics",
   "fields": [
     {
-      "name": "tcp_hits",
+      "name": "TcpHits",
       "displayName": "TCP Hits",
       "description": "Number of TCP packets that hit the rule",
       "units": "Count",
@@ -819,7 +819,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "udp_hits",
+      "name": "UdpHits",
       "displayName": "UDP Hits",
       "description": "Number of UDP packets that hit the rule",
       "units": "Count",
@@ -827,7 +827,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "icmp_hits",
+      "name": "IcmpHits",
       "displayName": "ICMP Hits",
       "description": "Number of ICMP packets that hit the rule",
       "units": "Count",
@@ -835,7 +835,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "esp_hits",
+      "name": "EspHits",
       "displayName": "ESP Hits",
       "description": "Number of ESP packets that hit the rule",
       "units": "Count",
@@ -843,7 +843,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "other_hits",
+      "name": "OtherHits",
       "displayName": "Other Hits",
       "description": "Number of non-TCP/UDP/ICMP/ESP packets that hit the rule",
       "units": "Count",
@@ -851,7 +851,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
-      "name": "total_hits",
+      "name": "TotalHits",
       "displayName": "Total Hits",
       "description": "Number of total packets that hit the rule",
       "units": "Count",

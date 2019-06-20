@@ -9,42 +9,42 @@
       "DisplayName": "per-Rule Statistics",
       "Fields": [
         {
-          "Name": "tcp_hits",
+          "Name": "TcpHits",
           "DisplayName": "TCP Hits",
           "Description": "Number of TCP packets that hit the rule",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "udp_hits",
+          "Name": "UdpHits",
           "DisplayName": "UDP Hits",
           "Description": "Number of UDP packets that hit the rule",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "icmp_hits",
+          "Name": "IcmpHits",
           "DisplayName": "ICMP Hits",
           "Description": "Number of ICMP packets that hit the rule",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "esp_hits",
+          "Name": "EspHits",
           "DisplayName": "ESP Hits",
           "Description": "Number of ESP packets that hit the rule",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "other_hits",
+          "Name": "OtherHits",
           "DisplayName": "Other Hits",
           "Description": "Number of non-TCP/UDP/ICMP/ESP packets that hit the rule",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "total_hits",
+          "Name": "TotalHits",
           "DisplayName": "Total Hits",
           "Description": "Number of total packets that hit the rule",
           "Units": "Count",

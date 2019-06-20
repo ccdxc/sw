@@ -9,189 +9,189 @@
       "DisplayName": "Global Drop Statistics",
       "Fields": [
         {
-          "Name": "drop_malformed_pkt",
+          "Name": "DropMalformedPkt",
           "DisplayName": "Malformed Packet Drops",
           "Description": " malformed pkt drop",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_parser_icrc_error",
+          "Name": "DropParserIcrcError",
           "DisplayName": "RDMA ICRC Errors",
           "Description": "number of packets dropped due to RDMA ICRC Errors",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_parse_len_error",
+          "Name": "DropParseLenError",
           "DisplayName": "Packet Length Errors",
           "Description": "number of packets dropped due to parse length errors",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_hardware_error",
+          "Name": "DropHardwareError",
           "DisplayName": "Hardware Errors",
           "Description": "number of packets dropped due to hardware errors seen",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_input_mapping",
+          "Name": "DropInputMapping",
           "DisplayName": "Input Mapping Table Drops",
           "Description": "number of packets dropped due to missing lookup in input mapping table",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_input_mapping_dejavu",
+          "Name": "DropInputMappingDejavu",
           "DisplayName": "Input Mapping Deja-vu Drops",
           "Description": "number of packets dropped due to dejavu in input mapping table",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_multi_dest_not_pinned_uplink",
+          "Name": "DropMultiDestNotPinnedUplink",
           "DisplayName": "Multi-dest-not-pinned-uplink Drops",
           "Description": "number of multi-destination (multicast) packets dropped because they were not seen on right pinned uplink",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_flow_hit",
+          "Name": "DropFlowHit",
           "DisplayName": "Drop-flow-hit Drops",
           "Description": "number of packets dropped due to hitting drop flows",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_flow_miss",
+          "Name": "DropFlowMiss",
           "DisplayName": "Flow-miss Drops",
           "Description": "number of packets dropped due to missing a flow-hit",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_nacl",
+          "Name": "DropNacl",
           "DisplayName": "Drop-NACL-hit Drops",
           "Description": "number of packets dropped due to drop-nacl hit",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_ipsg",
+          "Name": "DropIpsg",
           "DisplayName": "Drop-IPSG Drops",
           "Description": "number of packets dropped due to drop-ipsg hit",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_ip_normalization",
+          "Name": "DropIpNormalization",
           "DisplayName": "IP-Normalization Drops",
           "Description": "number of packets dropped due to IP packet normalization",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_tcp_normalization",
+          "Name": "DropTcpNormalization",
           "DisplayName": "TCP-Normalization Drops",
           "Description": "number of TCP packets dropped due to TCP normalization",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_tcp_rst_with_invalid_ack_num",
+          "Name": "DropTcpRstWithInvalidAckNum",
           "DisplayName": "TCP-RST-Invalid-ACK Drops",
           "Description": "number of TCP RST packets dropped due to invalid ACK number",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_tcp_non_syn_first_pkt",
+          "Name": "DropTcpNonSynFirstPkt",
           "DisplayName": "TCP-RST-Invalid-ACK Drops",
           "Description": "number of TCP non-SYN first packets dropped",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_icmp_normalization",
+          "Name": "DropIcmpNormalization",
           "DisplayName": "ICMP-Normalization Drops",
           "Description": "number of packets dropped due to ICMP packet normalization",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_input_properties_miss",
+          "Name": "DropInputPropertiesMiss",
           "DisplayName": "Input-properties-miss Drops",
           "Description": "number of packets dropped due to input properties miss",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_tcp_out_of_window",
+          "Name": "DropTcpOutOfWindow",
           "DisplayName": "TCP-out-of-window Drops",
           "Description": "number of TCP packets dropped due to out-of-window",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_tcp_split_handshake",
+          "Name": "DropTcpSplitHandshake",
           "DisplayName": "TCP-split-handshake Drops",
           "Description": "number of TCP packets dropped due to split handshake",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_tcp_win_zero_drop",
+          "Name": "DropTcpWinZeroDrop",
           "DisplayName": "TCP-zero-window Drops",
           "Description": "number of TCP packets dropped due to window size being zero",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_tcp_data_after_fin",
+          "Name": "DropTcpDataAfterFin",
           "DisplayName": "TCP-data-after-FIN Drops",
           "Description": "number of TCP packets dropped due to data received after FIN was seen",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_tcp_non_rst_pkt_after_rst",
+          "Name": "DropTcpNonRstPktAfterRst",
           "DisplayName": "TCP-non-RST-after-RST Drops",
           "Description": "number of TCP packets dropped due to non-RST seen after RST",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_tcp_invalid_responder_first_pkt",
+          "Name": "DropTcpInvalidResponderFirstPkt",
           "DisplayName": "TCP-responder-first-packet Drops",
           "Description": "number of TCP packets dropped due to invalid first packet seen from responder",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_tcp_unexpected_pkt",
+          "Name": "DropTcpUnexpectedPkt",
           "DisplayName": "TCP-unexpected-packet Drops",
           "Description": "number of TCP packets dropped due to unexpected packet seen",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_src_lif_mismatch",
+          "Name": "DropSrcLifMismatch",
           "DisplayName": "Source-LIF-mismatch Drops",
           "Description": "number of packets dropped due to packets received on unexpected source LIF",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_vf_ip_label_mismatch",
+          "Name": "DropVfIpLabelMismatch",
           "DisplayName": "VF-IP-Label-mismatch Drops",
           "Description": "number of packets dropped due to packets VF IP Label mismatch",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_vf_bad_rr_dst_ip",
+          "Name": "DropVfBadRrDstIp",
           "DisplayName": "VF-Bad-RR-Destination-IP Drops",
           "Description": "number of packets dropped due to packets VF bad RR destination IP",
           "Units": "Count",
@@ -206,42 +206,42 @@
       "DisplayName": "Global Egress Drop Statistics",
       "Fields": [
         {
-          "Name": "drop_output_mapping",
+          "Name": "DropOutputMapping",
           "DisplayName": "Output-mapping-miss Drops",
           "Description": "number of packets dropped due to output mapping miss",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_prune_src_port",
+          "Name": "DropPruneSrcPort",
           "DisplayName": "Source-port-prune Drops",
           "Description": "number of packets dropped due to source port pruning",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_mirror",
+          "Name": "DropMirror",
           "DisplayName": "Mirror-hit Drops",
           "Description": "number of packets dropped due to mirror hit",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_policer",
+          "Name": "DropPolicer",
           "DisplayName": "Policer Drops",
           "Description": "number of packets dropped due to policer",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_copp",
+          "Name": "DropCopp",
           "DisplayName": "COPP Drops",
           "Description": "number of packets dropped due to COPP",
           "Units": "Count",
           "BaseType": "Counter"
         },
         {
-          "Name": "drop_checksum_err",
+          "Name": "DropChecksumErr",
           "DisplayName": "Checksum-error Drops",
           "Description": "number of packets dropped due to checksum errors",
           "Units": "Count",
