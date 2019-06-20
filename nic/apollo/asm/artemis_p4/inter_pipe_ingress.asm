@@ -33,7 +33,8 @@ ingress_to_egress:
                         p4plus_to_p4_vlan_valid, \
                         p4plus_to_p4_valid, \
                         capri_txdma_intrinsic_valid}, 0xE008
-    phvwr           p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
+    phvwrpair       p.capri_intrinsic_tm_oport, TM_PORT_EGRESS, \
+                        p.capri_intrinsic_tm_oq, 0
     seq             c1, k.control_metadata_direction, RX_FROM_SWITCH
     nop.!c1.e
     phvwr           p.predicate_header_direction, k.control_metadata_direction
@@ -78,7 +79,8 @@ ingress_to_cps:
                         p4plus_to_p4_vlan_valid, \
                         p4plus_to_p4_valid, \
                         capri_txdma_intrinsic_valid}, 0x3C28
-    phvwr           p.capri_intrinsic_tm_oport, TM_PORT_DMA
+    phvwrpair       p.capri_intrinsic_tm_oport, TM_PORT_DMA, \
+                        p.capri_intrinsic_tm_oq, 0
     phvwr           p.capri_intrinsic_lif, ARTEMIS_SERVICE_LIF
     phvwr           p.capri_rxdma_intrinsic_rx_splitter_offset, \
                         (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \

@@ -11,6 +11,7 @@ action ingress_to_egress() {
     remove_header(p4plus_to_p4_vlan);
     remove_header(ingress_recirc);
     modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
+    modify_field(capri_intrinsic.tm_oq, 0);
     modify_field(capri_intrinsic.tm_span_session,
                  control_metadata.mirror_session);
     modify_field(predicate_header.direction, control_metadata.direction);
@@ -50,6 +51,7 @@ action ingress_to_cps() {
     add_header(predicate_header);
     remove_header(ingress_recirc);
     modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
+    modify_field(capri_intrinsic.tm_oq, 0);
     modify_field(capri_intrinsic.lif, ARTEMIS_SERVICE_LIF);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
                  (CAPRI_GLOBAL_INTRINSIC_HDR_SZ +
