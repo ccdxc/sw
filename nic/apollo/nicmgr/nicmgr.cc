@@ -45,6 +45,7 @@ nicmgrapi::nicmgr_thread_start(void *ctxt) {
     fwd_mode_t fwd_mode = sdk::platform::FWD_MODE_CLASSIC;
     platform_t platform = PLATFORM_HW;
 
+    SDK_THREAD_INIT(ctxt);
     EV_A = evutil_create_loop();
 
     // instantiate the logger

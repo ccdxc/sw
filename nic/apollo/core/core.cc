@@ -17,6 +17,7 @@
 #include "nic/apollo/pciemgr/pciemgr.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/core.hpp"
+#include "nic/apollo/fte/fte.hpp"
 
 using boost::property_tree::ptree;
 
@@ -196,6 +197,7 @@ thread_periodic_spawn (pds_state *state)
 
     return SDK_RET_OK;
 }
+
 sdk_ret_t
 thread_nicmgr_spawn (pds_state *state)
 {
@@ -219,7 +221,44 @@ thread_nicmgr_spawn (pds_state *state)
     return SDK_RET_OK;
 }
 
-// Stop the threads
+sdk_ret_t
+thread_fte_spawn (pds_state *state)
+{
+    uint32_t            i, tid;
+    char                thread_name[16];
+    uint64_t            data_cores_mask = state->data_cores_mask();
+    uint64_t            cores_mask = 0x0;
+    sdk::lib::thread    *new_thread;
+
+    if (state->platform_type() != platform_type_t::PLATFORM_TYPE_HW) {
+        return SDK_RET_OK;
+    }
+
+    // spawn FTE threads
+    for (i = 0; i < state->num_data_cores(); i++) {
+        // pin each data thread to a specific core
+        cores_mask = 1 << (ffsl(data_cores_mask) - 1);
+        tid = THREAD_ID_FTE_START + i;
+        snprintf(thread_name, sizeof(thread_name), "fte-%u",
+                 ffsl(data_cores_mask) - 1);
+        PDS_TRACE_DEBUG("Spawning FTE thread %s", thread_name);
+        new_thread =
+            thread_create(static_cast<const char *>(thread_name), tid,
+                sdk::lib::THREAD_ROLE_DATA, cores_mask,
+                fte::fte_thread_start,
+                sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_DATA),
+                sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_DATA),
+                NULL);
+        SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
+                                "%s thread create failure",
+                                thread_name);
+        new_thread->start(new_thread);
+        data_cores_mask = data_cores_mask & (data_cores_mask-1);
+    }
+    return SDK_RET_OK;
+}
+
+// stop the threads
 void
 threads_stop (void)
 {

@@ -39,6 +39,8 @@ namespace pt = boost::property_tree;
 #define FLOW_TEST_CHECK_RETURN(_exp, _ret) if (!(_exp)) return (_ret)
 #define MAX_NEXTHOP_GROUP_INDEX 1024
 
+FILE *g_fp;
+
 static char *
 flow_key2str(void *key) {
     static char str[256];
@@ -75,14 +77,13 @@ flow_appdata2str(void *appdata) {
 static void
 dump_flow_entry(ftlv6_entry_t *entry, ip_addr_t sip, ip_addr_t dip) {
 #ifdef SIM
-    static FILE *d_fp = fopen("/sw/nic/flow_log.log", "a+");
-    if (d_fp) {
-        fprintf(d_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
+    if (g_fp) {
+        fprintf(g_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
                 "sport %u, dport %u, epoch %u, flow %u, ktype %u\n",
                 entry->vpc_id, entry->proto, entry->session_index,
                 ipaddr2str(&sip), ipaddr2str(&dip), entry->sport, entry->dport,
                 entry->epoch, entry->flow_role, entry->ktype);
-        fflush(d_fp);
+        fflush(g_fp);
     }
 #endif
 }
@@ -90,14 +91,13 @@ dump_flow_entry(ftlv6_entry_t *entry, ip_addr_t sip, ip_addr_t dip) {
 static void
 dump_flow_entry(ftlv4_entry_t *entry, ip_addr_t sip, ip_addr_t dip) {
 #ifdef SIM
-    static FILE *d_fp = fopen("/sw/nic/flow_log.log", "a+");
-    if (d_fp) {
-        fprintf(d_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
+    if (g_fp) {
+        fprintf(g_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
                 "sport %u, dport %u, epoch %u, role %u\n",
                 entry->vpc_id, entry->proto, entry->session_index,
                 ipaddr2str(&sip), ipaddr2str(&dip), entry->sport, entry->dport,
                 entry->epoch, entry->flow_role);
-        fflush(d_fp);
+        fflush(g_fp);
     }
 #endif
 }
@@ -110,16 +110,15 @@ dump_session_info(uint32_t vpc, ip_addr_t ip_addr,
         //return;
     //}
 #ifdef SIM
-    static FILE *d_fp = fopen("/sw/nic/flow_log.log", "a+");
-    if (d_fp) {
-        fprintf(d_fp, "vpc %u, meter_idx %u, nh_idx %u, tx rewrite flags 0x%x, "
+    if (g_fp) {
+        fprintf(g_fp, "vpc %u, meter_idx %u, nh_idx %u, tx rewrite flags 0x%x, "
                 "rx rewrite flags 0x%x, tx_dst_ip %s\n", vpc,
                 actiondata->action_u.session_session_info.meter_idx,
                 actiondata->action_u.session_session_info.nexthop_idx,
                 actiondata->action_u.session_session_info.tx_rewrite_flags,
                 actiondata->action_u.session_session_info.rx_rewrite_flags,
                 ipaddr2str(&ip_addr));
-        fflush(d_fp);
+        fflush(g_fp);
     }
 #endif
 }
@@ -920,7 +919,7 @@ public:
                                               fwd_dport,
                                               fwd_sport);
                         } else if (vpc == TEST_APP_S1_SLB_IN_OUT) {
-                            // VPC 61 is used for Scenario1-SLB in/out traffic (DSR case)
+                            // this VPC is used for Scenario1-SLB in/out traffic (DSR case)
                             ip_addr.addr.v4_addr = TESTAPP_V4ROUTE_VAL(i);
                             ret = create_session(vpc, proto,
                                                  ep_pairs[i].v4_local.local_ip,
@@ -1186,6 +1185,7 @@ public:
     }
 
     sdk_ret_t create_flows() {
+        g_fp = fopen("/sw/nic/flow_log.log", "w+");
         if (cfg_params.valid == false) {
             parse_cfg_json_();
         }

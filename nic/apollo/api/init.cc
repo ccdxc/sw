@@ -163,7 +163,7 @@ pds_init (pds_init_params_t *params)
     api::asic_global_config_init(params, &asic_cfg);
     SDK_ASSERT(impl_base::init(params, &asic_cfg) == SDK_RET_OK);
 
-    // Ignore the threads if it is a slave initialization
+    // ignore the threads if it is a slave initialization
     if (sdk::asic::is_slave_init()) {
         return SDK_RET_OK;
     }
@@ -178,11 +178,14 @@ pds_init (pds_init_params_t *params)
     // spin pciemgr thread.
     core::thread_pciemgr_spawn(&api::g_pds_state);
 
-    PDS_TRACE_INFO("Sleeping for pciemgr server to come up ...");
+    PDS_TRACE_INFO("Waiting for pciemgr server to come up ...");
     sleep(2);
 
     // spin nicmgr thread. have to be after linkmgr init
     core::thread_nicmgr_spawn(&api::g_pds_state);
+
+    // spin fte threads
+    core::thread_fte_spawn(&api::g_pds_state);
 
     // initialize all the signal handlers
     core::sig_init(SIGUSR1, api::sig_handler);
