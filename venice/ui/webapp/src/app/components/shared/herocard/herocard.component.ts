@@ -4,6 +4,7 @@ import { Animations } from '@app/animations';
 import { OnChanges } from '@angular/core/src/metadata/lifecycle_hooks';
 import { Router } from '@angular/router';
 import { StatArrowDirection, CardStates } from '../basecard/basecard.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 export interface Stat {
   value: any;
@@ -50,7 +51,7 @@ export class HerocardComponent implements OnInit, OnChanges {
   @Input() secondStat: Stat;
   @Input() thirdStat: Stat;
   @Input() themeColor: string;
-  @Input() statColor: string = '#77a746';
+  @Input() statColor: string = '';
   @Input() backgroundIcon: Icon;
   @Input() icon: Icon;
   @Input() lastUpdateTime;
@@ -59,7 +60,6 @@ export class HerocardComponent implements OnInit, OnChanges {
   @Input() timeRange: string;
   // When set to true, card contents will fade into view
   @Input() cardState: CardStates = CardStates.LOADING;
-
 
   showGraph: boolean = false;
   layout = {
@@ -100,11 +100,17 @@ export class HerocardComponent implements OnInit, OnChanges {
 
   dataset = [];
 
-  constructor(private router: Router) { }
+  thresholds: any = {};
+  conditionColors: any = {};
+
+  constructor(private router: Router, protected uiconfigsService: UIConfigsService) { }
 
   ngOnChanges(changes) {
     if (this.cardState === CardStates.READY) {
       this.setupDataset();
+    }
+    if ( Object.keys(this.thresholds).length > 0 && Object.keys(this.conditionColors).length > 0) {
+      this.updateStatColor();
     }
   }
 
@@ -112,8 +118,70 @@ export class HerocardComponent implements OnInit, OnChanges {
     if (this.cardState === CardStates.READY) {
       this.setupDataset();
     }
+
+    if (this.statColor === '') {
+      this.statColor = '#77a746';
+    }
+
+    if (this.uiconfigsService.configFile) {
+      // Percentage thresholds for "healthy", "warning" and "critical" come from config.json
+      this.thresholds = this.uiconfigsService.configFile['condition-thresholds'];
+      this.conditionColors = this.uiconfigsService.configFile['condition-colors'];
+    }
   }
 
+  getRGBString(r: number, g: number, b: number) {
+    return 'rgb(' + r.toString() + ',' + g.toString() + ',' + b.toString() + ')';
+  }
+
+  updateStatColor() {
+    if (this.thresholds) {
+      let color, value;
+      if ( typeof this.firstStat.value === 'string') {
+        value = parseInt(this.firstStat.value.substring(0, this.firstStat.value.length - 1), 10);
+        color = this.getConditionColor(value);
+      } else if (typeof this.firstStat.value === 'number') {
+        value = this.firstStat.value;
+        color = this.getConditionColor(value);
+      }
+
+      if (!!color) {
+        this.statColor = this.getRGBString(color.get('r'), color.get('g'), color.get('b'));
+      }
+    }
+  }
+
+  // Based on value we decide which category the color should lie in.
+  // It either lies between "healthy" to "warning" or "warning" to "critical". (beyond the critical threshold the colors remains red)
+  // The r, g, b values change linerally wrt stat value.
+  // Condition Thresholds and Condition Colors are picked up from config.json
+  getConditionColor(value) {
+    let minVal, maxVal, minColor, maxColor;
+    if (value <= this.thresholds.healthy ) {
+      return this.conditionColors.healthy;
+    } else if (value > this.thresholds.healthy && value <= this.thresholds.warning) {
+      minVal = 0;
+      maxVal = this.thresholds.warning;
+      minColor = this.conditionColors.healthy;
+      maxColor = this.conditionColors.warning;
+    } else if (value > this.thresholds.warning && value <= this.thresholds.critical) {
+      minVal = this.thresholds.warning;
+      maxVal = this.thresholds.critical;
+      minColor = this.conditionColors.warning;
+      maxColor = this.conditionColors.critical;
+    } else {
+      return this.conditionColors.critical;
+    }
+
+    const ratio = (value - minVal) / (maxVal - minVal);
+
+    const color = new Map();
+    for (const key of Object.keys(minColor)) {
+      color.set(key, Math.floor( (maxColor[key] - minColor[key]) * ratio + minColor[key]));
+    }
+
+    return color;
+  }
 
   private setupDataset() {
     // If we only have one data point, we don't show the graph

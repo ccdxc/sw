@@ -11,6 +11,15 @@ import { SpinnerComponent } from '../spinner/spinner.component';
 import { By } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { CardStates, StatArrowDirection, BasecardComponent } from '../basecard/basecard.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { ControllerService } from '@app/services/controller.service';
+import { NgModuleFactoryLoader } from '@angular/core';
+import { LogService } from '@app/services/logging/log.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { MessageService } from '@app/services/message.service.ts';
+import { ConfirmationService } from 'primeng/primeng';
+import { AuthService } from '@app/services/auth.service';
+import { HttpClient, HttpHandler } from '@angular/common/http';
 
 const mockRouter = {
   navigateByUrl: jasmine.createSpy('navigateByUrl')
@@ -37,6 +46,16 @@ describe('HerocardComponent', () => {
       ],
       providers: [
         { provide: Router, useValue: mockRouter },
+        UIConfigsService,
+        ControllerService,
+        NgModuleFactoryLoader,
+        LogService,
+        LogPublishersService,
+        MessageService,
+        ConfirmationService,
+        AuthService,
+        HttpClient,
+        HttpHandler,
       ]
     }); });
 

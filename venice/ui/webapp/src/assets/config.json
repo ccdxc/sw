@@ -3,5 +3,27 @@
   ],
   "disabled-features" : [
       "WorkloadWidgets"
-  ]
+  ],
+  "condition-thresholds": {
+    "critical": 95,
+    "warning": 80,
+    "healthy": 0
+  },
+  "condition-colors": {
+    "healthy": {
+      "r": 119,
+      "g": 167,
+      "b": 70
+    },
+    "warning": {
+      "r": 253,
+      "g": 184,
+      "b": 17
+    },
+    "critical": {
+      "r": 226,
+      "g": 116,
+      "b": 83
+    }
+  }
 }

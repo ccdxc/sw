@@ -19,7 +19,7 @@ import { filter, map } from 'rxjs/operators';
 import { LogService } from '@app/services/logging/log.service';
 import { AUTH_KEY, AUTH_BODY } from '@app/core/auth/auth.reducer';
 import { ConfirmationService, Confirmation } from 'primeng/primeng';
-import { MessageService } from './message.service';
+import { MessageService } from '@app/services/message.service';
 import { Utility } from '@app/common/Utility';
 import { HelpData } from '@app/models/frontend/shared/helpdata.interface';
 
