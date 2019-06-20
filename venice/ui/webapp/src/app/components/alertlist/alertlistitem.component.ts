@@ -84,13 +84,13 @@ export class AlertlistitemComponent implements OnInit, OnDestroy, OnChanges {
    * .alertlistitem-icon-info { .. }
    */
   getAlertItemIconClass() {
-    let severity = this.alert.status.severity;
-    severity = severity.toLowerCase();
-    return 'alertlistitem-icon-' + severity;
+    return 'alertlistitem-icon-' + this.getAlertItemSeverity();
   }
 
-  getAlertItemIconText(): string {
-    return Utility.makeFirstLetterUppercase(this.alert.status.reason['alert-policy-id'], true);
+  getAlertItemSeverity(): string {
+    let severity = this.alert.status.severity;
+    severity = severity.toLowerCase();
+    return severity;
   }
 
   getAlertItemIconTooltip(): string {

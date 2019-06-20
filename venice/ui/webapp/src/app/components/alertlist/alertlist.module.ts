@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AlertlistComponent } from './alertlist.component';
 import { AlertlistitemComponent } from './alertlistitem.component';
+import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 
 import { SharedModule } from '@app/components/shared//shared.module';
 
@@ -10,7 +11,8 @@ import { SharedModule } from '@app/components/shared//shared.module';
   imports: [
     CommonModule,
     FormsModule,
-    SharedModule
+    SharedModule,
+    MaterialdesignModule
   ],
   declarations: [AlertlistComponent, AlertlistitemComponent],
   exports: [AlertlistComponent, AlertlistitemComponent]

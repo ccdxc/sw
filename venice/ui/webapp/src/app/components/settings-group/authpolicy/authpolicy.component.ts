@@ -239,16 +239,8 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
     handler = this._authService.UpdateAuthenticationPolicy(authAuthenticationPolicy);
     handler.subscribe(
       (response) => {
-        this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, 'Updated Authentication policy. System will log you out in 3 seconds');
-        // update data so auth-policy UI will get refresh and UI remain in auth-policy page.
-        const body = response.body;
-        this.authPolicy = new AuthAuthenticationPolicy(body);
-        this.setupToolbarItems();
-        // Since we change auth-policy, we have to log-out user.
-        const setTime1 = window.setTimeout(() => {
-          this._controllerService.publish(Eventtypes.LOGOUT, { 'reason': 'Authentication Policy Update.' });
-          window.clearTimeout(setTime1);
-        }, 3000);
+        this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, 'Updated Authentication policy.');
+        // per back-end, changing auth-policy does not require user to re-login
       },
       this._controllerService.restErrorHandler(Utility.UPDATE_FAILED_SUMMARY)
     );

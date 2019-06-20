@@ -32,16 +32,21 @@
   font-weight: bold;
 }
 
+.alertlistitem-front-group-div .mat-icon {
+  width: 50px;
+  font-size: 36px;
+}
+
 .alertlistitem-icon-critical {
-  background-color: #dd3b09;
+  color: #dd3b09;
 }
 
 .alertlistitem-icon-warn {
-  background-color: #fcb710;
+  color: #fcb710;
 }
 
 .alertlistitem-icon-info {
-  background-color: #6ba0e5;
+  color: #6ba0e5;
 }
 
 .alertlistitem-back-group-div-toprow {

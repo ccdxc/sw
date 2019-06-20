@@ -346,6 +346,11 @@ $sidenavWidth: 200px;
   width: min-content !important;
 }
 
+.app-shell-button-sideNav-settings.mat-icon-button {
+  text-align: left;
+  width: inherit;
+}
+
 /** VS-240 --*/
 .app-shell-sideNav-right-Notification {
   width: 100%;

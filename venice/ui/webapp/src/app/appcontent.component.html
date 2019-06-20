@@ -209,24 +209,25 @@
     <div fxFlex="auto" class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Settings">
       <!-- comment out for GS0.3 -->
       <!--  
-            <button mat-icon-button routerLink="settings" class="hidden-sm-down">
+            <button mat-icon-button routerLink="settings" class="app-shell-button-sideNav-settings">
                 <mat-icon>settings</mat-icon>
                 Themes and endpoints
             </button>
             -->
       <!-- Material-Design sideNav will auto highlight the first button when open. Check scss to see style rules -->
       <button mat-icon-button (click)="settingsNavigate(['/settings', 'authpolicy'])"
-              class="hidden-sm-down" *roleGuard="'authauthenticationpolicy_read'">
+              class="app-shell-button-sideNav-settings"
+              *roleGuard="'authauthenticationpolicy_read'">
         <mat-icon>settings</mat-icon>
         Authentication Policy
       </button>
       <button mat-icon-button (click)="settingsNavigate(['/settings', 'users'])"
-              class="hidden-sm-down">
+              class="app-shell-button-sideNav-settings">
         <mat-icon>person</mat-icon>
         User Management
       </button>
       <button mat-icon-button (click)="settingsNavigate(['/settings', 'upgrade'])"
-              class="hidden-sm-down" *roleGuard="'rolloutrollout_read'">
+              class="app-shell-button-sideNav-settings" *roleGuard="'rolloutrollout_read'">
         <mat-icon>cloud_upload</mat-icon>
         System Upgrade
       </button>

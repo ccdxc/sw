@@ -4,6 +4,7 @@ import { configureTestSuite } from 'ng-bullet';
 import { AlertlistComponent } from './alertlist.component';
 import { AlertlistitemComponent } from './alertlistitem.component';
 import { SharedModule } from '@app/components/shared//shared.module';
+import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 
 describe('AlertlistComponent', () => {
   let component: AlertlistComponent;
@@ -17,7 +18,8 @@ describe('AlertlistComponent', () => {
       ],
       imports: [
         // Other modules...
-        SharedModule
+        SharedModule,
+        MaterialdesignModule
       ],
     });
       });

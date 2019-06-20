@@ -1,13 +1,23 @@
 <div *ngIf="alert" class="alertlistitem-widget"
      [ngClass]="{'alertlistitem-widget-check':alert.check}" (click)="onAlertItemClick($event)">
   <div class="alertlistitem-front-group-div">
-    <span class="alertlistitem-icon" [ngClass]="getAlertItemIconClass()"
-          title="{{getAlertItemIconTooltip()}}">{{getAlertItemIconText()}}</span>
+    <mat-icon *ngIf="getAlertItemSeverity() === 'info'" fxFlex="none"
+              [ngClass]="getAlertItemIconClass()" [matTooltip]="getAlertItemIconTooltip()">
+      info
+    </mat-icon>
+    <mat-icon *ngIf="getAlertItemSeverity() === 'warn'" fxFlex="none"
+              [ngClass]="getAlertItemIconClass()" [matTooltip]="getAlertItemIconTooltip()">
+      warning
+    </mat-icon>
+    <mat-icon *ngIf="getAlertItemSeverity() === 'critical'" fxFlex="none"
+              [ngClass]="getAlertItemIconClass()" [matTooltip]="getAlertItemIconTooltip()">
+      error
+    </mat-icon>
   </div>
   <div class="alertlistitem-back-group-div">
     <div class="alertlistitem-back-group-div-toprow">
-      <span
-            class="alertlistitem-display-text-bold alertlistitem-label">{{alert.status['alert-policy-id']}}</span>
+      <span class="alertlistitem-display-text-bold alertlistitem-label">
+        {{alert.status['alert-policy-id']}}</span>
       <span class="alertlistitem-display-text alertlistitem-check" *ngIf="alert.check"><i
            class="fa fa-check"></i></span>
     </div>
@@ -15,7 +25,7 @@
     <div>
       <span
             class="alertlistitem-display-text-small alertlistitem-user">{{alert.status.source.component}}
-        {{alert.status.source['node-name']}}</span>
+        {{alert.status.source['node-name']}} {{alert.status['object-ref'].kind}}</span>
       <span
             class="alertlistitem-display-text-small alertlistitem-time">{{alert.meta['creation-time']| PrettyDate }}</span>
     </div>

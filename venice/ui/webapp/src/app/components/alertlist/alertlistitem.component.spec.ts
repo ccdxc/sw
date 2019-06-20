@@ -1,8 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { configureTestSuite } from 'ng-bullet';
-
 import { AlertlistitemComponent } from './alertlistitem.component';
 import { SharedModule } from '@app/components/shared//shared.module';
+import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 
 describe('AlertlistitemComponent', () => {
   let component: AlertlistitemComponent;
@@ -13,7 +13,8 @@ describe('AlertlistitemComponent', () => {
       declarations: [AlertlistitemComponent],
       imports: [
         // Other modules...
-        SharedModule
+        SharedModule,
+        MaterialdesignModule
       ]
     });
       });
