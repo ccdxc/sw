@@ -18,7 +18,7 @@
                       class="herocard-stat-arrow">arrow_upward</mat-icon>
             <mat-icon *ngIf="arrowDirection==='DOWN'" [style.color]="statColor" fxFlex="none"
                       class="herocard-stat-arrow">arrow_downward</mat-icon>
-            <div fxFlex fxLayout="column" class="herocard-first-stat"
+            <div fxFlex="auto" fxLayout="column" class="herocard-first-stat"
                  [matTooltip]="firstStat.tooltip"
                  [style.cursor]="firstStat.url != null ? 'pointer' : 'auto'"
                  (click)="firstStatClick()">
@@ -32,8 +32,9 @@
         <!-- Second stat -->
         <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="20%" fxLayout="row"
              fxLayoutAlign="start start">
-          <div fxFlex fxLayout="column" class="herocard-second-stat">
-            <div fxFlex fxLayout="column" *ngIf="secondStat != null && secondStat.value != null"
+          <div fxFlex="auto" fxLayout="column" class="herocard-second-stat">
+            <div fxFlex="auto" fxLayout="column"
+                 *ngIf="secondStat != null && secondStat.value != null"
                  [matTooltip]="secondStat.tooltip"
                  [style.cursor]="secondStat.url != null ? 'pointer' : 'auto'"
                  (click)="secondStatClick()">
@@ -45,22 +46,24 @@
           </div>
         </div>
         <!-- Third stat -->
-        <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex fxLayout="row"
+        <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="auto" fxLayout="row"
              fxLayoutAlign="start start">
-          <div fxFlex fxLayout="column" class="herocard-third-stat">
-            <div fxFlex fxLayout="column" *ngIf="thirdStat != null && thirdStat.value != null"
+          <div fxFlex="auto" fxLayout="column" class="herocard-third-stat">
+            <div fxFlex="auto" fxLayout="column"
+                 *ngIf="thirdStat != null && thirdStat.value != null"
                  [matTooltip]="thirdStat.tooltip"
                  [style.cursor]="thirdStat.url != null ? 'pointer' : 'auto'"
                  (click)="thirdStatClick()">
-              <div fxFlex [style.color]="themeColor" class="herocard-third-stat-value">
+              <div fxFlex="auto" [style.color]="themeColor" class="herocard-third-stat-value">
                 {{ thirdStat.value }}</div>
-              <div fxFlex class="herocard-third-stat-description">{{ thirdStat.description }}</div>
+              <div fxFlex="auto" class="herocard-third-stat-description">{{ thirdStat.description }}
+              </div>
             </div>
           </div>
         </div>
       </div>
       <div fxFlex="56px" fxLayout="row" class="herocard-south">
-        <div [@fade] fxFlex fxLayout="row" fxLayoutAlign="center center"
+        <div [@fade] fxFlex="auto" fxLayout="row" fxLayoutAlign="center center"
              *ngIf="cardState === cardStates.READY && showGraph" class="herocard-chart">
           <pw-plotly-chart fxFlex="none"
                            [data]="dataset"

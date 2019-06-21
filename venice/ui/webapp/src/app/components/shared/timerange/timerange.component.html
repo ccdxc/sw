@@ -9,9 +9,9 @@
   <div fxFlex="noshrink" fxLayout="column" class="timerange-overlay">
     <div fxFlex="nogrow" fxLayout="row" fxLayoutGap="15px"
          [formGroup]="timeFormGroup">
-      <div fxFlex fxLayout="column" class="timerange-value">
+      <div fxFlex="auto" fxLayout="column" class="timerange-value">
         <div class="timerange-time-text">START:</div>
-        <div fxFlex fxFlex="row">
+        <div fxFlex="auto" fxLayout="row">
           <input appErrorTooltip [errorMessage]="groupErrorMessage"
                  [ngClass]="groupErrorMessage.length != 0 ? 'error' : ''" fxFlex
                  class="timerange-input" spellcheck="false" type="text"
@@ -27,9 +27,9 @@
         </div>
       </div>
 
-      <div fxFlex fxLayout="column" class="timerange-value">
+      <div fxFlex="auto" fxLayout="column" class="timerange-value">
         <div class="timerange-time-text">END:</div>
-        <div fxFlex fxFlex="row">
+        <div fxFlex="auto" fxLayout="row">
           <input appErrorTooltip [errorMessage]="groupErrorMessage"
                  [ngClass]="groupErrorMessage.length != 0 ? 'error' : ''" fxFlex
                  class="timerange-input" spellcheck="false" type="text"
@@ -46,7 +46,7 @@
       </div>
     </div>
     <div fxFlex="10px"></div>
-    <div fxFlex fxLayout="row wrap" fxLayoutAlign="start center">
+    <div fxFlex="auto" fxLayout="row wrap" fxLayoutAlign="start center">
       <div *ngFor="let opt of timeRangeOptions" class="timerange-timeoption"
            (click)="setTimeRange(opt)" fxFlex="166px">
         {{ opt.text }}
