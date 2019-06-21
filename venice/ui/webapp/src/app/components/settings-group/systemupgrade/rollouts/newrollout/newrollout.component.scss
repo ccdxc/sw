@@ -151,3 +151,8 @@ $vertical-gutter: 5px;
 .newrollout-schedulenow-text {
   margin: 10px 0px;
 }
+
+//VS-492  firefox issue with input.type=number. Ensure not breaking other browsers
+.newrollout .newrollout-row input.ui-inputtext:not(.ui-dropdown-filter) {
+  padding: 0px 10px;
+}
