@@ -13,6 +13,7 @@ import (
 const defaultNumParallel = 2 // if user has not specified parallelism in Spec, we do do many SmartNICs in parallel. We can change this logic in future as needed..
 
 var preUpgradeTimeout = 480 * time.Second
+var veniceUpgradeTimeout = 15 * time.Minute
 
 type rofsmEvent uint
 type rofsmState uint
@@ -199,6 +200,7 @@ func (ros *RolloutState) runFSM() {
 			nstate := ros.fsm[ros.currentState][evt].nextSt
 			action := ros.fsm[ros.currentState][evt].actFn
 			if action != nil {
+				log.Infof("calling action %v", action)
 				action(ros)
 			}
 			ros.currentState = nstate
@@ -223,10 +225,13 @@ func fsmAcCreated(ros *RolloutState) {
 	if ros.Spec.SmartNICsOnly {
 		ros.eventChan <- fsmEvVeniceBypass
 	} else {
+		ros.startRolloutTimer()
 		ros.preCheckNextVeniceNode()
 	}
 }
 func fsmAcOneVenicePreupgSuccess(ros *RolloutState) {
+	ros.stopRolloutTimer()
+	ros.startRolloutTimer()
 	numPendingPrecheck, err := ros.preCheckNextVeniceNode()
 	if err != nil {
 		log.Errorf("Error %s issuing precheck to next venice", err)
@@ -243,6 +248,7 @@ func fsmAcOneVenicePreupgSuccess(ros *RolloutState) {
 
 func fsmAcPreUpgSmartNIC(ros *RolloutState) {
 
+	ros.stopRolloutTimer()
 	ros.writer.WriteRollout(ros.Rollout)
 	ros.Add(1)
 
@@ -302,6 +308,8 @@ func fsmAcIssueNextVeniceRollout(ros *RolloutState) {
 	if err != nil {
 		log.Errorf("Failed to set cluster.Version %v", err)
 	}
+	ros.stopRolloutTimer()
+	ros.startRolloutTimer()
 	numPendingRollout, err := ros.startNextVeniceRollout()
 	if err != nil {
 		log.Errorf("Error %s issuing rollout to next venice", err)
@@ -318,6 +326,7 @@ func fsmAcIssueNextVeniceRollout(ros *RolloutState) {
 }
 func fsmAcIssueServiceRollout(ros *RolloutState) {
 	log.Infof("fsmAcIssueServiceRollout..")
+	ros.stopRolloutTimer()
 	serviceRolloutPending, err := ros.issueServiceRollout()
 	if err != nil {
 		log.Errorf("Error %s issuing service rollout", err)
@@ -332,6 +341,7 @@ func fsmAcIssueServiceRollout(ros *RolloutState) {
 	log.Infof("fsmAcIssueServiceRollout.. returning from fsmAcIssueServiceRollout")
 }
 func fsmAcRolloutSmartNICs(ros *RolloutState) {
+	ros.stopRolloutTimer()
 	if ros.Spec.GetSuspend() {
 		log.Infof("Rollout is SUSPENDED. Returning without smartNIC Rollout.")
 		ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUSPENDED)]
@@ -353,6 +363,7 @@ func fsmAcRolloutSmartNICs(ros *RolloutState) {
 	}()
 }
 func fsmAcRolloutSuccess(ros *RolloutState) {
+	ros.stopRolloutTimer()
 	ros.setEndTime()
 	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUCCESS)]
 	ros.saveStatus()
@@ -367,6 +378,9 @@ func fsmAcRolloutSuccess(ros *RolloutState) {
 	ros.stop()
 }
 func fsmAcRolloutFail(ros *RolloutState) {
+	if ros.stateTimer != nil {
+		ros.stopRolloutTimer()
+	}
 	ros.setEndTime()
 	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_FAILURE)]
 	ros.saveStatus()
@@ -381,6 +395,7 @@ func fsmAcRolloutFail(ros *RolloutState) {
 	ros.stop()
 }
 func fsmAcRolloutSuspend(ros *RolloutState) {
+	ros.stopRolloutTimer()
 	ros.setEndTime()
 	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUSPENDED)]
 	ros.saveStatus()

@@ -27,6 +27,7 @@ type RolloutState struct {
 	stopChan     chan bool
 	currentState rofsmState
 	stopped      bool
+	stateTimer   *time.Timer
 
 	fsm [][]fsmNode
 
@@ -154,6 +155,39 @@ func (sm *Statemgr) deleteRolloutState(ro *roproto.Rollout) {
 	// delete rollout state from DB
 	_ = sm.memDB.DeleteObject(ros)
 	sm.deleteRollouts()
+}
+
+func (ros *RolloutState) startRolloutTimer() error {
+
+	ros.stateTimer = time.AfterFunc(veniceUpgradeTimeout, func() {
+		log.Errorf("Timeout during venice rollout \n")
+		if ros.currentState == fsmstRollingOutVenice {
+			phase := roproto.RolloutPhase_FAIL
+			for _, curStatus := range ros.Status.ControllerNodesStatus {
+				if curStatus.Phase == roproto.RolloutPhase_PROGRESSING.String() {
+					ros.setVenicePhase(curStatus.Name, "", "Timeout waiting for status from Venice", phase)
+				}
+			}
+			ros.eventChan <- fsmEvOneVeniceUpgFail
+		}
+		if ros.currentState == fsmstPreCheckingVenice {
+			phase := roproto.RolloutPhase_FAIL
+			for _, curStatus := range ros.Status.ControllerNodesStatus {
+				if curStatus.Phase == roproto.RolloutPhase_PRE_CHECK.String() {
+					ros.setVenicePhase(curStatus.Name, "", "Timeout waiting for status from Venice", phase)
+				}
+			}
+			ros.eventChan <- fsmEvOneVenicePreUpgFail
+		}
+	})
+	return nil
+}
+
+func (ros *RolloutState) stopRolloutTimer() {
+	if ros.stateTimer != nil {
+		ros.stateTimer.Stop()
+		ros.stateTimer = nil
+	}
 }
 
 func (ros *RolloutState) start() {
