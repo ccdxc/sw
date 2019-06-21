@@ -201,8 +201,8 @@ func (p *fwlogPolicyRPCServer) WatchFwlogPolicy(in *api.ObjectMeta, out tpmProto
 			}
 
 		case <-ctx.Done():
-			rpcLog.Errorf("context canceled from %v, error:%s", peer, ctx.Err())
-			return fmt.Errorf("context cancelled")
+			rpcLog.Errorf("fwlog policy client(%s) context canceled, error:%s", peer, ctx.Err())
+			return fmt.Errorf("context canceled")
 		}
 	}
 }
@@ -285,7 +285,7 @@ func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, ou
 			}
 
 		case <-ctx.Done():
-			rpcLog.Errorf("context canceled from %v, error:%s", peer, ctx.Err())
+			rpcLog.Errorf("flow export policy client(%s) context canceled, error:%s", peer, ctx.Err())
 			return fmt.Errorf("context canceled")
 		}
 	}
@@ -310,9 +310,9 @@ func (s *PolicyRPCServer) GetListenURL() string {
 // Debug is to dump the state
 func (s *PolicyRPCServer) Debug() map[string]map[string]string {
 	clients := map[string]map[string]string{
-		"StatsPolicy":      map[string]string{},
-		"FwlogPolicy":      map[string]string{},
-		"FlowExportPolicy": map[string]string{},
+		"StatsPolicy":      {},
+		"FwlogPolicy":      {},
+		"FlowExportPolicy": {},
 	}
 	s.statsPolicyRPCServer.clients.Range(func(k interface{}, v interface{}) bool {
 		if key, ok := k.(string); ok {

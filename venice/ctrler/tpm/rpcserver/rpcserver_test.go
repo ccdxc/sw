@@ -424,7 +424,7 @@ func TestRpcError(t *testing.T) {
 	defer f.Stop()
 
 	u := f.GetListenURL()
-	tu.Assert(t, len(u) != 0, "invalid server URL", u)
+	tu.Assert(t, u != "", "invalid server URL", u)
 
 	tu.Assert(t, defaultCollectInterval == f.collectionInterval.Load().(string),
 		fmt.Sprintf("interval [%v] didn't match in policy, {%s} ", f.collectionInterval.Load(),
