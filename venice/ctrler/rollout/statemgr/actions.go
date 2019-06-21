@@ -6,6 +6,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/pensando/sw/api/generated/cluster"
+
 	"github.com/davecgh/go-spew/spew"
 
 	"github.com/pensando/sw/api"
@@ -48,8 +50,11 @@ func orderSmartNICs(labelSels []*labels.Selector, smartNICMustMatchConstraint bo
 	for _, ls := range labelSels {
 		for name, s := range snics {
 			if ls.Matches(labels.Set(s.ObjectMeta.Labels)) {
-				curbin = append(curbin, s)
-				delete(snics, name)
+				log.Infof("SmartNIC Phase is %+v", s.Status.AdmissionPhase)
+				if s.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
+					curbin = append(curbin, s)
+					delete(snics, name)
+				}
 			}
 		}
 		if len(curbin) > 0 {
@@ -60,7 +65,10 @@ func orderSmartNICs(labelSels []*labels.Selector, smartNICMustMatchConstraint bo
 	if !smartNICMustMatchConstraint {
 		// add the remaining SNICs
 		for _, s := range snics {
-			curbin = append(curbin, s)
+			log.Infof("SmartNIC Phase is %+v", s.Status.AdmissionPhase)
+			if s.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
+				curbin = append(curbin, s)
+			}
 		}
 		if len(curbin) > 0 {
 			retval = append(retval, curbin)

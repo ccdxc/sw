@@ -307,6 +307,9 @@ func createSNICHelper(stateMgr *Statemgr, name string, labels map[string]string)
 			Tenant: "default",
 			Labels: labels,
 		},
+		Status: cluster.SmartNICStatus{
+			AdmissionPhase: cluster.SmartNICStatus_ADMITTED.String(),
+		},
 	}
 	stateMgr.handleSmartNICEvent(kvstore.Created, &sn)
 }
