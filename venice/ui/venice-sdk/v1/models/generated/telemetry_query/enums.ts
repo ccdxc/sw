@@ -62,6 +62,9 @@ export enum Telemetry_queryMetricsQuerySpec_function {
     'NONE' = "NONE",
     'MEAN' = "MEAN",
     'MAX' = "MAX",
+    'MEDIAN' = "MEDIAN",
+    'DERIVATIVE' = "DERIVATIVE",
+    'DIFFERENCE' = "DIFFERENCE",
 }
 
 export enum Telemetry_queryMetricsQuerySpec_sort_order {

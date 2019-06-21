@@ -907,7 +907,10 @@
           "enum": [
             "NONE",
             "MEAN",
-            "MAX"
+            "MAX",
+            "MEDIAN",
+            "DERIVATIVE",
+            "DIFFERENCE"
           ],
           "default": "NONE",
           "title": "Functions specify an operation function to be applied, example mean()/max()"

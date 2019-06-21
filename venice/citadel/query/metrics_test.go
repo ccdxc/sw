@@ -100,6 +100,63 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Using MEDIAN function",
+			qs: &telemetry_query.MetricsQuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: "test-db",
+				},
+				Function: "MEDIAN",
+			},
+			resp: "SELECT MEDIAN(*) FROM test-db ORDER BY time ASC",
+			pass: true,
+		},
+		{
+			desc: "Using DERIVATIVE function",
+			qs: &telemetry_query.MetricsQuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: "test-db",
+				},
+				Function: "DERIVATIVE",
+			},
+			resp: "SELECT DERIVATIVE(*) FROM test-db ORDER BY time ASC",
+			pass: true,
+		},
+		{
+			desc: "Using DERIVATIVE function with group by time",
+			qs: &telemetry_query.MetricsQuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: "test-db",
+				},
+				GroupbyTime: "5m",
+				Function:    "DERIVATIVE",
+			},
+			resp: "SELECT DERIVATIVE(MEAN(*)) FROM test-db GROUP BY time(5m) ORDER BY time ASC",
+			pass: true,
+		},
+		{
+			desc: "Using DIFFERENCE function",
+			qs: &telemetry_query.MetricsQuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: "test-db",
+				},
+				Function: "DIFFERENCE",
+			},
+			resp: "SELECT DIFFERENCE(*) FROM test-db ORDER BY time ASC",
+			pass: true,
+		},
+		{
+			desc: "Using DIFFERENCE function with group by time",
+			qs: &telemetry_query.MetricsQuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: "test-db",
+				},
+				GroupbyTime: "5m",
+				Function:    "DIFFERENCE",
+			},
+			resp: "SELECT DIFFERENCE(MEAN(*)) FROM test-db GROUP BY time(5m) ORDER BY time ASC",
+			pass: true,
+		},
+		{
 			desc: "Using MAX function",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{

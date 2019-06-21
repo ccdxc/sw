@@ -76,6 +76,12 @@ func (q *Server) validateMetricsQuerySpec(qs *telemetry_query.MetricsQuerySpec) 
 		}
 	case telemetry_query.TsdbFunctionType_MEAN.String():
 		//none
+	case telemetry_query.TsdbFunctionType_MEDIAN.String():
+		//none
+	case telemetry_query.TsdbFunctionType_DERIVATIVE.String():
+		//none
+	case telemetry_query.TsdbFunctionType_DIFFERENCE.String():
+		//none
 	case telemetry_query.TsdbFunctionType_NONE.String():
 		//none
 	}
@@ -193,7 +199,26 @@ func buildCitadelMetricsQuery(qs *telemetry_query.MetricsQuerySpec) (string, err
 
 	if qs.Function != "" {
 		switch qs.Function {
-		case telemetry_query.TsdbFunctionType_MEAN.String(), telemetry_query.TsdbFunctionType_MAX.String():
+		case telemetry_query.TsdbFunctionType_DERIVATIVE.String(),
+			telemetry_query.TsdbFunctionType_DIFFERENCE.String():
+
+			newFields := []string{}
+			if len(qs.GroupbyTime) > 0 {
+				// Must use advanced syntax when using group by time
+				innerFunc := telemetry_query.TsdbFunctionType_MEAN.String()
+				for _, field := range selectedFields {
+					newFields = append(newFields, fmt.Sprintf("%s(%s(%s))", qs.Function, innerFunc, field))
+				}
+				selectedFields = newFields
+				break
+			}
+			// If group by time is not present, we use normal syntax
+			fallthrough
+
+		case telemetry_query.TsdbFunctionType_MEAN.String(),
+			telemetry_query.TsdbFunctionType_MAX.String(),
+			telemetry_query.TsdbFunctionType_MEDIAN.String(),
+			telemetry_query.TsdbFunctionType_DIFFERENCE.String():
 			newFields := []string{}
 			for _, field := range selectedFields {
 				newFields = append(newFields, fmt.Sprintf("%s(%s)", qs.Function, field))

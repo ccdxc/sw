@@ -16,6 +16,9 @@ enum TsdbFunctionType {
     NONE = 0; // none
     MEAN = 1; // returns average of the fields
     MAX  = 2; // returns maximum of the fields
+    MEDIAN = 3; // returns median of the fields
+    DERIVATIVE = 4; // returns derivative of the fields, defaults to 1s
+    DIFFERENCE = 5; // returns difference between subsequent points
 }
 
 enum SortOrder {

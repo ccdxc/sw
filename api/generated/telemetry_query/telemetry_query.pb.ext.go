@@ -28,12 +28,18 @@ var _ listerwatcher.WatcherClient
 
 // TsdbFunctionType_normal is a map of normalized values for the enum
 var TsdbFunctionType_normal = map[string]string{
-	"MAX":  "MAX",
-	"MEAN": "MEAN",
-	"NONE": "NONE",
-	"max":  "MAX",
-	"mean": "MEAN",
-	"none": "NONE",
+	"DERIVATIVE": "DERIVATIVE",
+	"DIFFERENCE": "DIFFERENCE",
+	"MAX":        "MAX",
+	"MEAN":       "MEAN",
+	"MEDIAN":     "MEDIAN",
+	"NONE":       "NONE",
+	"derivative": "DERIVATIVE",
+	"difference": "DIFFERENCE",
+	"max":        "MAX",
+	"mean":       "MEAN",
+	"median":     "MEDIAN",
+	"none":       "NONE",
 }
 
 // SortOrder_normal is a map of normalized values for the enum
