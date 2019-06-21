@@ -218,6 +218,13 @@ struct cq {
 
 struct ionic;
 
+static inline void ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
+				   unsigned long index)
+{
+	ionic_intr_clean(idev->intr_ctrl, index);
+	intr->index = index;
+}
+
 void ionic_init_devinfo(struct ionic_dev *idev);
 int ionic_dev_setup(struct ionic *ionic);
 void ionic_dev_teardown(struct ionic *ionic);
@@ -252,8 +259,6 @@ void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct qcq *qcq,
 char *ionic_dev_asic_name(u8 asic_type);
 int ionic_db_page_num(struct lif *lif, int pid);
 
-void ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
-		     unsigned long index);
 int ionic_cq_init(struct lif *lif, struct cq *cq, struct intr *intr,
 		  unsigned int num_descs, size_t desc_size);
 void ionic_cq_map(struct cq *cq, void *base, dma_addr_t base_pa);

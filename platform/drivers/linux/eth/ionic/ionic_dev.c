@@ -347,13 +347,6 @@ int ionic_db_page_num(struct lif *lif, int pid)
 	return (lif->hw_index * lif->dbid_count) + pid;
 }
 
-void ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
-		     unsigned long index)
-{
-	ionic_intr_clean(idev->intr_ctrl, index);
-	intr->index = index;
-}
-
 int ionic_cq_init(struct lif *lif, struct cq *cq, struct intr *intr,
 		  unsigned int num_descs, size_t desc_size)
 {
