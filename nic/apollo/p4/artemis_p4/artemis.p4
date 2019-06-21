@@ -22,6 +22,7 @@
 #include "nexthop.p4"
 #include "stats.p4"
 #include "mirror.p4"
+#include "checksum.p4"
 
 action nop() {
 }
@@ -62,5 +63,6 @@ control egress {
         nat();
         nexthop();
         egress_stats();
+        update_checksums();
     }
 }

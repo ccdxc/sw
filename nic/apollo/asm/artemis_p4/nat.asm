@@ -28,27 +28,35 @@ nat_rewrite_tx:
     b.!c6           nat_rewrite_tx_dst_ip
     setcf           c4, [c6&c1]
     phvwr.c4        p.ipv4_1_srcAddr, d.nat_rewrite_d.nat_ip
+    phvwr.c4        p.control_metadata_update_checksum, TRUE
     setcf           c4, [c6&!c1]
     phvwr.c4        p.ipv6_1_srcAddr, d.nat_rewrite_d.nat_ip
+    phvwr.c4        p.control_metadata_update_checksum, TRUE
     b.!c5           nat_rewrite_tx_dst_ip
     nop
     phvwr.c2        p.udp_1_srcPort, k.p4e_i2e_service_xlate_port
+    phvwr.c2        p.control_metadata_update_checksum, TRUE
     phvwr.c3        p.tcp_srcPort, k.p4e_i2e_service_xlate_port
+    phvwr.c3        p.control_metadata_update_checksum, TRUE
 nat_rewrite_tx_dst_ip:
     seq             c4, k.rewrite_metadata_flags[TX_REWRITE_DST_IP_BITS], \
                         TX_REWRITE_DST_IP_FROM_SESSION
     b.!c4           nat_rewrite_tx_dport
     setcf           c5, [c4&c1]
     phvwr.c5        p.ipv4_1_dstAddr, k.rewrite_metadata_ip
+    phvwr.c5        p.control_metadata_update_checksum, TRUE
     setcf           c5, [c4&!c1]
     phvwr.c5        p.ipv6_1_dstAddr, k.rewrite_metadata_ip
+    phvwr.c5        p.control_metadata_update_checksum, TRUE
 nat_rewrite_tx_dport:
     seq             c4, k.rewrite_metadata_flags[TX_REWRITE_DPORT_BITS], \
                         TX_REWRITE_DPORT_FROM_SESSION
     b.!c4           nat_rewrite_encap
     nop
     phvwr.c2        p.udp_1_dstPort, k.rewrite_metadata_l4port
+    phvwr.c2        p.control_metadata_update_checksum, TRUE
     phvwr.c3        p.tcp_dstPort, k.rewrite_metadata_l4port
+    phvwr.c3        p.control_metadata_update_checksum, TRUE
 nat_rewrite_encap:
     seq.e           c4, k.rewrite_metadata_flags[TX_REWRITE_ENCAP_BITS], \
                         TX_REWRITE_ENCAP_VXLAN
@@ -60,15 +68,19 @@ nat_rewrite_rx:
     b.!c4           nat_rewrite_rx_sport
     setcf           c5, [c4&c1]
     phvwr.c5        p.ipv4_1_srcAddr, k.rewrite_metadata_ip
+    phvwr.c5        p.control_metadata_update_checksum, TRUE
     setcf           c5, [c4&!c1]
     phvwr.c5        p.ipv6_1_srcAddr, k.rewrite_metadata_ip
+    phvwr.c5        p.control_metadata_update_checksum, TRUE
 nat_rewrite_rx_sport:
     seq             c4, k.rewrite_metadata_flags[RX_REWRITE_SPORT_BITS], \
                         RX_REWRITE_SPORT_FROM_SESSION
     b.!c4           nat_rewrite_rx_dst_ip
     nop
     phvwr.c2        p.udp_1_srcPort, k.rewrite_metadata_l4port
+    phvwr.c2        p.control_metadata_update_checksum, TRUE
     phvwr.c3        p.tcp_srcPort, k.rewrite_metadata_l4port
+    phvwr.c3        p.control_metadata_update_checksum, TRUE
 nat_rewrite_rx_dst_ip:
     seq             c4, k.rewrite_metadata_flags[RX_REWRITE_DST_IP_BITS], \
                         RX_REWRITE_DST_IP_FROM_CA
@@ -78,13 +90,17 @@ nat_rewrite_rx_dst_ip:
     nop.!c6.e
     setcf           c4, [c6&c1]
     phvwr.c4        p.ipv4_1_dstAddr, d.nat_rewrite_d.nat_ip
+    phvwr.c4        p.control_metadata_update_checksum, TRUE
     setcf           c4, [c6&!c1]
     phvwr.c4        p.ipv6_1_dstAddr, d.nat_rewrite_d.nat_ip
+    phvwr.c4        p.control_metadata_update_checksum, TRUE
     nop.!c5.e
     nop
     phvwr.c2        p.udp_1_dstPort, k.p4e_i2e_service_xlate_port
-    nop.e
+    phvwr.c2        p.control_metadata_update_checksum, TRUE
     phvwr.c3        p.tcp_dstPort, k.p4e_i2e_service_xlate_port
+    nop.e
+    phvwr.c3        p.control_metadata_update_checksum, TRUE
 
 nat_rewrite_done:
     nop.e

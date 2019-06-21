@@ -618,6 +618,70 @@ inter_pipe_init (void)
                 INTER_PIPE_TABLE_SIZE);
 }
 
+static void
+checksum_init (void)
+{
+    checksum_swkey_t key;
+    checksum_actiondata_t data;
+    uint32_t tbl_id = P4TBL_ID_CHECKSUM;
+    uint64_t idx;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv4_1_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV4_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(tbl_id, &key);
+    entry_write(tbl_id, idx, NULL, NULL, &data, false, CHECKSUM_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv4_1_valid = 1;
+    key.udp_1_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV4_UDP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(tbl_id, &key);
+    entry_write(tbl_id, idx, NULL, NULL, &data, false, CHECKSUM_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv4_1_valid = 1;
+    key.tcp_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV4_TCP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(tbl_id, &key);
+    entry_write(tbl_id, idx, NULL, NULL, &data, false, CHECKSUM_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv4_1_valid = 1;
+    key.icmp_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV4_ICMP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(tbl_id, &key);
+    entry_write(tbl_id, idx, NULL, NULL, &data, false, CHECKSUM_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv6_1_valid = 1;
+    key.udp_1_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV6_UDP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(tbl_id, &key);
+    entry_write(tbl_id, idx, NULL, NULL, &data, false, CHECKSUM_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv6_1_valid = 1;
+    key.tcp_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV6_TCP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(tbl_id, &key);
+    entry_write(tbl_id, idx, NULL, NULL, &data, false, CHECKSUM_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv6_1_valid = 1;
+    key.icmp_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV6_ICMP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(tbl_id, &key);
+    entry_write(tbl_id, idx, NULL, NULL, &data, false, CHECKSUM_TABLE_SIZE);
+}
+
 class artemis_test : public ::testing::Test {
 protected:
     artemis_test() {}
@@ -759,6 +823,7 @@ TEST_F(artemis_test, test1)
     nat_init();
     nexthop_init();
     inter_pipe_init();
+    checksum_init();
 
 #ifdef SIM
     uint32_t port = 0;

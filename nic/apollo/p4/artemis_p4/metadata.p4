@@ -3,6 +3,7 @@ header_type capri_deparser_len_t {
         trunc_pkt_len   : 16;
         ipv4_0_hdr_len  : 16;
         ipv4_1_hdr_len  : 16;
+        l4_payload_len  : 16;
     }
 }
 
@@ -46,6 +47,7 @@ header_type control_metadata_t {
         pipe_id             : 4;
         mirror_session      : 8;
         vlan_strip          : 1;
+        update_checksum     : 1;
     }
 }
 

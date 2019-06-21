@@ -11,9 +11,11 @@ action nat_rewrite(nat_ip) {
             TX_REWRITE(rewrite_metadata.flags, SRC_IP, FROM_SERVICE)) {
             if (ipv4_1.valid == TRUE) {
                 modify_field(ipv4_1.srcAddr, nat_ip);
+                modify_field(control_metadata.update_checksum, TRUE);
             }
             if (ipv6_1.valid == TRUE) {
                 modify_field(ipv6_1.srcAddr, nat_ip);
+                modify_field(control_metadata.update_checksum, TRUE);
             }
         }
         if (TX_REWRITE(rewrite_metadata.flags, SRC_IP, FROM_SERVICE)) {
@@ -27,17 +29,21 @@ action nat_rewrite(nat_ip) {
         if (TX_REWRITE(rewrite_metadata.flags, DST_IP, FROM_SESSION)) {
             if (ipv4_1.valid == TRUE) {
                 modify_field(ipv4_1.dstAddr, rewrite_metadata.ip);
+                modify_field(control_metadata.update_checksum, TRUE);
             }
             if (ipv6_1.valid == TRUE) {
                 modify_field(ipv6_1.dstAddr, rewrite_metadata.ip);
+                modify_field(control_metadata.update_checksum, TRUE);
             }
         }
         if (TX_REWRITE(rewrite_metadata.flags, DPORT, FROM_SESSION)) {
             if (udp_1.valid == TRUE) {
                 modify_field(udp_1.dstPort, rewrite_metadata.l4port);
+                modify_field(control_metadata.update_checksum, TRUE);
             }
             if (tcp.valid == TRUE) {
                 modify_field(tcp.dstPort, rewrite_metadata.l4port);
+                modify_field(control_metadata.update_checksum, TRUE);
             }
         }
         if (TX_REWRITE(rewrite_metadata.flags, ENCAP, VXLAN)) {
@@ -47,26 +53,32 @@ action nat_rewrite(nat_ip) {
         if (RX_REWRITE(rewrite_metadata.flags, SRC_IP, FROM_SESSION)) {
             if (ipv4_1.valid == TRUE) {
                 modify_field(ipv4_1.srcAddr, rewrite_metadata.ip);
+                modify_field(control_metadata.update_checksum, TRUE);
             }
             if (ipv6_1.valid == TRUE) {
                 modify_field(ipv6_1.srcAddr, rewrite_metadata.ip);
+                modify_field(control_metadata.update_checksum, TRUE);
             }
         }
         if (RX_REWRITE(rewrite_metadata.flags, SPORT, FROM_SESSION)) {
             if (udp_1.valid == TRUE) {
                 modify_field(udp_1.srcPort, rewrite_metadata.l4port);
+                modify_field(control_metadata.update_checksum, TRUE);
             }
             if (tcp.valid == TRUE) {
                 modify_field(tcp.srcPort, rewrite_metadata.l4port);
+                modify_field(control_metadata.update_checksum, TRUE);
             }
         }
         if (RX_REWRITE(rewrite_metadata.flags, DST_IP, FROM_CA) or
             RX_REWRITE(rewrite_metadata.flags, DST_IP, FROM_SERVICE)) {
             if (ipv4_1.valid == TRUE) {
                 modify_field(ipv4_1.dstAddr, nat_ip);
+                modify_field(control_metadata.update_checksum, TRUE);
             }
             if (ipv6_1.valid == TRUE) {
                 modify_field(ipv6_1.dstAddr, nat_ip);
+                modify_field(control_metadata.update_checksum, TRUE);
             }
         }
         if (RX_REWRITE(rewrite_metadata.flags, DST_IP, FROM_SERVICE)) {
@@ -114,6 +126,7 @@ action local_46_info(prefix) {
             modify_field(ipv6_1.srcAddr, prefix | ipv4_1.srcAddr);
             modify_field(ipv6_1.dstAddr, rewrite_metadata.ip | ipv4_1.dstAddr);
             add(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, 20);
+            modify_field(control_metadata.update_checksum, TRUE);
         }
     } else {
         if (RX_REWRITE(rewrite_metadata.flags, SRC_IP, FROM_64)) {
@@ -133,6 +146,7 @@ action local_46_info(prefix) {
             modify_field(ipv4_1.srcAddr, ipv6_1.srcAddr);
             modify_field(ipv4_1.dstAddr, ipv6_1.dstAddr);
             subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, 20);
+            modify_field(control_metadata.update_checksum, TRUE);
         }
     }
 }

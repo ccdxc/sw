@@ -713,6 +713,145 @@ calculated_field ipv4_1.hdrChecksum  {
     update ipv4_1_checksum;
 }
 
+field_list ipv4_1_tcp_checksum_list {
+    ipv4_1.srcAddr;
+    ipv4_1.dstAddr;
+    8'0;
+    ipv4_1.protocol;
+    capri_deparser_len.l4_payload_len;
+    tcp.srcPort;
+    tcp.dstPort;
+    tcp.seqNo;
+    tcp.ackNo;
+    tcp.dataOffset;
+    tcp.res;
+    tcp.flags;
+    tcp.window;
+    tcp.urgentPtr;
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.l4_payload_len
+field_list_calculation ipv4_1_tcp_checksum {
+    input {
+        ipv4_1_tcp_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+field_list ipv6_1_tcp_checksum_list {
+    ipv6_1.srcAddr;
+    ipv6_1.dstAddr;
+    8'0;
+    ipv6_1.nextHdr;
+    capri_deparser_len.l4_payload_len;
+    tcp.srcPort;
+    tcp.dstPort;
+    tcp.seqNo;
+    tcp.ackNo;
+    tcp.dataOffset;
+    tcp.res;
+    tcp.flags;
+    tcp.window;
+    tcp.urgentPtr;
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.l4_payload_len
+field_list_calculation ipv6_1_tcp_checksum {
+    input {
+        ipv6_1_tcp_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field tcp.checksum {
+    update ipv4_1_tcp_checksum;
+    update ipv6_1_tcp_checksum;
+}
+
+field_list ipv4_1_udp_checksum_list {
+    ipv4_1.srcAddr;
+    ipv4_1.dstAddr;
+    8'0;
+    ipv4_1.protocol;
+    udp_1.len;
+    udp_1.srcPort;
+    udp_1.dstPort;
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.l4_payload_len
+field_list_calculation ipv4_1_udp_checksum {
+    input {
+        ipv4_1_udp_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+field_list ipv6_1_udp_checksum_list {
+    ipv6_1.srcAddr;
+    ipv6_1.dstAddr;
+    8'0;
+    ipv6_1.nextHdr;
+    udp_1.srcPort;
+    udp_1.dstPort;
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.l4_payload_len
+field_list_calculation ipv6_1_udp_checksum {
+    input {
+        ipv6_1_udp_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field udp_1.checksum {
+    update ipv4_1_udp_checksum;
+    update ipv6_1_udp_checksum;
+}
+
+field_list ipv4_1_icmp_checksum_list {
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.l4_payload_len
+field_list_calculation ipv4_1_icmp_checksum {
+    input {
+        ipv4_1_icmp_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+field_list ipv6_1_icmp_checksum_list {
+    ipv6_1.srcAddr;
+    ipv6_1.dstAddr;
+    ipv6_1.nextHdr;
+    ipv6_1.payloadLen;
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.l4_payload_len
+field_list_calculation ipv6_1_icmp_checksum {
+    input {
+        ipv6_1_icmp_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+
+calculated_field icmp.hdrChecksum {
+    update ipv4_1_icmp_checksum;
+    update ipv6_1_icmp_checksum;
+}
+
 /******************************************************************************
  * Checksums : Layer 2 (verify only)                                          *
  *****************************************************************************/
