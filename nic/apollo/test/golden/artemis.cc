@@ -49,6 +49,21 @@ using namespace sdk::platform::capri;
 #define JPKTDESC        "rxdma_to_txdma_desc"
 #define JP4_PRGM        "p4_program"
 
+#define MEM_REGION_LIF_STATS_BASE       "lif_stats_base"
+#define MEM_REGION_FLOW_BASE            "flow"
+#define MEM_REGION_FLOW_OHASH_BASE      "flow_ohash"
+#define MEM_REGION_IPV4_FLOW_BASE       "ipv4_flow"
+#define MEM_REGION_IPV4_FLOW_OHASH_BASE "ipv4_flow_ohash"
+#define MEM_REGION_METER_STATS_BASE     "meter_stats"
+
+#define MEM_REGION_FLOW_NAME            "flow"
+#define MEM_REGION_FLOW_OHASH_NAME      "flow_ohash"
+#define MEM_REGION_IPV4_FLOW_NAME       "ipv4_flow"
+#define MEM_REGION_IPV4_FLOW_OHASH_NAME "ipv4_flow_ohash"
+
+#define RXDMA_SYMBOLS_MAX           1
+#define TXDMA_SYMBOLS_MAX           5
+
 typedef struct __attribute__((__packed__)) lifqstate_ {
     uint64_t pc : 8;
     uint64_t rsvd : 8;
@@ -84,6 +99,7 @@ uint16_t g_vpc_id1 = 0xC1;
 uint16_t g_xlate_idx1 = 0xA1D1;
 uint32_t g_session_idx1 = 0x700DBA;
 uint32_t g_nexthop_idx1 = 0xE101;
+uint16_t g_meter_idx1 = 0x5;
 
 uint64_t g_dmaco1 = 0x001234567890ULL;
 uint32_t g_sipo1 = 0x64656667;
@@ -271,20 +287,6 @@ entry_write (uint32_t tbl_id, uint32_t index, void *key, void *mask, void *data,
     }
 }
 
-#define MEM_REGION_LIF_STATS_BASE       "lif_stats_base"
-#define MEM_REGION_FLOW_BASE            "flow"
-#define MEM_REGION_FLOW_OHASH_BASE      "flow_ohash"
-#define MEM_REGION_IPV4_FLOW_BASE       "ipv4_flow"
-#define MEM_REGION_IPV4_FLOW_OHASH_BASE "ipv4_flow_ohash"
-
-#define MEM_REGION_FLOW_NAME            "flow"
-#define MEM_REGION_FLOW_OHASH_NAME      "flow_ohash"
-#define MEM_REGION_IPV4_FLOW_NAME       "ipv4_flow"
-#define MEM_REGION_IPV4_FLOW_OHASH_NAME "ipv4_flow_ohash"
-
-#define RXDMA_SYMBOLS_MAX           1
-#define TXDMA_SYMBOLS_MAX           5
-
 static uint32_t
 rxdma_symbols_init (void **p4plus_symbols,
                     platform_type_t platform_type)
@@ -351,6 +353,13 @@ txdma_symbols_init (void **p4plus_symbols,
 static void
 table_constants_init (void)
 {
+    uint64_t stats_base_addr = 0;
+
+    stats_base_addr = get_mem_addr(MEM_REGION_METER_STATS_BASE);
+    stats_base_addr -= ((uint64_t)1 << 31);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_METER_STATS,
+                                                 stats_base_addr);
+
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_EGRESS_VNIC_INFO,
                                                  g_device_mac);
 }
@@ -555,6 +564,7 @@ session_init (void)
     session_info->nexthop_idx = g_nexthop_idx1;
     session_info->tx_rewrite_flags =
         (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_SHIFT);
+    session_info->meter_idx = g_meter_idx1;
     entry_write(tbl_id, g_session_idx1, NULL, NULL, &data, false, 0);
 }
 
