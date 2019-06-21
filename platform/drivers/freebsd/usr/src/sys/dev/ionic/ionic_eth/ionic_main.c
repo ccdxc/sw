@@ -274,7 +274,7 @@ ionic_adminq_flush(struct lif *lif)
 	int cmd_index;
 
 	IONIC_ADMIN_LOCK(adminq);
-	do {
+	while (!IONIC_Q_EMPTY(adminq)) {
 		cmd_index = adminq->tail_index;
 		cmd = &adminq->cmd_ring[cmd_index];
 		IONIC_QUE_WARN(adminq, "flushing tail: %d cmd %s(%d)\n",
@@ -284,7 +284,7 @@ ionic_adminq_flush(struct lif *lif)
 		memset(cmd, 0, sizeof(*cmd));
 		adminq->ctx_ring[cmd_index] = NULL;
 		adminq->tail_index = IONIC_MOD_INC(adminq, tail_index);
-	} while (!IONIC_Q_EMPTY(adminq));
+	}
 	IONIC_ADMIN_UNLOCK(adminq);
 
 	IONIC_QUE_INFO(adminq, "head :%d tail: %d comp index: %d\n",
