@@ -3,6 +3,7 @@ package cluster
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	uuid "github.com/satori/go.uuid"
 
@@ -167,5 +168,5 @@ func testQueries(testCases []*queryTestCase) {
 
 		return true
 
-	}, 120, 10).Should(BeTrue(), "Query tests failed")
+	}, 120, 10).Should(BeTrue(), fmt.Sprintf("ts: %s Query tests failed", time.Now().String()))
 }

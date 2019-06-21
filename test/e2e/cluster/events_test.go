@@ -3,6 +3,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"time"
 
 	es "github.com/olivere/elastic"
 	. "github.com/onsi/ginkgo"
@@ -43,7 +44,7 @@ var _ = Describe("events test", func() {
 			nodeName := node.GetName()
 			Eventually(func() string {
 				return ts.tu.GetContainerOnNode(ts.tu.NameToIPMap[nodeName], globals.EvtsProxy)
-			}, 10, 1).ShouldNot(BeEmpty(), fmt.Sprintf("%s container should be running on %s", globals.EvtsProxy, ts.tu.NameToIPMap[nodeName]))
+			}, 10, 1).ShouldNot(BeEmpty(), fmt.Sprintf("ts: %s %s container should be running on %s", time.Now().String(), globals.EvtsProxy, ts.tu.NameToIPMap[nodeName]))
 		}
 	})
 
@@ -54,7 +55,7 @@ var _ = Describe("events test", func() {
 			nodeName := node.GetName()
 			Eventually(func() string {
 				return ts.tu.GetContainerOnNode(ts.tu.NameToIPMap[nodeName], globals.EvtsMgr)
-			}, 10, 1).ShouldNot(BeEmpty(), fmt.Sprintf("%s container should be running on %s", globals.EvtsMgr, ts.tu.NameToIPMap[nodeName]))
+			}, 10, 1).ShouldNot(BeEmpty(), fmt.Sprintf("ts: %s %s container should be running on %s", time.Now().String(), globals.EvtsMgr, ts.tu.NameToIPMap[nodeName]))
 		}
 	})
 
@@ -90,14 +91,14 @@ var _ = Describe("events test", func() {
 						return fmt.Errorf("could not find any %s event", service)
 					}
 					return nil
-				}, 30, 1).Should(BeNil(), "could not find requested event(s) in elasticsearch")
+				}, 30, 1).Should(BeNil(), fmt.Sprintf("ts: %s could not find requested event(s) in elasticsearch", time.Now().String()))
 			}
 		}
 
-		// check for `LeaderElected` event
+		// check for LEADER_ELECTED event
 		Eventually(func() error {
 			query := es.NewBoolQuery().Must(es.NewTermQuery("source.component.keyword", globals.Cmd),
-				es.NewTermQuery("type.keyword", eventtypes.EventType_name[int32(eventtypes.LEADER_ELECTED)]))
+				es.NewTermQuery("type.keyword", eventtypes.LEADER_ELECTED.String()))
 			res, err := esClient.Search(context.Background(),
 				elastic.GetIndex(globals.Events, globals.DefaultTenant),
 				elastic.GetDocType(globals.Events),
@@ -108,10 +109,10 @@ var _ = Describe("events test", func() {
 			}
 
 			if res.TotalHits() == 0 {
-				return fmt.Errorf("could not find `LeaderElected` event")
+				return fmt.Errorf("could not find %s event", eventtypes.LEADER_ELECTED.String())
 			}
 			return nil
-		}, 30, 1).Should(BeNil(), "could not find `LeaderElected` event in elasticsearch")
+		}, 30, 1).Should(BeNil(), "ts: %s could not find LEADER_ELECTED event in elasticsearch", time.Now().String())
 	})
 
 	It("NMD should start recording events once NAPLES node is added to the cluster", func() {
@@ -119,12 +120,12 @@ var _ = Describe("events test", func() {
 			Skip("No NAPLES node to be added to the cluster. Skipping NMD events test")
 		}
 
-		// check for `NICAdmitted` event
-		// NOTE: cluster objects are not allowed to have tenant, so, NICAdmitted event will be in a index (e.g. venice.external.events.2018-09-12)
+		// check for NIC_ADMITTED event
+		// NOTE: cluster objects are not allowed to have tenant, so, NIC_ADMITTED event will be in a index (e.g. venice.external.events.2018-09-12)
 		// different than other events (e.g.venice.external.<tenant>.events.2018-09-12).
 		Eventually(func() error {
 			query := es.NewBoolQuery().Must(es.NewTermQuery("source.component.keyword", globals.Nmd),
-				es.NewTermQuery("type.keyword", eventtypes.EventType_name[int32(eventtypes.NIC_ADMITTED)]))
+				es.NewTermQuery("type.keyword", eventtypes.NIC_ADMITTED.String()))
 			res, err := esClient.Search(context.Background(),
 				elastic.GetIndex(globals.Events, globals.DefaultTenant), // empty tenant
 				elastic.GetDocType(globals.Events),
@@ -135,10 +136,10 @@ var _ = Describe("events test", func() {
 			}
 
 			if ts.tu.NumNaplesHosts > int(res.TotalHits()) {
-				return fmt.Errorf("got only %d `NICAdmitted` events while expecting atleast %d events", int(res.TotalHits()), ts.tu.NumNaplesHosts)
+				return fmt.Errorf("got only %d (%s events) while expecting atleast %d events", int(res.TotalHits()), eventtypes.NIC_ADMITTED.String(), ts.tu.NumNaplesHosts)
 			}
 			return nil
-		}, 100, 1).Should(BeNil(), "could not find enough number of `NICAdmitted` events in elasticsearch")
+		}, 100, 1).Should(BeNil(), fmt.Sprintf("ts: %s could not find enough number of %s events in elasticsearch", eventtypes.NIC_ADMITTED.String(), time.Now().String()))
 	})
 
 	AfterEach(func() {
