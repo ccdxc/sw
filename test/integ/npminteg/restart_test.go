@@ -53,6 +53,7 @@ func (it *integTestSuite) TestNpmApiServerRestart(c *C) {
 	c.Assert(err, check.IsNil)
 	it.apisrvClient, err = apiclient.NewGrpcAPIClient("integ_test", globals.APIServer, it.logger, rpckit.WithBalancer(balancer.New(it.resolverClient)))
 	c.Assert(err, check.IsNil)
+	time.Sleep(time.Second)
 
 	// verify NPM still has the network
 	AssertEventually(c, func() (bool, interface{}) {
