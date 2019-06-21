@@ -33,7 +33,8 @@ g_agent_hooks_func (agent_op_t op, void *obj, void *arg)
         flow_test_obj->set_session_info_cfg_params(
             test_params.num_vpcs, test_params.num_ip_per_vnic,
             test_params.num_remote_mappings, test_params.meter_scale,
-            TESTAPP_METER_NUM_PREFIXES, test_params.num_nh);
+            TESTAPP_METER_NUM_PREFIXES, test_params.num_nh,
+            TESTAPP_MAX_SERVICE_TEP, TESTAPP_MAX_REMOTE_SERVICE_TEP);
 #endif
     } else if (op == BATCH_START) {
         pds_epoch_t *epoch = (pds_epoch_t *)obj;

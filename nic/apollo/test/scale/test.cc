@@ -21,8 +21,6 @@
 #include "boost/property_tree/json_parser.hpp"
 #include "nic/apollo/test/scale/test_common.hpp"
 
-#define VNID_BASE                      1000
-
 using std::string;
 
 extern char *g_input_cfg_file;
@@ -60,8 +58,8 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
         v6route_table.key.id = ntables + i;
         for (uint32_t j = 0; j < num_routes; j++) {
             if (apollo()) {
-                compute_ipv6_prefix(&v6route_table.routes[j].prefix, v6_route_pfx,
-                                    v6rtnum++, 120);
+                compute_ipv6_prefix(&v6route_table.routes[j].prefix,
+                                    v6_route_pfx, v6rtnum++, 120);
                 v6route_table.routes[j].nh_ip.af = IP_AF_IPV4;
                 v6route_table.routes[j].nh_ip.addr.v4_addr =
                         tep_pfx->addr.addr.v4_addr + tep_offset++;
@@ -273,7 +271,6 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                             PDS_ENCAP_TYPE_VXLAN) {
                         pds_local_mapping.fabric_encap.type =
                             PDS_ENCAP_TYPE_VXLAN;
-                        //pds_mapping.fabric_encap.val.vnid = VNID_BASE + pds_mapping.subnet.id;
                         pds_local_mapping.fabric_encap.val.vnid = vnic_key;
                     } else {
                         pds_local_mapping.fabric_encap.type =
@@ -370,8 +367,6 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     PDS_SUBNET_ID((i - 1), num_subnets, j);
                 if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
                     pds_remote_mapping.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-                    //pds_mapping.fabric_encap.val.vnid =
-                        //VNID_BASE + pds_mapping.subnet.id;
                     pds_remote_mapping.fabric_encap.val.vnid = remote_slot++;
                 } else {
                     pds_remote_mapping.fabric_encap.type =
@@ -478,8 +473,6 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                 }
                 if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
                     pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-                    //pds_vnic.fabric_encap.val.vnid =
-                        //VNID_BASE + pds_vnic.subnet.id;
                     pds_vnic.fabric_encap.val.vnid = vnic_key;
                 } else {
                     pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
@@ -1014,23 +1007,39 @@ create_nexthops (uint32_t num_nh, ip_prefix_t *ip_pfx, uint32_t num_vpcs)
 // NOTE: all service TEPs are remote TEPs
 sdk_ret_t
 create_service_teps (uint32_t num_teps, ip_prefix_t *svc_tep_pfx,
-                     ip_prefix_t *tep_pfx)
+                     ip_prefix_t *tep_pfx, bool remote_svc)
 {
     sdk_ret_t      rv;
     pds_tep_spec_t pds_tep;
+    uint32_t addr_offset;
     uint32_t tep_vnid = g_test_params.svc_tep_vnid_base;
+    uint32_t remote_svc_vnid = g_test_params.remote_svc_tep_vnid_base;
+    static uint32_t tep_id = g_test_params.num_teps + 2;
 
     if (!num_teps) {
         return SDK_RET_OK;
     }
-    for (uint32_t i = 1; i <= num_teps; i++) {
+
+    // skip MyTEP + GW TEP
+    addr_offset = 2;
+    if (remote_svc) {
+        tep_vnid += TESTAPP_MAX_SERVICE_TEP;
+        addr_offset += TESTAPP_MAX_SERVICE_TEP;
+    }
+
+    for (uint32_t i = 1; i <= num_teps; i++, tep_id++) {
         memset(&pds_tep, 0, sizeof(pds_tep));
         compute_local46_addr(&pds_tep.key.ip_addr, svc_tep_pfx,
-                             tep_pfx->addr.addr.v4_addr + 2 + i, i);
+                             tep_pfx->addr.addr.v4_addr + addr_offset + i, i);
         pds_tep.type = PDS_TEP_TYPE_SERVICE;
         pds_tep.encap.type = PDS_ENCAP_TYPE_VXLAN;
         pds_tep.encap.val.vnid = tep_vnid++;
-        rv = create_tunnel(g_test_params.num_teps + i + 1, &pds_tep);
+        if (remote_svc) {
+            pds_tep.remote_svc = true;
+            pds_tep.remote_svc_encap.type = PDS_ENCAP_TYPE_VXLAN;
+            pds_tep.remote_svc_encap.val.vnid = remote_svc_vnid++;
+        }
+        rv = create_tunnel(tep_id, &pds_tep);
         if (rv != SDK_RET_OK) {
             return rv;
         }
@@ -1352,7 +1361,14 @@ create_objects (void)
         // create service TEPs
         ret = create_service_teps(TESTAPP_MAX_SERVICE_TEP,
                                   &g_test_params.svc_tep_pfx,
-                                  &g_test_params.tep_pfx);
+                                  &g_test_params.tep_pfx, false);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        // create remote service TEPs
+        ret = create_service_teps(TESTAPP_MAX_REMOTE_SERVICE_TEP,
+                                  &g_test_params.svc_tep_pfx,
+                                  &g_test_params.tep_pfx, true);
         if (ret != SDK_RET_OK) {
             return ret;
         }

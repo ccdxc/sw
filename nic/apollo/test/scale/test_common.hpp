@@ -20,6 +20,7 @@
 #define TESTAPP_SWITCH_VNIC_VLAN                           128
 #define TESTAPP_SUBSTRATE_VNID                             0x6666
 #define TESTAPP_MAX_SERVICE_TEP                            64
+#define TESTAPP_MAX_REMOTE_SERVICE_TEP                     64
 #define TEST_APP_VIP_PORT                                  32
 #define TEST_APP_DIP_PORT                                  64
 
@@ -57,6 +58,7 @@ typedef struct test_params_s {
         ip_prefix_t tep_pfx;
         ip_prefix_t svc_tep_pfx;
         uint32_t svc_tep_vnid_base;
+        uint32_t remote_svc_tep_vnid_base;
     };
     // route config
     struct {
@@ -161,7 +163,7 @@ compute_ipv6_prefix (ip_prefix_t *pfx, ip_prefix_t *initial_pfx,
     *pfx = *initial_pfx;
     pfx->addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-2] = htonl(0xF1D0D1D0);
     pfx->addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
-                                    htonl((0xC << 28) | (shift_val << (128 - len)));
+        htonl((0xC << 28) | (shift_val << (128 - len)));
     pfx->len = len;
 }
 
@@ -368,6 +370,7 @@ parse_test_cfg (char *cfg_file, test_params_t *test_params)
         return SDK_RET_ERR;
     }
     test_params->svc_tep_vnid_base = 10000;
+    test_params->remote_svc_tep_vnid_base = 20000;
     return SDK_RET_OK;
 }
 

@@ -543,8 +543,8 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
                                            overlay_ip_to_provider_ip_nat_hdl_,
                                            overlay_ip_to_public_ip_nat_hdl_,
                                            vpc->nat46_prefix_valid() ?
-                                           vnic_impl_obj->hw_id() + 1 :
-                                           PDS_IMPL_LOCAL_46_MAPPING_RSVD_ENTRY_IDX);
+                                               vnic_impl_obj->hw_id() + 1 :
+                                               PDS_IMPL_LOCAL_46_MAPPING_RSVD_ENTRY_IDX);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_ip_mapping_key,
                                    &local_ip_mapping_data,
                                    LOCAL_IP_MAPPING_LOCAL_IP_MAPPING_INFO_ID,

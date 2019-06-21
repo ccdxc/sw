@@ -193,7 +193,9 @@ create_objects_init (test_params_t *test_params)
             test_params->num_remote_mappings,
             test_params->meter_scale,
             TESTAPP_METER_NUM_PREFIXES,
-            test_params->num_nh);
+            test_params->num_nh,
+            TESTAPP_MAX_SERVICE_TEP,
+            TESTAPP_MAX_REMOTE_SERVICE_TEP);
 #endif
 
     return SDK_RET_OK;

@@ -196,7 +196,8 @@ private:
     cfg_params_t cfg_params;
     uint32_t nexthop_idx_start;
     uint32_t num_nexthop_idx_per_vpc;
-    uint32_t svc_tep_nexthop_idx_start;
+    uint32_t svc_tep_nh_idx_start;
+    uint32_t remote_svc_tep_nh_idx_start;
     uint32_t meter_idx;
     uint32_t num_meter_idx_per_vpc;
     bool with_hash;
@@ -224,9 +225,11 @@ private:
 
         assert(getenv("CONFIG_PATH"));
 #ifdef SIM
-        snprintf(cfgfile, 256, "%s/../apollo/test/scale/%s", getenv("CONFIG_PATH"), get_cfg_json_());
+        snprintf(cfgfile, 256, "%s/../apollo/test/scale/%s",
+                 getenv("CONFIG_PATH"), get_cfg_json_());
 #else
-        snprintf(cfgfile, 256, "%s/%s", getenv("CONFIG_PATH"), get_cfg_json_());
+        snprintf(cfgfile, 256, "%s/%s", getenv("CONFIG_PATH"),
+                 get_cfg_json_());
 #endif
 
         // parse the config and create objects
@@ -514,7 +517,8 @@ public:
 
     sdk_ret_t create_session_info(uint32_t vpc, ip_addr_t ip_addr,
                                   uint32_t nexthop_idx, uint32_t inh_idx,
-                                  uint32_t svc_tep_nexthop_idx) {
+                                  uint32_t svc_tep_nh_idx,
+                                  uint32_t remote_svc_tep_nh_idx) {
         session_actiondata_t actiondata;
         p4pd_error_t p4pd_ret;
         uint32_t tableid = P4TBL_ID_SESSION;
@@ -558,8 +562,13 @@ public:
             // 2. local IP mapping (will inherit the nat46 prefix from vpc)
             // 3. tunnel of type SERVICE_TEP
             // 4. route pointing to NH of type service TEPs
-            actiondata.action_u.session_session_info.nexthop_idx =
-                svc_tep_nexthop_idx;
+            if (vpc == TEST_APP_S1_SVC_TUNNEL_IN_OUT) {
+                actiondata.action_u.session_session_info.nexthop_idx =
+                    svc_tep_nh_idx;
+            } else {
+                actiondata.action_u.session_session_info.nexthop_idx =
+                    remote_svc_tep_nh_idx;
+            }
             sdk::lib::memrev(actiondata.action_u.session_session_info.tx_dst_ip,
                              ip_addr.addr.v6_addr.addr8, sizeof(ipv6_addr_t));
             actiondata.action_u.session_session_info.tx_rewrite_flags = 0x26;
@@ -823,7 +832,8 @@ public:
         ip_addr_t rewrite_ip;
         uint32_t nexthop_idx = nexthop_idx_start;
         uint32_t inh_idx = 1;
-        uint32_t svc_tep_nexthop_idx = svc_tep_nexthop_idx_start;
+        uint32_t svc_tep_nh_idx = svc_tep_nh_idx_start;
+        uint32_t remote_svc_tep_nh_idx = remote_svc_tep_nh_idx_start;
         uint32_t dport_hi = cfg_params.dport_hi;
         uint32_t sport_hi = cfg_params.sport_hi;
         uint32_t num_sport;
@@ -969,7 +979,8 @@ public:
                         }
                         // create V4 session
                         ret = create_session_info(vpc, rewrite_ip, nexthop_idx,
-                                                  inh_idx, svc_tep_nexthop_idx);
+                                                  inh_idx, svc_tep_nh_idx,
+                                                  remote_svc_tep_nh_idx);
                         if (ret != SDK_RET_OK) {
                             return ret;
                         }
@@ -1033,7 +1044,8 @@ public:
                             // create V6 session
                             ret = create_session_info(vpc, rewrite_ip,
                                                       nexthop_idx, inh_idx,
-                                                      svc_tep_nexthop_idx);
+                                                      svc_tep_nh_idx,
+                                                      remote_svc_tep_nh_idx);
                             if (ret != SDK_RET_OK) {
                                 return ret;
                             }
@@ -1059,11 +1071,18 @@ public:
                         }
                         break;
                     case TEST_APP_S1_SVC_TUNNEL_IN_OUT:
+                        svc_tep_nh_idx++;
+                        if (svc_tep_nh_idx ==
+                                svc_tep_nh_idx_start + TESTAPP_MAX_SERVICE_TEP) {
+                            svc_tep_nh_idx = svc_tep_nh_idx_start;
+                        }
+                        break;
                     case TEST_APP_S1_REMOTE_SVC_TUNNEL_IN_OUT:
-                        svc_tep_nexthop_idx++;
-                        if (svc_tep_nexthop_idx ==
-                                svc_tep_nexthop_idx_start + TESTAPP_MAX_SERVICE_TEP) {
-                            svc_tep_nexthop_idx = svc_tep_nexthop_idx_start;
+                        remote_svc_tep_nh_idx++;
+                        if (remote_svc_tep_nh_idx ==
+                                remote_svc_tep_nh_idx_start + TESTAPP_MAX_REMOTE_SERVICE_TEP) {
+                            remote_svc_tep_nh_idx =
+                                remote_svc_tep_nh_idx_start;
                         }
                         break;
                     default:
@@ -1160,13 +1179,17 @@ public:
     void set_session_info_cfg_params(
                             uint32_t num_vpcs, uint32_t num_ip_per_vnic,
                             uint32_t num_remote_mappings, uint32_t meter_scale,
-                            uint32_t meter_pfx_per_rule, uint32_t num_nh) {
+                            uint32_t meter_pfx_per_rule, uint32_t num_nh,
+                            uint32_t num_svc_teps,
+                            uint32_t num_remote_svc_teps) {
         nexthop_idx_start = num_nh + TESTAPP_MAX_SERVICE_TEP +
                                 (num_ip_per_vnic * num_vpcs * 2) + 1;
         num_nexthop_idx_per_vpc = num_remote_mappings * 2;
         num_meter_idx_per_vpc = (meter_scale/meter_pfx_per_rule) +
                                 (meter_scale % meter_pfx_per_rule);
-        svc_tep_nexthop_idx_start = num_nh + 1;
+        svc_tep_nh_idx_start = num_nh + 1;
+        remote_svc_tep_nh_idx_start =
+            svc_tep_nh_idx_start + num_remote_svc_teps;
     }
 
     void set_cfg_params(bool dual_stack, uint32_t num_tcp,
