@@ -2750,6 +2750,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "status.rollout-build-version",
+            "description": "RolloutBuildVersion shows in progress rollout version.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -5121,6 +5128,10 @@
         "build-date": {
           "type": "string",
           "title": "Date and Time at which the source code was built"
+        },
+        "rollout-build-version": {
+          "type": "string",
+          "title": "RolloutBuildVersion shows in progress rollout version"
         }
       },
       "description": "VersionStatus contains the current state of the Version."

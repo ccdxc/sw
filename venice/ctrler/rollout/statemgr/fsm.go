@@ -297,6 +297,11 @@ func fsmAcIssueNextVeniceRollout(ros *RolloutState) {
 		ros.eventChan <- fsmEvVeniceBypass
 		return
 	}
+	//set the in progress rollout version
+	err := ros.writer.SetRolloutBuildVersion(ros.Spec.Version)
+	if err != nil {
+		log.Errorf("Failed to set cluster.Version %v", err)
+	}
 	numPendingRollout, err := ros.startNextVeniceRollout()
 	if err != nil {
 		log.Errorf("Error %s issuing rollout to next venice", err)
@@ -355,6 +360,10 @@ func fsmAcRolloutSuccess(ros *RolloutState) {
 	ros.raiseRolloutEvent(rollout.RolloutStatus_SUCCESS)
 	ros.Statemgr.deleteRollouts()
 	ros.currentState = fsmstRolloutSuccess
+	err := ros.writer.SetRolloutBuildVersion("")
+	if err != nil {
+		log.Errorf("Failed to set cluster.Version %s", err)
+	}
 	ros.stop()
 }
 func fsmAcRolloutFail(ros *RolloutState) {
@@ -365,6 +374,10 @@ func fsmAcRolloutFail(ros *RolloutState) {
 	ros.raiseRolloutEvent(rollout.RolloutStatus_FAILURE)
 	ros.Statemgr.deleteRollouts()
 	ros.currentState = fsmstRolloutFail
+	err := ros.writer.SetRolloutBuildVersion("")
+	if err != nil {
+		log.Errorf("Failed to set cluster.Version %s", err)
+	}
 	ros.stop()
 }
 func fsmAcRolloutSuspend(ros *RolloutState) {
@@ -375,5 +388,9 @@ func fsmAcRolloutSuspend(ros *RolloutState) {
 	ros.raiseRolloutEvent(rollout.RolloutStatus_SUSPENDED)
 	ros.Statemgr.deleteRollouts()
 	ros.currentState = fsmstRolloutSuspend
+	err := ros.writer.SetRolloutBuildVersion("")
+	if err != nil {
+		log.Errorf("Failed to set cluster.Version %s", err)
+	}
 	ros.stop()
 }

@@ -4,6 +4,7 @@ package writer
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/pensando/sw/api"
@@ -22,6 +23,7 @@ type Writer interface {
 	WriteRolloutAction(ro *rollout.Rollout) error
 	Close() error
 	GetClusterVersion() string
+	SetRolloutBuildVersion(string) error
 }
 
 // APISrvWriter is the writer instance
@@ -82,6 +84,43 @@ func (wr *APISrvWriter) GetClusterVersion() string {
 	}
 	log.Debugf("Version Object %+v", vobj)
 	return vobj.Status.BuildVersion
+}
+
+// SetRolloutBuildVersion sets the in progress rollout build version
+func (wr *APISrvWriter) SetRolloutBuildVersion(version string) error {
+
+	// get the api client
+	apicl, err := wr.getAPIClient()
+	if err != nil {
+		log.Infof("Updating Rollout Failed to connect get APIClient %v", err)
+		return err
+	}
+	obj := api.ObjectMeta{
+		Name: "version",
+	}
+
+	vobj, err := apicl.ClusterV1().Version().Get(context.Background(), &obj)
+	if err != nil {
+		log.Errorf("Failed to get cluster object (%+v)", err)
+		return err
+	}
+	log.Debugf("Version Object %+v", vobj)
+	if version == "" {
+		vobj.Status.RolloutBuildVersion = version
+		_, err := apicl.ClusterV1().Version().UpdateStatus(context.Background(), vobj)
+		if err != nil {
+			log.Errorf("Failed to update Rollout Version to cluster.Version %+v", err)
+			return err
+		}
+	} else {
+		vobj.Status.RolloutBuildVersion = fmt.Sprintf("Rollout in progress to version %s", version)
+		_, err := apicl.ClusterV1().Version().UpdateStatus(context.Background(), vobj)
+		if err != nil {
+			log.Errorf("Failed to update Rollout Version to cluster.Version %+v", err)
+			return err
+		}
+	}
+	return nil
 }
 
 // WriteRollout updates Rollout object

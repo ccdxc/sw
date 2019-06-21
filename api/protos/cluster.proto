@@ -126,6 +126,8 @@ message VersionStatus {
     string VCSCommit                        = 2 [(gogoproto.jsontag) = "vcs-commit,omitempty"];
     // Date and Time at which the source code was built
     string BuildDate                        = 3 [(gogoproto.jsontag) = "build-date,omitempty"];
+    // RolloutBuildVersion shows in progress rollout version
+    string RolloutBuildVersion             = 4 [(gogoproto.jsontag) = "rollout-build-version"];
 }
 
 // ClusterAuthBootstrapRequest is to set auth bootstrap flag in cluster

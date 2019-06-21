@@ -49,6 +49,9 @@ func (d *dummyWriter) WriteRolloutAction(ro *roproto.Rollout) error {
 func (d *dummyWriter) GetClusterVersion() string {
 	return ""
 }
+func (d *dummyWriter) SetRolloutBuildVersion(version string) error {
+	return nil
+}
 func TestVeniceRolloutWatch(t *testing.T) {
 	// Create VeniceRolloutObject and see that its properly created and that watchers see the updates to the object
 	// create recorder

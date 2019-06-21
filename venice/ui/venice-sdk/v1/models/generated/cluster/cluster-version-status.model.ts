@@ -12,6 +12,7 @@ export interface IClusterVersionStatus {
     'build-version'?: string;
     'vcs-commit'?: string;
     'build-date'?: string;
+    'rollout-build-version'?: string;
 }
 
 
@@ -19,6 +20,7 @@ export class ClusterVersionStatus extends BaseModel implements IClusterVersionSt
     'build-version': string = null;
     'vcs-commit': string = null;
     'build-date': string = null;
+    'rollout-build-version': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'build-version': {
             required: false,
@@ -29,6 +31,10 @@ export class ClusterVersionStatus extends BaseModel implements IClusterVersionSt
             type: 'string'
         },
         'build-date': {
+            required: false,
+            type: 'string'
+        },
+        'rollout-build-version': {
             required: false,
             type: 'string'
         },
@@ -85,6 +91,13 @@ export class ClusterVersionStatus extends BaseModel implements IClusterVersionSt
         } else {
             this['build-date'] = null
         }
+        if (values && values['rollout-build-version'] != null) {
+            this['rollout-build-version'] = values['rollout-build-version'];
+        } else if (fillDefaults && ClusterVersionStatus.hasDefaultValue('rollout-build-version')) {
+            this['rollout-build-version'] = ClusterVersionStatus.propInfo['rollout-build-version'].default;
+        } else {
+            this['rollout-build-version'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -95,6 +108,7 @@ export class ClusterVersionStatus extends BaseModel implements IClusterVersionSt
                 'build-version': CustomFormControl(new FormControl(this['build-version']), ClusterVersionStatus.propInfo['build-version']),
                 'vcs-commit': CustomFormControl(new FormControl(this['vcs-commit']), ClusterVersionStatus.propInfo['vcs-commit']),
                 'build-date': CustomFormControl(new FormControl(this['build-date']), ClusterVersionStatus.propInfo['build-date']),
+                'rollout-build-version': CustomFormControl(new FormControl(this['rollout-build-version']), ClusterVersionStatus.propInfo['rollout-build-version']),
             });
         }
         return this._formGroup;
@@ -109,6 +123,7 @@ export class ClusterVersionStatus extends BaseModel implements IClusterVersionSt
             this._formGroup.controls['build-version'].setValue(this['build-version']);
             this._formGroup.controls['vcs-commit'].setValue(this['vcs-commit']);
             this._formGroup.controls['build-date'].setValue(this['build-date']);
+            this._formGroup.controls['rollout-build-version'].setValue(this['rollout-build-version']);
         }
     }
 }

@@ -466,19 +466,20 @@ var typesMapCluster = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
-			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"build-date":       api.CLIInfo{Path: "Status.BuildDate", Skip: false, Insert: "", Help: ""},
-			"build-version":    api.CLIInfo{Path: "Status.BuildVersion", Skip: false, Insert: "", Help: ""},
-			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
-			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
-			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
-			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
-			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
-			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
-			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
-			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
-			"uuid":             api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
-			"vcs-commit":       api.CLIInfo{Path: "Status.VCSCommit", Skip: false, Insert: "", Help: ""},
+			"api-version":           api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"build-date":            api.CLIInfo{Path: "Status.BuildDate", Skip: false, Insert: "", Help: ""},
+			"build-version":         api.CLIInfo{Path: "Status.BuildVersion", Skip: false, Insert: "", Help: ""},
+			"generation-id":         api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"kind":                  api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"labels":                api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
+			"name":                  api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
+			"namespace":             api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"resource-version":      api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
+			"rollout-build-version": api.CLIInfo{Path: "Status.RolloutBuildVersion", Skip: false, Insert: "", Help: ""},
+			"self-link":             api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
+			"tenant":                api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
+			"uuid":                  api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
+			"vcs-commit":            api.CLIInfo{Path: "Status.VCSCommit", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"cluster.VersionSpec": &api.Struct{
@@ -493,6 +494,8 @@ var typesMapCluster = map[string]*api.Struct{
 			"VCSCommit": api.Field{Name: "VCSCommit", CLITag: api.CLIInfo{ID: "vcs-commit", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "vcs-commit", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"BuildDate": api.Field{Name: "BuildDate", CLITag: api.CLIInfo{ID: "build-date", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "build-date", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"RolloutBuildVersion": api.Field{Name: "RolloutBuildVersion", CLITag: api.CLIInfo{ID: "rollout-build-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rollout-build-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }
