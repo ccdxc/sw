@@ -16,6 +16,7 @@ import { TelemetryPollingMetricQueries, MetricsqueryService, MetricsPollingQuery
 import { MetricsUtility } from '@app/common/MetricsUtility';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { Telemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
+import { NaplesCondition, NaplesConditionValues} from '@app/components/cluster-group/naples/index.ts';
 
 @Component({
   selector: 'app-dsbdnapleswidget',
@@ -108,6 +109,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
   ];
 
   healthyNaplesCount = 0;
+  unknownNaplesCount = 0;
 
   themeColor: string = '#b592e3';
   backgroundIcon: Icon = {
@@ -148,6 +150,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
 
   healthyPercent: number;
   unhealthyPercent: number;
+  unknownPercent: number;
 
   dataDoughnut: ChartData;
 
@@ -176,13 +179,14 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
       return;
     }
     this.dataDoughnut =  {
-      labels: ['Healthy', 'Unhealthy'],
+      labels: ['Healthy', 'Unhealthy', 'Unknown'],
       datasets: [
         {
-          data: [this.healthyPercent, this.unhealthyPercent],
+          data: [this.healthyPercent, this.unhealthyPercent, this.unknownPercent],
           backgroundColor: [
             '#97b8df',
-            '#e57553'
+            '#e57553',
+            '#ffe4b5'
           ],
         }
       ]
@@ -194,16 +198,19 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
         titleFontFamily: 'Fira Sans Condensed',
         titleFontSize: 14,
         bodyFontFamily: 'Fira Sans Condensed',
-        bodyFontSize: 14,
+        bodyFontSize: 13,
         callbacks: {
           label: function(tooltipItem, data) {
             const dataset = data.datasets[tooltipItem.datasetIndex];
             const label = data.labels[tooltipItem.index];
-            const val = dataset.data[tooltipItem.index];
+            const val: any = dataset.data[tooltipItem.index];
+            const rounded: any = Math.round(val * 10) / 10;
             if (label === 'Healthy') {
-              return val + '% of Naples are healthy';
+              return rounded + '% of Naples are healthy';
+            } else if (label === 'Unhealthy') {
+              return rounded + '% of Naples have critical errors';
             } else {
-              return val + '% of Naples have critical errors';
+              return rounded + '% of Naples are not reachable';
             }
           }
         }
@@ -375,6 +382,8 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
     this.naples.forEach((naple) => {
       if (Utility.isNaplesNICHealthy(naple)) {
         this.healthyNaplesCount += 1;
+      } else if (Utility.getNaplesCondition(naple) === NaplesConditionValues.UNKNOWN) {
+        this.unknownNaplesCount += 1;
       }
       switch (naple.status['admission-phase']) {
         case ClusterSmartNICStatus_admission_phase.ADMITTED:
@@ -396,18 +405,20 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
       // Using floor instead of round so that even if
       // it is 99.5% healthy, we show 1% error
       // to alert the user
-      this.healthyPercent = Math.floor((this.healthyNaplesCount / this.naples.length) * 100);
-      this.unhealthyPercent = 100 - this.healthyPercent;
+      this.healthyPercent = (this.healthyNaplesCount / this.naples.length) * 100;
+      this.unknownPercent = (this.unknownNaplesCount / this.naples.length) * 100;
+      this.unhealthyPercent = 100 - this.healthyPercent - this.unknownPercent;
       this.generatePieChartText();
       this.generateDoughnut();
     } else {
       this.healthyPercent = null;
       this.unhealthyPercent = null;
+      this.unknownPercent = null;
     }
   }
 
   generatePieChartText() {
-    this.pieChartPercent = this.healthyPercent + '%';
+    this.pieChartPercent = Math.round(this.healthyPercent) + '%';
     this.pieChartText = 'Healthy';
   }
 
