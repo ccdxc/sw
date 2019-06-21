@@ -4,13 +4,13 @@
     <div fxFlex="auto" fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'"
          fxLayoutAlign="start stretch"
          class="newrollout-content">
-      <div fxFlex fxLayout="column">
+      <div fxFlex="auto" fxLayout="column">
         <div fxFlex="auto" class="newrollout-select-button-div" fxLayout="row">
           <p-selectButton [options]="rolloutNicNodeTypes" [(ngModel)]="selectedRolloutNicNodeTypes"
                           (onChange)="onNicNodeTypeChange($event)">
           </p-selectButton>
         </div>
-        <div fxFlex fxLayout="column" [formGroup]="newRollout.$formGroup">
+        <div fxFlex="auto" fxLayout="column" [formGroup]="newRollout.$formGroup">
           <div fxFlex="nogrow" fxLayout="row" class="newrollout-row" formGroupName="meta">
             <!-- meta row-->
             <div fxFlex="nogrow" class="newrollout-text">Name *:</div>
@@ -85,7 +85,8 @@
                        placeholder="Max nodes to upgrade" min='1' max='10'>
               </div>
               <div fxFlex></div>
-              <div fxFlex fxLayout="column" class="newrollout-nic-div" *ngIf="isToShowNicDiv()">
+              <div fxFlex="auto" fxLayout="column" class="newrollout-nic-div"
+                   *ngIf="isToShowNicDiv()">
 
                 <div fxFlex="auto" class="newrollout-maxnic-div" fxLayout="row">
                   <div fxFlex="nogrow" class="newrollout-text">Max Allowed NICs Failure :</div>
