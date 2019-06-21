@@ -542,22 +542,22 @@ ionic_port_init(struct ionic *ionic)
 
 	idev->port_info_sz = IONIC_ALIGN(sizeof(*idev->port_info), VMK_PAGE_SIZE);
 	idev->port_info = ionic_dma_zalloc_align(ionic_driver.heap_id,
-									priv_data->dma_engine_coherent,
-									idev->port_info_sz,
-									VMK_PAGE_SIZE,
-									&idev->port_info_pa);
+                                                 priv_data->dma_engine_coherent,
+                                                 idev->port_info_sz,
+                                                 VMK_PAGE_SIZE,
+                                                 &idev->port_info_pa);
 	if (VMK_UNLIKELY(idev->port_info == NULL)) {
-			ionic_en_err("ionic_dma_alloc_align() failed, status: NO MEMORY");
-			return VMK_NO_MEMORY;
+                ionic_en_err("ionic_dma_alloc_align() failed, status: NO MEMORY");
+                return VMK_NO_MEMORY;
 	}
 
 	vmk_MutexLock(ionic->dev_cmd_lock);
 
 	nwords = IONIC_MIN(ARRAY_SIZE(ident->port.config.words),
-						ARRAY_SIZE(idev->dev_cmd->data));
+                           ARRAY_SIZE(idev->dev_cmd->data));
 	for (i = 0; i < nwords; i++)
 		ionic_writel_raw(ident->port.config.words[i],
-						(vmk_VA)&idev->dev_cmd->data[i]);
+                                 (vmk_VA)&idev->dev_cmd->data[i]);
 
 	ionic_dev_cmd_port_init(idev);
 	err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
@@ -590,15 +590,17 @@ ionic_port_reset(struct ionic *ionic)
                                        struct ionic_en_priv_data,
                                        ionic);
 
-	ionic_dma_free(ionic_driver.heap_id,
-                       priv_data->dma_engine_coherent,
-		       idev->port_info_sz,
-                       idev->port_info,
-                       idev->port_info_pa);
-	idev->port_info_pa = 0;
-	idev->port_info = NULL;
+        if (idev->port_info) {
+                ionic_dma_free(ionic_driver.heap_id,
+                               priv_data->dma_engine_coherent,
+                               idev->port_info_sz,
+                               idev->port_info,
+                               idev->port_info_pa);
+                idev->port_info_pa = 0;
+                idev->port_info = NULL;
+        }
 
-	return 0;
+	return VMK_OK;
 }
 
 
@@ -784,6 +786,7 @@ static VMK_ReturnStatus
 ionic_en_scan(vmk_Device device)                                  // IN
 {
         VMK_ReturnStatus status;
+        struct ionic *ionic;
         struct ionic_en_priv_data *priv_data;
 
 	ionic_en_dbg("ionic_en_scan() called");
@@ -796,15 +799,17 @@ ionic_en_scan(vmk_Device device)                                  // IN
                 return status;
         }
 
+        ionic = &priv_data->ionic;
+
 	/* Configure the ports */
-	status = ionic_port_identify(&priv_data->ionic);
+	status = ionic_port_identify(ionic);
 	if (status != VMK_OK) {
 		ionic_en_err("Cannot identify port: %s, aborting",
                         vmk_StatusToString(status));
 		return status;
 	}
 
-	status = ionic_port_init(&priv_data->ionic);
+	status = ionic_port_init(ionic);
 	if (status != VMK_OK) {
 		ionic_en_err("Cannot init port: %s, aborting",
                         vmk_StatusToString(status));
@@ -812,18 +817,18 @@ ionic_en_scan(vmk_Device device)                                  // IN
 	}
 
         /* Configure LIFs */
-	status = ionic_lif_identify(&priv_data->ionic);
+	status = ionic_lif_identify(ionic);
 	if (status != VMK_OK) {
 		ionic_en_err("Cannot identify LIFs: %s, aborting",
                         vmk_StatusToString(status));
-		return status;
-	}
+                goto lif_ident_err;
+        }
 
-        status = ionic_lifs_size(&priv_data->ionic);
+        status = ionic_lifs_size(ionic);
 	if (status != VMK_OK) {
 		ionic_en_err("ionic_lifs_size() failed, status: %s",
 			  vmk_StatusToString(status));
-                return status;
+                goto lif_ident_err;
         }
         priv_data->is_lifs_size_compl = VMK_TRUE;
 
@@ -834,14 +839,14 @@ ionic_en_scan(vmk_Device device)                                  // IN
                 goto uplink_init_err;
         }
 
-        status = ionic_lifs_alloc(&priv_data->ionic);
+        status = ionic_lifs_alloc(ionic);
         if (status != VMK_OK) {
                 ionic_en_err("ionic_lifs_alloc() failed, status: %s",
                           vmk_StatusToString(status));
                 goto lifs_alloc_err;
         }
 
-        status = ionic_lifs_init(&priv_data->ionic);
+        status = ionic_lifs_init(ionic);
         if (status != VMK_OK) {
                 ionic_en_err("ionic_lifs_init() failed, status: %s",
                           vmk_StatusToString(status));
@@ -871,16 +876,20 @@ ionic_en_scan(vmk_Device device)                                  // IN
         return status;
 
 sup_mode_err:
-        ionic_lifs_deinit(&priv_data->ionic);
+        ionic_lifs_deinit(ionic);
 
 lifs_init_err:
-        ionic_lifs_free(&priv_data->ionic);
+        ionic_lifs_free(ionic);
 
 lifs_alloc_err:
         ionic_en_uplink_cleanup(priv_data); 
 
 uplink_init_err:
         ionic_lifs_size_undo(priv_data);
+        priv_data->is_lifs_size_compl = VMK_FALSE;
+
+lif_ident_err:
+        ionic_port_reset(ionic);
 
         return status;
 }
@@ -928,7 +937,9 @@ ionic_en_detach(vmk_Device device)                                // IN
                 VMK_ASSERT(0);
         }
 
-        ionic_port_reset(&priv_data->ionic);
+        if ((priv_data->is_lifs_size_compl)) {
+                ionic_port_reset(&priv_data->ionic);
+        }
 
         ionic_dma_engine_destroy(priv_data->dma_engine_streaming);
         ionic_dma_engine_destroy(priv_data->dma_engine_coherent);
