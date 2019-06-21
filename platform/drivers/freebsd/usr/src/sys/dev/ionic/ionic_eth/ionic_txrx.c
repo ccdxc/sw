@@ -343,7 +343,7 @@ ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 	}
 
 #ifdef IONIC_DEBUG
-	if (comp->len > ETHER_MAX_FRAME(rxq->lif->netdev, ETHERTYPE_VLAN, 1)) {
+	if (comp->len > ETHER_MAX_FRAME(ifp, ETHERTYPE_VLAN, 1)) {
 		IONIC_QUE_INFO(rxq, "RX PKT TOO LARGE!  comp->len %d\n", comp->len);
 		stats->length_err++;
 		m_freem(m);
@@ -365,7 +365,7 @@ ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 	bus_dmamap_sync(rxq->buf_tag, rxbuf->dma_map, BUS_DMASYNC_POSTREAD);
 
 	prefetch(m->data - NET_IP_ALIGN);
-	m->m_pkthdr.rcvif = rxq->lif->netdev;
+	m->m_pkthdr.rcvif = ifp;
 	/*
 	 * Write the length here, if its chained mbufs for SG list,
 	 * it will be overwritten.
@@ -412,7 +412,7 @@ ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 
 	/* Send the packet to stack. */
 	rxbuf->m = NULL;
-	rxq->lif->netdev->if_input(rxq->lif->netdev, m);
+	ifp->if_input(ifp, m);
 }
 
 /*
@@ -694,7 +694,7 @@ ionic_legacy_isr(int irq, void *data)
 	notifyq = lif->notifyq;
 	status = readq(idev->intr_status);
 
-	IONIC_NETDEV_INFO(lif->netdev, "legacy INTR status(%p): 0x%lx\n",
+	IONIC_NETDEV_INFO(ifp, "legacy INTR status(%p): 0x%lx\n",
 		idev->intr_status, status);
 
 	if (status == 0) {
@@ -1571,7 +1571,7 @@ ionic_flow_ctrl_sysctl(SYSCTL_HANDLER_ARGS)
 	int err, fc;
 
 	/* Not allowed to change for mgmt interface. */
-	if (lif->ionic->is_mgmt_nic)
+	if (ionic->is_mgmt_nic)
 		return (EINVAL);
 
 	err = sysctl_handle_int(oidp, &fc, 0, req);
@@ -1594,8 +1594,10 @@ ionic_flow_ctrl_sysctl(SYSCTL_HANDLER_ARGS)
 	}
 
 	if (idev->port_info->config.pause_type != pause_type) {
+		IONIC_DEV_LOCK(ionic);
 		ionic_dev_cmd_port_pause(idev, pause_type);
 		err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
+		IONIC_DEV_UNLOCK(ionic);
 		if (err) {
 			IONIC_NETDEV_ERROR(lif->netdev,
 				"failed to set pause, error = %d\n", err);
@@ -1607,6 +1609,49 @@ ionic_flow_ctrl_sysctl(SYSCTL_HANDLER_ARGS)
 	return 0;
 }
 
+static int
+ionic_link_pause_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	struct lif *lif = oidp->oid_arg1;
+	struct ionic *ionic = lif->ionic;
+	struct ionic_dev *idev = &ionic->idev;
+	struct ifnet *ifp = lif->netdev;
+	uint8_t pause_type;
+	int err, type;
+
+	/* Not allowed to change for mgmt interface. */
+	if (ionic->is_mgmt_nic)
+		return (EINVAL);
+
+	err = sysctl_handle_int(oidp, &type, 0, req);
+	if ((err) || (req->newptr == NULL))
+		return (err);
+
+	pause_type = idev->port_info->config.pause_type & IONIC_PAUSE_TYPE_MASK;
+	if (pause_type != PORT_PAUSE_TYPE_LINK) {
+		if_printf(ifp, "first set pause type to link\n");
+		return (ENXIO);
+	}
+	if (type < 1 || type > 3) {
+		if_printf(ifp, "value out of range: 1(rx), 2(tx) or 3(both)\n");
+		return (ENXIO);
+	}
+
+	if (type & 1)
+		pause_type |= IONIC_PAUSE_F_RX;
+	if (type & 2)
+		pause_type |= IONIC_PAUSE_F_TX;
+
+	IONIC_DEV_LOCK(ionic);
+	ionic_dev_cmd_port_pause(idev, pause_type);
+	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
+	IONIC_DEV_UNLOCK(ionic);
+	if (err)
+		IONIC_NETDEV_ERROR(ifp,
+			"failed to set pause type, error = %d\n", err);
+
+	return (err);
+}
 /*
  * Print various media details.
  */
@@ -2281,7 +2326,7 @@ ionic_qos_apply_sysctl(SYSCTL_HANDLER_ARGS)
 	int i, err, val, total_wt;
 
 	/* Not allowed to change for mgmt interface. */
-	if (lif->ionic->is_mgmt_nic)
+	if (ionic->is_mgmt_nic)
 		return (EINVAL);
 
 	err = sysctl_handle_int(oidp, &val, 0, req);
@@ -2509,6 +2554,10 @@ ionic_setup_device_stats(struct lif *lif)
 			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
 			ionic_flow_ctrl_sysctl, "I",
 			"Set flow control - 0(off), 1(link), 2(pfc)");
+	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "link_pause",
+			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
+			ionic_link_pause_sysctl, "I",
+			"Set link pause - 1(rx), 2(tx) or 3(both)");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "reset",
 			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
 			ionic_lif_reset_sysctl, "I", "Reinit lif");
