@@ -15,8 +15,8 @@ import { Subscription } from 'rxjs';
 import { TelemetryPollingMetricQueries, MetricsqueryService, MetricsPollingQuery, MetricsPollingOptions } from '@app/services/metricsquery.service';
 import { MetricsUtility } from '@app/common/MetricsUtility';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
-import { Telemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
-import { NaplesCondition, NaplesConditionValues} from '@app/components/cluster-group/naples/index.ts';
+import { NaplesConditionValues} from '@app/components/cluster-group/naples/index.ts';
+import { Telemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function } from '@sdk/v1/models/generated/telemetry_query';
 
 @Component({
   selector: 'app-dsbdnapleswidget',
@@ -291,7 +291,9 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
       queries: [],
       tenant: Utility.getInstance().getTenant()
     };
-    queryList.queries.push(MetricsUtility.timeSeriesQueryPolling('Cluster'));
+    const timeQuery = MetricsUtility.timeSeriesQueryPolling('Cluster');
+    timeQuery.query.function = Telemetry_queryMetricsQuerySpec_function.MEDIAN;
+    queryList.queries.push(timeQuery);
     queryList.queries.push(this.avgQuery());
 
     const sub = this.metricsqueryService.pollMetrics('naplesHealthCards', queryList).subscribe(

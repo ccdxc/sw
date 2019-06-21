@@ -76,7 +76,8 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
 
   linegraphStats: LineGraphStat[] = [
     this.activeFlows,
-    this.totalConnections,
+    // Removing CPS for now as it is an unreliable stat
+    // this.totalConnections,
   ];
 
   themeColor: string = '#61b3a0';

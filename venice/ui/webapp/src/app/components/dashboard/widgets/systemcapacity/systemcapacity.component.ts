@@ -144,7 +144,7 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
     isPercentage: false,
     scaleMin: 0,
     valueFormatter: (val) => {
-      if (val) {
+      if (val != null) {
         return Utility.formatBytes(val, 2, 3);
       }
       return '';

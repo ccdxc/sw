@@ -74,9 +74,11 @@
                 [cardState]="cardState"
                 [menuItems]="menuItems"
                 (click)="toggleFlip()">
-    <app-linegraph [@fade] #lineGraph *ngIf="cardState === cardStates.READY" fxFlex="100%"
-                   fxLayout="row"
-                   class="dsbdpolicyhealth-card-back" [stats]="linegraphStats"></app-linegraph>
+    <div fxFlex="100%" fxLayout="column" fxLayoutAlign="center stretch">
+      <app-linegraph [@fade] #lineGraph *ngIf="cardState === cardStates.READY" fxFlex="70%"
+                     fxLayout="row"
+                     class="dsbdpolicyhealth-card-back" [stats]="linegraphStats"></app-linegraph>
+    </div>
   </app-basecard>
 
 </ng-template>

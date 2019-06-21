@@ -124,7 +124,7 @@ export const sideNavMenu: SideNavItem[] = [
         link: ['/monitoring', 'alertsevents']
       },
       {
-        label: 'Telemetry',
+        label: 'Metrics',
         icon: {
           cssClass: 'material-icons',
           matIconName: 'insert_chart_outlined'

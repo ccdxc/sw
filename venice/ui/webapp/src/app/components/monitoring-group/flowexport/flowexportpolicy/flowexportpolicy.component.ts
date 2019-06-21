@@ -34,7 +34,7 @@ export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoring
   };
 
   cols: TableCol[] = [
-    { field: 'meta.name', header: 'Targets', class: 'flowexportpolicy-column-name', sortable: false, width: 25 },
+    { field: 'meta.name', header: 'Name', class: 'flowexportpolicy-column-name', sortable: false, width: 25 },
     { field: 'spec.match-rules', header: 'Match Rules', class: 'flowexportpolicy-column-match-rules', sortable: false, width: 35 },
     { field: 'spec.exports', header: 'Targets', class: 'flowexportpolicy-column-targets', sortable: false, width: 40 },
   ];

@@ -12,25 +12,27 @@
       </div>
     </div>
     <div fxFlex="auto" fxLayout="column" class="telemetrychartedit-explore-bottom">
-      <mat-tab-group fxFlex="auto" [disableRipple]="true" [(selectedIndex)]="activeTabNumber"
+      <ng-container *ngTemplateOutlet="GraphOptionsTab"></ng-container>
+      <ng-container *ngTemplateOutlet="dataSource"></ng-container>
+      <!-- <mat-tab-group fxFlex="auto" [disableRipple]="true" [(selectedIndex)]="activeTabNumber"
                      dynamicHeight>
         <mat-tab label="DATA SOURCES">
-          <div fxFlex [style.height]="'100%'">
-            <!-- Using ngIf here to force a redraw of this tabs contents
+          <div fxFlex [style.height]="'100%'"> -->
+      <!-- Using ngIf here to force a redraw of this tabs contents
                     Otherwise, all elements that have an animation on them render with no height -->
-            <ng-container *ngIf="activeTabNumber === 0">
+      <!-- <ng-container *ngIf="activeTabNumber === 0">
               <ng-container *ngTemplateOutlet="dataSource"></ng-container>
             </ng-container>
           </div>
-        </mat-tab>
-        <!-- If we can add a source, then there is at least one
+        </mat-tab> -->
+      <!-- If we can add a source, then there is at least one
                 data source selected so we allow changing graph options -->
-        <mat-tab label="GRAPH OPTIONS" [disabled]="!canChangeGraphOptions()">
+      <!-- <mat-tab label="GRAPH OPTIONS" [disabled]="!canChangeGraphOptions()">
           <div fxFlex [style.height]="'100%'">
             <ng-container *ngTemplateOutlet="GraphOptionsTab"></ng-container>
           </div>
         </mat-tab>
-      </mat-tab-group>
+      </mat-tab-group> -->
     </div>
   </div>
 </div>
@@ -41,7 +43,7 @@
       <div class="global-button-primary telemetry-button"
            [ngClass]="canAddDataSource() ? '' : 'global-button-disabled'"
            (click)="addDataSourceClick()">
-        ADD SOURCE
+        ADD QUERY
       </div>
     </div>
     <div fxFlex="10px"></div>
