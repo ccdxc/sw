@@ -80,7 +80,19 @@ initialize_pds(void)
 
     memset(&capri_cfg, 0, sizeof(capri_cfg_t));
     capri_cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
-    std::string mpart_json = capri_cfg.cfg_path + "/" + PDS_PLATFORM + "/hbm_mem.json";
+    catalog *platform_catalog =  catalog::factory(capri_cfg.cfg_path,
+                                                  "",
+                                                  platform_type_t::PLATFORM_TYPE_HW);
+    uint32_t mem_sz = platform_catalog->memory_capacity();
+    std::string mem_path = "";
+    if (mem_sz == 8) {
+        mem_path = "/8g";
+    } else if (mem_sz == 4) {
+        mem_path = "/4g";
+    }
+    std::string mpart_json = capri_cfg.cfg_path + "/" +
+                             PDS_PLATFORM + mem_path + "/hbm_mem.json";
+
     capri_cfg.mempartition =
         sdk::platform::utils::mpartition::factory(mpart_json.c_str());
 
