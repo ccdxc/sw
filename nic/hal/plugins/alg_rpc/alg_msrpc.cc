@@ -167,11 +167,9 @@ __uuid_to_str(uuid_t *u, char *str) {
 
     sprintf(str, "%01x-%01x-%01x-%01x%01x-", u->time_lo, u->time_mid,
             u->time_hi_vers, u->clock_seq_hi, u->clock_seq_lo);
-    HAL_TRACE_DEBUG("UUID: {}", str);
     offset = strlen(str);
     for (int i=0; i<6; i++) {
          sprintf(&str[offset], "%01x", u->node[i]);
-         HAL_TRACE_DEBUG("string {} offset {}", str[offset], u->node[i]);
          offset += 2;
     }
 }
@@ -276,7 +274,7 @@ __parse_msrpc_bind_hdr(const uint8_t *pkt, uint32_t dlen,
        ctxt_elem.reserved = pkt[offset++];
        (void)__parse_uuid(pkt, &offset,
                            &ctxt_elem.abs_syntax.if_uuid, rpc_info->data_rep);
-       HAL_TRACE_DEBUG("UUID: {}", ctxt_elem.abs_syntax.if_uuid);
+       HAL_TRACE_VERBOSE("UUID: {}", ctxt_elem.abs_syntax.if_uuid);
        if (!memcmp(&epm_uuid,
                      &ctxt_elem.abs_syntax.if_uuid, UUID_BYTES)) {
            rpc_info->msrpc_ctxt_id[ctxt_id++] = ele;
@@ -388,7 +386,7 @@ __parse_msrpc_req_hdr (const uint8_t *pkt, uint32_t dlen,
         hdr.uuid_ptr = __pack_uint32(pkt, &offset, rpc_info->data_rep);
     (void)__parse_uuid(pkt, &offset, &hdr.uuid, rpc_info->data_rep);
 
-    HAL_TRACE_DEBUG("Ctxt id: {}", hdr.ctxt_id);
+    HAL_TRACE_VERBOSE("Ctxt id: {}", hdr.ctxt_id);
 
     return offset;
 }
@@ -434,7 +432,7 @@ __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
     // Parse maximum of MAX_FLOORS as we only expect so many
     twr->twr_arr.num_floors = (twr->twr_arr.num_floors > MAX_FLOORS)?MAX_FLOORS:\
                                     twr->twr_arr.num_floors;
-    HAL_TRACE_DEBUG("Num floors: {}", twr->twr_arr.num_floors);
+    HAL_TRACE_VERBOSE("Num floors: {}", twr->twr_arr.num_floors);
     for (int i=0; (i<twr->twr_arr.num_floors && (offset < dlen) && (dlen-offset) > 6); i++) {
         msrpc_epm_flr_t flr = {};
         flr.lhs_length = __pack_uint16(pkt, &offset, rpc_info->data_rep);
@@ -475,7 +473,7 @@ __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
                 flr.port = __pack_uint16(pkt, &offset);
                 if (set_dport) {
                     rpc_info->dport = flr.port;
-                    HAL_TRACE_DEBUG("Setting Dport: {}", rpc_info->dport);
+                    HAL_TRACE_VERBOSE("Setting Dport: {}", rpc_info->dport);
                 }
                 break;
 
@@ -496,7 +494,7 @@ __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
                 if (pdu_type == PDU_REQ) {
                     uuid_t *uuid = (uuid_t*)rpc_info->uuid;
                     memcpy(rpc_info->uuid, &pkt[uuid_offset], UUID_SZ);
-                    HAL_TRACE_DEBUG("RPC info UUID: {} floor proto: {} UUID Bytes: {}", *uuid, flr.protocol, UUID_BYTES);
+                    HAL_TRACE_VERBOSE("RPC info UUID: {} floor proto: {} UUID Bytes: {}", *uuid, flr.protocol, UUID_BYTES);
                 }
                 rpc_info->vers = flr.version;
                 rpc_info->prot = (flr.protocol == EPM_PROTO_CN)?\
@@ -530,7 +528,7 @@ __parse_msrpc_epm_req_hdr(const uint8_t *pkt, uint32_t dlen,
     bzero(&epm_req, sizeof(msrpc_epm_req_hdr_t));
     offset += __parse_msrpc_epm_map_twr(pkt, dlen, &epm_req.twr, is64bit, rpc_info, PDU_REQ);
 
-    HAL_TRACE_DEBUG("Parsed EPM REQ Header: {}", epm_req);
+    HAL_TRACE_VERBOSE("Parsed EPM REQ Header: {}", epm_req);
 
 #if 0
 
@@ -637,7 +635,7 @@ __parse_msrpc_epm_rsp_hdr(const uint8_t *pkt, uint32_t dlen,
     }
 #endif
 
-    HAL_TRACE_DEBUG("Parsed EPM RSP Header: {}", epm_rsp);
+    HAL_TRACE_VERBOSE("Parsed EPM RSP Header: {}", epm_rsp);
 
     return (offset+twr_offset);
 }
@@ -738,7 +736,7 @@ static inline int get_is_uuid_allowed(rpc_info_t *rpc_info) {
     uuid_t     *uuid = (uuid_t *)rpc_info->uuid;
 
     for (uint8_t idx=0; idx<rpc_info->pgmid_sz; idx++) {
-        HAL_TRACE_DEBUG("RPC allowed uuid: {}  received uuid: {}", *((uuid_t *)rpc[idx].uuid), *uuid);
+        HAL_TRACE_VERBOSE("RPC allowed uuid: {}  received uuid: {}", *((uuid_t *)rpc[idx].uuid), *uuid);
         if (!memcmp(rpc_info->uuid, (uint8_t *)&rpc[idx].uuid, UUID_BYTES)) {
             return rpc[idx].timeout;
         }
@@ -769,7 +767,7 @@ size_t parse_msrpc_cn_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
     uint32_t                 pgm_offset = 0;
     rpc_info_t              *rpc_info = (rpc_info_t *)l4_sess->info;
 
-    HAL_TRACE_DEBUG("In parse_msrpc_cn_control_flow {:p}", (void *)ctxt);
+    HAL_TRACE_VERBOSE("In parse_msrpc_cn_control_flow {:p}", (void *)ctxt);
 
     if (pkt_len < (rpc_msg_offset + sizeof(msrpc_cn_common_hdr_t))) {
         HAL_TRACE_ERR("Cannot process further -- packet len: {} is smaller than expected: {}",
@@ -832,7 +830,7 @@ size_t parse_msrpc_cn_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
         return pkt_len;
     }
 
-    HAL_TRACE_DEBUG("Parsed MSRPC Connection oriented header: {}", rpc_hdr);
+    HAL_TRACE_VERBOSE("Parsed MSRPC Connection oriented header: {}", rpc_hdr);
 
     switch (rpc_info->pkt_type)
     {
@@ -907,7 +905,7 @@ size_t parse_msrpc_cn_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                     return 0;
                 }
 
-                HAL_TRACE_DEBUG("RPC INFO DPORT: {}", rpc_info->dport);
+                HAL_TRACE_VERBOSE("RPC INFO DPORT: {}", rpc_info->dport);
                 // If the IP address is not filled in we assume that the sender is the
                 // server and use that.
                 if (!rpc_info->ip.v4_addr)
@@ -926,7 +924,7 @@ size_t parse_msrpc_cn_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
             break;
     };
 
-    HAL_TRACE_DEBUG("Processed Connection-Oriented MSRPC Header");
+    HAL_TRACE_VERBOSE("Processed Connection-Oriented MSRPC Header");
 
     return pkt_len;
 }
@@ -949,7 +947,7 @@ size_t parse_msrpc_dg_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
 
     __parse_dg_common_hdr(pkt, rpc_msg_offset, &rpc_hdr, rpc_info);
 
-    HAL_TRACE_DEBUG("Parsed MSRPC Connectionless header: {}", rpc_hdr);
+    HAL_TRACE_VERBOSE("Parsed MSRPC Connectionless header: {}", rpc_hdr);
 
     if (rpc_info->pkt_type == PDU_NONE) {
         /*
@@ -973,7 +971,7 @@ size_t parse_msrpc_dg_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
         if ((rpc_info->pkt_type == PDU_REQ && rpc_hdr.ptype == PDU_RESP) &&
              (rpc_info->call_id == rpc_hdr.seqnum &&
               (!memcmp(&rpc_info->act_id, &rpc_hdr.act_id, UUID_BYTES)))) {
-            HAL_TRACE_DEBUG("Received matching PDU response key: {}", ctx->key());
+            HAL_TRACE_VERBOSE("Received matching PDU response key: {}", ctx->key());
             // Register completion handler
             ctx->register_completion_handler(msrpc_completion_hdlr);
         }
@@ -1015,7 +1013,7 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
     app_session_t        *app_sess = NULL;
     uint8_t               rc = 0;
 
-    HAL_TRACE_DEBUG("In alg_msrpc_exec {:p}", (void *)l4_sess);
+    HAL_TRACE_VERBOSE("In alg_msrpc_exec {:p}", (void *)l4_sess);
     if (sfw_info->alg_proto == nwsec::APP_SVC_MSFT_RPC &&
         (!ctx.existing_session())) {
         /*
@@ -1063,7 +1061,7 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
                 ret = ctx.update_flow(flowupd);
 
                 if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN)) == TCP_FLAG_SYN) {
-                    HAL_TRACE_DEBUG("Setting up buff for Iflow");
+                    HAL_TRACE_VERBOSE("Setting up buff for Iflow");
                     // Setup TCP buffer for IFLOW
                     l4_sess->tcpbuf[DIR_IFLOW] = tcp_buffer_t::factory(
                                               htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
@@ -1088,7 +1086,7 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
 
         if (l4_sess->isCtrl == true && ctx.key().proto == IP_PROTO_TCP) {
             if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped()) {
-                HAL_TRACE_DEBUG("Setting up buffer for rflow");
+                HAL_TRACE_VERBOSE("Setting up buffer for rflow");
                 // Set up TCP buffer for RFLOW
                 l4_sess->tcpbuf[DIR_RFLOW] = tcp_buffer_t::factory(
                                           htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
