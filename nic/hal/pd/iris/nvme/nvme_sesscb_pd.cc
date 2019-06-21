@@ -53,14 +53,16 @@ nvme_sesscb_pd_compute_hw_hash_func (void *key, uint32_t ht_size)
     return sdk::lib::hash_algo::fnv_hash(key, sizeof(nvme_sesscb_hw_id_t)) % ht_size;
 }
 
-uint64_t nvme_sesscb_pd_sesq_prod_ci_addr_get(uint32_t g_sess_id)
+uint32_t nvme_sesscb_pd_sesq_prod_ci_offset_get()
 {
-    uint64_t addr;
+    uint32_t offset;
 
-    addr = g_pd_nvme_global->txsessprodcb_base + g_sess_id * sizeof(nvme_txsessprodcb_t);
-    //assumption: tcp_q_ci is at offset 0 of the struct nvme_txsessprodcb_t
+    //assumption: tcp_q_ci is at offset 62 of the struct nvme_txsessprodcb_t
+    //(i.e; last 2 bytes field of 64 bytes cb)
 
-    return addr;
+    offset = sizeof(nvme_txsessprodcb_t) - 2;
+
+    return offset;
 }
 
 /********************************************
@@ -171,7 +173,8 @@ p4pd_add_or_del_txsessprodcb_entry (pd_nvme_sesscb_t *nvme_sesscb_pd, bool del, 
         ret = HAL_RET_HW_FAIL;
     }
 
-    ret = p4pd_update_sesq_ci_addr(sesq_qid, data_addr + 0);
+    ret = p4pd_update_sesq_ci_addr(sesq_qid, 
+                                   data_addr + nvme_sesscb_pd_sesq_prod_ci_offset_get());
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to write TCP CB with sesq_ci_addr");
         ret = HAL_RET_HW_FAIL;

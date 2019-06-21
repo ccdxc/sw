@@ -1,13 +1,15 @@
 # Test Spec
 selectors:
     root: ref://store/templates/id=NVME_NS
-    nvmens: filter://lba_size=512
+    nvmens: filter://lba_size=4096
 
+scale_factor        : 5
 packets:
 
     - packet:
         id          : EXP_PKT   # Expected packet
-        payloadsize : callback://nvme/nvme/GetPktPayloadSize/pkt_id=0
+        scale       : True
+        payloadsize : callback://nvme/nvme/GetScalePktPayloadSize
         template    : callback://nvme/nvme/PickPktTemplate/v4=ETH_IPV4_TCP,v6=ETH_IPV6_TCP
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
@@ -30,11 +32,11 @@ packets:
             tcp:
                 sport   : ref://testcase/config/nvmesession/session/iflow/sport
                 dport   : ref://testcase/config/nvmesession/session/iflow/dport
-                seq     : callback://nvme/tcp/GetSeqNum/pkt_id=0
+                seq     : callback://nvme/tcp/GetScaleSeqNum
                 ack     : callback://nvme/tcp/GetAckNum
                 window  : callback://nvme/tcp/GetWindow
             payload:
-                data    : callback://nvme/nvme/GetPktPayloadBytes/pkt_id=0
+                data    : callback://nvme/nvme/GetScalePktPayloadBytes
 
     - packet:
         id          : ACK_PKT   # Expected packet
@@ -113,5 +115,6 @@ trigger:
 expect:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=EXP_PKT
+            scale   : True
+            object  : scale-ref://testcase/packets/id=EXP_PKT
             port    : ref://testcase/config/nvmesession/session/responder/ep/intf/ports

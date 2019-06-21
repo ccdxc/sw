@@ -142,7 +142,7 @@ post_tbl_updates:
     //in the data page
     sll         r6, 1, LOG_MAX_NUM_LBAS_IN_PAGE
     add         r5, CURR_LBA_OFFSET, r0
-    sle         F_FIRST_PAGE, r5, r6
+    slt         F_FIRST_PAGE, r5, r6
     mincr       r5, LOG_MAX_NUM_LBAS_IN_PAGE, 0
     seq         F_FIRST_LBA_IN_PAGE, r5, r0
     sll         r5, r5, K_LOG_LBA_SIZE

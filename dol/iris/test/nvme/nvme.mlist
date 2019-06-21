@@ -36,3 +36,24 @@ modules:
         module  : nvme_write_10_lba_no_prp3
         spec    : nvme_write_10_lba_no_prp3.testspec
         ignore  : False
+    - module:
+        name    : NVME_WRITE_10_LBA4K
+        enable  : True
+        package : test.nvme
+        module  : nvme_write_10_lba4k
+        spec    : nvme_write_10_lba4k.testspec
+        ignore  : False
+    - module:
+        name    : NVME_WRITE_10_LBA4K_PRP3
+        enable  : True
+        package : test.nvme
+        module  : nvme_write_10_lba4k_prp3
+        spec    : nvme_write_10_lba4k_prp3.testspec
+        ignore  : False
+    - module:
+        name    : NVME_WRITE_10_LBA4K_NO_PRP3
+        enable  : True
+        package : test.nvme
+        module  : nvme_write_10_lba4k_no_prp3
+        spec    : nvme_write_10_lba4k_no_prp3.testspec
+        ignore  : False

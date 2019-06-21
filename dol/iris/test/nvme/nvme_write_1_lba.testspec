@@ -1,13 +1,13 @@
 # Test Spec
 selectors:
     root: ref://store/templates/id=NVME_NS
-    nvmens: filter://lba_size=512
+    nvmens: filter://any
 
 packets:
 
     - packet:
         id          : EXP_PKT   # Expected packet
-        payloadsize : ref://testcase/pvtdata/capsulecmd_len
+        payloadsize : callback://nvme/nvme/GetPktPayloadSize/pkt_id=0
         template    : callback://nvme/nvme/PickPktTemplate/v4=ETH_IPV4_TCP,v6=ETH_IPV6_TCP
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
@@ -30,12 +30,42 @@ packets:
             tcp:
                 sport   : ref://testcase/config/nvmesession/session/iflow/sport
                 dport   : ref://testcase/config/nvmesession/session/iflow/dport
-                seq     : callback://nvme/tcp/GetSeqNum
+                seq     : callback://nvme/tcp/GetSeqNum/pkt_id=0
                 ack     : callback://nvme/tcp/GetAckNum
                 window  : callback://nvme/tcp/GetWindow
             payload:
-                data    : ref://testcase/pvtdata/capsulecmd_bytes
+                data    : callback://nvme/nvme/GetPktPayloadBytes/pkt_id=0
 
+    - packet:
+        id          : ACK_PKT   # Expected packet
+        payloadsize : 0
+        template    : callback://nvme/nvme/PickPktTemplate/v4=ETH_IPV4_TCP,v6=ETH_IPV6_TCP
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/nvmesession/session/responder/ep/macaddr
+                dst     : ref://testcase/config/nvmesession/session/initiator/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/nvmesession/session/responder/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/nvmesession/session/responder/addr
+                dst     : ref://testcase/config/nvmesession/session/initiator/addr
+                ttl     : 64
+                tos     : 0
+            ipv6:
+                src     : ref://testcase/config/nvmesession/session/responder/addr
+                dst     : ref://testcase/config/nvmesession/session/initiator/addr
+                hlim    : 64
+            tcp:
+                sport   : ref://testcase/config/nvmesession/session/iflow/dport
+                dport   : ref://testcase/config/nvmesession/session/iflow/sport
+                seq     : callback://nvme/tcp/GetRxSeqNum
+                ack     : callback://nvme/tcp/GetRxAckNum
+                window  : callback://nvme/tcp/GetRxWindow
+            payload:
 buffers:
     - buffer:
         id      : BUF
@@ -74,6 +104,10 @@ trigger:
         fields:
             upd : 0x9 # PI from DB data and DB_SCHED_EVAL
 
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=ACK_PKT
+            port    : ref://testcase/config/nvmesession/session/responder/ep/intf/ports
 expect:
     packets:
         - packet:

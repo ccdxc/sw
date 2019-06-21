@@ -87,7 +87,7 @@ class NvmeSessionObject(base.ConfigObjectBase):
         self.cq = None
         self.ns = None
         self.host_page_size = None
-        self.mtu = 4096
+        self.mtu = 8192
 
     def Configure(self):
         nvme_lif = self.session.initiator.ep.intf.lif.nvme_lif

@@ -77,6 +77,9 @@ def PopulatePreQStates(tc):
     if GlobalOptions.dryrun:
         return
 
+    #variable used for scale related test cases
+    tc.pvtdata.curr_pkt_id = 0
+
     tc.pvtdata.gbl = Store.objects.GetAllByClass(NvmeGlobalObject)[0]
     tc.pvtdata.resourcecb_pre_state = tc.pvtdata.gbl.ResourcecbRead()
     tc.pvtdata.hwxtstxcb_pre_state = tc.pvtdata.gbl.HwxtstxcbRead()
@@ -136,6 +139,8 @@ def PopulatePreQStates(tc):
     tcb = Store.objects.Get(tc.config.nvmesession.tcp_other_cbid)
     tcb.GetObjValPd()
     tc.pvtdata.tcb_pre_state = copy.deepcopy(tcb)
+    logger.info('pretcb: snd_nxt: %d snd_una: %d rcv_nxt: %d ' \
+                 %(tcb.snd_nxt, tcb.snd_una, tcb.rcv_nxt))
 
     tc.pvtdata.sqcb_pre_state = tc.config.nvmesession.sq.qstate.Read()
     tc.pvtdata.cqcb_pre_state = tc.config.nvmesession.cq.qstate.Read()
@@ -155,6 +160,8 @@ def PopulatePostQStates(tc):
     tcb = Store.objects.Get(tc.config.nvmesession.tcp_other_cbid)
     tcb.GetObjValPd()
     tc.pvtdata.tcb_post_state = copy.deepcopy(tcb)
+    logger.info('posttcb: snd_nxt: %d snd_una: %d rcv_nxt: %d ' \
+                 %(tcb.snd_nxt, tcb.snd_una, tcb.rcv_nxt))
 
     tc.pvtdata.resourcecb_post_state = tc.pvtdata.gbl.ResourcecbRead()
     tc.pvtdata.hwxtstxcb_post_state = tc.pvtdata.gbl.HwxtstxcbRead()
@@ -420,5 +427,6 @@ def PopulateWriteCapsuleCmdPDUWithData(tc):
 
     tc.pvtdata.capsulecmd_bytes = bytes(hdr)+bytes(hdgst)+bytes(pad)+bytes(tc.pvtdata.cipher_data)+bytes(ddgst)
     tc.pvtdata.capsulecmd_len = plen
+    tc.pvtdata.capsulecmd_pdo = pdo
                     
     return
