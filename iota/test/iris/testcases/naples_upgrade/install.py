@@ -8,6 +8,7 @@ import threading
 import iota.harness.api as api
 import iota.test.iris.testcases.naples_upgrade.common as common
 import iota.protos.pygen.iota_types_pb2 as types_pb2
+import iota.test.iris.testcases.penctl.common as pencommon
 
 def __installNaplesFwLatestImage(node, img):
 
@@ -61,5 +62,11 @@ def Main(step):
         ret = common.copyNaplesFwImage(naplesHost, common.UPGRADE_TEST_APP + ".bin", "/update/")
         if ret != api.types.status.SUCCESS:
             return ret
+
+    req = api.Trigger_CreateExecuteCommandsRequest()
+    for n in naplesHosts:
+        pencommon.AddPenctlCommand(req, n, "update time")
+
+    api.Trigger(req)
 
     return api.types.status.SUCCESS
