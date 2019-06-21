@@ -14,7 +14,7 @@
         "instructions": true
       },
       "settings": {
-        "trace-size": "1024",
+        "trace-size": "4096",
         "wrap": true
       },
       "description": "this enables tracing for all mpus in all stages in txdma pipeline"

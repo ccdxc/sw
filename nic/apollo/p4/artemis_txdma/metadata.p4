@@ -29,7 +29,6 @@ header_type txdma_control_metadata_t {
         rule_priority       : 10;
         svc_id              : 10;
 
-        vpc_id              : 8;
         mapping_ohash       : 32;
 
         pad1                : 4;

@@ -8,7 +8,7 @@
 action route_res_handler() {
     if ((scratch_metadata.field16 & ROUTE_RESULT_TYPE_PEER_VPC_MASK) != 0) {
         // Set VPCID in PHV from LPM result
-        modify_field(txdma_control.vpc_id, scratch_metadata.field32);
+        modify_field(rx_to_tx_hdr.vpc_id, scratch_metadata.field32);
         // For NH_TYPE=VNET, set rewrite Tx: src_ip / Rx:dst_ip to 00 (nothing to do)
         // Set Encap for NH_TYPE=VNET
         modify_field(session_info_hint.tx_rewrite_flags_encap, 1);
