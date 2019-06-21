@@ -81,6 +81,7 @@ export class BackgroundProcessManager {
                     this.getControllerService().invokeErrorToaster('Upload', 'Failed to upload file. ' + this.getFilesNames(this.myBackgroundVeniceImageFileUpload.files));
                     this.getControllerService().publish(Eventtypes.BACKGROUND_FILEUPLOAD_FAILURE, { xhr: xhr, files: files, status: 'failure' });
                 }
+                this.unRegisterVeniceImageFileUpload() ;  // VS-498 remove reference
             }
         };
     }

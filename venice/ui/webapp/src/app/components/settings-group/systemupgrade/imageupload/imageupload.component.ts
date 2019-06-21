@@ -71,10 +71,9 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   startingSortOrder: number = -1;
 
   cols: TableCol[] = [
-    { field: 'meta.name', header: 'Name', class: 'imageupload-column-common imageupload-column-who', sortable: true, width: 25 },
-    { field: 'meta.mod-time', header: 'Time', class: 'imageupload-column-common imageupload-column-date', sortable: true, width: 10 },
-    { field: 'meta.labels.Version', header: 'Version', class: 'imageupload-column-common imageupload-column-version', sortable: true, width: 25 },
+    { field: 'meta.labels.Version', header: 'Version', class: 'imageupload-column-common imageupload-column-version', sortable: true, width: 40 },
     { field: 'meta.labels', header: 'Details', class: 'imageupload-column-common imageupload-column-labels', sortable: false, width: 40 },
+    { field: 'meta.mod-time', header: 'Time', class: 'imageupload-column-common imageupload-column-date', sortable: true, width: 20 },
   ];
 
   exportFilename: string = 'Venice-images';
@@ -194,7 +193,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   /**
    * 2019-05-xx implementation logic
    * once bundle.tar is uploaded, backend will un-tar it to multiple files. objstoreService.listXXX()/Watch() will bring back multiple files, including bundle.tar and metadat.json
-   * We get labels information from metadata.json,  attach metadata.labels to bundle.tar. We display bundle.tar in table only. If user delete bundle.tar, backend will handle deleting the un-tar files.
+   * We get labels information from metadata.json,  attach metadata.labels to bundle.tar. We display bundle+version in table only. If user delete bundle.tar, backend will handle deleting the un-tar files.
    */
     let metaImage: ObjstoreObject = null;
     let rolloutImages: IObjstoreObjectList = null;
@@ -335,7 +334,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     const column = col.field;
     switch (column) {
       case 'meta.name':
-        return 'bundle.tar';
+        return 'bundle ' + this.getBundlerTarVersion(record);  // VS-499
       case 'meta.labels':
         return (value) ? Utility.displaySimpleObject(value) : '';
       case 'meta.labels.Version':
