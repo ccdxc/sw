@@ -154,6 +154,10 @@ class QpObject(base.ConfigObjectBase):
             #self.pd.AddMr(self.sq_mr)
             #self.pd.AddMr(self.rq_mr)
 
+        if (GlobalOptions.dryrun):
+            dcqcn_data = bytes(DCQCN_CB_T_SIZE_BYTES)
+            self.dcqcn_data = RdmaDCQCNstate(dcqcn_data)
+        
         self.Show()
 
         return
@@ -579,8 +583,6 @@ class QpObject(base.ConfigObjectBase):
 
     def ReadDcqcnCb(self):
         if (GlobalOptions.dryrun):
-            dcqcn_data = bytes(DCQCN_CB_T_SIZE_BYTES)
-            self.dcqcn_data = RdmaDCQCNstate(dcqcn_data)
             return
         self.dcqcn_data = RdmaDCQCNstate(model_wrap.read_mem(self.header_temp_addr + AH_ENTRY_T_SIZE_BYTES, DCQCN_CB_T_SIZE_BYTES))
         logger.ShowScapyObject(self.dcqcn_data)

@@ -35,7 +35,10 @@ def TestCaseSetup(tc):
     else:
         tc.pvtdata.rq_psn = 10  # random
     tc.pvtdata.ah_id_len = rs.lqp.ah_handle | len(rs.lqp.HdrTemplate) << 24
-    tc.pvtdata.dma_addr = rs.lqp.hdr_slab.phy_address[0]
+    if not GlobalOptions.dryrun:
+        tc.pvtdata.dma_addr = rs.lqp.hdr_slab.phy_address[0]
+    else:
+        tc.pvtdata.dma_addr = 0
 
     # Assuming SQ, RQ share CQ
     rs.lqp.sq_cq.qstate.Read()
