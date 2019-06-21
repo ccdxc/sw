@@ -167,6 +167,7 @@ struct lif {
 	bool uc_overflow;
 	unsigned int nucast;
 
+	union lif_identity *identity;
 	struct lif_info *info;
 	dma_addr_t info_pa;
 	u32 info_sz;

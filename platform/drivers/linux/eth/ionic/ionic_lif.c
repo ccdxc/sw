@@ -988,8 +988,6 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 		return NULL;
 	ionic_lif_identify(ionic, IONIC_LIF_TYPE_MACVLAN, lid);
 	nqueues = le32_to_cpu(lid->eth.config.queue_count[IONIC_QTYPE_RXQ]);
-	kfree(lid);
-	lid = NULL;
 
 	if (nqueues > 1)
 		netdev_warn(lower_dev, "Only 1 queue used per slave LIF\n");
@@ -999,7 +997,7 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 	if (lif_index < 0) {
 		netdev_info(lower_dev, "no lifs left for macvlan offload: %d, max=%d\n",
 			    lif_index, ionic->nslaves);
-		return NULL;
+		goto err_out_free_identify;
 	}
 	netdev_info(lower_dev, "slave index %d for macvlan dev %s\n",
 		    lif_index, upper_dev->name);
@@ -1007,8 +1005,9 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 	lif = ionic_lif_alloc(ionic, lif_index);
 	if (IS_ERR(lif)) {
 		ionic_slave_free(ionic, lif_index);
-		return NULL;
+		goto err_out_free_identify;
 	}
+	lif->identity = lid;
 
 	lif->upper_dev = upper_dev;
 	err = ionic_lif_init(lif);
@@ -1089,6 +1088,8 @@ err_out_deinit_slave:
 	ionic_lif_deinit(lif);
 err_out_free_slave:
 	ionic_lif_free(lif);
+err_out_free_identify:
+	kfree(lid);
 
 	return NULL;
 }
@@ -1792,13 +1793,24 @@ err_out_free_netdev:
 
 int ionic_lifs_alloc(struct ionic *ionic)
 {
+	union lif_identity *lid;
 	struct lif *lif;
 
 	INIT_LIST_HEAD(&ionic->lifs);
 
 	/* only build the first lif, others are for dynamic macvlan offload */
 	set_bit(0, ionic->lifbits);
+
+	lid = kzalloc(sizeof(*lid), GFP_KERNEL);
+	if (!lid)
+		return -ENOMEM;
+	ionic_lif_identify(ionic, IONIC_LIF_TYPE_CLASSIC, lid);
+
 	lif = ionic_lif_alloc(ionic, 0);
+	if (lif)
+		lif->identity = lid;
+	else
+		kfree(lid);
 
 	return PTR_ERR_OR_ZERO(lif);
 }
@@ -1844,6 +1856,7 @@ static void ionic_lif_free(struct lif *lif)
 	cancel_work_sync(&lif->deferred.work);
 
 	/* free lif info */
+	kfree(lif->identity);
 	if (lif->info) {
 		dma_free_coherent(dev, lif->info_sz, lif->info, lif->info_pa);
 		lif->info = NULL;

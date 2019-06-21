@@ -467,8 +467,63 @@ static int netdev_show(struct seq_file *seq, void *v)
 }
 single(netdev);
 
+static int lif_identity_show(struct seq_file *seq, void *v)
+{
+	union lif_identity *lid = seq->private;
+
+	seq_printf(seq, "capabilities:      0x%llx\n", lid->capabilities);
+	seq_printf(seq, "eth-version:       0x%x\n", lid->eth.version);
+	seq_printf(seq, "max_ucast_filters: %d\n", lid->eth.max_ucast_filters);
+	seq_printf(seq, "max_mcast_filters: %d\n", lid->eth.max_mcast_filters);
+	seq_printf(seq, "rss_ind_tbl_sz:    %d\n", lid->eth.rss_ind_tbl_sz);
+	seq_printf(seq, "min_frame_size:    %d\n", lid->eth.min_frame_size);
+	seq_printf(seq, "max_frame_size:    %d\n", lid->eth.max_frame_size);
+
+	seq_printf(seq, "state:             %d\n", lid->eth.config.state);
+	seq_printf(seq, "name:              \"%s\"\n", lid->eth.config.name);
+	seq_printf(seq, "mtu:               %d\n", lid->eth.config.mtu);
+	seq_printf(seq, "mac:               %pM\n", lid->eth.config.mac);
+	seq_printf(seq, "features:          0x%08llx\n",
+		   lid->eth.config.features);
+	seq_printf(seq, "adminq-count:      %d\n",
+		   lid->eth.config.queue_count[IONIC_QTYPE_ADMINQ]);
+	seq_printf(seq, "notifyq-count:     %d\n",
+		   lid->eth.config.queue_count[IONIC_QTYPE_NOTIFYQ]);
+	seq_printf(seq, "rxq-count:         %d\n",
+		   lid->eth.config.queue_count[IONIC_QTYPE_RXQ]);
+	seq_printf(seq, "txq-count:         %d\n",
+		   lid->eth.config.queue_count[IONIC_QTYPE_TXQ]);
+	seq_printf(seq, "eq-count:          %d\n",
+		   lid->eth.config.queue_count[IONIC_QTYPE_EQ]);
+
+	seq_printf(seq, "\n");
+
+	seq_printf(seq, "rdma_version:        0x%x\n", lid->rdma.version);
+	seq_printf(seq, "rdma_qp_opcodes:     %d\n", lid->rdma.qp_opcodes);
+	seq_printf(seq, "rdma_admin_opcodes:  %d\n", lid->rdma.admin_opcodes);
+	seq_printf(seq, "rdma_npts_per_lif:   %d\n", lid->rdma.npts_per_lif);
+	seq_printf(seq, "rdma_nmrs_per_lif:   %d\n", lid->rdma.nmrs_per_lif);
+	seq_printf(seq, "rdma_nahs_per_lif:   %d\n", lid->rdma.nahs_per_lif);
+	seq_printf(seq, "rdma_max_stride:     %d\n", lid->rdma.max_stride);
+	seq_printf(seq, "rdma_cl_stride:      %d\n", lid->rdma.cl_stride);
+	seq_printf(seq, "rdma_pte_stride:     %d\n", lid->rdma.pte_stride);
+	seq_printf(seq, "rdma_rrq_stride:     %d\n", lid->rdma.rrq_stride);
+	seq_printf(seq, "rdma_rsq_stride:     %d\n", lid->rdma.rsq_stride);
+	seq_printf(seq, "rdma_dcqcn_profiles: %d\n", lid->rdma.dcqcn_profiles);
+
+	identity_show_qtype(seq, "rdma_aq", &lid->rdma.aq_qtype);
+	identity_show_qtype(seq, "rdma_sq", &lid->rdma.sq_qtype);
+	identity_show_qtype(seq, "rdma_rq", &lid->rdma.rq_qtype);
+	identity_show_qtype(seq, "rdma_cq", &lid->rdma.cq_qtype);
+	identity_show_qtype(seq, "rdma_eq", &lid->rdma.eq_qtype);
+
+	return 0;
+}
+single(lif_identity);
+
 int ionic_debugfs_add_lif(struct lif *lif)
 {
+	struct dentry *identity_dentry;
 	struct dentry *netdev_dentry;
 
 	lif->dentry = debugfs_create_dir(lif->name, lif->ionic->dentry);
@@ -479,6 +534,11 @@ int ionic_debugfs_add_lif(struct lif *lif)
 					    lif->netdev, &netdev_fops);
 	if (IS_ERR_OR_NULL(netdev_dentry))
 		return PTR_ERR(netdev_dentry);
+
+	identity_dentry = debugfs_create_file("identity", 0400, lif->dentry,
+					      lif->identity, &lif_identity_fops);
+	if (IS_ERR_OR_NULL(identity_dentry))
+		return PTR_ERR(identity_dentry);
 
 	return 0;
 }
