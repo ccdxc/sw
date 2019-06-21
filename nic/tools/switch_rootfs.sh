@@ -25,6 +25,50 @@ save_fwupgrade_state()
     cp /var/run/fwupgrade.state $obfl_dir && sync
 }
 
+zombie_procs_count=0
+
+check_zombies()
+{
+    zombie_procs_parents_pids=`ps -o ppid,stat,pid,args | awk '$2~/^Z/ { print $1}'`
+    zombie_procs_count=`ps -o ppid,stat,pid,args | awk '$2~/^Z/ { print $1}' | wc -l`
+
+    update_fwupgrade_state "$zombie_procs_count ZOMBIE PROCESSES FOUND...TRYING TO REMOVE ZOMBIES FROM SYSTEM"
+    save_fwupgrade_state
+
+    for i in $zombie_procs_parents_pids
+    do
+        #if parent is not pid 1 i.e. init then only kill parent
+        if [ $i -ne 1 ]; then
+            kill -s SIGCHLD $i
+            sleep 1
+            kill -KILL $i
+        fi
+    done
+}
+
+kill_processes()
+{
+    setsid killall5 -TERM -o $$
+    sleep 2
+    setsid killall5 -KILL -o $$
+    sleep 2
+
+    check_zombies
+
+    echo "Total $zombie_procs_count zombie processes found in systems"
+
+    if [ $zombie_procs_count -ne 0 ]; then
+
+        update_fwupgrade_state "KILLING RESIDUAL PROCESESSES AFTER REMOVING ZOMBIE PROCESSES"
+        save_fwupgrade_state
+
+        setsid killall5 -TERM -o $$
+        sleep 1
+        setsid killall5 -KILL -o $$
+        sleep 1
+    fi
+}
+
 mainfwa_partuuid=d4e53be5-7dc1-4199-914c-48edfea92c5e
 mainfwb_partuuid=e2fd6d28-3300-4979-8062-b8ab599f3898
 
@@ -75,8 +119,19 @@ else
     exit 1
 fi
 
-rm -rf /data/pre-upgrade-logs.tar
-tar -cf /data/pre-upgrade-logs.tar /var/log/
+update_fwupgrade_state "REMOVING MNIC DRIVERS FROM KERNEL"
+
+ifconfig bond0 down
+rmmod mnet mnet_uio_pdrv_genirq ionic_mnic
+
+echo "Killing all processes except init and switch_rootfs.sh"
+update_fwupgrade_state "KILLING ALL PROCESSES EXCEPT INIT..."
+kill_processes
+update_fwupgrade_state "KILLED ALL PROCESSES EXCEPT INIT"
+save_fwupgrade_state
+
+rm -rf /data/pre-upgrade-logs.tar*
+tar -czf /data/pre-upgrade-logs.tar.gz /var/log/
 
 echo "Switching filesystem from $cur_image to $new_image"
 
@@ -132,40 +187,6 @@ if [ $? -ne 0 ]; then
     save_fwupgrade_state
     unmount_fs
     exit 1
-fi
-
-update_fwupgrade_state "REMOVING MNIC DRIVERS FROM KERNEL"
-
-ifconfig bond0 down
-rmmod mnet mnet_uio_pdrv_genirq ionic_mnic
-
-echo "Killing all processes except init and switch_rootfs.sh"
-update_fwupgrade_state "KILLING ALL PROCESSES EXCEPT INIT..."
-killall5 -9
-sleep 3
-update_fwupgrade_state "KILLED ALL PROCESSES EXCEPT INIT"
-save_fwupgrade_state
-
-num_stale_procs=`ps -o comm,stat,pid | awk '$2~/^Z/ { print $3}' | wc -l`
-stale_procs=`ps -o comm,stat,pid | awk '$2~/^Z/ { print $3}'`
-
-if [ $num_stale_procs -ne 0 ]; then
-    echo "Wait for 3 seconds to get processes killed"
-    sleep 3
-    num_stale_procs=`ps -o comm,stat,pid | awk '$2~/^Z/ { print $3}' | wc -l`
-    stale_procs=`ps -o comm,stat,pid | awk '$2~/^Z/ { print $3}'`
-    if [ $num_stale_procs -eq 0 ]; then
-        :
-    else
-        echo "$num_stale_procs stale processes(zombie) are still running"
-        update_fwupgrade_state "ONE OR MORE ZOMBIE PROCESSES FOUND...CANNOT CONTINUE UPGRADE"
-        echo $stale_procs
-
-        obfl_dir=`mount | grep obfl | cut -d' ' -f3`
-        ps -o pid,pgid,ppid,tty,vsz,sid,stat,rss,args > $obfl_dir/fw_upgrade_failure_pids.log && sync
-        echo "Upgrade Failed !!!"
-        exit 1
-    fi
 fi
 
 update_fwupgrade_state "KILLING INIT..."

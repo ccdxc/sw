@@ -12,6 +12,17 @@ export COVFILE=$NIC_DIR/conf/hw_bullseye_hal.cov
 
 ulimit -c unlimited
 
+#Clean up any stale files from /update dir when we are doing fresh boot
+
+#if we see overlay's lowerdir is /new that means we are starting in upgrade mode
+grep "overlay" /proc/mounts | grep -q "lowerdir=/new"
+
+#if lowerdir=/new is not found then we are in fresh boot mode
+if [ $? -ne 0 ]; then
+    cd /update
+    find . \( -path ./lost+found -o -path ./naples_fw.tar -o \) -prune -o -exec rm -rf '{}' ';'
+fi
+
 # Reserving port for HAL GRPC server
 sysctl -w net.ipv4.ip_local_reserved_ports=50054
 
