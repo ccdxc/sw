@@ -1411,8 +1411,17 @@ VMK_ReturnStatus
 ionic_en_uplink_cap_enable(vmk_AddrCookie driver_data,            // IN
                            vmk_UplinkCap cap)                     // IN
 {
+        struct ionic_en_priv_data *priv_data =
+                (struct ionic_en_priv_data *) driver_data.ptr;
+        struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
+
         ionic_en_info("ionic_en_uplink_cap_enable() called, "
-                   "cap: %d is enabled.", cap);
+                      "cap: %d is enabled.", cap);
+
+        if (cap == VMK_UPLINK_CAP_IPV4_CSO) {
+                uplink_handle->hw_features |= ETH_HW_RX_CSUM;
+                uplink_handle->hw_features |= ETH_HW_TX_CSUM;
+        }
 
         return VMK_OK;
 }
@@ -1442,8 +1451,18 @@ VMK_ReturnStatus
 ionic_en_uplink_cap_disable(vmk_AddrCookie driver_data,           // IN
                             vmk_UplinkCap cap)                    // IN
 {
+        struct ionic_en_priv_data *priv_data =
+                (struct ionic_en_priv_data *) driver_data.ptr;
+        struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
+
         ionic_en_info("ionic_en_uplink_cap_disable() called, "
-                   "cap: %d is disabled.", cap);
+                      "cap: %d is disabled.", cap);
+
+        if (cap == VMK_UPLINK_CAP_IPV4_CSO) {
+                uplink_handle->hw_features &= ~ETH_HW_RX_CSUM;
+                uplink_handle->hw_features &= ~ETH_HW_TX_CSUM;
+        }
+
         return VMK_OK;
 }
 
