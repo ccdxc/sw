@@ -93,7 +93,7 @@ func getNextTickDuration() time.Duration {
 	if nextTick.Before(now) {
 		nextTick = nextTick.Add(intervalPeriod)
 	}
-	return nextTick.Sub(time.Now())
+	return time.Until(nextTick)
 }
 
 //NewDefragJobTicker creates a new Ticker
@@ -599,10 +599,13 @@ func performQuorumDefrag(start bool) {
 
 		for {
 			<-jt.t.C
-			var members, _ = env.Quorum.List()
-			for _, member := range members {
-				env.Quorum.Defrag(&member)
-				time.Sleep(time.Minute * 5)
+			if env.Quorum != nil {
+				if members, err := env.Quorum.List(); err == nil {
+					for _, member := range members {
+						env.Quorum.Defrag(&member)
+						time.Sleep(time.Minute * 5)
+					}
+				}
 			}
 			jt.updateDefragJobTicker()
 		}
