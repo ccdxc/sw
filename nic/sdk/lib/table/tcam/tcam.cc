@@ -14,7 +14,11 @@ namespace sdk {
 namespace table {
 
 typedef struct tcam_iter_cb_s {
+    tcam *tcam_table;
     tcam_iterate_func_t func;
+    void *swkey;
+    void *swkey_mask;
+    void *swdata;
     const void          *iter_cb_data;
 } tcam_iter_cb_t;
 
@@ -447,8 +451,17 @@ bool tcam_iter_walk_cb(void *entry, void *ctxt)
     tcam_entry_t *te = (tcam_entry_t *)entry;
     tcam_iter_cb_t *te_cb = (tcam_iter_cb_t *)ctxt;
 
+    te_cb->tcam_table->retrieve_from_hw(te->index,
+                                        te_cb->swkey,
+                                        te_cb->swkey_mask,
+                                        te_cb->swdata);
+
+    te_cb->func(te_cb->swkey, te_cb->swkey_mask,
+                te_cb->swdata, te->index, te_cb->iter_cb_data);
+#if 0
     te_cb->func(te->key, te->key_mask,
                 te->data, te->index, te_cb->iter_cb_data);
+#endif
     return false;
 
 }
@@ -461,10 +474,18 @@ tcam::iterate(tcam_iterate_func_t cb, const void *cb_data)
     sdk_ret_t rs = SDK_RET_OK;
     tcam_iter_cb_t te_cb  = {0};
 
+    te_cb.tcam_table = this;
+    te_cb.swkey = SDK_CALLOC(SDK_MEM_ALLOC_ID_HW_KEY, swkey_len_);
+    te_cb.swkey_mask = SDK_CALLOC(SDK_MEM_ALLOC_ID_HW_KEY, swkey_len_);
+    te_cb.swdata = SDK_CALLOC(SDK_MEM_ALLOC_ID_HW_KEY, swdata_len_);
     te_cb.func = cb;
     te_cb.iter_cb_data = cb_data;
 
     this->entry_ht_->walk(tcam_iter_walk_cb, &te_cb);
+
+    SDK_FREE(SDK_MEM_ALLOC_ID_HW_KEY, te_cb.swkey);
+    SDK_FREE(SDK_MEM_ALLOC_ID_HW_KEY, te_cb.swkey_mask);
+    SDK_FREE(SDK_MEM_ALLOC_ID_HW_KEY, te_cb.swdata);
 
 #if 0
     sdk_ret_t rs = SDK_RET_OK;
