@@ -72,7 +72,7 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
     // reserve an entry in VNIC_MAPPING table
     if (spec->switch_vnic) {
-        vnic_mapping_key.ctag_1_vid = spec->vnic_encap.val.vlan_tag;
+        vnic_mapping_key.ctag_1_vid = spec->fabric_encap.val.vlan_tag;
         vnic_mapping_mask.ctag_1_vid_mask = ~0;
     } else {
         if ((spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) &&
@@ -443,7 +443,7 @@ vnic_impl::activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
     }
 
     if (spec->switch_vnic) {
-        vnic_mapping_key.ctag_1_vid = spec->vnic_encap.val.vlan_tag;
+        vnic_mapping_key.ctag_1_vid = spec->fabric_encap.val.vlan_tag;
         vnic_mapping_mask.ctag_1_vid_mask = ~0;
     } else {
         if ((spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) &&
@@ -459,7 +459,6 @@ vnic_impl::activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
     vnic_mapping_data.mapping_info_action.epoch = epoch;
     vnic_mapping_data.mapping_info_action.vnic_id = hw_id_;
     vnic_mapping_data.mapping_info_action.vpc_id = vpc->hw_id();
-
     api_params.key = &vnic_mapping_key;
     api_params.mask = &vnic_mapping_mask;
     api_params.appdata = &vnic_mapping_data;

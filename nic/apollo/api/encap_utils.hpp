@@ -36,7 +36,9 @@ pds_encap2str (pds_encap_t encap)
     case PDS_ENCAP_TYPE_VXLAN:
         snprintf(buf, 32, "VXLAN:%u", encap.val.vnid);
         break;
+    case PDS_ENCAP_TYPE_NONE:
     default:
+        snprintf(buf, 32, "None");
         break;
     }
     return buf;
