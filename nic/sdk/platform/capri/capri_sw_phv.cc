@@ -20,8 +20,8 @@
 #include "third-party/asic/capri/model/cap_dpa/cap_dpp_csr.h"
 
 namespace sdk {
-    namespace platform {
-        namespace capri {
+namespace platform {
+namespace capri {
             
 //16 64B PHV entries(Flits)
 #define CAPRI_SW_PHV_NUM_MEM_ENTRIES 16
@@ -54,8 +54,7 @@ capri_psp_swphv_init (bool rx)
 
     int index = 0;
 
-    SDK_TRACE_DEBUG("CAPRI-PSP::{}: Initializing PSP Global Config", 
-                    __func__);
+    SDK_TRACE_DEBUG("CAPRI-PSP:: Initializing PSP Global Config");
 
     psp_csr->cfg_sw_phv_global.start_enable(1);
     psp_csr->cfg_sw_phv_global.err_enable(0);
@@ -78,7 +77,7 @@ capri_psp_swphv_init (bool rx)
         sw_phv_ctrl.frame_size_enable(0);
         sw_phv_ctrl.packet_len_enable(0);
         sw_phv_ctrl.qid_enable(0);
-	sw_phv_ctrl.write();
+        sw_phv_ctrl.write();
 
         cap_psp_csr_cfg_sw_phv_config_t &sw_phv_cfg = psp_csr->cfg_sw_phv_config[index];
 
@@ -88,7 +87,8 @@ capri_psp_swphv_init (bool rx)
         sw_phv_cfg.counter_max(0);
         sw_phv_cfg.qid_min(0);
         sw_phv_cfg.qid_max(0);
-	sw_phv_cfg.write();
+
+        sw_phv_cfg.write();
     }
 
     return SDK_RET_OK;
@@ -107,8 +107,7 @@ capri_ppa_swphv_init ()
         cap_dpp_csr_t &dpp_csr = cap0.dpp.dpp[pidx];
         int index = 0;
 
-        SDK_TRACE_DEBUG("CAPRI-PPA::{}: Initializing PPA Global Config", 
-                        __func__);
+        SDK_TRACE_DEBUG("CAPRI-PPA:: Initializing PPA Global Config");
 
 	// enable sw phv
         ppa_csr.cfg_sw_phv_global.start_enable(1);
@@ -185,8 +184,7 @@ capri_pr_psp_sw_phv_inject (uint8_t prof_num, uint8_t start_idx, uint8_t num_fli
     cap_psp_csr_t &pr_psp_csr = cap0.pr.pr.psp;
     pu_cpp_int< 512 > flit_data;
 
-    SDK_TRACE_DEBUG("CAPRI-PSP-PHV-INJECT::{}: Injecting Software PHV.", 
-                    __func__);
+    SDK_TRACE_DEBUG("CAPRI-PSP-PHV-INJECT:: Injecting Software PHV.");
 
     int index = 0;
     capri_pd_flit_t *curr_flit_ptr = (capri_pd_flit_t *)data;
@@ -219,21 +217,20 @@ capri_pr_psp_sw_phv_inject (uint8_t prof_num, uint8_t start_idx, uint8_t num_fli
     sw_phv_cfg.insertion_period_clocks(0);
     sw_phv_cfg.counter_max(0);
     sw_phv_cfg.qid_min(0);
-    sw_phv_cfg.qid_max(0);
+    sw_phv_cfg.qid_max(16777215); //16M
     sw_phv_cfg.write();
 
     cap_psp_csr_cfg_sw_phv_control_t &sw_phv_ctrl = pr_psp_csr.cfg_sw_phv_control[prof_num];
     sw_phv_ctrl.start_enable(1);
     sw_phv_ctrl.counter_repeat_enable(0);
-    sw_phv_ctrl.qid_repeat_enable(0);
+    sw_phv_ctrl.qid_repeat_enable(1);
     sw_phv_ctrl.localtime_enable(0);
     sw_phv_ctrl.frame_size_enable(0);
     sw_phv_ctrl.packet_len_enable(0);
-    sw_phv_ctrl.qid_enable(0);
+    sw_phv_ctrl.qid_enable(1);
     sw_phv_ctrl.write();
 
-    SDK_TRACE_DEBUG("CAPRI-PHV-INJECT::{}: Software PHV injected. done", 
-                    __func__);
+    SDK_TRACE_DEBUG("CAPRI-PHV-INJECT:: Software PHV injected. done");
     return SDK_RET_OK;
 }
 
@@ -245,8 +242,7 @@ capri_pt_psp_sw_phv_inject (uint8_t prof_num, uint8_t start_idx, uint8_t num_fli
     cap_psp_csr_t &pt_psp_csr = cap0.pt.pt.psp;
     pu_cpp_int< 512 > flit_data;
 
-    SDK_TRACE_DEBUG("CAPRI-PSP-PHV-INJECT::{}: Injecting Software PHV.", 
-                    __func__);
+    SDK_TRACE_DEBUG("CAPRI-PSP-PHV-INJECT:: Injecting Software PHV.");
 
     int index = 0;
     capri_pd_flit_t *curr_flit_ptr = (capri_pd_flit_t *)data;
@@ -293,8 +289,7 @@ capri_pt_psp_sw_phv_inject (uint8_t prof_num, uint8_t start_idx, uint8_t num_fli
     sw_phv_ctrl.qid_enable(0);
     sw_phv_ctrl.write();
 
-    SDK_TRACE_DEBUG("CAPRI-PHV-INJECT::{}: Software PHV injected. done", 
-                    __func__);
+    SDK_TRACE_DEBUG("CAPRI-PHV-INJECT:: Software PHV injected. done");
     return SDK_RET_OK;
 }
 
@@ -306,7 +301,7 @@ capri_ppa_sw_phv_inject (uint8_t pidx, uint8_t prof_num, uint8_t start_idx, uint
     cap_ppa_csr_t &ppa_csr = cap0.ppa.ppa[pidx];
     pu_cpp_int< 512 > flit_data;
 
-    SDK_TRACE_DEBUG("CAPRI-PHV-INJECT::{}: Injecting PHV into PPA {}", __func__, pidx);
+    SDK_TRACE_DEBUG("CAPRI-PHV-INJECT:: Injecting PHV into PPA %d", pidx);
 
     int index = 0;
     capri_pd_flit_t *curr_flit_ptr = (capri_pd_flit_t *)data;
@@ -362,8 +357,8 @@ capri_sw_phv_inject (asicpd_swphv_type_t type, uint8_t prof_num, uint8_t start_i
 {
     sdk_ret_t   ret = SDK_RET_OK;
 
-    SDK_TRACE_DEBUG("CAPRI-PHV-INJECT::{}: Injecting Software PHV type {}", 
-                    __func__, type);
+    SDK_TRACE_DEBUG("CAPRI-PHV-INJECT:: Injecting Software PHV type %d", 
+                    type);
 
     // switch based on pipeline type
     switch(type) {
@@ -391,7 +386,7 @@ capri_pr_psp_sw_phv_state (uint8_t prof_num, asicpd_sw_phv_state_t *state)
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_psp_csr_t &pr_psp_csr = cap0.pr.pr.psp;
 
-    SDK_TRACE_DEBUG("CAPRI-PSP-PHV-STATE::{}: Getting Software PHV.", __func__);
+    SDK_TRACE_DEBUG("CAPRI-PSP-PHV-STATE:: Getting Software PHV.");
 
 
     cap_psp_csr_sta_sw_phv_state_t &sw_phv_state = pr_psp_csr.sta_sw_phv_state[prof_num];
@@ -421,7 +416,7 @@ capri_pt_psp_sw_phv_state (uint8_t prof_num, asicpd_sw_phv_state_t *state)
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_psp_csr_t &pt_psp_csr = cap0.pt.pt.psp;
 
-    SDK_TRACE_DEBUG("CAPRI-PSP-PHV-STATE::{}: Getting Software PHV state.", __func__);
+    SDK_TRACE_DEBUG("CAPRI-PSP-PHV-STATE:: Getting Software PHV state.");
 
     // read the status registers
     cap_psp_csr_sta_sw_phv_state_t &sw_phv_state = pt_psp_csr.sta_sw_phv_state[prof_num];
@@ -451,7 +446,7 @@ capri_ppa_sw_phv_state (uint8_t pidx, uint8_t prof_num, asicpd_sw_phv_state_t *s
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_ppa_csr_t &ppa_csr = cap0.ppa.ppa[pidx];
 
-    SDK_TRACE_DEBUG("CAPRI-PHV-STATE::{}: Getting Software PHV state", __func__);
+    SDK_TRACE_DEBUG("CAPRI-PHV-STATE:: Getting Software PHV state");
 
     // read the status registers
     cap_ppa_csr_sta_sw_phv_state_t &sw_phv_state = ppa_csr.sta_sw_phv_state[prof_num];
@@ -482,8 +477,8 @@ capri_sw_phv_get (asicpd_swphv_type_t type, uint8_t prof_num, asicpd_sw_phv_stat
 {
     sdk_ret_t   ret = SDK_RET_OK;
 
-    SDK_TRACE_DEBUG("CAPRI-PHV-STATE::{}: Getting Software PHV state for type {}", 
-                    __func__, type);
+    SDK_TRACE_DEBUG("CAPRI-PHV-STATE:: Getting Software PHV state for type %d", 
+                    type);
 
     // switch based on pipeline type
     switch(type) {
