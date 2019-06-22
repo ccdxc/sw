@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -89,7 +89,7 @@ func (b *balancer) Up(addr grpc.Address) func(error) {
 	if !b.running {
 		return func(err error) {}
 	}
-	log.InfoLog("msg", "address UP notified", "addr", addr, "target", b.service)
+	log.InfoLog("msg", "address UP notified", "addr", addr.Addr, "target", b.service)
 	b.upConns = append(b.upConns, addr)
 	// broadcast to waiting Gets.
 	close(b.upCh)
@@ -98,7 +98,7 @@ func (b *balancer) Up(addr grpc.Address) func(error) {
 	// This is the Down function that grpc will invoke when this connection breaks.
 	return func(err error) {
 		b.Lock()
-		log.ErrorLog("msg", "address DOWN notified", "addr", addr, "target", b.service, "err", err)
+		log.ErrorLog("msg", "address DOWN notified", "addr", addr.Addr, "target", b.service, "err", err)
 		for ii := range b.upConns {
 			if b.upConns[ii] == addr {
 				b.upConns = append(b.upConns[:ii], b.upConns[ii+1:]...)

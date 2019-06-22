@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver/mock"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -170,7 +170,7 @@ func TestMonitor(t *testing.T) {
 	b.monitorOfset = time.Millisecond * 100
 	b.Add(1)
 	go b.monitor()
-	// With no up connections notify monitorr and expect notification with 0 nodes, and periodically
+	// With no up connections notify monitor and expect notification with 0 nodes, and periodically
 	var ts time.Time
 	var d time.Duration
 	got := false
@@ -182,7 +182,10 @@ func TestMonitor(t *testing.T) {
 	Assert(t, got == false, "should not have seen any notification")
 
 	b.wakeUpMonitor(nil)
-	time.Sleep(250 * time.Millisecond)
+
+	// Ideally 220 milliseconds is sufficient for perfectly realtime application.
+	// sleep more so that tests are ok
+	time.Sleep(500 * time.Millisecond)
 	Assert(t, len(b.notifyCh) > 2, "should have seen atleast 2 notifications")
 
 	// Wakeup of the monitor does not reset the timer
@@ -249,13 +252,12 @@ loop2:
 		}
 	}
 
-	// Make sure we are giving atleast ofset time for grpc to establish connection.
+	// Make sure we are giving atleast offset time for grpc to establish connection.
 loop3:
 	for {
 		select {
 		case n := <-b.notifyCh:
 			if len(n) == 0 && set {
-				ts = time.Now()
 				break loop3
 			}
 			if len(n) > 0 && !set {
@@ -281,7 +283,7 @@ loop4:
 			break loop4
 		}
 	}
-	b.upConns = []grpc.Address{grpc.Address{Addr: url}}
+	b.upConns = []grpc.Address{{Addr: url}}
 	b.wakeUpMonitor(nil)
 	b.Unlock()
 
