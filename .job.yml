@@ -109,3 +109,9 @@ dependencies:
   nic/apollo: nic
   dol/apollo: nic/apollo
   storage/offload: storage/offload/linux-build-test
+
+dir_dependencies:
+  platform:
+    - nic/apollo
+  nic/sdk:
+    - nic/apollo
