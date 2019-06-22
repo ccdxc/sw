@@ -117,14 +117,6 @@
   version = "v2"
 
 [[projects]]
-  branch = "master"
-  digest = "1:a4c4224926f7752fb433e3b89178e670c764595a9658a69ded77f3db201dad68"
-  name = "github.com/amahagaonkar/dhcp-client"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "85c65d972859074e39cffe7e8c5e5c4ce25eabf0"
-
-[[projects]]
   digest = "1:e64acfe8cda1955db545ede8e863c54d69f1ac6cd058df4349be4040320840fd"
   name = "github.com/apache/thrift"
   packages = ["lib/go/thrift"]
@@ -955,14 +947,6 @@
   version = "0.2"
 
 [[projects]]
-  digest = "1:dbd86d229eacaa86a98b10f8fb3e3fc69a1913e0f4e010e7cc1f92bf12edca92"
-  name = "github.com/gorilla/context"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "1ea25387ff6f684839d82767c1733ff4d4d15d0a"
-  version = "v1.1"
-
-[[projects]]
   digest = "1:fe47be2bd5d0196679d314fcc6e02f40a51e641c09e1541528a05cccefee9b0e"
   name = "github.com/gorilla/handlers"
   packages = ["."]
@@ -1790,6 +1774,14 @@
   pruneopts = "NUT"
   revision = "c01d1270ff3e442a8a57cddc1c92dc1138598194"
   version = "v1.2.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:a4c4224926f7752fb433e3b89178e670c764595a9658a69ded77f3db201dad68"
+  name = "github.com/pensando/dhcp-client"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "1e4d3169e3fae8f261365f2b89a423e449364fb1"
 
 [[projects]]
   digest = "1:7c04005149aad047f93fe43b38627d068dee005fa1bcb595fcf1d8b4f92c04a3"
@@ -2806,7 +2798,6 @@
     "github.com/GeertJohan/go.rice/embedded",
     "github.com/GeertJohan/go.rice/rice",
     "github.com/RackSec/srslog",
-    "github.com/amahagaonkar/dhcp-client",
     "github.com/appc/cni/pkg/types",
     "github.com/appc/cni/pkg/version",
     "github.com/asaskevich/govalidator",
@@ -2912,6 +2903,7 @@
     "github.com/openzipkin/zipkin-go-opentracing",
     "github.com/openzipkin/zipkin-go-opentracing/thrift/gen-go/zipkincore",
     "github.com/patrickmn/go-cache",
+    "github.com/pensando/dhcp-client",
     "github.com/pensando/goexpect",
     "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway",
     "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor",

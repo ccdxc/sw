@@ -7,8 +7,8 @@ import (
 
 	"github.com/vishvananda/netlink"
 
-	"github.com/amahagaonkar/dhcp-client"
 	"github.com/krolaw/dhcp4"
+	"github.com/pensando/dhcp-client"
 
 	"github.com/pensando/sw/nic/agent/nmd/api"
 )
