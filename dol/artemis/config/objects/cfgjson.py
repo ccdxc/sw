@@ -4,6 +4,7 @@
 import json
 import sys
 import os
+import apollo.config.resmgr as resmgr
 
 class Config(object):
     def __init__(self):
@@ -45,10 +46,10 @@ class CfgJsonObjectHelper:
         self.__num_tcp = 0
         self.__num_udp = 100000
         self.__num_icmp = 0
-        self.__sport_lo = 100
-        self.__sport_hi = 100
-        self.__dport_lo = 200
-        self.__dport_hi = 200
+        self.__sport_lo = resmgr.TransportSrcPort
+        self.__sport_hi = resmgr.TransportSrcPort
+        self.__dport_lo = resmgr.TransportDstPort
+        self.__dport_hi = resmgr.TransportDstPort
         self.__num_nh_per_vpc = 0
         self.__vpc_count = 0
         return

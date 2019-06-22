@@ -27,25 +27,13 @@ def AddPacketEncapVxlan(pkt, encap):
     if pkt.hdrsorder[1] == 'qtag':
         pkt.headers.eth.fields.type = pkt.headers.qtag.fields.type
         pkt.hdrsorder.pop(1)
-    pkt.hdrsorder = ['outereth', 'outeripv4', 'outerudp', 'vxlan'] + pkt.hdrsorder
+    if encap.meta.id == 'ENCAP_VXLAN':
+        pkt.hdrsorder = ['outereth', 'outeripv4', 'outerudp', 'vxlan'] + pkt.hdrsorder
+    elif encap.meta.id == 'ENCAP_VXLAN_IPV6':
+        pkt.hdrsorder = ['outereth', 'outeripv6', 'outerudp', 'vxlan'] + pkt.hdrsorder
+    else:
+        assert 0
     return
-
-def AddPacketEncapMpls(pkt, encap):
-    #pdb.set_trace()
-    pkt.hdrsorder = pkt.hdrsorder[1:] # Remove both ethernet and vlan if present
-    if pkt.hdrsorder[0] == 'qtag':
-        pkt.hdrsorder = pkt.hdrsorder[1:]
-    pkt.hdrsorder = ['outereth', 'outeripv4', 'outerudp', 'mpls'] + pkt.hdrsorder
-    return
-
-def AddPacketEncapMpls2(pkt, encap):
-    #pdb.set_trace()
-    pkt.hdrsorder = pkt.hdrsorder[1:] # Remove both ethernet and vlan if present
-    if pkt.hdrsorder[0] == 'qtag':
-        pkt.hdrsorder = pkt.hdrsorder[1:]
-    pkt.hdrsorder = ['outereth', 'outeripv4', 'outerudp', 'outermpls', 'mpls'] + pkt.hdrsorder
-    return
-
 
 def AddPacketEncapErspan(pkt, encap):
     pkt.hdrsorder = ['erspaneth', 'erspanqtag', 'erspanipv4', 'erspangre', 'erspan'] + pkt.hdrsorder

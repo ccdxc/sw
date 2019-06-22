@@ -147,9 +147,8 @@ class RouteObjectClient:
             return self.__v6iter[vpcid].rrnext().RouteTblId
         return 0
 
-    def GenerateObjects(self, parent, vpc_spec_obj):
+    def GenerateObjects(self, parent, vpc_spec_obj, vpcpeerid):
         vpcid = parent.VPCId
-        vpccount = vpc_spec_obj.count
         stack = parent.Stack
         self.__v4objs[vpcid] = dict()
         self.__v6objs[vpcid] = dict()
@@ -161,12 +160,6 @@ class RouteObjectClient:
             return
 
         tunobj = self.__internet_tunnel_get(False)
-
-        def __get_vpc_peerid():
-            peerid = vpcid + 1
-            if (peerid > vpccount):
-                peerid %= vpccount
-            return peerid
 
         def __get_adjacent_routes(base, count):
             routes = []
@@ -199,13 +192,11 @@ class RouteObjectClient:
             return False
 
         def __add_v4routetable(v4routes, routetype):
-            vpcpeerid = __get_vpc_peerid()
             obj = RouteObject(parent, utils.IP_VERSION_4, v4routes, routetype, tunobj, vpcpeerid)
             self.__v4objs[vpcid].update({obj.RouteTblId: obj})
             self.__objs.update({obj.RouteTblId: obj})
 
         def __add_v6routetable(v6routes, routetype):
-            vpcpeerid = __get_vpc_peerid()
             obj = RouteObject(parent, utils.IP_VERSION_6, v6routes, routetype, tunobj, vpcpeerid)
             self.__v6objs[vpcid].update({obj.RouteTblId: obj})
             self.__objs.update({obj.RouteTblId: obj})

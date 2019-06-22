@@ -89,9 +89,6 @@ class NexthopObjectClient:
         self.__v6iter[vpcid] = None
         self.__num_nh_per_vpc = 0
 
-        if getattr(vpc_spec_obj, 'nexthop', None) == None:
-            return
-
         if utils.IsPipelineArtemis() == False:
             return
 

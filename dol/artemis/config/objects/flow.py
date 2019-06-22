@@ -82,7 +82,7 @@ class FlowMapObjectHelper:
             for lobj in lmapping.GetMatchingObjects(mapsel):
                 for robj in rmapping.GetMatchingObjects(rmapsel):
 
-                    # Ignore VPC-ID 1 now as it does not work. TODO. 
+                    # Ignore VPC-ID 1 now as it does not work. TODO.
                     if lobj.VNIC.SUBNET.VPC.VPCId == 1  or robj.SUBNET.VPC.VPCId == 1:
                         continue
 

@@ -14,7 +14,7 @@ from infra.common.logging import logger
 from apollo.config.store import Store
 
 class RemoteMappingObject(base.ConfigObjectBase):
-    def __init__(self, parent, spec, tunobj, ipversion):
+    def __init__(self, parent, spec, tunobj, ipversion, count, stack):
         super().__init__()
 
         ################# PUBLIC ATTRIBUTES OF MAPPING OBJECT #####################
@@ -30,17 +30,27 @@ class RemoteMappingObject(base.ConfigObjectBase):
             self.IPAddr = parent.AllocIPv6Address();
             self.AddrFamily = 'IPV6'
             self.HasDefaultRoute = self.SUBNET.V6RouteTable.HasDefaultRoute # For testspec
-            self.ProviderIPAddr = next(resmgr.RemoteProviderIpV6AddressAllocator)
         else:
             self.IPAddr = parent.AllocIPv4Address();
             self.AddrFamily = 'IPV4'
             self.HasDefaultRoute = self.SUBNET.V4RouteTable.HasDefaultRoute # For testspec
-            self.ProviderIPAddr = next(resmgr.RemoteProviderIpV4AddressAllocator)
+        # Provider IP can be v4 or v6
+        if stack == 'dual':
+            paf = utils.IP_VERSION_6 if count % 2 == 0 else utils.IP_VERSION_4
+        else:
+            paf = utils.IP_VERSION_6 if stack == 'ipv6' else utils.IP_VERSION_4
+        if paf == utils.IP_VERSION_6:
+            self.ProviderIPAddr = next(resmgr.ProviderIpV6AddressAllocator)
+            self.TunFamily =  'IPV6'
+        else:
+            self.ProviderIPAddr = next(resmgr.ProviderIpV4AddressAllocator)
+            self.TunFamily =  'IPV4'
+        self.ProviderIP = str(self.ProviderIPAddr) # For testspec
         self.Label = 'NETWORKING'
         self.FlType = "MAPPING"
         self.IP = str(self.IPAddr) # For testspec
-        self.ProviderIP = str(self.ProviderIPAddr) # For testspec
         self.TunIP = str(self.TunIPAddr) # For testspec
+        self.AppPort = resmgr.TransportDstPort
 
         ################# PRIVATE ATTRIBUTES OF MAPPING OBJECT #####################
         self.Show()
@@ -93,16 +103,20 @@ class RemoteMappingObjectClient:
 
         for rmap_spec_obj in subnet_spec_obj.rmap:
             c = 0
+            v6c = 0
+            v4c = 0
             while c < rmap_spec_obj.count:
                 tunobj = resmgr.RemoteMplsVnicTunAllocator.rrnext()
                 if stack == "dual" or stack == 'ipv6':
-                    obj = RemoteMappingObject(parent, rmap_spec_obj, tunobj, utils.IP_VERSION_6)
+                    obj = RemoteMappingObject(parent, rmap_spec_obj, tunobj, utils.IP_VERSION_6, v6c, stack)
                     self.__objs.append(obj)
                     c = c + 1
+                    v6c = v6c + 1
                 if c < rmap_spec_obj.count and (stack == "dual" or stack == 'ipv4'):
-                    obj = RemoteMappingObject(parent, rmap_spec_obj, tunobj, utils.IP_VERSION_4)
+                    obj = RemoteMappingObject(parent, rmap_spec_obj, tunobj, utils.IP_VERSION_4, v4c, stack)
                     self.__objs.append(obj)
                     c = c + 1
+                    v4c = v4c + 1
         return
 
     def CreateObjects(self):

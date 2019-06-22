@@ -12,5 +12,10 @@ modules:
         name    : L3_IPV4_UDP_QTAG
         spec    : local2remote.testspec
         iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,TunFamily=IPV4,Label=NETWORKING
 
+#    - module:
+#        name    : L3_IPV6_UDP_QTAG
+#        spec    : local2remote.testspec
+#        iterate :
+#            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L3,TunFamily=IPV6,Label=NETWORKING

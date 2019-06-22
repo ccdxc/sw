@@ -12,5 +12,5 @@ modules:
         name    : L3_IPV4_UDP_VXLAN_ENCAP
         spec    : remote2local.testspec
         iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,TunFamily=IPV4,Label=NETWORKING
 

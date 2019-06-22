@@ -149,19 +149,9 @@ def GetInvalidMPLSTag(testcase, packet, args=None):
 def GetInvalidVnid(testcase, packet, args=None):
     return next(resmgr.InvalidVxlanIdAllocator)
 
-def __get_packet_encap_type_impl(obj, args):
-    if obj.IsWorkload():
-        return 'ENCAP_MPLS2'
-    elif obj.IsIgw():
-        return 'ENCAP_MPLS'
-    else:
-        return None
-
-def __get_packet_encap_impl(obj, tunnel, args):
+def __get_packet_encap_impl(obj, rmap, args):
     if obj.IsEncapTypeVXLAN():
-        encap = 'ENCAP_VXLAN'
-    elif obj.IsEncapTypeMPLS():
-        encap = __get_packet_encap_type_impl(tunnel, args)
+        encap = 'ENCAP_VXLAN_IPV6' if rmap.TunFamily == 'IPV6' else 'ENCAP_VXLAN'
     else:
         assert 0
     return infra_api.GetPacketTemplate(encap)
@@ -169,7 +159,7 @@ def __get_packet_encap_impl(obj, tunnel, args):
 # This can be called for packets to switch or from switch
 def GetPacketEncapFromMapping(testcase, packet, args=None):
     encaps = []
-    encaps.append(__get_packet_encap_impl(testcase.config.devicecfg, testcase.config.tunnel, args))
+    encaps.append(__get_packet_encap_impl(testcase.config.devicecfg, testcase.config.remotemapping, args))
     return encaps
 
 def __get_packet_srcmac_impl(fwdmode, dobj, robj, lobj, args):

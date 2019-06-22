@@ -18,19 +18,21 @@ from infra.common.logging import logger
 from apollo.config.store import Store
 
 class VpcObject(base.ConfigObjectBase):
-    def __init__(self, spec, index):
+    def __init__(self, spec, index, maxcount):
         super().__init__()
 
         ################# PUBLIC ATTRIBUTES OF VPC OBJECT #####################
         self.VPCId = next(resmgr.VpcIdAllocator)
         self.GID('Vpc%d'%self.VPCId)
+        self.IPPrefix = {}
         if spec.type == 'substrate':
             self.Type = vpc_pb2.VPC_TYPE_SUBSTRATE
+            self.IPPrefix[0] = resmgr.ProviderIpV6Network
+            self.IPPrefix[1] = resmgr.ProviderIpV4Network
         else:
             self.Type = vpc_pb2.VPC_TYPE_TENANT
-        self.IPPrefix = {}
-        self.IPPrefix[0] = resmgr.GetVpcIPv6Prefix(self.VPCId)
-        self.IPPrefix[1] = resmgr.GetVpcIPv4Prefix(self.VPCId)
+            self.IPPrefix[0] = resmgr.GetVpcIPv6Prefix(self.VPCId)
+            self.IPPrefix[1] = resmgr.GetVpcIPv4Prefix(self.VPCId)
         self.Stack = spec.stack
         # As currently vpc can have only type IPV4 or IPV6, we will alternate
         # the configuration
@@ -50,22 +52,32 @@ class VpcObject(base.ConfigObjectBase):
 
         self.Show()
 
-        if self.Type == vpc_pb2.VPC_TYPE_SUBSTRATE:
+        ############### CHILDREN OBJECT GENERATION
+
+        if not utils.IsPipelineArtemis() and self.Type == vpc_pb2.VPC_TYPE_SUBSTRATE:
             # Nothing to be done for substrate vpc
             return
 
-        ############### CHILDREN OBJECT GENERATION
         # Generate NextHop configuration
-        nexthop.client.GenerateObjects(self, spec)
+        if getattr(spec, 'nexthop', None) != None:
+            nexthop.client.GenerateObjects(self, spec)
 
         # Generate Policy configuration.
-        policy.client.GenerateObjects(self, spec)
+        if getattr(spec, 'policy', None) != None:
+            policy.client.GenerateObjects(self, spec)
 
         # Generate Route configuration.
-        route.client.GenerateObjects(self, spec)
+        if getattr(spec, 'routetbl', None) != None:
+            # find peer vpcid
+            if (index + 1) == maxcount:
+                vpc_peerid = self.VPCId - maxcount + 1
+            else:
+                vpc_peerid = self.VPCId + 1
+            route.client.GenerateObjects(self, spec, vpc_peerid)
 
         # Generate Subnet configuration post policy & route
-        subnet.client.GenerateObjects(self, spec)
+        if getattr(spec, 'subnet', None) != None:
+            subnet.client.GenerateObjects(self, spec)
         return
 
     def InitSubnetPefixPools(self, poolid, v6pfxlen, v4pfxlen):
@@ -107,6 +119,7 @@ class VpcObject(base.ConfigObjectBase):
 class VpcObjectClient:
     def __init__(self):
         self.__objs = dict()
+        self.__substrate_vpcid = -1
         return
 
     def Objects(self):
@@ -122,6 +135,9 @@ class VpcObjectClient:
     def GetVpcObject(self, vpcid):
         return self.__objs.get(vpcid, None)
 
+    def GetSubstrateVPCID(self):
+        return self.__substrate_vpcid
+
     def __write_cfg(self, vpc_count):
         nh = nexthop.client.GetNumNextHopPerVPC()
         cfgjson.CfgJsonHelper.SetNumNexthopPerVPC(nh)
@@ -131,8 +147,10 @@ class VpcObjectClient:
     def GenerateObjects(self, topospec):
         for p in topospec.vpc:
             for c in range(p.count):
-                obj = VpcObject(p, c)
+                obj = VpcObject(p, c, p.count)
                 self.__objs.update({obj.VPCId: obj})
+                if obj.IsSubstrateVPC():
+                    Store.SetSubstrateVPCId(obj.VPCId)
         # Write the flow and nexthop config to agent hook file
         if utils.IsPipelineArtemis():
             self.__write_cfg(p.count)

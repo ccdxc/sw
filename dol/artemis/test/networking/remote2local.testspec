@@ -1,4 +1,22 @@
 # Test Spec
+#
+# Scenario1-Vnet in:
+# IN(l2o,ipo,udpo,vxlano,ORIG(l2,ip,udp)),
+# OUT(l2,vlan,ip,udp). Validates
+#
+# Header modifications: Vxlan encap removed, vlan header added
+#
+# Validates:
+#
+#   1. DST-inner-MAC local vnic mac (taken from local mapping)
+#   2. SRC-inner-MAC Un-touched. Not validated
+#   3. Encap is VXLAN with VID=VNET-vxlan-ID (taken from vpc config). Removed
+#   4. Vlan is added.
+#   4. DST-outer-IP local Provider-IP (taken from local vnic config)
+#   5. SRC-outer-IP remote Provider-IP. Not validated
+#   6. DST-outer-MAC local host mac   (taken from device config)
+#   5. SRC-outer-MAC Remote host mac. Not validated
+
 selectors:
     root: ref://store/templates/id=FLOW
     maxlimits: 4
@@ -12,7 +30,7 @@ packets:
         headers     :
             eth:
                 dst     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : ref://testcase/config/remotemapping/MACAddr
+                src     : 00:00:11:11:22:33 #ref://testcase/config/remotemapping/MACAddr
             ipv4:
                 dst     : ref://testcase/config/localmapping/IP
                 src     : ref://testcase/config/remotemapping/IP
@@ -22,8 +40,8 @@ packets:
                 src     : ref://testcase/config/remotemapping/IP
                 hlim    : 64
             udp:
-                sport   : 200
-                dport   : 100
+                dport   : ref://testcase/config/localmapping/AppPort
+                sport   : ref://testcase/config/remotemapping/AppPort
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -35,10 +53,10 @@ packets:
         headers     :
             outereth:
                 dst     : ref://testcase/config/devicecfg/MACAddr
-                src     : ref://testcase/config/remotemapping/TUNNEL/MACAddr
+                src     : 00:00:11:11:22:33 #ref://testcase/config/remotemapping/TUNNEL/MACAddr
             outeripv4:
                 dst     : ref://testcase/config/localmapping/ProviderIP
-                src     : ref://testcase/config/remotemapping/ProviderIP
+                src     : 1.1.1.1 #ref://testcase/config/remotemapping/ProviderIP
                 ttl     : 64
                 tos     : 0
                 id      : 0

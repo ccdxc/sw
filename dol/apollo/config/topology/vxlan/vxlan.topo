@@ -33,6 +33,24 @@ device:
 vpc:
     # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
     - stack  : dual # dual, ipv4 , ipv6
+      count : 1
+      type  : substrate  # This VPC is applicable only for ARTEMIS pipeline.
+      subnet :
+         - count : 1
+           v4prefixlen : 24
+           v6prefixlen : 64
+      routetbl:
+         - type: specific # route table with only default routes
+           routetype: only_default
+           v4routes:
+              - '0.0.0.0\0'
+           v6routes:
+              - '0::\0'
+      policy:
+        - type : specific
+          policytype : default
+          direction : bidir
+    - stack  : dual # dual, ipv4 , ipv6
       count : 2
       type  : tenant
       subnet:
@@ -49,12 +67,12 @@ vpc:
               srcguard : false        # true or false (default false)
               public  : true
           rmap:                       # Remote IP mappings per subnet
-            - count : 2
+            - count : 4
         - count     : 2
           v4prefixlen : 28
           v6prefixlen : 96
           rmap:
-            - count : 2
+            - count : 4
       nexthop:
         - count : 10
       routetbl:
