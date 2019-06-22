@@ -292,6 +292,12 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		goto err_out_deinit_lifs;
 	}
 
+	/* Configure command and firmware watchdogs */
+	err = ionic_wdog_init(ionic);
+	if (err) {
+		 IONIC_DEV_ERROR(dev, "Cannot start device watchdogs\n");
+	}
+
 	pci_save_state(pdev->dev.bsddev);
 
 	return 0;
@@ -317,7 +323,8 @@ static void ionic_remove(struct pci_dev *pdev)
 	struct ionic *ionic = pci_get_drvdata(pdev);
 
 	KASSERT(ionic, ("ionic is NULL"));
-	
+
+	ionic_wdog_deinit(ionic);
 	ionic_lifs_unregister(ionic);
 	ionic_lifs_deinit(ionic);
 	ionic_lifs_free(ionic);

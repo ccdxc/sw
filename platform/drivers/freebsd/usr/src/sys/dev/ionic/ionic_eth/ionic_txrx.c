@@ -147,13 +147,43 @@ TUNABLE_INT("hw.ionic.rx_sg_size", &ionic_rx_sg_size);
 SYSCTL_INT(_hw_ionic, OID_AUTO, rx_sg_size, CTLFLAG_RDTUN,
     &ionic_rx_sg_size, 0, "Rx scatter-gather buffer size, disabled by default.");
 
+int ionic_dev_cmd_auto_disable = true;
+TUNABLE_INT("hw.ionic.dev_cmd_auto_disable", &ionic_dev_cmd_auto_disable);
+SYSCTL_INT(_hw_ionic, OID_AUTO, dev_cmd_auto_disable, CTLFLAG_RWTUN,
+    &ionic_dev_cmd_auto_disable, 0, "Enable device self-disable after error.");
+
+int ionic_wdog_error_trigger = 0;
+TUNABLE_INT("hw.ionic.wdog_error_trigger", &ionic_wdog_error_trigger);
+SYSCTL_INT(_hw_ionic, OID_AUTO, wdog_error_trigger, CTLFLAG_RWTUN,
+    &ionic_wdog_error_trigger, 0, "Trigger error via watchdog (TEST).");
+
+int ionic_adminq_hb_interval = IONIC_WDOG_HB_DEFAULT_MS;
+TUNABLE_INT("hw.ionic.adminq_hb_interval", &ionic_adminq_hb_interval);
+SYSCTL_INT(_hw_ionic, OID_AUTO, adminq_hb_interval, CTLFLAG_RDTUN,
+    &ionic_adminq_hb_interval, 0, "AdminQ heartbeat interval in msecs.");
+
+int ionic_cmd_hb_interval = IONIC_WDOG_HB_DEFAULT_MS;
+TUNABLE_INT("hw.ionic.cmd_hb_interval", &ionic_cmd_hb_interval);
+SYSCTL_INT(_hw_ionic, OID_AUTO, cmd_hb_interval, CTLFLAG_RDTUN,
+    &ionic_cmd_hb_interval, 0, "Command heartbeat interval in msecs.");
+
+int ionic_fw_hb_interval = IONIC_WDOG_HB_DEFAULT_MS;
+TUNABLE_INT("hw.ionic.fw_hb_interval", &ionic_fw_hb_interval);
+SYSCTL_INT(_hw_ionic, OID_AUTO, fw_hb_interval, CTLFLAG_RDTUN,
+    &ionic_fw_hb_interval, 0, "Firmware heartbeat interval in msecs.");
+
+int ionic_txq_wdog_timeout = IONIC_WDOG_TX_DEFAULT_MS;
+TUNABLE_INT("hw.ionic.txq_wdog_timeout", &ionic_txq_wdog_timeout);
+SYSCTL_INT(_hw_ionic, OID_AUTO, txq_wdog_timeout, CTLFLAG_RDTUN,
+    &ionic_txq_wdog_timeout, 0, "Tx queue watchdog timeout in msecs.");
+
 /*
  * Firmware version for update.
  */
 static char ionic_fw_update_ver[IONIC_DEVINFO_FWVERS_BUFLEN + 1];
 TUNABLE_STR("hw.ionic.fw_update_ver", ionic_fw_update_ver, sizeof(ionic_fw_update_ver));
 SYSCTL_STRING(_hw_ionic, OID_AUTO, fw_update_ver, CTLFLAG_RWTUN,
-    ionic_fw_update_ver, 0, "Fimrware version that need to be programmed.");
+    ionic_fw_update_ver, 0, "Firmware version that needs to be programmed.");
 
 static inline bool
 ionic_is_rx_tcp(uint8_t pkt_type)
@@ -1063,7 +1093,7 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 		stats->no_descs++;
 		IONIC_TX_TRACE(txq, "No space available, head: %u tail: %u nsegs :%d\n",
 			txq->head_index, txq->tail_index, nsegs);
-		return (ENOBUFS);
+		return (ENOSPC);
 	}
 
 	m = *m_headp;
@@ -1185,7 +1215,7 @@ ionic_xmit(struct ifnet *ifp, struct txque *txq, struct mbuf **m)
 	int err;
 
 	if ((ifp->if_drv_flags & IFF_DRV_RUNNING) == 0)
-	    return (ENETDOWN);
+		return (ENETDOWN);
 
 	stats = &txq->stats;
 
@@ -1197,11 +1227,8 @@ ionic_xmit(struct ifnet *ifp, struct txque *txq, struct mbuf **m)
 	else
 		err = ionic_tx_setup(txq, m);
 
-	if (err) {
-		return (err);
-	}
-
-	return 0;
+	txq->full = (err == ENOSPC);
+	return (err);
 }
 
 int
@@ -1231,6 +1258,10 @@ ionic_start_xmit_locked(struct ifnet *ifp, struct txque *txq)
 		}
 		drbr_advance(ifp, txq->br);
 	}
+
+	/* On successful ionic_xmit, set the watchdog timer */
+	if (!err)
+		txq->wdog_start = ticks;
 
 	return (err);
 }
@@ -1780,7 +1811,119 @@ ionic_lif_reset_sysctl(SYSCTL_HANDLER_ARGS)
 	if (reset == 0)
 		return (EINVAL);
 
-	return ionic_lif_reinit(lif);
+	return ionic_lif_reinit(lif, false);
+}
+
+/*
+ * Sysctl to control Firmware heartbeat interval timer.
+ */
+static int
+ionic_fw_hb_handler(SYSCTL_HANDLER_ARGS)
+{
+	struct lif *lif = oidp->oid_arg1;
+	struct ionic_dev *idev = &lif->ionic->idev;
+	u32 old_hb_msecs, new_hb_msecs;
+	int error;
+
+	old_hb_msecs = (u32)(idev->fw_hb_interval * 1000 / HZ);
+
+	error = SYSCTL_OUT(req, &old_hb_msecs, sizeof(old_hb_msecs));
+	if (error || !req->newptr)
+		return (error);
+
+	error = SYSCTL_IN(req, &new_hb_msecs, sizeof(new_hb_msecs));
+	if (error)
+		return (error);
+
+	if (idev->fw_hb_state == IONIC_FW_HB_UNSUPPORTED) {
+		IONIC_DEV_WARN(lif->ionic->dev,
+			       "fw heartbeat not supported on this build\n");
+		return (0);
+	}
+
+	if (new_hb_msecs > 0 && new_hb_msecs < IONIC_WDOG_MIN_MS)
+		return (EINVAL);
+	if (new_hb_msecs == old_hb_msecs)
+		return (0);
+
+	if (new_hb_msecs > 0 &&
+	    new_hb_msecs < IONIC_WDOG_FW_WARN_MS) {
+		IONIC_DEV_WARN(lif->ionic->dev,
+			       "setting fw_hb_interval below %ums will "
+			       "cause spurious timeouts\n",
+			       IONIC_WDOG_FW_WARN_MS);
+	}
+
+	/* Update stored value and restart the workqueue */
+	idev->fw_hb_interval = (unsigned long)new_hb_msecs * HZ / 1000;
+	idev->fw_hb_state = new_hb_msecs ?
+		IONIC_FW_HB_INIT : IONIC_FW_HB_DISABLED;
+	ionic_fw_hb_resched(idev);
+
+	return (0);
+}
+
+/*
+ * Sysctl to control Command heartbeat interval timer.
+ */
+static int
+ionic_cmd_hb_handler(SYSCTL_HANDLER_ARGS)
+{
+	struct lif *lif = oidp->oid_arg1;
+	struct ionic_dev *idev = &lif->ionic->idev;
+	u32 old_hb_msecs, new_hb_msecs;
+	int error;
+
+	old_hb_msecs = (u32)(idev->cmd_hb_interval * 1000 / HZ);
+
+	error = SYSCTL_OUT(req, &old_hb_msecs, sizeof(old_hb_msecs));
+	if (error || !req->newptr)
+		return (error);
+
+	error = SYSCTL_IN(req, &new_hb_msecs, sizeof(new_hb_msecs));
+	if (error)
+		return (error);
+	if (new_hb_msecs > 0 && new_hb_msecs < IONIC_WDOG_MIN_MS)
+		return (EINVAL);
+	if (new_hb_msecs == old_hb_msecs)
+		return (0);
+
+	/* Update stored value and restart the workqueue */
+	idev->cmd_hb_interval = (unsigned long)new_hb_msecs * HZ / 1000;
+	ionic_cmd_hb_resched(idev);
+
+	return (0);
+}
+
+/*
+ * Sysctl to control TxQ watchdog timeouts.
+ */
+static int
+ionic_txq_wdog_handler(SYSCTL_HANDLER_ARGS)
+{
+	struct lif *lif = oidp->oid_arg1;
+	u32 old_to_msecs, new_to_msecs;
+	int error;
+
+	old_to_msecs = (u32)(lif->txq_wdog_timeout * 1000 / HZ);
+
+	error = SYSCTL_OUT(req, &old_to_msecs, sizeof(old_to_msecs));
+	if (error || !req->newptr)
+		return (error);
+
+	error = SYSCTL_IN(req, &new_to_msecs, sizeof(new_to_msecs));
+	if (error)
+		return (error);
+	if (new_to_msecs > 0 && new_to_msecs < IONIC_WDOG_MIN_MS)
+		return (EINVAL);
+	if (new_to_msecs == old_to_msecs)
+		return (0);
+
+	/* Update stored value and restart the workqueue */
+	lif->txq_wdog_timeout = (unsigned long)new_to_msecs * HZ / 1000;
+	ionic_txq_wdog_resched(lif);
+
+	return (0);
 }
 
 static void
@@ -1887,6 +2030,8 @@ ionic_lif_add_txtstat(struct txque *txq, struct sysctl_ctx_list *ctx,
 			 &txstat->mbuf_defrag_err, "Linearize  mbuf failed");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "bad_ethtype", CTLFLAG_RD,
 			 &txstat->bad_ethtype, "Tx malformed Ethernet");
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "wdog_expired", CTLFLAG_RD,
+			 &txstat->wdog_expired, "Tx watchdog expired");
 
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "pkts", CTLFLAG_RD,
 			 &txstat->pkts, "Tx Packets");
@@ -2422,6 +2567,37 @@ ionic_qos_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
 	}
 }
 
+/*
+ * Sysctl to control AdminQ heartbeat interval timer.
+ */
+static int
+ionic_adminq_hb_handler(SYSCTL_HANDLER_ARGS)
+{
+	struct lif *lif = oidp->oid_arg1;
+	u32 old_hb_msecs, new_hb_msecs;
+	int error;
+
+	old_hb_msecs = (u32)(lif->adq_hb_interval * 1000 / HZ);
+
+	error = SYSCTL_OUT(req, &old_hb_msecs, sizeof(old_hb_msecs));
+	if (error || !req->newptr)
+		return (error);
+
+	error = SYSCTL_IN(req, &new_hb_msecs, sizeof(new_hb_msecs));
+	if (error)
+		return (error);
+	if (new_hb_msecs > 0 && new_hb_msecs < IONIC_WDOG_MIN_MS)
+		return (EINVAL);
+	if (new_hb_msecs == old_hb_msecs)
+		return (0);
+
+	/* Update stored value and restart the workqueue */
+	lif->adq_hb_interval = (unsigned long)new_hb_msecs * HZ / 1000;
+	ionic_adminq_hb_resched(lif);
+
+	return (0);
+}
+
 static void
 ionic_adminq_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
 		struct sysctl_oid_list *child)
@@ -2449,6 +2625,10 @@ ionic_adminq_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
 			&adminq->comp_index, 0, "Completion index");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "comp_err", CTLFLAG_RD,
 			&adminq->stats.comp_err, "Completions with error");
+	SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, "hb_interval",
+			CTLTYPE_UINT | CTLFLAG_RW, lif, 0,
+			ionic_adminq_hb_handler, "IU",
+			"AdminQ heartbeat interval in msecs");
 }
 
 /*
@@ -2558,6 +2738,18 @@ ionic_setup_device_stats(struct lif *lif)
 			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
 			ionic_link_pause_sysctl, "I",
 			"Set link pause - 1(rx), 2(tx) or 3(both)");
+	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "cmd_hb_interval",
+			CTLTYPE_UINT | CTLFLAG_RW, lif, 0,
+			ionic_cmd_hb_handler, "IU",
+			"Command heartbeat interval in msecs");
+	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "fw_hb_interval",
+			CTLTYPE_INT | CTLFLAG_RW, lif, 0,
+			ionic_fw_hb_handler, "I",
+			"Firmware heartbeat interval in msecs");
+	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "txq_wdog_timeout",
+			CTLTYPE_INT | CTLFLAG_RW, lif, 0,
+			ionic_txq_wdog_handler, "I",
+			"Tx queue watchdog timeout in msecs");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "reset",
 			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
 			ionic_lif_reset_sysctl, "I", "Reinit lif");

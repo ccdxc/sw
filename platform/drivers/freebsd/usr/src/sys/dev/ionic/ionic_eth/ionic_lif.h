@@ -57,6 +57,7 @@ struct tx_stats {
 	u64 tso_max_sg;
 	u64 tso_max_size;
 	u64 bad_ethtype;	/* Unknown Ethernet frame. */
+	u64 wdog_expired;
 };
 
 struct rx_stats {
@@ -236,7 +237,7 @@ struct txque {
 	unsigned int hw_type;
 	u64 dbval;
 
-	struct ionic_tx_buf *txbuf;		/* S/w rx buffer descriptors. */
+	struct ionic_tx_buf *txbuf;	/* S/w rx buffer descriptors. */
 	bus_dma_tag_t buf_tag;
 	struct ionic_dma_info cmd_dma; 	/* DMA ring for command and completion. */
 	dma_addr_t cmd_ring_pa;
@@ -246,11 +247,13 @@ struct txque {
 
 	struct mtx tx_mtx;
 	char mtx_name[QUEUE_NAME_MAX_SZ];
-	unsigned int head_index;		/* Index for buffer and command descriptors. */
+	unsigned int head_index;	/* Index for buffer and command descriptors. */
 	unsigned int tail_index;
-	unsigned int comp_index;		/* Index for completion descriptors. */
-	int done_color;				/* Expected comletion color status. */
-	
+	unsigned int comp_index;	/* Index for completion descriptors. */
+	int done_color;			/* Expected completion color status. */
+
+	unsigned long wdog_start;	/* In ticks */
+	bool full;
 	struct tx_stats stats;
 	struct buf_ring	*br;
 
@@ -288,6 +291,17 @@ struct lif {
 
 	struct workqueue_struct *adminq_wq;
 	struct adminq *adminq;
+
+	spinlock_t wdog_lock;
+	struct workqueue_struct *wdog_wq;
+
+	struct delayed_work adq_hb_work;
+	unsigned long adq_hb_interval;
+	bool adq_hb_resched;
+
+	struct delayed_work txq_wdog_work;
+	unsigned long txq_wdog_timeout;
+	bool txq_wdog_resched;
 
 	struct notifyq *notifyq;
 	struct txque **txqs;
@@ -425,12 +439,14 @@ void ionic_set_rx_mode(struct ifnet *ifp);
 int ionic_set_multi(struct lif* lif);
 
 int ionic_set_mac(struct ifnet *ifp);
-extern int ionic_lif_reinit(struct lif *lif);
+int ionic_lif_reinit(struct lif *lif, bool wdog_reset_path);
+
+void ionic_adminq_hb_resched(struct lif *lif);
+void ionic_txq_wdog_resched(struct lif *lif);
 
 int ionic_setup_intr_coal(struct lif *lif, int coal);
 int ionic_firmware_update(struct lif *lif, const void *const fw_data, size_t fw_sz);
 
-extern int ionic_devcmd_timeout;
 extern int ionic_rx_stride;
 extern int ionic_tx_stride;
 extern int ionic_rx_sg_size;
@@ -441,4 +457,7 @@ extern int ionic_notifyq_descs;
 extern int ionic_rx_fill_threshold;
 extern int ionic_rx_process_limit;
 extern int ionic_intr_coalesce;
+extern int ionic_adminq_hb_interval;
+extern int ionic_txq_wdog_timeout;
+
 #endif /* _IONIC_LIF_H_ */

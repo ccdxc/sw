@@ -53,77 +53,77 @@ MALLOC_DECLARE(M_IONIC);
 
 /* Init time debug. */
 #ifdef IONIC_DEBUG
-#define	IONIC_INFO(fmt, ...)								\
-		printf("[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__);
+#define	IONIC_INFO(fmt, ...)							\
+		printf("[%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__);
 #else
 #define	IONIC_INFO(fmt, ...)
 #endif
-#define	IONIC_ERROR(fmt, ...)								\
-			printf("[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__);
+#define	IONIC_ERROR(fmt, ...)							\
+		printf("[%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__);
 
 /* Device related */
-#define	IONIC_DEV_DEBUG(dev, fmt, ...)							\
+#define	IONIC_DEV_DEBUG(dev, fmt, ...)						\
 		device_printf((dev)->bsddev, fmt, ##__VA_ARGS__);
 
 #ifdef IONIC_DEBUG
 #define IONIC_DEV_INFO(d, f, args...) 						\
-		IONIC_DEV_DEBUG(d, "[%s:%d]" f, __func__, __LINE__, ## args)
+		IONIC_DEV_DEBUG(d, "[%s:%d] " f, __func__, __LINE__, ## args)
 #else
 #define IONIC_DEV_INFO(d, f, args...)
 #endif
 
 #define IONIC_DEV_WARN(d, f, args...) 						\
-		IONIC_DEV_DEBUG(d, "[%s:%d]" f, __func__, __LINE__, ## args)
+		IONIC_DEV_DEBUG(d, "[%s:%d] " f, __func__, __LINE__, ## args)
 #define IONIC_DEV_ERROR(d, f, args...) 						\
-		IONIC_DEV_DEBUG(d, "[%s:%d]" f, __func__, __LINE__, ## args)
+		IONIC_DEV_DEBUG(d, "[%s:%d] " f, __func__, __LINE__, ## args)
 
 /* Netdev related. */
 #define IONIC_NETDEV_DEBUG(dev, fmt, ...) 					\
-			if_printf(dev, "[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__)
+		if_printf(dev, "[%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
 
 #ifdef IONIC_DEBUG
-#define IONIC_NETDEV_INFO(dev, fmt, ...) 						\
+#define IONIC_NETDEV_INFO(dev, fmt, ...) 					\
 		IONIC_NETDEV_DEBUG(dev, fmt, ##__VA_ARGS__)
 #else
 #define IONIC_NETDEV_INFO(dev, fmt, ...)
 #endif
 
-#define IONIC_NETDEV_WARN(dev, fmt, ...) 						\
+#define IONIC_NETDEV_WARN(dev, fmt, ...) 					\
 		IONIC_NETDEV_DEBUG(dev, fmt, ##__VA_ARGS__)
-#define IONIC_NETDEV_ERROR(dev, fmt, ...) 						\
+#define IONIC_NETDEV_ERROR(dev, fmt, ...) 					\
 		IONIC_NETDEV_DEBUG(dev, fmt, ##__VA_ARGS__)
 
 /* Print the MAC address. */
 #ifdef __FreeBSD__
-#define IONIC_NETDEV_ADDR_INFO(dev, addr, fmt, ...) 			\
+#define IONIC_NETDEV_ADDR_INFO(dev, addr, fmt, ...) 				\
 		IONIC_NETDEV_INFO(dev, fmt " MAC: %6D\n", ##__VA_ARGS__, (addr), ":")
-#define IONIC_NETDEV_ADDR_DEBUG(dev, addr, fmt, ...) 			\
+#define IONIC_NETDEV_ADDR_DEBUG(dev, addr, fmt, ...) 				\
 		IONIC_NETDEV_DEBUG(dev, fmt " MAC: %6D\n", ##__VA_ARGS__, (addr), ":")
 #else
-#define IONIC_NETDEV_ADDR_INFO(dev, addr, fmt, ...) 			\
+#define IONIC_NETDEV_ADDR_INFO(dev, addr, fmt, ...) 				\
 		IONIC_NETDEV_INFO(dev, fmt " %pM\n", ##__VA_ARGS__, (addr))
 #endif
 
 /* Netdevice queue related macros. */
-#define IONIC_QUE_DEBUG(q, fmt, ...)							\
-		if_printf(q->lif->netdev, "[%s:%d]%s:" fmt, 			\
+#define IONIC_QUE_DEBUG(q, fmt, ...)						\
+		if_printf(q->lif->netdev, "[%s:%d] %s: " fmt, 			\
 			__func__, __LINE__, q->name, ##__VA_ARGS__);
 
 #ifdef IONIC_DEBUG
-#define IONIC_QUE_INFO(q, fmt, ...)	 							\
-		IONIC_QUE_DEBUG(q, "info:" fmt, ##__VA_ARGS__)
+#define IONIC_QUE_INFO(q, fmt, ...)	 					\
+		IONIC_QUE_DEBUG(q, "info: " fmt, ##__VA_ARGS__)
 #else
 #define IONIC_QUE_INFO(q, fmt, ...)
 #endif
 
-#define IONIC_QUE_WARN(q, fmt, ...)								\
+#define IONIC_QUE_WARN(q, fmt, ...)						\
 		IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
-#define IONIC_QUE_ERROR(q, fmt, ...)							\
+#define IONIC_QUE_ERROR(q, fmt, ...)						\
 		IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
 
 #if defined(IONIC_ENABLE_TRACING)
-#define IONIC_TX_TRACE(q, fmt, ...)		IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
-#define IONIC_RX_TRACE(q, fmt, ...)		IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
+#define IONIC_TX_TRACE(q, fmt, ...)	IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
+#define IONIC_RX_TRACE(q, fmt, ...)	IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
 #else
 #define IONIC_TX_TRACE(q, fmt, ...)
 #define IONIC_RX_TRACE(q, fmt, ...)
@@ -180,6 +180,7 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx, bool);
 int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx);
 
 int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait);
+int ionic_dev_cmd_sleep_check(struct ionic_dev *idev, unsigned long max_wait);
 int ionic_set_dma_mask(struct ionic *ionic);
 int ionic_setup(struct ionic *ionic);
 

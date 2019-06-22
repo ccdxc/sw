@@ -161,6 +161,136 @@ ionic_txq_disable(struct txque *txq)
 		IONIC_QUE_WARN(txq, "failed to disable, err: %d\n", err);
 }
 
+static void
+ionic_adminq_hb_work(struct work_struct *work)
+{
+	struct lif *lif = container_of(work, struct lif, adq_hb_work.work);
+	struct ionic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.nop = {
+			.opcode = CMD_OPCODE_NOP,
+		},
+	};
+	int err;
+
+	if (!lif->adq_hb_interval)
+		return;
+
+	/* Send a NOP command to monitor AdminQ */
+	err = ionic_adminq_post_wait(lif, &ctx);
+	if (ionic_wdog_error_trigger == IONIC_WDOG_TRIG_ADMINQ) {
+		IONIC_QUE_WARN(lif->adminq, "injecting error\n");
+		err = -1;
+		ionic_wdog_error_trigger = 0;
+	}
+	if (err) {
+		IONIC_QUE_ERROR(lif->adminq, "heartbeat failed\n");
+		err = ionic_lif_reinit(lif, true);
+		if (err) {
+			/* Disable the heartbeat */
+			lif->adq_hb_interval = 0;
+			return;
+		}
+	}
+
+	spin_lock(&lif->wdog_lock);
+	if (lif->adq_hb_resched)
+		queue_delayed_work(lif->wdog_wq, &lif->adq_hb_work,
+				   lif->adq_hb_interval);
+	spin_unlock(&lif->wdog_lock);
+}
+
+static void
+ionic_adminq_hb_stop(struct lif *lif)
+{
+	spin_lock(&lif->wdog_lock);
+	lif->adq_hb_resched = false;
+	spin_unlock(&lif->wdog_lock);
+	cancel_delayed_work_sync(&lif->adq_hb_work);
+}
+
+void
+ionic_adminq_hb_resched(struct lif *lif)
+{
+	/* Cancel all outstanding work */
+	ionic_adminq_hb_stop(lif);
+
+	/* Start again with the new hb_interval */
+	lif->adq_hb_resched = true;
+	queue_delayed_work(lif->wdog_wq, &lif->adq_hb_work,
+			   lif->adq_hb_interval);
+}
+
+static void
+ionic_txq_wdog_work(struct work_struct *work)
+{
+	struct lif *lif = container_of(work, struct lif, txq_wdog_work.work);
+	struct txque *txq;
+	int i, err = 0;
+
+	if (!lif->txq_wdog_timeout)
+		return;
+
+	IONIC_LIF_LOCK(lif);
+	/* TODO More LIF state to check? */
+	if ((lif->netdev->if_drv_flags & IFF_DRV_RUNNING)) {
+		/* Check each TxQ for timeouts */
+		for (i = 0; i < lif->ntxqs; i++) {
+			txq = lif->txqs[i];
+			IONIC_TX_LOCK(txq);
+			if (txq->full &&
+			    ticks > txq->wdog_start + lif->txq_wdog_timeout) {
+				txq->stats.wdog_expired++;
+				err = ETIMEDOUT;
+			}
+			IONIC_TX_UNLOCK(txq);
+		}
+	}
+	IONIC_LIF_UNLOCK(lif);
+
+	if (ionic_wdog_error_trigger == IONIC_WDOG_TRIG_TXQ) {
+		IONIC_QUE_WARN(lif->adminq, "injecting timeout\n");
+		err = -1;
+		ionic_wdog_error_trigger = 0;
+	}
+	if (err) {
+		IONIC_QUE_ERROR(lif->adminq, "tx watchdog timeout\n");
+		err = ionic_lif_reinit(lif, true);
+		if (err) {
+			/* Disable the watchdog */
+			lif->txq_wdog_timeout = 0;
+			return;
+		}
+	}
+
+	spin_lock(&lif->wdog_lock);
+	if (lif->txq_wdog_resched)
+		queue_delayed_work(lif->wdog_wq, &lif->txq_wdog_work,
+				   lif->txq_wdog_timeout);
+	spin_unlock(&lif->wdog_lock);
+}
+
+static void
+ionic_txq_wdog_stop(struct lif *lif)
+{
+	spin_lock(&lif->wdog_lock);
+	lif->txq_wdog_resched = false;
+	spin_unlock(&lif->wdog_lock);
+	cancel_delayed_work_sync(&lif->txq_wdog_work);
+}
+
+void
+ionic_txq_wdog_resched(struct lif *lif)
+{
+	/* Cancel all outstanding work */
+	ionic_txq_wdog_stop(lif);
+
+	/* Start again with the new hb_interval */
+	lif->txq_wdog_resched = true;
+	queue_delayed_work(lif->wdog_wq, &lif->txq_wdog_work,
+			   lif->txq_wdog_timeout);
+}
+
 /*
  * Calculate mbuf pool size based on MTU.
  */
@@ -229,7 +359,7 @@ static void
 ionic_open(struct lif *lif)
 {
 	struct ifnet *ifp = lif->netdev;
-	
+
 	KASSERT(lif, ("lif is NULL"));
 	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s is not locked", lif->name));
 
@@ -1813,6 +1943,15 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	snprintf(name, sizeof(name), "adwq%d", index);
 	lif->adminq_wq = create_singlethread_workqueue(name);
 
+	snprintf(name, sizeof(name), "wdwq%d", index);
+	lif->wdog_wq = create_singlethread_workqueue(name);
+	spin_lock_init(&lif->wdog_lock);
+
+	lif->adq_hb_interval =
+		(unsigned long)ionic_adminq_hb_interval * HZ / 1000;
+	lif->txq_wdog_timeout =
+		(unsigned long)ionic_txq_wdog_timeout * HZ / 1000;
+
 	mutex_init(&lif->dbid_inuse_lock);
 	lif->dbid_count = lif->ionic->ident.dev.ndbpgs_per_lif;
 	if (!lif->dbid_count) {
@@ -1945,6 +2084,9 @@ ionic_lif_free(struct lif *lif)
 	/* destroy deferred contexts */
 	flush_workqueue(lif->adminq_wq);
 	destroy_workqueue(lif->adminq_wq);
+
+	flush_workqueue(lif->wdog_wq);
+	destroy_workqueue(lif->wdog_wq);
 
 	/* free rss indirection table */
 	ionic_lif_rss_free(lif);
@@ -2200,6 +2342,13 @@ ionic_lifs_deinit(struct ionic *ionic)
 
 	list_for_each(cur, &ionic->lifs) {
 		lif = list_entry(cur, struct lif, list);
+
+		/* Shut down the watchdogs.
+		 * NB: Must be done before taking the LIF lock!
+		 */
+		ionic_adminq_hb_stop(lif);
+		ionic_txq_wdog_stop(lif);
+
 		IONIC_LIF_LOCK(lif);
 		ionic_lif_deinit(lif);
 		IONIC_LIF_UNLOCK(lif);
@@ -2494,6 +2643,8 @@ ionic_lif_txq_init(struct lif *lif, struct txque *txq)
 	txq->hw_type = ctx.comp.q_init.hw_type;
 	txq->hw_index = ctx.comp.q_init.hw_index;
 	txq->dbval = IONIC_DBELL_QID(txq->hw_index);
+	txq->wdog_start = ticks;
+	txq->full = false;
 
 	return (0);
 }
@@ -3164,7 +3315,7 @@ err_out_free_buf:
 }
 
 static int
-ionic_lif_init(struct lif *lif)
+ionic_lif_init(struct lif *lif, bool wdog_reset_path)
 {
 	struct ionic *ionic = lif->ionic;
 	struct ionic_dev *idev = &ionic->idev;
@@ -3220,6 +3371,19 @@ ionic_lif_init(struct lif *lif)
 
 	ionic_read_notify_block(lif);
 
+	/* Start the watchdogs */
+	if (!wdog_reset_path) {
+		INIT_DELAYED_WORK(&lif->adq_hb_work, ionic_adminq_hb_work);
+		lif->adq_hb_resched = true;
+		queue_delayed_work(lif->wdog_wq, &lif->adq_hb_work,
+				   lif->adq_hb_interval);
+
+		INIT_DELAYED_WORK(&lif->txq_wdog_work, ionic_txq_wdog_work);
+		lif->txq_wdog_resched = true;
+		queue_delayed_work(lif->wdog_wq, &lif->txq_wdog_work,
+				   lif->txq_wdog_timeout);
+	}
+
 	return err;
 
 err_out_rss_deinit:
@@ -3246,7 +3410,7 @@ ionic_lifs_init(struct ionic *ionic)
 	list_for_each(cur, &ionic->lifs) {
 		lif = list_entry(cur, struct lif, list);
 		IONIC_LIF_LOCK(lif);
-		err = ionic_lif_init(lif);
+		err = ionic_lif_init(lif, false);
 		IONIC_LIF_UNLOCK(lif);
 		if (err)
 			return err;
@@ -3258,10 +3422,11 @@ ionic_lifs_init(struct ionic *ionic)
 /*
  * Reinit the LIF which represent individual network port.
  * Stack is not involved in it, only link flap.
- * XXX: If LIF reset failed, try device reset.
+ * XXX: If the reinit fails due to a dev cmd timeout, the device will be
+ *      disabled.
  */
 int
-ionic_lif_reinit(struct lif *lif)
+ionic_lif_reinit(struct lif *lif, bool wdog_reset_path)
 {
 	struct ifnet *ifp;
 	struct ionic_mc_addr *mc;
@@ -3269,6 +3434,17 @@ ionic_lif_reinit(struct lif *lif)
 	bool was_open;
 
 	ifp = lif->netdev;
+
+	IONIC_QUE_WARN(lif->adminq, "resetting LIF\n");
+
+	/* Shut down the watchdogs only if we are NOT
+	 * cleaning up after a watchdog timeout (wdog_reset_path).
+	 * NB: Must be done before taking the LIF lock!
+	 */
+	if (!wdog_reset_path) {
+		ionic_adminq_hb_stop(lif);
+		ionic_txq_wdog_stop(lif);
+	}
 
 	IONIC_LIF_LOCK(lif);
 	was_open = false;
@@ -3281,7 +3457,7 @@ ionic_lif_reinit(struct lif *lif)
 
 	/* LIF reset is already done by deinit. */
 
-	error = ionic_lif_init(lif);
+	error = ionic_lif_init(lif, wdog_reset_path);
 	if (error) {
 		IONIC_NETDEV_ERROR(ifp, "init failed, error = %d\n", error);
 		IONIC_LIF_UNLOCK(lif);
@@ -3293,7 +3469,7 @@ ionic_lif_reinit(struct lif *lif)
 		IONIC_LIF_UNLOCK(lif);
 		return (EINVAL);
 	}
-	
+
 	ionic_addr_add(lif->netdev, lif->dev_addr);
 
 	ionic_set_hw_features(lif, lif->hw_features);

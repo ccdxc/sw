@@ -324,22 +324,29 @@ int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 
 	err = ionic_api_adminq_post(lif, ctx);
 	if (err) {
-		IONIC_NETDEV_ERROR(lif->netdev, "ionic_api_adminq_post failed, error: %d\n",
-			err);
+		IONIC_NETDEV_ERROR(lif->netdev,
+				   "api_adminq_post failed, error: %d\n",
+				   err);
 		return err;
 	}
 
-	remaining = wait_for_completion_timeout(&ctx->work, ionic_devcmd_timeout * HZ);
+	remaining = wait_for_completion_timeout(&ctx->work,
+						ionic_devcmd_timeout * HZ);
 
-	err = ionic_adminq_check_err(lif, ctx, remaining == 0);
-
-	return (err);
+	return ionic_adminq_check_err(lif, ctx, remaining == 0);
 }
 
-static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
+static int
+ionic_dev_cmd_wait(struct ionic_dev *idev,
+		   unsigned long max_wait,
+		   bool sleepable_ctx)
 {
 	unsigned long time;
 	int done;
+
+	/* Bail out if the interface was disabled in response to an error */
+	if (unlikely(ionic_dev_cmd_disabled(idev)))
+		return ENXIO;
 
 	time = jiffies + max_wait;
 	do {
@@ -354,8 +361,11 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 			return 0;
 
 #ifdef __FreeBSD__
-		/* XXX: use msleep but need mtx access. */
-		DELAY(1000);
+		if (sleepable_ctx)
+			schedule_timeout_uninterruptible(HZ / 10);
+		else
+			/* XXX: use msleep but need mtx access. */
+			DELAY(1000);
 #else
 		schedule_timeout_uninterruptible(HZ / 10);
 #endif
@@ -367,29 +377,48 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 	return ETIMEDOUT;
 }
 
-static int ionic_dev_cmd_check_error(struct ionic_dev *idev)
+static int
+ionic_dev_cmd_check_error(struct ionic_dev *idev)
 {
 	u8 status;
 
 	status = ionic_dev_cmd_status(idev);
-
 	if (status) {
 		IONIC_ERROR("DEVCMD(%d) failed, status: %s\n",
-			idev->dev_cmd_regs->cmd.cmd.opcode, ionic_error_to_str(status));
+			    idev->dev_cmd_regs->cmd.cmd.opcode,
+			    ionic_error_to_str(status));
 		return (EIO);
 	}
 
-	return status;
+	return 0;
 }
 
-int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait)
+int
+ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait)
 {
 	int err;
 
-	err = ionic_dev_cmd_wait(idev, max_wait);
+	/* Preserve current behavior by declaring a non-sleepable ctx */
+	err = ionic_dev_cmd_wait(idev, max_wait, false);
+	if (!err)
+		err = ionic_dev_cmd_check_error(idev);
+	if (err) {
+		ionic_dev_cmd_disable(idev);
+	}
+	return err;
+}
+
+int
+ionic_dev_cmd_sleep_check(struct ionic_dev *idev, unsigned long max_wait)
+{
+	int err;
+
+	err = ionic_dev_cmd_wait(idev, max_wait, true);
+	if (!err)
+		err = ionic_dev_cmd_check_error(idev);
 	if (err)
-		return err;
-	return ionic_dev_cmd_check_error(idev);
+		ionic_dev_cmd_disable(idev);
+	return err;
 }
 
 int ionic_set_dma_mask(struct ionic *ionic)

@@ -35,6 +35,11 @@
 #define IONIC_MIN_MTU	ETHER_MIN_LEN
 #define IONIC_MAX_MTU	(9216 - ETHER_HDR_LEN - ETHER_VLAN_ENCAP_LEN - ETHER_CRC_LEN)
 
+#define IONIC_WDOG_HB_DEFAULT_MS	1500 /* msecs */
+#define IONIC_WDOG_TX_DEFAULT_MS	5000 /* msecs */
+#define IONIC_WDOG_FW_WARN_MS		1250 /* msecs */
+#define IONIC_WDOG_MIN_MS		100  /* msecs */
+
 struct ionic_dev_bar
 {
 	void __iomem *vaddr;
@@ -135,12 +140,21 @@ static inline void ionic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(struct rxq_comp) != 16);
 }
 
+enum ionic_fw_hb_state {
+	IONIC_FW_HB_DISABLED,
+	IONIC_FW_HB_INIT,
+	IONIC_FW_HB_RUNNING,
+	IONIC_FW_HB_STALE,
+	IONIC_FW_HB_UNSUPPORTED,
+};
+
 struct ionic;
 
 struct ionic_dev
 {
 	union dev_info_regs __iomem *dev_info_regs;
 	union dev_cmd_regs __iomem *dev_cmd_regs;
+	bool dev_cmd_disabled;
 
 	u64 __iomem *db_pages;
 	dma_addr_t phy_db_pages;
@@ -158,6 +172,19 @@ struct ionic_dev
 	uint32_t port_info_sz;
 
 	struct ionic_devinfo dev_info;
+
+	spinlock_t wdog_lock;
+	struct workqueue_struct *wdog_wq;
+
+	struct delayed_work cmd_hb_work;
+	unsigned long cmd_hb_interval;
+	bool cmd_hb_resched;
+
+	struct delayed_work fw_hb_work;
+	unsigned long fw_hb_interval;
+	bool fw_hb_resched;
+	enum ionic_fw_hb_state fw_hb_state;
+	uint32_t fw_hb_last;
 };
 
 #define INTR_INDEX_NOT_ASSIGNED (-1)
@@ -176,12 +203,20 @@ struct intr
 	unsigned int vector;
 };
 
-int ionic_dev_setup(struct ionic* ionic);
+int ionic_dev_setup(struct ionic *ionic);
+
+int  ionic_wdog_init(struct ionic *ionic);
+void ionic_wdog_deinit(struct ionic *ionic);
+void ionic_cmd_hb_resched(struct ionic_dev *idev);
+void ionic_fw_hb_resched(struct ionic_dev *idev);
 
 void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd);
 u8 ionic_dev_cmd_status(struct ionic_dev *idev);
 bool ionic_dev_cmd_done(struct ionic_dev *idev);
+void ionic_dev_cmd_disable(struct ionic_dev *idev);
+bool ionic_dev_cmd_disabled(struct ionic_dev *idev);
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem);
+void ionic_dev_cmd_nop(struct ionic_dev *idev);
 
 void ionic_dev_cmd_identify(struct ionic_dev *idev, u16 ver);
 void ionic_dev_cmd_init(struct ionic_dev *idev);
@@ -222,5 +257,18 @@ const char *ionic_port_pause_type_str(enum port_pause_type type);
 const char *ionic_port_loopback_mode_str(enum port_loopback_mode mode);
 const char *ionic_xcvr_state_str(enum xcvr_state state);
 const char *ionic_phy_type_str(enum phy_type type);
+
+#define IONIC_WDOG_TRIG_ADMINQ		1	/* Force one AdminQ error */
+#define IONIC_WDOG_TRIG_DEVCMD		2	/* Force one Dev CMD error */
+#define IONIC_WDOG_TRIG_FWSTAT		3	/* (Hint) fw_stat to 0 */
+#define IONIC_WDOG_TRIG_FWHB0		4	/* (Hint) fw_heartbeat to 0 */
+#define IONIC_WDOG_TRIG_FWHB1		5	/* Force fw_heartbeat to 1 */
+#define IONIC_WDOG_TRIG_TXQ		6	/* Force one TxQ watchdog */
+extern int ionic_wdog_error_trigger;
+extern int ionic_dev_cmd_auto_disable;
+extern int ionic_cmd_hb_interval;
+extern int ionic_fw_hb_interval;
+
+extern int ionic_devcmd_timeout;
 
 #endif /* _IONIC_DEV_H_ */

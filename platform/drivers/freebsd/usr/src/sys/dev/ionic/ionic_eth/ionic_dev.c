@@ -49,7 +49,8 @@ static void ionic_init_devinfo(struct ionic_dev *idev)
 	idev->dev_info.serial_num[IONIC_DEVINFO_SERIAL_BUFLEN] = 0;
 }
 
-int ionic_dev_setup(struct ionic* ionic)
+int
+ionic_dev_setup(struct ionic *ionic)
 {
 	struct ionic_dev_bar *bar = ionic->bars;
 	unsigned int num_bars = ionic->num_bars;
@@ -136,7 +137,42 @@ bool ionic_dev_cmd_done(struct ionic_dev *idev)
 	return ioread32(&idev->dev_cmd_regs->done) & DEV_CMD_DONE;
 }
 
-void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem)
+void
+ionic_dev_cmd_disable(struct ionic_dev *idev)
+{
+	struct ionic *ionic = container_of(idev, struct ionic, idev);
+
+	KASSERT(IONIC_DEV_LOCK_OWNED(ionic), ("device not locked"));
+
+	if (!ionic_dev_cmd_auto_disable) {
+		IONIC_DEV_WARN(ionic->dev,
+			       "dev_cmd disable skipped due to flag\n");
+		return;
+	}
+
+	if (idev->dev_cmd_disabled)
+		return;
+
+	/* Respond to timeout or heartbeat failure by disabling the device
+	 * command interface. This will allow the driver to fail quickly,
+	 * so the module can be unloaded without waiting for many teardown
+	 * commands to time out one after the other.
+	 * After the failure, the driver no longer knows what state the
+	 * device is in. The only way to recover the device and clear this
+	 * flag is to unload and reload the module or reboot the system.
+	 */
+	IONIC_DEV_ERROR(ionic->dev, "disabling dev_cmd interface\n");
+	idev->dev_cmd_disabled = true;
+}
+
+bool
+ionic_dev_cmd_disabled(struct ionic_dev *idev)
+{
+	return idev->dev_cmd_disabled;
+}
+
+void
+ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem)
 {
 	union dev_cmd_comp *comp = mem;
 	unsigned int i;
@@ -145,14 +181,29 @@ void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem)
 		comp->words[i] = ioread32(&idev->dev_cmd_regs->comp.words[i]);
 }
 
-void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd)
+void
+ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd)
 {
 	unsigned int i;
+
+	/* Bail out if the interface was disabled in response to an error */
+	if (unlikely(ionic_dev_cmd_disabled(idev)))
+		return;
 
 	for (i = 0; i < ARRAY_SIZE(cmd->words); i++)
 		iowrite32(cmd->words[i], &idev->dev_cmd_regs->cmd.words[i]);
 	iowrite32(0, &idev->dev_cmd_regs->done);
 	iowrite32(1, &idev->dev_cmd_regs->doorbell);
+}
+
+void
+ionic_dev_cmd_nop(struct ionic_dev *idev)
+{
+	union dev_cmd cmd = {
+		.nop.opcode = CMD_OPCODE_NOP,
+	};
+
+	ionic_dev_cmd_go(idev, &cmd);
 }
 
 /* Device commands */
@@ -401,4 +452,230 @@ int ionic_desc_avail(int ndescs, int head, int tail)
 		avail -= head + 1;
 
 	return avail;
+}
+
+static void
+ionic_cmd_hb_work(struct work_struct *work)
+{
+	struct ionic_dev *idev =
+		container_of(work, struct ionic_dev, cmd_hb_work.work);
+	struct ionic *ionic = container_of(idev, struct ionic, idev);
+	int err;
+
+	if (!idev->cmd_hb_interval)
+		return;
+
+	/* Send a NOP command to monitor dev command queue */
+	IONIC_DEV_LOCK(ionic);
+	ionic_dev_cmd_nop(idev);
+	err = ionic_dev_cmd_sleep_check(idev, ionic_devcmd_timeout * HZ);
+	if (ionic_wdog_error_trigger == IONIC_WDOG_TRIG_DEVCMD) {
+		IONIC_DEV_WARN(ionic->dev, "injecting error\n");
+		err = -1;
+		ionic_wdog_error_trigger = 0;
+	}
+	if (err) {
+		IONIC_DEV_ERROR(ionic->dev, "command heartbeat failed\n");
+		ionic_dev_cmd_disable(idev);
+		IONIC_DEV_UNLOCK(ionic);
+
+		/* Disable the heartbeat */
+		idev->cmd_hb_interval = 0;
+		return;
+	}
+	IONIC_DEV_UNLOCK(ionic);
+
+	spin_lock(&idev->wdog_lock);
+	if (idev->cmd_hb_resched)
+		queue_delayed_work(idev->wdog_wq, &idev->cmd_hb_work,
+				   idev->cmd_hb_interval);
+	spin_unlock(&idev->wdog_lock);
+}
+
+static void
+ionic_cmd_hb_stop(struct ionic_dev *idev)
+{
+	spin_lock(&idev->wdog_lock);
+	idev->cmd_hb_resched = false;
+	spin_unlock(&idev->wdog_lock);
+	cancel_delayed_work_sync(&idev->cmd_hb_work);
+}
+
+void
+ionic_cmd_hb_resched(struct ionic_dev *idev)
+{
+	/* Cancel all outstanding work */
+	ionic_cmd_hb_stop(idev);
+
+	/* Start again with the new hb_interval */
+	idev->cmd_hb_resched = true;
+	queue_delayed_work(idev->wdog_wq, &idev->cmd_hb_work,
+			   idev->cmd_hb_interval);
+}
+
+static void
+ionic_fw_hb_work(struct work_struct *work)
+{
+	struct ionic_dev *idev =
+		container_of(work, struct ionic_dev, fw_hb_work.work);
+	struct ionic *ionic = container_of(idev, struct ionic, idev);
+	u8 fw_status;
+	u32 fw_heartbeat;
+
+	if (idev->fw_hb_state == IONIC_FW_HB_DISABLED ||
+	    idev->fw_hb_state == IONIC_FW_HB_UNSUPPORTED)
+		return;
+
+	fw_status = ioread8(&idev->dev_info_regs->fw_status);
+	if (ionic_wdog_error_trigger == IONIC_WDOG_TRIG_FWSTAT) {
+		/* Persistent, don't reset trigger to 0 */
+		/* NB: Set with a hint */
+		IONIC_DEV_WARN(ionic->dev, "injecting fw_status 0\n");
+		fw_status = 0;
+	}
+	/* If FW is ready, check fw_heartbeat; otherwise reschedule */
+	if (fw_status != 0) {
+		fw_heartbeat = ioread32(&idev->dev_info_regs->fw_heartbeat);
+
+		if (ionic_wdog_error_trigger == IONIC_WDOG_TRIG_FWHB0) {
+			/* NB: Set with a hint */
+			IONIC_DEV_WARN(ionic->dev,
+				       "injecting fw_heartbeat 0\n");
+			fw_heartbeat = 0;
+			ionic_wdog_error_trigger = 0;
+		} else if (ionic_wdog_error_trigger == IONIC_WDOG_TRIG_FWHB1) {
+			/* Persistent, don't reset trigger to 0 */
+			IONIC_DEV_WARN(ionic->dev,
+				       "injecting fw_heartbeat 1\n");
+			fw_heartbeat = 1;
+		}
+		if (idev->fw_hb_state == IONIC_FW_HB_INIT) {
+			if (fw_heartbeat == 0) {
+				/* Unsupported firmware */
+				IONIC_DEV_WARN(ionic->dev,
+					       "fw heartbeat not supported\n");
+				idev->fw_hb_state = IONIC_FW_HB_UNSUPPORTED;
+				idev->fw_hb_interval = 0;
+				return;
+			} else {
+				/* First reading; go RUNNING */
+				idev->fw_hb_state = IONIC_FW_HB_RUNNING;
+			}
+		} else if (fw_heartbeat == idev->fw_hb_last) {
+			/* Duplicate reading; go STALE or time out */
+			if (idev->fw_hb_state == IONIC_FW_HB_RUNNING) {
+				idev->fw_hb_state = IONIC_FW_HB_STALE;
+			} else if (idev->fw_hb_state == IONIC_FW_HB_STALE) {
+				IONIC_DEV_ERROR(ionic->dev,
+						"fw heartbeat stuck (%u)\n",
+						fw_heartbeat);
+				IONIC_DEV_LOCK(ionic);
+				ionic_dev_cmd_disable(idev);
+				IONIC_DEV_UNLOCK(ionic);
+
+				/* Disable the heartbeat */
+				idev->fw_hb_state = IONIC_FW_HB_DISABLED;
+				idev->fw_hb_interval = 0;
+				return;
+			}
+		} else {
+			/* Update stored value; go RUNNING */
+			idev->fw_hb_last = fw_heartbeat;
+			if (idev->fw_hb_state == IONIC_FW_HB_STALE) {
+				idev->fw_hb_state = IONIC_FW_HB_RUNNING;
+			}
+		}
+	}
+
+	spin_lock(&idev->wdog_lock);
+	if (idev->fw_hb_resched)
+		queue_delayed_work(idev->wdog_wq, &idev->fw_hb_work,
+				   idev->fw_hb_interval);
+	spin_unlock(&idev->wdog_lock);
+}
+
+static void
+ionic_fw_hb_stop(struct ionic_dev *idev)
+{
+	spin_lock(&idev->wdog_lock);
+	idev->fw_hb_resched = false;
+	spin_unlock(&idev->wdog_lock);
+	cancel_delayed_work_sync(&idev->fw_hb_work);
+}
+
+void
+ionic_fw_hb_resched(struct ionic_dev *idev)
+{
+	/* Cancel all outstanding work */
+	ionic_fw_hb_stop(idev);
+
+	/* Start again with the new hb_interval */
+	idev->fw_hb_resched = true;
+	queue_delayed_work(idev->wdog_wq, &idev->fw_hb_work,
+			   idev->fw_hb_interval);
+}
+
+int
+ionic_wdog_init(struct ionic *ionic)
+{
+	struct ionic_dev *idev = &ionic->idev;
+	char name[16];
+
+	snprintf(name, sizeof(name), "devwdwq%d",
+		 le32_to_cpu(idev->port_info->status.id));
+	idev->wdog_wq = create_singlethread_workqueue(name);
+	spin_lock_init(&idev->wdog_lock);
+
+	/* Device command heartbeat watchdog */
+	if (ionic_cmd_hb_interval > 0 &&
+	    ionic_cmd_hb_interval < IONIC_WDOG_MIN_MS) {
+		IONIC_DEV_WARN(ionic->dev,
+			       "limiting cmd_hb_interval to %ums\n",
+			       IONIC_WDOG_MIN_MS);
+		ionic_cmd_hb_interval = IONIC_WDOG_MIN_MS;
+	}
+	idev->cmd_hb_interval =
+		(unsigned long)ionic_cmd_hb_interval * HZ / 1000;
+
+	INIT_DELAYED_WORK(&idev->cmd_hb_work, ionic_cmd_hb_work);
+	idev->cmd_hb_resched = true;
+	queue_delayed_work(idev->wdog_wq, &idev->cmd_hb_work,
+			   idev->cmd_hb_interval);
+
+	/* Firmware heartbeat */
+	if (ionic_fw_hb_interval > 0 &&
+	    ionic_fw_hb_interval < IONIC_WDOG_MIN_MS) {
+		IONIC_DEV_WARN(ionic->dev,
+			       "limiting fw_hb_interval to %ums\n",
+			       IONIC_WDOG_MIN_MS);
+		ionic_fw_hb_interval = IONIC_WDOG_MIN_MS;
+	}
+	if (ionic_fw_hb_interval > 0 &&
+	    ionic_fw_hb_interval < IONIC_WDOG_FW_WARN_MS) {
+		IONIC_DEV_WARN(ionic->dev,
+			       "setting fw_hb_interval below %ums will "
+			       "cause spurious timeouts\n",
+			       IONIC_WDOG_FW_WARN_MS);
+	}
+	idev->fw_hb_interval =
+		(unsigned long)ionic_fw_hb_interval * HZ / 1000;
+	idev->fw_hb_state = ionic_fw_hb_interval ?
+		IONIC_FW_HB_INIT : IONIC_FW_HB_DISABLED;
+
+	INIT_DELAYED_WORK(&idev->fw_hb_work, ionic_fw_hb_work);
+	idev->fw_hb_resched = true;
+	queue_delayed_work(idev->wdog_wq, &idev->fw_hb_work,
+	                   idev->fw_hb_interval);
+
+	return 0;
+}
+
+void
+ionic_wdog_deinit(struct ionic *ionic)
+{
+	struct ionic_dev *idev = &ionic->idev;
+
+	ionic_cmd_hb_stop(idev);
+	ionic_fw_hb_stop(idev);
+	destroy_workqueue(idev->wdog_wq);
 }
