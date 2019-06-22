@@ -25,35 +25,28 @@
 //:: #define here any constants needed.
 //:: ACTION_PC_LEN = 8 # in bits
 /*
- * p4pd.c
+ * p4pd_backend.cc
  * Pensando Systems
  */
-#include "gen/proto/debug.pb.h"
-#include "gen/proto/debug.grpc.pb.h"
-#include <grpc++/grpc++.h>
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+
+#include "nic/include/hal_pd_error.hpp"
+#include <iostream>
+#include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/asic/rw/asicrw.hpp"
 #include "gen/p4gen/${hdrdir}/include/${p4prog}p4pd.h"
 #include "nic/sdk/lib/p4/p4_utils.hpp"
-#include "nic/include/hal_pd_error.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
 
-using grpc::Channel;
-using grpc::ClientContext;
-using grpc::Status;
+using std::cout;
 
-using ::debug::Debug;
-using ::debug::MemoryRequestMsg;
-using ::debug::MemoryRequest;
-using ::debug::MemoryResponseMsg;
-using ::debug::RegisterRequestMsg;
-using ::debug::RegisterRequest;
-using ::debug::RegisterResponseMsg;
-using ::debug::MemoryRawRequestMsg;
-using ::debug::MemoryRawRequest;
-using ::debug::MemoryRawResponseMsg;
-using ::debug::MemoryRawResponse;
-using ::debug::MemoryRawUpdateRequestMsg;
-using ::debug::MemoryRawUpdateRequest;
-using ::debug::MemoryRawUpdateResponseMsg;
-using ::debug::MemoryRawUpdateResponse;
+#define P4CLI_MALLOC(ID, size) malloc(size)
+#define P4CLI_CALLOC(ID, size) calloc(1, size)
+#define P4CLI_FREE(ID, _ptr) free(_ptr)
+
+
 //::
 //::     tabledict = OrderedDict() # key=table-name
 //::     tableid = start_table_base
@@ -68,52 +61,18 @@ using ::debug::MemoryRawUpdateResponse;
 //::         api_prefix = 'p4pd'
 //::     #endif
 
-static std::shared_ptr<Channel>     channel;
-static std::unique_ptr<Debug::Stub> stub;
-static bool grpc_inited = 0;
-
-static int
-p4pd_grpc_init(void)
-{
-    if (grpc_inited != 0) {
-        return 0;
-    }
-
-    std::string grpc_server_port = "localhost:50054";
-
-    if (getenv("HAL_GRPC_PORT")) {
-        grpc_server_port = getenv("HAL_GRPC_PORT");
-    }
-
-    grpc_init();
-    channel =
-        grpc::CreateChannel(grpc_server_port, grpc::InsecureChannelCredentials());
-
-    stub    = ::debug::Debug::NewStub(channel);
-
-    grpc_inited = 1;
-
-    return 0;
-}
-
 p4pd_error_t
 ${api_prefix}_entry_write(uint32_t tableid,
                           uint32_t index,
-                          void     *swkey,
-                          void     *swkey_mask,
-                          void     *actiondata)
+                          void     *in_swkey,
+                          void     *in_swkey_mask,
+                          void     *in_actiondata)
 {
-    MemoryRequestMsg  req_msg;
-    MemoryResponseMsg rsp_msg;
-    ClientContext     context;
-    MemoryRequest     *req  = NULL;
-
-    p4pd_grpc_init();
-
-    req = req_msg.add_request();
-
-    req->set_table_id(tableid);
-    req->set_index(index);
+    
+    p4pd_error_t    ret;
+    void            *swkey = NULL, *swkey_mask = NULL, *actiondata = NULL;
+    uint32_t        hwkey_len = 0, hwkeymask_len = 0, hwactiondata_len = 0;
+    void            *hwkey = NULL, *hwkeymask = NULL;
 
     switch (tableid) {
         //::        for table, tid in tabledict.items():
@@ -128,35 +87,23 @@ ${api_prefix}_entry_write(uint32_t tableid,
         case P4${caps_p4prog}TBL_ID_${caps_tbl_}: /* p4-table '${tbl_}' */
         //::            #endif
         //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
-            req->set_actiondata(
-                        std::string ((char*)(${table}_actiondata_t*)actiondata,
-                                     sizeof(${table}_actiondata_t)));
+            actiondata = (void *)(${table}_actiondata_t*)in_actiondata;
             break;
 
         //::            #endif
         //::            if pddict['tables'][table]['type'] == 'Hash' or pddict['tables'][table]['type'] == 'Hash_OTcam':
-            req->set_swkey(
-                        std::string ((char*)(${table}_swkey_t*)swkey,
-                                     sizeof(${table}_swkey_t)));
+            swkey = (void *)((${table}_swkey_t*)in_swkey);
 
-            req->set_actiondata(
-                        std::string ((char*)(${table}_actiondata_t*)actiondata,
-                                     sizeof(${table}_actiondata_t)));
+            actiondata = (void *)((${table}_actiondata_t*)in_actiondata);
             break;
 
         //::            #endif
         //::            if pddict['tables'][table]['type'] == 'Ternary':
-            req->set_swkey(
-                        std::string ((char*)(${table}_swkey_t*)swkey,
-                                     sizeof(${table}_swkey_t)));
+            swkey = (void *)((${table}_swkey_t*)in_swkey);
 
-            req->set_swkey_mask(
-                        std::string ((char*)(${table}_swkey_mask_t*)swkey_mask,
-                                     sizeof(${table}_swkey_mask_t)));
+            swkey_mask = (void *)((${table}_swkey_mask_t*)in_swkey_mask);
 
-            req->set_actiondata(
-                        std::string ((char*)(${table}_actiondata_t*)actiondata,
-                                     sizeof(${table}_actiondata_t)));
+            actiondata = (void *)((${table}_actiondata_t*)in_actiondata);
             break;
 
         //::            #endif
@@ -166,24 +113,51 @@ ${api_prefix}_entry_write(uint32_t tableid,
             return (P4PD_FAIL);
             break;
     }
-
-    Status status = stub->MemoryUpdate(&context, req_msg, &rsp_msg);
-
-    return (P4PD_SUCCESS);
+    p4pd_hwentry_query(tableid, &hwkey_len, &hwkeymask_len, &hwactiondata_len);
+    hwkey = P4CLI_CALLOC(MEM_ALLOC_ID_CLI_INFRA, (hwkey_len + 7)/8);
+    if (!hwkey) {
+        return P4PD_FAIL;
+    }
+    hwkeymask = P4CLI_CALLOC(MEM_ALLOC_ID_CLI_INFRA, (hwkeymask_len + 7)/8);
+    if (!hwkeymask) {
+        P4CLI_FREE(MEM_ALLOC_ID_CLI_INFRA, hwkey);
+        return P4PD_FAIL;
+    }
+    ret = p4pd_hwkey_hwmask_build(tableid,
+                                  swkey,
+                                  swkey_mask,
+                                  (uint8_t*)hwkey,
+                                  (uint8_t*)hwkeymask);
+    if (ret != P4PD_SUCCESS) {
+        goto cleanup;
+    }
+    ret = p4pd_global_entry_write(tableid,
+                                  index,
+                                  (uint8_t*)hwkey,
+                                  (uint8_t*)hwkeymask,
+                                  actiondata);
+cleanup:
+    P4CLI_FREE(MEM_ALLOC_ID_CLI_INFRA, hwkey);
+    P4CLI_FREE(MEM_ALLOC_ID_CLI_INFRA, hwkeymask);
+    return ret;
 }
+
+#define MAX_RESP_SIZE_FOR_ONE_INDEX      512 /* Max table read response size for 1 index */ 
+/* Key:128B, Key Mask: 128B, data 256B */
+#define MAX_KEY_SZ 128
+#define MAX_ACTION_SZ 256
+#define MAX_RESP_SIZE  (MAX_RESP_SIZE_FOR_ONE_INDEX * 10) /* To tune based on the tables being used */
 
 void*
 allocate_debug_response_msg (void)
 {
-    MemoryResponseMsg *rsp_msg = new MemoryResponseMsg;
-    return rsp_msg;
+    return calloc(1, MAX_RESP_SIZE);
 }
 
 void
 free_debug_response_msg (void *mem_rsp_msg)
 {
-    MemoryResponseMsg *rsp_msg = (MemoryResponseMsg*)mem_rsp_msg;
-    delete rsp_msg;
+    free(mem_rsp_msg);
 }
 
 /* read the table info from HAL */
@@ -196,75 +170,43 @@ ${api_prefix}_entry_read(uint32_t  tableid,
                          void      *mem_rsp_msg,
                          int       *size)
 {
-    MemoryRequestMsg  req_msg;
-    MemoryResponseMsg *rsp_msg = (MemoryResponseMsg*)mem_rsp_msg;
-    ClientContext     context;
-    MemoryRequest     *req    = NULL;
 
-    p4pd_grpc_init();
+    p4pd_error_t    pd_err;
+    int             num_indices;
+    char            buffer[2048];
 
-    req = req_msg.add_request();
+    if (index == 0xffffffff) {
+        p4pd_table_properties_t tbl_ctx;
 
-    req->set_table_id(tableid);
-    req->set_index(index);
+        pd_err = p4pd_global_table_properties_get(tableid, &tbl_ctx);
+        if (pd_err != P4PD_SUCCESS) {
+            return P4PD_FAIL;
+        }
+        num_indices = tbl_ctx.tabledepth;
+        index = 0;
+    } else {
+        num_indices = 1;
+    }
 
-    switch (tableid) {
-        //::        for table, tid in tabledict.items():
-        //::            caps_tablename = table.upper()
-        //::            if pddict['tables'][table]['hash_overflow'] and not pddict['tables'][table]['otcam']:
-        //::                continue
-        //::            #endif
-        case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
-            //::            if len(pddict['tables'][table]['hash_overflow_tbl']):
-            //::                tbl_ = pddict['tables'][table]['hash_overflow_tbl']
-            //::                caps_tbl_ = tbl_.upper()
-        case P4${caps_p4prog}TBL_ID_${caps_tbl_}: /* p4-table '${tbl_}' */
-            //::            #endif
-            //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
-            req->set_actiondata(
-                        std::string ((char*)(${table}_actiondata_t*)actiondata,
-                                     sizeof(${table}_actiondata_t)));
-            break;
-
-            //::            #endif
-            //::            if pddict['tables'][table]['type'] == 'Hash' or pddict['tables'][table]['type'] == 'Hash_OTcam':
-            req->set_swkey(
-                        std::string ((char*)(${table}_swkey_t*)swkey,
-                                     sizeof(${table}_swkey_t)));
-
-            req->set_actiondata(
-                        std::string ((char*)(${table}_actiondata_t*)actiondata,
-                                     sizeof(${table}_actiondata_t)));
-            break;
-
-            //::            #endif
-            //::            if pddict['tables'][table]['type'] == 'Ternary':
-            req->set_swkey(
-                        std::string ((char*)(${table}_swkey_t*)swkey,
-                                     sizeof(${table}_swkey_t)));
-
-            req->set_swkey_mask(
-                        std::string ((char*)(${table}_swkey_mask_t*)swkey_mask,
-                                     sizeof(${table}_swkey_mask_t)));
-
-            req->set_actiondata(
-                        std::string ((char*)(${table}_actiondata_t*)actiondata,
-                                     sizeof(${table}_actiondata_t)));
-            break;
-            //::            #endif
-            //::        #endfor
-        default:
-            // Invalid tableid
+    for (int i = index; i < index + num_indices; ++i) {
+        pd_err = p4pd_global_entry_read(tableid, i, swkey,
+                                        swkey_mask, actiondata);
+        if (pd_err != P4PD_SUCCESS) {
             return (P4PD_FAIL);
+        }
+
+        memset(buffer, 0, sizeof(buffer));
+        p4pd_global_table_ds_decoded_string_get(tableid, i,
+                                                (void *)swkey,
+                                                (void *)swkey_mask,
+                                                (void *)actiondata,
+                                                buffer, sizeof(buffer));
+        printf("%s\n", buffer);
     }
 
-    Status status = stub->MemoryGet(&context, req_msg, rsp_msg);
-    if (status.ok()) {
-        *size = rsp_msg->response_size();
-        return (P4PD_SUCCESS);
-    }
+    fflush(stdout);
 
-    return P4PD_FAIL;
+    return P4PD_SUCCESS;
 }
 
 p4pd_error_t
@@ -275,11 +217,12 @@ ${api_prefix}_entry_populate(uint32_t  tableid,
                              void      *mem_rsp_msg,
                              int       response_index)
 {
-    if (mem_rsp_msg == NULL) {
+    
+    uint8_t    *ptr = (uint8_t *)mem_rsp_msg;
+
+    if (ptr == NULL) {
         return P4PD_FAIL;
     }
-
-    MemoryResponseMsg *rsp_msg = (MemoryResponseMsg*)mem_rsp_msg;
 
     switch (tableid) {
         //::        for table, tid in tabledict.items():
@@ -294,28 +237,25 @@ ${api_prefix}_entry_populate(uint32_t  tableid,
         case P4${caps_p4prog}TBL_ID_${caps_tbl_}: /* p4-table '${tbl_}' */
             //::            #endif
             //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
-            memcpy(actiondata, (void*)rsp_msg->response(response_index).actiondata().c_str(),
+            memcpy(actiondata, ptr + response_index * MAX_RESP_SIZE_FOR_ONE_INDEX + MAX_KEY_SZ + MAX_KEY_SZ,
                    sizeof(${table}_actiondata_t));
             break;
 
             //::            #endif
             //::            if pddict['tables'][table]['type'] == 'Hash' or pddict['tables'][table]['type'] == 'Hash_OTcam':
-            memcpy(swkey, (void*)rsp_msg->response(response_index).swkey().c_str(),
-                   sizeof(${table}_swkey_t));
+            memcpy(swkey, ptr + response_index * MAX_RESP_SIZE_FOR_ONE_INDEX, sizeof(${table}_swkey_t));
 
-            memcpy(actiondata, (void*)rsp_msg->response(response_index).actiondata().c_str(),
+            memcpy(actiondata, ptr + response_index * MAX_RESP_SIZE_FOR_ONE_INDEX + MAX_KEY_SZ + MAX_KEY_SZ,
                    sizeof(${table}_actiondata_t));
             break;
 
             //::            #endif
             //::            if pddict['tables'][table]['type'] == 'Ternary':
-            memcpy(swkey, (void*)rsp_msg->response(response_index).swkey().c_str(),
-                   sizeof(${table}_swkey_t));
+            memcpy(swkey, ptr + response_index * MAX_RESP_SIZE_FOR_ONE_INDEX, sizeof(${table}_swkey_t));
 
-            memcpy(swkey_mask, (void*)rsp_msg->response(response_index).swkey_mask().c_str(),
-                   sizeof(${table}_swkey_mask_t));
+            memcpy(swkey_mask, ptr + response_index * MAX_RESP_SIZE_FOR_ONE_INDEX + MAX_KEY_SZ, sizeof(${table}_swkey_mask_t));
 
-            memcpy(actiondata, (void*)rsp_msg->response(response_index).actiondata().c_str(),
+            memcpy(actiondata, ptr + response_index * MAX_RESP_SIZE_FOR_ONE_INDEX + MAX_KEY_SZ + MAX_KEY_SZ,
                    sizeof(${table}_actiondata_t));
             break;
             //
@@ -332,94 +272,13 @@ ${api_prefix}_entry_populate(uint32_t  tableid,
 void
 ${api_prefix}_register_entry_read(std::string block_name, std::string   reg_name, std::string filename)
 {
-    RegisterRequestMsg    req_msg;
-    RegisterResponseMsg   rsp_msg;
-    ClientContext         context;
-    RegisterRequest       *req = NULL;
-
-    req = req_msg.add_request();
-
-    req->set_reg_name(reg_name);
-    req->set_block_name(block_name);
-
-    auto channel =
-        grpc::CreateChannel("localhost:50054", grpc::InsecureChannelCredentials());
-
-    auto stub = ::debug::Debug::NewStub(channel);
-
-    Status status = stub->RegisterGet(&context, req_msg, &rsp_msg);
-
-    int reg_data_sz  = rsp_msg.response_size();
-    //*len = reg_data_sz;
-    FILE *reg_fd = 0;
-    if (!filename.empty()) {
-        reg_fd = fopen(filename.c_str(), "wb+");
-        if (!reg_fd) {
-            std::cout <<"Null file descriptor";
-            return;
-        }
-    }
-
-    for (uint32_t i = 0; i  < reg_data_sz; i++) {
-        //data[i].reg_name = rsp_msg.response(i).data().reg_name();
-        //data[i].offset = rsp_msg.response(i).data().address();
-        //data[i].value = rsp_msg.response(i).data().value();
-        if (filename.empty()) {
-            std::cout << "RegName: " << rsp_msg.response(i).data().reg_name()
-                      << "Address(Offset): " <<  rsp_msg.response(i).data().address()
-                      << "Value: "<< rsp_msg.response(i).data().value() << "\n";
-        } else {
-
-            std::fprintf(reg_fd, "RegName:  %s Address: %s Value: %s \n",
-                         rsp_msg.response(i).data().reg_name().c_str(),
-                         rsp_msg.response(i).data().address().c_str(),
-                         rsp_msg.response(i).data().value().c_str());
-            std::fflush(reg_fd);
-        }
-    }
 }
 
 void
 ${api_prefix}_register_list(std::string block_name, std::string   reg_name, std::string filename)
 {
-    RegisterRequestMsg   req_msg;
-    RegisterResponseMsg  rsp_msg;
-    ClientContext        context;
-    RegisterRequest      *req = NULL;
-
-    req = req_msg.add_request();
-
-    req->set_reg_name(reg_name);
-    req->set_block_name(block_name);
-
-    auto channel =
-        grpc::CreateChannel("localhost:50054", grpc::InsecureChannelCredentials());
-
-    auto stub = ::debug::Debug::NewStub(channel);
-
-    Status status = stub->RegisterGet(&context, req_msg, &rsp_msg);
-
-    int reg_data_sz  = rsp_msg.response_size();
-    FILE *reg_fd = 0;
-    if (!filename.empty()) {
-        reg_fd = fopen(filename.c_str(), "wb+");
-        if (!reg_fd) {
-            std::cout <<"Null file descriptor";
-            return;
-        }
-    }
-
-    for (uint32_t i = 0; i  < reg_data_sz; i++) {
-        if (filename.empty()) {
-            std::cout << "RegName: " << rsp_msg.response(i).data().reg_name() << "\n";
-        } else {
-
-            std::fprintf(reg_fd, "RegName:  %s \n",
-                         rsp_msg.response(i).data().reg_name().c_str());
-            std::fflush(reg_fd);
-        }
-    }
 }
+#define RAW_MEM_READ_MAX        1024
 
 //::    if pddict['p4plus']:
 
@@ -429,14 +288,10 @@ ${api_prefix}_raw_table_entry_read(uint32_t tableid,
         void        *actiondata,
         uint64_t    address)
 {
-    MemoryRawRequestMsg     req_msg;
-    MemoryRawResponseMsg    rsp_msg;
-    ClientContext           context;
-    MemoryRawRequest        *req = NULL;
-    uint32_t                len = 0;
-    p4pd_error_t            ret = P4PD_FAIL;
-
-    p4pd_grpc_init();
+    
+    uint32_t        len = 0;
+    p4pd_error_t    ret = P4PD_FAIL;
+    uint8_t         mem[RAW_MEM_READ_MAX];
 
     ${api_prefix}_raw_table_hwentry_query(tableid, actionid,
             &len);
@@ -444,24 +299,13 @@ ${api_prefix}_raw_table_entry_read(uint32_t tableid,
 
     len /= 8;
 
-    req = req_msg.add_request();
-    req->set_address(address);
-    req->set_len(len);
+    ret = sdk::asic::asic_mem_read(address, mem, len);
+    if (ret != SDK_RET_OK)
+        return P4PD_FAIL;
 
-    Status status = stub->MemoryRawGet(&context, req_msg, &rsp_msg);
-
-    if (status.ok()) {
-        assert(rsp_msg.response_size() == 1);
-
-        ${api_prefix}_entry_unpack(tableid,
-                actionid,
-                (uint8_t*)rsp_msg.response(0).actiondata().c_str(),
-                0,
-                actiondata);
-        ret = P4PD_SUCCESS;
-    }
-
-    return ret;
+    ${api_prefix}_entry_unpack(tableid, actionid,
+                                mem, 0, actiondata);
+    return P4PD_SUCCESS;
 }
 
 void

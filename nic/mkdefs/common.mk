@@ -137,12 +137,19 @@ export CLI_P4PD_INCS := ${NIC_DIR}/hal/third-party/google/include \
                         /usr/include/python3.6m \
                         /usr/include/python3.4m
 export CLI_P4PD_FLAGS := -Wl,--allow-multiple-definition -Wno-sign-compare
-export CLI_iris_P4PD_LDLIBS := :libprotobuf.so.14 grpc++_reflection grpc++ grpc_unsecure grpc++_unsecure rt ev
+export CLI_iris_P4PD_LDLIBS := ${NIC_COMMON_LDLIBS} ${NIC_CAPSIM_LDLIBS} \
+							   ${SDK_THIRDPARTY_CAPRI_LDLIBS}	
 export CLI_apollo_P4PD_LDLIBS := ${NIC_COMMON_LDLIBS} ${NIC_CAPSIM_LDLIBS} \
                                  ${SDK_THIRDPARTY_CAPRI_LDLIBS}
 export CLI_artemis_P4PD_LDLIBS := ${NIC_COMMON_LDLIBS} ${NIC_CAPSIM_LDLIBS} \
                                   ${SDK_THIRDPARTY_CAPRI_LDLIBS}
-export CLI_iris_P4PD_SOLIBS := halproto sdkp4utils delphisdk
+export CLI_iris_P4PD_SOLIBS :=   p4pd_iris p4pd_common_p4plus_txdma  p4pd_common_p4plus_rxdma \
+                                 ${NIC_SDK_SOLIBS} \
+                                 ${NIC_HAL_PD_SOLIBS_${ARCH}} \
+                                 sdkp4 sdkp4utils \
+                                 sdkcapri_asicrw_if sdkcapri \
+                                 sdkplatformutils sdkasicpd memhash \
+                                 bm_allocator pal
 export CLI_apollo_P4PD_SOLIBS := ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                                  ${NIC_SDK_SOLIBS} \
                                  ${NIC_HAL_PD_SOLIBS_${ARCH}} \
