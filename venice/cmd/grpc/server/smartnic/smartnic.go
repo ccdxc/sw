@@ -264,11 +264,11 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC,
 		switch updHealthCond.Status {
 		case cluster.ConditionStatus_TRUE.String():
 			evtType = eventtypes.NIC_HEALTHY
-			msg = fmt.Sprintf("Healthy condition for SmartNIC %s is now %s", nicName, cluster.ConditionStatus_TRUE.String())
+			msg = fmt.Sprintf("SmartNIC %s is %s", nicName, cluster.SmartNICCondition_HEALTHY.String())
 
 		case cluster.ConditionStatus_FALSE.String():
 			evtType = eventtypes.NIC_UNHEALTHY
-			msg = fmt.Sprintf("Healthy condition for SmartNIC %s is now %s", nicName, cluster.ConditionStatus_FALSE.String())
+			msg = fmt.Sprintf("SmartNIC %s is %s", nicName, cluster.SmartNICCondition_UNHEALTHY.String())
 
 		default:
 			// this should not happen
@@ -763,7 +763,7 @@ func (s *RPCServer) MonitorHealth() {
 									log.Errorf("Failed updating the NIC health status to unknown, nic: %s err: %s", nic.Name, err)
 								}
 								recorder.Event(eventtypes.NIC_HEALTH_UNKNOWN,
-									fmt.Sprintf("Healthy condition for SmartNIC %s is now %s", nic.Name, cluster.ConditionStatus_UNKNOWN.String()), nicState.SmartNIC)
+									fmt.Sprintf("SmartNIC %s is %s", nic.Name, cluster.SmartNICCondition_UNREACHABLE.String()), nicState.SmartNIC)
 							}
 							break
 						}
