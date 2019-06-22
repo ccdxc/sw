@@ -85,7 +85,7 @@ references:
   - iota/test/venice
   - platform/drivers/linux
   - iota/test/venice/hwtest
-  - iota/test/venice/hwtest/hwregression
+#  - iota/test/venice/hwtest/hwregression
 
 # in the current jobd infra this is a map. Hence the later entry overwrites earlier ones if there are duplicates..
 dependencies:

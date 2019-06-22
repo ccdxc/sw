@@ -22,7 +22,7 @@ import (
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services/mock"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/npm"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
@@ -74,6 +74,9 @@ var (
 
 // Hook up gocheck into the "go test" runner.
 func TestNpmInteg(t *testing.T) {
+	// TODO
+	t.Skip("Enable after fixing issues found in https://github.com/pensando/sw/issues/13233")
+
 	// integ test suite
 	var sts = &integTestSuite{}
 
