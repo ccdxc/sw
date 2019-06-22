@@ -115,3 +115,7 @@ dir_dependencies:
     - nic/apollo
   nic/sdk:
     - nic/apollo
+  venice:
+    - api
+  test:
+    - api
