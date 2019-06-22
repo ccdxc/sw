@@ -5,6 +5,8 @@
 
 #ifdef APOLLO
 #include "apollo/p4/txdma/common_txdma_dummy.p4"
+#elseif ARTEMIS
+#include "artemis/p4/txdma/common_txdma_dummy.p4"
 #else
 #include "nic/p4/common-p4+/common_txdma_dummy.p4"
 #endif
@@ -21,9 +23,12 @@
 
 #ifdef APOLLO
 #include "apollo/p4/txdma/common_txdma.p4"
+#elseif ARTEMIS
+#include "artemis/p4/txdma/common_txdma.p4"
 #else
 #include "nic/p4/common-p4+/common_txdma.p4"
 #endif
+
 #include "eth_txdma.p4"
 
 /******************************************************************************
