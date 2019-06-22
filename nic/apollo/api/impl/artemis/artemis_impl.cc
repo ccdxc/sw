@@ -776,6 +776,98 @@ artemis_impl::nacl_init_(void) {
 }
 
 sdk_ret_t
+artemis_impl::checksum_init_(void) {
+    uint64_t idx;
+    p4pd_error_t p4pd_ret;
+    checksum_swkey_t key;
+    checksum_actiondata_t data;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv4_1_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV4_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv4_1_valid = 1;
+    key.udp_1_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV4_UDP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv4_1_valid = 1;
+    key.tcp_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV4_TCP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv4_1_valid = 1;
+    key.icmp_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV4_ICMP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv6_1_valid = 1;
+    key.udp_1_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV6_UDP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv6_1_valid = 1;
+    key.tcp_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV6_TCP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv6_1_valid = 1;
+    key.icmp_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV6_ICMP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 artemis_impl::table_init_(void) {
     sdk_ret_t     ret;
     mem_addr_t    addr;
@@ -824,6 +916,18 @@ artemis_impl::table_init_(void) {
     // subtract 2G (saves ASM instructions)
     addr -= ((uint64_t)1 << 31);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_METER_STATS, addr);
+
+    // initialize checksum table
+    ret = checksum_init_();
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    // initialize stats tables
+    ret = stats_init_();
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    // install all default NACL entries
+    ret = nacl_init_();
+    SDK_ASSERT(ret == SDK_RET_OK);
 
     return SDK_RET_OK;
 }
@@ -917,10 +1021,6 @@ artemis_impl::pipeline_init(void) {
     ret = init_service_lif(p4pd_cfg.cfg_path);
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = table_init_();
-    SDK_ASSERT(ret == SDK_RET_OK);
-    ret = stats_init_();
-    SDK_ASSERT(ret == SDK_RET_OK);
-    ret = nacl_init_();
     SDK_ASSERT(ret == SDK_RET_OK);
 
     ret = sdk::platform::capri::capri_sw_phv_init();
