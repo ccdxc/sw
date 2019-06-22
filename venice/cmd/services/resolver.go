@@ -38,7 +38,6 @@ func (r *resolverService) Start() {
 	if r.running {
 		return
 	}
-	// Add CMD service and point it to local instance // FIMXE -- ok ? different ?
 	r.running = true
 	r.k8sSvc.Register(r)
 }

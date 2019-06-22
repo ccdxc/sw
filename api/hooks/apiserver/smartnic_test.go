@@ -4,13 +4,21 @@ package impl
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/utils"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/certs"
+	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -53,8 +61,8 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 		},
 	}
 
-	decomNICUpd := nic
-	decomNICUpd.Spec.MgmtMode = cluster.SmartNICSpec_HOST.String()
+	var decomNICUpd cluster.SmartNIC
+	nic.Clone(&decomNICUpd)
 
 	ctx := context.TODO()
 	key := nic.MakeKey(string(apiclient.GroupCluster))
@@ -62,6 +70,7 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 	err = kv.Create(ctx, key, &nic)
 	AssertOk(t, err, fmt.Sprintf("Error creating object in KVStore"))
 
+	// Test delete/decommission restrictions
 	for _, phase := range cluster.SmartNICStatus_Phase_name {
 		nic.Status.AdmissionPhase = phase
 		err = kv.Update(ctx, key, &nic)
@@ -74,13 +83,57 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 		Assert(t, r == true && err == nil, "smartNICPreCommitHook returned unexpected error, op: UPDATE, phase: %s", phase)
 
 		// MgmtMode change only goes through if phase == ADMITTED
-		_, r, err = hooks.smartNICPreCommitHook(ctx, kv, kv.NewTxn(), key, apiintf.UpdateOper, false, &decomNICUpd)
+		_, r, err = hooks.smartNICPreCommitHook(ctx, kv, kv.NewTxn(), key, apiintf.UpdateOper, false, decomNICUpd)
 		Assert(t, r == true && (err == nil || phase != cluster.SmartNICStatus_ADMITTED.String()),
 			"smartNICPreCommitHook returned unexpected result on mode change, op: UPDATE, phase: %s, err: %v", phase, err)
 
 		// delete only goes through if phase != ADMITTED
-		_, r, err = hooks.smartNICPreCommitHook(ctx, kv, kv.NewTxn(), key, apiintf.DeleteOper, false, nil)
+		_, r, err = hooks.smartNICPreCommitHook(ctx, kv, kv.NewTxn(), key, apiintf.DeleteOper, false, nic)
 		Assert(t, r == true && (err == nil || phase == cluster.SmartNICStatus_ADMITTED.String()),
 			"smartNICPreCommitHook returned unexpected result, op: DELETE, phase: %s, err: %v", phase, err)
+	}
+
+	// Test unsupported Spec modifications
+	tlsKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	AssertOk(t, err, "Error generating key")
+	tlsCert, err := certs.SelfSign(globals.APIGw, tlsKey, certs.WithValidityDays(1))
+	AssertOk(t, err, "Error generating cert")
+	userCtx := ctxutils.MakeMockContext(nil, tlsCert)
+	Assert(t, apiutils.IsUserRequestCtx(userCtx), "userCtx is not a user request context")
+
+	otherCtx := context.TODO()
+	nic.Status.AdmissionPhase = cluster.SmartNICStatus_PENDING.String()
+	err = kv.Update(ctx, key, &nic)
+	AssertOk(t, err, "Error updating NIC")
+
+	type ModTest struct {
+		fieldName string
+		fieldTx   func(cluster.SmartNIC) cluster.SmartNIC
+	}
+
+	modTests := []ModTest{
+		{"ID", func(n cluster.SmartNIC) cluster.SmartNIC { n.Spec.ID = "NewID"; return n }},
+		{"IPConfig", func(n cluster.SmartNIC) cluster.SmartNIC { n.Spec.IPConfig.IPAddress = "1.2.3.4"; return n }},
+		{"NetworkMode", func(n cluster.SmartNIC) cluster.SmartNIC { n.Spec.NetworkMode = "INBAND"; return n }},
+		{"MgmtVlan", func(n cluster.SmartNIC) cluster.SmartNIC { n.Spec.MgmtVlan = 1; return n }},
+		{"Controllers", func(n cluster.SmartNIC) cluster.SmartNIC { n.Spec.Controllers = []string{"abc"}; return n }},
+		{"ID, MgmtVlan", func(n cluster.SmartNIC) cluster.SmartNIC { n.Spec.ID = "NewID2"; n.Spec.MgmtVlan = 2; return n }},
+	}
+
+	for _, mt := range modTests {
+		for _, ctx := range []context.Context{userCtx, otherCtx} {
+			for _, oper := range []apiintf.APIOperType{apiintf.CreateOper, apiintf.UpdateOper, apiintf.DeleteOper} {
+				var updNIC cluster.SmartNIC
+				nic.Clone(&updNIC)
+				_, r, err := hooks.smartNICPreCommitHook(ctx, kv, kv.NewTxn(), key, oper, false, mt.fieldTx(updNIC))
+				if ctx == otherCtx || oper == apiintf.CreateOper || oper == apiintf.DeleteOper {
+					Assert(t, r == true && err == nil,
+						"smartNICPreCommitHook returned unexpected error, field: %s, op: %v, ctx: %+v, err: %v", mt.fieldName, oper, ctx, err)
+				} else {
+					Assert(t, r == true && err != nil && strings.Contains(err.Error(), mt.fieldName),
+						"smartNICPreCommitHook did not return expected error, field: %s, op: %v, ctx: %+v, err: %v", mt.fieldName, oper, ctx, err)
+				}
+			}
+		}
 	}
 }

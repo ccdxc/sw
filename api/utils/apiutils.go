@@ -170,3 +170,8 @@ func IsEventsReaderCtx(ctx context.Context) bool {
 func IsAuditsReaderCtx(ctx context.Context) bool {
 	return ctxutils.IsAPIGwCtx(ctx)
 }
+
+// IsUserRequestCtx returns true if the client context is that of a user-initiated request
+func IsUserRequestCtx(ctx context.Context) bool {
+	return ctxutils.IsAPIGwCtx(ctx)
+}
