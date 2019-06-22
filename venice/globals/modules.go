@@ -33,4 +33,5 @@ const (
 	Collector             = "pen-collector"
 	Tmagent               = "pen-tmagent"
 	Rollout               = "pen-rollout"
+	CitadelQuery          = "pen-citadel-query"
 )

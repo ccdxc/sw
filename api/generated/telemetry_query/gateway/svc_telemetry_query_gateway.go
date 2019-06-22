@@ -142,7 +142,7 @@ func (e *sTelemetryV1GwService) CompleteRegistration(ctx context.Context,
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 
-	grpcaddr := "pen-citadel"
+	grpcaddr := "pen-citadel-query"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
 
@@ -203,7 +203,7 @@ func (e *sTelemetryV1GwService) newClient(ctx context.Context, grpcAddr string, 
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
 	} else {
 
-		opts = append(opts, rpckit.WithRemoteServerName("pen-citadel"))
+		opts = append(opts, rpckit.WithRemoteServerName("pen-citadel-query"))
 	}
 
 	if !devmode {
