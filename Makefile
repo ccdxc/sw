@@ -33,6 +33,9 @@ venice/citadel/broker/mock \
 venice/utils/diagnostics/protos \
 metrics
 
+PARALLEL := $(shell command -v parallel 2> /dev/null)
+
+
 # Vendored packages to be installed before generation
 TO_PREGEN_INSTALL := ./vendor/github.com/gogo/protobuf/protoc-gen-gofast \
 						./vendor/github.com/gogo/protobuf/protoc-gen-gogofast \
@@ -192,7 +195,12 @@ install:
 	@cp -p ${PWD}/venice/vtsa/cmd/vtsa/vtsa.json tools/docker-files/vtsa/vtsa.json
 	@# npm is special - The executable is called pen-npm since it conflicts with node.js npm. Hence copy it explicitly here
 	@cp -p ${PWD}/bin/cbin/pen-npm tools/docker-files/npm/pen-npm
+ifndef PARALLEL
 	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; docker build --label org.label-schema.build-date="${BUILD_DATE}" --label org.label-schema.vendor="Pensando" --label org.label-schema.vcs-ref="${GIT_COMMIT}" --label org.label-schema.version="${GIT_VERSION}" --label org.label-schema.schema-version="1.0"  --rm -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c} ; done
+else
+	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c} ; done
+	@for c in $(TO_DOCKERIZE); do (echo docker build --label org.label-schema.build-date="${BUILD_DATE}" --label org.label-schema.vendor="Pensando" --label org.label-schema.vcs-ref="${GIT_COMMIT}" --label org.label-schema.version="${GIT_VERSION}" --label org.label-schema.schema-version="1.0"  --rm -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c}) ; done | parallel --will-cite --jobs 4
+endif
 	@tools/scripts/createImage.py ${IMAGE_VERSION} ${GIT_VERSION}
 	@# the above script populates venice.json which needs to be 'installed' on the venice. Hence creation of installer is done at the end
 	@# For now the installer is a docker container.
