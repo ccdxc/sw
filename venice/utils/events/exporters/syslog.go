@@ -8,6 +8,7 @@ import (
 
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/events/generated/eventattrs"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
@@ -211,37 +212,34 @@ func (s *SyslogExporter) GenerateSyslogMessage(evt *evtsapi.Event) *syslog.Messa
 	crTime, _ := evt.CreationTime.Time()
 	modTime, _ := evt.ModTime.Time()
 	strData := syslog.StrData{}
-	strData["type"] = map[string]string{
-		"kind": evt.GetKind(),
-	}
-	strData["meta"] = map[string]string{
+
+	m := map[string]string{
+		"kind":          evt.GetKind(),
 		"name":          evt.GetName(),
-		"uuid":          evt.GetUUID(),
 		"tenant":        evt.GetTenant(),
 		"namespace":     evt.GetNamespace(),
 		"creation-time": crTime.String(),
 		"mod-time":      modTime.String(),
+		"type":          evt.GetType(),
+		"severity":      evt.GetSeverity(),
+		"count":         fmt.Sprintf("%d", evt.GetCount()),
 	}
-	strData["attributes"] = map[string]string{
-		"type":     evt.GetType(),
-		"severity": evt.GetSeverity(),
-		"count":    fmt.Sprintf("%d", evt.GetCount()),
-	}
+
 	if evt.GetSource() != nil {
-		strData["source"] = map[string]string{
-			"node-name": evt.GetSource().GetNodeName(),
-			"component": evt.GetSource().GetComponent(),
-		}
+		m["src-node"] = evt.GetSource().GetNodeName()
+		m["src-component"] = evt.GetSource().GetComponent()
+
 	}
 
 	if evt.GetObjectRef() != nil {
-		strData["object-ref"] = map[string]string{
-			"tenant":    evt.GetObjectRef().GetTenant(),
-			"namespace": evt.GetObjectRef().GetNamespace(),
-			"kind":      evt.GetObjectRef().GetKind(),
-			"name":      evt.GetObjectRef().GetName(),
-		}
+		m["ref-tenant"] = evt.GetObjectRef().GetTenant()
+		m["ref-namespace"] = evt.GetObjectRef().GetNamespace()
+		m["ref-kind"] = evt.GetObjectRef().GetKind()
+		m["ref-name"] = evt.GetObjectRef().GetName()
+
 	}
+
+	strData[fmt.Sprintf("event@%d", globals.PensandoPEN)] = m
 
 	return &syslog.Message{MsgID: evt.GetUUID(), Msg: evt.GetMessage(), StructuredData: strData}
 }

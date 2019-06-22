@@ -643,7 +643,7 @@ func (s *PolicyState) sendFwLog(c *fwlogCollector, data map[string]string) {
 		if err := c.syslogFd.Info(&syslog.Message{
 			MsgID: data["rule-id"], // set rule-id
 			StructuredData: syslog.StrData{
-				"firewall-log": data,
+				fmt.Sprintf("firewall-log@%d", globals.PensandoPEN): data,
 			},
 		}); err != nil {
 			c.txErr++

@@ -964,7 +964,7 @@ func TestPolicyUpdate(t *testing.T) {
 
 	collList := []*tpmprotos.FwlogPolicyEvent{
 		// add
-		&tpmprotos.FwlogPolicyEvent{
+		{
 			EventType: api.EventType_CreateEvent,
 			Policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
@@ -990,7 +990,7 @@ func TestPolicyUpdate(t *testing.T) {
 		},
 
 		// add
-		&tpmprotos.FwlogPolicyEvent{
+		{
 			EventType: api.EventType_CreateEvent,
 			Policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
@@ -1019,7 +1019,7 @@ func TestPolicyUpdate(t *testing.T) {
 			},
 		},
 		// update
-		&tpmprotos.FwlogPolicyEvent{
+		{
 			EventType: api.EventType_UpdateEvent,
 			Policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
@@ -1044,7 +1044,7 @@ func TestPolicyUpdate(t *testing.T) {
 			},
 		},
 		// delete
-		&tpmprotos.FwlogPolicyEvent{
+		{
 			EventType: api.EventType_DeleteEvent,
 			Policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
@@ -1069,7 +1069,7 @@ func TestPolicyUpdate(t *testing.T) {
 			},
 		},
 		// update: format and facility change
-		&tpmprotos.FwlogPolicyEvent{
+		{
 			EventType: api.EventType_UpdateEvent,
 			Policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{

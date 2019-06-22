@@ -83,7 +83,7 @@ func TestSyslogEventsExporter(t *testing.T) {
 		defer wg.Done()
 		totalReceivedMessages := 0
 		for {
-			msg, _ := <-receivedMsgsAtUDPServer1
+			msg := <-receivedMsgsAtUDPServer1
 			if syslog.ValidateSyslogMessage(monitoring.MonitoringExportFormat_SYSLOG_BSD, msg) {
 				totalReceivedMessages++
 			}
@@ -98,7 +98,7 @@ func TestSyslogEventsExporter(t *testing.T) {
 		defer wg.Done()
 		totalReceivedMessages := 0
 		for {
-			msg, _ := <-receivedMsgsAtUDPServer2
+			msg := <-receivedMsgsAtUDPServer2
 			if syslog.ValidateSyslogMessage(monitoring.MonitoringExportFormat_SYSLOG_RFC5424, msg) {
 				totalReceivedMessages++
 			}

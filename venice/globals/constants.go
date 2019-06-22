@@ -224,4 +224,7 @@ const (
 var (
 	// PensandoOUI is the Pensando organizationally unique identifier, as it appears in a MAC address
 	PensandoOUI = []byte{0x00, 0xAE, 0xCD}
+
+	// PensandoPEN PrivateEnterpriseNumber assigned by IANA
+	PensandoPEN = 51886
 )

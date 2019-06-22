@@ -1301,43 +1301,43 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 	}{
 		receivedMsgsAtTCPServer: {
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy2.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name()), alertPolicy2.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name()), alertPolicy2.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy2.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name()), alertPolicy2.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name()), alertPolicy2.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 		},
@@ -1468,65 +1468,65 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 	}{
 		receivedMsgsAtUDPServer1: {
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name()), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name()), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name()), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name()), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 		},
 		receivedMsgsAtUDPServer2: {
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name()), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name()), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 		},
