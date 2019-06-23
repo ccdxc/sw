@@ -525,6 +525,10 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
         { query: this.generateRuleQuery(rule['rule-hash']) }
       );
     });
+    if (queryList.queries.length === 0) {
+      // No queries to execute yet
+      return;
+    }
     // We create a new query for each rule
     // We then group each rule by reporter ID
     // We then sum them to generate the total for the rule
