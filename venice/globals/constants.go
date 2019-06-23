@@ -194,7 +194,7 @@ const (
 
 	// Spyglass search service
 	SpyglassRPCPort    = "9011"
-	SpyglassRESTPort   = "9020"
+	SpyglassRESTPort   = "9021"
 	SpyglassMaxResults = 8192
 
 	EvtsMgrRPCPort    = "9010" // Events manager
