@@ -256,7 +256,7 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC,
 	updHealthCond := getNICCondition(updObj, cluster.SmartNICCondition_HEALTHY)
 
 	// generate event if there was a health transition
-	if updHealthCond != nil && refHealthCond != nil && refHealthCond.Status != updHealthCond.Status {
+	if updHealthCond != nil && (refHealthCond == nil || refHealthCond.Status != updHealthCond.Status) {
 		var evtType eventtypes.EventType
 		evtType = -1
 		var msg string
