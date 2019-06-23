@@ -137,7 +137,7 @@ var _ = Describe("Elastic cluster test", func() {
 					return fmt.Errorf("search query failed")
 				}
 
-				log.Infof("succesfully removed %s and elasticsearch cluster is still intact", ts.tu.QuorumNodes[i])
+				log.Infof("successfully removed %s and elasticsearch cluster is still intact", ts.tu.QuorumNodes[i])
 				return nil
 			}, 120, 1).Should(BeNil(), "elastic cluster is not in expected state")
 		}

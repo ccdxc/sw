@@ -287,6 +287,9 @@ func testQueryingFwlogs() {
 }
 
 var _ = Describe("telemetry tests", func() {
+	BeforeEach(func() {
+		validateCluster()
+	})
 	It("telemetry Node data", func() {
 		testQueryingMetrics("Node")
 	})
@@ -489,6 +492,10 @@ var _ = Describe("telemetry tests", func() {
 			}
 		})
 	})
+	AfterEach(func() {
+		validateCluster()
+	})
+
 })
 
 // Writes the given Fwlogs into influx

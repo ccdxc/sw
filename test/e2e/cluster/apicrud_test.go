@@ -463,7 +463,7 @@ var _ = Describe("API Crud tests", func() {
 	}
 
 	BeforeEach(func() {
-
+		validateCluster()
 	})
 
 	Context("API server and API Gateway should be running", func() {
@@ -692,4 +692,8 @@ var _ = Describe("API Crud tests", func() {
 			clearSavedConfig(&scfg)
 		})
 	})
+	AfterEach(func() {
+		validateCluster()
+	})
+
 })

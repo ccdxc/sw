@@ -153,7 +153,7 @@ func uploadFile(ctx context.Context, filename string, metadata map[string]string
 	}
 	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
 	if !ok {
-		return 0, fmt.Errorf("no authorizaton header in context")
+		return 0, fmt.Errorf("no authorization header in context")
 	}
 	req.Header.Set("Authorization", authzHeader)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
@@ -211,7 +211,7 @@ func statFile(ctx context.Context, filename string) (*objstore.Object, error) {
 	restcl := netutils.NewHTTPClient()
 	authzHeader, ok := penctx.AuthzHeaderFromContext(ctx)
 	if !ok {
-		return nil, fmt.Errorf("no authorizaton header in context")
+		return nil, fmt.Errorf("no authorization header in context")
 	}
 	restcl.SetHeader("Authorization", authzHeader)
 	restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
@@ -316,6 +316,7 @@ var _ = Describe("Objstore Write and read test", func() {
 			Skip("No in distributed mode, skipping cluster tests")
 			return
 		}
+		validateCluster()
 		Eventually(func() string {
 			vosNodes = getVosNodes()
 			if len(vosNodes) != ts.tu.NumQuorumNodes {
@@ -354,6 +355,9 @@ var _ = Describe("Objstore Write and read test", func() {
 			testObjCUDOps()()
 			nodeid++
 		}
+	})
+	AfterEach(func() {
+		validateCluster()
 	})
 
 })
