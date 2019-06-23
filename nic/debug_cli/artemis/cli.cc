@@ -16,6 +16,7 @@ static bool pd_inited = 0;
 int
 cli_init (char *ptr)
 {
+    catalog *catalog;
     pal_ret_t    pal_ret;
     p4pd_error_t p4pd_ret;
     capri_cfg_t  capri_cfg;
@@ -48,7 +49,10 @@ cli_init (char *ptr)
 
     memset(&capri_cfg, 0, sizeof(capri_cfg_t));
     capri_cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
-    std::string mpart_json = capri_cfg.cfg_path + "/artemis/hbm_mem.json";
+    catalog = catalog::factory(capri_cfg.cfg_path, "",
+                               platform_type_t::PLATFORM_TYPE_HW);
+    std::string mpart_json = capri_cfg.cfg_path + "/artemis/" +
+        catalog->memory_capacity_str() + "/hbm_mem.json";
     capri_cfg.mempartition =
         sdk::platform::utils::mpartition::factory(mpart_json.c_str());
 

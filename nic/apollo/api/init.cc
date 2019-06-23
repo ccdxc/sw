@@ -125,7 +125,7 @@ pds_init (pds_init_params_t *params)
     api::g_pds_state.set_catalog(catalog::factory(
         api::g_pds_state.cfg_path(), "", api::g_pds_state.platform_type()));
     PDS_TRACE_DEBUG("Memory capacity of the system %s",
-                    api::g_pds_state.mem_scale().c_str());
+                    api::g_pds_state.catalogue()->memory_capacity_str().c_str());
 
     // parse pipeline specific configuration
     ret = core::parse_pipeline_config(params->pipeline, &api::g_pds_state);
@@ -135,15 +135,18 @@ pds_init (pds_init_params_t *params)
     if (params->scale_profile == PDS_SCALE_PROFILE_DEFAULT) {
         mem_json =
             api::g_pds_state.cfg_path() + "/" + params->pipeline + "/" +
-                api::g_pds_state.mem_scale() + "/hbm_mem.json";
+                api::g_pds_state.catalogue()->memory_capacity_str() +
+                "/hbm_mem.json";
     } else if (params->scale_profile == PDS_SCALE_PROFILE_P1) {
         mem_json =
             api::g_pds_state.cfg_path() + "/" + params->pipeline + "/" +
-                api::g_pds_state.mem_scale() + "/hbm_mem_p1.json";
+                api::g_pds_state.catalogue()->memory_capacity_str() +
+                "/hbm_mem_p1.json";
     } else if (params->scale_profile == PDS_SCALE_PROFILE_P2) {
         mem_json =
             api::g_pds_state.cfg_path() + "/" + params->pipeline + "/" +
-                api::g_pds_state.mem_scale() + "/hbm_mem_p2.json";
+                api::g_pds_state.catalogue()->memory_capacity_str() +
+                "/hbm_mem_p2.json";
     } else {
         PDS_TRACE_ERR("Unknown profile %u, aborting ...",
                       params->scale_profile);
