@@ -178,10 +178,8 @@ message SmartNICCondition {
     enum ConditionType {
         // ui-hint: Healthy
         HEALTHY     = 0; // NIC is healthy
-	// ui-hint: Unhealthy
-	UNHEALTHY   = 2; // NIC is unhealthy
         // ui-hint: Not Reachable
-        UNREACHABLE = 3; // NIC is not reachable from Venice cluster
+        UNREACHABLE = 1; // NIC is not reachable from Venice cluster
     }
 
     // Type indicates a certain NIC condition

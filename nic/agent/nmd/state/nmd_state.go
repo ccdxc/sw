@@ -1270,7 +1270,7 @@ func (n *NMD) PersistDeviceSpec(fwdMode string, featureProfile device.FeaturePro
 		log.Errorf("Failed to marshal device spec. Err: %v", err)
 		return err
 	}
-	log.Infof("Marshalled JSON is : %v ", string(data))
+	log.Infof("Marshaled JSON is : %v ", string(data))
 
 	if err = ioutil.WriteFile(globals.NaplesModeConfigFile, data, 0664); err != nil {
 		log.Errorf("Failed to write feature profile to %s. Err: %v", globals.NaplesModeConfigFile, err)

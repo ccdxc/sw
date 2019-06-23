@@ -31,10 +31,8 @@ var _ listerwatcher.WatcherClient
 // SmartNICCondition_ConditionType_normal is a map of normalized values for the enum
 var SmartNICCondition_ConditionType_normal = map[string]string{
 	"HEALTHY":     "HEALTHY",
-	"UNHEALTHY":   "UNHEALTHY",
 	"UNREACHABLE": "UNREACHABLE",
 	"healthy":     "HEALTHY",
-	"unhealthy":   "UNHEALTHY",
 	"unreachable": "UNREACHABLE",
 }
 

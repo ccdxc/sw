@@ -362,7 +362,7 @@ func (n *NMD) UpdateNaplesHealth() []cmd.SmartNICCondition {
 	if n.DelphiClient != nil {
 		sysmgrSysStatus := sysmgrProto.GetSysmgrSystemStatus(n.DelphiClient)
 		if sysmgrSysStatus != nil && sysmgrSysStatus.State == sysmgrProto.SystemState_Fault {
-			health = cmd.SmartNICCondition_UNHEALTHY.String()
+			status = cmd.ConditionStatus_FALSE.String()
 			reason = sysmgrSysStatus.Reason
 		}
 	}

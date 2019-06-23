@@ -43,7 +43,6 @@ export enum ClusterNodeStatus_phase {
 
 export enum ClusterSmartNICCondition_type {
     'HEALTHY' = "HEALTHY",
-    'UNHEALTHY' = "UNHEALTHY",
     'UNREACHABLE' = "UNREACHABLE",
 }
 
@@ -104,7 +103,6 @@ export enum ClusterNodeStatus_phase_uihint {
 
 export enum ClusterSmartNICCondition_type_uihint {
     'HEALTHY' = "Healthy",
-    'UNHEALTHY' = "Unhealthy",
     'UNREACHABLE' = "Not Reachable",
 }
 

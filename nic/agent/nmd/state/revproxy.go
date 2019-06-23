@@ -95,7 +95,7 @@ func getRevProxyTLSConfig(trustRootsPath string) (*tls.Config, error) {
 			ClientAuth:             tls.RequireAndVerifyClientCert,
 			ClientCAs:              certs.NewCertPool(trustRoots),
 			Certificates: []tls.Certificate{
-				tls.Certificate{
+				{
 					Certificate: [][]byte{cert.Raw},
 					PrivateKey:  privateKey,
 				},

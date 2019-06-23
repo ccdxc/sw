@@ -268,7 +268,7 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC,
 
 		case cluster.ConditionStatus_FALSE.String():
 			evtType = eventtypes.NIC_UNHEALTHY
-			msg = fmt.Sprintf("SmartNIC %s is %s", nicName, cluster.SmartNICCondition_UNHEALTHY.String())
+			msg = fmt.Sprintf("SmartNIC %s is not %s", nicName, cluster.SmartNICCondition_HEALTHY.String())
 
 		default:
 			// this should not happen
