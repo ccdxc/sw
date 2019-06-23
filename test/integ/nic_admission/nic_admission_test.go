@@ -34,6 +34,7 @@ import (
 	"github.com/pensando/sw/api/generated/tokenauth"
 	"github.com/pensando/sw/nic/agent/nmd"
 	nmdstate "github.com/pensando/sw/nic/agent/nmd/state"
+	nmdutils "github.com/pensando/sw/nic/agent/nmd/utils"
 	proto "github.com/pensando/sw/nic/agent/protos/nmd"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apiserver"
@@ -318,7 +319,7 @@ func createNMD(t *testing.T, dbPath, priMac, restURL, revProxyURL, mgmtMode stri
 	err = createNaplesOOBInterface()
 
 	// set the NMD reverse proxy config to point to corresponding REST port
-	err = os.Remove(globals.NaplesTrustRootsFile)
+	err = nmdutils.ClearNaplesTrustRoots()
 	Assert(t, err == nil || os.IsNotExist(err), "Error removing stale trust roots: %v", err)
 	proxyConfig := map[string]string{
 		"/api/v1/naples": "http://127.0.0.1" + restURL,
@@ -340,6 +341,7 @@ func stopNMD(t *testing.T, i *nmdInfo) {
 		log.Fatalf("Error deleting emDB file: %s, err: %v", i.dbPath, err)
 	}
 	_ = deleteNaplesOOBInterfaces()
+	nmdutils.ClearNaplesTrustRoots()
 }
 
 func createNaplesOOBInterface() error {
@@ -734,6 +736,8 @@ func checkE2EState(t *testing.T, nmd *nmdstate.NMD, admPhase string) {
 		expRegStatus, expUpdStatus, expUpdWatchStatus, expRoWatchStatus = true, false, false, false
 	case pencluster.SmartNICStatus_DECOMMISSIONED.String():
 		expRegStatus, expUpdStatus, expUpdWatchStatus, expRoWatchStatus = false, false, false, false
+	case pencluster.SmartNICStatus_REGISTERING.String():
+		expRegStatus, expUpdStatus, expUpdWatchStatus, expRoWatchStatus = true, false, false, false
 	default:
 		panic(fmt.Sprintf("Unexpected admission phase %s, NMD: %+v", admPhase, nmd))
 	}
@@ -754,9 +758,18 @@ func checkE2EState(t *testing.T, nmd *nmdstate.NMD, admPhase string) {
 			return false, fmt.Sprintf("NIC %s not found in ApiServer, phase: %s", name, admPhase)
 		}
 
-		for i, nicObj := range []*pencluster.SmartNIC{nmdObj, cmdObj.SmartNIC, apiSrvObj} {
+		// Phase on CMD must match phase on NMD, except for the "registering case", where Venice has admitted but
+		// NAPLES refused to join and stays in REGISTERING
+		if admPhase != pencluster.SmartNICStatus_REGISTERING.String() {
+			for i, nicObj := range []*pencluster.SmartNIC{nmdObj, cmdObj.SmartNIC, apiSrvObj} {
+				if nicObj.Status.AdmissionPhase != admPhase {
+					log.Errorf("NIC not in expected admission phase, index: %d, have: %s, want: %s", i, nicObj.Status.AdmissionPhase, admPhase)
+					return false, nil
+				}
+			}
+		} else {
 			if nmdObj.Status.AdmissionPhase != admPhase {
-				log.Errorf("NIC not in expected admission phase, index: %d, have: %s, want: %s", i, nicObj.Status.AdmissionPhase, admPhase)
+				log.Errorf("NIC not in expected admission phase, have: %s, want: %s", nmdObj.Status.AdmissionPhase, admPhase)
 				return false, nil
 			}
 		}
@@ -787,6 +800,19 @@ func checkE2EState(t *testing.T, nmd *nmdstate.NMD, admPhase string) {
 		return true, nil
 	}
 	AssertEventually(t, f, fmt.Sprintf("NMD did not reach expected state for phase %s, status: %+v", admPhase, nmd), "500ms", "30s")
+}
+
+func setAutoAdmit(v bool) error {
+	clusterObj, err := tInfo.apiClient.ClusterV1().Cluster().Get(context.Background(), &api.ObjectMeta{Name: "testCluster"})
+	if err != nil {
+		return fmt.Errorf("Error getting cluster object: %v", err)
+	}
+	clusterObj.Spec.AutoAdmitNICs = v
+	_, err = tInfo.apiClient.ClusterV1().Cluster().Update(context.Background(), clusterObj)
+	if err != nil {
+		return fmt.Errorf("Error updating cluster object: %v", err)
+	}
+	return nil
 }
 
 // TestNICReadmit tests the flow in which a NIC is first admitted, then explicitly de-amitted and the re-admitted.
@@ -863,12 +889,8 @@ func TestNICReadmit(t *testing.T) {
 	checkE2EState(t, nmd, pencluster.SmartNICStatus_ADMITTED.String())
 
 	// Turn off auto-admit
-	clusterObj, err := tInfo.apiClient.ClusterV1().Cluster().Get(context.Background(), &api.ObjectMeta{Name: "testCluster"})
-	AssertOk(t, err, "Error getting cluster object")
-	fmt.Println("Setting auto admit to false")
-	clusterObj.Spec.AutoAdmitNICs = false
-	_, err = tInfo.apiClient.ClusterV1().Cluster().Update(context.Background(), clusterObj)
-	AssertOk(t, err, "Error updating cluster object")
+	err = setAutoAdmit(false)
+	AssertOk(t, err, "Failed to set autoAdmit to false")
 
 	//Verify that Status info (except phase, host and conditions) does not change in apiServer as NIC gets admitted/de-admitted
 	validateStatus := func(refObj *pencluster.SmartNIC) {
@@ -913,6 +935,37 @@ func TestNICReadmit(t *testing.T) {
 		// Verify that status information was preserved
 		validateStatus(refObj)
 	}
+
+	// When the NIC gets admitted to a Venice cluster for the first time, it is supposed to form a persistent bond.
+	// If later on the NIC performs a new admission sequence (for example after a reboot) and finds a different Venice
+	// (as identified by the Venice CA trust chain) it must refuse to join.
+	setNICAdmitState(t, &meta, false)
+	checkE2EState(t, nmd, pencluster.SmartNICStatus_PENDING.String())
+
+	err = nmdutils.StoreTrustRoots(cmdenv.CertMgr.Ca().TrustRoots())
+	AssertOk(t, err, "Error updating trust roots file")
+
+	origCertMgr := cmdenv.CertMgr
+	tmpCertMgr, err := certmgr.NewTestCertificateMgr("readmit-test")
+	AssertOk(t, err, "Failed to create tmp CertificateMgr")
+	cmdenv.CertMgr = tmpCertMgr
+	defer tmpCertMgr.Close()
+
+	setNICAdmitState(t, &meta, true)
+	checkE2EState(t, nmd, pencluster.SmartNICStatus_REGISTERING.String())
+
+	// Make sure that proper error message is present both in object and config
+	nicObj, err := nmd.GetSmartNIC()
+	AssertOk(t, err, "Error getting NIC obj from NMD")
+	Assert(t, strings.Contains(nicObj.Status.AdmissionPhaseReason, "Cluster trust chain failed validation"),
+		"Did not find expected admission phase reason. Have: %v", nicObj.Status.AdmissionPhaseReason)
+	naplesConf := nmd.GetNaplesConfig()
+	Assert(t, strings.Contains(naplesConf.Status.AdmissionPhaseReason, "Cluster trust chain failed validation"),
+		"Did not find expected admission phase reason. Have: %v", naplesConf.Status.AdmissionPhaseReason)
+
+	// Now switch back to the original CA. This time it should go through.
+	cmdenv.CertMgr = origCertMgr
+	checkE2EState(t, nmd, pencluster.SmartNICStatus_ADMITTED.String())
 }
 
 // TestNICDecommissionFlow tests the sequence in which a NIC is first admitted in the cluster, then decommissioned
@@ -934,11 +987,8 @@ func TestNICDecommissionFlow(t *testing.T) {
 	}
 
 	// Turn off auto-admit
-	clusterObj, err := tInfo.apiClient.ClusterV1().Cluster().Get(context.Background(), &api.ObjectMeta{Name: "testCluster"})
-	AssertOk(t, err, "Error getting cluster object")
-	clusterObj.Spec.AutoAdmitNICs = false
-	_, err = tInfo.apiClient.ClusterV1().Cluster().Update(context.Background(), clusterObj)
-	AssertOk(t, err, "Error updating cluster object")
+	err := setAutoAdmit(false)
+	AssertOk(t, err, "Failed to set autoAdmit to false")
 
 	// Cleanup any prior DB files
 	os.Remove(dbPath)
@@ -1166,6 +1216,9 @@ func Teardown(m *testing.M) {
 		cmdenv.CertMgr.Close()
 		cmdenv.CertMgr = nil
 	}
+
+	nmdutils.ClearNaplesTrustRoots()
+
 	log.Infof("#### ApiServer and CMD smartnic server is STOPPED")
 }
 

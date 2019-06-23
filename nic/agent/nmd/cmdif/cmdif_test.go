@@ -20,9 +20,11 @@ import (
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	nmdapi "github.com/pensando/sw/nic/agent/nmd/api"
+	nmdutils "github.com/pensando/sw/nic/agent/nmd/utils"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	cmdprotos "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/keymgr"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver/mock"
@@ -189,8 +191,26 @@ func (srv *mockRPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterN
 	}
 
 	// send challenge
+	if req.AdmissionRequest.Nic.Name == "proto-err-empty-cluster-trust-chain" {
+		authReq := grpc.RegisterNICResponse{
+			AuthenticationRequest: &grpc.AuthenticationRequest{},
+		}
+		return stream.Send(&authReq)
+	}
+
+	caKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		panic("Error generating key")
+	}
+	caCert, err := certs.SelfSign("", caKey, certs.WithValidityDays(1))
+	if err != nil {
+		panic("Error generating cert")
+	}
+
 	authReq := grpc.RegisterNICResponse{
-		AuthenticationRequest: &grpc.AuthenticationRequest{},
+		AuthenticationRequest: &grpc.AuthenticationRequest{
+			TrustChain: [][]byte{caCert.Raw},
+		},
 	}
 	err = stream.Send(&authReq)
 	if err != nil {
@@ -438,6 +458,10 @@ func TestCmdClientErrorHandling(t *testing.T) {
 	_, err = cl.RegisterSmartNICReq(&nic)
 	Assert(t, err != nil, "Register NIC should have failed")
 
+	nic.Name = "proto-err-empty-cluster-trust-chain"
+	_, err = cl.RegisterSmartNICReq(&nic)
+	Assert(t, err != nil, "Register NIC should have failed")
+
 	nic.Name = "proto-err-empty-response"
 	_, err = cl.RegisterSmartNICReq(&nic)
 	Assert(t, err != nil, "Register NIC should have failed")
@@ -446,7 +470,7 @@ func TestCmdClientErrorHandling(t *testing.T) {
 	nicRegTimeout = 100 * time.Millisecond
 	nic.Name = "timeout"
 	_, err = cl.RegisterSmartNICReq(&nic)
-	Assert(t, err != nil && strings.Contains(err.Error(), "DeadlineExceeded"), "Register NIC should have failed due to timeout")
+	Assert(t, err != nil && strings.Contains(err.Error(), "DeadlineExceeded"), "Register NIC should have failed due to timeout, got: %v", err)
 
 	// Test update nic failure
 	nic.Name = "invalid-mac"
@@ -486,4 +510,11 @@ func TestCmdClientErrorHandling(t *testing.T) {
 		n := ag.nicDeleted[objectKey(nic.ObjectMeta)]
 		return (n != nil && n.Name == nic.Name), nil
 	}, "NIC delete not found in agent")
+}
+
+func TestMain(m *testing.M) {
+	globals.NaplesTrustRootsFile = "/tmp/clusterTrustRoots.pem"
+	nmdutils.ClearNaplesTrustRoots()
+	defer nmdutils.ClearNaplesTrustRoots()
+	m.Run()
 }

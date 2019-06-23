@@ -132,10 +132,10 @@ service SmartNICUpdates {
 
 // NMD --> CMD
 message NICAdmissionRequest {
-	cluster.SmartNIC Nic    = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
+	cluster.SmartNIC Nic         = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
 
-	// Factory Certificate
-	bytes Cert          = 2 [(gogoproto.jsontag) = "cert,omitempty"];
+	// Factory Certificates
+	repeated bytes Certs         = 2 [(gogoproto.jsontag) = "certificates,omitempty"];
 
 	// Cluster Certificate Signing Request
 	bytes ClusterCertSignRequest = 3 [(gogoproto.jsontag) = "clusterCertSignRequest,omitempty"];
@@ -145,6 +145,9 @@ message NICAdmissionRequest {
 message AuthenticationRequest {
 	// Challenge consists of a random nonce
 	bytes Challenge = 1 [(gogoproto.jsontag) = "challenge,omitempty"];
+
+	// Trust chain of the cluster CA
+	repeated bytes TrustChain = 2 [(gogoproto.jsontag) = "trustChain,omitempty"];
 }
 
 // NMD --> CMD

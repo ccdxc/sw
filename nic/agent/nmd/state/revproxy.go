@@ -10,6 +10,7 @@ import (
 	"encoding/pem"
 	"fmt"
 
+	"github.com/pensando/sw/nic/agent/nmd/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/log"
@@ -68,9 +69,9 @@ var revProxyConfig = map[string]string{
 	"/api/diagnostics/": "http://127.0.0.1:" + globals.NaplesTechSupportRestPort,
 }
 
-func getRevProxyTLSConfig(trustRootsPath string) (*tls.Config, error) {
-	trustRoots, err := certs.ReadCertificates(trustRootsPath)
-	if err == nil {
+func getRevProxyTLSConfig() (*tls.Config, error) {
+	trustRoots, err := utils.GetNaplesTrustRoots()
+	if trustRoots != nil {
 		// use a self-signed certificate for the server so we don't have dependencies on Venice
 		privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 		if err != nil {
@@ -80,7 +81,7 @@ func getRevProxyTLSConfig(trustRootsPath string) (*tls.Config, error) {
 		if err != nil {
 			return nil, fmt.Errorf("Error generating self-signed certificate. Err: %v", err)
 		}
-		log.Infof("Loaded %d trust roots from %s", len(trustRoots), trustRootsPath)
+		log.Infof("Loaded %d trust roots", len(trustRoots))
 		for _, c := range trustRoots {
 			pemBlock := &pem.Block{
 				Type:  certs.CertificatePemBlockType,
@@ -102,16 +103,21 @@ func getRevProxyTLSConfig(trustRootsPath string) (*tls.Config, error) {
 			},
 		}, nil
 	}
-	log.Infof("No trust roots found in %s", trustRootsPath)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting NAPLES trust roots: %v", err)
+	}
 	return nil, nil
 }
 
 // StartReverseProxy starts the reverse proxy for all NAPLES REST APIs
 func (n *NMD) StartReverseProxy() error {
 	// if we have persisted root of trust, require client auth
-	tlsConfig, err := getRevProxyTLSConfig(globals.NaplesTrustRootsFile)
+	tlsConfig, err := getRevProxyTLSConfig()
 	if err != nil {
 		log.Errorf("Error getting TLS config for reverse proxy: %v", err)
+	}
+	if tlsConfig == nil {
+		log.Infof("NAPLES trust roots not found")
 	}
 	return n.revProxy.Start(tlsConfig)
 }

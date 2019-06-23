@@ -6,13 +6,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"time"
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/nic/agent/nmd/cmdif"
 	"github.com/pensando/sw/nic/agent/nmd/rolloutif"
+	"github.com/pensando/sw/nic/agent/nmd/utils"
 	nmd "github.com/pensando/sw/nic/agent/protos/nmd"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/globals"
@@ -121,7 +121,7 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 				defer n.Done()
 
 				// wipe out existing roots of trust
-				err = os.Remove(globals.NaplesTrustRootsFile)
+				err = utils.ClearNaplesTrustRoots()
 				if err != nil {
 					log.Errorf("Error removing trust roots: %v", err)
 				}

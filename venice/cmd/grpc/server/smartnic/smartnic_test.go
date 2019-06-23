@@ -564,7 +564,7 @@ func doPhase1Exchange(t *testing.T, stream grpc.SmartNICRegistration_RegisterNIC
 	admReq := &grpc.RegisterNICRequest{
 		AdmissionRequest: &grpc.NICAdmissionRequest{
 			Nic:                    nic,
-			Cert:                   cert,
+			Certs:                  [][]byte{cert},
 			ClusterCertSignRequest: csr.Raw,
 		},
 	}
@@ -952,21 +952,21 @@ func TestRegisterSmartNICProtocolErrors(t *testing.T) {
 		{
 			AdmissionRequest: &grpc.NICAdmissionRequest{
 				Nic:                    cmd.SmartNIC{},
-				Cert:                   cert,
+				Certs:                  [][]byte{cert},
 				ClusterCertSignRequest: csr.Raw,
 			},
 		},
 		{
 			AdmissionRequest: &grpc.NICAdmissionRequest{
 				Nic:                    nic,
-				Cert:                   nil,
+				Certs:                  nil,
 				ClusterCertSignRequest: csr.Raw,
 			},
 		},
 		{
 			AdmissionRequest: &grpc.NICAdmissionRequest{
 				Nic:                    nic,
-				Cert:                   cert,
+				Certs:                  [][]byte{cert},
 				ClusterCertSignRequest: nil,
 			},
 		},

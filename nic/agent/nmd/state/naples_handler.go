@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/pensando/sw/events/generated/eventtypes"
@@ -345,6 +346,19 @@ func (n *NMD) reconcileIPClient() error {
 	return nil
 }
 
+func (n *NMD) setRegistrationErrorStatus(reason string) {
+	nicObj, err := n.GetSmartNIC()
+	if err == nil {
+		nicObj.Status.AdmissionPhase = cmd.SmartNICStatus_REGISTERING.String()
+		nicObj.Status.AdmissionPhaseReason = reason
+		n.SetSmartNIC(nicObj)
+	} else {
+		log.Errorf("Error getting SmartNIC object: %v", err)
+	}
+	n.config.Status.AdmissionPhase = cmd.SmartNICStatus_REGISTERING.String()
+	n.config.Status.AdmissionPhaseReason = reason
+}
+
 // AdmitNaples performs NAPLES admission
 func (n *NMD) AdmitNaples() {
 	log.Info("Starting Managed Mode")
@@ -407,13 +421,17 @@ func (n *NMD) AdmitNaples() {
 			if err != nil {
 				// Rule #1 - continue retry at regular interval
 				log.Errorf("Error registering nic, mac: %s err: %+v", mac, err)
-				log.Infof("Setting the transition phase to venice unreachable.")
-				fmt.Println("TEST : ", msg)
-				n.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_UNREACHABLE.String()
+				// if there was an error, we should stay in REGISTERING
+				n.setRegistrationErrorStatus(err.Error())
+				if strings.Contains(err.Error(), "deadline") {
+					log.Infof("Setting the transition phase to venice unreachable.")
+					n.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_UNREACHABLE.String()
+				}
 			} else {
 				resp := msg.AdmissionResponse
 				if resp == nil {
 					log.Errorf("Protocol error: no AdmissionResponse in message, mac: %s", mac)
+					continue
 				}
 				log.Infof("Received register response, phase: %+v", resp.Phase)
 				switch resp.Phase {
@@ -471,17 +489,28 @@ func (n *NMD) AdmitNaples() {
 					}
 
 				case cmd.SmartNICStatus_ADMITTED.String():
+					// Venice says all good, but we need to check the credentials we got back
+					// to make sure they are valid and come from the expected Venice.
+					// If not, we report the error and go back to REGISTERING
+					cert, trustChain, trustRoots, err := n.parseAdmissionResponse(msg.AdmissionResponse)
+					if err != nil {
+						log.Errorf("Error parsing cluster credentials: %v", err)
+						n.setRegistrationErrorStatus("Cluster credentials error")
+						continue
+					} else {
+						err = n.setClusterCredentials(cert, trustChain, trustRoots)
+						if err != nil {
+							log.Errorf("Error storing cluster credentials: %v", err)
+							// we can remain in ADMITTED state but we need to retry
+							continue
+						}
+					}
 
 					// Rule #4 - registration is success, clear registration status
 					// and move on to next stage
 					log.Infof("NIC admitted into cluster, mac: %s", mac)
 					n.setRegStatus(false)
 					n.nicRegInterval = n.nicRegInitInterval
-
-					err = n.setClusterCredentials(resp)
-					if err != nil {
-						log.Errorf("Error processing cluster credentials: %v", err)
-					}
 
 					// Start certificates proxy
 					if n.certsListenURL != "" {

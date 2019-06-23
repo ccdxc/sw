@@ -27,13 +27,12 @@ type ReverseProxyRouter struct {
 }
 
 const (
-	kiB = 1024 // kilobyte
+	contentLengthLogThreshold = 2 * 1024 // 2KB
 )
-const twoKB int64 = 2 * kiB
 
 func dumpHTTPRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.ContentLength > twoKB {
+		if r.ContentLength > contentLengthLogThreshold {
 			log.Infof("RevProxy: ContentLength: %d", r.ContentLength)
 			dump, err := httputil.DumpRequest(r, false)
 			if err != nil {
@@ -54,19 +53,12 @@ func dumpHTTPRequest(next http.Handler) http.Handler {
 	})
 }
 
-func getTLSInfo(next http.Handler) http.Handler {
+func logTLSInfo(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Do stuff here
-		log.Infof("*** GORILLA REQUEST: %+v", r)
-		// Call the next handler, which can be another middleware in the chain, or the final handler.
 		if r.TLS != nil {
-			tlsInfo := r.TLS
-			log.Infof("*** Found TLS context: %+v", tlsInfo)
-			if tlsInfo.VerifiedChains != nil && len(tlsInfo.VerifiedChains) >= 0 {
-				clientCert := tlsInfo.VerifiedChains[0][0]
-				log.Infof("*** Found valid certificate attributes, Subj: %+v, SANs: %+v", clientCert.Subject, clientCert.DNSNames)
-			} else {
-				log.Infof("*** No valid certificate")
+			if r.TLS.VerifiedChains != nil && len(r.TLS.VerifiedChains) >= 0 {
+				clientCert := r.TLS.VerifiedChains[0][0]
+				log.Infof("RevProxy: found valid client certificate. Subj: %+v, SANs: %+v", clientCert.Subject, clientCert.DNSNames)
 			}
 		}
 		next.ServeHTTP(w, r)
@@ -107,7 +99,7 @@ func (rpr *ReverseProxyRouter) UpdateConfig(config map[string]string) error {
 		log.Infof("proxy %v: %v", prefix, proxyURL.String())
 	}
 
-	muxRouter.Use(getTLSInfo)
+	muxRouter.Use(logTLSInfo)
 	muxRouter.Use(dumpHTTPRequest)
 
 	// register /stop

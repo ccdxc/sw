@@ -4,6 +4,7 @@ package cmdif
 
 import (
 	"context"
+	"crypto/x509"
 	"fmt"
 	"sync"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	nmdapi "github.com/pensando/sw/nic/agent/nmd/api"
+	"github.com/pensando/sw/nic/agent/nmd/utils"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
@@ -336,7 +338,7 @@ func (client *CmdClient) RegisterSmartNICReq(nic *cluster.SmartNIC) (grpc.Regist
 	req := grpc.RegisterNICRequest{
 		AdmissionRequest: &grpc.NICAdmissionRequest{
 			Nic:                    *nic,
-			Cert:                   platformCert,
+			Certs:                  [][]byte{platformCert},
 			ClusterCertSignRequest: csr.Raw,
 		},
 	}
@@ -352,6 +354,49 @@ func (client *CmdClient) RegisterSmartNICReq(nic *cluster.SmartNIC) (grpc.Regist
 
 	if msg.AuthenticationRequest == nil {
 		return *msg, fmt.Errorf("Protocol error: no AuthenticationRequest in message %+v", msg)
+	}
+
+	if len(msg.AuthenticationRequest.TrustChain) == 0 {
+		return *msg, fmt.Errorf("Protocol error: no trust chain AuthenticationRequest in message %+v", msg)
+	}
+
+	naplesTrustRoots, err := utils.GetNaplesTrustRoots()
+	if err != nil {
+		return makeErrorResp(err, "Error loading trust roots", nic)
+	}
+
+	if naplesTrustRoots != nil {
+		// Check that we are connecting back to the same Venice we were admitted to.
+		// Right now we just check the trust chain presented by the cluster.
+		// After the admission sequence is complete, we also verify the signature on our CSR
+		// to make sure the trust chain was not spoofed, i.e. that Venice actually has
+		// the private key for a certificate in the chain.
+		var cert *x509.Certificate
+		var intermediates []*x509.Certificate
+
+		for i, rawCert := range msg.AuthenticationRequest.TrustChain {
+			c, err := x509.ParseCertificate(rawCert)
+			if err != nil {
+				return makeErrorResp(err, fmt.Sprintf("Error parsing trust chain, index: %d", i), nic)
+			}
+			if i == 0 {
+				cert = c
+			} else {
+				intermediates = append(intermediates, c)
+			}
+		}
+		verifyOpts := x509.VerifyOptions{
+			Roots:         certs.NewCertPool(naplesTrustRoots),
+			Intermediates: certs.NewCertPool(intermediates),
+		}
+		chains, err := cert.Verify(verifyOpts)
+		if err != nil || len(chains) == 0 {
+			log.Errorf("Error validating cluster trust chain: %v", err)
+			return makeErrorResp(nil, "Cluster trust chain failed validation", nic)
+		}
+		log.Infof("Successfully validated cluster trust chain")
+	} else {
+		log.Infof("No trust roots found, skipping cluster trust chain validation")
 	}
 
 	claimantRandom, challengeResp, err := client.nmd.GenChallengeResponse(nic, msg.AuthenticationRequest.Challenge)

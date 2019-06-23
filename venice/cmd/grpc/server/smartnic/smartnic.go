@@ -359,9 +359,13 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 		naplesNIC := req.GetNic()
 		name = naplesNIC.Name
 
-		cert, err := x509.ParseCertificate(req.GetCert())
+		nicCerts := req.GetCerts()
+		if len(nicCerts) == 0 {
+			return authErrResp, errors.Wrapf(err, "No SmartNIC certificate found")
+		}
+		cert, err := x509.ParseCertificate(nicCerts[0])
 		if err != nil {
-			return authErrResp, errors.Wrapf(err, "Invalid certificate")
+			return authErrResp, errors.Wrapf(err, "Invalid SmartNIC certificate")
 		}
 
 		// Validate the factory cert obtained in the request
@@ -380,15 +384,21 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			return protoErrResp, errors.Wrapf(err, "Certificate request has invalid signature")
 		}
 
-		// Send challenge
+		// Send challenge and cluster trust chain
 		challenge, err := certs.GeneratePoPNonce()
 		if err != nil {
 			return intErrResp, errors.Wrapf(err, "Error generating challenge")
 		}
 
+		trustChain := [][]byte{}
+		for _, c := range env.CertMgr.Ca().TrustChain() {
+			trustChain = append(trustChain, c.Raw)
+		}
+
 		authReq := &grpc.RegisterNICResponse{
 			AuthenticationRequest: &grpc.AuthenticationRequest{
-				Challenge: challenge,
+				Challenge:  challenge,
+				TrustChain: trustChain,
 			},
 		}
 

@@ -32,6 +32,7 @@ import (
 	device "github.com/pensando/sw/nic/agent/nmd/protos/halproto"
 	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
 	"github.com/pensando/sw/nic/agent/nmd/upg"
+	"github.com/pensando/sw/nic/agent/nmd/utils"
 	"github.com/pensando/sw/nic/agent/protos/nmd"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/venice/cmd/grpc"
@@ -713,19 +714,34 @@ func (n *NMD) initTLSProvider() error {
 	return nil
 }
 
-func (n *NMD) setClusterCredentials(resp *grpc.NICAdmissionResponse) error {
-	certMsg := resp.GetClusterCert()
-	if certMsg == nil {
-		return fmt.Errorf("No certificate found in registration response message")
-	}
-	cert, err := x509.ParseCertificate(certMsg.GetCertificate().Certificate)
-	if err != nil {
-		return fmt.Errorf("Error parsing cluster certificate: %v", err)
-	}
-	err = n.tlsProvider.SetClientCertificate(cert)
+func (n *NMD) setClusterCredentials(cert *x509.Certificate, caTrustChain, trustRoots []*x509.Certificate) error {
+	err := n.tlsProvider.SetClientCertificate(cert)
 	if err != nil {
 		return fmt.Errorf("Error storing cluster certificate: %v", err)
 	}
+	n.tlsProvider.SetCaTrustChain(caTrustChain)
+	n.tlsProvider.SetTrustRoots(trustRoots)
+
+	// Persist trust roots so that we remember what is the last Venice cluster we connected to
+	// and we can authenticate offline credentials signed by Venice CA.
+	err = utils.StoreTrustRoots(trustRoots)
+	if err != nil {
+		return fmt.Errorf("Error storing cluster trust roots: %v", err)
+	}
+
+	return nil
+}
+
+func (n *NMD) parseAdmissionResponse(resp *grpc.NICAdmissionResponse) (*x509.Certificate, []*x509.Certificate, []*x509.Certificate, error) {
+	certMsg := resp.GetClusterCert()
+	if certMsg == nil {
+		return nil, nil, nil, fmt.Errorf("No certificate found in registration response message")
+	}
+	cert, err := x509.ParseCertificate(certMsg.GetCertificate().Certificate)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("Error parsing cluster certificate: %v", err)
+	}
+
 	var caTrustChain []*x509.Certificate
 	if resp.GetCaTrustChain() != nil {
 		for i, c := range resp.GetCaTrustChain().GetCertificates() {
@@ -737,7 +753,6 @@ func (n *NMD) setClusterCredentials(resp *grpc.NICAdmissionResponse) error {
 			caTrustChain = append(caTrustChain, cert)
 		}
 	}
-	n.tlsProvider.SetCaTrustChain(caTrustChain)
 
 	var trustRoots []*x509.Certificate
 	if resp.GetTrustRoots() != nil {
@@ -750,16 +765,30 @@ func (n *NMD) setClusterCredentials(resp *grpc.NICAdmissionResponse) error {
 			trustRoots = append(trustRoots, cert)
 		}
 	}
-	n.tlsProvider.SetTrustRoots(trustRoots)
 
-	// Persist trust roots so that we remember what is the last Venice cluster we connected to
-	// and we can authenticate offline credentials signed by Venice CA.
-	err = certs.SaveCertificates(globals.NaplesTrustRootsFile, trustRoots)
+	// If we have trust roots obtained during previous admission, we use them to check the
+	// issued certificate signature and make sure that we are connecting to the same cluster.
+	// However, we always return the new trust roots, not old ones, as they may differ.
+	ntr, err := utils.GetNaplesTrustRoots()
 	if err != nil {
-		return fmt.Errorf("Error storing cluster trust roots in %s: %v", globals.NaplesTrustRootsFile, err)
+		return nil, nil, nil, fmt.Errorf("Error getting trust roots: %v", err)
+	}
+	log.Infof("Loaded %d trust roots", len(ntr))
+	if ntr != nil {
+		verifyOpts := x509.VerifyOptions{
+			Intermediates: certs.NewCertPool(caTrustChain),
+			Roots:         certs.NewCertPool(ntr),
+			KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageAny},
+		}
+		verifiedChains, err := cert.Verify(verifyOpts)
+		if err != nil || len(verifiedChains) == 0 {
+			return nil, nil, nil, fmt.Errorf("Error verifying certificate signature: %v, verified chain len: %d", err, len(verifiedChains))
+		}
+	} else {
+		log.Infof("Did not find a trust roots file, skipping validation")
 	}
 
-	return nil
+	return cert, caTrustChain, trustRoots, nil
 }
 
 // RegisterROCtrlClient registers client of RolloutController to NMD

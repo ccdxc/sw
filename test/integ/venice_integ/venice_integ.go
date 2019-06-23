@@ -35,6 +35,7 @@ import (
 	tmstate "github.com/pensando/sw/nic/agent/tmagent/state"
 
 	"github.com/pensando/sw/nic/agent/nmd"
+	nmdutils "github.com/pensando/sw/nic/agent/nmd/utils"
 	nmdproto "github.com/pensando/sw/nic/agent/protos/nmd"
 	tmrestapi "github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi"
 
@@ -962,6 +963,12 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 		c.Fatalf("Failed to setup fwupdate script : %v", err)
 	}
 
+	globals.NaplesTrustRootsFile = "/tmp/clusterTrustRoots.pem"
+	err = nmdutils.ClearNaplesTrustRoots()
+	if err != nil {
+		c.Fatalf("Could not remove stale trust roots file: %v", err)
+	}
+
 	// tls provider
 	err = testutils.SetupIntegTLSProvider()
 	if err != nil {
@@ -1191,6 +1198,8 @@ func (it *veniceIntegSuite) TearDownSuite(c *check.C) {
 		cmdenv.CertMgr.Close()
 		cmdenv.CertMgr = nil
 	}
+
+	nmdutils.ClearNaplesTrustRoots()
 
 	time.Sleep(time.Millisecond * 100) // allow goroutines to cleanup and terminate gracefully
 	log.Infof("============================= TearDownSuite completed ==========================")
