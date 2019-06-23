@@ -135,9 +135,11 @@ func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *pr
 			case protos.SmartNICOp_SmartNICUpgOnNextHostReboot:
 				evt = fsmEvOneSmartNICUpgSuccess
 				phase = rollout.RolloutPhase_COMPLETE
+				snicState.ros.Status.CompletionPercentage = snicState.ros.Status.CompletionPercentage + (uint32)(snicState.ros.completionDelta)
 			case protos.SmartNICOp_SmartNICDisruptiveUpgrade:
 				evt = fsmEvOneSmartNICUpgSuccess
 				phase = rollout.RolloutPhase_COMPLETE
+				snicState.ros.Status.CompletionPercentage = snicState.ros.Status.CompletionPercentage + (uint32)(snicState.ros.completionDelta)
 			}
 		} else {
 			switch s.Op {

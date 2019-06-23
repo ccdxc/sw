@@ -3,6 +3,7 @@
 package statemgr
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -33,6 +34,7 @@ type RolloutState struct {
 
 	numPreUpgradeFailures int32 // number of failures seen so far (computed from status)
 	numFailuresSeen       uint32
+	completionDelta       float32
 }
 
 func (sm *Statemgr) handleRolloutEvent(et kvstore.WatchEventType, ro *roproto.Rollout) {
@@ -240,6 +242,34 @@ func (ros *RolloutState) setPreviousVersion(v string) {
 		ros.saveStatus()
 	}
 }
+func (ros *RolloutState) getRolloutTimeStamps(nodeName string) (startTime *api.Timestamp, endTime *api.Timestamp) {
+	apicl, err := ros.writer.GetAPIClient()
+	if apicl == nil || err != nil {
+		log.Errorf("Failed to get API Client %v", err)
+		return nil, nil
+	}
+	obj := api.ObjectMeta{
+		Name: ros.Name,
+	}
+
+	for ii := 0; ii < 30; ii++ {
+		roObj, err := apicl.RolloutV1().Rollout().Get(context.Background(), &obj)
+		if err != nil {
+			log.Infof("Rollout Get Failed %v", err)
+			time.Sleep(time.Second)
+			continue
+		}
+		for _, obj := range roObj.Status.ControllerNodesStatus {
+			if obj.Name == nodeName {
+				log.Infof("Found Status: StartTime (%v) EndTime (%v)", obj.StartTime, obj.EndTime)
+				return obj.StartTime, obj.EndTime
+			}
+		}
+	}
+	log.Infof("No rollot status for %s", nodeName)
+	return nil, nil
+}
+
 func (ros *RolloutState) setStartTime() {
 	if ros.Status.StartTime == nil {
 		t := api.Timestamp{}
@@ -283,12 +313,18 @@ func (ros *RolloutState) setVenicePhase(name, reason, message string, phase ropr
 	case roproto.RolloutPhase_PROGRESSING:
 		startTime := api.Timestamp{}
 		startTime.SetTime(time.Now())
-		ros.Status.ControllerNodesStatus[index].StartTime = &startTime
+		stTime, _ := ros.getRolloutTimeStamps(ros.Status.ControllerNodesStatus[index].Name)
+		if stTime == nil {
+			ros.Status.ControllerNodesStatus[index].StartTime = &startTime
+		}
 
 	case roproto.RolloutPhase_COMPLETE, roproto.RolloutPhase_FAIL:
 		endTime := api.Timestamp{}
 		endTime.SetTime(time.Now())
-		ros.Status.ControllerNodesStatus[index].EndTime = &endTime
+		_, eTime := ros.getRolloutTimeStamps(ros.Status.ControllerNodesStatus[index].Name)
+		if eTime == nil {
+			ros.Status.ControllerNodesStatus[index].EndTime = &endTime
+		}
 
 	case roproto.RolloutPhase_PRE_CHECK:
 	case roproto.RolloutPhase_DEPENDENCIES_CHECK:

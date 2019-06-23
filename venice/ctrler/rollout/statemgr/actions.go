@@ -533,6 +533,31 @@ func (ros *RolloutState) issueSmartNICOpExponential(snStates []*SmartNICState, O
 
 }
 
+func (ros *RolloutState) computeProgressDelta() {
+
+	numVenice := 0
+	numNaples := 0
+	if !ros.Spec.SmartNICsOnly {
+		nodeStates, err := ros.Statemgr.ListNodes()
+		if err != nil {
+			log.Infof("Failed to get venice nodes")
+		}
+		numVenice = len(nodeStates)
+	}
+
+	snStates, err := ros.Statemgr.ListSmartNICs()
+	if err != nil {
+		log.Errorf("Error %v listing smartNICs", err)
+		return
+	}
+
+	sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.SmartNICMustMatchConstraint, snStates)
+	numNaples = len(sn)
+
+	ros.completionDelta = (float32)(100 / (2*numVenice + 2*numNaples + 2))
+	log.Infof("Completion Delta %+v NumNaples %v NumVenice %+v", ros.completionDelta, numNaples, numVenice)
+}
+
 func (ros *RolloutState) doUpdateSmartNICs() {
 	sm := ros.Statemgr
 	log.Infof("starting smartNIC Rollout")

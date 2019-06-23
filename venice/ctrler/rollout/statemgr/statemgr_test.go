@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/api/generated/apiclient"
+
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 
@@ -51,6 +53,9 @@ func (d *dummyWriter) GetClusterVersion() string {
 }
 func (d *dummyWriter) SetRolloutBuildVersion(version string) error {
 	return nil
+}
+func (d *dummyWriter) GetAPIClient() (apiclient.Services, error) {
+	return nil, nil
 }
 func TestVeniceRolloutWatch(t *testing.T) {
 	// Create VeniceRolloutObject and see that its properly created and that watchers see the updates to the object

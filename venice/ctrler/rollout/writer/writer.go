@@ -22,6 +22,7 @@ type Writer interface {
 	WriteRollout(ro *rollout.Rollout) error
 	WriteRolloutAction(ro *rollout.Rollout) error
 	Close() error
+	GetAPIClient() (apiclient.Services, error)
 	GetClusterVersion() string
 	SetRolloutBuildVersion(string) error
 }
@@ -44,8 +45,8 @@ func NewAPISrvWriter(apiSrvURL string, resolver resolver.Interface) (Writer, err
 	return &wr, nil
 }
 
-// getAPIClient gets an rpc client
-func (wr *APISrvWriter) getAPIClient() (apiclient.Services, error) {
+// GetAPIClient gets an rpc client
+func (wr *APISrvWriter) GetAPIClient() (apiclient.Services, error) {
 	// if we already have a client, just return it
 	if wr.apicl != nil {
 		return wr.apicl, nil
@@ -67,7 +68,7 @@ func (wr *APISrvWriter) getAPIClient() (apiclient.Services, error) {
 func (wr *APISrvWriter) GetClusterVersion() string {
 
 	// get the api client
-	apicl, err := wr.getAPIClient()
+	apicl, err := wr.GetAPIClient()
 	if err != nil {
 		log.Infof("Updating Rollout Failed to connect get APIClient %v", err)
 		return ""
@@ -90,7 +91,7 @@ func (wr *APISrvWriter) GetClusterVersion() string {
 func (wr *APISrvWriter) SetRolloutBuildVersion(version string) error {
 
 	// get the api client
-	apicl, err := wr.getAPIClient()
+	apicl, err := wr.GetAPIClient()
 	if err != nil {
 		log.Infof("Updating Rollout Failed to connect get APIClient %v", err)
 		return err
@@ -132,7 +133,7 @@ func (wr *APISrvWriter) WriteRollout(ro *rollout.Rollout) error {
 	}
 
 	// get the api client
-	apicl, err := wr.getAPIClient()
+	apicl, err := wr.GetAPIClient()
 	if err != nil {
 		log.Infof("Updating Rollout Failed to connect get APIClient %v", err)
 		return err
@@ -165,7 +166,7 @@ func (wr *APISrvWriter) WriteRolloutAction(ro *rollout.Rollout) error {
 	}
 
 	// get the api client
-	apicl, err := wr.getAPIClient()
+	apicl, err := wr.GetAPIClient()
 	if err != nil {
 		return err
 	}

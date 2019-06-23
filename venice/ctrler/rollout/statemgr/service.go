@@ -129,6 +129,7 @@ func (sros *ServiceRolloutState) UpdateServiceRolloutStatus(newStatus *protos.Se
 			case protos.ServiceOp_ServiceRunVersion:
 				evt = fsmEvServiceUpgOK
 				phase = rollout.RolloutPhase_COMPLETE
+				sros.ros.Status.CompletionPercentage = sros.ros.Status.CompletionPercentage + (uint32)(sros.ros.completionDelta*2)
 			}
 		} else {
 			switch s.Op {

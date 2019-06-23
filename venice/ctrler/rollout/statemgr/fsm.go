@@ -211,6 +211,9 @@ func (ros *RolloutState) runFSM() {
 func fsmAcCreated(ros *RolloutState) {
 	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_PROGRESSING)]
 	ros.setPreviousVersion(ros.writer.GetClusterVersion())
+	ros.Status.CompletionPercentage = 0
+	ros.computeProgressDelta()
+
 	if ros.Spec.GetSuspend() {
 		log.Infof("Rollout object created with state SUSPENDED.")
 		ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUSPENDED)]
@@ -366,6 +369,7 @@ func fsmAcRolloutSuccess(ros *RolloutState) {
 	ros.stopRolloutTimer()
 	ros.setEndTime()
 	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUCCESS)]
+	ros.Status.CompletionPercentage = 100
 	ros.saveStatus()
 	ros.updateRolloutAction()
 	ros.raiseRolloutEvent(rollout.RolloutStatus_SUCCESS)
