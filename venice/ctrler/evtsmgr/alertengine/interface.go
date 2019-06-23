@@ -10,6 +10,12 @@ type Interface interface {
 	// ProcessEvents processes the given events and generates any potential alerts
 	ProcessEvents(*evtsapi.EventList)
 
+	// SetMaintenanceMode sets the maintenance mode flag in alert engine
+	SetMaintenanceMode()
+
+	// UnsetMaintenanceMode unsets the maintenance mode flag if it is already set in alert engine
+	UnsetMaintenanceMode()
+
 	// Stop stops the alert engine
 	Stop()
 }

@@ -142,19 +142,19 @@ enum EventTypes {
                                            (desc)     = "System cold booted"];
 
     // ------------------------------ Rollout events -------------------------- //
-    ROLLOUT_STARTED                 = 701 [(category) = Cluster,
+    ROLLOUT_STARTED                 = 701 [(category) = Rollout,
                                            (severity) = INFO,
                                            (desc)     = "Rollout initiated"];
 
-    ROLLOUT_SUCCESS                 = 702 [(category) = Cluster,
+    ROLLOUT_SUCCESS                 = 702 [(category) = Rollout,
                                            (severity) = INFO,
                                            (desc)     = "Rollout successfully completed"];
 
-    ROLLOUT_FAILED                  = 703 [(category) = Cluster,
+    ROLLOUT_FAILED                  = 703 [(category) = Rollout,
                                            (severity) = CRITICAL,
                                            (desc)     = "Rollout failed"];
 
-    ROLLOUT_SUSPENDED               = 704 [(category) = Cluster,
+    ROLLOUT_SUSPENDED               = 704 [(category) = Rollout,
                                            (severity) = INFO,
                                            (desc)     = "Rollout suspended"];
 }

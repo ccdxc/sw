@@ -17,6 +17,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/events/generated/eventattrs"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/alertengine/exporter"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
 	"github.com/pensando/sw/venice/globals"
@@ -70,16 +71,17 @@ var (
 // AlertEngine represents the events alerts engine which is responsible fo converting
 // events to alerts based on the event based alert policies.
 type alertEngineImpl struct {
-	sync.Mutex
-	logger         log.Logger              // logger
-	resolverClient resolver.Interface      // to connect with apiserver to fetch alert policies; and send alerts
-	memDb          *memdb.MemDb            // in-memory db/cache
-	apiClient      apiclient.Services      // API server client
-	exporter       *exporter.AlertExporter // exporter to export alerts to different destinations
-	ctx            context.Context         // context to cancel goroutines
-	cancelFunc     context.CancelFunc      // context to cancel goroutines
-	wg             sync.WaitGroup          // for start routine
-	running        bool                    // indicates if alert engine is running or not
+	sync.RWMutex
+	logger          log.Logger              // logger
+	resolverClient  resolver.Interface      // to connect with apiserver to fetch alert policies; and send alerts
+	memDb           *memdb.MemDb            // in-memory db/cache
+	apiClient       apiclient.Services      // API server client
+	exporter        *exporter.AlertExporter // exporter to export alerts to different destinations
+	ctx             context.Context         // context to cancel goroutines
+	cancelFunc      context.CancelFunc      // context to cancel goroutines
+	wg              sync.WaitGroup          // for start routine
+	running         bool                    // indicates if alert engine is running or not
+	maintenanceMode bool                    // indicates if the maintenance mode is on or not
 }
 
 // NewAlertEngine creates the new events alert engine.
@@ -106,15 +108,25 @@ func NewAlertEngine(parentCtx context.Context, memDb *memdb.MemDb, logger log.Lo
 // ProcessEvents will be called from the events manager whenever the events are received.
 // And, it creates an alert whenever the event matches any policy.
 func (a *alertEngineImpl) ProcessEvents(eventList *evtsapi.EventList) {
-	a.Lock()
+	a.RLock()
 	if !a.running {
 		a.logger.Errorf("alert engine not running, could not process events")
-		a.Unlock()
+		a.RUnlock()
 		return
 	}
-	a.Unlock()
+	a.RUnlock()
 
 	for _, evt := range eventList.GetItems() {
+		a.RLock()
+		if a.maintenanceMode {
+			if evt.GetCategory() != eventattrs.Category_Rollout.String() {
+				// skip processing all events that don't belong to rollout category
+				// as a result, only rollout alerts will be triggered in the maintenance mode
+				continue
+			}
+		}
+		a.RUnlock()
+
 		// fetch alert policies belonging to evt.Tenant
 		alertPolicies := a.memDb.GetAlertPolicies(
 			memdb.WithTenantFilter(evt.GetTenant()),
@@ -185,6 +197,24 @@ func (a *alertEngineImpl) Stop() {
 	if a.running {
 		a.exporter.Stop() // this will stop any exports that're in line
 		a.running = false
+	}
+}
+
+// SetMaintenanceMode sets the maintenance mode flag
+func (a *alertEngineImpl) SetMaintenanceMode() {
+	a.Lock()
+	defer a.Unlock()
+	a.maintenanceMode = true
+	a.logger.Infof("entering maintenance mode, only upgrade/rollout events will be processed")
+}
+
+// UnsetMaintenanceMode un sets the maintenance mode flag if it is set already
+func (a *alertEngineImpl) UnsetMaintenanceMode() {
+	a.Lock()
+	defer a.Unlock()
+	if a.maintenanceMode {
+		a.maintenanceMode = false
+		a.logger.Infof("leaving maintenance mode")
 	}
 }
 

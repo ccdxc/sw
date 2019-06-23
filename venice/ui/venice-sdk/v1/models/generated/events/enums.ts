@@ -45,12 +45,12 @@ export enum EventsEvent_type {
     'NIC_UNHEALTHY' = "NIC_UNHEALTHY",
     'NODE_DISJOINED' = "NODE_DISJOINED",
     'NODE_JOINED' = "NODE_JOINED",
+    'LINK_DOWN' = "LINK_DOWN",
+    'LINK_UP' = "LINK_UP",
     'ROLLOUT_FAILED' = "ROLLOUT_FAILED",
     'ROLLOUT_STARTED' = "ROLLOUT_STARTED",
     'ROLLOUT_SUCCESS' = "ROLLOUT_SUCCESS",
     'ROLLOUT_SUSPENDED' = "ROLLOUT_SUSPENDED",
-    'LINK_DOWN' = "LINK_DOWN",
-    'LINK_UP' = "LINK_UP",
     'NAPLES_SERVICE_STOPPED' = "NAPLES_SERVICE_STOPPED",
     'SERVICE_PENDING' = "SERVICE_PENDING",
     'SERVICE_RUNNING' = "SERVICE_RUNNING",
@@ -64,6 +64,7 @@ export enum EventsEvent_category {
     'Cluster' = "Cluster",
     'Network' = "Network",
     'System' = "System",
+    'Rollout' = "Rollout",
 }
 
 export enum EventsEventAttributes_severity {
@@ -77,6 +78,7 @@ export enum EventsEventAttributes_category {
     'Cluster' = "Cluster",
     'Network' = "Network",
     'System' = "System",
+    'Rollout' = "Rollout",
 }
 
 

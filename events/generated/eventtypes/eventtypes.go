@@ -204,25 +204,25 @@ func init() {
 	eventTypes[ROLLOUT_STARTED] = &EventTypeAttributes{
 		EType:    "ROLLOUT_STARTED",
 		Severity: "INFO",
-		Category: "Cluster",
+		Category: "Rollout",
 		Desc:     "Rollout initiated"}
 
 	eventTypes[ROLLOUT_SUCCESS] = &EventTypeAttributes{
 		EType:    "ROLLOUT_SUCCESS",
 		Severity: "INFO",
-		Category: "Cluster",
+		Category: "Rollout",
 		Desc:     "Rollout successfully completed"}
 
 	eventTypes[ROLLOUT_FAILED] = &EventTypeAttributes{
 		EType:    "ROLLOUT_FAILED",
 		Severity: "CRITICAL",
-		Category: "Cluster",
+		Category: "Rollout",
 		Desc:     "Rollout failed"}
 
 	eventTypes[ROLLOUT_SUSPENDED] = &EventTypeAttributes{
 		EType:    "ROLLOUT_SUSPENDED",
 		Severity: "INFO",
-		Category: "Cluster",
+		Category: "Rollout",
 		Desc:     "Rollout suspended"}
 
 }

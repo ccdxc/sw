@@ -94,7 +94,21 @@
    "Name": "NODE_JOINED",
    "Severity": "INFO",
    "Desc": "Node joined the cluster"
+  }
+ ],
+ "Network": [
+  {
+   "Name": "LINK_DOWN",
+   "Severity": "WARN",
+   "Desc": "Port link status is down"
   },
+  {
+   "Name": "LINK_UP",
+   "Severity": "INFO",
+   "Desc": "Port is linked up"
+  }
+ ],
+ "Rollout": [
   {
    "Name": "ROLLOUT_FAILED",
    "Severity": "CRITICAL",
@@ -114,18 +128,6 @@
    "Name": "ROLLOUT_SUSPENDED",
    "Severity": "INFO",
    "Desc": "Rollout suspended"
-  }
- ],
- "Network": [
-  {
-   "Name": "LINK_DOWN",
-   "Severity": "WARN",
-   "Desc": "Port link status is down"
-  },
-  {
-   "Name": "LINK_UP",
-   "Severity": "INFO",
-   "Desc": "Port is linked up"
   }
  ],
  "System": [

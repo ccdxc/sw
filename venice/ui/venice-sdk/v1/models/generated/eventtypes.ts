@@ -27,14 +27,16 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'NIC_UNHEALTHY',
     'NODE_DISJOINED',
     'NODE_JOINED',
-    'ROLLOUT_FAILED',
-    'ROLLOUT_STARTED',
-    'ROLLOUT_SUCCESS',
-    'ROLLOUT_SUSPENDED',
   ],
   Network: [
     'LINK_DOWN',
     'LINK_UP',
+  ],
+  Rollout: [
+    'ROLLOUT_FAILED',
+    'ROLLOUT_STARTED',
+    'ROLLOUT_SUCCESS',
+    'ROLLOUT_SUSPENDED',
   ],
   System: [
     'NAPLES_SERVICE_STOPPED',
@@ -143,6 +145,16 @@ export const eventTypes: { [name: string]: EventType } = {
       "Severity": EventsEvent_severity.INFO,
       "Desc": "Node joined the cluster",
   },
+  'LINK_DOWN' : {
+      "Name": "LINK_DOWN",
+      "Severity": EventsEvent_severity.WARN,
+      "Desc": "Port link status is down",
+  },
+  'LINK_UP' : {
+      "Name": "LINK_UP",
+      "Severity": EventsEvent_severity.INFO,
+      "Desc": "Port is linked up",
+  },
   'ROLLOUT_FAILED' : {
       "Name": "ROLLOUT_FAILED",
       "Severity": EventsEvent_severity.CRITICAL,
@@ -162,16 +174,6 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "ROLLOUT_SUSPENDED",
       "Severity": EventsEvent_severity.INFO,
       "Desc": "Rollout suspended",
-  },
-  'LINK_DOWN' : {
-      "Name": "LINK_DOWN",
-      "Severity": EventsEvent_severity.WARN,
-      "Desc": "Port link status is down",
-  },
-  'LINK_UP' : {
-      "Name": "LINK_UP",
-      "Severity": EventsEvent_severity.INFO,
-      "Desc": "Port is linked up",
   },
   'NAPLES_SERVICE_STOPPED' : {
       "Name": "NAPLES_SERVICE_STOPPED",

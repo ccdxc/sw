@@ -17,7 +17,9 @@ var Category_normal = map[string]string{
 	"Cluster": "Cluster",
 	"System":  "System",
 	"Network": "Network",
+	"Rollout": "Rollout",
 	"cluster": "Cluster",
 	"system":  "System",
 	"network": "Network",
+	"rollout": "Rollout",
 }
