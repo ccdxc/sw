@@ -19,5 +19,6 @@ MODULE_FLAGS    = ${NIC_CSR_FLAGS}
 MODULE_DEFS     = -DCAPRI_SW ${NIC_CSR_DEFINES}
 MODULE_SRCS     = ${MODULE_SRC_DIR}/main.cc \
                   ${MODULE_SRC_DIR}/test.cc \
+                  ${MODULE_SRC_DIR}/${PIPELINE}_pkt.cc \
                   ${MODULE_SRC_DIR}/api_pds.cc
 include ${MKDEFS}/post.mk

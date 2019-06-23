@@ -248,6 +248,10 @@ jobd/artemis/gtest: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --artemis_gtest
 	${NICDIR}/apollo/test/tools/run_gtests_artemis.sh ${COVERAGE_OPTS}
 
+.PHONY: jobd/artemis/scale_test_sim
+jobd/artemis/scale_test_sim: ${JOBD_PREREQS}
+	${NICDIR}/run.py ${COVERAGE_OPTS} --artemis_scale_test > artemis_scale_test.log.txt
+
 .PHONY: jobd/storage
 jobd/storage: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --storage

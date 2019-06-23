@@ -202,7 +202,7 @@ def run_model(args):
         elif args.apollo_gtest or args.apollo_scale_test or args.apollo_scale_vxlan_test:
             os.system("%s/tools/merge_model_debug.py --pipeline apollo --p4 apollo --rxdma apollo_rxdma --txdma apollo_txdma" % nic_dir)
             model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/apollo/gen/p4gen//apollo/dbg_out/combined_model_debug.json")
-        elif args.artemis_gtest:
+        elif args.artemis_gtest or args.artemis_scale_test:
             os.system("%s/tools/merge_model_debug.py --pipeline artemis --p4 artemis --rxdma artemis_rxdma --txdma artemis_txdma" % nic_dir)
             model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/artemis/gen/p4gen//artemis/dbg_out/combined_model_debug.json")
         elif args.hello_gtest:
@@ -224,7 +224,7 @@ def run_model(args):
         bin_dir = nic_dir + '/build/x86_64/gft/bin/'
     elif args.apollo_gtest or args.apollo_scale_test or args.apollo_scale_vxlan_test:
         bin_dir = nic_dir + '/build/x86_64/apollo/bin/'
-    elif args.artemis_gtest:
+    elif args.artemis_gtest or args.artemis_scale_test:
         bin_dir = nic_dir + '/build/x86_64/artemis/bin/'
     elif args.l2switch_gtest:
         bin_dir = nic_dir + '/build/x86_64/l2switch/bin/'
@@ -548,6 +548,19 @@ def run_apollo_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
     os.chdir(nic_dir)
     cmd = ['build/x86_64/apollo/bin/apollo_test']
+    p = Popen(cmd)
+    return check_for_completion(p, None, model_process, hal_process, args)
+
+# Run Artemis Scale tests
+def run_artemis_scale_test(args):
+    os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
+    os.environ["SKIP_VERIFY"] = "1"
+    os.chdir(nic_dir)
+    cmd = ["build/x86_64/artemis/bin/apollo_scale_test",
+           '-c', "hal.json",
+           '-i', "apollo/test/scale/artemis/scale_cfg_sim.json",
+           '-f', "artemis",
+           "--gtest_output=", "xml:build/x86_64/artemis/gtest_results/artemis_scale_test.xml"]
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
 
@@ -1132,6 +1145,8 @@ def main():
                         default=False, help="Run Artemis gtests")
     parser.add_argument("--apollo_scale_test", dest='apollo_scale_test', action="store_true",
                         default=False, help="Run Apollo scale tests")
+    parser.add_argument("--artemis_scale_test", dest='artemis_scale_test', action="store_true",
+                        default=False, help="Run Artemis scale tests")
     parser.add_argument("--apollo_scale_vxlan_test", dest='apollo_scale_vxlan_test', action="store_true",
                         default=False, help="Run Apollo scale vxlan tests")
     parser.add_argument("--l2switch_gtest", dest='l2switch_gtest', action="store_true",
@@ -1254,6 +1269,7 @@ def main():
             if args.gft_gtest is False and \
                 args.apollo_gtest is False and \
                 args.artemis_gtest is False and \
+                args.artemis_scale_test is False and \
                 args.apollo_scale_test is False and \
                 args.apollo_scale_vxlan_test is False and \
                 args.l2switch_gtest is False and \
@@ -1294,6 +1310,10 @@ def main():
         status = run_artemis_test(args)
         if status != 0:
             print "- Artemis test failed, status=", status
+    elif args.artemis_scale_test:
+        status = run_artemis_scale_test(args)
+        if status != 0:
+            print "- Artemis scale test failed, status=", status
     elif args.apollo_scale_test:
         status = run_apollo_scale_test(args)
         if status != 0:
