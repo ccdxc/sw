@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/shirou/gopsutil/cpu"
@@ -36,7 +37,6 @@ type nodeMetrics struct {
 	DiskUsed         api.Gauge
 	DiskUsedPercent  api.Gauge
 	DiskTotal        api.Gauge
-	InterfaceName    api.String
 	InterfaceRxBytes api.Gauge
 	InterfaceTxBytes api.Gauge
 }
@@ -141,20 +141,18 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 				continue
 			}
 
-			// report metrics for eth0, TODO: report multiple network interfaces
-			phyIntf := map[string]bool{
-				"eth0": true,
-			}
+			// aggregate traffic across all eth... and en... network interfaces
+			var byteRecv uint64
+			var byteSent uint64
 
 			for _, s := range stat {
-				if _, ok := phyIntf[s.Name]; ok {
-					w.metricObj.InterfaceName.Set(s.Name, time.Time{})
-					w.metricObj.InterfaceRxBytes.Set(float64(s.BytesRecv))
-					w.metricObj.InterfaceTxBytes.Set(float64(s.BytesSent))
-					// fill metrics only for one interface
-					break
+				if strings.HasPrefix(s.Name, "eth") || strings.HasPrefix(s.Name, "en") {
+					byteRecv += s.BytesRecv
+					byteSent += s.BytesSent
 				}
 			}
+			w.metricObj.InterfaceRxBytes.Set(float64(byteRecv))
+			w.metricObj.InterfaceTxBytes.Set(float64(byteSent))
 		}
 	}
 }
