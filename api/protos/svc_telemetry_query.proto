@@ -11,7 +11,7 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "telemetry_query.proto";
 
 // gRPC destination for this service
-option (venice.fileGrpcDest) = "pen-citadel-query";
+option (venice.fileGrpcDest) = "pen-citadel";
 // fileApiServerBacked should be set to false to indicate that the set of services defined in this
 // file are not backed by the API server.
 option (venice.fileApiServerBacked) = false;

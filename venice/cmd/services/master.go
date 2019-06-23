@@ -266,7 +266,6 @@ func (m *masterService) Start() error {
 		err = m.startLeaderServices()
 	}
 
-	// add local CMD service
 	var localCMDSvcInstance = k8stypes.ServiceInstance{
 		TypeMeta: api.TypeMeta{
 			Kind: "Service",
@@ -279,20 +278,6 @@ func (m *masterService) Start() error {
 		URL:     fmt.Sprintf("%s:%s", globals.Localhost, globals.CMDGRPCAuthPort),
 	}
 	m.resolverSvc.AddServiceInstance(&localCMDSvcInstance)
-
-	// add local citadel service
-	var localCitadelInstance = k8stypes.ServiceInstance{
-		TypeMeta: api.TypeMeta{
-			Kind: "Service",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: globals.CitadelQuery,
-		},
-		Service: globals.CitadelQuery,
-		Node:    globals.Localhost,
-		URL:     fmt.Sprintf("%s:%s", globals.Localhost, globals.CitadelQueryRPCPort),
-	}
-	m.resolverSvc.AddServiceInstance(&localCitadelInstance)
 	m.resolverSvc.Start()
 	return err
 }
