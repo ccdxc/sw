@@ -26,6 +26,7 @@ export enum ClusterMemInfo_type {
 
 export enum ClusterNodeCondition_type {
     'LEADER' = "LEADER",
+    'HEALTHY' = "HEALTHY",
 }
 
 export enum ClusterNodeCondition_status {
@@ -85,6 +86,7 @@ export enum ApiListWatchOptions_sort_order_uihint {
 }
 
 export enum ClusterNodeCondition_type_uihint {
+    'HEALTHY' = "Healthy",
     'LEADER' = "Leader",
 }
 

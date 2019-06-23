@@ -41,8 +41,10 @@ var MemInfo_MemType_normal = map[string]string{
 
 // NodeCondition_ConditionType_normal is a map of normalized values for the enum
 var NodeCondition_ConditionType_normal = map[string]string{
-	"LEADER": "LEADER",
-	"leader": "LEADER",
+	"HEALTHY": "HEALTHY",
+	"LEADER":  "LEADER",
+	"healthy": "HEALTHY",
+	"leader":  "LEADER",
 }
 
 // NodeStatus_NodePhase_normal is a map of normalized values for the enum

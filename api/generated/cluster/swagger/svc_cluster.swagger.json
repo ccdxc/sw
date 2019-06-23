@@ -4532,10 +4532,12 @@
         "type": {
           "type": "string",
           "enum": [
-            "LEADER"
+            "LEADER",
+            "HEALTHY"
           ],
           "default": "LEADER",
           "x-ui-hints": {
+            "HEALTHY": "Healthy",
             "LEADER": "Leader"
           },
           "title": "Type indicates a certain node condition"

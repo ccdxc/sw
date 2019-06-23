@@ -3,11 +3,14 @@
 package auth
 
 import (
+	"time"
+
 	"github.com/pensando/sw/api/generated/tokenauth"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
+	"github.com/pensando/sw/venice/cmd/grpc/server/health"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	tokenauthsrv "github.com/pensando/sw/venice/cmd/grpc/server/tokenauth"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
@@ -17,6 +20,8 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
+
+const heartbeatTimeout = 1 * time.Minute
 
 // RunAuthServer creates a gRPC server for services that require authentication.
 // Authentication happens using mTLS, so the server can be started only after
@@ -76,6 +81,10 @@ func RunLeaderInstanceServer(url string, stopChannel chan bool) {
 
 	// Create and register the RPC handler for SmartNIC service
 	grpc.RegisterSmartNICUpdatesServer(env.LeaderRPCServer.GrpcServer, env.NICService.(*smartnic.RPCServer))
+
+	// Create and register the RPC handler for Health service
+	healthService := health.NewRPCServer(heartbeatTimeout)
+	grpc.RegisterNodeHeartbeatServer(env.LeaderRPCServer.GrpcServer, healthService)
 
 	rpcServer.Start()
 

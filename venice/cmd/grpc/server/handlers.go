@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
 	certutils "github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
+	"github.com/pensando/sw/venice/cmd/grpc/server/health"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/rolloutclient"
 	"github.com/pensando/sw/venice/cmd/services"
@@ -40,6 +41,8 @@ const (
 	apiClientWaitTimeMsec = 200
 
 	masterLeaderKey = "master"
+
+	heartbeatInterval = 15 * time.Second
 )
 
 // clusterRPCHandler handles all cluster gRPC calls.
@@ -338,6 +341,9 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
 	}
 
+	env.HealthClient = health.NewClient(env.ResolverClient)
+	env.HealthClient.Start(heartbeatInterval)
+
 	return &grpc.ClusterJoinResp{}, nil
 }
 
@@ -388,6 +394,11 @@ func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoi
 	if env.MetricsService != nil {
 		env.MetricsService.Stop()
 		env.MetricsService = nil
+	}
+
+	if env.HealthClient != nil {
+		env.HealthClient.Stop()
+		env.HealthClient = nil
 	}
 
 	// Cleanup all credentials

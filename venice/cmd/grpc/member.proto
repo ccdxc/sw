@@ -226,3 +226,14 @@ message SmartNICEvent {
 	api.EventType EventType = 1 [(gogoproto.jsontag) = "eventType,omitempty"];
 	cluster.SmartNIC  Nic       = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
 }
+
+service NodeHeartbeat {
+	rpc Heartbeat (HeartbeatRequest) returns (HeartbeatResponse) {};
+}
+
+message HeartbeatRequest {
+	string NodeID = 1;
+}
+
+message HeartbeatResponse {
+}

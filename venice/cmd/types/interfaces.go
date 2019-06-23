@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	"time"
 
 	k8sclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
@@ -442,4 +443,10 @@ type MetricsService interface {
 	IsRunning() bool
 	// UpdateCounters updates counters that are part of cluster metrics
 	UpdateCounters(m map[string]int64)
+}
+
+// HealthClient is responsible for relaying the status of the nodes to the leader
+type HealthClient interface {
+	Start(duration time.Duration)
+	Stop()
 }

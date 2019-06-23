@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
 	certutils "github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
+	"github.com/pensando/sw/venice/cmd/grpc/server/health"
 	"github.com/pensando/sw/venice/cmd/rolloutclient"
 	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/utils"
@@ -33,6 +34,7 @@ const (
 	sleepBetweenItersMsec = 100
 	masterLeaderKey       = "master"
 	apiServerWaitTime     = time.Second
+	heartbeatInterval     = 30 * time.Second
 )
 
 func waitForAPIAndStartServices(nodeID string) {
@@ -274,6 +276,9 @@ func StartNodeServices(nodeID, clusterID, VirtualIP string) {
 	if err != nil {
 		log.Errorf("Failed to start metrics service with error: %v", err)
 	}
+
+	healthClient := health.NewClient(env.ResolverClient)
+	healthClient.Start(heartbeatInterval)
 
 	if env.AuthRPCServer == nil {
 		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)

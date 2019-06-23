@@ -56,4 +56,5 @@ var (
 	Recorder             events.Recorder
 	TokenAuthService     types.TokenAuthService
 	MetricsService       types.MetricsService
+	HealthClient         types.HealthClient
 )

@@ -549,27 +549,39 @@ func (m *masterService) OnNotifySystemdEvent(e types.SystemdEvent) error {
 
 // handleNodeEvent handles Node update
 func (m *masterService) handleNodeEvent(et kvstore.WatchEventType, node *cmd.Node) {
-	if !m.isLeader {
-		return
+	if m.isLeader {
+		switch et {
+		case kvstore.Created:
+			// Check if not already in cluster
+			if node.Status.Phase != cmd.NodeStatus_JOINED.String() {
+				op := ops.NewNodeJoinOp(node)
+				_, err := ops.Run(op)
+				if err != nil {
+					log.Infof("Error %v while joining Node %v to cluster", err, node.Name)
+				}
+			}
+		case kvstore.Updated:
+		case kvstore.Deleted:
+			op := ops.NewNodeDisjoinOp(node)
+			_, err := ops.Run(op)
+			if err != nil {
+				log.Infof("Error %v while disjoin Node %v from cluster", err, node.Name)
+			}
+		}
 	}
+
+	// update local cache
+	var err error
 	switch et {
 	case kvstore.Created:
-		// Check if already in cluster.
-		if node.Status.Phase == cmd.NodeStatus_JOINED.String() {
-			return
-		}
-		op := ops.NewNodeJoinOp(node)
-		_, err := ops.Run(op)
-		if err != nil {
-			log.Infof("Error %v while joining Node %v to cluster", err, node.Name)
-		}
+		_, err = env.StateMgr.CreateNode(node)
 	case kvstore.Updated:
+		err = env.StateMgr.UpdateNode(node, false)
 	case kvstore.Deleted:
-		op := ops.NewNodeDisjoinOp(node)
-		_, err := ops.Run(op)
-		if err != nil {
-			log.Infof("Error %v while disjoin Node %v from cluster", err, node.Name)
-		}
+		err = env.StateMgr.DeleteNode(node)
+	}
+	if err != nil {
+		log.Errorf("Error updating local state, Op: %v, object: %+v", et, node)
 	}
 }
 
