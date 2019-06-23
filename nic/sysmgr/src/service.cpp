@@ -153,6 +153,18 @@ void Service::on_service_heartbeat(std::string name)
     }
 }
 
+void Service::fault(std::string reason)
+{
+    logger->info("System in fault mode");
+    if (this->spec->flags & PANIC_ON_FAILURE) {
+        FaultLoop::getInstance()->set_fault(reason);
+    }
+    auto obj = std::make_shared<delphi::objects::SysmgrSystemStatus>();
+    obj->set_state(::sysmgr::Fault);
+    delphi_sdk->QueueUpdate(obj);
+
+}
+
 void Service::on_child(pid_t pid)
 {
     std::string reason = parse_status(this->child_watcher->get_status());
@@ -161,11 +173,19 @@ void Service::on_child(pid_t pid)
     EventLogger::getInstance()->LogServiceEvent(eventtypes::NAPLES_SERVICE_STOPPED,
         "Service %s stopped", this->spec->name);
 
-    if (this->spec->flags & COPY_STDOUT_ON_CRASH) {
+    // SERVICE_CONFIG_STATE_OFF means we killed the process, don't worry about
+    // copying stdout
+    if (this->config_state == SERVICE_CONFIG_STATE_ON &&
+        this->spec->flags & COPY_STDOUT_ON_CRASH) {
+
         save_stdout_stderr(this->spec->name, pid);
     }
 
-    if (this->spec->flags & RESTARTABLE && this->restart_count < 5) {
+    // SERVICE_CONFIG_STATE_OFF means we killed the process, don't try to
+    // restart it
+    if (this->config_state == SERVICE_CONFIG_STATE_ON &&
+        this->spec->flags & RESTARTABLE && this->restart_count < 5) {
+
         this->restart_count += 1;
         this->launch();
         return;
@@ -183,9 +203,7 @@ void Service::on_child(pid_t pid)
     ServiceLoop::getInstance()->queue_event(
         ServiceEvent::create(this->spec->name, SERVICE_EVENT_STOP));
 
-    if (this->spec->flags & PANIC_ON_FAILURE) {
-        FaultLoop::getInstance()->set_fault("Process died");
-    }
+    this->fault("Process died");
 }
 
 void Service::on_timer()
@@ -193,13 +211,7 @@ void Service::on_timer()
     logger->info("Service {} timed out", this->spec->name);
     this->timer_watcher->stop();
 
-    logger->info("System in fault mode");
-    if (this->spec->flags & PANIC_ON_FAILURE) {
-        FaultLoop::getInstance()->set_fault("Process missed heartbeat");
-    }
-    auto obj = std::make_shared<delphi::objects::SysmgrSystemStatus>();
-    obj->set_state(::sysmgr::Fault);
-    delphi_sdk->QueueUpdate(obj);
+    this->fault("Process timed-out");
 }
 
 void Service::reset_dependencies()

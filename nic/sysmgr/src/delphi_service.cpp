@@ -42,6 +42,10 @@ void DelphiService::OnMountComplete()
         ServiceEvent::create("delphi", SERVICE_EVENT_START));
     EventLogger::getInstance()->LogSystemEvent(
         eventtypes::SYSTEM_COLDBOOT, "System booted");
+
+    auto obj = std::make_shared<delphi::objects::SysmgrSystemStatus>();
+    obj->set_state(::sysmgr::Fault);
+    this->sdk->QueueUpdate(obj);
 }
 
 std::string DelphiService::Name()

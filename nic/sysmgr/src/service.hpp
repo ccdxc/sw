@@ -50,6 +50,7 @@ private:
     void start_heartbeat();
     void launch();
     void reset_dependencies();
+    void fault(std::string reason);
 public:
     static std::shared_ptr<Service> create(ServiceSpecPtr spec);
     virtual void on_service_start(std::string name);
