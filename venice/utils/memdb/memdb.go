@@ -75,6 +75,7 @@ func (od *Objdb) watchEvent(obj Object, et EventType) error {
 		select {
 		case watchChan <- ev:
 		default:
+			log.Errorf("too slow agent and watcher events are greater than channel capacity")
 			// TODO: too slow agent and watcher events are greater than channel capacity..
 			// come up with a policy.. either close the connection or drop the events or something else
 		}

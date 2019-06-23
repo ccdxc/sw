@@ -49,7 +49,7 @@ func (client *TpClient) runWatcher(ctx context.Context) {
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
 
-	for client.watchCtx.Err() == nil {
+	for ctx.Err() == nil {
 		// create a grpc client
 		if client.resolverClient != nil {
 			rpcClient, err := rpckit.NewRPCClient(client.agentName, client.srvURL, rpckit.WithBalancer(balancer.New(client.resolverClient)))
@@ -81,7 +81,11 @@ func (w *watchChan) watchStatsPolicy(ctx context.Context, cl tpmproto.StatsPolic
 			log.Errorf("stop watching stats policy, error:%s", err)
 			return
 		}
-		w.statsChan <- event
+		select {
+		case w.statsChan <- event:
+		case <-ctx.Done():
+
+		}
 	}
 }
 
@@ -97,7 +101,10 @@ func (w *watchChan) watchFwlogPolicy(ctx context.Context, cl tpmproto.FwlogPolic
 			log.Errorf("stop watching fwlog policy, error:%s", err)
 			return
 		}
-		w.fwlogChan <- event
+		select {
+		case w.fwlogChan <- event:
+		case <-ctx.Done():
+		}
 	}
 }
 
@@ -113,9 +120,15 @@ func (w *watchChan) watchFlowExpPolicy(ctx context.Context, cl tpmproto.FlowExpo
 			log.Errorf("stop watching flow export policy, error:%s", err)
 			return
 		}
-		w.flowExpChan <- event
+		select {
+		case w.flowExpChan <- event:
+		case <-ctx.Done():
+		}
+
 	}
 }
+
+const watchlen = 100
 
 type watchChan struct {
 	wg          sync.WaitGroup
@@ -126,9 +139,9 @@ type watchChan struct {
 
 func (client *TpClient) processEvents(pctx context.Context) error {
 	wc := &watchChan{
-		statsChan:   make(chan *tpmproto.StatsPolicyEvent),
-		fwlogChan:   make(chan *tpmproto.FwlogPolicyEvent),
-		flowExpChan: make(chan *tpmproto.FlowExportPolicyEvent),
+		statsChan:   make(chan *tpmproto.StatsPolicyEvent, watchlen),
+		fwlogChan:   make(chan *tpmproto.FwlogPolicyEvent, watchlen),
+		flowExpChan: make(chan *tpmproto.FlowExportPolicyEvent, watchlen),
 	}
 
 	ctx, cancel := context.WithCancel(pctx)
@@ -168,14 +181,14 @@ func (client *TpClient) processEvents(pctx context.Context) error {
 		select {
 
 		case event, ok := <-wc.statsChan:
-			if ok != true {
+			if !ok {
 				log.Errorf("stats policy channel closed")
 				return nil
 			}
 			log.Infof("received policy(%s) %+v", event.EventType, event.Policy)
 
 		case event, ok := <-wc.fwlogChan:
-			if ok != true {
+			if !ok {
 				log.Errorf("fwlog policy channel closed")
 				return nil
 			}
@@ -197,7 +210,7 @@ func (client *TpClient) processEvents(pctx context.Context) error {
 			}
 
 		case event, ok := <-wc.flowExpChan:
-			if ok != true {
+			if !ok {
 				log.Errorf("flow policy channel closed")
 				return nil
 			}
@@ -218,8 +231,9 @@ func (client *TpClient) processEvents(pctx context.Context) error {
 				}
 			}
 
-		case <-client.watchCtx.Done():
-			log.Warnf("canceled telemetry policy watch")
+		case <-pctx.Done():
+			log.Warnf("canceled telemetry policy watch while there are %d events in flowExpChan, %d in fwlogChan %d in statsChan",
+				len(wc.flowExpChan), len(wc.fwlogChan), len(wc.statsChan))
 			return nil
 		}
 	}

@@ -321,7 +321,7 @@ func TestMarshal(t *testing.T) {
 	md.WatchObjects("testObj", watchChan)
 
 	mo, err := md.MarshalJSON()
-	AssertOk(t, err, "Error marshalling object")
+	AssertOk(t, err, "Error marshaling object")
 
 	o := map[string]struct {
 		Watchers []int
