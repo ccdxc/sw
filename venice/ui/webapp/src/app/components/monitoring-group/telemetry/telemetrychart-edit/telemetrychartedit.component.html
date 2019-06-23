@@ -45,6 +45,16 @@
            (click)="addDataSourceClick()">
         ADD QUERY
       </div>
+      <div fxFlex="auto"></div>
+      <div fxFlex="nogrow">
+        <p-checkbox name="Debug Metrics"
+                    styleClass="telemetrychartedit-checkbox"
+                    labelStyleClass="telemetrychartedit-checkbox-label"
+                    binary="true"
+                    label="Debug Metrics"
+                    [(ngModel)]="showDebug"
+                    (onChange)="debugMetricsChange()"></p-checkbox>
+      </div>
     </div>
     <div fxFlex="10px"></div>
     <div fxFlex="auto" fxLayout="column" fxLayoutGap="10px" style="margin-left:10px">
@@ -136,24 +146,31 @@
 <ng-template #EditSource let-source>
   <div fxFlex="none">Measurement:</div>
   <mat-radio-group fxFlex="none" fxLayout="row wrap" fxLayoutAlign="start center"
-                   fxLayoutGap="20px"
+                   fxLayoutGap="30px"
                    class="telemetrychartedit-input telemetrychartedit-radio-buttons"
 
                    [(ngModel)]="source.measurement">
-    <mat-radio-button fxFlex="250px" color="primary" [disableRipple]="true" class=""
-                      *ngFor="let option of measurements"
-                      [appErrorTooltip]="option.description"
-                      [value]="option.name">
-      {{option.displayName}}
-    </mat-radio-button>
+    <ng-container *ngFor="let option of measurements">
+      <!-- If we are in debug mode, we show all metrics
+          otherwise, we only show if the measureent has a tag level that isn't Level7
+          Also, if a user enables debug mode, finishes a source, and then untoggles debug mode,
+          we still display the option that they chose when they come back to edit it.
+      -->
+      <mat-radio-button fxFlex="nogrow" color="primary" [disableRipple]="true" class=""
+                        *ngIf="option.name === source.measurement || showDebug || (option.tags != null && !option.tags.includes('Level7'))"
+                        [appErrorTooltip]="option.description"
+                        [value]="option.name">
+        {{option.displayName}}
+      </mat-radio-button>
+    </ng-container>
   </mat-radio-group>
   <div fxFlex="none" fxLayout="column" [@fastSlideInOut] *ngIf="source.measurement != null">
     <div fxFlex="none">Fields:</div>
-    <div fxFlex="none" fxLayout="row wrap" fxLayoutAlign="start center" fxLayoutGap="20px"
+    <div fxFlex="none" fxLayout="row wrap" fxLayoutAlign="start center" fxLayoutGap="30px"
          class="telemetrychartedit-input">
       <ng-container *ngFor="let option of metricsMetadata[source.measurement].fields">
-        <p-checkbox fxFlex="200px" class="telemetrychartedit-checkbox-container"
-                    *ngIf="option.baseType !== 'string'"
+        <p-checkbox fxFlex="nogrow" class="telemetrychartedit-checkbox-container"
+                    *ngIf="(option.baseType !== 'string') && ((source.fields != null && source.fields.includes(option.name)) || showDebug || (option.tags != null && !option.tags.includes('Level7')))"
                     styleClass="telemetrychartedit-checkbox"
                     labelStyleClass="telemetrychartedit-checkbox"
                     name="fieldSelection" [value]="option.name" [label]="option.displayName"

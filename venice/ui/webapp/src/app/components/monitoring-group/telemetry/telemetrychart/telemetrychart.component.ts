@@ -421,8 +421,8 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
           query.query['end-time'] = this.selectedTimeRange.getTime().endTime.toISOString() as any;
         } else {
           // Default time range
-          query.query['start-time'] = 'now() - 24h' as any;
-          query.query['end-time'] = 'now()' as any;
+          query.query['start-time'] = moment().subtract('1', 'd').toISOString() as any;
+          query.query['end-time'] = moment().toISOString() as any;
         }
         source.transformQuery({query: query.query});
         queryList.queries.push(query);

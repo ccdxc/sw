@@ -69,6 +69,8 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
 
   graphTitle: string = '';
 
+  showDebug: boolean = false;
+
   constructor(protected controllerService: ControllerService,
     protected clusterService: ClusterService,
     protected authService: AuthService,
@@ -130,10 +132,24 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
     }
   }
 
+  debugMetricsChange() {
+    if (this.showDebug) {
+      // Don't need to uncheck anything
+      return;
+    }
+    // If the user has checked a debug metric, when we turn off debug metrics
+    // we should clear their selections
+    const source = this.getSelectedSource();
+    if (source.measurement == null) {
+      return;
+    }
+    if (MetricsMetadata[source.measurement].tags == null || MetricsMetadata[source.measurement].tags.includes('Level7')) {
+      // Need to remove selection
+      source.measurement = null;
+    }
+  }
+
   getSelectedSource(): DataSource {
-    // if (this.selectedDataSourceIndex == null) {
-    //   return null;
-    // }
     if (this.chart == null || this.chart.dataSources.length  === 0) {
       return null;
     }

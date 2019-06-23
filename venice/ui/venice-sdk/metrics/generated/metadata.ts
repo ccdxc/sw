@@ -8,6 +8,9 @@ export interface MetricField {
   allowedValues?: string[],
   scaleMin?: number,
   scaleMax?: number,
+  tags?: string[],
+  scope?: string,
+  isTag?: boolean,
 }
 
 export interface MetricMeasurement {
@@ -17,6 +20,7 @@ export interface MetricMeasurement {
   objectKind?: string,
   scope?: string,
   fields: MetricField[],
+  tags?: string[],
 }
 
 export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
@@ -31,6 +35,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": " malformed pkt drop",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -39,6 +46,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to RDMA ICRC Errors",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -47,6 +57,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to parse length errors",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -55,6 +68,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to hardware errors seen",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -63,6 +79,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to missing lookup in input mapping table",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -71,6 +90,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to dejavu in input mapping table",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -79,6 +101,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of multi-destination (multicast) packets dropped because they were not seen on right pinned uplink",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -87,6 +112,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to hitting drop flows",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -95,6 +123,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to missing a flow-hit",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -103,6 +134,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to drop-nacl hit",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -111,6 +145,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to drop-ipsg hit",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -119,6 +156,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to IP packet normalization",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -127,6 +167,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of TCP packets dropped due to TCP normalization",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -135,6 +178,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of TCP RST packets dropped due to invalid ACK number",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -143,6 +189,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of TCP non-SYN first packets dropped",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -151,6 +200,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to ICMP packet normalization",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -159,6 +211,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to input properties miss",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -167,6 +222,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of TCP packets dropped due to out-of-window",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -175,6 +233,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of TCP packets dropped due to split handshake",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -183,6 +244,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of TCP packets dropped due to window size being zero",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -191,6 +255,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of TCP packets dropped due to data received after FIN was seen",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -199,6 +266,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of TCP packets dropped due to non-RST seen after RST",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -207,6 +277,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of TCP packets dropped due to invalid first packet seen from responder",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -215,6 +288,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of TCP packets dropped due to unexpected packet seen",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -223,6 +299,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to packets received on unexpected source LIF",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -231,6 +310,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to packets VF IP Label mismatch",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -239,7 +321,21 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to packets VF bad RR destination IP",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
     }
   ],
   "scope": "PerASIC",
@@ -256,6 +352,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to output mapping miss",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -264,6 +363,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to source port pruning",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -272,6 +374,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to mirror hit",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -280,6 +385,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to policer",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -288,6 +396,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to COPP",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -296,7 +407,21 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of packets dropped due to checksum errors",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
     }
   ],
   "scope": "PerASIC",
@@ -313,6 +438,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Connections per second",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -321,7 +449,21 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Max Connections per second",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
     }
   ],
   "scope": "PerFTE",
@@ -338,6 +480,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Number of flow miss packets processed by this FTE",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -346,6 +491,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Number of flow retransmits seen",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -354,6 +502,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Number of packets that hit the L4 redirect queue",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -362,6 +513,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Number of packets that hit the ALG control flow queue",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -370,6 +524,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Number of packets that hit the TCP close queue",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -378,6 +535,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Number of packets that hit the TLS Proxy queue",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -386,6 +546,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Number of packets that hit the FTE SPAN queue",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -394,6 +557,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Number of packets that hit the FTE config path",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -402,7 +568,21 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Number of packets enqueue in the FTE TX queue",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
     }
   ],
   "scope": "PerFTE",
@@ -419,6 +599,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Total Number of active sessions",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -427,6 +610,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Total Number of L2 Sessions",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -435,6 +621,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Total Number of TCP sessions",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -443,6 +632,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Total Number of UDP sessions",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -451,6 +643,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Total Number of ICMP sessions",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -459,6 +654,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Total Number of Drop sessions",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -467,6 +665,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Total Number of Aged sessions",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -475,6 +676,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Total Number of TCP Resets sent as a result of SFW Reject",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -483,6 +687,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Total Number of ICMP Errors sent as a result of SFW Reject",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -491,6 +698,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Total Number of sessions that timed out at connection setup",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -499,7 +709,21 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Total Number of sessions that errored out during creation",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
     }
   ],
   "scope": "PerFTE",
@@ -516,6 +740,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "ring producer index",
       "units": "ID",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -524,6 +751,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "ring consumer index",
       "units": "ID",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -532,6 +762,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "total input bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)",
       "units": "Bytes",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -540,6 +773,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "total output bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)",
       "units": "Bytes",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -548,7 +784,21 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of soft resets executed",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
     }
   ],
   "scope": "PerRingPerSubRing",
@@ -565,6 +815,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "hardware logical interface ID",
       "units": "ID",
       "baseType": "uint64",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -573,6 +826,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "number of sequencer queues available",
       "units": "Count",
       "baseType": "uint32",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -581,6 +837,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "crypto key base index",
       "units": "Count",
       "baseType": "uint32",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -589,6 +848,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "maximum number of crypto keys allowed",
       "units": "Count",
       "baseType": "uint32",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -597,6 +859,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "CPU interrupt base",
       "units": "Count",
       "baseType": "uint32",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -605,7 +870,21 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "CPU interrupt vectors available",
       "units": "Count",
       "baseType": "uint32",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
     }
   ],
   "scope": "PerLIF",
@@ -622,6 +901,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "queue state memory address",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -630,6 +912,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "queue group\\n           : 0 - compress/decompress\\n           : 1 - compress/decompress status\\n           : 2 - crypto\\n           : 3 - crypto status\\n",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -638,7 +923,21 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "CPU core ID (not available currently",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
     }
   ],
   "scope": "PerLIFPerQ",
@@ -655,6 +954,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "CPU interrupts raised",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -663,6 +965,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "chaining doorbells rung",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -671,6 +976,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "sequencer descriptors processed",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -679,6 +987,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "sequencer descriptors aborted (due to reset)",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -687,6 +998,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "status descriptors copied",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -695,6 +1009,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "descriptors transferred to hardware",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -703,6 +1020,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "hardware batch (length) errors",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -711,6 +1031,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "hardware operation errors",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -719,6 +1042,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "AOL list updates requested",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -727,6 +1053,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "scatter/gather list updates requested",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -735,6 +1064,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "payload DMA transfers executed",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -743,6 +1075,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "payload DMA errors encountered",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -751,6 +1086,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "pad-data-only DMA transfers executed",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -759,6 +1097,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "pad-data-only DMA errors encountered",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -767,6 +1108,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "alternate (bypass-onfail) descriptors executed",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -775,6 +1119,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "alternate buffers taken",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -783,6 +1130,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "length updates requested",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -791,6 +1141,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "compression header updates requested",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -799,7 +1152,21 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "bytes processed",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
     }
   ],
   "scope": "PerLIFPerQ",
@@ -816,6 +1183,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Number of TCP packets that hit the rule",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -824,6 +1194,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Number of UDP packets that hit the rule",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -832,6 +1205,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Number of ICMP packets that hit the rule",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -840,6 +1216,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Number of ESP packets that hit the rule",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -848,6 +1227,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Number of non-TCP/UDP/ICMP/ESP packets that hit the rule",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
     },
     {
@@ -856,7 +1238,21 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "description": "Number of total packets that hit the rule",
       "units": "Count",
       "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
       "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
     }
   ],
   "scope": "PerFwRule",
@@ -867,6 +1263,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "objectKind": "Node",
   "displayName": "Node",
   "description": "Contains metrics reported from the Venice Nodes",
+  "tags": [
+    "Level7"
+  ],
   "fields": [
     {
       "name": "CPUUsedPercent",
@@ -984,6 +1383,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "objectKind": "SmartNIC",
   "displayName": "Naples",
   "description": "Contains metrics reported from the Naples",
+  "tags": [
+    "Level7"
+  ],
   "fields": [
     {
       "name": "CPUUsedPercent",
@@ -1101,6 +1503,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "objectKind": "Cluster",
   "displayName": "Cluster",
   "description": "Contains metrics related to the cluster",
+  "tags": [
+    "Level6"
+  ],
   "fields": [
     {
       "name": "AdmittedNICs",
@@ -1109,7 +1514,10 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "units": "count",
       "baseType": "number",
       "jsType": "number",
-      "scaleMin": 0
+      "scaleMin": 0,
+      "tags": [
+        "Level6"
+      ]
     },
     {
       "name": "DecommissionedNICs",
@@ -1118,7 +1526,10 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "units": "count",
       "baseType": "number",
       "jsType": "number",
-      "scaleMin": 0
+      "scaleMin": 0,
+      "tags": [
+        "Level6"
+      ]
     },
     {
       "name": "DisconnectedNICs",
@@ -1127,7 +1538,10 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "units": "count",
       "baseType": "number",
       "jsType": "number",
-      "scaleMin": 0
+      "scaleMin": 0,
+      "tags": [
+        "Level6"
+      ]
     },
     {
       "name": "HealthyNICs",
@@ -1136,7 +1550,10 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "units": "count",
       "baseType": "number",
       "jsType": "number",
-      "scaleMin": 0
+      "scaleMin": 0,
+      "tags": [
+        "Level6"
+      ]
     },
     {
       "name": "PendingNICs",
@@ -1145,7 +1562,10 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "units": "count",
       "baseType": "number",
       "jsType": "number",
-      "scaleMin": 0
+      "scaleMin": 0,
+      "tags": [
+        "Level6"
+      ]
     },
     {
       "name": "RejectedNICs",
@@ -1154,7 +1574,10 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "units": "count",
       "baseType": "number",
       "jsType": "number",
-      "scaleMin": 0
+      "scaleMin": 0,
+      "tags": [
+        "Level6"
+      ]
     },
     {
       "name": "UnhealthyNICs",
@@ -1163,7 +1586,10 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "units": "count",
       "baseType": "number",
       "jsType": "number",
-      "scaleMin": 0
+      "scaleMin": 0,
+      "tags": [
+        "Level6"
+      ]
     }
   ]
 },

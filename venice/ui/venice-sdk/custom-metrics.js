@@ -4,6 +4,9 @@ metrics  = [
     objectKind: 'Node',
     displayName: 'Node',
     description: 'Contains metrics reported from the Venice Nodes',
+    tags: [
+      "Level7"
+    ],
     fields: [
       {
         name: 'CPUUsedPercent',
@@ -121,6 +124,9 @@ metrics  = [
     objectKind: 'SmartNIC',
     displayName: 'Naples',
     description: 'Contains metrics reported from the Naples',
+    tags: [
+      "Level7"
+    ],
     fields: [
       {
         name: 'CPUUsedPercent',
@@ -238,6 +244,9 @@ metrics  = [
     objectKind: 'Cluster',
     displayName: 'Cluster',
     description: 'Contains metrics related to the cluster',
+    tags: [
+      "Level6"
+    ],
     fields: [
       {
         name: 'AdmittedNICs',
@@ -247,6 +256,9 @@ metrics  = [
         baseType: 'number',
         jsType: 'number',
         scaleMin: 0,
+        tags: [
+          "Level6"
+        ],
       },
       {
         name: 'DecommissionedNICs',
@@ -256,6 +268,9 @@ metrics  = [
         baseType: 'number',
         jsType: 'number',
         scaleMin: 0,
+        tags: [
+          "Level6"
+        ],
       },
       {
         name: 'DisconnectedNICs',
@@ -265,6 +280,9 @@ metrics  = [
         baseType: 'number',
         jsType: 'number',
         scaleMin: 0,
+        tags: [
+          "Level6"
+        ],
       },
       {
         name: 'HealthyNICs',
@@ -274,6 +292,9 @@ metrics  = [
         baseType: 'number',
         jsType: 'number',
         scaleMin: 0,
+        tags: [
+          "Level6"
+        ],
       },
       {
         name: 'PendingNICs',
@@ -283,6 +304,9 @@ metrics  = [
         baseType: 'number',
         jsType: 'number',
         scaleMin: 0,
+        tags: [
+          "Level6"
+        ],
       },
       {
         name: 'RejectedNICs',
@@ -292,6 +316,9 @@ metrics  = [
         baseType: 'number',
         jsType: 'number',
         scaleMin: 0,
+        tags: [
+          "Level6"
+        ],
       },
       {
         name: 'UnhealthyNICs',
@@ -301,6 +328,9 @@ metrics  = [
         baseType: 'number',
         jsType: 'number',
         scaleMin: 0,
+        tags: [
+          "Level6"
+        ],
       },
     ]
   }

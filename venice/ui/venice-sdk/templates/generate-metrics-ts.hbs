@@ -8,6 +8,9 @@ export interface MetricField {
   allowedValues?: string[],
   scaleMin?: number,
   scaleMax?: number,
+  tags?: string[],
+  scope?: string,
+  isTag?: boolean,
 }
 
 export interface MetricMeasurement {
@@ -17,6 +20,7 @@ export interface MetricMeasurement {
   objectKind?: string,
   scope?: string,
   fields: MetricField[],
+  tags?: string[],
 }
 
 export const MetricsMetadata: { [key: string]: MetricMeasurement } = {

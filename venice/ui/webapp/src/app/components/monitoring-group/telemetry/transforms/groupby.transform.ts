@@ -29,7 +29,11 @@ export class GroupByTransform extends MetricTransform<GroupByTransformConfig> {
   }
 
   updateOptions() {
-    const options = MetricsMetadata[this.measurement].fields.filter(x => x.baseType === 'string').map( f => {
+    if (this.measurement == null) {
+      this.groupByOptions = [];
+      return;
+    }
+    const options = MetricsMetadata[this.measurement].fields.filter(x => x.isTag).map( f => {
       return {label: f.displayName, value: f.name};
     });
     options.unshift({label: 'None', value: null});

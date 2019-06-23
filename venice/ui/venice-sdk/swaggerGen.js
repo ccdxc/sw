@@ -204,9 +204,22 @@ function generateMetricMetadata() {
         result[_.camelCase(key)] = val;
       });
       m.objectKind = "SmartNIC"
+      if (m.fields == null) {
+        return;
+      }
+      m.fields.push({
+        Name: 'reporterID',
+        Description: 'Name of reporting object',
+        BaseType: 'string',
+        JsType: 'string',
+        IsTag: true,
+      })
       m.fields = m.fields.map( (field) => {
         if (field.DisplayName == null) {
           field.DisplayName = field.Name;
+        }
+        if (field.Tags == null) {
+          field.Tags = ['Level4']
         }
         if (basetypeToJSType[field.BaseType] == null) {
           throw new Error("base type " + field.BaseType + " not recognized for field " + field.Name);

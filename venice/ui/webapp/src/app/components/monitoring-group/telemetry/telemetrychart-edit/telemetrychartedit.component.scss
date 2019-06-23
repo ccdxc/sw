@@ -70,6 +70,7 @@ $vertical-gutter: 5px;
 
 .telemetrychartedit-page {
   @include primary-font(16px);
+  width: 100%;
 }
 
 .telemetrychartedit-header {
@@ -160,4 +161,8 @@ $vertical-gutter: 5px;
 
 .telemetrychartedit-graph-transforms-container {
   margin: 10px 20px;
+}
+
+.telemetrychartedit-checkbox-label {
+  margin-bottom: 0px;
 }
