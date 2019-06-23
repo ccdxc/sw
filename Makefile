@@ -559,6 +559,9 @@ venice-image:
 	cd bin && tar -cf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.tgz
 	printf "\n+++++++++++++++++ complete venice-image $$(date) +++++++++++++++++\n"
 
+ci-venice-image:
+	$(MAKE) venice-image
+
 # this creates the OS image - like buildroot for venice from centos DVD image
 # Only needed to be run when contents of FS need to change
 venice-base-iso:

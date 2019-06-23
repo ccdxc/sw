@@ -17,7 +17,7 @@ func main() {
 	// pass the make target, as in "make e2e"
 	gitVersion, _ := os.LookupEnv("GIT_VERSION")
 	gitCommit, _ := os.LookupEnv("GIT_COMMIT")
-	err := infra.RunSingle(fmt.Sprintf("venice-image GIT_VERSION=%s GIT_COMMIT=%s", gitVersion, gitCommit))
+	err := infra.RunSingle(fmt.Sprintf("ci-venice-image GIT_VERSION=%s GIT_COMMIT=%s", gitVersion, gitCommit))
 	if err != nil {
 		// copy logs
 		err = infra.CopyLogs(clusterLogs, ".")

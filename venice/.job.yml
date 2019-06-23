@@ -8,11 +8,14 @@ targets:
     sub-area:
     feature:
   venice-image:
-    commands: [ "bash", "-c", "pwd && ls -l && cd /go/src/github.com/pensando/sw && make venice-image && ./tools/scripts/check-local-files.sh" ]
+    commands: [ "echo", "dummy target to trigger top level venice image build" ]
     owners: ["email:venice-dev@pensando.io"]
     area:
     sub-area:
     feature:
+    build-dependencies:
+      - build-venice-image
+
 image:
   bind_dir: "/go/src/github.com/pensando/sw"
   work_dir: "/go/src/github.com/pensando/sw"
