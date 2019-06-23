@@ -101,9 +101,8 @@ dependencies:
   dol: iota/test/venice/hwtest 
   dol/test/networking : nic
   #nic/agent: venice
-  nic/agent: test/ci_targets/e2e
+  #nic/agent: test/ci_targets/e2e
   #venice: test
-  venice: test/ci_targets/e2e
   #venice: test/ci_targets/e2erollout
   #test: test/ci_targets/e2e
   nic/apollo: nic
@@ -117,5 +116,11 @@ dir_dependencies:
     - nic/apollo
   venice:
     - api
+    - test/ci_targets/e2e
   test:
     - api
+    - test/ci_targets/e2e
+  api:
+    - test/ci_targets/e2e
+  nic/agent:
+    - test/ci_targets/e2e

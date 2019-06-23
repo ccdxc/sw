@@ -9,8 +9,10 @@ CACHEMOUNT :=
 endif
 
 # Lists excluded patterns to "go list"
-EXCLUDE_PATTERNS := "apollo|generated|halproto|proto|model_sim|labels|vendor|bazel|e2etests|gometrics|buildroot"
-UTEST_EXCLUDE_PATTERNS := "apollo|generated|halproto|proto|model_sim|labels|vendor|bazel|e2etests|iota|gometrics|vchub|buildroot"
+EXCLUDE_PATTERNS := "apollo|generated|halproto|proto|model_sim|labels|vendor|bazel|e2etests|iota|buildroot|gometrics"
+
+# these are run as part of integ test
+INTEG_TEST_PATTERNS := "sw.test.integ|api.integration|citadel.test.integ"
 
 # Lists targets to be prebuilt before generation
 TO_PREGEN := venice/utils/apigen/annotations
@@ -145,7 +147,8 @@ gopkgsinstall:
 	@$(shell cd ${GOPATH}/src/github.com/pensando/sw && CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ./vendor/github.com/haya14busa/gopkgs/cmd/gopkgs)
 gopkglist: gopkgsinstall
 	@$(eval GO_PKG := $(shell ${GOPATH}/bin/gopkgs -short 2>/dev/null | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS}))
-	$(eval GO_PKG_UTEST := $(shell ${GOPATH}/bin/gopkgs -short 2>/dev/null | grep github.com/pensando/sw | egrep -v ${UTEST_EXCLUDE_PATTERNS}))
+	$(eval GO_PKG_UTEST := $(shell ${GOPATH}/bin/gopkgs -short 2>/dev/null | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS} | egrep -v ${INTEG_TEST_PATTERNS}))
+	$(eval GO_PKG_INTEGTEST := $(shell ${GOPATH}/bin/gopkgs -short 2>/dev/null | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS} | egrep ${INTEG_TEST_PATTERNS}))
 
 # build installs all go binaries. Use VENICE_CCOMPILE_FORCE=1 to force a rebuild of all packages
 build: gopkglist
@@ -163,8 +166,20 @@ build: gopkglist
 # unit-test-cover uses go test wrappers in scripts/report/report.go and runs coverage tests.
 # this will return a non 0 error when coverage for a package is < 75.0%
 unit-test-cover: gopkglist
-	$(info +++ running go tests)
+	$(info +++ running go tests on $(GO_PKG_UTEST))
 	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go run scripts/report/report.go ${GO_PKG_UTEST}
+
+integ-test: gopkglist
+	$(info +++ running go tests on $(GO_PKG_INTEGTEST))
+	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go run scripts/report/report.go ${GO_PKG_INTEGTEST}
+
+ci-integ-test:
+	$(MAKE) pregen-clean
+	$(MAKE) ws-tools
+	$(MAKE) pull-assets
+	$(MAKE) gen-clean
+	$(MAKE) gen
+	$(MAKE) integ-test
 
 unit-race-test: gopkglist
 	$(info +++ running go tests with race detector)
