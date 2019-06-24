@@ -366,16 +366,16 @@ ionic_qcq_recover(struct lif *lif,
 		              desc_size, sg_desc_size, pid);
 	if (status != VMK_OK) {
                 ionic_en_err("ionic_q_init() failed, status: %s",
-                          vmk_StatusToString(status));
-                VMK_ASSERT(0);
+                             vmk_StatusToString(status));
+                return status;
         }
 
 	status = ionic_cq_init(lif, &qcq->cq, &qcq->intr,
 	                       num_descs, cq_desc_size);
 	if (status != VMK_OK) {
                 ionic_en_err("ionic_cq_init() failed, status: %s",
-                          vmk_StatusToString(status));
-                VMK_ASSERT(0);
+                             vmk_StatusToString(status));
+                return status;
         }
 
         q_base = qcq->base;
@@ -418,14 +418,22 @@ ionic_qcqs_recover(struct ionic *ionic)
                                    sizeof(struct admin_cmd),
                                    sizeof(struct admin_comp),
                                    0, lif->kern_pid, lif->adminqcq);
-        VMK_ASSERT(status == VMK_OK);
+        if (status != VMK_OK) {
+                ionic_en_err("ionic_qcq_recover for adminq failed, status: %s",
+                             vmk_StatusToString(status));
+                return status;
+        }
 
         if (lif->ionic->nnqs_per_lif) {
                 status = ionic_qcq_recover(lif, 0, "notifyq", NOTIFYQ_LENGTH,
                                            sizeof(struct notifyq_cmd),
                                            sizeof(union notifyq_comp),
                                            0, lif->kern_pid, lif->notifyqcq);
-                VMK_ASSERT(status == VMK_OK);
+                if (status != VMK_OK) {
+                        ionic_en_err("ionic_qcq_recover for notifyq failed,"
+                                     "status: %s", vmk_StatusToString(status));
+                        return status;
+                }
         }
 
 	for (i = 0; i < lif->ntxqcqs; i++) {
@@ -434,7 +442,11 @@ ionic_qcqs_recover(struct ionic *ionic)
 				          sizeof(struct txq_comp),
 				          sizeof(struct txq_sg_desc),
 				          lif->kern_pid, lif->txqcqs[i]);
-                VMK_ASSERT(status == VMK_OK);
+                if (status != VMK_OK) {
+                        ionic_en_err("ionic_qcq_recover for txq[%d] failed,"
+                                     "status: %s", i, vmk_StatusToString(status));
+                        return status;
+                }
         }
 
 	for (j = 0; j < lif->nrxqcqs; j++) {
@@ -442,7 +454,11 @@ ionic_qcqs_recover(struct ionic *ionic)
 		                           sizeof(struct rxq_desc),
 				           sizeof(struct rxq_comp),
 				           0, lif->kern_pid, lif->rxqcqs[j]);
-                VMK_ASSERT(status == VMK_OK);
+                if (status != VMK_OK) {
+                        ionic_en_err("ionic_qcq_recover for rxq[%d] failed,"
+                                     "status: %s", i, vmk_StatusToString(status));
+                        return status;
+                }
         }
 
         lif->rx_mode = 0;
@@ -509,15 +525,15 @@ ionic_dev_recover(struct ionic_en_priv_data *priv_data)
         status = ionic_init(&priv_data->ionic);
         if (status != VMK_OK) {
                 ionic_en_err("ionic_init() failed, status: %s",
-                          vmk_StatusToString(status));
-                VMK_ASSERT(0);
+                             vmk_StatusToString(status));
+                goto out_err;
         }
 
 	status = ionic_identify(&priv_data->ionic);
         if (status != VMK_OK) {
                 ionic_en_err("ionic_identify() failed, status: %s",
-                          vmk_StatusToString(status));
-                VMK_ASSERT(0);
+                             vmk_StatusToString(status));
+                goto out_err;
         }
 
         vmk_BitVectorZap(priv_data->uplink_handle.uplink_q_info.activeQueues);
@@ -525,7 +541,11 @@ ionic_dev_recover(struct ionic_en_priv_data *priv_data)
         // Assume no change in lifs_size
 
         status = ionic_qcqs_recover(&priv_data->ionic);
-        VMK_ASSERT(status == VMK_OK);
+        if (status != VMK_OK) {
+                ionic_en_err("ionic_qcqs_recover() failed, status: %s",
+                             vmk_StatusToString(status));
+                goto out_err;
+        }
 
         vmk_Memset(priv_data->uplink_handle.vmk_mac_addr,
                    0,
@@ -540,7 +560,7 @@ ionic_dev_recover(struct ionic_en_priv_data *priv_data)
         if (status != VMK_OK) {
                 ionic_en_err("ionic_lifs_init() failed, status: %s",
                           vmk_StatusToString(status));
-                VMK_ASSERT(0);
+                goto out_err;
         }
 
         lif->is_skip_res_alloc_after_fw = VMK_FALSE;
@@ -551,9 +571,18 @@ ionic_dev_recover(struct ionic_en_priv_data *priv_data)
 
         ionic_clean_priv_sw_stats(lif);
         status = ionic_en_uplink_start_io(driver_data);
-        VMK_ASSERT(status == VMK_OK);
+        if (status != VMK_OK) {
+                ionic_en_err("ionic_en_uplink_start_io() failed, status: %s",
+                             vmk_StatusToString(status));
+                goto out_err;
+        }
 
-        ionic_en_info("done recovery");
+        ionic_en_info("Recovery from FW upgrade has been completed!");
+
+        return status;
+
+out_err:
+        ionic_en_err("Recovery from FW upgrade failed!");
         return status;
 }
 
