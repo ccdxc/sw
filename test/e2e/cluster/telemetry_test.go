@@ -523,9 +523,9 @@ func writeFwlogs(logs []*telemetry_query.Fwlog) error {
 		}
 
 		tags := map[string]string{"source": ipSrc, "destination": ipDest, "destination-port": dPort, "protocol": ipProt}
-		fields := map[string]interface{}{"source-port": sPort, "action": action, "direction": dir, "rule-id": ruleID}
+		flds := map[string]interface{}{"source-port": sPort, "action": action, "direction": dir, "rule-id": ruleID}
 
-		pt, err := client.NewPoint("Fwlogs", tags, fields, timestamp)
+		pt, err := client.NewPoint("Fwlogs", tags, flds, timestamp)
 		if err != nil {
 			return err
 		}

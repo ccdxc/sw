@@ -30,7 +30,6 @@ import (
 
 	"github.com/pensando/sw/api/generated/objstore"
 	loginctx "github.com/pensando/sw/api/login/context"
-	penctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/utils/netutils"
 
 	"github.com/pkg/errors"
@@ -209,7 +208,7 @@ func createBuffer(size int) []byte {
 
 func statFile(ctx context.Context, filename string) (*objstore.Object, error) {
 	restcl := netutils.NewHTTPClient()
-	authzHeader, ok := penctx.AuthzHeaderFromContext(ctx)
+	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
 	if !ok {
 		return nil, fmt.Errorf("no authorization header in context")
 	}

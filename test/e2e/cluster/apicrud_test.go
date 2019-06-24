@@ -289,7 +289,7 @@ func testAPICRUDOps() func() {
 			}
 			retStr := fmt.Sprintf("Got %v Network events expecing %v events\n", len(rcvNEvents), len(expNEvents))
 			for i, ev := range rcvNEvents {
-				retStr = retStr + fmt.Sprintf("[%d]: %v, %v\n", i, ev.Type, ev.Key)
+				retStr += fmt.Sprintf("[%d]: %v, %v\n", i, ev.Type, ev.Key)
 			}
 			return retStr
 		}, 10, 1).Should(Equal("success"), "Number of Network watch events did not match")
@@ -301,7 +301,7 @@ func testAPICRUDOps() func() {
 			}
 			retStr := fmt.Sprintf("Got %v Network events expecing %v events\n", len(rcvNEvents), len(expNEvents))
 			for i, ev := range rcvNEvents {
-				retStr = retStr + fmt.Sprintf("[%d]: %v, %v\n", i, ev.Type, ev.Key)
+				retStr += fmt.Sprintf("[%d]: %v, %v\n", i, ev.Type, ev.Key)
 			}
 			return retStr
 		}, 10, 1).Should(Equal("success"), "Number of Network watch events did not match")
@@ -311,7 +311,7 @@ func testAPICRUDOps() func() {
 			rSpec := rcvTEvents[k].Object.(*cluster.Tenant).Spec
 			retStr := fmt.Sprintf("Got %v Network events expecing %v events\n", len(rcvNEvents), len(expNEvents))
 			for i, ev := range rcvNEvents {
-				retStr = retStr + fmt.Sprintf("[%d]: %v, %v\n", i, ev.Type, ev.Key)
+				retStr += fmt.Sprintf("[%d]: %v, %v\n", i, ev.Type, ev.Key)
 			}
 			Expect(expTEvents[k].Type).To(Equal(rcvTEvents[k].Type), fmt.Sprintf("[%d] [%v]want[%+v], got [%v][%+v]\n %s", k, expTEvents[k].Key, eSpec, rcvTEvents[k].Key, rSpec, retStr))
 			Expect(reflect.DeepEqual(eSpec, rSpec)).To(Equal(true), fmt.Sprintf("[%d] [%v]want[%+v], got [[%v]%+v]\n %s", k, expTEvents[k].Key, eSpec, rcvTEvents[k].Key, rSpec, retStr))
@@ -321,7 +321,7 @@ func testAPICRUDOps() func() {
 			rSpec := rcvNEvents[k].Object.(*network.Network).Spec
 			retStr := fmt.Sprintf("Got %v Network events expecing %v events\n", len(rcvNEvents), len(expNEvents))
 			for i, ev := range rcvNEvents {
-				retStr = retStr + fmt.Sprintf("[%d]: %v, %v\n", i, ev.Type, ev.Key)
+				retStr += fmt.Sprintf("[%d]: %v, %v\n", i, ev.Type, ev.Key)
 			}
 			Expect(expNEvents[k].Type).To(Equal(rcvNEvents[k].Type), fmt.Sprintf("[%d] [%v]want[%+v], [%v]got [%+v]\n %s", k, expNEvents[k].Key, eSpec, rcvNEvents[k].Key, rSpec, retStr))
 			Expect(reflect.DeepEqual(eSpec, rSpec)).To(Equal(true), fmt.Sprintf("[%d] [%v]want[%+v], [%v]got [%+v]\n %s", k, expNEvents[k].Key, eSpec, rcvNEvents[k].Key, rSpec, retStr))

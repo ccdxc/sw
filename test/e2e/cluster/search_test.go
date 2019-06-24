@@ -52,6 +52,11 @@ func defaultResultCheck(resp interface{}, tc queryTestCase) error {
 }
 
 var _ = Describe("Search test", func() {
+
+	BeforeEach(func() {
+		validateCluster()
+	})
+
 	It("spyglass restart", func() {
 		createDummyObj()
 		testCases := []*queryTestCase{
@@ -120,6 +125,10 @@ var _ = Describe("Search test", func() {
 			},
 		}
 		testQueries(testCases)
+	})
+
+	AfterEach(func() {
+		validateCluster()
 	})
 })
 
