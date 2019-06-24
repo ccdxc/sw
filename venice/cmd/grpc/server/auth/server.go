@@ -15,7 +15,7 @@ import (
 	tokenauthsrv "github.com/pensando/sw/venice/cmd/grpc/server/tokenauth"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	tokenauthsvc "github.com/pensando/sw/venice/cmd/services/tokenauth"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -72,19 +72,18 @@ func RunAuthServer(url string, stopChannel chan bool) {
 
 // RunLeaderInstanceServer creates a gRPC server for authenticated services offered by leader CMD.
 func RunLeaderInstanceServer(url string, stopChannel chan bool) {
-	// Leader sevice require TLS so it depends on certificate services being available
+	// Leader service require TLS so it depends on certificate services being available
 	rpcServer, err := rpckit.NewRPCServer(globals.CmdNICUpdatesSvc, url)
 	if err != nil {
 		log.Fatalf("Error creating grpc server at %v: %v", url, err)
 	}
-	env.LeaderRPCServer = rpcServer
 
 	// Create and register the RPC handler for SmartNIC service
-	grpc.RegisterSmartNICUpdatesServer(env.LeaderRPCServer.GrpcServer, env.NICService.(*smartnic.RPCServer))
+	grpc.RegisterSmartNICUpdatesServer(rpcServer.GrpcServer, env.NICService.(*smartnic.RPCServer))
 
 	// Create and register the RPC handler for Health service
 	healthService := health.NewRPCServer(heartbeatTimeout)
-	grpc.RegisterNodeHeartbeatServer(env.LeaderRPCServer.GrpcServer, healthService)
+	grpc.RegisterNodeHeartbeatServer(rpcServer.GrpcServer, healthService)
 
 	rpcServer.Start()
 
@@ -92,11 +91,7 @@ func RunLeaderInstanceServer(url string, stopChannel chan bool) {
 
 	// wait until stop signal
 	<-stopChannel
-
-	if env.LeaderRPCServer != nil {
-		env.LeaderRPCServer.Stop()
-		env.LeaderRPCServer = nil
-	}
+	rpcServer.Stop()
 
 	log.Infof("Stopped CMD leader instance service at %v", url)
 }

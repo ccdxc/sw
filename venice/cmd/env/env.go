@@ -47,7 +47,6 @@ var (
 	SmartNICRegRPCServer *rpckit.RPCServer // Unauthenticated service for SmartNIC registration
 	LocalCertsRPCServer  *rpckit.RPCServer // Unauthenticated local service for certificate issuance
 	AuthRPCServer        *rpckit.RPCServer // Authenticated services (requires TLS and client certificate)
-	LeaderRPCServer      *rpckit.RPCServer // Authenticated services offered by leader CMD
 	ServiceTracker       types.ServiceTracker
 	ResolverClient       resolver.Interface
 	RolloutMgr           types.RolloutMgr
