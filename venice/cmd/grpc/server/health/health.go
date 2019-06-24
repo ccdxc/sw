@@ -82,10 +82,10 @@ func (s *RPCServer) update() {
 		log.Infof("Node: %+v", node)
 		node.Lock()
 		defer node.Unlock()
-		if _, ok := s.nodes[node.Name]; ok == false {
+		if _, ok := s.nodes[node.Name]; !ok {
 			s.updateCondition(node, false, time.Now())
 		} else {
-			s.updateCondition(node, time.Now().Sub(s.nodes[node.Name]) < s.updateInterval,
+			s.updateCondition(node, time.Since(s.nodes[node.Name]) < s.updateInterval,
 				s.nodes[node.Name])
 		}
 		env.StateMgr.UpdateNode(node.Node, true)
@@ -98,9 +98,9 @@ func (s *RPCServer) periodicUpdate(interval time.Duration) {
 	defer ticker.Stop()
 	for {
 		select {
-		case _ = <-ticker.C:
+		case <-ticker.C:
 			s.update()
-		case _ = <-s.stop:
+		case <-s.stop:
 			log.Infof("Stop")
 			return
 		}
@@ -117,12 +117,13 @@ func (s *RPCServer) Heartbeat(ctx context.Context, req *grpc.HeartbeatRequest) (
 }
 
 // NewClient creates a new Client
-func NewClient(resolverClient resolver.Interface) *Client {
+func NewClient(resolverClient resolver.Interface) (*Client, error) {
 	rpcClient, err := rpckit.NewRPCClient(
 		"health-client", globals.CmdNICUpdatesSvc,
 		rpckit.WithBalancer(balancer.New(resolverClient)))
 	if err != nil {
-		return nil
+		log.Errorf("Unable to create rpcclient for health-client. %v", err)
+		return nil, err
 	}
 
 	heartbeatClient := grpc.NewNodeHeartbeatClient(rpcClient.ClientConn)
@@ -132,25 +133,25 @@ func NewClient(resolverClient resolver.Interface) *Client {
 		rpcClient:       rpcClient,
 		heartbeatClient: heartbeatClient,
 		stop:            make(chan struct{}),
-	}
+	}, nil
 }
 
 // Start starts the periodic headbeats to the Leader
 func (s *Client) Start(interval time.Duration) {
 	// Send periodic heartbeats
-	cluster, _ := utils.GetCluster()
+	c, _ := utils.GetCluster()
 	req := &grpc.HeartbeatRequest{
-		NodeID: cluster.NodeID,
+		NodeID: c.NodeID,
 	}
 	go func() {
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 		for {
 			select {
-			case _ = <-ticker.C:
+			case <-ticker.C:
 				log.Infof("Sending heartbeat with NodeID %s", req.NodeID)
 				s.heartbeatClient.Heartbeat(context.Background(), req)
-			case _ = <-s.stop:
+			case <-s.stop:
 				log.Infof("Stop")
 				return
 			}
@@ -160,5 +161,5 @@ func (s *Client) Start(interval time.Duration) {
 
 // Stop stops the periodic heartbeats to the leader
 func (s *Client) Stop() {
-	s.stop <- struct{}{}
+	close(s.stop)
 }

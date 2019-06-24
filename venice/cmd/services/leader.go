@@ -124,11 +124,11 @@ func (l *leaderService) waitForEventsOrCancel(ctx context.Context) {
 				go l.Start()
 			}
 		case <-ctx.Done():
-			log.Infof("Leader election cancelled")
+			log.Infof("Leader election canceled")
 			evtObjRef := &cluster.Node{}
 			evtObjRef.Defaults("all")
 			evtObjRef.Name = l.id
-			recorder.Event(eventtypes.ELECTION_CANCELLED, "Leader election cancelled", evtObjRef)
+			recorder.Event(eventtypes.ELECTION_CANCELLED, "Leader election canceled", evtObjRef)
 			return
 		}
 	}

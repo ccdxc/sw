@@ -341,8 +341,9 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
 	}
 
-	env.HealthClient = health.NewClient(env.ResolverClient)
-	env.HealthClient.Start(heartbeatInterval)
+	if env.HealthClient, err = health.NewClient(env.ResolverClient); err == nil {
+		env.HealthClient.Start(heartbeatInterval)
+	}
 
 	return &grpc.ClusterJoinResp{}, nil
 }

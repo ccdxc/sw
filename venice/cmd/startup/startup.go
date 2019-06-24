@@ -277,8 +277,9 @@ func StartNodeServices(nodeID, clusterID, VirtualIP string) {
 		log.Errorf("Failed to start metrics service with error: %v", err)
 	}
 
-	healthClient := health.NewClient(env.ResolverClient)
-	healthClient.Start(heartbeatInterval)
+	if env.HealthClient, err = health.NewClient(env.ResolverClient); err == nil {
+		env.HealthClient.Start(heartbeatInterval)
+	}
 
 	if env.AuthRPCServer == nil {
 		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)

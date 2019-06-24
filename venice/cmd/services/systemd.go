@@ -114,9 +114,14 @@ func (s *systemdService) StartUnit(name string) error {
 
 // StopUnit stops a systemd unit service and stops watching for it
 func (s *systemdService) StopUnit(name string) error {
+	s.Lock()
+	defer s.Unlock()
+
 	err := s.systemdIf.StopTarget(name)
 	if err == nil {
-		s.w.Unsubscribe(name)
+		if s.w != nil {
+			s.w.Unsubscribe(name)
+		}
 		delete(s.units, name)
 	}
 	return err
