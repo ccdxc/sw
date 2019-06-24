@@ -1,7 +1,7 @@
 # RFC Test Spec for negative egress cases
 selectors:
     root: ref://store/templates/id=POLICY
-    maxlimits: 1
+    maxlimits: 5
     policy: filter://Direction=egress
 
 packets:
