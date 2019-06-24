@@ -193,19 +193,19 @@ ionic_adminq_hb_work(struct work_struct *work)
 		}
 	}
 
-	spin_lock(&lif->wdog_lock);
+	IONIC_WDOG_LOCK(lif);
 	if (lif->adq_hb_resched)
 		queue_delayed_work(lif->wdog_wq, &lif->adq_hb_work,
 				   lif->adq_hb_interval);
-	spin_unlock(&lif->wdog_lock);
+	IONIC_WDOG_UNLOCK(lif);
 }
 
 static void
 ionic_adminq_hb_stop(struct lif *lif)
 {
-	spin_lock(&lif->wdog_lock);
+	IONIC_WDOG_LOCK(lif);
 	lif->adq_hb_resched = false;
-	spin_unlock(&lif->wdog_lock);
+	IONIC_WDOG_UNLOCK(lif);
 	cancel_delayed_work_sync(&lif->adq_hb_work);
 }
 
@@ -237,13 +237,12 @@ ionic_txq_wdog_work(struct work_struct *work)
 		/* Check each TxQ for timeouts */
 		for (i = 0; i < lif->ntxqs; i++) {
 			txq = lif->txqs[i];
-			IONIC_TX_LOCK(txq);
+			/* XXX: Unlocked to avoid causing data path jitter */
 			if (txq->full &&
 			    ticks > txq->wdog_start + lif->txq_wdog_timeout) {
 				txq->stats.wdog_expired++;
 				err = ETIMEDOUT;
 			}
-			IONIC_TX_UNLOCK(txq);
 		}
 	}
 	IONIC_LIF_UNLOCK(lif);
@@ -263,19 +262,19 @@ ionic_txq_wdog_work(struct work_struct *work)
 		}
 	}
 
-	spin_lock(&lif->wdog_lock);
+	IONIC_WDOG_LOCK(lif);
 	if (lif->txq_wdog_resched)
 		queue_delayed_work(lif->wdog_wq, &lif->txq_wdog_work,
 				   lif->txq_wdog_timeout);
-	spin_unlock(&lif->wdog_lock);
+	IONIC_WDOG_UNLOCK(lif);
 }
 
 static void
 ionic_txq_wdog_stop(struct lif *lif)
 {
-	spin_lock(&lif->wdog_lock);
+	IONIC_WDOG_LOCK(lif);
 	lif->txq_wdog_resched = false;
-	spin_unlock(&lif->wdog_lock);
+	IONIC_WDOG_UNLOCK(lif);
 	cancel_delayed_work_sync(&lif->txq_wdog_work);
 }
 
@@ -1945,7 +1944,7 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 
 	snprintf(name, sizeof(name), "wdwq%d", index);
 	lif->wdog_wq = create_singlethread_workqueue(name);
-	spin_lock_init(&lif->wdog_lock);
+	IONIC_WDOG_LOCK_INIT(lif);
 
 	lif->adq_hb_interval =
 		(unsigned long)ionic_adminq_hb_interval * HZ / 1000;
@@ -2087,6 +2086,7 @@ ionic_lif_free(struct lif *lif)
 
 	flush_workqueue(lif->wdog_wq);
 	destroy_workqueue(lif->wdog_wq);
+	IONIC_WDOG_LOCK_DESTROY(lif);
 
 	/* free rss indirection table */
 	ionic_lif_rss_free(lif);
@@ -3437,7 +3437,8 @@ ionic_lif_reinit(struct lif *lif, bool wdog_reset_path)
 
 	IONIC_QUE_WARN(lif->adminq, "resetting LIF\n");
 
-	/* Shut down the watchdogs only if we are NOT
+	/*
+	 * Shut down the watchdogs only if we are NOT
 	 * cleaning up after a watchdog timeout (wdog_reset_path).
 	 * NB: Must be done before taking the LIF lock!
 	 */

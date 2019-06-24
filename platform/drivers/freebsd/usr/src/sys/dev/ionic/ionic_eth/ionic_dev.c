@@ -153,7 +153,8 @@ ionic_dev_cmd_disable(struct ionic_dev *idev)
 	if (idev->dev_cmd_disabled)
 		return;
 
-	/* Respond to timeout or heartbeat failure by disabling the device
+	/*
+	 * Respond to timeout or heartbeat failure by disabling the device
 	 * command interface. This will allow the driver to fail quickly,
 	 * so the module can be unloaded without waiting for many teardown
 	 * commands to time out one after the other.
@@ -485,19 +486,19 @@ ionic_cmd_hb_work(struct work_struct *work)
 	}
 	IONIC_DEV_UNLOCK(ionic);
 
-	spin_lock(&idev->wdog_lock);
+	IONIC_WDOG_LOCK(idev);
 	if (idev->cmd_hb_resched)
 		queue_delayed_work(idev->wdog_wq, &idev->cmd_hb_work,
 				   idev->cmd_hb_interval);
-	spin_unlock(&idev->wdog_lock);
+	IONIC_WDOG_UNLOCK(idev);
 }
 
 static void
 ionic_cmd_hb_stop(struct ionic_dev *idev)
 {
-	spin_lock(&idev->wdog_lock);
+	IONIC_WDOG_LOCK(idev);
 	idev->cmd_hb_resched = false;
-	spin_unlock(&idev->wdog_lock);
+	IONIC_WDOG_UNLOCK(idev);
 	cancel_delayed_work_sync(&idev->cmd_hb_work);
 }
 
@@ -587,19 +588,19 @@ ionic_fw_hb_work(struct work_struct *work)
 		}
 	}
 
-	spin_lock(&idev->wdog_lock);
+	IONIC_WDOG_LOCK(idev);
 	if (idev->fw_hb_resched)
 		queue_delayed_work(idev->wdog_wq, &idev->fw_hb_work,
 				   idev->fw_hb_interval);
-	spin_unlock(&idev->wdog_lock);
+	IONIC_WDOG_UNLOCK(idev);
 }
 
 static void
 ionic_fw_hb_stop(struct ionic_dev *idev)
 {
-	spin_lock(&idev->wdog_lock);
+	IONIC_WDOG_LOCK(idev);
 	idev->fw_hb_resched = false;
-	spin_unlock(&idev->wdog_lock);
+	IONIC_WDOG_UNLOCK(idev);
 	cancel_delayed_work_sync(&idev->fw_hb_work);
 }
 
@@ -624,7 +625,7 @@ ionic_wdog_init(struct ionic *ionic)
 	snprintf(name, sizeof(name), "devwdwq%d",
 		 le32_to_cpu(idev->port_info->status.id));
 	idev->wdog_wq = create_singlethread_workqueue(name);
-	spin_lock_init(&idev->wdog_lock);
+	IONIC_WDOG_LOCK_INIT(idev);
 
 	/* Device command heartbeat watchdog */
 	if (ionic_cmd_hb_interval > 0 &&
@@ -678,4 +679,5 @@ ionic_wdog_deinit(struct ionic *ionic)
 	ionic_cmd_hb_stop(idev);
 	ionic_fw_hb_stop(idev);
 	destroy_workqueue(idev->wdog_wq);
+	IONIC_WDOG_LOCK_DESTROY(idev);
 }

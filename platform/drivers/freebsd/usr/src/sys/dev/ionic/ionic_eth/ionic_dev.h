@@ -173,7 +173,7 @@ struct ionic_dev
 
 	struct ionic_devinfo dev_info;
 
-	spinlock_t wdog_lock;
+	struct mtx wdog_mtx;
 	struct workqueue_struct *wdog_wq;
 
 	struct delayed_work cmd_hb_work;

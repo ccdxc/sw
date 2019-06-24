@@ -292,7 +292,7 @@ struct lif {
 	struct workqueue_struct *adminq_wq;
 	struct adminq *adminq;
 
-	spinlock_t wdog_lock;
+	struct mtx wdog_mtx;
 	struct workqueue_struct *wdog_wq;
 
 	struct delayed_work adq_hb_work;
