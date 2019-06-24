@@ -30,24 +30,24 @@ namespace impl {
 /// \ingroup PDS_SERVICE
 /// @{
 
-#define PDS_IMPL_FILL_SVC_MAPPING_SWKEY(key, vpc_hw_id, vip_or_dip, svc_port,  \
-                                        provider_ip)                           \
+#define PDS_IMPL_FILL_SVC_MAPPING_SWKEY(key, vpc_hw_id, ip1, ip2, svc_port)    \
 {                                                                              \
     memset((key), 0, sizeof(*(key)));                                          \
     (key)->key_metadata_mapping_port = svc_port;                               \
-    if ((vip_or_dip)->af == IP_AF_IPV6) {                                      \
+    if ((ip1)->af == IP_AF_IPV6) {                                             \
         sdk::lib::memrev((key)->key_metadata_mapping_ip,                       \
-                         (vip_or_dip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);     \
-        if (provider_ip) {                                                     \
-            sdk::lib::memrev((key)->key_metadata_mapping_ip2,                  \
-                             (provider_ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);\
-        }                                                                      \
+                         (ip1)->addr.v6_addr.addr8, IP6_ADDR8_LEN);            \
     } else {                                                                   \
         memcpy((key)->key_metadata_mapping_ip,                                 \
-               &(vip_or_dip)->addr.v4_addr, IP4_ADDR8_LEN);                    \
-        if (provider_ip) {                                                     \
+               &(ip1)->addr.v4_addr, IP4_ADDR8_LEN);                           \
+    }                                                                          \
+    if ((ip2)) {                                                               \
+        if ((ip2)->af == IP_AF_IPV6) {                                         \
+            sdk::lib::memrev((key)->key_metadata_mapping_ip2,                  \
+                             (ip2)->addr.v6_addr.addr8, IP6_ADDR8_LEN);        \
+        } else {                                                               \
             memcpy((key)->key_metadata_mapping_ip2,                            \
-                   &(provider_ip)->addr.v4_addr, IP4_ADDR8_LEN);               \
+                   &(ip2)->addr.v4_addr, IP4_ADDR8_LEN);                       \
         }                                                                      \
     }                                                                          \
     (key)->vnic_metadata_vpc_id = vpc_hw_id;                                   \
@@ -103,9 +103,10 @@ svc_mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
     // reserve an entry in SERVICE_MAPPING with (VIP, provider IP, port) as key
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
-                                    vpc->hw_id(), &spec->key.vip,
-                                    spec->key.svc_port,
-                                    &spec->backend_provider_ip);
+                                    vpc->hw_id(),
+                                    &spec->backend_provider_ip,
+                                    &spec->key.vip,
+                                    spec->key.svc_port);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key,
                                    NULL, 0, sdk::table::handle_t::null());
     ret = svc_mapping_impl_db()->svc_mapping_tbl()->reserve(&api_params);
@@ -131,7 +132,7 @@ svc_mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     memset(&svc_mapping_key, 0, sizeof(svc_mapping_key));
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
                                     vpc->hw_id(), &spec->backend_ip,
-                                    spec->svc_port, (ip_addr_t *)NULL);
+                                    (ip_addr_t *)NULL, spec->svc_port);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key,
                                    NULL, 0, sdk::table::handle_t::null());
     ret = svc_mapping_impl_db()->svc_mapping_tbl()->reserve(&api_params);
@@ -204,9 +205,10 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     // add an entry in SERVICE_MAPPING with (VIP, provider-ip, port) as key
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
-                                    vip_vpc->hw_id(), &spec->key.vip,
-                                    spec->key.svc_port,
-                                    &spec->backend_provider_ip);
+                                    vip_vpc->hw_id(),
+                                    &spec->backend_provider_ip,
+                                    &spec->key.vip,
+                                    spec->key.svc_port);
     PDS_IMPL_FILL_SVC_MAPPING_DATA(&svc_mapping_data,
                                    to_dip_nat_hdl_,
                                    spec->svc_port);
@@ -243,7 +245,7 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     // add an entry in SERVICE_MAPPING with (DIP/overlay_ip, port) as key
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
                                     dip_vpc->hw_id(), &spec->backend_ip,
-                                    spec->svc_port, (ip_addr_t *)NULL);
+                                    (ip_addr_t *)NULL, spec->svc_port);
     PDS_IMPL_FILL_SVC_MAPPING_DATA(&svc_mapping_data,
                                    to_vip_nat_hdl_,
                                    spec->key.svc_port);
