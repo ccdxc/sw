@@ -501,6 +501,8 @@ pciehw_open(pciemgr_params_t *params)
     pciehw_shmem_t *pshmem;
     int r;
 
+    pciehw_struct_size_checks();
+
     /* already open */
     if (phw->open) {
         phw->clients++;
@@ -665,7 +667,6 @@ pciehw_finalize_dev(pciehdev_t *pdev)
     pciehwdev_t *phwdev = pciehwdev_alloc(pdev);
     pciehdev_t *parent, *peer, *child;
 
-    phwdev->pdev = pdev;
     phwdev->pf = pciehdev_is_pf(pdev);
     phwdev->vf = pciehdev_is_vf(pdev);
     phwdev->totalvfs = pciehdev_get_totalvfs(pdev);
@@ -1053,20 +1054,36 @@ cmd_meminfo(int argc, char *argv[])
     pciehw_mem_t *phwmem = pciehw_get_hwmem();
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
     u_int64_t hwmempa = pal_mem_vtop(phwmem);
-    const int w = 16;
+    const int w = 24;
 
-    pciesys_loginfo("%-*s: 0x%08"PRIx64" size %lu\n", w, "physaddr",
-                    hwmempa, sizeof(pciehw_mem_t));
-    pciesys_loginfo("%-*s: 0x%08x\n", w, "magic", phwmem->magic);
-    pciesys_loginfo("%-*s: %d\n", w, "version", phwmem->version);
-    pciesys_loginfo("%-*s: %d\n", w, "allocdev", pshmem->allocdev);
-    pciesys_loginfo("%-*s: %d\n", w, "allocprt", pshmem->allocprt);
-    pciesys_loginfo("%-*s: 0x%08"PRIx64" size %lu\n", w, "cfgcur",
-                    hwmempa + offsetof(pciehw_mem_t, cfgcur),
-                    sizeof(phwmem->cfgcur));
+#define PSZ(t) \
+    pciesys_loginfo("%-*s: %lu\n", w, "sizeof "#t, sizeof(t));
+
+    /* pciehw_mem_t info */
+    PSZ(pciehw_mem_t);
+
+    pciesys_loginfo("%-*s: 0x%08" PRIx64 "\n", w, "physaddr", hwmempa);
     pciesys_loginfo("%-*s: 0x%08"PRIx64" size %lu\n", w, "notify_area",
                     hwmempa + offsetof(pciehw_mem_t, notify_area),
                     sizeof(phwmem->notify_area));
+    pciesys_loginfo("%-*s: 0x%08"PRIx64" size %lu\n", w, "cfgcur",
+                    hwmempa + offsetof(pciehw_mem_t, cfgcur),
+                    sizeof(phwmem->cfgcur));
+    pciesys_loginfo("%-*s: 0x%08x\n", w, "magic", phwmem->magic);
+    pciesys_loginfo("%-*s: %d\n", w, "version", phwmem->version);
+
+    /* pciehw_shmem_t info */
+    PSZ(pciehw_shmem_t);
+    PSZ(pciehwdev_t);
+    PSZ(pciehwbar_t);
+    PSZ(pciehw_port_t);
+    PSZ(pciehw_spmt_t);
+    PSZ(pciehw_sprt_t);
+    PSZ(pciehw_sromsk_t);
+
+    pciesys_loginfo("%-*s: %p\n", w, "pshmem->dev", pshmem->dev);
+    pciesys_loginfo("%-*s: %d\n", w, "allocdev", pshmem->allocdev);
+    pciesys_loginfo("%-*s: %d\n", w, "allocprt", pshmem->allocprt);
 }
 
 typedef struct cmd_s {

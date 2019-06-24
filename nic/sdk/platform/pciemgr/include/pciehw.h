@@ -13,6 +13,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <assert.h>
 
 #include "cap_top_csr_defines.h"
 #include "cap_pxb_c_hdr.h"
@@ -30,8 +31,8 @@ struct pciemgr_params_s;
 typedef struct pciemgr_params_s pciemgr_params_t;
 
 #define PCIEHW_NPORTS   8
-#define PCIEHW_NDEVS    48
-#define PCIEHW_CFGSZ    1024
+#define PCIEHW_NDEVS    1024
+#define PCIEHW_CFGSZ    2048
 #define PCIEHW_NROMSK   128
 #define PCIEHW_ROMSKSZ  (PCIEHW_CFGSZ / sizeof (u_int32_t))
 #define PCIEHW_CFGHNDSZ (PCIEHW_CFGSZ / sizeof (u_int32_t))
@@ -60,58 +61,72 @@ typedef enum pciehwbartype_e {
     PCIEHWBARTYPE_IO,                   /* 32-bit I/O bar */
 } pciehwbartype_t;
 
-typedef struct pciehwbar_s {
-    u_int64_t size;                     /* total size of this bar */
-    u_int32_t valid:1;                  /* valid bar for this dev */
-    pciehwbartype_t type;               /* PCIEHWBARTYPE_* */
-    u_int8_t cfgidx;                    /* config bars index (0-5) */
-    u_int32_t pmtb;                     /* pmt base  for bar */
-    u_int32_t pmtc;                     /* pmt count for bar */
+typedef union pciehwbar_u {
+    struct {
+        u_int64_t size;                 /* total size of this bar */
+        u_int32_t valid:1;              /* valid bar for this dev */
+        pciehwbartype_t type;           /* PCIEHWBARTYPE_* */
+        u_int8_t cfgidx;                /* config bars index (0-5) */
+        u_int32_t pmtb;                 /* pmt base  for bar */
+        u_int32_t pmtc;                 /* pmt count for bar */
+    };
+    u_int8_t _pad[64];
 } pciehwbar_t;
 
-typedef struct pciehwdev_s {
-    char name[32];                      /* device name */
-    int port;                           /* pcie port */
-    void *pdev;                         /* pciehdev */
-    u_int16_t pf:1;                     /* is pf */
-    u_int16_t vf:1;                     /* is vf */
-    u_int16_t totalvfs;                 /* totalvfs */
-    u_int16_t numvfs;                   /* current numvfs enabled */
-    u_int16_t vfidx;                    /* if is vf, vf position */
-    u_int16_t bdf;                      /* bdf of this dev */
-    u_int32_t lifb;                     /* lif base  for this dev */
-    u_int32_t lifc;                     /* lif count for this dev */
-    u_int32_t intrb;                    /* intr resource base */
-    u_int32_t intrc;                    /* intr resource count */
-    u_int32_t intrdmask:1;              /* reset val for drvcfg.mask */
-    pciehwdevh_t parenth;               /* handle to parent */
-    pciehwdevh_t childh;                /* handle to child */
-    pciehwdevh_t peerh;                 /* handle to peer */
-    u_int8_t intpin;                    /* legacy int pin */
-    u_int8_t romsksel[PCIEHW_ROMSKSZ];  /* cfg read-only mask selectors */
-    u_int8_t cfgpmtf[PCIEHW_CFGHNDSZ];  /* cfg pmt flags */
-    u_int8_t cfghnd[PCIEHW_CFGHNDSZ];   /* cfg indirect/notify handlers */
-    pciehwbar_t bar[PCIEHW_NBAR];       /* bar info */
-    pciehwbar_t rombar;                 /* option rom bar */
+typedef union pciehwdev_u {
+    struct {
+        char name[32];                  /* device name */
+        int port;                       /* pcie port */
+        u_int16_t pf:1;                 /* is pf */
+        u_int16_t vf:1;                 /* is vf */
+        u_int16_t totalvfs;             /* totalvfs */
+        u_int16_t numvfs;               /* current numvfs enabled */
+        u_int16_t vfidx;                /* if is vf, vf position */
+        u_int16_t bdf;                  /* bdf of this dev */
+        u_int32_t lifb;                 /* lif base  for this dev */
+        u_int32_t lifc;                 /* lif count for this dev */
+        u_int32_t intrb;                /* intr resource base */
+        u_int32_t intrc;                /* intr resource count */
+        u_int32_t intrdmask:1;          /* reset val for drvcfg.mask */
+        pciehwdevh_t parenth;           /* handle to parent */
+        pciehwdevh_t childh;            /* handle to child */
+        pciehwdevh_t peerh;             /* handle to peer */
+        u_int8_t intpin;                /* legacy int pin */
+        u_int8_t romsksel[PCIEHW_ROMSKSZ]; /* cfg read-only mask selectors */
+        u_int8_t cfgpmtf[PCIEHW_CFGHNDSZ]; /* cfg pmt flags */
+        u_int8_t cfghnd[PCIEHW_CFGHNDSZ];  /* cfg indirect/notify handlers */
+        pciehwbar_t bar[PCIEHW_NBAR];   /* bar info */
+        pciehwbar_t rombar;             /* option rom bar */
+    };
+    u_int8_t _pad[4096];
 } pciehwdev_t;
 
-typedef struct pciehw_port_s {
-    u_int8_t secbus;                    /* bridge secondary bus */
-    pciemgr_stats_t stats;
+typedef union pciehw_port_u {
+    struct {
+        u_int8_t secbus;                /* bridge secondary bus */
+        pciemgr_stats_t stats;
+    };
+    u_int8_t _pad[1024];
 } pciehw_port_t;
 
-typedef struct pciehw_sprt_s {
-    prt_t prt;                          /* shadow copy of prt */
+typedef union pciehw_sprt_u {
+    struct {
+        prt_t prt;                      /* shadow copy of prt */
+    };
+    u_int8_t _pad[32];
 } pciehw_sprt_t;
 
-typedef struct pciehw_spmt_s {
-    u_int64_t baroff;                   /* bar addr offset */
-    u_int64_t swrd;                     /* reads  handled by sw (not/ind) */
-    u_int64_t swwr;                     /* writes handled by sw (not/ind) */
-    pciehwdevh_t owner;                 /* current owner of this entry */
-    u_int8_t loaded:1;                  /* is loaded into hw */
-    u_int8_t cfgidx;                    /* cfgidx for bar we belong to */
-    pmt_t pmt;                          /* shadow copy of pmt */
+typedef union pciehw_spmt_u {
+    struct {
+        u_int64_t baroff;               /* bar addr offset */
+        u_int64_t swrd;                 /* reads  handled by sw (not/ind) */
+        u_int64_t swwr;                 /* writes handled by sw (not/ind) */
+        pciehwdevh_t owner;             /* current owner of this entry */
+        u_int8_t loaded:1;              /* is loaded into hw */
+        u_int8_t cfgidx;                /* cfgidx for bar we belong to */
+        pmt_t pmt;                      /* shadow copy of pmt */
+    };
+    u_int8_t _pad[128];
 } pciehw_spmt_t;
 
 typedef struct pciehw_sromsk_s {
@@ -131,6 +146,7 @@ typedef struct pciehw_shmem_s {
     u_int32_t allocdev;
     u_int32_t allocpmt;
     u_int32_t allocprt;
+    u_int32_t notify_ring_mask;
     pciehwdevh_t rooth[PCIEHW_NPORTS];
     pciehwdev_t dev[PCIEHW_NDEVS];
     pciehw_port_t port[PCIEHW_NPORTS];
@@ -139,8 +155,24 @@ typedef struct pciehw_shmem_s {
     pciehw_sprt_t sprt[PCIEHW_NPRT];
     u_int8_t cfgrst[PCIEHW_NDEVS][PCIEHW_CFGSZ];
     u_int8_t cfgmsk[PCIEHW_NDEVS][PCIEHW_CFGSZ];
-    u_int32_t notify_ring_mask;
 } pciehw_shmem_t;
+
+#define STATIC_ASSERT(cond) static_assert(cond, #cond)
+
+static inline void
+pciehw_struct_size_checks(void)
+{
+    /* make sure _pad[] is the largest item in the union */
+#define CHECK_PAD(T) \
+    do { T t; STATIC_ASSERT(sizeof(t) == sizeof(t._pad)); } while (0)
+
+    CHECK_PAD(pciehwdev_t);
+    CHECK_PAD(pciehwbar_t);
+    CHECK_PAD(pciehw_port_t);
+    CHECK_PAD(pciehw_spmt_t);
+    CHECK_PAD(pciehw_sprt_t);
+#undef CHECK_PAD
+}
 
 int pciehw_open(pciemgr_params_t *params);
 void pciehw_close(void);
