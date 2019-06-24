@@ -10,9 +10,10 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
 	mockes "github.com/pensando/sw/venice/utils/elastic/mock/server"
@@ -280,4 +281,31 @@ func TestEventsMgrAlertCache(t *testing.T) {
 	// invalid
 	err = evtsMgr.processAlert(kvstore.WatcherError, nil)
 	Assert(t, err != nil && strings.Contains(err.Error(), "invalid alert watch event"), "expected failure, but succeeded")
+}
+
+// TestEventsManagerMaintMode tests the creation of the new events manager and maintenance mode
+func TestEventsManagerMaintMode(t *testing.T) {
+	mockElasticsearchServer, mockResolver, apiServer, tLogger, err := setup(t)
+	AssertOk(t, err, "failed to setup test, err: %v", err)
+	defer mockElasticsearchServer.Stop()
+	defer apiServer.Stop()
+
+	ec, err := elastic.NewClient("", mockResolver, tLogger.WithContext("submodule", "elastic"))
+	AssertOk(t, err, "failed to create elastic client")
+	evtsMgr, err := NewEventsManager(globals.EvtsMgr, testServerURL, mockResolver, tLogger, WithElasticClient(ec))
+	AssertOk(t, err, "failed to create events manager")
+
+	ver := cluster.Version{
+		Status: cluster.VersionStatus{
+			BuildVersion:        "v1",
+			RolloutBuildVersion: "some-ver",
+		},
+	}
+	err = evtsMgr.processVersion(kvstore.Created, &ver)
+	AssertOk(t, err, "failed to process version, err: %v", err)
+
+	err = evtsMgr.processVersion(kvstore.Deleted, &ver)
+	AssertOk(t, err, "failed to delete version, err: %v", err)
+
+	evtsMgr.Stop()
 }
