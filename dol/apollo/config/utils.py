@@ -148,6 +148,17 @@ def GetRpcIPAddr(srcaddr, dstaddr):
         dstaddr.Af = types_pb2.IP_AF_INET
         dstaddr.V4Addr = int(srcaddr)
 
+def GetRpcIPRange(addrLow, addrHigh, addrRange):
+    if addrLow.version != addrHigh.version:
+        logger.error("ERROR: addrRange version mismatch: Low %s High %s" %(addrLow, addrHigh))
+        sys.exit(1)
+    if addrLow.version == IP_VERSION_6:
+        GetRpcIPAddr(addrLow, addrRange.IPv6range.Low)
+        GetRpcIPAddr(addrHigh, addrRange.IPv6range.High)
+    else:
+        GetRpcIPAddr(addrLow, addrRange.IPv4range.Low)
+        GetRpcIPAddr(addrHigh, addrRange.IPv4range.High)
+    return
 
 def GetRpcEncap(mplsslot, vxlanid, encap):
     encap.type = Store.GetDeviceEncapType()

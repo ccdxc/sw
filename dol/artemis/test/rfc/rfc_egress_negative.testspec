@@ -1,0 +1,48 @@
+# RFC Test Spec for negative egress cases
+selectors:
+    root: ref://store/templates/id=POLICY
+    maxlimits: 1
+    policy: filter://Direction=egress
+
+packets:
+    - packet:
+        id          : FROM_HOST_PKT # Input packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=UDP
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : 00:00:00:00:00:02
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                prio    : 0
+            ipv4:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : callback://networking/packets/GetUsableHostFromPolicy
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : callback://networking/packets/GetUsableHostFromPolicy
+                hlim    : 64
+            tcp:
+                sport   : callback://networking/packets/GetUsableSPortFromPolicy
+                dport   : callback://networking/packets/GetUsableDPortFromPolicy
+            udp:
+                sport   : callback://networking/packets/GetUsableSPortFromPolicy
+                dport   : callback://networking/packets/GetUsableDPortFromPolicy
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=FROM_HOST_PKT
+            port    : ref://testcase/config/hostport
+
+expect:
+    packets:
+        - packet:
+            object  : None
+            port    : ref://testcase/config/switchport

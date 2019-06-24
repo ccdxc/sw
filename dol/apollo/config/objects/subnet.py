@@ -71,6 +71,8 @@ class SubnetObject(base.ConfigObjectBase):
     def __fill_default_rules(self, policyobj):
         rules = []
         pfx = None
+        srcPfx = None
+        dstPfx = None
         if policyobj.AddrFamily == 'IPV4':
             if policyobj.PolicyType == 'default':
                 pfx = ipaddress.ip_network('0.0.0.0/0')
@@ -81,9 +83,14 @@ class SubnetObject(base.ConfigObjectBase):
                 pfx = ipaddress.ip_network('::/0')
             elif policyobj.PolicyType is 'subnet':
                 pfx = ipaddress.ip_network(self.IPPrefix[0])
+        if policyobj.Direction == types_pb2.RULE_DIR_INGRESS:
+            srcPfx = pfx
+        else:
+            dstPfx = pfx
+        l4match = policy.L4MatchObject(True)
         for proto in protos:
-            rule = policy.RuleObject(False, True, proto, pfx, True, 0, 65535, \
-                                     0, 65535)
+            l3match = policy.L3MatchObject(True, proto, srcpfx=srcPfx, dstpfx=dstPfx)
+            rule = policy.RuleObject(False, l3match, l4match)
             rules.append(rule)
         policyobj.rules = rules
         policyobj.Show()

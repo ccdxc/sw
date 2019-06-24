@@ -6,17 +6,18 @@ selectors:
 
 packets:
     - packet:
-        id          : IN_PKT # Input packet
+        id          : FROM_HOST_PKT # Input packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://networking/packets/GetPacketTemplateFromPolicy
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=UDP
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : 00:02:00:00:00:00
+                dst     : 00:00:00:00:00:02
             qtag:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                prio    : 0
             ipv4:
                 src     : ref://testcase/config/localmapping/IP
                 dst     : callback://networking/packets/GetUsableHostFromPolicy
@@ -35,43 +36,29 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : EXP_SWITCH_PKT # Expected packet
-        clone       : ref://testcase/packets/id=IN_PKT
-        encaps      : callback://networking/packets/GetPacketEncapFromMapping
+        id          : TO_SWITCH_PKT # Expected packet
+        clone       : ref://testcase/packets/id=FROM_HOST_PKT
         headers     :
-            outereth:
-                src     : ref://testcase/config/devicecfg/MACAddr
-                dst     : 00:02:0b:0a:0d:0e
-            outeripv4:
-                src     : ref://testcase/config/devicecfg/IP
-                dst     : ref://testcase/config/route/TunIP
-                ttl     : 64
-                tos     : 0
-                id      : 0
-            mpls:
-                label   : ref://testcase/config/route/Tunnel/EncapValue
-                ttl     : 0
-                s       : 1
-            vxlan:
-                vni     : ref://testcase/config/route/Tunnel/EncapValue
-            ipv4:
-                src     : callback://networking/packets/GetIPFromLocalMapping
-            ipv6:
-                src     : callback://networking/packets/GetIPFromLocalMapping
             eth:
-                src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : 00:02:00:00:00:00
-
+                src     : ref://testcase/config/localmapping/VNIC/SUBNET/VirtualRouterMACAddr
+                dst     : ref://testcase/config/route/Nexthop/MacAddr
+            ipv4:
+                src     : ref://testcase/config/localmapping/SvcMappingIP
+            ipv6:
+                src     : ref://testcase/config/localmapping/SvcMappingIP
+            tcp:
+                sport   : ref://testcase/config/localmapping/SvcPort
+            udp:
+                sport   : ref://testcase/config/localmapping/SvcPort
 
 trigger:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=IN_PKT
+            object  : ref://testcase/packets/id=FROM_HOST_PKT
             port    : ref://testcase/config/hostport
 
 expect:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=EXP_SWITCH_PKT
+            object  : ref://testcase/packets/id=TO_SWITCH_PKT
             port    : ref://testcase/config/switchport
-            #port    : 100

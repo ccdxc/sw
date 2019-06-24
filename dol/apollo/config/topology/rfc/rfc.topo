@@ -25,7 +25,7 @@ device:
     ipaddress   : None # Taken from resmgr
     gateway     : None # Taken from resmgr
     macaddress  : macaddr/0002.0100.0001
-    encap       : mplsoudp
+    encap       : vxlan
     tunnel      :
         - count : 16
           type  : internet-gateway
@@ -37,6 +37,25 @@ device:
 
 vpc:
     # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
+    - stack  : dual # dual, ipv4 , ipv6
+      count : 1
+      type  : substrate  # This VPC is applicable only for ARTEMIS pipeline.
+      subnet :
+         - count : 1
+           v4prefixlen : 24
+           v6prefixlen : 64
+      routetbl:
+         - type: specific # route table with only default routes
+           routetype: only_default
+           v4routes:
+              - '0.0.0.0\0'
+           v6routes:
+              - '0::\0'
+      policy:
+        - type : specific
+          policytype : default
+          direction : bidir
+
     - stack  : dual # dual, ipv4 , ipv6
       count : 1
       type  : tenant
@@ -65,6 +84,9 @@ vpc:
                    - '0.0.0.0\0'
                v6routes:
                    - '0::\0'
+      nexthop: # only ARTEMIS
+             - type: base
+               count : 46
       policy:
               - type : specific
                 policytype : empty
@@ -76,8 +98,17 @@ vpc:
                 rule:
                   - protocol: tcp
                     stateful: false
-                    v4pfx: '0.0.0.0\0'
-                    v6pfx: '0::\0'
+                    priority: 0             # only ARTEMIS
+                    action  : allow         # only ARTEMIS
+
+              - type : specific
+                policytype : deny_tcp
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: false
+                    priority: 10
+                    action  : deny
 
               # policies with stateless rules
               - type : specific

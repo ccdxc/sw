@@ -1,0 +1,21 @@
+# Feature RFC Modules List
+feature:
+    id          : rfc
+    sub         : negative
+    package     : test.rfc
+    module      : rfc
+    enable      : True
+    ignore      : True
+
+modules:
+    - module:
+        name    : IPV4_EGRESS_EMTPY_POLICY
+        spec    : rfc_egress_negative.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=empty
+
+    - module:
+        name    : IPV4_EGRESS_DENY_TCP_POLICY
+        spec    : rfc_egress_negative.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=deny_tcp

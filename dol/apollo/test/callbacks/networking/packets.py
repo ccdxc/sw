@@ -6,6 +6,7 @@ from infra.common.logging import logger
 import infra.api.api as infra_api
 import apollo.config.resmgr as resmgr
 import apollo.config.utils as utils
+import types_pb2 as types_pb2
 
 IPV4_HOST = ipaddress.IPv4Address(0xbadee1ba)
 IPV6_HOST = ipaddress.IPv6Address('e1ba:aced:a11:face:b00c:bade:da75:900d')
@@ -25,7 +26,7 @@ def __get_packet_template_from_policy_impl(rule, policy):
     template = 'ETH'
     template += "_%s" % (policy.AddrFamily)
 
-    protocol = utils.GetIPProtoName(rule.Proto) if rule else "TCP"
+    protocol = utils.GetIPProtoName(rule.L3Match.Proto) if rule else "TCP"
     template += "_%s" % (protocol)
     return infra_api.GetPacketTemplate(template)
 
@@ -97,9 +98,23 @@ def __get_module_args_value(modargs, attr):
                 return pval
     return None
 
-def GetUsableHostFromPolicy(testcase, packet, args=None):
-    route = testcase.config.tc_rule.Prefix if testcase.config.tc_rule else None
+def GetUsableSrcHostFromPolicy(testcase, packet, args=None):
+    #TODO: make an API to get based on pfx / pfxrange / tag
+    route = testcase.config.tc_rule.L3Match.SrcPrefix if testcase.config.tc_rule else None
     return __get_host_from_route(testcase.module.args, route, testcase.config.policy.AddrFamily)
+
+def GetUsableDstHostFromPolicy(testcase, packet, args=None):
+    route = testcase.config.tc_rule.L3Match.DstPrefix if testcase.config.tc_rule else None
+    return __get_host_from_route(testcase.module.args, route, testcase.config.policy.AddrFamily)
+
+def GetUsableHostFromPolicy(testcase, packet, args=None):
+    policy = testcase.config.policy
+    rule = testcase.config.tc_rule
+    route = None
+    if rule:
+        l3match = rule.L3Match
+        route = l3match.SrcPrefix if policy.Direction == types_pb2.RULE_DIR_INGRESS else l3match.DstPrefix
+    return __get_host_from_route(testcase.module.args, route, policy.AddrFamily)
 
 def __get_random_port_in_range(beg=0, end=65535):
     return random.randint(beg, end)
@@ -108,39 +123,39 @@ def __get_port_from_rule(rule, isSource=True):
     if rule is None:
         return __get_random_port_in_range()
     if isSource:
-        beg = rule.L4SportLow
-        end = rule.L4SportHigh
+        beg = rule.L4Match.SportLow
+        end = rule.L4Match.SportHigh
     else:
-        beg = rule.L4DportLow
-        end = rule.L4DportHigh
+        beg = rule.L4Match.DportLow
+        end = rule.L4Match.DportHigh
     return __get_random_port_in_range(beg, end)
 
 def GetUsableSPortFromPolicy(testcase, packet, args=None):
     rule = testcase.config.tc_rule
     pval = __get_module_args_value(testcase.module.args, 'sport')
     if pval == 'right':
-        return (rule.L4SportHigh + 1)
+        return (rule.L4Match.SportHigh + 1)
     if pval == 'left':
-        return (rule.L4SportLow - 1)
+        return (rule.L4Match.SportLow - 1)
     if pval == 'first':
         rule.Show()
-        return (rule.L4SportLow)
+        return (rule.L4Match.SportLow)
     if pval == 'last':
         rule.Show()
-        return (rule.L4SportHigh)
+        return (rule.L4Match.SportHigh)
     return __get_port_from_rule(rule)
 
 def GetUsableDPortFromPolicy(testcase, packet, args=None):
     rule = testcase.config.tc_rule
     pval = __get_module_args_value(testcase.module.args, 'dport')
     if pval == 'right':
-        return (rule.L4DportHigh + 1)
+        return (rule.L4Match.DportHigh + 1)
     if pval == 'left':
-        return (rule.L4DportLow - 1)
+        return (rule.L4Match.DportLow - 1)
     if pval == 'first':
-        return (rule.L4DportLow)
+        return (rule.L4Match.DportLow)
     if pval == 'last':
-        return (rule.L4DportHigh)
+        return (rule.L4Match.DportHigh)
     return __get_port_from_rule(rule, False)
 
 def GetInvalidMPLSTag(testcase, packet, args=None):

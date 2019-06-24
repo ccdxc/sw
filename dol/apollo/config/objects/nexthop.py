@@ -53,7 +53,7 @@ class NexthopObject(base.ConfigObjectBase):
 
 class NexthopObjectClient:
     def __init__(self):
-        self.__objs = []
+        self.__objs = dict()
         self.__v4objs = {}
         self.__v6objs = {}
         self.__v4iter = {}
@@ -61,17 +61,20 @@ class NexthopObjectClient:
         return
 
     def Objects(self):
-        return self.__objs
+        return self.__objs.values()
+
+    def GetNexthopObject(self, nexthopid):
+        return self.__objs.get(nexthopid, None)
 
     def GetV4NexthopId(self, vpcid):
-        if len(self.__objs):
+        if len(self.__objs.values()):
             assert(len(self.__v4objs[vpcid]) != 0)
             return self.__v4iter[vpcid].rrnext().NexthopId
         else:
             return 0
 
     def GetV6NexthopId(self, vpcid):
-        if len(self.__objs):
+        if len(self.__objs.values()):
             assert(len(self.__v6objs[vpcid]) != 0)
             return self.__v6iter[vpcid].rrnext().NexthopId
         else:
@@ -105,7 +108,7 @@ class NexthopObjectClient:
         for nh_spec_obj in vpc_spec_obj.nexthop:
             for c in range(nh_spec_obj.count):
                 obj = NexthopObject(parent, nh_spec_obj)
-                self.__objs.append(obj)
+                self.__objs.update({obj.NexthopId: obj})
                 if __is_v4stack():
                     self.__v4objs[vpcid].append(obj)
                 if __is_v6stack():
@@ -119,7 +122,7 @@ class NexthopObjectClient:
 
     def CreateObjects(self):
         if utils.IsPipelineArtemis():
-            msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
+            msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
             api.client.Create(api.ObjectTypes.NEXTHOP, msgs)
         return
 

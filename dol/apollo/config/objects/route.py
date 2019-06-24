@@ -28,6 +28,8 @@ class RouteObject(base.ConfigObjectBase):
             self.NexthopId = nexthop.client.GetV4NexthopId(parent.VPCId)
         self.GID('RouteTbl%d'%self.RouteTblId)
         self.routes = routes
+        if utils.IsPipelineArtemis():
+            self.Nexthop = nexthop.client.GetNexthopObject(self.NexthopId)
         self.Tunnel = tunobj
         self.TunIPAddr = tunobj.RemoteIPAddr
         self.TunIP = str(self.TunIPAddr)

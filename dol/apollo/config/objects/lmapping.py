@@ -52,6 +52,7 @@ class LocalMappingObject(base.ConfigObjectBase):
         else:
             self.ProviderIPAddr = next(resmgr.ProviderIpV4AddressAllocator)
             self.TunFamily =  'IPV4'
+        self.SvcMappingIP = str(self.SvcMappingIPAddr) # for testspec
         self.ProviderIP = str(self.ProviderIPAddr) # for testspec
         if self.PublicIPAddr is not None:
             self.PublicIP = str(self.PublicIPAddr) # for testspec

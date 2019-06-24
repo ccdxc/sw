@@ -1,41 +1,84 @@
 #! /usr/bin/python3
 import pdb
+import enum
 import ipaddress
 import random
 import socket
 
+from infra.common.logging import logger
 import infra.config.base as base
-import apollo.config.resmgr as resmgr
+
+from apollo.config.store import Store
 import apollo.config.agent.api as api
-import types_pb2 as types_pb2
-import policy_pb2 as policy_pb2
+import apollo.config.resmgr as resmgr
 import apollo.config.objects.lmapping as lmapping
 import apollo.config.utils as utils
 
-from infra.common.logging import logger
-from apollo.config.store import Store
+import policy_pb2 as policy_pb2
+import types_pb2 as types_pb2
 
-class RuleObject:
-    def __init__(self, stateful, l3match, proto, prefix, l4match, sportlow, sporthigh, dportlow, dporthigh):
-        self.Stateful = stateful
-        self.L3Match = l3match
-        self.Proto = proto
-        self.Prefix = prefix
-        self.L4Match = l4match
-        self.L4SportLow = sportlow
-        self.L4SportHigh = sporthigh
-        self.L4DportLow = dportlow
-        self.L4DportHigh = dporthigh
+class L3MatchType(enum.IntEnum):
+    PFX = 0
+    PFXRANGE = 1
+    TAG = 2
+
+class L4MatchObject:
+    def __init__(self, valid=False, sportlow=0, sporthigh=65535,\
+                 dportlow=0, dporthigh=65535, icmptype=0, icmpcode=0):
+        self.valid = valid
+        self.SportLow = sportlow
+        self.SportHigh = sporthigh
+        self.DportLow = dportlow
+        self.DportHigh = dporthigh
+        self.IcmpType = icmptype
+        self.IcmpCode = icmpcode
 
     def Show(self):
-        if self.L3Match:
-            logger.info("- Prefix:%s Proto:%d" %(self.Prefix, self.Proto))
-        else:
-            logger.info("- No L3Match")
-        if self.L4Match:
-            logger.info("- SrcPortRange:%d - %d DstPortRange:%d - %d" %(self.L4SportLow, self.L4SportHigh, self.L4DportLow, self.L4DportHigh))
+        if self.valid:
+            logger.info("- SrcPortRange:%d - %d DstPortRange:%d - %d" %(self.SportLow, self.SportHigh, self.DportLow, self.DportHigh))
         else:
             logger.info("- No L4Match")
+
+class L3MatchObject:
+    def __init__(self, valid=False, proto=0, srcpfx=None, dstpfx=None,\
+                 srciplow=None, srciphigh=None, dstiplow=None,\
+                 dstiphigh=None, srctag=0, dsttag=0,\
+                 srctype=L3MatchType.PFX, dsttype=L3MatchType.PFX):
+        self.valid = valid
+        self.Proto = proto
+        self.SrcType = srctype
+        self.DstType = dsttype
+        self.SrcPrefix = srcpfx
+        self.DstPrefix = dstpfx
+        self.SrcIPLow = srciplow
+        self.SrcIPHigh = srciphigh
+        self.DstIPLow = dstiplow
+        self.DstIPHigh = dstiphigh
+        self.SrcTag = srctag
+        self.DstTag = dsttag
+
+    def Show(self):
+        if self.valid:
+            logger.info("- Proto:%d SrcType:%d DstType:%d" %(self.Proto, self.SrcType, self.DstType))
+            logger.info("- SrcPrefix:%s DstPrefix:%s" %(self.SrcPrefix, self.DstPrefix))
+            logger.info("- SrcIPLow:%s SrcIPHigh:%s" %(self.SrcIPLow, self.SrcIPHigh))
+            logger.info("- DstIPLow:%s DstIPHigh:%s" %(self.DstIPLow, self.DstIPHigh))
+            logger.info("- SrcTag:%s DstTag:%s" %(self.SrcTag, self.DstTag))
+        else:
+            logger.info("- No L3Match")
+
+class RuleObject:
+    def __init__(self, stateful, l3match, l4match, priority=0, action=policy_pb2.SECURITY_RULE_ACTION_ALLOW):
+        self.Stateful = stateful
+        self.L3Match = l3match
+        self.L4Match = l4match
+        self.Priority = priority
+        self.Action = action
+
+    def Show(self):
+        logger.info("- Stateful:%s Priority:%d Action:%d" %(self.Stateful, self.Priority, self.Action))
+        self.L3Match.Show()
+        self.L4Match.Show()
 
 class PolicyObject(base.ConfigObjectBase):
     def __init__(self, parent, af, direction, rules, policytype, overlaptype):
@@ -63,19 +106,27 @@ class PolicyObject(base.ConfigObjectBase):
     def FillRuleSpec(self, spec, rule):
         specrule = spec.Rules.add()
         specrule.Stateful = rule.Stateful
-        if rule.L4Match:
-            specrule.Match.L4Match.Ports.SrcPortRange.PortLow = rule.L4SportLow
-            specrule.Match.L4Match.Ports.SrcPortRange.PortHigh = rule.L4SportHigh
-            specrule.Match.L4Match.Ports.DstPortRange.PortLow = rule.L4DportLow
-            specrule.Match.L4Match.Ports.DstPortRange.PortHigh = rule.L4DportHigh
-        if rule.L3Match:
-            specrule.Match.L3Match.Protocol = rule.Proto
-            if self.Direction == types_pb2.RULE_DIR_INGRESS:
-                if rule.Prefix is not None:
-                    utils.GetRpcIPPrefix(rule.Prefix, specrule.Match.L3Match.SrcPrefix)
-            else:
-                if rule.Prefix is not None:
-                    utils.GetRpcIPPrefix(rule.Prefix, specrule.Match.L3Match.DstPrefix)
+        specrule.Priority = rule.Priority
+        specrule.Action = rule.Action
+        l4match = rule.L4Match
+        if l4match and l4match.valid:
+            specrule.Match.L4Match.Ports.SrcPortRange.PortLow = l4match.SportLow
+            specrule.Match.L4Match.Ports.SrcPortRange.PortHigh = l4match.SportHigh
+            specrule.Match.L4Match.Ports.DstPortRange.PortLow = l4match.DportLow
+            specrule.Match.L4Match.Ports.DstPortRange.PortHigh = l4match.DportHigh
+        l3match = rule.L3Match
+        if l3match and l3match.valid:
+            specrule.Match.L3Match.Protocol = l3match.Proto
+            if l3match.SrcIPLow and l3match.SrcIPHigh:
+                utils.GetRpcIPRange(l3match.SrcIPLow, l3match.SrcIPHigh, specrule.Match.L3Match.SrcRange)
+            if l3match.DstIPLow and l3match.DstIPHigh:
+                utils.GetRpcIPRange(l3match.DstIPLow, l3match.DstIPHigh, specrule.Match.L3Match.DstRange)
+            specrule.Match.L3Match.SrcTag = l3match.SrcTag
+            specrule.Match.L3Match.DstTag = l3match.DstTag
+            if l3match.SrcPrefix is not None:
+                utils.GetRpcIPPrefix(l3match.SrcPrefix, specrule.Match.L3Match.SrcPrefix)
+            if l3match.DstPrefix is not None:
+                utils.GetRpcIPPrefix(l3match.DstPrefix, specrule.Match.L3Match.DstPrefix)
 
     def GetGrpcCreateMessage(self):
         grpcmsg = policy_pb2.SecurityPolicyRequest()
@@ -111,12 +162,20 @@ class PolicyObject(base.ConfigObjectBase):
             return None
         elif numrules == 1:
             rule = None
-            if not utils.isDefaultRoute(rules[0].Prefix):
+            if self.Direction == types_pb2.RULE_DIR_INGRESS:
+                pfx = rules[0].L3Match.SrcPrefix
+            else:
+                pfx = rules[0].L3Match.DstPrefix
+            if not utils.isDefaultRoute(pfx):
                 rule = rules[0]
             return rule
         while True:
             rule = random.choice(rules)
-            if not utils.isDefaultRoute(rule.Prefix):
+            if self.Direction == types_pb2.RULE_DIR_INGRESS:
+                pfx = rule.L3Match.SrcPrefix
+            else:
+                pfx = rule.L3Match.DstPrefix
+            if not utils.isDefaultRoute(pfx):
                 break
         return rule
 
@@ -124,6 +183,7 @@ class PolicyObject(base.ConfigObjectBase):
         obj.localmapping = self.l_obj
         obj.policy = self
         obj.route = self.l_obj.VNIC.SUBNET.V6RouteTable if self.AddrFamily == 'IPV6' else self.l_obj.VNIC.SUBNET.V4RouteTable
+        obj.tunnel = obj.route.Tunnel
         obj.hostport = utils.PortTypes.HOST
         obj.switchport = utils.PortTypes.SWITCH
         obj.devicecfg = Store.GetDevice()
@@ -199,51 +259,99 @@ class PolicyObjectClient:
             return False
 
         def __get_l4_rule(af, rulespec):
-            sportlow = rulespec.sportlow if hasattr(rulespec, 'sportlow') else 0
-            dportlow = rulespec.dportlow if hasattr(rulespec, 'dportlow') else 0
-            sporthigh = rulespec.sporthigh if hasattr(rulespec, 'sporthigh') else 65535
-            dporthigh = rulespec.dporthigh if hasattr(rulespec, 'dporthigh') else 65535
-            if hasattr(rulespec, 'sportlow') or hasattr(rulespec, 'dportlow'):
-                # set l4match if topo has any of l4 port info
-                l4match = True
-            else:
-                l4match = False
-            return l4match, sportlow, sporthigh, dportlow, dporthigh
+            sportlow = getattr(rulespec, 'sportlow', 0)
+            dportlow = getattr(rulespec, 'dportlow', 0)
+            sporthigh = getattr(rulespec, 'sporthigh', 65535)
+            dporthigh = getattr(rulespec, 'dporthigh', 65535)
+            icmptype = getattr(rulespec, 'icmptype', 0)
+            icmpcode = getattr(rulespec, 'icmpcode', 0)
+            l4match = any([sportlow, sporthigh, dportlow, dporthigh, icmptype, icmpcode])
+            obj = L4MatchObject(l4match, sportlow, sporthigh, dportlow, dporthigh, icmptype, icmpcode)
+            return obj
 
         def __get_l3_proto_from_rule(rulespec):
-            proto = 0
-            if hasattr(rulespec, 'protocol'):
-                protocol = rulespec.protocol
-                proto = socket.getprotobyname(protocol)
+            proto = getattr(rulespec, 'protocol', 0)
+            if proto:
+                proto = socket.getprotobyname(proto)
             return proto
 
-        def __get_l3_pfx_from_rule(af, rulespec):
+        def __get_l3_match_type(rulespec, attr):
+            matchtype = L3MatchType.PFX
+            if hasattr(rulespec, attr):
+                matchval = getattr(rulespec, attr)
+                if matchval == "pfxrange":
+                    matchtype = L3MatchType.PFXRANGE
+                elif matchval == "tag":
+                    matchtype = L3MatchType.TAG
+            return matchtype
+
+        def __get_l3_match_type_from_rule(rulespec):
+            srctype = __get_l3_match_type(rulespec, 'srctype')
+            dsttype = __get_l3_match_type(rulespec, 'dsttype')
+            return srctype, dsttype
+
+        def __get_pfx_from_rule(af, rulespec, attr):
             prefix = None
             if af == utils.IP_VERSION_4:
-                if hasattr(rulespec, 'v4pfx'):
-                    prefix = rulespec.v4pfx
+                prefix = getattr(rulespec, 'v4' + attr, None)
             else:
-                if hasattr(rulespec, 'v6pfx'):
-                    prefix = rulespec.v6pfx
+                prefix = getattr(rulespec, 'v6' + attr, None)
             if prefix is not None:
                 prefix = ipaddress.ip_network(prefix.replace('\\', '/'))
             return prefix
 
+        def __get_l3_pfx_from_rule(af, rulespec):
+            pfx = __get_pfx_from_rule(af, rulespec, 'pfx')
+            srcpfx = dstpfx = pfx
+            pfx = __get_pfx_from_rule(af, rulespec, 'srcpfx')
+            if pfx is not None:
+                srcpfx = pfx
+            pfx = __get_pfx_from_rule(af, rulespec, 'dstpfx')
+            if pfx is not None:
+                dstpfx = pfx
+            return srcpfx, dstpfx
+
+        def __get_l3_pfx_range_from_rule(af, rulespec):
+            srciplow = __get_pfx_from_rule(af, rulespec, 'srciplow')
+            srciphigh = __get_pfx_from_rule(af, rulespec, 'srciphigh')
+            dstiplow = __get_pfx_from_rule(af, rulespec, 'dstiplow')
+            dstiphigh = __get_pfx_from_rule(af, rulespec, 'dstiphigh')
+            return srciplow, srciphigh, dstiplow, dstiphigh
+
+        def __get_l3_tag_from_rule(af, rulespec):
+            srctag = getattr(rulespec, 'srctag', 0)
+            dsttag = getattr(rulespec, 'dsttag', 0)
+            return srctag, dsttag
+
         def __get_l3_rule(af, rulespec):
             proto = __get_l3_proto_from_rule(rulespec)
-            prefix = __get_l3_pfx_from_rule(af, rulespec)
-            l3match = False if prefix is None else True
-            return l3match, proto, prefix
+            srctype, dsttype = __get_l3_match_type_from_rule(rulespec)
+            srcpfx, dstpfx = __get_l3_pfx_from_rule(af, rulespec)
+            srciplow, srciphigh, dstiplow, dstiphigh = __get_l3_pfx_range_from_rule(af, rulespec)
+            srctag, dsttag = __get_l3_tag_from_rule(af, rulespec)
+            l3match = any([proto, srcpfx, dstpfx, srciplow, srciphigh, dstiplow, dstiphigh, srctag, dsttag])
+            obj = L3MatchObject(l3match, proto, srcpfx, dstpfx, srciplow, srciphigh, dstiplow, dstiphigh, srctag, dsttag, srctype, dsttype)
+            return obj
+
+        def __get_rule_action(rulespec):
+            actionVal = getattr(rulespec, 'action', None)
+            if actionVal == "deny":
+                action = policy_pb2.SECURITY_RULE_ACTION_DENY
+            else:
+                action = policy_pb2.SECURITY_RULE_ACTION_ALLOW
+            return action
 
         def __get_rules(af, policyspec):
             rules = []
             if not hasattr(policyspec, 'rule'):
                 return rules
             for rulespec in policyspec.rule:
-                stateful = rulespec.stateful
-                l4match, sportlow, sporthigh, dportlow, dporthigh = __get_l4_rule(af, rulespec)
-                l3match, proto, prefix = __get_l3_rule(af, rulespec)
-                rule = RuleObject(stateful, l3match, proto, prefix, l4match, sportlow, sporthigh, dportlow, dporthigh)
+                stateful = getattr(rulespec, 'stateful', False)
+                priority = getattr(rulespec, 'priority', 0)
+                l4match = __get_l4_rule(af, rulespec)
+                l3match = __get_l3_rule(af, rulespec)
+                action = __get_rule_action(rulespec)
+                rule = RuleObject(stateful, l3match, l4match, priority, action)
                 rules.append(rule)
             return rules
 
@@ -301,8 +409,7 @@ class PolicyObjectClient:
                 if policytype == 'default':
                     __add_default_policies(vpc_spec_obj, policy_spec_obj)
                 else:
-                    overlaptype = policy_spec_obj.overlaptype if \
-                        hasattr(policy_spec_obj, 'overlaptype') else None
+                    overlaptype = getattr(policy_spec_obj, 'overlaptype', None)
                     __add_user_specified_policy(policy_spec_obj, \
                                                 policytype, overlaptype)
 

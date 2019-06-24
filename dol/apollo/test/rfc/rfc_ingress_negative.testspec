@@ -30,8 +30,7 @@ packets:
     - packet:
         id          : FROM_SWITCH_PKT # Input packet from network
         clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      :
-            - ref://factory/packets/id=ENCAP_MPLS
+        encaps      : callback://networking/packets/GetPacketEncapFromMapping
         headers     :
             outereth:
                 src     : 00:02:0b:0a:0d:0e
