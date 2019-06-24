@@ -277,6 +277,7 @@ type CtrlerIntf interface {
 	GetNetagentUptime() (string, error)                                         // Returns NetAgent Uptime
 	CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp bool) error    // API for TSAgent and TPAgent to use to create dependent objects
 	DeleteLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp bool) error    // API for TSAgent and TPAgent to delete dependent objects
+	PurgeConfigs() error                                                        // Deletes all netagent configs. This is called on decommission workflow/switch to network managed mode
 }
 
 // PluginIntf is the API provided by the netagent to plugins

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	gogoproto "github.com/gogo/protobuf/types"
@@ -246,5 +247,42 @@ func (na *Nagent) GetUUID() error {
 
 	na.NodeUUID = uuid
 	log.Infof("Got UUID:. %v", na.NodeUUID)
+	return nil
+}
+
+// PurgeConfigs deletes all netagent configs. This is called during decommission workflow where the NAPLES is moved to host managed mode
+func (na *Nagent) PurgeConfigs() error {
+	// Perform ordered deletes of venice objects
+	// Apps, SGPolicies, Endpoints,  Networks
+	for _, app := range na.ListApp() {
+		if err := na.DeleteApp(app.Tenant, app.Namespace, app.Name); err != nil {
+			log.Errorf("Failed to delete the App. Err: %v", err)
+		}
+	}
+
+	for _, sgp := range na.ListSGPolicy() {
+		if err := na.DeleteSGPolicy(sgp.Tenant, sgp.Namespace, sgp.Name); err != nil {
+			log.Errorf("Failed to delete the SG Policy. Err: %v", err)
+		}
+	}
+
+	for _, ep := range na.ListEndpoint() {
+		if strings.Contains(ep.Name, "_internal") {
+			continue
+		}
+		if err := na.DeleteEndpoint(ep.Tenant, ep.Namespace, ep.Name); err != nil {
+			log.Errorf("Failed to delete the endpoint. Err: %v", err)
+		}
+	}
+
+	for _, nw := range na.ListNetwork() {
+		if strings.Contains(nw.Name, "_internal") {
+			continue
+		}
+		if err := na.DeleteNetwork(nw.Tenant, nw.Namespace, nw.Name); err != nil {
+			log.Errorf("Failed to delete the network. Err: %v", err)
+		}
+	}
+
 	return nil
 }

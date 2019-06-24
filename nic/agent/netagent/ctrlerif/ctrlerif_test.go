@@ -749,6 +749,11 @@ func (ag *fakeAgent) DeleteLateralNetAgentObjects(mgmtIP, destIP string, tunnelO
 	return nil
 }
 
+// PurgeConfigs deletes all netagent configs. stubbed to satisfy the interface
+func (ag *fakeAgent) PurgeConfigs() error {
+	return nil
+}
+
 type fakeRPCServer struct {
 	sync.Mutex
 	grpcServer  *rpckit.RPCServer
