@@ -113,13 +113,6 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 			// This has to be done in a separate goroutine because this function is executing in the context of
 			// the watcher and the watcher has to terminate for the cleanup to be complete
 			go func() {
-				err = n.StopManagedMode()
-				if err != nil {
-					log.Errorf("Error stopping NIC managed mode: %v", err)
-				}
-				n.Add(1)
-				defer n.Done()
-
 				// wipe out existing roots of trust
 				err = utils.ClearNaplesTrustRoots()
 				if err != nil {
@@ -133,19 +126,29 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 				if decommission {
 					// NIC has been decommissioned by user. Go back to classic mode.
 					log.Infof("SmartNIC %s has been decommissioned, triggering change to HOST managed mode", nic.ObjectMeta.Name)
+					cfg := nmd.Naples{}
 					// Update config status to reflect the mode change
-					n.config.Spec.Mode = nmd.MgmtMode_HOST.String()
-					n.config.Status.Mode = nmd.MgmtMode_HOST.String()
-					n.config.Status.AdmissionPhase = cmd.SmartNICStatus_DECOMMISSIONED.String()
-					n.config.Status.AdmissionPhaseReason = "SmartNIC management mode changed to HOST"
+					cfg.Spec.Mode = nmd.MgmtMode_HOST.String()
+					cfg.Spec.NaplesProfile = "default"
 					err = n.StartNMDRestServer()
 					if err != nil {
 						log.Errorf("Error starting NIC managed mode: %v", err)
 					}
-					if err := n.handleHostModeTransition(); err != nil {
+					n.config.Status.AdmissionPhase = cmd.SmartNICStatus_DECOMMISSIONED.String()
+					n.config.Status.AdmissionPhaseReason = "SmartNIC management mode changed to HOST"
+					if err := n.UpdateNaplesConfig(cfg); err != nil {
 						log.Errorf("Failed to revert to host managed mode during decommissioning")
 					}
+					log.Infof("Naples successfully decommissioned and moved to HOST mode.")
 				} else {
+					err = n.StopManagedMode()
+					if err != nil {
+						log.Errorf("Failed to stop managed mode. Err : %v", err)
+					}
+
+					n.Add(1)
+					defer n.Done()
+
 					// Re-init admission. TODO move this as native fsm state
 					log.Infof("SmartNIC %s has been de-admitted from cluster", nic.ObjectMeta.Name)
 					// Update CMD Client with the new resolvers obtained statically

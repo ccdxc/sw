@@ -677,6 +677,7 @@ func (n *NMD) StopManagedMode() error {
 		n.tlsProvider = nil
 	}
 
+	log.Infof("Stopping managed mode done.")
 	return nil
 }
 

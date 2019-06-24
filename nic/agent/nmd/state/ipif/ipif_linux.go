@@ -67,8 +67,7 @@ func (c *IPClient) DoStaticConfig() (string, error) {
 		}
 		err := netlink.RouteAdd(defaultRoute)
 		if err != nil {
-			log.Errorf("Failed to add default gw %v for the interface %v. Err: %v", ipConfig.DefaultGW, c.intf, err)
-			return "", err
+			log.Errorf("Failed to add default gw %v for the interface %v. Usually happens when the default gateway is already setup. Err: %v", ipConfig.DefaultGW, c.intf, err)
 		}
 	}
 
