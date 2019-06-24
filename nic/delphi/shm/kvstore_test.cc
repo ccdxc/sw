@@ -273,8 +273,8 @@ TEST_F(KvstoreTest, DpstatsTest) {
     // create a dpstats entry in table
     const char *key = "test_key";
     uint64_t   pal_addr = 0x1234567812345678ll;
-    err = tbl->CreateDpstats(key, strlen(key), pal_addr, 3000);
-    ASSERT_TRUE(err.IsOK()) << "error creating key";
+    auto valptr = tbl->CreateDpstats(key, strlen(key), pal_addr, 3000);
+    ASSERT_TRUE(valptr != NULL) << "find failed";
 
     // get the key
     uint64_t *gptr = (uint64_t *)tbl->Find(key, strlen(key));

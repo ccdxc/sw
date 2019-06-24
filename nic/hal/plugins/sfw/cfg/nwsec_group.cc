@@ -123,6 +123,7 @@ rule_stats_cb (rule_ctr_t *ctr, bool add)
     } else {
         auto rule_metrics_ptr = delphi::objects::RuleMetrics::Find(ctr->rule_key);
         if (rule_metrics_ptr != NULL) {
+            delphi::objects::RuleMetrics::Release(rule_metrics_ptr);
             rule_metrics_ptr->Delete(); 
         }
         g_rule_stats_indexer->free(ctr->stats_idx);

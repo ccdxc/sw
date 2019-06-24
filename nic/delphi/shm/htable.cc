@@ -116,12 +116,12 @@ void * TableMgr::Create(const char *key, int16_t keylen, int16_t val_len) {
 }
 
 // CreateDpstats creates hash entry pointing to datapath stats in PAL memory
-error TableMgr::CreateDpstats(const char *key, int16_t keylen, uint64_t pal_addr,
+char * TableMgr::CreateDpstats(const char *key, int16_t keylen, uint64_t pal_addr,
                                int16_t val_len) {
     // basic validation
     if ((key == NULL) || (keylen <= 0) || (keylen > MAX_KEY_LEN)) {
         LogError("Invalid key {p} or keylen {}", key, keylen);
-        return error::New("Invalid key");
+        return NULL;
     }
 
     // check if the key already exists
@@ -129,14 +129,14 @@ error TableMgr::CreateDpstats(const char *key, int16_t keylen, uint64_t pal_addr
     void *val = this->Find(key, keylen);
     if (val != NULL) {
         this->Release(val); // so that we dont double ref count it
-        return error::OK();
+        return (char *)val;
     }
 
     // create hash entry
     ht_entry_t *entry = this->createHashEntry(key, keylen, sizeof(pal_addr));
     if (entry == NULL) {
         LogError("Error allocating space in shared memory");
-        return error::New("Error allocating space in shared memory");
+        return NULL;
     }
 
     // set ht_entry params
@@ -155,7 +155,7 @@ error TableMgr::CreateDpstats(const char *key, int16_t keylen, uint64_t pal_addr
     uint64_t *val_ptr = (uint64_t *)VAL_PTR_FROM_HASH_ENTRY(entry);
     *val_ptr = pal_addr;
 
-   return error::OK();
+   return (char *)VAL_PTR_FROM_HASH_ENTRY(entry);
 }
 
 // Publish atomically publishes an entry into hash table

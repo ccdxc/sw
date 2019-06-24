@@ -39,9 +39,9 @@ private:
     uint64_t                      pal_addr_;
 public:
     TestMetric(int32_t key, char *ptr);
-    TestMetric(int32_t key, uint64_t pal_addr);
+    TestMetric(int32_t key, char *ptr, uint64_t pal_addr);
     TestMetric(char *kptr, char *vptr) : TestMetric(*(int32_t *)kptr, vptr){ };
-    TestMetric(char *kptr, uint64_t pal_addr) : TestMetric(*(int32_t *)kptr, pal_addr){ };
+    TestMetric(char *kptr, char *ptr, uint64_t pal_addr) : TestMetric(*(int32_t *)kptr, ptr, pal_addr){ };
     int32_t GetKey() { return key_; };
     void * Raw() { return shm_ptr_; };
     delphi::metrics::CounterPtr RxCounter() { return rx_counter_; };
@@ -75,7 +75,7 @@ public:
             return make_shared<TestMetric>(*key, tbl_iter_.Value());
         } else {
             uint64_t pal_addr = *(uint64_t *)tbl_iter_.Value();
-            return make_shared<TestMetric>(*key, pal_addr);
+            return make_shared<TestMetric>(*key, tbl_iter_.Value(), pal_addr);
         }
     }
     inline bool IsNil() {
@@ -105,8 +105,9 @@ TestMetric::TestMetric(int32_t key, char *ptr) {
 }
 
 // TestMetric constructor
-TestMetric::TestMetric(int32_t key, uint64_t pal_addr) {
+TestMetric::TestMetric(int32_t key, char *valptr, uint64_t pal_addr) {
     key_ = key;
+    shm_ptr_ = valptr;
     pal_addr_ = pal_addr;
 
     // instantiate fields
@@ -171,11 +172,10 @@ TestMetricPtr TestMetric::NewDpTestMetric(int32_t key, uint64_t pal_addr) {
     static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->CreateTable("TestMetric", DEFAULT_METRIC_TBL_SIZE);
 
     // create an entry in hash table
-    auto err = tbl->CreateDpstats((char *)&key, sizeof(key), pal_addr, TestMetric::Size());
-    assert(err.IsOK());
+    char *shmptr = tbl->CreateDpstats((char *)&key, sizeof(key), pal_addr, TestMetric::Size());
 
     // return an instance of TestMetric
-    return make_shared<TestMetric>(key, pal_addr);
+    return make_shared<TestMetric>(key, shmptr, pal_addr);
 }
 
 // Find finds a metrics by key
@@ -209,7 +209,7 @@ TestMetricPtr TestMetric::FindDp(int32_t key) {
     }
 
     // return an instance of TestMetric
-    return make_shared<TestMetric>(key, *pal_addr);
+    return make_shared<TestMetric>(key, (char *)pal_addr, *pal_addr);
 }
 
 // Publish publishes a metric atomically

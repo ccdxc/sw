@@ -145,7 +145,7 @@ class TableMgr {
 public:
     TableMgr(htable_t *htable, DelphiShmPtr shm_ptr);
     void *Create(const char *key, int16_t keylen, int16_t val_len);   // create an entry for the key in hash table
-    error CreateDpstats(const char *key, int16_t keylen, uint64_t pal_addr, int16_t val_len);  // create an entry and point it to PAL memory
+    char * CreateDpstats(const char *key, int16_t keylen, uint64_t pal_addr, int16_t val_len);  // create an entry and point it to PAL memory
     error Publish(const char *key, int16_t keylen, const char *val, int16_t val_len); // atomically publish kev,val into hash table
     void *Find(const char *key, int16_t keylen);     // finds an entry by key
     uint64_t FindDpstats(const char *key, int16_t keylen); // find dpstats by key

@@ -240,9 +240,9 @@ public:
 
     {{if (.HasExtOption "delphi.singleton")}}
 	{{$msgName}}(char *ptr);
-        {{$msgName}}(uint64_t pal_addr);
-	{{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(vptr){ };
-	{{$msgName}}(char *kptr, uint64_t pal_addr) : {{$msgName}}(pal_addr){ };
+        {{$msgName}}(char *valptr, uint64_t pal_addr);
+	{{$msgName}}(char *kptr, char *valptr) : {{$msgName}}(valptr){ };
+	{{$msgName}}(char *kptr, char *valptr, uint64_t pal_addr) : {{$msgName}}(valptr, pal_addr){ };
     uint32_t GetKey() { return 0; };
       {{if $msg.HasExtOption "delphi.datapath_metrics" }}
     static {{$msgName}}Ptr New{{$msgName}}(uint64_t pal_addr);
@@ -257,16 +257,16 @@ public:
     {{range $fields}}
       {{if (eq .GetName "Key") }}
         {{ if .TypeIsMessage }}
-    {{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, char *ptr);
-    {{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, uint64_t pal_addr);
+    {{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, char *valptr);
+    {{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, char *valptr, uint64_t pal_addr);
     inline {{$pkgName}}::{{.GetCppTypeName}} get{{.GetCppTypeName}}FromPtr(char *kptr) {
         string keystr(kptr);
         {{$pkgName}}::{{.GetCppTypeName}} key;
         key.ParseFromString(keystr);
         return key;
     }
-    {{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(get{{.GetCppTypeName}}FromPtr(kptr), vptr){ };
-    {{$msgName}}(char *kptr, uint64_t pal_addr) : {{$msgName}}(get{{.GetCppTypeName}}FromPtr(kptr), pal_addr){ };
+    {{$msgName}}(char *kptr, char *valptr) : {{$msgName}}(get{{.GetCppTypeName}}FromPtr(kptr), valptr){ };
+    {{$msgName}}(char *kptr, char *valptr, uint64_t pal_addr) : {{$msgName}}(get{{.GetCppTypeName}}FromPtr(kptr), valptr, pal_addr){ };
     {{$pkgName}}::{{.GetCppTypeName}} GetKey() { return key_; };
           {{if $msg.HasExtOption "delphi.datapath_metrics" }}
     static {{$msgName}}Ptr New{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, uint64_t pal_addr);
@@ -277,10 +277,10 @@ public:
 	static {{$msgName}}Ptr Find({{$pkgName}}::{{.GetCppTypeName}} key);
         static void Release({{$msgName}}Ptr ptr);
         {{else}}
-    {{$msgName}}({{.GetCppTypeName}} key, char *ptr);
-    {{$msgName}}({{.GetCppTypeName}} key, uint64_t pal_addr);
-	{{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(*({{.GetCppTypeName}} *)kptr, vptr){ };
-	{{$msgName}}(char *kptr, uint64_t pal_addr) : {{$msgName}}(*({{.GetCppTypeName}} *)kptr, pal_addr){ };
+    {{$msgName}}({{.GetCppTypeName}} key, char *valptr);
+    {{$msgName}}({{.GetCppTypeName}} key, char *valptr, uint64_t pal_addr);
+	{{$msgName}}(char *kptr, char *valptr) : {{$msgName}}(*({{.GetCppTypeName}} *)kptr, valptr){ };
+	{{$msgName}}(char *kptr, char *valptr, uint64_t pal_addr) : {{$msgName}}(*({{.GetCppTypeName}} *)kptr, valptr, pal_addr){ };
     {{.GetCppTypeName}} GetKey() { return key_; };
           {{if $msg.HasExtOption "delphi.datapath_metrics" }}
     static {{$msgName}}Ptr New{{$msgName}}({{.GetCppTypeName}} key, uint64_t pal_addr);
@@ -317,7 +317,7 @@ public:
                     return make_shared<{{$msgName}}>(tbl_iter_.Value());
                 } else {
                     uint64_t pal_addr = *(uint64_t *)tbl_iter_.Value();
-                    return make_shared<{{$msgName}}>(pal_addr);
+                    return make_shared<{{$msgName}}>(tbl_iter_.Value(), pal_addr);
                 }
     {{end}}
     {{$fields := .Fields}}
@@ -333,7 +333,7 @@ public:
             return make_shared<{{$msgName}}>(key, tbl_iter_.Value());
         } else {
             uint64_t pal_addr = *(uint64_t *)tbl_iter_.Value();
-            return make_shared<{{$msgName}}>(key, pal_addr);
+            return make_shared<{{$msgName}}>(key, tbl_iter_.Value(), pal_addr);
         }
         {{else}}
         {{.GetCppTypeName}} *key = ({{.GetCppTypeName}} *)tbl_iter_.Key();
@@ -341,7 +341,7 @@ public:
             return make_shared<{{$msgName}}>(*key, tbl_iter_.Value());
         } else {
             uint64_t pal_addr = *(uint64_t *)tbl_iter_.Value();
-            return make_shared<{{$msgName}}>(*key, pal_addr);
+            return make_shared<{{$msgName}}>(*key, tbl_iter_.Value(), pal_addr);
         }
         {{end}}
 
@@ -499,19 +499,21 @@ vector<{{.GetName}}Ptr> {{.GetName}}::List(SdkPtr sdk) {
 
 // {{.GetName}} metrics constructor
     {{if (.HasExtOption "delphi.singleton")}}
-{{$msgName}}::{{$msgName}}(uint64_t pal_addr) {
+{{$msgName}}::{{$msgName}}(char *valptr, uint64_t pal_addr) {
     pal_addr_ = pal_addr;
+    shm_ptr_ = valptr;
     key_ = 0;
     {{end}}
     {{$fields := .Fields}}
     {{range $fields}}
       {{if (eq .GetName "Key") }}
 	{{ if .TypeIsMessage }}
-{{$msgName}}::{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, uint64_t pal_addr) {
+{{$msgName}}::{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, char *valptr, uint64_t pal_addr) {
 	{{else}}
-{{$msgName}}::{{$msgName}}({{.GetCppTypeName}} key, uint64_t pal_addr) {
+{{$msgName}}::{{$msgName}}({{.GetCppTypeName}} key, char *valptr, uint64_t pal_addr) {
 	{{end}}
     pal_addr_ = pal_addr;
+    shm_ptr_ = valptr;
     key_ = key;
       {{end}}
 
@@ -568,11 +570,11 @@ delphi::error  {{.GetName}}::CreateTable() {
 
     // create an entry in hash table
     uint32_t key = 0;
-    auto err = tbl->CreateDpstats((char *)&key, sizeof(key), pal_addr, {{$msgName}}::Size());
-    assert(err.IsOK());
+    char *valptr= tbl->CreateDpstats((char *)&key, sizeof(key), pal_addr, {{$msgName}}::Size());
+    assert(valptr != NULL);
 
     // return an instance of {{$msgName}}
-    return make_shared<{{$msgName}}>(pal_addr);
+    return make_shared<{{$msgName}}>(valptr, pal_addr);
 }
       {{else}}
 // New{{.GetName}} creates a new metrics instance
@@ -609,11 +611,11 @@ delphi::error  {{.GetName}}::CreateTable() {
 
     // create an entry in hash table
     auto keystr = key.SerializeAsString();
-    auto err = tbl->CreateDpstats((char *)keystr.c_str(), keystr.length(), pal_addr, {{$msgName}}::Size());
-    assert(err.IsOK());
+    char *valptr = tbl->CreateDpstats((char *)keystr.c_str(), keystr.length(), pal_addr, {{$msgName}}::Size());
+    assert(valptr != NULL);
 
     // return an instance of {{$msgName}}
-    return make_shared<{{$msgName}}>(key, pal_addr);
+    return make_shared<{{$msgName}}>(key, valptr, pal_addr);
 }
           {{else}}
 // New{{.GetName}} creates a new metrics instance
@@ -646,11 +648,11 @@ delphi::error  {{.GetName}}::CreateTable() {
     static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->CreateTable("{{$msgName}}", DEFAULT_METRIC_TBL_SIZE);
 
     // create an entry in hash table
-    auto err = tbl->CreateDpstats((char *)&key, sizeof(key), pal_addr, {{$msgName}}::Size());
-    assert(err.IsOK());
+    char *valptr = tbl->CreateDpstats((char *)&key, sizeof(key), pal_addr, {{$msgName}}::Size());
+    assert(valptr != NULL);
 
     // return an instance of {{$msgName}}
-    return make_shared<{{$msgName}}>(key, pal_addr);
+    return make_shared<{{$msgName}}>(key, valptr, pal_addr);
 }
           {{else}}
 // New{{.GetName}} creates a new metrics instance
@@ -705,7 +707,7 @@ delphi::error {{$msgName}}::Publish({{$msgName | ToLower}}_t *mptr) {
     }
 
     // return an instance of {{$msgName}}
-    return make_shared<{{$msgName}}>(*pal_addr);
+    return make_shared<{{$msgName}}>((char *)pal_addr, *pal_addr);
       {{else}}
     char *shmptr = (char *)tbl->Find((char *)&key, sizeof(key));
     if (shmptr == NULL) {
@@ -764,7 +766,7 @@ delphi::error {{$msgName}}::Publish({{$pkgName}}::{{.GetCppTypeName}} key, {{$ms
     }
 
     // return an instance of {{$msgName}}
-    return make_shared<{{$msgName}}>(key, *pal_addr);
+    return make_shared<{{$msgName}}>(key, (char *)pal_addr, *pal_addr);
           {{else}}
     char *shmptr = (char *)tbl->Find((char *)keystr.c_str(), keystr.length());
     if (shmptr == NULL) {
@@ -816,7 +818,7 @@ delphi::error {{$msgName}}::Publish({{.GetCppTypeName}} key, {{$msgName | ToLowe
     }
 
     // return an instance of {{$msgName}}
-    return make_shared<{{$msgName}}>(key, *pal_addr);
+    return make_shared<{{$msgName}}>(key, (char *)pal_addr, *pal_addr);
           {{else}}
     char *shmptr = (char *)tbl->Find((char *)&key, sizeof(key));
     if (shmptr == NULL) {

@@ -55,7 +55,7 @@ class MetricsFactory
 {
 public:
     virtual DelphiMetricsPtr Create(char *key, char *val) = 0;
-    virtual DelphiMetricsPtr Create(char *key, uint64_t pal_addr) = 0;
+    virtual DelphiMetricsPtr Create(char *key, char *val, uint64_t pal_addr) = 0;
 };
 
 
@@ -70,8 +70,8 @@ public:
         delphi::metrics::DelphiMetricsPtr Create(char *key, char *val) { \
             return make_shared<klass>(key, val); \
         } \
-        delphi::metrics::DelphiMetricsPtr Create(char *key, uint64_t pal_addr) { \
-            return make_shared<klass>(key, pal_addr); \
+        delphi::metrics::DelphiMetricsPtr Create(char *key, char *val, uint64_t pal_addr) { \
+            return make_shared<klass>(key, val, pal_addr); \
         } \
     }; \
     static klass##MetricsFactory global_##klass##MetricsFactory;
@@ -105,12 +105,12 @@ public:
 
         return fctry->Create(key, val);
     }
-    static inline DelphiMetricsPtr Create(const string &name, char *key, uint64_t pal_addr) {
+    static inline DelphiMetricsPtr Create(const string &name, char *key, char *val, uint64_t pal_addr) {
         map<string, MetricsFactory*> fctries = *(DelphiMetrics::GetFactoryMap());
         MetricsFactory *fctry = fctries[name];
         assert(fctry != NULL);
 
-        return fctry->Create(key, pal_addr);
+        return fctry->Create(key, val, pal_addr);
     }
 };
 
@@ -137,7 +137,7 @@ public:
             return DelphiMetrics::Create(met_name_, tbl_iter_.Key(), tbl_iter_.Value());
         } else {
             uint64_t pal_addr = *(uint64_t *)tbl_iter_.Value();
-            return DelphiMetrics::Create(met_name_, tbl_iter_.Key(), pal_addr);
+            return DelphiMetrics::Create(met_name_, tbl_iter_.Key(), tbl_iter_.Value(), pal_addr);
         }
     }
     inline bool IsNil() {
