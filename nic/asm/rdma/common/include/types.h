@@ -1321,7 +1321,8 @@ struct rdma_aq_feedback_create_qp_ext_t {
     rq_spec      :  1;
     qp_privileged:  1;
     log_pmtu     :  5;
-    rsvd         : 16;
+    access_flags :  3;
+    rsvd         : 13;
 };
 
 struct rdma_aq_feedback_modify_qp_ext_t {
@@ -1706,15 +1707,14 @@ struct aqwqe_t {
                     rq_cmb:1;
                     sq_cmb:1;
                     sqd_notify:1;
-                    pad2:2;
+                    sq_draining:1;
+                    remote_previleged:1;
                     rq_spec:1;
                     sq_spec:1;
-                    pad3:3;
-                    access_mw_bind:1;
+                    pad3:5;
                     access_remote_atomic:1;
                     access_remote_read:1;
                     access_remote_write:1;
-                    access_local_write:1;
                 };
             };
             sq_cq_id: 32;

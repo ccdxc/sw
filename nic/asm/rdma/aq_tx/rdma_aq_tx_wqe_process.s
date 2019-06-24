@@ -498,7 +498,7 @@ qp_no_skip_dma_pt:
     phvwr.c2    p.p4_to_p4plus.create_qp_ext.rq_dma_addr, r7
     phvwr.c2    p.p4_to_p4plus.create_qp_ext.rq_cmb, 1
     phvwr.c5    p.p4_to_p4plus.create_qp_ext.rq_spec, 1
-    phvwr       p.p4_to_p4plus.create_qp_ext.qp_privileged, d.qp.privileged
+    phvwrpair   p.p4_to_p4plus.create_qp_ext.qp_privileged, d.qp.privileged, p.p4_to_p4plus.create_qp_ext.access_flags, d.{qp.access_remote_atomic...qp.access_remote_write}
     // Set log_pmtu for UD
     phvwr.!c3    p.p4_to_p4plus.create_qp_ext.log_pmtu, 12
     phvwr       p.rdma_feedback.create_qp.rq_type_state, d.type_state

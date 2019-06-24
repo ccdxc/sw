@@ -26,6 +26,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define K_CQP_RQ_SPEC k.{rdma_aq_feedback_cqp_rq_spec}
 #define K_CQP_RQ_CQ_ID k.{rdma_aq_feedback_cqp_rq_cq_id_sbit0_ebit7...rdma_aq_feedback_cqp_rq_cq_id_sbit16_ebit23}
 #define K_CQP_RQ_PRIVILEGED k.{rdma_aq_feedback_cqp_qp_privileged}
+#define K_CQP_RQ_ACCESS_FLAGS k.{rdma_aq_feedback_cqp_access_flags}
 #define K_CQP_LOG_PMTU k.{rdma_aq_feedback_cqp_log_pmtu}
 #define K_CQP_RQ_ID k.{rdma_aq_feedback_cqp_rq_id_sbit0_ebit15...rdma_aq_feedback_cqp_rq_id_sbit16_ebit23}
 #define K_CQP_RQ_STRIDE_LOG2 k.{rdma_aq_feedback_cqp_rq_stride_log2}
@@ -159,7 +160,7 @@ create_qp:
     phvwrpair   p.rqcb1.log_wqe_size, K_CQP_RQ_STRIDE_LOG2[4:0], p.rqcb1.log_num_wqes , K_CQP_RQ_DEPTH_LOG2[4:0]
     phvwrpair   p.rqcb1.serv_type, k.rdma_aq_feedback_cqp_rq_type_state[2:0], p.rqcb1.log_pmtu, K_CQP_LOG_PMTU
     phvwrpair   p.rqcb1.priv_oper_enable, K_CQP_RQ_PRIVILEGED, p.rqcb1.cq_id, K_CQP_RQ_CQ_ID
-    phvwr       p.rqcb1.pd, K_CQP_PD
+    phvwrpair   p.rqcb1.pd, K_CQP_PD, p.rqcb1.access_flags, K_CQP_RQ_ACCESS_FLAGS
 
     //RQCB2
     
