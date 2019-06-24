@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime/debug"
 	"time"
 
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -75,6 +76,18 @@ func main() {
 
 	// Initialize logger config
 	logger := log.SetConfig(logConfig)
+
+	// set Garbage collection ratio and periodically free OS memory
+	debug.SetGCPercent(20)
+	go func() {
+		for {
+			select {
+			case <-time.After(time.Minute):
+				// force GC and free OS memory
+				debug.FreeOSMemory()
+			}
+		}
+	}()
 
 	//create events recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
