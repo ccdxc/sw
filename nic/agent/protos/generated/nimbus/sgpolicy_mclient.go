@@ -47,6 +47,13 @@ func (client *NimbusClient) WatchSGPolicys(ctx context.Context, reactor SGPolicy
 		return
 	}
 
+	// start oper update stream
+	ostream, err := sgpolicyRPCClient.SGPolicyOperUpdate(ctx)
+	if err != nil {
+		log.Errorf("Error starting SGPolicy oper updates. Err: %v", err)
+		return
+	}
+
 	// get a list of objects
 	objList, err := sgpolicyRPCClient.ListSGPolicys(ctx, &api.ObjectMeta{})
 	if err != nil {
@@ -55,7 +62,7 @@ func (client *NimbusClient) WatchSGPolicys(ctx context.Context, reactor SGPolicy
 	}
 
 	// perform a diff of the states
-	client.diffSGPolicys(objList, reactor)
+	client.diffSGPolicys(objList, reactor, ostream)
 
 	// start grpc stream recv
 	recvCh := make(chan *netproto.SGPolicyEvent, evChanLength)
@@ -74,7 +81,7 @@ func (client *NimbusClient) WatchSGPolicys(ctx context.Context, reactor SGPolicy
 			log.Infof("Ctrlerif: agent %s got SGPolicy watch event: Type: {%+v} SGPolicy:{%+v}", client.clientName, evt.EventType, evt.SGPolicy)
 
 			client.lockObject(evt.SGPolicy.GetObjectKind(), evt.SGPolicy.ObjectMeta)
-			client.processSGPolicyEvent(*evt, reactor)
+			client.processSGPolicyEvent(*evt, reactor, ostream)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
@@ -86,7 +93,7 @@ func (client *NimbusClient) WatchSGPolicys(ctx context.Context, reactor SGPolicy
 			client.debugStats.AddInt("SGPolicyWatchResyncs", 1)
 
 			// perform a diff of the states
-			client.diffSGPolicys(objList, reactor)
+			client.diffSGPolicys(objList, reactor, ostream)
 		}
 	}
 }
@@ -112,7 +119,7 @@ func (client *NimbusClient) watchSGPolicyRecvLoop(stream netproto.SGPolicyApi_Wa
 
 // diffSGPolicy diffs local state with controller state
 // FIXME: this is not handling deletes today
-func (client *NimbusClient) diffSGPolicys(objList *netproto.SGPolicyList, reactor SGPolicyReactor) {
+func (client *NimbusClient) diffSGPolicys(objList *netproto.SGPolicyList, reactor SGPolicyReactor, ostream netproto.SGPolicyApi_SGPolicyOperUpdateClient) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.SGPolicy)
 	for _, obj := range objList.SGPolicys {
@@ -133,7 +140,7 @@ func (client *NimbusClient) diffSGPolicys(objList *netproto.SGPolicyList, reacto
 				}
 				log.Infof("diffSGPolicys(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.SGPolicy.GetObjectKind(), evt.SGPolicy.ObjectMeta)
-				client.processSGPolicyEvent(evt, reactor)
+				client.processSGPolicyEvent(evt, reactor, ostream)
 			}
 		} else {
 			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
@@ -147,12 +154,12 @@ func (client *NimbusClient) diffSGPolicys(objList *netproto.SGPolicyList, reacto
 			SGPolicy:  *obj,
 		}
 		client.lockObject(evt.SGPolicy.GetObjectKind(), evt.SGPolicy.ObjectMeta)
-		client.processSGPolicyEvent(evt, reactor)
+		client.processSGPolicyEvent(evt, reactor, ostream)
 	}
 }
 
 // processSGPolicyEvent handles SGPolicy event
-func (client *NimbusClient) processSGPolicyEvent(evt netproto.SGPolicyEvent, reactor SGPolicyReactor) {
+func (client *NimbusClient) processSGPolicyEvent(evt netproto.SGPolicyEvent, reactor SGPolicyReactor, ostream netproto.SGPolicyApi_SGPolicyOperUpdateClient) {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -206,36 +213,30 @@ func (client *NimbusClient) processSGPolicyEvent(evt netproto.SGPolicyEvent, rea
 			}
 		}
 
-		// return if there is no error
+		// send oper status and return if there is no error
 		if err == nil {
-			if evt.EventType == api.EventType_CreateEvent || evt.EventType == api.EventType_UpdateEvent {
-				robj := netproto.SGPolicy{
+			robj := netproto.SGPolicyEvent{
+				EventType: evt.EventType,
+				SGPolicy: netproto.SGPolicy{
 					TypeMeta:   evt.SGPolicy.TypeMeta,
 					ObjectMeta: evt.SGPolicy.ObjectMeta,
 					Status:     evt.SGPolicy.Status,
-				}
-				client.updateSGPolicyStatus(&robj)
+				},
 			}
+
+			// send oper status
+			err := ostream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send SGPolicy oper Status, %s", err)
+				client.debugStats.AddInt("SGPolicyOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("SGPolicyOperSent", 1)
+			}
+
 			return
 		}
 
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
-	}
-}
-
-// updateSGPolicyStatus sends status back to the controller
-func (client *NimbusClient) updateSGPolicyStatus(resp *netproto.SGPolicy) {
-	if client.rpcClient != nil && client.rpcClient.ClientConn != nil && client.rpcClient.ClientConn.GetState() == connectivity.Ready {
-		sgpolicyRPCClient := netproto.NewSGPolicyApiClient(client.rpcClient.ClientConn)
-		ctx, _ := context.WithTimeout(context.Background(), DefaultRPCTimeout)
-		_, err := sgpolicyRPCClient.UpdateSGPolicy(ctx, resp)
-		if err != nil {
-			log.Errorf("failed to send SGPolicy Status, %s", err)
-			client.debugStats.AddInt("SGPolicyStatusSendError", 1)
-		} else {
-			client.debugStats.AddInt("SGPolicyStatusSent", 1)
-		}
-
 	}
 }

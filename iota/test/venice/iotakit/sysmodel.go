@@ -379,7 +379,7 @@ func (sm *SysModel) populateConfig(ctx context.Context, vlanBase uint32, scale b
 	if scale {
 		cfg.SGPolicyParams.NumRulesPerPolicy = 50000
 		cfg.WorkloadParams.WorkloadsPerHost = 100
-		cfg.AppParams.NumApps = 5000
+		cfg.AppParams.NumApps = 1000
 	} else {
 		cfg.SGPolicyParams.NumRulesPerPolicy = 5
 		cfg.WorkloadParams.WorkloadsPerHost = 50
@@ -529,12 +529,14 @@ func (sm *SysModel) populateConfig(ctx context.Context, vlanBase uint32, scale b
 			iter := 1
 			for ; iter <= 2000 && ctx.Err() == nil; iter++ {
 				time.Sleep(time.Second * time.Duration(iter))
-				if retSgp, err := sm.tb.GetSGPolicy(&o.ObjectMeta); err != nil {
+				retSgp, err := sm.tb.GetSGPolicy(&o.ObjectMeta)
+				if err != nil {
 					return fmt.Errorf("error getting back policy %s %v", o.ObjectMeta.Name, err.Error())
 				} else if retSgp.Status.PropagationStatus.Updated == int32(len(smartnics)) {
-					log.Infof("got back policy satus %+v", o.Status.PropagationStatus)
+					log.Infof("got back policy satus %+v", retSgp.Status.PropagationStatus)
 					return nil
 				}
+				log.Warnf("Propagation stats did not match for policy %v. %+v", o.ObjectMeta.Name, retSgp.Status.PropagationStatus)
 			}
 			return fmt.Errorf("unable to update policy '%s' on all naples %+v ctx.Err() is %v",
 				o.ObjectMeta.Name, o.Status.PropagationStatus, ctx.Err())

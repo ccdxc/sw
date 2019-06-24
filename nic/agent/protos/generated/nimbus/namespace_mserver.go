@@ -10,6 +10,7 @@ package nimbus
 import (
 	"context"
 	"errors"
+	"io"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -48,8 +49,11 @@ func (ms *MbusServer) ListNamespaces(ctx context.Context) ([]*netproto.Namespace
 
 // NamespaceStatusReactor is the reactor interface implemented by controllers
 type NamespaceStatusReactor interface {
-	OnNamespaceAgentStatusSet(nodeID string, objinfo *netproto.Namespace) error
-	OnNamespaceAgentStatusDelete(nodeID string, objinfo *netproto.Namespace) error
+	OnNamespaceCreateReq(nodeID string, objinfo *netproto.Namespace) error
+	OnNamespaceUpdateReq(nodeID string, objinfo *netproto.Namespace) error
+	OnNamespaceDeleteReq(nodeID string, objinfo *netproto.Namespace) error
+	OnNamespaceOperUpdate(nodeID string, objinfo *netproto.Namespace) error
+	OnNamespaceOperDelete(nodeID string, objinfo *netproto.Namespace) error
 }
 
 // NamespaceTopic is the Namespace topic on message bus
@@ -83,17 +87,11 @@ func (eh *NamespaceTopic) CreateNamespace(ctx context.Context, objinfo *netproto
 
 	// trigger callbacks. we allow creates to happen before it exists in memdb
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnNamespaceAgentStatusSet(nodeID, objinfo)
+		eh.statusReactor.OnNamespaceCreateReq(nodeID, objinfo)
 	}
 
 	// increment stats
 	eh.server.Stats("Namespace", "AgentCreate").Inc()
-
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-	}
 
 	return objinfo, nil
 }
@@ -103,19 +101,12 @@ func (eh *NamespaceTopic) UpdateNamespace(ctx context.Context, objinfo *netproto
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received UpdateNamespace from node %v: {%+v}", nodeID, objinfo)
 
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-		return nil, err
-	}
-
 	// incr stats
 	eh.server.Stats("Namespace", "AgentUpdate").Inc()
 
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnNamespaceAgentStatusSet(nodeID, objinfo)
+		eh.statusReactor.OnNamespaceUpdateReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -129,15 +120,9 @@ func (eh *NamespaceTopic) DeleteNamespace(ctx context.Context, objinfo *netproto
 	// incr stats
 	eh.server.Stats("Namespace", "AgentDelete").Inc()
 
-	// delete node state from the memdb
-	err := eh.server.DelNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-	}
-
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnNamespaceAgentStatusDelete(nodeID, objinfo)
+		eh.statusReactor.OnNamespaceDeleteReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -262,4 +247,51 @@ func (eh *NamespaceTopic) WatchNamespaces(ometa *api.ObjectMeta, stream netproto
 	}
 
 	// done
+}
+
+// updateNamespaceOper triggers oper update callbacks
+func (eh *NamespaceTopic) updateNamespaceOper(oper *netproto.NamespaceEvent, nodeID string) error {
+	switch oper.EventType {
+	case api.EventType_CreateEvent:
+		fallthrough
+	case api.EventType_UpdateEvent:
+		// incr stats
+		eh.server.Stats("Namespace", "AgentUpdate").Inc()
+
+		// trigger callbacks
+		if eh.statusReactor != nil {
+			return eh.statusReactor.OnNamespaceOperUpdate(nodeID, &oper.Namespace)
+		}
+	case api.EventType_DeleteEvent:
+		// incr stats
+		eh.server.Stats("Namespace", "AgentDelete").Inc()
+
+		// trigger callbacks
+		if eh.statusReactor != nil {
+			eh.statusReactor.OnNamespaceOperDelete(nodeID, &oper.Namespace)
+		}
+	}
+
+	return nil
+}
+
+func (eh *NamespaceTopic) NamespaceOperUpdate(stream netproto.NamespaceApi_NamespaceOperUpdateServer) error {
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
+	for {
+		oper, err := stream.Recv()
+		if err == io.EOF {
+			log.Errorf("NamespaceOperUpdate stream ended. closing..")
+			return stream.SendAndClose(&api.TypeMeta{})
+		} else if err != nil {
+			log.Errorf("Error receiving from NamespaceOperUpdate stream. Err: %v", err)
+			return err
+		}
+
+		err = eh.updateNamespaceOper(oper, nodeID)
+		if err != nil {
+			log.Errorf("Error updating Namespace oper state. Err: %v", err)
+		}
+	}
 }

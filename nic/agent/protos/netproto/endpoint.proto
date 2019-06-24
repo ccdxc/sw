@@ -22,11 +22,12 @@ service EndpointApi {
     };
 
     rpc CreateEndpoint (Endpoint) returns (Endpoint) {};
+    rpc UpdateEndpoint (Endpoint) returns (Endpoint) {};
     rpc GetEndpoint (api.ObjectMeta) returns (Endpoint) {};
     rpc ListEndpoints (api.ObjectMeta) returns (EndpointList) {};
     rpc DeleteEndpoint (Endpoint) returns (Endpoint) {};
     rpc WatchEndpoints (api.ObjectMeta) returns (stream EndpointEvent) {};
-    rpc UpdateEndpoint (Endpoint) returns (Endpoint) {};
+    rpc EndpointOperUpdate (stream EndpointEvent) returns (api.TypeMeta) {};
 }
 
 // Endpoint Object

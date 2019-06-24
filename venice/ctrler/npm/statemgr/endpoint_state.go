@@ -179,14 +179,29 @@ func NewEndpointState(epinfo *ctkit.Endpoint, stateMgr *Statemgr) (*EndpointStat
 	return &eps, nil
 }
 
-// OnEndpointAgentStatusSet gets called when agent sends create request
-func (sm *Statemgr) OnEndpointAgentStatusSet(nodeID string, objinfo *netproto.Endpoint) error {
+// OnEndpointCreateReq gets called when agent sends create request
+func (sm *Statemgr) OnEndpointCreateReq(nodeID string, objinfo *netproto.Endpoint) error {
+	return nil
+}
+
+// OnEndpointUpdateReq gets called when agent sends update request
+func (sm *Statemgr) OnEndpointUpdateReq(nodeID string, objinfo *netproto.Endpoint) error {
+	return nil
+}
+
+// OnEndpointDeleteReq gets called when agent sends delete request
+func (sm *Statemgr) OnEndpointDeleteReq(nodeID string, objinfo *netproto.Endpoint) error {
+	return nil
+}
+
+// OnEndpointOperUpdate gets called when agent sends oper update
+func (sm *Statemgr) OnEndpointOperUpdate(nodeID string, objinfo *netproto.Endpoint) error {
 	// FIXME: handle endpoint status updates from agent
 	return nil
 }
 
-// OnEndpointAgentStatusDelete is called when agent sends delete request
-func (sm *Statemgr) OnEndpointAgentStatusDelete(nodeID string, objinfo *netproto.Endpoint) error {
+// OnEndpointOperDelete is called when agent sends oper delete
+func (sm *Statemgr) OnEndpointOperDelete(nodeID string, objinfo *netproto.Endpoint) error {
 	// FIXME: handle endpoint status updates from agent
 	return nil
 }

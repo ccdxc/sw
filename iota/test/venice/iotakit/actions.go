@@ -195,14 +195,12 @@ func (act *ActionCtx) VerifySystemHealth() error {
 	// verify policy status is goot
 	err = act.VerifyPolicyStatus(act.model.SGPolicies())
 	if err != nil {
-		act.model.tb.CollectLogs()
 		return err
 	}
 
 	// verify workload status is good
 	err = act.VerifyWorkloadStatus(act.model.Workloads())
 	if err != nil {
-		act.model.tb.CollectLogs()
 		return err
 	}
 

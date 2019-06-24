@@ -46,8 +46,8 @@ func convertNetifObj(nodeID string, agentNetif *netproto.Interface) *network.Net
 	return netif
 }
 
-// OnInterfaceAgentStatusSet gets called when agent sends create request
-func (sm *Statemgr) OnInterfaceAgentStatusSet(nodeID string, agentNetif *netproto.Interface) error {
+// OnInterfaceCreateReq gets called when agent sends create request
+func (sm *Statemgr) OnInterfaceCreateReq(nodeID string, agentNetif *netproto.Interface) error {
 	// convert agent's netif struct to the api object
 	netif := convertNetifObj(nodeID, agentNetif)
 
@@ -58,8 +58,13 @@ func (sm *Statemgr) OnInterfaceAgentStatusSet(nodeID string, agentNetif *netprot
 	return sm.ctrler.NetworkInterface().Create(netif)
 }
 
-// OnInterfaceAgentStatusDelete is called when agent sends delete request
-func (sm *Statemgr) OnInterfaceAgentStatusDelete(nodeID string, agentNetif *netproto.Interface) error {
+// OnInterfaceUpdateReq gets called when agent sends update request
+func (sm *Statemgr) OnInterfaceUpdateReq(nodeID string, agentNetif *netproto.Interface) error {
+	return nil
+}
+
+// OnInterfaceDeleteReq gets called when agent sends delete request
+func (sm *Statemgr) OnInterfaceDeleteReq(nodeID string, agentNetif *netproto.Interface) error {
 	obj, err := sm.FindObject("NetworkInterface", agentNetif.ObjectMeta.Tenant, agentNetif.ObjectMeta.Namespace, agentNetif.ObjectMeta.Name)
 	if err != nil {
 		return err
@@ -71,6 +76,17 @@ func (sm *Statemgr) OnInterfaceAgentStatusDelete(nodeID string, agentNetif *netp
 		return ErrIncorrectObjectType
 	}
 	return sm.ctrler.NetworkInterface().Delete(&ctkitNetif.NetworkInterface)
+}
+
+// OnInterfaceOperUpdate gets called when agent sends create request
+func (sm *Statemgr) OnInterfaceOperUpdate(nodeID string, agentNetif *netproto.Interface) error {
+	// FIXME: handle status updates
+	return nil
+}
+
+// OnInterfaceOperDelete is called when agent sends delete request
+func (sm *Statemgr) OnInterfaceOperDelete(nodeID string, agentNetif *netproto.Interface) error {
+	return nil
 }
 
 // OnNetworkInterfaceCreate creates a NetworkInterface

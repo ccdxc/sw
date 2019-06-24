@@ -10,6 +10,7 @@ package nimbus
 import (
 	"context"
 	"errors"
+	"io"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -48,8 +49,11 @@ func (ms *MbusServer) ListSecurityProfiles(ctx context.Context) ([]*netproto.Sec
 
 // SecurityProfileStatusReactor is the reactor interface implemented by controllers
 type SecurityProfileStatusReactor interface {
-	OnSecurityProfileAgentStatusSet(nodeID string, objinfo *netproto.SecurityProfile) error
-	OnSecurityProfileAgentStatusDelete(nodeID string, objinfo *netproto.SecurityProfile) error
+	OnSecurityProfileCreateReq(nodeID string, objinfo *netproto.SecurityProfile) error
+	OnSecurityProfileUpdateReq(nodeID string, objinfo *netproto.SecurityProfile) error
+	OnSecurityProfileDeleteReq(nodeID string, objinfo *netproto.SecurityProfile) error
+	OnSecurityProfileOperUpdate(nodeID string, objinfo *netproto.SecurityProfile) error
+	OnSecurityProfileOperDelete(nodeID string, objinfo *netproto.SecurityProfile) error
 }
 
 // SecurityProfileTopic is the SecurityProfile topic on message bus
@@ -83,17 +87,11 @@ func (eh *SecurityProfileTopic) CreateSecurityProfile(ctx context.Context, objin
 
 	// trigger callbacks. we allow creates to happen before it exists in memdb
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnSecurityProfileAgentStatusSet(nodeID, objinfo)
+		eh.statusReactor.OnSecurityProfileCreateReq(nodeID, objinfo)
 	}
 
 	// increment stats
 	eh.server.Stats("SecurityProfile", "AgentCreate").Inc()
-
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-	}
 
 	return objinfo, nil
 }
@@ -103,19 +101,12 @@ func (eh *SecurityProfileTopic) UpdateSecurityProfile(ctx context.Context, objin
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received UpdateSecurityProfile from node %v: {%+v}", nodeID, objinfo)
 
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-		return nil, err
-	}
-
 	// incr stats
 	eh.server.Stats("SecurityProfile", "AgentUpdate").Inc()
 
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnSecurityProfileAgentStatusSet(nodeID, objinfo)
+		eh.statusReactor.OnSecurityProfileUpdateReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -129,15 +120,9 @@ func (eh *SecurityProfileTopic) DeleteSecurityProfile(ctx context.Context, objin
 	// incr stats
 	eh.server.Stats("SecurityProfile", "AgentDelete").Inc()
 
-	// delete node state from the memdb
-	err := eh.server.DelNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-	}
-
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnSecurityProfileAgentStatusDelete(nodeID, objinfo)
+		eh.statusReactor.OnSecurityProfileDeleteReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -262,4 +247,51 @@ func (eh *SecurityProfileTopic) WatchSecurityProfiles(ometa *api.ObjectMeta, str
 	}
 
 	// done
+}
+
+// updateSecurityProfileOper triggers oper update callbacks
+func (eh *SecurityProfileTopic) updateSecurityProfileOper(oper *netproto.SecurityProfileEvent, nodeID string) error {
+	switch oper.EventType {
+	case api.EventType_CreateEvent:
+		fallthrough
+	case api.EventType_UpdateEvent:
+		// incr stats
+		eh.server.Stats("SecurityProfile", "AgentUpdate").Inc()
+
+		// trigger callbacks
+		if eh.statusReactor != nil {
+			return eh.statusReactor.OnSecurityProfileOperUpdate(nodeID, &oper.SecurityProfile)
+		}
+	case api.EventType_DeleteEvent:
+		// incr stats
+		eh.server.Stats("SecurityProfile", "AgentDelete").Inc()
+
+		// trigger callbacks
+		if eh.statusReactor != nil {
+			eh.statusReactor.OnSecurityProfileOperDelete(nodeID, &oper.SecurityProfile)
+		}
+	}
+
+	return nil
+}
+
+func (eh *SecurityProfileTopic) SecurityProfileOperUpdate(stream netproto.SecurityProfileApi_SecurityProfileOperUpdateServer) error {
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
+	for {
+		oper, err := stream.Recv()
+		if err == io.EOF {
+			log.Errorf("SecurityProfileOperUpdate stream ended. closing..")
+			return stream.SendAndClose(&api.TypeMeta{})
+		} else if err != nil {
+			log.Errorf("Error receiving from SecurityProfileOperUpdate stream. Err: %v", err)
+			return err
+		}
+
+		err = eh.updateSecurityProfileOper(oper, nodeID)
+		if err != nil {
+			log.Errorf("Error updating SecurityProfile oper state. Err: %v", err)
+		}
+	}
 }

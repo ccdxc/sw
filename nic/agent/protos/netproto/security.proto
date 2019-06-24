@@ -25,6 +25,8 @@ service SecurityGroupApi {
     rpc ListSecurityGroups (api.ObjectMeta) returns (SecurityGroupList) {};
     rpc WatchSecurityGroups (api.ObjectMeta) returns (stream SecurityGroupEvent) {};
     rpc UpdateSecurityGroup (SecurityGroup) returns (SecurityGroup) {};
+    rpc SecurityGroupOperUpdate (stream SecurityGroupEvent) returns (api.TypeMeta) {};
+
 }
 
 // security group object

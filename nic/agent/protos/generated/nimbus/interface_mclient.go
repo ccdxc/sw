@@ -47,6 +47,13 @@ func (client *NimbusClient) WatchInterfaces(ctx context.Context, reactor Interfa
 		return
 	}
 
+	// start oper update stream
+	ostream, err := interfaceRPCClient.InterfaceOperUpdate(ctx)
+	if err != nil {
+		log.Errorf("Error starting Interface oper updates. Err: %v", err)
+		return
+	}
+
 	// get a list of objects
 	objList, err := interfaceRPCClient.ListInterfaces(ctx, &api.ObjectMeta{})
 	if err != nil {
@@ -55,7 +62,7 @@ func (client *NimbusClient) WatchInterfaces(ctx context.Context, reactor Interfa
 	}
 
 	// perform a diff of the states
-	client.diffInterfaces(objList, reactor)
+	client.diffInterfaces(objList, reactor, ostream)
 
 	// start grpc stream recv
 	recvCh := make(chan *netproto.InterfaceEvent, evChanLength)
@@ -74,7 +81,7 @@ func (client *NimbusClient) WatchInterfaces(ctx context.Context, reactor Interfa
 			log.Infof("Ctrlerif: agent %s got Interface watch event: Type: {%+v} Interface:{%+v}", client.clientName, evt.EventType, evt.Interface)
 
 			client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
-			client.processInterfaceEvent(*evt, reactor)
+			client.processInterfaceEvent(*evt, reactor, ostream)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
@@ -86,7 +93,7 @@ func (client *NimbusClient) WatchInterfaces(ctx context.Context, reactor Interfa
 			client.debugStats.AddInt("InterfaceWatchResyncs", 1)
 
 			// perform a diff of the states
-			client.diffInterfaces(objList, reactor)
+			client.diffInterfaces(objList, reactor, ostream)
 		}
 	}
 }
@@ -112,7 +119,7 @@ func (client *NimbusClient) watchInterfaceRecvLoop(stream netproto.InterfaceApi_
 
 // diffInterface diffs local state with controller state
 // FIXME: this is not handling deletes today
-func (client *NimbusClient) diffInterfaces(objList *netproto.InterfaceList, reactor InterfaceReactor) {
+func (client *NimbusClient) diffInterfaces(objList *netproto.InterfaceList, reactor InterfaceReactor, ostream netproto.InterfaceApi_InterfaceOperUpdateClient) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Interface)
 	for _, obj := range objList.Interfaces {
@@ -133,7 +140,7 @@ func (client *NimbusClient) diffInterfaces(objList *netproto.InterfaceList, reac
 				}
 				log.Infof("diffInterfaces(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
-				client.processInterfaceEvent(evt, reactor)
+				client.processInterfaceEvent(evt, reactor, ostream)
 			}
 		} else {
 			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
@@ -147,12 +154,12 @@ func (client *NimbusClient) diffInterfaces(objList *netproto.InterfaceList, reac
 			Interface: *obj,
 		}
 		client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
-		client.processInterfaceEvent(evt, reactor)
+		client.processInterfaceEvent(evt, reactor, ostream)
 	}
 }
 
 // processInterfaceEvent handles Interface event
-func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, reactor InterfaceReactor) {
+func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, reactor InterfaceReactor, ostream netproto.InterfaceApi_InterfaceOperUpdateClient) {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -206,36 +213,30 @@ func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, r
 			}
 		}
 
-		// return if there is no error
+		// send oper status and return if there is no error
 		if err == nil {
-			if evt.EventType == api.EventType_CreateEvent || evt.EventType == api.EventType_UpdateEvent {
-				robj := netproto.Interface{
+			robj := netproto.InterfaceEvent{
+				EventType: evt.EventType,
+				Interface: netproto.Interface{
 					TypeMeta:   evt.Interface.TypeMeta,
 					ObjectMeta: evt.Interface.ObjectMeta,
 					Status:     evt.Interface.Status,
-				}
-				client.updateInterfaceStatus(&robj)
+				},
 			}
+
+			// send oper status
+			err := ostream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Interface oper Status, %s", err)
+				client.debugStats.AddInt("InterfaceOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("InterfaceOperSent", 1)
+			}
+
 			return
 		}
 
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
-	}
-}
-
-// updateInterfaceStatus sends status back to the controller
-func (client *NimbusClient) updateInterfaceStatus(resp *netproto.Interface) {
-	if client.rpcClient != nil && client.rpcClient.ClientConn != nil && client.rpcClient.ClientConn.GetState() == connectivity.Ready {
-		interfaceRPCClient := netproto.NewInterfaceApiClient(client.rpcClient.ClientConn)
-		ctx, _ := context.WithTimeout(context.Background(), DefaultRPCTimeout)
-		_, err := interfaceRPCClient.UpdateInterface(ctx, resp)
-		if err != nil {
-			log.Errorf("failed to send Interface Status, %s", err)
-			client.debugStats.AddInt("InterfaceStatusSendError", 1)
-		} else {
-			client.debugStats.AddInt("InterfaceStatusSent", 1)
-		}
-
 	}
 }

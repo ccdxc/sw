@@ -29,6 +29,7 @@ service NamespaceApi {
     rpc ListNamespaces (api.ObjectMeta) returns (NamespaceList) {};
     rpc WatchNamespaces (api.ObjectMeta) returns (stream NamespaceEvent) {};
     rpc UpdateNamespace (Namespace) returns (Namespace) {};
+    rpc NamespaceOperUpdate (stream NamespaceEvent) returns (api.TypeMeta) {};
 }
 
 // Namespace object

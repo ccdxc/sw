@@ -10,6 +10,7 @@ package nimbus
 import (
 	"context"
 	"errors"
+	"io"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -48,8 +49,11 @@ func (ms *MbusServer) ListEndpoints(ctx context.Context) ([]*netproto.Endpoint, 
 
 // EndpointStatusReactor is the reactor interface implemented by controllers
 type EndpointStatusReactor interface {
-	OnEndpointAgentStatusSet(nodeID string, objinfo *netproto.Endpoint) error
-	OnEndpointAgentStatusDelete(nodeID string, objinfo *netproto.Endpoint) error
+	OnEndpointCreateReq(nodeID string, objinfo *netproto.Endpoint) error
+	OnEndpointUpdateReq(nodeID string, objinfo *netproto.Endpoint) error
+	OnEndpointDeleteReq(nodeID string, objinfo *netproto.Endpoint) error
+	OnEndpointOperUpdate(nodeID string, objinfo *netproto.Endpoint) error
+	OnEndpointOperDelete(nodeID string, objinfo *netproto.Endpoint) error
 }
 
 // EndpointTopic is the Endpoint topic on message bus
@@ -83,17 +87,11 @@ func (eh *EndpointTopic) CreateEndpoint(ctx context.Context, objinfo *netproto.E
 
 	// trigger callbacks. we allow creates to happen before it exists in memdb
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnEndpointAgentStatusSet(nodeID, objinfo)
+		eh.statusReactor.OnEndpointCreateReq(nodeID, objinfo)
 	}
 
 	// increment stats
 	eh.server.Stats("Endpoint", "AgentCreate").Inc()
-
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-	}
 
 	return objinfo, nil
 }
@@ -103,19 +101,12 @@ func (eh *EndpointTopic) UpdateEndpoint(ctx context.Context, objinfo *netproto.E
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received UpdateEndpoint from node %v: {%+v}", nodeID, objinfo)
 
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-		return nil, err
-	}
-
 	// incr stats
 	eh.server.Stats("Endpoint", "AgentUpdate").Inc()
 
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnEndpointAgentStatusSet(nodeID, objinfo)
+		eh.statusReactor.OnEndpointUpdateReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -129,15 +120,9 @@ func (eh *EndpointTopic) DeleteEndpoint(ctx context.Context, objinfo *netproto.E
 	// incr stats
 	eh.server.Stats("Endpoint", "AgentDelete").Inc()
 
-	// delete node state from the memdb
-	err := eh.server.DelNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-	}
-
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnEndpointAgentStatusDelete(nodeID, objinfo)
+		eh.statusReactor.OnEndpointDeleteReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -262,4 +247,51 @@ func (eh *EndpointTopic) WatchEndpoints(ometa *api.ObjectMeta, stream netproto.E
 	}
 
 	// done
+}
+
+// updateEndpointOper triggers oper update callbacks
+func (eh *EndpointTopic) updateEndpointOper(oper *netproto.EndpointEvent, nodeID string) error {
+	switch oper.EventType {
+	case api.EventType_CreateEvent:
+		fallthrough
+	case api.EventType_UpdateEvent:
+		// incr stats
+		eh.server.Stats("Endpoint", "AgentUpdate").Inc()
+
+		// trigger callbacks
+		if eh.statusReactor != nil {
+			return eh.statusReactor.OnEndpointOperUpdate(nodeID, &oper.Endpoint)
+		}
+	case api.EventType_DeleteEvent:
+		// incr stats
+		eh.server.Stats("Endpoint", "AgentDelete").Inc()
+
+		// trigger callbacks
+		if eh.statusReactor != nil {
+			eh.statusReactor.OnEndpointOperDelete(nodeID, &oper.Endpoint)
+		}
+	}
+
+	return nil
+}
+
+func (eh *EndpointTopic) EndpointOperUpdate(stream netproto.EndpointApi_EndpointOperUpdateServer) error {
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
+	for {
+		oper, err := stream.Recv()
+		if err == io.EOF {
+			log.Errorf("EndpointOperUpdate stream ended. closing..")
+			return stream.SendAndClose(&api.TypeMeta{})
+		} else if err != nil {
+			log.Errorf("Error receiving from EndpointOperUpdate stream. Err: %v", err)
+			return err
+		}
+
+		err = eh.updateEndpointOper(oper, nodeID)
+		if err != nil {
+			log.Errorf("Error updating Endpoint oper state. Err: %v", err)
+		}
+	}
 }

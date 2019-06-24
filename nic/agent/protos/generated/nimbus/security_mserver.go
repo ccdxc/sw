@@ -10,6 +10,7 @@ package nimbus
 import (
 	"context"
 	"errors"
+	"io"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -48,8 +49,11 @@ func (ms *MbusServer) ListSecurityGroups(ctx context.Context) ([]*netproto.Secur
 
 // SecurityGroupStatusReactor is the reactor interface implemented by controllers
 type SecurityGroupStatusReactor interface {
-	OnSecurityGroupAgentStatusSet(nodeID string, objinfo *netproto.SecurityGroup) error
-	OnSecurityGroupAgentStatusDelete(nodeID string, objinfo *netproto.SecurityGroup) error
+	OnSecurityGroupCreateReq(nodeID string, objinfo *netproto.SecurityGroup) error
+	OnSecurityGroupUpdateReq(nodeID string, objinfo *netproto.SecurityGroup) error
+	OnSecurityGroupDeleteReq(nodeID string, objinfo *netproto.SecurityGroup) error
+	OnSecurityGroupOperUpdate(nodeID string, objinfo *netproto.SecurityGroup) error
+	OnSecurityGroupOperDelete(nodeID string, objinfo *netproto.SecurityGroup) error
 }
 
 // SecurityGroupTopic is the SecurityGroup topic on message bus
@@ -83,17 +87,11 @@ func (eh *SecurityGroupTopic) CreateSecurityGroup(ctx context.Context, objinfo *
 
 	// trigger callbacks. we allow creates to happen before it exists in memdb
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnSecurityGroupAgentStatusSet(nodeID, objinfo)
+		eh.statusReactor.OnSecurityGroupCreateReq(nodeID, objinfo)
 	}
 
 	// increment stats
 	eh.server.Stats("SecurityGroup", "AgentCreate").Inc()
-
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-	}
 
 	return objinfo, nil
 }
@@ -103,19 +101,12 @@ func (eh *SecurityGroupTopic) UpdateSecurityGroup(ctx context.Context, objinfo *
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received UpdateSecurityGroup from node %v: {%+v}", nodeID, objinfo)
 
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-		return nil, err
-	}
-
 	// incr stats
 	eh.server.Stats("SecurityGroup", "AgentUpdate").Inc()
 
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnSecurityGroupAgentStatusSet(nodeID, objinfo)
+		eh.statusReactor.OnSecurityGroupUpdateReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -129,15 +120,9 @@ func (eh *SecurityGroupTopic) DeleteSecurityGroup(ctx context.Context, objinfo *
 	// incr stats
 	eh.server.Stats("SecurityGroup", "AgentDelete").Inc()
 
-	// delete node state from the memdb
-	err := eh.server.DelNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-	}
-
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnSecurityGroupAgentStatusDelete(nodeID, objinfo)
+		eh.statusReactor.OnSecurityGroupDeleteReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -262,4 +247,51 @@ func (eh *SecurityGroupTopic) WatchSecurityGroups(ometa *api.ObjectMeta, stream 
 	}
 
 	// done
+}
+
+// updateSecurityGroupOper triggers oper update callbacks
+func (eh *SecurityGroupTopic) updateSecurityGroupOper(oper *netproto.SecurityGroupEvent, nodeID string) error {
+	switch oper.EventType {
+	case api.EventType_CreateEvent:
+		fallthrough
+	case api.EventType_UpdateEvent:
+		// incr stats
+		eh.server.Stats("SecurityGroup", "AgentUpdate").Inc()
+
+		// trigger callbacks
+		if eh.statusReactor != nil {
+			return eh.statusReactor.OnSecurityGroupOperUpdate(nodeID, &oper.SecurityGroup)
+		}
+	case api.EventType_DeleteEvent:
+		// incr stats
+		eh.server.Stats("SecurityGroup", "AgentDelete").Inc()
+
+		// trigger callbacks
+		if eh.statusReactor != nil {
+			eh.statusReactor.OnSecurityGroupOperDelete(nodeID, &oper.SecurityGroup)
+		}
+	}
+
+	return nil
+}
+
+func (eh *SecurityGroupTopic) SecurityGroupOperUpdate(stream netproto.SecurityGroupApi_SecurityGroupOperUpdateServer) error {
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
+	for {
+		oper, err := stream.Recv()
+		if err == io.EOF {
+			log.Errorf("SecurityGroupOperUpdate stream ended. closing..")
+			return stream.SendAndClose(&api.TypeMeta{})
+		} else if err != nil {
+			log.Errorf("Error receiving from SecurityGroupOperUpdate stream. Err: %v", err)
+			return err
+		}
+
+		err = eh.updateSecurityGroupOper(oper, nodeID)
+		if err != nil {
+			log.Errorf("Error updating SecurityGroup oper state. Err: %v", err)
+		}
+	}
 }

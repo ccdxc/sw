@@ -10,6 +10,7 @@ package nimbus
 import (
 	"context"
 	"errors"
+	"io"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -48,8 +49,11 @@ func (ms *MbusServer) ListInterfaces(ctx context.Context) ([]*netproto.Interface
 
 // InterfaceStatusReactor is the reactor interface implemented by controllers
 type InterfaceStatusReactor interface {
-	OnInterfaceAgentStatusSet(nodeID string, objinfo *netproto.Interface) error
-	OnInterfaceAgentStatusDelete(nodeID string, objinfo *netproto.Interface) error
+	OnInterfaceCreateReq(nodeID string, objinfo *netproto.Interface) error
+	OnInterfaceUpdateReq(nodeID string, objinfo *netproto.Interface) error
+	OnInterfaceDeleteReq(nodeID string, objinfo *netproto.Interface) error
+	OnInterfaceOperUpdate(nodeID string, objinfo *netproto.Interface) error
+	OnInterfaceOperDelete(nodeID string, objinfo *netproto.Interface) error
 }
 
 // InterfaceTopic is the Interface topic on message bus
@@ -83,17 +87,11 @@ func (eh *InterfaceTopic) CreateInterface(ctx context.Context, objinfo *netproto
 
 	// trigger callbacks. we allow creates to happen before it exists in memdb
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnInterfaceAgentStatusSet(nodeID, objinfo)
+		eh.statusReactor.OnInterfaceCreateReq(nodeID, objinfo)
 	}
 
 	// increment stats
 	eh.server.Stats("Interface", "AgentCreate").Inc()
-
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-	}
 
 	return objinfo, nil
 }
@@ -103,19 +101,12 @@ func (eh *InterfaceTopic) UpdateInterface(ctx context.Context, objinfo *netproto
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received UpdateInterface from node %v: {%+v}", nodeID, objinfo)
 
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-		return nil, err
-	}
-
 	// incr stats
 	eh.server.Stats("Interface", "AgentUpdate").Inc()
 
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnInterfaceAgentStatusSet(nodeID, objinfo)
+		eh.statusReactor.OnInterfaceUpdateReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -129,15 +120,9 @@ func (eh *InterfaceTopic) DeleteInterface(ctx context.Context, objinfo *netproto
 	// incr stats
 	eh.server.Stats("Interface", "AgentDelete").Inc()
 
-	// delete node state from the memdb
-	err := eh.server.DelNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-	}
-
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnInterfaceAgentStatusDelete(nodeID, objinfo)
+		eh.statusReactor.OnInterfaceDeleteReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -262,4 +247,51 @@ func (eh *InterfaceTopic) WatchInterfaces(ometa *api.ObjectMeta, stream netproto
 	}
 
 	// done
+}
+
+// updateInterfaceOper triggers oper update callbacks
+func (eh *InterfaceTopic) updateInterfaceOper(oper *netproto.InterfaceEvent, nodeID string) error {
+	switch oper.EventType {
+	case api.EventType_CreateEvent:
+		fallthrough
+	case api.EventType_UpdateEvent:
+		// incr stats
+		eh.server.Stats("Interface", "AgentUpdate").Inc()
+
+		// trigger callbacks
+		if eh.statusReactor != nil {
+			return eh.statusReactor.OnInterfaceOperUpdate(nodeID, &oper.Interface)
+		}
+	case api.EventType_DeleteEvent:
+		// incr stats
+		eh.server.Stats("Interface", "AgentDelete").Inc()
+
+		// trigger callbacks
+		if eh.statusReactor != nil {
+			eh.statusReactor.OnInterfaceOperDelete(nodeID, &oper.Interface)
+		}
+	}
+
+	return nil
+}
+
+func (eh *InterfaceTopic) InterfaceOperUpdate(stream netproto.InterfaceApi_InterfaceOperUpdateServer) error {
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
+	for {
+		oper, err := stream.Recv()
+		if err == io.EOF {
+			log.Errorf("InterfaceOperUpdate stream ended. closing..")
+			return stream.SendAndClose(&api.TypeMeta{})
+		} else if err != nil {
+			log.Errorf("Error receiving from InterfaceOperUpdate stream. Err: %v", err)
+			return err
+		}
+
+		err = eh.updateInterfaceOper(oper, nodeID)
+		if err != nil {
+			log.Errorf("Error updating Interface oper state. Err: %v", err)
+		}
+	}
 }

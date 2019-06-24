@@ -47,6 +47,13 @@ func (client *NimbusClient) WatchApps(ctx context.Context, reactor AppReactor) {
 		return
 	}
 
+	// start oper update stream
+	ostream, err := appRPCClient.AppOperUpdate(ctx)
+	if err != nil {
+		log.Errorf("Error starting App oper updates. Err: %v", err)
+		return
+	}
+
 	// get a list of objects
 	objList, err := appRPCClient.ListApps(ctx, &api.ObjectMeta{})
 	if err != nil {
@@ -55,7 +62,7 @@ func (client *NimbusClient) WatchApps(ctx context.Context, reactor AppReactor) {
 	}
 
 	// perform a diff of the states
-	client.diffApps(objList, reactor)
+	client.diffApps(objList, reactor, ostream)
 
 	// start grpc stream recv
 	recvCh := make(chan *netproto.AppEvent, evChanLength)
@@ -74,7 +81,7 @@ func (client *NimbusClient) WatchApps(ctx context.Context, reactor AppReactor) {
 			log.Infof("Ctrlerif: agent %s got App watch event: Type: {%+v} App:{%+v}", client.clientName, evt.EventType, evt.App)
 
 			client.lockObject(evt.App.GetObjectKind(), evt.App.ObjectMeta)
-			client.processAppEvent(*evt, reactor)
+			client.processAppEvent(*evt, reactor, ostream)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
@@ -86,7 +93,7 @@ func (client *NimbusClient) WatchApps(ctx context.Context, reactor AppReactor) {
 			client.debugStats.AddInt("AppWatchResyncs", 1)
 
 			// perform a diff of the states
-			client.diffApps(objList, reactor)
+			client.diffApps(objList, reactor, ostream)
 		}
 	}
 }
@@ -112,7 +119,7 @@ func (client *NimbusClient) watchAppRecvLoop(stream netproto.AppApi_WatchAppsCli
 
 // diffApp diffs local state with controller state
 // FIXME: this is not handling deletes today
-func (client *NimbusClient) diffApps(objList *netproto.AppList, reactor AppReactor) {
+func (client *NimbusClient) diffApps(objList *netproto.AppList, reactor AppReactor, ostream netproto.AppApi_AppOperUpdateClient) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.App)
 	for _, obj := range objList.Apps {
@@ -133,7 +140,7 @@ func (client *NimbusClient) diffApps(objList *netproto.AppList, reactor AppReact
 				}
 				log.Infof("diffApps(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.App.GetObjectKind(), evt.App.ObjectMeta)
-				client.processAppEvent(evt, reactor)
+				client.processAppEvent(evt, reactor, ostream)
 			}
 		} else {
 			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
@@ -147,12 +154,12 @@ func (client *NimbusClient) diffApps(objList *netproto.AppList, reactor AppReact
 			App:       *obj,
 		}
 		client.lockObject(evt.App.GetObjectKind(), evt.App.ObjectMeta)
-		client.processAppEvent(evt, reactor)
+		client.processAppEvent(evt, reactor, ostream)
 	}
 }
 
 // processAppEvent handles App event
-func (client *NimbusClient) processAppEvent(evt netproto.AppEvent, reactor AppReactor) {
+func (client *NimbusClient) processAppEvent(evt netproto.AppEvent, reactor AppReactor, ostream netproto.AppApi_AppOperUpdateClient) {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -206,36 +213,30 @@ func (client *NimbusClient) processAppEvent(evt netproto.AppEvent, reactor AppRe
 			}
 		}
 
-		// return if there is no error
+		// send oper status and return if there is no error
 		if err == nil {
-			if evt.EventType == api.EventType_CreateEvent || evt.EventType == api.EventType_UpdateEvent {
-				robj := netproto.App{
+			robj := netproto.AppEvent{
+				EventType: evt.EventType,
+				App: netproto.App{
 					TypeMeta:   evt.App.TypeMeta,
 					ObjectMeta: evt.App.ObjectMeta,
 					Status:     evt.App.Status,
-				}
-				client.updateAppStatus(&robj)
+				},
 			}
+
+			// send oper status
+			err := ostream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send App oper Status, %s", err)
+				client.debugStats.AddInt("AppOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("AppOperSent", 1)
+			}
+
 			return
 		}
 
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
-	}
-}
-
-// updateAppStatus sends status back to the controller
-func (client *NimbusClient) updateAppStatus(resp *netproto.App) {
-	if client.rpcClient != nil && client.rpcClient.ClientConn != nil && client.rpcClient.ClientConn.GetState() == connectivity.Ready {
-		appRPCClient := netproto.NewAppApiClient(client.rpcClient.ClientConn)
-		ctx, _ := context.WithTimeout(context.Background(), DefaultRPCTimeout)
-		_, err := appRPCClient.UpdateApp(ctx, resp)
-		if err != nil {
-			log.Errorf("failed to send App Status, %s", err)
-			client.debugStats.AddInt("AppStatusSendError", 1)
-		} else {
-			client.debugStats.AddInt("AppStatusSent", 1)
-		}
-
 	}
 }

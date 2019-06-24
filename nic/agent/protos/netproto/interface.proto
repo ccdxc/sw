@@ -30,6 +30,8 @@ service InterfaceApi {
     rpc DeleteInterface (Interface) returns (Interface) {};
     rpc WatchInterfaces (api.ObjectMeta) returns (stream InterfaceEvent) {};
     rpc UpdateInterface (Interface) returns (Interface) {};
+    rpc InterfaceOperUpdate (stream InterfaceEvent) returns (api.TypeMeta) {};
+
 }
 
 // Interface object

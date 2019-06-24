@@ -10,6 +10,7 @@ package nimbus
 import (
 	"context"
 	"errors"
+	"io"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -48,8 +49,11 @@ func (ms *MbusServer) ListApps(ctx context.Context) ([]*netproto.App, error) {
 
 // AppStatusReactor is the reactor interface implemented by controllers
 type AppStatusReactor interface {
-	OnAppAgentStatusSet(nodeID string, objinfo *netproto.App) error
-	OnAppAgentStatusDelete(nodeID string, objinfo *netproto.App) error
+	OnAppCreateReq(nodeID string, objinfo *netproto.App) error
+	OnAppUpdateReq(nodeID string, objinfo *netproto.App) error
+	OnAppDeleteReq(nodeID string, objinfo *netproto.App) error
+	OnAppOperUpdate(nodeID string, objinfo *netproto.App) error
+	OnAppOperDelete(nodeID string, objinfo *netproto.App) error
 }
 
 // AppTopic is the App topic on message bus
@@ -83,17 +87,11 @@ func (eh *AppTopic) CreateApp(ctx context.Context, objinfo *netproto.App) (*netp
 
 	// trigger callbacks. we allow creates to happen before it exists in memdb
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnAppAgentStatusSet(nodeID, objinfo)
+		eh.statusReactor.OnAppCreateReq(nodeID, objinfo)
 	}
 
 	// increment stats
 	eh.server.Stats("App", "AgentCreate").Inc()
-
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-	}
 
 	return objinfo, nil
 }
@@ -103,19 +101,12 @@ func (eh *AppTopic) UpdateApp(ctx context.Context, objinfo *netproto.App) (*netp
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received UpdateApp from node %v: {%+v}", nodeID, objinfo)
 
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-		return nil, err
-	}
-
 	// incr stats
 	eh.server.Stats("App", "AgentUpdate").Inc()
 
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnAppAgentStatusSet(nodeID, objinfo)
+		eh.statusReactor.OnAppUpdateReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -129,15 +120,9 @@ func (eh *AppTopic) DeleteApp(ctx context.Context, objinfo *netproto.App) (*netp
 	// incr stats
 	eh.server.Stats("App", "AgentDelete").Inc()
 
-	// delete node state from the memdb
-	err := eh.server.DelNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-	}
-
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnAppAgentStatusDelete(nodeID, objinfo)
+		eh.statusReactor.OnAppDeleteReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -262,4 +247,51 @@ func (eh *AppTopic) WatchApps(ometa *api.ObjectMeta, stream netproto.AppApi_Watc
 	}
 
 	// done
+}
+
+// updateAppOper triggers oper update callbacks
+func (eh *AppTopic) updateAppOper(oper *netproto.AppEvent, nodeID string) error {
+	switch oper.EventType {
+	case api.EventType_CreateEvent:
+		fallthrough
+	case api.EventType_UpdateEvent:
+		// incr stats
+		eh.server.Stats("App", "AgentUpdate").Inc()
+
+		// trigger callbacks
+		if eh.statusReactor != nil {
+			return eh.statusReactor.OnAppOperUpdate(nodeID, &oper.App)
+		}
+	case api.EventType_DeleteEvent:
+		// incr stats
+		eh.server.Stats("App", "AgentDelete").Inc()
+
+		// trigger callbacks
+		if eh.statusReactor != nil {
+			eh.statusReactor.OnAppOperDelete(nodeID, &oper.App)
+		}
+	}
+
+	return nil
+}
+
+func (eh *AppTopic) AppOperUpdate(stream netproto.AppApi_AppOperUpdateServer) error {
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
+	for {
+		oper, err := stream.Recv()
+		if err == io.EOF {
+			log.Errorf("AppOperUpdate stream ended. closing..")
+			return stream.SendAndClose(&api.TypeMeta{})
+		} else if err != nil {
+			log.Errorf("Error receiving from AppOperUpdate stream. Err: %v", err)
+			return err
+		}
+
+		err = eh.updateAppOper(oper, nodeID)
+		if err != nil {
+			log.Errorf("Error updating App oper state. Err: %v", err)
+		}
+	}
 }

@@ -47,6 +47,13 @@ func (client *NimbusClient) WatchTenants(ctx context.Context, reactor TenantReac
 		return
 	}
 
+	// start oper update stream
+	ostream, err := tenantRPCClient.TenantOperUpdate(ctx)
+	if err != nil {
+		log.Errorf("Error starting Tenant oper updates. Err: %v", err)
+		return
+	}
+
 	// get a list of objects
 	objList, err := tenantRPCClient.ListTenants(ctx, &api.ObjectMeta{})
 	if err != nil {
@@ -55,7 +62,7 @@ func (client *NimbusClient) WatchTenants(ctx context.Context, reactor TenantReac
 	}
 
 	// perform a diff of the states
-	client.diffTenants(objList, reactor)
+	client.diffTenants(objList, reactor, ostream)
 
 	// start grpc stream recv
 	recvCh := make(chan *netproto.TenantEvent, evChanLength)
@@ -74,7 +81,7 @@ func (client *NimbusClient) WatchTenants(ctx context.Context, reactor TenantReac
 			log.Infof("Ctrlerif: agent %s got Tenant watch event: Type: {%+v} Tenant:{%+v}", client.clientName, evt.EventType, evt.Tenant)
 
 			client.lockObject(evt.Tenant.GetObjectKind(), evt.Tenant.ObjectMeta)
-			client.processTenantEvent(*evt, reactor)
+			client.processTenantEvent(*evt, reactor, ostream)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
@@ -86,7 +93,7 @@ func (client *NimbusClient) WatchTenants(ctx context.Context, reactor TenantReac
 			client.debugStats.AddInt("TenantWatchResyncs", 1)
 
 			// perform a diff of the states
-			client.diffTenants(objList, reactor)
+			client.diffTenants(objList, reactor, ostream)
 		}
 	}
 }
@@ -112,7 +119,7 @@ func (client *NimbusClient) watchTenantRecvLoop(stream netproto.TenantApi_WatchT
 
 // diffTenant diffs local state with controller state
 // FIXME: this is not handling deletes today
-func (client *NimbusClient) diffTenants(objList *netproto.TenantList, reactor TenantReactor) {
+func (client *NimbusClient) diffTenants(objList *netproto.TenantList, reactor TenantReactor, ostream netproto.TenantApi_TenantOperUpdateClient) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Tenant)
 	for _, obj := range objList.Tenants {
@@ -133,7 +140,7 @@ func (client *NimbusClient) diffTenants(objList *netproto.TenantList, reactor Te
 				}
 				log.Infof("diffTenants(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.Tenant.GetObjectKind(), evt.Tenant.ObjectMeta)
-				client.processTenantEvent(evt, reactor)
+				client.processTenantEvent(evt, reactor, ostream)
 			}
 		} else {
 			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
@@ -147,12 +154,12 @@ func (client *NimbusClient) diffTenants(objList *netproto.TenantList, reactor Te
 			Tenant:    *obj,
 		}
 		client.lockObject(evt.Tenant.GetObjectKind(), evt.Tenant.ObjectMeta)
-		client.processTenantEvent(evt, reactor)
+		client.processTenantEvent(evt, reactor, ostream)
 	}
 }
 
 // processTenantEvent handles Tenant event
-func (client *NimbusClient) processTenantEvent(evt netproto.TenantEvent, reactor TenantReactor) {
+func (client *NimbusClient) processTenantEvent(evt netproto.TenantEvent, reactor TenantReactor, ostream netproto.TenantApi_TenantOperUpdateClient) {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -206,36 +213,30 @@ func (client *NimbusClient) processTenantEvent(evt netproto.TenantEvent, reactor
 			}
 		}
 
-		// return if there is no error
+		// send oper status and return if there is no error
 		if err == nil {
-			if evt.EventType == api.EventType_CreateEvent || evt.EventType == api.EventType_UpdateEvent {
-				robj := netproto.Tenant{
+			robj := netproto.TenantEvent{
+				EventType: evt.EventType,
+				Tenant: netproto.Tenant{
 					TypeMeta:   evt.Tenant.TypeMeta,
 					ObjectMeta: evt.Tenant.ObjectMeta,
 					Status:     evt.Tenant.Status,
-				}
-				client.updateTenantStatus(&robj)
+				},
 			}
+
+			// send oper status
+			err := ostream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Tenant oper Status, %s", err)
+				client.debugStats.AddInt("TenantOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("TenantOperSent", 1)
+			}
+
 			return
 		}
 
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
-	}
-}
-
-// updateTenantStatus sends status back to the controller
-func (client *NimbusClient) updateTenantStatus(resp *netproto.Tenant) {
-	if client.rpcClient != nil && client.rpcClient.ClientConn != nil && client.rpcClient.ClientConn.GetState() == connectivity.Ready {
-		tenantRPCClient := netproto.NewTenantApiClient(client.rpcClient.ClientConn)
-		ctx, _ := context.WithTimeout(context.Background(), DefaultRPCTimeout)
-		_, err := tenantRPCClient.UpdateTenant(ctx, resp)
-		if err != nil {
-			log.Errorf("failed to send Tenant Status, %s", err)
-			client.debugStats.AddInt("TenantStatusSendError", 1)
-		} else {
-			client.debugStats.AddInt("TenantStatusSent", 1)
-		}
-
 	}
 }

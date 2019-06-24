@@ -10,6 +10,7 @@ package nimbus
 import (
 	"context"
 	"errors"
+	"io"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -48,8 +49,11 @@ func (ms *MbusServer) ListNetworks(ctx context.Context) ([]*netproto.Network, er
 
 // NetworkStatusReactor is the reactor interface implemented by controllers
 type NetworkStatusReactor interface {
-	OnNetworkAgentStatusSet(nodeID string, objinfo *netproto.Network) error
-	OnNetworkAgentStatusDelete(nodeID string, objinfo *netproto.Network) error
+	OnNetworkCreateReq(nodeID string, objinfo *netproto.Network) error
+	OnNetworkUpdateReq(nodeID string, objinfo *netproto.Network) error
+	OnNetworkDeleteReq(nodeID string, objinfo *netproto.Network) error
+	OnNetworkOperUpdate(nodeID string, objinfo *netproto.Network) error
+	OnNetworkOperDelete(nodeID string, objinfo *netproto.Network) error
 }
 
 // NetworkTopic is the Network topic on message bus
@@ -83,17 +87,11 @@ func (eh *NetworkTopic) CreateNetwork(ctx context.Context, objinfo *netproto.Net
 
 	// trigger callbacks. we allow creates to happen before it exists in memdb
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnNetworkAgentStatusSet(nodeID, objinfo)
+		eh.statusReactor.OnNetworkCreateReq(nodeID, objinfo)
 	}
 
 	// increment stats
 	eh.server.Stats("Network", "AgentCreate").Inc()
-
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-	}
 
 	return objinfo, nil
 }
@@ -103,19 +101,12 @@ func (eh *NetworkTopic) UpdateNetwork(ctx context.Context, objinfo *netproto.Net
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received UpdateNetwork from node %v: {%+v}", nodeID, objinfo)
 
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-		return nil, err
-	}
-
 	// incr stats
 	eh.server.Stats("Network", "AgentUpdate").Inc()
 
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnNetworkAgentStatusSet(nodeID, objinfo)
+		eh.statusReactor.OnNetworkUpdateReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -129,15 +120,9 @@ func (eh *NetworkTopic) DeleteNetwork(ctx context.Context, objinfo *netproto.Net
 	// incr stats
 	eh.server.Stats("Network", "AgentDelete").Inc()
 
-	// delete node state from the memdb
-	err := eh.server.DelNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-	}
-
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnNetworkAgentStatusDelete(nodeID, objinfo)
+		eh.statusReactor.OnNetworkDeleteReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -262,4 +247,51 @@ func (eh *NetworkTopic) WatchNetworks(ometa *api.ObjectMeta, stream netproto.Net
 	}
 
 	// done
+}
+
+// updateNetworkOper triggers oper update callbacks
+func (eh *NetworkTopic) updateNetworkOper(oper *netproto.NetworkEvent, nodeID string) error {
+	switch oper.EventType {
+	case api.EventType_CreateEvent:
+		fallthrough
+	case api.EventType_UpdateEvent:
+		// incr stats
+		eh.server.Stats("Network", "AgentUpdate").Inc()
+
+		// trigger callbacks
+		if eh.statusReactor != nil {
+			return eh.statusReactor.OnNetworkOperUpdate(nodeID, &oper.Network)
+		}
+	case api.EventType_DeleteEvent:
+		// incr stats
+		eh.server.Stats("Network", "AgentDelete").Inc()
+
+		// trigger callbacks
+		if eh.statusReactor != nil {
+			eh.statusReactor.OnNetworkOperDelete(nodeID, &oper.Network)
+		}
+	}
+
+	return nil
+}
+
+func (eh *NetworkTopic) NetworkOperUpdate(stream netproto.NetworkApi_NetworkOperUpdateServer) error {
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
+	for {
+		oper, err := stream.Recv()
+		if err == io.EOF {
+			log.Errorf("NetworkOperUpdate stream ended. closing..")
+			return stream.SendAndClose(&api.TypeMeta{})
+		} else if err != nil {
+			log.Errorf("Error receiving from NetworkOperUpdate stream. Err: %v", err)
+			return err
+		}
+
+		err = eh.updateNetworkOper(oper, nodeID)
+		if err != nil {
+			log.Errorf("Error updating Network oper state. Err: %v", err)
+		}
+	}
 }

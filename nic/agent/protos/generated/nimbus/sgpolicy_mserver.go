@@ -10,6 +10,7 @@ package nimbus
 import (
 	"context"
 	"errors"
+	"io"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -48,8 +49,11 @@ func (ms *MbusServer) ListSGPolicys(ctx context.Context) ([]*netproto.SGPolicy, 
 
 // SGPolicyStatusReactor is the reactor interface implemented by controllers
 type SGPolicyStatusReactor interface {
-	OnSGPolicyAgentStatusSet(nodeID string, objinfo *netproto.SGPolicy) error
-	OnSGPolicyAgentStatusDelete(nodeID string, objinfo *netproto.SGPolicy) error
+	OnSGPolicyCreateReq(nodeID string, objinfo *netproto.SGPolicy) error
+	OnSGPolicyUpdateReq(nodeID string, objinfo *netproto.SGPolicy) error
+	OnSGPolicyDeleteReq(nodeID string, objinfo *netproto.SGPolicy) error
+	OnSGPolicyOperUpdate(nodeID string, objinfo *netproto.SGPolicy) error
+	OnSGPolicyOperDelete(nodeID string, objinfo *netproto.SGPolicy) error
 }
 
 // SGPolicyTopic is the SGPolicy topic on message bus
@@ -83,17 +87,11 @@ func (eh *SGPolicyTopic) CreateSGPolicy(ctx context.Context, objinfo *netproto.S
 
 	// trigger callbacks. we allow creates to happen before it exists in memdb
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnSGPolicyAgentStatusSet(nodeID, objinfo)
+		eh.statusReactor.OnSGPolicyCreateReq(nodeID, objinfo)
 	}
 
 	// increment stats
 	eh.server.Stats("SGPolicy", "AgentCreate").Inc()
-
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-	}
 
 	return objinfo, nil
 }
@@ -103,19 +101,12 @@ func (eh *SGPolicyTopic) UpdateSGPolicy(ctx context.Context, objinfo *netproto.S
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received UpdateSGPolicy from node %v: {%+v}", nodeID, objinfo)
 
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-		return nil, err
-	}
-
 	// incr stats
 	eh.server.Stats("SGPolicy", "AgentUpdate").Inc()
 
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnSGPolicyAgentStatusSet(nodeID, objinfo)
+		eh.statusReactor.OnSGPolicyUpdateReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -129,15 +120,9 @@ func (eh *SGPolicyTopic) DeleteSGPolicy(ctx context.Context, objinfo *netproto.S
 	// incr stats
 	eh.server.Stats("SGPolicy", "AgentDelete").Inc()
 
-	// delete node state from the memdb
-	err := eh.server.DelNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-	}
-
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnSGPolicyAgentStatusDelete(nodeID, objinfo)
+		eh.statusReactor.OnSGPolicyDeleteReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -262,4 +247,51 @@ func (eh *SGPolicyTopic) WatchSGPolicys(ometa *api.ObjectMeta, stream netproto.S
 	}
 
 	// done
+}
+
+// updateSGPolicyOper triggers oper update callbacks
+func (eh *SGPolicyTopic) updateSGPolicyOper(oper *netproto.SGPolicyEvent, nodeID string) error {
+	switch oper.EventType {
+	case api.EventType_CreateEvent:
+		fallthrough
+	case api.EventType_UpdateEvent:
+		// incr stats
+		eh.server.Stats("SGPolicy", "AgentUpdate").Inc()
+
+		// trigger callbacks
+		if eh.statusReactor != nil {
+			return eh.statusReactor.OnSGPolicyOperUpdate(nodeID, &oper.SGPolicy)
+		}
+	case api.EventType_DeleteEvent:
+		// incr stats
+		eh.server.Stats("SGPolicy", "AgentDelete").Inc()
+
+		// trigger callbacks
+		if eh.statusReactor != nil {
+			eh.statusReactor.OnSGPolicyOperDelete(nodeID, &oper.SGPolicy)
+		}
+	}
+
+	return nil
+}
+
+func (eh *SGPolicyTopic) SGPolicyOperUpdate(stream netproto.SGPolicyApi_SGPolicyOperUpdateServer) error {
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
+	for {
+		oper, err := stream.Recv()
+		if err == io.EOF {
+			log.Errorf("SGPolicyOperUpdate stream ended. closing..")
+			return stream.SendAndClose(&api.TypeMeta{})
+		} else if err != nil {
+			log.Errorf("Error receiving from SGPolicyOperUpdate stream. Err: %v", err)
+			return err
+		}
+
+		err = eh.updateSGPolicyOper(oper, nodeID)
+		if err != nil {
+			log.Errorf("Error updating SGPolicy oper state. Err: %v", err)
+		}
+	}
 }

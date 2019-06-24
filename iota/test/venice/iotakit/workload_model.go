@@ -250,7 +250,6 @@ func (wc *WorkloadCollection) Bringup() error {
 			if gwrk.WorkloadName == wrk.iotaWorkload.WorkloadName {
 				wrk.iotaWorkload.MgmtIp = gwrk.MgmtIp
 				wrk.iotaWorkload.Interface = gwrk.GetInterface()
-				log.Infof("Dumping interface %#v", wrk.iotaWorkload.Interface)
 			}
 		}
 	}

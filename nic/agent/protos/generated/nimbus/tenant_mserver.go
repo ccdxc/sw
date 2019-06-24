@@ -10,6 +10,7 @@ package nimbus
 import (
 	"context"
 	"errors"
+	"io"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -48,8 +49,11 @@ func (ms *MbusServer) ListTenants(ctx context.Context) ([]*netproto.Tenant, erro
 
 // TenantStatusReactor is the reactor interface implemented by controllers
 type TenantStatusReactor interface {
-	OnTenantAgentStatusSet(nodeID string, objinfo *netproto.Tenant) error
-	OnTenantAgentStatusDelete(nodeID string, objinfo *netproto.Tenant) error
+	OnTenantCreateReq(nodeID string, objinfo *netproto.Tenant) error
+	OnTenantUpdateReq(nodeID string, objinfo *netproto.Tenant) error
+	OnTenantDeleteReq(nodeID string, objinfo *netproto.Tenant) error
+	OnTenantOperUpdate(nodeID string, objinfo *netproto.Tenant) error
+	OnTenantOperDelete(nodeID string, objinfo *netproto.Tenant) error
 }
 
 // TenantTopic is the Tenant topic on message bus
@@ -83,17 +87,11 @@ func (eh *TenantTopic) CreateTenant(ctx context.Context, objinfo *netproto.Tenan
 
 	// trigger callbacks. we allow creates to happen before it exists in memdb
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnTenantAgentStatusSet(nodeID, objinfo)
+		eh.statusReactor.OnTenantCreateReq(nodeID, objinfo)
 	}
 
 	// increment stats
 	eh.server.Stats("Tenant", "AgentCreate").Inc()
-
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-	}
 
 	return objinfo, nil
 }
@@ -103,19 +101,12 @@ func (eh *TenantTopic) UpdateTenant(ctx context.Context, objinfo *netproto.Tenan
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received UpdateTenant from node %v: {%+v}", nodeID, objinfo)
 
-	// add object to node state
-	err := eh.server.AddNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-		return nil, err
-	}
-
 	// incr stats
 	eh.server.Stats("Tenant", "AgentUpdate").Inc()
 
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnTenantAgentStatusSet(nodeID, objinfo)
+		eh.statusReactor.OnTenantUpdateReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -129,15 +120,9 @@ func (eh *TenantTopic) DeleteTenant(ctx context.Context, objinfo *netproto.Tenan
 	// incr stats
 	eh.server.Stats("Tenant", "AgentDelete").Inc()
 
-	// delete node state from the memdb
-	err := eh.server.DelNodeState(nodeID, objinfo)
-	if err != nil {
-		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
-	}
-
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnTenantAgentStatusDelete(nodeID, objinfo)
+		eh.statusReactor.OnTenantDeleteReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
@@ -262,4 +247,51 @@ func (eh *TenantTopic) WatchTenants(ometa *api.ObjectMeta, stream netproto.Tenan
 	}
 
 	// done
+}
+
+// updateTenantOper triggers oper update callbacks
+func (eh *TenantTopic) updateTenantOper(oper *netproto.TenantEvent, nodeID string) error {
+	switch oper.EventType {
+	case api.EventType_CreateEvent:
+		fallthrough
+	case api.EventType_UpdateEvent:
+		// incr stats
+		eh.server.Stats("Tenant", "AgentUpdate").Inc()
+
+		// trigger callbacks
+		if eh.statusReactor != nil {
+			return eh.statusReactor.OnTenantOperUpdate(nodeID, &oper.Tenant)
+		}
+	case api.EventType_DeleteEvent:
+		// incr stats
+		eh.server.Stats("Tenant", "AgentDelete").Inc()
+
+		// trigger callbacks
+		if eh.statusReactor != nil {
+			eh.statusReactor.OnTenantOperDelete(nodeID, &oper.Tenant)
+		}
+	}
+
+	return nil
+}
+
+func (eh *TenantTopic) TenantOperUpdate(stream netproto.TenantApi_TenantOperUpdateServer) error {
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
+	for {
+		oper, err := stream.Recv()
+		if err == io.EOF {
+			log.Errorf("TenantOperUpdate stream ended. closing..")
+			return stream.SendAndClose(&api.TypeMeta{})
+		} else if err != nil {
+			log.Errorf("Error receiving from TenantOperUpdate stream. Err: %v", err)
+			return err
+		}
+
+		err = eh.updateTenantOper(oper, nodeID)
+		if err != nil {
+			log.Errorf("Error updating Tenant oper state. Err: %v", err)
+		}
+	}
 }

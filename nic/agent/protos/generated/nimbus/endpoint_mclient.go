@@ -47,6 +47,13 @@ func (client *NimbusClient) WatchEndpoints(ctx context.Context, reactor Endpoint
 		return
 	}
 
+	// start oper update stream
+	ostream, err := endpointRPCClient.EndpointOperUpdate(ctx)
+	if err != nil {
+		log.Errorf("Error starting Endpoint oper updates. Err: %v", err)
+		return
+	}
+
 	// get a list of objects
 	objList, err := endpointRPCClient.ListEndpoints(ctx, &api.ObjectMeta{})
 	if err != nil {
@@ -55,7 +62,7 @@ func (client *NimbusClient) WatchEndpoints(ctx context.Context, reactor Endpoint
 	}
 
 	// perform a diff of the states
-	client.diffEndpoints(objList, reactor)
+	client.diffEndpoints(objList, reactor, ostream)
 
 	// start grpc stream recv
 	recvCh := make(chan *netproto.EndpointEvent, evChanLength)
@@ -74,7 +81,7 @@ func (client *NimbusClient) WatchEndpoints(ctx context.Context, reactor Endpoint
 			log.Infof("Ctrlerif: agent %s got Endpoint watch event: Type: {%+v} Endpoint:{%+v}", client.clientName, evt.EventType, evt.Endpoint)
 
 			client.lockObject(evt.Endpoint.GetObjectKind(), evt.Endpoint.ObjectMeta)
-			client.processEndpointEvent(*evt, reactor)
+			client.processEndpointEvent(*evt, reactor, ostream)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
@@ -86,7 +93,7 @@ func (client *NimbusClient) WatchEndpoints(ctx context.Context, reactor Endpoint
 			client.debugStats.AddInt("EndpointWatchResyncs", 1)
 
 			// perform a diff of the states
-			client.diffEndpoints(objList, reactor)
+			client.diffEndpoints(objList, reactor, ostream)
 		}
 	}
 }
@@ -112,7 +119,7 @@ func (client *NimbusClient) watchEndpointRecvLoop(stream netproto.EndpointApi_Wa
 
 // diffEndpoint diffs local state with controller state
 // FIXME: this is not handling deletes today
-func (client *NimbusClient) diffEndpoints(objList *netproto.EndpointList, reactor EndpointReactor) {
+func (client *NimbusClient) diffEndpoints(objList *netproto.EndpointList, reactor EndpointReactor, ostream netproto.EndpointApi_EndpointOperUpdateClient) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Endpoint)
 	for _, obj := range objList.Endpoints {
@@ -133,7 +140,7 @@ func (client *NimbusClient) diffEndpoints(objList *netproto.EndpointList, reacto
 				}
 				log.Infof("diffEndpoints(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.Endpoint.GetObjectKind(), evt.Endpoint.ObjectMeta)
-				client.processEndpointEvent(evt, reactor)
+				client.processEndpointEvent(evt, reactor, ostream)
 			}
 		} else {
 			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
@@ -147,12 +154,12 @@ func (client *NimbusClient) diffEndpoints(objList *netproto.EndpointList, reacto
 			Endpoint:  *obj,
 		}
 		client.lockObject(evt.Endpoint.GetObjectKind(), evt.Endpoint.ObjectMeta)
-		client.processEndpointEvent(evt, reactor)
+		client.processEndpointEvent(evt, reactor, ostream)
 	}
 }
 
 // processEndpointEvent handles Endpoint event
-func (client *NimbusClient) processEndpointEvent(evt netproto.EndpointEvent, reactor EndpointReactor) {
+func (client *NimbusClient) processEndpointEvent(evt netproto.EndpointEvent, reactor EndpointReactor, ostream netproto.EndpointApi_EndpointOperUpdateClient) {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -206,36 +213,30 @@ func (client *NimbusClient) processEndpointEvent(evt netproto.EndpointEvent, rea
 			}
 		}
 
-		// return if there is no error
+		// send oper status and return if there is no error
 		if err == nil {
-			if evt.EventType == api.EventType_CreateEvent || evt.EventType == api.EventType_UpdateEvent {
-				robj := netproto.Endpoint{
+			robj := netproto.EndpointEvent{
+				EventType: evt.EventType,
+				Endpoint: netproto.Endpoint{
 					TypeMeta:   evt.Endpoint.TypeMeta,
 					ObjectMeta: evt.Endpoint.ObjectMeta,
 					Status:     evt.Endpoint.Status,
-				}
-				client.updateEndpointStatus(&robj)
+				},
 			}
+
+			// send oper status
+			err := ostream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Endpoint oper Status, %s", err)
+				client.debugStats.AddInt("EndpointOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("EndpointOperSent", 1)
+			}
+
 			return
 		}
 
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
-	}
-}
-
-// updateEndpointStatus sends status back to the controller
-func (client *NimbusClient) updateEndpointStatus(resp *netproto.Endpoint) {
-	if client.rpcClient != nil && client.rpcClient.ClientConn != nil && client.rpcClient.ClientConn.GetState() == connectivity.Ready {
-		endpointRPCClient := netproto.NewEndpointApiClient(client.rpcClient.ClientConn)
-		ctx, _ := context.WithTimeout(context.Background(), DefaultRPCTimeout)
-		_, err := endpointRPCClient.UpdateEndpoint(ctx, resp)
-		if err != nil {
-			log.Errorf("failed to send Endpoint Status, %s", err)
-			client.debugStats.AddInt("EndpointStatusSendError", 1)
-		} else {
-			client.debugStats.AddInt("EndpointStatusSent", 1)
-		}
-
 	}
 }

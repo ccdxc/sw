@@ -47,6 +47,13 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 		return
 	}
 
+	// start oper update stream
+	ostream, err := networkRPCClient.NetworkOperUpdate(ctx)
+	if err != nil {
+		log.Errorf("Error starting Network oper updates. Err: %v", err)
+		return
+	}
+
 	// get a list of objects
 	objList, err := networkRPCClient.ListNetworks(ctx, &api.ObjectMeta{})
 	if err != nil {
@@ -55,7 +62,7 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 	}
 
 	// perform a diff of the states
-	client.diffNetworks(objList, reactor)
+	client.diffNetworks(objList, reactor, ostream)
 
 	// start grpc stream recv
 	recvCh := make(chan *netproto.NetworkEvent, evChanLength)
@@ -74,7 +81,7 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 			log.Infof("Ctrlerif: agent %s got Network watch event: Type: {%+v} Network:{%+v}", client.clientName, evt.EventType, evt.Network)
 
 			client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
-			client.processNetworkEvent(*evt, reactor)
+			client.processNetworkEvent(*evt, reactor, ostream)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
@@ -86,7 +93,7 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 			client.debugStats.AddInt("NetworkWatchResyncs", 1)
 
 			// perform a diff of the states
-			client.diffNetworks(objList, reactor)
+			client.diffNetworks(objList, reactor, ostream)
 		}
 	}
 }
@@ -112,7 +119,7 @@ func (client *NimbusClient) watchNetworkRecvLoop(stream netproto.NetworkApi_Watc
 
 // diffNetwork diffs local state with controller state
 // FIXME: this is not handling deletes today
-func (client *NimbusClient) diffNetworks(objList *netproto.NetworkList, reactor NetworkReactor) {
+func (client *NimbusClient) diffNetworks(objList *netproto.NetworkList, reactor NetworkReactor, ostream netproto.NetworkApi_NetworkOperUpdateClient) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Network)
 	for _, obj := range objList.Networks {
@@ -133,7 +140,7 @@ func (client *NimbusClient) diffNetworks(objList *netproto.NetworkList, reactor 
 				}
 				log.Infof("diffNetworks(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
-				client.processNetworkEvent(evt, reactor)
+				client.processNetworkEvent(evt, reactor, ostream)
 			}
 		} else {
 			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
@@ -147,12 +154,12 @@ func (client *NimbusClient) diffNetworks(objList *netproto.NetworkList, reactor 
 			Network:   *obj,
 		}
 		client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
-		client.processNetworkEvent(evt, reactor)
+		client.processNetworkEvent(evt, reactor, ostream)
 	}
 }
 
 // processNetworkEvent handles Network event
-func (client *NimbusClient) processNetworkEvent(evt netproto.NetworkEvent, reactor NetworkReactor) {
+func (client *NimbusClient) processNetworkEvent(evt netproto.NetworkEvent, reactor NetworkReactor, ostream netproto.NetworkApi_NetworkOperUpdateClient) {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -206,36 +213,30 @@ func (client *NimbusClient) processNetworkEvent(evt netproto.NetworkEvent, react
 			}
 		}
 
-		// return if there is no error
+		// send oper status and return if there is no error
 		if err == nil {
-			if evt.EventType == api.EventType_CreateEvent || evt.EventType == api.EventType_UpdateEvent {
-				robj := netproto.Network{
+			robj := netproto.NetworkEvent{
+				EventType: evt.EventType,
+				Network: netproto.Network{
 					TypeMeta:   evt.Network.TypeMeta,
 					ObjectMeta: evt.Network.ObjectMeta,
 					Status:     evt.Network.Status,
-				}
-				client.updateNetworkStatus(&robj)
+				},
 			}
+
+			// send oper status
+			err := ostream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Network oper Status, %s", err)
+				client.debugStats.AddInt("NetworkOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("NetworkOperSent", 1)
+			}
+
 			return
 		}
 
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
-	}
-}
-
-// updateNetworkStatus sends status back to the controller
-func (client *NimbusClient) updateNetworkStatus(resp *netproto.Network) {
-	if client.rpcClient != nil && client.rpcClient.ClientConn != nil && client.rpcClient.ClientConn.GetState() == connectivity.Ready {
-		networkRPCClient := netproto.NewNetworkApiClient(client.rpcClient.ClientConn)
-		ctx, _ := context.WithTimeout(context.Background(), DefaultRPCTimeout)
-		_, err := networkRPCClient.UpdateNetwork(ctx, resp)
-		if err != nil {
-			log.Errorf("failed to send Network Status, %s", err)
-			client.debugStats.AddInt("NetworkStatusSendError", 1)
-		} else {
-			client.debugStats.AddInt("NetworkStatusSent", 1)
-		}
-
 	}
 }

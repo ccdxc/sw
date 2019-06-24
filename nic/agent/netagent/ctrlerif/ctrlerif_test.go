@@ -4,6 +4,7 @@ package ctrlerif
 
 import (
 	"fmt"
+	"io"
 	"sync"
 	"testing"
 	"time"
@@ -835,6 +836,10 @@ func (srv *fakeRPCServer) WatchNetworks(meta *api.ObjectMeta, stream netproto.Ne
 	return nil
 }
 
+func (srv *fakeRPCServer) NetworkOperUpdate(stream netproto.NetworkApi_NetworkOperUpdateServer) error {
+	return nil
+}
+
 func (srv *fakeRPCServer) UpdateNetwork(ctx context.Context, obj *netproto.Network) (*netproto.Network, error) {
 	return obj, nil
 }
@@ -891,6 +896,10 @@ func (srv *fakeRPCServer) WatchEndpoints(meta *api.ObjectMeta, stream netproto.E
 	return nil
 }
 
+func (srv *fakeRPCServer) EndpointOperUpdate(stream netproto.EndpointApi_EndpointOperUpdateServer) error {
+	return nil
+}
+
 func (srv *fakeRPCServer) UpdateEndpoint(ctx context.Context, obj *netproto.Endpoint) (*netproto.Endpoint, error) {
 	return obj, nil
 }
@@ -938,6 +947,11 @@ func (srv *fakeRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream netpro
 
 	return nil
 }
+
+func (srv *fakeRPCServer) SecurityGroupOperUpdate(stream netproto.SecurityGroupApi_SecurityGroupOperUpdateServer) error {
+	return nil
+}
+
 func (srv *fakeRPCServer) UpdateSecurityGroup(ctx context.Context, obj *netproto.SecurityGroup) (*netproto.SecurityGroup, error) {
 	return obj, nil
 }
@@ -993,6 +1007,23 @@ func (srv *fakeRPCServer) WatchSGPolicys(sel *api.ObjectMeta, stream netproto.SG
 	return nil
 }
 
+func (srv *fakeRPCServer) SGPolicyOperUpdate(stream netproto.SGPolicyApi_SGPolicyOperUpdateServer) error {
+	for {
+		oper, err := stream.Recv()
+		if err == io.EOF {
+			log.Errorf("SGPolicyOperUpdate stream ended. closing..")
+			return stream.SendAndClose(&api.TypeMeta{})
+		} else if err != nil {
+			log.Errorf("Error receiving from SGPolicyOperUpdate stream. Err: %v", err)
+			return err
+		}
+
+		srv.Lock()
+		srv.sgpUpdatedb[objectKey(oper.SGPolicy.ObjectMeta)] = &oper.SGPolicy
+		srv.Unlock()
+	}
+}
+
 func (srv *fakeRPCServer) GetSecurityProfile(ctx context.Context, ometa *api.ObjectMeta) (*netproto.SecurityProfile, error) {
 	return nil, nil
 }
@@ -1034,6 +1065,10 @@ func (srv *fakeRPCServer) WatchSecurityProfiles(sel *api.ObjectMeta, stream netp
 		}
 	}
 
+	return nil
+}
+
+func (srv *fakeRPCServer) SecurityProfileOperUpdate(stream netproto.SecurityProfileApi_SecurityProfileOperUpdateServer) error {
 	return nil
 }
 
@@ -1082,6 +1117,10 @@ func (srv *fakeRPCServer) WatchApps(sel *api.ObjectMeta, stream netproto.AppApi_
 		}
 	}
 
+	return nil
+}
+
+func (srv *fakeRPCServer) AppOperUpdate(stream netproto.AppApi_AppOperUpdateServer) error {
 	return nil
 }
 

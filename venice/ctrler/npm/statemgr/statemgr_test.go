@@ -408,11 +408,11 @@ func TestEndpointNodeState(t *testing.T) {
 	AssertOk(t, err, "Error finding endpoint in mbus")
 
 	// trigger node state add
-	err = stateMgr.OnEndpointAgentStatusSet("node-1", nep)
+	err = stateMgr.OnEndpointOperUpdate("node-1", nep)
 	AssertOk(t, err, "Error adding node status")
 
 	// trigger node state delete
-	err = stateMgr.OnEndpointAgentStatusDelete("node-1", nep)
+	err = stateMgr.OnEndpointOperDelete("node-1", nep)
 	AssertOk(t, err, "Error deleting node status")
 
 }
@@ -1266,6 +1266,38 @@ func TestNetworkInterfaceCRUD(t *testing.T) {
 	// delete the smartNic
 	err = stateMgr.ctrler.NetworkInterface().Delete(&netif)
 	AssertOk(t, err, "Error deleting the smartNic")
+}
+
+func TestAgentCrudEvents(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	AssertOk(t, stateMgr.OnEndpointCreateReq("test-node", &netproto.Endpoint{}), "endpoint create")
+	AssertOk(t, stateMgr.OnEndpointUpdateReq("test-node", &netproto.Endpoint{}), "endpoint update")
+	AssertOk(t, stateMgr.OnEndpointDeleteReq("test-node", &netproto.Endpoint{}), "endpoint delete")
+
+	AssertOk(t, stateMgr.OnSGPolicyCreateReq("test-node", &netproto.SGPolicy{}), "SGPolicy create")
+	AssertOk(t, stateMgr.OnSGPolicyUpdateReq("test-node", &netproto.SGPolicy{}), "SGPolicy update")
+	AssertOk(t, stateMgr.OnSGPolicyDeleteReq("test-node", &netproto.SGPolicy{}), "SGPolicy delete")
+
+	netIf := netproto.Interface{
+		TypeMeta: api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testEnic",
+		},
+		Spec: netproto.InterfaceSpec{
+			Type: "ENIC",
+		},
+	}
+	AssertOk(t, stateMgr.OnInterfaceCreateReq("test-node", &netIf), "Interface create")
+	AssertOk(t, stateMgr.OnInterfaceUpdateReq("test-node", &netIf), "Interface update")
+	stateMgr.OnInterfaceDeleteReq("test-node", &netIf)
 }
 
 func TestMain(m *testing.M) {

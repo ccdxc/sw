@@ -47,6 +47,13 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 		return
 	}
 
+	// start oper update stream
+	ostream, err := securityprofileRPCClient.SecurityProfileOperUpdate(ctx)
+	if err != nil {
+		log.Errorf("Error starting SecurityProfile oper updates. Err: %v", err)
+		return
+	}
+
 	// get a list of objects
 	objList, err := securityprofileRPCClient.ListSecurityProfiles(ctx, &api.ObjectMeta{})
 	if err != nil {
@@ -55,7 +62,7 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 	}
 
 	// perform a diff of the states
-	client.diffSecurityProfiles(objList, reactor)
+	client.diffSecurityProfiles(objList, reactor, ostream)
 
 	// start grpc stream recv
 	recvCh := make(chan *netproto.SecurityProfileEvent, evChanLength)
@@ -74,7 +81,7 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 			log.Infof("Ctrlerif: agent %s got SecurityProfile watch event: Type: {%+v} SecurityProfile:{%+v}", client.clientName, evt.EventType, evt.SecurityProfile)
 
 			client.lockObject(evt.SecurityProfile.GetObjectKind(), evt.SecurityProfile.ObjectMeta)
-			client.processSecurityProfileEvent(*evt, reactor)
+			client.processSecurityProfileEvent(*evt, reactor, ostream)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
@@ -86,7 +93,7 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 			client.debugStats.AddInt("SecurityProfileWatchResyncs", 1)
 
 			// perform a diff of the states
-			client.diffSecurityProfiles(objList, reactor)
+			client.diffSecurityProfiles(objList, reactor, ostream)
 		}
 	}
 }
@@ -112,7 +119,7 @@ func (client *NimbusClient) watchSecurityProfileRecvLoop(stream netproto.Securit
 
 // diffSecurityProfile diffs local state with controller state
 // FIXME: this is not handling deletes today
-func (client *NimbusClient) diffSecurityProfiles(objList *netproto.SecurityProfileList, reactor SecurityProfileReactor) {
+func (client *NimbusClient) diffSecurityProfiles(objList *netproto.SecurityProfileList, reactor SecurityProfileReactor, ostream netproto.SecurityProfileApi_SecurityProfileOperUpdateClient) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.SecurityProfile)
 	for _, obj := range objList.SecurityProfiles {
@@ -133,7 +140,7 @@ func (client *NimbusClient) diffSecurityProfiles(objList *netproto.SecurityProfi
 				}
 				log.Infof("diffSecurityProfiles(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.SecurityProfile.GetObjectKind(), evt.SecurityProfile.ObjectMeta)
-				client.processSecurityProfileEvent(evt, reactor)
+				client.processSecurityProfileEvent(evt, reactor, ostream)
 			}
 		} else {
 			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
@@ -147,12 +154,12 @@ func (client *NimbusClient) diffSecurityProfiles(objList *netproto.SecurityProfi
 			SecurityProfile: *obj,
 		}
 		client.lockObject(evt.SecurityProfile.GetObjectKind(), evt.SecurityProfile.ObjectMeta)
-		client.processSecurityProfileEvent(evt, reactor)
+		client.processSecurityProfileEvent(evt, reactor, ostream)
 	}
 }
 
 // processSecurityProfileEvent handles SecurityProfile event
-func (client *NimbusClient) processSecurityProfileEvent(evt netproto.SecurityProfileEvent, reactor SecurityProfileReactor) {
+func (client *NimbusClient) processSecurityProfileEvent(evt netproto.SecurityProfileEvent, reactor SecurityProfileReactor, ostream netproto.SecurityProfileApi_SecurityProfileOperUpdateClient) {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -206,36 +213,30 @@ func (client *NimbusClient) processSecurityProfileEvent(evt netproto.SecurityPro
 			}
 		}
 
-		// return if there is no error
+		// send oper status and return if there is no error
 		if err == nil {
-			if evt.EventType == api.EventType_CreateEvent || evt.EventType == api.EventType_UpdateEvent {
-				robj := netproto.SecurityProfile{
+			robj := netproto.SecurityProfileEvent{
+				EventType: evt.EventType,
+				SecurityProfile: netproto.SecurityProfile{
 					TypeMeta:   evt.SecurityProfile.TypeMeta,
 					ObjectMeta: evt.SecurityProfile.ObjectMeta,
 					Status:     evt.SecurityProfile.Status,
-				}
-				client.updateSecurityProfileStatus(&robj)
+				},
 			}
+
+			// send oper status
+			err := ostream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send SecurityProfile oper Status, %s", err)
+				client.debugStats.AddInt("SecurityProfileOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("SecurityProfileOperSent", 1)
+			}
+
 			return
 		}
 
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
-	}
-}
-
-// updateSecurityProfileStatus sends status back to the controller
-func (client *NimbusClient) updateSecurityProfileStatus(resp *netproto.SecurityProfile) {
-	if client.rpcClient != nil && client.rpcClient.ClientConn != nil && client.rpcClient.ClientConn.GetState() == connectivity.Ready {
-		securityprofileRPCClient := netproto.NewSecurityProfileApiClient(client.rpcClient.ClientConn)
-		ctx, _ := context.WithTimeout(context.Background(), DefaultRPCTimeout)
-		_, err := securityprofileRPCClient.UpdateSecurityProfile(ctx, resp)
-		if err != nil {
-			log.Errorf("failed to send SecurityProfile Status, %s", err)
-			client.debugStats.AddInt("SecurityProfileStatusSendError", 1)
-		} else {
-			client.debugStats.AddInt("SecurityProfileStatusSent", 1)
-		}
-
 	}
 }

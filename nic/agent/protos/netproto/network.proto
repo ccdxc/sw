@@ -25,6 +25,8 @@ service NetworkApi {
     rpc ListNetworks (api.ObjectMeta) returns (NetworkList) {};
     rpc WatchNetworks (api.ObjectMeta) returns (stream NetworkEvent) {};
     rpc UpdateNetwork (Network) returns (Network) {};
+    rpc NetworkOperUpdate (stream NetworkEvent) returns (api.TypeMeta) {};
+
 }
 
 // ApiResponse Object

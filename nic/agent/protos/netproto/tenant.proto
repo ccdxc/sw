@@ -60,4 +60,6 @@ service TenantApi {
     rpc ListTenants (api.ObjectMeta) returns (TenantList) {};
     rpc WatchTenants (api.ObjectMeta) returns (stream TenantEvent) {};
     rpc UpdateTenant (Tenant) returns (Tenant) {};
+    rpc TenantOperUpdate (stream TenantEvent) returns (api.TypeMeta) {};
+
 }

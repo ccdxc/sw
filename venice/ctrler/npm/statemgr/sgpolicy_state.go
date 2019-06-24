@@ -256,14 +256,29 @@ func NewSgpolicyState(sgp *ctkit.SGPolicy, stateMgr *Statemgr) (*SgpolicyState, 
 	return &sgps, nil
 }
 
-// OnSGPolicyAgentStatusSet gets called when policy updates arrive from agents
-func (sm *Statemgr) OnSGPolicyAgentStatusSet(nodeID string, objinfo *netproto.SGPolicy) error {
+// OnSGPolicyCreateReq gets called when agent sends create request
+func (sm *Statemgr) OnSGPolicyCreateReq(nodeID string, objinfo *netproto.SGPolicy) error {
+	return nil
+}
+
+// OnSGPolicyUpdateReq gets called when agent sends update request
+func (sm *Statemgr) OnSGPolicyUpdateReq(nodeID string, objinfo *netproto.SGPolicy) error {
+	return nil
+}
+
+// OnSGPolicyDeleteReq gets called when agent sends delete request
+func (sm *Statemgr) OnSGPolicyDeleteReq(nodeID string, objinfo *netproto.SGPolicy) error {
+	return nil
+}
+
+// OnSGPolicyOperUpdate gets called when policy updates arrive from agents
+func (sm *Statemgr) OnSGPolicyOperUpdate(nodeID string, objinfo *netproto.SGPolicy) error {
 	sm.UpdateSgpolicyStatus(nodeID, objinfo.ObjectMeta.Tenant, objinfo.ObjectMeta.Name, objinfo.ObjectMeta.GenerationID)
 	return nil
 }
 
-// OnSGPolicyAgentStatusDelete gets called when policy delete arrives from agent
-func (sm *Statemgr) OnSGPolicyAgentStatusDelete(nodeID string, objinfo *netproto.SGPolicy) error {
+// OnSGPolicyOperDelete gets called when policy delete arrives from agent
+func (sm *Statemgr) OnSGPolicyOperDelete(nodeID string, objinfo *netproto.SGPolicy) error {
 	return nil
 }
 

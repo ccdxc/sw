@@ -28,6 +28,8 @@ service VrfApi {
     rpc GetVrf (api.ObjectMeta) returns (Vrf) {};
     rpc ListVrfs (api.ObjectMeta) returns (VrfList) {};
     rpc WatchVrfs (api.ObjectMeta) returns (stream VrfEvent) {};
+    rpc VrfOperUpdate (stream VrfEvent) returns (api.TypeMeta) {};
+
 }
 
 // Vrf object
