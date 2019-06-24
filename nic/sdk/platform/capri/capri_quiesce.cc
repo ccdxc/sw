@@ -28,7 +28,7 @@ capri_quiesce_start(void) {
 	cap_top_quiesce_txs_start(chip_id);
 	cap_top_quiesce_sw_phv_insert(chip_id);
 
-	cap_top_quiesce_txs_poll(chip_id, 100);
+	cap_top_quiesce_txs_poll(chip_id, 1000);
 	cap_top_quiesce_p4p_tx_poll(chip_id, 100);
 	cap_top_quiesce_pb_poll(chip_id, port_10_ref_credits, port_11_ref_credits, 100);
 	cap_top_quiesce_psp_poll(chip_id, 100);
