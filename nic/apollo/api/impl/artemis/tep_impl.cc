@@ -343,34 +343,42 @@ tep_impl::fill_status_(pds_tep_status_t *status) {
     status->hw_id = remote46_hw_id_;
 }
 
-void
-tep_impl::fill_spec_(remote_46_mapping_actiondata_t *data,
-                     pds_tep_spec_t *spec) {
-    spec->type = PDS_TEP_TYPE_SERVICE;
-    spec->ip_addr.af = IP_AF_IPV6;
-    sdk::lib::memrev(spec->ip_addr.addr.v6_addr.addr8,
-                     data->action_u.remote_46_mapping_remote_46_info.ipv6_tx_da,
-                     IP6_ADDR8_LEN);
-}
-
 sdk_ret_t
-tep_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
+tep_impl::fill_spec_(pds_tep_spec_t *spec) {
     remote_46_mapping_actiondata_t remote_46_mapping_data = { 0 };
     p4pd_error_t p4pdret;
-    pds_tep_info_t *tep_info = (pds_tep_info_t *)info;
 
     p4pdret = p4pd_global_entry_read(P4_ARTEMIS_TXDMA_TBL_ID_REMOTE_46_MAPPING,
                                      remote46_hw_id_, NULL, NULL,
                                      &remote_46_mapping_data);
     if (unlikely(p4pdret != P4PD_SUCCESS)) {
-        PDS_TRACE_ERR("Failed to read REMOTE_46_MAPPING table for TEP %s at "
-                      "hw id %u, ret %d", api_obj->key2str().c_str(),
+        PDS_TRACE_ERR("p4 global entry read failed for hw id %u, ret %d",
                       remote46_hw_id_, p4pdret);
         return sdk::SDK_RET_HW_READ_ERR;
     }
-    fill_spec_(&remote_46_mapping_data, &tep_info->spec);
-    fill_status_(&tep_info->status);
+    spec->type = PDS_TEP_TYPE_SERVICE;
+    spec->ip_addr.af = IP_AF_IPV6;
+    sdk::lib::memrev(spec->ip_addr.addr.v6_addr.addr8,
+                     remote_46_mapping_data.action_u.
+                     remote_46_mapping_remote_46_info.ipv6_tx_da,
+                     IP6_ADDR8_LEN);
 
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+tep_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
+    sdk_ret_t rv;
+    pds_tep_info_t *tep_info = (pds_tep_info_t *)info;
+
+    rv = fill_spec_(&tep_info->spec);
+    if (unlikely(rv != sdk::SDK_RET_OK)) {
+        PDS_TRACE_ERR("Failed to read hardware table for TEP %s",
+                      api_obj->key2str().c_str());
+        return rv;
+    }
+
+    fill_status_(&tep_info->status);
     return sdk::SDK_RET_OK;
 }
 

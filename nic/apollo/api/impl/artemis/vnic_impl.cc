@@ -541,9 +541,81 @@ vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
     return SDK_RET_OK;
 }
 
+
+#define vnic_tx_stats_action          action_u.vnic_tx_stats_vnic_tx_stats
+#define vnic_rx_stats_action          action_u.vnic_rx_stats_vnic_rx_stats
+sdk_ret_t
+vnic_impl::fill_stats_(pds_vnic_stats_t *stats) {
+    p4pd_error_t p4pd_ret;
+    vnic_tx_stats_actiondata_t tx_stats = { 0 };
+    vnic_rx_stats_actiondata_t rx_stats = { 0 };
+
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VNIC_TX_STATS, hw_id_, NULL,
+                                      NULL, &tx_stats);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to read VNIC_TX_STATS table; hw_id:%u", hw_id_);
+        return sdk::SDK_RET_HW_READ_ERR;
+    }
+
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VNIC_RX_STATS, hw_id_, NULL,
+                                      NULL, &rx_stats);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to read VNIC_RX_STATS table hw_id:%u", hw_id_);
+        return sdk::SDK_RET_HW_READ_ERR;
+    }
+
+    stats->tx_pkts  = *(uint64_t *)tx_stats.vnic_tx_stats_action.out_packets;
+    stats->tx_bytes = *(uint64_t *)tx_stats.vnic_tx_stats_action.out_bytes;
+    stats->rx_pkts  = *(uint64_t *)rx_stats.vnic_rx_stats_action.in_packets;
+    stats->rx_bytes = *(uint64_t *)rx_stats.vnic_rx_stats_action.in_bytes;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vnic_impl::fill_spec_(pds_vnic_spec_t *spec) {
+    sdk_ret_t ret;
+    p4pd_error_t p4pd_ret;
+    egress_vnic_info_actiondata_t egr_vnic_info = { 0 };
+
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_EGRESS_VNIC_INFO, hw_id_, NULL,
+                                      NULL, &egr_vnic_info);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to read EGRESS_VNIC_INFO table; hw_id:%u",
+                      hw_id_);
+        return sdk::SDK_RET_HW_READ_ERR;
+    }
+
+    sdk::lib::memrev(
+        spec->mac_addr,
+        egr_vnic_info.egress_vnic_info_action.ca_mac, ETH_ADDR_LEN);
+
+    spec->vnic_encap.type = PDS_ENCAP_TYPE_DOT1Q;
+    spec->vnic_encap.val.value =
+        egr_vnic_info.egress_vnic_info_action.local_vlan;
+
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 vnic_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
-    return SDK_RET_INVALID_OP;
+    sdk_ret_t rv;
+    pds_vnic_info_t *vnic_info = (pds_vnic_info_t *)info;
+
+    rv = fill_spec_(&vnic_info->spec);
+    if (unlikely(rv != SDK_RET_OK)) {
+        PDS_TRACE_ERR("Failed to read hardware spec tables for VNIC %s",
+                      api_obj->key2str().c_str());
+        return rv;
+    }
+
+    rv = fill_stats_(&vnic_info->stats);
+    if (unlikely(rv != SDK_RET_OK)) {
+        PDS_TRACE_ERR("Failed to read hardware stats tables for VNIC %s",
+                      api_obj->key2str().c_str());
+        return rv;
+    }
+
+    return SDK_RET_OK;
 }
 
 /// \@}    // end of PDS_VNIC_IMPL

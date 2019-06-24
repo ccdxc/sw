@@ -188,6 +188,16 @@ private:
     /// \return     #SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_vnic_delete_(pds_epoch_t epoch, vnic_entry *vnic);
 
+    /// \brief      fill the VNIC spec
+    /// \param[out] spec specification
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_spec_(pds_vnic_spec_t *spec);
+
+    /// \brief      fill the VNIC stats
+    /// \param[out] stats statistics
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_stats_(pds_vnic_stats_t *stats);
+
 private:
     uint16_t    hw_id_;                 ///< hardware id
     handle_t    vnic_mapping_handle_;

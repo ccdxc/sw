@@ -155,32 +155,41 @@ nexthop_impl::fill_status_(pds_nexthop_status_t *status) {
     status->hw_id = hw_id_;
 }
 
-void
-nexthop_impl::fill_spec_(nexthop_actiondata_t *data,
-                         pds_nexthop_spec_t *spec) {
+sdk_ret_t
+nexthop_impl::fill_spec_(pds_nexthop_spec_t *spec) {
+    nexthop_actiondata_t nh_data = { 0 };
+
+    if (nexthop_impl_db()->nh_tbl()->retrieve(
+            hw_id_, &nh_data) != SDK_RET_OK) {
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
+
     if (PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID == hw_id_) {
         spec->type = PDS_NH_TYPE_BLACKHOLE;
-        return;
+        return SDK_RET_OK;
     }
+
     // TODO: read DIPo, DIPi, other types
     spec->type = PDS_NH_TYPE_IP;
-    spec->vlan = data->action_u.nexthop_nexthop_info.vni;
-    sdk::lib::memrev(spec->mac, data->action_u.nexthop_nexthop_info.dmaci,
+    spec->vlan = nh_data.action_u.nexthop_nexthop_info.vni;
+    sdk::lib::memrev(spec->mac, nh_data.action_u.nexthop_nexthop_info.dmaci,
                      ETH_ADDR_LEN);
+
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 nexthop_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
-    nexthop_actiondata_t nh_data = { 0 };
+    sdk_ret_t rv;
     pds_nexthop_info_t *nh_info = (pds_nexthop_info_t *)info;
 
-    if (nexthop_impl_db()->nh_tbl()->retrieve(hw_id_,
-                                              &nh_data) != SDK_RET_OK) {
-        return SDK_RET_ENTRY_NOT_FOUND;
+    rv = fill_spec_(&nh_info->spec);
+    if (unlikely(rv != sdk::SDK_RET_OK)) {
+        PDS_TRACE_ERR("Failed to read hardware table for NH %s",
+                      api_obj->key2str().c_str());
+        return rv;
     }
-    fill_spec_(&nh_data, &nh_info->spec);
     fill_status_(&nh_info->status);
-
     return SDK_RET_OK;
 }
 

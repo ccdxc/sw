@@ -17,7 +17,8 @@
 namespace api_test {
 
 const uint64_t k_feeder_mac = 0xa010101000000000;
-const uint32_t k_max_vnic = ::apollo() ? 64 : PDS_MAX_VNIC;
+// artemis - one is reserved, hence max is MAX_VNIC - 1
+const uint32_t k_max_vnic = ::apollo() ? 64 : PDS_MAX_VNIC - 1;
 
 static inline void
 vnic_feeder_encap_init (uint32_t id, pds_encap_type_t encap_type,
@@ -93,7 +94,8 @@ void
 vnic_feeder::iter_next(int width) {
     id += width;
     vnic_feeder_encap_next(&vnic_encap);
-    vnic_feeder_encap_next(&fabric_encap);
+    if (apollo())
+        vnic_feeder_encap_next(&fabric_encap);
     mac_u64 += width;
     cur_iter_pos++;
 }
@@ -130,14 +132,16 @@ vnic_feeder::spec_compare(const pds_vnic_spec_t *spec) const {
     if (!api::pdsencap_isequal(&vnic_encap, &spec->vnic_encap))
         return false;
 
-    if (!api::pdsencap_isequal(&fabric_encap, &spec->fabric_encap))
-        return false;
+    if (apollo()) {
+        if (!api::pdsencap_isequal(&fabric_encap, &spec->fabric_encap))
+            return false;
 
-    if (rsc_pool_id != spec->rsc_pool_id)
-        return false;
+        if (rsc_pool_id != spec->rsc_pool_id)
+            return false;
 
-    if (src_dst_check != spec->src_dst_check)
-        return false;
+        if (src_dst_check != spec->src_dst_check)
+            return false;
+    }
 
     mac_addr_t mac = {0};
     MAC_UINT64_TO_ADDR(mac, mac_u64);

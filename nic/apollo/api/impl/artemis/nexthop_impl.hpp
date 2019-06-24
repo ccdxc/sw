@@ -121,7 +121,7 @@ public:
 
     /// \brief      read spec, statistics and status from hw tables
     /// \param[in]  api_obj API object
-    /// \param[in]  key  pointer to nexthop key
+    /// \param[in]  key pointer to nexthop key
     /// \param[out] info pointer to nexthop info
     /// \return     #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
@@ -139,9 +139,9 @@ private:
     ~nexthop_impl() {}
 
     /// \brief      populate specification with hardware information
-    /// \param[in]  data nexthop_tx table data
     /// \param[out] spec specification
-    void fill_spec_(nexthop_actiondata_t *data, pds_nexthop_spec_t *spec);
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_spec_(pds_nexthop_spec_t *spec);
 
     /// \brief      populate status with hardware information
     /// \param[out] status status

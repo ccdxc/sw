@@ -16,6 +16,20 @@
 
 namespace api_test {
 
+// WF_TMP_1: [ Create SetMax ] - Read
+// workflow for objects for which delete's not supported. cleanup not done
+// on purpose as this will be the only testcase supported in the binary
+// this workflow will be deleted later
+template <typename feeder_T>
+inline void workflow_tmp_1(feeder_T &feeder) {
+    // trigger
+    batch_start();
+    many_create<feeder_T>(feeder);
+    batch_commit();
+
+    many_read<feeder_T>(feeder, sdk::SDK_RET_OK);
+}
+
 // WF_1: [ Create SetMax - Delete SetMax ] - Read
 template <typename feeder_T>
 inline void workflow_1(feeder_T& feeder) {

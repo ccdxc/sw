@@ -113,10 +113,9 @@ private:
     ~tep_impl() {}
 
     /// \brief      populate specification with hardware information
-    /// \param[in]  remote_46_mapping_data remote_46_mapping table data
     /// \param[out] spec specification
-    void fill_spec_(remote_46_mapping_actiondata_t *remote_46_mapping_data,
-                    pds_tep_spec_t *spec);
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_spec_(pds_tep_spec_t *spec);
 
     /// \brief      populate status with hardware information
     /// \param[out] status status
