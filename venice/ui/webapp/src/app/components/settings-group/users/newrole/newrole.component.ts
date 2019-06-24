@@ -54,7 +54,6 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
   @Input() selectedAuthRole: AuthRole;
   @Input() veniceRoles: AuthRole[] = [];  // hosted UI will pass in available AuthRoles
   @Output() formClose: EventEmitter<any> = new EventEmitter();
-
   groupOptions: SelectItem[] = Utility.convertCategoriesToSelectItem();
 
   constructor(protected _controllerService: ControllerService,
@@ -81,7 +80,6 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     if (this.isEditMode()) {
       this.newAuthRole = this.getRoleFromSelectedRole();
     } else {
-      this.addRolloutReadPermission();  // VS-405 all users to be able to rollout
       this.addEmptyPermission();
       this.newAuthRole.$formGroup.get(['meta', 'name']).setValidators([
         this.newAuthRole.$formGroup.get(['meta', 'name']).validator,
@@ -130,7 +128,6 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
       if (actions) {
         const actionsValues = [];
         actions.forEach( (element) => {
-
           const item = this.getPermissionActionItem(element);
           if (item) {
             actionsValues.push(item);
@@ -273,7 +270,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
    * We have to convert them to REST API complient data structure.
    */
   getRoleFromUI(): any {
-    const newRole = this.newAuthRole.getFormGroupValues();
+    const newRole = Utility.getLodash().cloneDeep(this.newAuthRole.getFormGroupValues());
     const permissions = newRole.spec.permissions;
     for (let i = 0; i < permissions.length; i++) {
       const actions = permissions[i].actions;
@@ -308,19 +305,26 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
    * Server HTML template
    */
   addEmptyPermission() {
-    const permissionArray = this.newAuthRole.$formGroup.get(['spec', 'permissions']) as FormArray;
     const newPermission = new AuthPermission();
     newPermission['actions'] = []; // clear out action field's default value
     newPermission[NewroleComponent.KINDOPTIONS] = [];
     newPermission[NewroleComponent.ACTIONOPTIONS] = [];
     newPermission['resource-kind'] = '';
     newPermission['resource-group'] = '';
-    permissionArray.insert(permissionArray.length , newPermission.$formGroup);
+    if (this.newAuthRole == null) {
+      const role = new AuthRole();
+      role.spec.permissions.push(newPermission);
+      this.newAuthRole = this.getRoleFromSelectedRole(role);
+    } else {
+      const permissionArray = this.newAuthRole.$formGroup.get(['spec', 'permissions']) as FormArray;
+      permissionArray.insert(permissionArray.length , newPermission.$formGroup);
+    }
 
 
   }
 
-  addRolloutReadPermission() {
+  /** adds default rollout permission as per VS-405. Commented out for now, though */
+  /** addRolloutReadPermission() {
     const jsonPermission  =  {
       'resource-tenant': '',
       'resource-group': 'rollout',
@@ -335,6 +339,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     role.spec.permissions.push(rolloutPermission);
     this.newAuthRole = this.getRoleFromSelectedRole(role);
   }
+  */
 
   /**
    * Server HTML template
@@ -363,9 +368,9 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
       permission[NewroleComponent.KINDOPTIONS] = this.getKindOptions(permission);
     }
     // Resetting action and kind values
-      permission.get('actions').setValue([]);
-      permission.get('resource-kind').setValue('');
-      this.displayActions(permission);
+    permission.get('actions').setValue([]);
+    permission.get('resource-kind').setValue('');
+    permission[NewroleComponent.ACTIONOPTIONS] = this.getActionOptions(permission);
     // comment out permission.resource-tenant per VS-241 (GS-release)
     // this.setPermissionInputOnGroupChange($event.value, permission);
   }
@@ -432,7 +437,11 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
         value: AuthPermission_actions_uihint.Read
       }];
     }
-    return Utility.convertEnumToSelectItem(AuthPermission_actions_uihint);
+    if (permission.value['resource-group'] === 'staging') {
+      return Utility.convertEnumToSelectItem(AuthPermission_actions_uihint);
+    } else {
+      return Utility.convertEnumToSelectItem(AuthPermission_actions_uihint, [AuthPermission_actions.Clear, AuthPermission_actions.Commit]);
+    }
   }
 
   /**
@@ -449,8 +458,12 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
 
   onActionChange(event: any, permission: any, actionListboxWidget: any, permissionIndex: number) {
     const values = event.value;
+    const selectedKind = permission.get('resource-kind').value;
     const index = this.getAllActionIndex(values);
-    if (Utility.KINDS_WITHOUT_GROUP.includes(permission.get('resource-kind').value)) {
+    if (Utility.KINDS_WITHOUT_GROUP.includes(selectedKind)) {
+      if (values.includes(NewroleComponent.ACTIONOPTIONS_ALL)) {
+        values.remove(values.indexOf(NewroleComponent.ACTIONOPTIONS_ALL));
+      }
       return;
     }
     if (values.length > 1) {
@@ -461,9 +474,6 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
          values.splice(index, 1);
       }
       actionListboxWidget.value = values;
-      permission[NewroleComponent.ACTIONOPTIONS] = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint);
-    } else {  // there is only one option selected or zero
-     permission[NewroleComponent.ACTIONOPTIONS] = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint);
     }
   }
 
