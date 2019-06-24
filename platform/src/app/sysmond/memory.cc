@@ -44,8 +44,9 @@ checkprocess(monprocess_t *process) {
 
     it = monprocess_map.find(process->pid);
     if (it == monprocess_map.end()) {
-        TRACE_INFO(GetObflLogger(), "{}({}): RSS: {} KB, VSZ: {} KB",
-                process->command, process->pid, process->rss, process->vsz);
+        TRACE_INFO(GetObflLogger(), "{}({}): RSS: {:.1f} MB, VSZ: {:.1f} MB",
+                process->command, process->pid, (double)process->rss / 1024.0,
+                (double)process->vsz / 1024.0);
         monprocess_map[process->pid] = *process;
     } else {
         const monprocess_t& old_process = it->second;
@@ -58,26 +59,30 @@ checkprocess(monprocess_t *process) {
             if (process->rss_change >= PROCESS_CHANGE_THRESHOLD &&
                 process->vsz_change >= PROCESS_CHANGE_THRESHOLD) {
                 //log the change in RSS
-                TRACE_INFO(GetObflLogger(), "{}({}):RSS: {} KB (+{} KB), " \
-                           "VSZ: {} KB (+{} KB)",
+                TRACE_INFO(GetObflLogger(), "{}({}):RSS: {:.1f} MB (+{:.1f} MB), " \
+                           "VSZ: {:.1f} MB (+{:.1f} MB)",
                             process->command, process->pid,
-                            process->rss, process->rss_change,
-                            process->vsz, process->vsz_change);
+                            (double)process->rss / 1024.0,
+                            (double)process->rss_change / 1024.0,
+                            (double)process->vsz / 1024.0,
+                            (double)process->vsz_change / 1024.0);
                 //Reinitialize rss/vsz change to 0.
                 process->rss_change = 0;
                 process->vsz_change = 0;
             } else if (process->rss_change >= PROCESS_CHANGE_THRESHOLD) {
                 //log the change in RSS
-                TRACE_INFO(GetObflLogger(), "{}({}):RSS: {}KB (+{}KB)",
+                TRACE_INFO(GetObflLogger(), "{}({}):RSS: {:.1f}MB (+{:.1f}MB)",
                             process->command, process->pid,
-                            process->rss, process->rss_change);
+                            (double)process->rss / 1024.0,
+                            (double)process->rss_change / 1024.0);
                 //Reinitialize rss_change  to 0
                 process->rss_change = 0;
             } else if (process->vsz_change >= PROCESS_CHANGE_THRESHOLD) {
                 //log the change in vsz
-                TRACE_INFO(GetObflLogger(), "{}({}):VSZ: {}KB (+{}KB)",
+                TRACE_INFO(GetObflLogger(), "{}({}):VSZ: {:.1f}MB (+{:.1f}MB)",
                             process->command, process->pid,
-                            process->vsz, process->vsz_change);
+                            (double)process->vsz / 1024.0,
+                            (double)process->vsz_change / 1024.0);
                 //Reinitialize vsz_change  to 0
                 process->vsz_change = 0;
             }
@@ -131,10 +136,11 @@ getMemory(char *psline, monprocess_t *process) {
         return -1;
     }
     //do not process the first line
-    //skip the ps and cut processes
+    //skip the ps,sleep and cut processes
     if (tokens[0] == "PID" ||
         tokens[3] == "ps" ||
-        tokens[3] == "cut") {
+        tokens[3] == "cut" ||
+        tokens[3] == "sleep") {
         return -1;
     }
     process->command = tokens[3];
@@ -211,12 +217,14 @@ monitorfreememory(void) {
                 curr_memory = getmeminfo(line);
                 if (asicmemory.availablememory == 0) {
                     avail_memory_lowest = curr_memory;
-                    TRACE_INFO(GetObflLogger(), "Available memory {} KB", avail_memory_lowest);
+                    TRACE_INFO(GetObflLogger(), "Available memory {:.1f} MB",
+                    (double)avail_memory_lowest / 1024.0);
                 } else if (curr_memory < avail_memory_lowest) {
                     mem_diff = mem_diff + avail_memory_lowest - curr_memory;
                     avail_memory_lowest = curr_memory;
                     if (mem_diff >= AVAILABLE_MEMORY_THRESHOLD) {
-                        TRACE_INFO(GetObflLogger(), "Available memory lowerwatermark {} KB", avail_memory_lowest);
+                        TRACE_INFO(GetObflLogger(), "Available memory lowerwatermark {:.1f} MB",
+                        (double)avail_memory_lowest / 1024.0);
                         mem_diff = 0;
                     }
                 }
@@ -257,7 +265,11 @@ static void
 checkmemory(void)
 {
     uint64_t key = 0;
+    static int runtimecounter;
 
+    if (++runtimecounter < 6) {
+        return;
+    }
     //monitor the processes in system
     monitorprocess();
     //remove the pids which are no longer used.
@@ -267,7 +279,6 @@ checkmemory(void)
     //Publish Delphi object
     delphi::objects::AsicMemoryMetrics::Publish(key, &asicmemory);
     color = !color;
-    return;
 }
 
 MONFUNC(checkmemory);
