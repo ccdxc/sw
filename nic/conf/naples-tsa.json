@@ -12,51 +12,60 @@
 
 	"CollectActions" : [
                                 {
-                                        "Name" : "Action1",
+                                        "Name" : "All Processes",
                                         "Method" : 0,
                                         "Command" : "ps -aefl"
                                 },
                                 {
-                                        "Name" : "Action2",
+                                        "Name" : "Storage",
                                         "Method" : 0,
                                         "Command" : "df -k"
                                 },
                                 {
-                                        "Name" : "Action3",
+                                        "Name" : "CPU Info",
                                         "Method" : 0,
                                         "Command" : "cat /proc/cpuinfo"
                                 },
                                 {
-                                        "Name" : "Action4",
+                                        "Name" : "Collect Core",
                                         "Method" : 0,
 					"Command" : "mkdir core && cp /data/core/* core"
                                 },
 				{
-                                        "Name" : "Action5",
+                                        "Name" : "Collect Logs",
                                         "Method" : 0,
                                         "Command" : "mkdir logs && cp /var/log/pensando/* logs/"
                                 },
                                 {
-                                        "Name" : "Action6",
+                                        "Name" : "Collect Sysmgr Logs",
+                                        "Method" : 0,
+                                        "Command" : "mkdir sysmgr-logs && cp /var/log/sysmgr/* /var/log/sysmgr.log sysmgr-logs/"
+                                },
+                                {
+                                        "Name" : "HBM Bandwidth",
                                         "Method" : 0,
                                         "Command" : "halctl show platform hbm bandwidth"
                                 },
                                 {
-                                        "Name" : "Action7",
+                                        "Name" : "LLC Stats",
                                         "Method" : 0,
                                         "Command" : "halctl show hbm llc-stats"
                                 },
                                 {
-                                        "Name" : "Action8",
+                                        "Name" : "Show Lif",
                                         "Method" : 0,
                                         "Command" : "halctl show lif"
                                 },                                
 				{
-                                        "Name" : "Action9",
+                                        "Name" : "Table Info",
                                         "Method" : 0,
                                         "Command" : "halctl show table info"
-				}
-
+				},
+				{
+                                        "Name" : "NaplesStatus Delphi Object",
+                                        "Method" : 0,
+                                        "Command" : "delphictl db get NaplesStatus"
+                                }
 			],
 
 	"ExportActions" : [
