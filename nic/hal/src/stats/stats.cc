@@ -130,6 +130,7 @@ stats_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
         HAL_TRACE_ERR("Error in updating port metrics, ret {}", ret);
     }
 
+#if 0
     if (hal::g_hal_cfg.device_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC) {
         bzero(&pd_func_args, sizeof(pd::pd_func_args_t));
         pd::pd_system_args_init(&pd_system_args);
@@ -144,6 +145,7 @@ stats_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
 
         hal_update_drop_stats(&rsp);
     }
+#endif
 }
 
 static void
@@ -193,10 +195,11 @@ hal_stats_init (hal_cfg_t *hal_cfg)
                              HAL_STATS_START_INTVL,
                              (void *)0,    // ctxt
                              stats_timer_start, false);
-
+#if 0
     if (hal::g_hal_cfg.device_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC) {
         hal_global_stats_init();
     }
+#endif
 
     return HAL_RET_OK;
 }
