@@ -223,6 +223,7 @@ void cpulock()
 
     CPU_ZERO(&set);
     CPU_SET(0, &set);
+    CPU_SET(2, &set);
     CPU_SET(3, &set);
     pid = getpid();
 

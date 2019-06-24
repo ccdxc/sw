@@ -457,7 +457,7 @@ alloc_init_rule_ctr(rule_cfg_t *cfg, rule_key_t rule_key)
 
     ret = init_rule_ctr(cfg, ctr, rule_key);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("rule ctr init failed");
+        HAL_TRACE_ERR("rule ctr init failed {}", ret);
         g_hal_state->rule_ctr_slab()->free(ctr);
         return NULL;
     }
@@ -773,7 +773,7 @@ rule_match_process_rule (const acl_ctx_t **acl_ctx,
                                             /* Rule add */
                                             ret = acl_add_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
                                             if (ret != HAL_RET_OK) {
-                                                HAL_TRACE_ERR("Unable to create the acl rules");
+                                                HAL_TRACE_ERR("Unable to create the acl rules {}", ret);
                                                 return ret;
                                             }
                                             /* Incremented here, corresponding decrement in acl_rule_deref */
@@ -782,7 +782,7 @@ rule_match_process_rule (const acl_ctx_t **acl_ctx,
                                             /* Rule delete */
                                             ret = acl_del_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
                                             if (ret != HAL_RET_OK) {
-                                                HAL_TRACE_ERR("Unable to delete the acl rules");
+                                                HAL_TRACE_ERR("Unable to delete the acl rules: {}", ret);
                                                 return ret;
                                             }
                                             /* acl_rule_deref calls ref_dec of the userdata (refcount) */
@@ -810,7 +810,7 @@ rule_match_process_rule (const acl_ctx_t **acl_ctx,
                                    /* Rule add */
                                    ret = acl_add_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
                                    if (ret != HAL_RET_OK) {
-                                       HAL_TRACE_ERR("Unable to create the acl rules");
+                                       HAL_TRACE_ERR("Unable to create the acl rules: {}", ret);
                                        return ret;
                                    }
                                    /* Incremented here, corresponding decrement in acl_rule_deref */
@@ -819,7 +819,7 @@ rule_match_process_rule (const acl_ctx_t **acl_ctx,
                                    /* Rule delete */
                                    ret = acl_del_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
                                    if (ret != HAL_RET_OK) {
-                                       HAL_TRACE_ERR("Unable to delete the acl rules");
+                                       HAL_TRACE_ERR("Unable to delete the acl rules:{}", ret);
                                        return ret;
                                    }
                                    /* acl_rule_deref calls ref_dec of the userdata (refcount) */
@@ -848,7 +848,7 @@ rule_match_process_rule (const acl_ctx_t **acl_ctx,
                                     /* Rule add */
                                     ret = acl_add_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
                                     if (ret != HAL_RET_OK) {
-                                        HAL_TRACE_ERR("Unable to create the acl rules");
+                                        HAL_TRACE_ERR("Unable to create the acl rules: {}", ret);
                                         return ret;
                                     }
                                     /* Incremented here, corresponding decrement in acl_rule_deref */
@@ -857,7 +857,7 @@ rule_match_process_rule (const acl_ctx_t **acl_ctx,
                                     /* Rule delete */
                                     ret = acl_del_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
                                     if (ret != HAL_RET_OK) {
-                                        HAL_TRACE_ERR("Unable to delete the acl rules");
+                                        HAL_TRACE_ERR("Unable to delete the acl rules:{}",ret);
                                         return ret;
                                     }
                                     /* acl_rule_deref calls ref_dec of the userdata (refcount) */
