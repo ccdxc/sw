@@ -81,6 +81,8 @@ func TestWatchFwlogPolicy(t *testing.T) {
 	Assert(t, client != nil, "invalid telemetry client ")
 	defer client.Stop()
 
+	time.Sleep(3 * time.Second)
+
 	// add new object
 	handler.EXPECT().CreateFwlogPolicy(gomock.Any(), gomock.Any()).Times(1).Return(nil)
 	appObj := *fp["fwlog-2"]
@@ -183,6 +185,12 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 	}, "fFlowExportPolicy add failed")
 
 	//update
+	// because of eventual consistent model, there is no guarantee that all the 3 creates are received
+	//	in the client watcher by this time. May be even the client is on the process of establishing the connection
+	//	to server by the time the update below is completed. in which case we would get the create for all the objects
+	//	and not the update. Sleep for 2 seconds and hope that all connection has been established..
+	time.Sleep(3 * time.Second)
+
 	handler.EXPECT().UpdateFlowExportPolicy(gomock.Any(), gomock.Any()).Times(1).Return(nil)
 	err = policyDb.UpdateObject(&appObj)
 	AssertOk(t, err, fmt.Sprintf("failed to update FlowExportPolicy object %+v", appObj))
