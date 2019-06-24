@@ -20,10 +20,11 @@ Delete Object
 ### Options inherited from parent commands
 
 ```
-  -j, --json      display in json format (default true)
-      --verbose   display penctl debug log
-  -v, --version   display version of penctl
-  -y, --yaml      display in yaml format
+  -a, --authtoken string   path to file containing authorization token
+  -j, --json               display in json format (default true)
+      --verbose            display penctl debug log
+  -v, --version            display version of penctl
+  -y, --yaml               display in yaml format
 ```
 
 ### SEE ALSO
@@ -32,4 +33,5 @@ Delete Object
 * [penctl delete interface](penctl_delete_interface.md)	 - Delete interface
 * [penctl delete naples-profile](penctl_delete_naples-profile.md)	 - naples profile object
 * [penctl delete qos-class](penctl_delete_qos-class.md)	 - qos-class object
+* [penctl delete ssh-pub-key](penctl_delete_ssh-pub-key.md)	 - Delete ssh pub-key on Naples
 

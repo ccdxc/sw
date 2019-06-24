@@ -31,11 +31,15 @@ var showTechCmd = &cobra.Command{
 var destDir string
 var cmdFile string
 var tarFile string
+var tarFileDir string
 
 func init() {
 	sysCmd.AddCommand(showTechCmd)
 
 	showTechCmd.Flags().StringVarP(&tarFile, "tarball", "b", "", "Name of tarball to create (without .tar.gz)")
+	showTechCmd.Flags().StringVarP(&tarFileDir, "odir", "", "", "Directory to create the tech-support in")
+
+	showTechCmd.Flags().MarkHidden("odir")
 }
 
 var cmdToExecute = `
@@ -142,10 +146,10 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 		os.MkdirAll(destDir, os.ModePerm)
 	}
 
-	fmt.Printf("Fetching upgrade logs")
+	fmt.Printf("Fetching data directory")
 	//Copy out upgrade logs
-	upgDestDir := destDir + "/upgrade_logs/"
-	createDestDir(upgDestDir)
+	dataDestDir := destDir + "/data/"
+	createDestDir(dataDestDir)
 	resp, err := restGetResp("data/")
 	if err != nil {
 		return err
@@ -155,12 +159,35 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	for _, file := range retS {
-		if strings.Contains(file, "upgrade-logs.tar") {
-			fmt.Printf(".")
-			copyFileToDest(upgDestDir, "data/", file)
+		if strings.HasSuffix(file, "/") || strings.Contains(file, "naples-disruptive-upgrade-tech-support") {
+			continue
 		}
+		fmt.Printf(".")
+		copyFileToDest(dataDestDir, "data/", file)
 	}
-	fmt.Printf("\nUpgrade logs fetched\n")
+	fmt.Printf("\ndata directory fetched\n")
+	retSlice = nil
+
+	fmt.Printf("Fetching update directory")
+	//Copy out files from /update/
+	updateDestDir := destDir + "/update/"
+	createDestDir(updateDestDir)
+	resp, err = restGetResp("update/")
+	if err != nil && !strings.Contains(err.Error(), "not found") {
+		return err
+	}
+	retS, err = parseFiles(resp)
+	if err != nil {
+		return err
+	}
+	for _, file = range retS {
+		if strings.HasSuffix(file, "/") {
+			continue
+		}
+		fmt.Printf(".")
+		copyFileToDest(updateDestDir, "update/", file)
+	}
+	fmt.Printf("\nupdate directory fetched\n")
 	retSlice = nil
 
 	fmt.Printf("Fetching cores")
@@ -199,6 +226,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 		if file == "events" || strings.HasSuffix(file, "/") {
 			continue
 		}
+		fmt.Printf(".")
 		copyFileToDest(eventsDestDir, "monitoring/v1/naples/events/", file)
 	}
 	fmt.Printf("Events fetched\n")
@@ -271,8 +299,12 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	if !cmd.Flags().Changed("tarball") {
 		tarFile = "naples-tech-support"
 	}
+	if !cmd.Flags().Changed("odir") {
+		tarFileDir = "./"
+	}
+	tarFile = tarFileDir + "/" + tarFile
 	fmt.Println("Creating tarball: " + tarFile + ".tar.gz")
-	tarcmd := exec.Command("tar", "-zcvf", tarFile+".tar.gz", destDir)
+	tarcmd := exec.Command("tar", "-czf", tarFile+".tar.gz", destDir)
 	tarcmd.Stdin = strings.NewReader("tar naples-tech-support")
 	var tarout bytes.Buffer
 	tarcmd.Stdout = &tarout

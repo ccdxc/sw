@@ -24,11 +24,11 @@ Options
 
 ::
 
-  -c, --controllers stringSlice     List of controller IP addresses or hostnames
+  -c, --controllers stringSlice     List of controller IP addresses or ids
   -g, --default-gw string           Default GW for mgmt
   -d, --dns-servers stringSlice     List of DNS servers
   -h, --help                        help for naples
-  -n, --hostname string             Host name
+  -i, --id string                   Naples ID
   -o, --managed-by string           NAPLES Management. host or network (default "host")
   -k, --management-network string   Management Network. inband or oob
   -m, --mgmt-ip string              Management IP in CIDR format
@@ -40,10 +40,11 @@ Options inherited from parent commands
 
 ::
 
-  -j, --json      display in json format (default true)
-      --verbose   display penctl debug log
-  -v, --version   display version of penctl
-  -y, --yaml      display in yaml format
+  -a, --authtoken string   path to file containing authorization token
+  -j, --json               display in json format (default true)
+      --verbose            display penctl debug log
+  -v, --version            display version of penctl
+  -y, --yaml               display in yaml format
 
 SEE ALSO
 ~~~~~~~~

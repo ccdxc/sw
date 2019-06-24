@@ -27,10 +27,11 @@ Options inherited from parent commands
 
 ::
 
-  -j, --json      display in json format (default true)
-      --verbose   display penctl debug log
-  -v, --version   display version of penctl
-  -y, --yaml      display in yaml format
+  -a, --authtoken string   path to file containing authorization token
+  -j, --json               display in json format (default true)
+      --verbose            display penctl debug log
+  -v, --version            display version of penctl
+  -y, --yaml               display in yaml format
 
 SEE ALSO
 ~~~~~~~~
@@ -42,6 +43,7 @@ SEE ALSO
 * `penctl show logs <penctl_show_logs.rst>`_ 	 - Show logs from Naples
 * `penctl show metrics <penctl_show_metrics.rst>`_ 	 - Show metrics from Naples
 * `penctl show naples <penctl_show_naples.rst>`_ 	 - Show NAPLES Modes and Profiles
+* `penctl show naples-config <penctl_show_naples-config.rst>`_ 	 - Show NAPLES Configuration
 * `penctl show naples-profiles <penctl_show_naples-profiles.rst>`_ 	 - Show Available NAPLES Profiles
 * `penctl show port <penctl_show_port.rst>`_ 	 - show port object
 * `penctl show proc-meminfo <penctl_show_proc-meminfo.rst>`_ 	 - Check /proc/meminfo file on Naples

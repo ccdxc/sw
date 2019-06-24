@@ -18,11 +18,12 @@ penctl [flags]
 ### Options
 
 ```
-  -h, --help      help for penctl
-  -j, --json      display in json format (default true)
-      --verbose   display penctl debug log
-  -v, --version   display version of penctl
-  -y, --yaml      display in yaml format
+  -a, --authtoken string   path to file containing authorization token
+  -h, --help               help for penctl
+  -j, --json               display in json format (default true)
+      --verbose            display penctl debug log
+  -v, --version            display version of penctl
+  -y, --yaml               display in yaml format
 ```
 
 ### SEE ALSO

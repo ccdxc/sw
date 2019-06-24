@@ -40,8 +40,8 @@ bool UpgPreStateHandler::ImageCompatCheck(UpgCtx &ctx) {
 }
 
 bool UpgPreStateHandler::PreCompatCheckHandler(UpgCtx &ctx) {
-    if (exists("/nic/tools/fwupdate") && exists("/data/upgrade_halt_state_machine")) {
-        remove("/data/upgrade_halt_state_machine");
+    if (exists("/nic/tools/fwupdate") && exists("/update/upgrade_halt_state_machine")) {
+        remove("/update/upgrade_halt_state_machine");
     }
     ctx.upgPostCompatCheck = false;
     UPG_LOG_DEBUG("UpgPreStateHandler PrePre returning");

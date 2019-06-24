@@ -19,7 +19,7 @@ def Setup(tc):
     req = api.Trigger_CreateExecuteCommandsRequest()
 
     for node in tc.Nodes:
-        api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/upgrade_halt_state_machine")
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/upgrade_halt_state_machine")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pcieport_upgdata")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pciemgr_upgdata")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pciemgr_upgrollback")
@@ -100,7 +100,7 @@ def Teardown(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for node in tc.Nodes:
-        api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/upgrade_halt_state_machine")
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/upgrade_halt_state_machine")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pcieport_upgdata")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pciemgr_upgdata")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pciemgr_upgrollback")

@@ -21,7 +21,7 @@ Options
 ::
 
       --admin-state string   Set port admin state - up, down (default "up")
-      --auto-neg string      Enable or disable auto-neg using enable | disable (default "enable") (default "enable")
+      --auto-neg string      Enable or disable auto-neg using enable | disable (default "enable")
       --fec-type string      Specify fec-type - rs, fc, none (default "none")
   -h, --help                 help for port
       --mtu uint32           Specify port MTU
@@ -34,10 +34,11 @@ Options inherited from parent commands
 
 ::
 
-  -j, --json      display in json format (default true)
-      --verbose   display penctl debug log
-  -v, --version   display version of penctl
-  -y, --yaml      display in yaml format
+  -a, --authtoken string   path to file containing authorization token
+  -j, --json               display in json format (default true)
+      --verbose            display penctl debug log
+  -v, --version            display version of penctl
+  -y, --yaml               display in yaml format
 
 SEE ALSO
 ~~~~~~~~

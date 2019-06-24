@@ -6,13 +6,16 @@ Sequencer queues information:
 
 Value Description:
 
-QStateAddr: queue state memory address
-QGroup    : queue group
-            0 - compress/decompress
-            1 - compress/decompress status
-            2 - crypto
-            3 - crypto status
-CoreId    : CPU core ID (not available currently)
+
+QStateAddr	: queue state memory address
+QGroup	: queue group
+           : 0 - compress/decompress
+           : 1 - compress/decompress status
+           : 2 - crypto
+           : 3 - crypto status
+
+CoreId	: CPU core ID (not available currently
+
 
 ### Synopsis
 
@@ -25,13 +28,16 @@ CoreId    : CPU core ID (not available currently)
 
 Value Description:
 
-QStateAddr: queue state memory address
-QGroup    : queue group
-            0 - compress/decompress
-            1 - compress/decompress status
-            2 - crypto
-            3 - crypto status
-CoreId    : CPU core ID (not available currently)
+
+QStateAddr	: queue state memory address
+QGroup	: queue group
+           : 0 - compress/decompress
+           : 1 - compress/decompress status
+           : 2 - crypto
+           : 3 - crypto status
+
+CoreId	: CPU core ID (not available currently
+
 ---------------------------------
 
 
@@ -48,10 +54,11 @@ penctl show metrics sonic sequencer_info [flags]
 ### Options inherited from parent commands
 
 ```
-  -j, --json      display in json format (default true)
-      --verbose   display penctl debug log
-  -v, --version   display version of penctl
-  -y, --yaml      display in yaml format
+  -a, --authtoken string   path to file containing authorization token
+  -j, --json               display in json format (default true)
+      --verbose            display penctl debug log
+  -v, --version            display version of penctl
+  -y, --yaml               display in yaml format
 ```
 
 ### SEE ALSO

@@ -20,10 +20,11 @@ Update Object
 ### Options inherited from parent commands
 
 ```
-  -j, --json      display in json format (default true)
-      --verbose   display penctl debug log
-  -v, --version   display version of penctl
-  -y, --yaml      display in yaml format
+  -a, --authtoken string   path to file containing authorization token
+  -j, --json               display in json format (default true)
+      --verbose            display penctl debug log
+  -v, --version            display version of penctl
+  -y, --yaml               display in yaml format
 ```
 
 ### SEE ALSO
@@ -32,6 +33,7 @@ Update Object
 * [penctl update naples](penctl_update_naples.md)	 - Set NAPLES Modes and Profiles
 * [penctl update port](penctl_update_port.md)	 - update port object
 * [penctl update qos-class](penctl_update_qos-class.md)	 - qos-class object
+* [penctl update ssh-pub-key](penctl_update_ssh-pub-key.md)	 - Configure ssh pub-key on Naples
 * [penctl update startup-firmware](penctl_update_startup-firmware.md)	 - Set startup firmware on Naples
 * [penctl update time](penctl_update_time.md)	 - Set system clock time on Naples
 
