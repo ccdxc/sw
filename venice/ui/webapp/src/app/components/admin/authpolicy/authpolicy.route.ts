@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { AuthpolicyComponent } from '@app/components/settings-group/authpolicy/authpolicy.component';
+import { AuthpolicyComponent } from '@app/components/admin/authpolicy/authpolicy.component';
 
 
 const routes: Routes = [

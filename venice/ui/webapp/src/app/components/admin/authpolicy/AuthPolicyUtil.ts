@@ -1,4 +1,4 @@
-import { LDAPCheckResponse, LDAPCheckType, CheckResponseError } from '@app/components/settings-group/authpolicy/.';
+import { LDAPCheckResponse, LDAPCheckType, CheckResponseError } from '@app/components/admin/authpolicy/.';
 import { AuthAuthenticationPolicy, ApiStatus, AuthLdap, IAuthAuthenticationPolicy, AuthAuthenticators_authenticator_order, IApiStatus, AuthLdapServerStatus_result } from '@sdk/v1/models/generated/auth';
 
 export class AuthPolicyUtil {

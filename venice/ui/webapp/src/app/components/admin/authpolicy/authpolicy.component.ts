@@ -3,8 +3,8 @@ import { FormControl } from '@angular/forms';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
-import { LDAPCheckResponse, LDAPCheckType } from '@app/components/settings-group/authpolicy/.';
-import { AuthPolicyUtil } from '@app/components/settings-group/authpolicy/AuthPolicyUtil';
+import { LDAPCheckResponse, LDAPCheckType } from '@app/components/admin/authpolicy/.';
+import { AuthPolicyUtil } from '@app/components/admin/authpolicy/AuthPolicyUtil';
 import { ControllerService } from '@app/services/controller.service';
 import { AuthService } from '@app/services/generated/auth.service';
 import { AuthAuthenticationPolicy, AuthLdap, IApiStatus, IAuthAuthenticationPolicy, AuthAuthenticators_authenticator_order, AuthRadius, IAuthTokenSecretRequest, AuthTokenSecretRequest } from '@sdk/v1/models/generated/auth';
@@ -95,7 +95,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
 
     this._controllerService.setToolbarData({
       buttons: buttons,
-      breadcrumb: [{ label: 'Settings', url: '' }, { label: 'Auth Policy', url: '' }]
+      breadcrumb: [{ label: 'Auth Policy', url: '' }]
     });
   }
 

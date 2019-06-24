@@ -165,4 +165,50 @@ export const sideNavMenu: SideNavItem[] = [
       }
     ]
   },
+  {
+    label: 'Admin',
+    icon: {
+      cssClass: 'material-icons',
+      matIconName: 'settings',
+    },
+    // TODO: to be included later, currently every user should have access to this object
+    //           to be able to modify or see their own implicit permissions
+    //
+    // roleGuard: {
+    //   opt: [
+    //     UIRolePermissions.authauthenticationpolicy_read,
+    //     UIRolePermissions.authuser_read,
+    //     UIRolePermissions.authrole_read,
+    //     UIRolePermissions.authrolebinding_read,
+    //   ]
+    // },
+    children: [
+      {
+        label: 'Auth Policy',
+        icon: {
+          cssClass: 'material-icons',
+          matIconName: 'settings',
+        },
+        roleGuard: UIRolePermissions.authauthenticationpolicy_read,
+        link: ['/admin', 'authpolicy']
+      },
+      {
+        label: 'User Management',
+        icon: {
+          cssClass: 'material-icons',
+          matIconName: 'person',
+        },
+        // TODO: to be included later, currently every user should have access to this object
+        //           to be able to modify or see their own implicit permissions
+        // roleGuard: {
+        //   opt: [
+        //       UIRolePermissions.authuser_read,
+        //       UIRolePermissions.authrole_read,
+        //       UIRolePermissions.authrolebinding_read,
+        //   ]
+        // },
+        link: ['/admin', 'users']
+      }
+    ]
+  },
 ];

@@ -215,17 +215,6 @@
             </button>
             -->
       <!-- Material-Design sideNav will auto highlight the first button when open. Check scss to see style rules -->
-      <button mat-icon-button (click)="settingsNavigate(['/settings', 'authpolicy'])"
-              class="app-shell-button-sideNav-settings"
-              *roleGuard="'authauthenticationpolicy_read'">
-        <mat-icon>settings</mat-icon>
-        Authentication Policy
-      </button>
-      <button mat-icon-button (click)="settingsNavigate(['/settings', 'users'])"
-              class="app-shell-button-sideNav-settings">
-        <mat-icon>person</mat-icon>
-        User Management
-      </button>
       <button mat-icon-button (click)="settingsNavigate(['/settings', 'upgrade'])"
               class="app-shell-button-sideNav-settings" *roleGuard="'rolloutrollout_read'">
         <mat-icon>cloud_upload</mat-icon>

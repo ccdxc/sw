@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewEncapsulation, Output, EventEmitter, Input } from '@angular/core';
-import { AuthpolicybaseComponent } from '@app/components/settings-group/authpolicy/authpolicybase/authpolicybase.component';
+import { AuthpolicybaseComponent } from '@app/components/admin/authpolicy/authpolicybase/authpolicybase.component';
 import { IAuthLocal } from '@sdk/v1/models/generated/auth';
 import { ControllerService } from '@app/services/controller.service';
 @Component({

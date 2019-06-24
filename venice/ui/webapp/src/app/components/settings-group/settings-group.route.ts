@@ -10,29 +10,11 @@ const routes: Routes = [
     pathMatch: 'full'
   },
   {
-    path: 'authpolicy',
-    children: [
-      {
-        path: '',
-        loadChildren: '@app/components/settings-group/authpolicy/authpolicy.module#AuthpolicyModule'
-      }
-    ]
-  },
-  {
     path: 'upgrade',
     children: [
       {
         path: '',
         loadChildren: '@app/components/settings-group/systemupgrade/systemupgrade.module#SystemupgradeModule'
-      }
-    ]
-  },
-  {
-    path: 'users',
-    children: [
-      {
-        path: '',
-        loadChildren: '@app/components/settings-group/users/users.module#UsersModule'
       }
     ]
   },

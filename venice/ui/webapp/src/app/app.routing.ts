@@ -49,6 +49,10 @@ export const routes: Routes = [
         loadChildren: '@components/monitoring-group/monitoring-group.module#MonitoringGroupModule',
       },
       {
+        path: 'admin',
+        loadChildren: '@components/admin/admin.module#AdminModule',
+      },
+      {
         path: 'settings',
         loadChildren: '@components/settings-group/settings-group.module#SettingsGroupModule',
       },

@@ -3,9 +3,9 @@ import { configureTestSuite } from 'ng-bullet';
 
 import { AuthpolicyComponent } from './authpolicy.component';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
-import { LdapComponent } from '@app/components/settings-group/authpolicy/ldap/ldap.component';
-import { RadiusComponent } from '@app/components/settings-group/authpolicy/radius/radius.component';
-import { LocalComponent } from '@app/components/settings-group/authpolicy/local/local.component';
+import { LdapComponent } from '@app/components/admin/authpolicy/ldap/ldap.component';
+import { RadiusComponent } from '@app/components/admin/authpolicy/radius/radius.component';
+import { LocalComponent } from '@app/components/admin/authpolicy/local/local.component';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ControllerService } from '@app/services/controller.service';
