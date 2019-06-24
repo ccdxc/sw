@@ -70,6 +70,7 @@ func NewNetctrlerWithDiagFlag(serverURL, restURL, apisrvURL, vmmURL string, reso
 		DBName:                  "default",
 		SendInterval:            time.Duration(30) * time.Second,
 		ConnectionRetryInterval: 100 * time.Millisecond,
+		StartLocalServer:        true,
 	}
 	tsdb.Init(context.Background(), tsdbOpts)
 

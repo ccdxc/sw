@@ -499,6 +499,19 @@ func (it *veniceIntegSuite) createResolver() {
 	}
 	m.AddServiceInstance(&citadelSi)
 
+	citadelQuerySi := types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "pen-citadel-query-test",
+		},
+		Service: globals.CitadelQuery,
+		Node:    "localhost",
+		URL:     "localhost:" + globals.CitadelQueryRPCPort,
+	}
+	m.AddServiceInstance(&citadelQuerySi)
+
 	rolloutSi := types.ServiceInstance{
 		TypeMeta: api.TypeMeta{
 			Kind: "ServiceInstance",

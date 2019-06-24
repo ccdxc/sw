@@ -503,8 +503,12 @@ func (e *etcdStore) runLeaseLoop(ctx context.Context, key string, leaseCh <-chan
 
 // Lease takes a lease on a key with TTL and keeps it alive
 func (e *etcdStore) Lease(ctx context.Context, key string, obj runtime.Object, ttl uint64) (chan kvstore.LeaseEvent, error) {
+	timeout := time.Second * 10
+	tctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
 	// create a new lease
-	resp, err := e.client.Lease.Grant(ctx, int64(ttl))
+	resp, err := e.client.Lease.Grant(tctx, int64(ttl))
 	if err != nil {
 		log.Errorf("Error getting a grant: Err: %v", err)
 		return nil, err
@@ -517,7 +521,7 @@ func (e *etcdStore) Lease(ctx context.Context, key string, obj runtime.Object, t
 	}
 
 	// put the object using lease
-	_, err = e.client.KV.Put(context.TODO(), key, string(value), clientv3.WithLease(resp.ID))
+	_, err = e.client.KV.Put(tctx, key, string(value), clientv3.WithLease(resp.ID))
 	if err != nil {
 		log.Errorf("Error writing key %s to kvstore. Err: %v", key, err)
 		return nil, err
