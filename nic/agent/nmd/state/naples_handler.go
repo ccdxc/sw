@@ -495,7 +495,7 @@ func (n *NMD) AdmitNaples() {
 					cert, trustChain, trustRoots, err := n.parseAdmissionResponse(msg.AdmissionResponse)
 					if err != nil {
 						log.Errorf("Error parsing cluster credentials: %v", err)
-						n.setRegistrationErrorStatus("Cluster credentials error")
+						n.setRegistrationErrorStatus("Cluster trust chain failed validation")
 						continue
 					} else {
 						err = n.setClusterCredentials(cert, trustChain, trustRoots)

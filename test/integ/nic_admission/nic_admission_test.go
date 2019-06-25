@@ -957,6 +957,10 @@ func TestNICReadmit(t *testing.T) {
 	// Make sure that proper error message is present both in object and config
 	nicObj, err := nmd.GetSmartNIC()
 	AssertOk(t, err, "Error getting NIC obj from NMD")
+	// cluster identity is checked twice during the admission sequence:
+	// - at the beginning, when CMD sends authentication request
+	// - at the end, after CMD has signed the CSR
+	// Regardless of which check fails, we expect the same error
 	Assert(t, strings.Contains(nicObj.Status.AdmissionPhaseReason, "Cluster trust chain failed validation"),
 		"Did not find expected admission phase reason. Have: %v", nicObj.Status.AdmissionPhaseReason)
 	naplesConf := nmd.GetNaplesConfig()
