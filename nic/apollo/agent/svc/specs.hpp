@@ -783,6 +783,19 @@ pds_meter_debug_stats_fill (pds_meter_debug_stats_t *stats, void *ctxt)
 }
 
 static inline void
+pds_session_debug_stats_fill (uint32_t idx, pds_session_debug_stats_t *stats, void *ctxt)
+{
+    pds::SessionStatsGetResponse *rsp = (pds::SessionStatsGetResponse *)ctxt;
+    auto proto_stats = rsp->add_stats();
+
+    proto_stats->set_statsindex(idx);
+    proto_stats->set_initiatorflowpkts(stats->iflow_packet_count);
+    proto_stats->set_initiatorflowbytes(stats->iflow_bytes_count);
+    proto_stats->set_responderflowpkts(stats->rflow_packet_count);
+    proto_stats->set_responderflowbytes(stats->rflow_bytes_count);
+}
+
+static inline void
 pds_pb_stats_entry_fill (pds_pb_debug_stats_t *pds_stats, void *ctxt)
 {
     sdk::platform::capri::tm_pb_debug_stats_t *stats = &pds_stats->stats;

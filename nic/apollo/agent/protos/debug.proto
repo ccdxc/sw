@@ -26,6 +26,7 @@ service DebugSvc {
   rpc SlabGet(SlabGetRequest) returns (SlabGetResponse) {}
   rpc HeapGet(types.Empty) returns (HeapGetResponse) {}
   rpc MeterStatsGet (MeterStatsGetRequest) returns (MeterStatsGetResponse) {}
+  rpc SessionStatsGet (SessionStatsGetRequest) returns (SessionStatsGetResponse) {}
 }
 
 enum TraceLevel {
@@ -343,3 +344,20 @@ message MeterStatsGetResponse {
   repeated MeterStatistics Stats     = 2;
 }
 
+message SessionStats {
+  uint32 StatsIndex         = 1;
+  uint64 InitiatorFlowPkts  = 2;
+  uint64 InitiatorFlowBytes = 3;
+  uint64 ResponderFlowPkts  = 4;
+  uint64 ResponderFlowBytes = 5;
+}
+
+message SessionStatsGetRequest {
+  uint32 StatsIndexLow  = 1;
+  uint32 StatsIndexHigh = 2;
+}
+
+message SessionStatsGetResponse {
+  types.ApiStatus       ApiStatus = 1;
+  repeated SessionStats Stats     = 2;
+}

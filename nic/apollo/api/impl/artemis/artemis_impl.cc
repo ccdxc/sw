@@ -42,6 +42,7 @@ extern sdk_ret_t init_service_lif(const char *cfg_path);
 #define MEM_REGION_FLOW_OHASH_NAME           "flow_ohash"
 #define MEM_REGION_IPV4_FLOW_NAME            "ipv4_flow"
 #define MEM_REGION_IPV4_FLOW_OHASH_NAME      "ipv4_flow_ohash"
+#define MEM_REGION_SESSION_STATS_NAME        "session_stats"
 
 #define RXDMA_SYMBOLS_MAX                    1
 #define TXDMA_SYMBOLS_MAX                    5
@@ -1162,6 +1163,36 @@ artemis_impl::table_transaction_end(void) {
 sdk_ret_t
 artemis_impl::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
     mapping_impl_db()->table_stats(cb, ctxt);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+artemis_impl::session_stats(debug::session_stats_get_cb_t cb, uint32_t lowidx,
+                            uint32_t highidx, void *ctxt) {
+    sdk_ret_t ret;
+    uint64_t offset = 0;
+    uint64_t start_addr = 0;
+    pds_session_debug_stats_t session_stats_entry;
+
+    memset(&session_stats_entry, 0, sizeof(pds_session_debug_stats_t));
+
+    start_addr = api::g_pds_state.mempartition()->start_addr(
+                                                  MEM_REGION_SESSION_STATS_NAME);
+
+    for (uint32_t idx = lowidx; idx <= highidx; idx ++) {
+        offset = idx * sizeof(pds_session_debug_stats_t);
+
+        ret = sdk::asic::asic_mem_read(start_addr + offset,
+                                       (uint8_t *)&session_stats_entry,
+                                       sizeof(pds_session_debug_stats_t));
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to read session stats for index %u err %u", idx, ret);
+            return ret;
+        }
+
+        cb(idx, &session_stats_entry, ctxt);
+    }
+
     return SDK_RET_OK;
 }
 

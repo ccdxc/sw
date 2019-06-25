@@ -110,6 +110,17 @@ public:
         return SDK_RET_ERR;
     }
 
+    /// \brief      API to get session stats
+    /// \param[in]  cb      callback to be called on stats
+    /// \param[in]  lowidx  Low Index for stats to be read
+    /// \param[in]  highidx High Index for stats to be read
+    /// \param[in]  ctxt    Opaque context to be passed to callback
+    /// \return     SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t session_stats(debug::session_stats_get_cb_t cb, uint32_t lowidx,
+                                    uint32_t highidx, void *ctxt) {
+        return SDK_RET_ERR;
+    }
+
     /// \brief Dump all the debug information to given file
     ///
     /// \param[in] fp File handle

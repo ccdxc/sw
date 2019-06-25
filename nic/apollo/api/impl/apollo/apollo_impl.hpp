@@ -23,13 +23,6 @@ namespace impl {
 /// \ingroup PDS_PIPELINE
 /// @{
 
-typedef struct __attribute__ ((__packed__)) session_stats_entry_s {
-    uint64_t iflow_packet_count;
-    uint64_t iflow_bytes_count;
-    uint64_t rflow_packet_count;
-    uint64_t rflow_bytes_count;
-} session_stats_entry_t;
-
 /// \brief pipeline implementation
 class apollo_impl : public pipeline_impl_base {
 public:
@@ -96,6 +89,15 @@ public:
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt)
             override;
+
+    /// \brief      API to get session stats
+    /// \param[in]  cb      callback to be called on stats
+    /// \param[in]  lowidx  Low Index for stats to be read
+    /// \param[in]  highidx High Index for stats to be read
+    /// \param[in]  ctxt    Opaque context to be passed to callback
+    /// \return     SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t session_stats(debug::session_stats_get_cb_t cb, uint32_t lowidx,
+                                    uint32_t highidx, void *ctxt) override;
 
     /// \brief     dump all the debug information to given file
     /// \param[in] fp file handle
@@ -166,15 +168,6 @@ private:
     /// \brief  init routine to initialize p4plus tables
     /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t p4plus_table_init_(void);
-
-    /// \brief      API to get session stats
-    /// \param[in]  session_index session index
-    /// \param[in]  flow_role     iflow or rflow
-    /// \param[out] packet_count  number of packets for this session and flow
-    /// \ param[out] bytes_count   number of bytes for this session and flow
-    /// \return     SDK_RET_OK on success, failure status code on error
-    sdk_ret_t session_stats(uint32_t session_index, uint8_t flow_role,
-                            uint64_t *packet_count, uint64_t *bytes_count);
 
 private:
     pipeline_cfg_t      pipeline_cfg_;

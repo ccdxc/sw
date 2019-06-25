@@ -648,35 +648,32 @@ apollo_impl::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
 }
 
 sdk_ret_t
-apollo_impl::session_stats(uint32_t session_index, uint8_t flow_role,
-                           uint64_t *packet_count, uint64_t *bytes_count) {
+apollo_impl::session_stats(debug::session_stats_get_cb_t cb, uint32_t lowidx,
+                           uint32_t highidx, void *ctxt) {
     sdk_ret_t ret;
     uint64_t offset = 0;
     uint64_t start_addr = 0;
-    session_stats_entry_t session_stats_entry;
+    pds_session_debug_stats_t session_stats_entry;
 
-    memset(&session_stats_entry, 0, sizeof(session_stats_entry_t));
-    offset = session_index * sizeof(session_stats_entry_t);
+    memset(&session_stats_entry, 0, sizeof(pds_session_debug_stats_t));
+
     start_addr = api::g_pds_state.mempartition()->start_addr(
-                                             MEM_REGION_SESSION_STATS_NAME);
-    ret = sdk::asic::asic_mem_read(start_addr + offset,
-                                   (uint8_t *)&session_stats_entry,
-                                   sizeof(session_stats_entry_t));
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-    switch (flow_role) {
-    case TCP_FLOW_INITIATOR:
-        *packet_count = session_stats_entry.iflow_packet_count;
-        *bytes_count = session_stats_entry.iflow_bytes_count;
-        break;
+                                                  MEM_REGION_SESSION_STATS_NAME);
 
-    default:
-    case TCP_FLOW_RESPONDER:
-        *packet_count = session_stats_entry.rflow_packet_count;
-        *bytes_count = session_stats_entry.rflow_bytes_count;
-        break;
+    for (uint32_t idx = lowidx; idx <= highidx; idx ++) {
+        offset = idx * sizeof(pds_session_debug_stats_t);
+
+        ret = sdk::asic::asic_mem_read(start_addr + offset,
+                                       (uint8_t *)&session_stats_entry,
+                                       sizeof(pds_session_debug_stats_t));
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to read session stats for index %u err %u", idx, ret);
+            return ret;
+        }
+
+        cb(idx, &session_stats_entry, ctxt);
     }
+
     return SDK_RET_OK;
 }
 

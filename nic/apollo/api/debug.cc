@@ -275,4 +275,10 @@ pds_meter_stats_get (debug::meter_stats_get_cb_t cb, uint32_t lowidx, uint32_t h
     return impl_base::asic_impl()->meter_stats(cb, lowidx, highidx, ctxt);
 }
 
+sdk_ret_t
+pds_session_stats_get (debug::session_stats_get_cb_t cb, uint32_t lowidx, uint32_t highidx, void *ctxt)
+{
+    return impl_base::pipeline_impl()->session_stats(cb, lowidx, highidx, ctxt);
+}
+
 }    // namespace debug

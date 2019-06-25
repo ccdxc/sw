@@ -25,6 +25,8 @@ using pds::LlcSetupRequest;
 using pds::LlcSetupResponse;
 using pds::MeterStatsGetRequest;
 using pds::MeterStatsGetResponse;
+using pds::SessionStatsGetRequest;
+using pds::SessionStatsGetResponse;
 
 class DebugSvcImpl final : public DebugSvc::Service {
 public:
@@ -53,6 +55,8 @@ public:
                    pds::HeapGetResponse *rsp) override;
     Status MeterStatsGet(ServerContext *context, const pds::MeterStatsGetRequest *req,
                          pds::MeterStatsGetResponse *rsp) override;
+    Status SessionStatsGet(ServerContext *context, const pds::SessionStatsGetRequest *req,
+                           pds::SessionStatsGetResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_DEBUG_HPP__

@@ -67,7 +67,7 @@ func meterShowStatsCmdHandler(cmd *cobra.Command, args []string) {
 
 	n, _ := fmt.Sscanf(statsID, "%d-%d", &statsIDLow, &statsIDHigh)
 	if n != 2 {
-		n, _ = fmt.Sscanf(statsID, "", &statsIDLow)
+		n, _ = fmt.Sscanf(statsID, "%d", &statsIDLow)
 		if n != 1 {
 			fmt.Printf("Invalid meter statistics index provided. Refer to help string\n")
 			return
@@ -102,16 +102,16 @@ func meterShowStatsCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func meterStatsPrintHeader() {
-	hdrLine := strings.Repeat("-", 30)
+	hdrLine := strings.Repeat("-", 46)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-12s%-12s\n",
+	fmt.Printf("%-6s%-20s%-20s\n",
 		"ID", "TxBytes", "RxBytes")
 	fmt.Println(hdrLine)
 }
 
 func meterStatsPrintEntry(resp *pds.MeterStatsGetResponse) {
 	for _, stats := range resp.GetStats() {
-		fmt.Printf("%-6d%-12d%-12d\n", stats.GetStatsIndex(),
+		fmt.Printf("%-6d%-20d%-20d\n", stats.GetStatsIndex(),
 			stats.GetTxBytes(), stats.GetRxBytes())
 	}
 }

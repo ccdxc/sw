@@ -59,11 +59,19 @@ typedef struct pds_meter_debug_stats_e {
     uint64_t tx_bytes;
 } pds_meter_debug_stats_t;
 
+typedef struct session_stats_entry_s {
+    uint64_t iflow_packet_count;
+    uint64_t iflow_bytes_count;
+    uint64_t rflow_packet_count;
+    uint64_t rflow_bytes_count;
+} pds_session_debug_stats_t;
+
 namespace debug {
 
 typedef void (*table_stats_get_cb_t)(pds_table_stats_t *stats, void *ctxt);
 typedef void (*pb_stats_get_cb_t) (pds_pb_debug_stats_t *stats, void *ctxt);
 typedef void (*meter_stats_get_cb_t) (pds_meter_debug_stats_t *stats, void *ctxt);
+typedef void (*session_stats_get_cb_t) (uint32_t idx, pds_session_debug_stats_t *stats, void *ctxt);
 sdk_ret_t pds_clock_frequency_update(pds_clock_freq_t freq);
 sdk_ret_t pds_arm_clock_frequency_update(pds_clock_freq_t freq);
 sdk_ret_t pds_get_system_temperature(pds_system_temperature_t *temp);
@@ -73,6 +81,7 @@ sdk_ret_t pds_llc_setup(sdk::asic::pd::llc_counters_t *llc_args);
 sdk_ret_t pds_llc_get(sdk::asic::pd::llc_counters_t *llc_args);
 sdk_ret_t pds_pb_stats_get(debug::pb_stats_get_cb_t cb, void *ctxt);
 sdk_ret_t pds_meter_stats_get(debug::meter_stats_get_cb_t cb, uint32_t lowidx, uint32_t highidx, void *ctxt);
+sdk_ret_t pds_session_stats_get(debug::session_stats_get_cb_t cb, uint32_t lowidx, uint32_t highidx, void *ctxt);
 
 }    // namespace debug
 
