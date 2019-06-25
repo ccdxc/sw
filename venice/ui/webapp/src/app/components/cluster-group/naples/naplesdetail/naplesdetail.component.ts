@@ -48,7 +48,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   };
   // Id of the object the user has navigated to
   selectedId: string;
-  selectedObj: ClusterSmartNIC;
+  selectedObj: Readonly<ClusterSmartNIC>;
 
   showExpandedDetailsCard: boolean;
 
@@ -178,7 +178,9 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
             + this.selectedId + ', received ' +
             this.objList.map((naples) => naples.meta.name).join(', '));
         }
-        if (this.selectedObj == null && this.objList.length > 0) {
+        if (this.selectedObj != null && this.objList.length > 0) {
+          this.selectedObj = this.objList[0];
+        } else if (this.selectedObj == null && this.objList.length > 0) {
           // In case object was deleted and then readded while we are on the same screen
           this.showDeletionScreen = false;
           // In case object wasn't created yet and then was added while we are on the same screen
@@ -390,9 +392,10 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   }
 
   handleEditSave(labels: object) {
+    const obj = new ClusterSmartNIC(this.selectedObj.getModelValues());
     const name = this.selectedObj.meta.name;
-    this.selectedObj.meta.labels = labels;
-    const sub = this.clusterService.UpdateSmartNIC(name, this.selectedObj).subscribe(response => {
+    obj.meta.labels = labels;
+    const sub = this.clusterService.UpdateSmartNIC(name, obj).subscribe(response => {
       this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, `Successfully updated ${this.selectedObj.meta.name}'s labels`);
     }, this._controllerService.restErrorHandler(Utility.UPDATE_FAILED_SUMMARY));
     this.subscriptions.push(sub);
@@ -421,15 +424,15 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     this.showExpandedDetailsCard = !this.showExpandedDetailsCard;
   }
 
-  helpDisplayCondition(data: ClusterSmartNIC): NaplesConditionValues {
+  helpDisplayCondition(data: Readonly<ClusterSmartNIC>): NaplesConditionValues {
     return Utility.getNaplesCondition(data);
   }
 
-  helpDisplayReasons(data: ClusterSmartNIC): any {
+  helpDisplayReasons(data: Readonly<ClusterSmartNIC>): any {
     return Utility.displayReasons(data);
   }
 
-  isNICHealthy(data: ClusterSmartNIC): boolean {
+  isNICHealthy(data: Readonly<ClusterSmartNIC>): boolean {
   if (Utility.isNaplesNICHealthy(data)) {
       return true;
     }

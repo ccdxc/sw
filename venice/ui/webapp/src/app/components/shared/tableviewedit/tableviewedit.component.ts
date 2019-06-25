@@ -328,8 +328,7 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
             } else {
               console.error('Service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
             }
-            const errorMsg = error.body != null ? error.body.message : '';
-            this.controllerService.invokeRESTErrorToaster(Utility.DELETE_FAILED_SUMMARY, errorMsg);
+            this.controllerService.invokeRESTErrorToaster(Utility.DELETE_FAILED_SUMMARY, error);
           }
         );
         this.subscriptions.push(sub);

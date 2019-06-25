@@ -8,7 +8,7 @@ import { ChartOptions, ChartData } from 'chart.js';
 import { StatArrowDirection, CardStates, Stat } from '@app/components/shared/basecard/basecard.component';
 import { FlipState, FlipComponent } from '@app/components/shared/flip/flip.component';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { ClusterSmartNIC, ClusterSmartNICStatus_admission_phase } from '@sdk/v1/models/generated/cluster';
+import { ClusterSmartNIC, ClusterSmartNICStatus_admission_phase, IClusterSmartNICList } from '@sdk/v1/models/generated/cluster';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { ControllerService } from '@app/services/controller.service';
 import { Subscription } from 'rxjs';
@@ -17,6 +17,8 @@ import { MetricsUtility } from '@app/common/MetricsUtility';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { NaplesConditionValues} from '@app/components/cluster-group/naples/index.ts';
 import { Telemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function } from '@sdk/v1/models/generated/telemetry_query';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 @Component({
   selector: 'app-dsbdnapleswidget',
@@ -133,16 +135,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
   flipState: FlipState = FlipState.front;
 
   menuItems = [
-    {
-      text: 'Flip card', onClick: () => {
-        this.toggleFlip();
-      }
-    },
-    {
-      text: 'Export', onClick: () => {
-        this.export();
-      }
-    }
+
   ];
 
 
@@ -167,10 +160,14 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
 
   constructor(private controllerService: ControllerService,
               protected metricsqueryService: MetricsqueryService,
+              protected uiconfigsService: UIConfigsService,
     protected clusterService: ClusterService) { }
 
   toggleFlip() {
-    this.flipState = FlipComponent.toggleState(this.flipState);
+    // The trend line metrics requires cluster read permissions
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.clustercluster_read)) {
+      this.flipState = FlipComponent.toggleState(this.flipState);
+    }
   }
 
   generateDoughnut() {
@@ -278,6 +275,23 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
   ngOnInit() {
     this.getNaples();
     this.getMetrics();
+    // Linegraph data needs to read from cluster measurement
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.clustercluster_read)) {
+      this.menuItems.push(
+        {
+          text: 'Flip card', onClick: () => {
+            this.toggleFlip();
+          }
+        }
+      );
+      this.menuItems.push(
+        {
+          text: 'Export', onClick: () => {
+            this.export();
+          }
+        }
+      );
+    }
   }
 
   tryGenMetrics() {
@@ -363,6 +377,20 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
   }
 
   getNaples() {
+    // We perform a get as well as a watch so that we can know to set the card state
+    // in case the number of workloads is 0
+    this.clusterService.ListSmartNIC().subscribe(
+      (resp) => {
+        const body: IClusterSmartNICList = resp.body as any;
+        if (body.items == null || body.items.length === 0) {
+          // Watch won't have any events
+          this.frontCardState = CardStates.NO_DATA;
+        }
+      },
+      error => {
+        this.frontCardState = CardStates.FAILED;
+      }
+    );
     this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
     this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
     const subscription = this.clusterService.WatchSmartNIC().subscribe(

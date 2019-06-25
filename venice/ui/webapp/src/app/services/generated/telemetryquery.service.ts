@@ -14,6 +14,9 @@ import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
 
 
 import { Telemetry_queryv1Service } from '@sdk/v1/services/generated/telemetry_queryv1.service';
+import { ITelemetry_queryMetricsQueryList } from '@sdk/v1/models/generated/telemetry_query';
+import { SearchUtil } from '@app/components/search/SearchUtil';
+import { IAuthUser } from '@sdk/v1/models/generated/auth';
 
 @Injectable()
 export class TelemetryqueryService extends Telemetry_queryv1Service {
@@ -52,11 +55,38 @@ export class TelemetryqueryService extends Telemetry_queryv1Service {
 
   protected invokeAJAX(method: string, url: string, payload: any, opts: MethodOpts, forceReal: boolean = false): Observable<VeniceResponse> {
 
-    const key = this.convertEventID(opts);
     const isMetrics = opts.eventID.includes('Metrics');
-    if (!isMetrics && !this.uiconfigsService.isAuthorized(key)) {
-      return NEVER;
+    if (isMetrics && method === 'POST') {
+      let metricAllowed = true;
+
+      const body = payload as ITelemetry_queryMetricsQueryList;
+      body.queries.forEach( q => {
+        // If one query has already failed, we return early
+        if (metricAllowed === false) {
+          return;
+        }
+        const cat = Utility.findCategoryByKind(q.kind);
+        if (cat == null) {
+          metricAllowed = false;
+          return;
+        }
+        if (!this.uiconfigsService.isAuthorized(UIRolePermissions[cat + q.kind + '_read'])) {
+          metricAllowed = false;
+          return;
+        }
+      });
+
+      // Check if admin, admin always has right to read any metrics
+      if (!metricAllowed && !Utility.getInstance().isAdmin()) {
+        return NEVER;
+      }
+    } else {
+      const key = this.convertEventID(opts);
+      if (!this.uiconfigsService.isAuthorized(key)) {
+        return NEVER;
+      }
     }
+
     const isOnline = !this.isToMockData() || forceReal;
     return this.serviceUtility.invokeAJAX(method, url, payload, opts.eventID, isOnline);
   }

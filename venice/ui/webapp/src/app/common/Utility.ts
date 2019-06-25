@@ -19,6 +19,7 @@ import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { FieldsSelector } from '@sdk/v1/models/generated/search';
 import { ClusterSmartNIC, ClusterSmartNICCondition, ClusterSmartNICCondition_status, ClusterSmartNICCondition_type } from '@sdk/v1/models/generated/cluster';
 import { NaplesCondition, NaplesConditionValues} from '@app/components/cluster-group/naples/index.ts';
+import { IAuthUser } from '@sdk/v1/models/generated/auth';
 
 
 
@@ -1009,6 +1010,10 @@ export class Utility {
       i = Math.floor(Math.log(bytes) / Math.log(k));
     const val = parseFloat((bytes / Math.pow(k, i)).toFixed(dm));
 
+    if (isNaN(val)) {
+      return '0 bytes';
+    }
+
     let valStr = val.toString();
     // not counting . for length
     while (valStr.replace('.', '').length > maxLength) {
@@ -1515,7 +1520,7 @@ export class Utility {
     return ret;
   }
 
-  public static getNaplesConditionObject(naples: ClusterSmartNIC): NaplesCondition {
+  public static getNaplesConditionObject(naples: Readonly<ClusterSmartNIC>): NaplesCondition {
     if (!naples || naples.status.conditions == null || naples.status.conditions.length === 0) {
       return {isHealthy: true, condition : NaplesConditionValues.HEALTHY};
     } else {
@@ -1531,17 +1536,17 @@ export class Utility {
     }
   }
 
-  public static isNaplesNICHealthy(naples: ClusterSmartNIC): boolean {
+  public static isNaplesNICHealthy(naples: Readonly<ClusterSmartNIC>): boolean {
     return this.getNaplesConditionObject(naples).isHealthy;
   }
 
-  public static getNaplesCondition(naples: ClusterSmartNIC): NaplesConditionValues {
+  public static getNaplesCondition(naples: Readonly<ClusterSmartNIC>): NaplesConditionValues {
     return this.getNaplesConditionObject(naples).condition;
   }
 
 
 
-  public static displayReasons(naples: ClusterSmartNIC): string {
+  public static displayReasons(naples: Readonly<ClusterSmartNIC>): string {
     const reasonarray: string[] = [];
     for (let i = 0; i < naples.status['conditions'].length; i ++) {
       if (!this.isNaplesNICHealthy(naples)) {
@@ -1622,6 +1627,14 @@ export class Utility {
       return body;
     }
     return null;
+  }
+
+  isAdmin(): boolean {
+    const user: IAuthUser = this.getLoginUser();
+    if (user != null && user.status != null && user.status.roles != null && user.status.roles.includes('AdminRole'))  {
+      return true;
+    }
+    return false;
   }
 
   getLoginName(): string | null {

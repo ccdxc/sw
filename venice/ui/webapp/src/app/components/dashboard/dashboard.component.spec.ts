@@ -33,6 +33,9 @@ import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { AuthService } from '@app/services/auth.service';
 import { WorkloadService } from '@app/services/generated/workload.service';
+import { By } from '@angular/platform-browser';
+import { TestingUtility } from '@app/common/TestingUtility';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 @Component({
   template: ''
@@ -89,10 +92,52 @@ describe('DashboardComponent', () => {
     fixture = TestBed.createComponent(DashboardComponent);
     component = fixture.componentInstance;
     component.gridsterOptions = [];
-    fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  describe('RBAC', () => {
+
+    beforeEach(() => {
+      TestingUtility.removeAllPermissions();
+    });
+
+    it('no permission', () => {
+      fixture.detectChanges();
+      const cards = fixture.debugElement.queryAll(By.css('app-flip'));
+      expect(cards.length).toBe(0);
+      TestingUtility.removeAllPermissions();
+    });
+
+    it('cluster card', () => {
+      TestingUtility.addPermissions([UIRolePermissions.clustercluster_read]);
+      fixture.detectChanges();
+      // metrics should be hidden
+      const cards = fixture.debugElement.queryAll(By.css('app-flip'));
+      expect(cards.length).toBe(1);
+    });
+
+    it('naples card', () => {
+      TestingUtility.addPermissions([UIRolePermissions.clustersmartnic_read]);
+      fixture.detectChanges();
+      // metrics should be hidden
+      const cards = fixture.debugElement.queryAll(By.css('app-flip'));
+      expect(cards.length).toBe(1);
+    });
+
+    it('workload card', () => {
+      TestingUtility.addPermissions([UIRolePermissions.workloadworkload_read, UIRolePermissions.clusterhost_read]);
+      fixture.detectChanges();
+      // metrics should be hidden
+      const cards = fixture.debugElement.queryAll(By.css('app-flip'));
+      expect(cards.length).toBe(1);
+    });
+
+    it('policy health card', () => {
+      TestingUtility.addPermissions([UIRolePermissions.adminrole]);
+      fixture.detectChanges();
+      // metrics should be hidden
+      const cards = fixture.debugElement.queryAll(By.css('app-flip'));
+      expect(cards.length).toBe(1);
+    });
+
   });
 });

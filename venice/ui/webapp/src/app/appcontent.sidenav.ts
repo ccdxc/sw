@@ -129,6 +129,11 @@ export const sideNavMenu: SideNavItem[] = [
           cssClass: 'material-icons',
           matIconName: 'insert_chart_outlined'
         },
+        roleGuard: {
+          opt: [
+            UIRolePermissions.adminrole,
+          ]
+        },
         link: ['/monitoring', 'telemetry']
       },
       {

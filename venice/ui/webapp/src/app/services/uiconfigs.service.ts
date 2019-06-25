@@ -166,6 +166,9 @@ export class UIConfigsService {
         }
       }
     });
+    if (Utility.getInstance().isAdmin()) {
+      this.uiPermissions[UIRolePermissions.adminrole] = true;
+    }
 
     // Publish to roleGuards that UI permissions have been changed
     this.controllerService.publish(Eventtypes.NEW_USER_PERMISSIONS, null);

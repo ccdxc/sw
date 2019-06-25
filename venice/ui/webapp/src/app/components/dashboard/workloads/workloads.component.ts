@@ -8,10 +8,10 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { StatArrowDirection, CardStates, Stat } from '@app/components/shared/basecard/basecard.component';
 import { FlipState, FlipComponent } from '@app/components/shared/flip/flip.component';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
+import { WorkloadWorkload, IWorkloadWorkload, IWorkloadWorkloadList } from '@sdk/v1/models/generated/workload';
 import { WorkloadService } from '@app/services/generated/workload.service';
 import { Subscription } from 'rxjs';
-import { ClusterHost } from '@sdk/v1/models/generated/cluster';
+import { ClusterHost, IClusterHostList } from '@sdk/v1/models/generated/cluster';
 import { ClusterService } from '@app/services/generated/cluster.service';
 
 @Component({
@@ -138,6 +138,23 @@ export class WorkloadsComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   getWorkloads() {
+    // We perform a get as well as a watch so that we can know to set the card state
+    // in case the number of workloads is 0
+    this.workloadService.ListWorkload().subscribe(
+      (resp) => {
+        const body: IWorkloadWorkloadList = resp.body as any;
+        if (body.items == null || body.items.length === 0) {
+          // Watch won't have any events
+          this.firstStat.value = '0';
+          this.cardState = CardStates.READY;
+          this.computeAvg();
+        }
+      },
+      error => {
+        this.getWorkloadsFailed = true;
+        this.checkFailureState();
+      }
+    );
     this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
     this.workloads = this.workloadEventUtility.array;
     const subscription = this.workloadService.WatchWorkload().subscribe(
@@ -156,6 +173,23 @@ export class WorkloadsComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   getHosts() {
+    // We perform a get as well as a watch so that we can know to set the card state
+    // in case the number of workloads is 0
+    this.clusterService.ListHost().subscribe(
+      (resp) => {
+        const body: IClusterHostList = resp.body as any;
+        if (body.items == null || body.items.length === 0) {
+          // Watch won't have any events
+          this.secondStat.value = '0';
+          this.cardState = CardStates.READY;
+          this.computeAvg();
+        }
+      },
+      error => {
+        this.getHostsFailed = true;
+        this.checkFailureState();
+      }
+    );
     this.hostsEventUtility = new HttpEventUtility<ClusterHost>(ClusterHost, true);
     this.hosts = this.hostsEventUtility.array as ReadonlyArray<ClusterHost>;
     const subscription = this.clusterService.WatchHost().subscribe(

@@ -11,6 +11,7 @@ import { GenServiceUtility } from './GenUtility';
 import { UIConfigsService } from '../uiconfigs.service';
 import { NEVER } from 'rxjs';
 import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 @Injectable()
 export class ClusterService extends Clusterv1Service {
@@ -49,7 +50,7 @@ export class ClusterService extends Clusterv1Service {
   protected invokeAJAX(method: string, url: string, payload: any, opts: MethodOpts, forceReal: boolean = false): Observable<VeniceResponse> {
 
     const key = this.serviceUtility.convertEventID(opts);
-    if (!this.uiconfigsService.isAuthorized(key)) {
+    if (key !== UIRolePermissions.clusterversion_read && !this.uiconfigsService.isAuthorized(key)) {
       return NEVER;
     }
     const isOnline = !this.isToMockData() || forceReal;

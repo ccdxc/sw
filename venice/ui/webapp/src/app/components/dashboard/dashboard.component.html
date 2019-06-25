@@ -1,16 +1,18 @@
 <div fxLayout="column" fxLayoutGap="10px">
   <div fxFlex="none" fxLayout="row" fxLayoutGap="10px">
-    <app-dsbdsystemcapacitywidget fxFlex="none"
+    <app-dsbdsystemcapacitywidget *roleGuard="'clustercluster_read'"
+                                  fxFlex="none"
                                   [cardState]="systemCapacity.cardState" [currentData]="currentData"
                                   [prevData]="prevData" [timeSeriesData]="timeSeriesData"
                                   [avgDayData]="avgDayData" [lastUpdateTime]="lastUpdateTime">
     </app-dsbdsystemcapacitywidget>
-    <app-dsbdnapleswidget fxFlex="none"></app-dsbdnapleswidget>
+    <app-dsbdnapleswidget *roleGuard="'clustersmartnic_read'" fxFlex="none"></app-dsbdnapleswidget>
   </div>
   <!-- hide workload and sg-policies widget for now 20190611 -->
   <div fxFlex="none" fxLayout="row" fxLayoutGap="10px">
-    <app-dsbdworkloads fxFlex="none"></app-dsbdworkloads>
-    <app-dsbdpolicyhealth fxFlex="none"></app-dsbdpolicyhealth>
+    <app-dsbdworkloads *roleGuard="{ req: ['workloadworkload_read', 'clusterhost_read']}"
+                       fxFlex="none"></app-dsbdworkloads>
+    <app-dsbdpolicyhealth *roleGuard="'adminrole'" fxFlex="none"></app-dsbdpolicyhealth>
   </div>
 </div>
 

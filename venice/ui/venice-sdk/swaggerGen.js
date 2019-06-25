@@ -294,6 +294,7 @@ function generateUIPermissionsFile(manifestData, versionData) {
   permEnum.push('auditevent' + delimiter + 'read');
   permEnum.push('eventsevent' + delimiter + 'read');
   permEnum.push('fwlogsquery' + delimiter + 'read');
+  permEnum.push('adminrole');
 
   Object.keys(versionData).forEach( (version) => {
     const template = readAndCompileTemplateFile('generate-permissions-enum-ts.hbs');
