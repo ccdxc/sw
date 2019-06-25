@@ -122,16 +122,27 @@ bool UpgPostStateHandler::PostSaveStateHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostSaveState returning");
     UPG_OBFL_TRACE("Going to restart system");
     if (exists("/nic/tools/fwupdate") && !exists("/update/upgrade_halt_state_machine")) {
-        UPG_LOG_DEBUG("File created");
-        ofstream file;
-        file.open("/update/upgrade_halt_state_machine");
-        file << "going to halt state machine for switchroot\n";
-        file.close();
-        int ret = 0;
-        string cmd = "sync";
-        if ((ret = system (cmd.c_str())) != 0) {
-            UPG_LOG_INFO("Unable to sync");
+        int i = 0;
+        do {
+            UPG_LOG_DEBUG("Trying to create /update/upgrade_halt_state_machine file");
+            ofstream file;
+            file.open("/update/upgrade_halt_state_machine");
+            file << "going to halt state machine for switchroot\n";
+            file.close();
+            int ret = 0;
+            string cmd = "sync";
+            if ((ret = system (cmd.c_str())) != 0) {
+                UPG_LOG_INFO("Unable to sync");
+            }
+            i++;
+        } while ((i<=10) && (!exists("/update/upgrade_halt_state_machine")));
+        if (exists("/update/upgrade_halt_state_machine")) {
+            UPG_LOG_DEBUG("File /update/upgrade_halt_state_machine got created. Switching root now.");  
+        } else {
+            UPG_LOG_DEBUG("File /update/upgrade_halt_state_machine did not get created.");  
+            return false;
         }
+        UPG_LOG_DEBUG("File created");
         ctx.haltStateMachine = true;
         ctx.sysMgr->restart_system();
     }
