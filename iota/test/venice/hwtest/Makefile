@@ -17,7 +17,7 @@ jobd:
 	cd ../../../ && make
 	../start_iota.sh
 	mkdir -p /go/src/github.com/pensando/sw/bin/upgrade-bundle
-	asset-pull bundle_image 0.10.0-256 /go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar
+	asset-pull bundle_image 0.11.0-50 /go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar
 	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/firewall -timeout 120m -v -ginkgo.v  -topo 3Venice_2Naples
 	VENICE_DEV=1 SKIP_SETUP=1 go test github.com/pensando/sw/iota/test/venice/testsuites/fwlog -timeout 120m -v -ginkgo.v  -topo 3Venice_2Naples
 	VENICE_DEV=1 SKIP_SETUP=1 go test github.com/pensando/sw/iota/test/venice/testsuites/monitor -timeout 60m -v -ginkgo.v -topo 3Venice_2Naples

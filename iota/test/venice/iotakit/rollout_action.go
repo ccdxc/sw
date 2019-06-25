@@ -161,6 +161,11 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 		}
 
 		for i := 0; i < len(status); i++ {
+			if status[i].Phase == "PROGRESSING" {
+				log.Errorf("ts:%s Controller node Pre-install Complete", time.Now().String())
+				numNodes = len(act.model.VeniceNodes().nodes)
+				break
+			}
 			if status[i].Phase != "WAITING_FOR_TURN" {
 				log.Errorf("ts:%s Controller node Pre-install Failed", time.Now().String())
 				time.Sleep(time.Second * 5)
@@ -268,7 +273,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 		return fmt.Errorf("rollout services failed on some nodes")
 	}
 
-	// Verify rollout smartNIC status
+	/*// Verify rollout smartNIC status
 	for numRetries = 0; numRetries < 60; numRetries++ {
 		restcls, err := act.model.tb.VeniceRestClient()
 		if err != nil {
@@ -309,7 +314,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 	}
 	if numRetries != 0 {
 		return fmt.Errorf("rollout smartNIC node failed")
-	}
+	}*/
 
 	// Verify rollout overall status
 	for numRetries = 0; numRetries < 60; numRetries++ {
@@ -346,7 +351,13 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 	// Verify delete on rollout object
 	for numRetries = 0; numRetries < 25; numRetries++ {
 		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
-		r1, err := restcls[0].RolloutV1().Rollout().Delete(ctx, &obj)
+		r1, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
+		if err != nil {
+			log.Infof("ts:%s Rollout LIST failed during delete, err: %+v rollouts: %+v", time.Now().String(), err, r1)
+			time.Sleep(time.Second * 5)
+			continue
+		}
+		r1, err = restcls[0].RolloutV1().Rollout().RemoveRollout(ctx, r1)
 		if err != nil || r1.Name != rolloutName {
 			time.Sleep(time.Second)
 			continue

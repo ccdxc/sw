@@ -81,7 +81,7 @@ func (sm *SysModel) GetRolloutObject() (*rollout.Rollout, error) {
 	}*/
 	//TODO hardcoding it for now to make asset-pull work
 
-	version := "0.10.0-256"
+	version := "0.11.0-50"
 
 	return &rollout.Rollout{
 		TypeMeta: api.TypeMeta{
@@ -100,7 +100,7 @@ func (sm *SysModel) GetRolloutObject() (*rollout.Rollout, error) {
 			OrderConstraints:          nil,
 			Suspend:                   false,
 			SmartNICsOnly:             false,
-			//SmartNICMustMatchConstraint: true, // hence venice upgrade only
+			SmartNICMustMatchConstraint: true, // hence venice upgrade only
 			UpgradeType: "Disruptive",
 		},
 	}, nil
