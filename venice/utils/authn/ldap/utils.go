@@ -1,7 +1,9 @@
 package ldap
 
 import (
+	"crypto/x509"
 	"errors"
+	"net"
 
 	"github.com/pensando/sw/api/generated/auth"
 )
@@ -24,10 +26,23 @@ func ValidateLdapConfig(config *auth.Ldap) []error {
 			errs = append(errs, errors.New("ldap server not defined"))
 		}
 		for _, srv := range config.Servers {
-			url := "ldap://" + srv.Url + "/" + config.BaseDN
-			_, err := ParseLdapURL(url, "", SUB, "")
+			_, _, err := net.SplitHostPort(srv.Url)
 			if err != nil {
 				errs = append(errs, err)
+			}
+			url := "ldap://" + srv.Url + "/" + config.BaseDN
+			_, err = ParseLdapURL(url, "", SUB, "")
+			if err != nil {
+				errs = append(errs, err)
+			}
+			if srv.TLSOptions.StartTLS && !srv.TLSOptions.SkipServerCertVerification {
+				if srv.TLSOptions.ServerName == "" {
+					errs = append(errs, errors.New("remote server name not defined"))
+				}
+				certpool := x509.NewCertPool()
+				if !certpool.AppendCertsFromPEM([]byte(srv.TLSOptions.TrustedCerts)) {
+					errs = append(errs, ErrSSLConfig)
+				}
 			}
 		}
 		if config.AttributeMapping == nil {

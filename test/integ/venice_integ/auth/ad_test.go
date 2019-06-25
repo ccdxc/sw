@@ -7,6 +7,7 @@ import (
 )
 
 func getADConfig() *LdapConfig {
+	tinfo.ldapAddr = "10.11.100.100:389"
 	return &LdapConfig{
 		ServerName: "WIN-HQEM46VDNCA.pensando.io",
 		TrustedCerts: `-----BEGIN CERTIFICATE-----
@@ -44,7 +45,7 @@ qzBI7uKi7rxkuDy0ejJvk7Beek/vF7qaar/bRdJQiMG/u5VmJPNCisXb9Qr8h0lI
 xx3mMeRQ4B9dAtanwCIkRntp1pmTNuVXD4E/nBjIFGYY/uCDWmDuHGmG1xL26uhX
 IEAsHuBf/zLR4c0QUBgs460vCgpxekUgY0XeXH9ldXqR60bxPF4UJQ==
 -----END CERTIFICATE-----`,
-		URL:                       "10.11.100.100:389",
+		URL:                       tinfo.ldapAddr,
 		BaseDN:                    "DC=pensando,DC=io",
 		BindDN:                    "pensando\\Administrator",
 		BindPassword:              "G0pensando",

@@ -87,7 +87,7 @@ message Authenticators {
 }
 
 message Ldap {
-    bool Enabled                          = 1 [(gogoproto.jsontag) = "enabled,omitempty"];
+    bool Enabled                          = 1 [(gogoproto.jsontag) = "enabled"];
     string BaseDN                         = 2 [(gogoproto.jsontag) = "base-dn,omitempty"];
     string BindDN                         = 3 [(gogoproto.jsontag) = "bind-dn,omitempty"];
     string BindPassword                   = 4 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "bind-password,omitempty"];
@@ -150,7 +150,7 @@ message LdapServerStatus {
 }
 
 message Local {
-    bool Enabled = 1 [(gogoproto.jsontag) = "enabled,omitempty"];
+    bool Enabled = 1 [(gogoproto.jsontag) = "enabled"];
 }
 
 message Radius {
@@ -164,7 +164,7 @@ message Radius {
         // EAP_TTLS sends user credentials using TLS tunnel
         EAP_TTLS_PAP  = 2;
     }
-    bool Enabled                  = 1 [(gogoproto.jsontag) = "enabled,omitempty"];
+    bool Enabled                  = 1 [(gogoproto.jsontag) = "enabled"];
     // NasID is a string identifying the NAS(API Gw) originating the Access-Request
     string NasID                  = 2 [(gogoproto.jsontag) = "nas-id,omitempty"];
     repeated RadiusServer Servers = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "servers,omitempty"];

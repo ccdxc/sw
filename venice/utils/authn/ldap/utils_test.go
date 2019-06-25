@@ -3,6 +3,7 @@ package ldap
 import (
 	"errors"
 	"fmt"
+	"net"
 	"testing"
 
 	"github.com/pensando/sw/api/generated/auth"
@@ -86,6 +87,64 @@ func TestValidateLdapConfig(t *testing.T) {
 				},
 			},
 			errs: []error{errors.New("ldap server not defined")},
+		},
+		{
+			name: "missing LDAP host",
+			in: &auth.Ldap{
+				Enabled: true,
+				Servers: []*auth.LdapServer{
+					{
+						Url: "",
+						TLSOptions: &auth.TLSOptions{
+							StartTLS:                   true,
+							SkipServerCertVerification: false,
+							ServerName:                 ServerName,
+							TrustedCerts:               TrustedCerts,
+						},
+					},
+				},
+
+				BaseDN:       BaseDN,
+				BindDN:       BindDN,
+				BindPassword: BindPassword,
+				AttributeMapping: &auth.LdapAttributeMapping{
+					User:             UserAttribute,
+					UserObjectClass:  UserObjectClassAttribute,
+					Group:            GroupAttribute,
+					GroupObjectClass: GroupObjectClassAttribute,
+				},
+			},
+
+			errs: []error{&net.AddrError{Err: "missing port in address", Addr: ""}},
+		},
+		{
+			name: "Invalid TLS Config",
+			in: &auth.Ldap{
+				Enabled: true,
+				Servers: []*auth.LdapServer{
+					{
+						Url: "localhost:389",
+						TLSOptions: &auth.TLSOptions{
+							StartTLS:                   true,
+							SkipServerCertVerification: false,
+							ServerName:                 "",
+							TrustedCerts:               "",
+						},
+					},
+				},
+
+				BaseDN:       BaseDN,
+				BindDN:       BindDN,
+				BindPassword: BindPassword,
+				AttributeMapping: &auth.LdapAttributeMapping{
+					User:             UserAttribute,
+					UserObjectClass:  UserObjectClassAttribute,
+					Group:            GroupAttribute,
+					GroupObjectClass: GroupObjectClassAttribute,
+				},
+			},
+
+			errs: []error{ErrSSLConfig, errors.New("remote server name not defined")},
 		},
 	}
 
