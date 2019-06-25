@@ -40,7 +40,7 @@ svc_mapping_impl_state::svc_mapping_impl_state(pds_state *state) {
     mhparams.max_recircs = 8;
     mhparams.entry_trace_en = true;
 
-    // local IP Mapping table
+    // service mapping table
     mhparams.table_id = P4TBL_ID_SERVICE_MAPPING;
     mhparams.key2str = NULL;
     mhparams.appdata2str = NULL;

@@ -71,8 +71,8 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
                 }
                 v6route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
             } else if (artemis()) {
-                compute_ipv6_prefix(&v6route_table.routes[j].prefix, v6_route_pfx,
-                                    v6rtnum++, 124);
+                compute_ipv6_prefix(&v6route_table.routes[j].prefix,
+                                    v6_route_pfx, v6rtnum++, 124);
                 v6route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
                 v6route_table.routes[j].nh = nh_id++;
                 if (nh_id > num_nh) {
@@ -86,7 +86,6 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
                                 "create route table %u failed, ret %u",
                                 v6route_table.key.id, rv);
     }
-
     return rv;
 }
 
@@ -94,7 +93,8 @@ sdk_ret_t
 create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                      uint32_t num_routes, ip_prefix_t *tep_pfx,
                      ip_prefix_t *route_pfx, ip_prefix_t *v6_route_pfx,
-                     uint32_t num_nh)
+                     uint32_t num_nh, uint32_t num_svc_teps,
+                     uint32_t num_remote_svc_teps)
 {
     uint32_t ntables = num_vpcs * num_subnets;
     uint32_t tep_offset = 3;
@@ -127,14 +127,29 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     tep_offset += 3;
                 }
             } else if (artemis()) {
-                route_table.routes[j].prefix.len = TESTAPP_V4ROUTE_PREFIX_LEN;
+                route_table.routes[j].prefix.len =
+                    TESTAPP_V4ROUTE_PREFIX_LEN;
                 route_table.routes[j].prefix.addr.addr.v4_addr =
-                                    TESTAPP_V4ROUTE_PREFIX_VAL(rtnum);
+                    TESTAPP_V4ROUTE_PREFIX_VAL(rtnum);
                 rtnum++;
-                route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
-                route_table.routes[j].nh = nh_id++;
-                if (nh_id > num_nh) {
-                    nh_id = 1;
+                if (i == TEST_APP_S1_SVC_TUNNEL_IN_OUT) {
+                    route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
+                    route_table.routes[j].nh_ip.af = IP_AF_IPV6;
+                    compute_remote46_addr(&route_table.routes[j].nh_ip,
+                        &g_test_params.svc_tep_pfx,
+                        (j % TESTAPP_MAX_SERVICE_TEP) + 1);
+                } else if (i == TEST_APP_S1_REMOTE_SVC_TUNNEL_IN_OUT) {
+                    route_table.routes[j].nh_ip.af = IP_AF_IPV6;
+                    route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
+                    compute_remote46_addr(&route_table.routes[j].nh_ip,
+                        &g_test_params.svc_tep_pfx,
+                        (j % TESTAPP_MAX_SERVICE_TEP) + 1 + TESTAPP_MAX_SERVICE_TEP);
+                } else {
+                    route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
+                    route_table.routes[j].nh = nh_id++;
+                    if (nh_id > num_nh) {
+                        nh_id = 1;
+                    }
                 }
             }
         }
@@ -1029,8 +1044,8 @@ create_service_teps (uint32_t num_teps, ip_prefix_t *svc_tep_pfx,
 
     for (uint32_t i = 1; i <= num_teps; i++, tep_id++) {
         memset(&pds_tep, 0, sizeof(pds_tep));
-        compute_local46_addr(&pds_tep.key.ip_addr, svc_tep_pfx,
-                             tep_pfx->addr.addr.v4_addr + addr_offset + i, i);
+        compute_remote46_addr(&pds_tep.key.ip_addr, svc_tep_pfx,
+                              remote_svc ? TESTAPP_MAX_SERVICE_TEP + i : i);
         pds_tep.type = PDS_TEP_TYPE_SERVICE;
         pds_tep.encap.type = PDS_ENCAP_TYPE_VXLAN;
         pds_tep.encap.val.vnid = tep_vnid++;
@@ -1380,7 +1395,9 @@ create_objects (void)
                               g_test_params.num_routes,
                               &g_test_params.tep_pfx, &g_test_params.route_pfx,
                               &g_test_params.v6_route_pfx,
-                              g_test_params.num_nh);
+                              g_test_params.num_nh,
+                              TESTAPP_MAX_SERVICE_TEP,
+                              TESTAPP_MAX_REMOTE_SERVICE_TEP);
     if (ret != SDK_RET_OK) {
         return ret;
     }

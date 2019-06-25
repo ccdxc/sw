@@ -103,7 +103,7 @@ svc_mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
     // reserve an entry in SERVICE_MAPPING with (VIP, provider IP, port) as key
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
-                                    vpc->hw_id(),
+                                    PDS_IMPL_PROVIDER_VPC_HW_ID,
                                     &spec->backend_provider_ip,
                                     &spec->key.vip,
                                     spec->key.svc_port);
@@ -172,7 +172,7 @@ svc_mapping_impl::release_resources(api_base *api_obj) {
 sdk_ret_t
 svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
-    vpc_entry *vip_vpc, *dip_vpc;
+    vpc_entry *dip_vpc;
     pds_svc_mapping_spec_t *spec;
     sdk_table_api_params_t api_params;
     nat_actiondata_t nat_data;
@@ -180,7 +180,6 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     service_mapping_swkey_t svc_mapping_key;
 
     spec = &obj_ctxt->api_params->svc_mapping_spec;
-    vip_vpc = vpc_db()->find(&spec->key.vpc);
     dip_vpc = vpc_db()->find(&spec->vpc);
     PDS_TRACE_DEBUG("Programming svc mapping (vpc %u, vip %s, port %u, "
                     "provider IP %s) -> (vpc %u, dip %s, port %u)",
@@ -205,7 +204,7 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     // add an entry in SERVICE_MAPPING with (VIP, provider-ip, port) as key
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
-                                    vip_vpc->hw_id(),
+                                    PDS_IMPL_PROVIDER_VPC_HW_ID,
                                     &spec->backend_provider_ip,
                                     &spec->key.vip,
                                     spec->key.svc_port);

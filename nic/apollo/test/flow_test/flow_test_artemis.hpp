@@ -911,10 +911,11 @@ public:
                                 return ret;
                             }
                             rewrite_ip = test_params->svc_tep_pfx.addr;
-                            compute_local46_addr(&rewrite_ip,
+                            compute_remote46_addr(&rewrite_ip,
                                 &test_params->svc_tep_pfx,
-                                test_params->tep_pfx.addr.addr.v4_addr + 1 + (i % TESTAPP_MAX_SERVICE_TEP),
-                                (i % TESTAPP_MAX_SERVICE_TEP) + 1);
+                                (vpc == TEST_APP_S1_SVC_TUNNEL_IN_OUT) ?
+                                    (i % TESTAPP_MAX_SERVICE_TEP) + 1 :
+                                    ((i % TESTAPP_MAX_SERVICE_TEP) + 1 + TESTAPP_MAX_SERVICE_TEP));
                             rewrite_ip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
                                 ip_addr.addr.v4_addr;
                             ip_addr_t rflow_dip =

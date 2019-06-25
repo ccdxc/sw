@@ -146,14 +146,13 @@ typedef struct test_params_s {
 }
 
 static inline void
-compute_local46_addr (ip_addr_t *addr, ip_prefix_t *initial_pfx,
-                      ipv4_addr_t tep_addr, uint32_t shift_val)
+compute_remote46_addr (ip_addr_t *addr, ip_prefix_t *initial_pfx,
+                       uint32_t shift_val)
 {
     *addr = initial_pfx->addr;
-    addr->addr.v6_addr.addr32[IP6_ADDR32_LEN-3] = htonl(0xF1D0D1D0);
-    addr->addr.v6_addr.addr32[IP6_ADDR32_LEN-2] =
-        htonl((0xC << 28) | (shift_val << 8));
-    addr->addr.v6_addr.addr32[IP6_ADDR32_LEN-1] = tep_addr;
+    addr->addr.v6_addr.addr32[IP6_ADDR32_LEN-2] = htonl(0xF1D0D1D0);
+    addr->addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
+        htonl((0xC << 28) | (shift_val));
 }
 
 static inline void

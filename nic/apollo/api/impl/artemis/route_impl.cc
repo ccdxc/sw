@@ -156,6 +156,9 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                             rtable->routes[i].nhid);
             break;
         case PDS_NH_TYPE_TEP:
+            PDS_TRACE_DEBUG("Processing route %s -> TEP %s",
+                            ippfx2str(&rtable->routes[i].prefix),
+                            ipaddr2str(&spec->routes[i].nh_ip));
             tep_key.ip_addr = spec->routes[i].nh_ip;
             tep = tep_db()->find(&tep_key);
             if (tep == NULL) {
