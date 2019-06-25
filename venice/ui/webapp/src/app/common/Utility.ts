@@ -1305,7 +1305,7 @@ export class Utility {
    *
    * [{"keyFormControl":"text","operatorFormControl":"equals","valueFormControl":"1.2","keytextFormName":"version"}]
    */
-  public static convertRepeaterValuesToSearchExpression(repeater: RepeaterComponent): any[] {
+  public static convertRepeaterValuesToSearchExpression(repeater: RepeaterComponent, addMetatag: boolean = true): any[] {
     const data = repeater.getValues();
     if (data == null) {
       return null;
@@ -1316,7 +1316,7 @@ export class Utility {
     // make sure the value field is an array
     retData = retData.map((item) => {
       const searchExpression: SearchExpression = {
-        key: item[repeater.keytextFormName],
+        key: ((addMetatag) ? 'meta.labels.' : '')  + item[repeater.keytextFormName],
         operator: item[repeater.operatorFormName],
         values: Array.isArray(item[repeater.valueFormName]) ? item[repeater.valueFormName] : item[repeater.valueFormName].trim().split(',')
       };
