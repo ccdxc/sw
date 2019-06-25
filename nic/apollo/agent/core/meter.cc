@@ -12,6 +12,16 @@ namespace core {
 static inline sdk_ret_t
 meter_create_validate (pds_meter_spec_t *spec)
 {
+    for (uint32_t rule = 0; rule < spec->num_rules; rule++) {
+        pds_meter_rule_t *rule_spec = &spec->rules[rule];
+        if ((rule_spec->type == PDS_METER_TYPE_PPS_POLICER) ||
+            (rule_spec->type == PDS_METER_TYPE_BPS_POLICER)) {
+            PDS_TRACE_ERR("Failed to create meter {}. PPS and BPS Policers not supported",
+                          spec->key.id);
+            return SDK_RET_INVALID_ARG;
+        }
+    }
+
     return SDK_RET_OK;
 }
 
@@ -51,6 +61,16 @@ meter_create (pds_meter_key_t *key, pds_meter_spec_t *spec)
 static inline sdk_ret_t
 meter_update_validate (pds_meter_spec_t *spec)
 {
+    for (uint32_t rule = 0; rule < spec->num_rules; rule++) {
+        pds_meter_rule_t *rule_spec = &spec->rules[rule];
+        if ((rule_spec->type == PDS_METER_TYPE_PPS_POLICER) ||
+            (rule_spec->type == PDS_METER_TYPE_BPS_POLICER)) {
+            PDS_TRACE_ERR("Failed to update meter {}. PPS and BPS Policers not supported",
+                          spec->key.id);
+            return SDK_RET_INVALID_ARG;
+        }
+    }
+
     return SDK_RET_OK;
 }
 
