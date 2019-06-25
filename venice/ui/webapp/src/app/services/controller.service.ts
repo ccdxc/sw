@@ -482,8 +482,9 @@ export class ControllerService {
     } else if (error && error.constructor && error.constructor.name === 'CloseEvent') {
       // VS-478. Run into web-socket issue. See https://stackoverflow.com/questions/19304157/getting-the-reason-why-websockets-closed-with-close-code-1006 (Chrome)
       const errorCode  = (error.code) ? error.code : '';
-      const errorMsg = 'Web socket connection close - ' + errorCode;  // error.code is likely 1006
-      this.invokeErrorToaster(summary, errorMsg);
+      const errorMsg = 'Connection close - ' + errorCode;  // error.code is likely 1006, 1011
+      this.invokeErrorToaster( 'Web socket', summary + '\n' + errorMsg);
+      return;
     }
     // Don't know what the error is, websockets can come to here.
     console.error('controller.service.invokeRESTErrorToaster() \n' + JSON.stringify(error)); // VS-478 display error.

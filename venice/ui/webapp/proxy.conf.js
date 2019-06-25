@@ -6,6 +6,8 @@ const URL = "10.7.100.21:10001"
 // const URL = "10.7.100.24:10001";  // Barun
 // const URL = "192.168.78.211";  // sys-test team (admin, Systest-1$
 // const URL = "192.168.78.198"   // india test team server with LDAP.  admin/Systest-1$ for admin accesssunil/N0isystem$ for test user
+// const URL = "192.168.78.186"  // systest Qixin's box
+// const URL = "192.168.78.237";    // systest  ambish's box
 
 const PROXY_CONFIG =
   {
