@@ -69,32 +69,6 @@ func GenerateEnterpriseElements() []ipfix.DictionaryEntry {
 			EnterpriseID: PensandoEnterpriseID,
 			Type:         ipfix.Uint16,
 		},
-
-		{
-			Name:         "permit-packets", // todo: check
-			FieldID:      0x0502,
-			EnterpriseID: PensandoEnterpriseID,
-			Type:         ipfix.Uint64,
-		},
-		{
-			Name:         "permit-bytes", //todo:check
-			FieldID:      0x0503,
-			EnterpriseID: PensandoEnterpriseID,
-			Type:         ipfix.Uint64,
-		},
-		{
-			Name:         "delta-permit-packets", //todo: check
-			FieldID:      0x0504,
-			EnterpriseID: PensandoEnterpriseID,
-			Type:         ipfix.Uint32,
-		},
-		{
-			Name:         "delta-permit-bytes", //todo: check
-			FieldID:      0x0505,
-			EnterpriseID: PensandoEnterpriseID,
-			Type:         ipfix.Uint32,
-		},
-
 		{
 			Name:         "drop-vector",
 			FieldID:      0x0506,
@@ -396,23 +370,23 @@ func GeneratePensandoTemplates() []ipfix.TemplateRecord {
 		},
 
 		{
-			EnterpriseID: PensandoEnterpriseID,
-			FieldID:      0x0502,
+			EnterpriseID: 0,
+			FieldID:      86,
 			Length:       8,
 		},
 		{
-			EnterpriseID: PensandoEnterpriseID,
-			FieldID:      0x0503,
+			EnterpriseID: 0,
+			FieldID:      85,
 			Length:       8,
 		},
 		{
-			EnterpriseID: PensandoEnterpriseID,
-			FieldID:      0x0504,
+			EnterpriseID: 0,
+			FieldID:      2,
 			Length:       4,
 		},
 		{
-			EnterpriseID: PensandoEnterpriseID,
-			FieldID:      0x0505,
+			EnterpriseID: 0,
+			FieldID:      1,
 			Length:       4,
 		},
 
