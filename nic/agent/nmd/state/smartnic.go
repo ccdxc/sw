@@ -134,11 +134,11 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 					if err != nil {
 						log.Errorf("Error starting NIC managed mode: %v", err)
 					}
-					n.config.Status.AdmissionPhase = cmd.SmartNICStatus_DECOMMISSIONED.String()
-					n.config.Status.AdmissionPhaseReason = "SmartNIC management mode changed to HOST"
 					if err := n.UpdateNaplesConfig(cfg); err != nil {
 						log.Errorf("Failed to revert to host managed mode during decommissioning")
 					}
+					n.config.Status.AdmissionPhase = cmd.SmartNICStatus_DECOMMISSIONED.String()
+					n.config.Status.AdmissionPhaseReason = "SmartNIC management mode changed to HOST"
 					log.Infof("Naples successfully decommissioned and moved to HOST mode.")
 				} else {
 					err = n.StopManagedMode()

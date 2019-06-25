@@ -319,6 +319,7 @@ func (n *NMD) handleHostModeTransition() error {
 		n.config.Status.IPConfig = &cmd.IPConfig{}
 		n.config.Status.Controllers = []string{}
 		n.config.Status.TransitionPhase = ""
+		n.config.Status.AdmissionPhase = ""
 		return nil
 	}
 	log.Error("Failed to stop network mode control loop")
@@ -492,12 +493,23 @@ func (n *NMD) AdmitNaples() {
 					// Venice says all good, but we need to check the credentials we got back
 					// to make sure they are valid and come from the expected Venice.
 					// If not, we report the error and go back to REGISTERING
-					cert, trustChain, trustRoots, err := n.parseAdmissionResponse(msg.AdmissionResponse)
+					cert, trustChain, trustRoots, cntrls, err := n.parseAdmissionResponse(msg.AdmissionResponse)
 					if err != nil {
 						log.Errorf("Error parsing cluster credentials: %v", err)
 						n.setRegistrationErrorStatus("Cluster trust chain failed validation")
 						continue
 					} else {
+
+						if len(cntrls) > 0 {
+							nicObj.Spec.Controllers = cntrls
+							n.config.Status.Controllers = cntrls
+							n.SetSmartNIC(nicObj)
+							err = n.UpdateCMDClient(cntrls)
+							if err != nil {
+								log.Errorf("Error updating CMD Client : %v", err)
+							}
+						}
+
 						err = n.setClusterCredentials(cert, trustChain, trustRoots)
 						if err != nil {
 							log.Errorf("Error storing cluster credentials: %v", err)

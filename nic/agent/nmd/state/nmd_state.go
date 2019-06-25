@@ -732,14 +732,20 @@ func (n *NMD) setClusterCredentials(cert *x509.Certificate, caTrustChain, trustR
 	return nil
 }
 
-func (n *NMD) parseAdmissionResponse(resp *grpc.NICAdmissionResponse) (*x509.Certificate, []*x509.Certificate, []*x509.Certificate, error) {
+func (n *NMD) parseAdmissionResponse(resp *grpc.NICAdmissionResponse) (*x509.Certificate, []*x509.Certificate, []*x509.Certificate, []string, error) {
+	cntrls := resp.GetControllers()
+	if cntrls == nil {
+		// TODO : Check if we should return with a failure from here.
+		log.Errorf("No controllers received as part of admission response")
+	}
+
 	certMsg := resp.GetClusterCert()
 	if certMsg == nil {
-		return nil, nil, nil, fmt.Errorf("No certificate found in registration response message")
+		return nil, nil, nil, nil, fmt.Errorf("No certificate found in registration response message")
 	}
 	cert, err := x509.ParseCertificate(certMsg.GetCertificate().Certificate)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("Error parsing cluster certificate: %v", err)
+		return nil, nil, nil, nil, fmt.Errorf("Error parsing cluster certificate: %v", err)
 	}
 
 	var caTrustChain []*x509.Certificate
@@ -771,7 +777,7 @@ func (n *NMD) parseAdmissionResponse(resp *grpc.NICAdmissionResponse) (*x509.Cer
 	// However, we always return the new trust roots, not old ones, as they may differ.
 	ntr, err := utils.GetNaplesTrustRoots()
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("Error getting trust roots: %v", err)
+		return nil, nil, nil, nil, fmt.Errorf("Error getting trust roots: %v", err)
 	}
 	log.Infof("Loaded %d trust roots", len(ntr))
 	if ntr != nil {
@@ -782,13 +788,13 @@ func (n *NMD) parseAdmissionResponse(resp *grpc.NICAdmissionResponse) (*x509.Cer
 		}
 		verifiedChains, err := cert.Verify(verifyOpts)
 		if err != nil || len(verifiedChains) == 0 {
-			return nil, nil, nil, fmt.Errorf("Error verifying certificate signature: %v, verified chain len: %d", err, len(verifiedChains))
+			return nil, nil, nil, nil, fmt.Errorf("Error verifying certificate signature: %v, verified chain len: %d", err, len(verifiedChains))
 		}
 	} else {
 		log.Infof("Did not find a trust roots file, skipping validation")
 	}
 
-	return cert, caTrustChain, trustRoots, nil
+	return cert, caTrustChain, trustRoots, cntrls, nil
 }
 
 // RegisterROCtrlClient registers client of RolloutController to NMD
