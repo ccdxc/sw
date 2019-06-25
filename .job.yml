@@ -105,8 +105,6 @@ dependencies:
   #venice: test
   #venice: test/ci_targets/e2erollout
   #test: test/ci_targets/e2e
-  nic/apollo: nic
-  dol/apollo: nic/apollo
   storage/offload: storage/offload/linux-build-test
 
 dir_dependencies:
@@ -117,6 +115,10 @@ dir_dependencies:
   nic/conf/apollo:
     - nic/apollo
   nic/conf/artemis:
+    - nic/apollo
+  dol/apollo:
+    - nic/apollo
+  dol/artemis:
     - nic/apollo
   venice:
     - api
