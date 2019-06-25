@@ -26,53 +26,60 @@ public:
 
 public:
     inline __attribute__((always_inline))
-    sdk_ret_t validate(ftlite_ipv6_entry_t *entry) {
+    sdk_ret_t validate(ipv4_entry_t *entry) {
         if (valid != entry->entry_valid) {
+            SDK_TRACE_ERR("v4: bucket valid:%d entry valid:%d",
+                          valid, entry->entry_valid);
             return SDK_RET_HW_SW_OO_SYNC;
         }
         return SDK_RET_OK;
     }
 
     inline __attribute__((always_inline))
-    sdk_ret_t validate(ftlite_ipv4_entry_t *entry) {
+    sdk_ret_t validate(ipv6_entry_t *entry) {
         if (valid != entry->entry_valid) {
+            SDK_TRACE_ERR("v6: bucket valid:%d entry valid:%d",
+                          valid, entry->entry_valid);
             return SDK_RET_HW_SW_OO_SYNC;
         }
         return SDK_RET_OK;
     }
 
     inline __attribute__((always_inline))
-    sdk_ret_t validate(ftlite_ipv6_entry_t *entry,
+    sdk_ret_t validate(ipv6_entry_t *entry,
                        uint32_t slot, uint32_t index) {
+        FTLITE_TRACE_DEBUG("ipv6 parent: index:%d "
+               "bucket:%d entry:%d slot:%d hint1:%d hint2:%d "
+               "hint3:%d hint4:%d more:%d", index,
+               valid, entry->entry_valid, slot, hint1_valid, hint2_valid, 
+               hint3_valid, hint4_valid, more_hints_valid);
         if (valid != entry->entry_valid ||
             (slot == 1 && hint1_valid) ||
             (slot == 2 && hint2_valid) ||
             (slot == 3 && hint3_valid) ||
             (slot == 4 && hint4_valid) ||
             (slot == 5 && more_hints_valid)) {
-            SDK_TRACE_ERR("Error: OOSYNC ipv6 parent: index:%d "
-                "bucket:%d entry:%d slot:%d hint1:%d hint2:%d "
-                "hint3:%d hint4:%d more:%d", index,
-                valid, entry->entry_valid, slot, hint1_valid, hint2_valid, 
-                hint3_valid, hint4_valid, more_hints_valid);
-            SDK_TRACE_ERR("[%s]", rawstr(entry, entry->size()));
+            FTLITE_TRACE_ERR("Error: OOSYNC");
+            FTLITE_TRACE_ERR("[%s]", rawstr(entry, entry->size()));
             return SDK_RET_HW_SW_OO_SYNC;
         }
         return SDK_RET_OK;
     }
 
     inline __attribute__((always_inline))
-    sdk_ret_t validate(ftlite_ipv4_entry_t *entry,
+    sdk_ret_t validate(ipv4_entry_t *entry,
                        uint32_t slot, uint32_t index) {
+        FTLITE_TRACE_DEBUG("ipv4 parent: index:%d "
+               "bucket:%d entry:%d slot:%d hint1:%d hint2:%d more:%d",
+               index, valid, entry->entry_valid,
+               slot, hint1_valid, hint2_valid, 
+               more_hints_valid);
         if (valid != entry->entry_valid ||
             (slot == 1 && hint1_valid) ||
             (slot == 2 && hint2_valid) ||
             (slot == 5 && more_hints_valid)) {
-            SDK_TRACE_ERR("Error: OOSYNC ipv4 parent: index:%d "
-                "bucket:%d entry:%d slot:%d hint1:%d hint2:%d more:%d",
-                index, valid, entry->entry_valid,
-                slot, hint1_valid, hint2_valid, 
-                more_hints_valid);
+            FTLITE_TRACE_ERR("Error: OOSYNC ");
+            FTLITE_TRACE_ERR("[%s]", rawstr(entry, entry->size()));
             return SDK_RET_HW_SW_OO_SYNC;
         }
         return SDK_RET_OK;

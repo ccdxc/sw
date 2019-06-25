@@ -11,7 +11,6 @@
 
 void run_basic_tests();
 
-#if 0
 static int
 ftl_debug_logger (sdk_trace_level_e trace_level, const char *format, ...)
 {
@@ -32,12 +31,11 @@ ftl_debug_logger (sdk_trace_level_e trace_level, const char *format, ...)
     }
     return 0;
 }
-#endif
 
 int 
 main(int argc, char **argv)
 {
-    //sdk::lib::logger::init(ftl_debug_logger);
-    run_basic_tests();
-    return 0;
+    ::testing::InitGoogleTest(&argc, argv);
+    sdk::lib::logger::init(ftl_debug_logger);
+    return RUN_ALL_TESTS();
 }

@@ -13,9 +13,11 @@
 #include "nic/utils/ftlite/ftlite_ipv4_structs.hpp"
 #include "nic/utils/ftlite/ftlite_ipv6_structs.hpp"
 
+using namespace ftlite::internal;
+
 typedef union ftlite_mock_table_s {
-    ftlite_ipv4_entry_t *v4entries;
-    ftlite_ipv6_entry_t *v6entries;
+    ipv4_entry_t *v4entries;
+    ipv6_entry_t *v6entries;
 } ftlite_mock_table_t;
 
 static ftlite_mock_table_t mocktables[FTLITE_TBLID_MAX];
@@ -39,23 +41,23 @@ void
 ftlite_mock_init ()
 {
     mocktables[FTLITE_TBLID_IPV4].v4entries =
-        (ftlite_ipv4_entry_t *)calloc(table_size_get(FTLITE_TBLID_IPV4),
-                                      sizeof(ftlite_ipv4_entry_t));
+        (ipv4_entry_t *)calloc(table_size_get(FTLITE_TBLID_IPV4),
+                                      sizeof(ipv4_entry_t));
     assert(mocktables[FTLITE_TBLID_IPV4].v4entries);
 
     mocktables[FTLITE_TBLID_IPV4_OHASH].v4entries =
-        (ftlite_ipv4_entry_t *)calloc(table_size_get(FTLITE_TBLID_IPV4_OHASH),
-                                      sizeof(ftlite_ipv4_entry_t));
+        (ipv4_entry_t *)calloc(table_size_get(FTLITE_TBLID_IPV4_OHASH),
+                                      sizeof(ipv4_entry_t));
     assert(mocktables[FTLITE_TBLID_IPV4_OHASH].v4entries);
 
     mocktables[FTLITE_TBLID_IPV6].v6entries =
-        (ftlite_ipv6_entry_t *)calloc(table_size_get(FTLITE_TBLID_IPV6),
-                                      sizeof(ftlite_ipv6_entry_t));
+        (ipv6_entry_t *)calloc(table_size_get(FTLITE_TBLID_IPV6),
+                                      sizeof(ipv6_entry_t));
     assert(mocktables[FTLITE_TBLID_IPV6].v6entries);
 
     mocktables[FTLITE_TBLID_IPV6_OHASH].v6entries =
-        (ftlite_ipv6_entry_t *)calloc(table_size_get(FTLITE_TBLID_IPV6_OHASH),
-                                      sizeof(ftlite_ipv6_entry_t));
+        (ipv6_entry_t *)calloc(table_size_get(FTLITE_TBLID_IPV6_OHASH),
+                                      sizeof(ipv6_entry_t));
     assert(mocktables[FTLITE_TBLID_IPV6_OHASH].v6entries);
 
 }

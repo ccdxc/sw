@@ -15,6 +15,14 @@
 
 using namespace ftlite::internal;
 
+#define FTLITE_API_BEGIN(_name) {\
+    FTLITE_TRACE_DEBUG("-- ftlite begin: --"); \
+}
+
+#define FTLITE_API_END(_status) {\
+    FTLITE_TRACE_DEBUG("-- ftlite end: (r:%d) --", _status); \
+}
+
 #if 0
 extern "C" {
 
@@ -108,85 +116,50 @@ namespace ftlite {
 static state_t g_state;
 
 sdk_ret_t
-init(init_params_t *params) {
-__label__ done;
-    sdk_ret_t ret = SDK_RET_OK;
-
-    g_state.lock();
-
-    if (params->ipv4_main_table_id) {
-        auto &mtable = g_state.main_tables[IPAF_IPV4];
-        ret = mtable.init(params->ipv4_main_table_id);
-        if (ret != SDK_RET_OK) {
-            goto done;
-        }
-
-        auto &htable = g_state.hint_tables[IPAF_IPV4];
-        ret = htable.init(mtable.oflow_table_id());
-        if (ret != SDK_RET_OK) {
-            goto done;
-        }
-    }
-
-    if (params->ipv6_main_table_id) {
-        auto &mtable = g_state.main_tables[IPAF_IPV6];
-        ret = mtable.init(params->ipv6_main_table_id);
-        if (ret != SDK_RET_OK) {
-            goto done;
-        }
-
-        auto &htable = g_state.hint_tables[IPAF_IPV6];
-        ret = htable.init(mtable.oflow_table_id());
-        if (ret != SDK_RET_OK) {
-            goto done;
-        }
-    }
-
-done:
-    g_state.unlock();
-    return SDK_RET_OK;
+init(init_params_t *ips) {
+    return g_state.init(ips);
 }
 
 template<class T>
-static sdk_ret_t insert_flow(T& flow) {
+static sdk_ret_t insert_flow(meta_t* meta, T* info) {
     sdk_ret_t ret = SDK_RET_OK;
-    auto &mtable = g_state.main_tables[flow.tblmeta.ipaf]; // Main Table
-    auto &htable = g_state.hint_tables[flow.tblmeta.ipaf]; // Hint Table
-    auto &ptable = flow.tblmeta.ptype ? htable : mtable; // Parent Table
-    auto &ltable = flow.tblmeta.pslot ? htable : mtable; // Leaf Table
-    uint32_t eindex = flow.tblmeta.hash.index;
+    auto &mtable = g_state.mtables[meta->ipv6]; // Main Table
+    auto &htable = g_state.htables[meta->ipv6]; // Hint Table
+    auto &ptable = meta->ptype ? htable : mtable; // Parent Table
+    auto &ltable = meta->pslot ? htable : mtable; // Leaf Table
+    uint32_t eindex = meta->hash.index;
 
-    if (flow.tblmeta.pslot) { // Parent is valid.
-        //flow.parent.entry.swizzle();
+    if (meta->pslot) { // Parent is valid.
+        //info->pentry.swizzle();
 
         // Validate PARENT bucket
-        auto &pbucket = ptable.bucket(flow.tblmeta.pindex);
-        ret = pbucket.validate(&flow.parent.entry,
-                               flow.tblmeta.pslot, flow.tblmeta.pindex);
+        auto &pbucket = ptable.bucket(meta->pindex);
+        ret = pbucket.validate(&info->pentry, meta->pslot, meta->pindex);
         FTLITE_CHECK_AND_RETURN(ret);
 
         // Allocate new hint index
         ret = htable.alloc(eindex);
         FTLITE_CHECK_AND_RETURN(ret);
+
+        FTLITE_TRACE_DEBUG("Allocated hint = %d", eindex);
     }
     
     // Validate LEAF bucket
     auto &bucket = ltable.bucket(eindex);
-    ret = bucket.validate(&flow.leaf.entry);
+    ret = bucket.validate(&info->lentry);
     FTLITE_CHECK_AND_RETURN(ret);
         
     // Set the 'valid' bit in the main table bucket
     bucket.valid = 1;
     
     // Programming start
-    flow.leaf.entry.entry_valid = 1;
-    ret = ltable.write(&flow.leaf.entry, eindex);
+    info->lentry.entry_valid = 1;
+    ret = ltable.write(meta->ipv6, &info->lentry, eindex);
     FTLITE_CHECK_AND_RETURN(ret);
     
-    if (flow.tblmeta.pslot) {
-        flow.parent.entry.set_hint_hash(flow.tblmeta.pslot,
-                                        eindex, flow.tblmeta.hash.msb);
-        ret = ptable.write(&flow.parent.entry, flow.tblmeta.pindex);
+    if (meta->pslot) {
+        info->pentry.set_hint_hash(meta->pslot, eindex, meta->hash.msb);
+        ret = ptable.write(meta->ipv6, &info->pentry, meta->pindex);
         FTLITE_CHECK_AND_RETURN(ret);
     }
                                          
@@ -194,12 +167,12 @@ static sdk_ret_t insert_flow(T& flow) {
 }
 
 static sdk_ret_t
-insert_flow_ipaf(flow_meta_t& meta) {
+insert_flow_af(meta_t* meta, info_t* info) {
     auto ret = SDK_RET_OK;
-    if (meta.ipv4meta.tblmeta.ipaf == IPAF_IPV4) {
-        ret = insert_flow<ipv4_flow_meta_t>(meta.ipv4meta);
+    if (meta->ipv6) {
+        ret = insert_flow<v6info_t>(meta, &info->v6);
     } else {
-        ret = insert_flow<ipv6_flow_meta_t>(meta.ipv6meta);
+        ret = insert_flow<v4info_t>(meta, &info->v4);
     }
     return ret;
 }
@@ -209,24 +182,60 @@ insert_session(insert_params_t *params) {
     return SDK_RET_OK;
 }
 
-sdk_ret_t
-insert(insert_params_t *params) {
-    auto ret = insert_session(params);
-    if (ret != SDK_RET_OK) {
-        return ret;
+template<class T> static void
+trace_flow_(meta_t* meta, T* flow) {
+    static char buff[4096];
+
+    meta->tostr(buff, sizeof(buff));
+    FTLITE_TRACE_DEBUG("Meta = [ %s ]", buff);
+
+    flow->lentry.tostr(buff, sizeof(buff));
+    FTLITE_TRACE_DEBUG("Leaf = [ %s ]", buff);
+
+    if (meta->level) {
+        flow->pentry.tostr(buff, sizeof(buff));
+        FTLITE_TRACE_DEBUG("Parent = [ %s ]", buff);
     }
-    
-    ret = insert_flow_ipaf(params->iflow);
-    if (ret != SDK_RET_OK) {
-        return ret;
+    return;
+}
+
+static void
+trace_params_(insert_params_t *ips) {
+    FTLITE_TRACE_DEBUG("IFLOW");
+    if (ips->imeta.ipv6) {
+        trace_flow_<v6info_t>(&ips->imeta, &ips->iflow.v6);
+    } else {
+        trace_flow_<v4info_t>(&ips->imeta, &ips->iflow.v4);
     }
 
-    ret = insert_flow_ipaf(params->rflow);
-    if (ret != SDK_RET_OK) {
-        return ret;
+    FTLITE_TRACE_DEBUG("RFLOW");
+    if (ips->rmeta.ipv6) {
+        trace_flow_<v6info_t>(&ips->rmeta, &ips->rflow.v6);
+    } else {
+        trace_flow_<v4info_t>(&ips->rmeta, &ips->rflow.v4);
     }
+
+    return;
+}
+
+sdk_ret_t
+insert(insert_params_t *ips) {
+__label__ done;
+    FTLITE_API_BEGIN();
+    trace_params_(ips);
+
+    auto ret = insert_session(ips);
+    FTLITE_RET_CHECK(ret, "session");
     
-    return SDK_RET_OK;
+    ret = insert_flow_af(&ips->imeta, &ips->iflow);
+    FTLITE_RET_CHECK(ret, "iflow");
+
+    ret = insert_flow_af(&ips->rmeta, &ips->rflow);
+    FTLITE_RET_CHECK(ret, "rflow");
+    
+    FTLITE_API_END(ret);
+done:
+    return ret;
 }
 
 } // namespace ftlite

@@ -12,10 +12,10 @@
 #define FTLITE_TRACE_INFO(_msg, _args...) SDK_TRACE_INFO(_msg, ##_args)
 #define FTLITE_TRACE_ERR(_msg, _args...) SDK_TRACE_ERR(_msg, ##_args)
 
-#define FTLITE_RET_CHECK_AND_GOTO(_status, _label, _msg, _args...) {\
+#define FTLITE_RET_CHECK(_status, _msg, _args...) {\
     if (unlikely((_status) != sdk::SDK_RET_OK)) {\
-        SDK_TRACE_ERR(_msg, ##_args);\
-        goto _label;\
+        SDK_TRACE_ERR(_msg "ret:%d", ##_args, _status);\
+        goto done;\
     }\
 }
 #define FTLITE_CHECK_AND_RETURN(_status) {\
@@ -49,6 +49,7 @@ void swap8bytes(uint8_t *bs, uint8_t s, uint8_t e) {
 }
 #endif
 
+static inline
 char* rawstr(void *data, uint32_t len) {
     static char str[512];
     uint32_t i = 0;

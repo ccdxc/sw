@@ -3,10 +3,15 @@
 //-----------------------------------------------------------------------------
 #ifndef __FTLITE_IPV6_HPP__
 #define __FTLITE_IPV6_HPP__
-
+#include <string.h>
 #include "ftlite_utils.hpp"
+#include "ftlite_structs.hpp"
+
+namespace ftlite {
+namespace internal {
+
 #define FTLITE_IPV6_ENTRY_NUM_HINTS 4
-struct __attribute__((__packed__)) ftlite_ipv6_entry_t {
+struct __attribute__((__packed__)) ipv6_entry_t {
     // data after key
     uint32_t __pad_to_512b : 13;
     uint32_t entry_valid : 1;
@@ -37,6 +42,10 @@ struct __attribute__((__packed__)) ftlite_ipv6_entry_t {
     uint32_t epoch : 8;
 
 public:
+    uint32_t ipv6() {
+        return 1;
+    }
+
     uint32_t size() {
         return sizeof(*this);
     }
@@ -51,13 +60,15 @@ public:
 
     void tostr(char *buff, uint32_t len) {
         snprintf(buff, len,
-                 "[#/msb/hint: M/%d/%d 4/%d%d 3/%d/%d 2/%d/%d 1/%d/%d] "
+                 "[#/msb/hint: M/%d/%d 4/%d/%d 3/%d/%d 2/%d/%d 1/%d/%d] "
                  "[key type:%d,vpc_id:%d,proto:%d,"
                  "src:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x,"
                  "dst:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x,"
                  "sport:%d,dport:%d] [data role:%d,session:%d,epoch:%d,valid:%d]",
-                 more_hints, more_hashes, hint4, hash4, hint3, hash3, 
-                 hint2, hash2, hint1, hash1, ktype, vpc_id, proto,
+                 more_hints, more_hashes,
+                 hint4, hash4, hint3, hash3, 
+                 hint2, hash2, hint1, hash1, 
+                 ktype, vpc_id, proto,
                  src[0], src[1], src[2], src[3],
                  src[4], src[5], src[6], src[7],
                  src[8], src[9], src[10], src[11],
@@ -114,7 +125,7 @@ public:
         clear_hints();
     }
 
-    void copy_key(ftlite_ipv6_entry_t *s) {
+    void copy_key(ipv6_entry_t *s) {
         ktype = s->ktype; 
         sport = s->sport; 
         dport = s->dport; 
@@ -124,25 +135,25 @@ public:
         vpc_id = s->vpc_id;
     }
 
-    void copy_data(ftlite_ipv6_entry_t *s) {
+    void copy_data(ipv6_entry_t *s) {
         flow_role = s->flow_role;
         session_index = s->session_index;
         epoch = s->epoch;
     }
 
-    void copy_key_data(ftlite_ipv6_entry_t *s) {
+    void copy_key_data(ipv6_entry_t *s) {
         copy_key(s);
         copy_data(s);
     }
 
-    void build_key(ftlite_ipv6_entry_t *s) {
+    void build_key(ipv6_entry_t *s) {
         copy_key(s);
         clear_data();
         clear_hints();
         entry_valid = 0;
     }
     
-    bool compare_key(ftlite_ipv6_entry_t *s) {
+    bool compare_key(ipv6_entry_t *s) {
         if (s->ktype != ktype) return false;
         if (s->sport != sport) return false;
         if (s->dport != dport) return false;
@@ -186,6 +197,22 @@ public:
         } 
     }
 
+    void find_hint(uint32_t hash_msb, uint32_t &hint, uint32_t &slot) {
+        if (hash1 == hash_msb) {
+            slot = 1; hint = hint1; return;
+        } else if (hash2 == hash_msb) {
+            slot = 2; hint = hint2; return;
+        } else if (hash3 == hash_msb) {
+            slot = 3; hint = hint3; return;
+        } else if (hash4 == hash_msb) {
+            slot = 4; hint = hint4; return;
+        } else if (more_hints) {
+           slot = get_more_hint_slot();  hint = more_hints; return;
+        }
+        hint = 0; slot = 0;
+        return;
+    }
+
     uint32_t get_num_hints() {
         return FTLITE_IPV6_ENTRY_NUM_HINTS;
     }
@@ -201,7 +228,7 @@ public:
         return false;
     }
 
-    uint32_t find_last_hint() {
+    uint32_t find_used_slot() {
         if (more_hints && more_hashes) {
             return get_more_hint_slot();
         } else if (hint4) {
@@ -215,6 +242,25 @@ public:
         }
         return 0;
     }
+
+    uint32_t find_free_slot() {
+        if (!hint1) {
+            return 1;
+        } else if (!hint2) {
+            return 2;
+        } else if (!hint3) {
+            return 3;
+        } else if (!hint4) {
+            return 4;
+        } else if (!more_hints) {
+            return get_more_hint_slot();
+        }
+        return 0;
+    }
+
 };
+
+} // namespace ftlite
+} // namespace internal
 
 #endif

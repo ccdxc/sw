@@ -85,6 +85,7 @@ references:
   - platform/drivers/linux
   - iota/test/venice/hwtest
 #  - iota/test/venice/hwtest/hwregression
+  - nic/utils/ftlite
 
 # in the current jobd infra this is a map. Hence the later entry overwrites earlier ones if there are duplicates..
 dependencies:

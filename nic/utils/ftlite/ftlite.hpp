@@ -12,93 +12,71 @@
 
 namespace ftlite {
 
-struct __attribute__((__packed__)) pkt_meta_t {
-    uint16_t flags;
+using namespace ftlite::internal;
+
+struct __attribute__((__packed__)) common_meta_t {
+    uint8_t action;
     uint16_t len;
-    uint16_t local_vnic_tag;
+    uint16_t sindex;
 };
 
-struct flow_table_meta_t {
-    struct __attribute__((__packed__)) {
-        uint32_t msb : 9;
-        uint32_t index : 23;
+struct meta_t {
+    union __attribute__((__packed__)) {
+        struct {
+            uint32_t msb : 9;
+            uint32_t index : 23;
+        };
+        uint32_t value;
     } hash;
-    uint32_t ipaf : 1;
+    uint32_t ipv6 : 1;
     uint32_t ptype : 1; // Parent Table Type
     uint32_t pslot : 3; // Parent Hint Slot
-    uint32_t nrecircs : 3;
+    uint32_t level : 3;
     uint32_t pindex; // Parent Index
+    uint32_t lindex; // Leaf Index
+public:
+    void tostr(char *buff, uint32_t size) {
+        FTLITE_SNPRINTF(buff, size, "hash:%#08x (msb = %#03x, index = %d) "
+                        "ipv6:%d ptype:%d pslot:%d level:%d "
+                        "pindex:%d lindex:%d",
+                        hash.value, hash.msb, hash.index,
+                        ipv6, ptype, pslot, level, pindex, lindex);
+    }
 };
 
-struct __attribute__((__packed__)) ipv4_flow_meta_t {
-    flow_table_meta_t tblmeta;
-    struct {
-        ftlite_ipv4_entry_t entry;
-        uint8_t pad[32];
-    } parent;
-    struct {
-        ftlite_ipv6_entry_t entry;
-    } leaf;
+struct __attribute__((__packed__)) v4info_t {
+    ipv4_entry_t pentry;
+    uint8_t pad0[32];
+    ipv4_entry_t lentry;
+    uint8_t pad1[32];
 };
 
-struct __attribute__((__packed__)) ipv6_flow_meta_t {
-    flow_table_meta_t tblmeta;
-    struct {
-        ftlite_ipv6_entry_t entry;
-    } parent;
-    struct {
-        ftlite_ipv6_entry_t entry;
-    } leaf;
+struct __attribute__((__packed__)) v6info_t {
+    ipv6_entry_t pentry;
+    ipv6_entry_t lentry;
 };
 
-union __attribute__((__packed__)) flow_meta_t {
-    ipv4_flow_meta_t ipv4meta;
-    ipv6_flow_meta_t ipv6meta;
+union __attribute__((__packed__)) info_t {
+    v4info_t v4;
+    v6info_t v6;
 };
   
 struct __attribute__((__packed__)) session_meta_t {
-    struct __attribute__((__packed__)) {
-        uint32_t tcp_state : 4;
-        uint32_t tcp_seq_num : 32;
-        uint32_t tcp_ack_num : 32;
-        uint32_t tcp_win_sz : 16;
-        uint32_t tcp_win_scale : 4;
-    } iflow;
-    struct __attribute__((__packed__)) {
-        uint32_t tcp_state : 4;
-        uint32_t tcp_seq_num : 32;
-        uint32_t tcp_ack_num : 32;
-        uint32_t tcp_win_sz : 16;
-        uint32_t tcp_win_scale : 4;
-    } rflow;
-    uint32_t tx_dst_ip[4];
-    uint32_t tx_dst_l4port : 16;
-    uint32_t nexthop_indx : 20;
-    uint32_t tx_rewrite_flags : 8;
-    uint32_t rx_rewrite_flags : 8;
-    uint32_t tx_policer_idx : 12;
-    uint32_t rx_policer_idx : 12;
-    uint32_t meter_idx : 16;
-    uint32_t timestamp1;
-    uint32_t timestamp2 : 16;
-    uint32_t drop : 1;
-    uint32_t pad1 : 32;
-    uint32_t pad2 : 32;
-    uint32_t pad3 : 3;
+    uint8_t fields[64];
 };
 
 struct __attribute__((__packed__)) insert_params_t {
-    pkt_meta_t pktmeta;
-    flow_meta_t iflow;
-    flow_meta_t rflow;
+    common_meta_t cmeta;
+    meta_t imeta;
+    meta_t rmeta;
+    info_t iflow;
+    info_t rflow;
     session_meta_t session;
 };
 
 struct init_params_t {
-    uint32_t ipv4_main_table_id;
-    uint32_t ipv4_num_hints;
-    uint32_t ipv6_main_table_id;
-    uint32_t ipv6_num_hints;
+    uint32_t v4tid;
+    uint32_t v6tid;
 };
 
 sdk_ret_t init(init_params_t *params);
