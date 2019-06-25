@@ -114,6 +114,10 @@ dir_dependencies:
     - nic/apollo
   nic/sdk:
     - nic/apollo
+  nic/conf/apollo:
+    - nic/apollo
+  nic/conf/artemis:
+    - nic/apollo
   venice:
     - api
     - test/ci_targets/e2e
