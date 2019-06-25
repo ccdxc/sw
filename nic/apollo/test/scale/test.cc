@@ -1046,6 +1046,7 @@ create_service_teps (uint32_t num_teps, ip_prefix_t *svc_tep_pfx,
         memset(&pds_tep, 0, sizeof(pds_tep));
         compute_remote46_addr(&pds_tep.key.ip_addr, svc_tep_pfx,
                               remote_svc ? TESTAPP_MAX_SERVICE_TEP + i : i);
+        MAC_UINT64_TO_ADDR(pds_tep.mac, (((uint64_t)0x0303 << 22) | tep_id));
         pds_tep.type = PDS_TEP_TYPE_SERVICE;
         pds_tep.encap.type = PDS_ENCAP_TYPE_VXLAN;
         pds_tep.encap.val.vnid = tep_vnid++;
