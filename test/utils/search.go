@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/pensando/sw/api/generated/audit"
@@ -142,4 +143,22 @@ func Search(ctx context.Context, apigw string, query *search.SearchRequest, resp
 	}
 	log.Infof("@@@ Search response : %+v\n", resp)
 	return nil
+}
+
+// GetAuditEvent returns audit event details given its UUID
+func GetAuditEvent(ctx context.Context, apiGwAddr, eventID string, resp *audit.Event) error {
+	auditURL := fmt.Sprintf("https://%s/audit/v1/events/%s", apiGwAddr, eventID)
+	restcl := netutils.NewHTTPClient()
+	restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+	// get authz header
+	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if !ok {
+		return fmt.Errorf("no authorizaton header in context")
+	}
+	restcl.SetHeader("Authorization", authzHeader)
+	status, err := restcl.Req("GET", auditURL, &audit.EventRequest{}, resp)
+	if status != http.StatusOK {
+		return fmt.Errorf("GET request failed with http status code (%d) for event (%s)", status, auditURL)
+	}
+	return err
 }

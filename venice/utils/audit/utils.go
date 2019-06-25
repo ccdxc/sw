@@ -38,11 +38,13 @@ func NewRequestObjectPopulator(reqObj interface{}, body bool) EventPopulator {
 			}
 			event.RequestObject = string(b)
 		default: // for API server, search, metrics, events
-			b, err := json.Marshal(reqObj)
-			if err != nil {
-				return err
+			if dumpBody {
+				b, err := json.Marshal(reqObj)
+				if err != nil {
+					return err
+				}
+				event.RequestObject = string(b)
 			}
-			event.RequestObject = string(b)
 		}
 		return nil
 	}
@@ -66,11 +68,13 @@ func NewResponseObjectPopulator(resObj interface{}, body bool) EventPopulator {
 			}
 			event.ResponseObject = string(b)
 		default: // for API server, search, metrics, events
-			b, err := json.Marshal(resObj)
-			if err != nil {
-				return err
+			if dumpBody {
+				b, err := json.Marshal(resObj)
+				if err != nil {
+					return err
+				}
+				event.ResponseObject = string(b)
 			}
-			event.ResponseObject = string(b)
 		}
 		return nil
 	}
@@ -99,6 +103,8 @@ func (p *policyChecker) PopulateEvent(event *audit.Event, populators ...EventPop
 	// do not log search, events, audit, metrics queries, fwlogs queries
 	case auth.Permission_Search.String(), auth.Permission_Event.String(), auth.Permission_MetricsQuery.String(), auth.Permission_FwlogsQuery.String(), auth.Permission_AuditEvent.String():
 		return false, nil
+	case auth.Permission_TokenAuth.String():
+		event.ServiceName = globals.Cmd
 	default:
 		switch event.Action {
 		// do not log reads

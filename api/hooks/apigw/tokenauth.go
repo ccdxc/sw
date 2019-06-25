@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/tokenauth"
 	"github.com/pensando/sw/venice/apigw"
@@ -61,6 +62,7 @@ func (e *tokenAuthHooks) registerTokenAuthHooks(svc apigw.APIGatewayService) err
 			return err
 		}
 		prof.AddPreAuthZHook(e.operations)
+		prof.SetAuditLevel(audit.Level_Request.String()) // not recording response as it has private key
 	}
 	return nil
 }

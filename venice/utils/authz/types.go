@@ -190,6 +190,7 @@ func (a *AbstractAuthorizer) AuthorizedOperations(user *auth.User, tenant, names
 		kinds := []string{auth.Permission_AuditEvent.String(),
 			auth.Permission_FwlogsQuery.String(),
 			auth.Permission_Event.String(),
+			auth.Permission_TokenAuth.String(),
 			auth.Permission_APIEndpoint.String()}
 		for _, kind := range kinds {
 			resource := NewResource(tenant, "", kind, namespace, "")
