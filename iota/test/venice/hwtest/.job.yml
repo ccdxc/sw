@@ -20,7 +20,7 @@ e2e-targets:
      - build-iris-arm
      - build-venice-image
    clusters:
-     - image: build-115
+     - image: build-160
        count: 3
        resources:
          cpus: 4
@@ -54,7 +54,7 @@ e2e-targets:
 #    - build-iris-arm
 #    - build-venice-image
 #  clusters:
-#    - image: build-115
+#    - image: build-160
 #      count: 1
 #      resources:
 #        cpus: 16

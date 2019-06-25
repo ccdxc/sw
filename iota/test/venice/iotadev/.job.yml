@@ -11,7 +11,7 @@ warmd:
     commands: ["sleep", "10000000"]
     owners: ["email:shaleman@pensando.io"]
   create:
-    image: build-115
+    image: build-160
     count: 6
     resources:
       cpus  : 8

@@ -261,7 +261,27 @@ func (tb *TestBed) CheckVeniceServiceStatus(leaderNode string) (string, error) {
 					}
 				}
 			}
+
+			trig = tb.NewTrigger()
+			trig.AddCommand(`/pensando/iota/bin/kubectl get pods -a --all-namespaces -o json  | /usr/local/bin/jq-linux64 -r '.items[] | select(.status.phase != "Running" or ([ .status.conditions[] | select(.type == "Ready" and .status == "False") ] | length ) == 1 ) | .metadata.namespace + "/" + .metadata.name' `, entity, node.NodeName)
+
+			// trigger commands
+			triggerResp, err = trig.Run()
+			if err != nil {
+				log.Errorf("Failed to get k8s service status Err: %v", err)
+				return ret, err
+			}
+
+			for _, cmdResp := range triggerResp {
+				if cmdResp.ExitCode != 0 {
+					return ret, fmt.Errorf("Venice trigger %v failed. code %v, Out: %v, StdErr: %v", cmdResp.Command, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+				}
+				if cmdResp.Stdout != "" {
+					return ret, fmt.Errorf("Some pods not ready: %v", cmdResp.Stdout)
+				}
+			}
 		}
+
 	}
 	return ret, nil
 }
