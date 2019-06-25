@@ -1,5 +1,7 @@
-#include "common_rxdma_dummy.p4"
+#include "nic/p4/include/intrinsic.p4"
+#include "nic/p4/common/defines.h"
 #include "../include/common_headers.p4"
+#include "common_metadata.p4"
 
 @pragma scratch_metadata
 metadata common_scratch_metadata_t common_scratch_metadata0;
@@ -19,6 +21,12 @@ metadata cap_phv_intr_global_t capri_intr_scratch;
 metadata cap_phv_intr_p4_t     capri_p4_intr_scratch;
 @pragma scratch_metadata
 metadata cap_phv_intr_rxdma_t  capri_rxdma_intr_scratch;
+@pragma scratch_metadata
+metadata cap_phv_intr_global_t p4_intr_global_scratch;
+@pragma scratch_metadata
+metadata cap_phv_intr_p4_t     p4_intr_scratch;
+@pragma scratch_metadata
+metadata cap_phv_intr_rxdma_t  p4_rxdma_intr_scratch;
 
 @pragma scratch_metadata
 metadata p4_2_p4plus_app_header_t scratch_app;
@@ -1173,6 +1181,60 @@ control common_p4plus_stage0 {
                     apply(eth_rx_rss_indir);
                 }
             }
+        }
+    }
+}
+
+parser start {
+    return ingress;
+}
+
+control ingress {
+    if (p4_to_rxdma.cps_path_en == 1) {
+        if (p4_to_rxdma.lpm1_enable == TRUE) {
+            rxlpm1();
+        }
+        // This bit is indication of first pass - change name
+        if (p4_to_rxdma.vnic_info_en == TRUE) {
+            vnic_info_rxdma();
+            nat_rxdma();
+        }
+        if (p4_to_rxdma.lpm2_enable == TRUE) {
+            rxlpm2();
+        }
+        recirc();
+        pkt_enqueue();
+        if (p4_to_rxdma.aging_enable == TRUE) {
+            session_aging();
+        }
+    } else {
+        common_p4plus_stage0();
+        if (app_header.table0_valid == 1) {
+            apply(rx_table_s1_t0);
+            apply(rx_table_s2_t0);
+            apply(rx_table_s3_t0);
+            apply(rx_table_s4_t0);
+            apply(rx_table_s5_t0);
+            apply(rx_table_s6_t0);
+            apply(rx_table_s7_t0);
+        }
+        if (app_header.table1_valid == 1) {
+            apply(rx_table_s1_t1);
+            apply(rx_table_s2_t1);
+            apply(rx_table_s3_t1);
+            apply(rx_table_s4_t1);
+            apply(rx_table_s5_t1);
+            apply(rx_table_s6_t1);
+            apply(rx_table_s7_t1);
+        }
+        if (app_header.table2_valid == 1) {
+            apply(rx_table_s1_t2);
+            apply(rx_table_s2_t2);
+            apply(rx_table_s3_t2);
+            apply(rx_table_s4_t2);
+            apply(rx_table_s5_t2);
+            apply(rx_table_s6_t2);
+            apply(rx_table_s7_t2);
         }
     }
 }

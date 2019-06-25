@@ -1,6 +1,3 @@
-#include "../../../p4/common-p4+/capri_dma_cmd.p4"
-#include "../../../p4/common-p4+/capri_doorbell.p4"
-
 header_type txdma_predicate_metadata_t {
     fields {
         p4plus_app_id       : 4;
@@ -94,7 +91,6 @@ metadata session_info_hint_t session_info_hint;
 @pragma dont_trim
 metadata artemis_txdma_to_arm_meta_header_t txdma_to_arm_meta;
 
-
 @pragma dont_trim
 metadata txdma_control_metadata_t txdma_control;
 
@@ -105,7 +101,7 @@ metadata artemis_rx_to_tx_header_t  rx_to_tx_hdr;
 // capri intr, txdma intr, session/iflow/rflow hints/info
 @pragma pa_align 128
 @pragma dont_trim
-metadata dma_cmd_phv2pkt_t intrinsic_dma;       // dma cmd 1 
+metadata dma_cmd_phv2pkt_t intrinsic_dma;       // dma cmd 1
 
 @pragma dont_trim
 metadata dma_cmd_mem2pkt_t payload_dma;         // dma cmd 2
@@ -125,4 +121,3 @@ metadata qstate_hdr_t           scratch_qstate_hdr;
 
 @pragma scratch_metadata
 metadata qstate_info_t          scratch_qstate_info;
-

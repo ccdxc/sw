@@ -7,6 +7,16 @@ metadata cap_phv_intr_p4_t capri_p4_intr;
 metadata cap_phv_intr_txdma_t capri_txdma_intr;
 
 @pragma dont_trim
+@pragma pa_header_union ingress capri_intr
+metadata cap_phv_intr_global_t p4_intr_global;
+@pragma dont_trim
+@pragma pa_header_union ingress capri_p4_intr
+metadata cap_phv_intr_p4_t p4_intr;
+@pragma dont_trim
+@pragma pa_header_union ingress capri_txdma_intr
+metadata cap_phv_intr_txdma_t p4_txdma_intr;
+
+@pragma dont_trim
 metadata p4plus_2_p4_app_header_t app_header;
 
 @pragma dont_trim

@@ -11,5 +11,3 @@ struct phv_             p;
 session_aging:
     phvwr.e     p.capri_intr_drop, 1
     nop
-    
-    

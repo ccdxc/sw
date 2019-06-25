@@ -93,7 +93,11 @@ eth_rx_rss_ipv4:
 eth_rx_rss_ipv6_l4:
   phvwr               p.toeplitz_input2_data, k.{p4_to_p4plus_l4_sport, p4_to_p4plus_l4_dport}
 eth_rx_rss_ipv6:
+#if defined(ARTEMIS)
+  phvwr               p.toeplitz_input0_data[127:32], k.p4_to_p4plus_ip_sa
+#else
   phvwr               p.toeplitz_input0_data[127:32], k.p4_to_p4plus_ip_sa_s0_e95
+#endif
   phvwr               p.toeplitz_input0_data[31:0], k.p4_to_p4plus_ip_sa_s96_e127
   phvwr.e             p.toeplitz_input1_data, k.p4_to_p4plus_ip_da
   phvwr.f             p.toeplitz_key2_data[33:0], k.p4_rxdma_intr_qstate_addr

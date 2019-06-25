@@ -61,10 +61,8 @@ TEST_F(scale_test, scale_test_create)
     rv = pds_batch_commit();
     ASSERT_TRUE(rv == SDK_RET_OK);
 
-#if 0
 #ifdef SIM
     send_packet();
-#endif
 #endif
 
     printf("DONE pushing configs!\n");

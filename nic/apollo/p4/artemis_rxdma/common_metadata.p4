@@ -1,10 +1,9 @@
-// Common PHV instantiation
 @pragma dont_trim
 metadata cap_phv_intr_global_t capri_intr;
 @pragma dont_trim
 metadata cap_phv_intr_p4_t capri_p4_intr;
 @pragma dont_trim
-metadata cap_phv_intr_txdma_t capri_txdma_intr;
+metadata cap_phv_intr_rxdma_t capri_rxdma_intr;
 
 @pragma dont_trim
 @pragma pa_header_union ingress capri_intr
@@ -13,11 +12,13 @@ metadata cap_phv_intr_global_t p4_intr_global;
 @pragma pa_header_union ingress capri_p4_intr
 metadata cap_phv_intr_p4_t p4_intr;
 @pragma dont_trim
-@pragma pa_header_union ingress capri_txdma_intr
-metadata cap_phv_intr_txdma_t p4_txdma_intr;
+@pragma pa_header_union ingress capri_rxdma_intr
+metadata cap_phv_intr_rxdma_t p4_rxdma_intr;
 
 @pragma dont_trim
-metadata p4plus_2_p4_app_header_t app_header;
+metadata p4_2_p4plus_app_header_t app_header;
+@pragma dont_trim
+metadata p4_2_p4plus_ext_app_header_t ext_app_header;
 
 @pragma dont_trim
 metadata p4plus_common_to_stage_t to_stage_0;
@@ -55,11 +56,11 @@ metadata p4plus_common_raw_table_engine_phv_t common_te3_phv;
 @pragma dont_trim
 metadata p4plus_common_s2s_t common_t3_s2s;
 
-header_type txdma_common_pad_t {
+header_type rxdma_common_pad_t {
     fields {
-        txdma_common_pad : 96;
+        rxdma_common_pad : 96;
     }
 }
 
 @pragma dont_trim
-metadata txdma_common_pad_t txdma_common_pad;
+metadata rxdma_common_pad_t     rxdma_common_pad;

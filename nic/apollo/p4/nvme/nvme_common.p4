@@ -1,8 +1,3 @@
-#ifdef NVME_APOLLO
-#include "../../../p4/common-p4+/capri_dma_cmd.p4"
-#include "../../../p4/common-p4+/capri_doorbell.p4"
-#endif
-
 // NVME command definition
 header_type nvme_sqe_t {
   fields {

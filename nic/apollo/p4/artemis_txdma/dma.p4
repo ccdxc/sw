@@ -34,7 +34,7 @@ table pkt_dma {
     }
 }
 
-control dma {
+control pkt_dma {
     apply(pkt_dma_setup);
     apply(pkt_dma);
 }

@@ -1,3 +1,6 @@
+#include "nic/p4/common-p4+/capri_dma_cmd.p4"
+#include "nic/p4/common-p4+/capri_doorbell.p4"
+
 #define GLOBAL_WIDTH 128
 #define STAGE_2_STAGE_WIDTH 160
 #define TO_STAGE_WIDTH 128

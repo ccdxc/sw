@@ -3,10 +3,11 @@
           before including the common p4 defines.
 */
 
-#ifdef APOLLO
-#include "apollo/p4/txdma/common_txdma_dummy.p4"
-#elseif ARTEMIS
-#include "artemis/p4/txdma/common_txdma_dummy.p4"
+#if defined(APOLLO)
+#include "nic/p4/common-p4+/common_txdma_dummy.p4"
+//#include "nic/apollo/p4/txdma/common_txdma_dummy.p4"
+#elif defined(ARTEMIS)
+#include "nic/apollo/p4/artemis_txdma/common_txdma_dummy.p4"
 #else
 #include "nic/p4/common-p4+/common_txdma_dummy.p4"
 #endif
@@ -21,10 +22,11 @@
 #define tx_table_s7_t0_action eth_tx_completion
 #define tx_table_s7_t1_action eth_tx_stats
 
-#ifdef APOLLO
-#include "apollo/p4/txdma/common_txdma.p4"
-#elseif ARTEMIS
-#include "artemis/p4/txdma/common_txdma.p4"
+#if defined(APOLLO)
+#include "nic/p4/common-p4+/common_txdma.p4"
+//#include "nic/apollo/p4/txdma/common_txdma.p4"
+#elif defined(ARTEMIS)
+#include "nic/apollo/p4/artemis_txdma/common_txdma.p4"
 #else
 #include "nic/p4/common-p4+/common_txdma.p4"
 #endif

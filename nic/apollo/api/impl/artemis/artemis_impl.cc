@@ -761,7 +761,7 @@ artemis_impl::nacl_init_(void) {
         mask.cps_blob_valid_mask = 0xFF;
         data.action_id = NACL_NACL_REDIRECT_ID;
         data.nacl_redirect_action.pipe_id = PIPE_ARM;
-        data.action_u.nacl_nacl_redirect.oport = TM_PORT_UPLINK_1;
+        data.action_u.nacl_nacl_redirect.oport = TM_PORT_DMA;
         data.action_u.nacl_nacl_redirect.lif = 0;
         data.action_u.nacl_nacl_redirect.qtype = 0;
         data.action_u.nacl_nacl_redirect.qid = 0;

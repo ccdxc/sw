@@ -1,16 +1,7 @@
+#include "nic/p4/include/intrinsic.p4"
+#include "nic/p4/common/defines.h"
 #include "../include/common_headers.p4"
-
-#include "../../../p4/include/intrinsic.p4"
-
-#include "../include/defines.h"
-#include "../include/table_sizes.h"
-#include "../include/headers.p4"
-#include "../include/artemis_table_sizes.h"
-
-#include "./common_metadata.p4"
-#include "./mapping.p4"
-#include "./remote_46_mapping.p4"
-#include "./vnic_info_txdma.p4"
+#include "common_metadata.p4"
 
 @pragma scratch_metadata
 metadata common_scratch_metadata_t common_scratch_metadata0;
@@ -41,6 +32,13 @@ metadata cap_phv_intr_global_t capri_intr_scratch;
 metadata cap_phv_intr_p4_t     capri_p4_intr_scratch;
 @pragma scratch_metadata
 metadata cap_phv_intr_txdma_t  capri_txdma_intr_scratch;
+
+@pragma scratch_metadata
+metadata cap_phv_intr_global_t p4_intr_global_scratch;
+@pragma scratch_metadata
+metadata cap_phv_intr_p4_t     p4_intr_scratch;
+@pragma scratch_metadata
+metadata cap_phv_intr_txdma_t  p4_txdma_intr_scratch;
 
 @pragma scratch_metadata
 metadata p4plus_2_p4_app_header_t app_header_scratch;
@@ -92,9 +90,6 @@ action tx_table_dummy_action(data0, data1, data2, data3, data4, data5,
                              data6, data7)
 {
     SCRATCH_METADATA_INIT_7(common_scratch_metadata1)
-}
-
-control tx_dummy_control {
 }
 
 //stage 7 action functions
@@ -1077,7 +1072,7 @@ control ingress {
             }
 
             rfc();
-            dma();
+            pkt_dma();
         }
     } else {
         if (app_header.table0_valid == 1) {
