@@ -115,11 +115,11 @@ sltcam::write_(sltctx *ctx) {
                                                 ctx->swdata, buff, sizeof(buff));
         SLTCAM_TRACE_DEBUG("Table: %s, EntryIndex:%u\n%s",
                            ctx->props->name, ctx->tcam_index, buff);
-    } else {
-        SLTCAM_TRACE_DEBUG("Table: %s, EntryIndex:%u",
-                           ctx->props->name, ctx->tcam_index);
-        ctx->print_sw();
     }
+
+    SLTCAM_TRACE_DEBUG("Table: %s, EntryIndex:%u",
+                       ctx->props->name, ctx->tcam_index);
+    ctx->print_sw();
 
     p4pdret = p4pd_entry_install(ctx->props->table_id, ctx->tcam_index,
                                  ctx->swkey, ctx->swkeymask, ctx->swdata);

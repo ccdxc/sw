@@ -115,11 +115,10 @@ slhctx::write() {
                                                 buff, sizeof(buff));
         SLHASH_TRACE_DEBUG("Table: %s, EntryIndex:%u\n%s",
                            props->name, index, buff);
-    } else {
-        SLHASH_TRACE_DEBUG("Table: %s, EntryIndex:%u",
-                           props->name, index);
-        print_sw();
     }
+    SLHASH_TRACE_DEBUG("Table: %s, EntryIndex:%u",
+                       props->name, index);
+    print_hw();
 
     auto p4pdret = p4pd_global_entry_install(props->table_id, index,
                                              swkey, swkeymask, swdata);
@@ -183,6 +182,12 @@ slhctx::print_sw() {
     printbytes("Key", props->key2str, swkey, props->swkey_len);
     printbytes("Mask", props->key2str, swkeymask, props->swkey_len);
     printbytes("Data", props->data2str, swdata, props->swdata_len);
+}
+
+void
+slhctx::print_hw() {
+    SLHASH_TRACE_VERBOSE("HW Fields");
+    printbytes("Key", props->key2str, hwkey, props->hwkey_len);
 }
 
 void
