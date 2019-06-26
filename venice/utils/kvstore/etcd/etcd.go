@@ -34,6 +34,13 @@ const (
 	maxCallSendMsgSize = 35 * 1024 * 1024
 )
 
+// The short keepalive timeout and interval have been chosen to aggressively
+// detect a failed etcd server without introducing much overhead.
+var (
+	keepaliveTime    = 30 * time.Second
+	keepaliveTimeout = 30 * time.Second
+)
+
 // etcdStore implements a KVStore using etcd as storage.
 type etcdStore struct {
 	client        *clientv3.Client
@@ -64,11 +71,13 @@ func GetEtcdClientCredentials() (*tls.Config, error) {
 func NewEtcdStore(servers []string, codec runtime.Codec, tlsConfig *tls.Config, grpcOpts ...grpc.DialOption) (kvstore.Interface, error) {
 
 	config := clientv3.Config{
-		Endpoints:          servers,
-		DialTimeout:        timeout,
-		DialOptions:        grpcOpts,
-		MaxCallSendMsgSize: maxCallSendMsgSize,
-		TLS:                tlsConfig,
+		Endpoints:            servers,
+		DialTimeout:          timeout,
+		DialOptions:          grpcOpts,
+		DialKeepAliveTime:    keepaliveTime,
+		DialKeepAliveTimeout: keepaliveTimeout,
+		MaxCallSendMsgSize:   maxCallSendMsgSize,
+		TLS:                  tlsConfig,
 	}
 
 	client, err := clientv3.New(config)
