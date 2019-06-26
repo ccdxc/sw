@@ -171,6 +171,7 @@ pciehw_struct_size_checks(void)
     CHECK_PAD(pciehw_port_t);
     CHECK_PAD(pciehw_spmt_t);
     CHECK_PAD(pciehw_sprt_t);
+    CHECK_PAD(pciemgr_stats_t);
 #undef CHECK_PAD
 }
 

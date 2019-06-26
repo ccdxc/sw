@@ -1080,6 +1080,7 @@ cmd_meminfo(int argc, char *argv[])
     PSZ(pciehw_spmt_t);
     PSZ(pciehw_sprt_t);
     PSZ(pciehw_sromsk_t);
+    PSZ(pciemgr_stats_t);
 
     pciesys_loginfo("%-*s: %p\n", w, "pshmem->dev", pshmem->dev);
     pciesys_loginfo("%-*s: %d\n", w, "allocdev", pshmem->allocdev);

@@ -5,8 +5,8 @@
 #ifndef __EVENTS_H__
 #define __EVENTS_H__
 
-struct pcieport_s;
-typedef struct pcieport_s pcieport_t;
+union pcieport_u;
+typedef union pcieport_u pcieport_t;
 
 void pcieport_event_linkup(pcieport_t *p, const int genid);
 void pcieport_event_linkdn(pcieport_t *p, const int genid);

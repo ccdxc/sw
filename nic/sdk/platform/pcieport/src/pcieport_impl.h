@@ -43,4 +43,15 @@ void pcieport_fault(pcieport_t *p, const char *fmt, ...)
 
 void pcieport_fsm_dbg(int argc, char *argv[]);
 
+static inline void
+pcieport_struct_size_checks(void)
+{
+    /* make sure _pad[] is the largest item in the union */
+#define CHECK_PAD(T) \
+    do { T t; STATIC_ASSERT(sizeof(t) == sizeof(t._pad)); } while (0)
+
+    CHECK_PAD(pcieport_t);
+    CHECK_PAD(pcieport_stats_t);
+#undef CHECK_PAD
+}
 #endif /* __PCIEPORT_IMPL_H__ */

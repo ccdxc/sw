@@ -105,6 +105,7 @@ pcieport_open(const int port, pciemgr_initmode_t initmode)
     pcieport_info_t *pi = pcieport_info_get_or_map(initmode);
     pcieport_t *p;
 
+    pcieport_struct_size_checks();
     if (pi == NULL) {
         return -ENOENT;
     }
@@ -500,6 +501,19 @@ cmd_fsm(int argc, char *argv[])
 }
 
 static void
+cmd_meminfo(int argc, char *argv[])
+{
+    const int w = 24;
+
+#define PSZ(t) \
+    pciesys_loginfo("%-*s: %lu\n", w, "sizeof "#t, sizeof(t));
+
+    PSZ(pcieport_info_t);
+    PSZ(pcieport_t);
+    PSZ(pcieport_stats_t);
+}
+
+static void
 cmd_port(int argc, char *argv[])
 {
     int port = 0;
@@ -560,6 +574,7 @@ static cmd_t cmdtab[] = {
 #define CMDENT(name, desc, helpstr) \
     { #name, cmd_##name, desc, helpstr }
     CMDENT(fsm, "fsm", ""),
+    CMDENT(meminfo, "meminfo", ""),
     CMDENT(port, "port", ""),
     CMDENT(ports, "ports", ""),
     CMDENT(portstats, "portstats", ""),

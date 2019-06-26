@@ -39,37 +39,40 @@ typedef enum pcieportev_e {
     PCIEPORTEV_MAX
 } pcieportev_t;
 
-struct pcieport_s {
-    int port;
-    int cap_gen;
-    int cap_width;
-    int cur_gen;
-    int cur_width;
-    int req_gen;
-    int req_width;
-    u_int8_t pribus;
-    u_int8_t secbus;
-    u_int8_t subbus;
-    u_int16_t lanemask;
-    u_int16_t subvendorid;
-    u_int16_t subdeviceid;
-    u_int32_t init:1;
-    u_int32_t open:1;
-    u_int32_t host:1;
-    u_int32_t config:1;
-    u_int32_t crs:1;
-    u_int32_t compliance:1;
-    u_int32_t aer_common:1;
-    u_int32_t sris:1;
-    u_int32_t vga_support:1;
-    u_int32_t reduce_rx_cred:1;
-    pcieportst_t state;
-    pcieportev_t event;
-    char fault_reason[80];
-    char last_fault_reason[80];
-    pcieport_stats_t stats;
+union pcieport_u {
+    struct {
+        int port;
+        int cap_gen;
+        int cap_width;
+        int cur_gen;
+        int cur_width;
+        int req_gen;
+        int req_width;
+        u_int8_t pribus;
+        u_int8_t secbus;
+        u_int8_t subbus;
+        u_int16_t lanemask;
+        u_int16_t subvendorid;
+        u_int16_t subdeviceid;
+        u_int32_t init:1;
+        u_int32_t open:1;
+        u_int32_t host:1;
+        u_int32_t config:1;
+        u_int32_t crs:1;
+        u_int32_t compliance:1;
+        u_int32_t aer_common:1;
+        u_int32_t sris:1;
+        u_int32_t vga_support:1;
+        u_int32_t reduce_rx_cred:1;
+        pcieportst_t state;
+        pcieportev_t event;
+        char fault_reason[80];
+        char last_fault_reason[80];
+        pcieport_stats_t stats;
+    };
+    u_int8_t _pad[2048];
 };
-typedef struct pcieport_s pcieport_t;
+typedef union pcieport_u pcieport_t;
 
 struct pcieport_info_s {
     u_int32_t version;
