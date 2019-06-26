@@ -227,6 +227,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 	defer cancel()
 
 	ps, err := NewTpAgent(ctx, strings.Split(rest.GetListenURL(), ":")[1])
+	defer ps.Reset()
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()

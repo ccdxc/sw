@@ -121,6 +121,9 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		}
 	} else {
 		s.tmagent.tpState.UpdateHostName(obj.GetSmartNicName())
+		if err := s.tmagent.tpState.Reset(); err != nil {
+			log.Fatalf("failed to delete the existing policies, err: %v", err)
+		}
 	}
 }
 

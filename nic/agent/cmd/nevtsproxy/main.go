@@ -143,6 +143,9 @@ func (n *nClient) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 			n.logger.Infof("changing mode to {%s}", hostMode)
 			n.evtServices.stopNetworkModeServices()
 			n.evtServices.resolverClient.UpdateServers([]string{})
+			if err := n.evtServices.policyMgr.Reset(); err != nil { // nuke the existing policies
+				n.logger.Fatalf("failed to delete the existing event polices, err: %v", err)
+			}
 			return
 		}
 		n.evtServices.start(hostMode)

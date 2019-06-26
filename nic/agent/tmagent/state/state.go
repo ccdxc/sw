@@ -410,6 +410,31 @@ func (s *PolicyState) deleteCollectors(vrf uint64) error {
 	return nil
 }
 
+// Reset delete all the existing fwlog policies and flow export policies
+func (s *PolicyState) Reset() error {
+	fwlogPolicies, err := s.ListFwlogPolicy(s.ctx)
+	if err != nil {
+		return err
+	}
+	for _, policy := range fwlogPolicies {
+		if err := s.DeleteFwlogPolicy(s.ctx, policy); err != nil {
+			log.Errorf("failed to delete fwlog policy, err: %v", err)
+		}
+	}
+
+	flowExportsPolicies, err := s.ListFlowExportPolicy(s.ctx)
+	if err != nil {
+		return err
+	}
+	for _, policy := range flowExportsPolicies {
+		if err := s.DeleteFlowExportPolicy(s.ctx, policy); err != nil {
+			log.Errorf("failed to delete flow export policy, err: %v", err)
+		}
+	}
+
+	return nil
+}
+
 // CreateFwlogPolicy is the POST() entry point
 func (s *PolicyState) CreateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) (err error) {
 	log.Infof("process fwlog policy %+v", p)
@@ -621,7 +646,7 @@ func (s *PolicyState) ListFwlogPolicy(tx context.Context) ([]*tpmprotos.FwlogPol
 		},
 	})
 
-	if err != nil {
+	if err != nil && err != emstore.ErrTableNotFound {
 		log.Errorf("failed to list FwlogPolicy, %v", err)
 		return fwlogPol, nil
 	}

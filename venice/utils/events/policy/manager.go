@@ -186,7 +186,7 @@ func (m *Manager) List() ([]*evtsmgrprotos.EventPolicy, error) {
 				Kind: "EventPolicy",
 			},
 		})
-		if err != nil {
+		if err != nil && err != emstore.ErrTableNotFound {
 			m.logger.Errorf("failed to list policies, err: %v", err)
 			return []*evtsmgrprotos.EventPolicy{}, ErrFailedToListPolicies
 		}
@@ -206,6 +206,20 @@ func (m *Manager) List() ([]*evtsmgrprotos.EventPolicy, error) {
 // GetExportManager returns the export manager; this is used only in the tests.
 func (m *Manager) GetExportManager() *ExportMgr {
 	return m.expMgr
+}
+
+// Reset deletes all the existing event policies.
+func (m *Manager) Reset() error {
+	// delete all the existing event policies that are stored in file (agent store)
+	eventPolicies, err := m.List()
+	if err != nil {
+		return err
+	}
+	for _, policy := range eventPolicies {
+		m.Delete(policy)
+	}
+
+	return nil
 }
 
 // Stop stops the policy manager.
