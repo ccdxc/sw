@@ -206,6 +206,13 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     // once toggling the slide, we want to re-run the validation
     server.get(['tls-options', 'server-name']).updateValueAndValidity();
     server.get(['tls-options', 'trusted-certs']).updateValueAndValidity();
+    if (!event.checked) {
+      server.get(['tls-options', 'server-name']).disable();
+      server.get(['tls-options', 'trusted-certs']).disable();
+    } else {
+      server.get(['tls-options', 'server-name']).enable();
+      server.get(['tls-options', 'trusted-certs']).enable();
+    }
     // TODO: comment out this line "this.checkServerTlsDisabling(server, index);" // per pull/8528 comment  -> allow the trusted-certs be filled out while skip verification is true.
   }
 
@@ -246,12 +253,14 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     this.updateLDAPData();
     if (this.inCreateMode) {
       if (this.isAllInputsValid(this.LDAPObject)) {
+        this.setLDAPEditMode(false);
         this.invokeCreateLDAP.emit(this.LDAPData);
       } else {
         this._controllerService.invokeErrorToaster('Invalid', 'There are invalid inputs.  Fields with "*" are requried');
       }
     } else {
       // POST DATA
+      this.setLDAPEditMode(false);
       this.invokeSaveLDAP.emit(true); // emit event to parent to update LDAP if REST call succeeds, ngOnChange() will bb invoked and refresh data.
     }
   }
