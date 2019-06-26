@@ -14,7 +14,7 @@ read_pktdesc:
     add         r1, k.txdma_control_pktdesc_addr, 64
     phvwr       p.txdma_control_pktdesc_addr, r1
     /* Load sacl base addr to r1 */
-    add        r1, r0, k.rx_to_tx_hdr_sacl_base_addr
+    add        r1, r0, d.read_pktdesc_d.sacl_base_addr
     /* Add SACL_P1_1_TABLE_OFFSET to sacl base address. */
     addi       r1, r1, SACL_P1_1_TABLE_OFFSET
     /* P1 table index = ((sip_classid << 7) | sport_classid). */

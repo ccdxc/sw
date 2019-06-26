@@ -74,20 +74,20 @@ action read_pktdesc(remote_ip,
     modify_field(session_info_hint.entry_valid, TRUE);
     
     // Fill meter_idx into session info
-    modify_field(session_info_hint.meter_idx, rx_to_tx_hdr.meter_result);
+    modify_field(session_info_hint.meter_idx, meter_result);
     // Tx: always rewrite dmac
     modify_field(session_info_hint.tx_rewrite_flags_dmac, 1);
 
     // Initialize the first P1 table index
-    //modify_field(rx_to_tx_hdr.sip_classid, (sip_classid << 7)|
-    //                                        sport_classid);
+    modify_field(scratch_metadata.field20, (sip_classid << 7)|
+                                            sport_classid);
 
     // Write P1 table index to PHV
     modify_field(txdma_control.rfc_index, scratch_metadata.field20);
 
     // Write P1 table lookup address to PHV
     modify_field(txdma_control.rfc_table_addr,              // P1 Lookup Addr =
-                 rx_to_tx_hdr.sacl_base_addr +              // Region Base +
+                 sacl_base_addr +                           // Region Base +
                  SACL_P1_1_TABLE_OFFSET +                   // Table Base +
                  (((scratch_metadata.field20) / 51) * 64)); // Index Bytes
 
