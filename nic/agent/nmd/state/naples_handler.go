@@ -18,6 +18,7 @@ import (
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
 	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
+	"github.com/pensando/sw/nic/agent/nmd/utils"
 	"github.com/pensando/sw/nic/agent/protos/nmd"
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/globals"
@@ -28,15 +29,15 @@ import (
 )
 
 const (
-	// ConfigURL is URL to configure a nic in classic mode
+	// ConfigURL is URL to configure a nic
 	ConfigURL = "/api/v1/naples/"
 	// RolloutURL is URL to configure SmartNICRollout object
 	RolloutURL = "/api/v1/naples/rollout/"
-	// MonitoringURL is URL to fetch logs and other diags from nic in classic mode
+	// MonitoringURL is URL to fetch logs and other diags from nic
 	MonitoringURL = "/monitoring/v1/naples/"
-	// CoresURL is URL to fetch cores from nic in classic mode
+	// CoresURL is URL to fetch cores from nic
 	CoresURL = "/cores/v1/naples/"
-	// CmdEXECUrl is URL to fetch output from running executables on Naples in classic mode
+	// CmdEXECUrl is URL to fetch output from running executables on Naples
 	CmdEXECUrl = "/cmd/v1/naples/"
 	// UpdateURL is the URL to help with file upload
 	UpdateURL = "/update/"
@@ -314,7 +315,15 @@ func (n *NMD) handleHostModeTransition() error {
 		log.Errorf("Failed to stop network mode control loop. Err: %v", err)
 		return err
 	}
+
 	log.Info("Clearing  nw mode naples status")
+	err = utils.ClearNaplesTrustRoots()
+	if err != nil {
+		log.Errorf("Error removing trust roots: %v", err)
+	}
+	// restart rev proxy so that it can go back to HTTP and no client auth
+	n.StopReverseProxy()
+	n.StartReverseProxy()
 	if !n.GetRegStatus() {
 		n.config.Status.IPConfig = &cmd.IPConfig{}
 		n.config.Status.Controllers = []string{}
@@ -693,15 +702,13 @@ func (n *NMD) StopManagedMode() error {
 	return nil
 }
 
-// StartNMDRestServer start the tasks required for classic mode
+// StartNMDRestServer start the REST server
 func (n *NMD) StartNMDRestServer() error {
-	log.Infof("Starting Classic Mode.")
 	if !n.GetRestServerStatus() {
 		// Start RestServer
-		log.Infof("NIC in classic mode, mac: %v", n.config.Status.Fru.MacStr)
+		log.Infof("Starting REST server, NIC mac: %v", n.config.Status.Fru.MacStr)
 		return n.StartRestServer()
 	}
-
 	return nil
 }
 
