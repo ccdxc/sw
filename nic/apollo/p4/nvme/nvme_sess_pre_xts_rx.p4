@@ -2,67 +2,68 @@
 /* nvme_sess_pre_xts_rx.p4 */
 /***********************************************************************/
 
-#include "common_rxdma_dummy.p4"
+#include "common_txdma_dummy.p4"
 
 /**** table declarations ****/
 
-#define rx_table_s0_t0 s0_t0_nvme_sessprexts_rx
-#define rx_table_s0_t1 s0_t1_nvme_sessprexts_rx
-#define rx_table_s0_t2 s0_t2_nvme_sessprexts_rx
-#define rx_table_s0_t3 s0_t3_nvme_sessprexts_rx
+#define tx_table_s0_t0 s0_t0_nvme_sessprexts_rx
+#define tx_table_s0_t1 s0_t1_nvme_sessprexts_rx
+#define tx_table_s0_t2 s0_t2_nvme_sessprexts_rx
+#define tx_table_s0_t3 s0_t3_nvme_sessprexts_rx
 
-#define rx_table_s1_t0 s1_t0_nvme_sessprexts_rx
-#define rx_table_s1_t1 s1_t1_nvme_sessprexts_rx
-#define rx_table_s1_t2 s1_t2_nvme_sessprexts_rx
-#define rx_table_s1_t3 s1_t3_nvme_sessprexts_rx
+#define tx_table_s1_t0 s1_t0_nvme_sessprexts_rx
+#define tx_table_s1_t1 s1_t1_nvme_sessprexts_rx
+#define tx_table_s1_t2 s1_t2_nvme_sessprexts_rx
+#define tx_table_s1_t3 s1_t3_nvme_sessprexts_rx
 
-#define rx_table_s2_t0 s2_t0_nvme_sessprexts_rx
-#define rx_table_s2_t1 s2_t1_nvme_sessprexts_rx
-#define rx_table_s2_t2 s2_t2_nvme_sessprexts_rx
-#define rx_table_s2_t3 s2_t3_nvme_sessprexts_rx
+#define tx_table_s2_t0 s2_t0_nvme_sessprexts_rx
+#define tx_table_s2_t1 s2_t1_nvme_sessprexts_rx
+#define tx_table_s2_t2 s2_t2_nvme_sessprexts_rx
+#define tx_table_s2_t3 s2_t3_nvme_sessprexts_rx
 
-#define rx_table_s3_t0 s3_t0_nvme_sessprexts_rx
-#define rx_table_s3_t1 s3_t1_nvme_sessprexts_rx
-#define rx_table_s3_t2 s3_t2_nvme_sessprexts_rx
-#define rx_table_s3_t3 s3_t3_nvme_sessprexts_rx
+#define tx_table_s3_t0 s3_t0_nvme_sessprexts_rx
+#define tx_table_s3_t1 s3_t1_nvme_sessprexts_rx
+#define tx_table_s3_t2 s3_t2_nvme_sessprexts_rx
+#define tx_table_s3_t3 s3_t3_nvme_sessprexts_rx
 
-#define rx_table_s4_t0 s4_t0_nvme_sessprexts_rx
-#define rx_table_s4_t1 s4_t1_nvme_sessprexts_rx
-#define rx_table_s4_t2 s4_t2_nvme_sessprexts_rx
-#define rx_table_s4_t3 s4_t3_nvme_sessprexts_rx
+#define tx_table_s4_t0 s4_t0_nvme_sessprexts_rx
+#define tx_table_s4_t1 s4_t1_nvme_sessprexts_rx
+#define tx_table_s4_t2 s4_t2_nvme_sessprexts_rx
+#define tx_table_s4_t3 s4_t3_nvme_sessprexts_rx
 
-#define rx_table_s5_t0 s5_t0_nvme_sessprexts_rx
-#define rx_table_s5_t1 s5_t1_nvme_sessprexts_rx
-#define rx_table_s5_t2 s5_t2_nvme_sessprexts_rx
-#define rx_table_s5_t3 s5_t3_nvme_sessprexts_rx
+#define tx_table_s5_t0 s5_t0_nvme_sessprexts_rx
+#define tx_table_s5_t1 s5_t1_nvme_sessprexts_rx
+#define tx_table_s5_t2 s5_t2_nvme_sessprexts_rx
+#define tx_table_s5_t3 s5_t3_nvme_sessprexts_rx
 
-#define rx_table_s6_t0 s6_t0_nvme_sessprexts_rx
-#define rx_table_s6_t1 s6_t1_nvme_sessprexts_rx
-#define rx_table_s6_t2 s6_t2_nvme_sessprexts_rx
-#define rx_table_s6_t3 s6_t3_nvme_sessprexts_rx
+#define tx_table_s6_t0 s6_t0_nvme_sessprexts_rx
+#define tx_table_s6_t1 s6_t1_nvme_sessprexts_rx
+#define tx_table_s6_t2 s6_t2_nvme_sessprexts_rx
+#define tx_table_s6_t3 s6_t3_nvme_sessprexts_rx
 
-#define rx_table_s7_t0 s7_t0_nvme_sessprexts_rx
-#define rx_table_s7_t1 s7_t1_nvme_sessprexts_rx
-#define rx_table_s7_t2 s7_t2_nvme_sessprexts_rx
-#define rx_table_s7_t3 s7_t3_nvme_sessprexts_rx
+#define tx_table_s7_t0 s7_t0_nvme_sessprexts_rx
+#define tx_table_s7_t1 s7_t1_nvme_sessprexts_rx
+#define tx_table_s7_t2 s7_t2_nvme_sessprexts_rx
+#define tx_table_s7_t3 s7_t3_nvme_sessprexts_rx
 
-#define rx_stage0_lif_params_table lif_params_nvme_sessprexts_rx
+#define tx_stage0_lif_params_table lif_params_nvme_sessprexts_rx
+#define tx_table_s5_t4_lif_rate_limiter_table lif_rate_limiter_nvme_sessprexts_rx
 
 /**** action declarations ****/
 
-#define rx_table_s0_t0_action cb_process
+#define tx_table_s0_t0_action cb_process
 
-#define rx_table_s1_t0_action sess_wqe_process
+#define tx_table_s1_t0_action sess_wqe_process
 
-#define rx_table_s2_t0_action pdu_ctxt_process
-#define rx_table_s2_t1_action xtscb_process
+#define tx_table_s2_t0_action pdu_ctxt_process
+#define tx_table_s2_t1_action xtscb_process
 
-#define rx_table_s3_t0_action cb_writeback_process
+#define tx_table_s3_t0_action cb_writeback_process
 
-#define rx_table_s4_t0_action ip_desc_process
-#define rx_table_s4_t1_action op_desc_process
+#define tx_table_s4_t0_action ip_desc_process
+#define tx_table_s4_t1_action op_desc_process
 
-#include "common_rxdma.p4"
+#include "common_txdma.p4"
 #include "nvme_common.p4"
 
 /**** Macros ****/
