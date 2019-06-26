@@ -16,10 +16,10 @@ static bool pd_inited = 0;
 int
 cli_init (char *ptr)
 {
-    catalog *catalog;
     pal_ret_t    pal_ret;
     p4pd_error_t p4pd_ret;
     capri_cfg_t  capri_cfg;
+    catalog      *catalog;
 
     p4pd_cfg_t p4pd_cfg = {
         .table_map_cfg_file  = "artemis/capri_p4_table_map.json",
