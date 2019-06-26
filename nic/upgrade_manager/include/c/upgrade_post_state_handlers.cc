@@ -134,6 +134,7 @@ bool UpgPostStateHandler::PostSaveStateHandler(UpgCtx &ctx) {
             if ((ret = system (cmd.c_str())) != 0) {
                 UPG_LOG_INFO("Unable to sync");
             }
+            sleep(1);
             i++;
         } while ((i<=10) && (!exists("/update/upgrade_halt_state_machine")));
         if (exists("/update/upgrade_halt_state_machine")) {
