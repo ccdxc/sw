@@ -18,6 +18,10 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
+const (
+	heartbeatInterval = 30 * time.Second
+)
+
 // RPCServer is the server running on the leader node to receive hearbeats
 type RPCServer struct {
 	sync.Mutex
@@ -29,7 +33,6 @@ type RPCServer struct {
 // Client is the client used to send seartbeats to the leader
 type Client struct {
 	resolverClient  resolver.Interface
-	rpcClient       *rpckit.RPCClient
 	heartbeatClient grpc.NodeHeartbeatClient
 	stop            chan struct{}
 }
@@ -117,41 +120,57 @@ func (s *RPCServer) Heartbeat(ctx context.Context, req *grpc.HeartbeatRequest) (
 }
 
 // NewClient creates a new Client
-func NewClient(resolverClient resolver.Interface) (*Client, error) {
-	rpcClient, err := rpckit.NewRPCClient(
-		"health-client", globals.CmdNICUpdatesSvc,
-		rpckit.WithBalancer(balancer.New(resolverClient)))
-	if err != nil {
-		log.Errorf("Unable to create rpcclient for health-client. %v", err)
-		return nil, err
+func NewClient(resolverClient resolver.Interface) *Client {
+
+	client := &Client{
+		resolverClient: resolverClient,
+		stop:           make(chan struct{}),
 	}
+	client.start(heartbeatInterval)
 
-	heartbeatClient := grpc.NewNodeHeartbeatClient(rpcClient.ClientConn)
-
-	return &Client{
-		resolverClient:  resolverClient,
-		rpcClient:       rpcClient,
-		heartbeatClient: heartbeatClient,
-		stop:            make(chan struct{}),
-	}, nil
+	return client
 }
 
 // Start starts the periodic headbeats to the Leader
-func (s *Client) Start(interval time.Duration) {
-	// Send periodic heartbeats
-	c, _ := utils.GetCluster()
-	req := &grpc.HeartbeatRequest{
-		NodeID: c.NodeID,
-	}
+func (c *Client) start(interval time.Duration) {
+
 	go func() {
+		// Try to connect. It make take a few tries
+		for {
+			select {
+			case <-c.stop:
+				return
+			default:
+
+			}
+			rpcClient, err := rpckit.NewRPCClient(
+				"health-client", globals.CmdNICUpdatesSvc,
+				rpckit.WithBalancer(balancer.New(c.resolverClient)))
+			if err != nil {
+				time.Sleep(time.Second)
+				continue
+			}
+			defer rpcClient.Close()
+
+			c.heartbeatClient = grpc.NewNodeHeartbeatClient(
+				rpcClient.ClientConn)
+			break
+		}
+
+		// Send periodic heartbeats
+		clstr, _ := utils.GetCluster()
+		req := &grpc.HeartbeatRequest{
+			NodeID: clstr.NodeID,
+		}
+
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 		for {
 			select {
 			case <-ticker.C:
 				log.Infof("Sending heartbeat with NodeID %s", req.NodeID)
-				s.heartbeatClient.Heartbeat(context.Background(), req)
-			case <-s.stop:
+				c.heartbeatClient.Heartbeat(context.Background(), req)
+			case <-c.stop:
 				log.Infof("Stop")
 				return
 			}
@@ -160,6 +179,6 @@ func (s *Client) Start(interval time.Duration) {
 }
 
 // Stop stops the periodic heartbeats to the leader
-func (s *Client) Stop() {
-	close(s.stop)
+func (c *Client) Stop() {
+	close(c.stop)
 }

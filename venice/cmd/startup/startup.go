@@ -34,7 +34,6 @@ const (
 	sleepBetweenItersMsec = 100
 	masterLeaderKey       = "master"
 	apiServerWaitTime     = time.Second
-	heartbeatInterval     = 30 * time.Second
 )
 
 func waitForAPIAndStartServices(nodeID string) {
@@ -277,9 +276,7 @@ func StartNodeServices(nodeID, clusterID, VirtualIP string) {
 		log.Errorf("Failed to start metrics service with error: %v", err)
 	}
 
-	if env.HealthClient, err = health.NewClient(env.ResolverClient); err == nil {
-		env.HealthClient.Start(heartbeatInterval)
-	}
+	env.HealthClient = health.NewClient(env.ResolverClient)
 
 	if env.AuthRPCServer == nil {
 		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)

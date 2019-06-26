@@ -41,8 +41,6 @@ const (
 	apiClientWaitTimeMsec = 200
 
 	masterLeaderKey = "master"
-
-	heartbeatInterval = 15 * time.Second
 )
 
 // clusterRPCHandler handles all cluster gRPC calls.
@@ -341,9 +339,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
 	}
 
-	if env.HealthClient, err = health.NewClient(env.ResolverClient); err == nil {
-		env.HealthClient.Start(heartbeatInterval)
-	}
+	env.HealthClient = health.NewClient(env.ResolverClient)
 
 	return &grpc.ClusterJoinResp{}, nil
 }
