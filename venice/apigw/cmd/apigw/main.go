@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net/http"
 	"path/filepath"
 	"strings"
 
@@ -46,6 +47,13 @@ func makeOverrideMap(in string) map[string]string {
 		}
 	}
 	return ret
+}
+
+// small function to redirect all http requests to https port
+func redirect(w http.ResponseWriter, req *http.Request) {
+	http.Redirect(w, req,
+		"https://"+req.Host+req.URL.String(),
+		http.StatusMovedPermanently)
 }
 
 func main() {
@@ -130,6 +138,10 @@ func main() {
 	if config.DevMode {
 		trace.Init(globals.APIGw)
 	}
+
+	// redirect every http request to https
+	go http.ListenAndServe(":80", http.HandlerFunc(redirect))
+
 	pl.Log("msg", "Starting Run")
 
 	gw := apigwpkg.MustGetAPIGateway()
