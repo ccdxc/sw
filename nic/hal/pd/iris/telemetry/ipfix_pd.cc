@@ -198,6 +198,7 @@ ipfix_doorbell_ring_cb (void *timer, uint32_t timer_id, void *ctxt)
     uint64_t address, data, qid;
     uint64_t upd = 3;
     uint64_t qtype = 0, pid = 0, ring_id = 0, p_index = 0;
+    uint32_t timev;
     lif_id_t lif_id = SERVICE_LIF_IPFIX;
     ipfix_qstate_t  qstate = { 0 };
 
@@ -209,12 +210,13 @@ ipfix_doorbell_ring_cb (void *timer, uint32_t timer_id, void *ctxt)
     // Update (RMW) export time in the Qstate table
     lif_manager()->read_qstate(lif_id, 0, qid+16,
                                 (uint8_t *)&qstate, sizeof(qstate));
-    qstate.export_time = (uint32_t)time(NULL);
+    timev = (uint32_t)time(NULL);
+    qstate.export_time = timev;
     lif_manager()->write_qstate(lif_id, 0, qid + 16,
                                 (uint8_t *)&qstate, sizeof(qstate));
 
-    HAL_TRACE_DEBUG("cpupkt: ringing Doorbell with addr: {:#x} data: {:#x}",
-                    address, data);
+    HAL_TRACE_DEBUG("cpupkt: ringing Doorbell with addr: {:#x} data: {:#x} time: {}",
+                    address, data, timev);
     sdk::asic::asic_ring_doorbell(address, data);
     return;
 }
