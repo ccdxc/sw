@@ -92,6 +92,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   initRolloutData() {
     if (!this.isInline) {  // create mode
       this.newRollout = new RolloutRollout();
+      this.newRollout.kind = 'rollout';
       const today = new Date().getTime() + 300 * 1000; // VS-331 set default time. Now + 5 min
       this.newRollout.spec['scheduled-start-time'] = new Date(today);
       this.newRollout.setFormGroupValuesToBeModelValues();
@@ -245,6 +246,8 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   /**
    * Build rollout JSON.
    * according to RolloutUtil.getRolloutNaplesVeniceType() rules
+   * sample working rollout ( upgrade some Naples)
+   * {"kind":"rollout","api-version":null,"meta":{"name":"jeff-vs529-3"},"spec":{"version":"0.11.0-55","scheduled-start-time":"2019-06-25T22:56:21.145Z","strategy":"LINEAR","max-parallel":2,"max-nic-failures-before-abort":1,"order-constraints":[{"requirements":[{"key":"number","operator":"equals","values":["1"]}]}],"smartnics-only":false,"smartnic-must-match-constraint":true,"upgrade-type":"Disruptive"}}
    */
   buildRollout(): IRolloutRollout {
     const rollout: IRolloutRollout = this.newRollout.getFormGroupValues();
@@ -269,9 +272,30 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     return rollout;
   }
 
+  /**
+   *
+   * @param rollout
+   * order-constraints”: [
+   *  {
+   *    “requirements”: [
+   *     {
+   *      “key”: “number”,
+   *       “operator”: “equals”,
+   *       “values”: [
+   *          “1"
+   *       ]
+   *     }
+   *   ]
+   * }
+   */
   private setSpecOrderConstrains(rollout: IRolloutRollout) {
     if (rollout.spec['smartnic-must-match-constraint']) {
-      rollout.spec['order-constraints'] = Utility.convertRepeaterValuesToSearchExpression(this.ocLabelRepeater); // Some Naples will be updated.
+      const labelsSelectorCriteria = Utility.convertRepeaterValuesToSearchExpression(this.ocLabelRepeater); // Some Naples will be updated.
+      const orderConstraints = [];
+      const requirements = labelsSelectorCriteria;
+      const obj = { 'requirements' : requirements};
+      orderConstraints.push(obj);
+      rollout.spec['order-constraints'] = orderConstraints;
     } else {
       rollout.spec['order-constraints'] = []; // All Naples will be updated.
     }

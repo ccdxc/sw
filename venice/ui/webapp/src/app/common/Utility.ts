@@ -1310,7 +1310,7 @@ export class Utility {
    *
    * [{"keyFormControl":"text","operatorFormControl":"equals","valueFormControl":"1.2","keytextFormName":"version"}]
    */
-  public static convertRepeaterValuesToSearchExpression(repeater: RepeaterComponent, addMetatag: boolean = true): any[] {
+  public static convertRepeaterValuesToSearchExpression(repeater: RepeaterComponent, addMetatag: boolean = false): any[] {
     const data = repeater.getValues();
     if (data == null) {
       return null;
