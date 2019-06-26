@@ -120,6 +120,8 @@ dir_dependencies:
     - nic/apollo
   dol/artemis:
     - nic/apollo
+  nic/debug_cli/apollo:
+    - nic/apollo
   venice:
     - api
     - test/ci_targets/e2e
