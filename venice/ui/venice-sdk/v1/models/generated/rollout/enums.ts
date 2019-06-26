@@ -33,6 +33,7 @@ export enum RolloutRolloutActionStatus_state {
     'SUSPENDED' = "SUSPENDED",
     'SUSPEND_IN_PROGRESS' = "SUSPEND_IN_PROGRESS",
     'DEADLINE_EXCEEDED' = "DEADLINE_EXCEEDED",
+    'PRECHECK_IN_PROGRESS' = "PRECHECK_IN_PROGRESS",
 }
 
 export enum RolloutRolloutPhase_phase {
@@ -62,6 +63,7 @@ export enum RolloutRolloutStatus_state {
     'SUSPENDED' = "SUSPENDED",
     'SUSPEND_IN_PROGRESS' = "SUSPEND_IN_PROGRESS",
     'DEADLINE_EXCEEDED' = "DEADLINE_EXCEEDED",
+    'PRECHECK_IN_PROGRESS' = "PRECHECK_IN_PROGRESS",
 }
 
 

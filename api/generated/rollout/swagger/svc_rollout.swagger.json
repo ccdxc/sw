@@ -1331,7 +1331,8 @@
             "SCHEDULED",
             "SUSPENDED",
             "SUSPEND_IN_PROGRESS",
-            "DEADLINE_EXCEEDED"
+            "DEADLINE_EXCEEDED",
+            "PRECHECK_IN_PROGRESS"
           ],
           "default": "PROGRESSING"
         },
@@ -1549,7 +1550,8 @@
             "SCHEDULED",
             "SUSPENDED",
             "SUSPEND_IN_PROGRESS",
-            "DEADLINE_EXCEEDED"
+            "DEADLINE_EXCEEDED",
+            "PRECHECK_IN_PROGRESS"
           ],
           "default": "PROGRESSING"
         },

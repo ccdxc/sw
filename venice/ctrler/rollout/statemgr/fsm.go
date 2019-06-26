@@ -209,7 +209,7 @@ func (ros *RolloutState) runFSM() {
 }
 
 func fsmAcCreated(ros *RolloutState) {
-	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_PROGRESSING)]
+	ros.Status.OperationalState = rollout.RolloutStatus_PRECHECK_IN_PROGRESS.String()
 	ros.setPreviousVersion(ros.writer.GetClusterVersion())
 	ros.Status.CompletionPercentage = 0
 	ros.computeProgressDelta()
@@ -279,13 +279,22 @@ func fsmAcWaitForSchedule(ros *RolloutState) {
 		ros.raiseRolloutEvent(rollout.RolloutStatus_PROGRESSING)
 		return
 	}
-	d := t.Sub(now)
-	time.Sleep(d)
-	if ros.Spec.GetSuspend() {
-		ros.eventChan <- fsmEvSuspend
-		return
+	ros.Status.OperationalState = rollout.RolloutStatus_SCHEDULED.String()
+	ros.saveStatus()
+
+	for d := t.Sub(now); d.Seconds() > 0; d = t.Sub(time.Now()) {
+		if d.Seconds() > 30 {
+			time.Sleep(30 * time.Second)
+		} else {
+			time.Sleep(d)
+		}
+		if ros.Spec.GetSuspend() {
+			ros.eventChan <- fsmEvSuspend
+			return
+		}
 	}
-	// TODO: Provide a way to cancel this when user Stops (or Deletes) Rollout
+	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_PROGRESSING)]
+	ros.saveStatus()
 	ros.eventChan <- fsmEvScheduleNow
 	ros.raiseRolloutEvent(rollout.RolloutStatus_PROGRESSING)
 	return

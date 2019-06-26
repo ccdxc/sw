@@ -79,8 +79,6 @@ func updateRolloutActionObj(rolloutActionObj *rollout.RolloutAction, buf *rollou
 	rolloutActionObj.ModTime = api.Timestamp{Timestamp: *ts}
 	if buf.Spec.Suspend || suspendFlag {
 		rolloutActionObj.Status.OperationalState = rollout.RolloutStatus_SUSPEND_IN_PROGRESS.String()
-	} else {
-		rolloutActionObj.Status.OperationalState = rollout.RolloutStatus_PROGRESSING.String()
 	}
 	err = txn.Update(rolloutActionObjKey, rolloutActionObj)
 	if err != nil {
@@ -104,7 +102,7 @@ func createRolloutActionObj(buf rollout.Rollout, rolloutActionObj *rollout.Rollo
 		return errors.New("RolloutAction create operation failed to get timestamp")
 	}
 	rolloutActionObj.CreationTime, rolloutActionObj.ModTime = api.Timestamp{Timestamp: *ts}, api.Timestamp{Timestamp: *ts}
-	rolloutActionObj.Status.OperationalState = rollout.RolloutStatus_PROGRESSING.String()
+	rolloutActionObj.Status.OperationalState = rollout.RolloutStatus_PRECHECK_IN_PROGRESS.String()
 	return nil
 }
 
@@ -112,6 +110,7 @@ func checkRolloutInProgress(rolloutActionObj rollout.RolloutAction) bool {
 
 	opState := rolloutActionObj.Status.GetOperationalState()
 	if opState == rollout.RolloutStatus_PROGRESSING.String() ||
+		opState == rollout.RolloutStatus_PRECHECK_IN_PROGRESS.String() ||
 		opState == rollout.RolloutStatus_SCHEDULED.String() ||
 		opState == rollout.RolloutStatus_SUSPEND_IN_PROGRESS.String() {
 		return true
@@ -196,7 +195,7 @@ func performRolloutUpdate(ctx context.Context, kv kvstore.Interface, txn kvstore
 	h.l.InfoLog("msg", "Updating RolloutAction & Updating Rollout")
 
 	//Update only if it's latest/in-progress
-	if buf.Name == rolloutActionObj.Name && rolloutActionObj.Status.OperationalState == rollout.RolloutStatus_PROGRESSING.String() {
+	if buf.Name == rolloutActionObj.Name && checkRolloutInProgress(*rolloutActionObj) {
 		if _, err := updateRolloutActionObj(rolloutActionObj, &buf, txn, stop); err != nil {
 			h.l.InfoLog("msg", "Update RolloutActionObject Failed %s", err)
 			return buf, false, err

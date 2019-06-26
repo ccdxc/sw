@@ -62,20 +62,22 @@ var RolloutSpec_SmartNICUpgradeType_normal = map[string]string{
 
 // RolloutStatus_RolloutOperationalState_normal is a map of normalized values for the enum
 var RolloutStatus_RolloutOperationalState_normal = map[string]string{
-	"DEADLINE_EXCEEDED":   "DEADLINE_EXCEEDED",
-	"FAILURE":             "FAILURE",
-	"PROGRESSING":         "PROGRESSING",
-	"SCHEDULED":           "SCHEDULED",
-	"SUCCESS":             "SUCCESS",
-	"SUSPENDED":           "SUSPENDED",
-	"SUSPEND_IN_PROGRESS": "SUSPEND_IN_PROGRESS",
-	"deadline_exceeded":   "DEADLINE_EXCEEDED",
-	"failure":             "FAILURE",
-	"progressing":         "PROGRESSING",
-	"scheduled":           "SCHEDULED",
-	"success":             "SUCCESS",
-	"suspend_in_progress": "SUSPEND_IN_PROGRESS",
-	"suspended":           "SUSPENDED",
+	"DEADLINE_EXCEEDED":    "DEADLINE_EXCEEDED",
+	"FAILURE":              "FAILURE",
+	"PRECHECK_IN_PROGRESS": "PRECHECK_IN_PROGRESS",
+	"PROGRESSING":          "PROGRESSING",
+	"SCHEDULED":            "SCHEDULED",
+	"SUCCESS":              "SUCCESS",
+	"SUSPENDED":            "SUSPENDED",
+	"SUSPEND_IN_PROGRESS":  "SUSPEND_IN_PROGRESS",
+	"deadline_exceeded":    "DEADLINE_EXCEEDED",
+	"failure":              "FAILURE",
+	"precheck_in_progress": "PRECHECK_IN_PROGRESS",
+	"progressing":          "PROGRESSING",
+	"scheduled":            "SCHEDULED",
+	"success":              "SUCCESS",
+	"suspend_in_progress":  "SUSPEND_IN_PROGRESS",
+	"suspended":            "SUSPENDED",
 }
 
 var _ validators.DummyVar
