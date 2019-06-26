@@ -50,6 +50,9 @@ echo "Running vnic test"
 $GDB artemis_vnic_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/artemis_vnic_test.xml" > artemis_vnic_test.log.txt
 [[ $? -ne 0 ]] && echo "artemis_vnic_test failed!" && exit 1
 
+echo "Running svc mapping test"
+$GDB artemis_svc_mapping_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/artemis_svc_mapping_test.xml" > artemis_svc_mapping_test.log.txt
+[[ $? -ne 0 ]] && echo "artemis_svc_mapping_test failed!" && exit 1
 
 echo "Running tag test"
 $GDB artemis_tag_test -c hal.json -f artemis --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/artemis_tag_test.xml" > artemis_tag_test.log.txt

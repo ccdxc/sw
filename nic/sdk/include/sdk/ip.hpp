@@ -552,7 +552,7 @@ ip_addr_is_multicast (ip_addr_t *ip_addr)
 }
 
 static inline bool
-ip_addr_is_lessthan (ip_addr_t *ip_addr1, ip_addr_t *ip_addr2)
+ip_addr_is_lessthan (const ip_addr_t *ip_addr1, const ip_addr_t *ip_addr2)
 {
     if (ip_addr1->af == IP_AF_IPV4) {
         return ((ip_addr1)->addr.v4_addr < (ip_addr2)->addr.v4_addr);
@@ -572,7 +572,7 @@ ip_addr_is_lessthan (ip_addr_t *ip_addr1, ip_addr_t *ip_addr2)
 }
 
 static inline bool
-ip_addr_is_equal (ip_addr_t *ip_addr1, ip_addr_t *ip_addr2)
+ip_addr_is_equal (const ip_addr_t *ip_addr1, const ip_addr_t *ip_addr2)
 {
     if (ip_addr1->af == IP_AF_IPV4) {
         return ((ip_addr1)->addr.v4_addr == (ip_addr2)->addr.v4_addr);
@@ -588,7 +588,7 @@ ip_addr_is_equal (ip_addr_t *ip_addr1, ip_addr_t *ip_addr2)
 }
 
 static inline bool
-ip_addr_is_greaterthan (ip_addr_t *ip_addr1, ip_addr_t *ip_addr2)
+ip_addr_is_greaterthan (const ip_addr_t *ip_addr1, const ip_addr_t *ip_addr2)
 {
     if (ip_addr1->af == IP_AF_IPV4) {
         return ((ip_addr1)->addr.v4_addr > (ip_addr2)->addr.v4_addr);
