@@ -54,6 +54,7 @@ using namespace sdk::platform::capri;
 #define MEM_REGION_FLOW_OHASH_BASE      "flow_ohash"
 #define MEM_REGION_IPV4_FLOW_BASE       "ipv4_flow"
 #define MEM_REGION_IPV4_FLOW_OHASH_BASE "ipv4_flow_ohash"
+#define MEM_REGION_SESSION_STATS_BASE   "session_stats"
 #define MEM_REGION_METER_STATS_BASE     "meter_stats"
 
 #define MEM_REGION_FLOW_NAME            "flow"
@@ -358,6 +359,11 @@ table_constants_init (void)
     stats_base_addr = get_mem_addr(MEM_REGION_METER_STATS_BASE);
     stats_base_addr -= ((uint64_t)1 << 31);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_METER_STATS,
+                                                 stats_base_addr);
+
+    stats_base_addr = get_mem_addr(MEM_REGION_SESSION_STATS_BASE);
+    stats_base_addr -= ((uint64_t)1 << 31);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_SESSION,
                                                  stats_base_addr);
 
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_EGRESS_VNIC_INFO,
