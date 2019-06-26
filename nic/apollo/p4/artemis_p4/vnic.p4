@@ -35,6 +35,7 @@ action egress_vnic_info(vr_mac, ca_mac, local_vlan, port, lif, qtype, qid) {
     remove_header(txdma_to_p4e);
     remove_header(predicate_header);
     remove_header(p4e_i2e);
+    modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
     // modify_field(rewrite_metadata.pa_mac, R5);
     if (control_metadata.direction == RX_FROM_SWITCH) {
         if (RX_REWRITE(rewrite_metadata.flags, SMAC, FROM_VRMAC)) {

@@ -19,9 +19,10 @@ ingress_recirc_done:
     seq             c1, k.cps_blob_valid, 1
     add.c1          r2, r2, 0x100
     sub             r1, k.capri_p4_intrinsic_frame_size, r2
-    phvwr           p.capri_p4_intrinsic_packet_len, r1
-    sne.e           c1, k.capri_intrinsic_tm_oq, TM_P4_RECIRC_QUEUE
+    sne             c1, k.capri_intrinsic_tm_oq, TM_P4_RECIRC_QUEUE
     phvwr.c1        p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
+    phvwr.e         p.capri_p4_intrinsic_packet_len, r1
+    phvwr.!c1       p.capri_intrinsic_tm_oq, k.capri_intrinsic_tm_iq
 
 /*****************************************************************************/
 /* error function                                                            */

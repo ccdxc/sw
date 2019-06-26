@@ -13,6 +13,7 @@ egress_vnic_info:
     phvwr           p.txdma_to_p4e_valid, FALSE
     phvwr           p.predicate_header_valid, FALSE
     phvwr           p.p4e_i2e_valid, FALSE
+    phvwr           p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
     seq             c1, k.control_metadata_direction, RX_FROM_SWITCH
     nop.!c1.e
     phvwr           p.rewrite_metadata_device_mac, r5

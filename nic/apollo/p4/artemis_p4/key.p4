@@ -217,6 +217,8 @@ action init_config() {
     }
     if (capri_intrinsic.tm_oq != TM_P4_RECIRC_QUEUE) {
         modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
+    } else {
+        modify_field(capri_intrinsic.tm_oq, capri_intrinsic.tm_iq);
     }
 }
 
