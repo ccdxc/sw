@@ -78,6 +78,7 @@ header_type artemis_rx_to_tx_header_t {
         payload_len     : 14; // Byte 36 to 37-6b
         iptype          : 1;  // Byte 37 - 1b
         pad0            : 1;  // Byte 37 - 1b
+        pad1            : 208; // Byte 38 to 63
         // Please check the above comment when adding new fields
     }
 }

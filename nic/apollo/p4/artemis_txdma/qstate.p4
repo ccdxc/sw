@@ -49,24 +49,26 @@ action read_pktdesc(remote_ip,
                     dport_classid,
                     vpc_id,
                     vnic_id,
+                    payload_len,
                     iptype,
                     pad0
                    )
 {
-    modify_field(scratch_metadata.field128, remote_ip);
-    modify_field(scratch_metadata.field40, sacl_base_addr);
-    modify_field(scratch_metadata.field40, route_base_addr);
-    modify_field(scratch_metadata.field10, meter_result);
-    modify_field(scratch_metadata.field10, sip_classid);
-    modify_field(scratch_metadata.field10, dip_classid);
-    modify_field(scratch_metadata.field10, stag_classid);
-    modify_field(scratch_metadata.field10, dtag_classid);
-    modify_field(scratch_metadata.field8, sport_classid);
-    modify_field(scratch_metadata.field8, dport_classid);
-    modify_field(scratch_metadata.field8, vpc_id);
-    modify_field(scratch_metadata.field8, vnic_id);
-    modify_field(scratch_metadata.field1, iptype);
-    modify_field(scratch_metadata.field7, pad0);
+    modify_field(rx_to_tx_hdr.remote_ip, remote_ip);
+    modify_field(rx_to_tx_hdr.sacl_base_addr, sacl_base_addr);
+    modify_field(rx_to_tx_hdr.route_base_addr, route_base_addr);
+    modify_field(rx_to_tx_hdr.meter_result, meter_result);
+    modify_field(rx_to_tx_hdr.sip_classid, sip_classid);
+    modify_field(rx_to_tx_hdr.dip_classid, dip_classid);
+    modify_field(rx_to_tx_hdr.stag_classid, stag_classid);
+    modify_field(rx_to_tx_hdr.dtag_classid, dtag_classid);
+    modify_field(rx_to_tx_hdr.sport_classid, sport_classid);
+    modify_field(rx_to_tx_hdr.dport_classid, dport_classid);
+    modify_field(rx_to_tx_hdr.vpc_id, vpc_id);
+    modify_field(rx_to_tx_hdr.vnic_id, vnic_id);
+    modify_field(rx_to_tx_hdr.payload_len, payload_len);
+    modify_field(rx_to_tx_hdr.iptype, iptype);
+    modify_field(rx_to_tx_hdr.pad0, pad0);
 
     // Fill meter_idx into session info
     modify_field(session_info_hint.meter_idx, rx_to_tx_hdr.meter_result);
@@ -74,8 +76,8 @@ action read_pktdesc(remote_ip,
     modify_field(session_info_hint.tx_rewrite_flags_dmac, 1);
 
     // Initialize the first P1 table index
-    modify_field(scratch_metadata.field20, (sip_classid << 7)|
-                                            sport_classid);
+    //modify_field(rx_to_tx_hdr.sip_classid, (sip_classid << 7)|
+    //                                        sport_classid);
 
     // Write P1 table index to PHV
     modify_field(txdma_control.rfc_index, scratch_metadata.field20);
