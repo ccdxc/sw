@@ -45,6 +45,9 @@ func init() {
 var cmdToExecute = `
 Cmds:
  -
+   cmd: ifconfig -a
+   outputfile: ifconfig.out
+ -
    cmd: fwupdate -l
    outputfile: fw_version.out
 `

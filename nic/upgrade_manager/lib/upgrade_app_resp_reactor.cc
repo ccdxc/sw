@@ -67,10 +67,6 @@ delphi::error UpgAppRespReact::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr
             if ((ret = system (cmd.c_str())) != 0) {
                 UPG_LOG_INFO("Unable to create penctl tech-support");
             }
-            cmd = "mv naples-disruptive-upgrade-tech-support*tar.gz /data/";
-            if ((ret = system (cmd.c_str())) != 0) {
-                UPG_LOG_INFO("Unable to move tech-support to /data/");
-            }
         }
         if (ctx.upgFailed) {
             //TODO: Move to OnUpgRespDelete once we have go APIs from sysmgr
