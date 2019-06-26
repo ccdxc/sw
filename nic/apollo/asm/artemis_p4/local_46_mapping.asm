@@ -27,10 +27,10 @@ tx_from_host_4to6:
     add             r1, r1, r2, 16
     phvwr           p.{ipv6_1_flowLabel,ipv6_1_payloadLen,ipv6_1_nextHdr, \
                         ipv6_1_hopLimit}, r1
-    or              r1, d.local_46_info_d.prefix[63:0], k.ipv4_1_srcAddr
+    or              r1, k.ipv4_1_srcAddr,  d.local_46_info_d.prefix[63:32], 32
     phvwrpair       p.ipv6_1_srcAddr[127:64], d.local_46_info_d.prefix[127:64],\
                         p.ipv6_1_srcAddr[63:0], r1
-    or              r1, k.rewrite_metadata_ip[63:0], k.ipv4_1_dstAddr
+    or              r1, k.ipv4_1_dstAddr, k.rewrite_metadata_ip[63:32], 32
     phvwrpair       p.ipv6_1_dstAddr[127:64], k.rewrite_metadata_ip[127:64],\
                         p.ipv6_1_dstAddr[63:0], r1
     add             r1, k.capri_p4_intrinsic_packet_len, 20
