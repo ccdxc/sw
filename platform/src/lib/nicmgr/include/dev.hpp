@@ -98,6 +98,7 @@ public:
     static string ParseDeviceConf(string input_arg);
     PdClient *GetPdClient(void) { return pd; }
     void SetUpgradeMode(UpgradeMode upg_mode) { upgrade_mode = upg_mode; };
+    UpgradeMode GetUpgradeMode() { return upgrade_mode; };
     UpgradeState GetUpgradeState();
     int HandleUpgradeEvent(UpgradeEvent event);
     std::map<uint32_t, uplink_t*> GetUplinks() { return uplinks; };

@@ -119,12 +119,23 @@ void NicMgrService::OnMountComplete() {
     restore_uplinks();
     retrieve_devices(eth_info);
     NIC_FUNC_DEBUG("Retrieved {} eth_info objects from Delphi", eth_info.size());
+
     // Restore eth devices retrieved from delphi db
     if (eth_info.size()) {
-        devmgr->RestoreDevicesState(eth_info);
+        //if we see the delphi object in normal boot then we should not use it and clean it up
+        if (devmgr->GetUpgradeMode() == FW_MODE_NORMAL_BOOT) {
+            // walk all objects and delete them
+            vector<delphi::objects::EthDeviceInfoPtr> objlist = delphi::objects::EthDeviceInfo::List(g_nicmgr_svc->sdk());
+            for (vector<delphi::objects::EthDeviceInfoPtr>::iterator obj=objlist.begin(); obj !=objlist.end(); ++obj) {
+                g_nicmgr_svc->sdk()->DeleteObject(*obj);
+            }
+        }
+        else {
+            devmgr->RestoreDevicesState(eth_info);
 
-        // All nicmgr objects are restored now so we can delete the file if exists
-        unlink(nicmgr_upgrade_state_file);
+            // All nicmgr objects are restored now so we can delete the file if exists
+            unlink(nicmgr_upgrade_state_file);
+        }
     }
 
     // walk all port status objects and handle them

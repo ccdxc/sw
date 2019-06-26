@@ -267,9 +267,10 @@ nicmgr_upg_hndlr::check_device_reset(void *obj)
     //Check whether all device are in reset or not
     if (devmgr->GetUpgradeState() == DEVICES_RESET_STATE) {
         NIC_FUNC_DEBUG("All devices are in reset state");
-        writefile(nicmgr_upgrade_state_file, "in progress", 12);
-        g_nicmgr_svc->upgsdk()->SendAppRespSuccess();
-        evutil_timer_stop(EV_DEFAULT_ &dev_reset_timer);
+        if (writefile(nicmgr_upgrade_state_file, "in progress", 12) != -1) {
+            g_nicmgr_svc->upgsdk()->SendAppRespSuccess();
+            evutil_timer_stop(EV_DEFAULT_ &dev_reset_timer);
+        }
     }
 
     return;
