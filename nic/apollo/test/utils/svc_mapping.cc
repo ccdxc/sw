@@ -8,10 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/api/service_utils.hpp"
-#include "nic/apollo/test/utils/api_base.hpp"
-#include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/svc_mapping.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 
