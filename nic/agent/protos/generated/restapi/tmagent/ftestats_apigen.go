@@ -46,12 +46,6 @@ func (s *RestServer) listFteCPSMetricsHandler(r *http.Request) (interface{}, err
 			continue
 		}
 
-		// Venice has no concept of FTE. Aggregate all per-fte stats to per-asic
-		// since Iris pipeline has only one FTE, ignoring other FTE has same effect
-		if temp.GetKey() != 0 {
-			continue
-		}
-
 		objMeta := s.GetObjectMeta("FteCPSMetricsKey", temp.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for FteCPSMetrics key %+v", temp.GetKey())
@@ -67,6 +61,7 @@ func (s *RestServer) listFteCPSMetricsHandler(r *http.Request) (interface{}, err
 
 // getFteCPSMetricsPoints returns tags and fields to save in Venice TSDB
 func (s *RestServer) getFteCPSMetricsPoints() ([]*tsdb.Point, error) {
+
 	iter, err := goproto.NewFteCPSMetricsIterator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
@@ -108,6 +103,7 @@ func (s *RestServer) getFteCPSMetricsPoints() ([]*tsdb.Point, error) {
 
 	iter.Free()
 	return points, nil
+
 }
 
 // getFteCPSMetricsHandler is the Get Handler for FteCPSMetrics
@@ -142,12 +138,6 @@ func (s *RestServer) listFteLifQMetricsHandler(r *http.Request) (interface{}, er
 			continue
 		}
 
-		// Venice has no concept of FTE. Aggregate all per-fte stats to per-asic
-		// since Iris pipeline has only one FTE, ignoring other FTE has same effect
-		if temp.GetKey() != 0 {
-			continue
-		}
-
 		objMeta := s.GetObjectMeta("FteLifQMetricsKey", temp.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for FteLifQMetrics key %+v", temp.GetKey())
@@ -163,6 +153,7 @@ func (s *RestServer) listFteLifQMetricsHandler(r *http.Request) (interface{}, er
 
 // getFteLifQMetricsPoints returns tags and fields to save in Venice TSDB
 func (s *RestServer) getFteLifQMetricsPoints() ([]*tsdb.Point, error) {
+
 	iter, err := goproto.NewFteLifQMetricsIterator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
@@ -204,6 +195,7 @@ func (s *RestServer) getFteLifQMetricsPoints() ([]*tsdb.Point, error) {
 
 	iter.Free()
 	return points, nil
+
 }
 
 // getFteLifQMetricsHandler is the Get Handler for FteLifQMetrics
@@ -238,12 +230,6 @@ func (s *RestServer) listSessionSummaryMetricsHandler(r *http.Request) (interfac
 			continue
 		}
 
-		// Venice has no concept of FTE. Aggregate all per-fte stats to per-asic
-		// since Iris pipeline has only one FTE, ignoring other FTE has same effect
-		if temp.GetKey() != 0 {
-			continue
-		}
-
 		objMeta := s.GetObjectMeta("SessionSummaryMetricsKey", temp.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for SessionSummaryMetrics key %+v", temp.GetKey())
@@ -259,6 +245,7 @@ func (s *RestServer) listSessionSummaryMetricsHandler(r *http.Request) (interfac
 
 // getSessionSummaryMetricsPoints returns tags and fields to save in Venice TSDB
 func (s *RestServer) getSessionSummaryMetricsPoints() ([]*tsdb.Point, error) {
+
 	iter, err := goproto.NewSessionSummaryMetricsIterator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
@@ -300,6 +287,7 @@ func (s *RestServer) getSessionSummaryMetricsPoints() ([]*tsdb.Point, error) {
 
 	iter.Free()
 	return points, nil
+
 }
 
 // getSessionSummaryMetricsHandler is the Get Handler for SessionSummaryMetrics

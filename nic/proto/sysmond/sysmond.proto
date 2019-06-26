@@ -3,6 +3,8 @@ package sysmond;
 
 import "delphi.proto";
 import "penctl.proto";
+import "metrics_annotations.proto";
+
 
 message SysmondPenctlRootCmd {
     option (venice.penctlParentCmd) = {
@@ -22,6 +24,14 @@ message AsicTemperatureMetrics {
                  "The temperature is degree Celcius\\n",
         RootCmd: "system"
     };
+    option (venice.metricInfo) = {
+        DisplayName: "Asic Temperature",
+        Description: "Asic Temperature",
+        Scope: PerASIC,
+        Tags: [ Level7 ]
+    };
+
+
     fixed64 Key = 1;
 
     delphi.Counter local_temperature           = 2;
@@ -40,6 +50,13 @@ message AsicPowerMetrics {
                  "The power is milli Watt\\n",
         RootCmd: "system"
     };
+    option (venice.metricInfo) = {
+        DisplayName: "Asic Power",
+        Description: "Asic Power",
+        Scope: PerASIC,
+        Tags: [ Level7 ]
+    };
+
     fixed64 Key = 1;
 
     delphi.Counter pin           = 2;
@@ -56,6 +73,14 @@ message AsicFrequencyMetrics {
                  "The frequency is MHz\\n",
         RootCmd: "system"
     };
+    option (venice.metricInfo) = {
+        DisplayName: "Asic Frequency",
+        Description: "Asic Frequency",
+        Scope: PerASIC,
+        Tags: [ Level7 ]
+    };
+
+
     fixed64 Key = 1;
 
     delphi.Counter frequency           = 2;
@@ -84,6 +109,13 @@ message AsicMemoryMetrics {
                  "The memory is KB\\n",
         RootCmd: "system"
     };
+    option (venice.metricInfo) = {
+        DisplayName: "System Memory",
+        Description: "System Memory",
+        Scope: UnknownScope, //ignore by venice UI
+        Tags: [ Level7 ]
+    };
+
     fixed64 Key = 1;
 
     delphi.Counter totalmemory          = 2;

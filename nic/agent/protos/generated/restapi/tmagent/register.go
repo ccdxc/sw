@@ -59,7 +59,6 @@ func (s *RestServer) RegisterAPIRoutes() {
 		"/telemetry/v1/metrics/ssepicsintbadaddrmetrics/":           s.AddSsepicsintbadaddrMetricsAPIRoutes,
 		"/telemetry/v1/metrics/ssepicsintbgmetrics/":                s.AddSsepicsintbgMetricsAPIRoutes,
 		"/telemetry/v1/metrics/ssepicsintpicsmetrics/":              s.AddSsepicsintpicsMetricsAPIRoutes,
-		"/telemetry/v1/metrics/upgrademetrics/":                     s.AddUpgradeMetricsAPIRoutes,
 	}
 }
 func (s *RestServer) RegisterListMetrics() {
@@ -116,6 +115,5 @@ func (s *RestServer) RegisterListMetrics() {
 		"SsepicsintbadaddrMetrics":           s.getSsepicsintbadaddrMetricsPoints,
 		"SsepicsintbgMetrics":                s.getSsepicsintbgMetricsPoints,
 		"SsepicsintpicsMetrics":              s.getSsepicsintpicsMetricsPoints,
-		"UpgradeMetrics":                     s.getUpgradeMetricsPoints,
 	}
 }

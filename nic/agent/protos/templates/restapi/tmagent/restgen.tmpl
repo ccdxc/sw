@@ -17,8 +17,8 @@ import (
 
  {{$msgs := .Messages}}
  {{range $msgs}}
-    {{if (HasSuffix .GetName "Metrics")}}
 
+    {{if (HasSuffix .GetName "Metrics")}}
 	// Add{{.GetName}}APIRoutes adds routes for {{.GetName}}
 	func (s *RestServer) Add{{.GetName}}APIRoutes(r *mux.Router){
 		r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.get{{.GetName}}Handler))
@@ -45,18 +45,6 @@ import (
 				continue
 			}
 
-            {{if (hasExtension "venice.metricInfo" .) }}
-                    {{$param := (getMsgMetricOptionsHdlr .)}}
-                    {{$scope := $param.Scope}}
-                    {{if strEq $scope "PerFTE"}}
-                    // Venice has no concept of FTE. Aggregate all per-fte stats to per-asic
-                    // since Iris pipeline has only one FTE, ignoring other FTE has same effect
-                    if temp.GetKey() != 0 {
-                        continue
-                    }
-                    {{end}}
-            {{end}}
-
 			objMeta := s.GetObjectMeta("{{.GetName}}Key", temp.GetKey())
 			if objMeta == nil {
 				log.Errorf("failed to get objMeta for {{.GetName}} key %+v", temp.GetKey())
@@ -72,6 +60,12 @@ import (
 
 	// get{{.GetName}}Points returns tags and fields to save in Venice TSDB
 	func (s *RestServer) get{{.GetName}}Points() ([]*tsdb.Point, error){
+	 {{if (hasExtension "venice.metricInfo" .) }}
+        {{$param := (getMsgMetricOptionsHdlr .)}}
+        {{$scope := $param.Scope}}
+        {{if (or (strEq $scope "UnknownScope") (strEq $scope "PerFwRule") (strEq $scope "PerRingPerSubRing") (strEq $scope "PerLIFPerQ") (strEq $scope "PerPciePort"  ) ) }}
+     return nil, nil
+        {{else}}
 		iter, err := goproto.New{{.GetName}}Iterator()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get metrics, error: %s", err)
@@ -90,10 +84,6 @@ import (
 			     continue
 			}
 
-
-            {{if (hasExtension "venice.metricInfo" .) }}
-                    {{$param := (getMsgMetricOptionsHdlr .)}}
-                    {{$scope := $param.Scope}}
                     {{if strEq $scope "PerFTE"}}
                     // Venice has no concept of FTE. Aggregate all per-fte stats to per-asic
                     // since Iris pipeline has only one FTE, ignoring other FTE has same effect
@@ -101,7 +91,6 @@ import (
                         continue
                     }
                     {{end}}
-            {{end}}
 
 
 			// translate key to meta
@@ -121,6 +110,11 @@ import (
 
 		iter.Free()
 		return points, nil
+
+        {{end}}
+     {{else}}
+         return nil, nil
+     {{end}}
 	}
 
 	// get{{.GetName}}Handler is the Get Handler for {{.GetName}}

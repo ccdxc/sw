@@ -1,0 +1,186 @@
+{
+  "FileName": "metrics.proto",
+  "Package": "metrics",
+  "Prefix": "nicmgr",
+  "Messages": [
+    {
+      "Name": "LifMetrics",
+      "Description": "Key index - LIF ID",
+      "DisplayName": "Lif Packet Statistics",
+      "Fields": [
+        {
+          "Name": "RxUnicastBytes",
+          "DisplayName": "Rx Unicast Bytes",
+          "Description": "Rx Unicast Bytes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxUnicastPackets",
+          "DisplayName": "Rx Unicast Packets",
+          "Description": "Rx Unicast Packets",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxMulticastBytes",
+          "DisplayName": "Rx Multicast Bytes",
+          "Description": "Rx Multicast Bytes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxMulticastPackets",
+          "DisplayName": "Rx Multicast Packets",
+          "Description": "Rx Multicast Packets",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxBroadcastBytes",
+          "DisplayName": "Rx Broadcast Bytes",
+          "Description": "Rx Broadcast Bytes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxBroadcastPackets",
+          "DisplayName": "Rx Broadcast Packets",
+          "Description": "Rx Broadcast Packets",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxDropUnicastBytes",
+          "DisplayName": "Rx Drop Unicast Bytes",
+          "Description": "Rx Drop Unicast Bytes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxDropUnicastPackets",
+          "DisplayName": "Rx Drop Unicast Packets",
+          "Description": "Rx Drop Unicast Packets",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxDropMulticastBytes",
+          "DisplayName": "Rx Drop Multicast Bytes",
+          "Description": "Rx Drop Multicast Bytes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxDropMulticastPackets",
+          "DisplayName": "Rx Drop Multicast Packets",
+          "Description": "Rx Drop Multicast Packets",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxDropBroadcastBytes",
+          "DisplayName": "Rx Drop Broadcast Bytes",
+          "Description": "Rx Drop Broadcast Bytes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxDropBroadcastPackets",
+          "DisplayName": "Rx Drop Broadcast Packets",
+          "Description": "Rx Drop Broadcast Packets",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxUnicastBytes",
+          "DisplayName": "Tx Unicast Bytes",
+          "Description": "Tx Unicast Bytes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxUnicastPackets",
+          "DisplayName": "Tx Unicast Packets",
+          "Description": "Tx Unicast Packets",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxMulticastBytes",
+          "DisplayName": "Tx Multicast Bytes",
+          "Description": "Tx Multicast Bytes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxMulticastPackets",
+          "DisplayName": "Tx Multicast Packets",
+          "Description": "Tx Multicast Packets",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxBroadcastBytes",
+          "DisplayName": "Tx Broadcast Bytes",
+          "Description": "Tx Broadcast Bytes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxBroadcastPackets",
+          "DisplayName": "Tx Broadcast Packets",
+          "Description": "Tx Broadcast Packets",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxDropUnicastBytes",
+          "DisplayName": "Tx Drop Unicast Bytes",
+          "Description": "Tx Drop Unicast Bytes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxDropUnicastPackets",
+          "DisplayName": "Tx Drop Unicast Packets",
+          "Description": "Tx Drop Unicast Packets",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxDropMulticastBytes",
+          "DisplayName": "Tx Drop Multicast Bytes",
+          "Description": "Tx Drop Multicast Bytes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxDropMulticastPackets",
+          "DisplayName": "Tx Drop Multicast Packets",
+          "Description": "Tx Drop Multicast Packets",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxDropBroadcastBytes",
+          "DisplayName": "Tx Drop Broadcast Bytes",
+          "Description": "Tx Drop Broadcast Bytes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxDropBroadcastPackets",
+          "DisplayName": "Tx Drop Broadcast Packets",
+          "Description": "Tx Drop Broadcast Packets",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerLIF"
+    }
+  ]
+}

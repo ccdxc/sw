@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/fatih/structs"
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/nic/agent/httputils"
@@ -61,41 +60,9 @@ func (s *RestServer) listPcieMgrMetricsHandler(r *http.Request) (interface{}, er
 
 // getPcieMgrMetricsPoints returns tags and fields to save in Venice TSDB
 func (s *RestServer) getPcieMgrMetricsPoints() ([]*tsdb.Point, error) {
-	iter, err := goproto.NewPcieMgrMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
 
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
+	return nil, nil
 
-	points := []*tsdb.Point{}
-
-	for iter.HasNext() {
-		m := iter.Next()
-		if m == nil {
-			continue
-		}
-
-		// translate key to meta
-		objMeta := s.GetObjectMeta("PcieMgrMetricsKey", m.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for PcieMgrMetrics key %+v", m.GetKey())
-			continue
-		}
-		tags := s.getTagsFromMeta(objMeta)
-		fields := structs.Map(m)
-
-		if len(fields) > 0 {
-			delete(fields, "ObjectMeta")
-			points = append(points, &tsdb.Point{Tags: tags, Fields: fields})
-		}
-	}
-
-	iter.Free()
-	return points, nil
 }
 
 // getPcieMgrMetricsHandler is the Get Handler for PcieMgrMetrics
@@ -145,41 +112,9 @@ func (s *RestServer) listPciePortMetricsHandler(r *http.Request) (interface{}, e
 
 // getPciePortMetricsPoints returns tags and fields to save in Venice TSDB
 func (s *RestServer) getPciePortMetricsPoints() ([]*tsdb.Point, error) {
-	iter, err := goproto.NewPciePortMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
 
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
+	return nil, nil
 
-	points := []*tsdb.Point{}
-
-	for iter.HasNext() {
-		m := iter.Next()
-		if m == nil {
-			continue
-		}
-
-		// translate key to meta
-		objMeta := s.GetObjectMeta("PciePortMetricsKey", m.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for PciePortMetrics key %+v", m.GetKey())
-			continue
-		}
-		tags := s.getTagsFromMeta(objMeta)
-		fields := structs.Map(m)
-
-		if len(fields) > 0 {
-			delete(fields, "ObjectMeta")
-			points = append(points, &tsdb.Point{Tags: tags, Fields: fields})
-		}
-	}
-
-	iter.Free()
-	return points, nil
 }
 
 // getPciePortMetricsHandler is the Get Handler for PciePortMetrics

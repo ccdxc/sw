@@ -6,7 +6,7 @@
     {
       "Name": "FteCPSMetrics",
       "Description": "Key index - FTE ID",
-      "DisplayName": "per-FTE CPS Statistics",
+      "DisplayName": "CPS Statistics",
       "Fields": [
         {
           "Name": "ConnectionsPerSecond",
@@ -20,8 +20,14 @@
           "DisplayName": "Max-CPS",
           "Description": "Max Connections per second",
           "Units": "Count",
-          "BaseType": "Counter"
+          "BaseType": "Counter",
+          "Tags": [
+            "Level7"
+          ]
         }
+      ],
+      "Tags": [
+        "Level4"
       ],
       "Scope": "PerFTE"
     },
@@ -94,12 +100,15 @@
           "BaseType": "Counter"
         }
       ],
+      "Tags": [
+        "Level7"
+      ],
       "Scope": "PerFTE"
     },
     {
       "Name": "SessionSummaryMetrics",
       "Description": "Key index - FTE ID",
-      "DisplayName": "Global Session Summary Statistics",
+      "DisplayName": "Session Summary Statistics",
       "Fields": [
         {
           "Name": "TotalActiveSessions",
@@ -178,6 +187,9 @@
           "Units": "Count",
           "BaseType": "Counter"
         }
+      ],
+      "Tags": [
+        "Level4"
       ],
       "Scope": "PerFTE"
     }

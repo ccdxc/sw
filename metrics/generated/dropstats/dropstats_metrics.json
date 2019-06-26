@@ -6,7 +6,7 @@
     {
       "Name": "DropMetrics",
       "Description": "Key index - Global ID",
-      "DisplayName": "Global Drop Statistics",
+      "DisplayName": "Drop Statistics",
       "Fields": [
         {
           "Name": "DropMalformedPkt",
@@ -198,12 +198,15 @@
           "BaseType": "Counter"
         }
       ],
+      "Tags": [
+        "Level7"
+      ],
       "Scope": "PerASIC"
     },
     {
       "Name": "EgressDropMetrics",
       "Description": "Key index - Global ID",
-      "DisplayName": "Global Egress Drop Statistics",
+      "DisplayName": "Asic Egress Drop Statistics",
       "Fields": [
         {
           "Name": "DropOutputMapping",
@@ -247,6 +250,9 @@
           "Units": "Count",
           "BaseType": "Counter"
         }
+      ],
+      "Tags": [
+        "Level7"
       ],
       "Scope": "PerASIC"
     }

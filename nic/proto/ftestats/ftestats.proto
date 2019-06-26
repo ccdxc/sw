@@ -8,14 +8,15 @@ message FteCPSMetrics {
     // External
     option (delphi.datapath_metrics) = true;
     option (venice.metricInfo) = {
-        DisplayName: "per-FTE CPS Statistics",
+        DisplayName: "CPS Statistics",
         Description: "Key index - FTE ID",
-        Scope: PerFTE
+        Scope: PerFTE,
+        Tags: [ Level4 ]
     };
     fixed64        Key                        = 1;     // FTE ID
 
     delphi.Counter connections_per_second     = 2  [(venice.metricsField) = {DisplayName: "CPS" Description: "Connections per second"}];
-    delphi.Counter max_connections_per_second = 3  [(venice.metricsField) = {DisplayName: "Max-CPS" Description: "Max Connections per second"}];
+    delphi.Counter max_connections_per_second = 3  [(venice.metricsField) = {DisplayName: "Max-CPS" Description: "Max Connections per second" Tags:[ Level7 ] }];
 }
 
 message FteLifQMetrics { 
@@ -24,7 +25,8 @@ message FteLifQMetrics {
     option (venice.metricInfo) = {
         DisplayName: "per-FTE Queue Statistics",
         Description: "Key index - FTE ID",
-        Scope: PerFTE
+        Scope: PerFTE,
+        Tags: [ Level7 ]
     };
     fixed64        Key                        = 1;     // FTE ID
 
@@ -42,9 +44,10 @@ message FteLifQMetrics {
 message SessionSummaryMetrics {
     option (delphi.datapath_metrics) = true;
     option (venice.metricInfo) = {
-        DisplayName: "Global Session Summary Statistics",
+        DisplayName: "Session Summary Statistics",
         Description: "Key index - FTE ID",
-        Scope: PerFTE
+        Scope: PerFTE,
+        Tags: [ Level4 ]
     };
     fixed64        Key                       = 1;
    

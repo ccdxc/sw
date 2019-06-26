@@ -142,12 +142,6 @@ message UpgradeMetricsPenctlRootCmd {
 }
 
 message UpgradeMetrics {
-    //command: penctl show metrics upgrade stats
-    option (venice.penctlCmd) = {
-        Cmd:     "stats",
-        HelpStr: "Upgrade Stats",
-        RootCmd: "upgrade"
-    };
     delphi.ObjectMeta      Meta                     = 1;
     uint32                 Key                      = 2;
     delphi.Counter         IsUpgPossible            = 3;

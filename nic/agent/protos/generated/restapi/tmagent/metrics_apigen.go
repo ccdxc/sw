@@ -61,6 +61,7 @@ func (s *RestServer) listLifMetricsHandler(r *http.Request) (interface{}, error)
 
 // getLifMetricsPoints returns tags and fields to save in Venice TSDB
 func (s *RestServer) getLifMetricsPoints() ([]*tsdb.Point, error) {
+
 	iter, err := goproto.NewLifMetricsIterator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
@@ -96,6 +97,7 @@ func (s *RestServer) getLifMetricsPoints() ([]*tsdb.Point, error) {
 
 	iter.Free()
 	return points, nil
+
 }
 
 // getLifMetricsHandler is the Get Handler for LifMetrics

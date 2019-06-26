@@ -61,6 +61,7 @@ func (s *RestServer) listAsicFrequencyMetricsHandler(r *http.Request) (interface
 
 // getAsicFrequencyMetricsPoints returns tags and fields to save in Venice TSDB
 func (s *RestServer) getAsicFrequencyMetricsPoints() ([]*tsdb.Point, error) {
+
 	iter, err := goproto.NewAsicFrequencyMetricsIterator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
@@ -96,6 +97,7 @@ func (s *RestServer) getAsicFrequencyMetricsPoints() ([]*tsdb.Point, error) {
 
 	iter.Free()
 	return points, nil
+
 }
 
 // getAsicFrequencyMetricsHandler is the Get Handler for AsicFrequencyMetrics
@@ -145,41 +147,9 @@ func (s *RestServer) listAsicMemoryMetricsHandler(r *http.Request) (interface{},
 
 // getAsicMemoryMetricsPoints returns tags and fields to save in Venice TSDB
 func (s *RestServer) getAsicMemoryMetricsPoints() ([]*tsdb.Point, error) {
-	iter, err := goproto.NewAsicMemoryMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
 
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
+	return nil, nil
 
-	points := []*tsdb.Point{}
-
-	for iter.HasNext() {
-		m := iter.Next()
-		if m == nil {
-			continue
-		}
-
-		// translate key to meta
-		objMeta := s.GetObjectMeta("AsicMemoryMetricsKey", m.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for AsicMemoryMetrics key %+v", m.GetKey())
-			continue
-		}
-		tags := s.getTagsFromMeta(objMeta)
-		fields := structs.Map(m)
-
-		if len(fields) > 0 {
-			delete(fields, "ObjectMeta")
-			points = append(points, &tsdb.Point{Tags: tags, Fields: fields})
-		}
-	}
-
-	iter.Free()
-	return points, nil
 }
 
 // getAsicMemoryMetricsHandler is the Get Handler for AsicMemoryMetrics
@@ -229,6 +199,7 @@ func (s *RestServer) listAsicPowerMetricsHandler(r *http.Request) (interface{}, 
 
 // getAsicPowerMetricsPoints returns tags and fields to save in Venice TSDB
 func (s *RestServer) getAsicPowerMetricsPoints() ([]*tsdb.Point, error) {
+
 	iter, err := goproto.NewAsicPowerMetricsIterator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
@@ -264,6 +235,7 @@ func (s *RestServer) getAsicPowerMetricsPoints() ([]*tsdb.Point, error) {
 
 	iter.Free()
 	return points, nil
+
 }
 
 // getAsicPowerMetricsHandler is the Get Handler for AsicPowerMetrics
@@ -313,6 +285,7 @@ func (s *RestServer) listAsicTemperatureMetricsHandler(r *http.Request) (interfa
 
 // getAsicTemperatureMetricsPoints returns tags and fields to save in Venice TSDB
 func (s *RestServer) getAsicTemperatureMetricsPoints() ([]*tsdb.Point, error) {
+
 	iter, err := goproto.NewAsicTemperatureMetricsIterator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
@@ -348,6 +321,7 @@ func (s *RestServer) getAsicTemperatureMetricsPoints() ([]*tsdb.Point, error) {
 
 	iter.Free()
 	return points, nil
+
 }
 
 // getAsicTemperatureMetricsHandler is the Get Handler for AsicTemperatureMetrics

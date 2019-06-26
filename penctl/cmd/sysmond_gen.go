@@ -14,11 +14,11 @@ import (
 
 //cmd - frequency
 //rootCmd = system
-//helpStr = System frequency information:\n\n\nValue Description:\n\nfrequency: Frequency of the system.\nThe frequency is MHz\n
+//helpStr = System frequency information:\n\n\nValue Description:\n\nfrequency: Frequency of the system.\nThe frequency is MHz\n\n
 var frequencysystemShowCmd = &cobra.Command{
 	Use:   "frequency",
-	Short: "System frequency information:\n\n\nValue Description:\n\nfrequency: Frequency of the system.\nThe frequency is MHz\n",
-	Long:  "\n---------------------------------\n System frequency information:\n\n\nValue Description:\n\nfrequency: Frequency of the system.\nThe frequency is MHz\n\n---------------------------------\n",
+	Short: "System frequency information:\n\n\nValue Description:\n\nfrequency: Frequency of the system.\nThe frequency is MHz\n\n",
+	Long:  "\n---------------------------------\n System frequency information:\n\n\nValue Description:\n\nfrequency: Frequency of the system.\nThe frequency is MHz\n\n\n---------------------------------\n",
 	RunE:  frequencysystemShowCmdHandler,
 }
 
@@ -37,11 +37,11 @@ func frequencysystemShowCmdHandler(cmd *cobra.Command, args []string) error {
 
 //cmd - memory
 //rootCmd = system
-//helpStr = System memory information:\n\n\nValue Description:\n\nTotal Memory: Total Memory of the system.\nAvailable Memory: Available Memory of the system.\nFree Memory: Free Memory of the system.\nThe memory is KB\n
+//helpStr = System memory information:\n\n\nValue Description:\n\nTotal Memory: Total Memory of the system.\nAvailable Memory: Available Memory of the system.\nFree Memory: Free Memory of the system.\nThe memory is KB\n\n
 var memorysystemShowCmd = &cobra.Command{
 	Use:   "memory",
-	Short: "System memory information:\n\n\nValue Description:\n\nTotal Memory: Total Memory of the system.\nAvailable Memory: Available Memory of the system.\nFree Memory: Free Memory of the system.\nThe memory is KB\n",
-	Long:  "\n---------------------------------\n System memory information:\n\n\nValue Description:\n\nTotal Memory: Total Memory of the system.\nAvailable Memory: Available Memory of the system.\nFree Memory: Free Memory of the system.\nThe memory is KB\n\n---------------------------------\n",
+	Short: "System memory information:\n\n\nValue Description:\n\nTotal Memory: Total Memory of the system.\nAvailable Memory: Available Memory of the system.\nFree Memory: Free Memory of the system.\nThe memory is KB\n\n",
+	Long:  "\n---------------------------------\n System memory information:\n\n\nValue Description:\n\nTotal Memory: Total Memory of the system.\nAvailable Memory: Available Memory of the system.\nFree Memory: Free Memory of the system.\nThe memory is KB\n\n\n---------------------------------\n",
 	RunE:  memorysystemShowCmdHandler,
 }
 
@@ -60,11 +60,11 @@ func memorysystemShowCmdHandler(cmd *cobra.Command, args []string) error {
 
 //cmd - power
 //rootCmd = system
-//helpStr = System power information:\n\n\nValue Description:\n\npin: Input power to the system.\npout1: Core output power.\npout2: Arm output power.\nThe power is milli Watt\n
+//helpStr = System power information:\n\n\nValue Description:\n\npin: Input power to the system.\npout1: Core output power.\npout2: Arm output power.\nThe power is milli Watt\n\n
 var powersystemShowCmd = &cobra.Command{
 	Use:   "power",
-	Short: "System power information:\n\n\nValue Description:\n\npin: Input power to the system.\npout1: Core output power.\npout2: Arm output power.\nThe power is milli Watt\n",
-	Long:  "\n---------------------------------\n System power information:\n\n\nValue Description:\n\npin: Input power to the system.\npout1: Core output power.\npout2: Arm output power.\nThe power is milli Watt\n\n---------------------------------\n",
+	Short: "System power information:\n\n\nValue Description:\n\npin: Input power to the system.\npout1: Core output power.\npout2: Arm output power.\nThe power is milli Watt\n\n",
+	Long:  "\n---------------------------------\n System power information:\n\n\nValue Description:\n\npin: Input power to the system.\npout1: Core output power.\npout2: Arm output power.\nThe power is milli Watt\n\n\n---------------------------------\n",
 	RunE:  powersystemShowCmdHandler,
 }
 
@@ -83,11 +83,11 @@ func powersystemShowCmdHandler(cmd *cobra.Command, args []string) error {
 
 //cmd - temp
 //rootCmd = system
-//helpStr = System temperature information:\n\n\nValue Description:\n\nlocal_temperature: Temperature of the board.\ndie_temperature: Temperature of the die.\nhbm_temperature: Temperature of the hbm.\nThe temperature is degree Celcius\n
+//helpStr = System temperature information:\n\n\nValue Description:\n\nlocal_temperature: Temperature of the board.\ndie_temperature: Temperature of the die.\nhbm_temperature: Temperature of the hbm.\nThe temperature is degree Celcius\n\n
 var tempsystemShowCmd = &cobra.Command{
 	Use:   "temp",
-	Short: "System temperature information:\n\n\nValue Description:\n\nlocal_temperature: Temperature of the board.\ndie_temperature: Temperature of the die.\nhbm_temperature: Temperature of the hbm.\nThe temperature is degree Celcius\n",
-	Long:  "\n---------------------------------\n System temperature information:\n\n\nValue Description:\n\nlocal_temperature: Temperature of the board.\ndie_temperature: Temperature of the die.\nhbm_temperature: Temperature of the hbm.\nThe temperature is degree Celcius\n\n---------------------------------\n",
+	Short: "System temperature information:\n\n\nValue Description:\n\nlocal_temperature: Temperature of the board.\ndie_temperature: Temperature of the die.\nhbm_temperature: Temperature of the hbm.\nThe temperature is degree Celcius\n\n",
+	Long:  "\n---------------------------------\n System temperature information:\n\n\nValue Description:\n\nlocal_temperature: Temperature of the board.\ndie_temperature: Temperature of the die.\nhbm_temperature: Temperature of the hbm.\nThe temperature is degree Celcius\n\n\n---------------------------------\n",
 	RunE:  tempsystemShowCmdHandler,
 }
 

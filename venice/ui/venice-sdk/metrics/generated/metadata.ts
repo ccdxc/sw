@@ -27,7 +27,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   DropMetrics: {
   "name": "DropMetrics",
   "description": "Key index - Global ID",
-  "displayName": "Global Drop Statistics",
+  "displayName": "Drop Statistics",
   "fields": [
     {
       "name": "DropMalformedPkt",
@@ -338,13 +338,16 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       ]
     }
   ],
+  "tags": [
+    "Level7"
+  ],
   "scope": "PerASIC",
   "objectKind": "SmartNIC"
 },
   EgressDropMetrics: {
   "name": "EgressDropMetrics",
   "description": "Key index - Global ID",
-  "displayName": "Global Egress Drop Statistics",
+  "displayName": "Asic Egress Drop Statistics",
   "fields": [
     {
       "name": "DropOutputMapping",
@@ -424,13 +427,16 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       ]
     }
   ],
+  "tags": [
+    "Level7"
+  ],
   "scope": "PerASIC",
   "objectKind": "SmartNIC"
 },
   FteCPSMetrics: {
   "name": "FteCPSMetrics",
   "description": "Key index - FTE ID",
-  "displayName": "per-FTE CPS Statistics",
+  "displayName": "CPS Statistics",
   "fields": [
     {
       "name": "ConnectionsPerSecond",
@@ -450,7 +456,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "units": "Count",
       "baseType": "Counter",
       "tags": [
-        "Level4"
+        "Level7"
       ],
       "jsType": "number"
     },
@@ -465,6 +471,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
         "Level4"
       ]
     }
+  ],
+  "tags": [
+    "Level4"
   ],
   "scope": "PerFTE",
   "objectKind": "SmartNIC"
@@ -585,13 +594,16 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       ]
     }
   ],
+  "tags": [
+    "Level7"
+  ],
   "scope": "PerFTE",
   "objectKind": "SmartNIC"
 },
   SessionSummaryMetrics: {
   "name": "SessionSummaryMetrics",
   "description": "Key index - FTE ID",
-  "displayName": "Global Session Summary Statistics",
+  "displayName": "Session Summary Statistics",
   "fields": [
     {
       "name": "TotalActiveSessions",
@@ -725,6 +737,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
         "Level4"
       ]
     }
+  ],
+  "tags": [
+    "Level4"
   ],
   "scope": "PerFTE",
   "objectKind": "SmartNIC"
@@ -1172,6 +1187,293 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "scope": "PerLIFPerQ",
   "objectKind": "SmartNIC"
 },
+  LifMetrics: {
+  "name": "LifMetrics",
+  "description": "Key index - LIF ID",
+  "displayName": "Lif Packet Statistics",
+  "fields": [
+    {
+      "name": "RxUnicastBytes",
+      "displayName": "Rx Unicast Bytes",
+      "description": "Rx Unicast Bytes",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxUnicastPackets",
+      "displayName": "Rx Unicast Packets",
+      "description": "Rx Unicast Packets",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxMulticastBytes",
+      "displayName": "Rx Multicast Bytes",
+      "description": "Rx Multicast Bytes",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxMulticastPackets",
+      "displayName": "Rx Multicast Packets",
+      "description": "Rx Multicast Packets",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxBroadcastBytes",
+      "displayName": "Rx Broadcast Bytes",
+      "description": "Rx Broadcast Bytes",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxBroadcastPackets",
+      "displayName": "Rx Broadcast Packets",
+      "description": "Rx Broadcast Packets",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxDropUnicastBytes",
+      "displayName": "Rx Drop Unicast Bytes",
+      "description": "Rx Drop Unicast Bytes",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxDropUnicastPackets",
+      "displayName": "Rx Drop Unicast Packets",
+      "description": "Rx Drop Unicast Packets",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxDropMulticastBytes",
+      "displayName": "Rx Drop Multicast Bytes",
+      "description": "Rx Drop Multicast Bytes",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxDropMulticastPackets",
+      "displayName": "Rx Drop Multicast Packets",
+      "description": "Rx Drop Multicast Packets",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxDropBroadcastBytes",
+      "displayName": "Rx Drop Broadcast Bytes",
+      "description": "Rx Drop Broadcast Bytes",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxDropBroadcastPackets",
+      "displayName": "Rx Drop Broadcast Packets",
+      "description": "Rx Drop Broadcast Packets",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxUnicastBytes",
+      "displayName": "Tx Unicast Bytes",
+      "description": "Tx Unicast Bytes",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxUnicastPackets",
+      "displayName": "Tx Unicast Packets",
+      "description": "Tx Unicast Packets",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxMulticastBytes",
+      "displayName": "Tx Multicast Bytes",
+      "description": "Tx Multicast Bytes",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxMulticastPackets",
+      "displayName": "Tx Multicast Packets",
+      "description": "Tx Multicast Packets",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxBroadcastBytes",
+      "displayName": "Tx Broadcast Bytes",
+      "description": "Tx Broadcast Bytes",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxBroadcastPackets",
+      "displayName": "Tx Broadcast Packets",
+      "description": "Tx Broadcast Packets",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxDropUnicastBytes",
+      "displayName": "Tx Drop Unicast Bytes",
+      "description": "Tx Drop Unicast Bytes",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxDropUnicastPackets",
+      "displayName": "Tx Drop Unicast Packets",
+      "description": "Tx Drop Unicast Packets",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxDropMulticastBytes",
+      "displayName": "Tx Drop Multicast Bytes",
+      "description": "Tx Drop Multicast Bytes",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxDropMulticastPackets",
+      "displayName": "Tx Drop Multicast Packets",
+      "description": "Tx Drop Multicast Packets",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxDropBroadcastBytes",
+      "displayName": "Tx Drop Broadcast Bytes",
+      "description": "Tx Drop Broadcast Bytes",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxDropBroadcastPackets",
+      "displayName": "Tx Drop Broadcast Packets",
+      "description": "Tx Drop Broadcast Packets",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "PerLIF",
+  "objectKind": "SmartNIC"
+},
   RuleMetrics: {
   "name": "RuleMetrics",
   "description": "Key index - Rule ID",
@@ -1254,6 +1556,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
         "Level4"
       ]
     }
+  ],
+  "tags": [
+    "Level7"
   ],
   "scope": "PerFwRule",
   "objectKind": "SmartNIC"

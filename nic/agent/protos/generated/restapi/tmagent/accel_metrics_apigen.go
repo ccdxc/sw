@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/fatih/structs"
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/nic/agent/httputils"
@@ -61,41 +60,9 @@ func (s *RestServer) listAccelHwRingMetricsHandler(r *http.Request) (interface{}
 
 // getAccelHwRingMetricsPoints returns tags and fields to save in Venice TSDB
 func (s *RestServer) getAccelHwRingMetricsPoints() ([]*tsdb.Point, error) {
-	iter, err := goproto.NewAccelHwRingMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
 
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
+	return nil, nil
 
-	points := []*tsdb.Point{}
-
-	for iter.HasNext() {
-		m := iter.Next()
-		if m == nil {
-			continue
-		}
-
-		// translate key to meta
-		objMeta := s.GetObjectMeta("AccelHwRingMetricsKey", m.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for AccelHwRingMetrics key %+v", m.GetKey())
-			continue
-		}
-		tags := s.getTagsFromMeta(objMeta)
-		fields := structs.Map(m)
-
-		if len(fields) > 0 {
-			delete(fields, "ObjectMeta")
-			points = append(points, &tsdb.Point{Tags: tags, Fields: fields})
-		}
-	}
-
-	iter.Free()
-	return points, nil
 }
 
 // getAccelHwRingMetricsHandler is the Get Handler for AccelHwRingMetrics
@@ -145,41 +112,9 @@ func (s *RestServer) listAccelSeqQueueInfoMetricsHandler(r *http.Request) (inter
 
 // getAccelSeqQueueInfoMetricsPoints returns tags and fields to save in Venice TSDB
 func (s *RestServer) getAccelSeqQueueInfoMetricsPoints() ([]*tsdb.Point, error) {
-	iter, err := goproto.NewAccelSeqQueueInfoMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
 
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
+	return nil, nil
 
-	points := []*tsdb.Point{}
-
-	for iter.HasNext() {
-		m := iter.Next()
-		if m == nil {
-			continue
-		}
-
-		// translate key to meta
-		objMeta := s.GetObjectMeta("AccelSeqQueueInfoMetricsKey", m.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for AccelSeqQueueInfoMetrics key %+v", m.GetKey())
-			continue
-		}
-		tags := s.getTagsFromMeta(objMeta)
-		fields := structs.Map(m)
-
-		if len(fields) > 0 {
-			delete(fields, "ObjectMeta")
-			points = append(points, &tsdb.Point{Tags: tags, Fields: fields})
-		}
-	}
-
-	iter.Free()
-	return points, nil
 }
 
 // getAccelSeqQueueInfoMetricsHandler is the Get Handler for AccelSeqQueueInfoMetrics
@@ -229,41 +164,9 @@ func (s *RestServer) listAccelSeqQueueMetricsHandler(r *http.Request) (interface
 
 // getAccelSeqQueueMetricsPoints returns tags and fields to save in Venice TSDB
 func (s *RestServer) getAccelSeqQueueMetricsPoints() ([]*tsdb.Point, error) {
-	iter, err := goproto.NewAccelSeqQueueMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
 
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
+	return nil, nil
 
-	points := []*tsdb.Point{}
-
-	for iter.HasNext() {
-		m := iter.Next()
-		if m == nil {
-			continue
-		}
-
-		// translate key to meta
-		objMeta := s.GetObjectMeta("AccelSeqQueueMetricsKey", m.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for AccelSeqQueueMetrics key %+v", m.GetKey())
-			continue
-		}
-		tags := s.getTagsFromMeta(objMeta)
-		fields := structs.Map(m)
-
-		if len(fields) > 0 {
-			delete(fields, "ObjectMeta")
-			points = append(points, &tsdb.Point{Tags: tags, Fields: fields})
-		}
-	}
-
-	iter.Free()
-	return points, nil
 }
 
 // getAccelSeqQueueMetricsHandler is the Get Handler for AccelSeqQueueMetrics

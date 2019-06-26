@@ -9,7 +9,8 @@ message RuleMetrics {
     option (venice.metricInfo) = {
         DisplayName: "per-Rule Statistics",
         Description: "Key index - Rule ID",
-        Scope: PerFwRule
+        Scope: PerFwRule,
+        Tags: [ Level7 ]
     };
     fixed64        Key          = 1;     // Rule Key
 

@@ -3,7 +3,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET       = upgrade.proto
 MODULE_PIPELINE     = iris gft
-MODULE_GEN_TYPES    = CC DELPHI GOMETRICS PENMETRICS
+MODULE_GEN_TYPES    = CC DELPHI
 MODULE_INCS         = ${MODULE_DIR} \
                       ${TOPDIR}/nic \
                       ${TOPDIR}/nic/hal/third-party/google/include \

@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/fatih/structs"
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/nic/agent/httputils"
@@ -61,41 +60,9 @@ func (s *RestServer) listRuleMetricsHandler(r *http.Request) (interface{}, error
 
 // getRuleMetricsPoints returns tags and fields to save in Venice TSDB
 func (s *RestServer) getRuleMetricsPoints() ([]*tsdb.Point, error) {
-	iter, err := goproto.NewRuleMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
 
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
+	return nil, nil
 
-	points := []*tsdb.Point{}
-
-	for iter.HasNext() {
-		m := iter.Next()
-		if m == nil {
-			continue
-		}
-
-		// translate key to meta
-		objMeta := s.GetObjectMeta("RuleMetricsKey", m.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for RuleMetrics key %+v", m.GetKey())
-			continue
-		}
-		tags := s.getTagsFromMeta(objMeta)
-		fields := structs.Map(m)
-
-		if len(fields) > 0 {
-			delete(fields, "ObjectMeta")
-			points = append(points, &tsdb.Point{Tags: tags, Fields: fields})
-		}
-	}
-
-	iter.Free()
-	return points, nil
 }
 
 // getRuleMetricsHandler is the Get Handler for RuleMetrics

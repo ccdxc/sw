@@ -61,6 +61,7 @@ func (s *RestServer) listDropMetricsHandler(r *http.Request) (interface{}, error
 
 // getDropMetricsPoints returns tags and fields to save in Venice TSDB
 func (s *RestServer) getDropMetricsPoints() ([]*tsdb.Point, error) {
+
 	iter, err := goproto.NewDropMetricsIterator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
@@ -96,6 +97,7 @@ func (s *RestServer) getDropMetricsPoints() ([]*tsdb.Point, error) {
 
 	iter.Free()
 	return points, nil
+
 }
 
 // getDropMetricsHandler is the Get Handler for DropMetrics
@@ -145,6 +147,7 @@ func (s *RestServer) listEgressDropMetricsHandler(r *http.Request) (interface{},
 
 // getEgressDropMetricsPoints returns tags and fields to save in Venice TSDB
 func (s *RestServer) getEgressDropMetricsPoints() ([]*tsdb.Point, error) {
+
 	iter, err := goproto.NewEgressDropMetricsIterator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
@@ -180,6 +183,7 @@ func (s *RestServer) getEgressDropMetricsPoints() ([]*tsdb.Point, error) {
 
 	iter.Free()
 	return points, nil
+
 }
 
 // getEgressDropMetricsHandler is the Get Handler for EgressDropMetrics
