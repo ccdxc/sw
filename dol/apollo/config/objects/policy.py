@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import pdb
 import enum
+import copy
 import ipaddress
 import random
 import socket
@@ -16,11 +17,6 @@ import apollo.config.utils as utils
 
 import policy_pb2 as policy_pb2
 import types_pb2 as types_pb2
-
-class L3MatchType(enum.IntEnum):
-    PFX = 0
-    PFXRANGE = 1
-    TAG = 2
 
 class L4MatchObject:
     def __init__(self, valid=False, sportlow=0, sporthigh=65535,\
@@ -43,7 +39,7 @@ class L3MatchObject:
     def __init__(self, valid=False, proto=0, srcpfx=None, dstpfx=None,\
                  srciplow=None, srciphigh=None, dstiplow=None,\
                  dstiphigh=None, srctag=0, dsttag=0,\
-                 srctype=L3MatchType.PFX, dsttype=L3MatchType.PFX):
+                 srctype=utils.L3MatchType.PFX, dsttype=utils.L3MatchType.PFX):
         self.valid = valid
         self.Proto = proto
         self.SrcType = srctype
@@ -69,6 +65,7 @@ class L3MatchObject:
 
 class RuleObject:
     def __init__(self, stateful, l3match, l4match, priority=0, action=policy_pb2.SECURITY_RULE_ACTION_ALLOW):
+        #TODO: introduce rule no
         self.Stateful = stateful
         self.L3Match = l3match
         self.L4Match = l4match
@@ -96,7 +93,7 @@ class PolicyObject(base.ConfigObjectBase):
         ################# PRIVATE ATTRIBUTES OF POLICY OBJECT #####################
         self.PolicyType = policytype
         self.OverlapType = overlaptype
-        self.rules = rules
+        self.rules = copy.deepcopy(rules)
         self.Show()
         return
 
@@ -152,6 +149,13 @@ class PolicyObject(base.ConfigObjectBase):
     def IsFilterMatch(self, selectors):
         return super().IsFilterMatch(selectors.policy.filters)
 
+    def __get_random_rule(self):
+        rules = self.rules
+        numrules = len(rules)
+        if numrules == 0:
+            return None
+        return random.choice(rules)
+
     def __get_non_default_random_rule(self):
         """
             returns a random rule without default prefix
@@ -188,12 +192,15 @@ class PolicyObject(base.ConfigObjectBase):
         obj.switchport = utils.PortTypes.SWITCH
         obj.devicecfg = Store.GetDevice()
         # select a random rule for this testcase
-        obj.tc_rule = self.__get_non_default_random_rule()
+        if utils.IsPipelineArtemis():
+            obj.tc_rule = self.__get_random_rule()
+        else:
+            obj.tc_rule = self.__get_non_default_random_rule()
         return
 
 class PolicyObjectClient:
     def __init__(self):
-        self.__objs = []
+        self.__objs = dict()
         self.__v4ingressobjs = {}
         self.__v6ingressobjs = {}
         self.__v4egressobjs = {}
@@ -205,14 +212,56 @@ class PolicyObjectClient:
         return
 
     def Objects(self):
-        return self.__objs
+        return self.__objs.values()
 
     def IsValidConfig(self):
-        count = len(self.__objs)
+        count = len(self.__objs.values())
         if  count > resmgr.MAX_POLICY:
             return False, "Policy count %d exceeds allowed limit of %d" %\
                           (count, resmgr.MAX_POLICY)
         return True, ""
+
+    def GetPolicyObject(self, policyid):
+        return self.__objs.get(policyid, None)
+
+    def ModifyPolicyRules(self, policyid, subnetobj):
+        if not utils.IsPipelineArtemis():
+            return
+
+        def __get_l3_attr(l3matchtype, newpfx):
+            pfx = None
+            startaddr = None
+            endaddr = None
+            tag = 0
+            if l3matchtype == utils.L3MatchType.PFX:
+                pfx = newpfx
+            elif l3matchtype == utils.L3MatchType.PFXRANGE:
+                startaddr = newpfx.network_address
+                endaddr = startaddr + newpfx.num_addresses - 1
+            elif l3matchtype == utils.L3MatchType.TAG:
+                # TODO: once tag support comes
+                tag = configure_tag_(newpfx)
+            return pfx, startaddr, endaddr, tag
+
+        def __modify_l3_match(direction, l3matchobj, subnetpfx):
+            if not l3matchobj.valid:
+                # nothing to do in case of wildcard
+                return
+            if (direction == 'egress'):
+                l3matchobj.SrcPrefix, l3matchobj.SrcIPLow, l3matchobj.SrcIPHigh, l3matchobj.SrcTag = __get_l3_attr(l3matchobj.SrcType, subnetpfx)
+            else:
+                l3matchobj.DstPrefix, l3matchobj.DstIPLow, l3matchobj.DstIPHigh, l3matchobj.DstTag = __get_l3_attr(l3matchobj.DstType, subnetpfx)
+            return
+
+        policy = self.GetPolicyObject(policyid)
+        direction = policy.Direction
+        af = policy.AddrFamily
+        subnetpfx = subnetobj.IPPrefix[1] if af == 'IPV4' else subnetobj.IPPrefix[0]
+        for rule in policy.rules:
+            __modify_l3_match(direction, rule.L3Match, subnetpfx)
+        logger.info("Modified Policy")
+        policy.Show()
+        return
 
     def GetIngV4SecurityPolicyId(self, vpcid):
         if len(self.__v4ingressobjs[vpcid]) == 0:
@@ -237,7 +286,7 @@ class PolicyObjectClient:
     def GenerateObjects(self, parent, vpc_spec_obj):
         vpcid = parent.VPCId
         stack = parent.Stack
-        self.__objs = []
+        self.__objs = dict()
         self.__v4ingressobjs[vpcid] = []
         self.__v6ingressobjs[vpcid] = []
         self.__v4egressobjs[vpcid] = []
@@ -276,13 +325,13 @@ class PolicyObjectClient:
             return proto
 
         def __get_l3_match_type(rulespec, attr):
-            matchtype = L3MatchType.PFX
+            matchtype = utils.L3MatchType.PFX
             if hasattr(rulespec, attr):
                 matchval = getattr(rulespec, attr)
                 if matchval == "pfxrange":
-                    matchtype = L3MatchType.PFXRANGE
+                    matchtype = utils.L3MatchType.PFXRANGE
                 elif matchval == "tag":
-                    matchtype = L3MatchType.TAG
+                    matchtype = utils.L3MatchType.TAG
             return matchtype
 
         def __get_l3_match_type_from_rule(rulespec):
@@ -290,19 +339,23 @@ class PolicyObjectClient:
             dsttype = __get_l3_match_type(rulespec, 'dsttype')
             return srctype, dsttype
 
-        def __get_pfx_from_rule(af, rulespec, attr):
+        def __get_pfx_from_rule(af, rulespec, attr, ispfx=True):
             prefix = None
             if af == utils.IP_VERSION_4:
                 prefix = getattr(rulespec, 'v4' + attr, None)
             else:
                 prefix = getattr(rulespec, 'v6' + attr, None)
             if prefix is not None:
-                prefix = ipaddress.ip_network(prefix.replace('\\', '/'))
+                if ispfx:
+                    prefix = ipaddress.ip_network(prefix.replace('\\', '/'))
+                else:
+                    prefix = ipaddress.ip_address(prefix)
             return prefix
 
         def __get_l3_pfx_from_rule(af, rulespec):
             pfx = __get_pfx_from_rule(af, rulespec, 'pfx')
-            srcpfx = dstpfx = pfx
+            srcpfx = pfx
+            dstpfx = pfx
             pfx = __get_pfx_from_rule(af, rulespec, 'srcpfx')
             if pfx is not None:
                 srcpfx = pfx
@@ -312,10 +365,10 @@ class PolicyObjectClient:
             return srcpfx, dstpfx
 
         def __get_l3_pfx_range_from_rule(af, rulespec):
-            srciplow = __get_pfx_from_rule(af, rulespec, 'srciplow')
-            srciphigh = __get_pfx_from_rule(af, rulespec, 'srciphigh')
-            dstiplow = __get_pfx_from_rule(af, rulespec, 'dstiplow')
-            dstiphigh = __get_pfx_from_rule(af, rulespec, 'dstiphigh')
+            srciplow = __get_pfx_from_rule(af, rulespec, 'srciplow', False)
+            srciphigh = __get_pfx_from_rule(af, rulespec, 'srciphigh', False)
+            dstiplow = __get_pfx_from_rule(af, rulespec, 'dstiplow', False)
+            dstiphigh = __get_pfx_from_rule(af, rulespec, 'dstiphigh', False)
             return srciplow, srciphigh, dstiplow, dstiphigh
 
         def __get_l3_tag_from_rule(af, rulespec):
@@ -361,7 +414,7 @@ class PolicyObjectClient:
                 self.__v4ingressobjs[vpcid].append(obj)
             else:
                 self.__v4egressobjs[vpcid].append(obj)
-            self.__objs.append(obj)
+            self.__objs.update({obj.PolicyId: obj})
 
         def __add_v6policy(direction, v6rules, policytype, overlaptype):
             obj = PolicyObject(parent, utils.IP_VERSION_6, direction, v6rules, policytype, overlaptype)
@@ -369,7 +422,7 @@ class PolicyObjectClient:
                 self.__v6ingressobjs[vpcid].append(obj)
             else:
                 self.__v6egressobjs[vpcid].append(obj)
-            self.__objs.append(obj)
+            self.__objs.update({obj.PolicyId: obj})
 
         def __add_user_specified_policy(policyspec, policytype, overlaptype):
             direction = policyspec.direction
@@ -428,7 +481,7 @@ class PolicyObjectClient:
         return
 
     def CreateObjects(self):
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
         api.client.Create(api.ObjectTypes.POLICY, msgs)
         return
 

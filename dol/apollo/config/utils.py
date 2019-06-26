@@ -13,6 +13,9 @@ from infra.common.glopts import GlobalOptions
 IP_VERSION_6 = 6
 IP_VERSION_4 = 4
 
+L4PORT_MIN = 0
+L4PORT_MAX = 65535
+
 ETHER_HDR_LEN = 14
 DOT1Q_HDR_LEN = 4
 
@@ -31,6 +34,11 @@ class PortTypes(enum.IntEnum):
     # Eth2/1 0x11020001 ==> 2 Switchport
 """
 INTF2PORT_TBL = { 0x11010001: PortTypes.HOST, 0x11020001: PortTypes.SWITCH}
+
+class L3MatchType(enum.IntEnum):
+    PFX = 0
+    PFXRANGE = 1
+    TAG = 2
 
 class rrobiniter:
     def __init__(self, objs):

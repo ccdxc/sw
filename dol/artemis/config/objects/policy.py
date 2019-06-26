@@ -30,7 +30,7 @@ class PolicyObjectHelper:
                     policyObj.l_obj = lobj
                     objs.append(policyObj)
                     break
-        return utils.GetFilteredObjects(objs, selectors.maxlimits)
+        return utils.GetFilteredObjects(objs, selectors.maxlimits, False)
 
 PolicyHelper = PolicyObjectHelper()
 

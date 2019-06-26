@@ -70,6 +70,8 @@ def __get_host_from_route_impl(route, af):
 
 def __get_host_from_route(modargs, route, af):
     pval = __get_module_args_value(modargs, 'prefix')
+    if route is None or pval is None:
+        host = __get_host_from_route_impl(route, af)
     if pval == 'right':
         #first ip post prefix range
         host = route.network_address + route.num_addresses
@@ -82,8 +84,6 @@ def __get_host_from_route(modargs, route, af):
     elif pval == 'last':
         #last ip in prefix range
         host = route.network_address + route.num_addresses - 1
-    else:
-        host = __get_host_from_route_impl(route, af)
     return str(host)
 
 def GetUsableHostFromRoute(testcase, packet, args=None):
@@ -98,15 +98,6 @@ def __get_module_args_value(modargs, attr):
                 return pval
     return None
 
-def GetUsableSrcHostFromPolicy(testcase, packet, args=None):
-    #TODO: make an API to get based on pfx / pfxrange / tag
-    route = testcase.config.tc_rule.L3Match.SrcPrefix if testcase.config.tc_rule else None
-    return __get_host_from_route(testcase.module.args, route, testcase.config.policy.AddrFamily)
-
-def GetUsableDstHostFromPolicy(testcase, packet, args=None):
-    route = testcase.config.tc_rule.L3Match.DstPrefix if testcase.config.tc_rule else None
-    return __get_host_from_route(testcase.module.args, route, testcase.config.policy.AddrFamily)
-
 def GetUsableHostFromPolicy(testcase, packet, args=None):
     policy = testcase.config.policy
     rule = testcase.config.tc_rule
@@ -116,7 +107,7 @@ def GetUsableHostFromPolicy(testcase, packet, args=None):
         route = l3match.SrcPrefix if policy.Direction == types_pb2.RULE_DIR_INGRESS else l3match.DstPrefix
     return __get_host_from_route(testcase.module.args, route, policy.AddrFamily)
 
-def __get_random_port_in_range(beg=0, end=65535):
+def __get_random_port_in_range(beg=utils.L4PORT_MIN, end=utils.L4PORT_MAX):
     return random.randint(beg, end)
 
 def __get_port_from_rule(rule, isSource=True):

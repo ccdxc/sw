@@ -60,7 +60,7 @@ vpc:
       count : 1
       type  : tenant
       subnet:
-        - count     :  46             # should be same as total routetbl / policy
+        - count     :  55             # should be same as total routetbl / policy
           v4prefixlen : 24
           v6prefixlen : 64
           vnic:
@@ -73,7 +73,7 @@ vpc:
       routetbl:
              - type: base
                routetype: fulloverlap_max_with_default
-               count : 46
+               count : 55
                v4base: '66.0.0.0\16'
                v4prefixlen: 24
                nv4routes   : 1021
@@ -86,7 +86,7 @@ vpc:
                    - '0::\0'
       nexthop: # only ARTEMIS
              - type: base
-               count : 46
+               count : 55
       policy:
               - type : specific
                 policytype : empty
@@ -100,6 +100,8 @@ vpc:
                     stateful: false
                     priority: 0             # only ARTEMIS
                     action  : allow         # only ARTEMIS
+                    v4pfx: '0.0.0.0\0'
+                    v6pfx: '0::0\0'
 
               - type : specific
                 policytype : deny_tcp
@@ -1118,3 +1120,275 @@ vpc:
                     sporthigh: 40
                     dportlow: 20
                     dporthigh: 40
+
+              - type : specific
+                policytype : dup_rule
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    priority: 10
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 10
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 10
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 10
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 10
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+              - type : specific
+                policytype : dup_rule
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    priority: 10
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 10
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 10
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 10
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 10
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+              - type : specific
+                policytype : dup_rule_diff_act
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    priority: 10
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 10
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 10
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 10
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 10
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+              - type : specific
+                policytype : dup_rule_diff_act
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    priority: 10
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 10
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 10
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 10
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 10
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+              - type : specific
+                policytype : dup_rule_diff_prio_act
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    priority: 5
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 1
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 10
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 2
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 3
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+              - type : specific
+                policytype : dup_rule_diff_prio_act
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    priority: 99
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 3
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 1023
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 1
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 55
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+              - type : specific
+                policytype : dup_rule_diff_prio
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    priority: 5
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 1
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 10
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 2
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 3
+                    action  : allow
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+              - type : specific
+                policytype : dup_rule_diff_prio
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    priority: 99
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 3
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 1023
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 1
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 55
+                    action  : deny
+                    v4pfx: '10.10.10.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'

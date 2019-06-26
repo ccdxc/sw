@@ -1,14 +1,14 @@
-# RFC Test Spec for egress cases
+# RFC Test Spec for egress case of scenario2-Internet out floating ip traffic
 selectors:
     root: ref://store/templates/id=POLICY
-    maxlimits: 2
+    maxlimits: 5
     policy: filter://Direction=egress
 
 packets:
     - packet:
         id          : FROM_HOST_PKT # Input packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=UDP
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -36,6 +36,11 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
+        id          : EXP_PKT # Expected packet
+        clone       : ref://testcase/packets/id=FROM_HOST_PKT
+        # TODO: Add P4 header
+
+    - packet:
         id          : TO_SWITCH_PKT # Expected packet
         clone       : ref://testcase/packets/id=FROM_HOST_PKT
         headers     :
@@ -60,5 +65,6 @@ trigger:
 expect:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=TO_SWITCH_PKT
+            #object  : ref://testcase/packets/id=TO_SWITCH_PKT
+            object  : callback://networking/packets/GetExpectedPacket/ipktid=FROM_HOST_PKT
             port    : ref://testcase/config/switchport

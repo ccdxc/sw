@@ -10,12 +10,36 @@ feature:
 modules:
     - module:
         name    : IPV4_EGRESS_EMTPY_POLICY
-        spec    : rfc_egress_negative.testspec
+        spec    : rfc_egress.testspec
         iterate :
             - policy : filter://AddrFamily=IPV4,PolicyType=empty
 
     - module:
         name    : IPV4_EGRESS_DENY_TCP_POLICY
-        spec    : rfc_egress_negative.testspec
+        spec    : rfc_egress.testspec
         iterate :
             - policy : filter://AddrFamily=IPV4,PolicyType=deny_tcp
+
+    - module:
+        name    : IPV4_EGRESS_DUP_RULE
+        spec    : rfc_egress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=dup_rule
+
+    - module:
+        name    : IPV4_EGRESS_DUP_RULE_DIFF_PRIO
+        spec    : rfc_egress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=dup_rule_diff_prio
+
+    - module:
+        name    : IPV4_EGRESS_DUP_RULE_DIFF_ACTION
+        spec    : rfc_egress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=dup_rule_diff_act
+
+    - module:
+        name    : IPV4_EGRESS_DUP_RULE_DIFF_PRIO_ACT
+        spec    : rfc_egress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=dup_rule_diff_prio_act
