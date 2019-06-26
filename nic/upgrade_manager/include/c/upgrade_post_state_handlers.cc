@@ -137,9 +137,9 @@ bool UpgPostStateHandler::PostSaveStateHandler(UpgCtx &ctx) {
             i++;
         } while ((i<=10) && (!exists("/update/upgrade_halt_state_machine")));
         if (exists("/update/upgrade_halt_state_machine")) {
-            UPG_LOG_DEBUG("File /update/upgrade_halt_state_machine got created. Switching root now.");  
+            UPG_OBFL_TRACE("File /update/upgrade_halt_state_machine got created. Switching root now.");  
         } else {
-            UPG_LOG_DEBUG("File /update/upgrade_halt_state_machine did not get created.");  
+            UPG_OBFL_TRACE("File /update/upgrade_halt_state_machine did not get created.");  
             return false;
         }
         UPG_LOG_DEBUG("File created");
