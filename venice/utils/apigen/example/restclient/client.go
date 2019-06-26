@@ -13,6 +13,10 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/authn/testutils"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/bookstore"
@@ -24,6 +28,140 @@ import (
 type respOrder struct {
 	V   bookstore.Order
 	Err error
+}
+
+func testAppSGPolLoop(instance string, count int) {
+	restcl, err := apiclient.NewRestAPIClient(instance)
+	if err != nil {
+		log.Fatalf("cannot create REST client")
+	}
+	defer restcl.Close()
+	userCred := &auth.PasswordCredential{
+		Username: "test",
+		Password: "Pensando0$",
+		Tenant:   globals.DefaultTenant,
+	}
+	ctx, err := testutils.NewLoggedInContext(context.Background(), instance, userCred)
+	if err != nil {
+		fmt.Printf("could not login (%s)", err)
+		return
+	}
+
+	// Create initial objects
+	app1 := security.App{
+		TypeMeta: api.TypeMeta{
+			Kind: "App",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "testapp1",
+			Tenant: globals.DefaultTenant,
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{Protocol: "tcp", Ports: "2110"},
+			},
+		},
+	}
+	app2 := security.App{
+		TypeMeta: api.TypeMeta{
+			Kind: "App",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "testapp2",
+			Tenant: globals.DefaultTenant,
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{Protocol: "tcp", Ports: "2111"},
+			},
+		},
+	}
+	app3 := security.App{
+		TypeMeta: api.TypeMeta{
+			Kind: "App",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "testapp3",
+			Tenant: globals.DefaultTenant,
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{Protocol: "tcp", Ports: "2112"},
+			},
+		},
+	}
+
+	sgpol := security.SGPolicy{
+		TypeMeta: api.TypeMeta{
+			Kind: "SGPolicy",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "testpol1",
+			Tenant: globals.DefaultTenant,
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+
+			Rules: []security.SGRule{
+				{
+					Action:          "PERMIT",
+					FromIPAddresses: []string{"0.0.0.0"},
+					ToIPAddresses:   []string{"0.0.0.0"},
+					Apps:            []string{"testapp1", "testapp2", "testapp3"},
+				},
+			},
+		},
+	}
+	restcl.SecurityV1().App().Delete(ctx, &app1.ObjectMeta)
+	restcl.SecurityV1().App().Delete(ctx, &app2.ObjectMeta)
+	restcl.SecurityV1().App().Delete(ctx, &app3.ObjectMeta)
+
+	restcl.SecurityV1().SGPolicy().Delete(ctx, &sgpol.ObjectMeta)
+
+	// Enter loop
+	for i := 0; i < count; i++ {
+		_, err = restcl.SecurityV1().App().Create(ctx, &app1)
+		if err != nil {
+			fmt.Printf("failed to create App1 [%d] (%s)\n", i, err)
+			return
+		}
+		_, err = restcl.SecurityV1().App().Create(ctx, &app2)
+		if err != nil {
+			fmt.Printf("failed to create App2 [%d] (%s)\n", i, err)
+			return
+		}
+		_, err = restcl.SecurityV1().App().Create(ctx, &app3)
+		if err != nil {
+			fmt.Printf("failed to create App3 [%d] (%s)\n", i, err)
+			return
+		}
+		_, err = restcl.SecurityV1().SGPolicy().Create(ctx, &sgpol)
+		if err != nil {
+			fmt.Printf("failed to create SGPol [%d] (%s)\n", i, err)
+			return
+		}
+		_, err = restcl.SecurityV1().SGPolicy().Delete(ctx, &sgpol.ObjectMeta)
+		if err != nil {
+			fmt.Printf("failed to Delete SGPol [%d] (%s)\n", i, err)
+			return
+		}
+		_, err = restcl.SecurityV1().App().Delete(ctx, &app1.ObjectMeta)
+		if err != nil {
+			fmt.Printf("failed to Delete App1 [%d] (%s)\n", i, err)
+			return
+		}
+		_, err = restcl.SecurityV1().App().Delete(ctx, &app2.ObjectMeta)
+		if err != nil {
+			fmt.Printf("failed to Delete App2 [%d] (%s)\n", i, err)
+			return
+		}
+		_, err = restcl.SecurityV1().App().Delete(ctx, &app3.ObjectMeta)
+		if err != nil {
+			fmt.Printf("failed to Delete App3 [%d] (%s)\n", i, err)
+			return
+		}
+	}
+	fmt.Printf("completed %d iterations\n", count)
 }
 
 func validateObject(expected, result interface{}) bool {
@@ -201,10 +339,12 @@ func testStagingFn(instance string) {
 }
 func main() {
 	var (
-		instance    = flag.String("gwaddr", "localhost:443", "API gateway to connect to")
+		instance    = flag.String("gwaddr", "localhost:19000", "API gateway to connect to")
 		testStaging = flag.Bool("staging", false, "Use Api server staging")
 		testScaleSg = flag.Bool("scaleSg", false, "test scaled SG policy post")
 		testWebSock = flag.Bool("ws", false, "test websocket watch")
+		testCD      = flag.Bool("tl", false, "test Create delete loop")
+		tcount      = flag.Int("count", 100, "iteration count")
 	)
 	flag.Parse()
 
@@ -212,6 +352,12 @@ func main() {
 		testStagingFn(*instance)
 		return
 	}
+
+	if *testCD {
+		testAppSGPolLoop(*instance, *tcount)
+		return
+	}
+
 	ctx := context.Background()
 	restcl, err := apiclient.NewRestAPIClient(*instance)
 	if err != nil {

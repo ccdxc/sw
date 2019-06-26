@@ -1291,6 +1291,11 @@ retryLoop:
 					log.Infof("[%v]Retrying failed transaction - retry %d (%s)", c.id, retries, err)
 					continue retryLoop
 				}
+				if kvstore.IsTxnFailedError(err) && c.ephemeral {
+					// This is a ephemeral overlay for a non-staged operation from user. Retry of txn failed.
+					log.Infof("[%v]Retrying failed transaction - retry %d (%s)", c.id, retries, err)
+					continue retryLoop
+				}
 				log.Errorf("[%v]error on Txn.Commit (%s)", c.id, err)
 				return resp, errors.Wrap(err, "Commit to backend failed")
 			}

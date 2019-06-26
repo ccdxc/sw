@@ -55,6 +55,8 @@ func TestOverlayCRD(t *testing.T) {
 	if err == nil {
 		t.Fatalf("could add duplicate overlay")
 	}
+	ovs := GetOverlays()
+	Assert(t, len(ovs) == 2, "number of overlays did not match, expecting 2 got (%d)", len(ovs))
 	// Delete
 	err = DelOverlay("tenant1", "dummy")
 	Assert(t, err != nil, "could delete non-existent overlay")
@@ -70,6 +72,15 @@ func TestOverlayCRD(t *testing.T) {
 
 	Assert(t, len(overlaysSingleton.ovMap) == 0,
 		"number of overlays do not match, expecting 0 got %d", len(overlaysSingleton.ovMap))
+
+	r3, err := NewLocalOverlay("tenant1", "new3", "/base/", c, mocks.NewFakeServer())
+	x3 := r3.(*overlay)
+	Assert(t, x3.ephemeral == true, "Epehemerl flag was not set")
+	SetOverlay("tenant1", "new3", r3)
+	x3 = r3.(*overlay)
+	Assert(t, x3.ephemeral == true, "Epehemerl flag was not set")
+	err = DelOverlay("tenant1", "new3")
+	AssertOk(t, err, "could not delete overlay")
 }
 
 func TestOverlayCreate(t *testing.T) {
@@ -1028,11 +1039,22 @@ func TestCommit(t *testing.T) {
 		}
 		return errors.New("Not Found")
 	}
-
+	var retErr []error
+	var errCount int
 	commitFn := func(ctx context.Context) (kvstore.TxnResponse, error) {
 		resp := kvstore.TxnResponse{}
 		resp.Succeeded = true
-		return resp, nil
+		if len(retErr) == 0 {
+			return resp, nil
+		}
+		err := retErr[errCount%len(retErr)]
+		if err != nil {
+			kerr := err.(*kvstore.KVError)
+			fmt.Printf("*** returning error [%v] [%+v]\n", kerr.Code, kerr)
+		}
+
+		errCount++
+		return resp, err
 	}
 
 	getfn := func(key string) (runtime.Object, error) {
@@ -1075,8 +1097,16 @@ func TestCommit(t *testing.T) {
 	// Verify Commit should pass
 	err = ov.Commit(ctx, nil)
 	AssertOk(t, err, "expecting Commit to pass")
+	Assert(t, len(txn.Ops) == 5, "expecgting 4 operations in the transaction got %v", len(txn.Ops))
+
+	// commit should pass with retry
+	ov.ephemeral = true
+	retErr = append(retErr, &kvstore.KVError{Code: kvstore.ErrCodeTxnFailed})
+	retErr = append(retErr, nil)
+	err = ov.Commit(ctx, nil)
+	AssertOk(t, err, "expecting Commit to pass")
+
 	Assert(t, len(ov.overlay) == 0, "expecting overlay to be cleaned up after commit")
-	Assert(t, len(txn.Ops) == 5, "expecgting 4 operations in the transaction")
 	// Verify all 4 objects are present in the transaction
 	baseKey := "/base/tenant/tenant1/buffer/testGet"
 	keyMap := map[string]bool{key1: false, key2: false, baseKey + key1: false, baseKey + key2: false, key3: false}
