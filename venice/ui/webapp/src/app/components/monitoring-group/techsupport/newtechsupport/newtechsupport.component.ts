@@ -136,6 +136,7 @@ export class NewtechsupportComponent extends BaseComponent implements OnInit, Af
         this.nodeEventUtility.processEvents(response);
         this.populateNodes();
       },
+      this._controllerService.webSocketErrorHandler('Failed to get Nodes')
     );
     this.subscriptions.push(subscription);
   }

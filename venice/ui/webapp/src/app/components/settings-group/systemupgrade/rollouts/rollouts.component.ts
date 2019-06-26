@@ -98,7 +98,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
         this.setDefaultToolbar();
         this.splitRollouts();
       },
-      this.controllerService.restErrorHandler('Failed to get Rollouts info')
+      this.controllerService.webSocketErrorHandler('Failed to get Rollouts info')
     );
     this.subscriptions.push(subscription);
   }

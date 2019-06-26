@@ -71,7 +71,7 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
           callback: () => { this.editChart(''); }
         },
       ],
-      breadcrumb: [{ label: 'Telemetry', url: Utility.getBaseUIUrl() + 'monitoring/telemetry' }]
+      breadcrumb: [{ label: 'Metrics', url: Utility.getBaseUIUrl() + 'monitoring/metrics' }]
     });
   }
 

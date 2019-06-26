@@ -281,6 +281,9 @@ export class UIConfigsService {
     const authBody = JSON.parse(sessionStorage.getItem(AUTH_BODY));
     if (authBody != null && authBody.status != null && authBody.status['access-review'] != null) {
       this.userPermissions = authBody.status['access-review'];
+    } else {
+      // remove all permissions
+      this.userPermissions = [];
     }
   }
 

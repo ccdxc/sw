@@ -116,6 +116,7 @@ export class SecurityappsComponent extends BaseComponent implements OnInit, OnDe
           this.selectedSecurityApp = matchedSecurityApp; // matchedSecurityApp could be null. It means the UI selected one is deleted in server.
         }
       },
+      this._controllerService.webSocketErrorHandler('Failed to get Apps')
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }

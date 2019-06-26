@@ -177,6 +177,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
           this.version = this.versionArray[0];
         }
       },
+      this._controllerService.webSocketErrorHandler('Failed to get Cluster Version'),
     );
     this.subscriptions.push(subscription);
   }
@@ -450,6 +451,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
         }
         this.alertNumbers = this.alerts.length;
       },
+      this._controllerService.webSocketErrorHandler('Failed to get Alerts'),
     );
     this.subscriptions.push(this.alertSubscription);
   }

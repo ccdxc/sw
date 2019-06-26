@@ -242,6 +242,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
           this.macAddrToName[smartnic.meta.name] = smartnic.spec.id;
         }
       },
+      this.controllerService.webSocketErrorHandler('Failed to get Naples')
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }
@@ -302,6 +303,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
           }
         }
       },
+      this.controllerService.webSocketErrorHandler('Failed to get SG Policies')
     );
     this.subscriptions.push(subscription);
   }

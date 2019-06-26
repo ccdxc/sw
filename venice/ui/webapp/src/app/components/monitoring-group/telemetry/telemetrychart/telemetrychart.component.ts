@@ -272,6 +272,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
         this.nodeEventUtility.processEvents(response);
         this.labelMap['Node'] = Utility.getLabels(this.nodes as any[]);
       },
+      this.controllerService.webSocketErrorHandler('Failed to get labels')
     );
     this.subscriptions.push(subscription);
   }
@@ -293,6 +294,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
           }
         }
       },
+      this.controllerService.webSocketErrorHandler('Failed to get labels')
     );
     this.subscriptions.push(subscription);
   }

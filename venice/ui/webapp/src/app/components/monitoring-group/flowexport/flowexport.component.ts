@@ -48,6 +48,7 @@ export class FlowexportComponent extends BaseComponent implements OnInit {
       (response) => {
         this.flowExportPoliciesEventUtility.processEvents(response);
       },
+      this.controllerService.webSocketErrorHandler('Failed to get Policies')
     );
     this.subscriptions.push(subscription);
   }

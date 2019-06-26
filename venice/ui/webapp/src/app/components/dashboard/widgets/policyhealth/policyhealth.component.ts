@@ -25,7 +25,7 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
   hasHover: boolean = false;
   cardStates = CardStates;
 
-  title: string = 'Security Policies';
+  title: string = 'Active Flows';
   firstStat: Stat = {
     value: '90%',
     description: 'ACTIVE FLOWS',

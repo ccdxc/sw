@@ -199,6 +199,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit, OnDest
           this.selectedObj = null;
         }
       },
+      this._controllerService.webSocketErrorHandler('Failed to get Node'),
     );
     this.subscriptions.push(subscription);
   }

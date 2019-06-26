@@ -136,32 +136,8 @@ export class GenServiceUtility {
       if (this.urlWsMap[url] == null) {
         url = url.replace('http://', 'ws://');
         url = url.replace('https://', 'wss://');
-        let output: Subject<any>;
         const observer = new WebSocketSubject({
           url: url,
-          openObserver: {
-            next: (v) => {
-              // when the socket connection opens, we save the
-              // variable that subscribers will be listening too
-              // _output is an internal variable, but is the only way to get the subscriber state.
-              // tslint:disable-next-line
-              output = observer._output;
-            }
-          },
-          closeObserver: {
-            next: (closeEvent) => {
-              // 1. Socket returned 400 error before connection was promoted.
-              //    output will be null since openObserer did not run
-              // 2. Socket was open and then closed. We check that this closed
-              //    wasn't caused by the UI unsubscribing from the socket by
-              //    checking if there are listeners on the output observable
-              // If output is null, then closeObserver was fired before openObserver was ever called, so we can safely not display an error message
-              if (output != null && output.observers.length > 0) {
-                Utility.getInstance().getControllerService().webSocketErrorToaster(url, closeEvent);
-                output = null;
-              }
-            }
-          }
         });
 
         this.urlWsMap[url] = observer;

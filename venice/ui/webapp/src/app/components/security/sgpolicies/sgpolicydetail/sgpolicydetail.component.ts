@@ -473,7 +473,6 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     this.subscriptions.push(getSubscription);
     this.sgPoliciesEventUtility = new HttpEventUtility<SecuritySGPolicy>(SecuritySGPolicy);
     this.sgPolicies = this.sgPoliciesEventUtility.array;
-    // const subscription = this.securityService.WatchSGPolicy({ 'field-selector': 'meta.name=' + this.selectedPolicyId}).subscribe(
     const subscription = this.securityService.WatchSGPolicy({ 'field-selector': 'meta.name=' + this.selectedPolicyId }).subscribe(
       response => {
         if (this.searchSubscription != null) { this.searchSubscription.unsubscribe(); }  // avoid racing condition for searchSubscription and WatchSGPolicy
@@ -508,6 +507,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
           this.sgPolicyRules = [];
         }
       },
+      this._controllerService.webSocketErrorHandler('Failed to get SG Policy')
     );
     this.subscriptions.push(subscription);
   }

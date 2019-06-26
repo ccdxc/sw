@@ -69,7 +69,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
           rowData['processedSmartNics'] = this.processSmartNics(rowData);
         });
       },
-      this.controllerService.restErrorHandler('Failed to get Hosts info')
+      this.controllerService.webSocketErrorHandler('Failed to get Hosts info')
     );
     this.subscriptions.push(subscription);
   }
@@ -90,7 +90,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
           }
         }
       },
-      this.controllerService.restErrorHandler('Failed to get NAPLES info')
+      this.controllerService.webSocketErrorHandler('Failed to get NAPLES info')
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }

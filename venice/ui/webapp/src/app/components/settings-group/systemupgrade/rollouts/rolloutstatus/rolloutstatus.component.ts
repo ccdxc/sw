@@ -158,6 +158,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
       response => {
         this.naplesEventUtility.processEvents(response);
       },
+      this._controllerService.webSocketErrorHandler('Failed to get Naples')
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }
@@ -171,7 +172,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
         this._controllerService.invokeSuccessToaster('Success', 'Rollout ' + this.selectedRollout.meta.name + ' was suspended!');
         // TODO:  What should UI do when rollout is suspeced.
       },
-      this._controllerService.restErrorHandler('')
+      this._controllerService.restErrorHandler('Failed to suspend rollout')
     );
     this.subscriptions.push(sub);
   }
@@ -233,6 +234,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
           this.selectedRollout = null;
         }
       },
+      this._controllerService.webSocketErrorHandler('Failed to get Rollout')
     );
     this.subscriptions.push(subscription);
   }

@@ -231,6 +231,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
       (response) => {
         this.workloadEventUtility.processEvents(response);
       },
+      this._controllerService.webSocketErrorHandler('Failed to get Workloads')
     );
     this.subscriptions.push(subscription);
   }

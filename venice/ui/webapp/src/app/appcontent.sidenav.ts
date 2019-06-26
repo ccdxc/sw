@@ -134,7 +134,7 @@ export const sideNavMenu: SideNavItem[] = [
             UIRolePermissions.adminrole,
           ]
         },
-        link: ['/monitoring', 'telemetry']
+        link: ['/monitoring', 'metrics']
       },
       {
         label: 'Audit Events',

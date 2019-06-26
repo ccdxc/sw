@@ -409,6 +409,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
   calculateNaplesStatus() {
     let rejected = 0; let admitted = 0; let pending = 0;
     this.healthyNaplesCount = 0;
+    this.unknownNaplesCount = 0;
     this.naples.forEach((naple) => {
       if (Utility.isNaplesNICHealthy(naple)) {
         this.healthyNaplesCount += 1;
@@ -432,12 +433,16 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
     this.thirdStat.value = rejected.toString();
     this.fourthStat.value = pending.toString();
     if (this.naples.length !== 0) {
-      // Using floor instead of round so that even if
-      // it is 99.5% healthy, we show 1% error
-      // to alert the user
-      this.healthyPercent = (this.healthyNaplesCount / this.naples.length) * 100;
+      const unhealthyCount = this.naples.length - this.healthyNaplesCount - this.unknownNaplesCount;
+
+      this.unhealthyPercent = (unhealthyCount / this.naples.length) * 100;
+      this.unhealthyPercent = Math.round(this.unhealthyPercent * 100) / 100;
+
       this.unknownPercent = (this.unknownNaplesCount / this.naples.length) * 100;
-      this.unhealthyPercent = 100 - this.healthyPercent - this.unknownPercent;
+      this.unknownPercent = Math.round(this.unknownPercent * 100) / 100;
+
+      // Calculate healthy last so any rounding error will lower the health percent
+      this.healthyPercent = Math.round(100 - this.unhealthyPercent - this.unknownPercent);
       this.generatePieChartText();
       this.generateDoughnut();
     } else {

@@ -116,6 +116,7 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
       (response) => {
         this.fwlogPoliciesEventUtility.processEvents(response);
       },
+      this.controllerService.webSocketErrorHandler('Failed to get Policies')
     );
     this.subscriptions.push(subscription);
   }

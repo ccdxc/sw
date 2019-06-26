@@ -53,7 +53,7 @@ const routes: Routes = [
     ]
   },
   {
-    path: 'telemetry',
+    path: 'metrics',
     children: [
       {
         path: '',

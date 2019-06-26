@@ -117,6 +117,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
           this.cluster = this.clusterArray[0];
         }
       },
+      this._controllerService.webSocketErrorHandler('Failed to get Cluster'),
     );
     this.subscriptions.push(subscription);
   }
@@ -128,6 +129,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
       response => {
         this.nodeEventUtility.processEvents(response);
       },
+      this._controllerService.webSocketErrorHandler('Failed to get Nodes'),
     );
     this.subscriptions.push(subscription);
   }

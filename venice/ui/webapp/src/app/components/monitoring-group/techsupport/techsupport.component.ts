@@ -96,6 +96,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
       response => {
         this.techsupportrequestsEventUtility.processEvents(response);
       },
+      this.controllerService.webSocketErrorHandler('Failed to get Tech Support Requests')
     );
     this.subscriptions.push(sub);
   }

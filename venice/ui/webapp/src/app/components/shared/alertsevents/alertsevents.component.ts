@@ -308,6 +308,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
         });
         this.filterAlerts();
       },
+      this._controllerService.webSocketErrorHandler('Failed to get Alert')
     );
     this.subscriptions.push(this.alertSubscription);
   }

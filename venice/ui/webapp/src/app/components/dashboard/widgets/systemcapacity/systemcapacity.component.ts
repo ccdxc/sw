@@ -263,6 +263,7 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
       response => {
         this.nodeEventUtility.processEvents(response);
       },
+      this.controllerService.webSocketErrorHandler('Failed to get Node')
     );
     this.subscriptions.push(subscription);
   }
