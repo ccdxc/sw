@@ -107,7 +107,8 @@
       <div fxLayout="row" class="rolloutstatus-summary-panel-content-row">
         <div fxFlex="50" fxLayout="row">
           <div class="rolloutstatus-summary-panel-content-label">Completed Percentage:</div>
-          <p-progressBar [value]="selectedRollout?.spec['completion-percent']"></p-progressBar>
+          <p-progressBar fxFlex="50" [value]="selectedRollout?.status['completion-percent']">
+          </p-progressBar>
         </div>
       </div>
     </div>

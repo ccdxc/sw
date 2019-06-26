@@ -84,7 +84,8 @@
 
 <ng-template #actionTemplatePast let-rowData>
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <mat-icon matTooltip="Delete rollout" class="global-table-action-icon"
+    <mat-icon *ngIf="isDeletable(rowData)" matTooltip="Delete rollout"
+              class="global-table-action-icon"
               (click)="onDeleteRecord($event, rowData)">
       delete
     </mat-icon>

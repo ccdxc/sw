@@ -230,4 +230,11 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
     return (this.creatingMode);
   }
 
+  isDeletable(data): boolean {
+    if (data.status.state !== RolloutRolloutStatus_state.SUSPEND_IN_PROGRESS) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 }
