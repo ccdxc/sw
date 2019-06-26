@@ -255,7 +255,7 @@ ionic_stop(struct lif *lif)
 		status = ionic_qcq_disable(lif->txqcqs[i]);
 		if (status != VMK_OK) {
                         ionic_en_err("ionic_qcq_disable() failed, status: %s",
-                                     vmk_StatusToString(status));
+                                  vmk_StatusToString(status));
                         /* In the failure case, we still keep disabling
                            the next qcq element and record the status */
                         status1 = status;
@@ -264,7 +264,7 @@ ionic_stop(struct lif *lif)
                 shared_q_data_idx =  max_rx_normal_queues +
                                      max_rx_rss_queues + i;
                 ionic_en_dbg("DEINIT txq, ring_idx: %d, "
-                             "shared_q_idx: %d",
+                          "shared_q_idx: %d",
                            i, shared_q_data_idx);
 
                 ionic_en_tx_ring_deinit(i,
@@ -273,10 +273,9 @@ ionic_stop(struct lif *lif)
 
         for (i = 0; i < lif->nrxqcqs; i++) {
                 ionic_rx_flush(&lif->rxqcqs[i]->cq);
-                ionic_rx_empty(&lif->rxqcqs[i]->q);
                 if (i < max_rx_normal_queues) {
                         ionic_en_dbg("DEINIT normal rxq, ring_idx: %d, "
-                                     "shared_q_idx: %d", i, i);
+                                  "shared_q_idx: %d", i, i);
                         ionic_en_rx_ring_deinit(i,
                                                 priv_data);
                 }
@@ -1490,6 +1489,7 @@ static void ionic_qcqs_free(struct lif *lif)
 
 	for (i = 0; i < lif->nrxqcqs; i++) {
                 //TODO: WE NEED TO FREE ESXi packet list in ionic_rx_empty()
+                ionic_rx_empty(&lif->rxqcqs[i]->q);
 		ionic_qcq_free(lif, lif->rxqcqs[i]);
 	}
 	for (i = 0; i < lif->ntxqcqs; i++)
