@@ -2,7 +2,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET = libftlite.so
 ifeq ($(PLATFORM),hw)
-MODULE_FLAGS  = -O3 -DUSE_ARM64_SIMD
+MODULE_FLAGS  = -O3 -DUSE_ARM64_SIMD -Wno-array-bounds
 else
 MODULE_FLAGS  = -O0
 endif

@@ -30,21 +30,21 @@ namespace internal {
 #ifdef USE_ARM64_SIMD
 #include <arm_neon.h>
 inline __attribute__((always_inline))
-void swap8bytes(uint8_t *bs, uint8_t s, uint8_t e) {
-    auto a = vld1_u8(bs + s);
-    auto b = vld1_u8(bs + e);
+void swap8bytes(uint8_t* bs1, uint8_t* bs2) {
+    auto a = vld1_u8(bs1);
+    auto b = vld1_u8(bs2);
     a = vrev64_u8(a);
     b = vrev64_u8(b);
-    vst1_u8(bs+s, b);
-    vst1_u8(bs+e, a);
+    vst1_u8(bs1, b);
+    vst1_u8(bs2, a);
 }
 #else
 inline __attribute__((always_inline))
-void swap8bytes(uint8_t *bs, uint8_t s, uint8_t e) {
+void swap8bytes(uint8_t* bs1, uint8_t* bs2) {
     for (auto i = 0; i < 8; i++) {
-        auto b = bs[s+i];
-        bs[s+i] = bs[e+i];
-        bs[e+i] = b;
+        auto b = bs1[i];
+        bs1[i] = bs2[i];
+        bs2[i] = b;
     }
 }
 #endif

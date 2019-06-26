@@ -51,11 +51,11 @@ public:
     }
 
     void swizzle() {
-        auto bs = (uint8_t*)this;
-        ftlite::internal::swap8bytes(bs, 0, 56);
-        ftlite::internal::swap8bytes(bs, 8, 48);
-        ftlite::internal::swap8bytes(bs, 16, 40);
-        ftlite::internal::swap8bytes(bs, 24, 32);
+        uint8_t* bs = (uint8_t*)this;
+        ftlite::internal::swap8bytes(bs, bs+56);
+        ftlite::internal::swap8bytes(bs+8, bs+48);
+        ftlite::internal::swap8bytes(bs+16, bs+40);
+        ftlite::internal::swap8bytes(bs+24, bs+32);
     }
 
     void tostr(char *buff, uint32_t len) {

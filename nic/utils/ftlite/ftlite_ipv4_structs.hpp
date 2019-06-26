@@ -46,9 +46,9 @@ public:
     }
 
     void swizzle() {
-        auto entry = (uint8_t*)this;
-        ftlite::internal::swap8bytes(entry, 0, 24);
-        ftlite::internal::swap8bytes(entry, 8, 16);
+        uint8_t* bs = (uint8_t*)this;
+        ftlite::internal::swap8bytes(bs, bs+24);
+        ftlite::internal::swap8bytes(bs+8, bs+16);
     }
 
     void tostr(char *buff, uint32_t len) {
