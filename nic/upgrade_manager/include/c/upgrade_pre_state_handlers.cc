@@ -28,6 +28,10 @@ bool UpgPreStateHandler::ImageCompatCheck(UpgCtx &ctx) {
     if ((ctx.preUpgMeta.nicmgrVersion != ctx.postUpgMeta.nicmgrVersion) ||
         (ctx.preUpgMeta.kernelVersion != ctx.postUpgMeta.kernelVersion) ||
         (ctx.preUpgMeta.pcieVersion != ctx.postUpgMeta.pcieVersion)) {
+        ctx.compatCheckFailureReason = string("Component versions (from/to): ") + \
+                               "nicmgr - (" + (ctx.preUpgMeta.nicmgrVersion) + "/" + (ctx.postUpgMeta.nicmgrVersion) + "), " + \
+                               "kernel- (" + (ctx.preUpgMeta.kernelVersion) + "/" + (ctx.postUpgMeta.kernelVersion) + "), " + \
+                               "pciemgr - (" + (ctx.preUpgMeta.pcieVersion) + "/" + (ctx.postUpgMeta.pcieVersion) + ")";
         UPG_LOG_INFO("compat pre nicmgr: {}", ctx.preUpgMeta.nicmgrVersion);
         UPG_LOG_INFO("compat pre kernel: {}", ctx.preUpgMeta.kernelVersion);
         UPG_LOG_INFO("compat pre pcie: {}", ctx.preUpgMeta.pcieVersion);

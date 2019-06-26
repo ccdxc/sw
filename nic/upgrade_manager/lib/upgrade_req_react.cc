@@ -325,7 +325,7 @@ delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
                 UPG_LOG_DEBUG("pre-state handler function returned false");
                 type = UpgStateFailed;
                 SetAppRespFail();
-                AppendAppRespFailStr("Compat Check Failed");
+                AppendAppRespFailStr("Compat Check Failed. Metadata version mismatch: " + ctx.compatCheckFailureReason);
                 upgMgrResp_->UpgradeFinish(UpgRespFail, appRespFailStrList_);
                 ResetAppResp();
                 upgPassed_ = false;

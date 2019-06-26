@@ -76,7 +76,7 @@ def Verify(tc):
                 if not item['opstatus'] == 'failure':
                     print("opstatus is bad")
                     return api.types.status.FAILURE
-                if not item['Message'] == "Compat Check Failed":
+                if "Compat Check Failed. Metadata version mismatch: Component versions" not in item['Message']:
                     print("message is bad")
                     return api.types.status.FAILURE
             return api.types.status.SUCCESS
