@@ -16,19 +16,19 @@ struct phv_             p;
 session_aging:
 
     // If session entry is not valid just skip the entry and exit the program.
-    bbne    d.session_aging_d.entry_valid, TRUE, exit
+    bbne        d.session_aging_d.entry_valid, TRUE, exit
 
     // If the session timeout did not exceed the timeout, skip the entry and
     // exit the program
-    sub     r1, r4, d.session_aging_d.timestamp  //BD slot
-    addui   r2, r0, TIMEOUT_IN_CYCLES_U 
-    addi    r2, r2, TIMEOUT_IN_CYCLES_L
-    blt    r1, r2, exit
+    sub         r1, r4, d.session_aging_d.timestamp  //BD slot
+    addui       r2, r0, TIMEOUT_IN_CYCLES_U
+    addi        r2, r2, TIMEOUT_IN_CYCLES_L
+    blt         r1, r2, exit
     nop
     
     // If entry is valid and timecout exceeded, Construct packet to send to
     // P4+-assist
     nop
-exit:   
+exit:
     phvwr.e     p.capri_intr_drop, 1
     nop

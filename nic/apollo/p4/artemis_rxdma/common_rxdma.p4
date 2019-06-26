@@ -1191,21 +1191,21 @@ parser start {
 
 control ingress {
     if (p4_to_rxdma.cps_path_en == 1) {
-        if (p4_to_rxdma.lpm1_enable == TRUE) {
-            rxlpm1();
-        }
-        // This bit is indication of first pass - change name
         if (p4_to_rxdma.vnic_info_en == TRUE) {
             vnic_info_rxdma();
             nat_rxdma();
         }
+        if (p4_to_rxdma.lpm1_enable == TRUE) {
+            rxlpm1();
+        }
         if (p4_to_rxdma.lpm2_enable == TRUE) {
             rxlpm2();
         }
-        recirc();
-        pkt_enqueue();
         if (p4_to_rxdma.aging_enable == TRUE) {
             session_aging();
+        } else {
+            recirc();
+            pkt_enqueue();
         }
     } else {
         common_p4plus_stage0();
