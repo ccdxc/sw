@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	timeout            = time.Second * 5
+	timeout            = time.Second * 20
 	maxCallSendMsgSize = 35 * 1024 * 1024
 )
 
@@ -503,7 +503,7 @@ func (e *etcdStore) runLeaseLoop(ctx context.Context, key string, leaseCh <-chan
 
 // Lease takes a lease on a key with TTL and keeps it alive
 func (e *etcdStore) Lease(ctx context.Context, key string, obj runtime.Object, ttl uint64) (chan kvstore.LeaseEvent, error) {
-	timeout := time.Second * 10
+	timeout := time.Second * 20
 	tctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
