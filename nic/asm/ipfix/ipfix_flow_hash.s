@@ -39,9 +39,11 @@ ipfix_flow_hash_ipv4_entry:
     phvwr       p.ipfix_record_ipv4_ip_sa, d.flow_hash_info_d.flow_lkp_metadata_lkp_src
     phvwr       p.ipfix_record_ipv4_ip_da, d.flow_hash_info_d.flow_lkp_metadata_lkp_dst
     phvwr       p.ipfix_record_ipv4_proto, d.flow_hash_info_d.flow_lkp_metadata_lkp_proto
-    phvwr       p.ipfix_record_ipv4_sport, d.flow_hash_info_d.flow_lkp_metadata_lkp_sport
+    seq         c1, d.flow_hash_info_d.flow_lkp_metadata_lkp_proto, IP_PROTO_ICMP
+    phvwr.c1    p.ipfix_record_ip_icmp_type_code, d.flow_hash_info_d.flow_lkp_metadata_lkp_dport
+    phvwr.!c1   p.ipfix_record_ipv4_dport, d.flow_hash_info_d.flow_lkp_metadata_lkp_dport
     b           ipfix_flow_hash_common
-    phvwr       p.ipfix_record_ipv4_dport, d.flow_hash_info_d.flow_lkp_metadata_lkp_dport
+    phvwr       p.ipfix_record_ipv4_sport, d.flow_hash_info_d.flow_lkp_metadata_lkp_sport
 
 ipfix_flow_hash_ipv6_entry:
     phvwr       p.ipfix_record_ipv6_vrf, d.flow_hash_info_d.flow_lkp_metadata_lkp_vrf
@@ -49,7 +51,9 @@ ipfix_flow_hash_ipv6_entry:
     phvwr       p.ipfix_record_ipv6_ip_da, d.flow_hash_info_d.flow_lkp_metadata_lkp_dst
     phvwr       p.ipfix_record_ipv6_proto, d.flow_hash_info_d.flow_lkp_metadata_lkp_proto
     phvwr       p.ipfix_record_ipv6_sport, d.flow_hash_info_d.flow_lkp_metadata_lkp_sport
-    phvwr       p.ipfix_record_ipv6_dport, d.flow_hash_info_d.flow_lkp_metadata_lkp_dport
+    seq         c1, d.flow_hash_info_d.flow_lkp_metadata_lkp_proto, IP_PROTO_ICMPV6
+    phvwr.c1    p.ipfix_record_ip_icmp_type_code, d.flow_hash_info_d.flow_lkp_metadata_lkp_dport
+    phvwr.!c1   p.ipfix_record_ipv6_dport, d.flow_hash_info_d.flow_lkp_metadata_lkp_dport
 
 ipfix_flow_hash_common:
     phvwr       p.ipfix_record_common_flow_id, d.flow_hash_info_d.flow_index
