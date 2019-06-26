@@ -151,7 +151,8 @@ header_type session_info_hint_t {
         meter_idx        : 16;
         timestamp        : 48;  // No need to fill this but kept for easy copy/DMA
         drop             : 1;
-        __pad_to_512b    : 67;
+        entry_valid      : 1;
+        __pad_to_512b    : 66;
     }
 }
 

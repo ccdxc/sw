@@ -1,24 +1,24 @@
 header_type scratch_metadata_t {
     fields {
-        field8          : 8;
-        field10         : 10;
-        field16         : 16;
-        field32         : 32;
-        field40         : 40;
-        field64         : 64;
+        field8          :   8;
+        field10         :  10;
+        field16         :  16;
+        field32         :  32;
+        field40         :  40;
+        field64         :  64;
         field128        : 128;
-        qid             : 24;
-        dma_size        : 16;
-
-        flag            :  1;
-        pad0            :  7;
+        qid             :  24;
+        dma_size        :  16;
+        flag            :   1;
+        pad0            :   7;
         remote_ip       : 128;
-
-        entry_valid      :  1;
-        pad1             :  7;
-        iflow_tcp_state  :  4;
-        rflow_tcp_state  :  4;
+        pad1            :   2;
+        
         timestamp        : 48;
+        field4          :   4;
+        field12         :  12;
+        field20         :  20;
+
     }
 }
 

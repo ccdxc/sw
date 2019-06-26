@@ -6,7 +6,7 @@ action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
                     rflow_tcp_seq_num, rflow_tcp_ack_num, rflow_tcp_win_sz,
                     rflow_tcp_win_scale, tx_dst_ip, tx_dst_l4port, nexthop_idx,
                     tx_rewrite_flags, rx_rewrite_flags, tx_policer_idx,
-                    rx_policer_idx, meter_idx, timestamp, drop) {
+                    rx_policer_idx, meter_idx, timestamp, drop, entry_valid) {
     subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,
              offset_metadata.l2_1);
     if (p4e_i2e.session_index == 0) {
@@ -39,6 +39,7 @@ action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
         }
     }
 
+    modify_field(scratch_metadata.flag, entry_valid);
     modify_field(scratch_metadata.timestamp, timestamp);
     modify_field(rewrite_metadata.meter_idx, meter_idx);
     modify_field(rewrite_metadata.meter_len, capri_p4_intrinsic.packet_len);

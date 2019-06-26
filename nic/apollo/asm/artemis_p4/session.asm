@@ -20,8 +20,8 @@ session_info:
     // update timestamp (flush/unlock if packet is not TCP or dropped)
     seq             c1, k.tcp_valid, 0
     seq.!c1         c1, d.session_info_d.drop, 1
-    tblwr.c1.f      d.session_info_d.timestamp, r6
-    tblwr.!c1       d.session_info_d.timestamp, r6
+    tblwr.c1.f      d.session_info_d.timestamp, r4
+    tblwr.!c1       d.session_info_d.timestamp, r4
 
     seq             c1, k.tcp_valid, 1
     bcf             [!c1], session_info_common

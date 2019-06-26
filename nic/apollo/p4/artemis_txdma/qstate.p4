@@ -70,6 +70,9 @@ action read_pktdesc(remote_ip,
     modify_field(rx_to_tx_hdr.iptype, iptype);
     modify_field(rx_to_tx_hdr.pad0, pad0);
 
+    //Fill entry_valid to TRUE in session always
+    modify_field(session_info_hint.entry_valid, TRUE);
+    
     // Fill meter_idx into session info
     modify_field(session_info_hint.meter_idx, rx_to_tx_hdr.meter_result);
     // Tx: always rewrite dmac
