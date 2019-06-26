@@ -171,8 +171,8 @@ parser parse_egress_to_ingress {
 parser parse_txdma_to_ingress {
     set_metadata(parser_metadata.cps_blob_len, 0xFF);
     extract(capri_txdma_intrinsic);
-    return select(current(72, 4)) {
-        0 : parse_txdma_cps;
+    return select(capri_intrinsic.lif) {
+        ARTEMIS_SERVICE_LIF : parse_txdma_cps;
         default : parse_txdma_app;
     }
 }
