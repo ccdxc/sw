@@ -272,16 +272,7 @@ func testQueryingFwlogs() {
 			return ts.tu.GetContainerOnNode(ts.tu.NameToIPMap[node.GetName()], globals.Citadel)
 		}, 120, 1).ShouldNot(BeEmpty(), globals.Citadel, " container not running on ", ts.tu.NameToIPMap[node.GetName()])
 	}
-
-	Eventually(func() string {
-		out := strings.Split(ts.tu.LocalCommandOutput("kubectl get pods --no-headers"), "\n")
-		for _, line := range out {
-			if !strings.Contains(line, "Running") {
-				return line
-			}
-		}
-		return ""
-	}, 120, 1).Should(BeEmpty(), "All pods should be in Running state")
+	validateCluster() // reach consistent state and then look for logs
 
 	verifyLogs()
 }
@@ -318,16 +309,7 @@ var _ = Describe("telemetry tests", func() {
 					return ts.tu.GetContainerOnNode(ts.tu.NameToIPMap[nodeName], globals.Citadel)
 				}, 120, 1).ShouldNot(BeEmpty(), globals.Citadel, " container not running on ", ts.tu.NameToIPMap[nodeName])
 			}
-
-			Eventually(func() string {
-				out := strings.Split(ts.tu.LocalCommandOutput("kubectl get pods --no-headers"), "\n")
-				for _, line := range out {
-					if !strings.Contains(line, "Running") {
-						return line
-					}
-				}
-				return ""
-			}, 120, 1).Should(BeEmpty(), "All pods should be in Running state")
+			// validateCluster is called at BeforeEach()
 
 			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 			apiClient, err := apiclient.NewRestAPIClient(apiGwAddr)
