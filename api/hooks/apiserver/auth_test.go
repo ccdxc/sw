@@ -476,6 +476,86 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 	}
 }
 
+func TestValidateBindPassword(t *testing.T) {
+	tests := []struct {
+		name string
+		in   interface{}
+		err  error
+	}{
+		{
+			name: "missing bind password",
+			in: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Enabled: true,
+							Servers: []*auth.LdapServer{
+								{
+									Url: "localhost:389",
+									TLSOptions: &auth.TLSOptions{
+										StartTLS:                   true,
+										SkipServerCertVerification: true,
+									},
+								},
+							},
+
+							BaseDN:       "DC=pensando,DC=io",
+							BindDN:       "CN=admin,DC=pensando,DC=io",
+							BindPassword: "",
+							AttributeMapping: &auth.LdapAttributeMapping{
+								User:             "uid",
+								UserObjectClass:  "inetPersonOrg",
+								Group:            "memberOf",
+								GroupObjectClass: "group",
+							},
+						},
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			err: errors.New("bind password not defined"),
+		},
+		{
+			name: "no authenticator configs",
+			in: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "MissingAuthenticatorsAuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						AuthenticatorOrder: []string{},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			err: nil,
+		},
+		{
+			name: "invalid input object",
+			in: struct {
+				Test string
+			}{"testing"},
+			err: errInvalidInputType,
+		},
+	}
+	r := authHooks{}
+	logConfig := log.GetDefaultConfig("TestAuthHooks")
+	r.logger = log.GetNewLogger(logConfig)
+	for _, test := range tests {
+		_, _, err := r.validateBindPassword(context.Background(), nil, nil, "", apiintf.CreateOper, false, test.in)
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, got error [%v], expected [%v]", test.name, err, test.err))
+	}
+}
+
 func TestGenerateSecret(t *testing.T) {
 	tests := []struct {
 		name string

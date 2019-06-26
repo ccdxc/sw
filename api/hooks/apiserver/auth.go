@@ -301,6 +301,26 @@ func (s *authHooks) validateAuthenticatorConfig(i interface{}, ver string, ignSt
 	return ret
 }
 
+// validateBindPassword is a pre-commit hook that checks if bind password is non-empty when creating authentication policy with LDAP configuration
+func (s *authHooks) validateBindPassword(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	r, ok := i.(auth.AuthenticationPolicy)
+	if !ok {
+		return i, true, errInvalidInputType
+	}
+	authenticatorOrder := r.Spec.Authenticators.GetAuthenticatorOrder()
+	for _, authenticatorType := range authenticatorOrder {
+		switch authenticatorType {
+		case auth.Authenticators_LDAP.String():
+			config := r.Spec.Authenticators.GetLdap()
+			if config != nil && config.Enabled && config.BindPassword == "" {
+				return i, true, errors.New("bind password not defined")
+			}
+		default:
+		}
+	}
+	return i, true, nil
+}
+
 // generateSecret is a pre-commit hook to generate secret when authentication policy is created
 func (s *authHooks) generateSecret(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	s.logger.DebugLog("method", "generateSecret", "msg", "AuthHook called to generate JWT secret")
@@ -677,7 +697,7 @@ func registerAuthHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("User", apiintf.CreateOper).WithPreCommitHook(r.hashPassword).WithPreCommitHook(r.generateUserPref)
 	svc.GetCrudService("User", apiintf.UpdateOper).WithPreCommitHook(r.hashPassword)
 	svc.GetCrudService("User", apiintf.DeleteOper).WithPreCommitHook(r.deleteUserPref)
-	svc.GetCrudService("AuthenticationPolicy", apiintf.CreateOper).WithPreCommitHook(r.generateSecret).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
+	svc.GetCrudService("AuthenticationPolicy", apiintf.CreateOper).WithPreCommitHook(r.generateSecret).WithPreCommitHook(r.validateBindPassword).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
 	svc.GetCrudService("AuthenticationPolicy", apiintf.UpdateOper).WithPreCommitHook(r.populateSecretsInAuthPolicy).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
 	svc.GetCrudService("Role", apiintf.CreateOper).WithPreCommitHook(r.adminRoleCheck).WithPreCommitHook(r.permissionTenantCheck).GetRequestType().WithValidate(r.validateRolePerms)
 	svc.GetCrudService("Role", apiintf.UpdateOper).WithPreCommitHook(r.adminRoleCheck).WithPreCommitHook(r.permissionTenantCheck).GetRequestType().WithValidate(r.validateRolePerms)

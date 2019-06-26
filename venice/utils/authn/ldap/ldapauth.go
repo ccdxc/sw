@@ -22,6 +22,8 @@ var (
 	ErrNoHostInLDAPReferral = errors.New("no host in LDAP referral")
 	// ErrNoServerAvailable error is returned when no configured LDAP server is reachable
 	ErrNoServerAvailable = errors.New("all configured LDAP servers are unavailable")
+	// ErrEmptyUserPassword error is returned when LDAP user supplies empty password
+	ErrEmptyUserPassword = errors.New("empty password not allowed for LDAP users")
 )
 
 // authenticator is used for authenticating LDAP user. It implements authn.Authenticator interface.
@@ -71,6 +73,11 @@ func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, b
 // bind chases ldap referrals while authenticating an ldap user entry. Upon successful authentication it returns the user ldap entry and
 // groups to which user belongs.
 func (a *authenticator) bind(username, password string) (*ldap.Entry, []string, error) {
+	// check for anonymous bind and disallow
+	if password == "" {
+		return nil, nil, ErrEmptyUserPassword
+	}
+
 	var groups []string
 	server, err := a.pickLdapServer()
 	if err != nil {

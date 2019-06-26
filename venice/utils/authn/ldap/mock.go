@@ -23,6 +23,8 @@ const (
 	FailedSearch Testcase = "failed search"
 	// IncorrectUserPassword for simulating incorrect user password error
 	IncorrectUserPassword Testcase = "incorrect user password"
+	// EmptyUserPassword for simulating empty user password error
+	EmptyUserPassword Testcase = "empty user password"
 	// NonExistentUser for simulating non existent user error
 	NonExistentUser Testcase = "non existent user"
 	// NoGroupMembership for simulating user not a member of any group error

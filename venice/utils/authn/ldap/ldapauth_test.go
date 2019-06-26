@@ -104,6 +104,15 @@ func TestBind(t *testing.T) {
 			err:      ErrNoneOrMultipleUserEntries,
 		},
 		{
+			name:     EmptyUserPassword,
+			url:      ldapURL,
+			username: testUser,
+			password: "",
+			entry:    nil,
+			groups:   nil,
+			err:      ErrEmptyUserPassword,
+		},
+		{
 			name:     NonExistentUser,
 			url:      ldapURL,
 			username: "non existent",
