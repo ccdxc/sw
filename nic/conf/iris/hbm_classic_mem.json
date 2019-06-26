@@ -180,19 +180,23 @@
         },
         {
             "name": "brq-ring-cp",
-            "size": "256K"
+            "size": "256K",
+            "reset": true
         },
         {
             "name": "brq-ring-cp-hot",
-            "size": "256K"
+            "size": "256K",
+            "reset": true
         },
         {
             "name": "brq-ring-dc",
-            "size": "256K"
+            "size": "256K",
+            "reset": true
         },
         {
             "name": "brq-ring-dc-hot",
-            "size": "256K"
+            "size": "256K",
+            "reset": true
         },
         {
             "name": "crypto-sym-msg-descr",
@@ -296,11 +300,13 @@
         },
         {
             "name": "brq-ring-xts0",
-            "size": "512K"
+            "size": "512K",
+            "reset": true
         },
         {
             "name": "brq-ring-xts1",
-            "size": "512K"
+            "size": "512K",
+            "reset": true
         },
         {
             "name": "tls_proxy_pad_table",

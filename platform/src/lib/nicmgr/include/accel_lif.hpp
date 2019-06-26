@@ -242,8 +242,10 @@ typedef struct {
     accel_lif_devcmd_ctx_t  devcmd;
     AccelLifUtils::accel_timestamp_t ts;
     uint32_t                quiesce_qid;
-    uint32_t                reset_destroy : 1,
-                            info_dump     : 1;
+    uint32_t                reset_destroy      : 1,
+                            info_dump          : 1,
+                            uncond_desc_notify : 1;
+    enum desc_notify_type   desc_notify_type;    
 } accel_lif_fsm_ctx_t;
 
 /**
@@ -256,6 +258,15 @@ typedef struct eth_lif_res_s {
     uint64_t cmb_mem_size;
     uint32_t index;
 } accel_lif_res_t;
+
+/**
+ * Map many ring_handle types to fewer descriptor types
+ */
+typedef enum {
+    ACCEL_RING_DESC_VOID,
+    ACCEL_RING_DESC_CPDC,
+    ACCEL_RING_DESC_CRYPTO_SYMM,
+} accel_ring_desc_type_t;
 
 /**
  * Accelerator LIF
@@ -349,6 +360,7 @@ private:
     // Other state
     uint32_t                    seq_created_count;
     uint32_t                    seq_qid_init_high;
+    uint32_t                    reason_code;
     accel_lif_fsm_ctx_t         fsm_ctx;
 
     EV_P;
@@ -373,6 +385,8 @@ private:
     _DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
                                  bool enable);
 
+    accel_ring_t *accel_ring_get(uint32_t ring_handle,
+                                 uint32_t sub_ring);
     int accel_ring_info_get_all(void);
     void accel_ring_info_del_all(void);
     int accel_rgroup_add(void);
@@ -389,6 +403,36 @@ private:
     int accel_rgroup_rmisc_get(void);
     uint32_t accel_ring_num_pendings_get(const accel_rgroup_ring_t& rgroup_ring);
     int accel_ring_max_pendings_get(uint32_t& max_pendings);
+    void accel_ring_desc_notify(const accel_ring_t *ring,
+                                uint32_t desc_idx);
+    void accel_ring_desc_notify(const accel_ring_t *ring,
+                                uint32_t desc_idx,
+                                const uint8_t *desc,
+                                uint32_t desc_size);
+    uint32_t accel_ring_desc_read(const accel_ring_t *ring,
+                                  uint32_t desc_idx,
+                                  uint8_t *desc,
+                                  uint32_t desc_size);
+    bool accel_ring_desc_valid(const accel_ring_t *ring,
+                               const uint8_t *desc,
+                               uint32_t desc_size,
+                               accel_ring_desc_type_t *ret_desc_type);
+    void accel_ring_desc_log(const accel_ring_t *ring,
+                             uint32_t desc_idx,
+                             const uint8_t *desc,
+                             accel_ring_desc_type_t desc_type);
+    void accel_ring_desc_data_notify(const accel_ring_t *ring,
+                                     uint32_t desc_idx,
+                                     const uint8_t *desc,
+                                     uint32_t desc_size);
+    void accel_ring_desc_addr_notify(const accel_ring_t *ring,
+                                     uint32_t desc_idx,
+                                     const uint8_t *desc,
+                                     accel_ring_desc_type_t desc_type);
+    bool accel_ring_desc_idx_delta(const accel_ring_t *ring,
+                                   uint32_t desc_idx,
+                                   int delta,
+                                   uint32_t *ret_idx);
     int qmetrics_init(void);
     void qmetrics_fini(void);
     uint64_t rmetrics_addr_get(uint32_t ring_handle,
@@ -399,5 +443,49 @@ private:
                               const storage_seq_qstate_t& qstate);
     void accel_lif_state_machine(accel_lif_event_t event);
 };
+
+/**
+ * Some well known ring constants
+ */
+#define ACCEL_RING_MAX_DESC_SIZE                                        \
+    ((sizeof(hal::pd::barco_symm_req_descriptor_t) >                    \
+                            sizeof(hal::pd::cpdc_descriptor_t)) ?       \
+    sizeof(hal::pd::barco_symm_req_descriptor_t) :                      \
+    sizeof(hal::pd::cpdc_descriptor_t))
+
+#define ACCEL_RING_MAX_PREFETCH_DESCS   16
+
+static inline accel_ring_desc_type_t
+accel_ring_desc_type_get(const accel_ring_t *ring)
+{
+    if (ring) {
+        switch (ring->ring_id) {
+
+        case ACCEL_RING_XTS0:
+        case ACCEL_RING_XTS1:
+        case ACCEL_RING_GCM0:
+        case ACCEL_RING_GCM1:
+            return ACCEL_RING_DESC_CRYPTO_SYMM;
+
+        case ACCEL_RING_CP:
+        case ACCEL_RING_CP_HOT:
+        case ACCEL_RING_DC:
+        case ACCEL_RING_DC_HOT:
+            return ACCEL_RING_DESC_CPDC;
+
+        default:
+            break;
+        }
+    }
+
+    return ACCEL_RING_DESC_VOID;
+}
+    
+static inline bool
+accel_ring_config_valid(const accel_ring_t *ring)
+{
+    return ring && ring->ring_size && ring->ring_desc_size;
+}
+
 
 #endif

@@ -153,14 +153,18 @@ void sonic_dev_cmd_adminq_init(struct sonic_dev *idev, struct qcq *qcq,
 }
 
 void sonic_dev_cmd_hang_notify(struct sonic_dev *idev,
-			       uint32_t lif_index)
+			       uint32_t lif_index,
+			       bool uncond_desc_notify)
 {
 	union dev_cmd cmd = {
 		.hang_notify.opcode = CMD_OPCODE_HANG_NOTIFY,
 		.hang_notify.lif_index = lif_index,
+		.hang_notify.uncond_desc_notify = uncond_desc_notify,
+		.hang_notify.desc_notify_type = DESC_NOTIFY_TYPE_ADDR,
 	};
 
-	OSAL_LOG_INFO("hang_notify lif_index %u", lif_index);
+	OSAL_LOG_INFO("hang_notify lif_index %u uncond_desc_notify %u",
+		      lif_index, uncond_desc_notify);
 	sonic_dev_cmd_go(idev, &cmd);
 }
 

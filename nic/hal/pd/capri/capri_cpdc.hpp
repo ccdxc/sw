@@ -8,6 +8,24 @@
 namespace hal {
 namespace pd {
 
+/*
+ * HW descriptor info
+ */
+typedef struct {
+    uint64_t    src;
+    uint64_t    dst;
+    uint16_t    cmd;
+    uint16_t    datain_len;
+    uint16_t    extended_len;
+    uint16_t    threshold_len;
+    uint64_t    status_addr;
+    uint64_t    db_addr;
+    uint64_t    db_data;
+    uint64_t    otag_addr;
+    uint32_t    otag_data;
+    uint32_t    status_data;
+} __attribute__((packed)) cpdc_descriptor_t;
+
 #define CAPRI_CPDC_INT_AXI_ERR                  (1 << 0)
 #define CAPRI_CPDC_INT_ECC_ERR                  (1 << 1)
 #define CAPRI_CPDC_INT_UENG_ERR                 (1 << 2)

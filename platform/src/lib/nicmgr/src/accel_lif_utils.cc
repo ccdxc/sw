@@ -30,33 +30,32 @@
 namespace AccelLifUtils {
 
 // Detection log control
-#define HW_MON_DETECT_LOG_SUPPRESS_US   (5 * 60 * 1000000)
+#define HW_MON_DETECT_LOG_SUPPRESS_US   (5 * 60 * USEC_PER_SEC)
 
 typedef std::pair<uint32_t,uint32_t>    mon_err_mask_code_t;
 typedef std::map<const std::string,mon_err_mask_code_t> mon_status_reg_map_t;
 
 const static mon_status_reg_map_t       mon_crypto_status_reg_map = {
-    {"xts_enc_status", {CRYPTO_SYM_ERR_UNRECOV_MASK, ACCEL_LIF_RESET_CODE_ENCR}},
-    {"xts_status",     {CRYPTO_SYM_ERR_UNRECOV_MASK, ACCEL_LIF_RESET_CODE_DECR}},
-    {"gcm0_status",    {CRYPTO_SYM_ERR_UNRECOV_MASK, ACCEL_LIF_RESET_CODE_ENCR}},
-    {"gcm1_status",    {CRYPTO_SYM_ERR_UNRECOV_MASK, ACCEL_LIF_RESET_CODE_DECR}},
+    {"xts_enc_status", {CRYPTO_SYM_ERR_UNRECOV_MASK, ACCEL_LIF_REASON_XTS_ENCR_ERR_RESET}},
+    {"xts_status",     {CRYPTO_SYM_ERR_UNRECOV_MASK, ACCEL_LIF_REASON_XTS_DECR_ERR_RESET}},
+    {"gcm0_status",    {CRYPTO_SYM_ERR_UNRECOV_MASK, ACCEL_LIF_REASON_GCM_ENCR_ERR_RESET}},
+    {"gcm1_status",    {CRYPTO_SYM_ERR_UNRECOV_MASK, ACCEL_LIF_REASON_GCM_DECR_ERR_RESET}},
 };
 
 /*
  * Note that unlike crypto, CP/DC engines are designed not to lock up due to
  * any errors (i.e., a subsequent soft reset would likely make no difference).
- * Hence, mask values below are only used for logging purposes, and reset
- * reason is always ACCEL_LIF_RESET_CODE_VOID (i.e., no reset notification to host driver).
+ * Hence, mask values below are only used for logging purposes.
  */
 const static mon_status_reg_map_t       mon_cpdc_status_reg_map = {
-    {"cp_int",              {CPDC_INT_ERR_LOG_MASK,    ACCEL_LIF_RESET_CODE_VOID}},
-    {"cp_int_ecc_error",    {CPDC_INT_ECC_LOG_MASK,    ACCEL_LIF_RESET_CODE_VOID}},
-    {"cp_int_axi_error_w0", {CPDC_AXI_ERR_W0_LOG_MASK, ACCEL_LIF_RESET_CODE_VOID}},
-    {"cp_int_axi_error_w1", {CPDC_AXI_ERR_W1_LOG_MASK, ACCEL_LIF_RESET_CODE_VOID}},
-    {"dc_int",              {CPDC_INT_ERR_LOG_MASK,    ACCEL_LIF_RESET_CODE_VOID}},
-    {"dc_int_ecc_error",    {CPDC_INT_ECC_LOG_MASK,    ACCEL_LIF_RESET_CODE_VOID}},
-    {"dc_int_axi_error_w0", {CPDC_AXI_ERR_W0_LOG_MASK, ACCEL_LIF_RESET_CODE_VOID}},
-    {"dc_int_axi_error_w1", {CPDC_AXI_ERR_W1_LOG_MASK, ACCEL_LIF_RESET_CODE_VOID}},
+    {"cp_int",              {CPDC_INT_ERR_LOG_MASK,    ACCEL_LIF_REASON_CP_ERR_LOG}},
+    {"cp_int_ecc_error",    {CPDC_INT_ECC_LOG_MASK,    ACCEL_LIF_REASON_CP_ERR_LOG}},
+    {"cp_int_axi_error_w0", {CPDC_AXI_ERR_W0_LOG_MASK, ACCEL_LIF_REASON_CP_ERR_LOG}},
+    {"cp_int_axi_error_w1", {CPDC_AXI_ERR_W1_LOG_MASK, ACCEL_LIF_REASON_CP_ERR_LOG}},
+    {"dc_int",              {CPDC_INT_ERR_LOG_MASK,    ACCEL_LIF_REASON_DC_ERR_LOG}},
+    {"dc_int_ecc_error",    {CPDC_INT_ECC_LOG_MASK,    ACCEL_LIF_REASON_DC_ERR_LOG}},
+    {"dc_int_axi_error_w0", {CPDC_AXI_ERR_W0_LOG_MASK, ACCEL_LIF_REASON_DC_ERR_LOG}},
+    {"dc_int_axi_error_w1", {CPDC_AXI_ERR_W1_LOG_MASK, ACCEL_LIF_REASON_DC_ERR_LOG}},
 };
 
 typedef std::map<uint32_t,const mon_status_reg_map_t&> mon_ring2status_reg_map_t;
@@ -175,7 +174,8 @@ NotifyQ::TxQInit(const notifyq_init_cmd_t *cmd,
             return false;
         }
         tx_alloc_size = alloc_size;
-        NIC_LOG_DEBUG("{}: NOTIFYQ tx queue address {:#x}", name, tx_ring_base);
+        NIC_LOG_DEBUG("{}: NOTIFYQ tx ring_size {} queue address {:#x}", name,
+                      tx_ring_size, tx_ring_base);
     }
 
     tx_desc_size = desc_size;
@@ -221,30 +221,45 @@ NotifyQ::TxQInit(const notifyq_init_cmd_t *cmd,
 }
 
 bool
-NotifyQ::TxQPost(void *desc)
+NotifyQ::TxQPost(const void *desc)
 {
-    uint64_t tx_db_addr;
-    uint64_t tx_db_data;
-    uint64_t desc_addr;
+    notify_qstate_t     qstate;
+    uint64_t            qstate_addr;
+    uint64_t            tx_db_addr;
+    uint64_t            tx_db_data;
+    uint64_t            desc_addr;
+    uint32_t            new_p_index0;
 
     if (!tx_ring_base || !tx_ring_size) {
         NIC_LOG_DEBUG("{}: Failed NOTIFYQ not yet initialized", name);
         return false;
     }
 
-    desc_addr = tx_ring_base + (tx_desc_size * tx_head);
-    WRITE_MEM(desc_addr, (uint8_t *)desc, tx_desc_size, 0);
+    /*
+     * Only post if there's room in the queue
+     */
+    qstate_addr = pd->lm_->get_lif_qstate_addr(lif_id, tx_qtype, tx_qid);
+    READ_MEM(qstate_addr + offsetof(notify_qstate_t, c_index0),
+             (uint8_t *)&qstate.c_index0,
+             sizeof(qstate.c_index0), 0);
+    qstate.c_index0 &= (tx_ring_size - 1);
+    new_p_index0 = (tx_head + 1) & (tx_ring_size - 1);
+    if (new_p_index0 != qstate.c_index0) {
+        desc_addr = tx_ring_base + (tx_desc_size * tx_head);
+        WRITE_MEM(desc_addr, (uint8_t *)desc, tx_desc_size, 0);
 
-    tx_db_addr = HW_DB_ADDR_LOCAL_CSR +
-                 ACCEL_LIF_DBADDR_SET(lif_id, tx_qtype);
-    tx_head = (tx_head + 1) & (tx_ring_size - 1);
-    tx_db_data = ACCEL_LIF_DBDATA_SET(tx_qid, tx_head);
-    NIC_LOG_DEBUG("{}: NOTIFYQ tx_db_addr {:#x} tx_db_data {:#x}",
-                  name, tx_db_addr, tx_db_data);
-    PAL_barrier();
-    WRITE_DB64(tx_db_addr, tx_db_data);
+        tx_db_addr = HW_DB_ADDR_LOCAL_CSR +
+                     ACCEL_LIF_DBADDR_SET(lif_id, tx_qtype);
+        tx_head = new_p_index0;
+        tx_db_data = ACCEL_LIF_DBDATA_SET(tx_qid, tx_head);
+        NIC_LOG_DEBUG("{}: NOTIFYQ tx_db_addr {:#x} tx_db_data {:#x}",
+                      name, tx_db_addr, tx_db_data);
+        PAL_barrier();
+        WRITE_DB64(tx_db_addr, tx_db_data);
+        return true;
+    }
 
-    return true;
+    return false;
 }
 
 bool
@@ -287,7 +302,7 @@ HwMonitor::HwMonitor(AccelLif& lif,
                      EV_P) :
     lif(lif),
     detection_log(HW_MON_DETECT_LOG_SUPPRESS_US),
-    reset_code(ACCEL_LIF_RESET_CODE_VOID),
+    reason_code(ACCEL_LIF_REASON_VOID),
     EV_A(EV_A),
     err_timer_started(false)
 {
@@ -300,13 +315,12 @@ HwMonitor::~HwMonitor()
 }
 
 /*
- * Accelerator ring group misc info response callback handler
+ * Evaluate reset/log reasons
  */
 void
-mon_rmisc_rsp_cb(void *user_ctx,
-                 const accel_rgroup_rmisc_rsp_t& misc)
+HwMonitor::reset_log_reason_eval(const accel_rgroup_rmisc_rsp_t& misc,
+                                 uint32_t *ret_reason_code)
 {
-    HwMonitor                   *mon = (HwMonitor *)user_ctx;
     const mon_status_reg_map_t  *reg_map;
     const accel_ring_reg_val_t  *reg_val;
     const mon_err_mask_code_t   *mask_code;
@@ -320,14 +334,25 @@ mon_rmisc_rsp_cb(void *user_ctx,
         for (i = 0, reg_val = &misc.reg_val[0]; i < num_regs; i++, reg_val++) {
             mask_code = mon_status_mask_code_find(reg_map, reg_val->name);
             if (mask_code && (reg_val->val & mask_code->first)) {
-                if (mon->detection_log.Request()) {
+                if (detection_log.Request()) {
                     NIC_LOG_ERR("HwMonitor: error detect {} {:#x} mask {:#x}",
                                 reg_val->name, reg_val->val, mask_code->first);
                 }
-                mon->reset_code |= mask_code->second;
+                *ret_reason_code |= mask_code->second;
             }
         }
     }
+}
+
+/*
+ * Accelerator ring group misc info response callback handler
+ */
+void
+mon_rmisc_rsp_cb(void *user_ctx,
+                 const accel_rgroup_rmisc_rsp_t& misc)
+{
+        HwMonitor *mon = (HwMonitor *)user_ctx;
+        mon->reset_log_reason_eval(misc, &mon->reason_code);
 }
 
 /*
@@ -343,7 +368,7 @@ HwMonitor::ErrPoll(void *obj)
     mon->detection_log.Enter();
 
     MON_CB_DEVAPI_CHECK_VOID();
-    mon->reset_code = ACCEL_LIF_RESET_CODE_VOID;
+    mon->reason_code = ACCEL_LIF_REASON_VOID;
     ret_val = mon->lif.dev_api->accel_rgroup_misc_get(mon->lif.LifNameGet(),
                                 ACCEL_SUB_RING_ALL, mon_rmisc_rsp_cb,
                                 mon, &num_rings);
@@ -353,14 +378,16 @@ HwMonitor::ErrPoll(void *obj)
      * HW unrecoverable errors detected, notify host driver so it can
      * issue LIF reset if applicable.
      */
-    if ((mon->reset_code != ACCEL_LIF_RESET_CODE_VOID) && mon->lif.notifyq) {
+    if ((mon->reason_code & ACCEL_LIF_REASON_ALL_ERR_RESET_MASK) && 
+        mon->lif.notifyq) {
+
         reset_event_t reset_ev = {0};
         reset_ev.ecode = EVENT_OPCODE_RESET;
-        reset_ev.reset_code = mon->reset_code;
+        reset_ev.reason_code = mon->reason_code;
         reset_ev.eid = mon->lif.next_event_id_get();
         if (mon->detection_log.Request()) {
-            NIC_LOG_DEBUG("{}: sending EVENT_OPCODE_RESET eid {} reset_code {:#x}",
-                    mon->lif.LifNameGet(), reset_ev.eid, reset_ev.reset_code);
+            NIC_LOG_DEBUG("{}: sending EVENT_OPCODE_RESET eid {} reason_code {:#x}",
+                    mon->lif.LifNameGet(), reset_ev.eid, reset_ev.reason_code);
         }
         mon->lif.notifyq->TxQPost((void *)&reset_ev);
 

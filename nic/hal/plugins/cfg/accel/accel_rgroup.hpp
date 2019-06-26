@@ -61,8 +61,9 @@ typedef void (*accel_rgroup_ring_info_cb_t)(void *user_ctx,
 typedef struct {
     uint32_t    ring_handle;
     uint32_t    sub_ring;
-    uint32_t    pndx;
-    uint32_t    cndx;
+    uint32_t    pndx;          /* producer index */
+    uint32_t    cndx;          /* consumer index */
+    uint32_t    endx;          /* error index */
 } accel_rgroup_ring_indices_t;
 
 typedef void (*accel_rgroup_ring_indices_cb_t)(void *user_ctx,

@@ -78,7 +78,7 @@ typedef struct barco_symm_req_descriptor_s {
     uint64_t                doorbell_addr;
     uint64_t                doorbell_data;
     uint32_t                second_key_descr_idx;
-    uint8_t                 reserved[320];
+    uint8_t                 reserved[40];
 }  __attribute__((__packed__)) barco_symm_req_descriptor_t;
 
 typedef struct barco_sym_msg_descriptor_s {

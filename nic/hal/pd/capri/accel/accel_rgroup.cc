@@ -809,6 +809,7 @@ accel_ring_cp_t::indices_get(uint32_t ring_handle,
 
     ACCEL_CFG_READ32(cp_cfg_q_pd_idx, indices.pndx);
     ACCEL_CFG_READ32(cp_sta_q_cp_idx, indices.cndx);
+    ACCEL_CFG_READ32(cp_sta_q_cp_idx_early, indices.endx);
 
     (*cb_func)(usr_ctx, indices);
     return HAL_RET_OK;
@@ -975,6 +976,7 @@ accel_ring_cp_hot_t::indices_get(uint32_t ring_handle,
 
     ACCEL_CFG_READ32(cp_cfg_hotq_pd_idx, indices.pndx);
     ACCEL_CFG_READ32(cp_sta_hotq_cp_idx, indices.cndx);
+    ACCEL_CFG_READ32(cp_sta_hotq_cp_idx_early, indices.endx);
 
     (*cb_func)(usr_ctx, indices);
     return HAL_RET_OK;
@@ -1111,6 +1113,7 @@ accel_ring_dc_t::indices_get(uint32_t ring_handle,
 
     ACCEL_CFG_READ32(dc_cfg_q_pd_idx, indices.pndx);
     ACCEL_CFG_READ32(dc_sta_q_cp_idx, indices.cndx);
+    ACCEL_CFG_READ32(dc_sta_q_cp_idx_early, indices.endx);
 
     (*cb_func)(usr_ctx, indices);
     return HAL_RET_OK;
@@ -1277,6 +1280,7 @@ accel_ring_dc_hot_t::indices_get(uint32_t ring_handle,
 
     ACCEL_CFG_READ32(dc_cfg_hotq_pd_idx, indices.pndx);
     ACCEL_CFG_READ32(dc_sta_hotq_cp_idx, indices.cndx);
+    ACCEL_CFG_READ32(dc_sta_hotq_cp_idx_early, indices.endx);
 
     (*cb_func)(usr_ctx, indices);
     return HAL_RET_OK;
@@ -1412,6 +1416,7 @@ accel_ring_xts0_t::indices_get(uint32_t ring_handle,
 
     ACCEL_CFG_READ32(xts_enc_producer_idx, indices.pndx);
     ACCEL_CFG_READ32(xts_enc_consumer_idx, indices.cndx);
+    ACCEL_CFG_READ32(xts_enc_error_idx, indices.endx);
 
     (*cb_func)(usr_ctx, indices);
     return HAL_RET_OK;
@@ -1551,6 +1556,7 @@ accel_ring_xts1_t::indices_get(uint32_t ring_handle,
 
     ACCEL_CFG_READ32(xts_producer_idx, indices.pndx);
     ACCEL_CFG_READ32(xts_consumer_idx, indices.cndx);
+    ACCEL_CFG_READ32(xts_error_idx, indices.endx);
 
     (*cb_func)(usr_ctx, indices);
     return HAL_RET_OK;
@@ -1710,6 +1716,7 @@ accel_ring_gcm0_t::indices_get(uint32_t ring_handle,
 
     ACCEL_CFG_READ32(gcm0_producer_idx, indices.pndx);
     ACCEL_CFG_READ32(gcm0_consumer_idx, indices.cndx);
+    ACCEL_CFG_READ32(gcm0_error_idx, indices.endx);
 
     (*cb_func)(usr_ctx, indices);
     return HAL_RET_OK;
@@ -1829,6 +1836,7 @@ accel_ring_gcm1_t::indices_get(uint32_t ring_handle,
 
     ACCEL_CFG_READ32(gcm1_producer_idx, indices.pndx);
     ACCEL_CFG_READ32(gcm1_consumer_idx, indices.cndx);
+    ACCEL_CFG_READ32(gcm1_error_idx, indices.endx);
 
     (*cb_func)(usr_ctx, indices);
     return HAL_RET_OK;

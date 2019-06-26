@@ -406,6 +406,7 @@ devapi_accel::accel_rgroup_indices_get(string name, uint32_t sub_ring,
         rindices.sub_ring = spec.sub_ring();
         rindices.pndx = spec.pndx();
         rindices.cndx = spec.cndx();
+        rindices.endx = spec.endx();
         (*rsp_cb_func)(user_ctx, rindices);
     }
     return ret;

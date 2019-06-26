@@ -77,7 +77,7 @@ struct deferred_work {
 	enum deferred_work_type type;
 	enum reset_ctl_state reset_state;
 	uint64_t timestamp;
-	u16 reset_code;
+	u32 reason_code;
 	u8 dont_free;
 };
 
@@ -98,6 +98,7 @@ struct reset_ctl {
 	reset_ctl_cb cbs[RESET_CTL_ST_MAX];
 	void *cb_args[RESET_CTL_ST_MAX];
 	int8_t sense;
+	bool uncond_desc_notify;
 };
 
 #define LIF_F_INITED		BIT(0)

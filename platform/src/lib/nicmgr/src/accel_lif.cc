@@ -45,12 +45,12 @@
 using namespace nicmgr;
 
 // Amount of time to wait for sequencer queues to be quiesced
-#define ACCEL_DEV_SEQ_QUEUES_QUIESCE_TIME_US    5000000
-#define ACCEL_DEV_RING_OP_QUIESCE_TIME_US       1000000
+#define ACCEL_DEV_SEQ_QUEUES_QUIESCE_TIME_US    (5 * USEC_PER_SEC)
+#define ACCEL_DEV_RING_OP_QUIESCE_TIME_US       (1 * USEC_PER_SEC)
 #define ACCEL_DEV_ALL_RINGS_MAX_QUIESCE_TIME_US (10 * ACCEL_DEV_RING_OP_QUIESCE_TIME_US)
 
 // Hang notify log control
-#define HANG_DETECT_LOG_SUPPRESS_US             (5 * 60 * 1000000)
+#define HANG_DETECT_LOG_SUPPRESS_US             (5 * 60 * USEC_PER_SEC)
 
 /*
  * rounded up log2
@@ -86,6 +86,25 @@ static const std::map<uint32_t,const char*> accel_ring_id2name_map = {
     {ACCEL_RING_XTS1,    "xts_dec"},
     {ACCEL_RING_GCM0,    "gcm_enc"},
     {ACCEL_RING_GCM1,    "gcm_dec"},
+};
+
+static const std::map<uint32_t,uint32_t> accel_ring_id2reason_map = {
+    {ACCEL_RING_CP,      ACCEL_LIF_REASON_CP_ERR_RESET |
+                         ACCEL_LIF_REASON_CP_ERR_LOG},
+    {ACCEL_RING_CP_HOT,  ACCEL_LIF_REASON_CP_ERR_RESET |
+                         ACCEL_LIF_REASON_CP_ERR_LOG},
+    {ACCEL_RING_DC,      ACCEL_LIF_REASON_DC_ERR_RESET |
+                         ACCEL_LIF_REASON_DC_ERR_LOG},
+    {ACCEL_RING_DC_HOT,  ACCEL_LIF_REASON_DC_ERR_RESET |
+                         ACCEL_LIF_REASON_DC_ERR_LOG},
+    {ACCEL_RING_XTS0,    ACCEL_LIF_REASON_XTS_ENCR_ERR_RESET |
+                         ACCEL_LIF_REASON_XTS_ENCR_ERR_LOG},
+    {ACCEL_RING_XTS1,    ACCEL_LIF_REASON_XTS_DECR_ERR_RESET |
+                         ACCEL_LIF_REASON_XTS_DECR_ERR_LOG},
+    {ACCEL_RING_GCM0,    ACCEL_LIF_REASON_GCM_ENCR_ERR_RESET |
+                         ACCEL_LIF_REASON_GCM_ENCR_ERR_LOG},
+    {ACCEL_RING_GCM1,    ACCEL_LIF_REASON_GCM_DECR_ERR_RESET |
+                         ACCEL_LIF_REASON_GCM_DECR_ERR_LOG},
 };
 
 static const char              *lif_state_str_table[] = {
@@ -700,6 +719,15 @@ accel_ring_id2name_get(uint32_t ring_handle)
     auto iter = accel_ring_id2name_map.find(ring_handle);
     if (iter != accel_ring_id2name_map.end()) {
         return iter->second;
+    }
+    return "unknown";
+}
+
+static inline const char *
+accel_ring_id2name_get(const accel_ring_t *ring)
+{
+    if (ring) {
+        return accel_ring_id2name_get(ring->ring_id);
     }
     return "unknown";
 }
@@ -1692,6 +1720,7 @@ AccelLif::accel_lif_seq_queue_batch_control_action(accel_lif_event_t event)
 accel_lif_event_t
 AccelLif::accel_lif_hang_notify_action(accel_lif_event_t event)
 {
+    hang_notify_cmd_t       *cmd = (hang_notify_cmd_t *)fsm_ctx.devcmd.req;
     int64_t                 qstate_addr;
     storage_seq_qstate_t    seq_qstate;
     admin_qstate_t          admin_qstate;
@@ -1699,17 +1728,17 @@ AccelLif::accel_lif_hang_notify_action(accel_lif_event_t event)
 
     ACCEL_LIF_FSM_LOG();
     hang_detect_log.Enter();
-    if (hang_detect_log.Request()) {
 
-        /*
-         * Dump everything about HW rings to log, to be collected by 
-         * show-tech-support
-         */
-        fsm_ctx.info_dump = true;
-        accel_rgroup_rindices_get();
-        accel_rgroup_rmisc_get();
-        accel_rgroup_rmetrics_get();
-        fsm_ctx.info_dump = false;
+    /*
+     * Dump everything about HW rings to log, to be collected by 
+     * show-tech-support
+     */
+    fsm_ctx.info_dump = hang_detect_log.Request();
+    fsm_ctx.uncond_desc_notify = cmd->uncond_desc_notify;
+    fsm_ctx.desc_notify_type = (enum desc_notify_type)cmd->desc_notify_type;
+    accel_rgroup_rmisc_get();
+    accel_rgroup_rmetrics_get();
+    if (fsm_ctx.info_dump) {
 
         /*
          * Dump sequencer queue states
@@ -1751,6 +1780,7 @@ AccelLif::accel_lif_hang_notify_action(accel_lif_event_t event)
         }
     }
 
+    fsm_ctx.info_dump = false;
     hang_detect_log.Leave();
     return ACCEL_LIF_EV_NULL;
 }
@@ -2038,6 +2068,14 @@ AccelLif::_DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
 /*
  * Populate accel_ring_tbl with info read from HW
  */
+accel_ring_t *
+AccelLif::accel_ring_get(uint32_t ring_handle,
+                         uint32_t sub_ring)
+{
+    return ring_handle < ACCEL_RING_ID_MAX ?
+           &accel_ring_tbl[ring_handle] : nullptr;
+}
+
 int
 AccelLif::accel_ring_info_get_all(void)
 {
@@ -2057,24 +2095,26 @@ AccelLif::accel_ring_info_get_all(void)
              iter++) {
 
             const accel_rgroup_rinfo_rsp_t& info = iter->second.info;
-            if (info.ring_handle < ACCEL_RING_ID_MAX) {
-                accel_ring_t& spec_ring = accel_ring_tbl[info.ring_handle];
-                spec_ring.ring_base_pa = info.base_pa;
-                spec_ring.ring_pndx_pa = info.pndx_pa;
-                spec_ring.ring_shadow_pndx_pa = info.shadow_pndx_pa;
-                spec_ring.ring_opaque_tag_pa = info.opaque_tag_pa;
-                spec_ring.ring_opaque_tag_size = info.opaque_tag_size;
-                spec_ring.ring_desc_size = info.desc_size;
-                spec_ring.ring_pndx_size = info.pndx_size;
-                spec_ring.ring_size = info.ring_size;
+            accel_ring_t *spec_ring = accel_ring_get(info.ring_handle,
+                                                     info.sub_ring);
+            if (spec_ring) {
+                spec_ring->ring_id = info.ring_handle;
+                spec_ring->ring_base_pa = info.base_pa;
+                spec_ring->ring_pndx_pa = info.pndx_pa;
+                spec_ring->ring_shadow_pndx_pa = info.shadow_pndx_pa;
+                spec_ring->ring_opaque_tag_pa = info.opaque_tag_pa;
+                spec_ring->ring_opaque_tag_size = info.opaque_tag_size;
+                spec_ring->ring_desc_size = info.desc_size;
+                spec_ring->ring_pndx_size = info.pndx_size;
+                spec_ring->ring_size = info.ring_size;
 
                 NIC_LOG_DEBUG("ring {} ring_base_pa {:#x} ring_pndx_pa {:#x} "
                              "ring_shadow_pndx_pa {:#x} ring_opaque_tag_pa {:#x} "
                              "ring_size {}",
                              accel_ring_id2name_get(info.ring_handle),
-                             spec_ring.ring_base_pa, spec_ring.ring_pndx_pa,
-                             spec_ring.ring_shadow_pndx_pa,
-                             spec_ring.ring_opaque_tag_pa, spec_ring.ring_size);
+                             spec_ring->ring_base_pa, spec_ring->ring_pndx_pa,
+                             spec_ring->ring_shadow_pndx_pa,
+                             spec_ring->ring_opaque_tag_pa, spec_ring->ring_size);
             }
         }
     }
@@ -2339,6 +2379,8 @@ accel_rgroup_rmisc_rsp_cb(void *user_ctx,
     uint32_t    num_reg_vals;
 
     ACCEL_RGROUP_GET_CB_HANDLE_CHECK(misc.ring_handle);
+    lif->hw_mon->reset_log_reason_eval(misc, &lif->reason_code);
+
     if (lif->fsm_ctx.info_dump) {
         NIC_LOG_DEBUG("{}: ring {} sub_ring {} num_reg_vals {}",
                       lif->LifNameGet(), accel_ring_id2name_get(misc.ring_handle),
@@ -2361,10 +2403,42 @@ AccelLif::accel_rgroup_rmisc_get(void)
     uint32_t    num_rings;
     int         ret_val;
 
+    /*
+     * rmisc handling requires rindices
+     */
+    accel_rgroup_rindices_get();
+
     ACCEL_LIF_DEVAPI_CHECK(0, SDK_RET_ERR);
+    reason_code = fsm_ctx.uncond_desc_notify ?
+                  ACCEL_LIF_REASON_CPDC_ERR_RESET_MASK  |
+                  ACCEL_LIF_REASON_CPDC_ERR_LOG_MASK    |
+                  ACCEL_LIF_REASON_XTS_ERR_RESET_MASK   |
+                  ACCEL_LIF_REASON_XTS_ERR_LOG_MASK :
+                  ACCEL_LIF_REASON_VOID;
+    fsm_ctx.uncond_desc_notify = false;
     ret_val = dev_api->accel_rgroup_misc_get(LifNameGet(), ACCEL_SUB_RING_ALL,
                              accel_rgroup_rmisc_rsp_cb, this, &num_rings);
     ACCEL_RGROUP_GET_RET_CHECK(ret_val, num_rings, "misc");
+
+    /*
+     * Send descriptor data notification for each ring
+     * that experienced HW errors.
+     */
+    if (reason_code != ACCEL_LIF_REASON_VOID) {
+        for (auto iter = accel_ring_id2reason_map.begin();
+             iter != accel_ring_id2reason_map.end();
+             iter++) {
+
+             if (reason_code & iter->second) {
+                 accel_rgroup_ring_t& rgroup_ring =
+                      accel_rgroup_find_create(iter->first, ACCEL_SUB_RING0);
+                 accel_ring_desc_notify(
+                       accel_ring_get(rgroup_ring.indices.ring_handle,
+                                      rgroup_ring.indices.sub_ring),
+                       rgroup_ring.indices.endx);
+             }
+        }
+    }
     return ret_val;
 }
 
@@ -2426,6 +2500,262 @@ AccelLif::accel_ring_max_pendings_get(uint32_t& max_pendings)
     }
 
     return ret_val;
+}
+
+/*
+ * Read out ring descriptor data for a number of prefetched descriptors
+ * near the argument desc_idx and send as notifyq data.
+ */
+void
+AccelLif::accel_ring_desc_notify(const accel_ring_t *ring,
+                                 uint32_t desc_idx)
+{
+    uint8_t     desc[ACCEL_RING_MAX_DESC_SIZE];
+    int         num_descs;
+    uint32_t    desc_size;
+    uint32_t    delta_idx;
+
+    if (notifyq) {
+        NIC_LOG_DEBUG("{}: ring {} desc_idx {}",LifNameGet(),
+                      accel_ring_id2name_get(ring), desc_idx);
+        num_descs = ACCEL_RING_MAX_PREFETCH_DESCS - 1;
+        while (num_descs >= 0) {
+            if (accel_ring_desc_idx_delta(ring, desc_idx,
+                                          -num_descs, &delta_idx)) {
+                desc_size = accel_ring_desc_read(ring, delta_idx,
+                                                 desc, sizeof(desc));
+                accel_ring_desc_notify(ring, delta_idx, desc, desc_size);
+            }
+            num_descs--;
+        }
+    }
+}
+
+/*
+ * Read out ring descriptor data for a given desc_idx
+ */
+uint32_t
+AccelLif::accel_ring_desc_read(const accel_ring_t *ring,
+                               uint32_t desc_idx,
+                               uint8_t *desc,
+                               uint32_t desc_size)
+{
+    uint64_t               desc_addr;
+
+    if (accel_ring_config_valid(ring)) {
+        desc_addr = ring->ring_base_pa +
+                    ((desc_idx % ring->ring_size) * ring->ring_desc_size);
+        assert(desc_size >= ring->ring_desc_size);
+        desc_size = std::min(desc_size, (uint32_t)ring->ring_desc_size);
+        READ_MEM(desc_addr, desc, desc_size, 0);
+        return desc_size;
+    }
+
+    NIC_LOG_ERR("{}: ring {} not valid or not configured",
+                LifNameGet(), accel_ring_id2name_get(ring));
+    return 0;
+}
+
+void
+AccelLif::accel_ring_desc_notify(const accel_ring_t *ring,
+                                 uint32_t desc_idx,
+                                 const uint8_t *desc,
+                                 uint32_t desc_size)
+{
+    accel_ring_desc_type_t desc_type;
+
+    if (accel_ring_desc_valid(ring, desc, desc_size, &desc_type)) {
+        accel_ring_desc_log(ring, desc_idx, desc, desc_type);
+
+        switch (fsm_ctx.desc_notify_type) {
+
+        case DESC_NOTIFY_TYPE_ADDR:
+            accel_ring_desc_addr_notify(ring, desc_idx, desc, desc_type);
+            break;
+
+        case DESC_NOTIFY_TYPE_DATA:
+            accel_ring_desc_data_notify(ring, desc_idx, desc, desc_size);
+            break;
+
+        default:
+            break;
+        }
+    }
+}
+
+/*
+ * Return true if ring descriptor indicates possible valid data
+ */
+bool
+AccelLif::accel_ring_desc_valid(const accel_ring_t *ring,
+                                const uint8_t *desc,
+                                uint32_t desc_size,
+                                accel_ring_desc_type_t *ret_desc_type)
+{
+    const hal::pd::cpdc_descriptor_t            *cpdc_desc;
+    const hal::pd::barco_symm_req_descriptor_t  *symm_desc;
+
+    if (desc_size) {
+        *ret_desc_type = accel_ring_desc_type_get(ring);
+        switch (*ret_desc_type) {
+
+        case ACCEL_RING_DESC_CPDC:
+            assert(desc_size == sizeof(hal::pd::cpdc_descriptor_t));
+            cpdc_desc = (const hal::pd::cpdc_descriptor_t *)desc;
+            return !!cpdc_desc->src;
+
+        case ACCEL_RING_DESC_CRYPTO_SYMM:
+            assert(desc_size == sizeof(hal::pd::barco_symm_req_descriptor_t));
+            symm_desc = (const hal::pd::barco_symm_req_descriptor_t *)desc;
+            return symm_desc->input_list_addr && symm_desc->output_list_addr;
+
+        default:
+            break;
+        }
+    }
+
+    return false;
+}
+
+/*
+ * Log print ring descriptor info
+ */
+void
+AccelLif::accel_ring_desc_log(const accel_ring_t *ring,
+                              uint32_t desc_idx,
+                              const uint8_t *desc,
+                              accel_ring_desc_type_t desc_type)
+{
+    const hal::pd::cpdc_descriptor_t            *cpdc_desc;
+    const hal::pd::barco_symm_req_descriptor_t  *symm_desc;
+
+    switch (desc_type) {
+
+    case ACCEL_RING_DESC_CPDC:
+        cpdc_desc = (const hal::pd::cpdc_descriptor_t *)desc;
+        NIC_LOG_DEBUG("{}: CPDC desc {} cmd {:#x} src {:#x} dst {:#x} "
+                      "status {:#x} db {:#x} otag {:#x}", LifNameGet(), desc_idx,
+                      cpdc_desc->cmd, cpdc_desc->src, cpdc_desc->dst,
+                      cpdc_desc->status_addr, cpdc_desc->db_addr,
+                      cpdc_desc->otag_addr);
+        break;
+
+    case ACCEL_RING_DESC_CRYPTO_SYMM:
+        symm_desc = (const hal::pd::barco_symm_req_descriptor_t *)desc;
+        NIC_LOG_DEBUG("{}: Crypto Symm desc {} cmd {:#x} src {:#x} dst {:#x} "
+                      "status {:#x} db {:#x} iv {:#x}", LifNameGet(), desc_idx,
+                      symm_desc->command, symm_desc->input_list_addr,
+                      symm_desc->output_list_addr, symm_desc->status_addr,
+                      symm_desc->doorbell_addr, symm_desc->iv_address);
+        break;
+
+    default:
+        break;
+    }
+}
+
+/*
+ * Send descriptor notification of type data.
+ */
+void
+AccelLif::accel_ring_desc_data_notify(const accel_ring_t *ring,
+                                      uint32_t desc_idx,
+                                      const uint8_t *desc,
+                                      uint32_t desc_size)
+{
+#define RING_FRAG_DATA_SZ       sizeof(ev.frag_data)
+
+    if (notifyq && ring) {
+        ring_desc_data_event_t ev = {0};
+
+        ev.ecode = EVENT_OPCODE_RING_DESC_DATA;
+        ev.ring_id = ring->ring_id;
+        ev.desc_idx = desc_idx;
+        ev.num_frags = (desc_size + RING_FRAG_DATA_SZ - 1) / RING_FRAG_DATA_SZ;
+        while (desc_size) {
+            ev.eid = next_event_id_get();
+            ev.frag_size = std::min((uint32_t)RING_FRAG_DATA_SZ, desc_size);
+            memcpy(&ev.frag_data[0], &desc[ev.frag_offs], ev.frag_size);
+            notifyq->TxQPost(&ev);
+
+            ev.frag_offs += ev.frag_size;
+            desc_size -= ev.frag_size;
+        }
+    }
+}
+
+/*
+ * Send descriptor notification of type address.
+ */
+void
+AccelLif::accel_ring_desc_addr_notify(const accel_ring_t *ring,
+                                      uint32_t desc_idx,
+                                      const uint8_t *desc,
+                                      accel_ring_desc_type_t desc_type)
+{
+    const hal::pd::cpdc_descriptor_t            *cpdc_desc;
+    const hal::pd::barco_symm_req_descriptor_t  *symm_desc;
+
+    if (notifyq && ring) {
+        ring_desc_addr_event_t ev = {0};
+
+        ev.ecode = EVENT_OPCODE_RING_DESC_ADDR;
+        ev.ring_id = ring->ring_id;
+        ev.desc_idx = desc_idx;
+        ev.eid = next_event_id_get();
+        switch (desc_type) {
+
+        case ACCEL_RING_DESC_CPDC:
+            cpdc_desc = (const hal::pd::cpdc_descriptor_t *)desc;
+            ev.src_addr = cpdc_desc->src;
+            ev.dst_addr = cpdc_desc->dst;
+            ev.status_addr = cpdc_desc->status_addr;
+            ev.db_addr = cpdc_desc->db_addr;
+            ev.otag_addr = cpdc_desc->otag_addr;
+            break;
+
+        case ACCEL_RING_DESC_CRYPTO_SYMM:
+            symm_desc = (const hal::pd::barco_symm_req_descriptor_t *)desc;
+            ev.src_addr = symm_desc->input_list_addr;
+            ev.dst_addr = symm_desc->output_list_addr;
+            ev.status_addr = symm_desc->status_addr;
+            ev.db_addr = symm_desc->doorbell_addr;
+            ev.iv_addr = symm_desc->iv_address;
+            break;
+
+        default:
+            return;
+        }
+
+        notifyq->TxQPost(&ev);
+    }
+}
+
+/*
+ * Calculate ring descriptor index from delta (which could be positive
+ * or negative).
+ */
+bool
+AccelLif::accel_ring_desc_idx_delta(const accel_ring_t *ring,
+                                    uint32_t desc_idx,
+                                    int delta,
+                                    uint32_t *ret_idx)
+{
+     int    delta_idx;
+
+     *ret_idx = desc_idx;
+     if (accel_ring_config_valid(ring)) {
+         delta_idx = (int)(desc_idx % ring->ring_size) + delta;
+         if (delta_idx < 0) {
+             delta_idx += ring->ring_size;
+         }
+         *ret_idx = (uint32_t)delta_idx % ring->ring_size;
+         return true;
+     }
+
+     NIC_LOG_ERR("{}: ring {} not valid or not configured",
+                 LifNameGet(), accel_ring_id2name_get(ring));
+     return false;
 }
 
 int

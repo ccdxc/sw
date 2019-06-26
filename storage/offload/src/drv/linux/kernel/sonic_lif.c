@@ -180,10 +180,10 @@ static bool sonic_notifyq_service(struct cq *cq, struct cq_info *cq_info, void *
 	case EVENT_OPCODE_RESET:
 		OSAL_LOG_DEBUG("Notifyq EVENT_OPCODE_RESET eid=" PRIu64,
 			    cpl->event.eid);
-		OSAL_LOG_DEBUG("reset_code=%d",
-			    cpl->reset.reset_code);
+		OSAL_LOG_DEBUG("reason_code=0x%x",
+			    cpl->reset.reason_code);
 		if (sonic_error_reset_recovery_en_get()) {
-			lif->reset_ctl.work.reset_code = cpl->reset.reset_code;
+			lif->reset_ctl.work.reason_code = cpl->reset.reason_code;
 			sonic_lif_reset_ctl_start(lif);
 		}
 		break;
@@ -196,6 +196,31 @@ static bool sonic_notifyq_service(struct cq *cq, struct cq_info *cq_info, void *
 			    cpl->event.eid);
 		print_hex_dump_debug("notifyq ", DUMP_PREFIX_OFFSET, 16, 1,
 			       cpl->log.data, sizeof(cpl->log.data), true);
+		break;
+	case EVENT_OPCODE_RING_DESC_DATA:
+		OSAL_LOG_DEBUG("Notifyq EVENT_OPCODE_RING_DESC_DATA eid=" PRIu64
+				" ring=%s desc_idx=%u", cpl->event.eid,
+				sonic_accel_ring_name_get(cpl->ring_desc_data.ring_id),
+				cpl->ring_desc_data.desc_idx);
+		OSAL_LOG_DEBUG("num_frags=%u frag_offs=%u frag_size=%u",
+				cpl->ring_desc_data.num_frags,
+				cpl->ring_desc_data.frag_offs,
+				cpl->ring_desc_data.frag_size);
+		break;
+	case EVENT_OPCODE_RING_DESC_ADDR:
+		OSAL_LOG_DEBUG("Notifyq EVENT_OPCODE_RING_DESC_ADDR eid=" PRIu64
+				" ring=%s desc_idx=%u", cpl->event.eid,
+				sonic_accel_ring_name_get(cpl->ring_desc_addr.ring_id),
+				cpl->ring_desc_addr.desc_idx);
+		OSAL_LOG_DEBUG("src_addr=0x" PRIx64 " dst_addr=0x" PRIx64
+				" status_addr=0x" PRIx64 " db_addr=0x" PRIx64
+				" otag_addr=0x" PRIx64 " iv_addr=0x" PRIx64,
+				cpl->ring_desc_addr.src_addr,
+				cpl->ring_desc_addr.dst_addr,
+				cpl->ring_desc_addr.status_addr,
+				cpl->ring_desc_addr.db_addr,
+				cpl->ring_desc_addr.otag_addr,
+				cpl->ring_desc_addr.iv_addr);
 		break;
 	default:
 		OSAL_LOG_DEBUG("Notifyq bad event ecode=%d eid=" PRIu64,
@@ -964,7 +989,9 @@ static int sonic_lif_hang_notify(struct lif *lif)
 {
 	struct sonic_dev *idev = &lif->sonic->idev;
 
-	sonic_dev_cmd_hang_notify(idev, lif->index);
+	sonic_dev_cmd_hang_notify(idev, lif->index,
+			lif->reset_ctl.uncond_desc_notify);
+	lif->reset_ctl.uncond_desc_notify = false;
 	return sonic_dev_cmd_wait_check(idev, devcmd_timeout);
 }
 
@@ -1186,8 +1213,10 @@ sonic_sysctl_lif_reset_handler(SYSCTL_HANDLER_ARGS)
 
 	OSAL_LOG_DEBUG("sonic systcl reset %d", reset_sense);
 	lif->reset_ctl.sense = reset_sense;
-	if (reset_sense)
+	if (reset_sense) {
+		lif->reset_ctl.uncond_desc_notify = true;
 		sonic_lif_reset_ctl_start(lif);
+	}
 	return 0;
 }
 

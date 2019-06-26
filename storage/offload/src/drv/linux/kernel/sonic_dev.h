@@ -93,6 +93,8 @@ static inline void sonic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(struct reset_event) != 64);
 	BUILD_BUG_ON(sizeof(struct heartbeat_event) != 64);
 	BUILD_BUG_ON(sizeof(struct log_event) != 64);
+	BUILD_BUG_ON(sizeof(struct ring_desc_data_event) != 64);
+	BUILD_BUG_ON(sizeof(struct ring_desc_addr_event) != 64);
 	BUILD_BUG_ON(sizeof(struct notifyq_cmd) != 4);
 	BUILD_BUG_ON(sizeof(union notifyq_cpl) != 64);
 	BUILD_BUG_ON(sizeof(union adminq_cmd) != 64);
@@ -270,7 +272,8 @@ u8 sonic_dev_cmd_status(struct sonic_dev *idev);
 bool sonic_dev_cmd_done(struct sonic_dev *idev);
 void sonic_dev_cmd_cpl(struct sonic_dev *idev, void *mem);
 void sonic_dev_cmd_reset(struct sonic_dev *idev);
-void sonic_dev_cmd_hang_notify(struct sonic_dev *idev, uint32_t lif_index);
+void sonic_dev_cmd_hang_notify(struct sonic_dev *idev, uint32_t lif_index,
+			       bool uncond_desc_notify);
 void sonic_dev_cmd_identify(struct sonic_dev *idev, u16 ver);
 void sonic_dev_cmd_lif_identify(struct sonic_dev *idev, u16 ver);
 void sonic_dev_cmd_lif_init(struct sonic_dev *idev, u32 lif_index);

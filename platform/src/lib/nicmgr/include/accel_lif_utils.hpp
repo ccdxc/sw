@@ -4,6 +4,14 @@
 #include <utility>
 #include <map>
 
+#ifndef USEC_PER_SEC
+#define USEC_PER_SEC    1000000L
+#endif
+
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(x)   (sizeof(x) / sizeof((x)[0]))
+#endif
+
 class AccelLif;
 
 namespace AccelLifUtils {
@@ -58,7 +66,7 @@ public:
 
     bool TxQInit(const notifyq_init_cmd_t *init_cmd,
                  uint32_t desc_size);
-    bool TxQPost(void *desc);
+    bool TxQPost(const void *desc);
     bool TxQReset(void);
 
 private:
@@ -120,6 +128,8 @@ public:
 
     void ErrPollStart(void);
     void ErrPollStop(void);
+    void reset_log_reason_eval(const accel_rgroup_rmisc_rsp_t& misc,
+                               uint32_t *ret_reason_code);
 
     friend void mon_rmisc_rsp_cb(void *user_ctx,
                                  const accel_rgroup_rmisc_rsp_t& misc);
@@ -128,7 +138,7 @@ public:
 private:
     AccelLif&           lif;
     DetectionLogControl detection_log;
-    uint32_t            reset_code;
+    uint32_t            reason_code;
 
     EV_P;
     evutil_timer        err_timer;

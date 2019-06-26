@@ -236,6 +236,7 @@ rgroup_indices_get_cb(void *user_ctx,
     response->mutable_ring_indices_spec(ctx->rsp_count)->set_sub_ring(indices.sub_ring);
     response->mutable_ring_indices_spec(ctx->rsp_count)->set_pndx(indices.pndx);
     response->mutable_ring_indices_spec(ctx->rsp_count)->set_cndx(indices.cndx);
+    response->mutable_ring_indices_spec(ctx->rsp_count)->set_endx(indices.endx);
     ctx->rsp_count++;
 }
 

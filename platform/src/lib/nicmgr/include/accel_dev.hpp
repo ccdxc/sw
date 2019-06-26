@@ -25,6 +25,7 @@
 #include "elb_ms_csr_define.h"
 #include "nic/hal/pd/elba/elba_cpdc.hpp"
 #include "nic/hal/pd/elba/elba_barco_crypto.hpp"
+#include "nic/hal/pd/elba/elba_barco_rings.hpp"
 #include "nic/hal/pd/elba/elba_hbm.hpp"
 
 // Temporarily using CHIPID since VER is not yet exported from model
@@ -51,6 +52,7 @@
 #include "cap_ms_c_hdr.h"
 #include "nic/hal/pd/capri/capri_cpdc.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
+#include "nic/hal/pd/capri/capri_barco_rings.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 
 #define HW_CHIP_VER_CSR                 (CAP_ADDR_BASE_MS_MS_OFFSET + \

@@ -136,6 +136,8 @@ enum notifyq_opcode {
 	EVENT_OPCODE_RESET          = 2,
 	EVENT_OPCODE_HEARTBEAT      = 3,
 	EVENT_OPCODE_LOG            = 4,
+	EVENT_OPCODE_RING_DESC_DATA = 5,
+	EVENT_OPCODE_RING_DESC_ADDR = 6,
 };
 
 #pragma pack(push, 1)
@@ -820,12 +822,21 @@ typedef struct crypto_key_update_cpl {
  * hang_notify_cmd_t - Hang notify command
  * @opcode:     opcode
  * @lif_index:  LIF index
+ * @uncond_desc_notify:  send desc notifications unconditionally
+ * @desc_notify_type:  type of desc notifications
  */
+enum desc_notify_type {
+	DESC_NOTIFY_TYPE_ADDR,
+	DESC_NOTIFY_TYPE_DATA,
+};
+
 typedef struct hang_notify_cmd {
 	uint8_t     opcode;
 	uint8_t     rsvd1;
         __le16      lif_index;
-	uint8_t     rsvd2[60];
+	uint8_t     uncond_desc_notify;
+	uint8_t     desc_notify_type;
+	uint8_t     rsvd2[58];
 } hang_notify_cmd_t;
 
 /**
@@ -849,35 +860,61 @@ typedef struct hang_notify_cpl {
  */
 typedef struct notifyq_event {
 	__le64      eid;
-	__le16      ecode;
+	uint8_t     ecode;
+	uint8_t     rsvd;
 	uint8_t     data[54];
 } notifyq_event_t;
 
 /**
- * enum reset_code - mask of reset reasons
+ * enum reason_code - mask of reason codes
  */
-enum reset_code {
-	ACCEL_LIF_RESET_CODE_VOID       = 0,
-	ACCEL_LIF_RESET_CODE_CP         = 1 << 0,
-	ACCEL_LIF_RESET_CODE_DC         = 1 << 1,
-	ACCEL_LIF_RESET_CODE_ENCR	= 1 << 2,
-	ACCEL_LIF_RESET_CODE_DECR	= 1 << 3,
+enum reason_code {
+	ACCEL_LIF_REASON_VOID			= 0,
+	ACCEL_LIF_REASON_CP_ERR_RESET		= 1 << 0,
+	ACCEL_LIF_REASON_DC_ERR_RESET		= 1 << 1,
+	ACCEL_LIF_REASON_CP_ERR_LOG		= 1 << 2,
+	ACCEL_LIF_REASON_DC_ERR_LOG		= 1 << 3,
+	ACCEL_LIF_REASON_XTS_ENCR_ERR_RESET	= 1 << 4,
+	ACCEL_LIF_REASON_XTS_DECR_ERR_RESET	= 1 << 5,
+	ACCEL_LIF_REASON_XTS_ENCR_ERR_LOG	= 1 << 6,
+	ACCEL_LIF_REASON_XTS_DECR_ERR_LOG	= 1 << 7,
+	ACCEL_LIF_REASON_GCM_ENCR_ERR_RESET	= 1 << 8,
+	ACCEL_LIF_REASON_GCM_DECR_ERR_RESET	= 1 << 9,
+	ACCEL_LIF_REASON_GCM_ENCR_ERR_LOG	= 1 << 10,
+	ACCEL_LIF_REASON_GCM_DECR_ERR_LOG	= 1 << 11,
+
+	ACCEL_LIF_REASON_CPDC_ERR_RESET_MASK	= ACCEL_LIF_REASON_CP_ERR_RESET |
+						  ACCEL_LIF_REASON_DC_ERR_RESET,
+	ACCEL_LIF_REASON_CPDC_ERR_LOG_MASK	= ACCEL_LIF_REASON_CP_ERR_LOG |
+						  ACCEL_LIF_REASON_DC_ERR_LOG,
+	ACCEL_LIF_REASON_XTS_ERR_RESET_MASK	= ACCEL_LIF_REASON_XTS_ENCR_ERR_RESET |
+						  ACCEL_LIF_REASON_XTS_DECR_ERR_RESET,
+	ACCEL_LIF_REASON_XTS_ERR_LOG_MASK	= ACCEL_LIF_REASON_XTS_ENCR_ERR_LOG |
+						  ACCEL_LIF_REASON_XTS_DECR_ERR_LOG,
+	ACCEL_LIF_REASON_GCM_ERR_RESET_MASK	= ACCEL_LIF_REASON_GCM_ENCR_ERR_RESET |
+						  ACCEL_LIF_REASON_GCM_DECR_ERR_RESET,
+	ACCEL_LIF_REASON_GCM_ERR_LOG_MASK	= ACCEL_LIF_REASON_GCM_ENCR_ERR_LOG |
+						  ACCEL_LIF_REASON_GCM_DECR_ERR_LOG,
+	ACCEL_LIF_REASON_ALL_ERR_RESET_MASK	= ACCEL_LIF_REASON_CPDC_ERR_RESET_MASK |
+						  ACCEL_LIF_REASON_XTS_ERR_RESET_MASK,
 };
 
 /**
  * struct reset_event
  * @eid:		event number
  * @ecode:		event code = EVENT_OPCODE_RESET
- * @reset_code:		see enum reset_code
+ * @reason_code:	see enum reason_code
  *
  * Sent when the NIC or some subsystem is going to be or
  * has been reset.
  */
 typedef struct reset_event {
 	__le64      eid;
-	__le16      ecode;
-	__le16      reset_code;
-	uint8_t     rsvd[52];
+	uint8_t     ecode;
+	uint8_t     rsvd1;
+	__le16      rsvd2;
+	__le32      reason_code;
+	uint8_t     rsvd3[48];
 } reset_event_t;
 
 /**
@@ -889,8 +926,9 @@ typedef struct reset_event {
  */
 typedef struct heartbeat_event {
 	__le64      eid;
-	__le16      ecode;
-	uint8_t     rsvd[54];
+	uint8_t     ecode;
+	uint8_t     rsvd1;
+	uint8_t     rsvd2[54];
 } heartbeat_event_t;
 
 /**
@@ -903,9 +941,63 @@ typedef struct heartbeat_event {
  */
 typedef struct log_event {
 	__le64      eid;
-	__le16      ecode;
+	uint8_t     ecode;
+	uint8_t     rsvd;
 	uint8_t     data[54];
 } log_event_t;
+
+/**
+ * struct ring_desc_data_event
+ * @eid:	event number
+ * @ecode:	event code = EVENT_OPCODE_RING_DESC_DATA
+ * @ring_id:	ring ID
+ * @desc_idx:	descriptor ring index
+ * @frag_offs:	fragment offset
+ * @frag_size:	fragment size
+ * @num_frags:	total number of fragments of descriptor data
+ * @frag_data:	fragment data
+ *
+ * Sent to notify the driver of an (errored) ring descriptor.
+ */
+typedef struct ring_desc_data_event {
+	__le64      eid;
+	uint8_t     ecode;
+	uint8_t     ring_id;
+	__le16      desc_idx;
+	__le16      frag_offs;
+	uint8_t     frag_size;
+	uint8_t     num_frags;
+	uint8_t     frag_data[48];
+} ring_desc_data_event_t;
+
+/**
+ * struct ring_desc_addr_event
+ * @eid:	event number
+ * @ecode:	event code = EVENT_OPCODE_RING_DESC_ADDR
+ * @ring_id:	ring ID
+ * @desc_idx:	descriptor ring index
+ * @src_data_addr: source data address
+ * @dst_data_addr: destination data address
+ * @status_addr: fragment size
+ * @db_addr:	doorbell address
+ * @otag_addr:	opaque data address
+ * @iv_addr:	initialization vector address
+ *
+ * Sent to notify the driver of an (errored) ring descriptor.
+ */
+typedef struct ring_desc_addr_event {
+	__le64      eid;
+	uint8_t     ecode;
+	uint8_t     ring_id;
+	__le16      desc_idx;
+	__le64      src_addr;
+	__le64      dst_addr;
+	__le64      status_addr;
+	__le64      db_addr;
+	__le64      otag_addr;
+	__le64      iv_addr;
+	uint8_t     rsvd[4];
+} ring_desc_addr_event_t;
 
 typedef struct notifyq_cmd {
 	__le32      data;       /* Not used but needed for qcq structure */
@@ -1110,6 +1202,8 @@ typedef union notifyq_cpl {
 	reset_event_t           reset;
 	heartbeat_event_t       heartbeat;
 	log_event_t             log;
+        ring_desc_data_event_t  ring_desc_data;
+        ring_desc_addr_event_t  ring_desc_addr;
 } notifyq_cpl_t;
 
 /**

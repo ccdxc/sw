@@ -201,6 +201,7 @@ message AccelRGroupRingIndicesSpec {
     uint32 sub_ring = 2;
     uint32 pndx = 3;
     uint32 cndx = 4;
+    uint32 endx = 5;
 }
 
 message AccelRGroupIndicesGetResponse {

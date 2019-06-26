@@ -149,7 +149,7 @@
         {
             "name" : "accel",
             "lif_count" : 1,
-            "seq_queue_count" : 24576,
+            "seq_queue_count" : 32768,
             "adminq_count" : 1,
             "intr_count" : 64,
             "rate_limit" : {
