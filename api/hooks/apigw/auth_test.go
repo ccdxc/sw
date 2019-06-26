@@ -617,6 +617,56 @@ func TestLdapConnectionCheck(t *testing.T) {
 			},
 			err: nil,
 		},
+		{
+			name: "no ldap authenticator config",
+			in: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{},
+			},
+			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
+			status: &auth.LdapServerStatus{
+				Result: auth.LdapServerStatus_Connect_Success.String(),
+			},
+			err: errors.New("ldap authenticator config not defined"),
+		},
+		{
+			name: "no ldap servers",
+			in: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Enabled:      true,
+							Servers:      []*auth.LdapServer{},
+							BaseDN:       "DC=io,DC=pensando",
+							BindDN:       "DN=admin",
+							BindPassword: "password",
+							AttributeMapping: &auth.LdapAttributeMapping{
+								User:             "samAccount",
+								UserObjectClass:  "user",
+								Group:            "group",
+								GroupObjectClass: "ou",
+							},
+						},
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+					},
+				},
+			},
+			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
+			status: &auth.LdapServerStatus{
+				Result: auth.LdapServerStatus_Connect_Success.String(),
+			},
+			err: errors.New("ldap server not defined"),
+		},
 	}
 	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
 	l := log.GetNewLogger(logConfig)
@@ -726,6 +776,56 @@ func TestLdapBindCheck(t *testing.T) {
 				Result: auth.LdapServerStatus_Bind_Success.String(),
 			},
 			err: nil,
+		},
+		{
+			name: "no ldap authenticator config",
+			in: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{},
+			},
+			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
+			status: &auth.LdapServerStatus{
+				Result: auth.LdapServerStatus_Connect_Success.String(),
+			},
+			err: errors.New("ldap authenticator config not defined"),
+		},
+		{
+			name: "no ldap servers",
+			in: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Enabled:      true,
+							Servers:      []*auth.LdapServer{},
+							BaseDN:       "DC=io,DC=pensando",
+							BindDN:       "DN=admin",
+							BindPassword: "password",
+							AttributeMapping: &auth.LdapAttributeMapping{
+								User:             "samAccount",
+								UserObjectClass:  "user",
+								Group:            "group",
+								GroupObjectClass: "ou",
+							},
+						},
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+					},
+				},
+			},
+			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
+			status: &auth.LdapServerStatus{
+				Result: auth.LdapServerStatus_Connect_Success.String(),
+			},
+			err: errors.New("ldap server not defined"),
 		},
 	}
 	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")

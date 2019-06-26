@@ -205,6 +205,12 @@ func (a *authHooks) ldapConnectionCheck(ctx context.Context, in interface{}) (co
 	}
 	obj.Status.LdapServers = nil
 	config := obj.Spec.Authenticators.Ldap
+	if config == nil {
+		return ctx, in, true, errors.New("ldap authenticator config not defined")
+	}
+	if len(config.Servers) == 0 {
+		return ctx, in, true, errors.New("ldap server not defined")
+	}
 	for _, server := range config.Servers {
 		_, err := a.ldapChecker.Connect(server.Url, server.TLSOptions)
 		status := &auth.LdapServerStatus{
@@ -232,6 +238,12 @@ func (a *authHooks) ldapBindCheck(ctx context.Context, in interface{}) (context.
 	}
 	obj.Status.LdapServers = nil
 	config := obj.Spec.Authenticators.Ldap
+	if config == nil {
+		return ctx, in, true, errors.New("ldap authenticator config not defined")
+	}
+	if len(config.Servers) == 0 {
+		return ctx, in, true, errors.New("ldap server not defined")
+	}
 	for _, server := range config.Servers {
 		ok, err := a.ldapChecker.Bind(server.Url, server.TLSOptions, config.BindDN, config.BindPassword)
 		status := &auth.LdapServerStatus{

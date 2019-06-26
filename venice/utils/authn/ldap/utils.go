@@ -35,7 +35,7 @@ func ValidateLdapConfig(config *auth.Ldap) []error {
 			if err != nil {
 				errs = append(errs, err)
 			}
-			if srv.TLSOptions.StartTLS && !srv.TLSOptions.SkipServerCertVerification {
+			if srv.TLSOptions != nil && srv.TLSOptions.StartTLS && !srv.TLSOptions.SkipServerCertVerification {
 				if srv.TLSOptions.ServerName == "" {
 					errs = append(errs, errors.New("remote server name not defined"))
 				}

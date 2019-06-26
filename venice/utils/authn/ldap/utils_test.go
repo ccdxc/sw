@@ -146,6 +146,30 @@ func TestValidateLdapConfig(t *testing.T) {
 
 			errs: []error{ErrSSLConfig, errors.New("remote server name not defined")},
 		},
+		{
+			name: "Missing TLS Options ",
+			in: &auth.Ldap{
+				Enabled: true,
+				Servers: []*auth.LdapServer{
+					{
+						Url:        "localhost:389",
+						TLSOptions: nil,
+					},
+				},
+
+				BaseDN:       BaseDN,
+				BindDN:       BindDN,
+				BindPassword: BindPassword,
+				AttributeMapping: &auth.LdapAttributeMapping{
+					User:             UserAttribute,
+					UserObjectClass:  UserObjectClassAttribute,
+					Group:            GroupAttribute,
+					GroupObjectClass: GroupObjectClassAttribute,
+				},
+			},
+
+			errs: []error{},
+		},
 	}
 
 	for _, test := range tests {

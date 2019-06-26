@@ -30,7 +30,7 @@ func getConnection(addr string, tlsOptions *auth.TLSOptions) (connection, error)
 		log.Errorf("Unable to establish ldap connection with [%q], Err: %v", addr, err)
 		return nil, err
 	}
-	if tlsOptions.GetStartTLS() {
+	if tlsOptions != nil && tlsOptions.GetStartTLS() {
 		trustedCerts := tlsOptions.GetTrustedCerts()
 		var certpool *x509.CertPool
 		if trustedCerts != "" {
