@@ -261,7 +261,7 @@ func runSteps(steps []installationStep) error {
 			log.Infof("restarting %s pid [%s]", step.Data, oldpid)
 			if err := syst.RestartTargetIfRunning(step.Data); err != nil {
 				log.Errorf("Error %v while issuing systemctl-reload-running %v", err, step.Data)
-				return err
+				return fmt.Errorf("Failed to restart service %v. Error(%s)", step.Data, err)
 			}
 
 			if strings.Contains(step.Data, "pen-etcd") {
