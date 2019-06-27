@@ -60,10 +60,10 @@ typedef struct pds_meter_debug_stats_e {
 } pds_meter_debug_stats_t;
 
 typedef struct session_stats_entry_s {
-    uint64_t iflow_packet_count;
     uint64_t iflow_bytes_count;
-    uint64_t rflow_packet_count;
+    uint64_t iflow_packet_count;
     uint64_t rflow_bytes_count;
+    uint64_t rflow_packet_count;
 } pds_session_debug_stats_t;
 
 namespace debug {
