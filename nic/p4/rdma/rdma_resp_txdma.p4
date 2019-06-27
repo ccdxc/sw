@@ -57,7 +57,7 @@
 #define tx_table_s1_t0_action2  resp_tx_rsq_backtrack_adjust_process
 #define tx_table_s1_t0_action3  resp_tx_rqcb2_bt_process
 
-#define tx_table_s1_t2_action   resp_tx_dcqcn_config_load_process
+#define tx_table_s1_t1_action   resp_tx_dcqcn_config_load_process
 
 #define tx_table_s2_t0_action   resp_tx_rsqwqe_process
 #define tx_table_s2_t0_action1  resp_tx_rsqwqe_bt_process
@@ -485,15 +485,15 @@ metadata resp_tx_rqcb0_bt_write_back_info_t t1_s2s_rqcb0_bt_write_back_info;
 @pragma scratch_metadata
 metadata resp_tx_rqcb0_bt_write_back_info_t t1_s2s_rqcb0_bt_write_back_info_scr;
 
+@pragma pa_header_union ingress common_t1_s2s
+metadata resp_tx_rqcb_to_dcqcn_cfg_info_t t1_s2s_dcqcn_config_info;
+@pragma scratch_metadata
+metadata resp_tx_rqcb_to_dcqcn_cfg_info_t t1_s2s_dcqcn_config_info_scr;
+
 @pragma pa_header_union ingress common_t0_s2s
 metadata resp_tx_bt_info_t t0_s2s_bt_info;
 @pragma scratch_metadata
 metadata resp_tx_bt_info_t t0_s2s_bt_info_scr;
-
-@pragma pa_header_union ingress common_t2_s2s
-metadata resp_tx_rqcb_to_dcqcn_cfg_info_t t2_s2s_dcqcn_config_info;
-@pragma scratch_metadata
-metadata resp_tx_rqcb_to_dcqcn_cfg_info_t t2_s2s_dcqcn_config_info_scr;
 
 @pragma pa_header_union ingress common_t2_s2s
 metadata resp_tx_rsqrkey_to_rkey_cookie_info_t t2_s2s_rsqrkey_to_rkey_cookie_info;
@@ -621,8 +621,8 @@ action resp_tx_dcqcn_config_load_process() {
     // to stage
 
     // stage to stage
-    modify_field(t2_s2s_dcqcn_config_info_scr.dcqcn_config_base, t2_s2s_dcqcn_config_info.dcqcn_config_base);
-    modify_field(t2_s2s_dcqcn_config_info_scr.dcqcn_config_id, t2_s2s_dcqcn_config_info.dcqcn_config_id);
+    modify_field(t1_s2s_dcqcn_config_info_scr.dcqcn_config_base, t1_s2s_dcqcn_config_info.dcqcn_config_base);
+    modify_field(t1_s2s_dcqcn_config_info_scr.dcqcn_config_id, t1_s2s_dcqcn_config_info.dcqcn_config_id);
 
 }
 action resp_tx_rqcb0_write_back_process () {

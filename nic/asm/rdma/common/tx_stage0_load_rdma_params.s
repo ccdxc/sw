@@ -46,7 +46,7 @@ rq:
     // r4 = dcqcn_config table base address
     add r4, r4, r3, LOG_SIZEOF_KEY_ENTRY_T
 
-    add r2, r0, offsetof(struct phv_, common_t2_s2s_s2s_data)
+    add r2, r0, offsetof(struct phv_, common_t1_s2s_s2s_data)
     b   done
     CAPRI_SET_FIELD(r2, RQCB_TO_DCQCN_CFG_T, dcqcn_config_base, r4)  // BD Slot
 

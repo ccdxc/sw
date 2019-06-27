@@ -49,6 +49,7 @@ process_atomic:
     # is the only valid speculation. All other speculations should be dropped.
     bcf         [!c1], drop_phv
     add         BTH_OPCODE, RDMA_PKT_OPC_ATOMIC_ACK, CAPRI_KEY_FIELD(IN_P, serv_type), BTH_OPC_SVC_SHIFT //BD Slot
+    CAPRI_RESET_TABLE_1_ARG()
     phvwrpair   p.bth.opcode, BTH_OPCODE, p.bth.psn, d.psn
     phvwr       CAPRI_PHV_FIELD(TO_S7_P, last_psn), d.psn
 

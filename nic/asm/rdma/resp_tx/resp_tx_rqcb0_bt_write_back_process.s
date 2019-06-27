@@ -13,7 +13,7 @@ struct rqcb0_t d;
 #define K_READ_RSP_IN_PROGRESS  CAPRI_KEY_FIELD(WB_K_P, read_rsp_in_progress)
 #define K_BT_IN_PROGRESS        CAPRI_KEY_FIELD(WB_K_P, bt_in_progress)
 #define K_CURR_READ_RSP_PSN     CAPRI_KEY_FIELD(WB_K_P, curr_read_rsp_psn)
-#define K_RSQ_CINDEX            CAPRI_KEY_FIELD(WB_K_P, rsq_cindex)
+#define K_RSQ_CINDEX            CAPRI_KEY_RANGE(WB_K_P, rsq_cindex_sbit0_ebit7, rsq_cindex_sbit8_ebit15)
 #define K_BT_CINDEX             CAPRI_KEY_FIELD(WB_K_P, bt_cindex)
 #define K_BT_RSQ_CINDEX         CAPRI_KEY_FIELD(WB_K_P, bt_rsq_cindex)
 

@@ -13,7 +13,7 @@ struct rdma_stage0_table_k k;
 #define TO_S4_P to_s4_dcqcn_info
 #define TO_S5_P to_s5_rqcb1_wb_info
 #define BT_TO_S_INFO_P to_s1_bt_info
-#define RQCB_TO_DCQCN_CFG_P t2_s2s_dcqcn_config_info
+#define RQCB_TO_DCQCN_CFG_P t1_s2s_dcqcn_config_info
 
 #define RSQWQE_P            r1
 #define RQCB2_P             r2
@@ -218,7 +218,7 @@ bt_in_progress:
 
         add             DCQCNCB_ADDR, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_rate_process, DCQCNCB_ADDR)
-        CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_config_load_process, r0)
+        CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_config_load_process, r0)
     
         phvwr.e     p.common.p4_intr_global_drop, 1
         nop //Exit Slot
@@ -232,7 +232,7 @@ bt_in_progress:
         phvwr           CAPRI_PHV_FIELD(RQCB_TO_DCQCN_CFG_P, dcqcn_config_id), d.dcqcn_cfg_id
         add             DCQCNCB_ADDR, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_dcqcn_timer_process, DCQCNCB_ADDR)
-        CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_config_load_process, r0)
+        CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_config_load_process, r0)
 
         phvwr.e     p.common.p4_intr_global_drop, 1
         nop //Exit Slot
