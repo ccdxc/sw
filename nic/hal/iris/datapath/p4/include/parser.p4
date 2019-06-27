@@ -1850,7 +1850,7 @@ parser parse_inner_udp {
     set_metadata(parser_metadata.inner_ip_options_len, inner_udp.len);
     return select(latest.dstPort) {
         UDP_PORT_ROCE_V2: parse_inner_roce_v2_pre;
-        default:          parse_dummy;
+        default:    ingress;
     }
 }
 
@@ -1861,21 +1861,6 @@ parser parse_inner_roce_v2_pre {
     // subtract 24 (8B UDP header, 12B BTH, 4B iCRC)
     set_metadata(parser_metadata.l4_len, parser_metadata.inner_ip_options_len - 24);
     return parse_roce_v2;
-}
-
-@pragma deparse_only
-parser parse_dummy {
-    // This state is added as a work-around until NCC has a fix for handling
-    // hdr unions and same set_metadata from multiple states while computing topo-graph
-    return select (current(0,16)) {
-        default: ingress;
-        0x1 mask 0x0000 : parse_ipsec_esp;
-        0x2 mask 0x0000 : parse_ipsec_ah;
-        0x3 mask 0x0000 : parse_icmp;
-        0x4 mask 0x0000 : parse_icmpv6;
-        0x5 mask 0x0000 : parse_ipv6_tcp;
-        0x6 mask 0x0000 : parse_ipv4_tcp;
-    }
 }
 
 @pragma dont_advance_packet

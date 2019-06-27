@@ -39,8 +39,9 @@ encap_vxlan:
 
   // set inner_ethernet_valid, vxlan_valid and udp_valid
   .assert(offsetof(p, inner_ethernet_valid) - offsetof(p, vxlan_valid) == 1)
-  .assert(offsetof(p, vxlan_valid) - offsetof(p, udp_valid) == 4)
-  phvwrmi     p.{inner_ethernet_valid...udp_valid}, 0x3F, 0x31
+  .assert(offsetof(p, vxlan_valid) - offsetof(p, udp_valid) == 5)
+  phvwrmi     p.{inner_ethernet_valid, vxlan_valid, genv_valid, \
+                 vxlan_gpe_valid, mpls_0_valid, esp_valid, udp_valid}, 0x7F, 0x61
 
   // vlan header
   seq         c1, d.u.encap_vxlan_d.ip_type, IP_HEADER_TYPE_IPV4
@@ -95,7 +96,7 @@ encap_mpls_udp:
   or          r1, 0x140, k.rewrite_metadata_tunnel_vnid, 12
   phvwr       p.{mpls_0_label,mpls_0_exp,mpls_0_bos,mpls_0_ttl}, r1
   // set header valid bits
-  phvwr       p.{mpls_0_valid,udp_valid}, 0x3
+  phvwrmi     p.{mpls_0_valid, esp_valid, udp_valid}, 0x7, 0x5
   // vlan header
   seq         c1, d.u.encap_vxlan_d.ip_type, IP_HEADER_TYPE_IPV4
   cmov        r6, c1, ETHERTYPE_IPV4, ETHERTYPE_IPV6

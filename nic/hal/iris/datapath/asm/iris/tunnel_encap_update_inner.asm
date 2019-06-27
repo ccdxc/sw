@@ -16,7 +16,8 @@ nop:
 encap_inner_ipv4_udp_rewrite:
   phvwr       p.{inner_ipv4_version...inner_ipv4_diffserv}, k.{ipv4_version...ipv4_diffserv}
   phvwr       p.{inner_ipv4_totalLen...inner_ipv4_dstAddr}, k.{ipv4_totalLen...ipv4_dstAddr}
-  phvwr       p.{inner_udp_srcPort...inner_udp_checksum}, k.{udp_srcPort...udp_checksum}
+  phvwr       p.{inner_udp_len...inner_udp_checksum}, k.{udp_len...udp_checksum}
+  phvwr       p.{inner_udp_srcPort...inner_udp_dstPort}, k.{udp_srcPort...udp_dstPort}
   phvwr       p.tunnel_metadata_inner_ip_proto, IP_PROTO_UDP
   phvwrpair   p.inner_ipv4_valid, TRUE, p.ipv4_valid, FALSE
   crestore    [c2-c1], k.{ipv4_options_blob2_valid, ipv4_options_blob_valid}, 0x3
@@ -71,7 +72,8 @@ encap_inner_ipv6_udp_rewrite:
   phvwr       p.inner_ipv6_version, k.ipv6_version
   phvwr       p.{inner_ipv6_trafficClass...inner_ipv6_srcAddr}, k.{ipv6_trafficClass...ipv6_srcAddr}
   phvwr       p.{inner_ipv6_dstAddr}, k.{ipv6_dstAddr}
-  phvwr       p.{inner_udp_srcPort...inner_udp_checksum}, k.{udp_srcPort...udp_checksum}
+  phvwr       p.{inner_udp_len...inner_udp_checksum}, k.{udp_len...udp_checksum}
+  phvwr       p.{inner_udp_srcPort...inner_udp_dstPort}, k.{udp_srcPort...udp_dstPort}
   phvwr       p.tunnel_metadata_inner_ip_proto, IP_PROTO_IPV6
   phvwrpair   p.inner_udp_valid, TRUE, p.udp_valid, FALSE
   phvwrpair.e p.inner_ipv6_valid, TRUE, p.ipv6_valid, FALSE
