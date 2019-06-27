@@ -29,8 +29,13 @@ action ipv4_vxlan_encap(vni, dipo, dmac) {
     modify_field(ipv4_0.totalLen, scratch_metadata.ip_totallen);
     modify_field(ipv4_0.ttl, 64);
     modify_field(ipv4_0.protocol, IP_PROTO_UDP);
-    modify_field(ipv4_0.dstAddr, dipo);
-    modify_field(ipv4_0.srcAddr, rewrite_metadata.encap_src_ip);
+    if (TX_REWRITE(rewrite_metadata.flags, SRC_IP_OUTER, FROM_XLATE)) {
+        modify_field(ipv4_0.dstAddr, dipo);
+        modify_field(ipv4_0.srcAddr, rewrite_metadata.encap_src_ip);
+    } else {
+        modify_field(ipv4_0.dstAddr, ipv4_1.dstAddr);
+        modify_field(ipv4_0.srcAddr, dipo);
+    }
 
     modify_field(udp_0.srcPort, (0xC000 | p4e_i2e.entropy_hash));
     modify_field(udp_0.dstPort, UDP_PORT_VXLAN);

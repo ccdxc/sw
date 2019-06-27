@@ -80,8 +80,12 @@ ipv4_vxlan_encap:
     phvwr           p.{ethernet_0_srcAddr,ethernet_0_etherType}, r7
     add             r1, r1, 36
     phvwr           p.{ipv4_0_version,ipv4_0_ihl}, 0x45
-    phvwr           p.ipv4_0_srcAddr, k.rewrite_metadata_encap_src_ip
-    phvwr           p.ipv4_0_dstAddr, d.nexthop_info_d.dipo
+    seq             c1, k.rewrite_metadata_flags[TX_REWRITE_SRC_IP_OUTER_BITS], \
+                        TX_REWRITE_SRC_IP_OUTER_FROM_XLATE
+    or.c1           r7, d.nexthop_info_d.dipo[31:0], \
+                        k.rewrite_metadata_encap_src_ip[31:0], 32
+    or.!c1          r7, k.ipv4_1_dstAddr, d.nexthop_info_d.dipo[31:0], 32
+    phvwr           p.{ipv4_0_srcAddr,ipv4_0_dstAddr}, r7
     phvwr           p.{ipv4_0_ttl,ipv4_0_protocol}, (64 << 8) | IP_PROTO_UDP
     phvwr           p.ipv4_0_totalLen, r1
     sub             r1, r1, 20

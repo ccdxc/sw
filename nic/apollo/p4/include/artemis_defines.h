@@ -105,6 +105,12 @@
 #define TX_REWRITE_ENCAP_VXLAN                  1
 #define TX_REWRITE_ENCAP_BITS                   5:5
 
+#define TX_REWRITE_SRC_IP_OUTER_SHIFT           6
+#define TX_REWRITE_SRC_IP_OUTER_MASK            1
+#define TX_REWRITE_SRC_IP_OUTER_FROM_XLATE      0
+#define TX_REWRITE_SRC_IP_OUTER_FROM_PUBLIC     1
+#define TX_REWRITE_SRC_IP_OUTER_BITS            6:6
+
 #define RX_REWRITE_SMAC_SHIFT                   0
 #define RX_REWRITE_SMAC_MASK                    1
 #define RX_REWRITE_SMAC_NONE                    0
