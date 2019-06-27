@@ -229,7 +229,10 @@ func fsmAcCreated(ros *RolloutState) {
 		ros.eventChan <- fsmEvVeniceBypass
 	} else {
 		ros.startRolloutTimer()
-		ros.preCheckNextVeniceNode()
+		numPendingPrecheck, err := ros.preCheckNextVeniceNode()
+		if err == nil && numPendingPrecheck == 0 {
+			ros.eventChan <- fsmEvAllVenicePreUpgOK
+		}
 	}
 }
 func fsmAcOneVenicePreupgSuccess(ros *RolloutState) {

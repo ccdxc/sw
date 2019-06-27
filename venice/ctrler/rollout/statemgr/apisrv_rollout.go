@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
+
 	"github.com/pensando/sw/events/generated/eventtypes"
 
 	"github.com/pensando/sw/api"
@@ -122,6 +124,95 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 		return fmt.Errorf("Unexpected object kind %s", ros.GetObjectKind())
 	}
 	ros.Mutex.Unlock()
+
+	//check if object has status if so, create veniceRollout Objects as well.
+	//if len(ro.Status.ControllerNodesStatus) != 0 {
+	for _, nodeStatus := range ro.Status.ControllerNodesStatus {
+		veniceRollouts := ros.getVenicePendingPreCheckIssue()
+		for _, n := range veniceRollouts {
+			log.Infof("Creating veniceRollout for %s", n)
+			veniceRollout := protos.VeniceRollout{
+				TypeMeta: api.TypeMeta{
+					Kind: "VeniceRollout",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Name: n,
+				},
+				Spec: protos.VeniceRolloutSpec{
+					Ops: []*protos.VeniceOpSpec{
+						{
+							Op:      protos.VeniceOp_VenicePreCheck,
+							Version: ro.Spec.Version,
+						},
+					},
+				},
+			}
+			err := sm.CreateVeniceRolloutState(&veniceRollout, &ros, nodeStatus)
+			if err != nil {
+				log.Errorf("Error %v creating venice rollout state", err)
+				return err
+			}
+		}
+	}
+
+	for _, snicStatus := range ro.Status.SmartNICsStatus {
+
+		var op protos.SmartNICOp
+		switch ros.Spec.UpgradeType {
+		case roproto.RolloutSpec_Disruptive.String():
+			op = protos.SmartNICOp_SmartNICPreCheckForDisruptive
+		case roproto.RolloutSpec_OnNextHostReboot.String():
+			op = protos.SmartNICOp_SmartNICPreCheckForUpgOnNextHostReboot
+		default:
+			op = protos.SmartNICOp_SmartNICPreCheckForDisruptive
+		}
+
+		snStates, err := sm.ListSmartNICs()
+		if err != nil {
+			log.Errorf("Error %v listing smartNICs", err)
+			return err
+		}
+		sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.SmartNICMustMatchConstraint, snStates)
+
+		for _, s := range sn {
+			for _, snicState := range s {
+				// smartNICRollout Create
+				if snicState.Name != snicStatus.Name {
+					log.Infof("mismatch in names stateName %s statusName %s", snicState.Name, snicStatus.Name)
+					continue
+				}
+
+				log.Infof("Creating smartNICRollout State for %s snicState %+v Tenant %s", snicStatus.Name, snicState, snicState.Tenant)
+				snicRollout := protos.SmartNICRollout{
+					TypeMeta: api.TypeMeta{
+						Kind: kindSmartNICRollout,
+					},
+					ObjectMeta: api.ObjectMeta{
+						Name:   snicState.Name,
+						Tenant: snicState.Tenant,
+					},
+					Spec: protos.SmartNICRolloutSpec{
+						Ops: []*protos.SmartNICOpSpec{
+							{
+								Op:      op,
+								Version: ros.Rollout.Spec.Version,
+							},
+						},
+					},
+				}
+
+				log.Infof("Creating smartNICRolloutState %#v", snicRollout)
+
+				err = sm.CreateSmartNICRolloutState(&snicRollout, &ros, snicStatus)
+				if err != nil {
+					log.Errorf("Error %v creating smartnic rollout state", err)
+					return err
+				}
+			}
+		}
+
+	}
+
 	sm.memDB.AddObject(&ros)
 
 	// TODO: Ensure there is only one Rollout object that is running the state machine at any point of time

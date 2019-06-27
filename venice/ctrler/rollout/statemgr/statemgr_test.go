@@ -5,23 +5,24 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/davecgh/go-spew/spew"
 
+	"github.com/pensando/sw/venice/utils/memdb"
+
+	"github.com/gogo/protobuf/types"
+
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/events/recorder"
-
-	"github.com/davecgh/go-spew/spew"
-	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	roproto "github.com/pensando/sw/api/generated/rollout"
-	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -57,6 +58,94 @@ func (d *dummyWriter) SetRolloutBuildVersion(version string) error {
 func (d *dummyWriter) GetAPIClient() (apiclient.Services, error) {
 	return nil, nil
 }
+
+func TestVeniceRolloutRestartEvent(t *testing.T) {
+	// Create VeniceRolloutObject and see that its properly created and that watchers see the updates to the object
+	// create recorder
+	// create recorder
+	const version = "v1.1"
+
+	// create recorder
+	// create recorder
+	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
+
+	// create  state manager
+	stateMgr, err := NewStatemgr(&dummyWriter{}, evtsRecorder)
+	AssertOk(t, err, "Error creating StateMgr")
+	defer stateMgr.Stop()
+
+	createNode := func(name string) { createNodeHelper(stateMgr, name) }
+	createSNIC := func(name string, labels map[string]string) { createSNICHelper(stateMgr, name, labels) }
+
+	createNode("node1")
+	createNode("node2")
+
+	createNode("node0")
+	n0 := cluster.Node{
+		TypeMeta: api.TypeMeta{
+			Kind: "Node",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "node0",
+			Tenant: "default",
+		},
+	}
+	stateMgr.handleNodeEvent(kvstore.Deleted, &n0)
+
+	createSNIC("naples1", map[string]string{"l1": "n1"})
+	createSNIC("naples2", map[string]string{"l1": "n1"})
+
+	ro1 := roproto.Rollout{
+		TypeMeta: api.TypeMeta{
+			Kind: "Rollout",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   t.Name(),
+			Tenant: "default",
+		},
+		Spec: roproto.RolloutSpec{
+			Version:                   version,
+			ScheduledStartTime:        nil,
+			Duration:                  "",
+			Strategy:                  "",
+			MaxParallel:               1,
+			MaxNICFailuresBeforeAbort: 0,
+			OrderConstraints:          nil,
+			Suspend:                   false,
+			SmartNICsOnly:             false,
+			//SmartNICMustMatchConstraint: true, // hence venice upgrade only
+		},
+		Status: roproto.RolloutStatus{
+			ControllerNodesStatus: []*roproto.RolloutPhase{
+				{
+					Name:  "node1",
+					Phase: roproto.RolloutPhase_COMPLETE.String(),
+				},
+				{
+					Name:  "node2",
+					Phase: roproto.RolloutPhase_PROGRESSING.String(),
+				},
+			},
+			SmartNICsStatus: []*roproto.RolloutPhase{
+				{
+					Name:  "naples1",
+					Phase: roproto.RolloutPhase_PROGRESSING.String(),
+				},
+				{
+					Name:  "naples2",
+					Phase: roproto.RolloutPhase_WAITING_FOR_TURN.String(),
+				},
+			},
+		},
+	}
+	evt2 := kvstore.WatchEvent{
+		Type:   kvstore.Created,
+		Object: &ro1,
+	}
+	stateMgr.RolloutWatcher <- evt2
+
+}
+
 func TestVeniceRolloutWatch(t *testing.T) {
 	// Create VeniceRolloutObject and see that its properly created and that watchers see the updates to the object
 	// create recorder
@@ -82,7 +171,7 @@ func TestVeniceRolloutWatch(t *testing.T) {
 			Tenant: "default",
 		},
 	}
-	err = stateMgr.CreateVeniceRolloutState(&ro, &RolloutState{})
+	err = stateMgr.CreateVeniceRolloutState(&ro, &RolloutState{}, nil)
 	AssertOk(t, err, "Error creating the Venice Rollout")
 
 	// verify we get a watch event

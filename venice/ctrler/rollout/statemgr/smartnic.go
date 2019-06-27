@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 
 	"github.com/pensando/sw/api/generated/rollout"
+	roproto "github.com/pensando/sw/api/generated/rollout"
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -24,7 +25,7 @@ type SmartNICRolloutState struct {
 }
 
 // CreateSmartNICRolloutState to create a SmartNICRollout Object in statemgr
-func (sm *Statemgr) CreateSmartNICRolloutState(ro *protos.SmartNICRollout, ros *RolloutState) error {
+func (sm *Statemgr) CreateSmartNICRolloutState(ro *protos.SmartNICRollout, ros *RolloutState, snicStatus *roproto.RolloutPhase) error {
 	_, err := sm.FindObject(kindSmartNICRollout, ro.Tenant, ro.Name)
 	if err == nil {
 		log.Errorf("SmartNICRollout {+%v} exists", ro)
@@ -36,6 +37,48 @@ func (sm *Statemgr) CreateSmartNICRolloutState(ro *protos.SmartNICRollout, ros *
 		Statemgr:        sm,
 		ros:             ros,
 		status:          make(map[protos.SmartNICOp]protos.SmartNICOpStatus),
+	}
+
+	if snicStatus != nil {
+
+		log.Infof("Spec for building is %+v", ros.Spec)
+		log.Infof("SmartNIC Status %+v", snicStatus)
+
+		var op, nextOp protos.SmartNICOp
+		switch ros.Spec.UpgradeType {
+		case roproto.RolloutSpec_Disruptive.String():
+			op = protos.SmartNICOp_SmartNICPreCheckForDisruptive
+			nextOp = protos.SmartNICOp_SmartNICDisruptiveUpgrade
+		case roproto.RolloutSpec_OnNextHostReboot.String():
+			op = protos.SmartNICOp_SmartNICPreCheckForUpgOnNextHostReboot
+			nextOp = protos.SmartNICOp_SmartNICUpgOnNextHostReboot
+		default:
+			op = protos.SmartNICOp_SmartNICPreCheckForDisruptive
+			nextOp = protos.SmartNICOp_SmartNICDisruptiveUpgrade
+		}
+
+		st := protos.SmartNICOpStatus{
+			Op:       op,
+			Version:  ros.Rollout.Spec.Version,
+			OpStatus: "success",
+		}
+		sros.status[op] = st
+		sros.Spec.Ops = append(sros.Spec.Ops, &protos.SmartNICOpSpec{Op: op, Version: ros.Rollout.Spec.Version})
+
+		if snicStatus.Phase == rollout.RolloutPhase_PROGRESSING.String() {
+			sros.Spec.Ops = append(sros.Spec.Ops, &protos.SmartNICOpSpec{Op: nextOp, Version: ros.Rollout.Spec.Version})
+		}
+		if snicStatus.Phase == rollout.RolloutPhase_COMPLETE.String() {
+			sros.Spec.Ops = append(sros.Spec.Ops, &protos.SmartNICOpSpec{Op: nextOp, Version: ros.Rollout.Spec.Version})
+			stNext := protos.SmartNICOpStatus{
+				Op:       nextOp,
+				Version:  ros.Rollout.Spec.Version,
+				OpStatus: "success",
+			}
+			sros.status[nextOp] = stNext
+			log.Infof("setting SmartNIC for %v with version %v", ro.Name, ros.Rollout.Spec.Version)
+		}
+
 	}
 
 	sros.Mutex.Lock()

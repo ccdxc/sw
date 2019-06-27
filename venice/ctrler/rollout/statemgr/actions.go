@@ -368,7 +368,7 @@ Loop:
 						},
 					}
 					log.Debugf("Creating smartNICRolloutState %#v", snicRollout)
-					err = sm.CreateSmartNICRolloutState(&snicRollout, ros)
+					err = sm.CreateSmartNICRolloutState(&snicRollout, ros, nil)
 					if err != nil {
 						log.Errorf("Error %v creating smartnic rollout state", err)
 						continue
@@ -623,7 +623,7 @@ func (ros *RolloutState) preCheckNextVeniceNode() (int, error) {
 				},
 			},
 		}
-		err := sm.CreateVeniceRolloutState(&veniceRollout, ros)
+		err := sm.CreateVeniceRolloutState(&veniceRollout, ros, nil)
 		if err != nil {
 			log.Errorf("Error %v creating venice rollout state", err)
 			return len(pendingStatus), err

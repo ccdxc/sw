@@ -23,7 +23,7 @@ type VeniceRolloutState struct {
 }
 
 // CreateVeniceRolloutState to create a VeniceRollout Object in statemgr
-func (sm *Statemgr) CreateVeniceRolloutState(ro *protos.VeniceRollout, ros *RolloutState) error {
+func (sm *Statemgr) CreateVeniceRolloutState(ro *protos.VeniceRollout, ros *RolloutState, nodeStatus *rollout.RolloutPhase) error {
 	_, err := sm.FindObject(kindVeniceRollout, ro.Tenant, ro.Name)
 	if err == nil {
 		log.Errorf("VeniceRollout {+%v} exists", ro)
@@ -36,7 +36,31 @@ func (sm *Statemgr) CreateVeniceRolloutState(ro *protos.VeniceRollout, ros *Roll
 		ros:           ros,
 		status:        make(map[protos.VeniceOp]protos.VeniceOpStatus),
 	}
+	if nodeStatus != nil {
+		log.Infof("Spec for building veniceRollout is %+v", ros.Spec)
+		log.Infof("Venice Status %+v", nodeStatus)
+		st := protos.VeniceOpStatus{
+			Op:       protos.VeniceOp_VenicePreCheck,
+			Version:  ros.Rollout.Spec.Version,
+			OpStatus: "success",
+		}
+		vros.status[protos.VeniceOp_VenicePreCheck] = st
+		vros.Spec.Ops = append(vros.Spec.Ops, &protos.VeniceOpSpec{Op: protos.VeniceOp_VenicePreCheck, Version: ros.Rollout.Spec.Version})
 
+		if nodeStatus.Phase == rollout.RolloutPhase_PROGRESSING.String() {
+			vros.Spec.Ops = append(vros.Spec.Ops, &protos.VeniceOpSpec{Op: protos.VeniceOp_VeniceRunVersion, Version: ros.Rollout.Spec.Version})
+		}
+		if nodeStatus.Phase == rollout.RolloutPhase_COMPLETE.String() {
+			vros.Spec.Ops = append(vros.Spec.Ops, &protos.VeniceOpSpec{Op: protos.VeniceOp_VeniceRunVersion, Version: ros.Rollout.Spec.Version})
+			stNext := protos.VeniceOpStatus{
+				Op:       protos.VeniceOp_VeniceRunVersion,
+				Version:  ros.Spec.Version,
+				OpStatus: "success",
+			}
+			vros.status[protos.VeniceOp_VeniceRunVersion] = stNext
+			log.Infof("setting VeniceRollout for %v with version %v", ro.Name, ros.Rollout.Spec.Version)
+		}
+	}
 	// XXX validate parameters -
 	ros.Mutex.Lock()
 	if vros.GetObjectKind() != kindVeniceRollout {
@@ -108,7 +132,7 @@ func (vros *VeniceRolloutState) UpdateVeniceRolloutStatus(newStatus *protos.Veni
 
 	version := vros.ros.Rollout.Spec.Version
 
-	log.Infof("Updating status of VeniceRollout %v", vros.VeniceRollout.Name)
+	log.Infof("Updating status of VeniceRollout %v newStatus %v", vros.VeniceRollout.Name, newStatus)
 
 	var message, reason string
 	var phase rollout.RolloutPhase_Phases
