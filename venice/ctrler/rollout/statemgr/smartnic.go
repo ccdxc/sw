@@ -63,7 +63,6 @@ func (sm *Statemgr) CreateSmartNICRolloutState(ro *protos.SmartNICRollout, ros *
 			OpStatus: "success",
 		}
 		sros.status[op] = st
-		sros.Spec.Ops = append(sros.Spec.Ops, &protos.SmartNICOpSpec{Op: op, Version: ros.Rollout.Spec.Version})
 
 		if snicStatus.Phase == rollout.RolloutPhase_PROGRESSING.String() {
 			sros.Spec.Ops = append(sros.Spec.Ops, &protos.SmartNICOpSpec{Op: nextOp, Version: ros.Rollout.Spec.Version})

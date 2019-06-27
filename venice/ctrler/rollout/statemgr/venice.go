@@ -45,7 +45,6 @@ func (sm *Statemgr) CreateVeniceRolloutState(ro *protos.VeniceRollout, ros *Roll
 			OpStatus: "success",
 		}
 		vros.status[protos.VeniceOp_VenicePreCheck] = st
-		vros.Spec.Ops = append(vros.Spec.Ops, &protos.VeniceOpSpec{Op: protos.VeniceOp_VenicePreCheck, Version: ros.Rollout.Spec.Version})
 
 		if nodeStatus.Phase == rollout.RolloutPhase_PROGRESSING.String() {
 			vros.Spec.Ops = append(vros.Spec.Ops, &protos.VeniceOpSpec{Op: protos.VeniceOp_VeniceRunVersion, Version: ros.Rollout.Spec.Version})
@@ -61,6 +60,7 @@ func (sm *Statemgr) CreateVeniceRolloutState(ro *protos.VeniceRollout, ros *Roll
 			log.Infof("setting VeniceRollout for %v with version %v", ro.Name, ros.Rollout.Spec.Version)
 		}
 	}
+	log.Infof("Status for Venice %v Spec %+v Status %+v", vros.Name, vros.Spec.Ops, vros.status)
 	// XXX validate parameters -
 	ros.Mutex.Lock()
 	if vros.GetObjectKind() != kindVeniceRollout {
@@ -132,7 +132,7 @@ func (vros *VeniceRolloutState) UpdateVeniceRolloutStatus(newStatus *protos.Veni
 
 	version := vros.ros.Rollout.Spec.Version
 
-	log.Infof("Updating status of VeniceRollout %v newStatus %v", vros.VeniceRollout.Name, newStatus)
+	log.Infof("Updating status of VeniceRollout %v newStatus %+v", vros.VeniceRollout.Name, newStatus)
 
 	var message, reason string
 	var phase rollout.RolloutPhase_Phases

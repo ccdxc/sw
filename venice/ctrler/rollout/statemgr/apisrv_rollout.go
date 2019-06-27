@@ -130,7 +130,13 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 	for _, nodeStatus := range ro.Status.ControllerNodesStatus {
 		veniceRollouts := ros.getVenicePendingPreCheckIssue()
 		for _, n := range veniceRollouts {
+
+			if n != nodeStatus.Name {
+				log.Infof("Status %s doesnt match rollout Name %s", nodeStatus.Name, n)
+				continue
+			}
 			log.Infof("Creating veniceRollout for %s", n)
+
 			veniceRollout := protos.VeniceRollout{
 				TypeMeta: api.TypeMeta{
 					Kind: "VeniceRollout",
