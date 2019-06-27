@@ -1,6 +1,7 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include <thread>
+#include <ctime>
 #include <iostream>
 #include <fstream>
 #include <math.h>
@@ -254,6 +255,7 @@ using types::L4PortRange;
 
 std::string  hal_svc_endpoint_     = "localhost:50054";
 std::string  linkmgr_svc_endpoint_ = "localhost:50053";
+std::string  script_dir_;
 
 port::PortOperState  port_oper_state  = port::PORT_OPER_STATUS_NONE;
 port::PortType       port_type        = port::PORT_TYPE_NONE;
@@ -267,10 +269,13 @@ min(uint64_t a, uint64_t b) {
 
 #define MIRROR_SESSION_ID       1
 #define DROP_MONITOR_RULE_ID    1
+#define HAL_WAIT_READY_TIMEOUT_SECS 300
 
 class hal_client {
 public:
-    hal_client(std::shared_ptr<Channel> channel) : vrf_stub_(Vrf::NewStub(channel)),
+    hal_client(std::shared_ptr<Channel> channel) : 
+    channel_ready(wait_channel_ready(channel)),
+    vrf_stub_(Vrf::NewStub(channel)),
     l2seg_stub_(L2Segment::NewStub(channel)), port_stub_(Port::NewStub(channel)),
     event_stub_(Event::NewStub(channel)), system_stub_(System::NewStub(channel)),
     debug_stub_(Debug::NewStub(channel)), intf_stub_(Interface::NewStub(channel)),
@@ -282,6 +287,35 @@ public:
     crypto_apis_stub_(Internal::NewStub(channel)),
     tcp_proxy_stub_(TcpProxy::NewStub(channel)),
     qos_stub_(QOS::NewStub(channel)) {}
+
+    bool wait_channel_ready(std::shared_ptr<Channel> channel)
+    {
+        std::time_t start, end, elapsed;
+
+        std::cout << "Waiting for HAL channel ready" << std::endl;
+
+        for (start = std::time(nullptr), end = start, elapsed = 0; 
+             elapsed < HAL_WAIT_READY_TIMEOUT_SECS;
+             end = std::time(nullptr)) {
+
+            auto state = channel->GetState(true);
+            elapsed = end - start;
+            if (state == GRPC_CHANNEL_READY) {
+                std::cout << "HAL channel became ready in "
+                          << elapsed << " seconds"
+                          << std::endl;
+                return true;
+            }
+
+            // Wait for State change or deadline
+            channel->WaitForStateChange(state, gpr_time_from_seconds(1, GPR_TIMESPAN));
+        }
+
+        std::cout << "HAL channel never reached ready state after "
+                  << elapsed << " seconds"
+                  << std::endl;
+        return false;
+    }
 
     bool port_handle_api_status(types::ApiStatus api_status,
                                 uint32_t port_id) {
@@ -2531,7 +2565,9 @@ public:
             std::cout << "Setup RSA key successful, key:" << *key_idx << std::endl;
         }
         else {
-            std::cout << "Setup RSA key failed" << std::endl;
+            std::cout << "Setup RSA key failed status="
+                      << status.error_code()
+                      << std::endl;
             *key_idx = -1;
             return -1;
         }
@@ -2627,7 +2663,7 @@ public:
         return 0;
     }
 
-    int fips_rsa_siggen15(char *fips_testvec_filename)
+    int fips_rsa_siggen15(std::string fips_testvec_filename)
     {
         std::vector<fips_rsa_siggen15_group_t> groups;
         struct stat st;
@@ -2637,15 +2673,15 @@ public:
         char                outfile[128];
         FILE                *ofile = NULL;
 
-        if (stat(fips_testvec_filename, &st)) {
+        if (stat(fips_testvec_filename.c_str(), &st)) {
             std::cout << "File:" << fips_testvec_filename << "Not found" << std::endl;
             return -1;
         }
 
-        fips_rsa_siggen15_testvec_parser rsa_testvec_parser(fips_testvec_filename);
+        fips_rsa_siggen15_testvec_parser rsa_testvec_parser(fips_testvec_filename.c_str());
         groups = rsa_testvec_parser.fips_rsa_siggen15_groups_get();
 
-        snprintf(outfile, 128, "%s.rsp", fips_testvec_filename);
+        snprintf(outfile, 128, "%s.output.rsp", fips_testvec_filename.c_str());
         ofile = fopen(outfile, "w");
         if (!ofile) {
             std::cout << "Failed to open " << outfile << " for output" << std::endl;
@@ -2707,6 +2743,7 @@ public:
     }
 
 private:
+    bool channel_ready;
     std::unique_ptr<Vrf::Stub> vrf_stub_;
     std::unique_ptr<L2Segment::Stub> l2seg_stub_;
     std::unique_ptr<Port::Stub> port_stub_;
@@ -3255,7 +3292,7 @@ main (int argc, char** argv)
     EncapInfo    l2seg_encap;
     bool         test_port = false;
     bool         test_port_get = false;
-    std::string  svc_endpoint = hal_svc_endpoint_;
+    std::string  svc_endpoint;
 
     bool         size_check = false;
     bool         ep_delete_test = false;
@@ -3316,6 +3353,28 @@ main (int argc, char** argv)
 
     sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_MOCK);
 
+    // Hack to parse program options which are expected to precede
+    // all commands, without changing any existing command parsing code.
+    while (true) {
+        if (argc > 2) {
+            if (!strcmp(argv[1], "--hal_port")) {
+                hal_svc_endpoint_ = std::string("localhost:").append(argv[2]);
+                argc -= 2;
+                argv += 2;
+                continue;
+            } else if (!strcmp(argv[1], "--script_dir")) {
+                script_dir_ = std::string(argv[2]) + "/";
+                argc -= 2;
+                argv += 2;
+                continue;
+            }
+        }
+        // Handle other argc values here if needed
+
+        break;
+    }
+
+    svc_endpoint = hal_svc_endpoint_;
     if (argc > 1) {
         if (!strcmp(argv[1], "port_test")) {
             test_port = true;
@@ -3477,7 +3536,7 @@ main (int argc, char** argv)
             fips_tests = true;
         }
     } else {
-        std::cout << "Usage: <pgm> config" << std::endl;
+        std::cout << "Usage: <pgm> [<options>] config" << std::endl;
         return 0;
     }
 
@@ -3706,7 +3765,7 @@ main (int argc, char** argv)
         return 0;
     } else if (fips_tests == true) {
         if (!strcmp(argv[1], "fips-rsa-siggen15")) {
-            hclient.fips_rsa_siggen15(argv[2]);
+            hclient.fips_rsa_siggen15(script_dir_ + std::string(argv[2]));
             return 0;
         }
     } else if (config == false) {

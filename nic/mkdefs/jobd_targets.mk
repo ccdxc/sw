@@ -280,6 +280,10 @@ jobd/storage/nicmgr: ${JOBD_PREREQS}
 jobd/storage/combined: ${JOBD_PREREQS}
 	GRPC_TRACE=tcp GRPC_VERBOSITY=debug ${NICDIR}/run.py ${COVERAGE_OPTS} --storage --storage_test unit --feature rdma --topo rdma --combined --test RDMA_TX_SEND_ONLY --testcase 1
 
+.PHONY: jobd/hal_test_fips/rsa-siggen15-0
+jobd/hal_test_fips/rsa-siggen15-0: ${JOBD_PREREQS}
+	${NICDIR}/run.py ${COVERAGE_OPTS} --hal_test_fips --hal_test_fips_runargs "fips-rsa-siggen15 rsa-testvectors/SigGen15_186-3.txt"
+
 .PHONY: jobd/configtest
 jobd/configtest: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --configtest

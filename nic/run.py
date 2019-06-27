@@ -507,6 +507,22 @@ def run_storage_dol(port, args):
         stg_dol_process = Popen(cmd)
         return check_for_completion(None, stg_dol_process, model_process, hal_process, args)
 
+# Run FIPS hal_test
+def run_hal_test_fips(port, args):
+    wait_for_hal()
+    bin_dir = nic_dir + "/build/x86_64/iris/bin"
+    script_dir = nic_dir + "/third-party/nist-cavp"
+    cmd = ['./hal_test', '--hal_port', str(port), '--script_dir', script_dir]
+
+    #pass additional arguments to hal_test
+    os.chdir(bin_dir)
+    if args.hal_test_fips_runargs:
+        cmd.extend(shlex.split(args.hal_test_fips_runargs))
+
+    print 'Executing command [%s]' % ', '.join(map(str, cmd))
+    p = Popen(cmd)
+    return check_for_completion(p, None, model_process, hal_process, args)
+
 # Run filter tests for libiris-c.so
 def run_filter_gtest(args):
     #os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
@@ -1082,6 +1098,8 @@ def main():
                         help='Run tests in Classic NIC mode.')
     parser.add_argument('--storage', dest='storage', action="store_true",
                         help='Run storage dol as well.')
+    parser.add_argument('--hal_test_fips', dest='hal_test_fips', action="store_true",
+                        help='Run FIPS hal_test.')
     parser.add_argument('--nicmgr', dest='nicmgr', action="store_true",
                         help='Run nicmgr standalone.')
     parser.add_argument('--nicmgr_platform_model_server', dest='nicmgr_platform_model_server', action="store_true",
@@ -1167,6 +1185,8 @@ def main():
                         help='Run only a subtest of storage test suite')
     parser.add_argument('--storage_runargs', dest='storage_runargs', default='',
                         help='any extra options that should be passed to storage as run_args.')
+    parser.add_argument('--hal_test_fips_runargs', dest='hal_test_fips_runargs', default='',
+                        help='FIPS hal_test command arguments.')
     parser.add_argument('--no_error_check', dest='no_error_check', default=None,
                         action='store_true',
                         help='Disable model error checking')
@@ -1349,6 +1369,10 @@ def main():
         status = run_nicmgr(args, True)
     elif args.nicmgr_platform_model_server:
         status = run_nicmgr_platform_model_server(args, True)
+    elif args.hal_test_fips:
+        status = run_hal_test_fips(port, args)
+        if status != 0:
+            print "- hal_test failed, status=", status
     else:
         if args.mbt:
             mbt_port = find_port()

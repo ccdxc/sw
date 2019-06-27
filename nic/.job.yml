@@ -79,6 +79,16 @@ targets:
   # sub-area:
   # feature:
 
+  # ======== A limited # of HAL Tests can be run from jobd ========
+  hal_test_fips/rsa-siggen15-0:
+    commands: ["make", "jobd/hal_test_fips/rsa-siggen15-0"]
+    owners: ["email:raghava@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-iris-x86
+
   # ====================== Config Tests ===========================
   #configtest:
   # commands: ["make", "jobd/configtest"]

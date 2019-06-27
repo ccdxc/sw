@@ -56,6 +56,7 @@ sdk/third-party/boost/
 sdk/third-party/sknobs/
 sdk/third-party/libev/
 sdk/third-party/libnuma/
+third-party/nist-cavp/*testvectors
 third-party/avago/x86_64/
 third-party/libz/
 third-party/liblmdb/

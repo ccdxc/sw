@@ -17,7 +17,7 @@
 /******************************************************************************
  SigGen15 Helpers
 ******************************************************************************/
-fips_rsa_siggen15_testvec_parser::fips_rsa_siggen15_testvec_parser(char *test_vector_file)
+fips_rsa_siggen15_testvec_parser::fips_rsa_siggen15_testvec_parser(const char *test_vector_file)
 {
     char            line[FIPS_TESTVEC_LINE_SZ_MAX];
     FILE*           fp;
@@ -147,7 +147,7 @@ void fips_rsa_siggen15_testvec_parser::print_group(fips_rsa_siggen15_group_t &gr
 /******************************************************************************
  SigVer15 Helpers
 ******************************************************************************/
-fips_rsa_sigver15_testvec_parser::fips_rsa_sigver15_testvec_parser(char *test_vector_file)
+fips_rsa_sigver15_testvec_parser::fips_rsa_sigver15_testvec_parser(const char *test_vector_file)
 {
     char            line[FIPS_TESTVEC_LINE_SZ_MAX];
     FILE*           fp;

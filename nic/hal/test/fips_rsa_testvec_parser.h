@@ -74,7 +74,7 @@ class fips_rsa_siggen15_testvec_parser: private fips_rsa_testvec_parser
         std::vector<fips_rsa_siggen15_group_t> fips_rsa_siggen15_groups;
 
     public:
-        fips_rsa_siggen15_testvec_parser(char *test_vector_file);
+        fips_rsa_siggen15_testvec_parser(const char *test_vector_file);
         std::vector<fips_rsa_siggen15_group_t> & fips_rsa_siggen15_groups_get(void) { return fips_rsa_siggen15_groups; }
         void print_group(fips_rsa_siggen15_group_t &group);
 
@@ -114,7 +114,7 @@ class fips_rsa_sigver15_testvec_parser: private fips_rsa_testvec_parser
         std::vector<fips_rsa_sigver15_group_t> fips_rsa_sigver15_groups;
 
     public:
-        fips_rsa_sigver15_testvec_parser(char *test_vector_file);
+        fips_rsa_sigver15_testvec_parser(const char *test_vector_file);
         std::vector<fips_rsa_sigver15_group_t> & fips_rsa_sigver15_groups_get(void) { return fips_rsa_sigver15_groups; }
         void print_group(fips_rsa_sigver15_group_t &group);
 
