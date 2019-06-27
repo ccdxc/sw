@@ -137,13 +137,13 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     route_table.routes[j].nh_ip.af = IP_AF_IPV6;
                     compute_remote46_addr(&route_table.routes[j].nh_ip,
                         &g_test_params.svc_tep_pfx,
-                        (j % TESTAPP_MAX_SERVICE_TEP) + 1);
+                        (j % TESTAPP_MAX_SERVICE_TEP));
                 } else if (i == TEST_APP_S1_REMOTE_SVC_TUNNEL_IN_OUT) {
                     route_table.routes[j].nh_ip.af = IP_AF_IPV6;
                     route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
                     compute_remote46_addr(&route_table.routes[j].nh_ip,
                         &g_test_params.svc_tep_pfx,
-                        (j % TESTAPP_MAX_SERVICE_TEP) + 1 + TESTAPP_MAX_SERVICE_TEP);
+                        (j % TESTAPP_MAX_SERVICE_TEP) + TESTAPP_MAX_SERVICE_TEP);
                 } else {
                     route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
                     route_table.routes[j].nh = nh_id++;
@@ -175,6 +175,7 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
 {
     sdk_ret_t rv;
     uint32_t ip_offset = 0;
+    uint32_t key_ip_offset = 0;
     pds_svc_mapping_spec_t svc_mapping;
     pds_svc_mapping_spec_t svc_v6_mapping;
 
@@ -187,7 +188,7 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
                     svc_mapping.key.vpc.id = num_vpcs + 1;
                     svc_mapping.key.vip.af = IP_AF_IPV4;
                     svc_mapping.key.vip.addr.v4_addr =
-                        v4_vip_pfx->addr.addr.v4_addr + ip_offset;
+                        v4_vip_pfx->addr.addr.v4_addr + key_ip_offset++;
                     svc_mapping.key.svc_port = TEST_APP_VIP_PORT;
                     svc_mapping.vpc.id = i;
                     // backend IP is one of the local IP mappings
@@ -221,12 +222,13 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
                             svc_v6_mapping.backend_provider_ip.addr.v6_addr =
                                 v6_provider_pfx->addr.addr.v6_addr;
                             CONVERT_TO_V4_MAPPED_V6_ADDRESS(svc_v6_mapping.backend_provider_ip.addr.v6_addr,
-                                                            svc_mapping.backend_provider_ip.addr.v4_addr);
+                                                            (v4_provider_pfx->addr.addr.v4_addr + ip_offset));
                         } else {
                             svc_v6_mapping.backend_provider_ip.af = IP_AF_IPV4;
                             svc_v6_mapping.backend_provider_ip.addr.v4_addr =
-                                svc_mapping.backend_provider_ip.addr.v4_addr;
+                                v4_provider_pfx->addr.addr.v4_addr + ip_offset;
                         }
+                        ip_offset++;
                         rv = create_svc_mapping(&svc_v6_mapping);
                         SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                                                 "create v6 svc mapping failed, vpc %u, rv %u",
@@ -1045,7 +1047,7 @@ create_service_teps (uint32_t num_teps, ip_prefix_t *svc_tep_pfx,
     for (uint32_t i = 1; i <= num_teps; i++, tep_id++) {
         memset(&pds_tep, 0, sizeof(pds_tep));
         compute_remote46_addr(&pds_tep.key.ip_addr, svc_tep_pfx,
-                              remote_svc ? TESTAPP_MAX_SERVICE_TEP + i : i);
+                              remote_svc ? TESTAPP_MAX_SERVICE_TEP + (i-1) : (i-1));
         MAC_UINT64_TO_ADDR(pds_tep.mac, (((uint64_t)0x0303 << 22) | tep_id));
         pds_tep.type = PDS_TEP_TYPE_SERVICE;
         pds_tep.encap.type = PDS_ENCAP_TYPE_VXLAN;

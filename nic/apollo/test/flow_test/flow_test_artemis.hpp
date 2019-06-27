@@ -423,6 +423,13 @@ public:
                 epdb[vpc_id].v6_locals[epdb[vpc_id].v6_lcount].provider_ip =
                                                         local_spec->provider_ip;
             }
+            ip_addr_t service_ip;
+            service_ip.af = IP_AF_IPV6;
+            service_ip.addr.v6_addr = test_params->v6_vip_pfx.addr.addr.v6_addr;
+            CONVERT_TO_V4_MAPPED_V6_ADDRESS(service_ip.addr.v6_addr,
+                                            epdb[vpc_id].v4_locals[epdb[vpc_id].v6_lcount].
+                                                        service_ip.addr.v4_addr);
+            epdb[vpc_id].v6_locals[epdb[vpc_id].v6_lcount].service_ip = service_ip;
             epdb[vpc_id].v6_lcount++;
         }
         //printf("Adding Local EP: Vcn=%d IP=%#x\n", vpc_id, ip_addr);
@@ -899,7 +906,12 @@ public:
                         if ((vpc == TEST_APP_S1_SVC_TUNNEL_IN_OUT) ||
                             (vpc == TEST_APP_S1_REMOTE_SVC_TUNNEL_IN_OUT)) {
                             // VPC 60 is used for Scenario1-ST in/out traffic
-                            ip_addr.addr.v4_addr = TESTAPP_V4ROUTE_VAL(i);
+                            if (vpc == TEST_APP_S1_SVC_TUNNEL_IN_OUT) {
+                                ip_addr.addr.v4_addr = TESTAPP_V4ROUTE_VAL(i % TESTAPP_MAX_SERVICE_TEP);
+                            } else {
+                                ip_addr.addr.v4_addr =
+                                    TESTAPP_V4ROUTE_VAL(TESTAPP_MAX_SERVICE_TEP + (i % TESTAPP_MAX_SERVICE_TEP));
+                            }
 
                             // iflow v4 session
                             ret = create_flow(vpc, proto,
@@ -914,14 +926,14 @@ public:
                             compute_remote46_addr(&rewrite_ip,
                                 &test_params->svc_tep_pfx,
                                 (vpc == TEST_APP_S1_SVC_TUNNEL_IN_OUT) ?
-                                    (i % TESTAPP_MAX_SERVICE_TEP) + 1 :
-                                    ((i % TESTAPP_MAX_SERVICE_TEP) + 1 + TESTAPP_MAX_SERVICE_TEP));
+                                    (i % TESTAPP_MAX_SERVICE_TEP) :
+                                    ((i % TESTAPP_MAX_SERVICE_TEP) + TESTAPP_MAX_SERVICE_TEP));
                             rewrite_ip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
-                                ip_addr.addr.v4_addr;
+                                htonl(ip_addr.addr.v4_addr);
                             ip_addr_t rflow_dip =
                                 test_params->nat46_vpc_pfx.addr;
                             rflow_dip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
-                                ep_pairs[i].v4_local.local_ip.addr.v4_addr;
+                                htonl(ep_pairs[i].v4_local.local_ip.addr.v4_addr);
 
                             // rflow v6 session
                             ret = create_flow(vpc, proto,
@@ -1044,7 +1056,7 @@ public:
                             }
                             // create V6 session
                             ret = create_session_info(vpc, rewrite_ip,
-                                                      nexthop_idx, inh_idx,
+                                                      nexthop_idx+1, inh_idx,
                                                       svc_tep_nh_idx,
                                                       remote_svc_tep_nh_idx);
                             if (ret != SDK_RET_OK) {
@@ -1087,7 +1099,7 @@ public:
                         }
                         break;
                     default:
-                        nexthop_idx++;
+                        nexthop_idx += 2 /* for both v4 and v6 */;
                         if (nexthop_idx ==
                                 (nexthop_idx_start + (vpc * num_nexthop_idx_per_vpc))) {
                             nexthop_idx = nexthop_idx_start +
@@ -1112,29 +1124,33 @@ public:
 
     void print_flow_stats(sdk_table_api_stats_t *api_stats,
                           sdk_table_stats_t *table_stats) {
-        printf("insert %u, insert_duplicate %u, insert_fail %u, "
-                "remove %u, remove_not_found %u, remove_fail %u, "
-                "update %u, update_fail %u, "
-                "get %u, get_fail %u, "
-                "reserve %u, reserver_fail %u, "
-                "release %u, release_fail %u, "
-                "entries %u, collisions %u\n",
-                api_stats->insert,
-                api_stats->insert_duplicate,
-                api_stats->insert_fail,
-                api_stats->remove,
-                api_stats->remove_not_found,
-                api_stats->remove_fail,
-                api_stats->update,
-                api_stats->update_fail,
-                api_stats->get,
-                api_stats->get_fail,
-                api_stats->reserve,
-                api_stats->reserve_fail,
-                api_stats->release,
-                api_stats->release_fail,
-                table_stats->entries,
-                table_stats->collisions);
+        if (g_fp) {
+            fprintf(g_fp,
+                    "insert %u, insert_duplicate %u, insert_fail %u, "
+                    "remove %u, remove_not_found %u, remove_fail %u, "
+                    "update %u, update_fail %u, "
+                    "get %u, get_fail %u, "
+                    "reserve %u, reserver_fail %u, "
+                    "release %u, release_fail %u, "
+                    "entries %u, collisions %u\n",
+                    api_stats->insert,
+                    api_stats->insert_duplicate,
+                    api_stats->insert_fail,
+                    api_stats->remove,
+                    api_stats->remove_not_found,
+                    api_stats->remove_fail,
+                    api_stats->update,
+                    api_stats->update_fail,
+                    api_stats->get,
+                    api_stats->get_fail,
+                    api_stats->reserve,
+                    api_stats->reserve_fail,
+                    api_stats->release,
+                    api_stats->release_fail,
+                    table_stats->entries,
+                    table_stats->collisions);
+            fflush(g_fp);
+        }
     }
 
     sdk_ret_t dump_flow_stats(void) {
@@ -1183,8 +1199,10 @@ public:
                             uint32_t meter_pfx_per_rule, uint32_t num_nh,
                             uint32_t num_svc_teps,
                             uint32_t num_remote_svc_teps) {
-        nexthop_idx_start = num_nh + TESTAPP_MAX_SERVICE_TEP +
-                                (num_ip_per_vnic * num_vpcs * 2) + 1;
+        nexthop_idx_start = num_nh                             /* NH for routes */
+                            + (2 * TESTAPP_MAX_SERVICE_TEP)    /* NH for SVC mappings + Remote SVC mappings */
+                            + (num_ip_per_vnic * num_vpcs * 2) /* NH for IPv4/v6 local IP mappings */
+                            + 1;
         num_nexthop_idx_per_vpc = num_remote_mappings * 2;
         num_meter_idx_per_vpc = (meter_scale/meter_pfx_per_rule) +
                                 (meter_scale % meter_pfx_per_rule);
