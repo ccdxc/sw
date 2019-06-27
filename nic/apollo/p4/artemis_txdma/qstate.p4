@@ -54,6 +54,9 @@ action read_pktdesc(remote_ip,
                     pad0
                    )
 {
+    modify_field(scratch_metadata.field10, sip_classid);
+    modify_field(scratch_metadata.field8, sport_classid);
+
     modify_field(rx_to_tx_hdr.remote_ip, remote_ip);
     modify_field(rx_to_tx_hdr.sacl_base_addr, sacl_base_addr);
     modify_field(rx_to_tx_hdr.route_base_addr, route_base_addr);
@@ -78,9 +81,9 @@ action read_pktdesc(remote_ip,
     // Tx: always rewrite dmac
     modify_field(session_info_hint.tx_rewrite_flags_dmac, 1);
 
-    // Initialize the first P1 table index
-    modify_field(scratch_metadata.field20, (sip_classid << 7)|
-                                            sport_classid);
+    // Initialize the first P1 table index = (sip_classid << 7) | sport_classid
+    modify_field(scratch_metadata.field20, (scratch_metadata.field10 << 7)|
+                                            scratch_metadata.field8);
 
     // Write P1 table index to PHV
     modify_field(txdma_control.rfc_index, scratch_metadata.field20);

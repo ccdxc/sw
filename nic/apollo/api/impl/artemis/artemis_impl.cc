@@ -1033,8 +1033,11 @@ artemis_impl::pipeline_init(void) {
 
     phv->p4_to_rxdma_aging_enable = 1;
     phv->p4_to_rxdma_cps_path_en = 1;
+
+#ifdef SESSION_AGING
     ret = asicpd_sw_phv_inject(ASICPD_SWPHV_TYPE_RXDMA, 0, 0, 1, data);
     SDK_ASSERT(ret == SDK_RET_OK);
+#endif
 
     return SDK_RET_OK;
 }
