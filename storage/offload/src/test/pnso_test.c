@@ -203,9 +203,16 @@ error:
 	return EINVAL;
 }
 
+static uint8_t g_normalized_data[TEST_MAX_BIN_PATTERN_LEN];
+
+/* Assumption: this runs in only one thread at a time */
 static const uint8_t *get_normalized_pattern(const char *pat,
-					  uint8_t *dst, uint32_t *dst_len)
+					     uint32_t *dst_len)
 {
+	uint8_t *dst = g_normalized_data;
+
+	OSAL_ASSERT(*dst_len <= sizeof(g_normalized_data));
+
 	if (pat[0] == '0' && (pat[1] == 'x' || pat[1] == 'X')) {
 		uint32_t tmp = *dst_len - 1;
 
@@ -225,9 +232,8 @@ static pnso_error_t test_fill_pattern(struct pnso_buffer_list *buflist,
 {
 	const uint8_t *pat_data;
 	uint32_t bin_len = TEST_MAX_BIN_PATTERN_LEN;
-	uint8_t hex_pat[TEST_MAX_BIN_PATTERN_LEN];
 
-	pat_data = get_normalized_pattern(pat, hex_pat, &bin_len);
+	pat_data = get_normalized_pattern(pat, &bin_len);
 
 	test_fill_buflist(buflist, pat_data, bin_len);
 
@@ -246,10 +252,9 @@ static int test_cmp_pattern(const struct pnso_buffer_list *buflist,
 	const uint8_t *pat_data;
 	uint8_t *dst;
 	uint32_t bin_len = TEST_MAX_BIN_PATTERN_LEN;
-	uint8_t hex_pat[TEST_MAX_BIN_PATTERN_LEN];
 
 	*total_len = 0;
-	pat_data = get_normalized_pattern(pat, hex_pat, &bin_len);
+	pat_data = get_normalized_pattern(pat, &bin_len);
 
 	if (!len)
 		len = pbuf_get_buffer_list_len(buflist);
@@ -1860,10 +1865,9 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 			/* Metadata not available, do full file compare */
 			if (!fnode1) {
 				uint32_t bin_len = TEST_MAX_BIN_PATTERN_LEN;
-				uint8_t hex_pat[TEST_MAX_BIN_PATTERN_LEN];
 
 				pat = (const char *) get_normalized_pattern(pat,
-							hex_pat, &bin_len);
+								&bin_len);
 				cmp = test_compare_file_data(path,
 						     offset, len,
 						     (const uint8_t *) pat,

@@ -814,8 +814,9 @@ hw_ring_evaluate_take(struct service_info *svc_info)
 		return;
 	}
 
-	ring_tracker->rt_max_dflt_takes = max(ring_tracker->rt_max_dflt_takes,
-				svc_info->si_seq_info.sqi_hw_dflt_takes);
+	ring_tracker->rt_max_dflt_takes =
+		max((uint8_t) ring_tracker->rt_max_dflt_takes,
+			(uint8_t) svc_info->si_seq_info.sqi_hw_dflt_takes);
 
 	svc_info->si_seq_info.sqi_hw_dflt_takes = 0;
 }

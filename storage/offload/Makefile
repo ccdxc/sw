@@ -108,8 +108,6 @@ $(PENCAKE)-y += src/osal/linux/kernel/osal_mem.o
 $(PENCAKE)-y += src/osal/linux/kernel/osal_random.o
 
 $(PENCAKE)-y += third-party/libyaml/src/api.o
-$(PENCAKE)-y += third-party/libyaml/src/dumper.o
-$(PENCAKE)-y += third-party/libyaml/src/emitter.o
 $(PENCAKE)-y += third-party/libyaml/src/loader.o
 $(PENCAKE)-y += third-party/libyaml/src/parser.o
 $(PENCAKE)-y += third-party/libyaml/src/reader.o
@@ -130,6 +128,8 @@ sonic-var: $(eval obj-m += $(SONIC).o)
 sonic-var: $(eval ccflags-y += $(SONIC_INCDIRS:%=-I$(PWD)/%))
 sonic-var: $(eval ccflags-y += -I$(KERN_DIR)/include/linux)
 sonic-var: $(eval ccflags-y += -DNDEBUG)
+sonic-var: $(eval ccflags-y += -Werror)
+sonic-var: $(eval ccflags-y += -Wall)
 ifdef ENABLE_PNSO_SONIC_TEST
 sonic-var: $(eval ccflags-y += -DENABLE_PNSO_SONIC_TEST)
 endif
