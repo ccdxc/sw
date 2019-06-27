@@ -107,8 +107,10 @@ func (client *RoClient) statusUpdater() {
 func (client *RoClient) UpdateSmartNICRolloutStatus(status *protos.SmartNICRolloutStatusUpdate) error {
 	client.Lock()
 	defer client.Unlock()
+	log.Infof("Sending rollout update status: %v to venice", *status)
 
 	if client.stopped {
+		log.Errorf("Rollout client is stopped. Failed to send update %v to venice. | RoClient: %v", *status, client)
 		return nil
 	}
 	client.statusUpdateChan <- *status

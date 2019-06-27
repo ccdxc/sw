@@ -219,10 +219,9 @@ func (n *NMD) UpgFailed(errStrList *[]string) {
 
 // UpgPossible is called on precheck success
 func (n *NMD) UpgPossible() {
-	log.Infof("UpgPossible got called")
 	n.Lock()
 	defer n.Unlock()
-
+	log.Infof("UpgPossible got called")
 	message := ""
 	if n.ro.Status.InProgressOp.Op != protos.SmartNICOp_SmartNICNoOp {
 		n.updateOpStatus(n.ro.Status.InProgressOp.Op, n.ro.Status.InProgressOp.Version, "success", message)
@@ -263,6 +262,7 @@ func (n *NMD) UpgAborted(errStrList *[]string) {
 
 // Must be called with LOCK held
 func (n *NMD) updateOpStatus(op protos.SmartNICOp, version string, status string, message string) {
+	log.Infof("Updating op status. Op: %v | Status: %s", op, status)
 	var OpStatus []protos.SmartNICOpStatus
 	for _, o := range n.opStatus {
 		if o.Op != op || o.Version != version {
@@ -279,6 +279,7 @@ func (n *NMD) updateOpStatus(op protos.SmartNICOp, version string, status string
 		})
 
 	n.opStatus = OpStatus
+	log.Infof("Updated NMD internal op status: %v", n.opStatus)
 
 	st := protos.SmartNICRolloutStatusUpdate{
 		ObjectMeta: n.objectMeta,
