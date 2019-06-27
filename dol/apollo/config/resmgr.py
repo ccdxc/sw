@@ -49,6 +49,9 @@ NexthopIpV6AddressAllocator = ipaddress.IPv6Network('eeee:eeee:0:0::/64').hosts(
 NexthopMacAllocator = objects.TemplateFieldObject("macstep/0055.0000.0001/0000.0000.0001")
 V4TagIdAllocator = iter(irange(1,1))
 V6TagIdAllocator = iter(irange(2,2))
+NexthopVxlanIdAllocator = iter(irange(90001, 91024))
+V4MeterIdAllocator = iter(irange(1,64))
+V6MeterIdAllocator = iter(irange(65,129))
 # Currently one to one mapping with CA-IP. TODO. Many to one
 SvcMappingPublicIpV4AddressAllocator = ipaddress.IPv4Network('150.0.0.0/16').hosts()
 SvcMappingPublicIpV6AddressAllocator = ipaddress.IPv6Network('eeee:dddd:dddd:0::/64').hosts()
@@ -82,6 +85,7 @@ MAX_ROUTE_TABLE = 1024
 MAX_POLICY = 1023
 MAX_MIRROR = 8
 MAX_TAG = 1
+MAX_METER = 64
 
 # Create subnets from base prefix
 # - base is a prefix in the form of '10.0.0.0/16'

@@ -9,6 +9,7 @@ import apollo.config.objects.route as route
 import apollo.config.objects.subnet as subnet
 import apollo.config.objects.nexthop as nexthop
 import apollo.config.objects.tag as tag
+import apollo.config.objects.meter as meter
 import artemis.config.objects.cfgjson as cfgjson
 import apollo.config.utils as utils
 
@@ -88,6 +89,10 @@ class VpcObject(base.ConfigObjectBase):
         # Generate Subnet configuration post policy & route
         if getattr(spec, 'subnet', None) != None:
             subnet.client.GenerateObjects(self, spec)
+
+        # Generate Meter configuration
+        if getattr(spec, 'meter', None) != None:
+            meter.client.GenerateObjects(self, spec)
         return
 
     def InitSubnetPefixPools(self, poolid, v6pfxlen, v4pfxlen):
@@ -199,6 +204,9 @@ class VpcObjectClient:
 
         # Create Subnet Objects after policy & route
         subnet.client.CreateObjects()
+
+        # Create Meter Objects
+        meter.client.CreateObjects()
         return
 
 client = VpcObjectClient()

@@ -1,0 +1,112 @@
+# Meter Topology Specification
+meta:
+    id: TOPO_METER
+
+uplink:
+    - entry:
+        id      : host
+        port    : 1
+        mode    : host
+        status  : UP
+
+    - entry:
+        id      : switch
+        port    : 2
+        mode    : switch
+        status  : UP
+
+    - entry:
+        id      : cpu
+        port    : 128
+        mode    : cpu
+        status  : UP
+
+device:
+    ipaddress   : None # Taken from resmgr
+    gateway     : None # Taken from resmgr
+    macaddress  : macaddr/0002.0100.0001
+    encap       : vxlan
+    tunnel      :
+        - count : 16
+          type  : internet-gateway
+          nat   : true
+        - count : 16
+          type  : internet-gateway
+        - count : 32
+          type  : workload
+
+vpc:
+    # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
+    - stack  : dual # dual, ipv4 , ipv6
+      count : 1
+      type  : substrate  # This VPC is applicable only for ARTEMIS pipeline.
+      subnet :
+         - count : 1
+           v4prefixlen : 24
+           v6prefixlen : 64
+      routetbl:
+         - type: specific # route table with only default routes
+           routetype: only_default
+           v4routes:
+              - '0.0.0.0\0'
+           v6routes:
+              - '0::\0'
+      policy:
+        - type : specific
+          policytype : default
+          direction : bidir
+
+    - stack  : dual # dual, ipv4 , ipv6
+      count : 1
+      type  : tenant
+      subnet:
+        - count     :  46             # should be same as total routetbl / policy
+          v4prefixlen : 24
+          v6prefixlen : 64
+          vnic:
+            - count   : 1             # VNICs per subnet
+              ipcount : 2             # Local IP mapping per vnic
+              srcguard : false        # true or false (default false)
+              public  : true
+          rmap:                       # Remote IP mappings per subnet
+            - count : 2
+      routetbl:
+         - type: specific # route table with only default routes
+           routetype: only_default
+           v4routes:
+              - '0.0.0.0\0'
+           v6routes:
+              - '0::\0'
+      nexthop: # only ARTEMIS
+             - type: base
+               count : 46
+      policy:
+        - type : specific
+          policytype : default
+          direction : bidir
+      meter:
+        - count: 64
+          rule:
+            - type: PDS_METER_TYPE_ACCOUNTING
+              priority: 1
+              num_prefixes: 510
+              v4base: '66.0.0.0\24'
+              v6base: '2002::\65'
+              v4prefixes:
+                - '10.0.0.0\24'
+                - '11.1.0.0\24'
+              v6prefixes:
+                - '0::\0'
+
+            - type: PDS_METER_TYPE_ACCOUNTING
+              priority: 2
+              num_prefixes: 510
+              v4base: '96.0.0.0\24'
+              v6base: '0::\0'
+              v4prefixes:
+                - '0.0.0.0\0'
+              v6prefixes:
+                - '0::\0'
+
+
+

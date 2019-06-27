@@ -18,6 +18,7 @@ import mirror_pb2_grpc as mirror_pb2_grpc
 import nh_pb2_grpc as nh_pb2_grpc
 import service_pb2_grpc as service_pb2_grpc
 import tags_pb2_grpc as tags_pb2_grpc
+import meter_pb2_grpc as meter_pb2_grpc
 import infra.common.defs as defs
 
 from infra.common.glopts  import GlobalOptions
@@ -149,6 +150,8 @@ class ApolloAgentClient:
                                                       self.__channel, 'SvcMapping')
         self.__stubs[ObjectTypes.TAG] = ClientStub(tags_pb2_grpc.TagSvcStub,
                                                       self.__channel, 'Tag')
+        self.__stubs[ObjectTypes.METER] = ClientStub(meter_pb2_grpc.MeterSvcStub,
+                                                      self.__channel, 'Meter')
         return
 
     def Create(self, objtype, objs):
