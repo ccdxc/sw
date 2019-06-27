@@ -1392,7 +1392,7 @@ Eth::_CmdLifIdentify(void *req, void *req_data, void *resp, void *resp_data)
 
         ident->rdma.version = 1;
         ident->rdma.qp_opcodes = 11;
-        ident->rdma.admin_opcodes = 16;
+        ident->rdma.admin_opcodes = 17;
         ident->rdma.npts_per_lif = spec->pte_count;
         ident->rdma.nmrs_per_lif = spec->key_count;
         ident->rdma.nahs_per_lif = spec->ah_count;

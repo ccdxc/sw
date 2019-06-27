@@ -61,10 +61,13 @@ struct aqcb1_t {
     num_query_qp: 16;
     num_destroy_qp: 16;
     num_stats_dump: 16;
-    
+    num_create_ah: 16;
+    num_query_ah: 16;
+    num_destroy_ah: 16;
+
     num_any: 64;
 
-    pad: 240;
+    pad: 192;
 };
 
 struct aqcb_t {

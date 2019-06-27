@@ -180,9 +180,12 @@ header_type aq_tx_to_stage_fb_stats_info_t {
         query_qp                         :    1;
         destroy_qp                       :    1;
         stats_dump                       :    1;
+        create_ah                        :    1;
+        query_ah                         :    1;
+        destroy_ah                       :    1;
         aq_cmd_done                      :    1;
         modify_dcqcn                     :    1;
-        pad                              :   63;
+        pad                              :   60;
     }
 }
 
@@ -596,10 +599,9 @@ action aq_tx_feedback_process () {
     // to stage
     modify_field(to_s7_fb_stats_info_scr.cb_addr, to_s7_fb_stats_info.cb_addr);
     modify_field(to_s7_fb_stats_info_scr.wqe_id, to_s7_fb_stats_info.wqe_id);
-    modify_field(to_s7_fb_stats_info_scr.aq_cmd_done, to_s7_fb_stats_info.aq_cmd_done);    
-    modify_field(to_s7_fb_stats_info_scr.pad, to_s7_fb_stats_info.pad);                                                   
+    modify_field(to_s7_fb_stats_info_scr.aq_cmd_done, to_s7_fb_stats_info.aq_cmd_done);
+    modify_field(to_s7_fb_stats_info_scr.pad, to_s7_fb_stats_info.pad);
     // stage to stage
-    
 }
 
 action aq_tx_stats_process () {
@@ -620,6 +622,9 @@ action aq_tx_stats_process () {
     modify_field(to_s7_fb_stats_info_scr.query_qp, to_s7_fb_stats_info.query_qp);
     modify_field(to_s7_fb_stats_info_scr.destroy_qp, to_s7_fb_stats_info.destroy_qp);
     modify_field(to_s7_fb_stats_info_scr.stats_dump, to_s7_fb_stats_info.stats_dump);
+    modify_field(to_s7_fb_stats_info_scr.create_ah, to_s7_fb_stats_info.create_ah);
+    modify_field(to_s7_fb_stats_info_scr.query_ah, to_s7_fb_stats_info.query_ah);
+    modify_field(to_s7_fb_stats_info_scr.destroy_ah, to_s7_fb_stats_info.destroy_ah);
 
     // stage to stage
     modify_field(t3_s2s_stats_info_scr.pad, t3_s2s_stats_info.pad);

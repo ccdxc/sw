@@ -59,8 +59,8 @@ rdma_aq_tx_wqe_process:
     add         r1, r0, d.op
 
     .brbegin
-    br          r1[3:0]
-    phvwr       p.rdma_feedback.aq_completion.op, r1[3:0]  // BD Slot
+    br          r1[4:0]
+    phvwr       p.rdma_feedback.aq_completion.op, r1[4:0]  // BD Slot
 
     .brcase     AQ_OP_TYPE_NOP
         b           prepare_feedback
@@ -87,7 +87,7 @@ rdma_aq_tx_wqe_process:
         b           report_bad_cmd
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, resize_cq), 1 //BD Slot
     .brcase     AQ_OP_TYPE_DESTROY_CQ
-        b           report_bad_cmd
+        b           prepare_feedback
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, destroy_cq), 1 //BD Slot
     .brcase     AQ_OP_TYPE_MODIFY_QP
         b           modify_qp
@@ -102,16 +102,62 @@ rdma_aq_tx_wqe_process:
         b           stats_dump
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, stats_dump), 1 //BD Slot
     .brcase     AQ_OP_TYPE_CREATE_AH
-//TODO:  need to add stats code
         b           create_ah
-        nop
+        phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, create_ah), 1 //BD Slot
     .brcase     AQ_OP_TYPE_QUERY_AH
         b           query_ah
-        nop
+        phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, query_ah), 1 //BD Slot
     .brcase     AQ_OP_TYPE_MODIFY_DCQCN
         b           modify_dcqcn
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, modify_dcqcn), 1 //BD Slot
-
+    .brcase     AQ_OP_TYPE_DESTROY_AH
+        b           prepare_feedback
+        phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, destroy_ah), 1 //BD Slot
+    .brcase     17
+        b           report_bad_cmd
+        nop
+    .brcase     18
+        b           report_bad_cmd
+        nop
+    .brcase     19
+        b           report_bad_cmd
+        nop
+    .brcase     20
+        b           report_bad_cmd
+        nop
+    .brcase     21
+        b           report_bad_cmd
+        nop
+    .brcase     22
+        b           report_bad_cmd
+        nop
+    .brcase     23
+        b           report_bad_cmd
+        nop
+    .brcase     24
+        b           report_bad_cmd
+        nop
+    .brcase     25
+        b           report_bad_cmd
+        nop
+    .brcase     26
+        b           report_bad_cmd
+        nop
+    .brcase     27
+        b           report_bad_cmd
+        nop
+    .brcase     28
+        b           report_bad_cmd
+        nop
+    .brcase     29
+        b           report_bad_cmd
+        nop
+    .brcase     30
+        b           report_bad_cmd
+        nop
+    .brcase     31
+        b           report_bad_cmd
+        nop
     .brend
 
 reg_mr:

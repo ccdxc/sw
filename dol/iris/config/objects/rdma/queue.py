@@ -74,8 +74,11 @@ class RdmaAQstate(Packet):
         ShortField("num_query_qp", 0),
         ShortField("num_destroy_qp", 0),
         ShortField("num_stats_dump", 0),
+        ShortField("num_create_ah", 0),
+        ShortField("num_query_ah", 0),
+        ShortField("num_destroy_ah", 0),
         LongField("num_any", 0),
-        BitField("aqcb1_pad", 0, 240),
+        BitField("aqcb1_pad", 0, 192),
     ]
 
 class RdmaRQstate(Packet):

@@ -29,8 +29,8 @@ rdma_aq_tx_stats_process:
     tblmincri.c2.e     d.num_stats_vals, MASK_16, 1
     tblmincri.c1.e     d.num_dereg_mr, MASK_16, 1
 
-    //flags resize_cq, destroy_cq, modify_qp, query_qp, destroy_qp, stats_dump
-    crestore         [c7, c6, c5, c4, c3, c2], CAPRI_KEY_RANGE(IN_P, resize_cq, stats_dump), 0x6F
+    //flags resize_cq, destroy_cq, modify_qp, query_qp, destroy_qp, stats_dump, create_ah
+    crestore         [c7, c6, c5, c4, c3, c2, c1], CAPRI_KEY_RANGE(IN_P, resize_cq, create_ah), 0x7F
 
     tblmincri.c7.e     d.num_resize_cq, MASK_16, 1
     tblmincri.c6.e     d.num_destroy_cq, MASK_16, 1
@@ -38,6 +38,13 @@ rdma_aq_tx_stats_process:
     tblmincri.c4.e     d.num_query_qp, MASK_16, 1
     tblmincri.c3.e     d.num_destroy_qp, MASK_16, 1
     tblmincri.c2.e     d.num_stats_dump, MASK_16, 1
+    tblmincri.c1.e     d.num_create_ah, MASK_16, 1
+
+    //flags query_ah, destroy_ah
+    crestore [c7, c6], CAPRI_KEY_RANGE(IN_P, query_ah, destroy_ah), 0x03
+
+    tblmincri.c7.e     d.num_query_ah, MASK_16, 1
+    tblmincri.c6.e     d.num_destroy_ah, MASK_16, 1
 
 exit:
     nop.e

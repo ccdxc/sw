@@ -422,12 +422,15 @@ typedef struct aqcb0_s {
     qpcb_ring_t           rings[MAX_AQ_RINGS];
     qpcb_intrinsic_base_t ring_header;
 } aqcb0_t;
-    
+
 typedef struct aqcb1_s {
-    uint8_t pad[30];
+    uint8_t pad[24];
 
     uint64_t num_any;
 
+    uint16_t num_destroy_ah;
+    uint16_t num_query_ah;
+    uint16_t num_create_ah;
     uint16_t num_stats_dump;
     uint16_t num_destroy_qp;
     uint16_t num_query_qp;

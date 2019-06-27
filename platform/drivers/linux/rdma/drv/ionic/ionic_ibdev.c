@@ -2097,9 +2097,7 @@ static int ionic_destroy_ah_cmd(struct ionic_ibdev *dev, u32 ahid, u32 flags)
 	case 1:
 		if (dev->admin_opcodes > IONIC_V1_ADMIN_DESTROY_AH)
 			return ionic_v1_destroy_ah_cmd(dev, ahid, flags);
-		/* XXX require opcode destroy ah */
-		//return -ENOSYS;
-		return 0;
+		return -ENOSYS;
 	default:
 		return -ENOSYS;
 	}
@@ -2767,9 +2765,7 @@ static int ionic_destroy_cq_cmd(struct ionic_ibdev *dev, u32 cqid)
 	case 1:
 		if (dev->admin_opcodes > IONIC_V1_ADMIN_DESTROY_CQ)
 			return ionic_v1_destroy_cq_cmd(dev, cqid);
-		/* XXX require opcode destroy cq */
-		//return -ENOSYS;
-		return 0;
+		return -ENOSYS;
 	default:
 		return -ENOSYS;
 	}
