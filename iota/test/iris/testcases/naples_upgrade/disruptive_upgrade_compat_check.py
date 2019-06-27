@@ -22,6 +22,7 @@ def Setup(tc):
         api.Trigger_AddNaplesCommand(req, node, "cp /update/{} /update/{}.orig".format(common.UPGRADE_NAPLES_PKG_COMPAT_CHECK, common.UPGRADE_NAPLES_PKG_COMPAT_CHECK))
         api.Trigger_AddNaplesCommand(req, node, "cp /update/{} /update/{}.orig".format(common.UPGRADE_NAPLES_PKG, common.UPGRADE_NAPLES_PKG))
         api.Trigger_AddNaplesCommand(req, node, "cp /update/{} /update/{}".format(common.UPGRADE_NAPLES_PKG_COMPAT_CHECK, common.UPGRADE_NAPLES_PKG))
+        api.Trigger_AddNaplesCommand(req, node, "touch /update/upgrade_to_same_firmware_allowed")
     resp = api.Trigger(req)
     for cmd_resp in resp.commands:
         api.PrintCommandResults(cmd_resp)
@@ -93,6 +94,7 @@ def Teardown(tc):
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/delphi.dat")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/{}.orig".format(common.UPGRADE_NAPLES_PKG_COMPAT_CHECK))
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/{}.orig".format(common.UPGRADE_NAPLES_PKG))
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/upgrade_to_same_firmware_allowed")
     resp = api.Trigger(req)
     for cmd_resp in resp.commands:
         api.PrintCommandResults(cmd_resp)

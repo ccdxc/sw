@@ -5,6 +5,7 @@
 
 #include "upgrade.hpp"
 #include "nic/upgrade_manager/utils/upgrade_log.hpp"
+#include "nic/upgrade_manager/include/c/upgrade_metadata.hpp"
 
 namespace upgrade {
 
@@ -101,6 +102,12 @@ delphi::error UpgSdk::CanPerformUpgrade(UpgType upgType, string firmwarePkgName)
     UPG_LOG_DEBUG("UpgSdk::CanPerformUpgrade");
     RETURN_IF_FAILED(IsRoleAgent(svcRole_, "Service is not of role AGENT."));
 
+    GetUpgCtxFromMeta(ctx);
+    if (IsPrePostImageMetaSame(ctx)) {
+            if (!exists("/update/upgrade_to_same_firmware_allowed"))
+                return delphi::error("Upgrade image is same as running image");
+    }
+
     delphi::objects::UpgReqPtr req = FindUpgReqSpec();
     if (req == NULL) {
         UPG_LOG_DEBUG("UpgReq not found. Create it now.");
@@ -129,6 +136,12 @@ delphi::error UpgSdk::StartUpgrade(UpgType upgType, string firmwarePkgName) {
     delphi::error err = delphi::error::OK();
     UPG_LOG_DEBUG("UpgSdk::StartUpgrade");
     RETURN_IF_FAILED(IsRoleAgent(svcRole_, "Upgrade not initiated. Service is not of role AGENT."));
+
+    GetUpgCtxFromMeta(ctx);
+    if (IsPrePostImageMetaSame(ctx)) {
+            if (!exists("/update/upgrade_to_same_firmware_allowed"))
+                return delphi::error("Upgrade image is same as running image");
+    }
 
     delphi::objects::UpgReqPtr req = FindUpgReqSpec();
     if (req == NULL) {

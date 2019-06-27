@@ -11,6 +11,7 @@ namespace upgrade {
 using namespace std;
 
 bool GetUpgCtxFromMeta(UpgCtx& ctx);
+bool IsPrePostImageMetaSame(UpgCtx& ctx);
 
 }
 

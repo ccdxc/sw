@@ -112,6 +112,10 @@ func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
 		upgCtx.PreUpgMeta.NicmgrVersion = preImgMeta.Uboot.Image.NicmgrVersion
 		upgCtx.PreUpgMeta.KernelVersion = preImgMeta.Uboot.Image.KernelVersion
 		upgCtx.PreUpgMeta.PcieVersion = preImgMeta.Uboot.Image.PcieVersion
+		upgCtx.PreUpgMeta.BuildDate = preImgMeta.Uboot.Image.BuildDate
+		upgCtx.PreUpgMeta.BuildUser = preImgMeta.Uboot.Image.BuildUser
+		upgCtx.PreUpgMeta.BaseVersion = preImgMeta.Uboot.Image.BaseVersion
+		upgCtx.PreUpgMeta.SoftwareVersion = preImgMeta.Uboot.Image.SoftwareVersion
 	} else {
 		_, err := os.Stat("/nic/tools/fwupdate")
 		if err == nil {
@@ -136,6 +140,10 @@ func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
 		upgCtx.PostUpgMeta.NicmgrVersion = postImgMeta.NicmgrVersion
 		upgCtx.PostUpgMeta.KernelVersion = postImgMeta.KernelVersion
 		upgCtx.PostUpgMeta.PcieVersion = postImgMeta.PcieVersion
+		upgCtx.PostUpgMeta.BuildDate = postImgMeta.BuildDate
+		upgCtx.PostUpgMeta.BuildUser = postImgMeta.BuildUser
+		upgCtx.PostUpgMeta.BaseVersion = postImgMeta.BaseVersion
+		upgCtx.PostUpgMeta.SoftwareVersion = postImgMeta.SoftwareVersion
 	}
 	return nil
 }
@@ -144,4 +152,17 @@ func getUpgCtxFromMeta(upgCtx *UpgCtx) error {
 	getUpgCtxFromImgMeta(upgCtx, true)
 	getUpgCtxFromImgMeta(upgCtx, false)
 	return nil
+}
+
+func isPrePostImageMetaSame(upgCtx *UpgCtx) bool {
+	if upgCtx.PostUpgMeta.NicmgrVersion == upgCtx.PreUpgMeta.NicmgrVersion &&
+		upgCtx.PostUpgMeta.KernelVersion == upgCtx.PreUpgMeta.KernelVersion &&
+		upgCtx.PostUpgMeta.PcieVersion == upgCtx.PreUpgMeta.PcieVersion &&
+		upgCtx.PostUpgMeta.BuildDate == upgCtx.PreUpgMeta.BuildDate &&
+		upgCtx.PostUpgMeta.BuildUser == upgCtx.PreUpgMeta.BuildUser &&
+		upgCtx.PostUpgMeta.BaseVersion == upgCtx.PreUpgMeta.BaseVersion &&
+		upgCtx.PostUpgMeta.SoftwareVersion == upgCtx.PreUpgMeta.SoftwareVersion {
+		return true
+	}
+	return false
 }
