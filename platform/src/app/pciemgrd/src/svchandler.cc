@@ -52,6 +52,7 @@ PciemgrSvcHandler::FailedHandler(UpgCtx& upgCtx)
     // to run with the current running state.
     //
     if (UpgCtxApi::UpgCtxGetUpgState(upgCtx) != CompatCheck) {
+        upgrade_state_save();
         upgrade_rollback_begin();
     } else {
         upgrade_failed();

@@ -70,21 +70,23 @@ delphi::error UpgAppRespReact::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr
         }
         if (ctx.upgFailed) {
             //TODO: Move to OnUpgRespDelete once we have go APIs from sysmgr
-            UPG_LOG_DEBUG("UpgFailed. Sleeping for 5s for system to cleanup state");
-            UPG_OBFL_TRACE("UpgFailed. Sleeping for 5s for system to cleanup state");
-            sleep(5);
             if (ctx.postRestart) {
                 UPG_LOG_DEBUG("Upgrade failed last time. So going to switch back to old code.");
                 UPG_OBFL_TRACE("Upgrade failed last time. So going to switch back to old code.");
+                sleep(5);
                 if (exists("/nic/tools/fwupdate")) {
                     ctx.sysMgr->restart_system();
                 } 
             } else if (ctx.upgPostCompatCheck) {
-                UPG_LOG_DEBUG("Upgrade failed last time. So going to switch back to old code.");
-                UPG_OBFL_TRACE("Upgrade failed last time. So going to switch back to old code.");
+                UPG_LOG_DEBUG("Upgrade failed last time. So going to restart apps.");
+                UPG_OBFL_TRACE("Upgrade failed last time. So going to restart apps.");
+                sleep(5);
                 if (exists("/nic/tools/fwupdate")) {
                     ctx.sysMgr->respawn_processes();
                 }
+            } else {
+                UPG_LOG_DEBUG("UpgFailed during compat check.");
+                UPG_OBFL_TRACE("UpgFailed during compat check.");
             }
         }
     }
