@@ -737,9 +737,9 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     SDK_ASSERT(offset == offset_verify);
 
     // write to hardware
-    HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial CQCB State, CQCB->PT: {:#x} cqcb_size: {}",
+    HAL_TRACE_DEBUG("{}: LIF: {}: Writing initial CQCB State, CQCB->PT: {:#x} cqcb_size: {}",
                     __FUNCTION__, lif, cqcb.pt_base_addr, sizeof(cqcb_t));
-    // Convert data before writting to HBM
+    // Convert data before writing to HBM
     memrev((uint8_t*)&cqcb, sizeof(cqcb_t));
     // lif_manager()->WriteQState(lif, Q_TYPE_RDMA_CQ, spec.cq_num(), (uint8_t *)&cqcb, sizeof(cqcb_t));
     lif_manager()->write_qstate(lif, Q_TYPE_RDMA_CQ, spec.cq_num(), (uint8_t *)&cqcb, sizeof(cqcb_t));
@@ -815,9 +815,9 @@ rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
     rsp->set_eq_intr_tbl_addr(eqcb.int_assert_addr);
 
     // write to hardware
-    HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial EQCB State, eqcb_size: {}",
+    HAL_TRACE_DEBUG("{}: LIF: {}: Writing initial EQCB State, eqcb_size: {}",
                     __FUNCTION__, lif, sizeof(eqcb_t));
-    // Convert data before writting to HBM
+    // Convert data before writing to HBM
     memrev((uint8_t*)&eqcb, sizeof(eqcb_t));
     // lif_manager()->WriteQState(lif, Q_TYPE_RDMA_EQ, spec.eq_id(), (uint8_t *)&eqcb, sizeof(eqcb_t));
     lif_manager()->write_qstate(lif, Q_TYPE_RDMA_EQ, spec.eq_id(), (uint8_t *)&eqcb, sizeof(eqcb_t));
@@ -869,10 +869,10 @@ rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp)
     //SDK_ASSERT(offset == offset_verify);
 
     // write to hardware
-    HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial AQCB State, AQCB->phy_addr: {:#x} "
+    HAL_TRACE_DEBUG("{}: LIF: {}: Writing initial AQCB State, AQCB->phy_addr: {:#x} "
                     "aqcb_size: {}",
                     __FUNCTION__, lif, aqcb.aqcb0.phy_base_addr, sizeof(aqcb_t));
-    // Convert data before writting to HBM
+    // Convert data before writing to HBM
     memrev((uint8_t*)&aqcb.aqcb0, sizeof(aqcb0_t));
     memrev((uint8_t*)&aqcb.aqcb1, sizeof(aqcb1_t));
     lif_manager()->write_qstate(lif, Q_TYPE_ADMINQ, spec.aq_num(),

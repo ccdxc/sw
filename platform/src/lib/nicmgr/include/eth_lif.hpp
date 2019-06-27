@@ -79,7 +79,7 @@ typedef struct eth_lif_res_s {
  * LIF State enum
  */
 enum eth_lif_state {
-    LIF_STATE_RESETING,
+    LIF_STATE_RESETTING,
     LIF_STATE_RESET,
     LIF_STATE_CREATING,
     LIF_STATE_CREATED,

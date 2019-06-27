@@ -81,7 +81,7 @@ const char*
 EthLif::lif_state_to_str(enum eth_lif_state state)
 {
     switch(state) {
-        CASE(LIF_STATE_RESETING);
+        CASE(LIF_STATE_RESETTING);
         CASE(LIF_STATE_RESET);
         CASE(LIF_STATE_CREATING);
         CASE(LIF_STATE_CREATED);
@@ -556,7 +556,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_EAGAIN);
     }
 
-    state = LIF_STATE_RESETING;
+    state = LIF_STATE_RESETTING;
 
     // Update name to the lif-id before doing a reset
     // to avoid name collisions during re-addition of the lifs
@@ -2095,6 +2095,18 @@ EthLif::_CmdRDMAResetLIF(void *req, void *req_data, void *resp, void *resp_data)
         p4plus_invalidate_cache(addr, sizeof(cqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
     }
 
+    for (uint32_t qid = spec->adminq_count; qid < spec->adminq_count + spec->rdma_aq_count; qid++) {
+        addr = pd->lm_->get_lif_qstate_addr(lif_id, ETH_HW_QTYPE_ADMIN, qid);
+        if (addr < 0) {
+            NIC_LOG_ERR("{}: Failed to get qstate address for RDMA ADMIN qid {}",
+                hal_lif_info_.name, qid);
+            return (IONIC_RC_ERROR);
+        }
+        MEM_SET(addr, 0, 1, 0);
+        PAL_barrier();
+        p4plus_invalidate_cache(addr, sizeof(aqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+    }
+
     addr = pd->rdma_get_kt_base_addr(lif_id);
     MEM_SET(addr, 0, spec->key_count * sizeof(key_entry_t), 0);
     PAL_barrier();
@@ -2210,10 +2222,10 @@ EthLif::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
     cqcb.ring_header.pc = offset;
 
     // write to hardware
-    NIC_LOG_DEBUG("{}: Writting initial CQCB State, "
+    NIC_LOG_DEBUG("{}: Writing initial CQCB State, "
                   "CQCB->PT: {:#x} cqcb_size: {}",
                   lif_id, cqcb.pt_base_addr, sizeof(cqcb_t));
-    // Convert data before writting to HBM
+    // Convert data before writing to HBM
     memrev((uint8_t*)&cqcb, sizeof(cqcb_t));
 
     addr = pd->lm_->get_lif_qstate_addr(lif_id, ETH_HW_QTYPE_CQ, cmd->qid_ver);
@@ -2284,12 +2296,12 @@ EthLif::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_d
     aqcb.aqcb0.ring_header.pc = offset;
 
     // write to hardware
-    NIC_LOG_DEBUG("{}: Writting initial AQCB State, "
+    NIC_LOG_DEBUG("{}: Writing initial AQCB State, "
                     "AQCB->phy_addr: {:#x} "
                     "aqcb_size: {}",
                     lif_id, aqcb.aqcb0.phy_base_addr, sizeof(aqcb_t));
 
-    // Convert data before writting to HBM
+    // Convert data before writing to HBM
     memrev((uint8_t*)&aqcb.aqcb0, sizeof(aqcb0_t));
     memrev((uint8_t*)&aqcb.aqcb1, sizeof(aqcb1_t));
 
