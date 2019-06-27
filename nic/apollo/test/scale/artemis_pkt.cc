@@ -580,7 +580,6 @@ send_packet (void)
         }
     }
 
-#if 0
     tcid++;
     if (tcid_filter == 0 || tcid == tcid_filter) {
         printf("Test with g_vnet60_st_out_v4_input\n");
@@ -727,7 +726,7 @@ send_packet (void)
             testcase_end(tcid, i + 1);
         }
     }
-
+#if 0
     tcid++;
     if (tcid_filter == 0 || tcid == tcid_filter) {
         printf("Test with g_vnet61_SLB_in_V6_input\n");
@@ -811,7 +810,6 @@ send_packet (void)
         }
     }
 #endif
-
     exit_simulation();
 }
 #endif
