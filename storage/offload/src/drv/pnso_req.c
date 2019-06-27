@@ -787,8 +787,6 @@ init_request_params(uint16_t req_flags,
 		pnso_poll_fn_t *pnso_poll_fn, void **pnso_poll_ctx,
 		struct request_params *req_params)
 {
-	memset(req_params, 0, sizeof(*req_params));
-
 	req_params->rp_flags = req_flags;
 	req_params->rp_pcr = pcr;
 
@@ -873,14 +871,14 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 		pnso_poll_fn_t *pnso_poll_fn, void **pnso_poll_ctx)
 {
 	pnso_error_t err;
-	struct request_params req_params;
+	struct request_params req_params = { 0 };
 	uint32_t req_flags = 0;
 	struct per_core_resource *pcr;
 
-	PAS_DECL_PERF();
+	PAS_DECL_SW_PERF();
 
 	OSAL_LOG_DEBUG("enter...");
-	PAS_START_PERF();
+	PAS_START_SW_PERF(req_params.rp_sw_latency_ts);
 
 	pcr = putil_get_per_core_resource();
 	if (!pcr || pnso_lif_reset_ctl_pending()) {
@@ -935,7 +933,9 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 		goto out;
 
 	REQ_PPRINT_RESULT(svc_res);
-	PAS_END_PERF(pcr);
+
+	if (req_flags & REQUEST_RFLAG_MODE_SYNC)
+		PAS_END_SW_PERF(pcr);
 	putil_put_per_core_resource(pcr);
 
 	OSAL_LOG_DEBUG("exit!");
@@ -943,7 +943,7 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 out:
 	if (pcr) {
 		PAS_INC_NUM_REQUEST_FAILURES(pcr);
-		PAS_END_PERF(pcr);
+		PAS_END_SW_PERF(pcr);
 		putil_put_per_core_resource(pcr);
 	}
 
@@ -1023,14 +1023,14 @@ pnso_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 		void **pnso_poll_ctx)
 {
 	pnso_error_t err;
-	struct request_params req_params;
+	struct request_params req_params = { 0 };
 	uint32_t req_flags = 0;
 	struct per_core_resource *pcr;
 
-	PAS_DECL_PERF();
+	PAS_DECL_SW_PERF();
 
 	OSAL_LOG_DEBUG("enter...");
-	PAS_START_PERF();
+	PAS_START_SW_PERF(req_params.rp_sw_latency_ts);
 
 	pcr = putil_get_per_core_resource();
 	if (!pcr || pnso_lif_reset_ctl_pending()) {
@@ -1062,7 +1062,7 @@ pnso_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 		bat_destroy_batch(pcr);
 
 	err = PNSO_OK;
-	PAS_END_PERF(pcr);
+	PAS_END_SW_PERF(pcr);
 	putil_put_per_core_resource(pcr);
 	OSAL_LOG_DEBUG("exit!");
 	return err;
@@ -1072,7 +1072,7 @@ out:
 	if (pcr) {
 		bat_destroy_batch(pcr);
 		PAS_INC_NUM_BATCH_FAILURES(pcr);
-		PAS_END_PERF(pcr);
+		PAS_END_SW_PERF(pcr);
 		putil_put_per_core_resource(pcr);
 	}
 

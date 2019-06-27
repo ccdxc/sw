@@ -35,6 +35,8 @@ struct request_params {
 	struct batch_page *rp_page;
 	uint16_t rp_batch_index;
 
+	uint64_t rp_sw_latency_ts;
+
 	struct pnso_service_request *rp_svc_req;
 	struct pnso_service_result *rp_svc_res;
 

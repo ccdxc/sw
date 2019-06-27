@@ -313,30 +313,6 @@ poll_ctx_to_chain_params(void *poll_ctx, uint16_t *gen_id,
 	return chain;
 }
 
-#if 0
-static struct service_chain *poll_ctx_to_chain(void *poll_ctx)
-{
-	struct service_chain *chain;
-	struct per_core_resource *pcr;
-	uint16_t gen_id;
-
-	chain = poll_ctx_to_chain_params(poll_ctx, &gen_id, &pcr);
-	if (!chain)
-		return NULL;
-
-	if (chain->sc_gen_id != gen_id) {
-		OSAL_LOG_ERROR("new chain gen_id %d found, expected %d",
-			       chain->sc_gen_id, gen_id);
-		return NULL;
-	}
-
-	return chain;
-}
-#endif
-
-pnso_error_t chn_poller(struct service_chain *chain, uint16_t gen_id,
-			bool is_timeout);
-
 pnso_error_t
 chn_poller(struct service_chain *chain, uint16_t gen_id, bool is_timeout)
 {
@@ -345,7 +321,12 @@ chn_poller(struct service_chain *chain, uint16_t gen_id, bool is_timeout)
 	completion_cb_t	cb = NULL;
 	void *cb_ctx = NULL;
 
+	PAS_DECL_SW_PERF();
+	PAS_DECL_HW_PERF();
+
 	OSAL_LOG_DEBUG("enter ...");
+
+	OSAL_ASSERT(chain);
 
 	OSAL_LOG_DEBUG("core_id: %u", osal_get_coreid());
 
@@ -358,6 +339,9 @@ chn_poller(struct service_chain *chain, uint16_t gen_id, bool is_timeout)
 	}
 
 	res = chain->sc_res;
+	PAS_SET_SW_PERF(chain->sc_sw_latency_start);
+	PAS_SET_HW_PERF(chain->sc_hw_latency_start);
+
 	if (is_timeout) {
 		err = ETIMEDOUT;
 	} else {
@@ -368,8 +352,15 @@ chn_poller(struct service_chain *chain, uint16_t gen_id, bool is_timeout)
 				(uint64_t) chain, err);
 		if (err == EBUSY)
 			goto out;
+
+		PAS_END_HW_PERF(chain->sc_pcr);
+		PAS_END_SW_PERF(chain->sc_pcr);
+
 		res->err = err; /* ETIMEDOUT most likely */
 	} else {
+		PAS_END_HW_PERF(chain->sc_pcr);
+		PAS_END_SW_PERF(chain->sc_pcr);
+
 		chn_read_write_result(chain);
 		chn_update_overall_result(chain);
 	}
@@ -1008,8 +999,11 @@ chn_create_chain(struct request_params *req_params,
 	if ((req_params->rp_flags & REQUEST_RFLAG_TYPE_CHAIN) &&
 			((chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC) ||
 			(chain->sc_flags & CHAIN_CFLAG_MODE_POLL))) {
+		chain->sc_sw_latency_start = req_params->rp_sw_latency_ts;
+
 		chain->sc_req_cb = req_params->rp_cb;
-		atomic64_set(&chain->sc_req_cb_ctx, (uint64_t) req_params->rp_cb_ctx);
+		atomic64_set(&chain->sc_req_cb_ctx,
+				(uint64_t) req_params->rp_cb_ctx);
 
 		poll_ctx = chain_to_poll_ctx(chain);
 		if (chain->sc_flags & CHAIN_CFLAG_MODE_POLL) {
@@ -1175,7 +1169,7 @@ pnso_error_t
 chn_execute_chain(struct service_chain *chain)
 {
 	pnso_error_t err = EINVAL;
-	struct per_core_resource *pcr = chain->sc_pcr;
+	struct per_core_resource *pcr;
 	struct chain_entry *ce_first, *ce_last;
 	uint16_t async_evid;
 	bool is_sync_mode = (chain->sc_flags & CHAIN_CFLAG_MODE_SYNC) != 0;
@@ -1190,17 +1184,28 @@ chn_execute_chain(struct service_chain *chain)
 	if (!ce_first)
 		goto out;
 	ce_last = chain->sc_last_entry;
+
 	async_evid = chain->sc_async_evid;
+	pcr = chain->sc_pcr;
 
 	/* ring 'first' service door bell */
 	chain->sc_flags |= CHAIN_CFLAG_RANG_DB;
+
+	/*
+	 * in poll or async mode, the request may finish before recording this
+	 * perf-event, so record it ahead of ringing the db to cover the case
+	 * of a race condition.
+	 *
+	 */
+	PAS_START_HW_PERF(chain->sc_hw_latency_start);
+
 	err = ce_first->ce_svc_info.si_ops.ring_db(&ce_first->ce_svc_info);
-	PAS_START_HW_PERF();
 	if (err) {
+		PAS_END_HW_PERF(pcr);
+
 		chain->sc_flags &= ~((uint16_t) CHAIN_CFLAG_RANG_DB);
 		OSAL_LOG_ERROR("failed to ring service door bell! svc_type: %d err: %d",
 			       ce_first->ce_svc_info.si_type, err);
-		PAS_END_HW_PERF(pcr);
 		goto out;
 	}
 
@@ -1209,7 +1214,7 @@ chn_execute_chain(struct service_chain *chain)
 				chain->sc_flags);
 		if (async_evid)
 			sonic_intr_touch_ev_id(pcr, async_evid);
-		PAS_END_HW_PERF(pcr);
+
 		goto out;
 	}
 

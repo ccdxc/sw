@@ -14,6 +14,7 @@
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
 #include "pnso_crypto_cmn.h"
+#include "pnso_stats.h"
 #include "pnso_utils.h"
 
 #ifdef NDEBUG
@@ -513,8 +514,6 @@ static struct batch_info *poll_ctx_to_batch(void *poll_ctx)
 	return batch;
 }
 
-pnso_error_t bat_poller(struct batch_info *batch_info, uint16_t gen_id, bool is_timeout);
-
 pnso_error_t
 bat_poller(struct batch_info *batch_info, uint16_t gen_id, bool is_timeout)
 {
@@ -522,9 +521,14 @@ bat_poller(struct batch_info *batch_info, uint16_t gen_id, bool is_timeout)
 	completion_cb_t	cb = NULL;
 	void *cb_ctx = NULL;
 
+	PAS_DECL_SW_PERF();
+	PAS_DECL_HW_PERF();
+
 	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_LOG_DEBUG("core_id: %u", osal_get_coreid());
+
+	OSAL_ASSERT(batch_info);
 
 	PPRINT_BATCH_INFO(batch_info);
 
@@ -534,6 +538,9 @@ bat_poller(struct batch_info *batch_info, uint16_t gen_id, bool is_timeout)
 		goto out;
 	}
 
+	PAS_SET_SW_PERF(batch_info->bi_sw_latency_start);
+	PAS_SET_HW_PERF(batch_info->bi_hw_latency_start);
+
 	if (is_timeout) {
 		err = ETIMEDOUT;
 	} else {
@@ -542,10 +549,18 @@ bat_poller(struct batch_info *batch_info, uint16_t gen_id, bool is_timeout)
 	if (err) {
 		OSAL_LOG_DEBUG("poll failed! batch_info: 0x" PRIx64 "err: %d",
 			(uint64_t) batch_info, err);
+
 		if (err == EBUSY)
 			goto out;
+
+		PAS_END_HW_PERF(batch_info->bi_pcr);
+		PAS_END_SW_PERF(batch_info->bi_pcr);
+
 		read_write_error_result_all_chains(batch_info, err);
 	} else {
+		PAS_END_HW_PERF(batch_info->bi_pcr);
+		PAS_END_SW_PERF(batch_info->bi_pcr);
+
 		/*
 		 * on success, read/write result from first to last chain's - first
 		 * to last service - of the entire batch
@@ -664,6 +679,8 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 
 	if ((req_params->rp_flags & REQUEST_RFLAG_MODE_ASYNC) ||
 			(req_params->rp_flags & REQUEST_RFLAG_MODE_POLL)) {
+		batch_info->bi_sw_latency_start = req_params->rp_sw_latency_ts;
+
 		batch_info->bi_req_cb = req_params->rp_cb;
 		atomic64_set(&batch_info->bi_req_cb_ctx,
 			     (uint64_t) req_params->rp_cb_ctx);
@@ -874,14 +891,16 @@ execute_batch(struct batch_info *batch_info)
 	uint16_t async_evid;
 	bool is_sync_mode = (batch_info->bi_flags & BATCH_BFLAG_MODE_SYNC) != 0;
 
-	pcr = batch_info->bi_pcr;
+	PAS_DECL_HW_PERF();
 
 	OSAL_LOG_DEBUG("enter ...");
 
 	/* get last chain's last service of the batch */
 	last_chain = chn_get_last_service_chain(batch_info);
 	last_ce = chn_get_last_centry(last_chain);
+
 	async_evid = last_chain->sc_async_evid;
+	pcr = batch_info->bi_pcr;
 
 	num_entries = batch_info->bi_num_entries;
 	for (idx = 0; idx < num_entries; idx += MAX_PAGE_ENTRIES) {
@@ -893,9 +912,21 @@ execute_batch(struct batch_info *batch_info)
 		/* ring DB first chain's first service within the mini-batch  */
 		set_batch_page_cflag(GET_PAGE(batch_info, idx),
 				CHAIN_CFLAG_RANG_DB);
+
+		/*
+		 * record the perf-event just for the 1st page; similar to
+		 * chain non-batch case, record the perf-event ahead of ringing
+		 * the db.
+		 *
+		 */
+		if (!batch_info->bi_hw_latency_start)
+			PAS_START_HW_PERF(batch_info->bi_hw_latency_start);
+
 		err = first_ce->ce_svc_info.si_ops.ring_db(
 				&first_ce->ce_svc_info);
 		if (err) {
+			PAS_END_HW_PERF(pcr);
+
 			clear_batch_page_cflag(GET_PAGE(batch_info, idx),
 					CHAIN_CFLAG_RANG_DB);
 			OSAL_LOG_DEBUG("failed to ring service door bell! svc_type: %d err: %d",
@@ -908,12 +939,15 @@ execute_batch(struct batch_info *batch_info)
 		OSAL_LOG_DEBUG("in non-sync mode ...");
 		if (async_evid)
 			sonic_intr_touch_ev_id(pcr, async_evid);
+
 		goto done;
 	}
 
 	/* poll on last chain's last service of the batch */
 	err = last_ce->ce_svc_info.si_ops.poll(&last_ce->ce_svc_info);
 	if (err) {
+		PAS_END_HW_PERF(pcr);
+
 		/* in sync-mode, poll() will return either OK or ETIMEDOUT */
 		OSAL_LOG_ERROR("service failed to poll svc_type: %d err: %d",
 			       last_ce->ce_svc_info.si_type, err);
@@ -922,6 +956,7 @@ execute_batch(struct batch_info *batch_info)
 
 	/* on success, loop n' poll on every chain's - every service(s) */
 	err = poll_all_chains(batch_info);
+	PAS_END_HW_PERF(pcr);
 	if (err) {
 		OSAL_LOG_ERROR("failed to poll all services err: %d", err);
 		goto out;

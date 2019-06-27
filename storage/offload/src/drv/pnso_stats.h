@@ -97,14 +97,6 @@ enum {
 #define PNSO_LIST_STAT PNSO_DECLARE_STAT
 #define PNSO_DECLARE_STATS PNSO_LIST_STATS
 
-/*
- * TODO-stats:
- *	- replace ktime with osal equivalent
- *	- reivew/add service/batch level stats, failure stat counting
- *	- add 'get/per-core aggregate' stats api
- *	- track emitting stats at module unload
- *
- */
 struct pnso_api_stats {
 	PNSO_DECLARE_STATS
 };
@@ -195,16 +187,18 @@ struct pnso_api_stats {
 	PNSO_STAT_ADD(pcr, num_chksums, count)
 
 /* for measuring the time spent in both software and hardware */
-#define PAS_DECL_PERF()		uint64_t s
-#define PAS_START_PERF()	s = osal_get_clock_nsec()
-#define PAS_END_PERF(pcr)						\
+#define PAS_DECL_SW_PERF()	uint64_t s = 0
+#define PAS_START_SW_PERF(x)	x = s = osal_get_clock_nsec()
+#define PAS_END_SW_PERF(pcr)						\
 	PNSO_STAT_ADD(pcr, total_latency, (osal_get_clock_nsec() - s))
+#define PAS_SET_SW_PERF(x)	s = x
 
 /* for measuring the time spent just in hardware */
-#define PAS_DECL_HW_PERF()	uint64_t h
-#define PAS_START_HW_PERF()	h = osal_get_clock_nsec()
+#define PAS_DECL_HW_PERF()	uint64_t h = 0
+#define PAS_START_HW_PERF(x)	x = h = osal_get_clock_nsec()
 #define PAS_END_HW_PERF(pcr)						\
 	PNSO_STAT_ADD(pcr, total_hw_latency, (osal_get_clock_nsec() - h))
+#define PAS_SET_HW_PERF(x)	h = x
 
 #define PAS_SHOW_STATS(pcr)	pas_show_stats(&pcr->api_stats);
 

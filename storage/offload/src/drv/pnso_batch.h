@@ -69,6 +69,9 @@ struct batch_info {
 	void *bi_bulk_desc[MAX_NUM_DESCS];	/* cpdc/crypto desc */
 	struct batch_page *bi_pages[MAX_NUM_PAGES];
 	uint64_t bi_poll_ts;		/* first poll timestamp */
+
+	uint64_t bi_sw_latency_start;	/* track ring db timestamp for software latency */
+	uint64_t bi_hw_latency_start;	/* track ring db timestamp for hardware latency */
 };
 
 pnso_error_t bat_add_to_batch(struct per_core_resource *pcr,

@@ -301,6 +301,8 @@ struct service_chain {
 	uint16_t sc_async_evid;		/* async interrupt based event id, or 0 */
 	uint32_t sc_req_id;		/* unique request id */
 	uint64_t sc_poll_ts;		/* first poll timestamp */
+	uint64_t sc_sw_latency_start;	/* track ring db timestamp for software latency */
+	uint64_t sc_hw_latency_start;	/* track ring db timestamp for hardware latency */
 
 	struct ring_tracker sc_ring_tracker[ACCEL_RING_ID_MAX];
 
