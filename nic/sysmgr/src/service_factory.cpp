@@ -92,6 +92,7 @@ ServiceFactoryPtr ServiceFactory::getInstance()
     ConfigLoop::getInstance()->register_config_reactor(instance);
     instance->int_watcher = SignalWatcher::create(SIGINT, instance);
     instance->term_watcher = SignalWatcher::create(SIGTERM, instance);
+    instance->respawn_in_progress = false;
     return instance;
 }
 
@@ -139,14 +140,21 @@ void ServiceFactory::on_signal(int sig)
 
 void ServiceFactory::respawn_all()
 {
+    if (this->respawn_in_progress) {
+        return;
+    }
+    this->shutdown_pending.clear();
     for (auto s: services)
     {
+        if (!s.second->is_running()) {
+            logger->info("Service {} is not running, skiping", s.first);
+            continue;
+        }
         s.second->stop();
+        logger->info("Adding {} to shutdown_pending", s.first);
+        this->shutdown_pending.insert(s.first);
     }
-    for (auto s: services)
-    {
-        s.second->start();
-    }
+    this->respawn_in_progress = true;
 }
 
 void ServiceFactory::on_service_start(std::string name)
@@ -155,7 +163,22 @@ void ServiceFactory::on_service_start(std::string name)
 
 void ServiceFactory::on_service_stop(std::string name)
 {
+    if (!this->respawn_in_progress) {
+        return;
+    }
     logger->info("Service {} stopped", name);
+    this->shutdown_pending.erase(name);
+
+    logger->info("Services in shutdown_pending: {}",
+        this->shutdown_pending.size());
+
+    if (this->shutdown_pending.size() == 0) {
+        for (auto s: services)
+        {
+            s.second->start();
+        }
+        respawn_in_progress = false;
+    }
 }
 
 void ServiceFactory::on_service_heartbeat(std::string name)

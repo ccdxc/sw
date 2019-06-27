@@ -33,6 +33,13 @@ enum service_config_state
     SERVICE_CONFIG_STATE_OFF,
 };
 
+enum service_running_state
+{
+    SERVICE_RUNNING_STATE_ON,
+    SERVICE_RUNNING_STATE_OFF,
+};
+
+
 class Service : public std::enable_shared_from_this<Service>,
                 public ServiceReactor,
                 public ChildReactor,
@@ -45,6 +52,7 @@ private:
     TimerWatcherPtr timer_watcher;
     pid_t pid;
     enum service_config_state config_state;
+    enum service_running_state running_state;
     int restart_count;
     void check_dep_and_launch();
     void start_heartbeat();
@@ -60,6 +68,7 @@ public:
     virtual void on_timer();
     void stop();
     void start();
+    bool is_running();
 };
 typedef std::shared_ptr<Service> ServicePtr;
 

@@ -18,6 +18,8 @@ private:
     std::map<std::string, ServicePtr>      services;
     SignalWatcherPtr                       term_watcher;
     SignalWatcherPtr                       int_watcher;
+    std::set<std::string>                  shutdown_pending;
+    bool                                   respawn_in_progress;
 public:
     static std::shared_ptr<ServiceFactory> getInstance();
     virtual void on_config_add(ServiceSpecPtr spec);

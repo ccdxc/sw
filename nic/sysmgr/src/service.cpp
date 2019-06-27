@@ -52,6 +52,7 @@ void Service::launch()
     }
     this->child_watcher = ChildWatcher::create(this->pid, shared_from_this());
     this->start_heartbeat();
+    this->running_state = SERVICE_RUNNING_STATE_ON;
 }
 
 void Service::check_dep_and_launch()
@@ -105,6 +106,7 @@ ServicePtr Service::create(ServiceSpecPtr spec)
     svc->timer_watcher = nullptr;
     svc->restart_count = 0;
     svc->config_state = SERVICE_CONFIG_STATE_ON;
+    svc->running_state = SERVICE_RUNNING_STATE_OFF;
     svc->check_dep_and_launch();
     ServiceLoop::getInstance()->register_event_reactor(SERVICE_EVENT_START,
         spec->name, svc);
@@ -155,8 +157,14 @@ void Service::on_service_heartbeat(std::string name)
 
 void Service::fault(std::string reason)
 {
-    logger->info("System in fault mode");
+    if (this->config_state == SERVICE_CONFIG_STATE_OFF) {
+        logger->info("Service {} shutdown on purpose, not setting fault",
+            this->spec->name);
+        return;
+    }
+    logger->info("System in fault mode ({}/{})", this->spec->name, reason);
     if (this->spec->flags & PANIC_ON_FAILURE) {
+        logger->info("{} is critical. Triggering watchdog", this->spec->name);
         FaultLoop::getInstance()->set_fault(reason);
     }
     auto obj = std::make_shared<delphi::objects::SysmgrSystemStatus>();
@@ -167,6 +175,8 @@ void Service::fault(std::string reason)
 
 void Service::on_child(pid_t pid)
 {
+    this->running_state = SERVICE_RUNNING_STATE_OFF;
+
     std::string reason = parse_status(this->child_watcher->get_status());
 
     logger->info("Service {} {}", this->spec->name, reason);
@@ -225,8 +235,10 @@ void Service::reset_dependencies()
 void Service::stop()
 {
     this->config_state = SERVICE_CONFIG_STATE_OFF;
-    this->timer_watcher->stop();
-    this->timer_watcher = nullptr;
+    if (this->timer_watcher != nullptr) {
+        this->timer_watcher->stop();
+        this->timer_watcher = nullptr;
+    }
     this->restart_count = 0;
     this->reset_dependencies();
     logger->info("Killing {}({})", this->spec->name, this->pid);
@@ -237,4 +249,9 @@ void Service::start()
 {
     this->config_state = SERVICE_CONFIG_STATE_ON;
     this->check_dep_and_launch();
+}
+
+bool Service::is_running()
+{
+    return (this->running_state == SERVICE_RUNNING_STATE_ON);
 }
