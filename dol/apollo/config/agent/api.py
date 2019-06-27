@@ -17,6 +17,7 @@ import policy_pb2_grpc as policy_pb2_grpc
 import mirror_pb2_grpc as mirror_pb2_grpc
 import nh_pb2_grpc as nh_pb2_grpc
 import service_pb2_grpc as service_pb2_grpc
+import tags_pb2_grpc as tags_pb2_grpc
 import infra.common.defs as defs
 
 from infra.common.glopts  import GlobalOptions
@@ -49,7 +50,9 @@ class ObjectTypes(enum.IntEnum):
     MIRROR = 10
     NEXTHOP = 11
     SVCMAPPING = 12
-    MAX = 13
+    METER = 13
+    TAG = 14
+    MAX = 15
 
 class ClientStub:
     def __init__(self, stubclass, channel, rpc_prefix):
@@ -144,6 +147,8 @@ class ApolloAgentClient:
                                                       self.__channel, 'Nexthop')
         self.__stubs[ObjectTypes.SVCMAPPING] = ClientStub(service_pb2_grpc.SvcStub,
                                                       self.__channel, 'SvcMapping')
+        self.__stubs[ObjectTypes.TAG] = ClientStub(tags_pb2_grpc.TagSvcStub,
+                                                      self.__channel, 'Tag')
         return
 
     def Create(self, objtype, objs):

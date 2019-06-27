@@ -8,6 +8,7 @@ import apollo.config.objects.policy as policy
 import apollo.config.objects.route as route
 import apollo.config.objects.subnet as subnet
 import apollo.config.objects.nexthop as nexthop
+import apollo.config.objects.tag as tag
 import artemis.config.objects.cfgjson as cfgjson
 import apollo.config.utils as utils
 
@@ -61,6 +62,10 @@ class VpcObject(base.ConfigObjectBase):
         # Generate NextHop configuration
         if getattr(spec, 'nexthop', None) != None:
             nexthop.client.GenerateObjects(self, spec)
+
+        # Generate Tag configuration.
+        if getattr(spec, 'tagtbl', None) != None:
+            tag.client.GenerateObjects(self, spec)
 
         # Generate Policy configuration.
         if getattr(spec, 'policy', None) != None:
@@ -162,6 +167,9 @@ class VpcObjectClient:
 
         # Create Nexthop object
         nexthop.client.CreateObjects()
+
+        # Create Tag object.
+        tag.client.CreateObjects()
 
         # Create Policy object.
         policy.client.CreateObjects()
