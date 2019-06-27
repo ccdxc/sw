@@ -8,13 +8,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/pensando/sw/api"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/tools/fuz/fuze"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/strconv"
+
+	libstrconv "github.com/pensando/sw/venice/utils/strconv"
 )
 
 // number of times to retry netcat client command
@@ -318,7 +320,7 @@ func (act *ActionCtx) TCPSession(wpc *WorkloadPairCollection, port int) error {
 		return wpc.err
 	}
 
-	return act.netcatTrigger(wpc, "", "", port, false, 0, "")
+	return act.FuzIt(wpc, 1, "tcp", strconv.Itoa(port))
 }
 
 // UDPSession runs UDP session between pair of workloads
@@ -331,7 +333,7 @@ func (act *ActionCtx) UDPSession(wpc *WorkloadPairCollection, port int) error {
 		return nil
 	}
 
-	return act.netcatTrigger(wpc, "-u --sh-exec 'echo test'", "-u", port, false, 0, "test")
+	return act.FuzIt(wpc, 1, "udp", strconv.Itoa(port))
 }
 
 // TCPSessionFails verifies TCP session fails between pair of workloads
@@ -382,7 +384,7 @@ func (act *ActionCtx) VerifyWorkloadStatus(wc *WorkloadCollection) error {
 			return fmt.Errorf("Unexpected number of interfaces on workload %v. Exp: %+v, Got: %+v", wr.veniceWorkload.Name, wr.veniceWorkload.Spec.Interfaces, wsts.Spec.Interfaces)
 		}
 
-		name, err := strconv.ParseMacAddr(wr.veniceWorkload.Spec.Interfaces[0].MACAddress)
+		name, err := libstrconv.ParseMacAddr(wr.veniceWorkload.Spec.Interfaces[0].MACAddress)
 		if err != nil {
 			name = wr.veniceWorkload.Spec.Interfaces[0].MACAddress
 		}
@@ -559,10 +561,12 @@ func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, po
 		serverInput[wfName] = fuze.Input{Connections: []*fuze.Connection{{ServerIPPort: ":" + port, Proto: proto}}}
 
 		conns := clientInput[wfName].Connections
-		destIPAddr := strings.Split(pair.second.iotaWorkload.IpPrefix, "/")[0]
+		destIPAddr := strings.Split(pair.first.iotaWorkload.IpPrefix, "/")[0]
 		for ii := 0; ii < numConns; ii++ {
 			conns = append(conns, &fuze.Connection{ServerIPPort: destIPAddr + ":" + port, Proto: proto})
 		}
+		wfName = pair.second.iotaWorkload.WorkloadName
+		workloads[wfName] = pair.second
 		clientInput[wfName] = fuze.Input{Connections: conns}
 	}
 
@@ -571,31 +575,37 @@ func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, po
 	for _, ws := range workloads {
 		wsName := ws.iotaWorkload.WorkloadName
 		// copy server configuration
-		filename := fmt.Sprintf("/tmp/%s_fuz_server.json", wsName)
-		if jdata, err := json.Marshal(serverInput[wsName]); err != nil {
-			retErr = fmt.Errorf("error marshaling json data: %s", err)
-			break
-		} else if err := ioutil.WriteFile(filename, jdata, 0644); err != nil {
-			retErr = fmt.Errorf("unable to write to file: %s", err)
-			break
+
+		setUpFile := func(input fuze.Input, filename string) (err error) {
+
+			if jdata, ferr := json.Marshal(input); ferr != nil {
+				err = fmt.Errorf("error marshaling json data: %s", err)
+			} else if ferr := ioutil.WriteFile(filename, jdata, 0644); ferr != nil {
+				err = fmt.Errorf("unable to write to file: %s", err)
+			}
+			if ferr := act.model.tb.CopyToWorkload(ws.iotaWorkload.NodeName, wsName, []string{filename}, "."); ferr != nil {
+				err = fmt.Errorf("unable to copy configs to workload: %s", err)
+			}
+
+			return err
 		}
-		if err := act.model.tb.CopyToWorkload(ws.iotaWorkload.NodeName, wsName, []string{filename}, "."); err != nil {
-			retErr = fmt.Errorf("unable to copy configs to workload: %s", err)
-			break
+		if _, ok := serverInput[wsName]; ok {
+			if len(serverInput[wsName].Connections) > 1 {
+				filename := fmt.Sprintf("/tmp/%s_fuz_server.json", wsName)
+				if err := setUpFile(serverInput[wsName], filename); err != nil {
+					break
+				}
+			}
 		}
 
-		// copy the client configuration
-		filename = fmt.Sprintf("/tmp/%s_fuz_client.json", wsName)
-		if jdata, err := json.Marshal(clientInput[wsName]); err != nil {
-			retErr = fmt.Errorf("error marshaling json data: %s", err)
-			break
-		} else if err := ioutil.WriteFile(filename, jdata, 0644); err != nil {
-			retErr = fmt.Errorf("unable to write to file: %s", err)
-			break
-		}
-		if err := act.model.tb.CopyToWorkload(ws.iotaWorkload.NodeName, wsName, []string{filename}, "."); err != nil {
-			retErr = fmt.Errorf("unable to copy configs to workload: %s", err)
-			break
+		if _, ok := clientInput[wsName]; ok {
+			if len(clientInput[wsName].Connections) > 1 {
+				// copy the client configuration
+				filename := fmt.Sprintf("/tmp/%s_fuz_client.json", wsName)
+				if err := setUpFile(clientInput[wsName], filename); err != nil {
+					break
+				}
+			}
 		}
 	}
 	if retErr != nil {
@@ -613,9 +623,20 @@ func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, po
 	// run fuz servers on each workload
 	trig = act.model.tb.NewTrigger()
 	for _, ws := range workloads {
-		filename := fmt.Sprintf("%s_fuz_server.json", ws.iotaWorkload.WorkloadName)
-		trig.AddBackgroundCommand(fmt.Sprintf("./fuz -jsonInput %s -jsonOut", filename),
-			ws.iotaWorkload.WorkloadName, ws.iotaWorkload.NodeName)
+
+		wsName := ws.iotaWorkload.WorkloadName
+		if _, ok := serverInput[wsName]; ok {
+			if len(serverInput[wsName].Connections) > 1 {
+				filename := fmt.Sprintf("%s_fuz_server.json", ws.iotaWorkload.WorkloadName)
+				trig.AddBackgroundCommand(fmt.Sprintf("./fuz -jsonInput %s -jsonOut", filename),
+					ws.iotaWorkload.WorkloadName, ws.iotaWorkload.NodeName)
+			} else {
+
+				trig.AddBackgroundCommand(fmt.Sprintf("./fuz -proto %v %v", serverInput[wsName].Connections[0].Proto,
+					serverInput[wsName].Connections[0].ServerIPPort),
+					ws.iotaWorkload.WorkloadName, ws.iotaWorkload.NodeName)
+			}
+		}
 	}
 	srvResp, err := trig.Run()
 	if err != nil {
@@ -629,10 +650,19 @@ func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, po
 	var clientErr error
 	trig = act.model.tb.NewTrigger()
 	for _, ws := range workloads {
-		filename := fmt.Sprintf("%s_fuz_client.json", ws.iotaWorkload.WorkloadName)
-		outfilename := fmt.Sprintf("%s_fuz_client_out.json", ws.iotaWorkload.WorkloadName)
-		trig.AddCommand(fmt.Sprintf("./fuz -talk -jsonInput %s -jsonOut > %s", filename, outfilename),
-			ws.iotaWorkload.WorkloadName, ws.iotaWorkload.NodeName)
+		wsName := ws.iotaWorkload.WorkloadName
+		if _, ok := clientInput[wsName]; ok {
+			if len(clientInput[wsName].Connections) > 1 {
+				filename := fmt.Sprintf("%s_fuz_client.json", ws.iotaWorkload.WorkloadName)
+				outfilename := fmt.Sprintf("%s_fuz_client_out.json", ws.iotaWorkload.WorkloadName)
+				trig.AddCommand(fmt.Sprintf("./fuz -talk -jsonInput %s -jsonOut > %s", filename, outfilename),
+					ws.iotaWorkload.WorkloadName, ws.iotaWorkload.NodeName)
+			} else {
+				trig.AddBackgroundCommand(fmt.Sprintf("./fuz -talk -proto %v %v", clientInput[wsName].Connections[0].Proto,
+					clientInput[wsName].Connections[0].ServerIPPort),
+					ws.iotaWorkload.WorkloadName, ws.iotaWorkload.NodeName)
+			}
+		}
 	}
 
 	// run trigger
@@ -645,6 +675,9 @@ func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, po
 	log.Debugf("Got fuz client resp: %+v", clientResp)
 
 	// verify client commands succeeded
+	totalConns := 0
+	totalConnsFailed := 0
+
 	for _, cmdResp := range clientResp {
 		// clientOutput := make(map[string]fuze.Output)
 		if cmdResp.ExitCode != 0 {
@@ -656,42 +689,54 @@ func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, po
 		return retErr
 	}
 
-	totalConns := 0
-	totalConnsFailed := 0
-
 	// fetch the output files and parse the results
 	for _, ws := range workloads {
 		wsName := ws.iotaWorkload.WorkloadName
-		filename := fmt.Sprintf("%s_fuz_client_out.json", wsName)
-		if err := act.model.tb.CopyFromWorkload(ws.iotaWorkload.NodeName, wsName, []string{filename}, "/tmp"); err != nil {
-			log.Errorf("unable to copy output from workload: %s", err)
-			// return fmt.Errorf("unable to copy output from workload: %s", err)
-		}
-
-		fuzOut := fuze.Output{}
-		if jdata, err := ioutil.ReadFile(filepath.Join("/tmp", filename)); err != nil {
-			retErr = fmt.Errorf("unable to read file %s from for client connection", filename)
-		} else if err := json.Unmarshal(jdata, &fuzOut); err != nil {
-			retErr = fmt.Errorf("error %s unmarshlig data from file %s", err, filename)
-		} else if fuzOut.FailedConnections > 0 {
-			for ii := 0; ii < len(fuzOut.Connections); ii++ {
-				connOut := fuzOut.Connections[ii]
-				if connOut.Failed == 1 {
-					log.Errorf("[%d] %s: from %s to %s error %s", ii,
-						wsName, connOut.ClientIPPort, connOut.ServerIPPort, connOut.ErrorMsg)
-					break
+		if _, ok := clientInput[wsName]; ok {
+			if len(clientInput[wsName].Connections) > 1 {
+				filename := fmt.Sprintf("%s_fuz_client_out.json", wsName)
+				if err := act.model.tb.CopyFromWorkload(ws.iotaWorkload.NodeName, wsName, []string{filename}, "/tmp"); err != nil {
+					log.Errorf("unable to copy output from workload: %s", err)
+					// return fmt.Errorf("unable to copy output from workload: %s", err)
 				}
+
+				fuzOut := fuze.Output{}
+				if jdata, err := ioutil.ReadFile(filepath.Join("/tmp", filename)); err != nil {
+					retErr = fmt.Errorf("unable to read file %s from for client connection", filename)
+				} else if err := json.Unmarshal(jdata, &fuzOut); err != nil {
+					retErr = fmt.Errorf("error %s unmarshlig data from file %s", err, filename)
+				} else if fuzOut.FailedConnections > 0 {
+					for ii := 0; ii < len(fuzOut.Connections); ii++ {
+						connOut := fuzOut.Connections[ii]
+						if connOut.Failed == 1 {
+							log.Errorf("[%d] %s: from %s to %s error %s", ii,
+								wsName, connOut.ClientIPPort, connOut.ServerIPPort, connOut.ErrorMsg)
+							break
+						}
+					}
+					retErr = fmt.Errorf("Fuz client returned failure for %d/%d connections",
+						fuzOut.FailedConnections, fuzOut.SuccessConnections+fuzOut.FailedConnections)
+				}
+				if retErr != nil {
+					log.Errorf("%s", retErr)
+				} else {
+					log.Infof("Fuz client succeeded on %s for %d connections", wsName, fuzOut.SuccessConnections)
+				}
+				totalConnsFailed += int(fuzOut.FailedConnections)
+				totalConns += int(fuzOut.SuccessConnections) + int(fuzOut.FailedConnections)
+			} else {
+				for _, cmdResp := range clientResp {
+					// clientOutput := make(map[string]fuze.Output)
+					if cmdResp.ExitCode != 0 {
+						totalConnsFailed++
+						retErr = fmt.Errorf("Fuz client returned failure for 1/1 connections")
+					} else {
+						totalConns++
+					}
+				}
+				totalConns += totalConnsFailed
 			}
-			retErr = fmt.Errorf("Fuz client returned failure for %d/%d connections",
-				fuzOut.FailedConnections, fuzOut.SuccessConnections+fuzOut.FailedConnections)
 		}
-		if retErr != nil {
-			log.Errorf("%s", retErr)
-		} else {
-			log.Infof("Fuz client succeeded on %s for %d connections", wsName, fuzOut.SuccessConnections)
-		}
-		totalConnsFailed += int(fuzOut.FailedConnections)
-		totalConns += int(fuzOut.SuccessConnections) + int(fuzOut.FailedConnections)
 	}
 
 	log.Infof("Fuz Cliens: workloads %d conns %d failed %d", len(workloads), totalConns, totalConnsFailed)

@@ -137,9 +137,9 @@ func main() {
 	debug.SetMaxThreads(30000)
 	done := make(chan error)
 	if talk {
-		go runClient(proto, connDatas, conns, rate, cps, duration, done)
+		go runClient(connDatas, conns, rate, cps, duration, done)
 	} else {
-		go runServer(proto, connDatas, done)
+		go runServer(connDatas, done)
 	}
 
 	exitFunc := func() {
@@ -246,7 +246,45 @@ func (w *sworker) run(jobs <-chan net.Conn) {
 	}
 }
 
-func runServer(proto string, connDatas []*fuze.ConnectionData,
+func runUDPServer(connDatas []*fuze.ConnectionData,
+	done chan<- error) {
+
+	connections := []*net.UDPConn{}
+	for _, connData := range connDatas {
+		connData := connData
+		printMsg(fmt.Sprintf("running %s server on %s\n", connData.Proto, connData.ServerIPPort))
+		serverAddr, err := net.ResolveUDPAddr("udp", connData.ServerIPPort)
+		if err != nil {
+			printMsg(err.Error())
+			return
+		}
+		serverConn, err := net.ListenUDP("udp", serverAddr)
+
+		connections = append(connections, serverConn)
+	}
+
+	for _, conn := range connections {
+		udpConn := conn
+		go func() {
+			buf := make([]byte, 1024)
+			for {
+				time.Sleep(10 * time.Millisecond)
+				_, addr, err := udpConn.ReadFromUDP(buf)
+				if err != nil {
+					continue
+				}
+
+				_, err = udpConn.WriteToUDP(buf, addr)
+				if err != nil {
+					fmt.Printf("Couldn't send response %v", err)
+				}
+			}
+		}()
+
+	}
+}
+
+func runTCPServer(connDatas []*fuze.ConnectionData,
 	done chan<- error) {
 	waitCh := make(chan error)
 	workers := int((float64(runtime.GOMAXPROCS(0))) * 0.9)
@@ -291,7 +329,7 @@ func runServer(proto string, connDatas []*fuze.ConnectionData,
 
 	}
 
-	for true {
+	for len(listeners) != 0 {
 		for _, l := range listeners {
 			l.(*net.TCPListener).SetDeadline(time.Now().Add(1 * time.Millisecond))
 			c, err := l.Accept()
@@ -320,12 +358,46 @@ func runServer(proto string, connDatas []*fuze.ConnectionData,
 	}
 
 	done <- nil
+}
+
+func runServer(connDatas []*fuze.ConnectionData,
+	done chan<- error) {
+
+	udpConnections := []*fuze.ConnectionData{}
+	index := 0
+	for _, conn := range connDatas {
+		if conn.Proto == "udp" {
+			udpConnections = append(udpConnections, conn)
+		} else {
+			connDatas[index] = conn
+			index++
+		}
+	}
+
+	udpDone := make(chan error, 1)
+	tcpDone := make(chan error, 1)
+	if len(udpConnections) != 0 {
+		go runUDPServer(udpConnections, udpDone)
+	} else {
+		udpDone <- nil
+	}
+
+	connDatas = connDatas[:index]
+	if len(connDatas) != 0 {
+		go runTCPServer(connDatas, tcpDone)
+	} else {
+		tcpDone <- nil
+	}
+
+	<-udpDone
+	<-tcpDone
+	done <- nil
 
 }
 
 var mutex sync.Mutex
 
-func runClient(proto string, connDatas []*fuze.ConnectionData, conns, rate, cps, duration int,
+func runClient(connDatas []*fuze.ConnectionData, conns, rate, cps, duration int,
 	err chan<- error) {
 	waitCh := make(chan error, len(connDatas)*conns)
 	randomBytes := RandomBytes(rate)
