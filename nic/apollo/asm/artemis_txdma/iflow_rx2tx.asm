@@ -81,8 +81,7 @@ iflow_ipv6_key:
 iflow_key_done:
 
     seq             c1, d.iflow_rx2tx_d.parent_valid, 0
-    phvwr.c1        p.txdma_predicate_cps_path_en, FALSE
-    phvwr.c1        p.txdma_predicate_flow_enable, FALSE
+    phvwr.c1        p.{txdma_predicate_flow_enable...txdma_predicate_cps_path_en}, 0
     phvwr.c1.e      p.capri_p4_intr_recirc, FALSE
 
     seq             c2, d.iflow_rx2tx_d.parent_is_hint, 0
