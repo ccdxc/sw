@@ -176,8 +176,9 @@ create_mirror_session (pds_mirror_session_spec_t *ms)
 sdk_ret_t
 create_objects_init (test_params_t *test_params)
 {
-    g_flow_test_obj = new flow_test(test_params);
-    g_flow_test_obj->set_cfg_params(test_params->dual_stack,
+    g_flow_test_obj = new flow_test();
+    g_flow_test_obj->set_cfg_params(test_params,
+            test_params->dual_stack,
             test_params->num_tcp,
             test_params->num_udp,
             test_params->num_icmp,
@@ -197,7 +198,6 @@ create_objects_init (test_params_t *test_params)
             TESTAPP_MAX_SERVICE_TEP,
             TESTAPP_MAX_REMOTE_SERVICE_TEP);
 #endif
-
     return SDK_RET_OK;
 }
 

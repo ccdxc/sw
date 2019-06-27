@@ -58,9 +58,10 @@ protected:
 
 TEST_F(flow_gtest, flows_create) {
     parse_test_cfg(&g_test_params, std::string("apollo"));
-    g_flow_test_obj = new flow_test(&g_test_params, true);
+    g_flow_test_obj = new flow_test(true);
     g_flow_test_obj->generate_dummy_epdb();
-    g_flow_test_obj->set_cfg_params(true, 0, PERF_TEST_SCALE, 0,
+    g_flow_test_obj->set_cfg_params(&g_test_params,
+                                    true, 0, PERF_TEST_SCALE, 0,
                                     100, 100, 1024, 2047);
     g_flow_test_obj->create_flows();
 }

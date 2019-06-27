@@ -279,7 +279,7 @@ private:
     }
 
 public:
-    flow_test(test_params_t *test_params, bool w = false) {
+    flow_test(bool w = false) {
         memset(&factory_params, 0, sizeof(factory_params));
         factory_params.table_id = P4TBL_ID_FLOW;
         factory_params.num_hints = 4;
@@ -647,7 +647,8 @@ public:
         return SDK_RET_OK;
     }
 
-    void set_cfg_params(bool dual_stack, uint32_t num_tcp,
+    void set_cfg_params(test_params_t *test_params,
+                        bool dual_stack, uint32_t num_tcp,
                         uint32_t num_udp, uint32_t num_icmp,
                         uint16_t sport_lo, uint16_t sport_hi,
                         uint16_t dport_lo, uint16_t dport_hi) {

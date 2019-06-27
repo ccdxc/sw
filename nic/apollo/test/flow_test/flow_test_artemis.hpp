@@ -220,47 +220,27 @@ private:
     }
 
     void parse_cfg_json_() {
-        pt::ptree json_pt;
-        char cfgfile[256];
-
-        assert(getenv("CONFIG_PATH"));
-#ifdef SIM
-        snprintf(cfgfile, 256, "%s/../apollo/test/scale/%s",
-                 getenv("CONFIG_PATH"), get_cfg_json_());
-#else
-        snprintf(cfgfile, 256, "%s/%s", getenv("CONFIG_PATH"),
-                 get_cfg_json_());
+        const char *pipeline = pipeline_get().c_str();
+        static test_params_t test_params;
+        memset(&test_params, 0, sizeof(test_params_t));
+        parse_test_cfg(&test_params, pipeline);
+        test_params.pipeline = pipeline;
+        set_cfg_params(&test_params,
+                       test_params.dual_stack,
+                       test_params.num_tcp,
+                       test_params.num_udp,
+                       test_params.num_icmp,
+                       test_params.sport_lo,
+                       test_params.sport_hi,
+                       test_params.dport_lo,
+                       test_params.dport_hi);
+#if defined(ARTEMIS)
+        set_session_info_cfg_params(
+            test_params.num_vpcs, test_params.num_ip_per_vnic,
+            test_params.num_remote_mappings, test_params.meter_scale,
+            TESTAPP_METER_NUM_PREFIXES, test_params.num_nh,
+            TESTAPP_MAX_SERVICE_TEP, TESTAPP_MAX_REMOTE_SERVICE_TEP);
 #endif
-
-        // parse the config and create objects
-        std::ifstream json_cfg(cfgfile);
-        read_json(json_cfg, json_pt);
-        try {
-            BOOST_FOREACH (pt::ptree::value_type &obj,
-                           json_pt.get_child("objects")) {
-                std::string kind = obj.second.get<std::string>("kind");
-                if (kind == "device") {
-                    cfg_params.dual_stack = false;
-                    if (!obj.second.get<std::string>("dual-stack").compare("true")) {
-                        cfg_params.dual_stack = true;
-                    }
-                } else if (kind == "flows") {
-                    cfg_params.num_tcp = std::stol(obj.second.get<std::string>("num_tcp"));
-                    cfg_params.num_udp = std::stol(obj.second.get<std::string>("num_udp"));
-                    cfg_params.num_icmp = std::stol(obj.second.get<std::string>("num_icmp"));
-                    cfg_params.sport_lo = std::stol(obj.second.get<std::string>("sport_lo"));
-                    cfg_params.sport_hi = std::stol(obj.second.get<std::string>("sport_hi"));
-                    cfg_params.dport_lo = std::stol(obj.second.get<std::string>("dport_lo"));
-                    cfg_params.dport_hi = std::stol(obj.second.get<std::string>("dport_hi"));
-                }
-            }
-
-            cfg_params.valid = true;
-            show_cfg_params_();
-        } catch (std::exception const &e) {
-            std::cerr << e.what() << std::endl;
-            assert(0);
-        }
     }
 
     void show_cfg_params_() {
@@ -304,8 +284,7 @@ private:
     }
 
 public:
-    flow_test(test_params_t *test_params, bool w = false) {
-        this->test_params = test_params;
+    flow_test(bool w = false) {
         memset(&factory_params, 0, sizeof(factory_params));
         factory_params.table_id = P4TBL_ID_FLOW;
         factory_params.num_hints = 4;
@@ -1211,10 +1190,12 @@ public:
             svc_tep_nh_idx_start + num_remote_svc_teps;
     }
 
-    void set_cfg_params(bool dual_stack, uint32_t num_tcp,
+    void set_cfg_params(test_params_t *test_params,
+                        bool dual_stack, uint32_t num_tcp,
                         uint32_t num_udp, uint32_t num_icmp,
                         uint16_t sport_lo, uint16_t sport_hi,
                         uint16_t dport_lo, uint16_t dport_hi) {
+        this->test_params = test_params;
         cfg_params.dual_stack = dual_stack;
         cfg_params.num_tcp = num_tcp;
         cfg_params.num_udp = num_udp;
