@@ -1520,15 +1520,20 @@ static hal_ret_t
 p4pd_flow_hash_init (p4pd_def_cfg_t *p4pd_def_cfg)
 {
     p4pd_table_properties_t       tbl_ctx;
+    uint64_t                      size = 0;
 
     p4pd_table_properties_get(P4TBL_ID_FLOW_HASH, &tbl_ctx);
-    HAL_TRACE_DEBUG("Flow Hash Table depth: {} Base virtual memory: {} Base Physical Memory: {}",
-            tbl_ctx.tabledepth, tbl_ctx.base_mem_va, tbl_ctx.base_mem_pa);
-    sdk::lib::pal_mem_set(tbl_ctx.base_mem_pa, 0, tbl_ctx.tabledepth);
+    // Get the table size from hbm json to reset to 0
+    size = get_mem_size_kb(tbl_ctx.tablename) << 10;
+    HAL_TRACE_DEBUG("Table name: {} depth: {} Base virtual memory: {} Base Physical Memory: {} table_sz: {}",
+            tbl_ctx.tablename, tbl_ctx.tabledepth, tbl_ctx.base_mem_va, tbl_ctx.base_mem_pa, size);
+    sdk::lib::pal_mem_set(tbl_ctx.base_mem_pa, 0, size);
     p4pd_table_properties_get(tbl_ctx.oflow_table_id, &tbl_ctx);
-    HAL_TRACE_DEBUG("Flow Hash overflow Table depth: {} Base virtual memory: {} Base Physical Memory: {}",
-          tbl_ctx.tabledepth, tbl_ctx.base_mem_va, tbl_ctx.base_mem_pa);
-    sdk::lib::pal_mem_set(tbl_ctx.base_mem_pa, 0, tbl_ctx.tabledepth);
+    // Get the table size from hbm json to reset to 0
+    size = get_mem_size_kb(tbl_ctx.tablename) << 10;
+    HAL_TRACE_DEBUG("Table name: {} depth: {} Base virtual memory: {} Base Physical Memory: {} table_sz: {}",
+          tbl_ctx.tablename, tbl_ctx.tabledepth, tbl_ctx.base_mem_va, tbl_ctx.base_mem_pa, size);
+    sdk::lib::pal_mem_set(tbl_ctx.base_mem_pa, 0, size);
 
     return HAL_RET_OK;
 }
@@ -1571,7 +1576,8 @@ p4pd_table_defaults_init (p4pd_def_cfg_t *p4pd_def_cfg)
 
     // Setting NIC's forwarding mode
     SDK_ASSERT(p4pd_forwarding_mode_init(p4pd_def_cfg) == HAL_RET_OK);
-    if (p4pd_def_cfg->hal_cfg->device_cfg.forwarding_mode == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
+    if (p4pd_def_cfg->hal_cfg->platform == platform_type_t::PLATFORM_TYPE_HW && 
+        p4pd_def_cfg->hal_cfg->device_cfg.forwarding_mode == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
         SDK_ASSERT(p4pd_flow_hash_init(p4pd_def_cfg) == HAL_RET_OK);
     }
 
