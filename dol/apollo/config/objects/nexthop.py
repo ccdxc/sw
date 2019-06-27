@@ -23,23 +23,25 @@ class NexthopObject(base.ConfigObjectBase):
         self.IPAddr = {}
         self.IPAddr[0] = next(resmgr.NexthopIpV4AddressAllocator)
         self.IPAddr[1] = next(resmgr.NexthopIpV6AddressAllocator)
-        self.MacAddr = resmgr.NexthopMacAllocator.get()
-        self.Vni = next(resmgr.NexthopVxlanIdAllocator)
+        self.MACAddr = resmgr.NexthopMacAllocator.get()
+        self.VlanId = next(resmgr.NexthopVlanIdAllocator)
+        self.Type = nh_pb2.NEXTHOP_TYPE_IP
         self.Show()
         return
 
     def __repr__(self):
-        return "NexthopID:%d|VPCId:%d|PfxSel:%d|IP:%s" %\
-               (self.NexthopId, self.VPC.VPCId, self.PfxSel, self.IPAddr[self.PfxSel])
+        return "NexthopID:%d|VPCId:%d|PfxSel:%d|IP:%s|Mac:%s|Vlan:%d" %\
+               (self.NexthopId, self.VPC.VPCId, self.PfxSel, self.IPAddr[self.PfxSel],
+               self.MACAddr, self.VlanId)
 
     def GetGrpcCreateMessage(self):
         grpcmsg = nh_pb2.NexthopRequest()
         spec = grpcmsg.Request.add()
         spec.Id = self.NexthopId
-        spec.Type = nh_pb2.NEXTHOP_TYPE_IP
+        spec.Type = self.Type
         spec.IPNhInfo.VPCId = self.VPC.VPCId
-        spec.IPNhInfo.Mac = self.MacAddr.getnum()
-        spec.IPNhInfo.Vlan = self.Vni
+        spec.IPNhInfo.Mac = self.MACAddr.getnum()
+        spec.IPNhInfo.Vlan = self.VlanId
         utils.GetRpcIPAddr(self.IPAddr[self.PfxSel], spec.IPNhInfo.IP)
         return grpcmsg
 
@@ -66,19 +68,19 @@ class NexthopObjectClient:
     def GetNexthopObject(self, nexthopid):
         return self.__objs.get(nexthopid, None)
 
-    def GetV4NexthopId(self, vpcid):
+    def GetV4Nexthop(self, vpcid):
         if len(self.__objs.values()):
             assert(len(self.__v4objs[vpcid]) != 0)
-            return self.__v4iter[vpcid].rrnext().NexthopId
+            return self.__v4iter[vpcid].rrnext()
         else:
-            return 0
+            return None
 
-    def GetV6NexthopId(self, vpcid):
+    def GetV6Nexthop(self, vpcid):
         if len(self.__objs.values()):
             assert(len(self.__v6objs[vpcid]) != 0)
-            return self.__v6iter[vpcid].rrnext().NexthopId
+            return self.__v6iter[vpcid].rrnext()
         else:
-            return 0
+            return None
 
     def GetNumNextHopPerVPC(self):
         return self.__num_nh_per_vpc

@@ -13,7 +13,7 @@ from infra.common.logging import logger
 from apollo.config.store import Store
 
 def IsNatEnabled(routetblobj):
-    tunnel = routetblobj.Tunnel
+    tunnel = routetblobj.TUNNEL
     if tunnel is not None:
         return tunnel.Nat
     return False
@@ -158,7 +158,7 @@ class FlowMapObjectHelper:
                     if IsNatEnabled(routetblobj) is True:
                         # Skip IGWs with nat flag set to True
                         continue
-                    obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.Tunnel)
+                    obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.TUNNEL)
                     objs.append(obj)
         elif fwdmode == 'IGW_NAT':
             for lobj in lmapping.GetMatchingObjects(mapsel):
@@ -170,14 +170,14 @@ class FlowMapObjectHelper:
                     if IsNatEnabled(routetblobj) is False:
                         # Skip IGWs without nat flag set to True
                         continue
-                    obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.Tunnel)
+                    obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.TUNNEL)
                     objs.append(obj)
         elif fwdmode == 'POLICY':
             for lobj in lmapping.GetMatchingObjects(mapsel):
                 for routetblobj in routetable.GetAllMatchingObjects(mapsel):
                     if not self.__is_lmapping_match(routetblobj, lobj):
                         continue
-                    obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.Tunnel)
+                    obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.TUNNEL)
                     objs.append(obj)
         elif fwdmode == "L2L":
             lobjs = lmapping.GetMatchingObjects(mapsel)

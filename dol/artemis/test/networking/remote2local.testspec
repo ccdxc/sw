@@ -1,21 +1,19 @@
 # Test Spec
 #
 # Scenario1-Vnet in:
-# IN(l2o,ipo,udpo,vxlano,ORIG(l2,ip,udp)),
-# OUT(l2,vlan,ip,udp). Validates
+# IN(l2o,ipo,tcpo,vxlano,ORIG(l2,ip,tcp)),
+# OUT(l2,vlan,ip,tcp).
 #
-# Header modifications: Vxlan encap removed, vlan header added
+# Header modifications and validations: Vxlan encap removed, vlan header added
 #
-# Validates:
-#
-#   1. DST-inner-MAC local vnic mac (taken from local mapping)
-#   2. SRC-inner-MAC Un-touched. Not validated
-#   3. Encap is VXLAN with VID=VNET-vxlan-ID (taken from vpc config). Removed
-#   4. Vlan is added.
-#   4. DST-outer-IP local Provider-IP (taken from local vnic config)
-#   5. SRC-outer-IP remote Provider-IP. Not validated
-#   6. DST-outer-MAC local host mac   (taken from device config)
-#   5. SRC-outer-MAC Remote host mac. Not validated
+#   1. DST-inner-MAC: local vnic mac (taken from local mapping)
+#   2. SRC-inner-MAC: Un-touched. Not validated
+#   3. Encap:VXLAN with VID=VNET-vxlan-ID (taken from vpc config). Removed
+#   4. Vlan: Added.
+#   4. DST-outer-IP: local Provider-IP (taken from local vnic config)
+#   5. SRC-outer-IP: remote Provider-IP. Not validated
+#   6. DST-outer-MAC: local host mac   (taken from device config)
+#   5. SRC-outer-MAC: Remote host mac. Not validated
 
 selectors:
     root: ref://store/templates/id=FLOW
@@ -26,7 +24,7 @@ packets:
     - packet:
         id          : BASE_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=UDP
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
         headers     :
             eth:
                 dst     : ref://testcase/config/localmapping/VNIC/MACAddr
@@ -39,7 +37,7 @@ packets:
                 dst     : ref://testcase/config/localmapping/IP
                 src     : ref://testcase/config/remotemapping/IP
                 hlim    : 64
-            udp:
+            tcp:
                 dport   : ref://testcase/config/localmapping/AppPort
                 sport   : ref://testcase/config/remotemapping/AppPort
             payload:
@@ -60,6 +58,10 @@ packets:
                 ttl     : 64
                 tos     : 0
                 id      : 0
+            outeripv6:
+                dst     : ref://testcase/config/localmapping/ProviderIP
+                src     : aaaa:abab::01 #ref://testcase/config/remotemapping/ProviderIP
+                hlim    : 64
             vxlan:
                 vni     : ref://testcase/config/localmapping/VNIC/SUBNET/VPC/Vnid
 

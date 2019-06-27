@@ -210,8 +210,8 @@ def __get_ip_localmapping_impl(localmapping, tunnel):
             return localmapping.IP
 
 def GetIPFromLocalMapping(testcase, packet, args=None):
-    if testcase.config.route is not None and testcase.config.route.Tunnel is not None:
-        tunnel = testcase.config.route.Tunnel
+    if testcase.config.route is not None and testcase.config.route.TUNNEL is not None:
+        tunnel = testcase.config.route.TUNNEL
     else:
         tunnel = None
     return __get_ip_localmapping_impl(testcase.config.localmapping, tunnel)

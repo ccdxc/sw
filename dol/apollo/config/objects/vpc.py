@@ -27,9 +27,14 @@ class VpcObject(base.ConfigObjectBase):
         self.GID('Vpc%d'%self.VPCId)
         self.IPPrefix = {}
         if spec.type == 'substrate':
+            self.SvcMappingIPAddr = {}
             self.Type = vpc_pb2.VPC_TYPE_SUBSTRATE
             self.IPPrefix[0] = resmgr.ProviderIpV6Network
             self.IPPrefix[1] = resmgr.ProviderIpV4Network
+            # Reserve one SVC endpoint
+            self.SvcMappingIPAddr[0] = next(resmgr.SvcMappingPublicIpV6AddressAllocator)
+            self.SvcMappingIPAddr[1] = next(resmgr.SvcMappingPublicIpV4AddressAllocator)
+            self.SvcPort = resmgr.TransportSvcPort
         else:
             self.Type = vpc_pb2.VPC_TYPE_TENANT
             self.IPPrefix[0] = resmgr.GetVpcIPv6Prefix(self.VPCId)
@@ -99,6 +104,24 @@ class VpcObject(base.ConfigObjectBase):
         return "VpcID:%d|Type:%d|PfxSel:%d" %\
                (self.VPCId, self.Type, self.PfxSel)
 
+    def GetProviderIPAddr(self, count):
+        assert self.Type == vpc_pb2.VPC_TYPE_SUBSTRATE
+        if self.Stack == 'dual':
+            paf = utils.IP_VERSION_6 if count % 2 == 0 else utils.IP_VERSION_4
+        else:
+            paf = utils.IP_VERSION_6 if stack == 'ipv6' else utils.IP_VERSION_4
+        if paf == utils.IP_VERSION_6:
+            return next(resmgr.ProviderIpV6AddressAllocator), 'IPV6'
+        else:
+            return next(resmgr.ProviderIpV4AddressAllocator), 'IPV4'
+
+    def GetSvcMapping(self, ipversion):
+        assert self.Type == vpc_pb2.VPC_TYPE_SUBSTRATE
+        if ipversion ==  utils.IP_VERSION_6:
+            return self.SvcMappingIPAddr[0],self.SvcPort
+        else:
+            return self.SvcMappingIPAddr[1],self.SvcPort
+
     def GetGrpcCreateMessage(self):
         grpcmsg = vpc_pb2.VPCRequest()
         spec = grpcmsg.Request.add()
@@ -140,9 +163,6 @@ class VpcObjectClient:
     def GetVpcObject(self, vpcid):
         return self.__objs.get(vpcid, None)
 
-    def GetSubstrateVPCID(self):
-        return self.__substrate_vpcid
-
     def __write_cfg(self, vpc_count):
         nh = nexthop.client.GetNumNextHopPerVPC()
         cfgjson.CfgJsonHelper.SetNumNexthopPerVPC(nh)
@@ -155,7 +175,7 @@ class VpcObjectClient:
                 obj = VpcObject(p, c, p.count)
                 self.__objs.update({obj.VPCId: obj})
                 if obj.IsSubstrateVPC():
-                    Store.SetSubstrateVPCId(obj.VPCId)
+                    Store.SetSubstrateVPC(obj)
         # Write the flow and nexthop config to agent hook file
         if utils.IsPipelineArtemis():
             self.__write_cfg(p.count)

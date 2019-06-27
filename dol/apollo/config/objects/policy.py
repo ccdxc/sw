@@ -187,7 +187,7 @@ class PolicyObject(base.ConfigObjectBase):
         obj.localmapping = self.l_obj
         obj.policy = self
         obj.route = self.l_obj.VNIC.SUBNET.V6RouteTable if self.AddrFamily == 'IPV6' else self.l_obj.VNIC.SUBNET.V4RouteTable
-        obj.tunnel = obj.route.Tunnel
+        obj.tunnel = obj.route.TUNNEL
         obj.hostport = utils.PortTypes.HOST
         obj.switchport = utils.PortTypes.SWITCH
         obj.devicecfg = Store.GetDevice()

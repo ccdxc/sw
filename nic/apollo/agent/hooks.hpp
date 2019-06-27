@@ -4,6 +4,7 @@
 #define __AGENT_HOOKS_HPP__
 #include <dlfcn.h>
 #include "nic/apollo/api/include/pds_mapping.hpp"
+#include "nic/apollo/api/include/pds_service.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 
 namespace hooks {
@@ -11,6 +12,9 @@ namespace hooks {
 typedef enum agent_op_e {
     LOCAL_MAPPING_CREATE = 0,
     REMOTE_MAPPING_CREATE,
+    SUBNET_CREATE,
+    ROUTE_TABLE_CREATE,
+    SVC_MAPPING_CREATE,
     BATCH_START,
     INIT_DONE
 } agent_op_t;
@@ -32,6 +36,33 @@ remote_mapping_create (pds_remote_mapping_spec_t *spec)
 {
     if (hooks_func) {
         return hooks_func(REMOTE_MAPPING_CREATE, (void *)spec, NULL);
+    }
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+route_table_create (pds_route_table_spec_t *spec)
+{
+    if (hooks_func) {
+        return hooks_func(ROUTE_TABLE_CREATE, (void *)spec, NULL);
+    }
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+subnet_create (pds_subnet_spec_t *spec)
+{
+    if (hooks_func) {
+        return hooks_func(SUBNET_CREATE, (void *)spec, NULL);
+    }
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+svc_mapping_create (pds_svc_mapping_spec_t *spec)
+{
+    if (hooks_func) {
+        return hooks_func(SVC_MAPPING_CREATE, (void *)spec, NULL);
     }
     return SDK_RET_OK;
 }

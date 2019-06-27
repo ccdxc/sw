@@ -47,12 +47,12 @@ NexthopIdAllocator = iter(irange(1,1*1024*1024))
 NexthopIpV4AddressAllocator = ipaddress.IPv4Network('210.0.0.0/16').hosts()
 NexthopIpV6AddressAllocator = ipaddress.IPv6Network('eeee:eeee:0:0::/64').hosts()
 NexthopMacAllocator = objects.TemplateFieldObject("macstep/0055.0000.0001/0000.0000.0001")
-NexthopVxlanIdAllocator = iter(irange(90001, 91024))
 V4TagIdAllocator = iter(irange(1,1))
 V6TagIdAllocator = iter(irange(2,2))
 # Currently one to one mapping with CA-IP. TODO. Many to one
 SvcMappingPublicIpV4AddressAllocator = ipaddress.IPv4Network('150.0.0.0/16').hosts()
 SvcMappingPublicIpV6AddressAllocator = ipaddress.IPv6Network('eeee:dddd:dddd:0::/64').hosts()
+NexthopVlanIdAllocator = iter(irange(4001, 5124))
 # Provider IP for local and remote. One to One mapping now. Many to one can be done later
 ProviderIpV4Network = '220.0.0.0/16'
 ProviderIpV6Network = 'eeee:eeee:eee0:0::/64'
@@ -63,9 +63,13 @@ ProviderIpV6AddressAllocator = ipaddress.IPv6Network(ProviderIpV6Network).hosts(
 VpcVxlanIdAllocator = iter(irange(50000, 51024))
 TepMacAllocator = objects.TemplateFieldObject("macstep/0065.0000.0001/0000.0000.0001")
 # TCP/UDP ports for flow and service mapping. Right now keeping it in resmgr.
-TransportSvcPort = 400
-TransportSrcPort = 100 # For TX packets
-TransportDstPort = 200 # For TX packets
+TransportSrcPort   = 100 # For VNET packets
+TransportDstPort   = 200 # For VNET packets
+TransportSvcPort   = 400 # For VIP, Substrate tcp/udp port
+TransportSrcLBPort = 101 # Local backend service port, 101 mapped to 400
+# Public IP adddress in the substrate VC
+SvcMappingPublicIpV4AddressAllocator = ipaddress.IPv4Network('150.0.0.0/16').hosts()
+SvcMappingPublicIpV6AddressAllocator = ipaddress.IPv6Network('eeee:dddd:dddd:0::/64').hosts()
 # -------------------------------------------------------------------
 
 #TODO: read from PDS header files & init

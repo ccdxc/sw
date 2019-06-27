@@ -43,8 +43,8 @@ class CfgJsonObjectHelper:
     def __init__(self):
         self.__obj = None
         self.__file = os.environ['CONFIG_PATH'] + '/gen/dol_agentcfg.json'
-        self.__num_tcp = 0
-        self.__num_udp = 100000
+        self.__num_tcp = 100000
+        self.__num_udp = 0
         self.__num_icmp = 0
         self.__sport_lo = resmgr.TransportSrcPort
         self.__sport_hi = resmgr.TransportSrcPort

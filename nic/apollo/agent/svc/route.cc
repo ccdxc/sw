@@ -8,6 +8,7 @@
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/route.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/hooks.hpp"
 
 Status
 RouteSvcImpl::RouteTableCreate(ServerContext *context,
@@ -34,6 +35,7 @@ RouteSvcImpl::RouteTableCreate(ServerContext *context,
         if (unlikely(ret != SDK_RET_OK)) {
             return Status::CANCELLED;
         }
+        hooks::route_table_create(api_spec);
         ret = core::route_table_create(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
 

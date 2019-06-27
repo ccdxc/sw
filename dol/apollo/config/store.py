@@ -13,7 +13,7 @@ class ApolloConfigStore:
         self.trunks = ObjectDatabase()
         self.tunnels = ObjectDatabase()
         self.device = None
-        self.substrate_vpcid = -1
+        self.substrate_vpc = None
         return
 
     def SetTunnels(self, objs):
@@ -25,11 +25,26 @@ class ApolloConfigStore:
     def GetDevice(self):
         return self.device
 
-    def SetSubstrateVPCId(self, vpcid):
-        self.substrate_vpcid = vpcid
+    def SetSubstrateVPC(self, obj):
+        self.substrate_vpc = obj
 
     def GetSubstrateVPCId(self):
-        return self.substrate_vpcid;
+        if self.substrate_vpc:
+            return self.substrate_vpc.VPCId
+        else:
+            return -1
+
+    def GetProviderIPAddr(self, count):
+        if self.substrate_vpc:
+            return self.substrate_vpc.GetProviderIPAddr(count)
+        else:
+            return None,-1
+
+    def GetSvcMapping(self, ipversion):
+        if self.substrate_vpc:
+            return self.substrate_vpc.GetSvcMapping(ipversion)
+        else:
+            return None,-1
 
     def IsDeviceEncapTypeMPLS(self):
         return self.device.IsEncapTypeMPLS()

@@ -49,11 +49,11 @@ packets:
                 tos     : 0
                 id      : 0
             mpls:
-                label   : ref://testcase/config/route/Tunnel/EncapValue
+                label   : ref://testcase/config/route/TUNNEL/EncapValue
                 ttl     : 0
                 s       : 1
             vxlan:
-                vni     : ref://testcase/config/route/Tunnel/EncapValue
+                vni     : ref://testcase/config/route/TUNNEL/EncapValue
             ipv4:
                 src     : callback://networking/packets/GetIPFromLocalMapping
             ipv6:

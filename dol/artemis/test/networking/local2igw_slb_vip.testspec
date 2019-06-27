@@ -1,0 +1,77 @@
+# Test Spec
+#
+# Scenario1-SLB/VIP out :
+#
+#   IN(l2,vlan,ip,tcp(Lport, Dport)
+#   OUT(l2,ip,tcp(SvcPort, Dport)).
+#
+#   Header Modifications and validations:
+#
+#   1. DST-MAC: Not validated. Modified to mac of the internet g/w from nexthop config.
+#   2. SRC-MAC: .
+#   4. Vlan: Local vnic vlan. Modified to bridge vlan from nexthop
+#   4. DST-IP: Untouched
+#   5. SRC-IP: Local vnic IP. Modified to Service IP
+#   6. DST-Port: Untouched.
+#   5. SRC-Port: Local vnic port. Modified to Service port
+selectors:
+    root: ref://store/templates/id=FLOW
+    maxlimits: 1
+    flow: filter://any
+    route: filter://any
+
+packets:
+    - packet:
+        id          : FROM_HOST_PKT # Input packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                # Random dst mac, will be edited with nexthop mac
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : 00:00:00:00:00:02
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                prio    : 0
+            ipv4:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : callback://networking/packets/GetUsableHostFromRoute/addr=last
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : callback://networking/packets/GetUsableHostFromRoute/addr=last
+                hlim    : 64
+            tcp:
+                sport   : ref://testcase/config/localmapping/LBPort
+                dport   : ref://testcase/config/route/AppPort
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : TO_SWITCH_PKT # Expected packet
+        clone       : ref://testcase/packets/id=FROM_HOST_PKT
+        headers     :
+            eth:
+                src     : ref://testcase/config/devicecfg/MACAddr
+                dst     : ref://testcase/config/route/NEXTHOP/MACAddr
+            qtag:
+                vlan    : ref://testcase/config/route/NEXTHOP/VlanId
+                prio    : 0
+            ipv4:
+                src     : ref://testcase/config/localmapping/SvcIP
+            tcp:
+                sport   : ref://testcase/config/localmapping/SvcPort
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=FROM_HOST_PKT
+            port    : ref://testcase/config/hostport
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=TO_SWITCH_PKT
+            port    : ref://testcase/config/switchport

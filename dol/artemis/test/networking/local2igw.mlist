@@ -1,0 +1,17 @@
+# Feature networking Modules List for Local to Remote scenario
+feature:
+    id          : networking
+    sub         : local2igw
+    package     : test.networking
+    module      : networking
+    enable      : True
+    ignore      : True
+
+modules:
+    - module:
+        name    : IPV4_SLB_VIP_UDP_QTAG
+        spec    : local2igw_slb_vip.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+
+

@@ -87,6 +87,12 @@ def __get_host_from_pfx(pfx, af, pos=None):
         host = pfx.network_address + pfx.num_addresses - 1
     return str(host)
 
+def GetUsableHostFromRoute(testcase, packet, args=None):
+    route = __get_non_default_random_route(testcase.config.route.routes)
+    if args != None and args.addr == 'last':
+        return str(route.network_address + route.num_addresses - 1)
+    return __get_host_from_route(testcase.module.args, route, testcase.config.route.AddrFamily)
+
 def __get_module_args_value(modargs, attr):
     if modargs is not None:
         for args in modargs:
@@ -334,8 +340,8 @@ def GetInvalidMPLSTag(testcase, packet, args=None):
 def GetInvalidVnid(testcase, packet, args=None):
     return next(resmgr.InvalidVxlanIdAllocator)
 
-def __get_packet_encap_impl(obj, rmap, args):
-    if obj.IsEncapTypeVXLAN():
+def __get_mapping_packet_encap_impl(dev, rmap, args):
+    if dev.IsEncapTypeVXLAN():
         encap = 'ENCAP_VXLAN_IPV6' if rmap.TunFamily == 'IPV6' else 'ENCAP_VXLAN'
     else:
         assert 0
@@ -344,7 +350,7 @@ def __get_packet_encap_impl(obj, rmap, args):
 # This can be called for packets to switch or from switch
 def GetPacketEncapFromMapping(testcase, packet, args=None):
     encaps = []
-    encaps.append(__get_packet_encap_impl(testcase.config.devicecfg, testcase.config.remotemapping, args))
+    encaps.append(__get_mapping_packet_encap_impl(testcase.config.devicecfg, testcase.config.remotemapping, args))
     return encaps
 
 def __get_packet_srcmac_impl(fwdmode, dobj, robj, lobj, args):
@@ -379,8 +385,8 @@ def __get_ip_localmapping_impl(localmapping, tunnel):
             return localmapping.IP
 
 def GetIPFromLocalMapping(testcase, packet, args=None):
-    if testcase.config.route is not None and testcase.config.route.Tunnel is not None:
-        tunnel = testcase.config.route.Tunnel
+    if testcase.config.route is not None and testcase.config.route.TUNNEL is not None:
+        tunnel = testcase.config.route.TUNNEL
     else:
         tunnel = None
     return __get_ip_localmapping_impl(testcase.config.localmapping, tunnel)

@@ -21,22 +21,25 @@ class RouteObject(base.ConfigObjectBase):
         if af == utils.IP_VERSION_6:
             self.RouteTblId = next(resmgr.V6RouteTableIdAllocator)
             self.AddrFamily = 'IPV6'
-            self.NexthopId = nexthop.client.GetV6NexthopId(parent.VPCId)
+            self.NEXTHOP = nexthop.client.GetV6Nexthop(parent.VPCId)
         else:
             self.RouteTblId = next(resmgr.V4RouteTableIdAllocator)
             self.AddrFamily = 'IPV4'
-            self.NexthopId = nexthop.client.GetV4NexthopId(parent.VPCId)
+            self.NEXTHOP = nexthop.client.GetV4Nexthop(parent.VPCId)
         self.GID('RouteTbl%d'%self.RouteTblId)
         self.routes = routes
-        if utils.IsPipelineArtemis():
-            self.Nexthop = nexthop.client.GetNexthopObject(self.NexthopId)
-        self.Tunnel = tunobj
+        if self.NEXTHOP:
+            self.NexthopId = self.NEXTHOP.NexthopId
+        else:
+            self.NexthopId = 0
+        self.TUNNEL = tunobj
         self.TunIPAddr = tunobj.RemoteIPAddr
         self.TunIP = str(self.TunIPAddr)
         self.VPCId = parent.VPCId
         self.Label = 'NETWORKING'
         self.RouteType = routetype # used for lpm route cases
         self.PeerVPCId = vpcpeerid
+        self.AppPort = resmgr.TransportDstPort
         ##########################################################################
         self._derive_oper_info()
         self.Show()
@@ -96,7 +99,7 @@ class RouteObject(base.ConfigObjectBase):
     def SetupTestcaseConfig(self, obj):
         obj.localmapping = self.l_obj
         obj.route = self
-        obj.tunnel = self.Tunnel
+        obj.tunnel = self.TUNNEL
         obj.hostport = utils.PortTypes.HOST
         obj.switchport = utils.PortTypes.SWITCH
         obj.devicecfg = Store.GetDevice()

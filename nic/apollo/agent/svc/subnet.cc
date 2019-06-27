@@ -8,6 +8,7 @@
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/subnet.hpp"
+#include "nic/apollo/agent/hooks.hpp"
 
 Status
 SubnetSvcImpl::SubnetCreate(ServerContext *context,
@@ -31,6 +32,7 @@ SubnetSvcImpl::SubnetCreate(ServerContext *context,
         auto request = proto_req->request(i);
         key.id = request.id();
         subnet_proto_spec_to_api_spec(api_spec, request);
+        hooks::subnet_create(api_spec);
         ret = core::subnet_create(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {

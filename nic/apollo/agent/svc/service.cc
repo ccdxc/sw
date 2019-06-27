@@ -8,6 +8,7 @@
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/service.hpp"
+#include "nic/apollo/agent/hooks.hpp"
 
 Status
 SvcImpl::SvcMappingCreate(ServerContext *context,
@@ -33,6 +34,7 @@ SvcImpl::SvcMappingCreate(ServerContext *context,
         key.svc_port = request.key().svcport();
         ipaddr_proto_spec_to_api_spec(&key.vip, request.key().ipaddr());
         service_proto_spec_to_api_spec(api_spec, request);
+        hooks::svc_mapping_create(api_spec);
         ret = core::service_create(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {

@@ -29,35 +29,27 @@ class LocalMappingObject(base.ConfigObjectBase):
             if (hasattr(spec, 'public')):
                 self.PublicIPAddr = next(resmgr.PublicIpv6AddressAllocator)
             self.HasDefaultRoute = parent.SUBNET.V6RouteTable.HasDefaultRoute # For testspec
-            # Service Mapping IP for this mapping
-            self.SvcMappingIPAddr = next(resmgr.SvcMappingPublicIpV6AddressAllocator)
+            self.SvcIPAddr, self.SvcPort = Store.GetSvcMapping(utils.IP_VERSION_6)
         else:
             self.AddrFamily = 'IPV4'
             self.IPAddr = parent.SUBNET.AllocIPv4Address();
             if (hasattr(spec, 'public')):
                 self.PublicIPAddr = next(resmgr.PublicIpAddressAllocator)
             self.HasDefaultRoute = parent.SUBNET.V4RouteTable.HasDefaultRoute # For testspec
-            self.SvcMappingIPAddr = next(resmgr.SvcMappingPublicIpV4AddressAllocator)
+            self.SvcIPAddr, self.SvcPort = Store.GetSvcMapping(utils.IP_VERSION_4)
         self.Label = 'NETWORKING'
         self.FlType = "MAPPING"
         self.IP = str(self.IPAddr) # for testspec
         # Provider IP can be v4 or v6
-        if stack == 'dual':
-            paf = utils.IP_VERSION_6 if count % 2 == 0 else utils.IP_VERSION_4
-        else:
-            paf = utils.IP_VERSION_6 if stack == 'ipv6' else utils.IP_VERSION_4
-        if paf == utils.IP_VERSION_6:
-            self.ProviderIPAddr = next(resmgr.ProviderIpV6AddressAllocator)
-            self.TunFamily =  'IPV6'
-        else:
-            self.ProviderIPAddr = next(resmgr.ProviderIpV4AddressAllocator)
-            self.TunFamily =  'IPV4'
-        self.SvcMappingIP = str(self.SvcMappingIPAddr) # for testspec
+        self.ProviderIPAddr, self.TunFamily = Store.GetProviderIPAddr(count)
         self.ProviderIP = str(self.ProviderIPAddr) # for testspec
         if self.PublicIPAddr is not None:
             self.PublicIP = str(self.PublicIPAddr) # for testspec
-        self.SvcPort = resmgr.TransportSvcPort
+        self.SvcIP = str(self.SvcIPAddr) # for testspec
+        # We will differentiate the traffic by port (vnet vs internet) and
+        # different rules will be applied
         self.AppPort = resmgr.TransportSrcPort
+        self.LBPort = resmgr.TransportSrcLBPort
         self.SubstrateVPCId = Store.GetSubstrateVPCId()
 
         ################# PRIVATE ATTRIBUTES OF MAPPING OBJECT #####################
@@ -91,20 +83,20 @@ class LocalMappingObject(base.ConfigObjectBase):
     def GetGrpcSvcMappingCreateMessage(self):
         grpcmsg = service_pb2.SvcMappingRequest()
         spec = grpcmsg.Request.add()
-        spec.Key.VPCId = self.VNIC.SUBNET.VPC.VPCId
-        utils.GetRpcIPAddr(self.SvcMappingIPAddr, spec.Key.IPAddr)
+        spec.Key.VPCId = self.SubstrateVPCId
+        utils.GetRpcIPAddr(self.SvcIPAddr, spec.Key.IPAddr)
         spec.Key.SvcPort = self.SvcPort
-        spec.VPCId = self.SubstrateVPCId
+        spec.VPCId = self.VNIC.SUBNET.VPC.VPCId
         utils.GetRpcIPAddr(self.IPAddr, spec.PrivateIP)
         utils.GetRpcIPAddr(self.ProviderIPAddr, spec.ProviderIP)
-        spec.Port = self.AppPort
+        spec.Port = self.LBPort
         return grpcmsg
 
     def Show(self):
         logger.info("LocalMapping Object:", self)
         logger.info("- %s" % repr(self))
         logger.info("- IPAddr:%s|PublicIP:%s|PIP:%s|VIP:%s" \
-            %(str(self.IPAddr), str(self.PublicIPAddr), str(self.ProviderIPAddr), str(self.SvcMappingIPAddr)))
+            %(str(self.IPAddr), str(self.PublicIPAddr), str(self.ProviderIPAddr), str(self.SvcIPAddr)))
         return
 
     def SetupTestcaseConfig(self, obj):

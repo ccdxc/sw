@@ -31,6 +31,12 @@ g_agent_hooks_func (agent_op_t op, void *obj, void *arg)
         flow_test_obj->add_local_ep((pds_local_mapping_spec_t *)obj);
     } else if (op == REMOTE_MAPPING_CREATE) {
         flow_test_obj->add_remote_ep((pds_remote_mapping_spec_t *)obj);
+    } else if (op == ROUTE_TABLE_CREATE) {
+        flow_test_obj->add_route_table((pds_route_table_spec_t *)obj);
+    } else if (op == SUBNET_CREATE) {
+        flow_test_obj->add_subnet((pds_subnet_spec_t *)obj);
+    } else if (op == SVC_MAPPING_CREATE) {
+        flow_test_obj->add_svc_mapping((pds_svc_mapping_spec_t *)obj);
     }
     return ret;
 }

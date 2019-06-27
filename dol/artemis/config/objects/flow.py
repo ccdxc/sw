@@ -12,15 +12,9 @@ import apollo.config.utils as utils
 from infra.common.logging import logger
 from apollo.config.store import Store
 
-def IsNatEnabled(routetblobj):
-    tunnel = routetblobj.Tunnel
-    if tunnel is not None:
-        return tunnel.Nat
-    return False
-
 # Flow based on Local and Remote mapping
 class FlowMapObject(base.ConfigObjectBase):
-    def __init__(self, lobj, robj, fwdmode, tunobj = None):
+    def __init__(self, lobj, robj, fwdmode, routeobj):
         super().__init__()
         self.Clone(Store.templates.Get('FLOW'))
         self.FlowMapId = next(resmgr.FlowIdAllocator)
@@ -29,7 +23,7 @@ class FlowMapObject(base.ConfigObjectBase):
         self.__lobj = lobj
         self.__robj = robj
         self.__dev = Store.GetDevice()
-        self.__tunobj = tunobj
+        self.__routeobj = routeobj
         self.Show()
         return
 
@@ -38,7 +32,7 @@ class FlowMapObject(base.ConfigObjectBase):
         obj.localmapping = self.__lobj
         obj.remotemapping = self.__robj
         obj.devicecfg = self.__dev
-        obj.tunnel = self.__tunobj
+        obj.route = self.__routeobj
         obj.hostport = utils.PortTypes.HOST
         obj.switchport = utils.PortTypes.SWITCH
         return
@@ -51,15 +45,26 @@ class FlowMapObject(base.ConfigObjectBase):
             if obj is not None:
                 obj.Show()
             return
-
+        logger.info("")
         logger.info("FlowMap Object: %s" % self)
         __show_flow_object(self.__lobj)
-        __show_flow_object(self.__robj)
+        if self.__robj:
+            __show_flow_object(self.__robj)
+        elif self.__routeobj:
+            __show_flow_object(self.__routeobj)
         return
 
 class FlowMapObjectHelper:
     def __init__(self):
         return
+
+    def __is_lmapping_match(self, routetblobj, lobj):
+        if lobj.AddrFamily == 'IPV4':
+            return lobj.AddrFamily == routetblobj.AddrFamily and\
+               lobj.VNIC.SUBNET.V4RouteTableId == routetblobj.RouteTblId
+        if lobj.AddrFamily == 'IPV6':
+            return lobj.AddrFamily == routetblobj.AddrFamily and\
+               lobj.VNIC.SUBNET.V6RouteTableId == routetblobj.RouteTblId
 
     def GetMatchingConfigObjects(self, selectors):
         objs = []
@@ -76,22 +81,38 @@ class FlowMapObjectHelper:
         mapsel.flow.filters.remove((key, fwdmode))
         rmapsel = copy.deepcopy(mapsel)
 
-        assert (fwdmode == 'L3') == True
+        assert (fwdmode == 'VNET' or fwdmode == 'IGW') == True
 
-        if True:
+        if fwdmode == 'VNET':
             for lobj in lmapping.GetMatchingObjects(mapsel):
                 for robj in rmapping.GetMatchingObjects(rmapsel):
 
-                    # Ignore VPC-ID 1 now as it does not work. TODO.
+                    # Ignore VPC-ID 1 , Reserved for substrate
                     if lobj.VNIC.SUBNET.VPC.VPCId == 1  or robj.SUBNET.VPC.VPCId == 1:
                         continue
 
                     if lobj.VNIC.SUBNET.VPC.VPCId != robj.SUBNET.VPC.VPCId:
                         continue
 
-                    obj = FlowMapObject(lobj, robj, fwdmode, robj.TUNNEL)
+                    obj = FlowMapObject(lobj, robj, fwdmode, None)
                     objs.append(obj)
-        return utils.GetFilteredObjects(objs, selectors.maxlimits)
+
+            return utils.GetFilteredObjects(objs, selectors.maxlimits)
+
+        elif fwdmode == 'IGW':
+            for lobj in lmapping.GetMatchingObjects(mapsel):
+                for routetblobj in routetable.GetAllMatchingObjects(mapsel):
+                    if not self.__is_lmapping_match(routetblobj, lobj):
+                        continue
+                    obj = FlowMapObject(lobj, None, fwdmode, routetblobj)
+                    objs.append(obj)
+
+            # Random is disabled for the initial testing. TODO Remove 
+            return utils.GetFilteredObjects(objs, selectors.maxlimits, False)
+
+        else:
+            assert 0
+
 
 FlowMapHelper = FlowMapObjectHelper()
 

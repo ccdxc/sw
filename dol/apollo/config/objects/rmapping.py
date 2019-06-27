@@ -35,16 +35,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
             self.AddrFamily = 'IPV4'
             self.HasDefaultRoute = self.SUBNET.V4RouteTable.HasDefaultRoute # For testspec
         # Provider IP can be v4 or v6
-        if stack == 'dual':
-            paf = utils.IP_VERSION_6 if count % 2 == 0 else utils.IP_VERSION_4
-        else:
-            paf = utils.IP_VERSION_6 if stack == 'ipv6' else utils.IP_VERSION_4
-        if paf == utils.IP_VERSION_6:
-            self.ProviderIPAddr = next(resmgr.ProviderIpV6AddressAllocator)
-            self.TunFamily =  'IPV6'
-        else:
-            self.ProviderIPAddr = next(resmgr.ProviderIpV4AddressAllocator)
-            self.TunFamily =  'IPV4'
+        self.ProviderIPAddr, self.TunFamily = Store.GetProviderIPAddr(count)
         self.ProviderIP = str(self.ProviderIPAddr) # For testspec
         self.Label = 'NETWORKING'
         self.FlType = "MAPPING"
