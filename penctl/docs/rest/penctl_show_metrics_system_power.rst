@@ -14,6 +14,7 @@ pout2: Arm output power.
 The power is milli Watt
 
 
+
 Synopsis
 ~~~~~~~~
 
@@ -29,6 +30,7 @@ pin: Input power to the system.
 pout1: Core output power.
 pout2: Arm output power.
 The power is milli Watt
+
 
 ---------------------------------
 

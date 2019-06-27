@@ -45,11 +45,44 @@ func init() {
 var cmdToExecute = `
 Cmds:
  -
+   cmd: pcieutil port
+   outputfile: pcieutil.port
+ -
+   cmd: pcieutil portstats
+   outputfile: pcieutil.portstats
+ -
+   cmd: pcieutil stats
+   outputfile: pcieutil.stats
+ -
+   cmd: pcieutil counters
+   outputfile: pcieutil.counters
+ -
+   cmd: pcieutil dev
+   outputfile: pcieutil.dev
+ -
+   cmd: pcieutil devintr
+   outputfile: pcieutil.devintr
+ -
+   cmd: pcieutil bar
+   outputfile: pcieutil.bar
+ -
+   cmd: pcieutil pmt
+   outputfile: pcieutil.pmt
+ -
+   cmd: pcieutil prt
+   outputfile: pcieutil.prt
+ -
+   cmd: pcieutil aximst
+   outputfile: pcieutil.aximst
+ -
    cmd: ifconfig -a
    outputfile: ifconfig.out
  -
    cmd: fwupdate -l
    outputfile: fw_version.out
+ -
+   cmd: ps
+   outputfile: ps.out
 `
 
 // NaplesCmds is the format of the yaml file used to run commands on Naples for tech-support

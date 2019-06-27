@@ -53,5 +53,4 @@ SEE ALSO
 * `penctl show metrics sessionsummary <penctl_show_metrics_sessionsummary.rst>`_ 	 - Show SessionSummaryMetrics from Naples
 * `penctl show metrics sonic <penctl_show_metrics_sonic.rst>`_ 	 - Metrics for Storage Offload NIC
 * `penctl show metrics system <penctl_show_metrics_system.rst>`_ 	 - Metrics for system monitors
-* `penctl show metrics upgrade <penctl_show_metrics_upgrade.rst>`_ 	 - Metrics for Upgrade
 

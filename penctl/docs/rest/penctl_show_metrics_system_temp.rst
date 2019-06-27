@@ -14,6 +14,7 @@ hbm_temperature: Temperature of the hbm.
 The temperature is degree Celcius
 
 
+
 Synopsis
 ~~~~~~~~
 
@@ -29,6 +30,7 @@ local_temperature: Temperature of the board.
 die_temperature: Temperature of the die.
 hbm_temperature: Temperature of the hbm.
 The temperature is degree Celcius
+
 
 ---------------------------------
 

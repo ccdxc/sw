@@ -45,6 +45,7 @@ Value Description:
 frequency: Frequency of the system.
 The frequency is MHz
 
+
 * `penctl show metrics system memory <penctl_show_metrics_system_memory.rst>`_ 	 - System memory information:
 
 
@@ -54,6 +55,7 @@ Total Memory: Total Memory of the system.
 Available Memory: Available Memory of the system.
 Free Memory: Free Memory of the system.
 The memory is KB
+
 
 * `penctl show metrics system power <penctl_show_metrics_system_power.rst>`_ 	 - System power information:
 
@@ -65,6 +67,7 @@ pout1: Core output power.
 pout2: Arm output power.
 The power is milli Watt
 
+
 * `penctl show metrics system temp <penctl_show_metrics_system_temp.rst>`_ 	 - System temperature information:
 
 
@@ -74,5 +77,6 @@ local_temperature: Temperature of the board.
 die_temperature: Temperature of the die.
 hbm_temperature: Temperature of the hbm.
 The temperature is degree Celcius
+
 
 

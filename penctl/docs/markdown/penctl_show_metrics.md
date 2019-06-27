@@ -45,5 +45,4 @@ penctl show metrics [flags]
 * [penctl show metrics sessionsummary](penctl_show_metrics_sessionsummary.md)	 - Show SessionSummaryMetrics from Naples
 * [penctl show metrics sonic](penctl_show_metrics_sonic.md)	 - Metrics for Storage Offload NIC
 * [penctl show metrics system](penctl_show_metrics_system.md)	 - Metrics for system monitors
-* [penctl show metrics upgrade](penctl_show_metrics_upgrade.md)	 - Metrics for Upgrade
 

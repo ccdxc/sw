@@ -875,6 +875,8 @@ func initAllowedCommands() {
 	allowedCommands["penrmpubkey"] = 20
 	allowedCommands["/nic/bin/halctl"] = 21
 	allowedCommands["ifconfig"] = 22
+	allowedCommands["pcieutil"] = 23
+	allowedCommands["ps"] = 24
 }
 
 func isCmdAllowed(cmd string) bool {
