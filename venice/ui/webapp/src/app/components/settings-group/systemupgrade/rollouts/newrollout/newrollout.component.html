@@ -78,7 +78,7 @@
 
               <div fxFlex="auto" class="newrollout-maxnode-div" fxLayout="row"
                    *ngIf="isToShowNodeDiv()">
-                <div fxFlex="nogrow" class="newrollout-text">Max Nodes In Parallel:</div>
+                <div fxFlex="nogrow" class="newrollout-text">Max NICs In Parallel:</div>
                 <input fxFlex="200px" formControlName="max-parallel" appErrorTooltip
                        class="newrollout-input-common"
                        matspellcheck="false" type="number" pInputText
@@ -103,12 +103,14 @@
                   <mat-slide-toggle formControlName="smartnic-must-match-constraint" fxFlex='30px'
                                     class="newrollout-toggle newrollout-fieldtitle"
                                     (change)="onNICsConstraintsChange($event)"></mat-slide-toggle>
-                  <div fxFlex="nogrow" class="newrollout-text">Must match NICs Constraints?</div>
+                  <div fxFlex="nogrow" class="newrollout-text">Upgrade NICs by labels</div>
                 </div>
                 <div fxFlex="auto" class="newrollout-NicOrder-div" fxLayout="row"
                      *ngIf="isToShowNicOrderDiv()">
-                  <div fxFlex="nogrow" class="newrollout-text">Set upgrade order by labels:</div>
+                  <div fxFlex="nogrow" class="newrollout-text">Labels:</div>
                   <app-repeater #orderConstraintsLabelRepeater [data]="orderConstraintslabelData"
+                                [buildKeyPlaceholder]="buildKeyPlaceholder"
+                                [buildValuePlaceholder]="buildValuePlaceholder"
                                 [formArray]="orderConstraintslabelFormArray">
                   </app-repeater>
                 </div>

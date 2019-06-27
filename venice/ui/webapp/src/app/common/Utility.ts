@@ -16,8 +16,8 @@ import { Eventtypes } from '../enum/eventtypes.enum';
 import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
-import { FieldsSelector } from '@sdk/v1/models/generated/search';
 import { ClusterSmartNIC, ClusterSmartNICCondition, ClusterSmartNICCondition_status, ClusterSmartNICCondition_type } from '@sdk/v1/models/generated/cluster';
+import { ILabelsSelector } from '@sdk/v1/models/generated/rollout';
 import { NaplesCondition, NaplesConditionValues} from '@app/components/cluster-group/naples/index.ts';
 import { IAuthUser } from '@sdk/v1/models/generated/auth';
 
@@ -81,6 +81,32 @@ export class Utility {
       });
     });
     return labels;
+  }
+
+  /**
+   * Convert
+   * {"order-constraints":[{"requirements":[{"key":"number","operator":"notEquals","values":["-1"]},{"key":"number ","operator":"notEquals","values":["3"]}]}]} to
+   * number notEquals -1
+   * number notEquals 3
+   * @param labelsSelectors;
+   */
+  public static convertLabelSelectorsToStringList(labelsSelectors: ILabelsSelector[]): string[] {
+    const list = [];
+    if (!labelsSelectors) {
+      return [];
+    }
+    labelsSelectors.forEach((labelsSelector) => {
+      const labelsRequirements = labelsSelector.requirements;
+      labelsRequirements.forEach(
+        (labelsRequirement) => {
+          if (!Utility.isEmpty(labelsRequirement.key) && !Utility.isEmpty(labelsRequirement.operator) && !Utility.isEmpty(labelsRequirement.values)) {
+            const str = labelsRequirement.key + ' ' + labelsRequirement.operator + ' ' + labelsRequirement.values + '\n';
+            list.push(str);
+          }
+        }
+      );
+    });
+    return list;
   }
 
   /**
@@ -1310,13 +1336,13 @@ export class Utility {
    *
    * [{"keyFormControl":"text","operatorFormControl":"equals","valueFormControl":"1.2","keytextFormName":"version"}]
    */
-  public static convertRepeaterValuesToSearchExpression(repeater: RepeaterComponent, addMetatag: boolean = false): any[] {
+  public static convertRepeaterValuesToSearchExpression(repeater: RepeaterComponent, addMetatag: boolean = false): SearchExpression[] {
     const data = repeater.getValues();
     if (data == null) {
       return null;
     }
     let retData = data.filter((item) => {
-      return item[repeater.valueFormName] != null && item[repeater.valueFormName].length !== 0;
+      return !Utility.isEmpty(item[repeater.keyFormName]) && !Utility.isEmpty(item[repeater.valueFormName]) && item[repeater.valueFormName].length !== 0;
     });
     // make sure the value field is an array
     retData = retData.map((item) => {

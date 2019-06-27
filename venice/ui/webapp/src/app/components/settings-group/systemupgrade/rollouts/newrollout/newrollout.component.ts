@@ -16,6 +16,7 @@ import { required } from '@sdk/v1/utils/validators';
 import { Utility } from '@common/Utility';
 import { RolloutImageLabel, EnumRolloutOptions, RolloutImageOption } from '../index';
 import { RolloutUtil } from '../RolloutUtil';
+import { SearchExpression } from '@app/components/search/index.ts';
 
 
 
@@ -161,6 +162,18 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     if (!this.newRollout || !this.newRollout.$formGroup) {
       return false;
     }
+    if (this.newRollout.$formGroup.get(['spec', 'smartnic-must-match-constraint']).value) {
+      const repeaterSarchExpression: SearchExpression[] = Utility.convertRepeaterValuesToSearchExpression(this.ocLabelRepeater);
+      if  (repeaterSarchExpression.length === 0) {
+        return false;
+      } else {
+        for (let i = 0; i < repeaterSarchExpression.length; i++) {
+          if (Utility.isEmpty(repeaterSarchExpression[i].key ) || Utility.isEmpty(repeaterSarchExpression[i].values)) {
+            return false;
+          }
+        }
+      }
+   }
     if (Utility.isEmpty(this.newRollout.$formGroup.get(['meta', 'name']).value)) {
       return false;
     }
@@ -416,6 +429,24 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
    */
   isToShowNicOrderDiv(): boolean {
     return this.newRollout.$formGroup.get(['spec', 'smartnic-must-match-constraint']).value;
+  }
+
+  /**
+   * Customized placeholder for key
+   * @param repeater
+   * @param keyFormName
+   */
+  buildKeyPlaceholder(repeater: any, keyFormName: string): string {
+    return 'key';
+  }
+
+  /**
+   * Customized placeholder value
+   * @param repeater
+   * @param keyFormName
+   */
+  buildValuePlaceholder(repeater: any, keyFormName: string): string {
+    return 'value';
   }
 
 

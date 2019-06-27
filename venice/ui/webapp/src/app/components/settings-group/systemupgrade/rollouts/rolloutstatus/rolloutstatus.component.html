@@ -70,6 +70,23 @@
             {{selectedRollout?.spec["max-nic-failures-before-abort"] }}</div>
         </div>
       </div>
+      <div fxLayout="row" class="rolloutstatus-summary-panel-content-row">
+        <div fxFlex="50" fxLayout="row">
+          <div class="rolloutstatus-summary-panel-content-label"> Upgrade NICs by Label?:
+          </div>
+          <div class="rolloutstatus-summary-panel-content-value">
+            {{selectedRollout?.spec["smartnic-must-match-constraint"]? 'true': 'false' }}</div>
+        </div>
+        <div fxFlex="50" fxLayout="row"
+             *ngIf="labelSelectorsStrings && labelSelectorsStrings.length>0">
+          <div class="rolloutstatus-summary-panel-content-label">Labels:</div>
+          <div class="rolloutstatus-summary-panel-content-value">
+            <div *ngFor="let label of labelSelectorsStrings">
+              <div class="rolloutstatus-summary-panel-content-value-labelselector">{{label}}</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </mat-expansion-panel>
   <mat-expansion-panel fxFlex="none" class="global-mat-expansion-panel" [expanded]="true"

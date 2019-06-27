@@ -72,6 +72,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   // Used for processing the stream events
   naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
 
+  labelSelectorsStrings: string[] = null;
 
   constructor(protected _controllerService: ControllerService,
     private _route: ActivatedRoute, protected UIConfigService: UIConfigsService,
@@ -225,6 +226,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
           this.selectedRollout = this.rollouts[0];
           this.addToolbarButton();
           this.selectedRolloutNicNodeTypes = RolloutUtil.getRolloutNaplesVeniceType(this.selectedRollout);
+          this.labelSelectorsStrings = RolloutUtil.formatRolloutNaplesCriteria(this.selectedRollout);
         } else {
           // Must have received a delete event.
           this.showDeletionScreen = true;
