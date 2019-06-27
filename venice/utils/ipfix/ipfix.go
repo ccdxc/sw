@@ -64,14 +64,20 @@ func GenerateEnterpriseElements() []ipfix.DictionaryEntry {
 
 		// ip common
 		{
-			Name:         "egress-interface-type", //todo: check
+			Name:         "egress-interface-type",
 			FieldID:      0x0501,
 			EnterpriseID: PensandoEnterpriseID,
 			Type:         ipfix.Uint16,
 		},
 		{
+			Name:         "egress-logical-interface",
+			FieldID:      0x0502,
+			EnterpriseID: PensandoEnterpriseID,
+			Type:         ipfix.Uint16,
+		},
+		{
 			Name:         "drop-vector",
-			FieldID:      0x0506,
+			FieldID:      0x0503,
 			EnterpriseID: PensandoEnterpriseID,
 			Type:         ipfix.Uint64,
 		},
@@ -359,8 +365,8 @@ func GeneratePensandoTemplates() []ipfix.TemplateRecord {
 		},
 
 		{
-			EnterpriseID: 0,
-			FieldID:      14,
+			EnterpriseID: PensandoEnterpriseID,
+			FieldID:      0x0502,
 			Length:       2,
 		},
 		{
