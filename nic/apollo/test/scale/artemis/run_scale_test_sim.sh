@@ -12,7 +12,7 @@ export APOLLO_TEST_TEP_ENCAP=vxlan
 export SKIP_VERIFY=1
 export PATH=${PATH}:${BUILD_DIR}/bin
 
-cfgfile=artemis/scale_cfg.json
+cfgfile=artemis/scale_cfg_sim.json
 if [[ "$1" ==  --cfg ]]; then
     cfgfile=$2
 fi
