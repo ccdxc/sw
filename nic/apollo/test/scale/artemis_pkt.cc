@@ -664,6 +664,7 @@ send_packet (void)
         }
     }
 
+#if 0
     tcid++;
     if (tcid_filter == 0 || tcid == tcid_filter) {
         printf("Test with g_vnet64_internet_in_floating_ip_input\n");
@@ -684,6 +685,7 @@ send_packet (void)
             testcase_end(tcid, i + 1);
         }
     }
+#endif
 
     tcid++;
     if (tcid_filter == 0 || tcid == tcid_filter) {
@@ -706,6 +708,7 @@ send_packet (void)
         }
     }
 
+#if 0
     tcid++;
     if (tcid_filter == 0 || tcid == tcid_filter) {
         printf("Test with g_vnet61_SLB_in_V4_input\n");
@@ -726,6 +729,9 @@ send_packet (void)
             testcase_end(tcid, i + 1);
         }
     }
+#endif
+
+#if 0
     tcid++;
     if (tcid_filter == 0 || tcid == tcid_filter) {
         printf("Test with g_vnet61_SLB_in_V6_input\n");
@@ -746,6 +752,7 @@ send_packet (void)
             testcase_end(tcid, i + 1);
         }
     }
+#endif
 
     tcid++;
     if (tcid_filter == 0 || tcid == tcid_filter) {
@@ -789,6 +796,7 @@ send_packet (void)
         }
     }
 
+#if 0
     tcid++;
     if (tcid_filter == 0 || tcid == tcid_filter) {
         printf("Test cps path\n");
@@ -808,6 +816,7 @@ send_packet (void)
             testcase_end(tcid, i + 1);
         }
     }
+#endif
 
     exit_simulation();
 }

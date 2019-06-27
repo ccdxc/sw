@@ -570,7 +570,6 @@ def run_apollo_test(args):
 # Run Artemis Scale tests
 def run_artemis_scale_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
-    os.environ["SKIP_VERIFY"] = "1"
     os.chdir(nic_dir)
     cmd = ["build/x86_64/artemis/bin/apollo_scale_test",
            '-c', "hal.json",
