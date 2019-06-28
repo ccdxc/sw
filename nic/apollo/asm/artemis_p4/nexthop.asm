@@ -84,7 +84,7 @@ ipv4_vxlan_encap:
                         TX_REWRITE_SRC_IP_OUTER_FROM_XLATE
     or.c1           r7, d.nexthop_info_d.dipo[31:0], \
                         k.rewrite_metadata_encap_src_ip[31:0], 32
-    or.!c1          r7, k.ipv4_1_dstAddr, d.nexthop_info_d.dipo[31:0], 32
+    or.!c1          r7, k.rewrite_metadata_rst_dipo, d.nexthop_info_d.dipo[31:0], 32
     phvwr           p.{ipv4_0_srcAddr,ipv4_0_dstAddr}, r7
     phvwr           p.{ipv4_0_ttl,ipv4_0_protocol}, (64 << 8) | IP_PROTO_UDP
     phvwr           p.ipv4_0_totalLen, r1

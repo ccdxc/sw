@@ -69,6 +69,7 @@ header_type rewrite_metadata_t {
         policer_idx         : 12;
         meter_idx           : 16;
         meter_len           : 16;
+        rst_dipo            : 32;
     }
 }
 

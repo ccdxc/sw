@@ -127,6 +127,7 @@ action local_46_info(prefix) {
                          (prefix & ~0xFFFFFFFF) | ipv4_1.srcAddr);
             modify_field(ipv6_1.dstAddr,
                          (rewrite_metadata.ip & ~0xFFFFFFFF) | ipv4_1.dstAddr);
+            modify_field(rewrite_metadata.rst_dipo, ipv4_1.dstAddr);
             add(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, 20);
             modify_field(control_metadata.update_checksum, TRUE);
         }

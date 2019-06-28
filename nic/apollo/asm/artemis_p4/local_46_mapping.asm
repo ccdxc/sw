@@ -33,6 +33,7 @@ tx_from_host_4to6:
     or              r1, k.ipv4_1_dstAddr, k.rewrite_metadata_ip[63:32], 32
     phvwrpair       p.ipv6_1_dstAddr[127:64], k.rewrite_metadata_ip[127:64],\
                         p.ipv6_1_dstAddr[63:0], r1
+    phvwr           p.rewrite_metadata_rst_dipo, k.ipv4_1_dstAddr
     add             r1, k.capri_p4_intrinsic_packet_len, 20
     phvwr.e         p.capri_p4_intrinsic_packet_len, r1
     phvwr.f         p.control_metadata_update_checksum, TRUE

@@ -33,7 +33,7 @@ action ipv4_vxlan_encap(vni, dipo, dmac) {
         modify_field(ipv4_0.dstAddr, dipo);
         modify_field(ipv4_0.srcAddr, rewrite_metadata.encap_src_ip);
     } else {
-        modify_field(ipv4_0.dstAddr, ipv4_1.dstAddr);
+        modify_field(ipv4_0.dstAddr, rewrite_metadata.rst_dipo);
         modify_field(ipv4_0.srcAddr, dipo);
     }
 
