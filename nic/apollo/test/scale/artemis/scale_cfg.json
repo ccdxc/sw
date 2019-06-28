@@ -14,7 +14,8 @@
             "kind" : "tep",
             "count" : "1024",
             "prefix": "1.0.0.0/8",
-            "svc-prefix": "2222::/96"
+            "svc-prefix": "2222::/96",
+            "remote-svc-public-prefix": "1.255.0.0/16"
         },
         {
             "_comment_" : "routes per routing table, middle 2 octets are used to create routes",
