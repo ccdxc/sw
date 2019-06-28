@@ -7,10 +7,10 @@ namespace sdk {
 namespace platform {
 namespace capri {
 
-int capri_toeplitz_init (int stage, int stage_tableid);
+int capri_toeplitz_init(const char *handle, int stage, int stage_tableid);
 
 }    // namespace capri
 }    // namespace platform
 }    // namespace sdk
 
-#endif // __CAPRI_TOEPLITZ_HPP__
+#endif    // __CAPRI_TOEPLITZ_HPP__

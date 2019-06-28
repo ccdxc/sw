@@ -26,10 +26,8 @@ namespace capri {
 // Size of the entire LIF indirection table
 #define ETH_RSS_INDIR_TBL_SZ                (MAX_LIFS * ETH_RSS_LIF_INDIR_TBL_SZ)
 
-#define CAPRI_P4PLUS_HANDLE                 "apollo_rxdma"
-
 int
-capri_toeplitz_init (int stage, int stage_tableid)
+capri_toeplitz_init (const char *handle, int stage, int stage_tableid)
 {
     int tbl_id;
     uint64_t pc;
@@ -37,18 +35,15 @@ capri_toeplitz_init (int stage, int stage_tableid)
     cap_top_csr_t & cap0 = sdk::platform::capri::g_capri_state_pd->cap_top();
     cap_te_csr_t *te_csr = NULL;
 
-    if (sdk::p4::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
-                                   (char *) ETH_RSS_INDIR_PROGRAM,
-                                   &pc) != 0) {
+    if (sdk::p4::p4_program_to_base_addr(handle,
+                                         (char *)ETH_RSS_INDIR_PROGRAM,
+                                         &pc) != 0) {
         SDK_TRACE_DEBUG("Could not resolve handle %s program %s",
-                        (char *) CAPRI_P4PLUS_HANDLE,
-                        (char *) ETH_RSS_INDIR_PROGRAM);
+                        handle, (char *) ETH_RSS_INDIR_PROGRAM);
         return CAPRI_FAIL;
     }
     SDK_TRACE_DEBUG("Resolved handle %s program %s to PC 0x%x",
-                    (char *) CAPRI_P4PLUS_HANDLE,
-                    (char *) ETH_RSS_INDIR_PROGRAM,
-                    pc);
+                    handle, (char *)ETH_RSS_INDIR_PROGRAM, pc);
 
     // Program rss params table with the PC
     te_csr = &cap0.pcr.te[stage];

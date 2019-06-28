@@ -725,30 +725,26 @@ pd_adjust_perf_status_t asic_pd_adjust_perf(int chip_id, int inst_id,
     return (pd_adjust_perf_status_t)capri_adjust_perf(chip_id, inst_id, (pen_adjust_index_t&)idx, (pen_adjust_perf_type_t)perf_type);
 }
 
-void asic_pd_set_half_clock(int chip_id, int inst_id)
+void
+asic_pd_set_half_clock (int chip_id, int inst_id)
 {
     return capri_set_half_clock(chip_id, inst_id);
 }
 
-sdk_ret_t asic_pd_unravel_hbm_intrs(bool *iscattrip)
+sdk_ret_t
+asic_pd_unravel_hbm_intrs (bool *iscattrip)
 {
     return capri_unravel_hbm_intrs(iscattrip);
 }
 
-sdk_ret_t asicpd_toeplitz_init(void)
+sdk_ret_t
+asicpd_toeplitz_init (const char *handle, uint32_t tableid)
 {
-#ifdef APOLLO
      p4pd_table_properties_t tbl_ctx;
-     p4pd_global_table_properties_get(P4_APOLLO_RXDMA_TBL_ID_ETH_RX_RSS_INDIR,
-                                      &tbl_ctx);
-     sdk::platform::capri::capri_toeplitz_init(tbl_ctx.stage, tbl_ctx.stage_tableid);
-#endif
-#ifdef ARTEMIS
-     p4pd_table_properties_t tbl_ctx;
-     p4pd_global_table_properties_get(P4_ARTEMIS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR,
-                                      &tbl_ctx);
-     sdk::platform::capri::capri_toeplitz_init(tbl_ctx.stage, tbl_ctx.stage_tableid);
-#endif
+
+     p4pd_global_table_properties_get(tableid, &tbl_ctx);
+     sdk::platform::capri::capri_toeplitz_init(handle, tbl_ctx.stage,
+                                               tbl_ctx.stage_tableid);
      return SDK_RET_OK;
 }
 

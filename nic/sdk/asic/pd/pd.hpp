@@ -114,7 +114,7 @@ enum asicpd_swphv_type_t {
     ASICPD_SWPHV_TYPE_INGRESS = 2,    // P4 Ingress
     ASICPD_SWPHV_TYPE_EGRESS  = 3,    // P4 Egress
 };
-    
+
 // sw phv injection state
 typedef struct asicpd_sw_phv_state_ {
     bool        enabled;
@@ -123,7 +123,7 @@ typedef struct asicpd_sw_phv_state_ {
     uint32_t    no_data_cntr;
     uint32_t    drop_no_data_cntr;
 } asicpd_sw_phv_state_t;
-    
+
 sdk_ret_t asicpd_program_table_constant(uint32_t tableid, uint64_t const_value);
 sdk_ret_t asicpd_p4plus_table_mpu_base_init(p4pd_cfg_t *p4pd_cfg);
 sdk_ret_t asicpd_program_table_mpu_pc(void);
@@ -180,14 +180,14 @@ pd_adjust_perf_status_t asic_pd_adjust_perf(int chip_id, int inst_id,
                                             pd_adjust_perf_type_t perf_type);
 void asic_pd_set_half_clock(int chip_id, int inst_id);
 sdk_ret_t asic_pd_unravel_hbm_intrs(bool *iscattrip);
-sdk_ret_t asicpd_toeplitz_init(void);
+sdk_ret_t asicpd_toeplitz_init(const char *handle, uint32_t table_id);
 
 sdk_ret_t asicpd_sw_phv_inject(asicpd_swphv_type_t type, uint8_t prof_num,
                                uint8_t start_idx, uint8_t num_flits,
                                void *data);
 sdk_ret_t asicpd_sw_phv_get(asicpd_swphv_type_t type, uint8_t prof_num,
                             asicpd_sw_phv_state_t *state);
-    
+
 }    // namespace pd
 }    // namespace asic
 }    // namespace sdk
