@@ -2709,7 +2709,9 @@ ionic_setup_device_stats(struct lif *lif)
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "hw_capabilities", CTLFLAG_RD,
 			&lif->hw_features, 0, "Hardware features enabled like checksum, TSO etc");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "dev_cmds", CTLFLAG_RD,
-			&lif->num_dev_cmds, "dev commands used");
+			&lif->num_dev_cmds, "Number of dev commands used");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "lif_resets", CTLFLAG_RD,
+			&lif->num_resets, "Number of resets attempted on this LIF");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "mac_filter_count", CTLFLAG_RD,
 			&lif->num_mc_addrs, 0, "Number of MAC filters");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "rx_mbuf_sz", CTLFLAG_RD,

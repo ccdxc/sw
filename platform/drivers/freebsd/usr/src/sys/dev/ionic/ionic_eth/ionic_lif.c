@@ -3448,6 +3448,7 @@ ionic_lif_reinit(struct lif *lif, bool wdog_reset_path)
 	}
 
 	IONIC_LIF_LOCK(lif);
+	lif->num_resets++;
 	was_open = false;
 	if (ifp->if_drv_flags & IFF_DRV_RUNNING) {
 		was_open = true;

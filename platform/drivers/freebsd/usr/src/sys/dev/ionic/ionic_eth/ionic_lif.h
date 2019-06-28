@@ -366,6 +366,7 @@ struct lif {
 	struct lif_info *info;
 
 	u64 	num_dev_cmds;
+	u64     num_resets;
 };
 
 
