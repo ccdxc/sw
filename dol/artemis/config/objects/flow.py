@@ -8,6 +8,7 @@ import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.rmapping as rmapping
 import apollo.config.objects.route as routetable
 import apollo.config.utils as utils
+import tunnel_pb2 as tunnel_pb2
 
 from infra.common.logging import logger
 from apollo.config.store import Store
@@ -81,7 +82,7 @@ class FlowMapObjectHelper:
         mapsel.flow.filters.remove((key, fwdmode))
         rmapsel = copy.deepcopy(mapsel)
 
-        assert (fwdmode == 'VNET' or fwdmode == 'IGW') == True
+        assert (fwdmode == 'VNET' or fwdmode == 'IGW' or fwdmode == 'SVCTUN') == True
 
         if fwdmode == 'VNET':
             for lobj in lmapping.GetMatchingObjects(mapsel):
@@ -107,12 +108,20 @@ class FlowMapObjectHelper:
                     obj = FlowMapObject(lobj, None, fwdmode, routetblobj)
                     objs.append(obj)
 
-            # Random is disabled for the initial testing. TODO Remove 
+            # Random is disabled for the initial testing. TODO Remove
             return utils.GetFilteredObjects(objs, selectors.maxlimits, False)
+
+        elif fwdmode == 'SVCTUN':
+            for lobj in lmapping.GetMatchingObjects(mapsel):
+                vpc = lobj.VNIC.SUBNET.VPC
+                if vpc.Nat46_pfx is not None:
+                    for routetblobj in routetable.GetAllMatchingObjects(mapsel):
+                        obj = FlowMapObject(lobj, None, fwdmode, routetblobj)
+                        objs.append(obj)
+            return utils.GetFilteredObjects(objs, selectors.maxlimits)
 
         else:
             assert 0
-
 
 FlowMapHelper = FlowMapObjectHelper()
 

@@ -12,6 +12,7 @@ import apollo.config.objects.tag as tag
 import apollo.config.objects.meter as meter
 import artemis.config.objects.cfgjson as cfgjson
 import apollo.config.utils as utils
+import ipaddress
 
 import vpc_pb2 as vpc_pb2
 import types_pb2 as types_pb2
@@ -27,6 +28,7 @@ class VpcObject(base.ConfigObjectBase):
         self.VPCId = next(resmgr.VpcIdAllocator)
         self.GID('Vpc%d'%self.VPCId)
         self.IPPrefix = {}
+        self.Nat46_pfx = None
         if spec.type == 'substrate':
             self.SvcMappingIPAddr = {}
             self.Type = vpc_pb2.VPC_TYPE_SUBSTRATE
@@ -40,6 +42,8 @@ class VpcObject(base.ConfigObjectBase):
             self.Type = vpc_pb2.VPC_TYPE_TENANT
             self.IPPrefix[0] = resmgr.GetVpcIPv6Prefix(self.VPCId)
             self.IPPrefix[1] = resmgr.GetVpcIPv4Prefix(self.VPCId)
+        if (hasattr(spec, 'nat46')) and spec.nat46 is True:
+            self.Nat46_pfx = resmgr.Nat46Address
         self.Stack = spec.stack
         # As currently vpc can have only type IPV4 or IPV6, we will alternate
         # the configuration
@@ -136,6 +140,8 @@ class VpcObject(base.ConfigObjectBase):
         utils.GetRpcIPPrefix(self.IPPrefix[0], spec.V6Prefix)
         if self.Vnid:
             utils.GetRpcEncap(self.Vnid, self.Vnid, spec.FabricEncap)
+        if self.Nat46_pfx is not None:
+            utils.GetRpcIPPrefix(self.Nat46_pfx, spec.Nat46Prefix)
         return grpcmsg
 
     def Show(self):
@@ -170,20 +176,25 @@ class VpcObjectClient:
 
     def __write_cfg(self, vpc_count):
         nh = nexthop.client.GetNumNextHopPerVPC()
-        cfgjson.CfgJsonHelper.SetNumNexthopPerVPC(nh)
+        cfgjson.CfgJsonHelper.SetNumNexthopPerVPC(nh + 1) # TODO
         cfgjson.CfgJsonHelper.SetVPCCount(vpc_count)
         cfgjson.CfgJsonHelper.WriteConfig()
 
     def GenerateObjects(self, topospec):
+        vpc_count = 0
         for p in topospec.vpc:
+            vpc_count += p.count
             for c in range(p.count):
+                if hasattr(p, "nat46"):
+                    if p.nat46 is True and not utils.IsPipelineArtemis():
+                        continue
                 obj = VpcObject(p, c, p.count)
                 self.__objs.update({obj.VPCId: obj})
                 if obj.IsSubstrateVPC():
                     Store.SetSubstrateVPC(obj)
         # Write the flow and nexthop config to agent hook file
         if utils.IsPipelineArtemis():
-            self.__write_cfg(p.count)
+            self.__write_cfg(vpc_count - 1) # Ignoring substrate VPC
         return
 
     def CreateObjects(self):

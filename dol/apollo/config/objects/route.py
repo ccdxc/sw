@@ -8,6 +8,7 @@ import apollo.config.utils as utils
 import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.nexthop as nexthop
 import route_pb2 as route_pb2
+import tunnel_pb2 as tunnel_pb2
 import types_pb2 as types_pb2
 import ipaddress
 
@@ -28,6 +29,11 @@ class RouteObject(base.ConfigObjectBase):
             self.NEXTHOP = nexthop.client.GetV4Nexthop(parent.VPCId)
         self.GID('RouteTbl%d'%self.RouteTblId)
         self.routes = routes
+        if hasattr(self, "TUNNEL") and self.TUNNEL is not None:
+        #if self.TUNNEL:
+            self.TunnelId = self.TUNNEL.Id
+        else:
+            self.TunnelId = 0
         if self.NEXTHOP:
             self.NexthopId = self.NEXTHOP.NexthopId
         else:
@@ -51,12 +57,21 @@ class RouteObject(base.ConfigObjectBase):
         self.HasDefaultRoute = True if 'default' in routetype else False
         self.VPCPeeringEnabled = True if 'vpc_peer' in routetype else False
         self.HasBlackHoleRoute = True if 'blackhole' in routetype else False
+        self.HasServiceTunnel = False
+        self.HasNexthop = False
+        if hasattr(self, "TUNNEL"):
+            if self.TUNNEL.Type == tunnel_pb2.TUNNEL_TYPE_SERVICE and \
+                    utils.IsPipelineArtemis():
+                self.HasServiceTunnel = True
+        if hasattr(self, "NEXTHOP") and self.NEXTHOP is not None:
+            self.HasNexthop = True
         if self.HasBlackHoleRoute:
             self.NextHopType = "blackhole"
         elif self.VPCPeeringEnabled:
             self.NextHopType = "vpcpeer"
         else:
-            if utils.IsPipelineArtemis():
+            if utils.IsPipelineArtemis() and self.TUNNEL.Type is not \
+                 tunnel_pb2.TUNNEL_TYPE_SERVICE:
                 self.NextHopType = "nh"
             else:
                 self.NextHopType = "tep"
@@ -65,11 +80,11 @@ class RouteObject(base.ConfigObjectBase):
     def __repr__(self):
         return "RouteTblID:%d|VPCId:%d|AddrFamily:%s|NumRoutes:%d|RouteType:%s|"\
                "HasDefaultRoute:%s|HasBlackHoleRoute:%s|VPCPeering:%s ID:%d|"\
-               "NextHop: ID:%d Type:%s IP:%s"\
+               "NextHop: ID:%d Type:%s IP:%s|TEP: ID:%s"\
                %(self.RouteTblId, self.VPCId, self.AddrFamily, len(self.routes),\
                  self.RouteType, self.HasDefaultRoute, self.HasBlackHoleRoute,\
                  self.VPCPeeringEnabled, self.PeerVPCId,\
-                 self.NexthopId, self.NextHopType, str(self.TunIPAddr))
+                 self.NexthopId, self.NextHopType, str(self.TunIPAddr), self.TunnelId)
 
     def GetGrpcCreateMessage(self):
         grpcmsg = route_pb2.RouteTableRequest()
@@ -82,8 +97,7 @@ class RouteObject(base.ConfigObjectBase):
             if self.NextHopType == "vpcpeer":
                 rtspec.VPCId = self.PeerVPCId
             elif self.NextHopType == "tep":
-                rtspec.NextHop.Af = types_pb2.IP_AF_INET
-                rtspec.NextHop.V4Addr = int(self.TunIPAddr)
+                utils.GetRpcIPAddr(self.TunIPAddr, rtspec.NextHop)
             elif self.NextHopType == "nh":
                 rtspec.NexthopId = self.NexthopId
         return grpcmsg
@@ -116,7 +130,11 @@ class RouteObjectClient:
         self.__v6iter = {}
         return
 
-    def __internet_tunnel_get(self, nat):
+    def __internet_tunnel_get(self, nat, teptype=None):
+        if teptype is not None and "service" in teptype:
+            if "remote" in teptype:
+                return resmgr.RemoteSvcTunAllocator.rrnext()
+            return resmgr.SvcTunAllocator.rrnext()
         if nat is False:
             return resmgr.RemoteInternetNonNatTunAllocator.rrnext()
         else:
@@ -165,8 +183,6 @@ class RouteObjectClient:
         if resmgr.RemoteInternetNonNatTunAllocator == None and resmgr.RemoteInternetNatTunAllocator == None:
             logger.info("Skipping route creation as there are no Internet tunnels")
             return
-
-        tunobj = self.__internet_tunnel_get(False)
 
         def __get_adjacent_routes(base, count):
             routes = []
@@ -227,9 +243,16 @@ class RouteObjectClient:
                 return resmgr.MAX_ROUTES_PER_ROUTE_TBL
             return count
 
+        def __get_nat_teptype_from_spec(routetablespec):
+            nat = getattr(routetbl_spec_obj, 'nat', False)
+            teptype = getattr(routetbl_spec_obj, 'teptype', None)
+            return nat, teptype
+
         for routetbl_spec_obj in vpc_spec_obj.routetbl:
             routetbltype = routetbl_spec_obj.type
             routetype = routetbl_spec_obj.routetype
+            nat, teptype = __get_nat_teptype_from_spec(routetbl_spec_obj)
+            tunobj = self.__internet_tunnel_get(nat, teptype)
             if routetbltype == "specific":
                 __add_user_specified_routetable(routetbl_spec_obj, routetype)
                 continue
@@ -248,8 +271,6 @@ class RouteObjectClient:
             if 'overlap' in routetype:
                 v4routecount -= 1
                 v6routecount -= 1
-            nat = getattr(routetbl_spec_obj, 'nat', False)
-            tunobj = self.__internet_tunnel_get(nat)
             for i in range(routetablecount):
                 if 'adjacent' in routetype:
                     if __is_v4stack():

@@ -97,6 +97,8 @@ def GetTunnelType(e):
         return tunnel_pb2.TUNNEL_TYPE_IGW
     elif e == 'workload':
         return tunnel_pb2.TUNNEL_TYPE_WORKLOAD
+    elif e == 'service' or e == 'remoteservice':
+        return tunnel_pb2.TUNNEL_TYPE_SERVICE
     else:
         return tunnel_pb2.TUNNEL_TYPE_NONE
 
@@ -105,6 +107,8 @@ def GetTunnelTypeString(e):
         return "internet-gateway"
     elif e == tunnel_pb2.TUNNEL_TYPE_WORKLOAD:
         return "workload"
+    elif e == tunnel_pb2.TUNNEL_TYPE_SERVICE:
+        return "service"
     elif e == tunnel_pb2.TUNNEL_TYPE_NONE:
         return "None"
     else:

@@ -32,7 +32,7 @@ class NexthopObject(base.ConfigObjectBase):
     def __repr__(self):
         return "NexthopID:%d|VPCId:%d|PfxSel:%d|IP:%s|Mac:%s|Vlan:%d" %\
                (self.NexthopId, self.VPC.VPCId, self.PfxSel, self.IPAddr[self.PfxSel],
-               self.MACAddr, self.VlanId)
+                self.MACAddr, self.VlanId)
 
     def GetGrpcCreateMessage(self):
         grpcmsg = nh_pb2.NexthopRequest()

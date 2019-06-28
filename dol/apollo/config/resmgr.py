@@ -27,6 +27,7 @@ VirtualRouterMacAllocator = objects.TemplateFieldObject("macstep/00CC.0000.0001/
 VnicMacAllocator = objects.TemplateFieldObject("macstep/00DD.0000.0001/0000.0000.0001")
 RemoteMappingMacAllocator = objects.TemplateFieldObject("macstep/00EE.0000.0001/0000.0000.0001")
 TepIpAddressAllocator = ipaddress.IPv4Network('172.16.0.0/21').hosts()
+TepIpv6AddressAllocator = ipaddress.IPv6Network('ffff::100:0/104').hosts()
 IGWMplsSlotIdAllocator = iter(irange(30001,31024))
 InvalidMplsSlotIdAllocator = iter(irange(50001,90000))
 RemoteInternetNonNatTunAllocator = None
@@ -64,6 +65,7 @@ ProviderIpV6Network = ipaddress.IPv6Network(ProviderIpV6Network)
 ProviderIpV4AddressAllocator = ipaddress.IPv4Network(ProviderIpV4Network).hosts()
 ProviderIpV6AddressAllocator = ipaddress.IPv6Network(ProviderIpV6Network).hosts()
 VpcVxlanIdAllocator = iter(irange(50000, 51024))
+Nat46Address = ipaddress.IPv6Network('aaaa:aaaa:0:0::/64')
 TepMacAllocator = objects.TemplateFieldObject("macstep/0065.0000.0001/0000.0000.0001")
 # TCP/UDP ports for flow and service mapping. Right now keeping it in resmgr.
 TransportSrcPort   = 100 # For VNET packets
@@ -74,6 +76,8 @@ TransportSrcLBPort = 101 # Local backend service port, 101 mapped to 400
 SvcMappingPublicIpV4AddressAllocator = ipaddress.IPv4Network('150.0.0.0/16').hosts()
 SvcMappingPublicIpV6AddressAllocator = ipaddress.IPv6Network('eeee:dddd:dddd:0::/64').hosts()
 # -------------------------------------------------------------------
+SvcTunAllocator = None
+RemoteSvcTunAllocator = None
 
 #TODO: read from PDS header files & init
 MAX_DEVICE = 1
@@ -127,6 +131,17 @@ def CreateInternetTunnels():
     objs = Store.GetIgwNatTunnels()
     if len(objs) != 0:
         RemoteInternetNatTunAllocator = utils.rrobiniter(objs)
+
+def CollectSvcTunnels():
+    if utils.IsPipelineArtemis():
+        global SvcTunAllocator
+        objs = Store.GetSvcTunnels()
+        if len(objs) != 0:
+            SvcTunAllocator = utils.rrobiniter(objs)
+        global RemoteSvcTunAllocator
+        objs = Store.GetSvcTunnels(True)
+        if len(objs) != 0:
+            RemoteSvcTunAllocator = utils.rrobiniter(objs)
 
 def CreateVnicTunnels():
     global RemoteMplsVnicTunAllocator

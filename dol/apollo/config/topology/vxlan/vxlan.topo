@@ -28,7 +28,12 @@ device:
           type  : internet-gateway
         - count : 32
           type  : workload
-
+        # artemis
+        - count : 2
+          type  : service
+        - count : 1
+          type  : service
+          remote : true
 
 vpc:
     # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
@@ -50,6 +55,44 @@ vpc:
         - type : specific
           policytype : default
           direction : bidir
+    # artemis - this vpc is only for artemis for nat46 functionality
+    - stack  : dual # dual, ipv4 , ipv6
+      count : 1
+      type  : tenant
+      subnet:
+        - count     : 4
+          v4prefixlen : 24
+          v6prefixlen : 64
+          vnic:
+            - count   : 1             # VNICs per subnet
+              ipcount : 4             # Local IP mapping per vnic
+              srcguard : false        # true or false (default false)
+              public  : true
+          rmap:                       # Remote IP mappings per subnet
+            - count : 4
+      nexthop:
+        - count : 10
+      routetbl:
+        - type: specific
+          routetype: only_default
+          teptype : service
+          v4routes:
+             - '0.0.0.0\0'
+          v6routes:
+             - '0::\0'
+
+        - type: specific
+          routetype: only_default
+          teptype : remoteservice
+          v4routes:
+             - '0.0.0.0\0'
+          v6routes:
+             - '0::\0'
+      policy:
+        - type : specific
+          policytype : default
+          direction : bidir
+      nat46 : true
     - stack  : dual # dual, ipv4 , ipv6
       count : 2
       type  : tenant
@@ -128,7 +171,6 @@ vpc:
                    - '1234:5678:4321:8765:1111::\80'
                    - '1234:5678:4321:8765:1111:3333::\96'
                    - '0::\0'
-
       policy:
               - type : specific
                 policytype : default

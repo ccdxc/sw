@@ -1,0 +1,21 @@
+# Feature networking Modules List for Local to Remote scenario
+feature:
+    id          : networking
+    sub         : service_tunnel
+    package     : test.networking
+    module      : networking
+    enable      : True
+    ignore      : True
+
+modules:
+    - module:
+        name    : IPV4_UDP_SVC_TUN
+        spec    : service_tunnel.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=SVCTUN,TunFamily=IPV4,Label=NETWORKING
+
+#    - module:
+#        name    : IPV6_UDP_SVC_TUN
+#        spec    : service_tunnel.testspec
+#        iterate :
+#            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=SVCTUN,TunFamily=IPV6,Label=NETWORKING

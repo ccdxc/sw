@@ -397,3 +397,100 @@ def GetIPFromLocalMapping(testcase, packet, args=None):
     else:
         tunnel = None
     return __get_ip_localmapping_impl(testcase.config.localmapping, tunnel)
+
+def __get_packet_encap_impl_from_route(obj, tunnel, args):
+    if obj.IsEncapTypeVXLAN():
+        encap = 'ENCAP_VXLAN'
+    else:
+        assert 0
+    return infra_api.GetPacketTemplate(encap)
+
+# This can be called for packets to switch or from switch
+def GetPacketEncapFromRoute(testcase, packet, args=None):
+    encaps = []
+    encaps.append(__get_packet_encap_impl_from_route(testcase.config.devicecfg, testcase.config.route.TUNNEL, args))
+    return encaps
+
+def __get_v4_from_v6(addr):
+    if addr.version is 4:
+        assert 0
+    if addr.version is 6:
+        text = addr.exploded.split(":")
+        text = text[6] + text[7]
+        text = text[:2] + '.' + text[2:4] + '.' + text[4:6] +'.'+ text[6:]
+        addr = ipaddress.ip_address(text)
+        return addr
+    return None
+
+def __get_packet_v4_dipo_remote46(tunnel):
+    if tunnel is not None:
+        return __get_v4_from_v6(tunnel.RemoteIPAddr)
+    return None
+
+def GetPacketV4DIPoRemote46(testcase, packet, args=None):
+    if testcase.config.route is not None and testcase.config.route.TUNNEL is not None:
+        return __get_packet_v4_dipo_remote46(testcase.config.route.TUNNEL)
+
+def __get_packet_v6_dipo_remote46(tunnel):
+    if tunnel is not None:
+        return tunnel.RemoteIPAddr
+    return None
+
+def GetPacketV6DIPoRemote46(testcase, packet, args=None):
+    if testcase.config.route is not None and testcase.config.route.TUNNEL is not None:
+        return __get_packet_dipo_remote46(testcase.config.route.TUNNEL)
+
+def __get_packet_template_impl_nat46(obj, args):
+    template = 'ETH'
+    af = "IPV4" if obj.AddrFamily is "IPV6" else "IPV6"
+    template += "_%s" % (af)
+
+    if args is not None:
+        template += "_%s" % (args.proto)
+    print(template)
+    return infra_api.GetPacketTemplate(template)
+
+def GetPacketTemplateForNat46(testcase, packet, args=None):
+    return __get_packet_template_impl_nat46(testcase.config.route.TUNNEL, args)
+
+def __get_host_from_route_impl(route, af):
+    """
+        returns a random usable host from non-default route
+        if no route / only default route exists, returns IPV4_HOST / IPV6_HOST
+    """
+    if route is None or utils.isDefaultRoute(route):
+        if af == "IPV4":
+            return str(IPV4_HOST)
+        elif af == "IPV6":
+            return str(IPV6_HOST)
+        else:
+            logger.error("ERROR: invalid AddrFamily ", af)
+            sys.exit(1)
+            return None
+    total_hosts = route.num_addresses
+    host = route.network_address
+    if total_hosts > 1:
+        host += random.randint(0, total_hosts-1)
+    return str(host)
+
+def __get_host_from_route(modargs, route, af):
+    pval = __get_module_args_value(modargs, 'prefix')
+    if route is None or pval is None:
+        host = __get_host_from_route_impl(route, af)
+    if pval == 'right':
+        #first ip post prefix range
+        host = route.network_address + route.num_addresses
+    elif pval == 'left':
+        #first ip pre prefix range
+        host = route.network_address - 1
+    elif pval == 'first':
+        #first ip in prefix range
+        host = route.network_address
+    elif pval == 'last':
+        #last ip in prefix range
+        host = route.network_address + route.num_addresses - 1
+    return str(host)
+
+def GetUsableHostFromRoute(testcase, packet, args=None):
+    route = __get_non_default_random_route(testcase.config.route.routes)
+    return __get_host_from_route(testcase.module.args, route, testcase.config.route.AddrFamily)

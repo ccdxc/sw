@@ -31,16 +31,24 @@ class TunnelObject(base.ConfigObjectBase):
             self.RemoteIPAddr = self.LocalIPAddr
             self.Type = tunnel_pb2.TUNNEL_TYPE_NONE
         else:
-            self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
             self.Type = utils.GetTunnelType(spec.type)
             if self.Type == tunnel_pb2.TUNNEL_TYPE_WORKLOAD:
+                self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
                 self.RemoteVnicMplsSlotIdAllocator = resmgr.CreateRemoteVnicMplsSlotAllocator()
                 self.RemoteVnicVxlanIdAllocator = resmgr.CreateRemoteVnicVxlanIdAllocator()
-            else :
+            elif self.Type == tunnel_pb2.TUNNEL_TYPE_IGW:
+                self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
                 if parent.IsEncapTypeMPLS():
                     self.EncapValue = next(resmgr.IGWMplsSlotIdAllocator)
                 else:
                     self.EncapValue = next(resmgr.IGWVxlanIdAllocator)
+            elif self.Type == tunnel_pb2.TUNNEL_TYPE_SERVICE:
+                if hasattr(spec, "remote") and spec.remote is True:
+                    self.Remote = True
+                else:
+                    self.Remote = False
+                self.RemoteIPAddr = next(resmgr.TepIpv6AddressAllocator)
+                self.EncapValue = next(resmgr.IGWVxlanIdAllocator)
         self.MACAddr = resmgr.TepMacAllocator.get()
         ################# PRIVATE ATTRIBUTES OF TUNNEL OBJECT #####################
 
@@ -48,9 +56,14 @@ class TunnelObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "Tunnel%d|LocalIPAddr:%s|RemoteIPAddr:%s|TunnelType:%s|EncapValue:%d|Nat:%s|Mac:%s" %\
+        remote = ""
+        if hasattr(self, "Remote") and self.Remote is True:
+            remote = " Remote:%s"% (self.Remote)
+        return "Tunnel%d|LocalIPAddr:%s|RemoteIPAddr:%s|TunnelType:%s%s|" \
+               "EncapValue:%d|Nat:%s|Mac:%s" % \
                (self.Id,self.LocalIPAddr, self.RemoteIPAddr,
-               utils.GetTunnelTypeString(self.Type), self.EncapValue, self.Nat, self.MACAddr)
+               utils.GetTunnelTypeString(self.Type), remote, self.EncapValue,
+               self.Nat, self.MACAddr)
 
     def GetGrpcCreateMessage(self):
         grpcmsg = tunnel_pb2.TunnelRequest()
@@ -59,10 +72,8 @@ class TunnelObject(base.ConfigObjectBase):
         spec.VPCId = 0 # TODO: Create Substrate VPC
         utils.GetRpcEncap(self.EncapValue, self.EncapValue, spec.Encap)
         spec.Type = self.Type
-        spec.LocalIP.Af = types_pb2.IP_AF_INET
-        spec.LocalIP.V4Addr = int(self.LocalIPAddr)
-        spec.RemoteIP.Af = types_pb2.IP_AF_INET
-        spec.RemoteIP.V4Addr = int(self.RemoteIPAddr)
+        utils.GetRpcIPAddr(self.LocalIPAddr, spec.LocalIP)
+        utils.GetRpcIPAddr(self.RemoteIPAddr, spec.RemoteIP)
         spec.Nat = self.Nat
         if utils.IsPipelineArtemis():
             spec.MACAddress = self.MACAddr.getnum()
@@ -75,6 +86,11 @@ class TunnelObject(base.ConfigObjectBase):
 
     def IsIgw(self):
         if self.Type == tunnel_pb2.TUNNEL_TYPE_IGW:
+            return True
+        return False
+
+    def IsSvc(self):
+        if self.Type == tunnel_pb2.TUNNEL_TYPE_SERVICE:
             return True
         return False
 
@@ -100,7 +116,7 @@ class TunnelObjectClient:
     def IsValidConfig(self):
         count = len(self.__objs)
         if  count > resmgr.MAX_TUNNEL:
-            return False, "Tunnel count %d exceeds allowed limit of %d" %\
+            return False, "Tunnel count %d exceeds allowed limit of %d" % \
                           (count, resmgr.MAX_TUNNEL)
         return True, ""
 
@@ -110,11 +126,16 @@ class TunnelObjectClient:
         # Generate Remote Tunnel object
         for t in tunnelspec:
             for c in range(t.count):
-                obj = TunnelObject(parent, t, False)
-                self.__objs.append(obj)
+                if (t.type == "service") and not \
+                    utils.IsPipelineArtemis():
+                        continue
+                else:
+                    obj = TunnelObject(parent, t, False)
+                    self.__objs.append(obj)
         Store.SetTunnels(self.__objs)
         resmgr.CreateInternetTunnels()
         resmgr.CreateVnicTunnels()
+        resmgr.CollectSvcTunnels()
         return
 
     def CreateObjects(self):

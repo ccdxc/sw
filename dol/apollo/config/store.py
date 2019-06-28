@@ -74,6 +74,13 @@ class ApolloConfigStore:
             if tun.IsIgw() and tun.IsNat(): tunnels.append(tun)
         return tunnels
 
+    def GetSvcTunnels(self, remote=False):
+        tunnels = []
+        for tun in self.tunnels.GetAllInList():
+            if tun.IsSvc() and tun.Remote is remote:
+                tunnels.append(tun)
+        return tunnels
+
     def GetTrunkingUplinks(self):
         return self.trunks.GetAllInList()
 
