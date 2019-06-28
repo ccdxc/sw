@@ -9,7 +9,7 @@ export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 export HAL_CONFIG_PATH=${NICDIR}/conf
 #export GDB='gdb --args'
 export APOLLO_TEST_TEP_ENCAP=vxlan
-export SKIP_VERIFY=1
+#export SKIP_VERIFY=1
 export PATH=${PATH}:${BUILD_DIR}/bin
 
 cfgfile=artemis/scale_cfg_sim.json

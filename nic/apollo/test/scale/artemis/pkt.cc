@@ -664,7 +664,6 @@ send_packet (void)
         }
     }
 
-#if 0
     tcid++;
     if (tcid_filter == 0 || tcid == tcid_filter) {
         printf("Test with g_vnet64_internet_in_floating_ip_input\n");
@@ -678,14 +677,13 @@ send_packet (void)
             step_network_pkt(ipkt, TM_PORT_UPLINK_1);
             if (!getenv("SKIP_VERIFY")) {
                 get_next_pkt(opkt, port, cos);
-                EXPECT_TRUE(port == TM_PORT_UPLINK_0);
+                EXPECT_TRUE(port == TM_PORT_UPLINK_1);
                 EXPECT_TRUE(opkt.size() == (epkt.size() + TESTAPP_PKT_META_HDR_SIZE));
                 EXPECT_TRUE(std::equal(opkt.begin() + TESTAPP_PKT_META_HDR_SIZE, opkt.end(), epkt.begin()));
             }
             testcase_end(tcid, i + 1);
         }
     }
-#endif
 
     tcid++;
     if (tcid_filter == 0 || tcid == tcid_filter) {
@@ -708,7 +706,6 @@ send_packet (void)
         }
     }
 
-#if 0
     tcid++;
     if (tcid_filter == 0 || tcid == tcid_filter) {
         printf("Test with g_vnet61_SLB_in_V4_input\n");
@@ -722,16 +719,14 @@ send_packet (void)
             step_network_pkt(ipkt, TM_PORT_UPLINK_1);
             if (!getenv("SKIP_VERIFY")) {
                 get_next_pkt(opkt, port, cos);
-                EXPECT_TRUE(port == TM_PORT_UPLINK_0);
+                EXPECT_TRUE(port == TM_PORT_UPLINK_1);
                 EXPECT_TRUE(opkt.size() == (epkt.size() + TESTAPP_PKT_META_HDR_SIZE));
                 EXPECT_TRUE(std::equal(opkt.begin() + TESTAPP_PKT_META_HDR_SIZE, opkt.end(), epkt.begin()));
             }
             testcase_end(tcid, i + 1);
         }
     }
-#endif
 
-#if 0
     tcid++;
     if (tcid_filter == 0 || tcid == tcid_filter) {
         printf("Test with g_vnet61_SLB_in_V6_input\n");
@@ -745,14 +740,13 @@ send_packet (void)
             step_network_pkt(ipkt, TM_PORT_UPLINK_1);
             if (!getenv("SKIP_VERIFY")) {
                 get_next_pkt(opkt, port, cos);
-                EXPECT_TRUE(port == TM_PORT_UPLINK_0);
+                EXPECT_TRUE(port == TM_PORT_UPLINK_1);
                 EXPECT_TRUE(opkt.size() == (epkt.size() + TESTAPP_PKT_META_HDR_SIZE));
                 EXPECT_TRUE(std::equal(opkt.begin() + TESTAPP_PKT_META_HDR_SIZE, opkt.end(), epkt.begin()));
             }
             testcase_end(tcid, i + 1);
         }
     }
-#endif
 
     tcid++;
     if (tcid_filter == 0 || tcid == tcid_filter) {
@@ -796,7 +790,6 @@ send_packet (void)
         }
     }
 
-#if 0
     tcid++;
     if (tcid_filter == 0 || tcid == tcid_filter) {
         printf("Test cps path\n");
@@ -810,13 +803,13 @@ send_packet (void)
             step_network_pkt(ipkt, TM_PORT_UPLINK_0);
             if (!getenv("SKIP_VERIFY")) {
                 get_next_pkt(opkt, port, cos);
-                EXPECT_TRUE(opkt == epkt);
                 EXPECT_TRUE(port == TM_PORT_UPLINK_1);
+                EXPECT_TRUE(opkt.size() == (epkt.size() + TESTAPP_PKT_META_HDR_SIZE));
+                EXPECT_TRUE(std::equal(opkt.begin() + TESTAPP_PKT_META_HDR_SIZE, opkt.end(), epkt.begin()));
             }
             testcase_end(tcid, i + 1);
         }
     }
-#endif
 
     exit_simulation();
 }
