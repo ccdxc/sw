@@ -273,6 +273,8 @@ func fsmAcWaitForSchedule(ros *RolloutState) {
 	if ros.Spec.ScheduledStartTime == nil {
 		ros.eventChan <- fsmEvScheduleNow
 		ros.raiseRolloutEvent(rollout.RolloutStatus_PROGRESSING)
+		ros.Status.OperationalState = rollout.RolloutStatus_PROGRESSING.String()
+		ros.saveStatus()
 		return
 	}
 	t, err := ros.Spec.ScheduledStartTime.Time()
@@ -280,6 +282,8 @@ func fsmAcWaitForSchedule(ros *RolloutState) {
 	if err != nil || now.After(t) { // specified time is in the past
 		ros.eventChan <- fsmEvScheduleNow
 		ros.raiseRolloutEvent(rollout.RolloutStatus_PROGRESSING)
+		ros.Status.OperationalState = rollout.RolloutStatus_PROGRESSING.String()
+		ros.saveStatus()
 		return
 	}
 	ros.Status.OperationalState = rollout.RolloutStatus_SCHEDULED.String()
@@ -296,7 +300,7 @@ func fsmAcWaitForSchedule(ros *RolloutState) {
 			return
 		}
 	}
-	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_PROGRESSING)]
+	ros.Status.OperationalState = rollout.RolloutStatus_PROGRESSING.String()
 	ros.saveStatus()
 	ros.eventChan <- fsmEvScheduleNow
 	ros.raiseRolloutEvent(rollout.RolloutStatus_PROGRESSING)
@@ -307,7 +311,7 @@ func fsmAcIssueNextVeniceRollout(ros *RolloutState) {
 
 	if ros.Spec.GetSuspend() {
 		log.Infof("Rollout is SUSPENDED. Returning without further controller node Rollout.")
-		ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUSPENDED)]
+		ros.Status.OperationalState = rollout.RolloutStatus_SUSPENDED.String()
 		ros.eventChan <- fsmEvSuspend
 		return
 	}

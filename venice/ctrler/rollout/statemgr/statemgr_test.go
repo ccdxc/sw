@@ -61,11 +61,8 @@ func (d *dummyWriter) GetAPIClient() (apiclient.Services, error) {
 
 func TestVeniceRolloutRestartEvent(t *testing.T) {
 	// Create VeniceRolloutObject and see that its properly created and that watchers see the updates to the object
-	// create recorder
-	// create recorder
 	const version = "v1.1"
 
-	// create recorder
 	// create recorder
 	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
 
@@ -80,17 +77,20 @@ func TestVeniceRolloutRestartEvent(t *testing.T) {
 	createNode("node1")
 	createNode("node2")
 
-	createNode("node0")
-	n0 := cluster.Node{
-		TypeMeta: api.TypeMeta{
-			Kind: "Node",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name:   "node0",
-			Tenant: "default",
-		},
+	// Return true if node does not have op in its pending operation
+	// (i.e either op is not issued or if it has been issued is already present in status)
+	checkNoVeniceOutstandingReq := func(node string, op protos.VeniceOp) func() (bool, interface{}) {
+		return func() (bool, interface{}) {
+			ret, i := addVeniceResponseHelper(t, stateMgr, node, op, version)
+			return !ret, i
+		}
 	}
-	stateMgr.handleNodeEvent(kvstore.Deleted, &n0)
+	checkVeniceOutstandingReq := func(node string, op protos.VeniceOp) func() (bool, interface{}) {
+		return func() (bool, interface{}) {
+			ret, i := checkVeniceOp(t, stateMgr, node, op, version)
+			return ret, i
+		}
+	}
 
 	createSNIC("naples1", map[string]string{"l1": "n1"})
 	createSNIC("naples2", map[string]string{"l1": "n1"})
@@ -119,7 +119,7 @@ func TestVeniceRolloutRestartEvent(t *testing.T) {
 			ControllerNodesStatus: []*roproto.RolloutPhase{
 				{
 					Name:  "node1",
-					Phase: roproto.RolloutPhase_COMPLETE.String(),
+					Phase: roproto.RolloutPhase_WAITING_FOR_TURN.String(),
 				},
 				{
 					Name:  "node2",
@@ -143,7 +143,17 @@ func TestVeniceRolloutRestartEvent(t *testing.T) {
 		Object: &ro1,
 	}
 	stateMgr.RolloutWatcher <- evt2
+	AssertEventually(t, checkNoVeniceOutstandingReq("node1", protos.VeniceOp_VeniceRunVersion), "Expected node1 spec not to have outstanding RunVersion Op")
+	AssertEventually(t, checkVeniceOutstandingReq("node2", protos.VeniceOp_VeniceRunVersion), "Expected node1 spec to have outstanding RunVersion Op")
 
+	// Test that there is no request issued for any smartNIC
+	checkNoSmartNICReq := func(snic string, op protos.SmartNICOp) func() (bool, interface{}) {
+		return func() (bool, interface{}) {
+			ret, i := checkNoPendingSmartNICOp(t, stateMgr, snic, op, version)
+			return ret, i
+		}
+	}
+	AssertConsistently(t, checkNoSmartNICReq("naples2", protos.SmartNICOp_SmartNICDisruptiveUpgrade), "Expected naples1 spec not to have RunVersion", "100ms", "1s")
 }
 
 func TestVeniceRolloutWatch(t *testing.T) {
@@ -205,6 +215,29 @@ func checkNoVeniceRolloutHelper(t *testing.T, stateMgr *Statemgr) (bool, interfa
 		return true, nil
 	}
 	return false, nil
+}
+
+// 	checkVeniceOp returns true if the Op has been issued
+//		returns false if the Op is not present in Spec
+func checkVeniceOp(t *testing.T, stateMgr *Statemgr, node string, op protos.VeniceOp, version string) (bool, interface{}) {
+	vros, err := stateMgr.ListVeniceRollouts()
+	AssertOk(t, err, "Error Listing VeniceRollouts")
+	for _, vro := range vros {
+		if vro.Name != node {
+			continue
+		}
+		found := false
+		for _, o := range vro.Spec.Ops {
+			if o.Op == op && o.Version == version {
+				found = true
+			}
+		}
+		if found {
+			return true, "op found in spec"
+		}
+		return false, vro
+	}
+	return false, "venice node not present"
 }
 
 // 	checkNoPendingVeniceOp returns true if the Op has not been issued (or it has been issued, then should have status)
