@@ -208,11 +208,11 @@ ipfix_doorbell_ring_cb (void *timer, uint32_t timer_id, void *ctxt)
     data = (pid << DB_PID_SHFT) | (qid << DB_QID_SHFT) | (ring_id << DB_RING_SHFT) | p_index;
     
     // Update (RMW) export time in the Qstate table
-    lif_manager()->read_qstate(lif_id, 0, qid+16,
+    lif_manager()->read_qstate(lif_id, 0, qid,
                                 (uint8_t *)&qstate, sizeof(qstate));
     timev = (uint32_t)time(NULL);
     qstate.export_time = timev;
-    lif_manager()->write_qstate(lif_id, 0, qid + 16,
+    lif_manager()->write_qstate(lif_id, 0, qid,
                                 (uint8_t *)&qstate, sizeof(qstate));
 
     HAL_TRACE_DEBUG("cpupkt: ringing Doorbell with addr: {:#x} data: {:#x} time: {}",
