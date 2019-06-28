@@ -41,7 +41,7 @@ func TestServer(t *testing.T) {
 		Assert(t, hdr.Version == 0x0a, "invalid version %v", hdr.Version)
 		Assert(t, hdr.SequenceNumber == 0, "invalid sequence number %v", hdr.SequenceNumber)
 		Assert(t, hdr.DomainID == 0, "invalid domain id %v", hdr.DomainID)
-		Assert(t, hdr.Length == 452, "invalid length %v", hdr.Length)
+		Assert(t, hdr.Length == 464, "invalid length %v", hdr.Length)
 
 		for i := range m.TemplateRecords {
 			r := m.TemplateRecords[i]
