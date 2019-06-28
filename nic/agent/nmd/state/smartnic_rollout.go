@@ -103,9 +103,27 @@ func (n *NMD) updateOps(ops []*protos.SmartNICOpSpec) error {
 func (n *NMD) issueNextPendingOp() {
 	log.Infof("On entry of issueNextPendingOp state is completed:%s inProgress:%s pending:%s", spew.Sdump(n.completedOps), n.ro.Status.InProgressOp, spew.Sdump(n.pendingOps))
 	if n.ro.Status.InProgressOp.Op != protos.SmartNICOp_SmartNICNoOp {
+		log.Infof("An op is currently in progress.  %v", n.ro.Status.InProgressOp.Op)
 		return // an op is already in progress...
 	}
+
 	if len(n.pendingOps) == 0 {
+		log.Info("No pending ops. Sending updates to Venice.")
+		st := protos.SmartNICRolloutStatusUpdate{
+			ObjectMeta: n.objectMeta,
+			Status: protos.SmartNICRolloutStatus{
+				OpStatus: n.opStatus,
+			},
+		}
+		if n.rollout == nil {
+			log.Errorf("RolloutIf empty while updating status")
+			return
+		}
+
+		err := n.rollout.UpdateSmartNICRolloutStatus(&st)
+		if err != nil {
+			log.Errorf("Failed to update Rollout err: %v", err)
+		}
 		return
 	}
 	op := n.pendingOps[0]
