@@ -50,6 +50,7 @@ using namespace sdk::platform::capri;
 #define JP4_PRGM        "p4_program"
 
 #define MEM_REGION_LIF_STATS_BASE       "lif_stats_base"
+#define MEM_REGION_INVALID_FLOW_BASE    "invalid_flow_base"
 #define MEM_REGION_FLOW_BASE            "flow"
 #define MEM_REGION_FLOW_OHASH_BASE      "flow_ohash"
 #define MEM_REGION_IPV4_FLOW_BASE       "ipv4_flow"
@@ -63,7 +64,7 @@ using namespace sdk::platform::capri;
 #define MEM_REGION_IPV4_FLOW_OHASH_NAME "ipv4_flow_ohash"
 
 #define RXDMA_SYMBOLS_MAX           1
-#define TXDMA_SYMBOLS_MAX           5
+#define TXDMA_SYMBOLS_MAX           6
 
 typedef struct __attribute__((__packed__)) lifqstate_ {
     uint64_t pc : 8;
@@ -324,6 +325,10 @@ txdma_symbols_init (void **p4plus_symbols,
     symbols[i].name = MEM_REGION_LIF_STATS_BASE;
     symbols[i].val = g_mempartition->start_addr(MEM_REGION_LIF_STATS_NAME);
     SDK_ASSERT(symbols[i].val != INVALID_MEM_ADDRESS);
+    i++;
+
+    symbols[i].name = MEM_REGION_INVALID_FLOW_BASE;
+    symbols[i].val = 0xc0000000;
     i++;
 
     symbols[i].name = MEM_REGION_FLOW_BASE;

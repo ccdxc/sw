@@ -17,8 +17,9 @@ struct phv_                 p;
     .param          flow_ohash
     .param          ipv4_flow
     .param          ipv4_flow_ohash
+    .param          invalid_flow_base
 
-iflow:
+iflow_rx2tx:
 
     // Fill iflow meta information
     phvwr           p.txdma_to_arm_meta_iflow_hash, d.{iflow_rx2tx_d.flow_hash}.wx
@@ -55,6 +56,20 @@ iflow_ipv4_key:
     // Fill iflow d (has to match ipv4_flow_d
     add             r1, 0, (TXDMA_IFLOW_LEAF_FLIT * 512) + 512 - 8
     phvwrp          r1, 0, 8, d.iflow_rx2tx_d.epoch
+
+#if 1
+    /* FIXME rflow , reverse of iflow for now */
+    phvwr           p.key_ipv4_flow_ohash, 0
+    phvwr           p.key_ipv4_proto, d.iflow_rx2tx_d.flow_proto
+    phvwr           p.key_ipv4_ipv4_src, d.iflow_rx2tx_d.flow_dst[31:0]
+    phvwr           p.key_ipv4_ipv4_dst, d.iflow_rx2tx_d.flow_src[31:0]
+    phvwr           p.key_ipv4_sport, d.iflow_rx2tx_d.flow_dport
+    phvwr           p.key_ipv4_dport, d.iflow_rx2tx_d.flow_sport
+    phvwr           p.key_ipv4_vpc_id, d.iflow_rx2tx_d.vpc_id
+    phvwri          p.key2_ipv4_flow_lkp_type, 4
+#endif
+    phvwr           p.key_ipv4_epoch, d.iflow_rx2tx_d.epoch
+
     b               iflow_key_done
 
 iflow_ipv6_key:
@@ -78,11 +93,27 @@ iflow_ipv6_key:
     // Fill iflow d (has to match flow_d
     add             r1, 0, (TXDMA_IFLOW_LEAF_FLIT * 512) + 512 - 8
     phvwrp          r1, 0, 8, d.iflow_rx2tx_d.epoch
+
+#if 1
+    /* FIXME: rflow , reverse of iflow for now */
+    phvwr           p.key1_flow_ohash, 0
+    phvwr           p.key1_proto, d.iflow_rx2tx_d.flow_proto
+    phvwr           p.key1_src, d.iflow_rx2tx_d.flow_dst[127:16]
+    phvwr           p.key2_src, d.iflow_rx2tx_d.flow_dst[15:0]
+    phvwr           p.key2_dst, d.iflow_rx2tx_d.flow_src[127:48]
+    phvwr           p.key3_dst, d.iflow_rx2tx_d.flow_src[47:0]
+    phvwr           p.key3_sport, d.iflow_rx2tx_d.flow_dport
+    phvwr           p.key3_dport, d.iflow_rx2tx_d.flow_sport
+    phvwr           p.key3_vpc_id, d.iflow_rx2tx_d.vpc_id
+    phvwri          p.key3_ktype, KEY_TYPE_IPV6
+    phvwri          p.key3_flow_lkp_type, 6
+#endif
+    phvwr           p.key3_epoch, d.iflow_rx2tx_d.epoch
+
 iflow_key_done:
 
     seq             c1, d.iflow_rx2tx_d.parent_valid, 0
-    phvwr.c1        p.{txdma_predicate_flow_enable...txdma_predicate_cps_path_en}, 0
-    phvwr.c1.e      p.capri_p4_intr_recirc, FALSE
+    phvwri.c1.e     p.txdma_control_pktdesc_addr, loword(invalid_flow_base)
 
     seq             c2, d.iflow_rx2tx_d.parent_is_hint, 0
 
@@ -94,15 +125,19 @@ iflow_key_done:
 
     setcf           c3, [c_ipv4 & c2]
     addi.c3         r3, r2, loword(ipv4_flow)
+    addui.c3        r3, r3, hiword(ipv4_flow)
 
     setcf           c4, [c_ipv4 & !c2]
     addi.c4         r3, r2, loword(ipv4_flow_ohash)
+    addui.c4        r3, r3, hiword(ipv4_flow_ohash)
 
     setcf           c5, [!c_ipv4 & c2]
     addi.c5         r3, r2, loword(flow)
+    addui.c5        r3, r3, hiword(flow)
 
     setcf           c6, [!c_ipv4 & !c2]
     addi.c6         r3, r2, loword(flow_ohash)
+    addui.c6        r3, r3, hiword(flow_ohash)
 
     phvwr.e         p.txdma_control_pktdesc_addr, r3
     nop

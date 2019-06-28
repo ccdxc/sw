@@ -59,6 +59,102 @@ header_type scratch_metadata_t {
         hint_valid          : 1;
         mapping_hash        : 11;
         mapping_hint        : 18;
+        epoch               : 8;
+        flow_hash           : 9;
+        flow_hint           : 22;
+        session_index       : 23;
+        flow_role           : 1;
+    }
+}
+
+/*
+    NOTE: Unfortunately there is no mechanism to enforce that the key formats are the same across
+    multiple pipelines, P4I and TXDMA in this case.
+    The following key formats have been manually created to match the key generated
+    by the Artemis P4 program. Any changes in the keys needs to be reflected here.
+*/
+
+// key_ipv4_metadata_t is exactly 160 bits and can be unionized
+// with common_t3_s2s
+header_type key_ipv4_metadata_t {
+    fields {
+        flow_ohash      : 32;
+        _pad0           : 8;
+        proto           : 8;
+        dport           : 16;
+        sport           : 16;
+        ipv4_src        : 32;
+        ipv4_dst        : 32;
+        vpc_id          : 8;
+
+        // I
+        epoch           : 8;
+    }
+}
+
+header_type key_ipv4_metadata_part2_t {
+    fields {
+        flow_lkp_type   : 8;
+    }
+}
+
+header_type key_metadata_t {
+    fields {
+        flow_ohash      : 32;
+        _pad0           : 8;
+        proto           : 8;
+        src             : 128;
+        dst             : 128;
+        dport           : 16;
+        sport           : 16;
+        vpc_id          : 8;
+        ktype           : 2;
+        _pad1           : 6;
+        _pad2           : 32;
+
+        // I
+        epoch           : 8;
+        flow_lkp_type   : 8;
+
+        _pad3           : 112;
+    }
+}
+
+// break key_metadata_t into parts so it can be unionized
+
+// to be unionized with common_t3_s2s (160 bits)
+header_type key_metadata_part1_t {
+    fields {
+        flow_ohash      : 32;
+        _pad0           : 8;
+        proto           : 8;
+        src             : 112;
+    }
+}
+
+// to be unionized with txdma_common_pad (96 bits)
+header_type key_metadata_part2_t {
+    fields {
+        src             : 16;
+        dst             : 80;
+    }
+}
+
+header_type key_metadata_part3_t {
+    fields {
+        dst             : 48;
+        dport           : 16;
+        sport           : 16;
+        vpc_id          : 8;
+        ktype           : 2;
+        _pad1           : 6;
+        _pad2           : 32;
+
+        // I
+        epoch           : 8;
+        flow_lkp_type   : 8;
+
+        _pad3           : 112;
     }
 }
 
@@ -81,6 +177,24 @@ metadata doorbell_data_t    doorbell_data;
 // Flit 3 : iflow_leaf_entry
 // Flit 4 : rflow_parent_entry
 // Flit 5 : rflow_leaf_entry
+
+@pragma dont_trim
+@pragma pa_header_union ingress common_t3_s2s
+metadata key_ipv4_metadata_t key_ipv4;
+@pragma dont_trim
+@pragma pa_header_union ingress txdma_common_pad
+metadata key_ipv4_metadata_part2_t key2_ipv4;
+
+@pragma dont_trim
+@pragma pa_header_union ingress common_t3_s2s
+metadata key_metadata_part1_t key1;
+
+@pragma dont_trim
+@pragma pa_header_union ingress txdma_common_pad
+metadata key_metadata_part2_t key2;
+
+@pragma dont_trim
+metadata key_metadata_part3_t key3;
 
 // Flit 6 : session_info
 @pragma pa_align 512

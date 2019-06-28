@@ -1,4 +1,5 @@
 control iflow {}
+control flow_lookup {}
 control read_qstate {}
 control mapping {}
 control vnic_info_txdma {}

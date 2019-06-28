@@ -25,7 +25,7 @@ read_qstate_info:
     tblmincri.f d.read_qstate_info_d.sw_cindex0, \
                     d.{read_qstate_info_d.ring_size}.hx, 1
 
-    phvwr       p.app_header_table3_valid, TRUE
+    phvwr       p.txdma_predicate_cps_path_en, TRUE
     phvwr       p.txdma_control_rxdma_cindex_addr, d.{read_qstate_info_d.rxdma_cindex_addr}.dx
     phvwr       p.txdma_control_cindex, d.read_qstate_info_d.sw_cindex0
     phvwr       p.txdma_control_pktdesc_addr, r3

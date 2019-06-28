@@ -8,12 +8,19 @@ struct iflow_entry_d        d;
 struct phv_                 p;
 
 %%
+    .param          invalid_flow_base
 
-iflow:
+iflow_entry:
+    addi            r1, r0, loword(invalid_flow_base)
+    seq             c1, k.txdma_control_pktdesc_addr, r1
+    b.c1            iflow_entry_done
+
     add             r1, 0, TXDMA_IFLOW_PARENT_FLIT * 512
-    phvwrp          r1, 0, 512, d.iflow_entry_d.flow
-    phvwr.e         p.{txdma_predicate_flow_enable...txdma_predicate_cps_path_en}, 0
-    phvwr           p.capri_p4_intr_recirc, FALSE
+    phvwrp.e        r1, 0, 512, d.iflow_entry_d.flow
+    nop
+iflow_entry_done:
+    nop.e
+    nop
 
 /*****************************************************************************/
 /* error function                                                            */

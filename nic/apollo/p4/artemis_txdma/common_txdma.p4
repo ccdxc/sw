@@ -1055,6 +1055,7 @@ control ingress {
     if (txdma_predicate.cps_path_en == 1) {
         if (txdma_predicate.flow_enable == TRUE) {
             iflow();
+            flow_lookup();
         } else {
             if (txdma_predicate.pass_two == 0) {
                 read_qstate();

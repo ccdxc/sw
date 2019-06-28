@@ -11,6 +11,7 @@
 #include "mapping.p4"
 #include "remote_46_mapping.p4"
 #include "vnic_info_txdma.p4"
+#include "flow.p4"
 
 #include "common_txdma_dummy_actions.p4"
 #include "common_txdma.p4"
