@@ -1026,9 +1026,9 @@ sdk_ret_t
 create_service_teps (uint32_t num_teps, ip_prefix_t *svc_tep_pfx,
                      ip_prefix_t *tep_pfx, bool remote_svc)
 {
-    sdk_ret_t      rv;
-    pds_tep_spec_t pds_tep;
+    sdk_ret_t rv;
     uint32_t addr_offset;
+    pds_tep_spec_t pds_tep;
     uint32_t tep_vnid = g_test_params.svc_tep_vnid_base;
     uint32_t remote_svc_vnid = g_test_params.remote_svc_tep_vnid_base;
     static uint32_t tep_id = g_test_params.num_teps + 2;
@@ -1056,6 +1056,9 @@ create_service_teps (uint32_t num_teps, ip_prefix_t *svc_tep_pfx,
             pds_tep.remote_svc = true;
             pds_tep.remote_svc_encap.type = PDS_ENCAP_TYPE_VXLAN;
             pds_tep.remote_svc_encap.val.vnid = remote_svc_vnid++;
+            pds_tep.remote_svc_public_ip =
+                g_test_params.remote_svc_public_ip_pfx.addr;
+            pds_tep.remote_svc_public_ip.addr.v4_addr |= tep_id;
         }
         rv = create_tunnel(tep_id, &pds_tep);
         if (rv != SDK_RET_OK) {

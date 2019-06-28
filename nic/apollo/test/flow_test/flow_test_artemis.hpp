@@ -517,9 +517,49 @@ public:
         }
         memset(&actiondata, 0, sizeof(session_actiondata_t));
         actiondata.action_id = SESSION_SESSION_INFO_ID;
-        if ((vpc == TEST_APP_S1_SVC_TUNNEL_IN_OUT) ||
-            (vpc == TEST_APP_S1_REMOTE_SVC_TUNNEL_IN_OUT)) {
-            // VPC 59 & 60 are used for (Remote) Scenario1-ST in/out traffic
+        if (vpc == TEST_APP_S1_REMOTE_SVC_TUNNEL_IN_OUT) {
+            // VPC 59 is used for Remote Scenario1-ST in/out traffic
+            // Tx path:
+            //     SMACi is unchnged
+            //     DMACi is unchanged
+            //     SIPi xlated to IPv6 (from LOCAL_46_TX table)
+            //     DIPi xlated to IPv6 (comes from REMOTE_46_MAPPING table,
+            //                          stored in the flow)
+            //     L4 ports remain unchanged
+            //     Vxlan encap is added (IPv4)
+            //     SMACo is local device mac (table constant of EGRESS_VNIC_INFO)
+            //     DMACo is from nexthop (comes from REMOTE_46_MAPPING table,
+            //                            stored in flow table)
+            //     SIPo is public IP of remote service tunnel (DIPo from NEXTHOP
+            //     table)
+            //     DIPo is last 32 bits of IPv6 address from REMOTE_46_MAPPING
+            //     table
+            //     vnid associated with the service tunnel (from NEXTHOP table)
+            // Rx path:
+            //     Use the outermost vnid as lookup key in TEP1_RX table and
+            //     decap that header
+            //     Use the inner vnid and DIPm (public IP assocaated with remote
+            //     ST) as key into TEP2_RX
+            //     Remove the vxlan encap after terminating based on received
+            //     vnid
+            //     IPv6 SIPi is xlated to IPv4 (last 32 bits of received IPv6
+            //     packet)
+            //     IPv6 DIPi is xlated to IPv4 (last 32 bits of received IPv6
+            //     packet)
+            //     vlan tag added from EGRESS_VNIC_INFO table
+            // Objects to configure (vpc, subnet, vnic, tep are common)
+            // 1. vpc should be configured with nat46 prefix
+            // 2. local IP mapping (will inherit the nat46 prefix from vpc)
+            // 3. tunnel of type SERVICE_TEP
+            // 4. route pointing to NH of type (remote) service TEPs
+            actiondata.action_u.session_session_info.nexthop_idx =
+                remote_svc_tep_nh_idx;
+            sdk::lib::memrev(actiondata.action_u.session_session_info.tx_dst_ip,
+                             ip_addr.addr.v6_addr.addr8, sizeof(ipv6_addr_t));
+            actiondata.action_u.session_session_info.tx_rewrite_flags = 0x66;
+            actiondata.action_u.session_session_info.rx_rewrite_flags = 0x4;
+        } else if (vpc == TEST_APP_S1_SVC_TUNNEL_IN_OUT) {
+            // VPC 60 is used for Scenario1-ST in/out traffic
             // Tx path:
             //     SMACi is unchnged
             //     DMACi is unchanged
@@ -548,13 +588,8 @@ public:
             // 2. local IP mapping (will inherit the nat46 prefix from vpc)
             // 3. tunnel of type SERVICE_TEP
             // 4. route pointing to NH of type service TEPs
-            if (vpc == TEST_APP_S1_SVC_TUNNEL_IN_OUT) {
-                actiondata.action_u.session_session_info.nexthop_idx =
-                    svc_tep_nh_idx;
-            } else {
-                actiondata.action_u.session_session_info.nexthop_idx =
-                    remote_svc_tep_nh_idx;
-            }
+            actiondata.action_u.session_session_info.nexthop_idx =
+                svc_tep_nh_idx;
             sdk::lib::memrev(actiondata.action_u.session_session_info.tx_dst_ip,
                              ip_addr.addr.v6_addr.addr8, sizeof(ipv6_addr_t));
             actiondata.action_u.session_session_info.tx_rewrite_flags = 0x26;

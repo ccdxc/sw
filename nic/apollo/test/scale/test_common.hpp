@@ -57,6 +57,7 @@ typedef struct test_params_s {
         uint32_t num_teps;
         ip_prefix_t tep_pfx;
         ip_prefix_t svc_tep_pfx;
+        ip_prefix_t remote_svc_public_ip_pfx;
         uint32_t svc_tep_vnid_base;
         uint32_t remote_svc_tep_vnid_base;
     };
@@ -249,6 +250,12 @@ parse_test_cfg (char *cfg_file, test_params_t *test_params)
                 if (pfxstr.empty() == false) {
                     assert(str2ipv6pfx((char *)pfxstr.c_str(),
                                        &test_params->svc_tep_pfx) == 0);
+                }
+                pfxstr = obj.second.get<std::string>("remote-svc-public-prefix",
+                                                     "");
+                if (pfxstr.empty() == false) {
+                    assert(str2ipv4pfx((char *)pfxstr.c_str(),
+                                       &test_params->remote_svc_public_ip_pfx) == 0);
                 }
             } else if (kind == "route-table") {
                 test_params->num_routes = std::stol(obj.second.get<std::string>("count"));

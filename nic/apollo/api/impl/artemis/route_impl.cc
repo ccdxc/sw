@@ -169,9 +169,15 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                 goto cleanup;
             }
             if (tep->type() == PDS_TEP_TYPE_SERVICE) {
-                rtable->routes[i].nhid =
-                    PDS_IMPL_NH_TYPE_SVC_TUNNEL_MASK |
-                    ((tep_impl *)(tep->impl()))->remote46_hw_id();
+                if (tep->remote_svc()) {
+                    rtable->routes[i].nhid =
+                        PDS_IMPL_NH_TYPE_REMOTE_SVC_TUNNEL_MASK |
+                        ((tep_impl *)(tep->impl()))->remote46_hw_id();
+                } else {
+                    rtable->routes[i].nhid =
+                        PDS_IMPL_NH_TYPE_SVC_TUNNEL_MASK |
+                        ((tep_impl *)(tep->impl()))->remote46_hw_id();
+                }
             } else if (tep->type() == PDS_TEP_TYPE_WORKLOAD) {
                 rtable->routes[i].nhid = ((tep_impl *)(tep->impl()))->nh_id();
             }

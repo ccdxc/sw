@@ -65,6 +65,7 @@ tep_entry::init_config(api_ctxt_t *api_ctxt) {
     PDS_TRACE_DEBUG("Initializing TEP %s", ipaddr2str(&spec->key.ip_addr));
     memcpy(&this->key_, &spec->key, sizeof(pds_tep_key_t));
     this->type_ = spec->type;
+    this->remote_svc_ = spec->remote_svc;
     if (is_mac_set(spec->mac)) {
         memcpy(mac_, spec->mac, ETH_ADDR_LEN);
     }

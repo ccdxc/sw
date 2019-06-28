@@ -259,7 +259,6 @@ tep_api_spec_to_proto_spec (pds::TunnelSpec *proto_spec,
                              &api_spec->encap);
     proto_spec->set_nat(api_spec->nat);
     proto_spec->set_vpcid(api_spec->vpc.id);
-
     switch (api_spec->type) {
     case PDS_TEP_TYPE_WORKLOAD:
         proto_spec->set_type(pds::TUNNEL_TYPE_WORKLOAD);
@@ -280,6 +279,9 @@ tep_api_spec_to_proto_spec (pds::TunnelSpec *proto_spec,
     if (api_spec->remote_svc) {
         pds_encap_to_proto_encap(proto_spec->mutable_remoteserviceencap(),
                                  &api_spec->remote_svc_encap);
+        ipaddr_api_spec_to_proto_spec(
+            proto_spec->mutable_remoteservicepublicip(),
+            &api_spec->remote_svc_public_ip);
     }
 }
 
@@ -1255,6 +1257,8 @@ tep_proto_spec_to_api_spec (pds_tep_spec_t *api_spec,
     if (api_spec->remote_svc) {
         api_spec->remote_svc_encap =
             proto_encap_to_pds_encap(proto_spec.remoteserviceencap());
+        ipaddr_proto_spec_to_api_spec(&api_spec->remote_svc_public_ip,
+                                      proto_spec.remoteservicepublicip());
     }
 }
 

@@ -199,17 +199,23 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     switch (spec->type) {
     case PDS_TEP_TYPE_SERVICE:
         PDS_TRACE_DEBUG("Programming service TEP %s, DIPo %s, remote %s, "
-                        "nh hw id %u, remote_46 hw id %u",
+                        "public IP %s, nh hw id %u, remote_46 hw id %u",
                         api_obj->key2str().c_str(),
                         ipv4addr2str(spec->key.ip_addr.addr.v6_addr.addr32[3]),
-                        spec->remote_svc ? "true" : "false", nh_idx_,
-                        remote46_hw_id_);
+                        spec->remote_svc ? "true" : "false",
+                        ipv4addr2str(spec->remote_svc_public_ip.addr.v4_addr),
+                        nh_idx_, remote46_hw_id_);
         // program NEXTHOP table entry
         nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
         nh_data.nexthop_info.port = TM_PORT_UPLINK_1;
         nh_data.nexthop_info.vni = spec->encap.val.value;
-        memcpy(nh_data.nexthop_info.dipo,
-               &spec->key.ip_addr.addr.v6_addr.addr32[3], IP4_ADDR8_LEN);
+        if (spec->remote_svc) {
+            memcpy(nh_data.nexthop_info.dipo,
+                   &spec->remote_svc_public_ip.addr.v4_addr, IP4_ADDR8_LEN);
+        } else {
+            memcpy(nh_data.nexthop_info.dipo,
+                   &spec->key.ip_addr.addr.v6_addr.addr32[3], IP4_ADDR8_LEN);
+        }
         sdk::lib::memrev(nh_data.nexthop_info.dmaco, spec->mac, ETH_ADDR_LEN);
         ret = nexthop_impl_db()->nh_tbl()->insert_atid(&nh_data, nh_idx_);
         if (ret != SDK_RET_OK) {
@@ -267,7 +273,8 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             tep2_rx_key.vxlan_2_vni = spec->encap.val.value;
             tep2_rx_mask.vxlan_2_vni_mask = ~0;
             memcpy(tep2_rx_key.tunnel_metadata_tep2_dst,
-                   &spec->key.ip_addr.addr.v6_addr.addr32[3], IP4_ADDR8_LEN);
+                   &spec->remote_svc_public_ip.addr.v4_addr,
+                   IP4_ADDR8_LEN);
             memset(tep2_rx_mask.tunnel_metadata_tep2_dst_mask, 0xFF,
                    sizeof(tep2_rx_mask.tunnel_metadata_tep2_dst_mask));
             tep2_rx_data.action_id = TEP2_RX_TEP2_RX_INFO_ID;

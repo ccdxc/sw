@@ -54,6 +54,9 @@ typedef struct pds_tep_spec_s {
     bool           remote_svc;
     ///< fabric encap for remote service
     pds_encap_t    remote_svc_encap;
+    ///< public IP of this service tunnel that is used as SIPo in the
+    ///< encapsulated VXLAN packet in the Tx direction
+    ip_addr_t      remote_svc_public_ip;
 } __PACK__ pds_tep_spec_t;
 
 /// \brief TEP status
