@@ -408,12 +408,85 @@ func TestSGPolicySmartNICEvents(t *testing.T) {
 	}, "SGPolicy propagation state incorrect", "300ms", "10s")
 }
 
-func TestFirewallProfile(t *testing.T) {
+func getFwProfileVersionForNode(s *Statemgr, fwprofilename, nodename string) (string, error) {
+	// Give the watchers a chance to run
+	time.Sleep(250 * time.Millisecond)
+	p, err := s.FindFirewallProfile("default", fwprofilename)
+	if err != nil {
+		return "", err
+	}
+
+	version, ok := p.NodeVersions[nodename]
+	if ok != true {
+		return "", errors.New("Smartnic not found in versions")
+	}
+
+	return version, nil
+}
+
+func createFwProfile(s *Statemgr, name, version string) error {
+
+	// firewall profile
+	fwp := security.FirewallProfile{
+		TypeMeta: api.TypeMeta{Kind: "FirewallProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name:         name,
+			Namespace:    "default",
+			Tenant:       "default",
+			GenerationID: version,
+		},
+		Spec: security.FirewallProfileSpec{
+			SessionIdleTimeout: "3m",
+		},
+	}
+	return s.ctrler.FirewallProfile().Create(&fwp)
+}
+
+func TestFirewallProfileNodeVersions(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
+	}
+
+	createFwProfile(stateMgr, "testFwProfile1", "1")
+	createSmartNic(stateMgr, "testSmartnic1")
+	version, err := getFwProfileVersionForNode(stateMgr, "testFwProfile1", "testSmartnic1")
+	AssertOk(t, err, "Couldn't get fwprofile version for node")
+	AssertEquals(t, version, "", "FwProfile version not correct for node")
+
+	stateMgr.UpdateFirewallProfileStatus("testSmartnic1", "default", "testFwProfile1", "1")
+
+	version, err = getFwProfileVersionForNode(stateMgr, "testFwProfile1", "testSmartnic1")
+	AssertOk(t, err, "Couldn't get fwprofile version for node")
+	AssertEquals(t, version, "1", "Fwprofile version not correct for node")
+
+	createSmartNic(stateMgr, "testSmartnic2")
+	version, err = getFwProfileVersionForNode(stateMgr, "testFwProfile1", "testSmartnic2")
+	AssertOk(t, err, "Smartnic not found in versions")
+	AssertEquals(t, version, "", "Fwprofile version not correct for node")
+
+	// Wait for the periodic updater to kick in at least once
+	time.Sleep(2 * time.Second)
+	fwp, err := stateMgr.FindFirewallProfile("default", "testFwProfile1")
+	AssertOk(t, err, "Error finding FwProfile")
+
+	// verify propagation status
+	prop := &fwp.FirewallProfile.Status.PropagationStatus
+	AssertEquals(t, (int32)(1), prop.Updated, "Incorrect 'updated' propagation status")
+	AssertEquals(t, (int32)(1), prop.Pending, "Incorrect 'pending' propagation status")
+	AssertEquals(t, "1", prop.GenerationID, "Incorrect 'generation id' propagation status")
+	AssertEquals(t, "", prop.MinVersion, "Incorrect 'min version' propagation status")
+
+}
+
+func TestFirewallProfile(t *testing.T) {
+	// create network state manazger
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+
 	}
 
 	// firewall profile
@@ -422,7 +495,7 @@ func TestFirewallProfile(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name:      "testProfile",
 			Namespace: "default",
-			Tenant:    "testTenant",
+			Tenant:    "default",
 		},
 		Spec: security.FirewallProfileSpec{
 			SessionIdleTimeout: "3m",
@@ -434,7 +507,7 @@ func TestFirewallProfile(t *testing.T) {
 	AssertOk(t, err, "Error creating firewall profile")
 
 	// verify we can find the firewall profile
-	tmpFwp, err := stateMgr.FindFirewallProfile("testTenant", "testProfile")
+	tmpFwp, err := stateMgr.FindFirewallProfile("default", "testProfile")
 	AssertOk(t, err, "Error finding firewall profile")
 	AssertEquals(t, fwp.Spec.SessionIdleTimeout, tmpFwp.FirewallProfile.Spec.SessionIdleTimeout, "firewall profile params did not match")
 
@@ -454,7 +527,7 @@ func TestFirewallProfile(t *testing.T) {
 	AssertOk(t, err, "Error creating firewall profile")
 
 	// verify firewll profile is gone
-	_, err = stateMgr.FindFirewallProfile("testTenant", "testProfile")
+	_, err = stateMgr.FindFirewallProfile("default", "testProfile")
 	Assert(t, (err != nil), "Firewall profile still found after deleting")
 }
 

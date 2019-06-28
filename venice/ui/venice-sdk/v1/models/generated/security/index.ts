@@ -42,6 +42,7 @@ export * from './security-certificate-status.model';
 export * from './security-dns.model';
 export * from './security-firewall-profile.model';
 export * from './security-firewall-profile-list.model';
+export * from './security-firewall-profile-propagation-status.model';
 export * from './security-firewall-profile-spec.model';
 export * from './security-firewall-profile-status.model';
 export * from './security-ftp.model';

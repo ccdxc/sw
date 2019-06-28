@@ -177,7 +177,7 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 		logger.Errorf("Error starting App RPC server")
 		return nil, err
 	}
-	statemgr.topics.SecurityProfileTopic, err = nimbus.AddSecurityProfileTopic(mserver, nil)
+	statemgr.topics.SecurityProfileTopic, err = nimbus.AddSecurityProfileTopic(mserver, statemgr)
 	if err != nil {
 		logger.Errorf("Error starting SecurityProfile RPC server")
 		return nil, err

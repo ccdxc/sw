@@ -16,6 +16,7 @@ import (
 type FirewallProfileState struct {
 	FirewallProfile *ctkit.FirewallProfile `json:"-"` // fwProfile object
 	stateMgr        *Statemgr              // pointer to state manager
+	NodeVersions    map[string]string      // Map fpr node -> version
 }
 
 // FirewallProfileStateFromObj conerts from memdb object to fwProfile state
@@ -40,6 +41,7 @@ func NewFirewallProfileState(fwProfile *ctkit.FirewallProfile, stateMgr *Statemg
 	fps := FirewallProfileState{
 		FirewallProfile: fwProfile,
 		stateMgr:        stateMgr,
+		NodeVersions:    make(map[string]string),
 	}
 	fwProfile.HandlerCtx = &fps
 
@@ -70,6 +72,57 @@ func convertFirewallProfile(fps *FirewallProfileState) *netproto.SecurityProfile
 	}
 
 	return &fwp
+}
+
+// Write writes the object to api server
+func (fps *FirewallProfileState) Write() error {
+	fps.FirewallProfile.Lock()
+	defer fps.FirewallProfile.Unlock()
+
+	// Consolidate the NodeVersions
+	prop := &fps.FirewallProfile.Status.PropagationStatus
+	prop.GenerationID = fps.FirewallProfile.GenerationID
+	prop.Updated = 0
+	prop.Pending = 0
+	prop.MinVersion = ""
+	for _, ver := range fps.NodeVersions {
+		if ver == prop.GenerationID {
+			prop.Updated++
+		} else {
+			prop.Pending++
+			if prop.MinVersion == "" || versionToInt(ver) < versionToInt(prop.MinVersion) {
+				prop.MinVersion = ver
+			}
+		}
+	}
+
+	return fps.FirewallProfile.Write()
+}
+
+// OnSecurityProfileCreateReq gets called when agent sends create request
+func (sm *Statemgr) OnSecurityProfileCreateReq(nodeID string, objinfo *netproto.SecurityProfile) error {
+	return nil
+}
+
+// OnSecurityProfileUpdateReq gets called when agent sends update request
+func (sm *Statemgr) OnSecurityProfileUpdateReq(nodeID string, objinfo *netproto.SecurityProfile) error {
+	return nil
+}
+
+// OnSecurityProfileDeleteReq gets called when agent sends delete request
+func (sm *Statemgr) OnSecurityProfileDeleteReq(nodeID string, objinfo *netproto.SecurityProfile) error {
+	return nil
+}
+
+// OnSecurityProfileOperUpdate gets called when policy updates arrive from agents
+func (sm *Statemgr) OnSecurityProfileOperUpdate(nodeID string, objinfo *netproto.SecurityProfile) error {
+	sm.UpdateFirewallProfileStatus(nodeID, objinfo.ObjectMeta.Tenant, objinfo.ObjectMeta.Name, objinfo.ObjectMeta.GenerationID)
+	return nil
+}
+
+// OnSecurityProfileOperDelete gets called when policy delete arrives from agent
+func (sm *Statemgr) OnSecurityProfileOperDelete(nodeID string, objinfo *netproto.SecurityProfile) error {
+	return nil
 }
 
 // OnFirewallProfileCreate handles fwProfile creation
@@ -140,6 +193,11 @@ func (sm *Statemgr) FindFirewallProfile(tenant, name string) (*FirewallProfileSt
 	return FirewallProfileStateFromObj(obj)
 }
 
+// GetKey returns the key of FirewallProfile
+func (fps *FirewallProfileState) GetKey() string {
+	return fps.FirewallProfile.GetKey()
+}
+
 // ListFirewallProfiles lists all apps
 func (sm *Statemgr) ListFirewallProfiles() ([]*FirewallProfileState, error) {
 	objs := sm.ListObjects("FirewallProfile")
@@ -155,4 +213,24 @@ func (sm *Statemgr) ListFirewallProfiles() ([]*FirewallProfileState, error) {
 	}
 
 	return fwps, nil
+}
+
+//UpdateFirewallProfileStatus Updated the status of firewallProfile
+func (sm *Statemgr) UpdateFirewallProfileStatus(nodeuuid, tenant, name, generationID string) {
+	fps, err := sm.FindFirewallProfile(tenant, name)
+	if err != nil {
+		log.Errorf("Error finding FirwallProfile %s in tenant : %s. Err: %v", name, tenant, err)
+		return
+	}
+
+	// lock policy for concurrent modifications
+	fps.FirewallProfile.Lock()
+	defer fps.FirewallProfile.Unlock()
+
+	if fps.NodeVersions == nil {
+		fps.NodeVersions = make(map[string]string)
+	}
+	fps.NodeVersions[nodeuuid] = generationID
+
+	sm.PeriodicUpdaterPush(fps)
 }

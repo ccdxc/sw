@@ -7,13 +7,20 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { SecurityFirewallProfilePropagationStatus, ISecurityFirewallProfilePropagationStatus } from './security-firewall-profile-propagation-status.model';
 
 export interface ISecurityFirewallProfileStatus {
+    'propagation-status'?: ISecurityFirewallProfilePropagationStatus;
 }
 
 
 export class SecurityFirewallProfileStatus extends BaseModel implements ISecurityFirewallProfileStatus {
+    'propagation-status': SecurityFirewallProfilePropagationStatus = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
+        'propagation-status': {
+            required: false,
+            type: 'object'
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
@@ -38,6 +45,7 @@ export class SecurityFirewallProfileStatus extends BaseModel implements ISecurit
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this['propagation-status'] = new SecurityFirewallProfilePropagationStatus();
         this.setValues(values, setDefaults);
     }
 
@@ -46,6 +54,11 @@ export class SecurityFirewallProfileStatus extends BaseModel implements ISecurit
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values) {
+            this['propagation-status'].setValues(values['propagation-status'], fillDefaults);
+        } else {
+            this['propagation-status'].setValues(null, fillDefaults);
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -53,6 +66,12 @@ export class SecurityFirewallProfileStatus extends BaseModel implements ISecurit
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'propagation-status': CustomFormGroup(this['propagation-status'].$formGroup, SecurityFirewallProfileStatus.propInfo['propagation-status'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('propagation-status') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('propagation-status').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;
@@ -64,6 +83,7 @@ export class SecurityFirewallProfileStatus extends BaseModel implements ISecurit
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
+            this['propagation-status'].setFormGroupValuesToBeModelValues();
         }
     }
 }

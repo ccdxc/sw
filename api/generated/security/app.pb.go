@@ -24,6 +24,7 @@
 		Msrpc
 		Sunrpc
 		FirewallProfile
+		FirewallProfilePropagationStatus
 		FirewallProfileSpec
 		FirewallProfileStatus
 		IPsecProtocolSpec

@@ -85,6 +85,17 @@ func (sm *Statemgr) OnSmartNICCreate(smartNic *ctkit.SmartNIC) error {
 		}
 	}
 
+	// Update FirewallProfiles
+	if isHealthy {
+		fwprofiles, _ := sm.ListFirewallProfiles()
+		for _, fwprofile := range fwprofiles {
+			if _, ok := fwprofile.NodeVersions[smartNic.SmartNIC.Name]; ok == false {
+				fwprofile.NodeVersions[smartNic.SmartNIC.Name] = ""
+				sm.PeriodicUpdaterPush(fwprofile)
+			}
+		}
+	}
+
 	// walk all hosts and see if they need to be associated to this snic
 	for _, host := range sm.ctrler.Host().List() {
 		associated := false
@@ -157,6 +168,23 @@ func (sm *Statemgr) OnSmartNICUpdate(smartNic *ctkit.SmartNIC, nsnic *cluster.Sm
 		}
 	}
 
+	fwprofiles, _ := sm.ListFirewallProfiles()
+	for _, fwprofile := range fwprofiles {
+		if isHealthy {
+			if _, ok := fwprofile.NodeVersions[smartNic.SmartNIC.Name]; ok == false {
+				fwprofile.NodeVersions[smartNic.SmartNIC.Name] = ""
+				sm.PeriodicUpdaterPush(fwprofile)
+			} else {
+				ver, ok := fwprofile.NodeVersions[smartNic.SmartNIC.Name]
+				if ok && ver == "" {
+					delete(fwprofile.NodeVersions, smartNic.SmartNIC.Name)
+					sm.PeriodicUpdaterPush(fwprofile)
+				}
+			}
+
+		}
+	}
+
 	return nil
 }
 
@@ -176,6 +204,12 @@ func (sm *Statemgr) OnSmartNICDelete(smartNic *ctkit.SmartNIC) error {
 	for _, policy := range policies {
 		delete(policy.NodeVersions, hs.SmartNIC.Name)
 		sm.PeriodicUpdaterPush(policy)
+	}
+
+	fwprofiles, _ := sm.ListFirewallProfiles()
+	for _, fwprofile := range fwprofiles {
+		delete(fwprofile.NodeVersions, hs.SmartNIC.Name)
+		sm.PeriodicUpdaterPush(fwprofile)
 	}
 
 	// walk all hosts and see if they need to be dis-associated to this snic

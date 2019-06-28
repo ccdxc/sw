@@ -1284,6 +1284,10 @@ func TestAgentCrudEvents(t *testing.T) {
 	AssertOk(t, stateMgr.OnSGPolicyUpdateReq("test-node", &netproto.SGPolicy{}), "SGPolicy update")
 	AssertOk(t, stateMgr.OnSGPolicyDeleteReq("test-node", &netproto.SGPolicy{}), "SGPolicy delete")
 
+	AssertOk(t, stateMgr.OnSecurityProfileCreateReq("test-node", &netproto.SecurityProfile{}), "SecurityProfile create")
+	AssertOk(t, stateMgr.OnSecurityProfileUpdateReq("test-node", &netproto.SecurityProfile{}), "SecurityProfile update")
+	AssertOk(t, stateMgr.OnSecurityProfileDeleteReq("test-node", &netproto.SecurityProfile{}), "SecurityProfile delete")
+
 	netIf := netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{

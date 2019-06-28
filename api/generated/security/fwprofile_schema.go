@@ -59,8 +59,10 @@ var typesMapFwprofile = map[string]*api.Struct{
 			"icmp-timeout":                 api.CLIInfo{Path: "Spec.IcmpTimeout", Skip: false, Insert: "", Help: ""},
 			"kind":                         api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":                       api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
+			"min-version":                  api.CLIInfo{Path: "Status.PropagationStatus.MinVersion", Skip: false, Insert: "", Help: ""},
 			"name":                         api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":                    api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"pending":                      api.CLIInfo{Path: "Status.PropagationStatus.Pending", Skip: false, Insert: "", Help: ""},
 			"resource-version":             api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":                    api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"session-idle-timeout":         api.CLIInfo{Path: "Spec.SessionIdleTimeout", Skip: false, Insert: "", Help: ""},
@@ -72,7 +74,20 @@ var typesMapFwprofile = map[string]*api.Struct{
 			"tenant":                       api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
 			"udp-drop-timeout":             api.CLIInfo{Path: "Spec.UDPDropTimeout", Skip: false, Insert: "", Help: ""},
 			"udp-timeout":                  api.CLIInfo{Path: "Spec.UdpTimeout", Skip: false, Insert: "", Help: ""},
+			"updated":                      api.CLIInfo{Path: "Status.PropagationStatus.Updated", Skip: false, Insert: "", Help: ""},
 			"uuid":                         api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
+		},
+	},
+	"security.FirewallProfilePropagationStatus": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(FirewallProfilePropagationStatus{}) },
+		Fields: map[string]api.Field{
+			"GenerationID": api.Field{Name: "GenerationID", CLITag: api.CLIInfo{ID: "generation-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "generation-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Updated": api.Field{Name: "Updated", CLITag: api.CLIInfo{ID: "updated", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "updated", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+
+			"Pending": api.Field{Name: "Pending", CLITag: api.CLIInfo{ID: "pending", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pending", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+
+			"MinVersion": api.Field{Name: "MinVersion", CLITag: api.CLIInfo{ID: "min-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "min-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"security.FirewallProfileSpec": &api.Struct{
@@ -103,7 +118,9 @@ var typesMapFwprofile = map[string]*api.Struct{
 	},
 	"security.FirewallProfileStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(FirewallProfileStatus{}) },
-		Fields: map[string]api.Field{},
+		Fields: map[string]api.Field{
+			"PropagationStatus": api.Field{Name: "PropagationStatus", CLITag: api.CLIInfo{ID: "propagation-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "propagation-status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.FirewallProfilePropagationStatus"},
+		},
 	},
 }
 

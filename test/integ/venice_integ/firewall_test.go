@@ -107,6 +107,22 @@ func (it *veniceIntegSuite) TestFirewallProfile(c *C) {
 		AssertEquals(c, secp.Spec.Timeouts.ICMPDrop, fwp.Spec.ICMPDropTimeout, "incorrect params")
 	}
 
+	// verify FirewallProfile status reflects propagation status
+	AssertEventually(c, func() (bool, interface{}) {
+		fwp, gerr := it.restClient.SecurityV1().FirewallProfile().Get(ctx, &fwp.ObjectMeta)
+		if err != nil {
+			return false, gerr
+		}
+		if fwp.Status.PropagationStatus.GenerationID != fwp.ObjectMeta.GenerationID {
+			return false, fwp
+		}
+		if (fwp.Status.PropagationStatus.Updated != int32(it.config.NumHosts)) || (fwp.Status.PropagationStatus.Pending != 0) ||
+			(fwp.Status.PropagationStatus.MinVersion != "") {
+			return false, fwp
+		}
+		return true, nil
+	}, "FirewallProfile status was not updated", "100ms", it.pollTimeout())
+
 	// delete firewall profile is not allowed.
 	_, err = it.restClient.SecurityV1().FirewallProfile().Delete(ctx, &fwp.ObjectMeta)
 }

@@ -51,6 +51,40 @@ func DecodeGrpcRespFirewallProfile(ctx context.Context, response interface{}) (i
 	return response, nil
 }
 
+func encodeHTTPFirewallProfilePropagationStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPFirewallProfilePropagationStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FirewallProfilePropagationStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqFirewallProfilePropagationStatus encodes GRPC request
+func EncodeGrpcReqFirewallProfilePropagationStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FirewallProfilePropagationStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqFirewallProfilePropagationStatus decodes GRPC request
+func DecodeGrpcReqFirewallProfilePropagationStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FirewallProfilePropagationStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespFirewallProfilePropagationStatus encodes GRC response
+func EncodeGrpcRespFirewallProfilePropagationStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespFirewallProfilePropagationStatus decodes GRPC response
+func DecodeGrpcRespFirewallProfilePropagationStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPFirewallProfileSpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
