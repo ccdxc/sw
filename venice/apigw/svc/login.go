@@ -341,6 +341,7 @@ func (s *loginV1GwService) audit(user *auth.User, clientIPs []string, reqURI str
 			ModTime: api.Timestamp{
 				Timestamp: *creationTime,
 			},
+			SelfLink: fmt.Sprintf("/audit/v1/events/%s", eventID),
 		},
 		EventAttributes: auditapi.EventAttributes{
 			Level:       auditapi.Level_Response.String(),

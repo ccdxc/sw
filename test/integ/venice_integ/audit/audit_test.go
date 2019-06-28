@@ -238,7 +238,7 @@ func TestAuditLogs(t *testing.T) {
 	}, "expected audit log for user login", "100ms")
 	AssertEventually(t, func() (bool, interface{}) {
 		resp := &auditapi.Event{}
-		err := getEvent(superAdminCtx, ti.apiGwAddr, loginEventObj.GetUUID(), resp)
+		err := getEvent(superAdminCtx, ti.apiGwAddr, loginEventObj.SelfLink, resp)
 		if err != nil {
 			return false, err.Error()
 		}
@@ -322,7 +322,7 @@ func TestAuditLogs(t *testing.T) {
 		return true, nil
 	}, fmt.Sprintf("expected one audit log for [%s] tenant creation authorization failure", testTenant), "100ms")
 	// test authorization check in spyglass controller when audit event is fetched given UUID
-	Assert(t, getEvent(unauthzCtx, ti.apiGwAddr, loginEventObj.GetUUID(), &auditapi.Event{}) != nil, "testtenant user should not be able to get event in default tenant")
+	Assert(t, getEvent(unauthzCtx, ti.apiGwAddr, loginEventObj.SelfLink, &auditapi.Event{}) != nil, "testtenant user should not be able to get event in default tenant")
 	// test audit log for call failure
 	_, err = ti.restcl.ClusterV1().Tenant().Create(superAdminCtx, tenant)
 	Assert(t, err != nil, "call to create duplicate tenant should fail")
@@ -499,8 +499,8 @@ func benchmarkProcessEvents(nRules int, b *testing.B) {
 	})
 }
 
-func getEvent(ctx context.Context, apiGwAddr, eventID string, resp *auditapi.Event) error {
-	auditURL := fmt.Sprintf("https://%s/audit/v1/events/%s", apiGwAddr, eventID)
+func getEvent(ctx context.Context, apiGwAddr, selfLink string, resp *auditapi.Event) error {
+	auditURL := fmt.Sprintf("https://%s%s", apiGwAddr, selfLink)
 	restcl := netutils.NewHTTPClient()
 	restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 	// get authz header

@@ -814,11 +814,12 @@ func (a *apiGw) audit(eventID string, user *auth.User, reqObj interface{}, resOb
 	}
 	resource := ops[0].GetResource()
 	creationTime, _ := types.TimestampProto(time.Now())
+	eventUUID := uuid.NewV4().String()
 	event := &auditapi.Event{
 		TypeMeta: api.TypeMeta{Kind: auth.Permission_AuditEvent.String()},
 		ObjectMeta: api.ObjectMeta{
 			Name:   eventID,
-			UUID:   uuid.NewV4().String(),
+			UUID:   eventUUID,
 			Tenant: user.Tenant,
 			Labels: map[string]string{"_category": globals.Kind2Category["AuditEvent"]},
 			CreationTime: api.Timestamp{
@@ -827,6 +828,7 @@ func (a *apiGw) audit(eventID string, user *auth.User, reqObj interface{}, resOb
 			ModTime: api.Timestamp{
 				Timestamp: *creationTime,
 			},
+			SelfLink: fmt.Sprintf("/audit/v1/events/%s", eventUUID),
 		},
 		EventAttributes: auditapi.EventAttributes{
 			Level:       level.String(),
