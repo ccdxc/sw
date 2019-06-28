@@ -13,6 +13,7 @@ export COVFILE=$NIC_DIR/conf/hw_bullseye_hal.cov
 ulimit -c unlimited
 
 #Clean up any stale files from /update dir when we are doing fresh boot
+#Also clean up /data/delphi.dat to bring up delphi clean
 
 #if we see overlay's lowerdir is /new that means we are starting in upgrade mode
 grep "overlay" /proc/mounts | grep -q "lowerdir=/new"
@@ -21,6 +22,7 @@ grep "overlay" /proc/mounts | grep -q "lowerdir=/new"
 if [ $? -ne 0 ]; then
     cd /update
     find . \( -path ./lost+found -o -path ./naples_fw.tar -o \) -prune -o -exec rm -rf '{}' ';' &> /dev/null
+    rm -rf /data/delphi.dat
 fi
 
 # Reserving port for HAL GRPC server
