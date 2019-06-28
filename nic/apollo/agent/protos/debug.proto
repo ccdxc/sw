@@ -21,12 +21,13 @@ service DebugSvc {
   rpc LlcSetup (LlcSetupRequest) returns (LlcSetupResponse) {}
   rpc LlcStatsGet (types.Empty) returns (LlcStatsGetResponse) {}
   rpc PbStatsGet (types.Empty) returns (PbStatsGetResponse) {}
-  rpc FlowClear (types.Empty) returns (types.Empty) {}
   rpc MemTrackGet(MemTrackGetRequest) returns (MemTrackGetResponse) {}
   rpc SlabGet(SlabGetRequest) returns (SlabGetResponse) {}
   rpc HeapGet(types.Empty) returns (HeapGetResponse) {}
   rpc MeterStatsGet (MeterStatsGetRequest) returns (MeterStatsGetResponse) {}
   rpc SessionStatsGet (SessionStatsGetRequest) returns (SessionStatsGetResponse) {}
+  rpc FteStatsGet (types.Empty) returns (FteStatsGetResponse) {}
+  rpc FteStatsClear (FteStatsClearRequest) returns (FteStatsClearResponse) {}
 }
 
 enum TraceLevel {
@@ -360,4 +361,25 @@ message SessionStatsGetRequest {
 message SessionStatsGetResponse {
   types.ApiStatus       ApiStatus = 1;
   repeated SessionStats Stats     = 2;
+}
+
+message FteTableStats {
+}
+
+message FteApiStats {
+}
+
+message FteStatsGetResponse {
+  types.ApiStatus ApiStatus  = 1;
+  FteTableStats   TableStats = 2;
+  FteApiStats     ApiStats   = 3;
+}
+
+message FteStatsClearRequest {
+  bool ApiStats   = 1;
+  bool TableStats = 2;
+}
+
+message FteStatsClearResponse {
+  types.ApiStatus ApiStatus  = 1;
 }

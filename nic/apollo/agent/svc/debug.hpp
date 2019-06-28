@@ -27,6 +27,9 @@ using pds::MeterStatsGetRequest;
 using pds::MeterStatsGetResponse;
 using pds::SessionStatsGetRequest;
 using pds::SessionStatsGetResponse;
+using pds::FteStatsGetResponse;
+using pds::FteStatsClearRequest;
+using pds::FteStatsGetResponse;
 
 class DebugSvcImpl final : public DebugSvc::Service {
 public:
@@ -47,8 +50,6 @@ public:
                        pds::LlcStatsGetResponse *rsp) override;
     Status PbStatsGet(ServerContext *context, const Empty *proto_req,
                       pds::PbStatsGetResponse *proto_rsp) override;
-    Status FlowClear(ServerContext *context, const Empty *req,
-                     Empty *rsp) override;
     Status TraceFlush(ServerContext *context, const Empty *req,
                       Empty *rsp) override;
     Status HeapGet(ServerContext *context, const Empty *req,
@@ -57,6 +58,10 @@ public:
                          pds::MeterStatsGetResponse *rsp) override;
     Status SessionStatsGet(ServerContext *context, const pds::SessionStatsGetRequest *req,
                            pds::SessionStatsGetResponse *rsp) override;
+    Status FteStatsGet(ServerContext *context, const Empty *req,
+                       pds::FteStatsGetResponse *rsp) override;
+    Status FteStatsClear(ServerContext *context, const pds::FteStatsClearRequest *req,
+                         pds::FteStatsClearResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_DEBUG_HPP__

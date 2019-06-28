@@ -1,0 +1,71 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for Network Address Translation (NAT)
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package pds;
+
+import "meta/meta.proto";
+import "types.proto";
+
+service SessionSvc {
+  rpc FlowGet (types.Empty) returns (stream FlowGetResponse) {}
+  rpc SessionGet (types.Empty) returns (stream SessionGetResponse) {}
+  rpc FlowClear (FlowClearRequest) returns (FlowClearResponse) {}
+  rpc SessionClear (SessionClearRequest) returns (SessionClearResponse) {}
+}
+
+message Flow {
+}
+
+message Session {
+  Flow InitiatorFlow = 1;
+  Flow ResponderFlow = 2;
+}
+
+message SessionGetResponse {
+  types.ApiStatus  ApiStatus = 1;
+  repeated Session Session   = 2;
+}
+
+message FlowGetResponse {
+  types.ApiStatus  ApiStatus = 1;
+  repeated Flow    Flow      = 2;
+}
+
+message SessionFilter {
+  uint32          Vpc     = 1;
+  types.IPAddress SrcAddr = 2;
+  types.IPAddress DstAddr = 3;
+  uint32          SrcPort = 4 [(gogoproto.moretags) = "meta:range:0-65535"];
+  uint32          DstPort = 5 [(gogoproto.moretags) = "meta:range:0-65535"];
+  uint32          IPProto = 6 [(gogoproto.moretags) = "meta:range:0-255"]; // IP Protocol
+}
+
+message SessionClearResponse {
+  types.ApiStatus ApiStatus = 1;
+}
+
+message SessionClearRequest {
+  SessionFilter Filter = 1;
+}
+
+message FlowFilter {
+  uint32          Vpc     = 1;
+  types.IPAddress SrcAddr = 2;
+  types.IPAddress DstAddr = 3;
+  uint32          SrcPort = 4 [(gogoproto.moretags) = "meta:range:0-65535"];
+  uint32          DstPort = 5 [(gogoproto.moretags) = "meta:range:0-65535"];
+  uint32          IPProto = 6 [(gogoproto.moretags) = "meta:range:0-255"]; // IP Protocol
+}
+
+message FlowClearResponse {
+  types.ApiStatus ApiStatus = 1;
+}
+
+message FlowClearRequest {
+  FlowFilter Filter = 1;
+}
+

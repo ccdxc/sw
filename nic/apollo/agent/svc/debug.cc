@@ -210,10 +210,14 @@ DebugSvcImpl::PbStatsGet(ServerContext *context, const Empty *proto_req,
 }
 
 Status
-DebugSvcImpl::FlowClear(ServerContext *context, const Empty *req,
-                        Empty *rsp) {
-    PDS_TRACE_DEBUG("Flow clear received");
+DebugSvcImpl::FteStatsGet(ServerContext *context, const Empty *req,
+                          pds::FteStatsGetResponse *rsp) {
+    return Status::OK;
+}
 
+Status
+DebugSvcImpl::FteStatsClear(ServerContext *context, const pds::FteStatsClearRequest *req,
+                          pds::FteStatsClearResponse *rsp) {
     return Status::OK;
 }
 

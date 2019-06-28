@@ -7,6 +7,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -17,6 +18,18 @@ import (
 
 var (
 	sessionStatsID string
+	sessionVpcID   uint32
+	sessionSrcIP   string
+	sessionDstIP   string
+	sessionSrcPort uint32
+	sessionDstPort uint32
+	sessionIPProto uint32
+	flowVpcID      uint32
+	flowSrcIP      string
+	flowDstIP      string
+	flowSrcPort    uint32
+	flowDstPort    uint32
+	flowIPProto    uint32
 )
 
 var sessionStatsShowCmd = &cobra.Command{
@@ -26,10 +39,308 @@ var sessionStatsShowCmd = &cobra.Command{
 	Run:   sessionShowStatsCmdHandler,
 }
 
+var flowShowCmd = &cobra.Command{
+	Use:   "flow",
+	Short: "show flow information",
+	Long:  "show flow object information",
+	Run:   flowShowCmdHandler,
+}
+
+var sessionShowCmd = &cobra.Command{
+	Use:   "session",
+	Short: "show session information",
+	Long:  "show session object information",
+	Run:   sessionShowCmdHandler,
+}
+
+var flowClearCmd = &cobra.Command{
+	Use:   "flow",
+	Short: "clear flow information",
+	Long:  "clear flow object information",
+	Run:   flowClearCmdHandler,
+}
+
+var sessionClearCmd = &cobra.Command{
+	Use:   "session",
+	Short: "clear session information",
+	Long:  "clear session object information",
+	Run:   sessionClearCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(sessionStatsShowCmd)
 	sessionStatsShowCmd.Flags().StringVarP(&sessionStatsID, "session-stats-index", "i", "", "Specify session stats index. Ex: 1-20 or 10")
 	sessionStatsShowCmd.MarkFlagRequired("session-stats-index")
+
+	showCmd.AddCommand(sessionShowCmd)
+	sessionShowCmd.Flags().Uint32Var(&sessionVpcID, "vpcid", 0, "Specify VPC ID (default is 0)")
+	sessionShowCmd.Flags().StringVar(&sessionSrcIP, "srcip", "0.0.0.0", "Specify session src ip")
+	sessionShowCmd.Flags().StringVar(&sessionDstIP, "dstip", "0.0.0.0", "Specify session dst ip")
+	sessionShowCmd.Flags().Uint32Var(&sessionSrcPort, "srcport", 0, "Specify session src port")
+	sessionShowCmd.Flags().Uint32Var(&sessionDstPort, "dstport", 0, "Specify session dst port")
+	sessionShowCmd.Flags().Uint32Var(&sessionIPProto, "ipproto", 0, "Specify session IP proto")
+
+	showCmd.AddCommand(flowShowCmd)
+	flowShowCmd.Flags().Uint32Var(&flowVpcID, "vpcid", 0, "Specify VPC ID (default is 0)")
+	flowShowCmd.Flags().StringVar(&flowSrcIP, "srcip", "0.0.0.0", "Specify flow src ip")
+	flowShowCmd.Flags().StringVar(&flowDstIP, "dstip", "0.0.0.0", "Specify flow dst ip")
+	flowShowCmd.Flags().Uint32Var(&flowSrcPort, "srcport", 0, "Specify flow src port")
+	flowShowCmd.Flags().Uint32Var(&flowDstPort, "dstport", 0, "Specify flow dst port")
+	flowShowCmd.Flags().Uint32Var(&flowIPProto, "ipproto", 0, "Specify flow IP proto")
+
+	clearCmd.AddCommand(sessionClearCmd)
+	sessionClearCmd.Flags().Uint32Var(&sessionVpcID, "vpcid", 0, "Specify VPC ID (default is 0)")
+	sessionClearCmd.Flags().StringVar(&sessionSrcIP, "srcip", "0.0.0.0", "Specify session src ip")
+	sessionClearCmd.Flags().StringVar(&sessionDstIP, "dstip", "0.0.0.0", "Specify session dst ip")
+	sessionClearCmd.Flags().Uint32Var(&sessionSrcPort, "srcport", 0, "Specify session src port")
+	sessionClearCmd.Flags().Uint32Var(&sessionDstPort, "dstport", 0, "Specify session dst port")
+	sessionClearCmd.Flags().Uint32Var(&sessionIPProto, "ipproto", 0, "Specify session IP proto")
+
+	clearCmd.AddCommand(flowClearCmd)
+	flowClearCmd.Flags().Uint32Var(&flowVpcID, "vpcid", 0, "Specify VPC ID (default is 0)")
+	flowClearCmd.Flags().StringVar(&flowSrcIP, "srcip", "0.0.0.0", "Specify flow src ip")
+	flowClearCmd.Flags().StringVar(&flowDstIP, "dstip", "0.0.0.0", "Specify flow dst ip")
+	flowClearCmd.Flags().Uint32Var(&flowSrcPort, "srcport", 0, "Specify flow src port")
+	flowClearCmd.Flags().Uint32Var(&flowDstPort, "dstport", 0, "Specify flow dst port")
+	flowClearCmd.Flags().Uint32Var(&flowIPProto, "ipproto", 0, "Specify flow IP proto")
+}
+
+func sessionClearCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewSessionSvcClient(c)
+
+	if cmd.Flags().Changed("vpcid") == false {
+		sessionVpcID = 0
+	}
+
+	if cmd.Flags().Changed("srcip") == false {
+		sessionSrcIP = "0.0.0.0"
+	}
+
+	if cmd.Flags().Changed("dstip") == false {
+		sessionDstIP = "0.0.0.0"
+	}
+
+	if cmd.Flags().Changed("srcport") == false {
+		sessionSrcPort = 0
+	}
+
+	if cmd.Flags().Changed("dstport") == false {
+		sessionDstPort = 0
+	}
+
+	if cmd.Flags().Changed("ipproto") == false {
+		sessionIPProto = 0
+	}
+
+	req := &pds.SessionClearRequest{
+		Filter: &pds.SessionFilter{
+			Vpc:     sessionVpcID,
+			SrcAddr: utils.IPAddrStrToPDSIPAddr(sessionSrcIP),
+			DstAddr: utils.IPAddrStrToPDSIPAddr(sessionDstIP),
+			SrcPort: sessionSrcPort,
+			DstPort: sessionDstPort,
+			IPProto: sessionIPProto,
+		},
+	}
+
+	// PDS call
+	respMsg, err := client.SessionClear(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Clearing sessions failed. %v\n", err)
+		return
+	}
+
+	if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
+		return
+	}
+
+	fmt.Printf("Clearing sessions succeeded\n")
+}
+
+func flowClearCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewSessionSvcClient(c)
+
+	if cmd.Flags().Changed("vpcid") == false {
+		flowVpcID = 0
+	}
+
+	if cmd.Flags().Changed("srcip") == false {
+		flowSrcIP = "0.0.0.0"
+	}
+
+	if cmd.Flags().Changed("dstip") == false {
+		flowDstIP = "0.0.0.0"
+	}
+
+	if cmd.Flags().Changed("srcport") == false {
+		flowSrcPort = 0
+	}
+
+	if cmd.Flags().Changed("dstport") == false {
+		flowDstPort = 0
+	}
+
+	if cmd.Flags().Changed("ipproto") == false {
+		flowIPProto = 0
+	}
+
+	req := &pds.FlowClearRequest{
+		Filter: &pds.FlowFilter{
+			Vpc:     flowVpcID,
+			SrcAddr: utils.IPAddrStrToPDSIPAddr(flowSrcIP),
+			DstAddr: utils.IPAddrStrToPDSIPAddr(flowDstIP),
+			SrcPort: flowSrcPort,
+			DstPort: flowDstPort,
+			IPProto: flowIPProto,
+		},
+	}
+
+	// PDS call
+	respMsg, err := client.FlowClear(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Clearing flows failed. %v\n", err)
+		return
+	}
+
+	if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
+		return
+	}
+
+	fmt.Printf("Clearing flows succeeded\n")
+}
+
+func flowShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewSessionSvcClient(c)
+
+	var empty *pds.Empty
+
+	// PDS call
+	stream, err := client.FlowGet(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("Getting flows failed. %v\n", err)
+		return
+	}
+
+	flowPrintHeader()
+
+	for {
+		respMsg, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			fmt.Printf("Getting flow stream failure. %v\n", err)
+		}
+
+		if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+			fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
+			continue
+		}
+		// Print flows
+		for _, flow := range respMsg.GetFlow() {
+			flowPrintEntry(flow)
+		}
+	}
+}
+
+func flowPrintHeader() {
+}
+
+func flowPrintEntry(flow *pds.Flow) {
+}
+
+func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewSessionSvcClient(c)
+
+	var empty *pds.Empty
+
+	// PDS call
+	stream, err := client.SessionGet(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("Getting sessions failed. %v\n", err)
+		return
+	}
+
+	sessionPrintHeader()
+
+	for {
+		respMsg, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			fmt.Printf("Getting session stream failure. %v\n", err)
+		}
+
+		if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+			fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
+			continue
+		}
+		// Print sessions
+		for _, session := range respMsg.GetSession() {
+			sessionPrintEntry(session)
+		}
+	}
+}
+
+func sessionPrintHeader() {
+}
+
+func sessionPrintEntry(session *pds.Session) {
 }
 
 func sessionShowStatsCmdHandler(cmd *cobra.Command, args []string) {
