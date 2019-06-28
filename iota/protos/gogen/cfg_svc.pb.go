@@ -22,6 +22,7 @@
 		MatchSelector
 		IotaAPIResponse
 		NodeMsg
+		ReloadMsg
 		Entity
 		VmwareESXConfig
 		Node

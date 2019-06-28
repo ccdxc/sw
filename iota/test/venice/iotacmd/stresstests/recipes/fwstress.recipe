@@ -4,7 +4,6 @@ meta:
 
 config:
     #Run a particular testcase
-    focus: ""
     #Number of iterations
     iterations: 2
     #Run lineraly or randomize suites
@@ -12,8 +11,10 @@ config:
     stop-on-failure: True
 
 testsuites:
-    - firewall
-    - fwlog
+    - suite: firewall
+      focus: ""
+    - suite: fwlog
+      focus: ""
 
 triggers:
     - trigger: FlapDataPorts
@@ -23,5 +24,8 @@ triggers:
       percent: 50
       skip-setup: True
     - trigger: VeniceReboot
+      percent: 50
+      skip-setup: True
+    - trigger: NaplesRemoveAdd
       percent: 50
       skip-setup: True

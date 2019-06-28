@@ -198,7 +198,7 @@ func (n *TestNode) InitNode(reboot bool, c *ssh.ClientConfig, dstDir string, com
 }
 
 // CleanUpNode cleans up the node
-func (n *TestNode) CleanUpNode(cfg *ssh.ClientConfig) error {
+func (n *TestNode) CleanUpNode(cfg *ssh.ClientConfig, reboot bool) error {
 	log.Infof("TOPO SVC | CleanupNode | Running clean up for TestNode: %v, IPAddress: %v", n.Node.Name, n.Node.IpAddress)
 	runner := runner.NewRunner(cfg)
 	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
@@ -216,6 +216,9 @@ func (n *TestNode) CleanUpNode(cfg *ssh.ClientConfig) error {
 		}
 	}
 
+	if reboot {
+		return n.RestartNode()
+	}
 	return nil
 }
 

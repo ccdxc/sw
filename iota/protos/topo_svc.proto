@@ -38,7 +38,7 @@ service TopologyApi {
     rpc AddNodes (NodeMsg) returns (NodeMsg) {};
 
     // Load Node will save, reboot and load context
-    rpc ReloadNodes (NodeMsg) returns (NodeMsg) {};
+    rpc ReloadNodes (ReloadMsg) returns (ReloadMsg) {};
 
     // DeleteNodes removes a node from the e2e cluster
     rpc DeleteNodes (NodeMsg) returns (NodeMsg) {};
@@ -90,6 +90,17 @@ message NodeMsg {
 
     // Cluster is complete or not (Could by used by other nodes to check their admission status for health check)
     bool cluster_done               = 5;
+}
+
+// Reload msg
+message ReloadMsg {
+
+    // API Response for the node
+    IotaAPIResponse api_response    = 1;
+
+    NodeMsg node_msg                = 2;
+
+    bool skip_restore               = 3;
 }
 
 enum PersonalityType {

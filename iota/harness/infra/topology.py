@@ -321,13 +321,14 @@ class Topology(object):
         return self.__nodes.values()
 
     def RestartNodes(self, node_names):
-        req = topo_pb2.NodeMsg()
+        req = topo_pb2.ReloadMsg()
+        req.nodeMsg = topo_pb2.NodeMsg()
 
         for node_name in node_names:
             if node_name not in self.__nodes:
                 Logger.error("Node %s not found" % node_name)
                 return types.status.FAILURE
-            msg = req.nodes.add()
+            msg = req.nodeMsg.nodes.add()
             msg.name = node_name
 
 

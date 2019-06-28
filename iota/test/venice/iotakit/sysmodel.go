@@ -169,6 +169,63 @@ func (sm *SysModel) CleanupAllConfig() error {
 	return nil
 }
 
+//SetupWorkloadsOnHost sets up workload on host
+func (sm *SysModel) SetupWorkloadsOnHost(h *Host) (*WorkloadCollection, error) {
+
+	var wc WorkloadCollection
+	nwMap := make(map[uint32]uint32)
+
+	for i := 2 + sm.tb.GetBaseVlan(); i <= defaultNumNetworks+sm.tb.GetBaseVlan()+1; i++ {
+		nwMap[((uint32)(i))] = 0
+	}
+
+	wloadsPerNetwork := defaultWorkloadPerHost / defaultNumNetworks
+
+	//Keep track of number of workloads per network
+	wloadsToCreate := []*workload.Workload{}
+
+	wloads, err := sm.ListWorkloadsOnHost(h.veniceHost)
+	if err != nil {
+		log.Error("Error finding real workloads on hosts.")
+		return nil, err
+	}
+
+	if len(wloads) == 0 {
+		log.Error("No workloads created on real hosts.")
+		return nil, err
+	}
+
+	for _, wload := range wloads {
+		nw := wload.GetSpec().Interfaces[0].GetExternalVlan()
+		if _, ok := nwMap[nw]; ok {
+			if nwMap[nw] > ((uint32)(wloadsPerNetwork)) {
+				//This network is done.
+				continue
+			}
+			nwMap[nw]++
+			wloadsToCreate = append(wloadsToCreate, wload)
+			log.Infof("Adding workload %v (host:%v NodeUUID:(%v) iotaNode:%v nw:%v) to create list", wload.GetName(), h.veniceHost.GetName(), h.iotaNode.GetNodeUuid(), h.iotaNode.Name, nw)
+
+			if len(wloadsToCreate) == defaultWorkloadPerHost {
+				// We have enough workloads already for this host.
+				break
+			}
+		}
+	}
+
+	for _, wload := range wloadsToCreate {
+		wrk, err := sm.createWorkload(wload, sm.tb.Topo.WorkloadType, sm.tb.Topo.WorkloadImage, h)
+		if err != nil {
+			log.Errorf("Error creating workload %v. Err: %v", wload.GetName(), err)
+			return nil, err
+		}
+		wc.workloads = append(wc.workloads, wrk)
+	}
+
+	return &wc, nil
+
+}
+
 // SetupDefaultConfig sets up a default config for the system
 func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData bool) error {
 	var wc WorkloadCollection
@@ -224,55 +281,16 @@ func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData boo
 		}
 
 	}
-	nwMap := make(map[uint32]uint32)
 
 	for _, h := range hosts {
 
-		for i := 2 + sm.tb.GetBaseVlan(); i <= defaultNumNetworks+sm.tb.GetBaseVlan()+1; i++ {
-			nwMap[((uint32)(i))] = 0
-		}
-		wloadsPerNetwork := defaultWorkloadPerHost / defaultNumNetworks
+		hwc, err := sm.SetupWorkloadsOnHost(h)
 
-		//Keep track of number of workloads per network
-		wloadsToCreate := []*workload.Workload{}
-
-		wloads, err := sm.ListWorkloadsOnHost(h.veniceHost)
 		if err != nil {
-			log.Error("Error finding real workloads on hosts.")
 			return err
 		}
 
-		if len(wloads) == 0 {
-			log.Error("No workloads created on real hosts.")
-			return err
-		}
-
-		for _, wload := range wloads {
-			nw := wload.GetSpec().Interfaces[0].GetExternalVlan()
-			if _, ok := nwMap[nw]; ok {
-				if nwMap[nw] > ((uint32)(wloadsPerNetwork)) {
-					//This network is done.
-					continue
-				}
-				nwMap[nw]++
-				wloadsToCreate = append(wloadsToCreate, wload)
-				log.Infof("Adding workload %v (host:%v NodeUUID:(%v) iotaNode:%v nw:%v) to create list", wload.GetName(), h.veniceHost.GetName(), h.iotaNode.GetNodeUuid(), h.iotaNode.Name, nw)
-
-				if len(wloadsToCreate) == defaultWorkloadPerHost {
-					// We have enough workloads already for this host.
-					break
-				}
-			}
-		}
-
-		for _, wload := range wloadsToCreate {
-			wrk, err := sm.createWorkload(wload, sm.tb.Topo.WorkloadType, sm.tb.Topo.WorkloadImage, h)
-			if err != nil {
-				log.Errorf("Error creating workload %v. Err: %v", wload.GetName(), err)
-				return err
-			}
-			wc.workloads = append(wc.workloads, wrk)
-		}
+		wc.workloads = append(wc.workloads, hwc.workloads...)
 	}
 
 	// if we are skipping setup we dont need to bringup the workload
@@ -729,32 +747,70 @@ func (sm *SysModel) createDefaultAlgs() error {
 	return nil
 }
 
-// AddNaplesNode node on the fly
-func (sm *SysModel) AddNaplesNode(name string) error {
+// AddNaplesNodes node on the fly
+func (sm *SysModel) AddNaplesNodes(names []string) error {
 	//First add to testbed.
-	node, err := sm.tb.AddNode(iota.PersonalityType_PERSONALITY_NAPLES, name)
+	log.Infof("Adding naples nodes : %v", names)
+	nodes, err := sm.tb.AddNodes(iota.PersonalityType_PERSONALITY_NAPLES, names)
 	if err != nil {
 		return err
 	}
 
-	return sm.createNaples(node)
+	for _, node := range nodes {
+		if err := sm.createNaples(node); err != nil {
+			return err
+		}
+
+	}
+
+	//Reassociate hosts as new naples is added now.
+	if err := sm.AssociateHosts(); err != nil {
+		log.Infof("Error in host association %v", err.Error())
+		return err
+	}
+
+	log.Infof("Bringing up workloads naples nodes : %v", names)
+	var wc WorkloadCollection
+	for _, h := range sm.hosts {
+		for _, node := range nodes {
+			if node.iotaNode == h.iotaNode {
+				hwc, err := sm.SetupWorkloadsOnHost(h)
+				if err != nil {
+					return err
+				}
+				wc.workloads = append(wc.workloads, hwc.workloads...)
+			}
+		}
+	}
+
+	return wc.Bringup()
 }
 
-// DeleteNaplesNode node on the fly
-func (sm *SysModel) DeleteNaplesNode(name string) error {
+// DeleteNaplesNodes nodes on the fly
+func (sm *SysModel) DeleteNaplesNodes(names []string) error {
 	//First add to testbed.
 
-	naples, ok := sm.naples[name]
+	nodes := []*TestNode{}
+	for _, name := range names {
+		log.Infof("Deleting naples node : %v", name)
+		naples, ok := sm.naples[name]
 
-	if !ok {
-		return errors.New("naples not found to delete")
+		if !ok {
+			return errors.New("naples not found to delete")
+		}
+
+		nodes = append(nodes, naples.testNode)
 	}
 
-	err := sm.tb.DeleteNode(naples.testNode)
+	err := sm.tb.DeleteNodes(nodes)
 	if err != nil {
 		return err
 	}
 
-	delete(sm.naples, name)
-	return nil
+	for _, name := range names {
+
+		delete(sm.naples, name)
+	}
+	//Reassociate hosts as new naples is added now.
+	return sm.AssociateHosts()
 }

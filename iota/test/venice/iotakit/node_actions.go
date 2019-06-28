@@ -22,25 +22,28 @@ func (act *ActionCtx) ReloadHosts(hc *HostCollection) error {
 	}
 
 	var hostNames string
-	reloadMsg := &iota.NodeMsg{
+	nodeMsg := &iota.NodeMsg{
 		ApiResponse: &iota.IotaAPIResponse{},
 		Nodes:       []*iota.Node{},
 	}
 
 	for _, hst := range hc.hosts {
-		reloadMsg.Nodes = append(reloadMsg.Nodes, &iota.Node{Name: hst.iotaNode.Name})
+		nodeMsg.Nodes = append(nodeMsg.Nodes, &iota.Node{Name: hst.iotaNode.Name})
 		hostNames += hst.iotaNode.Name + " "
 	}
 
+	reloadMsg := &iota.ReloadMsg{
+		NodeMsg: nodeMsg,
+	}
 	log.Infof("Reloading hosts: %v", hostNames)
 
 	// Trigger App
 	topoClient := iota.NewTopologyApiClient(act.model.tb.iotaClient.Client)
 	reloadResp, err := topoClient.ReloadNodes(context.Background(), reloadMsg)
 	if err != nil {
-		return fmt.Errorf("Failed to reload hosts %+v. | Err: %v", reloadMsg.Nodes, err)
+		return fmt.Errorf("Failed to reload hosts %+v. | Err: %v", reloadMsg.NodeMsg.Nodes, err)
 	} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
-		return fmt.Errorf("Failed to reload hosts %v. API Status: %+v | Err: %v", reloadMsg.Nodes, reloadResp.ApiResponse, err)
+		return fmt.Errorf("Failed to reload hosts %v. API Status: %+v | Err: %v", reloadMsg.NodeMsg.Nodes, reloadResp.ApiResponse, err)
 	}
 
 	log.Debugf("Got reload resp: %+v", reloadResp)
@@ -54,7 +57,7 @@ func (act *ActionCtx) ReloadVeniceNodes(vnc *VeniceNodeCollection) error {
 		return vnc.err
 	}
 
-	reloadMsg := &iota.NodeMsg{
+	nodeMsg := &iota.NodeMsg{
 		ApiResponse: &iota.IotaAPIResponse{},
 		Nodes:       []*iota.Node{},
 	}
@@ -62,16 +65,19 @@ func (act *ActionCtx) ReloadVeniceNodes(vnc *VeniceNodeCollection) error {
 	// add each node
 	for _, node := range vnc.nodes {
 		log.Infof("Reloading venice node %v", node.iotaNode.Name)
-		reloadMsg.Nodes = append(reloadMsg.Nodes, node.iotaNode)
+		nodeMsg.Nodes = append(nodeMsg.Nodes, node.iotaNode)
 	}
 
+	reloadMsg := &iota.ReloadMsg{
+		NodeMsg: nodeMsg,
+	}
 	// Trigger reload
 	topoClient := iota.NewTopologyApiClient(act.model.tb.iotaClient.Client)
 	reloadResp, err := topoClient.ReloadNodes(context.Background(), reloadMsg)
 	if err != nil {
-		return fmt.Errorf("Failed to reload venice nodes %v. | Err: %v", reloadMsg.Nodes, err)
+		return fmt.Errorf("Failed to reload venice nodes %v. | Err: %v", reloadMsg.NodeMsg.Nodes, err)
 	} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
-		return fmt.Errorf("Failed to reload node %v. API Status: %+v | Err: %v", reloadMsg.Nodes, reloadResp.ApiResponse, err)
+		return fmt.Errorf("Failed to reload node %v. API Status: %+v | Err: %v", reloadMsg.NodeMsg.Nodes, reloadResp.ApiResponse, err)
 	}
 
 	log.Debugf("Got reload resp: %+v", reloadResp)
@@ -86,25 +92,28 @@ func (act *ActionCtx) ReloadNaples(npc *NaplesCollection) error {
 	}
 
 	var hostNames string
-	reloadMsg := &iota.NodeMsg{
+	nodeMsg := &iota.NodeMsg{
 		ApiResponse: &iota.IotaAPIResponse{},
 		Nodes:       []*iota.Node{},
 	}
 
 	for _, node := range npc.nodes {
-		reloadMsg.Nodes = append(reloadMsg.Nodes, &iota.Node{Name: node.iotaNode.Name})
+		nodeMsg.Nodes = append(nodeMsg.Nodes, &iota.Node{Name: node.iotaNode.Name})
 		hostNames += node.iotaNode.Name + " "
 	}
 
+	reloadMsg := &iota.ReloadMsg{
+		NodeMsg: nodeMsg,
+	}
 	log.Infof("Reloading Naples: %v", hostNames)
 
 	// Trigger App
 	topoClient := iota.NewTopologyApiClient(act.model.tb.iotaClient.Client)
 	reloadResp, err := topoClient.ReloadNodes(context.Background(), reloadMsg)
 	if err != nil {
-		return fmt.Errorf("Failed to reload Naples %+v. | Err: %v", reloadMsg.Nodes, err)
+		return fmt.Errorf("Failed to reload Naples %+v. | Err: %v", reloadMsg.NodeMsg.Nodes, err)
 	} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
-		return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.Nodes, reloadResp.ApiResponse, err)
+		return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.NodeMsg.Nodes, reloadResp.ApiResponse, err)
 	}
 
 	log.Debugf("Got reload resp: %+v", reloadResp)
@@ -404,6 +413,28 @@ func (act *ActionCtx) FlapDataSwitchPorts(ports *SwitchPortCollection, downTime 
 	}
 
 	log.Debugf("Got switch port not shut resp: %+v", switchResp)
+
+	return nil
+}
+
+// RemoveAddNaples remove and add naples
+func (act *ActionCtx) RemoveAddNaples(naples *NaplesCollection) error {
+
+	names := []string{}
+	for _, obj := range naples.nodes {
+		names = append(names, obj.iotaNode.Name)
+
+	}
+
+	if err := act.model.DeleteNaplesNodes(names); err != nil {
+		log.Errorf("Failed to delete naples nodes %v", names)
+		return err
+	}
+
+	if err := act.model.AddNaplesNodes(names); err != nil {
+		log.Errorf("Failed to add naples node %v", names)
+		return err
+	}
 
 	return nil
 }

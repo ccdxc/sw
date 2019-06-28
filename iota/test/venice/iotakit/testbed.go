@@ -317,7 +317,8 @@ func (tb *TestBed) addAvailableInstance(instance *InstanceParams) error {
 		}
 	}
 
-	tb.unallocatedInstances = append(tb.unallocatedInstances, instance)
+	//Add element to beginning to make sure we can reuse
+	tb.unallocatedInstances = append([]*InstanceParams{instance}, tb.unallocatedInstances...)
 	return nil
 }
 
@@ -412,59 +413,42 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 
 func (tb *TestBed) setupVeniceIPs(node *TestNode) error {
 
-	// setup venice ips
-	for _, node := range tb.Nodes {
-		switch node.Personality {
-		case iota.PersonalityType_PERSONALITY_NAPLES:
-			var veniceIps []string
+	switch node.Personality {
+	case iota.PersonalityType_PERSONALITY_NAPLES:
+		fallthrough
+	case iota.PersonalityType_PERSONALITY_NAPLES_SIM:
+		fallthrough
+	case iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM:
+		var veniceIps []string
+		for _, vn := range tb.Nodes {
+			if vn.Personality == iota.PersonalityType_PERSONALITY_VENICE {
+				veniceIps = append(veniceIps, vn.NodeMgmtIP) // in HW setups, use venice mgmt ip
+			}
+		}
+		node.NaplesConfig.VeniceIps = veniceIps
+	case iota.PersonalityType_PERSONALITY_VENICE:
+		if tb.hasNaplesSim {
 			for _, vn := range tb.Nodes {
 				if vn.Personality == iota.PersonalityType_PERSONALITY_VENICE {
-					veniceIps = append(veniceIps, vn.NodeMgmtIP) // in HW setups, use venice mgmt ip
-				}
-			}
-
-			node.NaplesConfig.VeniceIps = veniceIps
-		case iota.PersonalityType_PERSONALITY_NAPLES_SIM:
-			var veniceIps []string
-			for _, vn := range tb.Nodes {
-				if vn.Personality == iota.PersonalityType_PERSONALITY_VENICE {
-					veniceIps = append(veniceIps, vn.VeniceConfig.ControlIp)
-				}
-			}
-
-			node.NaplesConfig.VeniceIps = veniceIps
-		case iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM:
-			var veniceIps []string
-			for _, vn := range tb.Nodes {
-				if vn.Personality == iota.PersonalityType_PERSONALITY_VENICE {
-					veniceIps = append(veniceIps, vn.NodeMgmtIP) // in HW setups, use venice mgmt ip
-				}
-			}
-
-			node.NaplesMultSimConfig.VeniceIps = veniceIps
-		case iota.PersonalityType_PERSONALITY_VENICE:
-			if tb.hasNaplesSim {
-				for _, vn := range tb.Nodes {
-					if vn.Personality == iota.PersonalityType_PERSONALITY_VENICE {
-						peer := iota.VenicePeer{
-							HostName:  vn.NodeName,
-							IpAddress: vn.VeniceConfig.ControlIp, // in Sim setups venice-naples use control network
-						}
-						node.VeniceConfig.VenicePeers = append(node.VeniceConfig.VenicePeers, &peer)
+					peer := iota.VenicePeer{
+						HostName:  vn.NodeName,
+						IpAddress: vn.VeniceConfig.ControlIp, // in Sim setups venice-naples use control network
 					}
+					node.VeniceConfig.VenicePeers = append(node.VeniceConfig.VenicePeers, &peer)
 				}
-			} else {
-				for _, vn := range tb.Nodes {
-					if vn.Personality == iota.PersonalityType_PERSONALITY_VENICE {
-						peer := iota.VenicePeer{
-							HostName:  vn.NodeName,
-							IpAddress: vn.NodeMgmtIP, // HACK: in HW setups, Venice-Naples use mgmt network
-						}
-						node.VeniceConfig.VenicePeers = append(node.VeniceConfig.VenicePeers, &peer)
+			}
+		} else {
+			for _, vn := range tb.Nodes {
+				if vn.Personality == iota.PersonalityType_PERSONALITY_VENICE {
+					peer := iota.VenicePeer{
+						HostName:  vn.NodeName,
+						IpAddress: vn.NodeMgmtIP, // HACK: in HW setups, Venice-Naples use mgmt network
 					}
+					node.VeniceConfig.VenicePeers = append(node.VeniceConfig.VenicePeers, &peer)
 				}
 			}
 		}
+
 	}
 	return nil
 }
@@ -509,63 +493,79 @@ func (tb *TestBed) setupNode(node *TestNode) error {
 		return fmt.Errorf("Error while initing nodes in testbed")
 	}
 
+	if err := tb.setupVeniceIPs(node); err != nil {
+		log.Errorf("Error in setting up venice nodes: ApiResp: %+v. ", resp.ApiResponse)
+		return err
+	}
+
 	return nil
 }
 
-//DeleteNode add node dynamically
-func (tb *TestBed) DeleteNode(node *TestNode) error {
+//DeleteNodes add node dynamically
+func (tb *TestBed) DeleteNodes(nodes []*TestNode) error {
 
 	client := iota.NewTopologyApiClient(tb.iotaClient.Client)
 	cnt := 0
 	for i := 0; i < len(tb.Nodes); i++ {
 		n := tb.Nodes[i]
-		if node.NodeName != n.NodeName {
+		toDelete := false
+		for _, node := range nodes {
+			if node.NodeName == n.NodeName {
+				toDelete = true
+				break
+			}
+
+		}
+		if !toDelete {
 			tb.Nodes[cnt] = n
 			cnt++
 		}
 	}
 
 	if cnt == len(tb.Nodes) {
-		log.Errorf("Node not presnt to delete:  Err %v", node.NodeName)
-		return fmt.Errorf("Node not presnt to delete:  Err %v", node.NodeName)
+		log.Errorf("Nodes not presnt to delete:  Err %v", nodes)
+		return errors.New("Node not presnt to delete")
 	}
 
 	tb.Nodes = tb.Nodes[:cnt]
 
 	// move naples to managed mode
-	err := tb.cleanUpNaplesConfig([]*TestNode{node})
+	err := tb.cleanUpNaplesConfig(nodes)
 	if err != nil {
 		log.Errorf("clean up naples failed. Err: %v", err)
 		return err
 	}
 
-	tb.addAvailableInstance(node.instParams)
-
-	tbn := iota.TestBedNode{
-		Type:                node.Type,
-		IpAddress:           node.NodeMgmtIP,
-		NicConsoleIpAddress: node.instParams.NicConsoleIP,
-		NicConsolePort:      node.instParams.NicConsolePort,
-		NicIpAddress:        node.instParams.NicMgmtIP,
-		CimcIpAddress:       node.instParams.NodeCimcIP,
-		NicUuid:             node.instParams.Resource.NICUuid,
-		NodeName:            node.NodeName,
-	}
-	// set esx user name when required
-	if node.topoNode.HostOS == "esx" {
-		tbn.EsxUsername = tb.Params.Provision.Vars["EsxUsername"]
-		tbn.EsxPassword = tb.Params.Provision.Vars["EsxPassword"]
-		tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_ESX
-	} else if node.topoNode.HostOS == "freebsd" {
-		tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_FREEBSD
-	} else {
-		tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_LINUX
-	}
 	cleanNodeMsg := &iota.TestNodesMsg{
 		Username:    tb.Params.Provision.Username,
 		Password:    tb.Params.Provision.Password,
 		ApiResponse: &iota.IotaAPIResponse{},
-		Nodes:       []*iota.TestBedNode{&tbn},
+	}
+	for _, node := range nodes {
+		tb.addAvailableInstance(node.instParams)
+		tbn := iota.TestBedNode{
+			Type:                node.Type,
+			IpAddress:           node.NodeMgmtIP,
+			NicConsoleIpAddress: node.instParams.NicConsoleIP,
+			NicConsolePort:      node.instParams.NicConsolePort,
+			NicIpAddress:        node.instParams.NicMgmtIP,
+			CimcIpAddress:       node.instParams.NodeCimcIP,
+			NicUuid:             node.instParams.Resource.NICUuid,
+			NodeName:            node.NodeName,
+		}
+		// set esx user name when required
+		if node.topoNode.HostOS == "esx" {
+			tbn.EsxUsername = tb.Params.Provision.Vars["EsxUsername"]
+			tbn.EsxPassword = tb.Params.Provision.Vars["EsxPassword"]
+			tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_ESX
+		} else if node.topoNode.HostOS == "freebsd" {
+			tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_FREEBSD
+		} else {
+			tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_LINUX
+		}
+
+		cleanNodeMsg.Nodes = append(cleanNodeMsg.Nodes, &tbn)
+
 	}
 
 	resp, err := client.CleanNodes(context.Background(), cleanNodeMsg)
@@ -580,50 +580,19 @@ func (tb *TestBed) DeleteNode(node *TestNode) error {
 	return nil
 }
 
-//AddNode add node dynamically
-func (tb *TestBed) AddNode(personality iota.PersonalityType, name string) (*TestNode, error) {
+//AddNodes add node dynamically
+func (tb *TestBed) AddNodes(personality iota.PersonalityType, names []string) ([]*TestNode, error) {
 
 	for i := 0; i < len(tb.Nodes); i++ {
-		node := tb.Nodes[i]
-		if node.NodeName == name {
-			msg := fmt.Sprintf("Node name %v already present", name)
-			return nil, errors.New(msg)
+		n := tb.Nodes[i]
+		for _, name := range names {
+			if n.NodeName == name {
+				msg := fmt.Sprintf("Node name %v already present", name)
+				return nil, errors.New(msg)
+			}
 		}
 	}
 
-	client := iota.NewTopologyApiClient(tb.iotaClient.Client)
-
-	nodeType := iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM
-	if personality == iota.PersonalityType_PERSONALITY_NAPLES {
-		nodeType = iota.TestBedNodeType_TESTBED_NODE_TYPE_HW
-	}
-	pinst := tb.getAvailableInstance(nodeType)
-	// setup node state
-	node := &TestNode{
-		NodeName:    name,
-		Type:        nodeType,
-		Personality: personality,
-		NodeMgmtIP:  pinst.NodeMgmtIP,
-		instParams:  pinst,
-		topoNode: &TopoNode{NodeName: name,
-			Personality: personality,
-			HostOS:      tb.Params.Provision.Vars["BmOs"],
-			Type:        nodeType},
-	}
-
-	if err := tb.preapareNodeParams(nodeType, personality, node); err != nil {
-		return nil, err
-	}
-
-	if err := tb.setupNode(node); err != nil {
-		return nil, err
-	}
-
-	tb.Nodes = append(tb.Nodes, node)
-
-	if err := tb.setupVeniceIPs(node); err != nil {
-		return nil, err
-	}
 	// Build Topology Object after parsing warmd.json
 	nodes := &iota.NodeMsg{
 		NodeOp:      iota.Op_ADD,
@@ -631,12 +600,46 @@ func (tb *TestBed) AddNode(personality iota.PersonalityType, name string) (*Test
 		Nodes:       []*iota.Node{},
 		MakeCluster: true,
 	}
+	client := iota.NewTopologyApiClient(tb.iotaClient.Client)
 
-	iotaNode := tb.getIotaNode(node)
+	newNodes := []*TestNode{}
+	for _, name := range names {
 
-	nodes.Nodes = append(nodes.Nodes, iotaNode)
+		nodeType := iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM
+		if personality == iota.PersonalityType_PERSONALITY_NAPLES {
+			nodeType = iota.TestBedNodeType_TESTBED_NODE_TYPE_HW
+		}
+		pinst := tb.getAvailableInstance(nodeType)
+		// setup node state
+		node := &TestNode{
+			NodeName:    name,
+			Type:        nodeType,
+			Personality: personality,
+			NodeMgmtIP:  pinst.NodeMgmtIP,
+			instParams:  pinst,
+			topoNode: &TopoNode{NodeName: name,
+				Personality: personality,
+				HostOS:      tb.Params.Provision.Vars["BmOs"],
+				Type:        nodeType},
+		}
+
+		if err := tb.preapareNodeParams(nodeType, personality, node); err != nil {
+			return nil, err
+		}
+
+		if err := tb.setupNode(node); err != nil {
+			return nil, err
+		}
+
+		newNodes = append(newNodes, node)
+
+		iotaNode := tb.getIotaNode(node)
+
+		nodes.Nodes = append(nodes.Nodes, iotaNode)
+	}
+
 	log.Infof("Adding nodes to the testbed...")
-	log.Debugf("Adding nodes: %+v", nodes)
+	log.Infof("Adding nodes: %+v", nodes)
 	addNodeResp, err := client.AddNodes(context.Background(), nodes)
 	if err != nil {
 		log.Errorf("Error adding nodes:  Err %v", err)
@@ -647,17 +650,20 @@ func (tb *TestBed) AddNode(personality iota.PersonalityType, name string) (*Test
 	}
 
 	// save node uuid
-	node.NodeUUID = addNodeResp.Nodes[0].NodeUuid
-	node.iotaNode = addNodeResp.Nodes[0]
+	for index, node := range newNodes {
+		node.NodeUUID = addNodeResp.Nodes[index].NodeUuid
+		node.iotaNode = addNodeResp.Nodes[index]
+		tb.Nodes = append(tb.Nodes, node)
+	}
 
 	// move naples to managed mode
-	err = tb.setupNaplesMode([]*TestNode{node})
+	err = tb.setupNaplesMode(newNodes)
 	if err != nil {
 		log.Errorf("Setting up naples failed. Err: %v", err)
 		return nil, err
 	}
 
-	return node, nil
+	return newNodes, nil
 }
 
 // initNodeState merges topology and testbed params to create node state
@@ -1213,26 +1219,29 @@ func (tb *TestBed) setupNaplesMode(nodes []*TestNode) error {
 
 	// reload naples
 	var hostNames string
-	reloadMsg := &iota.NodeMsg{
+	nodeMsg := &iota.NodeMsg{
 		ApiResponse: &iota.IotaAPIResponse{},
 		Nodes:       []*iota.Node{},
 	}
 	for _, node := range nodes {
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
-			reloadMsg.Nodes = append(reloadMsg.Nodes, &iota.Node{Name: node.iotaNode.Name})
+			nodeMsg.Nodes = append(nodeMsg.Nodes, &iota.Node{Name: node.iotaNode.Name})
 			hostNames += node.iotaNode.Name + ", "
 
 		}
 	}
 	log.Infof("Reloading Naples: %v", hostNames)
 
+	reloadMsg := &iota.ReloadMsg{
+		NodeMsg: nodeMsg,
+	}
 	// Trigger App
 	topoClient := iota.NewTopologyApiClient(tb.iotaClient.Client)
 	reloadResp, err := topoClient.ReloadNodes(context.Background(), reloadMsg)
 	if err != nil {
-		return fmt.Errorf("Failed to reload Naples %+v. | Err: %v", reloadMsg.Nodes, err)
+		return fmt.Errorf("Failed to reload Naples %+v. | Err: %v", reloadMsg.NodeMsg.Nodes, err)
 	} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
-		return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.Nodes, reloadResp.ApiResponse, err)
+		return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.NodeMsg.Nodes, reloadResp.ApiResponse, err)
 	}
 
 	log.Debugf("Got reload resp: %+v", reloadResp)
@@ -1266,7 +1275,7 @@ func (tb *TestBed) setupNaplesMode(nodes []*TestNode) error {
 
 // cleanUpNaplesConfig cleans up naples config
 func (tb *TestBed) cleanUpNaplesConfig(nodes []*TestNode) error {
-	log.Infof("Setting up Naples in self managed mode")
+	log.Infof("Removing Naples in self managed mode")
 
 	// set date, untar penctl and trigger mode switch
 	cmds := 0
@@ -1300,26 +1309,30 @@ func (tb *TestBed) cleanUpNaplesConfig(nodes []*TestNode) error {
 	}
 
 	var hostNames string
-	reloadMsg := &iota.NodeMsg{
+	nodeMsg := &iota.NodeMsg{
 		ApiResponse: &iota.IotaAPIResponse{},
 		Nodes:       []*iota.Node{},
 	}
 	for _, node := range nodes {
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
-			reloadMsg.Nodes = append(reloadMsg.Nodes, &iota.Node{Name: node.iotaNode.Name})
+			nodeMsg.Nodes = append(nodeMsg.Nodes, &iota.Node{Name: node.iotaNode.Name})
 			hostNames += node.iotaNode.Name + ", "
 
 		}
 	}
-	log.Infof("Reloading Naples: %v", hostNames)
+	log.Infof("Reloading Naples after unset: %v", hostNames)
 
+	reloadMsg := &iota.ReloadMsg{
+		NodeMsg:     nodeMsg,
+		SkipRestore: true,
+	}
 	// Trigger App
 	topoClient := iota.NewTopologyApiClient(tb.iotaClient.Client)
 	reloadResp, err := topoClient.ReloadNodes(context.Background(), reloadMsg)
 	if err != nil {
-		return fmt.Errorf("Failed to reload Naples %+v. | Err: %v", reloadMsg.Nodes, err)
+		return fmt.Errorf("Failed to reload Naples %+v. | Err: %v", reloadMsg.NodeMsg.Nodes, err)
 	} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
-		return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.Nodes, reloadResp.ApiResponse, err)
+		return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.NodeMsg.Nodes, reloadResp.ApiResponse, err)
 	}
 
 	log.Debugf("Got reload resp: %+v", reloadResp)

@@ -37,11 +37,13 @@ type Naples struct {
 }
 
 // Switch represents a data-switch
+
 type Switch struct {
 	dataSwitch *iota.DataSwitch
 }
 
 // SwitchPort represents a port in a data switch
+
 type SwitchPort struct {
 	sw   *Switch
 	port string
@@ -430,7 +432,7 @@ func (vnc *VeniceNodeCollection) SelectByPercentage(percent int) (*VeniceNodeCol
 	ret := &VeniceNodeCollection{sm: vnc.sm}
 	for i, node := range vnc.nodes {
 		ret.nodes = append(ret.nodes, node)
-		if i > len(vnc.nodes)*percent/100 {
+		if (i + 1) >= len(vnc.nodes)*percent/100 {
 			break
 		}
 	}
@@ -535,6 +537,9 @@ func (sm *SysModel) AssociateHosts() error {
 		}
 	}
 
+	for k := range sm.hosts {
+		delete(sm.hosts, k)
+	}
 	//TOOD:Associate fake naples too
 	for _, n := range sm.naples {
 		nodeMac := strings.Replace(n.iotaNode.GetNodeUuid(), ":", "", -1)
@@ -542,7 +547,8 @@ func (sm *SysModel) AssociateHosts() error {
 			objMac := strings.Replace(obj.GetSpec().SmartNICs[0].MACAddress, ".", "", -1)
 			if objMac == nodeMac {
 				log.Infof("Associating host %v(ip:%v) with %v(ip:%v)\n", obj.GetName(),
-					n.iotaNode.GetIpAddress(), n.iotaNode.Name, n.iotaNode.GetNaplesConfig().GetNaplesIpAddress())
+					n.iotaNode.GetIpAddress(), n.iotaNode.Name,
+					n.iotaNode.GetNaplesConfig().GetNaplesIpAddress())
 				bs := bitset.New(uint(4096))
 				bs.Set(0).Set(1).Set(4095)
 				h := Host{
@@ -594,7 +600,7 @@ func (hc *HostCollection) SelectByPercentage(percent int) (*HostCollection, erro
 	ret := &HostCollection{}
 	for i, host := range hc.hosts {
 		ret.hosts = append(ret.hosts, host)
-		if i > len(hc.hosts)*percent/100 {
+		if (i + 1) >= len(hc.hosts)*percent/100 {
 			break
 		}
 	}
@@ -618,13 +624,37 @@ func (pc *SwitchPortCollection) SelectByPercentage(percent int) (*SwitchPortColl
 	ret := &SwitchPortCollection{}
 	for i, port := range pc.ports {
 		ret.ports = append(ret.ports, port)
-		if i > len(pc.ports)*percent/100 {
+		if (i + 1) >= len(pc.ports)*percent/100 {
 			break
 		}
 	}
 
 	if len(ret.ports) == 0 {
 		return nil, fmt.Errorf("Did not find ports matching percentage (%v)", percent)
+	}
+	return ret, nil
+}
+
+// SelectByPercentage returns a collection with the specified napls based on percentage.
+func (naples *NaplesCollection) SelectByPercentage(percent int) (*NaplesCollection, error) {
+	if percent > 100 {
+		return nil, fmt.Errorf("Invalid percentage input %v", percent)
+	}
+
+	if naples.err != nil {
+		return nil, fmt.Errorf("naples collection error (%s)", naples.err)
+	}
+
+	ret := &NaplesCollection{}
+	for i, entry := range naples.nodes {
+		ret.nodes = append(ret.nodes, entry)
+		if (i + 1) >= len(naples.nodes)*percent/100 {
+			break
+		}
+	}
+
+	if len(ret.nodes) == 0 {
+		return nil, fmt.Errorf("Did not find hosts matching percentage (%v)", percent)
 	}
 	return ret, nil
 }

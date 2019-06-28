@@ -25,8 +25,8 @@ var (
 )
 
 func getOutFiles() (string, string) {
-	atomic.AddUint64(&cmdCnt, 1)
-	return execOutputDir + "/stdout_" + strconv.FormatUint(cmdCnt, 10), execOutputDir + "/stderr_" + strconv.FormatUint(cmdCnt, 10)
+	newCnt := atomic.AddUint64(&cmdCnt, 1)
+	return execOutputDir + "/stdout_" + strconv.FormatUint(newCnt, 10), execOutputDir + "/stderr_" + strconv.FormatUint(newCnt, 10)
 }
 
 //ExecCmd run shell command

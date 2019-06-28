@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -16,6 +17,7 @@ import (
 
 type testsuite struct {
 	name        string
+	focus       string
 	path        string
 	stopOnError bool
 	successCnt  int
@@ -28,7 +30,6 @@ func runCmd(cmdArgs []string, env []string) (int, string) {
 	var process *exec.Cmd
 	shell := true
 
-	stdoutStderr := ""
 	exitCode := 0
 
 	if shell {
@@ -43,7 +44,11 @@ func runCmd(cmdArgs []string, env []string) (int, string) {
 		process.Env = append(process.Env, env)
 	}
 
-	output, cmdErr := process.CombinedOutput()
+	mwriter := io.MultiWriter(os.Stdout)
+	process.Stderr = mwriter
+	process.Stdout = mwriter
+	process.Start()
+	cmdErr := process.Wait()
 	if cmdErr != nil {
 		if exitError, ok := cmdErr.(*exec.ExitError); ok {
 			ws := exitError.Sys().(syscall.WaitStatus)
@@ -54,9 +59,9 @@ func runCmd(cmdArgs []string, env []string) (int, string) {
 	} else {
 		exitCode = 0
 	}
-	stdoutStderr = string(output)
+	//stdoutStderr = string(output)
 
-	return exitCode, stdoutStderr
+	return exitCode, ""
 
 }
 
@@ -89,7 +94,13 @@ func (suite testsuite) run(skipInstall bool, rebootOnly bool, iterations int, tr
 			rebootOnly = false
 		}
 
+		env = append(env, "VENICE_DEV=1")
+
 		cmd := []string{"go", "test", testPath, "-timeout", "120m", "-v", "-ginkgo.v", "-topo", topology, "-testbed", testbed}
+		if suite.focus != "" {
+			cmd = append(cmd, "-ginkgo.focus")
+			cmd = append(cmd, "\""+suite.focus+"\"")
+		}
 		if !dryRun {
 			exitCode, stdoutStderr = runCmd(cmd, env)
 		}
@@ -141,21 +152,21 @@ func (suite testsuite) run(skipInstall bool, rebootOnly bool, iterations int, tr
 	return nil
 }
 
-//stressRecipe
 type stressRecipe struct {
 	Meta struct {
 		Name        string `yaml:"name"`
 		Description string `yaml:"description"`
 	} `yaml:"meta"`
 	Config struct {
-		Focus         string `yaml:"focus"`
 		Iterations    int    `yaml:"iterations"`
-		StopOnFailure bool   `yaml:"stop-on-failure"`
 		RunType       string `yaml:"run-type"`
+		StopOnFailure bool   `yaml:"stop-on-failure"`
 	} `yaml:"config"`
-
-	Testsuites []string `yaml:"testsuites"`
-	Triggers   []struct {
+	Testsuites []struct {
+		Suite string `yaml:"suite"`
+		Focus string `yaml:"focus"`
+	} `yaml:"testsuites"`
+	Triggers []struct {
 		Name      string `yaml:"trigger"`
 		Percent   string `yaml:"percent"`
 		SkipSetup bool   `yaml:"skip-setup"`
@@ -182,7 +193,7 @@ func (stRecipe *stressRecipe) execute() error {
 		triggers = append(triggers, nTrigger)
 	}
 	for _, suite := range stRecipe.Testsuites {
-		st := testsuite{name: suite, path: suiteDirectory + "/" + suite}
+		st := testsuite{name: suite.Suite, path: suiteDirectory + "/" + suite.Suite, focus: suite.Focus}
 		st.run(skipInstall, rebootOnly, stRecipe.Config.Iterations, triggers)
 		//After first suite, no need to run install
 		skipInstall = true

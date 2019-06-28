@@ -162,6 +162,7 @@ func (n *TestNode) RestartNode() error {
 
 	} else {
 
+		sshCfg = InitSSHConfig(n.Node.EsxConfig.GetUsername(), n.Node.EsxConfig.GetPassword())
 		if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
 			//First shutdown control node
 			nrunner = runner.NewRunner(n.SSHCfg)
@@ -171,7 +172,6 @@ func (n *TestNode) RestartNode() error {
 			nrunner.Run(addr, command, constants.RunCommandForeground)
 			addr = fmt.Sprintf("%s:%d", n.Node.EsxConfig.GetIpAddress(), constants.SSHPort)
 			command = fmt.Sprintf("reboot && sleep 30")
-			sshCfg = InitSSHConfig(n.Node.EsxConfig.GetUsername(), n.Node.EsxConfig.GetPassword())
 			nrunner = runner.NewRunner(sshCfg)
 		} else {
 			addr = fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
@@ -217,7 +217,7 @@ func (n *TestNode) RestartNode() error {
 }
 
 // ReloadNode saves and reboots the nodes.
-func (n *TestNode) ReloadNode() error {
+func (n *TestNode) ReloadNode(restoreState bool) error {
 	var agentBinary string
 
 	resp, err := n.AgentClient.SaveNode(context.Background(), n.Node)
@@ -257,12 +257,14 @@ func (n *TestNode) ReloadNode() error {
 	n.AgentClient = iota.NewIotaAgentApiClient(c.Client)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
-	resp, err = n.AgentClient.ReloadNode(ctx, n.Node)
-	n.RespNode = resp
-	log.Infof("TOPO SVC | ReloadNode | ReloadNode Agent . Received Response Msg: %v", resp)
-	if err != nil {
-		log.Errorf("Reload node %v failed. Err: %v", n.Node.Name, err)
-		return err
+	if restoreState {
+		resp, err = n.AgentClient.ReloadNode(ctx, n.Node)
+		n.RespNode = resp
+		log.Infof("TOPO SVC | ReloadNode | ReloadNode Agent . Received Response Msg: %v", resp)
+		if err != nil {
+			log.Errorf("Reload node %v failed. Err: %v", n.Node.Name, err)
+			return err
+		}
 	}
 	return nil
 }

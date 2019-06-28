@@ -331,7 +331,7 @@ func (ts *TopologyService) initTestNodes(ctx context.Context, cfg *ssh.ClientCon
 	return nil
 }
 
-func (ts *TopologyService) cleanUpTestNodes(ctx context.Context, cfg *ssh.ClientConfig, nodes []*iota.TestBedNode) error {
+func (ts *TopologyService) cleanUpTestNodes(ctx context.Context, cfg *ssh.ClientConfig, reboot bool, nodes []*iota.TestBedNode) error {
 
 	pool, ctx := errgroup.WithContext(ctx)
 	for _, node := range nodes {
@@ -346,10 +346,10 @@ func (ts *TopologyService) cleanUpTestNodes(ctx context.Context, cfg *ssh.Client
 			},
 			Os: node.GetOs(),
 		}
-
+		n.Node.Os = node.GetOs()
 		pool.Go(func() error {
 			n := n
-			return n.CleanUpNode(cfg)
+			return n.CleanUpNode(cfg, reboot)
 		})
 	}
 	return pool.Wait()
@@ -382,7 +382,7 @@ func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBed
 	//ts.TestBedInfo.Username = req.Username
 	//ts.TestBedInfo.Password = req.Password
 
-	err := ts.cleanUpTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.GetNodes())
+	err := ts.cleanUpTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.RebootNodes, req.GetNodes())
 
 	if err != nil {
 		log.Errorf("TOPO SVC | InitNodes | cleanup Node Call Failed. %v", err)
@@ -398,7 +398,7 @@ func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBed
 // InitNodes initializes list of nodes
 func (ts *TopologyService) InitNodes(ctx context.Context, req *iota.TestNodesMsg) (*iota.TestNodesMsg, error) {
 
-	err := ts.cleanUpTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.GetNodes())
+	err := ts.cleanUpTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.RebootNodes, req.GetNodes())
 
 	if err != nil {
 		log.Errorf("TOPO SVC | InitNodes | cleanup Node Call Failed. %v", err)
@@ -409,6 +409,10 @@ func (ts *TopologyService) InitNodes(ctx context.Context, req *iota.TestNodesMsg
 
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 
+	//Avoid one other reboot
+	if req.RebootNodes {
+		req.RebootNodes = false
+	}
 	err = ts.initTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.RebootNodes, req.GetNodes())
 	if err != nil {
 		log.Errorf("TOPO SVC | InitNodes | initnode Call Failed. %v", err)
@@ -424,7 +428,7 @@ func (ts *TopologyService) InitNodes(ctx context.Context, req *iota.TestNodesMsg
 // CleanNodes cleans up list of nodes and removes association
 func (ts *TopologyService) CleanNodes(ctx context.Context, req *iota.TestNodesMsg) (*iota.TestNodesMsg, error) {
 
-	err := ts.cleanUpTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.GetNodes())
+	err := ts.cleanUpTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.RebootNodes, req.GetNodes())
 
 	if err != nil {
 		log.Errorf("TOPO SVC | InitNodes | cleanup Node Call Failed. %v", err)
@@ -574,13 +578,13 @@ func (ts *TopologyService) SaveNode(ctx context.Context, req *iota.NodeMsg) (*io
 }
 
 // ReloadNodes saves and loads node personality
-func (ts *TopologyService) ReloadNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
+func (ts *TopologyService) ReloadNodes(ctx context.Context, req *iota.ReloadMsg) (*iota.ReloadMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | ReloadNodes. Received Request Msg: %v", req)
 	defer log.Infof("TOPO SVC | DEBUG | ReloadNodes Returned: %v", req)
 
 	rNodes := []*testbed.TestNode{}
 
-	for _, node := range req.Nodes {
+	for _, node := range req.NodeMsg.Nodes {
 		n, ok := ts.ProvisionedNodes[node.Name]
 		if !ok {
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
@@ -597,22 +601,22 @@ func (ts *TopologyService) ReloadNodes(ctx context.Context, req *iota.NodeMsg) (
 		for _, node := range rNodes {
 			node := node
 			pool.Go(func() error {
-				return node.ReloadNode()
+				return node.ReloadNode(!req.SkipRestore)
 			})
 		}
 		return pool.Wait()
 	}
 
+	req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}
 	err := reloadNodes(context.Background())
 	if err != nil {
 		log.Errorf("TOPO SVC | ReloadNodes | ReloadNodes Call Failed. %v", err)
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
-	} else {
-		req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+		req.ApiResponse.ErrorMsg = err.Error()
 	}
 
 	for idx, node := range rNodes {
-		req.Nodes[idx] = node.RespNode
+		req.NodeMsg.Nodes[idx] = node.RespNode
 		if node.RespNode.GetNodeStatus().ApiStatus != iota.APIResponseType_API_STATUS_OK {
 			req.ApiResponse.ErrorMsg = "Node :" + node.RespNode.GetName() + " : " + node.RespNode.GetNodeStatus().ErrorMsg + "\n"
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR

@@ -60,8 +60,8 @@ func (ts *StubTopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) 
 }
 
 // ReloadNodes saves and loads node personality
-func (*StubTopologyService) ReloadNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
-	resp := &iota.NodeMsg{}
+func (*StubTopologyService) ReloadNodes(ctx context.Context, req *iota.ReloadMsg) (*iota.ReloadMsg, error) {
+	resp := &iota.ReloadMsg{}
 	return resp, nil
 }
 

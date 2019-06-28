@@ -2,20 +2,21 @@ package cmd
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 var (
-	nodeName string
+	nodeNames string
 )
 
 func init() {
 	rootCmd.AddCommand(naplesCmd)
 	naplesCmd.AddCommand(naplesAddCmd)
 	naplesCmd.AddCommand(naplesDelCmd)
-	naplesAddCmd.Flags().StringVarP(&nodeName, "name", "", "", "Node name")
-	naplesDelCmd.Flags().StringVarP(&nodeName, "name", "", "", "Node name")
+	naplesAddCmd.Flags().StringVarP(&nodeNames, "names", "", "", "Node names")
+	naplesDelCmd.Flags().StringVarP(&nodeNames, "names", "", "", "Node names")
 }
 
 var naplesCmd = &cobra.Command{
@@ -37,11 +38,11 @@ var naplesDelCmd = &cobra.Command{
 
 func naplesAddAction(cmd *cobra.Command, args []string) {
 
-	if nodeName == "" {
+	if nodeNames == "" {
 		errorExit("No node name specified", errors.New("No node name specified"))
 	}
 
-	err := setupModel.AddNaplesNode(nodeName)
+	err := setupModel.AddNaplesNodes(strings.Split(nodeNames, ","))
 
 	if err != nil {
 		errorExit("Error adding  naples node", err)
@@ -50,13 +51,24 @@ func naplesAddAction(cmd *cobra.Command, args []string) {
 
 func naplesDeleteAction(cmd *cobra.Command, args []string) {
 
-	if nodeName == "" {
+	if nodeNames == "" {
 		errorExit("No node name specified", errors.New("No node name specified"))
 	}
 
-	err := setupModel.DeleteNaplesNode(nodeName)
+	err := setupModel.DeleteNaplesNodes(strings.Split(nodeNames, ","))
 
 	if err != nil {
 		errorExit("Error delete naples node", err)
 	}
+}
+
+func doNaplesRemoveAdd(percent int) error {
+
+	naples, err := setupModel.Naples().SelectByPercentage(percent)
+
+	if err != nil {
+		return err
+	}
+
+	return setupModel.Action().RemoveAddNaples(naples)
 }

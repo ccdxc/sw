@@ -5,9 +5,10 @@ import (
 )
 
 const (
-	hostReboot    = "HostReboot"
-	veniceReboot  = "VeniceReboot"
-	flapDataPorts = "FlapDataPorts"
+	hostReboot      = "HostReboot"
+	veniceReboot    = "VeniceReboot"
+	flapDataPorts   = "FlapDataPorts"
+	naplesRemoveAdd = "NaplesRemoveAdd"
 )
 
 type triggerBase struct {
@@ -31,6 +32,10 @@ type veniceRebootTrigger struct {
 }
 
 type flapDataPortsTrigger struct {
+	triggerBase
+}
+
+type naplesRemoveAddTrigger struct {
 	triggerBase
 }
 
@@ -78,6 +83,14 @@ func (h *flapDataPortsTrigger) Run() error {
 	return flapPorts(percent)
 }
 
+func (h *naplesRemoveAddTrigger) Run() error {
+	percent, err := h.triggerBase.getPercent()
+	if err != nil {
+		return err
+	}
+	return doNaplesRemoveAdd(percent)
+}
+
 func newHostRebootTrigger(name string, percent string, skipSetup bool) trigger {
 	return &hostRebootTrigger{triggerBase: triggerBase{TriggerName: name, Percent: percent, SkipSetupVar: skipSetup}}
 }
@@ -90,10 +103,15 @@ func newflapDataPortsTrigger(name string, percent string, skipSetup bool) trigge
 	return &flapDataPortsTrigger{triggerBase: triggerBase{TriggerName: name, Percent: percent, SkipSetupVar: skipSetup}}
 }
 
+func newNaplesRemoveAddTrigger(name string, percent string, skipSetup bool) trigger {
+	return &naplesRemoveAddTrigger{triggerBase: triggerBase{TriggerName: name, Percent: percent, SkipSetupVar: skipSetup}}
+}
+
 var triggers = map[string]func(string, string, bool) trigger{
-	hostReboot:    newHostRebootTrigger,
-	veniceReboot:  newVeniceRebootTrigger,
-	flapDataPorts: newflapDataPortsTrigger,
+	hostReboot:      newHostRebootTrigger,
+	veniceReboot:    newVeniceRebootTrigger,
+	flapDataPorts:   newflapDataPortsTrigger,
+	naplesRemoveAdd: newNaplesRemoveAddTrigger,
 }
 
 func newTrigger(name string, percent string, skipSetup bool) trigger {
