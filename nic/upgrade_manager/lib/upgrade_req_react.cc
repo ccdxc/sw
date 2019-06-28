@@ -156,6 +156,7 @@ bool UpgReqReact::CanMoveStateMachine(void) {
                 UPG_LOG_DEBUG("Got pass from application {}/{}", (*appResp)->key(), ((*appResp))->meta().ShortDebugString());
             } else {
                 UPG_LOG_DEBUG("Got fail from application {} {}", (*appResp)->key(), (*appResp)->upgapprespval());
+                ctx.upgFailed = true;
             }
         }
     }
@@ -254,7 +255,6 @@ delphi::error UpgReqReact::MoveStateMachine(UpgReqStateType type) {
             if (GetAppRespFail()) {
                 respType = UpgRespFail;
                 upgMetric_->FailedUpg()->Incr();
-                ctx.upgFailed = true;
             }
             if (upgPassed_ && !upgAborted_) {
                 respType = UpgRespPass;
