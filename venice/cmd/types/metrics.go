@@ -8,13 +8,13 @@ import (
 
 // ClusterMetrics is the metrics type for the Cluster object.
 type ClusterMetrics struct {
-	AdmittedNICs       api.Counter
-	PendingNICs        api.Counter
-	RejectedNICs       api.Counter
-	DecommissionedNICs api.Counter
-	HealthyNICs        api.Counter
-	UnhealthyNICs      api.Counter
-	DisconnectedNICs   api.Counter
+	AdmittedNICs       api.Gauge
+	PendingNICs        api.Gauge
+	RejectedNICs       api.Gauge
+	DecommissionedNICs api.Gauge
+	HealthyNICs        api.Gauge
+	UnhealthyNICs      api.Gauge
+	DisconnectedNICs   api.Gauge
 }
 
 // GetSmartNICMetricsZeroMap returns a map containing all SmartNIC-related ClusterMetrics fields

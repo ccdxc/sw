@@ -43,6 +43,7 @@ func TestMetricsService(t *testing.T) {
 	time.Sleep(5 * testSendInterval)
 	Assert(t, collector.ValidateSendInterval(testSendInterval), "Error validating send interval")
 
+	// clusterCounters are gauges, so we collect them as int64 but report them as float64
 	clusterCounters := map[string]int64{
 		"AdmittedNICs":       0,
 		"PendingNICs":        1,
@@ -56,7 +57,7 @@ func TestMetricsService(t *testing.T) {
 	time.Sleep(2 * testSendInterval)
 
 	clusterTags := map[string]string{"Tenant": "default", "Namespace": "default", "Kind": "Cluster", "Name": "testCluster"}
-	ok := collector.ValidateCount("test", clusterTags, 1, len(clusterCounters), 0, 0, 0)
+	ok := collector.ValidateCount("test", clusterTags, 1, 0, len(clusterCounters), 0, 0)
 	Assert(t, ok, "Cluster metrics validation failed")
 
 	// we need to sleep because collector's Validate* functions do a ClearMetrics() at the end
@@ -84,7 +85,7 @@ func TestMetricsService(t *testing.T) {
 
 	ms.UpdateCounters(clusterCounters)
 	time.Sleep(2 * testSendInterval)
-	ok = collector.ValidateCount("test", clusterTags, 1, len(clusterCounters), 0, 0, 0)
+	ok = collector.ValidateCount("test", clusterTags, 1, 0, len(clusterCounters), 0, 0)
 	Assert(t, ok, "Cluster metrics validation failed")
 
 	time.Sleep(2 * testSendInterval)

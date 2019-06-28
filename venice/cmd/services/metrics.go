@@ -109,7 +109,7 @@ func (ms *metricsService) UpdateCounters(m map[string]int64) {
 	}
 	ms.table.AtomicBegin(time.Now())
 	for k, v := range m {
-		ms.table.Counter(k).Set(v)
+		ms.table.Gauge(k).Set(float64(v))
 	}
 	ms.table.AtomicEnd()
 }
