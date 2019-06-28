@@ -11,9 +11,9 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/network"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
-	"github.com/pensando/sw/venice/apigw/pkg"
+	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apigw/pkg/mocks"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/ldap"
@@ -897,6 +897,27 @@ func TestAddOwner(t *testing.T) {
 			err: false,
 		},
 		{
+			name: "user preference watch",
+			in:   &api.ListWatchOptions{FieldSelector: "meta.name=test"},
+			operations: []authz.Operation{
+				authz.NewOperation(authz.NewResource(globals.DefaultTenant,
+					string(apiclient.GroupAuth), string(auth.KindUserPreference),
+					"", "test"),
+					auth.Permission_Read.String()),
+			},
+			expectedOperations: []authz.Operation{
+				authz.NewOperation(authz.NewResourceWithOwner(globals.DefaultTenant,
+					string(apiclient.GroupAuth), string(auth.KindUserPreference),
+					"", "test",
+					&auth.User{
+						ObjectMeta: api.ObjectMeta{Name: "test", Tenant: globals.DefaultTenant},
+					}),
+					auth.Permission_Read.String()),
+			},
+			out: &api.ListWatchOptions{FieldSelector: "meta.name=test"},
+			err: false,
+		},
+		{
 			name: "password change",
 			in:   &auth.PasswordChangeRequest{},
 			operations: []authz.Operation{
@@ -1054,7 +1075,14 @@ func TestAddOwnerHookRegistration(t *testing.T) {
 	err := r.registerAddOwnerHook(svc)
 	AssertOk(t, err, "addOwner hook registration failed")
 
-	opers := []apiintf.APIOperType{apiintf.UpdateOper, apiintf.GetOper}
+	opers := []apiintf.APIOperType{apiintf.WatchOper}
+	for _, oper := range opers {
+		// user preference watch operation
+		prof, err := svc.GetCrudServiceProfile("UserPreference", oper)
+		AssertOk(t, err, fmt.Sprintf("error getting service profile for oper :%v", oper))
+		Assert(t, len(prof.PreAuthZHooks()) == 1, fmt.Sprintf("unexpected number of pre authz hooks [%d] for UserPreference operation [%v]", len(prof.PreAuthZHooks()), oper))
+	}
+	opers = []apiintf.APIOperType{apiintf.UpdateOper, apiintf.GetOper}
 	for _, oper := range opers {
 		// user operation
 		prof, err := svc.GetCrudServiceProfile("User", oper)

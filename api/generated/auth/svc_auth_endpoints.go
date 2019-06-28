@@ -2614,8 +2614,7 @@ func makeURIAuthV1AutoWatchUserWatchOper(in *api.ListWatchOptions) string {
 
 //
 func makeURIAuthV1AutoWatchUserPreferenceWatchOper(in *api.ListWatchOptions) string {
-	return ""
-
+	return fmt.Sprint("/configs/auth/v1", "/watch/tenant/", in.Tenant, "/user-preferences")
 }
 
 //

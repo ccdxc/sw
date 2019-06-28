@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw"
-	"github.com/pensando/sw/venice/apigw/pkg"
+	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/ldap"
 	"github.com/pensando/sw/venice/utils/authn/manager"
@@ -61,8 +62,26 @@ func (a *authHooks) authBootstrap(ctx context.Context, i interface{}) (context.C
 // addOwner is a pre authz hook registered with PasswordChange, PasswordReset and IsAuthorized action and user get/update to add owner to user resource in authz.Operation
 func (a *authHooks) addOwner(ctx context.Context, in interface{}) (context.Context, interface{}, error) {
 	a.logger.DebugLog("msg", "APIGw addOwner pre-authz hook called")
+
+	type getOwnerNameFn func(resource authz.Resource, in interface{}) string
+	var fn getOwnerNameFn
 	switch in.(type) {
 	case *auth.User, *auth.PasswordResetRequest, *auth.PasswordChangeRequest, *auth.SubjectAccessReviewRequest, *auth.UserPreference:
+		fn = func(resource authz.Resource, in interface{}) string {
+			// for user resource, owner is the resource itself
+			return resource.GetName()
+		}
+	case *api.ListWatchOptions:
+		fn = func(resource authz.Resource, in interface{}) string {
+			obj, _ := in.(*api.ListWatchOptions)
+			fields := strings.Split(obj.FieldSelector, ",")
+			for i := range fields {
+				if strings.HasPrefix(fields[i], "meta.name=") {
+					return strings.Split(fields[i], "=")[1]
+				}
+			}
+			return ""
+		}
 	default:
 		return ctx, in, errors.New("invalid input type")
 	}
@@ -78,10 +97,9 @@ func (a *authHooks) addOwner(ctx context.Context, in interface{}) (context.Conte
 			return ctx, in, errors.New("internal error")
 		}
 		resource := operation.GetResource()
-		// for user resource, owner is the resource itself
 		owner := &auth.User{
 			ObjectMeta: api.ObjectMeta{
-				Name:   resource.GetName(),
+				Name:   fn(resource, in),
 				Tenant: resource.GetTenant(),
 			},
 		}
@@ -510,6 +528,19 @@ func (a *authHooks) registerAddOwnerHook(svc apigw.APIGatewayService) error {
 			prof.AddPreAuthZHook(a.addOwner)
 		}
 	}
+
+	opers = []apiintf.APIOperType{apiintf.WatchOper}
+	crudObjs = []string{"UserPreference"}
+	for _, oper := range opers {
+		for _, crudObj := range crudObjs {
+			prof, err := svc.GetCrudServiceProfile(crudObj, oper)
+			if err != nil {
+				return err
+			}
+			prof.AddPreAuthZHook(a.addOwner)
+		}
+	}
+
 	return nil
 }
 

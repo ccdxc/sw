@@ -1551,7 +1551,7 @@ func (a *restObjAuthV1UserPreference) Allowed(oper apiintf.APIOperType) bool {
 	case apiintf.ListOper:
 		return false
 	case apiintf.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}

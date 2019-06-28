@@ -1188,6 +1188,8 @@ func (e *sAuthV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoWatchUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgUserWatchHelper", "auth", apiintf.WatchOper)
 
+	e.svcProf["AutoWatchUserPreference"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgUserPreferenceWatchHelper", "auth", apiintf.WatchOper)
+
 	e.svcProf["IsAuthorized"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiintf.CreateOper)
 
 	e.svcProf["LdapBindCheck"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiintf.CreateOper)
