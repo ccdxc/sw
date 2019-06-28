@@ -277,6 +277,22 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		}
 	} else if obj.NaplesMode == delphiProto.NaplesStatus_HOST_MANAGED {
 		log.Info("Switching to host mode. Purging all configs")
+		ag.NetworkAgent.Lock()
+
+		// Stop previous tsdb instance
+		if ag.StopTSDB != nil {
+			ag.StopTSDB()
+		}
+
+		// Stop the existing npm client
+		if ag.NpmClient != nil {
+			ag.NpmClient.Stop()
+		}
+
+		ag.NetworkAgent.Ctrlerif = nil
+		ag.NetworkAgent.Mode = "host-managed"
+
+		ag.NetworkAgent.Unlock()
 		err := ag.NetworkAgent.PurgeConfigs()
 		if err != nil {
 			log.Errorf("Failed to purge netagent configs. Err: %v", err)
