@@ -51,12 +51,9 @@ tunneled_nonip_packet:
 .align
 set_tep2_dst:
     seq             c1, k.ipv4_1_valid, TRUE
-    phvwr.c1.e      p.key_metadata_mapping_ip, k.ipv4_2_dstAddr
-    phvwr.c1        p.tunnel_metadata_tep2_dst, k.ipv4_2_dstAddr
-    seq             c1, k.ipv6_1_valid, TRUE
-    nop.!c1.e
-    phvwr.c1        p.key_metadata_mapping_ip, k.ipv6_2_dstAddr
-    phvwr.e         p.tunnel_metadata_tep2_dst, k.ipv6_2_dstAddr
+    phvwr.c1.e      p.tunnel_metadata_tep2_dst, k.ipv4_2_dstAddr
+    seq.e           c1, k.ipv6_1_valid, TRUE
+    phvwr.c1        p.tunnel_metadata_tep2_dst, k.ipv6_2_dstAddr
 
 /*****************************************************************************/
 /* error function                                                            */

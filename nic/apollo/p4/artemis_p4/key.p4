@@ -98,11 +98,9 @@ action tunneled_nonip_packet() {
 action set_tep2_dst() {
     if (ipv4_2.valid == TRUE) {
         modify_field(tunnel_metadata.tep2_dst, ipv4_2.dstAddr);
-        modify_field(key_metadata.mapping_ip, ipv4_2.dstAddr);
     } else {
         if (ipv6_2.valid == TRUE) {
             modify_field(tunnel_metadata.tep2_dst, ipv6_2.dstAddr);
-            modify_field(key_metadata.mapping_ip, ipv6_2.dstAddr);
         }
     }
 }

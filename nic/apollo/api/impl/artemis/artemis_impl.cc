@@ -327,51 +327,7 @@ artemis_impl::key_native_init_(void) {
               &artemis_impl_db()->key_native_tbl_idx_[idx++]);
     SDK_ASSERT(ret == SDK_RET_OK);
 
-    // entry for tunneled (inner) IPv4 packets (outer can be IPv4 or IPv6)
-    key.ipv4_1_valid = 0;
-    key.ipv6_1_valid = 0;
-    key.ethernet_2_valid = 1;
-    key.ipv4_2_valid = 1;
-    key.ipv6_2_valid = 0;
-    key.ethernet_3_valid = 0;
-    key.ipv4_3_valid = 0;
-    key.ipv6_3_valid = 0;
-    data.action_id = KEY_NATIVE_SET_TEP1_DST_ID;
-    mask.ipv4_1_valid_mask = 0;
-    mask.ipv6_1_valid_mask = 0;
-    mask.ethernet_2_valid_mask = 0xFF;
-    mask.ipv4_2_valid_mask = 0xFF;
-    mask.ipv6_2_valid_mask = 0xFF;
-    mask.ethernet_3_valid_mask = 0xFF;
-    mask.ipv4_3_valid_mask = 0xFF;
-    mask.ipv6_3_valid_mask = 0xFF;
-    ret = artemis_impl_db()->key_native_tbl()->insert(&key, &mask, &data,
-              &artemis_impl_db()->key_native_tbl_idx_[idx++]);
-    SDK_ASSERT(ret == SDK_RET_OK);
-
-    // entry for tunneled (inner) IPv6 packets (outer can be IPv4 or IPv6)
-    key.ipv4_1_valid = 0;
-    key.ipv6_1_valid = 0;
-    key.ethernet_2_valid = 1;
-    key.ipv4_2_valid = 0;
-    key.ipv6_2_valid = 1;
-    key.ethernet_3_valid = 0;
-    key.ipv4_3_valid = 0;
-    key.ipv6_3_valid = 0;
-    data.action_id = KEY_NATIVE_SET_TEP1_DST_ID;
-    mask.ipv4_1_valid_mask = 0;
-    mask.ipv6_1_valid_mask = 0;
-    mask.ethernet_2_valid_mask = 0xFF;
-    mask.ipv4_2_valid_mask = 0xFF;
-    mask.ipv6_2_valid_mask = 0xFF;
-    mask.ethernet_3_valid_mask = 0xFF;
-    mask.ipv4_3_valid_mask = 0xFF;
-    mask.ipv6_3_valid_mask = 0xFF;
-    ret = artemis_impl_db()->key_native_tbl()->insert(&key, &mask, &data,
-              &artemis_impl_db()->key_native_tbl_idx_[idx++]);
-    SDK_ASSERT(ret == SDK_RET_OK);
-
-    // entry for tunneled (inner) non-IP packets (outer can be IPv4 or IPv6)
+    // entry for tunneled/double tunneled packets
     key.ipv4_1_valid = 0;
     key.ipv6_1_valid = 0;
     key.ethernet_2_valid = 1;
@@ -384,11 +340,11 @@ artemis_impl::key_native_init_(void) {
     mask.ipv4_1_valid_mask = 0;
     mask.ipv6_1_valid_mask = 0;
     mask.ethernet_2_valid_mask = 0xFF;
-    mask.ipv4_2_valid_mask = 0xFF;
-    mask.ipv6_2_valid_mask = 0xFF;
-    mask.ethernet_3_valid_mask = 0xFF;
-    mask.ipv4_3_valid_mask = 0xFF;
-    mask.ipv6_3_valid_mask = 0xFF;
+    mask.ipv4_2_valid_mask = 0;
+    mask.ipv6_2_valid_mask = 0;
+    mask.ethernet_3_valid_mask = 0;
+    mask.ipv4_3_valid_mask = 0;
+    mask.ipv6_3_valid_mask = 0;
     ret = artemis_impl_db()->key_native_tbl()->insert(&key, &mask, &data,
               &artemis_impl_db()->key_native_tbl_idx_[idx++]);
     SDK_ASSERT(ret == SDK_RET_OK);
@@ -479,55 +435,7 @@ artemis_impl::key_tunneled_init_(void) {
               &artemis_impl_db()->key_tunneled_tbl_idx_[idx++]);
     SDK_ASSERT(ret == SDK_RET_OK);
 
-    // entry for double tunneled (inner-most) IPv4 packets (outer headers can
-    // be IPv4 or IPv6)
-    key.ipv4_1_valid = 0;
-    key.ipv6_1_valid = 0;
-    key.ethernet_2_valid = 0;
-    key.ipv4_2_valid = 0;
-    key.ipv6_2_valid = 0;
-    key.ethernet_3_valid = 1;
-    key.ipv4_3_valid = 1;
-    key.ipv6_3_valid = 0;
-    data.action_id = KEY_TUNNELED_SET_TEP2_DST_ID;
-    mask.ipv4_1_valid_mask = 0;
-    mask.ipv6_1_valid_mask = 0;
-    mask.ethernet_2_valid_mask = 0;
-    mask.ipv4_2_valid_mask = 0;
-    mask.ipv6_2_valid_mask = 0;
-    mask.ethernet_3_valid_mask = 0xFF;
-    mask.ipv4_3_valid_mask = 0xFF;
-    mask.ipv6_3_valid_mask = 0xFF;
-    ret = artemis_impl_db()->key_tunneled_tbl()->insert(
-              &key, &mask, &data,
-              &artemis_impl_db()->key_tunneled_tbl_idx_[idx++]);
-    SDK_ASSERT(ret == SDK_RET_OK);
-
-    // entry for double tunneled (inner-most) IPv6 packets (outer headers can
-    // be IPv4 or IPv6)
-    key.ipv4_1_valid = 0;
-    key.ipv6_1_valid = 0;
-    key.ethernet_2_valid = 0;
-    key.ipv4_2_valid = 0;
-    key.ipv6_2_valid = 0;
-    key.ethernet_3_valid = 1;
-    key.ipv4_3_valid = 0;
-    key.ipv6_3_valid = 1;
-    data.action_id = KEY_TUNNELED_SET_TEP2_DST_ID;
-    mask.ipv4_1_valid_mask = 0;
-    mask.ipv6_1_valid_mask = 0;
-    mask.ethernet_2_valid_mask = 0;
-    mask.ipv4_2_valid_mask = 0;
-    mask.ipv6_2_valid_mask = 0;
-    mask.ethernet_3_valid_mask = 0xFF;
-    mask.ipv4_3_valid_mask = 0xFF;
-    mask.ipv6_3_valid_mask = 0xFF;
-    ret = artemis_impl_db()->key_tunneled_tbl()->insert(
-              &key, &mask, &data,
-              &artemis_impl_db()->key_tunneled_tbl_idx_[idx++]);
-    SDK_ASSERT(ret == SDK_RET_OK);
-
-    // entry for tunneled (inner) non-IP packets (outer can be IPv4 or IPv6)
+    // entry for double tunneled packets (outer headers can be IPv4 or IPv6)
     key.ipv4_1_valid = 0;
     key.ipv6_1_valid = 0;
     key.ethernet_2_valid = 0;
@@ -543,8 +451,8 @@ artemis_impl::key_tunneled_init_(void) {
     mask.ipv4_2_valid_mask = 0;
     mask.ipv6_2_valid_mask = 0;
     mask.ethernet_3_valid_mask = 0xFF;
-    mask.ipv4_3_valid_mask = 0xFF;
-    mask.ipv6_3_valid_mask = 0xFF;
+    mask.ipv4_3_valid_mask = 0;
+    mask.ipv6_3_valid_mask = 0;
     ret = artemis_impl_db()->key_tunneled_tbl()->insert(
               &key, &mask, &data,
               &artemis_impl_db()->key_tunneled_tbl_idx_[idx++]);
