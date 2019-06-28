@@ -55,7 +55,8 @@ func (s *RPCServer) updateCondition(node *cache.NodeState, alive bool, lastHeart
 	} else {
 		status = cluster.ConditionStatus_UNKNOWN
 	}
-	for _, cond := range node.Status.Conditions {
+	for i := 0; i < len(node.Status.Conditions); i++ {
+		cond := &node.Status.Conditions[i]
 		if cond.Type == cluster.NodeCondition_HEALTHY.String() {
 			// update
 			cond.LastTransitionTime = lastHeartbeat.UTC().Format(time.RFC3339)
