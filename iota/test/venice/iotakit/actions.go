@@ -4,6 +4,7 @@ package iotakit
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -184,30 +185,52 @@ func (act *ActionCtx) VerifyPolicyStatus(spc *SGPolicyCollection) error {
 }
 
 // VerifySystemHealth checks all aspects of system, like cluster, workload, policies etc
-func (act *ActionCtx) VerifySystemHealth() error {
+func (act *ActionCtx) VerifySystemHealth(collectLogOnErr bool) error {
+	const numRetries = 5
 	// verify cluster is in good health
 	err := act.VerifyClusterStatus()
 	if err != nil {
-		act.model.tb.CollectLogs()
-		return err
-	}
-
-	// verify policy status is goot
-	err = act.VerifyPolicyStatus(act.model.SGPolicies())
-	if err != nil {
+		if collectLogOnErr {
+			act.model.tb.CollectLogs()
+		}
 		return err
 	}
 
 	// verify workload status is good
 	err = act.VerifyWorkloadStatus(act.model.Workloads())
 	if err != nil {
+		if collectLogOnErr {
+			act.model.tb.CollectLogs()
+		}
+		return err
+	}
+
+	// verify policy status is good
+	for i := 0; i < numRetries; i++ {
+		err = act.VerifyPolicyStatus(act.model.SGPolicies())
+		if err == nil {
+			break
+		}
+		time.Sleep(time.Second)
+	}
+	if err != nil {
+		if collectLogOnErr {
+			act.model.tb.CollectLogs()
+		}
 		return err
 	}
 
 	// verify ping is successful across all workloads
-	err = act.PingPairs(act.model.WorkloadPairs().WithinNetwork())
+	for i := 0; i < numRetries; i++ {
+		err = act.PingPairs(act.model.WorkloadPairs().WithinNetwork())
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
-		act.model.tb.CollectLogs()
+		if collectLogOnErr {
+			act.model.tb.CollectLogs()
+		}
 		return err
 	}
 

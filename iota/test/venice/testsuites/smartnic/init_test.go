@@ -54,7 +54,7 @@ var _ = BeforeSuite(func() {
 
 	// verify cluster, workload are in good health
 	Eventually(func() error {
-		return model.Action().VerifySystemHealth()
+		return model.Action().VerifySystemHealth(true)
 	}).Should(Succeed())
 
 	// test suite
