@@ -24,12 +24,17 @@ def __get_packet_template_impl(obj, args):
 def GetPacketTemplateFromMapping(testcase, packet, args=None):
     return __get_packet_template_impl(testcase.config.localmapping, args)
 
-def __get_packet_template_from_policy_impl(rule, policy):
-    template = 'ETH'
-    template += "_%s" % (policy.AddrFamily)
+def __get_proto_from_policy_rule(rule):
+    if rule is None:
+        return "TCP"
+    l3match = rule.L3Match
+    if not l3match.valid:
+        return "TCP"
+    return utils.GetIPProtoName(l3match.Proto)
 
-    protocol = utils.GetIPProtoName(rule.L3Match.Proto) if rule else "TCP"
-    template += "_%s" % (protocol)
+def __get_packet_template_from_policy_impl(rule, policy):
+    protocol = __get_proto_from_policy_rule(rule)
+    template = 'ETH_%s_%s' % (policy.AddrFamily, protocol)
     return infra_api.GetPacketTemplate(template)
 
 def GetPacketTemplateFromPolicy(testcase, packet, args=None):
@@ -171,7 +176,7 @@ def __get_valid_port(port):
         return port
 
 def __get_port_from_rule(rule, pos=None, isSource=True):
-    if rule is None or pos is None:
+    if rule is None:
         return __get_random_port_in_range()
     l4matchobj = rule.L4Match
     if not l4matchobj.valid:
@@ -299,21 +304,22 @@ def __get_packet_tuples(pkt):
 
 def __get_final_result(tc_rule, match_rule):
     final_result = match_rule.Action if match_rule else tc_rule.Action
-    logger.verbose("TestCase rule for packet ")
-    if tc_rule:
-        tc_rule.Show()
-    logger.verbose("Final matching rule for packet ")
+    logger.info("TestCase rule for packet ")
+    tc_rule.Show()
     if match_rule:
+        logger.info("Final matching rule for packet")
         match_rule.Show()
+    else:
+        logger.info("No rule matching the packet")
     return final_result
 
 def __get_matching_rule(policy, pkt, tc_rule):
     packet_tuples = __get_packet_tuples(pkt)
     action = tc_rule.Action
     prio = tc_rule.Priority
-    #Get a new copy of reverse (based on priority) sorted (stable) rules
+    # Get a new copy of stable sorted (based on priority) rules
+    # Note: lower the value of rule.Priority higher the Priority
     rules = sorted(policy.rules, key=lambda x: x.Priority)
-    rules.reverse()
     match_rule = None
     for rule in rules:
         #TODO: if tc_rule is the first one, we can return here
@@ -325,6 +331,7 @@ def __get_matching_rule(policy, pkt, tc_rule):
 def GetExpectedPacket(testcase, args):
     tc_rule = testcase.config.tc_rule
     if tc_rule is None:
+        # no rule in policy - so implicit deny
         return None
     policy = testcase.config.policy
     pkt = testcase.packets.Get(args.ipktid).GetScapyPacket()
@@ -332,7 +339,7 @@ def GetExpectedPacket(testcase, args):
     final_result = __get_final_result(tc_rule, match_rule)
     if final_result == policy_pb2.SECURITY_RULE_ACTION_DENY:
         return None
-    return testcase.packets.Get("EXP_PKT")
+    return testcase.packets.Get("TO_CPU_PKT")
 
 def GetInvalidMPLSTag(testcase, packet, args=None):
     return next(resmgr.InvalidMplsSlotIdAllocator)

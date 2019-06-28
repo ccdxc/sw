@@ -22,12 +22,17 @@ def __get_packet_template_impl(obj, args):
 def GetPacketTemplateFromMapping(testcase, packet, args=None):
     return __get_packet_template_impl(testcase.config.localmapping, args)
 
-def __get_packet_template_from_policy_impl(rule, policy):
-    template = 'ETH'
-    template += "_%s" % (policy.AddrFamily)
+def __get_proto_from_policy_rule(rule):
+    if rule is None:
+        return "TCP"
+    l3match = rule.L3Match
+    if not l3match.valid:
+        return "TCP"
+    return utils.GetIPProtoName(l3match.Proto)
 
-    protocol = utils.GetIPProtoName(rule.L3Match.Proto) if rule else "TCP"
-    template += "_%s" % (protocol)
+def __get_packet_template_from_policy_impl(rule, policy):
+    protocol = __get_proto_from_policy_rule(rule)
+    template = 'ETH_%s_%s' % (policy.AddrFamily, protocol)
     return infra_api.GetPacketTemplate(template)
 
 def GetPacketTemplateFromPolicy(testcase, packet, args=None):
@@ -110,44 +115,47 @@ def GetUsableHostFromPolicy(testcase, packet, args=None):
 def __get_random_port_in_range(beg=utils.L4PORT_MIN, end=utils.L4PORT_MAX):
     return random.randint(beg, end)
 
-def __get_port_from_rule(rule, isSource=True):
+def __get_valid_port(port):
+    if port < utils.L4PORT_MIN:
+        return utils.L4PORT_MIN
+    elif port > utils.L4PORT_MAX:
+        return utils.L4PORT_MAX
+    else:
+        return port
+
+def __get_port_from_rule(rule, pos=None, isSource=True):
     if rule is None:
         return __get_random_port_in_range()
+    l4matchobj = rule.L4Match
+    if not l4matchobj.valid:
+        return __get_random_port_in_range()
     if isSource:
-        beg = rule.L4Match.SportLow
-        end = rule.L4Match.SportHigh
+        beg = l4matchobj.SportLow
+        end = l4matchobj.SportHigh
     else:
-        beg = rule.L4Match.DportLow
-        end = rule.L4Match.DportHigh
-    return __get_random_port_in_range(beg, end)
+        beg = l4matchobj.DportLow
+        end = l4matchobj.DportHigh
+    if pos == 'right':
+        port = end + 1
+    elif pos == 'left':
+        port = beg - 1
+    elif pos == 'first':
+        port = beg
+    elif pos == 'last':
+        port = end
+    else:
+        return __get_random_port_in_range(beg, end)
+    return __get_valid_port(port)
 
 def GetUsableSPortFromPolicy(testcase, packet, args=None):
     rule = testcase.config.tc_rule
-    pval = __get_module_args_value(testcase.module.args, 'sport')
-    if pval == 'right':
-        return (rule.L4Match.SportHigh + 1)
-    if pval == 'left':
-        return (rule.L4Match.SportLow - 1)
-    if pval == 'first':
-        rule.Show()
-        return (rule.L4Match.SportLow)
-    if pval == 'last':
-        rule.Show()
-        return (rule.L4Match.SportHigh)
-    return __get_port_from_rule(rule)
+    pos = __get_module_args_value(testcase.module.args, 'sport')
+    return __get_port_from_rule(rule, pos)
 
 def GetUsableDPortFromPolicy(testcase, packet, args=None):
     rule = testcase.config.tc_rule
-    pval = __get_module_args_value(testcase.module.args, 'dport')
-    if pval == 'right':
-        return (rule.L4Match.DportHigh + 1)
-    if pval == 'left':
-        return (rule.L4Match.DportLow - 1)
-    if pval == 'first':
-        return (rule.L4Match.DportLow)
-    if pval == 'last':
-        return (rule.L4Match.DportHigh)
-    return __get_port_from_rule(rule, False)
+    pos = __get_module_args_value(testcase.module.args, 'dport')
+    return __get_port_from_rule(rule, pos, False)
 
 def GetInvalidMPLSTag(testcase, packet, args=None):
     return next(resmgr.InvalidMplsSlotIdAllocator)

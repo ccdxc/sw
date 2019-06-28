@@ -1,4 +1,4 @@
-# RFC Test Spec for egress case of scenario2-Internet out floating ip traffic
+# RFC Test Spec for egress case of scenario2-Internet out VPC VIP traffic
 selectors:
     root: ref://store/templates/id=POLICY
     maxlimits: 5
@@ -8,7 +8,7 @@ packets:
     - packet:
         id          : FROM_HOST_PKT # Input packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
+        template    : callback://networking/packets/GetPacketTemplateFromPolicy
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -36,7 +36,7 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : EXP_PKT # Expected packet
+        id          : TO_CPU_PKT # Expected packet
         clone       : ref://testcase/packets/id=FROM_HOST_PKT
         # TODO: Add P4 header
 
@@ -46,11 +46,13 @@ packets:
         headers     :
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/SUBNET/VirtualRouterMACAddr
-                dst     : ref://testcase/config/route/Nexthop/MacAddr
+                dst     : ref://testcase/config/route/NEXTHOP/MACAddr
+            qtag:
+                vlan    : ref://testcase/config/route/NEXTHOP/VlanId
             ipv4:
-                src     : ref://testcase/config/localmapping/SvcMappingIP
+                src     : ref://testcase/config/localmapping/SvcIP
             ipv6:
-                src     : ref://testcase/config/localmapping/SvcMappingIP
+                src     : ref://testcase/config/localmapping/SvcIP
             tcp:
                 sport   : ref://testcase/config/localmapping/SvcPort
             udp:

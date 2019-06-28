@@ -19,8 +19,10 @@ import policy_pb2 as policy_pb2
 import types_pb2 as types_pb2
 
 class L4MatchObject:
-    def __init__(self, valid=False, sportlow=0, sporthigh=65535,\
-                 dportlow=0, dporthigh=65535, icmptype=0, icmpcode=0):
+    def __init__(self, valid=False,\
+                 sportlow=utils.L4PORT_MIN, sporthigh=utils.L4PORT_MAX,\
+                 dportlow=utils.L4PORT_MIN, dporthigh=utils.L4PORT_MAX,\
+                 icmptype=utils.ICMPTYPE_MIN, icmpcode=utils.ICMPCODE_MIN):
         self.valid = valid
         self.SportLow = sportlow
         self.SportHigh = sporthigh
@@ -247,6 +249,7 @@ class PolicyObjectClient:
             if not l3matchobj.valid:
                 # nothing to do in case of wildcard
                 return
+            #TODO: return without modification for default pfx so that it can be tested
             if (direction == 'egress'):
                 l3matchobj.SrcPrefix, l3matchobj.SrcIPLow, l3matchobj.SrcIPHigh, l3matchobj.SrcTag = __get_l3_attr(l3matchobj.SrcType, subnetpfx)
             else:

@@ -64,10 +64,12 @@ class RouteObject(base.ConfigObjectBase):
 
     def __repr__(self):
         return "RouteTblID:%d|VPCId:%d|AddrFamily:%s|NumRoutes:%d|RouteType:%s|"\
-               "HasDefaultRoute:%s|HasBlackHoleRoute:%s|VPCPeering:%s ID:%d|NextHop:%s"\
+               "HasDefaultRoute:%s|HasBlackHoleRoute:%s|VPCPeering:%s ID:%d|"\
+               "NextHop: ID:%d Type:%s IP:%s"\
                %(self.RouteTblId, self.VPCId, self.AddrFamily, len(self.routes),\
-                 self.RouteType, self.HasDefaultRoute, self.HasBlackHoleRoute,
-                 self.VPCPeeringEnabled, self.PeerVPCId, str(self.TunIPAddr))
+                 self.RouteType, self.HasDefaultRoute, self.HasBlackHoleRoute,\
+                 self.VPCPeeringEnabled, self.PeerVPCId,\
+                 self.NexthopId, self.NextHopType, str(self.TunIPAddr))
 
     def GetGrpcCreateMessage(self):
         grpcmsg = route_pb2.RouteTableRequest()
@@ -220,6 +222,11 @@ class RouteObjectClient:
             if __is_v6stack():
                 __add_v6routetable(__get_user_specified_routes(routetablespec.v6routes), routetype)
 
+        def __get_valid_route_count_per_route_table(count):
+            if count > resmgr.MAX_ROUTES_PER_ROUTE_TBL:
+                return resmgr.MAX_ROUTES_PER_ROUTE_TBL
+            return count
+
         for routetbl_spec_obj in vpc_spec_obj.routetbl:
             routetbltype = routetbl_spec_obj.type
             routetype = routetbl_spec_obj.routetype
@@ -227,8 +234,8 @@ class RouteObjectClient:
                 __add_user_specified_routetable(routetbl_spec_obj, routetype)
                 continue
             routetablecount = routetbl_spec_obj.count
-            v4routecount = routetbl_spec_obj.nv4routes
-            v6routecount = routetbl_spec_obj.nv6routes
+            v4routecount = __get_valid_route_count_per_route_table(routetbl_spec_obj.nv4routes)
+            v6routecount = __get_valid_route_count_per_route_table(routetbl_spec_obj.nv6routes)
             v4prefixlen = routetbl_spec_obj.v4prefixlen
             v6prefixlen = routetbl_spec_obj.v6prefixlen
             v4base = __get_first_subnet(ipaddress.ip_network(routetbl_spec_obj.v4base.replace('\\', '/')), v4prefixlen)
@@ -236,9 +243,12 @@ class RouteObjectClient:
             # get user specified routes if any for 'base' routetbltype
             user_specified_v4routes = __get_user_specified_routes(routetbl_spec_obj.v4routes)
             user_specified_v6routes = __get_user_specified_routes(routetbl_spec_obj.v6routes)
-            nat = False
-            if hasattr(routetbl_spec_obj, 'nat'):
-                nat = routetbl_spec_obj.nat
+            v4routecount -= len(user_specified_v4routes)
+            v6routecount -= len(user_specified_v6routes)
+            if 'overlap' in routetype:
+                v4routecount -= 1
+                v6routecount -= 1
+            nat = getattr(routetbl_spec_obj, 'nat', False)
             tunobj = self.__internet_tunnel_get(nat)
             for i in range(routetablecount):
                 if 'adjacent' in routetype:

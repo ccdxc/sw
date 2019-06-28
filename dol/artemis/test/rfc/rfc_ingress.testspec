@@ -1,0 +1,70 @@
+# RFC Test Spec for ingress case of scenario2-Internet in VPC VIP traffic
+
+selectors:
+    root: ref://store/templates/id=POLICY
+    maxlimits: 5
+    policy: filter://Direction=ingress
+
+packets:
+
+    - packet:
+        id          : FROM_SWITCH_PKT # Input packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromPolicy
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : ref://testcase/config/route/NEXTHOP/MACAddr
+                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
+            qtag:
+                vlan    : ref://testcase/config/route/NEXTHOP/VlanId
+                prio    : 0
+            ipv4:
+                src     : callback://networking/packets/GetUsableHostFromPolicy
+                dst     : ref://testcase/config/localmapping/SvcIP
+                ttl     : 64
+            ipv6:
+                src     : callback://networking/packets/GetUsableHostFromPolicy
+                dst     : ref://testcase/config/localmapping/SvcIP
+                hlim    : 64
+            tcp:
+                sport   : callback://networking/packets/GetUsableSPortFromPolicy
+                dport   : callback://networking/packets/GetUsableDPortFromPolicy
+            udp:
+                sport   : callback://networking/packets/GetUsableSPortFromPolicy
+                dport   : callback://networking/packets/GetUsableDPortFromPolicy
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : TO_CPU_PKT # Expected packet
+        clone       : ref://testcase/packets/id=FROM_SWITCH_PKT
+        # TODO: Add P4 header
+
+    - packet:
+        id          : TO_HOST_PKT # Expected packet
+        clone       : ref://testcase/packets/id=FROM_SWITCH_PKT
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/SUBNET/VirtualRouterMACAddr
+                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+            ipv4:
+                dst     : ref://testcase/config/localmapping/IP
+            ipv6:
+                dst     : ref://testcase/config/localmapping/IP
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=FROM_SWITCH_PKT
+            port    : ref://testcase/config/switchport
+
+expect:
+    packets:
+        - packet:
+            #object  : ref://testcase/packets/id=TO_HOST_PKT
+            object  : callback://networking/packets/GetExpectedPacket/ipktid=FROM_SWITCH_PKT
+            port    : ref://testcase/config/hostport
