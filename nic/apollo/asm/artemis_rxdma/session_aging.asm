@@ -13,6 +13,8 @@ struct phv_             p;
 #define TIMEOUT_IN_CYCLES_U 0x3A
     
 %%
+    .param session2flow
+    
 session_aging:
 
     // If session entry is not valid just skip the entry and exit the program.

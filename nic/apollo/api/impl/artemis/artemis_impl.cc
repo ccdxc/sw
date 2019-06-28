@@ -45,7 +45,11 @@ extern sdk_ret_t init_service_lif(const char *cfg_path);
 #define MEM_REGION_IPV4_FLOW_OHASH_NAME      "ipv4_flow_ohash"
 #define MEM_REGION_SESSION_STATS_NAME        "session_stats"
 
-#define RXDMA_SYMBOLS_MAX                    1
+#define MEM_REGION_SESSION2FLOW_BASE         "session2flow"
+#define MEM_REGION_SESSION2FLOW_NAME         "session2flow"
+
+
+#define RXDMA_SYMBOLS_MAX                    2
 #define TXDMA_SYMBOLS_MAX                    6
 
 namespace api {
@@ -115,6 +119,10 @@ artemis_impl::rxdma_symbols_init_(void **p4plus_symbols,
 
     symbols[i].name = MEM_REGION_LIF_STATS_BASE;
     symbols[i].val = api::g_pds_state.mempartition()->start_addr(MEM_REGION_LIF_STATS_NAME);
+    SDK_ASSERT(symbols[i].val != INVALID_MEM_ADDRESS);
+    i++;
+    symbols[i].name = MEM_REGION_SESSION2FLOW_BASE;
+    symbols[i].val = api::g_pds_state.mempartition()->start_addr(MEM_REGION_SESSION2FLOW_NAME);
     SDK_ASSERT(symbols[i].val != INVALID_MEM_ADDRESS);
     i++;
     SDK_ASSERT(i <= RXDMA_SYMBOLS_MAX);

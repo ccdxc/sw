@@ -294,6 +294,11 @@
             "_comment": "This is alias for session region, to refer fom rxdma; Dont configure cache; 8M * 64B"
         },
         {
+            "name": "session2flow",
+            "size": "64M",
+            "_comment": "This table contains pointers from session to iflow and rflow"
+        },
+        {
             "name": "nexthop",
             "size": "32M",
             "cache": "p4eg",

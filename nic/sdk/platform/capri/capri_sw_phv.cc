@@ -214,7 +214,7 @@ capri_pr_psp_sw_phv_inject (uint8_t prof_num, uint8_t start_idx, uint8_t num_fli
     cap_psp_csr_cfg_sw_phv_config_t &sw_phv_cfg = pr_psp_csr.cfg_sw_phv_config[prof_num];
     sw_phv_cfg.start_addr(start_idx);
     sw_phv_cfg.num_flits(num_flits-1);
-    sw_phv_cfg.insertion_period_clocks(0);
+    sw_phv_cfg.insertion_period_clocks(100);
     sw_phv_cfg.counter_max(0);
     sw_phv_cfg.qid_min(0);
     sw_phv_cfg.qid_max(16777215); //16M
