@@ -90,13 +90,14 @@ class VpcObject(base.ConfigObjectBase):
                 vpc_peerid = self.VPCId + 1
             route.client.GenerateObjects(self, spec, vpc_peerid)
 
+        # Generate Meter configuration
+        if getattr(spec, 'meter', None) != None:
+            meter.client.GenerateObjects(self, spec)
+
         # Generate Subnet configuration post policy & route
         if getattr(spec, 'subnet', None) != None:
             subnet.client.GenerateObjects(self, spec)
 
-        # Generate Meter configuration
-        if getattr(spec, 'meter', None) != None:
-            meter.client.GenerateObjects(self, spec)
         return
 
     def InitSubnetPefixPools(self, poolid, v6pfxlen, v4pfxlen):
@@ -213,11 +214,11 @@ class VpcObjectClient:
         # Create Route object.
         route.client.CreateObjects()
 
-        # Create Subnet Objects after policy & route
-        subnet.client.CreateObjects()
-
         # Create Meter Objects
         meter.client.CreateObjects()
+
+        # Create Subnet Objects after policy & route
+        subnet.client.CreateObjects()
         return
 
 client = VpcObjectClient()

@@ -6,6 +6,7 @@ import infra.config.base as base
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
+import apollo.config.objects.route as route
 import types_pb2 as types_pb2
 import meter_pb2 as meter_pb2
 
@@ -158,10 +159,10 @@ class MeterObjectClient:
                 prefixes = []
                 if af == utils.IP_VERSION_4:
                     pfx = ipaddress.ip_network(rulespec.v4base.replace('\\', '/'))
-                    totalhosts = ipaddress.ip_network(pfx).num_addresses * (metercount * rulespec.num_prefixes)
-                    new_pfx = str(pfx.network_address + totalhosts) + '/' + str(pfx.prefixlen)
                 else:
-                    new_pfx = ipaddress.ip_network(rulespec.v6base.replace('\\', '/'))
+                    pfx = ipaddress.ip_network(rulespec.v6base.replace('\\', '/'))
+                totalhosts = ipaddress.ip_network(pfx).num_addresses * (metercount * rulespec.num_prefixes)
+                new_pfx = str(pfx.network_address + totalhosts) + '/' + str(pfx.prefixlen)
                 prefix = ipaddress.ip_network(new_pfx)
                 prefixes.append(prefix)
                 c = 1
@@ -175,20 +176,64 @@ class MeterObjectClient:
                 rules.append(obj)
             return rules
 
+        def __add_meter_v4rules_from_routetable(meterspec):
+            base_priority = meterspec.base_priority
+            rule_type = meterspec.rule_type
+            total_rt = route.client.GetRouteV4Tables(vpcid)
+            rules = []
+
+            if total_rt != None:
+                for rt_id, rt_obj in total_rt.items():
+                    if rt_obj.RouteType != 'overlap':
+                        # one rule for all routes in one route table
+                        prefixes = list(rt_obj.routes)
+                        ruleobj = MeterRuleObject(rule_type, base_priority, prefixes)
+                        base_priority += 1
+                        rules.append(ruleobj)
+            return rules
+
+        def __add_meter_v6rules_from_routetable(meterspec):
+            total_rt = route.client.GetRouteV6Tables(vpcid)
+            base_priority = meterspec.base_priority
+            rule_type = meterspec.rule_type
+            rules = []
+
+            if total_rt != None:
+                for rt_id, rt_obj in total_rt.items():
+                    if rt_obj.RouteType != 'overlap':
+                        # one rule for all routes in one route table
+                        prefixes = list(rt_obj.routes)
+                        ruleobj = MeterRuleObject(rule_type, base_priority, prefixes)
+                        base_priority += 1
+                        rules.append(ruleobj)
+            return rules
+
         for meter in vpcspecobj.meter:
             c = 0
-            while c < meter.count:
+            if meter.auto_fill:
                 if __is_v4stack():
-                    rules = __add_meter_rules(meter.rule, utils.IP_VERSION_4, c)
+                    rules = __add_meter_v4rules_from_routetable(meter)
                     obj = MeterObject(parent, utils.IP_VERSION_4, rules)
                     self.__v4objs[vpcid].append(obj)
                     self.__objs.append(obj)
-                #if __is_v6stack():
-                #    rules = __add_meter_rules(meterspec, utils.IP_VERSION_6, c)
-                #    obj = MeterObject(parent, utils.IP_VERSION_6, rules)
-                #    self.__v6objs[vpcid].append(obj)
-                #    self.__objs.append(obj)
-                c += 1
+                if __is_v6stack():
+                    rules = __add_meter_v6rules_from_routetable(meter)
+                    obj = MeterObject(parent, utils.IP_VERSION_6, rules)
+                    self.__v6objs[vpcid].append(obj)
+                    self.__objs.append(obj)
+            else:
+                while c < meter.count:
+                    if __is_v4stack():
+                        rules = __add_meter_rules(meter.rule, utils.IP_VERSION_4, c)
+                        obj = MeterObject(parent, utils.IP_VERSION_4, rules)
+                        self.__v4objs[vpcid].append(obj)
+                        self.__objs.append(obj)
+                    if __is_v6stack():
+                        rules = __add_meter_rules(meter.rule, utils.IP_VERSION_6, c)
+                        obj = MeterObject(parent, utils.IP_VERSION_6, rules)
+                        self.__v6objs[vpcid].append(obj)
+                        self.__objs.append(obj)
+                    c += 1
 
         if len(self.__v4objs[vpcid]):
             self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid])

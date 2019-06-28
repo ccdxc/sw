@@ -6,6 +6,7 @@ import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.mirror as mirror
+import apollo.config.objects.meter as meter
 import apollo.config.utils as utils
 import vnic_pb2 as vnic_pb2
 import tunnel_pb2 as tunnel_pb2
@@ -31,6 +32,8 @@ class VnicObject(base.ConfigObjectBase):
             self.SourceGuard = c
         self.RxMirror = rxmirror
         self.TxMirror = txmirror
+        self.V4MeterId = meter.client.GetV4MeterId(parent.VPC.VPCId )
+        self.V6MeterId = meter.client.GetV6MeterId(parent.VPC.VPCId)
         self._derive_oper_info()
 
         ################# PRIVATE ATTRIBUTES OF VNIC OBJECT #####################
@@ -113,7 +116,7 @@ class VnicObjectClient:
                 if vnicspec.rxmirror is None:
                     return ms;
                 for rxmirror in vnicspec.rxmirror:
-                    ms.append(rxmirror.msid) 
+                    ms.append(rxmirror.msid)
             return ms
 
         def __get_txmirror(vnicspec):
@@ -122,7 +125,7 @@ class VnicObjectClient:
                 if vnicspec.txmirror is None:
                     return ms;
                 for txmirror in vnicspec.txmirror:
-                    ms.append(txmirror.msid) 
+                    ms.append(txmirror.msid)
             return ms
 
         for vnic_spec_obj in subnet_spec_obj.vnic:

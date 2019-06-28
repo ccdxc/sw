@@ -86,27 +86,28 @@ vpc:
           direction : bidir
       meter:
         - count: 64
+          auto_fill: False
           rule:
             - type: PDS_METER_TYPE_ACCOUNTING
               priority: 1
               num_prefixes: 510
               v4base: '66.0.0.0\24'
-              v6base: '2002::\65'
+              v6base: '2002::\120'
               v4prefixes:
                 - '10.0.0.0\24'
                 - '11.1.0.0\24'
               v6prefixes:
-                - '0::\0'
+                - '0::\120'
 
             - type: PDS_METER_TYPE_ACCOUNTING
               priority: 2
               num_prefixes: 510
               v4base: '96.0.0.0\24'
-              v6base: '0::\0'
+              v6base: '100::\120'
               v4prefixes:
                 - '0.0.0.0\0'
               v6prefixes:
-                - '0::\0'
+                - '999::\120'
 
 
 

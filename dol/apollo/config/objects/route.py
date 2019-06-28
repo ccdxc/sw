@@ -143,6 +143,12 @@ class RouteObjectClient:
     def Objects(self):
         return self.__objs.values()
 
+    def GetRouteV4Tables(self, vpcid):
+        return self.__v4objs.get(vpcid, None)
+
+    def GetRouteV6Tables(self, vpcid):
+        return self.__v6objs.get(vpcid, None)
+
     def IsValidConfig(self):
         count = sum(list(map(lambda x: len(x.values()), self.__v4objs.values())))
         if  count > resmgr.MAX_ROUTE_TABLE:
