@@ -206,7 +206,8 @@ struct rxque {
 	struct rx_stats stats;
 	struct intr intr;
 
-	struct task task;
+	struct task task;			/* Queue completion handler. */
+	struct task tx_task;			/* Tx deferred xmit handler. */
 	struct taskqueue *taskq;
 
 	struct lro_ctrl	lro;

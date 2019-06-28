@@ -177,7 +177,9 @@ ionic_adminq_hb_work(struct work_struct *work)
 		return;
 
 	/* Send a NOP command to monitor AdminQ */
+	IONIC_LIF_LOCK(lif);
 	err = ionic_adminq_post_wait(lif, &ctx);
+	IONIC_LIF_UNLOCK(lif);
 	if (ionic_wdog_error_trigger == IONIC_WDOG_TRIG_ADMINQ) {
 		IONIC_QUE_WARN(lif->adminq, "injecting error\n");
 		err = -1;
@@ -2298,8 +2300,10 @@ ionic_lif_rxqs_deinit(struct lif *lif)
 		ionic_rx_clean(rxq, rxq->num_descs);
 		ionic_rx_empty(rxq);
 		IONIC_RX_UNLOCK(rxq);
-		if (rxq->taskq)
+		if (rxq->taskq) {
+			taskqueue_drain(rxq->taskq, &rxq->tx_task);
 			taskqueue_drain(rxq->taskq, &rxq->task);
+		}
 	}
 }
 

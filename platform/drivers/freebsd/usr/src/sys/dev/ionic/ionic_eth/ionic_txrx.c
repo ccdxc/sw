@@ -588,7 +588,7 @@ ionic_queue_isr(int irq, void *data)
 
 	ionic_intr_credits(idev->intr_ctrl, rxq->intr.index,
 			   work_done + tx_work, 0);
-
+	/* XXX: schedule only if there is more work to do. */
 	taskqueue_enqueue(rxq->taskq, &rxq->task);
 
 	return (IRQ_HANDLED);
@@ -634,6 +634,17 @@ ionic_queue_task_handler(void *arg, int pendindg)
 			   (work_done + tx_work), IONIC_INTR_CRED_REARM);
 }
 
+static void
+ionic_deferred_xmit_task(void *arg, int pending)
+{
+	struct txque *txq = arg;
+	struct ifnet *ifp = txq->lif->netdev;
+
+	IONIC_TX_LOCK(txq);
+	if (!drbr_empty(ifp, txq->br))
+		ionic_start_xmit_locked(ifp, txq);
+	IONIC_TX_UNLOCK(txq);
+}
 /*
  * Setup queue interrupt handler.
  */
@@ -642,6 +653,7 @@ ionic_setup_rx_intr(struct rxque *rxq)
 {
 	int err, bind_cpu;
 	struct lif *lif = rxq->lif;
+	struct txque *txq = lif->txqs[rxq->index];
 	char namebuf[16];
 #ifdef RSS
 	cpuset_t        cpu_mask;
@@ -652,6 +664,7 @@ ionic_setup_rx_intr(struct rxque *rxq)
 	bind_cpu = rxq->index;
 #endif
 
+	TASK_INIT(&rxq->tx_task, 0, ionic_deferred_xmit_task, txq);
 	TASK_INIT(&rxq->task, 0, ionic_queue_task_handler, rxq);
 	snprintf(namebuf, sizeof(namebuf), "task-%s", rxq->name);
 	rxq->taskq = taskqueue_create(namebuf, M_NOWAIT,
@@ -1235,16 +1248,10 @@ int
 ionic_start_xmit_locked(struct ifnet *ifp, struct txque *txq)
 {
 	struct mbuf *m;
-	struct lif *lif = ifp->if_softc;
-	struct ionic_dev *idev = &lif->ionic->idev;
-	struct intr *intr = &lif->rxqs[txq->index]->intr;
 	struct tx_stats *stats;
-	int err, work_done;
+	int err;
 
 	stats = &txq->stats;
-	work_done = ionic_tx_clean(txq, txq->num_descs);
-	ionic_intr_credits(idev->intr_ctrl, intr->index,
-			   work_done, 0);
 
 	while ((m = drbr_peek(ifp, txq->br)) != NULL) {
 		if ((err = ionic_xmit(ifp, txq, &m)) != 0) {
@@ -1298,7 +1305,7 @@ ionic_start_xmit(struct ifnet *ifp, struct mbuf *m)
 		ionic_start_xmit_locked(ifp, txq);
 		IONIC_TX_UNLOCK(txq);
 	} else
-		taskqueue_enqueue(rxq->taskq, &rxq->task);
+		taskqueue_enqueue(rxq->taskq, &rxq->tx_task);
 
 	return (0);
 }
