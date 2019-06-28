@@ -14,7 +14,8 @@
             "kind" : "tep",
             "count" : "1024",
             "prefix": "1.0.0.0/8",
-            "svc-prefix": "2222::/96"
+            "svc-prefix": "2222::/96",
+            "remote-svc-public-prefix": "1.255.0.0/16"
         },
         {
             "_comment_" : "routes per routing table, middle 2 octets are used to create routes",
@@ -43,12 +44,13 @@
             "_comment_" : "per vpc, per subnet vnic scale",
             "kind" : "vnic",
             "count" : "1",
-            "vlan-start" : "1"
+            "vlan-start" : "1",
+            "tagged": "true"
         },
         {
             "kind" : "mappings",
             "remotes" : "512",
-            "locals" : "32",
+            "locals" : "8",
             "nat-prefix" : "3.0.0.0/8",
             "v6-nat-prefix": "2020::/96",
             "provider-prefix" : "1.1.0.0/16",
