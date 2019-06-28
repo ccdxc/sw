@@ -100,8 +100,10 @@ string UpgAppRespReact::UpgStateRespTypeToStr(UpgStateRespType type) {
 }
 
 delphi::error UpgAppRespReact::OnUpgAppRespVal(delphi::objects::UpgAppRespPtr resp) {
-    if (UpgStateRespTypeToStr(resp->upgapprespval()) != "") 
+    if (UpgStateRespTypeToStr(resp->upgapprespval()) != "") {
         UPG_LOG_DEBUG("\n\n\n========== Got Response {} from {} application ==========", UpgStateRespTypeToStr(resp->upgapprespval()), resp->key());
+        UPG_OBFL_TRACE("Got Response {} from {} application", UpgStateRespTypeToStr(resp->upgapprespval()), resp->key());
+    }
     //UPG_LOG_DEBUG("UpgAppRespReact OnUpgAppRespVal got called for {}/{}/{}", 
                          //resp, resp->meta().ShortDebugString(), resp->upgapprespval());
 

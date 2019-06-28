@@ -272,8 +272,10 @@ delphi::error UpgReqReact::MoveStateMachine(UpgReqStateType type) {
             upgAborted_ = false;
         }
     }
-    if (type != UpgStateTerminal)
+    if (type != UpgStateTerminal) {
         UPG_LOG_DEBUG("========== Upgrade state moved to {} ==========", UpgReqStateTypeToStr(type));
+        UPG_OBFL_TRACE("Upgrade state moved to {}", UpgReqStateTypeToStr(type));
+    }
     return delphi::error::OK();
 }
 
@@ -293,6 +295,7 @@ delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     UpgReqStateType type = UpgStateCompatCheck;
     if (req->upgreqcmd() == IsUpgPossible) {
         UPG_LOG_INFO("CanUpgrade request received");
+        UPG_OBFL_TRACE("Check Upgrade Possible");
         StateMachine = CanUpgradeStateMachine;
         upgReqType_ = IsUpgPossible;
         type = UpgStateUpgPossible;
@@ -300,6 +303,7 @@ delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     } else {
         UPG_LOG_INFO("StartUpgrade request received");
         if (ctx.upgType == UpgTypeDisruptive) {
+            UPG_OBFL_TRACE("Start Disruptive upgrade");
             StateMachine = DisruptiveUpgradeStateMachine;
             upgMetric_->DisruptiveUpg()->Incr();
         } else {
