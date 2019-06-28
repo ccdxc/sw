@@ -20,7 +20,7 @@ def startTestUpgApp(node, param):
     #/data/sysmgr.json
     data = [
                {
-                   "name": "upgrade",
+                   "name": "{}".format(UPGRADE_TEST_APP),
                    "command": "/update/{} {}".format(UPGRADE_TEST_APP + ".bin", param),
                    "dependencies": [
                        {
