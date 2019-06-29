@@ -78,8 +78,8 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
         if ((spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) &&
             spec->vnic_encap.val.vlan_tag) {
             vnic_mapping_key.ctag_1_vid = spec->vnic_encap.val.vlan_tag;
-            vnic_mapping_mask.ctag_1_vid_mask = ~0;
         }
+        vnic_mapping_mask.ctag_1_vid_mask = ~0;
         sdk::lib::memrev(vnic_mapping_key.ethernet_1_srcAddr, spec->mac_addr,
                          ETH_ADDR_LEN);
         memset(vnic_mapping_mask.ethernet_1_srcAddr_mask, 0xFF, ETH_ADDR_LEN);
@@ -449,8 +449,8 @@ vnic_impl::activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
         if ((spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) &&
             spec->vnic_encap.val.vlan_tag) {
             vnic_mapping_key.ctag_1_vid = spec->vnic_encap.val.vlan_tag;
-            vnic_mapping_mask.ctag_1_vid_mask = ~0;
         }
+        vnic_mapping_mask.ctag_1_vid_mask = ~0;
         sdk::lib::memrev(vnic_mapping_key.ethernet_1_srcAddr, spec->mac_addr,
                          ETH_ADDR_LEN);
         memset(vnic_mapping_mask.ethernet_1_srcAddr_mask, 0xFF, ETH_ADDR_LEN);

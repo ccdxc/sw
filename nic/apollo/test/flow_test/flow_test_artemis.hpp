@@ -26,6 +26,7 @@
 #include "gen/p4gen/apollo/include/p4pd.h"
 #else
 #include "gen/p4gen/artemis/include/p4pd.h"
+#include "nic/apollo/p4/include/artemis_defines.h"
 #endif
 
 using sdk::table::ftlv6;
@@ -718,7 +719,8 @@ public:
 
     sdk_ret_t create_flow(uint32_t vpc, uint8_t proto,
                           ip_addr_t flow_sip, ip_addr_t flow_dip,
-                          uint16_t flow_sport, uint16_t flow_dport) {
+                          uint16_t flow_sport, uint16_t flow_dport,
+                          uint8_t role) {
         sdk_ret_t ret;
         if (flow_sip.af == IP_AF_IPV4) {
             memset(&v4entry, 0, sizeof(ftlv4_entry_t));
@@ -733,6 +735,7 @@ public:
             v4entry.dport = flow_dport;
             v4entry.src = flow_sip.addr.v4_addr;
             v4entry.dst = flow_dip.addr.v4_addr;
+            v4entry.flow_role = role;
             ret = insert_(&v4entry);
             SDK_ASSERT(ret == SDK_RET_OK);
             //if (vpc == TEST_APP_S3_VNET_IN_OUT_V6_OUTER) {
@@ -753,6 +756,7 @@ public:
                              sizeof(ipv6_addr_t));
             sdk::lib::memrev(v6entry.dst, flow_dip.addr.v6_addr.addr8,
                              sizeof(ipv6_addr_t));
+            v6entry.flow_role = role;
             ret = insert_(&v6entry);
             SDK_ASSERT(ret == SDK_RET_OK);
             //if (vpc == TEST_APP_S3_VNET_IN_OUT_V6_OUTER) {
@@ -784,6 +788,7 @@ public:
             v4entry.dport = iflow_dport;
             v4entry.src = iflow_sip.addr.v4_addr;
             v4entry.dst = iflow_dip.addr.v4_addr;
+            v4entry.flow_role = TCP_FLOW_INITIATOR;
             ret = insert_(&v4entry);
             SDK_ASSERT(ret == SDK_RET_OK);
             //if (vpc == TEST_APP_S3_VNET_IN_OUT_V6_OUTER) {
@@ -795,6 +800,7 @@ public:
             v4entry.dport = rflow_dport;
             v4entry.src = rflow_sip.addr.v4_addr;
             v4entry.dst = rflow_dip.addr.v4_addr;
+            v4entry.flow_role = TCP_FLOW_RESPONDER;
             ret = insert_(&v4entry);
             SDK_ASSERT(ret == SDK_RET_OK);
             //if (vpc == TEST_APP_S3_VNET_IN_OUT_V6_OUTER) {
@@ -815,6 +821,7 @@ public:
             // create IFLOW
             v6entry.sport = iflow_sport;
             v6entry.dport = iflow_dport;
+            v6entry.flow_role = TCP_FLOW_INITIATOR;
             sdk::lib::memrev(v6entry.src, iflow_sip.addr.v6_addr.addr8,
                              sizeof(ipv6_addr_t));
             sdk::lib::memrev(v6entry.dst, iflow_dip.addr.v6_addr.addr8,
@@ -832,6 +839,7 @@ public:
                              sizeof(ipv6_addr_t));
             sdk::lib::memrev(v6entry.dst, rflow_dip.addr.v6_addr.addr8,
                              sizeof(ipv6_addr_t));
+            v6entry.flow_role = TCP_FLOW_RESPONDER;
             ret = insert_(&v6entry);
             SDK_ASSERT(ret == SDK_RET_OK);
             //if (vpc == TEST_APP_S3_VNET_IN_OUT_V6_OUTER) {
@@ -930,9 +938,8 @@ public:
                             // iflow v4 session
                             ret = create_flow(vpc, proto,
                                               ep_pairs[i].v4_local.local_ip,
-                                              ip_addr,
-                                              fwd_sport,
-                                              fwd_dport);
+                                              ip_addr, fwd_sport, fwd_dport,
+                                              TCP_FLOW_INITIATOR);
                             if (ret != SDK_RET_OK) {
                                 return ret;
                             }
@@ -950,11 +957,9 @@ public:
                                 htonl(ep_pairs[i].v4_local.local_ip.addr.v4_addr);
 
                             // rflow v6 session
-                            ret = create_flow(vpc, proto,
-                                              rewrite_ip,
-                                              rflow_dip,
-                                              fwd_dport,
-                                              fwd_sport);
+                            ret = create_flow(vpc, proto, rewrite_ip, rflow_dip,
+                                              fwd_dport, fwd_sport,
+                                              TCP_FLOW_RESPONDER);
                         } else if (vpc == TEST_APP_S1_SLB_IN_OUT) {
                             // this VPC is used for Scenario1-SLB in/out traffic (DSR case)
                             ip_addr.addr.v4_addr = TESTAPP_V4ROUTE_VAL(i);

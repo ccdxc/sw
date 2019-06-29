@@ -311,6 +311,12 @@
             "_comment": "64K * 16B"
         },
         {
+            "name": "meter_stats",
+            "size": "2M",
+            "cache": "p4eg",
+            "_comment": "256K * 8B"
+        },
+        {
             "name": "nat_rxdma",
             "base_region": "nat",
             "size": "1M",
@@ -320,11 +326,6 @@
             "name": "session_stats",
             "size": "256M",
             "_comment": "8M * 16B * 2"
-        },
-        {
-            "name": "meter_stats",
-            "size": "2M",
-            "_comment": "256K * 8B"
         },
         {
             "name": "qos-hbm-fifo",
