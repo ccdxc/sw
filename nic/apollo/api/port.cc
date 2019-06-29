@@ -95,7 +95,7 @@ xcvr_event_cb (xcvr_event_info_t *xcvr_event_info)
 }
 
 /**
- * @brief        create a port with the given configuration information
+ * @brief        update a port with the given configuration information
  * @param[in]    ifindex               interface index
  * @param[in]    port_admin_state_t    port admin state
  * @return       SDK_RET_OK on success, failure status code on error
@@ -121,13 +121,18 @@ update_port (pds_ifindex_t ifindex, port_args_t *api_port_info)
     }
     port_info.port_num = intf->key();
 
-    // set the admin state as per the argument
+    port_info.user_admin_state = api_port_info->user_admin_state;
     port_info.admin_state = api_port_info->admin_state;
-    port_info.user_admin_state = api_port_info->admin_state;
-    port_info.auto_neg_enable = api_port_info->auto_neg_enable;
-    port_info.auto_neg_cfg = api_port_info->auto_neg_enable;
     port_info.port_speed = api_port_info->port_speed;
     port_info.fec_type = api_port_info->fec_type;
+    port_info.auto_neg_cfg = api_port_info->auto_neg_cfg;
+    port_info.auto_neg_enable = api_port_info->auto_neg_enable;
+    port_info.debounce_time = api_port_info->debounce_time;
+    port_info.mtu = api_port_info->mtu;
+    port_info.pause = api_port_info->pause;
+    port_info.loopback_mode = api_port_info->loopback_mode;
+    port_info.num_lanes_cfg = api_port_info->num_lanes_cfg;
+    port_info.num_lanes = api_port_info->num_lanes;
 
     ret = sdk::linkmgr::port_update(intf->if_info(), &port_info);
     return ret;

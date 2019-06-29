@@ -268,15 +268,19 @@ message PortSpec {
   uint32           DeBounceTimeout = 6;
   // MTU size in bytes
   uint32           Mtu             = 7;
-  // // Pause type (pfc or link level)
+  // Pause type (pfc or link level)
   PortPauseType    PauseType       = 8;
   // Port loopback mode - MAC/PHY
   PortLoopBackMode LoopbackMode    = 9;
+  // Number of lanes for port
+  uint32           NumLanes        = 10;
 }
 
 message PortLinkStatus {
   PortOperState OperState = 1; // operational state of port
   PortSpeed     PortSpeed = 2; // operational speed of the port
+  bool          AutoNegEn = 3; // operational state of AN
+  uint32        NumLanes  = 4; // operational value of NumLanes
 }
 
 message PortXcvrStatus {

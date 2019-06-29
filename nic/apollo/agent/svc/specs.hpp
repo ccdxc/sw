@@ -347,9 +347,9 @@ service_proto_spec_to_api_spec (pds_svc_mapping_spec_t *api_spec,
 }
 
 static inline port_fec_type_t
-proto_port_fec_type_to_sdk_fec_type (pds::PortFecType fec_type)
+port_proto_fec_type_to_sdk_fec_type (pds::PortFecType proto_fec_type)
 {
-    switch (fec_type) {
+    switch (proto_fec_type) {
     case pds::PORT_FEC_TYPE_NONE:
         return port_fec_type_t::PORT_FEC_TYPE_NONE;
     case pds::PORT_FEC_TYPE_FC:
@@ -361,10 +361,23 @@ proto_port_fec_type_to_sdk_fec_type (pds::PortFecType fec_type)
     }
 }
 
-static inline port_speed_t
-proto_port_speed_to_sdk_port_speed (pds::PortSpeed port_speed)
+static inline pds::PortFecType
+port_sdk_fec_type_to_proto_fec_type (port_fec_type_t sdk_fec_type)
 {
-    switch (port_speed) {
+    switch (sdk_fec_type) {
+    case port_fec_type_t::PORT_FEC_TYPE_FC:
+        return pds::PORT_FEC_TYPE_FC;
+    case port_fec_type_t::PORT_FEC_TYPE_RS:
+        return pds::PORT_FEC_TYPE_RS;
+    default:
+        return pds::PORT_FEC_TYPE_NONE;
+    }
+}
+
+static inline port_speed_t
+port_proto_speed_to_sdk_speed (pds::PortSpeed proto_port_speed)
+{
+    switch (proto_port_speed) {
     case pds::PORT_SPEED_NONE:
         return port_speed_t::PORT_SPEED_NONE;
     case pds::PORT_SPEED_1G:
@@ -384,10 +397,32 @@ proto_port_speed_to_sdk_port_speed (pds::PortSpeed port_speed)
     }
 }
 
-static inline port_admin_state_t
-proto_port_admin_state_to_sdk_admin_state (pds::PortAdminState proto_state)
+static inline pds::PortSpeed
+port_sdk_speed_to_proto_speed (port_speed_t sdk_port_speed)
 {
-    switch (proto_state) {
+    switch (sdk_port_speed) {
+    case port_speed_t::PORT_SPEED_1G:
+        return pds::PORT_SPEED_1G;
+    case port_speed_t::PORT_SPEED_10G:
+        return pds::PORT_SPEED_10G;
+    case port_speed_t::PORT_SPEED_25G:
+        return pds::PORT_SPEED_25G;
+    case port_speed_t::PORT_SPEED_40G:
+        return pds::PORT_SPEED_40G;
+    case port_speed_t::PORT_SPEED_50G:
+        return pds::PORT_SPEED_50G;
+    case port_speed_t::PORT_SPEED_100G:
+        return pds::PORT_SPEED_100G;
+    default:
+        return pds::PORT_SPEED_NONE;
+    }
+}
+
+static inline port_admin_state_t
+port_proto_admin_state_to_sdk_admin_state (
+                            pds::PortAdminState proto_admin_state)
+{
+    switch (proto_admin_state) {
     case pds::PORT_ADMIN_STATE_NONE:
         return port_admin_state_t::PORT_ADMIN_STATE_NONE;
     case pds::PORT_ADMIN_STATE_DOWN:
@@ -399,14 +434,89 @@ proto_port_admin_state_to_sdk_admin_state (pds::PortAdminState proto_state)
     }
 }
 
+static inline pds::PortAdminState
+port_sdk_admin_state_to_proto_admin_state (port_admin_state_t sdk_admin_state)
+{
+    switch (sdk_admin_state) {
+    case port_admin_state_t::PORT_ADMIN_STATE_DOWN:
+        return pds::PORT_ADMIN_STATE_DOWN;
+    case port_admin_state_t::PORT_ADMIN_STATE_UP:
+        return pds::PORT_ADMIN_STATE_UP;
+    default:
+        return pds::PORT_ADMIN_STATE_NONE;
+    }
+}
+
+static inline port_pause_type_t
+port_proto_pause_type_to_sdk_pause_type (pds::PortPauseType proto_pause_type)
+{
+    switch(proto_pause_type) {
+    case pds::PORT_PAUSE_TYPE_LINK:
+        return port_pause_type_t::PORT_PAUSE_TYPE_LINK;
+    case pds::PORT_PAUSE_TYPE_PFC:
+        return port_pause_type_t::PORT_PAUSE_TYPE_PFC;
+    default:
+        return port_pause_type_t::PORT_PAUSE_TYPE_NONE;
+    }
+}
+
+static inline pds::PortPauseType
+port_sdk_pause_type_to_proto_pause_type (port_pause_type_t sdk_pause_type)
+{
+    switch (sdk_pause_type) {
+    case port_pause_type_t::PORT_PAUSE_TYPE_LINK:
+        return pds::PORT_PAUSE_TYPE_LINK;
+    case port_pause_type_t::PORT_PAUSE_TYPE_PFC:
+        return pds::PORT_PAUSE_TYPE_PFC;
+    default:
+        return pds::PORT_PAUSE_TYPE_NONE;
+    }
+}
+
+static inline port_loopback_mode_t
+port_proto_loopback_mode_to_sdk_loopback_mode (
+                        pds::PortLoopBackMode proto_loopback_mode)
+{
+    switch(proto_loopback_mode) {
+    case pds::PORT_LOOPBACK_MODE_MAC:
+        return port_loopback_mode_t::PORT_LOOPBACK_MODE_MAC;
+    case pds::PORT_LOOPBACK_MODE_PHY:
+        return port_loopback_mode_t::PORT_LOOPBACK_MODE_PHY;
+    default:
+        return port_loopback_mode_t::PORT_LOOPBACK_MODE_NONE;
+    }
+}
+
+static inline pds::PortLoopBackMode
+port_sdk_loopback_mode_to_proto_loopback_mode (
+                        port_loopback_mode_t sdk_loopback_mode)
+{
+    switch (sdk_loopback_mode) {
+    case port_loopback_mode_t::PORT_LOOPBACK_MODE_MAC:
+        return pds::PORT_LOOPBACK_MODE_MAC;
+    case port_loopback_mode_t::PORT_LOOPBACK_MODE_PHY:
+        return pds::PORT_LOOPBACK_MODE_PHY;
+    default:
+        return pds::PORT_LOOPBACK_MODE_NONE;
+    }
+}
+
 static inline void
-proto_port_spec_to_port_args (port_args_t *port_args,
+port_proto_spec_to_port_args (port_args_t *port_args,
                               const pds::PortSpec &spec)
 {
-    port_args->admin_state = proto_port_admin_state_to_sdk_admin_state(spec.adminstate());
-    port_args->port_speed = proto_port_speed_to_sdk_port_speed(spec.speed());
-    port_args->auto_neg_enable = spec.autonegen();
-    port_args->fec_type = proto_port_fec_type_to_sdk_fec_type(spec.fectype());
+    port_args->user_admin_state = port_args->admin_state =
+                port_proto_admin_state_to_sdk_admin_state(spec.adminstate());
+    port_args->port_speed = port_proto_speed_to_sdk_speed(spec.speed());
+    port_args->fec_type = port_proto_fec_type_to_sdk_fec_type(spec.fectype());
+    port_args->auto_neg_cfg = port_args->auto_neg_enable = spec.autonegen();
+    port_args->debounce_time = spec.debouncetimeout();
+    port_args->mtu = spec.mtu();
+    port_args->pause =
+                port_proto_pause_type_to_sdk_pause_type(spec.pausetype());
+    port_args->loopback_mode =
+       port_proto_loopback_mode_to_sdk_loopback_mode(spec.loopbackmode());
+    port_args->num_lanes_cfg = port_args->num_lanes = spec.numlanes();
 }
 
 static inline pds::SecurityRuleAction
@@ -1353,6 +1463,18 @@ pds_port_specs_fill (pds::PortSpec *spec, sdk::linkmgr::port_args_t *port_info)
         spec->set_adminstate(pds::PORT_ADMIN_STATE_NONE);
         break;
     }
+    spec->set_speed(port_sdk_speed_to_proto_speed(
+                                      port_info->port_speed));
+    spec->set_fectype(port_sdk_fec_type_to_proto_fec_type
+                                      (port_info->fec_type));
+    spec->set_autonegen(port_info->auto_neg_cfg);
+    spec->set_debouncetimeout(port_info->debounce_time);
+    spec->set_mtu(port_info->mtu);
+    spec->set_pausetype(port_sdk_pause_type_to_proto_pause_type
+                                      (port_info->pause));
+    spec->set_loopbackmode(port_sdk_loopback_mode_to_proto_loopback_mode(
+                                     port_info->loopback_mode));
+    spec->set_numlanes(port_info->num_lanes_cfg);
 }
 
 static inline void
@@ -1397,6 +1519,8 @@ pds_port_status_fill (pds::PortStatus *status,
         link_status->set_portspeed(pds::PORT_SPEED_NONE);
         break;
     }
+    link_status->set_autonegen(port_info->auto_neg_enable);
+    link_status->set_numlanes(port_info->num_lanes);
 
     xcvr_status->set_port(port_info->xcvr_event_info.phy_port);
     xcvr_status->set_state(pds::PortXcvrState(port_info->xcvr_event_info.state));
