@@ -41,6 +41,7 @@ protected:
                         app: { proto:IPPROTO_UDP,
                                dport_low: DNS_PORT, dport_high: DNS_PORT,
                                alg: nwsec::APP_SVC_DNS,
+                               idle_timeout: 30,
                                has_alg_opts: true,
                                alg_opt: { opt: { dns_opts: { drop_multi_question_packets: 1, 
                                                              drop_large_domain_name_packets: 1,

@@ -2153,7 +2153,7 @@ struct session_age_cb_args_t {
     uint32_t          *num_sessions;
     uint64_t           ctime_ns;
     uint8_t           *num_ctx;
-    uint8_t           *num_del_sess;
+    uint16_t          *num_del_sess;
     timer_ctx_list    *tctx_list;
     timer_handle_list *session_list;
 };
@@ -2275,8 +2275,8 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
                                    (sizeof(uint8_t)*HAL_MAX_DATA_THREAD));
     SDK_ASSERT(args.num_ctx != NULL);
 
-    args.num_del_sess = (uint8_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_AGE_ARGS,
-                                     sizeof(uint8_t)*HAL_MAX_DATA_THREAD);
+    args.num_del_sess = (uint16_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_AGE_ARGS,
+                                     sizeof(uint16_t)*HAL_MAX_DATA_THREAD);
     SDK_ASSERT(args.num_del_sess != NULL);
 
     args.tctx_list = (timer_ctx_list *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_TIMER_CTXT,

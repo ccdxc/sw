@@ -490,6 +490,7 @@ TEST_F(rpc_test, msrpc_session_nd464bit_2)
     EXPECT_NE(session->sfw_rule_id, 0);
     EXPECT_EQ(session->skip_sfw_reval, 0);
     EXPECT_EQ(session->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
+    EXPECT_EQ(ctx_.session()->idle_timeout, 30);
 
     // TCP SYN re-transmit on ALG_CFLOW_LIFQ
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
@@ -559,6 +560,7 @@ TEST_F(rpc_test, msrpc_session_nd464bit_2)
     EXPECT_EQ(ctx_.session()->skip_sfw_reval, 1);
     EXPECT_EQ(ctx_.session()->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
     EXPECT_NE(ctx_.session()->sfw_rule_id, 0);
+    EXPECT_EQ(ctx_.session()->idle_timeout, 200);
     EXPECT_FALSE(ctx_.drop());    
     CHECK_DENY_UDP(server_eph, client_eph, 49302, 49301, "c:49301 -> s:49302");
 }

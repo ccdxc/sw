@@ -67,6 +67,7 @@ public:
             uint16_t                      dport_low;
             uint16_t                      dport_high;
             nwsec::ALGName                alg;
+            uint32_t                      idle_timeout;
             bool                          has_alg_opts;
             hal::alg_opts                 alg_opt;
         } app;

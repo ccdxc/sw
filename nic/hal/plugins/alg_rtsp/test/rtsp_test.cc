@@ -43,25 +43,29 @@ protected:
                         to: {},
                         app: { proto:IPPROTO_TCP,
                                dport_low: RTSP_PORT, dport_high: RTSP_PORT,
-                               alg: nwsec::APP_SVC_RTSP } },
+                               alg: nwsec::APP_SVC_RTSP,
+                               idle_timeout: 0x30} },
             v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_DENY,
                         from: {},
                         to: {},
                         app: { proto:IPPROTO_TCP,
                                dport_low: 0, dport_high: 0xFFFF,
-                               alg: nwsec::APP_SVC_NONE} },
+                               alg: nwsec::APP_SVC_NONE,
+                               idle_timeout: 0xFFFFFFFF} },
             v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_DENY,
                         from: {},
                         to: {},
                         app: { proto:IPPROTO_UDP,
                                dport_low: 0, dport_high: 0xFFFF,
-                               alg: nwsec::APP_SVC_NONE} },
+                               alg: nwsec::APP_SVC_NONE,
+                               idle_timeout: 0xFFFFFFFF} },
             v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_DENY,
                         from: {},
                         to: {},
                         app: { proto:0,
                                dport_low: 0, dport_high: 0xFFFF,
-                               alg: nwsec::APP_SVC_NONE} },
+                               alg: nwsec::APP_SVC_NONE,
+                               idle_timeout: 0xFFFFFFFF} },
         };
 
         add_nwsec_policy(vrfh, rules);
@@ -100,6 +104,7 @@ TEST_F(rtsp_test, rtsp_session)
     EXPECT_NE(session->sfw_rule_id, 0);
     EXPECT_EQ(session->skip_sfw_reval, 0);
     EXPECT_EQ(session->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
+    EXPECT_EQ(ctx_.session()->idle_timeout, 0x30);
 
     // TCP SYN re-transmit
     ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, server_eph, client_eph, tcp);
@@ -161,6 +166,7 @@ TEST_F(rtsp_test, rtsp_session)
     EXPECT_EQ(ctx_.session()->skip_sfw_reval, 1);
     EXPECT_EQ(ctx_.session()->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
     EXPECT_NE(ctx_.session()->sfw_rule_id, 0);
+    EXPECT_EQ(ctx_.session()->idle_timeout, 0x30);
     CHECK_ALLOW_UDP(server_eph, client_eph, 6257, 4589, "c:4589 -> s:6257");
     CHECK_ALLOW_UDP(client_eph, server_eph, 4588, 6256, "c:4588 <- s:6256");
     CHECK_ALLOW_UDP(client_eph, server_eph, 4589, 6257, "c:4589 <- s:6257");

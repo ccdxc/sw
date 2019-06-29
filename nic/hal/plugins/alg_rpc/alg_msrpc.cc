@@ -1034,7 +1034,6 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
             SDK_ASSERT_RETURN((rpc_info != NULL), HAL_RET_OOM);
             l4_sess->isCtrl = true;
             l4_sess->info = rpc_info;
-            l4_sess->idle_timeout = sfw_info->idle_timeout;
             reset_rpc_info(rpc_info);
             copy_sfw_info(sfw_info, l4_sess);
             //Register feature session state

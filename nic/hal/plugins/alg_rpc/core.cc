@@ -316,7 +316,7 @@ void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess, rpc_cb_t cb,
     if (ret == HAL_RET_OK) {
         exp_flow->entry.handler = expected_flow_handler;
         exp_flow->alg = l4_sess->alg;
-        exp_flow->idle_timeout = l4_sess->idle_timeout;
+        exp_flow->idle_timeout = timeout;
         exp_flow->rule_id = (ctx.session())?ctx.session()->sfw_rule_id:0;
         exp_flow->info = g_rpc_state->alg_info_slab()->alloc();
         SDK_ASSERT(exp_flow->info != NULL);

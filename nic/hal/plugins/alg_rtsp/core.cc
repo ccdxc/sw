@@ -250,7 +250,7 @@ expected_flow_handler(fte::ctx_t &ctx, alg_utils::expected_flow_t *entry)
 
     // skip firewall check
     sfw_info->skip_sfw = true;
-    sfw_info->idle_timeout = ((alg_utils::l4_alg_status_t *)entry)->idle_timeout;
+    sfw_info->idle_timeout = exp_flow->idle_timeout;
 
     return ret;
 }
@@ -293,6 +293,7 @@ add_expected_flows(fte::ctx_t &ctx, alg_utils::app_session_t *app_sess,
         exp_flow->info = rtsp_sess;
         exp_flow->sess_hdl = HAL_HANDLE_INVALID;
         exp_flow->rule_id = (ctx.session())?ctx.session()->sfw_rule_id:0;
+        exp_flow->idle_timeout = l4_sess->idle_timeout;
     }
 
     return HAL_RET_OK;

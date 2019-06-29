@@ -50,6 +50,7 @@ TEST_F(ftp_test, ftp_session)
     EXPECT_NE(session->sfw_rule_id, 0);
     EXPECT_EQ(session->skip_sfw_reval, 0);
     EXPECT_EQ(session->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
+    EXPECT_EQ(ctx_.session()->idle_timeout, 30);
 
     // TCP SYN/ACK on ALG_CFLOW_LIFQ
     tcp = Tins::TCP(2000, FTP_PORT);
@@ -103,6 +104,7 @@ TEST_F(ftp_test, ftp_session)
     EXPECT_EQ(ctx_.session()->skip_sfw_reval, 1);
     EXPECT_EQ(ctx_.session()->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
     EXPECT_NE(ctx_.session()->sfw_rule_id, 0);
+    EXPECT_EQ(ctx_.session()->idle_timeout, 30);
     CHECK_DENY_TCP(client_eph, server_eph, 37075, 2000, "c:2000 -> s:37075");
     EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_DENY);
     EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg, nwsec::APP_SVC_NONE);

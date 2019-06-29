@@ -102,6 +102,7 @@ TEST_F(rpc_test, sunrpc_session)
     EXPECT_NE(session->sfw_rule_id, 0);
     EXPECT_EQ(session->skip_sfw_reval, 0);
     EXPECT_EQ(session->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
+    EXPECT_EQ(ctx_.session()->idle_timeout, 30);
 
     // TCP SYN/ACK on ALG_CFLOW_LIFQ
     tcp = Tins::TCP(5000, SUNRPC_PORT);
@@ -149,6 +150,7 @@ TEST_F(rpc_test, sunrpc_session)
     EXPECT_EQ(ctx_.session()->skip_sfw_reval, 1);
     EXPECT_EQ(ctx_.session()->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
     EXPECT_NE(ctx_.session()->sfw_rule_id, 0);
+    EXPECT_EQ(ctx_.session()->idle_timeout, 100);
     CHECK_ALLOW_UDP(server_eph, client_eph, 32776, 59374, "c:59374 -> s:32776");
     CHECK_DENY_UDP(server_eph, client_eph, 54890, 49153, "c:49153 -> s:54890");
     CHECK_DENY_TCP(server_eph, client_eph, 32776, 59374, "c:59374 -> s:32776");

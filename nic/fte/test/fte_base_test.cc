@@ -275,6 +275,7 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<fte_
         if (rule.app.alg) {
             nwsec::AppData* app_data = rule_spec->mutable_action()->mutable_app_data();
             app_data->set_alg(rule.app.alg);
+            app_data->set_idle_timeout(rule.app.idle_timeout);
             if (rule.app.has_alg_opts) {
                 if (rule.app.alg == nwsec::APP_SVC_FTP) {
                     app_data->mutable_ftp_option_info()->set_allow_mismatch_ip_address(\
