@@ -5,11 +5,13 @@
 #include "core.hpp"
 #include "nic/include/base.hpp"
 #include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
+#include "nic/hal/plugins/sfw/core.hpp"
 
 namespace hal {
 namespace plugins {
 namespace telemetry {
 
+using namespace hal::plugins::sfw;
 /*
  * update_flow
  *   Update flow from TELEMETRY policy
@@ -224,7 +226,8 @@ telemetry_completion_hdlr (fte::ctx_t& ctx, bool status)
 fte::pipeline_action_t
 telemetry_exec (fte::ctx_t &ctx)
 {
-    hal_ret_t           ret = HAL_RET_OK;
+    hal_ret_t   ret = HAL_RET_OK;
+    sfw_info_t  *sfw_info = NULL;
     
     hal::session_t *session = ctx.session();
     HAL_TRACE_DEBUG("telemetry plugin exec, event {}", ctx.pipeline_event());
@@ -233,6 +236,9 @@ telemetry_exec (fte::ctx_t &ctx)
             (ctx.cpu_rxhdr() && (ctx.cpu_rxhdr()->src_lif == HAL_LIF_CPU) &&
             (ctx.cpu_rxhdr()->src_app_id == P4PLUS_APPTYPE_TELEMETRY))) {
         HAL_TRACE_DEBUG("Processing IPFIX flow");
+        sfw_info = sfw::sfw_feature_state(ctx);
+        // Skip firewall processing for IPFIX flows
+        sfw_info->skip_sfw = true;
         /* Skip rflow for IPFIX pkts */
         ctx.set_valid_rflow(false);
         ctx.set_is_ipfix_flow(true);
