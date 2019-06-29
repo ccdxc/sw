@@ -156,6 +156,77 @@ func TestVeniceRolloutRestartEvent(t *testing.T) {
 	AssertConsistently(t, checkNoSmartNICReq("naples2", protos.SmartNICOp_SmartNICDisruptiveUpgrade), "Expected naples1 spec not to have RunVersion", "100ms", "1s")
 }
 
+func TestSmartNICWatch(t *testing.T) {
+
+	// create recorder
+	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
+
+	// create  state manager
+	stateMgr, err := NewStatemgr(&dummyWriter{}, evtsRecorder)
+	AssertOk(t, err, "Error creating StateMgr")
+	defer stateMgr.Stop()
+
+	// start a watch
+	watchChan := make(chan memdb.Event, memdb.WatchLen)
+	err = stateMgr.WatchObjects("SmartNIC", watchChan)
+	AssertOk(t, err, "Error creating the Watch for VeniceRollout")
+
+	// Create SmartNICObject and see that its properly created and that watchers see the updates to the object
+	sn := cluster.SmartNIC{
+		TypeMeta: api.TypeMeta{
+			Kind: "SmartNIC",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "naples1",
+			Tenant: "default",
+			Labels: map[string]string{"l1": "n1"},
+		},
+		Status: cluster.SmartNICStatus{
+			AdmissionPhase: cluster.SmartNICStatus_ADMITTED.String(),
+		},
+	}
+	stateMgr.handleSmartNICEvent(kvstore.Created, &sn)
+
+	// verify we get a watch event
+	select {
+	case wnt, ok := <-watchChan:
+		Assert(t, ok, "Error reading from channel", wnt)
+		Assert(t, wnt.Obj.GetObjectMeta().Name == "naples1", "Received invalid naples1", wnt)
+		Assert(t, wnt.Obj.GetObjectKind() == "SmartNIC", "Received invalid Kind SmartNIC", wnt)
+
+	case <-time.After(time.Second):
+		t.Fatalf("Timed out while waiting for channel event")
+	}
+
+	sn.Status.AdmissionPhase = cluster.SmartNICStatus_PENDING.String()
+	stateMgr.handleSmartNICEvent(kvstore.Updated, &sn)
+
+	// verify we get a watch event
+	select {
+	case wnt, ok := <-watchChan:
+		Assert(t, ok, "Error reading from channel", wnt)
+		Assert(t, wnt.Obj.GetObjectMeta().Name == "naples1", "Received invalid naples1", wnt)
+		Assert(t, wnt.Obj.GetObjectKind() == "SmartNIC", "Received invalid Kind SmartNIC", wnt)
+
+	case <-time.After(time.Second):
+		t.Fatalf("Timed out while waiting for channel event")
+	}
+	sn.ObjectMeta.Tenant = "default2"
+	stateMgr.handleSmartNICEvent(kvstore.Updated, &sn)
+
+	// verify we get a watch event
+	select {
+	case wnt, ok := <-watchChan:
+		Assert(t, ok, "Error reading from channel", wnt)
+		Assert(t, wnt.Obj.GetObjectMeta().Name == "naples1", "Received invalid naples1", wnt)
+		Assert(t, wnt.Obj.GetObjectKind() == "SmartNIC", "Received invalid Kind SmartNIC", wnt)
+
+	case <-time.After(time.Second):
+		t.Fatalf("Timed out while waiting for channel event")
+	}
+
+}
+
 func TestVeniceRolloutWatch(t *testing.T) {
 	// Create VeniceRolloutObject and see that its properly created and that watchers see the updates to the object
 	// create recorder
