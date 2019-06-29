@@ -54,7 +54,7 @@ func downloadMetaFile(ctx context.Context, resolver resolver.Interface, bundleVe
 	fr, err := client.GetObject(ctx, name)
 	if err != nil {
 		log.Errorf("Could not get object (%s)", err)
-		return fmt.Errorf("Could not get object (%s)", err)
+		return fmt.Errorf("Image doesnt exist in objectstore")
 	}
 
 	of, err := os.Create(out)

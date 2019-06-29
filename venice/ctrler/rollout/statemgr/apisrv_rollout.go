@@ -314,13 +314,13 @@ func (ros *RolloutState) raiseRolloutEvent(status roproto.RolloutStatus_RolloutO
 	}
 	switch status {
 	case roproto.RolloutStatus_SUCCESS:
-		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_SUCCESS, "Rollout completed sucessfully", ros.Rollout)
+		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_SUCCESS, fmt.Sprintf("Rollout(%s) to version(%s) completed sucessfully", ros.Rollout.Name, ros.Rollout.Spec.Version), ros.Rollout)
 	case roproto.RolloutStatus_SUSPENDED:
-		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_SUSPENDED, "Rollout suspended", ros.Rollout)
+		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_SUSPENDED, fmt.Sprintf("Rollout(%s) to version(%s) suspended", ros.Rollout.Name, ros.Rollout.Spec.Version), ros.Rollout)
 	case roproto.RolloutStatus_FAILURE:
-		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_FAILED, "Rollout failed", ros.Rollout)
+		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_FAILED, fmt.Sprintf("Rollout(%s) to version(%s) failed", ros.Rollout.Name, ros.Rollout.Spec.Version), ros.Rollout)
 	case roproto.RolloutStatus_PROGRESSING:
-		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_STARTED, "Rollout started", ros.Rollout)
+		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_STARTED, fmt.Sprintf("Rollout(%s) to version(%s) started", ros.Rollout.Name, ros.Rollout.Spec.Version), ros.Rollout)
 	}
 }
 func (ros *RolloutState) saveStatus() {
