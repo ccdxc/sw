@@ -89,6 +89,7 @@ header_type artemis_rx_to_tx_header2_t {
     fields {
         // from artemis_p4_to_rxdma_header3_t
         flow_hash           : 32;
+        epoch               : 8;
         parent_hint_index   : 22;
         flow_nrecircs       : 3;
         parent_hint_slot    : 3;

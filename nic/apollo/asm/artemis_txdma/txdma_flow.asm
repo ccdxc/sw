@@ -8,9 +8,13 @@ struct txdma_flow_d  d;
 struct phv_ p;
 
 #define FLOW_HASH_MSB 31:23
+#define FLOW_HASH_LSB 22:0
 #define FLOW_FLIT_TO_PHV_RANGE(flit) p[(((flit+1)*512)-1):(flit*512)]
 #define FLOW_PARENT_FLIT    FLOW_FLIT_TO_PHV_RANGE(TXDMA_RFLOW_PARENT_FLIT)
 #define FLOW_LEAF_FLIT      FLOW_FLIT_TO_PHV_RANGE(TXDMA_RFLOW_LEAF_FLIT)
+
+// Support max of 6 flow lookups (so max 5 nrecircs)
+#define MAX_FLOW_LOOKUPS    4
 %%
 
 flow_hash:
@@ -21,9 +25,20 @@ flow_hash:
     b.c2        label_key_invalid
     nop
 
+    // Set hash only in the first lookup
+    seq         c2, k.key3_num_flow_lkps, 0
+    phvwrpair.c2 p.txdma_to_arm_meta_rflow_hash, r1.wx, \
+                p.txdma_to_arm_meta_rflow_ipaf, 1
+
     bbne        d.txdma_flow_hash_d.entry_valid, TRUE, label_flow_miss
     nop
 
+    // manually compare keys as we are not using hw overflow assist
+    seq         c1, k[471:408], d[471:408]
+    seq.!c1     c1, k[407:344], d[407:344]
+    seq.!c1     c1, k[343:280], d[343:280]
+    seq.!c1     c1, k[279:216], d[279:216]
+    seq.!c1     c1, k[215:166], d[215:166]
     bcf         [c1], label_flow_hit
     // Check hash1 and hint1
     seq         c1, r1[FLOW_HASH_MSB], d.txdma_flow_hash_d.hash1
@@ -51,86 +66,79 @@ flow_hash:
     bcf         [c1&c2], label_flow_hash_hit
     add         r2, r0, d.txdma_flow_hash_d.more_hints
 
-    /* Entry valid but, no key match, no hint match, no more hints, nor linked hints (Hint entry scenario)
-            - Relay Parent entry (D-vector) 
-            - Relay new flow key (K-vector)
-    */
-
-    /* All done with the tables, set flow key to invalid */
-    phvwr       p.key3_flow_lkp_type, 0
-    phvwr       p.{txdma_predicate_flow_enable...txdma_predicate_cps_path_en}, 0
-    phvwr       p.capri_p4_intr_recirc, FALSE
+label_2nd_level_flow_miss:
+    /* Entry valid but, no key match, no hint match, no more hints, nor linked
+     * hints (Hint entry scenario)
+     *      - Relay Parent entry (D-vector) 
+     *      - Relay new flow key (K-vector)
+     */
 
     phvwr       FLOW_PARENT_FLIT, d.{txdma_flow_hash_d.entry_valid...txdma_flow_hash_d.__pad_to_512b}
 
-    tblwr.l     d[511:504], k.key3_epoch
-    tblwr.l     d[471:464], k.key1_proto
-    tblwr.l     d[463:416], k.key1_src[111:64]
-    tblwr.l     d[415:352], k.key1_src[63:0]
-    tblwr.l     d[351:336], k.key2_src[15:0]
-    tblwr.l     d[335:272], k.key2_dst[79:16]
-    tblwr.l     d[271:256], k.key2_dst[15:0]
-    tblwr.l     d[255:208], k.key3_dst[47:0]
-    tblwr.l     d[207:192], k.key3_dport
-    tblwr.l     d[191:176], k.key3_sport
-    tblwr.l     d[175:168], k.key3_vpc_id
-    tblwr.l     d[167:166], k.key3_ktype
-
-    phvwr       FLOW_LEAF_FLIT, d.{txdma_flow_hash_d.entry_valid...txdma_flow_hash_d.__pad_to_512b}
-
-    add         r2, r0, k.key1_flow_ohash
-    andi        r3, r2, 0x80000000
-    sne         c2, r3, 0
+    seq         c2, k.key1_flow_ohash_lkp, 1
 
     /* Hint entry specific */
-    //phvwr.c2    p.txdma_to_arm_meta_rflow_parent_is_hint, TRUE
-    andi.c2     r3, r2, ~(0x80000000)
+    add         r4, r0, k.key1_flow_ohash[FLOW_HASH_LSB].wx
     phvwrpair.c2 p.txdma_to_arm_meta_rflow_parent_is_hint, TRUE, \
-                p.txdma_to_arm_meta_rflow_parent_index, r3
+                p.txdma_to_arm_meta_rflow_parent_index, r4
 
-    phvwrpair   p.txdma_to_arm_meta_rflow_hash, r1, \
-                p.txdma_to_arm_meta_rflow_ipaf, 1
+    slt         c1, k.key3_num_flow_lkps, 2
+    add.c1      r1, r0, r0
+    sub.!c1     r1, k.key3_num_flow_lkps, 1
+    phvwr       p.txdma_to_arm_meta_rflow_nrecircs, r1
 
     seq         c2, r0, d.txdma_flow_hash_d.hint1
-    phvwr.c2.e  p.txdma_to_arm_meta_rflow_parent_hint_slot, 1
+    phvwr.c2    p.txdma_to_arm_meta_rflow_parent_hint_slot, 1
 
     seq         c2, r0, d.txdma_flow_hash_d.hint2
-    phvwr.c2.e  p.txdma_to_arm_meta_rflow_parent_hint_slot, 2
+    phvwr.c2    p.txdma_to_arm_meta_rflow_parent_hint_slot, 2
 
     seq         c2, r0, d.txdma_flow_hash_d.hint3
-    phvwr.c2.e  p.txdma_to_arm_meta_rflow_parent_hint_slot, 3
+    phvwr.c2    p.txdma_to_arm_meta_rflow_parent_hint_slot, 3
 
     seq         c2, r0, d.txdma_flow_hash_d.hint4
-    phvwr.c2.e  p.txdma_to_arm_meta_rflow_parent_hint_slot, 4
+    phvwr.c2    p.txdma_to_arm_meta_rflow_parent_hint_slot, 4
     nop
-
 
 label_flow_miss:
     /* All done with the tables, set flow key to invalid */
     phvwr       p.key3_flow_lkp_type, 0
     phvwr       p.{txdma_predicate_flow_enable...txdma_predicate_cps_path_en}, 0
     phvwr       p.capri_p4_intr_recirc, FALSE
+
     /* 
-        Setup assist informaton for rflow
-        - Key information
-        - Main table miss indication
-    */
-    tblwr.l     d[511:504], k.key3_epoch
-    tblwr.l     d[471:464], k.key1_proto
-    tblwr.l     d[463:416], k.key1_src[111:64]
-    tblwr.l     d[415:352], k.key1_src[63:0]
-    tblwr.l     d[351:336], k.key2_src[15:0]
-    tblwr.l     d[335:272], k.key2_dst[79:16]
-    tblwr.l     d[271:256], k.key2_dst[15:0]
-    tblwr.l     d[255:208], k.key3_dst[47:0]
-    tblwr.l     d[207:192], k.key3_dport
-    tblwr.l     d[191:176], k.key3_sport
-    tblwr.l     d[175:168], k.key3_vpc_id
-    tblwr.l     d[167:166], k.key3_ktype
-    phvwr       FLOW_PARENT_FLIT, d.{txdma_flow_hash_d.entry_valid...txdma_flow_hash_d.__pad_to_512b}
-    //phvwr       p.txdma_to_arm_meta_rflow_parent_index, r1
-    phvwrpair.e   p.txdma_to_arm_meta_rflow_hash, r1, \
-                  p.txdma_to_arm_meta_rflow_ipaf, 1
+     *  Setup assist informaton for rflow
+     *  - Key information
+     *  - Main table miss indication
+     */
+
+    // zero flit first
+    phvwr       FLOW_LEAF_FLIT, 0
+
+    // Fill rflow key in leaf entry (flit 3)
+    //  check flow_k for offset from bottom where the key starts
+    add             r1, 0, (TXDMA_RFLOW_LEAF_FLIT * 512) + 120 + 8 + 32 + 6
+    phvwrp          r1, 0, 2, 2 // ktype
+    add             r1, r1, 2
+    phvwrp          r1, 0, 8, k.key3_vpc_id
+    add             r1, r1, 8
+    phvwrp          r1, 0, 16, k.key3_sport
+    add             r1, r1, 16
+    phvwrp          r1, 0, 16, k.key3_dport
+    add             r1, r1, 16
+    phvwrp          r1, 0, 48, k.key3_dst
+    add             r1, r1, 48
+    phvwrp          r1, 0, 80, k.key2_dst
+    add             r1, r1, 80
+    phvwrp          r1, 0, 16, k.key2_src
+    add             r1, r1, 16
+    phvwrp          r1, 0, 112, k.key1_src
+    add             r1, r1, 112
+    phvwrp          r1, 0, 8, k.key1_proto
+
+    // Fill iflow d (has to match flow_d)
+    add             r1, 0, (TXDMA_RFLOW_LEAF_FLIT * 512) + 512 - 8
+    phvwrp.e        r1, 0, 8, k.key3_epoch
     nop
 
 label_flow_hit:
@@ -139,12 +147,31 @@ label_flow_hit:
     nop
 
 label_flow_hash_hit:
-    // Set bit 31 for overflow hash lookup to work
-    ori         r2, r2, 0x80000000
+    // increment number of flow lookups
+    add         r1, k.key3_num_flow_lkps, 1
+
+    seq         c2, r1, MAX_FLOW_LOOKUPS
+    b.c2        max_recircs_reached
+    phvwr       p.key3_num_flow_lkps, r1
+
+    // indicate that this is an overflow lookup
     phvwr.e     p.key1_flow_ohash, r2
-    nop
+    phvwr       p.key1_flow_ohash_lkp, 1
 
 label_key_invalid:
+    nop.e
+    nop
+
+max_recircs_reached:
+    // error, should not reach here
+    phvwr       FLOW_FLIT_TO_PHV_RANGE(TXDMA_IFLOW_PARENT_FLIT), 0
+    phvwr       FLOW_FLIT_TO_PHV_RANGE(TXDMA_IFLOW_LEAF_FLIT), 0
+    phvwr       FLOW_FLIT_TO_PHV_RANGE(TXDMA_RFLOW_PARENT_FLIT), 0
+    phvwr       FLOW_FLIT_TO_PHV_RANGE(TXDMA_RFLOW_LEAF_FLIT), 0
+
+    phvwr       p.key3_flow_lkp_type, 0
+    phvwr       p.{txdma_predicate_flow_enable...txdma_predicate_cps_path_en}, 0
+    phvwr       p.capri_p4_intr_recirc, FALSE
     nop.e
     nop
 

@@ -53,7 +53,7 @@ iflow_ipv4_key:
     add             r1, r1, 16
     phvwrp          r1, 0, 8, d.iflow_rx2tx_d.flow_proto
 
-    // Fill iflow d (has to match ipv4_flow_d
+    // Fill iflow d (has to match ipv4_flow_d)
     add             r1, 0, (TXDMA_IFLOW_LEAF_FLIT * 512) + 512 - 8
     phvwrp          r1, 0, 8, d.iflow_rx2tx_d.epoch
 
@@ -90,7 +90,7 @@ iflow_ipv6_key:
     add             r1, r1, 128
     phvwrp          r1, 0, 8, d.iflow_rx2tx_d.flow_proto
 
-    // Fill iflow d (has to match flow_d
+    // Fill iflow d (has to match flow_d)
     add             r1, 0, (TXDMA_IFLOW_LEAF_FLIT * 512) + 512 - 8
     phvwrp          r1, 0, 8, d.iflow_rx2tx_d.epoch
 

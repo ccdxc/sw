@@ -3,9 +3,9 @@
 /*****************************************************************************/
 @pragma capi appdatafields session_index epoch flow_role
 @pragma capi hwfields_access_api
-action txdma_flow_hash(entry_valid, session_index, epoch, flow_role, hash1, hint1,
-                 hash2, hint2, hash3, hint3, hash4, hint4, more_hashes,
-                 more_hints) {
+action txdma_flow_hash(entry_valid, session_index, epoch, flow_role, pad8,
+                 hash1, hint1, hash2, hint2, hash3, hint3, hash4, hint4,
+                 more_hashes, more_hints) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         //modify_field(service_header.flow_done, TRUE);
@@ -55,6 +55,21 @@ action txdma_flow_hash(entry_valid, session_index, epoch, flow_role, hash1, hint
     modify_field(scratch_metadata.flow_hash, hash3);
     modify_field(scratch_metadata.flow_hash, hash4);
     modify_field(scratch_metadata.field8, key3.flow_lkp_type);
+    modify_field(scratch_metadata.field8, key3.num_flow_lkps);
+    modify_field(scratch_metadata.field1, key1.flow_ohash_lkp);
+    modify_field(scratch_metadata.field8, pad8);
+
+    // access all the k fields so it gets added as i for the overflow lookups
+    modify_field(scratch_metadata.field32, key1.flow_ohash);
+    modify_field(scratch_metadata.field8, key3.vpc_id);
+    modify_field(scratch_metadata.field2, key3.ktype);
+    modify_field(scratch_metadata.field112, key1.src);
+    modify_field(scratch_metadata.field16, key2.src);
+    modify_field(scratch_metadata.field80, key2.dst);
+    modify_field(scratch_metadata.field48, key3.dst);
+    modify_field(scratch_metadata.field8, key1.proto);
+    modify_field(scratch_metadata.field16, key3.sport);
+    modify_field(scratch_metadata.field16, key3.dport);
 }
 
 @pragma stage 2
@@ -79,8 +94,7 @@ table txdma_flow {
 
 @pragma stage 3
 @pragma hbm_table
-@pragma overflow_table txdma_flow
-table txdma_flow_ohash_1 {
+table txdma_flow_ohash_3 {
     reads {
         key1.flow_ohash : exact;
     }
@@ -90,11 +104,9 @@ table txdma_flow_ohash_1 {
     size : FLOW_OHASH_TABLE_SIZE;
 }
 
-#if 0
 @pragma stage 4
 @pragma hbm_table
-@pragma overflow_table txdma_flow
-table txdma_flow_ohash_2 {
+table txdma_flow_ohash_4 {
     reads {
         key1.flow_ohash : exact;
     }
@@ -103,14 +115,49 @@ table txdma_flow_ohash_2 {
     }
     size : FLOW_OHASH_TABLE_SIZE;
 }
-#endif
+
+@pragma stage 5
+@pragma hbm_table
+table txdma_flow_ohash_5 {
+    reads {
+        key1.flow_ohash : exact;
+    }
+    actions {
+        txdma_flow_hash;
+    }
+    size : FLOW_OHASH_TABLE_SIZE;
+}
+
+@pragma stage 6
+@pragma hbm_table
+table txdma_flow_ohash_6 {
+    reads {
+        key1.flow_ohash : exact;
+    }
+    actions {
+        txdma_flow_hash;
+    }
+    size : FLOW_OHASH_TABLE_SIZE;
+}
+
+@pragma stage 7
+@pragma hbm_table
+table txdma_flow_ohash_7 {
+    reads {
+        key1.flow_ohash : exact;
+    }
+    actions {
+        txdma_flow_hash;
+    }
+    size : FLOW_OHASH_TABLE_SIZE;
+}
 
 /*****************************************************************************/
 /* Policy (IPv4)                                                             */
 /*****************************************************************************/
 @pragma capi appdatafields session_index epoch flow_role
 @pragma capi hwfields_access_api
-action txdma_ipv4_flow_hash(entry_valid, session_index, epoch, flow_role,
+action txdma_ipv4_flow_hash(entry_valid, session_index, epoch, flow_role, pad8,
                       hash1, hint1, hash2, hint2, more_hashes, more_hints) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
@@ -149,6 +196,18 @@ action txdma_ipv4_flow_hash(entry_valid, session_index, epoch, flow_role,
     modify_field(scratch_metadata.flow_hash, hash1);
     modify_field(scratch_metadata.flow_hash, hash2);
     modify_field(scratch_metadata.field8, key2_ipv4.flow_lkp_type);
+    modify_field(scratch_metadata.field8, key2_ipv4.num_flow_lkps);
+    modify_field(scratch_metadata.field1, key_ipv4.flow_ohash_lkp);
+    modify_field(scratch_metadata.field8, pad8);
+
+    // access all the k fields so it gets added as i for the overflow lookups
+    modify_field(scratch_metadata.field32, key_ipv4.flow_ohash);
+    modify_field(scratch_metadata.field8, key_ipv4.vpc_id);
+    modify_field(scratch_metadata.field32, key_ipv4.ipv4_src);
+    modify_field(scratch_metadata.field32, key_ipv4.ipv4_dst);
+    modify_field(scratch_metadata.field8, key_ipv4.proto);
+    modify_field(scratch_metadata.field16, key_ipv4.sport);
+    modify_field(scratch_metadata.field16, key_ipv4.dport);
 }
 
 @pragma stage 2
@@ -170,10 +229,57 @@ table txdma_ipv4_flow {
 
 @pragma stage 3
 @pragma hbm_table
-@pragma overflow_table txdma_ipv4_flow
-table txdma_ipv4_flow_ohash_1 {
+table txdma_ipv4_flow_ohash_3 {
     reads {
         key_ipv4.flow_ohash   : exact;
+    }
+    actions {
+        txdma_ipv4_flow_hash;
+    }
+    size : FLOW_OHASH_TABLE_SIZE;
+}
+
+@pragma stage 4
+@pragma hbm_table
+table txdma_ipv4_flow_ohash_4 {
+    reads {
+        key_ipv4.flow_ohash  : exact;
+    }
+    actions {
+        txdma_ipv4_flow_hash;
+    }
+    size : FLOW_OHASH_TABLE_SIZE;
+}
+
+@pragma stage 5
+@pragma hbm_table
+table txdma_ipv4_flow_ohash_5 {
+    reads {
+        key_ipv4.flow_ohash  : exact;
+    }
+    actions {
+        txdma_ipv4_flow_hash;
+    }
+    size : FLOW_OHASH_TABLE_SIZE;
+}
+
+@pragma stage 6
+@pragma hbm_table
+table txdma_ipv4_flow_ohash_6 {
+    reads {
+        key_ipv4.flow_ohash  : exact;
+    }
+    actions {
+        txdma_ipv4_flow_hash;
+    }
+    size : FLOW_OHASH_TABLE_SIZE;
+}
+
+@pragma stage 7
+@pragma hbm_table
+table txdma_ipv4_flow_ohash_7 {
+    reads {
+        key_ipv4.flow_ohash  : exact;
     }
     actions {
         txdma_ipv4_flow_hash;
@@ -185,7 +291,14 @@ control flow_lookup {
     apply(txdma_ipv4_flow);
     apply(txdma_flow);
 
-    apply(txdma_ipv4_flow_ohash_1);
-    apply(txdma_flow_ohash_1);
-    //apply(txdma_flow_ohash_2);
+    apply(txdma_ipv4_flow_ohash_3);
+    //apply(txdma_ipv4_flow_ohash_4);
+    apply(txdma_ipv4_flow_ohash_5);
+    apply(txdma_ipv4_flow_ohash_6);
+    apply(txdma_ipv4_flow_ohash_7);
+    apply(txdma_flow_ohash_3);
+    //apply(txdma_flow_ohash_4);
+    //apply(txdma_flow_ohash_5);
+    apply(txdma_flow_ohash_6);
+    apply(txdma_flow_ohash_7);
 }

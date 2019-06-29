@@ -46,7 +46,10 @@ header_type scratch_metadata_t {
         field22         : 22;
         field32         : 32;
         field40         : 40;
+        field48         : 48;
+        field80         : 80;
         field64         : 64;
+        field112        : 112;
         field128        : 128;
         field512        : 512;
         payload_addr    : 40;
@@ -79,7 +82,8 @@ header_type scratch_metadata_t {
 header_type key_ipv4_metadata_t {
     fields {
         flow_ohash      : 32;
-        _pad0           : 8;
+        flow_ohash_lkp  : 1;
+        _pad0           : 7;
         proto           : 8;
         dport           : 16;
         sport           : 16;
@@ -95,13 +99,15 @@ header_type key_ipv4_metadata_t {
 header_type key_ipv4_metadata_part2_t {
     fields {
         flow_lkp_type   : 8;
+        num_flow_lkps   : 8;
     }
 }
 
 header_type key_metadata_t {
     fields {
         flow_ohash      : 32;
-        _pad0           : 8;
+        flow_ohash_lkp  : 1;
+        _pad0           : 7;
         proto           : 8;
         src             : 128;
         dst             : 128;
@@ -115,8 +121,9 @@ header_type key_metadata_t {
         // I
         epoch           : 8;
         flow_lkp_type   : 8;
+        num_flow_lkps   : 8;
 
-        _pad3           : 112;
+        _pad3           : 104;
     }
 }
 
@@ -126,7 +133,8 @@ header_type key_metadata_t {
 header_type key_metadata_part1_t {
     fields {
         flow_ohash      : 32;
-        _pad0           : 8;
+        flow_ohash_lkp  : 1;
+        _pad0           : 7;
         proto           : 8;
         src             : 112;
     }
@@ -153,8 +161,9 @@ header_type key_metadata_part3_t {
         // I
         epoch           : 8;
         flow_lkp_type   : 8;
+        num_flow_lkps   : 8;
 
-        _pad3           : 112;
+        _pad3           : 104;
     }
 }
 
