@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"text/template"
 
@@ -189,6 +190,10 @@ func getQuote() string {
 	return "`"
 }
 
+func isLast(x int, a interface{}) bool {
+	return x == reflect.ValueOf(a).Len()-1
+}
+
 var funcMap = template.FuncMap{
 	"ToUpper":    strings.ToUpper,
 	"ToLower":    strings.ToLower,
@@ -197,6 +202,7 @@ var funcMap = template.FuncMap{
 	"ThrowError": throwError,
 	"IsTrue":     isTrue,
 	"Quote":      getQuote,
+	"IsLast":     isLast,
 }
 
 // ApplyTemplate applies template on a proto file

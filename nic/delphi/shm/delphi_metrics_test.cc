@@ -57,6 +57,7 @@ public:
     static TestMetricPtr FindDp(int32_t key);
     delphi::error Delete();
     virtual string DebugString();
+    virtual string JSONString();
     static TestMetricsIterator Iterator();
 };
 REGISTER_METRICS(TestMetric);
@@ -267,6 +268,22 @@ string TestMetric::DebugString() {
     return outstr.str();
 }
 
+// DebugString prints the contents of the metrics object
+string TestMetric::JSONString() {
+    stringstream outstr;
+    outstr << "{" << endl;
+    outstr << "  \"TestMetric\": {" << endl;
+    outstr << "    \"Key\": " << key_ << "," << endl;
+    outstr << "    \"RxCounte\": " << RxCounter()->Get() << "," << endl;
+    outstr << "    \"TxCounter\": " << TxCounter()->Get() << "," << endl;
+    outstr << "    \"RxRate\": " << RxRate()->Get() << "," << endl;
+    outstr << "    \"TxRate\": " << TxRate()->Get() << endl;
+    outstr << "  }" << endl;
+    outstr << "}" << endl;
+
+    return outstr.str();
+}
+    
 class DelphiMetricTest : public testing::Test {
 protected:
     delphi::shm::DelphiShmPtr srv_shm_;

@@ -11,6 +11,7 @@ var (
 #include "nic/delphi/shm/delphi_metrics.hpp"
 #include "{{.FilePrefix}}.pb.h"
 #include <google/protobuf/text_format.h>
+#include <google/protobuf/util/json_util.h>
 #include "nic/sdk/lib/pal/pal.hpp"
 
 namespace delphi {
@@ -234,6 +235,7 @@ public:
     static int32_t Size();
     delphi::error Delete();
     string DebugString();
+    string JSONString();
     static {{.GetName}}Iterator Iterator();
     void * Raw() { return shm_ptr_; };
 	static delphi::error  CreateTable();
@@ -891,6 +893,44 @@ string {{.GetName}}::DebugString() {
     outstr << "    {{.GetName}}: " << {{.GetName}}()->Get() << endl;
       {{end}}
     {{end}}
+    outstr << "}" << endl;
+
+    return outstr.str();
+}
+
+// DebugString returns a string with the contents of the metrics object in JSON 
+// format
+string {{.GetName}}::JSONString() {
+    stringstream outstr;
+    outstr << "{" << endl;
+    outstr << "  \"{{.GetName}}\": {" << endl;
+
+    {{$fields := .Fields}}
+    {{range $i, $e := $fields}}
+      {{if (eq .GetName "Key") }}
+	    {{ if .TypeIsMessage }}
+          std::string json_string;
+          google::protobuf::util::JsonPrintOptions options;
+          options.add_whitespace = true;
+          options.always_print_primitive_fields = true;
+          options.preserve_proto_field_names = true;
+          MessageToJsonString(key_, &json_string, options);
+	      outstr << "    \"Key\": " << json_string;
+	    {{else}}
+	      outstr << "    \"Key\": " << key_;
+	    {{end}}
+      {{else if (eq .GetTypeName ".delphi.Counter") }}
+        outstr << "    \"{{.GetName}}\": " << {{.GetName}}()->Get();
+      {{else if (eq .GetTypeName ".delphi.Gauge") }}
+        outstr << "    \"{{.GetName}}\": " << {{.GetName}}()->Get();
+      {{end}}
+      {{if IsLast $i $fields}}
+        outstr << endl;
+      {{else}}
+        outstr << "," << endl;
+      {{end}}
+    {{end}}
+    outstr << "  }" << endl;
     outstr << "}" << endl;
 
     return outstr.str();

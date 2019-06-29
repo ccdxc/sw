@@ -110,7 +110,7 @@ void listMetricsKind(string kind, string matchstr) {
     delphi::metrics::DelphiMetricsIterator miter(kind);
     for (; miter.IsNotNil(); miter.Next()) {
         auto tmp = miter.Get();
-        string dbgstr = tmp->DebugString();
+        string dbgstr = tmp->JSONString();
         if ((matchstr == "") || (dbgstr.find(matchstr) != std::string::npos)) {
             printf("%s\n", dbgstr.c_str());
         }

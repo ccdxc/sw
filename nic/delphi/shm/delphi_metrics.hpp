@@ -81,6 +81,7 @@ class DelphiMetrics {
 public:
     DelphiMetrics() {};
     virtual string DebugString() = 0;
+    virtual string JSONString() = 0;
     virtual void *Raw() = 0;
     static delphi::shm::DelphiShmPtr GetDelphiShm();
     // GetFactoryMap gets the factory db
