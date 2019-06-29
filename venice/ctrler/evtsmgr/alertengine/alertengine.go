@@ -122,6 +122,7 @@ func (a *alertEngineImpl) ProcessEvents(eventList *evtsapi.EventList) {
 			if evt.GetCategory() != eventattrs.Category_Rollout.String() {
 				// skip processing all events that don't belong to rollout category
 				// as a result, only rollout alerts will be triggered in the maintenance mode
+				a.RUnlock()
 				continue
 			}
 		}
