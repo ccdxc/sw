@@ -2,6 +2,7 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "EGRESS_session_k.h"
+#include "nic/apollo/p4/include/artemis_table_sizes.h"
 #include "platform/capri/capri_common.hpp"
 
 struct session_k_ k;
@@ -36,12 +37,13 @@ session_tcp_responder:
 
 session_info_common:
     phvwr           p.rewrite_metadata_nexthop_idx, d.session_info_d.nexthop_idx
-    phvwr           p.rewrite_metadata_meter_idx, d.session_info_d.meter_idx
     phvwr           p.rewrite_metadata_meter_len, r7
     phvwr           p.rewrite_metadata_ip, d.session_info_d.tx_dst_ip
     bbeq            k.control_metadata_direction, TX_FROM_HOST, session_tx
     phvwr           p.rewrite_metadata_l4port, d.session_info_d.tx_dst_l4port
 session_rx:
+    add             r1, d.session_info_d.meter_idx, (METER_STATS_TABLE_SIZE >> 1)
+    phvwr           p.rewrite_metadata_meter_idx, r1
     phvwr           p.rewrite_metadata_flags, d.session_info_d.rx_rewrite_flags
     phvwr           p.rewrite_metadata_policer_idx, d.session_info_d.rx_policer_idx
     seq             c1, d.session_info_d.rx_rewrite_flags[RX_REWRITE_DST_IP_BITS], \
@@ -53,6 +55,7 @@ session_rx:
     phvwr.c1        p.nat_metadata_xlate_idx, k.p4e_i2e_pa_or_ca_xlate_idx
 
 session_tx:
+    phvwr           p.rewrite_metadata_meter_idx, d.session_info_d.meter_idx
     phvwr           p.rewrite_metadata_flags, d.session_info_d.tx_rewrite_flags
     phvwr           p.rewrite_metadata_policer_idx, d.session_info_d.tx_policer_idx
     add             r1, r0, k.p4e_i2e_pa_or_ca_xlate_idx
@@ -67,7 +70,7 @@ session_tx:
 session_stats:
     seq             c1, r5, r0
     nop.c1.e
-    add             r5, r5, k.p4e_i2e_session_index, 4
+    add             r5, r5, k.p4e_i2e_session_index, 5
     seq             c1, k.p4e_i2e_flow_role, TCP_FLOW_RESPONDER
     add.c1          r5, r5, 16
     addi            r1, r0, 0x1000001

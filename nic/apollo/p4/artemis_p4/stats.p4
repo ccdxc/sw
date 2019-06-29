@@ -91,6 +91,7 @@ table p4e_drop_stats {
 
 
 control egress_stats {
+    apply(meter_stats);
     if (control_metadata.direction == RX_FROM_SWITCH) {
         apply(vnic_rx_stats);
     }

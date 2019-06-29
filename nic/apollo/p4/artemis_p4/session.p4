@@ -41,7 +41,13 @@ action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
 
     modify_field(scratch_metadata.flag, entry_valid);
     modify_field(scratch_metadata.timestamp, timestamp);
-    modify_field(rewrite_metadata.meter_idx, meter_idx);
+    modify_field(scratch_metadata.meter_idx, meter_idx);
+    if (control_metadata.direction == TX_FROM_HOST) {
+        modify_field(rewrite_metadata.meter_idx, scratch_metadata.meter_idx);
+    } else  {
+        modify_field(rewrite_metadata.meter_idx,
+                     scratch_metadata.meter_idx + (METER_STATS_TABLE_SIZE/2));
+    }
     modify_field(rewrite_metadata.meter_len, capri_p4_intrinsic.packet_len);
     modify_field(rewrite_metadata.ip, tx_dst_ip);
     modify_field(rewrite_metadata.l4port, tx_dst_l4port);
@@ -86,26 +92,6 @@ table session {
     size : SESSION_TABLE_SIZE;
 }
 
-/*****************************************************************************/
-/* Meter stats                                                               */
-/*****************************************************************************/
-action meter_stats() {
-    if (control_metadata.direction == TX_FROM_HOST) {
-        modify_field(scratch_metadata.meter_idx, rewrite_metadata.meter_idx);
-    } else  {
-        add_to_field(scratch_metadata.meter_idx, METER_STATS_TABLE_SIZE * 8);
-    }
-    modify_field(scratch_metadata.packet_len, rewrite_metadata.meter_len);
-}
-
-@pragma stage 5
-table meter_stats {
-    actions {
-        meter_stats;
-    }
-}
-
 control session_lookup {
     apply(session);
-    apply(meter_stats);
 }

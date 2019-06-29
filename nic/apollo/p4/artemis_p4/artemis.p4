@@ -20,6 +20,7 @@
 #include "inter_pipe.p4"
 #include "nat.p4"
 #include "nexthop.p4"
+#include "meter.p4"
 #include "stats.p4"
 #include "mirror.p4"
 #include "checksum.p4"

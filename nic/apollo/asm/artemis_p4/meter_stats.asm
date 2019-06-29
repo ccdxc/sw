@@ -2,26 +2,16 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "EGRESS_meter_stats_k.h"
-#include "nic/apollo/p4/include/artemis_table_sizes.h"
-#include "platform/capri/capri_common.hpp"
 
 struct meter_stats_k_   k;
+struct meter_stats_d    d;
 struct phv_ p;
 
 %%
 
 meter_stats:
-    seq             c1, r5, r0
-    nop.c1.e
-    add             r1, r0, k.rewrite_metadata_meter_idx
-    seq             c1, k.control_metadata_direction, TX_FROM_HOST
-    add.!c1         r1, r1, METER_STATS_TABLE_SIZE
-    add             r5, r5, r1, 3
-    add             r7, r0, k.rewrite_metadata_meter_len
-    or              r7, r7, r5[32:27], 58
-    addi            r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
-    add.e           r6, r6, r5[26:0]
-    memwr.dx        r6, r7
+    tbladd.f.e      d.{meter_stats_d.pkt_bytes}.dx, k.rewrite_metadata_meter_len
+    nop
 
 /*****************************************************************************/
 /* error function                                                            */

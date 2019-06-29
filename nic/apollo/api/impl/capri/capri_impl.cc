@@ -311,7 +311,7 @@ capri_impl::meter_stats(debug::meter_stats_get_cb_t cb, uint32_t lowidx, uint32_
     uint64_t tx_offset = 0, rx_offset = 0;
     uint64_t start_addr = 0;
 
-    if (highidx > METER_STATS_TABLE_SIZE) {
+    if (highidx > (METER_STATS_TABLE_SIZE >> 1)) {
         PDS_TRACE_ERR("Read Meter Stats failed. Invalid index {} specified", highidx);
         return SDK_RET_ERR;
     }
@@ -320,7 +320,7 @@ capri_impl::meter_stats(debug::meter_stats_get_cb_t cb, uint32_t lowidx, uint32_
 
     for (uint32_t idx = lowidx; idx <= highidx; idx ++) {
         tx_offset = idx * 8; // Each statistics is 8B
-        rx_offset = tx_offset + (METER_STATS_TABLE_SIZE * 8);
+        rx_offset = tx_offset + (METER_STATS_TABLE_SIZE << 2); // ((SIZE/2) * 8)
 
         stats.idx = idx;
 

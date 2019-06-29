@@ -67,7 +67,7 @@ header_type rewrite_metadata_t {
         nexthop_idx         : 20;
         flags               : 8;
         policer_idx         : 12;
-        meter_idx           : 16;
+        meter_idx           : 17;
         meter_len           : 16;
         rst_dipo            : 32;
     }

@@ -19,7 +19,7 @@
 #define NEXTHOP_TABLE_SIZE                                  1048576     // 1M
 #define VNIC_STATS_TABLE_SIZE                               256
 #define DROP_STATS_TABLE_SIZE                               64
-#define METER_STATS_TABLE_SIZE                              65536       // 64K
+#define METER_STATS_TABLE_SIZE                              131072      // 128K
 #define CHECKSUM_TABLE_SIZE                                 32
 
 //RXDMA Tables
