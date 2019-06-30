@@ -113,7 +113,6 @@ func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
 		upgCtx.PreUpgMeta.KernelVersion = preImgMeta.Uboot.Image.KernelVersion
 		upgCtx.PreUpgMeta.PcieVersion = preImgMeta.Uboot.Image.PcieVersion
 		upgCtx.PreUpgMeta.BuildDate = preImgMeta.Uboot.Image.BuildDate
-		upgCtx.PreUpgMeta.BuildUser = preImgMeta.Uboot.Image.BuildUser
 		upgCtx.PreUpgMeta.BaseVersion = preImgMeta.Uboot.Image.BaseVersion
 		upgCtx.PreUpgMeta.SoftwareVersion = preImgMeta.Uboot.Image.SoftwareVersion
 	} else {
@@ -141,7 +140,6 @@ func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
 		upgCtx.PostUpgMeta.KernelVersion = postImgMeta.KernelVersion
 		upgCtx.PostUpgMeta.PcieVersion = postImgMeta.PcieVersion
 		upgCtx.PostUpgMeta.BuildDate = postImgMeta.BuildDate
-		upgCtx.PostUpgMeta.BuildUser = postImgMeta.BuildUser
 		upgCtx.PostUpgMeta.BaseVersion = postImgMeta.BaseVersion
 		upgCtx.PostUpgMeta.SoftwareVersion = postImgMeta.SoftwareVersion
 	}
@@ -159,7 +157,6 @@ func isPrePostImageMetaSame(upgCtx *UpgCtx) bool {
 		upgCtx.PostUpgMeta.KernelVersion == upgCtx.PreUpgMeta.KernelVersion &&
 		upgCtx.PostUpgMeta.PcieVersion == upgCtx.PreUpgMeta.PcieVersion &&
 		upgCtx.PostUpgMeta.BuildDate == upgCtx.PreUpgMeta.BuildDate &&
-		upgCtx.PostUpgMeta.BuildUser == upgCtx.PreUpgMeta.BuildUser &&
 		upgCtx.PostUpgMeta.BaseVersion == upgCtx.PreUpgMeta.BaseVersion &&
 		upgCtx.PostUpgMeta.SoftwareVersion == upgCtx.PreUpgMeta.SoftwareVersion {
 		return true

@@ -80,9 +80,6 @@ bool GetUpgCtxTablesFromMeta(string metafile,
                 } else if (!strcmp(sysimg.first.c_str(), "build_date")) {
                     meta.buildDate = sysimg.second.get_value<string>();
                     UPG_LOG_DEBUG("running build date: {}", meta.buildDate);
-                } else if (!strcmp(sysimg.first.c_str(), "build_user")) {
-                    meta.buildUser = sysimg.second.get_value<string>();
-                    UPG_LOG_DEBUG("running build user: {}", meta.buildUser);
                 } else if (!strcmp(sysimg.first.c_str(), "base_version")) {
                     meta.baseVersion = sysimg.second.get_value<string>();
                     UPG_LOG_DEBUG("running base version: {}", meta.baseVersion);
@@ -111,9 +108,6 @@ bool GetUpgCtxTablesFromMeta(string metafile,
                 } else if (!strcmp(item.first.c_str(), "build_date")) {
                     meta.buildDate = item.second.get_value<string>();
                     UPG_LOG_DEBUG("upgrade build date: {}", meta.buildDate);
-                } else if (!strcmp(item.first.c_str(), "build_user")) {
-                    meta.buildUser = item.second.get_value<string>();
-                    UPG_LOG_DEBUG("upgrade build user: {}", meta.buildUser);
                 } else if (!strcmp(item.first.c_str(), "base_version")) {
                     meta.baseVersion = item.second.get_value<string>();
                     UPG_LOG_DEBUG("upgrade base version: {}", meta.baseVersion);
@@ -162,7 +156,6 @@ bool IsPrePostImageMetaSame(UpgCtx& ctx) {
         ctx.postUpgMeta.kernelVersion == ctx.preUpgMeta.kernelVersion &&
         ctx.postUpgMeta.pcieVersion == ctx.preUpgMeta.pcieVersion &&
         ctx.postUpgMeta.buildDate == ctx.preUpgMeta.buildDate &&
-        ctx.postUpgMeta.buildUser == ctx.preUpgMeta.buildUser &&
         ctx.postUpgMeta.baseVersion == ctx.preUpgMeta.baseVersion &&
         ctx.postUpgMeta.softwareVersion == ctx.preUpgMeta.softwareVersion) {
         return true;
