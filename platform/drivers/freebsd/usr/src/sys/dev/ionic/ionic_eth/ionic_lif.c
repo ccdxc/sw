@@ -1796,6 +1796,7 @@ ionic_qcqs_free(struct lif *lif)
 	struct rxque *rxq;
 	struct txque *txq;
 
+	IONIC_LIF_LOCK(lif);
 	for (i = 0; i < lif->nrxqs; i++) {
 		rxq = lif->rxqs[i];
 		ionic_rxq_free(lif, rxq);
@@ -1810,6 +1811,7 @@ ionic_qcqs_free(struct lif *lif)
 	if (lif->adminq)
 		ionic_adminq_free(lif, lif->adminq);
 
+	IONIC_LIF_UNLOCK(lif);
 	IONIC_LIF_LOCK_DESTROY(lif);
 	free(lif->rxqs, M_IONIC);
 	free(lif->txqs, M_IONIC);
