@@ -1,6 +1,10 @@
 import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
+import { Routes, RouterModule, UrlSegment } from '@angular/router';
 import { AlertseventspageComponent } from '@app/components/monitoring-group/alertsevents/alertseventspage.component';
+
+export function destinationOrPolicies(url: UrlSegment[]) {
+  return url.length === 1 && (url[0].path === ('alertpolicies') || url[0].path === ('alertdestinations'))  ? ({consumed: url}) : null;
+}
 
 
 const routes: Routes = [
@@ -9,7 +13,7 @@ const routes: Routes = [
     component: AlertseventspageComponent
   },
   {
-    path: 'alertpolicies',
+    matcher: destinationOrPolicies,
     children: [
       {
         path: '',

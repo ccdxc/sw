@@ -1,5 +1,6 @@
 <app-pagebody class="alertpolicies">
-  <app-penuitabs [style.height]="'100%'">
+  <app-penuitabs [startingIndex]="selectedIndex" (selectedIndexChange)=tabSwitched($event)
+                 [style.height]="'100%'">
     <app-penuitab title="EVENT ALERT POLICIES" [count]="eventPolicies?.length">
       <ng-template>
         <app-eventalertpolicies #tabContent [dataObjects]="eventPolicies"

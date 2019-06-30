@@ -7,6 +7,7 @@ import { IMonitoringAlertDestination, IMonitoringAlertPolicy, IApiStatus, Monito
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Subscription } from 'rxjs';
 import { Utility } from '@app/common/Utility';
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-alertpolicies',
@@ -26,29 +27,71 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
   destinationsEventUtility: HttpEventUtility<MonitoringAlertDestination>;
 
   subscriptions: Subscription[] = [];
+  selectedIndex = 0;
 
   constructor(protected _controllerService: ControllerService,
     protected _monitoringService: MonitoringService,
+    protected router: Router
   ) {
     super(_controllerService);
   }
 
   ngOnInit() {
+    this.activeTab();
     this._controllerService.publish(Eventtypes.COMPONENT_INIT, {
       'component': 'AlertpoliciesComponent', 'state':
         Eventtypes.COMPONENT_INIT
     });
     this.getAlertPolicies();
     this.getDestinations();
+    this.updateBreadCrumb(0);
+  }
+
+  updateBreadCrumb(tabindex: number) {
     this._controllerService.setToolbarData({
       buttons: [
       ],
       breadcrumb: [
         { label: 'Alerts & Events', url: Utility.getBaseUIUrl() + 'monitoring/alertsevents' },
-        { label: 'Alert Policies', url: Utility.getBaseUIUrl() + 'monitoring/alertsevents/alertpolicies' }
+        { label: this.getSecondCrumbLabel(tabindex), url: Utility.getBaseUIUrl() + this.getSecondCrumbUrl(tabindex) }
       ]
     });
   }
+
+  getSecondCrumbLabel(tabindex: number) {
+    if (tabindex === 0) {
+      return 'Alert Policies';
+    } else {
+      return 'Destinations';
+    }
+  }
+
+  getSecondCrumbUrl(tabindex: number) {
+    if (tabindex === 0) {
+      return 'monitoring/alertsevents/alertpolicies';
+    } else {
+      return 'monitoring/alertsevents/alertdestinations';
+    }
+  }
+
+  tabSwitched(event) {
+    if (event === 0) {
+      this.router.navigate(['/monitoring/alertsevents/alertpolicies']);
+    } else {
+      this.router.navigate(['/monitoring/alertsevents/alertdestinations']);
+    }
+    this.activeTab();
+    this.updateBreadCrumb(event);
+  }
+
+  activeTab() {
+    if (this.router.url.endsWith('alertdestinations')) {
+      this.selectedIndex = 1;
+    } else {
+      this.selectedIndex = 0;
+    }
+  }
+
 
   /**
   * Overide super's API
