@@ -133,9 +133,11 @@ func (s *nodeService) FileBeatConfig(elasticLocations []string) error {
 		return err
 	}
 
-	if err := s.sysSvc.StartUnit("pen-filebeatconfig.service"); err != nil {
-		log.Errorf("Failed to reconfigure filebeat service with new config.  error: %v", err)
-		return err
+	if s.sysSvc != nil {
+		if err := s.sysSvc.StartUnit("pen-filebeatconfig.service"); err != nil {
+			log.Errorf("Failed to reconfigure filebeat service with new config.  error: %v", err)
+			return err
+		}
 	}
 
 	return nil

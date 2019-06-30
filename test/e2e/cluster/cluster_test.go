@@ -185,19 +185,17 @@ func validateCluster() {
 
 	By(fmt.Sprintf("kubernetes indicated all pods to be Running"))
 	Eventually(func() string {
-		// TODO: fix filebeat CrashLoopBackOff
-		out := strings.Split(ts.tu.LocalCommandOutput("kubectl get pods --no-headers | grep -v filebeat"), "\n")
+		out := strings.Split(ts.tu.LocalCommandOutput("kubectl get pods --no-headers"), "\n")
 		for _, line := range out {
 			if !strings.Contains(line, "Running") {
 				return line
 			}
 		}
 		return ""
-	}, 95, 1).Should(BeEmpty(), "All pods should be in Running state")
+	}, 120, 1).Should(BeEmpty(), "All pods should be in Running state")
 
 	Eventually(func() string {
-		// TODO: fix filebeat CrashLoopBackOff
-		return ts.tu.LocalCommandOutput(`kubectl get pods -a --all-namespaces -o json  | jq-linux64 -r '.items[] | select(.status.phase != "Running" or ([ .status.conditions[] | select(.type == "Ready" and .status == "False") ] | length ) == 1 ) | .metadata.namespace + "/" + .metadata.name' | grep -v filebeat `)
+		return ts.tu.LocalCommandOutput(`kubectl get pods -a --all-namespaces -o json  | jq-linux64 -r '.items[] | select(.status.phase != "Running" or ([ .status.conditions[] | select(.type == "Ready" and .status == "False") ] | length ) == 1 ) | .metadata.namespace + "/" + .metadata.name'`)
 	}, 95, 1).Should(BeEmpty(), "All pods should be in Ready state")
 
 	apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort

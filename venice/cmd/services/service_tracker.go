@@ -48,7 +48,6 @@ func NewServiceTracker(resolver types.ResolverService) types.ServiceTracker {
 	}
 
 	s.addrs[globals.KubeAPIServer] = make(map[string]struct{})
-	s.addrs[globals.ElasticSearch] = make(map[string]struct{})
 	return s
 }
 
@@ -71,14 +70,6 @@ func (m *ServiceTracker) Run(resolverClient interface{}, nodeService types.NodeS
 			m.OnNotifyResolver(protos.ServiceInstanceEvent{Type: protos.ServiceInstanceEvent_Added, Instance: i})
 		}
 	}
-
-	srvInstanceList = m.resolverClient.Lookup(globals.ElasticSearch)
-	if srvInstanceList != nil {
-		for _, i := range srvInstanceList.Items {
-			m.OnNotifyResolver(protos.ServiceInstanceEvent{Type: protos.ServiceInstanceEvent_Added, Instance: i})
-		}
-	}
-
 }
 
 // Stop the service tracker
@@ -230,10 +221,6 @@ func (m *ServiceTracker) setAPIAddress(service string, addrs []string) {
 		}
 		if err := m.nodeService.ElasticMgmtConfig(); err != nil {
 			log.Errorf("Failed to update elastic-mgmt config, err: %v", err)
-		}
-	case globals.ElasticSearch:
-		if err := m.nodeService.FileBeatConfig(addrs); err != nil {
-			log.Errorf("Failed to update filebeat config, err: %v", err)
 		}
 	}
 }

@@ -93,6 +93,7 @@ func (k *CfgWatcherService) SetClusterQuorumNodes(nodeNames []string) {
 	}
 
 	k.updateElasticDiscoveryConfig()
+	k.updateFilebeatConfig()
 }
 
 func (k *CfgWatcherService) updateElasticDiscoveryConfig() {
@@ -103,6 +104,18 @@ func (k *CfgWatcherService) updateElasticDiscoveryConfig() {
 		}
 		if err := k.nodeService.ElasticDiscoveryConfig(nodeAddrs); err != nil {
 			log.Errorf("Failed to update elastic-discovery config, err: %v", err)
+		}
+	}
+}
+
+func (k *CfgWatcherService) updateFilebeatConfig() {
+	if k.nodeService != nil {
+		var nodeAddrs []string
+		for nodeAddr := range k.clusterNodes {
+			nodeAddrs = append(nodeAddrs, nodeAddr)
+		}
+		if err := k.nodeService.FileBeatConfig(nodeAddrs); err != nil {
+			log.Errorf("Failed to update filebeat config, err: %v", err)
 		}
 	}
 }
@@ -251,6 +264,7 @@ func (k *CfgWatcherService) updateClusterNodes(et kvstore.WatchEventType, node *
 	}
 
 	k.updateElasticDiscoveryConfig()
+	k.updateFilebeatConfig()
 }
 
 // runUntilCancel implements the config Watcher service.
