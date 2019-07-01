@@ -109,3 +109,7 @@
                                          SACL_IPV4_DIP_TABLE_SIZE)
 #define SACL_IPV6_SIP_TABLE_OFFSET      (SACL_DIP_TABLE_OFFSET +\
                                          SACL_IPV6_DIP_TABLE_SIZE)
+
+#define SACL_PRIORITY_HIGHEST           0
+#define SACL_PRIORITY_LOWEST            0x3FF
+#define SACL_PRIORITY_INVALID           (SACL_PRIORITY_LOWEST+1)

@@ -803,7 +803,7 @@ rfc_compute_p3_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
                        rte_bitmap *cbm, uint32_t cbm_size, void *ctxt)
 {
     int         rv;
-    uint16_t    result = 0, priority = 0;
+    uint16_t    result = 0, priority = SACL_PRIORITY_INVALID;
     uint32_t    ruleidx, posn, start_posn = 0, new_posn = 0;
     uint64_t    slab = 0;
 

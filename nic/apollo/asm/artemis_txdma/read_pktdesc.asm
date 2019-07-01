@@ -13,6 +13,7 @@ read_pktdesc:
     /* pktdesc_addr += 64  (used in iflow assist) */
     add         r1, k.txdma_control_pktdesc_addr, 64
     phvwr       p.txdma_control_pktdesc_addr, r1
+
     /* Load sacl base addr to r1 */
     add        r1, r0, d.read_pktdesc_d.sacl_base_addr
     /* Add SACL_P1_1_TABLE_OFFSET to sacl base address. */
@@ -28,6 +29,8 @@ read_pktdesc:
     add        r1, r1, r2
     /* Write the address back to phv for P1 lookup */
     phvwr      p.txdma_control_rfc_table_addr, r1
+    /* Initialize rule priority to invalid */
+    phvwr      p.txdma_control_rule_priority, SACL_PRIORITY_INVALID
 
     /* Setup for route LPM lookup */
     sne        c1, d.read_pktdesc_d.route_base_addr, 0

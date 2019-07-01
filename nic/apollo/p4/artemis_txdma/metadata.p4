@@ -20,15 +20,13 @@ header_type txdma_control_metadata_t {
         payload_addr        : 40;
         cindex              : 16;
 
+        mapping_ohash       : 32;
         mapping_ohash_lkp   : 1;
         st_enable           : 1;
+        pad0                : 3;
+        rule_priority       : 11;
         rfc_p1_classid      : 10;
-        rule_priority       : 10;
         svc_id              : 10;
-
-        mapping_ohash       : 32;
-
-        pad1                : 4;
         rfc_index           : 20;
     }
 }
