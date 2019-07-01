@@ -89,22 +89,12 @@ references:
 
 # in the current jobd infra this is a map. Hence the later entry overwrites earlier ones if there are duplicates..
 dependencies:
-  #test: nic
   test: platform
-  #  nic: platform
   nic: iota/test/venice/hwtest
-  #platform: nic
   platform: iota/test/venice/hwtest
-  #venice: iota/test/venice/hwtest
   iota: iota/test/venice/hwtest
-  #dol: nic
   dol: iota/test/venice/hwtest 
   dol/test/networking : nic
-  #nic/agent: venice
-  #nic/agent: test/ci_targets/e2e
-  #venice: test
-  #venice: test/ci_targets/e2erollout
-  #test: test/ci_targets/e2e
   storage/offload: storage/offload/linux-build-test
 
 dir_dependencies:
@@ -125,6 +115,7 @@ dir_dependencies:
   venice:
     - api
     - test/ci_targets/e2e
+    - iota/test/venice/hwtest
   test:
     - api
     - test/ci_targets/e2e
