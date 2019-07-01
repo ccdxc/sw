@@ -136,24 +136,13 @@ func (n *NMD) issueNextPendingOp() {
 	switch n.ro.Status.InProgressOp.Op {
 	case protos.SmartNICOp_SmartNICDisruptiveUpgrade:
 		//TODO set the right downloaded image name
-		_, err = naplesPkgVerify("naples_fw.tar")
-		if err != nil {
-			log.Errorf("Firmware image verification failed %s", err)
-			return
-		}
 		err = n.Upgmgr.StartDisruptiveUpgrade("naples_fw.tar")
-
 		if err != nil {
 			log.Errorf("StartDisruptiveUpgrade returned %s", err)
 			return
 		}
 	case protos.SmartNICOp_SmartNICUpgOnNextHostReboot:
 		//TODO set the right downloaded image name
-		_, err = naplesPkgVerify("naples_fw.tar")
-		if err != nil {
-			log.Errorf("Firmware image verification failed %s", err)
-			return
-		}
 		err = n.Upgmgr.StartUpgOnNextHostReboot("naples_fw.tar")
 		if err != nil {
 			log.Errorf("StartDisruptiveUpgrade returned %s", err)
@@ -167,11 +156,6 @@ func (n *NMD) issueNextPendingOp() {
 		err = imagestore.DownloadNaplesImage(context.Background(), n.resolverClient, naplesVersion, "/update/naples_fw.tar")
 		if err != nil {
 			log.Errorf("Failed to download naples image from objectstore %+v", err)
-		}
-		_, err = naplesPkgVerify("naples_fw.tar")
-		if err != nil {
-			log.Errorf("Firmware image verification failed %s", err)
-			return
 		}
 		err = n.Upgmgr.StartPreCheckDisruptive(n.ro.Status.InProgressOp.Version)
 		if err != nil {

@@ -27,6 +27,7 @@ func execCmd(req *nmd.NaplesCmdExecute) (string, error) {
 	parts := strings.Fields(req.Opts)
 	return executeCmd(req, parts)
 }
+
 func createMetaFile(filename string, content string) error {
 	f, err := os.Create(filename)
 	if err != nil {
@@ -75,4 +76,12 @@ func createMetaFiles(pkgName string) error {
 	}
 	err = createMetaFile("/tmp/upg_meta.json", content)
 	return err
+}
+
+func pkgVerify(pkgName string) (string, error) {
+	v := &nmd.NaplesCmdExecute{
+		Executable: "fwupdate",
+		Opts:       strings.Join([]string{"-p ", "/update/" + pkgName, " -v"}, ""),
+	}
+	return execCmd(v)
 }

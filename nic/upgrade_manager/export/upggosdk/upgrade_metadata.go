@@ -170,7 +170,11 @@ func isPrePostImageMetaSame(upgCtx *UpgCtx) bool {
 
 func isUpgradeAllowed(pkgName string) error {
 	upgCtx.firmwarePkgName = pkgName
-	err := getUpgCtxFromMeta(&upgCtx)
+	_, err := pkgVerify(pkgName)
+	if err != nil {
+		return errors.New("Package verification failed")
+	}
+	err = getUpgCtxFromMeta(&upgCtx)
 	if err != nil {
 		return err
 	}
