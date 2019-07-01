@@ -78,18 +78,16 @@ class SubnetObject(base.ConfigObjectBase):
         dstPfx = None
         if policyobj.AddrFamily == 'IPV4':
             if policyobj.PolicyType == 'default':
-                pfx = ipaddress.ip_network('0.0.0.0/0')
+                pfx = utils.IPV4_DEFAULT_ROUTE
             elif policyobj.PolicyType is 'subnet':
                 pfx = ipaddress.ip_network(self.IPPrefix[1])
         else:
             if policyobj.PolicyType == 'default':
-                pfx = ipaddress.ip_network('::/0')
+                pfx = utils.IPV6_DEFAULT_ROUTE
             elif policyobj.PolicyType is 'subnet':
                 pfx = ipaddress.ip_network(self.IPPrefix[0])
-        if policyobj.Direction == types_pb2.RULE_DIR_INGRESS:
-            srcPfx = pfx
-        else:
-            dstPfx = pfx
+        srcPfx = pfx
+        dstPfx = pfx
         l4match = policy.L4MatchObject(True)
         for proto in protos:
             l3match = policy.L3MatchObject(True, proto, srcpfx=srcPfx, dstpfx=dstPfx)

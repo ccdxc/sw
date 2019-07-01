@@ -16,10 +16,10 @@ uplink:
         status  : UP
 
 device:
-    ipaddress   : None # Taken from resmgr
-    gateway     : None # Taken from resmgr
+    ipaddress   : None
+    gateway     : None
     macaddress  : macaddr/0002.0100.0001
-    encap       : mplsoudp
+    encap       : vxlan
     tunnel      :
         - count : 16
           type  : internet-gateway
@@ -30,8 +30,29 @@ device:
           type  : workload
 
 vpc:
-    # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
-    - stack  : dual # dual, ipv4 , ipv6
+    - stack  : dual
+      count : 1
+      type  : substrate  # This VPC is applicable only for ARTEMIS pipeline.
+      subnet :
+         - count : 1
+           v4prefixlen : 24
+           v6prefixlen : 64
+      routetbl:
+         - type: specific
+           routetype: only_default
+           v4routes:
+              - '0.0.0.0\0'
+           v6routes:
+              - '0::\0'
+      nexthop:
+             - type: base
+               count : 1
+      policy:
+        - type : specific
+          policytype : default
+          direction : bidir
+
+    - stack  : dual
       count : 2
       type  : tenant
       subnet:
@@ -41,10 +62,16 @@ vpc:
           vnic:
             - count   : 1             # VNICs per subnet
               ipcount : 4             # Local IP mapping per vnic
-              srcguard : false        # true or false (default false)
               public  : true
           rmap:                       # Remote IP mappings per subnet
             - count : 2
+      policy:
+              - type : specific
+                policytype : default
+                direction : bidir
+      nexthop:
+             - type: base
+               count : 25
       routetbl:
              - type: specific # route table with disjoint routes
                count : 1 # always 1 if routes specified by user
@@ -328,7 +355,3 @@ vpc:
                v6routes:
                    - '1234:5678:4321:8765:1111::\80'
                    - '1234:5678:4321:8765:1111:3333::\96'
-      policy:
-              - type : specific
-                policytype : default
-                direction : bidir
