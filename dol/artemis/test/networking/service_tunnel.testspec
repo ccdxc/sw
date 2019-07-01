@@ -71,12 +71,10 @@ packets:
         headers     :
             outereth:
                 src     : ref://testcase/config/devicecfg/MACAddr
-                #dst     : ref://testcase/config/nexthop/MACAddr
                 dst     : ref://testcase/config/route/TUNNEL/MACAddr
             outeripv4:
                 src     : ref://testcase/config/localmapping/ProviderIP
-                #dst     : callback://networking/packets/GetPacketV4DIPoRemote46
-                dst     : 1.2.3.4
+                dst     : callback://networking/packets/GetPacketV4DIPoRemote46
                 ttl     : 64
                 tos     : 0
                 id      : 0
@@ -86,14 +84,12 @@ packets:
                 hlim    : 64
             ipv6:
                 src     : ref://testcase/config/localmapping/VNIC/SUBNET/VPC/Nat46_pfx
-                #dst     : callback://networking/packets/GetPacketV6DIPoRemote46
-                dst     : 1::2
+                dst     : callback://networking/packets/GetPacketV6DIPoRemote46
                 hlim    : 64
             vxlan:
                 vni     : ref://testcase/config/route/TUNNEL/EncapValue
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                #dst     : ref://testcase/config/route/TUNNEL/MACAddr
                 dst     : 00:00:00:00:00:02
 
 trigger:

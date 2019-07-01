@@ -419,8 +419,7 @@ def __get_v4_from_v6(addr):
         text = addr.exploded.split(":")
         text = text[6] + text[7]
         text = text[:2] + '.' + text[2:4] + '.' + text[4:6] +'.'+ text[6:]
-        addr = ipaddress.ip_address(text)
-        return addr
+        return text
     return None
 
 def __get_packet_v4_dipo_remote46(tunnel):
@@ -439,7 +438,7 @@ def __get_packet_v6_dipo_remote46(tunnel):
 
 def GetPacketV6DIPoRemote46(testcase, packet, args=None):
     if testcase.config.route is not None and testcase.config.route.TUNNEL is not None:
-        return __get_packet_dipo_remote46(testcase.config.route.TUNNEL)
+        return __get_packet_v6_dipo_remote46(testcase.config.route.TUNNEL)
 
 def __get_packet_template_impl_nat46(obj, args):
     template = 'ETH'

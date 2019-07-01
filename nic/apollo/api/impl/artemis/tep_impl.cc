@@ -198,10 +198,11 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     tep = (tep_entry *)api_obj;
     switch (spec->type) {
     case PDS_TEP_TYPE_SERVICE:
-        PDS_TRACE_DEBUG("Programming service TEP %s, DIPo %s, remote %s, "
-                        "public IP %s, nh hw id %u, remote_46 hw id %u",
+        PDS_TRACE_DEBUG("Programming service TEP %s, DIPo %s, mac %s remote %s,"
+                        " public IP %s, nh hw id %u, remote_46 hw id %u",
                         api_obj->key2str().c_str(),
                         ipv4addr2str(spec->key.ip_addr.addr.v6_addr.addr32[3]),
+                        macaddr2str(spec->mac),
                         spec->remote_svc ? "true" : "false",
                         ipv4addr2str(spec->remote_svc_public_ip.addr.v4_addr),
                         nh_idx_, remote46_hw_id_);
@@ -228,7 +229,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         // program REMOTE_46_MAPPING table entry
         remote_46_mapping_data.action_id = REMOTE_46_MAPPING_REMOTE_46_INFO_ID;
         sdk::lib::memrev(remote_46_mapping_data.remote_46_info.ipv6_tx_da,
-                         spec->ip_addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
+                         spec->key.ip_addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
         remote_46_mapping_data.remote_46_info.nh_id = nh_idx_;
         p4pd_ret =
             p4pd_global_entry_write(P4_ARTEMIS_TXDMA_TBL_ID_REMOTE_46_MAPPING,
@@ -364,8 +365,8 @@ tep_impl::fill_spec_(pds_tep_spec_t *spec) {
         return sdk::SDK_RET_HW_READ_ERR;
     }
     spec->type = PDS_TEP_TYPE_SERVICE;
-    spec->ip_addr.af = IP_AF_IPV6;
-    sdk::lib::memrev(spec->ip_addr.addr.v6_addr.addr8,
+    spec->key.ip_addr.af = IP_AF_IPV6;
+    sdk::lib::memrev(spec->key.ip_addr.addr.v6_addr.addr8,
                      remote_46_mapping_data.action_u.
                      remote_46_mapping_remote_46_info.ipv6_tx_da,
                      IP6_ADDR8_LEN);
