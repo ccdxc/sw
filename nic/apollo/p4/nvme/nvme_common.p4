@@ -587,6 +587,17 @@ header_type pduid_ring_entry_t {
 #define GENERATE_PDUID_RING_ENTRY_D                                             \
     modify_field(pduid_ring_entry_d.pduid, pduid);
 
+header_type c2h_data_t {
+    fields {
+        rsvd                            : 512;
+    }
+}
+
+#define C2H_DATA_PARAMS \
+    rsvd
+
+#define GENERATE_C2H_DATA_D \
+    modify_field(c2h_data_d.rsvd, rsvd);
 
 
 // SQ stats cb

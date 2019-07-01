@@ -55,17 +55,16 @@
 #define tx_table_s0_t0_action rqcb_process
 
 #define tx_table_s1_t0_action rqe_process
+#define tx_table_s1_t1_action resourcecb_process
 
 #define tx_table_s2_t0_action pdu_hdr_process
+#define tx_table_s2_t1_action pduid_fetch_process
 
-#define tx_table_s3_t0_action cmd_ctxt_process
+#define tx_table_s3_t0_action c2h_data_process
 
-#define tx_table_s4_t1_action resourcecb_process
+#define tx_table_s4_t0_action sessprodcb_process
 
-#define tx_table_s5_t0_action sessprodcb_process
-#define tx_table_s5_t1_action pduid_fetch_process
-
-#define tx_table_s6_t0_action rqcb_writeback_process
+#define tx_table_s5_t0_action rqcb_writeback_process
 
 #define tx_table_s7_t1_action rq_statscb_process
 
@@ -105,13 +104,7 @@ header_type nvme_req_rx_to_stage_pdu_hdr_info_t {
     }
 }
 
-header_type nvme_req_rx_to_stage_cmd_ctxt_info_t {
-    fields {
-        pad                              :  128;
-    }
-}
-
-header_type nvme_req_rx_to_stage_resourcecb_info_t {
+header_type nvme_req_rx_to_stage_c2h_data_info_t {
     fields {
         pad                              :  128;
     }
@@ -141,32 +134,31 @@ header_type nvme_req_rx_rqcb_to_rqe_t {
     }
 }
 
+header_type nvme_req_rx_rqcb_to_resourcecb_t {
+    fields {
+        pad                 : 160;
+    }
+}
+
 header_type nvme_req_rx_rqe_to_pdu_hdr_t {
     fields {
         pad                 : 160;
     }
 }
 
-header_type nvme_req_rx_pdu_hdr_to_cmd_ctxt_t {
-    fields {
-        pad                 : 160;
-    }
-}
-
-header_type nvme_req_rx_cmd_ctxt_to_resourcecb_t {
-    fields {
-        prp3_dma_bytes                   : 16;
-        pad                 : 144;
-    }
-}
-
-header_type nvme_req_rx_cmd_ctxt_to_sessprodcb_t {
-    fields {
-        pad                 : 160;
-    }
-}
-
 header_type nvme_req_rx_resourcecb_to_pduid_fetch_t {
+    fields {
+        pad                 : 160;
+    }
+}
+
+header_type nvme_req_rx_pduhdr_to_c2h_data_t {
+    fields {
+        pad                 : 160;
+    }
+}
+
+header_type nvme_req_rx_pduhdr_to_sessprodcb_t {
     fields {
         pad                 : 160;
     }
@@ -193,19 +185,19 @@ metadata rqcb_t rqcb_d;
 metadata nvme_rqe_t nvme_rqe_d;
 
 @pragma scratch_metadata
-metadata pdu_hdr_t pdu_hdr_d;
-
-@pragma scratch_metadata
-metadata cmd_context_t cmd_ctxt_d;
-
-@pragma scratch_metadata
 metadata resourcecb_t resourcecb_d;
 
 @pragma scratch_metadata
-metadata sessprodcb_t sessprodcb_d;
+metadata pdu_hdr_t pdu_hdr_d;
 
 @pragma scratch_metadata
 metadata pduid_ring_entry_t pduid_ring_entry_d;
+
+@pragma scratch_metadata
+metadata c2h_data_t c2h_data_d;
+
+@pragma scratch_metadata
+metadata sessprodcb_t sessprodcb_d;
 
 @pragma scratch_metadata
 metadata rq_statscb_t rq_statscb_d;
@@ -235,27 +227,21 @@ metadata nvme_req_rx_to_stage_pdu_hdr_info_t to_s2_info_scr;
 
 //To-Stage-3
 @pragma pa_header_union ingress to_stage_3
-metadata nvme_req_rx_to_stage_cmd_ctxt_info_t to_s3_info;
+metadata nvme_req_rx_to_stage_c2h_data_info_t to_s3_info;
 @pragma scratch_metadata
-metadata nvme_req_rx_to_stage_cmd_ctxt_info_t to_s3_info_scr;
+metadata nvme_req_rx_to_stage_c2h_data_info_t to_s3_info_scr;
 
 //To-Stage-4
 @pragma pa_header_union ingress to_stage_4
-metadata nvme_req_rx_to_stage_resourcecb_info_t to_s4_info;
+metadata nvme_req_rx_to_stage_sessprodcb_info_t to_s4_info;
 @pragma scratch_metadata
-metadata nvme_req_rx_to_stage_resourcecb_info_t to_s4_info_scr;
+metadata nvme_req_rx_to_stage_sessprodcb_info_t to_s4_info_scr;
 
 //To-Stage-5
 @pragma pa_header_union ingress to_stage_5
-metadata nvme_req_rx_to_stage_sessprodcb_info_t to_s5_info;
+metadata nvme_req_rx_to_stage_rqcb_writeback_info_t to_s5_info;
 @pragma scratch_metadata
-metadata nvme_req_rx_to_stage_sessprodcb_info_t to_s5_info_scr;
-
-//To-Stage-6
-@pragma pa_header_union ingress to_stage_6
-metadata nvme_req_rx_to_stage_rqcb_writeback_info_t to_s6_info;
-@pragma scratch_metadata
-metadata nvme_req_rx_to_stage_rqcb_writeback_info_t to_s6_info_scr;
+metadata nvme_req_rx_to_stage_rqcb_writeback_info_t to_s5_info_scr;
 
 //To-Stage-7
 @pragma pa_header_union ingress to_stage_7
@@ -267,7 +253,7 @@ metadata nvme_req_rx_to_stage_rq_statscb_info_t to_s7_info_scr;
 /**** stage to stage header unions ****/
 
 //Table-0
-@pragma pa_header_union ingress common_t0_s2s t0_s2s_rqcb_to_rqe_info t0_s2s_rqe_to_pdu_hdr_info t0_s2s_pdu_hdr_to_cmd_ctxt_info t0_s2s_cmd_ctxt_to_sessprodcb_info t0_s2s_sessprodcb_to_rqcb_writeback_info
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_rqcb_to_rqe_info t0_s2s_rqe_to_pdu_hdr_info t0_s2s_pduhdr_to_c2h_data_info t0_s2s_pduhdr_to_sessprodcb_info t0_s2s_sessprodcb_to_rqcb_writeback_info
 
 metadata nvme_req_rx_rqcb_to_rqe_t t0_s2s_rqcb_to_rqe_info;
 @pragma scratch_metadata
@@ -277,24 +263,24 @@ metadata nvme_req_rx_rqe_to_pdu_hdr_t t0_s2s_rqe_to_pdu_hdr_info;
 @pragma scratch_metadata
 metadata nvme_req_rx_rqe_to_pdu_hdr_t t0_s2s_rqe_to_pdu_hdr_info_scr;
 
-metadata nvme_req_rx_pdu_hdr_to_cmd_ctxt_t t0_s2s_pdu_hdr_to_cmd_ctxt_info;
+metadata nvme_req_rx_pduhdr_to_c2h_data_t t0_s2s_pduhdr_to_c2h_data_info;
 @pragma scratch_metadata
-metadata nvme_req_rx_pdu_hdr_to_cmd_ctxt_t t0_s2s_pdu_hdr_to_cmd_ctxt_info_scr;
+metadata nvme_req_rx_pduhdr_to_c2h_data_t t0_s2s_pduhdr_to_c2h_data_info_scr;
 
-metadata nvme_req_rx_cmd_ctxt_to_sessprodcb_t t0_s2s_cmd_ctxt_to_sessprodcb_info;
+metadata nvme_req_rx_pduhdr_to_sessprodcb_t t0_s2s_pduhdr_to_sessprodcb_info;
 @pragma scratch_metadata
-metadata nvme_req_rx_cmd_ctxt_to_sessprodcb_t t0_s2s_cmd_ctxt_to_sessprodcb_info_scr;
+metadata nvme_req_rx_pduhdr_to_sessprodcb_t t0_s2s_pduhdr_to_sessprodcb_info_scr;
 
 metadata nvme_req_rx_sessprodcb_to_rqcb_writeback_t t0_s2s_sessprodcb_to_rqcb_writeback_info;
 @pragma scratch_metadata
 metadata nvme_req_rx_sessprodcb_to_rqcb_writeback_t t0_s2s_sessprodcb_to_rqcb_writeback_info_scr;
 
 //Table-1
-@pragma pa_header_union ingress common_t1_s2s t1_s2s_cmd_ctxt_to_resourcecb_info t1_s2s_resourcecb_to_pduid_fetch_info t1_s2s_rqcb_writeback_to_rq_statscb_info
+@pragma pa_header_union ingress common_t1_s2s t1_s2s_rqcb_to_resourcecb_info t1_s2s_resourcecb_to_pduid_fetch_info t1_s2s_rqcb_writeback_to_rq_statscb_info
 
-metadata nvme_req_rx_cmd_ctxt_to_resourcecb_t t1_s2s_cmd_ctxt_to_resourcecb_info;
+metadata nvme_req_rx_rqcb_to_resourcecb_t t1_s2s_rqcb_to_resourcecb_info;
 @pragma scratch_metadata
-metadata nvme_req_rx_cmd_ctxt_to_resourcecb_t t1_s2s_cmd_ctxt_to_resourcecb_info_scr;
+metadata nvme_req_rx_rqcb_to_resourcecb_t t1_s2s_rqcb_to_resourcecb_info_scr;
 
 metadata nvme_req_rx_resourcecb_to_pduid_fetch_t t1_s2s_resourcecb_to_pduid_fetch_info;
 @pragma scratch_metadata
@@ -359,6 +345,20 @@ action rqe_process (NVME_RQE_PARAMS) {
     GENERATE_NVME_RQE_D
 }
 
+action resourcecb_process (RESOURCECB_PARAMS) {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s1_info_scr.pad, to_s1_info.pad);
+    
+    // stage to stage
+    modify_field(t1_s2s_rqcb_to_resourcecb_info_scr.pad, t1_s2s_rqcb_to_resourcecb_info.pad);
+
+    // D-vector
+    GENERATE_RESOURCECB_D
+}
+
 action pdu_hdr_process (PDU_HDR_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
@@ -373,21 +373,7 @@ action pdu_hdr_process (PDU_HDR_PARAMS) {
     GENERATE_PDU_HDR_D
 }
 
-action cmd_ctxt_process (CMD_CTXT_PARAMS) {
-    // from ki global
-    GENERATE_GLOBAL_K
-
-    // to stage
-    modify_field(to_s3_info_scr.pad, to_s3_info.pad);
-    
-    // stage to stage
-    modify_field(t0_s2s_pdu_hdr_to_cmd_ctxt_info_scr.pad, t0_s2s_pdu_hdr_to_cmd_ctxt_info.pad);
-
-    // D-vector
-    GENERATE_CMD_CTXT_D
-}
-
-action resourcecb_process (RESOURCECB_PARAMS) {
+action sessprodcb_process (SESSPRODCB_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -395,22 +381,7 @@ action resourcecb_process (RESOURCECB_PARAMS) {
     modify_field(to_s4_info_scr.pad, to_s4_info.pad);
     
     // stage to stage
-    modify_field(t1_s2s_cmd_ctxt_to_resourcecb_info_scr.pad, t1_s2s_cmd_ctxt_to_resourcecb_info.pad);
-
-    // D-vector
-    GENERATE_RESOURCECB_D
-}
-
-
-action sessprodcb_process (SESSPRODCB_PARAMS) {
-    // from ki global
-    GENERATE_GLOBAL_K
-
-    // to stage
-    modify_field(to_s5_info_scr.pad, to_s5_info.pad);
-    
-    // stage to stage
-    modify_field(t0_s2s_cmd_ctxt_to_sessprodcb_info_scr.pad, t0_s2s_cmd_ctxt_to_sessprodcb_info.pad);
+    modify_field(t0_s2s_pduhdr_to_sessprodcb_info_scr.pad, t0_s2s_pduhdr_to_sessprodcb_info.pad);
 
     // D-vector
     GENERATE_SESSPRODCB_D
@@ -421,7 +392,7 @@ action pduid_fetch_process (PDUID_RING_ENTRY_PARAMS) {
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s5_info_scr.pad, to_s5_info.pad);
+    modify_field(to_s2_info_scr.pad, to_s2_info.pad);
     
     // stage to stage
     modify_field(t1_s2s_resourcecb_to_pduid_fetch_info_scr.pad, t1_s2s_resourcecb_to_pduid_fetch_info.pad);
@@ -430,12 +401,26 @@ action pduid_fetch_process (PDUID_RING_ENTRY_PARAMS) {
     GENERATE_PDUID_RING_ENTRY_D
 }
 
+action c2h_data_process(C2H_DATA_PARAMS) {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s3_info_scr.pad, to_s3_info.pad);
+    
+    // stage to stage
+    modify_field(t0_s2s_pduhdr_to_c2h_data_info_scr.pad, t0_s2s_pduhdr_to_c2h_data_info.pad);
+
+    // D-vector
+    GENERATE_C2H_DATA_D
+}
+
 action rqcb_writeback_process (RQCB_PARAMS_NON_STG0) {
     // from ki global
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s6_info_scr.pad, to_s6_info.pad);
+    modify_field(to_s5_info_scr.pad, to_s5_info.pad);
     
     // stage to stage
     modify_field(t0_s2s_sessprodcb_to_rqcb_writeback_info_scr.pad, t0_s2s_sessprodcb_to_rqcb_writeback_info.pad);
