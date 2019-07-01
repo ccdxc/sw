@@ -3,6 +3,8 @@
 /******************************************************************************/
 action local_ip_mapping_info(vnic_id, vpc_id, service_tag, pa_or_ca_xlate_idx,
                              public_xlate_idx, ca6_xlate_idx) {
+    // save the original vpc id
+    modify_field(vnic_metadata.vpc_id2, vnic_metadata.vpc_id);
     // if table lookup is a miss, return
 
     if (vnic_id != 0) {
@@ -53,7 +55,7 @@ action service_mapping_info(service_xlate_idx, service_xlate_port) {
 @pragma stage 4
 table service_mapping {
     reads {
-        vnic_metadata.vpc_id        : exact;
+        vnic_metadata.vpc_id2       : exact;
         key_metadata.mapping_ip     : exact;
         key_metadata.mapping_ip2    : exact;
         key_metadata.mapping_port   : exact;
@@ -68,7 +70,7 @@ table service_mapping {
 @pragma overflow_table service_mapping
 table service_mapping_otcam {
     reads {
-        vnic_metadata.vpc_id        : ternary;
+        vnic_metadata.vpc_id2       : ternary;
         key_metadata.mapping_ip     : ternary;
         key_metadata.mapping_ip2    : ternary;
         key_metadata.mapping_port   : ternary;

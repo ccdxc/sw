@@ -11,6 +11,7 @@ struct phv_ p;
 
 local_ip_mapping_info:
     nop.!c1.e
+    phvwr           p.vnic_metadata_vpc_id2, k.vnic_metadata_vpc_id
     sne             c1, d.local_ip_mapping_info_d.vnic_id, r0
     phvwr.c1        p.vnic_metadata_vnic_id, d.local_ip_mapping_info_d.vnic_id
     phvwr.c1        p.vnic_metadata_vpc_id, d.local_ip_mapping_info_d.vpc_id

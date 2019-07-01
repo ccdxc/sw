@@ -27,6 +27,7 @@ header_type vnic_metadata_t {
     fields {
         vnic_id         : 8;
         vpc_id          : 8;
+        vpc_id2         : 8;
         src_vpc_id      : 16;
 
         vr_mac          : 48;

@@ -50,7 +50,7 @@ namespace impl {
                    &(ip2)->addr.v4_addr, IP4_ADDR8_LEN);                       \
         }                                                                      \
     }                                                                          \
-    (key)->vnic_metadata_vpc_id = vpc_hw_id;                                   \
+    (key)->vnic_metadata_vpc_id2 = vpc_hw_id;                                  \
 }
 
 #define svc_mapping_action action_u.service_mapping_service_mapping_info
