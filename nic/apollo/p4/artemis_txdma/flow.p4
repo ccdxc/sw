@@ -3,9 +3,11 @@
 /*****************************************************************************/
 @pragma capi appdatafields session_index epoch flow_role
 @pragma capi hwfields_access_api
-action txdma_flow_hash(entry_valid, session_index, epoch, flow_role, pad8,
-                 hash1, hint1, hash2, hint2, hash3, hint3, hash4, hint4,
-                 more_hashes, more_hints) {
+action txdma_flow_hash(epoch, session_index, flow_role, pad8,
+                 hash1, hint1, hash2, hint2, hash3, hint3,
+                 hash4, hint4,  more_hashes,
+                 more_hints, more_hints_pad, entry_valid) {
+
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         //modify_field(service_header.flow_done, TRUE);
@@ -58,6 +60,7 @@ action txdma_flow_hash(entry_valid, session_index, epoch, flow_role, pad8,
     modify_field(scratch_metadata.field8, key3.num_flow_lkps);
     modify_field(scratch_metadata.field1, key1.flow_ohash_lkp);
     modify_field(scratch_metadata.field8, pad8);
+    modify_field(scratch_metadata.field8, more_hints_pad);
 
     // access all the k fields so it gets added as i for the overflow lookups
     modify_field(scratch_metadata.field32, key1.flow_ohash);
@@ -157,8 +160,9 @@ table txdma_flow_ohash_7 {
 /*****************************************************************************/
 @pragma capi appdatafields session_index epoch flow_role
 @pragma capi hwfields_access_api
-action txdma_ipv4_flow_hash(entry_valid, session_index, epoch, flow_role, pad8,
-                      hash1, hint1, hash2, hint2, more_hashes, more_hints) {
+action txdma_ipv4_flow_hash(epoch, session_index, flow_role, pad8,
+                      hash1, hint1, hash2, hint2,
+                      more_hashes, more_hints, more_hints_pad, entry_valid) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         //modify_field(service_header.flow_done, TRUE);
@@ -199,6 +203,7 @@ action txdma_ipv4_flow_hash(entry_valid, session_index, epoch, flow_role, pad8,
     modify_field(scratch_metadata.field8, key2_ipv4.num_flow_lkps);
     modify_field(scratch_metadata.field1, key_ipv4.flow_ohash_lkp);
     modify_field(scratch_metadata.field8, pad8);
+    modify_field(scratch_metadata.field8, more_hints_pad);
 
     // access all the k fields so it gets added as i for the overflow lookups
     modify_field(scratch_metadata.field32, key_ipv4.flow_ohash);

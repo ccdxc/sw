@@ -9,6 +9,7 @@ struct phv_ p;
 
 #define FLOW_HASH_MSB 31:23
 #define FLOW_HASH_LSB 22:0
+#define OFLOW_HASH_LSB 21:0
 #define FLOW_FLIT_TO_PHV_RANGE(flit) p[(((flit+1)*512)-1):(flit*512)]
 #define FLOW_PARENT_FLIT    FLOW_FLIT_TO_PHV_RANGE(TXDMA_RFLOW_PARENT_FLIT)
 #define FLOW_LEAF_FLIT      FLOW_FLIT_TO_PHV_RANGE(TXDMA_RFLOW_LEAF_FLIT)
@@ -27,6 +28,7 @@ flow_hash:
 
     // Set hash only in the first lookup
     seq         c2, k.key3_num_flow_lkps, 0
+    phvwr.c2    p.txdma_to_arm_meta_rflow_parent_index, r1[FLOW_HASH_LSB].wx
     phvwrpair.c2 p.txdma_to_arm_meta_rflow_hash, r1.wx, \
                 p.txdma_to_arm_meta_rflow_ipaf, 1
 
@@ -78,7 +80,7 @@ label_2nd_level_flow_miss:
     seq         c2, k.key1_flow_ohash_lkp, 1
 
     /* Hint entry specific */
-    add         r4, r0, k.key1_flow_ohash[FLOW_HASH_LSB].wx
+    add         r4, r0, k.key1_flow_ohash[OFLOW_HASH_LSB].wx
     phvwrpair.c2 p.txdma_to_arm_meta_rflow_parent_is_hint, TRUE, \
                 p.txdma_to_arm_meta_rflow_parent_index, r4
 
@@ -89,12 +91,15 @@ label_2nd_level_flow_miss:
 
     seq         c2, r0, d.txdma_flow_hash_d.hint1
     phvwr.c2    p.txdma_to_arm_meta_rflow_parent_hint_slot, 1
+    b.c2        label_flow_miss
 
     seq         c2, r0, d.txdma_flow_hash_d.hint2
     phvwr.c2    p.txdma_to_arm_meta_rflow_parent_hint_slot, 2
+    b.c2        label_flow_miss
 
     seq         c2, r0, d.txdma_flow_hash_d.hint3
     phvwr.c2    p.txdma_to_arm_meta_rflow_parent_hint_slot, 3
+    b.c2        label_flow_miss
 
     seq         c2, r0, d.txdma_flow_hash_d.hint4
     phvwr.c2    p.txdma_to_arm_meta_rflow_parent_hint_slot, 4

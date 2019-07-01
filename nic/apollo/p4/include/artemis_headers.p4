@@ -186,7 +186,7 @@ header_type artemis_txdma_to_arm_meta_header_t {
                                      // 1-4 = hint slots
                                      // 5 = more
         iflow_nrecircs          : 3;
-        iflow_parent_index      : 32; // parent index if 'parent_is_hint'
+        iflow_parent_index      : 32;
         iflow_leaf_index        : 32; // for delete
 
         // rflow metadata
@@ -197,7 +197,7 @@ header_type artemis_txdma_to_arm_meta_header_t {
                                      // 1-4 = hint slots
                                      // 5 = more
         rflow_nrecircs          : 3;
-        rflow_parent_index      : 32; // parent index if 'parent_is_hint'
+        rflow_parent_index      : 32;
         rflow_leaf_index        : 32; // for delete
     }
 }

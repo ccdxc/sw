@@ -64,7 +64,7 @@ header_type scratch_metadata_t {
         mapping_hint        : 18;
         epoch               : 8;
         flow_hash           : 9;
-        flow_hint           : 22;
+        flow_hint           : 23;
         session_index       : 23;
         flow_role           : 1;
     }

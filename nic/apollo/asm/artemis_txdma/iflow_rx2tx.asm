@@ -25,8 +25,10 @@ iflow_rx2tx:
     phvwr           p.txdma_to_arm_meta_iflow_hash, d.{iflow_rx2tx_d.flow_hash}.wx
 
     seq             c1, d.iflow_rx2tx_d.parent_is_hint, 1
-    phvwr.c1        p.txdma_to_arm_meta_iflow_parent_index, d.{iflow_rx2tx_d.parent_hint_index}.wx
     phvwr.c1        p.txdma_to_arm_meta_iflow_parent_is_hint, 1
+    // parent_index is filled by p4 pipeline if parent_is_hint, else it is flow_hash
+    phvwr.c1        p.txdma_to_arm_meta_iflow_parent_index, d.{iflow_rx2tx_d.parent_hint_index}.wx
+    phvwr.!c1       p.txdma_to_arm_meta_iflow_parent_index, d.{iflow_rx2tx_d.flow_hash}[22:0].wx
 
     seq             c_ipv4, d.iflow_rx2tx_d.ipaf, 0
     phvwr.!c_ipv4   p.txdma_to_arm_meta_iflow_ipaf, 1

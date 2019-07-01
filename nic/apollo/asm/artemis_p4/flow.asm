@@ -41,24 +41,29 @@ flow_hash:
     add         r2, r0, d.flow_hash_d.more_hints
 
 label_2nd_level_flow_miss:
+    seq         c1, k.control_metadata_flow_ohash_lkp, 1
+    phvwr.c1    p.p4_to_rxdma3_parent_is_hint, 1
+    phvwr.c1    p.p4_to_rxdma3_parent_hint_index, \
+                    k.ingress_recirc_flow_ohash[21:0]
+    phvwr       p.p4_to_rxdma3_parent_valid, 1
+
     seq         c2, r0, d.flow_hash_d.hint1
     phvwr.c2    p.p4_to_rxdma3_parent_hint_slot, 1
+    b.c2        label_flow_miss
 
     seq         c2, r0, d.flow_hash_d.hint2
     phvwr.c2    p.p4_to_rxdma3_parent_hint_slot, 2
+    b.c2        label_flow_miss
 
     seq         c2, r0, d.flow_hash_d.hint3
     phvwr.c2    p.p4_to_rxdma3_parent_hint_slot, 3
+    b.c2        label_flow_miss
 
     seq         c2, r0, d.flow_hash_d.hint4
     phvwr.c2    p.p4_to_rxdma3_parent_hint_slot, 4
 
-    seq         c1, k.control_metadata_flow_ohash_lkp, 1
-    phvwr.c1    p.p4_to_rxdma3_parent_is_hint, 1
-    phvwr.c1    p.p4_to_rxdma3_parent_hint_index, \
-                    k.ingress_recirc_flow_ohash[21:0].wx
-    phvwr       p.p4_to_rxdma3_parent_valid, 1
 label_flow_miss:
+    phvwr       p.p4_to_rxdma3_flow_nrecircs, 1 // TODO : use correct value
     phvwr       p.p4_to_rxdma3_epoch, k.control_metadata_epoch
     phvwrpair   p.p4_to_rxdma3_flow_hash, r1, p.p4_to_rxdma3_ipaf, 1
     phvwr       p.p4_to_rxdma_tag_root, r5
