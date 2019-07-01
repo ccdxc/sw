@@ -221,16 +221,13 @@ func (u *upgSdk) startUpgrade(upgType upgrade.UpgType, firmwarePkgName string) e
 		if err != nil {
 			return err
 		}
+		err = isUpgradeAllowed(firmwarePkgName)
+		if err != nil {
+			return err
+		}
 	}
 	if u.svcRole != AgentRole {
 		return errors.New("Svc not of role Agent")
-	}
-
-	getUpgCtxFromMeta(&upgCtx)
-	if isPrePostImageMetaSame(&upgCtx) {
-		if _, err := os.Stat("/update/upgrade_to_same_firmware_allowed"); os.IsNotExist(err) {
-			return errors.New("Upgrade image is same as running image")
-		}
 	}
 
 	upgreq := upgrade.GetUpgReq(u.sdkClient)
@@ -259,16 +256,13 @@ func (u *upgSdk) canPerformUpgrade(upgType upgrade.UpgType, firmwarePkgName stri
 		if err != nil {
 			return err
 		}
+		err = isUpgradeAllowed(firmwarePkgName)
+		if err != nil {
+			return err
+		}
 	}
 	if u.svcRole != AgentRole {
 		return errors.New("Svc not of role Agent")
-	}
-
-	getUpgCtxFromMeta(&upgCtx)
-	if isPrePostImageMetaSame(&upgCtx) {
-		if _, err := os.Stat("/update/upgrade_to_same_firmware_allowed"); os.IsNotExist(err) {
-			return errors.New("Upgrade image is same as running image")
-		}
 	}
 
 	upgreq := upgrade.GetUpgReq(u.sdkClient)

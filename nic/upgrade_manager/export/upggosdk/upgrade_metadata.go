@@ -2,6 +2,7 @@ package upggosdk
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"os"
 
@@ -147,6 +148,9 @@ func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
 }
 
 func getUpgCtxFromMeta(upgCtx *UpgCtx) error {
+	if err := createMetaFiles(upgCtx.firmwarePkgName); err != nil {
+		return err
+	}
 	getUpgCtxFromImgMeta(upgCtx, true)
 	getUpgCtxFromImgMeta(upgCtx, false)
 	return nil
@@ -162,4 +166,18 @@ func isPrePostImageMetaSame(upgCtx *UpgCtx) bool {
 		return true
 	}
 	return false
+}
+
+func isUpgradeAllowed(pkgName string) error {
+	upgCtx.firmwarePkgName = pkgName
+	err := getUpgCtxFromMeta(&upgCtx)
+	if err != nil {
+		return err
+	}
+	if isPrePostImageMetaSame(&upgCtx) {
+		if _, err := os.Stat("/update/upgrade_to_same_firmware_allowed"); os.IsNotExist(err) {
+			return errors.New("Upgrade image is same as running image")
+		}
+	}
+	return nil
 }
