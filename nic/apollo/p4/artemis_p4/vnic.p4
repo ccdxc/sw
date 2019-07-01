@@ -9,7 +9,7 @@ action vnic_mapping_info(epoch, vnic_id, vpc_id) {
     modify_field(vnic_metadata.vpc_id, vpc_id);
 }
 
-@pragma stage 1
+@pragma stage 0
 table vnic_mapping {
     reads {
         capri_intrinsic.lif : ternary;

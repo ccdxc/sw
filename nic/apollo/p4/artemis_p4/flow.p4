@@ -83,7 +83,7 @@ action flow_hash(epoch, session_index, flow_role, pad8,
     modify_field(scratch_metadata.more_hints_pad, more_hints_pad);
 }
 
-@pragma stage 3
+@pragma stage 2
 @pragma hbm_table
 table flow {
     reads {
@@ -101,7 +101,7 @@ table flow {
     size : FLOW_TABLE_SIZE;
 }
 
-@pragma stage 4
+@pragma stage 3
 @pragma hbm_table
 @pragma overflow_table flow
 table flow_ohash {
@@ -186,7 +186,7 @@ action ipv4_flow_hash(epoch, session_index, flow_role, pad8,
     modify_field(scratch_metadata.more_hints_pad, more_hints_pad);
 }
 
-@pragma stage 3
+@pragma stage 2
 @pragma hbm_table
 table ipv4_flow {
     reads {
@@ -203,7 +203,7 @@ table ipv4_flow {
     size : FLOW_TABLE_SIZE;
 }
 
-@pragma stage 4
+@pragma stage 3
 @pragma hbm_table
 @pragma overflow_table ipv4_flow
 table ipv4_flow_ohash {

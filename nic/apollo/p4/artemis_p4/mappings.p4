@@ -15,7 +15,7 @@ action local_ip_mapping_info(vnic_id, vpc_id, service_tag, pa_or_ca_xlate_idx,
     modify_field(p4i_i2e.ca6_xlate_idx, ca6_xlate_idx);
 }
 
-@pragma stage 2
+@pragma stage 1
 table local_ip_mapping {
     reads {
         vnic_metadata.vpc_id    : exact;
@@ -27,7 +27,7 @@ table local_ip_mapping {
     size : LOCAL_IP_MAPPING_HASH_TABLE_SIZE;
 }
 
-@pragma stage 2
+@pragma stage 1
 @pragma overflow_table local_ip_mapping
 table local_ip_mapping_otcam {
     reads {
@@ -50,7 +50,7 @@ action service_mapping_info(service_xlate_idx, service_xlate_port) {
     modify_field(p4i_i2e.service_xlate_port, service_xlate_port);
 }
 
-@pragma stage 2
+@pragma stage 4
 table service_mapping {
     reads {
         vnic_metadata.vpc_id        : exact;
@@ -64,7 +64,7 @@ table service_mapping {
     size : SERVICE_MAPPING_HASH_TABLE_SIZE;
 }
 
-@pragma stage 2
+@pragma stage 4
 @pragma overflow_table service_mapping
 table service_mapping_otcam {
     reads {

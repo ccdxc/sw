@@ -1017,6 +1017,8 @@ class capri_p4pd:
                                 phv_byte_sourced_with_intermixed_multihdr = True
                                 break
 
+                    previous_containerstart = 0
+                    previous_width = 0
                     if phv_byte_sourced_with_intermixed_multihdr:
                         for k, v  in self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields.items():
                             containerstart, cf_startbit, width = v
