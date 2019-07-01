@@ -111,13 +111,9 @@ func (client *RoClient) UpdateSmartNICRolloutStatus(status *protos.SmartNICRollo
 
 	if client.stopped {
 		log.Errorf("Rollout client is stopped. Failed to send update %v to venice. | RoClient: %v", *status, client)
+		return nil
 	}
-
-	if client.statusUpdateChan != nil {
-		client.statusUpdateChan <- *status
-	} else {
-		log.Error("Rollout client status update chan is nil")
-	}
+	client.statusUpdateChan <- *status
 	return nil
 }
 
