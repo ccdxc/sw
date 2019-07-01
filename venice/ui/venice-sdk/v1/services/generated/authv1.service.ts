@@ -4,7 +4,7 @@ import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
 
-import { IAuthAuthenticationPolicy,AuthAuthenticationPolicy,IApiStatus,ApiStatus,AuthTokenSecretRequest,IAuthTokenSecretRequest,IAuthRoleBindingList,AuthRoleBindingList,IAuthRoleBinding,AuthRoleBinding,IAuthRoleList,AuthRoleList,IAuthRole,AuthRole,IAuthUserPreference,AuthUserPreference,IAuthUserList,AuthUserList,IAuthUser,AuthUser,AuthSubjectAccessReviewRequest,IAuthSubjectAccessReviewRequest,AuthPasswordChangeRequest,IAuthPasswordChangeRequest,AuthPasswordResetRequest,IAuthPasswordResetRequest,IAuthAutoMsgAuthenticationPolicyWatchHelper,AuthAutoMsgAuthenticationPolicyWatchHelper,IAuthAutoMsgRoleBindingWatchHelper,AuthAutoMsgRoleBindingWatchHelper,IAuthAutoMsgRoleWatchHelper,AuthAutoMsgRoleWatchHelper,IAuthAutoMsgUserWatchHelper,AuthAutoMsgUserWatchHelper } from '../../models/generated/auth';
+import { IAuthAuthenticationPolicy,AuthAuthenticationPolicy,IApiStatus,ApiStatus,AuthTokenSecretRequest,IAuthTokenSecretRequest,IAuthRoleBindingList,AuthRoleBindingList,IAuthRoleBinding,AuthRoleBinding,IAuthRoleList,AuthRoleList,IAuthRole,AuthRole,IAuthUserPreference,AuthUserPreference,IAuthUserList,AuthUserList,IAuthUser,AuthUser,AuthSubjectAccessReviewRequest,IAuthSubjectAccessReviewRequest,AuthPasswordChangeRequest,IAuthPasswordChangeRequest,AuthPasswordResetRequest,IAuthPasswordResetRequest,IAuthAutoMsgAuthenticationPolicyWatchHelper,AuthAutoMsgAuthenticationPolicyWatchHelper,IAuthAutoMsgRoleBindingWatchHelper,AuthAutoMsgRoleBindingWatchHelper,IAuthAutoMsgRoleWatchHelper,AuthAutoMsgRoleWatchHelper,IAuthAutoMsgUserPreferenceWatchHelper,AuthAutoMsgUserPreferenceWatchHelper,IAuthAutoMsgUserWatchHelper,AuthAutoMsgUserWatchHelper } from '../../models/generated/auth';
 
 @Injectable()
 export class Authv1Service extends AbstractService {
@@ -901,6 +901,22 @@ export class Authv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IAuthAutoMsgRoleWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Watch UserPreference objects. Supports WebSockets or HTTP long poll */
+  public WatchUserPreference(queryParam: any = null, stagingID: string = ""):Observable<{body: IAuthAutoMsgUserPreferenceWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/watch/tenant/{O.Tenant}/user-preferences';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    const opts = {
+      eventID: 'WatchUserPreference',
+      objType: 'AuthAutoMsgUserPreferenceWatchHelper',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IAuthAutoMsgUserPreferenceWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** Watch User objects. Supports WebSockets or HTTP long poll */
   public WatchUser(queryParam: any = null, stagingID: string = ""):Observable<{body: IAuthAutoMsgUserWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/watch/tenant/{O.Tenant}/users';
@@ -915,6 +931,21 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IAuthAutoMsgUserWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Watch UserPreference objects. Supports WebSockets or HTTP long poll */
+  public WatchUserPreference_1(queryParam: any = null, stagingID: string = ""):Observable<{body: IAuthAutoMsgUserPreferenceWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/watch/user-preferences';
+    const opts = {
+      eventID: 'WatchUserPreference_1',
+      objType: 'AuthAutoMsgUserPreferenceWatchHelper',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IAuthAutoMsgUserPreferenceWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch User objects. Supports WebSockets or HTTP long poll */
