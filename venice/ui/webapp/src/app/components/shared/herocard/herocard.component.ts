@@ -146,7 +146,7 @@ export class HerocardComponent implements OnInit, OnChanges {
       }
 
       if (!!color) {
-        this.statColor = this.getRGBString(color.get('r'), color.get('g'), color.get('b'));
+        this.statColor = this.getRGBString(color['r'], color['g'], color['b']);
       }
     }
   }
@@ -175,9 +175,9 @@ export class HerocardComponent implements OnInit, OnChanges {
 
     const ratio = (value - minVal) / (maxVal - minVal);
 
-    const color = new Map();
+    const color = {};
     for (const key of Object.keys(minColor)) {
-      color.set(key, Math.floor( (maxColor[key] - minColor[key]) * ratio + minColor[key]));
+      color[key] = Math.floor( (maxColor[key] - minColor[key]) * ratio + minColor[key]);
     }
 
     return color;
