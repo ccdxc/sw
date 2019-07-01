@@ -1203,6 +1203,7 @@ control ingress {
         }
         if (p4_to_rxdma.aging_enable == TRUE) {
             session_aging();
+            session2flow();
         } else {
             recirc();
             pkt_enqueue();

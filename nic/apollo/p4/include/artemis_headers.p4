@@ -111,6 +111,22 @@ header_type artemis_rx_to_tx_header2_t {
     }
 }
 
+// Information related to session aging
+header_type artemis_rx_to_tx_header4_t {
+    fields {
+        pad1                 :   7;
+        iflow_ipaf           :   1;
+        iflow_parent_hint    :   1;
+        iflow_ind            :  23;
+        pad2                 :   7;
+        rflow_ipaf           :   1;
+        rflow_parent_hint    :   1;
+        rflow_ind            :  23;
+        pad3                 :   9;
+        session_ind          :  23;
+    }
+}
+
 // Session Info hints that CPA path passes to the FTL Assist programs
 // Session Info is derived from the configured policies for the flow
 // being investigated

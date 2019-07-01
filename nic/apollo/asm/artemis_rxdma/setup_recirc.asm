@@ -55,16 +55,14 @@ pass0:
 
 pass1:
     /* Setup key for TAG Lookup on LPM1 */
-    phvwr            p.lpm_metadata_lpm1_key[127:64], k.rx_to_tx_hdr_remote_ip[127:64]
-    phvwr            p.lpm_metadata_lpm1_key[63:0], k.rx_to_tx_hdr_remote_ip[63:0]
+    phvwr            p.lpm_metadata_lpm1_key[127:0], k.{rx_to_tx_hdr_remote_ip_sbit0_ebit15...rx_to_tx_hdr_remote_ip_sbit96_ebit127}
 
     /* Setup root for TAG Lookup on LPM1 */
     phvwr            p.lpm_metadata_lpm1_base_addr, k.{p4_to_rxdma_tag_root_sbit0_ebit7...\
                                                        p4_to_rxdma_tag_root_sbit16_ebit39}
 
     /* Setup key for METER Lookup on LPM1 */
-    phvwr            p.lpm_metadata_lpm2_key[127:64], k.rx_to_tx_hdr_remote_ip[127:64]
-    phvwr            p.lpm_metadata_lpm2_key[63:0], k.rx_to_tx_hdr_remote_ip[63:0]
+    phvwr            p.lpm_metadata_lpm2_key[127:0], k.{rx_to_tx_hdr_remote_ip_sbit0_ebit15...rx_to_tx_hdr_remote_ip_sbit96_ebit127}
 
     /* Setup root for METER Lookup on LPM2 */
     phvwr.e          p.lpm_metadata_lpm2_base_addr, k.lpm_metadata_meter_base_addr

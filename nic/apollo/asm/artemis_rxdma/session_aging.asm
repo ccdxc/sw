@@ -28,9 +28,11 @@ session_aging:
     blt         r1, r2, exit
     nop
     
-    // If entry is valid and timecout exceeded, Construct packet to send to
-    // P4+-assist
+    // If entry is valid and timeout exceeded, Construct packet to send to
+    // P4+ assist
+    phvwr.e     p.rx_to_tx_hdr4_session_ind, k.capri_rxdma_intr_qid
     nop
+    
 exit:
     phvwr.e     p.capri_intr_drop, 1
     nop

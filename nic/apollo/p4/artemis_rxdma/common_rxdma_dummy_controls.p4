@@ -5,6 +5,7 @@ control nat_rxdma {}
 control recirc {}
 control pkt_enqueue {}
 control session_aging {}
+control session2flow {}
 
 #define p4_to_rxdma             app_header
 #define lpm1_enable             table0_valid

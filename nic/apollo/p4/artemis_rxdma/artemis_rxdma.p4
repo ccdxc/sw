@@ -11,6 +11,7 @@
 #include "packet_queue.p4"
 #include "nat_rxdma.p4"
 #include "session_aging.p4"
+#include "session2flow.p4"
 
 #include "common_rxdma_dummy_actions.p4"
 #include "common_rxdma.p4"

@@ -10,7 +10,7 @@ header_type scratch_metadata_t {
         qid             :  24;
         dma_size        :  16;
         flag            :   1;
-        pad0            :   7;
+        field7          :   7;
         remote_ip       : 128;
         pad1            :   2;
         
@@ -18,7 +18,8 @@ header_type scratch_metadata_t {
         field4          :   4;
         field12         :  12;
         field20         :  20;
-
+        field23         :  23;
+        pad             :   9;
     }
 }
 
@@ -89,6 +90,10 @@ metadata lpm_metadata_t         lpm_metadata;
 
 @pragma dont_trim
 metadata artemis_rx_to_tx_header_t rx_to_tx_hdr;
+
+@pragma dont_trim
+@pragma pa_header_union ingress rx_to_tx_hdr
+metadata artemis_rx_to_tx_header4_t rx_to_tx_hdr4;
 
 // DMA commands
 @pragma pa_align 128
