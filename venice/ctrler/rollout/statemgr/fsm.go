@@ -401,7 +401,9 @@ func fsmAcRolloutFail(ros *RolloutState) {
 	if ros.stateTimer != nil {
 		ros.stopRolloutTimer()
 	}
-	ros.setEndTime()
+	if ros.Status.StartTime != nil {
+		ros.setEndTime()
+	}
 	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_FAILURE)]
 	ros.saveStatus()
 	ros.updateRolloutAction()
@@ -416,7 +418,9 @@ func fsmAcRolloutFail(ros *RolloutState) {
 }
 func fsmAcRolloutSuspend(ros *RolloutState) {
 	ros.stopRolloutTimer()
-	ros.setEndTime()
+	if ros.Status.StartTime != nil {
+		ros.setEndTime()
+	}
 	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUSPENDED)]
 	ros.saveStatus()
 	ros.updateRolloutAction()

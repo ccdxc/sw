@@ -495,9 +495,11 @@ func (ros *RolloutState) setSmartNICPhase(name, reason, message string, phase ro
 		ros.Status.SmartNICsStatus[index].StartTime = &startTime
 
 	case roproto.RolloutPhase_COMPLETE, roproto.RolloutPhase_FAIL:
-		endTime := api.Timestamp{}
-		endTime.SetTime(time.Now())
-		ros.Status.SmartNICsStatus[index].EndTime = &endTime
+		if ros.Status.SmartNICsStatus[index].StartTime != nil {
+			endTime := api.Timestamp{}
+			endTime.SetTime(time.Now())
+			ros.Status.SmartNICsStatus[index].EndTime = &endTime
+		}
 
 	case roproto.RolloutPhase_PRE_CHECK:
 	case roproto.RolloutPhase_DEPENDENCIES_CHECK:
