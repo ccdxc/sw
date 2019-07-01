@@ -182,8 +182,9 @@ sdk_ret_t
 tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     tep_entry *tep;
-    p4pd_error_t p4pd_ret;
     pds_tep_spec_t *spec;
+    p4pd_error_t p4pd_ret;
+    ipv4_addr_t st_v4_dipo;
     sdk_table_api_params_t api_params;
     tep1_rx_swkey_t tep1_rx_key = { 0 };
     tep2_rx_swkey_t tep2_rx_key = { 0 };
@@ -214,8 +215,8 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             memcpy(nh_data.nexthop_info.dipo,
                    &spec->remote_svc_public_ip.addr.v4_addr, IP4_ADDR8_LEN);
         } else {
-            memcpy(nh_data.nexthop_info.dipo,
-                   &spec->key.ip_addr.addr.v6_addr.addr32[3], IP4_ADDR8_LEN);
+            st_v4_dipo = ntohl(spec->key.ip_addr.addr.v6_addr.addr32[3]);
+            memcpy(nh_data.nexthop_info.dipo, &st_v4_dipo, IP4_ADDR8_LEN);
         }
         sdk::lib::memrev(nh_data.nexthop_info.dmaco, spec->mac, ETH_ADDR_LEN);
         ret = nexthop_impl_db()->nh_tbl()->insert_atid(&nh_data, nh_idx_);
