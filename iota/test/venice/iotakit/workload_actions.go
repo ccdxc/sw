@@ -560,12 +560,15 @@ func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, po
 		workloads[wfName] = pair.first
 		serverInput[wfName] = fuze.Input{Connections: []*fuze.Connection{{ServerIPPort: ":" + port, Proto: proto}}}
 
-		conns := clientInput[wfName].Connections
+		wfName = pair.second.iotaWorkload.WorkloadName
+		conns := []*fuze.Connection{}
+		if _, ok := clientInput[wfName]; ok {
+			conns = clientInput[wfName].Connections
+		}
 		destIPAddr := strings.Split(pair.first.iotaWorkload.IpPrefix, "/")[0]
 		for ii := 0; ii < numConns; ii++ {
 			conns = append(conns, &fuze.Connection{ServerIPPort: destIPAddr + ":" + port, Proto: proto})
 		}
-		wfName = pair.second.iotaWorkload.WorkloadName
 		workloads[wfName] = pair.second
 		clientInput[wfName] = fuze.Input{Connections: conns}
 	}

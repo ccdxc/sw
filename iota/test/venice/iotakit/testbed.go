@@ -32,6 +32,7 @@ import (
 const defaultIotaServerURL = "localhost:60000"
 const maxTestbedInitRetry = 3
 const agentAuthTokenFile = "/tmp/auth_token"
+const naplesTBFile = "/tmp/naples.dat"
 
 // DataNetworkParams contains switch port info for each port
 type DataNetworkParams struct {
@@ -92,6 +93,11 @@ type TestNode struct {
 	topoNode            *TopoNode                 // node info from topology
 }
 
+type naplesData struct {
+	Naples string `json:"naples"`
+	ID     int    `json:"id"`
+}
+
 // TestBed is the state of the testbed
 type TestBed struct {
 	Topo                 Topology                   // testbed topology
@@ -110,6 +116,7 @@ type TestBed struct {
 	taskResult           map[string]error           // sub task result
 	caseResult           map[string]*TestCaseResult // test case result counts
 	DataSwitches         []*iota.DataSwitch         // data switches associated to this testbed
+	naplesDataMap        map[string]naplesData      //naples name data map
 
 	// cached message responses from iota server
 	iotaClient      *common.GRPCClient   // iota grpc client
@@ -308,6 +315,22 @@ func (tb *TestBed) getAvailableInstance(instType iota.TestBedNodeType) *Instance
 
 	log.Fatalf("Could not find any instances of type: %v", instType)
 	return nil
+}
+
+// getNaplesInstanceByName which was allocated before
+func (tb *TestBed) getNaplesInstanceByName(name string) *InstanceParams {
+
+	for _, naples := range tb.naplesDataMap {
+		for idx, inst := range tb.unallocatedInstances {
+			if inst.Type == "bm" && naples.ID == inst.ID {
+				tb.unallocatedInstances = append(tb.unallocatedInstances[:idx], tb.unallocatedInstances[idx+1:]...)
+				return inst
+			}
+		}
+	}
+
+	//Did not find int allocated before instances, try to allocate a fresh one
+	return tb.getAvailableInstance(iota.TestBedNodeType_TESTBED_NODE_TYPE_HW)
 }
 
 func (tb *TestBed) addAvailableInstance(instance *InstanceParams) error {
@@ -609,7 +632,7 @@ func (tb *TestBed) AddNodes(personality iota.PersonalityType, names []string) ([
 		if personality == iota.PersonalityType_PERSONALITY_NAPLES {
 			nodeType = iota.TestBedNodeType_TESTBED_NODE_TYPE_HW
 		}
-		pinst := tb.getAvailableInstance(nodeType)
+		pinst := tb.getNaplesInstanceByName(name)
 		// setup node state
 		node := &TestNode{
 			NodeName:    name,
@@ -654,8 +677,11 @@ func (tb *TestBed) AddNodes(personality iota.PersonalityType, names []string) ([
 		node.NodeUUID = addNodeResp.Nodes[index].NodeUuid
 		node.iotaNode = addNodeResp.Nodes[index]
 		tb.Nodes = append(tb.Nodes, node)
+		tb.addToNaplesCache(node.NodeName, node.instParams.ID)
 	}
 
+	//Save the context
+	tb.saveNaplesCache()
 	// move naples to managed mode
 	err = tb.setupNaplesMode(newNodes)
 	if err != nil {
@@ -902,8 +928,39 @@ func (tb *TestBed) getIotaNode(node *TestNode) *iota.Node {
 	return &tbn
 }
 
+func (tb *TestBed) initNaplesCache() {
+	tb.naplesDataMap = make(map[string]naplesData)
+	if jdata, err := ioutil.ReadFile(naplesTBFile); err == nil {
+		if err := json.Unmarshal(jdata, &tb.naplesDataMap); err != nil {
+			log.Fatal("Failed to read naples TB file")
+		}
+	}
+}
+
+func (tb *TestBed) resetNaplesCache() {
+	tb.naplesDataMap = make(map[string]naplesData)
+	os.Remove(naplesTBFile)
+}
+
+func (tb *TestBed) addToNaplesCache(name string, ID int) {
+	tb.naplesDataMap[name] = naplesData{Naples: name, ID: ID}
+}
+
+func (tb *TestBed) saveNaplesCache() error {
+	//Remember which naples was used for which ID
+	if jdata, err := json.Marshal(tb.naplesDataMap); err != nil {
+		return fmt.Errorf("Error in marshaling naples map")
+	} else if err := ioutil.WriteFile(naplesTBFile, jdata, 0644); err != nil {
+		return fmt.Errorf("unable to write naples data file: %s", err)
+	}
+
+	return nil
+}
+
 // setupTestBed sets up testbed
 func (tb *TestBed) setupTestBed() error {
+
+	tb.initNaplesCache()
 	client := iota.NewTopologyApiClient(tb.iotaClient.Client)
 
 	// Allocate VLANs
@@ -974,6 +1031,8 @@ func (tb *TestBed) setupTestBed() error {
 		// install image if required
 		skipInstall := os.Getenv("SKIP_INSTALL")
 		if skipInstall == "" && tb.hasNaplesHW {
+			//we are reinstalling, reset current mapping
+			tb.resetNaplesCache()
 			log.Infof("Installing images on testbed. This may take 10s of minutes...")
 			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Hour))
 			defer cancel()
@@ -1124,6 +1183,7 @@ func (tb *TestBed) setupTestBed() error {
 
 	// save node uuid
 	addedNodes := []*TestNode{}
+
 	for i := 0; i < len(tb.Nodes); i++ {
 		nodeAdded := false
 		node := tb.Nodes[i]
@@ -1134,12 +1194,21 @@ func (tb *TestBed) setupTestBed() error {
 				node.iotaNode = nr
 				nodeAdded = true
 				addedNodes = append(addedNodes, node)
+				//Update Instance to be used.
+				if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+					tb.addToNaplesCache(node.NodeName, node.instParams.ID)
+				}
 			}
 		}
 		//Probably node not added, release the instance
 		if !nodeAdded {
 			tb.addAvailableInstance(node.instParams)
 		}
+	}
+
+	if err := tb.saveNaplesCache(); err != nil {
+		log.Errorf("Failed to save to naples cache Err: %v", err)
+		return err
 	}
 
 	tb.Nodes = addedNodes

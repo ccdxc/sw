@@ -194,7 +194,7 @@ var topo3Venice1Naples = Topology{
 	NaplesImage:   "../nic/naples_fw.tar",
 	VeniceImage:   "../bin/venice.tgz",
 	WorkloadType:  iota.WorkloadType_WORKLOAD_TYPE_VM,
-	WorkloadImage: "build-152",
+	WorkloadImage: "build-160",
 	NumVlans:      10, // FIXME: what should this be??
 	Nodes: []TopoNode{
 		{
@@ -229,7 +229,7 @@ var topo1Venice1Naples = Topology{
 	NaplesImage:   "../nic/naples_fw.tar",
 	VeniceImage:   "../bin/venice.tgz",
 	WorkloadType:  iota.WorkloadType_WORKLOAD_TYPE_VM,
-	WorkloadImage: "build-152",
+	WorkloadImage: "build-160",
 	NumVlans:      10, // FIXME: what should this be??
 	Nodes: []TopoNode{
 		{
@@ -252,7 +252,7 @@ var topo1Venice2Naples = Topology{
 	NaplesImage:   "../nic/naples_fw.tar",
 	VeniceImage:   "../bin/venice.tgz",
 	WorkloadType:  iota.WorkloadType_WORKLOAD_TYPE_VM,
-	WorkloadImage: "build-152",
+	WorkloadImage: "build-160",
 	NumVlans:      10, // FIXME: what should this be??
 	Nodes: []TopoNode{
 		{
@@ -282,7 +282,7 @@ var topo1Venice2Naples1NaplesSim3Scale = Topology{
 	VeniceImage:    "../bin/venice.tgz",
 	NaplesSimImage: "../nic/obj/images/naples-release-v1.tgz",
 	WorkloadType:   iota.WorkloadType_WORKLOAD_TYPE_VM,
-	WorkloadImage:  "build-152",
+	WorkloadImage:  "build-160",
 	NumVlans:       10, // FIXME: what should this be??
 	Nodes: []TopoNode{
 		{
@@ -320,7 +320,7 @@ var topo3Venice2Naples1NaplesSim100Scale = Topology{
 	VeniceImage:    "../bin/venice.tgz",
 	NaplesSimImage: "../nic/obj/images/naples-release-v1.tgz",
 	WorkloadType:   iota.WorkloadType_WORKLOAD_TYPE_VM,
-	WorkloadImage:  "build-152",
+	WorkloadImage:  "build-160",
 	NumVlans:       10, // FIXME: what should this be??
 	Nodes: []TopoNode{
 		{
@@ -370,7 +370,7 @@ var topo3Venice2Naples3NaplesSim100Scale = Topology{
 	VeniceImage:    "../bin/venice.tgz",
 	NaplesSimImage: "../nic/obj/images/naples-release-v1.tgz",
 	WorkloadType:   iota.WorkloadType_WORKLOAD_TYPE_VM,
-	WorkloadImage:  "build-152",
+	WorkloadImage:  "build-160",
 	NumVlans:       10, // FIXME: what should this be??
 	Nodes: []TopoNode{
 		{
@@ -436,7 +436,7 @@ var topo1Venice2Naples15NaplesSim200Scale = Topology{
 	VeniceImage:    "../bin/venice.tgz",
 	NaplesSimImage: "../nic/obj/images/naples-release-v1.tgz",
 	WorkloadType:   iota.WorkloadType_WORKLOAD_TYPE_VM,
-	WorkloadImage:  "build-152",
+	WorkloadImage:  "build-160",
 	NumVlans:       10, // FIXME: what should this be??
 	Nodes: []TopoNode{
 		{
@@ -568,7 +568,7 @@ var topo1Venice2Naples3NaplesSim200Scale = Topology{
 	VeniceImage:    "../bin/venice.tgz",
 	NaplesSimImage: "../nic/obj/images/naples-release-v1.tgz",
 	WorkloadType:   iota.WorkloadType_WORKLOAD_TYPE_VM,
-	WorkloadImage:  "build-152",
+	WorkloadImage:  "build-160",
 	NumVlans:       10, // FIXME: what should this be??
 	Nodes: []TopoNode{
 		{
@@ -622,7 +622,7 @@ var topo3Venice3NaplesSim200Scale = Topology{
 	VeniceImage:    "../bin/venice.tgz",
 	NaplesSimImage: "../nic/obj/images/naples-release-v1.tgz",
 	WorkloadType:   iota.WorkloadType_WORKLOAD_TYPE_VM,
-	WorkloadImage:  "build-152",
+	WorkloadImage:  "build-160",
 	NumVlans:       10, // FIXME: what should this be??
 	Nodes: []TopoNode{
 		{
@@ -676,7 +676,7 @@ var topo3Venice1NaplesSim200Scale = Topology{
 	VeniceImage:    "../bin/venice.tgz",
 	NaplesSimImage: "../nic/obj/images/naples-release-v1.tgz",
 	WorkloadType:   iota.WorkloadType_WORKLOAD_TYPE_VM,
-	WorkloadImage:  "build-152",
+	WorkloadImage:  "build-160",
 	NumVlans:       10, // FIXME: what should this be??
 	Nodes: []TopoNode{
 		{
@@ -714,7 +714,7 @@ var topo1Venice1NaplesSim200Scale = Topology{
 	VeniceImage:    "../bin/venice.tgz",
 	NaplesSimImage: "../nic/obj/images/naples-release-v1.tgz",
 	WorkloadType:   iota.WorkloadType_WORKLOAD_TYPE_VM,
-	WorkloadImage:  "build-152",
+	WorkloadImage:  "build-160",
 	NumVlans:       10, // FIXME: what should this be??
 	Nodes: []TopoNode{
 		{
@@ -740,7 +740,7 @@ var topo1Venice3NaplesSim200Scale = Topology{
 	VeniceImage:    "../bin/venice.tgz",
 	NaplesSimImage: "../nic/obj/images/naples-release-v1.tgz",
 	WorkloadType:   iota.WorkloadType_WORKLOAD_TYPE_VM,
-	WorkloadImage:  "build-152",
+	WorkloadImage:  "build-160",
 	NumVlans:       10, // FIXME: what should this be??
 	Nodes: []TopoNode{
 		{
@@ -780,7 +780,7 @@ var topo3Venice2Naples = Topology{
 	NaplesImage:   "../nic/naples_fw.tar",
 	VeniceImage:   "../bin/venice.tgz",
 	WorkloadType:  iota.WorkloadType_WORKLOAD_TYPE_VM,
-	WorkloadImage: "build-152",
+	WorkloadImage: "build-160",
 	NumVlans:      10, // FIXME: what should this be??
 	Nodes: []TopoNode{
 		{
@@ -821,7 +821,7 @@ var topo1VeniceScaleNaples = Topology{
 	NaplesImage:   "../nic/naples_fw.tar",
 	VeniceImage:   "../bin/venice.tgz",
 	WorkloadType:  iota.WorkloadType_WORKLOAD_TYPE_VM,
-	WorkloadImage: "build-138",
+	WorkloadImage: "build-160",
 	NumVlans:      10,
 	Nodes: []TopoNode{
 		{
