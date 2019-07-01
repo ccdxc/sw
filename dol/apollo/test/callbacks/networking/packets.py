@@ -77,7 +77,7 @@ def __get_host_from_route(modargs, route, af):
     pval = __get_module_args_value(modargs, 'prefix')
     if route is None or pval is None:
         host = __get_host_from_route_impl(route, af)
-    if pval == 'right':
+    elif pval == 'right':
         #first ip post prefix range
         host = route.network_address + route.num_addresses
     elif pval == 'left':

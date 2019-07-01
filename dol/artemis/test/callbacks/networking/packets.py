@@ -109,7 +109,7 @@ def __get_module_args_value(modargs, attr):
 def __get_pfx_position_selector(modargs):
     return __get_module_args_value(modargs, 'prefix')
 
-def __get_usable_pfx_from_range(ipaddrLow, ipaddrHigh, pfxpos):
+def __get_usable_pfx_from_range(ipaddrLow, ipaddrHigh, pos):
     if not all([ipaddrLow, ipaddrHigh]):
         return None
     elif pos == 'right':
@@ -210,6 +210,7 @@ def GetUsableDPortFromPolicy(testcase, packet, args=None):
     return __get_port_from_rule(rule, pos, False)
 
 def __is_matching_ip(matchtype, ipaddr, ippfx=None, ipaddrLow=None, ipaddrHigh=None, tag=0):
+    ipaddr = ipaddress.ip_address(ipaddr)
     if matchtype == utils.L3MatchType.PFX:
         if ippfx is None:
             return True

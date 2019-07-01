@@ -171,11 +171,11 @@ def GetRpcIPRange(addrLow, addrHigh, addrRange):
         logger.error("ERROR: addrRange version mismatch: Low %s High %s" %(addrLow, addrHigh))
         sys.exit(1)
     if addrLow.version == IP_VERSION_6:
-        GetRpcIPAddr(addrLow, addrRange.IPv6range.Low)
-        GetRpcIPAddr(addrHigh, addrRange.IPv6range.High)
+        GetRpcIPAddr(addrLow, addrRange.IPv6Range.Low)
+        GetRpcIPAddr(addrHigh, addrRange.IPv6Range.High)
     else:
-        GetRpcIPAddr(addrLow, addrRange.IPv4range.Low)
-        GetRpcIPAddr(addrHigh, addrRange.IPv4range.High)
+        GetRpcIPAddr(addrLow, addrRange.IPv4Range.Low)
+        GetRpcIPAddr(addrHigh, addrRange.IPv4Range.High)
     return
 
 def GetRpcEncap(mplsslot, vxlanid, encap):

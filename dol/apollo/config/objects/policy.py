@@ -230,6 +230,17 @@ class PolicyObjectClient:
         if not utils.IsPipelineArtemis():
             return
 
+        def __is_default_l3_attr(matchtype=utils.L3MatchType.PFX, pfx=None,\
+                                 iplow=None, iphigh=None, tag=0):
+            if matchtype == utils.L3MatchType.PFX:
+                return utils.isDefaultRoute(pfx)
+            elif matchtype == utils.L3MatchType.PFXRANGE:
+                return ((int(iplow) == 0) and (int(iphigh) == 0))
+            elif matchtype == utils.L3MatchType.TAG:
+                # TODO: once tag support comes
+                return False
+            return False
+
         def __get_l3_attr(l3matchtype, newpfx):
             pfx = None
             startaddr = None
@@ -249,10 +260,14 @@ class PolicyObjectClient:
             if not l3matchobj.valid:
                 # nothing to do in case of wildcard
                 return
-            #TODO: return without modification for default pfx so that it can be tested
             if (direction == 'egress'):
+                if __is_default_l3_attr(l3matchobj.SrcType, l3matchobj.SrcPrefix, l3matchobj.SrcIPLow, l3matchobj.SrcIPHigh, l3matchobj.SrcTag):
+                    # no need of modification if it is already a default route
+                    return
                 l3matchobj.SrcPrefix, l3matchobj.SrcIPLow, l3matchobj.SrcIPHigh, l3matchobj.SrcTag = __get_l3_attr(l3matchobj.SrcType, subnetpfx)
             else:
+                if __is_default_l3_attr(l3matchobj.DstType, l3matchobj.DstPrefix, l3matchobj.DstIPLow, l3matchobj.DstIPHigh, l3matchobj.DstTag):
+                    return
                 l3matchobj.DstPrefix, l3matchobj.DstIPLow, l3matchobj.DstIPHigh, l3matchobj.DstTag = __get_l3_attr(l3matchobj.DstType, subnetpfx)
             return
 
@@ -385,6 +400,10 @@ class PolicyObjectClient:
             srcpfx, dstpfx = __get_l3_pfx_from_rule(af, rulespec)
             srciplow, srciphigh, dstiplow, dstiphigh = __get_l3_pfx_range_from_rule(af, rulespec)
             srctag, dsttag = __get_l3_tag_from_rule(af, rulespec)
+            if not utils.IsPipelineArtemis():
+                # Apollo does NOT support other match types like range/tag
+                if srctype is not utils.L3MatchType.PFX or dsttype is not utils.L3MatchType.PFX:
+                    return None
             l3match = any([proto, srcpfx, dstpfx, srciplow, srciphigh, dstiplow, dstiphigh, srctag, dsttag])
             obj = L3MatchObject(l3match, proto, srcpfx, dstpfx, srciplow, srciphigh, dstiplow, dstiphigh, srctag, dsttag, srctype, dsttype)
             return obj
@@ -406,6 +425,9 @@ class PolicyObjectClient:
                 priority = getattr(rulespec, 'priority', 0)
                 l4match = __get_l4_rule(af, rulespec)
                 l3match = __get_l3_rule(af, rulespec)
+                if l3match is None:
+                    # L3 match is mandatory for a rule
+                    return None
                 action = __get_rule_action(rulespec)
                 rule = RuleObject(stateful, l3match, l4match, priority, action)
                 rules.append(rule)
@@ -431,6 +453,8 @@ class PolicyObjectClient:
             direction = policyspec.direction
             if __is_v4stack():
                 v4rules = __get_rules(utils.IP_VERSION_4, policyspec)
+                if v4rules is None:
+                    return
                 if direction == 'bidir':
                     #For bidirectional, add policy in both directions
                     policyobj = __add_v4policy('ingress', v4rules, policytype, overlaptype)
@@ -440,6 +464,8 @@ class PolicyObjectClient:
 
             if __is_v6stack():
                 v6rules = __get_rules(utils.IP_VERSION_6, policyspec)
+                if v6rules is None:
+                    return
                 if direction == 'bidir':
                     #For bidirectional, add policy in both directions
                     policyobj = __add_v6policy('ingress', v6rules, policytype, overlaptype)
@@ -516,7 +542,7 @@ class PolicyObjectHelper:
                     policyObj.l_obj = lobj
                     objs.append(policyObj)
                     break
-        return utils.GetFilteredObjects(objs, selectors.maxlimits, False)
+        return utils.GetFilteredObjects(objs, selectors.maxlimits)
 
 PolicyHelper = PolicyObjectHelper()
 

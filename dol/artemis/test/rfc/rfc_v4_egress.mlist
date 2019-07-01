@@ -71,6 +71,7 @@ modules:
         name    : OVERLAP_RANDOM
         spec    : rfc_egress.testspec
         iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=partial
             - policy : filter://AddrFamily=IPV4,OverlapType=pfx
             - policy : filter://AddrFamily=IPV4,OverlapType=full_pfx
             - policy : filter://AddrFamily=IPV4,OverlapType=sport
@@ -86,6 +87,7 @@ modules:
             - sport  : first
             - dport  : first
         iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=partial
             - policy : filter://AddrFamily=IPV4,OverlapType=pfx
             - policy : filter://AddrFamily=IPV4,OverlapType=full_pfx
             - policy : filter://AddrFamily=IPV4,OverlapType=sport
@@ -101,6 +103,7 @@ modules:
             - sport  : last
             - dport  : last
         iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=partial
             - policy : filter://AddrFamily=IPV4,OverlapType=pfx
             - policy : filter://AddrFamily=IPV4,OverlapType=full_pfx
             - policy : filter://AddrFamily=IPV4,OverlapType=sport
@@ -116,6 +119,7 @@ modules:
             - sport  : left
             - dport  : left
         iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=partial
             - policy : filter://AddrFamily=IPV4,OverlapType=pfx
             - policy : filter://AddrFamily=IPV4,OverlapType=full_pfx
             - policy : filter://AddrFamily=IPV4,OverlapType=sport
@@ -131,6 +135,7 @@ modules:
             - sport  : right
             - dport  : right
         iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=partial
             - policy : filter://AddrFamily=IPV4,OverlapType=pfx
             - policy : filter://AddrFamily=IPV4,OverlapType=full_pfx
             - policy : filter://AddrFamily=IPV4,OverlapType=sport
@@ -142,6 +147,7 @@ modules:
         name    : ADJACENT_RANDOM
         spec    : rfc_egress.testspec
         iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent
             - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx
             - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx_with_default
 
@@ -153,6 +159,7 @@ modules:
             - sport  : first
             - dport  : first
         iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent
             - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx
             - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx_with_default
 
@@ -164,6 +171,7 @@ modules:
             - sport  : last
             - dport  : last
         iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent
             - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx
             - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx_with_default
 
@@ -175,6 +183,7 @@ modules:
             - sport  : left
             - dport  : left
         iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent
             - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx
             - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx_with_default
 
@@ -186,5 +195,6 @@ modules:
             - sport  : right
             - dport  : right
         iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent
             - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx
             - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx_with_default
