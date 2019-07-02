@@ -292,12 +292,16 @@ def __get_packet_tuples(pkt):
         sip = pkt[IP].src
         dip = pkt[IP].dst
         proto = pkt[IP].proto
-        if TCP in pkt:
-            sport = pkt[TCP].sport
-            dport = pkt[TCP].dport
-        elif UDP in pkt:
-            sport = pkt[UDP].sport
-            dport = pkt[UDP].dport
+    elif IPv6 in pkt:
+        sip = pkt[IPv6].src
+        dip = pkt[IPv6].dst
+        proto = pkt[IPv6].nh
+    if TCP in pkt:
+        sport = pkt[TCP].sport
+        dport = pkt[TCP].dport
+    elif UDP in pkt:
+        sport = pkt[UDP].sport
+        dport = pkt[UDP].dport
     packet_tuples = [sip, dip, proto, sport, dport]
     logger.verbose("Packet ", pkt.summary())
     logger.verbose("Packet Tuples ", packet_tuples)

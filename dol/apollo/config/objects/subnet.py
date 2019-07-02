@@ -60,8 +60,7 @@ class SubnetObject(base.ConfigObjectBase):
 
     def __fill_default_rules_in_policy(self):
         ids = [self.IngV4SecurityPolicyId, self.EgV4SecurityPolicyId]
-        # TODO: IPv6 support
-        # ids += [self.IngV6SecurityPolicyId, self.EgV6SecurityPolicyId]
+        ids += [self.IngV6SecurityPolicyId, self.EgV6SecurityPolicyId]
         for policyid in ids:
             policyobj = policy.client.GetPolicyObject(policyid)
             if policyobj.PolicyType == 'default':

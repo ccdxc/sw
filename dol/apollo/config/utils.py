@@ -13,6 +13,8 @@ from infra.common.glopts import GlobalOptions
 IP_VERSION_6 = 6
 IP_VERSION_4 = 4
 
+L3PROTO_MIN = 0
+
 L4PORT_MIN = 0
 L4PORT_MAX = 65535
 
@@ -24,6 +26,12 @@ ICMPCODE_MAX = 255
 
 ETHER_HDR_LEN = 14
 DOT1Q_HDR_LEN = 4
+
+IPV4_MINADDR = ipaddress.ip_address("0.0.0.0")
+IPV4_MAXADDR = ipaddress.ip_address("255.255.255.255")
+
+IPV6_MINADDR = ipaddress.ip_address("0::0")
+IPV6_MAXADDR = ipaddress.ip_address("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff")
 
 IPV4_DEFAULT_ROUTE = ipaddress.ip_network("0.0.0.0/0")
 IPV6_DEFAULT_ROUTE = ipaddress.ip_network("0::/0")
@@ -139,6 +147,17 @@ def GetEncapTypeString(e):
 def isDefaultRoute(ippfx):
     if ippfx == IPV4_DEFAULT_ROUTE or ippfx == IPV6_DEFAULT_ROUTE:
         return True
+    return False
+
+def isDefaultAddrRange(addrLow, addrHigh):
+    if addrLow == IPV4_MINADDR and addrHigh == IPV4_MAXADDR:
+        return True
+    if addrLow == IPV6_MINADDR and addrHigh == IPV6_MAXADDR:
+        return True
+    return False
+
+def isTagWithDefaultRoute(tag):
+    #TODO: Tag support
     return False
 
 def GetRpcIPAddrFamily(ipaddrfamily):

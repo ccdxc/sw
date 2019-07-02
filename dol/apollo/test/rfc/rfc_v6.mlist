@@ -4,7 +4,7 @@ feature:
     sub         : ipv6
     package     : test.rfc
     module      : rfc
-    enable      : False
+    enable      : True
     ignore      : True
 
 modules:
@@ -15,12 +15,6 @@ modules:
             - policy : filter://AddrFamily=IPV6,PolicyType=allow_all
 
     # testcases for policies with stateless rules only
-    - module:
-        name    : IPV6_EGRESS_DISJOINT_PFX
-        spec    : rfc_egress.testspec
-        iterate :
-            - policy : filter://AddrFamily=IPV6,PolicyType=stateless,OverlapType=disjoint_pfx
-
     - module:
         name    : IPV6_EGRESS_DISJOINT
         spec    : rfc_egress.testspec
@@ -140,12 +134,6 @@ modules:
         spec    : rfc_ingress.testspec
         iterate :
             - policy : filter://AddrFamily=IPV6,PolicyType=allow_all
-
-    - module:
-        name    : IPV6_INGRESS_DISJOINT_PFX
-        spec    : rfc_ingress.testspec
-        iterate :
-            - policy : filter://AddrFamily=IPV6,PolicyType=stateless,OverlapType=disjoint_pfx
 
     - module:
         name    : IPV6_INGRESS_DISJOINT

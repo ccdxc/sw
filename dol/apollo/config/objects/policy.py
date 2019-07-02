@@ -38,7 +38,8 @@ class L4MatchObject:
             logger.info("- No L4Match")
 
 class L3MatchObject:
-    def __init__(self, valid=False, proto=0, srcpfx=None, dstpfx=None,\
+    def __init__(self, valid=False, proto=utils.L3PROTO_MIN,\
+                 srcpfx=None, dstpfx=None,\
                  srciplow=None, srciphigh=None, dstiplow=None,\
                  dstiphigh=None, srctag=0, dsttag=0,\
                  srctype=utils.L3MatchType.PFX, dsttype=utils.L3MatchType.PFX):
@@ -304,6 +305,8 @@ class PolicyObjectClient:
     def GenerateObjects(self, parent, vpc_spec_obj):
         vpcid = parent.VPCId
         stack = parent.Stack
+        isV4Stack = True if ((stack == "dual") or (stack == 'ipv4')) else False
+        isV6Stack = True if ((stack == "dual") or (stack == 'ipv6')) else False
         self.__v4ingressobjs[vpcid] = []
         self.__v6ingressobjs[vpcid] = []
         self.__v4egressobjs[vpcid] = []
@@ -313,30 +316,19 @@ class PolicyObjectClient:
         self.__v4epolicyiter[vpcid] = None
         self.__v6epolicyiter[vpcid] = None
 
-        def __is_v4stack():
-            if stack == "dual" or stack == 'ipv4':
-                return True
-            return False
-
-        def __is_v6stack():
-            return False #v6 policy not supported in HAL yet
-            if stack == "dual" or stack == 'ipv6':
-                return True
-            return False
-
         def __get_l4_rule(af, rulespec):
-            sportlow = getattr(rulespec, 'sportlow', 0)
-            dportlow = getattr(rulespec, 'dportlow', 0)
-            sporthigh = getattr(rulespec, 'sporthigh', 65535)
-            dporthigh = getattr(rulespec, 'dporthigh', 65535)
-            icmptype = getattr(rulespec, 'icmptype', 0)
-            icmpcode = getattr(rulespec, 'icmpcode', 0)
+            sportlow = getattr(rulespec, 'sportlow', utils.L4PORT_MIN)
+            dportlow = getattr(rulespec, 'dportlow', utils.L4PORT_MIN)
+            sporthigh = getattr(rulespec, 'sporthigh', utils.L4PORT_MAX)
+            dporthigh = getattr(rulespec, 'dporthigh', utils.L4PORT_MAX)
+            icmptype = getattr(rulespec, 'icmptype', utils.ICMPTYPE_MIN)
+            icmpcode = getattr(rulespec, 'icmpcode', utils.ICMPCODE_MIN)
             l4match = any([sportlow, sporthigh, dportlow, dporthigh, icmptype, icmpcode])
             obj = L4MatchObject(l4match, sportlow, sporthigh, dportlow, dporthigh, icmptype, icmpcode)
             return obj
 
         def __get_l3_proto_from_rule(rulespec):
-            proto = getattr(rulespec, 'protocol', 0)
+            proto = getattr(rulespec, 'protocol', utils.L3PROTO_MIN)
             if proto:
                 proto = socket.getprotobyname(proto)
             return proto
@@ -450,7 +442,7 @@ class PolicyObjectClient:
 
         def __add_user_specified_policy(policyspec, policytype, overlaptype):
             direction = policyspec.direction
-            if __is_v4stack():
+            if isV4Stack:
                 v4rules = __get_rules(utils.IP_VERSION_4, policyspec)
                 if v4rules is None:
                     return
@@ -461,7 +453,7 @@ class PolicyObjectClient:
                 else:
                     policyobj = __add_v4policy(direction, v4rules, policytype, overlaptype)
 
-            if __is_v6stack():
+            if isV6Stack:
                 v6rules = __get_rules(utils.IP_VERSION_6, policyspec)
                 if v6rules is None:
                     return

@@ -1,0 +1,66 @@
+# Artemis RFC IPv6 Egress negative modules list
+feature:
+    id          : rfc
+    sub         : negative_ipv6_egress
+    package     : test.rfc
+    module      : rfc
+    enable      : True
+    ignore      : True
+
+modules:
+
+    - module:
+        name    : EMTPY_POLICY
+        spec    : rfc_egress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=empty
+
+    - module:
+        name    : DENY_ALL
+        spec    : rfc_egress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=deny_all
+
+    - module:
+        name    : SPECIFIC_LEFT
+        spec    : rfc_egress.testspec
+        args    :
+            - prefix : left
+            - sport  : left
+            - dport  : left
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=user_specific
+
+    - module:
+        name    : SPECIFIC_RIGHT
+        spec    : rfc_egress.testspec
+        args    :
+            - prefix : right
+            - sport  : right
+            - dport  : right
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=user_specific
+
+    - module:
+        name    : DUP_RULE
+        spec    : rfc_egress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=dup_rule
+
+    - module:
+        name    : DUP_RULE_DIFF_PRIO
+        spec    : rfc_egress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=dup_rule_diff_prio
+
+    - module:
+        name    : DUP_RULE_DIFF_ACTION
+        spec    : rfc_egress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=dup_rule_diff_act
+
+    - module:
+        name    : DUP_RULE_DIFF_PRIO_ACT
+        spec    : rfc_egress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=dup_rule_diff_prio_act

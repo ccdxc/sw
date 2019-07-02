@@ -1,0 +1,140 @@
+# Feature RFC negative IPV6 Modules List
+feature:
+    id          : rfc
+    sub         : negative_v6
+    package     : test.rfc
+    module      : rfc
+    enable      : True
+    ignore      : True
+
+modules:
+    - module:
+        name    : IPV6_EGRESS_EMTPY_POLICY
+        spec    : rfc_egress_negative.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=empty
+
+    - module:
+        name    : IPV6_INGRESS_EMTPY_POLICY
+        spec    : rfc_ingress_negative.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=empty
+
+    # policies with stateless rules
+    - module:
+        name    : IPV6_EGRESS_RIGHT_INVALID_IP
+        spec    : rfc_egress_negative.testspec
+        args    :
+            - prefix : right
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=stateless,OverlapType=none
+
+    - module:
+        name    : IPV6_EGRESS_RIGHT_INVALID_SPORT
+        spec    : rfc_egress_negative.testspec
+        args    :
+            - sport : right
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=stateless,OverlapType=none
+
+    - module:
+        name    : IPV6_EGRESS_RIGHT_INVALID_DPORT
+        spec    : rfc_egress_negative.testspec
+        args    :
+            - dport : right
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=stateless,OverlapType=none
+
+    - module:
+        name    : IPV6_EGRESS_RIGHT_INVALID
+        spec    : rfc_egress_negative.testspec
+        args    :
+            - prefix : right
+            - sport  : right
+            - dport  : right
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=stateless,OverlapType=none
+
+    - module:
+        name    : IPV6_EGRESS_LEFT_INVALID_IP
+        spec    : rfc_egress_negative.testspec
+        args    :
+            - prefix : left
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=stateless,OverlapType=none
+
+    - module:
+        name    : IPV6_EGRESS_LEFT_INVALID_SPORT
+        spec    : rfc_egress_negative.testspec
+        args    :
+            - sport : left
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=stateless,OverlapType=none
+
+    - module:
+        name    : IPV6_EGRESS_LEFT_INVALID_DPORT
+        spec    : rfc_egress_negative.testspec
+        args    :
+            - dport : left
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=stateless,OverlapType=none
+
+    - module:
+        name    : IPV6_EGRESS_LEFT_INVALID
+        spec    : rfc_egress_negative.testspec
+        args    :
+            - prefix : left
+            - sport  : left
+            - dport  : left
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=stateless,OverlapType=none
+
+    - module:
+        name    : IPV6_INGRESS_RIGHT_INVALID_SPORT
+        spec    : rfc_ingress_negative.testspec
+        args    :
+            - sport : right
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=stateless,OverlapType=none
+
+    - module:
+        name    : IPV6_INGRESS_RIGHT_INVALID_DPORT
+        spec    : rfc_ingress_negative.testspec
+        args    :
+            - dport : right
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=stateless,OverlapType=none
+
+    - module:
+        name    : IPV6_INGRESS_RIGHT_INVALID
+        spec    : rfc_ingress_negative.testspec
+        args    :
+            - sport  : right
+            - dport  : right
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=stateless,OverlapType=none
+
+    - module:
+        name    : IPV6_INGRESS_LEFT_INVALID_SPORT
+        spec    : rfc_ingress_negative.testspec
+        args    :
+            - sport : left
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=stateless,OverlapType=none
+
+    - module:
+        name    : IPV6_INGRESS_LEFT_INVALID_DPORT
+        spec    : rfc_ingress_negative.testspec
+        args    :
+            - dport : left
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=stateless,OverlapType=none
+
+    - module:
+        name    : IPV6_INGRESS_LEFT_INVALID
+        spec    : rfc_ingress_negative.testspec
+        args    :
+            - sport  : left
+            - dport  : left
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=stateless,OverlapType=none

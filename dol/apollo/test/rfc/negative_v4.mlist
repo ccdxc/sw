@@ -1,7 +1,7 @@
-# Feature RFC Modules List
+# Feature RFC negative IPV4 Modules List
 feature:
     id          : rfc
-    sub         : negative
+    sub         : negative_v4
     package     : test.rfc
     module      : rfc
     enable      : True
