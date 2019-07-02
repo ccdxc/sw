@@ -123,6 +123,7 @@ ESTAB:
 					log.Infof("received event [%+v]", ev.Records[i])
 					evType, obj := w.makeEvent(ev.Records[i])
 					path := w.bucket + ":" + ev.Records[i].S3.Object.Key
+					log.Infof("sending watch event [%v][%v][%+v]", path, evType, obj)
 					qs := w.watchPrefixes.Get(path)
 					for j := range qs {
 						err := qs[j].Enqueue(evType, obj, nil)
@@ -145,6 +146,7 @@ func (w *storeWatcher) makeEvent(event minio.NotificationEvent) (kvstore.WatchEv
 		retType = kvstore.Deleted
 	}
 	obj := &objstore.Object{}
+	obj.Defaults("v1")
 	parts := strings.Split(event.S3.Bucket.Name, ".")
 	if len(parts) == 2 {
 		obj.Tenant = parts[0]
