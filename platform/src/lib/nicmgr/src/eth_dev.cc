@@ -183,6 +183,9 @@ Eth::Eth(devapi *dev_api,
         lif_map[lif_id] = eth_lif;
     }
 
+    host_port_info_addr = 0;
+    host_port_stats_addr = 0;
+
     // Port Config
     port_config_addr = pd->nicmgr_mem_alloc(sizeof(union port_config));
     host_port_config_addr = 0;
@@ -249,7 +252,7 @@ Eth::Eth(devapi *dev_api,
         NIC_LOG_ERR("{}: Failed to allocate lifs. ret: {}", spec->name, ret);
         throw;
     }
-    NIC_LOG_DEBUG("{}: lif_base {} lif_count {}", spec->name, 
+    NIC_LOG_DEBUG("{}: lif_base {} lif_count {}", spec->name,
             dev_resources.lif_base, spec->lif_count);
 
     // Allocate interrupts
@@ -333,6 +336,9 @@ Eth::Eth(devapi *dev_api,
             dev_spec, pd_client, lif_res, loop);
         lif_map[lif_id] = eth_lif;
     }
+
+    host_port_info_addr = 0;
+    host_port_stats_addr = 0;
 
     // Port Config
     port_config_addr = pd->nicmgr_mem_alloc(sizeof(union port_config));
@@ -1064,6 +1070,11 @@ Eth::_CmdPortInit(void *req, void *req_data, void *resp, void *resp_data)
         host_port_stats_addr = cmd->info_pa + offsetof(struct port_info, stats);
         NIC_LOG_INFO("{}: host_port_stats_addr {:#x}",
                     spec->name, host_port_stats_addr);
+    } else {
+        host_port_info_addr = 0;
+        host_port_config_addr = 0;
+        host_port_status_addr = 0;
+        host_port_stats_addr = 0;
     }
 
     memcpy(port_config, cfg, sizeof(*port_config));
@@ -1501,7 +1512,9 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
     };
 
     if (spec->eth_type == ETH_HOST && cmd->index == 0 && host_port_stats_addr != 0) {
-        NIC_LOG_INFO("{}: port{}: Starting stats update", spec->name, spec->uplink_port_num);
+        NIC_LOG_INFO("{}: port{}: Starting stats update to "
+                     "host_port_stats_addr {:#x}",
+                     spec->name, spec->uplink_port_num, host_port_stats_addr);
         evutil_timer_start(EV_A_ &stats_timer, &Eth::StatsUpdate, this, 0.0, 0.2);
     }
 
