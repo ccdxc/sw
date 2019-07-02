@@ -5,7 +5,9 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"strings"
 
+	"github.com/pensando/sw/nic/agent/protos/nmd"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -41,6 +43,26 @@ type preUpgImgMeta struct {
 			PcieVersion     string `json:"pcie_compat_version"`
 		} `json:"system_image"`
 	} `json:"mainfwa"`
+	Mainfwb struct {
+		KernelFit struct {
+			BuildDate       string `json:"build_date"`
+			BuildUser       string `json:"build_user"`
+			BaseVersion     string `json:"base_version"`
+			SoftwareVersion string `json:"software_version"`
+			NicmgrVersion   string `json:"nicmgr_compat_version"`
+			KernelVersion   string `json:"kernel_compat_version"`
+			PcieVersion     string `json:"pcie_compat_version"`
+		} `json:"kernel_fit"`
+		SystemImage struct {
+			BuildDate       string `json:"build_date"`
+			BuildUser       string `json:"build_user"`
+			BaseVersion     string `json:"base_version"`
+			SoftwareVersion string `json:"software_version"`
+			NicmgrVersion   string `json:"nicmgr_compat_version"`
+			KernelVersion   string `json:"kernel_compat_version"`
+			PcieVersion     string `json:"pcie_compat_version"`
+		} `json:"system_image"`
+	} `json:"mainfwb"`
 }
 
 type postUpgImgMeta struct {
@@ -110,12 +132,32 @@ func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
 			log.Infof("Unable to unmarshal the json file %s", err)
 			return err
 		}
-		upgCtx.PreUpgMeta.NicmgrVersion = preImgMeta.Uboot.Image.NicmgrVersion
-		upgCtx.PreUpgMeta.KernelVersion = preImgMeta.Uboot.Image.KernelVersion
-		upgCtx.PreUpgMeta.PcieVersion = preImgMeta.Uboot.Image.PcieVersion
-		upgCtx.PreUpgMeta.BuildDate = preImgMeta.Uboot.Image.BuildDate
-		upgCtx.PreUpgMeta.BaseVersion = preImgMeta.Uboot.Image.BaseVersion
-		upgCtx.PreUpgMeta.SoftwareVersion = preImgMeta.Uboot.Image.SoftwareVersion
+		_, err = os.Stat("/nic/tools/fwupdate")
+		if err == nil {
+			v := &nmd.NaplesCmdExecute{
+				Executable: "fwupdate",
+				Opts:       strings.Join([]string{"-r"}, ""),
+			}
+			content, er := execCmd(v)
+			if er != nil {
+				return er
+			}
+			if strings.Contains(content, "mainfwa") {
+				upgCtx.PreUpgMeta.NicmgrVersion = preImgMeta.Mainfwa.SystemImage.NicmgrVersion
+				upgCtx.PreUpgMeta.KernelVersion = preImgMeta.Mainfwa.SystemImage.KernelVersion
+				upgCtx.PreUpgMeta.PcieVersion = preImgMeta.Mainfwa.SystemImage.PcieVersion
+				upgCtx.PreUpgMeta.BuildDate = preImgMeta.Mainfwa.SystemImage.BuildDate
+				upgCtx.PreUpgMeta.BaseVersion = preImgMeta.Mainfwa.SystemImage.BaseVersion
+				upgCtx.PreUpgMeta.SoftwareVersion = preImgMeta.Mainfwa.SystemImage.SoftwareVersion
+			} else {
+				upgCtx.PreUpgMeta.NicmgrVersion = preImgMeta.Mainfwb.SystemImage.NicmgrVersion
+				upgCtx.PreUpgMeta.KernelVersion = preImgMeta.Mainfwb.SystemImage.KernelVersion
+				upgCtx.PreUpgMeta.PcieVersion = preImgMeta.Mainfwb.SystemImage.PcieVersion
+				upgCtx.PreUpgMeta.BuildDate = preImgMeta.Mainfwb.SystemImage.BuildDate
+				upgCtx.PreUpgMeta.BaseVersion = preImgMeta.Mainfwb.SystemImage.BaseVersion
+				upgCtx.PreUpgMeta.SoftwareVersion = preImgMeta.Mainfwb.SystemImage.SoftwareVersion
+			}
+		}
 	} else {
 		_, err := os.Stat("/nic/tools/fwupdate")
 		if err == nil {
