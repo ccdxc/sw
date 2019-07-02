@@ -25,6 +25,7 @@ namespace alg_rtsp {
  * Externs
  */
 extern alg_utils::alg_state_t *g_rtsp_state;
+extern alg_utils::tcp_buffer_slab_t g_rtsp_tcp_buffer_slabs;
 
 /*
  * Constants

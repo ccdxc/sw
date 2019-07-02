@@ -129,7 +129,19 @@ typedef enum hal_slab_e {
     HAL_SLAB_NVME_NS                         = 118,
     HAL_SLAB_NVME_SQ                         = 119,
     HAL_SLAB_NVME_CQ                         = 120,
-    HAL_SLAB_PI_MAX                          = 121,  // NOTE: MUST be last PI slab id
+    HAL_SLAB_FTP_TCP_BUFFER_2048             = 121,
+    HAL_SLAB_FTP_TCP_BUFFER_4096             = 122,
+    HAL_SLAB_FTP_TCP_BUFFER_8192             = 123,
+    HAL_SLAB_FTP_TCP_BUFFER_16384            = 124,
+    HAL_SLAB_RTSP_TCP_BUFFER_2048            = 125,
+    HAL_SLAB_RTSP_TCP_BUFFER_4096            = 126,
+    HAL_SLAB_RTSP_TCP_BUFFER_8192            = 127,
+    HAL_SLAB_RTSP_TCP_BUFFER_16384           = 128,
+    HAL_SLAB_RPC_TCP_BUFFER_2048             = 129,
+    HAL_SLAB_RPC_TCP_BUFFER_4096             = 130,
+    HAL_SLAB_RPC_TCP_BUFFER_8192             = 131,
+    HAL_SLAB_RPC_TCP_BUFFER_16384            = 132,
+    HAL_SLAB_PI_MAX                          = 133,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
     HAL_SLAB_PD_MIN                          = 1000,

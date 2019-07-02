@@ -21,6 +21,7 @@ using namespace hal::plugins::sfw;
  * Externs
  */
 extern alg_state_t *g_rpc_state;
+extern tcp_buffer_slab_t g_rpc_tcp_buffer_slabs;
 
 /*
  * Constants

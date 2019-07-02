@@ -13,6 +13,7 @@ namespace plugins {
 namespace alg_rtsp {
 
 alg_utils::alg_state_t *g_rtsp_state;
+alg_utils::tcp_buffer_slab_t g_rtsp_tcp_buffer_slabs;
 
 extern "C" hal_ret_t alg_rtsp_init(hal_cfg_t *hal_cfg) {
     slab *appsess_slab_ = NULL;
@@ -50,6 +51,31 @@ extern "C" hal_ret_t alg_rtsp_init(hal_cfg_t *hal_cfg) {
                                                    appsess_slab_, l4sess_slab_,
                                                    rtspinfo_slab_, 
                                                    rtsp_app_sess_cleanup_hdlr, NULL);
+
+    g_rtsp_tcp_buffer_slabs[0] = g_hal_state->register_slab(HAL_SLAB_RTSP_TCP_BUFFER_2048,
+                       slab_args={.name="rtsp_tcp_buffer_2k",
+                       .size=2048, .num_elements=8,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    SDK_ASSERT_RETURN((g_rtsp_tcp_buffer_slabs[0] != NULL), HAL_RET_OOM);
+
+    g_rtsp_tcp_buffer_slabs[1] = g_hal_state->register_slab(HAL_SLAB_RTSP_TCP_BUFFER_4096,
+                          slab_args={.name="rtsp_tcp_buffer_4k",
+                          .size=4096, .num_elements=8,
+                          .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    SDK_ASSERT_RETURN((g_rtsp_tcp_buffer_slabs[1] != NULL), HAL_RET_OOM);
+
+    g_rtsp_tcp_buffer_slabs[2] = g_hal_state->register_slab(HAL_SLAB_RTSP_TCP_BUFFER_8192,
+                       slab_args={.name="rtsp_tcp_buffer_8k",
+                       .size=8192, .num_elements=8,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    SDK_ASSERT_RETURN((g_rtsp_tcp_buffer_slabs[2] != NULL), HAL_RET_OOM);
+
+    g_rtsp_tcp_buffer_slabs[3] = g_hal_state->register_slab(HAL_SLAB_RTSP_TCP_BUFFER_16384,
+                       slab_args={.name="rtsp_tcp_buffer_16k",
+                       .size=16384, .num_elements=8,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    SDK_ASSERT_RETURN((g_rtsp_tcp_buffer_slabs[3] != NULL), HAL_RET_OOM);
+
 
     return HAL_RET_OK;
 }

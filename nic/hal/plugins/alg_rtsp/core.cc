@@ -484,18 +484,20 @@ static void rtsp_completion_hdlr (fte::ctx_t& ctx, bool status) {
         l4_sess->sess_hdl = ctx.session()->hal_handle;
         HAL_TRACE_DEBUG("RTSP Completion handler iscontrol session: {}", l4_sess->isCtrl);
         if (l4_sess->isCtrl == true) {
-            if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped()) {
+            if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped() &&
+                (ctx.pkt_len() == payload_offset)) {
                 // Set up TCP buffer for RFLOW
                 l4_sess->tcpbuf[DIR_RFLOW] = alg_utils::tcp_buffer_t::factory(
                                           htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
-                                          NULL, process_control_message);
+                                          NULL, process_control_message, g_rtsp_tcp_buffer_slabs);
             }
             /*
              * This will only be executed for control channel packets that
              * would lead to opening up pinholes for RTSP data sessions.
              */
             uint8_t buff = ctx.is_flow_swapped()?1:0;
-            if ((ctx.pkt_len() > payload_offset) && l4_sess->tcpbuf[buff])
+            if ((ctx.pkt_len() > payload_offset) &&
+                (l4_sess->tcpbuf[0] && l4_sess->tcpbuf[1]))
                 l4_sess->tcpbuf[buff]->insert_segment(ctx, process_control_message);
         } else {
             /*
@@ -549,7 +551,7 @@ rtsp_new_control_session(fte::ctx_t &ctx)
             //Setup TCP buffer for IFLOW
             l4_sess->tcpbuf[DIR_IFLOW] = alg_utils::tcp_buffer_t::factory(
                                       htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
-                                      NULL, process_control_message);
+                                      NULL, process_control_message, g_rtsp_tcp_buffer_slabs);
         }
 
         /*

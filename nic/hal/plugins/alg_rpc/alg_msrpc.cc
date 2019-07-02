@@ -1064,7 +1064,8 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
                     // Setup TCP buffer for IFLOW
                     l4_sess->tcpbuf[DIR_IFLOW] = tcp_buffer_t::factory(
                                               htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
-                                              NULL, parse_msrpc_cn_control_flow);
+                                              NULL, parse_msrpc_cn_control_flow,
+                                              g_rpc_tcp_buffer_slabs);
                 }
                 // Register completion handler
                 ctx.register_completion_handler(msrpc_completion_hdlr);
@@ -1084,12 +1085,14 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
         rpc_info = (rpc_info_t *)l4_sess->info;
 
         if (l4_sess->isCtrl == true && ctx.key().proto == IP_PROTO_TCP) {
-            if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped()) {
+            if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped() &&
+                (ctx.pkt_len() == payload_offset)) {
                 HAL_TRACE_VERBOSE("Setting up buffer for rflow");
                 // Set up TCP buffer for RFLOW
                 l4_sess->tcpbuf[DIR_RFLOW] = tcp_buffer_t::factory(
                                           htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
-                                           NULL, parse_msrpc_cn_control_flow);
+                                           NULL, parse_msrpc_cn_control_flow,
+                                           g_rpc_tcp_buffer_slabs);
             }
 
             /*
@@ -1097,7 +1100,8 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
              * would lead to opening up pinholes for FTP data sessions.
              */
             uint8_t buff = ctx.is_flow_swapped()?1:0;
-            if ((ctx.pkt_len() > payload_offset) && l4_sess->tcpbuf[buff]) {
+            if ((ctx.pkt_len() > payload_offset) &&
+                (l4_sess->tcpbuf[0] && l4_sess->tcpbuf[1])) {
                 l4_sess->tcpbuf[buff]->insert_segment(ctx, rpc_info->callback);
             }
         } else {

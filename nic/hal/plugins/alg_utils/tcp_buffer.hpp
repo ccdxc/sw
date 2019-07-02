@@ -15,6 +15,8 @@ namespace hal {
 namespace plugins {
 namespace alg_utils {
 
+typedef slab* (tcp_buffer_slab_t) [4];
+
 using sdk::lib::slab;
 
 typedef class tcp_buffer_t tcp_buffer;
@@ -24,7 +26,7 @@ public:
     typedef size_t (*data_handler_t)(void *ctx, uint8_t *data, size_t len);
 
     static tcp_buffer_t *factory(uint32_t seq_start, void *handler_ctx,
-                                 data_handler_t handler);
+                                 data_handler_t handler, tcp_buffer_slab_t slab_info);
     void free();
 
     hal_ret_t insert_segment(uint32_t seq, uint8_t *payload, size_t payload_len);
@@ -36,7 +38,7 @@ public:
 private:
 
     static const int MAX_SEGMENTS = 32;
-    static const int MIN_BUFF_SIZE = 1024;
+    static const int MIN_BUFF_SIZE = 2048;
     static const int MAX_BUFF_SIZE = 16*1024;
 
     // As defined by RFC 1982 - 2 ^ (SERIAL_BITS - 1)
@@ -81,13 +83,15 @@ private:
     } __PACK__ ;
 
     uint8_t        *buff_;
-    size_t         free_buff_size_;
+    uint32_t       end_buff_seq_;
     size_t         buff_size_;
     uint32_t       cur_seq_;
     segment_t      *segments_;
     uint8_t        num_segments_;
     data_handler_t data_handler_;
     void           *handler_ctx_;
+    uint8_t        cur_slab_;
+    tcp_buffer_slab_t buff_slabs_;
 };
 
 } // namespace alg_utils

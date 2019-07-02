@@ -3,13 +3,26 @@
 #include <utility>
 
 #include "nic/hal/plugins/alg_utils/tcp_buffer.hpp"
+#include "nic/sdk/lib/slab/slab.hpp"
+#include "nic/include/hal_mem.hpp"
 
 using namespace hal::plugins::alg_utils;
+using namespace hal;
 
 class tcp_buffer_test : public ::testing::Test {
 public:
     void tcp_buffer_init(uint32_t start_seq) {
         result_.len = 0;
+        tcp_buffer_slab_t slab_info;
+
+        slab_info[0] = slab::factory("0", HAL_SLAB_PI_MAX+1, 2048,
+                      8, true, true, true);
+        slab_info[1] = slab::factory("1", HAL_SLAB_PI_MAX+2, 4096,
+                      8, true, true, true);
+        slab_info[2] = slab::factory("2", HAL_SLAB_PI_MAX+3, 8192,
+                      8, true, true, true);
+        slab_info[3] = slab::factory("3", HAL_SLAB_PI_MAX+4, 16384,
+                      8, true, true, true);
         tcp_buffer_ = tcp_buffer_t::factory(start_seq, &result_, [](void *ctx, uint8_t *data, size_t len) {
                 result_t *res = (result_t *)ctx;
                 EXPECT_NE(len, 0);
@@ -17,7 +30,7 @@ public:
                 memcpy(res->buff + res->len, data, len);
                 res->len += len;
                 return len;
-            });
+            }, slab_info);
     }
 
     static int myrandom (int i) { return std::rand()%i;}

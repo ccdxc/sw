@@ -17,6 +17,7 @@ using namespace hal::plugins::alg_utils;
  * Externs
  */
 extern alg_state_t *g_ftp_state;
+extern tcp_buffer_slab_t g_ftp_tcp_buffer_slabs;
 
 /*
  * Constants

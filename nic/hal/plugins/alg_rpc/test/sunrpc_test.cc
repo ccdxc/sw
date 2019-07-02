@@ -334,6 +334,7 @@ TEST_F(rpc_test, sunrpc_session_fragmentation)
     tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
     tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
     tcp.mss(1200);
+    tcp.seq(442004268);
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_EQ(ctx_.session(), session);
@@ -361,7 +362,7 @@ TEST_F(rpc_test, sunrpc_session_fragmentation)
     //SUNRPC DUMP REPLY
     tcp = Tins::TCP(5001, SUNRPC_PORT) /
          Tins::RawPDU(dump_rsp1, sizeof(dump_rsp1));
-    tcp.seq(1);
+    tcp.seq(442004280);
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop());
@@ -369,7 +370,7 @@ TEST_F(rpc_test, sunrpc_session_fragmentation)
 
     tcp = Tins::TCP(5001, SUNRPC_PORT) /
          Tins::RawPDU(dump_rsp2, sizeof(dump_rsp2));
-    tcp.seq(1 + sizeof(dump_rsp1));
+    tcp.seq(442004280 + sizeof(dump_rsp1));
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop());

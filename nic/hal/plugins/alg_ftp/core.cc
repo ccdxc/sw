@@ -770,7 +770,7 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
                 // Setup TCP buffer for IFLOW
                 l4_sess->tcpbuf[DIR_IFLOW] = tcp_buffer_t::factory(
                                             htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1, 
-                                            NULL, __parse_ftp_req);             
+                                            NULL, __parse_ftp_req, g_ftp_tcp_buffer_slabs);
             }
         }
 
@@ -783,11 +783,14 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
         l4_sess = (l4_alg_status_t *)alg_status(ctx.feature_session_state());
         if (l4_sess != NULL && (l4_sess->alg == nwsec::APP_SVC_FTP)) {
             ftp_info = (ftp_info_t *)l4_sess->info;
-            if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped()) {
-                // Set up TCP buffer for RFLOW
+            if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped() && 
+                (ctx.pkt_len() == payload_offset)) {
+                // Set up TCP buffer for RFLOW only when we see handshake
+                // If due to load we miss the handshake then there is no point
+                // to process the packets.
                 l4_sess->tcpbuf[DIR_RFLOW] = tcp_buffer_t::factory(
                                           htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1, 
-                                          NULL, __parse_ftp_req);
+                                          NULL, __parse_ftp_req, g_ftp_tcp_buffer_slabs);
             }
             /*
              * Process only when we are expecting something.
@@ -798,7 +801,8 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
                  * would lead to opening up pinholes for FTP data sessions.
                  */
                 uint8_t buff = ctx.is_flow_swapped()?1:0;
-                if ((ctx.pkt_len() > payload_offset) && l4_sess->tcpbuf[buff])
+                if ((ctx.pkt_len() > payload_offset) &&
+                    (l4_sess->tcpbuf[0] && l4_sess->tcpbuf[1]))
                     l4_sess->tcpbuf[buff]->insert_segment(ctx, ftp_info->callback);
             } else if (!ctx.existing_session()) {
                 /*

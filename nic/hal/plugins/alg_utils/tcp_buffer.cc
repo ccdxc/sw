@@ -19,21 +19,27 @@ slab* tcp_buffer_t::slab_ = slab::factory("tcp_buffer_t", hal::HAL_SLAB_TCP_REAS
 // Alloc/Initialize the tcp buffer
 //------------------------------------------------------------------------
 tcp_buffer_t *
-tcp_buffer_t::factory (uint32_t seq_start, void *handler_ctx, data_handler_t handler)
+tcp_buffer_t::factory (uint32_t seq_start, void *handler_ctx, 
+                       data_handler_t handler, tcp_buffer_slab_t slab_info)
 {
     tcp_buffer_t *entry = (tcp_buffer_t *)slab_->alloc();
 
     entry->buff_ = NULL;
-    entry->free_buff_size_ = 0;
-    entry->buff_size_ = 0;
     entry->cur_seq_ = seq_start;
+    entry->end_buff_seq_ = entry->cur_seq_;
+    entry->buff_size_ = 0;
     entry->segments_ = NULL;
     entry->num_segments_ = 0;
     entry->data_handler_ = handler;
     entry->handler_ctx_ = handler_ctx;
+    entry->cur_slab_ = 0;
+    memcpy(entry->buff_slabs_, slab_info, sizeof(tcp_buffer_slab_t));
 
-    HAL_TRACE_DEBUG("Init TCP buffer with seq_start: {} data handler: {:p} handle_ctx: {:p}",
-                     entry->cur_seq_, (void *)entry->data_handler_, (void *)entry->handler_ctx_);
+    HAL_TRACE_DEBUG("Init TCP buffer with seq_start: {} data handler: {:p} handle_ctx: {:p} slab_2k: {:p}"
+                    "slab_4k: {:p} slab_8k {:p} slab_16k{:p}",
+                     entry->cur_seq_, (void *)entry->data_handler_, (void *)entry->handler_ctx_, 
+                     (void *)entry->buff_slabs_[0], (void *)entry->buff_slabs_[1], 
+                     (void *)entry->buff_slabs_[2], (void *)entry->buff_slabs_[3]);
 
     return entry;
 }
@@ -44,7 +50,7 @@ tcp_buffer_t::factory (uint32_t seq_start, void *handler_ctx, data_handler_t han
 void tcp_buffer_t::free ()
 {
     if (buff_) {
-        HAL_FREE(hal::HAL_MEM_ALLOC_TCP_REASSEMBLY_BUFF, buff_);
+        buff_slabs_[cur_slab_]->free(buff_); 
     }
     if (segments_) {
         HAL_FREE(hal::HAL_MEM_ALLOC_TCP_REASSEMBLY_BUFF, segments_);
@@ -101,7 +107,7 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
     // stored segments, call the handler without doing a copy
     if ((seq == cur_seq_) &&
         (num_segments_ <= 0 || compare_seq_numbers(end, segments_[0].start) < 0)) {
-        HAL_TRACE_DEBUG("Calling data handler1");
+        HAL_TRACE_VERBOSE("Calling data handler1");
         size_t processed = data_handler_(handler_ctx_, payload, payload_len);
         SDK_ASSERT_RETURN(processed <= payload_len, HAL_RET_INVALID_ARG);
         cur_seq_ += processed;
@@ -113,43 +119,59 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
         payload += processed;
         payload_len -= processed;
         data_handler_invoked = true;
-        HAL_TRACE_DEBUG("Processed bytes: {} seq: {} end: {}", processed, seq, end);
     }
 
+    uint32_t  buff_sz_reqd = (end-cur_seq_);
+    HAL_TRACE_VERBOSE("Curr seq: {} end_buff_seq_: {} buff_sz_reqd: {}", 
+                      cur_seq_, end_buff_seq_, buff_sz_reqd);
     // Allocate/expand the buffer
-    if ((end - cur_seq_) > free_buff_size_) {
-        if (free_buff_size_ == 0) {
-            // Set the buff size to minimum required, we increase as we go
-            free_buff_size_ = buff_size_ = ((end-cur_seq_) > MIN_BUFF_SIZE)?((end-cur_seq_)+1):MIN_BUFF_SIZE;
-            // first segment to store, allocate buffer
-            buff_ = (uint8_t *)HAL_MALLOC(hal::HAL_MEM_ALLOC_TCP_REASSEMBLY_BUFF, free_buff_size_);
-            segments_ = (segment_t *) HAL_MALLOC(hal::HAL_MEM_ALLOC_TCP_REASSEMBLY_BUFF,
-                                                 sizeof(segment_t) * MAX_SEGMENTS);
-            HAL_TRACE_DEBUG("Allocate segment of size: {}", buff_size_);
-        } else if (2*buff_size_ < MAX_BUFF_SIZE) {
-            // expand the size of buffer
-            uint32_t new_buff_sz = 2*buff_size_;
-            uint8_t *new_buff = (uint8_t *)HAL_MALLOC(hal::HAL_MEM_ALLOC_TCP_REASSEMBLY_BUFF,
-                                                      new_buff_sz);
-            memcpy(new_buff, buff_, buff_size_);
-            HAL_FREE(hal::HAL_MEM_ALLOC_TCP_REASSEMBLY_BUFF, buff_);
-
-            // Set the free buff size to reflect the new buffer
-            free_buff_size_ += (new_buff_sz - buff_size_);
-            buff_ = new_buff;
-            buff_size_ = new_buff_sz;
-        } else {
-            uint32_t seq_diff = (seq - cur_seq_);
-            // Check if we are seeing a packet in the future and
-            // we have enough to hold some of the payload atleast
-            if (seq_diff < free_buff_size_) {
-                HAL_TRACE_ERR("alg_utils::payload execeeds the max buffer size - truncating");
-                end = seq + (free_buff_size_ - seq_diff);
-                payload_len = (end - seq);
-            } else {
-                HAL_TRACE_ERR("alg_utils::payload execeeds the max buffer size - bailing");
-            }
+    if (buff_size_ == 0) {
+        uint32_t segment_sz = sizeof(segment_t) * MAX_SEGMENTS;
+        // Set the buff size to minimum required, we increase as we go
+        uint32_t size = MIN_BUFF_SIZE;
+        while (buff_sz_reqd > size && size <= MAX_BUFF_SIZE) {
+            size = 2*size; cur_slab_++;
         }
+
+        // We hit the max. Return
+        if (size > MAX_BUFF_SIZE) {
+            HAL_TRACE_ERR("Max buffer size hit -- bailing");
+            return HAL_RET_OOB;
+        }
+
+        buff_size_ = size;
+        buff_ = (uint8_t *)buff_slabs_[cur_slab_]->alloc();
+        SDK_ASSERT_RETURN((buff_ != NULL), HAL_RET_OOB);
+        end_buff_seq_ = cur_seq_ + size;
+
+        // first segment to store, allocate buffer
+        segments_ = (segment_t *) HAL_MALLOC(hal::HAL_MEM_ALLOC_TCP_REASSEMBLY_BUFF,
+                                             segment_sz);
+        bzero(segments_, segment_sz);
+        HAL_TRACE_DEBUG("Allocate buffer of size: {} current_slab: {}", buff_size_, cur_slab_);
+    } else if (end >= end_buff_seq_) {
+        uint32_t new_buff_sz = buff_size_, old_slab = cur_slab_;
+        while (buff_sz_reqd > new_buff_sz && new_buff_sz <= MAX_BUFF_SIZE) {
+            new_buff_sz = 2*new_buff_sz; cur_slab_++;
+        }
+
+        // We hit the max. Return
+        if (new_buff_sz > MAX_BUFF_SIZE) {
+            HAL_TRACE_ERR("Payload exceeds the max buff size");
+            return HAL_RET_OOB;
+        }
+ 
+        // expand the size of buffer
+        uint8_t *new_buff = (uint8_t *)buff_slabs_[cur_slab_]->alloc();
+        memcpy(new_buff, buff_, buff_size_);
+        buff_slabs_[old_slab]->free(buff_); 
+
+        // Set the buff size to reflect the new buffer
+        buff_ = new_buff;
+        buff_size_ = new_buff_sz;
+        end_buff_seq_ = cur_seq_ +  buff_size_;
+        HAL_TRACE_DEBUG("Allocated memory of size: {} end buffer seq: {} cur_slab_: {}", 
+                        buff_size_, end_buff_seq_, cur_slab_);
     }
 
 
@@ -213,7 +235,6 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
 
     /* copy payload and call the handler */
     memcpy(buff_ + (seq - cur_seq_), payload, payload_len);
-    free_buff_size_ -= ((seq - cur_seq_) + payload_len);
 
     // Invoke handler if we havent already
     if (data_handler_invoked == false && (segments_[0].start == cur_seq_) &&
@@ -239,7 +260,7 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
             }
 
             cur_seq_ += processed;
-            free_buff_size_ += processed;
+            end_buff_seq_ = cur_seq_ + buff_size_;
         }
     }
 

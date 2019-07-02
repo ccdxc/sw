@@ -15,6 +15,7 @@ namespace alg_rpc {
 using namespace hal::plugins::alg_utils;
 
 alg_state_t *g_rpc_state;
+tcp_buffer_slab_t g_rpc_tcp_buffer_slabs;
 
 extern "C" hal_ret_t alg_rpc_init(hal_cfg_t *hal_cfg) {
     slab *appsess_slab_ = NULL;
@@ -52,6 +53,30 @@ extern "C" hal_ret_t alg_rpc_init(hal_cfg_t *hal_cfg) {
     g_rpc_state = alg_state_t::factory(FTE_FEATURE_ALG_RPC.c_str(),
                           appsess_slab_, l4sess_slab_, rpcinfo_slab_, NULL,
                           rpcinfo_cleanup_hdlr);
+
+    g_rpc_tcp_buffer_slabs[0] = g_hal_state->register_slab(HAL_SLAB_RPC_TCP_BUFFER_2048,
+                       slab_args={.name="rpc_tcp_buffer_2k",
+                       .size=2048, .num_elements=16,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    SDK_ASSERT_RETURN((g_rpc_tcp_buffer_slabs[0] != NULL), HAL_RET_OOM);
+
+    g_rpc_tcp_buffer_slabs[1] = g_hal_state->register_slab(HAL_SLAB_RPC_TCP_BUFFER_4096,
+                          slab_args={.name="rpc_tcp_buffer_4k",
+                          .size=4096, .num_elements=16,
+                          .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    SDK_ASSERT_RETURN((g_rpc_tcp_buffer_slabs[1] != NULL), HAL_RET_OOM);
+
+    g_rpc_tcp_buffer_slabs[2] = g_hal_state->register_slab(HAL_SLAB_RPC_TCP_BUFFER_8192,
+                       slab_args={.name="rpc_tcp_buffer_8k",
+                       .size=8192, .num_elements=16,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    SDK_ASSERT_RETURN((g_rpc_tcp_buffer_slabs[2] != NULL), HAL_RET_OOM);
+
+    g_rpc_tcp_buffer_slabs[3] = g_hal_state->register_slab(HAL_SLAB_RPC_TCP_BUFFER_16384,
+                       slab_args={.name="rpc_tcp_buffer_16k",
+                       .size=16384, .num_elements=16,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    SDK_ASSERT_RETURN((g_rpc_tcp_buffer_slabs[3] != NULL), HAL_RET_OOM);
 
     return HAL_RET_OK;
 }
