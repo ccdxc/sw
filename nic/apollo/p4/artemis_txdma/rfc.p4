@@ -284,7 +284,7 @@ action rfc_action_p3(pad,pr45, res45, pr44, res44,
     modify_field(scratch_metadata.field1, res44);
     modify_field(scratch_metadata.field10, pr45);
     modify_field(scratch_metadata.field1, res45);
-    modify_field(scratch_metadata.field2,  pad);
+    modify_field(scratch_metadata.field6,  pad);
 
     /* Get the P3 result by indexing into the classid array */
     modify_field(scratch_metadata.field10,pr00>>(txdma_control.rfc_index%46)*10);

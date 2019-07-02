@@ -36,6 +36,7 @@ header_type scratch_metadata_t {
         field1          :  1;
         field2          :  2;
         field3          :  3;
+        field6          :  6;
         field7          :  7;
         field8          :  8;
         field10         : 10;
