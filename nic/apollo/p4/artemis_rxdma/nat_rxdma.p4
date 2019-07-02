@@ -2,8 +2,9 @@
 /* NAT To find Local IP for Rx Direction (Switch to Host Traffic)           */
 /*****************************************************************************/
 action find_local_ip(nat_ip) {
-        // No need to do direction check here, as for Traffic from host,
+        // No need to do direction check here, as for Traffic FROM_HOST,
         // xlate_idx would be zero, so nat_ip would be zero
+        // This is onyl valid for Traffic TO_HOST
         if (nat_ip != 0) {
             // Update FlowDst with this Local IP address derived from NAT table
             // Only do it if nat_ip is valid, otherwise it means no NAT and

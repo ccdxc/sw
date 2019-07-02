@@ -36,6 +36,9 @@ action iflow_rx2tx(flow_hash,
     modify_field(scratch_metadata.field8, flow_proto);
     modify_field(scratch_metadata.field128, flow_dst);
     modify_field(scratch_metadata.field32, service_tag);
+    modify_field(scratch_metadata.field128, rx_to_tx_hdr.pre_nat_ip);
+    modify_field(scratch_metadata.field1, rx_to_tx_hdr.iptype);
+    modify_field(scratch_metadata.field1, rx_to_tx_hdr.direction);
 }
 
 @pragma stage 0

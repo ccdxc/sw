@@ -59,10 +59,11 @@ read_pktdesc:
                        rx_to_tx_hdr_vnic_id, \
                        rx_to_tx_hdr_payload_len, \
                        rx_to_tx_hdr_iptype, \
-                       rx_to_tx_hdr_pad0}, \
+                       rx_to_tx_hdr_direction, \
+                       rx_to_tx_hdr_pre_nat_ip }, \
                        d[511:(512-(offsetof(p,rx_to_tx_hdr_remote_ip) + \
                             sizeof(p.rx_to_tx_hdr_remote_ip) - \
-                            offsetof(p, rx_to_tx_hdr_pad0)))]
+                            offsetof(p, rx_to_tx_hdr_pre_nat_ip)))]
     nop
 
 /*****************************************************************************/

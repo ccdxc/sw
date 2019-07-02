@@ -66,13 +66,16 @@ mapping_miss:
 mapping_hit:
     phvwr       p.session_info_hint_nexthop_idx, \
                 d.mapping_info_d.nexthop_group_index
-    // Tx: If found mapping table finds entry then set src_ip
-    // rewrite flag to 10 (rewrite using service mapping table index)
-    phvwr       p.session_info_hint_tx_rewrite_flags_src_ip, 10
+    // Tx: Set Encap to 1
+    phvwr       p.session_info_hint_tx_rewrite_flags_encap, 0x01
+    // rewrite flag to 00 (rewrite using service mapping table index)
+    phvwr       p.session_info_hint_tx_rewrite_flags_src_ip, 0x00
 
-    // Rx: If found mapping table finds entry then set dst_ip
-    // rewrite flag to 10 (rewrite using service mapping table index)
-    phvwr.e     p.session_info_hint_rx_rewrite_flags_dst_ip, 10
+    // Set Rx:smac to 0
+    phvwr       p.session_info_hint_rx_rewrite_flags_smac, 0x00
+
+    // rewrite flag to 00 (rewrite using service mapping table index)
+    phvwr.e     p.session_info_hint_rx_rewrite_flags_dst_ip, 0x00
     nop
 
 mapping_hash_hit:

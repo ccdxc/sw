@@ -144,6 +144,46 @@ iflow_key_done:
     phvwr.e         p.txdma_control_pktdesc_addr, r3
     nop
 
+
+#if I_RFLOW_DERIVATION_IN_THROTTLE
+    // Fill the iFlow Keys
+    phvwr          p.iflow_keys1_sip, d.iflow_rx2tx_d.flow_src
+    phvwr          p.iflow_keys2_dip, d.iflow_rx2tx_d.flow_dst
+    phvwr          p.iflow_keys3_sport, d.iflow_rx2tx_d.flow_sport
+    phvwr          p.iflow_keys3_dport, d.iflow_rx2tx_d.flow_dport
+    phvwr          p.iflow_keys3_proto, d.iflow_rx2tx_d.flow_proto
+    phvwr          p.iflow_keys3_vpc_id, d.iflow_rx2tx_d.vpc_id
+    phvwr          p.iflow_keys3_iptype, k.rx_to_tx_hdr_iptype
+
+    // Fill the rFlow Keys - reverse of iFlow keys
+    phvwr          p.rflow_keys1_sip, d.iflow_rx2tx_d.flow_dst
+    phvwr          p.rflow_keys1_dip_127_96, d.iflow_rx2tx_d.flow_src[127:96]
+    phvwr          p.rflow_keys2_dip_95_0, d.iflow_rx2tx_d.flow_src[95:0]
+    phvwr          p.rflow_keys3_sport, d.iflow_rx2tx_d.flow_dport
+    phvwr          p.rflow_keys3_dport, d.iflow_rx2tx_d.flow_sport
+    phvwr          p.rflow_keys3_proto, d.iflow_rx2tx_d.flow_proto
+    phvwr          p.rflow_keys3_vpc_id, d.iflow_rx2tx_d.vpc_id
+    phvwr          p.iflow_keys3_iptype, k.rx_to_tx_hdr_iptype
+
+    // In case of NAT, the iflow keys are overwrote by the NAT table
+    // so update the iflow keys with pre_nat_ip address from PHV
+    // This is based on direction
+    // TODO-MURTY: For TX_FROM_HOST, need to derive NATed IP for iflow.sip
+    // and use that as destination for rflow
+    seq            c1, k.rx_to_tx_hdr_direction, TX_FROM_HOST
+    phvwr.c1       p.rflow_keys1_dip_127_96, k.rx_to_tx_hdr_pre_nat_ip[127:96]
+    phvwr.c1       p.rflow_keys2_dip_95_0, k.rx_to_tx_hdr_pre_nat_ip[95:0]
+
+    // For RX_TO_HOST, iflow_rx2tx.flow_dip is ovewritten by NATed IP,
+    // thats good for rflow.sip, but iflow.dip need to have pre-nat_ip, so
+    // overwrite
+    phvwr.!c1      p.iflow_keys2_dip, k.rx_to_tx_hdr_pre_nat_ip
+
+    // TODO-MURTY: Fix the Xlate Port as well
+    // TODO-MURTY: Take care 4-6 and 6-4 logic as well
+#endif
+
+
 /*****************************************************************************/
 /* error function                                                            */
 /*****************************************************************************/

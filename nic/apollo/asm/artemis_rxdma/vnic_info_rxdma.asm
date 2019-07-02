@@ -36,6 +36,8 @@ vnic_info_rxdma:
     // Copy the data that need to go to txdma
     phvwr        p.rx_to_tx_hdr_vpc_id, k.p4_to_rxdma_vpc_id
     phvwr        p.rx_to_tx_hdr_vnic_id, k.p4_to_rxdma_vnic_id
+    phvwr        p.rx_to_tx_hdr_direction, k.p4_to_rxdma_direction
+    phvwr        p.rx_to_tx_hdr_iptype, k.p4_to_rxdma_iptype
 
     // Fill the remote_ip and tag classid based on the direction
     seq          c1, k.p4_to_rxdma_direction, TX_FROM_HOST
@@ -43,9 +45,15 @@ vnic_info_rxdma:
     phvwr.c1     p.rx_to_tx_hdr_remote_ip[127:104], k.p4_to_rxdma_flow_dst_s0_e23
     phvwr.c1     p.rx_to_tx_hdr_remote_ip[103:64], k.p4_to_rxdma_flow_dst_s24_e127[103:64]
     phvwr.c1     p.rx_to_tx_hdr_remote_ip[63:0], k.p4_to_rxdma_flow_dst_s24_e127[63:0]
+    phvwr.c1     p.rx_to_tx_hdr_pre_nat_ip[127:64], k.p4_to_rxdma_flow_src[127:64]
+    phvwr.c1     p.rx_to_tx_hdr_pre_nat_ip[63:0], k.p4_to_rxdma_flow_src[63:0]
+
     phvwr.!c1    p.rx_to_tx_hdr_dtag_classid, k.p4_to_rxdma_service_tag
     phvwr.!c1    p.rx_to_tx_hdr_remote_ip[127:64], k.p4_to_rxdma_flow_src[127:64]
     phvwr.!c1    p.rx_to_tx_hdr_remote_ip[63:0], k.p4_to_rxdma_flow_src[63:0]
+    phvwr.!c1    p.rx_to_tx_hdr_pre_nat_ip[127:104], k.p4_to_rxdma_flow_dst_s0_e23
+    phvwr.!c1    p.rx_to_tx_hdr_pre_nat_ip[103:64], k.p4_to_rxdma_flow_dst_s24_e127[103:64]
+    phvwr.!c1    p.rx_to_tx_hdr_pre_nat_ip[63:0], k.p4_to_rxdma_flow_dst_s24_e127[63:0]
 
     // Setup key for DPORT lookup
     phvwr        p.lpm_metadata_lpm2_key[23:16], k.p4_to_rxdma_flow_proto

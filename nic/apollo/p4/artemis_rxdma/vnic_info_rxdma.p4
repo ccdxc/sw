@@ -35,14 +35,18 @@ action vnic_info_rxdma(lpm_base1, lpm_base2, lpm_base3, lpm_base4,
     // Copy the data that need to go to txdma
     modify_field(rx_to_tx_hdr.vpc_id, p4_to_rxdma.vpc_id);
     modify_field(rx_to_tx_hdr.vnic_id, p4_to_rxdma.vnic_id);
+    modify_field(rx_to_tx_hdr.direction, p4_to_rxdma.direction);
+    modify_field(rx_to_tx_hdr.iptype, p4_to_rxdma.iptype);
 
     // Fill the remote_ip and tag classid based on the direction
     if (p4_to_rxdma.direction == TX_FROM_HOST) {
         modify_field(rx_to_tx_hdr.remote_ip, p4_to_rxdma.flow_dst);
         modify_field(rx_to_tx_hdr.stag_classid, p4_to_rxdma.service_tag);
+        modify_field(rx_to_tx_hdr.pre_nat_ip, p4_to_rxdma.flow_src);
     } else {
         modify_field(rx_to_tx_hdr.remote_ip, p4_to_rxdma.flow_src);
         modify_field(rx_to_tx_hdr.dtag_classid, p4_to_rxdma.service_tag);
+        modify_field(rx_to_tx_hdr.pre_nat_ip, p4_to_rxdma.flow_dst);
     }
 
     // Pick the correct xlate_idx out of 3 idx's passed by P4, only

@@ -58,9 +58,10 @@ header_type artemis_p4_to_rxdma_header3_t {
 }
 
 // When added new fields, please make sure to update
-// DMA command in ASM file to include this new field:
+// DMA command in following 3 P4 and ASM files:
+// apollo/p4/artemis_txdma/qstate.p4
 // apollo/asm/artemis_rxdma/txdma_enqueue.asm
-// And in txdma files where it is DMA'd back
+// apollo/asm/artemis_txdma/read_pktdesc.asm
 header_type artemis_rx_to_tx_header_t {
     fields {
         remote_ip       : 128;// Bytes 0 to 15
@@ -77,8 +78,9 @@ header_type artemis_rx_to_tx_header_t {
         vnic_id         : 8;  // Byte 35
         payload_len     : 14; // Byte 36 to 37-6b
         iptype          : 1;  // Byte 37 - 1b
-        pad0            : 1;  // Byte 37 - 1b
-        pad1            : 208; // Byte 38 to 63
+        direction       : 1;  // Byte 37 - 1b
+        pre_nat_ip      : 128; // Byte 38 to 53
+        pad1            : 80;  // Byte 54 to 63
         // Please check the above comment when adding new fields
     }
 }

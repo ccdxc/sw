@@ -18,16 +18,16 @@ action route_res_handler() {
             modify_field(txdma_control.svc_id, scratch_metadata.field32);
 
             // For NH_TYPE=ST, set the Tx: src_ip flag to 11 (rewrite CA6)
-            modify_field(session_info_hint.tx_rewrite_flags_src_ip, 11);
+            modify_field(session_info_hint.tx_rewrite_flags_src_ip, 3);
 
             // Set Encap for NH_TYPE=ST
             modify_field(session_info_hint.tx_rewrite_flags_encap, 1);
 
             // Set Rx:src_ip to 10 (blind 64 mapping) for NH_TYPE=ST
-            modify_field(session_info_hint.tx_rewrite_flags_src_ip, 10);
+            modify_field(session_info_hint.tx_rewrite_flags_src_ip, 2);
 
             // For NH_TYPE=ST, set the Rx: dst_ip flag to 11 (64 mapping)
-            modify_field(session_info_hint.rx_rewrite_flags_dst_ip, 11);
+            modify_field(session_info_hint.rx_rewrite_flags_dst_ip, 3);
 
             // Enable 4-6 lookup
             modify_field(txdma_control.st_enable, TRUE);
@@ -41,15 +41,15 @@ action route_res_handler() {
             // Tx: For NH_TYPE=IP, set src_ip flag to 01 (public IP from
             // local mapping table index) and if mapping table finds entry then 
             // src_ip rewrite flag to 10 (from service mapping table index)
-            modify_field(session_info_hint.tx_rewrite_flags_src_ip, 01);
+            modify_field(session_info_hint.tx_rewrite_flags_src_ip, 1);
 
             // Set Rx:smac to 1 for NH_TYPE=IP
-            modify_field(session_info_hint.rx_rewrite_flags_smac, 01);
+            modify_field(session_info_hint.rx_rewrite_flags_smac, 1);
 
             // Rx: For NH_TYPE=IP, set the dst_ip flag to 01 (CA from mapping -
             // from local-ip mapping table index)and if mapping table finds entry then 
             // dst_ip rewrite flag to 10 (CA from service mapping table index)
-            modify_field(session_info_hint.rx_rewrite_flags_dst_ip, 01);
+            modify_field(session_info_hint.rx_rewrite_flags_dst_ip, 1);
 
             // Disable Peer VNET Route lookup
             modify_field(txdma_predicate.lpm1_enable, FALSE);

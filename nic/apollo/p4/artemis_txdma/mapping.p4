@@ -16,12 +16,12 @@ action mapping_info(entry_valid, nexthop_group_index,
         // Tx: For NH_TYPE=IP, set src_ip flag to 01 (public IP from
         // local mapping table index) and if mapping table finds entry then
         // src_ip rewrite flag to 10 (from service mapping table index)
-        modify_field(session_info_hint.tx_rewrite_flags_src_ip, 10);
+        modify_field(session_info_hint.tx_rewrite_flags_src_ip, 2);
 
         // Rx: For NH_TYPE=IP, set the dst_ip flag to 01 (CA from mapping -
         // from local-ip mapping table index)and if mapping table finds entry then
         // dst_ip rewrite flag to 10 (CA from service mapping table index)
-        modify_field(session_info_hint.rx_rewrite_flags_dst_ip, 10);
+        modify_field(session_info_hint.rx_rewrite_flags_dst_ip, 2);
 
         // if hardware register indicates miss, compare hashes with r1
         // (scratch_metadata.mapping_hash) and setup lookup in overflow
