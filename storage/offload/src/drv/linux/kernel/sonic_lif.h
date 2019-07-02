@@ -92,6 +92,8 @@ struct deferred {
 typedef int (*reset_ctl_cb)(struct lif *lif,
 			    void *cb_arg);
 
+#define MAX_RESET_CTL_SUSPECT_INFO_COUNT NOTIFYQ_LENGTH
+
 struct reset_ctl {
         struct deferred_work work;
 	atomic_t state;
@@ -99,6 +101,9 @@ struct reset_ctl {
 	void *cb_args[RESET_CTL_ST_MAX];
 	int8_t sense;
 	bool uncond_desc_notify;
+	atomic_t suspect_info_count;
+	atomic_t suspect_info_sorted_count;
+	uint64_t suspect_info[MAX_RESET_CTL_SUSPECT_INFO_COUNT];
 };
 
 #define LIF_F_INITED		BIT(0)
@@ -171,6 +176,7 @@ int sonic_lif_reset_ctl_reset(struct lif *lif, void *cb_arg);
 int sonic_lif_reset_ctl_reinit(struct lif *lif, void *cb_arg);
 int sonic_lif_reset_ctl_end(struct lif *lif, void *cb_arg);
 bool sonic_lif_reset_ctl_pending(struct lif *lif);
+bool sonic_lif_reset_addr_is_suspect(struct lif *lif, void *addr);
 int sonic_lif_reinit(struct lif *lif);
 
 int sonic_intr_alloc(struct lif *lif, struct intr *intr);

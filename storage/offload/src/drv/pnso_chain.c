@@ -31,8 +31,10 @@
 #define PPRINT_SERVICE_INFO(s)
 #define PPRINT_CHAIN_ENTRY(ce)
 #else
-#define PPRINT_SERVICE_INFO(s)		pprint_service_info(s)
-#define PPRINT_CHAIN_ENTRY(ce)		pprint_chain_entry(ce)
+#define PPRINT_SERVICE_INFO(s)	if (OSAL_LOG_ON(OSAL_LOG_LEVEL_DEBUG))	\
+					pprint_service_info(s)
+#define PPRINT_CHAIN_ENTRY(ce)	if (OSAL_LOG_ON(OSAL_LOG_LEVEL_DEBUG))	\
+					pprint_chain_entry(ce)
 #endif
 
 osal_atomic_int_t g_req_id;
@@ -43,80 +45,82 @@ pprint_service_info(const struct service_info *svc_info)
 	if (!svc_info)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== svc_info",  (uint64_t) svc_info);
-	OSAL_LOG_DEBUG("%30s: %d", "si_type", svc_info->si_type);
-	OSAL_LOG_DEBUG("%30s: %d", "si_flags", svc_info->si_flags);
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "=== svc_info",  (uint64_t) svc_info);
+	OSAL_LOG("%30s: %d\n", "si_type", svc_info->si_type);
+	OSAL_LOG("%30s: %d\n", "si_flags", svc_info->si_flags);
 
-	OSAL_LOG_DEBUG("%30s: %d", "si_block_size", svc_info->si_block_size);
-	OSAL_LOG_DEBUG("%30s: %d", "si_desc_flags", svc_info->si_desc_flags);
+	OSAL_LOG("%30s: %d\n", "si_block_size", svc_info->si_block_size);
+	OSAL_LOG("%30s: %d\n", "si_desc_flags", svc_info->si_desc_flags);
 
-	OSAL_LOG_DEBUG("%30s: %d", "si_num_tags", svc_info->si_num_tags);
-	OSAL_LOG_DEBUG("%30s: %d", "si_num_bof_tags", svc_info->si_num_bof_tags);
-	OSAL_LOG_DEBUG("%30s: %d", "si_num_bytes", svc_info->si_num_bytes);
+	OSAL_LOG("%30s: %d\n", "si_num_tags", svc_info->si_num_tags);
+	OSAL_LOG("%30s: %d\n", "si_num_bof_tags", svc_info->si_num_bof_tags);
+	OSAL_LOG("%30s: %d\n", "si_num_bytes", svc_info->si_num_bytes);
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_desc",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "si_desc",
 			(uint64_t) svc_info->si_desc);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_status_desc",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "si_desc[0]",
+			*((uint64_t *) svc_info->si_desc));
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "si_status_desc",
 			(uint64_t) svc_info->si_status_desc.desc);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_istatus_desc",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "si_istatus_desc",
 			(uint64_t) svc_info->si_istatus_desc.desc);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_bof_desc",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "si_bof_desc",
 			(uint64_t) svc_info->si_bof_desc);
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_src_sgl",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "si_src_sgl",
 			(uint64_t) svc_info->si_src_sgl.sgl);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_dst_sgl",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "si_dst_sgl",
 			(uint64_t) svc_info->si_dst_sgl.sgl);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_bof_sgl",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "si_bof_sgl",
 			(uint64_t) svc_info->si_bof_sgl.sgl);
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_src_aol",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "si_src_aol",
 			(uint64_t) svc_info->si_src_aol.aol);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_dst_aol",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "si_dst_aol",
 			(uint64_t) svc_info->si_dst_aol.aol);
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_pb_sgl",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "si_pb_sgl",
 			(uint64_t) svc_info->si_pb_sgl);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_pb_bof_sgl",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "=== si_pb_bof_sgl",
 			(uint64_t) svc_info->si_pb_bof_sgl);
 
-	OSAL_LOG_DEBUG("%30s: %d", "=== sbi_num_entries",
+	OSAL_LOG("%30s: %d\n", "=== sbi_num_entries",
 			svc_info->si_batch_info.sbi_num_entries);
-	OSAL_LOG_DEBUG("%30s: %d", "sbi_bulk_desc_idx",
+	OSAL_LOG("%30s: %d\n", "sbi_bulk_desc_idx",
 			svc_info->si_batch_info.sbi_bulk_desc_idx);
-	OSAL_LOG_DEBUG("%30s: %d", "sbi_desc_idx",
+	OSAL_LOG("%30s: %d\n", "sbi_desc_idx",
 			svc_info->si_batch_info.sbi_desc_idx);
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_pcr",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "si_pcr",
 			(uint64_t) svc_info->si_pcr);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_centry",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "si_centry",
 			(uint64_t) svc_info->si_centry);
 
-	OSAL_LOG_DEBUG("%30s: %u", "si_iblist count",
+	OSAL_LOG("%30s: %u\n", "si_iblist count",
 			svc_info->si_iblist.blist.count);
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_src_blist.type",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "=== si_src_blist.type",
 			(uint64_t) svc_info->si_src_blist.type);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_src_blist.len",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "si_src_blist.len",
 			(uint64_t) svc_info->si_src_blist.len);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_src_blist",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "si_src_blist",
 			(uint64_t) svc_info->si_src_blist.blist);
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_dst_blist.type",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "=== si_dst_blist.type",
 			(uint64_t) svc_info->si_dst_blist.type);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_dst_blist.len",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "si_dst_blist.len",
 			(uint64_t) svc_info->si_dst_blist.len);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_dst_blist",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "si_dst_blist",
 			(uint64_t) svc_info->si_dst_blist.blist);
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_bof_blist.type",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "=== si_bof_blist.type",
 			(uint64_t) svc_info->si_bof_blist.type);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_bof_blist.len",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "si_bof_blist.len",
 			(uint64_t) svc_info->si_bof_blist.len);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_bof_blist",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "si_bof_blist",
 			(uint64_t) svc_info->si_bof_blist.blist);
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_sgl_pdma",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "=== si_sgl_pdma",
 			(uint64_t) svc_info->si_sgl_pdma);
 }
 
@@ -127,23 +131,23 @@ pprint_chain_entry(const struct chain_entry *centry)
 		return;
 
 	/* chain entry */
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "centry", (uint64_t) centry);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "centry->ce_chain_head",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "centry", (uint64_t) centry);
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "centry->ce_chain_head",
 			      (uint64_t) centry->ce_chain_head);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "centry->ce_next",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "centry->ce_next",
 			      (uint64_t) centry->ce_next);
 
 	/* basic service info */
-	OSAL_LOG_DEBUG("%30s: %d", "ce_svc_info->si_type",
+	OSAL_LOG("%30s: %d\n", "ce_svc_info->si_type",
 		      centry->ce_svc_info.si_type);
-	OSAL_LOG_DEBUG("%30s: %d", "ce_svc_info->si_flags",
+	OSAL_LOG("%30s: %d\n", "ce_svc_info->si_flags",
 		      centry->ce_svc_info.si_flags);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ce_svc_info->si_ops",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "ce_svc_info->si_ops",
 		      (uint64_t) &centry->ce_svc_info.si_ops);
 }
 
 void __attribute__((unused))
-chn_pprint_chain(const struct service_chain *chain)
+chn_pprint_chain(const struct service_chain *chain, bool verbose)
 {
 	uint32_t i;
 	struct chain_entry *sc_entry;
@@ -151,52 +155,56 @@ chn_pprint_chain(const struct service_chain *chain)
 	if (!chain)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain", (uint64_t) chain);
-	OSAL_LOG_DEBUG("%30s: %d", "chain->sc_req_id", chain->sc_req_id);
-	OSAL_LOG_DEBUG("%30s: %d", "chain->sc_num_services",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "chain", (uint64_t) chain);
+	OSAL_LOG("%30s: %d\n", "chain->sc_req_id", chain->sc_req_id);
+	OSAL_LOG("%30s: %d\n", "chain->sc_num_services",
 			chain->sc_num_services);
-	OSAL_LOG_DEBUG("%30s: %d", "chain->sc_flags", chain->sc_flags);
-	OSAL_LOG_DEBUG("%30s: %d", "chain->sc_gen_id", chain->sc_gen_id);
+	OSAL_LOG("%30s: %d\n", "chain->sc_flags", chain->sc_flags);
+	OSAL_LOG("%30s: %d\n", "chain->sc_gen_id", chain->sc_gen_id);
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_req",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "chain->sc_req",
 			(uint64_t) chain->sc_req);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_res",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "chain->sc_res",
 			(uint64_t) chain->sc_res);
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_pcr",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "chain->sc_pcr",
 			(uint64_t) chain->sc_pcr);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_batch_info",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "chain->sc_batch_info",
 			(uint64_t) chain->sc_batch_info);
 
 	i = 0;
 	sc_entry = chain->sc_entry;
 	while (sc_entry) {
-		OSAL_LOG_DEBUG("%30s: %d", "service: #", ++i);
+		OSAL_LOG("%30s: %d\n", "service: #", ++i);
 
 		/* chain entry */
-		OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_entry",
+		OSAL_LOG("%30s: 0x" PRIx64 "\n", "chain->sc_entry",
 				(uint64_t) sc_entry);
-		OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_entry->ce_chain_head",
+		OSAL_LOG("%30s: 0x" PRIx64 "\n", "chain->sc_entry->ce_chain_head",
 			      (uint64_t) sc_entry->ce_chain_head);
-		OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_entry->ce_next",
+		OSAL_LOG("%30s: 0x" PRIx64 "\n", "chain->sc_entry->ce_next",
 			      (uint64_t) sc_entry->ce_next);
 
 		/* service info */
-		OSAL_LOG_DEBUG("%30s: %d", "ce_svc_info->si_type",
+		if (verbose) {
+			pprint_service_info(&sc_entry->ce_svc_info);
+		} else {
+			OSAL_LOG("%30s: %d\n", "ce_svc_info->si_type",
 			      sc_entry->ce_svc_info.si_type);
-		OSAL_LOG_DEBUG("%30s: %d", "ce_svc_info->si_flags",
+			OSAL_LOG("%30s: %d\n", "ce_svc_info->si_flags",
 			      sc_entry->ce_svc_info.si_flags);
-		OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ce_svc_info->si_ops",
+			OSAL_LOG("%30s: 0x" PRIx64 "\n", "ce_svc_info->si_ops",
 			      (uint64_t) &sc_entry->ce_svc_info.si_ops);
+		}
 
 		sc_entry = sc_entry->ce_next;
 	}
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_last_entry",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "chain->sc_last_entry",
 			(uint64_t) chain->sc_last_entry);
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_req_cb",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "chain->sc_req_cb",
 			(uint64_t) chain->sc_req_cb);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_req_cb_ctx",
+	OSAL_LOG("%30s: 0x" PRIx64 "\n", "chain->sc_req_cb_ctx",
 			(uint64_t) atomic64_read((atomic64_t *)
 					&chain->sc_req_cb_ctx));
 }
@@ -241,6 +249,28 @@ bool
 chn_is_poll_done(struct service_chain *chain)
 {
 	return (chain->sc_flags & CHAIN_CFLAG_POLLED) ? true : false;
+}
+
+bool chn_is_suspect(const struct service_chain *chain)
+{
+	struct chain_entry *sc_entry;
+	struct service_info *svc_info;
+	struct lif *lif = chain->sc_pcr->lif;
+	uint64_t src_paddr;
+
+	sc_entry = chain->sc_entry;
+	while (sc_entry) {
+		svc_info = &sc_entry->ce_svc_info;
+		if (svc_info && svc_info->si_desc) {
+			src_paddr = chn_service_desc_src_paddr_get(svc_info);
+			if (src_paddr && sonic_lif_reset_addr_is_suspect(lif,
+				&src_paddr))
+				return true;
+		}
+		sc_entry = sc_entry->ce_next;
+	}
+
+	return false;
 }
 
 pnso_error_t
@@ -320,6 +350,7 @@ chn_poller(struct service_chain *chain, uint16_t gen_id, bool is_timeout)
 	struct pnso_service_result *res = NULL;
 	completion_cb_t	cb = NULL;
 	void *cb_ctx = NULL;
+	bool skip_destroy = false;
 
 	PAS_DECL_SW_PERF();
 	PAS_DECL_HW_PERF();
@@ -343,9 +374,17 @@ chn_poller(struct service_chain *chain, uint16_t gen_id, bool is_timeout)
 	PAS_SET_HW_PERF(chain->sc_hw_latency_start);
 
 	if (is_timeout) {
+		if (chn_is_suspect(chain))
+			chn_pprint_chain(chain, true);
+
 		err = ETIMEDOUT;
 	} else {
 		err = chn_poll_all_services(chain);
+		if (err == ETIMEDOUT && pnso_lif_reset_ctl_pending()) {
+			skip_destroy = true;
+			OSAL_LOG_DEBUG("skip destroying chain 0x" PRIx64,
+				       (uint64_t) chain);
+		}
 	}
 	if (err) {
 		OSAL_LOG_DEBUG("poll failed! chain: 0x" PRIx64 " err: %d",
@@ -369,7 +408,8 @@ chn_poller(struct service_chain *chain, uint16_t gen_id, bool is_timeout)
 	cb = chain->sc_req_cb;
 	cb_ctx = (void *) atomic64_xchg(&chain->sc_req_cb_ctx, 0);
 
-	chn_destroy_chain(chain);
+	if (!skip_destroy)
+		chn_destroy_chain(chain);
 
 	if (cb && cb_ctx) {
 		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 " res: 0x" PRIx64 " err: %d",
@@ -414,6 +454,7 @@ chn_poll_timeout_all(struct per_core_resource *pcr)
 	struct mem_pool *mpool;
 	void *obj = NULL;
 	struct service_chain *chain;
+	uint32_t count = 0;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -428,7 +469,11 @@ chn_poll_timeout_all(struct per_core_resource *pcr)
 		chn_poller(chain, chain->sc_gen_id, true);
 
 		obj = mpool_get_next_inuse_object(mpool, obj);
+		count++;
 	}
+
+	if (count)
+		OSAL_LOG_DEBUG("timed out %u chain entries", count);
 
 out:
 	OSAL_LOG_DEBUG("exit!");

@@ -796,7 +796,7 @@ pprint_chain_sgl_pdma(uint64_t sgl_pa)
 	const struct chain_sgl_pdma *sgl;
 	const struct chain_sgl_pdma_tuple *tuple;
 
-	if(g_osal_log_level < OSAL_LOG_LEVEL_DEBUG)
+	if(!OSAL_LOG_ON(OSAL_LOG_LEVEL_DEBUG))
 		return;
 	if (sgl_pa) {
 		sgl = (const struct chain_sgl_pdma *) sonic_phy_to_virt(sgl_pa);

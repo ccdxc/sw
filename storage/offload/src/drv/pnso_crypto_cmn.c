@@ -22,7 +22,7 @@ crypto_pprint_aol(uint64_t aol_pa)
 {
 	const struct crypto_aol *aol;
 
-	if(!aol_pa || (g_osal_log_level < OSAL_LOG_LEVEL_DEBUG))
+	if(!aol_pa || !OSAL_LOG_ON(OSAL_LOG_LEVEL_DEBUG))
 		return;
 
 	aol = (const struct crypto_aol *) sonic_phy_to_virt(aol_pa);

@@ -328,6 +328,24 @@ poll_all_chains(struct batch_info *batch_info)
 	return err;
 }
 
+static void
+pprint_all_chains(struct batch_info *batch_info, bool suspects_only)
+{
+	struct batch_page *batch_page;
+	struct batch_page_entry *page_entry;
+	uint32_t idx;
+
+	for (idx = 0; idx < batch_info->bi_num_entries; idx++) {
+		batch_page = GET_PAGE(batch_info, idx);
+		page_entry = GET_PAGE_ENTRY(batch_page, idx);
+
+		if (!suspects_only ||
+		    chn_is_suspect(page_entry->bpe_chain)) {
+			chn_pprint_chain(page_entry->bpe_chain, true);
+		}
+	}
+}
+
 static struct batch_info *
 init_batch_info(struct per_core_resource *pcr,
 		struct pnso_service_request *req)
@@ -520,6 +538,7 @@ bat_poller(struct batch_info *batch_info, uint16_t gen_id, bool is_timeout)
 	pnso_error_t err = EINVAL;
 	completion_cb_t	cb = NULL;
 	void *cb_ctx = NULL;
+	bool skip_destroy = false;
 
 	PAS_DECL_SW_PERF();
 	PAS_DECL_HW_PERF();
@@ -542,9 +561,17 @@ bat_poller(struct batch_info *batch_info, uint16_t gen_id, bool is_timeout)
 	PAS_SET_HW_PERF(batch_info->bi_hw_latency_start);
 
 	if (is_timeout) {
+		if (pnso_lif_reset_ctl_pending()) {
+			pprint_all_chains(batch_info, true);
+		}
 		err = ETIMEDOUT;
 	} else {
 		err = poll_all_chains(batch_info);
+		if (err == ETIMEDOUT && pnso_lif_reset_ctl_pending()) {
+			skip_destroy = true;
+			OSAL_LOG_DEBUG("skip destroying batch 0x" PRIx64,
+				       (uint64_t) batch_info);
+		}
 	}
 	if (err) {
 		OSAL_LOG_DEBUG("poll failed! batch_info: 0x" PRIx64 "err: %d",
@@ -573,7 +600,8 @@ bat_poller(struct batch_info *batch_info, uint16_t gen_id, bool is_timeout)
 	cb = batch_info->bi_req_cb;
 	cb_ctx = (void *) atomic64_xchg(&batch_info->bi_req_cb_ctx, 0);
 
-	deinit_batch(batch_info);
+	if (!skip_destroy)
+		deinit_batch(batch_info);
 
 	if (cb && cb_ctx) {
 		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 "err: %d",
@@ -617,6 +645,7 @@ bat_poll_timeout_all(struct per_core_resource *pcr)
 	struct mem_pool *batch_info_mpool;
 	void *obj = NULL;
 	struct batch_info *batch_info;
+	uint32_t count = 0;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -631,7 +660,11 @@ bat_poll_timeout_all(struct per_core_resource *pcr)
 		bat_poller(batch_info, batch_info->bi_gen_id, true);
 
 		obj = mpool_get_next_inuse_object(batch_info_mpool, obj);
+		count++;
 	}
+
+	if (count)
+		OSAL_LOG_DEBUG("timed out %u batch entries", count);
 
 out:
 	OSAL_LOG_DEBUG("exit!");

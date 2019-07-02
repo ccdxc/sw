@@ -208,6 +208,7 @@ crypto_src_dst_aol_fill(struct service_info *svc_info)
 		src_err = crypto_aol_packed_get(pcr, &svc_info->si_src_blist,
 						svc_info->si_src_blist.len,
 						&svc_info->si_src_aol);
+
 		/*
 		 * NOTE: earlier we had ensured dst list length is no less than
 		 * src list length. Now we enforce HW requirement that both
@@ -522,10 +523,6 @@ crypto_poll(struct service_info *svc_info)
 	cur_ts = osal_get_clock_nsec();
 	start_ts = svc_poll_expiry_start(svc_info, cur_ts);
 	while (1) {
-		if (pnso_lif_reset_ctl_pending()) {
-			err = PNSO_LIF_IO_ERROR;
-			break;
-		}
 		err = (status_desc->csd_cpl_data == cpl_data) ? PNSO_OK : EBUSY;
 		if (!err)
 			break;
@@ -544,6 +541,11 @@ crypto_poll(struct service_info *svc_info)
 		if (!(svc_info->si_flags & CHAIN_SFLAG_MODE_SYNC)) {
 			OSAL_LOG_DEBUG("transient err: %d", err);
 			goto out;
+		}
+
+		if (pnso_lif_reset_ctl_pending()) {
+			err = PNSO_LIF_IO_ERROR;
+			break;
 		}
 
 		osal_yield();

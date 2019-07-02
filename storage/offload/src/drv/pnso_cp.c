@@ -382,11 +382,6 @@ compress_poll(struct service_info *svc_info)
 	cur_ts = osal_get_clock_nsec();
 	start_ts = svc_poll_expiry_start(svc_info, cur_ts);
 	while (1) {
-		if (pnso_lif_reset_ctl_pending()) {
-			err = PNSO_LIF_IO_ERROR;
-			break;
-		}
-
 		/* poll on padding opaque tag updated by P4+ */
 		if (*cp_pad_cpl_addr == CPDC_PAD_STATUS_DATA) {
 			OSAL_LOG_DEBUG("cp/pad status data matched!");
@@ -409,6 +404,11 @@ compress_poll(struct service_info *svc_info)
 			OSAL_LOG_DEBUG("cp/pad async/poll mode. transient err: %d",
 				       err);
 			goto out;
+		}
+
+		if (pnso_lif_reset_ctl_pending()) {
+			err = PNSO_LIF_IO_ERROR;
+			break;
 		}
 
 		osal_yield();

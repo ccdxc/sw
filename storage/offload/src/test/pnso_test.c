@@ -3229,10 +3229,11 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 
 	if (err == ETIMEDOUT) {
 		print_testcase_ctx(ctx);
-		if (batch_completion_count != batch_submit_count) {
-			PNSO_LOG_WARN("Waiting 2 seconds for possible race cleanup\n");
-			osal_msleep(2000); /* final attempt at nice cleanup */
-		}
+	}
+
+	if (batch_completion_count != batch_submit_count) {
+		PNSO_LOG_WARN("Waiting 5 seconds for possible race cleanup\n");
+		osal_msleep(5000); /* final attempt at nice cleanup */
 	}
 
 	/* Final tally for stats */

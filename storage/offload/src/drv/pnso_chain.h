@@ -90,11 +90,11 @@ extern "C" {
 #define PPRINT_CHAIN(c)
 #else
 #define PPRINT_CHAIN(c)							\
-	do {								\
-		OSAL_LOG_INFO("%.*s", 30, "=========================================");\
-		chn_pprint_chain(c);					\
-		OSAL_LOG_INFO("%.*s", 30, "=========================================");\
-	} while (0)
+	if (OSAL_LOG_ON(OSAL_LOG_LEVEL_DEBUG)) {				\
+		OSAL_LOG("%.*s", 30, "=========================================");\
+		chn_pprint_chain(c, false);					\
+		OSAL_LOG("%.*s", 30, "=========================================");\
+	}
 #endif
 
 extern struct service_ops cp_ops;
@@ -356,7 +356,8 @@ pnso_error_t chn_poller(struct service_chain *chain, uint16_t gen_id,
 void chn_poll_timeout_all(struct per_core_resource *pcr);
 pnso_error_t pnso_chain_poller(void *poll_ctx);
 
-void chn_pprint_chain(const struct service_chain *chain);
+void chn_pprint_chain(const struct service_chain *chain, bool verbose);
+bool chn_is_suspect(const struct service_chain *chain);
 
 static inline bool
 chn_service_is_in_chain(const struct service_info *svc_info)
@@ -583,6 +584,20 @@ chn_service_deps_num_blks_get(const struct service_info *svc_info)
 	OSAL_ASSERT(is_power_of_2(svc_info->si_block_size));
 	return REQ_SZ_TO_NUM_BLKS(svc_info->si_svc_deps.sd_data_len,
 				  svc_info->si_block_size);
+}
+
+static inline uint64_t
+chn_service_desc_src_paddr_get(const struct service_info *svc_info)
+{
+	if (chn_service_type_is_crypto(svc_info)) {
+		return ((struct crypto_desc *) svc_info->si_desc)->cd_in_aol;
+	} else if (chn_service_type_is_cpdc(svc_info)) {
+		return ((struct cpdc_desc *) svc_info->si_desc)->cd_src;
+	} else if (chn_service_type_is_hashchksum(svc_info)) {
+		return ((struct cpdc_desc *) svc_info->si_desc)->cd_src;
+	}
+
+	return 0;
 }
 
 #ifdef __cplusplus

@@ -37,9 +37,10 @@ extern enum osal_log_level g_osal_log_level;
 extern char g_osal_log_prefix[PREFIX_STR_LEN];
 
 #ifndef __KERNEL__
+#define OSAL_LOG_ON(level) ((enum osal_log_level) level <= g_osal_log_level)
 #define USPACE_LOG(log_fp, level, format, ...)				\
 	do {								\
-		if ((enum osal_log_level) level <= g_osal_log_level)	\
+		if (OSAL_LOG_ON(level))					\
 			osal_log_msg(log_fp, level,			\
 					" %4d | %-30.30s | " format,	\
 					__LINE__, __func__,		\
@@ -64,13 +65,14 @@ extern char g_osal_log_prefix[PREFIX_STR_LEN];
 	USPACE_LOG(stdout, OSAL_LOG_LEVEL_DEBUG, fmt, ##__VA_ARGS__)
 #define OSAL_LOG printf
 #else
+#define OSAL_LOG_ON(level) (unlikely((enum osal_log_level) level <= g_osal_log_level))
 #ifndef __FreeBSD__
 #define KSPACE_LOG(level, ...)						\
-	if (unlikely((enum osal_log_level) level <= g_osal_log_level))		\
+	if (OSAL_LOG_ON(level))						\
 		printk(__VA_ARGS__)
 #else
 #define KSPACE_LOG(level, ...)						\
-	if (unlikely((enum osal_log_level) level <= g_osal_log_level)) {		\
+	if (OSAL_LOG_ON(level)) {					\
 		printk(__VA_ARGS__);					\
 		printk("\n");						\
 	}

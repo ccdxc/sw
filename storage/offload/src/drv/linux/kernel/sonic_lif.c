@@ -22,6 +22,8 @@
 #include <linux/printk.h>
 #else
 #define NETDEV_IFNAME	name
+#include <linux/sort.h>
+#include <linux/bsearch.h>
 #endif
 #include "pnso_stats.h"
 
@@ -167,6 +169,7 @@ static bool sonic_notifyq_service(struct cq *cq, struct cq_info *cq_info, void *
 	union notifyq_cpl *cpl = cq_info->cq_desc;
 	struct queue *q;
 	struct lif *lif;
+	uint32_t idx;
 
 	q = cq->bound_q;
 	lif = q->admin_info[0].cb_arg;
@@ -221,6 +224,11 @@ static bool sonic_notifyq_service(struct cq *cq, struct cq_info *cq_info, void *
 				cpl->ring_desc_addr.db_addr,
 				cpl->ring_desc_addr.otag_addr,
 				cpl->ring_desc_addr.iv_addr);
+		idx = (uint32_t) atomic_read(&lif->reset_ctl.suspect_info_count);
+		if (idx < MAX_RESET_CTL_SUSPECT_INFO_COUNT) {
+			lif->reset_ctl.suspect_info[idx] = cpl->ring_desc_addr.src_addr;
+			atomic_inc(&lif->reset_ctl.suspect_info_count);
+		}
 		break;
 	default:
 		OSAL_LOG_DEBUG("Notifyq bad event ecode=%d eid=" PRIu64,
@@ -1119,19 +1127,76 @@ void sonic_lif_reset_ctl_start(struct lif *lif)
 	}
 }
 
+static int cmp_u64(const void *a, const void *b)
+{
+	if (*(uint64_t *) a < *(uint64_t *) b)
+		return -1;
+	else if (*(uint64_t *) a > *(uint64_t *) b)
+		return 1;
+
+	return 0;
+}
+
 int sonic_lif_reset_ctl_pre_reset(struct lif *lif, void *cb_arg)
 {
 	int err;
 	struct per_core_resource *res;
-	uint32_t i;
+	uint32_t i, count;
+
+	OSAL_LOG_DEBUG("enter sonic_lif_reset_ctl_pre_reset");
+	atomic_set(&lif->reset_ctl.suspect_info_sorted_count, 0);
+	atomic_set(&lif->reset_ctl.suspect_info_count, 0);
 
 	err = sonic_lif_hang_notify(lif);
+	OSAL_LOG_DEBUG("ran sonic_lif_hang_notify");
+
+	/* Allow small amount of time for pending notify msgs */
+	msleep(500);
 
 	LIF_FOR_EACH_PC_RES(lif, i, res) {
 		sonic_lif_per_core_resource_pre_reset(res);
 	}
 
+	count = (uint32_t) atomic_read(&lif->reset_ctl.suspect_info_count);
+	if (count > MAX_RESET_CTL_SUSPECT_INFO_COUNT)
+		count = 0;
+	if (count > 1) {
+		/* sort suspects for quicker matching later */
+#ifdef __FreeBSD__
+		qsort(lif->reset_ctl.suspect_info,
+			count, sizeof(uint64_t), cmp_u64);
+#else
+		sort(lif->reset_ctl.suspect_info,
+			count, sizeof(uint64_t), cmp_u64, NULL);
+#endif
+		OSAL_LOG_DEBUG("sorted suspect_info list count %u:", count);
+		for (i = 0; i < count; i++) {
+			OSAL_LOG_DEBUG("suspect addr[%d]=0x" PRIx64,
+				      i, lif->reset_ctl.suspect_info[i]);
+		}
+	}
+	atomic_set(&lif->reset_ctl.suspect_info_sorted_count, count);
+
+	OSAL_LOG_DEBUG("exit sonic_lif_reset_ctl_pre_reset");
+
 	return err;
+}
+
+bool sonic_lif_reset_addr_is_suspect(struct lif *lif, void *addr)
+{
+	bool ret = false;
+	uint32_t count;
+
+	count = atomic_read(&lif->reset_ctl.suspect_info_sorted_count);
+	if (count) {
+		ret = bsearch(addr, lif->reset_ctl.suspect_info,
+				count, sizeof(uint64_t), cmp_u64) != NULL;
+		if (ret)
+			OSAL_LOG_DEBUG("addr 0x" PRIx64 " IS a suspect",
+				       *((uint64_t *)addr));
+	}
+
+	return ret;
 }
 
 int sonic_lif_reset_ctl_reset(struct lif *lif, void *cb_arg)
