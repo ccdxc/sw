@@ -19,7 +19,7 @@ read_pktdesc:
     /* Add SACL_P1_1_TABLE_OFFSET to sacl base address. */
     addi       r1, r1, SACL_P1_1_TABLE_OFFSET
     /* P1 table index = ((sip_classid << 7) | sport_classid). */
-    add.c1     r2, d.read_pktdesc_d.sport_classid, d.read_pktdesc_d.sip_classid, 7
+    add        r2, d.read_pktdesc_d.sport_classid, d.read_pktdesc_d.sip_classid, 7
     /* Write P1 table index to PHV */
     phvwr      p.txdma_control_rfc_index, r2
     /* Compute the byte offset for P1 table index */

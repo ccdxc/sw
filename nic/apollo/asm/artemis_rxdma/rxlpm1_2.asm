@@ -50,8 +50,8 @@ rxlpm1_res_handler:
     bcf          [!c1], exit
     /* Third pass. Write TAG classid result, and Stop */
     seq          c1, k.p4_to_rxdma_direction, TX_FROM_HOST
-    phvwr.c1     p.rx_to_tx_hdr_dtag_classid, k.p4_to_rxdma_service_tag
-    phvwr.!c1    p.rx_to_tx_hdr_stag_classid, k.p4_to_rxdma_service_tag
+    phvwr.c1     p.rx_to_tx_hdr_dtag_classid, res_reg
+    phvwr.!c1    p.rx_to_tx_hdr_stag_classid, res_reg
 exit:
     nop.e
     nop

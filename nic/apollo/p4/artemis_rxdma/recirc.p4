@@ -12,10 +12,10 @@ action rxlpm1_res_handler()
             // Write the derived TAG class id to PHV
             if (p4_to_rxdma.direction == TX_FROM_HOST) {
                 modify_field(rx_to_tx_hdr.dtag_classid,
-                             p4_to_rxdma.service_tag);
+                             scratch_metadata.field10);
             } else {
                 modify_field(rx_to_tx_hdr.stag_classid,
-                             p4_to_rxdma.service_tag);
+                             scratch_metadata.field10);
             }
         }
     }
@@ -49,7 +49,6 @@ action rxlpm2_res_handler()
             // Write the derived METER result to PHV
             modify_field(rx_to_tx_hdr.meter_result,
                          scratch_metadata.field10);
-
         }
     }
 }
