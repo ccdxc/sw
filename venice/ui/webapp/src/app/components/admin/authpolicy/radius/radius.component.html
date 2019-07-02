@@ -9,19 +9,21 @@
   <div class="radius-overlay"></div>
   <div fxFlex fxLayout="column" fxLayoutAlign="center stretch">
     <div fxFlex="nogrow" fxLayout="row">
-      <mat-slide-toggle fxFlex='nogrow' class="radius-toggle"></mat-slide-toggle>
+      <mat-slide-toggle fxFlex='nogrow' class="radius-toggle">
+      </mat-slide-toggle>
       <div class="radius-title  authpolicy-config-title">
         Radius
       </div>
       <div fxFlex></div>
-      <div fxFlex="nogrow" class="global-button-primary authpolicy-button radius-create"
+      <div *roleGuard="'authauthenticationpolicy_update'" fxFlex="nogrow"
+           class="global-button-primary authpolicy-button radius-create"
            (click)="createRadius()">
         CREATE RADIUS AUTHENTICATOR
       </div>
     </div>
   </div>
 
-  <div fxFlex="nogrow" fxLayout="column">
+  <div *roleGuard="'authauthenticationpolicy_update'" fxFlex="nogrow" fxLayout="column">
     <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-up">
     </div>
     <div fxFlex="60px"></div>
@@ -47,7 +49,9 @@
     <div fxFlex="noshrink" fxLayout="row" [style.position]="'relative'">
       <div fxFlex fxLayout="column">
         <ng-container *ngIf="radiusEditMode">
-          <ng-container *ngTemplateOutlet="RadiusServers"></ng-container>
+          <ng-container *roleGuard="'authauthenticationpolicy_update'">
+            <ng-container *ngTemplateOutlet="RadiusServers"></ng-container>
+          </ng-container>
         </ng-container>
         <div fxFlex="40px"></div>
       </div>
@@ -55,26 +59,36 @@
   </div>
   <div *ngIf="!radiusEditMode" fxFlex="nogrow" fxLayout="column">
     <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" fxLayoutGap="10px"
-         class="authpolicy-arrow-up">
+         [ngClass]="{'authpolicy-arrow-up': !toggleDisabled}">
       <!-- NOT EDIT MODE, SHOW EDIT BUTTON AND ARROW -->
-      <mat-icon [matTooltip]="'Edit RADIUS Config'" class="radius-edit-icon"
-                *ngIf="isHover && !radiusEditMode" fxFlex="nogrow" (click)="toggleEdit()">
-        edit
-      </mat-icon>
-      <mat-icon [matTooltip]="'Delete RADIUS Config'" class="radius-edit-icon"
-                *ngIf="isHover && !radiusEditMode" fxFlex="nogrow" (click)="onDeleteRadius()">
-        delete
-      </mat-icon>
-      <mat-icon [matTooltip]="'Move RADIUS Order Up'" *ngIf="!radiusEditMode && canRaiseAuthRank()"
-                (click)="raiseAuthRank()">
-        arrow_upward
-      </mat-icon>
+      <ng-container *ngIf="isHover && !radiusEditMode">
+        <mat-icon *roleGuard="'authauthenticationpolicy_update'" [matTooltip]="'Edit RADIUS Config'"
+                  class="radius-edit-icon"
+                  fxFlex="nogrow" (click)="toggleEdit()">
+          edit
+        </mat-icon>
+      </ng-container>
+      <ng-container *ngIf="isHover && !radiusEditMode">
+        <mat-icon *roleGuard="'authauthenticationpolicy_delete'"
+                  [matTooltip]="'Delete RADIUS Config'" class="radius-edit-icon"
+                  fxFlex="nogrow" (click)="onDeleteRadius()">
+          delete
+        </mat-icon>
+      </ng-container>
+      <ng-container *ngIf="!radiusEditMode && canRaiseAuthRank()">
+        <mat-icon *roleGuard="'authauthenticationpolicy_update'"
+                  [matTooltip]="'Move RADIUS Order Up'"
+                  (click)="raiseAuthRank()">
+          arrow_upward
+        </mat-icon>
+      </ng-container>
     </div>
     <div fxFlex="noshrink" fxLayout="row" fxLayoutAlign="end center">
       <div *ngIf="currentRank != null" fxFlex="nogrow" class="authpolicy-rank"> {{currentRank + 1}}
       </div>
     </div>
-    <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-down">
+    <div *roleGuard="'authauthenticationpolicy_update'" fxFlex="24px" fxLayout="row"
+         fxLayoutAlign="end stretch" class="authpolicy-arrow-down">
       <mat-icon [matTooltip]="'Move RADIUS Order Down'" fxFlex="nogrow"
                 *ngIf="!radiusEditMode && canLowerAuthRank()" (click)="lowerAuthRank()">
         arrow_downward
@@ -82,16 +96,18 @@
     </div>
   </div>
   <!-- EDIT MODE, SHOW SAVE/CANCEL BUTTON -->
-  <div *ngIf="radiusEditMode" fxFlex="nogrow" fxLayout="row">
-    <div *ngIf="radiusEditMode" fxFlex="nogrow">
-      <button (click)="saveRadius()"
-              class="global-button-primary authpolicy-save authpolicy-save-radius"
-              [disabled]="!enableSaveButton()">SAVE</button>
+  <ng-container *ngIf="radiusEditMode">
+    <div *roleGuard="'authauthenticationpolicy_update'" fxFlex="nogrow" fxLayout="row">
+      <div *ngIf="radiusEditMode" fxFlex="nogrow">
+        <button (click)="saveRadius()"
+                class="global-button-primary authpolicy-save authpolicy-save-radius"
+                [disabled]="!enableSaveButton()">SAVE</button>
+      </div>
+      <div *ngIf="radiusEditMode" fxFlex="nogrow">
+        <div (click)="cancelEdit()" class="global-button-neutral authpolicy-cancel">CANCEL</div>
+      </div>
     </div>
-    <div *ngIf="radiusEditMode" fxFlex="nogrow">
-      <div (click)="cancelEdit()" class="global-button-neutral authpolicy-cancel">CANCEL</div>
-    </div>
-  </div>
+  </ng-container>
 </ng-template>
 
 <ng-template #RadiusConfig>
@@ -110,12 +126,14 @@
             </div>
           </div>
           <!-- Field Values - edit mode -->
-          <div fxFlex fxLayout="column" *ngIf="radiusEditMode">
-            <div fxFlex="30px" fxLayout="row" class="radius-value">
-              <input fxFlex="nogrow" formControlName="nas-id" class="radius-input"
-                     spellcheck="false" type="text" pInputText placeholder="">
+          <ng-container *roleGuard="'authauthenticationpolicy_update'">
+            <div fxFlex fxLayout="column" *ngIf="radiusEditMode">
+              <div fxFlex="30px" fxLayout="row" class="radius-value">
+                <input fxFlex="nogrow" formControlName="nas-id" class="radius-input"
+                       spellcheck="false" type="text" pInputText placeholder="">
+              </div>
             </div>
-          </div>
+          </ng-container>
           <!-- Field Values - view mode -->
           <div fxFlex fxLayout="column" *ngIf="!radiusEditMode">
             <div fxFlex="30px" fxLayout="row" class="radius-fieldtitle radius-input"

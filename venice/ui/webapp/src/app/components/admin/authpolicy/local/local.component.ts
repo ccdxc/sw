@@ -2,6 +2,7 @@ import { Component, OnInit, ViewEncapsulation, Output, EventEmitter, Input } fro
 import { AuthpolicybaseComponent } from '@app/components/admin/authpolicy/authpolicybase/authpolicybase.component';
 import { IAuthLocal } from '@sdk/v1/models/generated/auth';
 import { ControllerService } from '@app/services/controller.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 @Component({
   selector: 'app-local',
   templateUrl: './local.component.html',
@@ -15,11 +16,12 @@ import { ControllerService } from '@app/services/controller.service';
 export class LocalComponent extends AuthpolicybaseComponent implements OnInit {
   @Input() localData: IAuthLocal;
 
-  constructor(protected _controllerService: ControllerService) {
-    super(_controllerService);
+  constructor(protected _controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService) {
+    super(_controllerService, uiconfigsService);
   }
 
   ngOnInit() {
+    super.ngOnInit();
   }
-
 }

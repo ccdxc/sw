@@ -3,6 +3,8 @@ import { ControllerService } from '@app/services/controller.service';
 import { AbstractControl } from '@angular/forms';
 import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 @Component({
   selector: 'app-authpolicybase',
@@ -23,15 +25,19 @@ export class AuthpolicybaseComponent extends BaseComponent implements OnInit {
   // Total number of ranks
   @Input() numRanks: number;
 
+  toggleDisabled: boolean;
+
   // Emits a request for a rank change, the parent is responsible for
   // actually changing the rank
   @Output() changeAuthRank: EventEmitter<number> = new EventEmitter();
 
-  constructor(protected _controllerService: ControllerService) {
+  constructor(protected _controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService) {
     super(_controllerService);
    }
 
   ngOnInit() {
+    this.toggleDisabled = !this.uiconfigsService.isAuthorized(UIRolePermissions.authauthenticationpolicy_update);
   }
 
   onMouseEnter() {

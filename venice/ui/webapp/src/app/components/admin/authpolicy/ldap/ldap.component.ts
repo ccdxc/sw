@@ -10,6 +10,7 @@ import { MatSlideToggleChange } from '@angular/material';
 import { LDAPCheckResponse, LDAPCheckType, CheckResponseError } from '@app/components/admin/authpolicy/.';
 import { AuthPolicyUtil } from '@app/components/admin/authpolicy/AuthPolicyUtil';
 import { Utility } from '@app/common/Utility';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 import { ControllerService } from '@app/services/controller.service';
 /**
@@ -54,8 +55,9 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
 
   @Input() parentAuthPolicy: AuthAuthenticationPolicy = null;
 
-  constructor(protected _controllerService: ControllerService) {
-    super(_controllerService);
+  constructor(protected _controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService) {
+    super(_controllerService, uiconfigsService);
   }
 
   getClassName(): string {
@@ -63,6 +65,7 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
   }
 
   ngOnInit() {
+    super.ngOnInit();
     this.setLDAPEditMode(true);
   }
 

@@ -10,6 +10,8 @@ import { AuthService } from '@app/services/generated/auth.service';
 import { AuthAuthenticationPolicy, AuthLdap, IApiStatus, IAuthAuthenticationPolicy, AuthAuthenticators_authenticator_order, AuthRadius, IAuthTokenSecretRequest, AuthTokenSecretRequest } from '@sdk/v1/models/generated/auth';
 import { Observable } from 'rxjs';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 
 /**
@@ -43,13 +45,17 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
   _ldapConnCheckResponse: LDAPCheckResponse = null;
   _ldapBindCheckResponse: LDAPCheckResponse = null;
 
+  updateDisabled: boolean;
+
   constructor(protected _controllerService: ControllerService,
     protected _authService: AuthService,
+    protected uiconfigsService: UIConfigsService
   ) {
     super(_controllerService);
   }
 
   ngOnInit() {
+    this.updateDisabled = !this.uiconfigsService.isAuthorized(UIRolePermissions.authauthenticationpolicy_update);
     // Setting the toolbar
     this.setupToolbarItems();
     // Retrieve auth-policy
@@ -71,23 +77,27 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
         text: 'Refresh',
         callback: () => {
           this.getAuthenticationPolicy();
+          this.setupToolbarItems();
         }
-      },
-      {
+      }
+    ];
+    if (this.updateDisabled === false) {
+      const newAuthToken = {
         cssClass: 'global-button-primary authpolicy-toolbar-button',
         text: 'New Authorization Token',
         callback: () => {
           this.onGenerate();
         }
-      }
-
-    ];
+      };
+      buttons.push(newAuthToken);
+    }
     if (rankChanged === true) {
       const saveRankChange = {
         cssClass: 'global-button-primary authpolicy-toolbar-button authpolicy-toolbar-button-save',
         text: 'Save',
         callback: () => {
           this.saveAuthenticationPolicy(this.authPolicy.getFormGroupValues());
+          this.setupToolbarItems();
         }
       };
       buttons.push(saveRankChange);

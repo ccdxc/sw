@@ -952,7 +952,7 @@ export class Utility {
       case 'AlertDestination':
         return cat + '/alertsevents/alertdestinations';
       case 'AuthenticationPolicy':
-        return 'settings/authpolicy';
+        return 'admin/authpolicy';
       case 'App':
         return 'security/securityapps';
       case 'SGPolicy':
@@ -966,7 +966,7 @@ export class Utility {
       case 'User':
       case 'Role':
       case 'RoleBinding':
-        return 'settings/users';
+        return 'admin/users';
       case 'Rollout':
         return 'settings/upgrade/rollouts';
       default:

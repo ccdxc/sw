@@ -7,6 +7,7 @@ import { FormArray, AbstractControl } from '@angular/forms';
 import { SelectItem } from 'primeng/primeng';
 import { Utility } from '@app/common/Utility';
 import { ControllerService } from '@app/services/controller.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 /**
  * RadiusComponent is a child component of AuthPolicy.component (parent)
@@ -43,11 +44,13 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
   @Output() invokeCreateRadius: EventEmitter<AuthRadius> = new EventEmitter();
   @Output() invokeRemoveRadius: EventEmitter<AuthRadius> = new EventEmitter();
 
-  constructor(protected _controllerService: ControllerService, private cd: ChangeDetectorRef) {
-    super(_controllerService);
+  constructor(protected _controllerService: ControllerService, private cd: ChangeDetectorRef,
+    protected uiconfigsService: UIConfigsService) {
+    super(_controllerService, uiconfigsService);
   }
 
   ngOnInit() {
+    super.ngOnInit();
   }
 
   ngAfterContentInit() {
@@ -175,6 +178,7 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
       // POST DATA
       this.invokeSaveRadius.emit(false); // emit event to parent to update RADIUS if REST call succeeds, ngOnChange() will bb invoked and refresh data.
     }
+    this.setRadiusEditMode(false);
   }
 
   createRadius() {

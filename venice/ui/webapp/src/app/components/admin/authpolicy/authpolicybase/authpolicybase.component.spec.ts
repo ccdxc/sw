@@ -16,6 +16,10 @@ import { MessageService } from '@app/services/message.service';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { AuthService } from '@app/services/auth.service';
+
 import { AuthpolicybaseComponent } from './authpolicybase.component';
 
 describe('AuthpolicybaseComponent', () => {
@@ -41,7 +45,9 @@ describe('AuthpolicybaseComponent', () => {
         LogService,
         LogPublishersService,
         MatIconRegistry,
-        MessageService
+        MessageService,
+        UIConfigsService,
+        AuthService
       ]
     });
       });

@@ -12,26 +12,27 @@
   <div class="ldap-overlay"></div>
   <div fxFlex fxLayout="column" fxLayoutAlign="center stretch">
     <div fxFlex="nogrow" fxLayout="row">
-      <mat-slide-toggle fxFlex='nogrow' class="ldap-toggle"></mat-slide-toggle>
+      <mat-slide-toggle fxFlex='nogrow' class="ldap-toggle">
+      </mat-slide-toggle>
       <div class="ldap-title authpolicy-config-title">
         LDAP
       </div>
       <div fxFlex></div>
-      <div fxFlex="nogrow" class="global-button-primary authpolicy-button ldap-create"
+      <div *roleGuard="'authauthenticationpolicy_update'" fxFlex="nogrow"
+           class="global-button-primary authpolicy-button ldap-create"
            (click)="createLDAP()">
         CREATE LDAP AUTHENTICATOR
       </div>
     </div>
   </div>
 
-  <div fxFlex="nogrow" fxLayout="column">
+  <div *roleGuard="'authauthenticationpolicy_update'" fxFlex="nogrow" fxLayout="column">
     <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-up">
     </div>
     <div fxFlex="60px"></div>
     <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-down">
     </div>
   </div>
-
 </ng-template>
 
 <ng-template #LDAP>
@@ -50,7 +51,9 @@
     <div fxFlex="noshrink" fxLayout="row" [style.position]="'relative'">
       <div fxFlex fxLayout="column">
         <ng-container *ngIf="LDAPEditMode;else LDAPServersViewMode">
-          <ng-container *ngTemplateOutlet="LDAPServers"></ng-container>
+          <ng-container *roleGuard="'authauthenticationpolicy_update'">
+            <ng-container *ngTemplateOutlet="LDAPServers"></ng-container>
+          </ng-container>
         </ng-container>
         <div fxFlex="40px"></div>
       </div>
@@ -58,26 +61,35 @@
   </div>
   <div *ngIf="!LDAPEditMode" fxFlex="nogrow" fxLayout="column">
     <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" fxLayoutGap="10px"
-         class="authpolicy-arrow-up">
+         [ngClass]="{'authpolicy-arrow-up': !toggleDisabled}">
       <!-- NOT EDIT MODE, SHOW EDIT BUTTON AND ARROW -->
-      <mat-icon [matTooltip]="'Edit LDAP Config'" class="ldap-edit-icon"
-                *ngIf="isHover && !LDAPEditMode" fxFlex="nogrow" (click)="toggleEdit()">
-        edit
-      </mat-icon>
-      <mat-icon [matTooltip]="'Delete LDAP Config'" class="ldap-edit-icon"
-                *ngIf="isHover && !LDAPEditMode" fxFlex="nogrow" (click)="onDeleteLDAP()">
-        delete
-      </mat-icon>
-      <mat-icon [matTooltip]="'Move LDAP Order Up'" *ngIf="!LDAPEditMode && canRaiseAuthRank()"
-                (click)="raiseAuthRank()">
-        arrow_upward
-      </mat-icon>
+      <ng-container *ngIf="isHover && !LDAPEditMode">
+        <mat-icon *roleGuard="'authauthenticationpolicy_update'" [matTooltip]="'Edit LDAP Config'"
+                  class="ldap-edit-icon"
+                  fxFlex="nogrow" (click)="toggleEdit()">
+          edit
+        </mat-icon>
+      </ng-container>
+      <ng-container *ngIf="isHover && !LDAPEditMode">
+        <mat-icon *roleGuard="'authauthenticationpolicy_delete'" [matTooltip]="'Delete LDAP Config'"
+                  class="ldap-edit-icon"
+                  fxFlex="nogrow" (click)="onDeleteLDAP()">
+          delete
+        </mat-icon>
+      </ng-container>
+      <ng-container *ngIf="!LDAPEditMode && canRaiseAuthRank()">
+        <mat-icon *roleGuard="'authauthenticationpolicy_update'" [matTooltip]="'Move LDAP Order Up'"
+                  (click)="raiseAuthRank()">
+          arrow_upward
+        </mat-icon>
+      </ng-container>
     </div>
     <div fxFlex="noshrink" fxLayout="row" fxLayoutAlign="end center">
       <div *ngIf="currentRank != null" fxFlex="nogrow" class="authpolicy-rank"> {{currentRank + 1}}
       </div>
     </div>
-    <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-down">
+    <div *roleGuard="'authauthenticationpolicy_update'" fxFlex="24px" fxLayout="row"
+         fxLayoutAlign="end stretch" class="authpolicy-arrow-down">
       <mat-icon [matTooltip]="'Move LDAP Order Down'" fxFlex="nogrow"
                 *ngIf="!LDAPEditMode && canLowerAuthRank()" (click)="lowerAuthRank()">
         arrow_downward
@@ -85,16 +97,18 @@
     </div>
   </div>
   <!-- EDIT MODE, SHOW SAVE/CANCEL BUTTON -->
-  <div *ngIf="LDAPEditMode" fxFlex="nogrow" fxLayout="row">
-    <div fxFlex="nogrow">
-      <button (click)="saveLDAP()"
-              class="global-button-primary authpolicy-save authpolicy-save-ldap"
-              [disabled]="!enableSaveButton()">SAVE</button>
+  <ng-container *ngIf="LDAPEditMode">
+    <div *roleGuard="'authauthenticationpolicy_update'" fxFlex="nogrow" fxLayout="row">
+      <div fxFlex="nogrow">
+        <button (click)="saveLDAP()"
+                class="global-button-primary authpolicy-save authpolicy-save-ldap"
+                [disabled]="!enableSaveButton()">SAVE</button>
+      </div>
+      <div fxFlex="nogrow">
+        <div (click)="cancelEdit()" class="global-button-neutral authpolicy-cancel">CANCEL</div>
+      </div>
     </div>
-    <div fxFlex="nogrow">
-      <div (click)="cancelEdit()" class="global-button-neutral authpolicy-cancel">CANCEL</div>
-    </div>
-  </div>
+  </ng-container>
 
 </ng-template>
 
@@ -119,24 +133,26 @@
             </div>
           </div>
           <!-- Field Values - edit mode -->
-          <div fxFlex fxLayout="column" *ngIf="LDAPEditMode">
-            <div fxFlex="30px" fxLayout="row" class="ldap-value">
-              <input fxFlex="nogrow" formControlName="bind-dn" appErrorTooltip class="ldap-input"
-                     spellcheck="false" type="text" pInputText placeholder="">
-              <div fxFlex="nogrow" class="global-button-primary ldap-bind-connection-button"
-                   (click)="onCheckLDAPBindConnect($event)">Test Bind</div>
-              <mat-icon *ngIf="hasBindConfigError()" (click)="onBindErrorMessageClick()"
-                        title="{{getBindConfigErrorTooltip()}}"
-                        class="ldap-test-error-icon ldap-test-error-icon-bind">
-                error
-              </mat-icon>
+          <ng-container *ngIf="LDAPEditMode">
+            <div fxFlex fxLayout="column" *roleGuard="'authauthenticationpolicy_update'">
+              <div fxFlex="30px" fxLayout="row" class="ldap-value">
+                <input fxFlex="nogrow" formControlName="bind-dn" appErrorTooltip class="ldap-input"
+                       spellcheck="false" type="text" pInputText placeholder="">
+                <div fxFlex="nogrow" class="global-button-primary ldap-bind-connection-button"
+                     (click)="onCheckLDAPBindConnect($event)">Test Bind</div>
+                <mat-icon *ngIf="hasBindConfigError()" (click)="onBindErrorMessageClick()"
+                          [matTooltip]="getBindConfigErrorTooltip()"
+                          class="ldap-test-error-icon ldap-test-error-icon-bind">
+                  error
+                </mat-icon>
+              </div>
+              <div fxFlex="30px" fxLayout="row" class="ldap-value">
+                <input fxFlex="nogrow" formControlName="bind-password"
+                       class="ldap-input" spellcheck="false" type="text" pInputText
+                       placeholder="password" type="password" appErrorTooltip>
+              </div>
             </div>
-            <div fxFlex="30px" fxLayout="row" class="ldap-value">
-              <input fxFlex="nogrow" formControlName="bind-password"
-                     class="ldap-input" spellcheck="false" type="text" pInputText
-                     placeholder="password" type="password" appErrorTooltip>
-            </div>
-          </div>
+          </ng-container>
           <!-- Field Values - view mode -->
           <div fxFlex fxLayout="column" *ngIf="!LDAPEditMode">
             <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
@@ -173,22 +189,24 @@
             </div>
           </div>
           <!-- Field Values - edit mode -->
-          <div fxFlex fxLayout="column" *ngIf="LDAPEditMode">
-            <div fxFlex="30px" fxLayout="row" class="ldap-value">
-              <input fxFlex="nogrow" class="ldap-input" formControlName="base-dn" appErrorTooltip
-                     spellcheck="false" type="text" pInputText placeholder="">
+          <ng-container *ngIf="LDAPEditMode">
+            <div fxFlex fxLayout="column" *roleGuard="'authauthenticationpolicy_update'">
+              <div fxFlex="30px" fxLayout="row" class="ldap-value">
+                <input fxFlex="nogrow" class="ldap-input" formControlName="base-dn" appErrorTooltip
+                       spellcheck="false" type="text" pInputText placeholder="">
+              </div>
+              <ng-container formGroupName="attribute-mapping">
+                <div fxFlex="30px" fxLayout="row" class="ldap-value">
+                  <input fxFlex="nogrow" class="ldap-input" formControlName="user-object-class"
+                         appErrorTooltip spellcheck="false" type="text" pInputText placeholder="">
+                </div>
+                <div fxFlex="30px" fxLayout="row" class="ldap-value">
+                  <input fxFlex="nogrow" class="ldap-input" formControlName="group-object-class"
+                         appErrorTooltip spellcheck="false" type="text" pInputText placeholder="">
+                </div>
+              </ng-container>
             </div>
-            <ng-container formGroupName="attribute-mapping">
-              <div fxFlex="30px" fxLayout="row" class="ldap-value">
-                <input fxFlex="nogrow" class="ldap-input" formControlName="user-object-class"
-                       appErrorTooltip spellcheck="false" type="text" pInputText placeholder="">
-              </div>
-              <div fxFlex="30px" fxLayout="row" class="ldap-value">
-                <input fxFlex="nogrow" class="ldap-input" formControlName="group-object-class"
-                       appErrorTooltip spellcheck="false" type="text" pInputText placeholder="">
-              </div>
-            </ng-container>
-          </div>
+          </ng-container>
           <!-- Field Values - view mode -->
           <div fxFlex fxLayout="column" *ngIf="!LDAPEditMode">
             <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
@@ -228,20 +246,23 @@
             </div>
           </div>
           <!-- Field Values - edit mode -->
-          <div fxFlex fxLayout="column" *ngIf="LDAPEditMode">
-            <div fxFlex="30px" fxLayout="row" class="ldap-value">
-              <input fxFlex="nogrow" class="ldap-input" formControlName="user" spellcheck="false"
-                     appErrorTooltip type="text" pInputText placeholder="">
+          <ng-container *ngIf="LDAPEditMode">
+            <div fxFlex fxLayout="column" *roleGuard="'authauthenticationpolicy_update'">
+              <div fxFlex="30px" fxLayout="row" class="ldap-value">
+                <input fxFlex="nogrow" class="ldap-input" formControlName="user" spellcheck="false"
+                       appErrorTooltip type="text" pInputText placeholder="">
+              </div>
+              <div fxFlex="30px" fxLayout="row" class="ldap-value">
+                <input fxFlex="nogrow" class="ldap-input" formControlName="group" spellcheck="false"
+                       appErrorTooltip type="text" pInputText placeholder="">
+              </div>
+              <div fxFlex="30px" fxLayout="row" class="ldap-value">
+                <input fxFlex="nogrow" class="ldap-input" formControlName="tenant"
+                       spellcheck="false"
+                       type="text" pInputText placeholder="">
+              </div>
             </div>
-            <div fxFlex="30px" fxLayout="row" class="ldap-value">
-              <input fxFlex="nogrow" class="ldap-input" formControlName="group" spellcheck="false"
-                     appErrorTooltip type="text" pInputText placeholder="">
-            </div>
-            <div fxFlex="30px" fxLayout="row" class="ldap-value">
-              <input fxFlex="nogrow" class="ldap-input" formControlName="tenant" spellcheck="false"
-                     type="text" pInputText placeholder="">
-            </div>
-          </div>
+          </ng-container>
           <!-- Field Values - view mode -->
           <div fxFlex fxLayout="column" *ngIf="!LDAPEditMode">
             <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
@@ -269,16 +290,18 @@
             </div>
           </div>
           <!-- Field Values - edit mode -->
-          <div fxFlex fxLayout="column" *ngIf="LDAPEditMode">
-            <div fxFlex="30px" fxLayout="row" class="ldap-value">
-              <input fxFlex="nogrow" class="ldap-input" formControlName="fullname"
-                     spellcheck="false" type="text" pInputText placeholder="">
+          <ng-container *ngIf="LDAPEditMode">
+            <div fxFlex fxLayout="column" *roleGuard="'authauthenticationpolicy_update'">
+              <div fxFlex="30px" fxLayout="row" class="ldap-value">
+                <input fxFlex="nogrow" class="ldap-input" formControlName="fullname"
+                       spellcheck="false" type="text" pInputText placeholder="">
+              </div>
+              <div fxFlex="30px" fxLayout="row" class="ldap-value">
+                <input fxFlex="nogrow" class="ldap-input" formControlName="email" spellcheck="false"
+                       type="text" pInputText placeholder="">
+              </div>
             </div>
-            <div fxFlex="30px" fxLayout="row" class="ldap-value">
-              <input fxFlex="nogrow" class="ldap-input" formControlName="email" spellcheck="false"
-                     type="text" pInputText placeholder="">
-            </div>
-          </div>
+          </ng-container>
           <!-- Field Values - view mode -->
           <div fxFlex fxLayout="column" *ngIf="!LDAPEditMode">
             <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
@@ -409,7 +432,7 @@
   </div>
   <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end center">
     <mat-icon *ngIf="hasConnConfigError()" (click)="onConnErrorMessageClick()"
-              title="{{getConnConfigErrorTooltip()}}"
+              [matTooltip]="getConnConfigErrorTooltip()"
               class="ldap-test-error-icon ldap-test-error-icon-connection">
       error
     </mat-icon>

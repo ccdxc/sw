@@ -11,22 +11,26 @@
   </div>
 
   <div fxFlex="nogrow" fxLayout="column">
-    <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-up">
-      <mat-icon [matTooltip]="'Move Local Order Up'" *ngIf="canRaiseAuthRank()"
-                (click)="raiseAuthRank()" fxFlex="nogrow">
-        arrow_upward
-      </mat-icon>
-    </div>
+    <ng-container *roleGuard="'authauthenticationpolicy_update'">
+      <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-up">
+        <mat-icon [matTooltip]="'Move Local Order Up'" *ngIf="canRaiseAuthRank()"
+                  (click)="raiseAuthRank()" fxFlex="nogrow">
+          arrow_upward
+        </mat-icon>
+      </div>
+    </ng-container>
     <div fxFlex="noshrink" fxLayout="row" fxLayoutAlign="end center">
       <div *ngIf="currentRank != null" fxFlex="nogrow" class="authpolicy-rank"> {{currentRank + 1}}
       </div>
     </div>
-    <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-down">
-      <mat-icon [matTooltip]="'Move Local Order Down'" fxFlex="nogrow" *ngIf="canLowerAuthRank()"
-                (click)="lowerAuthRank()">
-        arrow_downward
-      </mat-icon>
-    </div>
+    <ng-container *roleGuard="'authauthenticationpolicy_update'">
+      <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-down">
+        <mat-icon [matTooltip]="'Move Local Order Down'" fxFlex="nogrow" *ngIf="canLowerAuthRank()"
+                  (click)="lowerAuthRank()">
+          arrow_downward
+        </mat-icon>
+      </div>
+    </ng-container>
   </div>
 
 </div>
