@@ -630,6 +630,9 @@ func (n *NMD) StartRestServer() error {
 
 	router.HandleFunc("/api/v1/naples/profiles/{ProfileName}", httputils.MakeHTTPHandler(n.NaplesProfileDeleteHandler))
 
+	t4 := router.Methods("PUT").Subrouter()
+	t4.HandleFunc(ProfileURL, httputils.MakeHTTPHandler(n.NaplesProfileUpdateHandler))
+
 	// create listener
 	listener, err := net.Listen("tcp", n.listenURL)
 	if err != nil {
@@ -1447,4 +1450,33 @@ func macToUint64(macAddr net.HardwareAddr) (mac uint64) {
 	}
 	mac = binary.BigEndian.Uint64(b)
 	return
+}
+
+// NaplesProfileUpdateHandler is the REST handler for Naples Profile PUT
+func (n *NMD) NaplesProfileUpdateHandler(r *http.Request) (interface{}, error) {
+	req := nmd.NaplesProfile{}
+	resp := NaplesConfigResp{}
+
+	content, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Errorf("Failed to read request: %v", err)
+		resp.ErrorMsg = err.Error()
+		return resp, err
+	}
+
+	if err = json.Unmarshal(content, &req); err != nil {
+		log.Errorf("Unmarshal err %s", content)
+		resp.ErrorMsg = err.Error()
+		return resp, err
+	}
+	log.Infof("Naples Update Profile Request: %+v", req)
+
+	err = n.UpdateNaplesProfile(req)
+	if err != nil {
+		resp.ErrorMsg = err.Error()
+		return resp, err
+	}
+	log.Infof("Naples Profile Response: %+v", resp)
+
+	return resp, nil
 }

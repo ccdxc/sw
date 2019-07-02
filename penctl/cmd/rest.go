@@ -418,3 +418,57 @@ func restDelete(url string) ([]byte, error) {
 	}
 	return bodyBytes, nil
 }
+
+func restPut(v interface{}, url string) error {
+	payloadBytes, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	if verbose {
+		var prettyJSON bytes.Buffer
+		error := json.Indent(&prettyJSON, payloadBytes, "", "\t")
+		if error != nil {
+			return err
+		}
+
+		fmt.Println("Json output:", string(prettyJSON.Bytes()))
+	}
+	body := bytes.NewReader(payloadBytes)
+
+	if ur, err := getNaplesURL(); err == nil {
+		url = ur + url
+	} else {
+		return err
+	}
+	if verbose {
+		fmt.Println("URL: ", url)
+	}
+	postReq, err := http.NewRequest("PUT", url, body)
+	if err != nil {
+		return err
+	}
+	postReq.Header.Set("Content-Type", "application/json")
+	printHTTPReq(postReq)
+	postResp, err := penHTTPClient.Do(postReq)
+	if err != nil {
+		return err
+	}
+	defer postResp.Body.Close()
+	printHTTPResp(postResp)
+	if postResp.StatusCode != 200 {
+		if verbose {
+			fmt.Println(postResp.Status + " " + url)
+			fmt.Println(postResp.Body)
+		}
+		bodyBytes, _ := ioutil.ReadAll(postResp.Body)
+		jsonResp := state.NaplesConfigResp{}
+		json.Unmarshal(bodyBytes[:len(bodyBytes)-1], &jsonResp)
+		return errors.New(jsonResp.ErrorMsg)
+	}
+	if verbose {
+		fmt.Println("Successfully posted the request")
+		fmt.Println("Status:", postResp.Status)
+		fmt.Println("StatusCode: ", postResp.StatusCode)
+	}
+	return nil
+}

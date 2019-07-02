@@ -732,3 +732,49 @@ func (n *NMD) GenChallengeResponse(nic *cmd.SmartNIC, challenge []byte) ([]byte,
 	}
 	return certs.GeneratePoPChallengeResponse(signer, challenge)
 }
+
+// UpdateNaplesProfile creates a Naples Profile
+func (n *NMD) UpdateNaplesProfile(profile nmd.NaplesProfile) error {
+	log.Infof("Creating Naples Profile : %v", profile)
+	// Validate the number of LIFs
+	if !(profile.Spec.NumLifs == 1 || profile.Spec.NumLifs == 16) {
+		return fmt.Errorf("requested lif number is not supported. Expecting either 1 or 16")
+	}
+
+	if profile.Spec.DefaultPortAdmin != nmd.PortAdminState_PORT_ADMIN_STATE_ENABLE.String() && profile.Spec.DefaultPortAdmin != nmd.PortAdminState_PORT_ADMIN_STATE_DISABLE.String() {
+		log.Infof("Invalid port admin state set. Setting to default of Enabled.")
+		profile.Spec.DefaultPortAdmin = nmd.PortAdminState_PORT_ADMIN_STATE_ENABLE.String()
+	}
+
+	n.Lock()
+	defer n.Unlock()
+	found := false
+	// ensure the profile name is unique.
+	for _, p := range n.profiles {
+		if profile.Name == p.Name {
+			found = true
+			p.Spec.DefaultPortAdmin = profile.Spec.DefaultPortAdmin
+			p.Spec.NumLifs = profile.Spec.NumLifs
+
+			c, _ := types.TimestampProto(time.Now())
+			p.ModTime = api.Timestamp{
+				Timestamp: *c,
+			}
+			break
+		}
+	}
+
+	if !found {
+		log.Errorf("Profile %v not found.", profile.Name)
+		return fmt.Errorf("profile %v not found", profile.Name)
+	}
+
+	// persist profile
+	if err := n.store.Write(&profile); err != nil {
+		log.Errorf("Failed to persist naples profile. Err: %v", err)
+		return err
+	}
+	BackupNMDDB()
+
+	return nil
+}

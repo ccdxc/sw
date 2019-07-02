@@ -59,6 +59,14 @@ var naplesProfileDeleteCmd = &cobra.Command{
 	Args:  naplesProfileDeleteCmdValidator,
 }
 
+var naplesProfileUpdateCmd = &cobra.Command{
+	Use:   "naples-profile",
+	Short: "naples profile object",
+	Long:  "\n----------------------------\n Update NAPLES Profiles \n----------------------------\n",
+	RunE:  naplesProfileUpdateCmdHandler,
+	Args:  naplesProfileCreateCmdValidator,
+}
+
 var numLifs int32
 var controllers []string
 var managedBy, managementNetwork, priMac, id, mgmtIP, defaultGW, naplesProfile, profileName, portDefault string
@@ -69,6 +77,7 @@ func init() {
 	showCmd.AddCommand(naplesShowCmd, naplesProfileShowCmd)
 	createCmd.AddCommand(naplesProfileCreateCmd)
 	deleteCmd.AddCommand(naplesProfileDeleteCmd)
+	updateCmd.AddCommand(naplesProfileUpdateCmd)
 
 	naplesCmd.Flags().StringSliceVarP(&controllers, "controllers", "c", make([]string, 0), "List of controller IP addresses or ids")
 	naplesCmd.Flags().StringVarP(&managedBy, "managed-by", "o", "host", "NAPLES Management. host or network")
@@ -84,6 +93,10 @@ func init() {
 	naplesProfileCreateCmd.Flags().StringVarP(&portDefault, "port-default", "p", "enable", "Set default port admin state for next reboot. (enable | disable)")
 
 	naplesProfileDeleteCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the NAPLES profile to be deleted")
+
+	naplesProfileUpdateCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the NAPLES profile to be created")
+	naplesProfileUpdateCmd.Flags().Int32VarP(&numLifs, "num-lifs", "i", 1, "Maximum number of LIFs on the eth device. 1 or 16")
+	naplesProfileUpdateCmd.Flags().StringVarP(&portDefault, "port-default", "p", "enable", "Set default port admin state for next reboot. (enable | disable)")
 }
 
 func naplesCmdHandler(cmd *cobra.Command, args []string) error {
@@ -224,11 +237,6 @@ func naplesProfileCreateCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 func naplesProfileDeleteCmdHandler(cmd *cobra.Command, args []string) error {
-	// check if profile exists.
-	if err := checkProfileExists(profileName); err != nil {
-		return err
-	}
-
 	// check if currently attached profile is being deleted
 	if err := checkAttachedProfile(profileName); err != nil {
 		return err
@@ -249,6 +257,46 @@ func naplesProfileCreateCmdValidator(cmd *cobra.Command, args []string) (err err
 		err = errors.New("number of LIFs not supported. --num-lifs should either be 1 or 16")
 	}
 	return
+}
+
+func naplesProfileUpdateCmdHandler(cmd *cobra.Command, args []string) error {
+	var portState string
+
+	// check if currently attached profile is being deleted
+	if err := checkAttachedProfile(profileName); err != nil {
+		fmt.Printf("%v is currently applied, all changes will be applicable after reboot only\n", profileName)
+	}
+
+	if portDefault == "enable" {
+		portState = nmd.PortAdminState_PORT_ADMIN_STATE_ENABLE.String()
+	} else if portDefault == "disable" {
+		portState = nmd.PortAdminState_PORT_ADMIN_STATE_DISABLE.String()
+	}
+
+	profile := nmd.NaplesProfile{
+		TypeMeta: api.TypeMeta{Kind: "NaplesProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name: profileName,
+		},
+		Spec: nmd.NaplesProfileSpec{
+			NumLifs:          numLifs,
+			DefaultPortAdmin: portState,
+		},
+	}
+
+	err := restPut(profile, "api/v1/naples/profiles/")
+	if err != nil {
+		if strings.Contains(err.Error(), "EOF") {
+			if verbose {
+				fmt.Println("success")
+			}
+		} else {
+			fmt.Println("Unable to update profile.")
+			fmt.Println("Error:", err.Error())
+		}
+		return err
+	}
+	return err
 }
 
 func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
