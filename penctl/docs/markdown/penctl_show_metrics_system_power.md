@@ -1,16 +1,6 @@
 ## penctl show metrics system power
 
-System power information:
-
-
-Value Description:
-
-pin: Input power to the system.
-pout1: Core output power.
-pout2: Arm output power.
-The power is milli Watt
-
-
+System power information
 
 ### Synopsis
 

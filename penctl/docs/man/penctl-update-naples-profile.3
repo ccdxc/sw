@@ -5,27 +5,36 @@
 
 .SH NAME
 .PP
-penctl\-show\-naples\-config \- Show NAPLES Configuration
+penctl\-update\-naples\-profile \- naples profile object
 
 
 .SH SYNOPSIS
 .PP
-\fBpenctl show naples\-config [flags]\fP
+\fBpenctl update naples\-profile [flags]\fP
 
 
 .SH DESCRIPTION
 .ti 0
 \l'\n(.lu'
 
-.PP
-Show NAPLES Configuration
-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-n
-
+.SH Update NAPLES Profiles
 
 .SH OPTIONS
 .PP
 \fB\-h\fP, \fB\-\-help\fP[=false]
-    help for naples\-config
+    help for naples\-profile
+
+.PP
+\fB\-n\fP, \fB\-\-name\fP=""
+    Name of the NAPLES profile to be created
+
+.PP
+\fB\-i\fP, \fB\-\-num\-lifs\fP=1
+    Maximum number of LIFs on the eth device. 1 or 16
+
+.PP
+\fB\-p\fP, \fB\-\-port\-default\fP="enable"
+    Set default port admin state for next reboot. (enable | disable)
 
 
 .SH OPTIONS INHERITED FROM PARENT COMMANDS
@@ -52,4 +61,4 @@ Show NAPLES Configuration
 
 .SH SEE ALSO
 .PP
-\fBpenctl\-show(3)\fP
+\fBpenctl\-update(3)\fP

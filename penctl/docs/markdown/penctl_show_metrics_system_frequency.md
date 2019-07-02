@@ -1,14 +1,6 @@
 ## penctl show metrics system frequency
 
-System frequency information:
-
-
-Value Description:
-
-frequency: Frequency of the system.
-The frequency is MHz
-
-
+System frequency information
 
 ### Synopsis
 

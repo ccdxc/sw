@@ -1,16 +1,6 @@
 ## penctl show metrics system temp
 
-System temperature information:
-
-
-Value Description:
-
-local_temperature: Temperature of the board.
-die_temperature: Temperature of the die.
-hbm_temperature: Temperature of the hbm.
-The temperature is degree Celcius
-
-
+System temperature information
 
 ### Synopsis
 

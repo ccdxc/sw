@@ -3,33 +3,7 @@
 penctl show metrics sonic sequencer_metrics
 -------------------------------------------
 
-Metrics for sequencer queues:
- Key indices - LifId: logical interface ID, QId: queue ID
-
-
-Value Description:
-
-
-InterruptsRaised	: CPU interrupts raised
-NextDBsRung	: chaining doorbells rung
-SeqDescsProcessed	: sequencer descriptors processed
-SeqDescsAborted	: sequencer descriptors aborted (due to reset)
-StatusPdmaXfers	: status descriptors copied
-HwDescXfers	: descriptors transferred to hardware
-HwBatchErrors	: hardware batch (length) errors
-HwOpErrors	: hardware operation errors
-AolUpdateReqs	: AOL list updates requested
-SglUpdateReqs	: scatter/gather list updates requested
-SglPdmaXfers	: payload DMA transfers executed
-SglPdmaErrors	: payload DMA errors encountered
-SglPadOnlyXfers	: pad-data-only DMA transfers executed
-SglPadOnlyErrors	: pad-data-only DMA errors encountered
-AltDescsTaken	: alternate (bypass-onfail) descriptors executed
-AltBufsTaken	: alternate buffers taken
-LenUpdateReqs	: length updates requested
-CpHeaderUpdates	: compression header updates requested
-SeqHwBytes	: bytes processed
-
+Metrics for sequencer queues
 
 Synopsis
 ~~~~~~~~

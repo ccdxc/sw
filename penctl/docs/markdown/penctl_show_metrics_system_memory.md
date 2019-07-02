@@ -1,16 +1,6 @@
 ## penctl show metrics system memory
 
-System memory information:
-
-
-Value Description:
-
-Total Memory: Total Memory of the system.
-Available Memory: Available Memory of the system.
-Free Memory: Free Memory of the system.
-The memory is KB
-
-
+System memory information
 
 ### Synopsis
 

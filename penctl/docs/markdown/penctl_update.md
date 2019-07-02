@@ -31,6 +31,7 @@ Update Object
 * [penctl](penctl.md)	 - Pensando CLIs
 * [penctl update interface](penctl_update_interface.md)	 - Create interface
 * [penctl update naples](penctl_update_naples.md)	 - Set NAPLES Modes and Profiles
+* [penctl update naples-profile](penctl_update_naples-profile.md)	 - naples profile object
 * [penctl update port](penctl_update_port.md)	 - update port object
 * [penctl update qos-class](penctl_update_qos-class.md)	 - qos-class object
 * [penctl update ssh-pub-key](penctl_update_ssh-pub-key.md)	 - Configure ssh pub-key on Naples

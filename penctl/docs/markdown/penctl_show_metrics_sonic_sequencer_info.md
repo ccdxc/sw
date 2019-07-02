@@ -1,21 +1,6 @@
 ## penctl show metrics sonic sequencer_info
 
-Sequencer queues information:
- Key indices - LifId: logical interface ID, QId: queue ID
-
-
-Value Description:
-
-
-QStateAddr	: queue state memory address
-QGroup	: queue group
-           : 0 - compress/decompress
-           : 1 - compress/decompress status
-           : 2 - crypto
-           : 3 - crypto status
-
-CoreId	: CPU core ID (not available currently
-
+Sequencer queues information
 
 ### Synopsis
 
