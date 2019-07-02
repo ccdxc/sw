@@ -211,7 +211,8 @@ func (ros *RolloutState) runFSM() {
 func fsmAcCreated(ros *RolloutState) {
 	ros.Status.OperationalState = rollout.RolloutStatus_PRECHECK_IN_PROGRESS.String()
 	ros.setPreviousVersion(ros.writer.GetClusterVersion())
-	ros.Status.CompletionPercentage = 0
+	log.Infof("Completion Percentage %v", ros.Rollout.Status.CompletionPercentage)
+	ros.Status.CompletionPercentage = ros.Rollout.Status.CompletionPercentage
 	ros.computeProgressDelta()
 
 	if ros.Spec.GetSuspend() {

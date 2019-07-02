@@ -155,6 +155,7 @@ func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *pr
 
 	var phase rollout.RolloutPhase_Phases
 	var reason, message string
+	var updateStatus = false
 	snicState.Mutex.Lock()
 	for _, s := range newStatus.OpStatus {
 		log.Infof("Updating OpStatus %+v", s)
@@ -166,6 +167,7 @@ func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *pr
 			continue
 		}
 		evt := fsmEvInvalid
+		updateStatus = true
 		if s.OpStatus == "success" {
 			switch s.Op {
 			case protos.SmartNICOp_SmartNICPreCheckForDisruptive:
@@ -212,7 +214,9 @@ func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *pr
 	}
 	snicState.Statemgr.memDB.UpdateObject(snicState)
 	snicState.Mutex.Unlock()
-	snicState.ros.setSmartNICPhase(snicState.Name, reason, message, phase)
+	if updateStatus {
+		snicState.ros.setSmartNICPhase(snicState.Name, reason, message, phase)
+	}
 
 }
 
