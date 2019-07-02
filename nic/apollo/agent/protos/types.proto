@@ -92,7 +92,7 @@ message AddressRange {
     // IPv4 address range
     IPRange IPv4Range = 1;
     // IPv6 address range
-    IPRange IPv6range = 2;
+    IPRange IPv6Range = 2;
   }
 }
 
@@ -112,7 +112,7 @@ message PortRange {
   uint32 PortHigh = 2 [(gogoproto.moretags) = "meta:range:0-65535"];
 }
 
-// type of the virtual private cloud
+// type of the direction in which policy is enforced
 enum RuleDir {
   RULE_DIR_NONE    = 0;
   RULE_DIR_INGRESS = 1;

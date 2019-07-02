@@ -49,11 +49,6 @@ rfc_policy_rule_dump (policy_t *policy, uint32_t rule_num)
     } else {
         rule_str += "v6, ";
     }
-    if (rule->stateful) {
-        rule_str += "stateful : ";
-    } else {
-        rule_str += "stateless : ";
-    }
     rule_str += "match = (proto " +
         std::to_string(rule->match.l3_match.ip_proto) + ", ";
     rule_str+=

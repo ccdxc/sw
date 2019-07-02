@@ -18,7 +18,7 @@ service SecurityPolicySvc {
   rpc SecurityPolicyDelete (SecurityPolicyDeleteRequest) returns (SecurityPolicyDeleteResponse) {}
 }
 
-// Securit rule action is one of the below
+// Security rule action is one of the below
 enum SecurityRuleAction {
   SECURITY_RULE_ACTION_NONE   = 0;
   SECURITY_RULE_ACTION_ALLOW  = 1;

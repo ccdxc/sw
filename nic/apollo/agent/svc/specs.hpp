@@ -44,7 +44,6 @@
 #include "nic/apollo/agent/svc/mirror.hpp"
 #include "nic/apollo/agent/svc/subnet.hpp"
 #include "nic/apollo/agent/svc/mapping.hpp"
-#include "nic/apollo/agent/svc/policy.hpp"
 #include "gen/proto/types.pb.h"
 
 // Populate proto buf spec from meter API spec
