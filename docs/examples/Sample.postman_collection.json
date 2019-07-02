@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "3fd02264-ca08-40f9-a873-add971e63ead",
+		"_postman_id": "56159253-f2aa-4e12-8d15-3f95b21cfd65",
 		"name": "Demo",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -242,10 +242,6 @@
 					"request": {
 						"method": "GET",
 						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
 						"url": {
 							"raw": "{{apigwurl}}/configs/cluster/v1/hosts",
 							"host": [
@@ -338,10 +334,6 @@
 					"request": {
 						"method": "GET",
 						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
 						"url": {
 							"raw": "{{apigwurl}}/configs/workload/v1/workloads",
 							"host": [
@@ -362,10 +354,6 @@
 					"request": {
 						"method": "GET",
 						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
 						"url": {
 							"raw": "{{apigwurl}}/configs/network/v1/networks",
 							"host": [
@@ -431,10 +419,6 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": ""
-								},
 								"url": {
 									"raw": "{{apigwurl}}/configs/auth/v1/authn-policy",
 									"host": [
@@ -455,10 +439,6 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": ""
-								},
 								"url": {
 									"raw": "{{apigwurl}}/configs/auth/v1/role-bindings",
 									"host": [
@@ -479,10 +459,6 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": ""
-								},
 								"url": {
 									"raw": "{{apigwurl}}/configs/auth/v1/roles",
 									"host": [
@@ -503,10 +479,6 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": ""
-								},
 								"url": {
 									"raw": "{{apigwurl}}/configs/auth/v1/users",
 									"host": [
@@ -533,10 +505,6 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": ""
-								},
 								"url": {
 									"raw": "{{apigwurl}}/configs/cluster/v1/cluster",
 									"host": [
@@ -557,10 +525,6 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": ""
-								},
 								"url": {
 									"raw": "{{apigwurl}}/configs/cluster/v1/nodes",
 									"host": [
@@ -760,10 +724,6 @@
 					"request": {
 						"method": "GET",
 						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
 						"url": {
 							"raw": "{{apigwurl}}/configs/cluster/v1/smartnics",
 							"host": [
@@ -847,10 +807,6 @@
 					"request": {
 						"method": "GET",
 						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
 						"url": {
 							"raw": "{{apigwurl}}/configs/security/v1/sgpolicies",
 							"host": [
@@ -871,10 +827,6 @@
 					"request": {
 						"method": "GET",
 						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
 						"url": {
 							"raw": "{{apigwurl}}/configs/security/v1/apps",
 							"host": [
@@ -955,7 +907,7 @@
 							"raw": ""
 						},
 						"url": {
-							"raw": "{{apigwurl}}/configs/security/v1/sgpolicies/policy1",
+							"raw": "{{apigwurl}}/configs/security/v1/apps/ftpApp",
 							"host": [
 								"{{apigwurl}}"
 							],
@@ -963,8 +915,8 @@
 								"configs",
 								"security",
 								"v1",
-								"sgpolicies",
-								"policy1"
+								"apps",
+								"ftpApp"
 							]
 						}
 					},
@@ -999,7 +951,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"kind\": \"AlertPolicy\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"alertPolicy1\",\n        \"tenant\": \"default\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"resource\": \"Event\",\n        \"severity\": \"INFO\",\n        \"message\": \"a smartNIC got admitted\",\n        \"requirements\": [{\n            \"key\": \"type\",\n            \"operator\": \"equals\",\n            \"values\": [\"NICAdmitted\"]\n        }],\n        \"enable\": true\n    }\n}"
+							"raw": "{\n    \"kind\": \"AlertPolicy\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"alertPolicy1\",\n        \"tenant\": \"default\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"resource\": \"Event\",\n        \"severity\": \"INFO\",\n        \"message\": \"a smartNIC got admitted\",\n        \"requirements\": [{\n            \"key\": \"type\",\n            \"operator\": \"equals\",\n            \"values\": [\"NIC_ADMITTED\"]\n        }],\n        \"enable\": true\n    }\n}"
 						},
 						"url": {
 							"raw": "{{apigwurl}}/configs/monitoring/v1/tenant/default/alertPolicies",

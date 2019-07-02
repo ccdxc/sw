@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	auditapi "github.com/pensando/sw/api/generated/audit"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw"
 )
 
@@ -131,7 +131,7 @@ func (s *svcProfile) ClearPostCallHooks() {
 }
 
 // SetDefaults sets any system wide defaults to the service profile. This
-//  is usually called during init and overriden if needed while registering
+//  is usually called during init and overridden if needed while registering
 //  hooks.
 func (s *svcProfile) SetDefaults() error {
 	// All defaults for the service profile go here.

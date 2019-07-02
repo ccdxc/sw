@@ -175,7 +175,7 @@ func (a *apiGw) extractHdrInfo(next http.Handler) http.Handler {
 		if len(p) > 3 && p[3] != "" {
 			r.Header.Set(apigw.GrpcMDRequestVersion, p[3])
 		} else {
-			a.logger.Errorf("Could not find Version (%s)", r.URL.Path)
+			a.logger.Debugf("Could not find Version (%s)", r.URL.Path)
 		}
 		if len(p) > 4 {
 			r.Header.Set(apigw.GrpcMDRequestURI, "/"+p[1]+"/"+p[2]+"/"+p[4])

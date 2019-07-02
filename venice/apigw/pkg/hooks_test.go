@@ -6,7 +6,7 @@ import (
 
 	"github.com/pensando/sw/api/generated/audit"
 
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 )
 
 type testHooks struct {
