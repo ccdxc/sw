@@ -606,7 +606,7 @@ action rfc_action_p3_1(pad,pr45, res45, pr44, res44,
     modify_field(scratch_metadata.field1, res44);
     modify_field(scratch_metadata.field10, pr45);
     modify_field(scratch_metadata.field1, res45);
-    modify_field(scratch_metadata.field2,  pad);
+    modify_field(scratch_metadata.field6,  pad);
 
     modify_field(scratch_metadata.field10,pr00>>(txdma_control.rfc_index%46)*10);
     modify_field(scratch_metadata.field1,res00>>(txdma_control.rfc_index%46)*1);
