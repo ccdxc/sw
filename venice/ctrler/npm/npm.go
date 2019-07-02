@@ -8,15 +8,15 @@
  *    +-----------------------+
  *        |             ^
  *        V             |
- *    +---------+    +--------+
- *    | Watcher |    | Writer |
- *  +---------------------------------------+
+ *    +-----------------------+
+ *    |     Controller kit    |
+ *  +-+-----------------------+-------------+
  *  |        Network State Manager          |
  *  | +---------+ +----------+ +----------+ |
  *  | | Network | | Endpoint | | SecGroup | |
  *  | +---------+ +----------+ +----------+ |
  *  +---------------------------------------+
- *  |               RPC Server              |
+ *  |            Nimbus Server              |
  *  +---------------------------------------+
  *       ^           ^            ^
  *       |           |            |
@@ -31,7 +31,13 @@ package npm
 
 import (
 	"context"
+	"encoding/json"
+	"expvar"
+	"fmt"
+	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
 
 	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
@@ -55,12 +61,7 @@ type Netctrler struct {
 }
 
 // NewNetctrler returns a controller instance
-func NewNetctrler(serverURL, restURL, apisrvURL, vmmURL string, resolver resolver.Interface, logger log.Logger) (*Netctrler, error) {
-	return NewNetctrlerWithDiagFlag(serverURL, restURL, apisrvURL, vmmURL, resolver, logger, false)
-}
-
-// NewNetctrlerWithDiagFlag returns a controller instance
-func NewNetctrlerWithDiagFlag(serverURL, restURL, apisrvURL, vmmURL string, resolver resolver.Interface, logger log.Logger, enableDiagnostics bool) (*Netctrler, error) {
+func NewNetctrler(serverURL, restURL, apisrvURL, vmmURL string, resolver resolver.Interface, logger log.Logger, enableDiagnostics bool) (*Netctrler, error) {
 
 	// init tsdb client
 	tsdbOpts := &tsdb.Opts{
@@ -106,7 +107,11 @@ func NewNetctrlerWithDiagFlag(serverURL, restURL, apisrvURL, vmmURL string, reso
 
 	// start the RPC server
 	rpcServer.Start()
-	msrv.Start()
+
+	// start debug REST server
+	if restURL != "" {
+		ctrler.runDebugRESTServer(restURL)
+	}
 
 	return &ctrler, nil
 }
@@ -116,10 +121,41 @@ func (c *Netctrler) Stop() error {
 	if c.rpcServer != nil {
 		c.rpcServer.Stop()
 	}
-	if c.mserver != nil {
-		c.mserver.Stop()
-	}
 
 	c.StateMgr.Stop()
+	return nil
+}
+
+// runDebugRESTServer starts REST server for debug purposes
+func (c *Netctrler) runDebugRESTServer(restURL string) error {
+	// start a debug http server
+	router := mux.NewRouter()
+	router.Methods("GET").Subrouter().Handle("/debug/vars", expvar.Handler())
+	router.Methods("GET").Subrouter().Handle("/nimbus/db/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		jData, err := c.mserver.DumpDatabase()
+		if err != nil {
+			log.Errorf("Error dumping nimbus server database. Err: %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jData)
+	}))
+	router.Methods("GET").Subrouter().Handle("/ctkit/db/{kind}/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		kind, ok := vars["kind"]
+		if !ok {
+			http.Error(w, fmt.Sprintf("kind not specified"), http.StatusInternalServerError)
+			return
+		}
+		objlist := c.StateMgr.ListObjects(kind)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(objlist)
+	}))
+
+	// start the server
+	go http.ListenAndServe(restURL, router)
+
 	return nil
 }

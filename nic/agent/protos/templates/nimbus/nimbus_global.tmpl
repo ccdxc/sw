@@ -82,12 +82,9 @@ func (ms *MbusServer) Stats(kind, cname string) api.Counter {
 	return tsdbObj.Counter(cname)
 }
 
-// Start starts the RPC server
-func (ms *MbusServer) Start() {}
-
-// Stop stops the rpc server
-func (ms *MbusServer) Stop() error {
-	return nil
+// DumpDatabase dumps the entire database as json
+func (ms *MbusServer) DumpDatabase() ([]byte, error) {
+	return ms.memDB.MarshalJSON()
 }
 
 // NewMbusServer creates a new instance of message bus server
