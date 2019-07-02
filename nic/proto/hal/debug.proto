@@ -60,6 +60,8 @@ service Debug {
 
   rpc XcvrValidCheckEnable  (types.Empty) returns (types.Empty) {}
   rpc XcvrValidCheckDisable (types.Empty) returns (types.Empty) {}
+
+  rpc MemoryTrim (types.Empty) returns (types.Empty) {}
 }
 
 

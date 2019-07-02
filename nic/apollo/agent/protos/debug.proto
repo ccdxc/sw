@@ -28,6 +28,7 @@ service DebugSvc {
   rpc SessionStatsGet (SessionStatsGetRequest) returns (SessionStatsGetResponse) {}
   rpc FteStatsGet (types.Empty) returns (FteStatsGetResponse) {}
   rpc FteStatsClear (FteStatsClearRequest) returns (FteStatsClearResponse) {}
+  rpc MemoryTrim (types.Empty) returns (types.Empty) {}
 }
 
 enum TraceLevel {

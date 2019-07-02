@@ -64,6 +64,13 @@ var debugUpdateCmd = &cobra.Command{
 	Long:  "update object",
 }
 
+var memoryDebugCmd = &cobra.Command{
+	Use:   "memory",
+	Short: "debug memory",
+	Long:  "debug memory",
+	Run:   memoryDebugCmdHandler,
+}
+
 var regDebugCmd = &cobra.Command{
 	Use:   "register",
 	Short: "set register data",
@@ -179,6 +186,7 @@ func init() {
 	debugCmd.AddCommand(debugUpdateCmd)
 	debugCmd.AddCommand(debugDeleteCmd)
 	debugCmd.AddCommand(testDebugCmd)
+	debugCmd.AddCommand(memoryDebugCmd)
 	traceDebugCmd.AddCommand(flushLogsDebugCmd)
 	fwDebugCmd.AddCommand(secProfDebugCmd)
 	showCmd.AddCommand(traceShowCmd)
@@ -222,11 +230,42 @@ func init() {
 	pbPlatDebugCmd.Flags().StringVar(&platPbPause, "pause", "", "Enable or Disable packet-buffer pause using enable | disable")
 	pbPlatDebugCmd.Flags().Uint32Var(&spanThreshold, "span-threshold", 900, "Span queue threshold")
 
+	memoryDebugCmd.Flags().Bool("memory-trim", false, "Reclaim free memory from malloc")
+	memoryDebugCmd.MarkFlagRequired("memory-trim")
+
 	// debug transceiver
 	debugCmd.AddCommand(xcvrDebugCmd)
 
 	// debug transceiver --valid-check <enable|disable>
 	xcvrDebugCmd.Flags().StringVar(&xcvrValid, "valid-check", "enable", "Enable/Disable transceiver valid checks for links")
+}
+
+func memoryDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := halproto.NewDebugClient(c)
+
+	var empty *halproto.Empty
+
+	// HAL call
+	_, err = client.MemoryTrim(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("Memory trim failed. %v\n", err)
+		return
+	}
+
+	fmt.Printf("Memory trim succeeded\n")
 }
 
 func pbPlatDebugCmdHandler(cmd *cobra.Command, args []string) {

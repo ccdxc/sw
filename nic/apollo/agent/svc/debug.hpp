@@ -62,6 +62,8 @@ public:
                        pds::FteStatsGetResponse *rsp) override;
     Status FteStatsClear(ServerContext *context, const pds::FteStatsClearRequest *req,
                          pds::FteStatsClearResponse *rsp) override;
+    Status MemoryTrim(ServerContext *context, const Empty *req,
+                      Empty *rsp) override;
 };
 
 #endif    // __AGENT_SVC_DEBUG_HPP__

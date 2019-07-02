@@ -825,6 +825,24 @@ func (mr *MockDebugClientMockRecorder) XcvrValidCheckDisable(ctx, in interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "XcvrValidCheckDisable", reflect.TypeOf((*MockDebugClient)(nil).XcvrValidCheckDisable), varargs...)
 }
 
+// MemoryTrim mocks base method
+func (m *MockDebugClient) MemoryTrim(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "MemoryTrim", varargs...)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MemoryTrim indicates an expected call of MemoryTrim
+func (mr *MockDebugClientMockRecorder) MemoryTrim(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MemoryTrim", reflect.TypeOf((*MockDebugClient)(nil).MemoryTrim), varargs...)
+}
+
 // MockDebugServer is a mock of DebugServer interface
 type MockDebugServer struct {
 	ctrl     *gomock.Controller
@@ -1249,4 +1267,17 @@ func (m *MockDebugServer) XcvrValidCheckDisable(arg0 context.Context, arg1 *Empt
 // XcvrValidCheckDisable indicates an expected call of XcvrValidCheckDisable
 func (mr *MockDebugServerMockRecorder) XcvrValidCheckDisable(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "XcvrValidCheckDisable", reflect.TypeOf((*MockDebugServer)(nil).XcvrValidCheckDisable), arg0, arg1)
+}
+
+// MemoryTrim mocks base method
+func (m *MockDebugServer) MemoryTrim(arg0 context.Context, arg1 *Empty) (*Empty, error) {
+	ret := m.ctrl.Call(m, "MemoryTrim", arg0, arg1)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MemoryTrim indicates an expected call of MemoryTrim
+func (mr *MockDebugServerMockRecorder) MemoryTrim(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MemoryTrim", reflect.TypeOf((*MockDebugServer)(nil).MemoryTrim), arg0, arg1)
 }

@@ -169,6 +169,9 @@ public:
     Status SnakeTestGet(ServerContext *context,
                         const Empty *req,
                         SnakeTestResponseMsg *rsp_msg) override;
+    Status MemoryTrim(ServerContext *context,
+                      const Empty *req,
+                      Empty *rsp_msg) override;
 };
 
 #endif  // __DEBUG_SVC_HPP__

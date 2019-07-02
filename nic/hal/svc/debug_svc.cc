@@ -13,6 +13,7 @@
 #include "nic/hal/src/debug/snake.hpp"
 #include "nic/include/asic_pd.hpp"
 #include "nic/linkmgr/linkmgr_debug.hpp"
+#include <malloc.h>
 
 // TODO: we don't seem to be using these ??
 #include <vector>
@@ -603,5 +604,16 @@ DebugServiceImpl::SnakeTestGet(ServerContext *context,
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
     hal::snake_test_get(rsp_msg);
     hal::hal_cfg_db_close();
+    return Status::OK;
+}
+
+Status
+DebugServiceImpl::MemoryTrim(ServerContext *context,
+                             const Empty *req,
+                             Empty *rsp_msg)
+{
+    HAL_TRACE_DEBUG("Received memory trim");
+
+    malloc_trim(0);
     return Status::OK;
 }

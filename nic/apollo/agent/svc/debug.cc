@@ -252,6 +252,13 @@ DebugSvcImpl::TraceFlush(ServerContext *context, const Empty *req,
 }
 
 Status
+DebugSvcImpl::MemoryTrim(ServerContext *context, const Empty *req,
+                         Empty *rsp) {
+    malloc_trim(0);
+    return Status::OK;
+}
+
+Status
 DebugSvcImpl::HeapGet(ServerContext *context, const Empty *req,
                       pds::HeapGetResponse *rsp) {
     auto stats = rsp->mutable_stats();

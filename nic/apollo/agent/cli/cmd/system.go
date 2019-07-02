@@ -43,6 +43,13 @@ var traceDebugCmd = &cobra.Command{
 	Run:   traceDebugCmdHandler,
 }
 
+var memoryDebugCmd = &cobra.Command{
+	Use:   "memory",
+	Short: "debug memory",
+	Long:  "debug memory",
+	Run:   memoryDebugCmdHandler,
+}
+
 var llcDebugCmd = &cobra.Command{
 	Use:   "llc-cache",
 	Short: "debug system llc-cache",
@@ -88,9 +95,41 @@ func init() {
 	llcDebugCmd.Flags().StringVar(&llcTypeStr, "type", "none", "Specify LLC Cache type (Allowed: cache-read,cache-write,scratchpad-access,cache-hit,cache-miss,partial-write,cache-maint-op,eviction,retry-needed,retry-access,disable)")
 	llcDebugCmd.MarkFlagRequired("type")
 
+	debugCmd.AddCommand(memoryDebugCmd)
+	memoryDebugCmd.Flags().Bool("memory-trim", false, "Reclaim free memory from malloc")
+	memoryDebugCmd.MarkFlagRequired("memory-trim")
+
 	systemShowCmd.AddCommand(llcShowCmd)
 	systemShowCmd.AddCommand(tableShowCmd)
 	systemShowCmd.AddCommand(pbShowCmd)
+}
+
+func memoryDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewDebugSvcClient(c)
+
+	var empty *pds.Empty
+
+	// PDS call
+	_, err = client.MemoryTrim(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("Memory trim failed. %v\n", err)
+		return
+	}
+
+	fmt.Printf("Memory trim succeeded\n")
 }
 
 func pbShowCmdHandler(cmd *cobra.Command, args []string) {
