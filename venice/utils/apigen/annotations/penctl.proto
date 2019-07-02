@@ -5,9 +5,10 @@ package venice;
 import "google/protobuf/descriptor.proto";
 
 message PenCtlCmd {
-    string                 Cmd       = 1;
-    string                 HelpStr   = 2;
-    string                 RootCmd   = 3;
+    string                 Cmd            = 1;
+    string                 HelpStr        = 2;
+    string                 ShortHelpStr   = 3;
+    string                 RootCmd        = 4;
 }
 
 // Venice Option extensions applicable to messages

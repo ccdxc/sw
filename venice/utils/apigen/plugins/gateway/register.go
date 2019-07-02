@@ -92,9 +92,10 @@ type ServiceParams struct {
 
 // PenctlCmdOpts holds raw PenctlCmd options data from .proto files
 type PenctlCmdOpts struct {
-	Cmd     string
-	HelpStr string
-	RootCmd string
+	Cmd          string
+	HelpStr      string
+	ShortHelpStr string
+	RootCmd      string
 }
 
 // RestServiceOptions holds raw REST options data from .proto files
@@ -634,6 +635,7 @@ func getPenctlParentCmdOptions(m *descriptor.Message) ([]PenctlCmdOpts, error) {
 		penctlCmdOpt.Cmd = r.Cmd
 		penctlCmdOpt.RootCmd = r.RootCmd
 		penctlCmdOpt.HelpStr = r.HelpStr
+		penctlCmdOpt.ShortHelpStr = r.ShortHelpStr
 		if penctlCmdOpt.HelpStr == "" {
 			// generate the help string from options defined on the fields
 			if mopts, ok := getMsgMetricOptions(m); ok {
@@ -663,6 +665,7 @@ func getPenctlCmdOptions(m *descriptor.Message) (PenctlCmdOpts, error) {
 	penctlCmdOpts.Cmd = r.Cmd
 	penctlCmdOpts.RootCmd = r.RootCmd
 	penctlCmdOpts.HelpStr = r.HelpStr
+	penctlCmdOpts.ShortHelpStr = r.ShortHelpStr
 	if penctlCmdOpts.HelpStr == "" {
 		// generate the help string from options defined on the fields
 		if mopts, ok := getMsgMetricOptions(m); ok {

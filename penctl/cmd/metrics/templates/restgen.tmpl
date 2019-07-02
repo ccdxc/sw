@@ -20,14 +20,16 @@ import (
         {{range $params}}
           {{$cmd := .Cmd}}
           {{$rootCmd := .RootCmd}}
-          {{$helpStr:= .HelpStr}}
+          {{$longHelpStr:= .HelpStr}}
+          {{$shortHelpStr:= .ShortHelpStr}}
 //cmd - {{$cmd}}
 //rootCmd = {{$rootCmd}}
-//helpStr = {{$helpStr}}
+//longHelpStr = {{$longHelpStr}}
+//shortHelpStr = {{$shortHelpStr}}
         var {{ToLower $cmd}}ShowCmd = &cobra.Command{
                 Use:   "{{ToLower $cmd}}",
-                Short: "{{$helpStr}}",
-                Long:  "\n---------------------------------\n {{$helpStr}}\n---------------------------------\n",
+                Short: "{{$shortHelpStr}}",
+                Long:  "\n---------------------------------\n {{$longHelpStr}}\n---------------------------------\n",
         }
         {{end}}
       {{end}}
@@ -36,14 +38,16 @@ import (
         {{$param := (getPenctlCmdOptions .)}}
         {{$cmd := $param.Cmd}}
         {{$rootCmd := $param.RootCmd}}
-        {{$helpStr:= $param.HelpStr}}
+        {{$longHelpStr:= $param.HelpStr}}
+        {{$shortHelpStr:= $param.ShortHelpStr}}
 //cmd - {{$cmd}}
 //rootCmd = {{$rootCmd}}
-//helpStr = {{$helpStr}}
+//longHelpStr = {{$longHelpStr}}
+//shortHelpStr = {{$shortHelpStr}}
         var {{ToLower $cmd}}{{$rootCmd}}ShowCmd = &cobra.Command{
                 Use:   "{{ToLower $cmd}}",
-                Short: "{{$helpStr}}",
-                Long:  "\n---------------------------------\n {{$helpStr}}\n---------------------------------\n",
+                Short: "{{$shortHelpStr}}",
+                Long:  "\n---------------------------------\n {{$longHelpStr}}\n---------------------------------\n",
                 RunE:  {{ToLower $cmd}}{{$rootCmd}}ShowCmdHandler,
         }
 
@@ -92,10 +96,12 @@ import (
           {{range $params}}
             {{$cmd := .Cmd}}
             {{$rootCmd := .RootCmd}}
-            {{$helpStr:= .HelpStr}}
+            {{$longHelpStr:= .HelpStr}}
+            {{$shortHelpStr:= .ShortHelpStr}}
 //cmd - {{$cmd}}
 //rootCmd = {{$rootCmd}}
-//helpStr = {{$helpStr}}
+//longHelpStr = {{$longHelpStr}}
+//shortHelpStr = {{$shortHelpStr}}
             {{if strEq $rootCmd ""}}
                metricsShowCmd.AddCommand({{ToLower $cmd}}ShowCmd)
             {{else}}
@@ -108,7 +114,8 @@ import (
         {{$param := (getPenctlCmdOptions .)}}
         {{$cmd := $param.Cmd}}
         {{$rootCmd := $param.RootCmd}}
-        {{$helpStr:= $param.HelpStr}}
+        {{$longHelpStr:= $param.HelpStr}}
+        {{$shortHelpStr:= $param.ShortHelpStr}}
         {{ToLower $rootCmd}}ShowCmd.AddCommand({{ToLower $cmd}}{{$rootCmd}}ShowCmd)
        {{else}}
                 metricsShowCmd.AddCommand({{ToLower .GetName}}ShowCmd)

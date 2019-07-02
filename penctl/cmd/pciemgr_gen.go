@@ -14,10 +14,11 @@ import (
 
 //cmd - pciemgr
 //rootCmd = pcie
-//helpStr = Pcie Mgr Metrics information:\nnot_intr : notify total intrs.\nnot_spurious : notify spurious intrs.\nnot_cnt : notify total txns.\nnot_max : notify max txns per intr.\nnot_cfgrd : notify config reads.\nnot_cfgwr : notify config writes.\nnot_memrd : notify memory reads.\nnot_memwr : notify memory writes.\nnot_iord : notify io reads.\nnot_iowr : notify io writes.\nnot_unknown : notify unknown type.\nnot_rsrv0 : notify rsrv0.\nnot_rsrv1 : notify rsrv1.\nnot_msg : notify pcie message.\nnot_unsupported : notify unsupported.\nnot_pmv : notify pgm model violation.\nnot_dbpmv : notify doorbell pmv.\nnot_atomic : notify atomic trans.\nnot_pmtmiss : notify PMT miss.\nnot_pmrmiss : notify PMR miss.\nnot_prtmiss : notify PRT miss.\nnot_bdf2vfidmiss : notify bdf2vfid table miss.\nnot_prtoor : notify PRT out-of-range.\nnot_vfidoor : notify vfid out-of-range.\nnot_bdfoor : notify bdf out-of-range.\nnot_pmrind : notify PMR force indirect.\nnot_prtind : notify PRT force indirect.\nnot_pmrecc : notify PMR ECC error.\nnot_prtecc : notify PRT ECC error.\nind_intr : indirect total intrs.\nind_spurious : indirect spurious intrs.\nind_cfgrd : indirect config reads.\nind_cfgwr : indirect config writes.\nind_memrd : indirect memory reads.\nind_memwr : indirect memory writes.\nind_iord : indirect io reads.\nind_iowr : indirect io writes.\nind_unknown : indirect unknown type.\n\n
+//longHelpStr = Pcie Mgr Metrics information:\nnot_intr : notify total intrs.\nnot_spurious : notify spurious intrs.\nnot_cnt : notify total txns.\nnot_max : notify max txns per intr.\nnot_cfgrd : notify config reads.\nnot_cfgwr : notify config writes.\nnot_memrd : notify memory reads.\nnot_memwr : notify memory writes.\nnot_iord : notify io reads.\nnot_iowr : notify io writes.\nnot_unknown : notify unknown type.\nnot_rsrv0 : notify rsrv0.\nnot_rsrv1 : notify rsrv1.\nnot_msg : notify pcie message.\nnot_unsupported : notify unsupported.\nnot_pmv : notify pgm model violation.\nnot_dbpmv : notify doorbell pmv.\nnot_atomic : notify atomic trans.\nnot_pmtmiss : notify PMT miss.\nnot_pmrmiss : notify PMR miss.\nnot_prtmiss : notify PRT miss.\nnot_bdf2vfidmiss : notify bdf2vfid table miss.\nnot_prtoor : notify PRT out-of-range.\nnot_vfidoor : notify vfid out-of-range.\nnot_bdfoor : notify bdf out-of-range.\nnot_pmrind : notify PMR force indirect.\nnot_prtind : notify PRT force indirect.\nnot_pmrecc : notify PMR ECC error.\nnot_prtecc : notify PRT ECC error.\nind_intr : indirect total intrs.\nind_spurious : indirect spurious intrs.\nind_cfgrd : indirect config reads.\nind_cfgwr : indirect config writes.\nind_memrd : indirect memory reads.\nind_memwr : indirect memory writes.\nind_iord : indirect io reads.\nind_iowr : indirect io writes.\nind_unknown : indirect unknown type.\n\n
+//shortHelpStr =
 var pciemgrpcieShowCmd = &cobra.Command{
 	Use:   "pciemgr",
-	Short: "Pcie Mgr Metrics information:\nnot_intr : notify total intrs.\nnot_spurious : notify spurious intrs.\nnot_cnt : notify total txns.\nnot_max : notify max txns per intr.\nnot_cfgrd : notify config reads.\nnot_cfgwr : notify config writes.\nnot_memrd : notify memory reads.\nnot_memwr : notify memory writes.\nnot_iord : notify io reads.\nnot_iowr : notify io writes.\nnot_unknown : notify unknown type.\nnot_rsrv0 : notify rsrv0.\nnot_rsrv1 : notify rsrv1.\nnot_msg : notify pcie message.\nnot_unsupported : notify unsupported.\nnot_pmv : notify pgm model violation.\nnot_dbpmv : notify doorbell pmv.\nnot_atomic : notify atomic trans.\nnot_pmtmiss : notify PMT miss.\nnot_pmrmiss : notify PMR miss.\nnot_prtmiss : notify PRT miss.\nnot_bdf2vfidmiss : notify bdf2vfid table miss.\nnot_prtoor : notify PRT out-of-range.\nnot_vfidoor : notify vfid out-of-range.\nnot_bdfoor : notify bdf out-of-range.\nnot_pmrind : notify PMR force indirect.\nnot_prtind : notify PRT force indirect.\nnot_pmrecc : notify PMR ECC error.\nnot_prtecc : notify PRT ECC error.\nind_intr : indirect total intrs.\nind_spurious : indirect spurious intrs.\nind_cfgrd : indirect config reads.\nind_cfgwr : indirect config writes.\nind_memrd : indirect memory reads.\nind_memwr : indirect memory writes.\nind_iord : indirect io reads.\nind_iowr : indirect io writes.\nind_unknown : indirect unknown type.\n\n",
+	Short: "",
 	Long:  "\n---------------------------------\n Pcie Mgr Metrics information:\nnot_intr : notify total intrs.\nnot_spurious : notify spurious intrs.\nnot_cnt : notify total txns.\nnot_max : notify max txns per intr.\nnot_cfgrd : notify config reads.\nnot_cfgwr : notify config writes.\nnot_memrd : notify memory reads.\nnot_memwr : notify memory writes.\nnot_iord : notify io reads.\nnot_iowr : notify io writes.\nnot_unknown : notify unknown type.\nnot_rsrv0 : notify rsrv0.\nnot_rsrv1 : notify rsrv1.\nnot_msg : notify pcie message.\nnot_unsupported : notify unsupported.\nnot_pmv : notify pgm model violation.\nnot_dbpmv : notify doorbell pmv.\nnot_atomic : notify atomic trans.\nnot_pmtmiss : notify PMT miss.\nnot_pmrmiss : notify PMR miss.\nnot_prtmiss : notify PRT miss.\nnot_bdf2vfidmiss : notify bdf2vfid table miss.\nnot_prtoor : notify PRT out-of-range.\nnot_vfidoor : notify vfid out-of-range.\nnot_bdfoor : notify bdf out-of-range.\nnot_pmrind : notify PMR force indirect.\nnot_prtind : notify PRT force indirect.\nnot_pmrecc : notify PMR ECC error.\nnot_prtecc : notify PRT ECC error.\nind_intr : indirect total intrs.\nind_spurious : indirect spurious intrs.\nind_cfgrd : indirect config reads.\nind_cfgwr : indirect config writes.\nind_memrd : indirect memory reads.\nind_memwr : indirect memory writes.\nind_iord : indirect io reads.\nind_iowr : indirect io writes.\nind_unknown : indirect unknown type.\n\n\n---------------------------------\n",
 	RunE:  pciemgrpcieShowCmdHandler,
 }
@@ -37,10 +38,11 @@ func pciemgrpcieShowCmdHandler(cmd *cobra.Command, args []string) error {
 
 //cmd - port
 //rootCmd = pcie
-//helpStr = Pcie Port Metrics information:\n\n\nValue Description:\n\nintr_total : total port intrs.\nintr_ltssmst_early : link train before linkup.\nintr_ltssmst : link train after  linkup.\nintr_linkup2dn : link down.\nintr_linkdn2up : link up.\nintr_rstup2dn : mac up.\nintr_rstdn2up : mac down.\nintr_secbus : secondary bus set.\nlinkup : link is up.\nhostup : host is up (secbus).\nphypolllast : phy poll count (last).\nphypollmax : phy poll count (max).\nphypollperstn : phy poll lost perstn.\nphypollfail : phy poll failed.\ngatepolllast : gate poll count (last).\ngatepollmax : gate poll count (max).\nmarkerpolllast : marker poll count (last).\nmarkerpollmax : marker poll count (max).\naxipendpolllast : axipend poll count (last).\naxipendpollmax : axipend poll count (max).\nfaults : link faults.\n\n
+//longHelpStr = Pcie Port Metrics information:\n\n\nValue Description:\n\nintr_total : total port intrs.\nintr_ltssmst_early : link train before linkup.\nintr_ltssmst : link train after  linkup.\nintr_linkup2dn : link down.\nintr_linkdn2up : link up.\nintr_rstup2dn : mac up.\nintr_rstdn2up : mac down.\nintr_secbus : secondary bus set.\nlinkup : link is up.\nhostup : host is up (secbus).\nphypolllast : phy poll count (last).\nphypollmax : phy poll count (max).\nphypollperstn : phy poll lost perstn.\nphypollfail : phy poll failed.\ngatepolllast : gate poll count (last).\ngatepollmax : gate poll count (max).\nmarkerpolllast : marker poll count (last).\nmarkerpollmax : marker poll count (max).\naxipendpolllast : axipend poll count (last).\naxipendpollmax : axipend poll count (max).\nfaults : link faults.\n\n
+//shortHelpStr =
 var portpcieShowCmd = &cobra.Command{
 	Use:   "port",
-	Short: "Pcie Port Metrics information:\n\n\nValue Description:\n\nintr_total : total port intrs.\nintr_ltssmst_early : link train before linkup.\nintr_ltssmst : link train after  linkup.\nintr_linkup2dn : link down.\nintr_linkdn2up : link up.\nintr_rstup2dn : mac up.\nintr_rstdn2up : mac down.\nintr_secbus : secondary bus set.\nlinkup : link is up.\nhostup : host is up (secbus).\nphypolllast : phy poll count (last).\nphypollmax : phy poll count (max).\nphypollperstn : phy poll lost perstn.\nphypollfail : phy poll failed.\ngatepolllast : gate poll count (last).\ngatepollmax : gate poll count (max).\nmarkerpolllast : marker poll count (last).\nmarkerpollmax : marker poll count (max).\naxipendpolllast : axipend poll count (last).\naxipendpollmax : axipend poll count (max).\nfaults : link faults.\n\n",
+	Short: "",
 	Long:  "\n---------------------------------\n Pcie Port Metrics information:\n\n\nValue Description:\n\nintr_total : total port intrs.\nintr_ltssmst_early : link train before linkup.\nintr_ltssmst : link train after  linkup.\nintr_linkup2dn : link down.\nintr_linkdn2up : link up.\nintr_rstup2dn : mac up.\nintr_rstdn2up : mac down.\nintr_secbus : secondary bus set.\nlinkup : link is up.\nhostup : host is up (secbus).\nphypolllast : phy poll count (last).\nphypollmax : phy poll count (max).\nphypollperstn : phy poll lost perstn.\nphypollfail : phy poll failed.\ngatepolllast : gate poll count (last).\ngatepollmax : gate poll count (max).\nmarkerpolllast : marker poll count (last).\nmarkerpollmax : marker poll count (max).\naxipendpolllast : axipend poll count (last).\naxipendpollmax : axipend poll count (max).\nfaults : link faults.\n\n\n---------------------------------\n",
 	RunE:  portpcieShowCmdHandler,
 }
@@ -60,10 +62,11 @@ func portpcieShowCmdHandler(cmd *cobra.Command, args []string) error {
 
 //cmd - pcie
 //rootCmd =
-//helpStr = Metrics for pciemgr
+//longHelpStr = Metrics for pciemgr
+//shortHelpStr =
 var pcieShowCmd = &cobra.Command{
 	Use:   "pcie",
-	Short: "Metrics for pciemgr",
+	Short: "",
 	Long:  "\n---------------------------------\n Metrics for pciemgr\n---------------------------------\n",
 }
 
@@ -75,7 +78,8 @@ func init() {
 
 	//cmd - pcie
 	//rootCmd =
-	//helpStr = Metrics for pciemgr
+	//longHelpStr = Metrics for pciemgr
+	//shortHelpStr =
 
 	metricsShowCmd.AddCommand(pcieShowCmd)
 
