@@ -63,7 +63,7 @@ import (
 	 {{if (hasExtension "venice.metricInfo" .) }}
         {{$param := (getMsgMetricOptionsHdlr .)}}
         {{$scope := $param.Scope}}
-        {{if (or (strEq $scope "UnknownScope") (strEq $scope "PerFwRule") (strEq $scope "PerRingPerSubRing") (strEq $scope "PerLIFPerQ") (strEq $scope "PerPciePort"  ) ) }}
+        {{if (or (strEq $scope "UnknownScope") (strEq $scope "PerRingPerSubRing") (strEq $scope "PerLIFPerQ") (strEq $scope "PerPciePort"  ) ) }}
      return nil, nil
         {{else}}
 		iter, err := goproto.New{{.GetName}}Iterator()
