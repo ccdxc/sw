@@ -22,9 +22,10 @@ func RunShellCmd(cmdStr string) ([]byte, error) {
 }
 
 // GetDelphiObject gets delphi object details
-func GetDelphiObject(obj string) error {
+func GetDelphiObject(obj string) []byte {
 	log.Infof("Getting DelphiObject : %v", obj)
-	return nil
+	ret, _ := RunShellCmd("delphictl db get " + obj)
+	return ret
 }
 
 // MakeRESTCall  makes a rest call
@@ -34,9 +35,11 @@ func MakeRESTCall(cmd string) error {
 }
 
 // CollectFile copies file into the techsupport bundle
-func CollectFile(fileName string) error {
+func CollectFile(techSupportDir, fileName string) error {
 	log.Infof("Collecting File : %v", fileName)
-	return nil
+	cmd := fmt.Sprintf("mkdir -p %v/%v && cp %v/* %v/%v/", techSupportDir, fileName, fileName, techSupportDir, fileName)
+	_, err := RunShellCmd(cmd)
+	return err
 }
 
 // RunActions runs all the actions provided in the techsupport config
@@ -71,17 +74,19 @@ func RunActions(actions []*tsconfig.ActionItem, techsupportDir string) error {
 	for _, action := range actions {
 		switch action.GetMethod() {
 		case tsconfig.ActionItem_ShellCmd:
-			f.WriteString("==== RUNNING Command ====\n")
+			f.WriteString("==== Running Command ====\n")
 			f.WriteString(action.Command + "\n")
 			out, _ := RunShellCmd(action.Command)
 			f.WriteString(string(out) + "\n")
 
 		case tsconfig.ActionItem_DelphiObj:
-			GetDelphiObject(action.Command)
+			f.WriteString(fmt.Sprintf("==== Getting Delphi Object : %v ====\n", action.Command))
+			out := GetDelphiObject(action.Command)
+			f.WriteString(string(out) + "\n")
 		case tsconfig.ActionItem_RESTCall:
 			MakeRESTCall(action.Command)
 		case tsconfig.ActionItem_CollectFile:
-			CollectFile(action.Command)
+			CollectFile(techsupportDir, action.Command)
 		default:
 			log.Errorf("Unknown Action method specified : %v", action.Method)
 		}
@@ -161,16 +166,25 @@ func CollectTechSupport(config *tsconfig.TechSupportConfig, targetID string) err
 	log.Infof("Starting to collect TechSupport in directory : %v", baseDir)
 
 	log.Infof("======== Prep Actions - Start ========")
-	RunActions(config.PrepActions, baseDir+"/PrepActions")
+	err = RunActions(config.PrepActions, baseDir+"/PrepActions")
 	log.Infof("======== Prep Actions - End ========")
+	if err != nil {
+		return fmt.Errorf("Failed to run PrepActions. %v", err)
+	}
 
 	log.Infof("======== Collect Actions - Start ========")
-	RunActions(config.CollectActions, baseDir+"/CollectActions")
+	err = RunActions(config.CollectActions, baseDir+"/CollectActions")
 	log.Infof("======== Collect Actions - End ========")
+	if err != nil {
+		return fmt.Errorf("Failed to run CollectActions. %v", err)
+	}
 
 	log.Infof("======== Export Actions - Start ========")
-	RunActions(config.ExportActions, baseDir+"/ExportActions")
+	err = RunActions(config.ExportActions, baseDir+"/ExportActions")
 	log.Infof("======== Export Actions - End ========")
+	if err != nil {
+		return fmt.Errorf("Failed to run ExportActions. %v", err)
+	}
 	os.Chdir("/")
 
 	return nil

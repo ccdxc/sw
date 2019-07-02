@@ -346,8 +346,15 @@ func (ag *TSMClient) do(work *tsproto.TechSupportRequest) error {
 	}
 	targetID := ag.generateTargetID(instanceID, instanceName)
 	vosTarget := fmt.Sprintf("%v.tar.gz", targetID)
-	action.CollectTechSupport(ag.cfg, targetID)
-	export.GenerateTechsupportZip(vosTarget, ag.cfg.FileSystemRoot+"/"+targetID)
+	err := action.CollectTechSupport(ag.cfg, targetID)
+	if err != nil {
+		log.Errorf("Err : %v", err)
+	}
+
+	err = export.GenerateTechsupportZip(vosTarget, ag.cfg.FileSystemRoot+"/"+targetID)
+	if err != nil {
+		return err
+	}
 	tarballFile := ag.cfg.FileSystemRoot + "/" + targetID + "/" + vosTarget
 
 	for _, destination := range work.Spec.Destinations {
@@ -357,15 +364,24 @@ func (ag *TSMClient) do(work *tsproto.TechSupportRequest) error {
 			log.Info("Keep file local")
 		case "SCP":
 			log.Info("SCP file")
-			export.ScpFile(tarballFile, destination.Destination, "root", "docker", destination.Path)
+			err = export.ScpFile(tarballFile, destination.Destination, "root", "docker", destination.Path)
+			if err != nil {
+				return err
+			}
 		case "Venice":
 			uri := fmt.Sprintf("/objstore/v1/downloads/tenant/default/techsupport/%v", vosTarget)
 			work.Status.URI = uri
 			log.Infof("Send to VENICE. WORK : %v. URL : %v", work, uri)
-			export.SendToVenice(ag.resolverClient, tarballFile, vosTarget)
+			err = export.SendToVenice(ag.resolverClient, tarballFile, vosTarget)
+			if err != nil {
+				return err
+			}
 		case "HTTPS":
 			log.Info("Transfer file using HTTPs")
-			export.SendToHTTP(tarballFile, destination.Path, "", "")
+			err = export.SendToHTTP(tarballFile, destination.Path, "", "")
+			if err != nil {
+				return err
+			}
 		}
 	}
 

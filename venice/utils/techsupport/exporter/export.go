@@ -22,7 +22,7 @@ func GenerateTechsupportZip(techsupportFile string, directory string) error {
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Printf("tar command out:\n%s\n", string(out))
-		log.Errorf("Collecting log files failed with: %s\n", err)
+		return fmt.Errorf("collecting log files failed with: %s", err)
 	}
 	return nil
 }
@@ -90,7 +90,7 @@ func SendToVenice(resolver resolver.Interface, source string, vosTarget string) 
 
 	_, err = client.GetObject(context.Background(), vosTarget)
 	if err != nil {
-		log.Errorf("Could not get object %v", vosTarget)
+		return fmt.Errorf("Could not get object %v", vosTarget)
 	}
 
 	return nil
