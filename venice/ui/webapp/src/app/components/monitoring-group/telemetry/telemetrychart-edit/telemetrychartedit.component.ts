@@ -95,7 +95,7 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
     ];
     this.controllerService.setToolbarData({
       buttons: buttons,
-      breadcrumb: [{ label: 'Telemetry', url: Utility.getBaseUIUrl() + 'monitoring/telemetry' }]
+      breadcrumb: [{ label: 'Metrics', url: Utility.getBaseUIUrl() + 'monitoring/metrics' }]
     });
     this.measurements = [];
     Object.keys(this.metricsMetadata).forEach( (m) => {

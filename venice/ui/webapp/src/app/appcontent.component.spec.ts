@@ -1,7 +1,7 @@
 /* ---------------------------------------------------
     Angular JS libraries
 ----------------------------------------------------- */
-import { TestBed } from '@angular/core/testing';
+import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { configureTestSuite } from 'ng-bullet';
 import { RouterTestingModule } from '@angular/router/testing';
 import { FormsModule } from '@angular/forms';
@@ -55,8 +55,14 @@ import { MessageService } from './services/message.service';
 import { HelpoverlayComponent } from './widgets/helpcontent/helpoverlay.component';
 import { PortalModule } from '@angular/cdk/portal';
 import { BgfileuploadComponent } from '@app/widgets/bgfileupload/bgfileupload.component';
+import { MonitoringAlert, MonitoringAlertList } from '@sdk/v1/models/generated/monitoring';
+import { BehaviorSubject } from 'rxjs';
+import { TestingUtility } from './common/TestingUtility';
 
 describe('AppcontentComponent', () => {
+  let component: AppcontentComponent;
+  let fixture: ComponentFixture<AppcontentComponent>;
+
     configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [
@@ -107,10 +113,59 @@ describe('AppcontentComponent', () => {
 
     });
 
+  beforeEach(() => {
+    fixture = TestBed.createComponent(AppcontentComponent);
+    component = fixture.componentInstance;
+  });
+
   it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppcontentComponent);
-    const app = fixture.debugElement.componentInstance;
-    expect(app).toBeTruthy();
+    fixture.detectChanges();
+    expect(component).toBeTruthy();
+  });
+
+  it('should show new alerts that come in', () => {
+    const alerts = [];
+    for (let index = 0; index < 20; index++) {
+      const alert = new MonitoringAlert();
+      alert.meta.name = 'alert' + index;
+      alerts.push(alert);
+    }
+    // Get will return all 20
+    // Watch will return in two batches of 10
+    // We then send a new alert to watch, which should trigger a notification
+    const controllerService = TestBed.get(ControllerService);
+    const toasterSpy = spyOn(controllerService, 'invokeInfoToaster');
+
+    const monitoringService = TestBed.get(MonitoringService);
+    const body = new MonitoringAlertList();
+    body.items = alerts;
+    spyOn(monitoringService, 'ListAlert').and.returnValue(
+      TestingUtility.createListResponse(alerts)
+    );
+    const watchSubject = TestingUtility.createWatchEventsSubject(alerts.slice(0, 10));
+    spyOn(monitoringService, 'WatchAlert').and.returnValue(
+      watchSubject
+    );
+
+    fixture.detectChanges();
+    expect(toasterSpy).toHaveBeenCalledTimes(0);
+
+    watchSubject.next(TestingUtility.createWatchEvents(alerts.slice(10)));
+    fixture.detectChanges();
+    expect(toasterSpy).toHaveBeenCalledTimes(0);
+
+    const newAlerts = [];
+    for (let index = 0; index < 5; index++) {
+      const alert = new MonitoringAlert();
+      alert.meta.name = 'newalert' + index;
+      newAlerts.push(alert);
+    }
+
+    // New alerts
+    watchSubject.next(TestingUtility.createWatchEvents(newAlerts));
+    fixture.detectChanges();
+    expect(toasterSpy).toHaveBeenCalledTimes(1);
+
   });
 
 

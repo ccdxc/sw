@@ -111,7 +111,13 @@ describe('DashboardComponent', () => {
       TestingUtility.addPermissions([UIRolePermissions.clustercluster_read]);
       fixture.detectChanges();
       // metrics should be hidden
-      const cards = fixture.debugElement.queryAll(By.css('app-flip'));
+      let cards = fixture.debugElement.queryAll(By.css('app-flip'));
+      expect(cards.length).toBe(0);
+
+      TestingUtility.addPermissions([UIRolePermissions.clustercluster_read, UIRolePermissions.clusternode_read]);
+      fixture.detectChanges();
+      // metrics should be hidden
+      cards = fixture.debugElement.queryAll(By.css('app-flip'));
       expect(cards.length).toBe(1);
     });
 

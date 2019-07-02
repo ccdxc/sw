@@ -135,7 +135,7 @@ describe('NaplesComponent', () => {
     component = fixture.componentInstance;
     const service = TestBed.get(ClusterService);
     spyOn(service, 'WatchSmartNIC').and.returnValue(
-      TestingUtility.createWatchEvents([naples1, naples2, naples3])
+      TestingUtility.createWatchEventsSubject([naples1, naples2, naples3])
     );
   });
 

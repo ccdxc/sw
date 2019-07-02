@@ -384,7 +384,8 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
         const body: IClusterSmartNICList = resp.body as any;
         if (body.items == null || body.items.length === 0) {
           // Watch won't have any events
-          this.frontCardState = CardStates.NO_DATA;
+          this.calculateNaplesStatus();
+          this.frontCardState = CardStates.READY;
         }
       },
       error => {
@@ -443,16 +444,19 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
 
       // Calculate healthy last so any rounding error will lower the health percent
       this.healthyPercent = Math.round(100 - this.unhealthyPercent - this.unknownPercent);
-      this.generatePieChartText();
-      this.generateDoughnut();
     } else {
       this.healthyPercent = null;
       this.unhealthyPercent = null;
       this.unknownPercent = null;
     }
+    this.generatePieChartText();
+    this.generateDoughnut();
   }
 
   generatePieChartText() {
+    if (this.healthyPercent == null) {
+      return '';
+    }
     this.pieChartPercent = Math.round(this.healthyPercent) + '%';
     this.pieChartText = 'Healthy';
   }

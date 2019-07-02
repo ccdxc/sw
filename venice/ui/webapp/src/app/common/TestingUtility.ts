@@ -13,6 +13,10 @@ import { Eventtypes } from '@app/enum/eventtypes.enum';
 export class TestingUtility {
   fixture: ComponentFixture<any>;
 
+  public static createWatchEventsSubject(obj: any[]) {
+    return new BehaviorSubject(TestingUtility.createWatchEvents(obj));
+  }
+
   public static createWatchEvents(obj: any[]) {
     const events = [];
     obj.forEach( (o) => {
@@ -21,8 +25,14 @@ export class TestingUtility {
         object: o
       });
     });
+    return { events: events };
+  }
+
+  public static createListResponse(obj: any[]) {
     return new BehaviorSubject({
-      events: events
+      body: {
+        items: obj
+      }
     });
   }
 
@@ -37,11 +47,13 @@ export class TestingUtility {
     Object.keys(UIRolePermissions).forEach((p) => {
       serviceAny.uiPermissions[p] = true;
     });
+    this.updateRoleGuards();
   }
 
   public static removeAllPermissions() {
     const serviceAny = TestBed.get(UIConfigsService) as any;
     serviceAny.uiPermissions = {};
+    this.updateRoleGuards();
   }
 
   public static addPermissions(permissions: UIRolePermissions[]) {
@@ -49,6 +61,7 @@ export class TestingUtility {
     permissions.forEach((p) => {
       serviceAny.uiPermissions[p] = true;
     });
+    this.updateRoleGuards();
   }
 
   public static removePermissions(permissions: UIRolePermissions[]) {
@@ -56,6 +69,7 @@ export class TestingUtility {
     permissions.forEach((p) => {
       delete serviceAny.uiPermissions[p];
     });
+    this.updateRoleGuards();
   }
 
   /**

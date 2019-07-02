@@ -16,6 +16,7 @@ export enum TransformNames {
   GraphTitle = 'GraphTitle',
   GroupBy = 'GroupBy',
   LabelSelector = 'LabelSelector',
+  RoundCounters = 'RoundCounters'
 }
 
 export interface ChartDataSets extends ChartJSDataSets {

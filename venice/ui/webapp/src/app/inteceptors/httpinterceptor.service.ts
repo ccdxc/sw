@@ -7,6 +7,7 @@ import { tap, catchError } from 'rxjs/internal/operators';
 import { Utility } from '@app/common/Utility';
 import { LogService } from '@app/services/logging/log.service';
 import { AUTH_KEY } from '@app/core';
+import { environment } from '@env/environment';
 
 /**
  * This is an angular http-client inteceptor
@@ -39,7 +40,7 @@ export class VeniceUIHttpInterceptor implements HttpInterceptor {
   }
 
   private isURLlogin(url: string): boolean {
-    return (url.indexOf('login') >= 0);
+    return url.endsWith(environment.version_api_string + environment.login);
   }
 
   /**

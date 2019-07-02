@@ -197,7 +197,7 @@ describe('HostsComponent', () => {
   it('should populate table', () => {
     const service = TestBed.get(ClusterService);
     spyOn(service, 'WatchHost').and.returnValue(
-      TestingUtility.createWatchEvents([
+      TestingUtility.createWatchEventsSubject([
         host1, host2
       ])
     );
@@ -224,13 +224,13 @@ describe('HostsComponent', () => {
     TestingUtility.setAllPermissions();
     const service = TestBed.get(ClusterService);
     spyOn(service, 'WatchHost').and.returnValue(
-      TestingUtility.createWatchEvents([
+      TestingUtility.createWatchEventsSubject([
         host1, host2, host3
       ])
     );
 
     spyOn(service, 'WatchSmartNIC').and.returnValue(
-      TestingUtility.createWatchEvents([
+      TestingUtility.createWatchEventsSubject([
         naple1
       ])
     );
@@ -252,13 +252,13 @@ describe('HostsComponent', () => {
     beforeEach(() => {
       const service = TestBed.get(ClusterService);
       spyOn(service, 'WatchHost').and.returnValue(
-        TestingUtility.createWatchEvents([
+        TestingUtility.createWatchEventsSubject([
           host1, host2, host3
         ])
       );
 
       spyOn(service, 'WatchSmartNIC').and.returnValue(
-        TestingUtility.createWatchEvents([
+        TestingUtility.createWatchEventsSubject([
           naple1
         ])
       );

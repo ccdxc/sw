@@ -112,10 +112,11 @@ metrics  = [
       },
       {
         name: 'reporterID',
-        displayName: 'Reporting Node',
+        displayName: 'Node',
         description: 'Name of reporting node',
         baseType: 'string',
         jsType: 'string',
+        isTag: true,
       },
     ]
   },
@@ -232,10 +233,11 @@ metrics  = [
       },
       {
         name: 'reporterID',
-        displayName: 'Reporting SmartNIC',
-        description: 'Name of reporting SmartNIC',
+        displayName: 'Naples',
+        description: 'Name of reporting Naples',
         baseType: 'string',
         jsType: 'string',
+        isTag: true,
       },
     ]
   },
@@ -245,7 +247,8 @@ metrics  = [
     displayName: 'Cluster',
     description: 'Contains metrics related to the cluster',
     tags: [
-      "Level6"
+      "Level6",
+      "SingleReporter"
     ],
     fields: [
       {
@@ -253,7 +256,7 @@ metrics  = [
         displayName: 'Admitted NICs',
         description: 'Number of admitted NICs',
         units: 'count',
-        baseType: 'number',
+        baseType: 'Counter',
         jsType: 'number',
         scaleMin: 0,
         tags: [
@@ -265,7 +268,7 @@ metrics  = [
         displayName: 'Decomissioned NICs',
         description: 'Number of decommissioned NICs',
         units: 'count',
-        baseType: 'number',
+        baseType: 'Counter',
         jsType: 'number',
         scaleMin: 0,
         tags: [
@@ -277,7 +280,7 @@ metrics  = [
         displayName: 'Disconnected NICs',
         description: 'Number of disconnected NICs',
         units: 'count',
-        baseType: 'number',
+        baseType: 'Counter',
         jsType: 'number',
         scaleMin: 0,
         tags: [
@@ -289,7 +292,7 @@ metrics  = [
         displayName: 'Healthy NICs',
         description: 'Number of healthy NICs',
         units: 'count',
-        baseType: 'number',
+        baseType: 'Counter',
         jsType: 'number',
         scaleMin: 0,
         tags: [
@@ -301,7 +304,7 @@ metrics  = [
         displayName: 'Pending NICs',
         description: 'Number of pending NICs',
         units: 'count',
-        baseType: 'number',
+        baseType: 'Counter',
         jsType: 'number',
         scaleMin: 0,
         tags: [
@@ -313,7 +316,7 @@ metrics  = [
         displayName: 'Rejected NICs',
         description: 'Number of rejected NICs',
         units: 'count',
-        baseType: 'number',
+        baseType: 'Counter',
         jsType: 'number',
         scaleMin: 0,
         tags: [
@@ -325,7 +328,7 @@ metrics  = [
         displayName: 'Unhealthy NICs',
         description: 'Number of unhealthy NICs',
         units: 'count',
-        baseType: 'number',
+        baseType: 'Counter',
         jsType: 'number',
         scaleMin: 0,
         tags: [

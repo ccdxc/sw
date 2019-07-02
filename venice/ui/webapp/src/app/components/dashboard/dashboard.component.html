@@ -1,6 +1,6 @@
 <div fxLayout="column" fxLayoutGap="10px">
   <div fxFlex="none" fxLayout="row" fxLayoutGap="10px">
-    <app-dsbdsystemcapacitywidget *roleGuard="'clustercluster_read'"
+    <app-dsbdsystemcapacitywidget *roleGuard="{ req: ['clustercluster_read', 'clusternode_read']}"
                                   fxFlex="none"
                                   [cardState]="systemCapacity.cardState" [currentData]="currentData"
                                   [prevData]="prevData" [timeSeriesData]="timeSeriesData"

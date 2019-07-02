@@ -75,7 +75,7 @@ describe('FwlogpoliciesComponent', () => {
     beforeEach(() => {
       const service = TestBed.get(MonitoringService);
       spyOn(service, 'WatchFwlogPolicy').and.returnValue(
-        TestingUtility.createWatchEvents([new MonitoringFwlogPolicy()])
+        TestingUtility.createWatchEventsSubject([new MonitoringFwlogPolicy()])
       );
       testHelper.fixture = fixture;
     });

@@ -28,6 +28,7 @@ import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { GraphTitleTransform } from '../transforms/graphtitle.transform';
 import { GroupByTimeTransform } from '../transforms/groupbytime.transform';
+import { RoundCountersTransform } from '../transforms/roundcounters.transform';
 
 /**
  * A data source allows a user to select a single measurement,
@@ -374,6 +375,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
 
   addDataSource(): DataSource {
     const source = new DataSource(this.getMetricsSubject as Observer<any>, [
+      new RoundCountersTransform(),
       new DisplayLabelTransform(), // This needs to be before groupByTransform
       new ColorTransform(),
       new GroupByTransform(),

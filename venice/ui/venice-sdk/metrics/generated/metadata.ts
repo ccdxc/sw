@@ -1676,10 +1676,11 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     },
     {
       "name": "reporterID",
-      "displayName": "Reporting Node",
+      "displayName": "Node",
       "description": "Name of reporting node",
       "baseType": "string",
-      "jsType": "string"
+      "jsType": "string",
+      "isTag": true
     }
   ]
 },
@@ -1796,10 +1797,11 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     },
     {
       "name": "reporterID",
-      "displayName": "Reporting SmartNIC",
-      "description": "Name of reporting SmartNIC",
+      "displayName": "Naples",
+      "description": "Name of reporting Naples",
       "baseType": "string",
-      "jsType": "string"
+      "jsType": "string",
+      "isTag": true
     }
   ]
 },
@@ -1809,7 +1811,8 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "displayName": "Cluster",
   "description": "Contains metrics related to the cluster",
   "tags": [
-    "Level6"
+    "Level6",
+    "SingleReporter"
   ],
   "fields": [
     {
@@ -1817,7 +1820,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Admitted NICs",
       "description": "Number of admitted NICs",
       "units": "count",
-      "baseType": "number",
+      "baseType": "Counter",
       "jsType": "number",
       "scaleMin": 0,
       "tags": [
@@ -1829,7 +1832,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Decomissioned NICs",
       "description": "Number of decommissioned NICs",
       "units": "count",
-      "baseType": "number",
+      "baseType": "Counter",
       "jsType": "number",
       "scaleMin": 0,
       "tags": [
@@ -1841,7 +1844,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Disconnected NICs",
       "description": "Number of disconnected NICs",
       "units": "count",
-      "baseType": "number",
+      "baseType": "Counter",
       "jsType": "number",
       "scaleMin": 0,
       "tags": [
@@ -1853,7 +1856,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Healthy NICs",
       "description": "Number of healthy NICs",
       "units": "count",
-      "baseType": "number",
+      "baseType": "Counter",
       "jsType": "number",
       "scaleMin": 0,
       "tags": [
@@ -1865,7 +1868,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Pending NICs",
       "description": "Number of pending NICs",
       "units": "count",
-      "baseType": "number",
+      "baseType": "Counter",
       "jsType": "number",
       "scaleMin": 0,
       "tags": [
@@ -1877,7 +1880,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Rejected NICs",
       "description": "Number of rejected NICs",
       "units": "count",
-      "baseType": "number",
+      "baseType": "Counter",
       "jsType": "number",
       "scaleMin": 0,
       "tags": [
@@ -1889,7 +1892,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "displayName": "Unhealthy NICs",
       "description": "Number of unhealthy NICs",
       "units": "count",
-      "baseType": "number",
+      "baseType": "Counter",
       "jsType": "number",
       "scaleMin": 0,
       "tags": [

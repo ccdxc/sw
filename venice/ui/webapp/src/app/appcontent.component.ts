@@ -15,7 +15,7 @@ import { DEFAULT_INTERRUPTSOURCES, Idle } from '@ng-idle/core';
 import { Store } from '@ngrx/store';
 import { IApiStatus, IAuthUser } from '@sdk/v1/models/generated/auth';
 import { ClusterVersion } from '@sdk/v1/models/generated/cluster';
-import { MonitoringAlert } from '@sdk/v1/models/generated/monitoring';
+import { MonitoringAlert, IMonitoringAlert, IMonitoringAlertList } from '@sdk/v1/models/generated/monitoring';
 import { Subject, Subscription } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { CommonComponent } from './common.component';
@@ -66,8 +66,10 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
 
   // alerts related variables
   alertsEventUtility: HttpEventUtility<MonitoringAlert>;
-  alertSubscription: Subscription;
+  alertGetSubscription: Subscription;
+  alertWatchSubscription: Subscription;
   alerts: ReadonlyArray<MonitoringAlert> = [];
+  startingAlertCount = 0;
   alertNumbers = 0;
   alertHighestSeverity: string;
   alertQuery = {};
@@ -432,11 +434,34 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
    */
   getAlerts() {
     this.alertsEventUtility = new HttpEventUtility<MonitoringAlert>(MonitoringAlert);
-    if (this.alertSubscription) {
-      this.alertSubscription.unsubscribe();
+    if (this.alertGetSubscription) {
+      this.alertGetSubscription.unsubscribe();
     }
-    this.alertSubscription = this.monitoringService.WatchAlert(this.alertQuery).subscribe(
+    this.alertGetSubscription = this.monitoringService.ListAlert().subscribe(
+      resp => {
+        const body = resp.body as IMonitoringAlertList;
+        if (body.items == null) {
+          body.items = [];
+        }
+        this.startingAlertCount = body.items.length;
+        this.alertNumbers = this.startingAlertCount;
+        // Now that we have the count already in the system, we start the watch
+        this.getAlertsWatch();
+      },
+      this._controllerService.webSocketErrorHandler('Failed to get Alerts'),
+    );
+    this.subscriptions.push(this.alertGetSubscription);
+  }
+
+  getAlertsWatch() {
+    this.alertsEventUtility = new HttpEventUtility<MonitoringAlert>(MonitoringAlert);
+    if (this.alertWatchSubscription) {
+      this.alertWatchSubscription.unsubscribe();
+    }
+    this.alertWatchSubscription = this.monitoringService.WatchAlert(this.alertQuery).subscribe(
       response => {
+        // NOTE: there is a max of 100 events that will come in a single chunk
+        // The second chunk is NOT guaranteed to be
         this.alertsEventUtility.processEvents(response);
         // this.alertQuery is empty. So we will get all alerts. We only need the alerts that are in open state. Alert table can update alerts. This will reflect the changes of alerts.
         this.alerts = this.alertsEventUtility.array.filter((alert: MonitoringAlert) => {
@@ -449,11 +474,20 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
           const alertMsg = (diff === 1) ? diff + ' new alert arrived' : diff + 'new alerts arrived';
           this._controllerService.invokeInfoToaster('Alert', alertMsg);
         }
-        this.alertNumbers = this.alerts.length;
+        if (this.startingAlertCount == null) {
+          this.alertNumbers = this.alerts.length;
+        } else {
+          this.alertNumbers = Math.max(this.startingAlertCount, this.alerts.length);
+          if (this.alertNumbers === this.startingAlertCount) {
+            // Have received all alerts that exist
+            // no longer rely on startingAlertCount since we may receive delete events
+            this.startingAlertCount = null;
+          }
+        }
       },
       this._controllerService.webSocketErrorHandler('Failed to get Alerts'),
     );
-    this.subscriptions.push(this.alertSubscription);
+    this.subscriptions.push(this.alertWatchSubscription);
   }
 
   isAlertInOpenState(alert: MonitoringAlert): boolean {

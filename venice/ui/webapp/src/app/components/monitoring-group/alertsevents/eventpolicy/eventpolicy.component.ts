@@ -94,6 +94,7 @@ export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEvent
       (response) => {
         this.policyEventUtility.processEvents(response);
       },
+      this.controllerService.webSocketErrorHandler('Failed to get Event Policies')
     );
     this.subscriptions.push(sub);
   }

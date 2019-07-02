@@ -75,7 +75,7 @@ describe('EventpolicyComponent', () => {
     beforeEach(() => {
       const service = TestBed.get(MonitoringService);
       spyOn(service, 'WatchEventPolicy').and.returnValue(
-        TestingUtility.createWatchEvents([new MonitoringEventPolicy()])
+        TestingUtility.createWatchEventsSubject([new MonitoringEventPolicy()])
       );
       testHelper.fixture = fixture;
     });

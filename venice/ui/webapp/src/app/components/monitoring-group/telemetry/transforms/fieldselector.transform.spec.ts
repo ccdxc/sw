@@ -92,7 +92,7 @@ describe('Field Selector transform', () => {
     // Metrics should be requested
     expect(reqMetricsSpy).toHaveBeenCalledTimes(2);
     expect(_.isEqual(transform.currValue, expValue)).toBeTruthy('Curr value was not upgraded correctly');
-    expect(transform.stringForm).toBe('Percent CPU Used <= 10    Reporting SmartNIC = naples1, naples2');
+    expect(transform.stringForm).toBe('Percent CPU Used <= 10    Naples = naples1, naples2');
 
   }));
 

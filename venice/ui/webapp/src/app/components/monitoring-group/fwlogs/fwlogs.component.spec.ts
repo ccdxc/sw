@@ -218,7 +218,7 @@ describe('fwlogsComponent', () => {
       new BehaviorSubject({body: fwlog})
     );
     spyOn(clusterService, 'WatchSmartNIC').and.returnValue(
-      TestingUtility.createWatchEvents([
+      TestingUtility.createWatchEventsSubject([
         naple1
       ])
     );

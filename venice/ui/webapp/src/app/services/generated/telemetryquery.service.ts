@@ -70,7 +70,7 @@ export class TelemetryqueryService extends Telemetry_queryv1Service {
           metricAllowed = false;
           return;
         }
-        if (!this.uiconfigsService.isAuthorized(UIRolePermissions[cat + q.kind + '_read'])) {
+        if (!this.uiconfigsService.isAuthorized(UIRolePermissions[cat.toLowerCase() + q.kind.toLowerCase() + '_read'])) {
           metricAllowed = false;
           return;
         }
