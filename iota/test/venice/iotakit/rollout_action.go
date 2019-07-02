@@ -143,7 +143,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 		return fmt.Errorf("rollout pre-check failed")
 	}
 
-	// Verify rollout Node status
+	// Verify pre-install Node status
 	for numRetries = 0; numRetries < 60; numRetries++ {
 		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
 		rollout, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
@@ -185,6 +185,48 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 	}
 	if numRetries != 0 {
 		return fmt.Errorf("rollout pre-check not completed for all nodes")
+	}
+
+	// Verify pre-install of Naples
+	for numRetries = 0; numRetries < 60; numRetries++ {
+		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
+		rollout, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
+		if err != nil {
+			log.Errorf("ts:%s Rollout GET failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, rollout)
+			time.Sleep(time.Second * 5)
+			continue
+		}
+		status := rollout.Status.GetSmartNICsStatus()
+		log.Infof("ts:%s Precheck smartNIC status len %d: status:  %+v", time.Now().String(), len(status), status)
+		var numNodes int
+		if len(status) == 0 {
+			log.Infof("ts:%s Precheck smartNIC in progress", time.Now().String())
+			time.Sleep(time.Second * 5)
+			continue
+		}
+
+		for i := 0; i < len(status); i++ {
+
+			if status[i].Phase != "WAITING_FOR_TURN" {
+				log.Errorf("ts:%s Naples Pre-install Failed. Naples Pre Install %+v", time.Now().String(), status[i])
+				time.Sleep(time.Second * 5)
+				continue
+			}
+			numNodes++
+		}
+
+		if numNodes != len(act.model.Naples().nodes) {
+			log.Errorf("ts:%s Pre-install completed for : %d naples", time.Now().String(), numNodes)
+			time.Sleep(time.Second * 5)
+			continue
+		}
+		log.Infof("ts:%s Naples Pre-install Status: Complete", time.Now().String())
+		numRetries = 0
+		break
+	}
+
+	if numRetries != 0 {
+		return fmt.Errorf("rollout pre-check failed")
 	}
 
 	// Verify Start Time of rollout object
@@ -273,7 +315,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 		return fmt.Errorf("rollout services failed on some nodes")
 	}
 
-	/*// Verify rollout smartNIC status
+	// Verify rollout smartNIC status
 	for numRetries = 0; numRetries < 60; numRetries++ {
 		restcls, err := act.model.tb.VeniceRestClient()
 		if err != nil {
@@ -314,7 +356,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 	}
 	if numRetries != 0 {
 		return fmt.Errorf("rollout smartNIC node failed")
-	}*/
+	}
 
 	// Verify rollout overall status
 	for numRetries = 0; numRetries < 60; numRetries++ {
