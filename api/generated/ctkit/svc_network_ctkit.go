@@ -266,7 +266,7 @@ func (ct *ctrlerCtx) runNetworkWatcher() {
 						}
 
 						// handle event
-						ct.handleNetworkEvent(evt)
+						go ct.handleNetworkEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -665,7 +665,7 @@ func (ct *ctrlerCtx) runServiceWatcher() {
 						}
 
 						// handle event
-						ct.handleServiceEvent(evt)
+						go ct.handleServiceEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -1064,7 +1064,7 @@ func (ct *ctrlerCtx) runLbPolicyWatcher() {
 						}
 
 						// handle event
-						ct.handleLbPolicyEvent(evt)
+						go ct.handleLbPolicyEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -1463,7 +1463,7 @@ func (ct *ctrlerCtx) runVirtualRouterWatcher() {
 						}
 
 						// handle event
-						ct.handleVirtualRouterEvent(evt)
+						go ct.handleVirtualRouterEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -1862,7 +1862,7 @@ func (ct *ctrlerCtx) runNetworkInterfaceWatcher() {
 						}
 
 						// handle event
-						ct.handleNetworkInterfaceEvent(evt)
+						go ct.handleNetworkInterfaceEvent(evt)
 					}
 				}
 				apicl.Close()

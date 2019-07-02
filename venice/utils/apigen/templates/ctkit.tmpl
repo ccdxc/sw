@@ -270,7 +270,7 @@ func (ct *ctrlerCtx) run{{.}}Watcher() {
 						}
 
 						// handle event
-						ct.handle{{.}}Event(evt)
+						go ct.handle{{.}}Event(evt)
 					}
 				}
 				apicl.Close()

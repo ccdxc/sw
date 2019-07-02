@@ -266,7 +266,7 @@ func (ct *ctrlerCtx) runOrderWatcher() {
 						}
 
 						// handle event
-						ct.handleOrderEvent(evt)
+						go ct.handleOrderEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -665,7 +665,7 @@ func (ct *ctrlerCtx) runBookWatcher() {
 						}
 
 						// handle event
-						ct.handleBookEvent(evt)
+						go ct.handleBookEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -1064,7 +1064,7 @@ func (ct *ctrlerCtx) runPublisherWatcher() {
 						}
 
 						// handle event
-						ct.handlePublisherEvent(evt)
+						go ct.handlePublisherEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -1463,7 +1463,7 @@ func (ct *ctrlerCtx) runStoreWatcher() {
 						}
 
 						// handle event
-						ct.handleStoreEvent(evt)
+						go ct.handleStoreEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -1862,7 +1862,7 @@ func (ct *ctrlerCtx) runCouponWatcher() {
 						}
 
 						// handle event
-						ct.handleCouponEvent(evt)
+						go ct.handleCouponEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -2261,7 +2261,7 @@ func (ct *ctrlerCtx) runCustomerWatcher() {
 						}
 
 						// handle event
-						ct.handleCustomerEvent(evt)
+						go ct.handleCustomerEvent(evt)
 					}
 				}
 				apicl.Close()

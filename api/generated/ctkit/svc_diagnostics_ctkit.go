@@ -266,7 +266,7 @@ func (ct *ctrlerCtx) runModuleWatcher() {
 						}
 
 						// handle event
-						ct.handleModuleEvent(evt)
+						go ct.handleModuleEvent(evt)
 					}
 				}
 				apicl.Close()

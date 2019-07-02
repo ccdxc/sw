@@ -266,7 +266,7 @@ func (ct *ctrlerCtx) runEventPolicyWatcher() {
 						}
 
 						// handle event
-						ct.handleEventPolicyEvent(evt)
+						go ct.handleEventPolicyEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -665,7 +665,7 @@ func (ct *ctrlerCtx) runStatsPolicyWatcher() {
 						}
 
 						// handle event
-						ct.handleStatsPolicyEvent(evt)
+						go ct.handleStatsPolicyEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -1064,7 +1064,7 @@ func (ct *ctrlerCtx) runFwlogPolicyWatcher() {
 						}
 
 						// handle event
-						ct.handleFwlogPolicyEvent(evt)
+						go ct.handleFwlogPolicyEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -1463,7 +1463,7 @@ func (ct *ctrlerCtx) runFlowExportPolicyWatcher() {
 						}
 
 						// handle event
-						ct.handleFlowExportPolicyEvent(evt)
+						go ct.handleFlowExportPolicyEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -1862,7 +1862,7 @@ func (ct *ctrlerCtx) runAlertWatcher() {
 						}
 
 						// handle event
-						ct.handleAlertEvent(evt)
+						go ct.handleAlertEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -2261,7 +2261,7 @@ func (ct *ctrlerCtx) runAlertPolicyWatcher() {
 						}
 
 						// handle event
-						ct.handleAlertPolicyEvent(evt)
+						go ct.handleAlertPolicyEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -2660,7 +2660,7 @@ func (ct *ctrlerCtx) runAlertDestinationWatcher() {
 						}
 
 						// handle event
-						ct.handleAlertDestinationEvent(evt)
+						go ct.handleAlertDestinationEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -3059,7 +3059,7 @@ func (ct *ctrlerCtx) runMirrorSessionWatcher() {
 						}
 
 						// handle event
-						ct.handleMirrorSessionEvent(evt)
+						go ct.handleMirrorSessionEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -3458,7 +3458,7 @@ func (ct *ctrlerCtx) runTroubleshootingSessionWatcher() {
 						}
 
 						// handle event
-						ct.handleTroubleshootingSessionEvent(evt)
+						go ct.handleTroubleshootingSessionEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -3857,7 +3857,7 @@ func (ct *ctrlerCtx) runTechSupportRequestWatcher() {
 						}
 
 						// handle event
-						ct.handleTechSupportRequestEvent(evt)
+						go ct.handleTechSupportRequestEvent(evt)
 					}
 				}
 				apicl.Close()

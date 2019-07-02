@@ -266,7 +266,7 @@ func (ct *ctrlerCtx) runClusterWatcher() {
 						}
 
 						// handle event
-						ct.handleClusterEvent(evt)
+						go ct.handleClusterEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -665,7 +665,7 @@ func (ct *ctrlerCtx) runNodeWatcher() {
 						}
 
 						// handle event
-						ct.handleNodeEvent(evt)
+						go ct.handleNodeEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -1064,7 +1064,7 @@ func (ct *ctrlerCtx) runHostWatcher() {
 						}
 
 						// handle event
-						ct.handleHostEvent(evt)
+						go ct.handleHostEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -1463,7 +1463,7 @@ func (ct *ctrlerCtx) runSmartNICWatcher() {
 						}
 
 						// handle event
-						ct.handleSmartNICEvent(evt)
+						go ct.handleSmartNICEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -1862,7 +1862,7 @@ func (ct *ctrlerCtx) runTenantWatcher() {
 						}
 
 						// handle event
-						ct.handleTenantEvent(evt)
+						go ct.handleTenantEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -2261,7 +2261,7 @@ func (ct *ctrlerCtx) runVersionWatcher() {
 						}
 
 						// handle event
-						ct.handleVersionEvent(evt)
+						go ct.handleVersionEvent(evt)
 					}
 				}
 				apicl.Close()

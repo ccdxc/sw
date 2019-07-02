@@ -266,7 +266,7 @@ func (ct *ctrlerCtx) runSecurityGroupWatcher() {
 						}
 
 						// handle event
-						ct.handleSecurityGroupEvent(evt)
+						go ct.handleSecurityGroupEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -665,7 +665,7 @@ func (ct *ctrlerCtx) runSGPolicyWatcher() {
 						}
 
 						// handle event
-						ct.handleSGPolicyEvent(evt)
+						go ct.handleSGPolicyEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -1064,7 +1064,7 @@ func (ct *ctrlerCtx) runAppWatcher() {
 						}
 
 						// handle event
-						ct.handleAppEvent(evt)
+						go ct.handleAppEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -1463,7 +1463,7 @@ func (ct *ctrlerCtx) runFirewallProfileWatcher() {
 						}
 
 						// handle event
-						ct.handleFirewallProfileEvent(evt)
+						go ct.handleFirewallProfileEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -1862,7 +1862,7 @@ func (ct *ctrlerCtx) runCertificateWatcher() {
 						}
 
 						// handle event
-						ct.handleCertificateEvent(evt)
+						go ct.handleCertificateEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -2261,7 +2261,7 @@ func (ct *ctrlerCtx) runTrafficEncryptionPolicyWatcher() {
 						}
 
 						// handle event
-						ct.handleTrafficEncryptionPolicyEvent(evt)
+						go ct.handleTrafficEncryptionPolicyEvent(evt)
 					}
 				}
 				apicl.Close()

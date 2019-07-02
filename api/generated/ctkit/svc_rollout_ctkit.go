@@ -266,7 +266,7 @@ func (ct *ctrlerCtx) runRolloutWatcher() {
 						}
 
 						// handle event
-						ct.handleRolloutEvent(evt)
+						go ct.handleRolloutEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -665,7 +665,7 @@ func (ct *ctrlerCtx) runRolloutActionWatcher() {
 						}
 
 						// handle event
-						ct.handleRolloutActionEvent(evt)
+						go ct.handleRolloutActionEvent(evt)
 					}
 				}
 				apicl.Close()

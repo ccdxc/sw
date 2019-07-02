@@ -266,7 +266,7 @@ func (ct *ctrlerCtx) runUserWatcher() {
 						}
 
 						// handle event
-						ct.handleUserEvent(evt)
+						go ct.handleUserEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -665,7 +665,7 @@ func (ct *ctrlerCtx) runAuthenticationPolicyWatcher() {
 						}
 
 						// handle event
-						ct.handleAuthenticationPolicyEvent(evt)
+						go ct.handleAuthenticationPolicyEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -1064,7 +1064,7 @@ func (ct *ctrlerCtx) runRoleWatcher() {
 						}
 
 						// handle event
-						ct.handleRoleEvent(evt)
+						go ct.handleRoleEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -1463,7 +1463,7 @@ func (ct *ctrlerCtx) runRoleBindingWatcher() {
 						}
 
 						// handle event
-						ct.handleRoleBindingEvent(evt)
+						go ct.handleRoleBindingEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -1862,7 +1862,7 @@ func (ct *ctrlerCtx) runUserPreferenceWatcher() {
 						}
 
 						// handle event
-						ct.handleUserPreferenceEvent(evt)
+						go ct.handleUserPreferenceEvent(evt)
 					}
 				}
 				apicl.Close()

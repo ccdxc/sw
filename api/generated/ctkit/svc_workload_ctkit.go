@@ -266,7 +266,7 @@ func (ct *ctrlerCtx) runEndpointWatcher() {
 						}
 
 						// handle event
-						ct.handleEndpointEvent(evt)
+						go ct.handleEndpointEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -665,7 +665,7 @@ func (ct *ctrlerCtx) runWorkloadWatcher() {
 						}
 
 						// handle event
-						ct.handleWorkloadEvent(evt)
+						go ct.handleWorkloadEvent(evt)
 					}
 				}
 				apicl.Close()

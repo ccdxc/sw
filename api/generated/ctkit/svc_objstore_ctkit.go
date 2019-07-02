@@ -266,7 +266,7 @@ func (ct *ctrlerCtx) runBucketWatcher() {
 						}
 
 						// handle event
-						ct.handleBucketEvent(evt)
+						go ct.handleBucketEvent(evt)
 					}
 				}
 				apicl.Close()
@@ -665,7 +665,7 @@ func (ct *ctrlerCtx) runObjectWatcher() {
 						}
 
 						// handle event
-						ct.handleObjectEvent(evt)
+						go ct.handleObjectEvent(evt)
 					}
 				}
 				apicl.Close()

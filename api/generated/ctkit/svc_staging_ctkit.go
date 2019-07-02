@@ -266,7 +266,7 @@ func (ct *ctrlerCtx) runBufferWatcher() {
 						}
 
 						// handle event
-						ct.handleBufferEvent(evt)
+						go ct.handleBufferEvent(evt)
 					}
 				}
 				apicl.Close()
