@@ -984,59 +984,55 @@ ionic_pkt_header_parse(vmk_PktHandle *pkt,
 
 
 static VMK_ReturnStatus
-ionic_tx_descs_needed(struct queue *q,
-                      vmk_PktHandle **pkt,
-                      vmk_uint32 *num_tx_descs,
-                      ionic_tx_ctx *ctx)
+ionic_tx_linearize_pkt(struct queue *q,
+                       vmk_PktHandle **pkt,
+                       ionic_tx_ctx *ctx)
 {
-        VMK_ReturnStatus status = VMK_OK;
+        VMK_ReturnStatus status;
         struct tx_stats *stats = q_to_tx_stats(q);
         vmk_PktHandle *flat_pkt = NULL;
         vmk_PktHandle *orig_pkt = *pkt;
 
-        ctx->is_tso_needed = vmk_PktIsLargeTcpPacket(orig_pkt);
-        ctx->nr_frags = vmk_PktSgArrayGet(orig_pkt)->numElems;
-        ctx->frame_len = vmk_PktFrameLenGet(orig_pkt);
-
-        /* we need atleast one descriptor to send a packet */
-        *num_tx_descs = 1;
-
-        /* If TSO, need roundup(len/mss) descs */
-        if (ctx->is_tso_needed) {
-                ctx->mss = vmk_PktGetLargeTcpPacketMss(orig_pkt);
-                /* we need one additional descriptor per tso segment */
-                *num_tx_descs += (ctx->frame_len / ctx->mss);
-
-                if (ctx->nr_frags > IONIC_TX_MAX_SG_ELEMS + 1) {
-                        goto linearize;
-                } else {
-                        goto out;
-                }
-        }
-
-        /* If non-TSO, just need 1 desc and nr_frags sg elems */
-        if (ctx->nr_frags <= IONIC_TX_MAX_SG_ELEMS + 1) {
-                goto out;
-        }
-
-linearize:
-
         status = vmk_PktCopy(orig_pkt, &flat_pkt);
         if (VMK_UNLIKELY(status != VMK_OK)) {
                 ionic_en_err("Failed to linearize non-TSO pkt");
-                *num_tx_descs = 0;
-                goto out;
+                return status;
         }
 
         ctx->nr_frags = 1;
-
         ionic_en_pkt_release(orig_pkt, NULL);
         *pkt = flat_pkt;
         stats->linearize++;
 
-out:
         return status;
 }
+
+
+void
+ionic_tx_descs_needed(vmk_PktHandle *pkt,
+                      vmk_uint32 *num_tx_descs,
+                      ionic_tx_ctx *ctx,
+                      vmk_Bool *is_linearize_needed)
+{
+        ctx->is_tso_needed = vmk_PktIsLargeTcpPacket(pkt);
+        ctx->nr_frags = vmk_PktSgArrayGet(pkt)->numElems;
+        ctx->frame_len = vmk_PktFrameLenGet(pkt);
+
+        /* we need at least one descriptor to send a packet */
+        *num_tx_descs = 1;
+
+        /* If TSO, need roundup(len/mss) descs */
+        if (ctx->is_tso_needed) {
+                ctx->mss = vmk_PktGetLargeTcpPacketMss(pkt);
+                /* we need one additional descriptor per tso segment */
+                *num_tx_descs += (ctx->frame_len / ctx->mss);
+
+                if (ctx->nr_frags > IONIC_TX_MAX_SG_ELEMS + 1) {
+                        *is_linearize_needed = VMK_TRUE;
+                }
+        }
+}
+
 
 VMK_ReturnStatus
 ionic_start_xmit(vmk_PktHandle *pkt,
@@ -1049,6 +1045,7 @@ ionic_start_xmit(vmk_PktHandle *pkt,
         struct tx_stats *stats = q_to_tx_stats(q);
         ionic_tx_ctx ctx;
         int ndescs = 0;
+        vmk_Bool is_linearize_needed = VMK_FALSE;
 
         VMK_ASSERT(pkt);
         VMK_ASSERT(uplink_handle);
@@ -1062,15 +1059,11 @@ ionic_start_xmit(vmk_PktHandle *pkt,
         }
 
         vmk_Memset(&ctx, 0, sizeof(ionic_tx_ctx));
-        status = ionic_tx_descs_needed(q,
-                                       &pkt,
-                                       &ndescs,
-                                       &ctx);
-        if (status != VMK_OK) {
-                ionic_en_err("ionic_tx_descs_needed() failed, status: %s",
-                          vmk_StatusToString(status));
-                goto err_out_drop;
-        }
+
+        ionic_tx_descs_needed(pkt,
+                              &ndescs,
+                              &ctx,
+                              &is_linearize_needed);
 
         if (VMK_UNLIKELY(!ionic_q_has_space(q, ndescs))) {
                 /* Might race with ionic_tx_clean, check again */
@@ -1088,6 +1081,17 @@ ionic_start_xmit(vmk_PktHandle *pkt,
                         stats->stop++;
 
                         return VMK_BUSY;
+                }
+        }
+
+        if (is_linearize_needed) {
+                status = ionic_tx_linearize_pkt(q,
+                                                &pkt,
+                                                &ctx);
+                if (status != VMK_OK) {
+                        ionic_en_err("ionic_tx_linearize_pkt() failed, status: %s",
+                                     vmk_StatusToString(status));
+                        goto err_out_drop;
                 }
         }
 
