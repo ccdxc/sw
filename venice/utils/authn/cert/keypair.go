@@ -76,7 +76,7 @@ func (kp *clusterKeyPair) generateSelfSignedCert() error {
 	if err != nil {
 		return err
 	}
-	cert, err := certs.SelfSign(globals.APIGw, key, certs.WithValidityDays(3650))
+	cert, err := certs.SelfSign(globals.APIGw, key, certs.WithValidityDays(820))
 	if err != nil {
 		return err
 	}
