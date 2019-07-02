@@ -148,6 +148,9 @@ label_flow_miss:
 
 label_flow_hit:
     /* TODO: Possibly due to epoch check failure? */
+    phvwr       p.key3_flow_lkp_type, 0
+    phvwr       p.{txdma_predicate_flow_enable...txdma_predicate_cps_path_en}, 0
+    phvwr       p.capri_p4_intr_recirc, FALSE
     nop.e
     nop
 

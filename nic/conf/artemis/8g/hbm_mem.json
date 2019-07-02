@@ -252,7 +252,31 @@
             "_comment": "4M * 64B"
         },
         {
-            "name": "txdma_flow_ohash",
+            "name": "txdma_flow_ohash_3",
+            "base_region": "flow_ohash",
+            "size": "256M",
+            "_comment": "This is alias for IPv6 flow_ohash region, to refer fom TXDMA; Dont configure cache; 4M * 64B"
+        },
+        {
+            "name": "txdma_flow_ohash_4",
+            "base_region": "flow_ohash",
+            "size": "256M",
+            "_comment": "This is alias for IPv6 flow_ohash region, to refer fom TXDMA; Dont configure cache; 4M * 64B"
+        },
+        {
+            "name": "txdma_flow_ohash_5",
+            "base_region": "flow_ohash",
+            "size": "256M",
+            "_comment": "This is alias for IPv6 flow_ohash region, to refer fom TXDMA; Dont configure cache; 4M * 64B"
+        },
+        {
+            "name": "txdma_flow_ohash_6",
+            "base_region": "flow_ohash",
+            "size": "256M",
+            "_comment": "This is alias for IPv6 flow_ohash region, to refer fom TXDMA; Dont configure cache; 4M * 64B"
+        },
+        {
+            "name": "txdma_flow_ohash_7",
             "base_region": "flow_ohash",
             "size": "256M",
             "_comment": "This is alias for IPv6 flow_ohash region, to refer fom TXDMA; Dont configure cache; 4M * 64B"
@@ -276,7 +300,31 @@
             "_comment": "4M * 32B"
         },
         {
-            "name": "txdma_ipv4_flow_ohash",
+            "name": "txdma_ipv4_flow_ohash_3",
+            "size": "128M",
+            "base_region": "ipv4_flow_ohash",
+            "_comment": "This is alias for IPv4 flow region, to refer fom TXDMA; Dont configure cache; 4M * 32B"
+        },
+        {
+            "name": "txdma_ipv4_flow_ohash_4",
+            "size": "128M",
+            "base_region": "ipv4_flow_ohash",
+            "_comment": "This is alias for IPv4 flow region, to refer fom TXDMA; Dont configure cache; 4M * 32B"
+        },
+        {
+            "name": "txdma_ipv4_flow_ohash_5",
+            "size": "128M",
+            "base_region": "ipv4_flow_ohash",
+            "_comment": "This is alias for IPv4 flow region, to refer fom TXDMA; Dont configure cache; 4M * 32B"
+        },
+        {
+            "name": "txdma_ipv4_flow_ohash_6",
+            "size": "128M",
+            "base_region": "ipv4_flow_ohash",
+            "_comment": "This is alias for IPv4 flow region, to refer fom TXDMA; Dont configure cache; 4M * 32B"
+        },
+        {
+            "name": "txdma_ipv4_flow_ohash_7",
             "size": "128M",
             "base_region": "ipv4_flow_ohash",
             "_comment": "This is alias for IPv4 flow region, to refer fom TXDMA; Dont configure cache; 4M * 32B"
