@@ -103,7 +103,10 @@ label_2nd_level_flow_miss:
 
     seq         c2, r0, d.txdma_flow_hash_d.hint4
     phvwr.c2    p.txdma_to_arm_meta_rflow_parent_hint_slot, 4
-    nop
+    b.c2        label_flow_miss
+
+    seq         c2, r0, d.txdma_flow_hash_d.more_hints
+    phvwr.c2    p.txdma_to_arm_meta_rflow_parent_hint_slot, 5
 
 label_flow_miss:
     /* All done with the tables, set flow key to invalid */

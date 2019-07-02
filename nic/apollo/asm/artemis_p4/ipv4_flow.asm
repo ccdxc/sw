@@ -44,6 +44,10 @@ label_2nd_level_flow_miss:
 
     seq         c2, r0, d.ipv4_flow_hash_d.hint2
     phvwr.c2    p.p4_to_rxdma3_parent_hint_slot, 2
+    b.c2        label_flow_miss
+
+    seq         c2, r0, d.ipv4_flow_hash_d.more_hints
+    phvwr.c2    p.p4_to_rxdma3_parent_hint_slot, 5
 
 label_flow_miss:
     phvwr       p.p4_to_rxdma3_flow_nrecircs, 1 // TODO : use correct value
