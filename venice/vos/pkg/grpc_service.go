@@ -337,7 +337,7 @@ func (g *grpcBackend) AutoWatchObject(opts *api.ListWatchOptions, stream objstor
 		}
 		return apierrors.ToGrpcError("failed to complete PreOp checks", strs, int32(codes.FailedPrecondition), "", nil)
 	}
-	handleFn := func(evType kvstore.WatchEventType, item, prev runtime.Object) {
+	handleFn := func(inctx context.Context, evType kvstore.WatchEventType, item, prev runtime.Object) {
 		evs := objstore.AutoMsgObjectWatchHelper{}
 		evs.Events = []*objstore.AutoMsgObjectWatchHelper_WatchEvent{
 			{

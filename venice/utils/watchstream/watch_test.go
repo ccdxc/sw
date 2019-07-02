@@ -110,8 +110,8 @@ func TestWatchEventQ(t *testing.T) {
 	ctx := context.Background()
 	rcvdEvents := 0
 	rcvdErrors := 0
-	cbfunc := func(id string) func(evType kvstore.WatchEventType, obj, prev runtime.Object) {
-		return func(evType kvstore.WatchEventType, obj, prev runtime.Object) {
+	cbfunc := func(id string) func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object) {
+		return func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object) {
 			t.Logf("Q [%s] received object %+v", id, obj)
 			if evType == kvstore.WatcherError {
 				rcvdErrors++
@@ -245,8 +245,8 @@ func TestWatchEventQ(t *testing.T) {
 	t.Logf(" --> janitor slow watchers")
 	slowrcvd := 0
 	slowBlockCount := 3
-	slowcb := func(id string) func(evType kvstore.WatchEventType, obj, prev runtime.Object) {
-		return func(evType kvstore.WatchEventType, obj, prev runtime.Object) {
+	slowcb := func(id string) func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object) {
+		return func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object) {
 			slowrcvd++
 			t.Logf("q[%s] slowCb called", id)
 			if slowrcvd < slowBlockCount {
@@ -255,6 +255,7 @@ func TestWatchEventQ(t *testing.T) {
 			t.Logf("q[%s] slowCb blocking", id)
 			select {
 			case <-nctx.Done():
+			case <-inctx.Done():
 			}
 		}
 	}

@@ -334,12 +334,11 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb apiintf.Ev
 		histogram.Record("watch.DequeueLatency", time.Since(obj.enqts))
 		go func() {
 			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "type", obj.evType, "path", w.path, "ResVersion", obj.version, "peer", peer)
-			cb(obj.evType, obj.item, obj.prev)
+			cb(tracker.ctx, obj.evType, obj.item, obj.prev)
 			close(sendCh)
 		}()
 		select {
 		case <-sendCh:
-		case <-tracker.ctx.Done():
 		}
 		tracker.Lock()
 		tracker.version = obj.version
@@ -400,7 +399,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb apiintf.Ev
 			}
 			for _, obj := range objs {
 				w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "reason", "list", "type", kvstore.Created, "path", w.path, "peer", peer)
-				cb(kvstore.Created, obj, nil)
+				cb(tracker.ctx, kvstore.Created, obj, nil)
 			}
 		}
 		startVer = maxver + 1
@@ -427,7 +426,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb apiintf.Ev
 				Code:    http.StatusGone,
 			}
 			w.log.InfoLog("oper", "WatchEventQDequeueSend", "type", kvstore.WatcherError, "path", w.path, "reason", "catch up", "peer", peer)
-			cb(kvstore.WatcherError, &errmsg, nil)
+			cb(tracker.ctx, kvstore.WatcherError, &errmsg, nil)
 			return
 		}
 		// ignore events older than startVer
@@ -458,7 +457,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb apiintf.Ev
 				Code:    http.StatusGone,
 			}
 			w.log.InfoLog("oper", "WatchEventQDequeueSend", "type", kvstore.WatcherError, "path", w.path, "reason", "catch up", "peer", peer)
-			cb(kvstore.WatcherError, &errmsg, nil)
+			cb(tracker.ctx, kvstore.WatcherError, &errmsg, nil)
 			return
 		}
 	}

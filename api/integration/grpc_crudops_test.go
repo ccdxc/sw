@@ -3423,3 +3423,98 @@ func TestCrossTenantList(t *testing.T) {
 	tinfo.apisrvConfig.AllowMultiTenant = false
 	restartAPIGatewayAndServer(t)
 }
+
+func TestWatcherEviction(t *testing.T) {
+	// goRoutine to the create book elements
+	doneDel := make(chan error)
+	startCreate := make(chan error)
+	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
+	ctx := context.Background()
+
+	apicl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+	AssertOk(t, err, "failed to create grpc client")
+	defer apicl.Close()
+	go func() {
+		books, err := apicl.BookstoreV1().Book().List(ctx, &api.ListWatchOptions{})
+		if err != nil {
+			t.Fatalf("failed to list orders (%s)\n", err)
+			return
+		}
+		for i := range books {
+			_, err := apicl.BookstoreV1().Book().Delete(ctx, &books[i].ObjectMeta)
+			if err != nil {
+				t.Fatalf("failed to delete order [%v](%s)\n", books[i].Name, err)
+				return
+			}
+		}
+		t.Logf("done deleting current objects")
+		close(doneDel)
+		<-startCreate
+		longStr := "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789"
+		longStr = longStr + longStr
+		longStr = longStr + longStr
+		longStr = longStr + longStr
+
+		pub := bookstore.Publisher{
+			ObjectMeta: api.ObjectMeta{
+				Name: "Sahara",
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "Publisher",
+			},
+			Spec: bookstore.PublisherSpec{
+				Id:      "111",
+				Address: "#1 hilane, timbuktoo",
+				WebAddr: "http://sahara-books.org",
+			},
+		}
+		// create a publisher to satisfy references
+		apicl.BookstoreV1().Publisher().Create(ctx, &pub)
+		for i := 0; i < 200; i++ {
+			book := bookstore.Book{
+				ObjectMeta: api.ObjectMeta{
+					Name: fmt.Sprintf("watchBook-%d", i),
+				},
+				Spec: bookstore.BookSpec{
+					Publisher: "Sahara",
+					Category:  bookstore.BookSpec_ChildrensLit.String(),
+					Editions: map[string]*bookstore.BookEdition{
+						"DummyReview": {
+							Year: "2019",
+							Reviews: map[string]*bookstore.BookReview{
+								"dummy": {Review: longStr},
+							},
+						},
+					},
+				},
+			}
+			_, err = apicl.BookstoreV1().Book().Create(ctx, &book)
+		}
+		t.Logf("completed creating Objects")
+	}()
+	watcher, err := apicl.BookstoreV1().Book().Watch(ctx, &api.ListWatchOptions{})
+	AssertOk(t, err, "failed to create watch")
+	<-doneDel
+	wait := true
+	aft := time.After(time.Second * 90)
+	close(startCreate)
+	for {
+		select {
+		case ev, ok := <-watcher.EventChan():
+			if ok {
+				if wait {
+					t.Logf("Blocking for 60 seconds")
+					time.Sleep(time.Second * 60)
+					t.Logf("ublocking watcher, expecting to have been evicted")
+					wait = false
+				}
+				t.Logf("got watcher event [%v]", ev)
+			} else {
+				t.Logf("Watcher errored out as expected")
+				return
+			}
+		case <-aft:
+			t.Fatalf("Eventchannel was not closed!")
+		}
+	}
+}

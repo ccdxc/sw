@@ -53,6 +53,7 @@ func testAPICRUDOps() func() {
 		var rcvTEventsMutex sync.Mutex
 		var rcvTEvents, expTEvents []kvstore.WatchEvent
 		wctx, wcancel := context.WithCancel(lctx)
+		stopped := false
 		Expect(grpcClient).ShouldNot(BeNil())
 		go func() {
 			success := false
@@ -67,16 +68,19 @@ func testAPICRUDOps() func() {
 			opts.Name = globals.DefaultTenant
 			var tWatcher, nWatcher kvstore.Watcher
 			var err error
-			Eventually(func() error {
-				tWatcher, err = grpcClient.ClusterV1().Tenant().Watch(wctx, &opts)
-				return err
-			}, 30, 1).Should(BeNil(), "Watch should be successful")
-			opts = api.ListWatchOptions{}
-			opts.Tenant = globals.DefaultTenant
-			Eventually(func() error {
-				nWatcher, err = grpcClient.NetworkV1().Network().Watch(wctx, &opts)
-				return err
-			}, 30, 1).Should(BeNil(), "Watch should be successful")
+			setupWatchers := func() {
+				Eventually(func() error {
+					tWatcher, err = grpcClient.ClusterV1().Tenant().Watch(wctx, &opts)
+					return err
+				}, 30, 1).Should(BeNil(), "Watch should be successful")
+				opts = api.ListWatchOptions{}
+				opts.Tenant = globals.DefaultTenant
+				Eventually(func() error {
+					nWatcher, err = grpcClient.NetworkV1().Network().Watch(wctx, &opts)
+					return err
+				}, 30, 1).Should(BeNil(), "Watch should be successful")
+			}
+			setupWatchers()
 
 			Expect(err).To(BeNil())
 			success = true
@@ -90,7 +94,11 @@ func testAPICRUDOps() func() {
 						rcvTEvents = append(rcvTEvents, *ev)
 						rcvTEventsMutex.Unlock()
 					} else {
-						active = false
+						if !stopped {
+							setupWatchers()
+						} else {
+							active = false
+						}
 					}
 				case ev, ok := <-nWatcher.EventChan():
 					if ok {
@@ -98,7 +106,11 @@ func testAPICRUDOps() func() {
 						rcvNEvents = append(rcvNEvents, *ev)
 						rcvNEventsMutex.Unlock()
 					} else {
-						active = false
+						if !stopped {
+							setupWatchers()
+						} else {
+							active = false
+						}
 					}
 				case <-wctx.Done():
 					active = false
@@ -305,6 +317,7 @@ func testAPICRUDOps() func() {
 			}
 			return retStr
 		}, 10, 1).Should(Equal("success"), "Number of Network watch events did not match")
+		stopped = true
 		wcancel()
 		for k := range expTEvents {
 			eSpec := expTEvents[k].Object.(*cluster.Tenant).Spec

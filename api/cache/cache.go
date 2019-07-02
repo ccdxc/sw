@@ -990,7 +990,7 @@ func (c *cache) WatchFiltered(ctx context.Context, key string, opts api.ListWatc
 	nctx, cancel := context.WithCancel(ctx)
 	ret := newWatchServer(cancel)
 	peer := ctxutils.GetContextID(nctx)
-	watchHandler := func(evType kvstore.WatchEventType, item, prev runtime.Object) {
+	watchHandler := func(inctx context.Context, evType kvstore.WatchEventType, item, prev runtime.Object) {
 		if evType != kvstore.WatcherError {
 			for _, fn := range filters {
 				if !fn(item, prev) {
@@ -1004,6 +1004,7 @@ func (c *cache) WatchFiltered(ctx context.Context, key string, opts api.ListWatc
 			Object: item,
 		}:
 		case <-nctx.Done():
+		case <-inctx.Done():
 		}
 	}
 	wq := c.queues.Add(key, peer)
@@ -1022,6 +1023,8 @@ func (c *cache) WatchFiltered(ctx context.Context, key string, opts api.ListWatc
 	go func() {
 		wq.Dequeue(nctx, fromVer, watchHandler, cleanupFn)
 		watchers.Add(-1)
+		ret.Stop()
+		close(ret.ch)
 	}()
 	return ret, nil
 }
