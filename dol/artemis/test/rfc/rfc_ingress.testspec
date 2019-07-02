@@ -2,7 +2,7 @@
 
 selectors:
     root: ref://store/templates/id=POLICY
-    maxlimits: 5
+    maxlimits: 1
     policy: filter://Direction=ingress
 
 packets:

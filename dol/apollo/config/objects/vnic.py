@@ -32,7 +32,7 @@ class VnicObject(base.ConfigObjectBase):
             self.SourceGuard = c
         self.RxMirror = rxmirror
         self.TxMirror = txmirror
-        self.V4MeterId = meter.client.GetV4MeterId(parent.VPC.VPCId )
+        self.V4MeterId = meter.client.GetV4MeterId(parent.VPC.VPCId)
         self.V6MeterId = meter.client.GetV6MeterId(parent.VPC.VPCId)
         self._derive_oper_info()
 
@@ -77,6 +77,8 @@ class VnicObject(base.ConfigObjectBase):
             spec.RxMirrorSessionId.append(int(rxmirror))
         for txmirror in self.TxMirror:
             spec.TxMirrorSessionId.append(int(txmirror))
+        spec.V4MeterId = self.V4MeterId
+        spec.V6MeterId = self.V6MeterId
         return grpcmsg
 
     def Show(self):
@@ -86,6 +88,7 @@ class VnicObject(base.ConfigObjectBase):
              % (self.VlanId, self.MplsSlot, self.Vnid, self.MACAddr, str(self.SourceGuard)))
         logger.info("- RxMirror:", self.RxMirror)
         logger.info("- TxMirror:", self.TxMirror)
+        logger.info("- V4MeterId:%d|V6MeterId:%d" %(self.V4MeterId, self.V6MeterId))
         return
 
     def SetupTestcaseConfig(self, obj):

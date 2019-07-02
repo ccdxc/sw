@@ -304,7 +304,6 @@ class PolicyObjectClient:
     def GenerateObjects(self, parent, vpc_spec_obj):
         vpcid = parent.VPCId
         stack = parent.Stack
-        self.__objs = dict()
         self.__v4ingressobjs[vpcid] = []
         self.__v6ingressobjs[vpcid] = []
         self.__v4egressobjs[vpcid] = []
