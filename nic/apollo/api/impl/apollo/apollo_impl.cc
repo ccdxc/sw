@@ -678,6 +678,26 @@ apollo_impl::session_stats(debug::session_stats_get_cb_t cb, uint32_t lowidx,
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+apollo_impl::session(debug::session_get_cb_t cb, uint32_t idx, void *ctxt) {
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+apollo_impl::flow(debug::flow_get_cb_t cb, uint32_t idx, void *ctxt) {
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+apollo_impl::session_clear(uint32_t idx) {
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+apollo_impl::flow_clear(uint32_t idx) {
+    return SDK_RET_OK;
+}
+
 /// \@}
 
 }    // namespace impl

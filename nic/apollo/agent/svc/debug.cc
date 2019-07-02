@@ -212,12 +212,35 @@ DebugSvcImpl::PbStatsGet(ServerContext *context, const Empty *proto_req,
 Status
 DebugSvcImpl::FteStatsGet(ServerContext *context, const Empty *req,
                           pds::FteStatsGetResponse *rsp) {
+    sdk_ret_t ret;
+
+    if ((ret = debug::pds_fte_api_stats_get()) != SDK_RET_OK) {
+        rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    }
+    if ((ret = debug::pds_fte_table_stats_get()) != SDK_RET_OK) {
+        rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    }
+
     return Status::OK;
 }
 
 Status
 DebugSvcImpl::FteStatsClear(ServerContext *context, const pds::FteStatsClearRequest *req,
                           pds::FteStatsClearResponse *rsp) {
+    sdk_ret_t ret;
+
+    if (req->apistats()) {
+        if ((ret = debug::pds_fte_api_stats_clear()) != SDK_RET_OK) {
+            rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        }
+    }
+
+    if (req->tablestats()) {
+        if ((ret = debug::pds_fte_table_stats_clear()) != SDK_RET_OK) {
+            rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        }
+    }
+
     return Status::OK;
 }
 

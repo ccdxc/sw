@@ -907,6 +907,16 @@ pds_session_debug_stats_fill (uint32_t idx, pds_session_debug_stats_t *stats, vo
 }
 
 static inline void
+pds_session_fill (void *ctxt)
+{
+}
+
+static inline void
+pds_flow_fill (void *ctxt)
+{
+}
+
+static inline void
 pds_pb_stats_entry_fill (pds_pb_debug_stats_t *pds_stats, void *ctxt)
 {
     sdk::platform::capri::tm_pb_debug_stats_t *stats = &pds_stats->stats;
