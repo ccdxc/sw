@@ -252,7 +252,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 	}
 
 	// Verify rollout Node status
-	for numRetries = 0; numRetries < 100; numRetries++ {
+	for numRetries = 0; numRetries < 120; numRetries++ {
 		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
 		rollout, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
 		if err != nil {
@@ -316,7 +316,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 	}
 
 	// Verify rollout smartNIC status
-	for numRetries = 0; numRetries < 60; numRetries++ {
+	for numRetries = 0; numRetries < 180; numRetries++ {
 		restcls, err := act.model.tb.VeniceRestClient()
 		if err != nil {
 			log.Infof("ts:%s Failed to get restclient err %+v", time.Now().String(), err)
