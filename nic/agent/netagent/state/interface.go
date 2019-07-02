@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
+	dnetproto "github.com/pensando/sw/nic/agent/protos/generated/delphi/netproto/delphi"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -81,6 +82,7 @@ func (na *Nagent) CreateInterface(intf *netproto.Interface) error {
 	}
 
 	// save it in db
+	na.saveInterface(intf)
 	key := na.Solver.ObjectKey(intf.ObjectMeta, intf.TypeMeta)
 	na.Lock()
 	na.EnicDB[key] = intf
@@ -157,6 +159,8 @@ func (na *Nagent) UpdateInterface(intf *netproto.Interface) error {
 		return nil
 	}
 
+	// save it in db
+	na.saveInterface(intf)
 	err = na.Datapath.UpdateInterface(intf)
 	key := na.Solver.ObjectKey(intf.ObjectMeta, intf.TypeMeta)
 	na.Lock()
@@ -199,6 +203,7 @@ func (na *Nagent) DeleteInterface(tn, namespace, name string) error {
 	}
 
 	// delete from db
+	na.discardInterface(intf)
 	key := na.Solver.ObjectKey(intf.ObjectMeta, intf.TypeMeta)
 	na.Lock()
 	delete(na.EnicDB, key)
@@ -206,6 +211,48 @@ func (na *Nagent) DeleteInterface(tn, namespace, name string) error {
 	err = na.Store.Delete(intf)
 
 	return err
+}
+
+// saveInterface saves interface to state stores
+func (na *Nagent) saveInterface(intf *netproto.Interface) error {
+	key := na.Solver.ObjectKey(intf.ObjectMeta, intf.TypeMeta)
+
+	// write to delphi
+	if na.DelphiClient != nil {
+		dintf := dnetproto.Interface{
+			Key:       key,
+			Interface: intf,
+		}
+
+		err := na.DelphiClient.SetObject(&dintf)
+		if err != nil {
+			log.Errorf("Error writing Interface %s to delphi. Err: %v", key, err)
+			return err
+		}
+	}
+
+	return na.Store.Write(intf)
+}
+
+// discardInterface deletes interface from state stores
+func (na *Nagent) discardInterface(intf *netproto.Interface) error {
+	key := na.Solver.ObjectKey(intf.ObjectMeta, intf.TypeMeta)
+
+	// delete it from delphi
+	if na.DelphiClient != nil {
+		dintf := dnetproto.Interface{
+			Key:       key,
+			Interface: intf,
+		}
+
+		err := na.DelphiClient.DeleteObject(&dintf)
+		if err != nil {
+			log.Errorf("Error deleting Interface %s from delphi. Err: %v", key, err)
+			return err
+		}
+	}
+
+	return na.Store.Delete(intf)
 }
 
 //GetHwInterfaces queries the datapath interface for uplinks and lifs created and populates the interface DB
@@ -222,6 +269,7 @@ func (na *Nagent) GetHwInterfaces() error {
 		key := na.Solver.ObjectKey(lif.ObjectMeta, lif.TypeMeta)
 		na.HwIfDB[key] = lif
 		na.Unlock()
+		na.saveInterface(lif)
 	}
 
 	// Populate Agent state
@@ -341,6 +389,12 @@ func (na *Nagent) createPortsAndUplinks(ports []*netproto.Port) error {
 			},
 		}
 		key := na.Solver.ObjectKey(uplink.ObjectMeta, uplink.TypeMeta)
+
+		// save the interface into state stores
+		err = na.saveInterface(uplink)
+		if err != nil {
+			log.Errorf("Error storing uplink %+v to state store. Err: %v", uplink.ObjectMeta, err)
+		}
 
 		na.Lock()
 		na.HwIfDB[key] = uplink
