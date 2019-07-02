@@ -972,6 +972,7 @@ enum xcvr_pid {
 	XCVR_PID_SFP_10GBASE_ER   = 66,
 	XCVR_PID_SFP_10GBASE_AOC  = 67,
 	XCVR_PID_SFP_10GBASE_CU   = 68,
+        XCVR_PID_QSFP_100G_CWDM4  = 69,
 };
 
 /**

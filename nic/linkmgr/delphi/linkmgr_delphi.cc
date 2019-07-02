@@ -325,6 +325,9 @@ xcvr_sdk_pid_to_spec_pid (xcvr_pid_t pid)
     case xcvr_pid_t::XCVR_PID_QSFP_100G_ER4:
         return port::XCVR_PID_QSFP_100G_ER4;
 
+    case xcvr_pid_t::XCVR_PID_QSFP_100G_CWDM4:
+        return port::XCVR_PID_QSFP_100G_CWDM4;
+
     case xcvr_pid_t::XCVR_PID_QSFP_40GBASE_ER4:
         return port::XCVR_PID_QSFP_40GBASE_ER4;
 

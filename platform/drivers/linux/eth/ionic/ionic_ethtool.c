@@ -179,6 +179,7 @@ fake_port_type++;
 		ethtool_link_ksettings_add_link_mode(ks, advertising,
 						     100000baseSR4_Full);
 		break;
+	case XCVR_PID_QSFP_100G_CWDM4:
 	case XCVR_PID_QSFP_100G_LR4:
 		ethtool_link_ksettings_add_link_mode(ks, supported,
 						     100000baseLR4_ER4_Full);
