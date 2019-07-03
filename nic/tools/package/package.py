@@ -53,6 +53,12 @@ parser.add_argument('--pipeline', dest='pipeline', default='iris',
                      action='store', choices=['apollo', 'gft', 'iris', 'artemis'],
                      help='Pipeline')
 
+# feature type
+parser.add_argument('--feature', dest='feature',
+                     default=None,
+                     choices=['ipsec'],
+                     help='Feature (eg)ipsec')
+
 args = parser.parse_args()
 def process_files(files, arch, pipeline):
     new_files = []
@@ -144,6 +150,9 @@ else:
         files.append('nic/tools/package/pack_haps.txt')
         # skip platform for apollo
         files.append('nic/tools/package/pack_platform.txt')
+
+    if args.feature == 'ipsec':
+        files.append('nic/tools/package/pack_ipsec.txt')
 
     files.append('nic/tools/package/pack_debug.txt')
 

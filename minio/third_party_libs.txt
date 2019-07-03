@@ -23,6 +23,7 @@ nic/hal/third-party/snort3/export/aarch64/*
 nic/sdk/third-party/libev/*
 nic/sdk/third-party/libnuma/*
 nic/sdk/third-party/vpp-pkg/*
+nic/sdk/third-party/strongswan-pkg/*
 
 nic/hal/third-party/tins/x86_64/*
 nic/hal/third-party/tins/aarch64/*

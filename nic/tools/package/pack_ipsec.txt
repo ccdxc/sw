@@ -1,0 +1,6 @@
+# strongSwan binaries and libraries
+nic/sdk/third-party/strongswan-pkg/$ARCH/bin/		/nic/bin/
+nic/sdk/third-party/strongswan-pkg/$ARCH/etc/		/nic/etc/
+nic/sdk/third-party/strongswan-pkg/$ARCH/lib/		/nic/lib/
+nic/sdk/third-party/strongswan-pkg/$ARCH/libexec/	/nic/libexec/
+nic/sdk/third-party/strongswan-pkg/$ARCH/sbin/		/nic/sbin/
