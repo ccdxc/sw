@@ -45,8 +45,15 @@ iflow_ipv4_key:
     add             r1, 0, (TXDMA_IFLOW_LEAF_FLIT * 512) + 256 + 96 + 8
     phvwrp          r1, 0, 8, d.iflow_rx2tx_d.vpc_id
     add             r1, r1, 8
-    phvwrp          r1, 0, 32, d.iflow_rx2tx_d.flow_dst[31:0]
+
+    // For RX_TO_HOST, iflow_rx2tx.flow_dip is ovewritten by NATed IP,
+    // thats good for rflow.sip, but iflow.dip need to have pre-nat_ip, so
+    // overwrite
+    seq             c1, k.rx_to_tx_hdr_direction, RX_FROM_SWITCH
+    phvwrp.c1       r1, 0, 32, k.rx_to_tx_hdr_pre_nat_ip[31:0]
+    phvwrp.!c1      r1, 0, 32, d.iflow_rx2tx_d.flow_dst[31:0]
     add             r1, r1, 32
+
     phvwrp          r1, 0, 32, d.iflow_rx2tx_d.flow_src[31:0]
     add             r1, r1, 32
     phvwrp          r1, 0, 16, d.iflow_rx2tx_d.flow_sport
@@ -59,17 +66,23 @@ iflow_ipv4_key:
     add             r1, 0, (TXDMA_IFLOW_LEAF_FLIT * 512) + 512 - 8
     phvwrp          r1, 0, 8, d.iflow_rx2tx_d.epoch
 
-#if 1
-    /* FIXME rflow , reverse of iflow for now */
+    /*
+     * RFLOW keys
+     */
     phvwr           p.key_ipv4_flow_ohash, 0
     phvwr           p.key_ipv4_proto, d.iflow_rx2tx_d.flow_proto
     phvwr           p.key_ipv4_ipv4_src, d.iflow_rx2tx_d.flow_dst[31:0]
-    phvwr           p.key_ipv4_ipv4_dst, d.iflow_rx2tx_d.flow_src[31:0]
     phvwr           p.key_ipv4_sport, d.iflow_rx2tx_d.flow_dport
     phvwr           p.key_ipv4_dport, d.iflow_rx2tx_d.flow_sport
     phvwr           p.key_ipv4_vpc_id, d.iflow_rx2tx_d.vpc_id
     phvwri          p.key2_ipv4_flow_lkp_type, 4
-#endif
+
+    // TODO-MURTY: For TX_FROM_HOST, need to derive NATed IP for iflow.sip
+    // and use that as destination for rflow
+    seq             c1, k.rx_to_tx_hdr_direction, TX_FROM_HOST
+    phvwr.c1        p.key_ipv4_ipv4_dst, k.rx_to_tx_hdr_pre_nat_ip[31:0]
+    phvwr.!c1       p.key_ipv4_ipv4_dst, d.iflow_rx2tx_d.flow_src[31:0]
+
     phvwr           p.key_ipv4_epoch, d.iflow_rx2tx_d.epoch
 
     b               iflow_key_done
@@ -86,8 +99,15 @@ iflow_ipv6_key:
     add             r1, r1, 16
     phvwrp          r1, 0, 16, d.iflow_rx2tx_d.flow_dport
     add             r1, r1, 16
-    phvwrp          r1, 0, 128, d.iflow_rx2tx_d.flow_dst
+
+    // For RX_TO_HOST, iflow_rx2tx.flow_dip is ovewritten by NATed IP,
+    // thats good for rflow.sip, but iflow.dip need to have pre-nat_ip, so
+    // overwrite
+    seq             c1, k.rx_to_tx_hdr_direction, RX_FROM_SWITCH
+    phvwrp.c1       r1, 0, 128, k.rx_to_tx_hdr_pre_nat_ip
+    phvwrp.!c1      r1, 0, 128, d.iflow_rx2tx_d.flow_dst
     add             r1, r1, 128
+
     phvwrp          r1, 0, 128, d.iflow_rx2tx_d.flow_src
     add             r1, r1, 128
     phvwrp          r1, 0, 8, d.iflow_rx2tx_d.flow_proto
@@ -96,20 +116,27 @@ iflow_ipv6_key:
     add             r1, 0, (TXDMA_IFLOW_LEAF_FLIT * 512) + 512 - 8
     phvwrp          r1, 0, 8, d.iflow_rx2tx_d.epoch
 
-#if 1
-    /* FIXME: rflow , reverse of iflow for now */
+    /*
+     * RFLOW keys
+     */
     phvwr           p.key1_flow_ohash, 0
     phvwr           p.key1_proto, d.iflow_rx2tx_d.flow_proto
     phvwr           p.key1_src, d.iflow_rx2tx_d.flow_dst[127:16]
     phvwr           p.key2_src, d.iflow_rx2tx_d.flow_dst[15:0]
-    phvwr           p.key2_dst, d.iflow_rx2tx_d.flow_src[127:48]
-    phvwr           p.key3_dst, d.iflow_rx2tx_d.flow_src[47:0]
     phvwr           p.key3_sport, d.iflow_rx2tx_d.flow_dport
     phvwr           p.key3_dport, d.iflow_rx2tx_d.flow_sport
     phvwr           p.key3_vpc_id, d.iflow_rx2tx_d.vpc_id
     phvwri          p.key3_ktype, KEY_TYPE_IPV6
     phvwri          p.key3_flow_lkp_type, 6
-#endif
+
+    // TODO-MURTY: For TX_FROM_HOST, need to derive NATed IP for iflow.sip
+    // and use that as destination for rflow
+    seq             c1, k.rx_to_tx_hdr_direction, TX_FROM_HOST
+    phvwr.c1        p.key2_dst, k.rx_to_tx_hdr_pre_nat_ip[127:48]
+    phvwr.c1        p.key3_dst, k.rx_to_tx_hdr_pre_nat_ip[47:0]
+    phvwr.!c1       p.key2_dst, d.iflow_rx2tx_d.flow_src[127:48]
+    phvwr.!c1       p.key3_dst, d.iflow_rx2tx_d.flow_src[47:0]
+
     phvwr           p.key3_epoch, d.iflow_rx2tx_d.epoch
 
 iflow_key_done:
