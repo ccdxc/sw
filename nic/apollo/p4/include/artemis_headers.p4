@@ -35,7 +35,7 @@ header_type artemis_p4_to_rxdma_header_t {
 header_type artemis_p4_to_rxdma_header2_t {
     fields {
         service_xlate_idx   : 16;
-        xlate_port          : 16;
+        service_xlate_port  : 16;
         pa_or_ca_xlate_idx  : 16;
         public_xlate_idx    : 16;
         pad0                : 32;

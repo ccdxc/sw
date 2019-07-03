@@ -21,12 +21,12 @@ nat_rxdma:
     // keys derivation.  Carry this nat ip and xlate_port in rx_to_tx header.
     phvwr.c1    p.rx_to_tx_hdr_nat_ip[127:64], d.find_local_ip_d.nat_ip[127:64]
     phvwr.c1    p.rx_to_tx_hdr_nat_ip[63:0], d.find_local_ip_d.nat_ip[63:0]
-    phvwr.c1    p.rx_to_tx_hdr_xlate_port, k.p4_to_rxdma2_xlate_port
+    phvwr.c1    p.rx_to_tx_hdr_xlate_port, k.p4_to_rxdma2_service_xlate_port
 
     // Overwrite FlowDst with this Local IP address derived from NAT table
     phvwr.!c1   p.p4_to_rxdma_flow_dst, d.find_local_ip_d.nat_ip
     // Update FlowDst with this Xlate_port received from P4
-    phvwr.!c1   p.p4_to_rxdma_flow_dport, k.p4_to_rxdma2_xlate_port
+    phvwr.!c1   p.p4_to_rxdma_flow_dport, k.p4_to_rxdma2_service_xlate_port
 
 not_rxdma_skip_nat:
     nop.e

@@ -8,7 +8,15 @@ struct flow_d  d;
 struct phv_ p;
 
 #define FLOW_HASH_MSB 31:23
+
 %%
+
+.assert(offsetof(k, key_metadata_proto)    == (512 - 40 - (8)))
+.assert(offsetof(k, key_metadata_src)      == (512 - 40 - (8 + 128)))
+.assert(offsetof(k, key_metadata_dst)      == (512 - 40 - (8 + 128 + 128)))
+.assert(offsetof(k, key_metadata_dport)    == (512 - 40 - (8 + 128 + 128 + 16)))
+.assert(offsetof(k, key_metadata_sport)    == (512 - 40 - (8 + 128 + 128 + 16 + 16)))
+.assert(offsetof(k, vnic_metadata_vpc_id)  == (512 - 40 - (8 + 128 + 128 + 16 + 16 + 8)))
 
 flow_hash:
     bbne        d.flow_hash_d.entry_valid, TRUE, label_flow_miss

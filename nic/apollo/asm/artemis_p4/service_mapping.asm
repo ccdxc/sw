@@ -10,10 +10,11 @@ struct phv_ p;
 %%
 
 service_mapping_info:
+    phvwr.c1        p.nat_metadata_service_xlate_idx, \
+                        d.service_mapping_info_d.service_xlate_idx
     nop.e
-    phvwr.c1.f      p.{p4i_i2e_service_xlate_idx,p4i_i2e_service_xlate_port}, \
-                        d.{service_mapping_info_d.service_xlate_idx, \
-                            service_mapping_info_d.service_xlate_port}
+    phvwr.c1.f      p.nat_metadata_service_xlate_port, \
+                        d.service_mapping_info_d.service_xlate_port
 
 /*****************************************************************************/
 /* error function                                                            */

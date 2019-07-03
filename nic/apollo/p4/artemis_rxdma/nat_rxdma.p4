@@ -14,7 +14,7 @@ action find_local_ip(nat_ip) {
                 // Update FlowDst with this Local IP address derived from NAT table
                 modify_field(p4_to_rxdma.flow_dst, nat_ip);
                 // Update FlowDst with this Xlate_port received from P4, if its non-zero
-                modify_field(p4_to_rxdma.flow_dport, p4_to_rxdma2.xlate_port);
+                modify_field(p4_to_rxdma.flow_dport, p4_to_rxdma2.service_xlate_port);
             }
         }
 }

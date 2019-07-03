@@ -247,9 +247,9 @@
         },
         {
             "name": "flow_ohash",
-            "size": "256M",
+            "size": "288M",
             "cache": "p4ig",
-            "_comment": "4M * 64B"
+            "_comment": "(4M + 512K) * 64B"
         },
         {
             "name": "txdma_flow_ohash_3",
@@ -295,9 +295,9 @@
         },
         {
             "name": "ipv4_flow_ohash",
-            "size": "128M",
+            "size": "144M",
             "cache": "p4ig",
-            "_comment": "4M * 32B"
+            "_comment": "(4M + 512K) * 32B"
         },
         {
             "name": "txdma_ipv4_flow_ohash_3",

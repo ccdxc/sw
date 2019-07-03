@@ -80,6 +80,7 @@ ingress_to_cps:
                         (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
                          CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
                          ARTEMIS_P4_TO_RXDMA_HDR_SZ)
+    phvwr           p.predicate_header_direction, k.control_metadata_direction
     phvwr           p.p4_to_rxdma_vnic_info_en, TRUE
     phvwr.e         p.p4_to_rxdma_cps_path_en, TRUE
     phvwr.f         p.p4_to_rxdma_direction, k.control_metadata_direction

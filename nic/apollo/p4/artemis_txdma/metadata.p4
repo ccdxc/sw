@@ -83,11 +83,11 @@ header_type key_ipv4_metadata_t {
         flow_ohash      : 32;
         flow_ohash_lkp  : 1;
         _pad0           : 7;
+        ipv4_dst        : 32;
         proto           : 8;
+        ipv4_src        : 32;
         dport           : 16;
         sport           : 16;
-        ipv4_src        : 32;
-        ipv4_dst        : 32;
         vpc_id          : 8;
 
         // I

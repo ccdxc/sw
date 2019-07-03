@@ -12,8 +12,8 @@ action local_ip_mapping_info(vnic_id, vpc_id, service_tag, pa_or_ca_xlate_idx,
         modify_field(vnic_metadata.vpc_id, vpc_id);
     }
     modify_field(p4_to_rxdma.service_tag, service_tag);
-    modify_field(p4i_i2e.pa_or_ca_xlate_idx, pa_or_ca_xlate_idx);
-    modify_field(p4i_i2e.public_xlate_idx, public_xlate_idx);
+    modify_field(nat_metadata.pa_or_ca_xlate_idx, pa_or_ca_xlate_idx);
+    modify_field(nat_metadata.public_xlate_idx, public_xlate_idx);
     modify_field(p4i_i2e.ca6_xlate_idx, ca6_xlate_idx);
 }
 
@@ -48,8 +48,8 @@ table local_ip_mapping_otcam {
 action service_mapping_info(service_xlate_idx, service_xlate_port) {
     // if table lookup is a miss, return
 
-    modify_field(p4i_i2e.service_xlate_idx, service_xlate_idx);
-    modify_field(p4i_i2e.service_xlate_port, service_xlate_port);
+    modify_field(nat_metadata.service_xlate_idx, service_xlate_idx);
+    modify_field(nat_metadata.service_xlate_port, service_xlate_port);
 }
 
 @pragma stage 4

@@ -76,6 +76,10 @@ header_type rewrite_metadata_t {
 
 header_type nat_metadata_t {
     fields {
+        service_xlate_idx   : 16;
+        service_xlate_port  : 16;
+        pa_or_ca_xlate_idx  : 16;
+        public_xlate_idx    : 16;
         xlate_idx           : 16;
     }
 }

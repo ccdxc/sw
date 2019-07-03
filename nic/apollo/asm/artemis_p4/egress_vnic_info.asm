@@ -46,4 +46,4 @@ egress_vnic_port_check:
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 egress_vnic_info_error:
     phvwr.e         p.capri_intrinsic_drop, 1
-    nop
+    phvwr           p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq

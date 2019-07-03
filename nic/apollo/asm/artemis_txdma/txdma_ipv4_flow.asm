@@ -106,15 +106,15 @@ label_flow_miss:
     add             r1, 0, (TXDMA_RFLOW_LEAF_FLIT * 512) + 256 + 96 + 8
     phvwrp          r1, 0, 8, k.key_ipv4_vpc_id
     add             r1, r1, 8
-    phvwrp          r1, 0, 32, k.key_ipv4_ipv4_dst[31:0]
-    add             r1, r1, 32
-    phvwrp          r1, 0, 32, k.key_ipv4_ipv4_src[31:0]
-    add             r1, r1, 32
     phvwrp          r1, 0, 16, k.key_ipv4_sport
     add             r1, r1, 16
     phvwrp          r1, 0, 16, k.key_ipv4_dport
     add             r1, r1, 16
+    phvwrp          r1, 0, 32, k.key_ipv4_ipv4_src[31:0]
+    add             r1, r1, 32
     phvwrp          r1, 0, 8, k.key_ipv4_proto
+    add             r1, r1, 8
+    phvwrp          r1, 0, 32, k.key_ipv4_ipv4_dst[31:0]
 
     // Fill iflow d (has to match ipv4_flow_d
     add             r1, 0, (TXDMA_RFLOW_LEAF_FLIT * 512) + 512 - 8
