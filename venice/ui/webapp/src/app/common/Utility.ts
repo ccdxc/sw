@@ -970,6 +970,8 @@ export class Utility {
         return 'admin/users';
       case 'Rollout':
         return 'settings/upgrade/rollouts';
+      case 'EventPolicy':
+        return 'monitoring/alertsevents/eventpolicy';
       default:
         return (!isToUseDefault) ? null : cat + '/' + pluralize.plural(kind.toLowerCase()) + '/' + name;
     }
