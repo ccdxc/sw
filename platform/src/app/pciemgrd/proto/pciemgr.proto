@@ -41,8 +41,9 @@ message PciePortMetrics {
     };
     option (venice.penctlCmd) = {
         Cmd:     "port",
+        ShortHelpStr: "Pcie Port Metrics information",
         HelpStr: "Pcie Port Metrics information:\\n"
-            "\\n\\nValue Description:\\n\\n"
+            "Value Description:\\n"
             "intr_total : total port intrs.\\n"
             "intr_ltssmst_early : link train before linkup.\\n"
             "intr_ltssmst : link train after  linkup.\\n"
@@ -102,7 +103,9 @@ message PcieMgrMetrics {
     };
     option (venice.penctlCmd) = {
         Cmd:     "pciemgr",
+        ShortHelpStr: "Pcie Mgr Metrics information",
         HelpStr: "Pcie Mgr Metrics information:\\n"
+            "Value Description:\\n"
             "not_intr : notify total intrs.\\n"
             "not_spurious : notify spurious intrs.\\n"
             "not_cnt : notify total txns.\\n"
