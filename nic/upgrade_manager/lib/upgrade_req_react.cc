@@ -355,10 +355,50 @@ delphi::error UpgReqReact::OnUpgReqDelete(delphi::objects::UpgReqPtr req) {
     return delphi::error::OK();
 }
 
-delphi::error UpgReqReact::StartUpgrade() {
+delphi::error UpgReqReact::IsUpgradePossible(delphi::objects::UpgReqPtr req) {
+    UPG_LOG_INFO("CanUpgrade request received");
+    UPG_OBFL_TRACE("Check Upgrade Possible");
+
+    StateMachine = CanUpgradeStateMachine;
+    upgReqType_ = IsUpgPossible;
+    UpgReqStateType type = UpgStateUpgPossible;
+    upgMetric_->IsUpgPossible()->Incr();
+   
+    if (appRegMap_.size() == 0) {
+        AppendAppRespFailStr("No app registered for upgrade");
+        upgMgrResp_->UpgradeFinish(UpgRespFail, appRespFailStrList_);
+        return delphi::error("No app registered for upgrade");
+    }
+    // find the status object
+    auto upgReqStatus = findUpgStateReq();
+    if (upgReqStatus == NULL) {
+        // create it since it doesnt exist
+        UpgPreStateFunc preStFunc = StateMachine[type].preStateFunc;
+        if (preStFunc) {
+            UPG_LOG_DEBUG("Going to invoke pre-state handler function");
+            if (!(preStateHandlers->*preStFunc)(ctx)) {
+                UPG_LOG_DEBUG("pre-state handler function returned false");
+                type = UpgStateFailed;
+                SetAppRespFail();
+                AppendAppRespFailStr("Compat Check Failed. Metadata version mismatch: " + ctx.compatCheckFailureReason);
+                upgMgrResp_->UpgradeFinish(UpgRespFail, appRespFailStrList_);
+                ResetAppResp();
+                upgPassed_ = false;
+                upgAborted_ = false;
+                return delphi::error::OK();
+            }
+        }
+        RETURN_IF_FAILED(createUpgStateReq(type, req->upgreqtype(), ctx.firmwarePkgName));
+    }
+
+    return delphi::error::OK();
+}
+
+delphi::error UpgReqReact::StartUpgrade(delphi::objects::UpgReqPtr req) {
+    UpgReqStateType type = UpgStateCompatCheck;
+    upgReqType_ = UpgStart;
     delphi::objects::UpgStateReqPtr upgReqStatus = findUpgStateReq();
     if (upgReqStatus != NULL) {
-        upgReqType_ = UpgStart;
         StateMachine = NonDisruptiveUpgradeStateMachine;
         upgReqStatus->set_upgreqtype(UpgTypeNonDisruptive);
         if (ctx.upgType == UpgTypeDisruptive) {
@@ -376,6 +416,29 @@ delphi::error UpgReqReact::StartUpgrade() {
         sdk_->SetObject(upgReqStatus);
         UPG_LOG_DEBUG("Updated Upgrade Request Status UpgStateCompatCheck");
         return delphi::error::OK();
+    } else {
+        StateMachine = NonDisruptiveUpgradeStateMachine;
+        if (ctx.upgType == UpgTypeDisruptive) {
+            StateMachine = DisruptiveUpgradeStateMachine;
+            UPG_OBFL_TRACE("Disruptive upgrade started");
+        }
+        // create it since it doesnt exist
+        UpgPreStateFunc preStFunc = StateMachine[type].preStateFunc;
+        if (preStFunc) {
+            UPG_LOG_DEBUG("Going to invoke pre-state handler function");
+            if (!(preStateHandlers->*preStFunc)(ctx)) {
+                UPG_LOG_DEBUG("pre-state handler function returned false");
+                type = UpgStateFailed;
+                SetAppRespFail();
+                AppendAppRespFailStr("Compat Check Failed. Metadata version mismatch: " + ctx.compatCheckFailureReason);
+                upgMgrResp_->UpgradeFinish(UpgRespFail, appRespFailStrList_);
+                ResetAppResp();
+                upgPassed_ = false;
+                upgAborted_ = false;
+                return delphi::error::OK();
+            }
+        }
+        RETURN_IF_FAILED(createUpgStateReq(type, req->upgreqtype(), ctx.firmwarePkgName));
     }
     return delphi::error("Did not find UpgStateReqPtr");
 }
@@ -408,12 +471,18 @@ delphi::error UpgReqReact::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
         return delphi::error("GetUpgCtxFromMeta failed");
     }
     if (req->upgreqcmd() == UpgStart) {
+        UPG_OBFL_TRACE("Upgrade modify request for: Start Upgrade");
         UPG_LOG_DEBUG("OnUpgReqCmd got upgType {} firmware {}", ctx.upgType, ctx.firmwarePkgName);
         UPG_LOG_INFO("Start Upgrade");
-        return StartUpgrade();
+        return StartUpgrade(req);
     } else if (req->upgreqcmd() == UpgAbort) {
+        UPG_OBFL_TRACE("Upgrade modify request for: Abort Upgrade");
         UPG_LOG_INFO("Abort Upgrade");
         return AbortUpgrade();
+    } else if (req->upgreqcmd() == IsUpgPossible) {
+        UPG_OBFL_TRACE("Upgrade modify request for: IsUpgradePossible");
+        UPG_LOG_INFO("Is Upgrade Possible");
+        return IsUpgradePossible(req);
     }
     return delphi::error("Cannot decipher the upgreqcmd");
 }

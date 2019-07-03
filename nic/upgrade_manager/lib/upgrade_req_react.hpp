@@ -83,8 +83,9 @@ public:
     void SetAppRespFail(void);
     void ResetAppResp(void);
 
-    delphi::error StartUpgrade();
+    delphi::error StartUpgrade(delphi::objects::UpgReqPtr req);
     delphi::error AbortUpgrade();
+    delphi::error IsUpgradePossible(delphi::objects::UpgReqPtr req);
     void RegNewApp(string name);
     void UnRegNewApp(string name);
     void CreateUpgradeMetrics(void);
