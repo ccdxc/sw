@@ -6,7 +6,7 @@ IPXEGENDIR = $(TOP)/platform/gen/ipxe
 IONIC_IPXE = $(wildcard $(TOP)/platform/drivers/pxe/*.c) $(wildcard $(TOP)/platform/drivers/pxe/*.h)
 IONIC_COMMON = $(wildcard $(TOP)/platform/drivers/common/*.h)
 IONIC_SRC = $(IONIC_IPXE) $(IONIC_COMMON)
-IPXE_TAR = ipxe-133f4c4.tar.gz
+IPXE_TAR = ipxe-1cdf56f.tar.gz
 IPXEORG = $(TOP)/platform/drivers/pxe/ipxe-org
 IPXEMOD = $(TOP)/platform/drivers/pxe/ipxe-mod
 

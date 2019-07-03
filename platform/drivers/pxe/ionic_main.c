@@ -1111,34 +1111,38 @@ int ionic_lif_init(struct net_device *netdev)
 	err = ionic_lif_adminq_init(lif);
 	if (err) {
 		DBG2("%s :: adminq initiation failed\n", __FUNCTION__);
-		return err;
+		goto err_reset_lif;
 	}
 
 	err = ionic_lif_notifyq_init(lif, lif->notifyqcqs);
 	if (err) {
 		DBG2("%s ::failed to initialize the notifyq\n", __FUNCTION__);
-		return err;
+		goto err_reset_lif;
 	}
 
 	err = ionic_lif_txq_init(lif, lif->txqcqs);
 	if (err) {
 		DBG2("%s ::failed to initialize the txq\n", __FUNCTION__);
-		return err;
+		goto err_reset_lif;
 	}
 
 	err = ionic_lif_rxq_init(lif, lif->rxqcqs);
 	if (err) {
 		DBG2("%s ::failed to initialize the rxq\n", __FUNCTION__);
-		return err;
+		goto err_reset_lif;
 	}
 
 	err = ionic_lif_station_mac_addr(lif, netdev);
 	if (err) {
 		DBG2("%s ::lif station mac addr failed\n", __FUNCTION__);
-		return err;
+		goto err_reset_lif;
 	}
 	netdev->max_pkt_len = IONIC_MAX_MTU;
 	return 0;
+
+err_reset_lif:
+	ionic_lif_reset(ionic);
+	return err;
 }
 
 /**

@@ -324,7 +324,7 @@ static int ionic_probe(struct pci_device *pci)
 
 	// Init the NIC
 	if ((errorcode = ionic_init(ionic)) != 0)
-		goto err_reset;
+		goto err_ionicunmap;
 
 	// Identify the Ionic
 	errorcode = ionic_identify(ionic);
@@ -357,7 +357,7 @@ static int ionic_probe(struct pci_device *pci)
 
 	unregister_netdev(netdev);
 err_register_netdev:
-	ionic_reset(ionic);
+	ionic_lif_reset(ionic);
 err_free_alloc:
 	ionic_qcq_dealloc(ionic->lif->adminqcq);
 	ionic_qcq_dealloc(ionic->lif->notifyqcqs);
@@ -366,6 +366,7 @@ err_free_alloc:
 	free_dma(ionic->lif->info, sizeof(ionic->lif->info_sz));
 	free(ionic->lif);
 err_reset:
+	ionic_reset(ionic);
 err_ionicunmap:
 	ionic_unmap_bars(ionic);
 	netdev_nullify(netdev);
