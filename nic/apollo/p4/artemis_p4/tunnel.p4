@@ -46,7 +46,9 @@ control tunnel_rx {
     if (vxlan_1.valid == TRUE) {
         apply(tep1_rx);
     }
-    if ((vxlan_2.valid == TRUE) and (tunnel_metadata.decap_next == TRUE)) {
-        apply(tep2_rx);
+    if (vxlan_2.valid == TRUE) {
+        if (tunnel_metadata.decap_next == TRUE) {
+            apply(tep2_rx);
+        }
     }
 }
