@@ -64,9 +64,6 @@ func (o *clusterCreateOp) populateClusterDefaults() {
 	o.cluster.UUID = uuid.NewV4().String()
 	o.cluster.SelfLink = o.cluster.MakeKey("cluster")
 	o.cluster.GenerationID = "1"
-	o.cluster.Status.BuildVersion = env.GitVersion
-	o.cluster.Status.VCSCommit = env.GitCommit
-	o.cluster.Status.BuildDate = env.BuildDate
 	if len(o.cluster.Spec.NTPServers) == 0 {
 		o.cluster.Spec.NTPServers = append(o.cluster.Spec.NTPServers, defaultNTPServer)
 	}

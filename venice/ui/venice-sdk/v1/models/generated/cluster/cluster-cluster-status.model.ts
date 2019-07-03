@@ -11,9 +11,6 @@ import { BaseModel, PropInfoItem } from './base-model';
 export interface IClusterClusterStatus {
     'leader'?: string;
     'last-leader-transition-time'?: Date;
-    'build-version'?: string;
-    'vcs-commit'?: string;
-    'build-date'?: string;
     'auth-bootstrapped'?: boolean;
 }
 
@@ -22,9 +19,6 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
     /** Leader contains the node name of the cluster leader. */
     'leader': string = null;
     'last-leader-transition-time': Date = null;
-    'build-version': string = null;
-    'vcs-commit': string = null;
-    'build-date': string = null;
     'auth-bootstrapped': boolean = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'leader': {
@@ -35,18 +29,6 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
         'last-leader-transition-time': {
             required: false,
             type: 'Date'
-        },
-        'build-version': {
-            required: false,
-            type: 'string'
-        },
-        'vcs-commit': {
-            required: false,
-            type: 'string'
-        },
-        'build-date': {
-            required: false,
-            type: 'string'
         },
         'auth-bootstrapped': {
             required: false,
@@ -98,27 +80,6 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
         } else {
             this['last-leader-transition-time'] = null
         }
-        if (values && values['build-version'] != null) {
-            this['build-version'] = values['build-version'];
-        } else if (fillDefaults && ClusterClusterStatus.hasDefaultValue('build-version')) {
-            this['build-version'] = ClusterClusterStatus.propInfo['build-version'].default;
-        } else {
-            this['build-version'] = null
-        }
-        if (values && values['vcs-commit'] != null) {
-            this['vcs-commit'] = values['vcs-commit'];
-        } else if (fillDefaults && ClusterClusterStatus.hasDefaultValue('vcs-commit')) {
-            this['vcs-commit'] = ClusterClusterStatus.propInfo['vcs-commit'].default;
-        } else {
-            this['vcs-commit'] = null
-        }
-        if (values && values['build-date'] != null) {
-            this['build-date'] = values['build-date'];
-        } else if (fillDefaults && ClusterClusterStatus.hasDefaultValue('build-date')) {
-            this['build-date'] = ClusterClusterStatus.propInfo['build-date'].default;
-        } else {
-            this['build-date'] = null
-        }
         if (values && values['auth-bootstrapped'] != null) {
             this['auth-bootstrapped'] = values['auth-bootstrapped'];
         } else if (fillDefaults && ClusterClusterStatus.hasDefaultValue('auth-bootstrapped')) {
@@ -135,9 +96,6 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
             this._formGroup = new FormGroup({
                 'leader': CustomFormControl(new FormControl(this['leader']), ClusterClusterStatus.propInfo['leader']),
                 'last-leader-transition-time': CustomFormControl(new FormControl(this['last-leader-transition-time']), ClusterClusterStatus.propInfo['last-leader-transition-time']),
-                'build-version': CustomFormControl(new FormControl(this['build-version']), ClusterClusterStatus.propInfo['build-version']),
-                'vcs-commit': CustomFormControl(new FormControl(this['vcs-commit']), ClusterClusterStatus.propInfo['vcs-commit']),
-                'build-date': CustomFormControl(new FormControl(this['build-date']), ClusterClusterStatus.propInfo['build-date']),
                 'auth-bootstrapped': CustomFormControl(new FormControl(this['auth-bootstrapped']), ClusterClusterStatus.propInfo['auth-bootstrapped']),
             });
         }
@@ -152,9 +110,6 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
         if (this._formGroup) {
             this._formGroup.controls['leader'].setValue(this['leader']);
             this._formGroup.controls['last-leader-transition-time'].setValue(this['last-leader-transition-time']);
-            this._formGroup.controls['build-version'].setValue(this['build-version']);
-            this._formGroup.controls['vcs-commit'].setValue(this['vcs-commit']);
-            this._formGroup.controls['build-date'].setValue(this['build-date']);
             this._formGroup.controls['auth-bootstrapped'].setValue(this['auth-bootstrapped']);
         }
     }

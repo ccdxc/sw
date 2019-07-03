@@ -84,14 +84,8 @@ message ClusterStatus {
     string Leader                           = 1 [(gogoproto.jsontag) = "leader,omitempty"];
     // LastLeaderTransitionTime is when the leadership changed last time
     api.Timestamp LastLeaderTransitionTime  = 2 [(gogoproto.jsontag) = "last-leader-transition-time,omitempty"];
-    // Human friendly build version
-    string BuildVersion                     = 3 [(gogoproto.jsontag) = "build-version,omitempty"];
-    // Representation of ommit in version control system - e.g: hash in git
-    string VCSCommit                        = 4 [(gogoproto.jsontag) = "vcs-commit,omitempty"];
-    // Date and Time at which the source code was built
-    string BuildDate                        = 5 [(gogoproto.jsontag) = "build-date,omitempty"];
-    // AuthBootstrapped when set to true indicates that auth has been bootstrapped in cluster
-    bool AuthBootstrapped                   = 6 [(gogoproto.jsontag) = "auth-bootstrapped"];
+    // AuthBootstrapped indicates whether the Cluster has Completed BootStrap of Auth
+    bool AuthBootstrapped                   = 3 [(gogoproto.jsontag) = "auth-bootstrapped"];
 }
 
 // Version is public accessible object that holds build information.

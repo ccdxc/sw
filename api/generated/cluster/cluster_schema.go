@@ -67,8 +67,6 @@ var typesMapCluster = map[string]*api.Struct{
 			"api-version":       api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"auth-bootstrapped": api.CLIInfo{Path: "Status.AuthBootstrapped", Skip: false, Insert: "", Help: ""},
 			"auto-admit-nics":   api.CLIInfo{Path: "Spec.AutoAdmitNICs", Skip: false, Insert: "", Help: ""},
-			"build-date":        api.CLIInfo{Path: "Status.BuildDate", Skip: false, Insert: "", Help: ""},
-			"build-version":     api.CLIInfo{Path: "Status.BuildVersion", Skip: false, Insert: "", Help: ""},
 			"certs":             api.CLIInfo{Path: "Spec.Certs", Skip: false, Insert: "", Help: ""},
 			"generation-id":     api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"key":               api.CLIInfo{Path: "Spec.Key", Skip: false, Insert: "", Help: ""},
@@ -83,7 +81,6 @@ var typesMapCluster = map[string]*api.Struct{
 			"self-link":         api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"tenant":            api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
 			"uuid":              api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
-			"vcs-commit":        api.CLIInfo{Path: "Status.VCSCommit", Skip: false, Insert: "", Help: ""},
 			"virtual-ip":        api.CLIInfo{Path: "Spec.VirtualIP", Skip: false, Insert: "", Help: ""},
 		},
 	},
@@ -141,12 +138,6 @@ var typesMapCluster = map[string]*api.Struct{
 			"Leader": api.Field{Name: "Leader", CLITag: api.CLIInfo{ID: "leader", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "leader", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"LastLeaderTransitionTime": api.Field{Name: "LastLeaderTransitionTime", CLITag: api.CLIInfo{ID: "last-leader-transition-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-leader-transition-time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
-
-			"BuildVersion": api.Field{Name: "BuildVersion", CLITag: api.CLIInfo{ID: "build-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "build-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"VCSCommit": api.Field{Name: "VCSCommit", CLITag: api.CLIInfo{ID: "vcs-commit", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "vcs-commit", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"BuildDate": api.Field{Name: "BuildDate", CLITag: api.CLIInfo{ID: "build-date", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "build-date", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"AuthBootstrapped": api.Field{Name: "AuthBootstrapped", CLITag: api.CLIInfo{ID: "auth-bootstrapped", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "auth-bootstrapped", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},

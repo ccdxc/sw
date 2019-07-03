@@ -209,29 +209,8 @@
             "format": "date-time"
           },
           {
-            "name": "status.build-version",
-            "description": "Human friendly build version.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "status.vcs-commit",
-            "description": "Representation of ommit in version control system - e.g: hash in git.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "status.build-date",
-            "description": "Date and Time at which the source code was built.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
             "name": "status.auth-bootstrapped",
-            "description": "AuthBootstrapped when set to true indicates that auth has been bootstrapped in cluster.",
+            "description": "AuthBootstrapped indicates whether the Cluster has Completed BootStrap of Auth.",
             "in": "query",
             "required": false,
             "type": "boolean",
@@ -4362,22 +4341,10 @@
           "format": "date-time",
           "title": "LastLeaderTransitionTime is when the leadership changed last time"
         },
-        "build-version": {
-          "type": "string",
-          "title": "Human friendly build version"
-        },
-        "vcs-commit": {
-          "type": "string",
-          "title": "Representation of ommit in version control system - e.g: hash in git"
-        },
-        "build-date": {
-          "type": "string",
-          "title": "Date and Time at which the source code was built"
-        },
         "auth-bootstrapped": {
           "type": "boolean",
           "format": "boolean",
-          "title": "AuthBootstrapped when set to true indicates that auth has been bootstrapped in cluster"
+          "title": "AuthBootstrapped indicates whether the Cluster has Completed BootStrap of Auth"
         }
       },
       "description": "ClusterStatus contains the current state of the Cluster."
