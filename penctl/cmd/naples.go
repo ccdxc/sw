@@ -237,6 +237,11 @@ func naplesProfileCreateCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 func naplesProfileDeleteCmdHandler(cmd *cobra.Command, args []string) error {
+	// check if profile exists.
+	if err := checkProfileExists(profileName); err != nil {
+		return err
+	}
+
 	// check if currently attached profile is being deleted
 	if err := checkAttachedProfile(profileName); err != nil {
 		return err
