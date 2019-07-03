@@ -56,7 +56,8 @@ rfc_p1_table_entry_pack (uint32_t running_id, void *actiondata,
 {
     rfc_p1_actiondata_t    *action_data;
 
-    PDS_TRACE_DEBUG("running id %u, class id %u", running_id, cid);
+    PDS_TRACE_DEBUG("running id %u, entry %u, class id %u",
+                    running_id, entry_num, cid);
     action_data = (rfc_p1_actiondata_t *)actiondata;
     switch (entry_num) {
     case 0:
@@ -237,7 +238,8 @@ rfc_p2_table_entry_pack (uint32_t running_id, void *actiondata,
 {
     rfc_p2_actiondata_t    *action_data;
 
-    PDS_TRACE_DEBUG("running id %u, class id %u", running_id, cid);
+    PDS_TRACE_DEBUG("running id %u, entry %u, class id %u",
+                    running_id, entry_num, cid);
     action_data = (rfc_p2_actiondata_t *)actiondata;
     switch (entry_num) {
         case 0:
@@ -414,6 +416,7 @@ rfc_p1_action_data_flush (mem_addr_t addr, void *actiondata)
     sdk_ret_t                        ret;
     rfc_p1_actiondata_t    *action_data;
 
+    PDS_TRACE_DEBUG("Flushing action data to 0x%llx", addr);
     action_data = (rfc_p1_actiondata_t *)actiondata;
     ret = impl_base::pipeline_impl()->write_to_txdma_table(addr,
                                    P4_ARTEMIS_TXDMA_TBL_ID_RFC_P1,
@@ -436,6 +439,7 @@ rfc_p2_action_data_flush (mem_addr_t addr, void *actiondata)
     sdk_ret_t                        ret;
     rfc_p2_actiondata_t    *action_data;
 
+    PDS_TRACE_DEBUG("Flushing action data to 0x%llx", addr);
     action_data = (rfc_p2_actiondata_t *)actiondata;
     ret = impl_base::pipeline_impl()->write_to_txdma_table(addr,
               P4_ARTEMIS_TXDMA_TBL_ID_RFC_P2,
@@ -546,8 +550,8 @@ rfc_p3_table_entry_pack (uint32_t running_id, void *actiondata,
 
     action_data = (rfc_p3_actiondata_t *)actiondata;
     result &= (uint16_t)0x7FF; // Only 11 bits are valid
-    PDS_TRACE_DEBUG("running id %u, result 0x%x", running_id,
-            result);
+    PDS_TRACE_DEBUG("running id %u, entry %u, result 0x%x",
+                    running_id, entry_num, result);
     switch (entry_num) {
     case 0:
         action_data->action_u.rfc_p3_rfc_action_p3.pr00 = result>>1;
@@ -752,6 +756,7 @@ rfc_p3_action_data_flush (mem_addr_t addr, void *actiondata)
     sdk_ret_t               ret;
     rfc_p3_actiondata_t    *action_data;
 
+    PDS_TRACE_DEBUG("Flushing action data to 0x%llx", addr);
     action_data = (rfc_p3_actiondata_t *)actiondata;
     ret = impl_base::pipeline_impl()->write_to_txdma_table(addr,
               P4_ARTEMIS_TXDMA_TBL_ID_RFC_P3,

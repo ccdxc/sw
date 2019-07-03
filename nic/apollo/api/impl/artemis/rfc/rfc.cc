@@ -39,6 +39,7 @@ rfc_policy_rule_dump (policy_t *policy, uint32_t rule_num)
     rule_t    *rule = &policy->rules[rule_num];
     string    rule_str = "";
 
+    rule_str += std::to_string(rule_num) + ". ";
     if (policy->direction == RULE_DIR_INGRESS) {
         rule_str += "ing, ";
     } else {
@@ -51,10 +52,18 @@ rfc_policy_rule_dump (policy_t *policy, uint32_t rule_num)
     }
     rule_str += "match = (proto " +
         std::to_string(rule->match.l3_match.ip_proto) + ", ";
-    rule_str+=
-        "src " + string(ippfx2str(&rule->match.l3_match.src_ip_pfx)) + ", ";
-    rule_str+=
-        "dst " + string(ippfx2str(&rule->match.l3_match.dst_ip_pfx)) + ", ";
+    if (rule->match.l3_match.src_match_type == IP_MATCH_PREFIX) {
+        rule_str+=
+            "src " + string(ippfx2str(&rule->match.l3_match.src_ip_pfx)) + ", ";
+    } else if (rule->match.l3_match.src_match_type == IP_MATCH_TAG) {
+        rule_str+= "src " + std::to_string(rule->match.l3_match.src_tag) + ", ";
+    }
+    if (rule->match.l3_match.dst_match_type == IP_MATCH_PREFIX) {
+        rule_str+=
+            "dst " + string(ippfx2str(&rule->match.l3_match.dst_ip_pfx)) + ", ";
+    } else if (rule->match.l3_match.dst_match_type == IP_MATCH_TAG) {
+        rule_str+= "dst " + std::to_string(rule->match.l3_match.dst_tag) + ", ";
+    }
     if (rule->match.l3_match.ip_proto == IP_PROTO_ICMP) {
         rule_str += "ICMP type/code " +
             std::to_string(rule->match.l4_match.icmp_type) +
