@@ -94,7 +94,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     buttons.push(
       {
         cssClass: 'global-button-primary imageupload-toolbar-button imageupload-toolbar-button-refresh',
-        text: 'RERESH',
+        text: 'REFRESH',
         callback: () => { this.refreshImages(); },
       }
     );
