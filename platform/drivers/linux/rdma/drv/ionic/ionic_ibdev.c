@@ -1849,6 +1849,7 @@ static int ionic_set_ah_attr(struct ionic_ibdev *dev,
 		flow_label = 0;
 		ttl = hdr->ip4.ttl;
 		tos = hdr->ip4.tos;
+		*(__be16 *)(hdr->grh.destination_gid.raw + 10) = 0xffff;
 		*(__be32 *)(hdr->grh.destination_gid.raw + 12) = hdr->ip4.daddr;
 	} else {
 		flow_label = be32_to_cpu(hdr->grh.flow_label);
@@ -1860,6 +1861,13 @@ static int ionic_set_ah_attr(struct ionic_ibdev *dev,
 #ifdef HAVE_RDMA_AH_ATTR_TYPE_ROCE
 	ah_attr->type = RDMA_AH_ATTR_TYPE_ROCE;
 #endif
+	if (hdr->eth_present) {
+#ifdef HAVE_RDMA_AH_ATTR_TYPE_ROCE
+		memcpy(&ah_attr->roce.dmac, &hdr->eth.dmac_h, ETH_ALEN);
+#else
+		memcpy(&ah_attr->dmac, &hdr->eth.dmac_h, ETH_ALEN);
+#endif
+	}
 	rdma_ah_set_sl(ah_attr, vlan >> 13);
 	rdma_ah_set_port_num(ah_attr, 1);
 	rdma_ah_set_grh(ah_attr, NULL, flow_label, sgid_index, ttl, tos);
@@ -7083,7 +7091,6 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 		BIT_ULL(IB_USER_VERBS_CMD_ALLOC_PD)		|
 		BIT_ULL(IB_USER_VERBS_CMD_DEALLOC_PD)		|
 		BIT_ULL(IB_USER_VERBS_CMD_CREATE_AH)		|
-		BIT_ULL(IB_USER_VERBS_CMD_MODIFY_AH)		|
 		BIT_ULL(IB_USER_VERBS_CMD_QUERY_AH)		|
 		BIT_ULL(IB_USER_VERBS_CMD_DESTROY_AH)		|
 		BIT_ULL(IB_USER_VERBS_CMD_REG_MR)		|
