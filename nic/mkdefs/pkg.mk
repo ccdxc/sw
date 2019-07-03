@@ -19,6 +19,8 @@ ifeq ($(ARCH),aarch64)
     endif
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py \
 		--pipeline $(PIPELINE) $(PKG_ARGS) $(STRIP)
+	cd $(NICDIR) && $(NICDIR)/sdk/platform/mputrace/captrace.py gen_syms \
+		--pipeline $(PIPELINE)
 else
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py \
