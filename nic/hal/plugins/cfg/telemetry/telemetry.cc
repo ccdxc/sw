@@ -30,11 +30,11 @@ using hal::drop_monitor_rule_t;
 extern uint64_t g_mgmt_if_mac;
 namespace hal {
 
-int telemetry_collector_id_db[HAL_MAX_TELEMETRY_COLLECTORS] = {-1};
-
 // Global structs
-acl::acl_config_t   flowmon_rule_config_glbl = { };
+int telemetry_collector_id_db[HAL_MAX_TELEMETRY_COLLECTORS] = {-1};
+int flow_monitor_rule_id_db[MAX_FLOW_MONITOR_RULES] = {-1};
 flow_monitor_rule_t *flow_mon_rules[MAX_FLOW_MONITOR_RULES];
+acl::acl_config_t   flowmon_rule_config_glbl = { };
 
 // Cache the current dest if mirror sessions are using
 hal::if_t *g_telemetry_mirror_dest_if;
@@ -113,6 +113,17 @@ telemetry_collector_get_id (int spec_id)
 {
     for (int i = 0; i < HAL_MAX_TELEMETRY_COLLECTORS; i++) {
         if (telemetry_collector_id_db[i] == spec_id) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static inline int
+telemetry_flow_monitor_rule_get_id (int spec_id)
+{
+    for (int i = 0; i < MAX_FLOW_MONITOR_RULES; i++) {
+        if (flow_monitor_rule_id_db[i] == spec_id) {
             return i;
         }
     }
@@ -498,7 +509,7 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     // Get free collector id
     sdk_ret_t sret = g_hal_state->telemetry_collectors_bmp()->first_free(&id);
     if (sret != SDK_RET_OK) {
-        HAL_TRACE_ERR("Unable to allocate collector bitmap! ret: {}", sret);
+        HAL_TRACE_ERR("Unable to allocate collector! ret: {}", sret);
         rsp->set_api_status(types::API_STATUS_OUT_OF_RESOURCE);
         return HAL_RET_NO_RESOURCE;
     }
@@ -512,8 +523,8 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     // Stash the collector id
     telemetry_collector_id_db[id] = spec.key_or_handle().collector_id();
     g_hal_state->telemetry_collectors_bmp()->set(id);
+    
     cfg.collector_id = id;
-
     ip_addr_spec_to_ip_addr(&cfg.src_ip, spec.src_ip());
     ip_addr_spec_to_ip_addr(&cfg.dst_ip, spec.dest_ip());
     auto ep = find_ep_by_v4_key(spec.vrf_key_handle().vrf_id(), cfg.dst_ip.addr.v4_addr);
@@ -787,14 +798,15 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
 {
     uint64_t            vrf_id;
     bool                mirror_action = false;
-    rule_key_t          rule_id;
+    rule_key_t          rule_id = (~0);
     hal_ret_t           ret = HAL_RET_OK;
     flow_monitor_rule_t *rule = NULL;
     const acl_ctx_t     *flowmon_acl_ctx = NULL;
     telemetry::RuleAction action;
+    uint32_t id;
+    sdk_ret_t sret = SDK_RET_OK;
 
     flowmonrule_spec_dump(spec);
-    rule_id = spec.key_or_handle().flowmonitorrule_id();
     vrf_id = spec.vrf_key_handle().vrf_id();
     if (vrf_id == HAL_VRF_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
@@ -802,18 +814,31 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
+    // Get free id
+    sret = g_hal_state->telemetry_flowmon_bmp()->first_free(&id);
+    if (sret != SDK_RET_OK) {
+        HAL_TRACE_ERR("Unable to allocate rule-id! ret: {}", sret);
+        rsp->set_api_status(types::API_STATUS_OUT_OF_RESOURCE);
+        return HAL_RET_NO_RESOURCE;
+    }
+    rule_id = id;
+    HAL_TRACE_DEBUG("Allocated ruleid {} spec_id {}", rule_id,
+                            spec.key_or_handle().flowmonitorrule_id());
     if (rule_id >= MAX_FLOW_MONITOR_RULES) {
+        HAL_TRACE_ERR("Id is out of bounds. id {}", rule_id);
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        HAL_TRACE_ERR("ruleid {}", spec.key_or_handle().flowmonitorrule_id());
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
+    // Stash the rule id
+    flow_monitor_rule_id_db[rule_id] = spec.key_or_handle().flowmonitorrule_id();
+    g_hal_state->telemetry_flowmon_bmp()->set(rule_id);
+
     rule = flow_monitor_rule_alloc_init();
     rule->vrf_id = vrf_id;
     rule->rule_id = rule_id;
     flow_mon_rules[rule_id] = rule;
 
-    HAL_TRACE_DEBUG("Ruleid {}", rule_id);
     ret = get_flowmon_action(spec, &action);
     if (ret != HAL_RET_OK) {
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
@@ -861,6 +886,11 @@ end:
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("telemetry_eval_sessions failed {}", ret);
         }
+    } else {
+        // Free any allocated ids
+        if (rule_id != (~0)) {
+            g_hal_state->telemetry_flowmon_bmp()->clear(rule_id);
+        }
     }
     return ret;
 }
@@ -883,18 +913,19 @@ flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDele
     const acl_ctx_t     *flowmon_acl_ctx;
 
     vrf_id = req.vrf_key_handle().vrf_id();
-    rule_id = req.key_or_handle().flowmonitorrule_id();
     if (vrf_id == HAL_VRF_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         HAL_TRACE_ERR("vrf {}", req.vrf_key_handle().vrf_id());
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
-    if (rule_id >= MAX_FLOW_MONITOR_RULES) {
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        HAL_TRACE_ERR("ruleid {}", rule_id);
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
+    rule_id = telemetry_flow_monitor_rule_get_id(
+                        req.key_or_handle().flowmonitorrule_id());
+    if (rule_id < 0) {
+        HAL_TRACE_ERR("Rule not found for id {}",
+                        req.key_or_handle().flowmonitorrule_id());
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+        return HAL_RET_INVALID_ARG;
     }
     rule = flow_mon_rules[rule_id];
     if (!rule) {
@@ -930,6 +961,9 @@ flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDele
         goto end;
     }
     rsp->set_api_status(types::API_STATUS_OK);
+    // Cleanup id bitmap state
+    g_hal_state->telemetry_flowmon_bmp()->clear(rule_id);
+    flow_monitor_rule_id_db[rule_id] = -1;
 
 end:
     // Reeval telemetry sessions

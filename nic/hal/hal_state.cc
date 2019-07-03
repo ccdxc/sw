@@ -1201,6 +1201,9 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
     telemetry_collectors_bmp_ = bitmap::factory(HAL_MAX_TELEMETRY_COLLECTORS, true);
     SDK_ASSERT_RETURN((telemetry_collectors_bmp_ != NULL), false);
 
+    telemetry_flowmon_bmp_ = bitmap::factory(MAX_FLOW_MONITOR_RULES, true);
+    SDK_ASSERT_RETURN((telemetry_flowmon_bmp_ != NULL), false);
+
     qos_cmap_pcp_bmp_ = bitmap::factory(HAL_MAX_DOT1Q_PCP_VALS, true);
     SDK_ASSERT_RETURN((qos_cmap_pcp_bmp_ != NULL), false);
 
@@ -1367,6 +1370,7 @@ hal_oper_db::hal_oper_db()
     rule_cfg_ht_ = NULL;
     qos_class_ht_ = NULL;
     telemetry_collectors_bmp_ = NULL;
+    telemetry_flowmon_bmp_ = NULL;
     qos_cmap_pcp_bmp_ = NULL;
     qos_cmap_dscp_bmp_ = NULL;
     copp_ht_ = NULL;
@@ -1430,6 +1434,7 @@ hal_oper_db::~hal_oper_db()
     tcpcb_id_ht_ ? ht::destroy(tcpcb_id_ht_) : HAL_NOP;
     qos_class_ht_ ? ht::destroy(qos_class_ht_, mmgr_) : HAL_NOP;
     telemetry_collectors_bmp_ ? bitmap::destroy(telemetry_collectors_bmp_) : HAL_NOP;
+    telemetry_flowmon_bmp_ ? bitmap::destroy(telemetry_flowmon_bmp_) : HAL_NOP;
     qos_cmap_pcp_bmp_ ? bitmap::destroy(qos_cmap_pcp_bmp_) : HAL_NOP;
     qos_cmap_dscp_bmp_ ? bitmap::destroy(qos_cmap_dscp_bmp_) : HAL_NOP;
     copp_ht_ ? ht::destroy(copp_ht_, mmgr_) : HAL_NOP;

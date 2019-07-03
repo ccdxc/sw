@@ -71,7 +71,7 @@ using telemetry::DropMonitorRuleGetResponseMsg;
 
 namespace hal {
 
-#define MAX_FLOW_MONITOR_RULES          1024
+#define MAX_FLOW_MONITOR_RULES          5120
 #define HAL_MAX_TELEMETRY_COLLECTORS    16
 
 using hal::if_t;

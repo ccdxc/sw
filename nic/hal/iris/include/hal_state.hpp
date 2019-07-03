@@ -257,6 +257,7 @@ public:
     ht *session_hal_rflow_ht(void)  const { return session_hal_rflow_ht_; }
     ht *qos_class_ht(void) const { return qos_class_ht_; }
     bitmap *telemetry_collectors_bmp(void) const { return telemetry_collectors_bmp_; }
+    bitmap *telemetry_flowmon_bmp(void) const { return telemetry_flowmon_bmp_; }
     bitmap *qos_cmap_pcp_bmp(void) const { return qos_cmap_pcp_bmp_; }
     bitmap *qos_cmap_dscp_bmp(void) const { return qos_cmap_dscp_bmp_; }
     ht *crypto_cert_store_id_ht(void) const { return crypto_cert_store_id_ht_; }
@@ -413,6 +414,7 @@ private:
     ht    *tcp_proxy_policy_ht_;
     ht    *filter_ht_;
     bitmap                  *telemetry_collectors_bmp_;
+    bitmap                  *telemetry_flowmon_bmp_;
     bitmap                  *qos_cmap_pcp_bmp_;
     bitmap                  *qos_cmap_dscp_bmp_;
 
@@ -603,6 +605,7 @@ public:
     slab *qos_class_slab(void) const { return cfg_db_->qos_class_slab(); }
     ht *qos_class_ht(void) const { return oper_db_->qos_class_ht(); }
     bitmap *telemetry_collectors_bmp(void) const { return oper_db_->telemetry_collectors_bmp(); }
+    bitmap *telemetry_flowmon_bmp(void) const { return oper_db_->telemetry_flowmon_bmp(); }
     bitmap *qos_cmap_pcp_bmp(void) const { return oper_db_->qos_cmap_pcp_bmp(); }
     bitmap *qos_cmap_dscp_bmp(void) const { return oper_db_->qos_cmap_dscp_bmp(); }
 
