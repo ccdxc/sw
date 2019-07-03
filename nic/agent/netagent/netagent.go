@@ -15,7 +15,6 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	grpcDatapath "github.com/pensando/sw/nic/agent/netagent/datapath"
-	delphiDatapath "github.com/pensando/sw/nic/agent/netagent/datapath/delphidp"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
@@ -96,11 +95,6 @@ func NewAgent(datapath string, dbPath, ctrlerURL string, resolverClient resolver
 		if err != nil {
 			log.Fatalf("Error creating hal datapath. Err: %v", err)
 		}
-	} else if datapath == "delphi" {
-		dp, err = delphiDatapath.NewDelphiDatapath(cl)
-		if err != nil {
-			log.Fatalf("Error creating delphi datapath. Err: %v", err)
-		}
 	} else {
 		// Set expectations to allow mock testing
 		dp, err = grpcDatapath.NewHalDatapath("mock")
@@ -108,6 +102,13 @@ func NewAgent(datapath string, dbPath, ctrlerURL string, resolverClient resolver
 			log.Fatalf("Error creating mock datapath. Err: %v", err)
 		}
 	}
+	// Temporarily commented out
+	//else if datapath == "delphi" {
+	//	dp, err = delphiDatapath.NewDelphiDatapath(cl)
+	//	if err != nil {
+	//		log.Fatalf("Error creating delphi datapath. Err: %v", err)
+	//	}
+	//}
 
 	// create a new network agent
 	nagent, err := state.NewNetAgent(dp, dbPath, cl)
