@@ -27,6 +27,7 @@ import (
 	"github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/telemetryclient"
 )
 
 const defaultIotaServerURL = "localhost:60000"
@@ -100,23 +101,24 @@ type naplesData struct {
 
 // TestBed is the state of the testbed
 type TestBed struct {
-	Topo                 Topology                   // testbed topology
-	Params               TestBedParams              // testbed params - provided by warmd
-	Nodes                []*TestNode                // nodes in the testbed
-	mockMode             bool                       // mock iota server and venice node for testing purposes
-	mockIota             *mockIotaServer            // mock iota server
-	skipSetup            bool                       // skip setting up the cluster
-	hasNaplesSim         bool                       // has Naples sim nodes in the topology
-	hasNaplesHW          bool                       // testbed has Naples HW in the topology
-	allocatedVlans       []uint32                   // VLANs allocated for this testbed
-	authToken            string                     // authToken obtained after logging in
-	veniceRestClient     []apiclient.Services       // Venice REST API client
-	unallocatedInstances []*InstanceParams          // currently unallocated instances
-	testResult           map[string]bool            // test result
-	taskResult           map[string]error           // sub task result
-	caseResult           map[string]*TestCaseResult // test case result counts
-	DataSwitches         []*iota.DataSwitch         // data switches associated to this testbed
-	naplesDataMap        map[string]naplesData      //naples name data map
+	Topo                 Topology                           // testbed topology
+	Params               TestBedParams                      // testbed params - provided by warmd
+	Nodes                []*TestNode                        // nodes in the testbed
+	mockMode             bool                               // mock iota server and venice node for testing purposes
+	mockIota             *mockIotaServer                    // mock iota server
+	skipSetup            bool                               // skip setting up the cluster
+	hasNaplesSim         bool                               // has Naples sim nodes in the topology
+	hasNaplesHW          bool                               // testbed has Naples HW in the topology
+	allocatedVlans       []uint32                           // VLANs allocated for this testbed
+	authToken            string                             // authToken obtained after logging in
+	veniceRestClient     []apiclient.Services               // Venice REST API client
+	telemetryClient      []*telemetryclient.TelemetryClient // venice telemetry client
+	unallocatedInstances []*InstanceParams                  // currently unallocated instances
+	testResult           map[string]bool                    // test result
+	taskResult           map[string]error                   // sub task result
+	caseResult           map[string]*TestCaseResult         // test case result counts
+	DataSwitches         []*iota.DataSwitch                 // data switches associated to this testbed
+	naplesDataMap        map[string]naplesData              //naples name data map
 
 	// cached message responses from iota server
 	iotaClient      *common.GRPCClient   // iota grpc client

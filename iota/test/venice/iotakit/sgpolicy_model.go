@@ -97,6 +97,24 @@ func (spc *SGPolicyCollection) Restore() error {
 	return spc.AddRule("any", "any", "any", "PERMIT").Commit()
 }
 
+// Status returns venice status of the policy
+func (spc *SGPolicyCollection) Status() ([]*security.SGPolicyStatus, error) {
+	if spc.err != nil {
+		return nil, spc.err
+	}
+
+	var vsts []*security.SGPolicyStatus
+	for _, pol := range spc.policies {
+		sgp, err := pol.sm.tb.GetSGPolicy(&pol.venicePolicy.ObjectMeta)
+		if err != nil {
+			return nil, err
+		}
+		vsts = append(vsts, &sgp.Status)
+	}
+
+	return vsts, nil
+}
+
 // AddRule adds a rule to the policy
 func (spc *SGPolicyCollection) AddRule(fromIP, toIP, port, action string) *SGPolicyCollection {
 	if spc.err != nil {

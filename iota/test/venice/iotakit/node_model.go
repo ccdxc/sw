@@ -314,6 +314,16 @@ func (sm *SysModel) Naples() *NaplesCollection {
 	return &NaplesCollection{nodes: naples}
 }
 
+// Names retruns names of all naples in the collection
+func (npc *NaplesCollection) Names() []string {
+	var ret []string
+	for _, n := range npc.nodes {
+		ret = append(ret, n.smartNic.ObjectMeta.Name)
+	}
+
+	return ret
+}
+
 // Any returns the requested number of naples from collection in random
 func (npc *NaplesCollection) Any(num int) *NaplesCollection {
 	if npc.err != nil || len(npc.nodes) <= num {

@@ -545,6 +545,7 @@ func (act *ActionCtx) FTPGetFails(wpc *WorkloadPairCollection) error {
 
 // FuzIt Establish large number (numConns) of connections from client workload to server workload
 func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, port string) error {
+	var pairNames []string
 	// no need to perform connection scale in sim run
 	if act.model.tb.HasNaplesSim() {
 		return nil
@@ -571,7 +572,10 @@ func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, po
 		}
 		workloads[wfName] = pair.second
 		clientInput[wfName] = fuze.Input{Connections: conns}
+		pairNames = append(pairNames, fmt.Sprintf("%s -> %s", pair.second.iotaWorkload.WorkloadName, pair.first.iotaWorkload.WorkloadName))
+
 	}
+	log.Infof("Fuz testing workload pairs %v", pairNames)
 
 	var retErr error
 	// copy all configuration files the the workloads

@@ -426,7 +426,7 @@ func (sm *SysModel) populateConfig(ctx context.Context, vlanBase uint32, scale b
 		return nil
 	}
 
-	configFile := "/tmp/scale.json"
+	configFile := "/tmp/scale-cfg.json"
 
 	writeConfig := func() {
 		ofile, err := os.OpenFile(configFile, os.O_RDWR|os.O_CREATE, 0755)

@@ -186,7 +186,7 @@ func (act *ActionCtx) VerifyPolicyStatus(spc *SGPolicyCollection) error {
 
 // VerifySystemHealth checks all aspects of system, like cluster, workload, policies etc
 func (act *ActionCtx) VerifySystemHealth(collectLogOnErr bool) error {
-	const numRetries = 5
+	const numRetries = 10
 	// verify cluster is in good health
 	err := act.VerifyClusterStatus()
 	if err != nil {

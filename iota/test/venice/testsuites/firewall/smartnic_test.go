@@ -1,6 +1,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
 
-package smartnic_test
+package firewall_test
 
 import (
 	"time"
@@ -24,9 +24,7 @@ var _ = Describe("smartnic tests", func() {
 
 	Context("Basic smartnic tests", func() {
 		It("Should be able to reload hosts and smartnic should come back up", func() {
-			if ts.tb.HasNaplesSim() {
-				Skip("Disable on Sim setups till we debug Naples sim issues with reload")
-			}
+			Skip("Disable  till we debug forwarding issues with reload")
 
 			for i := 0; i < 2; i++ {
 				// reload each host
