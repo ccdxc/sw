@@ -148,6 +148,8 @@ ionic_txq_enable(struct txque *txq)
 	err = ionic_q_enable_disable(txq->lif, txq->index, txq->type, true /* enable */);
 	if (err)
 		IONIC_QUE_WARN(txq, "failed to enable, err: %d\n", err);
+
+	txq->wdog_start = ticks;
 }
 
 static void
@@ -234,8 +236,8 @@ ionic_txq_wdog_work(struct work_struct *work)
 		return;
 
 	IONIC_LIF_LOCK(lif);
-	/* TODO More LIF state to check? */
-	if ((lif->netdev->if_drv_flags & IFF_DRV_RUNNING)) {
+	if (lif->link_up &&
+	    (lif->netdev->if_drv_flags & IFF_DRV_RUNNING)) {
 		/* Check each TxQ for timeouts */
 		for (i = 0; i < lif->ntxqs; i++) {
 			txq = lif->txqs[i];

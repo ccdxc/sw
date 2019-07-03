@@ -35,8 +35,8 @@
 #define IONIC_MIN_MTU	ETHER_MIN_LEN
 #define IONIC_MAX_MTU	(9216 - ETHER_HDR_LEN - ETHER_VLAN_ENCAP_LEN - ETHER_CRC_LEN)
 
-#define IONIC_WDOG_HB_DEFAULT_MS	1500 /* msecs */
-#define IONIC_WDOG_TX_DEFAULT_MS	5000 /* msecs */
+#define IONIC_WDOG_HB_DEFAULT_MS	(10 * 1000) /* 10s */
+#define IONIC_WDOG_TX_DEFAULT_MS	(5  * 1000) /* 5s  */
 #define IONIC_WDOG_FW_WARN_MS		1250 /* msecs */
 #define IONIC_WDOG_MIN_MS		100  /* msecs */
 

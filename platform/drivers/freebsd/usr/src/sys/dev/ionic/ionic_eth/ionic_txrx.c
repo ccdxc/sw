@@ -157,12 +157,12 @@ TUNABLE_INT("hw.ionic.wdog_error_trigger", &ionic_wdog_error_trigger);
 SYSCTL_INT(_hw_ionic, OID_AUTO, wdog_error_trigger, CTLFLAG_RWTUN,
     &ionic_wdog_error_trigger, 0, "Trigger error via watchdog (TEST).");
 
-int ionic_adminq_hb_interval = IONIC_WDOG_HB_DEFAULT_MS;
+int ionic_adminq_hb_interval = 0; /* Disabled by default */
 TUNABLE_INT("hw.ionic.adminq_hb_interval", &ionic_adminq_hb_interval);
 SYSCTL_INT(_hw_ionic, OID_AUTO, adminq_hb_interval, CTLFLAG_RDTUN,
     &ionic_adminq_hb_interval, 0, "AdminQ heartbeat interval in msecs.");
 
-int ionic_cmd_hb_interval = IONIC_WDOG_HB_DEFAULT_MS;
+int ionic_cmd_hb_interval = 0;    /* Disabled by default */
 TUNABLE_INT("hw.ionic.cmd_hb_interval", &ionic_cmd_hb_interval);
 SYSCTL_INT(_hw_ionic, OID_AUTO, cmd_hb_interval, CTLFLAG_RDTUN,
     &ionic_cmd_hb_interval, 0, "Command heartbeat interval in msecs.");
