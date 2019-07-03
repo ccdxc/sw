@@ -84,6 +84,7 @@ enum status_code {
 	IONIC_RC_ERANGE		= 16,	/* Parameter out of range */
 	IONIC_RC_BAD_ADDR	= 17,	/* Descriptor contains a bad ptr */
 	IONIC_RC_DEV_CMD	= 18,	/* Device cmd attempted on AdminQ */
+	IONIC_RC_ENOSUPP	= 19,    /* Operation not supported */
 	IONIC_RC_ERROR		= 29,	/* Generic error */
 
 	IONIC_RC_ERDMA		= 30,	/* Generic RDMA error */
@@ -1159,6 +1160,13 @@ struct port_reset_comp {
 };
 
 /**
+ * enum stats_ctl_cmd - List of commands for stats control
+ */
+enum stats_ctl_cmd {
+	STATS_CTL_RESET             = 0,
+};
+
+/**
  * enum ionic_port_attr - List of device attributes
  */
 enum ionic_port_attr {
@@ -1169,6 +1177,7 @@ enum ionic_port_attr {
 	IONIC_PORT_ATTR_FEC		= 4,
 	IONIC_PORT_ATTR_PAUSE		= 5,
 	IONIC_PORT_ATTR_LOOPBACK	= 6,
+	IONIC_PORT_ATTR_STATS_CTRL	= 7,
 };
 
 /**
@@ -1190,6 +1199,7 @@ struct port_setattr_cmd {
 		u8      fec_type;
 		u8      pause_type;
 		u8      loopback_mode;
+		u8      stats_ctl;
 		u8      rsvd2[60];
 	};
 };
@@ -1373,6 +1383,7 @@ enum lif_attr {
 	IONIC_LIF_ATTR_MAC          = 3,
 	IONIC_LIF_ATTR_FEATURES     = 4,
 	IONIC_LIF_ATTR_RSS          = 5,
+	IONIC_LIF_ATTR_STATS_CTRL   = 6,
 };
 
 /**
@@ -1389,6 +1400,7 @@ enum lif_attr {
  *              @types:     The hash types to enable (see rss_hash_types).
  *              @key:       The hash secret key.
  *              @addr:      Address for the indirection table shared memory.
+ * @stats_ctl:  stats control commands (enum stats_ctl_cmd)
  */
 struct lif_setattr_cmd {
 	u8     opcode;
@@ -1406,6 +1418,7 @@ struct lif_setattr_cmd {
 			u8     rsvd[6];
 			__le64 addr;
 		} rss;
+		u8 stats_ctl;
 		u8      rsvd[60];
 	};
 };

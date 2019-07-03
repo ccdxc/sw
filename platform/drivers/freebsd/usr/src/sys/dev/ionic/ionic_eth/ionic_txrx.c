@@ -1690,6 +1690,73 @@ ionic_link_pause_sysctl(SYSCTL_HANDLER_ARGS)
 
 	return (err);
 }
+
+static int
+ionic_reset_stats_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	struct lif *lif = oidp->oid_arg1;
+	struct adminq *adminq = lif->adminq;
+	struct ionic *ionic = lif->ionic;
+	struct ionic_dev *idev = &ionic->idev;
+	struct ifnet *ifp = lif->netdev;
+	struct rxque *rxq;
+	struct txque *txq;
+	struct rx_stats *rxstat;
+	struct tx_stats *txstat;
+	int i, err, value;
+
+	err = sysctl_handle_int(oidp, &value, 0, req);
+	if ((err) || (req->newptr == NULL))
+		return (err);
+
+	if (value == 0) {
+		if_printf(ifp, "use non-zero value to reset\n");
+		return (EINVAL);
+	}
+	IONIC_LIF_LOCK(lif);
+	/* Reset the driver stats. */
+	bzero(&adminq->stats, sizeof(adminq->stats));
+	for (i = 0; i < lif->nrxqs; i++) {
+		rxq = lif->rxqs[i];
+		rxstat = &rxq->stats;
+		bzero(rxstat, sizeof(*rxstat));
+		txq = lif->txqs[i];
+		txstat = &txq->stats;
+		bzero(txstat, sizeof(*txstat));
+	}
+
+	/* Reset firmware stats. */
+	err = ionic_lif_reset_stats(lif);
+	IONIC_LIF_UNLOCK(lif);
+	if (err) {
+		if (err == IONIC_RC_ENOSUPP)
+			IONIC_NETDEV_ERROR(ifp,
+					"Error: reset interface counters, Operation not supported, error = %d\n",
+					err);
+		else
+			IONIC_NETDEV_ERROR(ifp,
+					"failed to reset interface counters, error = %d\n",
+					err);
+	}
+
+	/* Reset port stats. */
+	IONIC_DEV_LOCK(ionic);
+	ionic_dev_cmd_port_reset_stats(idev);
+	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
+	IONIC_DEV_UNLOCK(ionic);
+	if (err) {
+		if (err == IONIC_RC_ENOSUPP)
+			IONIC_NETDEV_ERROR(ifp,
+					"Error: reset port counters, Operation not supported, error = %d\n",
+					err);
+		else
+			IONIC_NETDEV_ERROR(ifp,
+					"failed to reset port counters, error = %d\n",
+					err);
+	}
+
+	return (0);
+}
 /*
  * Print various media details.
  */
@@ -2760,6 +2827,10 @@ ionic_setup_device_stats(struct lif *lif)
 			CTLTYPE_INT | CTLFLAG_RW, lif, 0,
 			ionic_txq_wdog_handler, "I",
 			"Tx queue watchdog timeout in msecs");
+	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "reset_stats",
+			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
+			ionic_reset_stats_sysctl, "I",
+			"Reset driver, firmware and port statistics");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "reset",
 			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
 			ionic_lif_reset_sysctl, "I", "Reinit lif");

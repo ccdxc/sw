@@ -232,6 +232,7 @@ void ionic_dev_cmd_port_autoneg(struct ionic_dev *idev, uint8_t an_enable);
 void ionic_dev_cmd_port_fec(struct ionic_dev *idev, uint8_t fec_type);
 void ionic_dev_cmd_port_pause(struct ionic_dev *idev, uint8_t pause_type);
 void ionic_dev_cmd_port_loopback(struct ionic_dev *idev, uint8_t loopback_mode);
+void ionic_dev_cmd_port_reset_stats(struct ionic_dev *idev);
 
 void ionic_dev_cmd_lif_identify(struct ionic_dev *idev, u8 type, u8 ver);
 void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index,

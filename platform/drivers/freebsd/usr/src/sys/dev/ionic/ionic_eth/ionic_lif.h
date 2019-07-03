@@ -449,6 +449,9 @@ void ionic_txq_wdog_resched(struct lif *lif);
 int ionic_setup_intr_coal(struct lif *lif, int coal);
 int ionic_firmware_update(struct lif *lif, const void *const fw_data, size_t fw_sz);
 
+void ionic_lif_reset_stats(struct lif *lif);
+
+extern int ionic_devcmd_timeout;
 extern int ionic_rx_stride;
 extern int ionic_tx_stride;
 extern int ionic_rx_sg_size;

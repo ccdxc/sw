@@ -110,7 +110,6 @@ public:
 
     // Event Handlers
     void LinkEventHandler(port_status_t *evd);
-    void XcvrEventHandler(port_status_t *evd);
     void SendFWDownEvent();
     void HalEventHandler(bool status);
 

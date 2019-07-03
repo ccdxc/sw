@@ -1144,10 +1144,20 @@ Eth::_CmdPortSetAttr(void *req, void *req_data, void *resp, void *resp_data)
     case IONIC_PORT_ATTR_LOOPBACK:
         cfg.loopback_mode = cmd->loopback_mode;
         break;
+    case IONIC_PORT_ATTR_STATS_CTRL:
+            switch (cmd->stats_ctl) {
+                case STATS_CTL_RESET:
+                    cfg.reset_mac_stats = 1;
+                    break;
+                default:
+                    NIC_LOG_ERR("{}: UNKNOWN COMMAND {} FOR IONIC_PORT_ATTR_STATS_CTRL", spec->name, cmd->stats_ctl);
+                    return (IONIC_RC_ENOSUPP);
+                }
+
         break;
     default:
         NIC_LOG_ERR("{}: Unknown attr {}", spec->name, cmd->attr);
-        return (IONIC_RC_ERROR);
+        return (IONIC_RC_ENOSUPP);
     }
 
     ret = dev_api->port_set_config(spec->uplink_port_num, &cfg);
@@ -1761,10 +1771,16 @@ Eth::LinkEventHandler(port_status_t *evd)
 void
 Eth::XcvrEventHandler(port_status_t *evd)
 {
-    for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
-        EthLif *eth_lif = it->second;
-        eth_lif->XcvrEventHandler(evd);
+    if (spec->uplink_port_num != evd->id) {
+        return;
     }
+
+    port_status->id = evd->id;
+    port_status->speed = evd->speed;
+    port_status->status = evd->status;
+    memcpy(&port_status->xcvr, &evd->xcvr, sizeof(struct xcvr_status));
+
+    PortStatusUpdate(this);
 }
 
 bool

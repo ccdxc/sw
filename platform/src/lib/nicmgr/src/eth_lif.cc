@@ -1628,9 +1628,19 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
             return SetFeatures(req, req_data, resp, resp_data);
         case IONIC_LIF_ATTR_RSS:
             return RssConfig(req, req_data, resp, resp_data);
+        case IONIC_LIF_ATTR_STATS_CTRL:
+            switch (cmd->stats_ctl) {
+                case STATS_CTL_RESET:
+                    MEM_SET(lif_stats_addr, 0, LIF_STATS_SIZE, 0);
+                    break;
+                default:
+                    NIC_LOG_ERR("{}: UNKNOWN COMMAND {} FOR IONIC_LIF_ATTR_STATS_CTRL", hal_lif_info_.name, cmd->stats_ctl);
+                    return (IONIC_RC_ENOSUPP);
+            }
+            break;
         default:
             NIC_LOG_ERR("{}: UNKNOWN ATTR {}", hal_lif_info_.name, cmd->attr);
-            return (IONIC_RC_ERROR);
+            return (IONIC_RC_ENOSUPP);
     }
 
     return (IONIC_RC_SUCCESS);
@@ -2388,79 +2398,6 @@ EthLif::LinkEventHandler(port_status_t *evd)
         .link_status = evd->status,
         .link_speed = evd->speed,
     };
-
-    addr = notify_ring_base + notify_ring_head * sizeof(union notifyq_comp);
-    WRITE_MEM(addr, (uint8_t *)&msg, sizeof(union notifyq_comp), 0);
-    req_db_addr =
-#ifdef __aarch64__
-                CAP_ADDR_BASE_DB_WA_OFFSET +
-#endif
-                CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
-                (0b1011 /* PI_UPD + SCHED_SET */ << 17) +
-                (hal_lif_info_.lif_id << 6) +
-                (ETH_NOTIFYQ_QTYPE << 3);
-
-    // NIC_LOG_DEBUG("{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
-    //     hal_lif_info_.lif_id, lif_status->eid, notify_ring_head, addr);
-    notify_ring_head = (notify_ring_head + 1) % ETH_NOTIFYQ_RING_SIZE;
-    PAL_barrier();
-    WRITE_DB64(req_db_addr, (ETH_NOTIFYQ_QID << 24) | notify_ring_head);
-
-    // FIXME: Wait for completion
-
-    state = (evd->status == PORT_OPER_STATUS_UP) ? LIF_STATE_UP : LIF_STATE_DOWN;
-    NIC_LOG_INFO("{}: {} + {} => {}",
-        hal_lif_info_.name,
-        lif_state_to_str(state),
-        (evd->status == PORT_OPER_STATUS_UP) ? "LINK_UP" : "LINK_DN",
-        lif_state_to_str(state));
-}
-
-void
-EthLif::XcvrEventHandler(port_status_t *evd)
-{
-    if (spec->uplink_port_num != evd->id) {
-        return;
-    }
-
-    if (state != LIF_STATE_INIT &&
-        state != LIF_STATE_UP &&
-        state != LIF_STATE_DOWN) {
-        NIC_LOG_INFO("{}: {} => {}",
-            hal_lif_info_.name,
-            lif_state_to_str(state),
-            lif_state_to_str(state));
-        return;
-    }
-
-    // Update local lif status
-    lif_status->link_status = evd->status;
-    lif_status->link_speed =  evd->speed;
-    ++lif_status->eid;
-    if (state == LIF_STATE_DOWN && evd->status == PORT_OPER_STATUS_UP)
-        ++lif_status->link_down_count;
-    WRITE_MEM(lif_status_addr, (uint8_t *)lif_status, sizeof(struct lif_status), 0);
-
-    // Update host lif status
-    if (host_lif_status_addr != 0) {
-        edmaq->Post(
-            spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-            lif_status_addr,
-            host_lif_status_addr,
-            sizeof(struct lif_status),
-            NULL
-        );
-    }
-
-    // Send the link event notification
-    struct link_change_event msg = {
-        .eid = lif_status->eid,
-        .ecode = EVENT_OPCODE_LINK_CHANGE, //TODO: need to change event as XCVR_EVENT
-        .link_status = evd->status,
-        .link_speed = evd->speed,
-    };
-
-    uint64_t addr, req_db_addr;
 
     addr = notify_ring_base + notify_ring_head * sizeof(union notifyq_comp);
     WRITE_MEM(addr, (uint8_t *)&msg, sizeof(union notifyq_comp), 0);

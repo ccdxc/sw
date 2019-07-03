@@ -3119,6 +3119,24 @@ ionic_lif_set_netdev_info(struct lif *lif)
 	(void)ionic_adminq_post_wait(lif, &ctx);
 }
 
+int
+ionic_lif_reset_stats(struct lif *lif)
+{
+	struct ionic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.lif_setattr = {
+			.opcode = CMD_OPCODE_LIF_SETATTR,
+			.index = lif->index,
+			.attr = IONIC_LIF_ATTR_STATS_CTRL,
+			.stats_ctl = STATS_CTL_RESET,
+		},
+	};
+
+	IONIC_NETDEV_INFO(lif->netdev, "RESET_LIF_STATS %s\n",
+		ctx.cmd.lif_setattr.name);
+
+	return ionic_adminq_post_wait(lif, &ctx);
+}
 /*
  * Register device MAC address. 
  */

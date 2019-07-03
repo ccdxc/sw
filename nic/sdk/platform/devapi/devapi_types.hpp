@@ -93,6 +93,7 @@ typedef struct port_config_s {
 #define PORT_CFG_PAUSE_F_RX		0x20
     uint8_t     pause_type; // TODO: port_pause_type_t
     uint8_t     loopback_mode; // TODO: port_loopback_mode_t
+    uint8_t     reset_mac_stats;
 } __PACK__ port_config_t;
 
 typedef struct xcvr_status_s {

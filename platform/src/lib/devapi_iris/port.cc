@@ -237,6 +237,7 @@ devapi_port::port_hal_update_config(port_config_t *cfg)
     req->set_tx_pause_enable(cfg->pause_type & PORT_CFG_PAUSE_F_TX);
     req->set_rx_pause_enable(cfg->pause_type & PORT_CFG_PAUSE_F_RX);
     req->set_loopback_mode((port::PortLoopBackMode)cfg->loopback_mode);
+    req->set_mac_stats_reset(cfg->reset_mac_stats);
     VERIFY_HAL();
     status = hal->port_update(req_msg, rsp_msg);
     if (status.ok()) {

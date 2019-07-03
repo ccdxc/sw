@@ -353,6 +353,17 @@ void ionic_dev_cmd_port_loopback(struct ionic_dev *idev, uint8_t loopback_mode)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
+void ionic_dev_cmd_port_reset_stats(struct ionic_dev *idev)
+{
+	union dev_cmd cmd = {
+		.port_setattr.opcode = CMD_OPCODE_PORT_SETATTR,
+		.port_setattr.index = 0,
+		.port_setattr.attr = IONIC_PORT_ATTR_STATS_CTRL,
+		.port_setattr.stats_ctl = STATS_CTL_RESET,
+	};
+
+	ionic_dev_cmd_go(idev, &cmd);
+}
 /* LIF commands */
 void ionic_dev_cmd_lif_identify(struct ionic_dev *idev, u8 type, u8 ver)
 {
