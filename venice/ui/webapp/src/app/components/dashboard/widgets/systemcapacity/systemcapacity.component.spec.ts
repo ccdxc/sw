@@ -167,7 +167,7 @@ describe('node cluster test', () => {
     fixture = TestBed.createComponent(SystemcapacitywidgetComponent);
     component = fixture.componentInstance;
     const service = TestBed.get(ClusterService);
-    watchSubject = TestingUtility.createWatchEvents([node1, node2, node3, node4]);
+    watchSubject = TestingUtility.createWatchEventsSubject([node1, node2, node3, node4]) ;
     spyOn(service, 'WatchNode').and.returnValue(
       watchSubject
     );
