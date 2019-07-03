@@ -149,7 +149,7 @@ capri_impl::dump_tm_debug_stats_(FILE *fp, tm_pb_debug_stats_t *debug_stats)
 static inline pen_adjust_index_t
 pds_clock_frequency_to_perf_id (pds_clock_freq_t freq)
 {
-    switch(freq) {
+    switch (freq) {
     case PDS_CLOCK_FREQUENCY_833:
         return PEN_PERF_ID0;
         break;
@@ -176,7 +176,7 @@ pds_clock_frequency_to_perf_id (pds_clock_freq_t freq)
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::set_frequency (pds_clock_freq_t freq) {
+capri_impl::set_frequency(pds_clock_freq_t freq) {
     pen_adjust_index_t perf_id;
     pen_adjust_perf_status_t ret;
 
@@ -195,7 +195,7 @@ capri_impl::set_frequency (pds_clock_freq_t freq) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::set_arm_frequency (pds_clock_freq_t freq) {
+capri_impl::set_arm_frequency(pds_clock_freq_t freq) {
     if (freq == PDS_CLOCK_FREQUENCY_2200) {
         PDS_TRACE_DEBUG("Setting ARM CPU freq to 2.2Ghz");
         cap_set_margin_by_value("arm", 950);
@@ -213,7 +213,7 @@ capri_impl::set_arm_frequency (pds_clock_freq_t freq) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::get_system_temperature (pds_system_temperature_t *temp) {
+capri_impl::get_system_temperature(pds_system_temperature_t *temp) {
     int rv;
     sdk::platform::sensor::system_temperature_t temperature;
 
@@ -227,7 +227,6 @@ capri_impl::get_system_temperature (pds_system_temperature_t *temp) {
         PDS_TRACE_ERR("Temperature reading failed");
         return SDK_RET_ERR;
     }
-
     return SDK_RET_OK;
 }
 
@@ -236,7 +235,7 @@ capri_impl::get_system_temperature (pds_system_temperature_t *temp) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::get_system_power (pds_system_power_t *pow) {
+capri_impl::get_system_power(pds_system_power_t *pow) {
     int rv;
     sdk::platform::sensor::system_power_t power;
 
@@ -250,7 +249,6 @@ capri_impl::get_system_power (pds_system_power_t *pow) {
         PDS_TRACE_ERR("Power reading failed");
         return SDK_RET_ERR;
     }
-
     return SDK_RET_OK;
 }
 
@@ -259,7 +257,7 @@ capri_impl::get_system_power (pds_system_power_t *pow) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::llc_setup (sdk::asic::pd::llc_counters_t *llc_args) {
+capri_impl::llc_setup(sdk::asic::pd::llc_counters_t *llc_args) {
     return sdk::asic::pd::asic_pd_llc_setup(llc_args);
 }
 
@@ -268,7 +266,7 @@ capri_impl::llc_setup (sdk::asic::pd::llc_counters_t *llc_args) {
  * @return      SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::llc_get (sdk::asic::pd::llc_counters_t *llc_args) {
+capri_impl::llc_get(sdk::asic::pd::llc_counters_t *llc_args) {
     return sdk::asic::pd::asic_pd_llc_get(llc_args);
 }
 
@@ -305,19 +303,20 @@ capri_impl::pb_stats(debug::pb_stats_get_cb_t cb, void *ctxt) {
  * @return      SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::meter_stats(debug::meter_stats_get_cb_t cb, uint32_t lowidx, uint32_t highidx, void *ctxt) {
+capri_impl::meter_stats(debug::meter_stats_get_cb_t cb, uint32_t lowidx,
+                        uint32_t highidx, void *ctxt) {
     sdk_ret_t ret;
     pds_meter_debug_stats_t stats = {0};
     uint64_t tx_offset = 0, rx_offset = 0;
     uint64_t start_addr = 0;
 
     if (highidx > (METER_STATS_TABLE_SIZE >> 1)) {
-        PDS_TRACE_ERR("Read Meter Stats failed. Invalid index {} specified", highidx);
+        PDS_TRACE_ERR("Read meter stats failed, invalid index {} specified",
+                      highidx);
         return SDK_RET_ERR;
     }
 
     start_addr = api::g_pds_state.mempartition()->start_addr("meter_stats");
-
     for (uint32_t idx = lowidx; idx <= highidx; idx ++) {
         tx_offset = idx * 8; // Each statistics is 8B
         rx_offset = tx_offset + (METER_STATS_TABLE_SIZE << 2); // ((SIZE/2) * 8)
@@ -325,21 +324,20 @@ capri_impl::meter_stats(debug::meter_stats_get_cb_t cb, uint32_t lowidx, uint32_
         stats.idx = idx;
 
         ret = sdk::asic::asic_mem_read(start_addr + tx_offset,
-                                       (uint8_t *)&stats.tx_bytes,
-                                       8);
+                                       (uint8_t *)&stats.tx_bytes, 8);
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Read Meter TX Stats for index {} failed with err %u", idx, ret);
+            PDS_TRACE_ERR("Read meter TX stats for index {} failed with err %u",
+                          idx, ret);
             return ret;
         }
 
         ret = sdk::asic::asic_mem_read(start_addr + rx_offset,
-                                       (uint8_t *)&stats.rx_bytes,
-                                       8);
+                                       (uint8_t *)&stats.rx_bytes, 8);
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Read Meter RX Stats for index {} failed with err %u", idx, ret);
+            PDS_TRACE_ERR("Read meter RX stats for index {} failed with err %u",
+                          idx, ret);
             return ret;
         }
-
         cb (&stats, ctxt);
     }
 
@@ -360,7 +358,7 @@ capri_impl::monitor (void) {
     rv = sdk::platform::sensor::read_temperatures(&temperature);
     if (rv == 0) {
         OBFL_LOG_DEBUG("Die temperature is {}C, local temperature is {}C,"
-                       " HBM temperature is {}C", temperature.dietemp,
+                       " HBM temperature is {}C", temperature.dietemp/1000,
                        temperature.localtemp/1000, temperature.hbmtemp);
     } else {
         OBFL_LOG_ERR("Temperature reading failed");
