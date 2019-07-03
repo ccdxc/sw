@@ -14,12 +14,6 @@ vnic_info_rxdma:
     // Pass payload_len from rxdma to txdma
     phvwr        p.rx_to_tx_hdr_payload_len, k.capri_p4_intr_packet_len
 
-    // Disable this lookup for further passes
-    phvwr        p.p4_to_rxdma_vnic_info_en, FALSE
-
-    // Pass iptype (address family) to txdma
-    phvwr        p.rx_to_tx_hdr_iptype, k.p4_to_rxdma_iptype
-
     // Copy the LPM roots to PHV based on AF
     addi         r1, r0, SACL_PROTO_DPORT_TABLE_OFFSET
     seq          c1, k.p4_to_rxdma_iptype, IPTYPE_IPV4
@@ -37,23 +31,42 @@ vnic_info_rxdma:
     phvwr        p.rx_to_tx_hdr_vpc_id, k.p4_to_rxdma_vpc_id
     phvwr        p.rx_to_tx_hdr_vnic_id, k.p4_to_rxdma_vnic_id
     phvwr        p.rx_to_tx_hdr_direction, k.p4_to_rxdma_direction
+    // Pass iptype (address family) to txdma
     phvwr        p.rx_to_tx_hdr_iptype, k.p4_to_rxdma_iptype
 
     // Fill the remote_ip and tag classid based on the direction
     seq          c1, k.p4_to_rxdma_direction, TX_FROM_HOST
     phvwr.c1     p.rx_to_tx_hdr_stag_classid, k.p4_to_rxdma_service_tag
-    phvwr.c1     p.rx_to_tx_hdr_remote_ip[127:104], k.p4_to_rxdma_flow_dst_s0_e23
-    phvwr.c1     p.rx_to_tx_hdr_remote_ip[103:64], k.p4_to_rxdma_flow_dst_s24_e127[103:64]
-    phvwr.c1     p.rx_to_tx_hdr_remote_ip[63:0], k.p4_to_rxdma_flow_dst_s24_e127[63:0]
-    phvwr.c1     p.rx_to_tx_hdr_pre_nat_ip[127:64], k.p4_to_rxdma_flow_src[127:64]
-    phvwr.c1     p.rx_to_tx_hdr_pre_nat_ip[63:0], k.p4_to_rxdma_flow_src[63:0]
+    phvwr.c1     p.rx_to_tx_hdr_remote_ip[127:112], k.p4_to_rxdma_flow_dst_s0_e15
+    phvwr.c1     p.rx_to_tx_hdr_remote_ip[111:0], k.p4_to_rxdma_flow_dst_s16_e127[111:0]
+    // In Tx scenario, NAT table is not overidding the flow sip/sport so no need to save original
+    // flow keys from P4, but just to simply deriving the rflow keys in iflow_rx2tx in
+    // non-NAT cases, we can save original keys in nat_ip/xlate_port here, and they
+    // get overwritten in NAT if NAT is enabled. These are used for dip/dport of rflow keys
+    phvwr.c1     p.rx_to_tx_hdr_nat_ip[127:64], k.p4_to_rxdma_flow_src[127:64]
+    phvwr.c1     p.rx_to_tx_hdr_nat_ip[63:0], k.p4_to_rxdma_flow_src[63:0]
+    phvwr.c1     p.rx_to_tx_hdr_xlate_port, k.p4_to_rxdma_flow_sport
 
     phvwr.!c1    p.rx_to_tx_hdr_dtag_classid, k.p4_to_rxdma_service_tag
     phvwr.!c1    p.rx_to_tx_hdr_remote_ip[127:64], k.p4_to_rxdma_flow_src[127:64]
     phvwr.!c1    p.rx_to_tx_hdr_remote_ip[63:0], k.p4_to_rxdma_flow_src[63:0]
-    phvwr.!c1    p.rx_to_tx_hdr_pre_nat_ip[127:104], k.p4_to_rxdma_flow_dst_s0_e23
-    phvwr.!c1    p.rx_to_tx_hdr_pre_nat_ip[103:64], k.p4_to_rxdma_flow_dst_s24_e127[103:64]
-    phvwr.!c1    p.rx_to_tx_hdr_pre_nat_ip[63:0], k.p4_to_rxdma_flow_dst_s24_e127[63:0]
+    // Save the original src or dst ip/port from P4 into nat_ip and xlate_port and pass
+    // to txdma, as its needed  for the rflow keys derivation
+    phvwr.!c1    p.rx_to_tx_hdr_nat_ip[127:112], k.p4_to_rxdma_flow_dst_s0_e15
+    phvwr.!c1    p.rx_to_tx_hdr_nat_ip[111:0], k.p4_to_rxdma_flow_dst_s16_e127[111:0]
+    phvwr.c1     p.rx_to_tx_hdr_xlate_port, k.p4_to_rxdma_flow_dport
+
+    // Pick the correct xlate_idx out of 3 idx's passed by P4
+    // If all 3 idx's are not valid, then xlate_idx is untouched as zero
+    add          r1, k.p4_to_rxdma2_public_xlate_idx, r0
+    sne          c1, k.p4_to_rxdma2_pa_or_ca_xlate_idx, 0
+    add.c1       r1, k.p4_to_rxdma2_pa_or_ca_xlate_idx, r0
+    sne          c1, k.p4_to_rxdma2_service_xlate_idx, 0
+    add.c1       r1, k.p4_to_rxdma2_service_xlate_idx, r0
+    phvwr        p.rxdma_control_xlate_idx, r1
+    // set xlate_valid if the xlate_idx is not zero
+    sne          c1, r1, 0
+    phvwr.c1     p.rx_to_tx_hdr_xlate_valid, 1
 
     // Setup key for DPORT lookup
     phvwr        p.lpm_metadata_lpm2_key[23:16], k.p4_to_rxdma_flow_proto

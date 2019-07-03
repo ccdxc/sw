@@ -60,10 +60,12 @@ read_pktdesc:
                        rx_to_tx_hdr_payload_len, \
                        rx_to_tx_hdr_iptype, \
                        rx_to_tx_hdr_direction, \
-                       rx_to_tx_hdr_pre_nat_ip }, \
+                       rx_to_tx_hdr_nat_ip, \
+                       rx_to_tx_hdr_xlate_port, \
+                       rx_to_tx_hdr_xlate_valid }, \
                        d[511:(512-(offsetof(p,rx_to_tx_hdr_remote_ip) + \
                             sizeof(p.rx_to_tx_hdr_remote_ip) - \
-                            offsetof(p, rx_to_tx_hdr_pre_nat_ip)))]
+                            offsetof(p, rx_to_tx_hdr_xlate_valid)))]
     nop
 
 /*****************************************************************************/

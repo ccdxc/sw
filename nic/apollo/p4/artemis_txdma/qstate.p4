@@ -52,7 +52,9 @@ action read_pktdesc(remote_ip,
                     payload_len,
                     iptype,
                     direction,
-                    pre_nat_ip
+                    nat_ip,
+                    xlate_port,
+                    xlate_valid
                    )
 {
     modify_field(scratch_metadata.field10, sip_classid);
@@ -73,7 +75,9 @@ action read_pktdesc(remote_ip,
     modify_field(rx_to_tx_hdr.payload_len, payload_len);
     modify_field(rx_to_tx_hdr.iptype, iptype);
     modify_field(rx_to_tx_hdr.direction, direction);
-    modify_field(rx_to_tx_hdr.pre_nat_ip, pre_nat_ip);
+    modify_field(rx_to_tx_hdr.nat_ip, nat_ip);
+    modify_field(rx_to_tx_hdr.xlate_port, xlate_port);
+    modify_field(rx_to_tx_hdr.xlate_valid, xlate_valid);
 
     //Fill entry_valid to TRUE in session always
     modify_field(session_info_hint.entry_valid, TRUE);

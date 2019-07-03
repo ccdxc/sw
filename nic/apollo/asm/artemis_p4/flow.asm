@@ -71,6 +71,7 @@ label_flow_miss:
     phvwr       p.p4_to_rxdma3_epoch, k.control_metadata_epoch
     phvwrpair   p.p4_to_rxdma3_flow_hash, r1, p.p4_to_rxdma3_ipaf, 1
     phvwr       p.p4_to_rxdma_tag_root, r5
+    phvwr       p.p4_to_rxdma_iptype, IPTYPE_IPV6
     phvwr.e     p.control_metadata_pipe_id, PIPE_CPS
     phvwr.f     p.ingress_recirc_flow_done, TRUE
 

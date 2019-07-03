@@ -16,6 +16,7 @@ action flow_hash(epoch, session_index, flow_role, pad8,
             modify_field(ingress_recirc.flow_done, TRUE);
             modify_field(control_metadata.pipe_id, PIPE_CPS);
             modify_field(p4_to_rxdma.tag_root, scratch_metadata.tag_root_addr);
+            modify_field(p4_to_rxdma.iptype, IPTYPE_IPV6);
         } else {
             modify_field(ingress_recirc.flow_done, TRUE);
             modify_field(p4i_i2e.session_index, session_index);
@@ -63,11 +64,13 @@ action flow_hash(epoch, session_index, flow_role, pad8,
             modify_field(ingress_recirc.flow_done, TRUE);
             modify_field(control_metadata.pipe_id, PIPE_CPS);
             modify_field(p4_to_rxdma.tag_root, scratch_metadata.tag_root_addr);
+            modify_field(p4_to_rxdma.iptype, IPTYPE_IPV6);
         }
     } else {
         modify_field(ingress_recirc.flow_done, TRUE);
         modify_field(control_metadata.pipe_id, PIPE_CPS);
         modify_field(p4_to_rxdma.tag_root, scratch_metadata.tag_root_addr);
+        modify_field(p4_to_rxdma.iptype, IPTYPE_IPV6);
     }
 
     modify_field(scratch_metadata.flag, entry_valid);

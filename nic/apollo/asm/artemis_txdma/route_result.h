@@ -8,10 +8,13 @@ route_result_handler:
     nop
 route_result_nexthop_group:
     phvwr           p.session_info_hint_nexthop_idx, res_reg[19:0]
-    // Set Tx:src_ip to 01 for NH_TYPE=IP
-    phvwr           p.session_info_hint_tx_rewrite_flags_src_ip, 1
-    // Set Rx:dst_ip to 01 for NH_TYPE=IP
-    phvwr           p.session_info_hint_rx_rewrite_flags_dst_ip, 1
+    // Set Tx:src_ip to 2(10) if xlate_idx_valid else 1(01) for NH_TYPE=IP
+    sne             c1, k.rx_to_tx_hdr_xlate_valid, 0
+    phvwr.c1        p.session_info_hint_tx_rewrite_flags_src_ip, 2
+    phvwr.!c1       p.session_info_hint_tx_rewrite_flags_src_ip, 1
+    // Set Rx:dst_ip to  2(10) if xlate_idx_valid else 1(01) for NH_TYPE=IP
+    phvwr.c1        p.session_info_hint_rx_rewrite_flags_dst_ip, 2
+    phvwr.!c1       p.session_info_hint_rx_rewrite_flags_dst_ip, 1
     // Set Rx:smac to 1 for NH_TYPE=IP
     phvwr.e         p.session_info_hint_rx_rewrite_flags_smac, 1
     // Disable Peer VNET Route lookup

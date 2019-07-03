@@ -50,7 +50,7 @@ iflow_ipv4_key:
     // thats good for rflow.sip, but iflow.dip need to have pre-nat_ip, so
     // overwrite
     seq             c1, k.rx_to_tx_hdr_direction, RX_FROM_SWITCH
-    phvwrp.c1       r1, 0, 32, k.rx_to_tx_hdr_pre_nat_ip[31:0]
+    phvwrp.c1       r1, 0, 32, k.rx_to_tx_hdr_nat_ip[31:0]
     phvwrp.!c1      r1, 0, 32, d.iflow_rx2tx_d.flow_dst[31:0]
     add             r1, r1, 32
 
@@ -80,7 +80,7 @@ iflow_ipv4_key:
     // TODO-MURTY: For TX_FROM_HOST, need to derive NATed IP for iflow.sip
     // and use that as destination for rflow
     seq             c1, k.rx_to_tx_hdr_direction, TX_FROM_HOST
-    phvwr.c1        p.key_ipv4_ipv4_dst, k.rx_to_tx_hdr_pre_nat_ip[31:0]
+    phvwr.c1        p.key_ipv4_ipv4_dst, k.rx_to_tx_hdr_nat_ip[31:0]
     phvwr.!c1       p.key_ipv4_ipv4_dst, d.iflow_rx2tx_d.flow_src[31:0]
 
     phvwr           p.key_ipv4_epoch, d.iflow_rx2tx_d.epoch
@@ -104,7 +104,7 @@ iflow_ipv6_key:
     // thats good for rflow.sip, but iflow.dip need to have pre-nat_ip, so
     // overwrite
     seq             c1, k.rx_to_tx_hdr_direction, RX_FROM_SWITCH
-    phvwrp.c1       r1, 0, 128, k.rx_to_tx_hdr_pre_nat_ip
+    phvwrp.c1       r1, 0, 128, k.rx_to_tx_hdr_nat_ip
     phvwrp.!c1      r1, 0, 128, d.iflow_rx2tx_d.flow_dst
     add             r1, r1, 128
 
@@ -132,8 +132,8 @@ iflow_ipv6_key:
     // TODO-MURTY: For TX_FROM_HOST, need to derive NATed IP for iflow.sip
     // and use that as destination for rflow
     seq             c1, k.rx_to_tx_hdr_direction, TX_FROM_HOST
-    phvwr.c1        p.key2_dst, k.rx_to_tx_hdr_pre_nat_ip[127:48]
-    phvwr.c1        p.key3_dst, k.rx_to_tx_hdr_pre_nat_ip[47:0]
+    phvwr.c1        p.key2_dst, k.rx_to_tx_hdr_nat_ip[127:48]
+    phvwr.c1        p.key3_dst, k.rx_to_tx_hdr_nat_ip[47:0]
     phvwr.!c1       p.key2_dst, d.iflow_rx2tx_d.flow_src[127:48]
     phvwr.!c1       p.key3_dst, d.iflow_rx2tx_d.flow_src[47:0]
 
@@ -190,24 +190,29 @@ iflow_key_done:
     phvwr          p.rflow_keys3_dport, d.iflow_rx2tx_d.flow_sport
     phvwr          p.rflow_keys3_proto, d.iflow_rx2tx_d.flow_proto
     phvwr          p.rflow_keys3_vpc_id, d.iflow_rx2tx_d.vpc_id
-    phvwr          p.iflow_keys3_iptype, k.rx_to_tx_hdr_iptype
+    phvwr          p.rflow_keys3_iptype, k.rx_to_tx_hdr_iptype
 
     // In case of NAT, the iflow keys are overwrote by the NAT table
-    // so update the iflow keys with pre_nat_ip address from PHV
+    // so update the iflow keys with nat_ip address from PHV
     // This is based on direction
-    // TODO-MURTY: For TX_FROM_HOST, need to derive NATed IP for iflow.sip
-    // and use that as destination for rflow
-    seq            c1, k.rx_to_tx_hdr_direction, TX_FROM_HOST
-    phvwr.c1       p.rflow_keys1_dip_127_96, k.rx_to_tx_hdr_pre_nat_ip[127:96]
-    phvwr.c1       p.rflow_keys2_dip_95_0, k.rx_to_tx_hdr_pre_nat_ip[95:0]
 
-    // For RX_TO_HOST, iflow_rx2tx.flow_dip is ovewritten by NATed IP,
+    // For TX_FROM_HOST, if NAT table is hit, then update rflow dip with
+    // NATed ip
+    seq            c1, k.rx_to_tx_hdr_direction, TX_FROM_HOST
+    phvwr.c1       p.rflow_keys1_dip_127_96, k.rx_to_tx_hdr_nat_ip[127:96]
+    phvwr.c1       p.rflow_keys2_dip_95_0, k.rx_to_tx_hdr_nat_ip[95:0]
+    phvwr.c1       p.rflow_keys3_dport, k.rx_to_tx_hdr_xlate_port
+
+    // For RX_TO_HOST, iflow_rx2tx.flow_dip is ovewritten by IP from NAT table,
     // thats good for rflow.sip, but iflow.dip need to have pre-nat_ip, so
     // overwrite
-    phvwr.!c1      p.iflow_keys2_dip, k.rx_to_tx_hdr_pre_nat_ip
+    phvwr.!c1      p.iflow_keys2_dip, k.rx_to_tx_hdr_nat_ip
+    // same with xlate port
+    phvwr.!c1      p.iflow_keys3_dport, k.rx_to_tx_hdr_xlate_port
 
-    // TODO-MURTY: Fix the Xlate Port as well
     // TODO-MURTY: Take care 4-6 and 6-4 logic as well
+    nop.e
+    nop
 #endif
 
 

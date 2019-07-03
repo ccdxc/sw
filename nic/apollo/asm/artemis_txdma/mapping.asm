@@ -67,15 +67,15 @@ mapping_hit:
     phvwr       p.session_info_hint_nexthop_idx, \
                 d.mapping_info_d.nexthop_group_index
     // Tx: Set Encap to 1
-    phvwr       p.session_info_hint_tx_rewrite_flags_encap, 0x01
+    phvwr       p.session_info_hint_tx_rewrite_flags_encap, 1
     // rewrite flag to 00 (rewrite using service mapping table index)
-    phvwr       p.session_info_hint_tx_rewrite_flags_src_ip, 0x00
+    phvwr       p.session_info_hint_tx_rewrite_flags_src_ip, 0
 
     // Set Rx:smac to 0
-    phvwr       p.session_info_hint_rx_rewrite_flags_smac, 0x00
+    phvwr       p.session_info_hint_rx_rewrite_flags_smac, 0
 
     // rewrite flag to 00 (rewrite using service mapping table index)
-    phvwr.e     p.session_info_hint_rx_rewrite_flags_dst_ip, 0x00
+    phvwr.e     p.session_info_hint_rx_rewrite_flags_dst_ip, 0
     nop
 
 mapping_hash_hit:

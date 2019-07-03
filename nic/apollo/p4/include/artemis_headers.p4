@@ -35,9 +35,10 @@ header_type artemis_p4_to_rxdma_header_t {
 header_type artemis_p4_to_rxdma_header2_t {
     fields {
         service_xlate_idx   : 16;
+        xlate_port          : 16;
         pa_or_ca_xlate_idx  : 16;
         public_xlate_idx    : 16;
-        pad0                : 48;
+        pad0                : 32;
     }
 }
 
@@ -79,8 +80,10 @@ header_type artemis_rx_to_tx_header_t {
         payload_len     : 14; // Byte 36 to 37-6b
         iptype          : 1;  // Byte 37 - 1b
         direction       : 1;  // Byte 37 - 1b
-        pre_nat_ip      : 128; // Byte 38 to 53
-        pad1            : 80;  // Byte 54 to 63
+        nat_ip          : 128;// Byte 38 to 53
+        xlate_port      : 16; // Byte 54 to 55
+        xlate_valid     : 1;  // Byte 56 1b
+        pad1            : 63; // Byte 56 7b to 63
         // Please check the above comment when adding new fields
     }
 }
