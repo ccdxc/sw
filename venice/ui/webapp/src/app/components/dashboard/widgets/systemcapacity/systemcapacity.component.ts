@@ -13,6 +13,8 @@ import { ClusterService } from '@app/services/generated/cluster.service';
 import { Subscription } from 'rxjs';
 import { ControllerService } from '@app/services/controller.service';
 import { FlipState, FlipComponent } from '@app/components/shared/flip/flip.component';
+import { NodeConditionValues } from '@app/components/cluster-group/naples';
+
 
 interface BarGraphStat {
   percent: number;
@@ -228,7 +230,9 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
     this.memGraphStat,
     this.storageGraphStat,
   ];
-
+  healthynodes = 0;
+  unhealthynodes = 0;
+  unknownnodes = 0;
   cardStates = CardStates;
 
   nodeEventUtility: HttpEventUtility<ClusterNode>;
@@ -262,6 +266,8 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
     const subscription = this.clusterService.WatchNode().subscribe(
       response => {
         this.nodeEventUtility.processEvents(response);
+        this.getNodeConditionNumbers();
+
       },
       this.controllerService.webSocketErrorHandler('Failed to get Node')
     );
@@ -283,6 +289,7 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
     // to be ready in the dom.
     this.viewInitialized = true;
     this.setupData();
+
   }
 
   export() {
@@ -408,6 +415,20 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
     chart.data.datasets[0].data = [percent];
     chart.data.datasets[1].data = [100 - percent];
     chart.update();
+  }
+
+  getNodeConditionNumbers() {
+    this.healthynodes = 0;
+    this.unhealthynodes = 0;
+    this.unknownnodes = 0;
+    this.nodes.forEach((node) => {
+      if (Utility.getNodeCondition(node) === NodeConditionValues.HEALTHY)  {
+        this.healthynodes += 1 ;
+      } else if (Utility.getNodeCondition(node) === NodeConditionValues.UNHEALTHY) {
+        this.unhealthynodes += 1;
+      }
+    });
+    this.unknownnodes = this.nodes.length - this.healthynodes - this.unhealthynodes;
   }
 
   setBarGraphOptions(graphData: BarGraphStat, id: string): Chart {

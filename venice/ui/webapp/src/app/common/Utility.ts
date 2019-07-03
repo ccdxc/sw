@@ -16,10 +16,11 @@ import { Eventtypes } from '../enum/eventtypes.enum';
 import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
-import { ClusterSmartNIC, ClusterSmartNICCondition, ClusterSmartNICCondition_status, ClusterSmartNICCondition_type } from '@sdk/v1/models/generated/cluster';
+import { ClusterSmartNIC, ClusterSmartNICCondition, ClusterSmartNICCondition_status, ClusterNode, ClusterSmartNICCondition_type } from '@sdk/v1/models/generated/cluster';
 import { ILabelsSelector } from '@sdk/v1/models/generated/rollout';
-import { NaplesCondition, NaplesConditionValues} from '@app/components/cluster-group/naples/index.ts';
+import { NaplesCondition, NaplesConditionValues, NodeConditionValues} from '@app/components/cluster-group/naples/index.ts';
 import { IAuthUser } from '@sdk/v1/models/generated/auth';
+import {ClusterNodeCondition_type, ClusterNodeCondition_status, ClusterSmartNICStatus_admission_phase} from '@sdk/v1/models/generated/cluster';
 
 
 
@@ -1546,9 +1547,28 @@ export class Utility {
     return ret;
   }
 
+  public static getNodeCondition(nodes: Readonly<ClusterNode>) {
+    if (!nodes || !nodes.status || nodes.status.conditions == null || nodes.status.conditions.length === 0) {
+      return NodeConditionValues.UNKNOWN;
+    } else {
+      // 2019-07-02 : conditions is technically an array, but backend only supplies one element in it, so this is fine
+      for (const cond of nodes.status.conditions) {
+        if ((cond) && (cond.type === ClusterNodeCondition_type.HEALTHY) && (cond.status === ClusterNodeCondition_status.TRUE)) {
+          return NodeConditionValues.HEALTHY;
+        } else if ((cond) && (cond.type === ClusterNodeCondition_type.HEALTHY) && (cond.status === ClusterNodeCondition_status.FALSE)) {
+          return NodeConditionValues.UNHEALTHY;
+        } else {
+          return NodeConditionValues.UNKNOWN;
+        }
+      }
+    }
+  }
+
   public static getNaplesConditionObject(naples: Readonly<ClusterSmartNIC>): NaplesCondition {
-    if (!naples || naples.status.conditions == null || naples.status.conditions.length === 0) {
-      return {isHealthy: true, condition : NaplesConditionValues.HEALTHY};
+    if (!naples || naples.status['admission-phase'] !== ClusterSmartNICStatus_admission_phase.ADMITTED) {
+      return {isHealthy: false, condition : NaplesConditionValues.EMPTY};
+    } else if (naples.status.conditions == null || naples.status.conditions.length === 0) {
+      return {isHealthy : true, condition : NaplesConditionValues.HEALTHY};
     } else {
       for (const cond of naples.status.conditions) {
         if ((cond) && (cond.type === ClusterSmartNICCondition_type.HEALTHY) && (cond.status === ClusterSmartNICCondition_status.FALSE)) {
@@ -1588,6 +1608,10 @@ export class Utility {
     } else {
       return '';
     }
+  }
+
+  public static isNICConditionEmpty(naples: Readonly<ClusterSmartNIC>): boolean {
+    return this.getNaplesCondition(naples) === NaplesConditionValues.EMPTY;
   }
 
   public static formatDateWithinString(cond: ClusterSmartNICCondition): string {

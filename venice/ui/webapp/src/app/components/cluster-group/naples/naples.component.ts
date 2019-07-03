@@ -145,6 +145,13 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     return Utility.displayReasons(data);
   }
 
+  isNICNotAdmitted(data: ClusterSmartNIC): boolean {
+    if (Utility.isNICConditionEmpty(data)) {
+      return true;
+    }
+    return false;
+  }
+
   /**
    * We start 3 metric polls.
    * Time series poll

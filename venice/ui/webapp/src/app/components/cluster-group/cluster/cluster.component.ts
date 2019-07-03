@@ -191,6 +191,10 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     return MetricsUtility.pastFiveMinAverageQueryPolling(this.telemetryKind);
   }
 
+  displayCondition(node: ClusterNode) {
+    return Utility.getNodeCondition(node);
+  }
+
   avgDayQuery(): MetricsPollingQuery {
     return MetricsUtility.pastDayAverageQueryPolling(this.telemetryKind);
   }

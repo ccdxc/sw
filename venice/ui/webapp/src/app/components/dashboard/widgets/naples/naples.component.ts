@@ -411,11 +411,15 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
     let rejected = 0; let admitted = 0; let pending = 0;
     this.healthyNaplesCount = 0;
     this.unknownNaplesCount = 0;
+    const admittedNics = [];
     this.naples.forEach((naple) => {
       if (Utility.isNaplesNICHealthy(naple)) {
         this.healthyNaplesCount += 1;
       } else if (Utility.getNaplesCondition(naple) === NaplesConditionValues.UNKNOWN) {
         this.unknownNaplesCount += 1;
+      }
+      if (!Utility.isNICConditionEmpty(naple)) {
+        admittedNics.push(naple);
       }
       switch (naple.status['admission-phase']) {
         case ClusterSmartNICStatus_admission_phase.ADMITTED:
@@ -433,13 +437,13 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
     this.secondStat.value = admitted.toString();
     this.thirdStat.value = rejected.toString();
     this.fourthStat.value = pending.toString();
-    if (this.naples.length !== 0) {
-      const unhealthyCount = this.naples.length - this.healthyNaplesCount - this.unknownNaplesCount;
+    if (admittedNics && admittedNics.length !== 0) {
+      const unhealthyCount = admittedNics.length - this.healthyNaplesCount - this.unknownNaplesCount;
 
-      this.unhealthyPercent = (unhealthyCount / this.naples.length) * 100;
+      this.unhealthyPercent = (unhealthyCount / admittedNics.length) * 100;
       this.unhealthyPercent = Math.round(this.unhealthyPercent * 100) / 100;
 
-      this.unknownPercent = (this.unknownNaplesCount / this.naples.length) * 100;
+      this.unknownPercent = (this.unknownNaplesCount / admittedNics.length) * 100;
       this.unknownPercent = Math.round(this.unknownPercent * 100) / 100;
 
       // Calculate healthy last so any rounding error will lower the health percent

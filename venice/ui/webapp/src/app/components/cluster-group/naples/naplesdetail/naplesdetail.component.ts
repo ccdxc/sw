@@ -439,4 +439,11 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     }
     return false;
   }
+
+  isNICNotAdmitted(data: Readonly<ClusterSmartNIC>): boolean {
+    if (Utility.isNICConditionEmpty(data)) {
+      return true;
+    }
+    return false;
+  }
 }

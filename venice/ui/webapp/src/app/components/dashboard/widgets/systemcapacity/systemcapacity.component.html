@@ -87,7 +87,7 @@
 <ng-template #background>
   <div class="systemcapacity-background">
     <div fxFlex="100%" fxLayout="row">
-      <div fxFlex='45%' class="systemcapacity-left">
+      <div fxFlex='45%' fxLayout="column" class="systemcapacity-left">
         <div [ngStyle]="_background_img" class="systemcapacity-venice-image">
           <div *ngIf="cardState === cardStates.READY" class="systemcapacity-image-text-container">
             <div class="systemcapacity-nodecount">
@@ -96,6 +96,16 @@
             <div *ngIf="nodes.length !== 1" class="systemcapacity-image-text">Nodes</div>
             <div *ngIf="nodes.length === 1" class="systemcapacity-image-text">Node</div>
           </div>
+        </div>
+        <div fxFlex="grow" fxLayout="row" fxLayoutGap="50px" fxLayoutAlign="left end">
+          <div class="top-node-label">{{ this.unhealthynodes}}</div>
+          <div class='top-node-label'>{{ this.healthynodes}}</div>
+          <div class='top-node-label'>{{ this.unknownnodes }}</div>
+        </div>
+        <div fxFlex="shrink" fxLayout="row" fxLayoutGap="25px" fxLayoutAlign="left end">
+          <div class="node-condition-type">Unhealthy</div>
+          <div class="node-condition-type">Healthy</div>
+          <div class="node-condition-type">Unknown</div>
         </div>
       </div>
     </div>

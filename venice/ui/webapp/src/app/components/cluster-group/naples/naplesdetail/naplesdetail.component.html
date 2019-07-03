@@ -137,9 +137,9 @@
               <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
                    class="naplesdetail-node-value">
                 <div class="naplesdetail-details-panel-ntp-servers"
-                     [matTooltip]="!isNICHealthy(selectedObj) ? helpDisplayReasons(selectedObj) : ''">
+                     [matTooltip]="!isNICHealthy(selectedObj) && !isNICNotAdmitted(selectedObj)? helpDisplayReasons(selectedObj) : ''">
                   {{helpDisplayCondition(selectedObj)}}
-                  <mat-icon *ngIf=" !isNICHealthy(selectedObj)"
+                  <mat-icon *ngIf=" !isNICHealthy(selectedObj) && !isNICNotAdmitted(selectedObj)"
                             fxFlex="nogrow"
                             [inline]="true"
                             class="global-alert-critical-icon naples-bad-indicator-icon">error

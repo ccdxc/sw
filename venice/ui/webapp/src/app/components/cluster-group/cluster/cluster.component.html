@@ -64,7 +64,7 @@
             <div fxFlex fxLayout="column">
               <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
                    class="cluster-node-value">
-                <div class="cluster-node-quorum">{{ node.status.quorum }}</div>
+                <div class="cluster-node-quorum">{{ node?.status?.quorum  }}</div>
               </div>
             </div>
             <div fxFlex="none" fxLayout="column">
@@ -77,6 +77,18 @@
               <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
                    class="cluster-node-value">
                 <div class="cluster-node-phase">{{ phaseEnum[node.status.phase] }}</div>
+              </div>
+            </div>
+            <div fxFlex="none" fxLayout="column">
+              <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                   fxLayoutAlign="start center">
+                <div>Condition:</div>
+              </div>
+            </div>
+            <div fxFlex fxLayout="column">
+              <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                   class="cluster-node-value">
+                <div class="cluster-node-phase">{{ displayCondition(node)}}</div>
               </div>
             </div>
           </div>
