@@ -10,7 +10,7 @@ struct s1_t0_nvme_sesspostxts_tx_sess_wqe_process_d d;
 
 %%
     .param  nvme_txsessprodcb_base
-    .param  nvme_sesspostxts_tx_sessprodcb_process
+    .param  nvme_sesspostxts_tx_sessprodtxcb_process
 
 .align
 nvme_sesspostxts_tx_sess_wqe_process:
@@ -26,5 +26,5 @@ nvme_sesspostxts_tx_sess_wqe_process:
 
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS,
                                 CAPRI_TABLE_SIZE_0_BITS,
-                                nvme_sesspostxts_tx_sessprodcb_process,
+                                nvme_sesspostxts_tx_sessprodtxcb_process,
                                 r6) //Exit Slot

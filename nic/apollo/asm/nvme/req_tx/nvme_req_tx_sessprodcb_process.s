@@ -6,7 +6,7 @@
 
 struct phv_ p;
 struct s5_t0_nvme_req_tx_k_ k;
-struct s5_t0_nvme_req_tx_sessprodcb_process_d d;
+struct s5_t0_nvme_req_tx_sessprodtxcb_process_d d;
 
 #define DB_ADDR r4
 #define DB_DATA r5
@@ -16,7 +16,7 @@ struct s5_t0_nvme_req_tx_sessprodcb_process_d d;
     .param  nvme_req_tx_sqcb_writeback_process
 
 .align
-nvme_req_tx_sessprodcb_process:
+nvme_req_tx_sessprodtxcb_process:
 
     mfspr       r1, spr_mpuid
     seq         c1, r1[4:2], STAGE_5

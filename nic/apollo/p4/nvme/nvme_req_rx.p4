@@ -62,7 +62,7 @@
 
 #define tx_table_s3_t0_action c2h_data_process
 
-#define tx_table_s4_t0_action sessprodcb_process
+#define tx_table_s4_t0_action sessprodrxcb_process
 
 #define tx_table_s5_t0_action rqcb_writeback_process
 
@@ -110,7 +110,7 @@ header_type nvme_req_rx_to_stage_c2h_data_info_t {
     }
 }
 
-header_type nvme_req_rx_to_stage_sessprodcb_info_t {
+header_type nvme_req_rx_to_stage_sessprodrxcb_info_t {
     fields {
         pad                              :  128;
     }
@@ -158,13 +158,13 @@ header_type nvme_req_rx_pduhdr_to_c2h_data_t {
     }
 }
 
-header_type nvme_req_rx_pduhdr_to_sessprodcb_t {
+header_type nvme_req_rx_pduhdr_to_sessprodrxcb_t {
     fields {
         pad                 : 160;
     }
 }
 
-header_type nvme_req_rx_sessprodcb_to_rqcb_writeback_t {
+header_type nvme_req_rx_sessprodrxcb_to_rqcb_writeback_t {
     fields {
         pad                 : 160;
     }
@@ -197,7 +197,7 @@ metadata pduid_ring_entry_t pduid_ring_entry_d;
 metadata c2h_data_t c2h_data_d;
 
 @pragma scratch_metadata
-metadata sessprodcb_t sessprodcb_d;
+metadata sessprodrxcb_t sessprodrxcb_d;
 
 @pragma scratch_metadata
 metadata rq_statscb_t rq_statscb_d;
@@ -233,9 +233,9 @@ metadata nvme_req_rx_to_stage_c2h_data_info_t to_s3_info_scr;
 
 //To-Stage-4
 @pragma pa_header_union ingress to_stage_4
-metadata nvme_req_rx_to_stage_sessprodcb_info_t to_s4_info;
+metadata nvme_req_rx_to_stage_sessprodrxcb_info_t to_s4_info;
 @pragma scratch_metadata
-metadata nvme_req_rx_to_stage_sessprodcb_info_t to_s4_info_scr;
+metadata nvme_req_rx_to_stage_sessprodrxcb_info_t to_s4_info_scr;
 
 //To-Stage-5
 @pragma pa_header_union ingress to_stage_5
@@ -253,7 +253,7 @@ metadata nvme_req_rx_to_stage_rq_statscb_info_t to_s7_info_scr;
 /**** stage to stage header unions ****/
 
 //Table-0
-@pragma pa_header_union ingress common_t0_s2s t0_s2s_rqcb_to_rqe_info t0_s2s_rqe_to_pdu_hdr_info t0_s2s_pduhdr_to_c2h_data_info t0_s2s_pduhdr_to_sessprodcb_info t0_s2s_sessprodcb_to_rqcb_writeback_info
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_rqcb_to_rqe_info t0_s2s_rqe_to_pdu_hdr_info t0_s2s_pduhdr_to_c2h_data_info t0_s2s_pduhdr_to_sessprodrxcb_info t0_s2s_sessprodrxcb_to_rqcb_writeback_info
 
 metadata nvme_req_rx_rqcb_to_rqe_t t0_s2s_rqcb_to_rqe_info;
 @pragma scratch_metadata
@@ -267,13 +267,13 @@ metadata nvme_req_rx_pduhdr_to_c2h_data_t t0_s2s_pduhdr_to_c2h_data_info;
 @pragma scratch_metadata
 metadata nvme_req_rx_pduhdr_to_c2h_data_t t0_s2s_pduhdr_to_c2h_data_info_scr;
 
-metadata nvme_req_rx_pduhdr_to_sessprodcb_t t0_s2s_pduhdr_to_sessprodcb_info;
+metadata nvme_req_rx_pduhdr_to_sessprodrxcb_t t0_s2s_pduhdr_to_sessprodrxcb_info;
 @pragma scratch_metadata
-metadata nvme_req_rx_pduhdr_to_sessprodcb_t t0_s2s_pduhdr_to_sessprodcb_info_scr;
+metadata nvme_req_rx_pduhdr_to_sessprodrxcb_t t0_s2s_pduhdr_to_sessprodrxcb_info_scr;
 
-metadata nvme_req_rx_sessprodcb_to_rqcb_writeback_t t0_s2s_sessprodcb_to_rqcb_writeback_info;
+metadata nvme_req_rx_sessprodrxcb_to_rqcb_writeback_t t0_s2s_sessprodrxcb_to_rqcb_writeback_info;
 @pragma scratch_metadata
-metadata nvme_req_rx_sessprodcb_to_rqcb_writeback_t t0_s2s_sessprodcb_to_rqcb_writeback_info_scr;
+metadata nvme_req_rx_sessprodrxcb_to_rqcb_writeback_t t0_s2s_sessprodrxcb_to_rqcb_writeback_info_scr;
 
 //Table-1
 @pragma pa_header_union ingress common_t1_s2s t1_s2s_rqcb_to_resourcecb_info t1_s2s_resourcecb_to_pduid_fetch_info t1_s2s_rqcb_writeback_to_rq_statscb_info
@@ -373,7 +373,7 @@ action pdu_hdr_process (PDU_HDR_PARAMS) {
     GENERATE_PDU_HDR_D
 }
 
-action sessprodcb_process (SESSPRODCB_PARAMS) {
+action sessprodrxcb_process (SESSPRODRXCB_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -381,13 +381,14 @@ action sessprodcb_process (SESSPRODCB_PARAMS) {
     modify_field(to_s4_info_scr.pad, to_s4_info.pad);
     
     // stage to stage
-    modify_field(t0_s2s_pduhdr_to_sessprodcb_info_scr.pad, t0_s2s_pduhdr_to_sessprodcb_info.pad);
+    modify_field(t0_s2s_pduhdr_to_sessprodrxcb_info_scr.pad, t0_s2s_pduhdr_to_sessprodrxcb_info.pad);
 
     // D-vector
-    GENERATE_SESSPRODCB_D
+    GENERATE_SESSPRODRXCB_D
 }
 
 action pduid_fetch_process (PDUID_RING_ENTRY_PARAMS) {
+
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -423,7 +424,7 @@ action rqcb_writeback_process (RQCB_PARAMS_NON_STG0) {
     modify_field(to_s5_info_scr.pad, to_s5_info.pad);
     
     // stage to stage
-    modify_field(t0_s2s_sessprodcb_to_rqcb_writeback_info_scr.pad, t0_s2s_sessprodcb_to_rqcb_writeback_info.pad);
+    modify_field(t0_s2s_sessprodrxcb_to_rqcb_writeback_info_scr.pad, t0_s2s_sessprodrxcb_to_rqcb_writeback_info.pad);
 
     // D-vector
     GENERATE_RQCB_D_NON_STG0

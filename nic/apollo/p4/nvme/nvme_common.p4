@@ -224,8 +224,8 @@ ptr
 #define GENERATE_SQE_PRP_LIST_D                                         \
     modify_field(sqe_prp_list_d.ptr, ptr);
 
-// session producer cb
-header_type sessprodcb_t {
+// session producer tx cb
+header_type sessprodtxcb_t {
     fields {
         xts_q_base_addr                 : 34;
         log_num_xts_q_entries           : 5;
@@ -264,7 +264,7 @@ header_type sessprodcb_t {
     }
 }
 
-#define SESSPRODCB_PARAMS                                                      \
+#define SESSPRODTXCB_PARAMS                                                    \
 xts_q_base_addr, log_num_xts_q_entries, rsvd0, xts_q_choke_counter, xts_qid,   \
 dgst_q_base_addr, log_num_dgst_q_entries, rsvd2, dgst_q_choke_counter, dgst_qid,  \
 tcp_q_base_addr, log_num_tcp_q_entries, rsvd4, tcp_q_choke_counter, rsvd5,     \
@@ -275,31 +275,31 @@ tcpcb_sesq_db_addr, tcpcb_sesq_db_data,                                        \
 tcp_q_pi, tcp_q_ci
 
 
-#define GENERATE_SESSPRODCB_D                                                  \
-    modify_field(sessprodcb_d.xts_q_base_addr, xts_q_base_addr);               \
-    modify_field(sessprodcb_d.log_num_xts_q_entries, log_num_xts_q_entries);   \
-    modify_field(sessprodcb_d.rsvd0, rsvd0);                                   \
-    modify_field(sessprodcb_d.xts_q_choke_counter, xts_q_choke_counter);       \
-    modify_field(sessprodcb_d.xts_qid, xts_qid);                                   \
-    modify_field(sessprodcb_d.dgst_q_base_addr, dgst_q_base_addr);             \
-    modify_field(sessprodcb_d.log_num_dgst_q_entries, log_num_dgst_q_entries); \
-    modify_field(sessprodcb_d.rsvd2, rsvd2);                                   \
-    modify_field(sessprodcb_d.dgst_q_choke_counter, dgst_q_choke_counter);     \
-    modify_field(sessprodcb_d.dgst_qid, dgst_qid);                                   \
-    modify_field(sessprodcb_d.tcp_q_base_addr, tcp_q_base_addr);               \
-    modify_field(sessprodcb_d.log_num_tcp_q_entries, log_num_tcp_q_entries);   \
-    modify_field(sessprodcb_d.rsvd4, rsvd4);                                   \
-    modify_field(sessprodcb_d.tcp_q_choke_counter, tcp_q_choke_counter);       \
-    modify_field(sessprodcb_d.rsvd5, rsvd5);                                   \
-    modify_field(sessprodcb_d.xts_q_pi, xts_q_pi);                             \
-    modify_field(sessprodcb_d.xts_q_ci, xts_q_ci);                             \
-    modify_field(sessprodcb_d.dgst_q_pi, dgst_q_pi);                           \
-    modify_field(sessprodcb_d.dgst_q_ci, dgst_q_ci);                           \
-    modify_field(sessprodcb_d.pad, pad);                                       \
-    modify_field(sessprodcb_d.tcpcb_sesq_db_addr, tcpcb_sesq_db_addr);         \
-    modify_field(sessprodcb_d.tcpcb_sesq_db_data, tcpcb_sesq_db_data);         \
-    modify_field(sessprodcb_d.tcp_q_pi, tcp_q_pi);                             \
-    modify_field(sessprodcb_d.tcp_q_ci, tcp_q_ci);                             \
+#define GENERATE_SESSPRODTXCB_D                                                  \
+    modify_field(sessprodtxcb_d.xts_q_base_addr, xts_q_base_addr);               \
+    modify_field(sessprodtxcb_d.log_num_xts_q_entries, log_num_xts_q_entries);   \
+    modify_field(sessprodtxcb_d.rsvd0, rsvd0);                                   \
+    modify_field(sessprodtxcb_d.xts_q_choke_counter, xts_q_choke_counter);       \
+    modify_field(sessprodtxcb_d.xts_qid, xts_qid);                               \
+    modify_field(sessprodtxcb_d.dgst_q_base_addr, dgst_q_base_addr);             \
+    modify_field(sessprodtxcb_d.log_num_dgst_q_entries, log_num_dgst_q_entries); \
+    modify_field(sessprodtxcb_d.rsvd2, rsvd2);                                   \
+    modify_field(sessprodtxcb_d.dgst_q_choke_counter, dgst_q_choke_counter);     \
+    modify_field(sessprodtxcb_d.dgst_qid, dgst_qid);                             \
+    modify_field(sessprodtxcb_d.tcp_q_base_addr, tcp_q_base_addr);               \
+    modify_field(sessprodtxcb_d.log_num_tcp_q_entries, log_num_tcp_q_entries);   \
+    modify_field(sessprodtxcb_d.rsvd4, rsvd4);                                   \
+    modify_field(sessprodtxcb_d.tcp_q_choke_counter, tcp_q_choke_counter);       \
+    modify_field(sessprodtxcb_d.rsvd5, rsvd5);                                   \
+    modify_field(sessprodtxcb_d.xts_q_pi, xts_q_pi);                             \
+    modify_field(sessprodtxcb_d.xts_q_ci, xts_q_ci);                             \
+    modify_field(sessprodtxcb_d.dgst_q_pi, dgst_q_pi);                           \
+    modify_field(sessprodtxcb_d.dgst_q_ci, dgst_q_ci);                           \
+    modify_field(sessprodtxcb_d.pad, pad);                                       \
+    modify_field(sessprodtxcb_d.tcpcb_sesq_db_addr, tcpcb_sesq_db_addr);         \
+    modify_field(sessprodtxcb_d.tcpcb_sesq_db_data, tcpcb_sesq_db_data);         \
+    modify_field(sessprodtxcb_d.tcp_q_pi, tcp_q_pi);                             \
+    modify_field(sessprodtxcb_d.tcp_q_ci, tcp_q_ci);                             \
 
 // session xts tx cb
 // 64B
@@ -1310,6 +1310,56 @@ header_type pdu_hdr_cmdcap_psh_t {
       dw15        : 32;
     }
 }
+
+// session producer rx cb
+header_type sessprodrxcb_t {
+    fields {
+        xts_q_base_addr                 : 34;
+        log_num_xts_q_entries           : 5;
+        rsvd0                           : 1;
+        xts_q_choke_counter             : 8;
+        xts_qid                         : 16;
+
+        dgst_q_base_addr                : 34;
+        log_num_dgst_q_entries          : 5;
+        rsvd1                           : 1;
+        dgst_q_choke_counter            : 8;
+        dgst_qid                        : 16;
+
+        xts_q_pi                        : 16;
+        xts_q_ci                        : 16;
+
+        dgst_q_pi                       : 16;
+        dgst_q_ci                       : 16;
+
+        //32 Bytes
+        pad                             : 320;
+    }
+}
+
+#define SESSPRODRXCB_PARAMS                                                    \
+xts_q_base_addr, log_num_xts_q_entries, rsvd0, xts_q_choke_counter, xts_qid,   \
+dgst_q_base_addr, log_num_dgst_q_entries, rsvd1, dgst_q_choke_counter, dgst_qid,  \
+xts_q_pi, xts_q_ci, dgst_q_pi, dgst_q_ci,                                      \
+pad                                                                            \
+
+
+#define GENERATE_SESSPRODRXCB_D                                                  \
+    modify_field(sessprodrxcb_d.xts_q_base_addr, xts_q_base_addr);               \
+    modify_field(sessprodrxcb_d.log_num_xts_q_entries, log_num_xts_q_entries);   \
+    modify_field(sessprodrxcb_d.rsvd0, rsvd0);                                   \
+    modify_field(sessprodrxcb_d.xts_q_choke_counter, xts_q_choke_counter);       \
+    modify_field(sessprodrxcb_d.xts_qid, xts_qid);                               \
+    modify_field(sessprodrxcb_d.dgst_q_base_addr, dgst_q_base_addr);             \
+    modify_field(sessprodrxcb_d.log_num_dgst_q_entries, log_num_dgst_q_entries); \
+    modify_field(sessprodrxcb_d.rsvd1, rsvd1);                                   \
+    modify_field(sessprodrxcb_d.dgst_q_choke_counter, dgst_q_choke_counter);     \
+    modify_field(sessprodrxcb_d.dgst_qid, dgst_qid);                             \
+    modify_field(sessprodrxcb_d.xts_q_pi, xts_q_pi);                             \
+    modify_field(sessprodrxcb_d.xts_q_ci, xts_q_ci);                             \
+    modify_field(sessprodrxcb_d.dgst_q_pi, dgst_q_pi);                           \
+    modify_field(sessprodrxcb_d.dgst_q_ci, dgst_q_ci);                           \
+    modify_field(sessprodrxcb_d.pad, pad);                                       \
 
 // session dgst rx cb
 // 64B

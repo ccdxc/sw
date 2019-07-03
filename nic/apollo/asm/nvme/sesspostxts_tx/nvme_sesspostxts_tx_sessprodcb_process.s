@@ -6,7 +6,7 @@
 
 struct phv_ p;
 struct s5_t0_nvme_sesspostxts_tx_k_ k;
-struct s5_t0_nvme_sesspostxts_tx_sessprodcb_process_d d;
+struct s5_t0_nvme_sesspostxts_tx_sessprodtxcb_process_d d;
 
 #define DB_ADDR r4
 #define DB_DATA r5
@@ -16,7 +16,7 @@ struct s5_t0_nvme_sesspostxts_tx_sessprodcb_process_d d;
     .param  nvme_sesspostxts_tx_cb_writeback_process
 
 .align
-nvme_sesspostxts_tx_sessprodcb_process:
+nvme_sesspostxts_tx_sessprodtxcb_process:
 
     mfspr       r1, spr_mpuid
     seq         c1, r1[4:2], STAGE_5
@@ -29,7 +29,7 @@ nvme_sesspostxts_tx_sessprodcb_process:
     tblmincri   DGST_Q_PI, d.log_num_dgst_q_entries, 1
 
     // because we successfully consumed cid from sesspostxts q, we need
-    // to increment the CI of xts q in sessprodcb
+    // to increment the CI of xts q in sessprodtxcb
     tblmincri.f XTS_Q_CI, d.log_num_xts_q_entries, 1 
 
     //sess_wqe is populated in sess_wqe_process, but DMA cmd is enqueued here

@@ -20,7 +20,7 @@ struct s2_t0_nvme_req_tx_nscb_process_d d;
 %%
     .param  nvme_txsessprodcb_base
     .param  nvme_resourcecb_addr
-    .param  nvme_req_tx_sessprodcb_process
+    .param  nvme_req_tx_sessprodtxcb_process
     .param  nvme_req_tx_resourcecb_process
     .param  nvme_req_tx_sqe_prp_process
 
@@ -88,7 +88,7 @@ sess_found:
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS,
                               CAPRI_TABLE_SIZE_0_BITS,
-                              nvme_req_tx_sessprodcb_process,
+                              nvme_req_tx_sessprodtxcb_process,
                               r6)
 
     addui   r6, r0, hiword(nvme_resourcecb_addr)

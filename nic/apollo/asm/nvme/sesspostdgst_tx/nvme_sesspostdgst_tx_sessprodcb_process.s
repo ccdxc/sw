@@ -6,7 +6,7 @@
 
 struct phv_ p;
 struct s4_t0_nvme_sesspostdgst_tx_k_ k;
-struct s4_t0_nvme_sesspostdgst_tx_sessprodcb_process_d d;
+struct s4_t0_nvme_sesspostdgst_tx_sessprodtxcb_process_d d;
 
 #define NUM_AVAIL_TCPQ_ENTRIES r1
 #define NUM_TCPQ_ENTRIES       r2
@@ -22,7 +22,7 @@ struct s4_t0_nvme_sesspostdgst_tx_sessprodcb_process_d d;
     .param   nvme_sesspostdgst_tx_cb_writeback_process
 
 .align
-nvme_sesspostdgst_tx_sessprodcb_process:
+nvme_sesspostdgst_tx_sessprodtxcb_process:
     // check for number of tcpq entries available to post pages
     // if there are not sufficient entries, give up the scheduler
     // turn and come back to check again. If available, post all
