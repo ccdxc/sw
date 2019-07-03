@@ -15,7 +15,14 @@ SessionSvcImpl::SessionGet(ServerContext *context, const Empty *req,
 Status
 SessionSvcImpl::FlowGet(ServerContext *context, const Empty *req,
                         grpc::ServerWriter<pds::FlowGetResponse> *writer) {
-    debug::pds_flow_get(pds_flow_fill, writer);
+    flow_get_t flow;
+
+    flow.writer = writer;
+    flow.msg.clear_flow();
+    flow.count = 0;
+
+    debug::pds_flow_get(pds_flow_fill, &flow);
+
     return Status::OK;
 }
 

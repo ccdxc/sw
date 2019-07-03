@@ -271,23 +271,82 @@ func flowShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 		if err != nil {
 			fmt.Printf("Getting flow stream failure. %v\n", err)
+			return
 		}
 
 		if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
 			fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
-			continue
+			return
 		}
 		// Print flows
 		for _, flow := range respMsg.GetFlow() {
-			flowPrintEntry(flow)
+			if flowMatchFilter(cmd, flow) {
+				flowPrintEntry(flow)
+			}
 		}
 	}
 }
 
+func flowMatchFilter(cmd *cobra.Command, flow *pds.Flow) bool {
+	key := flow.GetKey()
+
+	if cmd.Flags().Changed("vpcid") == false {
+		if flow.GetVpc() != flowVpcID {
+			return false
+		}
+	}
+
+	if cmd.Flags().Changed("srcip") == false {
+		if strings.Compare(utils.IPAddrToStr(key.GetSrcAddr()), flowSrcIP) != 0 {
+			return false
+		}
+	}
+
+	if cmd.Flags().Changed("dstip") == false {
+		if strings.Compare(utils.IPAddrToStr(key.GetDstAddr()), flowDstIP) != 0 {
+			return false
+		}
+	}
+
+	if cmd.Flags().Changed("srcport") == false {
+		if key.GetSrcPort() != flowSrcPort {
+			return false
+		}
+	}
+
+	if cmd.Flags().Changed("dstport") == false {
+		if key.GetDstPort() != flowDstPort {
+			return false
+		}
+	}
+
+	if cmd.Flags().Changed("ipproto") == false {
+		if key.GetIPProto() != flowIPProto {
+			return false
+		}
+	}
+
+	return true
+}
+
 func flowPrintHeader() {
+	hdrLine := strings.Repeat("-", 131)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-6s%-40s%-40s%-8s%-8s%-8s%-5s%-11s%-5s\n",
+		"VPCId", "SrcAddr", "DstAddr", "SrcPort",
+		"DstPort", "IPProto", "Role", "SessionIdx", "Epoch")
+	fmt.Println(hdrLine)
 }
 
 func flowPrintEntry(flow *pds.Flow) {
+	key := flow.GetKey()
+	fmt.Printf("%-6d%-40s%-40s%-8d%-8d%-8d%-5d%-11d%-5d\n",
+		flow.GetVpc(),
+		utils.IPAddrToStr(key.GetSrcAddr()),
+		utils.IPAddrToStr(key.GetDstAddr()),
+		key.GetSrcPort(), key.GetDstPort(),
+		key.GetIPProto(), flow.GetFlowRole(),
+		flow.GetSessionIdx(), flow.GetEpoch())
 }
 
 func sessionShowCmdHandler(cmd *cobra.Command, args []string) {

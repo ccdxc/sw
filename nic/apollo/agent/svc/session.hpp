@@ -21,6 +21,20 @@ using pds::FlowGetResponse;
 using pds::FlowClearResponse;
 using pds::FlowClearRequest;
 
+#define FLOW_GET_STREAM_COUNT (500)
+
+typedef struct flow_get_ {
+    grpc::ServerWriter<pds::FlowGetResponse> *writer;
+    pds::FlowGetResponse msg;
+    uint32_t count;
+} flow_get_t;
+
+typedef struct session_get_ {
+    grpc::ServerWriter<pds::SessionGetResponse> *writer;
+    pds::SessionGetResponse msg;
+    uint32_t count;
+} session_get_t;
+
 class SessionSvcImpl final : public SessionSvc::Service {
 public:
     Status FlowGet(ServerContext *context, const Empty *req,

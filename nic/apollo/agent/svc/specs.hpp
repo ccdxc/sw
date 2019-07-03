@@ -10,6 +10,8 @@
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
+#include "nic/utils/ftlite/ftlite_ipv4_structs.hpp"
+#include "nic/utils/ftlite/ftlite_ipv6_structs.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
@@ -34,6 +36,7 @@
 #include "nic/apollo/agent/svc/vnic.hpp"
 #include "nic/apollo/agent/svc/vpc.hpp"
 #include "nic/apollo/agent/svc/tunnel.hpp"
+#include "nic/apollo/agent/svc/session.hpp"
 #include "nic/apollo/agent/svc/service.hpp"
 #include "nic/apollo/agent/svc/port.hpp"
 #include "nic/apollo/agent/svc/policy.hpp"
@@ -912,8 +915,89 @@ pds_session_fill (void *ctxt)
 }
 
 static inline void
-pds_flow_fill (void *ctxt)
+pds_ipv4_flow_fill (ftlite::internal::ipv4_entry_t *ipv4_entry,
+                    void *ctxt)
 {
+    flow_get_t *fget = (flow_get_t *)ctxt;
+    auto flow = fget->msg.add_flow();
+    auto key = flow->mutable_key();
+    auto srcaddr = key->mutable_srcaddr();
+    auto dstaddr = key->mutable_dstaddr();
+
+    srcaddr->set_af(types::IP_AF_INET);
+    srcaddr->set_v4addr(ipv4_entry->src);
+    dstaddr->set_af(types::IP_AF_INET);
+    dstaddr->set_v4addr(ipv4_entry->dst);
+    key->set_srcport(ipv4_entry->sport);
+    key->set_dstport(ipv4_entry->dport);
+    key->set_ipproto(ipv4_entry->proto);
+
+    flow->set_vpc(ipv4_entry->vpc_id);
+    flow->set_flowrole(ipv4_entry->flow_role);
+    flow->set_sessionidx(ipv4_entry->session_index);
+    flow->set_epoch(ipv4_entry->epoch);
+
+    fget->count ++;
+    if (fget->count == FLOW_GET_STREAM_COUNT) {
+        fget->msg.set_apistatus(types::ApiStatus::API_STATUS_OK);
+        fget->writer->Write(fget->msg);
+        fget->msg.Clear();
+        fget->count = 0;
+    }
+}
+
+static inline void
+pds_ipv6_flow_fill (ftlite::internal::ipv6_entry_t *ipv6_entry,
+                    void *ctxt)
+{
+    flow_get_t *fget = (flow_get_t *)ctxt;
+    auto flow = fget->msg.add_flow();
+    auto key = flow->mutable_key();
+    auto srcaddr = key->mutable_srcaddr();
+    auto dstaddr = key->mutable_dstaddr();
+
+    srcaddr->set_af(types::IP_AF_INET6);
+    srcaddr->set_v6addr(std::string((const char *)(ipv6_entry->src),
+                        IP6_ADDR8_LEN));
+    dstaddr->set_af(types::IP_AF_INET6);
+    srcaddr->set_v6addr(std::string((const char *)(ipv6_entry->dst),
+                        IP6_ADDR8_LEN));
+    key->set_srcport(ipv6_entry->sport);
+    key->set_dstport(ipv6_entry->dport);
+    key->set_ipproto(ipv6_entry->proto);
+
+    flow->set_vpc(ipv6_entry->vpc_id);
+    flow->set_flowrole(ipv6_entry->flow_role);
+    flow->set_sessionidx(ipv6_entry->session_index);
+    flow->set_epoch(ipv6_entry->epoch);
+
+    fget->count ++;
+    if (fget->count == FLOW_GET_STREAM_COUNT) {
+        fget->msg.set_apistatus(types::ApiStatus::API_STATUS_OK);
+        fget->writer->Write(fget->msg);
+        fget->msg.Clear();
+        fget->count = 0;
+    }
+}
+
+static inline void
+pds_flow_fill (ftlite::internal::ipv4_entry_t *ipv4_entry,
+               ftlite::internal::ipv6_entry_t *ipv6_entry,
+               void *ctxt)
+{
+    if (ipv4_entry) {
+        pds_ipv4_flow_fill(ipv4_entry, ctxt);
+    } else if (ipv6_entry) {
+        pds_ipv6_flow_fill(ipv6_entry, ctxt);
+    } else {
+        flow_get_t *fget = (flow_get_t *)ctxt;
+        if (fget->count) {
+            fget->msg.set_apistatus(types::ApiStatus::API_STATUS_OK);
+            fget->writer->Write(fget->msg);
+            fget->msg.Clear();
+            fget->count = 0;
+        }
+    }
 }
 
 static inline void

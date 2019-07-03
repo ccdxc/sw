@@ -35,6 +35,9 @@ extern sdk_ret_t init_service_lif(const char *cfg_path);
 #define TXDMA_SYMBOLS_MAX             1
 #define MEM_REGION_SESSION_STATS_NAME "session_stats"
 
+using ftlite::internal::ipv6_entry_t;
+using ftlite::internal::ipv4_entry_t;
+
 namespace api {
 namespace impl {
 
@@ -679,12 +682,60 @@ apollo_impl::session_stats(debug::session_stats_get_cb_t cb, uint32_t lowidx,
 }
 
 sdk_ret_t
-apollo_impl::session(debug::session_get_cb_t cb, uint32_t idx, void *ctxt) {
+apollo_impl::session(debug::session_get_cb_t cb, void *ctxt) {
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-apollo_impl::flow(debug::flow_get_cb_t cb, uint32_t idx, void *ctxt) {
+apollo_impl::flow(debug::flow_get_cb_t cb, void *ctxt) {
+    uint32_t idx = 0;
+    p4pd_error_t p4pd_ret;
+    p4pd_table_properties_t prop;
+    ipv4_entry_t ipv4_entry;
+    ipv6_entry_t ipv6_entry;
+
+    // Read IPv4 sessions
+    p4pd_global_table_properties_get(P4TBL_ID_IPV4_FLOW, &prop);
+    for (idx = 0; idx < prop.tabledepth; idx ++) {
+        memcpy(&ipv4_entry, ((ipv4_entry_t *)(prop.base_mem_va)) + idx,
+               sizeof(ipv4_entry_t));
+        ipv4_entry.swizzle();
+        if (ipv4_entry.entry_valid) {
+            cb(&ipv4_entry, NULL, ctxt);
+        }
+    }
+    p4pd_global_table_properties_get(P4TBL_ID_IPV4_FLOW_OHASH, &prop);
+    for (idx = 0; idx < prop.tabledepth; idx ++) {
+        memcpy(&ipv4_entry, ((ipv4_entry_t *)(prop.base_mem_va)) + idx,
+               sizeof(ipv4_entry_t));
+        ipv4_entry.swizzle();
+        if (ipv4_entry.entry_valid) {
+            cb(&ipv4_entry, NULL, ctxt);
+        }
+    }
+    cb(NULL, NULL, ctxt);
+
+    // Read IPv6 sessions
+    p4pd_global_table_properties_get(P4TBL_ID_FLOW, &prop);
+    for (idx = 0; idx < prop.tabledepth; idx ++) {
+        memcpy(&ipv6_entry, ((ipv6_entry_t *)(prop.base_mem_va)) + idx,
+               sizeof(ipv6_entry_t));
+        ipv6_entry.swizzle();
+        if (ipv6_entry.entry_valid) {
+            cb(NULL, &ipv6_entry, ctxt);
+        }
+    }
+    p4pd_global_table_properties_get(P4TBL_ID_FLOW_OHASH, &prop);
+    for (idx = 0; idx < prop.tabledepth; idx ++) {
+        memcpy(&ipv6_entry, ((ipv6_entry_t *)(prop.base_mem_va)) + idx,
+               sizeof(ipv6_entry_t));
+        ipv6_entry.swizzle();
+        if (ipv6_entry.entry_valid) {
+            cb(NULL, &ipv6_entry, ctxt);
+        }
+    }
+    cb(NULL, NULL, ctxt);
+
     return SDK_RET_OK;
 }
 

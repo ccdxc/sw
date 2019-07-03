@@ -308,15 +308,13 @@ pds_fte_table_stats_clear (void)
 sdk_ret_t
 pds_session_get (debug::session_get_cb_t cb, void *ctxt)
 {
-    uint32_t idx = 0;
-    return impl_base::pipeline_impl()->session(cb, idx, ctxt);
+    return impl_base::pipeline_impl()->session(cb, ctxt);
 }
 
 sdk_ret_t
 pds_flow_get (debug::flow_get_cb_t cb, void *ctxt)
 {
-    uint32_t idx = 0;
-    return impl_base::pipeline_impl()->flow(cb, idx, ctxt);
+    return impl_base::pipeline_impl()->flow(cb, ctxt);
 }
 
 sdk_ret_t

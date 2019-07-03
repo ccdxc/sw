@@ -155,19 +155,15 @@ public:
 
     /// \brief      API to get session
     /// \param[in]  cb      callback to be called on session
-    /// \param[in]  idx     Index for session to be read
     /// \param[in]  ctxt    Opaque context to be passed to callback
     /// \return     SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t session(debug::session_get_cb_t cb, uint32_t idx,
-                              void *ctxt) override;
+    virtual sdk_ret_t session(debug::session_get_cb_t cb, void *ctxt) override;
 
     /// \brief      API to get flow
     /// \param[in]  cb      callback to be called on flow
-    /// \param[in]  idx     Index for flow to be read
     /// \param[in]  ctxt    Opaque context to be passed to callback
     /// \return     SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t flow(debug::flow_get_cb_t cb, uint32_t idx,
-                           void *ctxt) override;
+    virtual sdk_ret_t flow(debug::flow_get_cb_t cb, void *ctxt) override;
 
     /// \brief      API to clear session
     /// \param[in]  idx     Index for session to be cleared

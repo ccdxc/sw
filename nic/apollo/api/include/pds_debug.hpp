@@ -15,6 +15,8 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
+#include "nic/utils/ftlite/ftlite_ipv4_structs.hpp"
+#include "nic/utils/ftlite/ftlite_ipv6_structs.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 
 /// \defgroup PDS_VPC VPC API
@@ -73,7 +75,9 @@ typedef void (*pb_stats_get_cb_t) (pds_pb_debug_stats_t *stats, void *ctxt);
 typedef void (*meter_stats_get_cb_t) (pds_meter_debug_stats_t *stats, void *ctxt);
 typedef void (*session_stats_get_cb_t) (uint32_t idx, pds_session_debug_stats_t *stats, void *ctxt);
 typedef void (*session_get_cb_t) (void *ctxt);
-typedef void (*flow_get_cb_t) (void *ctxt);
+typedef void (*flow_get_cb_t) (ftlite::internal::ipv4_entry_t *ipv4_entry,
+                               ftlite::internal::ipv6_entry_t *ipv6_entry,
+                               void *ctxt);
 sdk_ret_t pds_clock_frequency_update(pds_clock_freq_t freq);
 sdk_ret_t pds_arm_clock_frequency_update(pds_clock_freq_t freq);
 sdk_ret_t pds_get_system_temperature(pds_system_temperature_t *temp);

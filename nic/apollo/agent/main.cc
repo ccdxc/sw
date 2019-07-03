@@ -18,6 +18,7 @@
 #include "nic/apollo/agent/svc/port.hpp"
 #include "nic/apollo/agent/svc/policy.hpp"
 #include "nic/apollo/agent/svc/mirror.hpp"
+#include "nic/apollo/agent/svc/session.hpp"
 #include "nic/apollo/agent/svc/debug.hpp"
 #include "nic/apollo/agent/svc/meter.hpp"
 #include "nic/apollo/agent/svc/tag.hpp"
@@ -55,6 +56,7 @@ svc_reg (void)
     PortSvcImpl           port_svc;
     SecurityPolicySvcImpl policy_svc;
     MirrorSvcImpl         mirror_svc;
+    SessionSvcImpl        session_svc;
     MeterSvcImpl          meter_svc;
     TagSvcImpl            tag_svc;
     NhSvcImpl             nh_svc;
@@ -75,6 +77,7 @@ svc_reg (void)
     server_builder->RegisterService(&device_svc);
     server_builder->RegisterService(&vpc_svc);
     server_builder->RegisterService(&subnet_svc);
+    server_builder->RegisterService(&session_svc);
     server_builder->RegisterService(&tunnel_svc);
     server_builder->RegisterService(&route_svc);
     server_builder->RegisterService(&policy_svc);

@@ -30,6 +30,8 @@ copy_files() {
 
     apollod='nic/apollo nic/conf/apollo '
 
+    utilsd='nic/utils/ftlite '
+
     pack_apollo='nic/conf/init_bins nic/conf/catalog_hw.json nic/conf/serdes.json '
     pack_apollo+='nic/tools/sysupdate.sh nic/tools/apollo nic/tools/sysreset.sh nic/tools/fwupdate '
     pack_apollo+='nic/conf/captrace platform/src/app/pciemgrd nic/hal/third-party/spdlog/include/ ' 
@@ -53,7 +55,7 @@ copy_files() {
 
     pack_debug='nic/debug_cli nic/tools/p4ctl '
 
-    files="$nicd $nicf $p4d $pkgf $apollod $apollof $pack_apollo $pack_debug $miscd $protobuf"
+    files="$nicd $nicf $p4d $pkgf $utilsd $apollod $apollof $pack_apollo $pack_debug $miscd $protobuf"
 
 
     cd /sw
