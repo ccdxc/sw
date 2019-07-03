@@ -12,12 +12,15 @@ typedef struct pciemgrenv_s {
     u_int8_t poll_port:1;
     u_int8_t poll_dev:1;
     u_int8_t enabled_ports;
+    u_int32_t cpumask;
+    u_int32_t fifopri;
     pciemgr_params_t params;
 } pciemgrenv_t;
 
 pciemgrenv_t *pciemgrenv_get(void);
 void pciemgrd_catalog_defaults(pciemgrenv_t *pme);
 void pciemgrd_params(pciemgrenv_t *pme);
+void pciemgrd_sched_init(pciemgrenv_t *pme);
 int server_loop(pciemgrenv_t *pme);
 int open_hostports(void);
 void close_hostports(void);

@@ -7,8 +7,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <unistd.h>
-#include <getopt.h>
-#include <setjmp.h>
+#include <sched.h>
 #include <cinttypes>
 #include <sys/types.h>
 #include <sys/param.h>
@@ -256,6 +255,8 @@ pciemgrd_params(pciemgrenv_t *pme)
                                             pme->enabled_ports);
     pme->poll_port = pciemgrd_param_ull("PCIE_POLL_PORT", pme->poll_port);
     pme->poll_dev = pciemgrd_param_ull("PCIE_POLL_DEV", pme->poll_dev);
+    pme->cpumask = pciemgrd_param_ull("PCIE_CPUMASK", pme->cpumask);
+    pme->fifopri = pciemgrd_param_ull("PCIE_FIFOPRI", pme->fifopri);
 
     if (pme->params.restart) {
         if (upgrade_state_restore() < 0) {
@@ -298,6 +299,48 @@ pciemgrd_catalog_defaults(pciemgrenv_t *pme)
 #endif /* __aarch64__ */
 }
 
+/*
+ * Set the cpu affinity mask to restrict to cpu 0.
+ * Set sched policy to SCHED_FIFO to select "real-time"
+ * scheduling so pciemgr can respond to pcie transactions
+ * in "pcie transaction timeout" time frames, typically 50ms.
+ */
+void
+pciemgrd_sched_init(pciemgrenv_t *pme)
+{
+#ifdef __aarch64__
+    if (pme->cpumask) {
+        unsigned int cpumask = pme->cpumask;
+        cpu_set_t cpuset;
+
+        CPU_ZERO(&cpuset);
+        for (int cpu = 0; cpumask; cpu++) {
+            int cpubit = 1 << cpu;
+            if (cpumask & cpubit) {
+                CPU_SET(cpu, &cpuset);
+                cpumask &= ~cpubit;
+            }
+        }
+        if (sched_setaffinity(0, sizeof(cpuset), &cpuset) < 0) {
+            pciesys_logerror("sched_setaffinity 0x%x: %s\n",
+                             pme->cpumask, strerror(errno));
+        }
+    }
+
+    if (pme->fifopri) {
+        struct sched_param param;
+        const int policy = SCHED_FIFO;
+
+        memset(&param, 0, sizeof(param));
+        param.sched_priority = pme->fifopri;
+        if (sched_setscheduler(0, policy, &param) < 0) {
+            pciesys_logerror("sched_setscheduler FIFO pri %d: %s\n",
+                             pme->fifopri, strerror(errno));
+        }
+    }
+#endif
+}
+
 void
 pciemgrd_start()
 {
@@ -309,6 +352,8 @@ pciemgrd_start()
     pme->reboot_on_hostdn = pal_is_asic() ? 1 : 0;
     pme->poll_port = 1;
     pme->poll_dev = 0;
+    pme->cpumask = 0x1;
+    pme->fifopri = 50;
 
     params->strict_crs = 1;
 

@@ -217,8 +217,11 @@ server_loop(pciemgrenv_t *pme)
     pciesys_loginfo("subdeviceid: %04x\n", pme->params.subdeviceid);
     pciesys_loginfo("initmode: %d\n", pme->params.initmode);
     pciesys_loginfo("restart: %d\n", pme->params.restart);
+    pciesys_loginfo("cpumask: %d\n", pme->cpumask);
+    pciesys_loginfo("fifopri: %d\n", pme->fifopri);
     pciesys_loginfo("---------------- config ----------------\n");
 
+    pciemgrd_sched_init(pme);
     if ((r = open_hostports()) < 0) {
         goto error_out;
     }
