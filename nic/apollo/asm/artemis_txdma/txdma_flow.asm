@@ -146,7 +146,11 @@ label_flow_miss:
 
     // Fill iflow d (has to match flow_d)
     add             r1, 0, (TXDMA_RFLOW_LEAF_FLIT * 512) + 512 - 8
-    phvwrp.e        r1, 0, 8, k.key3_epoch
+    phvwrp          r1, 0, 8, k.key3_epoch
+
+    // set flow role to 1
+    add             r1, 0, (TXDMA_RFLOW_LEAF_FLIT * 512) + 512 - 8 - 24
+    phvwrp.e        r1, 0, 1, 1
     nop
 
 label_flow_hit:
