@@ -72,7 +72,7 @@ header_type virtq_used_idx {
 #define VIRTIO_NET_HDR_GSO_TCPV6    4
 #define VIRTIO_NET_HDR_GSO_ECN      0x80
 
-header_type virtio_net_hdr {
+header_type virtio_net_hdr_v1_rxbuf {
     fields {
         flags                       : 8;
         gso_type                    : 8;
@@ -83,23 +83,6 @@ header_type virtio_net_hdr {
         num_buffers                 : 16;
     }
 }
-
-/* Legacy Support */
- 
-/* When VIRTIO_NET_F_MRG_RXBUF is not negotiated */
-header_type virtio_net_hdr_no_mrg_rxbuf {
-    fields {
-        flags                       : 8;
-        gso_type                    : 8;
-        hdr_len                     : 16;
-        gso_size                    : 16;
-        csum_start                  : 16;
-        csum_offset                 : 16;
-    }
-}
-
-/* v1.0 support */
-
 
 
 /*  ------------------------------------------- */
@@ -114,7 +97,7 @@ header_type virtio_net_hdr_no_mrg_rxbuf {
 #define VIRTQ_AVAIL_D_SCRATCH       virtq_avail_d
 #define GENERATE_VIRTQ_AVAIL_D                                              \
     modify_field(VIRTQ_AVAIL_D_SCRATCH.flags, flags);                       \
-    modify_field(VIRTQ_AVAIL_D_SCRATCH.idx, idx);    
+    modify_field(VIRTQ_AVAIL_D_SCRATCH.idx, idx);
 
 /* virtq_desc_idx D */
 #define VIRTQ_DESC_IDX_D_PARAMS                                             \
@@ -133,17 +116,18 @@ header_type virtio_net_hdr_no_mrg_rxbuf {
     modify_field(VIRTQ_DESC_D_SCRATCH.flags, flags);                        \
     modify_field(VIRTQ_DESC_D_SCRATCH.nextidx, nextidx);
 
-/* virtio_net_hdr_no_mrg_rxbuf D */
-#define VIRTIO_NET_HDR_NO_MRG_RXBUF_D_PARAMS                                \
+/* virtio_net_hdr_v1_rxbuf D */
+#define VIRTIO_NET_HDR_V1_RXBUF_D_PARAMS                                \
     flags, gso_type, hdr_len, gso_size, csum_start, csum_offset
-#define VIRTIO_NET_HDR_NO_MRG_RXBUF_D_SCRATCH   virtio_net_hdr_no_mrg_rxbuf_d
-#define GENERATE_VIRTIO_NET_HDR_NO_MRG_RXBUF_D                              \
-    modify_field(VIRTIO_NET_HDR_NO_MRG_RXBUF_D_SCRATCH.flags, flags);       \
-    modify_field(VIRTIO_NET_HDR_NO_MRG_RXBUF_D_SCRATCH.gso_type, gso_type); \
-    modify_field(VIRTIO_NET_HDR_NO_MRG_RXBUF_D_SCRATCH.hdr_len, hdr_len);   \
-    modify_field(VIRTIO_NET_HDR_NO_MRG_RXBUF_D_SCRATCH.gso_size, gso_size); \
-    modify_field(VIRTIO_NET_HDR_NO_MRG_RXBUF_D_SCRATCH.csum_start, csum_start); \
-    modify_field(VIRTIO_NET_HDR_NO_MRG_RXBUF_D_SCRATCH.csum_offset, csum_offset);
+#define VIRTIO_NET_HDR_V1_RXBUF_D_SCRATCH   virtio_net_hdr_v1_rxbuf_d
+#define GENERATE_VIRTIO_NET_HDR_V1_RXBUF_D                              \
+    modify_field(VIRTIO_NET_HDR_V1_RXBUF_D_SCRATCH.flags, flags);       \
+    modify_field(VIRTIO_NET_HDR_V1_RXBUF_D_SCRATCH.gso_type, gso_type); \
+    modify_field(VIRTIO_NET_HDR_V1_RXBUF_D_SCRATCH.hdr_len, hdr_len);   \
+    modify_field(VIRTIO_NET_HDR_V1_RXBUF_D_SCRATCH.gso_size, gso_size); \
+    modify_field(VIRTIO_NET_HDR_V1_RXBUF_D_SCRATCH.csum_start, csum_start); \
+    modify_field(VIRTIO_NET_HDR_V1_RXBUF_D_SCRATCH.csum_offset, csum_offset); \
+    modify_field(VIRTIO_NET_HDR_V1_RXBUF_D_SCRATCH.num_buffers, num_buffers);
 
 /*
  * NOTE: The qstate for a LIF is seggeregated into TX and RX parts

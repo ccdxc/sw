@@ -21,6 +21,7 @@
 #include "lib/table/common/table.hpp"
 #include "platform/capri/capri_common.hpp"
 #include "platform/src/lib/nicmgr/include/eth_if.h"
+#include "platform/src/lib/nicmgr/include/virtio_if.h"
 #include "platform/utils/mpartition.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
@@ -316,6 +317,126 @@ nvme_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                    qstate_edmaq.ring_size, qstate_edmaq.cq_ring_base,
                    qstate_edmaq.intr_assert_index);
         }
+       break;
+    default:
+        printf("Invalid qtype %u for lif %u\n", qtype, lif);
+    }
+}
+
+void
+virtio_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
+{
+    queue_info_t qinfo[8] = { 0 };
+    union {
+        virtio_qstate_rx_t rx;
+        virtio_qstate_tx_t tx;
+        uint8_t raw[0];
+    } qstate = { 0 };
+
+    if (!get_lif_qstate(lif, qinfo)) {
+        printf("Failed to get qinfo for lif %u\n", lif);
+        return;
+    }
+
+    if (qinfo[qtype].size == 0) {
+        printf("Invalid type %u for lif %u\n", qtype, lif);
+        return;
+    }
+
+    if (qid >= qinfo[qtype].length) {
+        printf("Invalid qid %u for lif %u qtype %u\n", qid, lif, qtype);
+        return;
+    }
+
+    uint64_t addr = qinfo[qtype].base + qid * qinfo[qtype].size;
+    printf("\naddr: 0x%lx\n\n", addr);
+
+    sdk::lib::pal_mem_read(addr, qstate.raw, qinfo[qtype].size);
+
+    switch (qtype) {
+    case 0: /* Virtio RX */
+        printf("pc_offset %#x\n"
+               "rsvd0 %#x\n"
+               "cosA %#x\n"
+               "cosB %#x\n"
+               "cos_sel %#x\n"
+               "eval_last %#x\n"
+               "host %#x\n"
+               "total %#x\n"
+               "pid %#x\n"
+               "ring0_pi %#x\n"
+               "ring0_ci %#x\n"
+               "features %#lx\n"
+               "rx_virtq_desc_addr %#lx\n"
+               "rx_virtq_avail_addr %#lx\n"
+               "rx_virtq_used_addr %#lx\n"
+               "rx_intr_assert_addr %#x\n"
+               "rx_queue_size_mask %#x\n"
+               "rx_virtq_avail_ci %#x\n"
+               "rx_virtq_used_pi %#x\n",
+               qstate.rx.qs.pc_offset,
+               qstate.rx.qs.rsvd0,
+               qstate.rx.qs.cosA,
+               qstate.rx.qs.cosB,
+               qstate.rx.qs.cos_sel,
+               qstate.rx.qs.eval_last,
+               qstate.rx.qs.host,
+               qstate.rx.qs.total,
+               qstate.rx.qs.pid,
+               qstate.rx.ring[0].pi,
+               qstate.rx.ring[0].ci,
+               qstate.rx.features,
+               qstate.rx.rx_virtq_desc_addr,
+               qstate.rx.rx_virtq_avail_addr,
+               qstate.rx.rx_virtq_used_addr,
+               qstate.rx.rx_intr_assert_addr,
+               qstate.rx.rx_queue_size_mask,
+               qstate.rx.rx_virtq_avail_ci,
+               qstate.rx.rx_virtq_used_pi);
+       break;
+    case 1: /* Virtio TX */
+        printf("pc_offset %#x\n"
+               "rsvd0 %#x\n"
+               "cosA %#x\n"
+               "cosB %#x\n"
+               "cos_sel %#x\n"
+               "eval_last %#x\n"
+               "host %#x\n"
+               "total %#x\n"
+               "pid %#x\n"
+               "ring0_pi %#x\n"
+               "ring0_ci %#x\n"
+               "ring1_pi %#x\n"
+               "ring1_ci %#x\n"
+               "features %#lx\n"
+               "tx_virtq_desc_addr %#lx\n"
+               "tx_virtq_avail_addr %#lx\n"
+               "tx_virtq_used_addr %#lx\n"
+               "tx_intr_assert_addr %#x\n"
+               "tx_queue_size_mask %#x\n"
+               "tx_virtq_avail_ci %#x\n"
+               "tx_virtq_used_pi %#x\n",
+               qstate.tx.qs.pc_offset,
+               qstate.tx.qs.rsvd0,
+               qstate.tx.qs.cosA,
+               qstate.tx.qs.cosB,
+               qstate.tx.qs.cos_sel,
+               qstate.tx.qs.eval_last,
+               qstate.tx.qs.host,
+               qstate.tx.qs.total,
+               qstate.tx.qs.pid,
+               qstate.tx.ring[0].pi,
+               qstate.tx.ring[0].ci,
+               qstate.tx.ring[1].pi,
+               qstate.tx.ring[1].ci,
+               qstate.tx.features,
+               qstate.tx.tx_virtq_desc_addr,
+               qstate.tx.tx_virtq_avail_addr,
+               qstate.tx.tx_virtq_used_addr,
+               qstate.tx.tx_intr_assert_addr,
+               qstate.tx.tx_queue_size_mask,
+               qstate.tx.tx_virtq_avail_ci,
+               qstate.tx.tx_virtq_used_pi);
        break;
     default:
         printf("Invalid qtype %u for lif %u\n", qtype, lif);
@@ -1402,6 +1523,7 @@ usage()
     printf("   qdump          <lif> <qtype> <qid> <ring>\n");
     printf("   debug          <lif> <qtype> <qid> <enable>\n");
     printf("   nvme_qstate    <lif> <qtype> <qid>\n");
+    printf("   virtio_qstate  <lif> <qtype> <qid>\n");
     printf("   qpoll          <lif> <qtype>\n");
     printf("   stats          <lif>\n");
     printf("   stats_reset    <lif>\n");
@@ -1475,7 +1597,15 @@ main(int argc, char **argv)
         uint16_t lif = std::strtoul(argv[2], NULL, 0);
         uint8_t qtype = std::strtoul(argv[3], NULL, 0);
         uint32_t qid = std::strtoul(argv[4], NULL, 0);
-        nvme_qstate(lif, qtype, qid); 
+        nvme_qstate(lif, qtype, qid);
+    } else if (strcmp(argv[1], "virtio_qstate") == 0) {
+        if (argc != 5) {
+            usage();
+        }
+        uint16_t lif = std::strtoul(argv[2], NULL, 0);
+        uint8_t qtype = std::strtoul(argv[3], NULL, 0);
+        uint32_t qid = std::strtoul(argv[4], NULL, 0);
+        virtio_qstate(lif, qtype, qid);
     } else if (strcmp(argv[1], "qpoll") == 0) {
         if (argc != 4) {
             usage();

@@ -29,6 +29,7 @@
 #include "eth_dev.hpp"
 #include "nicmgr_init.hpp"
 #include "nvme_dev.hpp"
+#include "virtio_dev.hpp"
 
 using namespace std;
 
@@ -302,6 +303,21 @@ DeviceManager::LoadConfig(string path)
         }
     }
 
+    NIC_HEADER_TRACE("Loading VirtIO devices");
+    // Create VirtIO devices
+    if (spec.get_child_optional("virtio_dev")) {
+        struct virtio_devspec *virtio_spec;
+
+        for (const auto &node : spec.get_child("virtio_dev")) {
+
+            virtio_spec = VirtIODev::ParseConfig(node);
+
+            if (virtio_spec->enable) {
+                AddDevice(VIRTIO, (void *)virtio_spec);
+            }
+        }
+    }
+
 #endif //IRIS
 
     evutil_timer_start(EV_A_ &heartbeat_timer, DeviceManager::HeartbeatEventHandler, this, 0.0, 1);
@@ -316,6 +332,7 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 #ifdef IRIS
     AccelDev *accel_dev;
     NvmeDev *nvme_dev;
+    VirtIODev *virtio_dev;
 #endif //IRIS
 
     switch (type) {
@@ -364,10 +381,12 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
             nvme_dev->SetType(type);
             devices[nvme_dev->GetName()] = nvme_dev;
             return (Device *)nvme_dev;
-#endif //IRIS
         case VIRTIO:
-            NIC_LOG_ERR("Unsupported Device Type VIRTIO");
-            return NULL;
+            virtio_dev = new VirtIODev(dev_api, dev_spec, pd, EV_A);
+            virtio_dev->SetType(type);
+            devices[virtio_dev->GetName()] = virtio_dev;
+            return (Device *)virtio_dev;
+#endif //IRIS
         default:
             return NULL;
     }
@@ -424,6 +443,10 @@ DeviceManager::SetHalClient(devapi *dev_api)
             NvmeDev *nvme_dev = (NvmeDev *)dev;
             nvme_dev->SetHalClient(dev_api);
         }
+        if (dev->GetType() == VIRTIO) {
+            VirtIODev *virtio_dev = (VirtIODev *)dev;
+            virtio_dev->SetHalClient(dev_api);
+        }
 #endif //IRIS
 
     }
@@ -469,6 +492,10 @@ DeviceManager::HalEventHandler(bool status)
         if (dev->GetType() == NVME) {
             NvmeDev *nvme_dev = (NvmeDev *)dev;
             nvme_dev->HalEventHandler(status);
+        }
+        if (dev->GetType() == VIRTIO) {
+            VirtIODev *virtio_dev = (VirtIODev *)dev;
+            virtio_dev->HalEventHandler(status);
         }
 #endif //IRIS
     }

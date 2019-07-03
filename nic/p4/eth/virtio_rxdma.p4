@@ -175,7 +175,7 @@ metadata virtio_s2s_t0_t VIRTIO_S2S_T0_PHV;
 /*---------------------------------------------------------------------------*/
 
 @pragma dont_trim
-metadata virtio_net_hdr_no_mrg_rxbuf    vnet_hdr_no_mrg_rxbuf;
+metadata virtio_net_hdr_v1_rxbuf    vnet_hdr_v1_rxbuf;
 
 @pragma dont_trim
 metadata virtq_used_elem vq_used_elem; 
@@ -185,7 +185,7 @@ metadata virtq_used_idx vq_used_idx;
 
 header_type pad_to_dma_cmds_t {
     fields {
-        pad                 : 96;
+        pad                 : 80;
     }
 }
 
@@ -197,7 +197,7 @@ metadata pad_to_dma_cmds_t dma_cmd_pad;
 /*---------------------------------------------------------------------------*/
 
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t vnet_hdr_no_mrg_rxbuf_cmd;
+metadata dma_cmd_phv2mem_t vnet_hdr_v1_rxbuf_cmd;
 @pragma dont_trim
 metadata dma_cmd_pkt2mem_t pkt_cmd;
 @pragma dont_trim

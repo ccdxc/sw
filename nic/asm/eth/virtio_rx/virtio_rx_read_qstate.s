@@ -42,9 +42,7 @@ virtio_rx_read_qstate_start:
 
 virtio_rx_read_qstate_done:
 
-    add         r1, r0, 0
-    addui       r1, r1, 0x80000000
-    add         r1, r1, D(rx_virtq_avail_addr).dx
+    add         r1, r0, D(rx_virtq_avail_addr).dx
 
 	CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                         virtio_rx_read_virtq_avail_start,

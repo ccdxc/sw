@@ -16,6 +16,7 @@
 static int
 virtio_bars(pciehdev_t *pdev, const pciehdev_res_t *res)
 {
+    u_int32_t msixtbloff, msixpbaoff;
     pciehbars_t *pbars;
     pciehbar_t pbar;
     pciehbarreg_t preg;
@@ -27,11 +28,13 @@ virtio_bars(pciehdev_t *pdev, const pciehdev_res_t *res)
      * virtio resource io bar
      */
     memset(&pbar, 0, sizeof(pbar));
+    memset(&preg, 0, sizeof(preg));
+    memset(&prt, 0, sizeof(prt));
+
     pbar.type = PCIEHBARTYPE_IO;
-    pbar.size = 0x20;
+    pbar.size = 0x1000; /* XXX */
     pbar.cfgidx = 0;
 
-    memset(&preg, 0, sizeof(preg));
     pmt_bar_enc(&preg.pmt,
                 res->port,
                 PMT_TYPE_IO,
@@ -39,10 +42,12 @@ virtio_bars(pciehdev_t *pdev, const pciehdev_res_t *res)
                 pbar.size, /* prtsize */
                 PMTF_RW);
 
-    /* XXX */
-    prt_res_enc(&prt, 0, 0, PRT_RESF_NONE);
-    pciehbarreg_add_prt(&preg, &prt);
+    prt_res_enc(&prt,
+                res->virtio.virtioregspa,
+                0x1000,
+                PRT_RESF_NONE);
 
+    pciehbarreg_add_prt(&preg, &prt);
     pciehbar_add_reg(&pbar, &preg);
     pciehbars_add_bar(pbars, &pbar);
 
@@ -52,34 +57,57 @@ virtio_bars(pciehdev_t *pdev, const pciehdev_res_t *res)
     memset(&pbar, 0, sizeof(pbar));
     pbar.type = PCIEHBARTYPE_MEM64;
     pbar.size = 2 * 0x1000;
-    pbar.cfgidx = 1;
+    pbar.cfgidx = 2;
 
-    memset(&preg, 0, sizeof(preg));
-    pmt_bar_enc(&preg.pmt,
-                res->port,
-                PMT_TYPE_MEM,
-                pbar.size, /* barsize */
-                0x1000,    /* prtsize */
-                PMTF_RW);
-
-    /* MSI-X Interrupt Table */
-    prt_res_enc(&prt,
-                intr_msixcfg_addr(res->intrb),
-                intr_msixcfg_size(res->intrc),
-                PRT_RESF_NONE);
-    pciehbarreg_add_prt(&preg, &prt);
-    pciehbars_set_msix_tbl(pbars, 1, 0x0000);
-
-    /* MSI-X Interrupt PBA */
-    prt_res_enc(&prt,
-                intr_pba_addr(res->lifb),
-                intr_pba_size(res->intrc),
-                PRT_RESF_NONE);
-    pciehbarreg_add_prt(&preg, &prt);
-    pciehbars_set_msix_pba(pbars, 1, 0x1000);
-
-    pciehbar_add_reg(&pbar, &preg);
+    assert(res->intrc <= 256); /* 256 intrs per page (XXX grow bar) */
+    msixtbloff = 0;
+    msixpbaoff = 0x1000;
+    add_msix_region(pbars, &pbar, res, msixtbloff, msixpbaoff);
     pciehbars_add_bar(pbars, &pbar);
+
+    /* XXX TODO:
+     *
+     * TODO Common Config:
+     *
+     * 4.1.4.3 Common configuration structure layout
+     * https://docs.oasis-open.org/virtio/virtio/v1.1/cs01/virtio-v1.1-cs01.html#x1-1090004
+     *
+     * 2.1 Device Status Field
+     * 3.1 Device Initialization
+     *
+     * Need special behavior select registers and the device status
+     * register.
+     *
+     * TODO Notify/Doorbells:
+     *
+     * 4.1.5.2 Available Buffer Notifications
+     * https://docs.oasis-open.org/virtio/virtio/v1.1/cs01/virtio-v1.1-cs01.html#x1-1370002
+     *
+     * Notify registers should go direcctly to real doorbells.
+     * We can provide two notify registers, for RX and TX queue
+     * types.
+     *
+     * The value written to the notify register is the queue id,
+     * however it is the queue id in terms of virtio.  To transform
+     * the virtio queue id into the TX or RX queue id in the
+     * device, shift right the doorbell value by one bit.
+     *
+     * TODO Control Queue Notify/Doorbell (lowprio/future):
+     *
+     * If we later add support for a control queue, that can be
+     * another queue type.  There will be only one control queue,
+     * but its virtio queue id will be one greater than the highest
+     * virtio TX queue id.  We would need to tell the doorbell
+     * logic to ignore the queue id for that one queue type, or
+     * subtract to get the queue id, or size the number of queues
+     * so that the control queue id is zero mod that many bits.
+     *
+     * TODO ISR Status Region (lowprio):
+     *
+     * Needs read-to-clear, and should indicate the current
+     * intrrupt control status.  Low priority, since this is only
+     * needed for INTX legacy pci interrupt emulation.
+     */
 
     pciehdev_set_bars(pdev, pbars);
     return 0;
@@ -90,6 +118,30 @@ virtio_cfg(pciehdev_t *pdev, const pciehdev_res_t *res)
 {
     pciehcfg_t *pcfg = pciehcfg_new();
     pciehbars_t *pbars = pciehdev_get_bars(pdev);
+
+    /* XXX TODO:
+     *
+     * 4.1.4 Virtio Structure PCI Capabilities
+     * https://docs.oasis-open.org/virtio/virtio/v1.1/cs01/virtio-v1.1-cs01.html#x1-1090004
+     *
+     * To be compatible with unmodified virtio driver, we will need
+     * to add capability structs to describe the following regions
+     * in io/mmio space:
+     *
+     * -> 4.1.4.3 Notification struture layout
+     * -> 4.1.4.4 Notification struture layout
+     * -> 4.1.4.5 IRS status capability
+     * -> 4.1.4.6 Device-specific configuration
+     *
+     * Specified as MUST, but is unsed by the linux virtio driver.
+     * -> 4.1.4.7 PCI configuration access capability
+     *
+     *
+     * The current workaround in modified virtio driver replaces
+     * virtio_pci_modern_probe with xxx_virtio_pci_modern_probe,
+     * and hardcodes the configuration that would be described by
+     * the above capabilities 4.1.4.3-6.
+     */
 
     pciehcfg_setconf_vendorid(pcfg, 0x1af4);    /* Vendor ID Redhat */
     pciehcfg_setconf_deviceid(pcfg, 0x1000);    /* transitional virtio-net */
@@ -108,6 +160,7 @@ virtio_cfg(pciehdev_t *pdev, const pciehdev_res_t *res)
 
     pciehcfg_sethdr_type0(pcfg, pbars);
     pciehcfg_add_standard_caps(pcfg);
+
     pciehdev_set_cfg(pdev, pcfg);
     return 0;
 }

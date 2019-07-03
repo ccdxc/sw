@@ -35,12 +35,7 @@ virtio_tx_read_head_desc_idx_start:
     /* Compute address to the virtq_desc ring offset */
     add         r1, r0, K(to_s3_tx_virtq_desc_addr)
     /* r2 -> K(to_s1_tx_virtq_avail_ci) */
-    sll         r2, r2, VIRTIO_VIRTQ_DESC_RING_ELEM_SHIFT
-    add         r1, r1, r2
-
-    add         r2, r0, 0
-    addui       r2, r2, 0x80000000
-    add         r1, r1, r2
+    add         r1, r1, r2, VIRTIO_VIRTQ_DESC_RING_ELEM_SHIFT
 
 	CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                         virtio_tx_read_head_desc_start,

@@ -17,7 +17,7 @@ copy_files() {
     nicf='nic/Makefile nic/include/capri_barco.h nic/tools/print-cores.sh nic/tools/savelogs.sh '
     nicf+='nic/tools/merge_model_debug.py nic/tools/relative_link.sh nic/include/globals.hpp '
     nicf+='nic/include/notify.hpp nic/include/edmaq.h nic/include/eth_common.h '
-    nicf+='nic/include/adminq.h nic/include/nvme_dev_if.h '
+    nicf+='nic/include/adminq.h nic/include/nvme_dev_if.h nic/include/virtio_dev_if.h'
 
     p4d='nic/p4/include nic/p4/common nic/p4/common-p4+ nic/asm/common-p4+/include/ nic/p4-hlir ' 
     p4d+='nic/include/hal_pd_error.hpp nic/p4/eth nic/asm/eth '

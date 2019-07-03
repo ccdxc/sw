@@ -3,6 +3,8 @@
 #define VIRTIO_TX_HOST_RING     0
 #define VIRTIO_TX_PEND_RING     1
 
+#define VIRTIO_RX_CB_SIZE_SHIFT 6
+#define VIRTIO_TX_CB_SIZE_SHIFT 6
 
 /* Virtio specification definitions */
 /* virtq_desc definitions */
@@ -27,7 +29,5 @@
 #define VIRTIO_VIRTQ_USED_RING_ELEM_SIZE    8
 #define VIRTIO_VIRTQ_USED_RING_ELEM_SHIFT   3
 
-
 /* virtio_net_hdr definitions */
-#define VIRTIO_NET_HDR_SIZE                     12
-#define VIRTIO_NET_HDR_SIZE_NO_MRG_RXBUF        10
+#define VIRTIO_NET_HDR_SIZE_V1              12

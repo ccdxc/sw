@@ -40,18 +40,16 @@ virtio_rx_check_reqs_done:
     add         r1, K(to_s2_rx_virtq_avail_addr), VIRTIO_VIRTQ_AVAIL_RING_OFFSET
     /* r2 -> D(rx_virtq_avail_ci).hx */
     and         r2, r2, D(rx_queue_size_mask).hx /* rx_virtq_avail_ci % queue_size */
-    sll         r2, r2, VIRTIO_VIRTQ_AVAIL_RING_ELEM_SHIFT
-    add         r1, r1, r2
-
-    add         r2, r0, 0
-    addui       r2, r2, 0x80000000
-    add         r1, r1, r2
+    add         r1, r1, r2, VIRTIO_VIRTQ_AVAIL_RING_ELEM_SHIFT
 
 	CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                         virtio_rx_read_head_desc_idx_start,
 	                    r1, TABLE_SIZE_32_BITS)
+	nop.e
+    nop
 
 virtio_rx_check_reqs_done_no_reqs:
     phvwri.c1   p.p4_intr_global_drop, 1
+    CAPRI_CLEAR_TABLE0_VALID
 	nop.e
     nop

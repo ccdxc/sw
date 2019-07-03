@@ -44,6 +44,11 @@ typedef struct pciehdev_nvmeres_s {
     u_int32_t nvmeqidc;         /* nvme qid count */
 } pciehdev_nvmeres_t;
 
+typedef struct pciehdev_virtiores_s {
+    u_int64_t virtioregspa;       /* virtio 4k register region */
+    u_int32_t virtioqidc;         /* virtio qid count */
+} pciehdev_virtiores_t;
+
 typedef struct pciehdev_debugres_s {
     u_int16_t vendorid;         /* override vendorid */
     u_int16_t deviceid;         /* override deviceid */
@@ -85,6 +90,7 @@ typedef struct pciehdev_res_s {
         pciehdev_accelres_t accel;      /* accel device resources */
         pciehdev_ethres_t eth;          /* eth   device resources */
         pciehdev_nvmeres_t nvme;        /* nvme  device resources */
+        pciehdev_virtiores_t virtio;    /* virtio device resources */
         pciehdev_debugres_t debug;      /* debug device resources */
     };
 } pciehdev_res_t;

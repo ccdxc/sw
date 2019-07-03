@@ -294,12 +294,12 @@ action read_tx_payload_desc(VIRTQ_DESC_D_PARAMS)
 #if 0
 /* Stage 5, Table 1 */
 @pragma scratch_metadata
-metadata virtio_net_hdr_no_mrg_rxbuf VIRTIO_NET_HDR_NO_MRG_RXBUF_D_SCRATCH;
+metadata virtio_net_hdr_v1_rxbuf VIRTIO_NET_HDR_V1_RXBUF_D_SCRATCH;
 
-action read_tx_virtio_net_hdr(VIRTIO_NET_HDR_NO_MRG_RXBUF_D_PARAMS)
+action read_tx_virtio_net_hdr(VIRTIO_NET_HDR_V1_RXBUF_D_PARAMS)
 {
     GENERATE_GLOBAL_K
 
-    GENERATE_VIRTIO_NET_HDR_NO_MRG_RXBUF_D
+    GENERATE_VIRTIO_NET_HDR_V1_RXBUF_D
 }
 #endif
