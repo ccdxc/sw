@@ -880,6 +880,7 @@ func initAllowedCommands() {
 	allowedCommands["ifconfig"] = 22
 	allowedCommands["pcieutil"] = 23
 	allowedCommands["ps"] = 24
+	allowedCommands["delphictl"] = 25
 }
 
 func isCmdAllowed(cmd string) bool {

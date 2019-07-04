@@ -83,6 +83,21 @@ Cmds:
  -
    cmd: ps
    outputfile: ps.out
+ -
+   cmd: delphictl db get UpgReq
+   outputfile: upgreq.out
+ -
+   cmd: delphictl db get UpgResp
+   outputfile: upgresp.out
+ -
+   cmd: delphictl db get UpgStateReq
+   outputfile: upgstatereq.out
+ -
+   cmd: delphictl db get UpgAppResp
+   outputfile: upgappresp.out
+ -
+   cmd: delphictl db get UpgApp
+   outputfile: upgapp.out
 `
 
 // NaplesCmds is the format of the yaml file used to run commands on Naples for tech-support
