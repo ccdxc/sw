@@ -13,6 +13,7 @@ from apollo.config.store import Store
 import apollo.config.agent.api as api
 import apollo.config.resmgr as resmgr
 import apollo.config.objects.lmapping as lmapping
+import apollo.config.objects.tag as tag
 import apollo.config.utils as utils
 
 import policy_pb2 as policy_pb2
@@ -33,15 +34,20 @@ class L4MatchObject:
 
     def Show(self):
         if self.valid:
-            logger.info("- SrcPortRange:%d - %d DstPortRange:%d - %d" %(self.SportLow, self.SportHigh, self.DportLow, self.DportHigh))
+            logger.info("    SrcPortRange:%d - %d"\
+                        %(self.SportLow, self.SportHigh))
+            logger.info("    DstPortRange:%d - %d"\
+                        %(self.DportLow, self.DportHigh))
+            logger.info("    Icmp Type:%d Code:%d"\
+                        %(self.IcmpType, self.IcmpCode))
         else:
-            logger.info("- No L4Match")
+            logger.info("    No L4Match")
 
 class L3MatchObject:
     def __init__(self, valid=False, proto=utils.L3PROTO_MIN,\
                  srcpfx=None, dstpfx=None,\
                  srciplow=None, srciphigh=None, dstiplow=None,\
-                 dstiphigh=None, srctag=0, dsttag=0,\
+                 dstiphigh=None, srctag=None, dsttag=None,\
                  srctype=utils.L3MatchType.PFX, dsttype=utils.L3MatchType.PFX):
         self.valid = valid
         self.Proto = proto
@@ -57,14 +63,22 @@ class L3MatchObject:
         self.DstTag = dsttag
 
     def Show(self):
+        def __get_tag_id(tagObj):
+            return tagObj.TagId if tagObj else None
+
         if self.valid:
-            logger.info("- Proto:%d SrcType:%d DstType:%d" %(self.Proto, self.SrcType, self.DstType))
-            logger.info("- SrcPrefix:%s DstPrefix:%s" %(self.SrcPrefix, self.DstPrefix))
-            logger.info("- SrcIPLow:%s SrcIPHigh:%s" %(self.SrcIPLow, self.SrcIPHigh))
-            logger.info("- DstIPLow:%s DstIPHigh:%s" %(self.DstIPLow, self.DstIPHigh))
-            logger.info("- SrcTag:%s DstTag:%s" %(self.SrcTag, self.DstTag))
+            logger.info("    Proto:%d SrcType:%d DstType:%d"\
+                        %(self.Proto, self.SrcType, self.DstType))
+            logger.info("    SrcPrefix:%s DstPrefix:%s"\
+                        %(self.SrcPrefix, self.DstPrefix))
+            logger.info("    SrcIPLow:%s SrcIPHigh:%s"\
+                        %(self.SrcIPLow, self.SrcIPHigh))
+            logger.info("    DstIPLow:%s DstIPHigh:%s"\
+                        %(self.DstIPLow, self.DstIPHigh))
+            logger.info("    SrcTag:%s DstTag:%s"\
+                        %(__get_tag_id(self.SrcTag), __get_tag_id(self.DstTag)))
         else:
-            logger.info("- No L3Match")
+            logger.info("    No L3Match")
 
 class RuleObject:
     def __init__(self, stateful, l3match, l4match, priority=0, action=policy_pb2.SECURITY_RULE_ACTION_ALLOW):
@@ -76,7 +90,7 @@ class RuleObject:
         self.Action = action
 
     def Show(self):
-        logger.info("- Stateful:%s Priority:%d Action:%d" %(self.Stateful, self.Priority, self.Action))
+        logger.info(" -- Stateful:%s Priority:%d Action:%d" %(self.Stateful, self.Priority, self.Action))
         self.L3Match.Show()
         self.L4Match.Show()
 
@@ -121,8 +135,10 @@ class PolicyObject(base.ConfigObjectBase):
                 utils.GetRpcIPRange(l3match.SrcIPLow, l3match.SrcIPHigh, specrule.Match.L3Match.SrcRange)
             if l3match.DstIPLow and l3match.DstIPHigh:
                 utils.GetRpcIPRange(l3match.DstIPLow, l3match.DstIPHigh, specrule.Match.L3Match.DstRange)
-            specrule.Match.L3Match.SrcTag = l3match.SrcTag
-            specrule.Match.L3Match.DstTag = l3match.DstTag
+            if l3match.SrcTag:
+                specrule.Match.L3Match.SrcTag = l3match.SrcTag.TagId
+            if l3match.DstTag:
+                specrule.Match.L3Match.DstTag = l3match.DstTag.TagId
             if l3match.SrcPrefix is not None:
                 utils.GetRpcIPPrefix(l3match.SrcPrefix, specrule.Match.L3Match.SrcPrefix)
             if l3match.DstPrefix is not None:
@@ -232,32 +248,30 @@ class PolicyObjectClient:
             return
 
         def __is_default_l3_attr(matchtype=utils.L3MatchType.PFX, pfx=None,\
-                                 iplow=None, iphigh=None, tag=0):
+                                 iplow=None, iphigh=None, tag=None):
             if matchtype == utils.L3MatchType.PFX:
                 return utils.isDefaultRoute(pfx)
             elif matchtype == utils.L3MatchType.PFXRANGE:
-                return ((int(iplow) == 0) and (int(iphigh) == 0))
+                return utils.isDefaultAddrRange(iplow, iphigh)
             elif matchtype == utils.L3MatchType.TAG:
-                # TODO: once tag support comes
-                return False
+                return utils.isTagWithDefaultRoute(tag)
             return False
 
-        def __get_l3_attr(l3matchtype, newpfx):
+        def __get_l3_attr(l3matchtype, newpfx, newtag):
             pfx = None
             startaddr = None
             endaddr = None
-            tag = 0
+            tag = None
             if l3matchtype == utils.L3MatchType.PFX:
                 pfx = newpfx
             elif l3matchtype == utils.L3MatchType.PFXRANGE:
                 startaddr = newpfx.network_address
                 endaddr = startaddr + newpfx.num_addresses - 1
             elif l3matchtype == utils.L3MatchType.TAG:
-                # TODO: once tag support comes
-                tag = configure_tag_(newpfx)
+                tag = newtag
             return pfx, startaddr, endaddr, tag
 
-        def __modify_l3_match(direction, l3matchobj, subnetpfx):
+        def __modify_l3_match(direction, l3matchobj, subnetpfx, subnettag):
             if not l3matchobj.valid:
                 # nothing to do in case of wildcard
                 return
@@ -265,21 +279,20 @@ class PolicyObjectClient:
                 if __is_default_l3_attr(l3matchobj.SrcType, l3matchobj.SrcPrefix, l3matchobj.SrcIPLow, l3matchobj.SrcIPHigh, l3matchobj.SrcTag):
                     # no need of modification if it is already a default route
                     return
-                l3matchobj.SrcPrefix, l3matchobj.SrcIPLow, l3matchobj.SrcIPHigh, l3matchobj.SrcTag = __get_l3_attr(l3matchobj.SrcType, subnetpfx)
+                l3matchobj.SrcPrefix, l3matchobj.SrcIPLow, l3matchobj.SrcIPHigh, l3matchobj.SrcTag = __get_l3_attr(l3matchobj.SrcType, subnetpfx, subnettag)
             else:
                 if __is_default_l3_attr(l3matchobj.DstType, l3matchobj.DstPrefix, l3matchobj.DstIPLow, l3matchobj.DstIPHigh, l3matchobj.DstTag):
                     return
-                l3matchobj.DstPrefix, l3matchobj.DstIPLow, l3matchobj.DstIPHigh, l3matchobj.DstTag = __get_l3_attr(l3matchobj.DstType, subnetpfx)
+                l3matchobj.DstPrefix, l3matchobj.DstIPLow, l3matchobj.DstIPHigh, l3matchobj.DstTag = __get_l3_attr(l3matchobj.DstType, subnetpfx, subnettag)
             return
 
         policy = self.GetPolicyObject(policyid)
         direction = policy.Direction
-        af = policy.AddrFamily
-        subnetpfx = subnetobj.IPPrefix[1] if af == 'IPV4' else subnetobj.IPPrefix[0]
+        af = utils.GetIPVersion(policy.AddrFamily)
+        subnetpfx = subnetobj.IPPrefix[1] if af == utils.IP_VERSION_4 else subnetobj.IPPrefix[0]
+        subnettag = tag.client.GetCreateTag(policy.VPCId, af, subnetpfx)
         for rule in policy.rules:
-            __modify_l3_match(direction, rule.L3Match, subnetpfx)
-        logger.info("Modified Policy")
-        policy.Show()
+            __modify_l3_match(direction, rule.L3Match, subnetpfx, subnettag)
         return
 
     def GetIngV4SecurityPolicyId(self, vpcid):
@@ -380,21 +393,32 @@ class PolicyObjectClient:
             dstiphigh = __get_pfx_from_rule(af, rulespec, 'dstiphigh', False)
             return srciplow, srciphigh, dstiplow, dstiphigh
 
-        def __get_l3_tag_from_rule(af, rulespec):
-            srctag = getattr(rulespec, 'srctag', 0)
-            dsttag = getattr(rulespec, 'dsttag', 0)
+        def __get_l3_tag_from_rule(af, rulespec, srctype, dsttype):
+            srctag = None
+            dsttag = None
+            if srctype != utils.L3MatchType.TAG and dsttype != utils.L3MatchType.TAG:
+                # no need to create tag if none of src,dst is of tag type
+                return srctag, dsttag
+            #get pfx from rule and configure tag on the fly to tagtable of af in this vpc
+            pfx = __get_pfx_from_rule(af, rulespec, 'pfx')
+            tagObj = tag.client.GetCreateTag(vpcid, af, pfx)
+            if srctype == utils.L3MatchType.TAG:
+                srctag = tagObj
+            if dsttype == utils.L3MatchType.TAG:
+                dsttag = tagObj
             return srctag, dsttag
 
         def __get_l3_rule(af, rulespec):
             proto = __get_l3_proto_from_rule(rulespec)
             srctype, dsttype = __get_l3_match_type_from_rule(rulespec)
-            srcpfx, dstpfx = __get_l3_pfx_from_rule(af, rulespec)
-            srciplow, srciphigh, dstiplow, dstiphigh = __get_l3_pfx_range_from_rule(af, rulespec)
-            srctag, dsttag = __get_l3_tag_from_rule(af, rulespec)
             if not utils.IsPipelineArtemis():
                 # Apollo does NOT support other match types like range/tag
-                if srctype is not utils.L3MatchType.PFX or dsttype is not utils.L3MatchType.PFX:
+                if srctype is not utils.L3MatchType.PFX or\
+                   dsttype is not utils.L3MatchType.PFX:
                     return None
+            srcpfx, dstpfx = __get_l3_pfx_from_rule(af, rulespec)
+            srciplow, srciphigh, dstiplow, dstiphigh = __get_l3_pfx_range_from_rule(af, rulespec)
+            srctag, dsttag = __get_l3_tag_from_rule(af, rulespec, srctype, dsttype)
             l3match = any([proto, srcpfx, dstpfx, srciplow, srciphigh, dstiplow, dstiphigh, srctag, dsttag])
             obj = L3MatchObject(l3match, proto, srcpfx, dstpfx, srciplow, srciphigh, dstiplow, dstiphigh, srctag, dsttag, srctype, dsttype)
             return obj
@@ -500,7 +524,16 @@ class PolicyObjectClient:
 
         return
 
+    def ShowObjects(self):
+        objs = self.__objs.values()
+        for obj in objs:
+            obj.Show()
+        return
+
     def CreateObjects(self):
+        #Show before create as policy gets modified after GenerateObjects()
+        self.ShowObjects()
+        logger.info("Creating Policy Objects in agent")
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
         api.client.Create(api.ObjectTypes.POLICY, msgs)
         return

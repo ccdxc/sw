@@ -5,44 +5,47 @@ import infra.config.base as base
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
-import apollo.config.objects.lmapping as lmapping
-import apollo.config.objects.nexthop as nexthop
 import tags_pb2 as tags_pb2
-import types_pb2 as types_pb2
 import ipaddress
 
 from infra.common.logging import logger
-from apollo.config.store import Store
 
-class TagRuleObject(base.ConfigObjectBase):
-    def __init__(self, prefixes, tag_id, priority):
+class TagRuleObject:
+    def __init__(self, prefixes, tag_id, priority=0):
         super().__init__()
-        ################# PUBLIC ATTRIBUTES OF ROUTE TABLE OBJECT #####################
+        ################# PUBLIC ATTRIBUTES OF TAG RULE OBJECT #####################
         self.Priority = priority
         self.TagId = tag_id
         self.Prefixes = prefixes
         ##########################################################################
         return
 
+    def Show(self):
+        logger.info(" -- priority:%d|TagId:%d|NumPfxs:%d"\
+                    %(self.Priority, self.TagId, len(self.Prefixes)))
+        for pfx in self.Prefixes:
+            logger.info("  --- %s" % str(pfx))
+        return
+
 class TagObject(base.ConfigObjectBase):
     def __init__(self, af, rules):
         super().__init__()
-        ################# PUBLIC ATTRIBUTES OF ROUTE TABLE OBJECT #####################
+        ################# PUBLIC ATTRIBUTES OF TAG TABLE OBJECT #####################
         if af == utils.IP_VERSION_6:
             self.TagTblId = next(resmgr.V6TagIdAllocator)
             self.AddrFamily = 'IPV6'
-            self.GID('Ipv4TagTbl%d' %self.TagTblId)
+            self.GID('IPv6TagTbl%d' %self.TagTblId)
         else:
             self.TagTblId = next(resmgr.V4TagIdAllocator)
             self.AddrFamily = 'IPV4'
-            self.GID('Ipv6TagTbl%d' %self.TagTblId)
+            self.GID('IPv4TagTbl%d' %self.TagTblId)
         self.Rules = rules
         ##########################################################################
         self.Show()
         return
 
     def __repr__(self):
-        return "TagTblID:%dAddrFamily:%s|NumRules:%d|"\
+        return "TagTblID:%dAddrFamily:%s|NumRules:%d"\
                %(self.TagTblId, self.AddrFamily, len(self.Rules))
 
     def GetGrpcCreateMessage(self):
@@ -64,9 +67,7 @@ class TagObject(base.ConfigObjectBase):
         logger.info("TagTbl object:", self)
         logger.info("- %s" % repr(self))
         for rule in self.Rules:
-            logger.info("-- priority:%d|TagId:%d" %(rule.Priority, rule.TagId))
-            for pfx in rule.Prefixes:
-                logger.info("-- %s" % str(pfx))
+            rule.Show()
         return
 
     def IsFilterMatch(self, selectors):
@@ -112,6 +113,25 @@ class TagObjectClient:
         if self.__v6objs[vpcid]:
             return self.__v6iter[vpcid].rrnext().TagTblId
         return 0
+
+    def GetTagTable(self, vpcid, af):
+        tagtblid = self.GetTagV6TableId(vpcid) if af == utils.IP_VERSION_6 else self.GetTagV4TableId(vpcid)
+        tagtbl = self.GetTagV6Table(vpcid, tagtblid) if af == utils.IP_VERSION_6 else self.GetTagV4Table(vpcid, tagtblid)
+        return tagtbl
+
+    def GetCreateTag(self, vpcid, af, pfx, tagid=0):
+        tagtbl = self.GetTagTable(vpcid, af)
+        tagtbl.Rules.sort(key=lambda x: x.TagId)
+        for rule in tagtbl.Rules:
+            for tagpfx in rule.Prefixes:
+                if pfx == tagpfx:
+                    return rule
+        if tagid == 0:
+            lastrule = tagtbl.Rules[-1]
+            tagid = lastrule.TagId + 1
+        obj = TagRuleObject([pfx], tagid)
+        tagtbl.Rules.append(obj)
+        return obj
 
     def GenerateObjects(self, parent, vpc_spec_obj):
         vpcid = parent.VPCId
@@ -198,9 +218,17 @@ class TagObjectClient:
         if self.__v4objs[vpcid]:
             self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid].values())
 
+    def ShowObjects(self):
+        objs = self.__objs.values()
+        for obj in objs:
+            obj.Show()
+        return
 
     def CreateObjects(self):
         if utils.IsPipelineArtemis():
+            #Show before create as tag gets modified after GenerateObjects()
+            self.ShowObjects()
+            logger.info("Creating TAG Objects in agent")
             msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
             api.client.Create(api.ObjectTypes.TAG, msgs)
         return

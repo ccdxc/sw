@@ -157,8 +157,18 @@ def isDefaultAddrRange(addrLow, addrHigh):
     return False
 
 def isTagWithDefaultRoute(tag):
-    #TODO: Tag support
+    tagpfxlist = tag.Prefixes if tag else None
+    if tagpfxlist is None:
+        return False
+    for tagpfx in tagpfxlist:
+        if isDefaultRoute(tagpfx):
+            return True
     return False
+
+def GetIPVersion(ipaf):
+    if ipaf == 'IPV6':
+        return IP_VERSION_6
+    return IP_VERSION_4
 
 def GetRpcIPAddrFamily(ipaddrfamily):
     if ipaddrfamily == 'IPV6':

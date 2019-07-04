@@ -126,16 +126,20 @@ def __get_usable_pfx_from_range(ipaddrLow, ipaddrHigh, pos):
         host = ipaddrHigh
     else:
         # random pfx between ipaddrLow and ipaddrHigh
-        pfxs = [ipaddr for ipaddr in ipaddress.summarize_address_range(ipaddrLow, ipaddrHigh)]
-        return random.choice(pfxs)
+        pfxlist = [ipaddr for ipaddr in ipaddress.summarize_address_range(ipaddrLow, ipaddrHigh)]
+        return random.choice(pfxlist)
 
     return ipaddress.ip_network(host)
 
 def __get_usable_pfx_from_tag(tag, pfxpos):
-    #TODO: TAG support
-    return None
+    pfxlist = tag.Prefixes if tag else None
+    if pfxlist is None:
+        pfx = None
+    else:
+        pfx = random.choice(pfxlist)
+    return pfx
 
-def __get_usable_pfx_from_rule_impl(matchtype, ippfx=None, ipaddrLow=None, ipaddrHigh=None, tag=0, pfxpos=None):
+def __get_usable_pfx_from_rule_impl(matchtype, ippfx=None, ipaddrLow=None, ipaddrHigh=None, tag=None, pfxpos=None):
     if matchtype == utils.L3MatchType.PFX:
         return ippfx
     elif matchtype == utils.L3MatchType.PFXRANGE:
@@ -209,22 +213,23 @@ def GetUsableDPortFromPolicy(testcase, packet, args=None):
     pos = __get_module_args_value(testcase.module.args, 'dport')
     return __get_port_from_rule(rule, pos, False)
 
-def __is_matching_ip(matchtype, ipaddr, ippfx=None, ipaddrLow=None, ipaddrHigh=None, tag=0):
+def __is_matching_ip(matchtype, ipaddr, ippfx=None, ipaddrLow=None, ipaddrHigh=None, tag=None):
     ipaddr = ipaddress.ip_address(ipaddr)
     if matchtype == utils.L3MatchType.PFX:
         if ippfx is None:
             return True
-        pfx = ipaddress.ip_network(ipaddr)
-        return pfx.overlaps(ippfx)
+        return ipaddr in ippfx
     elif matchtype == utils.L3MatchType.PFXRANGE:
         if not all([ipaddrLow, ipaddrHigh]):
             return True
         return ((ipaddr >= ipaddrLow) and (ipaddr <= ipaddrHigh))
     elif matchtype == utils.L3MatchType.TAG:
-        if tag == 0:
-            return True
-        #TODO: support tag
-        return False
+        tagpfxlist = tag.Prefixes if tag else None
+        if tagpfxlist is None:
+            return False
+        for tagpfx in tagpfxlist:
+            if ipaddr in tagpfx:
+                return True
     return False
 
 def __is_matching_src_ip(src_ip, l3matchobj):

@@ -56,7 +56,7 @@ vpc:
       count : 1
       type  : tenant
       subnet:
-        - count     :  41             # should be same as total routetbl / policy
+        - count     :  44             # should be same as total routetbl / policy
           v4prefixlen : 24
           v6prefixlen : 64
           vnic:
@@ -68,7 +68,7 @@ vpc:
       routetbl:
              - type: base
                routetype: fulloverlap_max_with_default
-               count : 41
+               count : 44
                v4base: '66.0.0.0\16'
                v4prefixlen: 24
                nv4routes   : 1023     # Max routes per route table 
@@ -81,7 +81,7 @@ vpc:
                    - '0::\0'
       nexthop: # only ARTEMIS
              - type: base
-               count : 41
+               count : 44
       tagtbl: # only ARTEMIS
             - type : specific
               count : 1
@@ -141,6 +141,30 @@ vpc:
                     v4dstiphigh : '255.255.255.255'
                     v6dstiplow : '0::0'
                     v6dstiphigh : 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff'
+
+              - type : specific
+                policytype : allow_all
+                direction : bidir
+                rule:
+                  - protocol: tcp
+                    priority: 0
+                    action  : allow
+                    srctype : tag           #Only for artemis. Coverts the prefix to tag
+                    dsttype : tag
+                    v4pfx: '0.0.0.0\0'
+                    v6pfx: '0::0\0'
+
+              - type : specific
+                policytype : deny_all
+                direction : bidir
+                rule:
+                  - protocol: tcp
+                    priority: 0
+                    action  : deny
+                    srctype : tag
+                    dsttype : tag
+                    v4pfx: '0.0.0.0\0'
+                    v6pfx: '0::0\0'
 
               - type : specific
                 policytype : deny_all
@@ -229,6 +253,34 @@ vpc:
                     v4dstiphigh : '66.77.88.99'
                     v6dstiplow : '1234:a11:bad:b075:d1e::90d'
                     v6dstiphigh : '1234:a11:bad:b075:d1e::90d'
+                    sportlow: 13579
+                    sporthigh: 13579
+                    dportlow: 24680
+                    dporthigh: 24680
+
+              - type : specific
+                policytype : user_specific # all values are specific
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    priority: 4294967295
+                    action  : allow
+                    srctype : tag
+                    dsttype : tag
+                    v4pfx: '99.88.77.66\32'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::bade\128'
+                    sportlow: 9999
+                    sporthigh: 9999
+                    dportlow: 8888
+                    dporthigh: 8888
+
+                  - protocol: udp
+                    priority: 2449692759
+                    action  : deny
+                    srctype : tag
+                    dsttype : tag
+                    v4pfx: '66.77.88.99\32'
+                    v6pfx: '1234:a11:bad:b075:d1e::90d\128'
                     sportlow: 13579
                     sporthigh: 13579
                     dportlow: 24680
@@ -757,8 +809,8 @@ vpc:
                     priority: 4294967295
                     action  : deny
                     srctype : pfx
-                    v4pfx: '1.1.1.0\24'
-                    v6pfx: 'e1ba:aced:a11:face:b00c:91::0\96'
+                    v4srcpfx: '1.1.1.0\24'
+                    v6srcpfx: 'e1ba:aced:a11:face:b00c:91::0\96'
                     dsttype : pfxrange
                     v4dstiplow : '1.1.1.0'
                     v4dstiphigh : '1.1.1.255'
@@ -827,7 +879,7 @@ vpc:
                 overlaptype : adjacent   # all attr are adjacent
                 direction  : bidir
                 rule:
-                  - protocol: tcp
+                  - protocol: tcp        # src & dst both pfxrange
                     srctype : pfxrange
                     v4srciplow : '10.10.10.0'
                     v4srciphigh : '10.10.10.255'
@@ -843,10 +895,10 @@ vpc:
                     dportlow: 10
                     dporthigh: 20
 
-                  - protocol: tcp
+                  - protocol: tcp        # src - pfx but dst - pfxrange
                     srctype : pfx
-                    v4pfx: '10.10.11.0\24'
-                    v6pfx: 'e1ba:aced:a11:face:b00d::0\80'
+                    v4srcpfx: '10.10.11.0\24'
+                    v6srcpfx: 'e1ba:aced:a11:face:b00d::0\80'
                     dsttype : pfxrange
                     v4dstiplow : '10.10.11.0'
                     v4dstiphigh : '10.10.11.255'
@@ -857,13 +909,85 @@ vpc:
                     dportlow: 21
                     dporthigh: 30
 
-                  - protocol: tcp
+                  - protocol: tcp        # src & dst both pfx
                     v4pfx: '10.10.12.0\24'
                     v6pfx: 'e1ba:aced:a11:face:b00e::0\80'
                     sportlow: 31
                     sporthigh: 40
                     dportlow: 31
                     dporthigh: 40
+
+                  - protocol: tcp        # src & dst both tag
+                    srctype : tag
+                    dsttype : tag
+                    v4pfx: '10.10.13.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00f::0\80'
+                    sportlow: 41
+                    sporthigh: 50
+                    dportlow: 41
+                    dporthigh: 50
+
+                  - protocol: tcp        # src - pfxrange but dst - pfx
+                    srctype : pfxrange
+                    v4srciplow : '10.10.14.0'
+                    v4srciphigh : '10.10.14.255'
+                    v6srciplow : 'e1ba:aced:a11:face:b010::0'
+                    v6srciphigh : 'e1ba:aced:a11:face:b010:ffff:ffff:ffff'
+                    dsttype : pfx
+                    v4dstpfx: '10.10.14.0\24'
+                    v6dstpfx: 'e1ba:aced:a11:face:b010::0\80'
+                    sportlow: 51
+                    sporthigh: 60
+                    dportlow: 51
+                    dporthigh: 60
+
+                  - protocol: tcp        # src - pfx but dst - tag
+                    srctype : pfx
+                    dsttype : tag
+                    v4pfx: '10.10.15.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b011::0\80'
+                    sportlow: 61
+                    sporthigh: 70
+                    dportlow: 61
+                    dporthigh: 70
+
+                  - protocol: tcp        # src - tag but dst - pfx
+                    srctype : tag
+                    dsttype : pfx
+                    v4pfx: '10.10.16.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b012::0\80'
+                    sportlow: 71
+                    sporthigh: 80
+                    dportlow: 71
+                    dporthigh: 80
+
+                  - protocol: tcp        # src - tag but dst - pfxrange
+                    srctype : tag
+                    v4pfx: '10.10.17.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b013::0\80'
+                    dsttype : pfxrange
+                    v4dstiplow : '10.10.17.0'
+                    v4dstiphigh : '10.10.17.255'
+                    v6dstiplow : 'e1ba:aced:a11:face:b013::0'
+                    v6dstiphigh : 'e1ba:aced:a11:face:b013:ffff:ffff:ffff'
+                    sportlow: 81
+                    sporthigh: 90
+                    dportlow: 81
+                    dporthigh: 90
+
+                  - protocol: tcp        # src - pfxrange but dst - tag
+                    srctype : pfxrange
+                    v4srciplow : '10.10.18.0'
+                    v4srciphigh : '10.10.18.255'
+                    v6srciplow : 'e1ba:aced:a11:face:b014::0'
+                    v6srciphigh : 'e1ba:aced:a11:face:b014:ffff:ffff:ffff'
+                    dsttype : tag
+                    v4pfx: '10.10.18.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b014::0\80'
+                    sportlow: 91
+                    sporthigh: 100
+                    dportlow: 91
+                    dporthigh: 100
 
               - type : specific
                 policytype : stateless
