@@ -17,6 +17,8 @@ import { Utility } from '@app/common/Utility';
 import { UserDataReadyMap } from './';
 import { AUTH_BODY } from '@app/core';
 
+import { AuthUserSpec_type } from '@sdk/v1/models/generated/auth/enums.ts';
+
 import { AuthService } from '@app/services/generated/auth.service';
 import { StagingService } from '@app/services/generated/staging.service';
 import {
@@ -106,8 +108,6 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   isToShowAddRolePanel: boolean = false;
   isToShowAddRolebindingPanel: boolean = false;
 
-
-
   usericon: any = {
     margin: {
       top: '9px',
@@ -176,6 +176,24 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    */
   canManageRBAC(): boolean {
     return (this.uiconfigsService.isAuthorized(UIRolePermissions.authuser_create) && this.uiconfigsService.isAuthorized(UIRolePermissions.authuser_update));
+  }
+
+  // TODO: A similar function is present in Utility.ts, need to remove one later for avoiding redundancy
+  isAuthAdmin(): boolean {
+    return (this.uiconfigsService.isAuthorized(UIRolePermissions.authuser_allactions));
+  }
+
+  // Local and External Admin can update all local users
+  // Local Current User can update itself
+  // External Users can't be updated
+  canCurrentUserUpdate(user: any|null): boolean {
+    const currentUser = Utility.getInstance().getLoginUser();
+    if (user != null && user.meta != null && user.spec != null && currentUser != null && currentUser.spec != null) {
+      if (user.spec.type === AuthUserSpec_type.Local && (this.isAuthAdmin() || user.meta.name === currentUser.meta.name)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   onLayoutDropDownChange(sbutton: any) {

@@ -95,14 +95,10 @@
   margin-left: 10px;
 }
 
-
 .usertemplate-div-card-username {
 
   height: auto;
   margin: 0;
-  -ms-transform: rotate(0);
-  -webkit-transform: rotate(0);
-  transform: rotate(0);
   font-weight: 500;
   font-style: normal;
   font-size: 16.0px;
@@ -116,9 +112,6 @@
   height: 20px;
   width: auto;
   margin: 0;
-  -ms-transform: rotate(0);
-  -webkit-transform: rotate(0);
-  transform: rotate(0);
   font-weight: 400;
   font-style: normal;
   font-size: 16.0px;
@@ -127,21 +120,45 @@
   line-height: 19.0px;
 }
 
-.usertemplate-div-card-createdtime,
 .usertemplate-div-card-item {
 
   height: auto;
   width: auto;
   margin: 0;
-  -ms-transform: rotate(0);
-  -webkit-transform: rotate(0);
-  transform: rotate(0);
   font-weight: 400;
   font-style: normal;
   font-size: 12.0px;
   color: rgba(170, 170, 167, 1.0);
   text-align: left;
   line-height: 14.0px;
+}
+
+.usertemplate-div-card-email {
+  height: 14.0px;
+  width: auto;
+  margin: 0;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 12.0px;
+  color: #aaaaa7;
+  text-align: left;
+  line-height: 14.0px;
+}
+
+.usertemplate-div-card-usertype {
+  width: 15px;
+  height: 14px;
+  border-radius: 4.5px;
+  background-color: #d1cec7;
+  font-weight: 500;
+  font-size: 12.0px;
+  color: #FFFFFF;
+  text-align: center;
+  text-transform: capitalize;
+  margin-left: 5px;
+  display: inline-block;
+  line-height: 14px;
+  vertical-align: 2px;
 }
 
 .usertemplate-div-card-item-action {

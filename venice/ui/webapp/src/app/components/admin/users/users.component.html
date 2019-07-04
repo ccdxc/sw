@@ -4,17 +4,17 @@
     <button class="global-button-primary users-toolbar-button users-add-button users-adduser-button"
             [disabled]="isToShowAddUserPanel"
             (click)="onAddUser($event)" *ngIf="whichPanel=='user' && canManageRBAC()"
-            title="Add User">Add User
+            matTooltip="Add User">Add User
     </button>
     <button class="global-button-primary users-toolbar-button users-add-button users-addrole-button"
             [disabled]="isToShowAddRolePanel"
             (click)="onAddRole($event)" *ngIf="whichPanel=='role' && canManageRBAC()"
-            title="Add Role">Add Role
+            matTooltip="Add Role">Add Role
     </button>
     <button class="global-button-primary users-toolbar-button users-add-button users-addrolebinding-button"
             [disabled]="isToShowAddRolebindingPanel"
             (click)="onAddRoleBinding($event)" *ngIf="whichPanel=='rolebinding' && canManageRBAC()"
-            title="Add Role-binding">Add
+            matTooltip="Add Role-binding">Add
       Rolebinding
     </button>
   </div>
@@ -82,9 +82,10 @@
     <div *ngFor="let role of getRoles()" class="user-panel-rolegroup">
       <div class="user-panel-rolegroup-header">
         <div fxLayout="row wrap" fxLayoutAlign="start" class="user-panel-rolegroup-header-info-row">
-          <div class="user-panel-rolegroup-header-row-item" title="Role Name">{{role}}</div>
+          <div class="user-panel-rolegroup-header-row-item" matTooltip="Role Name">{{role}}</div>
           <div class="user-panel-rolegroup-header-row-item"
-               title="Total number of users for this role">({{getRoleUsers(role).length}})</div>
+               matTooltip="Total number of users for this role">({{getRoleUsers(role).length}})
+          </div>
         </div>
       </div>
       <div fxLayout="row wrap" fxLayoutAlign="start" class="user-panel-rolegroup-content">
@@ -163,16 +164,23 @@
         </button>
       </div>
       <div class="usertemplate-div-card-content-div" fxFlex fxLayout="column">
-        <div class="usertemplate-div-card-username" title="Login Name">{{user?.meta.name}}</div>
-        <div class="usertemplate-div-card-username" title="Full Name">{{user?.spec.fullname}}</div>
-        <div class="usertemplate-div-card-roles" title="Role">
-          {{ user.status.roles? user.status.roles : 'Administor'}}</div>
-        <div class="usertemplate-div-card-createdtime" title="Creation time">
-          {{user?.meta["creation-time"] | date:'MM/dd/yyyy HH:mm
-                    a'}}</div>
-
+        <div>
+          <span class="usertemplate-div-card-username"
+                matTooltip="Login Name">{{user?.meta.name}}</span>
+          <span class="usertemplate-div-card-usertype"
+                [matTooltip]="user?.spec.type + ' User'">{{user?.spec.type[0]}}</span>
+        </div>
+        <!--<div class="usertemplate-div-card-username" matTooltip="Login Name">{{user?.meta.name}}</div>-->
+        <div class="usertemplate-div-card-username" matTooltip="Full Name">{{user?.spec.fullname}}
+        </div>
+        <div class="usertemplate-div-card-roles" matTooltip="Role">
+          {{ user.status.roles? user.status.roles : 'Administrator'}}</div>
+        <div class="usertemplate-div-card-email" matTooltip="Email">
+          {{user?.spec.email}}</div>
       </div>
-      <div class="usertemplate-div-editdelete-buttons-div" fxLayout="column" fxFlex="none">
+      <div class="usertemplate-div-editdelete-buttons-div"
+           *ngIf="canCurrentUserUpdate(user)" fxLayout="column"
+           fxFlex="none">
         <div class="usertemplate-div-card-icon-buttons-div" *ngIf="!isUserEditMode(user)">
           <div class="usertemplate-div-card-icon-div-edit" *ngIf="showEditUserButton(user)">
             <button mat-icon-button
@@ -306,7 +314,8 @@
           </div>
         </div>
       </div>
-      <div class="usertemplate-div-editdelete-buttons-div" fxLayout="column" fxFlex="none">
+      <div class="usertemplate-div-editdelete-buttons-div"
+           fxLayout="column" fxFlex="none">
         <div class="usertemplate-div-card-icon-buttons-div"
              *ngIf="!isRoleBindingEditMode(rolebinding)">
           <div class="usertemplate-div-card-icon-div-edit"
