@@ -1570,7 +1570,7 @@ export class Utility {
     if (!naples || naples.status['admission-phase'] !== ClusterSmartNICStatus_admission_phase.ADMITTED) {
       return {isHealthy: false, condition : NaplesConditionValues.EMPTY};
     } else if (naples.status.conditions == null || naples.status.conditions.length === 0) {
-      return {isHealthy : true, condition : NaplesConditionValues.HEALTHY};
+      return {isHealthy : false, condition : NaplesConditionValues.UNKNOWN};
     } else {
       for (const cond of naples.status.conditions) {
         if ((cond) && (cond.type === ClusterSmartNICCondition_type.HEALTHY) && (cond.status === ClusterSmartNICCondition_status.FALSE)) {
@@ -1579,8 +1579,11 @@ export class Utility {
         if ((cond) && (cond.type === ClusterSmartNICCondition_type.HEALTHY) && (cond.status === ClusterSmartNICCondition_status.TRUE)) {
           return {isHealthy: true, condition : NaplesConditionValues.HEALTHY};
         }
+        if ((cond) && (cond.type === ClusterSmartNICCondition_type.HEALTHY) && (cond.status === ClusterSmartNICCondition_status.UNKNOWN)) {
         return {isHealthy: false, condition : NaplesConditionValues.UNKNOWN};
+        }
       }
+      return {isHealthy: false, condition : NaplesConditionValues.UNKNOWN};
     }
   }
 
@@ -1596,12 +1599,14 @@ export class Utility {
 
   public static displayReasons(naples: Readonly<ClusterSmartNIC>): string {
     const reasonarray: string[] = [];
-    for (let i = 0; i < naples.status['conditions'].length; i ++) {
-      if (!this.isNaplesNICHealthy(naples)) {
-        if (naples.status.conditions[i].reason != null) {
-          const cond = naples.status.conditions[i];
-          const reason = this.formatDateWithinString(cond);
-          reasonarray.push(reason);
+    if (naples.status.conditions != null) {
+      for (let i = 0; i < naples.status['conditions'].length; i ++) {
+        if (!this.isNaplesNICHealthy(naples)) {
+          if (naples.status.conditions[i].reason != null) {
+            const cond = naples.status.conditions[i];
+            const reason = this.formatDateWithinString(cond);
+            reasonarray.push(reason);
+          }
         }
       }
     }
@@ -1612,7 +1617,8 @@ export class Utility {
     }
   }
 
-  public static isNICConditionEmpty(naples: Readonly<ClusterSmartNIC>): boolean {
+
+  public static isNICConditionEmpty(naples: Readonly<ClusterSmartNIC>): boolean { // If NIC not admitted, condition in table is left blank
     return this.getNaplesCondition(naples) === NaplesConditionValues.EMPTY;
   }
 
