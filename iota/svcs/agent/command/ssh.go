@@ -149,6 +149,7 @@ func StartSSHBgCommand(SSHHandle *ssh.Client, cmd string, sudo bool) (*CmdInfo, 
 	shout := io.MultiWriter(&stdoutBuf)
 	ssherr := io.MultiWriter(&stderrBuf)
 
+	cmdInfo.Ctx.status = make(chan error, 1)
 	go func(ctx *CmdCtx) {
 		go func() {
 			io.Copy(shout, sshOut)
@@ -180,6 +181,7 @@ func StartSSHBgCommand(SSHHandle *ssh.Client, cmd string, sudo bool) (*CmdInfo, 
 			ctx.Stderr = "Failed to start cmd : " + cmd
 		}
 		ctx.Done = true
+		ctx.Complete(nil)
 	}(cmdInfo.Ctx)
 
 	cmdInfo.Handle = sshSession
@@ -197,5 +199,12 @@ func StopSSHCmd(cmdInfo *CmdInfo) error {
 	}
 	cmdInfo.Handle = nil
 
+	return nil
+}
+
+//WaitSSHCmd Stop bg process running
+func WaitSSHCmd(cmdInfo *CmdInfo) error {
+	cmdInfo.Ctx.Wait()
+	cmdInfo.Handle = nil
 	return nil
 }

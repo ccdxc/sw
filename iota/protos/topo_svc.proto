@@ -101,6 +101,7 @@ message ReloadMsg {
     NodeMsg node_msg                = 2;
 
     bool skip_restore               = 3;
+
 }
 
 enum PersonalityType {
@@ -386,8 +387,9 @@ message Workload {
 
 enum TriggerOp {
     TYPE_NONE           = 0;
-    EXEC_CMDS           = 3;
-    TERMINATE_ALL_CMDS  = 4;
+    EXEC_CMDS           = 1;
+    WAIT_FOR_CMDS       = 2;
+    TERMINATE_ALL_CMDS  = 3;
 }
 
 enum TriggerMode {

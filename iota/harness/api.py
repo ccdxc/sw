@@ -599,6 +599,23 @@ def Trigger_TerminateAllCommands(exec_cmd_resp = None):
         term_cmd.mode = cmd.mode
     return Trigger(term_req)
 
+def Trigger_WaitForAllCommands(exec_cmd_resp = None):
+    term_req = topo_svc.TriggerMsg()
+    term_req.trigger_op = topo_svc.WAIT_FOR_CMDS
+    term_req.trigger_mode = exec_cmd_resp.trigger_mode
+    if exec_cmd_resp is None:
+        return term_req
+
+    for cmd in exec_cmd_resp.commands:
+        if not Trigger_IsBackgroundCommand(cmd): continue
+        term_cmd = term_req.commands.add()
+        term_cmd.handle = cmd.handle
+        term_cmd.entity_name = cmd.entity_name
+        term_cmd.node_name = cmd.node_name
+        term_cmd.mode = cmd.mode
+    return Trigger(term_req)
+
+
 def Trigger_AggregateCommandsResponse(trig_resp, term_resp):
     if trig_resp == None or term_resp == None:
         return None

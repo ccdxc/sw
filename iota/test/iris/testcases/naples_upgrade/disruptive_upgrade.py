@@ -9,6 +9,94 @@ import iota.test.iris.testcases.naples_upgrade.ping as ping
 import iota.test.iris.testcases.naples_upgrade.arping as arping
 import iota.test.iris.config.netagent.api as netagent_cfg_api
 
+__fuz_run_time = "300s"
+
+def copy_fuz(tc):
+    tc.fuz_exec = {}
+    def copy_to_entity(entity):
+        fullpath = api.GetTopDir() + '/iota/bin/fuz'
+        resp = api.CopyToWorkload(entity.node_name, entity.workload_name, [fullpath], '')
+        #Create a symlink at top level
+        realPath = "realpath fuz"
+        req = api.Trigger_CreateExecuteCommandsRequest()
+        api.Trigger_AddCommand(req, entity.node_name, entity.workload_name, realPath, background = False)
+        resp = api.Trigger(req)
+        for cmd in resp.commands:
+            api.PrintCommandResults(cmd)
+            if cmd.exit_code != 0:
+                return api.types.status.FAILURE
+            tc.fuz_exec[cmd.entity_name] = cmd.stdout.split("\n")[0]
+        return api.types.status.SUCCESS
+
+    for idx, pairs in enumerate(tc.workload_pairs):
+        ret = copy_to_entity(pairs[0])
+        if ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+        ret = copy_to_entity(pairs[1])
+        if ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    return api.types.status.SUCCESS
+
+def start_fuz(tc):
+    ret = copy_fuz(tc)
+    if ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
+
+    tc.serverCmds = []
+    tc.clientCmds = []
+    tc.cmd_descr = []
+
+    serverReq = None
+    clientReq = None
+
+    serverReq = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+    clientReq = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+
+    for idx, pairs in enumerate(tc.workload_pairs):
+        client = pairs[0]
+        server = pairs[1]
+        cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
+                       (server.workload_name, server.ip_address, client.workload_name, client.ip_address)
+        tc.cmd_descr.append(cmd_descr)
+        num_sessions = int(getattr(tc.args, "num_sessions", 1))
+        api.Logger.info("Starting Fuz test from %s num-sessions %d" % (cmd_descr, num_sessions))
+
+        serverCmd = None
+        clientCmd = None
+        port = api.AllocateTcpPort()
+
+        serverCmd = tc.fuz_exec[server.workload_name]  + " -port " + str(port)
+        clientCmd = tc.fuz_exec[client.workload_name]  + " -duration " + str(__fuz_run_time) + " -attempts 200 -read-timeout 20 -talk " + server.ip_address + ":" + str(port)
+
+        tc.serverCmds.append(serverCmd)
+        tc.clientCmds.append(clientCmd)
+
+        api.Trigger_AddCommand(serverReq, server.node_name, server.workload_name,
+                               serverCmd, background = True)
+
+        api.Trigger_AddCommand(clientReq, client.node_name, client.workload_name,
+                               clientCmd, background = True)
+
+
+    tc.server_resp = api.Trigger(serverReq)
+    #Sleep for some time as bg may not have been started.
+    time.sleep(5)
+    tc.fuz_client_resp = api.Trigger(clientReq)
+    return api.types.status.SUCCESS
+
+
+def wait_and_verify_fuz(tc):
+    tc.fuz_client_resp = api.Trigger_WaitForAllCommands(tc.fuz_client_resp)
+    api.Trigger_TerminateAllCommands(tc.server_resp)
+    for idx, cmd in enumerate(tc.fuz_client_resp.commands):
+        if cmd.exit_code != 0:
+            api.Logger.error("Fuz commmand failed Workload : {}, command : {},  stdout : {} stderr : {}", cmd.entity_name, cmd.command, cmd.stdout, cmd.stderr)
+            return api.types.status.FAILURE
+
+    api.Logger.info("Fuz test successfull")
+    return api.types.status.SUCCESS
+
+
 def Setup(tc):
     tc.Nodes = api.GetNaplesHostnames()
     if arping.ArPing(tc) != api.types.status.SUCCESS:
@@ -31,10 +119,17 @@ def Setup(tc):
         if cmd_resp.exit_code != 0:
             api.Logger.error("Setup failed %s", cmd_resp.command)
 
+    #Start Fuz
+    ret = start_fuz(tc)
+    if ret != api.types.status.SUCCESS:
+        api.Logger.error("Fuz start failed")
+        return api.types.status.FAILURE
+
     if not tc.iterators.option:
         return api.types.status.SUCCESS
     for n in tc.Nodes:
         common.startTestUpgApp(n, tc.iterators.option)
+
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -90,6 +185,9 @@ def Verify(tc):
                 if not item['opstatus'] == 'success':
                     print("opstatus is bad")
                     return api.types.status.FAILURE
+
+        if wait_and_verify_fuz(tc) != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
         return api.types.status.SUCCESS
 
 def Teardown(tc):

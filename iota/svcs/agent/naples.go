@@ -677,7 +677,8 @@ func (dnode *dataNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 			cmdResp, cmdKey, err = item.(iotaWorkload).workload.RunCommand(strings.Split(cmd.GetCommand(), " "),
 				cmd.GetRunningDir(), cmd.GetForegroundTimeout(),
 				cmd.GetMode() == iota.CommandMode_COMMAND_BACKGROUND, true)
-
+		} else if in.TriggerOp == iota.TriggerOp_WAIT_FOR_CMDS {
+			cmdResp, err = item.(iotaWorkload).workload.WaitCommand(cmd.Handle)
 		} else {
 			cmdResp, err = item.(iotaWorkload).workload.StopCommand(cmd.Handle)
 			cmdKey = cmd.Handle
@@ -1310,6 +1311,8 @@ func (node *commandNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) 
 				cmd.GetRunningDir(), cmd.GetForegroundTimeout(),
 				cmd.GetMode() == iota.CommandMode_COMMAND_BACKGROUND, true)
 
+		} else if in.TriggerOp == iota.TriggerOp_WAIT_FOR_CMDS {
+			cmdResp, err = node.WaitBgCommand(cmd.Handle)
 		} else {
 			cmdResp, err = node.StopCommand(cmd.Handle)
 			cmdKey = cmd.Handle
@@ -1441,6 +1444,23 @@ func (node *commandNode) StopCommand(commandHandle string) (*Cmd.CmdCtx, error) 
 	node.logger.Printf("Stopping bare metal Running cmd %v %v\n", cmdInfo.Ctx.Stdout, cmdInfo.Handle)
 
 	Cmd.StopExecCmd(cmdInfo)
+	node.bgCmds.Delete(commandHandle)
+
+	return cmdInfo.Ctx, nil
+}
+
+// WaitBgCommand waits until bg command is complete
+func (node *commandNode) WaitBgCommand(commandHandle string) (*Cmd.CmdCtx, error) {
+	item, ok := node.bgCmds.Load(commandHandle)
+	if !ok {
+		return &Cmd.CmdCtx{ExitCode: -1, Stdout: "", Stderr: "", Done: true}, nil
+	}
+
+	cmdInfo := item.(*Cmd.CmdInfo)
+
+	node.logger.Printf("Waiting bare metal Running cmd %v %v\n", cmdInfo.Ctx.Stdout, cmdInfo.Handle)
+
+	Cmd.WaitForExecCmd(cmdInfo)
 	node.bgCmds.Delete(commandHandle)
 
 	return cmdInfo.Ctx, nil

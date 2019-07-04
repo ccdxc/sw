@@ -117,8 +117,11 @@ func execCmd(cmdArgs []string, runDir string, TimedOut int, background bool, she
 		go func(cmdInfo *CmdInfo) {
 			process.Wait()
 			fmt.Println("Process exited :", strings.Join(cmdArgs, " "))
-			cmdInfo.Ctx.Done = true
 			cmdInfo.Ctx.ExitCode = 1
+			if process.ProcessState != nil && process.ProcessState.Success() {
+				cmdInfo.Ctx.ExitCode = 0
+			}
+			cmdInfo.Ctx.Done = true
 			copyStdoutStderr()
 			cmdInfo.Ctx.status <- nil
 		}(cmdInfo)
@@ -188,6 +191,17 @@ func getChildPids(ppid int) []int {
 	}
 
 	return ret
+}
+
+//WaitForExecCmd for bg command to complete
+func WaitForExecCmd(cmdInfo *CmdInfo) error {
+
+	if cmdInfo.Handle == nil {
+		return nil
+	}
+	<-cmdInfo.Ctx.status
+	cmdInfo.Handle = nil
+	return nil
 }
 
 //StopExecCmd Stop bg process running

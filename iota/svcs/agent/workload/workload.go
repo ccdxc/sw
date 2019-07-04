@@ -55,6 +55,7 @@ type Workload interface {
 	SetBaseDir(dir string) error
 	RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*cmd.CmdCtx, string, error)
 	StopCommand(commandHandle string) (*cmd.CmdCtx, error)
+	WaitCommand(commandHandle string) (*cmd.CmdCtx, error)
 	AddInterface(parentInterface string, workloadInterface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error)
 	AddSecondaryIpv4Addresses(intf string, ipaddresses []string) error
 	AddSecondaryIpv6Addresses(intf string, ipaddresses []string) error
@@ -193,6 +194,10 @@ func (app *workloadBase) AddSecondaryIpv6Addresses(intf string, ipaddresses []st
 
 func (app *workloadBase) RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*cmd.CmdCtx, string, error) {
 	return nil, "", nil
+}
+
+func (app *workloadBase) WaitCommand(commandHandle string) (*cmd.CmdCtx, error) {
+	return nil, nil
 }
 
 func (app *workloadBase) StopCommand(commandHandle string) (*cmd.CmdCtx, error) {
@@ -371,6 +376,7 @@ func (app *containerWorkload) RunCommand(cmds []string, dir string, timeout uint
 		cmdCtx.ExitCode = cmdResp.RetCode
 		cmdCtx.Stdout = strings.Map(fixUtf, cmdResp.Stdout)
 		cmdCtx.Stderr = strings.Map(fixUtf, cmdResp.Stderr)
+		cmdCtx.Complete(nil)
 	}(cmdCtx)
 
 	handleKey := app.genBgCmdHandle()
@@ -397,6 +403,24 @@ func (app *containerWorkload) StopCommand(commandHandle string) (*cmd.CmdCtx, er
 		app.containerHandle.StopCommand((utils.CommandHandle)(cmdInfo.Handle.(string)))
 	}
 
+	/* Give it 1 second to dump output */
+	time.Sleep(1 * time.Second)
+
+	app.bgCmds.Delete(commandHandle)
+	//For bg command, always return exit code 0
+	cmdInfo.Ctx.ExitCode = 0
+	return cmdInfo.Ctx, nil
+}
+
+func (app *containerWorkload) WaitCommand(commandHandle string) (*cmd.CmdCtx, error) {
+
+	item, ok := app.bgCmds.Load(commandHandle)
+	if !ok {
+		return &cmd.CmdCtx{ExitCode: -1, Stdout: "", Stderr: "", Done: true}, nil
+	}
+
+	cmdInfo := item.(*cmd.CmdInfo)
+	cmdInfo.Ctx.Wait()
 	/* Give it 1 second to dump output */
 	time.Sleep(1 * time.Second)
 
@@ -710,6 +734,22 @@ func (app *bareMetalWorkload) StopCommand(commandHandle string) (*cmd.CmdCtx, er
 	return cmdInfo.Ctx, nil
 }
 
+func (app *bareMetalWorkload) WaitCommand(commandHandle string) (*cmd.CmdCtx, error) {
+	item, ok := app.bgCmds.Load(commandHandle)
+	if !ok {
+		return &cmd.CmdCtx{ExitCode: -1, Stdout: "", Stderr: "", Done: true}, nil
+	}
+
+	cmdInfo := item.(*cmd.CmdInfo)
+	app.logger.Printf("Waiting for bare metal Running cmd %v %v\n", cmdInfo.Ctx.Stdout, cmdInfo.Handle)
+
+	cmd.WaitForExecCmd(cmdInfo)
+	time.Sleep(2 * time.Second)
+	app.bgCmds.Delete(commandHandle)
+
+	return cmdInfo.Ctx, nil
+}
+
 func (app *remoteWorkload) RunCommand(cmds []string, dir string, timeout uint32, background bool, shell bool) (*cmd.CmdCtx, string, error) {
 	var cmdInfo *cmd.CmdInfo
 	runCmd := strings.Join(cmds, " ")
@@ -856,6 +896,21 @@ func (app *remoteWorkload) StopCommand(commandHandle string) (*cmd.CmdCtx, error
 	app.bgCmds.Delete(commandHandle)
 	//For bg command, always return exit code 0
 	cmdInfo.Ctx.ExitCode = 0
+	return cmdInfo.Ctx, nil
+}
+
+func (app *remoteWorkload) WaitCommand(commandHandle string) (*cmd.CmdCtx, error) {
+
+	item, ok := app.bgCmds.Load(commandHandle)
+	if !ok {
+		return &cmd.CmdCtx{ExitCode: -1, Stdout: "", Stderr: "", Done: true}, nil
+	}
+
+	cmdInfo := item.(*cmd.CmdInfo)
+
+	cmd.WaitSSHCmd(cmdInfo)
+	time.Sleep(1 * time.Second)
+	app.bgCmds.Delete(commandHandle)
 	return cmdInfo.Ctx, nil
 }
 

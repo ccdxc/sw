@@ -47,6 +47,8 @@ func main() {
 	var talk bool
 	var port int
 	var cps int
+	var connnectAttempts int
+	var readTimeout int
 	var jsonInput string
 	var input fuze.Input
 
@@ -63,6 +65,8 @@ func main() {
 	flag.StringVar(&jsonInput, "jsonInput", "", "Json Input")
 	flag.IntVar(&conns, "conns", 1, "number of concurrent clients")
 	flag.IntVar(&cps, "cps", 10, "number of connections per second")
+	flag.IntVar(&connnectAttempts, "attempts", 1, "Number of attempts to connect")
+	flag.IntVar(&readTimeout, "read-timeout", 180, "Read timeout to declare connection as failed")
 	flag.IntVar(&port, "port", 12000, "Default port to listen or connect to ")
 	flag.StringVar(&proto, "proto", "tcp", "protocol: [tcp | udp]")
 	flag.IntVar(&rate, "rate", 100, "Bytes Per Second")
@@ -137,7 +141,7 @@ func main() {
 	debug.SetMaxThreads(30000)
 	done := make(chan error)
 	if talk {
-		go runClient(connDatas, conns, rate, cps, duration, done)
+		go runClient(connDatas, conns, rate, cps, duration, connnectAttempts, readTimeout, done)
 	} else {
 		go runServer(connDatas, done)
 	}
@@ -397,7 +401,7 @@ func runServer(connDatas []*fuze.ConnectionData,
 
 var mutex sync.Mutex
 
-func runClient(connDatas []*fuze.ConnectionData, conns, rate, cps, duration int,
+func runClient(connDatas []*fuze.ConnectionData, conns, rate, cps, duration, connnectAttempts, readTimeout int,
 	err chan<- error) {
 	waitCh := make(chan error, len(connDatas)*conns)
 	randomBytes := RandomBytes(rate)
@@ -414,8 +418,8 @@ func runClient(connDatas []*fuze.ConnectionData, conns, rate, cps, duration int,
 				numConnsSpawned = 0
 			}
 			go func(connData *fuze.ConnectionData) {
-				start := time.Now()
 				var msg error
+				start := time.Now()
 				bytesReceived := 0
 				bytesSent := 0
 				updateStats := func() {
@@ -434,64 +438,67 @@ func runClient(connDatas []*fuze.ConnectionData, conns, rate, cps, duration int,
 					printMsg(fmt.Sprintf("Completed connection to : %s Total : %v, Spawned : %v )\n", connData.ServerIPPort, len(connDatas)*1, totalSpawned))
 					waitCh <- msg
 				}
-				conn, err := net.Dial(connData.Proto, connData.ServerIPPort)
-				if conn != nil {
-					connData.ClientIPPort = conn.LocalAddr().String()
-				}
-				printMsg(fmt.Sprintf("Initiating connection to : %s\n", connData.ServerIPPort))
-				if err != nil {
-					msg = fmt.Errorf("error dialing %s, protocol %s, '%s' ", connData.ServerIPPort, connData.Proto, err)
-					updateStats()
-					return
-				}
-				defer conn.Close()
 
-				printMsg(fmt.Sprintf("Established connection to : %s\n", connData.ServerIPPort))
-				for ticks := duration; ticks > 0; ticks-- {
-
-					time.Sleep(time.Second)
-					//if ticks%2!= 0 {
-					//	continue
-					//}
-					written, err := fmt.Fprintf(conn, randomBytes)
+				for attempt := 0; attempt < connnectAttempts; attempt++ {
+					msg = nil
+					conn, err := net.Dial(connData.Proto, connData.ServerIPPort)
+					if conn != nil {
+						connData.ClientIPPort = conn.LocalAddr().String()
+					}
+					printMsg(fmt.Sprintf("Initiating connection to : %s\n", connData.ServerIPPort))
 					if err != nil {
-						msg = fmt.Errorf("error '%s' writin to socket", err)
-						updateStats()
-						return
+						msg = fmt.Errorf("error dialing %s, protocol %s, '%s' ", connData.ServerIPPort, connData.Proto, err)
+						time.Sleep(5 * time.Second)
+						continue
 					}
+					defer conn.Close()
 
-					ch := make(chan error)
-					go func() { // this goroutime still exist even when timeout
-						bytesSent += written
-						readData, err := bufio.NewReader(conn).ReadString('\n')
+					printMsg(fmt.Sprintf("Established connection to : %s\n", connData.ServerIPPort))
+					done := false
+					for ticks := duration; ticks > 0 && !done; ticks-- {
+
+						time.Sleep(time.Second)
+						written, err := fmt.Fprintf(conn, randomBytes)
 						if err != nil {
-							msg = fmt.Errorf("error '%s' reading from connection", err)
-							ch <- msg
-							return
+							msg = fmt.Errorf("error '%s' writin to socket", err)
+							done = true
+						} else {
+							ch := make(chan error)
+							go func() { // this goroutime still exist even when timeout
+								bytesSent += written
+								readData, err := bufio.NewReader(conn).ReadString('\n')
+								if err != nil {
+									msg = fmt.Errorf("error '%s' reading from connection", err)
+									ch <- msg
+									return
+								}
+								if readData != randomBytes {
+									printMsg("unexpected data from server...")
+									msg = fmt.Errorf("unexpected read value from client '%s'(%v)", readData, len(readData))
+									ch <- msg
+									return
+								}
+								bytesReceived += len(randomBytes)
+								ch <- nil
+							}()
+							select {
+							case <-ch:
+								if msg != nil {
+									done = true
+								}
+							case <-time.After(time.Duration(readTimeout) * time.Second):
+								msg = fmt.Errorf("Timeout on reading from server")
+								done = true
+							}
 						}
-						if readData != randomBytes {
-							msg = fmt.Errorf("unexpected read value from client '%s'(%v)", readData, len(readData))
-							ch <- msg
-							return
-						}
-						bytesReceived += len(randomBytes)
-						ch <- nil
-					}()
-					select {
-					case <-ch:
-						if msg != nil {
-							updateStats()
-							return
-						}
-					case <-time.After(time.Duration(180) * time.Second):
-						msg = fmt.Errorf("Timeout on reading from server")
-						updateStats()
-						return
+					}
+					//Conection successful
+					if msg == nil {
+						break
 					}
 				}
-
-				msg = nil
 				updateStats()
+
 			}(connData)
 		}
 	}

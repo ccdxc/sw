@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"testing"
@@ -105,6 +106,37 @@ func Test_SSH_Background(t *testing.T) {
 	TestUtils.Assert(t, !cmdResp.Ctx.TimedOut, "Command TimedOut!")
 }
 
+func Test_SSH_BackgroundStop(t *testing.T) {
+
+	sshConfig := &ssh.ClientConfig{
+		User: "root",
+		Auth: []ssh.AuthMethod{
+			ssh.Password("root"),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+
+	SSHHandle, err := ssh.Dial("tcp", "127.0.0.1:22", sshConfig)
+	TestUtils.Assert(t, SSHHandle != nil && err == nil, "Connection failed!")
+	defer SSHHandle.Close()
+
+	logger := log.New()
+	logger.Out = io.MultiWriter(os.Stdout)
+
+	cmdResp, err := StartSSHBgCommand(SSHHandle, "sleep 10", false)
+	TestUtils.Assert(t, err == nil, "Command succeded!")
+	TestUtils.Assert(t, !cmdResp.Ctx.Done, "Command not completed!")
+	TestUtils.Assert(t, cmdResp.Handle != nil, "Command Handle set ")
+	TestUtils.Assert(t, !cmdResp.Ctx.TimedOut, "Command TimedOut!")
+
+	err = WaitSSHCmd(cmdResp)
+	TestUtils.Assert(t, err == nil, "Command succeded!")
+	TestUtils.Assert(t, cmdResp.Ctx.Done, "Command completed!")
+	TestUtils.Assert(t, cmdResp.Handle == nil, "Command Handle not set ")
+	TestUtils.Assert(t, !cmdResp.Ctx.TimedOut, "Command TimedOut!")
+
+}
+
 func Test_SSH_TimedOut(t *testing.T) {
 	sshConfig := &ssh.ClientConfig{
 		User: "root",
@@ -177,5 +209,48 @@ func Test_Cmd_TimedOut(t *testing.T) {
 	TestUtils.Assert(t, cmdResp.Ctx.TimedOut, "Command time out!")
 	TestUtils.Assert(t, cmdResp.Handle == nil, "Command Handle set ")
 	//TestUtils.Assert(t, cmdResp.Ctx.Stdout != "", "Command stdout is set!")
+
+}
+
+func Test_Cmd_WaitOutFail(t *testing.T) {
+	logger := log.New()
+	logger.Out = io.MultiWriter(os.Stdout)
+
+	cmdResp, err := ExecCmd([]string{"ping", "-c", "1", "127.0.0.2"}, "", 0, true, false, nil)
+	TestUtils.Assert(t, err == nil, "Command succeded!")
+	TestUtils.Assert(t, !cmdResp.Ctx.Done, "Command completed!")
+	TestUtils.Assert(t, cmdResp.Handle != nil, "Command Handle set ")
+	TestUtils.Assert(t, !cmdResp.Ctx.TimedOut, "Command TimedOut!")
+
+	time.Sleep(2 * time.Second)
+	err = WaitForExecCmd(cmdResp)
+	fmt.Printf("Command ctx %+v\n", cmdResp.Ctx)
+	TestUtils.Assert(t, err == nil, "Command succeded!")
+	TestUtils.Assert(t, cmdResp.Ctx.Done, "Command completed!")
+	TestUtils.Assert(t, cmdResp.Handle == nil, "Command Handle not set ")
+	TestUtils.Assert(t, cmdResp.Ctx.Stdout != "", "Command stdout is set!")
+	TestUtils.Assert(t, !cmdResp.Ctx.TimedOut, "Command TimedOut!")
+	TestUtils.Assert(t, cmdResp.Ctx.ExitCode != 0, "Exit code is non zero ")
+
+}
+
+func Test_Cmd_WaitOutSuccess(t *testing.T) {
+	logger := log.New()
+	logger.Out = io.MultiWriter(os.Stdout)
+
+	cmdResp, err := ExecCmd([]string{"ping", "-c", "30", "127.0.0.1"}, "", 0, true, false, nil)
+	TestUtils.Assert(t, err == nil, "Command succeded!")
+	TestUtils.Assert(t, !cmdResp.Ctx.Done, "Command completed!")
+	TestUtils.Assert(t, cmdResp.Handle != nil, "Command Handle set ")
+	TestUtils.Assert(t, !cmdResp.Ctx.TimedOut, "Command TimedOut!")
+
+	err = WaitForExecCmd(cmdResp)
+	fmt.Printf("Command ctx %+v\n", cmdResp.Ctx)
+	TestUtils.Assert(t, err == nil, "Command succeded!")
+	TestUtils.Assert(t, cmdResp.Ctx.Done, "Command completed!")
+	TestUtils.Assert(t, cmdResp.Handle == nil, "Command Handle not set ")
+	TestUtils.Assert(t, cmdResp.Ctx.ExitCode == 0, "Exit code is zero ")
+	TestUtils.Assert(t, cmdResp.Ctx.Stdout != "", "Command stdout is set!")
+	TestUtils.Assert(t, !cmdResp.Ctx.TimedOut, "Command TimedOut!")
 
 }
