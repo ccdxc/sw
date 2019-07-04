@@ -127,7 +127,7 @@ imageConfig['imageMap'] = imageMap
 
 # the order in which the services get upgraded. For now fill up with some random order.
 imageConfig['upgradeOrder'] = ['pen-cmd', 'pen-apiserver', 'pen-apigw',  'pen-npm', 'pen-tpm', 'pen-spyglass', 'pen-evtsmgr', 'pen-tsm', 'pen-evtsproxy',
-                               'pen-kube-controller-manager', 'pen-kube-scheduler', 'pen-kube-apiserver', 'pen-etcd', 'pen-filebeat', 'pen-ntp',  'pen-elastic', "pen-vos", "pen-citadel", "pen-vtsa"]
+                               'pen-kube-controller-manager', 'pen-kube-scheduler', 'pen-kube-apiserver', 'pen-etcd', 'pen-filebeat', 'pen-ntp',  'pen-elastic', "pen-vos", "pen-citadel", "pen-vtsa", "pen-rollout"]
 
 # installInfo is used by the installer during installation of this image.
 # This has 2 steps. Preload and LoadAndInstall.

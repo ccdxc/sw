@@ -91,6 +91,12 @@ func TestVeniceRolloutRestartEvent(t *testing.T) {
 			return ret, i
 		}
 	}
+	checkServiceOutstandingReq := func(op protos.ServiceOp) func() (bool, interface{}) {
+		return func() (bool, interface{}) {
+			ret, i := checkServiceOp(t, stateMgr, op, version)
+			return ret, i
+		}
+	}
 
 	createSNIC("naples1", map[string]string{"l1": "n1"})
 	createSNIC("naples2", map[string]string{"l1": "n1"})
@@ -126,6 +132,12 @@ func TestVeniceRolloutRestartEvent(t *testing.T) {
 					Phase: roproto.RolloutPhase_PROGRESSING.String(),
 				},
 			},
+			ControllerServicesStatus: []*roproto.RolloutPhase{
+				{
+					Name:  "serviceRollout",
+					Phase: roproto.RolloutPhase_COMPLETE.String(),
+				},
+			},
 			SmartNICsStatus: []*roproto.RolloutPhase{
 				{
 					Name:  "naples1",
@@ -145,7 +157,7 @@ func TestVeniceRolloutRestartEvent(t *testing.T) {
 	stateMgr.RolloutWatcher <- evt2
 	AssertEventually(t, checkNoVeniceOutstandingReq("node1", protos.VeniceOp_VeniceRunVersion), "Expected node1 spec not to have outstanding RunVersion Op")
 	AssertEventually(t, checkVeniceOutstandingReq("node2", protos.VeniceOp_VeniceRunVersion), "Expected node1 spec to have outstanding RunVersion Op")
-
+	AssertEventually(t, checkServiceOutstandingReq(protos.ServiceOp_ServiceRunVersion), "Expected spec to have outstanding Service RunVersion Op")
 	// Test that there is no request issued for any smartNIC
 	checkNoSmartNICReq := func(snic string, op protos.SmartNICOp) func() (bool, interface{}) {
 		return func() (bool, interface{}) {
@@ -286,6 +298,26 @@ func checkNoVeniceRolloutHelper(t *testing.T, stateMgr *Statemgr) (bool, interfa
 		return true, nil
 	}
 	return false, nil
+}
+
+// 	checkServiceOp returns true if the Op has been issued
+//		returns false if the Op is not present in Spec
+func checkServiceOp(t *testing.T, stateMgr *Statemgr, op protos.ServiceOp, version string) (bool, interface{}) {
+	sros, err := stateMgr.ListServiceRollouts()
+	AssertOk(t, err, "Error Listing ServiceRollouts")
+	for _, sro := range sros {
+		found := false
+		for _, o := range sro.Spec.Ops {
+			if o.Op == op && o.Version == version {
+				found = true
+			}
+		}
+		if found {
+			return true, "op found in spec"
+		}
+		return false, sro
+	}
+	return false, "service state not present"
 }
 
 // 	checkVeniceOp returns true if the Op has been issued

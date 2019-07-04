@@ -218,6 +218,34 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 		}
 
 	}
+	for _, svcStatus := range ro.Status.ControllerServicesStatus {
+
+		log.Infof("Creating serviceRollout for %s", svcStatus.Name)
+
+		serviceRollout := protos.ServiceRollout{
+			TypeMeta: api.TypeMeta{
+				Kind: kindServiceRollout,
+			},
+			ObjectMeta: api.ObjectMeta{
+				Name: "serviceRollout",
+			},
+			Spec: protos.ServiceRolloutSpec{
+				Ops: []*protos.ServiceOpSpec{
+					{
+						Op:      protos.ServiceOp_ServiceRunVersion,
+						Version: ros.Rollout.Spec.Version,
+					},
+				},
+			},
+		}
+		log.Infof("Creating serviceRollout")
+		err = sm.CreateServiceRolloutState(&serviceRollout, &ros, svcStatus)
+		if err != nil {
+			log.Errorf("Error %v creating service rollout state", err)
+			return err
+		}
+	}
+
 	ros.Status.CompletionPercentage = ro.Status.CompletionPercentage
 	sm.memDB.AddObject(&ros)
 

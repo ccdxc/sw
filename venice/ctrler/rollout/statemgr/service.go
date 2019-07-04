@@ -24,18 +24,34 @@ type ServiceRolloutState struct {
 }
 
 // CreateServiceRolloutState to create a ServiceRollout Object in statemgr
-func (sm *Statemgr) CreateServiceRolloutState(sro *protos.ServiceRollout, ros *RolloutState) error {
+func (sm *Statemgr) CreateServiceRolloutState(sro *protos.ServiceRollout, ros *RolloutState, svcStatus *roproto.RolloutPhase) error {
 	_, err := sm.FindObject(kindServiceRollout, sro.Tenant, sro.Name)
 	if err == nil {
 		log.Errorf("ServiceRollout {+%v} exists", sro)
 		return fmt.Errorf("ServiceRollout already exists")
 	}
-
+	var phase = roproto.RolloutPhase_PROGRESSING
 	sros := ServiceRolloutState{
 		ServiceRollout: sro,
 		Statemgr:       sm,
 		ros:            ros,
 		status:         make(map[protos.ServiceOp]protos.ServiceOpStatus),
+	}
+
+	if svcStatus != nil {
+		log.Infof("Spec for building serviceRollout is %+v", ros.Spec)
+		log.Infof("Service Status %+v", svcStatus)
+
+		if svcStatus.Phase == rollout.RolloutPhase_COMPLETE.String() {
+			st := protos.ServiceOpStatus{
+				Op:       protos.ServiceOp_ServiceRunVersion,
+				Version:  ros.Spec.Version,
+				OpStatus: "success",
+			}
+			sros.status[protos.ServiceOp_ServiceRunVersion] = st
+			phase = roproto.RolloutPhase_COMPLETE
+			log.Infof("setting ServiceRollout to success with version %v", ros.Rollout.Spec.Version)
+		}
 	}
 
 	sros.Mutex.Lock()
@@ -47,7 +63,7 @@ func (sm *Statemgr) CreateServiceRolloutState(sro *protos.ServiceRollout, ros *R
 	sros.Mutex.Unlock()
 
 	sm.memDB.AddObject(&sros)
-	ros.setServicePhase(sro.Name, "", "", roproto.RolloutPhase_PROGRESSING)
+	ros.setServicePhase(sro.Name, "", "", phase)
 	return nil
 }
 

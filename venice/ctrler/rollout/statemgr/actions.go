@@ -303,7 +303,7 @@ func (ros *RolloutState) issueServiceRollout() (bool, error) {
 		},
 	}
 	log.Infof("Creating serviceRollout")
-	err = sm.CreateServiceRolloutState(&serviceRollout, ros)
+	err = sm.CreateServiceRolloutState(&serviceRollout, ros, nil)
 	if err != nil {
 		log.Errorf("Error %v creating service rollout state", err)
 	}
