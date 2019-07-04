@@ -324,16 +324,16 @@ Loop:
 		case snicState, ok := <-workCh:
 			{
 				if !ok {
-					log.Debugf("End of Workchannel. Closing")
+					log.Infof("End of Workchannel. Closing")
 					return
 				}
 				numFailures := atomic.LoadUint32(&ros.numFailuresSeen)
 				if numFailures > ros.Spec.MaxNICFailuresBeforeAbort {
-					log.Debugf("Skipping upgrade for %s as MaxFailures reached", snicState)
+					log.Infof("Skipping upgrade for %s as MaxFailures reached", snicState)
 					continue
 				}
 
-				log.Debugf("Got work %#v", snicState)
+				log.Infof("Got work %#v", snicState)
 
 				watchChan := make(chan memdb.Event, memdb.WatchLen)
 				defer close(watchChan)
@@ -343,7 +343,7 @@ Loop:
 				snicROState, err := sm.GetSmartNICRolloutState(snicState.Tenant, snicState.Name)
 				if err == nil {
 					if st := snicROState.status[op]; st.OpStatus != "" {
-						log.Debugf("smartnic %v already has status for version %s op %s", snicState.Name, version, op)
+						log.Infof("smartnic %v already has status for version %s op %s", snicState.Name, version, op)
 						continue
 					} else {
 						snicROState.addSpecOp(version, op)
@@ -367,7 +367,7 @@ Loop:
 							},
 						},
 					}
-					log.Debugf("Creating smartNICRolloutState %#v", snicRollout)
+					log.Infof("Creating smartNICRolloutState %#v", snicRollout)
 					err = sm.CreateSmartNICRolloutState(&snicRollout, ros, nil)
 					if err != nil {
 						log.Errorf("Error %v creating smartnic rollout state", err)
@@ -533,6 +533,34 @@ func (ros *RolloutState) issueSmartNICOpExponential(snStates []*SmartNICState, O
 
 }
 
+func (ros *RolloutState) checkVeniceHealth() (name string, msg string) {
+	if !ros.Spec.SmartNICsOnly {
+		nodeStates, err := ros.Statemgr.ListNodes()
+		if err != nil {
+			log.Infof("Failed to get venice nodes")
+			return "", "Failed to get any venice node"
+		}
+		for _, nodestate := range nodeStates {
+			var found = false
+			if len(nodestate.Status.Conditions) == 0 {
+				return nodestate.Name, "Couldnt determine the condition of venice node"
+			}
+			for _, condition := range nodestate.Status.Conditions {
+				log.Infof("Condition Status %+v Type %v", condition.Status, condition.Type)
+
+				if condition.Type == cluster.NodeCondition_HEALTHY.String() && condition.Status == cluster.ConditionStatus_TRUE.String() {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return nodestate.Name, "Venice node is not healthy"
+			}
+		}
+	}
+	return "", ""
+}
+
 func (ros *RolloutState) computeProgressDelta() {
 
 	numVenice := 0
@@ -552,7 +580,11 @@ func (ros *RolloutState) computeProgressDelta() {
 	}
 
 	sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.SmartNICMustMatchConstraint, snStates)
-	numNaples = len(sn)
+
+	for _, s := range sn {
+		log.Infof("Status %s", spew.Sdump(s))
+		numNaples++
+	}
 
 	ros.completionDelta = (float32)(100 / (2*numVenice + 2*numNaples + 2))
 	log.Infof("Completion Delta %+v NumNaples %v NumVenice %+v", ros.completionDelta, numNaples, numVenice)

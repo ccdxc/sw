@@ -554,6 +554,12 @@ func createNodeHelper(stateMgr *Statemgr, name string) {
 		},
 		Status: cluster.NodeStatus{
 			Phase: "JOINED",
+			Conditions: []cluster.NodeCondition{
+				{
+					Type:   cluster.NodeCondition_HEALTHY.String(),
+					Status: cluster.ConditionStatus_TRUE.String(),
+				},
+			},
 		},
 	}
 	stateMgr.handleNodeEvent(kvstore.Created, &node)

@@ -235,14 +235,16 @@ func (snicState *SmartNICRolloutState) anyPendingOp() bool {
 func (snicState *SmartNICRolloutState) addSpecOp(version string, op protos.SmartNICOp) {
 
 	snicState.Mutex.Lock()
+	log.Infof("version %s and op %s update %+v", version, op, snicState.Spec.Ops)
 	for _, ops := range snicState.Spec.Ops {
 		if ops.Op == op && ops.Version == version {
-			log.Debugf("version %s and op %s already exist for %v", version, op, snicState.ObjectMeta)
+			log.Infof("version %s and op %s already exist for %v", version, op, snicState.ObjectMeta)
 			snicState.Mutex.Unlock()
 			return // version and op already exist
 		}
 	}
 	snicState.Spec.Ops = snicState.Spec.Ops[:0]
+	log.Infof("version %s and op %s update %+v", version, op, snicState.Spec.Ops)
 	snicState.Spec.Ops = append(snicState.Spec.Ops, &protos.SmartNICOpSpec{Op: op, Version: version})
 	snicState.Mutex.Unlock()
 

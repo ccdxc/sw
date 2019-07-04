@@ -149,6 +149,7 @@ var roFSM = [][]fsmNode{
 	fsmstStart: {
 		fsmEvROCreated: {nextSt: fsmstPreCheckingVenice, actFn: fsmAcCreated},
 		fsmEvSuspend:   {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
+		fsmEvFail:      {nextSt: fsmstRolloutFail, actFn: fsmAcRolloutFail},
 	},
 
 	fsmstPreCheckingVenice: {
@@ -157,6 +158,7 @@ var roFSM = [][]fsmNode{
 		fsmEvAllVenicePreUpgOK:      {nextSt: fsmstPreCheckingSmartNIC, actFn: fsmAcPreUpgSmartNIC},
 		fsmEvVeniceBypass:           {nextSt: fsmstPreCheckingSmartNIC, actFn: fsmAcPreUpgSmartNIC},
 		fsmEvSuspend:                {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
+		fsmEvFail:                   {nextSt: fsmstRolloutFail, actFn: fsmAcRolloutFail},
 	},
 	fsmstPreCheckingSmartNIC: {
 		fsmEvAllSmartNICPreUpgOK:      {nextSt: fsmstWaitForSchedule, actFn: fsmAcWaitForSchedule},
@@ -214,6 +216,12 @@ func fsmAcCreated(ros *RolloutState) {
 	log.Infof("Completion Percentage %v", ros.Rollout.Status.CompletionPercentage)
 	ros.Status.CompletionPercentage = ros.Rollout.Status.CompletionPercentage
 	ros.computeProgressDelta()
+	name, msg := ros.checkVeniceHealth()
+	if msg != "" {
+		log.Errorf("Precheck failed: %v", msg)
+		ros.setVenicePhase(name, "", msg, rollout.RolloutPhase_FAIL)
+		ros.eventChan <- fsmEvFail
+	}
 
 	if ros.Spec.GetSuspend() {
 		log.Infof("Rollout object created with state SUSPENDED.")
