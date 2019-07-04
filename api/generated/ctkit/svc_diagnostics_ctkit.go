@@ -150,6 +150,90 @@ func (ct *ctrlerCtx) handleModuleEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+// handleModuleEventParallel handles Module events from watcher
+func (ct *ctrlerCtx) handleModuleEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *diagnostics.Module:
+		eobj := evt.Object.(*diagnostics.Module)
+		kind := "Module"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		moduleHandler := handler.(ModuleHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &Module{
+					Module:     *eobj,
+					HandlerCtx: nil,
+					ctrler:     ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("Module_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = moduleHandler.OnModuleCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, eobj.GetKey())
+					}
+				}()
+			} else {
+				obj := fobj.(*Module)
+
+				ct.stats.Counter("Module_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = moduleHandler.OnModuleUpdate(obj, eobj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}()
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*Module)
+
+			ct.stats.Counter("Module_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			go func() {
+				err = moduleHandler.OnModuleDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+
+				ct.delObject(kind, eobj.GetKey())
+			}()
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Module watch channel", tp)
+	}
+
+	return nil
+}
+
 // diffModule does a diff of Module objects between local cache and API server
 func (ct *ctrlerCtx) diffModule(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
@@ -265,8 +349,8 @@ func (ct *ctrlerCtx) runModuleWatcher() {
 							break innerLoop
 						}
 
-						// handle event
-						go ct.handleModuleEvent(evt)
+						// handle event in parallel
+						ct.handleModuleEventParallel(evt)
 					}
 				}
 				apicl.Close()

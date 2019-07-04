@@ -150,6 +150,90 @@ func (ct *ctrlerCtx) handleEndpointEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+// handleEndpointEventParallel handles Endpoint events from watcher
+func (ct *ctrlerCtx) handleEndpointEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *workload.Endpoint:
+		eobj := evt.Object.(*workload.Endpoint)
+		kind := "Endpoint"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		endpointHandler := handler.(EndpointHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &Endpoint{
+					Endpoint:   *eobj,
+					HandlerCtx: nil,
+					ctrler:     ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("Endpoint_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = endpointHandler.OnEndpointCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, eobj.GetKey())
+					}
+				}()
+			} else {
+				obj := fobj.(*Endpoint)
+
+				ct.stats.Counter("Endpoint_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = endpointHandler.OnEndpointUpdate(obj, eobj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}()
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*Endpoint)
+
+			ct.stats.Counter("Endpoint_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			go func() {
+				err = endpointHandler.OnEndpointDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+
+				ct.delObject(kind, eobj.GetKey())
+			}()
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Endpoint watch channel", tp)
+	}
+
+	return nil
+}
+
 // diffEndpoint does a diff of Endpoint objects between local cache and API server
 func (ct *ctrlerCtx) diffEndpoint(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
@@ -265,8 +349,8 @@ func (ct *ctrlerCtx) runEndpointWatcher() {
 							break innerLoop
 						}
 
-						// handle event
-						go ct.handleEndpointEvent(evt)
+						// handle event in parallel
+						ct.handleEndpointEventParallel(evt)
 					}
 				}
 				apicl.Close()
@@ -549,6 +633,90 @@ func (ct *ctrlerCtx) handleWorkloadEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+// handleWorkloadEventParallel handles Workload events from watcher
+func (ct *ctrlerCtx) handleWorkloadEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *workload.Workload:
+		eobj := evt.Object.(*workload.Workload)
+		kind := "Workload"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		workloadHandler := handler.(WorkloadHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &Workload{
+					Workload:   *eobj,
+					HandlerCtx: nil,
+					ctrler:     ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("Workload_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = workloadHandler.OnWorkloadCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, eobj.GetKey())
+					}
+				}()
+			} else {
+				obj := fobj.(*Workload)
+
+				ct.stats.Counter("Workload_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = workloadHandler.OnWorkloadUpdate(obj, eobj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}()
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*Workload)
+
+			ct.stats.Counter("Workload_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			go func() {
+				err = workloadHandler.OnWorkloadDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+
+				ct.delObject(kind, eobj.GetKey())
+			}()
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Workload watch channel", tp)
+	}
+
+	return nil
+}
+
 // diffWorkload does a diff of Workload objects between local cache and API server
 func (ct *ctrlerCtx) diffWorkload(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
@@ -664,8 +832,8 @@ func (ct *ctrlerCtx) runWorkloadWatcher() {
 							break innerLoop
 						}
 
-						// handle event
-						go ct.handleWorkloadEvent(evt)
+						// handle event in parallel
+						ct.handleWorkloadEventParallel(evt)
 					}
 				}
 				apicl.Close()

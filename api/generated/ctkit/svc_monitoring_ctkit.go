@@ -150,6 +150,90 @@ func (ct *ctrlerCtx) handleEventPolicyEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+// handleEventPolicyEventParallel handles EventPolicy events from watcher
+func (ct *ctrlerCtx) handleEventPolicyEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *monitoring.EventPolicy:
+		eobj := evt.Object.(*monitoring.EventPolicy)
+		kind := "EventPolicy"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		eventpolicyHandler := handler.(EventPolicyHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &EventPolicy{
+					EventPolicy: *eobj,
+					HandlerCtx:  nil,
+					ctrler:      ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("EventPolicy_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = eventpolicyHandler.OnEventPolicyCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, eobj.GetKey())
+					}
+				}()
+			} else {
+				obj := fobj.(*EventPolicy)
+
+				ct.stats.Counter("EventPolicy_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = eventpolicyHandler.OnEventPolicyUpdate(obj, eobj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}()
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*EventPolicy)
+
+			ct.stats.Counter("EventPolicy_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			go func() {
+				err = eventpolicyHandler.OnEventPolicyDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+
+				ct.delObject(kind, eobj.GetKey())
+			}()
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on EventPolicy watch channel", tp)
+	}
+
+	return nil
+}
+
 // diffEventPolicy does a diff of EventPolicy objects between local cache and API server
 func (ct *ctrlerCtx) diffEventPolicy(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
@@ -265,8 +349,8 @@ func (ct *ctrlerCtx) runEventPolicyWatcher() {
 							break innerLoop
 						}
 
-						// handle event
-						go ct.handleEventPolicyEvent(evt)
+						// handle event in parallel
+						ct.handleEventPolicyEventParallel(evt)
 					}
 				}
 				apicl.Close()
@@ -549,6 +633,90 @@ func (ct *ctrlerCtx) handleStatsPolicyEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+// handleStatsPolicyEventParallel handles StatsPolicy events from watcher
+func (ct *ctrlerCtx) handleStatsPolicyEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *monitoring.StatsPolicy:
+		eobj := evt.Object.(*monitoring.StatsPolicy)
+		kind := "StatsPolicy"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		statspolicyHandler := handler.(StatsPolicyHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &StatsPolicy{
+					StatsPolicy: *eobj,
+					HandlerCtx:  nil,
+					ctrler:      ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("StatsPolicy_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = statspolicyHandler.OnStatsPolicyCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, eobj.GetKey())
+					}
+				}()
+			} else {
+				obj := fobj.(*StatsPolicy)
+
+				ct.stats.Counter("StatsPolicy_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = statspolicyHandler.OnStatsPolicyUpdate(obj, eobj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}()
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*StatsPolicy)
+
+			ct.stats.Counter("StatsPolicy_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			go func() {
+				err = statspolicyHandler.OnStatsPolicyDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+
+				ct.delObject(kind, eobj.GetKey())
+			}()
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on StatsPolicy watch channel", tp)
+	}
+
+	return nil
+}
+
 // diffStatsPolicy does a diff of StatsPolicy objects between local cache and API server
 func (ct *ctrlerCtx) diffStatsPolicy(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
@@ -664,8 +832,8 @@ func (ct *ctrlerCtx) runStatsPolicyWatcher() {
 							break innerLoop
 						}
 
-						// handle event
-						go ct.handleStatsPolicyEvent(evt)
+						// handle event in parallel
+						ct.handleStatsPolicyEventParallel(evt)
 					}
 				}
 				apicl.Close()
@@ -948,6 +1116,90 @@ func (ct *ctrlerCtx) handleFwlogPolicyEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+// handleFwlogPolicyEventParallel handles FwlogPolicy events from watcher
+func (ct *ctrlerCtx) handleFwlogPolicyEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *monitoring.FwlogPolicy:
+		eobj := evt.Object.(*monitoring.FwlogPolicy)
+		kind := "FwlogPolicy"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		fwlogpolicyHandler := handler.(FwlogPolicyHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &FwlogPolicy{
+					FwlogPolicy: *eobj,
+					HandlerCtx:  nil,
+					ctrler:      ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("FwlogPolicy_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = fwlogpolicyHandler.OnFwlogPolicyCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, eobj.GetKey())
+					}
+				}()
+			} else {
+				obj := fobj.(*FwlogPolicy)
+
+				ct.stats.Counter("FwlogPolicy_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = fwlogpolicyHandler.OnFwlogPolicyUpdate(obj, eobj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}()
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*FwlogPolicy)
+
+			ct.stats.Counter("FwlogPolicy_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			go func() {
+				err = fwlogpolicyHandler.OnFwlogPolicyDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+
+				ct.delObject(kind, eobj.GetKey())
+			}()
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on FwlogPolicy watch channel", tp)
+	}
+
+	return nil
+}
+
 // diffFwlogPolicy does a diff of FwlogPolicy objects between local cache and API server
 func (ct *ctrlerCtx) diffFwlogPolicy(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
@@ -1063,8 +1315,8 @@ func (ct *ctrlerCtx) runFwlogPolicyWatcher() {
 							break innerLoop
 						}
 
-						// handle event
-						go ct.handleFwlogPolicyEvent(evt)
+						// handle event in parallel
+						ct.handleFwlogPolicyEventParallel(evt)
 					}
 				}
 				apicl.Close()
@@ -1347,6 +1599,90 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEvent(evt *kvstore.WatchEvent) error 
 	return nil
 }
 
+// handleFlowExportPolicyEventParallel handles FlowExportPolicy events from watcher
+func (ct *ctrlerCtx) handleFlowExportPolicyEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *monitoring.FlowExportPolicy:
+		eobj := evt.Object.(*monitoring.FlowExportPolicy)
+		kind := "FlowExportPolicy"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		flowexportpolicyHandler := handler.(FlowExportPolicyHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &FlowExportPolicy{
+					FlowExportPolicy: *eobj,
+					HandlerCtx:       nil,
+					ctrler:           ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("FlowExportPolicy_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = flowexportpolicyHandler.OnFlowExportPolicyCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, eobj.GetKey())
+					}
+				}()
+			} else {
+				obj := fobj.(*FlowExportPolicy)
+
+				ct.stats.Counter("FlowExportPolicy_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = flowexportpolicyHandler.OnFlowExportPolicyUpdate(obj, eobj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}()
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*FlowExportPolicy)
+
+			ct.stats.Counter("FlowExportPolicy_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			go func() {
+				err = flowexportpolicyHandler.OnFlowExportPolicyDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+
+				ct.delObject(kind, eobj.GetKey())
+			}()
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on FlowExportPolicy watch channel", tp)
+	}
+
+	return nil
+}
+
 // diffFlowExportPolicy does a diff of FlowExportPolicy objects between local cache and API server
 func (ct *ctrlerCtx) diffFlowExportPolicy(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
@@ -1462,8 +1798,8 @@ func (ct *ctrlerCtx) runFlowExportPolicyWatcher() {
 							break innerLoop
 						}
 
-						// handle event
-						go ct.handleFlowExportPolicyEvent(evt)
+						// handle event in parallel
+						ct.handleFlowExportPolicyEventParallel(evt)
 					}
 				}
 				apicl.Close()
@@ -1746,6 +2082,90 @@ func (ct *ctrlerCtx) handleAlertEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+// handleAlertEventParallel handles Alert events from watcher
+func (ct *ctrlerCtx) handleAlertEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *monitoring.Alert:
+		eobj := evt.Object.(*monitoring.Alert)
+		kind := "Alert"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		alertHandler := handler.(AlertHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &Alert{
+					Alert:      *eobj,
+					HandlerCtx: nil,
+					ctrler:     ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("Alert_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = alertHandler.OnAlertCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, eobj.GetKey())
+					}
+				}()
+			} else {
+				obj := fobj.(*Alert)
+
+				ct.stats.Counter("Alert_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = alertHandler.OnAlertUpdate(obj, eobj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}()
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*Alert)
+
+			ct.stats.Counter("Alert_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			go func() {
+				err = alertHandler.OnAlertDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+
+				ct.delObject(kind, eobj.GetKey())
+			}()
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Alert watch channel", tp)
+	}
+
+	return nil
+}
+
 // diffAlert does a diff of Alert objects between local cache and API server
 func (ct *ctrlerCtx) diffAlert(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
@@ -1861,8 +2281,8 @@ func (ct *ctrlerCtx) runAlertWatcher() {
 							break innerLoop
 						}
 
-						// handle event
-						go ct.handleAlertEvent(evt)
+						// handle event in parallel
+						ct.handleAlertEventParallel(evt)
 					}
 				}
 				apicl.Close()
@@ -2145,6 +2565,90 @@ func (ct *ctrlerCtx) handleAlertPolicyEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+// handleAlertPolicyEventParallel handles AlertPolicy events from watcher
+func (ct *ctrlerCtx) handleAlertPolicyEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *monitoring.AlertPolicy:
+		eobj := evt.Object.(*monitoring.AlertPolicy)
+		kind := "AlertPolicy"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		alertpolicyHandler := handler.(AlertPolicyHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &AlertPolicy{
+					AlertPolicy: *eobj,
+					HandlerCtx:  nil,
+					ctrler:      ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("AlertPolicy_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = alertpolicyHandler.OnAlertPolicyCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, eobj.GetKey())
+					}
+				}()
+			} else {
+				obj := fobj.(*AlertPolicy)
+
+				ct.stats.Counter("AlertPolicy_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = alertpolicyHandler.OnAlertPolicyUpdate(obj, eobj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}()
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*AlertPolicy)
+
+			ct.stats.Counter("AlertPolicy_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			go func() {
+				err = alertpolicyHandler.OnAlertPolicyDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+
+				ct.delObject(kind, eobj.GetKey())
+			}()
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on AlertPolicy watch channel", tp)
+	}
+
+	return nil
+}
+
 // diffAlertPolicy does a diff of AlertPolicy objects between local cache and API server
 func (ct *ctrlerCtx) diffAlertPolicy(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
@@ -2260,8 +2764,8 @@ func (ct *ctrlerCtx) runAlertPolicyWatcher() {
 							break innerLoop
 						}
 
-						// handle event
-						go ct.handleAlertPolicyEvent(evt)
+						// handle event in parallel
+						ct.handleAlertPolicyEventParallel(evt)
 					}
 				}
 				apicl.Close()
@@ -2544,6 +3048,90 @@ func (ct *ctrlerCtx) handleAlertDestinationEvent(evt *kvstore.WatchEvent) error 
 	return nil
 }
 
+// handleAlertDestinationEventParallel handles AlertDestination events from watcher
+func (ct *ctrlerCtx) handleAlertDestinationEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *monitoring.AlertDestination:
+		eobj := evt.Object.(*monitoring.AlertDestination)
+		kind := "AlertDestination"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		alertdestinationHandler := handler.(AlertDestinationHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &AlertDestination{
+					AlertDestination: *eobj,
+					HandlerCtx:       nil,
+					ctrler:           ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("AlertDestination_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = alertdestinationHandler.OnAlertDestinationCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, eobj.GetKey())
+					}
+				}()
+			} else {
+				obj := fobj.(*AlertDestination)
+
+				ct.stats.Counter("AlertDestination_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = alertdestinationHandler.OnAlertDestinationUpdate(obj, eobj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}()
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*AlertDestination)
+
+			ct.stats.Counter("AlertDestination_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			go func() {
+				err = alertdestinationHandler.OnAlertDestinationDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+
+				ct.delObject(kind, eobj.GetKey())
+			}()
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on AlertDestination watch channel", tp)
+	}
+
+	return nil
+}
+
 // diffAlertDestination does a diff of AlertDestination objects between local cache and API server
 func (ct *ctrlerCtx) diffAlertDestination(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
@@ -2659,8 +3247,8 @@ func (ct *ctrlerCtx) runAlertDestinationWatcher() {
 							break innerLoop
 						}
 
-						// handle event
-						go ct.handleAlertDestinationEvent(evt)
+						// handle event in parallel
+						ct.handleAlertDestinationEventParallel(evt)
 					}
 				}
 				apicl.Close()
@@ -2943,6 +3531,90 @@ func (ct *ctrlerCtx) handleMirrorSessionEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+// handleMirrorSessionEventParallel handles MirrorSession events from watcher
+func (ct *ctrlerCtx) handleMirrorSessionEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *monitoring.MirrorSession:
+		eobj := evt.Object.(*monitoring.MirrorSession)
+		kind := "MirrorSession"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		mirrorsessionHandler := handler.(MirrorSessionHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &MirrorSession{
+					MirrorSession: *eobj,
+					HandlerCtx:    nil,
+					ctrler:        ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("MirrorSession_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = mirrorsessionHandler.OnMirrorSessionCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, eobj.GetKey())
+					}
+				}()
+			} else {
+				obj := fobj.(*MirrorSession)
+
+				ct.stats.Counter("MirrorSession_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = mirrorsessionHandler.OnMirrorSessionUpdate(obj, eobj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}()
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*MirrorSession)
+
+			ct.stats.Counter("MirrorSession_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			go func() {
+				err = mirrorsessionHandler.OnMirrorSessionDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+
+				ct.delObject(kind, eobj.GetKey())
+			}()
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on MirrorSession watch channel", tp)
+	}
+
+	return nil
+}
+
 // diffMirrorSession does a diff of MirrorSession objects between local cache and API server
 func (ct *ctrlerCtx) diffMirrorSession(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
@@ -3058,8 +3730,8 @@ func (ct *ctrlerCtx) runMirrorSessionWatcher() {
 							break innerLoop
 						}
 
-						// handle event
-						go ct.handleMirrorSessionEvent(evt)
+						// handle event in parallel
+						ct.handleMirrorSessionEventParallel(evt)
 					}
 				}
 				apicl.Close()
@@ -3342,6 +4014,90 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEvent(evt *kvstore.WatchEvent) 
 	return nil
 }
 
+// handleTroubleshootingSessionEventParallel handles TroubleshootingSession events from watcher
+func (ct *ctrlerCtx) handleTroubleshootingSessionEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *monitoring.TroubleshootingSession:
+		eobj := evt.Object.(*monitoring.TroubleshootingSession)
+		kind := "TroubleshootingSession"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		troubleshootingsessionHandler := handler.(TroubleshootingSessionHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &TroubleshootingSession{
+					TroubleshootingSession: *eobj,
+					HandlerCtx:             nil,
+					ctrler:                 ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("TroubleshootingSession_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = troubleshootingsessionHandler.OnTroubleshootingSessionCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, eobj.GetKey())
+					}
+				}()
+			} else {
+				obj := fobj.(*TroubleshootingSession)
+
+				ct.stats.Counter("TroubleshootingSession_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = troubleshootingsessionHandler.OnTroubleshootingSessionUpdate(obj, eobj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}()
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*TroubleshootingSession)
+
+			ct.stats.Counter("TroubleshootingSession_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			go func() {
+				err = troubleshootingsessionHandler.OnTroubleshootingSessionDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+
+				ct.delObject(kind, eobj.GetKey())
+			}()
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on TroubleshootingSession watch channel", tp)
+	}
+
+	return nil
+}
+
 // diffTroubleshootingSession does a diff of TroubleshootingSession objects between local cache and API server
 func (ct *ctrlerCtx) diffTroubleshootingSession(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
@@ -3457,8 +4213,8 @@ func (ct *ctrlerCtx) runTroubleshootingSessionWatcher() {
 							break innerLoop
 						}
 
-						// handle event
-						go ct.handleTroubleshootingSessionEvent(evt)
+						// handle event in parallel
+						ct.handleTroubleshootingSessionEventParallel(evt)
 					}
 				}
 				apicl.Close()
@@ -3741,6 +4497,90 @@ func (ct *ctrlerCtx) handleTechSupportRequestEvent(evt *kvstore.WatchEvent) erro
 	return nil
 }
 
+// handleTechSupportRequestEventParallel handles TechSupportRequest events from watcher
+func (ct *ctrlerCtx) handleTechSupportRequestEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *monitoring.TechSupportRequest:
+		eobj := evt.Object.(*monitoring.TechSupportRequest)
+		kind := "TechSupportRequest"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		techsupportrequestHandler := handler.(TechSupportRequestHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &TechSupportRequest{
+					TechSupportRequest: *eobj,
+					HandlerCtx:         nil,
+					ctrler:             ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("TechSupportRequest_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = techsupportrequestHandler.OnTechSupportRequestCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, eobj.GetKey())
+					}
+				}()
+			} else {
+				obj := fobj.(*TechSupportRequest)
+
+				ct.stats.Counter("TechSupportRequest_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = techsupportrequestHandler.OnTechSupportRequestUpdate(obj, eobj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}()
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*TechSupportRequest)
+
+			ct.stats.Counter("TechSupportRequest_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			go func() {
+				err = techsupportrequestHandler.OnTechSupportRequestDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+
+				ct.delObject(kind, eobj.GetKey())
+			}()
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on TechSupportRequest watch channel", tp)
+	}
+
+	return nil
+}
+
 // diffTechSupportRequest does a diff of TechSupportRequest objects between local cache and API server
 func (ct *ctrlerCtx) diffTechSupportRequest(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
@@ -3856,8 +4696,8 @@ func (ct *ctrlerCtx) runTechSupportRequestWatcher() {
 							break innerLoop
 						}
 
-						// handle event
-						go ct.handleTechSupportRequestEvent(evt)
+						// handle event in parallel
+						ct.handleTechSupportRequestEventParallel(evt)
 					}
 				}
 				apicl.Close()

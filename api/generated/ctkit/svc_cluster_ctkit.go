@@ -150,6 +150,90 @@ func (ct *ctrlerCtx) handleClusterEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+// handleClusterEventParallel handles Cluster events from watcher
+func (ct *ctrlerCtx) handleClusterEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *cluster.Cluster:
+		eobj := evt.Object.(*cluster.Cluster)
+		kind := "Cluster"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		clusterHandler := handler.(ClusterHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &Cluster{
+					Cluster:    *eobj,
+					HandlerCtx: nil,
+					ctrler:     ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("Cluster_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = clusterHandler.OnClusterCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, eobj.GetKey())
+					}
+				}()
+			} else {
+				obj := fobj.(*Cluster)
+
+				ct.stats.Counter("Cluster_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = clusterHandler.OnClusterUpdate(obj, eobj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}()
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*Cluster)
+
+			ct.stats.Counter("Cluster_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			go func() {
+				err = clusterHandler.OnClusterDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+
+				ct.delObject(kind, eobj.GetKey())
+			}()
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Cluster watch channel", tp)
+	}
+
+	return nil
+}
+
 // diffCluster does a diff of Cluster objects between local cache and API server
 func (ct *ctrlerCtx) diffCluster(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
@@ -265,8 +349,8 @@ func (ct *ctrlerCtx) runClusterWatcher() {
 							break innerLoop
 						}
 
-						// handle event
-						go ct.handleClusterEvent(evt)
+						// handle event in parallel
+						ct.handleClusterEventParallel(evt)
 					}
 				}
 				apicl.Close()
@@ -549,6 +633,90 @@ func (ct *ctrlerCtx) handleNodeEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+// handleNodeEventParallel handles Node events from watcher
+func (ct *ctrlerCtx) handleNodeEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *cluster.Node:
+		eobj := evt.Object.(*cluster.Node)
+		kind := "Node"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		nodeHandler := handler.(NodeHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &Node{
+					Node:       *eobj,
+					HandlerCtx: nil,
+					ctrler:     ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("Node_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = nodeHandler.OnNodeCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, eobj.GetKey())
+					}
+				}()
+			} else {
+				obj := fobj.(*Node)
+
+				ct.stats.Counter("Node_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = nodeHandler.OnNodeUpdate(obj, eobj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}()
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*Node)
+
+			ct.stats.Counter("Node_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			go func() {
+				err = nodeHandler.OnNodeDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+
+				ct.delObject(kind, eobj.GetKey())
+			}()
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Node watch channel", tp)
+	}
+
+	return nil
+}
+
 // diffNode does a diff of Node objects between local cache and API server
 func (ct *ctrlerCtx) diffNode(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
@@ -664,8 +832,8 @@ func (ct *ctrlerCtx) runNodeWatcher() {
 							break innerLoop
 						}
 
-						// handle event
-						go ct.handleNodeEvent(evt)
+						// handle event in parallel
+						ct.handleNodeEventParallel(evt)
 					}
 				}
 				apicl.Close()
@@ -948,6 +1116,90 @@ func (ct *ctrlerCtx) handleHostEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+// handleHostEventParallel handles Host events from watcher
+func (ct *ctrlerCtx) handleHostEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *cluster.Host:
+		eobj := evt.Object.(*cluster.Host)
+		kind := "Host"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		hostHandler := handler.(HostHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &Host{
+					Host:       *eobj,
+					HandlerCtx: nil,
+					ctrler:     ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("Host_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = hostHandler.OnHostCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, eobj.GetKey())
+					}
+				}()
+			} else {
+				obj := fobj.(*Host)
+
+				ct.stats.Counter("Host_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = hostHandler.OnHostUpdate(obj, eobj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}()
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*Host)
+
+			ct.stats.Counter("Host_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			go func() {
+				err = hostHandler.OnHostDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+
+				ct.delObject(kind, eobj.GetKey())
+			}()
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Host watch channel", tp)
+	}
+
+	return nil
+}
+
 // diffHost does a diff of Host objects between local cache and API server
 func (ct *ctrlerCtx) diffHost(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
@@ -1063,8 +1315,8 @@ func (ct *ctrlerCtx) runHostWatcher() {
 							break innerLoop
 						}
 
-						// handle event
-						go ct.handleHostEvent(evt)
+						// handle event in parallel
+						ct.handleHostEventParallel(evt)
 					}
 				}
 				apicl.Close()
@@ -1347,6 +1599,90 @@ func (ct *ctrlerCtx) handleSmartNICEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+// handleSmartNICEventParallel handles SmartNIC events from watcher
+func (ct *ctrlerCtx) handleSmartNICEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *cluster.SmartNIC:
+		eobj := evt.Object.(*cluster.SmartNIC)
+		kind := "SmartNIC"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		smartnicHandler := handler.(SmartNICHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &SmartNIC{
+					SmartNIC:   *eobj,
+					HandlerCtx: nil,
+					ctrler:     ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("SmartNIC_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = smartnicHandler.OnSmartNICCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, eobj.GetKey())
+					}
+				}()
+			} else {
+				obj := fobj.(*SmartNIC)
+
+				ct.stats.Counter("SmartNIC_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = smartnicHandler.OnSmartNICUpdate(obj, eobj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}()
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*SmartNIC)
+
+			ct.stats.Counter("SmartNIC_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			go func() {
+				err = smartnicHandler.OnSmartNICDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+
+				ct.delObject(kind, eobj.GetKey())
+			}()
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on SmartNIC watch channel", tp)
+	}
+
+	return nil
+}
+
 // diffSmartNIC does a diff of SmartNIC objects between local cache and API server
 func (ct *ctrlerCtx) diffSmartNIC(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
@@ -1462,8 +1798,8 @@ func (ct *ctrlerCtx) runSmartNICWatcher() {
 							break innerLoop
 						}
 
-						// handle event
-						go ct.handleSmartNICEvent(evt)
+						// handle event in parallel
+						ct.handleSmartNICEventParallel(evt)
 					}
 				}
 				apicl.Close()
@@ -1746,6 +2082,90 @@ func (ct *ctrlerCtx) handleTenantEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+// handleTenantEventParallel handles Tenant events from watcher
+func (ct *ctrlerCtx) handleTenantEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *cluster.Tenant:
+		eobj := evt.Object.(*cluster.Tenant)
+		kind := "Tenant"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		tenantHandler := handler.(TenantHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &Tenant{
+					Tenant:     *eobj,
+					HandlerCtx: nil,
+					ctrler:     ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("Tenant_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = tenantHandler.OnTenantCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, eobj.GetKey())
+					}
+				}()
+			} else {
+				obj := fobj.(*Tenant)
+
+				ct.stats.Counter("Tenant_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = tenantHandler.OnTenantUpdate(obj, eobj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}()
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*Tenant)
+
+			ct.stats.Counter("Tenant_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			go func() {
+				err = tenantHandler.OnTenantDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+
+				ct.delObject(kind, eobj.GetKey())
+			}()
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Tenant watch channel", tp)
+	}
+
+	return nil
+}
+
 // diffTenant does a diff of Tenant objects between local cache and API server
 func (ct *ctrlerCtx) diffTenant(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
@@ -1861,8 +2281,8 @@ func (ct *ctrlerCtx) runTenantWatcher() {
 							break innerLoop
 						}
 
-						// handle event
-						go ct.handleTenantEvent(evt)
+						// handle event in parallel
+						ct.handleTenantEventParallel(evt)
 					}
 				}
 				apicl.Close()
@@ -2145,6 +2565,90 @@ func (ct *ctrlerCtx) handleVersionEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+// handleVersionEventParallel handles Version events from watcher
+func (ct *ctrlerCtx) handleVersionEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *cluster.Version:
+		eobj := evt.Object.(*cluster.Version)
+		kind := "Version"
+
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		handler, ok := ct.handlers[kind]
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		versionHandler := handler.(VersionHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &Version{
+					Version:    *eobj,
+					HandlerCtx: nil,
+					ctrler:     ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("Version_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = versionHandler.OnVersionCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, eobj.GetKey())
+					}
+				}()
+			} else {
+				obj := fobj.(*Version)
+
+				ct.stats.Counter("Version_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				go func() {
+					err = versionHandler.OnVersionUpdate(obj, eobj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}()
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*Version)
+
+			ct.stats.Counter("Version_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			go func() {
+				err = versionHandler.OnVersionDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+
+				ct.delObject(kind, eobj.GetKey())
+			}()
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Version watch channel", tp)
+	}
+
+	return nil
+}
+
 // diffVersion does a diff of Version objects between local cache and API server
 func (ct *ctrlerCtx) diffVersion(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
@@ -2260,8 +2764,8 @@ func (ct *ctrlerCtx) runVersionWatcher() {
 							break innerLoop
 						}
 
-						// handle event
-						go ct.handleVersionEvent(evt)
+						// handle event in parallel
+						ct.handleVersionEventParallel(evt)
 					}
 				}
 				apicl.Close()
