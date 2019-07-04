@@ -47,16 +47,6 @@ def TestPing(tc, type, ipaf, pktsize):
 
     tc.resp = api.Trigger(req)
 
-    req2 = api.Trigger_CreateAllParallelCommandsRequest()
-    for w in api.GetWorkloads():
-        api.Trigger_AddCommand(req2, w.node_name, w.workload_name,
-                               "ls /root/ > %s_ls.out" % w.workload_name)
-    tc.resp2 = api.Trigger(req2)
-
-    for w in api.GetWorkloads():
-        api.CopyFromWorkload(w.node_name, w.workload_name,
-                             [ '%s_ls.out' % w.workload_name ], tc.GetLogsDir())
-
     if tc.resp is None:
         return api.types.status.FAILURE
 
