@@ -2805,18 +2805,19 @@ session_eval_matching_session (session_match_t  *match)
         dllist_ctxt_t   *list_head = match->session_list;
 
         if (!session->skip_sfw_reval && check_session_match(match, session)) {
-            hal_handle_id_list_entry_t *list_entry = (hal_handle_id_list_entry_t *)g_hal_state->
-                    hal_handle_id_list_entry_slab()->alloc();
-            if (list_entry == NULL) {
-                HAL_TRACE_ERR("Out of memory - skipping delete session {}", session->hal_handle);
-                return false;
-            }
             hal::flow_key_t *key = &session->iflow->config.key;
             hal::ipv4_tuple acl_key = {};
             extract_acl_key_from_flow_key(acl_key, key);
             bool allow = securitypolicy_is_allow(key->svrf_id, &acl_key, (session::FlowAction)session->iflow->config.action);
             if (!allow) {
                 HAL_TRACE_DEBUG("add the handle {}", session->hal_handle);
+                hal_handle_id_list_entry_t *list_entry = (hal_handle_id_list_entry_t *)g_hal_state->
+                    hal_handle_id_list_entry_slab()->alloc();
+                if (list_entry == NULL) {
+                    HAL_TRACE_ERR("Out of memory - skipping delete session {}", session->hal_handle);
+                    return false;
+                }
+
                 list_entry->handle_id = session->hal_handle;
                 dllist_add(list_head, &list_entry->dllist_ctxt);
             }
