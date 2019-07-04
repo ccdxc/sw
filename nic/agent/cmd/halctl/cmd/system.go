@@ -2043,6 +2043,8 @@ func fteTxRxStatsShow(stats *halproto.Stats) {
 		fmt.Printf("%s%-15d\n", "Cpu Rx DPR Cindex   : ", glbl.GetCpuRxDprCindex())
 		fmt.Printf("%s%-15d\n", "Cpu Rx DPR SEM Cindex   : ", glbl.GetCpuRxDprSemCindex())
 		fmt.Printf("%s%-15d\n", "Cpu Rx DPR Descr Free Errors : ", glbl.GetCpuRxDprDescrFreeErr())
+		fmt.Printf("%s%-15d\n", "Cpu Rx DPR SEM Free Errors : ", glbl.GetCpuRxDprSemFreeErr())
+		fmt.Printf("%s%-15d\n", "Cpu Rx DPR Descr Invalid Free Errors : ", glbl.GetCpuRxDprDescrInvalidFreeErr())
 
 		fteid++
 	}

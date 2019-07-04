@@ -2860,6 +2860,8 @@ system_fte_txrx_stats_get(SystemResponse *rsp)
         global_info->set_cpu_rx_dpr_cindex(txrx_stats.glinfo.cpu_rx_dpr_cindex);
         global_info->set_cpu_rx_dpr_sem_cindex(txrx_stats.glinfo.cpu_rx_dpr_sem_cindex);
         global_info->set_cpu_rx_dpr_descr_free_err(txrx_stats.glinfo.cpu_rx_dpr_descr_free_err);
+        global_info->set_cpu_rx_dpr_sem_free_err(txrx_stats.glinfo.cpu_rx_dpr_sem_free_err);
+        global_info->set_cpu_rx_dpr_descr_invalid_free_err(txrx_stats.glinfo.cpu_rx_dpr_descr_invalid_free_err);
 
         for (int i = 0; i < FTE_MAX_CPU_QUEUES; i++) {
             //for number of queues

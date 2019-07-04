@@ -222,6 +222,7 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, bool copied_pk
     pkt_ = pkt;
     pkt_len_ = pkt_len;
     copied_pkt_ = copied_pkt;
+    enq_or_free_rx_pkt_ = false;
 
      if (fte_span()) {
          // TODO: Print packet and exit

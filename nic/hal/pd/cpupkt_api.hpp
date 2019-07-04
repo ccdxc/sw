@@ -148,6 +148,8 @@ typedef struct cpupkt_global_info_s {
     uint32_t       cpu_rx_dpr_cindex;
     uint32_t       cpu_rx_dpr_sem_cindex;
     uint32_t       cpu_rx_dpr_descr_free_err;
+    uint32_t       cpu_rx_dpr_sem_free_err;
+    uint32_t       cpu_rx_dpr_descr_invalid_free_err;
 } __PACK__ cpupkt_global_info_t;
 
 typedef struct cpupkt_qinst_stats_s {

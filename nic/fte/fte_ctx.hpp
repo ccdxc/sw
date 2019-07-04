@@ -494,6 +494,7 @@ typedef struct fte_hbm_stats_ {
         uint64_t          fte_span_pkts;               // Number of FTE Span packets processed by this FTE
         uint64_t          softq_req;                   // Number of softq requests processed by this FTE
         uint64_t          queued_tx_pkts;              // Number of packets queued from this FTE to be transmitted
+        uint64_t          freed_tx_pkts;               // Number of dropped/non-flowmiss packets for which the CPU buffers are freed 
     } __PACK__ qstats;
 } __PACK__ fte_hbm_stats_t;
 
@@ -762,7 +763,11 @@ private:
 
     // pkts queued for tx
     uint16_t               txpkt_cnt_;
-    txpkt_info_t          txpkts_[MAX_QUEUED_PKTS];
+    txpkt_info_t           txpkts_[MAX_QUEUED_PKTS];
+    bool                   enq_or_free_rx_pkt_; // Rx Packets from PMD layer should be enqueued back to the pipeline
+                                                // or the resource should be explicitly freed up in case it is dropped
+                                                // Most of the non-flowmiss (ALG/TCP close), the packet is looked up and
+                                                // freed. If we dont do this, we might leak the packet buffers.
 
     session::SessionSpec           *sess_spec_;
     session::SessionResponse       *sess_resp_;

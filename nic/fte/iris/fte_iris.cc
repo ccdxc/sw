@@ -1069,7 +1069,7 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
 {
     hal_ret_t ret;
 
-    if (pkt_ != NULL && txpkt_cnt_ == 0) {
+    if (pkt_ != NULL && enq_or_free_rx_pkt_ == false) {
 
         if (flow_miss() && !drop()) {
 
@@ -1101,7 +1101,8 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
 
                  hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_FREE_PKT_RES, &pd_func_args);
 	     }
-         }
+        }
+        enq_or_free_rx_pkt_ = true;
     }
 
     for (int i = 0; i < txpkt_cnt_; i++) {

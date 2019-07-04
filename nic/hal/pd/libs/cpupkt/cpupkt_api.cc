@@ -25,7 +25,9 @@ thread_local uint32_t cpu_tx_descr_pindex = 0;
 thread_local uint32_t cpu_tx_descr_cindex = 0;
 thread_local uint32_t cpu_rx_dpr_cindex = 0;
 thread_local uint32_t cpu_rx_dpr_sem_cindex = 0;
+thread_local uint32_t cpu_rx_dpr_sem_free_err = 0;
 thread_local uint32_t cpu_rx_dpr_descr_free_err = 0;
+thread_local uint32_t cpu_rx_dpr_descr_invalid_free_err = 0;
 thread_local int      tg_cpu_id = -1;
 bool cpu_do_zero_copy = true;
 
@@ -268,12 +270,14 @@ pd_cpupkt_free_rx_descrs (uint64_t *descr_addrs, pd_descr_aol_t **virt_addrs,
         dpr_wring_meta = wring_pd_get_meta(types::WRING_TYPE_CPU_RX_DPR);
 	if(!dpr_wring_meta) {
 	    HAL_TRACE_ERR2("Failed to get wring meta for type: {}", types::WRING_TYPE_CPU_RX_DPR);
+            cpu_rx_dpr_descr_invalid_free_err++;
 	    return HAL_RET_WRING_NOT_FOUND;
 	}
 
 	ret = wring_pd_get_base_addr(types::WRING_TYPE_CPU_RX_DPR, 0, &dpr_ring_base_addr);
   	if (ret != HAL_RET_OK) {
 	    HAL_TRACE_ERR2("failed to get base address for the wring: {}", types::WRING_TYPE_CPU_RX_DPR);
+            cpu_rx_dpr_descr_invalid_free_err++;
 	    return HAL_RET_ERR;
 	}
     }
@@ -286,6 +290,7 @@ pd_cpupkt_free_rx_descrs (uint64_t *descr_addrs, pd_descr_aol_t **virt_addrs,
 	if (ret != HAL_RET_OK) {
 	    HAL_TRACE_ERR2("Failed to get to slot addr for cpu-rx-dpr ci: {}",
 			  cpu_rx_dpr_cindex);
+            cpu_rx_dpr_descr_invalid_free_err++;
 	    return ret;
 	}
 
@@ -304,6 +309,7 @@ pd_cpupkt_free_rx_descrs (uint64_t *descr_addrs, pd_descr_aol_t **virt_addrs,
 	    if (asic_mem_write(slot_addr, (uint8_t *)&value, sizeof(uint64_t),
 			       ASIC_WRITE_MODE_WRITE_THRU) != sdk::SDK_RET_OK) {
 	        HAL_TRACE_ERR2("Failed to program descr to slot");
+                cpu_rx_dpr_descr_invalid_free_err++;
 		return HAL_RET_HW_FAIL;
 	    }
 	    HAL_TRACE_DEBUG2("cpu-id: {} update cpudr: slot: {:#x} ci: {} descr: {:#x}, value: {:#x}",
@@ -323,6 +329,7 @@ pd_cpupkt_free_rx_descrs (uint64_t *descr_addrs, pd_descr_aol_t **virt_addrs,
 			   ASIC_WRITE_MODE_WRITE_THRU) != sdk::SDK_RET_OK) {
             HAL_TRACE_ERR2("Failed to program CPU-RX-DPR CI semaphore to {}",
 			  cpu_rx_dpr_sem_cindex);
+            cpu_rx_dpr_sem_free_err++;
 	    return HAL_RET_HW_FAIL;
     }
 
@@ -344,6 +351,7 @@ pd_cpupkt_free_rx_descr (cpupkt_hw_id_t descr_addr)
 
     if(!descr_addr) {
         HAL_TRACE_ERR2("invalid arg");
+        cpu_rx_dpr_descr_invalid_free_err++;
         return HAL_RET_INVALID_ARG;
     }
 
@@ -353,6 +361,7 @@ pd_cpupkt_free_rx_descr (cpupkt_hw_id_t descr_addr)
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR2("Failed to get to slot addr for cpu-rx-dpr ci: {}",
                       cpu_rx_dpr_cindex);
+        cpu_rx_dpr_descr_invalid_free_err++;
         return ret;
     }
 
@@ -372,6 +381,7 @@ pd_cpupkt_free_rx_descr (cpupkt_hw_id_t descr_addr)
         if (asic_mem_write(slot_addr, (uint8_t *)&value, sizeof(uint64_t),
 			   ASIC_WRITE_MODE_WRITE_THRU) != sdk::SDK_RET_OK) {
             HAL_TRACE_ERR2("Failed to program descr to slot");
+            cpu_rx_dpr_descr_invalid_free_err++;
 	    return HAL_RET_HW_FAIL;
 	}
 	HAL_TRACE_DEBUG2("cpu-id: {} update cpudr: slot: {:#x} ci: {} descr: {:#x}, value: {:#x}",
@@ -397,6 +407,7 @@ pd_cpupkt_free_rx_descr (cpupkt_hw_id_t descr_addr)
 			   ASIC_WRITE_MODE_WRITE_THRU) != sdk::SDK_RET_OK) {
             HAL_TRACE_ERR2("Failed to program CPU-RX-DPR CI semaphore to {}",
 			  cpu_rx_dpr_sem_cindex);
+            cpu_rx_dpr_sem_free_err++;
 	    return HAL_RET_HW_FAIL;
 	}
     }
@@ -1117,7 +1128,10 @@ pd_cpupkt_free_pkt_resources (pd_func_args_t *pd_func_args)
 
     uint8_t *pkt = args->pkt;
 
-    if (!pkt) return(HAL_RET_INVALID_ARG);
+    if (!pkt) {
+        cpu_rx_dpr_descr_invalid_free_err++;
+        return(HAL_RET_INVALID_ARG);
+    }
 
     /*
      * Only if this is a zero-copy page from CPU-RX-DPR pool, we have to free it back
@@ -1137,6 +1151,7 @@ pd_cpupkt_free_pkt_resources (pd_func_args_t *pd_func_args)
     } else {
 	HAL_TRACE_DEBUG2("Unknown packet page-addr: {:#x}, page-virt-addr {:#x}", phy_page_addr,
 			 (uint64_t) pkt);
+        cpu_rx_dpr_descr_invalid_free_err++;
     }
 
     return(ret);
@@ -1673,7 +1688,9 @@ pd_cpupkt_get_global (pd_func_args_t *pd_func_args)
     args->cpu_tx_descr_cindex = cpu_tx_descr_cindex;
     args->cpu_rx_dpr_cindex = cpu_rx_dpr_cindex;
     args->cpu_rx_dpr_sem_cindex = cpu_rx_dpr_sem_cindex;
+    args->cpu_rx_dpr_sem_free_err = cpu_rx_dpr_sem_free_err;
     args->cpu_rx_dpr_descr_free_err = cpu_rx_dpr_descr_free_err;
+    args->cpu_rx_dpr_descr_invalid_free_err = cpu_rx_dpr_descr_invalid_free_err;
     return HAL_RET_OK;
 }
 

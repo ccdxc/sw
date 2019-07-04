@@ -178,6 +178,8 @@ type FteLifQMetrics struct {
 
 	QueuedTxPackets metrics.Counter
 
+	FreedTxPackets metrics.Counter
+
 	// private state
 	metrics gometrics.Metrics
 }
@@ -207,6 +209,8 @@ func (mtr *FteLifQMetrics) Size() int {
 	sz += mtr.SoftwareQueuePackets.Size()
 
 	sz += mtr.QueuedTxPackets.Size()
+
+	sz += mtr.FreedTxPackets.Size()
 
 	return sz
 }
@@ -243,6 +247,9 @@ func (mtr *FteLifQMetrics) Unmarshal() error {
 
 	mtr.QueuedTxPackets = mtr.metrics.GetCounter(offset)
 	offset += mtr.QueuedTxPackets.Size()
+
+	mtr.FreedTxPackets = mtr.metrics.GetCounter(offset)
+	offset += mtr.FreedTxPackets.Size()
 
 	return nil
 }
@@ -295,6 +302,11 @@ func (mtr *FteLifQMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.QueuedTxPackets.Size()
+
+	if fldName == "FreedTxPackets" {
+		return offset
+	}
+	offset += mtr.FreedTxPackets.Size()
 
 	return offset
 }
@@ -350,6 +362,12 @@ func (mtr *FteLifQMetrics) SetSoftwareQueuePackets(val metrics.Counter) error {
 // SetQueuedTxPackets sets cunter in shared memory
 func (mtr *FteLifQMetrics) SetQueuedTxPackets(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("QueuedTxPackets"))
+	return nil
+}
+
+// SetFreedTxPackets sets cunter in shared memory
+func (mtr *FteLifQMetrics) SetFreedTxPackets(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FreedTxPackets"))
 	return nil
 }
 

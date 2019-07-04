@@ -105,4 +105,7 @@ fte_txrx_stats_t fte_txrx_stats_get (uint8_t fte_id, bool clear_on_read=false);
 // API to bypass packet processing in FTE
 void set_bypass_fte (uint8_t fte_id, bool bypass_fte=false);
 
+// API to increment per-instance stats for freed TX resources
+void incr_inst_freed_tx_stats(void);
+
 } // namespace fte

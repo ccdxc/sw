@@ -379,6 +379,7 @@ sfw_exec(ctx_t& ctx)
                     ctx.register_completion_handler(net_sfw_generate_reject_pkt);
                     ctx.set_ignore_session_create(true);
                     ctx.set_ipc_logging_disable(false);
+                    ctx.set_drop();
                 } else {
                     flow_update_t flowupd = {type: FLOWUPD_AGING_INFO};
                     flowupd.aging_info.idle_timeout = match_rslt.idle_timeout;

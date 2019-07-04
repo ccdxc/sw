@@ -2546,6 +2546,8 @@ typedef struct pd_cpupkt_get_global_args_s {
     uint32_t  cpu_rx_dpr_cindex;
     uint32_t  cpu_rx_dpr_sem_cindex;
     uint32_t  cpu_rx_dpr_descr_free_err;
+    uint32_t  cpu_rx_dpr_sem_free_err;
+    uint32_t  cpu_rx_dpr_descr_invalid_free_err;
 } pd_cpupkt_get_global_args_t;
 
 // rdma

@@ -358,6 +358,8 @@ message QGlobalInfo {
   uint32  cpu_rx_dpr_cindex   = 6;
   uint32  cpu_rx_dpr_sem_cindex = 7;
   uint32  cpu_rx_dpr_descr_free_err = 8;
+  uint32  cpu_rx_dpr_sem_free_err = 9;
+  uint32  cpu_rx_dpr_descr_invalid_free_err = 10;
 }
 
 message QInfo {

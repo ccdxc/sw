@@ -60,6 +60,7 @@ public:
     void update_rx_stats_batch(uint16_t pktcount);
     void update_tx_stats(uint16_t pktcount);
     void set_bypass_fte(bool bypass_fte) { bypass_fte_ = bypass_fte; }
+    void incr_freed_tx_stats(void);
 
 private:
     uint8_t                 id_;
@@ -530,6 +531,26 @@ void incr_fte_retransmit_packets(void)
     t_inst->incr_fte_retransmit_packets();
 }
 
+//----------------------------------------------------------------------------
+// Increment fte tx stats
+//----------------------------------------------------------------------------
+void incr_inst_freed_tx_stats(void)
+{
+    if (fte_disabled_ || t_inst == NULL) {
+        return;
+    }
+
+    t_inst->incr_freed_tx_stats();
+}
+
+//----------------------------------------------------------------------------
+// Increment Freed CPU Tx Resources
+//----------------------------------------------------------------------------
+void inst_t::incr_freed_tx_stats(void)
+{
+    stats_.fte_hbm_stats->qstats.freed_tx_pkts++;
+}
+
 //-----------------------------------------------------------------------------
  // Compute Connections per second
  //-----------------------------------------------------------------------------
@@ -783,7 +804,7 @@ void inst_t::process_arq_new ()
     size_t                    pkt_len;
     bool                      copied_pkt, drop_pkt;
 
-    cpupkt_batch.pktcount = 0;
+    bzero(&cpupkt_batch, sizeof(hal::pd::cpupkt_pkt_batch_t));
 
     // read the packet
     ret = fte::impl::cpupkt_poll_receive_new(arm_ctx_, &cpupkt_batch);
@@ -973,6 +994,8 @@ fte_txrx_stats_t inst_t::get_txrx_stats(bool clear_on_read)
     txrx_stats.glinfo.cpu_rx_dpr_cindex = args.cpu_rx_dpr_cindex;
     txrx_stats.glinfo.cpu_rx_dpr_sem_cindex = args.cpu_rx_dpr_sem_cindex;
     txrx_stats.glinfo.cpu_rx_dpr_descr_free_err = args.cpu_rx_dpr_descr_free_err;
+    txrx_stats.glinfo.cpu_rx_dpr_sem_free_err = args.cpu_rx_dpr_sem_free_err;
+    txrx_stats.glinfo.cpu_rx_dpr_descr_invalid_free_err = args.cpu_rx_dpr_descr_invalid_free_err;
     return txrx_stats;
 
 }
