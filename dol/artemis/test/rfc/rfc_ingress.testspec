@@ -34,6 +34,12 @@ packets:
             udp:
                 sport   : callback://networking/packets/GetUsableSPortFromPolicy
                 dport   : callback://networking/packets/GetUsableDPortFromPolicy
+            icmp:
+                type    : callback://networking/packets/GetUsableICMPTypeFromPolicy
+                code    : callback://networking/packets/GetUsableICMPCodeFromPolicy
+            icmpv6:
+                type    : callback://networking/packets/GetUsableICMPTypeFromPolicy
+                code    : callback://networking/packets/GetUsableICMPCodeFromPolicy
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 

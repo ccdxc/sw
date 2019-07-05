@@ -85,6 +85,12 @@ def GetIPProtoName(proto):
     """
     return IPPROTO_TO_NAME_TBL[proto]
 
+def IsICMPProtocol(proto):
+    """
+        returns True if given proto is icmp/icmpv6
+    """
+    return 'ICMP' in GetIPProtoName(proto)
+
 def __get_subnet(ip, prev=False):
     """
         returns next subnet of 'ip' if 'prev' is False else previous subnet

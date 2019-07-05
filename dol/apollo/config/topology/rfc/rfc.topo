@@ -56,7 +56,7 @@ vpc:
       count : 1
       type  : tenant
       subnet:
-        - count     :  44             # should be same as total routetbl / policy
+        - count     :  45             # should be same as total routetbl / policy
           v4prefixlen : 24
           v6prefixlen : 64
           vnic:
@@ -68,7 +68,7 @@ vpc:
       routetbl:
              - type: base
                routetype: fulloverlap_max_with_default
-               count : 44
+               count : 45
                v4base: '66.0.0.0\16'
                v4prefixlen: 24
                nv4routes   : 1023     # Max routes per route table 
@@ -81,7 +81,7 @@ vpc:
                    - '0::\0'
       nexthop: # only ARTEMIS
              - type: base
-               count : 44
+               count : 45
       tagtbl: # only ARTEMIS
             - type : specific
               count : 1
@@ -193,6 +193,18 @@ vpc:
                     action  : deny         # only ARTEMIS
                     v4pfx: '0.0.0.0\0'
                     v6pfx: '0::0\0'
+
+              - type : specific
+                policytype : icmp_specific
+                direction : bidir
+                rule:
+                  - protocol: icmp
+                    priority: 0
+                    action  : allow
+                    v4pfx: '0.0.0.0\0'
+                    v6pfx: '0::0\0'
+                    icmptype : 5
+                    icmpcode : 4
 
               - type : specific
                 policytype : user_specific # all values are specific

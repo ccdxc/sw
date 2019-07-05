@@ -118,19 +118,15 @@ class PolicyObject(base.ConfigObjectBase):
         return "PolicyID:%d" % (self.PolicyId)
 
     def FillRuleSpec(self, spec, rule):
+        proto = 0
         specrule = spec.Rules.add()
         specrule.Stateful = rule.Stateful
         specrule.Priority = rule.Priority
         specrule.Action = rule.Action
-        l4match = rule.L4Match
-        if l4match and l4match.valid:
-            specrule.Match.L4Match.Ports.SrcPortRange.PortLow = l4match.SportLow
-            specrule.Match.L4Match.Ports.SrcPortRange.PortHigh = l4match.SportHigh
-            specrule.Match.L4Match.Ports.DstPortRange.PortLow = l4match.DportLow
-            specrule.Match.L4Match.Ports.DstPortRange.PortHigh = l4match.DportHigh
         l3match = rule.L3Match
         if l3match and l3match.valid:
-            specrule.Match.L3Match.Protocol = l3match.Proto
+            proto = l3match.Proto
+            specrule.Match.L3Match.Protocol = proto
             if l3match.SrcIPLow and l3match.SrcIPHigh:
                 utils.GetRpcIPRange(l3match.SrcIPLow, l3match.SrcIPHigh, specrule.Match.L3Match.SrcRange)
             if l3match.DstIPLow and l3match.DstIPHigh:
@@ -143,6 +139,16 @@ class PolicyObject(base.ConfigObjectBase):
                 utils.GetRpcIPPrefix(l3match.SrcPrefix, specrule.Match.L3Match.SrcPrefix)
             if l3match.DstPrefix is not None:
                 utils.GetRpcIPPrefix(l3match.DstPrefix, specrule.Match.L3Match.DstPrefix)
+        l4match = rule.L4Match
+        if l4match and l4match.valid:
+            if utils.IsICMPProtocol(proto):
+                specrule.Match.L4Match.TypeCode.type = l4match.IcmpType
+                specrule.Match.L4Match.TypeCode.code = l4match.IcmpCode
+            else:
+                specrule.Match.L4Match.Ports.SrcPortRange.PortLow = l4match.SportLow
+                specrule.Match.L4Match.Ports.SrcPortRange.PortHigh = l4match.SportHigh
+                specrule.Match.L4Match.Ports.DstPortRange.PortLow = l4match.DportLow
+                specrule.Match.L4Match.Ports.DstPortRange.PortHigh = l4match.DportHigh
 
     def GetGrpcCreateMessage(self):
         grpcmsg = policy_pb2.SecurityPolicyRequest()
@@ -340,9 +346,11 @@ class PolicyObjectClient:
             obj = L4MatchObject(l4match, sportlow, sporthigh, dportlow, dporthigh, icmptype, icmpcode)
             return obj
 
-        def __get_l3_proto_from_rule(rulespec):
+        def __get_l3_proto_from_rule(af, rulespec):
             proto = getattr(rulespec, 'protocol', utils.L3PROTO_MIN)
             if proto:
+                if proto == "icmp" and af == utils.IP_VERSION_6:
+                    proto = "ipv6-" + proto
                 proto = socket.getprotobyname(proto)
             return proto
 
@@ -409,13 +417,17 @@ class PolicyObjectClient:
             return srctag, dsttag
 
         def __get_l3_rule(af, rulespec):
-            proto = __get_l3_proto_from_rule(rulespec)
+            proto = __get_l3_proto_from_rule(af, rulespec)
             srctype, dsttype = __get_l3_match_type_from_rule(rulespec)
             if not utils.IsPipelineArtemis():
                 # Apollo does NOT support other match types like range/tag
                 if srctype is not utils.L3MatchType.PFX or\
                    dsttype is not utils.L3MatchType.PFX:
                     return None
+                # Apollo does NOT support icmp proto
+                if utils.IsICMPProtocol(proto):
+                    return None
+
             srcpfx, dstpfx = __get_l3_pfx_from_rule(af, rulespec)
             srciplow, srciphigh, dstiplow, dstiphigh = __get_l3_pfx_range_from_rule(af, rulespec)
             srctag, dsttag = __get_l3_tag_from_rule(af, rulespec, srctype, dsttype)

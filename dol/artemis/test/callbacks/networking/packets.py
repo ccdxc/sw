@@ -180,10 +180,8 @@ def __get_valid_port(port):
         return port
 
 def __get_port_from_rule(rule, pos=None, isSource=True):
-    if rule is None:
-        return __get_random_port_in_range()
-    l4matchobj = rule.L4Match
-    if not l4matchobj.valid:
+    l4matchobj = rule.L4Match if rule else None
+    if l4matchobj is None or l4matchobj.valid == False:
         return __get_random_port_in_range()
     if isSource:
         beg = l4matchobj.SportLow
@@ -212,6 +210,41 @@ def GetUsableDPortFromPolicy(testcase, packet, args=None):
     rule = testcase.config.tc_rule
     pos = __get_module_args_value(testcase.module.args, 'dport')
     return __get_port_from_rule(rule, pos, False)
+
+def __get_random_icmptype_in_range(beg=utils.ICMPTYPE_MIN, end=utils.ICMPTYPE_MAX):
+    return random.randint(beg, end)
+
+def __get_valid_icmptype(icmptype):
+    if icmptype < utils.ICMPTYPE_MIN:
+        return utils.ICMPTYPE_MIN
+    elif icmptype > utils.ICMPTYPE_MAX:
+        return utils.ICMPTYPE_MAX
+    else:
+        return icmptype
+
+def __get_icmp_values_from_rule(rule, pos=None, isIcmpCode=False):
+    l4matchobj = rule.L4Match if rule else None
+    if l4matchobj is None or l4matchobj.valid == False:
+        return __get_random_icmptype_in_range()
+    if isIcmpCode:
+        val = l4matchobj.IcmpCode
+    else:
+        val = l4matchobj.IcmpType
+    if pos == 'right':
+        val = val + 1
+    elif pos == 'left':
+        val = val - 1
+    return __get_valid_icmptype(val)
+
+def GetUsableICMPTypeFromPolicy(testcase, packet, args=None):
+    rule = testcase.config.tc_rule
+    pos = __get_module_args_value(testcase.module.args, 'icmptype')
+    return __get_icmp_values_from_rule(rule, pos)
+
+def GetUsableICMPCodeFromPolicy(testcase, packet, args=None):
+    rule = testcase.config.tc_rule
+    pos = __get_module_args_value(testcase.module.args, 'icmpcode')
+    return __get_icmp_values_from_rule(rule, pos, True)
 
 def __is_matching_ip(matchtype, ipaddr, ippfx=None, ipaddrLow=None, ipaddrHigh=None, tag=None):
     ipaddr = ipaddress.ip_address(ipaddr)
@@ -253,6 +286,12 @@ def __is_matching_sport(sport, l4matchobj):
 def __is_matching_dport(dport, l4matchobj):
     return __is_matching_L4port(dport, l4matchobj.DportLow, l4matchobj.DportHigh)
 
+def __is_matching_icmptype(icmptype, l4matchobj):
+    return icmptype == l4matchobj.IcmpType
+
+def __is_matching_icmpcode(icmpcode, l4matchobj):
+    return icmpcode == l4matchobj.IcmpCode
+
 def __is_l3_match(packet_tuples, l3matchobj):
     if not l3matchobj.valid:
         return True
@@ -270,12 +309,20 @@ def __is_l3_match(packet_tuples, l3matchobj):
 def __is_l4_match(packet_tuples, l4matchobj):
     if not l4matchobj.valid:
         return True
-    if not __is_matching_sport(packet_tuples[3], l4matchobj):
-        logger.verbose("l4match sport fail")
-        return False
-    if not __is_matching_dport(packet_tuples[4], l4matchobj):
-        logger.verbose("l4match dport fail")
-        return False
+    if utils.IsICMPProtocol(packet_tuples[2]):
+        if not __is_matching_icmptype(packet_tuples[5], l4matchobj):
+            logger.verbose("l4match icmp type fail")
+            return False
+        if not __is_matching_icmpcode(packet_tuples[6], l4matchobj):
+            logger.verbose("l4match icmp code fail")
+            return False
+    else:
+        if not __is_matching_sport(packet_tuples[3], l4matchobj):
+            logger.verbose("l4match sport fail")
+            return False
+        if not __is_matching_dport(packet_tuples[4], l4matchobj):
+            logger.verbose("l4match dport fail")
+            return False
     return True
 
 def __is_matching_rule(packet_tuples, rule):
@@ -288,11 +335,15 @@ def __is_matching_rule(packet_tuples, rule):
     return True
 
 def __get_packet_tuples(pkt):
+    payload = None
     sip = None
     dip = None
     proto = 0
     sport = 0
     dport = 0
+    icmptype = 0
+    icmpcode = 0
+    logger.info("Actual Packet ", pkt.summary())
     if IP in pkt:
         sip = pkt[IP].src
         dip = pkt[IP].dst
@@ -301,26 +352,33 @@ def __get_packet_tuples(pkt):
         sip = pkt[IPv6].src
         dip = pkt[IPv6].dst
         proto = pkt[IPv6].nh
+        payload = pkt[IPv6].payload
     if TCP in pkt:
         sport = pkt[TCP].sport
         dport = pkt[TCP].dport
     elif UDP in pkt:
         sport = pkt[UDP].sport
         dport = pkt[UDP].dport
-    packet_tuples = [sip, dip, proto, sport, dport]
-    logger.verbose("Packet ", pkt.summary())
-    logger.verbose("Packet Tuples ", packet_tuples)
+    elif ICMP in pkt:
+        icmptype = pkt[ICMP].type
+        icmpcode = pkt[ICMP].code
+    elif proto == 58: #ICMPv6
+        icmptype = payload.type
+        icmpcode = payload.code
+    #TODO: make packet_tuples a class
+    packet_tuples = [sip, dip, proto, sport, dport, icmptype, icmpcode]
+    logger.info("Retrieved Packet Tuples ", packet_tuples)
     return packet_tuples
 
 def __get_final_result(tc_rule, match_rule):
-    final_result = match_rule.Action if match_rule else tc_rule.Action
+    final_result = match_rule.Action if match_rule else policy_pb2.SECURITY_RULE_ACTION_DENY
     logger.info("TestCase rule for packet ")
     tc_rule.Show()
     if match_rule:
         logger.info("Final matching rule for packet")
         match_rule.Show()
     else:
-        logger.info("No rule matching the packet")
+        logger.info("No rule matching the packet - so DENY")
     return final_result
 
 def __get_matching_rule(policy, pkt, tc_rule):
