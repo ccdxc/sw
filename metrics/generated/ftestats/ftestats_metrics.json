@@ -98,6 +98,13 @@
           "Description": "Number of packets enqueue in the FTE TX queue",
           "Units": "Count",
           "BaseType": "Counter"
+        },
+        {
+          "Name": "FreedTxPackets",
+          "DisplayName": "Freed-Tx Packets",
+          "Description": "Number of dropped or non-flowmiss packets for which the CPU resources are freed",
+          "Units": "Count",
+          "BaseType": "Counter"
         }
       ],
       "Tags": [
