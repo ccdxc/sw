@@ -1,7 +1,6 @@
 package revproxy
 
 import (
-	"context"
 	"crypto/tls"
 	"fmt"
 	"net"
@@ -10,7 +9,6 @@ import (
 	"net/url"
 	"sort"
 	"sync"
-	"time"
 
 	"github.com/gorilla/mux"
 
@@ -160,9 +158,8 @@ func (rpr *ReverseProxyRouter) Stop() error {
 	rpr.Lock()
 	defer rpr.Unlock()
 	if rpr.httpServer != nil {
-		ctx, cancelFunc := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancelFunc()
-		if err := rpr.httpServer.Shutdown(ctx); err != nil {
+		// Purge all existing connections and shutdown the HTTP Server
+		if err := rpr.httpServer.Close(); err != nil {
 			log.Infof("Could not shut Reverse Proxy Router. Err: %v", err)
 			return err
 		}

@@ -322,8 +322,18 @@ func (n *NMD) handleHostModeTransition() error {
 		log.Errorf("Error removing trust roots: %v", err)
 	}
 	// restart rev proxy so that it can go back to HTTP and no client auth
-	n.StopReverseProxy()
-	n.StartReverseProxy()
+	err = n.StopReverseProxy()
+	if err != nil {
+		log.Errorf("Failed to stop reverse proxy. Err: %v", err)
+		return err
+	}
+
+	err = n.StartReverseProxy()
+	if err != nil {
+		log.Errorf("Failed to start reverse proxy. Err: %v", err)
+		return err
+	}
+
 	if !n.GetRegStatus() {
 		n.config.Status.IPConfig = &cmd.IPConfig{}
 		n.config.Status.Controllers = []string{}
@@ -572,8 +582,15 @@ func (n *NMD) AdmitNaples() {
 					}()
 
 					// restart rev proxy so that it can switch to HTTPS + client auth
-					n.StopReverseProxy()
-					n.StartReverseProxy()
+					err = n.StopReverseProxy()
+					if err != nil {
+						log.Errorf("Failed to stop reverse proxy. Err : %v", err)
+					}
+
+					err = n.StartReverseProxy()
+					if err != nil {
+						log.Errorf("Failed to start reverse proxy. Err : %v", err)
+					}
 
 					// Registration is complete here. Set the status to Registration done.
 					log.Infof("Setting the transition phase to registration done")
