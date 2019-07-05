@@ -21,13 +21,13 @@ namespace platform {
 static inline mem_addr_t
 mputrace_util_base_addr_get (cap_mpu_csr_trace_t trace)
 {
-    return (mem_addr_t)(trace.int_var__base_addr << 6);
+    return (mem_addr_t)(trace.base_addr() << 6);
 }
 
 static inline uint32_t
 mputrace_util_size_get (cap_mpu_csr_trace_t trace)
 {
-    return (MPUTRACE_ONE << (uint32_t)trace.int_var__buf_size);
+    return (MPUTRACE_ONE << (uint32_t)trace.buf_size());
 }
 
 static inline int
@@ -295,9 +295,7 @@ mputrace_reset_buffer_erase (cap_mpu_csr_trace_t trace)
     if (mputrace_util_is_enabled(trace)) {
         trace_addr = mputrace_util_base_addr_get(trace);
         trace_size = mputrace_util_size_get(trace);
-        trace_addr = (mem_addr_t)sdk::lib::pal_mem_map(trace_addr, trace_size);
-        memset((void*)trace_addr, 0, trace_size);
-        sdk::lib::pal_mem_unmap((void*)trace_addr);
+        sdk::lib::pal_mem_set(trace_addr, 0, trace_size * TRACE_ENTRY_SIZE);
     }
 }
 
