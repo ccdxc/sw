@@ -583,6 +583,17 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
+      "name": "FreedTxPackets",
+      "displayName": "Freed-Tx Packets",
+      "description": "Number of dropped or non-flowmiss packets for which the CPU resources are freed",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
       "name": "reporterID",
       "description": "Name of reporting object",
       "baseType": "string",
