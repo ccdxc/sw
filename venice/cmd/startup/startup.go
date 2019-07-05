@@ -243,6 +243,9 @@ func StartQuorumServices(c utils.Cluster) {
 	if env.AuthRPCServer == nil {
 		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
 	}
+	if env.HealthClient == nil {
+		env.HealthClient = health.NewClient(env.ResolverClient)
+	}
 }
 
 // StartNodeServices starts services running on non-quorum node
@@ -276,7 +279,9 @@ func StartNodeServices(nodeID, clusterID, VirtualIP string) {
 		log.Errorf("Failed to start metrics service with error: %v", err)
 	}
 
-	env.HealthClient = health.NewClient(env.ResolverClient)
+	if env.HealthClient == nil {
+		env.HealthClient = health.NewClient(env.ResolverClient)
+	}
 
 	if env.AuthRPCServer == nil {
 		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)

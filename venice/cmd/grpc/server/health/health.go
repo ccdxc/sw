@@ -135,11 +135,13 @@ func NewClient(resolverClient resolver.Interface) *Client {
 // Start starts the periodic headbeats to the Leader
 func (c *Client) start(interval time.Duration) {
 
+	log.Infof("Starting health client")
 	go func() {
 		// Try to connect. It make take a few tries
 		for {
 			select {
 			case <-c.stop:
+				log.Infof("Stopping health client while trying to connect")
 				return
 			default:
 
@@ -172,7 +174,7 @@ func (c *Client) start(interval time.Duration) {
 				log.Infof("Sending heartbeat with NodeID %s", req.NodeID)
 				c.heartbeatClient.Heartbeat(context.Background(), req)
 			case <-c.stop:
-				log.Infof("Stop")
+				log.Infof("Stopping health client")
 				return
 			}
 		}
