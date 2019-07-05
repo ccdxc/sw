@@ -64,18 +64,9 @@ func (sm *Statemgr) OnSmartNICCreate(smartNic *ctkit.SmartNIC) error {
 		return err
 	}
 
-	// see if snic is healthy
-	isHealthy := false
-	if len(smartNic.Status.Conditions) > 0 {
-		for _, cond := range smartNic.Status.Conditions {
-			if cond.Type == "HEALTHY" && cond.Status == "TRUE" {
-				isHealthy = true
-			}
-		}
-	}
-
-	// Update SGPolicies
-	if isHealthy {
+	// see if smartnic is haelthy
+	if sm.isSmartNICHealthy(&smartNic.SmartNIC) {
+		// Update SGPolicies
 		policies, _ := sm.ListSgpolicies()
 		for _, policy := range policies {
 			if _, ok := policy.NodeVersions[smartNic.SmartNIC.Name]; ok == false {
@@ -83,10 +74,8 @@ func (sm *Statemgr) OnSmartNICCreate(smartNic *ctkit.SmartNIC) error {
 				sm.PeriodicUpdaterPush(policy)
 			}
 		}
-	}
 
-	// Update FirewallProfiles
-	if isHealthy {
+		// Update FirewallProfiles
 		fwprofiles, _ := sm.ListFirewallProfiles()
 		for _, fwprofile := range fwprofiles {
 			if _, ok := fwprofile.NodeVersions[smartNic.SmartNIC.Name]; ok == false {
@@ -141,20 +130,10 @@ func (sm *Statemgr) OnSmartNICUpdate(smartNic *ctkit.SmartNIC, nsnic *cluster.Sm
 
 	hs.SmartNIC.SmartNIC = *nsnic
 
-	// see if snic is healthy
-	isHealthy := false
-	if len(nsnic.Status.Conditions) > 0 {
-		for _, cond := range nsnic.Status.Conditions {
-			if cond.Type == "HEALTHY" && cond.Status == "TRUE" {
-				isHealthy = true
-			}
-		}
-	}
-
 	// Update SGPolicies
 	policies, _ := sm.ListSgpolicies()
 	for _, policy := range policies {
-		if isHealthy {
+		if sm.isSmartNICHealthy(&smartNic.SmartNIC) {
 			if _, ok := policy.NodeVersions[smartNic.SmartNIC.Name]; ok == false {
 				policy.NodeVersions[smartNic.SmartNIC.Name] = ""
 				sm.PeriodicUpdaterPush(policy)
@@ -168,9 +147,10 @@ func (sm *Statemgr) OnSmartNICUpdate(smartNic *ctkit.SmartNIC, nsnic *cluster.Sm
 		}
 	}
 
+	// update firewall profiles
 	fwprofiles, _ := sm.ListFirewallProfiles()
 	for _, fwprofile := range fwprofiles {
-		if isHealthy {
+		if sm.isSmartNICHealthy(&smartNic.SmartNIC) {
 			if _, ok := fwprofile.NodeVersions[smartNic.SmartNIC.Name]; ok == false {
 				fwprofile.NodeVersions[smartNic.SmartNIC.Name] = ""
 				sm.PeriodicUpdaterPush(fwprofile)
@@ -290,4 +270,18 @@ func (sm *Statemgr) FindSmartNICByHname(hname string) (*SmartNICState, error) {
 	}
 
 	return nil, fmt.Errorf("Smartnic not found for name %v", hname)
+}
+
+// isSmartNICHealthy returns true if smartnic is in healthry condition
+func (sm *Statemgr) isSmartNICHealthy(nsnic *cluster.SmartNIC) bool {
+	isHealthy := false
+	if len(nsnic.Status.Conditions) > 0 {
+		for _, cond := range nsnic.Status.Conditions {
+			if cond.Type == "HEALTHY" && cond.Status == "TRUE" {
+				isHealthy = true
+			}
+		}
+	}
+
+	return isHealthy
 }

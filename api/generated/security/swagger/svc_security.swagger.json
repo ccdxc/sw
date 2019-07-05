@@ -987,6 +987,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "propagation-status.status",
+            "description": "Textual description of propagation status.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1987,6 +1994,13 @@
           {
             "name": "propagation-status.min-version",
             "description": "The Version running on the slowest Naples.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "propagation-status.status",
+            "description": "Textual description of propagation status.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3108,6 +3122,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "propagation-status.status",
+            "description": "Textual description of propagation status.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -4134,6 +4155,13 @@
           {
             "name": "propagation-status.min-version",
             "description": "The Version running on the slowest Naples.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "propagation-status.status",
+            "description": "Textual description of propagation status.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -6414,30 +6442,6 @@
       },
       "title": "FirewallProfileList is a container object for list of FirewallProfile objects"
     },
-    "securityFirewallProfilePropagationStatus": {
-      "type": "object",
-      "properties": {
-        "generation-id": {
-          "type": "string",
-          "title": "The Generation ID this status is for"
-        },
-        "updated": {
-          "type": "integer",
-          "format": "int32",
-          "title": "The number of Naples that this version has already been pushed to"
-        },
-        "pending": {
-          "type": "integer",
-          "format": "int32",
-          "description": "Number of Naples pending. If this is 0 it can be assumed that everything is up to date."
-        },
-        "min-version": {
-          "type": "string",
-          "title": "The Version running on the slowest Naples"
-        }
-      },
-      "title": "FirewallProfilePropagationStatus - status part of FirewallProfileStatus"
-    },
     "securityFirewallProfileSpec": {
       "type": "object",
       "required": [
@@ -6538,7 +6542,7 @@
       "type": "object",
       "properties": {
         "propagation-status": {
-          "$ref": "#/definitions/securityFirewallProfilePropagationStatus",
+          "$ref": "#/definitions/securityPropagationStatus",
           "title": "The status of the configuration propagation to the Naples"
         }
       },
@@ -6601,6 +6605,33 @@
       },
       "title": "MSRPC ALG configuration"
     },
+    "securityPropagationStatus": {
+      "type": "object",
+      "properties": {
+        "generation-id": {
+          "type": "string",
+          "title": "The Generation ID this status is for"
+        },
+        "updated": {
+          "type": "integer",
+          "format": "int32",
+          "title": "The number of Naples that this version has already been pushed to"
+        },
+        "pending": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of Naples pending. If this is 0 it can be assumed that everything is up to date."
+        },
+        "min-version": {
+          "type": "string",
+          "title": "The Version running on the slowest Naples"
+        },
+        "status": {
+          "type": "string",
+          "title": "Textual description of propagation status"
+        }
+      }
+    },
     "securityProtoPort": {
       "type": "object",
       "properties": {
@@ -6659,29 +6690,6 @@
       },
       "title": "SGPolicyList is a container object for list of SGPolicy objects"
     },
-    "securitySGPolicyPropagationStatus": {
-      "type": "object",
-      "properties": {
-        "generation-id": {
-          "type": "string",
-          "title": "The Generation ID this status is for"
-        },
-        "updated": {
-          "type": "integer",
-          "format": "int32",
-          "title": "The number of Naples that this version has already been pushed to"
-        },
-        "pending": {
-          "type": "integer",
-          "format": "int32",
-          "description": "Number of Naples pending. If this is 0 it can be assumed that everything is up to date."
-        },
-        "min-version": {
-          "type": "string",
-          "title": "The Version running on the slowest Naples"
-        }
-      }
-    },
     "securitySGPolicySpec": {
       "type": "object",
       "properties": {
@@ -6710,7 +6718,7 @@
       "type": "object",
       "properties": {
         "propagation-status": {
-          "$ref": "#/definitions/securitySGPolicyPropagationStatus",
+          "$ref": "#/definitions/securityPropagationStatus",
           "title": "The status of the configuration propagation to the Naples"
         },
         "rule-status": {

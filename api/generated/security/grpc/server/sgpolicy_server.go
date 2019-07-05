@@ -47,7 +47,8 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 	l.Infof("registering message for ssecuritySgpolicyBackend")
 	s.Messages = map[string]apiserver.Message{
 
-		"security.ProtoPort": apisrvpkg.NewMessage("security.ProtoPort"),
+		"security.PropagationStatus": apisrvpkg.NewMessage("security.PropagationStatus"),
+		"security.ProtoPort":         apisrvpkg.NewMessage("security.ProtoPort"),
 		"security.SGPolicy": apisrvpkg.NewMessage("security.SGPolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := security.SGPolicy{}
@@ -327,11 +328,10 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 		}),
 
-		"security.SGPolicyPropagationStatus": apisrvpkg.NewMessage("security.SGPolicyPropagationStatus"),
-		"security.SGPolicySpec":              apisrvpkg.NewMessage("security.SGPolicySpec"),
-		"security.SGPolicyStatus":            apisrvpkg.NewMessage("security.SGPolicyStatus"),
-		"security.SGRule":                    apisrvpkg.NewMessage("security.SGRule"),
-		"security.SGRuleStatus":              apisrvpkg.NewMessage("security.SGRuleStatus"),
+		"security.SGPolicySpec":   apisrvpkg.NewMessage("security.SGPolicySpec"),
+		"security.SGPolicyStatus": apisrvpkg.NewMessage("security.SGPolicyStatus"),
+		"security.SGRule":         apisrvpkg.NewMessage("security.SGRule"),
+		"security.SGRuleStatus":   apisrvpkg.NewMessage("security.SGRuleStatus"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

@@ -69,27 +69,6 @@ func (m *FirewallProfile) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *FirewallProfilePropagationStatus) Clone(into interface{}) (interface{}, error) {
-	var out *FirewallProfilePropagationStatus
-	var ok bool
-	if into == nil {
-		out = &FirewallProfilePropagationStatus{}
-	} else {
-		out, ok = into.(*FirewallProfilePropagationStatus)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*FirewallProfilePropagationStatus))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *FirewallProfilePropagationStatus) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
 func (m *FirewallProfileSpec) Clone(into interface{}) (interface{}, error) {
 	var out *FirewallProfileSpec
 	var ok bool
@@ -224,19 +203,6 @@ func (m *FirewallProfile) Normalize() {
 	m.ObjectMeta.Normalize()
 
 	m.Spec.Normalize()
-
-}
-
-func (m *FirewallProfilePropagationStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
-
-}
-
-func (m *FirewallProfilePropagationStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *FirewallProfilePropagationStatus) Normalize() {
 
 }
 

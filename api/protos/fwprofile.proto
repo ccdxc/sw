@@ -8,6 +8,7 @@ import "google/api/annotations.proto";
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
+import "sgpolicy.proto";
 
 // ----------------------------- FirewallProfile Object -----------------------------
 
@@ -38,22 +39,11 @@ message FirewallProfileSpec {
 }
 
 
-// FirewallProfilePropagationStatus - status part of FirewallProfileStatus
-message FirewallProfilePropagationStatus {
-    // The Generation ID this status is for
-    string GenerationID = 1 [(gogoproto.jsontag) = "generation-id"];
-    // The number of Naples that this version has already been pushed to
-    int32 Updated = 2 [(gogoproto.jsontag) = "updated"];
-    // Number of Naples pending. If this is 0 it can be assumed that everything is up to date.
-    int32 Pending = 3 [(gogoproto.jsontag) = "pending"];
-    // The Version running on the slowest Naples
-    string MinVersion = 4 [(gogoproto.jsontag) = "min-version"];
-    // TODO: do we show default values for attributes that can not be set, here?
-}
+
 // FirewallProfileStatus - status part of FirewallProfileObject
 message FirewallProfileStatus {
     // The status of the configuration propagation to the Naples
-    FirewallProfilePropagationStatus PropagationStatus = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "propagation-status"];
+    PropagationStatus PropagationStatus = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "propagation-status"];
     
 }
 // FirewallProfile - defined one per tenant

@@ -52,6 +52,27 @@ func (m *SGPolicy) MakeURI(cat, ver, prefix string) string {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *PropagationStatus) Clone(into interface{}) (interface{}, error) {
+	var out *PropagationStatus
+	var ok bool
+	if into == nil {
+		out = &PropagationStatus{}
+	} else {
+		out, ok = into.(*PropagationStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*PropagationStatus))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *PropagationStatus) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *ProtoPort) Clone(into interface{}) (interface{}, error) {
 	var out *ProtoPort
 	var ok bool
@@ -98,27 +119,6 @@ func (m *SGPolicy) Defaults(ver string) bool {
 	}
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *SGPolicyPropagationStatus) Clone(into interface{}) (interface{}, error) {
-	var out *SGPolicyPropagationStatus
-	var ok bool
-	if into == nil {
-		out = &SGPolicyPropagationStatus{}
-	} else {
-		out, ok = into.(*SGPolicyPropagationStatus)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*SGPolicyPropagationStatus))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SGPolicyPropagationStatus) Defaults(ver string) bool {
-	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -218,6 +218,19 @@ func (m *SGRuleStatus) Defaults(ver string) bool {
 
 // Validators and Requirements
 
+func (m *PropagationStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *PropagationStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *PropagationStatus) Normalize() {
+
+}
+
 func (m *ProtoPort) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -316,19 +329,6 @@ func (m *SGPolicy) Normalize() {
 	m.ObjectMeta.Normalize()
 
 	m.Spec.Normalize()
-
-}
-
-func (m *SGPolicyPropagationStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
-
-}
-
-func (m *SGPolicyPropagationStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *SGPolicyPropagationStatus) Normalize() {
 
 }
 

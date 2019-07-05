@@ -17,6 +17,40 @@ import (
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
 
+func encodeHTTPPropagationStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPPropagationStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req PropagationStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqPropagationStatus encodes GRPC request
+func EncodeGrpcReqPropagationStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PropagationStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqPropagationStatus decodes GRPC request
+func DecodeGrpcReqPropagationStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PropagationStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespPropagationStatus encodes GRC response
+func EncodeGrpcRespPropagationStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespPropagationStatus decodes GRPC response
+func DecodeGrpcRespPropagationStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPProtoPort(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -82,40 +116,6 @@ func EncodeGrpcRespSGPolicy(ctx context.Context, response interface{}) (interfac
 
 // DecodeGrpcRespSGPolicy decodes GRPC response
 func DecodeGrpcRespSGPolicy(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSGPolicyPropagationStatus(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSGPolicyPropagationStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SGPolicyPropagationStatus
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSGPolicyPropagationStatus encodes GRPC request
-func EncodeGrpcReqSGPolicyPropagationStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SGPolicyPropagationStatus)
-	return req, nil
-}
-
-// DecodeGrpcReqSGPolicyPropagationStatus decodes GRPC request
-func DecodeGrpcReqSGPolicyPropagationStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SGPolicyPropagationStatus)
-	return req, nil
-}
-
-// EncodeGrpcRespSGPolicyPropagationStatus encodes GRC response
-func EncodeGrpcRespSGPolicyPropagationStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSGPolicyPropagationStatus decodes GRPC response
-func DecodeGrpcRespSGPolicyPropagationStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

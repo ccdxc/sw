@@ -70,7 +70,7 @@ message SGPolicySpec {
     repeated SGRule Rules       = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "rules,omitempty"];
 }
 
-message SGPolicyPropagationStatus {
+message PropagationStatus {
     // The Generation ID this status is for
     string GenerationID = 1 [(gogoproto.jsontag) = "generation-id"];
     // The number of Naples that this version has already been pushed to
@@ -79,6 +79,8 @@ message SGPolicyPropagationStatus {
     int32 Pending = 3 [(gogoproto.jsontag) = "pending"];
     // The Version running on the slowest Naples
     string MinVersion = 4 [(gogoproto.jsontag) = "min-version"];
+    // Textual description of propagation status
+    string Status = 5 [(gogoproto.jsontag) = "status"];
 }
 
 message SGRuleStatus {
@@ -87,7 +89,7 @@ message SGRuleStatus {
 
 message SGPolicyStatus {
     // The status of the configuration propagation to the Naples
-    SGPolicyPropagationStatus PropagationStatus = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "propagation-status"];
+    PropagationStatus PropagationStatus         = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "propagation-status"];
     repeated SGRuleStatus RuleStatus            = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "rule-status,omitempty"];
 }
 

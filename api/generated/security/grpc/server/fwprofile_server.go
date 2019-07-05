@@ -326,9 +326,8 @@ func (s *ssecurityFwprofileBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sc
 			}
 		}),
 
-		"security.FirewallProfilePropagationStatus": apisrvpkg.NewMessage("security.FirewallProfilePropagationStatus"),
-		"security.FirewallProfileSpec":              apisrvpkg.NewMessage("security.FirewallProfileSpec"),
-		"security.FirewallProfileStatus":            apisrvpkg.NewMessage("security.FirewallProfileStatus"),
+		"security.FirewallProfileSpec":   apisrvpkg.NewMessage("security.FirewallProfileSpec"),
+		"security.FirewallProfileStatus": apisrvpkg.NewMessage("security.FirewallProfileStatus"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

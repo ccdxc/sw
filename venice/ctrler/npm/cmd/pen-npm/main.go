@@ -28,7 +28,7 @@ func main() {
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		listenURL       = flag.String("listen-url", ":"+globals.NpmRPCPort, "gRPC listener URL")
 		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
-		restURL         = flag.String("rest-url", ":"+globals.NpmRESTPort, "rest listener URL")
+		restURL         = flag.String("rest-url", globals.Localhost+":"+globals.NpmRESTPort, "rest listener URL")
 	)
 	flag.Parse()
 

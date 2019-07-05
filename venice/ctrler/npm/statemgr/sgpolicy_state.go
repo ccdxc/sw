@@ -137,15 +137,24 @@ func (sgp *SgpolicyState) Write() error {
 	prop.Updated = 0
 	prop.Pending = 0
 	prop.MinVersion = ""
-	for _, ver := range sgp.NodeVersions {
+	pendingNodes := ""
+	for nid, ver := range sgp.NodeVersions {
 		if ver == prop.GenerationID {
 			prop.Updated++
 		} else {
 			prop.Pending++
+			pendingNodes += fmt.Sprintf("%s, ", nid)
 			if prop.MinVersion == "" || versionToInt(ver) < versionToInt(prop.MinVersion) {
 				prop.MinVersion = ver
 			}
 		}
+	}
+
+	// set status
+	if prop.Pending == 0 {
+		prop.Status = fmt.Sprintf("Propagation Complete")
+	} else {
+		prop.Status = fmt.Sprintf("Propagation pending on: %s", pendingNodes)
 	}
 
 	return sgp.SGPolicy.Write()
@@ -319,6 +328,13 @@ func (sm *Statemgr) OnSGPolicyCreate(sgp *ctkit.SGPolicy) error {
 		return err
 	}
 
+	// in case of errors, write status back
+	defer func() {
+		if err != nil {
+			sgp.SGPolicy.Status.PropagationStatus.Status = fmt.Sprintf("SGPolicy error: %s", err.Error())
+		}
+	}()
+
 	// find and update all attached apps
 	err = sgps.updateAttachedApps()
 	if err != nil {
@@ -364,6 +380,13 @@ func (sm *Statemgr) OnSGPolicyUpdate(sgp *ctkit.SGPolicy, nsgp *security.SGPolic
 		log.Errorf("Can find sg policy for updating {%+v}. Err: {%v}", sgp.ObjectMeta, err)
 		return fmt.Errorf("Can not find sg policy")
 	}
+
+	// in case of errors, write status back
+	defer func() {
+		if err != nil {
+			sgp.SGPolicy.Status.PropagationStatus.Status = fmt.Sprintf("SGPolicy error: %s", err.Error())
+		}
+	}()
 
 	// find and update all attached apps
 	err = sgps.updateAttachedApps()
@@ -423,6 +446,15 @@ func (sm *Statemgr) UpdateSgpolicyStatus(nodeuuid, tenant, name, generationID st
 	policy, err := sm.FindSgpolicy(tenant, name)
 	if err != nil {
 		return
+	}
+
+	// find smartnic object
+	snic, err := sm.FindSmartNIC(tenant, nodeuuid)
+	if err == nil {
+		// if smartnic is not healthy, dont update
+		if !sm.isSmartNICHealthy(&snic.SmartNIC.SmartNIC) {
+			return
+		}
 	}
 
 	// lock policy for concurrent modifications

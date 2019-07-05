@@ -24,7 +24,6 @@
 		Msrpc
 		Sunrpc
 		FirewallProfile
-		FirewallProfilePropagationStatus
 		FirewallProfileSpec
 		FirewallProfileStatus
 		IPsecProtocolSpec
@@ -35,9 +34,9 @@
 		SecurityGroup
 		SecurityGroupSpec
 		SecurityGroupStatus
+		PropagationStatus
 		ProtoPort
 		SGPolicy
-		SGPolicyPropagationStatus
 		SGPolicySpec
 		SGPolicyStatus
 		SGRule
