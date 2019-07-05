@@ -413,6 +413,12 @@ func (n *NMD) AdmitNaples() {
 				nicObj.Status.AdmissionPhaseReason = msg.AdmissionResponse.Reason
 				n.config.Status.AdmissionPhase = msg.AdmissionResponse.Phase
 				n.config.Status.AdmissionPhaseReason = msg.AdmissionResponse.Reason
+			} else {
+				if 2*n.nicRegInterval <= 15 {
+					n.nicRegInterval = 2 * n.nicRegInterval
+				} else {
+					n.nicRegInterval = globals.NicRegIntvl
+				}
 			}
 			n.SetSmartNIC(nicObj)
 
