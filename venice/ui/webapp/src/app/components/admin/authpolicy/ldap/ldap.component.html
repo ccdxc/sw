@@ -128,9 +128,16 @@
             <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
               <span>* Bind DN:</span>
             </div>
-            <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+            <div *ngIf="inCreateMode || !LDAPEditMode; else inUpdateMode" class="ldap-fieldtitle"
+                 fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
               <span>* Bind Password:</span>
             </div>
+            <ng-template #inUpdateMode>
+              <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row"
+                   fxLayoutAlign="start center">
+                <span>Bind Password:</span>
+              </div>
+            </ng-template>
           </div>
           <!-- Field Values - edit mode -->
           <ng-container *ngIf="LDAPEditMode">

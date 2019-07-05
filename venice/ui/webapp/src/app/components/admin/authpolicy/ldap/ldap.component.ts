@@ -87,7 +87,9 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     // TODO: Changing auth.proto LDAP validation rule has ripple effects on go-test, we set validator in UI 2019-01-24
     this.LDAPObject.$formGroup.get(['bind-dn']).setValidators(required);
     this.LDAPObject.$formGroup.get(['base-dn']).setValidators(required);
-    this.LDAPObject.$formGroup.get(['bind-password']).setValidators(required);
+    if (this.inCreateMode) {
+      this.LDAPObject.$formGroup.get(['bind-password']).setValidators(required);
+    }
 
     const attribute_mapping: AbstractControl = this.LDAPObject.$formGroup.get('attribute-mapping') as AbstractControl;
     attribute_mapping.get('user-object-class').setValidators(required);

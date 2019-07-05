@@ -15,7 +15,7 @@
 }
 
 .user-panel-rolegroup-header-row-item {
-  height: 24px;
+  height: auto;
   font-size: 20px;
   font-weight: normal;
   font-style: normal;
@@ -24,6 +24,7 @@
   letter-spacing: normal;
   color: #676763;
   margin-left: 10px;
+  word-break: break-all;
 }
 
 .usertemplate-div {
@@ -109,7 +110,7 @@
 
 .usertemplate-div-card-roles {
 
-  height: 20px;
+  height: auto;
   width: auto;
   margin: 0;
   font-weight: 400;
@@ -118,6 +119,7 @@
   color: rgba(103, 103, 99, 1.0);
   text-align: left;
   line-height: 19.0px;
+  word-break: break-all;
 }
 
 .usertemplate-div-card-item {
