@@ -275,6 +275,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 	for i := 0; i < it.config.NumHosts; i++ {
 		AssertOk(c, <-waitCh, "Endpoint info incorrect in datapath")
 	}
+	time.Sleep(time.Second)
 
 	// delete the security group
 	_, err = it.restClient.SecurityV1().SecurityGroup().Delete(ctx, &sg.ObjectMeta)

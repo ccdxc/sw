@@ -87,6 +87,7 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		var err error
 
 		s.tmagent.tpState.UpdateHostName(obj.GetID())
+		s.tmagent.restServer.SetNodeUUID(obj.GetSmartNicName())
 		for _, ip := range obj.Controllers {
 			controllers = append(controllers, fmt.Sprintf("%s:%s", ip, globals.CMDResolverPort))
 		}

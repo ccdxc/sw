@@ -213,6 +213,11 @@ func (s *RestServer) GetListenURL() string {
 	return ""
 }
 
+// SetNodeUUID sets node UUID of the naples in REST server
+func (s *RestServer) SetNodeUUID(uuid string) {
+	s.gensrv.SetNodeUUID(uuid)
+}
+
 // Stop stops the http server
 func (s *RestServer) Stop() error {
 	if s.httpServer != nil {
