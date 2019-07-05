@@ -41,11 +41,13 @@ var FwlogFilter_normal = map[string]string{
 	"FIREWALL_ACTION_DENY":   "FIREWALL_ACTION_DENY",
 	"FIREWALL_ACTION_NONE":   "FIREWALL_ACTION_NONE",
 	"FIREWALL_ACTION_REJECT": "FIREWALL_ACTION_REJECT",
+	"FIREWALL_IMPLICIT_DENY": "FIREWALL_IMPLICIT_DENY",
 	"firewall_action_all":    "FIREWALL_ACTION_ALL",
 	"firewall_action_allow":  "FIREWALL_ACTION_ALLOW",
 	"firewall_action_deny":   "FIREWALL_ACTION_DENY",
 	"firewall_action_none":   "FIREWALL_ACTION_NONE",
 	"firewall_action_reject": "FIREWALL_ACTION_REJECT",
+	"firewall_implicit_deny": "FIREWALL_IMPLICIT_DENY",
 }
 
 var _ validators.DummyVar

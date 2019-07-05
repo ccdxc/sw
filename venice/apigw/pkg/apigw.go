@@ -657,6 +657,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 		var ok bool
 		user, ok = a.isRequestAuthenticated(nctx)
 		if !ok {
+			a.logger.ErrorLog("method", "HandleRequest", "msg", "authentication failed")
 			return nil, apierrors.ToGrpcError("Authentication failed", []string{"Not authenticated"}, int32(codes.Unauthenticated), "", nil)
 		}
 		// add user to context

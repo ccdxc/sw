@@ -82,8 +82,10 @@ enum FwlogFilter {
     FIREWALL_ACTION_DENY= 2;
     // ui-hint: Reject Logs
     FIREWALL_ACTION_REJECT = 3;
+    // ui-hint: Implicit Deny Logs
+    FIREWALL_IMPLICIT_DENY = 4;
     // ui-hint: All Logs
-    FIREWALL_ACTION_ALL = 4;
+    FIREWALL_ACTION_ALL = 5;
 }
 
 // Venice collects fwlog irrespective of the export config

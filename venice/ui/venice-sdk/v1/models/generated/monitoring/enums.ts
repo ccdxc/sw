@@ -85,6 +85,7 @@ export enum MonitoringFwlogPolicySpec_filter {
     'FIREWALL_ACTION_ALLOW' = "FIREWALL_ACTION_ALLOW",
     'FIREWALL_ACTION_DENY' = "FIREWALL_ACTION_DENY",
     'FIREWALL_ACTION_REJECT' = "FIREWALL_ACTION_REJECT",
+    'FIREWALL_IMPLICIT_DENY' = "FIREWALL_IMPLICIT_DENY",
     'FIREWALL_ACTION_ALL' = "FIREWALL_ACTION_ALL",
 }
 
@@ -234,6 +235,7 @@ export enum MonitoringFwlogPolicySpec_filter_uihint {
     'FIREWALL_ACTION_DENY' = "Deny Logs",
     'FIREWALL_ACTION_NONE' = "No Logs",
     'FIREWALL_ACTION_REJECT' = "Reject Logs",
+    'FIREWALL_IMPLICIT_DENY' = "Implicit Deny Logs",
 }
 
 export enum MonitoringMatchedRequirement_operator_uihint {

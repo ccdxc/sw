@@ -14053,6 +14053,7 @@
             "FIREWALL_ACTION_ALLOW",
             "FIREWALL_ACTION_DENY",
             "FIREWALL_ACTION_REJECT",
+            "FIREWALL_IMPLICIT_DENY",
             "FIREWALL_ACTION_ALL"
           ],
           "default": "FIREWALL_ACTION_ALL",
@@ -14061,7 +14062,8 @@
             "FIREWALL_ACTION_ALLOW": "Allow Logs",
             "FIREWALL_ACTION_DENY": "Deny Logs",
             "FIREWALL_ACTION_NONE": "No Logs",
-            "FIREWALL_ACTION_REJECT": "Reject Logs"
+            "FIREWALL_ACTION_REJECT": "Reject Logs",
+            "FIREWALL_IMPLICIT_DENY": "Implicit Deny Logs"
           },
           "title": "filter firewall logs, FWLOG_ALL default"
         },

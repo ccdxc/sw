@@ -780,6 +780,11 @@ func TestProcessFWEvent(t *testing.T) {
 	AssertOk(t, err, "failed to create tcp syslog server")
 	defer tcpl2()
 
+	tcpch3 := make(chan []byte, 1024)
+	tcpAddr3, tcpl3, err := startSyslogServer("tcp", tcpch3)
+	AssertOk(t, err, "failed to create tcp syslog server")
+	defer tcpl3()
+
 	udpch1 := make(chan []byte, 1024)
 	udpAddr1, udpl1, err := startSyslogServer("udp", udpch1)
 	AssertOk(t, err, "failed to create udp syslog server")
@@ -842,11 +847,36 @@ func TestProcessFWEvent(t *testing.T) {
 			},
 		},
 	}
+	fwPolicy3 := &tpmprotos.FwlogPolicy{
+		TypeMeta: api.TypeMeta{
+			Kind: "FwlogPolicy",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Namespace: globals.DefaultNamespace,
+			Name:      "policy3",
+		},
+		Spec: monitoring.FwlogPolicySpec{
+			Targets: []monitoring.ExportConfig{
+				{
+					Destination: strings.Split(tcpAddr3, ":")[0],
+					Transport:   fmt.Sprintf("tcp/%s", strings.Split(tcpAddr3, ":")[1]),
+				},
+			},
+			Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+			Filter: []string{monitoring.FwlogFilter_FIREWALL_IMPLICIT_DENY.String()},
+			Config: &monitoring.SyslogExportConfig{
+				FacilityOverride: monitoring.SyslogFacility_LOG_LOCAL0.String(),
+			},
+		},
+	}
 
 	err = ps.CreateFwlogPolicy(ctx, fwPolicy1)
 	AssertOk(t, err, "failed to create fwlog policy")
 
 	err = ps.CreateFwlogPolicy(ctx, fwPolicy2)
+	AssertOk(t, err, "failed to create fwlog policy")
+
+	err = ps.CreateFwlogPolicy(ctx, fwPolicy3)
 	AssertOk(t, err, "failed to create fwlog policy")
 
 	srcIPStr := "192.168.10.1"
@@ -884,8 +914,8 @@ func TestProcessFWEvent(t *testing.T) {
 			return true
 		})
 
-		// total 4 syslog collectors are configured
-		return len(kmap) == 4, kmap
+		// total 5 syslog collectors are configured
+		return len(kmap) == 5, kmap
 
 	}, "failed to connect to syslog", "1s")
 
@@ -899,7 +929,7 @@ func TestProcessFWEvent(t *testing.T) {
 			fwEvent: &halproto.FWEvent{
 				SourceVrf: nm.Status.VrfID,
 				DestVrf:   nm.Status.VrfID,
-				Fwaction:  halproto.SecurityAction_SECURITY_RULE_ACTION_ALLOW,
+				Fwaction:  halproto.SecurityAction_SECURITY_RULE_ACTION_IMPLICIT_DENY,
 				Sipv4:     srcIP,
 				Dipv4:     destIP,
 				Dport:     10000,
@@ -913,7 +943,7 @@ func TestProcessFWEvent(t *testing.T) {
 
 		// verify
 		for k, v := range map[string][]chan []byte{
-			"rfc3164": {tcpch1, udpch1},
+			"rfc3164": {tcpch1, tcpch3, udpch1},
 			"rfc5424": {tcpch2, udpch2},
 		} {
 			if k == "rfc3164" {
