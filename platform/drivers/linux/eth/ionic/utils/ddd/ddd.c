@@ -13,7 +13,8 @@ typedef uint16_t u16, __le16;
 typedef uint32_t u32, __le32;
 typedef uint64_t u64, __le64;
 typedef uint64_t dma_addr_t;
-#define BIT(n)  (1 << (n))
+#define BIT(n)		(1 << (n))
+#define BIT_ULL(n)	(1ULL << (n))
 
 typedef u8 bool;
 #define false 0
@@ -179,6 +180,7 @@ void dump_txq(char *path)
 	int head = get_val(path, "head");
 	int tail = get_val(path, "tail");
 	int num_descs = get_val(path, "num_descs");
+	int num_sges = 0;
 
 	fpath = make_path(path, "desc_blob");
 	file = fopen(fpath, "rb");
@@ -197,11 +199,13 @@ void dump_txq(char *path)
 	char *txq_opcode(u8 opcode)
 	{
 		switch (opcode) {
-		case TXQ_DESC_OPCODE_CALC_NO_CSUM:
-			return "CALC_NO_CSUM";
-		case TXQ_DESC_OPCODE_CALC_CSUM:
-			return "CALC_CSUM";
-		case TXQ_DESC_OPCODE_TSO:
+		case IONIC_TXQ_DESC_OPCODE_CSUM_NONE:
+			return "CSUM_NONE";
+		case IONIC_TXQ_DESC_OPCODE_CSUM_PARTIAL:
+			return "CSUM_PARTIAL";
+		case IONIC_TXQ_DESC_OPCODE_CSUM_HW:
+			return "CSUM_HW";
+		case IONIC_TXQ_DESC_OPCODE_TSO:
 			return "TSO";
 		default:
 			return "???";
@@ -215,38 +219,54 @@ void dump_txq(char *path)
 		printf("%s", heads_or_tails(i, head, tail));
 		printf("[%04x]", i);
 
-		switch (desc.opcode) {
-		case TXQ_DESC_OPCODE_CALC_CSUM:
-			printf(" %-15s flags %s%s%s-- addr 0x%lx len %d",
-			       txq_opcode(desc.opcode), desc.V ? "V" : "-",
-			       desc.C ? "C" : "-", desc.O ? "O" : "-",
-			       (u64)desc.addr, desc.len);
-			printf(" hdr_len %d csum_offset %d", desc.hdr_len,
-			       desc.csum_offset);
+		switch ((desc.cmd >> IONIC_TXQ_DESC_OPCODE_SHIFT) & IONIC_TXQ_DESC_OPCODE_MASK) {
+		case IONIC_TXQ_DESC_OPCODE_CSUM_PARTIAL:
+			printf(" %-15s flags %s%s-- addr 0x%llx len %d",
+			       txq_opcode((desc.cmd >> IONIC_TXQ_DESC_OPCODE_SHIFT) & IONIC_TXQ_DESC_OPCODE_MASK),
+			       (desc.cmd & IONIC_TXQ_DESC_FLAG_VLAN) ? "V" : "-",
+			       (desc.cmd & IONIC_TXQ_DESC_FLAG_ENCAP) ? "O" : "-",
+			       ((u64)desc.cmd >> IONIC_TXQ_DESC_ADDR_SHIFT) & IONIC_TXQ_DESC_ADDR_MASK,
+			       desc.len);
+			printf(" csum_start %d csum_offset %d", desc.csum_start, desc.csum_offset);
 			break;
-		case TXQ_DESC_OPCODE_TSO:
-			printf(" %-15s flags %s%s%s%s%s addr 0x%lx len %d",
-			       txq_opcode(desc.opcode), desc.V ? "V" : "-",
-			       desc.C ? "C" : "-", desc.O ? "O" : "-",
-			       desc.S ? "S" : "-", desc.E ? "E" : "-",
-			       (u64)desc.addr, desc.len);
-			printf(" hdr_len %d mss %d", desc.hdr_len,
-			       desc.mss);
+		case IONIC_TXQ_DESC_OPCODE_CSUM_HW:
+			printf(" %-15s flags %s%s%s%s-- addr 0x%llx len %d",
+			       txq_opcode((desc.cmd >> IONIC_TXQ_DESC_OPCODE_SHIFT) & IONIC_TXQ_DESC_OPCODE_MASK),
+			       (desc.cmd & IONIC_TXQ_DESC_FLAG_VLAN) ? "V" : "-",
+			       (desc.cmd & IONIC_TXQ_DESC_FLAG_ENCAP) ? "O" : "-",
+			       (desc.cmd & IONIC_TXQ_DESC_FLAG_CSUM_L3) ? "3" : "-",
+			       (desc.cmd & IONIC_TXQ_DESC_FLAG_CSUM_L4) ? "4" : "-",
+			       ((u64)desc.cmd >> IONIC_TXQ_DESC_ADDR_SHIFT) & IONIC_TXQ_DESC_ADDR_MASK,
+			       desc.len);
+			break;
+		case IONIC_TXQ_DESC_OPCODE_TSO:
+			printf(" %-15s flags %s%s%s%s addr 0x%llx len %d",
+			       txq_opcode((desc.cmd >> IONIC_TXQ_DESC_OPCODE_SHIFT) & IONIC_TXQ_DESC_OPCODE_MASK),
+			       (desc.cmd & IONIC_TXQ_DESC_FLAG_VLAN) ? "V" : "-",
+			       (desc.cmd & IONIC_TXQ_DESC_FLAG_ENCAP) ? "O" : "-",
+			       (desc.cmd & IONIC_TXQ_DESC_FLAG_TSO_SOT) ? "S" : "-",
+			       (desc.cmd & IONIC_TXQ_DESC_FLAG_TSO_EOT) ? "E" : "-",
+			       ((u64)desc.cmd >> IONIC_TXQ_DESC_ADDR_SHIFT) & IONIC_TXQ_DESC_ADDR_MASK,
+			       desc.len);
+			printf(" hdr_len %d mss %d", desc.hdr_len, desc.mss);
 			break;
 		default:
-			printf(" %-15s flags %s%s%s-- addr 0x%lx len %d",
-			       txq_opcode(desc.opcode), desc.V ? "V" : "-",
-			       desc.C ? "C" : "-", desc.O ? "O" : "-",
-			       (u64)desc.addr, desc.len);
+			printf(" %-15s flags %s%s-- addr 0x%llx len %d",
+			       txq_opcode((desc.cmd >> IONIC_TXQ_DESC_OPCODE_SHIFT) & IONIC_TXQ_DESC_OPCODE_MASK),
+			       (desc.cmd & IONIC_TXQ_DESC_FLAG_VLAN) ? "V" : "-",
+			       (desc.cmd & IONIC_TXQ_DESC_FLAG_ENCAP) ? "O" : "-",
+			       ((u64)desc.cmd >> IONIC_TXQ_DESC_ADDR_SHIFT) & IONIC_TXQ_DESC_ADDR_MASK,
+			       desc.len);
 			break;
 		}
 
-		if (desc.vlan_tci)
+		if (desc.cmd & IONIC_TXQ_DESC_FLAG_VLAN)
 			printf(" vlan 0x%04x", desc.vlan_tci);
 
 		printf("\n");
 
-		for (j = 0; j < desc.num_sg_elems; j++) {
+		num_sges = (desc.cmd >> IONIC_TXQ_DESC_NSGE_SHIFT) & IONIC_TXQ_DESC_NSGE_MASK;
+		for (j = 0; j < num_sges; j++) {
 			printf("                                       addr 0x%lx len %d\n",
 			       (u64)sg_desc.elems[j].addr,
 			       sg_desc.elems[j].len);
