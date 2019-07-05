@@ -25,6 +25,9 @@ The following Messages are defined.
   NodeSpec
   NodeStatus
   OsInfo
+  QuorumMemberCondition
+  QuorumMemberStatus
+  QuorumStatus
   SmartNICID
   StorageDeviceInfo
   StorageInfo

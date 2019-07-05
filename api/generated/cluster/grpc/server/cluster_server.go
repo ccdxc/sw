@@ -1081,14 +1081,17 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			}
 		}),
 
-		"cluster.NodeCondition":     apisrvpkg.NewMessage("cluster.NodeCondition"),
-		"cluster.NodeInfo":          apisrvpkg.NewMessage("cluster.NodeInfo"),
-		"cluster.NodeSpec":          apisrvpkg.NewMessage("cluster.NodeSpec"),
-		"cluster.NodeStatus":        apisrvpkg.NewMessage("cluster.NodeStatus"),
-		"cluster.OsInfo":            apisrvpkg.NewMessage("cluster.OsInfo"),
-		"cluster.SmartNICID":        apisrvpkg.NewMessage("cluster.SmartNICID"),
-		"cluster.StorageDeviceInfo": apisrvpkg.NewMessage("cluster.StorageDeviceInfo"),
-		"cluster.StorageInfo":       apisrvpkg.NewMessage("cluster.StorageInfo"),
+		"cluster.NodeCondition":         apisrvpkg.NewMessage("cluster.NodeCondition"),
+		"cluster.NodeInfo":              apisrvpkg.NewMessage("cluster.NodeInfo"),
+		"cluster.NodeSpec":              apisrvpkg.NewMessage("cluster.NodeSpec"),
+		"cluster.NodeStatus":            apisrvpkg.NewMessage("cluster.NodeStatus"),
+		"cluster.OsInfo":                apisrvpkg.NewMessage("cluster.OsInfo"),
+		"cluster.QuorumMemberCondition": apisrvpkg.NewMessage("cluster.QuorumMemberCondition"),
+		"cluster.QuorumMemberStatus":    apisrvpkg.NewMessage("cluster.QuorumMemberStatus"),
+		"cluster.QuorumStatus":          apisrvpkg.NewMessage("cluster.QuorumStatus"),
+		"cluster.SmartNICID":            apisrvpkg.NewMessage("cluster.SmartNICID"),
+		"cluster.StorageDeviceInfo":     apisrvpkg.NewMessage("cluster.StorageDeviceInfo"),
+		"cluster.StorageInfo":           apisrvpkg.NewMessage("cluster.StorageInfo"),
 		"cluster.UpdateTLSConfigRequest": apisrvpkg.NewMessage("cluster.UpdateTLSConfigRequest").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := cluster.UpdateTLSConfigRequest{}

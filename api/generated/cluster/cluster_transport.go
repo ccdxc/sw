@@ -629,6 +629,108 @@ func DecodeGrpcRespOsInfo(ctx context.Context, response interface{}) (interface{
 	return response, nil
 }
 
+func encodeHTTPQuorumMemberCondition(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPQuorumMemberCondition(_ context.Context, r *http.Request) (interface{}, error) {
+	var req QuorumMemberCondition
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqQuorumMemberCondition encodes GRPC request
+func EncodeGrpcReqQuorumMemberCondition(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*QuorumMemberCondition)
+	return req, nil
+}
+
+// DecodeGrpcReqQuorumMemberCondition decodes GRPC request
+func DecodeGrpcReqQuorumMemberCondition(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*QuorumMemberCondition)
+	return req, nil
+}
+
+// EncodeGrpcRespQuorumMemberCondition encodes GRC response
+func EncodeGrpcRespQuorumMemberCondition(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespQuorumMemberCondition decodes GRPC response
+func DecodeGrpcRespQuorumMemberCondition(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPQuorumMemberStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPQuorumMemberStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req QuorumMemberStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqQuorumMemberStatus encodes GRPC request
+func EncodeGrpcReqQuorumMemberStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*QuorumMemberStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqQuorumMemberStatus decodes GRPC request
+func DecodeGrpcReqQuorumMemberStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*QuorumMemberStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespQuorumMemberStatus encodes GRC response
+func EncodeGrpcRespQuorumMemberStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespQuorumMemberStatus decodes GRPC response
+func DecodeGrpcRespQuorumMemberStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPQuorumStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPQuorumStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req QuorumStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqQuorumStatus encodes GRPC request
+func EncodeGrpcReqQuorumStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*QuorumStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqQuorumStatus decodes GRPC request
+func DecodeGrpcReqQuorumStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*QuorumStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespQuorumStatus encodes GRC response
+func EncodeGrpcRespQuorumStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespQuorumStatus decodes GRPC response
+func DecodeGrpcRespQuorumStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPSmartNICID(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

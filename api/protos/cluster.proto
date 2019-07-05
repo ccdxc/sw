@@ -78,6 +78,44 @@ message ClusterSpec {
     string Key                  = 6 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "key,omitempty"];
 }
 
+message QuorumMemberCondition {
+    enum ConditionType {
+        // ui-hint: Healthy
+        HEALTHY = 0; // Quorum member is alive and voting on transactions
+    }
+    // Type indicates a certain node condition
+    string Type                 = 1 [(venice.check) = "StrEnum(QuorumMemberCondition.ConditionType)",
+                                    (gogoproto.jsontag) = "type,omitempty"];
+    // Condition Status
+    string Status               = 2 [(venice.check) = "StrEnum(ConditionStatus)",
+                                    (gogoproto.jsontag) = "status,omitempty"];
+
+    // The last time the condition transitioned
+    string LastTransitionTime   = 3 [(gogoproto.jsontag) = "last-transition-time,omitempty"];
+}
+
+message QuorumMemberStatus {
+    // A unique identifier for this quorum member
+    string ID                                 = 1 [(gogoproto.jsontag) = "id,omitempty"];
+
+    // The name of the quorum member, matching the node name
+    string Name                               = 2 [(gogoproto.jsontag) = "name,omitempty"];
+
+    // "Started" if the member succesfully joined the quorum, "Unstarted" otherwise
+    string Status                             = 3 [(gogoproto.jsontag) = "status,omitempty"];
+
+    // The last election term this member has participated in
+    string Term                               = 4 [(gogoproto.jsontag) = "term,omitempty"];
+
+    // Conditions reported by the quorum member
+    repeated QuorumMemberCondition Conditions = 5 [(gogoproto.jsontag) = "term,omitempty"];
+}
+
+// QuorumStatus contains the current state of the quorum, including registered members and health
+message QuorumStatus {
+    repeated QuorumMemberStatus Members = 1 [(gogoproto.jsontag) = "members,omitempty"];
+}
+
 // ClusterStatus contains the current state of the Cluster.
 message ClusterStatus {
     // Leader contains the node name of the cluster leader.

@@ -59,6 +59,12 @@ var NodeStatus_NodePhase_normal = map[string]string{
 	"unknown": "UNKNOWN",
 }
 
+// QuorumMemberCondition_ConditionType_normal is a map of normalized values for the enum
+var QuorumMemberCondition_ConditionType_normal = map[string]string{
+	"HEALTHY": "HEALTHY",
+	"healthy": "HEALTHY",
+}
+
 // ConditionStatus_normal is a map of normalized values for the enum
 var ConditionStatus_normal = map[string]string{
 	"FALSE":   "FALSE",
@@ -567,6 +573,90 @@ func (m *OsInfo) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *OsInfo) Defaults(ver string) bool {
 	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *QuorumMemberCondition) Clone(into interface{}) (interface{}, error) {
+	var out *QuorumMemberCondition
+	var ok bool
+	if into == nil {
+		out = &QuorumMemberCondition{}
+	} else {
+		out, ok = into.(*QuorumMemberCondition)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*QuorumMemberCondition))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *QuorumMemberCondition) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Status = "UNKNOWN"
+		m.Type = "HEALTHY"
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *QuorumMemberStatus) Clone(into interface{}) (interface{}, error) {
+	var out *QuorumMemberStatus
+	var ok bool
+	if into == nil {
+		out = &QuorumMemberStatus{}
+	} else {
+		out, ok = into.(*QuorumMemberStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*QuorumMemberStatus))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *QuorumMemberStatus) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Conditions {
+		if m.Conditions[k] != nil {
+			i := m.Conditions[k]
+			ret = i.Defaults(ver) || ret
+		}
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *QuorumStatus) Clone(into interface{}) (interface{}, error) {
+	var out *QuorumStatus
+	var ok bool
+	if into == nil {
+		out = &QuorumStatus{}
+	} else {
+		out, ok = into.(*QuorumStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*QuorumStatus))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *QuorumStatus) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Members {
+		if m.Members[k] != nil {
+			i := m.Members[k]
+			ret = i.Defaults(ver) || ret
+		}
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -1200,6 +1290,94 @@ func (m *OsInfo) Normalize() {
 
 }
 
+func (m *QuorumMemberCondition) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *QuorumMemberCondition) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	if vs, ok := validatorMapCluster["QuorumMemberCondition"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapCluster["QuorumMemberCondition"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *QuorumMemberCondition) Normalize() {
+
+	m.Status = ConditionStatus_normal[strings.ToLower(m.Status)]
+
+	m.Type = QuorumMemberCondition_ConditionType_normal[strings.ToLower(m.Type)]
+
+}
+
+func (m *QuorumMemberStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *QuorumMemberStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Conditions {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sConditions[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *QuorumMemberStatus) Normalize() {
+
+	for _, v := range m.Conditions {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
+func (m *QuorumStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *QuorumStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Members {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sMembers[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *QuorumStatus) Normalize() {
+
+	for _, v := range m.Members {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *SmartNICID) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1443,6 +1621,33 @@ func init() {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Phase", vals)
+		}
+		return nil
+	})
+
+	validatorMapCluster["QuorumMemberCondition"] = make(map[string][]func(string, interface{}) error)
+	validatorMapCluster["QuorumMemberCondition"]["all"] = append(validatorMapCluster["QuorumMemberCondition"]["all"], func(path string, i interface{}) error {
+		m := i.(*QuorumMemberCondition)
+
+		if _, ok := ConditionStatus_value[m.Status]; !ok {
+			vals := []string{}
+			for k1, _ := range ConditionStatus_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
+		}
+		return nil
+	})
+
+	validatorMapCluster["QuorumMemberCondition"]["all"] = append(validatorMapCluster["QuorumMemberCondition"]["all"], func(path string, i interface{}) error {
+		m := i.(*QuorumMemberCondition)
+
+		if _, ok := QuorumMemberCondition_ConditionType_value[m.Type]; !ok {
+			vals := []string{}
+			for k1, _ := range QuorumMemberCondition_ConditionType_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
 		}
 		return nil
 	})

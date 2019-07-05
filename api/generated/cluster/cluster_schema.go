@@ -354,6 +354,36 @@ var typesMapCluster = map[string]*api.Struct{
 			"Processor": api.Field{Name: "Processor", CLITag: api.CLIInfo{ID: "processor", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "processor", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
+	"cluster.QuorumMemberCondition": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(QuorumMemberCondition{}) },
+		Fields: map[string]api.Field{
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{ID: "status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"LastTransitionTime": api.Field{Name: "LastTransitionTime", CLITag: api.CLIInfo{ID: "last-transition-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-transition-time", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
+	"cluster.QuorumMemberStatus": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(QuorumMemberStatus{}) },
+		Fields: map[string]api.Field{
+			"ID": api.Field{Name: "ID", CLITag: api.CLIInfo{ID: "id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Name": api.Field{Name: "Name", CLITag: api.CLIInfo{ID: "name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "name", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{ID: "status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Term": api.Field{Name: "Term", CLITag: api.CLIInfo{ID: "term", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "term", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Conditions": api.Field{Name: "Conditions", CLITag: api.CLIInfo{ID: "term", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "term", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.QuorumMemberCondition"},
+		},
+	},
+	"cluster.QuorumStatus": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(QuorumStatus{}) },
+		Fields: map[string]api.Field{
+			"Members": api.Field{Name: "Members", CLITag: api.CLIInfo{ID: "members", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "members", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.QuorumMemberStatus"},
+		},
+	},
 	"cluster.SmartNICID": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICID{}) },
 		Fields: map[string]api.Field{
