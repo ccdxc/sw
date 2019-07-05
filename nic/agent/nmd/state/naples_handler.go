@@ -55,8 +55,8 @@ const (
 
 	// Max retry interval in seconds for Registration retries
 	// Retry interval is initially exponential and is capped
-	// at 30min.
-	nicRegMaxInterval = 30 * 60 * time.Second
+	// at 3 mins.
+	nicRegMaxInterval = 3 * time.Minute
 )
 
 // CreateNaplesProfile creates a Naples Profile
@@ -424,7 +424,7 @@ func (n *NMD) AdmitNaples() {
 			//    why it is rejected. In this case, there is no retry done.
 			// 3. If the phase is PENDING, it indicates that the certificate is valid, but it
 			//    is either not auto-admitted or not manually approved. In such cases
-			//    the retry is done at exponential interval and capped at 30min retry.
+			//    the retry is done at exponential interval and capped at  5min retry.
 			// 4. If is the phase is ADMITTED, move on to next stage of sending periodic
 			//    NIC updates.
 			//
@@ -456,7 +456,7 @@ func (n *NMD) AdmitNaples() {
 				case cmd.SmartNICStatus_PENDING.String():
 
 					// Rule #3 - needs slower exponential retry
-					// Cap the retry interval at 30mins
+					// Cap the retry interval at 3 mins
 					if 2*n.nicRegInterval <= nicRegMaxInterval {
 						n.nicRegInterval = 2 * n.nicRegInterval
 					} else {
