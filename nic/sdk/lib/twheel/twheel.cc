@@ -7,7 +7,7 @@
 #include "include/sdk/mem.hpp"
 #include "lib/twheel/twheel.hpp"
 
-//#define SDK_TWHEEL_DEBUG 1
+// #define SDK_TWHEEL_DEBUG 1
 
 namespace sdk {
 namespace lib {
@@ -231,9 +231,15 @@ twheel::del_timer(void *timer)
 #endif
     if (twentry->valid_ == TRUE) {
         TWHEEL_LOCK_SLICE(slice = twentry->slice_);
-        remove_timer_(twentry);
-        TWHEEL_UNLOCK_SLICE(slice);
-        delay_delete_(twentry);
+        // check for validity again since the delay_delete_ from tick()
+        // could have invalidated it
+        if (twentry->valid_ == TRUE) {
+            remove_timer_(twentry);
+            TWHEEL_UNLOCK_SLICE(slice);
+            delay_delete_(twentry);
+        } else {
+            TWHEEL_UNLOCK_SLICE(slice);
+        }
     }
     //delay_delete_(twentry);
 
