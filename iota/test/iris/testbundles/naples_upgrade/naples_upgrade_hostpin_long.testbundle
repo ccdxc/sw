@@ -11,7 +11,7 @@ testcases:
             type : simple
             option : [""]
         args      :
-            sleep : 320
+            sleep : 220
 
     -   name: DISRUPTIVE_UPGRADE_FAIL_PRE_SWITCHROOT
         testcase    : testcases.naples_upgrade.disruptive_upgrade
