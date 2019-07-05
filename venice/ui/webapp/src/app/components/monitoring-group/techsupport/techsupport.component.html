@@ -30,8 +30,13 @@
       {{rowData.meta['mod-time'] | PrettyDate }}
     </ng-container>
     <ng-container *ngSwitchCase="'status.status'">
-      <div *ngIf="!isTechsupportCompleted(rowData, col)" [innerHTML]="displayColumn(rowData, col)">
+      <div *ngIf="!isTechsupportCompleted(rowData, col)">
+        {{displayColumn(rowData, col)}}
+        <mat-icon *ngIf="timeoutOrFailure(rowData)"
+                  fxFlex="nogrow" [inline]="true"
+                  class="global-alert-critical-icon techsupport-bad-icon">error</mat-icon>
       </div>
+      <div *ngIf="timeoutOrFailure(rowData)">{{displayMessage(rowData)}}</div>
       <div *ngIf="isTechsupportCompleted(rowData, col)" fxLayout="column">
         <div fxLayout="row"> Success </div>
         <!--  download all ts output files in one bundle  -->
@@ -57,16 +62,19 @@
 </ng-template>
 
 <ng-template #expandTemplate let-rowData let-col="col">
-  <div fxLayout="row">
-    <div *ngFor="let v of rowData['techsupportdownload']['nicNodes']">
-      <a class="techsupportrequests-download-file-link" href="{{v.url}}"
-         [matTooltip]="'Download NIC files ' + v.name ">{{v.name}}</a>
+  <ng-container *ngIf="rowData['techsupportdownload'] != null">
+    <div fxLayout="row">
+      <div *ngFor="let v of rowData['techsupportdownload']['nicNodes']">
+        <a class="techsupportrequests-download-file-link" href="{{v.url}}"
+           [matTooltip]="'Download NIC files ' + v.name ">{{v.name}}</a>
+      </div>
     </div>
-  </div>
-  <div fxLayout="row">
-    <div *ngFor="let v of rowData['techsupportdownload']['controlnodes']">
-      <a class="techsupportrequests-download-file-link" href="{{v.url}}"
-         [matTooltip]="'Download Controller file ' + v.name ">{{v.name}}</a>
+
+    <div fxLayout="row">
+      <div *ngFor="let v of rowData['techsupportdownload']['controlnodes']">
+        <a class="techsupportrequests-download-file-link" href="{{v.url}}"
+           [matTooltip]="'Download Controller file ' + v.name ">{{v.name}}</a>
+      </div>
     </div>
-  </div>
+  </ng-container>
 </ng-template>

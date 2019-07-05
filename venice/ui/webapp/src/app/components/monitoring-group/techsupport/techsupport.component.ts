@@ -134,6 +134,103 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     return isComplete;
   }
 
+  timeoutOrFailure(rowData: MonitoringTechSupportRequest): boolean {
+    if  (rowData.status.status === MonitoringTechSupportRequestStatus_status.TimeOut || rowData.status.status === MonitoringTechSupportRequestStatus_status.Failed) {
+      return true;
+    }
+    return false;
+  }
+
+
+  displayTimeOutMessage(rowData: MonitoringTechSupportRequest): string {
+    const nodes = rowData.status['ctrlr-node-results'];
+    const nics = rowData.status['smartnic-node-results'];
+    const reasonArray: string[] = [];
+    if (nodes != null) {
+      Object.keys(nodes).forEach((key) => {
+        if (nodes != null && key != null && nodes[key].status != null && nodes[key].status === MonitoringTechSupportRequestStatus_status.TimeOut) {
+          reasonArray.push(key + ' timed out during operation');
+        }
+      });
+    }
+    if (nics != null) {
+       Object.keys(nics).forEach((key) => {
+         if (key != null && nics[key].status != null && nics[key].status === MonitoringTechSupportRequestStatus_status.TimeOut) {
+           reasonArray.push(key + ' timed out during operation');
+          }
+      });
+    }
+
+    if (reasonArray.length > 0) {
+      return reasonArray.join('\n');
+    }
+    return '';
+  }
+
+  displayFailureMessage(rowData: MonitoringTechSupportRequest): string {
+    const nodes = rowData.status['ctrlr-node-results'];
+    const nics = rowData.status['smartnic-node-results'];
+    const reasonArray: string[] = [];
+    if (nodes != null) {
+      Object.keys(nodes).forEach((key) => {
+        if (key != null && nodes[key].status != null && nodes[key].status === MonitoringTechSupportRequestStatus_status.Failed) {
+          reasonArray.push(nodes[key].reason);
+        }
+      });
+    }
+    if (nics != null) {
+      Object.keys(nics).forEach((key) => {
+        if (key != null && nics[key].status != null && nics[key].status === MonitoringTechSupportRequestStatus_status.TimeOut) {
+          reasonArray.push(nics[key].reason);
+         }
+     });
+    }
+    const nonNullArray = reasonArray.filter(function (el) {
+      return el != null;
+    });
+
+    if (nonNullArray.length > 0) {
+      return nonNullArray.join('\n');  // if the failing agents have a 'reason' attribute (ideally), then print that explanation as an error message
+    } else {     // else, manually identify the agents that caused the operation to fail, and print a generic error message (eg: X is unhealthy)
+      return this.whichNaplesFail(rowData);
+    }
+  }
+
+  whichNaplesFail(rowData: MonitoringTechSupportRequest): string {
+    const nodes = rowData.status['ctrlr-node-results'];
+    const nics = rowData.status['smartnic-node-results'];
+    const reasonArray: string[] = [];
+    if (nodes != null) {
+    Object.keys(nodes).forEach((key) => {
+      if (key != null && nodes[key].status != null && nodes[key].status === MonitoringTechSupportRequestStatus_status.Failed) {
+        reasonArray.push(key + 'is unhealthy and causing the operation to fail');
+      }
+    });
+  }
+    if (nics != null) {
+       Object.keys(nics).forEach((key) => {
+         if (key != null && nics[key].status != null && nics[key].status === MonitoringTechSupportRequestStatus_status.Failed) {
+           reasonArray.push(key + ' is unhealthy and causing the operation to fail');
+          }
+      });
+    }
+
+    if (reasonArray.length > 0) {
+      return reasonArray.join('\n');
+    }
+    return '';
+  }
+
+
+  displayMessage(rowData: MonitoringTechSupportRequest): any {
+    if  (rowData.status.status === MonitoringTechSupportRequestStatus_status.TimeOut) {
+      return this.displayTimeOutMessage(rowData);
+    } else if (rowData.status.status === MonitoringTechSupportRequestStatus_status.Failed) {
+      return this.displayFailureMessage(rowData);
+    }
+  }
+
+
   /**
   Techsupport server response JSON object.status looks like:
   status: {
@@ -149,6 +246,8 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
         }
    techsupport url looks like: https://10.7.100.21:10001/objstore/v1/downloads/tenant/default/techsupport/ts-1-b91bd56b-060a-48dc-ad9b-fa2c62d7b621-SmartNIC-00ae.cd00.1142
   */
+
+
   buildTSDownload(rowData: MonitoringTechSupportRequest) {
     const tsName = rowData.meta.name;
     const status: IMonitoringTechSupportRequestStatus = rowData.status;
