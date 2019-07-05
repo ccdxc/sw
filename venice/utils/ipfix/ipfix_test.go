@@ -12,9 +12,9 @@ func TestCreateTemplateMsg(t *testing.T) {
 	testutils.AssertOk(t, err, "failed to generate template")
 	testutils.Assert(t, len(b) == len(tp), "invalid length, got %d expected %d", len(tp), len(b))
 	for i := 0; i < len(tp); i++ {
-		if i >= 4 && i < 8 { //skip time stamp
+		if i >= 4 && i < 8 { // skip time stamp
 			continue
 		}
-		testutils.Assert(t, tp[i] == tp[i], "didnt match at %v, got %v expected %v", i, tp[i], tp[i])
+		testutils.Assert(t, b[i] == tp[i], "didnt match at %v, got %v expected %v", i, b[i], tp[i])
 	}
 }
