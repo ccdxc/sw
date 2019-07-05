@@ -223,11 +223,16 @@ EdmaQ::Post(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
             ev_now_update(EV_A);
         };
     } else {
-        auto cb = [](void *obj) { EdmaQ::Poll(obj); };
-        evutil_add_prepare(EV_A_ &prepare, cb, this);
+        evutil_add_prepare(EV_A_ &prepare, EdmaQ::PollCb, this);
     }
 
     return true;
+}
+
+void
+EdmaQ::PollCb(void *obj)
+{
+    EdmaQ::Poll(obj);
 }
 
 bool
