@@ -183,7 +183,7 @@ meter_str_to_type (std::string meter_type_str,
 }
 
 inline sdk_ret_t
-parse_test_cfg (char *cfg_file, test_params_t *test_params)
+parse_test_cfg (const char *cfg_file, test_params_t *test_params)
 {
     pt::ptree json_pt;
     string pfxstr;
@@ -381,37 +381,44 @@ parse_test_cfg (char *cfg_file, test_params_t *test_params)
 }
 
 inline const char *
-get_cfg_json (void) {
+get_cfg_json_name (void) {
+    return "scale_cfg.json";
+}
+
+static inline string
+get_cfg_json (const char *pipeline) {
+    const char *cfg_file_name = get_cfg_json_name();
+
+    // read from ENV if set
     const char *test_cfg = getenv("TEST_CFG");
     if (test_cfg != NULL) {
-        return test_cfg;
+        return string(test_cfg);
     }
-    auto p = api::g_pds_state.scale_profile();
-    if (p == PDS_SCALE_PROFILE_DEFAULT) {
-        return "scale_cfg.json";
-    } else if (p == PDS_SCALE_PROFILE_P1) {
-        return "scale_cfg_p1.json";
-    } else if (p == PDS_SCALE_PROFILE_P2) {
-        return "scale_cfg_p2.json";
-    } else {
-        assert(0);
+
+    // read from /tmp/ if present
+    string tmp_cfg_file = "/tmp/" + string(cfg_file_name);
+    if (access(tmp_cfg_file.c_str(), R_OK) == 0) {
+        return tmp_cfg_file;
     }
+
+    // read from cfg path
+    assert(getenv("CONFIG_PATH"));
+#ifdef SIM
+    return string(getenv("CONFIG_PATH")) + "/../apollo/test/scale/" +
+           string(pipeline) + "/" + string(cfg_file_name);
+#else
+    return string(getenv("CONFIG_PATH")) + "/" + string(cfg_file_name);
+#endif // SIM
+
+    return "";
 }
 
 inline sdk_ret_t
 parse_test_cfg (test_params_t *test_params, string pipeline)
 {
-    char cfgfile[256];
-    assert(getenv("CONFIG_PATH"));
-#ifdef SIM
-    snprintf(cfgfile, 256, "%s/../apollo/test/scale/%s/%s",
-             getenv("CONFIG_PATH"),
-             pipeline.c_str(),
-             get_cfg_json());
-#else
-    snprintf(cfgfile, 256, "%s/%s", getenv("CONFIG_PATH"), get_cfg_json());
-#endif    // SIM
-    return parse_test_cfg(cfgfile, test_params);
+    string cfg_file = get_cfg_json(pipeline.c_str());
+    printf ("cfg file: %s\n", cfg_file.c_str());
+    return parse_test_cfg(cfg_file.c_str(), test_params);
 }
 
 #endif // __APOLLO_SCALE_TEST_COMMON_HPP__

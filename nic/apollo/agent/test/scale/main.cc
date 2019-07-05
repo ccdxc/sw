@@ -26,6 +26,7 @@
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/agent/test/scale/app.hpp"
+#include "nic/apollo/test/scale/test_common.hpp"
 
 using std::string;
 namespace pt = boost::property_tree;
@@ -57,6 +58,8 @@ int
 main (int argc, char **argv)
 {
     int oc;
+    std::string cmd;
+
     struct option longopts[] = {
         {"config", required_argument, NULL, 'c'},
         {"daemon", required_argument, NULL, 'd'},
@@ -113,6 +116,11 @@ main (int argc, char **argv)
                 g_input_cfg_file);
         exit(1);
     }
+
+    // copy the input cfg file for the agent to read
+    cmd = "cp " + string(g_input_cfg_file) + " /tmp/" + string(get_cfg_json_name());
+    system(cmd.c_str());
+
     // Init app
     test_app_init();
     // Push configs
@@ -123,5 +131,3 @@ main (int argc, char **argv)
 
     return 0;
 }
-
-
