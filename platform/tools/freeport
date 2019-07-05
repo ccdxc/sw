@@ -12,7 +12,7 @@
 #    freeport HEAD~ HEAD
 #
 # After running, there may be cleanup needed for patch rejects.  Rejects will
-# be written to the file freeport.patch.rej.
+# be written to the file platform/gen/freeport.patch.rej.
 #
 # It is _always_ good practice to review and test the changes after porting.
 #
@@ -50,36 +50,38 @@
 #
 
 : ${FP:=freeport.patch}
-: ${FP_PATH:=../linux}
+: ${FP_PATH:=gen}
 
-rm -f "$FP" "$FP.rej"
+cd "$(readlink -f "$(dirname "$0")/..")"
+mkdir -p "$FP_PATH"
+rm -f "$FP_PATH/$FP" "$FP_PATH/$FP.rej"
 
 FP_SRC=(
-# changes in rdma driver should be ported automacically if possible
-"$FP_PATH/rdma"
+# changes in rdma driver should be ported automatically if possible
+"drivers/linux/rdma"
 )
 
 FP_SED=(
+# the path to ionic-abi.h is different in bsd srcs
+'s_linux/rdma/drv/ionic/uapi_freebsd/usr/src/sys/ofed/include/uapi_g'
+
 # transform linux user library paths for bsd srcs
 's_linux/rdma/lib/ionic_freebsd/usr/src/contrib/ofed/libionic_g'
 
 # transform linux kernel module paths for bsd srcs
 's_linux/rdma/drv/ionic_freebsd/usr/src/sys/dev/ionic/ionic\_rdma_g'
 
-# the path to ionic-abi.h is different in bsd srcs
-'s_dev/ionic/ionic\_rdma/uapi_ofed/include/uapi_g'
-
 # transform linux eth driver paths for bsd srcs
 's_linux/eth/ionic_freebsd/usr/src/sys/dev/ionic/ionic\_eth_g'
 )
 
-# generate the linux patch for the range
-git diff "${1:-HEAD~}...$2" "${FP_SRC[@]}" > "$FP"
+# generate the patch for the range
+git diff "${1:-HEAD~}...$2" "${FP_SRC[@]}" > "$FP_PATH/$FP"
 
 # apply transformations to the patch file
 for FS in "${FP_SED[@]}"; do
-	sed -i "$FS" "$FP"
+	sed -i "$FS" "$FP_PATH/$FP"
 done
 
-# apply the patch file to bsd srcs
-patch -f -p4 "-i$FP" "-r$FP.rej"
+# apply the patch file to srcs
+patch -f -p2 "-i$FP_PATH/$FP" "-r$FP_PATH/$FP.rej"
