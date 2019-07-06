@@ -40,7 +40,7 @@ func (sm *Statemgr) handleSmartNICEvent(et kvstore.WatchEventType, smartNIC *clu
 // SetSmartNICState to create a SmartNIC Object/update smartNIC isf it already exists in statemgr
 func (sm *Statemgr) SetSmartNICState(smartNIC *cluster.SmartNIC) error {
 	if smartNIC.GetObjectKind() != kindSmartNIC {
-		return fmt.Errorf("Unexpected object kind %s", smartNIC.GetObjectKind())
+		return fmt.Errorf("unexpected object kind %s", smartNIC.GetObjectKind())
 	}
 	var smartNICState *SmartNICState
 
@@ -67,9 +67,8 @@ func (sm *Statemgr) SetSmartNICState(smartNIC *cluster.SmartNIC) error {
 
 // SmartNICStateFromObj converts from memdb object to SmartNIC state
 func SmartNICStateFromObj(obj memdb.Object) (*SmartNICState, error) {
-	switch obj.(type) {
+	switch nsobj := obj.(type) {
 	case *SmartNICState:
-		nsobj := obj.(*SmartNICState)
 		return nsobj, nil
 	default:
 		return nil, ErrIncorrectObjectType
@@ -111,9 +110,8 @@ func (sm *Statemgr) DeleteSmartNICState(sn *cluster.SmartNIC) {
 	}
 
 	log.Infof("Deleting SmartNIC %v", smartnicState.SmartNIC.Name)
-	smartnicState.Mutex.Lock()
+
 	// TODO: may be set state to deleted and leave it db till all the watchers have come to reasonable state
-	smartnicState.Mutex.Unlock()
 
 	// delete smartNIC state from DB
 	_ = sm.memDB.DeleteObject(smartnicState)

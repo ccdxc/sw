@@ -7,7 +7,6 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/pensando/sw/api/generated/rollout"
 	roproto "github.com/pensando/sw/api/generated/rollout"
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/log"
@@ -28,7 +27,7 @@ func (sm *Statemgr) CreateServiceRolloutState(sro *protos.ServiceRollout, ros *R
 	_, err := sm.FindObject(kindServiceRollout, sro.Tenant, sro.Name)
 	if err == nil {
 		log.Errorf("ServiceRollout {+%v} exists", sro)
-		return fmt.Errorf("ServiceRollout already exists")
+		return fmt.Errorf("serviceRollout already exists")
 	}
 	var phase = roproto.RolloutPhase_PROGRESSING
 	sros := ServiceRolloutState{
@@ -42,7 +41,7 @@ func (sm *Statemgr) CreateServiceRolloutState(sro *protos.ServiceRollout, ros *R
 		log.Infof("Spec for building serviceRollout is %+v", ros.Spec)
 		log.Infof("Service Status %+v", svcStatus)
 
-		if svcStatus.Phase == rollout.RolloutPhase_COMPLETE.String() {
+		if svcStatus.Phase == roproto.RolloutPhase_COMPLETE.String() {
 			st := protos.ServiceOpStatus{
 				Op:       protos.ServiceOp_ServiceRunVersion,
 				Version:  ros.Spec.Version,
@@ -58,7 +57,7 @@ func (sm *Statemgr) CreateServiceRolloutState(sro *protos.ServiceRollout, ros *R
 	// XXX validate parameters -
 	if sros.GetObjectKind() != kindServiceRollout {
 		sros.Mutex.Unlock()
-		return fmt.Errorf("Unexpected object kind %s", sros.GetObjectKind())
+		return fmt.Errorf("unexpected object kind %s", sros.GetObjectKind())
 	}
 	sros.Mutex.Unlock()
 
@@ -85,9 +84,7 @@ func (sm *Statemgr) DeleteServiceRolloutState(ro *protos.ServiceRollout) {
 	}
 
 	log.Infof("Deleting ServiceRollout %v", sros.ServiceRollout.Name)
-	sros.Mutex.Lock()
 	// TODO: may be set state to deleted and leave it db till all the watchers have come to reasonable state
-	sros.Mutex.Unlock()
 
 	// delete rollout state from DB
 	_ = sm.memDB.DeleteObject(sros)
@@ -95,9 +92,8 @@ func (sm *Statemgr) DeleteServiceRolloutState(ro *protos.ServiceRollout) {
 
 // ServiceRolloutStateFromObj converts from memdb object to ServiceRollout state
 func ServiceRolloutStateFromObj(obj memdb.Object) (*ServiceRolloutState, error) {
-	switch obj.(type) {
+	switch nsobj := obj.(type) {
 	case *ServiceRolloutState:
-		nsobj := obj.(*ServiceRolloutState)
 		return nsobj, nil
 	default:
 		return nil, ErrIncorrectObjectType
@@ -128,7 +124,7 @@ func (sros *ServiceRolloutState) UpdateServiceRolloutStatus(newStatus *protos.Se
 	log.Infof("Updating status of ServiceRollout %v", sros.ServiceRollout.Name)
 
 	var message, reason string
-	var phase rollout.RolloutPhase_Phases
+	var phase roproto.RolloutPhase_Phases
 
 	sros.Mutex.Lock()
 	for _, s := range newStatus.OpStatus {
@@ -141,17 +137,15 @@ func (sros *ServiceRolloutState) UpdateServiceRolloutStatus(newStatus *protos.Se
 		}
 		evt := fsmEvInvalid
 		if s.OpStatus == "success" {
-			switch s.Op {
-			case protos.ServiceOp_ServiceRunVersion:
+			if s.Op == protos.ServiceOp_ServiceRunVersion {
 				evt = fsmEvServiceUpgOK
-				phase = rollout.RolloutPhase_COMPLETE
-				sros.ros.Status.CompletionPercentage = sros.ros.Status.CompletionPercentage + (uint32)(sros.ros.completionDelta*2)
+				phase = roproto.RolloutPhase_COMPLETE
+				sros.ros.Status.CompletionPercentage += uint32(sros.ros.completionDelta * 2)
 			}
 		} else {
-			switch s.Op {
-			case protos.ServiceOp_ServiceRunVersion:
+			if s.Op == protos.ServiceOp_ServiceRunVersion {
 				evt = fsmEvServiceUpgFail
-				phase = rollout.RolloutPhase_FAIL
+				phase = roproto.RolloutPhase_FAIL
 			}
 		}
 		sros.status[s.Op] = s

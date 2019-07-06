@@ -27,9 +27,8 @@ import (
 )
 
 var (
-	testServerURL = "localhost:0"
-	logConfig     = log.GetDefaultConfig(fmt.Sprintf("%s.%s", globals.Rollout, "test"))
-	logger        = log.SetConfig(logConfig)
+	logConfig = log.GetDefaultConfig(fmt.Sprintf("%s.%s", globals.Rollout, "test"))
+	logger    = log.SetConfig(logConfig)
 
 	// create mock events recorder
 	_ = recorder.Override(mockevtsrecorder.NewRecorder("statemgr_test", logger))
@@ -291,38 +290,34 @@ func TestVeniceRolloutWatch(t *testing.T) {
 }
 
 // checkNoVeniceRolloutHelper returns true if there are no venice rollouts
-func checkNoVeniceRolloutHelper(t *testing.T, stateMgr *Statemgr) (bool, interface{}) {
+func checkNoVeniceRolloutHelper(t *testing.T, stateMgr *Statemgr) bool {
 	sros, err := stateMgr.ListVeniceRollouts()
 	AssertOk(t, err, "Error Listing VeinceRollouts")
-	if sros == nil || len(sros) == 0 {
-		return true, nil
-	}
-	return false, nil
+	return len(sros) == 0
 }
 
 // 	checkServiceOp returns true if the Op has been issued
 //		returns false if the Op is not present in Spec
-func checkServiceOp(t *testing.T, stateMgr *Statemgr, op protos.ServiceOp, version string) (bool, interface{}) {
+func checkServiceOp(t *testing.T, stateMgr *Statemgr, op protos.ServiceOp, version string) (opIssued bool, serviceRollout interface{}) {
 	sros, err := stateMgr.ListServiceRollouts()
 	AssertOk(t, err, "Error Listing ServiceRollouts")
-	for _, sro := range sros {
-		found := false
-		for _, o := range sro.Spec.Ops {
-			if o.Op == op && o.Version == version {
-				found = true
-			}
-		}
-		if found {
+
+	if len(sros) == 0 {
+		return false, "service state not present"
+	}
+
+	for _, o := range sros[0].Spec.Ops {
+		if o.Op == op && o.Version == version {
 			return true, "op found in spec"
 		}
-		return false, sro
 	}
-	return false, "service state not present"
+	return false, sros[0]
+
 }
 
 // 	checkVeniceOp returns true if the Op has been issued
 //		returns false if the Op is not present in Spec
-func checkVeniceOp(t *testing.T, stateMgr *Statemgr, node string, op protos.VeniceOp, version string) (bool, interface{}) {
+func checkVeniceOp(t *testing.T, stateMgr *Statemgr, node string, op protos.VeniceOp, version string) (opIssued bool, veniceRollout interface{}) {
 	vros, err := stateMgr.ListVeniceRollouts()
 	AssertOk(t, err, "Error Listing VeniceRollouts")
 	for _, vro := range vros {
@@ -343,36 +338,8 @@ func checkVeniceOp(t *testing.T, stateMgr *Statemgr, node string, op protos.Veni
 	return false, "venice node not present"
 }
 
-// 	checkNoPendingVeniceOp returns true if the Op has not been issued (or it has been issued, then should have status)
-//		returns false if the Op is present in Spec and Not in Status
-func checkNoPendingVeniceOp(t *testing.T, stateMgr *Statemgr, node string, op protos.VeniceOp, version string) (bool, interface{}) {
-	vros, err := stateMgr.ListVeniceRollouts()
-	AssertOk(t, err, "Error Listing VeniceRollouts")
-	for _, vro := range vros {
-		if vro.Name != node {
-			continue
-		}
-		found := false
-		for _, o := range vro.Spec.Ops {
-			if o.Op == op && o.Version == version {
-				found = true
-			}
-		}
-		if !found {
-			return true, "op not found in spec"
-		}
-		_, found = vro.status[op]
-		if found {
-			return true, "Status also present"
-		}
-
-		return false, vro
-	}
-	return true, "venice node not present"
-}
-
 // 	Add a response on node if op is present in the Spec and not present in Status
-func addVeniceResponseHelper(t *testing.T, stateMgr *Statemgr, node string, op protos.VeniceOp, version string) (bool, interface{}) {
+func addVeniceResponseHelper(t *testing.T, stateMgr *Statemgr, node string, op protos.VeniceOp, version string) (responseUpdated bool, veniceRollout interface{}) {
 	vros, err := stateMgr.ListVeniceRollouts()
 	AssertOk(t, err, "Error Listing VeniceRollouts")
 	for _, vro := range vros {
@@ -413,53 +380,55 @@ func addVeniceResponseHelper(t *testing.T, stateMgr *Statemgr, node string, op p
 	return false, "venice node not present"
 }
 
-func IsFSMInState(t *testing.T, stateMgr *Statemgr, roName string, st rofsmState) (bool, interface{}) {
+func IsFSMInState(t *testing.T, stateMgr *Statemgr, roName string, st rofsmState) (expectedState bool, foundState interface{}) {
 	ros, err := stateMgr.GetRolloutState("default", roName)
 	AssertOk(t, err, "Error Listing ServiceRollouts")
 	return ros.currentState == st, ros.currentState
 }
 
 // 	Add a response if service status is pending and returns true
-func addServiceResponseFilter(t *testing.T, stateMgr *Statemgr, version string) (bool, interface{}) {
+func addServiceResponseFilter(t *testing.T, stateMgr *Statemgr, version string) (responseAdded bool, serviceRollout interface{}) {
 	sros, err := stateMgr.ListServiceRollouts()
 	AssertOk(t, err, "Error Listing ServiceRollouts")
-	for _, sro := range sros {
-		found := false
-		for _, o := range sro.Spec.Ops {
-			if o.Version == version {
-				found = true
-			}
-		}
-		if !found {
-			return false, "op not found in spec"
-		}
-		_, found = sro.status[protos.ServiceOp_ServiceRunVersion]
-		if found {
-			return false, "Status already present"
-		}
-
-		var newOpStatus []protos.ServiceOpStatus
-		for _, s := range sro.status {
-			newOpStatus = append(newOpStatus, s)
-		}
-		newOpStatus = append(newOpStatus, protos.ServiceOpStatus{
-			Op:       protos.ServiceOp_ServiceRunVersion,
-			Version:  version,
-			OpStatus: "success",
-			Message:  "successful op in Service",
-		})
-		status := protos.ServiceRolloutStatus{
-			OpStatus: newOpStatus,
-		}
-		sro.UpdateServiceRolloutStatus(&status)
-		return true, sro
+	if len(sros) == 0 {
+		return false, "service Rollout not present"
 	}
-	return false, "service Rollout not present"
+	sro := sros[0]
+	found := false
+	for _, o := range sro.Spec.Ops {
+		if o.Version == version {
+			found = true
+		}
+	}
+	if !found {
+		return false, "op not found in spec"
+	}
+	_, found = sro.status[protos.ServiceOp_ServiceRunVersion]
+	if found {
+		return false, "Status already present"
+	}
+
+	var newOpStatus []protos.ServiceOpStatus
+	for _, s := range sro.status {
+		newOpStatus = append(newOpStatus, s)
+	}
+	newOpStatus = append(newOpStatus, protos.ServiceOpStatus{
+		Op:       protos.ServiceOp_ServiceRunVersion,
+		Version:  version,
+		OpStatus: "success",
+		Message:  "successful op in Service",
+	})
+	status := protos.ServiceRolloutStatus{
+		OpStatus: newOpStatus,
+	}
+	sro.UpdateServiceRolloutStatus(&status)
+	return true, sro
+
 }
 
 // 	checkNoPendingSmartNICOp returns true if the Op has not been issued (or it has been issued, then should have status)
 //		returns false if the Op is present in Spec and Not in Status
-func checkNoPendingSmartNICOp(t *testing.T, stateMgr *Statemgr, node string, op protos.SmartNICOp, version string) (bool, interface{}) {
+func checkNoPendingSmartNICOp(t *testing.T, stateMgr *Statemgr, node string, op protos.SmartNICOp, version string) (opNotIssued bool, smartnicRollout interface{}) {
 	sros, err := stateMgr.ListSmartNICRollouts()
 	AssertOk(t, err, "Error Listing SmartNICRollouts")
 	for _, sro := range sros {
@@ -484,16 +453,16 @@ func checkNoPendingSmartNICOp(t *testing.T, stateMgr *Statemgr, node string, op 
 }
 
 // 	Add a response on node if op is present in the Spec and not present in Status
-func addSmartNICResponseFilter(t *testing.T, stateMgr *Statemgr, snic string, op protos.SmartNICOp, version, status string) (bool, interface{}) {
+func addSmartNICResponseFilter(t *testing.T, stateMgr *Statemgr, snic string, op protos.SmartNICOp, version, status string) (statusUpdated bool, smartnicRollout interface{}) {
 	sros, err := stateMgr.ListSmartNICRollouts()
 	AssertOk(t, err, "Error Listing SmartNICRollouts")
-	for _, vro := range sros {
-		log.Debugf("SmartNICRollout Object: %v", vro)
-		if vro.Name != snic {
+	for _, sro := range sros {
+		log.Debugf("SmartNICRollout Object: %v", sro)
+		if sro.Name != snic {
 			continue
 		}
 		found := false
-		for _, o := range vro.Spec.Ops {
+		for _, o := range sro.Spec.Ops {
 			if o.Op == op && o.Version == version {
 				found = true
 			}
@@ -501,13 +470,13 @@ func addSmartNICResponseFilter(t *testing.T, stateMgr *Statemgr, snic string, op
 		if !found {
 			return false, "op not found in spec"
 		}
-		log.Debugf("Verify Rollout Object OpStatus %v", spew.Sdump(vro.status[op]))
-		if vro.status[op].OpStatus != "" {
+		log.Debugf("Verify Rollout Object OpStatus %v", spew.Sdump(sro.status[op]))
+		if sro.status[op].OpStatus != "" {
 			return false, "Status also present"
 		}
 
 		var newOpStatus []protos.SmartNICOpStatus
-		for _, s := range vro.status {
+		for _, s := range sro.status {
 			newOpStatus = append(newOpStatus, s)
 		}
 		newOpStatus = append(newOpStatus, protos.SmartNICOpStatus{
@@ -519,15 +488,15 @@ func addSmartNICResponseFilter(t *testing.T, stateMgr *Statemgr, snic string, op
 		status := protos.SmartNICRolloutStatus{
 			OpStatus: newOpStatus,
 		}
-		vro.UpdateSmartNICRolloutStatus(&status)
-		log.Debugf("Update Rollout Object OpStatus %v", spew.Sdump(vro.status[op]))
-		return true, vro
+		sro.UpdateSmartNICRolloutStatus(&status)
+		log.Debugf("Update Rollout Object OpStatus %v", spew.Sdump(sro.status[op]))
+		return true, sro
 
 	}
 	return false, "smartNIC is not present"
 }
 
-func createSNICHelper(stateMgr *Statemgr, name string, labels map[string]string) {
+func createSNICHelper(stateMgr *Statemgr, name string, lbls map[string]string) {
 	sn := cluster.SmartNIC{
 		TypeMeta: api.TypeMeta{
 			Kind: "SmartNIC",
@@ -535,7 +504,7 @@ func createSNICHelper(stateMgr *Statemgr, name string, labels map[string]string)
 		ObjectMeta: api.ObjectMeta{
 			Name:   name,
 			Tenant: "default",
-			Labels: labels,
+			Labels: lbls,
 		},
 		Status: cluster.SmartNICStatus{
 			AdmissionPhase: cluster.SmartNICStatus_ADMITTED.String(),
@@ -657,7 +626,7 @@ func TestVeniceOnlyRollout(t *testing.T) {
 	checkNoVeniceSmartNICReq := func() (bool, interface{}) {
 		sros, err := stateMgr.ListSmartNICRollouts()
 		AssertOk(t, err, "Error Listing SmartNICRollouts")
-		if sros == nil || len(sros) == 0 {
+		if len(sros) == 0 {
 			return true, nil
 		}
 		return false, nil
@@ -685,8 +654,6 @@ func TestVeniceOnlyRollout(t *testing.T) {
 }
 
 func TestSNICOrder(t *testing.T) {
-	const version = "v1.1"
-
 	// create recorder
 	// create recorder
 	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
@@ -807,7 +774,7 @@ func TestSNICOnlyRollout(t *testing.T) {
 
 	// Return true if if veniceRollout was not created
 	checkNoVeniceReq := func() (bool, interface{}) {
-		return checkNoVeniceRolloutHelper(t, stateMgr)
+		return checkNoVeniceRolloutHelper(t, stateMgr), nil
 	}
 
 	AssertConsistently(t, checkNoVeniceReq, "Expected no venice rollouts", "100ms", "1s")
@@ -1156,7 +1123,7 @@ func TestMaxFailuresHit(t *testing.T) {
 }
 
 func TestExponentialRollout(t *testing.T) {
-	const version = "v1.1"
+	const version = "v1.2"
 	// create recorder
 	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
 
@@ -1213,7 +1180,7 @@ func TestExponentialRollout(t *testing.T) {
 
 	// Return true if if veniceRollout was not created
 	checkNoVeniceReq := func() (bool, interface{}) {
-		return checkNoVeniceRolloutHelper(t, stateMgr)
+		return checkNoVeniceRolloutHelper(t, stateMgr), nil
 	}
 
 	AssertConsistently(t, checkNoVeniceReq, "Expected no venice rollouts", "100ms", "1s")

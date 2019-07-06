@@ -175,17 +175,19 @@ func (ros *RolloutState) startNextVeniceRollout() (int, error) {
 
 	selectedVenice := pendingVenice[0]
 	for _, v := range veniceROs {
-		if v.Name == selectedVenice {
-			v.Spec.Ops = append(v.Spec.Ops, &protos.VeniceOpSpec{Op: protos.VeniceOp_VeniceRunVersion, Version: version})
-
-			log.Debugf("setting VeniceRollout for %v with version %v", v.Name, version)
-			err = sm.memDB.UpdateObject(v)
-			if err == nil {
-				log.Infof("Setting Rollout Status %#v", v.status[protos.VeniceOp_VenicePreCheck])
-				ros.setVenicePhase(v.Name, v.status[protos.VeniceOp_VenicePreCheck].OpStatus, v.status[protos.VeniceOp_VenicePreCheck].Message, roproto.RolloutPhase_PROGRESSING)
-			}
-			return 1, err
+		if v.Name != selectedVenice {
+			continue
 		}
+		v.Spec.Ops = append(v.Spec.Ops, &protos.VeniceOpSpec{Op: protos.VeniceOp_VeniceRunVersion, Version: version})
+
+		log.Debugf("setting VeniceRollout for %v with version %v", v.Name, version)
+		err = sm.memDB.UpdateObject(v)
+		if err == nil {
+			log.Infof("Setting Rollout Status %#v", v.status[protos.VeniceOp_VenicePreCheck])
+			ros.setVenicePhase(v.Name, v.status[protos.VeniceOp_VenicePreCheck].OpStatus, v.status[protos.VeniceOp_VenicePreCheck].Message, roproto.RolloutPhase_PROGRESSING)
+		}
+		return 1, err
+
 	}
 	return 0, fmt.Errorf("unexpected error - unknown venice %s selected for next rollout", selectedVenice)
 }
@@ -258,7 +260,8 @@ func (ros *RolloutState) issueServiceRollout() (bool, error) {
 		log.Errorf("Error %v listing ServiceRollouts", err)
 		return false, err
 	}
-	for _, v := range serviceRollouts {
+	if len(serviceRollouts) != 0 {
+		v := serviceRollouts[0]
 		found := false
 		for _, ops := range v.Spec.Ops {
 			if ops.Op == protos.ServiceOp_ServiceRunVersion && ops.Version == version {
@@ -469,7 +472,7 @@ func (ros *RolloutState) preUpgradeSmartNICs() {
 	log.Infof("completed smartNIC Rollout Preupgrade")
 }
 
-func (ros *RolloutState) issueSmartNICOpLinear(snStates []*SmartNICState, Op protos.SmartNICOp) {
+func (ros *RolloutState) issueSmartNICOpLinear(snStates []*SmartNICState, op protos.SmartNICOp) {
 	sm := ros.Statemgr
 
 	numParallel := ros.Spec.MaxParallel
@@ -481,7 +484,7 @@ func (ros *RolloutState) issueSmartNICOpLinear(snStates []*SmartNICState, Op pro
 
 	for i := uint32(0); i < numParallel; i++ {
 		sm.smartNICWG.Add(1)
-		go sm.smartNICWorkers(workCh, &sm.smartNICWG, ros, Op)
+		go sm.smartNICWorkers(workCh, &sm.smartNICWG, ros, op)
 	}
 	// give work to worker threads and wait for all of them to complete
 	for _, sn := range snStates {
@@ -500,7 +503,7 @@ func min(a, b int) int {
 	return b
 }
 
-func (ros *RolloutState) issueSmartNICOpExponential(snStates []*SmartNICState, Op protos.SmartNICOp) {
+func (ros *RolloutState) issueSmartNICOpExponential(snStates []*SmartNICState, op protos.SmartNICOp) {
 	sm := ros.Statemgr
 
 	numParallel := int(ros.Spec.MaxParallel) // if numParallel is 0 then unlimited parallelism
@@ -517,7 +520,7 @@ func (ros *RolloutState) issueSmartNICOpExponential(snStates []*SmartNICState, O
 		workCh := make(chan *SmartNICState, numJobs)
 		for i := 0; i < numJobs; i++ {
 			sm.smartNICWG.Add(1)
-			go sm.smartNICWorkers(workCh, &sm.smartNICWG, ros, Op)
+			go sm.smartNICWorkers(workCh, &sm.smartNICWG, ros, op)
 			log.Debugf("Adding %v to work", snStates[curIndex])
 			workCh <- snStates[curIndex]
 			curIndex++
@@ -533,31 +536,38 @@ func (ros *RolloutState) issueSmartNICOpExponential(snStates []*SmartNICState, O
 
 }
 
-func (ros *RolloutState) checkVeniceHealth() (name string, msg string) {
-	if !ros.Spec.SmartNICsOnly {
-		nodeStates, err := ros.Statemgr.ListNodes()
-		if err != nil {
-			log.Infof("Failed to get venice nodes")
-			return "", "Failed to get any venice node"
+func (ros *RolloutState) checkVeniceHealth(nodesToCheck []string) (name, msg string) {
+	toCheck := make(map[string]bool)
+	for _, n := range nodesToCheck {
+		toCheck[n] = true
+	}
+	nodeStates, err := ros.Statemgr.ListNodes()
+	if err != nil {
+		log.Infof("Failed to get venice nodes")
+		return "", "Failed to get any venice node"
+	}
+	for _, nodestate := range nodeStates {
+		if !toCheck[nodestate.Name] {
+			continue
 		}
-		for _, nodestate := range nodeStates {
-			var found = false
-			if len(nodestate.Status.Conditions) == 0 {
-				return nodestate.Name, "Couldnt determine the condition of venice node"
-			}
-			for _, condition := range nodestate.Status.Conditions {
-				log.Infof("Condition Status %+v Type %v", condition.Status, condition.Type)
 
-				if condition.Type == cluster.NodeCondition_HEALTHY.String() && condition.Status == cluster.ConditionStatus_TRUE.String() {
-					found = true
-					break
-				}
+		var found = false
+		if len(nodestate.Status.Conditions) == 0 {
+			return nodestate.Name, "Couldnt determine the condition of venice node"
+		}
+		for _, condition := range nodestate.Status.Conditions {
+			log.Infof("Condition Status %+v Type %v", condition.Status, condition.Type)
+
+			if condition.Type == cluster.NodeCondition_HEALTHY.String() && condition.Status == cluster.ConditionStatus_TRUE.String() {
+				found = true
+				break
 			}
-			if !found {
-				return nodestate.Name, "Venice node is not healthy"
-			}
+		}
+		if !found {
+			return nodestate.Name, "Venice node is not healthy"
 		}
 	}
+
 	return "", ""
 }
 
@@ -586,7 +596,7 @@ func (ros *RolloutState) computeProgressDelta() {
 		numNaples++
 	}
 
-	ros.completionDelta = (float32)(100 / (2*numVenice + 2*numNaples + 2))
+	ros.completionDelta = float32(100 / (2*numVenice + 2*numNaples + 2))
 	log.Infof("Completion Delta %+v NumNaples %v NumVenice %+v", ros.completionDelta, numNaples, numVenice)
 }
 
@@ -624,7 +634,8 @@ func (ros *RolloutState) doUpdateSmartNICs() {
 
 // Send precheck to one more venice node (which has not been requested yet)
 // Returns the number of venice nodes with precheck issued (and status not obtained yet)
-func (ros *RolloutState) preCheckNextVeniceNode() (int, error) {
+// When there is an error, it returns error and the node on which there is an error
+func (ros *RolloutState) preCheckNextVeniceNode() (lenPendingStatus int, erroredNode string, err error) {
 	sm := ros.Statemgr
 	version := ros.Spec.Version
 	pendingStatus := ros.getVenicePendingPrecheckStatus()
@@ -634,33 +645,36 @@ func (ros *RolloutState) preCheckNextVeniceNode() (int, error) {
 	// once the dev machines have more disk, this can be removed so that precheck can run in parallel
 	const maxPrecheckInParallel = 1
 	if len(pendingStatus) >= maxPrecheckInParallel {
-		return len(pendingStatus), nil
+		return len(pendingStatus), "", nil
 	}
 
 	veniceRollouts := ros.getVenicePendingPreCheckIssue()
-	for _, n := range veniceRollouts {
-		veniceRollout := protos.VeniceRollout{
-			TypeMeta: api.TypeMeta{
-				Kind: "VeniceRollout",
-			},
-			ObjectMeta: api.ObjectMeta{
-				Name: n,
-			},
-			Spec: protos.VeniceRolloutSpec{
-				Ops: []*protos.VeniceOpSpec{
-					{
-						Op:      protos.VeniceOp_VenicePreCheck,
-						Version: version,
-					},
+	if len(veniceRollouts) == 0 {
+		return 0, "", nil // all venice have been issued precheck already
+
+	}
+	n := veniceRollouts[0]
+	veniceRollout := protos.VeniceRollout{
+		TypeMeta: api.TypeMeta{
+			Kind: "VeniceRollout",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: n,
+		},
+		Spec: protos.VeniceRolloutSpec{
+			Ops: []*protos.VeniceOpSpec{
+				{
+					Op:      protos.VeniceOp_VenicePreCheck,
+					Version: version,
 				},
 			},
-		}
-		err := sm.CreateVeniceRolloutState(&veniceRollout, ros, nil)
-		if err != nil {
-			log.Errorf("Error %v creating venice rollout state", err)
-			return len(pendingStatus), err
-		}
-		return len(pendingStatus) + 1, nil
+		},
 	}
-	return 0, nil // all venice have been issued precheck already
+	err = sm.CreateVeniceRolloutState(&veniceRollout, ros, nil)
+	if err != nil {
+		log.Errorf("Error %v creating venice rollout state", err)
+		return len(pendingStatus), n, err
+	}
+	return len(pendingStatus) + 1, "", nil
+
 }

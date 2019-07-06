@@ -216,12 +216,6 @@ func fsmAcCreated(ros *RolloutState) {
 	log.Infof("Completion Percentage %v", ros.Rollout.Status.CompletionPercentage)
 	ros.Status.CompletionPercentage = ros.Rollout.Status.CompletionPercentage
 	ros.computeProgressDelta()
-	name, msg := ros.checkVeniceHealth()
-	if msg != "" {
-		log.Errorf("Precheck failed: %v", msg)
-		ros.setVenicePhase(name, "", msg, rollout.RolloutPhase_FAIL)
-		ros.eventChan <- fsmEvFail
-	}
 
 	if ros.Spec.GetSuspend() {
 		log.Infof("Rollout object created with state SUSPENDED.")
@@ -238,8 +232,25 @@ func fsmAcCreated(ros *RolloutState) {
 		ros.eventChan <- fsmEvVeniceBypass
 	} else {
 		ros.startRolloutTimer()
-		numPendingPrecheck, err := ros.preCheckNextVeniceNode()
-		if err == nil && numPendingPrecheck == 0 {
+
+		// Check the venice health only for nodes for which the PreCheckIssue is pending
+		veniceRollouts := ros.getVenicePendingPreCheckIssue()
+		name, msg := ros.checkVeniceHealth(veniceRollouts)
+		if msg != "" {
+			log.Errorf("Precheck failed: %v", msg)
+			ros.setVenicePhase(name, "", msg, rollout.RolloutPhase_FAIL)
+			ros.eventChan <- fsmEvFail
+			return
+		}
+
+		numPendingPrecheck, n, err := ros.preCheckNextVeniceNode()
+		if err != nil {
+			log.Errorf("Precheck failed: %v", err)
+			ros.setVenicePhase(n, "", err.Error(), rollout.RolloutPhase_FAIL)
+			ros.eventChan <- fsmEvFail
+			return
+		}
+		if numPendingPrecheck == 0 {
 			ros.eventChan <- fsmEvAllVenicePreUpgOK
 		}
 	}
@@ -247,9 +258,11 @@ func fsmAcCreated(ros *RolloutState) {
 func fsmAcOneVenicePreupgSuccess(ros *RolloutState) {
 	ros.stopRolloutTimer()
 	ros.startRolloutTimer()
-	numPendingPrecheck, err := ros.preCheckNextVeniceNode()
+	numPendingPrecheck, n, err := ros.preCheckNextVeniceNode()
 	if err != nil {
 		log.Errorf("Error %s issuing precheck to next venice", err)
+		ros.setVenicePhase(n, "", err.Error(), rollout.RolloutPhase_FAIL)
+		ros.eventChan <- fsmEvFail
 		return
 	}
 	if numPendingPrecheck == 0 { // all venice have been issued pre-check
@@ -298,7 +311,7 @@ func fsmAcWaitForSchedule(ros *RolloutState) {
 	ros.Status.OperationalState = rollout.RolloutStatus_SCHEDULED.String()
 	ros.saveStatus()
 
-	for d := t.Sub(now); d.Seconds() > 0; d = t.Sub(time.Now()) {
+	for d := t.Sub(now); d.Seconds() > 0; d = time.Until(t) {
 		if d.Seconds() > 30 {
 			time.Sleep(30 * time.Second)
 		} else {
@@ -313,7 +326,6 @@ func fsmAcWaitForSchedule(ros *RolloutState) {
 	ros.saveStatus()
 	ros.eventChan <- fsmEvScheduleNow
 	ros.raiseRolloutEvent(rollout.RolloutStatus_PROGRESSING)
-	return
 }
 
 func fsmAcIssueNextVeniceRollout(ros *RolloutState) {

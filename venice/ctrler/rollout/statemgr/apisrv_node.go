@@ -46,7 +46,7 @@ func (sm *Statemgr) handleNodeEvent(et kvstore.WatchEventType, node *cluster.Nod
 // SetNodeState to create a Node Object/update node if it already exists in statemgr
 func (sm *Statemgr) SetNodeState(n *cluster.Node) error {
 	if n.GetObjectKind() != kindNode {
-		return fmt.Errorf("Unexpected object kind %s", n.GetObjectKind())
+		return fmt.Errorf("unexpected object kind %s", n.GetObjectKind())
 	}
 	var nodeState *NodeState
 
@@ -73,9 +73,8 @@ func (sm *Statemgr) SetNodeState(n *cluster.Node) error {
 
 // NodeStateFromObj converts from memdb object to Node state
 func NodeStateFromObj(obj memdb.Object) (*NodeState, error) {
-	switch obj.(type) {
+	switch nsobj := obj.(type) {
 	case *NodeState:
-		nsobj := obj.(*NodeState)
 		return nsobj, nil
 	default:
 		return nil, ErrIncorrectObjectType
@@ -117,9 +116,7 @@ func (sm *Statemgr) DeleteNodeState(node *cluster.Node) {
 	}
 
 	log.Infof("Deleting Node %v", nodeState.Node.Name)
-	nodeState.Mutex.Lock()
 	// TODO: may be set state to deleted and leave it db till all the watchers have come to reasonable state
-	nodeState.Mutex.Unlock()
 
 	// delete node state from DB
 	_ = sm.memDB.DeleteObject(nodeState)

@@ -8,7 +8,6 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/pensando/sw/api/generated/rollout"
 	roproto "github.com/pensando/sw/api/generated/rollout"
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/log"
@@ -29,7 +28,7 @@ func (sm *Statemgr) CreateSmartNICRolloutState(ro *protos.SmartNICRollout, ros *
 	_, err := sm.FindObject(kindSmartNICRollout, ro.Tenant, ro.Name)
 	if err == nil {
 		log.Errorf("SmartNICRollout {+%v} exists", ro)
-		return fmt.Errorf("SmartNICRollout already exists")
+		return fmt.Errorf("smartNICRollout already exists")
 	}
 
 	sros := SmartNICRolloutState{
@@ -64,10 +63,10 @@ func (sm *Statemgr) CreateSmartNICRolloutState(ro *protos.SmartNICRollout, ros *
 		}
 		sros.status[op] = st
 
-		if snicStatus.Phase == rollout.RolloutPhase_PROGRESSING.String() {
+		if snicStatus.Phase == roproto.RolloutPhase_PROGRESSING.String() {
 			sros.Spec.Ops = append(sros.Spec.Ops, &protos.SmartNICOpSpec{Op: nextOp, Version: ros.Rollout.Spec.Version})
 		}
-		if snicStatus.Phase == rollout.RolloutPhase_COMPLETE.String() {
+		if snicStatus.Phase == roproto.RolloutPhase_COMPLETE.String() {
 			sros.Spec.Ops = append(sros.Spec.Ops, &protos.SmartNICOpSpec{Op: nextOp, Version: ros.Rollout.Spec.Version})
 			stNext := protos.SmartNICOpStatus{
 				Op:       nextOp,
@@ -84,7 +83,7 @@ func (sm *Statemgr) CreateSmartNICRolloutState(ro *protos.SmartNICRollout, ros *
 	// XXX validate parameters -
 	if sros.GetObjectKind() != kindSmartNICRollout {
 		sros.Mutex.Unlock()
-		return fmt.Errorf("Unexpected object kind %s", sros.GetObjectKind())
+		return fmt.Errorf("unexpected object kind %s", sros.GetObjectKind())
 	}
 	sros.Mutex.Unlock()
 
@@ -110,9 +109,7 @@ func (sm *Statemgr) DeleteSmartNICRolloutState(ro *protos.SmartNICRollout) {
 	}
 
 	log.Infof("Deleting SmartNICRollout %v", ros.SmartNICRollout.Name)
-	ros.Mutex.Lock()
 	// TODO: may be set state to deleted and leave it db till all the watchers have come to reasonable state
-	ros.Mutex.Unlock()
 
 	// delete rollout state from DB
 	_ = sm.memDB.DeleteObject(ros)
@@ -120,9 +117,8 @@ func (sm *Statemgr) DeleteSmartNICRolloutState(ro *protos.SmartNICRollout) {
 
 // SmartNICRolloutStateFromObj converts from memdb object to SmartNICRollout state
 func SmartNICRolloutStateFromObj(obj memdb.Object) (*SmartNICRolloutState, error) {
-	switch obj.(type) {
+	switch nsobj := obj.(type) {
 	case *SmartNICRolloutState:
-		nsobj := obj.(*SmartNICRolloutState)
 		return nsobj, nil
 	default:
 		return nil, ErrIncorrectObjectType
@@ -153,7 +149,7 @@ func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *pr
 	log.Infof("Updating status %+v of SmartNICRollout %v", newStatus, snicState.SmartNICRollout.Name)
 	version := snicState.ros.Rollout.Spec.Version
 
-	var phase rollout.RolloutPhase_Phases
+	var phase roproto.RolloutPhase_Phases
 	var reason, message string
 	var updateStatus = false
 	snicState.Mutex.Lock()
@@ -172,37 +168,37 @@ func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *pr
 			switch s.Op {
 			case protos.SmartNICOp_SmartNICPreCheckForDisruptive:
 				evt = fsmEvOneSmartNICPreupgSuccess
-				phase = rollout.RolloutPhase_WAITING_FOR_TURN
+				phase = roproto.RolloutPhase_WAITING_FOR_TURN
 			case protos.SmartNICOp_SmartNICPreCheckForUpgOnNextHostReboot:
 				evt = fsmEvOneSmartNICPreupgSuccess
-				phase = rollout.RolloutPhase_WAITING_FOR_TURN
+				phase = roproto.RolloutPhase_WAITING_FOR_TURN
 			case protos.SmartNICOp_SmartNICUpgOnNextHostReboot:
 				evt = fsmEvOneSmartNICUpgSuccess
-				phase = rollout.RolloutPhase_COMPLETE
-				snicState.ros.Status.CompletionPercentage = snicState.ros.Status.CompletionPercentage + (uint32)(snicState.ros.completionDelta)
+				phase = roproto.RolloutPhase_COMPLETE
+				snicState.ros.Status.CompletionPercentage += uint32(snicState.ros.completionDelta)
 			case protos.SmartNICOp_SmartNICDisruptiveUpgrade:
 				evt = fsmEvOneSmartNICUpgSuccess
-				phase = rollout.RolloutPhase_COMPLETE
-				snicState.ros.Status.CompletionPercentage = snicState.ros.Status.CompletionPercentage + (uint32)(snicState.ros.completionDelta)
+				phase = roproto.RolloutPhase_COMPLETE
+				snicState.ros.Status.CompletionPercentage += uint32(snicState.ros.completionDelta)
 			}
 		} else {
 			switch s.Op {
 			case protos.SmartNICOp_SmartNICPreCheckForDisruptive:
 				evt = fsmEvOneSmartNICPreupgFail
 				atomic.AddInt32(&snicState.ros.numPreUpgradeFailures, 1)
-				phase = rollout.RolloutPhase_FAIL
+				phase = roproto.RolloutPhase_FAIL
 			case protos.SmartNICOp_SmartNICPreCheckForUpgOnNextHostReboot:
 				evt = fsmEvOneSmartNICPreupgFail
 				atomic.AddInt32(&snicState.ros.numPreUpgradeFailures, 1)
-				phase = rollout.RolloutPhase_FAIL
+				phase = roproto.RolloutPhase_FAIL
 			case protos.SmartNICOp_SmartNICUpgOnNextHostReboot:
 				atomic.AddUint32(&snicState.ros.numFailuresSeen, 1)
 				evt = fsmEvOneSmartNICUpgFail
-				phase = rollout.RolloutPhase_FAIL
+				phase = roproto.RolloutPhase_FAIL
 			case protos.SmartNICOp_SmartNICDisruptiveUpgrade:
 				atomic.AddUint32(&snicState.ros.numFailuresSeen, 1)
 				evt = fsmEvOneSmartNICUpgFail
-				phase = rollout.RolloutPhase_FAIL
+				phase = roproto.RolloutPhase_FAIL
 			}
 		}
 		snicState.status[s.Op] = s

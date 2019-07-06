@@ -74,7 +74,7 @@ func (sm *Statemgr) updateRolloutState(ro *roproto.Rollout) error {
 	// XXX validate parameters -
 	if ros.GetObjectKind() != kindRollout {
 		ros.Mutex.Unlock()
-		return fmt.Errorf("Unexpected object kind %s", ros.GetObjectKind())
+		return fmt.Errorf("unexpected object kind %s", ros.GetObjectKind())
 	}
 	ros.Spec.Suspend = ro.Spec.Suspend
 	ros.Status.OperationalState = ro.Status.OperationalState
@@ -101,7 +101,7 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 	_, err := sm.FindObject(kindRollout, ro.Tenant, ro.Name)
 	if err == nil {
 		log.Errorf("Rollout {+%v} exists", ro)
-		return fmt.Errorf("Rollout already exists")
+		return fmt.Errorf("rollout already exists")
 	}
 	//On process restart we get create events for rollouts
 	//For the historical rollout obejcts we do nothing
@@ -121,16 +121,14 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 	// XXX validate parameters -
 	if ros.GetObjectKind() != kindRollout {
 		ros.Mutex.Unlock()
-		return fmt.Errorf("Unexpected object kind %s", ros.GetObjectKind())
+		return fmt.Errorf("unexpected object kind %s", ros.GetObjectKind())
 	}
 	ros.Mutex.Unlock()
 
-	//check if object has status if so, create veniceRollout Objects as well.
-	//if len(ro.Status.ControllerNodesStatus) != 0 {
 	for _, nodeStatus := range ro.Status.ControllerNodesStatus {
 		veniceRollouts := ros.getVenicePendingPreCheckIssue()
-		for _, n := range veniceRollouts {
 
+		for _, n := range veniceRollouts {
 			if n != nodeStatus.Name {
 				log.Infof("Status %s doesnt match rollout Name %s", nodeStatus.Name, n)
 				continue
@@ -275,16 +273,14 @@ func (sm *Statemgr) deleteRolloutState(ro *roproto.Rollout) {
 	ros.stop()
 
 	log.Infof("Deleting Rollout %v", ros.Rollout.Name)
-	ros.Mutex.Lock()
 	// TODO: may be set state to deleted and leave it db till all the watchers have come to reasonable state
-	ros.Mutex.Unlock()
 
 	// delete rollout state from DB
 	_ = sm.memDB.DeleteObject(ros)
 	sm.deleteRollouts()
 }
 
-func (ros *RolloutState) startRolloutTimer() error {
+func (ros *RolloutState) startRolloutTimer() {
 
 	ros.stateTimer = time.AfterFunc(veniceUpgradeTimeout, func() {
 		log.Errorf("Timeout during venice rollout \n")
@@ -307,7 +303,6 @@ func (ros *RolloutState) startRolloutTimer() error {
 			ros.eventChan <- fsmEvOneVenicePreUpgFail
 		}
 	})
-	return nil
 }
 
 func (ros *RolloutState) stopRolloutTimer() {
@@ -342,7 +337,7 @@ func (ros *RolloutState) raiseRolloutEvent(status roproto.RolloutStatus_RolloutO
 	}
 	switch status {
 	case roproto.RolloutStatus_SUCCESS:
-		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_SUCCESS, fmt.Sprintf("Rollout(%s) to version(%s) completed sucessfully", ros.Rollout.Name, ros.Rollout.Spec.Version), ros.Rollout)
+		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_SUCCESS, fmt.Sprintf("Rollout(%s) to version(%s) completed successfully", ros.Rollout.Name, ros.Rollout.Spec.Version), ros.Rollout)
 	case roproto.RolloutStatus_SUSPENDED:
 		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_SUSPENDED, fmt.Sprintf("Rollout(%s) to version(%s) suspended", ros.Rollout.Name, ros.Rollout.Spec.Version), ros.Rollout)
 	case roproto.RolloutStatus_FAILURE:
@@ -367,7 +362,7 @@ func (ros *RolloutState) setPreviousVersion(v string) {
 		ros.saveStatus()
 	}
 }
-func (ros *RolloutState) getRolloutTimeStamps(nodeName string) (startTime *api.Timestamp, endTime *api.Timestamp) {
+func (ros *RolloutState) getRolloutTimeStamps(nodeName string) (startTime, endTime *api.Timestamp) {
 	apicl, err := ros.writer.GetAPIClient()
 	if apicl == nil || err != nil {
 		log.Errorf("Failed to get API Client %v", err)
@@ -411,11 +406,6 @@ func (ros *RolloutState) setEndTime() {
 		ros.Status.EndTime = &t
 		ros.saveStatus()
 	}
-}
-
-func (ros *RolloutState) setStateAndPercentage(state string, percent uint32) {
-	ros.Status.CompletionPercentage = percent
-	ros.Status.OperationalState = state
 }
 
 func (ros *RolloutState) setVenicePhase(name, reason, message string, phase roproto.RolloutPhase_Phases) {

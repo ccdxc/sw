@@ -27,7 +27,7 @@ func (sm *Statemgr) CreateVeniceRolloutState(ro *protos.VeniceRollout, ros *Roll
 	_, err := sm.FindObject(kindVeniceRollout, ro.Tenant, ro.Name)
 	if err == nil {
 		log.Errorf("VeniceRollout {+%v} exists", ro)
-		return fmt.Errorf("VeniceRollout already exists")
+		return fmt.Errorf("veniceRollout already exists")
 	}
 
 	vros := VeniceRolloutState{
@@ -65,7 +65,7 @@ func (sm *Statemgr) CreateVeniceRolloutState(ro *protos.VeniceRollout, ros *Roll
 	ros.Mutex.Lock()
 	if vros.GetObjectKind() != kindVeniceRollout {
 		ros.Mutex.Unlock()
-		return fmt.Errorf("Unexpected object kind %s", vros.GetObjectKind())
+		return fmt.Errorf("unexpected object kind %s", vros.GetObjectKind())
 	}
 	ros.Mutex.Unlock()
 
@@ -90,9 +90,7 @@ func (sm *Statemgr) DeleteVeniceRolloutState(ro *protos.VeniceRollout) {
 	}
 
 	log.Infof("Deleting VeniceRollout %v", ros.VeniceRollout.Name)
-	ros.Mutex.Lock()
 	// TODO: may be set state to deleted and leave it db till all the watchers have come to reasonable state
-	ros.Mutex.Unlock()
 
 	// delete rollout state from DB
 	_ = sm.memDB.DeleteObject(ros)
@@ -100,9 +98,8 @@ func (sm *Statemgr) DeleteVeniceRolloutState(ro *protos.VeniceRollout) {
 
 // VeniceRolloutStateFromObj converts from memdb object to VeniceRollout state
 func VeniceRolloutStateFromObj(obj memdb.Object) (*VeniceRolloutState, error) {
-	switch obj.(type) {
+	switch nsobj := obj.(type) {
 	case *VeniceRolloutState:
-		nsobj := obj.(*VeniceRolloutState)
 		return nsobj, nil
 	default:
 		return nil, ErrIncorrectObjectType
@@ -152,11 +149,11 @@ func (vros *VeniceRolloutState) UpdateVeniceRolloutStatus(newStatus *protos.Veni
 			case protos.VeniceOp_VenicePreCheck:
 				evt = fsmEvOneVenicePreUpgSuccess
 				phase = rollout.RolloutPhase_WAITING_FOR_TURN
-				vros.ros.Status.CompletionPercentage = vros.ros.Status.CompletionPercentage + (uint32)(vros.ros.completionDelta)
+				vros.ros.Status.CompletionPercentage += uint32(vros.ros.completionDelta)
 			case protos.VeniceOp_VeniceRunVersion:
 				evt = fsmEvOneVeniceUpgSuccess
 				phase = rollout.RolloutPhase_COMPLETE
-				vros.ros.Status.CompletionPercentage = vros.ros.Status.CompletionPercentage + (uint32)(vros.ros.completionDelta)
+				vros.ros.Status.CompletionPercentage += uint32(vros.ros.completionDelta)
 
 			}
 		} else {

@@ -146,7 +146,7 @@ func (wr *APISrvWriter) WriteRollout(ro *rollout.Rollout) error {
 
 	log.Infof("Updating Rollout %v Status %v", ro.Name, ro.Status)
 	for ii := 0; ii < 30; ii++ {
-		k, err := apicl.RolloutV1().Rollout().Update(context.Background(), ro)
+		k, err := apicl.RolloutV1().Rollout().UpdateStatus(context.Background(), ro)
 		if err != nil {
 			log.Debugf("Rollout Update errored %v", err)
 			time.Sleep(time.Second)
