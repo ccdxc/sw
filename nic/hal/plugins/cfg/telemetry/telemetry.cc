@@ -741,13 +741,18 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
             HAL_TRACE_DEBUG("Action: {}", spec.action().action(0));
             /* Mirror action */
             int n = spec.action().ms_key_handle_size();
+            HAL_TRACE_DEBUG("Num mirror dest: {}", n);
+            if (n >= MAX_MIRROR_SESSION_DEST) {
+                HAL_TRACE_ERR("Num mirror destinations {} greater than max {}",
+                                                    n, MAX_MIRROR_SESSION_DEST);
+                return HAL_RET_INVALID_ARG;
+            }
             for (int i = 0; i < n; i++) {
                 rule->action.mirror_destinations[i] = spec.action().ms_key_handle(i).mirrorsession_id();
                 HAL_TRACE_DEBUG("Mirror Destinations[{}]: {}", i,
                                rule->action.mirror_destinations[i]);
             }
             rule->action.num_mirror_dest = n;
-            HAL_TRACE_DEBUG("Num mirror dest: {}", n);
             n = spec.action().action_size();
             if (n != 0) {
                 // Only one action for mirroring
