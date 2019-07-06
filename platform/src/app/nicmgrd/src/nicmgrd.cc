@@ -104,7 +104,7 @@ loop(void)
     else
         fw_mode = FW_MODE_NORMAL_BOOT;
 
-    NIC_LOG_INFO("fw_mode: {}", fw_mode);
+    NIC_LOG_INFO("Upgrade mode: {}", fw_mode);
 
     if (platform_is_hw(platform))
         pciemgr = new class pciemgr("nicmgrd", EV_DEFAULT);
@@ -138,10 +138,11 @@ int main(int argc, char *argv[])
     while ((opt = getopt(argc, argv, "c:sp:")) != -1) {
         switch (opt) {
         case 'c':
-            config_file = DeviceManager::ParseDeviceConf(string(optarg));
+            config_file = DeviceManager::ParseDeviceConf(string(optarg), &fwd_mode);
             break;
         case 's':
-            fwd_mode = sdk::platform::FWD_MODE_SMART;
+            // Ignore cmd line mode specification. Determines mode always from device.conf
+            // fwd_mode = sdk::platform::FWD_MODE_SMART;
             break;
         case 'p':
             if (string(optarg) == "sim") {

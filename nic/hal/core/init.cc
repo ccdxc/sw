@@ -665,7 +665,7 @@ hal_device_cfg_init (hal_cfg_t *hal_cfg)
     if (access(device_cfg_fname.c_str(), R_OK) < 0) {
         HAL_TRACE_DEBUG("Device config: {} not found",
                         device_cfg_fname.c_str());
-        return HAL_RET_OK;
+        goto end;
     }
     boost::property_tree::read_json(device_cfg_fname, prop_tree);
     forwarding_mode = prop_tree.get<std::string>("forwarding-mode", "FORWARDING_MODE_CLASSIC");
@@ -683,7 +683,10 @@ hal_device_cfg_init (hal_cfg_t *hal_cfg)
     } catch (std::exception const &e) {
         g_mgmt_if_mac = 0;
     }
-    printf("Hal forwarding mode: %s\n", forwarding_mode.c_str());
+
+end:
+    printf("Hal forwarding mode: %s\n",
+           FORWARDING_MODES_str(device_cfg->forwarding_mode));
     return HAL_RET_OK;
 }
 

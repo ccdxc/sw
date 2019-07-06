@@ -76,10 +76,14 @@ typedef struct lif_info_s {
     uint64_t qstate_addr[NUM_QUEUE_TYPES];
 } __PACK__ lif_info_t;
 
-typedef enum fwd_mode_e {
-    FWD_MODE_CLASSIC,
-    FWD_MODE_SMART,
-} fwd_mode_t;
+
+#define FWD_MODE_TYPES(ENTRY)                                   \
+    ENTRY(FWD_MODE_NONE,            0, "FWD_MODE_NONE")         \
+    ENTRY(FWD_MODE_CLASSIC,         1, "FWD_MODE_CLASSIC")      \
+    ENTRY(FWD_MODE_SMART,           2, "FWD_MODE_SMART")
+SDK_DEFINE_ENUM(fwd_mode_t, FWD_MODE_TYPES)
+SDK_DEFINE_ENUM_TO_STR(fwd_mode_t, FWD_MODE_TYPES)
+#undef FWD_MODE_TYPES
 
 typedef struct port_config_s {
     uint32_t    speed;      // Mbps

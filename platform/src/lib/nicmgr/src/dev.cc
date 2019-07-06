@@ -94,6 +94,7 @@ DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
     pd = PdClient::factory(platform, fwd_mode);
     assert(pd);
 
+    printf("Nicmgr forwarding mode: %s\n", FWD_MODE_TYPES_str(fwd_mode));
     NIC_LOG_DEBUG("Event loop: {:#x}", (uint64_t)this->loop);
 
     // Reserve all the LIF ids used by HAL
@@ -108,11 +109,13 @@ DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
 }
 
 string
-DeviceManager::ParseDeviceConf(string filename)
+DeviceManager::ParseDeviceConf(string filename, fwd_mode_t *fw_mode)
 {
 #if !defined(APOLLO) && !defined(ARTEMIS)
     boost::property_tree::ptree spec;
     std::string forwarding_mode;
+
+    *fw_mode = sdk::platform::FWD_MODE_CLASSIC;
 
     cout << "Parsing Device conf, input: " << filename << endl;
     if (filename.compare("none") == 0) {
@@ -126,19 +129,11 @@ DeviceManager::ParseDeviceConf(string filename)
 
     // int fw_mode = spec.get<int>("forwarding-mode");
     int feature_profile = spec.get<int>("feature-profile");
-    cout << "fw_mode: " << forwarding_mode << endl;
-#if 0
-    cout << "fw_mode: " <<
-        device::ForwardingMode_Name(device::ForwardingMode(fw_mode)) << endl;
-#endif
     cout << "feature_profile: " <<
         device::FeatureProfile_Name(device::FeatureProfile(feature_profile)) << endl;
-#if 0
-    if ((fw_mode == device::FORWARDING_MODE_HOSTPIN) ||
-        (fw_mode == device::FORWARDING_MODE_SWITCH)) {
-#endif
     if (forwarding_mode == "FORWARDING_MODE_HOSTPIN" ||
          forwarding_mode == "FORWARDING_MODE_SWITCH") {
+        *fw_mode = sdk::platform::FWD_MODE_SMART;
         return string("/platform/etc/nicmgrd/eth_smart.json");
     } else if (forwarding_mode == "FORWARDING_MODE_CLASSIC") {
         if (feature_profile == device::FEATURE_PROFILE_CLASSIC_DEFAULT) {
@@ -725,7 +720,7 @@ DeviceManager::UpgradeCompatCheck()
                 NIC_LOG_WARN("RDMA enabled ETH device {} will not function "
                         "after upgrade", it->first);
                 /*
-                 * TODO: as of now we need to ignore RDMA check since 
+                 * TODO: as of now we need to ignore RDMA check since
                  * smart-nic profile has RDMA default enabled
                  */
                 //return false;

@@ -95,7 +95,7 @@ public:
     void SetHalClient(devapi *dev_api);
 
     int GenerateQstateInfoJson(std::string qstate_info_file);
-    static string ParseDeviceConf(string input_arg);
+    static string ParseDeviceConf(string input_arg, fwd_mode_t *fw_mode);
     PdClient *GetPdClient(void) { return pd; }
     void SetUpgradeMode(UpgradeMode upg_mode) { upgrade_mode = upg_mode; };
     UpgradeMode GetUpgradeMode() { return upgrade_mode; };
@@ -122,7 +122,7 @@ private:
     std::string config_file;
     fwd_mode_t fwd_mode;
     UpgradeState upg_state;
-    std::vector <struct EthDevInfo *> eth_dev_info_list; 
+    std::vector <struct EthDevInfo *> eth_dev_info_list;
 
     Device *AddDevice(enum DeviceType type, void *dev_spec);
     bool IsDataPathQuiesced();

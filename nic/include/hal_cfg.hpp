@@ -52,6 +52,8 @@ typedef enum hal_feature_profile_s {
      ENTRY(HAL_FORWARDING_MODE_SMART_SWITCH,        2, "HAL_FORWARDING_MODE_SMART_SWITCH")          \
      ENTRY(HAL_FORWARDING_MODE_SMART_HOST_PINNED,   3, "HAL_FORWARDING_MODE_SMART_HOST_PINNED")
  DEFINE_ENUM(hal_forwarding_mode_t, FORWARDING_MODES)
+ DEFINE_ENUM_TO_STR(hal_forwarding_mode_t, FORWARDING_MODES)
+
  #undef FORWARDING_MODES
 
 typedef struct device_cfg_s {
