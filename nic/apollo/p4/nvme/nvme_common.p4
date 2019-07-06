@@ -713,7 +713,7 @@ prp1_offset, rsvd3, key_index, sec_key_index, pad
 header_type pdu_context0_t {
   fields {
     cmd_opc	            :   8;	// Cmd Opcode
-    pdu_opc             :   8;    // PUD Opcode
+    pdu_opc             :   8;    // PDU Opcode
     cid	                :   16;	// Command identifier
     nsid                :   32;	// Namespace identifier
 
@@ -1134,9 +1134,10 @@ header_type rqcb_t {
 
         //6B
         base_addr                       : 34;
+        log_wqe_size                    : 5;
         log_num_entries                 : 5;
         ring_empty_sched_eval_done      : 1;
-        rsvd0                           : 8;
+        rsvd0                           : 3;
         
         //R0 stage0 flags
         //1B
@@ -1146,17 +1147,30 @@ header_type rqcb_t {
         //R0 writeback stage flags
         //1B
         wb_r0_busy                      : 1;
-        rsvd2                           : 7;
+        resource_alloc_done             : 1;
+        rsvd2                           : 6;
 
-        pad                             : 352;
+        //2B
+        session_id                      : 16;
+        //2B
+        pduid                           : 16;
+        //2B
+        segment_offset                  : 16;
+        //2B
+        pdu_offset                      : 16;
+        //4B
+        curr_plen                       : 32;
+
+        pad                             : 256;
 
     }
 }
 
 #define RQCB_PARAMS                                                                                   \
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, \
-base_addr, log_num_entries, ring_empty_sched_eval_done, rsvd0, \
-r0_busy, rsvd1, wb_r0_busy, rsvd2, pad
+base_addr, log_wqe_size, log_num_entries, ring_empty_sched_eval_done, rsvd0, \
+r0_busy, rsvd1, wb_r0_busy, resource_alloc_done, rsvd2, session_id, pduid, \
+segment_offset, pdu_offset, curr_plen, pad
 
 #define GENERATE_RQCB_D                                           \
     modify_field(rqcb_d.rsvd, rsvd);                              \
@@ -1170,13 +1184,20 @@ r0_busy, rsvd1, wb_r0_busy, rsvd2, pad
     modify_field(rqcb_d.pi_0, pi_0);                              \
     modify_field(rqcb_d.ci_0, ci_0);                              \
     modify_field(rqcb_d.base_addr, base_addr);                    \
+    modify_field(rqcb_d.log_wqe_size, log_wqe_size);              \
     modify_field(rqcb_d.log_num_entries, log_num_entries);        \
     modify_field(rqcb_d.ring_empty_sched_eval_done, ring_empty_sched_eval_done);\
     modify_field(rqcb_d.rsvd0, rsvd0);                            \
     modify_field(rqcb_d.r0_busy, r0_busy);                        \
     modify_field(rqcb_d.rsvd1, rsvd1);                            \
     modify_field(rqcb_d.wb_r0_busy, wb_r0_busy);                  \
+    modify_field(rqcb_d.resource_alloc_done, resource_alloc_done);\
     modify_field(rqcb_d.rsvd2, rsvd2);                            \
+    modify_field(rqcb_d.session_id, session_id);                  \
+    modify_field(rqcb_d.pduid, pduid);                            \
+    modify_field(rqcb_d.segment_offset, segment_offset);          \
+    modify_field(rqcb_d.pdu_offset, pdu_offset);                  \
+    modify_field(rqcb_d.curr_plen, curr_plen);                    \
     modify_field(rqcb_d.pad, pad);                                \
 
 #define RQCB_PARAMS_NON_STG0 \
@@ -1185,6 +1206,25 @@ r0_busy, rsvd1, wb_r0_busy, rsvd2, pad
 #define GENERATE_RQCB_D_NON_STG0                                \
     modify_field(rqcb_d.pc, pc);                                \
     GENERATE_RQCB_D
+
+// Incr refcnt cb
+header_type incr_refcnt_cb_t {
+    fields {
+        refcnt                          : 16;
+        more_pdus                       :  1;
+
+        //62 Bytes
+        pad                             : 495;
+    }
+}
+
+#define INCR_REFCNT_PARAMS                                                      \
+refcnt, more_pdus, pad
+
+#define GENERATE_INCR_REFCNT_D                          \
+    modify_field(incr_refcnt_cb_d.refcnt, refcnt);      \
+    modify_field(incr_refcnt_cb_d.more_pdus, more_pdus);      \
+    modify_field(incr_refcnt_cb_d.pad, pad);             \
 
 // RQ stats cb
 header_type rq_statscb_t {

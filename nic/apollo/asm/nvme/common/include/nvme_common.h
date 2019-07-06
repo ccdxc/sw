@@ -24,6 +24,8 @@
 //ring pindex/cindex
 #define SQ_P_INDEX              d.{pi_0}.hx
 #define SQ_C_INDEX              d.{ci_0}.hx
+#define RQ_P_INDEX              d.{pi_0}.hx
+#define RQ_C_INDEX              d.{ci_0}.hx
 #define CMDID_RING_PROXY_PI     d.{cmdid_ring_proxy_pi}
 #define CMDID_RING_PROXY_PI_LE  d.{cmdid_ring_proxy_pi}.hx
 #define CMDID_RING_PROXY_CI     d.{cmdid_ring_proxy_ci}
@@ -65,6 +67,7 @@
 #define LOG_CQE_SIZE            4   //2^4 = 16
 #define LOG_NSCB_SIZE           6   //2^6 = 64
 #define LOG_TXSESSPRODCB_SIZE   6   //2^6 = 64
+#define LOG_RXSESSPRODCB_SIZE   6   //2^6 = 64
 
 #define LOG_CMDID_SIZE              1   //2^1 = 2
 #define LOG_CMDID_RING_ENTRY_SIZE   LOG_CMDID_SIZE
@@ -116,6 +119,32 @@
 #define SESSPREDGST_TX_RING_ID   0
 #define SESSPOSTDGST_TX_RING_ID  1
 
+//rings, their ids and priorities
+//rq
+#define MAX_REQ_RX_RINGS        1
+
+#define RQ_PRI                  0
+
+#define RQ_RING_ID              0
+
+//sessdgstrx
+#define MAX_SESSDGST_RX_RINGS   2
+
+#define SESSPREDGST_RX_PRI      1
+#define SESSPOSTDGST_RX_PRI     0
+
+#define SESSPREDGST_RX_RING_ID   0
+#define SESSPOSTDGST_RX_RING_ID  1
+
+//sessxtsrx
+#define MAX_SESSXTS_RX_RINGS    2
+
+#define SESSPREXTS_RX_PRI       1
+#define SESSPOSTXTS_RX_PRI      0
+
+#define SESSPREXTS_RX_RING_ID   0
+#define SESSPOSTXTS_RX_RING_ID  1
+
 //globals
 #define K_GLOBAL_LIF            k.phv_global_common_lif
 #define K_GLOBAL_QTYPE          k.phv_global_common_qtype
@@ -138,6 +167,8 @@
 #define NVME_SESSPOSTXTSTX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(last_ddgst_aol_desc_dma_dma_cmd_type)/16)
 #define NVME_SESS_POST_DGST_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(pduid_dma_dma_cmd_type)/16)
 #define NVME_SESS_PRE_DGST_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(pdu_hdr_dma_dma_cmd_type)/16)
+
+#define NVME_REQ_RX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(pdu_ctxt1_dma_dma_cmd_type)/16)
 
 //Digest related defines
 #define HW_DGST_STATUS_SIZE                  8
