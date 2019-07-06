@@ -169,21 +169,21 @@ func CollectTechSupport(config *tsconfig.TechSupportConfig, targetID string) err
 	err = RunActions(config.PrepActions, baseDir+"/PrepActions")
 	log.Infof("======== Prep Actions - End ========")
 	if err != nil {
-		return fmt.Errorf("Failed to run PrepActions. %v", err)
+		log.Errorf("Failed to run PrepActions. %v", err)
 	}
 
 	log.Infof("======== Collect Actions - Start ========")
 	err = RunActions(config.CollectActions, baseDir+"/CollectActions")
 	log.Infof("======== Collect Actions - End ========")
 	if err != nil {
-		return fmt.Errorf("Failed to run CollectActions. %v", err)
+		log.Errorf("Failed to run CollectActions. %v", err)
 	}
 
 	log.Infof("======== Export Actions - Start ========")
 	err = RunActions(config.ExportActions, baseDir+"/ExportActions")
 	log.Infof("======== Export Actions - End ========")
 	if err != nil {
-		return fmt.Errorf("Failed to run ExportActions. %v", err)
+		log.Errorf("Failed to run ExportActions. %v", err)
 	}
 	os.Chdir("/")
 
