@@ -100,7 +100,9 @@ func startSpyglass() finder.Interface {
 		rsr,
 		nil,
 		tinfo.l,
-		finder.WithElasticClient(esClient))
+		finder.WithElasticClient(esClient),
+		finder.WithModuleWatcher(diagmock.GetModuleWatcher()),
+		finder.WithDiagnosticsService(diagmock.GetDiagnosticsService()))
 	if err != nil {
 		log.Errorf("Error creating finder: %+v", err)
 		os.Exit(-1)

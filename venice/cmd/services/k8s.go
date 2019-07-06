@@ -660,7 +660,7 @@ func (k *k8sService) notify(e types.K8sPodEvent) error {
 	k.Lock()
 	defer k.Unlock()
 	for _, o := range k.observers {
-		log.Infof("Calling observer: with k8sPodEvent: %v Name: %s Status: %v",  e.Type, e.Pod.Name, e.Pod.Status)
+		log.Infof("Calling observer: with k8sPodEvent: %v Name: %s Status: %v", e.Type, e.Pod.Name, e.Pod.Status)
 		er := o.OnNotifyK8sPodEvent(e)
 		if err == nil && er != nil {
 			err = er
