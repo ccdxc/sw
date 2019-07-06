@@ -49,12 +49,13 @@ extern UpgCtx ctx;
 delphi::error UpgAppRespReact::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr resp) {
     UPG_LOG_DEBUG("UpgAppResp got deleted for {}/{}", resp, resp->meta().ShortDebugString());
     vector<delphi::objects::UpgAppRespPtr> upgAppResplist = delphi::objects::UpgAppResp::List(sdk_);
+    int ret = 0;
+    string cmd;
     if (upgAppResplist.empty()) {
         UPG_LOG_DEBUG("All UpgAppResp objects got deleted");
         upgMgr_->DeleteUpgMgrResp();
         if (exists("/nic/tools/fwupdate")) {
-            int ret = 0;
-            string cmd = "rm -rf /data/post-upgrade-logs.tar.gz";
+            cmd = "rm -rf /data/post-upgrade-logs.tar.gz";
             UPG_LOG_INFO("Image is: {}", ctx.firmwarePkgName);
             if ((ret = system (cmd.c_str())) != 0) {
                 UPG_LOG_INFO("Unable to delete old logs post-upgrade");
@@ -82,6 +83,10 @@ delphi::error UpgAppRespReact::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr
                 UPG_OBFL_TRACE("Upgrade failed last time. So going to restart apps.");
                 sleep(5);
                 if (exists("/nic/tools/fwupdate")) {
+                    cmd = "/nic/tools/reload_mnic_drv.sh";
+                    if ((ret = system (cmd.c_str())) != 0) {
+                        UPG_LOG_INFO("Unable to reload mnic driver");
+                    }
                     ctx.sysMgr->respawn_processes();
                 }
             } else {
