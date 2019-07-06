@@ -10,6 +10,9 @@ from infra.common.logging import logger
 from apollo.config.store import Store
 from infra.common.glopts import GlobalOptions
 
+UINT32_MIN = 0
+UINT32_MAX = 4294967295
+
 IP_VERSION_6 = 6
 IP_VERSION_4 = 4
 

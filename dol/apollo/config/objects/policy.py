@@ -439,25 +439,119 @@ class PolicyObjectClient:
             actionVal = getattr(rulespec, 'action', None)
             if actionVal == "deny":
                 action = policy_pb2.SECURITY_RULE_ACTION_DENY
+            elif actionVal == "random":
+                action = random.choice([policy_pb2.SECURITY_RULE_ACTION_DENY, policy_pb2.SECURITY_RULE_ACTION_ALLOW])
             else:
                 action = policy_pb2.SECURITY_RULE_ACTION_ALLOW
             return action
 
-        def __get_rules(af, policyspec):
+        def __get_valid_priority(prio):
+            if prio < utils.UINT32_MIN:
+                return utils.UINT32_MIN
+            elif prio > utils.UINT32_MAX:
+                return utils.UINT32_MAX
+            else:
+                return prio
+
+        def __get_rule_priority(rulespec, basePrio=0):
+            prio = getattr(rulespec, 'priority', -3)
+            if prio == -1:
+                # increasing priority
+                basePrio = basePrio + 1
+                priority = basePrio
+            elif prio == -2:
+                # decreasing priority
+                basePrio = basePrio - 1
+                priority = basePrio
+            elif prio == -3:
+                # random priority
+                priority = random.randint(utils.UINT32_MIN, utils.UINT32_MAX)
+            else:
+                # configured priority
+                priority = prio
+            return __get_valid_priority(priority), basePrio
+
+        def __get_l3_rules_from_rule_base(af, rulespec, overlaptype):
+
+            def __get_first_subnet(ippfx, pfxlen):
+                for ip in ippfx.subnets(new_prefix=pfxlen):
+                    return (ip)
+                return
+
+            def __get_user_specified_pfxs(pfxspec):
+                pfxlist = []
+                if pfxspec:
+                    for pfx in pfxspec:
+                        pfxlist.append(ipaddress.ip_network(pfx.replace('\\', '/')))
+                return pfxlist
+
+            def __get_adjacent_pfxs(basepfx, count):
+                pfxlist = []
+                c = 1
+                pfxlist.append(ipaddress.ip_network(basepfx))
+                while c < count:
+                    pfxlist.append(utils.GetNextSubnet(pfxlist[c-1]))
+                    c += 1
+                return pfxlist
+
+            def __get_overlap_pfxs(basepfx, base, count):
+                # for overlap, add user specified base prefix with original prefixlen
+                pfxlist = [ basepfx ]
+                pfxlist.extend(__get_adjacent_pfxs(base, count))
+                return pfxlist
+
+            if af == utils.IP_VERSION_4:
+                pfxcount = getattr(rulespec, 'nv4prefixes', 0)
+                pfxlen = getattr(rulespec, 'v4prefixlen', 24)
+                basepfx = ipaddress.ip_network(rulespec.v4base.replace('\\', '/'))
+                user_specified_routes = __get_user_specified_pfxs(getattr(rulespec, 'v4prefixes', None))
+            else:
+                pfxcount = getattr(rulespec, 'nv6prefixes', 0)
+                pfxlen = getattr(rulespec, 'v6prefixlen', 120)
+                basepfx = ipaddress.ip_network(rulespec.v6base.replace('\\', '/'))
+                user_specified_routes = __get_user_specified_pfxs(getattr(rulespec, 'v6prefixes', None))
+
+            newbase = __get_first_subnet(basepfx, pfxlen)
+            pfxlist = user_specified_routes
+            if 'adjacent' in overlaptype:
+                pfxlist +=  __get_adjacent_pfxs(newbase, pfxcount)
+            elif 'overlap' in overlaptype:
+                pfxlist += __get_overlap_pfxs(basepfx, newbase, pfxcount-1)
+
+            l3rules = []
+            proto = __get_l3_proto_from_rule(af, rulespec)
+            for pfx in pfxlist:
+                obj = L3MatchObject(True, proto, pfx, pfx)
+                l3rules.append(obj)
+            return l3rules
+
+        def __get_rules(af, policyspec, overlaptype):
             rules = []
             if not hasattr(policyspec, 'rule'):
                 return rules
+            policy_spec_type = policyspec.type
             for rulespec in policyspec.rule:
                 stateful = getattr(rulespec, 'stateful', False)
-                priority = getattr(rulespec, 'priority', 0)
                 l4match = __get_l4_rule(af, rulespec)
-                l3match = __get_l3_rule(af, rulespec)
-                if l3match is None:
-                    # L3 match is mandatory for a rule
-                    return None
-                action = __get_rule_action(rulespec)
-                rule = RuleObject(stateful, l3match, l4match, priority, action)
-                rules.append(rule)
+                if policy_spec_type == 'base':
+                    prioritybase = getattr(rulespec, 'prioritybase', 0)
+                    objs = __get_l3_rules_from_rule_base(af, rulespec, overlaptype)
+                    if len(objs) == 0:
+                        return None
+                    for l3match in objs:
+                        priority, prioritybase = __get_rule_priority(rulespec, prioritybase)
+                        action = __get_rule_action(rulespec)
+                        rule = RuleObject(stateful, l3match, l4match, priority, action)
+                        rules.append(rule)
+                else:
+                    l3match = __get_l3_rule(af, rulespec)
+                    if l3match is None:
+                        # L3 match is mandatory for a rule
+                        return None
+                    priority, prioritybase = __get_rule_priority(rulespec)
+                    action = __get_rule_action(rulespec)
+                    rule = RuleObject(stateful, l3match, l4match, priority, action)
+                    rules.append(rule)
             return rules
 
         def __add_v4policy(direction, v4rules, policytype, overlaptype):
@@ -479,7 +573,7 @@ class PolicyObjectClient:
         def __add_user_specified_policy(policyspec, policytype, overlaptype):
             direction = policyspec.direction
             if isV4Stack:
-                v4rules = __get_rules(utils.IP_VERSION_4, policyspec)
+                v4rules = __get_rules(utils.IP_VERSION_4, policyspec, overlaptype)
                 if v4rules is None:
                     return
                 if direction == 'bidir':
@@ -490,7 +584,7 @@ class PolicyObjectClient:
                     policyobj = __add_v4policy(direction, v4rules, policytype, overlaptype)
 
             if isV6Stack:
-                v6rules = __get_rules(utils.IP_VERSION_6, policyspec)
+                v6rules = __get_rules(utils.IP_VERSION_6, policyspec, overlaptype)
                 if v6rules is None:
                     return
                 if direction == 'bidir':
@@ -521,6 +615,9 @@ class PolicyObjectClient:
                     overlaptype = getattr(policy_spec_obj, 'overlaptype', None)
                     __add_user_specified_policy(policy_spec_obj, \
                                                 policytype, overlaptype)
+            elif policy_spec_type == "base":
+                overlaptype = getattr(policy_spec_obj, 'overlaptype', 'none')
+                __add_user_specified_policy(policy_spec_obj, policytype, overlaptype)
 
         if len(self.__v4ingressobjs[vpcid]) != 0:
             self.__v4ipolicyiter[vpcid] = utils.rrobiniter(self.__v4ingressobjs[vpcid])
