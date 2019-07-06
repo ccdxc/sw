@@ -1859,20 +1859,17 @@ static inline void
 ionic_ifmedia_add(struct ifmedia *ifm, int m)
 {
 	ifmedia_add(ifm, m, 0, NULL);
-	ifmedia_add(ifm, m | IFM_ETH_TXPAUSE, 0, NULL);
-	ifmedia_add(ifm, m | IFM_ETH_RXPAUSE, 0, NULL);
-	ifmedia_add(ifm, m | IFM_ETH_TXPAUSE | IFM_ETH_RXPAUSE, 0, NULL);
+	ifmedia_add(ifm, m | IFM_FDX | IFM_ETH_TXPAUSE | IFM_ETH_RXPAUSE, 0, NULL);
 }
 
 static void
 ionic_lif_ifnet_init(struct lif *lif)
 {
 	struct ifnet *ifp;
-	int media;
-	struct ionic_dev *idev = &lif->ionic->idev;
 
 	ifp = lif->netdev;
 	lif->max_frame_size = ifp->if_mtu + ETHER_HDR_LEN + ETHER_VLAN_ENCAP_LEN + ETHER_CRC_LEN;
+	/* Adverise h/w TSO limits. */
 	ifp->if_hw_tsomax = IONIC_MAX_TSO_SIZE - (ETHER_HDR_LEN + ETHER_CRC_LEN);
 	ifp->if_hw_tsomaxsegcount = IONIC_MAX_TSO_SG_ENTRIES;
 	ifp->if_hw_tsomaxsegsize = IONIC_MAX_TSO_SG_SIZE;
@@ -1881,11 +1878,9 @@ ionic_lif_ifnet_init(struct lif *lif)
 		ionic_media_status);
 
 	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_AUTO);
-	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_UNKNOWN);
 
 	if (lif->ionic->is_mgmt_nic) {
 		ifmedia_add(&lif->media, IFM_ETHER | IFM_1000_KX, 0, NULL);
-		ifmedia_set(&lif->media, IFM_ETHER | IFM_AUTO);
 		return;
 	}
 
@@ -1904,13 +1899,8 @@ ionic_lif_ifnet_init(struct lif *lif)
 	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_LRM);
 	ionic_ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_ER);
 
-	media = ionic_ifmedia_xcvr(lif);
-	if (idev->port_info->config.pause_type & IONIC_PAUSE_F_RX)
-		media |= IFM_ETH_RXPAUSE;
-	if (idev->port_info->config.pause_type & IONIC_PAUSE_F_TX)
-		media |= IFM_ETH_TXPAUSE;
-	IONIC_NETDEV_ERROR(lif->netdev, "media %x\n", media);
-	ifmedia_set(&lif->media, media);
+        ifmedia_set(&lif->media, IFM_ETHER | IFM_AUTO | IFM_FDX |
+            IFM_ETH_RXPAUSE | IFM_ETH_TXPAUSE);
 }
 
 static int
