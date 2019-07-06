@@ -8,6 +8,7 @@
 #include "nic/apollo/agent/svc/tunnel.hpp"
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/hooks.hpp"
 
 // Create Tunnel Object
 Status
@@ -30,6 +31,7 @@ TunnelSvcImpl::TunnelCreate(ServerContext *context,
         }
         auto request = proto_req->request(i);
         tep_proto_spec_to_api_spec(api_spec, request);
+        hooks::tunnel_create(api_spec);
         ret = core::tep_create(request.id(), api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {

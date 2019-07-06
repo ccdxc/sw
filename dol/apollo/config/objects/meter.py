@@ -92,6 +92,8 @@ class MeterObjectClient:
         self.__v6objs = {}
         self.__v4iter = {}
         self.__v6iter = {}
+        self.__num_v4_meter_per_vpc = []
+        self.__num_v6_meter_per_vpc = []
         return
 
     def Objects(self):
@@ -112,7 +114,7 @@ class MeterObjectClient:
             return 0
 
     def GetNumMeterPerVPC(self):
-        return self.__num_meter_per_vpc
+        return self.__num_v4_meter_per_vpc,self.__num_v6_meter_per_vpc
 
     def GenerateObjects(self, parent, vpcspecobj):
         vpcid = parent.VPCId
@@ -121,9 +123,10 @@ class MeterObjectClient:
         self.__v6objs[vpcid] = []
         self.__v4iter[vpcid] = None
         self.__v6iter[vpcid] = None
-        self.__num_meter_per_vpc = 0
 
         if getattr(vpcspecobj, 'meter', None) == None:
+            self.__num_v4_meter_per_vpc.append(0)
+            self.__num_v6_meter_per_vpc.append(0)
             return
 
         if utils.IsPipelineArtemis() == False:
@@ -210,17 +213,21 @@ class MeterObjectClient:
 
         for meter in vpcspecobj.meter:
             c = 0
+            v4_count = 0
+            v6_count = 0
             if meter.auto_fill:
                 if __is_v4stack():
                     rules = __add_meter_v4rules_from_routetable(meter)
                     obj = MeterObject(parent, utils.IP_VERSION_4, rules)
                     self.__v4objs[vpcid].append(obj)
                     self.__objs.append(obj)
+                    v4_count += 1
                 if __is_v6stack():
                     rules = __add_meter_v6rules_from_routetable(meter)
                     obj = MeterObject(parent, utils.IP_VERSION_6, rules)
                     self.__v6objs[vpcid].append(obj)
                     self.__objs.append(obj)
+                    v6_count += 1
             else:
                 while c < meter.count:
                     if __is_v4stack():
@@ -228,18 +235,21 @@ class MeterObjectClient:
                         obj = MeterObject(parent, utils.IP_VERSION_4, rules)
                         self.__v4objs[vpcid].append(obj)
                         self.__objs.append(obj)
+                        v4_count += 1
                     if __is_v6stack():
                         rules = __add_meter_rules(meter.rule, utils.IP_VERSION_6, c)
                         obj = MeterObject(parent, utils.IP_VERSION_6, rules)
                         self.__v6objs[vpcid].append(obj)
                         self.__objs.append(obj)
+                        v6_count += 1
                     c += 1
 
         if len(self.__v4objs[vpcid]):
             self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid])
         if len(self.__v6objs[vpcid]):
             self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid])
-        self.__num_meter_per_vpc = vpcspecobj.meter.count
+        self.__num_v4_meter_per_vpc.append(v4_count)
+        self.__num_v6_meter_per_vpc.append(v6_count)
         return
 
     def CreateObjects(self):

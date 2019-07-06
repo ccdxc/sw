@@ -1,24 +1,27 @@
 # Test Spec
 #
-# Scenario1-Vnet in:
+# Scenario1-SLB/VIP in :
 # IN(l2o,ipo,udpo,vxlano,ORIG(l2,ip,tcp)),
 # OUT(l2,vlan,ip,tcp).
 #
 # Header modifications and validations: Vxlan encap removed, vlan header added
 #
-#   1. DST-inner-MAC: local vnic mac (taken from local mapping)
-#   2. SRC-inner-MAC: Un-touched. Not validated
+#   1. DST-inner-MAC: Not validated. Modified to local vnic mac
+#   2. SRC-inner-MAC: Not validated. Modified to VR_MAC
 #   3. Encap:VXLAN with VID=VNET-vxlan-ID (taken from vpc config). Removed
 #   4. Vlan: Added.
-#   4. DST-outer-IP: local Provider-IP (taken from local vnic config)
-#   5. SRC-outer-IP: remote Provider-IP. Not validated
-#   6. DST-outer-MAC: local host mac   (taken from device config)
-#   5. SRC-outer-MAC: Remote host mac. Not validated
+#   4. DST-outer-IP: local Provider-IP (taken from local vnic config) . Removed
+#   5. SRC-outer-IP: remote Provider-IP. Not validated. Removed
+#   6. DST-outer-MAC: local host mac   (taken from device config). Removed
+#   5. SRC-outer-MAC: Remote host mac. Not validated. Removed
+#   6. DST-Port: Servicee Mapped to backend port
+#   5. SRC-Port: Untouched
 
 selectors:
     root: ref://store/templates/id=FLOW
     maxlimits: 4
     flow: filter://any
+    route: filter://any
 
 packets:
     - packet:
@@ -28,18 +31,18 @@ packets:
         headers     :
             eth:
                 dst     : ref://testcase/config/localmapping/VNIC/MACAddr
-                src     : ref://testcase/config/remotemapping/MACAddr
+                src     : 00:11:22:33:44:55 # Random mac of the remote system
             ipv4:
-                dst     : ref://testcase/config/localmapping/IP
-                src     : ref://testcase/config/remotemapping/IP
+                dst     : ref://testcase/config/localmapping/SvcIP
+                src     : callback://networking/packets/GetUsableHostFromRoute/addr=last
                 ttl     : 64
             ipv6:
-                dst     : ref://testcase/config/localmapping/IP
-                src     : ref://testcase/config/remotemapping/IP
+                dst     : ref://testcase/config/localmapping/SvcIP
+                src     : callback://networking/packets/GetUsableHostFromRoute/addr=last
                 hlim    : 64
             tcp:
-                dport   : ref://testcase/config/localmapping/AppPort
-                sport   : ref://testcase/config/remotemapping/AppPort
+                dport   : ref://testcase/config/localmapping/SvcPort
+                sport   : ref://testcase/config/route/AppPort
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -51,16 +54,16 @@ packets:
         headers     :
             outereth:
                 dst     : ref://testcase/config/devicecfg/MACAddr
-                src     : 00:00:44:44:55:55 #ref://testcase/config/remotemapping/TUNNEL/MACAddr
+                src     : 00:00:44:44:55:55 # Mac address of the service VM/BridgeVM
             outeripv4:
                 dst     : ref://testcase/config/localmapping/ProviderIP
-                src     : 1.1.1.1 #ref://testcase/config/remotemapping/ProviderIP
+                src     : 1.1.1.1 # Provider IP of the service VM host.
                 ttl     : 64
                 tos     : 0
                 id      : 0
             outeripv6:
                 dst     : ref://testcase/config/localmapping/ProviderIP
-                src     : aaaa:abab::01 #ref://testcase/config/remotemapping/ProviderIP
+                src     : aaaa:abab::01 # Provider IP of the service VM host
                 hlim    : 64
             vxlan:
                 vni     : ref://testcase/config/localmapping/VNIC/SUBNET/VPC/Vnid
@@ -71,9 +74,17 @@ packets:
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/SUBNET/VirtualRouterMACAddr
             qtag:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
                 prio    : 0
+            ipv4:
+                dst     : ref://testcase/config/localmapping/IP
+            ipv6:
+                dst     : ref://testcase/config/localmapping/IP
+            tcp:
+                dport   : ref://testcase/config/localmapping/LBPort
 
 trigger:
     packets:

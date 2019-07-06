@@ -31,10 +31,13 @@ class Config(object):
         self.objects.append(obj)
         return
 
-    def SetSessionParams(self, num_nh_per_vpc, vpc_count):
+    def SetSessionParams(self, num_nh_per_vpc, num_v4_meter_per_vpc, num_v6_meter_per_vpc, vpc_count):
         obj = {}
         obj['kind'] = 'session'
-        obj['num_nh_per_vpc'] = str(num_nh_per_vpc)
+        obj['num_nh_per_vpc'] = []
+        obj['num_nh_per_vpc']  = num_nh_per_vpc
+        obj['num_v4_meter_per_vpc']  = num_v4_meter_per_vpc
+        obj['num_v6_meter_per_vpc']  = num_v6_meter_per_vpc
         obj['vpc_count'] = str(vpc_count)
         self.objects.append(obj)
         return
@@ -50,12 +53,19 @@ class CfgJsonObjectHelper:
         self.__sport_hi = resmgr.TransportSrcPort
         self.__dport_lo = resmgr.TransportDstPort
         self.__dport_hi = resmgr.TransportDstPort
-        self.__num_nh_per_vpc = 0
+        self.__num_nh_per_vpc = []
+        self.__num_v4_meter_per_vpc = []
+        self.__num_v6_meter_per_vpc = []
         self.__vpc_count = 0
         return
 
     def SetNumNexthopPerVPC(self, v):
         self.__num_nh_per_vpc = v
+        return
+
+    def SetNumMeterPerVPC(self, v4, v6):
+        self.__num_v4_meter_per_vpc = v4
+        self.__num_v6_meter_per_vpc = v6
         return
 
     def SetVPCCount(self, v):
@@ -67,7 +77,8 @@ class CfgJsonObjectHelper:
         self.__obj.SetPortParams(self.__num_tcp, self.__num_udp, self.__num_icmp, \
                 self.__sport_lo, self.__sport_hi, self.__dport_lo, self.__dport_hi)
         self.__obj.SetDeviceParams()
-        self.__obj.SetSessionParams(self.__num_nh_per_vpc, self.__vpc_count)
+        self.__obj.SetSessionParams(self.__num_nh_per_vpc, self.__num_v4_meter_per_vpc, \
+                self.__num_v6_meter_per_vpc, self.__vpc_count)
         with open(self.__file, "w") as file:
             json.dump(self.__obj.__dict__, file, indent=4)
         #s = json.dumps(self.__obj.__dict__, indent=4)

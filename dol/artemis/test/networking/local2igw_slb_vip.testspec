@@ -61,6 +61,8 @@ packets:
                 prio    : 0
             ipv4:
                 src     : ref://testcase/config/localmapping/SvcIP
+            ipv6:
+                src     : ref://testcase/config/localmapping/SvcIP
             tcp:
                 sport   : ref://testcase/config/localmapping/SvcPort
 

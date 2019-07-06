@@ -108,8 +108,7 @@ class FlowMapObjectHelper:
                     obj = FlowMapObject(lobj, None, fwdmode, routetblobj)
                     objs.append(obj)
 
-            # Random is disabled for the initial testing. TODO Remove
-            return utils.GetFilteredObjects(objs, selectors.maxlimits, False)
+            return utils.GetFilteredObjects(objs, selectors.maxlimits)
 
         elif fwdmode == 'SVCTUN':
             for lobj in lmapping.GetMatchingObjects(mapsel):

@@ -15,6 +15,7 @@ typedef enum agent_op_e {
     SUBNET_CREATE,
     ROUTE_TABLE_CREATE,
     SVC_MAPPING_CREATE,
+    TUNNEL_CREATE,
     BATCH_START,
     INIT_DONE
 } agent_op_t;
@@ -63,6 +64,15 @@ svc_mapping_create (pds_svc_mapping_spec_t *spec)
 {
     if (hooks_func) {
         return hooks_func(SVC_MAPPING_CREATE, (void *)spec, NULL);
+    }
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+tunnel_create (pds_tep_spec_t *spec)
+{
+    if (hooks_func) {
+        return hooks_func(TUNNEL_CREATE, (void *)spec, NULL);
     }
     return SDK_RET_OK;
 }

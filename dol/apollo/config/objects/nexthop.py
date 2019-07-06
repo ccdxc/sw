@@ -60,6 +60,7 @@ class NexthopObjectClient:
         self.__v6objs = {}
         self.__v4iter = {}
         self.__v6iter = {}
+        self.__num_nh_per_vpc = []
         return
 
     def Objects(self):
@@ -92,9 +93,12 @@ class NexthopObjectClient:
         self.__v6objs[vpcid] = []
         self.__v4iter[vpcid] = None
         self.__v6iter[vpcid] = None
-        self.__num_nh_per_vpc = 0
 
         if utils.IsPipelineArtemis() == False:
+            return
+
+        if getattr(vpc_spec_obj, 'nexthop', None) == None:
+            self.__num_nh_per_vpc.append(0)
             return
 
         def __is_v4stack():
@@ -119,7 +123,7 @@ class NexthopObjectClient:
             self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid])
         if len(self.__v6objs[vpcid]):
             self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid])
-        self.__num_nh_per_vpc = nh_spec_obj.count
+        self.__num_nh_per_vpc.append(nh_spec_obj.count)
         return
 
     def CreateObjects(self):

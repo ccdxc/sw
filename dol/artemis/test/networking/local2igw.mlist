@@ -14,4 +14,9 @@ modules:
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
 
+    - module:
+        name    : IPV6_SLB_VIP_UDP_QTAG
+        spec    : local2igw_slb_vip.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
 

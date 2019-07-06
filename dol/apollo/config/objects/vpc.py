@@ -30,14 +30,15 @@ class VpcObject(base.ConfigObjectBase):
         self.IPPrefix = {}
         self.Nat46_pfx = None
         if spec.type == 'substrate':
-            self.SvcMappingIPAddr = {}
             self.Type = vpc_pb2.VPC_TYPE_SUBSTRATE
             self.IPPrefix[0] = resmgr.ProviderIpV6Network
             self.IPPrefix[1] = resmgr.ProviderIpV4Network
-            # Reserve one SVC endpoint
-            self.SvcMappingIPAddr[0] = next(resmgr.SvcMappingPublicIpV6AddressAllocator)
-            self.SvcMappingIPAddr[1] = next(resmgr.SvcMappingPublicIpV4AddressAllocator)
+            # Reserve one SVC port
+            # Right now it does not support multiple backends for a frontend
             self.SvcPort = resmgr.TransportSvcPort
+            self.__max_svc_mapping_shared_count = 1
+            self.__svc_mapping_shared_count = 0
+            self.SvcMappingIPAddr  = {}
         else:
             self.Type = vpc_pb2.VPC_TYPE_TENANT
             self.IPPrefix[0] = resmgr.GetVpcIPv6Prefix(self.VPCId)
@@ -70,8 +71,7 @@ class VpcObject(base.ConfigObjectBase):
             return
 
         # Generate NextHop configuration
-        if getattr(spec, 'nexthop', None) != None:
-            nexthop.client.GenerateObjects(self, spec)
+        nexthop.client.GenerateObjects(self, spec)
 
         # Generate Tag configuration.
         if getattr(spec, 'tagtbl', None) != None:
@@ -91,8 +91,7 @@ class VpcObject(base.ConfigObjectBase):
             route.client.GenerateObjects(self, spec, vpc_peerid)
 
         # Generate Meter configuration
-        if getattr(spec, 'meter', None) != None:
-            meter.client.GenerateObjects(self, spec)
+        meter.client.GenerateObjects(self, spec)
 
         # Generate Subnet configuration post policy & route
         if getattr(spec, 'subnet', None) != None:
@@ -127,10 +126,21 @@ class VpcObject(base.ConfigObjectBase):
 
     def GetSvcMapping(self, ipversion):
         assert self.Type == vpc_pb2.VPC_TYPE_SUBSTRATE
-        if ipversion ==  utils.IP_VERSION_6:
-            return self.SvcMappingIPAddr[0],self.SvcPort
-        else:
-            return self.SvcMappingIPAddr[1],self.SvcPort
+
+        def __alloc():
+            self.SvcMappingIPAddr[0] = next(resmgr.SvcMappingPublicIpV6AddressAllocator)
+            self.SvcMappingIPAddr[1] = next(resmgr.SvcMappingPublicIpV4AddressAllocator)
+
+        def __get():
+            if ipversion ==  utils.IP_VERSION_6:
+                return self.SvcMappingIPAddr[0],self.SvcPort
+            else:
+                return self.SvcMappingIPAddr[1],self.SvcPort
+
+        if self.__svc_mapping_shared_count == 0:
+            __alloc()
+            self.__svc_mapping_shared_count = (self.__svc_mapping_shared_count + 1) % self.__max_svc_mapping_shared_count
+        return __get()
 
     def GetGrpcCreateMessage(self):
         grpcmsg = vpc_pb2.VPCRequest()
@@ -177,7 +187,9 @@ class VpcObjectClient:
 
     def __write_cfg(self, vpc_count):
         nh = nexthop.client.GetNumNextHopPerVPC()
-        cfgjson.CfgJsonHelper.SetNumNexthopPerVPC(nh + 1) # TODO
+        mtr = meter.client.GetNumMeterPerVPC()
+        cfgjson.CfgJsonHelper.SetNumNexthopPerVPC(nh)
+        cfgjson.CfgJsonHelper.SetNumMeterPerVPC(mtr[0], mtr[1])
         cfgjson.CfgJsonHelper.SetVPCCount(vpc_count)
         cfgjson.CfgJsonHelper.WriteConfig()
 
@@ -195,7 +207,7 @@ class VpcObjectClient:
                     Store.SetSubstrateVPC(obj)
         # Write the flow and nexthop config to agent hook file
         if utils.IsPipelineArtemis():
-            self.__write_cfg(vpc_count - 1) # Ignoring substrate VPC
+            self.__write_cfg(vpc_count)
         return
 
     def CreateObjects(self):

@@ -3,7 +3,7 @@
 # Scenario1-Vnet out :
 #
 #   IN(l2,vlan,ip,tcp)
-#   OUT(l2o,ipo,tcpo,vxlano,ORIG(l2,ip,tcp)).
+#   OUT(l2o,ipo,udpo,vxlano,ORIG(l2,ip,tcp)).
 #
 #   Header Modifications and validations: VXLAN encap added, vlan removed from inner.
 #

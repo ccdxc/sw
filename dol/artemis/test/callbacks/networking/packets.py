@@ -13,6 +13,9 @@ import types_pb2 as types_pb2
 IPV4_HOST = ipaddress.IPv4Address(0xbadee1ba)
 IPV6_HOST = ipaddress.IPv6Address('e1ba:aced:a11:face:b00c:bade:da75:900d')
 
+IPV4_MHOST = ipaddress.IPv4Address(0xffffffff)
+IPV6_MHOST = ipaddress.IPv6Address('ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff')
+
 def __get_packet_template_impl(obj, args):
     template = 'ETH'
     template += "_%s" % (obj.AddrFamily)
@@ -91,12 +94,6 @@ def __get_host_from_pfx(pfx, af, pos=None):
         #last ip in prefix range
         host = pfx.network_address + pfx.num_addresses - 1
     return str(host)
-
-def GetUsableHostFromRoute(testcase, packet, args=None):
-    route = __get_non_default_random_route(testcase.config.route.routes)
-    if args != None and args.addr == 'last':
-        return str(route.network_address + route.num_addresses - 1)
-    return __get_host_from_route(testcase.module.args, route, testcase.config.route.AddrFamily)
 
 def __get_module_args_value(modargs, attr):
     if modargs is not None:
@@ -415,9 +412,9 @@ def GetInvalidMPLSTag(testcase, packet, args=None):
 def GetInvalidVnid(testcase, packet, args=None):
     return next(resmgr.InvalidVxlanIdAllocator)
 
-def __get_mapping_packet_encap_impl(dev, rmap, args):
+def __get_mapping_packet_encap_impl(dev, lmap, args):
     if dev.IsEncapTypeVXLAN():
-        encap = 'ENCAP_VXLAN_IPV6' if rmap.TunFamily == 'IPV6' else 'ENCAP_VXLAN'
+        encap = 'ENCAP_VXLAN_IPV6' if lmap.TunFamily == 'IPV6' else 'ENCAP_VXLAN'
     else:
         assert 0
     return infra_api.GetPacketTemplate(encap)
@@ -425,7 +422,7 @@ def __get_mapping_packet_encap_impl(dev, rmap, args):
 # This can be called for packets to switch or from switch
 def GetPacketEncapFromMapping(testcase, packet, args=None):
     encaps = []
-    encaps.append(__get_mapping_packet_encap_impl(testcase.config.devicecfg, testcase.config.remotemapping, args))
+    encaps.append(__get_mapping_packet_encap_impl(testcase.config.devicecfg, testcase.config.localmapping, args))
     return encaps
 
 def __get_packet_srcmac_impl(fwdmode, dobj, robj, lobj, args):
@@ -560,4 +557,9 @@ def __get_host_from_route(modargs, route, af):
 
 def GetUsableHostFromRoute(testcase, packet, args=None):
     route = __get_non_default_random_route(testcase.config.route.routes)
+    if args != None and args.addr == 'last':
+        if route != None:
+            return str(route.network_address + route.num_addresses - 1)
+        else:
+            return str(IPV4_MHOST) if testcase.config.route.AddrFamily == "IPV4" else str(IPV6_MHOST)
     return __get_host_from_route(testcase.module.args, route, testcase.config.route.AddrFamily)

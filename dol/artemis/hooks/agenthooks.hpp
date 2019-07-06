@@ -25,6 +25,12 @@
 #include "gen/p4gen/artemis/include/p4pd.h"
 
 //#define DUMP_FLOW_SESSION_INFO 1
+#if 0
+#define DBG_PRINT(fmt, args...) fprintf(stderr, fmt, ##args)
+#else
+#define DBG_PRINT(fmt, args...)
+#endif
+#define htonll(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
 
 using sdk::table::ftlv6;
 using sdk::table::ftlv4;
@@ -34,6 +40,11 @@ using sdk::table::sdk_table_stats_t;
 using sdk::table::sdk_table_factory_params_t;
 
 namespace pt = boost::property_tree;
+
+#define DOL_MAX_VPC    8
+#define DOL_MAX_SUBNET 64
+#define DOL_MAX_ROUTE_TABLE     64
+#define DOL_MAX_ROUTE_PER_TABLE 128
 
 static char *
 flow_key2str(void *key) {
@@ -148,7 +159,6 @@ dump_hash_value(uint32_t hash)
 }
 #endif
 
-#define MAX_VPCS        64
 #define MAX_LOCAL_EPS   512
 #define MAX_REMOTE_EPS  512
 #define MAX_EP_PAIRS_PER_VPC (MAX_LOCAL_EPS*MAX_REMOTE_EPS)
@@ -203,15 +213,11 @@ typedef struct cfg_params_s {
     uint32_t num_udp;
     uint32_t num_icmp;
     // session related
-    uint32_t num_nexthop_idx_per_vpc;
+    uint32_t num_nexthop_idx_per_vpc[DOL_MAX_VPC];
     uint32_t vpc_count;
-    uint32_t num_meter_idx_per_vpc;
+    uint32_t num_meter_idx_per_vpc[DOL_MAX_VPC];
 } cfg_params_t;
 
-
-#define MAX_ROUTE_TBLS              128
-#define MAX_SUBNETS                 64
-#define MAX_ROUTES_PER_ROUTE_TBL    64
 #define MAX_REMOTE_GW_HOSTS         4
 typedef struct route_s {
     pds_route_t route;
@@ -231,13 +237,13 @@ typedef struct vpc_local_gw_mapping_s {
     uint32_t valid;
     mapping_t v4_local;
     mapping_t v6_local;
-    route_t remotes[MAX_ROUTE_TBLS * MAX_ROUTES_PER_ROUTE_TBL];
+    route_t remotes[DOL_MAX_ROUTE_TABLE * DOL_MAX_ROUTE_PER_TABLE];
     uint32_t remote_count;
 } vpc_local_gw_mapping_t;
 
 typedef struct route_db_s {
     uint32_t num_routes;
-    pds_route_t routes[MAX_ROUTES_PER_ROUTE_TBL];
+    pds_route_t routes[DOL_MAX_ROUTE_PER_TABLE];
 } route_db_t;
 
 typedef struct subnet_db_s {
@@ -254,7 +260,7 @@ class flow_test {
 private:
     ftlv6 *v6table;
     ftlv4 *v4table;
-    vpc_epdb_t epdb[MAX_VPCS+1];
+    vpc_epdb_t epdb[DOL_MAX_VPC+1];
     uint32_t session_index;
     uint32_t epoch;
     uint32_t hash;
@@ -268,14 +274,14 @@ private:
     ftlv4_entry_t v4entry;
     vpc_ep_pair_t ep_pairs[MAX_EP_PAIRS_PER_VPC];
     cfg_params_t cfg_params;
-    uint32_t meter_idx;
     bool with_hash;
     uint32_t remote_mapping_nexthop_idx;
-    route_db_t routedb[2][MAX_ROUTE_TBLS];
-    subnet_db_t subnetdb[MAX_VPCS][MAX_SUBNETS];
+    route_db_t routedb[2][DOL_MAX_ROUTE_TABLE];
+    subnet_db_t subnetdb[DOL_MAX_VPC+1][DOL_MAX_SUBNET];
     vpc_local_gw_mapping_t local_gw_mapping[MAX_LOCAL_EPS];
     uint32_t v6_route_table_sid;
     uint32_t v4_route_table_sid;
+    uint32_t service_teps;
 
 private:
 
@@ -308,11 +314,16 @@ private:
                     cfg_params.dport_lo = std::stol(obj.second.get<std::string>("dport_lo"));
                     cfg_params.dport_hi = std::stol(obj.second.get<std::string>("dport_hi"));
                 } else if (kind == "session") {
-                    cfg_params.num_nexthop_idx_per_vpc = std::stol(obj.second.get<std::string>("num_nh_per_vpc"));
+                    uint32_t count = 0;
+
+                    BOOST_FOREACH (pt::ptree::value_type &v, obj.second.get_child("num_nh_per_vpc.")) {
+                        SDK_ASSERT(count < DOL_MAX_VPC);
+                        remote_mapping_nexthop_idx += std::stol(v.second.data());
+                        // Remote Mapping next hop starts immediately after the vpc reserved ones
+                        cfg_params.num_nexthop_idx_per_vpc[count] = std::stol(v.second.data());
+                        count++;
+                    }
                     cfg_params.vpc_count = std::stol(obj.second.get<std::string>("vpc_count"));
-                    cfg_params.num_meter_idx_per_vpc = cfg_params.num_nexthop_idx_per_vpc; //TODO
-                    // Remote Mapping next hop starts immediately after the vpc reserved ones
-                    remote_mapping_nexthop_idx = cfg_params.num_nexthop_idx_per_vpc * cfg_params.vpc_count;
                 }
             }
             cfg_params.valid = true;
@@ -334,7 +345,6 @@ private:
         SDK_TRACE_DEBUG("- sport_hi : %d", cfg_params.sport_hi);
         SDK_TRACE_DEBUG("- dport_lo : %d", cfg_params.dport_lo);
         SDK_TRACE_DEBUG("- dport_hi : %d", cfg_params.dport_hi);
-        SDK_TRACE_DEBUG("- num_nh_per_vpc : %d", cfg_params.num_nexthop_idx_per_vpc);
         SDK_TRACE_DEBUG("- vpc_count : %d", cfg_params.vpc_count);
     }
 
@@ -405,6 +415,10 @@ public:
         v4_route_table_sid = 0;
         memset(routedb, 0, sizeof(routedb));
         memset(subnetdb, 0 , sizeof(subnetdb));
+        memset(local_gw_mapping, 0, sizeof(local_gw_mapping));
+        memset(ep_pairs, 0, sizeof(ep_pairs));
+        service_teps = 0;
+        remote_mapping_nexthop_idx = 0;
     }
 
     void read_config() {
@@ -460,7 +474,7 @@ public:
         ip_addr_t ip_addr = local_spec->key.ip_addr;
 
         assert(vpc_id);
-        if (vpc_id > MAX_VPCS) {
+        if (vpc_id > DOL_MAX_VPC) {
             return;
         }
         epdb[vpc_id].vpc_id = vpc_id;
@@ -501,8 +515,8 @@ public:
             epdb[vpc_id].v6_locals[epdb[vpc_id].v6_lcount].nh_idx = ++remote_mapping_nexthop_idx;
             epdb[vpc_id].v6_lcount++;
         }
-        //fprintf(stderr, "Adding Local EP Vpc %d, IP %s, PIP %s\n",
-        //        vpc_id, ipaddr2str(&ip_addr), ipaddr2str(&local_spec->provider_ip));
+        DBG_PRINT("Adding Local EP Vpc %d, IP %s, PIP %s\n",
+                  vpc_id, ipaddr2str(&ip_addr), ipaddr2str(&local_spec->provider_ip));
     }
 
     void add_remote_ep(pds_remote_mapping_spec_t *remote_spec) {
@@ -510,7 +524,7 @@ public:
         ip_addr_t ip_addr = remote_spec->key.ip_addr;
 
         assert(vpc_id);
-        if (vpc_id > MAX_VPCS) {
+        if (vpc_id > DOL_MAX_VPC) {
             return;
         }
         epdb[vpc_id].vpc_id = vpc_id;
@@ -539,8 +553,8 @@ public:
             epdb[vpc_id].v6_remotes[epdb[vpc_id].v6_rcount].nh_idx = ++remote_mapping_nexthop_idx;
             epdb[vpc_id].v6_rcount++;
         }
-        //fprintf(stderr, "Adding Remote EP Vpc %d, IP %s, PIP %s\n",
-        //        vpc_id, ipaddr2str(&ip_addr), ipaddr2str(&remote_spec->provider_ip));
+        DBG_PRINT("Adding Remote EP Vpc %d, IP %s, PIP %s\n",
+                  vpc_id, ipaddr2str(&ip_addr), ipaddr2str(&remote_spec->provider_ip));
     }
 
     void add_route_table(pds_route_table_spec_t *route_spec) {
@@ -558,9 +572,9 @@ public:
             else
                  tblid = route_spec->key.id - v6_route_table_sid;
         }
-        //fprintf(stderr, "Route tblid %u:%u type %u\n", route_spec->key.id, tblid, rt_dbid);
-        assert(tblid < MAX_ROUTE_TBLS);
-        assert(route_spec->num_routes < MAX_ROUTES_PER_ROUTE_TBL);
+        DBG_PRINT("Route tblid %u:%u type %u\n", route_spec->key.id, tblid, rt_dbid);
+        assert(tblid < DOL_MAX_ROUTE_TABLE);
+        assert(route_spec->num_routes < DOL_MAX_ROUTE_PER_TABLE);
         for (uint32_t i = 0; i < route_spec->num_routes; i++) {
             memcpy(&routedb[rt_dbid][tblid].routes[i],
                    &route_spec->routes[i], sizeof(pds_route_t));
@@ -569,13 +583,25 @@ public:
     }
 
     void add_subnet(pds_subnet_spec_t *subnet_spec) {
-        assert(subnet_spec->key.id < MAX_SUBNETS);
-        assert(subnet_spec->vpc.id < MAX_VPCS);
-        //fprintf(stderr, "Subnet tblid %u, rtid %u:%u\n", subnet_spec->key.id,
-        //        subnet_spec->v4_route_table.id, subnet_spec->v6_route_table.id);
+        assert(subnet_spec->key.id < DOL_MAX_SUBNET);
+        assert(subnet_spec->vpc.id < DOL_MAX_VPC);
+        DBG_PRINT("Subnet tblid %u, rtid %u:%u\n", subnet_spec->key.id,
+                  subnet_spec->v4_route_table.id, subnet_spec->v6_route_table.id);
         subnetdb[subnet_spec->vpc.id][subnet_spec->key.id].v4_routetbl_id = subnet_spec->v4_route_table.id + 1;
         subnetdb[subnet_spec->vpc.id][subnet_spec->key.id].v6_routetbl_id = subnet_spec->v6_route_table.id + 1;
     }
+
+    void add_tep(pds_tep_spec_t *tep_spec) {
+        if (tep_spec->type == PDS_TEP_TYPE_SERVICE) {
+            service_teps++;
+            remote_mapping_nexthop_idx++;
+        }
+    }
+
+    #define IPCOMP(ip1, ip2) \
+        (((ip1.af == IP_AF_IPV4) && (ip1.addr.v4_addr ==  ip2.addr.v4_addr)) || \
+           ((ip1.af == IP_AF_IPV6) && (ip1.addr.v6_addr.addr64[0] == ip2.addr.v6_addr.addr64[0]) && \
+           (ip1.addr.v6_addr.addr64[1] == ip2.addr.v6_addr.addr64[1])))
 
     void add_svc_mapping(pds_svc_mapping_spec_t *svc_spec) {
         uint32_t vpc = svc_spec->vpc.id;
@@ -584,8 +610,7 @@ public:
 
         if (af == IP_AF_IPV4) {
             for (lid = 0; lid < epdb[vpc].v4_lcount; lid++) {
-                if (epdb[vpc].v4_locals[lid].provider_ip.addr.v4_addr ==
-                    svc_spec->backend_provider_ip.addr.v4_addr) {
+                if (IPCOMP(epdb[vpc].v4_locals[lid].provider_ip, svc_spec->backend_provider_ip)) {
                     epdb[vpc].v4_locals[lid].service_ip = svc_spec->key.vip;
                     epdb[vpc].v4_locals[lid].service_port = svc_spec->key.svc_port;
                     epdb[vpc].v4_locals[lid].lb_port = svc_spec->svc_port;
@@ -595,13 +620,10 @@ public:
             assert(lid < epdb[vpc].v4_lcount);
         } else {
             for (lid = 0; lid < epdb[vpc].v6_lcount; lid++) {
-                if ((epdb[vpc].v6_locals[lid].provider_ip.addr.v6_addr.addr64[0] ==
-                    svc_spec->backend_provider_ip.addr.v6_addr.addr64[0]) && (
-                    epdb[vpc].v6_locals[lid].provider_ip.addr.v6_addr.addr64[1] ==
-                    svc_spec->backend_provider_ip.addr.v6_addr.addr64[1])) {
+                if (IPCOMP(epdb[vpc].v6_locals[lid].provider_ip, svc_spec->backend_provider_ip)) {
                     epdb[vpc].v6_locals[lid].service_ip = svc_spec->key.vip;
-                    epdb[vpc].v4_locals[lid].service_port = svc_spec->key.svc_port;
-                    epdb[vpc].v4_locals[lid].lb_port = svc_spec->svc_port;
+                    epdb[vpc].v6_locals[lid].service_port = svc_spec->key.svc_port;
+                    epdb[vpc].v6_locals[lid].lb_port = svc_spec->svc_port;
                     break;
                 }
                 assert(lid < epdb[vpc].v6_lcount);
@@ -613,19 +635,23 @@ public:
         pds_route_t *routes;
         uint32_t nroutes;
         uint32_t rt_dbid = v4 ? 1 : 0;
-        uint32_t lid;
+        uint32_t lid, lmap_count;
 
-        memset(local_gw_mapping, 0, sizeof(local_gw_mapping));
-        // fprintf(stderr, "%s in vpc %d\n", __func__, vpc);
-        // We will configure the first and last ip of each prefix
+        // Right now function configures the last ip of each prefix
         assert(epdb[vpc].v4_lcount < MAX_LOCAL_EPS);
-        for (lid = 0; lid < epdb[vpc].v4_lcount; lid++) {
+        assert(epdb[vpc].v6_lcount < MAX_LOCAL_EPS);
+        lmap_count = v4 ? epdb[vpc].v4_lcount :  epdb[vpc].v6_lcount;
+        for (lid = 0; lid < lmap_count; lid++) {
             local_gw_mapping[lid].v4_local = epdb[vpc].v4_locals[lid];
-            for (int sid = 0; sid < MAX_SUBNETS; sid++) {
-                if (subnetdb[vpc][sid].v4_routetbl_id) {
-                    uint32_t tblid = subnetdb[vpc][sid].v4_routetbl_id - 1 - v4_route_table_sid;
+            local_gw_mapping[lid].v6_local = epdb[vpc].v6_locals[lid];
+            for (int sid = 0; sid < DOL_MAX_SUBNET; sid++) {
+                uint32_t tblid = v4 ? subnetdb[vpc][sid].v4_routetbl_id : subnetdb[vpc][sid].v6_routetbl_id;
+                uint32_t tblsid = v4 ? v4_route_table_sid : v6_route_table_sid;
+
+                if (tblid) {
                     uint32_t rid = 0, rc;
 
+                    tblid = tblid - 1 - tblsid;
                     routes = routedb[rt_dbid][tblid].routes;
                     nroutes = routedb[rt_dbid][tblid].num_routes;
                     rc = local_gw_mapping[lid].remote_count;
@@ -633,37 +659,65 @@ public:
                     for (rid = 0; rid < nroutes; rid++, rc++) {
                         assert(rc < (sizeof(local_gw_mapping[lid].remotes) / sizeof(route_t)));
                         local_gw_mapping[lid].remotes[rc].route = routes[rid];
-                        // Create flows for the last addresses, we are saving the first one also
-                        local_gw_mapping[lid].remotes[rc].v4_addr[0] = routes[rid].prefix.addr.addr.v4_addr;
-                        local_gw_mapping[lid].remotes[rc].v4_host_count++;
-                        if (routes[rid].prefix.len != 32) {
-                            local_gw_mapping[lid].remotes[rc].v4_addr[1] =
-                                routes[rid].prefix.addr.addr.v4_addr | ((1 << (32 - routes[rid].prefix.len)) - 1);
+                        // Create flows for the last addresses, saving the first one also
+                        if (v4) {
+                            uint32_t mask = 0;
+                            local_gw_mapping[lid].remotes[rc].v4_addr[0] = routes[rid].prefix.addr.addr.v4_addr;
                             local_gw_mapping[lid].remotes[rc].v4_host_count++;
+                            if (routes[rid].prefix.len != 32) {
+                                mask = (1ULL << (32 - routes[rid].prefix.len)) - 1;
+                                local_gw_mapping[lid].remotes[rc].v4_host_count++;
+                            }
+                            local_gw_mapping[lid].remotes[rc].v4_addr[1] = local_gw_mapping[lid].remotes[rc].v4_addr[0] | mask;
+                            DBG_PRINT("local gw mapping vpc %u, routes %s, count %u, addr0 %s, addr1 %s\n", vpc,
+                                      ippfx2str(&local_gw_mapping[lid].remotes[rc].route.prefix),
+                                      local_gw_mapping[lid].remotes[rc].v4_host_count,
+                                      ipv4addr2str(local_gw_mapping[lid].remotes[rc].v4_addr[0]),
+                                      ipv4addr2str(local_gw_mapping[lid].remotes[rc].v4_addr[1]));
                         } else {
-                            local_gw_mapping[lid].remotes[rc].v4_addr[1]  = local_gw_mapping[lid].remotes[rc].v4_addr[0];
+                            ipv6_addr_t mask = {0};
+                            local_gw_mapping[lid].remotes[rc].v6_addr[0].addr64[0] = routes[rid].prefix.addr.addr.v6_addr.addr64[0];
+                            local_gw_mapping[lid].remotes[rc].v6_addr[0].addr64[1] = routes[rid].prefix.addr.addr.v6_addr.addr64[1];
+                            local_gw_mapping[lid].remotes[rc].v6_host_count++;
+                            if (routes[rid].prefix.len != 128) {
+                                if (routes[rid].prefix.len < 64) {
+                                    mask.addr64[0] = (1ULL << (64 - routes[rid].prefix.len)) - 1;
+                                    mask.addr64[1] = -1;
+                                } else if (routes[rid].prefix.len == 64) {
+                                    mask.addr64[1] = -1;
+                                } else if (routes[rid].prefix.len == 0) {
+                                    mask.addr64[0] = -1ULL;
+                                    mask.addr64[1] = -1ULL;
+                                } else {
+                                    mask.addr64[1] = (1ULL << (128 - routes[rid].prefix.len)) - 1;
+                                }
+                                local_gw_mapping[lid].remotes[rc].v4_host_count++;
+                            }
+                            local_gw_mapping[lid].remotes[rc].v6_addr[1].addr64[0] =
+                                local_gw_mapping[lid].remotes[rc].v6_addr[0].addr64[0] | htonll(mask.addr64[0]);
+                            local_gw_mapping[lid].remotes[rc].v6_addr[1].addr64[1] =
+                                local_gw_mapping[lid].remotes[rc].v6_addr[0].addr64[1] | htonll(mask.addr64[1]);
+                            DBG_PRINT("local gw mapping vpc %u, routes %s, count %u, addr0 %s, addr1 %s\n", vpc,
+                                      ippfx2str(&local_gw_mapping[lid].remotes[rc].route.prefix),
+                                      local_gw_mapping[lid].remotes[rc].v6_host_count,
+                                      ipv6addr2str(local_gw_mapping[lid].remotes[rc].v6_addr[0]),
+                                      ipv6addr2str(local_gw_mapping[lid].remotes[rc].v6_addr[1]));
                         }
-                       /*  fprintf(stderr, "local gw mapping vpc %u, routes %s, count %u addr %x:%x\n", vpc,
-                                ippfx2str(&local_gw_mapping[lid].remotes[rc].route.prefix),
-                                local_gw_mapping[lid].remotes[rc].v4_host_count,
-                                local_gw_mapping[lid].remotes[rc].v4_addr[0],
-                                local_gw_mapping[lid].remotes[rc].v4_addr[1]); */
                     }
                     local_gw_mapping[lid].remote_count += rid;
                 }
             }
         }
-        //fprintf(stderr, "%s out vpc %d\n", __func__, vpc);
         return lid;
     }
 
     void generate_ep_pairs(uint32_t vpc, bool dual_stack) {
+        uint32_t pid = 0;
+
         if (dual_stack) {
             assert(epdb[vpc].v6_lcount == epdb[vpc].v4_lcount);
             assert(epdb[vpc].v6_rcount == epdb[vpc].v4_rcount);
         }
-        uint32_t pid = 0;
-        memset(ep_pairs, 0, sizeof(ep_pairs));
         if (epdb[vpc].valid == 0) {
             return;
         }
@@ -684,13 +738,8 @@ public:
         session_actiondata_t actiondata;
         p4pd_error_t p4pd_ret;
         uint32_t tableid = P4TBL_ID_SESSION;
-        static uint32_t cur_vpc = 0;
+        uint32_t meter_idx = 0;  //TODO
 
-        // reset meter_idx to corresponding start value for the VPC
-        if (cur_vpc != vpc) {
-            cur_vpc = vpc;
-            meter_idx = (vpc - 1) * cfg_params.num_meter_idx_per_vpc + 1;
-        }
         memset(&actiondata, 0, sizeof(session_actiondata_t));
         actiondata.action_id = SESSION_SESSION_INFO_ID;
         actiondata.action_u.session_session_info.nexthop_idx = nexthop_idx;
@@ -698,15 +747,13 @@ public:
             // do DMACi rewrite and encap in the Tx direction
             actiondata.action_u.session_session_info.tx_rewrite_flags = 0x21;
             // No rewrites in the RX direction.
-            actiondata.action_u.session_session_info.rx_rewrite_flags = 0x11;
+            actiondata.action_u.session_session_info.rx_rewrite_flags = 0x00;
         } else if (type == VNET_TO_INTERNET_SLB) {
             actiondata.action_u.session_session_info.tx_rewrite_flags = 0x45;
             actiondata.action_u.session_session_info.rx_rewrite_flags = 0x61;
         }
-        actiondata.action_u.session_session_info.meter_idx = meter_idx++;
-        if (meter_idx == vpc * cfg_params.num_meter_idx_per_vpc) {
-            meter_idx = (vpc-1) * cfg_params.num_meter_idx_per_vpc + 1;
-        }
+        actiondata.action_u.session_session_info.meter_idx = meter_idx;
+
         dump_session_info(vpc, &actiondata);
         p4pd_ret = p4pd_global_entry_write(
                             tableid, session_index, NULL, NULL, &actiondata);
@@ -718,9 +765,11 @@ public:
         return SDK_RET_OK;
     }
 
-    sdk_ret_t create_flow(uint32_t vpc, ipv6_addr_t iflow_sip,
-                             ipv6_addr_t iflow_dip, uint8_t proto,
-                             uint16_t iflow_sport, uint16_t iflow_dport) {
+    sdk_ret_t create_flow(uint32_t vpc, uint8_t proto,
+                          ipv6_addr_t iflow_sip, ipv6_addr_t iflow_dip,
+                          uint16_t iflow_sport, uint16_t iflow_dport,
+                          ipv6_addr_t rflow_sip, ipv6_addr_t rflow_dip,
+                          uint16_t rflow_sport, uint16_t rflow_dport) {
         memset(&v6entry, 0, sizeof(ftlv6_entry_t));
         // Common DATA fields
         v6entry.session_index = session_index;
@@ -738,22 +787,22 @@ public:
         SDK_ASSERT(ret == SDK_RET_OK || ret == SDK_RET_ENTRY_EXISTS);
         dump_flow_entry(&v6entry, iflow_sip, iflow_dip);
         // Create RFLOW
-        v6entry.sport = iflow_dport;
-        v6entry.dport = iflow_sport;
-        sdk::lib::memrev(v6entry.src, iflow_dip.addr8, sizeof(ipv6_addr_t));
-        sdk::lib::memrev(v6entry.dst, iflow_sip.addr8, sizeof(ipv6_addr_t));
+        v6entry.sport = rflow_sport;
+        v6entry.dport = rflow_dport;
+        sdk::lib::memrev(v6entry.src, rflow_sip.addr8, sizeof(ipv6_addr_t));
+        sdk::lib::memrev(v6entry.dst, rflow_dip.addr8, sizeof(ipv6_addr_t));
         ret = insert_(&v6entry);
         SDK_ASSERT(ret == SDK_RET_OK || ret == SDK_RET_ENTRY_EXISTS);
-        dump_flow_entry(&v6entry, iflow_dip, iflow_sip);
+        dump_flow_entry(&v6entry, rflow_sip, rflow_dip);
 
         return SDK_RET_OK;
     }
 
     sdk_ret_t create_flow(uint32_t vpc, uint8_t proto,
-                             ipv4_addr_t iflow_sip, ipv4_addr_t iflow_dip,
-                             uint16_t iflow_sport, uint16_t iflow_dport,
-                             ipv4_addr_t rflow_sip, ipv4_addr_t rflow_dip,
-                             uint16_t rflow_sport, uint16_t rflow_dport) {
+                          ipv4_addr_t iflow_sip, ipv4_addr_t iflow_dip,
+                          uint16_t iflow_sport, uint16_t iflow_dport,
+                          ipv4_addr_t rflow_sip, ipv4_addr_t rflow_dip,
+                          uint16_t rflow_sport, uint16_t rflow_dport) {
         memset(&v4entry, 0, sizeof(ftlv4_entry_t));
         // Common DATA fields
         v4entry.session_index = session_index;
@@ -776,7 +825,7 @@ public:
         v4entry.dst = rflow_dip;
         ret = insert_(&v4entry);
         SDK_ASSERT(ret == SDK_RET_OK || ret == SDK_RET_ENTRY_EXISTS);
-        dump_flow_entry(&v4entry, iflow_dip, iflow_sip);
+        dump_flow_entry(&v4entry, rflow_sip, rflow_dip);
 
         return SDK_RET_OK;
     }
@@ -788,9 +837,8 @@ public:
         uint16_t rev_sport = 0, rev_dport = 0;
         uint32_t nflows = 0;
         sdk_ret_t ret;
-        ip_addr_t ip_addr;
 
-        for (uint32_t vpc = 1; vpc <= MAX_VPCS; vpc++) {
+        for (uint32_t vpc = 1; vpc <= DOL_MAX_VPC; vpc++) {
             generate_ep_pairs(vpc, dual_stack);
             for (i = 0; i < MAX_EP_PAIRS_PER_VPC ; i++) {
                 for (auto lp = cfg_params.sport_lo; lp <= cfg_params.sport_hi; lp++) {
@@ -808,7 +856,6 @@ public:
                             fwd_dport = rev_sport = remote_port;
                         }
 
-                        memset(&ip_addr, 0, sizeof(ip_addr));
                         // create V4 Flows
                         // vnet in/out with vxlan encap
                         ret = create_flow(
@@ -820,34 +867,41 @@ public:
                             ep_pairs[i].v4_local.local_ip.addr.v4_addr,
                             fwd_dport, fwd_sport);
                         if (ret != SDK_RET_OK) {
+                            ep_pairs[i].valid = 0;
                             return ret;
                         }
                         // create V4 session
                         ret = create_session_info(vpc,  ep_pairs[i].v4_remote.nh_idx, VNET_TO_VNET);
                         if (ret != SDK_RET_OK) {
+                            ep_pairs[i].valid = 0;
                             return ret;
                         }
                         session_index++;
 
                         if (dual_stack) {
-                            memset(&ip_addr, 0, sizeof(ip_addr));
                             // create V6 Flows
                             // vnet in/out with vxlan encap
                             ret = create_flow(
-                                vpc, ep_pairs[i].v6_local.local_ip.addr.v6_addr,
+                                vpc, proto, ep_pairs[i].v6_local.local_ip.addr.v6_addr,
                                 ep_pairs[i].v6_remote.remote_ip.addr.v6_addr,
-                                proto, fwd_sport, fwd_dport);
+                                fwd_sport, fwd_dport,
+                                ep_pairs[i].v6_remote.remote_ip.addr.v6_addr,
+                                ep_pairs[i].v6_local.local_ip.addr.v6_addr,
+                                fwd_dport, fwd_sport);
                             if (ret != SDK_RET_OK) {
+                                ep_pairs[i].valid = 0;
                                 return ret;
                             }
                             // create V6 session
                             ret = create_session_info(vpc, ep_pairs[i].v6_remote.nh_idx, VNET_TO_VNET);
                             if (ret != SDK_RET_OK) {
+                                ep_pairs[i].valid = 0;
                                 return ret;
                             }
                             session_index++;
                         }
 
+                        ep_pairs[i].valid = 0;
                         nflows+=2;
                         if (nflows >= count) {
                             return SDK_RET_OK;
@@ -866,15 +920,18 @@ public:
         uint16_t rev_sport = 0, rev_dport = 0;
         uint32_t nflows = 0;
         sdk_ret_t ret;
-        ip_addr_t ip_addr;
 
-        for (uint32_t vpc = 1; vpc <= MAX_VPCS; vpc++) {
+        for (uint32_t vpc = 1; vpc <= DOL_MAX_VPC; vpc++) {
             generate_local_gw_mapping(vpc, v4);
             for (i = 0; i < MAX_LOCAL_EPS ; i++) {
                 if (local_gw_mapping[i].remote_count == 0) {
                     break;
                 }
-                local_port = local_gw_mapping[i].v4_local.lb_port;
+                if (v4) {
+                    local_port = local_gw_mapping[i].v4_local.lb_port;
+                } else {
+                    local_port = local_gw_mapping[i].v6_local.lb_port;
+                }
                 remote_port = cfg_params.dport_lo;
                 if (proto == IP_PROTO_ICMP) {
                     fwd_sport = rev_sport = local_port;
@@ -884,9 +941,8 @@ public:
                     fwd_dport = rev_sport = remote_port;
                 }
 
-                memset(&ip_addr, 0, sizeof(ip_addr));
-                if (v4) {
-                    for (uint32_t rc = 0; rc < local_gw_mapping[i].remote_count; rc++) {
+                for (uint32_t rc = 0; rc < local_gw_mapping[i].remote_count; rc++) {
+                    if (v4) {
                         // create V4 Flows
                         ret = create_flow(
                             vpc, proto,
@@ -896,20 +952,33 @@ public:
                             local_gw_mapping[i].remotes[rc].v4_addr[1],
                             local_gw_mapping[i].v4_local.service_ip.addr.v4_addr,
                             fwd_dport, local_gw_mapping[i].v4_local.service_port);
-                        if (ret != SDK_RET_OK) {
-                            return ret;
-                        }
-                        // create V4 session
-                        ret = create_session_info(
-                            vpc, local_gw_mapping[i].remotes[rc].route.nh,
-                            VNET_TO_INTERNET_SLB);
-                        if (ret != SDK_RET_OK) {
-                            return ret;
-                        }
-                        session_index++;
-                        nflows+=2;
+                    } else {
+                        // create V6 Flows
+                        ret = create_flow(
+                            vpc, proto,
+                            local_gw_mapping[i].v6_local.local_ip.addr.v6_addr,
+                            local_gw_mapping[i].remotes[rc].v6_addr[1],
+                            fwd_sport, fwd_dport,
+                            local_gw_mapping[i].remotes[rc].v6_addr[1],
+                            local_gw_mapping[i].v6_local.service_ip.addr.v6_addr,
+                            fwd_dport, local_gw_mapping[i].v6_local.service_port);
                     }
+                    if (ret != SDK_RET_OK) {
+                        local_gw_mapping[i].remote_count = 0;
+                        return ret;
+                    }
+                    // create V4 session
+                    ret = create_session_info(
+                        vpc, local_gw_mapping[i].remotes[rc].route.nh,
+                        VNET_TO_INTERNET_SLB);
+                    if (ret != SDK_RET_OK) {
+                        local_gw_mapping[i].remote_count = 0;
+                        return ret;
+                    }
+                    session_index++;
+                    nflows+=2;
                 }
+                local_gw_mapping[i].remote_count = 0;
             }
         }
         return SDK_RET_OK;
@@ -980,6 +1049,11 @@ public:
             if (ret != SDK_RET_OK) {
                 return ret;
             }
+
+            ret = create_vnet_vip_flows_one_proto_(cfg_params.num_tcp, IP_PROTO_TCP, false);
+            if (ret != SDK_RET_OK) {
+                return ret;
+            }
         }
 
         if (cfg_params.num_udp) {
@@ -991,7 +1065,10 @@ public:
             if (ret != SDK_RET_OK) {
                 return ret;
             }
-
+            ret = create_vnet_vip_flows_one_proto_(cfg_params.num_udp, IP_PROTO_UDP, false);
+            if (ret != SDK_RET_OK) {
+                return ret;
+            }
         }
 
         if (cfg_params.num_icmp) {
@@ -1000,6 +1077,10 @@ public:
                 return ret;
             }
             ret = create_vnet_vip_flows_one_proto_(cfg_params.num_icmp, IP_PROTO_ICMP, true);
+            if (ret != SDK_RET_OK) {
+                return ret;
+            }
+            ret = create_vnet_vip_flows_one_proto_(cfg_params.num_icmp, IP_PROTO_ICMP, false);
             if (ret != SDK_RET_OK) {
                 return ret;
             }
