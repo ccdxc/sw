@@ -256,9 +256,9 @@ message NodeCondition {
     // These are valid conditions of a Node
     enum ConditionType {
         // ui-hint: Leader
-        LEADER  = 0; // Node is the elected leader in Venice cluster
-	// ui-hint: Healthy
-	HEALTHY = 1; // Node is alive and sending heartbeats
+        LEADER      = 0; // Node is the elected leader in Venice cluster
+        // ui-hint: Healthy
+        HEALTHY     = 1; // Node is alive and sending heartbeats
     }
 
     // Type indicates a certain node condition

@@ -22,11 +22,13 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'MODULE_CREATION_FAILED',
     'NIC_ADMITTED',
     'NIC_HEALTHY',
-    'NIC_HEALTH_UNKNOWN',
     'NIC_REJECTED',
     'NIC_UNHEALTHY',
+    'NIC_UNREACHABLE',
     'NODE_DISJOINED',
+    'NODE_HEALTHY',
     'NODE_JOINED',
+    'NODE_UNREACHABLE',
   ],
   Network: [
     'LINK_DOWN',
@@ -120,11 +122,6 @@ export const eventTypes: { [name: string]: EventType } = {
       "Severity": EventsEvent_severity.INFO,
       "Desc": "NIC health transitioned to &#x27;true&#x27;",
   },
-  'NIC_HEALTH_UNKNOWN' : {
-      "Name": "NIC_HEALTH_UNKNOWN",
-      "Severity": EventsEvent_severity.CRITICAL,
-      "Desc": "NIC health transitioned to &#x27;unknown&#x27;",
-  },
   'NIC_REJECTED' : {
       "Name": "NIC_REJECTED",
       "Severity": EventsEvent_severity.WARN,
@@ -135,15 +132,30 @@ export const eventTypes: { [name: string]: EventType } = {
       "Severity": EventsEvent_severity.WARN,
       "Desc": "NIC health transitioned to &#x27;false&#x27;",
   },
+  'NIC_UNREACHABLE' : {
+      "Name": "NIC_UNREACHABLE",
+      "Severity": EventsEvent_severity.CRITICAL,
+      "Desc": "NIC is unreachable",
+  },
   'NODE_DISJOINED' : {
       "Name": "NODE_DISJOINED",
       "Severity": EventsEvent_severity.WARN,
       "Desc": "Node disjoined from the cluster",
   },
+  'NODE_HEALTHY' : {
+      "Name": "NODE_HEALTHY",
+      "Severity": EventsEvent_severity.INFO,
+      "Desc": "Node is healthy",
+  },
   'NODE_JOINED' : {
       "Name": "NODE_JOINED",
       "Severity": EventsEvent_severity.INFO,
       "Desc": "Node joined the cluster",
+  },
+  'NODE_UNREACHABLE' : {
+      "Name": "NODE_UNREACHABLE",
+      "Severity": EventsEvent_severity.CRITICAL,
+      "Desc": "Node is unreachable",
   },
   'LINK_DOWN' : {
       "Name": "LINK_DOWN",

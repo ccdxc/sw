@@ -87,6 +87,18 @@ func init() {
 		Category: "Cluster",
 		Desc:     "Node disjoined from the cluster"}
 
+	eventTypes[NODE_HEALTHY] = &EventTypeAttributes{
+		EType:    "NODE_HEALTHY",
+		Severity: "INFO",
+		Category: "Cluster",
+		Desc:     "Node is healthy"}
+
+	eventTypes[NODE_UNREACHABLE] = &EventTypeAttributes{
+		EType:    "NODE_UNREACHABLE",
+		Severity: "CRITICAL",
+		Category: "Cluster",
+		Desc:     "Node is unreachable"}
+
 	eventTypes[MODULE_CREATION_FAILED] = &EventTypeAttributes{
 		EType:    "MODULE_CREATION_FAILED",
 		Severity: "WARN",
@@ -99,11 +111,17 @@ func init() {
 		Category: "Cluster",
 		Desc:     "NIC admitted to the cluster"}
 
-	eventTypes[NIC_HEALTH_UNKNOWN] = &EventTypeAttributes{
-		EType:    "NIC_HEALTH_UNKNOWN",
+	eventTypes[NIC_REJECTED] = &EventTypeAttributes{
+		EType:    "NIC_REJECTED",
+		Severity: "WARN",
+		Category: "Cluster",
+		Desc:     "A SmartNIC admission request was rejected"}
+
+	eventTypes[NIC_UNREACHABLE] = &EventTypeAttributes{
+		EType:    "NIC_UNREACHABLE",
 		Severity: "CRITICAL",
 		Category: "Cluster",
-		Desc:     "NIC health transitioned to 'unknown'"}
+		Desc:     "NIC is unreachable"}
 
 	eventTypes[NIC_HEALTHY] = &EventTypeAttributes{
 		EType:    "NIC_HEALTHY",
@@ -116,12 +134,6 @@ func init() {
 		Severity: "WARN",
 		Category: "Cluster",
 		Desc:     "NIC health transitioned to 'false'"}
-
-	eventTypes[NIC_REJECTED] = &EventTypeAttributes{
-		EType:    "NIC_REJECTED",
-		Severity: "WARN",
-		Category: "Cluster",
-		Desc:     "A SmartNIC admission request was rejected"}
 
 	eventTypes[HOST_SMART_NIC_SPEC_CONFLICT] = &EventTypeAttributes{
 		EType:    "HOST_SMART_NIC_SPEC_CONFLICT",

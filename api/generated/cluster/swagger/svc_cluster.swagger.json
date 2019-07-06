@@ -4661,12 +4661,12 @@
           "type": "string",
           "enum": [
             "HEALTHY",
-            "UNREACHABLE"
+            "NIC_HEALTH_UNKNOWN"
           ],
           "default": "HEALTHY",
           "x-ui-hints": {
             "HEALTHY": "Healthy",
-            "UNREACHABLE": "Not Reachable"
+            "NIC_HEALTH_UNKNOWN": "Not Reachable"
           },
           "title": "Type indicates a certain NIC condition"
         },

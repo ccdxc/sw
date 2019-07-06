@@ -333,7 +333,7 @@ var _ = Describe("SmartNIC tests", func() {
 			validateNICMetrics(ctx, snIf, int64(ts.tu.NumNaplesHosts))
 
 			// check that events were generated
-			validateNICHealthEvents(ctx, esClient, eventtypes.NIC_HEALTH_UNKNOWN, ts.tu.NumNaplesHosts)
+			validateNICHealthEvents(ctx, esClient, eventtypes.NIC_UNREACHABLE, ts.tu.NumNaplesHosts)
 			validateNICHealthEvents(ctx, esClient, eventtypes.NIC_HEALTHY, ts.tu.NumNaplesHosts)
 		})
 	})

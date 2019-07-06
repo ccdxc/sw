@@ -71,11 +71,6 @@
    "Desc": "NIC health transitioned to 'true'"
   },
   {
-   "Name": "NIC_HEALTH_UNKNOWN",
-   "Severity": "CRITICAL",
-   "Desc": "NIC health transitioned to 'unknown'"
-  },
-  {
    "Name": "NIC_REJECTED",
    "Severity": "WARN",
    "Desc": "A SmartNIC admission request was rejected"
@@ -86,14 +81,29 @@
    "Desc": "NIC health transitioned to 'false'"
   },
   {
+   "Name": "NIC_UNREACHABLE",
+   "Severity": "CRITICAL",
+   "Desc": "NIC is unreachable"
+  },
+  {
    "Name": "NODE_DISJOINED",
    "Severity": "WARN",
    "Desc": "Node disjoined from the cluster"
   },
   {
+   "Name": "NODE_HEALTHY",
+   "Severity": "INFO",
+   "Desc": "Node is healthy"
+  },
+  {
    "Name": "NODE_JOINED",
    "Severity": "INFO",
    "Desc": "Node joined the cluster"
+  },
+  {
+   "Name": "NODE_UNREACHABLE",
+   "Severity": "CRITICAL",
+   "Desc": "Node is unreachable"
   }
  ],
  "Network": [

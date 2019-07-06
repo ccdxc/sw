@@ -772,8 +772,8 @@ func (s *RPCServer) MonitorHealth() {
 								if err != nil {
 									log.Errorf("Failed updating the NIC health status to unknown, nic: %s err: %s", nic.Name, err)
 								}
-								recorder.Event(eventtypes.NIC_HEALTH_UNKNOWN,
-									fmt.Sprintf("SmartNIC %s is %s", nic.Name, cluster.SmartNICCondition_UNREACHABLE.String()), nicState.SmartNIC)
+								recorder.Event(eventtypes.NIC_UNREACHABLE,
+									fmt.Sprintf("SmartNIC %s is %s", nic.Name, eventtypes.NIC_UNREACHABLE.String()), nicState.SmartNIC)
 							}
 							break
 						}
@@ -870,7 +870,7 @@ func (s *RPCServer) InitiateNICRegistration(nic *cluster.SmartNIC) {
 				Status: cluster.SmartNICStatus{
 					Conditions: []cluster.SmartNICCondition{
 						{
-							Type:               cluster.SmartNICCondition_UNREACHABLE.String(),
+							Type:               cluster.SmartNICCondition_NIC_HEALTH_UNKNOWN.String(),
 							Status:             cluster.ConditionStatus_TRUE.String(),
 							LastTransitionTime: time.Now().UTC().Format(time.RFC3339),
 							Reason:             fmt.Sprintf("Failed to post naples config after several attempts, response: %+v", resp),

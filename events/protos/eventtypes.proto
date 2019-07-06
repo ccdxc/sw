@@ -57,6 +57,14 @@ enum EventTypes {
                                          (severity) = WARN,
                                          (desc)     = "Node disjoined from the cluster"];
 
+    NODE_HEALTHY                    = 9 [(category) = Cluster,
+                                         (severity) = INFO,
+                                         (desc)     = "Node is healthy"];
+
+    NODE_UNREACHABLE                = 10 [(category) = Cluster,
+                                          (severity) = CRITICAL,
+                                          (desc)     = "Node is unreachable"];
+
     // ------------------------------- Diagnostic events ----------------------------- //
     MODULE_CREATION_FAILED          = 24 [(category) = Cluster,
                                          (severity)  = WARN,
@@ -66,22 +74,21 @@ enum EventTypes {
     NIC_ADMITTED                    = 100 [(category)   = Cluster,
                                            (severity)   = INFO,
                                            (desc)       = "NIC admitted to the cluster"];
+    NIC_REJECTED                    = 101 [(category)   = Cluster,
+                                           (severity)   = WARN,
+                                           (desc)       = "A SmartNIC admission request was rejected"];
 
-    NIC_HEALTH_UNKNOWN              = 101 [(category)   = Cluster,
+    NIC_UNREACHABLE                 = 102 [(category)   = Cluster,
                                             (severity)  = CRITICAL,
-                                            (desc)      = "NIC health transitioned to 'unknown'"];
+                                            (desc)      = "NIC is unreachable"];
 
-    NIC_HEALTHY                     = 102 [(category)   = Cluster,
+    NIC_HEALTHY                     = 103 [(category)   = Cluster,
                                             (severity)  = INFO,
                                             (desc)      = "NIC health transitioned to 'true'"];
 
-    NIC_UNHEALTHY                   = 103 [(category)   = Cluster,
+    NIC_UNHEALTHY                   = 104 [(category)   = Cluster,
                                            (severity)   = WARN,
                                            (desc)       = "NIC health transitioned to 'false'"];
-
-    NIC_REJECTED                    = 104 [(category)   = Cluster,
-                                           (severity)   = WARN,
-                                           (desc)       = "A SmartNIC admission request was rejected"];
 
     HOST_SMART_NIC_SPEC_CONFLICT    = 105 [(category)   = Cluster,
                                            (severity)   = WARN,

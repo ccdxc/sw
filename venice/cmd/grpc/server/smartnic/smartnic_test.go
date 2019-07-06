@@ -1283,7 +1283,7 @@ func TestSmartNICConfigByUserErrorCases(t *testing.T) {
 		}
 		nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
 		if err != nil || nicObj == nil || len(nicObj.Status.Conditions) == 0 ||
-			nicObj.Status.Conditions[0].Type != cmd.SmartNICCondition_UNREACHABLE.String() ||
+			nicObj.Status.Conditions[0].Type != cmd.SmartNICCondition_NIC_HEALTH_UNKNOWN.String() ||
 			nicObj.Status.Conditions[0].Status != cmd.ConditionStatus_TRUE.String() {
 			log.Errorf("Failed to validate SmartNIC condition, nicObj: %+v, err: %v",
 				nicObj, err)

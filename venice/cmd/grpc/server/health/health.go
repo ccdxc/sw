@@ -1,18 +1,21 @@
 package health
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -22,7 +25,7 @@ const (
 	heartbeatInterval = 30 * time.Second
 )
 
-// RPCServer is the server running on the leader node to receive hearbeats
+// RPCServer is the server running on the leader node to receive heartbeats
 type RPCServer struct {
 	sync.Mutex
 	nodes          map[string]time.Time
@@ -30,7 +33,7 @@ type RPCServer struct {
 	updateInterval time.Duration
 }
 
-// Client is the client used to send seartbeats to the leader
+// Client is the client used to send heartbeats to the leader
 type Client struct {
 	resolverClient  resolver.Interface
 	heartbeatClient grpc.NodeHeartbeatClient
@@ -58,6 +61,22 @@ func (s *RPCServer) updateCondition(node *cache.NodeState, alive bool, lastHeart
 	for i := 0; i < len(node.Status.Conditions); i++ {
 		cond := &node.Status.Conditions[i]
 		if cond.Type == cluster.NodeCondition_HEALTHY.String() {
+			// true to unknown
+			if cond.Status == cluster.ConditionStatus_TRUE.String() {
+				if status == cluster.ConditionStatus_UNKNOWN {
+					recorder.Event(eventtypes.NODE_UNREACHABLE,
+						fmt.Sprintf("Venice node %s is %s", node.GetName(), eventtypes.NODE_UNREACHABLE.String()), node.Node)
+				}
+			}
+
+			// unknown to true
+			if cond.Status == cluster.ConditionStatus_UNKNOWN.String() {
+				if status == cluster.ConditionStatus_TRUE {
+					recorder.Event(eventtypes.NODE_HEALTHY,
+						fmt.Sprintf("Venice node %s is %s", node.GetName(), cluster.NodeCondition_HEALTHY.String()), node.Node)
+				}
+			}
+
 			// update
 			cond.LastTransitionTime = lastHeartbeat.UTC().Format(time.RFC3339)
 			cond.Status = status.String()
@@ -66,6 +85,10 @@ func (s *RPCServer) updateCondition(node *cache.NodeState, alive bool, lastHeart
 	}
 
 	// create
+	if status == cluster.ConditionStatus_UNKNOWN {
+		recorder.Event(eventtypes.NODE_UNREACHABLE,
+			fmt.Sprintf("Venice node %s is %s", node.GetName(), eventtypes.NODE_UNREACHABLE.String()), node.Node)
+	}
 	node.Status.Conditions = append(node.Status.Conditions,
 		cluster.NodeCondition{
 			Type:               cluster.NodeCondition_HEALTHY.String(),
@@ -115,6 +138,13 @@ func (s *RPCServer) periodicUpdate(interval time.Duration) {
 func (s *RPCServer) Heartbeat(ctx context.Context, req *grpc.HeartbeatRequest) (*grpc.HeartbeatResponse, error) {
 	s.Lock()
 	defer s.Unlock()
+	if _, ok := s.nodes[req.NodeID]; !ok { // receiving heart beat for the first time
+		node := &cluster.Node{}
+		node.Defaults("all")
+		node.Name = req.NodeID
+		recorder.Event(eventtypes.NODE_HEALTHY,
+			fmt.Sprintf("Venice node %s is %s", req.GetNodeID(), cluster.NodeCondition_HEALTHY.String()), node)
+	}
 	s.nodes[req.NodeID] = time.Now()
 	log.Infof("Got heartbeat from %s", req.NodeID)
 	return &grpc.HeartbeatResponse{}, nil
@@ -132,10 +162,8 @@ func NewClient(resolverClient resolver.Interface) *Client {
 	return client
 }
 
-// Start starts the periodic headbeats to the Leader
+// Start starts the periodic heartbeats to the Leader
 func (c *Client) start(interval time.Duration) {
-
-	log.Infof("Starting health client")
 	go func() {
 		// Try to connect. It make take a few tries
 		for {
