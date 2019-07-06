@@ -3,6 +3,10 @@ package impl
 import (
 	"context"
 	"fmt"
+	"strings"
+
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/venice/ctrler/tpm"
 
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/interfaces"
@@ -25,6 +29,20 @@ func (r *fwlogHooks) validateFwlogPolicy(ctx context.Context, kv kvstore.Interfa
 
 	if err := state.ValidateFwLogPolicy(&policy.Spec); err != nil {
 		return i, false, err
+	}
+
+	switch oper {
+	case apiintf.CreateOper:
+		pl := monitoring.FwlogPolicyList{}
+		policyKey := strings.TrimSuffix(pl.MakeKey(string(apiclient.GroupMonitoring)), "/")
+		err := kv.List(ctx, policyKey, &pl)
+		if err != nil {
+			return nil, false, fmt.Errorf("error retrieving FwlogPolicy: %v", err)
+		}
+
+		if len(pl.Items) >= tpm.MaxNumExportPolicy {
+			return nil, false, fmt.Errorf("can't configure more than %v FwlogPolicy", tpm.MaxNumExportPolicy)
+		}
 	}
 
 	return i, true, nil

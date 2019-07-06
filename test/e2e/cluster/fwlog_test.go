@@ -40,7 +40,7 @@ var _ = Describe("fwlog policy tests", func() {
 			ch     chan syslogparser.LogParts
 		}
 
-		testFwSpecList := make([]monitoring.FwlogPolicySpec, tpm.MaxPolicyPerVrf)
+		testFwSpecList := make([]monitoring.FwlogPolicySpec, tpm.MaxNumExportPolicy)
 		syslogCollectors := []testCollector{}
 
 		AfterEach(func() {
@@ -71,7 +71,7 @@ var _ = Describe("fwlog policy tests", func() {
 
 			syslogCollectors = []testCollector{}
 
-			for i := 0; i < tpm.MaxPolicyPerVrf; i++ {
+			for i := 0; i < tpm.MaxNumExportPolicy; i++ {
 				proto := protos[i%len(protos)]
 				format := formats[i/4]
 				addr, ch, err := syslog.Server(pctx, localAddr.String()+":0", format, proto)
@@ -89,7 +89,7 @@ var _ = Describe("fwlog policy tests", func() {
 				By(fmt.Sprintf("[%d] syslog server %v://%v %v created", i, proto, addr, format))
 			}
 
-			for i := 0; i < tpm.MaxPolicyPerVrf; i++ {
+			for i := 0; i < tpm.MaxNumExportPolicy; i++ {
 				testFwSpecList[i] = monitoring.FwlogPolicySpec{
 					VrfName: globals.DefaultVrf,
 					Targets: []monitoring.ExportConfig{
@@ -811,6 +811,94 @@ var _ = Describe("fwlog policy tests", func() {
 					Expect(err).Should(BeNil())
 				}
 			}
+		})
+		It("validate max. collectors", func() {
+			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			defer cancel()
+			ctx := ts.tu.NewLoggedInContext(pctx)
+
+			policy := &monitoring.FwlogPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "fwLogPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Tenant:    globals.DefaultTenant,
+				},
+				Spec: monitoring.FwlogPolicySpec{
+					VrfName: globals.DefaultVrf,
+					Targets: []monitoring.ExportConfig{
+						{
+							Destination: "192.168.100.11",
+							Transport:   "udp/10001",
+						},
+						{
+							Destination: "192.168.100.12",
+							Transport:   "udp/11001",
+						},
+						{
+							Destination: "192.168.100.13",
+							Transport:   "tcp/12001",
+						},
+					},
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+					},
+				},
+			}
+
+			// create should fail for more than 2 collectors
+			policy.Name = "test-max-collector"
+			_, err := fwlogClient.Create(ctx, policy)
+			Expect(err).ShouldNot(BeNil(), "policy create didn't fail for invalid number of collectors")
+		})
+
+		It("validate max. fwlog export policy", func() {
+			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			defer cancel()
+			ctx := ts.tu.NewLoggedInContext(pctx)
+
+			policy := &monitoring.FwlogPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "fwLogPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Tenant:    globals.DefaultTenant,
+				},
+				Spec: monitoring.FwlogPolicySpec{
+					VrfName: globals.DefaultVrf,
+					Targets: []monitoring.ExportConfig{
+						{
+							Destination: "192.168.100.11",
+							Transport:   "udp/10001",
+						},
+						{
+							Destination: "192.168.100.12",
+							Transport:   "udp/11001",
+						},
+					},
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+					},
+				},
+			}
+
+			for i := 0; i < tpm.MaxNumExportPolicy; i++ {
+				policy.Name = fmt.Sprintf("test-policy-%d", i)
+				_, err := fwlogClient.Create(ctx, policy)
+				Expect(err).Should(BeNil(), fmt.Sprintf("failed to create  %v, %v", policy.Name, err))
+			}
+
+			// new policy create should fail
+			policy.Name = "test-policy-fail"
+			_, err := fwlogClient.Create(ctx, policy)
+			Expect(err).ShouldNot(BeNil(), fmt.Sprintf("policy create didn't fail, %v", err))
+
 		})
 	})
 })

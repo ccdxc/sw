@@ -70,9 +70,9 @@ var _ = Describe("flow export policy tests", func() {
 			defer cancel()
 			ctx := ts.tu.NewLoggedInContext(pctx)
 
-			testFwSpecList := make([]monitoring.FlowExportPolicySpec, tpm.MaxPolicyPerVrf)
+			testFwSpecList := make([]monitoring.FlowExportPolicySpec, tpm.MaxNumExportPolicy)
 
-			for i := 0; i < tpm.MaxPolicyPerVrf; i++ {
+			for i := 0; i < tpm.MaxNumExportPolicy; i++ {
 				testFwSpecList[i] = monitoring.FlowExportPolicySpec{
 					VrfName:  globals.DefaultVrf,
 					Interval: "10s",
@@ -103,7 +103,7 @@ var _ = Describe("flow export policy tests", func() {
 				}
 			}
 
-			for i := 0; i < tpm.MaxPolicyPerVrf; i++ {
+			for i := 0; i < tpm.MaxNumExportPolicy; i++ {
 				flowPolicy := &monitoring.FlowExportPolicy{
 					TypeMeta: api.TypeMeta{
 						Kind: "FlowExportPolicy",
@@ -251,9 +251,9 @@ var _ = Describe("flow export policy tests", func() {
 			defer cancel()
 			ctx := ts.tu.NewLoggedInContext(pctx)
 
-			testFwSpecList := make([]monitoring.FlowExportPolicySpec, tpm.MaxCollectorPerPolicy)
+			testFwSpecList := make([]monitoring.FlowExportPolicySpec, tpm.MaxNumCollectorsPerPolicy)
 
-			for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
+			for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
 				testFwSpecList[i] = monitoring.FlowExportPolicySpec{
 					VrfName:  globals.DefaultVrf,
 					Interval: "10s",
@@ -289,7 +289,7 @@ var _ = Describe("flow export policy tests", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			defer os.Remove(nodeAuthFile)
 
-			for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
+			for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
 				flowPolicy := &monitoring.FlowExportPolicy{
 					TypeMeta: api.TypeMeta{
 						Kind: "FlowExportPolicy",
@@ -348,18 +348,18 @@ var _ = Describe("flow export policy tests", func() {
 						return err
 					}
 
-					if len(naplesDbg.FlowRuleTable) != tpm.MaxCollectorPerPolicy {
-						By(fmt.Sprintf("received %d rules, expected %v", len(naplesDbg.FlowRuleTable), tpm.MaxCollectorPerPolicy))
+					if len(naplesDbg.FlowRuleTable) != tpm.MaxNumCollectorsPerPolicy {
+						By(fmt.Sprintf("received %d rules, expected %v", len(naplesDbg.FlowRuleTable), tpm.MaxNumCollectorsPerPolicy))
 						return err
 					}
 
-					if len(naplesDbg.CollectorTable) != tpm.MaxCollectorPerPolicy {
+					if len(naplesDbg.CollectorTable) != tpm.MaxNumCollectorsPerPolicy {
 						By(fmt.Sprintf("received %d collectors, expected 2", len(naplesDbg.CollectorTable)))
 						return err
 					}
 
-					for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
-						if len(naplesDbg.CollectorTable[i].PolicyNames) != tpm.MaxCollectorPerPolicy {
+					for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
+						if len(naplesDbg.CollectorTable[i].PolicyNames) != tpm.MaxNumCollectorsPerPolicy {
 							By(fmt.Sprintf("received %d policynames in collector, expected 2", len(naplesDbg.CollectorTable[i].PolicyNames)))
 							return err
 						}
@@ -373,9 +373,9 @@ var _ = Describe("flow export policy tests", func() {
 				return nil
 			}, 120, 2).Should(BeNil(), "failed to find flow export policy")
 
-			for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
-				expRules := tpm.MaxCollectorPerPolicy - i - 1
-				expCollectors := tpm.MaxCollectorPerPolicy - i*2
+			for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
+				expRules := tpm.MaxNumCollectorsPerPolicy - i - 1
+				expCollectors := tpm.MaxNumCollectorsPerPolicy - i*2
 
 				flowPolicy := &monitoring.FlowExportPolicy{
 					TypeMeta: api.TypeMeta{
@@ -466,9 +466,9 @@ var _ = Describe("flow export policy tests", func() {
 			defer cancel()
 			ctx := ts.tu.NewLoggedInContext(pctx)
 
-			testFwSpecList := make([]monitoring.FlowExportPolicySpec, tpm.MaxCollectorPerPolicy)
+			testFwSpecList := make([]monitoring.FlowExportPolicySpec, tpm.MaxNumCollectorsPerPolicy)
 
-			for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
+			for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
 				testFwSpecList[i] = monitoring.FlowExportPolicySpec{
 					VrfName:  globals.DefaultVrf,
 					Interval: "10s",
@@ -495,7 +495,7 @@ var _ = Describe("flow export policy tests", func() {
 				}
 			}
 
-			for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
+			for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
 				flowPolicy := &monitoring.FlowExportPolicy{
 					TypeMeta: api.TypeMeta{
 						Kind: "FlowExportPolicy",
@@ -560,20 +560,20 @@ var _ = Describe("flow export policy tests", func() {
 						return err
 					}
 
-					if len(naplesDbg.FlowRuleTable) != tpm.MaxCollectorPerPolicy {
-						By(fmt.Sprintf("received %d rules, expected %v", len(naplesDbg.FlowRuleTable), tpm.MaxCollectorPerPolicy))
+					if len(naplesDbg.FlowRuleTable) != tpm.MaxNumCollectorsPerPolicy {
+						By(fmt.Sprintf("received %d rules, expected %v", len(naplesDbg.FlowRuleTable), tpm.MaxNumCollectorsPerPolicy))
 						return err
 					}
 
 					By(fmt.Sprintf("received  info %+v", naplesDbg))
 
-					if len(naplesDbg.CollectorTable) != tpm.MaxCollectorPerPolicy {
+					if len(naplesDbg.CollectorTable) != tpm.MaxNumCollectorsPerPolicy {
 						By(fmt.Sprintf("received %d collectors, expected 2", len(naplesDbg.CollectorTable)))
 						return err
 					}
 
-					for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
-						if len(naplesDbg.CollectorTable[i].PolicyNames) != tpm.MaxCollectorPerPolicy {
+					for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
+						if len(naplesDbg.CollectorTable[i].PolicyNames) != tpm.MaxNumCollectorsPerPolicy {
 							By(fmt.Sprintf("received %d policynames in collector, expected 2", len(naplesDbg.CollectorTable[i].PolicyNames)))
 							return err
 						}
@@ -587,9 +587,9 @@ var _ = Describe("flow export policy tests", func() {
 				return nil
 			}, 120, 2).Should(BeNil(), "failed to find flow export policy")
 
-			for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
-				expRules := tpm.MaxCollectorPerPolicy - 2*i
-				expCollectors := tpm.MaxCollectorPerPolicy - 1 - i
+			for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
+				expRules := tpm.MaxNumCollectorsPerPolicy - 2*i
+				expCollectors := tpm.MaxNumCollectorsPerPolicy - 1 - i
 
 				flowPolicy := &monitoring.FlowExportPolicy{
 					TypeMeta: api.TypeMeta{
@@ -680,19 +680,19 @@ var _ = Describe("flow export policy tests", func() {
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
 			ctx := ts.tu.NewLoggedInContext(pctx)
-			testFwSpecList := make([]monitoring.FlowExportPolicySpec, tpm.MaxCollectorPerPolicy)
+			testFwSpecList := make([]monitoring.FlowExportPolicySpec, tpm.MaxNumCollectorsPerPolicy)
 			collectors := make([]struct {
 				addr string
 				port string
 				ch   chan ipfix.Message
-			}, tpm.MaxCollectorPerPolicy)
+			}, tpm.MaxNumCollectorsPerPolicy)
 
 			conn, err := net.Dial("udp", "8.8.8.8:80")
 			Expect(err).ShouldNot(HaveOccurred())
 			defer conn.Close()
 			localAddr := conn.LocalAddr().(*net.UDPAddr)
 
-			for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
+			for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
 				addr, ch, err := server.NewServer(pctx, localAddr.IP.String()+":0")
 				Expect(err).ShouldNot(HaveOccurred())
 				s := strings.Split(addr, ":")
@@ -702,7 +702,7 @@ var _ = Describe("flow export policy tests", func() {
 				collectors[i].ch = ch
 			}
 
-			for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
+			for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
 				testFwSpecList[i] = monitoring.FlowExportPolicySpec{
 					VrfName:          globals.DefaultVrf,
 					Interval:         "10s",
@@ -766,7 +766,7 @@ var _ = Describe("flow export policy tests", func() {
 				return nil
 			}, 120, 2).Should(BeNil(), "failed to find flow export policy")
 
-			for i := 0; i < tpm.MaxCollectorPerPolicy; i++ {
+			for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
 				select {
 				case m, ok := <-collectors[i].ch:
 					hdr := m.Header
@@ -1144,6 +1144,91 @@ var _ = Describe("flow export policy tests", func() {
 					Expect(err).Should(BeNil())
 				}
 			}
+
+		})
+
+		It("validate max. collectors", func() {
+			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			defer cancel()
+			ctx := ts.tu.NewLoggedInContext(pctx)
+
+			policy := &monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					Interval:         "10s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "192.168.100.1",
+							Transport:   "UDP/5055",
+						},
+						{
+							Destination: "192.168.100.1",
+							Transport:   "UDP/6055",
+						},
+						{
+							Destination: "192.168.100.1",
+							Transport:   "UDP/7055",
+						},
+					},
+				},
+			}
+
+			// create should fail for more than 2 collectors
+			policy.Name = "test-max-collector"
+			_, err := flowExpClient.Create(ctx, policy)
+			Expect(err).ShouldNot(BeNil(), "policy create didn't fail for invalid number of collectors")
+		})
+
+		It("validate max. flow export policy", func() {
+			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			defer cancel()
+			ctx := ts.tu.NewLoggedInContext(pctx)
+
+			policy := &monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					Interval:         "10s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "192.168.100.1",
+							Transport:   "UDP/5055",
+						},
+						{
+							Destination: "192.168.100.2",
+							Transport:   "UDP/6055",
+						},
+					},
+				},
+			}
+
+			for i := 0; i < tpm.MaxNumExportPolicy; i++ {
+				policy.Name = fmt.Sprintf("test-policy-%d", i)
+				_, err := flowExpClient.Create(ctx, policy)
+				Expect(err).Should(BeNil(), fmt.Sprintf("failed to create  %v, %v", policy.Name, err))
+			}
+
+			// new policy create should fail
+			policy.Name = "test-policy-fail"
+			_, err := flowExpClient.Create(ctx, policy)
+			Expect(err).ShouldNot(BeNil(), fmt.Sprintf("policy create didn't fail, %v", err))
 
 		})
 	})

@@ -264,8 +264,8 @@ func ValidateFwLogPolicy(s *monitoring.FwlogPolicySpec) error {
 		return fmt.Errorf("no collectors configured")
 	}
 
-	if len(s.Targets) > tpm.MaxCollectorPerPolicy {
-		return fmt.Errorf("cannot configure more than %v collectors", tpm.MaxCollectorPerPolicy)
+	if len(s.Targets) > tpm.MaxNumCollectorsPerPolicy {
+		return fmt.Errorf("cannot configure more than %v collectors", tpm.MaxNumCollectorsPerPolicy)
 	}
 
 	collectors := map[string]bool{}
@@ -447,6 +447,16 @@ func (s *PolicyState) CreateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 	if _, err := s.emstore.Read(p); err == nil {
 		log.Warnf("policy %s/%s already exists", p.Kind, p.Name)
 		return fmt.Errorf("policy %s already exists", p.Name)
+	}
+
+	if objList, err := s.emstore.List(&tpmprotos.FwlogPolicy{
+		TypeMeta: api.TypeMeta{
+			Kind: "FwlogPolicy",
+		},
+	}); err == nil {
+		if len(objList) >= tpm.MaxNumExportPolicy {
+			return fmt.Errorf("can't configure more than %v FwlogPolicy", tpm.MaxNumExportPolicy)
+		}
 	}
 
 	vrf, err := s.getvrf(p.Tenant, p.Namespace, p.Spec.VrfName)

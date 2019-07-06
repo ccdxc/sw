@@ -37,9 +37,8 @@ import (
 )
 
 const (
-	flowExportPolicyID      = "flowExportPolicyId"
-	maxFlowExportCollectors = 16
-	ipfixSrcPort            = 32007 // src port used by datapath
+	flowExportPolicyID = "flowExportPolicyId"
+	ipfixSrcPort       = 32007 // src port used by datapath
 )
 
 // PolicyState keeps the agent state
@@ -250,8 +249,8 @@ func ValidateFlowExportPolicy(p *monitoring.FlowExportPolicy) error {
 		return fmt.Errorf("no targets configured")
 	}
 
-	if len(spec.Exports) > tpm.MaxCollectorPerPolicy {
-		return fmt.Errorf("cannot configure more than %d targets", tpm.MaxCollectorPerPolicy)
+	if len(spec.Exports) > tpm.MaxNumCollectorsPerPolicy {
+		return fmt.Errorf("cannot configure more than %d targets", tpm.MaxNumCollectorsPerPolicy)
 	}
 
 	feTargets := map[string]bool{}
@@ -323,8 +322,8 @@ func (s *PolicyState) validatePolicy(p *tpmprotos.FlowExportPolicy) (map[types.C
 		return nil, fmt.Errorf("no targets configured")
 	}
 
-	if len(spec.Exports) > tpm.MaxCollectorPerPolicy {
-		return nil, fmt.Errorf("cannot configure more than %d targets", tpm.MaxCollectorPerPolicy)
+	if len(spec.Exports) > tpm.MaxNumCollectorsPerPolicy {
+		return nil, fmt.Errorf("cannot configure more than %d targets", tpm.MaxNumCollectorsPerPolicy)
 	}
 
 	// get vrf
@@ -1084,6 +1083,18 @@ func (s *PolicyState) CreateFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 	s.Lock()
 	defer s.Unlock()
 
+	if objList, err := s.store.List(&types.FlowExportPolicyTable{
+		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+			TypeMeta: api.TypeMeta{
+				Kind: "FlowExportPolicy",
+			},
+		},
+	}); err == nil {
+		if len(objList) >= tpm.MaxNumExportPolicy {
+			return fmt.Errorf("can't configure more than %v FlowExportPolicy", tpm.MaxNumExportPolicy)
+		}
+	}
+
 	policyCtx, err := s.createPolicyContext(p)
 	if err != nil {
 		log.Errorf("failed to create policy context, %s", err)
@@ -1096,11 +1107,6 @@ func (s *PolicyState) CreateFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 
 	policyCtx.collectorKeys = collKeys
 
-	numCollector := policyCtx.findNumCollectors()
-
-	if numCollector > maxFlowExportCollectors {
-		return fmt.Errorf("exceeds(%d>%d) maximum collector configs", numCollector, maxFlowExportCollectors)
-	}
 	// Create lateral objects here
 	for _, c := range p.Spec.Exports {
 		mgmtIP := s.getMgmtIPAddr()

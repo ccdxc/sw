@@ -3,6 +3,10 @@ package impl
 import (
 	"context"
 	"fmt"
+	"strings"
+
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/venice/ctrler/tpm"
 
 	"github.com/pensando/sw/nic/agent/tpa/state"
 
@@ -27,6 +31,21 @@ func (r *flowExpHooks) validateFlowExportPolicy(ctx context.Context, kv kvstore.
 	if err := state.ValidateFlowExportPolicy(&policy); err != nil {
 		return i, false, err
 	}
+
+	switch oper {
+	case apiintf.CreateOper:
+		pl := monitoring.FlowExportPolicyList{}
+		policyKey := strings.TrimSuffix(pl.MakeKey(string(apiclient.GroupMonitoring)), "/")
+		err := kv.List(ctx, policyKey, &pl)
+		if err != nil {
+			return nil, false, fmt.Errorf("error retrieving FlowExportPolicy: %v", err)
+		}
+
+		if len(pl.Items) >= tpm.MaxNumExportPolicy {
+			return nil, false, fmt.Errorf("can't configure more than %v FlowExportPolicy", tpm.MaxNumExportPolicy)
+		}
+	}
+
 	return i, true, nil
 }
 

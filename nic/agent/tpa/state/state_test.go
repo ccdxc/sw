@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/pensando/sw/venice/ctrler/tpm"
+
 	"github.com/pensando/sw/venice/globals"
 
 	"github.com/golang/mock/gomock"
@@ -27,7 +29,10 @@ import (
 	tu "github.com/pensando/sw/venice/utils/testutils"
 )
 
-const emDbPath = "/tmp/naples-tpagent.db"
+const (
+	emDbPath                = "/tmp/naples-tpagent.db"
+	maxFlowExportCollectors = tpm.MaxNumExportPolicy * tpm.MaxNumCollectorsPerPolicy
+)
 
 func cleanup(t *testing.T, ag *PolicyState) {
 
@@ -643,7 +648,7 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 	defer cleanup(t, s)
 
 	policyPrefix := "flowmon"
-	for l := 0; l < maxFlowExportCollectors+1; l++ {
+	for l := 0; l < tpm.MaxNumExportPolicy+1; l++ {
 		pol := &tpmprotos.FlowExportPolicy{
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("%s-%d", policyPrefix, l), Tenant: "default", Namespace: "default"},
@@ -675,19 +680,19 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 		}
 
 		err = s.CreateFlowExportPolicy(context.Background(), pol)
-		if l < maxFlowExportCollectors {
+		if l < tpm.MaxNumExportPolicy {
 			tu.AssertOk(t, err, fmt.Sprintf("failed to create export policy %+v", pol))
 		} else {
-			tu.Assert(t, err != nil, fmt.Sprintf("created more than max (%d) policies", maxFlowExportCollectors))
+			tu.Assert(t, err != nil, fmt.Sprintf("created more than max (%d) policies", tpm.MaxNumExportPolicy))
 		}
 	}
 
 	// list
 	rp, err := s.ListFlowExportPolicy(context.Background())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to list export policy"))
-	tu.Assert(t, len(rp) == maxFlowExportCollectors, fmt.Sprintf("expected %d export policy, got %d {%+v}", maxFlowExportCollectors, len(rp), rp))
+	tu.Assert(t, len(rp) == tpm.MaxNumExportPolicy, fmt.Sprintf("expected %d export policy, got %d {%+v}", tpm.MaxNumExportPolicy, len(rp), rp))
 
-	for l := 0; l < maxFlowExportCollectors; l++ {
+	for l := 0; l < tpm.MaxNumExportPolicy; l++ {
 		pol := &tpmprotos.FlowExportPolicy{
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("%s-%d", policyPrefix, l), Tenant: "default", Namespace: "default"},
@@ -727,7 +732,7 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 		tu.Assert(t, reflect.DeepEqual(rp, pol), "policy in db didn;t match, got %+v, expected:%+v", pol, rp)
 	}
 
-	for l := 0; l < maxFlowExportCollectors; l++ {
+	for l := 0; l < tpm.MaxNumExportPolicy; l++ {
 		err = s.DeleteFlowExportPolicy(context.Background(), &tpmprotos.FlowExportPolicy{
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("%s-%d", policyPrefix, l), Tenant: "default", Namespace: "default"},
@@ -2803,6 +2808,40 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Interval:         "15s",
 					TemplateInterval: "5m",
 					Format:           "IPFIX",
+				},
+			},
+		},
+		{
+			name: "too many collectors",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "empty-targets",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "UDP/1234",
+						},
+						{
+							Destination: "10.1.1.100",
+							Transport:   "UDP/1235",
+						},
+						{
+							Destination: "10.1.1.100",
+							Transport:   "UDP/1236",
+						},
+					},
 				},
 			},
 		},
