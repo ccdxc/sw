@@ -12,6 +12,8 @@ type upgrespctx struct {
 	sdkClient  clientApi.Client
 }
 
+var upgRespCtx upgrespctx
+
 func (ctx *upgrespctx) invokeAgentHandler(obj *upgrade.UpgResp) {
 	var errStrList []string
 	switch obj.GetUpgRespVal() {
@@ -81,6 +83,7 @@ func upgRespInit(client clientApi.Client, hdlrs AgentHandlers) {
 	upgrade.UpgRespMount(client, delphi.MountMode_ReadMode)
 	upgrade.UpgRespWatch(client, ctx)
 	client.WatchMount(ctx)
+	upgRespCtx = *ctx
 }
 
 func (ctx *upgrespctx) OnMountComplete() {

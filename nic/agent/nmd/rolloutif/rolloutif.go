@@ -83,21 +83,24 @@ func (client *RoClient) statusUpdater() {
 			if !ok {
 				return
 			}
-			for numRetries := 0; numRetries < 3; numRetries++ {
+			for numRetries := 0; numRetries < 10; numRetries++ {
 				client.Lock()
 				rpcClient := client.smartNICRPCClient
 				client.Unlock()
 
 				if rpcClient == nil {
 					log.Errorf("client is nil while updating smartnic rollout status. retrying..")
-					time.Sleep(time.Second)
+					time.Sleep(3 * time.Second)
 					continue
 				}
-				_, err := rpcClient.UpdateSmartNICRolloutStatus(context.TODO(), &status)
+				ctx, cancel := context.WithTimeout(context.TODO(), 3*time.Second)
+				_, err := rpcClient.UpdateSmartNICRolloutStatus(ctx, &status)
+				cancel()
 				if err != nil {
 					log.Errorf("Error updating  smartNIC rollout status: Err: %v ", err)
+				} else {
+					break
 				}
-				break
 			}
 		}
 	}

@@ -2,6 +2,7 @@ package state
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/pensando/sw/venice/utils/imagestore"
@@ -135,14 +136,13 @@ func (n *NMD) issueNextPendingOp() {
 	log.Infof("Issuing %#v", n.ro.Status.InProgressOp)
 	switch n.ro.Status.InProgressOp.Op {
 	case protos.SmartNICOp_SmartNICDisruptiveUpgrade:
-		//TODO set the right downloaded image name
 		err = n.Upgmgr.StartDisruptiveUpgrade("naples_fw.tar")
 		if err != nil {
 			log.Errorf("StartDisruptiveUpgrade returned %s", err)
+			go n.UpgFailed(&[]string{fmt.Sprintf("StartDisruptiveUpgrade returned %s", err)})
 			return
 		}
 	case protos.SmartNICOp_SmartNICUpgOnNextHostReboot:
-		//TODO set the right downloaded image name
 		err = n.Upgmgr.StartUpgOnNextHostReboot("naples_fw.tar")
 		if err != nil {
 			log.Errorf("StartDisruptiveUpgrade returned %s", err)
@@ -159,7 +159,8 @@ func (n *NMD) issueNextPendingOp() {
 		}
 		err = n.Upgmgr.StartPreCheckDisruptive(n.ro.Status.InProgressOp.Version)
 		if err != nil {
-			log.Errorf("Precheck returned %s", err)
+			log.Errorf("StartPreCheckDisruptive returned %s", err)
+			go n.UpgNotPossible(&[]string{fmt.Sprintf("StartPreCheckDisruptive returned %s", err)})
 			return
 		}
 	case protos.SmartNICOp_SmartNICImageDownload:
