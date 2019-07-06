@@ -158,6 +158,17 @@ func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *pr
 		if s.Version != version {
 			continue
 		}
+
+		found := false
+		for _, specops := range snicState.Spec.Ops {
+			if specops.Op == s.Op && s.Version == specops.Version {
+				found = true
+			}
+		}
+		if !found { // got status for some operation that we didnt even request for. ignore..
+			continue
+		}
+
 		existingStatus := snicState.status[s.Op]
 		if existingStatus.OpStatus == s.OpStatus {
 			continue
