@@ -121,5 +121,6 @@ dir_dependencies:
     - test/ci_targets/e2e
   api:
     - test/ci_targets/e2e
+    - venice/ui
   nic/agent:
     - test/ci_targets/e2e
